@@ -162,15 +162,27 @@ int atomic () {
   return count;
 }
 
+int busysleep(int tid) {
+  int i;
+  int dummy = 0;
+  for (i = 0 ; i < tid*10000000 ; i++) {
+    dummy += tid;
+  }
+  return dummy;
+}
+
 int barrier () {
-  int count = 0;
-  int max = omp_get_num_threads() == 1 ? 1 : 2;
-  #pragma omp parallel num_threads(max)
+  int count[1024] = {0};
+  //int max = (omp_get_max_threads() < 2 ? 1 : omp_get_max_threads());
+  int max = omp_get_max_threads();
+  #pragma omp parallel
   {
-    sleep(omp_get_thread_num());
+    int tid = omp_get_thread_num();
+    printf("Thread %d sleeping %d seconds.\n", tid, tid);
+    count[tid] = busysleep(tid);
     #pragma omp barrier
   }
-  return count;
+  return count[max];
 }
 
 #define CRITICAL_SIZE 10
@@ -185,7 +197,8 @@ int critical() {
   }
 
   max = a[0];
-  int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
+  //int maxthreads = omp_get_max_threads() == 1 ? 1 : 2;
+  int maxthreads = omp_get_max_threads();
   #pragma omp parallel for num_threads(maxthreads)
   for (i = 1; i < CRITICAL_SIZE; i++) {
     if (a[i] > max) {
@@ -197,6 +210,7 @@ int critical() {
         if (a[i] > max) {
           max = a[i];
         }
+        max += busysleep(omp_get_thread_num());
       }
     }
   }
@@ -213,7 +227,8 @@ int critical_named() {
   }
 
   max = a[0];
-  int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
+  //int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
+  int maxthreads = omp_get_max_threads();
   #pragma omp parallel for num_threads(maxthreads)
   for (i = 1; i < CRITICAL_SIZE; i++) {
     if (a[i] > max) {
@@ -225,6 +240,7 @@ int critical_named() {
         if (a[i] > max) {
           max = a[i];
         }
+        max += busysleep(omp_get_thread_num());
       }
     }
   }
@@ -243,8 +259,9 @@ int flush() {
   int data;
   int flag = 0;
 
-  int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
-  #pragma omp parallel sections num_threads(maxthreads)
+  //int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
+  int maxthreads = omp_get_num_threads();
+  #pragma omp parallel sections
   {
     #pragma omp section
     {
@@ -364,7 +381,7 @@ static float a[1000], b[1000], c[1000];
 void test(int first, int last) 
 {
   int i;
-#pragma omp for ordered schedule(dynamic) 
+#pragma omp for ordered
   for (i = first; i <= last; ++i) {
     // Do something here.
     if (i % 2) 
@@ -475,7 +492,6 @@ int main (int argc, char *argv[])
   do_work();
   printf ("\n\nDoing atomic: %d\n\n", atomic()); fflush(stdout);
   printf ("\n\nDoing barrier: %d\n\n", barrier()); fflush(stdout);
-  printf ("\n\nDoing critical: %d\n\n", critical()); fflush(stdout);
   printf ("\n\nDoing fortest: %d\n\n", fortest()); fflush(stdout);
   printf ("\n\nDoing flush: %d\n\n", flush()); fflush(stdout);
   printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
@@ -484,6 +500,7 @@ int main (int argc, char *argv[])
 #endif
   printf ("\n\nDoing sections: %d\n\n", sections()); fflush(stdout);
   printf ("\n\nDoing single: %d\n\n", single()); fflush(stdout);
+  printf ("\n\nDoing critical: %d\n\n", critical()); fflush(stdout);
   printf ("\n\nDoing critical named: %d\n\n", critical_named()); fflush(stdout);
   printf ("\n\nDoing parallelfor: %d\n\n", parallelfor()); fflush(stdout);
   printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static()); fflush(stdout);

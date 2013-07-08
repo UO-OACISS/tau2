@@ -1788,7 +1788,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 
 // This function will return a timer for the Collector API OpenMP state, if available
 // This is called by the OpenMP collector API wrapper initialization...
-extern "C" void Tau_create_thread_state_if_necessary(char *name)
+extern "C" void Tau_create_thread_state_if_necessary(const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
@@ -1806,7 +1806,7 @@ extern "C" void Tau_create_thread_state_if_necessary(char *name)
 }
 
 // This function will return a timer for the Collector API OpenMP state, if available
-FunctionInfo * Tau_create_thread_state_if_necessary(string const & name)
+FunctionInfo * Tau_create_thread_state_if_necessary_string(string const & name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;

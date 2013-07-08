@@ -67,6 +67,7 @@ using namespace std;
 
 /* If we are using OpenMP and the collector API */
 #define TAU_COLLECTOR_API_DEFAULT 1
+#define TAU_COLLECTOR_API_STATES_DEFAULT 0
 #define TAU_COLLECTOR_API_CONTEXT_TIMER "timer"
 #define TAU_COLLECTOR_API_CONTEXT_REGION "region"
 #define TAU_COLLECTOR_API_CONTEXT_NONE "none"
@@ -474,6 +475,7 @@ static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_collector_api_enabled = 0;
+static int env_collector_api_states_enabled = 0;
 static int env_collector_api_context = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
@@ -720,6 +722,10 @@ int TauEnv_get_ebs_enabled() {
 
 int TauEnv_get_collector_api_enabled() {
   return env_collector_api_enabled;
+}
+
+int TauEnv_get_collector_api_states_enabled() {
+  return env_collector_api_states_enabled;
 }
 
 int TauEnv_get_collector_api_context() {
@@ -1392,6 +1398,17 @@ void TauEnv_initialize()
       env_collector_api_enabled = 0;
       TAU_VERBOSE("TAU: Collector API Disabled\n");
       TAU_METADATA("TAU_COLLECTOR_API", "off");
+    }
+
+    tmp = getconf("TAU_COLLECTOR_API_STATES");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_STATES_DEFAULT) == 0) {
+      env_collector_api_states_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API States Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "off");
+    } else {
+      env_collector_api_states_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API States Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "on");
     }
 
     env_collector_api_context = 2; // the region is the default
