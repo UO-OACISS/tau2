@@ -4521,10 +4521,20 @@ then
     if [ "x$oshcc_var" != "x" -a $? = 0 ]
     then
       openshmem_include_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@include@g'`
-      if [ -r $openshmem_include_dir/mpp/shmem.h ] 
+      if [ -r $openshmem_include_dir/mpp/shmem.h -a -r $openshmem_include_dir/../bin/mpiexec_mpt ] 
       then
         shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
         fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+      else
+        if [ -r $oshcc_var ]
+        then 
+          openshmem=yes
+          if [ -r $openshmem_include_dir/mpp/shmem.h ] 
+          then
+            shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
+          fi
+          fixmakeargs="$fixmakeargs OPENSHMEM"
+        fi
       fi
     fi
     if [ $catamount = yes ] 
