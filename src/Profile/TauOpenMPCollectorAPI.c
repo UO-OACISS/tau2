@@ -128,7 +128,7 @@ void Tau_get_region_id(int tid) {
     Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz, OMP_REQ_CURRENT_PRID, OMP_ERRCODE_OK, currentid_rsz, 1);
     long * rid = message + OMP_COLLECTORAPI_HEADERSIZE;
     int rc = (Tau_collector_api)(message);
-    TAU_VERBOSE("Thread %d, region ID : %ld\n", tid, *rid);
+    //TAU_VERBOSE("Thread %d, region ID : %ld\n", tid, *rid);
     free(message);
     return;
 }
@@ -247,6 +247,7 @@ void Tau_get_my_region_context(int tid, int forking) {
 }
 
 /*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context, int forking) {
+  //fprintf(stderr,"%d Starting %s\n", tid,state);
   if (use_context == 0 || TauEnv_get_collector_api_context() == 0) {
     //  no context for the event
     Tau_pure_start_task(state, tid);
@@ -284,6 +285,7 @@ void Tau_get_my_region_context(int tid, int forking) {
 }
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context) {
+  //fprintf(stderr,"%d Stopping %s\n", tid,state);
 #if 0
     char * regionIDstr = NULL;
     if (Tau_collector_flags[tid].activeTimerContext == NULL) {
@@ -419,7 +421,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
             break;
         case OMP_EVENT_THR_END_ODWT:
             if (Tau_collector_flags[tid].ordered_region_wait == 1) {
-                Tau_omp_stop_timer("ORDERED_REGION_WAIT", tid, 1);
+                Tau_omp_stop_timer("OpenMP_ORDERED_REGION_WAIT", tid, 1);
             }
             Tau_collector_flags[tid].ordered_region_wait = 0;
             break;
@@ -684,23 +686,28 @@ int Tau_initialize_collector_api(void) {
     //Tau_Sampling_register_unit(); // not necessary now?
 #endif
 
-#if 0
+    if (TauEnv_get_collector_api_states_enabled() == 1) {
     // now, for the collector API support, create the 12 OpenMP states.
     // preallocate State timers. If we create them now, we won't run into
     // malloc issues later when they are required during signal handling.
-    Tau_create_thread_state_if_necessary("OMP UNKNOWN");
-    Tau_create_thread_state_if_necessary("OMP OVERHEAD");
-    Tau_create_thread_state_if_necessary("OMP WORKING");
-    Tau_create_thread_state_if_necessary("OMP IMPLICIT BARRIER"); 
-    Tau_create_thread_state_if_necessary("OMP EXPLICIT BARRIER");
-    Tau_create_thread_state_if_necessary("OMP IDLE");
-    Tau_create_thread_state_if_necessary("OMP SERIAL");
-    Tau_create_thread_state_if_necessary("OMP REDUCTION");
-    Tau_create_thread_state_if_necessary("OMP LOCK WAIT");
-    Tau_create_thread_state_if_necessary("OMP CRITICAL WAIT");
-    Tau_create_thread_state_if_necessary("OMP ORDERED WAIT");
-    Tau_create_thread_state_if_necessary("OMP ATOMIC WAIT");
-#endif
+      Tau_create_thread_state_if_necessary("OMP_UNKNOWN");
+      Tau_create_thread_state_if_necessary("OMP_OVERHEAD");
+      Tau_create_thread_state_if_necessary("OMP_WORKING");
+      Tau_create_thread_state_if_necessary("OMP_IMPLICIT_BARRIER"); 
+      Tau_create_thread_state_if_necessary("OMP_EXPLICIT_BARRIER");
+      Tau_create_thread_state_if_necessary("OMP_IDLE");
+      Tau_create_thread_state_if_necessary("OMP_SERIAL");
+      Tau_create_thread_state_if_necessary("OMP_REDUCTION");
+      Tau_create_thread_state_if_necessary("OMP_LOCK_WAIT");
+      Tau_create_thread_state_if_necessary("OMP_CRITICAL_WAIT");
+      Tau_create_thread_state_if_necessary("OMP_ORDERED_WAIT");
+      Tau_create_thread_state_if_necessary("OMP_ATOMIC_WAIT");
+      Tau_create_thread_state_if_necessary("OMP_TASK_CREATE");
+      Tau_create_thread_state_if_necessary("OMP_TASK_SCHEDULE");
+      Tau_create_thread_state_if_necessary("OMP_TASK_SUSPEND");
+      Tau_create_thread_state_if_necessary("OMP_TASK_STEAL");
+      Tau_create_thread_state_if_necessary("OMP_TASK_FINISH");
+    }
 
     Tau_collector_enabled = 1;
     initializing = false;
@@ -739,7 +746,7 @@ int Tau_get_thread_omp_state(int tid) {
     (Tau_collector_api)(Tau_collector_flags[tid].signal_message);
     int * rid = Tau_collector_flags[tid].signal_message + OMP_COLLECTORAPI_HEADERSIZE;
     thread_state = *rid;
-    TAU_VERBOSE("Thread %d, state : %d\n", tid, thread_state);
+    //TAU_VERBOSE("Thread %d, state : %d\n", tid, thread_state);
     // return the thread state as a string
     return (int)(thread_state);
 }
