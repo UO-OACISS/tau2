@@ -91,7 +91,8 @@ static function functionArray[TAU_MAX_METRICS];
 /* gtod based initial timestamp, used for snapshots and other stuff */
 static x_uint64 initialTimeStamp;
 
-
+/* flags for atomic metrics */
+char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = {NULL};
 
 /*********************************************************************
  * Remove _'s, convert case, and compare
@@ -351,8 +352,9 @@ static void initialize_functionArray()
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			//functionArray[pos++] = metric_read_cupti;
-      functionArray[pos++] = metric_read_cudatime;
-			Tau_CuptiLayer_register_string(metricv[i], pos - 1);
+			Tau_CuptiLayer_register_string(metricv[i], pos);
+      TauMetrics_atomicMetrics[pos] = metricv[i];
+      functionArray[pos++] = metric_read_cupti;
 #endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
@@ -459,12 +461,16 @@ static void initialize_functionArray()
  * Returns metric name for an index
  ********************************************************************/
 extern "C" const char *TauMetrics_getMetricName(int metric) {
+#ifdef CUPTI
   if (Tau_CuptiLayer_is_cupti_counter(metricv[metric])) {
-    return Tau_CuptiLayer_get_event_name(Tau_CuptiLayer_get_cupti_event_id(metric)).c_str();
+    return Tau_CuptiLayer_get_event_name(Tau_CuptiLayer_get_cupti_event_id(metric));
   }
   else {
+#endif
     return metricv[metric];
+#ifdef CUPTI
   }
+#endif
 }
 
 /*********************************************************************
@@ -476,6 +482,13 @@ int TauMetrics_getMetricUsed(int metric) {
   } else {
     return 0;
   }
+}
+
+/*********************************************************************
+ * Query if a metric is atomic
+ ********************************************************************/
+const char* TauMetrics_getMetricAtomic(int metric) {
+  return TauMetrics_atomicMetrics[metric];
 }
 
 /*********************************************************************

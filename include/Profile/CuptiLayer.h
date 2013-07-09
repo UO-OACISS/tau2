@@ -103,6 +103,8 @@ counter_map_t Tau_CuptiLayer_Counter_Map;
 /* mapping the metric number to the cupti metric number */
 counter_id_map_t internal_id_map; 
 extern counter_id_map_t internal_id_map() {return internal_id_map;}
+counter_id_map_t internal_id_map_backwards; 
+extern counter_id_map_t internal_id_map_backwards() {return internal_id_map_backwards;}
 #else
 
 extern bool Tau_CuptiLayer_is_initialized();
@@ -114,6 +116,8 @@ extern void Tau_CuptiLayer_disable();
 extern void Tau_CuptiLayer_init();
 
 extern void Tau_CuptiLayer_finalize();
+
+extern void Tau_CuptiLayer_register_all_counters();
 
 extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
 
@@ -141,9 +145,11 @@ extern "C" int Tau_CuptiLayer_get_num_events();
 
 extern "C" void Tau_CuptiLayer_set_event_name(int metric_n, int type);
 
-std::string Tau_CuptiLayer_get_event_name(int metric_n);
+extern "C" const char* Tau_CuptiLayer_get_event_name(int metric_n);
 
 extern "C" int Tau_CuptiLayer_get_cupti_event_id(int metric_n);
+
+extern "C" int Tau_CuptiLayer_get_metric_event_id(int metric_n);
 
 extern "C" void Tau_CuptiLayer_read_counters(CUdevice d, uint64_t *cb);
 

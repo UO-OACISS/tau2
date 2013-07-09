@@ -58,7 +58,7 @@ void Tau_cupti_onload()
 	TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
 
 	CUptiResult err;
-
+  
 	if (cupti_api_runtime())
 	{
 		//printf("TAU: Subscribing to RUNTIME API.\n");
@@ -71,7 +71,7 @@ void Tau_cupti_onload()
 		err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API);
 		//driver_enabled = true;
 	}
-
+  
 	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE); 
 	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE); 
 
@@ -101,8 +101,8 @@ void Tau_cupti_onload()
 		printf("TAU WARNING: DISABLING CUDA %s tracking. Please use CUDA 5.0 or greater.\n", TauEnv_get_cuda_instructions());
   }
 #endif //CUPTI_API_VERSIOn >= 3
-
-	CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
+	
+  CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
 
 	Tau_gpu_init();
 }
@@ -149,7 +149,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
     int device_count;
     cuDeviceGetCount(&device_count);
     for (int i=0; i<device_count; i++) {
-      CurrentGpuState[i].record_gpu_counters_at_sync();
+      record_gpu_counters_at_sync(i);
     }
 		Tau_cupti_register_sync_event(NULL, 0);
     
@@ -214,7 +214,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           int device_count;
           cuDeviceGetCount(&device_count);
           for (int i=0; i<device_count; i++) {
-            CurrentGpuState[i].record_gpu_counters_at_sync();
+            record_gpu_counters_at_sync(i);
           }
 					Tau_cupti_register_sync_event(cbInfo->context, 0);
           
@@ -282,10 +282,9 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
   int device_count;
   cuDeviceGetCount(&device_count);
   //start
-  if (device_count > CurrentGpuState.size()) {
-    for (int i=0; i < device_count; i++) {
-      CurrentGpuState[i] = GpuState(i);
-    }
+  if (device_count > TAU_MAX_GPU_DEVICES) {
+    printf("TAU ERROR: Maximum number of devices (%d) exceeded.\n", TAU_MAX_GPU_DEVICES);
+    exit(1);
   }
 
 	err = cuptiActivityDequeueBuffer(context, stream, &activityBuffer, &bufferSize);
@@ -325,12 +324,13 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
    
     for (int i=0; i < device_count; i++) {
       //printf("Kernels encountered/recorded: %d/%d.\n", CurrentGpuState[i].kernels_encountered, CurrentGpuState[0].kernels_recorded);
-      if (CurrentGpuState[i].kernels_recorded == CurrentGpuState[i].kernels_encountered)
+      if (kernels_recorded[i] == kernels_encountered[i])
       {
-        CurrentGpuState[i].clear();
+        clear_counters(i);
         last_recorded_kernel_name = NULL;
-      } else if (CurrentGpuState[i].kernels_recorded > CurrentGpuState[i].kernels_encountered) {
+      } else if (kernels_recorded[i] > kernels_encountered[i]) {
         printf("TAU: Recorded more kernels than were launched, exiting.\n");
+        abort();
         exit(1);
       }
     }
@@ -424,7 +424,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
       double metrics_start[number_of_metrics];
       double metrics_end[number_of_metrics];
-      record_gpu_counters(kernel->deviceId, name, id, metrics_start, metrics_end);
+      record_gpu_counters(kernel->deviceId, name, id, &eventMap);
 
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
@@ -657,103 +657,44 @@ void record_gpu_launch(int correlationId, FunctionInfo *current_function)
   CUdevice device;
   cuCtxGetDevice(&device);
 
-  CurrentGpuState[device].record_gpu_counters_at_launch();
-  /*int n_counters = Tau_CuptiLayer_get_num_events();
-  if (n_counters > 0)
-  {
-    printf("putting in %d.\n", correlationId);
-    int device_count;
-    cuDeviceGetCount(&device_count);
-    //kernelInfoMap[correlationId].counters = (uint64_t **) malloc(n_counters*device_count*sizeof(uint64_t));
-    //for (int i=0; i<device_count; i++)
-    //{
-      CUdevice device;
-      cuCtxGetDevice(&device);
-      //uint64_t *tmpCounters = (uint64_t*)  malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
-      uint64_t *tmpCounters;
-      //K *tmp = new K();
-      tmpCounters = CurrentGpuState[device].counters();
-      Tau_CuptiLayer_read_counters(device, tmpCounters);
-      //memcpy(kernelInfoMap[correlationId].counters(i), tmpCounters, Tau_CuptiLayer_get_num_events()*sizeof(uint64_t)); 
-      //kernelInfoMap[correlationId] = *tmp;
-      printf("[at launch, %d] device 0, counter 0: %llu.\n", correlationId, tmpCounters[0]);
-    //}
-  }*/
+  record_gpu_counters_at_launch(device);
 }
-void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, double * metrics_start, double *metrics_end)
+void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
 {
-  //std::cout << "              kernel name " << name << std::endl;
-  if ( last_recorded_kernel_name ) {
-  //std::cout << "last recorded kernel name " << last_recorded_kernel_name << std::endl;
-  }
   if (Tau_CuptiLayer_get_num_events() > 0 &&
-      !CurrentGpuState[device_id].counters_bounded_warning_issued && 
+      !counters_bounded_warning_issued[device_id] && 
       last_recorded_kernel_name != NULL && 
-      strcmp(last_recorded_kernel_name, name) != 0) {
+      strcmp(last_recorded_kernel_name, name) != 0) 
+  {
     TAU_VERBOSE("Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
-    CurrentGpuState[device_id].counters_bounded_warning_issued = true;
+    counters_bounded_warning_issued[device_id] = true;
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
+      Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
+    }
   }
   last_recorded_kernel_name = name;
-  //this to get around a bug in CUPTI.
-  /*
-  if (kernelInfoMap.count(correlationId) == 0) {
-    correlationId--;
-  }
-  printf("looking for %d.\n", correlationId);
-  if (kernelInfoMap.count(correlationId) > 0)
-  */
   {
     //increment kernel count.
     
-    //CurrentGpuState[device_id].kernels_encountered++;
-    //uint64_t *metrics = (uint64_t *) malloc((Tau_CuptiLayer_get_num_events()+1)*sizeof(uint64_t));
-    //K *k = new K();
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      if (CurrentGpuState[device_id].counters_bounded_warning_issued) {
-        //std::cout << "counters are bounded.\n" << std::endl;
-        Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
-      }
-      else if (CurrentGpuState[device_id].counters_averaged_warning_issued) {
-        //std::cout << "counters are averaged.\n" << std::endl;
-        Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
-      } else {
-        //std::cout << "counters are actual.\n" << std::endl;
-        Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_ACTUAL); 
-     
-      }
-      metrics_start[n+1] = CurrentGpuState[device_id].start_counters()[n];
+      //std::cout << "at record: "<< name << " ====> " << std::endl;
+      //std::cout << "\tstart: " << counters_at_last_launch[device_id][n] << std::endl;
+      //std::cout << "\t stop: " << current_counters[device_id][n] << std::endl;
 
-      if (CurrentGpuState[device_id].counters_bounded_warning_issued) {
-        metrics_end[n+1] = CurrentGpuState[device_id].end_counters()[n] *
-          CurrentGpuState[device_id].kernels_encountered;
-      } else {
-        metrics_end[n+1] = CurrentGpuState[device_id].end_counters()[n];
-      }
-      //plus one since
-      
-      //std::cout << "kernel name: " << name << std::endl;
-      //std::cout << "final number: " << std::setprecision(16) << eventMap[c] << std::endl;
-      //std::cout << "number kernel: " << CurrentGpuState[device_id].kernels_encountered << std::endl;
-    }
-    //std::cout << "kernel recorded." << std::endl;
-    CurrentGpuState[device_id].kernels_recorded++;
-    //printf("clearing the times counter: %d.\n", CurrentGpuState[device_id].kernels_encountered);
-    //tmpCounters = CurrentGpuState[device_id].counters();
-    //Tau_CuptiLayer_read_counters(device, tmpCounters);
-    /*for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
-    {
-      //printf("tmp: %llu.\n", tmpCounters[n]);
       TauContextUserEvent* c;
-      Tau_cupti_find_context_event(&c, Tau_CuptiLayer_get_event_name(n), true);
-      //kernelInfoMap[correlationId].difference(*k);
-      tmpCounters = CurrentGpuState[device_id].counters();
-      //eventMap[c] = tmpCounters[n];
-      eventMap[c] = tmpCounters[n] / CurrentGpuState[device_id].kernels_encountered;
-      cout << "final number: " << setprecision(16) << eventMap[c] << endl;
-      cout << "number kernel: " << CurrentGpuState[device_id].kernels_encountered << endl;
-      //printf("final number: %f.\n", eventMap[c]);
-    }*/
-    //free(counters);
+      const char *name = Tau_CuptiLayer_get_event_name(n);
+      if (n >= counterEvents.size()) {
+        c = (TauContextUserEvent *) Tau_return_context_userevent(name);
+        counterEvents.push_back(c);
+      } else {
+        c = counterEvents[n];
+      }
+      Tau_set_context_event_name(c, name);
+      eventMap[c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]) * kernels_encountered[device_id];
+
+      
+    }
+    kernels_recorded[device_id]++;
   }
 }
 void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventMap_t *map)
