@@ -779,6 +779,7 @@ dwarf=no
 java=no
 openmp=no
 ompt=no
+omptlib=
 omptenabled=no
 xlsmp=no
 ibmxlc=no
@@ -1485,10 +1486,31 @@ for arg in "$@"; do
       openmp=yes
     shift
     ;;
+
+  -omptlib=*)
+      ompt=yes
+      omptfile=`echo $arg | sed -e 's/-omptlib=//'`
+      if [ ! -f $omptfile ]
+      then
+        echo "Error: Cannot access OpenMP runtime library $omptfile"
+        exit 1
+      fi
+      # split the ompt library path
+      omptdir=${omptfile%/*}
+      if [ ! -d $omptdir ]
+      then
+        echo "Error: Cannot access directory $omptdir"
+        exit 1
+      fi
+      omptlib="-Wl,-rpath=$omptdir#$omptfile"
+    shift
+    ;;
+
   -ompt*)
       ompt=yes
     shift
     ;;
+
   -xlsmp=*)
       xlsmp=yes
       xlsmpdir=`echo $arg | sed -e 's/-xlsmp=//'`
@@ -1972,7 +1994,6 @@ else
     mpi=yes
   fi
 fi
-
 
 # -- some functions
 
@@ -2836,7 +2857,7 @@ if [ "$machine" = "apple" ] ; then
 fi
 
 if [ $ompt = yes ]; then
-  fixmakeargs="$fixmakeargs TAU_OMPT"
+  fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlib"
 fi
 
 if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then

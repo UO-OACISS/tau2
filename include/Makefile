@@ -251,6 +251,8 @@ JDKARCH                 = linux
 #############################################
 #OPENMP#TAU_LINKER_OPT19=-ldl#ENDIF#
 
+OMPTLIB=-Wl,-rpath=/home3/khuck/src/intel-openmp-rtl/branches/ompt-support/itt/libomp_oss/tmp/lin_32e-rtl_5_nor_dyn.12.deb.40.c0.t0-hn1 /home3/khuck/src/intel-openmp-rtl/branches/ompt-support/itt/libomp_oss/tmp/lin_32e-rtl_5_nor_dyn.12.deb.40.c0.t0-hn1/libiomp5.so
+#TAU_OMPT#TAU_LINKER_OPT20=$(OMPTLIB) #ENDIF#
 #IBMOMPT#TAU_LINKER_OPT20=-L$(LOMPLIB) -lxllomp #ENDIF#
 
 #############################################
