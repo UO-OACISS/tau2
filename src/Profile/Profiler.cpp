@@ -38,6 +38,8 @@
 #include <stdlib.h>
 #include <limits.h>
 
+#include <string>
+
 #ifdef TAU_VAMPIRTRACE
 #include <Profile/TauVampirTrace.h>
 #endif
@@ -976,6 +978,10 @@ static int writeUserEvents(FILE *fp, int tid)
     if ((*it) && (*it)->GetNumEvents(tid) == 0) {    // skip user events with no calls
       continue;
     }
+    if ((*it)->GetWriteAsMetric()) { //skip events that are written out as metrics.
+      printf("skipping: %s.\n", (*it)->GetName().c_str());
+      continue;
+    }
     if ((*it)) {
       numEvents++;
     }
@@ -990,6 +996,7 @@ static int writeUserEvents(FILE *fp, int tid)
 
     for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
       if ((*it) && (*it)->GetNumEvents(tid) == 0) continue;
+      if ((*it) && (*it)->GetWriteAsMetric()) continue;
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", (*it)->GetName().c_str(), (*it)->GetNumEvents(tid),
           (*it)->GetMax(tid), (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
     }
@@ -1138,20 +1145,86 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
       continue;
     }
 
-    // get currently stored values
-    double incltime = fi->getDumpInclusiveValues(tid)[metric];
-    double excltime = fi->getDumpExclusiveValues(tid)[metric];
 
-    if (strlen(fi->GetType()) > 0) {
-      fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
-          excltime, incltime);
+    if (TauMetrics_getMetricAtomic(metric) != NULL)
+    {
+      vector<TauUserEvent*>::iterator it2;
+
+      bool found_one;
+      // Print UserEvent Data if any
+      for (it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+        TauUserEvent *ue = *it2;
+        //printf("testing %s vs %s.\n", fi->GetName(), ue->GetName().c_str());
+
+        const char *str = ue->GetName().c_str();
+        const char *suffix = fi->GetName();
+
+        if (!str || !suffix)
+            continue;
+        size_t lenstr = strlen(str);
+        size_t lensuffix = strlen(suffix);
+        if (lensuffix >  lenstr) {
+            continue;
+        }
+        //printf("testing: %s vs. %s.\n", TauMetrics_getMetricAtomic(metric), str);
+        if (strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0 &&
+            strncmp(TauMetrics_getMetricAtomic(metric), str, strlen(TauMetrics_getMetricAtomic(metric))) == 0)
+        {
+          printf("found match! %s.\n", ue->GetName().c_str());
+
+          double excltime = ue->GetMean(tid);
+          //double excltime = ue->GetMean(tid) * ue->GetNumEvents(tid);
+          double incltime = excltime;
+       
+          std::string name = ue->GetName();
+
+          size_t del = name.rfind(std::string("=>"));
+
+          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", name.substr(del + 3, string::npos).c_str(), fi->GetCalls(tid), 0, excltime,
+              incltime);
+          
+          found_one = true;
+        }
+      }
+      
+      if (!found_one) {
+        fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), 0, 0.0, 0.0);
+      }
+      found_one = false;
+/*
+      if (numEvents > 0) {
+        // Data format 
+        // # % userevents
+        // # name numsamples max min mean sumsqr 
+        fprintf(fp, "%d userevents\n", numEvents);
+        fprintf(fp, "# eventname numevents max min mean sumsqr\n");
+
+        for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
+          if ((*it) && (*it)->GetNumEvents(tid) == 0) continue;
+          fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", (*it)->GetName().c_str(), (*it)->GetNumEvents(tid),
+              (*it)->GetMax(tid), (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+        }
+      }
+*/
     } else {
-      fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), excltime,
-          incltime);
-    }
 
+      // get currently stored values
+      double incltime = fi->getDumpInclusiveValues(tid)[metric];
+      double excltime = fi->getDumpExclusiveValues(tid)[metric];
+
+      if (strlen(fi->GetType()) > 0) {
+        fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
+            excltime, incltime);
+      } else {
+        fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), excltime,
+            incltime);
+      }
+
+    }
+    
     fprintf(fp, "0 ");    // Indicating that profile calls is turned off
     fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
+
   }
 
   return 0;

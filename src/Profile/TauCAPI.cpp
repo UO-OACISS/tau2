@@ -1337,7 +1337,7 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 extern "C" void * Tau_get_userevent(char const * name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *ue;
-  ue = new TauUserEvent(name);
+  ue = new TauUserEvent(std::string(name));
   return (void *) ue;
 }
 
@@ -1352,6 +1352,12 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
   t->TriggerEvent(data, tid);
+}
+
+extern "C" void * Tau_return_context_userevent(const char *name) {
+    TauInternalFunctionGuard protects_this_function;
+    TauContextUserEvent * ue = new TauContextUserEvent(name);
+    return (void*)ue;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1424,6 +1430,20 @@ extern "C" void Tau_set_event_name(void *ue, char *name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetName(name);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_context_event_name(void *ue, const char *name) {
+  TauInternalFunctionGuard protects_this_function;
+  TauContextUserEvent *t = (TauContextUserEvent *) ue;
+  t->SetAllEventName(name);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_write_user_event_as_metric(void *ue) {
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetWriteAsMetric(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////
