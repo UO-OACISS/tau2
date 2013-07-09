@@ -54,20 +54,15 @@ struct TauBfdAddrMap
 struct TauBfdInfo
 {
 	TauBfdInfo() :
-		probeAddr(0), filename(NULL), funcname(NULL), lineno(-1)
+		probeAddr(0), filename(NULL), funcname(NULL), 
+                lineno(-1), discriminator(0)
 	{ }
-
-	TauBfdInfo(unsigned long _probeAddr, char const * _filename,
-			char const * _funcname, int _lineno) :
-		probeAddr(_probeAddr), filename(_filename),
-		funcname(_funcname), lineno(_lineno)
-	{ }
-
+        
 	// Makes all fields safe to query
 	void secure(unsigned long addr) {
 		probeAddr = addr;
 		if(!funcname) {
-			char * tmp = (char*)malloc(64);
+			char * tmp = (char*)malloc(256);
 			sprintf(tmp, "addr=<%p>", (void*)(addr));
 			funcname = tmp;
 		}
@@ -79,6 +74,7 @@ struct TauBfdInfo
 	char const * filename;
 	char const * funcname;
 	int lineno;
+        unsigned int discriminator;
 };
 
 

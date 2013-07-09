@@ -61,6 +61,8 @@ s/^PVM_ARCH=\(.*\)/PVM_ARCH=default/g
 s@^PVM_DIR=\(.*\)@PVM_DIR=default@g
 s@^CONFIG_CC=\(.*\)@CONFIG_CC=gcc@g
 s@^CONFIG_CXX=\(.*\)@CONFIG_CXX=g++@g
+s@^TAU_BUILD_CC=\(.*\)@TAU_BUILD_CC=@g
+s@^TAU_BUILD_CXX=\(.*\)@TAU_BUILD_CXX=@g
 s@^PCXX_OPT=\(.*\)@PCXX_OPT=-g@g
 s@^USER_OPT=\(.*\)@USER_OPT=-g@g
 s@^PDT_CXX=\(.*\)@PDT_CXX=@g
@@ -98,3 +100,5 @@ s,^UNWIND_INC=.*$,UNWIND_INC=,g
 s,^UNWIND_LIB=.*$,UNWIND_LIB=,g
 s,^UNWIND_LIB_FLAG=.*$,UNWIND_LIB_FLAG=,g
 s,^UNWIND_EXTRAS=.*$,UNWIND_EXTRAS=,g
+s@^LOMPINC=\(.*\)@LOMPINC=@g
+s@^LOMPLIB=\(.*\)@LOMPLIB=@g

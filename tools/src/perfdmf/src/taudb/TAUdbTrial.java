@@ -796,6 +796,51 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		statement.setInt(1, trialID);
 		statement.execute();
 	}
+	
+	public static void updatePrimaryMetadataField(DB db, int trialID, String name, String value){
+		try {
+			PreparedStatement statement = db.prepareStatement("update primary_metadata set value=? where trial=? and name=?;");
+			statement.setString(1, value);
+			statement.setInt(2, trialID);
+			statement.setString(3, name);
+			statement.execute();
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	public static void updateFields(DB db,int trialID, String field,String value){
+//	int node_count = dataSource.getMaxNode();
+//	int contexts_per_node = dataSource.getMaxContextPerNode();
+//	int threads_per_context = dataSource.getMaxThreadsPerContext();
+//	int datasource_id = dataSource.getFileType();
+//	int total_threads = dataSource.getNumThreads();
+
+//	String sql = "UPDATE "
+//			+ db.getSchemaPrefix()
+//			+ "trial (name, data_source,  node_count, contexts_per_node, threads_per_context, total_threads)"
+//			+ "VALUES (?,?,?,?,?,?" + ") ";
+	String sql = "update trial set "+field+"=? where ID="+trialID;
+	PreparedStatement statement;
+	try {
+		statement = db.prepareStatement(sql);
+		statement.setString(1, value);
+//		statement.setString(1, name);
+//
+//		statement.setInt(2, datasource_id);
+//
+//		statement.setInt(3, node_count);
+//		statement.setInt(4, contexts_per_node);
+//		statement.setInt(5, threads_per_context);
+//		statement.setInt(6, total_threads);
+
+		statement.executeUpdate();
+		statement.close();
+	} catch (SQLException e) {
+		e.printStackTrace();
+	}
+
+	}
 
 	public void loadXMLMetadata(DB db, Map<Integer, Function> ieMap) {
 		loadMetadata(db, ieMap);

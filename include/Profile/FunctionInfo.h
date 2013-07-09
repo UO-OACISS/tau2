@@ -32,8 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+extern int Tau_Global_numCounters;
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
-extern "C" int Tau_Global_numCounters;
 #define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
 #define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][TAU_MAX_COUNTERS]
 
@@ -61,6 +67,12 @@ extern "C" int Tau_Global_numCounters;
 #define SS_ALLOCATOR std::allocator
 #endif //TAU_SS_ALLOC_SUPPORT
 #endif //TAU_WINDOWS
+
+// Forward declaration
+namespace tau {
+  class TauUserEvent;
+}
+
 
 class FunctionInfo
 {
@@ -105,12 +117,12 @@ public:
   inline void SetAlreadyOnStack(bool value, int tid);  
 
 #ifdef TAU_PROFILEMEMORY
-  class tau::TauUserEvent * MemoryEvent;
-  class tau::TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
+  tau::TauUserEvent * MemoryEvent;
+  tau::TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
 #endif // TAU_PROFILEMEMORY
 #ifdef TAU_PROFILEHEADROOM
-  class tau::TauUserEvent * HeadroomEvent;
-  class tau::TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
+  tau::TauUserEvent * HeadroomEvent;
+  tau::TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
 #endif // TAU_PROFILEHEADROOM
 
 #ifdef RENCI_STFF
