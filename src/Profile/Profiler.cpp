@@ -1170,7 +1170,6 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         if (strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0 &&
             strncmp(TauMetrics_getMetricAtomic(metric), str, strlen(TauMetrics_getMetricAtomic(metric))) == 0)
         {
-          printf("found match! %s.\n", ue->GetName().c_str());
 
           double excltime = ue->GetMean(tid);
           //double excltime = ue->GetMean(tid) * ue->GetNumEvents(tid);
