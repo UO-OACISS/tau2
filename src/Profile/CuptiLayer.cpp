@@ -1,5 +1,6 @@
 
 #include "Profile/CuptiLayer.h"
+#include "TAU.h"
 #include "Profile/TauEnv.h"
 #include <dlfcn.h>
 
@@ -25,14 +26,19 @@ void Tau_CuptiLayer_read_counter(uint64_t * cBuffer, int id) {}
 
 counter_map_t Tau_CuptiLayer_Counter_Map;
 
-counter_id_map_t internal_id_map; 
-counter_id_map_t internal_id_map() {return internal_id_map;}
+int internal_id_map[TAU_MAX_COUNTERS]; 
+int internal_id_map_backwards[TAU_MAX_COUNTERS];
 
 #endif
 
 counter_map_t Tau_CuptiLayer_Counter_Map;
-counter_id_map_t internal_id_map; 
+int internal_id_map[TAU_MAX_COUNTERS] = {0};  
+int internal_id_map_backwards[TAU_MAX_COUNTERS] = {0}; 
 counter_vec_t Tau_CuptiLayer_Added_counters;
+
+char *Tau_CuptiLayer_Added_strings[TAU_MAX_COUNTERS];
+int number_of_added_strings = 0;
+
 CUpti_EventGroup* eventGroup;	
 
 int Tau_CuptiLayer_num_events;
@@ -195,6 +201,7 @@ void Tau_CuptiLayer_init()
   cuDeviceGetCount(&device_count);
   if (initialized == NULL)
   {
+    Tau_CuptiLayer_register_all_counters();
     initialized = (bool*) calloc (device_count,sizeof(bool));
     eventGroup = (CUpti_EventGroup *) malloc (device_count*sizeof(CUpti_EventGroup));
   }
@@ -204,7 +211,7 @@ void Tau_CuptiLayer_init()
   cuCtxGetDevice(&device);
   if (!initialized[device] && Tau_CuptiLayer_Added_counters.size() > 0)
 	{
-	  //printf("in Tau_CuptiLayer_init.\n");
+	  //printf("in Tau_CuptiLayer_init, device = %d.\n");
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
 		CUresult cuErr = CUDA_SUCCESS;
 
@@ -251,8 +258,19 @@ void Tau_CuptiLayer_init()
                     (*it)->event );
         CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupAddEvent" );
       } else {
-        //TAU_VERBOSE("TAU Warning: Cannot add event: %s to GPU device: %s.\n", (*it)->event_name, (*it)->device_name);
-        return;
+        /* This warning is to cover a small corner case. Since each event group
+         * fill the counter buffers starting at a zero offset, disjoint event
+         * groups (ie. two or more event groups that collect counters for
+         * seperate GPUs) will end up writing to the same offset causing the
+         * data to become garbled.
+         * Notice that running on multiple different GPUs is supported as long 
+         * as we only collect counters for one set that a time. 
+         */
+        char device_char[TAU_CUPTI_MAX_NAME];
+        size_t size = TAU_CUPTI_MAX_NAME;
+        CUresult er;
+        er = cuDeviceGetName(device_char, size, device);
+        cerr << "TAU Warning: Cannot add event: " << (*it)->tag << " to GPU device: " << device_char << endl << "             Only counters for a single GPU device model can be collected at the same time." << endl;
       }
 		}
     //record the fact the events have been added.
@@ -324,7 +342,7 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 		//cuErr = cuCtxGetCurrent( &cuCtx );
 		// check if there is a current context
 		//printf("cupti layer finalized? %d context current? %d.\n",
-	  //		Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
+	  		//Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
 		if (Tau_CuptiLayer_finalized || !Tau_CuptiLayer_enabled)
 		{
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
@@ -423,6 +441,13 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 #endif
 			//if ( events_read != ( size_t ) Tau_CuptiLayer_num_events )
 				//TODO error return -1;
+		
+      printf("cupti last values    %llu.\n",
+      lastDataBuffer[0]);
+
+      printf("cupti events, values %llu.\n",
+      counterDataBuffer[0]);
+		
 
 			//accumulate counter values.
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
@@ -434,12 +459,6 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 			//free( counterDataBuffer );
 			free( eventIDArray );
 	  }
-		
-		//printf("cupti last values    %llu.\n",
-		//lastDataBuffer[0]);
-
-		//printf("cupti events, values %llu.\n",
-		//counterDataBuffer[0]);
 		
 	}
   else {
@@ -556,9 +575,6 @@ void Tau_CuptiLayer_Initialize_Map()
 		}
 		cuDeviceGetCount(&deviceCount);
 	}
-	//CuptiCounterEvent* ev = new CuptiCounterEvent(1,1,7);
-	//Tau_CuptiLayer_Counter_Map.insert(std::make_pair(ev->tag, ev));
-	//ev->print();
 }
 
 bool Tau_CuptiLayer_is_cupti_counter(char* str)
@@ -569,38 +585,54 @@ bool Tau_CuptiLayer_is_cupti_counter(char* str)
 	return Tau_CuptiLayer_Counter_Map.count(string(str)) > 0;
 }
 
+void Tau_CuptiLayer_register_all_counters()
+{
+  for (int i = 0; i < number_of_added_strings; i++)
+  {
+    Tau_CuptiLayer_register_counter(Tau_CuptiLayer_Counter_Map.at(
+      Tau_CuptiLayer_Added_strings[i]));
+  }
+
+}
+
 void Tau_CuptiLayer_register_string(char *str, int metric_n)
 {
-	Tau_CuptiLayer_register_counter(Tau_CuptiLayer_Counter_Map.at(str));
-	internal_id_map[metric_n] = Tau_CuptiLayer_Added_counters.size() - 1;
+  Tau_CuptiLayer_Added_strings[number_of_added_strings] = str;
+	internal_id_map[metric_n] = number_of_added_strings;
+	internal_id_map_backwards[number_of_added_strings] = metric_n;
+  number_of_added_strings++;
 }
 
 void Tau_CuptiLayer_set_event_name(int metric_n, int type)
 { 
-  string counter_string = Tau_CuptiLayer_Added_counters[metric_n]->tag;
+  string counter_string = Tau_CuptiLayer_Added_counters.at(metric_n)->tag;
   if (type == TAU_CUPTI_COUNTER_BOUNDED) {
     counter_string += " (upper bound)";
   } else if (type == TAU_CUPTI_COUNTER_AVERAGED) {
     counter_string += " (averaged)";
   }
-  Tau_CuptiLayer_Added_counters.at(metric_n)->tag = counter_string;
-  //std::cout << "counter string: " << counter_string << std::endl;
+  Tau_CuptiLayer_Added_counters.at(metric_n)->tag = counter_string; Tau_CuptiLayer_Added_counters[metric_n]->tag = counter_string;
   
 }
 
-string Tau_CuptiLayer_get_event_name(int metric_n)
+const char* Tau_CuptiLayer_get_event_name(int metric_n)
 {
-  string counter_string = Tau_CuptiLayer_Added_counters.at(metric_n)->tag;
-  //std::cout << "counter string: " << counter_string << std::endl;
-  return counter_string;
-  //char *name = (char*) malloc(sizeof(char) *(counter_string.length()+1));
-  //memcpy(name, counter_string.c_str(), sizeof(char) * (counter_string.length()+1));
-  //return name;
+  const char*counter_string;
+  string tag = Tau_CuptiLayer_Added_counters.at(metric_n)->tag;
+  std::cout << "counter string: " << tag.substr(0, string::npos) << std::endl;
+  const char * string = tag.substr(0, string::npos).c_str();
+  return string;
 }
 
 int Tau_CuptiLayer_get_cupti_event_id(int metric_id)
 {
-  return internal_id_map.at(metric_id);
+  //plus one because we need to leave room for TIME.
+  return internal_id_map[metric_id];
+}
+
+int Tau_CuptiLayer_get_metric_event_id(int metric_id)
+{
+  return internal_id_map_backwards[metric_id];
 }
 
 #endif

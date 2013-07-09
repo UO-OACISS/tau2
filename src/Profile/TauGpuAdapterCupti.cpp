@@ -89,13 +89,12 @@ extern "C" void Tau_cupti_register_gpu_event(
 						uint32_t correlationId,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes,
-						double *start,
-						double *stop,
-            int number_of_metrics
+						double start,
+						double stop
 						) {
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
 								deviceId, streamId, contextId, correlationId, gpu_attributes, number_of_attributes);
-							Tau_gpu_register_gpu_event(&gpu_event, start, stop, number_of_metrics);
+							Tau_gpu_register_gpu_event(&gpu_event, start, stop);
 						}
 
 extern "C" void Tau_cupti_register_gpu_atomic_event(

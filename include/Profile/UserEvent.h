@@ -62,12 +62,14 @@ public:
 
   static void ReportStatistics(bool ForEachThread=false);
 
+  bool writeAsMetric;
+
 public:
 
   TauUserEvent() :
       eventId(0), name("No Name"),
       minEnabled(true), maxEnabled(true), meanEnabled(true),
-      stdDevEnabled(true), monoIncreasing(false)
+      stdDevEnabled(true), monoIncreasing(false), writeAsMetric(false)
   {
     AddEventToDB();
   }
@@ -76,14 +78,14 @@ public:
       eventId(0), name(e.name),
       minEnabled(e.minEnabled), maxEnabled(e.maxEnabled),
       meanEnabled(e.meanEnabled), stdDevEnabled(e.stdDevEnabled),
-      monoIncreasing(e.monoIncreasing)
+      monoIncreasing(e.monoIncreasing), writeAsMetric(false) 
   {
     AddEventToDB();
   }
 
   TauUserEvent(std::string const & name, bool increasing=false) :
       eventId(0), name(name), minEnabled(true), maxEnabled(true),
-      meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing)
+      meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing), writeAsMetric(false) 
   {
     AddEventToDB();
   }
@@ -148,6 +150,14 @@ public:
     monoIncreasing = value;
   }
 
+  void SetWriteAsMetric(bool value) {
+    writeAsMetric = value;
+  }
+  
+  bool GetWriteAsMetric() {
+    return writeAsMetric;
+  }
+  
   TAU_EVENT_DATATYPE GetMin(void) {
     Data const & d = ThreadData();
     return d.nEvents ? d.minVal : 0;

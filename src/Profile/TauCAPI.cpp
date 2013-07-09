@@ -1385,10 +1385,17 @@ extern "C" void Tau_set_event_name(void *ue, char *name) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_set_context_event_name(void *ue, char *name) {
+extern "C" void Tau_set_context_event_name(void *ue, const char *name) {
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->SetAllEventName(name);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_write_user_event_as_metric(void *ue) {
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetWriteAsMetric(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////

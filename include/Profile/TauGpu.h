@@ -114,7 +114,7 @@ GpuEvent *gpu, int memcpyType);
 
 /* Callback for a GPU event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double *start, double *end, int metrics);
+extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, double endTime);
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */

@@ -4,6 +4,7 @@
 #include <cupti.h>
 #include <math.h>
 #include <iostream>
+#include <limits.h>
 
 #if CUPTI_API_VERSION >= 2
 
@@ -31,7 +32,8 @@
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
 
-extern "C" void Tau_set_context_event_name(void *ue, char *name);
+extern "C" void Tau_set_context_event_name(void *ue, const char *name);
+extern "C" void Tau_write_user_event_as_metric(void *ue);
 extern "C" void * Tau_return_context_userevent(const char *name);
 
 extern "C" void metric_set_gpu_timestamp(int tid, int idx, double value);
@@ -148,7 +150,7 @@ eventMap_t eventMap;
 int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
 void record_gpu_launch(int cId, FunctionInfo *f);
-void record_gpu_counters(int device_id, const char *name, uint32_t id, double *s_metrics, double* e_metrics);
+void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
@@ -160,126 +162,66 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 
+#define TAU_MAX_GPU_DEVICES 4
 
-struct GpuState {
 
-  int kernels_encountered;
-  int kernels_recorded;
-  //structure: counter 1,2,3...
-  uint64_t *counters_at_last_launch;
-  uint64_t *current_counters;
-  static int device_count;
-  static int n_counters;
-  bool counters_averaged_warning_issued;
-  bool counters_bounded_warning_issued;
+/* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
+ * allocate/deallocate memory. So all the counters values need to be allocated
+ * on the Stack. */
 
-public:
-  int device_num;
-  GpuState() {
-    n_counters = Tau_CuptiLayer_get_num_events();
-    cuDeviceGetCount(&device_count);
-    cuCtxGetDevice(&device_num);
-    kernels_encountered = 0;
-    kernels_recorded = 0;
-    counters_at_last_launch = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
-    current_counters = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
-    counters_averaged_warning_issued = false;
-    counters_bounded_warning_issued = false;
-    clear();
-  }
-  GpuState(int n) { 
-    n_counters = Tau_CuptiLayer_get_num_events();
-    cuDeviceGetCount(&device_count);
-    device_num = n;
-    kernels_encountered = 0;
-    kernels_recorded = 0;
-    counters_at_last_launch = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
-    current_counters = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
-    counters_averaged_warning_issued = false;
-    counters_bounded_warning_issued = false;
-    clear();
-  }
-  uint64_t *start_counters()
-  {
-    return counters_at_last_launch;
-  }
+uint64_t counters_at_last_launch[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {ULONG_MAX};
+uint64_t current_counters[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {0};
 
-  uint64_t *end_counters()
-  {
-    return current_counters;
-  }
+int kernels_encountered[TAU_MAX_GPU_DEVICES] = {0};
+int kernels_recorded[TAU_MAX_GPU_DEVICES] = {0};
 
-  void clear() {
-    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
-    {
-      counters_at_last_launch[n] = -1;
-      kernels_encountered = 0;
-      kernels_recorded = 0;
+bool counters_averaged_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
+bool counters_bounded_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
+
+void record_gpu_counters_at_launch(int device)
+{ 
+  kernels_encountered[device]++;
+  if (Tau_CuptiLayer_get_num_events() > 0 &&
+      !counters_averaged_warning_issued[device] && 
+      kernels_encountered[device] > 1) {
+    TAU_VERBOSE("Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
+    counters_averaged_warning_issued[device] = true;
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
+      Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
     }
   }
+  int n_counters = Tau_CuptiLayer_get_num_events();
+  if (n_counters > 0 && counters_at_last_launch[device][0] == ULONG_MAX) {
+    Tau_CuptiLayer_read_counters(device, counters_at_last_launch[device]);
+    //std::cout << "at launch ====> " << std::endl;
+    //std::cout << "\tlast launch:      " << counters_at_last_launch[device][0] << std::endl;
+    //std::cout << "\tcurrent counters: " << current_counters[device][0] << std::endl;
 
-  void record_gpu_counters_at_launch()
-  {
-    kernels_encountered++;
-    //std::cout << "kernel encountered." << std::endl;
-    if (Tau_CuptiLayer_get_num_events() > 0 &&
-        !counters_averaged_warning_issued && 
-        kernels_encountered > 1) {
-      TAU_VERBOSE("Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
-      counters_averaged_warning_issued = true;
-    }
-    n_counters = Tau_CuptiLayer_get_num_events();
-    if (n_counters > 0 && counters_at_last_launch[0] == -1) {
-    //kernelInfoMap[correlationId].counters = (uint64_t **) malloc(n_counters*device_count*sizeof(uint64_t));
-    //for (int i=0; i<device_count; i++)
-    //{
-      Tau_CuptiLayer_read_counters(device_num, counters_at_last_launch);
-      //printf("[at launch] device 0, counter 0: %llu.\n", counters_at_last_launch[0]);
-
-    }
   }
-  void record_gpu_counters_at_sync()
-  {
-    //std::cout << "recording counters at sync." << std::endl;
-    if (kernels_encountered == 0) {
-     return;
-    }
-    /*if (counters_at_last_launch[0] == 0) {
-      return;
-    }*/
-    Tau_CuptiLayer_read_counters(device_num, current_counters);
-
-    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
-    {
-      //printf("counter %d: start: %llu end: %llu diff: %llu num: %d.\n", n, counters_at_last_launch[n], current_counters[n], current_counters[n] - counters_at_last_launch[n], kernels_encountered);
-      //current_counters[n] = (current_counters[n] - counters_at_last_launch[n]) / kernels_encountered; 
-      current_counters[n] = current_counters[n] / kernels_encountered; 
-    }
+}
+  
+void record_gpu_counters_at_sync(int device)
+{
+  if (kernels_encountered[device] == 0) {
+   return;
   }
-  //take the end counts to get a difference.
-  /*
-  void difference(K o)
-  {
-    //print difference
-    for (int d = 0; d < device_count; d++)
-    {
-      uint64_t *o_counters;
-      o_counters = o.counters(d);
-      uint64_t *my_counters;
-      my_counters = counters(d);
-      for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
-      {
-        printf("counter %d: start: %llu end: %llu diff: %llu.\n", n, my_counters[n], o_counters[n], o_counters[n] - my_counters[n]);
-        my_counters[n] = o_counters[n] - my_counters[n]; 
-      }
-    }    
-    */
-};
-int GpuState::device_count = 0;
-int GpuState::n_counters = 0;
+  Tau_CuptiLayer_read_counters(device, current_counters[device]);
+  //std::cout << "at sync   ====> " << std::endl;
+  //std::cout << "\tlast launch:      " << counters_at_last_launch[device][0] << std::endl;
+  //std::cout << "\tcurrent counters: " << current_counters[device][0] << std::endl;
 
-//std::vector<int> CurrentState::kernels_encountered;
-std::map<uint32_t, GpuState> CurrentGpuState;
+}
+
+void clear_counters(int device)
+{
+  for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
+  {
+    counters_at_last_launch[device][n] = ULONG_MAX;
+  }
+  kernels_encountered[device] = 0;
+  kernels_recorded[device] = 0;
+
+}
 
 const char *last_recorded_kernel_name;
 
