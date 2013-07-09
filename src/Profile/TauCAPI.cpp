@@ -226,12 +226,12 @@ extern "C" void Tau_stack_initialization() {
 }
 
 extern "C" int Tau_global_get_insideTAU() {
+  Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return _Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   return (TauGlobal::getInstance().getValue())->insideTAU;
 #else
-  Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 #endif
@@ -239,13 +239,13 @@ extern "C" int Tau_global_get_insideTAU() {
 
 extern "C" int Tau_global_incr_insideTAU()
 {
+  Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return ++_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   return ++(tmp->insideTAU);
 #else
-  Tau_stack_checkInit();
   Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
 
@@ -257,13 +257,13 @@ extern "C" int Tau_global_incr_insideTAU()
 
 extern "C" int Tau_global_decr_insideTAU()
 {
+  Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return --_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   return --(tmp->insideTAU);
 #else
-  Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
