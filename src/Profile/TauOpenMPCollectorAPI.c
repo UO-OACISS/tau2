@@ -576,7 +576,7 @@ extern int __omp_collector_api(void *);
 int Tau_initialize_collector_api(void) {
     //if (Tau_collector_api != NULL || initializing) return 0;
     if (initialized || initializing) return 0;
-    if (!TauEnv_get_collector_api_enabled()) return;
+    if (!TauEnv_get_collector_api_enabled()) return 0;
 
     initializing = true;
 
@@ -768,6 +768,7 @@ int Tau_get_thread_omp_state(int tid) {
 #endif /* TAU_IBM_OMPT */
 
 void Tau_ompt_start_timer(const char * state, ompt_parallel_id_t regionid) {
+#if 0
     char * regionIDstr = NULL;
     regionIDstr = malloc(32);
     if (regionid > 0)
@@ -776,14 +777,21 @@ void Tau_ompt_start_timer(const char * state, ompt_parallel_id_t regionid) {
       sprintf(regionIDstr, "%s", state);
     Tau_pure_start_task(regionIDstr, Tau_get_tid());
     free(regionIDstr);
+#else
+    Tau_omp_start_timer(state, Tau_get_tid(), 1, 0);
+#endif
 }
 
 void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
+#if 0
     char * regionIDstr = NULL;
     regionIDstr = malloc(32);
     sprintf(regionIDstr, "%s %llx", state, regionid);
     Tau_pure_stop_task(regionIDstr, Tau_get_tid());
     free(regionIDstr);
+#else
+    Tau_omp_stop_timer(state, Tau_get_tid(), 1);
+#endif
 }
 
 /* These two macros make sure we don't time TAU related events */
@@ -791,15 +799,17 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
 #define TAU_OMPT_COMMON_ENTRY \
     /* Never process anything internal to TAU */ \
     if (Tau_global_get_insideTAU() > 0) { \
+        /*TAU_VERBOSE("%d : %s inside TAU - returning %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); */\
         return; \
     } \
     Tau_global_incr_insideTAU(); \
-    int tid = Tau_get_tid(); \
-    TAU_VERBOSE("%d %d: %s\n", tid, omp_get_thread_num(), __func__); \
-    fflush(stdout);
+    int tid = Tau_get_tid(); /*\
+    TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \
+    fflush(stdout); */
 
 #define TAU_OMPT_COMMON_EXIT \
     Tau_global_decr_insideTAU(); \
+    /* TAU_VERBOSE ("%d : %s inside (exit): %d\n\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); */\
 
 /*
  * Mandatory Events
@@ -839,16 +849,16 @@ void my_parallel_region_exit (
 /* Task creation */
 void my_task_create (ompt_data_t *task_data) {
   TAU_OMPT_COMMON_ENTRY;
-  //Tau_omp_start_timer("TASK", tid, 1, 0);
-  Tau_ompt_start_timer("OpenMP_TASK", 0);
+  Tau_omp_start_timer("TASK", tid, 1, 0);
+  //Tau_ompt_start_timer("OpenMP_TASK", 0);
   TAU_OMPT_COMMON_EXIT;
 }
 
 /* Task exit */
 void my_task_exit (ompt_data_t *task_data) {
   TAU_OMPT_COMMON_ENTRY;
-  //Tau_omp_stop_timer("TASK", tid, 1);
-  Tau_ompt_stop_timer("OpenMP_TASK", 0);
+  Tau_omp_stop_timer("TASK", tid, 1);
+  //Tau_ompt_stop_timer("OpenMP_TASK", 0);
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -930,7 +940,7 @@ TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_lock,my_acquired_lock,my_release_lock,"Ope
 void BEGIN_FUNCTION (ompt_data_t  *parent_task_data, ompt_parallel_id_t parallel_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   /*Tau_ompt_start_timer(NAME, parallel_id); */ \
-  Tau_omp_start_timer(NAME, tid, 0, 0); \
+  Tau_omp_start_timer(NAME, tid, 1, 0); \
   TAU_OMPT_COMMON_EXIT; \
 } \
 \
@@ -966,7 +976,7 @@ void my_idle_end(ompt_data_t *thread_data) {
   Tau_omp_stop_timer("IDLE", tid, 0);
   // if this thread is not the master of a team, then assume this 
   // thread is entering a new parallel region
-#if 0
+#if 1
   if (Tau_collector_flags[tid].parallel==0) {
     if (Tau_collector_flags[tid].activeTimerContext != NULL) {
         free(Tau_collector_flags[tid].activeTimerContext);
@@ -977,10 +987,10 @@ void my_idle_end(ompt_data_t *thread_data) {
     }
     Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
     strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
-    Tau_omp_start_timer("PARALLEL_REGION", tid, 1, 1);
+    Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1);
     Tau_collector_flags[tid].busy = 1;
-    Tau_collector_flags[tid].idle = 0;
   }
+  Tau_collector_flags[tid].idle = 0;
 #endif
   TAU_OMPT_COMMON_EXIT;
 }
@@ -990,18 +1000,19 @@ void my_idle_begin(ompt_data_t *thread_data) {
   TAU_OMPT_COMMON_ENTRY;
   // if this thread is not the master of a team, then assume this 
   // thread is exiting a parallel region
-#if 0
+#if 1
   if (Tau_collector_flags[tid].parallel==0) {
     if (Tau_collector_flags[tid].idle == 1 && 
         Tau_collector_flags[tid].busy == 0) {
+        TAU_OMPT_COMMON_EXIT;
         return;
     }
     if (Tau_collector_flags[tid].busy == 1) {
-        Tau_omp_stop_timer("PARALLEL_REGION", tid, 1);
+        Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1);
         Tau_collector_flags[tid].busy = 0;
     }
-    Tau_collector_flags[tid].idle = 1;
   }
+  Tau_collector_flags[tid].idle = 1;
 #endif
   Tau_omp_start_timer("IDLE", tid, 0, 0);
   TAU_OMPT_COMMON_EXIT;
@@ -1014,13 +1025,18 @@ void my_idle_begin(ompt_data_t *thread_data) {
 #define CHECK(EVENT,FUNCTION,NAME) ompt_set_callback(EVENT, FUNCTION)
 #else 
 #define CHECK(EVENT,FUNCTION,NAME) \
-  if (ompt_set_callback(EVENT, FUNCTION) != 0) { \
-    fprintf(stderr,"Failed to register OMPT callback %s!\n",NAME); \
+  if (ompt_set_callback(EVENT, FUNCTION) == 0) { \
+    TAU_VERBOSE("Failed to register OMPT callback %s!\n",NAME); \
     fflush(stderr); \
   }
 #endif /* TAU_IBM_OMPT */
 
 int ompt_initialize() {
+  if (initialized || initializing) return 0;
+  //if (!TauEnv_get_collector_api_enabled()) return;
+  initializing = true;
+  omp_init_lock(&writelock);
+
   /* required events */
   CHECK(ompt_event_parallel_create, my_parallel_region_create, "parallel_create");
   CHECK(ompt_event_parallel_exit, my_parallel_region_exit, "parallel_exit");
@@ -1040,60 +1056,65 @@ int ompt_initialize() {
   CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
   CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
 #endif
-  //CHECK(ompt_event_wait_barrier_begin, my_wait_barrier_begin, "wait_barrier_begin");
-  //CHECK(ompt_event_wait_barrier_end, my_wait_barrier_end, "wait_barrier_end");
-  //CHECK(ompt_event_wait_taskwait_begin, my_wait_taskwait_begin, "wait_taskwait_begin");
-  //CHECK(ompt_event_wait_taskwait_end, my_wait_taskwait_end, "wait_taskwait_end");
-  //CHECK(ompt_event_wait_taskgroup_begin, my_wait_taskgroup_begin, "wait_taskgroup_begin");
-  //CHECK(ompt_event_wait_taskgroup_end, my_wait_taskgroup_end, "wait_taskgroup_end");
-  //CHECK(ompt_event_release_lock, my_release_lock, "release_lock");
-//ompt_event(ompt_event_release_nest_lock_last, ompt_wait_callback_t, 18, ompt_event_release_nest_lock_implemented) /* last nest lock release */
-  //CHECK(ompt_event_release_critical, my_release_critical, "release_critical");
-  //CHECK(ompt_event_release_atomic, my_release_atomic, "release_atomic");
-  //CHECK(ompt_event_release_ordered, my_release_ordered, "release_ordered");
+  CHECK(ompt_event_wait_barrier_begin, my_wait_barrier_begin, "wait_barrier_begin");
+  CHECK(ompt_event_wait_barrier_end, my_wait_barrier_end, "wait_barrier_end");
+  CHECK(ompt_event_wait_taskwait_begin, my_wait_taskwait_begin, "wait_taskwait_begin");
+  CHECK(ompt_event_wait_taskwait_end, my_wait_taskwait_end, "wait_taskwait_end");
+  CHECK(ompt_event_wait_taskgroup_begin, my_wait_taskgroup_begin, "wait_taskgroup_begin");
+  CHECK(ompt_event_wait_taskgroup_end, my_wait_taskgroup_end, "wait_taskgroup_end");
+  CHECK(ompt_event_release_lock, my_release_lock, "release_lock");
+//ompt_event(ompt_event_release_nest_lock_last, ompt_wait_callback_t, 18, ompt_event_release_nest_lock_implem
+  CHECK(ompt_event_release_critical, my_release_critical, "release_critical");
+  CHECK(ompt_event_release_atomic, my_release_atomic, "release_atomic");
+  CHECK(ompt_event_release_ordered, my_release_ordered, "release_ordered");
 
   /* optional events, synchronous events */
-  //CHECK(ompt_event_implicit_task_create, my_task_create, "task_create");
-  //CHECK(ompt_event_implicit_task_exit, my_task_exit, "task_exit");
+  CHECK(ompt_event_implicit_task_create, my_task_create, "task_create");
+  CHECK(ompt_event_implicit_task_exit, my_task_exit, "task_exit");
   CHECK(ompt_event_barrier_begin, my_barrier_begin, "barrier_begin");
   CHECK(ompt_event_barrier_end, my_barrier_end, "barrier_end");
-  //CHECK(ompt_event_master_begin, my_master_begin, "master_begin");
-  //CHECK(ompt_event_master_end, my_master_end, "master_end");
-//ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* task switch */
-  //CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
-  //CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
-  //CHECK(ompt_event_section_begin, my_section_begin, "section_begin");
-  //CHECK(ompt_event_section_end, my_section_end, "section_end");
-  //CHECK(ompt_event_single_in_block_begin, my_single_in_block_begin, "single_in_block_begin");
-  //CHECK(ompt_event_single_in_block_end, my_single_in_block_end, "single_in_block_end");
-  //CHECK(ompt_event_single_others_begin, my_single_others_begin, "single_others_begin");
-  //CHECK(ompt_event_single_others_end, my_single_others_end, "single_others_end");
-  //CHECK(ompt_event_taskwait_begin, my_taskwait_begin, "taskwait_begin");
-  //CHECK(ompt_event_taskwait_end, my_taskwait_end, "taskwait_end");
-  //CHECK(ompt_event_taskgroup_begin, my_taskgroup_begin, "taskgroup_begin");
-  //CHECK(ompt_event_taskgroup_end, my_taskgroup_end, "taskgroup_end");
+  CHECK(ompt_event_master_begin, my_master_begin, "master_begin");
+  CHECK(ompt_event_master_end, my_master_end, "master_end");
+//ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
+  CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
+  CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
+  CHECK(ompt_event_section_begin, my_section_begin, "section_begin");
+  CHECK(ompt_event_section_end, my_section_end, "section_end");
+  CHECK(ompt_event_single_in_block_begin, my_single_in_block_begin, "single_in_block_begin");
+  CHECK(ompt_event_single_in_block_end, my_single_in_block_end, "single_in_block_end");
+  CHECK(ompt_event_single_others_begin, my_single_others_begin, "single_others_begin");
+  CHECK(ompt_event_single_others_end, my_single_others_end, "single_others_end");
+  CHECK(ompt_event_taskwait_begin, my_taskwait_begin, "taskwait_begin");
+  CHECK(ompt_event_taskwait_end, my_taskwait_end, "taskwait_end");
+  CHECK(ompt_event_taskgroup_begin, my_taskgroup_begin, "taskgroup_begin");
+  CHECK(ompt_event_taskgroup_end, my_taskgroup_end, "taskgroup_end");
 
-//ompt_event(ompt_event_release_nest_lock_prev, ompt_parallel_callback_t, 41, ompt_event_release_nest_lock_prev_implemented) /* prev nest lock release */
+//ompt_event(ompt_event_release_nest_lock_prev, ompt_parallel_callback_t, 41, ompt_event_release_nest_lock_pr
 
-  //CHECK(ompt_event_wait_lock, my_wait_lock, "wait_lock");
-//ompt_event(ompt_event_wait_nest_lock, ompt_wait_callback_t, 43, ompt_event_wait_nest_lock_implemented) /* nest lock wait */
-  //CHECK(ompt_event_wait_critical, my_wait_critical, "wait_critical");
-  //CHECK(ompt_event_wait_atomic, my_wait_atomic, "wait_atomic");
-  //CHECK(ompt_event_wait_ordered, my_wait_ordered, "wait_ordered");
+  CHECK(ompt_event_wait_lock, my_wait_lock, "wait_lock");
+//ompt_event(ompt_event_wait_nest_lock, ompt_wait_callback_t, 43, ompt_event_wait_nest_lock_implemented) /* n
+  CHECK(ompt_event_wait_critical, my_wait_critical, "wait_critical");
+  CHECK(ompt_event_wait_atomic, my_wait_atomic, "wait_atomic");
+  CHECK(ompt_event_wait_ordered, my_wait_ordered, "wait_ordered");
 
-  //CHECK(ompt_event_acquired_lock, my_acquired_lock, "acquired_lock");
-//ompt_event(ompt_event_acquired_nest_lock_first, ompt_wait_callback_t, 48, ompt_event_acquired_nest_lock_first_implemented) /* 1st nest lock acquired */
-//ompt_event(ompt_event_acquired_nest_lock_next, ompt_parallel_callback_t, 49, ompt_event_acquired_nest_lock_next_implemented) /* next nest lock acquired*/
-  //CHECK(ompt_event_acquired_critical, my_acquired_critical, "acquired_critical");
-  //CHECK(ompt_event_acquired_atomic, my_acquired_atomic, "acquired_atomic");
-  //CHECK(ompt_event_acquired_ordered, my_acquired_ordered, "acquired_ordered");
+  CHECK(ompt_event_acquired_lock, my_acquired_lock, "acquired_lock");
+//ompt_event(ompt_event_acquired_nest_lock_first, ompt_wait_callback_t, 48, ompt_event_acquired_nest_lock_fir
+//ompt_event(ompt_event_acquired_nest_lock_next, ompt_parallel_callback_t, 49, ompt_event_acquired_nest_lock_
+  CHECK(ompt_event_acquired_critical, my_acquired_critical, "acquired_critical");
+  CHECK(ompt_event_acquired_atomic, my_acquired_atomic, "acquired_atomic");
+  CHECK(ompt_event_acquired_ordered, my_acquired_ordered, "acquired_ordered");
 
-//ompt_event(ompt_event_init_lock, ompt_wait_callback_t, 53, ompt_event_init_lock_implemented) /* lock init */
-//ompt_event(ompt_event_init_nest_lock, ompt_wait_callback_t, 54, ompt_event_init_nest_lock_implemented) /* nest lock init */
-//ompt_event(ompt_event_destroy_lock, ompt_wait_callback_t, 55, ompt_event_destroy_lock_implemented) /* lock destruction */
-//ompt_event(ompt_event_destroy_nest_lock, ompt_wait_callback_t, 56, ompt_event_destroy_nest_lock_implemented) /* nest lock destruction */
+//ompt_event(ompt_event_init_lock, ompt_wait_callback_t, 53, ompt_event_init_lock_implemented) /* lock init *
+//ompt_event(ompt_event_init_nest_lock, ompt_wait_callback_t, 54, ompt_event_init_nest_lock_implemented) /* n
+//ompt_event(ompt_event_destroy_lock, ompt_wait_callback_t, 55, ompt_event_destroy_lock_implemented) /* lock 
+//ompt_event(ompt_event_destroy_nest_lock, ompt_wait_callback_t, 56, ompt_event_destroy_nest_lock_implemented
 
-//ompt_event(ompt_event_flush, ompt_thread_callback_t, 57, ompt_event_flush_implemented) /* after executing flush */
+//ompt_event(ompt_event_flush, ompt_thread_callback_t, 57, ompt_event_flush_implemented) /* after executing f
+
+  TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
+  Tau_collector_enabled = 1;
+  initializing = false;
+  initialized = true;
 
   return 1;
 }
