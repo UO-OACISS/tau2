@@ -442,11 +442,11 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 			//if ( events_read != ( size_t ) Tau_CuptiLayer_num_events )
 				//TODO error return -1;
 		
-      printf("cupti last values    %llu.\n",
-      lastDataBuffer[0]);
+      //printf("cupti last values    %llu.\n",
+      //lastDataBuffer[0]);
 
-      printf("cupti events, values %llu.\n",
-      counterDataBuffer[0]);
+      //printf("cupti events, values %llu.\n",
+      //counterDataBuffer[0]);
 		
 
 			//accumulate counter values.
@@ -622,7 +622,7 @@ const char* Tau_CuptiLayer_get_event_name(int metric_n)
 {
   const char*counter_string;
   string tag = Tau_CuptiLayer_Added_counters.at(metric_n)->tag;
-  std::cout << "counter string: " << tag.substr(0, string::npos) << std::endl;
+  //std::cout << "counter string: " << tag.substr(0, string::npos) << std::endl;
   const char * string = tag.substr(0, string::npos).c_str();
   return string;
 }
