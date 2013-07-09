@@ -2835,6 +2835,10 @@ if [ "$machine" = "apple" ] ; then
     fi
 fi
 
+if [ $ompt = yes ]; then
+  fixmakeargs="$fixmakeargs TAU_OMPT"
+fi
+
 if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
   if [ $ompt = yes -o $xlsmp = yes ]; then
     comp=`which bgxlc_r`
@@ -6720,7 +6724,7 @@ int main() {
 EOF
   $echo "Checking for __declspec(thread) support... ${nnl}"
   if $cxx_compiler $orig_useropt -c conftest_dtls.cc 1> /dev/null 2>&1 ; then
-      fixmakeargs="$fixmakeargs DSTLS_AVAILABLE"
+      fixmakeargs="$fixmakeargs DTLS_AVAILABLE"
       echo "yes"
   else
       echo "no"
