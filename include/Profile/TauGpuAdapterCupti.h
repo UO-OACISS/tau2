@@ -1,3 +1,4 @@
+#include "Profile/CuptiLayer.h"
 #include <Profile/TauGpu.h>
 #include <stdlib.h>
 
@@ -10,9 +11,9 @@ struct {
 	int length;
 	} typedef metadata_struct;
 
-std::map<uint32_t, FunctionInfo*> functionInfoMap;
 
 std::map<uint32_t, metadata_struct> deviceInfoMap;
+std::map<uint32_t, FunctionInfo *> kernelContextMap;
 
 class CuptiGpuEvent : public GpuEvent
 {
@@ -105,8 +106,8 @@ public:
 	FunctionInfo* getCallingSite() const
 	{
 		FunctionInfo *funcInfo = NULL;
-		std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap.find(correlationId);
-		if (it != functionInfoMap.end())
+		std::map<uint32_t, FunctionInfo *>::iterator it = kernelContextMap.find(correlationId);
+		if (it != kernelContextMap.end())
 		{
 			funcInfo = it->second;
 		}
