@@ -179,14 +179,14 @@ static void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 
 static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   // Use the backtrace handler if this SIGSEGV wasn't due to invalid memory access
   if (sig == SIGSEGV && si->si_code != SEGV_ACCERR) {
     tauBacktraceHandler(sig, si, context);
     return;
   }
+
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   TAU_REGISTER_CONTEXT_EVENT(evt, "Invalid memory access");
 
@@ -196,13 +196,12 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
 
   // If allocation info was found, be more informative and maybe attempt to continue
   if (alloc && TauEnv_get_memdbg_attempt_continue()) {
+    typedef TauAllocation::addr_t addr_t;
 
-    // Disable the guard page so we can resume
-    if (alloc->InUpperGuard(ptr)) {
-      alloc->DisableUpperGuard();
-    } else if (alloc->InLowerGuard(ptr)) {
-      alloc->DisableLowerGuard();
-    } else {
+    // Unprotect range so we can resume
+    size_t size = Tau_page_size();
+    addr_t addr = (addr_t)((size_t)ptr & ~(size-1));
+    if (TauAllocation::Unprotect(addr, size)) {
       Tau_backtrace_exit_with_backtrace(1,
           "TAU: Memory debugger caught invalid memory access and cannot continue. "
           "Dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n",
@@ -340,6 +339,10 @@ int Tau_signal_initialization()
   return 0;
 }
 
+#ifdef TAU_IBM_OMPT
+extern "C" void TauInitOMPT(void);
+#endif /* TAU_IBM_OMPT */
+
 extern "C" int Tau_init_initializeTAU()
 {
   //protect against reentrancy
@@ -357,6 +360,10 @@ extern "C" int Tau_init_initializeTAU()
 
   /* initialize environment variables */
   TauEnv_initialize();
+
+#ifdef TAU_IBM_OMPT
+  TauInitOMPT();
+#endif /* TAU_IBM_OMPT */
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */

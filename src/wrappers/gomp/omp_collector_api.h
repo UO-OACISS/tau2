@@ -370,6 +370,23 @@ typedef enum {
 	OMP_EVENT_THR_END_ORDERED = 20,
 	OMP_EVENT_THR_BEGIN_ATWT = 21,
 	OMP_EVENT_THR_END_ATWT = 22,
+/* Events created by UH */
+        OMP_EVENT_THR_BEGIN_CREATE_TASK = 23,
+        OMP_EVENT_THR_END_CREATE_TASK_IMM = 24,
+        OMP_EVENT_THR_END_CREATE_TASK_DEL = 25,
+        OMP_EVENT_THR_BEGIN_SCHD_TASK = 26,
+        OMP_EVENT_THR_END_SCHD_TASK = 27,
+        OMP_EVENT_THR_BEGIN_SUSPEND_TASK = 28,
+        OMP_EVENT_THR_END_SUSPEND_TASK = 29,
+        OMP_EVENT_THR_BEGIN_STEAL_TASK = 30,
+        OMP_EVENT_THR_END_STEAL_TASK = 31,
+        OMP_EVENT_THR_FETCHED_TASK = 32,
+        OMP_EVENT_THR_BEGIN_EXEC_TASK = 33,
+        OMP_EVENT_THR_BEGIN_FINISH_TASK = 34,
+        OMP_EVENT_THR_END_FINISH_TASK = 35,
+        // OMP_EVENT_THR_BEGIN_RETURN_TASK = 36,
+        // OMP_EVENT_THR_END_RETURN_TASK = 37,
+
 	    /*
 	     * implementation-specific events may be defined with any enum value
 	     * equal to or greater than OMP_EVENT_THR_RESERVED_IMPL
@@ -478,6 +495,11 @@ typedef enum {
     THR_CTWT_STATE = 9,		/* Waiting to enter critical region */
     THR_ODWT_STATE = 10,	/* Waiting to execute an ordered region */
     THR_ATWT_STATE = 11,	/* Waiting to enter an atomic region */
+    THR_TASK_CREATE_STATE = 12,        /* Creating new explicit task */
+    THR_TASK_SCHEDULE_STATE = 13,      /* Find explicit task from queue */
+    THR_TASK_SUSPEND_STATE = 14,       /* Suspending current explicit task */
+    THR_TASK_STEAL_STATE = 15, /* Stealing explicit task */
+    THR_TASK_FINISH_STATE = 16,        /* Completing explicit task */
 
     THR_LAST_STATE
 } OMP_COLLECTOR_API_THR_STATE;

@@ -535,6 +535,13 @@ void Tau_CuptiLayer_Initialize_Map()
 			exit(1);
 		}
 		//printf("found %d domains.\n", domainCount);
+    // alloc domainId array
+    size_t size = sizeof ( CUpti_EventDomainID ) * domainCount;
+    CUpti_EventDomainID *domainId = (CUpti_EventDomainID*)malloc(size);
+
+    // fill domainId
+    err = cuptiDeviceEnumEventDomains(currDevice, &size, domainId);
+    CHECK_CUPTI_ERROR( err, "cuptiDeviceEnumEventDomains" );
 	
 		for (int j=0; j<domainCount; j++)
 		{
@@ -550,11 +557,7 @@ void Tau_CuptiLayer_Initialize_Map()
 				exit(1);
 			}
 			
-			size_t size = sizeof ( CUpti_EventDomainID ) * num_domains;
-		  //printf("(2) currDevice=%d.\n", currDevice);
-			err = cuptiDeviceEnumEventDomains(currDevice, &size, &currDomain);
-			CHECK_CUPTI_ERROR( err, "cuptiDeviceEnumEventDomains" );
-			currDomain = (&currDomain)[j];
+			currDomain = domainId[j];
 
     	err = cuptiEventDomainGetNumEvents(currDomain, &eventCount);
 			CHECK_CUPTI_ERROR( err, "cuptiEventDomainGetEnumEvent" );

@@ -18,14 +18,14 @@
 extern "C" {
 #endif
 
-extern char OMP_EVENT_NAME[22][50];
+extern char OMP_EVENT_NAME[35][50];
 extern char OMP_STATE_NAME[11][50];
 
 int __omp_collector_api(void *arg);
 
 void __omp_collector_init(void);
 
-void __ompc_set_state(OMP_COLLECTOR_API_THR_STATE state);
+OMP_COLLECTOR_API_THR_STATE __ompc_set_state(OMP_COLLECTOR_API_THR_STATE state);
 void __ompc_event_callback(OMP_COLLECTORAPI_EVENT event);
 
 #ifdef __cplusplus

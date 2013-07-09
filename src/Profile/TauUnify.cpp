@@ -444,6 +444,41 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
 #endif /* TAU_UNIFY */
 
+#ifdef TAU_MPC
+extern "C" int TauInitMpcThreads(int* rank) {
+  static bool firsttime = true; 
+  if (firsttime) {
+    for (int i = 0; i < TAU_MAX_THREADS; i++) {
+      rank[i] = -1;
+    }
+    firsttime = false;
+  }
+  return 0;
+}
+
+extern "C" int TauGetMpiRank(void) {
+  static int firsttime = 1;
+  static int *rank = NULL;
+  int retval;
+
+  RtsLayer::LockDB(); 
+  int tid = RtsLayer::myThread();
+  if (firsttime) {
+    if (rank == NULL) {
+      rank = new int[TAU_MAX_THREADS]; 
+      firsttime = TauInitMpcThreads(rank);
+    }
+  }
+  if (rank[tid] == -1) {
+    PMPI_Comm_rank(MPI_COMM_WORLD, &rank[tid]);
+  }
+  retval = rank[tid];
+  RtsLayer::UnLockDB();
+
+  return retval;
+}
+#else /* !TAU_MPC */
+
 extern "C" int TauGetMpiRank(void)
 {
   int rank;
@@ -451,6 +486,7 @@ extern "C" int TauGetMpiRank(void)
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 }
+#endif /* TAU_MPC */
 #else /* !TAU_MPI */
 extern "C" int TauGetMpiRank(void) {
   return 0;

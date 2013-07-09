@@ -111,6 +111,9 @@ void Tau_cupti_onunload() {}
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
+	//Just in case we encounter a callback before TAU is intialized or finished.
+  if (!Tau_init_check_initialized() || Tau_global_getLightsOut()) { return; }
+
 	if (domain == CUPTI_CB_DOMAIN_RESOURCE)
 	{
 		//A resource was created, let us enqueue a buffer in order to capture events
