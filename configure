@@ -6715,6 +6715,9 @@ fi
 ######################################################################
 # Check for TLS, or Thread Local Storage
 ######################################################################
+
+tlsfound=no
+
 if [ $openmp = yes ] ; then
   cat <<EOF > conftest_tls.cc
 __thread int number = -1;
@@ -6726,6 +6729,7 @@ EOF
   if $cxx_compiler $orig_useropt -c conftest_tls.cc 1> /dev/null 2>&1 ; then
       fixmakeargs="$fixmakeargs TLS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6736,7 +6740,7 @@ fi
 ######################################################################
 # Check for declspec(thread) support
 ######################################################################
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] && [ $openmp = no ] ; then
   cat <<EOF > conftest_dtls.cc
 __declspec(thread) int number = -1;
 int main() {
@@ -6757,7 +6761,7 @@ fi
 ######################################################################
 # Check for pthread_getspecific() support
 ######################################################################
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] && [ $openmp = no ] ; then
   cat <<EOF > conftest_pgs.cc
 #include "pthread.h"
 static pthread_key_t key;
