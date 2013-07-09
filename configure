@@ -6740,7 +6740,7 @@ fi
 ######################################################################
 # Check for declspec(thread) support
 ######################################################################
-if [ $openmp = yes ] && [ $openmp = no ] ; then
+if [ $openmp = yes ] && [ $tlsfound = no ] ; then
   cat <<EOF > conftest_dtls.cc
 __declspec(thread) int number = -1;
 int main() {
@@ -6751,6 +6751,7 @@ EOF
   if $cxx_compiler $orig_useropt -c conftest_dtls.cc 1> /dev/null 2>&1 ; then
       fixmakeargs="$fixmakeargs DTLS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6761,7 +6762,7 @@ fi
 ######################################################################
 # Check for pthread_getspecific() support
 ######################################################################
-if [ $openmp = yes ] && [ $openmp = no ] ; then
+if [ $openmp = yes ] && [ $tlsfound = no ] ; then
   cat <<EOF > conftest_pgs.cc
 #include "pthread.h"
 static pthread_key_t key;
@@ -6779,6 +6780,7 @@ EOF
   if $cxx_compiler $orig_useropt -c conftest_pgs.cc 1> /dev/null 2>&1 ; then
       fixmakeargs="$fixmakeargs PGS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
