@@ -251,7 +251,7 @@ JDKARCH                 = linux
 #############################################
 #OPENMP#TAU_LINKER_OPT19=-ldl#ENDIF#
 
-OMPTLIB=-Wl,-rpath=/home3/khuck/src/intel-openmp-rtl/branches/ompt-support/itt/libomp_oss/tmp/lin_32e-rtl_5_nor_dyn.12.deb.40.c0.t0-hn1 /home3/khuck/src/intel-openmp-rtl/branches/ompt-support/itt/libomp_oss/tmp/lin_32e-rtl_5_nor_dyn.12.deb.40.c0.t0-hn1/libiomp5.so
+OMPTLIB=
 #TAU_OMPT#TAU_LINKER_OPT20=$(OMPTLIB) #ENDIF#
 #IBMOMPT#TAU_LINKER_OPT20=-L$(LOMPLIB) -lxllomp #ENDIF#
 
@@ -943,7 +943,6 @@ HPCTOOLKIT_LINK=
 EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 # -rdynamic doesn't exist (nor does -export-dynamic) for gcc 4.6+
-#GNU46PLUS#EXTRA_LINKER_ARGS = #ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 ##############################################
@@ -1024,7 +1023,6 @@ EBS_CLOCK_RES=
 #SGI_MPT_MPI#PROFILEOPT90= -DTAU_SGI_MPT_MPI -DTAU_MPI_F_STATUSES_IGNORE_ABSENT #ENDIF#
 #GPI#PROFILEOPT91 = -DTAU_GPI -I$(GPIDIR)/include #ENDIF#
 #GPI#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gpi/link_options.tau #ENDIF#
-#GOMP_AVAILABLE#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gomp_wrapper/link_options.tau #ENDIF#
 
 #TAU_OPENMP_NESTED#PROFILEOPT92=-DTAU_OPENMP_NESTED#ENDIF#
 
