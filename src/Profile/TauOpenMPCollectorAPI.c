@@ -60,7 +60,7 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = 
 
 static omp_lock_t writelock;
 
-int Tau_collector_enabled = 0;
+static int Tau_collector_enabled = 1;
 
 extern void Tau_disable_collector_api() {
   // if we didn't initialize the lock, we will crash...
@@ -330,7 +330,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
     Tau_global_incr_insideTAU();
 
     int tid = Tau_get_tid();
-    //TAU_VERBOSE("** Thread: %d, (i:%d b:%d p:%d w:%d o:%d t:%d) EVENT:%s **\n", tid, Tau_collector_flags[tid].idle, Tau_collector_flags[tid].busy, Tau_collector_flags[tid].parallel, Tau_collector_flags[tid].ordered_region_wait, Tau_collector_flags[tid].ordered_region, Tau_collector_flags[tid].task_exec, OMP_EVENT_NAME[event-1]); fflush(stdout); fflush(stderr);
+    //fprintf(stderr, "** Thread: %d, (i:%d b:%d p:%d w:%d o:%d t:%d) EVENT:%s **\n", tid, Tau_collector_flags[tid].idle, Tau_collector_flags[tid].busy, Tau_collector_flags[tid].parallel, Tau_collector_flags[tid].ordered_region_wait, Tau_collector_flags[tid].ordered_region, Tau_collector_flags[tid].task_exec, OMP_EVENT_NAME[event-1]); fflush(stderr);
 
     switch(event) {
         case OMP_EVENT_FORK:
@@ -709,7 +709,6 @@ int Tau_initialize_collector_api(void) {
       Tau_create_thread_state_if_necessary("OMP_TASK_FINISH");
     }
 
-    Tau_collector_enabled = 1;
     initializing = false;
     return 0;
 }
@@ -1112,7 +1111,6 @@ int ompt_initialize() {
 //ompt_event(ompt_event_flush, ompt_thread_callback_t, 57, ompt_event_flush_implemented) /* after executing f
 
   TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
-  Tau_collector_enabled = 1;
   initializing = false;
   initialized = true;
 
@@ -1125,4 +1123,9 @@ int ompt_initialize() {
 #ifndef TAU_USE_OMPT
 extern __attribute__ (( weak ))
   int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb) { return -1; };
+#endif
+
+#if defined __GNUC__
+extern __attribute__ ((weak))
+  int __omp_collector_api(void *message) { TAU_VERBOSE ("Error linking GOMP wrapper. Try using tau_exec with the -gomp option.\n"); return -1; };
 #endif
