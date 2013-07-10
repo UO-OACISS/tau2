@@ -32,8 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+extern int Tau_Global_numCounters;
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
-extern "C" int Tau_Global_numCounters;
 #define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
 #define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][TAU_MAX_COUNTERS]
 

@@ -1,3 +1,4 @@
+#include "Profile/CuptiLayer.h"
 #include <Profile/TauGpu.h>
 #include <stdlib.h>
 
@@ -14,6 +15,7 @@ std::map<uint32_t, FunctionInfo*> functionInfoMap_hostLaunch;
 std::map<int64_t, FunctionInfo*> functionInfoMap_deviceLaunch;
 
 std::map<uint32_t, metadata_struct> deviceInfoMap;
+std::map<uint32_t, FunctionInfo *> kernelContextMap;
 
 class CuptiGpuEvent : public GpuEvent
 {

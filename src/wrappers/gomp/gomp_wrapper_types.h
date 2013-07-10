@@ -1,3 +1,6 @@
+#include "omp.h"
+typedef void (*omp_set_lock_p) (omp_lock_t*);
+typedef void (*omp_set_nest_lock_p) (omp_nest_lock_t*);
 typedef void (*GOMP_barrier_p) ();
 typedef void (*GOMP_critical_start_p) ();
 typedef void (*GOMP_critical_end_p) ();
@@ -49,6 +52,7 @@ typedef void (*GOMP_parallel_start_p) (void (*)(void *), void *, unsigned int);
 typedef void (*GOMP_parallel_end_p) ();
 typedef void (*GOMP_task_p) (void (*)(void *), void *, void (*)(void *, void *), long, long, bool, unsigned int);
 typedef void (*GOMP_taskwait_p) ();
+/* taskyield is not defined until 4.7, and even then it is just a stub */
 typedef void (*GOMP_taskyield_p) ();
 typedef unsigned int (*GOMP_sections_start_p) (unsigned int);
 typedef unsigned int (*GOMP_sections_next_p) ();

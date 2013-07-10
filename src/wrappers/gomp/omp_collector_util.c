@@ -35,7 +35,7 @@
 
 typedef void (*callback) (OMP_COLLECTORAPI_EVENT e);
 
-char OMP_EVENT_NAME[35][50]= {
+char GOMP_OMP_EVENT_NAME[35][50]= {
   "OMP_EVENT_FORK",
   "OMP_EVENT_JOIN",
   "OMP_EVENT_THR_BEGIN_IDLE",
@@ -74,7 +74,7 @@ char OMP_EVENT_NAME[35][50]= {
  };
 
 
-char OMP_STATE_NAME[11][50]= {
+char OMP_STATE_NAME[16][50]= {
   "THR_OVHD_STATE",          /* Overhead */
   "THR_WORK_STATE",          /* Useful work, excluding reduction, master, single, critical */
   "THR_IBAR_STATE",          /* In an implicit barrier */
@@ -85,22 +85,21 @@ char OMP_STATE_NAME[11][50]= {
   "THR_LKWT_STATE",          /* Waiting for lock */
   "THR_CTWT_STATE",          /* Waiting to enter critical region */
   "THR_ODWT_STATE",          /* Waiting to execute an ordered region */
-  "THR_ATWT_STATE"};         /* Waiting to enter an atomic region */
+  "THR_ATWT_STATE",          /* Waiting to enter an atomic region */
+  "THR_TASK_CREATE_STATE",        /* Creating new explicit task */
+  "THR_TASK_SCHEDULE_STATE",      /* Find explicit task from queue */
+  "THR_TASK_SUSPEND_STATE",       /* Suspending current explicit task */
+  "THR_TASK_STEAL_STATE", /* Stealing explicit task */
+  "THR_TASK_FINISH_STATE"         /* Completing explicit task */
+};
 
 static callback callbacks[OMP_EVENT_THR_END_FINISH_TASK+1];
 
-union __gomp_collector_status_flags {
-  struct {
-    OMP_COLLECTOR_API_THR_STATE state;
-  };
-  char _pad[64];
-};
+__thread OMP_COLLECTOR_API_THR_STATE gomp_state = THR_IDLE_STATE;
 
 static unsigned long current_region_id;
 
 int __omp_collector_api(void *arg);
-
-static union __gomp_collector_status_flags gomp_collector_status_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
 
 static omp_lock_t init_lock;
 int collector_initialized=0;
@@ -114,75 +113,11 @@ int return_state(omp_collector_message *req);
 int return_current_prid(omp_collector_message *req);
 int return_parent_prid(omp_collector_message *req);
 
-struct message_queue_node_s {
-  omp_collector_message message;
-  struct message_queue_node_s* next;
-};
-typedef struct message_queue_node_s message_queue_node_t;
-
-typedef struct {
-  message_queue_node_t* head;
-  message_queue_node_t* tail;
-} message_queue_t;
-
-static inline void message_queue_init(message_queue_t* queue)
-{
-  queue->head = queue->tail = NULL;
-}
-
-/*
-static inline void message_queue_destroy(message_queue_t* queue)
-{
-  message_queue_node_t* head = queue->head;
-  message_queue_node_t* last_head;
-  while (head) {
-    last_head = head;
-    head = head->next;
-    free(last_head);
-  }
-}
-*/
-
-static inline omp_collector_message* message_queue_push(message_queue_t* queue)
-{
-  message_queue_node_t* new_node = (message_queue_node_t*) malloc(sizeof(message_queue_node_t));
-  new_node->next = NULL;
-  if (queue->tail) {
-    queue->tail->next = new_node;
-  } else {
-    queue->head = new_node;
-  }
-  queue->tail = new_node;
-  return &(new_node->message);
-}
-
-static inline void message_queue_pop(message_queue_t* queue, omp_collector_message* msg)
-{
-  message_queue_node_t* cur_node;
-  assert(queue->head);
-  cur_node = queue->head;
-  *msg = cur_node->message;
-  queue->head = cur_node->next;
-  if (!queue->head) {
-    queue->tail = NULL;
-  }
-  free(cur_node);
-}
-
-static inline int message_queue_empty(message_queue_t* queue)
-{
-  return queue->head == NULL;
-}
-
-
 int __omp_collector_api(void *arg)
 {
   if(arg!=NULL) {
-    message_queue_t pending_requests;
     char *traverse = (char *) arg;
 
-    message_queue_init(&pending_requests);
- 
     while((int)(*traverse)!=0) {
       omp_collector_message req;
       req.sz = (int)(*traverse); // todo: add check for consistency    
@@ -215,6 +150,7 @@ void __ompc_req_start(omp_collector_message *req)
     } // note check callback boundaries.
     omp_set_lock(&init_lock);
     collector_initialized = 1;
+    gomp_state = THR_SERIAL_STATE; // everyone is initialized to IDLE except thread 0
     omp_unset_lock(&init_lock);
     *(req->ec) = OMP_ERRCODE_OK;
   } else {
@@ -422,24 +358,25 @@ int return_state(omp_collector_message *req)
     *(req->ec) = OMP_ERRCODE_MEM_TOO_SMALL;
     return 0;
   } else {
-   
-    //omp_v_thread_t *p_vthread = __ompc_get_v_thread_by_num(__omp_myid); 
-    //*((OMP_COLLECTOR_API_THR_STATE *) req->mem) = (OMP_COLLECTOR_API_THR_STATE) p_vthread->state;
-    OMP_COLLECTOR_API_THR_STATE thread_state = gomp_collector_status_flags[omp_get_thread_num()].state;
-    switch(thread_state) {
+    *((unsigned long *)(req->mem))=gomp_state; 
+    *(req->rsz) = sizeof(OMP_COLLECTOR_API_THR_STATE)+sizeof(unsigned long);
+    *(req->ec) = OMP_ERRCODE_OK; 
+    return 1;
+/*
+    switch(gomp_state) {
   
     case THR_IBAR_STATE:
-      return return_state_id(req,thread_state);
+      return return_state_id(req,gomp_state);
     case THR_EBAR_STATE:    	      
-      return return_state_id(req,thread_state);    
+      return return_state_id(req,gomp_state);    
     case THR_LKWT_STATE:
-      return return_state_id(req,thread_state);     
+      return return_state_id(req,gomp_state);     
     case THR_CTWT_STATE:
-      return return_state_id(req,thread_state);     
+      return return_state_id(req,gomp_state);     
     case THR_ODWT_STATE:
-      return return_state_id(req,thread_state);     
+      return return_state_id(req,gomp_state);     
     case THR_ATWT_STATE:
-      return return_state_id(req,thread_state);     
+      return return_state_id(req,gomp_state);     
     default:
       *(req->rsz)=sizeof(OMP_COLLECTOR_API_THR_STATE);
       *(req->ec) = OMP_ERRCODE_OK;
@@ -447,6 +384,7 @@ int return_state(omp_collector_message *req)
       break; 
  
     }
+*/
   }
 
   return 1;
@@ -465,8 +403,7 @@ int return_current_prid(omp_collector_message *req)
     *(req->rsz)=0;
     return 0;
   } else {
-    //if(__ompc_in_parallel() || gomp_collector_status_flags[0].state!=THR_SERIAL_STATE ) {
-    if(gomp_collector_status_flags[0].state!=THR_SERIAL_STATE ) {
+    if(gomp_state!=THR_SERIAL_STATE) {
       *((unsigned long *)req->mem) = current_region_id; }
     else *((unsigned long *)req->mem) = 0;
     *(req->rsz)=sizeof(unsigned long);
@@ -488,8 +425,7 @@ int return_parent_prid(omp_collector_message *req)
     *(req->ec) = OMP_ERRCODE_MEM_TOO_SMALL;
     return 0;
   } else {
-    //if(__ompc_in_parallel() || gomp_collector_status_flags[0].state!=THR_SERIAL_STATE) {
-    if(gomp_collector_status_flags[0].state!=THR_SERIAL_STATE) {
+    if(gomp_state!=THR_SERIAL_STATE) {
       *((unsigned long *)req->mem) = current_region_id; }
     else *((unsigned long *)req->mem) = 0;   
     *(req->rsz)=sizeof(unsigned long);
@@ -504,10 +440,11 @@ void __omp_collector_init() {
   current_region_id = 0;
 }
 
-void __ompc_set_state(OMP_COLLECTOR_API_THR_STATE state)
+OMP_COLLECTOR_API_THR_STATE __ompc_set_state(OMP_COLLECTOR_API_THR_STATE state)
 {
-  gomp_collector_status_flags[omp_get_thread_num()].state = state;
-
+  OMP_COLLECTOR_API_THR_STATE previous = gomp_state;
+  gomp_state = state;
+  return previous;
 }
 void __ompc_event_callback(OMP_COLLECTORAPI_EVENT event)
 {

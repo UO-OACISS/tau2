@@ -360,6 +360,19 @@ case $1 in
 	echo "s,^PDT_CXX=.*$,PDT_CXX=$pdtcxx,g" >> $sedout
 	;;
 
+     omptlib=*)
+        omptlib=`echo $1 | sed -e 's@^omptlib=@@' -e 's@#@ @g'`
+	echo "s@^OMPTLIB=.*@OMPTLIB=$omptlib@g" >> $sedout
+	;;
+
+     lompinc=*)
+        lompinc=`echo $1 | sed -e 's@^lompinc=@@' -e 's@#@ @g'`
+	echo "s@^LOMPINC=.*@LOMPINC=$lompinc@g" >> $sedout
+	;;
+     lomplib=*)
+        lomplib=`echo $1 | sed -e 's@^lomplib=@@' -e 's@#@ @g'`
+	echo "s@^LOMPLIB=.*@LOMPLIB=$lomplib@g" >> $sedout
+	;;
      fullcxx=*)
         fullcxx=`echo $1 | sed -e 's@^fullcxx=@@' -e 's@#@ @g'`
 	echo "s@^FULL_CXX=.*@FULL_CXX=$fullcxx@g" >> $sedout
@@ -810,6 +823,10 @@ case $1 in
 	echo NOTE: Using the Open64 C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     MERCURIUM)
+	echo NOTE: Using the Mercurium C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      HITACHI)
 	echo NOTE: Using the HITACHI SR8000 MPP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -832,6 +849,14 @@ case $1 in
 	;;
      HITACHI_OPENMP)
 	echo NOTE: Using HITACHI OpenMP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_OMPT)
+	echo NOTE: Using OMPT OpenMP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     IBMOMPT)
+	echo NOTE: Using IBM OMPT OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPEN64_OPENMP)
@@ -1297,6 +1322,22 @@ case $1 in
 	;;
      OPENMP)
 	echo "NOTE: Using OpenMP Threads ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GOMP_AVAILABLE)
+	echo "NOTE: Using GOMP OpenMP Library Wrapper ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TLS_AVAILABLE)
+	echo "NOTE: __thread Using Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DTLS_AVAILABLE)
+	echo "NOTE: Using __declspec(thread) Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGS_AVAILABLE)
+	echo "NOTE: Using pthread_getspecific() Thread Local Storage (TLS) ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPARI)
