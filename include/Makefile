@@ -943,7 +943,6 @@ HPCTOOLKIT_LINK=
 EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 # -rdynamic doesn't exist (nor does -export-dynamic) for gcc 4.6+
-#GNU46PLUS#EXTRA_LINKER_ARGS = #ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 ##############################################
