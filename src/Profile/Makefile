@@ -136,11 +136,12 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o TauCallSite.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
-		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
+		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPENMP_PGS_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
-		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS)
+		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
+		$(TAU_OMPT_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -259,6 +260,7 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #NOSHARED#TAU_NULL=X #ENDIF#
 #NOSHARED#TAU_SHLIB	= #ENDIF#
 #NOSHARED#TAU_DISABLE_SHARED	= #ENDIF#
+#GOMP_AVAILABLE#TAU_DISABLE_SHARED_GOMP	= -DTAU_DISABLE_SHARED#ENDIF#
 #BGL#TAU_SHLIB	= #ENDIF#
 #BGL#TAU_DISABLE_SHARED = #ENDIF#
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
@@ -532,15 +534,16 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
                    else $(MKDIR) $(TAU_JAVA_INSTALLDIR) ;fi
-		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
+		@if [ ! -r $(INSTALLDEST)/Profile.class ] ; then \
+		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR) ; fi
 
 $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@echo Installing $? in $(INSTALLDEST)
-		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else $(MKDIR) $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) $? $(INSTALLDEST)
-		@if [ -f $(INSTALLDEST)/libTAU.jnilib ] ; then true; \
-									 else cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
+		@if [ -d $(INSTALLDEST) ] ; then true;  else $(MKDIR) $(INSTALLDEST) ;fi 
+		@if [ ! -r $(INSTALLDEST)/TauJVMTI.jar ] ; then \
+		$(TAU_INSTALL) $? $(INSTALLDEST) ; fi 
+		@if [ ! -r $(INSTALLDEST)/libTAU.jnilib ] ; then \
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
 
 $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
@@ -644,7 +647,13 @@ TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.c $(HDRS)
-	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c)
+	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
+
+TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauOpenMPCollectorAPIDisable.o  : TauOpenMPCollectorAPIDisable.c $(HDRS)
+	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -894,6 +903,9 @@ jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 
 TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
+
+TauOMPT.o 	: TauOMPT.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
 
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes

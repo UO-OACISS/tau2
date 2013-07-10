@@ -8,23 +8,14 @@ WITH PDT INSTRUMENTATION:
 - configure and build tau with: -openmp -pdt=<path-to-pdt>
 - cd examples/gomp_wrapper (this directory)
 - make
-- tau_exec -T pdt,openmp,serial -v -loadlib=./libgomp_g_wrapper/libgomp_g_wrap.so ./matmult
+- ./matmult
 
 WITHOUT PDT INSTRUMENTATION:
 ---------------------------
 
-- configure and build tau with: -openmp -bfd=download -unwind_inc=<path-to-libunwind>/include -unwind_lib=<path-to-libunwind>/lib -unwinder=libunwind
+- configure and build tau with: -openmp -bfd=download -unwind=<path-to-libunwind>
 - cd examples/gomp_wrapper (this directory)
+- edit the Makefile to change the compiler to gcc (not tau_cc.sh)
 - make
-- cd libgomp_g_wrapper
-- make
-- cd ..
-- tau_exec -T pdt,openmp,serial -v -loadlib=./libgomp_g_wrapper/libgomp_g_wrap.so ./matmult
+- tau_exec -T openmp,serial -gomp ./matmult
 
-NOTES:
------
-
-You may also have to:
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path-to-libunwind>/lib:<path-to-tau>/examples/gomp/libgomp_g_wrapper:<path-to-tau>/<arch>/lib
-
-If you prefer, you can link in the wrapper rather than preload it. See the Makefile for details.

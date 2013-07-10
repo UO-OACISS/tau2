@@ -986,11 +986,6 @@ void parseInstrumentationCommand(char *line, int lineno)
       RETRIEVESTRING(pname, line);
       WSPACE(line);
       DEBUG_MSG("got routine = %s\n", pname);
-      if (filespecified) {
-        instrumentList.push_back(new tauInstrument(string(pfile), string(pname), kind));
-      } else {
-        instrumentList.push_back(new tauInstrument(string(pname), kind));
-      }
     } else {
       parseError("<routine> token not found", line, lineno, line - original);
     }
@@ -1008,6 +1003,11 @@ void parseInstrumentationCommand(char *line, int lineno)
       } else {
         parseError("Invalid loop level: must be greater than 0\n", line, lineno, line - original);
       }
+    }
+    if (filespecified) {
+      instrumentList.push_back(new tauInstrument(string(pfile), string(pname), kind));
+    } else {
+      instrumentList.push_back(new tauInstrument(string(pname), kind));
     }
   }
   break; // END case TAU_LOOPS
