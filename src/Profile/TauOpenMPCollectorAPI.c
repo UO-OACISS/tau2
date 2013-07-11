@@ -1130,5 +1130,5 @@ extern __attribute__ (( weak ))
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE COLLECTOR API SUPPORT IS NONEXISTENT */
 #if defined __GNUC__
 extern __attribute__ ((weak))
-  int __omp_collector_api(void *message) { fprintf (stderr, "Error linking GOMP wrapper. Try using the -gomp flag with tau_exec.\n"); return -1; };
+  int __omp_collector_api(void *message) { TAU_VERBOSE ("Error linking GOMP wrapper. Try using the -gomp flag with tau_exec.\n"); return -1; };
 #endif
