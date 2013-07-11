@@ -177,6 +177,8 @@ void record_gpu_occupancy(int32_t blockX,
 void record_gpu_launch(int cId, FunctionInfo *f);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
 
+int get_device_count();
+
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
 
@@ -209,7 +211,7 @@ void record_gpu_counters_at_launch(int device)
   if (Tau_CuptiLayer_get_num_events() > 0 &&
       !counters_averaged_warning_issued[device] && 
       kernels_encountered[device] > 1) {
-    TAU_VERBOSE("Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
+    TAU_VERBOSE("TAU Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
     counters_averaged_warning_issued[device] = true;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
       Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
