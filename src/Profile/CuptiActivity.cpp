@@ -87,6 +87,8 @@ void Tau_cupti_onload()
 #endif
 #if CUDA_VERSION >= 5000
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
+#else
+	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
 #endif
 
 #if CUPTI_API_VERSION >= 3
@@ -162,8 +164,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		uint32_t stream;
 		CUptiResult err;
 		//Global Buffer
-    int device_count;
-    cuDeviceGetCount(&device_count);
+    int device_count = get_device_count();
     for (int i=0; i<device_count; i++) {
       record_gpu_counters_at_sync(i);
     }
@@ -227,8 +228,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					//cuCtxSynchronize();
 					cudaDeviceSynchronize();
 					//Tau_CuptiLayer_enable();
-          int device_count;
-          cuDeviceGetCount(&device_count);
+          int device_count = get_device_count();
           for (int i=0; i<device_count; i++) {
             record_gpu_counters_at_sync(i);
           }
@@ -295,8 +295,7 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
   CUpti_Activity *record = NULL;
 	size_t bufferSize = 0;
   
-  int device_count;
-  cuDeviceGetCount(&device_count);
+  int device_count = get_device_count();
   //start
   if (device_count > TAU_MAX_GPU_DEVICES) {
     printf("TAU ERROR: Maximum number of devices (%d) exceeded.\n", TAU_MAX_GPU_DEVICES);
@@ -593,6 +592,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       if (record->kind != CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
         record_gpu_counters(deviceId, name, id, &eventMap);
       }
+#else
+      record_gpu_counters(deviceId, name, id, &eventMap);
 #endif
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
@@ -680,6 +681,12 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	
 			//cerr << "recording metadata (device): " << device->id << endl;
 			deviceMap[device->id] = *device;
+#if CUDA_VERSION < 5000
+      if (deviceMap.size() > 1 && Tau_CuptiLayer_get_num_events() > 0)
+      {
+        TAU_VERBOSE("TAU Warning: CUDA 5.0 or greater is needed to record counters on more that one GPU device at the same time.\n");
+      }
+#endif
 			Tau_cupti_register_metadata(device->id, metadata, nMeta);
 			break;
 		}
@@ -800,7 +807,7 @@ int gpu_occupancy_available(int deviceId)
 		device.computeCapabilityMajor == 3 &&
 		device.computeCapabilityMinor > 5)
 	{
-		TAU_VERBOSE("Warning: GPU occupancy calculator is not implemented for devices of compute capability > 3.5.");
+		TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 3.5.");
 		return 0;
 	}
 	//gpu occupancy available.
@@ -828,7 +835,7 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
       last_recorded_kernel_name != NULL && 
       strcmp(last_recorded_kernel_name, name) != 0) 
   {
-    TAU_VERBOSE("Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
+    TAU_VERBOSE("TAU Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
     counters_bounded_warning_issued[device_id] = true;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
       Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
@@ -1175,6 +1182,18 @@ bool cupti_api_driver()
 {
 	return (0 == strcasecmp(TauEnv_get_cupti_api(), "driver") || 
 			0 == strcasecmp(TauEnv_get_cupti_api(), "both")); 
+}
+
+int get_device_count()
+{
+#if CUDA_VERSION >= 5000
+  int device_count;
+  cuDeviceGetCount(&device_count);
+  return device_count;
+#else
+  return 1;
+#endif
+
 }
 
 #endif //CUPTI API VERSION >= 2
