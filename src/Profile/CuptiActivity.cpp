@@ -85,7 +85,9 @@ void Tau_cupti_onload()
 #if CUDA_VERSION >= 5050
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
 #endif
+#if CUDA_VERSION >= 5000
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
+#endif
 
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
@@ -115,7 +117,7 @@ void Tau_cupti_onload()
 	//cerr << "begining timestamp: " << TauTraceGetTimeStamp(0) - ((double)timestamp/1e3) << "ms.\n" << endl;
   //Tau_cupti_set_offset(0);
 
-	Tau_gpu_init();
+  Tau_gpu_init();
 }
 
 void Tau_cupti_onunload() {}
@@ -478,7 +480,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				break;
 		}
   	case CUPTI_ACTIVITY_KIND_KERNEL:
+#if CUDA_VERSION >= 5000
   	case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
+#endif
 #if CUDA_VERSION >= 5050
   	case CUPTI_ACTIVITY_KIND_CDP_KERNEL:
 #endif

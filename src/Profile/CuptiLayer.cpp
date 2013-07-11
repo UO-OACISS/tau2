@@ -290,8 +290,12 @@ void Tau_CuptiLayer_init()
 			exit(1);
 		}
 		//printf("in Tau_CuptiLayer_init 7.\n");
-    int major;
+    int minor, major;
+#if CUDA_VERSION >= 5000
     cuDeviceGetAttribute(&major, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, device);
+#else
+    cuDeviceComputeCapability(&major, &minor, device);
+#endif
     if (major < 2)
     {
         //Events are reset on kernel launch for compute < 2.0.
