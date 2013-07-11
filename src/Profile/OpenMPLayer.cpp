@@ -104,9 +104,9 @@ int OpenMPLayer::GetTauThreadId(void)
   // if this thread has not been registered, then it does not have a TLS value for the ID
   if (_tau_thread_id == -1) {
     Tau_global_incr_insideTAU();
+    Initialize();
     omp_set_lock(&OpenMPLayer::tauRegistermutex);
     if (_thread_count > 0) {
-      Initialize();
       /* Process is already locked, call the unsafe thread creation routine. */
       _tau_thread_id = RtsLayer::_createThread();
     } else {
@@ -122,9 +122,9 @@ int OpenMPLayer::GetTauThreadId(void)
   // if this thread has not been registered, then it does not have a TLS value for the ID
   if (tmp->threadID == -1) {
     Tau_global_incr_insideTAU();
+    Initialize();
     omp_set_lock(&OpenMPLayer::tauRegistermutex);
     if (_thread_count > 0) {
-      Initialize();
       /* Process is already locked, call the unsafe thread creation routine. */
       tmp->threadID = RtsLayer::_createThread();
     } else {
