@@ -326,7 +326,6 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
     if (Tau_global_get_insideTAU() > 0) {
         return;
     }
-
     Tau_global_incr_insideTAU();
 
     int tid = Tau_get_tid();
@@ -576,7 +575,10 @@ extern int __omp_collector_api(void *);
 int Tau_initialize_collector_api(void) {
     //if (Tau_collector_api != NULL || initializing) return 0;
     if (initialized || initializing) return 0;
-    if (!TauEnv_get_collector_api_enabled()) return 0;
+    if (!TauEnv_get_collector_api_enabled()) {
+      TAU_VERBOSE("COLLECTOR API disabled.\n"); 
+      return 0;
+    }
 
     initializing = true;
 
@@ -1125,7 +1127,8 @@ extern __attribute__ (( weak ))
   int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb) { return -1; };
 #endif
 
+/* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE COLLECTOR API SUPPORT IS NONEXISTENT */
 #if defined __GNUC__
 extern __attribute__ ((weak))
-  int __omp_collector_api(void *message) { fprintf (stderr, "Error linking GOMP wrapper.\n"); return -1; };
+  int __omp_collector_api(void *message) { fprintf (stderr, "Error linking GOMP wrapper. Try using the -gomp flag with tau_exec.\n"); return -1; };
 #endif
