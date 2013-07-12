@@ -527,9 +527,7 @@ static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
-  if (env_verbose != 1) return;
-
-  {
+  if (env_verbose == 1) {
     TauInternalFunctionGuard protects_this_function;
     va_list args;
     va_start(args, format);
@@ -541,7 +539,6 @@ void TAU_VERBOSE(const char *format, ...)
 #endif
     va_end(args);
     fflush (stderr);
-
   } // END inside TAU
 }
 

@@ -228,6 +228,20 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     *wrapped = false;
   }
 
+  size_t stackSize = TauEnv_get_pthread_stack_size();
+  if (stackSize) {
+    size_t defaultSize;
+    if (pthread_attr_getstacksize(attr, &defaultSize)) {
+      TAU_VERBOSE("TAU: ERROR - failed to get default pthread stack size.\n");
+      defaultSize = 0;
+    }
+    if(pthread_attr_setstacksize(const_cast<pthread_attr_t*>(attr), stackSize)) {
+      TAU_VERBOSE("TAU: ERROR - failed to change pthread stack size from %d to %d.\n", defaultSize, stackSize);
+    } else {
+      TAU_VERBOSE("TAU: changed pthread stack size from %d to %d\n", defaultSize, stackSize);
+    }
+  }
+
   int retval;
   if(*wrapped) {
     // Another wrapper has already intercepted the call so just pass through
@@ -237,12 +251,6 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     tau_pthread_pack * pack = new tau_pthread_pack;
     pack->start_routine = start_routine;
     pack->arg = arg;
-
-    int stackSize = TauEnv_get_pthread_stack_size();
-    if (stackSize) {
-      TAU_VERBOSE("TAU: set pthread stack size to %d\n", stackSize);
-      pthread_attr_setstacksize(const_cast<pthread_attr_t*>(attr), stackSize);
-    }
 
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
     TAU_PROFILE_START(timer);
