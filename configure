@@ -6873,9 +6873,10 @@ EOF
 				fi
 				rm -f opencl.cpp opencl.o
 			fi
-			if [ $cupti = no -a -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
+			cudadir=`dirname $cudainclude`
+			if [ $cupti = no -a -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
 				tauoptions="${tauoptions}-cupti"
-				cupti="$cudainclude/../extras/CUPTI"
+				cupti="$cudadir/extras/CUPTI"
 				fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 				echo "Using CUPTI library found in $cupti."
 			fi

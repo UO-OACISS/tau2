@@ -32,6 +32,19 @@
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
 
+/* Some API calls deprecated in 5.5
+ */
+#if CUDA_VERSION >= 5050
+
+#define runtimeCorrelationId correlationId
+#define CUpti_ActivityKernel CUpti_ActivityKernel2
+
+#endif
+
+extern "C" void Tau_cupti_set_offset(
+            uint64_t timestamp
+            );
+
 extern "C" void Tau_set_context_event_name(void *ue, const char *name);
 extern "C" void Tau_write_user_event_as_metric(void *ue);
 extern "C" void * Tau_return_context_userevent(const char *name);
@@ -48,14 +61,13 @@ extern "C" void Tau_cupti_register_metadata(
 						GpuMetadata *metadata,
 						int metadata_size);
 
-extern "C" void Tau_cupti_register_calling_site(
+extern "C" void Tau_cupti_register_host_calling_site(
 						uint32_t correlationId,
 						FunctionInfo *current_function);
 
-extern "C" void Tau_cupti_register_sync_site(
-						uint32_t correlationId, 
-            uint64_t *counters,
-            int number_of_counters);
+extern "C" void Tau_cupti_register_device_calling_site(
+						int64_t correlationId,
+						const char *name);
 
 extern "C" void Tau_cupti_enter_memcpy_event(
 						const char *name,
@@ -84,7 +96,8 @@ extern "C" void Tau_cupti_register_memcpy_event(
 						double start,
 						double stop,
 						int bytes_copied,
-						int memcpy_type);
+						int memcpy_type,
+            int direction);
 
 extern "C" void Tau_cupti_register_gpu_event(
 						const char *name,
@@ -92,11 +105,12 @@ extern "C" void Tau_cupti_register_gpu_event(
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
+            int64_t parentGridId,
+            bool cdp,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes,
-						double *start,
-						double *stop,
-            int number_of_metrics);
+						double start,
+						double stop);
 
 extern "C" void Tau_cupti_register_gpu_atomic_event(
 						const char *name,
@@ -106,6 +120,8 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						uint32_t correlationId,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes);
+
+extern x_uint64 TauTraceGetTimeStamp(int tid);
 
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
@@ -148,9 +164,20 @@ typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
 eventMap_t eventMap; 
 
 int gpu_occupancy_available(int deviceId);
-void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
+
+void record_gpu_occupancy(int32_t blockX, 
+                          int32_t blockY,
+                          int32_t blockZ,
+			                    uint16_t registersPerThread,
+		                      int32_t staticSharedMemory,
+                          uint32_t deviceId,
+                          const char *name, 
+                          eventMap_t *map);
+
 void record_gpu_launch(int cId, FunctionInfo *f);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
+
+int get_device_count();
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
@@ -184,7 +211,7 @@ void record_gpu_counters_at_launch(int device)
   if (Tau_CuptiLayer_get_num_events() > 0 &&
       !counters_averaged_warning_issued[device] && 
       kernels_encountered[device] > 1) {
-    TAU_VERBOSE("Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
+    TAU_VERBOSE("TAU Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
     counters_averaged_warning_issued[device] = true;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
       Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
