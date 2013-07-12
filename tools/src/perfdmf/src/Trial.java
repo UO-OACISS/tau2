@@ -18,7 +18,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Vector;
 
 import org.xml.sax.Attributes;
@@ -1137,10 +1136,15 @@ public class Trial implements Serializable, Comparable<Trial> {
         if (!found) {
             StringBuffer sql = new StringBuffer();
             // create the column in the database
-            sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
+            sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD ");
+            if(db.getDBType().equalsIgnoreCase("oracle")){
+            	sql.append(" ( ");
+            } else{
+            	sql.append(" COLUMN ");
+            }
             sql.append(XML_METADATA);
             if (db.getDBType().equalsIgnoreCase("oracle")) {
-                sql.append(" CLOB"); // defaults to 4 GB max
+                sql.append(" CLOB)"); // defaults to 4 GB max
             } else if (db.getDBType().equalsIgnoreCase("derby")) {
                 sql.append(" CLOB"); // defaults to 1 MB max
             } else if (db.getDBType().equalsIgnoreCase("h2")) {
@@ -1175,10 +1179,15 @@ public class Trial implements Serializable, Comparable<Trial> {
         if (!found) {
             StringBuffer sql = new StringBuffer();
             // create the column in the database
-            sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD COLUMN ");
+            sql.append("ALTER TABLE " + db.getSchemaPrefix() + "trial ADD ");
+            if(db.getDBType().equalsIgnoreCase("oracle")){
+            	sql.append(" ( ");
+            } else{
+            	sql.append(" COLUMN ");
+            }
             sql.append(XML_METADATA_GZ);
             if (db.getDBType().equalsIgnoreCase("oracle")) {
-                sql.append(" BLOB"); // defaults to 4 GB max
+                sql.append(" BLOB)"); // defaults to 4 GB max
             } else if (db.getDBType().equalsIgnoreCase("derby")) {
                 sql.append(" BLOB"); // defaults to 1 MB max
             } else if (db.getDBType().equalsIgnoreCase("h2")) {
