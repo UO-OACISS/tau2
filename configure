@@ -2192,6 +2192,9 @@ cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
 cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
 
+# install post-mortem address translation tool
+cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
+
 case $machine in
     
     apple)
