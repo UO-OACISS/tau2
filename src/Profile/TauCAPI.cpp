@@ -226,12 +226,12 @@ extern "C" void Tau_stack_initialization() {
 }
 
 extern "C" int Tau_global_get_insideTAU() {
+  Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return _Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   return (TauGlobal::getInstance().getValue())->insideTAU;
 #else
-  Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 #endif
@@ -239,13 +239,13 @@ extern "C" int Tau_global_get_insideTAU() {
 
 extern "C" int Tau_global_incr_insideTAU()
 {
+  Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return ++_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   return ++(tmp->insideTAU);
 #else
-  Tau_stack_checkInit();
   Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
 
@@ -257,13 +257,13 @@ extern "C" int Tau_global_incr_insideTAU()
 
 extern "C" int Tau_global_decr_insideTAU()
 {
+  Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return --_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   return --(tmp->insideTAU);
 #else
-  Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
@@ -1337,7 +1337,7 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 extern "C" void * Tau_get_userevent(char const * name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *ue;
-  ue = new TauUserEvent(name);
+  ue = new TauUserEvent(std::string(name));
   return (void *) ue;
 }
 
@@ -1352,6 +1352,12 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
   t->TriggerEvent(data, tid);
+}
+
+extern "C" void * Tau_return_context_userevent(const char *name) {
+    TauInternalFunctionGuard protects_this_function;
+    TauContextUserEvent * ue = new TauContextUserEvent(name);
+    return (void*)ue;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1424,6 +1430,20 @@ extern "C" void Tau_set_event_name(void *ue, char *name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetName(name);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_context_event_name(void *ue, const char *name) {
+  TauInternalFunctionGuard protects_this_function;
+  TauContextUserEvent *t = (TauContextUserEvent *) ue;
+  t->SetAllEventName(name);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_write_user_event_as_metric(void *ue) {
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetWriteAsMetric(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1740,6 +1760,19 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
+void *Tau_pure_search_for_function(const char *name)
+{
+  FunctionInfo *fi = 0;
+  RtsLayer::LockDB();
+  PureMap & pure = ThePureMap();
+  PureMap::iterator it = pure.find(name);
+  if (it != pure.end()) {
+    fi = it->second;
+  }
+  RtsLayer::UnLockDB();
+  return (void *) fi;
+}
+
 /* DON'T REMOVE THIS FUNCTION! 
  * When processing samples, you cannot allocate memory!
  * That means you can't create strings!
@@ -1788,7 +1821,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 
 // This function will return a timer for the Collector API OpenMP state, if available
 // This is called by the OpenMP collector API wrapper initialization...
-extern "C" void Tau_create_thread_state_if_necessary(char *name)
+extern "C" void Tau_create_thread_state_if_necessary(const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
@@ -1806,7 +1839,7 @@ extern "C" void Tau_create_thread_state_if_necessary(char *name)
 }
 
 // This function will return a timer for the Collector API OpenMP state, if available
-FunctionInfo * Tau_create_thread_state_if_necessary(string const & name)
+FunctionInfo * Tau_create_thread_state_if_necessary_string(string const & name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;

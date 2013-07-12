@@ -482,7 +482,7 @@ int TauTraceDumpEDF(int tid) {
   
   numEvents = TheFunctionDB().size() + TheEventDB().size();
 #ifdef TAU_GPU 
-  numExtra = 14; // Added five ONESIDED msg events
+  numExtra = 16; // Added seven ONESIDED msg events
 #else
   numExtra = 9; // Number of extra events
 #endif	
@@ -521,6 +521,10 @@ int TauTraceDumpEDF(int tid) {
 	TAU_ONESIDED_MESSAGE_SEND); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_RECV\" TriggerValue\n", (long)
 	TAU_ONESIDED_MESSAGE_RECV); 
+  fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_RECIPROCAL_SEND\" TriggerValue\n", (long)
+	TAU_ONESIDED_MESSAGE_RECIPROCAL_SEND); 
+  fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_RECIPROCAL_RECV\" TriggerValue\n", (long)
+	TAU_ONESIDED_MESSAGE_RECIPROCAL_RECV); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE\" TriggerValue\n", (long)
 	TAU_ONESIDED_MESSAGE_UNKNOWN); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_ID_TriggerValueT1\" TriggerValue\n", (long)
@@ -613,6 +617,10 @@ void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int threadId)
     	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_SEND, length, threadId); 
 		else if (type == MESSAGE_RECV)
     	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, length, threadId); 
+		else if (type == MESSAGE_RECIPROCAL_SEND)
+    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECIPROCAL_SEND, length, threadId); 
+		else if (type == MESSAGE_RECIPROCAL_RECV)
+    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECIPROCAL_RECV, length, threadId); 
 		else
     	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_UNKNOWN, length, threadId); 
     TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_1, gpu->id_p1(), threadId); 

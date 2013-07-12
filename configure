@@ -779,6 +779,7 @@ dwarf=no
 java=no
 openmp=no
 ompt=no
+omptlib=
 omptenabled=no
 xlsmp=no
 ibmxlc=no
@@ -1485,10 +1486,31 @@ for arg in "$@"; do
       openmp=yes
     shift
     ;;
+
+  -omptlib=*)
+      ompt=yes
+      omptfile=`echo $arg | sed -e 's/-omptlib=//'`
+      if [ ! -f $omptfile ]
+      then
+        echo "Error: Cannot access OpenMP runtime library $omptfile"
+        exit 1
+      fi
+      # split the ompt library path
+      omptdir=${omptfile%/*}
+      if [ ! -d $omptdir ]
+      then
+        echo "Error: Cannot access directory $omptdir"
+        exit 1
+      fi
+      omptlib="-Wl,-rpath=$omptdir#$omptfile"
+    shift
+    ;;
+
   -ompt*)
       ompt=yes
     shift
     ;;
+
   -xlsmp=*)
       xlsmp=yes
       xlsmpdir=`echo $arg | sed -e 's/-xlsmp=//'`
@@ -1972,7 +1994,6 @@ else
     mpi=yes
   fi
 fi
-
 
 # -- some functions
 
@@ -2833,6 +2854,10 @@ if [ "$machine" = "apple" ] ; then
 	configure_perfexplorer
 	exit 0
     fi
+fi
+
+if [ $ompt = yes ]; then
+  fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlib"
 fi
 
 if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
@@ -4521,10 +4546,20 @@ then
     if [ "x$oshcc_var" != "x" -a $? = 0 ]
     then
       openshmem_include_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@include@g'`
-      if [ -r $openshmem_include_dir/mpp/shmem.h ] 
+      if [ -r $openshmem_include_dir/mpp/shmem.h -a -r $openshmem_include_dir/../bin/mpiexec_mpt ] 
       then
         shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
         fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+      else
+        if [ -r $oshcc_var ]
+        then 
+          openshmem=yes
+          if [ -r $openshmem_include_dir/mpp/shmem.h ] 
+          then
+            shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
+          fi
+          fixmakeargs="$fixmakeargs OPENSHMEM"
+        fi
       fi
     fi
     if [ $catamount = yes ] 
@@ -6246,7 +6281,7 @@ fi
 ######################################################################
 binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
-binutilsurl=http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/$binutilstgz
+binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 if [ "x$bfddir" = xnone ]; then
 	echo "BFD disabled."
 	turnbfdoff=yes
@@ -6261,7 +6296,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-                            curl $binutilsurl > $binutilstgz
+                            curl -L $binutilsurl > $binutilstgz
 			else 
                             wget $binutilsurl
 			fi
@@ -6680,6 +6715,9 @@ fi
 ######################################################################
 # Check for TLS, or Thread Local Storage
 ######################################################################
+
+tlsfound=no
+
 if [ $openmp = yes ] ; then
   cat <<EOF > conftest_tls.cc
 __thread int number = -1;
@@ -6691,6 +6729,7 @@ EOF
   if $cxx_compiler $orig_useropt -c conftest_tls.cc 1> /dev/null 2>&1 ; then
       fixmakeargs="$fixmakeargs TLS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6701,7 +6740,7 @@ fi
 ######################################################################
 # Check for declspec(thread) support
 ######################################################################
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] && [ $tlsfound = no ] ; then
   cat <<EOF > conftest_dtls.cc
 __declspec(thread) int number = -1;
 int main() {
@@ -6710,8 +6749,9 @@ int main() {
 EOF
   $echo "Checking for __declspec(thread) support... ${nnl}"
   if $cxx_compiler $orig_useropt -c conftest_dtls.cc 1> /dev/null 2>&1 ; then
-      fixmakeargs="$fixmakeargs DSTLS_AVAILABLE"
+      fixmakeargs="$fixmakeargs DTLS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6722,7 +6762,7 @@ fi
 ######################################################################
 # Check for pthread_getspecific() support
 ######################################################################
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] && [ $tlsfound = no ] ; then
   cat <<EOF > conftest_pgs.cc
 #include "pthread.h"
 static pthread_key_t key;
@@ -6740,6 +6780,7 @@ EOF
   if $cxx_compiler $orig_useropt -c conftest_pgs.cc 1> /dev/null 2>&1 ; then
       fixmakeargs="$fixmakeargs PGS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6832,9 +6873,10 @@ EOF
 				fi
 				rm -f opencl.cpp opencl.o
 			fi
-			if [ $cupti = no -a -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
+			cudadir=`dirname $cudainclude`
+			if [ $cupti = no -a -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
 				tauoptions="${tauoptions}-cupti"
-				cupti="$cudainclude/../extras/CUPTI"
+				cupti="$cudadir/extras/CUPTI"
 				fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 				echo "Using CUPTI library found in $cupti."
 			fi

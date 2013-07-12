@@ -178,7 +178,7 @@ transferSize, int MemcpyType)
 	//eventId c = Tau_gpu_create_gpu_event(name, id, p, NULL);
 	id->name = name;
 	id->callingSite = p;
-	Tau_gpu_register_memcpy_event(id, start/1e3, stop/1e3, transferSize, MemcpyType);
+	Tau_gpu_register_memcpy_event(id, start/1e3, stop/1e3, transferSize, MemcpyType, MESSAGE_UNKNOWN);
 }
 
 
