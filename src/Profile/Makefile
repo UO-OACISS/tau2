@@ -136,7 +136,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o TauCallSite.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
-		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
+		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPENMP_PGS_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
@@ -648,6 +648,9 @@ TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.c $(HDRS)
 	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
+
+TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauOpenMPCollectorAPIDisable.o  : TauOpenMPCollectorAPIDisable.c $(HDRS)
 	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
