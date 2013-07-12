@@ -2157,6 +2157,9 @@ if [ $errorStatus == $TRUE ] ; then
     fi
 
     evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+    if [ $revertForced == $TRUE ] ; then
+      $errorStatus = 0
+    fi
     break;
 fi
 
