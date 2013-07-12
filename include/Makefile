@@ -798,7 +798,6 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 
 TAU_LINKER_OPT4 = $(LEXTRA1)
 #HITACHI_OPENMP#TAU_LINKER_OPT4 = -lcompas -lpthreads -lc_r #ENDIF#
-#OPENMP#TAU_LINKER_OPT5 = $(TAU_OPENMP_OPTION) #ENDIF#
 
 # MALLINFO needs -lmalloc on sgi, sun 
 #SGIMP#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
@@ -1172,6 +1171,8 @@ TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 
 ## TAU TRACE INPUT LIBRARY (can build a trace converter using TAU TIL)
 TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
+
+TAU_LDFLAGS = $(TAU_OPENMP_OPTION)
 
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################

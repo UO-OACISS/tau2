@@ -352,7 +352,7 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 	
 }
 
-void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType)
+void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType, int direction)
 {
 	int task = get_task(id);
 	//printf("in Tau_gpu.\n");
@@ -378,6 +378,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 	printf("recording memcopy event.\n");
 	printf("time is: %f:%f.\n", startTime, endTime);
 	printf("kind is: %d.\n", memcpyType);
+	printf("id is: %s.\n", id->gpuIdentifier());
 #endif
 	if (memcpyType == MemcpyHtoD) {
 		stage_gpu_event(functionName, task,
@@ -432,6 +433,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 		stage_gpu_event(functionName, task,
 				startTime + id->syncOffset(), id->getCallingSite());
 		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
+	  if (TauEnv_get_tracing() && direction == MESSAGE_RECIPROCAL_SEND) {
+		  TauTraceOneSidedMsg(direction, id, transferSize, task);
+	  }
 		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{
 			counted_memcpys++;
@@ -447,6 +451,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 		//TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
 		break_gpu_event(functionName, task,
 				endTime + id->syncOffset(), id->getCallingSite());
+	  if (TauEnv_get_tracing() && direction == MESSAGE_RECIPROCAL_RECV) {
+		TauTraceOneSidedMsg(direction, id, transferSize, task);
+	  }
 	}
 
 }

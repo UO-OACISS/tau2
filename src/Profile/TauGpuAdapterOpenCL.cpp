@@ -227,7 +227,7 @@ transferSize, int MemcpyType)
 	//printf("locked for: %s.\n", name);
 	//FunctionInfo* p;
 	//eventId evId = Tau_gpu_create_gpu_event(name, gId, parent, map);
-	Tau_gpu_register_memcpy_event(evId, start/1e3, stop/1e3, transferSize, MemcpyType);
+	Tau_gpu_register_memcpy_event(evId, start/1e3, stop/1e3, transferSize, MemcpyType, MESSAGE_UNKNOWN);
 	//printf("released for: %s.\n", name);
 	release_callback();
 
