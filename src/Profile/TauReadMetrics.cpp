@@ -322,10 +322,16 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 #define CPU_THREAD 0
 
 double gpu_timestamp[TAU_MAX_THREADS];
+double gpu_counterstamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
 
-extern "C" void metric_set_gpu_timestamp(int tid, double value)
+extern "C" void metric_set_gpu_timestamp(int tid, int idx, double value)
 {
 	gpu_timestamp[tid] = value;
+}
+
+extern "C" void metric_set_gpu_counterstamp(int tid, int idx, double value)
+{
+	gpu_counterstamp[tid][idx] = value;
 }
 
 void metric_read_cudatime(int tid, int idx, double values[]) {
@@ -345,18 +351,18 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   else
   {
     values[idx] = gpu_timestamp[tid];
+    //values[idx] = gpu_timestamp[tid][1];
   }
 }
 
 #ifdef CUPTI
 void metric_read_cupti(int tid, int idx, double values[])
 {
-
-	//printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_is_initialized());
-	//printf("requesting counter id: %d.\n", idx);
-	uint64_t counterData = Tau_CuptiLayer_read_counter(idx);
-
-	values[idx] = (double) counterData;
-	//printf("cupti value %d is: %lf.\n", idx, values[idx]);
+  if (!Tau_is_thread_fake(tid))
+  { 
+    values[idx] = 0;
+  } else {
+    values[idx] = gpu_counterstamp[tid][Tau_CuptiLayer_get_cupti_event_id(idx)];
+  }
 }
 #endif //CUPTI
