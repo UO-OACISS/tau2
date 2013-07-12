@@ -11,7 +11,7 @@
 int * objopen_counter()
 {
   static int count = 0;
-  return &flag;
+  return &count;
 }
 
 // This auditor supports all API versions.

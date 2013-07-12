@@ -244,7 +244,7 @@ void set_objopen_counter(int value)
 }
 
 extern "C"
-void Tau_bfd_register_objopen_counter(int * (*)(void) handle)
+void Tau_bfd_register_objopen_counter(objopen_counter_t handle)
 {
   objopen_counter = handle;
 }
@@ -446,8 +446,6 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
 
   TauBfdUnit * unit = ThebfdUnits()[handle];
 
-  if (unit->objopen_counter != get_objopen_counter())
-
   unit->ClearMaps();
   unit->ClearModules();
 
@@ -459,7 +457,7 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
   Tau_bfd_internal_updateProcSelfMaps(unit);
 #endif
 
-  AddressMapsAreStale() = 0;
+  unit->objopen_counter = get_objopen_counter();
 
   TAU_VERBOSE("Tau_bfd_updateAddressMaps: %d modules discovered\n", unit->modules.size());
 }
@@ -555,7 +553,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   unsigned long addr0;
   unsigned long addr1;
 
-  if (AddressMapsAreStale()) {
+  if (unit->objopen_counter != get_objopen_counter()) {
     Tau_bfd_updateAddressMaps(handle);
   }
 
