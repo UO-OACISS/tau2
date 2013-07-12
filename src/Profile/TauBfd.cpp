@@ -543,7 +543,7 @@ static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
 // Probe for BFD information given a single address.
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, TauBfdInfo & info)
 {
-  if (!Tau_bfd_checkHandle(handle)) {
+  if (!TauEnv_get_bfd_lookup() || !Tau_bfd_checkHandle(handle)) {
     info.secure(probeAddr);
     return false;
   }
@@ -896,7 +896,6 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // TauBfdInfo fields without an extra copy.  This also means
   // that the pointers in TauBfdInfo must never be deleted
   // since they point directly into the module's BFD.
-  if (TauEnv_get_bfd_lookup()) {
 #if TAU_BFD >= 022200
   data.found = bfd_find_nearest_line_discriminator(bfdptr, section,
       data.module->syms, (data.info.probeAddr - vma),
@@ -908,7 +907,6 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
       &data.info.filename, &data.info.funcname,
       (unsigned int*)&data.info.lineno);
 #endif
-  }
 }
 
 #endif /* TAU_BFD */
