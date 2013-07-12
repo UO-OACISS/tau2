@@ -173,8 +173,12 @@ static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
 #endif
 
-#ifdef TAU_USE_TLS
+#if defined (TAU_USE_TLS)
 __thread int _Tau_global_insideTAU = 0;
+#elif defined (TAU_USE_DTLS)
+__declspec(thread) int _Tau_global_insideTAU = 0;
+#elif defined (TAU_USE_PGS)
+#include "TauPthreadGlobal.h"
 #endif
 
 int lightsOut = 0;
@@ -222,34 +226,44 @@ extern "C" void Tau_stack_initialization() {
 }
 
 extern "C" int Tau_global_get_insideTAU() {
-#ifdef TAU_USE_TLS
-  return _Tau_global_insideTAU;
-#endif
   Tau_stack_checkInit();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
+  return _Tau_global_insideTAU;
+#elif defined(TAU_USE_PGS)
+  return (TauGlobal::getInstance().getValue())->insideTAU;
+#else
   int tid = RtsLayer::unsafeLocalThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
+#endif
 }
 
 extern "C" int Tau_global_incr_insideTAU()
 {
-#ifdef TAU_USE_TLS
-  return ++_Tau_global_insideTAU;
-#endif
   Tau_stack_checkInit();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
+  return ++_Tau_global_insideTAU;
+#elif defined(TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  return ++(tmp->insideTAU);
+#else
   Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
   *insideTAU = *insideTAU + 1;
   return *insideTAU;
+#endif
 }
 
 extern "C" int Tau_global_decr_insideTAU()
 {
-#ifdef TAU_USE_TLS
-  return --_Tau_global_insideTAU;
-#endif
   Tau_stack_checkInit();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
+  return --_Tau_global_insideTAU;
+#elif defined(TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  return --(tmp->insideTAU);
+#else
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
@@ -258,6 +272,7 @@ extern "C" int Tau_global_decr_insideTAU()
 
   if (*insideTAU == 0) Tau_memory_wrapper_enable();
   return *insideTAU;
+#endif
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
@@ -669,6 +684,18 @@ extern "C" int Tau_stop_current_timer_task(int tid)
 
   if (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
     Profiler * profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    /* We might have an inconstant stack because of throttling. If one thread
+     * throttles a routine while it is on the top of the stack of another thread
+     * it will remain there until a stop is called on its parent. Check for this
+     * condition before printing a overlap error message. */
+    while (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask() && 
+          (Tau_thread_flags[tid].Tau_global_stackpos >= 0))
+    {
+      profiler->Stop();
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    }
+
     FunctionInfo * functionInfo = profiler->ThisFunction;
     return Tau_stop_timer(functionInfo, tid);
   }
@@ -1310,7 +1337,7 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 extern "C" void * Tau_get_userevent(char const * name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *ue;
-  ue = new TauUserEvent(name);
+  ue = new TauUserEvent(std::string(name));
   return (void *) ue;
 }
 
@@ -1325,6 +1352,12 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
   t->TriggerEvent(data, tid);
+}
+
+extern "C" void * Tau_return_context_userevent(const char *name) {
+    TauInternalFunctionGuard protects_this_function;
+    TauContextUserEvent * ue = new TauContextUserEvent(name);
+    return (void*)ue;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1397,6 +1430,20 @@ extern "C" void Tau_set_event_name(void *ue, char *name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetName(name);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_set_context_event_name(void *ue, const char *name) {
+  TauInternalFunctionGuard protects_this_function;
+  TauContextUserEvent *t = (TauContextUserEvent *) ue;
+  t->SetAllEventName(name);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_write_user_event_as_metric(void *ue) {
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *t = (TauUserEvent *) ue;
+  t->SetWriteAsMetric(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1713,6 +1760,19 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
+void *Tau_pure_search_for_function(const char *name)
+{
+  FunctionInfo *fi = 0;
+  RtsLayer::LockDB();
+  PureMap & pure = ThePureMap();
+  PureMap::iterator it = pure.find(name);
+  if (it != pure.end()) {
+    fi = it->second;
+  }
+  RtsLayer::UnLockDB();
+  return (void *) fi;
+}
+
 /* DON'T REMOVE THIS FUNCTION! 
  * When processing samples, you cannot allocate memory!
  * That means you can't create strings!
@@ -1761,7 +1821,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 
 // This function will return a timer for the Collector API OpenMP state, if available
 // This is called by the OpenMP collector API wrapper initialization...
-extern "C" void Tau_create_thread_state_if_necessary(char *name)
+extern "C" void Tau_create_thread_state_if_necessary(const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
@@ -1779,7 +1839,7 @@ extern "C" void Tau_create_thread_state_if_necessary(char *name)
 }
 
 // This function will return a timer for the Collector API OpenMP state, if available
-FunctionInfo * Tau_create_thread_state_if_necessary(string const & name)
+FunctionInfo * Tau_create_thread_state_if_necessary_string(string const & name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;

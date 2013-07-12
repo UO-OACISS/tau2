@@ -92,6 +92,9 @@
 #ifndef HAVE_POSIX_MEMALIGN
 #if defined(TAU_WINDOWS) || (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ +0 < 1060))
 #undef HAVE_POSIX_MEMALIGN
+#ifndef ENOMEM
+#define ENOMEM 12
+#endif /* ENOMEM defined */
 #elif (_POSIX_C_SOURCE >= 200112L) || (_XOPEN_SOURCE >= 600)
 #define HAVE_POSIX_MEMALIGN 1
 #endif

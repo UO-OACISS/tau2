@@ -210,7 +210,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   if (TauEnv_get_ebs_enabled() &&
       !strstr(ProfileGroupName, "TAU_SAMPLE") &&
       !strstr(ProfileGroupName, "TAU_INTERMEDIATE") &&
-      !strstr(ProfileGroupName, "TAU_OMP_STATE") &&
+      //!strstr(ProfileGroupName, "TAU_OMP_STATE") &&
       !strstr(ProfileGroupName, "TAU_UNWIND"))
   {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {

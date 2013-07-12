@@ -289,7 +289,7 @@ int main(int argc, char **argv)
 			
 			if (Tau_CuptiLayer_Counter_Map.count(*it) > 0)
 			{
-				CuptiCounterEvent* ev = Tau_CuptiLayer_Counter_Map.find(*it)->second;
+				CuptiCounterEvent *ev = Tau_CuptiLayer_Counter_Map.find(*it)->second;
 				//ev->print();
 				tags_added.push_back(*it);
 				counters_added.push_back(ev);

@@ -67,6 +67,10 @@ using namespace std;
 
 /* If we are using OpenMP and the collector API */
 #define TAU_COLLECTOR_API_DEFAULT 1
+#define TAU_COLLECTOR_API_STATES_DEFAULT 0
+#define TAU_COLLECTOR_API_CONTEXT_TIMER "timer"
+#define TAU_COLLECTOR_API_CONTEXT_REGION "region"
+#define TAU_COLLECTOR_API_CONTEXT_NONE "none"
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
@@ -144,6 +148,8 @@ using namespace std;
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
+#define TAU_BFD_LOOKUP 1
+
 // Memory debugging environment variable defaults
 #define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  0
 #define TAU_MEMDBG_PROTECT_BELOW_DEFAULT  0
@@ -160,6 +166,9 @@ using namespace std;
 #endif
 #define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
 #define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 0
+
+// pthread stack size default
+#define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -468,6 +477,8 @@ static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_collector_api_enabled = 0;
+static int env_collector_api_states_enabled = 0;
+static int env_collector_api_context = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
@@ -487,6 +498,7 @@ static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 
 static int env_mic_offload = 0;
+static int env_bfd_lookup = 0;
 
 static int env_memdbg = 0;
 static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
@@ -509,6 +521,8 @@ static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
+static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
+
 #ifdef TAU_GPI 
 #include <GPI.h>
 #include <GpiLogger.h>
@@ -518,9 +532,7 @@ static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
-  if (env_verbose != 1) return;
-
-  {
+  if (env_verbose == 1) {
     TauInternalFunctionGuard protects_this_function;
     va_list args;
     va_start(args, format);
@@ -532,7 +544,6 @@ void TAU_VERBOSE(const char *format, ...)
 #endif
     va_end(args);
     fflush (stderr);
-
   } // END inside TAU
 }
 
@@ -713,6 +724,14 @@ int TauEnv_get_collector_api_enabled() {
   return env_collector_api_enabled;
 }
 
+int TauEnv_get_collector_api_states_enabled() {
+  return env_collector_api_states_enabled;
+}
+
+int TauEnv_get_collector_api_context() {
+  return env_collector_api_context;
+}
+
 int TauEnv_get_ebs_unwind() {
   return env_ebs_unwind_enabled;
 }
@@ -749,6 +768,11 @@ const char* TauEnv_get_cuda_instructions(){
 int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
+
+int TauEnv_get_bfd_lookup(){
+  return env_bfd_lookup;
+}
+
 int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
@@ -815,6 +839,10 @@ int TauEnv_get_memdbg_zero_malloc() {
 
 int TauEnv_get_memdbg_attempt_continue() {
   return env_memdbg_attempt_continue;
+}
+
+int TauEnv_get_pthread_stack_size() {
+  return env_pthread_stack_size;
 }
 
 
@@ -1003,6 +1031,15 @@ void TauEnv_initialize()
       }
 
     } // if (env_memdbg)
+
+    tmp = getconf("TAU_PTHREAD_STACK_SIZE");
+    if (tmp) {
+      env_pthread_stack_size = atoi(tmp);
+      if (env_pthread_stack_size) {
+        TAU_VERBOSE("TAU: pthread stack size = %d\n", env_pthread_stack_size);
+        TAU_METADATA("TAU_PTHREAD_STACK_SIZE", tmp);
+      }
+    }
 
     tmp = getconf("TAU_TRACK_IO_PARAMS");
     if (parse_bool(tmp, env_track_memory_headroom)) {
@@ -1368,6 +1405,33 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_COLLECTOR_API", "off");
     }
 
+    tmp = getconf("TAU_COLLECTOR_API_STATES");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_STATES_DEFAULT) == 0) {
+      env_collector_api_states_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API States Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "off");
+    } else {
+      env_collector_api_states_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API States Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "on");
+    }
+
+    env_collector_api_context = 2; // the region is the default
+    const char *apiContext = getconf("TAU_COLLECTOR_API_CONTEXT");
+    if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_TIMER)) {
+      env_collector_api_context = 1;
+      TAU_VERBOSE("TAU: Collector API Context will be the current timer\n");
+      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "timer");
+    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_REGION)) {
+      env_collector_api_context = 2;
+      TAU_VERBOSE("TAU: Collector API Context will be the current parallel region\n");
+      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "region");
+    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_NONE)) {
+      env_collector_api_context = 0;
+      TAU_VERBOSE("TAU: Collector API Context none\n");
+      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "none");
+    }
+
     tmp = getconf("TAU_SAMPLING");
     if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
       env_ebs_enabled = 1;
@@ -1548,6 +1612,17 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: MIC offloading Enabled\n");
       TAU_METADATA("TAU_MIC_OFFLOAD", "on");
 		}
+
+    tmp = getconf("TAU_BFD_LOOKUP");
+    if (parse_bool(tmp, TAU_BFD_LOOKUP)) {
+      env_bfd_lookup = 1;
+      TAU_VERBOSE("TAU: BFD Lookup Enabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "on");
+    } else {
+      env_bfd_lookup = 0;
+      TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "off");
+    }
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

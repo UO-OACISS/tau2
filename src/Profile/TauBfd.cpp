@@ -17,7 +17,9 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
 #include <bfd.h>
+#if TAU_BFD >= 022300
 #include <elf-bfd.h>
+#endif
 #include <dirent.h>
 #include <stdint.h>
 
@@ -93,8 +95,10 @@ struct TauBfdModule
       return (bfdOpen = false);
     }
 
+#if TAU_BFD >= 022200
     // Decompress sections
     bfdImage->flags |= BFD_DECOMPRESS;
+#endif
 
     if (!bfd_check_format(bfdImage, bfd_object)) {
       TAU_VERBOSE("loadSymbolTable: bfd format check failed [%s]\n", path);
@@ -494,9 +498,7 @@ static char const * Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * fu
 }
 
 static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
-  char hex_pc_string[100];
-  sprintf(hex_pc_string, "%p", pc);
-  pc = bfd_scan_vma(hex_pc_string, NULL, 16);
+#if TAU_BFD >= 022300
   if (bfd_get_flavour(bfdImage) == bfd_target_elf_flavour) {
     const struct elf_backend_data * bed = get_elf_backend_data(bfdImage);
     bfd_vma sign = (bfd_vma) 1 << (bed->s->arch_size - 1);
@@ -505,6 +507,7 @@ static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
       pc = (pc ^ sign) - sign;
     }
   }
+#endif
   return pc;
 }
 
@@ -845,7 +848,7 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   if (data.found) return;
 
   // Skip this section if it isn't a debug info section
-  //if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
+  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
 
   // Skip this section if the address is before the section start
   bfd_vma vma = bfd_get_section_vma(bfdptr, section);
@@ -860,10 +863,19 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // TauBfdInfo fields without an extra copy.  This also means
   // that the pointers in TauBfdInfo must never be deleted
   // since they point directly into the module's BFD.
+  if (TauEnv_get_bfd_lookup()) {
+#if TAU_BFD >= 022200
   data.found = bfd_find_nearest_line_discriminator(bfdptr, section,
       data.module->syms, (data.info.probeAddr - vma),
       &data.info.filename, &data.info.funcname,
       (unsigned int*)&data.info.lineno, &data.info.discriminator);
+#else
+  data.found = bfd_find_nearest_line(bfdptr, section,
+      data.module->syms, (data.info.probeAddr - vma),
+      &data.info.filename, &data.info.funcname,
+      (unsigned int*)&data.info.lineno);
+#endif
+  }
 }
 
 #endif /* TAU_BFD */
