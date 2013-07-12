@@ -103,32 +103,38 @@
 using namespace std;
 using namespace tau;
 
-extern FunctionInfo * Tau_create_thread_state_if_necessary(int tid, const string & thread_state);
+extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
 
-#if 0 // disabled for now -- no state tracking
-static char const * _gTauOmpStatesArray[12] = {
-  "OMP UNKNOWN",
-  "OMP OVERHEAD",
-  "OMP WORKING",
-  "OMP IMPLICIT BARRIER",
-  "OMP EXPLICIT BARRIER",
-  "OMP IDLE",
-  "OMP SERIAL",
-  "OMP REDUCTION",
-  "OMP LOCK WAIT",
-  "OMP CRITICAL WAIT",
-  "OMP ORDERED WAIT",
-  "OMP ATOMIC WAIT",
+#if 1 // disabled for now -- no state tracking
+static string _gTauOmpStatesArray[17] = {
+  "OMP_UNKNOWN",
+  "OMP_OVERHEAD",
+  "OMP_WORKING",
+  "OMP_IMPLICIT_BARRIER",
+  "OMP_EXPLICIT_BARRIER",
+  "OMP_IDLE",
+  "OMP_SERIAL",
+  "OMP_REDUCTION",
+  "OMP_LOCK_WAIT",
+  "OMP_CRITICAL_WAIT",
+  "OMP_ORDERED_WAIT",
+  "OMP_ATOMIC_WAIT",
+  "OMP_TASK_CREATE",
+  "OMP_TASK_SCHEDULE",
+  "OMP_TASK_SUSPEND",
+  "OMP_TASK_STEAL",
+  "OMP_TASK_FINISH"
 };
 
-static std::string gTauOmpStates(int index)
+static const string & gTauOmpStates(int index)
 {
-  if (index >= 1 && index <= 11) {
+  if (index >= 1 && index <= 16) {
     return _gTauOmpStatesArray[index];
   }
   return _gTauOmpStatesArray[0];
 }
+
 #endif
 
 /*
@@ -722,7 +728,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       if (childName) {
         sprintf(buff, "[%s] [%s] [@] UNRESOLVED %s", tag, childName, mapName);
       } else {
-        sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+	if (TauEnv_get_bfd_lookup()) {
+          sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+        } else {
+          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, addr);
+        }
       }
       // TODO: Leak?
       *newShortName = strdup("UNRESOLVED");
@@ -1086,9 +1096,6 @@ void Tau_sampling_finalizeProfile(int tid)
   TAU_METADATA(tmpname, tmpstr);
 }
 
-extern FunctionInfo * Tau_create_thread_state_if_necessary(const string & thread_state);
-extern "C" int Tau_get_thread_omp_state(int tid);
-
 void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
 
   Profiler * profiler = TauInternal_CurrentProfiler(tid);
@@ -1167,20 +1174,23 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     //printf("tid = %d, sampling previousTimestamp = %llu, period = %d\n", tid, previousTimestamp[localIndex + i], ebsPeriod); fflush(stdout);
   }
   //printf("tid = %d, Delta = %f, period = %d\n", tid, deltaValues[0], ebsPeriod); fflush(stdout);
-  samplingContext->addPcSample(pcStack, tid, deltaValues);
-#if 0
 #ifdef TAU_OPENMP
-  // get the thread state, too!
-  int thread_state = 0;
-  thread_state = Tau_get_thread_omp_state(tid);
-  if (thread_state >= 0) {
-    // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
-	// Instead, it will look it up and return the ones we created during
-	// the OpenMP Collector API initialization.
-    FunctionInfo *stateContext = Tau_create_thread_state_if_necessary(gTauOmpStates(thread_state));
-    stateContext->addPcSample(pcStack, tid, deltaValues);
+  if (TauEnv_get_collector_api_states_enabled() == 1) {
+    // get the thread state, too!
+    int thread_state = 0;
+    thread_state = Tau_get_thread_omp_state(tid);
+    if (thread_state >= 0) {
+      // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
+      // Instead, it will look it up and return the ones we created during
+      // the OpenMP Collector API initialization.
+      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(gTauOmpStates(thread_state));
+      stateContext->addPcSample(pcStack, tid, deltaValues);
+    }
+  } else {
+    samplingContext->addPcSample(pcStack, tid, deltaValues);
   }
-#endif
+#else
+  samplingContext->addPcSample(pcStack, tid, deltaValues);
 #endif
 }
 

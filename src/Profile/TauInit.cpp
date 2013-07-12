@@ -89,46 +89,6 @@ int dl_initialized = 1;
 #endif
 
 
-
-static void wrap_up(int sig)
-{
-  void * array[10];
-  size_t size;
-
-#ifdef TAU_EXECINFO
-  // get void*'s for all entries on the stack
-  size = backtrace(array, 10);
-#endif /* TAU_EXECINFO = !(_AIX || sun || windows) */
-
-  // print out all the frames to stderr
-  fprintf(stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
-
-#ifdef TAU_EXECINFO
-  backtrace_symbols_fd(array, size, 2);
-#endif /* TAU_EXECINFO */
-  TAU_PROFILE_EXIT("signal");
-  fprintf(stderr, "TAU: done.\n");
-  exit(1);
-}
-
-
-#ifndef TAU_WINDOWS
-static void tauInitializeKillHandlers()
-{
-  signal(SIGINT, wrap_up);
-  signal(SIGQUIT, wrap_up);
-  signal(SIGILL, wrap_up);
-  signal(SIGFPE, wrap_up);
-  signal(SIGBUS, wrap_up);
-  signal(SIGTERM, wrap_up);
-  signal(SIGABRT, wrap_up);
-  signal(SIGSEGV, wrap_up);
-#ifndef TAU_UPC
-  signal(SIGCHLD, wrap_up);
-#endif
-}
-#endif
-
 #ifndef TAU_DISABLE_SIGUSR
 
 static void tauSignalHandler(int sig)
@@ -411,12 +371,6 @@ extern "C" int Tau_init_initializeTAU()
   if (TauEnv_get_compensate()) {
     Tau_compensate_initialization();
   }
-#ifndef TAU_WINDOWS
-  /* initialize signal handlers to flush the trace buffer */
-  if (TauEnv_get_tracing()) {
-    tauInitializeKillHandlers();
-  }
-#endif
   /* initialize sampling if requested */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
   if (TauEnv_get_ebs_enabled()) {
