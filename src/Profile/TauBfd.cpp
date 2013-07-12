@@ -559,7 +559,6 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
 
   // Discover if we are searching in the executable or a module
   int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probeAddr);
-printf("%p: matchingIdx: %d\n", probeAddr, matchingIdx);
   if (matchingIdx != -1) {
     if (!Tau_bfd_internal_loadSymTab(unit, matchingIdx)) {
       info.secure(probeAddr);
