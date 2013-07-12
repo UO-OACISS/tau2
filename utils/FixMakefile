@@ -360,6 +360,11 @@ case $1 in
 	echo "s,^PDT_CXX=.*$,PDT_CXX=$pdtcxx,g" >> $sedout
 	;;
 
+     omptlib=*)
+        omptlib=`echo $1 | sed -e 's@^omptlib=@@' -e 's@#@ @g'`
+	echo "s@^OMPTLIB=.*@OMPTLIB=$omptlib@g" >> $sedout
+	;;
+
      lompinc=*)
         lompinc=`echo $1 | sed -e 's@^lompinc=@@' -e 's@#@ @g'`
 	echo "s@^LOMPINC=.*@LOMPINC=$lompinc@g" >> $sedout
@@ -844,6 +849,10 @@ case $1 in
 	;;
      HITACHI_OPENMP)
 	echo NOTE: Using HITACHI OpenMP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_OMPT)
+	echo NOTE: Using OMPT OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      IBMOMPT)

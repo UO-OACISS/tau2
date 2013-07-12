@@ -7,8 +7,11 @@ void __attribute__ ((destructor)) taupreload_fini(void);
 #include <stdlib.h>
 
 void taupreload_init() {
-  Tau_create_top_level_timer_if_necessary();
-  TAU_PROFILE_SET_NODE(0);
+//We can not include this check. Build applications with -optShared to work around
+//  if (Tau_init_check_dl_initialized()) {
+    Tau_create_top_level_timer_if_necessary();
+    TAU_PROFILE_SET_NODE(0);
+//  }
 }
 
 void taupreload_fini() {
