@@ -90,6 +90,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_instructions();
   int TAUDECL TauEnv_get_mic_offload();
+  int TAUDECL TauEnv_get_bfd_lookup();
 
   int  TAUDECL TauEnv_get_profile_format();
   int  TAUDECL TauEnv_get_sigusr1_action();

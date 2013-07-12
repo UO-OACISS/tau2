@@ -728,7 +728,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       if (childName) {
         sprintf(buff, "[%s] [%s] [@] UNRESOLVED %s", tag, childName, mapName);
       } else {
-        sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+	if (TauEnv_get_bfd_lookup()) {
+          sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+        } else {
+          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, addr);
+        }
       }
       // TODO: Leak?
       *newShortName = strdup("UNRESOLVED");
