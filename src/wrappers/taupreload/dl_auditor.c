@@ -46,7 +46,7 @@ void la_preinit(uintptr_t *cookie)
     if ((err = dlerror())) {
       printf("TAU: ERROR obtaining symbol info in auditor: %s\n", err);
     } else {
-      Tau_init_dl_initialized_h();
+      Tau_init_dl_initialized();
       Tau_bfd_register_objopen_counter(objopen_counter);
     }
     dlclose(tau_so);
