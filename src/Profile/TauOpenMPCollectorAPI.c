@@ -663,6 +663,10 @@ int Tau_initialize_collector_api(void) {
     /*test for request of all events*/
     int i;
     int num_req=OMP_EVENT_THR_END_FINISH_TASK; /* last event */
+    if (!TauEnv_get_collector_api_events_enabled()) {
+	  // if events are disabled, only do the 4 major ones
+	  num_req = OMP_EVENT_THR_END_IDLE;
+	}
     int register_sz = sizeof(OMP_COLLECTORAPI_EVENT)+sizeof(void *);
     int mes_size = OMP_COLLECTORAPI_HEADERSIZE+register_sz;
     message = (void *) malloc(num_req*mes_size+sizeof(int));
