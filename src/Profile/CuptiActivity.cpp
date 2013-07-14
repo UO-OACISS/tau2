@@ -82,7 +82,14 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
 	
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
+#if CUDA_VERSION >= 5050
+	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
+#endif
+#if CUDA_VERSION >= 5000
+	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
+#else
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+#endif
 
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
@@ -104,7 +111,15 @@ void Tau_cupti_onload()
 	
   CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
 
-	Tau_gpu_init();
+  uint64_t timestamp;
+  err = cuptiGetTimestamp(&timestamp);
+	CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
+  Tau_cupti_set_offset(TauTraceGetTimeStamp(0) - ((double)timestamp / 1e3));
+  //Tau_cupti_set_offset((-1) * timestamp / 1e3);
+	//cerr << "begining timestamp: " << TauTraceGetTimeStamp(0) - ((double)timestamp/1e3) << "ms.\n" << endl;
+  //Tau_cupti_set_offset(0);
+
+  Tau_gpu_init();
 }
 
 void Tau_cupti_onunload() {}
@@ -149,8 +164,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		uint32_t stream;
 		CUptiResult err;
 		//Global Buffer
-    int device_count;
-    cuDeviceGetCount(&device_count);
+    int device_count = get_device_count();
     for (int i=0; i<device_count; i++) {
       record_gpu_counters_at_sync(i);
     }
@@ -179,7 +193,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					count, getMemcpyType(kind)
 				);
 				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				//record_gpu_launch(cbInfo->correlationId, p);
+				Tau_cupti_register_host_calling_site(cbInfo->correlationId, p);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -214,8 +228,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					//cuCtxSynchronize();
 					cudaDeviceSynchronize();
 					//Tau_CuptiLayer_enable();
-          int device_count;
-          cuDeviceGetCount(&device_count);
+          int device_count = get_device_count();
           for (int i=0; i<device_count; i++) {
             record_gpu_counters_at_sync(i);
           }
@@ -282,8 +295,7 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
   CUpti_Activity *record = NULL;
 	size_t bufferSize = 0;
   
-  int device_count;
-  cuDeviceGetCount(&device_count);
+  int device_count = get_device_count();
   //start
   if (device_count > TAU_MAX_GPU_DEVICES) {
     printf("TAU ERROR: Maximum number of devices (%d) exceeded.\n", TAU_MAX_GPU_DEVICES);
@@ -352,39 +364,103 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
-	
+  
 	//printf("in record activity.\n");
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
+#if CUDA_VERSION >= 5050
+	  case CUPTI_ACTIVITY_KIND_MEMCPY2:
+#endif
 		{	
-      CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
-			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
-		  //cerr << "recording memcpy on device: " << memcpy->streamId << "/" << memcpy->runtimeCorrelationId << endl;
-		  //cerr << "recording memcpy kind: " << getMemcpyType(memcpy->copyKind) << endl;
+      uint32_t deviceId;
+      uint32_t streamId;
+      uint32_t contextId;
+      uint64_t start;
+      uint64_t end;
+      uint64_t bytes;
+      uint8_t copyKind;
 			int id;
-			if (cupti_api_runtime())
-			{
-				id = memcpy->runtimeCorrelationId;
-			}
-			else
-			{
-				id = memcpy->correlationId;
-			}
+      int direction = MESSAGE_UNKNOWN;
+
+#if CUDA_VERSION >= 5050
+      if (record->kind == CUPTI_ACTIVITY_KIND_MEMCPY2) {
+        CUpti_ActivityMemcpy2 *memcpy = (CUpti_ActivityMemcpy2 *)record;
+        deviceId = memcpy->deviceId;
+        streamId = memcpy->streamId;
+        contextId = memcpy->contextId;
+        start = memcpy->start;
+        end = memcpy->end;
+        bytes = memcpy->bytes;
+        copyKind = memcpy->copyKind;
+        id = memcpy->correlationId;
+        cerr << "recording memcpy (device, stream, context, correlation): " << memcpy->deviceId << ", " << memcpy->streamId << ", " << memcpy->contextId << ", " << memcpy->correlationId << ", " << memcpy->start << "-" << memcpy->end << "ns.\n" << endl;
+		    cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
+		    cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
+        Tau_cupti_register_memcpy_event(
+          TAU_GPU_USE_DEFAULT_NAME,
+          memcpy->srcDeviceId,
+          streamId,
+          memcpy->srcContextId,
+          id,
+          start / 1e3,
+          end / 1e3,
+          bytes,
+          getMemcpyType(copyKind),
+          MESSAGE_RECIPROCAL_SEND
+        );
+        Tau_cupti_register_memcpy_event(
+          TAU_GPU_USE_DEFAULT_NAME,
+          memcpy->dstDeviceId,
+          streamId,
+          memcpy->dstContextId,
+          id,
+          start / 1e3,
+          end / 1e3,
+          bytes,
+          getMemcpyType(copyKind),
+          MESSAGE_RECIPROCAL_RECV
+        );
+} else {
+#endif
+        CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
+        deviceId = memcpy->deviceId;
+        streamId = memcpy->streamId;
+        contextId = memcpy->contextId;
+        start = memcpy->start;
+        end = memcpy->end;
+        bytes = memcpy->bytes;
+        copyKind = memcpy->copyKind;
+        if (cupti_api_runtime())
+        {
+          id = memcpy->runtimeCorrelationId;
+        }
+        else
+        {
+          id = memcpy->correlationId;
+        }
+        if (getMemcpyType(copyKind) == MemcpyHtoD) {
+          direction = MESSAGE_RECV;
+        } else if (getMemcpyType(copyKind) == MemcpyDtoH) {
+          direction = MESSAGE_SEND;
+        }
+			//cerr << "recording memcpy: " << end - start << "ns.\n" << endl;
+		  //cerr << "recording memcpy on device: " << id << endl;
+		  //cerr << "recording memcpy kind: " << copyKind << endl;
 			//We do not always know on the corresponding host event on
 			//the CPU what type of copy we have so we need to register 
 			//the bytes copied here. Be careful we only want to record 
 			//the bytes copied once.
-			int bytes = memcpy->bytes; //record bytes on this device.
 			Tau_cupti_register_memcpy_event(
 				TAU_GPU_USE_DEFAULT_NAME,
-				memcpy->deviceId,
-				memcpy->streamId,
-				memcpy->contextId,
+				deviceId,
+				streamId,
+				contextId,
 				id,
-				memcpy->start / 1e3,
-				memcpy->end / 1e3,
+				start / 1e3,
+				end / 1e3,
 				bytes,
-				getMemcpyType(memcpy->copyKind)
+				getMemcpyType(copyKind),
+        direction
 			);
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->contextId, id, NULL, 0);
@@ -396,39 +472,129 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				TAU_GPU_UNKNOW_TRANSFER_SIZE, 
 				getMemcpyType(memcpy->copyKind));
 			*/	
+#if CUDA_VERSION >= 5050
+  }
+#endif
+      
 				break;
 		}
   	case CUPTI_ACTIVITY_KIND_KERNEL:
-		{
-			//find FunctionInfo object from FunctionInfoMap
-      CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
+#if CUDA_VERSION >= 5000
+  	case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
+#endif
+#if CUDA_VERSION >= 5050
+  	case CUPTI_ACTIVITY_KIND_CDP_KERNEL:
+#endif
+    {
+      const char *name;
+      uint32_t deviceId;
+      uint32_t streamId;
+      uint32_t contextId;
+      uint32_t correlationId;
+#if CUDA_VERSION < 5050
+      uint32_t runtimeCorrelationId;
+#endif
+      uint64_t start;
+      uint64_t end;
+      int64_t gridId;
+      int64_t parentGridId;
+      uint32_t blockX;
+      uint32_t blockY; 
+      uint32_t blockZ;
+      uint32_t dynamicSharedMemory;
+      uint32_t staticSharedMemory;
+      uint32_t localMemoryPerThread;
+      uint32_t registersPerThread;
+
+#if CUDA_VERSION >= 5050
+      if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+        CUpti_ActivityCdpKernel *kernel = (CUpti_ActivityCdpKernel *)record;
+        name = kernel->name;
+        deviceId = kernel->deviceId;
+        streamId = kernel->streamId;
+        contextId = kernel->contextId;
+        correlationId = kernel->correlationId;
+        gridId = kernel->gridId;
+        parentGridId = kernel->parentGridId;
+        start = kernel->start;
+        end = kernel->end;
+        blockX = kernel->blockX;
+        blockY = kernel->blockY; 
+        blockZ = kernel->blockZ;
+        dynamicSharedMemory = kernel->dynamicSharedMemory;
+        staticSharedMemory = kernel->staticSharedMemory;
+        localMemoryPerThread = kernel->localMemoryPerThread;
+        registersPerThread = kernel->registersPerThread;
+      }
+      else {
+#endif
+        CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
+        name = kernel->name;
+        deviceId = kernel->deviceId;
+        streamId = kernel->streamId;
+        contextId = kernel->contextId;
+        correlationId = kernel->correlationId;
+        runtimeCorrelationId = kernel->runtimeCorrelationId;
+#if CUDA_VERSION >= 5050
+        gridId = kernel->gridId;
+#else
+        gridId = 0;
+#endif
+        start = kernel->start;
+        end = kernel->end;
+        blockX = kernel->blockX;
+        blockY = kernel->blockY; 
+        blockZ = kernel->blockZ;
+        dynamicSharedMemory = kernel->dynamicSharedMemory;
+        staticSharedMemory = kernel->staticSharedMemory;
+        localMemoryPerThread = kernel->localMemoryPerThread;
+        registersPerThread = kernel->registersPerThread;
+        //find FunctionInfo object from FunctionInfoMap
+        kernelMap[kernel->correlationId] = *kernel;
+#if CUDA_VERSION >= 5050
+      }
+#endif
+      //cerr << "recording kernel (device, stream, context, correlation, grid, name): " << deviceId << ", " << streamId << ", " << contextId << ", " << correlationId << ", " << gridId << ", " << name << ", "<< start << "-" << end << "ns.\n" << endl;
+      /*if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+        cerr << "CDP kernel, parent is: " << parentGridId << endl;
+      }*/
 			//cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
       
-      kernelMap[kernel->correlationId] = *kernel;
 
-      const char* name;
-			name = demangleName(kernel->name);
+			name = demangleName(name);
 
       eventMap.erase(eventMap.begin(), eventMap.end());
-			if (gpu_occupancy_available(kernel->deviceId))
+			if (gpu_occupancy_available(deviceId))
 			{
-				record_gpu_occupancy(kernel, name, &eventMap);
+        record_gpu_occupancy(blockX, 
+                            blockY,
+                            blockZ,
+                            registersPerThread,
+                            staticSharedMemory,
+                            deviceId,
+                            name, 
+                            &eventMap);
 			}
 
 			uint32_t id;
 			if (cupti_api_runtime())
 			{
-				id = kernel->runtimeCorrelationId;
+				id = runtimeCorrelationId;
 			}
 			else
 			{
-				id = kernel->correlationId;
+				id = correlationId;
 			}
       int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
       double metrics_start[number_of_metrics];
       double metrics_end[number_of_metrics];
-      record_gpu_counters(kernel->deviceId, name, id, &eventMap);
-
+#if CUDA_VERSION >= 5050
+      if (record->kind != CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+        record_gpu_counters(deviceId, name, id, &eventMap);
+      }
+#else
+      record_gpu_counters(deviceId, name, id, &eventMap);
+#endif
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
 			static TauContextUserEvent* sm;
@@ -440,11 +606,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
 			Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
 
-      eventMap[bs] = kernel->blockX * kernel->blockY * kernel->blockZ;
-      eventMap[dm] = kernel->dynamicSharedMemory;
-      eventMap[sm] = kernel->staticSharedMemory;
-      eventMap[lm] = kernel->localMemoryPerThread;
-      eventMap[lr] = kernel->registersPerThread;
+      eventMap[bs] = blockX * blockY * blockZ;
+      eventMap[dm] = dynamicSharedMemory;
+      eventMap[sm] = staticSharedMemory;
+      eventMap[lm] = localMemoryPerThread;
+      eventMap[lr] = registersPerThread;
       
       GpuEventAttributes *map;
 			int map_size = eventMap.size();
@@ -456,22 +622,21 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         map[i].data = it->second;
         i++;
       }
-		
-      metrics_start[0] = kernel->start / 1e3;
-      metrics_end[0] = kernel->end / 1e3;
-
-			Tau_cupti_register_gpu_event(name, kernel->deviceId,
-				kernel->streamId, kernel->contextId, id, map, map_size,
-				metrics_start, metrics_end, number_of_metrics);
-      //testing counter array
-      //uint64_t * counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
-      //CUdevice device;
-      //cuDeviceGet(&device, kernel->deviceId);
-      //Tau_CuptiLayer_read_counters(device, counters);
-      //Tau_cupti_register_sync_site(id, counters, Tau_CuptiLayer_get_num_events());
-      //int n = 2;
-      //uint64_t c[] = { 1900, 8550 };
-      //Tau_cupti_register_sync_site(id, c, n);
+			
+#if CUDA_VERSION >= 5050
+      if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+        Tau_cupti_register_gpu_event(name, deviceId,
+          streamId, contextId, id, parentGridId, true, map, map_size,
+          start / 1e3, end / 1e3);
+      } else {
+#endif
+        Tau_cupti_register_gpu_event(name, deviceId,
+          streamId, contextId, id, 0, false, map, map_size,
+          start / 1e3, end / 1e3);
+#if CUDA_VERSION >= 5050
+      }
+#endif
+        Tau_cupti_register_device_calling_site(gridId, name);
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(name, kernel->streamId, kernel->contextId, id, map, map_size);
 			//cuptiGpuEvent cuRec = cuptiGpuEvent(name, &gId, &map);
@@ -482,7 +647,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			*/	
 
 			break;
-		}
+    }
   	case CUPTI_ACTIVITY_KIND_DEVICE:
 		{
 			CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
@@ -516,6 +681,12 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	
 			//cerr << "recording metadata (device): " << device->id << endl;
 			deviceMap[device->id] = *device;
+#if CUDA_VERSION < 5000
+      if (deviceMap.size() > 1 && Tau_CuptiLayer_get_num_events() > 0)
+      {
+        TAU_VERBOSE("TAU Warning: CUDA 5.0 or greater is needed to record counters on more that one GPU device at the same time.\n");
+      }
+#endif
 			Tau_cupti_register_metadata(device->id, metadata, nMeta);
 			break;
 		}
@@ -636,7 +807,7 @@ int gpu_occupancy_available(int deviceId)
 		device.computeCapabilityMajor == 3 &&
 		device.computeCapabilityMinor > 5)
 	{
-		TAU_VERBOSE("Warning: GPU occupancy calculator is not implemented for devices of compute capability > 3.5.");
+		TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 3.5.");
 		return 0;
 	}
 	//gpu occupancy available.
@@ -647,15 +818,10 @@ int gpu_source_locations_available()
   //always available. 
   return 1;
 }
-void read_gpu_counters()
-{
-
-
-}
 
 void record_gpu_launch(int correlationId, FunctionInfo *current_function)
 {
-  Tau_cupti_register_calling_site(correlationId, current_function);	
+  Tau_cupti_register_host_calling_site(correlationId, current_function);	
 
   CUdevice device;
   cuCtxGetDevice(&device);
@@ -669,7 +835,7 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
       last_recorded_kernel_name != NULL && 
       strcmp(last_recorded_kernel_name, name) != 0) 
   {
-    TAU_VERBOSE("Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
+    TAU_VERBOSE("TAU Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
     counters_bounded_warning_issued[device_id] = true;
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
       Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
@@ -700,13 +866,20 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
     kernels_recorded[device_id]++;
   }
 }
-void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventMap_t *map)
+void record_gpu_occupancy(int32_t blockX, 
+                          int32_t blockY,
+                          int32_t blockZ,
+			                    uint16_t registersPerThread,
+		                      int32_t staticSharedMemory,
+                          uint32_t deviceId,
+                          const char *name, 
+                          eventMap_t *map)
 {
-	CUpti_ActivityDevice device = deviceMap[kernel->deviceId];
+	CUpti_ActivityDevice device = deviceMap[deviceId];
 
 
 	int myWarpsPerBlock = ceil(
-				(kernel->blockX * kernel->blockY * kernel->blockZ)/
+				(blockX * blockY * blockZ)/
 				device.numThreadsPerWarp
 			); 
 
@@ -730,12 +903,12 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventM
 			ceil(
 				(float)myWarpsPerBlock, 2	
 			)*
-			kernel->registersPerThread*
+			registersPerThread*
 			device.numThreadsPerWarp,
 			device.computeCapabilityMinor < 2 ? 256 : 512
 		) :
 		ceil(
-			kernel->registersPerThread*
+			registersPerThread*
 			device.numThreadsPerWarp,
 			device.computeCapabilityMajor < 3 ? 128 : 256
 		)*
@@ -766,7 +939,7 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventM
 		case 3: sharedMemoryUnit = 256; break;
 	}
 	int mySharedMemoryPerBlock = ceil(
-		kernel->staticSharedMemory,
+		staticSharedMemory,
 		sharedMemoryUnit
 	);
 
@@ -1009,6 +1182,18 @@ bool cupti_api_driver()
 {
 	return (0 == strcasecmp(TauEnv_get_cupti_api(), "driver") || 
 			0 == strcasecmp(TauEnv_get_cupti_api(), "both")); 
+}
+
+int get_device_count()
+{
+#if CUDA_VERSION >= 5000
+  int device_count;
+  cuDeviceGetCount(&device_count);
+  return device_count;
+#else
+  return 1;
+#endif
+
 }
 
 #endif //CUPTI API VERSION >= 2

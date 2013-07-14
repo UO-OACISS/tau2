@@ -25,68 +25,39 @@ class TotID{
 	 * The name of the trace file
 	 */
 	public String filename;
-//	/**
-//	 * The id of the thread as contained in the trace file
-//	 */
-//	public int thread;
-//	/**
-//	 * The id of the node as contained in the trace file
-//	 */
-//	public int node;
 
 	/**
 	 * The map from the local state id (the id in this trace file) to the global state id (the id used in the merged trace)
 	 */
 	public Map<Integer, Integer> locToGlobStates;
 
-	//	/**
-	//	 * The number of send events seen on this thread.  Used to detect communication triplets used by CUDA traces
-	//	 */
-	//	public int sSeen=0;
-
 	/**
-	 * The number of CUDA communication use events seen on this thread.  Used to detect communication triplets used by CUDA traces
+	 * The type observed for the one-sided triplet we're investigating
 	 */
-	//public boolean cSeen=false;
-	//public boolean send=true;
 	public int oneSideType=-1;
-	//public static final int ONESIDE_SEND=0;
-	//public static final int ONESIDE_RECV=1;
+	/**
+	 * The identifying attributes (message tags etc) of the one sided triplet we're investigating
+	 */
+	DoublePair dp=new DoublePair(-1,-1,false);
+	
 	public int size=0;
 	
 	public long offset=0;
 
-	//	/**
-	//	 * Most recent valid CUDA mem-copy size, set in the second of 3 communication triplets.
-	//	 */
-	//	int truSize=0;
 
-	//	/**
-	//	 * The unique CUDA communication id composed of the first and last tags of the first and last triplets for communication between two threads
-	//	 */
-	//	StringBuilder uniC=new StringBuilder();//null;
+	
 
-	DoublePair dp=new DoublePair(-1,-1);
-
-	//	/**
-	//	 * The unique CUDA communication id composed of the first and last tags of the first and last triplets for communication between two threads, on the sending side
-	//	 */
-	//	StringBuilder uniS=new StringBuilder();//null;
 
 	/**
 	 * The combination of filename and timestamp for the current communication.  If is not CUDA communication it will be stored in a global list for quick differentiation
 	 */
 	StringBuilder mpi=new StringBuilder();//null;
 
-	//public int cudaSendID=-1;
-	//public int cudaRecvID=-1;
-	//public int cudaSizeID=-1;
 
 	TotID(String fname){
 		filename=fname;
 		locToGlobStates=new HashMap<Integer, Integer>();
-//		thread=-1;
-//		node=-1;
+
 	}
 }
 
@@ -167,22 +138,29 @@ class TraceFilter implements FilenameFilter{
 class DoublePair{
 	public double l1;
 	public double l2;
-	public DoublePair(double la, double lb){
+	//public boolean reciprocal=false;
+	public DoublePair(double la, double lb,boolean reciprocal){
 		l1=la;
 		l2=lb;
+		//this.reciprocal=reciprocal;
 	}
 	
 	public DoublePair(DoublePair orig){
 		l1=orig.l1;
 		l2=orig.l2;
+		//reciprocal=orig.reciprocal;
 	}
 	
 	public boolean equals(Object o){
 		DoublePair dp=(DoublePair)o;
-		return(dp!=null&&this.l1==dp.l1&&this.l2==dp.l2);
+		return(dp!=null&&this.l1==dp.l1&&this.l2==dp.l2);//&&this.reciprocal==dp.reciprocal
 	}
 	public String toString(){
-		return l1+"."+l2;
+		String match =l1+"."+l2;
+//		if(reciprocal){
+//			match=match+".R";
+//		}
+		return match;
 	}
 	public int hashCode(){
 		System.out.println(this.toString().hashCode());
@@ -194,25 +172,38 @@ class DoublePair{
 class ToFrom{
 	public int toNode,toThread,fromNode,fromThread, direction;
 
+	public boolean reciprocal;
+	
 	public ToFrom(int toNode, int toThread, int fromNode, int fromThread) {
 		super();
 		this.toNode = toNode;
 		this.toThread = toThread;
 		this.fromNode = fromNode;
 		this.fromThread = fromThread;
+		reciprocal=false;
 	}
-	
-	
 	
 }
 
 public class MultiMerge {
+	
+	private static boolean isReciprocal(int evt){
+		if(evt==ONESIDED_MESSAGE_RECIPROCAL_SEND||evt==ONESIDED_MESSAGE_RECIPROCAL_RECV){
+			return true;
+		}
+		return false;
+	}
 
 	private static final int ONESIDED_MESSAGE_SEND=70000;
 	private static final int ONESIDED_MESSAGE_RECV=70001;
 	private static final int ONESIDED_MESSAGE_UNKNOWN=70004;
 	private static final int ONESIDED_MESSAGE_ID_TriggerValueT1=70002;
 	private static final int ONESIDED_MESSAGE_ID_TriggerValueT2=70003;
+	/**
+	 * Reciprocal send must be matched with a reciprocal. A non-reciprocal may be matched with anything
+	 */
+	private static final int ONESIDED_MESSAGE_RECIPROCAL_SEND=70005;
+	private static final int ONESIDED_MESSAGE_RECIPROCAL_RECV=70006;
 	
 	
 	/**
@@ -231,24 +222,12 @@ public class MultiMerge {
 	 * Keeps track of the number of state and user-events seen so far.  The global ids are set by the current value (ids are sequential in the order seen)
 	 */
 	static int numStates=0;
-//	/**
-//	 * Keeps track of the last global node id recorded.  This allows the global node ids to be generated sequentially.
-//	 */
-//	static int lastNode=-1;
-	/**
-//	 * The map from the node id associated with the old trace file to the new global node id that will be used in the merged trace
-//	 */
-//	static Map<Integer,Integer> oldNewDest;
 
 	/**
 	 * The map from the unique cuda communication id string to the point (node/thread id pair) that is associated with that unique id
 	 */
 	static Map<String,ToFrom> idNodes;
 
-	//	/**
-	//	 * This set contains all filename/timestamp combinations that are associated with mpi communication events.  If the string is not in here then it is cuda communication.
-	//	 */
-	//	static Set<String> mpiCom;
 
 	/**
 	 * The array of TotID objects, index-paired with the list of trace files
@@ -300,10 +279,7 @@ public class MultiMerge {
 			if(a.length==5){
 			//In some cases the 'node' id contains invalid characters so it must be parsed one character at a time
 				if(a[0].contains("cuda")){
-					//Pattern p = Pattern.compile("([^\\d]+)(\\d+)(.*)");
-					//Matcher m = p.matcher(a[1]);
 					String m = "";
-					//Char c=null;
 					for(int i=0;i<a[1].length();i++){
 						char c = a[1].charAt(i);
 						if(Character.isDigit(c)){
@@ -311,12 +287,8 @@ public class MultiMerge {
 						}
 					}
 					out[0]=Integer.parseInt(m);
-					//out[1]=Integer.parseInt(p.matcher(a[2]).group());
-					//out[2]=Integer.parseInt(p.matcher(a[3]).group());
 				}else{
 				out[0]=Integer.parseInt(a[1]);
-				//out[1]=Integer.parseInt(a[2]);
-				//out[2]=Integer.parseInt(a[3]);
 				}
 				out[1]=Integer.parseInt(a[2]);
 				out[2]=Integer.parseInt(a[3]);
@@ -345,59 +317,6 @@ public class MultiMerge {
 
 		return newname;
 	}
-
-//	/**
-//	 * Does extra initialization on the given TotID object
-//	 * @param tot
-//	 * @return
-//	 */
-//	private static TotID initTotLoc(TotID tot){
-//
-//		//boolean isCuda=tot.filename.contains("cuda");
-//
-//		int[]fn=getNCT(tot.filename);
-//		int threadToken=-1;
-////		if(isCuda)
-////		{
-////			threadToken=0;
-////		}else{
-//			threadToken=fn[2];
-//		//}
-//
-//		/*
-//		 * If this is a threaded trace file we are on the same node as before, just update the thread
-//		 */
-//		/*if(threadToken>0){
-//			tot.node=lastNode;
-//			tot.thread=threadToken;
-//		}*/
-//		/*
-//		 * If this is not a threaded entry we're on a new node so increment and set thread to 0.  If this is not a cuda tracefile we need to map the local node ID to the global nodeID.
-//		 */
-//		//else{
-////			lastNode++;
-////			tot.node=lastNode;
-////			tot.thread=0;
-////			if(threadToken==0){
-////				oldNewDest.put(new Integer(fn[0]), new Integer(lastNode));
-//			//}	
-////		}
-//
-//
-//		/*
-//		 * Identify the threads based on the n/c/t in the file names.
-//		 */
-//		if(threadToken==1){//!tot.filename.startsWith("tautrace")){
-//
-//			String threadName="Node"+fn[0]+" CUDA Stream "+fn[1]+" Device "+fn[2];
-//			tw.defThread(tot.node, tot.thread, threadName);
-//		}else{
-//			String threadName="Node"+fn[0]+" Thread "+fn[2];
-//			tw.defThread(tot.node, tot.thread, threadName);
-//		}
-//
-//		return tot;
-//	}
 
 	/**
 	 * Returns a sorted list of all trace files in the current directory
@@ -481,7 +400,10 @@ public class MultiMerge {
 			if(synch){sorter[rs]+=totIDs[rs].offset;}
 		}
 
-		System.out.println(totalRecords+" records to merge.");
+		if(!quiet)
+		{
+			System.out.println(totalRecords+" records to merge.");
+		}
 		long stepsize=totalRecords/50;
 		long countRecords=0;
 		if(stepsize==0){
@@ -501,7 +423,7 @@ public class MultiMerge {
 			}else{
 
 				countRecords++;
-				if(countRecords%stepsize==0){
+				if(!quiet&&countRecords%stepsize==0){
 					System.out.println(countRecords+" Records read. "+(int)(100*((double)countRecords/(double)totalRecords))+"% converted");
 				}
 
@@ -523,6 +445,8 @@ public class MultiMerge {
 		}
 	}
 
+	static boolean quiet = false;
+	
 	/**
 	 * @param args
 	 */
@@ -534,15 +458,24 @@ public class MultiMerge {
 		stateMap=new HashMap<String,Integer>();
 		ueMap=new HashMap<String,Integer>();
 		tw = new TraceWriter("tau.trc", "tau.edf");
+		
+		 for(int i=0;i<args.length;i++){
+			if(args[i].equals("-q"))
+			quiet=true;
+		}
 
 		List<String> traces = listTraces();
 
 		initializeMerge(traces);
-		System.out.println("Initilization complete");
+		if(!quiet){
+			System.out.println("Initilization complete");
+		}
 		dataMerge(traces);
 
 		tw.closeTrace();
-		System.out.println("The merging is complete.");
+		if(!quiet){
+			System.out.println("The merging is complete.");
+		}
 	}
 
 	/**
@@ -596,19 +529,6 @@ public class MultiMerge {
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing){
 
 			TotID tot = (TotID)userData;
-
-			/*if(userEventName.equals("TAUCUDA_MEM_SEND")){
-				tot.cudaSendID=userEventToken;
-				return 0;
-			} 
-			if(userEventName.equals("TAUCUDA_MEM_RCV")){
-				tot.cudaRecvID=userEventToken;
-				return 0;
-			} 
-			if(userEventName.equals("TAUCUDA_COPY_MEM_SIZE")){
-				tot.cudaSizeID=userEventToken;
-				return 0;
-			} */
 			
 			if(userEventToken>=70000)
 				return 0;
@@ -657,70 +577,82 @@ public class MultiMerge {
 
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
 			TotID tot = (TotID)userData;
-			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV) {
+			/**
+			 * Set the message type (first of the 3 event triplet)
+			 */
+			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV||userEventToken==ONESIDED_MESSAGE_UNKNOWN||userEventToken==ONESIDED_MESSAGE_RECIPROCAL_SEND||userEventToken==ONESIDED_MESSAGE_RECIPROCAL_RECV) {
 				tot.oneSideType = userEventToken;	
+//				if(userEventToken==ONESIDED_MESSAGE_RECIPROCAL_SEND||userEventToken==ONESIDED_MESSAGE_RECIPROCAL_RECV){
+//					tot.dp.reciprocal=true;
+//				}else{
+//					tot.dp.reciprocal=false;
+//				}
 			  //System.out.println("eventTrigger, recording: " + userEventToken + " on thread: " + threadToken);
 			}
-			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT1){
+			/**
+			 * Set the message id part 1 (second of the 3 event triplet)
+			 */
+			else if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT1){
 				tot.dp.l1=userEventValue;
 			}
-			
-			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT2){
+			/**
+			 * Set the message id part 2 (thrid of the 3 event triplet) and do processing to start or complete the link between the communication points
+			 */
+			else if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT2){
 				tot.dp.l2=userEventValue;
+				linkOnesidedComm(tot.dp,nodeToken,threadToken,tot.oneSideType);
 				
-				ToFrom p =idNodes.get(tot.dp.toString());
-				if(p==null){
-					p=new ToFrom(nodeToken,threadToken,-1,-1);
-					idNodes.put(tot.dp.toString(), p);
-				}else if(p.toNode!=nodeToken||p.toThread!=threadToken){
-					p.fromNode=nodeToken;
-					p.fromThread=threadToken;
-				}
-				p.direction = tot.oneSideType;
+//				//If this message is *not* reciprocal than it could also match with a reciprocal. We need to do the association in this case as well.
+//				if(!tot.dp.reciprocal){
+//					DoublePair dpr = new DoublePair(tot.dp);
+//					dpr.reciprocal=true;
+//					linkOnesidedComm(dpr,nodeToken,threadToken,tot.oneSideType);
+//				}
+				
 			}
-			
-			/*
-			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV)
-			{
-
-				if(!tot.cSeen){
-
-					//tot.uniC=commID1(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-					tot.dp.l1=userEventValue;
-					tot.cSeen=true;
-					//System.out.println(userEventToken);
-					return 0;
-				}
-				else{
-					tot.cSeen=false;
-					//tot.uniR=commID2(tot.uniR,sourceNodeToken,messageSize,messageTag,messageCom);
-					tot.dp.l2=userEventValue;
-					//System.out.println(tot.dp);
-					Point p =idNodes.get(tot.dp.toString());
-					if(p==null){
-						p=new Point(tot.node,-1);
-						idNodes.put(tot.dp.toString(), p);
-					}else if(p.x!=tot.node){
-						p.y=tot.node;
-					}
-					
-					//System.out.println(" tot "+p);
-					
-//					if(p.x==tot.node||p.y==tot.node){
-//
-//					}
-//
-//					if(p.y!=-1){
-//						System.out.println("Warning, doubling up node identifiers!");
-//
-//					}
-					//Does Uni need to be duplicated?
-					//tot.uniC.setLength(0);
-
-				}
-			}*/
 
 			return 0;
+		}
+		
+		/**
+		 * Updates the map from communication id to an object indicating the source and destination threads for that communication
+		 * @param dp DoublePair containing the communication tags, etc, needed to uniquely identify the communication
+		 * @param nodeToken node where communication tags were observed
+		 * @param threadToken thread where communication tags were observed
+		 * @param direction event type of communication
+		 */
+		private static void linkOnesidedComm(DoublePair dp, int nodeToken, int threadToken, int direction){
+			//See if this unique message id has been associated with a send/recieve location
+			ToFrom p =idNodes.get(dp.toString());
+			boolean reciprocal=isReciprocal(direction);
+			if(p==null){
+				//If not, create a new object to record the local side of the transaction and store it
+				p=new ToFrom(nodeToken,threadToken,-1,-1);
+				if(reciprocal){
+					p.reciprocal=true;
+				}
+				idNodes.put(dp.toString(), p);
+			}else {
+				//Otherwise, if we find it and our side hasn't been recorded yet update the to/from object with our information
+				if(reciprocal){
+					if(!p.reciprocal){
+						p.reciprocal=true;
+						p.toNode=nodeToken;
+						p.toThread=threadToken;
+					}
+				}
+				else if(!reciprocal){
+					if(p.reciprocal)
+					{
+						return;
+					}
+				}
+				
+				p.fromNode=nodeToken;
+				p.fromThread=threadToken;
+				
+			}
+			p.direction = direction;
 		}
 
 		public int endTrace(Object userData, int nodeToken, int threadToken){
@@ -778,18 +710,13 @@ public class MultiMerge {
 		/*Message registration.  (Message sending is defined in TAUReader below)*/
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
+			
+			
 
 			TotID tot = (TotID)userData;
 			if(synch){
 				time+=tot.offset;
 			}
-
-//			Integer transNode=oldNewDest.get(new Integer(destinationNodeToken));
-//			if(transNode==null)
-//			{
-//				System.out.println("Bad Dest Node ID: "+destinationNodeToken);
-//				return 0;
-//			}
 
 			tw.sendMessage(time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag, messageComm);
 
@@ -803,14 +730,7 @@ public class MultiMerge {
 			if(synch){
 				time+=tot.offset;
 			}
-
-
-			//Integer transNode=oldNewDest.get(new Integer(sourceNodeToken));
-//			if(transNode==null)
-//			{
-//				System.out.println("Bad Source Node ID: "+sourceNodeToken);
-//				return 0;
-//			}
+			
 			tw.recvMessage(time, sourceNodeToken, sourceThreadToken, destinationNodeToken, destinationThreadToken, messageSize, messageTag, messageCom);
 
 			return 0;
@@ -823,7 +743,7 @@ public class MultiMerge {
 			if(synch){
 				time+=tot.offset;
 			}
-			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV||userEventToken==ONESIDED_MESSAGE_UNKNOWN){
+			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV||userEventToken==ONESIDED_MESSAGE_UNKNOWN||userEventToken==ONESIDED_MESSAGE_RECIPROCAL_SEND||userEventToken==ONESIDED_MESSAGE_RECIPROCAL_RECV){
 				tot.oneSideType=userEventToken;
 				tot.size=(int)userEventValue;
 				return 0;
@@ -839,6 +759,12 @@ public class MultiMerge {
 				ToFrom p = idNodes.get(tot.dp.toString());
 				if(p==null){
 					System.out.println("Bad Recv: "+tot.dp);
+					return 0;
+				}
+				/**
+				 * if the to/from object indicates we have reciprocal events but this is not reciprocal, don't record the event.
+				 */
+				if(p.reciprocal&&!isReciprocal(tot.oneSideType)){
 					return 0;
 				}
 				int remoteNode,remoteThread;
@@ -861,22 +787,28 @@ public class MultiMerge {
 					defRemThread=false;
 				}
 				tw.eventTrigger(time, nodeToken, threadToken, 7004, remoteThread);
-				if(tot.oneSideType==ONESIDED_MESSAGE_SEND)
+				if(tot.oneSideType==ONESIDED_MESSAGE_SEND||tot.oneSideType==ONESIDED_MESSAGE_RECIPROCAL_SEND)
 				{
 					tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
+					//System.out.println("Send from"+nodeToken+"-"+threadToken+" to "+remoteNode+"-"+remoteThread+" with tag: "+(int)userEventValue);
 				}
-				else if (tot.oneSideType==ONESIDED_MESSAGE_RECV)
+				else if (tot.oneSideType==ONESIDED_MESSAGE_RECV||tot.oneSideType==ONESIDED_MESSAGE_RECIPROCAL_RECV)
 				{
 					tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
+					//System.out.println("Recv from"+remoteNode+"-"+remoteThread+" to "+nodeToken+"-"+threadToken+" with tag: "+(int)userEventValue);
 				}
 				else
 				{
-					if (p.direction == ONESIDED_MESSAGE_RECV)
+					if (p.direction == ONESIDED_MESSAGE_RECV||p.direction==ONESIDED_MESSAGE_RECIPROCAL_RECV)
 					{
+						//System.out.println("Send from"+nodeToken+"-"+threadToken+" to "+remoteNode+"-"+remoteThread+" with tag: "+(int)userEventValue);
 						return tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
+						
 					}
-					else if (p.direction == ONESIDED_MESSAGE_SEND) {
+					else if (p.direction == ONESIDED_MESSAGE_SEND||p.direction==ONESIDED_MESSAGE_RECIPROCAL_SEND) {
+						//System.out.println("Recv from"+remoteNode+"-"+remoteThread+" to "+nodeToken+"-"+threadToken+" with tag: "+(int)userEventValue);
 						return tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
+						
 					}
 					//otherwise undefined.
 					System.out.println("eventTrigger 2, recording " + p.direction + " on thread: "+threadToken);

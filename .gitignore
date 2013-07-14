@@ -2,6 +2,7 @@
 *.a
 *.so
 *.dylib
+*.pyo
 *.pyc
 a.out
 .all_configs

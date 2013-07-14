@@ -162,7 +162,7 @@ struct TauBfdModule
 
 struct TauBfdUnit
 {
-  TauBfdUnit() {
+  TauBfdUnit() : objopen_counter(-1) {
     executablePath = Tau_bfd_internal_getExecutablePath();
     executableModule = new TauBfdModule;
   }
@@ -181,10 +181,12 @@ struct TauBfdUnit
     modules.clear();
   }
 
+  int objopen_counter;
   char const * executablePath;
   TauBfdModule * executableModule;
   vector<TauBfdAddrMap*> addressMaps;
   vector<TauBfdModule*> modules;
+
 };
 
 struct LocateAddressData
@@ -221,6 +223,30 @@ static bfd_unit_vector_t & ThebfdUnits(void)
   // BFD units (e.g. executables and their dynamic libraries)
   static bfd_unit_vector_t internal_bfd_units;
   return internal_bfd_units;
+}
+
+typedef int * (*objopen_counter_t)(void);
+objopen_counter_t objopen_counter = NULL;
+
+int get_objopen_counter(void)
+{
+  if (objopen_counter) {
+    return *(objopen_counter());
+  }
+  return 0;
+}
+
+void set_objopen_counter(int value)
+{
+  if (objopen_counter) {
+    *(objopen_counter()) = value;
+  }
+}
+
+extern "C"
+void Tau_bfd_register_objopen_counter(objopen_counter_t handle)
+{
+  objopen_counter = handle;
 }
 
 //
@@ -419,6 +445,7 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
   if (!Tau_bfd_checkHandle(handle)) return;
 
   TauBfdUnit * unit = ThebfdUnits()[handle];
+
   unit->ClearMaps();
   unit->ClearModules();
 
@@ -429,6 +456,8 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
 #else
   Tau_bfd_internal_updateProcSelfMaps(unit);
 #endif
+
+  unit->objopen_counter = get_objopen_counter();
 
   TAU_VERBOSE("Tau_bfd_updateAddressMaps: %d modules discovered\n", unit->modules.size());
 }
@@ -514,7 +543,7 @@ static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
 // Probe for BFD information given a single address.
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, TauBfdInfo & info)
 {
-  if (!Tau_bfd_checkHandle(handle)) {
+  if (!TauEnv_get_bfd_lookup() || !Tau_bfd_checkHandle(handle)) {
     info.secure(probeAddr);
     return false;
   }
@@ -523,6 +552,10 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   TauBfdModule * module;
   unsigned long addr0;
   unsigned long addr1;
+
+  if (unit->objopen_counter != get_objopen_counter()) {
+    Tau_bfd_updateAddressMaps(handle);
+  }
 
   // Discover if we are searching in the executable or a module
   int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probeAddr);
@@ -618,7 +651,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   }
 
   // At this point we were unable to resolve the symbol.
-    
+
 #ifdef TAU_INTEL12
   // For Intel 12 workaround. Inform the module that the previous resolve failed.
   module->markLastResult(false);
