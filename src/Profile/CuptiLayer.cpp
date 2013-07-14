@@ -252,12 +252,14 @@ void Tau_CuptiLayer_init()
 		for (counter_vec_t::iterator it = Tau_CuptiLayer_Added_counters.begin(); it !=
 					Tau_CuptiLayer_Added_counters.end(); it++)
 		{
-      if ((*it)->device == device) 
+      char device_char[TAU_CUPTI_MAX_NAME], counter_char[TAU_CUPTI_MAX_NAME];
+      size_t size = TAU_CUPTI_MAX_NAME;
+      CUresult er;
+      er = cuDeviceGetName(device_char, size, device);
+      er = cuDeviceGetName(counter_char, size, (*it)->device);
+     
+      if (strcmp(device_char, counter_char) != 0)
       {
-        cuptiErr = cuptiEventGroupAddEvent( eventGroup[device],
-                    (*it)->event );
-        CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupAddEvent" );
-      } else {
         /* This warning is to cover a small corner case. Since each event group
          * fill the counter buffers starting at a zero offset, disjoint event
          * groups (ie. two or more event groups that collect counters for
@@ -266,10 +268,13 @@ void Tau_CuptiLayer_init()
          * Notice that running on multiple different GPUs is supported as long 
          * as we only collect counters for one set that a time. 
          */
-        char device_char[TAU_CUPTI_MAX_NAME];
-        size_t size = TAU_CUPTI_MAX_NAME;
-        CUresult er;
-        er = cuDeviceGetName(device_char, size, device);
+        cerr << "TAU Error: Cannot add event: " << (*it)->tag << " to GPU device: " << device_char << endl << "             Only counters for a single GPU device model can be collected at the same time." << endl;
+        exit(1);
+      }
+      cuptiErr = cuptiEventGroupAddEvent( eventGroup[device],
+                  (*it)->event );
+      CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupAddEvent" );
+      if (cuptiErr != CUPTI_SUCCESS) {
         cerr << "TAU Warning: Cannot add event: " << (*it)->tag << " to GPU device: " << device_char << endl << "             Only counters for a single GPU device model can be collected at the same time." << endl;
       }
 		}
@@ -290,8 +295,12 @@ void Tau_CuptiLayer_init()
 			exit(1);
 		}
 		//printf("in Tau_CuptiLayer_init 7.\n");
-    int major;
+    int minor, major;
+#if CUDA_VERSION >= 5000
     cuDeviceGetAttribute(&major, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, device);
+#else
+    cuDeviceComputeCapability(&major, &minor, device);
+#endif
     if (major < 2)
     {
         //Events are reset on kernel launch for compute < 2.0.
@@ -333,7 +342,7 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 /* read all the counters. */
 void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 {
-  cuCtxGetDevice(&device);
+  //cuCtxGetDevice(&device);
 	//uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
 	if (Tau_CuptiLayer_is_initialized() && initialized[device])
 	{
