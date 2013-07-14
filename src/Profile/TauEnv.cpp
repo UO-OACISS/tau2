@@ -149,6 +149,8 @@ using namespace std;
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
+#define TAU_BFD_LOOKUP 1
+
 // Memory debugging environment variable defaults
 #define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  0
 #define TAU_MEMDBG_PROTECT_BELOW_DEFAULT  0
@@ -498,6 +500,7 @@ static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 
 static int env_mic_offload = 0;
+static int env_bfd_lookup = 0;
 
 static int env_memdbg = 0;
 static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
@@ -531,9 +534,7 @@ static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
-  if (env_verbose != 1) return;
-
-  {
+  if (env_verbose == 1) {
     TauInternalFunctionGuard protects_this_function;
     va_list args;
     va_start(args, format);
@@ -545,7 +546,6 @@ void TAU_VERBOSE(const char *format, ...)
 #endif
     va_end(args);
     fflush (stderr);
-
   } // END inside TAU
 }
 
@@ -774,6 +774,11 @@ const char* TauEnv_get_cuda_instructions(){
 int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
+
+int TauEnv_get_bfd_lookup(){
+  return env_bfd_lookup;
+}
+
 int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
@@ -1624,6 +1629,17 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: MIC offloading Enabled\n");
       TAU_METADATA("TAU_MIC_OFFLOAD", "on");
 		}
+
+    tmp = getconf("TAU_BFD_LOOKUP");
+    if (parse_bool(tmp, TAU_BFD_LOOKUP)) {
+      env_bfd_lookup = 1;
+      TAU_VERBOSE("TAU: BFD Lookup Enabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "on");
+    } else {
+      env_bfd_lookup = 0;
+      TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "off");
+    }
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

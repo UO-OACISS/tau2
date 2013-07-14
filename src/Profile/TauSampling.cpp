@@ -728,7 +728,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       if (childName) {
         sprintf(buff, "[%s] [%s] [@] UNRESOLVED %s", tag, childName, mapName);
       } else {
-        sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+	if (TauEnv_get_bfd_lookup()) {
+          sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+        } else {
+          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, addr);
+        }
       }
       // TODO: Leak?
       *newShortName = strdup("UNRESOLVED");
@@ -1497,12 +1501,12 @@ int Tau_sampling_init(int tid)
   memset(&act, 0, sizeof(struct sigaction));
   ret = sigemptyset(&act.sa_mask);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 1: %s\n", strerror(ret));
     return -1;
   }
   ret = sigaddset(&act.sa_mask, TAU_ALARM_TYPE);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 2: %s\n", strerror(ret));
     return -1;
   }
   act.sa_sigaction = Tau_sampling_handler;
@@ -1513,13 +1517,13 @@ int Tau_sampling_init(int tid)
   struct sigaction query_action;
   ret = sigaction(TAU_ALARM_TYPE, NULL, &query_action);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 3: %s\n", strerror(ret));
     return -1;
   }
   if (query_action.sa_handler == SIG_DFL || query_action.sa_handler == SIG_IGN) {
     ret = sigaction(TAU_ALARM_TYPE, &act, NULL);
     if (ret != 0) {
-      fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+      fprintf(stderr, "TAU: Sampling error 4: %s\n", strerror(ret));
       return -1;
     }
     //DEBUGMSG("sigaction called");
@@ -1538,7 +1542,7 @@ int Tau_sampling_init(int tid)
       // install our handler, and save the old handler
       ret = sigaction(TAU_ALARM_TYPE, &act, &application_sa);
       if (ret != 0) {
-        fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+        fprintf(stderr, "TAU: Sampling error 5: %s\n", strerror(ret));
         return -1;
       }
       //DEBUGMSG("sigaction called");
@@ -1551,7 +1555,7 @@ int Tau_sampling_init(int tid)
 /* on Linux systems, we have the option of sampling based on the Wall clock
  * on a per-thread basis.  We don't have this ability everywhere - on those
  * systems, we have to use ITIMER_PROF with setitimer. */
-#ifdef SIGEV_THREAD_ID
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ)
    struct sigevent sev;
    timer_t timerid = 0;
    sev.sigev_signo = TAU_ALARM_TYPE;
@@ -1560,7 +1564,7 @@ int Tau_sampling_init(int tid)
    sev.sigev_notify_thread_id = syscall(SYS_gettid);
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
     return -1;
   }
    struct itimerspec it;
@@ -1572,7 +1576,7 @@ int Tau_sampling_init(int tid)
 
     ret = timer_settime (timerid, 0, &it, NULL);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 7: %s\n", strerror(ret));
     return -1;
   }
   TAU_VERBOSE("Thread %d called timer_settime...\n", tid);
@@ -1583,7 +1587,7 @@ int Tau_sampling_init(int tid)
 
   ret = setitimer(TAU_ITIMER_TYPE, &itval, &ovalue);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 8: %s\n", strerror(ret));
     return -1;
   }
   TAU_VERBOSE("Thread %d called setitimer...\n", tid);

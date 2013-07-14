@@ -462,7 +462,7 @@ static void initialize_functionArray()
  ********************************************************************/
 extern "C" const char *TauMetrics_getMetricName(int metric) {
 #ifdef CUPTI
-  if (Tau_CuptiLayer_is_cupti_counter(metricv[metric]) && metric < Tau_CuptiLayer_get_num_events())
+  if (Tau_CuptiLayer_is_cupti_counter(metricv[metric]) && Tau_CuptiLayer_get_cupti_event_id(metric) < Tau_CuptiLayer_get_num_events())
   {
       return Tau_CuptiLayer_get_event_name(Tau_CuptiLayer_get_cupti_event_id(metric));
   }

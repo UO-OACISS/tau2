@@ -29,5 +29,5 @@ $(TAU_CUDA_SHARED): cuda_wrap.o
 cuda_wrap.o: cuda_wrap.c
 	$(TAU_CUDA_CXX) -g $(TAU_INTERNAL_FLAGS) $(CFLAGS) -I$(TAU_CUDA_INC) -c $< -o $@
 clean:
-	/bin/rm -f cudart_wrap.o libTAU_CUDArt.so
+	/bin/rm -f cudart_wrap.o cuda_wrap.o libTAU-CUDArt.so libTAU-CUDA.so
 
