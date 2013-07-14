@@ -2192,6 +2192,9 @@ cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
 cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
 
+# install post-mortem address translation tool
+cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
+
 case $machine in
     
     apple)
@@ -6957,9 +6960,12 @@ if [ -d $otfdir/include/otf2 ]; then
 else
   if [ $otf = yes ] ; then
     fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
-    if [ ! -d $otfdir/${architecture} ] ; then
+    if [ ! -d $otfdir/${architecture} -a -d $otfdir/src ] ; then
       fixmakeargs="$fixmakeargs OTFSRC"
     fi  
+    if [ -r $otfdir/lib/libopen-trace-format.a ]; then
+      fixmakeargs="$fixmakeargs OTFLIB_LONGNAME"
+    fi
   fi
 fi
 
@@ -6981,36 +6987,49 @@ if [ $ebs2otf = yes ] ; then
   if [ -f utils/ebs2otf/ebs2otf.so ] ; then
       touch utils/ebs2otf/ebs2otf.so
   fi
+  fixmakeargs="$fixmakeargs EBS2OTF "
   if [ $otf = yes ] ; then
-      echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
+    echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
+  fi
+fi
+if [ $otf = yes ] ; then
       if [ "$otflib" = "" ] ; then
-	  otflib="$otfdir/${architecture}/lib"
+        if [ -d $otfdir/lib ]; then 
+	      otflib="$otfdir/lib"
+        else 
+	      otflib="$otfdir/${architecture}/lib"
+        fi
 	  echo "OTF Library implicitly set to $otflib"
       fi
       if [ "$otfinc" = "" ] ; then
-	  otfinc="$otfdir/include"
+        if [ -r $otfdir/include/otf.h ]; then
+	      otfinc="$otfdir/include"
+        else 
+          if [ -r $otfdir/include/open-trace-format/otf.h ]; then
+	        otfinc="$otfdir/include/open-trace-format"
+          fi
+        fi
 	  echo "OTF Header directory implicitly set to $otfinc"
       fi
-  fi 
-  if [ ! -d $otflib ]
+    if [ ! -d $otflib ]
       then
       echo "Error: No available OTF support. Library not found at $otflib."
       exit 1
-  fi
-  if [ ! -d $otfinc ]
+    fi
+    if [ ! -d $otfinc ]
       then
       echo "Error: No available OTF support. Headers not found at $otfinc."
       exit 1
-  fi
-  if [ ! -f $otfinc/OTF_Version.h ] ; then
+    fi
+    if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
       echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
       exit 1
       # *CWL* Need version control code here. Still trying to decide the
       #    best way about it. The above conditional will at least trim away
       #    ancient versions of OTF.
-  fi
+    fi
 
-  fixmakeargs="$fixmakeargs EBS2OTF otflib=$otflib otfinc=$otfinc"
+    fixmakeargs="$fixmakeargs otflib=$otflib otfinc=$otfinc"
 fi
 
 if [ $ebs_has_rt = yes ] ; then
