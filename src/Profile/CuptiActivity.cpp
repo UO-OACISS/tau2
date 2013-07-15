@@ -114,9 +114,9 @@ void Tau_cupti_onload()
   uint64_t timestamp;
   err = cuptiGetTimestamp(&timestamp);
 	CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
-  Tau_cupti_set_offset(TauTraceGetTimeStamp(0) - ((double)timestamp / 1e3));
+  Tau_cupti_set_offset(TauTraceGetTimeStamp() - ((double)timestamp / 1e3));
   //Tau_cupti_set_offset((-1) * timestamp / 1e3);
-	//cerr << "begining timestamp: " << TauTraceGetTimeStamp(0) - ((double)timestamp/1e3) << "ms.\n" << endl;
+	//cerr << "begining timestamp: " << TauTraceGetTimeStamp() - ((double)timestamp/1e3) << "ms.\n" << endl;
   //Tau_cupti_set_offset(0);
 
   Tau_gpu_init();

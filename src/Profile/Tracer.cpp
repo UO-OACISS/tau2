@@ -106,6 +106,10 @@ x_uint64 TauTraceGetTimeStamp(int tid) {
   return value;
 }
 
+extern "C" x_uint64 TauTraceGetTimeStamp() {
+	return TauTraceGetTimeStamp(0);
+}
+
 
 /* Write event to buffer only [without overflow check] */
 void TauTraceEventOnly(long int ev, x_int64 par, int tid) {
