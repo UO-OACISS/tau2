@@ -51,6 +51,7 @@ void metric_read_papi(int tid, int idx, double values[]);
 void metric_read_ktau(int tid, int idx, double values[]);
 void metric_read_cudatime(int tid, int idx, double values[]);
 void metric_read_cupti(int tid, int idx, double values[]);
+void metric_read_memory(int tid, int idx, double values[]);
 
 
 #ifdef __cplusplus
@@ -372,6 +373,8 @@ static void initialize_functionArray()
 #endif /* TAU_PAPI */
     } else if (compareMetricString(metricv[i], "TAUGPU_TIME")) {
       functionArray[pos++] = metric_read_cudatime;
+    } else if (compareMetricString(metricv[i], "MEMORY_DELTA")) {
+      functionArray[pos++] = metric_read_memory;
     } else {
       if (papi_available && is_papi_metric(metricv[i])) {
         /* PAPI handled separately */
