@@ -306,11 +306,13 @@ void Tau_get_my_region_context(int tid, int forking) {
     omp_unset_lock(&writelock);
     free(regionIDstr);
 #else
-    omp_set_lock(&writelock);
+    //omp_set_lock(&writelock);
     if (Tau_collector_enabled) {
+      //omp_unset_lock(&writelock);
       Tau_stop_current_timer_task(tid);
+    //} else {
+      //omp_unset_lock(&writelock);
     }
-    omp_unset_lock(&writelock);
 #endif
 }
 
@@ -696,6 +698,7 @@ int Tau_initialize_collector_api(void) {
     // now, for the collector API support, create the 12 OpenMP states.
     // preallocate State timers. If we create them now, we won't run into
     // malloc issues later when they are required during signal handling.
+      omp_set_lock(&writelock);
       Tau_create_thread_state_if_necessary("OMP_UNKNOWN");
       Tau_create_thread_state_if_necessary("OMP_OVERHEAD");
       Tau_create_thread_state_if_necessary("OMP_WORKING");
@@ -713,6 +716,7 @@ int Tau_initialize_collector_api(void) {
       Tau_create_thread_state_if_necessary("OMP_TASK_SUSPEND");
       Tau_create_thread_state_if_necessary("OMP_TASK_STEAL");
       Tau_create_thread_state_if_necessary("OMP_TASK_FINISH");
+      omp_unset_lock(&writelock);
     }
 
     initializing = false;
@@ -870,7 +874,7 @@ void my_task_exit (ompt_data_t *task_data) {
 /* Thread creation */
 void my_thread_create(ompt_data_t *thread_data) {
   TAU_OMPT_COMMON_ENTRY;
-  //Tau_create_top_level_timer_if_necessary();
+  Tau_create_top_level_timer_if_necessary();
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -1056,6 +1060,7 @@ int ompt_initialize() {
   CHECK(ompt_event_runtime_shutdown, my_shutdown, "runtime_shutdown");
 #endif /* TAU_IBM_OMPT */
 
+  if (TauEnv_get_collector_api_events_enabled()) {
   /* optional events, "blameshifting" */
 #ifndef TAU_IBM_OMPT
   CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
@@ -1115,6 +1120,7 @@ int ompt_initialize() {
 //ompt_event(ompt_event_destroy_nest_lock, ompt_wait_callback_t, 56, ompt_event_destroy_nest_lock_implemented
 
 //ompt_event(ompt_event_flush, ompt_thread_callback_t, 57, ompt_event_flush_implemented) /* after executing f
+  }
 
   TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
   initializing = false;
@@ -1132,7 +1138,9 @@ extern __attribute__ (( weak ))
 #endif
 
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE COLLECTOR API SUPPORT IS NONEXISTENT */
+#if !defined (TAU_OPEN64ORC)
 #if defined __GNUC__
 extern __attribute__ ((weak))
   int __omp_collector_api(void *message) { TAU_VERBOSE ("Error linking GOMP wrapper. Try using tau_exec with the -gomp option.\n"); return -1; };
+#endif
 #endif
