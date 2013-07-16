@@ -121,7 +121,7 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes);
 
-extern x_uint64 TauTraceGetTimeStamp(int tid);
+extern "C" x_uint64 TauTraceGetTimeStamp();
 
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;

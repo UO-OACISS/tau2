@@ -340,7 +340,7 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 }
 
 /* read all the counters. */
-void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
+void Tau_CuptiLayer_read_counters(int device, uint64_t * counterDataBuffer)
 {
   //cuCtxGetDevice(&device);
 	//uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
