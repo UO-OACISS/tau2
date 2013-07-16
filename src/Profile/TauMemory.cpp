@@ -34,6 +34,7 @@
 #else
 #include <malloc.h>
 #endif
+#include <errno.h>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -813,7 +814,8 @@ int TauAllocation::Protect(addr_t addr, size_t size)
 
   int ret = 0;
   if ((ret = mprotect((void*)addr, size, PROT_NONE))) {
-    TAU_VERBOSE("TAU: ERROR - mprotect(%p, %ld, PROT_NONE) failed\n", addr, size);
+    char * errstr = strerror(errno);
+    TAU_VERBOSE("TAU: ERROR - mprotect(%p, %ld, PROT_NONE) failed: %s\n", addr, size, errstr);
   }
   return ret;
 
