@@ -86,12 +86,6 @@ struct ContextEventMap : public std::map<long *, TauUserEvent *, ContextEventMap
   }
 };
 
-static ContextEventMap & TheContextMap(void)
-{
-  static ContextEventMap contextmap;
-  return contextmap;
-}
-
 AtomicEventDB & TheEventDB(void)
 {
   static AtomicEventDB eventDB;
@@ -186,6 +180,8 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #ifdef TAU_SCOREP
   SCOREP_Tau_TriggerMetricDouble( eventId, data );
 #endif /*TAU_SCOREP*/
+
+  TAU_ASSERT(this != NULL, "this == NULL in TauUserEvent::TriggerEvent!  Make sure all databases are appropriately locked.\n");
 
 #ifdef PROFILING_ON
   Data & d = ThreadData(tid);
@@ -317,40 +313,44 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current)
 ////////////////////////////////////////////////////////////////////////////
 string TauContextUserEvent::FormulateContextNameString(Profiler * current)
 {
-  ostringstream buff;
-  buff << userEvent->GetName();
+  if (current) {
+    ostringstream buff;
+    buff << userEvent->GetName();
 
-  int depth = TauEnv_get_callpath_depth();
-  if (depth) {
-    Profiler ** path = (Profiler**)malloc(depth*sizeof(Profiler*));
+    int depth = TauEnv_get_callpath_depth();
+    if (depth) {
+      Profiler ** path = new Profiler*[depth];
 
-    // Reverse the callpath to avoid string copies
-    int i=depth-1;
-    for (; current && i >= 0; --i) {
-      path[i] = current;
-      current = current->ParentProfiler;
-    }
-    // Now we can construct the name string by appending rather than prepending
-    buff  << " : ";
-    FunctionInfo * fi;
-    for (++i; i < depth-1; ++i) {
+      // Reverse the callpath to avoid string copies
+      int i=depth-1;
+      for (; current && i >= 0; --i) {
+        path[i] = current;
+        current = current->ParentProfiler;
+      }
+      // Now we can construct the name string by appending rather than prepending
+      buff  << " : ";
+      FunctionInfo * fi;
+      for (++i; i < depth-1; ++i) {
+        fi = path[i]->ThisFunction;
+        buff << fi->GetName();
+        if (strlen(fi->GetType()) > 0)
+          buff << " " << fi->GetType();
+        buff << " => ";
+      }
       fi = path[i]->ThisFunction;
       buff << fi->GetName();
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
-      buff << " => ";
+
+      delete[] path;
     }
-    fi = path[i]->ThisFunction;
-    buff << fi->GetName();
-    if (strlen(fi->GetType()) > 0)
-      buff << " " << fi->GetType();
 
-    free((void*)path);
+    // Return a new string object.
+    // A smart STL implementation will not allocate a new buffer.
+    return buff.str();
+  } else {
+    return "";
   }
-
-  // Return a new string object.
-  // A smart STL implementation will not allocate a new buffer.
-  return buff.str();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -358,42 +358,27 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
 ////////////////////////////////////////////////////////////////////////////
 void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts)
 {
+  static ContextEventMap contextMap;
+
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
   if (contextEnabled) {
-    TauUserEvent * contextEvent;
     Profiler * current = TauInternal_CurrentProfiler(tid);
     long * comparison = FormulateContextComparisonArray(current);
 
-    ContextEventMap & contextMap = TheContextMap();
+    RtsLayer::LockDB();
     ContextEventMap::iterator it = contextMap.find(comparison);
-
     if (it == contextMap.end()) {
-      RtsLayer::LockEnv();
-      it = contextMap.find(comparison);
-      if (it == contextMap.end()) {
-        if (current != NULL) {
-          contextEvent = new TauUserEvent(
-            FormulateContextNameString(current),
-            userEvent->IsMonotonicallyIncreasing());
-        } else {
-          contextEvent = new TauUserEvent(
-            string(""),
-            userEvent->IsMonotonicallyIncreasing());
-        }
-        contextMap[comparison] = contextEvent;
-      } else {
-        contextEvent = it->second;
-        delete[] comparison;
-      }
-      RtsLayer::UnLockEnv();
+      contextEvent = new TauUserEvent(
+          FormulateContextNameString(current),
+          userEvent->IsMonotonicallyIncreasing());
+      contextMap[comparison] = contextEvent;
     } else {
       contextEvent = it->second;
       delete[] comparison;
     }
-
-    contextName = contextEvent->GetName();
+    RtsLayer::UnLockDB();
     contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
   }
   userEvent->TriggerEvent(data, tid, timestamp, use_ts);

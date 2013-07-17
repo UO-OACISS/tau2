@@ -78,6 +78,14 @@ bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;
 wrapper_disable_handle_t wrapper_disable_handle = NULL;
 
+// Returns true if the given allocation size should be protected
+bool TauAllocation::AllocationShouldBeProtected(size_t size)
+{
+  return (TauEnv_get_memdbg() && !(
+      (TauEnv_get_memdbg_overhead() && (TauEnv_get_memdbg_overhead_value() < BytesOverhead())) ||
+      (TauEnv_get_memdbg_alloc_min() && (size < TauEnv_get_memdbg_alloc_min_value())) ||
+      (TauEnv_get_memdbg_alloc_max() && (size > TauEnv_get_memdbg_alloc_max_value()))));
+}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -107,18 +115,58 @@ void TauAllocation::DetectLeaks(void)
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+// Read/write allocation map
+//////////////////////////////////////////////////////////////////////
+TauAllocation::allocation_map_t & TauAllocation::__allocation_map()
+{
+  static allocation_map_t alloc_map;
+  return alloc_map;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Total bytes allocated
+//////////////////////////////////////////////////////////////////////
+size_t & TauAllocation::__bytes_allocated()
+{
+  static size_t bytes = 0;
+  return bytes;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Total bytes deallocated
+//////////////////////////////////////////////////////////////////////
+size_t & TauAllocation::__bytes_deallocated()
+{
+  static size_t bytes = 0;
+  return bytes;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Bytes of memory protection overhead
+//////////////////////////////////////////////////////////////////////
+size_t & TauAllocation::__bytes_overhead()
+{
+  static size_t bytes = 0;
+  return bytes;
+}
 
 //////////////////////////////////////////////////////////////////////
 // Search for an allocation record by base address
 //////////////////////////////////////////////////////////////////////
-TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key) {
-  static allocation_map_t const & alloc_map = AllocationMap();
-
+TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key)
+{
+  TauAllocation * found = NULL;
   if (key) {
+    RtsLayer::LockDB();
+    allocation_map_t const & alloc_map = AllocationMap();
     allocation_map_t::const_iterator it = alloc_map.find(key);
-    if (it != alloc_map.end()) return it->second;
+    if (it != alloc_map.end()) {
+      found = it->second;
+    }
+    RtsLayer::UnLockDB();
   }
-  return NULL;
+  return found;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -126,34 +174,23 @@ TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key) {
 //////////////////////////////////////////////////////////////////////
 TauAllocation * TauAllocation::FindContaining(void * ptr)
 {
-  static allocation_map_t const & allocMap = AllocationMap();
-
+  TauAllocation * found = NULL;
   if (ptr) {
+    RtsLayer::LockDB();
+    allocation_map_t const & allocMap = AllocationMap();
     allocation_map_t::const_iterator it;
     for(it = allocMap.begin(); it != allocMap.end(); it++) {
       TauAllocation * const alloc = it->second;
-      if (alloc->Contains(ptr)) return alloc;
+      if (alloc->Contains(ptr)) {
+        found = alloc;
+        break;
+      }
     }
+    RtsLayer::UnLockDB();
   }
-  return NULL;
+  return found;
 }
 
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-void TauAllocation::TriggerHeapMemoryUsageEvent() {
-  static TauUserEvent evt("Heap Memory Usage (KB)");
-  evt.TriggerEvent(Tau_max_RSS());
-}
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-void TauAllocation::TriggerMemoryHeadroomEvent(void) {
-  static TauContextUserEvent evt("Memory Headroom Left (MB)");
-  evt.TriggerEvent(Tau_estimate_free_memory());
-}
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
@@ -162,14 +199,18 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     const char * filename, int lineno)
 {
 #ifndef PAGE_SIZE
-  static size_t const PAGE_SIZE = Tau_page_size();
+  size_t const PAGE_SIZE = Tau_page_size();
 #endif
-  static bool const PROTECT_ABOVE = TauEnv_get_memdbg_protect_above();
-  static bool const PROTECT_BELOW = TauEnv_get_memdbg_protect_below();
+  bool const protect_above = TauEnv_get_memdbg_protect_above();
+  bool const protect_below = TauEnv_get_memdbg_protect_below();
+  bool const fill_gap = TauEnv_get_memdbg_fill_gap();
+
+  // Fail or not, this is a TAU allocation not a tracked system allocation
+  tracked = false;
 
   // Check size
   if (!size && !TauEnv_get_memdbg_zero_malloc()) {
-    TriggerErrorEvent("Allocation of zero bytes.", filename, lineno);
+    TriggerErrorEvent("Allocation of zero bytes", filename, lineno);
     return NULL;
   }
 
@@ -202,9 +243,9 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   // Round up to the next page boundary
   alloc_size = ((size + PAGE_SIZE-1) & ~(PAGE_SIZE-1));
   // Include space for protection pages
-  if (PROTECT_ABOVE)
+  if (protect_above)
     alloc_size += PAGE_SIZE;
-  if (PROTECT_BELOW)
+  if (protect_below)
     alloc_size += PAGE_SIZE;
   if (align > PAGE_SIZE)
     alloc_size += align - PAGE_SIZE;
@@ -244,7 +285,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 
 #endif
 
-  if (PROTECT_BELOW) {
+  if (protect_below) {
     // Address range with requested alignment and adjacent to guard page
     user_addr = (addr_t)(((size_t)alloc_addr + PAGE_SIZE + align-1) & ~(align-1));
     user_size = size;
@@ -255,7 +296,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     lgap_addr = (addr_t)((size_t)user_addr & ~(PAGE_SIZE-1));
     lgap_size = (size_t)(user_addr - lgap_addr);
 
-    if (PROTECT_ABOVE) {
+    if (protect_above) {
       // Upper guard page address and size
       uguard_addr = (addr_t)((size_t)(user_addr + user_size + PAGE_SIZE-1) & ~(PAGE_SIZE-1));
       uguard_size = (size_t)(alloc_addr + alloc_size - uguard_addr);
@@ -264,11 +305,11 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
       ugap_size = (size_t)(uguard_addr - ugap_addr);
 
       // Permit access to all except the upper and lower guard pages
-      UnprotectPages(lgap_addr, (size_t)(uguard_addr - lgap_addr));
+      Unprotect(lgap_addr, (size_t)(uguard_addr - lgap_addr));
       // Deny access to the lower guard page
-      ProtectPages(lguard_addr, lguard_size);
+      Protect(lguard_addr, lguard_size);
       // Deny access to the upper guard page
-      ProtectPages(uguard_addr, uguard_size);
+      Protect(uguard_addr, uguard_size);
     } else {
       // Upper guard page address and size
       uguard_addr = NULL;
@@ -278,11 +319,11 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
       ugap_size = (size_t)(alloc_addr + alloc_size - ugap_addr);
 
       // Permit access to all except the lower guard page
-      UnprotectPages(lgap_addr, (size_t)(alloc_addr + alloc_size - lgap_addr));
+      Unprotect(lgap_addr, (size_t)(alloc_addr + alloc_size - lgap_addr));
       // Deny access to the lower guard page
-      ProtectPages(lguard_addr, lguard_size);
+      Protect(lguard_addr, lguard_size);
     }
-  } else if (PROTECT_ABOVE) {
+  } else if (protect_above) {
     // Address range with requested alignment and adjacent to guard page
     user_addr = (addr_t)(((size_t)alloc_addr + alloc_size - PAGE_SIZE - size) & ~(align-1));
     user_size = size;
@@ -300,17 +341,26 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     ugap_size = (size_t)(uguard_addr - ugap_addr);
 
     // Permit access to all except the upper guard page
-    UnprotectPages(alloc_addr, (size_t)(uguard_addr - alloc_addr));
+    Unprotect(alloc_addr, (size_t)(uguard_addr - alloc_addr));
     // Deny access to the upper guard page
-    ProtectPages(uguard_addr, uguard_size);
+    Protect(uguard_addr, uguard_size);
   }
 
-  RtsLayer::LockEnv();
-  BytesAllocated() += user_size;
-  __allocation_map()[user_addr] = this;
-  RtsLayer::UnLockEnv();
+  if (fill_gap) {
+    unsigned char const fill_pattern = TauEnv_get_memdbg_fill_gap_value();
+    if(lgap_size) memset(lgap_addr, fill_pattern, lgap_size);
+    if(ugap_size) memset(ugap_addr, fill_pattern, ugap_size);
+  }
 
+  RtsLayer::LockDB();
+  __bytes_allocated() += user_size;
+  __bytes_overhead() += alloc_size - user_size;
+  __allocation_map()[user_addr] = this;
+  RtsLayer::UnLockDB();
+
+  allocated = true;
   TriggerAllocationEvent(user_size, filename, lineno);
+  TriggerMemDbgOverheadEvent();
   TriggerHeapMemoryUsageEvent();
 
 //  printf("%s:%d :: alloc=(%p, %ld), user=(%p, %ld), "
@@ -329,6 +379,21 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::Deallocate(const char * filename, int lineno)
 {
+  bool const protect_free = TauEnv_get_memdbg_protect_free();
+
+  // Fail or not, this is a TAU allocation not a tracked system allocation
+  tracked = false;
+
+  // Error if this allocation has already been deallocated
+  if (!allocated) {
+    TriggerErrorEvent("Deallocation of unallocated memory", filename, lineno);
+    return;
+  }
+
+  // Mark record as deallocated
+  allocated = false;
+
+  if (!protect_free) {
 #if defined(TAU_WINDOWS)
 
   addr_t tmp_addr = alloc_addr;
@@ -337,7 +402,7 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
   MEMORY_BASIC_INFORMATION MemInfo;
   BOOL ret;
 
-  /* release physical memory commited to virtual address space */
+  // release physical memory committed to virtual address space
   while (tmp_size > 0) {
     retQuery = VirtualQuery((void*)tmp_addr, &MemInfo, sizeof(MemInfo));
 
@@ -356,32 +421,39 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
     tmp_size -= MemInfo.RegionSize;
   }
 
-  /* release virtual address space */
+  // release virtual address space
   ret = VirtualFree((LPVOID)alloc_addr, (DWORD)0, (DWORD)MEM_RELEASE);
   if (!ret) {
     TAU_VERBOSE("TAU: ERROR - VirtualFree(%p, %ld, MEM_RELEASE) failed\n", alloc_addr, alloc_size);
   }
-
 #else
-
-  if (munmap(alloc_addr, alloc_size) < 0) {
-    TAU_VERBOSE("TAU: ERROR - munmap(%p, %ld) failed\n", alloc_addr, alloc_size);
+    if (munmap(alloc_addr, alloc_size) < 0) {
+      TAU_VERBOSE("TAU: ERROR - munmap(%p, %ld) failed\n", alloc_addr, alloc_size);
+    }
+#endif
+  } else {
+    // TAU_MEMDBG_PROTECT_FREE is set, so don't deallocate just protect
+    Protect(alloc_addr, alloc_size);
   }
 
-#endif
-
-  RtsLayer::LockEnv();
-  BytesDeallocated() += user_size;
-  __allocation_map().erase(user_addr);
-  RtsLayer::UnLockEnv();
+  RtsLayer::LockDB();
+  __bytes_deallocated() += user_size;
+  if (protect_free) {
+    __bytes_overhead() += user_size;
+  } else {
+    __bytes_overhead() -= alloc_size - user_size;
+    __allocation_map().erase(user_addr);
+  }
+  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
+  TriggerMemDbgOverheadEvent();
   TriggerHeapMemoryUsageEvent();
 
-  alloc_addr = NULL;
-  alloc_size = 0;
-  user_addr = NULL;
-  user_size = 0;
+  if (!protect_free) {
+    // If free memory isn't protected then we don't need this record anymore
+    delete this;
+  }
 }
 
 
@@ -398,10 +470,10 @@ void * TauAllocation::Reallocate(size_t size, size_t align, size_t min_align,
   if (ptr) {
     memcpy(ptr, (void*)user_addr, copy_size);
     Deallocate(filename, lineno);
-    delete this;
   } else {
     delete resized;
   }
+
   TriggerHeapMemoryUsageEvent();
   return ptr;
 }
@@ -412,24 +484,26 @@ void * TauAllocation::Reallocate(size_t size, size_t align, size_t min_align,
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filename, int lineno)
 {
-  addr_t addr = (addr_t)ptr;
+  tracked = true;
+  allocated = true;
 
   if (size) {
     if (!alloc_addr) {
+      addr_t addr = (addr_t)ptr;
       alloc_addr = addr;
       alloc_size = size;
       user_addr = addr;
       user_size = size;
     }
-    RtsLayer::LockEnv();
-    BytesAllocated() += user_size;
+    RtsLayer::LockDB();
+    __bytes_allocated() += user_size;
     __allocation_map()[user_addr] = this;
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
 
     TriggerAllocationEvent(user_size, filename, lineno);
     TriggerHeapMemoryUsageEvent();
   } else if (!TauEnv_get_memdbg_zero_malloc()) {
-    TriggerErrorEvent("Allocation of zero bytes.", filename, lineno);
+    TriggerErrorEvent("Allocation of zero bytes", filename, lineno);
   }
 }
 
@@ -439,13 +513,19 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TrackDeallocation(const char * filename, int lineno)
 {
-  RtsLayer::LockEnv();
-  BytesDeallocated() += user_size;
+  tracked = true;
+  allocated = false;
+
+  RtsLayer::LockDB();
+  __bytes_deallocated() += user_size;
   __allocation_map().erase(user_addr);
-  RtsLayer::UnLockEnv();
+  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
+
+  // We don't need this record anymore
+  delete this;
 }
 
 
@@ -467,10 +547,19 @@ void TauAllocation::TrackReallocation(void * ptr, size_t size, const char * file
         } else {
           TriggerAllocationEvent(size - user_size, filename, lineno);
         }
+        tracked = true;
+        allocated = true;
         user_size = size;
         alloc_size = size;
       } else {
-        TrackDeallocation(filename, lineno);
+        // Track deallocation of old memory without destroying this object
+        RtsLayer::LockDB();
+        __bytes_deallocated() += user_size;
+        __allocation_map().erase(user_addr);
+        RtsLayer::UnLockDB();
+        TriggerDeallocationEvent(user_size, filename, lineno);
+
+        // Reuse this object to track the new resized allocation
         TrackAllocation(ptr, size, filename, lineno);
       }
     } else {
@@ -568,15 +657,39 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 
 
 //////////////////////////////////////////////////////////////////////
+// Records memory used at the current time
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::TriggerHeapMemoryUsageEvent() {
+  TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
+  TAU_EVENT(evt, Tau_max_RSS());
+}
+
+//////////////////////////////////////////////////////////////////////
+// Records memory remaining at the current time
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::TriggerMemoryHeadroomEvent(void) {
+  TAU_REGISTER_CONTEXT_EVENT(evt, "Memory Headroom Left (MB)");
+  TAU_CONTEXT_EVENT(evt, Tau_estimate_free_memory());
+}
+
+//////////////////////////////////////////////////////////////////////
+// Records memory overhead consumed by memory debugger
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::TriggerMemDbgOverheadEvent() {
+  TAU_REGISTER_EVENT(evt, "Memory Debugger Overhead (KB)");
+  TAU_EVENT(evt, BytesOverhead() >> 10);
+}
+
+//////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, int lineno)
 {
-  typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
 
+  RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -584,15 +697,17 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
     {
       alloc_event = new user_event_t("Heap Allocate");
     } else {
-      char * s = (char*)malloc(strlen(filename)+128);
-      sprintf(s, "Heap Allocate <file=%s, line=%d>", filename, lineno);
-      alloc_event = new user_event_t(s);
-      free((void*)s);
+      char * name = new char[strlen(filename)+128];
+      sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
+      alloc_event = new user_event_t(name);
+      delete[] name;
     }
     event_map[file_hash] = alloc_event;
   } else {
     alloc_event = it->second;
   }
+  RtsLayer::UnLockDB();
+
   alloc_event->TriggerEvent(size);
 }
 
@@ -602,13 +717,12 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename, int lineno)
 {
-  typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-
   user_event_t * e;
 
+  RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -616,15 +730,17 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
     {
       e = new user_event_t("Heap Free");
     } else {
-      char * s = (char*)malloc(strlen(filename)+128);
-      sprintf(s, "Heap Free <file=%s, line=%d>", filename, lineno);
-      e = new user_event_t(s);
-      free((void*)s);
+      char * name = new char[strlen(filename)+128];
+      sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
+      e = new user_event_t(name);
+      delete[] name;
     }
     event_map[file_hash] = e;
   } else {
     e = it->second;
   }
+  RtsLayer::UnLockDB();
+
   e->TriggerEvent(size);
 }
 
@@ -634,31 +750,32 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerErrorEvent(char const * descript, char const * filename, int lineno)
 {
-  typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-
   user_event_t * e;
 
+  RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
-    char * s;
+    char * name;
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      s = (char*)malloc(strlen(descript)+128);
-      sprintf(s, "Memory Error! %s", descript);
+      name = new char[strlen(descript)+128];
+      sprintf(name, "Memory Error! %s", descript);
     } else {
-      s = (char*)malloc(strlen(descript)+strlen(filename)+128);
-      sprintf(s, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
+      name = new char[strlen(descript)+strlen(filename)+128];
+      sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
     }
-    e = new user_event_t(s);
+    e = new user_event_t(name);
     event_map[file_hash] = e;
-    free((void*)s);
+    delete[] name;
   } else {
     e = it->second;
   }
+  RtsLayer::UnLockDB();
+
   e->TriggerEvent(1);
 }
 
@@ -666,7 +783,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-void TauAllocation::ProtectPages(addr_t addr, size_t size)
+int TauAllocation::Protect(addr_t addr, size_t size)
 {
 #if defined(TAU_WINDOWS)
 
@@ -684,17 +801,21 @@ void TauAllocation::ProtectPages(addr_t addr, size_t size)
     ret = VirtualProtect((LPVOID)addr, (DWORD)tail_size, (DWORD)PAGE_READWRITE, (PDWORD) &OldProtect);
     if (!ret) {
       TAU_VERBOSE("TAU: ERROR - VirtualProtect(%p, %ld) failed\n", addr, tail_size);
+      return ret;
     }
 
     addr += tail_size;
     size -= tail_size;
   }
+  return ret;
 
 #else
 
-  if (mprotect((void*)addr, size, PROT_NONE) < 0) {
+  int ret = 0;
+  if ((ret = mprotect((void*)addr, size, PROT_NONE))) {
     TAU_VERBOSE("TAU: ERROR - mprotect(%p, %ld, PROT_NONE) failed\n", addr, size);
   }
+  return ret;
 
 #endif
 }
@@ -703,7 +824,7 @@ void TauAllocation::ProtectPages(addr_t addr, size_t size)
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-void TauAllocation::UnprotectPages(addr_t addr, size_t size)
+int TauAllocation::Unprotect(addr_t addr, size_t size)
 {
 #if defined(TAU_WINDOWS)
 
@@ -721,17 +842,21 @@ void TauAllocation::UnprotectPages(addr_t addr, size_t size)
     ret = VirtualProtect((LPVOID)addr, (DWORD)tail_size, (DWORD)PAGE_NOACCESS, (PDWORD)&OldProtect);
     if (!ret) {
       TAU_VERBOSE("TAU: ERROR - VirtualProtecct(%p, %ld) failed\n", addr, tail_size);
+      return ret;
     }
 
     addr += tail_size;
     size -= tail_size;
   }
+  return ret;
 
 #else
 
-  if (mprotect((void*)addr, size, PROT_READ|PROT_WRITE) < 0) {
+  int ret = 0;
+  if ((ret = mprotect((void*)addr, size, PROT_READ|PROT_WRITE))) {
     TAU_VERBOSE("TAU: ERROR - mprotect(%p, %ld, PROT_READ|PROT_WRITE) failed\n", addr, size);
   }
+  return ret;
 
 #endif
 }
@@ -743,6 +868,8 @@ void TauAllocation::UnprotectPages(addr_t addr, size_t size)
 extern "C"
 void Tau_memory_initialize(void)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   // Trigger the map's constructor
   static TauAllocation::allocation_map_t const & alloc = TauAllocation::AllocationMap();
 
@@ -850,7 +977,7 @@ double Tau_max_RSS(void)
     struct mallinfo minfo = mallinfo();
     double used = minfo.hblkhd + minfo.usmblks + minfo.uordblks;
     return used / 1024.0;
-#elif defined(TAU_BGP)
+#elif (defined(TAU_BGP) || defined(TAU_BGQ))
     uint32_t heap_size;
     Kernel_GetMemorySize( KERNEL_MEMSIZE_HEAP, &heap_size );
     return (double)heap_size / 1024.0;
@@ -966,8 +1093,6 @@ void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno
   TauAllocation * alloc = TauAllocation::Find(ptr);
   if (alloc) {
     alloc->TrackDeallocation(filename, lineno);
-    // TrackDeallocation triggers an event, so deleting alloc is not crazy
-    delete alloc;
   } else {
     TAU_VERBOSE("TAU: WARNING - No allocation record found for %p\n", ptr);
   }
@@ -1003,7 +1128,7 @@ void * Tau_malloc(size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, 0, 0, filename, lineno);
   } else {
@@ -1030,7 +1155,7 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(count*size, 0, 0, filename, lineno);
     if (ptr) memset(ptr, 0, size);
@@ -1056,7 +1181,7 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = NULL;
     if (ptr) {
       if (size) {
@@ -1085,7 +1210,6 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
         alloc = TauAllocation::Find(ptr);
         if (alloc) {
           alloc->Deallocate(filename, lineno);
-          delete alloc;
         } else {
           TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
           free(ptr);
@@ -1123,13 +1247,12 @@ void Tau_free(void * ptr, char const * filename, int lineno)
 
     TauAllocation * alloc = TauAllocation::Find(ptr);
     if (alloc) {
-      if (TauEnv_get_memdbg()) {
-        alloc->Deallocate(filename, lineno);
-      } else {
+      if (alloc->IsTracked()) {
         alloc->TrackDeallocation(filename, lineno);
         free(ptr);
+      } else {
+        alloc->Deallocate(filename, lineno);
       }
-      delete alloc;
     } else {
       TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
       free(ptr);
@@ -1152,7 +1275,7 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, alignment, 0, filename, lineno);
   } else {
@@ -1179,7 +1302,7 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
     *ptr = alloc->Allocate(size, alignment, sizeof(void*), filename, lineno);
     retval = (ptr != NULL);
@@ -1207,7 +1330,7 @@ void * Tau_valloc(size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, Tau_page_size(), 0, filename, lineno);
   } else {
@@ -1228,7 +1351,7 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
 {
 #ifdef HAVE_PVALLOC
 #ifndef PAGE_SIZE
-  static size_t const PAGE_SIZE = Tau_page_size();
+  size_t const PAGE_SIZE = Tau_page_size();
 #endif
 
   void * ptr;
@@ -1240,9 +1363,9 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
   // that can hold the requested number of bytes
   size = (size + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
-    ptr = alloc->Allocate(size, Tau_page_size(), 0, filename, lineno);
+    ptr = alloc->Allocate(size, PAGE_SIZE, 0, filename, lineno);
   } else {
     ptr = pvalloc(size);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
@@ -1263,7 +1386,7 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  if (TauEnv_get_memdbg()) {
+  if (TauAllocation::AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = NULL;
     if (ptr) {
       if (size) {
@@ -1272,7 +1395,6 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
           ptr = alloc->Reallocate(size, 0, 0, filename, lineno);
           if (!ptr) {
             alloc->Deallocate(filename, lineno);
-            delete alloc;
           }
         } else {
           // Trying to resize an allocation made outside TAU
@@ -1296,7 +1418,6 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
         alloc = TauAllocation::Find(ptr);
         if (alloc) {
           alloc->Deallocate(filename, lineno);
-          delete alloc;
         } else {
           TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
           free(ptr);

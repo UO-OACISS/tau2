@@ -1,5 +1,3 @@
-# Specify exclude/include lists in this file.
-BEGIN_EXCLUDE_LIST
-#"#multiply#"
-"#report_num_threads#"
-END_EXCLUDE_LIST
+BEGIN_FILE_EXCLUDE_LIST
+matmult.*
+END_FILE_EXCLUDE_LIST

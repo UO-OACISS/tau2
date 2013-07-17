@@ -89,11 +89,12 @@ public:
 
   static void getCurrentValues(int tid, double *values);
 
+  // Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
+  static int myThread(void);
+
   static int setMyNode(int NodeId, int tid=RtsLayer::myThread());
 
   static int setMyContext(int ContextId);
-
-  static int setMyThread(int tid);
 
   static const char* getSingleCounterName(); 
   static const char* getCounterName(int i); 
@@ -103,9 +104,6 @@ public:
 
   // Return the number of the 'current' context.
   static int myContext(void);
-
-  // Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
-  static int myThread(void);
 
   static int threadId(void);
   static int unsafeThreadId(void);
@@ -158,6 +156,7 @@ private:
 
 extern "C" int Tau_RtsLayer_getTid();
 extern "C" int Tau_RtsLayer_createThread();
+extern "C" int Tau_RtsLayer_TheEnableInstrumentation();
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************

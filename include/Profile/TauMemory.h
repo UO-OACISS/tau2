@@ -27,6 +27,10 @@
 #define _GNU_SOURCE
 #endif
 
+#ifdef TAU_WINDOWS
+#define ENOMEM 0
+#endif
+
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600 /* see: man posix_memalign */
 #endif
@@ -40,6 +44,10 @@
 #include <stdlib.h>
 #include <tau_internal.h>
 
+// PAGESIZE can be a synonym for PAGE_SIZE
+#if !defined(PAGE_SIZE) && defined(PAGESIZE)
+#define PAGE_SIZE PAGESIZE
+#endif
 
 // Constants indicating unknown source location
 #define TAU_MEMORY_UNKNOWN_LINE 0
@@ -84,6 +92,9 @@
 #ifndef HAVE_POSIX_MEMALIGN
 #if defined(TAU_WINDOWS) || (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ +0 < 1060))
 #undef HAVE_POSIX_MEMALIGN
+#ifndef ENOMEM
+#define ENOMEM 12
+#endif /* ENOMEM defined */
 #elif (_POSIX_C_SOURCE >= 200112L) || (_XOPEN_SOURCE >= 600)
 #define HAVE_POSIX_MEMALIGN 1
 #endif
@@ -152,8 +163,21 @@ public:
 
   typedef unsigned char * addr_t;
   typedef tau::TauContextUserEvent user_event_t;
+
   struct allocation_map_t : public TAU_HASH_MAP<addr_t, class TauAllocation*> {
+    allocation_map_t() {
+      Tau_init_initializeTAU();
+    }
     virtual ~allocation_map_t() {
+      Tau_destructor_trigger();
+    }
+  };
+
+  struct event_map_t : public TAU_HASH_MAP<unsigned long, user_event_t*> {
+    event_map_t() {
+      Tau_init_initializeTAU();
+    }
+    virtual ~event_map_t() {
       Tau_destructor_trigger();
     }
   };
@@ -164,16 +188,22 @@ public:
   }
 
   // Total bytes allocated
-  static size_t & BytesAllocated() {
-    static size_t bytes = 0;
-    return bytes;
+  static size_t BytesAllocated() {
+    return __bytes_allocated();
   }
 
   // Total bytes deallocated
-  static size_t & BytesDeallocated() {
-    static size_t bytes = 0;
-    return bytes;
+  static size_t BytesDeallocated() {
+    return __bytes_deallocated();
   }
+
+  // Bytes of memory protection overhead
+  static size_t BytesOverhead() {
+    return __bytes_overhead();
+  }
+
+  // Returns true if the given allocation size should be protected
+  static bool AllocationShouldBeProtected(size_t size);
 
   // Trigger memory leak detection
   static void DetectLeaks(void);
@@ -189,18 +219,33 @@ public:
   // Records memory remaining at the current time
   static void TriggerMemoryHeadroomEvent(void);
 
+  // Records memory overhead consumed by memory debugger
+  static void TriggerMemDbgOverheadEvent(void);
+
+  // Uses the MMU to mark an address range as protected.
+  // Touching memory in that range will trigger a segfault or bus error
+  static int Protect(addr_t addr, size_t size);
+
+  // Uses the MMU to mark an address range as unprotected (i.e. normal memory).
+  static int Unprotect(addr_t addr, size_t size);
+
 
 // ----------------------------------------------------------------------------
 // Private class members
 //
 private:
 
-  // Forces Tau_global_incr_insideTAU before map's constructor is called
-  // so the memory wrapper isn't used to construct the map
-  static allocation_map_t & __allocation_map() {
-    static allocation_map_t alloc_map;
-    return alloc_map;
-  }
+  // Read/write allocation map
+  static allocation_map_t & __allocation_map();
+
+  // Read/write bytes allocated
+  static size_t & __bytes_allocated();
+
+  // Read/write bytes deallocated
+  static size_t & __bytes_deallocated();
+
+  // Bytes of memory protection overhead
+  static size_t & __bytes_overhead();
 
 // ----------------------------------------------------------------------------
 // Public instance members
@@ -208,13 +253,14 @@ private:
 public:
 
   TauAllocation() :
+    alloc_event(NULL),
     alloc_addr(NULL), alloc_size(0),
     user_addr(NULL), user_size(0),
     lguard_addr(NULL), lguard_size(0),
     uguard_addr(NULL), uguard_size(0),
     lgap_addr(NULL), lgap_size(0),
     ugap_addr(NULL), ugap_size(0),
-    alloc_event(NULL)
+    tracked(false), allocated(false)
   { }
 
   // True if ptr is in the range tracked by this allocation
@@ -223,44 +269,14 @@ public:
     return (alloc_addr <= addr) && (addr < (alloc_addr+alloc_size));
   }
 
-  // True if ptr is in this allocation's upper guard range
-  bool InUpperGuard(void * ptr) const {
-    addr_t addr = (addr_t)ptr;
-    return uguard_addr && (uguard_addr <= addr) && (addr < (uguard_addr+uguard_size));
+  // True if this is not a TAU allocation but a tracked allocation
+  bool IsTracked() const {
+    return tracked;
   }
 
-  // True if ptr is in this allocation's lower guard range
-  bool InLowerGuard(void * ptr) const {
-    addr_t addr = (addr_t)ptr;
-    return lguard_addr && (lguard_addr <= addr) && (addr < (lguard_addr+lguard_size));
-  }
-
-  // Enable the upper guard pages
-  void EnableUpperGuard() {
-    if (uguard_addr) {
-      ProtectPages(uguard_addr, uguard_size);
-    }
-  }
-
-  // Disable the upper guard range
-  void DisableUpperGuard() {
-    if (uguard_addr) {
-      UnprotectPages(uguard_addr, uguard_size);
-    }
-  }
-
-  // Enable the lower guard range
-  void EnableLowerGuard() {
-    if (lguard_addr) {
-      ProtectPages(lguard_addr, lguard_size);
-    }
-  }
-
-  // Disable the lower guard range
-  void DisableLowerGuard() {
-    if (lguard_addr) {
-      UnprotectPages(lguard_addr, lguard_size);
-    }
+  // True if this allocation has not been deallocated
+  bool IsAllocated() const {
+    return allocated;
   }
 
   // Creates and tracks a new guarded allocation with specified alignment
@@ -286,6 +302,8 @@ public:
 //
 private:
 
+  user_event_t * alloc_event; ///< Allocation event (for leak detection)
+
   addr_t alloc_addr;    ///< Unadjusted address
   size_t alloc_size;    ///< Unadjusted size
   addr_t user_addr;     ///< Address presented to user
@@ -299,14 +317,8 @@ private:
   addr_t ugap_addr;     ///< Unprotected upper gap address
   size_t ugap_size;     ///< Unprotected upper gap size
 
-  user_event_t * alloc_event; ///< Allocation event (for leak detection)
-
-  // Uses the MMU to mark an address range as protected.
-  // Touching memory in that range will trigger a segfault or bus error
-  void ProtectPages(addr_t addr, size_t size);
-
-  // Uses the MMU to mark an address range as unprotected (i.e. normal memory).
-  void UnprotectPages(addr_t addr, size_t size);
+  bool tracked;         ///< True if this is not a TAU allocation but a tracked allocation
+  bool allocated;       ///< True if this allocation has not been deallocated
 
   // Quickly translates a filename and line number to a unique hash
   unsigned long LocationHash(unsigned long hash, char const * data);

@@ -311,7 +311,7 @@ fi
 
 echoIfShortVerbose "outfile=$outfile"
 
-commandline="$TAUROOT/$TAUARCH/bin/pebil.static --tool TauFunctionTrace $selectopt --lnc $TAU_INST_LIBRARY --fbl $TAUROOT/etc/blacklist.txt --app $infile --out $outfile"
+commandline="$pebil_bin --tool TauFunctionTrace $selectopt --lnc $TAU_INST_LIBRARY --fbl $TAUROOT/etc/blacklist.txt --app $infile --out $outfile"
 
 if [ "$dryrun" = true ]
 then

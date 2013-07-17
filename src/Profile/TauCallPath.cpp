@@ -149,7 +149,7 @@ string TauFormulateNameString(Profiler * current)
   ostringstream buff;
 
   int depth = GetCallpathDepth();
-  int i;
+  int i=0;
 
   Profiler ** path = (Profiler**)malloc(depth*sizeof(Profiler*));
 
@@ -158,11 +158,13 @@ string TauFormulateNameString(Profiler * current)
   // Phase profiles are always 2 deep
   // Store reversed to avoid string copies
   path[1] = current;
-  if (!current->ParentProfiler || current->GetPhase()) {
-    path[0] = current->ParentProfiler;
-    i = 0; // Include path[0] in the name string
-  } else {
-    i = 1;  // Exclude path[0] from the name string
+  Profiler *it = current;  /* iterate */
+  while (it != NULL) {
+    if ( it != current && (it->GetPhase() || (it->ParentProfiler == (Profiler *) NULL))) {
+      path[0] = it;
+      break; /* come out of the loop, got phase name in */
+    } 
+    it = it ->ParentProfiler;
   }
 
 #else /* TAU_PROFILEPHASE */

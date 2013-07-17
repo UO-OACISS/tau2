@@ -72,9 +72,9 @@ static char const * return_nonvoid_string = "return";
 extern bool use_spec;
 /* For Pooma, add a -noinline flag */
 extern bool noinline_flag;
+extern bool nolinemarker_flag = false; /* by default, emit line marker */
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
-
 
 /* Prototypes for selective instrumentation */
 extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& itemvec);
@@ -127,7 +127,9 @@ static void emitLineMarker()
   // inputLineNo is 0-indexed, but line numbers are 1-indexed so
   // adding an additional newline after corrects the offset and protects
   // following lines from the directive
-  ostr << "\n#line " << inputLineNo << '\n';
+  if (nolinemarker_flag == false) { 
+    ostr << "\n#line " << inputLineNo << '\n';
+  }
 }
 
 
@@ -166,27 +168,14 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
   }
 }
 
-static bool itemEqual(const itemRef* r1, const itemRef* r2) {
-#ifdef DEBUG
-  printf("Comparing <%d:%d> with <%d:%d> kind = %d vs %d, target %d vs %d, attribute %d vs %d\n",
-	r1->line, r1->col, r2->line, r2->col, r1->kind, r2->kind, r1->isTarget, r2->isTarget, r1->attribute, r2->attribute);
-#endif /* DEBUG */
-  /* two loops on the same line shouldn't be instrumented twice -- happens with templates with different instantiations. */
-  if ((r1->line == r2->line) && (r1->col == r2->col) && (r1->kind == r2->kind) &&
-	(r1->isTarget == r2->isTarget) && (r1->attribute == r2->attribute) &&
-	((r1->kind == START_LOOP_TIMER ) || (r1->kind == STOP_LOOP_TIMER))) {
-#ifdef DEBUG
-    printf("Items are equal returning true!\n");
-#endif /* DEBUG */
-    return true; /* they are equal -- don't bother checking the snippet part.*/
-  }
-  else 
-    return ( (r1->line == r2->line) &&
-           (r1->col  == r2->col) && 
-           (r1->kind == r2->kind) && 
-           (r1->isTarget == r2->isTarget) && 
-	   (r1->attribute == r2->attribute) && 
-	   (r1->snippet == r2->snippet)); 
+static bool itemEqual(const itemRef* r1, const itemRef* r2)
+{
+  return ((r1->line == r2->line) &&
+          (r1->col == r2->col) &&
+          (r1->kind == r2->kind) &&
+          (r1->isTarget == r2->isTarget) &&
+          (r1->attribute == r2->attribute) &&
+          (r1->snippet == r2->snippet));
 }
  
 
@@ -313,26 +302,41 @@ const char * getStopMeasurementEntity(itemRef *i)
 /* -------------------------------------------------------------------------- */
 /* -- Merge instrumentation requests of same kind for same location --------- */
 /* -------------------------------------------------------------------------- */
-void mergeInstrumentationRequests(vector<itemRef *>& itemvec) {
-  /* Now merge objects of the same kind at the same location */
-  if (itemvec.size() > 1) {
-    vector<itemRef *>::iterator iter = itemvec.begin()+1;
-    while (iter != itemvec.end()) {
-      itemRef* item1 = *(iter - 1);
-      itemRef* item2 = *iter;
+void mergeInstrumentationRequests(vector<itemRef *>& itemvec)
+{
+  vector<itemRef *>::iterator i = itemvec.begin()+1;
+  while (i < itemvec.end()) {
+    itemRef * item1 = *i;
+    itemRef * item2 = *(i-1);
 
-      if (item1->kind == item2->kind &&
-          item1->line == item2->line &&
-          item1->col  == item2->col) {
-        if (item1->snippet.empty())
+    if (item1->kind == item2->kind && item1->line == item2->line && item1->col == item2->col) {
+      switch(item1->kind) {
+      // Fall-through cases for kinds that require snippets match, e.g.
+      //case TAU_A:
+      //case TAU_B:
+      case STOP_LOOP_TIMER:
+        if (item1->snippet == item2->snippet) {
+          if (!item1->snippet.empty()) {
+            item2->snippet += "\n\t" + item1->snippet;
+          }
+          i = itemvec.erase(i);
+          continue;
+        } 
+        break;
+      // The default case doesn't require snippets to match.
+      default:
+        if (item1->snippet.empty()) {
           item1->snippet = item2->snippet;
-        else if (!item2->snippet.empty())
+        } else if (!item2->snippet.empty()) {
           item1->snippet += "\n\t" + item2->snippet;
-        iter = itemvec.erase(iter);
-      } else {
-        ++iter;
-      }
+        }
+        i = itemvec.erase(i);
+        continue;
+      } // end switch
     }
+
+    // Items don't match, proceed to next
+    ++i;
   }
 }
 
@@ -368,11 +372,21 @@ void postprocessInstrumentationRequests(vector<itemRef *>& itemvec)
      point. Now the requests can be sorted, duplicates removed, and requests
      of the same type on the same location merged. */
   stable_sort(itemvec.begin(), itemvec.end(), locCmp);
+
+#ifdef DEBUG
+  cout << itemvec.size() << endl;
+  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end(); iter++) {
+    cout <<"Items ("<<(*iter)->kind<<", "<<(*iter)->line<<", "<<(*iter)->col<<", "<<(*iter)->snippet<<")"<<endl;
+  }
+#endif /* DEBUG */
+
   itemvec.erase(unique(itemvec.begin(), itemvec.end(),itemEqual),itemvec.end());
   mergeInstrumentationRequests(itemvec);
+
 #ifdef DEBUG
+  cout << itemvec.size() << endl;
   for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end(); iter++) {
-    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"<<endl;
+    cout <<"Items ("<<(*iter)->kind<<", "<<(*iter)->line<<", "<<(*iter)->col<<", "<<(*iter)->snippet<<")"<<endl;
   }
 #endif /* DEBUG */
 }
@@ -780,7 +794,7 @@ void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
 /* -------------------------------------------------------------------------- */
 void defineTauGroup(string& group_name)
 {
-  if (group_name == "TAU_USER") {
+  if (group_name != "TAU_USER") {
     // Write the following lines only when -DTAU_GROUP=string is defined
     ostr << "#ifndef " << group_name << endl;
     ostr << "#define " << group_name << " TAU_GET_PROFILE_GROUP(\"" << group_name << "\")" << endl;
@@ -893,6 +907,7 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
             ostr << inbuf[i] << endl; // write the open brace and '\n'
 
             emitLineMarker();
+
             if (use_spec) {
               /* XXX Insert code here */
             } else if (use_perflib) {
@@ -3969,7 +3984,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) {
     cout << "Usage : " << argv[0]
-         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>]"
+         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>] [-nolinemarker]"
          << endl
          << "----------------------------------------------------------------------------------------------------------"
          << endl
@@ -4031,6 +4046,12 @@ int main(int argc, char **argv)
         printf("Noinline flag\n");
 #endif /* DEBUG */
         noinline_flag = true;
+      }
+      if (strcmp(argv[i], "-nolinemarker") == 0) {
+#ifdef DEBUG
+        printf("Nolinemarker flag\n");
+#endif /* DEBUG */
+        nolinemarker_flag = true; /* do not emit line marker */
       }
       if (strcmp(argv[i], "-noinit") == 0) {
 #ifdef DEBUG

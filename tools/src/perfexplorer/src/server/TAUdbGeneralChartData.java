@@ -136,32 +136,34 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 			if(model.getMainEventOnly() ){
 				buf.append(getMainOnlyQuery(db, listOfTrials, listOfMetrics,getDervivedThreadRank(yAxisStat),metaDataFieldName,
 						seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
-			}else if(model.getEventNames()==null && metaDataFieldName != null && model.getEventNoCallpath()) {
+			}else if(model.getEventNames()==null  && model.getEventNoCallpath()) {
 				buf.append(getAllEventsNoCallpathMetadata(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),  metaDataFieldName,
-						seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+						seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
 		
-			}else if(model.getEventNames()==null && metaDataFieldName != null && !model.getEventNoCallpath()) {
-				buf.append(getAllEventsCallpathMetadata(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),metaDataFieldName,
-						seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
-			}else if (model.getEventNoCallpath()&& metaDataFieldName != null) {
-				buf.append(getSomeEventsNoCallpathMetadata(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),metaDataFieldName,
-						seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
-			} else  if (!model.getEventNoCallpath()&& metaDataFieldName != null) {
-				buf.append(getSomeEventsCallpathMetadata(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),metaDataFieldName,
-						seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
-			}else if(model.getEventNames()==null && model.getEventNoCallpath()) {
-					buf.append(getAllEventsNoCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
-							seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
 			}else if(model.getEventNames()==null && !model.getEventNoCallpath()) {
-					buf.append(getAllEventsCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
-							seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+				buf.append(getAllEventsCallpathMetadata(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),metaDataFieldName,
+						seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
 			}else if (model.getEventNoCallpath()) {
-					buf.append(getSomeEventsNoCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
-							seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+				buf.append(getSomeEventsNoCallpathMetadata(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),metaDataFieldName,
+						seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
 			} else  if (!model.getEventNoCallpath()) {
-					buf.append(getSomeEventsCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
-							seriesName,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+				buf.append(getSomeEventsCallpathMetadata(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),metaDataFieldName,
+						seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
 			}
+			
+//			else if(model.getEventNames()==null && model.getEventNoCallpath()) {
+//					buf.append(getAllEventsNoCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
+//							seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+//			}else if(model.getEventNames()==null && !model.getEventNoCallpath()) {
+//					buf.append(getAllEventsCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
+//							seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+//			}else if (model.getEventNoCallpath()) {
+//					buf.append(getSomeEventsNoCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
+//							seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+//			} else  if (!model.getEventNoCallpath()) {
+//					buf.append(getSomeEventsCallpath(db, listOfTrials, listOfMetrics, getDervivedThreadRank(yAxisStat),
+//							seriesName, seriesXML,  xAxisName,  yAxisName,  yAxisStat, yAxisValue));
+//			}
 
 		//So I know I said don't do this, but this one is simple enough to do once.
 		//Also, I don't think this is used too much
@@ -317,7 +319,13 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 	private String getMainOnlyQuery(DB db, String listOfTrials, String listOfMetrics, int derivedThread, String metadata,
 			String seriesName, boolean seriesXML, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
 			StringBuffer buffer = new StringBuffer();
-			buffer.append("select "+seriesName +" as series_name, ");
+			if(seriesXML)
+			{
+				buffer.append("select "+"series_metadata.value" +" as series_name, ");
+			}
+			else{
+				buffer.append("select "+seriesName +" as series_name, ");
+			}
 		    buffer.append(xAxisName + " as xaxis_value, ");
 		    buffer.append(yAxisStat+"("+yAxisName );
 		    buffer.append("."+yAxisValue+") as yaxis_value from  ");
@@ -337,36 +345,46 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 			buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
 			buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath ");
 			buffer.append(" inner join timer on timer_callpath.timer = timer.id   ");
-			if(metadata!=null){
+			if(metadata!=null&&metadata.length()>0){
 				buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
+			}
+			if(seriesXML){
+				buffer.append("  inner join primary_metadata as series_metadata on series_metadata.trial=trial.id and series_metadata.name = \'"+seriesName+'\'');
 			}
 			buffer.append(" where timer_value.inclusive_value = maxinc ");
 
 			return buffer.toString();		
 	}
-	private String getAllEventsCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("select "+seriesName +" as series_name, ");
-	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-
-		buffer.append(" timer_value");
-		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
-		buffer.append(" inner join thread on thread.thread_rank = " +derivedThread);
-		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials);
-		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
-		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath ");
-		buffer.append(" inner join timer on timer_callpath.timer = timer.id   ");
-
-		return buffer.toString();		
-}
+//	private String getAllEventsCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
+//			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+//		StringBuffer buffer = new StringBuffer();
+//		buffer.append("select "+seriesName +" as series_name, ");
+//	    buffer.append(xAxisName + " as xaxis_value, ");
+//	    buffer.append(yAxisStat+"("+yAxisName );
+//
+//		buffer.append(" timer_value");
+//		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
+//		buffer.append(" inner join thread on thread.thread_rank = " +derivedThread);
+//		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials);
+//		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
+//		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath ");
+//		buffer.append(" inner join timer on timer_callpath.timer = timer.id   ");
+//
+//		return buffer.toString();		
+//}
 	private String getAllEventsCallpathMetadata(DB db, String listOfTrials, String listOfMetrics, int derivedThread, String metadata,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+			String seriesName, boolean seriesXML, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("select "+seriesName +" as series_name, ");
+		if(seriesXML)
+		{
+			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+		}
+		else{
+			buffer.append("select "+seriesName +" as series_name, ");
+		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
 	    buffer.append(yAxisStat+"("+yAxisName );
+	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
 
 		buffer.append(" timer_value");
 		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
@@ -375,33 +393,44 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
 		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath ");
 		buffer.append(" inner join timer on timer_callpath.timer = timer.id   ");
-		buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
+		if(metadata!=null&&metadata.length()>0){
+			buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
+		}
+		if(seriesXML){
+			buffer.append("  inner join primary_metadata as series_metadata on series_metadata.trial=trial.id and series_metadata.name = \'"+seriesName+'\'');
+		}
 
 
 		return buffer.toString();		
 }
-	private String getAllEventsNoCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("select "+seriesName +" as series_name, ");
-	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
-
-		buffer.append(" timer_value");
-		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
-		buffer.append(" inner join thread on thread.thread_rank = " +derivedThread);
-		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials);
-		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
-		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath and timer_callpath.parent is null");
-		buffer.append(" inner join timer on timer_callpath.timer = timer.id   ");
-
-		return buffer.toString();		
-		}
+//	private String getAllEventsNoCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
+//			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+//		StringBuffer buffer = new StringBuffer();
+//		buffer.append("select "+seriesName +" as series_name, ");
+//	    buffer.append(xAxisName + " as xaxis_value, ");
+//	    buffer.append(yAxisStat+"("+yAxisName );
+//	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
+//
+//		buffer.append(" timer_value");
+//		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
+//		buffer.append(" inner join thread on thread.thread_rank = " +derivedThread);
+//		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials);
+//		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
+//		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath and timer_callpath.parent is null");
+//		buffer.append(" inner join timer on timer_callpath.timer = timer.id   ");
+//
+//		return buffer.toString();		
+//		}
 	private String getAllEventsNoCallpathMetadata(DB db, String listOfTrials, String listOfMetrics, int derivedThread, String metadata,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+			String seriesName, boolean seriesXML, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append("select "+seriesName +" as series_name, ");
+		if(seriesXML)
+		{
+			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+		}
+		else{
+			buffer.append("select "+seriesName +" as series_name, ");
+		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
 	    buffer.append(yAxisStat+"("+yAxisName );
 	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
@@ -413,49 +442,55 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
 		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath and timer_callpath.parent is null");
 		buffer.append(" inner join timer on timer_callpath.timer = timer.id   ");
-		buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
+		if(metadata!=null&&metadata.length()>0)
+		{
+			buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
+		}
+		if(seriesXML){
+			buffer.append("  inner join primary_metadata as series_metadata on series_metadata.trial=trial.id and series_metadata.name = \'"+seriesName+'\'');
+		}
 
 
 		return buffer.toString();		
 		}
-	private String getSomeEventsCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
-		if(seriesName.equals("timer.name")) seriesName = "callpath.name";
-
-		StringBuffer buffer = new StringBuffer();
-		StringBuilder listOfEvents = new StringBuilder();
-		listOfEvents.append("( ");
-		for(String event : model.getEventNames()){
-			listOfEvents.append("\'"+event+"\',");
-		}
-		String events = listOfEvents.substring(0, listOfEvents.length()-1) + ") ";
-		
-
-		buffer.append(" with recursive callpath (id, parent, timer, name) as (  "); 
-		buffer.append(" SELECT tc.id, tc.parent, tc.timer, timer.name  "); 
-		buffer.append(" FROM  timer_callpath tc inner join timer on tc.timer = timer.id where timer.trial in "+listOfTrials+" and tc.parent is null "); 
-		buffer.append(" UNION ALL "); 
-		buffer.append(" SELECT d.id, d.parent, d.timer,  concat (callpath.name, ' => ', dt.name)  "); 
-		buffer.append(" FROM timer_callpath AS d JOIN callpath ON (d.parent = callpath.id) join timer dt on d.timer = dt.id where dt.trial in "+listOfTrials+" ) "); 
-
-		buffer.append(" select "+seriesName +" as series_name, ");
-	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from  timer_value ");
-	    
-		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id   "); 
-		buffer.append(" inner join thread on thread.thread_rank = "+derivedThread); 
-		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials); 
-		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data   "); 
-		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath  "); 
-		buffer.append(" inner join callpath on  callpath.id = timer_callpath.id and callpath.name in "+events+"   "); 
-		buffer.append(" inner join timer on timer_callpath.timer = timer.id  " );
-
-//				buffer.append(	"  group by series_name, xaxis_value order by 1, 2  "); 
-		return buffer.toString();		
-	}
+//	private String getSomeEventsCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
+//			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+//		if(seriesName.equals("timer.name")) seriesName = "callpath.name";
+//
+//		StringBuffer buffer = new StringBuffer();
+//		StringBuilder listOfEvents = new StringBuilder();
+//		listOfEvents.append("( ");
+//		for(String event : model.getEventNames()){
+//			listOfEvents.append("\'"+event+"\',");
+//		}
+//		String events = listOfEvents.substring(0, listOfEvents.length()-1) + ") ";
+//		
+//
+//		buffer.append(" with recursive callpath (id, parent, timer, name) as (  "); 
+//		buffer.append(" SELECT tc.id, tc.parent, tc.timer, timer.name  "); 
+//		buffer.append(" FROM  timer_callpath tc inner join timer on tc.timer = timer.id where timer.trial in "+listOfTrials+" and tc.parent is null "); 
+//		buffer.append(" UNION ALL "); 
+//		buffer.append(" SELECT d.id, d.parent, d.timer,  concat (callpath.name, ' => ', dt.name)  "); 
+//		buffer.append(" FROM timer_callpath AS d JOIN callpath ON (d.parent = callpath.id) join timer dt on d.timer = dt.id where dt.trial in "+listOfTrials+" ) "); 
+//
+//		buffer.append(" select "+seriesName +" as series_name, ");
+//	    buffer.append(xAxisName + " as xaxis_value, ");
+//	    buffer.append(yAxisStat+"("+yAxisName );
+//	    buffer.append("."+yAxisValue+") as yaxis_value from  timer_value ");
+//	    
+//		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id   "); 
+//		buffer.append(" inner join thread on thread.thread_rank = "+derivedThread); 
+//		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials); 
+//		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data   "); 
+//		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath  "); 
+//		buffer.append(" inner join callpath on  callpath.id = timer_callpath.id and callpath.name in "+events+"   "); 
+//		buffer.append(" inner join timer on timer_callpath.timer = timer.id  " );
+//
+////				buffer.append(	"  group by series_name, xaxis_value order by 1, 2  "); 
+//		return buffer.toString();		
+//	}
 	private String getSomeEventsCallpathMetadata(DB db, String listOfTrials, String listOfMetrics, int derivedThread, String metadata,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+			String seriesName, boolean seriesXML, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
 		if(seriesName.equals("timer.name")) seriesName = "callpath.name";
 
 		StringBuffer buffer = new StringBuffer();
@@ -471,14 +506,20 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		buffer.append(" SELECT tc.id, tc.parent, tc.timer, timer.name  "); 
 		buffer.append(" FROM  timer_callpath tc inner join timer on tc.timer = timer.id where timer.trial in "+listOfTrials+" and tc.parent is null "); 
 		buffer.append(" UNION ALL "); 
-		buffer.append(" SELECT d.id, d.parent, d.timer,  concat (callpath.name, ' => ', dt.name)  "); 
+		buffer.append(" SELECT d.id, d.parent, d.timer,  concat(callpath.name, ' => ', dt.name)  "); //TODO: concat does not exist in postgresql maybe try something like "callpath.name||' => '||dt.name"
 		buffer.append(" FROM timer_callpath AS d JOIN callpath ON (d.parent = callpath.id) join timer dt on d.timer = dt.id where dt.trial in "+listOfTrials+" ) "); 
 
-		buffer.append("select "+seriesName +" as series_name, ");
+		if(seriesXML)
+		{
+			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+		}
+		else{
+			buffer.append("select "+seriesName +" as series_name, ");
+		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
 	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from  timer_value ");
-	    
+	    buffer.append("."+yAxisValue+") as yaxis_value from ");
+	    buffer.append(" timer_value ");
 		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id   "); 
 		buffer.append(" inner join thread on thread.thread_rank = "+derivedThread); 
 		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials); 
@@ -486,13 +527,18 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath  "); 
 		buffer.append(" inner join callpath on  callpath.id = timer_callpath.id and callpath.name in "+events+"   "); 
 		buffer.append(" inner join timer on timer_callpath.timer = timer.id  " );
-		buffer.append(" inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
+		if(metadata!=null&&metadata.length()>0){
+			buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
+		}
+		if(seriesXML){
+			buffer.append("  inner join primary_metadata as series_metadata on series_metadata.trial=trial.id and series_metadata.name = \'"+seriesName+'\'');
+		}
 
 //				buffer.append(	"  group by series_name, xaxis_value order by 1, 2  "); 
 		return buffer.toString();		
 	}
 	private String getSomeEventsNoCallpathMetadata(DB db, String listOfTrials, String listOfMetrics, int derivedThread, String metadata,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+			String seriesName, boolean seriesXML, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
 		StringBuffer buffer = new StringBuffer();
 		StringBuilder listOfEvents = new StringBuilder();
 		listOfEvents.append("( ");
@@ -501,7 +547,13 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		}
 		String events = listOfEvents.substring(0, listOfEvents.length()-1) + ") ";
 
-		buffer.append("select "+seriesName +" as series_name, ");
+		if(seriesXML)
+		{
+			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+		}
+		else{
+			buffer.append("select "+seriesName +" as series_name, ");
+		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
 	    buffer.append(yAxisStat+"("+yAxisName );
 	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
@@ -513,36 +565,40 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
 		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath and timer_callpath.parent is null");
 		buffer.append(" inner join timer on timer.name in "+events+" and timer_callpath.timer = timer.id   ");
-		buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
-
-
-		return buffer.toString();		
-}
-	private String getSomeEventsNoCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
-			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
-		StringBuffer buffer = new StringBuffer();
-		StringBuilder listOfEvents = new StringBuilder();
-		listOfEvents.append("( ");
-		for(String event : model.getEventNames()){
-			listOfEvents.append("\'"+event+"\',");
+		if(metadata!=null&&metadata.length()>0){
+			buffer.append("  inner join primary_metadata on primary_metadata.trial=trial.id and primary_metadata.name = \'"+metadata+'\'');
 		}
-		String events = listOfEvents.substring(0, listOfEvents.length()-1) + ") ";
-
-		buffer.append("select "+seriesName +" as series_name, ");
-	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
-		
-		buffer.append(" timer_value");
-		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
-		buffer.append(" inner join thread on thread.thread_rank = " +derivedThread);
-		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials);
-		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
-		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath and timer_callpath.parent is null");
-		buffer.append(" inner join timer on timer.name in "+events+" and timer_callpath.timer = timer.id   ");
+		if(seriesXML){
+			buffer.append("  inner join primary_metadata as series_metadata on series_metadata.trial=trial.id and series_metadata.name = \'"+seriesName+'\'');
+		}
 
 		return buffer.toString();		
 }
+//	private String getSomeEventsNoCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
+//			String seriesName, String xAxisName, String yAxisName, String yAxisStat, String yAxisValue) throws SQLException {
+//		StringBuffer buffer = new StringBuffer();
+//		StringBuilder listOfEvents = new StringBuilder();
+//		listOfEvents.append("( ");
+//		for(String event : model.getEventNames()){
+//			listOfEvents.append("\'"+event+"\',");
+//		}
+//		String events = listOfEvents.substring(0, listOfEvents.length()-1) + ") ";
+//
+//		buffer.append("select "+seriesName +" as series_name, ");
+//	    buffer.append(xAxisName + " as xaxis_value, ");
+//	    buffer.append(yAxisStat+"("+yAxisName );
+//	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
+//		
+//		buffer.append(" timer_value");
+//		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
+//		buffer.append(" inner join thread on thread.thread_rank = " +derivedThread);
+//		buffer.append(" inner join trial on thread.trial=trial.id and thread.trial in "+listOfTrials);
+//		buffer.append(" inner join timer_call_data on timer_call_data.thread = thread.id   and  timer_call_data.id = timer_value.timer_call_data ");
+//		buffer.append(" inner join timer_callpath on timer_callpath.id=timer_call_data.timer_callpath and timer_callpath.parent is null");
+//		buffer.append(" inner join timer on timer.name in "+events+" and timer_callpath.timer = timer.id   ");
+//
+//		return buffer.toString();		
+//}
 
 
 

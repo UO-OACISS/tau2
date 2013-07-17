@@ -117,7 +117,7 @@ case $1 in
         ;;
 
      unwind_lib_flag=*)
-        unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//'`
+        unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//' -e 's/#/ /g'`
        echo "s,^UNWIND_LIB_FLAG=.*$,UNWIND_LIB_FLAG=$unwind_lib_flag,g" >> $sedout
         ;;
 
@@ -360,14 +360,35 @@ case $1 in
 	echo "s,^PDT_CXX=.*$,PDT_CXX=$pdtcxx,g" >> $sedout
 	;;
 
+     omptlib=*)
+        omptlib=`echo $1 | sed -e 's@^omptlib=@@' -e 's@#@ @g'`
+	echo "s@^OMPTLIB=.*@OMPTLIB=$omptlib@g" >> $sedout
+	;;
+
+     lompinc=*)
+        lompinc=`echo $1 | sed -e 's@^lompinc=@@' -e 's@#@ @g'`
+	echo "s@^LOMPINC=.*@LOMPINC=$lompinc@g" >> $sedout
+	;;
+     lomplib=*)
+        lomplib=`echo $1 | sed -e 's@^lomplib=@@' -e 's@#@ @g'`
+	echo "s@^LOMPLIB=.*@LOMPLIB=$lomplib@g" >> $sedout
+	;;
      fullcxx=*)
-        fullcxx=`echo $1 | sed -e 's/^fullcxx=//'`
-	echo "s,^FULL_CXX=.*$,FULL_CXX=$fullcxx,g" >> $sedout
+        fullcxx=`echo $1 | sed -e 's@^fullcxx=@@' -e 's@#@ @g'`
+	echo "s@^FULL_CXX=.*@FULL_CXX=$fullcxx@g" >> $sedout
 	;;
 
      fullcc=*)
-        fullcc=`echo $1 | sed -e 's/^fullcc=//'`
-	echo "s,^FULL_CC=.*$,FULL_CC=$fullcc,g" >> $sedout
+        fullcc=`echo $1 | sed -e 's@^fullcc=@@' -e 's@#@ @g'`
+	echo "s@^FULL_CC=.*@FULL_CC=$fullcc@g" >> $sedout
+	;;
+     tau_build_cc=*)
+        tau_build_cc=`echo $1 | sed -e 's@^tau_build_cc=@@' -e 's@#@ @g'`
+	echo "s@^TAU_BUILD_CC=.*@TAU_BUILD_CC=$tau_build_cc@g" >> $sedout
+	;;
+     tau_build_cxx=*)
+        tau_build_cxx=`echo $1 | sed -e 's@^tau_build_cxx=@@' -e 's@#@ @g'`
+	echo "s@^TAU_BUILD_CXX=.*@TAU_BUILD_CXX=$tau_build_cxx@g" >> $sedout
 	;;
 
      dyninstdir=*)
@@ -802,6 +823,10 @@ case $1 in
 	echo NOTE: Using the Open64 C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     MERCURIUM)
+	echo NOTE: Using the Mercurium C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      HITACHI)
 	echo NOTE: Using the HITACHI SR8000 MPP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -824,6 +849,14 @@ case $1 in
 	;;
      HITACHI_OPENMP)
 	echo NOTE: Using HITACHI OpenMP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_OMPT)
+	echo NOTE: Using OMPT OpenMP options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     IBMOMPT)
+	echo NOTE: Using IBM OMPT OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPEN64_OPENMP)
@@ -1243,6 +1276,10 @@ case $1 in
 	echo "NOTE: Using OTF source based distribution to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OTFLIB_LONGNAME)
+	echo "NOTE: Using -lopen-trace-format instead of -lotf to link the OTF library ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      TAU2EPILOG)
 	echo "NOTE: Using Kojak 2.1+ Epilog write interface to build tau2elg ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1291,6 +1328,22 @@ case $1 in
 	echo "NOTE: Using OpenMP Threads ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     GOMP_AVAILABLE)
+	echo "NOTE: Using GOMP OpenMP Library Wrapper ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TLS_AVAILABLE)
+	echo "NOTE: __thread Using Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DTLS_AVAILABLE)
+	echo "NOTE: Using __declspec(thread) Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGS_AVAILABLE)
+	echo "NOTE: Using pthread_getspecific() Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OPARI)
 	echo "NOTE: Using Opari OpenMP directive rewriting tool ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1336,6 +1389,14 @@ case $1 in
 	;;
      SCOREPMPI)
 	echo "NOTE: Using SCOREPMPI Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPOMPI)
+	echo "NOTE: Using SCOREPOMPI Options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPOMP)
+	echo "NOTE: Using SCOREPOMP Options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      VAMPIRTRACE_5_7_API)
@@ -1849,7 +1910,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LD_AUDITOR_AVAILABLE)
-	echo "NOTE: Disabling building of shared objects"
+	echo "NOTE: Using LD AUDITOR"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      TAU_OPENMP_NESTED)

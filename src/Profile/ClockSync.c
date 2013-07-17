@@ -226,7 +226,7 @@ void TauSyncClocks() {
 
   offsetInfo->beginOffset = getPreSyncTime();
   offsetInfo->syncOffset = getTimeOffset();
-  offsetInfo->enabled = 1;
+  offsetInfo->enabled = 0;
 
   if (userevent == 0) { /* register the user event */
     userevent = Tau_get_userevent("TauTraceClockOffsetStart");

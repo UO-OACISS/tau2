@@ -75,8 +75,13 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 }
 
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
+#ifdef __APPLE__
+  unw_context_t context;
+  int ret = unw_getcontext(&context);
+#else
   ucontext_t context;
   int ret = getcontext(&context);
+#endif
   
   if (ret != 0) {
     fprintf(stderr, "TAU: Error getting context\n");
@@ -110,8 +115,13 @@ bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
 }
 
 void Tau_sampling_unwindTauContext(int tid, void **addresses) {
+#ifdef __APPLE__
+  unw_context_t context;
+  int ret = unw_getcontext(&context);
+#else
   ucontext_t context;
   int ret = getcontext(&context);
+#endif
   
   if (ret != 0) {
     fprintf(stderr, "TAU: Error getting context\n");

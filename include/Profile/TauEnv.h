@@ -61,6 +61,9 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_signals_gdb();
+  int  TAUDECL TauEnv_get_collector_api_enabled();
+  int  TAUDECL TauEnv_get_collector_api_states_enabled();
+  int  TAUDECL TauEnv_get_collector_api_events_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
@@ -88,6 +91,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_instructions();
   int TAUDECL TauEnv_get_mic_offload();
+  int TAUDECL TauEnv_get_bfd_lookup();
 
   int  TAUDECL TauEnv_get_profile_format();
   int  TAUDECL TauEnv_get_sigusr1_action();
@@ -108,6 +112,7 @@ extern "C" {
   size_t TAUDECL TauEnv_get_memdbg_alignment();
   int TAUDECL TauEnv_get_memdbg_zero_malloc();
   int TAUDECL TauEnv_get_memdbg_attempt_continue();
+  int TAUDECL TauEnv_get_pthread_stack_size();
 
 #ifdef __cplusplus
 }

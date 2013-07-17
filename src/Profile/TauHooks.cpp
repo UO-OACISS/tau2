@@ -568,11 +568,13 @@ void tau_trace_exit(int id) {
 void* tool_thread_init(pthread_t args) {
   dprintf("TAU: initializing thread %#lx\n", args); 
   Tau_create_top_level_timer_if_necessary();
+  return NULL;
 }
 
 void* tool_thread_fini(pthread_t args) {
   dprintf("TAU: finalizing thread %#lx\n", args); 
   Tau_stop_top_level_timer_if_necessary(); 
+  return NULL;
 }
 void  tau_register_loop(char **func, char** file, int* lineno, 
   int id) {

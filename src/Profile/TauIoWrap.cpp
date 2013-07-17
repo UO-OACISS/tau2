@@ -70,7 +70,7 @@ static IOvector & TheIoWrapEvents()
 extern "C"
 int Tau_iowrap_checkPassThrough()
 {
-  return Tau_global_get_insideTAU() || lightsOut;
+  return lightsOut || Tau_init_initializingTAU() || !Tau_init_check_initialized() || (Tau_global_get_insideTAU() > 0);
 }
 
 /*********************************************************************

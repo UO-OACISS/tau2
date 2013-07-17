@@ -210,7 +210,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   if (TauEnv_get_ebs_enabled() &&
       !strstr(ProfileGroupName, "TAU_SAMPLE") &&
       !strstr(ProfileGroupName, "TAU_INTERMEDIATE") &&
-      !strstr(ProfileGroupName, "TAU_OMP_STATE") &&
+      //!strstr(ProfileGroupName, "TAU_OMP_STATE") &&
       !strstr(ProfileGroupName, "TAU_UNWIND"))
   {
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
@@ -476,6 +476,44 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
   }
 }
 
+void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
+  if (*ptr == 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+    RtsLayer::LockEnv();
+#else
+    RtsLayer::LockEnv();
+#endif
+    if (*ptr == 0) {
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#ifndef TAU_WINDOWS
+    *ptr = Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(FunctionInfo));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+#else
+    new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+#endif
+    }
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+    RtsLayer::UnLockEnv();
+#else
+    RtsLayer::UnLockEnv();
+#endif
+  }
+}
+
 void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {
@@ -548,49 +586,37 @@ char const * FunctionInfo::GetFullName()
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
-void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS]) {
-  //  static int numSamples = 0;
-  if (!TauEnv_get_ebs_enabled()) {
-    // This should be an error! We'll ignore it for now!
-    return;
-  }
-  // *CWL* - pcHistogram should never be NULL but ...
-  if (pathHistogram[tid] == NULL) {
-    // *CWL* - For the use of the PathHash, we *cannot* initialize the
-    //         mmap memory manager here! That risks signal safety issues.
-    pathHistogram[tid] = new TauPathHashTable<TauPathAccumulator>(tid);
-  }
+void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS])
+{
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
-  //TAU_VERBOSE("TAU<%d,%d>: addPcSample()\n", RtsLayer::myNode(), RtsLayer::myThread());
-  TauPathAccumulator *accumulator;
-  accumulator = pathHistogram[tid]->get(pcStack);
+  TauPathAccumulator * accumulator = pathHistogram[tid]->get(pcStack);
   if (accumulator == NULL) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
-    //accumulator = new TauPathAccumulator(1,interval);
-    accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(1, sizeof(TauPathAccumulator));
-    /*  now, use the pacement new function to create a object in
-     *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
-     *  I think the best place for that is in the destructor for
-     *  the hash table. */
-    new(accumulator) TauPathAccumulator(1,interval);
+    // accumulator = new TauPathAccumulator(1,interval);
+
+    /* Use placement new to create a object in pre-allocated memory.
+     * NOTE - this memory needs to be explicitly deallocated by calling the
+     * destructor. I think the best place for that is in the destructor for
+     * the hash table. */
+    accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(tid, sizeof(TauPathAccumulator));
+    new (accumulator) TauPathAccumulator(1, interval);
 
     bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
     if (!success) {
-      fprintf(stderr,"addPcSample: Failed to insert sample.\n");
+      fprintf(stderr, "addPcSample: Failed to insert sample.\n");
     }
   } else {
-    (accumulator->count)++;
-    int i;
-    for (i = 0; i < Tau_Global_numCounters; i++) {
+    accumulator->count++;
+    for (int i = 0; i < Tau_Global_numCounters; i++) {
       accumulator->accumulator[i] += interval[i];
     }
   }
 }
 #endif // TAU_WINDOWS
+
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $
