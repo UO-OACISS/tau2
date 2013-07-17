@@ -619,9 +619,9 @@ void Tau_CuptiLayer_set_event_name(int metric_n, int type)
 { 
   string counter_string = Tau_CuptiLayer_Added_counters.at(metric_n)->tag;
   if (type == TAU_CUPTI_COUNTER_BOUNDED) {
-    counter_string += " (upper bound)";
+    counter_string += "_(upper bound)";
   } else if (type == TAU_CUPTI_COUNTER_AVERAGED) {
-    counter_string += " (averaged)";
+    counter_string += "_(averaged)";
   }
   Tau_CuptiLayer_Added_counters.at(metric_n)->tag = counter_string; Tau_CuptiLayer_Added_counters[metric_n]->tag = counter_string;
   
