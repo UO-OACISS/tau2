@@ -1412,23 +1412,23 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_COLLECTOR_API_STATES");
-    if (parse_bool(tmp, TAU_COLLECTOR_API_STATES_DEFAULT) == 0) {
-      env_collector_api_states_enabled = 0;
-      TAU_VERBOSE("TAU: Collector API States Disabled\n");
-      TAU_METADATA("TAU_COLLECTOR_API_STATES", "off");
-    } else {
+    if (parse_bool(tmp, TAU_COLLECTOR_API_STATES_DEFAULT)) {
       env_collector_api_states_enabled = 1;
       TAU_VERBOSE("TAU: Collector API States Enabled\n");
       TAU_METADATA("TAU_COLLECTOR_API_STATES", "on");
+    } else {
+      env_collector_api_states_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API States Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "off");
     }
 
     tmp = getconf("TAU_COLLECTOR_API_EVENTS");
-    if (parse_bool(tmp, TAU_COLLECTOR_API_EVENTS_DEFAULT) == 1) {
-      env_collector_api_states_enabled = 1;
+    if (parse_bool(tmp, TAU_COLLECTOR_API_EVENTS_DEFAULT)) {
+      env_collector_api_events_enabled = 1;
       TAU_VERBOSE("TAU: Collector API Events Enabled\n");
       TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "on");
     } else {
-      env_collector_api_states_enabled = 0;
+      env_collector_api_events_enabled = 0;
       TAU_VERBOSE("TAU: Collector API Events Disabled\n");
       TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "off");
     }
