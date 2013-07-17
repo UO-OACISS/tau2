@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -344,8 +343,17 @@ public class View implements Serializable {
 	 */
 	public static List<Trial> getTrialsForTAUdbView (List<View> views, DB db) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
+		//List<Trial> trials = new ArrayList<Trial>();
 		HashMap<Integer, View> hashViews = new HashMap<Integer, View>();
+		if(views.size()==0){
+			List<View> topViews = getViews(0,db);
+			if(topViews.size()>0){
+				views.add(topViews.get(0));
+			}else
+			{
+			 return null;
+			}
+		}
 		for(View view: views){
 			hashViews.put(view.getID(), view);
 		}
@@ -377,11 +385,13 @@ public class View implements Serializable {
 			int currentView = 0;
 			int alias = 0;
 			String conjoin = " where ((";
+			boolean conditions = false;
 			while (results.next() != false) {
 				int viewid = results.getInt(2);
 				String tableName = results.getString(3);
 				if (tableName == null) 
 					break;
+				conditions = true;
 				String columnName = results.getString(4);
 				String operator = results.getString(5);
 				String value = results.getString(6);
@@ -405,7 +415,9 @@ public class View implements Serializable {
 				hashViews.get(currentView).setWhereClause(whereClause.toString());
 				hashViews.get(currentView).setJoinClause(joinClause.toString());
 			}
-			whereClause.append(")");
+			if (conditions) {
+				whereClause.append(")");
+			}
 			statement.close();
 			
 			//PerfExplorerOutput.println(whereClause.toString());

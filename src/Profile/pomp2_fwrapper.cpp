@@ -48,6 +48,10 @@
 #include "pomp2_fwrapper_def.h"
 #include <omp.h>
 
+#ifdef TAU_OPEN64ORC
+#undef FSUB
+#define FSUB(name) SUFFIX2(LOWCASE(name))
+#endif /* TAU_OPEN64ORC */
 /*
  * Fortran wrappers calling the C versions
  */

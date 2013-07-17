@@ -123,6 +123,10 @@ bool& RtsLayer::TheEnableInstrumentation(void) {
   return EnableInstrumentation;
 }
 
+extern "C" int Tau_RtsLayer_TheEnableInstrumentation(void) {
+  return (int)RtsLayer::TheEnableInstrumentation();
+}
+
 /////////////////////////////////////////////////////////////////////////
 long RtsLayer::GenerateUniqueId(void) {
   /* This routine is called in a locked region (RtsLayer::LockDB/UnLockDB)*/

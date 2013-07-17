@@ -1,4 +1,4 @@
-#!/bin/bash  
+#!/bin/bash
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -8,8 +8,6 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 declare -i group_upc=4
-# Replaced with more flexible "upc" variable
-#declare -i berkeley_upcc=$FALSE
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -26,6 +24,7 @@ declare -i optResetUsed=$FALSE
 declare -i optMemDbg=$FALSE
 declare -i optFujitsu=$FALSE
 
+declare -i cleanUpOpariFileLater=$FALSE
 declare -i optPdtF95ResetSpecified=$FALSE
 
 declare -i isVerbose=$FALSE
@@ -58,6 +57,7 @@ declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
 declare -i trackDMAPP=$FALSE
 declare -i trackPthread=$FALSE
+declare -i trackGOMP=$FALSE
 declare -i trackMPCThread=$FALSE
 declare -i revertOnError=$TRUE
 declare -i revertForced=$FALSE
@@ -106,6 +106,7 @@ printUsage () {
     echo -e "  -optTrackUPCR\t\t\tSpecify wrapping of UPC runtime calls at link time."
     echo -e "  -optTrackDMAPP\t\tSpecify wrapping of Cray DMAPP library calls at link time."
     echo -e "  -optTrackPthread\t\tSpecify wrapping of Pthread library calls at link time."
+    echo -e "  -optTrackGOMP\t\tSpecify wrapping of GOMP library calls at link time."
     echo -e "  -optTrackMPCThread\t\tSpecify wrapping of MPC Thread library calls at link time."
     echo -e "  -optWrappersDir=\"\"\t\tSpecify the location of the link wrappers directory."
     echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
@@ -271,7 +272,7 @@ echoIfDebug "The compiler being read is $CMD \n"
 # Initialize optOpariOpts 
 ####################################################################
 optOpariOpts="-nosrc -table opari.tab.c"
-optOpari2Opts="--nosrc "
+optOpari2Opts="--nosrc"
 
 ####################################################################
 #Parsing all the Tokens of the Command passed
@@ -360,6 +361,12 @@ for arg in "$@" ; do
 		   -optTrackPthread)
 			trackPthread=$TRUE
 			echoIfDebug "NOTE: turning TrackPthread on"
+			# use the wrapper link_options.tau during linking
+			;;
+
+		   -optTrackGOMP)
+			trackGOMP=$TRUE
+			echoIfDebug "NOTE: turning TrackGOMP on"
 			# use the wrapper link_options.tau during linking
 			;;
 
@@ -459,9 +466,16 @@ for arg in "$@" ; do
 			;;
 
 		    -optDefaultParser=*)
-		        defaultParser="${arg#"-optDefaultParser="}"
+			if [ $defaultParser = "noparser" ]; then 
+		          defaultParser="${arg#"-optDefaultParser="}"
+			fi 
 			pdtParserType=$defaultParser
 			if [ $pdtParserType = roseparse -o $pdtParserType = upcparse ] ; then
+			  roseUsed=$TRUE
+# roseUsed uses the ReturnFix.
+			fi
+			if [ $pdtParserType = edg44-upcparse -a ! -x $optPdtDir/edg44-upcparse -a -x $optPdtDir/upcparse ] ; then
+			  pdtParserType=upcparse; 
 			  roseUsed=$TRUE
 			fi
 
@@ -839,7 +853,13 @@ for arg in "$@" ; do
 		;;
 	    
 	    *.upc)
-		pdtParserType=upcparse
+		if [ $defaultParser = "noparser" ]; then 
+		  if [ -x $optPdtDir/edg44-upcparse ]; then 
+		    pdtParserType=edg44-upcparse
+                  else 
+		    pdtParserType=upcparse
+                  fi 
+ 		fi
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -1386,6 +1406,11 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd "
     fi
 
+    if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then 
+      linkCmd="$linkCmd `cat $optWrappersDir/gomp_wrapper/link_options.tau`"
+      echoIfDebug "Linking command is $linkCmd "
+    fi
+
     if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
@@ -1814,6 +1839,10 @@ if [ $gotoNextStep == $TRUE ]; then
 	    printError "$CMD" "$newCmd"
 	    break
 	    else
+
+            if [ $cleanUpOpariFileLater == $TRUE ]; then
+	      evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file after failed PDT stage"
+            fi
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
@@ -1956,6 +1985,11 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 	  echoIfDebug "Linking command is $linkCmd "
 	fi
 
+        if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then 
+	  newCmd="$newCmd `cat $optWrappersDir/gomp_wrapper/link_options.tau`"
+	  echoIfDebug "Linking command is $linkCmd "
+	fi
+
         if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
 	  newCmd="$newCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
 	  echoIfDebug "Linking command is $linkCmd "
@@ -2060,7 +2094,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	    fi
 	fi
 	if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
-	    evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
+            if [ $errorStatus == $FALSE ]; then
+	      evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
+            fi
+	    cleanUpOpariFileLater=$TRUE
 	fi
 	tempCounter=tempCounter+1
     done
@@ -2120,6 +2157,9 @@ if [ $errorStatus == $TRUE ] ; then
     fi
 
     evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+    if [ $revertForced == $TRUE ] ; then
+      errorStatus=0
+    fi
     break;
 fi
 

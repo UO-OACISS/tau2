@@ -96,28 +96,18 @@ int PthreadLayer::GetThreadId(void)
   return 0; // main() thread
 }
 
-void PthreadLayer::SetThreadId(int tid)
-{
-  InitializeThreadData();
-
-  int * id = (int*)pthread_getspecific(tauPthreadId);
-  if (!id) {
-    RegisterThread();
-    id = (int*)pthread_getspecific(tauPthreadId);
-  }
-  *id = tid;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // InitializeThreadData is called before any thread operations are performed. 
 // It sets the default values for static private data members of the 
 // PthreadLayer class.
 ////////////////////////////////////////////////////////////////////////
 extern "C"
-void init_once(void)
+void pthread_init_once(void)
 {
   pthread_key_create(&PthreadLayer::tauPthreadId, NULL);
   pthread_mutex_init(&PthreadLayer::tauThreadcountMutex, NULL);
+  pthread_mutex_init(&PthreadLayer::tauDBMutex, NULL);
+  pthread_mutex_init(&PthreadLayer::tauEnvMutex, NULL);
   // FIXME: This is completely unrelated to PthreadLayer
   pthread_key_create(&wrapper_flags_key, NULL);
 }
@@ -126,14 +116,14 @@ int PthreadLayer::InitializeThreadData(void)
 {
   // Do this exactly once.  Checking a static flag is a race condition so
   // use pthread_once with a callback friend function.
-  pthread_once(&initFlag, init_once);
+  pthread_once(&initFlag, pthread_init_once);
   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::InitializeDBMutexData(void)
 {
-  pthread_mutex_init(&tauDBMutex, NULL);
+  // Initialized in pthread_init_once
   return 1;
 }
 
@@ -146,7 +136,7 @@ int PthreadLayer::InitializeDBMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::LockDB(void)
 {
-  static int initflag = InitializeDBMutexData();
+  InitializeThreadData();
   pthread_mutex_lock(&tauDBMutex);
   return 1;
 }
@@ -163,7 +153,7 @@ int PthreadLayer::UnLockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::InitializeEnvMutexData(void)
 {
-  pthread_mutex_init(&tauEnvMutex, NULL);
+  // Initialized in pthread_init_once
   return 1;
 }
 
@@ -176,7 +166,7 @@ int PthreadLayer::InitializeEnvMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::LockEnv(void)
 {
-  static int initflag = InitializeEnvMutexData();
+  InitializeThreadData();
   pthread_mutex_lock(&tauEnvMutex);
   return 1;
 }
@@ -189,8 +179,6 @@ int PthreadLayer::UnLockEnv(void)
   pthread_mutex_unlock(&tauEnvMutex);
   return 1;
 }
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -238,6 +226,20 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     wrapped = new bool;
     pthread_setspecific(wrapper_flags_key, (void*)wrapped);
     *wrapped = false;
+  }
+
+  size_t stackSize = TauEnv_get_pthread_stack_size();
+  if (stackSize) {
+    size_t defaultSize;
+    if (pthread_attr_getstacksize(attr, &defaultSize)) {
+      TAU_VERBOSE("TAU: ERROR - failed to get default pthread stack size.\n");
+      defaultSize = 0;
+    }
+    if(pthread_attr_setstacksize(const_cast<pthread_attr_t*>(attr), stackSize)) {
+      TAU_VERBOSE("TAU: ERROR - failed to change pthread stack size from %d to %d.\n", defaultSize, stackSize);
+    } else {
+      TAU_VERBOSE("TAU: changed pthread stack size from %d to %d\n", defaultSize, stackSize);
+    }
   }
 
   int retval;

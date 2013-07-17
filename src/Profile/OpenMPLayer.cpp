@@ -56,6 +56,22 @@ OpenMPMap & TheOMPMap()
   return omp_map;
 }
 
+/* This is Thread Local Storage (TLS) for the thread ID.
+ * Using this is MUCH faster than computing it every time we need it.
+ * HOWEVER, it might not be supported everywhere. */
+#if defined (TAU_OPENMP)
+#if defined (TAU_USE_TLS)
+__thread int _tau_thread_id = -1;
+int _thread_count = 0;
+#elif defined(TAU_USE_DTLS)
+__declspec(thread) int _tau_thread_id = -1;
+int _thread_count = 0;
+#elif defined(TAU_USE_PGS)
+#include "TauPthreadGlobal.h"
+int _thread_count = 0;
+#endif
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
@@ -83,6 +99,44 @@ int OpenMPLayer::numThreads()
 int OpenMPLayer::GetTauThreadId(void)
 {
 #ifdef TAU_OPENMP
+
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (_tau_thread_id == -1) {
+    Tau_global_incr_insideTAU();
+    Initialize();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (_thread_count > 0) {
+      /* Process is already locked, call the unsafe thread creation routine. */
+      _tau_thread_id = RtsLayer::_createThread();
+    } else {
+      _tau_thread_id = 0;
+    }
+    _thread_count = _thread_count + 1;
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    Tau_global_decr_insideTAU();
+  }
+  return _tau_thread_id;
+#elif defined (TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (tmp->threadID == -1) {
+    Tau_global_incr_insideTAU();
+    Initialize();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (_thread_count > 0) {
+      /* Process is already locked, call the unsafe thread creation routine. */
+      tmp->threadID = RtsLayer::_createThread();
+    } else {
+      tmp->threadID = 0;
+    }
+    _thread_count = _thread_count + 1;
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    Tau_global_decr_insideTAU();
+  }
+  return tmp->threadID;
+#endif // TAU_USE_TLS
+
   int omp_thread_id = omp_get_thread_num();
 
 #ifdef TAU_OPENMP_NESTED
@@ -105,26 +159,22 @@ int OpenMPLayer::GetTauThreadId(void)
     tau_thread_id = omp_thread_id;
   } else {
     Initialize();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
     OpenMPMap & ompMap = TheOMPMap();
     OpenMPMap::iterator it = ompMap.find(omp_thread_id);
     if (it == ompMap.end()) {
-      omp_set_lock(&OpenMPLayer::tauRegistermutex);
-      it = ompMap.find(omp_thread_id);
-      if (it == ompMap.end()) {
-      /* Process is already locked, call the unsafe thread creation routine. */
-        tau_thread_id = RtsLayer::_createThread();
-        ompMap[omp_thread_id] = tau_thread_id;
-      } else {
-        tau_thread_id = it->second;
-      }
-      omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    /* Process is already locked, call the unsafe thread creation routine. */
+      tau_thread_id = RtsLayer::_createThread();
+      ompMap[omp_thread_id] = tau_thread_id;
     } else {
       tau_thread_id = it->second;
     }
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+
+    Tau_create_top_level_timer_if_necessary_task(tau_thread_id);
   }
 
   return tau_thread_id;
-
 #else
   return 0;
 #endif /* TAU_OPENMP */
@@ -133,6 +183,25 @@ int OpenMPLayer::GetTauThreadId(void)
 int OpenMPLayer::GetThreadId(void)
 {
 #ifdef TAU_OPENMP
+
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+  if (_tau_thread_id == -1) {
+	// call the function above, which will register the thread
+	// and assign the TLS value which we will use henceforth
+    return GetTauThreadId();  
+  } else {
+    return _tau_thread_id;
+  }
+#elif defined (TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  if (tmp->threadID == -1) {
+	// call the function above, which will register the thread
+	// and assign the TLS value which we will use henceforth
+    return GetTauThreadId();  
+  } else {
+    return tmp->threadID;
+  }
+#endif //TAU_USE_TLS
 
   int omp_thread_id = omp_get_thread_num();
 

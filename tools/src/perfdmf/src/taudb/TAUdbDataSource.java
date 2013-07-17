@@ -173,12 +173,12 @@ public class TAUdbDataSource extends DataSource {
         //System.out.print(time + ", ");
 
 		derivedProvided = true;
+    	meanData=meanDataNoNull;
+    	stddevData=stddevDataNoNull;
+
     	if(meanIncludeNulls){
     		meanData=meanDataAll;
     		stddevData=stddevDataAll;
-    	}else{
-    		meanData=meanDataNoNull;
-    		stddevData=stddevDataNoNull;
     	}
 
         resultSet.close();
@@ -213,6 +213,11 @@ public class TAUdbDataSource extends DataSource {
         }
         resultSet.close();
 
+		// get the list of threads. We have to do this, on case it is a summary
+		// profile that has metadata per thread - there may not be timer data
+		// for each thread.
+		Map<Thread, Integer> threadMap = databaseAPI.getThreadsMap(trialID, this, databaseAPI.getDb(), true);
+
         // map Interval Event ID's to Function objects
         Map<Integer, Function> ieMap = new HashMap<Integer, Function>();
 
@@ -240,7 +245,10 @@ public class TAUdbDataSource extends DataSource {
         // We actually discard the mean and total values by calling this
         // But, we need to compute other statistics anyway
         //TODO Deal with derived data.  Most of it will be saved in the DB?
-        generateDerivedData();
+        this.derivedProvided = true;
+        this.generateDerivedData();
+        this.aggregateMetaData();
+
 
 		// get the stats
     }

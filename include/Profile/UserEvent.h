@@ -62,12 +62,14 @@ public:
 
   static void ReportStatistics(bool ForEachThread=false);
 
+  bool writeAsMetric;
+
 public:
 
   TauUserEvent() :
       eventId(0), name("No Name"),
       minEnabled(true), maxEnabled(true), meanEnabled(true),
-      stdDevEnabled(true), monoIncreasing(false)
+      stdDevEnabled(true), monoIncreasing(false), writeAsMetric(false)
   {
     AddEventToDB();
   }
@@ -76,14 +78,14 @@ public:
       eventId(0), name(e.name),
       minEnabled(e.minEnabled), maxEnabled(e.maxEnabled),
       meanEnabled(e.meanEnabled), stdDevEnabled(e.stdDevEnabled),
-      monoIncreasing(e.monoIncreasing)
+      monoIncreasing(e.monoIncreasing), writeAsMetric(false) 
   {
     AddEventToDB();
   }
 
   TauUserEvent(std::string const & name, bool increasing=false) :
       eventId(0), name(name), minEnabled(true), maxEnabled(true),
-      meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing)
+      meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing), writeAsMetric(false) 
   {
     AddEventToDB();
   }
@@ -148,8 +150,16 @@ public:
     monoIncreasing = value;
   }
 
+  void SetWriteAsMetric(bool value) {
+    writeAsMetric = value;
+  }
+  
+  bool GetWriteAsMetric() {
+    return writeAsMetric;
+  }
+  
   TAU_EVENT_DATATYPE GetMin(void) {
-    Data const & d = MyThreadData();
+    Data const & d = ThreadData();
     return d.nEvents ? d.minVal : 0;
   }
   TAU_EVENT_DATATYPE GetMin(int tid) {
@@ -158,7 +168,7 @@ public:
   }
 
   TAU_EVENT_DATATYPE GetMax(void) {
-    Data const & d = MyThreadData();
+    Data const & d = ThreadData();
     return d.nEvents ? d.maxVal : 0;
   }
   TAU_EVENT_DATATYPE GetMax(int tid) {
@@ -167,21 +177,21 @@ public:
   }
 
   TAU_EVENT_DATATYPE GetSum(void) {
-    return MyThreadData().sumVal;
+    return ThreadData().sumVal;
   }
   TAU_EVENT_DATATYPE GetSum(int tid) {
     return ThreadData(tid).sumVal;
   }
 
   TAU_EVENT_DATATYPE GetSumSqr(void) {
-    return MyThreadData().sumSqrVal;
+    return ThreadData().sumSqrVal;
   }
   TAU_EVENT_DATATYPE GetSumSqr(int tid) {
     return ThreadData(tid).sumSqrVal;
   }
 
   TAU_EVENT_DATATYPE GetMean(void) {
-    Data const & d = MyThreadData();
+    Data const & d = ThreadData();
     return d.nEvents ? (d.sumVal / d.nEvents) : 0;
   }
   TAU_EVENT_DATATYPE GetMean(int tid) {
@@ -190,14 +200,14 @@ public:
   }
 
   size_t GetNumEvents(void) {
-    return MyThreadData().nEvents;
+    return ThreadData().nEvents;
   }
   size_t GetNumEvents(int tid) {
     return ThreadData(tid).nEvents;
   }
 
   void ResetData(void) {
-    MyThreadData() = Data();
+    ThreadData() = Data();
   }
   void ResetData(int tid) {
     ThreadData(tid) = Data();
@@ -213,8 +223,8 @@ public:
 
 private:
 
-  Data & MyThreadData() {
-    return eventData[RtsLayer::myThread()];
+  Data & ThreadData() {
+    return eventData[RtsLayer::threadId()];
   }
 
   Data & ThreadData(int tid) {
@@ -243,14 +253,27 @@ class TauContextUserEvent
 public:
 
   TauContextUserEvent(char const * name, bool monoIncr=false) :
-      userEvent(new TauUserEvent(name, monoIncr)),
 #ifdef TAU_SCOREP
-      contextEnabled(true)
+      contextEnabled(true),
 #else
-      contextEnabled(TauEnv_get_callpath_depth() != 0)
+      contextEnabled(TauEnv_get_callpath_depth() != 0),
 #endif
+      userEvent(new TauUserEvent(name, monoIncr)),
+      contextEvent(NULL)
+  { }
+  
+  TauContextUserEvent(const TauContextUserEvent &c) :
+      userEvent(c.userEvent),
+      contextEvent(c.contextEvent), contextEnabled(c.contextEnabled)
   { }
 
+  TauContextUserEvent & operator=(const TauContextUserEvent &rhs) {
+      userEvent = rhs.userEvent;
+      contextEvent = rhs.contextEvent; 
+      contextEnabled = rhs.contextEnabled;
+      return *this;
+  }
+  
   ~TauContextUserEvent() {
     delete userEvent;
   }
@@ -259,8 +282,46 @@ public:
     contextEnabled = value;
   }
 
+  std::string const & GetUserEventName() const {
+    return userEvent->GetName();
+  }
+  
+  void SetAllEventName(std::string const & value) {
+    userEvent->SetName(value);
+    if (contextEvent != NULL)
+    {
+      int sep_pos = contextEvent->GetName().find(':');
+      if (sep_pos != std::string::npos)
+      {
+        std::string context_portion = contextEvent->GetName().substr(sep_pos, contextEvent->GetName().length()-sep_pos);
+        //form new string
+        //contextEvent = userEvent;
+        std::string new_context = userEvent->GetName();
+        new_context += std::string(" ");
+        new_context += context_portion;
+        contextEvent->SetName(new_context);
+      }
+      else {
+        contextEvent->SetName(value);
+      }
+    }
+
+  }
+
   std::string const & GetName() const {
-    return contextName;
+    return contextEvent->GetName();
+  }
+  
+  void SetName(std::string const & value) {
+    contextEvent->SetName(value);
+  }
+
+  TauUserEvent *getContextUserEvent() {
+    return contextEvent;
+  }
+
+  TauUserEvent *getUserEvent() {
+    return userEvent;
   }
 
   void TriggerEvent(TAU_EVENT_DATATYPE data) {
@@ -277,8 +338,8 @@ private:
   std::string FormulateContextNameString(Profiler * current);
 
   bool contextEnabled;
-  std::string contextName;
   TauUserEvent * userEvent;
+  TauUserEvent * contextEvent;
 };
 
 

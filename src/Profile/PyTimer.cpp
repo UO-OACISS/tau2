@@ -116,15 +116,15 @@ PyFunctionDB & ThePyFunctionDB()
 ///////////////////////////////////////////////////////////////////////////////
 static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwargs, bool phase)
 {
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   static char * argnames[] = { "name", "type", "group", NULL };
 
   int tauid = 0;
   char * name = "None";
   char * type = "";
   char * group = "TAU_PYTHON";
-
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
 
   // Get Python arguments 
   if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", argnames, &name, &type, &group)) {

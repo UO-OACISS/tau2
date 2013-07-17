@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Mon Feb 25 17:25:41 PST 2013";
+    private final static String VERSION = "Wed May 15 12:29:08 PDT 2013";
 
     public static int defaultNumberPrecision = 6;
 
@@ -128,7 +128,7 @@ public class ParaProf implements ActionListener {
 		+ "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
 		+ "                                    profiles (default), pprof, dynaprof, mpip,\n"
 		+ "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
-		+ "                                    snap, perixml, gptl, ipm, google\n"
+		+ "                                    snap, perixml, gptl, ipm, google, darshan\n"
 		+ "  --range a-b:c                   Load only profiles from the given range(s) of processes\n"
 		+ "                                    Seperate individual ids or dash-defined ranges with colons\n"
 		+ "  -h, --help                      Display this help message\n" + "\n"
@@ -560,7 +560,10 @@ public class ParaProf implements ActionListener {
 		ParaProf.fileType = DataSource.IPM;
 	    } else if (fileTypeString.equals("google")) {
 		ParaProf.fileType = DataSource.GOOGLE;
-	    } else {
+	    } else if (fileTypeString.equals("darshan")){
+	    ParaProf.fileType = DataSource.DARSHAN;
+	    }
+	    else {
 		System.err.println("Please enter a valid file type.");
 		ParaProf.usage();
 		System.exit(-1);

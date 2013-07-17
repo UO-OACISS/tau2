@@ -1,0 +1,21 @@
+*** NOTE: Tested with GNU 4.7.2.
+
+To use the GOMP wrapper, do the following:
+
+WITH PDT INSTRUMENTATION:
+------------------------
+
+- configure and build tau with: -openmp -pdt=<path-to-pdt>
+- cd examples/gomp_wrapper (this directory)
+- make
+- ./matmult
+
+WITHOUT PDT INSTRUMENTATION:
+---------------------------
+
+- configure and build tau with: -openmp -bfd=download -unwind=<path-to-libunwind>
+- cd examples/gomp_wrapper (this directory)
+- edit the Makefile to change the compiler to gcc (not tau_cc.sh)
+- make
+- tau_exec -T openmp,serial -gomp ./matmult
+

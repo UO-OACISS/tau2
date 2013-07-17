@@ -169,7 +169,12 @@ public class Function implements Serializable, Comparable<Function> {
             int right = name.indexOf(">");
 
             sourceLink.setShortName(name.substring(0,fileIndex));
-            sourceLink.setFilename(name.substring(fileIndex + 5, left).trim());
+            String filename = name.substring(fileIndex + 5, left).trim();
+            if(filename.contains("/"))
+            {
+            	filename = filename.substring(filename.lastIndexOf("/") + 1);
+            }
+            sourceLink.setFilename(filename);
             sourceLink.setStartLine(Integer.parseInt(name.substring(left + 1, comma).trim()));
             sourceLink.setEndLine(Integer.parseInt(name.substring(comma + 1, right).trim()));
         }
@@ -203,6 +208,21 @@ public class Function implements Serializable, Comparable<Function> {
             name = name.substring(name.lastIndexOf("=>") + 2);
         }
 
+        if(name.startsWith("!$omp")){
+        	int at = name.lastIndexOf('@');
+        	int colon = name.lastIndexOf(':');
+        	if(at<0||colon<0||colon<at){
+        		return sourceLink;
+        	}
+        	String filename = name.substring(at+1, colon);
+        	String lineString = name.substring(colon+1);
+        	sourceLink.setFilename(filename);
+        	int linenumber = Integer.parseInt(lineString);
+        	sourceLink.setStartLine(linenumber);
+        	sourceLink.setEndLine(linenumber);
+        	return sourceLink;
+        }
+        
         // check for parameter based profile name
     	List<Parameter> parameters = new ArrayList<Parameter>();
         int parameterStart = name.indexOf("[ <");
@@ -247,9 +267,16 @@ public class Function implements Serializable, Comparable<Function> {
         filename = filename.substring(filename.lastIndexOf("/") + 1);
 
         sourceLink.setFilename(filename);
-
+        
         if (openbracket1 == -1) {
             return sourceLink;
+        }
+        
+        if(comma1>closebracket1){
+        	comma1=-1;
+        }
+        if(dash>closebracket2){
+        	dash=-1;
         }
 
         if (dash == -1) {
@@ -264,7 +291,9 @@ public class Function implements Serializable, Comparable<Function> {
                     return sourceLink;
                 }
             }
-            int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
+            
+            String lineno=name.substring(openbracket1 + 1, comma1);
+            int linenumber = Integer.parseInt(lineno);
             sourceLink.setStartLine(linenumber);
             sourceLink.setEndLine(linenumber);
             return sourceLink;

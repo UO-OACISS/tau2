@@ -65,6 +65,14 @@ using namespace std;
 #define TAU_CALLSITE_DEFAULT 0
 #define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
 
+/* If we are using OpenMP and the collector API */
+#define TAU_COLLECTOR_API_DEFAULT 1
+#define TAU_COLLECTOR_API_STATES_DEFAULT 0
+#define TAU_COLLECTOR_API_EVENTS_DEFAULT 1
+#define TAU_COLLECTOR_API_CONTEXT_TIMER "timer"
+#define TAU_COLLECTOR_API_CONTEXT_REGION "region"
+#define TAU_COLLECTOR_API_CONTEXT_NONE "none"
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
@@ -141,6 +149,8 @@ using namespace std;
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
+#define TAU_BFD_LOOKUP 1
+
 // Memory debugging environment variable defaults
 #define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  0
 #define TAU_MEMDBG_PROTECT_BELOW_DEFAULT  0
@@ -150,9 +160,16 @@ using namespace std;
 #define TAU_MEMDBG_ALLOC_MIN_DEFAULT      0 // 0 => undefined, not zero
 #define TAU_MEMDBG_ALLOC_MAX_DEFAULT      0 // 0 => undefined, not zero
 #define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
-#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
+#ifdef TAU_BGQ
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      64
+#else
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(long)
+#endif
 #define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
 #define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 0
+
+// pthread stack size default
+#define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -280,52 +297,56 @@ extern int Tau_util_readFullLine(char *line, FILE *fp);
 /*********************************************************************
  * Get executable directory name: /usr/local/foo will return /usr/local
  ********************************************************************/
-int Tau_get_cwd_of_exe(string& dirname) {
-  FILE *f;
-  f = fopen("/proc/self/cmdline", "r");
+static char const * Tau_get_cwd_of_exe()
+{
+  char * retval = NULL;
+
+  FILE * f = fopen("/proc/self/cmdline", "r");
   if (f) {
-    char line[4096];
+    char * line = (char*)malloc(4096);
     if (Tau_util_readFullLine(line, f)) {
-      string fullpath = string(line);
-      int loc = fullpath.find_last_of("/\\");
-      dirname = fullpath.substr(0,loc);
-    //  dirname.append("/");
-      return 1; 
-    } else {
-      dirname=string("unknown");
-      return 0;
+      int pos = strlen(line) - 1;
+      while(pos >= 0) {
+        char c = line[pos];
+        if (c == '/' || c == '\\') break;
+        --pos;
+      }
+      if (pos >= 0) {
+        line[pos] = '\0';
+        retval = strdup(line);
+      }
+      free((void*)line);
     }
-  } else {
-    dirname = string("unknown");
-    return 0;
   }
+  fclose(f);
+  return retval;
 }
 
 /*********************************************************************
  * Read configuration file
  ********************************************************************/
-static int TauConf_read() {
+static int TauConf_read()
+{
   const char *tmp;
-  char conf_file_name[1024]; 
+  char conf_file_name[1024];
 
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
     tmp = "tau.conf";
   }
-  FILE *cfgFile = fopen(tmp, "r");
-  if (! cfgFile) {
-    string exedir; 
-    Tau_get_cwd_of_exe(exedir);  
-    sprintf(conf_file_name, "%s/tau.conf", exedir.c_str()); 
+  FILE * cfgFile = fopen(tmp, "r");
+  if (!cfgFile) {
+    char const * exedir = Tau_get_cwd_of_exe();
+    if (!exedir) exedir = ".";
+    sprintf(conf_file_name, "%s/tau.conf", exedir);
     TAU_VERBOSE("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
   }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);
     fclose(cfgFile);
-  }
-  else {
-    sprintf(conf_file_name,"%s/tau_system_defaults/tau.conf", TAUROOT);
+  } else {
+    sprintf(conf_file_name, "%s/tau_system_defaults/tau.conf", TAUROOT);
     cfgFile = fopen(conf_file_name, "r");
     if (cfgFile) {
       TauConf_parse(cfgFile, tmp);
@@ -385,7 +406,7 @@ char * Tau_check_dirname(const char * dir)
     TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
-      sprintf(user, temp);
+      sprintf(user, "%s", temp);
     } else {
       sprintf(user, "unknown");
     }
@@ -456,6 +477,10 @@ static int env_ibm_bg_hwp_counters = 0;
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
+static int env_collector_api_enabled = 0;
+static int env_collector_api_states_enabled = 0;
+static int env_collector_api_events_enabled = 0;
+static int env_collector_api_context = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
@@ -470,11 +495,12 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
-static const char *env_cupti_api = NULL;
+static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
-static const char *env_track_cuda_instructions = NULL;
+static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 
 static int env_mic_offload = 0;
+static int env_bfd_lookup = 0;
 
 static int env_memdbg = 0;
 static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
@@ -483,7 +509,7 @@ static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
 static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
 // All values of env_memdbg_fill_gap_value are valid fill patterns
 static int env_memdbg_fill_gap = TAU_MEMDBG_FILL_GAP_DEFAULT;
-static unsigned char env_memdbg_fill_gap_value = 0;
+static unsigned char env_memdbg_fill_gap_value = 0xAB;
 // All values of env_memdbg_alloc_min are valid limits
 static int env_memdbg_alloc_min = TAU_MEMDBG_ALLOC_MIN_DEFAULT;
 static size_t env_memdbg_alloc_min_value = 0;
@@ -497,6 +523,8 @@ static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
+static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
+
 #ifdef TAU_GPI 
 #include <GPI.h>
 #include <GpiLogger.h>
@@ -506,22 +534,19 @@ static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
-  va_list args;
-  if (env_verbose != 1) {
-    return;
-  }
-  va_start(args, format);
+  if (env_verbose == 1) {
+    TauInternalFunctionGuard protects_this_function;
+    va_list args;
+    va_start(args, format);
 
 #ifdef TAU_GPI
-  gpi_vprintf(format, args);
+    gpi_vprintf(format, args);
 #else
-  vfprintf(stderr, format, args);
+    vfprintf(stderr, format, args);
 #endif
-  va_end(args);
-  fflush (stderr);
+    va_end(args);
+    fflush (stderr);
+  } // END inside TAU
 }
 
 /*********************************************************************
@@ -697,6 +722,22 @@ int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
 }
 
+int TauEnv_get_collector_api_enabled() {
+  return env_collector_api_enabled;
+}
+
+int TauEnv_get_collector_api_states_enabled() {
+  return env_collector_api_states_enabled;
+}
+
+int TauEnv_get_collector_api_events_enabled() {
+  return env_collector_api_events_enabled;
+}
+
+int TauEnv_get_collector_api_context() {
+  return env_collector_api_context;
+}
+
 int TauEnv_get_ebs_unwind() {
   return env_ebs_unwind_enabled;
 }
@@ -733,6 +774,11 @@ const char* TauEnv_get_cuda_instructions(){
 int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
+
+int TauEnv_get_bfd_lookup(){
+  return env_bfd_lookup;
+}
+
 int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
@@ -799,6 +845,10 @@ int TauEnv_get_memdbg_zero_malloc() {
 
 int TauEnv_get_memdbg_attempt_continue() {
   return env_memdbg_attempt_continue;
+}
+
+int TauEnv_get_pthread_stack_size() {
+  return env_pthread_stack_size;
 }
 
 
@@ -934,7 +984,7 @@ void TauEnv_initialize()
       if (tmp) {
         env_memdbg_alloc_min = 1;
         env_memdbg_alloc_min_value = atol(tmp);
-        TAU_VERBOSE("TAU: Minimum allocation size for bounds checking is %d\n", tmp);
+        TAU_VERBOSE("TAU: Minimum allocation size for bounds checking is %d\n", env_memdbg_alloc_min_value);
         TAU_METADATA("TAU_MEMDBG_ALLOC_MIN", tmp);
       }
 
@@ -942,7 +992,7 @@ void TauEnv_initialize()
       if (tmp) {
         env_memdbg_alloc_max = 1;
         env_memdbg_alloc_max_value = atol(tmp);
-        TAU_VERBOSE("TAU: Maximum allocation size for bounds checking is %d\n", tmp);
+        TAU_VERBOSE("TAU: Maximum allocation size for bounds checking is %d\n", env_memdbg_alloc_max_value);
         TAU_METADATA("TAU_MEMDBG_ALLOC_MAX", tmp);
       }
 
@@ -950,7 +1000,7 @@ void TauEnv_initialize()
       if (tmp) {
         env_memdbg_overhead = 1;
         env_memdbg_overhead_value = atol(tmp);
-        TAU_VERBOSE("TAU: Maximum bounds checking overhead is %d\n", tmp);
+        TAU_VERBOSE("TAU: Maximum bounds checking overhead is %d\n", env_memdbg_overhead_value);
         TAU_METADATA("TAU_MEMDBG_OVERHEAD", tmp);
       }
 
@@ -979,7 +1029,7 @@ void TauEnv_initialize()
       tmp = getconf("TAU_MEMDBG_ATTEMPT_CONTINUE");
       env_memdbg_attempt_continue = parse_bool(tmp, env_memdbg_attempt_continue);
       if(env_memdbg_attempt_continue) {
-        TAU_VERBOSE("TAU: Attempt to resume execution after memory error (only the first error will be recorded)\n");
+        TAU_VERBOSE("TAU: Attempt to resume execution after memory error\n");
         TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "on");
       } else {
         TAU_VERBOSE("TAU: The first memory error will halt execution and generate a backtrace\n");
@@ -987,6 +1037,15 @@ void TauEnv_initialize()
       }
 
     } // if (env_memdbg)
+
+    tmp = getconf("TAU_PTHREAD_STACK_SIZE");
+    if (tmp) {
+      env_pthread_stack_size = atoi(tmp);
+      if (env_pthread_stack_size) {
+        TAU_VERBOSE("TAU: pthread stack size = %d\n", env_pthread_stack_size);
+        TAU_METADATA("TAU_PTHREAD_STACK_SIZE", tmp);
+      }
+    }
 
     tmp = getconf("TAU_TRACK_IO_PARAMS");
     if (parse_bool(tmp, env_track_memory_headroom)) {
@@ -1051,11 +1110,10 @@ void TauEnv_initialize()
 #ifdef TAU_GPI
       // if exe is /usr/local/foo, this will return /usr/local where profiles
       // may be stored if PROFILEDIR is not specified
-      string cwd; 
-      int ret = Tau_get_cwd_of_exe(cwd);
-      if (ret) {
-	env_profiledir = strdup(cwd.c_str());
-	TAU_VERBOSE("ENV_PROFILEDIR = %s\n", env_profiledir); 
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_profiledir = strdup(cwd);
+        TAU_VERBOSE("ENV_PROFILEDIR = %s\n", env_profiledir);
       }
 #endif /* TAU_GPI */
     }
@@ -1066,11 +1124,10 @@ void TauEnv_initialize()
 #ifdef TAU_GPI
       // if exe is /usr/local/foo, this will return /usr/local where profiles
       // may be stored if PROFILEDIR is not specified
-      string cwd; 
-      int ret = Tau_get_cwd_of_exe(cwd);
-      if (ret) {
-	env_tracedir = strdup(cwd.c_str());
-	TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir); 
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_tracedir = strdup(cwd);
+        TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir);
       }
 #endif /* TAU_GPI */
     }
@@ -1343,6 +1400,55 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
 
+    tmp = getconf("TAU_COLLECTOR_API");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_DEFAULT)) {
+      env_collector_api_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API", "on");
+    } else {
+      env_collector_api_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API", "off");
+    }
+
+    tmp = getconf("TAU_COLLECTOR_API_STATES");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_STATES_DEFAULT)) {
+      env_collector_api_states_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API States Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "on");
+    } else {
+      env_collector_api_states_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API States Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "off");
+    }
+
+    tmp = getconf("TAU_COLLECTOR_API_EVENTS");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_EVENTS_DEFAULT)) {
+      env_collector_api_events_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API Events Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "on");
+    } else {
+      env_collector_api_events_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API Events Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "off");
+    }
+
+    env_collector_api_context = 2; // the region is the default
+    const char *apiContext = getconf("TAU_COLLECTOR_API_CONTEXT");
+    if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_TIMER)) {
+      env_collector_api_context = 1;
+      TAU_VERBOSE("TAU: Collector API Context will be the current timer\n");
+      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "timer");
+    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_REGION)) {
+      env_collector_api_context = 2;
+      TAU_VERBOSE("TAU: Collector API Context will be the current parallel region\n");
+      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "region");
+    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_NONE)) {
+      env_collector_api_context = 0;
+      TAU_VERBOSE("TAU: Collector API Context none\n");
+      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "none");
+    }
+
     tmp = getconf("TAU_SAMPLING");
     if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
       env_ebs_enabled = 1;
@@ -1523,6 +1629,17 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: MIC offloading Enabled\n");
       TAU_METADATA("TAU_MIC_OFFLOAD", "on");
 		}
+
+    tmp = getconf("TAU_BFD_LOOKUP");
+    if (parse_bool(tmp, TAU_BFD_LOOKUP)) {
+      env_bfd_lookup = 1;
+      TAU_VERBOSE("TAU: BFD Lookup Enabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "on");
+    } else {
+      env_bfd_lookup = 0;
+      TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "off");
+    }
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
