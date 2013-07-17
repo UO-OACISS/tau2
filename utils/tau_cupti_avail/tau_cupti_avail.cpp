@@ -262,6 +262,7 @@ int main(int argc, char **argv)
 
 	if (checkCounters)
 	{
+		Tau_CuptiLayer_Initialize_Map();
 		if (counter_list == NULL)
 		{
 			fprintf(stderr, "ERROR: counter list empty.\n");
