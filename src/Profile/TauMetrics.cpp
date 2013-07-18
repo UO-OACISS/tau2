@@ -101,16 +101,25 @@ char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = {NULL};
  ********************************************************************/
 static void metricv_add(const char *name) {
   int i;
+  char *ptr;
+
   if (nmetrics >= TAU_MAX_METRICS) {
     fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n", TAU_MAX_METRICS);
  		exit(1); 
 	} else {
     for (i = 0; i < nmetrics; i++) {
-      if (strcmp(metricv[i], name) == 0) {
+      if (strcasecmp(metricv[i], name) == 0) {
         return;
       }
     }
     metricv[nmetrics] = strdup(name);
+
+    /* save metric name in upper case */
+    ptr = metricv[nmetrics];
+    for (; *ptr; ptr++) {
+      *ptr = toupper(*ptr);
+    }
+
     nmetrics++;
   }
 }
