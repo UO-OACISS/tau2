@@ -1806,16 +1806,22 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
   string name = n; // this is VERY bad if called from signalling! see above ^
   FunctionInfo * fi = NULL;
 
-  RtsLayer::LockEnv();
   PureMap & pure = ThePureMap();
-  PureMap::iterator it = pure.find(name);
-  if (it == pure.end()) {
-    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-    pure[name] = fi;
-  } else {
+  int exists = pure.count(name);
+  if (exists) {
+    PureMap::const_iterator it = pure.find(name);
     fi = it->second;
+  } else {
+    RtsLayer::LockEnv();
+    PureMap::iterator it = pure.find(name);
+    if (it == pure.end()) {
+      tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+      pure[name] = fi;
+    } else {
+      fi = it->second;
+    }
+    RtsLayer::UnLockEnv();
   }
-  RtsLayer::UnLockEnv();
   Tau_start_timer(fi, 0, tid);
 }
 
