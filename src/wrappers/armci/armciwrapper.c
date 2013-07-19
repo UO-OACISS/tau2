@@ -299,7 +299,7 @@ ARMCI_PutS (void *src_ptr, int *src_stride_arr, void *dst_ptr,
 
 
 void *
-ARMCI_Memat (armci_meminfo_t * meminfo, int memflg)
+ARMCI_Memat (armci_meminfo_t * meminfo, long memflg)
 {
   void *rval;
   TAU_PROFILE_TIMER(t, "ARMCI_Memat()", "", TAU_ARMCI);
