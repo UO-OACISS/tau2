@@ -51,6 +51,7 @@ void metric_read_papi(int tid, int idx, double values[]);
 void metric_read_ktau(int tid, int idx, double values[]);
 void metric_read_cudatime(int tid, int idx, double values[]);
 void metric_read_cupti(int tid, int idx, double values[]);
+void metric_read_memory(int tid, int idx, double values[]);
 
 
 #ifdef __cplusplus
@@ -94,61 +95,31 @@ static x_uint64 initialTimeStamp;
 /* flags for atomic metrics */
 char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = {NULL};
 
-/*********************************************************************
- * Remove _'s, convert case, and compare
- * This function also changes 'one' to match 'two' if they fuzzy match correctly
- * Returns 1 if they match, 0 otherwise
- ********************************************************************/
-static int compareMetricString(char *one, const char *two) {
-  char m1[512], m2[512];
-  char *p;
-  int i;
-
-  strcpy(m1, one);
-  strcpy(m2, two);
-  while ((p = strchr(m1, '_')) != NULL) {
-    while (*p) {
-      *p = *(p + 1);
-      p++;
-    }
-  }
-  while ((p = strchr(m2, '_')) != NULL) {
-    while (*p) {
-      *p = *(p + 1);
-      p++;
-    }
-  }
-  for (i = 0; m1[i]; i++) {
-    m1[i] = toupper(m1[i]);
-  }
-  for (i = 0; m2[i]; i++) {
-    m2[i] = toupper(m2[i]);
-  }
-
-  if (strcmp(m1, m2) == 0) {
-    /* overwrite the matching name */
-    strcpy(one, two);
-    return 1;
-  } else {
-    return 0;
-  }
-}
 
 /*********************************************************************
  * Add a metric to the metrics vector
  ********************************************************************/
 static void metricv_add(const char *name) {
   int i;
+  char *ptr;
+
   if (nmetrics >= TAU_MAX_METRICS) {
     fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n", TAU_MAX_METRICS);
  		exit(1); 
 	} else {
     for (i = 0; i < nmetrics; i++) {
-      if (compareMetricString(metricv[i], name)) {
+      if (strcasecmp(metricv[i], name) == 0) {
         return;
       }
     }
     metricv[nmetrics] = strdup(name);
+
+    /* save metric name in upper case */
+    ptr = metricv[nmetrics];
+    for (; *ptr; ptr++) {
+      *ptr = toupper(*ptr);
+    }
+
     nmetrics++;
   }
 }
@@ -278,8 +249,8 @@ static void TauMetrics_initializeKTAU() {
  ********************************************************************/
 static int is_papi_metric(char *str) {
   if (strncmp("PAPI", str, 4) == 0) {
-    if (compareMetricString(str, "PAPI_TIME") == 0
-        && compareMetricString(str, "PAPI_VIRTUAL_TIME") == 0) {
+    if (strcmp(str, "PAPI_TIME") != 0
+        && strcmp(str, "PAPI_VIRTUAL_TIME") != 0) {
       return 1;
     }
   }
@@ -321,31 +292,31 @@ static void initialize_functionArray()
 
   for (int i = 0; i < nmetrics; i++) {
     found = 1;
-    if (compareMetricString(metricv[i], "LOGICAL_CLOCK")) {
+    if (strcmp(metricv[i], "LOGICAL_CLOCK") == 0) {
       functionArray[pos++] = metric_read_logicalClock;
-    } else if (compareMetricString(metricv[i], "USER_CLOCK")) {
+    } else if (strcmp(metricv[i], "USER_CLOCK") == 0) {
       functionArray[pos++] = metric_read_userClock;
-    } else if (compareMetricString(metricv[i], "GET_TIME_OF_DAY")) {
+    } else if (strcmp(metricv[i], "GET_TIME_OF_DAY") == 0) {
       functionArray[pos++] = metric_read_gettimeofday;
-    } else if (compareMetricString(metricv[i], "CLOCK_GET_TIME")) {
+    } else if (strcmp(metricv[i], "CLOCK_GET_TIME") == 0) {
       functionArray[pos++] = metric_read_clock_gettime;
-    } else if (compareMetricString(metricv[i], "TIME")) {
+    } else if (strcmp(metricv[i], "TIME") == 0) {
       functionArray[pos++] = metric_read_gettimeofday;
-    } else if (compareMetricString(metricv[i], "CPU_TIME")) {
+    } else if (strcmp(metricv[i], "CPU_TIME") == 0) {
       functionArray[pos++] = metric_read_cputime;
 #ifdef TAU_LINUX_TIMERS
-    } else if (compareMetricString(metricv[i], "LINUX_TIMERS")) {
+    } else if (strcmp(metricv[i], "LINUX_TIMERS") == 0) {
       functionArray[pos++] = metric_read_linuxtimers;
 #endif
-    } else if (compareMetricString(metricv[i], "BGL_TIMERS")) {
+    } else if (strcmp(metricv[i], "BGL_TIMERS") == 0) {
       functionArray[pos++] = metric_read_bgtimers;
-    } else if (compareMetricString(metricv[i], "BGP_TIMERS")) {
+    } else if (strcmp(metricv[i], "BGP_TIMERS") == 0) {
       functionArray[pos++] = metric_read_bgtimers;
-    } else if (compareMetricString(metricv[i], "BGQ_TIMERS")) {
+    } else if (strcmp(metricv[i], "BGQ_TIMERS") == 0) {
       functionArray[pos++] = metric_read_bgtimers;
-    } else if (compareMetricString(metricv[i], "CRAY_TIMERS")) {
+    } else if (strcmp(metricv[i], "CRAY_TIMERS") == 0) {
       functionArray[pos++] = metric_read_craytimers;
-    } else if (compareMetricString(metricv[i], "TAU_MPI_MESSAGE_SIZE")) {
+    } else if (strcmp(metricv[i], "TAU_MPI_MESSAGE_SIZE") == 0) {
       functionArray[pos++] = metric_read_messagesize;
 #ifdef CUPTI
 		} else if (is_cupti_metric(metricv[i])) {
@@ -357,21 +328,23 @@ static void initialize_functionArray()
       functionArray[pos++] = metric_read_cupti;
 #endif //CUPTI
 #ifdef TAU_PAPI
-    } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
+    } else if (strcmp(metricv[i], "P_WALL_CLOCK_TIME") == 0) {
       usingPAPI = 1;
       functionArray[pos++] = metric_read_papiwallclock;
-    } else if (compareMetricString(metricv[i], "PAPI_TIME")) {
+    } else if (strcmp(metricv[i], "PAPI_TIME") == 0) {
       usingPAPI = 1;
       functionArray[pos++] = metric_read_papiwallclock;
-    } else if (compareMetricString(metricv[i], "P_VIRTUAL_TIME")) {
+    } else if (strcmp(metricv[i], "P_VIRTUAL_TIME") == 0) {
       usingPAPI = 1;
       functionArray[pos++] = metric_read_papivirtual;
-    } else if (compareMetricString(metricv[i], "PAPI_VIRTUAL_TIME")) {
+    } else if (strcmp(metricv[i], "PAPI_VIRTUAL_TIME") == 0) {
       usingPAPI = 1;
       functionArray[pos++] = metric_read_papivirtual;
 #endif /* TAU_PAPI */
-    } else if (compareMetricString(metricv[i], "TAUGPU_TIME")) {
+    } else if (strcmp(metricv[i], "TAUGPU_TIME") == 0) {
       functionArray[pos++] = metric_read_cudatime;
+    } else if (strcmp(metricv[i], "MEMORY_DELTA") == 0) {
+      functionArray[pos++] = metric_read_memory;
     } else {
       if (papi_available && is_papi_metric(metricv[i])) {
         /* PAPI handled separately */
@@ -637,7 +610,7 @@ double TauMetrics_getTraceMetricValue(int tid) {
  **********************************************************************/
 int TauMetrics_getMetricIndexFromName(const char *metricString) {
   for (int i=0; i<nmetrics; i++) {
-    if (compareMetricString(metricv[i], metricString) == 1) {
+    if (strcmp(metricv[i], metricString) == 0) {
       return i;
     }
   }
@@ -646,7 +619,7 @@ int TauMetrics_getMetricIndexFromName(const char *metricString) {
      general case, TIME isn't necessarily in position 0. */
   if (TauEnv_get_ebs_enabled()) {
     for (int i=0; i<nmetrics; i++) {
-      if (compareMetricString(metricv[i], "TIME") == 1) {
+      if (strcmp(metricv[i], "TIME") == 0) {
 	return i;
       }
     }
