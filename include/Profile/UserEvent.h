@@ -62,8 +62,6 @@ public:
 
   static void ReportStatistics(bool ForEachThread=false);
 
-  bool writeAsMetric;
-
 public:
 
   TauUserEvent() :
@@ -242,6 +240,7 @@ private:
   bool meanEnabled;
   bool stdDevEnabled;
   bool monoIncreasing;
+  bool writeAsMetric;
 };
 
 
