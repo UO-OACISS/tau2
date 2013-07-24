@@ -37,135 +37,219 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+from __future__ import with_statement
+
 import re
+import os
 import sys
-import shutil
-from os import path
+from glob import glob
+from optparse import OptionParser
 from subprocess import Popen, PIPE
+from threading import Thread
+from Queue import Queue, Empty
+
+USAGE = """
+%prog [options] [file1 file2 ...]
+
+Input files may be regular profiles (profile.0.0.0, profile.1.0.0, etc.) or 
+merged profiles (tauprofile.xml).  If no input files are given, files named
+profile.* in the current directory are used as input. See -h for details."""
+
+PATTERN = re.compile('UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
+
 
 class Addr2LineError(RuntimeError):
     def __init__(self, value):
         self.value = value
 
 
-USAGE = "Usage: %(exe)s [-b|--backup] <file0> [<file1> ...]"
+class Addr2Line(object):
 
-PATTERN = re.compile('UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
+    _instances = dict()
 
+    @classmethod
+    def enqueue_output(cls, out, queue):
+        flag = False
+        last = None
+        for line in iter(out.readline, b''):
+            line = line.strip()
+            if flag:
+                queue.put((last, line))
+                flag = False
+            else:
+                last = line
+                flag = True
+        out.close()
 
-def die(msg, code=1):
-    """
-    Prints a message and exits
-    """
-    print msg
-    sys.exit(code)
+    @classmethod
+    def resolve(cls, exe, addr):
+        if exe == 'UNKNOWN':
+            for addr2line in Addr2Line._instances.itervalues():
+                resolved = addr2line._resolve(addr)
+                if resolved[0] != 'UNRESOLVED':
+                    break
+            return resolved
+        else:
+            return Addr2Line._instances[exe].resolve(addr)
+
+    def __init__(self, addr2line, exe):
+        Addr2Line._instances[exe] = self
+        cmd = [addr2line, '-C', '-f', '-e', exe]
+        self.exe = exe
+        self.cmdstr = ' '.join(cmd)
+        self.p = Popen(cmd, stdin=PIPE, stdout=PIPE, bufsize=1)
+        self.q = Queue()
+        self.t = Thread(target=Addr2Line.enqueue_output, args=(self.p.stdout, self.q))
+        self.t.daemon = True
+        self.t.start()
+
+    def close(self):
+        self.p.stdin.close()
+        retval = self.p.wait()
+        if retval != 0:
+            raise Addr2LineError('Nonzero exit code %d from %r' % (retval, self.cmdstr))
     
+    def _resolve(self, addr):
+        # Send address to addr2line
+        self.p.stdin.write(addr+'\n')
 
-def addr2line(exe, addr):
+        # Read addr2line output 
+        try:
+            funcname, location = self.q.get(block=True,timeout=120)
+        except Empty:
+            raise Addr2LineError('ERROR: %r timed out resolving address %r' % (self.cmdstr, addr))
+
+        # Parse location
+        location_parts = location.rsplit(':', 1)
+        if len(location_parts) != 2:
+            raise Addr2LineError('Unexpected output from %r: %r' % (cmdstr, location))
+        filename = location_parts[0]
+        lineno = location_parts[1]
+
+        # Return results
+        if not funcname or funcname == '??':
+            funcname = 'UNRESOLVED'
+        if not filename or filename == '??':
+            filename = 'UNKNOWN'
+        return funcname, filename, lineno
+
+
+def resolve(match):
     """
-    Spawns an addr2line process to resolve an address
     """
-    # Check that exe exists
-    if not path.exists(exe):
-        raise Addr2LineError('Profile references non-existent executable: %s' % exe)
-
-    # Execute addr2line    
-    cmd = ['addr2line', '-C', '-f', '-e', exe, addr]
-    cmdstr = ' '.join(cmd)
-    proc = Popen(cmd, stdout=PIPE, stderr=PIPE)
-    stdout, _ = proc.communicate()
-    if proc.returncode != 0:
-        raise Addr2LineError('addr2line failed: %s' % cmdstr)
-    
-    # Parse addr2line output
-    parts = stdout.split()
-    if len(parts) != 2:
-        raise Addr2LineError('Unexpected output from %s: %s' (cmdstr, stdout))
-    funcname = parts[0]
-    if funcname == '??' or not len(funcname):
-        funcname = '<%s>' % addr
-    location_parts = parts[1].rsplit(':', 1)
-    if len(location_parts) != 2:
-        raise Addr2LineError('Unexpected output from %s: %s' (cmdstr, stdout))
-    filename = location_parts[0]
-    if filename == '??' or not len(filename):
-        filename = exe
-    lineno = location_parts[1]
-    if lineno == '0':
-        lineno = '-1'
-
-    return funcname, filename, lineno
+    exe = match.group(1)
+    addr = match.group(2)
+    resolved = Addr2Line.resolve(exe, addr)
+    return '%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2])
 
 
-def resolve_addresses(line):
-    """
-    Uses addr2line to resolve addresses to function names and source code
-    locations in a single line of profile data
-    """
-    def sub_repl(match):
-        resolved = addr2line(match.group(1), match.group(2))
-        return '%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2])
-    return re.sub(PATTERN, sub_repl, line)
-
-def resolve_addresses_in_profile(fname):
+def resolve_addresses_in_profile(infile, outfile, addr2line, fallback_exes):
     """
     Calls addr2line to resolve addresses in profile.* files
     """ 
-    try:
-        f = open(fname, 'r+b')
-    except IOError:
-        print 'Invalid filename: %s' % fname
-        return
-    
-    # Count lines in profile and go back to file start
-    num_lines = sum(1 for line in f)
-    f.seek(0, 0) 
-    
-    # Read in file and rewrite in memory
-    rewritten = list()
-    for i, line in enumerate(f):
-        if i % max((num_lines / 10), 1) == 0:
-            perc = (float(i) / num_lines) * 100.0
-            print 'Processing %s (%d%%)' % (fname, perc)
-        try:
-            rewritten.append(resolve_addresses(line))
-        except Addr2LineError, e:
-            print 'FATAL ERROR: ' % e.value
-            f.close()
-            return
-    
-    # Rewind the file and dump rewritten text
-    f.seek(0, 0)
-    f.writelines(rewritten)
-    f.close()
+    with open(infile, 'r+') as fin:
+        with open(outfile, 'w') as fout:
+            # Scan input file for executable names
+            print 'Scanning %r' % infile
+            all_exes = list()
+            linecount = 0
+            for line in fin:
+                linecount = linecount + 1
+                match = re.search(PATTERN, line)
+                if match:
+                    exe = match.group(1)
+                    if exe != 'UNKNOWN':
+                        all_exes.append(exe)
+
+            # Build list of executables to search
+            all_exes.extend(fallback_exes)
+            if not all_exes:
+                print 'ERROR: No executables or other binary objects specified. See --help.'
+                return
+
+            # Spawn addr2line threads
+            print 'Spawning addr2line'
+            for exe in all_exes:
+                Addr2Line(addr2line, exe)
+
+            # Resolve addresses
+            fin.seek(0, 0)
+            for i, line in enumerate(fin):
+                perc = int((float(i) / linecount) * 100.0)
+                if i % 1000 == 0:
+                    print '%d of %d records processed (%d%%)' % (i, linecount, perc)
+                fout.write(re.sub(PATTERN, resolve, line))
+
+
+def which(program):
+    """
+    Returns full path to an executable or None if the named
+    executable is not in the path.
+    """
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
 
 
 def get_args():
     """
-    Processes command line arguments from sys.argv
+    Parse command line arguments
     """
-    idx = 1
-    backup = False
+    parser = OptionParser(usage=USAGE)
+    parser.add_option('-o', '--outdir', help='Specify output directory.', default='RESOLVED')
+                     
+    parser.add_option('-e', '--exe', help='Add executable or other binary object to list of binary files to search.  Repeatable.', 
+                      action='append', default=[])
+    parser.add_option('-a', '--addr2line', help='Command to execute as addr2line.', 
+                      default='addr2line', metavar='CMD')
+    (options, args) = parser.parse_args()
+
+    # Check output directory
+    if os.path.exists(options.outdir) and os.listdir(options.outdir):
+        parser.error('Output directory %r exists and contains files.' % options.outdir)
+
+    # Check executables
+    for exe in options.exe:
+        if not os.path.exists(exe):
+            parser.error('Invalid binary: %r' % exe)
+
+    # Check addr2line command
+    if not which(options.addr2line):
+        parser.error('addr2line command not found in PATH: %r' % options.addr2line)
     
-    if len(sys.argv) == 1:
-        die(USAGE % {'exe': sys.argv[0]})
-    
-    if sys.argv[1] in ['-b', '--backup']:
-        backup = True
-        idx = idx + 1
-        
-    files = sys.argv[idx:]
-    if not len(files):
-        die(USAGE % {'exe': sys.argv[0]})
-    
-    return backup, files
+    # Check input files
+    files = args if args else glob('profile.*')
+    if not files:
+        parser.error('At least one profile file must be specified.')
+
+    return options, files
+
 
 if __name__ == '__main__':   
-    backup, files = get_args()
-    for fname in files:
-        if backup:
-            shutil.copy(fname, '%s.bak' % fname)
-        resolve_addresses_in_profile(fname)
-            
-        
-            
+    options, files = get_args()
+    outdir = options.outdir
+    exes = options.exe
+    addr2line = options.addr2line
+
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+
+    for infile in files:
+        outfile = os.path.join(outdir, infile)
+        try:
+            resolve_addresses_in_profile(infile, outfile, addr2line, exes)
+        except IOError:
+            print 'Invalid input or output file.  Check command arguments'
+            sys.exit(1)
+
