@@ -208,16 +208,11 @@ def get_args():
     """
     parser = OptionParser(usage=USAGE)
     parser.add_option('-o', '--outdir', help='Specify output directory.', default='RESOLVED')
-                     
-    parser.add_option('-e', '--exe', help='Add executable or other binary object to list of binary files to search.  Repeatable.', 
+    parser.add_option('-e', '--exe', help='Add binary to list of files to search. Repeatable.', 
                       action='append', default=[])
     parser.add_option('-a', '--addr2line', help='Command to execute as addr2line.', 
                       default='addr2line', metavar='CMD')
     (options, args) = parser.parse_args()
-
-    # Check output directory
-    if os.path.exists(options.outdir) and os.listdir(options.outdir):
-        parser.error('Output directory %r exists and contains files.' % options.outdir)
 
     # Check executables
     for exe in options.exe:
