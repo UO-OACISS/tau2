@@ -293,6 +293,11 @@ void metric_read_papi(int tid, int idx, double values[]) {
 #endif /* TAU_PAPI */
 }
 
+void metric_read_memory(int tid, int idx, double values[]) {
+  double rss = Tau_max_RSS();
+  values[idx] = rss;
+}
+
 /* KTAU metrics */
 void metric_read_ktau(int tid, int idx, double values[]) {
 #ifdef TAUKTAU

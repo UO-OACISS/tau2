@@ -296,7 +296,7 @@ int main(int argc, char** argv)
 		multiply_by_block(grid, threads, d_a[cDevice], d_b[cDevice], d_c[cDevice], m, cStream);
 	}
 
-	cout << "Finnished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
+	cout << "Finished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
 
 	for (int d=0;d<nDevices;d++)
 	{

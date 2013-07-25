@@ -1,7 +1,10 @@
 TAUROOT=
 include $(TAUROOT)/include/Makefile
 
-CC = $(TAUROOT)/src/wrappers/taupreload/tau_alt_gnu_compiler gcc
+CC = $(TAU_CC)
+
+#PGI#CC = $(TAUROOT)/src/wrappers/taupreload/tau_alt_gnu_compiler gcc #ENDIF#
+
 CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS)
 ARFLAGS = rcv
 

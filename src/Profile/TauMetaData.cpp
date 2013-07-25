@@ -217,9 +217,9 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  RtsLayer::LockEnv();
+  //RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
-  RtsLayer::UnLockEnv();
+  //RtsLayer::UnLockEnv();
 #endif
 }
 
@@ -885,9 +885,9 @@ extern "C" void Tau_context_metadata(const char *name, const char *value) {
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  RtsLayer::LockEnv();
+  //RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
-  RtsLayer::UnLockEnv();
+  //RtsLayer::UnLockEnv();
 #endif
 }
 
@@ -949,9 +949,9 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  RtsLayer::LockEnv();
+  //RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
-  RtsLayer::UnLockEnv();
+  //RtsLayer::UnLockEnv();
 #else
   Tau_context_metadata(name, value);
 #endif
