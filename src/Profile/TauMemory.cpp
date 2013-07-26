@@ -94,7 +94,7 @@ static inline bool AllocationShouldBeProtected(size_t size)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
-  typedef TAU_HASH_MAP<user_event_t*, TauUserEvent*> leak_event_map_t;
+  typedef TAU_HASH_MAP<string, TauUserEvent*> leak_event_map_t;
   static leak_event_map_t leak_map;
 
   allocation_map_t const & alloc_map = AllocationMap();
@@ -103,12 +103,12 @@ void TauAllocation::DetectLeaks(void)
   for(allocation_map_t::const_iterator it=alloc_map.begin(); it != alloc_map.end(); it++) {
     TauAllocation * alloc = it->second;
     size_t size = alloc->user_size;
-    user_event_t * event = alloc->alloc_event;
+    string const & event_name = alloc->alloc_event_name;
 
-    leak_event_map_t::iterator jt = leak_map.find(event);
+    leak_event_map_t::iterator jt = leak_map.find(event_name);
     if (jt == leak_map.end()) {
-      TauUserEvent * leak_event = new TauUserEvent("MEMORY LEAK! " + event->GetName());
-      leak_map[event] = leak_event;
+      TauUserEvent * leak_event = new TauUserEvent("MEMORY LEAK! " + event_name);
+      leak_map[event_name] = leak_event;
       leak_event->TriggerEvent(size);
     } else {
       jt->second->TriggerEvent(size);
@@ -689,6 +689,7 @@ void TauAllocation::TriggerMemDbgOverheadEvent() {
 void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, int lineno)
 {
   static event_map_t event_map;
+  TauContextUserEvent * alloc_event;
 
   unsigned long file_hash = LocationHash(lineno, filename);
 
@@ -698,11 +699,11 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      alloc_event = new user_event_t("Heap Allocate");
+      alloc_event = new TauContextUserEvent("Heap Allocate");
     } else {
       char * name = new char[strlen(filename)+128];
       sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
-      alloc_event = new user_event_t(name);
+      alloc_event = new TauContextUserEvent(name);
       delete[] name;
     }
     event_map[file_hash] = alloc_event;
@@ -712,6 +713,7 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
   RtsLayer::UnLockDB();
 
   alloc_event->TriggerEvent(size);
+  alloc_event_name = alloc_event->GetName();
 }
 
 
@@ -723,7 +725,7 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-  user_event_t * e;
+  TauContextUserEvent * e;
 
   RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
@@ -731,11 +733,11 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      e = new user_event_t("Heap Free");
+      e = new TauContextUserEvent("Heap Free");
     } else {
       char * name = new char[strlen(filename)+128];
       sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
-      e = new user_event_t(name);
+      e = new TauContextUserEvent(name);
       delete[] name;
     }
     event_map[file_hash] = e;
@@ -756,7 +758,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-  user_event_t * e;
+  TauContextUserEvent * e;
 
   RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
@@ -771,7 +773,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
       name = new char[strlen(descript)+strlen(filename)+128];
       sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
     }
-    e = new user_event_t(name);
+    e = new TauContextUserEvent(name);
     event_map[file_hash] = e;
     delete[] name;
   } else {
