@@ -300,12 +300,7 @@ public:
 //
 private:
 
-  // Name of the allocation event (for leak detection)
-  // It is not sufficient to store a pointer to the allocation event
-  // because TauContextUserEvent::GetName() returns the name of the *last*
-  // context it was triggered in.  For leak detection to work, the name
-  // of the allocation event must be copied and stored.
-  std::string alloc_event_name;
+  tau::TauUserEvent * alloc_event;  ///< Allocation event (for leak detection)
 
   addr_t alloc_addr;    ///< Unadjusted address
   size_t alloc_size;    ///< Unadjusted size
