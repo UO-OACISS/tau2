@@ -162,7 +162,6 @@ class TauAllocation
 public:
 
   typedef unsigned char * addr_t;
-  typedef tau::TauContextUserEvent user_event_t;
 
   struct allocation_map_t : public TAU_HASH_MAP<addr_t, class TauAllocation*> {
     allocation_map_t() {
@@ -173,7 +172,7 @@ public:
     }
   };
 
-  struct event_map_t : public TAU_HASH_MAP<unsigned long, user_event_t*> {
+  struct event_map_t : public TAU_HASH_MAP<unsigned long, tau::TauContextUserEvent*> {
     event_map_t() {
       Tau_init_initializeTAU();
     }
@@ -253,7 +252,6 @@ private:
 public:
 
   TauAllocation() :
-    alloc_event(NULL),
     alloc_addr(NULL), alloc_size(0),
     user_addr(NULL), user_size(0),
     lguard_addr(NULL), lguard_size(0),
@@ -302,7 +300,12 @@ public:
 //
 private:
 
-  user_event_t * alloc_event; ///< Allocation event (for leak detection)
+  // Name of the allocation event (for leak detection)
+  // It is not sufficient to store a pointer to the allocation event
+  // because TauContextUserEvent::GetName() returns the name of the *last*
+  // context it was triggered in.  For leak detection to work, the name
+  // of the allocation event must be copied and stored.
+  std::string alloc_event_name;
 
   addr_t alloc_addr;    ///< Unadjusted address
   size_t alloc_size;    ///< Unadjusted size
