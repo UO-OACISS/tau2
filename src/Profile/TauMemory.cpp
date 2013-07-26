@@ -94,7 +94,7 @@ static inline bool AllocationShouldBeProtected(size_t size)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
-  typedef TAU_HASH_MAP<string, TauUserEvent*> leak_event_map_t;
+  typedef TAU_HASH_MAP<TauUserEvent*, TauUserEvent*> leak_event_map_t;
   static leak_event_map_t leak_map;
 
   allocation_map_t const & alloc_map = AllocationMap();
@@ -103,12 +103,12 @@ void TauAllocation::DetectLeaks(void)
   for(allocation_map_t::const_iterator it=alloc_map.begin(); it != alloc_map.end(); it++) {
     TauAllocation * alloc = it->second;
     size_t size = alloc->user_size;
-    string const & event_name = alloc->alloc_event_name;
+    TauUserEvent * event = alloc->alloc_event;
 
-    leak_event_map_t::iterator jt = leak_map.find(event_name);
+    leak_event_map_t::iterator jt = leak_map.find(event);
     if (jt == leak_map.end()) {
-      TauUserEvent * leak_event = new TauUserEvent("MEMORY LEAK! " + event_name);
-      leak_map[event_name] = leak_event;
+      TauUserEvent * leak_event = new TauUserEvent("MEMORY LEAK! " + event->GetName());
+      leak_map[event] = leak_event;
       leak_event->TriggerEvent(size);
     } else {
       jt->second->TriggerEvent(size);
@@ -689,7 +689,7 @@ void TauAllocation::TriggerMemDbgOverheadEvent() {
 void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, int lineno)
 {
   static event_map_t event_map;
-  TauContextUserEvent * alloc_event;
+  TauContextUserEvent * event;
 
   unsigned long file_hash = LocationHash(lineno, filename);
 
@@ -699,21 +699,21 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      alloc_event = new TauContextUserEvent("Heap Allocate");
+      event = new TauContextUserEvent("Heap Allocate");
     } else {
       char * name = new char[strlen(filename)+128];
       sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
-      alloc_event = new TauContextUserEvent(name);
+      event = new TauContextUserEvent(name);
       delete[] name;
     }
-    event_map[file_hash] = alloc_event;
+    event_map[file_hash] = event;
   } else {
-    alloc_event = it->second;
+    event = it->second;
   }
   RtsLayer::UnLockDB();
 
-  alloc_event->TriggerEvent(size);
-  alloc_event_name = alloc_event->GetName();
+  event->TriggerEvent(size);
+  alloc_event = event->getContextUserEvent();
 }
 
 
