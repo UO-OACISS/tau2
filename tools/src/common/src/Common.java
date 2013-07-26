@@ -49,5 +49,27 @@ public class Common {
         }
         return buf.toString();
     }
+    
+    public static String HTMLEntityEncodeLimit(String s,int limit) {
+        StringBuffer buf = new StringBuffer();
+        int len = (s == null ? -1 : s.length());
+
+        int limcount=0;
+        
+        for (int i = 0; i < len; i++) {
+        	limcount++;
+            char c = s.charAt(i);
+            if (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9') {
+                buf.append(c);
+            } else {
+                buf.append("&#" + (int) c + ";");
+            }
+            if(limcount>=limit&&c=='>'){
+            	buf.append("<br>");
+            	limcount=0;
+            }
+        }
+        return buf.toString();
+    }
 
 }
