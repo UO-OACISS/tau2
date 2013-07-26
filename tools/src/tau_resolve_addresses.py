@@ -42,20 +42,30 @@ from __future__ import with_statement
 import re
 import os
 import sys
+import time
 from glob import glob
+from mmap import mmap
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 from threading import Thread
 from Queue import Queue, Empty
+from xml.sax import saxutils
 
 USAGE = """
-%prog [options] [file1 file2 ...]
+%prog [options] tauprofile.xml
 
 Input files may be regular profiles (profile.0.0.0, profile.1.0.0, etc.) or 
 merged profiles (tauprofile.xml).  If no input files are given, files named
 profile.* in the current directory are used as input. See -h for details."""
 
 PATTERN = re.compile('UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
+
+# Seconds
+TIMEOUT = 300
+
+# How many times do the workers report?
+ITERS_PER_REPORT = 5000
+
 
 
 class Addr2LineError(RuntimeError):
@@ -64,8 +74,6 @@ class Addr2LineError(RuntimeError):
 
 
 class Addr2Line(object):
-
-    _instances = dict()
 
     @classmethod
     def enqueue_output(cls, out, queue):
@@ -81,41 +89,33 @@ class Addr2Line(object):
                 flag = True
         out.close()
 
-    @classmethod
-    def resolve(cls, exe, addr):
-        if exe == 'UNKNOWN':
-            for addr2line in Addr2Line._instances.itervalues():
-                resolved = addr2line._resolve(addr)
-                if resolved[0] != 'UNRESOLVED':
-                    break
-            return resolved
-        else:
-            return Addr2Line._instances[exe].resolve(addr)
-
     def __init__(self, addr2line, exe):
-        Addr2Line._instances[exe] = self
         cmd = [addr2line, '-C', '-f', '-e', exe]
         self.exe = exe
         self.cmdstr = ' '.join(cmd)
-        self.p = Popen(cmd, stdin=PIPE, stdout=PIPE, bufsize=1)
+        self.p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=1)
         self.q = Queue()
         self.t = Thread(target=Addr2Line.enqueue_output, args=(self.p.stdout, self.q))
         self.t.daemon = True
         self.t.start()
+        print 'New process: %s' % self.cmdstr
 
     def close(self):
+        self.q.join()
         self.p.stdin.close()
         retval = self.p.wait()
         if retval != 0:
-            raise Addr2LineError('Nonzero exit code %d from %r' % (retval, self.cmdstr))
+            raise Addr2LineError('Nonzero exit code %d from %r\nstdout: %s\nstderr: %s' % 
+                                 (retval, self.cmdstr, self.p.stdout, self.p.stderr))
+            
     
-    def _resolve(self, addr):
+    def resolve(self, addr):
         # Send address to addr2line
         self.p.stdin.write(addr+'\n')
 
         # Read addr2line output 
         try:
-            funcname, location = self.q.get(block=True,timeout=120)
+            funcname, location = self.q.get(block=True,timeout=TIMEOUT)
         except Empty:
             raise Addr2LineError('ERROR: %r timed out resolving address %r' % (self.cmdstr, addr))
 
@@ -133,52 +133,160 @@ class Addr2Line(object):
             filename = 'UNKNOWN'
         return funcname, filename, lineno
 
+class Worker(Thread):
 
-def resolve(match):
-    """
-    """
-    exe = match.group(1)
-    addr = match.group(2)
-    resolved = Addr2Line.resolve(exe, addr)
-    return '%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2])
+    def __init__(self, addr2line, all_exes, mm, unresolved, linespan, chunk):
+        Thread.__init__(self)
+        self.results = list()
+        self.mm = mm
+        self.unresolved = unresolved
+        self.linespan = linespan
+        self.firstline = chunk[0]
+        self.lastline = self.firstline + chunk[1]
+        self.linecount = chunk[1]
+        self.pipes = dict()
+        for exe in all_exes:
+            self.pipes[exe] = Addr2Line(addr2line, exe)
+
+    def run(self):
+        """
+        """
+        def repl(match):
+            exe = match.group(1)
+            addr = match.group(2)
+            if exe == 'UNKNOWN':
+                for p in self.pipes.itervalues():
+                    resolved = p.resolve(addr)
+                    if resolved[0] != 'UNRESOLVED':
+                        break
+            else:
+                resolved = self.pipes[exe].resolve(addr)
+            return saxutils.escape('%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2]))
+
+        # Extract lines from memory and rewrite
+        print 'New thread: %s' % self.name
+        t0 = time.clock()
+        j = 1
+        for i in xrange(self.firstline, self.lastline):
+            if j % ITERS_PER_REPORT == 0:
+                timespan = time.clock() - t0
+                time_per_iter = timespan / ITERS_PER_REPORT
+                eta = (self.linecount - j) * time_per_iter
+                etadate = time.ctime(time.time() + eta)
+                print '%s: %d records in %f seconds, ETA %f seconds (%s)' % (self.name, ITERS_PER_REPORT, timespan, eta, etadate)
+                if eta > 1000:
+                    print 'This is going to take a long time. Maybe use the --jobs option? See --help'
+                t0 = time.clock()
+            lineno = self.unresolved[i]
+            span = self.linespan[lineno]
+            start = span[0]
+            stop = span[1]
+            line = self.mm[start:stop]
+            try:
+                result = (lineno, re.sub(PATTERN, repl, line))
+            except Addr2LineError, e:
+                print e.value
+                break
+            self.results.append(result)
+            j += 1
 
 
-def resolve_addresses_in_profile(infile, outfile, addr2line, fallback_exes):
+def tauprofile_xml(infile, outfile, options):
     """
-    Calls addr2line to resolve addresses in profile.* files
+    Calls addr2line to resolve addresses in a tauprofile.xml file
     """ 
-    with open(infile, 'r+') as fin:
-        with open(outfile, 'w') as fout:
-            # Scan input file for executable names
+    fallback_exes = options.exe
+    addr2line = options.addr2line
+    jobs = int(options.jobs)
+
+    with open(infile, 'r+b') as fin:
+        with open(outfile, 'wb') as fout:
+
+            # Scan events from input file
             print 'Scanning %r' % infile
             all_exes = list()
-            linecount = 0
+            linespan = list()
+            unresolved = list()
+            offset = 0
+            t0 = time.clock()
+            j = 1
             for line in fin:
-                linecount = linecount + 1
+                # There are no event records after the first </definitions> tag
+                if line.startswith('</definitions>'):
+                    break
+                if j % ITERS_PER_REPORT == 0:
+                    timespan = time.clock() - t0
+                    print 'Scanned %d lines in %f seconds' % (j, timespan)
+                linespan.append((offset, offset + len(line)))
+                offset += len(line)
                 match = re.search(PATTERN, line)
                 if match:
+                    unresolved.append(len(linespan) - 1)
                     exe = match.group(1)
                     if exe != 'UNKNOWN':
                         all_exes.append(exe)
+                j += 1
+            linecount = len(unresolved)
+
+            # "Rewind" the input file and report
+            fin.seek(0, 0)
+            print 'Found %d executables in profile' % len(all_exes)
+            print 'Found %d unresolved addresses' % linecount
+            if jobs > linecount:
+                jobs = linecount
+                print 'Reducing jobs to %d' % jobs
 
             # Build list of executables to search
             all_exes.extend(fallback_exes)
             if not all_exes:
                 print 'ERROR: No executables or other binary objects specified. See --help.'
-                return
+                sys.exit(1)
 
-            # Spawn addr2line threads
-            print 'Spawning addr2line'
-            for exe in all_exes:
-                Addr2Line(addr2line, exe)
+            # Calculate work division
+            chunks = list()
+            start = 0
+            if jobs > 1:
+                chunklen = linecount / jobs
+                chunkrem = linecount % jobs
+                for i in xrange(jobs):
+                    count = chunklen
+                    if i < chunkrem:
+                        count += 1
+                    chunks.append((start, count))
+                    start += count
+                print '%d workers process %d records, %d process %d records' % (chunkrem, chunklen+1, (jobs-chunkrem), chunklen)
+            else:
+                chunks = [(0, linecount)]
+                print 'One thread will process %d records' % len(unresolved)
 
-            # Resolve addresses
-            fin.seek(0, 0)
-            for i, line in enumerate(fin):
-                perc = int((float(i) / linecount) * 100.0)
-                if i % 1000 == 0:
-                    print '%d of %d records processed (%d%%)' % (i, linecount, perc)
-                fout.write(re.sub(PATTERN, resolve, line))
+            # Launch worker processes
+            mm = mmap(fin.fileno(), 0)
+            workers = list()
+            for i in xrange(jobs):
+                w = Worker(addr2line, all_exes, mm, unresolved, linespan, chunks[i])
+                w.start()
+                workers.append(w)
+
+            # Process worker output
+            i = 0
+            for rank, w in enumerate(workers):
+                w.join()
+                print '%s (%d/%d) completed' % (w.name, rank, len(workers))
+                for lineno, line in w.results:
+                    if i < lineno:
+                        start = linespan[i][0]
+                        stop = linespan[lineno-1][1]
+                        fout.write(mm[start:stop])
+                        i = lineno
+                    fout.write(line)
+                    i += 1
+
+            # Write out remainder of file
+            print 'Address resolution complete, writing metrics to file...'
+            start = linespan[len(linespan)-1][1]
+            fin.seek(start, 0)
+            for line in fin:
+                fout.write(line)
 
 
 def which(program):
@@ -212,6 +320,7 @@ def get_args():
                       action='append', default=[])
     parser.add_option('-a', '--addr2line', help='Command to execute as addr2line.', 
                       default='addr2line', metavar='CMD')
+    parser.add_option('-j', '--jobs', help='Number of parallel jobs to use', default=1)
     (options, args) = parser.parse_args()
 
     # Check executables
@@ -234,8 +343,6 @@ def get_args():
 if __name__ == '__main__':   
     options, files = get_args()
     outdir = options.outdir
-    exes = options.exe
-    addr2line = options.addr2line
 
     if not os.path.exists(outdir):
         os.mkdir(outdir)
@@ -243,7 +350,7 @@ if __name__ == '__main__':
     for infile in files:
         outfile = os.path.join(outdir, infile)
         try:
-            resolve_addresses_in_profile(infile, outfile, addr2line, exes)
+            tauprofile_xml(infile, outfile, options)
         except IOError:
             print 'Invalid input or output file.  Check command arguments'
             sys.exit(1)
