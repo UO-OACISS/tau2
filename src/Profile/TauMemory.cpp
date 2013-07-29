@@ -94,11 +94,10 @@ static inline bool AllocationShouldBeProtected(size_t size)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
-  typedef TAU_HASH_MAP<TauUserEvent*, TauUserEvent*> leak_event_map_t;
-  static leak_event_map_t leak_map;
-
   allocation_map_t const & alloc_map = AllocationMap();
   if (alloc_map.empty()) return;
+
+  leak_event_map_t & leak_map = __leak_event_map();
 
   for(allocation_map_t::const_iterator it=alloc_map.begin(); it != alloc_map.end(); it++) {
     TauAllocation * alloc = it->second;
@@ -123,6 +122,15 @@ TauAllocation::allocation_map_t & TauAllocation::__allocation_map()
 {
   static allocation_map_t alloc_map;
   return alloc_map;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Read/write leak event map
+//////////////////////////////////////////////////////////////////////
+TauAllocation::leak_event_map_t & TauAllocation::__leak_event_map()
+{
+  static leak_event_map_t leak_event_map;
+  return leak_event_map;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -947,11 +955,9 @@ size_t Tau_page_size(void)
   return (size_t)PAGE_SIZE;
 #else
   static size_t page_size = 0;
-
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   if (!page_size) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 #if defined(TAU_WINDOWS)
     SYSTEM_INFO SystemInfo;
     GetSystemInfo(&SystemInfo);
@@ -964,7 +970,6 @@ size_t Tau_page_size(void)
     page_size = getpagesize();
 #endif
   }
-
   return page_size;
 #endif
 }

@@ -181,6 +181,8 @@ public:
     }
   };
 
+  typedef TAU_HASH_MAP<tau::TauUserEvent*, tau::TauUserEvent*> leak_event_map_t;
+
   // Database of allocation records (read-only outside this class)
   static allocation_map_t const & AllocationMap() {
     return __allocation_map();
@@ -237,6 +239,9 @@ private:
   // Read/write allocation map
   static allocation_map_t & __allocation_map();
 
+  // Read/write leak event map
+  static leak_event_map_t & __leak_event_map();
+
   // Read/write bytes allocated
   static size_t & __bytes_allocated();
 
@@ -259,7 +264,11 @@ public:
     lgap_addr(NULL), lgap_size(0),
     ugap_addr(NULL), ugap_size(0),
     tracked(false), allocated(false)
-  { }
+  { 
+    // Initialize leak event map early on since Intel 12.x compilers 
+    // can't construct tr1::hash_map from exit()
+    static leak_event_map_t & leak_event_map = __leak_event_map();
+  }
 
   // True if ptr is in the range tracked by this allocation
   bool Contains(void * ptr) const {
