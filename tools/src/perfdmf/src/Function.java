@@ -1,6 +1,7 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.awt.Color;
+import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -264,7 +265,11 @@ public class Function implements Serializable, Comparable<Function> {
         int closebracket2 = name.indexOf("}", closebracket1 + 1);
 
         String filename = name.substring(filenameStart + 2, filenameEnd);
-        filename = filename.substring(filename.lastIndexOf("/") + 1);
+        File sourceFile=new File(filename);
+        if(!sourceFile.exists())
+        {
+        	filename = filename.substring(filename.lastIndexOf("/") + 1);
+        }
 
         sourceLink.setFilename(filename);
         
