@@ -1142,9 +1142,9 @@ void __wrap_GOMP_taskwait () {
 }
 
 /* taskyield only exists in 4.7 or greater */
-#ifndef GOMP_taskyield
-void GOMP_taskyield () {};
-#else
+//#ifndef GOMP_taskyield
+//void GOMP_taskyield () {};
+//#else
 
 void __real_GOMP_taskyield ();
 void __wrap_GOMP_taskyield () {
