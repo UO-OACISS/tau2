@@ -94,16 +94,15 @@ static inline bool AllocationShouldBeProtected(size_t size)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
-  typedef TAU_HASH_MAP<user_event_t*, TauUserEvent*> leak_event_map_t;
-  static leak_event_map_t leak_map;
-
   allocation_map_t const & alloc_map = AllocationMap();
   if (alloc_map.empty()) return;
+
+  leak_event_map_t & leak_map = __leak_event_map();
 
   for(allocation_map_t::const_iterator it=alloc_map.begin(); it != alloc_map.end(); it++) {
     TauAllocation * alloc = it->second;
     size_t size = alloc->user_size;
-    user_event_t * event = alloc->alloc_event;
+    TauUserEvent * event = alloc->alloc_event;
 
     leak_event_map_t::iterator jt = leak_map.find(event);
     if (jt == leak_map.end()) {
@@ -123,6 +122,15 @@ TauAllocation::allocation_map_t & TauAllocation::__allocation_map()
 {
   static allocation_map_t alloc_map;
   return alloc_map;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Read/write leak event map
+//////////////////////////////////////////////////////////////////////
+TauAllocation::leak_event_map_t & TauAllocation::__leak_event_map()
+{
+  static leak_event_map_t leak_event_map;
+  return leak_event_map;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -689,6 +697,7 @@ void TauAllocation::TriggerMemDbgOverheadEvent() {
 void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, int lineno)
 {
   static event_map_t event_map;
+  TauContextUserEvent * event;
 
   unsigned long file_hash = LocationHash(lineno, filename);
 
@@ -698,20 +707,21 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      alloc_event = new user_event_t("Heap Allocate");
+      event = new TauContextUserEvent("Heap Allocate");
     } else {
       char * name = new char[strlen(filename)+128];
       sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
-      alloc_event = new user_event_t(name);
+      event = new TauContextUserEvent(name);
       delete[] name;
     }
-    event_map[file_hash] = alloc_event;
+    event_map[file_hash] = event;
   } else {
-    alloc_event = it->second;
+    event = it->second;
   }
   RtsLayer::UnLockDB();
 
-  alloc_event->TriggerEvent(size);
+  event->TriggerEvent(size);
+  alloc_event = event->getContextUserEvent();
 }
 
 
@@ -723,7 +733,7 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-  user_event_t * e;
+  TauContextUserEvent * e;
 
   RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
@@ -731,11 +741,11 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      e = new user_event_t("Heap Free");
+      e = new TauContextUserEvent("Heap Free");
     } else {
       char * name = new char[strlen(filename)+128];
       sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
-      e = new user_event_t(name);
+      e = new TauContextUserEvent(name);
       delete[] name;
     }
     event_map[file_hash] = e;
@@ -756,7 +766,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-  user_event_t * e;
+  TauContextUserEvent * e;
 
   RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
@@ -771,7 +781,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
       name = new char[strlen(descript)+strlen(filename)+128];
       sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
     }
-    e = new user_event_t(name);
+    e = new TauContextUserEvent(name);
     event_map[file_hash] = e;
     delete[] name;
   } else {
@@ -945,11 +955,9 @@ size_t Tau_page_size(void)
   return (size_t)PAGE_SIZE;
 #else
   static size_t page_size = 0;
-
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   if (!page_size) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 #if defined(TAU_WINDOWS)
     SYSTEM_INFO SystemInfo;
     GetSystemInfo(&SystemInfo);
@@ -962,7 +970,6 @@ size_t Tau_page_size(void)
     page_size = getpagesize();
 #endif
   }
-
   return page_size;
 #endif
 }
