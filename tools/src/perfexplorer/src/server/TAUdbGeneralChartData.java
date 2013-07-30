@@ -377,7 +377,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		StringBuffer buffer = new StringBuffer();
 		if(seriesXML)
 		{
-			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+			buffer.append("select "+"series_metadata.value" +" as series_name, ");
 		}
 		else{
 			buffer.append("select "+seriesName +" as series_name, ");
@@ -426,7 +426,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 		StringBuffer buffer = new StringBuffer();
 		if(seriesXML)
 		{
-			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+			buffer.append("select "+"series_metadata.value" +" as series_name, ");
 		}
 		else{
 			buffer.append("select "+seriesName +" as series_name, ");
@@ -511,7 +511,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 
 		if(seriesXML)
 		{
-			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+			buffer.append("select "+"series_metadata.value" +" as series_name, ");
 		}
 		else{
 			buffer.append("select "+seriesName +" as series_name, ");
@@ -549,7 +549,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 
 		if(seriesXML)
 		{
-			buffer.append("select "+"primary_metadata.value" +" as series_name, ");
+			buffer.append("select "+"series_metadata.value" +" as series_name, ");
 		}
 		else{
 			buffer.append("select "+seriesName +" as series_name, ");
