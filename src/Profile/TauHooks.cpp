@@ -410,6 +410,12 @@ void traceEntry(int id)
     dprintf("ERROR?: ENTRY: id = null!\n");
     return;
   }
+
+  // this event is throttled - exit!
+  if (!(((FunctionInfo*)(fi))->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    return;
+  }
+
   TAU_QUERY_DECLARE_EVENT(curr);
   TAU_QUERY_GET_CURRENT_EVENT(curr);
 
@@ -419,8 +425,10 @@ void traceEntry(int id)
     TAU_PROFILER_STOP(((Profiler *)curr)->ThisFunction);
   }
 
+#if 0
   dprintf("Inside traceEntry: id = %d fi = %lx\n", id, fi);
   dprintf("Name = %s\n", ((FunctionInfo *)fi)->GetName());
+#endif
   if (id == tauFiniID) { 
     Tau_stop_top_level_timer_if_necessary(); 
 	/* if there is .TAU application from tau_exec, write the files out */
@@ -443,17 +451,24 @@ void traceExit(int id)
 {
   const char *strcurr;
   const char *strbin;
-  dprintf("Inside traceExit: id = %d\n", id);  
+  //dprintf("Inside traceExit: id = %d\n", id);  
   
   if ( !RtsLayer::TheEnableInstrumentation()) return; 
   int tid = RtsLayer::myThread();
 
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
+#if 0
   if (fi) 
     dprintf("traceExit: Name = %s, %lx\n", ((FunctionInfo *)fi)->GetName(), fi);
   else
     return;
+#endif
+
+  // this event is throttled - exit!
+  if (!(((FunctionInfo*)(fi))->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    return;
+  }
 
   TAU_QUERY_DECLARE_EVENT(curr);
   TAU_QUERY_GET_CURRENT_EVENT(curr);
