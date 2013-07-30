@@ -726,7 +726,12 @@ public abstract class DataSource {
 
         for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
             Function function = l.next();
-			if (function.getName().contains("SAMPLE") && !function.getName().contains("UNRESOLVED")) {
+			if (function.getName().contains("SAMPLE") && 
+			    !function.getName().contains("UNRESOLVED")) {
+              functions.add(function);
+			} else if (function.getName().contains("SAMPLE") && 
+			           function.getName().contains("UNRESOLVED") && 
+			   	       function.getName().contains("ADDR")) {
               functions.add(function);
 			}
 
@@ -754,20 +759,40 @@ public abstract class DataSource {
             Function function = l.next();
 
             String bonusName = function.getName();
-			// search for "} {1234}]" at the end of the string
-            int end = bonusName.lastIndexOf("} {");
-			// if this sample doesn't have a line number, skip it.
-			if (end == -1) continue;
-            bonusName = bonusName.substring(0, end);
-			// truncate it
-			bonusName += "}]";
-            Function bonusFunction = this.getFunction(bonusName);
-            if (bonusFunction == null) {
-                bonusFunction = addFunction(bonusName);
-                for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
-                   bonusFunction.addGroup(g.next());
-                }
-            }
+            Function bonusFunction = null;
+			if (function.getName().contains("SAMPLE") && 
+			    !function.getName().contains("UNRESOLVED")) {
+			  // search for "} {1234}]" at the end of the string
+              int end = bonusName.lastIndexOf("} {");
+			  // if this sample doesn't have a line number, skip it.
+			  if (end == -1) continue;
+              bonusName = bonusName.substring(0, end);
+			  // truncate it
+			  bonusName += "}]";
+              bonusFunction = this.getFunction(bonusName);
+              if (bonusFunction == null) {
+                  bonusFunction = addFunction(bonusName);
+                  for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
+                     bonusFunction.addGroup(g.next());
+                  }
+              }
+			} else if (function.getName().contains("SAMPLE") && 
+			         function.getName().contains("UNRESOLVED") && 
+				     function.getName().contains("ADDR")) {
+			  // search for "ADDR 0x7fc4fcf10283" at the end of the string
+              int end = bonusName.lastIndexOf(" ADDR ");
+			  // if this sample doesn't have an address number, skip it.
+			  if (end == -1) continue;
+			  // truncate it
+              bonusName = bonusName.substring(0, end);
+              bonusFunction = this.getFunction(bonusName);
+              if (bonusFunction == null) {
+                  bonusFunction = addFunction(bonusName);
+                  for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
+                     bonusFunction.addGroup(g.next());
+                  }
+              }
+			}
             bonusFunction.addGroup(derivedGroup);
             for (int i = 0; i < numThreads; i++) {
                 Thread thread = allThreads.get(i);
@@ -791,7 +816,7 @@ public abstract class DataSource {
                 }
             }
 			// now, insert the aggregate value into the callpath tree by renaming the function
-            end = function.getName().lastIndexOf(" => ");
+            int end = function.getName().lastIndexOf(" => ");
 			// if this is not a callpath sample, skip it.
 			if (end == -1) continue;
             bonusFunction.addGroup(callpathDerivedGroup);

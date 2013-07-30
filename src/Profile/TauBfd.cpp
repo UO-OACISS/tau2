@@ -17,7 +17,9 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
 #include <bfd.h>
+#if TAU_BFD >= 022300
 #include <elf-bfd.h>
+#endif
 #include <dirent.h>
 #include <stdint.h>
 
@@ -93,8 +95,10 @@ struct TauBfdModule
       return (bfdOpen = false);
     }
 
+#if TAU_BFD >= 022200
     // Decompress sections
     bfdImage->flags |= BFD_DECOMPRESS;
+#endif
 
     if (!bfd_check_format(bfdImage, bfd_object)) {
       TAU_VERBOSE("loadSymbolTable: bfd format check failed [%s]\n", path);
@@ -158,7 +162,7 @@ struct TauBfdModule
 
 struct TauBfdUnit
 {
-  TauBfdUnit() {
+  TauBfdUnit() : objopen_counter(-1) {
     executablePath = Tau_bfd_internal_getExecutablePath();
     executableModule = new TauBfdModule;
   }
@@ -177,10 +181,12 @@ struct TauBfdUnit
     modules.clear();
   }
 
+  int objopen_counter;
   char const * executablePath;
   TauBfdModule * executableModule;
   vector<TauBfdAddrMap*> addressMaps;
   vector<TauBfdModule*> modules;
+
 };
 
 struct LocateAddressData
@@ -217,6 +223,30 @@ static bfd_unit_vector_t & ThebfdUnits(void)
   // BFD units (e.g. executables and their dynamic libraries)
   static bfd_unit_vector_t internal_bfd_units;
   return internal_bfd_units;
+}
+
+typedef int * (*objopen_counter_t)(void);
+objopen_counter_t objopen_counter = NULL;
+
+int get_objopen_counter(void)
+{
+  if (objopen_counter) {
+    return *(objopen_counter());
+  }
+  return 0;
+}
+
+void set_objopen_counter(int value)
+{
+  if (objopen_counter) {
+    *(objopen_counter()) = value;
+  }
+}
+
+extern "C"
+void Tau_bfd_register_objopen_counter(objopen_counter_t handle)
+{
+  objopen_counter = handle;
 }
 
 //
@@ -415,6 +445,7 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
   if (!Tau_bfd_checkHandle(handle)) return;
 
   TauBfdUnit * unit = ThebfdUnits()[handle];
+
   unit->ClearMaps();
   unit->ClearModules();
 
@@ -425,6 +456,8 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
 #else
   Tau_bfd_internal_updateProcSelfMaps(unit);
 #endif
+
+  unit->objopen_counter = get_objopen_counter();
 
   TAU_VERBOSE("Tau_bfd_updateAddressMaps: %d modules discovered\n", unit->modules.size());
 }
@@ -494,9 +527,7 @@ static char const * Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * fu
 }
 
 static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
-  char hex_pc_string[100];
-  sprintf(hex_pc_string, "%p", pc);
-  pc = bfd_scan_vma(hex_pc_string, NULL, 16);
+#if TAU_BFD >= 022300
   if (bfd_get_flavour(bfdImage) == bfd_target_elf_flavour) {
     const struct elf_backend_data * bed = get_elf_backend_data(bfdImage);
     bfd_vma sign = (bfd_vma) 1 << (bed->s->arch_size - 1);
@@ -505,13 +536,14 @@ static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
       pc = (pc ^ sign) - sign;
     }
   }
+#endif
   return pc;
 }
 
 // Probe for BFD information given a single address.
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, TauBfdInfo & info)
 {
-  if (!Tau_bfd_checkHandle(handle)) {
+  if (!TauEnv_get_bfd_lookup() || !Tau_bfd_checkHandle(handle)) {
     info.secure(probeAddr);
     return false;
   }
@@ -520,6 +552,10 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   TauBfdModule * module;
   unsigned long addr0;
   unsigned long addr1;
+
+  if (unit->objopen_counter != get_objopen_counter()) {
+    Tau_bfd_updateAddressMaps(handle);
+  }
 
   // Discover if we are searching in the executable or a module
   int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probeAddr);
@@ -615,7 +651,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   }
 
   // At this point we were unable to resolve the symbol.
-    
+
 #ifdef TAU_INTEL12
   // For Intel 12 workaround. Inform the module that the previous resolve failed.
   module->markLastResult(false);
@@ -845,7 +881,7 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   if (data.found) return;
 
   // Skip this section if it isn't a debug info section
-  //if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
+  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
 
   // Skip this section if the address is before the section start
   bfd_vma vma = bfd_get_section_vma(bfdptr, section);
@@ -860,10 +896,17 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // TauBfdInfo fields without an extra copy.  This also means
   // that the pointers in TauBfdInfo must never be deleted
   // since they point directly into the module's BFD.
+#if TAU_BFD >= 022200
   data.found = bfd_find_nearest_line_discriminator(bfdptr, section,
       data.module->syms, (data.info.probeAddr - vma),
       &data.info.filename, &data.info.funcname,
       (unsigned int*)&data.info.lineno, &data.info.discriminator);
+#else
+  data.found = bfd_find_nearest_line(bfdptr, section,
+      data.module->syms, (data.info.probeAddr - vma),
+      &data.info.filename, &data.info.funcname,
+      (unsigned int*)&data.info.lineno);
+#endif
 }
 
 #endif /* TAU_BFD */

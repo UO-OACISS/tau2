@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <vector>
+
 // Putting "using namespace" statements in header files can create ambiguity
 // between user-defined symbols and std symbols, creating unparsable code
 // or even changing the behavior of user codes.  This is also widely considered
@@ -35,7 +36,18 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 
 #define TAU_CUPTI_MAX_NAME 40
 #define TAU_CUPTI_MAX_DESCRIPTION 480
-		
+
+#define TAU_CUPTI_COUNTER_ACTUAL 0
+#define TAU_CUPTI_COUNTER_BOUNDED 1
+#define TAU_CUPTI_COUNTER_AVERAGED 2
+
+//This setting will aggregate the event values collected across all event
+//domains. Thus the event results will report values as if all SM had an event
+//domain available to collect this value. WARNING: If the kernel being measured
+//is not large enough to utilize all the available SMs on a device this
+//aggregation will result in skewed data.
+#define TAU_CUPTI_NORMALIZE_EVENTS_ACROSS_ALL_SMS
+
 //#define DISABLE_CUPTI
 
 class CuptiCounterEvent
@@ -91,6 +103,8 @@ counter_map_t Tau_CuptiLayer_Counter_Map;
 /* mapping the metric number to the cupti metric number */
 counter_id_map_t internal_id_map; 
 extern counter_id_map_t internal_id_map() {return internal_id_map;}
+counter_id_map_t internal_id_map_backwards; 
+extern counter_id_map_t internal_id_map_backwards() {return internal_id_map_backwards;}
 #else
 
 extern bool Tau_CuptiLayer_is_initialized();
@@ -102,6 +116,8 @@ extern void Tau_CuptiLayer_disable();
 extern void Tau_CuptiLayer_init();
 
 extern void Tau_CuptiLayer_finalize();
+
+extern void Tau_CuptiLayer_register_all_counters();
 
 extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
 
@@ -126,6 +142,16 @@ extern counter_id_map_t interal_id_map();
 
 
 extern "C" int Tau_CuptiLayer_get_num_events();
+
+extern "C" void Tau_CuptiLayer_set_event_name(int metric_n, int type);
+
+extern "C" const char* Tau_CuptiLayer_get_event_name(int metric_n);
+
+extern "C" int Tau_CuptiLayer_get_cupti_event_id(int metric_n);
+
+extern "C" int Tau_CuptiLayer_get_metric_event_id(int metric_n);
+
+extern "C" void Tau_CuptiLayer_read_counters(int d, uint64_t *cb);
 
 extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 

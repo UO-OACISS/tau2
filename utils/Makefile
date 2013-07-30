@@ -18,6 +18,8 @@ PDT_CXX=
 TAU_PREFIX_INSTALL_DIR=
 VTFDIR=
 OTFDIR=
+OTFLIB=
+OTFINC=
 PDTDIR=
 DYNINSTDIR=
 OPARICOMP=
@@ -100,9 +102,10 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #VTF#INSTALLVTF2PROFILE 	= $(INSTALLDEST)/vtf2profile #ENDIF#
 #OTF#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf #ENDIF#
 #OTF2#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf2 #ENDIF#
-#OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib64 -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib64 -L$(OTFLIB) -lotf -Wl,-rpath,$(OTFLIB) $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTFLIB_LONGNAME#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib64 -L$(OTFLIB) -lopen-trace-format -Wl,-rpath,$(OTFLIB) $(TAU_TRACE_INPUT_LIB) #ENDIF#
 #OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) -Wl,-rpath,$(OTFDIR)/lib #ENDIF#
-#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf2 $(TAU_TRACE_INPUT_LIB) -Wl,-rpath,$(OTFDIR)/lib #ENDIF#
+#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf2 $(TAU_TRACE_INPUT_LIB) -Wl,-rpath,$(OTFDIR)/lib -L$(OTFDIR)/src -lrt #ENDIF#
 #EBS2OTF#INSTALL_EBS2OTF = $(INSTALLLIBDEST)/ebs2otf.so #ENDIF#
 #TAU2EPILOG#TAU2ELG = elgconverter/tau2elg #ENDIF#
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
@@ -238,7 +241,7 @@ tau2otf: 	tau2otf.o
 		$(CXX) $(CFLAGS) tau2otf.o -o tau2otf -lm $(LEXTRA) $(OTFLIBS)
 
 tau2otf.o:	tau2otf.cpp
-		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include -I$(OTFDIR)/include/vampirtrace
+		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include -I$(OTFDIR)/include/vampirtrace -I$(OTFDIR)/include/open-trace-format
 tau2otf2: 	tau2otf2.o
 		$(CXX) $(CFLAGS) tau2otf2.o -o tau2otf2 -lm $(LEXTRA) $(OTFLIBS)
 

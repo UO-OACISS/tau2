@@ -92,6 +92,9 @@
 #ifndef HAVE_POSIX_MEMALIGN
 #if defined(TAU_WINDOWS) || (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ +0 < 1060))
 #undef HAVE_POSIX_MEMALIGN
+#ifndef ENOMEM
+#define ENOMEM 12
+#endif /* ENOMEM defined */
 #elif (_POSIX_C_SOURCE >= 200112L) || (_XOPEN_SOURCE >= 600)
 #define HAVE_POSIX_MEMALIGN 1
 #endif
@@ -159,7 +162,6 @@ class TauAllocation
 public:
 
   typedef unsigned char * addr_t;
-  typedef tau::TauContextUserEvent user_event_t;
 
   struct allocation_map_t : public TAU_HASH_MAP<addr_t, class TauAllocation*> {
     allocation_map_t() {
@@ -170,7 +172,7 @@ public:
     }
   };
 
-  struct event_map_t : public TAU_HASH_MAP<unsigned long, user_event_t*> {
+  struct event_map_t : public TAU_HASH_MAP<unsigned long, tau::TauContextUserEvent*> {
     event_map_t() {
       Tau_init_initializeTAU();
     }
@@ -178,6 +180,8 @@ public:
       Tau_destructor_trigger();
     }
   };
+
+  typedef TAU_HASH_MAP<tau::TauUserEvent*, tau::TauUserEvent*> leak_event_map_t;
 
   // Database of allocation records (read-only outside this class)
   static allocation_map_t const & AllocationMap() {
@@ -235,6 +239,9 @@ private:
   // Read/write allocation map
   static allocation_map_t & __allocation_map();
 
+  // Read/write leak event map
+  static leak_event_map_t & __leak_event_map();
+
   // Read/write bytes allocated
   static size_t & __bytes_allocated();
 
@@ -250,7 +257,6 @@ private:
 public:
 
   TauAllocation() :
-    alloc_event(NULL),
     alloc_addr(NULL), alloc_size(0),
     user_addr(NULL), user_size(0),
     lguard_addr(NULL), lguard_size(0),
@@ -258,7 +264,11 @@ public:
     lgap_addr(NULL), lgap_size(0),
     ugap_addr(NULL), ugap_size(0),
     tracked(false), allocated(false)
-  { }
+  { 
+    // Initialize leak event map early on since Intel 12.x compilers 
+    // can't construct tr1::hash_map from exit()
+    static leak_event_map_t & leak_event_map = __leak_event_map();
+  }
 
   // True if ptr is in the range tracked by this allocation
   bool Contains(void * ptr) const {
@@ -299,7 +309,7 @@ public:
 //
 private:
 
-  user_event_t * alloc_event; ///< Allocation event (for leak detection)
+  tau::TauUserEvent * alloc_event;  ///< Allocation event (for leak detection)
 
   addr_t alloc_addr;    ///< Unadjusted address
   size_t alloc_size;    ///< Unadjusted size
