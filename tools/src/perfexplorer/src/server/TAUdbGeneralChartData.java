@@ -352,7 +352,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 				buffer.append("  inner join primary_metadata as series_metadata on series_metadata.trial=trial.id and series_metadata.name = \'"+seriesName+'\'');
 			}
 			buffer.append(" where timer_value.inclusive_value = maxinc ");
-
+			System.out.println(buffer.toString());
 			return buffer.toString();		
 	}
 //	private String getAllEventsCallpath(DB db, String listOfTrials, String listOfMetrics, int derivedThread,
