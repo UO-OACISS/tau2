@@ -301,9 +301,9 @@ extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
-	FunctionInfo *fi = (FunctionInfo *) functionInfo; 
+  FunctionInfo *fi = (FunctionInfo *) functionInfo;
 
-	// Protect TAU from itself
+  // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
 #ifndef TAU_WINDOWS
@@ -362,6 +362,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
+    free(Tau_thread_flags[tid].Tau_global_stack);
     Tau_thread_flags[tid].Tau_global_stack = newStack;
     Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
