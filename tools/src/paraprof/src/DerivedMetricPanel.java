@@ -29,8 +29,6 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import edu.uoregon.tau.perfdmf.Trial;
-
 public class DerivedMetricPanel extends JPanel implements ActionListener {
 
    /**
