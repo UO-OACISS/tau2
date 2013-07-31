@@ -341,7 +341,7 @@ private void collectTrials(DefaultMutableTreeNode sel, ArrayList<ParaProfTrial> 
          }else if(arg.equals("/")){
             insertString("/");
          }else if(arg.equals("(")){
-            insertString(")");
+            insertString("(");
          }else if(arg.equals(")")){
             insertString(")");
          }else if(arg.equals("=")){
@@ -361,7 +361,14 @@ private void collectTrials(DefaultMutableTreeNode sel, ArrayList<ParaProfTrial> 
    }
 
    public void insertMetric(ParaProfMetric metric) {
-      arg1Field.replaceSelection("\""+metric.getName()+"\"");//puts string at point of cursor
+	   String quoteMetric=metric.getName();
+	   quoteMetric=quoteMetric.replace(' ', '\"');
+	   if(!quoteMetric.startsWith("(")||!quoteMetric.endsWith(")")){
+		   arg1Field.replaceSelection("\""+quoteMetric+"\"");//puts string at point of cursor
+	   }
+	   else{
+		   arg1Field.replaceSelection(quoteMetric);//puts string at point of cursor
+	   }
       arg1Field.requestFocusInWindow();
       //de-select the text
       int pos=arg1Field.getSelectionStart();
