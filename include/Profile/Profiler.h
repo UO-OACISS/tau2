@@ -82,7 +82,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 
 
 #ifndef TAU_MAX_COUNTERS
-#define TAU_MAX_COUNTERS 10
+#define TAU_MAX_COUNTERS 25
 #endif
 
 #if (defined(PTHREADS) || defined(TAU_MPC) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))

@@ -176,14 +176,21 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
   bool resolved = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, resolvedInfo);
 
   // Prepare and return the callsite string
-  char * resolvedBuffer = (char*)malloc(4096);
+  char * resolvedBuffer = NULL;
+  int length = 0;
   if (resolved) {
+    // this should be enough...
+    length = strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 100;
+    resolvedBuffer = (char*)malloc(length * sizeof(char));
     sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
-        resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno, 0);
+        resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
   } else {
+    // this should be enough...
+    length = strlen(mapName) + 32;
+    resolvedBuffer = (char*)malloc(length * sizeof(char));
     sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR", mapName);
   }
-  // TODO: Leak?
+
   return resolvedBuffer;
 }
 
@@ -262,7 +269,7 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
     str++;
 
   if (*str == 0)    // All spaces?
-      {
+  {
     *out = 0;
     return 1;
   }
@@ -343,6 +350,7 @@ bool nameInMPI(const char *name)
   strPtr = strstr((char *)mpiCheckBuffer, "mpi_");
 
   free(mpiCheckBuffer);
+  free(outString);
 
   if (strPtr != NULL) {
     return true;
@@ -386,6 +394,7 @@ bool determineCallSiteViaString(unsigned long *addresses)
       name = Tau_callsite_resolveCallSite(addresses[i + 1]);
       if (nameInTau(name)) {
         hasMPI = hasMPI | nameInMPI(name);
+        free(name);
         continue;
       } else {
         // Not in TAU. Found a boundary candidate.
@@ -407,22 +416,27 @@ bool determineCallSiteViaString(unsigned long *addresses)
           // This is not an MPI chain. We assume it is a function event. Skip one level.
           //   The callsite into a function probe is not the same as the callsite into
           //   the function itself.
+          free(name);
           if (i + 2 < length) {
             callsite = addresses[i + 2];
             name = Tau_callsite_resolveCallSite(addresses[i + 2]);
             registerNewCallsiteInfo(name, callsite, id);
+            free(name);
             return true;
           }
         } else {
           if (nameInMPI(name)) {
             // MPI could not possibly have invoked an MPI chain.
             //   Ignore and continue searching.
+            free(name);
             continue;
           } else {
+            free(name);
             // MPI invocations have immediate callsites.
             callsite = addresses[i + 1];
             name = Tau_callsite_resolveCallSite(addresses[i + 1]);
             registerNewCallsiteInfo(name, callsite, id);
+            free(name);
             return true;
           }
         }
@@ -724,13 +738,16 @@ extern "C" void finalizeCallSites_if_necessary()
       // We've already done this in the discovery phase.
       continue;
     }
+    char *name;
     string *tempName = new string("");
     if (callsiteInfo->resolved) {
       //      printf("ID %d resolved\n", i);
       // resolve a single address
       unsigned long callsite = callsiteInfo->resolvedCallSite;
-      *tempName = string(" [@] ") + string(Tau_callsite_resolveCallSite(callsite));
+      name = Tau_callsite_resolveCallSite(callsite);
+      *tempName = string(" [@] ") + string(name);
       callsiteInfo->resolvedName = tempName;
+      free(name);
     } else {
       unsigned long *key = callsiteInfo->key;
       // One last try with the string method.
@@ -742,14 +759,18 @@ extern "C" void finalizeCallSites_if_necessary()
         int keyLength = key[0];
         // Bad if not true. Also the head entry cannot be Tau_start_timer.
         if (keyLength > 0) {
-          *tempName = *tempName + string(Tau_callsite_resolveCallSite(key[keyLength]));
+          name = Tau_callsite_resolveCallSite(key[keyLength]);
+          *tempName = *tempName + string(name);
+          free(name);
         }
         // process until "Tau_start_timer" is encountered and stop.
         for (int j = keyLength - 1; j > 0; j--) {
-          char *temp = Tau_callsite_resolveCallSite(key[j]);
-          if (strstr(temp, "Tau_start_timer") == NULL) {
-            *tempName = *tempName + delimiter + string(temp);
+          name = Tau_callsite_resolveCallSite(key[j]);
+          if (strstr(name, "Tau_start_timer") == NULL) {
+            *tempName = *tempName + delimiter + string(name);
+            free(name);
           } else {
+            free(name);
             break;
           }
         }

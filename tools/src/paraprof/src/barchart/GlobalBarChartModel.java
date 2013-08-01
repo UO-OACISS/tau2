@@ -233,6 +233,8 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
             //Return the name of the function
             name = getDisplayName(fp);
         }
+        
+        String htmlName=Common.HTMLEntityEncodeLimit(name,100);
 
         String metricName = dataSorter.getSelectedMetric().getName();
 
@@ -250,7 +252,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
         String calls = "<br>Calls: " + fp.getNumCalls();
         String subr = "<br>SubCalls: " + fp.getNumSubr();
 
-        return "<html>" + Common.HTMLEntityEncode(name) + exclusive + inclusive + calls + subr + "</html>";
+        return "<html>" + htmlName + exclusive + inclusive + calls + subr + "</html>";
 
     }
 
