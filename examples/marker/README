@@ -1,0 +1,42 @@
+Markers show sudden variation in atomic events. They can be enabled by configuring TAU with 
+-useropt=-DTAU_USE_EVENT_THRESHOLDS. By default, when an atomic events value changes by 10%, 
+a marker context event is triggered with the value that caused this condition. To change the threshold to 
+something other than 0.1 (or 10%) to say 0.5 (or 50%), you may configure using:
+-useropt=-DTAU_USE_EVENT_THRESHOLDS#-DTAU_EVENT_THRESHOLD=0.5
+
+As a simple example consider a function triggering events such as:
+300, 301, 304, 299, 2000, 21, 5, we see in foo.c:
+% ./foo
+Inside foo: x = 300
+Inside foo: x = 301
+Inside foo: x = 304
+Inside foo: x = 299
+Inside foo: x = 2000
+Inside foo: x = 21
+Inside foo: x = 5
+% pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.009        0.145           1           7        145 int main(int, char **) C 
+ 93.8        0.136        0.136           7           0         19 int foo(int) C 
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         1       2000       2000       2000          0  [GROUP=MAX_MARKER] foo counter
+         1       2000       2000       2000          0  [GROUP=MAX_MARKER] foo counter : int main(int, char **) C => int foo(int) C 
+         2         21          5         13          8  [GROUP=MIN_MARKER] foo counter
+         2         21          5         13          8  [GROUP=MIN_MARKER] foo counter : int main(int, char **) C => int foo(int) C 
+         7       2000          5      461.4      640.6  foo counter
+---------------------------------------------------------------------------------------
+
+
+
+Note the new GROUP=MAX or MIN_MARKER annotation. 
