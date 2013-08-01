@@ -77,7 +77,7 @@ public class ParaProfExpression {
 
 		ArrayList<Object> 	expressArray =  infixToPostfix(text);
 		if(newName ==null){
-			text.trim();
+			text=text.replace(" ", "");
 			text = text.replace('\"', ' ');
 			newName ="("+text+")";
 		}

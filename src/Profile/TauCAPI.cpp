@@ -301,9 +301,9 @@ extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
-	FunctionInfo *fi = (FunctionInfo *) functionInfo; 
+  FunctionInfo *fi = (FunctionInfo *) functionInfo;
 
-	// Protect TAU from itself
+  // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
 #ifndef TAU_WINDOWS
@@ -359,8 +359,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
     int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
-    Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+    //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+    Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
+    free(Tau_thread_flags[tid].Tau_global_stack);
     Tau_thread_flags[tid].Tau_global_stack = newStack;
     Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
@@ -1806,16 +1808,53 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
   string name = n; // this is VERY bad if called from signalling! see above ^
   FunctionInfo * fi = NULL;
 
-  RtsLayer::LockEnv();
   PureMap & pure = ThePureMap();
-  PureMap::iterator it = pure.find(name);
-  if (it == pure.end()) {
-    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-    pure[name] = fi;
-  } else {
+  int exists = pure.count(name);
+  if (exists) {
+    PureMap::iterator it = pure.find(name);
     fi = it->second;
+  } else {
+    RtsLayer::LockEnv();
+    PureMap::iterator it = pure.find(name);
+    if (it == pure.end()) {
+      tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+      pure[name] = fi;
+    } else {
+      fi = it->second;
+    }
+    RtsLayer::UnLockEnv();
   }
-  RtsLayer::UnLockEnv();
+  Tau_start_timer(fi, 0, tid);
+}
+
+extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
+{
+  TauInternalFunctionGuard protects_this_function;
+  string name = n; // this is VERY bad if called from signalling! see above ^
+  string type = t; // this is VERY bad if called from signalling! see above ^
+  FunctionInfo * fi = NULL;
+
+  PureMap & pure = ThePureMap();
+  int exists = pure.count(name);
+  if (exists) {
+    PureMap::iterator it = pure.find(name);
+    fi = it->second;
+  } else {
+    RtsLayer::LockEnv();
+    PureMap::iterator it = pure.find(name);
+    if (it == pure.end()) {
+      tauCreateFI((void**)&fi, name, type, TAU_USER, "OpenMP");
+      pure[name] = fi;
+    } else {
+      fi = it->second;
+    }
+    RtsLayer::UnLockEnv();
+  }
+  return fi;
+}
+
+extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int tid) {
+  FunctionInfo * fi = Tau_make_openmp_timer(n, t);
   Tau_start_timer(fi, 0, tid);
 }
 
