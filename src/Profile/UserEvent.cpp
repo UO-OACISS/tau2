@@ -20,7 +20,7 @@
 #pragma mta instantiate used
 #endif /* TAU_CRAYXMT */
 
-#define TAU_USE_EVENT_THRESHOLDS 1 
+//#define TAU_USE_EVENT_THRESHOLDS 1 
 
 #ifdef TAU_USE_EVENT_THRESHOLDS
 #ifndef TAU_EVENT_THRESHOLD
