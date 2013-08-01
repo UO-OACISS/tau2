@@ -176,12 +176,19 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
   bool resolved = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, resolvedInfo);
 
   // Prepare and return the callsite string
-  char * resolvedBuffer = (char*)malloc(4096);
+  char * resolvedBuffer = NULL;
+  int length = 0;
   if (resolved) {
-    snprintf(resolvedBuffer, sizeof(resolvedBuffer), "[%s] [{%s} {%d}]",
+    // this should be enough...
+    length = strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 100;
+    resolvedBuffer = (char*)malloc(length * sizeof(char));
+    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
         resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
   } else {
-    snprintf(resolvedBuffer, sizeof(resolvedBuffer), "[%s] UNRESOLVED ADDR", mapName);
+    // this should be enough...
+    length = strlen(mapName) + 32;
+    resolvedBuffer = (char*)malloc(length * sizeof(char));
+    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR", mapName);
   }
 
   return resolvedBuffer;

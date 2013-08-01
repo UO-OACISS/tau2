@@ -483,7 +483,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   	case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
 #endif
 #if CUDA_VERSION >= 5050
-  	case CUPTI_ACTIVITY_KIND_CDP_KERNEL:
+    case CUPTI_ACTIVITY_KIND_CDP_KERNEL:
 #endif
     {
       const char *name;
@@ -625,9 +625,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			
 #if CUDA_VERSION >= 5050
       if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
-        Tau_cupti_register_gpu_event(name, deviceId,
-          streamId, contextId, id, parentGridId, true, map, map_size,
-          start / 1e3, end / 1e3);
+        if (TauEnv_get_cuda_track_cdp()) {
+          Tau_cupti_register_gpu_event(name, deviceId,
+            streamId, contextId, id, parentGridId, true, map, map_size,
+            start / 1e3, end / 1e3);
+        }
       } else {
 #endif
         Tau_cupti_register_gpu_event(name, deviceId,
