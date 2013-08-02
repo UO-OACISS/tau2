@@ -111,6 +111,8 @@ int Tau_mergeProfiles()
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
+  Tau_detect_memory_leaks();
+
 #ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions();
 
