@@ -94,10 +94,15 @@ static inline bool AllocationShouldBeProtected(size_t size)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
+
   allocation_map_t const & alloc_map = AllocationMap();
-  if (alloc_map.empty()) return;
+  if (alloc_map.empty()) {
+    TAU_VERBOSE("TAU: No memory leaks detected");
+    return;
+  }
 
   leak_event_map_t & leak_map = __leak_event_map();
+  TAU_VERBOSE("TAU: There are %d memory leaks", leak_map.size());
 
   for(allocation_map_t::const_iterator it=alloc_map.begin(); it != alloc_map.end(); it++) {
     TauAllocation * alloc = it->second;
