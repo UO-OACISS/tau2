@@ -67,6 +67,8 @@ using namespace std;
 
 /* If we are using OpenMP and the collector API */
 #define TAU_COLLECTOR_API_DEFAULT 1
+#define TAU_COLLECTOR_API_STATES_DEFAULT 0
+#define TAU_COLLECTOR_API_EVENTS_DEFAULT 1
 #define TAU_COLLECTOR_API_CONTEXT_TIMER "timer"
 #define TAU_COLLECTOR_API_CONTEXT_REGION "region"
 #define TAU_COLLECTOR_API_CONTEXT_NONE "none"
@@ -144,8 +146,11 @@ using namespace std;
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
 #define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
+#define TAU_TRACK_CUDA_CDP_DEFAULT 0
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
+
+#define TAU_BFD_LOOKUP 1
 
 // Memory debugging environment variable defaults
 #define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  0
@@ -474,6 +479,8 @@ static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_collector_api_enabled = 0;
+static int env_collector_api_states_enabled = 0;
+static int env_collector_api_events_enabled = 0;
 static int env_collector_api_context = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
@@ -492,8 +499,10 @@ static const char *env_metrics = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
+static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
 
 static int env_mic_offload = 0;
+static int env_bfd_lookup = 0;
 
 static int env_memdbg = 0;
 static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
@@ -527,9 +536,7 @@ static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
-  if (env_verbose != 1) return;
-
-  {
+  if (env_verbose == 1) {
     TauInternalFunctionGuard protects_this_function;
     va_list args;
     va_start(args, format);
@@ -541,7 +548,6 @@ void TAU_VERBOSE(const char *format, ...)
 #endif
     va_end(args);
     fflush (stderr);
-
   } // END inside TAU
 }
 
@@ -722,6 +728,14 @@ int TauEnv_get_collector_api_enabled() {
   return env_collector_api_enabled;
 }
 
+int TauEnv_get_collector_api_states_enabled() {
+  return env_collector_api_states_enabled;
+}
+
+int TauEnv_get_collector_api_events_enabled() {
+  return env_collector_api_events_enabled;
+}
+
 int TauEnv_get_collector_api_context() {
   return env_collector_api_context;
 }
@@ -759,9 +773,18 @@ const char* TauEnv_get_cuda_instructions(){
   return env_track_cuda_instructions;
 }
 
+int TauEnv_get_cuda_track_cdp(){
+  return env_track_cuda_cdp;
+}
+
 int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
+
+int TauEnv_get_bfd_lookup(){
+  return env_bfd_lookup;
+}
+
 int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
@@ -1394,6 +1417,28 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_COLLECTOR_API", "off");
     }
 
+    tmp = getconf("TAU_COLLECTOR_API_STATES");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_STATES_DEFAULT)) {
+      env_collector_api_states_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API States Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "on");
+    } else {
+      env_collector_api_states_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API States Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_STATES", "off");
+    }
+
+    tmp = getconf("TAU_COLLECTOR_API_EVENTS");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_EVENTS_DEFAULT)) {
+      env_collector_api_events_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API Events Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "on");
+    } else {
+      env_collector_api_events_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API Events Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "off");
+    }
+
     env_collector_api_context = 2; // the region is the default
     const char *apiContext = getconf("TAU_COLLECTOR_API_CONTEXT");
     if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_TIMER)) {
@@ -1584,12 +1629,32 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: tracking CUDA instructions: %s\n", env_track_cuda_instructions);
       TAU_METADATA("TAU_TRACK_CUDA_INSTRUCTIONS", env_track_cuda_instructions);
 		}
+    tmp = getconf("TAU_TRACK_CUDA_CDP");
+    if (parse_bool(tmp, TAU_TRACK_CUDA_CDP_DEFAULT)) {
+      env_track_cuda_cdp = 1;
+      TAU_VERBOSE("TAU: tracking CUDA CDP kernels Enabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_CDP", "on");
+    } else {
+      TAU_VERBOSE("TAU: tracking CUDA CDP kernels Disabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_CDP", "off");
+    }
 		tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
       env_mic_offload = 1;
       TAU_VERBOSE("TAU: MIC offloading Enabled\n");
       TAU_METADATA("TAU_MIC_OFFLOAD", "on");
 		}
+
+    tmp = getconf("TAU_BFD_LOOKUP");
+    if (parse_bool(tmp, TAU_BFD_LOOKUP)) {
+      env_bfd_lookup = 1;
+      TAU_VERBOSE("TAU: BFD Lookup Enabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "on");
+    } else {
+      env_bfd_lookup = 0;
+      TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
+      TAU_METADATA("TAU_BFD_LOOKUP", "off");
+    }
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

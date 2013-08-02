@@ -779,6 +779,7 @@ dwarf=no
 java=no
 openmp=no
 ompt=no
+omptlib=
 omptenabled=no
 xlsmp=no
 ibmxlc=no
@@ -1485,10 +1486,31 @@ for arg in "$@"; do
       openmp=yes
     shift
     ;;
+
+  -omptlib=*)
+      ompt=yes
+      omptfile=`echo $arg | sed -e 's/-omptlib=//'`
+      if [ ! -f $omptfile ]
+      then
+        echo "Error: Cannot access OpenMP runtime library $omptfile"
+        exit 1
+      fi
+      # split the ompt library path
+      omptdir=${omptfile%/*}
+      if [ ! -d $omptdir ]
+      then
+        echo "Error: Cannot access directory $omptdir"
+        exit 1
+      fi
+      omptlib="-Wl,-rpath=$omptdir#$omptfile"
+    shift
+    ;;
+
   -ompt*)
       ompt=yes
     shift
     ;;
+
   -xlsmp=*)
       xlsmp=yes
       xlsmpdir=`echo $arg | sed -e 's/-xlsmp=//'`
@@ -1973,7 +1995,6 @@ else
   fi
 fi
 
-
 # -- some functions
 
 configure_java () {
@@ -2170,6 +2191,9 @@ cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 # install the perl scripts for ebs post-processing in the bin dir
 cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
 cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
+
+# install post-mortem address translation tool
+cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
 
 case $machine in
     
@@ -2833,6 +2857,10 @@ if [ "$machine" = "apple" ] ; then
 	configure_perfexplorer
 	exit 0
     fi
+fi
+
+if [ $ompt = yes ]; then
+  fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlib"
 fi
 
 if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
@@ -4521,10 +4549,20 @@ then
     if [ "x$oshcc_var" != "x" -a $? = 0 ]
     then
       openshmem_include_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@include@g'`
-      if [ -r $openshmem_include_dir/mpp/shmem.h ] 
+      if [ -r $openshmem_include_dir/mpp/shmem.h -a -r $openshmem_include_dir/../bin/mpiexec_mpt ] 
       then
         shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
         fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+      else
+        if [ -r $oshcc_var ]
+        then 
+          openshmem=yes
+          if [ -r $openshmem_include_dir/mpp/shmem.h ] 
+          then
+            shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
+          fi
+          fixmakeargs="$fixmakeargs OPENSHMEM"
+        fi
       fi
     fi
     if [ $catamount = yes ] 
@@ -6680,6 +6718,9 @@ fi
 ######################################################################
 # Check for TLS, or Thread Local Storage
 ######################################################################
+
+tlsfound=no
+
 if [ $openmp = yes ] ; then
   cat <<EOF > conftest_tls.cc
 __thread int number = -1;
@@ -6691,6 +6732,7 @@ EOF
   if $cxx_compiler $orig_useropt -c conftest_tls.cc 1> /dev/null 2>&1 ; then
       fixmakeargs="$fixmakeargs TLS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6701,7 +6743,7 @@ fi
 ######################################################################
 # Check for declspec(thread) support
 ######################################################################
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] && [ $tlsfound = no ] ; then
   cat <<EOF > conftest_dtls.cc
 __declspec(thread) int number = -1;
 int main() {
@@ -6710,8 +6752,9 @@ int main() {
 EOF
   $echo "Checking for __declspec(thread) support... ${nnl}"
   if $cxx_compiler $orig_useropt -c conftest_dtls.cc 1> /dev/null 2>&1 ; then
-      fixmakeargs="$fixmakeargs DSTLS_AVAILABLE"
+      fixmakeargs="$fixmakeargs DTLS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6722,7 +6765,7 @@ fi
 ######################################################################
 # Check for pthread_getspecific() support
 ######################################################################
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] && [ $tlsfound = no ] ; then
   cat <<EOF > conftest_pgs.cc
 #include "pthread.h"
 static pthread_key_t key;
@@ -6740,6 +6783,7 @@ EOF
   if $cxx_compiler $orig_useropt -c conftest_pgs.cc 1> /dev/null 2>&1 ; then
       fixmakeargs="$fixmakeargs PGS_AVAILABLE"
       echo "yes"
+      tlsfound=yes
   else
       echo "no"
   fi
@@ -6758,7 +6802,7 @@ fi
 # GOMP wrapping is only available for openmp
 if [ $openmp = yes ] ; then
 # GOMP wrapping is only available for GCC
-  if [ $c_compiler = gcc ] ; then
+  if [ $c_compiler = gcc ] || [ $machine = craycnl -a "x$PE_ENV" = xGNU ] ; then
 # GOMP wrapping is not compatible with Opari.
     if [ $opari = no ] ; then
 	  if [ $opari1 = no ] ; then
@@ -6832,9 +6876,10 @@ EOF
 				fi
 				rm -f opencl.cpp opencl.o
 			fi
-			if [ $cupti = no -a -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
+			cudadir=`dirname $cudainclude`
+			if [ $cupti = no -a -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
 				tauoptions="${tauoptions}-cupti"
-				cupti="$cudainclude/../extras/CUPTI"
+				cupti="$cudadir/extras/CUPTI"
 				fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 				echo "Using CUPTI library found in $cupti."
 			fi
@@ -6915,9 +6960,12 @@ if [ -d $otfdir/include/otf2 ]; then
 else
   if [ $otf = yes ] ; then
     fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
-    if [ ! -d $otfdir/${architecture} ] ; then
+    if [ ! -d $otfdir/${architecture} -a -d $otfdir/src ] ; then
       fixmakeargs="$fixmakeargs OTFSRC"
     fi  
+    if [ -r $otfdir/lib/libopen-trace-format.a ]; then
+      fixmakeargs="$fixmakeargs OTFLIB_LONGNAME"
+    fi
   fi
 fi
 
@@ -6939,36 +6987,49 @@ if [ $ebs2otf = yes ] ; then
   if [ -f utils/ebs2otf/ebs2otf.so ] ; then
       touch utils/ebs2otf/ebs2otf.so
   fi
+  fixmakeargs="$fixmakeargs EBS2OTF "
   if [ $otf = yes ] ; then
-      echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
+    echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
+  fi
+fi
+if [ $otf = yes ] ; then
       if [ "$otflib" = "" ] ; then
-	  otflib="$otfdir/${architecture}/lib"
+        if [ -d $otfdir/lib ]; then 
+	      otflib="$otfdir/lib"
+        else 
+	      otflib="$otfdir/${architecture}/lib"
+        fi
 	  echo "OTF Library implicitly set to $otflib"
       fi
       if [ "$otfinc" = "" ] ; then
-	  otfinc="$otfdir/include"
+        if [ -r $otfdir/include/otf.h ]; then
+	      otfinc="$otfdir/include"
+        else 
+          if [ -r $otfdir/include/open-trace-format/otf.h ]; then
+	        otfinc="$otfdir/include/open-trace-format"
+          fi
+        fi
 	  echo "OTF Header directory implicitly set to $otfinc"
       fi
-  fi 
-  if [ ! -d $otflib ]
+    if [ ! -d $otflib ]
       then
       echo "Error: No available OTF support. Library not found at $otflib."
       exit 1
-  fi
-  if [ ! -d $otfinc ]
+    fi
+    if [ ! -d $otfinc ]
       then
       echo "Error: No available OTF support. Headers not found at $otfinc."
       exit 1
-  fi
-  if [ ! -f $otfinc/OTF_Version.h ] ; then
+    fi
+    if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
       echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
       exit 1
       # *CWL* Need version control code here. Still trying to decide the
       #    best way about it. The above conditional will at least trim away
       #    ancient versions of OTF.
-  fi
+    fi
 
-  fixmakeargs="$fixmakeargs EBS2OTF otflib=$otflib otfinc=$otfinc"
+    fixmakeargs="$fixmakeargs otflib=$otflib otfinc=$otfinc"
 fi
 
 if [ $ebs_has_rt = yes ] ; then

@@ -57,6 +57,7 @@ declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
 declare -i trackDMAPP=$FALSE
 declare -i trackPthread=$FALSE
+declare -i trackGOMP=$FALSE
 declare -i trackMPCThread=$FALSE
 declare -i revertOnError=$TRUE
 declare -i revertForced=$FALSE
@@ -105,6 +106,7 @@ printUsage () {
     echo -e "  -optTrackUPCR\t\t\tSpecify wrapping of UPC runtime calls at link time."
     echo -e "  -optTrackDMAPP\t\tSpecify wrapping of Cray DMAPP library calls at link time."
     echo -e "  -optTrackPthread\t\tSpecify wrapping of Pthread library calls at link time."
+    echo -e "  -optTrackGOMP\t\tSpecify wrapping of GOMP library calls at link time."
     echo -e "  -optTrackMPCThread\t\tSpecify wrapping of MPC Thread library calls at link time."
     echo -e "  -optWrappersDir=\"\"\t\tSpecify the location of the link wrappers directory."
     echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
@@ -359,6 +361,12 @@ for arg in "$@" ; do
 		   -optTrackPthread)
 			trackPthread=$TRUE
 			echoIfDebug "NOTE: turning TrackPthread on"
+			# use the wrapper link_options.tau during linking
+			;;
+
+		   -optTrackGOMP)
+			trackGOMP=$TRUE
+			echoIfDebug "NOTE: turning TrackGOMP on"
 			# use the wrapper link_options.tau during linking
 			;;
 
@@ -1398,6 +1406,11 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd "
     fi
 
+    if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then 
+      linkCmd="$linkCmd `cat $optWrappersDir/gomp_wrapper/link_options.tau`"
+      echoIfDebug "Linking command is $linkCmd "
+    fi
+
     if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
@@ -1972,6 +1985,11 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 	  echoIfDebug "Linking command is $linkCmd "
 	fi
 
+        if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then 
+	  newCmd="$newCmd `cat $optWrappersDir/gomp_wrapper/link_options.tau`"
+	  echoIfDebug "Linking command is $linkCmd "
+	fi
+
         if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
 	  newCmd="$newCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
 	  echoIfDebug "Linking command is $linkCmd "
@@ -2139,6 +2157,9 @@ if [ $errorStatus == $TRUE ] ; then
     fi
 
     evalWithDebugMessage "$regularCmd" "Compiling with Non-Instrumented Regular Code"
+    if [ $revertForced == $TRUE ] ; then
+      errorStatus=0
+    fi
     break;
 fi
 

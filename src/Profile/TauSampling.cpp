@@ -103,32 +103,38 @@
 using namespace std;
 using namespace tau;
 
-extern FunctionInfo * Tau_create_thread_state_if_necessary(int tid, const string & thread_state);
+extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
 
-#if 0 // disabled for now -- no state tracking
-static char const * _gTauOmpStatesArray[12] = {
-  "OMP UNKNOWN",
-  "OMP OVERHEAD",
-  "OMP WORKING",
-  "OMP IMPLICIT BARRIER",
-  "OMP EXPLICIT BARRIER",
-  "OMP IDLE",
-  "OMP SERIAL",
-  "OMP REDUCTION",
-  "OMP LOCK WAIT",
-  "OMP CRITICAL WAIT",
-  "OMP ORDERED WAIT",
-  "OMP ATOMIC WAIT",
+#if 1 // disabled for now -- no state tracking
+static string _gTauOmpStatesArray[17] = {
+  "OMP_UNKNOWN",
+  "OMP_OVERHEAD",
+  "OMP_WORKING",
+  "OMP_IMPLICIT_BARRIER",
+  "OMP_EXPLICIT_BARRIER",
+  "OMP_IDLE",
+  "OMP_SERIAL",
+  "OMP_REDUCTION",
+  "OMP_LOCK_WAIT",
+  "OMP_CRITICAL_WAIT",
+  "OMP_ORDERED_WAIT",
+  "OMP_ATOMIC_WAIT",
+  "OMP_TASK_CREATE",
+  "OMP_TASK_SCHEDULE",
+  "OMP_TASK_SUSPEND",
+  "OMP_TASK_STEAL",
+  "OMP_TASK_FINISH"
 };
 
-static std::string gTauOmpStates(int index)
+static const string & gTauOmpStates(int index)
 {
-  if (index >= 1 && index <= 11) {
+  if (index >= 1 && index <= 16) {
     return _gTauOmpStatesArray[index];
   }
   return _gTauOmpStatesArray[0];
 }
+
 #endif
 
 /*
@@ -722,7 +728,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       if (childName) {
         sprintf(buff, "[%s] [%s] [@] UNRESOLVED %s", tag, childName, mapName);
       } else {
-        sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+	if (TauEnv_get_bfd_lookup()) {
+          sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
+        } else {
+          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, addr);
+        }
       }
       // TODO: Leak?
       *newShortName = strdup("UNRESOLVED");
@@ -1086,9 +1096,6 @@ void Tau_sampling_finalizeProfile(int tid)
   TAU_METADATA(tmpname, tmpstr);
 }
 
-extern FunctionInfo * Tau_create_thread_state_if_necessary(const string & thread_state);
-extern "C" int Tau_get_thread_omp_state(int tid);
-
 void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
 
   Profiler * profiler = TauInternal_CurrentProfiler(tid);
@@ -1167,20 +1174,23 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     //printf("tid = %d, sampling previousTimestamp = %llu, period = %d\n", tid, previousTimestamp[localIndex + i], ebsPeriod); fflush(stdout);
   }
   //printf("tid = %d, Delta = %f, period = %d\n", tid, deltaValues[0], ebsPeriod); fflush(stdout);
-  samplingContext->addPcSample(pcStack, tid, deltaValues);
-#if 0
 #ifdef TAU_OPENMP
-  // get the thread state, too!
-  int thread_state = 0;
-  thread_state = Tau_get_thread_omp_state(tid);
-  if (thread_state >= 0) {
-    // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
-	// Instead, it will look it up and return the ones we created during
-	// the OpenMP Collector API initialization.
-    FunctionInfo *stateContext = Tau_create_thread_state_if_necessary(gTauOmpStates(thread_state));
-    stateContext->addPcSample(pcStack, tid, deltaValues);
+  if (TauEnv_get_collector_api_states_enabled() == 1) {
+    // get the thread state, too!
+    int thread_state = 0;
+    thread_state = Tau_get_thread_omp_state(tid);
+    if (thread_state >= 0) {
+      // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
+      // Instead, it will look it up and return the ones we created during
+      // the OpenMP Collector API initialization.
+      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(gTauOmpStates(thread_state));
+      stateContext->addPcSample(pcStack, tid, deltaValues);
+    }
+  } else {
+    samplingContext->addPcSample(pcStack, tid, deltaValues);
   }
-#endif
+#else
+  samplingContext->addPcSample(pcStack, tid, deltaValues);
 #endif
 }
 
@@ -1284,6 +1294,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
     if (samplingEnabled[tid]) {
       numSamples[tid]++;
 
+#ifndef TAU_SAMPLING_PROFILE_TAU
       // Exclude TAU from sampling
       if (Tau_global_get_insideTAU() > 0) {
         samplesDroppedTau[tid]++;
@@ -1294,6 +1305,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
         samplesDroppedSuspended[tid]++;
         return;
       }
+#endif
 
       // disable sampling until we handle this sample
       {
@@ -1491,12 +1503,12 @@ int Tau_sampling_init(int tid)
   memset(&act, 0, sizeof(struct sigaction));
   ret = sigemptyset(&act.sa_mask);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 1: %s\n", strerror(ret));
     return -1;
   }
   ret = sigaddset(&act.sa_mask, TAU_ALARM_TYPE);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 2: %s\n", strerror(ret));
     return -1;
   }
   act.sa_sigaction = Tau_sampling_handler;
@@ -1507,13 +1519,13 @@ int Tau_sampling_init(int tid)
   struct sigaction query_action;
   ret = sigaction(TAU_ALARM_TYPE, NULL, &query_action);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 3: %s\n", strerror(ret));
     return -1;
   }
   if (query_action.sa_handler == SIG_DFL || query_action.sa_handler == SIG_IGN) {
     ret = sigaction(TAU_ALARM_TYPE, &act, NULL);
     if (ret != 0) {
-      fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+      fprintf(stderr, "TAU: Sampling error 4: %s\n", strerror(ret));
       return -1;
     }
     //DEBUGMSG("sigaction called");
@@ -1532,7 +1544,7 @@ int Tau_sampling_init(int tid)
       // install our handler, and save the old handler
       ret = sigaction(TAU_ALARM_TYPE, &act, &application_sa);
       if (ret != 0) {
-        fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+        fprintf(stderr, "TAU: Sampling error 5: %s\n", strerror(ret));
         return -1;
       }
       //DEBUGMSG("sigaction called");
@@ -1545,7 +1557,7 @@ int Tau_sampling_init(int tid)
 /* on Linux systems, we have the option of sampling based on the Wall clock
  * on a per-thread basis.  We don't have this ability everywhere - on those
  * systems, we have to use ITIMER_PROF with setitimer. */
-#ifdef SIGEV_THREAD_ID
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ)
    struct sigevent sev;
    timer_t timerid = 0;
    sev.sigev_signo = TAU_ALARM_TYPE;
@@ -1554,7 +1566,7 @@ int Tau_sampling_init(int tid)
    sev.sigev_notify_thread_id = syscall(SYS_gettid);
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
     return -1;
   }
    struct itimerspec it;
@@ -1566,7 +1578,7 @@ int Tau_sampling_init(int tid)
 
     ret = timer_settime (timerid, 0, &it, NULL);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 7: %s\n", strerror(ret));
     return -1;
   }
   TAU_VERBOSE("Thread %d called timer_settime...\n", tid);
@@ -1577,7 +1589,7 @@ int Tau_sampling_init(int tid)
 
   ret = setitimer(TAU_ITIMER_TYPE, &itval, &ovalue);
   if (ret != 0) {
-    fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+    fprintf(stderr, "TAU: Sampling error 8: %s\n", strerror(ret));
     return -1;
   }
   TAU_VERBOSE("Thread %d called setitimer...\n", tid);

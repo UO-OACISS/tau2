@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import edu.uoregon.tau.paraprof.DataSorter;
@@ -20,11 +21,13 @@ import edu.uoregon.tau.paraprof.FunctionBarChartWindow;
 import edu.uoregon.tau.paraprof.PPFunctionProfile;
 import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfApplication;
+import edu.uoregon.tau.paraprof.ParaProfErrorDialog;
 import edu.uoregon.tau.paraprof.ParaProfExperiment;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
@@ -175,11 +178,37 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
             rowMap.put(ppFunctionProfile.getDisplayName(), blob);
         }
 
+        String selMet = dataSorter.getSelectedMetric().getName();
+        String sortMet = dataSorter.getSortMetric().getName();
         // add all the others
         for (int i = 1; i < ppTrials.size(); i++) {
+        	
             ParaProfTrial ppTrial = ppTrials.get(i);
             Thread thread = threads.get(i);
-
+            
+            Iterator<Metric> metIt = ppTrial.getMetrics().iterator();
+            boolean hasSel=false;
+            boolean hasSort=false;
+            if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR) {
+              hasSel=true;
+            }
+            if (dataSorter.getSortValueType() == ValueType.NUMCALLS || dataSorter.getSortValueType() == ValueType.NUMSUBR) {
+                hasSort=true;
+            }
+            while(metIt.hasNext()){
+            	String checkName = metIt.next().getName();
+            	if(checkName.equals(selMet))
+            		hasSel=true;
+            	if(checkName.equals(sortMet))
+            		hasSort=true;
+            }
+            if(!hasSel||!hasSort){
+            	JOptionPane.showMessageDialog(window, "Warning: Selected metric not available for all trials");
+            	hasSel=false;
+            	hasSort=false;
+            	continue;
+            }
+            
             // We now use the kludge wrapper so that the metric ids between trials get mapped
             // dataSorter.setPpTrial(ppTrial);
             newDataSorter = new DataSorterWrapper(dataSorter, ppTrial);

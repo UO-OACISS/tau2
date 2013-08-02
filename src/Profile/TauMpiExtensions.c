@@ -13,6 +13,12 @@
 #else
 #define TAU_CONST
 #endif
+
+#ifdef TAU_MPICH3
+#define TAU_MPICH3_CONST const
+#else
+#define TAU_MPICH3_CONST
+#endif
 /******************************************************/
 /******************************************************/
 
@@ -516,7 +522,7 @@ void mpi_type_dup__( MPI_Fint *  type, MPI_Fint * newtype, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Type_create_hindexed wrapper function 
 ******************************************************/
-int MPI_Type_create_hindexed( int count, int * array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPI_Type_create_hindexed( int count, TAU_MPICH3_CONST int * array_of_blocklengths, TAU_MPICH3_CONST MPI_Aint * array_of_displacements, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Type_create_hindexed()", "", TAU_MESSAGE); 
@@ -626,7 +632,7 @@ void mpi_type_create_hvector__( MPI_Fint *  count, MPI_Fint *  blocklength, MPI_
 /******************************************************
 ***      MPI_Type_create_struct wrapper function 
 ******************************************************/
-int MPI_Type_create_struct( int count, int * array_of_blocklengths, MPI_Aint * array_of_displacements, MPI_Datatype * array_of_types, MPI_Datatype * newtype)
+int MPI_Type_create_struct( int count, TAU_MPICH3_CONST int * array_of_blocklengths, TAU_MPICH3_CONST MPI_Aint * array_of_displacements, TAU_MPICH3_CONST MPI_Datatype * array_of_types, MPI_Datatype * newtype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Type_create_struct()", "", TAU_MESSAGE); 
@@ -965,7 +971,7 @@ void mpi_type_match_size__( MPI_Fint *  typeclass, MPI_Fint *  size, MPI_Fint * 
 /******************************************************
 ***      MPI_Alltoallw wrapper function 
 ******************************************************/
-int MPI_Alltoallw( void * sendbuf, int * sendcounts, int * sdispls, MPI_Datatype * sendtypes, void * recvbuf, int * recvcounts, int * rdispls, MPI_Datatype * recvtypes, MPI_Comm comm)
+int MPI_Alltoallw( TAU_MPICH3_CONST void * sendbuf, TAU_MPICH3_CONST int * sendcounts, TAU_MPICH3_CONST int * sdispls, TAU_MPICH3_CONST MPI_Datatype * sendtypes, void * recvbuf, TAU_MPICH3_CONST int * recvcounts, TAU_MPICH3_CONST int * rdispls, TAU_MPICH3_CONST MPI_Datatype * recvtypes, MPI_Comm comm)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Alltoallw()", "", TAU_MESSAGE); 
@@ -1024,7 +1030,7 @@ void mpi_alltoallw__( MPI_Aint * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sd
 /******************************************************
 ***      MPI_Exscan wrapper function 
 ******************************************************/
-int MPI_Exscan( void * sendbuf, void * recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
+int MPI_Exscan( TAU_MPICH3_CONST void * sendbuf, void * recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Exscan()", "", TAU_MESSAGE); 
@@ -1738,7 +1744,7 @@ void mpi_win_get_group__( MPI_Fint *  win, MPI_Fint * group, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Put wrapper function 
 ******************************************************/
-int MPI_Put( void * origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Win win)
+int MPI_Put( TAU_MPICH3_CONST void * origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Win win)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Put()", "", TAU_MESSAGE); 
@@ -1844,7 +1850,7 @@ void mpi_get__( MPI_Aint * origin_addr, MPI_Fint *  origin_count, MPI_Fint *  or
 /******************************************************
 ***      MPI_Accumulate wrapper function 
 ******************************************************/
-int MPI_Accumulate( void * origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
+int MPI_Accumulate( TAU_MPICH3_CONST void * origin_addr, int origin_count, MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp, int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Accumulate()", "", TAU_MESSAGE); 
@@ -2868,7 +2874,7 @@ void mpi_free_mem__( MPI_Aint * base, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-int MPI_File_open( MPI_Comm comm, char * filename, int amode, MPI_Info info, MPI_File * fh)
+int MPI_File_open( MPI_Comm comm, TAU_MPICH3_CONST char * filename, int amode, MPI_Info info, MPI_File * fh)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_open()", "", TAU_MESSAGE); 
@@ -2987,7 +2993,7 @@ void mpi_file_close__( MPI_Fint * fh, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_delete wrapper function 
 ******************************************************/
-int MPI_File_delete( char * filename, MPI_Info info)
+int MPI_File_delete( TAU_MPICH3_CONST char * filename, MPI_Info info)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_delete()", "", TAU_MESSAGE); 
@@ -3373,7 +3379,7 @@ void mpi_file_get_info__( MPI_Fint *  fh, MPI_Fint * info_used, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_File_set_view wrapper function 
 ******************************************************/
-int MPI_File_set_view( MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, char * datarep, MPI_Info info)
+int MPI_File_set_view( MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype, TAU_MPICH3_CONST char * datarep, MPI_Info info)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_set_view()", "", TAU_MESSAGE); 
@@ -3626,7 +3632,7 @@ void mpi_file_read_at_all__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * bu
 /******************************************************
 ***      MPI_File_write_at wrapper function 
 ******************************************************/
-int MPI_File_write_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
+int MPI_File_write_at( MPI_File fh, MPI_Offset offset, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_at()", "", TAU_MESSAGE); 
@@ -3690,7 +3696,7 @@ void mpi_file_write_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, 
 /******************************************************
 ***      MPI_File_write_at_all wrapper function 
 ******************************************************/
-int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
+int MPI_File_write_at_all( MPI_File fh, MPI_Offset offset, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_at_all()", "", TAU_MESSAGE); 
@@ -3935,7 +3941,7 @@ void mpi_file_iread_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, 
 /******************************************************
 ***      MPI_File_iwrite_at wrapper function 
 ******************************************************/
-int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
+int MPI_File_iwrite_at( MPI_File fh, MPI_Offset offset, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_iwrite_at()", "", TAU_MESSAGE); 
@@ -4104,7 +4110,7 @@ void mpi_file_sync__( MPI_Fint *  fh, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Type_create_subarray wrapper function 
 ******************************************************/
-int MPI_Type_create_subarray( int ndims, int * array_of_sizes, int * array_of_subsizes, int * array_of_starts, int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPI_Type_create_subarray( int ndims, TAU_MPICH3_CONST int * array_of_sizes, TAU_MPICH3_CONST int * array_of_subsizes, TAU_MPICH3_CONST int * array_of_starts, int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Type_create_subarray()", "", TAU_MESSAGE); 
@@ -4161,7 +4167,7 @@ void mpi_type_create_subarray__( MPI_Fint *  ndims, MPI_Fint *  array_of_sizes, 
 /******************************************************
 ***      MPI_Type_create_darray wrapper function 
 ******************************************************/
-int MPI_Type_create_darray( int size, int rank, int ndims, int * array_of_gsizes, int * array_of_distribs, int * array_of_dargs, int * array_of_psizes, int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPI_Type_create_darray( int size, int rank, int ndims, TAU_MPICH3_CONST int * array_of_gsizes, TAU_MPICH3_CONST int * array_of_distribs, TAU_MPICH3_CONST int * array_of_dargs, TAU_MPICH3_CONST int * array_of_psizes, int order, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Type_create_darray()", "", TAU_MESSAGE); 
@@ -4971,7 +4977,7 @@ void mpi_file_iread_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count,
 /******************************************************
 ***      MPI_File_iwrite wrapper function 
 ******************************************************/
-int MPI_File_iwrite( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
+int MPI_File_iwrite( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_iwrite()", "", TAU_MESSAGE); 
@@ -5029,7 +5035,7 @@ void mpi_file_iwrite__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_F
 /******************************************************
 ***      MPI_File_iwrite_shared wrapper function 
 ******************************************************/
-int MPI_File_iwrite_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
+int MPI_File_iwrite_shared( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Request * request)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_iwrite_shared()", "", TAU_MESSAGE); 
@@ -5881,7 +5887,7 @@ void mpi_file_set_atomicity__( MPI_Fint *  fh, MPI_Fint *  flag, MPI_Fint * ierr
 /******************************************************
 ***      MPI_File_write wrapper function 
 ******************************************************/
-int MPI_File_write( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
+int MPI_File_write( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
   int retvalue;
   TAU_PROFILE_TIMER(t, "MPI_File_write()", "", TAU_MESSAGE); 
@@ -5945,7 +5951,7 @@ void mpi_file_write__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fi
 /******************************************************
 ***      MPI_File_write_all wrapper function 
 ******************************************************/
-int MPI_File_write_all( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
+int MPI_File_write_all( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
   int retvalue;
 
@@ -6010,7 +6016,7 @@ void mpi_file_write_all__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MP
 /******************************************************
 ***      MPI_File_write_all_begin wrapper function 
 ******************************************************/
-int MPI_File_write_all_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype)
+int MPI_File_write_all_begin( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_all_begin()", "", TAU_MESSAGE); 
@@ -6063,7 +6069,7 @@ void mpi_file_write_all_begin__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  cou
 /******************************************************
 ***      MPI_File_write_all_end wrapper function 
 ******************************************************/
-int MPI_File_write_all_end( MPI_File fh, void * buf, MPI_Status * status)
+int MPI_File_write_all_end( MPI_File fh, TAU_MPICH3_CONST void * buf, MPI_Status * status)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_all_end()", "", TAU_MESSAGE); 
@@ -6121,7 +6127,7 @@ void mpi_file_write_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * status
 /******************************************************
 ***      MPI_File_write_at_all_begin wrapper function 
 ******************************************************/
-int MPI_File_write_at_all_begin( MPI_File fh, MPI_Offset offset, void * buf, int count, MPI_Datatype datatype)
+int MPI_File_write_at_all_begin( MPI_File fh, MPI_Offset offset, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_at_all_begin()", "", TAU_MESSAGE); 
@@ -6174,7 +6180,7 @@ void mpi_file_write_at_all_begin__( MPI_Fint *  fh, MPI_Fint *  offset, MPI_Aint
 /******************************************************
 ***      MPI_File_write_at_all_end wrapper function 
 ******************************************************/
-int MPI_File_write_at_all_end( MPI_File fh, void * buf, MPI_Status * status)
+int MPI_File_write_at_all_end( MPI_File fh, TAU_MPICH3_CONST void * buf, MPI_Status * status)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_at_all_end()", "", TAU_MESSAGE); 
@@ -6232,7 +6238,7 @@ void mpi_file_write_at_all_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * sta
 /******************************************************
 ***      MPI_File_write_ordered wrapper function 
 ******************************************************/
-int MPI_File_write_ordered( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
+int MPI_File_write_ordered( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_ordered()", "", TAU_MESSAGE); 
@@ -6294,7 +6300,7 @@ void mpi_file_write_ordered__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count
 /******************************************************
 ***      MPI_File_write_ordered_begin wrapper function 
 ******************************************************/
-int MPI_File_write_ordered_begin( MPI_File fh, void * buf, int count, MPI_Datatype datatype)
+int MPI_File_write_ordered_begin( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_ordered_begin()", "", TAU_MESSAGE); 
@@ -6347,7 +6353,7 @@ void mpi_file_write_ordered_begin__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * 
 /******************************************************
 ***      MPI_File_write_ordered_end wrapper function 
 ******************************************************/
-int MPI_File_write_ordered_end( MPI_File fh, void * buf, MPI_Status * status)
+int MPI_File_write_ordered_end( MPI_File fh, TAU_MPICH3_CONST void * buf, MPI_Status * status)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_ordered_end()", "", TAU_MESSAGE); 
@@ -6405,7 +6411,7 @@ void mpi_file_write_ordered_end__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint * st
 /******************************************************
 ***      MPI_File_write_shared wrapper function 
 ******************************************************/
-int MPI_File_write_shared( MPI_File fh, void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
+int MPI_File_write_shared( MPI_File fh, TAU_MPICH3_CONST void * buf, int count, MPI_Datatype datatype, MPI_Status * status)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_File_write_shared()", "", TAU_MESSAGE); 
@@ -6470,7 +6476,7 @@ void mpi_file_write_shared__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count,
 /******************************************************
 ***      MPI_Register_datarep wrapper function 
 ******************************************************/
-int MPI_Register_datarep( char * datarep, MPI_Datarep_conversion_function * read_conversion_fn, MPI_Datarep_conversion_function * write_conversion_fn, MPI_Datarep_extent_function * dtype_file_extent_fn, void * extra_state)
+int MPI_Register_datarep( TAU_MPICH3_CONST char * datarep, MPI_Datarep_conversion_function * read_conversion_fn, MPI_Datarep_conversion_function * write_conversion_fn, MPI_Datarep_extent_function * dtype_file_extent_fn, void * extra_state)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Register_datarep()", "", TAU_MESSAGE); 
@@ -7144,7 +7150,7 @@ void mpi_add_error_code__( MPI_Fint *  errorclass, MPI_Fint *  errorcode, MPI_Fi
 #ifdef TAU_SGI_MPT_MPI
 int MPI_Add_error_string( int errorcode, const char * string)
 #else
-int MPI_Add_error_string( int errorcode, char * string)
+int MPI_Add_error_string( int errorcode, TAU_MPICH3_CONST char * string)
 #endif /* TAU_SGI_MPT_MPI  */
 {
   int retvalue; 
@@ -7257,7 +7263,7 @@ void mpi_comm_call_errhandler__( MPI_Fint *  comm, MPI_Fint *  errorcode, MPI_Fi
 /******************************************************
 ***      MPI_Comm_set_name wrapper function 
 ******************************************************/
-int MPI_Comm_set_name( MPI_Comm comm, char * comm_name)
+int MPI_Comm_set_name( MPI_Comm comm, TAU_MPICH3_CONST char * comm_name)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Comm_set_name()", "", TAU_MESSAGE); 
@@ -7422,7 +7428,7 @@ void mpi_file_call_errhandler__( MPI_Fint *  fh, MPI_Fint *  errorcode, MPI_Fint
 /******************************************************
 ***      MPI_Type_set_name wrapper function 
 ******************************************************/
-int MPI_Type_set_name( MPI_Datatype type, char * type_name)
+int MPI_Type_set_name( MPI_Datatype type, TAU_MPICH3_CONST char * type_name)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Type_set_name()", "", TAU_MESSAGE); 
@@ -7587,7 +7593,7 @@ void mpi_win_call_errhandler__( MPI_Fint *  win, MPI_Fint *  errorcode, MPI_Fint
 /******************************************************
 ***      MPI_Win_set_name wrapper function 
 ******************************************************/
-int MPI_Win_set_name( MPI_Win win, char * win_name)
+int MPI_Win_set_name( MPI_Win win, TAU_MPICH3_CONST char * win_name)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Win_set_name()", "", TAU_MESSAGE); 
@@ -8134,7 +8140,7 @@ void mpi_finalized__( MPI_Fint *  flag, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Type_create_indexed_block wrapper function 
 ******************************************************/
-int MPI_Type_create_indexed_block( int count, int blocklength, int * array_of_displacements, MPI_Datatype oldtype, MPI_Datatype * newtype)
+int MPI_Type_create_indexed_block( int count, int blocklength, TAU_MPICH3_CONST int * array_of_displacements, MPI_Datatype oldtype, MPI_Datatype * newtype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Type_create_indexed_block()", "", TAU_MESSAGE); 
@@ -8244,7 +8250,7 @@ void mpi_request_get_status__( MPI_Fint *  request, MPI_Fint *  flag, MPI_Fint *
 /******************************************************
 ***      MPI_Get_address wrapper function 
 ******************************************************/
-int MPI_Get_address( void * location, MPI_Aint * address)
+int MPI_Get_address( TAU_MPICH3_CONST void * location, MPI_Aint * address)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Get_address()", "", TAU_MESSAGE); 
@@ -8409,7 +8415,7 @@ void mpi_type_get_true_extent__( MPI_Fint *  datatype, MPI_Aint * true_lb, MPI_A
 /******************************************************
 ***      MPI_Pack_external wrapper function 
 ******************************************************/
-int MPI_Pack_external( char * datarep, void * inbuf, int incount, MPI_Datatype datatype, void * outbuf, MPI_Aint outsize, MPI_Aint * position)
+int MPI_Pack_external( TAU_MPICH3_CONST char * datarep, TAU_MPICH3_CONST void * inbuf, int incount, MPI_Datatype datatype, void * outbuf, MPI_Aint outsize, MPI_Aint * position)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Pack_external()", "", TAU_MESSAGE); 
@@ -8462,7 +8468,7 @@ void mpi_pack_external__( char * datarep, MPI_Aint * inbuf, MPI_Fint *  incount,
 /******************************************************
 ***      MPI_Unpack_external wrapper function 
 ******************************************************/
-int MPI_Unpack_external( char * datarep, void * inbuf, MPI_Aint insize, MPI_Aint * position, void * outbuf, int outcount, MPI_Datatype datatype)
+int MPI_Unpack_external( TAU_MPICH3_CONST char * datarep, TAU_MPICH3_CONST void * inbuf, MPI_Aint insize, MPI_Aint * position, void * outbuf, int outcount, MPI_Datatype datatype)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Unpack_external()", "", TAU_MESSAGE); 
@@ -8516,7 +8522,7 @@ void mpi_unpack_external__( char * datarep, MPI_Aint * inbuf, MPI_Aint *  insize
 /******************************************************
 ***      MPI_Pack_external_size wrapper function 
 ******************************************************/
-int MPI_Pack_external_size( char * datarep, int incount, MPI_Datatype datatype, MPI_Aint * size)
+int MPI_Pack_external_size( TAU_MPICH3_CONST char * datarep, int incount, MPI_Datatype datatype, MPI_Aint * size)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Pack_external_size()", "", TAU_MESSAGE); 

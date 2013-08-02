@@ -1,12 +1,15 @@
 CONFIG_ARCH=default
 TAUROOT=
+ifndef $(TAUROOT)
+TOOLS_SRC=..
+else
 TOOLS_SRC=$(TAUROOT)/tools/src
-
+endif
 
 
 SOURCES = $(wildcard src/*.java) $(wildcard src/tar/*.java) $(wildcard src/treetable/*.java)
 
-CLASSPATH = $(TAUROOT)/$(CONFIG_ARCH)/lib/batik-combined.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jfreechart-1.0.12.jar:$(TOOLS_SRC)/contrib/jcommon-1.0.15.jar
+CLASSPATH = $(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jfreechart-1.0.12.jar:$(TOOLS_SRC)/contrib/jcommon-1.0.15.jar
 
 bin/tau-common.jar: $(SOURCES) classes
 	javac -target 1.5 -source 1.5 -d ./classes -classpath $(CLASSPATH) $(SOURCES)

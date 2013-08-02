@@ -82,7 +82,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 
 
 #ifndef TAU_MAX_COUNTERS
-#define TAU_MAX_COUNTERS 10
+#define TAU_MAX_COUNTERS 25
 #endif
 
 #if (defined(PTHREADS) || defined(TAU_MPC) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
@@ -104,7 +104,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
          each component value (e.g., PTHREADS + GPU = 128 + 32 = 160).
 */
 #ifdef TAU_GPU
-#define TAU_MAX_THREADS 32
+#define TAU_MAX_THREADS 512 
 #else /* TAU_GPU */
 #define TAU_MAX_THREADS 1
 #endif /* TAU_GPU */
@@ -233,6 +233,9 @@ public:
   /* For EBS sampling */
   int needToRecordStop;
   void *address[TAU_SAMP_NUM_ADDRESSES];
+
+  /* For tracking heap memory */
+  void *extraInfo;
 
   // Callsite discovery
   unsigned long callsites[TAU_SAMP_NUM_ADDRESSES+1];
