@@ -1,8 +1,11 @@
 
 CONFIG_ARCH=default
 TAUROOT=
+ifndef $(TAUROOT)
+TOOLS_SRC=..
+else
 TOOLS_SRC=$(TAUROOT)/tools/src
-
+endif
 
 
 SOURCES = $(wildcard src/*.java)

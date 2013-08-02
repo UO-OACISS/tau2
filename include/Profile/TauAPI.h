@@ -169,6 +169,7 @@
                                  if (event == 0) Tau_get_context_userevent(&event, name);  
 
 #define TAU_TRIGGER_CONTEXT_EVENT(eventname, eventvalue) Tau_trigger_context_event(eventname, eventvalue)
+#define TAU_TRIGGER_EVENT(eventname, eventvalue) Tau_trigger_userevent(eventname, eventvalue)
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
 #define TAU_EVENT_THREAD(event, data, tid)				Tau_userevent_thread(event, data, tid)
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
@@ -465,7 +466,7 @@ void TAUDECL Tau_trace_sendmsg_remote(int type, int destination, int length, int
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_create_top_level_timer_if_necessary_task(int task);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
-void TAUDECL Tau_create_thread_state_if_necessary(char* name);
+void TAUDECL Tau_create_thread_state_if_necessary(const char* name);
 
 // metadata functions
 void TAUDECL Tau_metadata(const char *name, const char *value);
@@ -509,6 +510,7 @@ void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 void* TAUDECL Tau_get_userevent(char const * name);
 void Tau_get_context_userevent(void **ptr, const char *name);
 void Tau_trigger_context_event(const char *name, double data);
+void Tau_trigger_userevent(const char *name, double data);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);

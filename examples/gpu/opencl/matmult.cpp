@@ -287,7 +287,7 @@ int main(int argc, char**argv)
 		CL_MEM_COPY_HOST_PTR, matsize, b, &ci);
 		CHECK_CL_ERROR(ci);
 
-		d_c = clCreateBuffer(GPUContext, CL_MEM_WRITE_ONLY, matsize, c, &ci);
+		d_c = clCreateBuffer(GPUContext, CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR, matsize, c, &ci);
 		CHECK_CL_ERROR(ci);
 
 		clSetKernelArg(OpenCL_multiply_matrices, 0, sizeof(cl_mem), (void *) &d_a);
