@@ -1387,6 +1387,12 @@ pure_atomic_map_t & ThePureAtomicMap() {
   return pureAtomicMap;
 }
 
+typedef TAU_HASH_MAP<string, TauUserEvent *> pure_userevent_atomic_map_t;
+pure_userevent_atomic_map_t & ThePureUserEventAtomicMap() {
+  static pure_userevent_atomic_map_t pureUserEventAtomicMap;
+  return pureUserEventAtomicMap;
+}
+
 extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -1403,6 +1409,22 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
   *ptr = (void *) ue;
 }
 
+extern "C" void Tau_pure_userevent(void **ptr, const char* name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *ue = 0;
+  RtsLayer::LockEnv();
+  pure_userevent_atomic_map_t::iterator it = ThePureUserEventAtomicMap().find(string(name));
+  if (it == ThePureUserEventAtomicMap().end()) {
+    ue = new TauUserEvent(name); 
+    ThePureUserEventAtomicMap()[string(name)] = ue;
+  } else {
+    ue = (*it).second;
+  }
+  RtsLayer::UnLockEnv();
+  *ptr = (void *) ue;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1412,12 +1434,21 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
   t->TriggerEvent(data);
 } 
 
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_context_event(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
   Tau_pure_context_userevent(&ue, name);
   Tau_context_userevent(ue, data);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_userevent(const char *name, double data) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_userevent(&ue, name);
+  Tau_userevent(ue, data);
 }
 
 ///////////////////////////////////////////////////////////////////////////
