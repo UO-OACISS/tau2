@@ -25,12 +25,11 @@ def run(statement, filename=None, sort=-1):
     prof = Profile()
     result = None
     try:
-        try:
-            prof = prof.run(statement)
-        except SystemExit:
-            pass
+        prof = prof.run(statement)
+    except SystemExit:
+        pass
     finally:
-        if filename is not None:
+        if filename:
             prof.dump_stats(filename)
         else:
             result = prof.print_stats(sort)
