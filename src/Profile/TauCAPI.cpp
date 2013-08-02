@@ -407,8 +407,12 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   /*** Memory Profiling ***/
   if (TauEnv_get_track_memory_heap()) {
+    double *heapmem = new double; 
+    *heapmem = Tau_max_RSS();
     TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Entry");
-    TAU_CONTEXT_EVENT(memHeapEvent, Tau_max_RSS());
+    TAU_CONTEXT_EVENT(memHeapEvent, *heapmem);
+    p->extraInfo = heapmem;
+   
   }
 
   if (TauEnv_get_track_memory_headroom()) {
@@ -515,6 +519,8 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   TauInternalFunctionGuard protects_this_function;
 
 	FunctionInfo *fi = (FunctionInfo *) function_info; 
+        double currentHeap;
+        bool enableHeapTracking;
 
 	Profiler *profiler;
 #ifndef TAU_WINDOWS
@@ -528,9 +534,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   /********************************************************************************/
 
   /*** Memory Profiling ***/
-  if (TauEnv_get_track_memory_heap()) {
+  enableHeapTracking = TauEnv_get_track_memory_heap();
+  if (enableHeapTracking) {
+    currentHeap = Tau_max_RSS();
     TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Exit");
-    TAU_CONTEXT_EVENT(memHeapEvent, Tau_max_RSS());
+    TAU_CONTEXT_EVENT(memHeapEvent, currentHeap);
   }
 
   if (TauEnv_get_track_memory_headroom()) {
@@ -618,6 +626,20 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   }
 #endif /* TAU_DEPTH_LIMIT */
 
+
+  /* check memory */
+  if (enableHeapTracking && profiler->extraInfo) {
+    double *oldheap = (double *) (profiler->extraInfo);
+    double difference = currentHeap - *oldheap; 
+    if (difference > 0) {
+      TAU_TRIGGER_CONTEXT_EVENT("Increase in heap memory (KB)", difference);
+    } else {
+       if (difference < 0) {
+        TAU_TRIGGER_CONTEXT_EVENT("Decrease in heap memory (KB)", difference);
+       }
+    }
+			  
+  }
 
   profiler->Stop(tid);
 
