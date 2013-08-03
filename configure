@@ -7287,7 +7287,7 @@ fi
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorep11=`${scorepdir}/bin/scorep-config --version | grep 1.1 | wc -l`
+    scorep11=`${scorepdir}/bin/scorep-config --version | grep "^1.1" | wc -l`
     echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
     # default flags for Score-P 1.2+
