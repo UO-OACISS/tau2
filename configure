@@ -7287,7 +7287,7 @@ if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
     scorep11=`${scorepdir}/bin/scorep-config --version | grep "^1.1" | wc -l`
-    echo "SCORE-P version is 1.1? $scorep11"
+    #echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
     # default flags for Score-P 1.2+
       scorepLibs=`${scorepdir}/bin/scorep-config --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
@@ -7340,6 +7340,24 @@ if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
 
+    if [ $opari = yes ] ; then
+    # We should use the Opari2 provided by Score-P instead of TAU's Opari2 which may be older in some cases.
+      scorep_opari_support=`${scorepdir}/bin/scorep-info config-summary | grep 'opari2 support' `
+      if [ `echo $scorep_opari_support | grep internal | wc -l ` = 0 ]; then
+        scorep_opari_bin_dir=`echo $scorep_opari_support | sed -e 's@.*via @@g' -e 's@opari2-config@@g' `
+        if [ -x $scorep_opari_bin_dir/opari2 ]; then
+          echo "NOTE: Using external Opari2 from $scorep_opari for OpenMP instrumentation"
+        fi
+        # When Score-P 1.1.1's internal Opari2 is usable, we should move this line outside the if statement
+        # so it applies to both the clauses internal as well as external
+        fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
+      else
+        scorep_opari_bin_dir=${scorepdir}/bin
+        if [ -x $scorep_opari_bin_dir/opari2 ]; then
+          echo "NOTE: Using Score-P's internal Opari2 from ${scorep_opari_bin_dir}/opari2"
+        fi
+      fi
+    fi
 
 if [ $phase = yes ] ; then
      echo "********scorep and phase are on"
