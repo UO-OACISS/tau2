@@ -1,14 +1,1 @@
 This tool converts OTF2 traces to TAU profile format. 
-To configure, please edit the Makefile and put in the location of the OTFDIR. Or
-% make clean
-% make OTFDIR=/usr/local/packages/otf2-1.1.1
-
-We have included a simple dataset in the data subdirectory for testing:
-% cd data
-
-% otf2profile traces.otf2
-% pprof
-% paraprof
-
-
-For further information, please contact info@paratools.com.
