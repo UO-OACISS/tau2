@@ -1883,10 +1883,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
 {
   TauInternalFunctionGuard protects_this_function;
-  string name = n; // this is VERY bad if called from signalling! see above ^
-  string type = t; // this is VERY bad if called from signalling! see above ^
+  string name(n+string(" ")+ string(t)); // this is VERY bad if called from signalling! see above ^
+  string type = ""; // this is VERY bad if called from signalling! see above ^
   FunctionInfo * fi = NULL;
 
+  //printf("Tau_make_openmp_timer: n=%s, t = %s, PureMapSize=%d\n", n, t, ThePureMap().size());
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
   if (exists) {
