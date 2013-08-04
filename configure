@@ -4349,8 +4349,7 @@ if [ $vampirtrace = yes ] ; then
 	# check if 5.7 or later
 	if [ "x$major" = "x5" -a "x$minor" = "x7" ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
-	fi
-	if [ "x$major" = "x5" -a "x$minor" = "x12" ] ; then
+	else
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_12_API" 
 	fi
 
