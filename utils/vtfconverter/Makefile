@@ -13,17 +13,9 @@
  
 include ../../include/Makefile
 ########### Automatically modified by the configure script ############
+include ../Makefile
+#######################################################################
 
-
-
-#SGICC#LEXTRA = -lCio #ENDIF#
-
-
-
-
-CONFIG_ARCH=default
-CONFIG_CC=gcc
-CONFIG_CXX=g++
 CXX=$(CONFIG_CXX)  $(ABI) $(ISA)
 HEADERS=
 VTFDIR=

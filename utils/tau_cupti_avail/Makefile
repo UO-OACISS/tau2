@@ -1,4 +1,5 @@
 include ../../include/Makefile
+include ../Makefile
 
 CC     = $(TAU_CC)
 CXX		 = $(TAU_CXX)
@@ -7,11 +8,6 @@ CXX		 = $(TAU_CXX)
 RM      = /bin/rm -f
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
-
-#CUPTI#INSTALLTAU_CUPTI_AVAIL = $(INSTALLDEST)/tau_cupti_avail #ENDIF#
-#CUPTI#TAU_CUPTI_AVAIL = tau_cupti_avail #ENDIF#
-
-#CRAYCNL#DYNAMIC_OPT = -dynamic #ENDIF#
 
 all: $(TAU_CUPTI_AVAIL)
 install: $(INSTALLTAU_CUPTI_AVAIL)

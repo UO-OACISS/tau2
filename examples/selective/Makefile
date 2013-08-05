@@ -7,9 +7,11 @@
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #****************************************************************************
  
-TAUROOTDIR	= ../..
+include ../../include/Makefile 
+include ../Makefile
+include $(TAU_MAKEFILE_PDT_FORTRAN)
 
-include $(TAUROOTDIR)/include/Makefile
+
 
 USE_TAU = 1
 # Comment above line to disable TAU 

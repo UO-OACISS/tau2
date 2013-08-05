@@ -1,16 +1,8 @@
 include ../../include/Makefile
+include ../Makefile
 
-CC               = $(TAU_CC)
-CXX		 = $(TAU_CXX)
-
-#CRAYCNL#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
-#CRAYCNL#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
-
-ELG_INC_DIR=$(EPILOGINCDIR)
-#CRAYCNL#ELG_INC_DIR=$(EPILOGINCDIR)/../fe #ENDIF#
-
-ELG_LIB_DIR=$(EPILOGLIBDIR) 
-#CRAYCNL#ELG_LIB_DIR=$(EPILOGLIBDIR)/../fe #ENDIF#
+CC = $(TAU_CC_FE) $(ABI) $(ISA)
+CXX = $(TAU_CXX_FE) $(ABI) $(ISA)
 
 RM               = /bin/rm -f
 LIBS		= $(TAU_TRACE_INPUT_LIB) -L$(ELG_LIB_DIR)  -lelg.base $(EPILOGEXTRALINKCMD)
