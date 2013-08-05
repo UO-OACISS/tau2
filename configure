@@ -7353,8 +7353,11 @@ if [ $scorep = yes ] ; then
         fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
       else
         scorep_opari_bin_dir=${scorepdir}/bin
-        if [ -x $scorep_opari_bin_dir/opari2 ]; then
+        if [ -x $scorep_opari_bin_dir/opari2 -a $scorep11 = 0 ]; then
           echo "NOTE: Using Score-P's internal Opari2 from ${scorep_opari_bin_dir}/opari2"
+          fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
+          # If it is scorep-1.1.1, please use TAU's Opari2. The internal Opari2 from Score-P 1.1.1 crashes.
+          # It is ok to use Opari2 from Score-P 1.2+.
         fi
       fi
     fi
