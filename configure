@@ -7342,7 +7342,7 @@ if [ $scorep = yes ] ; then
 
     if [ $opari = yes ] ; then
     # We should use the Opari2 provided by Score-P instead of TAU's Opari2 which may be older in some cases.
-      scorep_opari_support=`${scorepdir}/bin/scorep-info config-summary | grep 'opari2 support' `
+      scorep_opari_support=`${scorepdir}/bin/scorep-info config-summary | grep -iE 'opari[2-9] support' `
       if [ `echo $scorep_opari_support | grep internal | wc -l ` = 0 ]; then
         scorep_opari_bin_dir=`echo $scorep_opari_support | sed -e 's@.*via @@g' -e 's@opari2-config@@g' `
         if [ -x $scorep_opari_bin_dir/opari2 ]; then
