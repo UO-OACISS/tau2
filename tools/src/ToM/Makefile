@@ -1,9 +1,9 @@
 # To be set by TAU configure
 
 # If shared libraries are disabled (probably due to system restrictions)
-#NOSHARED#TOM_EXTRA_DEF=-DTOM_NO_SHARED #ENDIF#
 
-TAUROOT=
+include ../../../include/Makefile
+
 MRNET_ROOT=
 MRNET_INCLUDE=
 MRNET_LIBS=
