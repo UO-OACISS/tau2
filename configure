@@ -7958,7 +7958,7 @@ sed -f $sedout < include/Makefile.skel > include/Makefile
 sed -f $sedout < src/Profile/Makefile.skel > src/Profile/Makefile
 sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
-sed -f $sedout < utils/Makefile.skel > utils/Makefile
+sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
 sed -f $sedout < examples/Makefile.skel > examples/Makefile
 
 if [ $tauprefix != unknown ] ; then 
