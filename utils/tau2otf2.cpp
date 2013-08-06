@@ -271,7 +271,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
   int stateid = callstack[cpuid].top();
   callstack[cpuid].pop();
 
-  dprintf("Leaving state time %g cpuid %d \n", time, cpuid);
+  dprintf("Leaving state %d time %g cpuid %d \n", stateid, time, cpuid);
   
 /* OLD: 
   OTF_Writer_writeUpfrom((OTF_Writer*)userData, TauGetClockTicksInGHz(time), stateid, cpuid, TAU_SCL_NONE);
@@ -282,7 +282,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
   OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter((OTF2_Archive_struct*)userData, locations[ numthreads[nid] * nid + tid ] );
 
   /* we can write stateid = 0 if we don't need stack integrity checking */
-  OTF2_EvtWriter_Leave(evt_writer, attributes, TauGetClockTicksInGHz(time), cpuid);
+  OTF2_EvtWriter_Leave(evt_writer, attributes, TauGetClockTicksInGHz(time), statetoken);
   lastt=time;
   return 0;
 }
@@ -845,7 +845,6 @@ int main(int argc, char **argv)
     firstpass.DefThread = DefThread;
     firstpass.EndTrace = EndTrace;
     firstpass.DefClkPeriod = ClockPeriod;
-    firstpass.DefThread = DefThread;
     firstpass.DefStateGroup = DefStateGroup;
     firstpass.DefState = DefState;
     firstpass.SendMessage = 0; /* Important to declare these as null! */

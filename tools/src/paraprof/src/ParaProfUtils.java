@@ -73,6 +73,7 @@ import edu.uoregon.tau.perfdmf.Snapshot;
 import edu.uoregon.tau.perfdmf.SourceRegion;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.vis.HeatMapWindow;
 
@@ -1179,7 +1180,12 @@ public class ParaProfUtils {
         return jMenuItem;
     }
 
-    public static void handleUserEventClick(final ParaProfTrial ppTrial, final UserEvent userEvent, final JComponent owner,
+    public static void handleUserEventClick(final ParaProfTrial ppTrial, final UserEvent userEvent,  final JComponent owner,
+            MouseEvent evt) {
+    	handleUserEventClick(ppTrial, userEvent, null, owner, evt);
+    }
+    
+    public static void handleUserEventClick(final ParaProfTrial ppTrial, final UserEvent userEvent, final Thread thread, final JComponent owner,
             MouseEvent evt) {
     	
         ActionListener act = new ActionListener() {
@@ -1205,6 +1211,18 @@ public class ParaProfUtils {
                         userEvent.setColorFlag(false);
                         ppTrial.updateRegisteredObjects("colorEvent");
                     }
+                    else if (arg.equals("Show In Context Event Window")&&thread!=null) {
+
+                    	//if(owner instanceof UserEventWindow){
+                    		//UserEventWindow uew = (UserEventWindow)owner;
+                    	
+                    		ContextEventWindow cew = new ContextEventWindow( ppTrial,  thread,  owner);
+                    		UserEventProfile uep = thread.getUserEventProfile(userEvent);
+                    		cew.selectEvent(uep);
+                    		cew.setVisible(true);
+                    		//cew.selectEvent();
+                    	//}
+                    }
                 }
 
             }
@@ -1212,6 +1230,11 @@ public class ParaProfUtils {
 
         JPopupMenu popup = new JPopupMenu();
         JMenuItem menuItem;
+        
+        menuItem = new JMenuItem("Show In Context Event Window");
+        menuItem.addActionListener(act);
+        popup.add(menuItem);
+        
         menuItem = new JMenuItem("Show User Event Bar Chart");
         menuItem.addActionListener(act);
         popup.add(menuItem);
