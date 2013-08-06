@@ -234,6 +234,9 @@ public:
   int needToRecordStop;
   void *address[TAU_SAMP_NUM_ADDRESSES];
 
+  /* For tracking heap memory */
+  void *extraInfo;
+
   // Callsite discovery
   unsigned long callsites[TAU_SAMP_NUM_ADDRESSES+1];
   unsigned long callsiteKeyId;

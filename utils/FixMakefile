@@ -179,6 +179,10 @@ case $1 in
         scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
 	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
 	;;
+     scorep_opari_bin_dir=*)
+        scorep_opari_bin_dir=`echo $1 | sed -e 's/^scorep_opari_bin_dir=//'`
+	    echo "s,^SCOREP_OPARI_BIN_DIR=.*$,SCOREP_OPARI_BIN_DIR=$scorep_opari_bin_dir,g" >> $sedout
+	;;
 
      scorepincs=*)
 	scorepincs=`echo $1 | sed -e 's/^scorepincs=//' -e 's/#/ /g'`
@@ -1384,11 +1388,15 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREP)
-	echo "NOTE: Using SCOREP Tracing Package ***"
+	echo "NOTE: Using SCOREP Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPOPARI2)
+	echo "NOTE: Using Opari2 configured with SCOREP Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREPMPI)
-	echo "NOTE: Using SCOREPMPI Tracing Package ***"
+	echo "NOTE: Using SCOREPMPI Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREPOMPI)
