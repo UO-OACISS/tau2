@@ -1,5 +1,5 @@
 include ../../include/Makefile
-include ../Makefile
+include ../include/Makefile
 
 CC = $(TAU_CC_FE) $(ABI) $(ISA)
 CXX = $(TAU_CXX_FE) $(ABI) $(ISA)

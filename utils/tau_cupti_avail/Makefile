@@ -1,5 +1,5 @@
 include ../../include/Makefile
-include ../Makefile
+include ../include/Makefile
 
 CC     = $(TAU_CC)
 CXX		 = $(TAU_CXX)
