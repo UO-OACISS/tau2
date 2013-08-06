@@ -30,6 +30,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
     }
 
     public ContextEventTreeNode(UserEventProfile uep, ContextEventModel model, String alternateName) {
+    	this.setUserObject(uep);
         userEventProfile = uep;
         this.model = model;
         if (uep == null) {
@@ -113,6 +114,10 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
 
     public String toString() {
         return displayName;
+    }
+    
+    public String getName(){
+    	return name;
     }
 
     public int compareTo(ContextEventTreeNode o) {
