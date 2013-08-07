@@ -24,14 +24,16 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev) {}
 
 void Tau_CuptiLayer_read_counter(uint64_t * cBuffer, int id) {}
 
-counter_map_t Tau_CuptiLayer_Counter_Map;
-
 int internal_id_map[TAU_MAX_COUNTERS]; 
 int internal_id_map_backwards[TAU_MAX_COUNTERS];
 
 #endif
 
-counter_map_t Tau_CuptiLayer_Counter_Map;
+counter_map_t& Tau_CuptiLayer_Counter_Map() {
+  static counter_map_t Counter_Map;
+  return Counter_Map;
+}
+
 int internal_id_map[TAU_MAX_COUNTERS] = {0};  
 int internal_id_map_backwards[TAU_MAX_COUNTERS] = {0}; 
 counter_vec_t Tau_CuptiLayer_Added_counters;
@@ -578,7 +580,7 @@ void Tau_CuptiLayer_Initialize_Map()
 				CuptiCounterEvent* ev = new CuptiCounterEvent(i,j,k);
 
 				//ev->print();
-				Tau_CuptiLayer_Counter_Map.insert(std::make_pair(ev->tag, ev));
+				Tau_CuptiLayer_Counter_Map().insert(std::make_pair(ev->tag, ev));
 			}
 		
 			er = cuDeviceGet(&currDevice, i);
@@ -591,17 +593,17 @@ void Tau_CuptiLayer_Initialize_Map()
 
 bool Tau_CuptiLayer_is_cupti_counter(char* str)
 {
-	if (Tau_CuptiLayer_Counter_Map.empty()) {
+	if (Tau_CuptiLayer_Counter_Map().empty()) {
 		Tau_CuptiLayer_Initialize_Map();
 	}
-	return Tau_CuptiLayer_Counter_Map.count(string(str)) > 0;
+	return Tau_CuptiLayer_Counter_Map().count(string(str)) > 0;
 }
 
 void Tau_CuptiLayer_register_all_counters()
 {
   for (int i = 0; i < number_of_added_strings; i++)
   {
-    Tau_CuptiLayer_register_counter(Tau_CuptiLayer_Counter_Map.at(
+    Tau_CuptiLayer_register_counter(Tau_CuptiLayer_Counter_Map().at(
       Tau_CuptiLayer_Added_strings[i]));
   }
 
