@@ -6435,6 +6435,10 @@ else
 	fi
     fi
 fi
+if [ $bfd_worked = "yes" -a $machine = bgq ] ; then
+  BFDLIBS=`echo $BFDLIBS | sed -e 's@-liberty@${TAU_BFD_DIR}/lib/libiberty.a@g'`
+  fixmakeargs="$fixmakeargs bfddir=$bfddir"
+fi
 
 if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
