@@ -317,56 +317,7 @@ int tau_openmp_init(void)
 }
 
 
-  int tau_openmp_initialized = tau_openmp_init();
-#ifdef TAU_USE_OLD_SLOW_WAY
-void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
-{
-/* For any region, create a mapping between a region r and timer t and
-   start the timer. */
-  
-  // Automatically increment and decrement insideTAU
-  TauInternalFunctionGuard protects_this_function;
-
-  RtsLayer::LockEnv();
-  //omp_set_lock(&tau_ompregdescr_lock);
-  //printf("index = %d, NUM_OMP_TYPES=%d\n", index, NUM_OMP_TYPES);
-if(r == NULL)
-printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
-  if (!r->data) {
-#ifdef TAU_OPENMP_PARTITION_REGION
-    FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
-    for (int i=0; i < NUM_OMP_TYPES; i++) {
-      char rname[1024], rtype[1024];
-      sprintf(rname, "%s (%s)",  r->rtype, omp_names[i]);
-      sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
-	      r->start_file_name, r->start_line_1, r->end_line_1);
-      
-      FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");
-      flist[i] = f;
-    }
-    r->data = (void*)flist;
-#else
-    char rname[1024], rtype[1024];
-    sprintf(rname, "%s", r->rtype);
-    sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
-	    r->start_file_name, r->start_line_1, r->end_line_1);
-    
-    FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");
-    r->data = (void*)f;
-#endif
-  }
-  
-#ifdef TAU_OPENMP_PARTITION_REGION
-  FunctionInfo *f = ((FunctionInfo **)r->data)[index];
-#else 
-  FunctionInfo *f = (FunctionInfo *)r->data;
-#endif
-  Tau_start_timer(f, 0, Tau_get_tid());
- 
-  RtsLayer::UnLockEnv();
-  //omp_unset_lock(&tau_ompregdescr_lock);
-}
-#else //TAU_USE_OLD_SLOW_WAY
+int tau_openmp_initialized = tau_openmp_init();
 
 extern FunctionInfo * Tau_make_openmp_timer(const char * n, const char * t);
 
@@ -382,27 +333,48 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
     printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
   }
 
-  if (!r->data) {
-    // only one thread should create the timers.
-    RtsLayer::LockEnv();
+  FunctionInfo **flist = (FunctionInfo **)(r->data);
+
 #ifdef TAU_OPENMP_PARTITION_REGION
-    // make sure some other thread hasn't created them.
+  if (!r->data) {
+    // only one thread should create the array.
+    RtsLayer::LockEnv();
+    // make sure some other thread hasn't created it.
     if (!r->data) {
-      // create the array of timers for this region
-      FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
+      flist = new FunctionInfo*[NUM_OMP_TYPES];
+	  // initialize the array to be null pointers
       for (int i=0; i < NUM_OMP_TYPES; i++) {
-        char rname[1024], rtype[1024];
-        sprintf(rname, "%s (%s)",  r->rtype, omp_names[i]);
-        sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
-	        r->start_file_name, r->start_line_1, r->end_line_1);
-        
-        FunctionInfo *f = Tau_make_openmp_timer(rname, rtype);
-        flist[i] = f;
+	    flist[i] = NULL;
       }
       // save the list of timers to the region
       r->data = (void*)flist;
+	}
+    RtsLayer::UnLockEnv();
+
+    flist = (FunctionInfo **)(r->data);
+  }
+
+  // does the timer we want exist?
+  if (flist[index] == NULL) {
+    // only one thread should create the timers.
+    RtsLayer::LockEnv();
+     // make sure some other thread hasn't created it.
+    if (flist[index] == NULL) {
+      char rname[1024], rtype[1024];
+      sprintf(rname, "%s (%s)",  r->rtype, omp_names[index]);
+      sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
+      r->start_file_name, r->start_line_1, r->end_line_1);
+      flist[index] = Tau_make_openmp_timer(rname, rtype);
     }
-#else
+    RtsLayer::UnLockEnv();
+  }
+
+  FunctionInfo *f = flist[index];
+
+#else // not TAU_OPENMP_PARTITION_REGION
+
+  if (!r->data) {
+    RtsLayer::LockEnv();
     // make sure some other thread hasn't created the timer.
     if (!r->data) {
       // create the timer for this region
@@ -414,20 +386,13 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
       FunctionInfo *f = Tau_make_openmp_timer(rname, rtype);
       r->data = (void*)f;
     }
-#endif
     // let other threads get to these timers
     RtsLayer::UnLockEnv();
   }
-  
-#ifdef TAU_OPENMP_PARTITION_REGION
-  FunctionInfo *f = ((FunctionInfo **)r->data)[index];
-#else 
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
   Tau_start_timer(f, 0, Tau_get_tid());
 }
-#endif //TAU_USE_OLD_SLOW_WAY - replaced by the fast way!
-
 
 void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
 {
