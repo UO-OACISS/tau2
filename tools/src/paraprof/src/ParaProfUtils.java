@@ -950,6 +950,10 @@ public class ParaProfUtils {
                         map.putAll(ppTrial.getDataSource().getMetaData());
                         params.metadata = map;
                         ExternalTool.launch(tools, params, owner);
+                    } else if (arg.equals("Show In Statistics Table")){
+                    	TreeTableWindow ttWindow = new TreeTableWindow(ppTrial, thread, owner);
+                    	ttWindow.select(function);
+                        ttWindow.setVisible(true);
                     }
 
                 } catch (Exception e) {
@@ -974,14 +978,18 @@ public class ParaProfUtils {
             functionPopup.add(functionDetailsItem);
         }
 
-        JMenuItem functionDetailsItem = new JMenuItem("Show Function Bar Chart");
-        functionDetailsItem.addActionListener(actionListener);
-        functionPopup.add(functionDetailsItem);
+        JMenuItem functionStatisticsItem = new JMenuItem("Show In Statistics Table");
+        functionStatisticsItem.addActionListener(actionListener);
+        functionPopup.add(functionStatisticsItem);
 
         JMenuItem functionHistogramItem = new JMenuItem("Show Function Histogram");
         functionHistogramItem.addActionListener(actionListener);
         functionPopup.add(functionHistogramItem);
 
+        JMenuItem functionDetailsItem = new JMenuItem("Show Function Bar Chart");
+        functionDetailsItem.addActionListener(actionListener);
+        functionPopup.add(functionDetailsItem);
+        
         if (ppTrial.getDataSource().getPhasesPresent()) {
             JMenuItem jMenuItem = new JMenuItem("Show Function Data over Phases");
             jMenuItem.addActionListener(actionListener);
