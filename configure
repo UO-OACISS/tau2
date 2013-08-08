@@ -1413,7 +1413,10 @@ for arg in "$@"; do
 
   -otf=*)
       otf=yes
-      trace=yes
+      # don't set this! it will enable tracing by default. Just because
+	  # specified an OTF generation library doesn't mean TRACING should be
+	  # the default measurement!
+      # trace=yes
       otfdir=`echo $arg | sed -e 's/-otf=//'`
       if [ ! -d $otfdir ]
       then
