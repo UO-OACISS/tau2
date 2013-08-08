@@ -8,6 +8,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -39,6 +40,7 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.common.ImageExport;
@@ -63,6 +65,7 @@ import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.NumSubrColumn;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.RegularMetricColumn;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.RegularPerCallMetricColumn;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.RegularPercentMetricColumn;
+import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.Thread;
 
 /**
@@ -623,5 +626,39 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     public void setDecimals(int decimals) {
         this.decimals = decimals;
+    }
+    
+    public void select(final Function function){
+    	System.out.println(function.getName());
+    	String[] chunks = function.getName().split("=>");
+    	//model.getRoot();
+    	//int modelChildren=model.getChildCount(model.getRoot());
+    	JTree tree = treeTable.getTree();
+    	TreeModel treeModel=tree.getModel();
+    	TreeTableNode treeRoot =(TreeTableNode) treeModel.getRoot();
+    	int treeChildren = treeModel.getChildCount(treeRoot);
+    	System.out.println(treeRoot.getClass());
+    	int row=0;
+    	for(int i=0;i<chunks.length;i++)
+    	{
+    		for(int j=0;j<treeChildren;j++){
+    			TreeTableNode ttn = (TreeTableNode) treeModel.getChild(treeRoot, j);
+    			System.out.println(chunks[i]+" vs "+ttn);
+    			if(chunks[i].trim().equals(ttn.toString().trim())){
+    				treeRoot=ttn;
+    				treeChildren=treeModel.getChildCount(treeRoot);
+    				row+=j;
+    				tree.expandRow(row);
+    				row++;
+    				break;
+    			}
+    		}
+    	}
+    	if(row>0)
+    		row--;
+    	tree.setSelectionRow(row);
+    	int oneRow = treeTable.getRowHeight()+treeTable.getRowMargin();
+    	treeTable.scrollRectToVisible(new Rectangle(0,oneRow*row,5,5));
+    	
     }
 }

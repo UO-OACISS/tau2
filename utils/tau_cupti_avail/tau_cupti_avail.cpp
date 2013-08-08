@@ -10,6 +10,11 @@
 //#include <string>
 //#include <vector>
 using namespace std;
+
+// CrayCC is stupid and doesn't support weak symbols
+void *pomp_rd_table;
+int POMP_MAX_ID = 0;
+
 /* Specific errors from CUDA lib */
 /*
 #define CHECK_CU_ERROR(err, cufunc) \

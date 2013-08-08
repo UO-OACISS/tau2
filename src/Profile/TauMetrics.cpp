@@ -173,16 +173,16 @@ static void read_env_vars() {
         }
         ptr++;
       } else {
-        if (*ptr == ':') {
-          *ptr = ',';
+        if ((*ptr == ':') || (*ptr == '|') || (*ptr == ',')) {
+          *ptr = '^';
         }
       }
     }
 
-    token = strtok(metrics, ",");
+    token = strtok(metrics, "^");
     while (token) {
       metricv_add(token);
-      token = strtok(NULL, ",");
+      token = strtok(NULL, "^");
     }
   } else {
     char counterName[256];
