@@ -79,7 +79,7 @@ struct PyMethodDef pytau_methods[] = {
     {pytau_getFuncVals__name__, pytau_getFuncVals, METH_VARARGS, pytau_getFuncVals__doc__},
     {pytau_dumpFuncVals__name__, pytau_dumpFuncVals, METH_VARARGS, pytau_dumpFuncVals__doc__},
     {pytau_dumpFuncValsIncr__name__, pytau_dumpFuncValsIncr, METH_VARARGS, pytau_dumpFuncValsIncr__doc__},
-
+    {pytau_metadata__name__, pytau_metadata, METH_VARARGS, pytau_metadata__doc__},
 // groups
 
     {pytau_getProfileGroup__name__, pytau_getProfileGroup, METH_VARARGS, pytau_getProfileGroup__doc__},
