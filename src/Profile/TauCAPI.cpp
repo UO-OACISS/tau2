@@ -1813,10 +1813,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
-  if (exists) {
+  if (exists > 0) {
     PureMap::iterator it = pure.find(name);
     fi = it->second;
-  } else {
+  } 
+  if (fi == NULL) {
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
@@ -1839,10 +1840,11 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
 
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
-  if (exists) {
+  if (exists > 0) {
     PureMap::iterator it = pure.find(name);
     fi = it->second;
-  } else {
+  }
+  if (fi == NULL) {
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
