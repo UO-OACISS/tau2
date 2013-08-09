@@ -11,7 +11,11 @@ SOURCES = $(filter-out src/ParaProf.java, $(BASE_SRC))
 NOW = $(shell date)
 
 CUBE_JAVA_READER=../contrib/CubeReader.jar
-TOOLS_SRC = $(TAUROOT)/tools/src
+ifndef $(TAUROOT)
+TOOLS_SRC=..
+else
+TOOLS_SRC=$(TAUROOT)/tools/src
+endif
 CLASSPATH = $(TOOLS_SRC)/perfdmf/bin/perfdmf.jar:$(TOOLS_SRC)/contrib/jargs.jar:$(TOOLS_SRC)/contrib/batik-combined.jar:$(TOOLS_SRC)/common/bin/tau-common.jar:$(TOOLS_SRC)/contrib/jfreechart-1.0.12.jar:$(TOOLS_SRC)/contrib/jcommon-1.0.15.jar:$(TOOLS_SRC)/contrib/jython.jar:$(TOOLS_SRC)/contrib/jgraph.jar:$(TOOLS_SRC)/vis/bin/vis.jar:$(TOOLS_SRC)/contrib/mesp.jar:$(CUBE_JAVA_READER)
 
 TARGET_JAR=$(TOOLS_SRC)/paraprof/bin/paraprof.jar

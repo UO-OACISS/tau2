@@ -36,6 +36,7 @@ usage()
     echo "        -T <$options> : specify TAU option"
     echo "        -loadlib=<file.so>   : specify additional load library"
     echo "        -XrunTAUsh-<options> : specify TAU library directly"
+    echo "        -gdb          run program in the gdb debugger"
     echo ""
     echo "Notes:"
     echo "	Defaults if unspecified: -T MPI"
@@ -94,6 +95,7 @@ TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
 track_pthread=false
 track_gomp=false
+use_gdb=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -166,6 +168,10 @@ for arg in "$@" ; do
 	      ;;
 	  -s)
 	      dryrun=true
+	      shift
+	      ;;
+	  -gdb)
+	      use_gdb=true
 	      shift
 	      ;;
 	  -V)
@@ -494,6 +500,31 @@ else
         echo "export TAU_MEMDBG_PROTECT_ABOVE=1"
       fi
       echo "$@"
+      exit 0;
+    elif [ $use_gdb = "true" ]; then
+      echo "" > .gdb_commands
+      if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
+        echo "set env LD_BIND_NOW=1" >> .gdb_commands
+      fi
+      if [ $track_io = "true" ] ; then
+        echo "set env LD_BIND_NOW=1" >> .gdb_commands 
+      fi
+      if [ $apple = 1 ]; then
+        echo "set env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
+        echo "set env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
+        echo "set env DYLD_FORCE_FLAT_NAMESPACE=" >> .gdb_commands  
+      else
+        echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
+        echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
+        echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
+      fi
+      if [ $memory_debug = "true" ] ; then
+        echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
+        echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
+      fi
+      echo "set arg ${*:2}" >> .gdb_commands
+      gdb -x .gdb_commands "$1"
+      rm -f ./.gdb_commands
       exit 0;
     elif [ $apple = 1 ]; then
       export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH

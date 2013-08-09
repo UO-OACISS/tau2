@@ -1413,7 +1413,10 @@ for arg in "$@"; do
 
   -otf=*)
       otf=yes
-      trace=yes
+      # don't set this! it will enable tracing by default. Just because
+	  # specified an OTF generation library doesn't mean TRACING should be
+	  # the default measurement!
+      # trace=yes
       otfdir=`echo $arg | sed -e 's/-otf=//'`
       if [ ! -d $otfdir ]
       then
@@ -4349,8 +4352,7 @@ if [ $vampirtrace = yes ] ; then
 	# check if 5.7 or later
 	if [ "x$major" = "x5" -a "x$minor" = "x7" ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
-	fi
-	if [ "x$major" = "x5" -a "x$minor" = "x12" ] ; then
+	else
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_12_API" 
 	fi
 
@@ -6436,6 +6438,10 @@ else
 	fi
     fi
 fi
+if [ $bfd_worked = "yes" -a $machine = bgq ] ; then
+  BFDLIBS=`echo $BFDLIBS | sed -e 's@-liberty@${TAU_BFD_DIR}/lib/libiberty.a@g'`
+  fixmakeargs="$fixmakeargs bfddir=$bfddir"
+fi
 
 if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
@@ -7287,27 +7293,53 @@ fi
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
+    scorep11=`${scorepdir}/bin/scorep-config --version | grep "^1.1" | wc -l`
+    #echo "SCORE-P version is 1.1? $scorep11"
+    if [ $scorep11 = 0 ] ; then
+    # default flags for Score-P 1.2+
+      scorepLibs=`${scorepdir}/bin/scorep-config --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+      scorepLD=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+      scorepExtraLibs='-lscorep_adapter_user_event -lscorep_adapter_user_mgmt'
+    fi
+    # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-        scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-      else
+        if [ $scorep11 = 0 ]; then
+          scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+          scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        else
+          scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+          scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        fi
+        else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-        scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        if [ $scorep11 = 0 ]; then
+          scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+          scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        else
+          scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+          scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        fi
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-        scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        if [ $scorep11 = 0 ]; then
+	      scorepLD=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --ldflags --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+          scorepLibs=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --libs  --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        else
+	      scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+          scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        fi
       else
-        scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        if [ $scorep11 = 1 ]; then
+          scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+          scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        fi
       fi
     fi
-    scorepLibs="$scorepLD $scorepLibs"
+    scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
@@ -7315,6 +7347,27 @@ if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
 
+    if [ $opari = yes ] ; then
+    # We should use the Opari2 provided by Score-P instead of TAU's Opari2 which may be older in some cases.
+      scorep_opari_support=`${scorepdir}/bin/scorep-info config-summary | grep -iE 'opari[2-9] support' `
+      if [ `echo $scorep_opari_support | grep internal | wc -l ` = 0 ]; then
+        scorep_opari_bin_dir=`echo $scorep_opari_support | sed -e 's@.*via @@g' -e 's@opari2-config@@g' `
+        if [ -x $scorep_opari_bin_dir/opari2 ]; then
+          echo "NOTE: Using external Opari2 from $scorep_opari for OpenMP instrumentation"
+        fi
+        # When Score-P 1.1.1's internal Opari2 is usable, we should move this line outside the if statement
+        # so it applies to both the clauses internal as well as external
+        fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
+      else
+        scorep_opari_bin_dir=${scorepdir}/bin
+        if [ -x $scorep_opari_bin_dir/opari2 -a $scorep11 = 0 ]; then
+          echo "NOTE: Using Score-P's internal Opari2 from ${scorep_opari_bin_dir}/opari2"
+          fixmakeargs="$fixmakeargs scorep_opari_bin_dir=$scorep_opari_bin_dir SCOREPOPARI2"
+          # If it is scorep-1.1.1, please use TAU's Opari2. The internal Opari2 from Score-P 1.1.1 crashes.
+          # It is ok to use Opari2 from Score-P 1.2+.
+        fi
+      fi
+    fi
 
 if [ $phase = yes ] ; then
      echo "********scorep and phase are on"
