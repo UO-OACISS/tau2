@@ -158,13 +158,23 @@ static void read_env_vars() {
   const char *token;
   const char *taumetrics = TauEnv_get_metrics();
   char *ptr, *ptr2;
+  int len = strlen(taumetrics);
+  int i;
+  bool alt_delimiter_found = false;
 
-  if (taumetrics && strlen(taumetrics) == 0) {
+  if (taumetrics && len == 0) {
     taumetrics = NULL;
   }
 
   if (taumetrics) {
     char *metrics = strdup(taumetrics);
+    for(i=0; i < len;i++) {
+      if ((taumetrics[i] == ',') || (taumetrics[i] == '|')) {
+        alt_delimiter_found = true;
+        //printf("ALT delimiter found: taumetrics[%d] = %c\n", i, taumetrics[i]);
+        break;
+      }
+    }
     for (ptr = metrics; *ptr; ptr++) {
       if (*ptr == '\\') {
         /* escaped, skip over */
@@ -173,11 +183,22 @@ static void read_env_vars() {
         }
         ptr++;
       } else {
-        if ((*ptr == ':') || (*ptr == '|') || (*ptr == ',')) {
-          *ptr = '^';
+        if (alt_delimiter_found) {
+          //printf("Alt_delimiter = %d, ptr = %c\n", alt_delimiter_found, *ptr);
+          if ((*ptr == '|') || (*ptr == ',')) {
+	  // printf("Checking for | or , in %s\n", metrics);
+            *ptr = '^';
+          } 
+        } else { 
+           // printf("Alt_delimiter = %d, ptr = %c\n", alt_delimiter_found, *ptr);
+            if ((*ptr == ':')) {
+	     // printf("Checking for : in %s\n", metrics);
+              *ptr = '^';
+            }
         }
       }
     }
+    //printf("METRICS is %s\n", metrics);
 
     token = strtok(metrics, "^");
     while (token) {
