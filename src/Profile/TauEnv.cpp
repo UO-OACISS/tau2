@@ -883,6 +883,9 @@ void TauEnv_initialize()
     /* Read the configuration file */
     TauConf_read();
 
+    sprintf(tmpstr, "%d", TAU_MAX_THREADS);
+    TAU_VERBOSE("TAU: Supporting %d threads\n", TAU_MAX_THREADS);
+    TAU_METADATA("TAU_MAX_THREADS", tmpstr);
 
     /*** Options that can be used with Scalasca and VampirTrace ***/
     tmp = getconf("TAU_LITE");
