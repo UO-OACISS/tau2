@@ -115,6 +115,11 @@ extern char pytau_setNode__doc__[];
 extern "C"
 PyObject * pytau_setNode(PyObject *, PyObject *);
 
+extern char pytau_metadata__name__[];
+extern char pytau_metadata__doc__[];
+extern "C"
+PyObject * pytau_metadata(PyObject *, PyObject *);
+
 #endif // pytau_database_h
 
 // version
