@@ -124,14 +124,14 @@ public class DataSourceExport {
 		BufferedOutputStream bw = new BufferedOutputStream(gzip);
 		DataOutputStream p = new DataOutputStream(bw);
 
-		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+		//Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 		int numFunctions = 0;
 
 		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
-			if (!function.isGroupMember(derived)) {
+			//if (!function.isGroupMember(derived)) {
 				numFunctions++;
-			}
+			//}
 		}
 
 		int numMetrics = dataSource.getNumberOfMetrics();
@@ -219,7 +219,7 @@ public class DataSourceExport {
 		p.writeInt(numFunctions);
 		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
-			if (!function.isGroupMember(derived)) {
+			//if (!function.isGroupMember(derived)) {
 
 				functions[idx++] = function;
 				p.writeUTF(function.getName());
@@ -234,7 +234,7 @@ public class DataSourceExport {
 						p.writeInt(findGroupID(groups, group));
 					}
 				}
-			}
+			//}
 		}
 
 		// write out user event names
@@ -498,9 +498,9 @@ public class DataSourceExport {
 		int numFunctions = 0;
 		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
-			if (function.isGroupMember(derived)) {
-				continue;
-			}
+//			if (function.isGroupMember(derived)) {
+//				continue;
+//			}
 			numFunctions++;
 		}
 
@@ -520,7 +520,7 @@ public class DataSourceExport {
 		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 
-			if (!function.isGroupMember(derived)) {
+			//if (!function.isGroupMember(derived)) {
 				functions[idx] = function;
 
 				List<Group> thisGroups = function.getGroups();
@@ -543,7 +543,7 @@ public class DataSourceExport {
 					groupStrings[idx] = groupStrings[idx].trim();
 				}
 				idx++;
-			}
+			//}
 		}
 
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
@@ -587,9 +587,9 @@ public class DataSourceExport {
 		int numFunctions = 0;
 		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
-			if (function.isGroupMember(derived)) {
-				continue;
-			}
+//			if (function.isGroupMember(derived)) {
+//				continue;
+//			}
 			numFunctions++;
 		}
 
@@ -609,7 +609,7 @@ public class DataSourceExport {
 		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 
-			if (!function.isGroupMember(derived)) {
+			//if (!function.isGroupMember(derived)) {
 				functions[idx] = function;
 
 				List<Group> thisGroups = function.getGroups();
@@ -632,7 +632,7 @@ public class DataSourceExport {
 					groupStrings[idx] = groupStrings[idx].trim();
 				}
 				idx++;
-			}
+			//}
 		}
 
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
