@@ -2878,9 +2878,9 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
 	    exit 1; 
           fi
         fi
-        if [ -d $xlsmpdir -a -r $xlsmpdir/bg/*/bglib64/libxllomp.a -a -r $xlsmpdir/bg/*/include/lomp/omp.h ]; then
+        if [ -d $xlsmpdir -a -r $xlsmpdir/bg/*/bglib64/ompt_full/libxllomp.a -a -r $xlsmpdir/bg/*/include/lomp/omp.h ]; then
           lompinc=`echo $xlsmpdir/bg/*/include `
-	  lomplib=`echo $xlsmpdir/bg/*/bglib64 `
+	  lomplib=`echo $xlsmpdir/bg/*/bglib64/ompt_full `
 	  echo "NOTE: Found LOMP include directory $lompinc"
 	  echo "NOTE: Found LOMP lib directory $lomplib"
           omptenabled=yes
