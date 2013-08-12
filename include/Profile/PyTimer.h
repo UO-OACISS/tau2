@@ -44,8 +44,17 @@ extern char pytau_stop__doc__[];
 extern "C"
 PyObject * pytau_stop(PyObject *, PyObject *);
 
-#endif // pytau_timer_h
+extern char pytau_registerEvent__name__[];
+extern char pytau_registerEvent__doc__[];
+extern "C"
+PyObject * pytau_registerEvent(PyObject *, PyObject *);
 
+extern char pytau_event__name__[];
+extern char pytau_event__doc__[];
+extern "C"
+PyObject * pytau_event(PyObject *, PyObject *);
+
+#endif // pytau_timer_h
 // version
 // $Id: PyTimer.h,v 1.2 2007/03/01 22:14:37 amorris Exp $
 

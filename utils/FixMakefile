@@ -86,6 +86,10 @@ case $1 in
 	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
 	;;
 
+     bfddir=*)
+        bfddir=`echo $1 | sed -e 's/^bfddir=//' -e 's/#/ /g'`
+	echo "s,^TAU_BFD_DIR=.*$,TAU_BFD_DIR=$bfddir,g" >> $sedout
+	;;
      bfdlink=*)
         bfdlink=`echo $1 | sed -e 's/^bfdlink=//' -e 's/#/ /g'`
 	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
