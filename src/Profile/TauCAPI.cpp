@@ -68,7 +68,13 @@ void esd_exit (elg_ui4 rid);
 
 using namespace tau;
 
+#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
+	static TauContextUserEvent ce(msg); return &ce; } 
 
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryEntryEvent,"Heap Memory Used (KB) at Entry")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryExitEvent,"Heap Memory Used (KB) at Exit")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent,"Increase in Heap Memory (KB)")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent,"Decrease in Heap Memory (KB)")
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name)
 {
@@ -409,8 +415,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (TauEnv_get_track_memory_heap()) {
     double *heapmem = new double; 
     *heapmem = Tau_max_RSS();
-    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Entry");
-    TAU_CONTEXT_EVENT(memHeapEvent, *heapmem);
+    TAU_CONTEXT_EVENT(TheHeapMemoryEntryEvent(), *heapmem);
     p->extraInfo = heapmem;
    
   }
@@ -537,8 +542,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   enableHeapTracking = TauEnv_get_track_memory_heap();
   if (enableHeapTracking) {
     currentHeap = Tau_max_RSS();
-    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Exit");
-    TAU_CONTEXT_EVENT(memHeapEvent, currentHeap);
+    TAU_CONTEXT_EVENT(TheHeapMemoryExitEvent(), currentHeap);
   }
 
   if (TauEnv_get_track_memory_headroom()) {
@@ -632,10 +636,10 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     double *oldheap = (double *) (profiler->extraInfo);
     double difference = currentHeap - *oldheap; 
     if (difference > 0) {
-      TAU_TRIGGER_CONTEXT_EVENT("Increase in heap memory (KB)", difference);
+      TAU_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent(), difference);
     } else {
        if (difference < 0) {
-        TAU_TRIGGER_CONTEXT_EVENT("Decrease in heap memory (KB)", difference);
+        TAU_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent(), (0 - difference));
        }
     }
 			  
@@ -1140,8 +1144,6 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 #endif /* TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT */
 
 
-#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
-	static TauContextUserEvent ce(msg); return &ce; } 
 
 TAU_GEN_EVENT(TheSendEvent,"Message size sent to all nodes")
 TAU_GEN_EVENT(TheRecvEvent,"Message size received from all nodes")

@@ -3992,7 +3992,7 @@ then
   bgq)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
         if [ $cxx_compiler = mpicxx ]; then
-	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/gcc/include
         fi
         ;;
   t3e|crayx1|craysv1)
