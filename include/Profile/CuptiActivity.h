@@ -189,7 +189,7 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 
-#define TAU_MAX_GPU_DEVICES 4
+#define TAU_MAX_GPU_DEVICES 16
 
 
 /* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
