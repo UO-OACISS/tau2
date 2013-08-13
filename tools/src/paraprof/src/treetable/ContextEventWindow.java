@@ -9,6 +9,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -20,13 +21,15 @@ import java.util.Observer;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
+
+import com.sun.rowset.internal.Row;
 
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
@@ -38,7 +41,7 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.WindowPlacer;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.Thread;
-import edu.uoregon.tau.perfdmf.UserEvent;
+import edu.uoregon.tau.perfdmf.UserEventProfile;
 
 public class ContextEventWindow extends JFrame implements Observer, ParaProfWindow, Printable, ImageExport {
 
@@ -133,7 +136,7 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
                             //JPopupMenu popup;
                             if (node.getUserEventProfile() != null) {
                                 //popup = 
-                                		ParaProfUtils.handleUserEventClick(ppTrial, node.getUserEventProfile().getUserEvent(), treeTable, evt);
+                                		ParaProfUtils.handleUserEventClick(ppTrial, node.getUserEventProfile().getUserEvent(), thread, treeTable, evt);
                                 		//.createFunctionClickPopUp(node.getModel().getPPTrial(),node.getFunctionProfile().getFunction(), getThread(), treeTable);
                                // popup.show(treeTable, evt.getX(), evt.getY());
                             } else {
@@ -317,5 +320,112 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
     public JFrame getFrame() {
         return this;
     }
+    
+    public void selectEvent(UserEventProfile userEventProfile){
+    	JTree t= treeTable.getTree();
+    	TreeModel tm = t.getModel();
+    	//If this isn't a context event it will return the full string
+    	ContextEventTreeNode treeRoot=(ContextEventTreeNode)tm.getRoot();
+    	String context = userEventProfile.getName().trim().replaceAll(" +", " ");
+    	context=context.substring(context.indexOf(':')+1).trim();
 
+    	int depth = 0;
+    	//If it's a context event search the tree
+    	if(userEventProfile.getUserEvent().isContextEvent()){
+    		depth=treeSearch(treeRoot,userEventProfile,t,0,context);
+    	}
+    	//Otherwise search the flat event list (different APIs are necessary to select from each element of the UI)
+    	else{
+    		depth=tableSearch(model,userEventProfile);
+    		treeTable.getSelectionModel().setSelectionInterval(depth, depth);
+    	}
+    	
+    	int oneRow = treeTable.getRowHeight()+treeTable.getRowMargin();
+    	treeTable.scrollRectToVisible(new Rectangle(0,oneRow*depth,5,5));
+    	treeTable.validate();
+    }
+    
+    /**
+     * Returns the row in which the entry associated with the provided UserEventProfile is found, or 0 if not found.
+     * @param model
+     * @param uep
+     * @return
+     */
+    private static int tableSearch(ContextEventModel model,UserEventProfile uep){
+    	ContextEventTreeNode r = (ContextEventTreeNode)model.getRoot();
+    	int count = model.getChildCount(model.getRoot());
+    	for(int i=0;i<count;i++){
+    		ContextEventTreeNode node = (ContextEventTreeNode)model.getChild(r, i);
+    		if(node!=null){
+    			UserEventProfile check = (UserEventProfile)node.getUserObject();
+    			if(check!=null){
+    				if(check.equals(uep)){
+    					return i;
+    				}
+    			}
+    		}
+    	}
+    	return 0;
+    }
+    
+    /**
+     * Opens the tree down at each successive level that matches the context event name string. Returns the row occupied by the selected UserEventProfile in the opened tree.
+     * @param root
+     * @param target
+     * @param tree
+     * @param depth
+     * @param context
+     * @return
+     */
+    private static int treeSearch(ContextEventTreeNode root,final UserEventProfile target, final JTree tree, int depth, final String context){
+
+    	TreeModel tm = tree.getModel();
+    	
+    	UserEventProfile test = (UserEventProfile) root.getUserObject();
+    	if(test!=null&&target.equals(test)){
+    		if(depth==0){
+    			return 0;
+    		}
+    		return depth-1;
+    	}
+    	int children = tm.getChildCount(root);
+    	if(children==0){
+    		return 0;
+    	}
+    	for(int i=0;i<children;i++)
+    	{
+    		
+    		ContextEventTreeNode currentChild = (ContextEventTreeNode) tm.getChild(root, i);
+    		if(currentChild==null)
+    		{
+    			continue;
+    		}
+    		
+    		
+    		if(context.startsWith(currentChild.getName().trim().replaceAll(" +", " "))){
+
+    			tree.expandRow(i+depth);
+    			depth++;
+    			return treeSearch(currentChild,target,tree,i+depth,context);
+    		}
+
+    		
+    		UserEventProfile testChild=(UserEventProfile) currentChild.getUserObject();
+    		if(testChild!=null){
+    			System.out.println(testChild.getName());
+    		}
+    		
+    		if(testChild!=null&&testChild.equals(target)){
+    			if(target.getUserEvent().isContextEvent())
+    			{
+    				tree.setSelectionRow(depth+i);
+    			}
+
+    			return depth+i;
+    		}
+
+    		
+    	}
+    	return 0;
+    }
 }

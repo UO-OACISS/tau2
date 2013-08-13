@@ -304,10 +304,10 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         // Build routine name for TAU function info
         unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
         char * routine = (char*)malloc(size);
-	if (TauEnv_get_bfd_lookup()) {
+        if (TauEnv_get_bfd_lookup()) {
           sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
         } else {
-          sprintf(routine, "%s [ADDR %p][{%s} {%d,0}]", node->info.funcname, addr, node->info.filename, node->info.lineno);
+          sprintf(routine, "[%s] UNRESOLVED %s ADDR %p", node->info.funcname, node->info.filename, addr);
         }
 
         // Create function info
