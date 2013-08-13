@@ -8012,7 +8012,6 @@ sed -f $sedout < src/Profile/Makefile.skel > src/Profile/Makefile
 sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
-sed -f $sedout < examples/Makefile.skel > examples/Makefile
 
 if [ $tauprefix != unknown ] ; then 
     echo "TAU: Copying include directory to ${tauprefix}"
@@ -8106,7 +8105,7 @@ if [ $pdt = yes ] ; then
 fi
 
 echo "Setting enduring example Makefiles."
-sed -i -f $sedex examples/Makefile
+sed  -f $sedex examples/Makefile.skel > examples/Makefile
 
 
 
@@ -8117,8 +8116,19 @@ fi
 
 # If it is default, restore to original state
 if [ "y$1"  = "ydefault" ] ; then
-	
-	echo "" > include/tauroot.h
+	#delete files created by configure
+	rm -f Makefile
+	rm -f include/Makefile
+	rm -f src/Profile/Makefile
+	rm -f src/TraceInput/Makefile
+	rm -f src/wrappers/Makefile
+	rm -f utils/include/Makefile
+	rm -f examples/Makefile
+
+	rm -f include/TAU.h
+	rm -f include/tauarch.h
+	rm -f include/tau_config.h
+	rm -f include/tauroot.h
 
   STUB="default"
 else
