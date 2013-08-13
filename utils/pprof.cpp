@@ -219,7 +219,7 @@ bool IsDynamicProfiling(char *filename) {
     if(strstr(version,"MULTI") != NULL){
       multipleCounters = true;
       counterName = strdup(version);
-      if(strstr(version,"TIME") != NULL)
+      if((strstr(version,"TIME") != NULL) || (strstr(version, "Time") != NULL))
 	hwcounters = false;
       else
 	hwcounters = true;
