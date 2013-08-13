@@ -177,6 +177,87 @@ extern "C" char *cuserid(char *);
 
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
+extern "C" {
+
+static int env_synchronize_clocks = 0;
+static int env_verbose = 0;
+static int env_throttle = 0;
+static int env_disable_instrumentation = 0;
+static double env_max_records = 0;
+static int env_callpath = 0;
+static int env_callsite = 0;
+static int env_callsite_limit = 0;
+static int env_compensate = 0;
+static int env_profiling = 0;
+static int env_tracing = 0;
+static int env_callpath_depth = 0;
+static int env_depth_limit = 0;
+static int env_track_message = 0;
+static int env_comm_matrix = 0;
+static int env_track_memory_heap = 0;
+static int env_tau_lite = 0;
+static int env_track_memory_leaks = 0;
+static int env_track_memory_headroom = 0;
+static int env_track_io_params = 0;
+static int env_track_signals = 0;
+static int env_signals_gdb = 0;
+static int env_summary_only = 0;
+static int env_ibm_bg_hwp_counters = 0;
+/* This is a malleable default */
+static int env_ebs_keep_unresolved_addr = 0;
+static int env_ebs_period = 0;
+static int env_ebs_inclusive = 0;
+static int env_collector_api_enabled = 0;
+static int env_collector_api_states_enabled = 0;
+static int env_collector_api_events_enabled = 0;
+static int env_collector_api_context = 0;
+static int env_ebs_enabled = 0;
+static const char *env_ebs_source = "itimer";
+static int env_ebs_unwind_enabled = 0;
+static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+
+static int env_stat_precompute = 0;
+static int env_child_forkdirs = 0;
+
+static int env_profile_format = TAU_FORMAT_PROFILE;
+static double env_throttle_numcalls = 0;
+static double env_throttle_percall = 0;
+static const char *env_profiledir = NULL;
+static const char *env_tracedir = NULL;
+static const char *env_metrics = NULL;
+static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
+static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
+static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
+static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
+
+static int env_mic_offload = 0;
+static int env_bfd_lookup = 0;
+
+static int env_memdbg = 0;
+static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
+static int env_memdbg_protect_below = TAU_MEMDBG_PROTECT_BELOW_DEFAULT;
+static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
+static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
+// All values of env_memdbg_fill_gap_value are valid fill patterns
+static int env_memdbg_fill_gap = TAU_MEMDBG_FILL_GAP_DEFAULT;
+static unsigned char env_memdbg_fill_gap_value = 0xAB;
+// All values of env_memdbg_alloc_min are valid limits
+static int env_memdbg_alloc_min = TAU_MEMDBG_ALLOC_MIN_DEFAULT;
+static size_t env_memdbg_alloc_min_value = 0;
+// All values of env_memdbg_alloc_max are valid limits
+static int env_memdbg_alloc_max = TAU_MEMDBG_ALLOC_MAX_DEFAULT;
+static size_t env_memdbg_alloc_max_value = 0;
+// All values of env_memdbg_overhead are valid limits
+static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
+static size_t env_memdbg_overhead_value = 0;
+static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
+static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
+static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
+
+static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
+
+} // extern "C"
+
 /*********************************************************************
  * Tau configuration record definition
  ********************************************************************/
@@ -324,12 +405,43 @@ static char const * Tau_get_cwd_of_exe()
 }
 
 /*********************************************************************
+ * Parse a boolean value
+ ********************************************************************/
+static int parse_bool(const char *str, int default_value = 0) {
+  if (str == NULL) {
+    return default_value;
+  }
+  static char strbuf[128];
+  char *ptr = strbuf;
+  strncpy(strbuf, str, 128);
+  while (*ptr) {
+    *ptr = tolower(*ptr);
+    ptr++;
+  }
+  if (strcmp(strbuf, "yes") == 0  ||
+      strcmp(strbuf, "true") == 0 ||
+      strcmp(strbuf, "on") == 0 ||
+      strcmp(strbuf, "1") == 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+/*********************************************************************
  * Read configuration file
  ********************************************************************/
 static int TauConf_read()
 {
   const char *tmp;
   char conf_file_name[1024];
+
+  tmp = getenv("TAU_VERBOSE");
+  if (parse_bool(tmp)) {
+    env_verbose = 1;
+  } else {
+    env_verbose = 0;
+  }
 
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
@@ -450,83 +562,6 @@ char * Tau_check_dirname(const char * dir)
 
 extern "C" { /* C linkage */
 
-static int env_synchronize_clocks = 0;
-static int env_verbose = 0;
-static int env_throttle = 0;
-static int env_disable_instrumentation = 0;
-static double env_max_records = 0;
-static int env_callpath = 0;
-static int env_callsite = 0;
-static int env_callsite_limit = 0;
-static int env_compensate = 0;
-static int env_profiling = 0;
-static int env_tracing = 0;
-static int env_callpath_depth = 0;
-static int env_depth_limit = 0;
-static int env_track_message = 0;
-static int env_comm_matrix = 0;
-static int env_track_memory_heap = 0;
-static int env_tau_lite = 0;
-static int env_track_memory_leaks = 0;
-static int env_track_memory_headroom = 0;
-static int env_track_io_params = 0;
-static int env_track_signals = 0;
-static int env_signals_gdb = 0;
-static int env_summary_only = 0;
-static int env_ibm_bg_hwp_counters = 0;
-/* This is a malleable default */
-static int env_ebs_keep_unresolved_addr = 0;
-static int env_ebs_period = 0;
-static int env_ebs_inclusive = 0;
-static int env_collector_api_enabled = 0;
-static int env_collector_api_states_enabled = 0;
-static int env_collector_api_events_enabled = 0;
-static int env_collector_api_context = 0;
-static int env_ebs_enabled = 0;
-static const char *env_ebs_source = "itimer";
-static int env_ebs_unwind_enabled = 0;
-static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
-
-static int env_stat_precompute = 0;
-static int env_child_forkdirs = 0;
-
-static int env_profile_format = TAU_FORMAT_PROFILE;
-static double env_throttle_numcalls = 0;
-static double env_throttle_percall = 0;
-static const char *env_profiledir = NULL;
-static const char *env_tracedir = NULL;
-static const char *env_metrics = NULL;
-static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
-static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
-static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
-static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
-
-static int env_mic_offload = 0;
-static int env_bfd_lookup = 0;
-
-static int env_memdbg = 0;
-static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
-static int env_memdbg_protect_below = TAU_MEMDBG_PROTECT_BELOW_DEFAULT;
-static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
-static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
-// All values of env_memdbg_fill_gap_value are valid fill patterns
-static int env_memdbg_fill_gap = TAU_MEMDBG_FILL_GAP_DEFAULT;
-static unsigned char env_memdbg_fill_gap_value = 0xAB;
-// All values of env_memdbg_alloc_min are valid limits
-static int env_memdbg_alloc_min = TAU_MEMDBG_ALLOC_MIN_DEFAULT;
-static size_t env_memdbg_alloc_min_value = 0;
-// All values of env_memdbg_alloc_max are valid limits
-static int env_memdbg_alloc_max = TAU_MEMDBG_ALLOC_MAX_DEFAULT;
-static size_t env_memdbg_alloc_max_value = 0;
-// All values of env_memdbg_overhead are valid limits
-static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
-static size_t env_memdbg_overhead_value = 0;
-static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
-static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
-static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
-
-static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
-
 #ifdef TAU_GPI 
 #include <GPI.h>
 #include <GpiLogger.h>
@@ -549,30 +584,6 @@ void TAU_VERBOSE(const char *format, ...)
     va_end(args);
     fflush (stderr);
   } // END inside TAU
-}
-
-/*********************************************************************
- * Parse a boolean value
- ********************************************************************/
-static int parse_bool(const char *str, int default_value = 0) {
-  if (str == NULL) {
-    return default_value;
-  }
-  static char strbuf[128];
-  char *ptr = strbuf;
-  strncpy(strbuf, str, 128);
-  while (*ptr) {
-    *ptr = tolower(*ptr);
-    ptr++;
-  }
-  if (strcmp(strbuf, "yes") == 0  ||
-      strcmp(strbuf, "true") == 0 ||
-      strcmp(strbuf, "on") == 0 ||
-      strcmp(strbuf, "1") == 0) {
-    return 1;
-  } else {
-    return 0;
-  }
 }
 
 const char *TauEnv_get_metrics() {
@@ -873,16 +884,19 @@ void TauEnv_initialize()
   if (!initialized) {
     const char *tmp;
 
-    tmp = getenv("TAU_VERBOSE");
-    if (parse_bool(tmp)) {
-      env_verbose = 1;
-    } else {
-      env_verbose = 0;
-    }
-
     /* Read the configuration file */
     TauConf_read();
 
+    tmp = getconf("TAU_VERBOSE");
+    if (parse_bool(tmp,env_verbose)) {
+      TAU_VERBOSE("TAU: VERBOSE enabled\n");
+      TAU_METADATA("TAU_VERBOSE", "on");
+      env_verbose = 1;
+    }
+
+    sprintf(tmpstr, "%d", TAU_MAX_THREADS);
+    TAU_VERBOSE("TAU: Supporting %d threads\n", TAU_MAX_THREADS);
+    TAU_METADATA("TAU_MAX_THREADS", tmpstr);
 
     /*** Options that can be used with Scalasca and VampirTrace ***/
     tmp = getconf("TAU_LITE");
@@ -890,13 +904,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: LITE measurement enabled\n");
       TAU_METADATA("TAU_LITE", "on");
       env_tau_lite = 1;
-    }
-
-    tmp = getconf("TAU_VERBOSE");
-    if (parse_bool(tmp,env_verbose)) {
-      TAU_VERBOSE("TAU: VERBOSE enabled\n");
-      TAU_METADATA("TAU_VERBOSE", "on");
-      env_verbose = 1;
     }
 
     tmp = getconf("TAU_TRACK_HEAP");
