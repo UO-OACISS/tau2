@@ -825,9 +825,9 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
         return; \
     } \
     Tau_global_incr_insideTAU(); \
-    int tid = Tau_get_tid(); /*\
+    int tid = Tau_get_tid(); \
     TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \
-    fflush(stdout); */
+    fflush(stdout); 
 
 #define TAU_OMPT_COMMON_EXIT \
     Tau_global_decr_insideTAU(); \
@@ -1047,6 +1047,8 @@ void my_idle_begin(ompt_data_t *thread_data) {
 #define CHECK(EVENT,FUNCTION,NAME) ompt_set_callback(EVENT, FUNCTION)
 #else 
 #define CHECK(EVENT,FUNCTION,NAME) \
+  /*fprintf(stderr, "Registering OMPT callback %s!\n",NAME); \
+  fflush(stderr); */\
   if (ompt_set_callback(EVENT, FUNCTION) == 0) { \
     TAU_VERBOSE("Failed to register OMPT callback %s!\n",NAME); \
     fflush(stderr); \
