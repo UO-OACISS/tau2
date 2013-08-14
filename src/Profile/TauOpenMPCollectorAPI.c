@@ -208,7 +208,7 @@ void Tau_get_current_region_context(int tid) {
     } else {
         Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+3);
     }
-    sprintf(Tau_collector_flags[tid].timerContext, "%s", tmpStr);
+    strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
     //TAU_VERBOSE("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
     //TAU_VERBOSE("Forking with %d threads\n", omp_get_max_threads());
     int i;
@@ -219,7 +219,7 @@ void Tau_get_current_region_context(int tid) {
         } else {
             Tau_collector_flags[i].timerContext = malloc(strlen(tmpStr)+3);
         }
-        sprintf(Tau_collector_flags[i].timerContext, "", tmpStr);
+        strcpy(Tau_collector_flags[i].timerContext, tmpStr);
     }
     return;
 }
@@ -248,7 +248,7 @@ void Tau_get_my_region_context(int tid, int forking) {
     } else {
         Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+1);
     }
-    sprintf(Tau_collector_flags[tid].timerContext, "%s", tmpStr);
+    strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
     return;
 }
 
