@@ -26,7 +26,7 @@ This is not a parallel implementation */
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 256
+#define MATRIX_SIZE 512
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */

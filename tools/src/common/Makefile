@@ -1,5 +1,5 @@
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=x86_64
+TAUROOT=/home/users/scottb/tau2
 ifndef $(TAUROOT)
 TOOLS_SRC=..
 else

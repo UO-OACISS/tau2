@@ -298,7 +298,7 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
   int device_count = get_device_count();
   //start
   if (device_count > TAU_MAX_GPU_DEVICES) {
-    printf("TAU ERROR: Maximum number of devices (%d) exceeded.\n", TAU_MAX_GPU_DEVICES);
+    printf("TAU ERROR: Maximum number of devices (%d) exceeded. Please reconfigure TAU with -useropt=-DTAU_MAX_GPU_DEVICES=32 or some higher number\n", TAU_MAX_GPU_DEVICES);
     exit(1);
   }
 

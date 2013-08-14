@@ -11,9 +11,10 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-TAUROOTDIR	= ../../..
+include ../../../include/Makefile 
+include ../../Makefile
 
-include $(TAUROOTDIR)/include/Makefile
+
 
 CC		= $(TAU_COMPILER) -optKeepFiles -optTau="-rv MacroVoidReturn -rn MacroFunctionReturn" $(TAU_CC)
 
