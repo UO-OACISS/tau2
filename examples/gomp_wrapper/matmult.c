@@ -378,7 +378,7 @@ int master( )
 
 static float a[1000], b[1000], c[1000];
 
-void test(int first, int last) 
+int test(int first, int last) 
 {
   int i;
 #pragma omp for ordered
@@ -391,6 +391,7 @@ void test(int first, int last)
       fflush(stdout);
     }
   }
+  return i;
 }
 
 void test2(int iter) 
@@ -405,7 +406,7 @@ int ordered( )
   int i;
 #pragma omp parallel
   {
-    test(1, 8);
+    i = test(1, 8);
 #pragma omp for ordered schedule(dynamic) 
     for (i = 0 ; i < 5 ; i++)
       test2(i);
@@ -416,13 +417,15 @@ int ordered( )
 int sections() {
   #pragma omp parallel sections
   {
-    printf("Hello from thread %d\n", omp_get_thread_num());
-    fflush(stdout);
+    {
+      printf("Hello from thread %d\n", omp_get_thread_num());
+      fflush(stdout);
+    }
     #pragma omp section
-	{
-    printf("Hello from thread %d\n", omp_get_thread_num());
-    fflush(stdout);
-	}
+    {
+      printf("Hello from thread %d\n", omp_get_thread_num());
+      fflush(stdout);
+    }
   }
   return 1;
 }
@@ -488,16 +491,17 @@ int main (int argc, char *argv[])
   printf("Main...\n");
   fflush(stdout);
 #if 0
-#endif
   do_work();
   printf ("\n\nDoing atomic: %d\n\n", atomic()); fflush(stdout);
   printf ("\n\nDoing barrier: %d\n\n", barrier()); fflush(stdout);
   printf ("\n\nDoing fortest: %d\n\n", fortest()); fflush(stdout);
   printf ("\n\nDoing flush: %d\n\n", flush()); fflush(stdout);
   printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
+#endif
 #ifndef TAU_OPEN64ORC
   printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
 #endif
+#if 0
   printf ("\n\nDoing sections: %d\n\n", sections()); fflush(stdout);
   printf ("\n\nDoing single: %d\n\n", single()); fflush(stdout);
   printf ("\n\nDoing critical: %d\n\n", critical()); fflush(stdout);
@@ -507,7 +511,6 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic()); fflush(stdout);
   printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime()); fflush(stdout);
   printf ("\n\nDoing tasks: %d\n\n", fibouter(20)); fflush(stdout);
-#if 0
 #endif
 
   printf ("Done.\n");

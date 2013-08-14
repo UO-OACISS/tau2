@@ -193,13 +193,13 @@ void Tau_get_current_region_context(int tid) {
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
     tmpStr = show_backtrace(tid, 0); // find our source location
     if (tmpStr == NULL) {
-        tmpStr = ": UNKNOWN";
+        tmpStr = "UNKNOWN";
     }
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
 #endif
     if (tmpStr == NULL)
-        tmpStr = ": UNKNOWN";
+        tmpStr = "UNKNOWN";
     if (Tau_collector_flags[tid].timerContext != NULL) {
 	    if (strstr(tmpStr, "OpenMP_PARALLEL_REGION: ") != NULL && strlen(tmpStr) > 23) {
 		    tmpStr = tmpStr=tmpStr+23;
@@ -208,7 +208,7 @@ void Tau_get_current_region_context(int tid) {
     } else {
         Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+3);
     }
-    sprintf(Tau_collector_flags[tid].timerContext, ": %s", tmpStr);
+    sprintf(Tau_collector_flags[tid].timerContext, "%s", tmpStr);
     //TAU_VERBOSE("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
     //TAU_VERBOSE("Forking with %d threads\n", omp_get_max_threads());
     int i;
@@ -219,7 +219,7 @@ void Tau_get_current_region_context(int tid) {
         } else {
             Tau_collector_flags[i].timerContext = malloc(strlen(tmpStr)+3);
         }
-        sprintf(Tau_collector_flags[i].timerContext, ": ", tmpStr);
+        sprintf(Tau_collector_flags[i].timerContext, "", tmpStr);
     }
     return;
 }
@@ -233,13 +233,13 @@ void Tau_get_my_region_context(int tid, int forking) {
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
     tmpStr = show_backtrace(tid, 1); // find our source location
     if (tmpStr == NULL) {
-        tmpStr = ": UNKNOWN";
+        tmpStr = "UNKNOWN";
     }
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
 #endif
     if (tmpStr == NULL)
-        tmpStr = ": UNKNOWN";
+        tmpStr = "UNKNOWN";
     if (Tau_collector_flags[tid].timerContext != NULL) {
 	    if (strstr(tmpStr, "OpenMP_PARALLEL_REGION: ") != NULL && strlen(tmpStr) > 23) {
 		    tmpStr = tmpStr=tmpStr+23;
@@ -248,7 +248,7 @@ void Tau_get_my_region_context(int tid, int forking) {
     } else {
         Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+1);
     }
-    sprintf(Tau_collector_flags[tid].timerContext, ": %s", tmpStr);
+    sprintf(Tau_collector_flags[tid].timerContext, "%s", tmpStr);
     return;
 }
 
@@ -595,6 +595,11 @@ int Tau_initialize_collector_api(void) {
       return 0;
     }
 
+#ifdef TAU_USE_OMPT
+    TAU_VERBOSE("COLLECTOR API disabled, using OMPT instead.\n"); 
+    return 0;
+#endif
+
     initializing = true;
 
     omp_init_lock(&writelock);
@@ -785,9 +790,9 @@ int Tau_get_thread_omp_state(int tid) {
  * relevant information.
  */
 
-#ifndef TAU_IBM_OMPT
+//#ifndef TAU_IBM_OMPT
 #include <ompt.h>
-#endif /* TAU_IBM_OMPT */
+//#endif /* TAU_IBM_OMPT */
 
 void Tau_ompt_start_timer(const char * state, ompt_parallel_id_t regionid) {
 #if 0
@@ -1043,9 +1048,9 @@ void my_idle_begin(ompt_data_t *thread_data) {
 #undef TAU_OMPT_COMMON_ENTRY
 #undef TAU_OMPT_COMMON_EXIT
 
-#ifdef TAU_IBM_OMPT
-#define CHECK(EVENT,FUNCTION,NAME) ompt_set_callback(EVENT, FUNCTION)
-#else 
+//#ifdef TAU_IBM_OMPT
+//#define CHECK(EVENT,FUNCTION,NAME) ompt_set_callback(EVENT, FUNCTION)
+//#else 
 #define CHECK(EVENT,FUNCTION,NAME) \
   /*fprintf(stderr, "Registering OMPT callback %s!\n",NAME); \
   fflush(stderr); */\
@@ -1053,11 +1058,12 @@ void my_idle_begin(ompt_data_t *thread_data) {
     TAU_VERBOSE("Failed to register OMPT callback %s!\n",NAME); \
     fflush(stderr); \
   }
-#endif /* TAU_IBM_OMPT */
+//#endif /* TAU_IBM_OMPT */
 
 int ompt_initialize() {
   if (initialized || initializing) return 0;
   //if (!TauEnv_get_collector_api_enabled()) return;
+  TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
   omp_init_lock(&writelock);
 
@@ -1094,15 +1100,19 @@ int ompt_initialize() {
   CHECK(ompt_event_release_ordered, my_release_ordered, "release_ordered");
 
   /* optional events, synchronous events */
+#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_implicit_task_create, my_task_create, "task_create");
   CHECK(ompt_event_implicit_task_exit, my_task_exit, "task_exit");
+#endif
   CHECK(ompt_event_barrier_begin, my_barrier_begin, "barrier_begin");
   CHECK(ompt_event_barrier_end, my_barrier_end, "barrier_end");
   CHECK(ompt_event_master_begin, my_master_begin, "master_begin");
   CHECK(ompt_event_master_end, my_master_end, "master_end");
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
+#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
+#endif
   CHECK(ompt_event_section_begin, my_section_begin, "section_begin");
   CHECK(ompt_event_section_end, my_section_end, "section_end");
   CHECK(ompt_event_single_in_block_begin, my_single_in_block_begin, "single_in_block_begin");

@@ -7,9 +7,10 @@
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #****************************************************************************
  
-TAUROOTDIR	= ../../..
+include ../../../include/Makefile 
+include ../../Makefile
 
-include $(TAUROOTDIR)/include/Makefile
+
 
 CXX		= $(TAU_CXX)
 

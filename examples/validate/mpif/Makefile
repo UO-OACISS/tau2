@@ -7,7 +7,8 @@
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #****************************************************************************
  
-TAUROOTDIR	= ../../..
+include ../../../include/Makefile 
+include ../../Makefile
 
 .SUFFIXES : .f90 
 

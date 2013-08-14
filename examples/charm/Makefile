@@ -11,8 +11,9 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
 
-TAUROOTDIR	= ../..
-include $(TAUROOTDIR)/include/Makefile
+include ../../include/Makefile 
+include ../Makefile
+
 
 CHARMC = charmc
 OPTS = -g
