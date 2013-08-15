@@ -1,8 +1,5 @@
 # Set by TAU configure script
-CONFIG_ARCH=x86_64
-TAU_PREFIX_INSTALL_DIR=/home/users/scottb/tau2
-OTFINC=
-OTFLIB=
+include ../include/Makefile
 
 # Fixed Variables, do not modify
 TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
