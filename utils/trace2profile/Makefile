@@ -14,7 +14,6 @@
 include ../../include/Makefile
 ########### Automatically modified by the configure script ############
 
-CONFIG_ARCH=x86_64
 CC = $(TAU_CC_FE) $(ABI) $(ISA)
 CXX = $(TAU_CXX_FE) $(ABI) $(ISA)
 LIBS=$(TAU_TRACE_INPUT_LIB)
