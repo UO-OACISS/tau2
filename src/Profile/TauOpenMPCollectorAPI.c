@@ -831,8 +831,8 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
     } \
     Tau_global_incr_insideTAU(); \
     int tid = Tau_get_tid(); \
-    TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \
-    fflush(stdout); 
+    /*TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \
+    fflush(stdout); */
 
 #define TAU_OMPT_COMMON_EXIT \
     Tau_global_decr_insideTAU(); \
