@@ -465,14 +465,22 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
   /* create a state record */
   if (monotonicallyIncreasing)
   {
+	  //printf("MONO %s",name);
     //dodifferentiation = 1; /* for hw counter data */
     OTF2_GlobalDefWriter_WriteMetricMember(glob_def_writer,userEventToken, userEventToken,  userEventToken,OTF2_METRIC_TYPE_PAPI,OTF2_METRIC_ACCUMULATED_START, OTF2_TYPE_UINT64,OTF2_BASE_DECIMAL,0,COUNTS);
+    OTF2_MetricMemberRef* omr = new OTF2_MetricMemberRef[1];
+    	omr[0]=userEventToken;
+    OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT);
 
   }
   else
   { /* for non monotonically increasing data */
     //dodifferentiation = 0; /* for TAU user defined events */
+	  //printf("ATO %s",name);
 	  OTF2_GlobalDefWriter_WriteMetricMember(glob_def_writer,userEventToken, userEventToken,  userEventToken,OTF2_METRIC_TYPE_OTHER,OTF2_METRIC_ABSOLUTE_POINT, OTF2_TYPE_UINT64,OTF2_BASE_DECIMAL,0,COUNTS);
+	  OTF2_MetricMemberRef* omr = new OTF2_MetricMemberRef[1];
+	      	omr[0]=userEventToken;
+	  OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT);
     /* NOTE: WE DO NOT HAVE THE DO DIFFERENTIATION PARAMETER YET IN OTF */
   } 
 
@@ -519,7 +527,6 @@ int EventTrigger( void *userData, double time,
 
 
 	OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter((OTF2_Archive_struct*)userData, locations[ numthreads[nid] * nid + tid ] );
-
 	OTF2_EvtWriter_Metric( evt_writer,
 	                       NULL,
 	                       TauGetClockTicksInGHz(time),

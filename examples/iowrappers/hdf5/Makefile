@@ -2,6 +2,7 @@ CC=xlc_r
 #  With TAU
 
 CWD=`pwd`
+include ../../../../include/include/Makefile 
 include ../../../include/Makefile
 TAU_MAKEFILE=$(TAU_LIB_DIR)/Makefile.tau$(TAU_CONFIG)
 include ${TAU_MAKEFILE}

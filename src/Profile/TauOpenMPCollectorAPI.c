@@ -208,7 +208,7 @@ void Tau_get_current_region_context(int tid) {
     } else {
         Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+3);
     }
-    sprintf(Tau_collector_flags[tid].timerContext, "%s", tmpStr);
+    strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
     //TAU_VERBOSE("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
     //TAU_VERBOSE("Forking with %d threads\n", omp_get_max_threads());
     int i;
@@ -219,7 +219,7 @@ void Tau_get_current_region_context(int tid) {
         } else {
             Tau_collector_flags[i].timerContext = malloc(strlen(tmpStr)+3);
         }
-        sprintf(Tau_collector_flags[i].timerContext, "", tmpStr);
+        strcpy(Tau_collector_flags[i].timerContext, tmpStr);
     }
     return;
 }
@@ -248,7 +248,7 @@ void Tau_get_my_region_context(int tid, int forking) {
     } else {
         Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+1);
     }
-    sprintf(Tau_collector_flags[tid].timerContext, "%s", tmpStr);
+    strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
     return;
 }
 
@@ -1052,6 +1052,8 @@ void my_idle_begin(ompt_data_t *thread_data) {
 //#define CHECK(EVENT,FUNCTION,NAME) ompt_set_callback(EVENT, FUNCTION)
 //#else 
 #define CHECK(EVENT,FUNCTION,NAME) \
+  /*fprintf(stderr, "Registering OMPT callback %s!\n",NAME); \
+  fflush(stderr); */\
   if (ompt_set_callback(EVENT, FUNCTION) == 0) { \
     TAU_VERBOSE("Failed to register OMPT callback %s!\n",NAME); \
     fflush(stderr); \

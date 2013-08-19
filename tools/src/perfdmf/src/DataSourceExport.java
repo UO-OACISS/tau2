@@ -12,7 +12,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
@@ -125,14 +124,16 @@ public class DataSourceExport {
 		DataOutputStream p = new DataOutputStream(bw);
 
 		//Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-		int numFunctions = 0;
+		int numFunctions = dataSource.getFunctions().size();//0;
 
-		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
-			Function function = it.next();
-			//if (!function.isGroupMember(derived)) {
-				numFunctions++;
-			//}
-		}
+		
+		
+//		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
+//			Function function = it.next();
+//			if (!function.isGroupMember(derived)) {
+//				numFunctions++;
+//			}
+//		}
 
 		int numMetrics = dataSource.getNumberOfMetrics();
 		int numUserEvents = dataSource.getNumUserEvents();
@@ -493,16 +494,16 @@ public class DataSourceExport {
 
 		int idx = 0;
 
-		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+		//Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
-		int numFunctions = 0;
-		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
-			Function function = it.next();
+		int numFunctions = dataSource.getFunctions().size();//0;
+//		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
+//			Function function = it.next();
 //			if (function.isGroupMember(derived)) {
 //				continue;
 //			}
-			numFunctions++;
-		}
+//			numFunctions++;
+//		}
 
 		// write out group names
 		Group groups[] = new Group[numGroups];
@@ -582,16 +583,16 @@ public class DataSourceExport {
 
 		int idx = 0;
 
-		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+		//Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
-		int numFunctions = 0;
-		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
-			Function function = it.next();
+		int numFunctions = dataSource.getFunctions().size();//0;
+//		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
+//			Function function = it.next();
 //			if (function.isGroupMember(derived)) {
 //				continue;
 //			}
-			numFunctions++;
-		}
+//			numFunctions++;
+//		}
 
 		// // write out group names
 		// Group groups[] = new Group[numGroups];

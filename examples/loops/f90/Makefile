@@ -1,8 +1,9 @@
-TAUROOTDIR      = ../../..
+include ../../../include/Makefile 
+include ../../Makefile
 
 .SUFFIXES : .f90
 
-include $(TAUROOTDIR)/include/Makefile
+
 
 # We use TAU_COMPILER (defined in the above stub Makefile) for instrumenting
 # the source code. We can pass it optional arguments. See tau_compiler.sh -help
