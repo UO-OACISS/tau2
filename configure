@@ -1505,7 +1505,13 @@ for arg in "$@"; do
         echo "Error: Cannot access directory $omptdir"
         exit 1
       fi
-      omptlib="-Wl,-rpath=$omptdir#$omptfile"
+      extension="${omptfile##*.}"
+      omptlib="$omptfile"
+      prefix="lib"
+      tmp=$(basename "$omptfile")
+      tmp=${tmp#$prefix}
+      omptbase=${tmp%.$extension}
+      omptlib="-Wl,-rpath=$omptdir#-L$omptdir#-l$omptbase"
     shift
     ;;
 
