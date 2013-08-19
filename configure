@@ -781,6 +781,7 @@ java=no
 openmp=no
 ompt=no
 omptlib=
+omptlibrary=-liompt5
 omptenabled=no
 xlsmp=no
 ibmxlc=no
@@ -1490,26 +1491,17 @@ for arg in "$@"; do
 
   -omptlib=*)
       ompt=yes
-      omptfile=`echo $arg | sed -e 's/-omptlib=//'`
-      if [ ! -f $omptfile ]
+      omptlib=`echo $arg | sed -e 's/-omptlib=//'`
+      if [ ! -d $omptlib ]
       then
-        echo "Error: Cannot access OpenMP runtime library $omptfile"
+        echo "Error: Cannot access OpenMP runtime library directory $omptlib"
         exit 1
       fi
-      # split the ompt library path
-      omptdir=${omptfile%/*}
-      if [ ! -d $omptdir ]
-      then
-        echo "Error: Cannot access directory $omptdir"
-        exit 1
-      fi
-      extension="${omptfile##*.}"
-      omptlib="$omptfile"
-      prefix="lib"
-      tmp=$(basename "$omptfile")
-      tmp=${tmp#$prefix}
-      omptbase=${tmp%.$extension}
-      omptlib="-Wl,-rpath=$omptdir#-L$omptdir#-l$omptbase"
+    shift
+    ;;
+
+  -omptlibrary=*)
+     omptlibrary=`echo $arg | sed -e 's/-omptlibrary=//'`
     shift
     ;;
 
@@ -2868,10 +2860,6 @@ if [ "$machine" = "apple" ] ; then
     fi
 fi
 
-if [ $ompt = yes ]; then
-  fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlib"
-fi
-
 if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
   if [ $ompt = yes -o $xlsmp = yes ]; then
     comp=`which bgxlc_r`
@@ -2899,6 +2887,12 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
       echo "bgxlc_r not found in the path. Cannot test for OMPT support."
     fi
   fi
+else # intel OMPT support
+  if [ $ompt = yes ]; then
+    omptlinking="-Wl,-rpath=$omptlib#-L$omptlib#$omptlibrary"
+    fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+  fi
+
 fi 
 
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
