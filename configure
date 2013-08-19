@@ -610,6 +610,7 @@ if [ "$usingbash" = "yes" ] ; then
 else 
     modmodargs=`echo "x$modargs" | sed -e 's/^x//' -e 's#\\\#\\\\\\\\\\\#g'`
 fi
+cp include/tau_config.h.default include/tau_config.h
 echo "#define TAU_CONFIG \"$modmodargs\"" > include/tau_config.h
 
 START_DIR=`pwd`
@@ -808,10 +809,7 @@ cupti=no
 strsignal_ok=no
 
 # Reset include/Makefile before starting anything else
-for i in include/Makefile ; do
-    sed -f utils/FixMakefile.sed.default < ${i} > ${i}~~0
-    mv ${i}~~0 ${i}
-done
+sed -f utils/FixMakefile.sed.default < include/Makefile.skel > include/Makefile 
 
 restore_perfdmf_and_paraprof
 
@@ -2138,6 +2136,7 @@ cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BI
 cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINTARGET
 chmod a+rx $BINTARGET/tau_portal.py $BINTARGET/portal.py $BINTARGET/perfdmfdb.py
 
+cp include/tauarch.h.default include/tauarch.h
 if [ $default = "true" ] ; then
   echo "#define TAU_BIN_DIR \"default\"" >> include/tauarch.h 
 else
@@ -2376,6 +2375,7 @@ else
     tautoplevel=$tauprefix
 fi
 
+cp include/tauroot.h.default include/tauroot.h
 echo \#define TAUROOT \"$tauroot\" > include/tauroot.h
 if [ $tauprefix != unknown ] ; then
   echo \#define TAUROOT \"$tauprefix\" > include/tauroot.h
@@ -8008,18 +8008,16 @@ if [ $machine = default ] ; then
 fi
 
 sedout="./utils/FixMakefile.sed"
-echo "Applying script to all Makefiles, please wait, this may take a while..."
-
+echo "Applying script to Makefile, please wait, this may take a while..."
 # Change back to $START_DIR (defined at the top) to ensure we're in the tau2 directory
 # before we execute this fairly dangerous 'find' command
 cd $START_DIR
-for i in `find . -name Makefile -print `
-  do 
-    $echo ".${nnl}"
-    sed -f $sedout < ${i} > ${i}~~0
-    mv ${i}~~0 ${i}
-done
-echo .
+sed -f $sedout < Makefile.skel > Makefile
+sed -f $sedout < include/Makefile.skel > include/Makefile
+sed -f $sedout < src/Profile/Makefile.skel > src/Profile/Makefile
+sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
+sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
+sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
 
 if [ $tauprefix != unknown ] ; then 
     echo "TAU: Copying include directory to ${tauprefix}"
@@ -8039,10 +8037,10 @@ echo "Configuring TAU Build scripts..."
 
 # Modify the Makefiles so include/Makefile is replaced by the TAU options 
 # for specific examples
-echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/$architecture/lib/Makefile.tau$tauoptions@g" > utils/sedexamples.out
+#echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/$architecture/lib/Makefile.tau$tauoptions@g" > utils/sedexamples.out
 #echo "s@include/Makefile@$machine/lib/Makefile.tau$tauoptions@g" >utils/sedexamples.out
 sedex="./utils/sedexamples.out"
-
+echo "" > $sedex
 echo "Modifying Makefiles in the examples subdirectory..."
 
 # Prefix start from examples directory
@@ -8054,104 +8052,89 @@ if [ "x$fortran_compiler" != "xno" ] ; then
   exampleslist="$exampleslist fortran/Makefile f90/Makefile"
 fi
 
-# Rules for adding examples follow...
-# If PDT is specified, then modify the following makefiles
-if [ $pdt = yes ] ; then
-  exampleslist="$exampleslist autoinstrument/Makefile reduce/Makefile cinstrument/Makefile"
-  if [ $fortran_compiler != no ] ; then
-    exampleslist="$exampleslist selective/Makefile"
-  fi
-fi
-
-# If PDT is specified WITH MPI
-if [ $pdt = yes -a $mpi = yes ] ; then
-  exampleslist="$exampleslist pdt_mpi/c++/Makefile pdt_mpi/c/Makefile" 
-  if [ $pthread = yes ] ; then
-    exampleslist="$exampleslist mixedmode/Makefile"
-  fi
-
-  if [ $fortran_compiler != no ] ; then
-    exampleslist="$exampleslist pdt_mpi/f90/Makefile"
-  fi 
+if [ $fortran_compiler != no ] ; then
+  echo "s@.*TAU_MAKEFILE_FORTRAN=\(.*\)@TAU_MAKEFILE_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
 fi
 
 if [ $mpi = yes ] ; then
-  exampleslist="$exampleslist pi/Makefile mpishlib/Makefile"
-  if [ "x$fortran_compiler" != "xno" ] ; then
-    exampleslist="$exampleslist NPB2.3/config/make.def"
+  echo "s@.*TAU_MAKEFILE_MPI=\(.*\)@TAU_MAKEFILE_MPI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  if [ $fortran_compiler != no ] ; then
+    echo "s@.*TAU_MAKEFILE_MPI_FORTRAN=\(.*\)@TAU_MAKEFILE_MPI_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
   fi
-  if [ $openmp = yes ] ; then 
-    exampleslist="$exampleslist openmpi/stommel/Makefile"
-  fi
-fi
-
-if [ $opari1 = yes ] ; then
-  exampleslist="$exampleslist opari/c++/Makefile"
-  if [ $pdt = yes -a $fortran_compiler != no ] ; then 
-    exampleslist="$exampleslist opari/pdt_f90/Makefile"
-  fi
-
-  if [ $mpi = yes ] ; then
-    exampleslist="$exampleslist opari/openmpi/Makefile"
+  if [ $pdt = yes ] ; then
+    echo "s@.*TAU_MAKEFILE_MPI_OPENMP=\(.*\)@TAU_MAKEFILE_MPI_OPENMP=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
   fi
 fi
 
-if [ $trace = yes ] ; then
-  exampleslist="$exampleslist traceinput/c++/Makefile traceinput/c/Makefile"
-fi
+if [ $opari1 = yes -o $opari = yes ] ; then
+  echo "s@.*TAU_MAKEFILE_OPARI=\(.*\)@TAU_MAKEFILE_OPARI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
 
-if [ $callpath = yes ] ; then
-  exampleslist="$exampleslist callpath/Makefile"
-fi
-
-if [ $python = yes -o $java = yes -o $dyninst = yes ] ; then
-# RESET the exampleslist, the C, C++, F90 examples don't matter!
-  exampleslist=""
 fi
 
 if [ $pthread = yes ] ; then
-  exampleslist="$exampleslist threads/Makefile cthreads/Makefile"
-fi
+  echo "s@.*TAU_MAKEFILE_PTHREAD=\(.*\)@TAU_MAKEFILE_PTHREAD=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
 
-if [ $sproc = yes ] ; then
-  exampleslist="$exampleslist sproc/Makefile"
 fi
 
 if [ $papi = yes ] ; then
-  exampleslist="$exampleslist papi/Makefile multicounter/Makefile"
-  if [ $pthread = yes ]
-  then
-    exampleslist="$exampleslist papithreads/Makefile" 
-  fi 
+  echo "s@.*TAU_MAKEFILE_PAPI=\(.*\)@TAU_MAKEFILE_PAPI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  if [ $pthread = yes ] ; then
+    echo "s@.*TAU_MAKEFILE_PAPI_PTHREAD=\(.*\)@TAU_MAKEFILE_PAPI_PTHREAD=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  fi
+
 fi
+
+if [ $sproc = yes ] ; then
+  echo "s@.*TAU_MAKEFILE_SPROC=\(.*\)@TAU_MAKEFILE_SPROC=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+
+fi
+
+
+if [ $pdt = yes ] ; then
+  echo "s@.*TAU_MAKEFILE_PDT=\(.*\)@TAU_MAKEFILE_PDT=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+
+  if [ $mpi = yes ] ; then
+    echo "s@.*TAU_MAKEFILE_PDT_MPI=\(.*\)@TAU_MAKEFILE_PDT_MPI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  fi
+  if [ $pthread = yes ] ; then
+    echo "s@.*TAU_MAKEFILE_PDT_PTHREAD=\(.*\)@TAU_MAKEFILE_PDT_PTHREAD=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  fi
+  if [ $openmp = yes ] ; then
+    echo "s@.*TAU_MAKEFILE_PDT_OPENMP=\(.*\)@TAU_MAKEFILE_PDT_OPENMP=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  fi
+  if [ $opari1 = yes -o $opari = yes ] ; then
+    echo "s@.*TAU_MAKEFILE_PDT_OPARI=\(.*\)@TAU_MAKEFILE_PDT_OPARI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  fi
+  if [ $fortran_compiler != no ] ; then
+    echo "s@.*TAU_MAKEFILE_PDT_FORTRAN=\(.*\)@TAU_MAKEFILE_PDT_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
+  fi
+fi
+
+echo "Setting enduring example Makefiles."
+sed  -f $sedex examples/Makefile.skel > examples/Makefile
+
 
 
 # Modify the Makefiles only if prefix is not specified. 
 if [ $tauprefix = unknown ] ; then 
-  for i in $exampleslist
-  do 
-    $echo ".${nnl}"
-    sed -f $sedex < $pr/${i} > $pr/${i}~~0
-    mv $pr/${i}~~0 $pr/${i}
-  done
-# Copy over the Makefile so make clean works
   cp include/Makefile $machine/lib/Makefile.tau$tauoptions
 fi
-echo .
 
 # If it is default, restore to original state
 if [ "y$1"  = "ydefault" ] ; then
-  echo "Fixing examples Makefiles..."
-  echo "s@include \(.*\)TAUROOTDIR\(.*\)@include $\(TAUROOTDIR\)/include/Makefile@g" >utils/sedexamples.out
-  sedex="./utils/sedexamples.out"
-  for i in `find examples -name Makefile -print` examples/NPB2.3/config/make.def
-  do 
-    $echo ".${nnl}"
-    sed -f $sedex < ${i} > ${i}~~0
-    mv ${i}~~0 ${i}
-  done
-	
-	echo "" > include/tauroot.h
+	#delete files created by configure
+	rm -f Makefile
+	rm -f include/Makefile
+	rm -f src/Profile/Makefile
+	rm -f src/TraceInput/Makefile
+	rm -f src/wrappers/Makefile
+	rm -f utils/include/Makefile
+	rm -f examples/Makefile
+  rm -f utils/FixMakefile.info
+	rm -f include/TAU.h
+	rm -f include/tauarch.h
+	rm -f include/tau_config.h
+	rm -f include/tauroot.h
 
   STUB="default"
 else
@@ -8177,18 +8160,17 @@ if [ $default = false ] ; then
     echo "$STUB" > .active_stub
 fi
 
-# replace TAU_MAKEFILE in TAU.h
-cat ./include/TAU.h | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > TAU.h
-rm ./include/TAU.h
-mv TAU.h ./include/TAU.h
-
+if [ $default = false ] ; then
+	# replace TAU_MAKEFILE in TAU.h
+	cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
+fi
     
 if [ $perf = yes ] ; then
     cp include/Makefile $tautoplevel/$architecture/lib/Makefile.tau$tauoptions
 fi
   
-
 if [ $tauprefix != unknown ] ; then
+  echo "TAU: Copying examples directory to ${tauprefix}"
   cp -r examples ${tauprefix}
   cp .all_configs .last_config .active_stubs .active_stub ${tauprefix}
 fi
@@ -8205,10 +8187,3 @@ fi
 echo '   Type "make install" to begin compilation'
 
 exit 0
-
-
-
-
-
-
-
