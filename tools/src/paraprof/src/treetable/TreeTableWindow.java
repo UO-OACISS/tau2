@@ -629,7 +629,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     }
     
     public void select(final Function function){
-    	System.out.println(function.getName());
+    	//System.out.println(function.getName());
     	String[] chunks = function.getName().split("=>");
     	//model.getRoot();
     	//int modelChildren=model.getChildCount(model.getRoot());
@@ -637,13 +637,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     	TreeModel treeModel=tree.getModel();
     	TreeTableNode treeRoot =(TreeTableNode) treeModel.getRoot();
     	int treeChildren = treeModel.getChildCount(treeRoot);
-    	System.out.println(treeRoot.getClass());
+    	//System.out.println(treeRoot.getClass());
     	int row=0;
     	for(int i=0;i<chunks.length;i++)
     	{
     		for(int j=0;j<treeChildren;j++){
     			TreeTableNode ttn = (TreeTableNode) treeModel.getChild(treeRoot, j);
-    			System.out.println(chunks[i]+" vs "+ttn);
+    			//System.out.println(chunks[i]+" vs "+ttn);
     			if(chunks[i].trim().equals(ttn.toString().trim())){
     				treeRoot=ttn;
     				treeChildren=treeModel.getChildCount(treeRoot);

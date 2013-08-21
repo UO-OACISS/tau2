@@ -1,5 +1,5 @@
 TAUROOTDIR=../../../
-include $(TAUROOTDIR)/include/Makefile
+
 
 TAULINK				=$(TAU_CXXLIBS) $(TAU_LIBS)
 

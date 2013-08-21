@@ -3,13 +3,14 @@
 #endif /* TAU_IBM_OMPT */
 
 #include "omp.h"
+#include "ompt.h"
 #include <stdio.h>
 #include <pthread.h>
 
 #include <Profile/Profiler.h>
 
 // set to enable debugging print statements
-//#define DEBUG 1
+#define DEBUG 1
 
 // set to enable numerous callbacks
 #define TAU_OMPT_CALLBACK 1
@@ -286,14 +287,13 @@ extern "C" void Tau_ompt_initialize(void)
 ////////////////////////////////////////////////////////////////////////////////
 // my tool methods
 //
-extern "C" void ompt_initialize(void);
-
 
 extern "C" void TauInitOMPT(void) 
 {
 #ifdef DEBUG 
   printf("TauInitOMPT\n");
 #endif /* DEBUG */
+  //ompt_register_tool(ompt_initialize);
 }
 
 TauOMPT::TauOMPT()
@@ -307,7 +307,7 @@ TauOMPT::TauOMPT()
   threadId = 10000;
 
   PRINTF("before calling ompt_initialize()\n");
-  ompt_register_tool(ompt_initialize);
+  //ompt_register_tool(ompt_initialize);
   PRINTF("after ompt_initialize()\n");
 }
 TauOMPT::~TauOMPT()
