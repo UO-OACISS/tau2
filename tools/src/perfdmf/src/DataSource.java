@@ -708,6 +708,47 @@ public abstract class DataSource {
 
     }
 
+	private String sampleNameSummary(String inName) {
+		String tmpName = null;
+		int end = -1;
+		if ((inName.contains("[SAMPLE]") || 
+		     inName.contains("[disabled UNWIND]")) && 
+		    !inName.contains("UNRESOLVED")) {
+			end = inName.lastIndexOf("} {");
+			if (end == -1) return null;
+			// truncate it
+			tmpName = inName.substring(0, end);
+			tmpName += "}]";
+			// replace the last instance of SAMPLE with SUMMARY
+			StringBuilder b = new StringBuilder(tmpName);
+			int index = tmpName.lastIndexOf("[SAMPLE]");
+			if (index == -1) {
+				index = tmpName.lastIndexOf("[UNWIND]");
+			}
+			// fortunately, SAMPLE and UNWIND are the same length.
+			b.replace(index, index+8, "[SUMMARY]");
+			tmpName = b.toString();
+		} else if ((inName.contains("[SAMPLE]") || 
+		            inName.contains("[disabled UNWIND]")) && 
+		           inName.contains("UNRESOLVED") && 
+		   	       inName.contains("ADDR")) {
+			end = inName.lastIndexOf(" ADDR ");
+			if (end == -1) return null;
+			// truncate it
+			tmpName = inName.substring(0, end);
+			// replace the last instance of SAMPLE with SUMMARY
+			StringBuilder b = new StringBuilder(tmpName);
+			int index = tmpName.lastIndexOf("[SAMPLE]");
+			if (index == -1) {
+				index = tmpName.lastIndexOf("[UNWIND]");
+			}
+			// fortunately, SAMPLE and UNWIND are the same length.
+			b.replace(index, index+8, "[SUMMARY]");
+			tmpName = b.toString();
+		}
+		return tmpName;
+	}
+
     private void generateAggregateSampleData() {
         /*
          * When samples are collected, they are measured down to the
@@ -727,25 +768,11 @@ public abstract class DataSource {
 
         for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
             Function function = l.next();
-			int end = -1;
-			String tmpName = "";
-			if (function.getName().contains("[SAMPLE]") && 
-			    !function.getName().contains("UNRESOLVED")) {
-              functions.add(function);
-              end = function.getName().lastIndexOf("} {");
-			  if (end == -1) continue;
-			  // truncate it
-              tmpName = function.getName().substring(0, end);
-			  tmpName += "}]";
-			} else if (function.getName().contains("[SAMPLE]") && 
-			           function.getName().contains("UNRESOLVED") && 
-			   	       function.getName().contains("ADDR")) {
-              functions.add(function);
-              end = function.getName().lastIndexOf(" ADDR ");
-			  if (end == -1) continue;
-			  // truncate it
-              tmpName = function.getName().substring(0, end);
-			}
+			String tmpName = null;
+			tmpName = sampleNameSummary(function.getName());
+			if (tmpName == null) continue;
+			//System.out.println("ADDING: " + function.getName());
+			functions.add(function);
 
 			// check if we have already done this process... in which case, return
             Function bonusFunction = this.getFunction(tmpName);
@@ -760,7 +787,6 @@ public abstract class DataSource {
 			  count = prefixes.get(tmpName);
 			}
 			prefixes.put(tmpName, count+1);
-			System.out.println(tmpName);
         }
 
         // make sure that the allThreads list is initialized;
@@ -774,55 +800,20 @@ public abstract class DataSource {
         for (Iterator<Function> l = functions.iterator(); l.hasNext();) {
             Function function = l.next();
 
-            String bonusName = function.getName();
+            String bonusName = null;
             Function bonusFunction = null;
-			if (function.getName().contains("[SAMPLE]") && 
-			    !function.getName().contains("UNRESOLVED")) {
-			  // search for "} {1234}]" at the end of the string
-              int end = bonusName.lastIndexOf("} {");
-			  // if this sample doesn't have a line number, skip it.
-			  if (end == -1) continue;
-              bonusName = bonusName.substring(0, end);
-			  // truncate it
-			  bonusName += "}]";
-			  // replace the last instance of SAMPLE with SUMMARY,
-			  // but only for functions with 3+ samples
-			  if (prefixes.get(bonusName) < 3) continue;
-			  StringBuilder b = new StringBuilder(bonusName);
-			  int index = bonusName.lastIndexOf("[SAMPLE]");
-			  b.replace(index, index+8, "[SUMMARY]");
-			  bonusName = b.toString();
-              bonusFunction = this.getFunction(bonusName);
-              if (bonusFunction == null) {
-                  bonusFunction = addFunction(bonusName);
-                  for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
-                     bonusFunction.addGroup(g.next());
-                  }
-              }
-			} else if (function.getName().contains("[SAMPLE]") && 
-			         function.getName().contains("UNRESOLVED") && 
-				     function.getName().contains("ADDR")) {
-			  // search for "ADDR 0x7fc4fcf10283" at the end of the string
-              int end = bonusName.lastIndexOf(" ADDR ");
-			  // if this sample doesn't have an address number, skip it.
-			  if (end == -1) continue;
-			  // truncate it
-              bonusName = bonusName.substring(0, end);
-			  // replace the last instance of SAMPLE with SUMMARY
-			  System.out.println(bonusName);
-			  if (prefixes.get(bonusName) <= 2) continue;
-			  StringBuilder b = new StringBuilder(bonusName);
-			  int index = bonusName.lastIndexOf("[SAMPLE]");
-			  b.replace(index, index+8, "[SUMMARY]");
-			  bonusName = b.toString();
-              bonusFunction = this.getFunction(bonusName);
-              if (bonusFunction == null) {
-                  bonusFunction = addFunction(bonusName);
-                  for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
-                     bonusFunction.addGroup(g.next());
-                  }
-              }
+            bonusName = sampleNameSummary(function.getName());
+			if (bonusName == null) continue;
+			if (prefixes.get(bonusName) < 3) continue;
+			bonusFunction = this.getFunction(bonusName);
+			if (bonusFunction == null) {
+				bonusFunction = addFunction(bonusName);
+				for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
+					bonusFunction.addGroup(g.next());
+				}
 			}
+			//System.out.println("BEFORE: " + function.getName());
+			//System.out.println("AFTER:  " + bonusFunction.getName());
             bonusFunction.addGroup(derivedGroup);
             for (int i = 0; i < numThreads; i++) {
                 Thread thread = allThreads.get(i);
