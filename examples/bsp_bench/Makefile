@@ -1,9 +1,10 @@
 
 #SELFISHLIBS	= -L /home/anataraj/APPS/Selfish/BGW2006-prep-02-cmpd/ -ldetour-regular
 
-TAUROOTDIR	= ../..
+include ../../include/Makefile 
+include ../Makefile
 
-include $(TAUROOTDIR)/include/Makefile
+
 
 CXX		= $(TAU_CXX)
 

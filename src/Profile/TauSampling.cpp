@@ -809,6 +809,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
+          prevShortName = NULL;
           if (newShortName) {
             prevShortName = newShortName;
           }

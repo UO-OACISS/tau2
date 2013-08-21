@@ -1,5 +1,5 @@
-TAUROOT=
-include $(TAUROOT)/include/Makefile
+include ../../../include/Makefile
+include ../Makefile
 CC=$(TAU_CC) 
 ARFLAGS=rcv 
 CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) $(CRAY_DMAPP_INCLUDE_OPTS) 

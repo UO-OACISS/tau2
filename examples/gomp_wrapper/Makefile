@@ -3,12 +3,12 @@ TAU_MAKEFILE ?=../../include/Makefile
 include $(TAU_MAKEFILE)
 
 #CXX=gcc
-CXX=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_cc.sh
+CXX=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_cc.sh -optTrackGOMP
 LD=$(CXX)
 AR=ar
 ARFLAGS=rcv
-LDFLAGS=-fopenmp -g 
-CFLAGS=-fopenmp -g 
+LDFLAGS         = -g -fopenmp -O0
+CFLAGS          = -g -fopenmp -O0
 TARGET=matmult
 
 OBJS=$(TARGET).o 

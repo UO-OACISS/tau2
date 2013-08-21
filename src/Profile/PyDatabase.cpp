@@ -413,6 +413,22 @@ PyObject * pytau_setNode(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+char pytau_metadata__name__[] = "metadata";
+char pytau_metadata__doc__[] = "add a key-value pair to the TAU metadata";
+extern "C" PyObject * pytau_metadata(PyObject * self, PyObject * args) {
+    char * name = NULL;
+    char * value = NULL;
+    if(!PyArg_ParseTuple(args, "ss", &name, &value)) {
+        printf("pytau_metadata: Couldn't Parse the tuple!\n");
+        return NULL;
+    }
+
+    Tau_metadata(name, value);
+    
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 // version
 // $Id: PyDatabase.cpp,v 1.10 2010/05/12 19:42:17 amorris Exp $
 

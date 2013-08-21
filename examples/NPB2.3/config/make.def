@@ -26,8 +26,8 @@
 #                            $(MPIF77) $(FFLAGS)
 # linking is done with       $(FLINK) $(FMPI_LIB) $(FLINKFLAGS)
 #---------------------------------------------------------------------------
-TAUDIR = ../../..
-include $(TAUDIR)/include/Makefile
+include ../../include/Makefile
+include $(TAU_MAKEFILE_MPI_FORTRAN)
 
 #---------------------------------------------------------------------------
 # This is the fortran compiler used for MPI programs

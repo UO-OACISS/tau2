@@ -79,7 +79,7 @@ struct PyMethodDef pytau_methods[] = {
     {pytau_getFuncVals__name__, pytau_getFuncVals, METH_VARARGS, pytau_getFuncVals__doc__},
     {pytau_dumpFuncVals__name__, pytau_dumpFuncVals, METH_VARARGS, pytau_dumpFuncVals__doc__},
     {pytau_dumpFuncValsIncr__name__, pytau_dumpFuncValsIncr, METH_VARARGS, pytau_dumpFuncValsIncr__doc__},
-
+    {pytau_metadata__name__, pytau_metadata, METH_VARARGS, pytau_metadata__doc__},
 // groups
 
     {pytau_getProfileGroup__name__, pytau_getProfileGroup, METH_VARARGS, pytau_getProfileGroup__doc__},
@@ -96,6 +96,8 @@ struct PyMethodDef pytau_methods[] = {
     {pytau_profileTimer__name__, pytau_profileTimer, METH_VARARGS | METH_KEYWORDS, pytau_profileTimer__doc__}, 
     {pytau_start__name__, pytau_start, METH_VARARGS, pytau_start__doc__}, 
     {pytau_stop__name__, pytau_stop, METH_VARARGS, pytau_stop__doc__}, 
+    {pytau_registerEvent__name__, pytau_registerEvent, METH_VARARGS, pytau_registerEvent__doc__},
+    {pytau_event__name__, pytau_event, METH_VARARGS, pytau_event__doc__},
 // runtime system
     {pytau_setNode__name__, pytau_setNode, METH_VARARGS, pytau_setNode__doc__}, 
 
