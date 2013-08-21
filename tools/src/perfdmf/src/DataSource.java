@@ -723,28 +723,44 @@ public abstract class DataSource {
         }
 
         List<Function> functions = new ArrayList<Function>();
+        Map<String, Integer> prefixes = new HashMap<String, Integer>();
 
         for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
             Function function = l.next();
-			if (function.getName().contains("SAMPLE") && 
+			int end = -1;
+			String tmpName = "";
+			if (function.getName().contains("[SAMPLE]") && 
 			    !function.getName().contains("UNRESOLVED")) {
               functions.add(function);
-			} else if (function.getName().contains("SAMPLE") && 
+              end = function.getName().lastIndexOf("} {");
+			  if (end == -1) continue;
+			  // truncate it
+              tmpName = function.getName().substring(0, end);
+			  tmpName += "}]";
+			} else if (function.getName().contains("[SAMPLE]") && 
 			           function.getName().contains("UNRESOLVED") && 
 			   	       function.getName().contains("ADDR")) {
               functions.add(function);
+              end = function.getName().lastIndexOf(" ADDR ");
+			  if (end == -1) continue;
+			  // truncate it
+              tmpName = function.getName().substring(0, end);
 			}
 
 			// check if we have already done this process... in which case, return
-            int end = function.getName().lastIndexOf("} {");
-			if (end == -1) continue;
-            String tmpName = function.getName().substring(0, end);
-			// truncate it
-			tmpName += "}]";
             Function bonusFunction = this.getFunction(tmpName);
             if (bonusFunction != null) {
 			  return;
 			}
+
+			// update our map of prefixes and counts - we don't want
+			// to aggregate functions with only 1 or 2 lines sampled.
+			Integer count = 0;
+			if (prefixes.containsKey(tmpName)) {
+			  count = prefixes.get(tmpName);
+			}
+			prefixes.put(tmpName, count+1);
+			System.out.println(tmpName);
         }
 
         // make sure that the allThreads list is initialized;
@@ -760,7 +776,7 @@ public abstract class DataSource {
 
             String bonusName = function.getName();
             Function bonusFunction = null;
-			if (function.getName().contains("SAMPLE") && 
+			if (function.getName().contains("[SAMPLE]") && 
 			    !function.getName().contains("UNRESOLVED")) {
 			  // search for "} {1234}]" at the end of the string
               int end = bonusName.lastIndexOf("} {");
@@ -769,6 +785,13 @@ public abstract class DataSource {
               bonusName = bonusName.substring(0, end);
 			  // truncate it
 			  bonusName += "}]";
+			  // replace the last instance of SAMPLE with SUMMARY,
+			  // but only for functions with 3+ samples
+			  if (prefixes.get(bonusName) < 3) continue;
+			  StringBuilder b = new StringBuilder(bonusName);
+			  int index = bonusName.lastIndexOf("[SAMPLE]");
+			  b.replace(index, index+8, "[SUMMARY]");
+			  bonusName = b.toString();
               bonusFunction = this.getFunction(bonusName);
               if (bonusFunction == null) {
                   bonusFunction = addFunction(bonusName);
@@ -776,7 +799,7 @@ public abstract class DataSource {
                      bonusFunction.addGroup(g.next());
                   }
               }
-			} else if (function.getName().contains("SAMPLE") && 
+			} else if (function.getName().contains("[SAMPLE]") && 
 			         function.getName().contains("UNRESOLVED") && 
 				     function.getName().contains("ADDR")) {
 			  // search for "ADDR 0x7fc4fcf10283" at the end of the string
@@ -785,6 +808,13 @@ public abstract class DataSource {
 			  if (end == -1) continue;
 			  // truncate it
               bonusName = bonusName.substring(0, end);
+			  // replace the last instance of SAMPLE with SUMMARY
+			  System.out.println(bonusName);
+			  if (prefixes.get(bonusName) <= 2) continue;
+			  StringBuilder b = new StringBuilder(bonusName);
+			  int index = bonusName.lastIndexOf("[SAMPLE]");
+			  b.replace(index, index+8, "[SUMMARY]");
+			  bonusName = b.toString();
               bonusFunction = this.getFunction(bonusName);
               if (bonusFunction == null) {
                   bonusFunction = addFunction(bonusName);
