@@ -169,6 +169,7 @@
                                  if (event == 0) Tau_get_context_userevent(&event, name);  
 
 #define TAU_TRIGGER_CONTEXT_EVENT(eventname, eventvalue) Tau_trigger_context_event(eventname, eventvalue)
+#define TAU_TRIGGER_EVENT(eventname, eventvalue) Tau_trigger_userevent(eventname, eventvalue)
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
 #define TAU_EVENT_THREAD(event, data, tid)				Tau_userevent_thread(event, data, tid)
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
@@ -509,6 +510,7 @@ void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 void* TAUDECL Tau_get_userevent(char const * name);
 void Tau_get_context_userevent(void **ptr, const char *name);
 void Tau_trigger_context_event(const char *name, double data);
+void Tau_trigger_userevent(const char *name, double data);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);
