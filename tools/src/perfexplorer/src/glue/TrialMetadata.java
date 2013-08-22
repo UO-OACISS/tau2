@@ -70,9 +70,10 @@ public class TrialMetadata {
 			// add the trial name
 			commonAttributes.put("Trial.Name", trial.getName());
 			
+/*
 			// get the metadata strings from the trial
 			String[] columns = Trial.getFieldNames(PerfExplorerServer.getServer().getDB());
-			for (int index = 0 ; index < columns.length ; index++) {
+			for (int index = 0 ; (index < columns.length && index < trial.getNumFields()) ; index++) {
 				if (columns[index].equalsIgnoreCase("XML_METADATA") || columns[index].equalsIgnoreCase("XML_METADATA_GZ")) {
 					continue;
 				}
@@ -92,7 +93,7 @@ public class TrialMetadata {
 			InputSource source = new InputSource(reader);
 			Document metadata = builder.parse(source);
 	
-			/* this is the 1.5 way */
+			// this is the 1.5 way 
 			// build the xpath object to jump around in that document
 			javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
 			xpath.setNamespaceContext(new TauNamespaceContext());
@@ -136,8 +137,9 @@ public class TrialMetadata {
 					commonAttributes.put(key, Double.toString(accumulator.get(key) / profileAttributes.getLength()));
 				}
 			}
-			
-			if (this.performanceResult != null) {
+*/
+			// if false to disable this block
+			if (false && this.performanceResult != null) {
 				// get the metadata from the CQoS tables!
 				DB db = PerfExplorerServer.getServer().getDB();
 				StringBuilder sql = new StringBuilder();

@@ -68,7 +68,13 @@ void esd_exit (elg_ui4 rid);
 
 using namespace tau;
 
+#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
+	static TauContextUserEvent ce(msg); return &ce; } 
 
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryEntryEvent,"Heap Memory Used (KB) at Entry")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryExitEvent,"Heap Memory Used (KB) at Exit")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent,"Increase in Heap Memory (KB)")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent,"Decrease in Heap Memory (KB)")
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name)
 {
@@ -407,8 +413,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   /*** Memory Profiling ***/
   if (TauEnv_get_track_memory_heap()) {
-    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Entry");
-    TAU_CONTEXT_EVENT(memHeapEvent, Tau_max_RSS());
+    double *heapmem = new double; 
+    *heapmem = Tau_max_RSS();
+    TAU_CONTEXT_EVENT(TheHeapMemoryEntryEvent(), *heapmem);
+    p->extraInfo = heapmem;
+   
   }
 
   if (TauEnv_get_track_memory_headroom()) {
@@ -515,6 +524,8 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   TauInternalFunctionGuard protects_this_function;
 
 	FunctionInfo *fi = (FunctionInfo *) function_info; 
+        double currentHeap;
+        bool enableHeapTracking;
 
 	Profiler *profiler;
 #ifndef TAU_WINDOWS
@@ -528,9 +539,10 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   /********************************************************************************/
 
   /*** Memory Profiling ***/
-  if (TauEnv_get_track_memory_heap()) {
-    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Exit");
-    TAU_CONTEXT_EVENT(memHeapEvent, Tau_max_RSS());
+  enableHeapTracking = TauEnv_get_track_memory_heap();
+  if (enableHeapTracking) {
+    currentHeap = Tau_max_RSS();
+    TAU_CONTEXT_EVENT(TheHeapMemoryExitEvent(), currentHeap);
   }
 
   if (TauEnv_get_track_memory_headroom()) {
@@ -618,6 +630,20 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   }
 #endif /* TAU_DEPTH_LIMIT */
 
+
+  /* check memory */
+  if (enableHeapTracking && profiler->extraInfo) {
+    double *oldheap = (double *) (profiler->extraInfo);
+    double difference = currentHeap - *oldheap; 
+    if (difference > 0) {
+      TAU_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent(), difference);
+    } else {
+       if (difference < 0) {
+        TAU_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent(), (0 - difference));
+       }
+    }
+			  
+  }
 
   profiler->Stop(tid);
 
@@ -722,6 +748,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	// Stop the collector API. The main thread may exit with running
 	// worker threads. When those threads try to exit, they will 
 	// try to stop timers that aren't running.
+    RtsLayer::LockDB();
 #ifdef TAU_OPENMP
 	Tau_disable_collector_api();
 #endif
@@ -732,6 +759,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 			Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 			//Make sure even throttled routines are stopped.
 			if (Tau_stop_timer(p->ThisFunction, tid)) {
+	            TAU_VERBOSE("Stopping timer on thread %d: %s\n",tid,p->ThisFunction->Name);
 				p->Stop(tid);
   			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 			}
@@ -739,6 +767,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	tid++;
 	}
   Tau_disable_instrumentation();
+    RtsLayer::UnLockDB();
   return 0;
 }
 
@@ -1115,8 +1144,6 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 #endif /* TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT */
 
 
-#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
-	static TauContextUserEvent ce(msg); return &ce; } 
 
 TAU_GEN_EVENT(TheSendEvent,"Message size sent to all nodes")
 TAU_GEN_EVENT(TheRecvEvent,"Message size received from all nodes")
@@ -1387,6 +1414,12 @@ pure_atomic_map_t & ThePureAtomicMap() {
   return pureAtomicMap;
 }
 
+typedef TAU_HASH_MAP<string, TauUserEvent *> pure_userevent_atomic_map_t;
+pure_userevent_atomic_map_t & ThePureUserEventAtomicMap() {
+  static pure_userevent_atomic_map_t pureUserEventAtomicMap;
+  return pureUserEventAtomicMap;
+}
+
 extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -1403,6 +1436,22 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
   *ptr = (void *) ue;
 }
 
+extern "C" void Tau_pure_userevent(void **ptr, const char* name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *ue = 0;
+  RtsLayer::LockEnv();
+  pure_userevent_atomic_map_t::iterator it = ThePureUserEventAtomicMap().find(string(name));
+  if (it == ThePureUserEventAtomicMap().end()) {
+    ue = new TauUserEvent(name); 
+    ThePureUserEventAtomicMap()[string(name)] = ue;
+  } else {
+    ue = (*it).second;
+  }
+  RtsLayer::UnLockEnv();
+  *ptr = (void *) ue;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1412,12 +1461,21 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
   t->TriggerEvent(data);
 } 
 
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_context_event(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
   Tau_pure_context_userevent(&ue, name);
   Tau_context_userevent(ue, data);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_userevent(const char *name, double data) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_userevent(&ue, name);
+  Tau_userevent(ue, data);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1810,10 +1868,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
-  if (exists) {
+  if (exists > 0) {
     PureMap::iterator it = pure.find(name);
     fi = it->second;
-  } else {
+  } 
+  if (fi == NULL) {
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
@@ -1830,16 +1889,18 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
 {
   TauInternalFunctionGuard protects_this_function;
-  string name = n; // this is VERY bad if called from signalling! see above ^
-  string type = t; // this is VERY bad if called from signalling! see above ^
+  string name(n+string(" ")+ string(t)); // this is VERY bad if called from signalling! see above ^
+  string type = ""; // this is VERY bad if called from signalling! see above ^
   FunctionInfo * fi = NULL;
 
+  //printf("Tau_make_openmp_timer: n=%s, t = %s, PureMapSize=%d\n", n, t, ThePureMap().size());
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
-  if (exists) {
+  if (exists > 0) {
     PureMap::iterator it = pure.find(name);
     fi = it->second;
-  } else {
+  }
+  if (fi == NULL) {
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
