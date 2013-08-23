@@ -153,6 +153,8 @@ char * show_backtrace (int tid, int offset) {
     int index = 0;
 #if defined (TAU_OPEN64ORC)
     int depth = 1 + offset;
+#elif defined (__INTEL_COMPILER)
+    int depth = 5 + offset;
 #else /* assume we are using gcc */
     //#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
     int depth = 6 + offset;
