@@ -28,6 +28,14 @@ Version 2.22 changes (from 2.21):
 16. ParaProf, PerfExplorer enhancements.
 17. tau_show_libs lists extra static libs that are needed to link in TAU for tau_rewrite, tau_run. 
 18. OpenMP bug fixes.
+19. Added support for OpenMP Tools API (OMPT). 
+20. Added support for markers (events triggered when atomic events increase or decrease beyond a threshold). 
+21. Increase and decrease in heap memory tracked with TAU_TRACK_HEAP=1.
+22. ParaProf event window can be launched from a node view. 
+23. Better support for creating ppk files from tauprofile.xml.
+23. TAU_BFD_LOOKUP=0 and tau_resolve_addresses.py with TAU_PROFILE_FORMAT=merged for offline address translation with TAU_SAMPLING=1.
+24. Better configure step that builds TAU.h and Makefiles from a skeleton.
+25. Lower OpenMP runtime overhead. 
 
 
 Version 2.21 changes (from 2.20):
