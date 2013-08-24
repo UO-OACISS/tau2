@@ -1715,6 +1715,10 @@ case $1 in
 	echo "NOTE: Using PAPI with IBM64 Linux options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     ARMLINUXPAPI)
+	echo "NOTE: Using PAPI with ARM Linux options ***"
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      IBM64LINUX)
 	echo "NOTE: Using IBM64 Linux options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

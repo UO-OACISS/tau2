@@ -711,6 +711,8 @@ public abstract class DataSource {
 	private String sampleNameSummary(String inName) {
 		String tmpName = null;
 		int end = -1;
+		// the UNWIND support is currently disabled.
+		// remove "disabled" to enable it.
 		if ((inName.contains("[SAMPLE]") || 
 		     inName.contains("[disabled UNWIND]")) && 
 		    !inName.contains("UNRESOLVED")) {
@@ -728,6 +730,8 @@ public abstract class DataSource {
 			// fortunately, SAMPLE and UNWIND are the same length.
 			b.replace(index, index+8, "[SUMMARY]");
 			tmpName = b.toString();
+		// the UNWIND support is currently disabled.
+		// remove "disabled" to enable it.
 		} else if ((inName.contains("[SAMPLE]") || 
 		            inName.contains("[disabled UNWIND]")) && 
 		           inName.contains("UNRESOLVED") && 
@@ -878,7 +882,7 @@ public abstract class DataSource {
         }
 		
 		// generate the intermediate sample aggregation data
-        generateAggregateSampleData();
+        //generateAggregateSampleData();
 
         checkForPhases();
 
