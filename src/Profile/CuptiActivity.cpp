@@ -252,6 +252,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 
           //printf("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
 				  record_gpu_launch(cbInfo->correlationId);
+					CUdevice device;
+					cuCtxGetDevice(&device);
+					record_gpu_counters_at_launch(device);
 				}
 				//cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
 			}
@@ -340,7 +343,9 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
    
     for (int i=0; i < device_count; i++) {
-      //printf("Kernels encountered/recorded: %d/%d.\n", CurrentGpuState[i].kernels_encountered, CurrentGpuState[0].kernels_recorded);
+#ifdef TAU_CUPTI_DEBUG_COUNTERS
+      printf("Kernels encountered/recorded: %d/%d.\n", kernels_encountered[i], kernels_recorded[i]);
+#endif
       if (kernels_recorded[i] == kernels_encountered[i])
       {
         clear_counters(i);
@@ -826,11 +831,6 @@ int gpu_source_locations_available()
 void record_gpu_launch(int correlationId)
 {
   Tau_cupti_register_host_calling_site(correlationId);	
-
-  CUdevice device;
-  cuCtxGetDevice(&device);
-
-  record_gpu_counters_at_launch(device);
 }
 void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
 {
@@ -850,10 +850,11 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
     //increment kernel count.
     
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      //std::cout << "at record: "<< name << " ====> " << std::endl;
-      //std::cout << "\tstart: " << counters_at_last_launch[device_id][n] << std::endl;
-      //std::cout << "\t stop: " << current_counters[device_id][n] << std::endl;
-
+#ifdef TAU_CUPTI_DEBUG_COUNTERS
+      std::cout << "at record: "<< name << " ====> " << std::endl;
+      std::cout << "\tstart: " << counters_at_last_launch[device_id][n] << std::endl;
+      std::cout << "\t stop: " << current_counters[device_id][n] << std::endl;
+#endif
       TauContextUserEvent* c;
       const char *name = Tau_CuptiLayer_get_event_name(n);
       if (n >= counterEvents.size()) {
