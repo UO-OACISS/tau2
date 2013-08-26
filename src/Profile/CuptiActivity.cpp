@@ -192,8 +192,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
-				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				Tau_cupti_register_host_calling_site(cbInfo->correlationId, p);
+				Tau_cupti_register_host_calling_site(cbInfo->correlationId);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -252,19 +251,22 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           Tau_CuptiLayer_init();
 
           //printf("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
-					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				  record_gpu_launch(cbInfo->correlationId, p);
+				  record_gpu_launch(cbInfo->correlationId);
 				}
 				//cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
 			}
 			else if (cbInfo->callbackSite == CUPTI_API_EXIT)
 			{
+				if (function_is_launch(id))
+				{
+				  record_gpu_launch(cbInfo->correlationId);
+				}
       /* for testing only. 
 				if (function_is_launch(id))
 				{
           printf("synthetic sync point.\n");
           cuCtxSynchronize();
-					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
+					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         }
       */
 				//cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
@@ -821,9 +823,9 @@ int gpu_source_locations_available()
   return 1;
 }
 
-void record_gpu_launch(int correlationId, FunctionInfo *current_function)
+void record_gpu_launch(int correlationId)
 {
-  Tau_cupti_register_host_calling_site(correlationId, current_function);	
+  Tau_cupti_register_host_calling_site(correlationId);	
 
   CUdevice device;
   cuCtxGetDevice(&device);
