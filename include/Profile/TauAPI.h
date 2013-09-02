@@ -193,6 +193,10 @@
 #define TAU_TRACK_MEMORY_HEADROOM_HERE()	Tau_track_memory_headroom_here()
 #define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()	Tau_enable_tracking_memory_headroom()
 #define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()	Tau_disable_tracking_memory_headroom()
+#define TAU_TRACK_POWER()		        Tau_track_power()
+#define TAU_TRACK_POWER_HERE()	        	Tau_track_power_here()
+#define TAU_ENABLE_TRACKING_POWER()		Tau_enable_tracking_power()
+#define TAU_DISABLE_TRACKING_POWER()		Tau_disable_tracking_power()
 
 #define TAU_SET_INTERRUPT_INTERVAL(value)	Tau_set_interrupt_interval(value)
 
@@ -542,6 +546,10 @@ void Tau_enable_tracking_memory_headroom();
 void Tau_disable_tracking_memory_headroom();
 void Tau_track_memory_here(void);
 void Tau_track_memory_headroom(void);
+void Tau_track_power(void);
+void Tau_track_power_here(void);
+void Tau_enable_tracking_power();
+void Tau_disable_tracking_power();
 void Tau_track_memory_headroom_here(void);
 void Tau_profile_param1l(long data, const char *dataname);
 
