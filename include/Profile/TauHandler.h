@@ -27,6 +27,10 @@ int  TauEnableTrackingMemory(void);
 int  TauDisableTrackingMemory(void);
 void TauTrackMemoryUtilization(bool allocated);
 void TauTrackMemoryHere(void);
+void TauTrackPower(void);
+void TauTrackPowerHere(void);
+int TauEnableTrackingPower(void);
+int TauDisableTrackingPower(void);
 
 int TauEnableTrackingMemoryHeadroom(void);
 int TauDisableTrackingMemoryHeadroom(void);
