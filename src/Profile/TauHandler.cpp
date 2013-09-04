@@ -50,6 +50,14 @@ bool& TheIsTauTrackingMemoryHeadroom(void) {
 }
 
 //////////////////////////////////////////////////////////////////////
+// Is TAU tracking power events? Set to true/false.
+//////////////////////////////////////////////////////////////////////
+bool& TheIsTauTrackingPower(void) {
+  static bool isit = false; /* TAU is not tracking power */
+  return isit;
+}
+
+//////////////////////////////////////////////////////////////////////
 // Start tracking memory 
 //////////////////////////////////////////////////////////////////////
 int TauEnableTrackingMemory(void) {
@@ -68,6 +76,16 @@ int TauEnableTrackingMemoryHeadroom(void) {
 }
 
 //////////////////////////////////////////////////////////////////////
+// Start tracking power
+//////////////////////////////////////////////////////////////////////
+int TauEnableTrackingPower(void) {
+  // Set tracking to true
+  TheIsTauTrackingPower() = true;
+  return 1;
+}
+
+
+//////////////////////////////////////////////////////////////////////
 // Stop tracking memory 
 //////////////////////////////////////////////////////////////////////
 int TauDisableTrackingMemory(void) {
@@ -80,6 +98,15 @@ int TauDisableTrackingMemory(void) {
 //////////////////////////////////////////////////////////////////////
 int TauDisableTrackingMemoryHeadroom(void) {
   TheIsTauTrackingMemoryHeadroom() = false;
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Stop tracking power
+//////////////////////////////////////////////////////////////////////
+int TauDisableTrackingPower(void) {
+  // Set tracking to true
+  TheIsTauTrackingPower() = false;
   return 0;
 }
 
@@ -99,6 +126,13 @@ void TauSetInterruptInterval(int interval) {
   TheTauInterruptInterval() = interval;
 }
 
+void TauTriggerPowerEvent(void) {
+  //printf("Inside TauTriggerPowerEvent\n");
+#ifdef TAU_PAPI
+  PapiLayer::triggerRAPLPowerEvents();
+#endif /* TAU_PAPI */
+}
+
 //////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
@@ -110,6 +144,10 @@ void TauAlarmHandler(int signum) {
 
   if (TheIsTauTrackingMemoryHeadroom()) {
     TauAllocation::TriggerMemoryHeadroomEvent();
+  }
+
+  if (TheIsTauTrackingPower()) {
+    TauTriggerPowerEvent();
   }
 
   /* Set alarm for the next interrupt */
@@ -154,6 +192,33 @@ void TauTrackMemoryUtilization(bool allocated) {
 }
 
 //////////////////////////////////////////////////////////////////////
+// Track Power
+//////////////////////////////////////////////////////////////////////
+void TauTrackPower(void) {
+
+#ifndef TAU_WINDOWS
+  struct sigaction new_action, old_action;
+
+  // Are we tracking memory or headroom. Check the allocated argument. 
+  TheIsTauTrackingPower() = true;
+
+  // set signal handler 
+  new_action.sa_handler = TauAlarmHandler;
+
+  new_action.sa_flags = 0;
+  sigaction(SIGALRM, NULL, &old_action);
+  if (old_action.sa_handler != SIG_IGN) {
+    /* by default it is set to ignore */
+    sigaction(SIGALRM, &new_action, NULL);
+  }
+ 
+  /* activate alarm */
+  alarm(TheTauInterruptInterval());
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////
 // Track Memory events at this location in the source code
 //////////////////////////////////////////////////////////////////////
 void TauTrackMemoryHere(void) {
@@ -179,6 +244,18 @@ void TauTrackMemoryHeadroomHere(void) {
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+// Track Power events at this location in the source code
+//////////////////////////////////////////////////////////////////////
+void TauTrackPowerHere(void) {
+  /* Enable tracking power by default */
+  static int flag = TauEnableTrackingPower();
+ 
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingMemory()) {
+    TauTriggerPowerEvent();
+  }
+}
 
   
 /***************************************************************************

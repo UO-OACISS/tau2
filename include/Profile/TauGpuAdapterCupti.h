@@ -11,8 +11,14 @@ struct {
 	int length;
 	} typedef metadata_struct;
 
-std::map<uint32_t, FunctionInfo*> functionInfoMap_hostLaunch;
-std::map<int64_t, FunctionInfo*> functionInfoMap_deviceLaunch;
+static std::map<uint32_t, FunctionInfo*> host_map;
+std::map<uint32_t, FunctionInfo*>& functionInfoMap_hostLaunch() {
+  return host_map;
+}
+static std::map<int64_t, FunctionInfo*> device_map;
+std::map<int64_t, FunctionInfo*>& functionInfoMap_deviceLaunch() {
+  return device_map;
+}
 
 std::map<uint32_t, metadata_struct> deviceInfoMap;
 std::map<uint32_t, FunctionInfo *> kernelContextMap;
@@ -132,15 +138,15 @@ public:
     FunctionInfo *funcInfo = NULL;
     if (cdpId != 0)
     {
-      std::map<int64_t, FunctionInfo*>::iterator it = functionInfoMap_deviceLaunch.find(parentGridId);
-      if (it != functionInfoMap_deviceLaunch.end())
+      std::map<int64_t, FunctionInfo*>::iterator it = functionInfoMap_deviceLaunch().find(parentGridId);
+      if (it != functionInfoMap_deviceLaunch().end())
       { 
         funcInfo = it->second;
         //printf("found device launch site: %s.\n", funcInfo->GetName());
       }
     } else {
-      std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch.find(correlationId);
-      if (it != functionInfoMap_hostLaunch.end())
+      std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch().find(correlationId);
+      if (it != functionInfoMap_hostLaunch().end())
       {
         funcInfo = it->second;
         //printf("found host launch site: %s.\n", funcInfo->GetName());

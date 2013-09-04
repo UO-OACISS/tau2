@@ -1058,6 +1058,94 @@ void TAU_DISABLE_TRACKING_MEMORY_HEADROOM(void)
   Tau_disable_tracking_memory_headroom();
 } 
 
+//////////////////////////////////////////////////////
+// POWER API
+//////////////////////////////////////////////////////
+void TAU_TRACK_POWER(void)
+{
+  Tau_track_power();
+} 
+
+void TAU_TRACK_POWER_HERE(void)
+{
+  Tau_track_power_here();
+} 
+
+void TAU_DISABLE_TRACKING_POWER(void)
+{
+  Tau_disable_tracking_power();
+} 
+
+void TAU_ENABLE_TRACKING_POWER(void)
+{
+  Tau_enable_tracking_power();
+} 
+
+//////////////////////////////////////////////////////
+void tau_track_power(void)
+{
+  Tau_track_power();
+} 
+
+void tau_track_power_here(void)
+{
+  Tau_track_power_here();
+} 
+
+void tau_disable_tracking_power(void)
+{
+  Tau_disable_tracking_power();
+} 
+
+void tau_enable_tracking_power(void)
+{
+  Tau_enable_tracking_power();
+} 
+
+//////////////////////////////////////////////////////
+void tau_track_power_(void)
+{
+  Tau_track_power();
+} 
+
+void tau_track_power_here_(void)
+{
+  Tau_track_power_here();
+} 
+
+void tau_disable_tracking_power_(void)
+{
+  Tau_disable_tracking_power();
+} 
+
+void tau_enable_tracking_power_(void)
+{
+  Tau_enable_tracking_power();
+} 
+
+//////////////////////////////////////////////////////
+void tau_track_power__(void)
+{
+  Tau_track_power();
+} 
+
+void tau_track_power_here__(void)
+{
+  Tau_track_power_here();
+} 
+
+void tau_disable_tracking_power__(void)
+{
+  Tau_disable_tracking_power();
+} 
+
+void tau_enable_tracking_power__(void)
+{
+  Tau_enable_tracking_power();
+} 
+
+//////////////////////////////////////////////////////
+
 
 void TAU_SET_INTERRUPT_INTERVAL(int* value)
 {
