@@ -29,17 +29,16 @@ extern "C" void Tau_cupti_register_metadata(
 							deviceInfoMap[deviceId] = m;
 						}
 extern "C" void Tau_cupti_register_host_calling_site(
-						uint32_t correlationId,
-						FunctionInfo *current_function
+						uint32_t correlationId
 						) {
-							functionInfoMap_hostLaunch[correlationId] = current_function;	
+							functionInfoMap_hostLaunch()[correlationId] = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;	
 						}	
 
 extern "C" void Tau_cupti_register_device_calling_site(
 						int64_t correlationId,
 						const char *name
 						) {
-							functionInfoMap_deviceLaunch[correlationId] = (FunctionInfo *) Tau_pure_search_for_function(name);
+							functionInfoMap_deviceLaunch()[correlationId] = (FunctionInfo *) Tau_pure_search_for_function(name);
 						}	
 extern "C" void Tau_cupti_register_sync_site(
 						uint32_t correlationId, 

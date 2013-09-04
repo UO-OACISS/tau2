@@ -207,7 +207,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //   objects.
   if (TauEnv_get_ebs_enabled() &&
       !strstr(ProfileGroupName, "TAU_SAMPLE") &&
-      !strstr(ProfileGroupName, "TAU_INTERMEDIATE") &&
+      !strstr(ProfileGroupName, "TAU_SAMPLE_CONTEXT") &&
       //!strstr(ProfileGroupName, "TAU_OMP_STATE") &&
       !strstr(ProfileGroupName, "TAU_UNWIND"))
   {

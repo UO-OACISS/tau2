@@ -37,10 +37,11 @@ struct Tau_collector_status_flags {
     int ordered_region_wait; // 4 bytes
     int ordered_region; // 4 bytes
     int task_exec; // 4 bytes
+    int looping; // 4 bytes
     char *timerContext; // 8 bytes(?)
     char *activeTimerContext; // 8 bytes(?)
     void *signal_message; // preallocated message for signal handling, 8 bytes
-    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(6*sizeof(int)))];
+    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(int)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -153,6 +154,8 @@ char * show_backtrace (int tid, int offset) {
     int index = 0;
 #if defined (TAU_OPEN64ORC)
     int depth = 1 + offset;
+#elif defined (__INTEL_COMPILER)
+    int depth = 5 + offset;
 #else /* assume we are using gcc */
     //#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
     int depth = 6 + offset;
@@ -170,9 +173,10 @@ char * show_backtrace (int tid, int offset) {
         // - __ompc_event_callback() or fork()
         // - GOMP_parallel_begin() * maybe - only if using GOMP *
         // - ?? <- the source location we want
-        if (++index >= depth) {
             unw_get_reg(&cursor, UNW_REG_IP, &ip);
             unw_get_reg(&cursor, UNW_REG_SP, &sp);
+            printf("Address: %p %p\n", ip, sp);
+        if (++index >= depth) {
             char * newShort;
             void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
             //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
@@ -978,10 +982,28 @@ void END_FUNCTION (ompt_data_t  *parent_task_data, ompt_parallel_id_t parallel_i
   TAU_OMPT_COMMON_EXIT; \
 }
 
+#define TAU_OMPT_LOOP_BEGIN_AND_END(BEGIN_FUNCTION,END_FUNCTION,NAME) \
+void BEGIN_FUNCTION (ompt_data_t  *parent_task_data, ompt_parallel_id_t parallel_id) { \
+  TAU_OMPT_COMMON_ENTRY; \
+  /*Tau_ompt_start_timer(NAME, parallel_id); */ \
+  Tau_omp_start_timer(NAME, tid, 1, 0); \
+  Tau_collector_flags[tid].looping=1; \
+  TAU_OMPT_COMMON_EXIT; \
+} \
+\
+void END_FUNCTION (ompt_data_t  *parent_task_data, ompt_parallel_id_t parallel_id) { \
+  TAU_OMPT_COMMON_ENTRY; \
+  /*Tau_ompt_stop_timer(NAME, parallel_id); */ \
+  if (Tau_collector_flags[tid].looping==1) { \
+  Tau_omp_stop_timer(NAME, tid, 0); } \
+  Tau_collector_flags[tid].looping=0; \
+  TAU_OMPT_COMMON_EXIT; \
+}
+
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_barrier_begin,my_barrier_end,"OpenMP_BARRIER")
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_barrier_begin,my_wait_barrier_end,"OpenMP_WAIT_BARRIER")
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_master_begin,my_master_end,"OpenMP_MASTER_REGION")
-TAU_OMPT_SIMPLE_BEGIN_AND_END(my_loop_begin,my_loop_end,"OpenMP_LOOP")
+TAU_OMPT_LOOP_BEGIN_AND_END(my_loop_begin,my_loop_end,"OpenMP_LOOP")
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_section_begin,my_section_end,"OpenMP_SECTION") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end,"OpenMP_SINGLE_IN_BLOCK") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_others_begin,my_single_others_end,"OpenMP_SINGLE_OTHERS") 
