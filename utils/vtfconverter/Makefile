@@ -13,8 +13,7 @@
  
 include ../../include/Makefile
 include ../include/Makefile
-
-CXX=$(CONFIG_CXX)  $(ABI) $(ISA)
+CXX:=$(CXX)  $(ABI) $(ISA)
 LIBS=-L$(VTFDIR)/$(TAU_ARCH)/lib  -lvtf3 $(LEXTRA)
 VTFINCLUDES=-I$(VTFDIR)/include
 RM=/bin/rm -f
