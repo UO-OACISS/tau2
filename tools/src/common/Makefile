@@ -1,5 +1,8 @@
-CONFIG_ARCH=x86_64
-TAUROOT=/home/users/scottb/tau2
+TAU_MAKEFILE ?=../../../include/Makefile
+
+include $(TAU_MAKEFILE)
+
+
 ifndef $(TAUROOT)
 TOOLS_SRC=..
 else
