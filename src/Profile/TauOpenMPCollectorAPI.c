@@ -177,7 +177,7 @@ char * show_backtrace (int tid, int offset) {
             unw_get_reg(&cursor, UNW_REG_SP, &sp);
             printf("Address: %p %p\n", ip, sp);
         if (++index >= depth) {
-            char * newShort;
+            char * newShort = NULL;
             void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
             //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
             Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
@@ -195,9 +195,13 @@ void Tau_get_current_region_context(int tid) {
     // Tau_get_region_id (tid);
     char * tmpStr = NULL;
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
-    tmpStr = show_backtrace(tid, 0); // find our source location
-    if (tmpStr == NULL) {
-        tmpStr = "UNKNOWN";
+    if (TauEnv_get_collector_api_context() == 2) { // region
+      tmpStr = show_backtrace(tid, 0); // find our source location
+      if (tmpStr == NULL) {
+          tmpStr = "UNKNOWN";
+      }
+    } else { // timer or none
+      tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
     }
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
@@ -235,9 +239,13 @@ void Tau_get_my_region_context(int tid, int forking) {
     // Tau_get_region_id (tid);
     char * tmpStr = NULL;
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
-    tmpStr = show_backtrace(tid, 1); // find our source location
-    if (tmpStr == NULL) {
-        tmpStr = "UNKNOWN";
+    if (TauEnv_get_collector_api_context() == 2) { // region
+      tmpStr = show_backtrace(tid, 1); // find our source location
+      if (tmpStr == NULL) {
+          tmpStr = "UNKNOWN";
+      }
+    } else { // timer or none
+      tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
     }
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
