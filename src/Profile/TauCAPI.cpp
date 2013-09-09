@@ -440,7 +440,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
-    Tau_sampling_event_start(tid, p->address);
+    //Tau_sampling_event_start(tid, p->address);
   }
 #endif
 }
