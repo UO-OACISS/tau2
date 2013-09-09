@@ -1685,6 +1685,16 @@ extern "C" void Tau_track_memory_here(void) {
   TauTrackMemoryHere();
 }
 
+extern "C" void Tau_track_power(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackPower();
+}
+
+
+extern "C" void Tau_track_power_here(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackPowerHere();
+}
 
 extern "C" void Tau_track_memory_headroom(void) {
   TauInternalFunctionGuard protects_this_function;
@@ -1705,6 +1715,14 @@ extern "C" void Tau_enable_tracking_memory(void) {
 
 extern "C" void Tau_disable_tracking_memory(void) {
   TauDisableTrackingMemory();
+}
+
+extern "C" void Tau_disable_tracking_power(void) {
+  TauDisableTrackingPower();
+}
+
+extern "C" void Tau_enable_tracking_power(void) {
+  TauEnableTrackingPower();
 }
 
 

@@ -3241,7 +3241,7 @@ then
 		cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
-            if [ $mpilibrary = no ]; then
+            if [ "x$mpilibrary" = "xno" ]; then
 		mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
             fi
             full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`

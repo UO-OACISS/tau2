@@ -1,9 +1,13 @@
 package edu.uoregon.tau.common;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
 import java.net.URL;
-import java.util.StringTokenizer;
 import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -127,6 +131,9 @@ public class Utility {
      * @return the shortened function name
      */
     public static String shortenFunctionName(String longName) {
+		if (longName == null) {
+			return "";
+		}
         StringTokenizer st = new StringTokenizer(longName, "(");
         String shorter = null;
         try {
