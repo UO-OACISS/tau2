@@ -36,6 +36,7 @@ Version 2.22 changes (from 2.21):
 23. TAU_BFD_LOOKUP=0 and tau_resolve_addresses.py with TAU_PROFILE_FORMAT=merged for offline address translation with TAU_SAMPLING=1.
 24. Better configure step that builds TAU.h and Makefiles from a skeleton.
 25. Lower OpenMP runtime overhead. 
+26. Added support for tracking power (TAU_TRACK_POWER()) using PAPI --with-component=rapl.
 
 
 Version 2.21 changes (from 2.20):

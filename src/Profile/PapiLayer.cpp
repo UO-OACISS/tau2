@@ -16,6 +16,7 @@
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
+#include <Profile/UserEvent.h>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -628,4 +629,191 @@ long long PapiLayer::getVirtualTime(void) {
   // Returns the virtual (user) time from PAPI interface
   static int initflag = initializePapiLayer();
   return PAPI_get_virt_usec();
+}
+
+#if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
+
+#define TAU_MAX_RAPL_EVENTS 64
+char Tau_rapl_event_names[TAU_MAX_RAPL_EVENTS][PAPI_MAX_STR_LEN];
+char Tau_rapl_units[TAU_MAX_RAPL_EVENTS][PAPI_MIN_STR_LEN];
+#endif /* VERSION */
+/////////////////////////////////////////////////
+int PapiLayer::initializeRAPL(int tid) {
+#if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
+  int ncomponents, i, code, ret, rapl_cid = -1;
+  PAPI_event_info_t evinfo;
+  const PAPI_component_info_t *cinfo = NULL;
+  int num_events = 0;
+ 
+  
+  dmesg(1, "Inside PapiLayer::initializeRAPL(), papiLayer::numCounters=%d\n", numCounters);
+  if (!papiInitialized)
+    initializePapiLayer();
+
+  if (!ThreadList[tid]) {
+    RtsLayer::LockDB();
+    if (!ThreadList[tid]) {
+      dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
+
+      /* Task API does not have a real thread associated with it. It is fake */
+      if (Tau_is_thread_fake(tid) == 1) tid = 0;
+
+      ThreadList[tid] = new ThreadValue;
+      ThreadList[tid]->ThreadID = tid;
+      ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
+      memset(ThreadList[tid]->CounterValues, 0, MAX_PAPI_COUNTERS*sizeof(long long));
+    }
+    RtsLayer::UnLockDB();
+  }
+
+  
+  if (numCounters > 0) {
+    printf("WARNING: TAU: Disabling TAU_TRACK_POWER events\n");
+    printf("WARNING: TAU is already using PAPI counters. Please unset the TAU_METRICS environment variable so PAPI events do no appear in it if you plan to use TAU_TRACK_POWER API. Currently, TAU does not support both at the same time due to the higer overhead of power events.\n");
+    return -1;
+  }
+  ncomponents = PAPI_num_components(); 
+  for (i=0; i < ncomponents; i++) {
+    if ((cinfo = PAPI_get_component_info(i)) == NULL) { 
+      printf("PAPI_get_component_info returns null. PAPI was not configured with --components=rapl and hence RAPL events for power cannot be measured.\n"); 
+    return -1;
+   }
+   
+    if (strstr(cinfo->name,"rapl")) {
+      rapl_cid = i;
+      if (cinfo->disabled) {
+        printf("WARNING: TAU can't measure power events on your system using PAPI with RAPL. Please ensure that permissions on /dev/cpu/*/msr allow you to read it. You may need to run this code as root to read the power registers or enable superuser access to these registers for this executable.  Besides loading the MSR kernel module and setting the appropriate file permissions on the msr device file, one must grant the CAP_SYS_RAWIO capability to any user executable that needs access to the MSR driver, using the command below:\n");
+        printf("# setcap cap_sys_rawio=ep <user_executable>\n");
+        return -1;
+      } /* rapl is disabled */
+      /* create event set */
+      ThreadList[tid]->EventSet[rapl_cid] = PAPI_NULL;
+      ret = PAPI_create_eventset(&(ThreadList[tid]->EventSet[rapl_cid]));
+      if (ret != PAPI_OK) {
+        printf("WARNING: TAU couldn't create a PAPI eventset. Please check the LD_LIBRARY_PATH and ensure that there is no mismatch between the version of papi.h and the papi library that is loaded\n");
+        return -1;
+      }
+    
+
+    
+      /* Add RAPL events to the event set */
+      code = PAPI_NATIVE_MASK;
+      ret = PAPI_enum_cmp_event( &code, PAPI_ENUM_FIRST, rapl_cid ); 
+      if (ret != PAPI_OK) {
+        printf("WARNING: TAU: PAPI_enum_cmp_event returns %d. Power measurements will not be made.\n", ret);
+        return -1;
+      }
+      while ( ret == PAPI_OK ) {
+        ret = PAPI_event_code_to_name( code, Tau_rapl_event_names[num_events]); 
+        dmesg(1,"code = %d, event_name[%d]=%s\n", code, num_events, Tau_rapl_event_names[num_events]);
+        if (ret != PAPI_OK) {
+          printf("WARNING: TAU: PAPI_event_code_to_name returns an error. Can't add PAPI RAPL events for power measurement.\n");
+          return -1;
+        }
+      
+        ret = PAPI_get_event_info(code, &evinfo);
+        if (ret != PAPI_OK) {
+          printf("WARNING: TAU: PAPI_get_event_info returns an error. Can't add PAPI RAPL events for power measurement.\n");
+          return -1;
+        }
+       
+         /* Check for nano Joules or nJ in the units */
+        if ((evinfo.units[0] == 'n') && (evinfo.units[1] == 'J')) {
+          strncpy(Tau_rapl_units[num_events], evinfo.units, PAPI_MIN_STR_LEN);
+          ret = PAPI_add_event( (ThreadList[tid]->EventSet[rapl_cid]), code);
+          if (ret != PAPI_OK) {
+            printf("PAPI_add_event is not OK!\n");
+            break; /* hit an event limit */
+          }
+          dmesg(1,"Added PAPI event %s successfully, rapl_cid = %d, EventSet=%d\n", Tau_rapl_event_names[num_events], rapl_cid, ThreadList[tid]->EventSet[rapl_cid]);
+          ThreadList[tid]->Comp2Metric[rapl_cid][ThreadList[tid]->NumEvents[rapl_cid]++] = numCounters;
+          ThreadList[tid]->CounterValues[num_events] = 0;
+          num_events++; 
+	  numCounters++;
+          ret = PAPI_enum_cmp_event(&code, PAPI_ENUM_EVENTS, rapl_cid);
+        } else { /* if units != nJ */
+          ret = PAPI_enum_cmp_event(&code, PAPI_ENUM_EVENTS, rapl_cid);
+          continue;
+        }
+      } /* while loop */ 
+      numCounters += 1; /* ADD 1 for wallclock time! */
+    } /* if rapl */
+  } /* for ncomponents */
+
+  if (PAPI_start(ThreadList[tid]->EventSet[rapl_cid]) != PAPI_OK) {
+    printf("Error in PAPI_Start\n");
+    return -1;
+  }
+  return rapl_cid;
+#else
+  return -1;
+#endif /* PAPI_VERSION */
+}
+
+/////////////////////////////////////////////////
+void PapiLayer::triggerRAPLPowerEvents(void) {
+#if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
+  int tid = Tau_get_tid();
+  static int rapl_cid = PapiLayer::initializeRAPL(tid); 
+  static bool firsttime = true;
+  dmesg(1,"rapl_cid = %d\n", rapl_cid);
+  int ret, i; 
+  long long tmpCounters[MAX_PAPI_COUNTERS];
+  double elapsedTimeInSecs = 0.0;
+  long long curtime; 
+  char ename[1024];
+
+  for (i=0; i<numCounters; i++) {
+    tmpCounters[i] = 0;
+    dmesg(1,"Tau_rapl_event_names = %s, Tau_rapl_units=%s, numCounters=%d\n",
+	Tau_rapl_event_names[i], Tau_rapl_units[i], numCounters);
+  }
+
+  if (rapl_cid != -1) { 
+    dmesg(1, "Inside PapiLayer::triggerRAPLPowerEvents()\n");
+    
+    curtime = PAPI_get_real_nsec();
+    if (firsttime) {
+       firsttime = false; 
+       ThreadList[tid]->CounterValues[numCounters - 1] = curtime;
+       return ;
+    }
+   
+    // NOTE: We store the curtime in the numCounters index. 
+    dmesg(1,"curtime = %lld, EventSet=%d, numEvents=%d\n", curtime, ThreadList[tid]->EventSet[rapl_cid], ThreadList[tid]->NumEvents[rapl_cid]);
+    if (ThreadList[tid]->NumEvents[rapl_cid] > 0) { // active counters 
+      // read eventset for this component and reset counters 
+      if (PAPI_stop(ThreadList[tid]->EventSet[rapl_cid], tmpCounters) 
+	!= PAPI_OK) {
+        printf("Node %d, Thread %d:Error reading counters in PapiLayer::triggerRAPLPowerEvents\n", RtsLayer::myNode(), tid);
+        return;  
+      }
+      tmpCounters[numCounters - 1] = curtime;
+      
+      elapsedTimeInSecs = (curtime - ThreadList[tid]->CounterValues[numCounters-1])/1.0e9;
+      ThreadList[tid]->CounterValues[numCounters - 1] = curtime;
+
+      for (i = 0; i < numCounters-1; i++) {
+	dmesg(1,"Before subtracting: Counter: %s: tmp value= %.8f, units = %s, old value=%.8f, time elapsed=%.4f seconds\n",
+	Tau_rapl_event_names[i], (double) tmpCounters[i], Tau_rapl_units[i], (double) ThreadList[tid]->CounterValues[i], elapsedTimeInSecs);
+	
+      }
+      for(i=0; i < numCounters -1; i++) {
+        double value = (((double) tmpCounters[i]) /1.0e9)/elapsedTimeInSecs;
+	dmesg(1,"Counter: %s: value %.9f, units = W\n", Tau_rapl_event_names[i], value);
+	if (value > 1e-5) {
+	  sprintf(ename,"%s (Power in Watts)", Tau_rapl_event_names[i]);
+          TAU_TRIGGER_EVENT(ename, value);
+        }
+      }
+      
+
+      if (PAPI_start(ThreadList[tid]->EventSet[rapl_cid]) != PAPI_OK) { 
+        printf("Node %d, Thread %d:Error starting counters in PapiLayer::triggerRAPLPowerEvents\n", RtsLayer::myNode(), tid);
+        return;  
+      }
+    }
+  }
+
+#endif /* VERSION */
 }
