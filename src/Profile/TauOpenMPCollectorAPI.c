@@ -258,6 +258,7 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
 
 /*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context, int forking) {
   //fprintf(stderr,"%d Starting %s\n", tid,state);
+  // 0 means no context wanted
   if (use_context == 0 || TauEnv_get_collector_api_context() == 0) {
     //  no context for the event
     Tau_pure_start_openmp_task(state, "", tid);
@@ -266,6 +267,7 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
 #if 1
     char * regionIDstr = NULL;
     // don't do this if the worker thread is entering the parallel region - use the master's timer
+    // 1 means use the timer context
     if (TauEnv_get_collector_api_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
@@ -294,6 +296,7 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
     free(regionIDstr);
 #else
     // don't do this if the worker thread is entering the parallel region - use the master's timer
+    // 1 means use the timer context
     if (TauEnv_get_collector_api_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
