@@ -182,6 +182,7 @@ extern "C" {
 static int env_synchronize_clocks = 0;
 static int env_verbose = 0;
 static int env_throttle = 0;
+static double env_evt_threshold = 0.0;
 static int env_disable_instrumentation = 0;
 static double env_max_records = 0;
 static int env_callpath = 0;
@@ -618,6 +619,11 @@ int TauEnv_get_disable_instrumentation() {
 double TauEnv_get_max_records() {
   return env_max_records;
 }
+
+double TauEnv_get_evt_threshold() {
+  return env_evt_threshold;
+}
+
 int TauEnv_get_callpath() {
   return env_callpath;
 }
@@ -1327,6 +1333,14 @@ void TauEnv_initialize()
     env_throttle_percall = TAU_THROTTLE_PERCALL_DEFAULT;
     if (percall) {
       env_throttle_percall = strtod(percall, 0);
+    }
+
+    const char *evt_threshold = getconf("TAU_EVENT_THRESHOLD");
+    env_evt_threshold = TAU_EVENT_THRESHOLD;
+    if (evt_threshold) {
+      sscanf(evt_threshold,"%g",&env_evt_threshold);
+      TAU_METADATA("TAU_EVENT_THRESHOLD", evt_threshold);
+      printf("TAU_EVENT_THRESHOLD set to %g\n", env_evt_threshold);
     }
 
     const char *numcalls = getconf("TAU_THROTTLE_NUMCALLS");
