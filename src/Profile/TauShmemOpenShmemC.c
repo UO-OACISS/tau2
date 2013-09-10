@@ -1,4 +1,5 @@
-#include <mpp/shmem.h>
+#include <shmem.h>
+#include <pshmem.h>
 #include <Profile/Profiler.h>
 #include <stdio.h>
 int TAUDECL tau_totalnodes(int set_or_get, int value);
@@ -12,68 +13,63 @@ static int tau_shmem_tagid_f=0 ;
  */
 void pshmem_init (void)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
-    return ;
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
 void pshmem_finalize (void)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
-    return ;
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
-char *pshmem_nodename (void)
+char * pshmem_nodename (void)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
 
 int pshmem_version (int *major, int *minor)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
-    return 0;
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
-void *pshmem_malloc (size_t size)
+void * pshmem_malloc (size_t size)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
 
 void pshmem_free (void *ptr)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
-    return ;
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
-void *pshmem_realloc (void *ptr, size_t size)
+void * pshmem_realloc (void *ptr, size_t size)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
 
-void *pshmem_memalign (size_t alignment, size_t size)
+void * pshmem_memalign (size_t alignment, size_t size)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
 
-char *psherror (void)
+char * psherror (void)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
 
-char *pshmem_error (void)
+char * pshmem_error (void)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
 
 void pshmem_sync_init (long *pSync)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
-    return ;
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
 #ifdef __cplusplus
@@ -87,8 +83,7 @@ void pshmem_complexd_put (COMPLEXIFY (double) * dest,
                                  const COMPLEXIFY (double) * src,
                                  size_t nelems, int pe)
 {
-    fprintf(stderr, "Dummy %s\n", __FUNCTION__);
-    return ;
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
 /* Old API */
@@ -482,7 +477,6 @@ void shmem_get128(void * a1, const void * a2, size_t a3, int a4)  {
    shmem_char_p
  **********************************************************/
 
-/*
 void shmem_char_p(char * a1, char a2, int a3)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_char_p(char *, char, int) C", "", TAU_USER);
@@ -491,10 +485,7 @@ void shmem_char_p(char * a1, char a2, int a3)  {
    pshmem_char_p(a1, a2, a3);
   TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(char)*1, a3);
   TAU_PROFILE_STOP(t);
-
 }
-
-*/
 
 /**********************************************************
    shmem_short_p
@@ -612,7 +603,6 @@ void shmem_longdouble_p(long double * a1, long double a2, int a3)  {
    shmem_char_g
  **********************************************************/
 
-/*
 char shmem_char_g(char * a1, int a2)  {
 
   char retval = 0;
@@ -623,9 +613,7 @@ char shmem_char_g(char * a1, int a2)  {
   TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a2, sizeof(char)*1);
   TAU_PROFILE_STOP(t);
   return retval;
-
 }
-*/
 
 
 /**********************************************************
@@ -1166,41 +1154,43 @@ int shmem_addr_accessible(void * a1, int a2)  {
    shmem_ptr
  **********************************************************/
 
+#if 0
+// 
+// WARNING: Uncommenting this may break OpenSHMEM 10e
+// We should look at this further...
+// 
 void * shmem_ptr(void * a1, int a2)  {
 
   void * retval = 0;
-  TAU_PROFILE_TIMER(t,"void *shmem_ptr(void *, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"void * shmem_ptr(void *, int) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   retval  =   pshmem_ptr(a1, a2);
   TAU_PROFILE_STOP(t);
   return retval;
 
 }
+#endif
 
 
 /**********************************************************
    shmalloc
  **********************************************************/
 
-/*
-void * shmalloc(size_t a1)  {
-
+void * shmalloc(size_t a1)  
+{
   void * retval = 0;
   TAU_PROFILE_TIMER(t,"void *shmalloc(size_t) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   retval  =   pshmalloc(a1);
   TAU_PROFILE_STOP(t);
   return retval;
-
 }
-*/
 
 
 /**********************************************************
    shfree
  **********************************************************/
 
-/*
 void shfree(void * a1)  {
 
   TAU_PROFILE_TIMER(t,"void shfree(void *) C", "", TAU_USER);
@@ -1209,14 +1199,12 @@ void shfree(void * a1)  {
   TAU_PROFILE_STOP(t);
 
 }
-*/
 
 
 /**********************************************************
    shrealloc
  **********************************************************/
 
-/*
 void * shrealloc(void * a1, size_t a2)  {
 
   void * retval = 0;
@@ -1227,14 +1215,12 @@ void * shrealloc(void * a1, size_t a2)  {
   return retval;
 
 }
-*/
 
 
 /**********************************************************
    shmemalign
  **********************************************************/
 
-/*
 void * shmemalign(size_t a1, size_t a2)  {
 
   void * retval = 0;
@@ -1245,8 +1231,6 @@ void * shmemalign(size_t a1, size_t a2)  {
   return retval;
 
 }
-*/
-
 
 /**********************************************************
    shmem_short_wait_until
@@ -2610,7 +2594,6 @@ int shmem_test_lock(long * a1)  {
    shmem_init
  **********************************************************/
 
-/*
 void shmem_init()  {
 
   TAU_PROFILE_TIMER(t,"void shmem_init(void) C", "", TAU_USER);
@@ -2622,13 +2605,11 @@ void shmem_init()  {
 
 }
 
-*/
 
 /**********************************************************
    shmem_finalize
  **********************************************************/
 
-/*
 void shmem_finalize()  {
 
   TAU_PROFILE_TIMER(t,"void shmem_finalize(void) C", "", TAU_USER);
@@ -2637,7 +2618,6 @@ void shmem_finalize()  {
   TAU_PROFILE_STOP(t);
 
 }
-*/
 
 
 /**********************************************************
@@ -2692,7 +2672,6 @@ int shmem_n_pes()  {
    shmem_nodename
  **********************************************************/
 
-/*
 char * shmem_nodename()  {
 
   char * retval = 0;
@@ -2703,7 +2682,6 @@ char * shmem_nodename()  {
   return retval;
 
 }
-*/
 
 
 /**********************************************************
