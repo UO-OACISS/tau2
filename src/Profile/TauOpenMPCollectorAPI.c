@@ -31,17 +31,19 @@
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
 struct Tau_collector_status_flags {
-    int idle; // 4 bytes
-    int busy; // 4 bytes
-    int parallel; // 4 bytes
-    int ordered_region_wait; // 4 bytes
-    int ordered_region; // 4 bytes
-    int task_exec; // 4 bytes
-    int looping; // 4 bytes
+    char idle; // 4 bytes
+    char busy; // 4 bytes
+    char parallel; // 4 bytes
+    char ordered_region_wait; // 4 bytes
+    char ordered_region; // 4 bytes
+    char task_exec; // 4 bytes
+    char looping; // 4 bytes
+    char acquired; // 4 bytes
+    char waiting; // 4 bytes
     char *timerContext; // 8 bytes(?)
     char *activeTimerContext; // 8 bytes(?)
     void *signal_message; // preallocated message for signal handling, 8 bytes
-    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(int)))];
+    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(char)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -842,8 +844,8 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
     } \
     Tau_global_incr_insideTAU(); \
     int tid = Tau_get_tid(); \
-    /*TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \
-    fflush(stdout); */
+    TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \
+    fflush(stdout);
 
 #define TAU_OMPT_COMMON_EXIT \
     Tau_global_decr_insideTAU(); \
@@ -947,19 +949,27 @@ void my_shutdown() {
 void WAIT_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_ompt_start_timer(WAIT_NAME, 0); \
+  Tau_collector_flags[tid].waiting = 1; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
 void ACQUIRED_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
-  Tau_ompt_stop_timer(WAIT_NAME, 0); \
+  if (Tau_collector_flags[tid].waiting>0) { \
+    Tau_ompt_stop_timer(WAIT_NAME, 0); \
+  } \
+  Tau_collector_flags[tid].waiting = 0; \
   Tau_ompt_start_timer(REGION_NAME, 0); \
+  Tau_collector_flags[tid].acquired = 1; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
 void RELEASE_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
-  Tau_ompt_stop_timer(REGION_NAME, 0); \
+  if (Tau_collector_flags[tid].acquired>0) { \
+    Tau_ompt_stop_timer(REGION_NAME, 0); \
+  } \
+  Tau_collector_flags[tid].acquired = 0; \
   TAU_OMPT_COMMON_EXIT; \
 } \
 
