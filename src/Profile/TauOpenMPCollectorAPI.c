@@ -142,7 +142,7 @@ typedef struct {
 } Tau_collector_api_CallSiteInfo;
 
 extern struct CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long address,
-        const char *tag, const char *childName, char **newShortName, char addAddress);
+        const char *tag, const char *childName, char **newShortName, char addAddress, bool useLineNumber);
 
 char * show_backtrace (int tid, int offset) {
     char * location = NULL;
@@ -175,11 +175,10 @@ char * show_backtrace (int tid, int offset) {
         // - ?? <- the source location we want
             unw_get_reg(&cursor, UNW_REG_IP, &ip);
             unw_get_reg(&cursor, UNW_REG_SP, &sp);
-            printf("Address: %p %p\n", ip, sp);
+            //printf("Address: %p %p\n", ip, sp);
         if (++index >= depth) {
             char * newShort = NULL;
-            void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
-            //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
+            void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0, true);
             Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
             //TAU_VERBOSE ("index = %d, ip = %lx, sp = %lx, name= %s\n", index, (long) ip, (long) sp, myInfo->name);
             location = malloc(strlen(myInfo->name)+1);
