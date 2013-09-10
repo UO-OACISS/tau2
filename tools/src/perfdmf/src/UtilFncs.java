@@ -416,7 +416,7 @@ public class UtilFncs {
     }
 
     public static String getContextEventRoot(String str) {
-        int colon = str.indexOf(":");
+		int colon = str.lastIndexOf(" : ");
         int location = str.indexOf("=>");
         if (location < 0) {
             if (colon < 0) {
@@ -425,7 +425,7 @@ public class UtilFncs {
                 return str.substring(colon + 1);
             }
         }
-        return str.substring(colon + 1, location).trim();
+		return str.substring(colon + 2, location).trim();
     }
 
     /**
