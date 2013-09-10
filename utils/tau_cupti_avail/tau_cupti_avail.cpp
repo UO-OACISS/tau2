@@ -10,6 +10,11 @@
 //#include <string>
 //#include <vector>
 using namespace std;
+
+// CrayCC is stupid and doesn't support weak symbols
+void *pomp_rd_table;
+int POMP_MAX_ID = 0;
+
 /* Specific errors from CUDA lib */
 /*
 #define CHECK_CU_ERROR(err, cufunc) \
@@ -254,7 +259,7 @@ int main(int argc, char **argv)
 	{
 		Tau_CuptiLayer_Initialize_Map();
 		CuptiCounterEvent::printHeader();
-		for(counter_map_it it = Tau_CuptiLayer_Counter_Map.begin(); it != Tau_CuptiLayer_Counter_Map.end(); it++)
+		for(counter_map_it it = Tau_CuptiLayer_Counter_Map().begin(); it != Tau_CuptiLayer_Counter_Map().end(); it++)
 		{
 			it->second->print();
 		}
@@ -288,9 +293,9 @@ int main(int argc, char **argv)
 		{
 			//printf("size of available counters: %d.\n", Tau_CuptiLayer_Counter_Map.size());
 			
-			if (Tau_CuptiLayer_Counter_Map.count(*it) > 0)
+			if (Tau_CuptiLayer_Counter_Map().count(*it) > 0)
 			{
-				CuptiCounterEvent *ev = Tau_CuptiLayer_Counter_Map.find(*it)->second;
+				CuptiCounterEvent *ev = Tau_CuptiLayer_Counter_Map().find(*it)->second;
 				//ev->print();
 				tags_added.push_back(*it);
 				counters_added.push_back(ev);

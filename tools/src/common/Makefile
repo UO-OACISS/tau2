@@ -1,5 +1,8 @@
-CONFIG_ARCH=default
-TAUROOT=
+TAU_MAKEFILE ?=../../../include/Makefile
+
+include $(TAU_MAKEFILE)
+
+
 ifndef $(TAUROOT)
 TOOLS_SRC=..
 else

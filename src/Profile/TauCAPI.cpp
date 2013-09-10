@@ -68,7 +68,13 @@ void esd_exit (elg_ui4 rid);
 
 using namespace tau;
 
+#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
+	static TauContextUserEvent ce(msg); return &ce; } 
 
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryEntryEvent,"Heap Memory Used (KB) at Entry")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryExitEvent,"Heap Memory Used (KB) at Exit")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent,"Increase in Heap Memory (KB)")
+TAU_GEN_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent,"Decrease in Heap Memory (KB)")
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name)
 {
@@ -409,8 +415,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (TauEnv_get_track_memory_heap()) {
     double *heapmem = new double; 
     *heapmem = Tau_max_RSS();
-    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Entry");
-    TAU_CONTEXT_EVENT(memHeapEvent, *heapmem);
+    TAU_CONTEXT_EVENT(TheHeapMemoryEntryEvent(), *heapmem);
     p->extraInfo = heapmem;
    
   }
@@ -435,7 +440,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
-    Tau_sampling_event_start(tid, p->address);
+    //Tau_sampling_event_start(tid, p->address);
   }
 #endif
 }
@@ -537,8 +542,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   enableHeapTracking = TauEnv_get_track_memory_heap();
   if (enableHeapTracking) {
     currentHeap = Tau_max_RSS();
-    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Exit");
-    TAU_CONTEXT_EVENT(memHeapEvent, currentHeap);
+    TAU_CONTEXT_EVENT(TheHeapMemoryExitEvent(), currentHeap);
   }
 
   if (TauEnv_get_track_memory_headroom()) {
@@ -632,10 +636,10 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     double *oldheap = (double *) (profiler->extraInfo);
     double difference = currentHeap - *oldheap; 
     if (difference > 0) {
-      TAU_TRIGGER_CONTEXT_EVENT("Increase in heap memory (KB)", difference);
+      TAU_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent(), difference);
     } else {
        if (difference < 0) {
-        TAU_TRIGGER_CONTEXT_EVENT("Decrease in heap memory (KB)", difference);
+        TAU_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent(), (0 - difference));
        }
     }
 			  
@@ -744,6 +748,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	// Stop the collector API. The main thread may exit with running
 	// worker threads. When those threads try to exit, they will 
 	// try to stop timers that aren't running.
+    RtsLayer::LockDB();
 #ifdef TAU_OPENMP
 	Tau_disable_collector_api();
 #endif
@@ -754,6 +759,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 			Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 			//Make sure even throttled routines are stopped.
 			if (Tau_stop_timer(p->ThisFunction, tid)) {
+	            TAU_VERBOSE("Stopping timer on thread %d: %s\n",tid,p->ThisFunction->Name);
 				p->Stop(tid);
   			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 			}
@@ -761,6 +767,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	tid++;
 	}
   Tau_disable_instrumentation();
+    RtsLayer::UnLockDB();
   return 0;
 }
 
@@ -1137,8 +1144,6 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 #endif /* TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT */
 
 
-#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
-	static TauContextUserEvent ce(msg); return &ce; } 
 
 TAU_GEN_EVENT(TheSendEvent,"Message size sent to all nodes")
 TAU_GEN_EVENT(TheRecvEvent,"Message size received from all nodes")
@@ -1680,6 +1685,16 @@ extern "C" void Tau_track_memory_here(void) {
   TauTrackMemoryHere();
 }
 
+extern "C" void Tau_track_power(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackPower();
+}
+
+
+extern "C" void Tau_track_power_here(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackPowerHere();
+}
 
 extern "C" void Tau_track_memory_headroom(void) {
   TauInternalFunctionGuard protects_this_function;
@@ -1700,6 +1715,14 @@ extern "C" void Tau_enable_tracking_memory(void) {
 
 extern "C" void Tau_disable_tracking_memory(void) {
   TauDisableTrackingMemory();
+}
+
+extern "C" void Tau_disable_tracking_power(void) {
+  TauDisableTrackingPower();
+}
+
+extern "C" void Tau_enable_tracking_power(void) {
+  TauEnableTrackingPower();
 }
 
 
@@ -1863,10 +1886,11 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
-  if (exists) {
+  if (exists > 0) {
     PureMap::iterator it = pure.find(name);
     fi = it->second;
-  } else {
+  } 
+  if (fi == NULL) {
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
@@ -1890,10 +1914,11 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
   //printf("Tau_make_openmp_timer: n=%s, t = %s, PureMapSize=%d\n", n, t, ThePureMap().size());
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
-  if (exists) {
+  if (exists > 0) {
     PureMap::iterator it = pure.find(name);
     fi = it->second;
-  } else {
+  }
+  if (fi == NULL) {
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {

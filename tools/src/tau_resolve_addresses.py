@@ -53,10 +53,7 @@ from xml.sax import saxutils
 
 USAGE = """
 %prog [options] tauprofile.xml
-
-Input files may be regular profiles (profile.0.0.0, profile.1.0.0, etc.) or 
-merged profiles (tauprofile.xml).  If no input files are given, files named
-profile.* in the current directory are used as input. See -h for details."""
+"""
 
 PATTERN = re.compile('UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
 
@@ -93,45 +90,53 @@ class Addr2Line(object):
         cmd = [addr2line, '-C', '-f', '-e', exe]
         self.exe = exe
         self.cmdstr = ' '.join(cmd)
-        self.p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=1)
-        self.q = Queue()
-        self.t = Thread(target=Addr2Line.enqueue_output, args=(self.p.stdout, self.q))
-        self.t.daemon = True
-        self.t.start()
-        print 'New process: %s' % self.cmdstr
+        if not os.path.exists(self.exe):
+            print 'WARNING: %r not found.  Addresses in this binary will not be resolved.' % self.exe
+            self.p = self.q = self.t = None
+        else:
+            self.p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, bufsize=1)
+            self.q = Queue()
+            self.t = Thread(target=Addr2Line.enqueue_output, args=(self.p.stdout, self.q))
+            self.t.daemon = True
+            self.t.start()
+            print 'New process: %s' % self.cmdstr
 
     def close(self):
-        self.q.join()
-        self.p.stdin.close()
-        retval = self.p.wait()
-        if retval != 0:
-            raise Addr2LineError('Nonzero exit code %d from %r\nstdout: %s\nstderr: %s' % 
-                                 (retval, self.cmdstr, self.p.stdout, self.p.stderr))
-            
-    
+        if self.p:
+            self.q.join()
+            self.p.stdin.close()
+            retval = self.p.wait()
+            if retval != 0:
+                raise Addr2LineError('Nonzero exit code %d from %r\nstdout: %s\nstderr: %s' % 
+                                     (retval, self.cmdstr, self.p.stdout, self.p.stderr))
+
     def resolve(self, addr):
         # Send address to addr2line
-        self.p.stdin.write(addr+'\n')
+        if self.p:
+            self.p.stdin.write(addr+'\n')
+    
+            # Read addr2line output 
+            try:
+                funcname, location = self.q.get(block=True,timeout=TIMEOUT)
+            except Empty:
+                raise Addr2LineError('ERROR: %r timed out resolving address %r' % (self.cmdstr, addr))
+    
+            # Parse location
+            location_parts = location.rsplit(':', 1)
+            if len(location_parts) != 2:
+                raise Addr2LineError('Unexpected output from %r: %r' % (cmdstr, location))
+            filename = location_parts[0]
+            lineno = location_parts[1]
+    
+            # Return results
+            if not funcname or funcname == '??':
+                funcname = 'UNRESOLVED'
+            if not filename or filename == '??':
+                filename = self.exe
+            return funcname, filename, lineno
+        else:
+            return 'UNRESOLVED', self.exe, '0'
 
-        # Read addr2line output 
-        try:
-            funcname, location = self.q.get(block=True,timeout=TIMEOUT)
-        except Empty:
-            raise Addr2LineError('ERROR: %r timed out resolving address %r' % (self.cmdstr, addr))
-
-        # Parse location
-        location_parts = location.rsplit(':', 1)
-        if len(location_parts) != 2:
-            raise Addr2LineError('Unexpected output from %r: %r' % (cmdstr, location))
-        filename = location_parts[0]
-        lineno = location_parts[1]
-
-        # Return results
-        if not funcname or funcname == '??':
-            funcname = 'UNRESOLVED'
-        if not filename or filename == '??':
-            filename = 'UNKNOWN'
-        return funcname, filename, lineno
 
 class Worker(Thread):
 
@@ -161,7 +166,10 @@ class Worker(Thread):
                         break
             else:
                 resolved = self.pipes[exe].resolve(addr)
-            return saxutils.escape('%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2]))
+            if resolved[0] != 'UNRESOLVED':
+                return saxutils.escape('%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2]))
+            else:
+                return match.group(0)
 
         # Extract lines from memory and rewrite
         print 'New thread: %s' % self.name
@@ -195,7 +203,7 @@ def tauprofile_xml(infile, outfile, options):
     """
     Calls addr2line to resolve addresses in a tauprofile.xml file
     """ 
-    fallback_exes = options.exe
+    fallback_exes = set(options.exe)
     addr2line = options.addr2line
     jobs = int(options.jobs)
 
@@ -204,7 +212,7 @@ def tauprofile_xml(infile, outfile, options):
 
             # Scan events from input file
             print 'Scanning %r' % infile
-            all_exes = list()
+            all_exes = set()
             linespan = list()
             unresolved = list()
             offset = 0
@@ -224,7 +232,7 @@ def tauprofile_xml(infile, outfile, options):
                     unresolved.append(len(linespan) - 1)
                     exe = match.group(1)
                     if exe != 'UNKNOWN':
-                        all_exes.append(exe)
+                        all_exes.add(exe)
                 j += 1
             linecount = len(unresolved)
 
@@ -237,7 +245,7 @@ def tauprofile_xml(infile, outfile, options):
                 print 'Reducing jobs to %d' % jobs
 
             # Build list of executables to search
-            all_exes.extend(fallback_exes)
+            all_exes |= fallback_exes
             if not all_exes:
                 print 'ERROR: No executables or other binary objects specified. See --help.'
                 sys.exit(1)
@@ -257,7 +265,7 @@ def tauprofile_xml(infile, outfile, options):
                 print '%d workers process %d records, %d process %d records' % (chunkrem, chunklen+1, (jobs-chunkrem), chunklen)
             else:
                 chunks = [(0, linecount)]
-                print 'One thread will process %d records' % len(unresolved)
+                print 'One thread will process %d records' % linecount
 
             # Launch worker processes
             mm = mmap(fin.fileno(), 0)
@@ -276,6 +284,7 @@ def tauprofile_xml(infile, outfile, options):
                     if i < lineno:
                         start = linespan[i][0]
                         stop = linespan[lineno-1][1]
+                        print 'writing lines %d:%d' % (i, lineno-1)
                         fout.write(mm[start:stop])
                         i = lineno
                     fout.write(line)
@@ -283,7 +292,7 @@ def tauprofile_xml(infile, outfile, options):
 
             # Write out remainder of file
             print 'Address resolution complete, writing metrics to file...'
-            start = linespan[len(linespan)-1][1]
+            start = linespan[i-1][1]
             fin.seek(start, 0)
             for line in fin:
                 fout.write(line)

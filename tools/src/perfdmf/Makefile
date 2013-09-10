@@ -1,6 +1,6 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=default
-TAUROOT=
+TAU_MAKEFILE ?=../../../include/Makefile
+include $(TAU_MAKEFILE)
 
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.

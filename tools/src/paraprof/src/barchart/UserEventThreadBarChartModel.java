@@ -69,7 +69,7 @@ public class UserEventThreadBarChartModel extends AbstractBarChartModel {
 
         UserEvent userEvent = ppUserEventProfile.getUserEvent();
         if (ParaProfUtils.rightClick(e)) {
-            ParaProfUtils.handleUserEventClick(window.getPpTrial(), userEvent, owner, e);
+            ParaProfUtils.handleUserEventClick(window.getPpTrial(), userEvent, thread, owner, e);
 
         } else {
             FunctionBarChartWindow threadDataWindow = new FunctionBarChartWindow(window.getPpTrial(),

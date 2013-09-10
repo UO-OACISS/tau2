@@ -86,6 +86,10 @@ case $1 in
 	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
 	;;
 
+     bfddir=*)
+        bfddir=`echo $1 | sed -e 's/^bfddir=//' -e 's/#/ /g'`
+	echo "s,^TAU_BFD_DIR=.*$,TAU_BFD_DIR=$bfddir,g" >> $sedout
+	;;
      bfdlink=*)
         bfdlink=`echo $1 | sed -e 's/^bfdlink=//' -e 's/#/ /g'`
 	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
@@ -178,6 +182,10 @@ case $1 in
      scorepdir=*)
         scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
 	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
+	;;
+     scorep_opari_bin_dir=*)
+        scorep_opari_bin_dir=`echo $1 | sed -e 's/^scorep_opari_bin_dir=//'`
+	    echo "s,^SCOREP_OPARI_BIN_DIR=.*$,SCOREP_OPARI_BIN_DIR=$scorep_opari_bin_dir,g" >> $sedout
 	;;
 
      scorepincs=*)
@@ -1384,11 +1392,15 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREP)
-	echo "NOTE: Using SCOREP Tracing Package ***"
+	echo "NOTE: Using SCOREP Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPOPARI2)
+	echo "NOTE: Using Opari2 configured with SCOREP Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREPMPI)
-	echo "NOTE: Using SCOREPMPI Tracing Package ***"
+	echo "NOTE: Using SCOREPMPI Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREPOMPI)
@@ -1702,6 +1714,10 @@ case $1 in
      IBM64PAPILINUX)
 	echo "NOTE: Using PAPI with IBM64 Linux options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ARMLINUXPAPI)
+	echo "NOTE: Using PAPI with ARM Linux options ***"
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      IBM64LINUX)
 	echo "NOTE: Using IBM64 Linux options ***"

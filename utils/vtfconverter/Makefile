@@ -12,21 +12,8 @@
 #######################################################################
  
 include ../../include/Makefile
-########### Automatically modified by the configure script ############
-
-
-
-#SGICC#LEXTRA = -lCio #ENDIF#
-
-
-
-
-CONFIG_ARCH=default
-CONFIG_CC=gcc
-CONFIG_CXX=g++
-CXX=$(CONFIG_CXX)  $(ABI) $(ISA)
-HEADERS=
-VTFDIR=
+include ../include/Makefile
+CXX:=$(CXX)  $(ABI) $(ISA)
 LIBS=-L$(VTFDIR)/$(TAU_ARCH)/lib  -lvtf3 $(LEXTRA)
 VTFINCLUDES=-I$(VTFDIR)/include
 RM=/bin/rm -f
