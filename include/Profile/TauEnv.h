@@ -33,6 +33,10 @@
 #define TAU_ACTION_DUMP_CALLPATHS 2
 #define TAU_ACTION_DUMP_BACKTRACES 3
 
+#ifndef TAU_EVENT_THRESHOLD
+#define TAU_EVENT_THRESHOLD .5
+#endif /* TAU_EVENT_THRESHOLD */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -79,6 +83,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_summary_only();
   int  TAUDECL TauEnv_get_ibm_bg_hwp_counters();
   double TAUDECL TauEnv_get_max_records(); 
+  double TAUDECL TauEnv_get_evt_threshold(); 
   int TAUDECL TauEnv_get_disable_instrumentation(); 
 
   const char* TAUDECL TauEnv_get_ebs_source();

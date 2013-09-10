@@ -283,7 +283,7 @@ public class DataSourceResult extends AbstractResult {
 	 * @see edu.uoregon.tau.perfexplorer.glue.PerformanceResult#getTrial()
 	 */
 	public Trial getTrial() {
-		return null;
+		return this.trial;
 	}
 
 	/*

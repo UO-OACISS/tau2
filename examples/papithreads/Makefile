@@ -11,9 +11,11 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-TAUROOTDIR	= ../..
+include ../../include/Makefile 
+include ../Makefile
+include $(TAU_MAKEFILE_PAPI_PTHREAD)
 
-include $(TAUROOTDIR)/include/Makefile
+
 
 CXX		= $(TAU_CXX)
 

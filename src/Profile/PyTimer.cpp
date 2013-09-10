@@ -97,6 +97,19 @@ struct PyFunctionDB : public TAU_HASH_MAP<string, int>
   }
 };
 
+struct UserEventNameMap : public TAU_HASH_MAP<string, int>
+{
+  virtual ~UserEventNameMap() {
+    Tau_destructor_trigger();
+  }
+};
+
+struct UserEventDB : public TAU_HASH_MAP<int, tau::TauUserEvent *>
+{
+  virtual ~UserEventDB() {
+    Tau_destructor_trigger();
+  }
+};
 
 PhaseMap & ThePhaseMap()
 {
@@ -108,6 +121,16 @@ PyFunctionDB & ThePyFunctionDB()
 {
   static PyFunctionDB db;
   return db;
+}
+
+UserEventNameMap & TheUserEventNameMap() {
+  static UserEventNameMap uenm;
+  return uenm;
+}
+
+UserEventDB & TheUserEventDB() {
+  static UserEventDB uedb;
+  return uedb;
 }
 
 
@@ -153,6 +176,30 @@ static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwarg
     tauid = TheFunctionDB().size() - 1;
     funcDB[functionName] = tauid;
     ThePhaseMap()[tauid] = phase;
+  }
+
+  return Py_BuildValue("i", tauid);
+}
+
+static PyObject * createUserEvent(PyObject * self, PyObject * args) {
+  TauInternalFunctionGuard protects_this_function;
+
+  char * name = "None";
+  int tauid = 0;
+  if (!PyArg_ParseTuple(args, "s", &name)) {
+    printf("createUserEvent: Couldn't Parse the tuple!\n");
+    return NULL;
+  }
+
+  UserEventNameMap & nameMap = TheUserEventNameMap();
+  UserEventNameMap::iterator it = nameMap.find(name);
+  if(it != nameMap.end()) {
+    tauid = it->second;
+  } else {
+    tauid = nameMap.size() - 1;
+    nameMap[name] = tauid;
+    tau::TauUserEvent * ue = new tau::TauUserEvent(std::string(name));
+    TheUserEventDB()[tauid] = ue;
   }
 
   return Py_BuildValue("i", tauid);
@@ -229,6 +276,39 @@ extern "C" PyObject * pytau_stop(PyObject *self, PyObject *args)
 
   Tau_stop_timer(p->ThisFunction, tid);
   Py_INCREF (Py_None);
+  return Py_None;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// register user event
+///////////////////////////////////////////////////////////////////////////////
+char pytau_registerEvent__name__[] = "registerEvent";
+char pytau_registerEvent__doc__[]  = "register a new TAU user event";
+extern "C" PyObject * pytau_registerEvent(PyObject * self, PyObject * args) {
+  return createUserEvent(self, args);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// trigger user event
+///////////////////////////////////////////////////////////////////////////////
+char pytau_event__name__[] = "event";
+char pytau_event__doc__[]  = "trigger an existing TAU user event";
+extern "C" PyObject * pytau_event(PyObject * self, PyObject * args) {
+  TauInternalFunctionGuard protects_this_function;
+  
+  int tid = RtsLayer::myThread();
+  int id;
+  double data;
+  if(!PyArg_ParseTuple(args, "id", &id, &data)) {
+    printf("pytau_event: Couldn't Parse the tuple!\n");
+    return NULL;
+  }
+
+  tau::TauUserEvent * ue = TheUserEventDB()[id];
+  ue->TriggerEvent(data, tid);
+  Py_INCREF(Py_None);
   return Py_None;
 }
 

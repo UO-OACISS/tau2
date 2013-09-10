@@ -182,6 +182,8 @@ extern void Tau_sampling_unwind(int tid, Profiler *profiler,
     void *pc, void *context, unsigned long stack[]);
 
 extern "C" bool unwind_cutoff(void **addresses, void *address) {
+/* Kevin disabled for now */
+  return false;
   bool found = false;
   for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
     if ((unsigned long)(addresses[i]) == (unsigned long)address) {
@@ -809,6 +811,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
+          prevShortName = NULL;
           if (newShortName) {
             prevShortName = newShortName;
           }
@@ -954,8 +957,8 @@ void Tau_sampling_finalizeProfile(int tid)
     string *intermediateGlobalLeafString = new string("");
     string *intermediatePathLeafString = new string("");
 
-    // STEP 2a: Locate or create Leaf Entry - the INTERMEDIATE node
-    *intermediateGlobalLeafString = "[INTERMEDIATE] ";
+    // STEP 2a: Locate or create Leaf Entry - the CONTEXT node
+    *intermediateGlobalLeafString = "[CONTEXT] ";
     *intermediateGlobalLeafString += Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName());
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
@@ -965,7 +968,7 @@ void Tau_sampling_finalizeProfile(int tid)
 	new FunctionInfo((const char*)intermediateGlobalLeafString->c_str(),
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
-			 "TAU_INTERMEDIATE", true);
+			 "TAU_SAMPLE_CONTEXT", true);
       RtsLayer::UnLockDB();
       name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediateGlobalLeafString->c_str(), intermediateGlobalLeaf));
     } else {
@@ -974,7 +977,7 @@ void Tau_sampling_finalizeProfile(int tid)
 
     // Step 2b: Locate or create Full Path Entry. Requires name
     //   information about the Leaf Entry available.
-    //   This is the TIMER => INTERMEDIATE entry.
+    //   This is the TIMER => SAMPLES entry.
     *intermediatePathLeafString = candidate->tauContext->GetName();
 	*intermediatePathLeafString += " ";
 	*intermediatePathLeafString += candidate->tauContext->GetType();
@@ -988,7 +991,7 @@ void Tau_sampling_finalizeProfile(int tid)
 	new FunctionInfo((const char*)intermediatePathLeafString->c_str(),
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
-			 "TAU_INTERMEDIATE|TAU_CALLPATH", true);
+			 "TAU_SAMPLE_CONTEXT|TAU_CALLPATH", true);
       RtsLayer::UnLockDB();
       name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediatePathLeafString->c_str(), intermediatePathLeaf));
     } else {

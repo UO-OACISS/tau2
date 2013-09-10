@@ -708,6 +708,51 @@ public abstract class DataSource {
 
     }
 
+	private String sampleNameSummary(String inName) {
+		String tmpName = null;
+		int end = -1;
+		// the UNWIND support is currently disabled.
+		// remove "disabled" to enable it.
+		if ((inName.contains("[SAMPLE]") || 
+		     inName.contains("[disabled UNWIND]")) && 
+		    !inName.contains("UNRESOLVED")) {
+			end = inName.lastIndexOf("} {");
+			if (end == -1) return null;
+			// truncate it
+			tmpName = inName.substring(0, end);
+			tmpName += "}]";
+			// replace the last instance of SAMPLE with SUMMARY
+			StringBuilder b = new StringBuilder(tmpName);
+			int index = tmpName.lastIndexOf("[SAMPLE]");
+			if (index == -1) {
+				index = tmpName.lastIndexOf("[UNWIND]");
+			}
+			// fortunately, SAMPLE and UNWIND are the same length.
+			b.replace(index, index+8, "[SUMMARY]");
+			tmpName = b.toString();
+		// the UNWIND support is currently disabled.
+		// remove "disabled" to enable it.
+		} else if ((inName.contains("[SAMPLE]") || 
+		            inName.contains("[disabled UNWIND]")) && 
+		           inName.contains("UNRESOLVED") && 
+		   	       inName.contains("ADDR")) {
+			end = inName.lastIndexOf(" ADDR ");
+			if (end == -1) return null;
+			// truncate it
+			tmpName = inName.substring(0, end);
+			// replace the last instance of SAMPLE with SUMMARY
+			StringBuilder b = new StringBuilder(tmpName);
+			int index = tmpName.lastIndexOf("[SAMPLE]");
+			if (index == -1) {
+				index = tmpName.lastIndexOf("[UNWIND]");
+			}
+			// fortunately, SAMPLE and UNWIND are the same length.
+			b.replace(index, index+8, "[SUMMARY]");
+			tmpName = b.toString();
+		}
+		return tmpName;
+	}
+
     private void generateAggregateSampleData() {
         /*
          * When samples are collected, they are measured down to the
@@ -723,28 +768,29 @@ public abstract class DataSource {
         }
 
         List<Function> functions = new ArrayList<Function>();
+        Map<String, Integer> prefixes = new HashMap<String, Integer>();
 
         for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
             Function function = l.next();
-			if (function.getName().contains("SAMPLE") && 
-			    !function.getName().contains("UNRESOLVED")) {
-              functions.add(function);
-			} else if (function.getName().contains("SAMPLE") && 
-			           function.getName().contains("UNRESOLVED") && 
-			   	       function.getName().contains("ADDR")) {
-              functions.add(function);
-			}
+			String tmpName = null;
+			tmpName = sampleNameSummary(function.getName());
+			if (tmpName == null) continue;
+			//System.out.println("ADDING: " + function.getName());
+			functions.add(function);
 
 			// check if we have already done this process... in which case, return
-            int end = function.getName().lastIndexOf("} {");
-			if (end == -1) continue;
-            String tmpName = function.getName().substring(0, end);
-			// truncate it
-			tmpName += "}]";
             Function bonusFunction = this.getFunction(tmpName);
             if (bonusFunction != null) {
 			  return;
 			}
+
+			// update our map of prefixes and counts - we don't want
+			// to aggregate functions with only 1 or 2 lines sampled.
+			Integer count = 0;
+			if (prefixes.containsKey(tmpName)) {
+			  count = prefixes.get(tmpName);
+			}
+			prefixes.put(tmpName, count+1);
         }
 
         // make sure that the allThreads list is initialized;
@@ -758,41 +804,20 @@ public abstract class DataSource {
         for (Iterator<Function> l = functions.iterator(); l.hasNext();) {
             Function function = l.next();
 
-            String bonusName = function.getName();
+            String bonusName = null;
             Function bonusFunction = null;
-			if (function.getName().contains("SAMPLE") && 
-			    !function.getName().contains("UNRESOLVED")) {
-			  // search for "} {1234}]" at the end of the string
-              int end = bonusName.lastIndexOf("} {");
-			  // if this sample doesn't have a line number, skip it.
-			  if (end == -1) continue;
-              bonusName = bonusName.substring(0, end);
-			  // truncate it
-			  bonusName += "}]";
-              bonusFunction = this.getFunction(bonusName);
-              if (bonusFunction == null) {
-                  bonusFunction = addFunction(bonusName);
-                  for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
-                     bonusFunction.addGroup(g.next());
-                  }
-              }
-			} else if (function.getName().contains("SAMPLE") && 
-			         function.getName().contains("UNRESOLVED") && 
-				     function.getName().contains("ADDR")) {
-			  // search for "ADDR 0x7fc4fcf10283" at the end of the string
-              int end = bonusName.lastIndexOf(" ADDR ");
-			  // if this sample doesn't have an address number, skip it.
-			  if (end == -1) continue;
-			  // truncate it
-              bonusName = bonusName.substring(0, end);
-              bonusFunction = this.getFunction(bonusName);
-              if (bonusFunction == null) {
-                  bonusFunction = addFunction(bonusName);
-                  for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
-                     bonusFunction.addGroup(g.next());
-                  }
-              }
+            bonusName = sampleNameSummary(function.getName());
+			if (bonusName == null) continue;
+			if (prefixes.get(bonusName) < 3) continue;
+			bonusFunction = this.getFunction(bonusName);
+			if (bonusFunction == null) {
+				bonusFunction = addFunction(bonusName);
+				for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
+					bonusFunction.addGroup(g.next());
+				}
 			}
+			//System.out.println("BEFORE: " + function.getName());
+			//System.out.println("AFTER:  " + bonusFunction.getName());
             bonusFunction.addGroup(derivedGroup);
             for (int i = 0; i < numThreads; i++) {
                 Thread thread = allThreads.get(i);
@@ -857,7 +882,7 @@ public abstract class DataSource {
         }
 		
 		// generate the intermediate sample aggregation data
-        generateAggregateSampleData();
+        //generateAggregateSampleData();
 
         checkForPhases();
 

@@ -14,13 +14,8 @@
 include ../../include/Makefile
 ########### Automatically modified by the configure script ############
 
-CONFIG_ARCH=default
-CXX=$(CONFIG_CXX) $(ABI) $(ISA)
-#CRAYXMT#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
-#CRAYXMT#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
-#CRAYCNL#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
-#CRAYCNL#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
-#MMIC#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
+CC = $(TAU_CC_FE) $(ABI) $(ISA)
+CXX = $(TAU_CXX_FE) $(ABI) $(ISA)
 LIBS=$(TAU_TRACE_INPUT_LIB)
 INCLUDES=$(TAU_INCLUDE) -I.
 RM=/bin/rm -f

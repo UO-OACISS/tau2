@@ -1,3 +1,4 @@
+include ../../../../include/include/Makefile 
 include ../../../include/Makefile
 
 F90 = hmpp $(TAU_F90) -finstrument-functions
