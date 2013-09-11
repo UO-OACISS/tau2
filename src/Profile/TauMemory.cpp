@@ -88,6 +88,16 @@ static inline bool AllocationShouldBeProtected(size_t size)
       (TauEnv_get_memdbg_alloc_max() && (size > TauEnv_get_memdbg_alloc_max_value()))));
 }
 
+static inline void BuildTimerName(char * buff, char const * funcname, char const * filename, int lineno)
+{
+  if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
+      !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
+  {
+    sprintf(buff, "%s", funcname);
+  } else {
+    sprintf(buff, "%s [{%s} {%d,1}-{%d,1}]", funcname, filename, lineno, lineno);
+  }
+}
 
 //////////////////////////////////////////////////////////////////////
 // Triggers leak detection
@@ -1144,11 +1154,19 @@ void * Tau_malloc(size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "void * malloc(size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
+    TAU_PROFILE_START(t);
     ptr = alloc->Allocate(size, 0, 0, filename, lineno);
+    TAU_PROFILE_STOP(t);
   } else {
+    TAU_PROFILE_START(t);
     ptr = malloc(size);
+    TAU_PROFILE_STOP(t);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
 
@@ -1171,12 +1189,20 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "void * calloc(size_t, size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
+    TAU_PROFILE_START(t);
     ptr = alloc->Allocate(count*size, 0, 0, filename, lineno);
+    TAU_PROFILE_STOP(t);
     if (ptr) memset(ptr, 0, size);
   } else {
+    TAU_PROFILE_START(t);
     ptr = calloc(count, size);
+    TAU_PROFILE_STOP(t);
     Tau_track_memory_allocation(ptr, count*size, filename, lineno);
   }
 
@@ -1197,18 +1223,25 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "void * realloc(void*, size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = NULL;
     if (ptr) {
       if (size) {
         alloc = TauAllocation::Find(ptr);
         if (alloc) {
+          TAU_PROFILE_START(t);
           ptr = alloc->Reallocate(size, 0, 0, filename, lineno);
+          TAU_PROFILE_STOP(t);
         } else {
           // Trying to resize an allocation made outside TAU
           // Use system's realloc so we know the allocation size then copy
           // to a guarded allocation
           TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+          TAU_PROFILE_START(t);
           void * tmpPtr = realloc(ptr, size);
           if (tmpPtr) {
             alloc = new TauAllocation;
@@ -1220,24 +1253,33 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
             // If the system realloc failed then we aren't going to succeed either
             ptr = NULL;
           }
+          TAU_PROFILE_STOP(t);
         }
       } else {
         // Calling realloc with size == 0 is the same as calling free(ptr)
         alloc = TauAllocation::Find(ptr);
         if (alloc) {
+          TAU_PROFILE_START(t);
           alloc->Deallocate(filename, lineno);
+          TAU_PROFILE_STOP(t);
         } else {
           TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+          TAU_PROFILE_START(t);
           free(ptr);
+          TAU_PROFILE_STOP(t);
         }
         ptr = NULL;
       }
     } else {
       alloc = new TauAllocation;
+      TAU_PROFILE_START(t);
       ptr = alloc->Allocate(size, 0, 0, filename, lineno);
+      TAU_PROFILE_STOP(t);
     }
   } else {
+    TAU_PROFILE_START(t);
     void * newPtr = realloc(ptr, size);
+    TAU_PROFILE_STOP(t);
     if (newPtr) {
       Tau_track_memory_reallocation(newPtr, ptr, size, filename, lineno);
     }
@@ -1258,19 +1300,29 @@ void Tau_free(void * ptr, char const * filename, int lineno)
 {
 #ifdef HAVE_FREE
   if (ptr) {
+    char name[1024];
+    BuildTimerName(name, "void free(void*) C", filename, lineno);
+    TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
     TauAllocation * alloc = TauAllocation::Find(ptr);
     if (alloc) {
       if (alloc->IsTracked()) {
         alloc->TrackDeallocation(filename, lineno);
+        TAU_PROFILE_START(t);
         free(ptr);
+        TAU_PROFILE_STOP(t);
       } else {
+        TAU_PROFILE_START(t);
         alloc->Deallocate(filename, lineno);
+        TAU_PROFILE_STOP(t);
       }
     } else {
       TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+      TAU_PROFILE_START(t);
       free(ptr);
+      TAU_PROFILE_STOP(t);
     }
   }
 #endif
@@ -1290,11 +1342,19 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "void * memalign(size_t, size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
+    TAU_PROFILE_START(t);
     ptr = alloc->Allocate(size, alignment, 0, filename, lineno);
+    TAU_PROFILE_STOP(t);
   } else {
+    TAU_PROFILE_START(t);
     ptr = memalign(alignment, size);
+    TAU_PROFILE_STOP(t);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
   return ptr;
@@ -1317,12 +1377,20 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "int posix_memalign(void**, size_t, size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
+    TAU_PROFILE_START(t);
     *ptr = alloc->Allocate(size, alignment, sizeof(void*), filename, lineno);
+    TAU_PROFILE_STOP(t);
     retval = (ptr != NULL);
   } else {
+    TAU_PROFILE_START(t);
     retval = posix_memalign(ptr, alignment, size);
+    TAU_PROFILE_STOP(t);
     Tau_track_memory_allocation(*ptr, size, filename, lineno);
   }
   return retval;
@@ -1345,11 +1413,19 @@ void * Tau_valloc(size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "void * valloc(size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
+    TAU_PROFILE_START(t);
     ptr = alloc->Allocate(size, Tau_page_size(), 0, filename, lineno);
+    TAU_PROFILE_STOP(t);
   } else {
+    TAU_PROFILE_START(t);
     ptr = valloc(size);
+    TAU_PROFILE_STOP(t);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
   return ptr;
@@ -1374,15 +1450,23 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "void * pvalloc(size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   // pvalloc allocates the smallest set of complete pages
   // that can hold the requested number of bytes
   size = (size + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
 
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = new TauAllocation;
+    TAU_PROFILE_START(t);
     ptr = alloc->Allocate(size, PAGE_SIZE, 0, filename, lineno);
+    TAU_PROFILE_STOP(t);
   } else {
+    TAU_PROFILE_START(t);
     ptr = pvalloc(size);
+    TAU_PROFILE_STOP(t);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
   return ptr;
@@ -1401,21 +1485,28 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  char name[1024];
+  BuildTimerName(name, "void * reallocf(void*, size_t) C", filename, lineno);
+  TAU_PROFILE_TIMER(t, name, "", TAU_USER);
+
   if (AllocationShouldBeProtected(size)) {
     TauAllocation * alloc = NULL;
     if (ptr) {
       if (size) {
         alloc = TauAllocation::Find(ptr);
         if (alloc) {
+          TAU_PROFILE_START(t);
           ptr = alloc->Reallocate(size, 0, 0, filename, lineno);
           if (!ptr) {
             alloc->Deallocate(filename, lineno);
           }
+          TAU_PROFILE_STOP(t);
         } else {
           // Trying to resize an allocation made outside TAU
           // Use system's realloc so we know the allocation size then copy
           // to a guarded allocation
           TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+          TAU_PROFILE_START(t);
           void * tmpPtr = reallocf(ptr, size);
           if (tmpPtr) {
             alloc = new TauAllocation;
@@ -1427,24 +1518,33 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
             // If the system reallocf failed then we aren't going to succeed either
             ptr = NULL;
           }
+          TAU_PROFILE_STOP(t);
         }
       } else {
         // Calling reallocf with size == 0 is the same as calling free(ptr)
         alloc = TauAllocation::Find(ptr);
         if (alloc) {
+          TAU_PROFILE_START(t);
           alloc->Deallocate(filename, lineno);
+          TAU_PROFILE_STOP(t);
         } else {
           TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+          TAU_PROFILE_START(t);
           free(ptr);
+          TAU_PROFILE_STOP(t);
         }
         ptr = NULL;
       }
     } else {
       alloc = new TauAllocation;
+      TAU_PROFILE_START(t);
       ptr = alloc->Allocate(size, 0, 0, filename, lineno);
+      TAU_PROFILE_STOP(t);
     }
   } else {
+    TAU_PROFILE_START(t);
     void * newPtr = reallocf(ptr, size);
+    TAU_PROFILE_STOP(t);
     if (newPtr) {
       Tau_track_memory_reallocation(newPtr, ptr, size, filename, lineno);
     }

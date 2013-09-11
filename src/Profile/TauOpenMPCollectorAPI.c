@@ -31,17 +31,19 @@
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
 struct Tau_collector_status_flags {
-    int idle; // 4 bytes
-    int busy; // 4 bytes
-    int parallel; // 4 bytes
-    int ordered_region_wait; // 4 bytes
-    int ordered_region; // 4 bytes
-    int task_exec; // 4 bytes
-    int looping; // 4 bytes
+    char idle; // 4 bytes
+    char busy; // 4 bytes
+    char parallel; // 4 bytes
+    char ordered_region_wait; // 4 bytes
+    char ordered_region; // 4 bytes
+    char task_exec; // 4 bytes
+    char looping; // 4 bytes
+    char acquired; // 4 bytes
+    char waiting; // 4 bytes
     char *timerContext; // 8 bytes(?)
     char *activeTimerContext; // 8 bytes(?)
     void *signal_message; // preallocated message for signal handling, 8 bytes
-    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(int)))];
+    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(char)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -142,7 +144,7 @@ typedef struct {
 } Tau_collector_api_CallSiteInfo;
 
 extern struct CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long address,
-        const char *tag, const char *childName, char **newShortName, char addAddress);
+        const char *tag, const char *childName, char **newShortName, char addAddress, bool useLineNumber);
 
 char * show_backtrace (int tid, int offset) {
     char * location = NULL;
@@ -175,11 +177,10 @@ char * show_backtrace (int tid, int offset) {
         // - ?? <- the source location we want
             unw_get_reg(&cursor, UNW_REG_IP, &ip);
             unw_get_reg(&cursor, UNW_REG_SP, &sp);
-            printf("Address: %p %p\n", ip, sp);
+            //printf("Address: %p %p\n", ip, sp);
         if (++index >= depth) {
-            char * newShort;
-            void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
-            //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
+            char * newShort = NULL;
+            void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0, true);
             Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
             //TAU_VERBOSE ("index = %d, ip = %lx, sp = %lx, name= %s\n", index, (long) ip, (long) sp, myInfo->name);
             location = malloc(strlen(myInfo->name)+1);
@@ -195,9 +196,13 @@ void Tau_get_current_region_context(int tid) {
     // Tau_get_region_id (tid);
     char * tmpStr = NULL;
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
-    tmpStr = show_backtrace(tid, 0); // find our source location
-    if (tmpStr == NULL) {
-        tmpStr = "UNKNOWN";
+    if (TauEnv_get_collector_api_context() == 2) { // region
+      tmpStr = show_backtrace(tid, 0); // find our source location
+      if (tmpStr == NULL) {
+          tmpStr = "UNKNOWN";
+      }
+    } else { // timer or none
+      tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
     }
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
@@ -235,9 +240,13 @@ void Tau_get_my_region_context(int tid, int forking) {
     // Tau_get_region_id (tid);
     char * tmpStr = NULL;
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
-    tmpStr = show_backtrace(tid, 1); // find our source location
-    if (tmpStr == NULL) {
-        tmpStr = "UNKNOWN";
+    if (TauEnv_get_collector_api_context() == 2) { // region
+      tmpStr = show_backtrace(tid, 1); // find our source location
+      if (tmpStr == NULL) {
+          tmpStr = "UNKNOWN";
+      }
+    } else { // timer or none
+      tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
     }
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
@@ -940,19 +949,27 @@ void my_shutdown() {
 void WAIT_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_ompt_start_timer(WAIT_NAME, 0); \
+  Tau_collector_flags[tid].waiting = 1; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
 void ACQUIRED_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
-  Tau_ompt_stop_timer(WAIT_NAME, 0); \
+  if (Tau_collector_flags[tid].waiting>0) { \
+    Tau_ompt_stop_timer(WAIT_NAME, 0); \
+  } \
+  Tau_collector_flags[tid].waiting = 0; \
   Tau_ompt_start_timer(REGION_NAME, 0); \
+  Tau_collector_flags[tid].acquired = 1; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
 void RELEASE_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
-  Tau_ompt_stop_timer(REGION_NAME, 0); \
+  if (Tau_collector_flags[tid].acquired>0) { \
+    Tau_ompt_stop_timer(REGION_NAME, 0); \
+  } \
+  Tau_collector_flags[tid].acquired = 0; \
   TAU_OMPT_COMMON_EXIT; \
 } \
 

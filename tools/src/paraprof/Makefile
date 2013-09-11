@@ -1,7 +1,6 @@
 # Makefile for ParaProf
-
-CONFIG_ARCH=x86_64
-TAUROOT=/home/users/scottb/tau2
+TAU_MAKEFILE ?=../../../include/Makefile
+include $(TAU_MAKEFILE)
 
 BASE_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java) $(wildcard src/sourceview/*.java) $(wildcard src/tablemodel/*.java) $(wildcard src/graph/*.java) $(wildcard src/*.java)
 

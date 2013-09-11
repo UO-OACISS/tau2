@@ -38,9 +38,9 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
             displayName = UtilFncs.getRightMost(alternateName);
         } else {
             name = uep.getUserEvent().getName().trim();
-            if (name.indexOf(":") != -1) {
+			if (name.indexOf(" : ") != -1) {
                 // remove the path
-                displayName = name.substring(0, name.indexOf(":")).trim();
+				displayName = name.substring(0, name.lastIndexOf(" : ")).trim();
             } else {
                 displayName = name;
             }
@@ -72,7 +72,8 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
                     continue;
                 }
 
-                String path = uep.getName().substring(uep.getName().indexOf(":") + 1).trim();
+				String path = uep.getName()
+						.substring(uep.getName().lastIndexOf(" : ") + 2).trim();
                 path = Utility.removeRuns(path);
                 if (path.startsWith(name)) {
 

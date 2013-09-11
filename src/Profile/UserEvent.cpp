@@ -24,12 +24,6 @@
 #define TAU_USE_EVENT_THRESHOLDS 1 
 #endif /* TAU_DISABLE_MARKERS */
 
-#ifdef TAU_USE_EVENT_THRESHOLDS
-#ifndef TAU_EVENT_THRESHOLD
-#define TAU_EVENT_THRESHOLD .5
-#endif /* TAU_EVENT_THRESHOLD */
-#endif 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -207,7 +201,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   if (minEnabled && data < d.minVal) {
 
 #ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data <= (1.0 - TAU_EVENT_THRESHOLD) * d.minVal) 
+    if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) 
     {
       if (name.data()[0] != '[') { //re-entrant 
         string ename(string("[GROUP=MIN_MARKER] ")+name);
@@ -225,7 +219,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   }
   if (maxEnabled && data > d.maxVal) {
 #ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data >= (1.0 + TAU_EVENT_THRESHOLD) * d.maxVal) 
+    if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) 
     {
       if (name.data()[0] != '[') { //re-entrant 
         string ename(string("[GROUP=MAX_MARKER] ")+name);
