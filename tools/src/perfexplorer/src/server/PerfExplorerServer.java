@@ -175,12 +175,16 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		theServer = this;
 		int i = 0;
 		List<String> configFiles = ConfigureFiles.getConfigurationNames();
-		if (configFile != null && configFile.length() > 0) {
+		if (configFile != null && configFile.equals("NONE")) {
+			configFiles = new ArrayList<String>();
+		} else if (configFile != null && configFile.length() > 0) {
 			// if the user supplied a config file, use just that one
 			configFiles = new ArrayList<String>();
 			configFiles.add(configFile);
+			addWorkingDatabase(configFiles);
+		} else {
+			addWorkingDatabase(configFiles);
 		}
-		addWorkingDatabase(configFiles);
         String home = System.getProperty("user.home");
         String slash = System.getProperty("file.separator");
         String prefix = home + slash + ".ParaProf" + slash + "perfdmf.cfg.";
