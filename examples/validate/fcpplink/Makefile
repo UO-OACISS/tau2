@@ -5,7 +5,7 @@ CC		= $(TAU_CC)
 FFLAGS        	= $(TAU_INCLUDE) $(TAU_F90_FIXED) $(TAU_SHMEM_INC)
 LIBS            = $(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_FORTRANLIBS) $(LEXTRA1) $(EXTRALIBS) $(TAU_SHMEM_LIB)
 
-LDFLAGS	      	= $(USER_OPT) 
+LDFLAGS	      	= $(USER_OPT) $(TAU_F90_OPT)
 RM 	      	= /bin/rm -f
 F90		= $(TAU_F90)  
 TARGET	      	= simple
