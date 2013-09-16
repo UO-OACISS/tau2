@@ -144,7 +144,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
                 String nameString;
 
                 if (userEventWindow) {
-                    nameString = uepList.get(i).getUserEventName();
+					nameString = uepList.get(i).getUserEventDisplayName();
                     statString = uepList.get(i).getUserEventStatString(ParaProf.defaultNumberPrecision);
                     statString = statString + nameString;
                 } else {
@@ -348,7 +348,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
             Color nameColor;
             if (userEventWindow) {
                 nameColor = ppUserEventProfile.getColor();
-                nameString = ppUserEventProfile.getUserEventName();
+				nameString = ppUserEventProfile.getUserEventDisplayName();
             } else {
                 nameColor = ppFunctionProfile.getColor();
                 nameString = ppFunctionProfile.getDisplayName();
