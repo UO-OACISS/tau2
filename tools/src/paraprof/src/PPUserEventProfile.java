@@ -68,6 +68,10 @@ public class PPUserEventProfile implements Comparable<PPUserEventProfile> {
         return userEvent;
     }
 
+	public String getUserEventDisplayName() {
+		return ParaProfUtils.getUserEventDisplayName(userEvent);
+	}
+
     public String getUserEventName() {
         return userEvent.getName();
     }
@@ -109,7 +113,7 @@ public class PPUserEventProfile implements Comparable<PPUserEventProfile> {
 
         PPUserEventProfile.insertSpaces(statStringArray, 0, 108);
 
-        String name = this.getUserEventName();
+		String name = this.getUserEventDisplayName();
         if (name.startsWith("Memory Utilization (heap, in KB)") || name.contains("/s)"))
         {
         	tmpString = "-";

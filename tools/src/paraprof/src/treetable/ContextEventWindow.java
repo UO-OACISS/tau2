@@ -29,8 +29,6 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import com.sun.rowset.internal.Row;
-
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
@@ -297,9 +295,9 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
     		this.setTitle("TAU: ParaProf: Context Events for: " + ParaProfUtils.getThreadLabel(thread)+ " - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
     	}
-    	
+		setupData();
         treeTable.repaint();
-        //setupData();
+
     }
 
     public void closeThisWindow() {

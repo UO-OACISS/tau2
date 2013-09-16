@@ -243,6 +243,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
         showMetaData.addActionListener(this);
         optionsMenu.add(showMetaData);
 
+
         optionsMenu.add(new JSeparator());
 
         descendingOrder = new JCheckBoxMenuItem("Descending Order", true);
@@ -365,7 +366,7 @@ public class UserEventWindow extends JFrame implements ActionListener, KeyListen
                     }
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
-                }
+				}
             }
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
