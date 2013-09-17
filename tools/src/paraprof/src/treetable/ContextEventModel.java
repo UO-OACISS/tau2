@@ -12,6 +12,7 @@ import edu.uoregon.tau.common.treetable.TreeTableModel;
 import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.PPUserEventProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -67,7 +68,9 @@ public class ContextEventModel extends AbstractTreeTableModel {
                 if (uep.getUserEvent().isContextEvent()) {
                     String rootName;
 
-                    rootName = UtilFncs.getContextEventRoot(uep.getName()).trim();
+					rootName = UtilFncs.getContextEventRoot(
+							ParaProfUtils.getUserEventDisplayName(uep
+									.getUserEvent())).trim();
 
                     rootNames.put(rootName, 1);
 

@@ -6,7 +6,12 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
-import edu.uoregon.tau.paraprof.*;
+import edu.uoregon.tau.paraprof.DataSorter;
+import edu.uoregon.tau.paraprof.FunctionBarChartWindow;
+import edu.uoregon.tau.paraprof.PPUserEventProfile;
+import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.paraprof.UserEventWindow;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -32,7 +37,7 @@ public class UserEventThreadBarChartModel extends AbstractBarChartModel {
 
     public String getRowLabel(int row) {
         PPUserEventProfile ppUserEventProfile = (PPUserEventProfile) list.get(row);
-        return ppUserEventProfile.getUserEventName();
+		return ppUserEventProfile.getUserEventDisplayName();
     }
 
     public String getValueLabel(int row, int subIndex) {
