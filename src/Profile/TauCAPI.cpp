@@ -1463,6 +1463,14 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
 
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_context_event_thread(const char *name, double data, int tid) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_context_userevent(&ue, name);
+  Tau_context_userevent_thread(ue, data, tid);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_context_event(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;

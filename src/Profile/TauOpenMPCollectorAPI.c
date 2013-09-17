@@ -43,7 +43,7 @@ struct Tau_collector_status_flags {
     char *timerContext; // 8 bytes(?)
     char *activeTimerContext; // 8 bytes(?)
     void *signal_message; // preallocated message for signal handling, 8 bytes
-    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(char)))];
+    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(9*sizeof(char)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -269,6 +269,7 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
 
 /*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context, int forking) {
   //fprintf(stderr,"%d Starting %s\n", tid,state);
+  // 0 means no context wanted
   if (use_context == 0 || TauEnv_get_collector_api_context() == 0) {
     //  no context for the event
     Tau_pure_start_openmp_task(state, "", tid);
@@ -277,6 +278,7 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
 #if 1
     char * regionIDstr = NULL;
     // don't do this if the worker thread is entering the parallel region - use the master's timer
+    // 1 means use the timer context
     if (TauEnv_get_collector_api_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
@@ -305,6 +307,7 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
     free(regionIDstr);
 #else
     // don't do this if the worker thread is entering the parallel region - use the master's timer
+    // 1 means use the timer context
     if (TauEnv_get_collector_api_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
@@ -1022,8 +1025,8 @@ TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_barrier_begin,my_wait_barrier_end,"OpenMP_
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_master_begin,my_master_end,"OpenMP_MASTER_REGION")
 TAU_OMPT_LOOP_BEGIN_AND_END(my_loop_begin,my_loop_end,"OpenMP_LOOP")
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_section_begin,my_section_end,"OpenMP_SECTION") 
-TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end,"OpenMP_SINGLE_IN_BLOCK") 
-TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_others_begin,my_single_others_end,"OpenMP_SINGLE_OTHERS") 
+//TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end,"OpenMP_SINGLE_IN_BLOCK") 
+//TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_others_begin,my_single_others_end,"OpenMP_SINGLE_OTHERS") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_taskwait_begin,my_taskwait_end,"OpenMP_TASKWAIT") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_taskwait_begin,my_wait_taskwait_end,"OpenMP_WAIT_TASKWAIT") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_taskgroup_begin,my_taskgroup_end,"OpenMP_TASKGROUP") 
@@ -1101,7 +1104,7 @@ void my_idle_begin(ompt_data_t *thread_data) {
 
 int ompt_initialize() {
   if (initialized || initializing) return 0;
-  //if (!TauEnv_get_collector_api_enabled()) return;
+  if (!TauEnv_get_collector_api_enabled()) return 0;
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
   omp_init_lock(&writelock);
@@ -1154,10 +1157,14 @@ int ompt_initialize() {
 #endif
   CHECK(ompt_event_section_begin, my_section_begin, "section_begin");
   CHECK(ompt_event_section_end, my_section_end, "section_end");
-  CHECK(ompt_event_single_in_block_begin, my_single_in_block_begin, "single_in_block_begin");
-  CHECK(ompt_event_single_in_block_end, my_single_in_block_end, "single_in_block_end");
-  CHECK(ompt_event_single_others_begin, my_single_others_begin, "single_others_begin");
-  CHECK(ompt_event_single_others_end, my_single_others_end, "single_others_end");
+/* When using Intel, there are times when the non-single thread continues on its
+ * merry way. For now, don't track the time spent in the "other" threads. 
+ * We have no way of knowing when the other threads finish waiting, because for
+ * Intel they don't wait - they just continue. */
+  //CHECK(ompt_event_single_in_block_begin, my_single_in_block_begin, "single_in_block_begin");
+  //CHECK(ompt_event_single_in_block_end, my_single_in_block_end, "single_in_block_end");
+  //CHECK(ompt_event_single_others_begin, my_single_others_begin, "single_others_begin");
+  //CHECK(ompt_event_single_others_end, my_single_others_end, "single_others_end");
   CHECK(ompt_event_taskwait_begin, my_taskwait_begin, "taskwait_begin");
   CHECK(ompt_event_taskwait_end, my_taskwait_end, "taskwait_end");
   CHECK(ompt_event_taskgroup_begin, my_taskgroup_begin, "taskgroup_begin");
