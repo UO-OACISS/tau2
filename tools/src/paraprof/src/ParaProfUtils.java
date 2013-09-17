@@ -1580,6 +1580,20 @@ public class ParaProfUtils {
         }
     }
 
+	// handles reversed callpaths
+	public static String getUserEventDisplayName(UserEvent event) {
+		// if (ParaProf.preferences.getReversedCallPaths()) {
+		// return removeSource(event.getReversedName());
+		// } else {
+		// return removeSource(event.getName());
+		// }
+
+		/*
+		 * TODO: Support reversed callpaths for context events?
+		 */
+		return removeSource(event.getName());
+	}
+
     public static String getLeafDisplayName(Function function) {
         String name = function.getName();
         int loc = name.lastIndexOf("=>");

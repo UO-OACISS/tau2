@@ -4,7 +4,7 @@ CXX             = $(TAU_CXX)
 CC              = $(TAU_CC)
 CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_SHMEM_INC)
 LIBS            = $(TAU_LIBS) $(TAU_MPI_LIBS) $(TAU_SHMEM_LIB) $(TAU_LIBS) $(LEXTRA1) $(EXTRALIBS) 
-LDFLAGS         = $(USER_OPT)
+LDFLAGS         = $(USER_OPT) $(TAU_OPENMP_OPTION)
 RM              = /bin/rm -f
 TARGET          = simple
 
