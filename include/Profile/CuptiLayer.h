@@ -159,7 +159,7 @@ extern "C" bool Tau_CuptiLayer_is_cupti_counter(char *str);
 
 extern "C" void Tau_CuptiLayer_register_string(char *str, int metric_n);
 
-extern counter_map_t& Tau_CuptiLayer_Counter_Map();
+//extern counter_map_t& Tau_CuptiLayer_Counter_Map();
 
 //counter_map_it Tau_CuptiLayer_counters_iterator();
 
