@@ -58,6 +58,7 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
     private ParaProfTrial ppTrial = null;
     private StatWindow window = null;
     private boolean userEventWindow;
+	private boolean showTotal = true;
     //private List<Comparable> list = new ArrayList<Comparable>();
     private List<PPUserEventProfile> uepList = new ArrayList<PPUserEventProfile>();
     private List<PPFunctionProfile>  fpList = new ArrayList<PPFunctionProfile>();
@@ -131,6 +132,21 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
 
     }
 
+	public static String getUserEventStatStringHeading(boolean useTotal) {
+
+		int w = 18;
+		String s = "";
+		if (useTotal) {
+			s += UtilFncs.pad("Total", w);
+		}
+		s += UtilFncs.pad("NumSamples", w) + UtilFncs.pad("Max", w)
+				+ UtilFncs.pad("Min", w) + UtilFncs.pad("Mean", w)
+				+ UtilFncs.pad("Std. Dev", w);
+
+		return s;
+
+	}
+
     public void setSearchLines(String headerString, String dashString) {
 
         if (searcher.getSearchLines() == null){// && list != null) {
@@ -145,7 +161,8 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
 
                 if (userEventWindow) {
 					nameString = uepList.get(i).getUserEventDisplayName();
-                    statString = uepList.get(i).getUserEventStatString(ParaProf.defaultNumberPrecision);
+					statString = uepList.get(i).getUserEventStatString(
+							ParaProf.defaultNumberPrecision, showTotal);
                     statString = statString + nameString;
                 } else {
                     nameString = fpList.get(i).getDisplayName();
@@ -267,7 +284,8 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
 
         String headerString;
         if (userEventWindow) {
-            headerString = StatWindowPanel.getUserEventStatStringHeading();
+			headerString = StatWindowPanel
+.getUserEventStatStringHeading();
 
         } else {
             if (ppTrial.isTimeMetric())
@@ -336,7 +354,8 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
 
             if (userEventWindow) {
                 ppUserEventProfile = uepList.get(i);
-                statString = ppUserEventProfile.getUserEventStatString(ParaProf.defaultNumberPrecision);
+				statString = ppUserEventProfile.getUserEventStatString(
+						ParaProf.defaultNumberPrecision, showTotal);
             } else {
                 ppFunctionProfile = fpList.get(i);
                 statString = ppFunctionProfile.getStatString(window.units());
@@ -451,5 +470,9 @@ public class StatWindowPanel extends JPanel implements MouseListener, Printable,
     public Searcher getSearcher() {
         return searcher;
     }
+
+	public void setShowTotal(boolean showTotal) {
+		this.showTotal = showTotal;
+	}
 
 }

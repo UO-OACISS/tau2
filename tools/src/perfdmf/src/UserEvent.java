@@ -23,8 +23,24 @@ public class UserEvent implements Serializable, Comparable<UserEvent> {
 
     private boolean contextEventSet;
     private boolean contextEvent;
+	private boolean showTotal = true;
 
-    public UserEvent(String name, int id) {
+	/**
+	 * @return the showTotal
+	 */
+	public boolean isShowTotal() {
+		return showTotal;
+	}
+
+	/**
+	 * @param showTotal
+	 *            the showTotal to set
+	 */
+	public void setShowTotal(boolean showTotal) {
+		this.showTotal = showTotal;
+	}
+
+	public UserEvent(String name, int id) {
         this.name = name;
         this.id = id;
     }
