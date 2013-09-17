@@ -34,7 +34,7 @@
 #define TAU_ACTION_DUMP_BACKTRACES 3
 
 #ifndef TAU_EVENT_THRESHOLD
-#define TAU_EVENT_THRESHOLD .5
+#define TAU_EVENT_THRESHOLD_DEFAULT .5
 #endif /* TAU_EVENT_THRESHOLD */
 
 #ifdef __cplusplus
