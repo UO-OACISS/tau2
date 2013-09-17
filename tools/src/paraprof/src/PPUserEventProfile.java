@@ -104,7 +104,7 @@ public class PPUserEventProfile implements Comparable<PPUserEventProfile> {
         return userEventProfile.getStdDev(dataSorter.getSelectedSnapshot());
     }
 
-    public String getUserEventStatString(int precision) {
+	public String getUserEventStatString(int precision, boolean showTotal) {
         int initialBufferLength = 108;
         int position = 0;
         char[] statStringArray = new char[initialBufferLength];
@@ -114,7 +114,9 @@ public class PPUserEventProfile implements Comparable<PPUserEventProfile> {
         PPUserEventProfile.insertSpaces(statStringArray, 0, 108);
 
 		String name = this.getUserEventDisplayName();
-        if (name.startsWith("Memory Utilization (heap, in KB)") || name.contains("/s)"))
+		if (name.startsWith("Memory Utilization (heap, in KB)")
+				|| name.contains("/s)") || !showTotal
+				|| !this.getUserEvent().isShowTotal())
         {
         	tmpString = "-";
         }

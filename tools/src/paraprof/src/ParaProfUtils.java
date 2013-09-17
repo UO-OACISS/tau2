@@ -1218,6 +1218,9 @@ public class ParaProfUtils {
 
                         userEvent.setColorFlag(false);
                         ppTrial.updateRegisteredObjects("colorEvent");
+					} else if (arg.equals("Show/Hide Total")) {
+						userEvent.setShowTotal(!userEvent.isShowTotal());
+						ppTrial.updateRegisteredObjects("colorEvent");
                     }
                     else if (arg.equals("Show In Context Event Window")&&thread!=null) {
 
@@ -1255,6 +1258,10 @@ public class ParaProfUtils {
         menuItem.addActionListener(act);
         popup.add(menuItem);
         
+		menuItem = new JMenuItem("Show/Hide Total");
+		menuItem.addActionListener(act);
+		popup.add(menuItem);
+
         menuItem = createContextSourcePopUp(userEvent.getName());
         if(menuItem!=null){
         	popup.add(menuItem);

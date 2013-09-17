@@ -134,7 +134,12 @@ public class ContextEventModel extends AbstractTreeTableModel {
         } else {
             switch (column) {
             case 1:
-                if (uep.getName().startsWith("Memory Utilization (heap, in KB)") || uep.getName().contains("/s)")) { // rates are ignored for total
+				if (uep.getName()
+						.startsWith("Memory Utilization (heap, in KB)")
+						|| uep.getName().contains("/s)")
+						|| !uep.getUserEvent().isShowTotal()) { // rates are
+																// ignored for
+																// total
                     return null;
                 } else {
                     return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())
