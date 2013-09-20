@@ -502,7 +502,7 @@ char * Tau_check_dirname(const char * dir)
 
     char logfiledir[2048];
     char scratchdir[2048];
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || (defined(__linux__) && !defined(TAU_ANDROID)))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }

@@ -799,6 +799,22 @@ case $1 in
 	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
 	;;
 
+     host=*)
+        config_host=`echo $1 | sed 's/^host=//'`
+	echo "NOTE: Building TAU library for HOST (i.e. cross compile)"
+	echo "s/^CROSS_PREFIX=\(.*\)/CROSS_PREFIX=${config_host}-/g" >> $sedout
+	;;
+
+     HOSTUTILS)
+	echo "NOTE: Building TAU utils for HOST (i.e. cross compile)"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+
+     ANDROID)
+	echo NOTE: Building TAU for Android
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+
      NO_RANLIB)
 	echo NOTE: ranlib not required for this architecture.
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

@@ -1,8 +1,6 @@
 include ../../../include/Makefile
 include ../Makefile
 
-CC = $(TAU_CC)
-CXX = $(TAU_CXX)
 CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) -I$(TAUROOT)/src/wrappers/memory
 ARFLAGS = rcv
 
