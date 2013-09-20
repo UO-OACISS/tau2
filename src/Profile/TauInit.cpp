@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
-#ifndef TAU_WINDOWS
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
 #include <ucontext.h>
 #endif //TAU_WINDOWS
 #include <string.h>
@@ -372,7 +372,7 @@ extern "C" int Tau_init_initializeTAU()
     Tau_compensate_initialization();
   }
   /* initialize sampling if requested */
-#if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
+#if !defined(TAU_MPI) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
   if (TauEnv_get_ebs_enabled()) {
     // Work-around for MVAPHICH 2 to move sampling initialization to after MPI_Init()
     Tau_sampling_init_if_necessary();

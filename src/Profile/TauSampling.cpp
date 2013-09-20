@@ -62,7 +62,7 @@
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #endif /* __APPLE__ */
 
-#ifndef TAU_WINDOWS
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
 
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
@@ -1804,4 +1804,4 @@ void Tau_sampling_finalize_if_necessary(void)
   }
 }
 
-#endif //TAU_WINDOWS
+#endif //TAU_WINDOWS && TAU_ANDROID

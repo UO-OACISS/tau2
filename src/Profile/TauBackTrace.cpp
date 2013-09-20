@@ -12,7 +12,7 @@ using namespace std;
 
 #define TAU_MAX_STACK 1024
 
-#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
 #include <execinfo.h>
 #define TAU_EXECINFO 1
 #endif
@@ -152,11 +152,11 @@ void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
   // are being destroyed from here on out.  Recording new events will segfault.
   Tau_global_incr_insideTAU();
 
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
 
-#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_finalize_if_necessary();
   }

@@ -11,7 +11,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauBfd.h>
 
-#ifndef TAU_WINDOWS
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
 #include <ucontext.h>
 
 #if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)

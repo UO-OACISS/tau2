@@ -293,6 +293,8 @@ for arg in "$@"; do
 	    echo "       gfortran|gfortran4]"
 	    echo "-upc=<compiler> ............................. specify the UPC compiler."
 	    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
+	    echo "-host=<host-type>..................the type of system on which TAU runs"
+	    echo "-hostutils..............................build TAU utils for <host-type>"
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
 	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -304,7 +306,8 @@ for arg in "$@"; do
 	    echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
 	    echo "-arch=<architecture> ................... Specify a target architecture."
 	    echo "       options      [xt3|craycnl|bgp|bgq|bgl|ibm64|ibm64linux|sunx86_64"
-	    echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
+	    echo "                         crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32"
+	    echo "                                                 arm_linux|arm_android]"
 	    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
 	    echo ""
 	    echo "MPI Options:"
@@ -421,6 +424,10 @@ for arg in "$@"; do
 	    echo "       gfortran|gfortran4]"
 	    echo "-upc=<compiler> ............................. specify the UPC compiler."
 	    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
+	    echo "-host=<host-type>..................the type of system on which TAU runs"
+	    echo "                                     this is used for cross-compilation"
+	    echo "-hostutils..............................build TAU utils for <host-type>"
+	    echo "                                     this is used for cross-compilation"
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
 	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -433,7 +440,8 @@ for arg in "$@"; do
 	    echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
 	    echo "-arch=<architecture> ................... Specify a target architecture."
 	    echo "       options      [xt3|craycnl|bgp|bgq|bgl|ibm64|ibm64linux|sunx86_64"
-	    echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
+	    echo "                         crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32"
+	    echo "                                                 arm_linux|arm_android]"
 	    echo "-iowrapper .................................... Build POSIX IO Wrapper."
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
@@ -610,7 +618,7 @@ if [ "$usingbash" = "yes" ] ; then
 else 
     modmodargs=`echo "x$modargs" | sed -e 's/^x//' -e 's#\\\#\\\\\\\\\\\#g'`
 fi
-cp include/tau_config.h.default include/tau_config.h
+
 echo "#define TAU_CONFIG \"$modmodargs\"" > include/tau_config.h
 
 START_DIR=`pwd`
@@ -722,6 +730,8 @@ papiwallclock=no
 papivirtual=no
 use_ansic=no
 tauarch=unknown
+host=
+host_prefix=
 pdtcompdir=
 pdtarchdir=unknown
 tauprefix=unknown
@@ -808,9 +818,6 @@ zeptodir=
 cuda=no
 cupti=no
 strsignal_ok=no
-
-# Reset include/Makefile before starting anything else
-sed -f utils/FixMakefile.sed.default < include/Makefile.skel > include/Makefile 
 
 restore_perfdmf_and_paraprof
 
@@ -1878,6 +1885,18 @@ for arg in "$@"; do
 	    fi
 	    ;;
 
+	-host=*)
+	    host=`echo $arg | sed -e 's/-host=//' -e 's/ /_/g'`
+	    host_prefix=${host}-
+	    fixmakeargs="$fixmakeargs host=$host"
+	    shift
+	    ;;
+
+	-hostutils)
+	    fixmakeargs="$fixmakeargs HOSTUTILS"
+	    shift
+	    ;;
+
 	-pdtcompdir=*)
 	    pdtcompdir=`echo $arg | sed -e 's/-pdtcompdir=//' -e 's/ /_/g'`
 	    shift
@@ -2391,14 +2410,11 @@ if [ "x$detectarch" = "x" ] ; then
 fi
 
 
-if [ "$tauarch" = "i386_linux" -o "$tauarch" = "i386_solaris" -o "$tauarch" = "mpis32" -o "$tauarch" = "ppc64" ]; then
+if [ "$tauarch" = "i386_linux" -o "$tauarch" = "i386_solaris" -o "$tauarch" = "arm_android" -o "$tauarch" = "arm_linux" -o "$tauarch" = "mpis32" -o "$tauarch" = "ppc64" ]; then
     fixmakeargs="$fixmakeargs arch_width=32bit"
 else
     fixmakeargs="$fixmakeargs arch_width=64bit"
 fi
-
-
-
 
 
 ###############################################################
@@ -3309,7 +3325,7 @@ case $cxx_compiler in
 
     *g++)
 	echo "Default C++ compiler will be " \
-            `gcc -v 2>&1 | tail -1 | sed 's/gcc/g++/g'`
+            `$cxx_compiler -v 2>&1 | tail -1`
 	gnu=yes
 	# No fixmakeargs needed because it is the default
 	;;
@@ -3890,8 +3906,8 @@ esac
 # Encode the full path of the C++/C compiler in the stub Makefile
 if [ "x$full_cxx_compiler" = "x" ]
 then 
-    full_cxx_compiler=`which $cxx_compiler`
-    full_cc_compiler=`which $c_compiler`
+    full_cxx_compiler=`which $host_prefix$cxx_compiler`
+    full_cc_compiler=`which $host_prefix$c_compiler`
     if [ $fujitsu = yes ]
     then
 	# Fujitsu does not want full path to point to the absolute paths due to
@@ -4860,9 +4876,9 @@ then
     then
 	tauoptions="${tauoptions}-gnu"
     fi
-    taugcclibdir=`$c_compiler -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+    taugcclibdir=`$host_prefix$c_compiler -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
     echo "Using GNU lib dir as $taugcclibdir"
-    taugccstdcxxlibdir=`$c_compiler -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
+    taugccstdcxxlibdir=`$host_prefix$c_compiler -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
     echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
@@ -4879,7 +4895,7 @@ cat << EOF > gccAuditorTest.c
 #endif 
 EOF
 
-$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
+$host_prefix$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
 if [ "$?" = "1" ]
 then
     echo "LD AUDITOR unavailable, disabling" 
@@ -5255,7 +5271,18 @@ case $machine in
 
     arm_linux)
 	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine ARMLINUXPAPI $fixmakeargs"
+	fixmakeargs="arch=$machine $fixmakeargs"
+	if [ $papi = yes ] ; then
+	    fixmakeargs="ARMLINUXPAPI $fixmakeargs"
+	fi
+	;;
+
+    arm_android)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine ANDROID $fixmakeargs"
+	if [ $papi = yes ] ; then
+	    fixmakeargs="ARMLINUXPAPI $fixmakeargs"
+	fi
 	;;
 
     unknown)
@@ -6328,6 +6355,10 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	    elif [ $machine = "rs6000" -o  $machine = "ibm64" ]; then
 		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile
 		make && make install
+	    elif [ $machine = "arm_android" ]; then
+		patch -p1 <$START_DIR/android.binutils-2.23.2.patch
+		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile --host=$host
+		make && make install
             else 
 		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 		make && make install
@@ -6585,7 +6616,7 @@ int main() {
 }
 EOF
 $echo "Checking for librt linkage support ... ${nnl}"
-if $cxx_compiler $orig_useropt -o conftest_rt_link_test conftest_rt_link_test.cpp -lrt 1> /dev/null 2>&1 ; then
+if $host_prefix$cxx_compiler $orig_useropt -o conftest_rt_link_test conftest_rt_link_test.cpp -lrt 1> /dev/null 2>&1 ; then
     tau_links_rt=yes
     fixmakeargs="$fixmakeargs TAU_LINKS_RT"
     echo "yes"
