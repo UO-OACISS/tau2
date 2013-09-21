@@ -29,9 +29,20 @@ extern "C" void Tau_cupti_register_metadata(
 							deviceInfoMap[deviceId] = m;
 						}
 extern "C" void Tau_cupti_register_host_calling_site(
-						uint32_t correlationId
-						) {
-							functionInfoMap_hostLaunch()[correlationId] = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;	
+						uint32_t correlationId,
+						const char *name
+						) {	
+							//find thread with launch event.
+							FunctionInfo* launch = (FunctionInfo *) Tau_pure_search_for_function(name);
+							for (int i=0; i<TAU_MAX_THREADS; i++)
+							{
+								if (launch == TauInternal_CurrentProfiler(i)->ThisFunction)
+								{
+									functionInfoMap_hostLaunch()[correlationId] = TauInternal_CurrentProfiler(i)->CallPathFunction;
+									break;
+								}
+							}
+							//functionInfoMap_hostLaunch()[correlationId] = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;	
 						}	
 
 extern "C" void Tau_cupti_register_device_calling_site(
