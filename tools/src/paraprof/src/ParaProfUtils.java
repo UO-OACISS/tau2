@@ -1218,6 +1218,9 @@ public class ParaProfUtils {
 
                         userEvent.setColorFlag(false);
                         ppTrial.updateRegisteredObjects("colorEvent");
+					} else if (arg.equals("Show/Hide Total")) {
+						userEvent.setShowTotal(!userEvent.isShowTotal());
+						ppTrial.updateRegisteredObjects("colorEvent");
                     }
                     else if (arg.equals("Show In Context Event Window")&&thread!=null) {
 
@@ -1255,6 +1258,10 @@ public class ParaProfUtils {
         menuItem.addActionListener(act);
         popup.add(menuItem);
         
+		menuItem = new JMenuItem("Show/Hide Total");
+		menuItem.addActionListener(act);
+		popup.add(menuItem);
+
         menuItem = createContextSourcePopUp(userEvent.getName());
         if(menuItem!=null){
         	popup.add(menuItem);
@@ -1579,6 +1586,20 @@ public class ParaProfUtils {
             return removeSource(function.getName());
         }
     }
+
+	// handles reversed callpaths
+	public static String getUserEventDisplayName(UserEvent event) {
+		// if (ParaProf.preferences.getReversedCallPaths()) {
+		// return removeSource(event.getReversedName());
+		// } else {
+		// return removeSource(event.getName());
+		// }
+
+		/*
+		 * TODO: Support reversed callpaths for context events?
+		 */
+		return removeSource(event.getName());
+	}
 
     public static String getLeafDisplayName(Function function) {
         String name = function.getName();

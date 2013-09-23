@@ -43,7 +43,7 @@ struct Tau_collector_status_flags {
     char *timerContext; // 8 bytes(?)
     char *activeTimerContext; // 8 bytes(?)
     void *signal_message; // preallocated message for signal handling, 8 bytes
-    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(char)))];
+    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(9*sizeof(char)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false

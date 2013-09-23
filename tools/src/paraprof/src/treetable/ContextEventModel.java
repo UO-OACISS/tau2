@@ -12,6 +12,7 @@ import edu.uoregon.tau.common.treetable.TreeTableModel;
 import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.PPUserEventProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -67,7 +68,9 @@ public class ContextEventModel extends AbstractTreeTableModel {
                 if (uep.getUserEvent().isContextEvent()) {
                     String rootName;
 
-                    rootName = UtilFncs.getContextEventRoot(uep.getName()).trim();
+					rootName = UtilFncs.getContextEventRoot(
+							ParaProfUtils.getUserEventDisplayName(uep
+									.getUserEvent())).trim();
 
                     rootNames.put(rootName, 1);
 
@@ -131,7 +134,12 @@ public class ContextEventModel extends AbstractTreeTableModel {
         } else {
             switch (column) {
             case 1:
-                if (uep.getName().startsWith("Memory Utilization (heap, in KB)") || uep.getName().contains("/s)")) { // rates are ignored for total
+				if (uep.getName()
+						.startsWith("Memory Utilization (heap, in KB)")
+						|| uep.getName().contains("/s)")
+						|| !uep.getUserEvent().isShowTotal()) { // rates are
+																// ignored for
+																// total
                     return null;
                 } else {
                     return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())

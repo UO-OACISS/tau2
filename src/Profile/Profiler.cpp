@@ -1297,8 +1297,7 @@ int TauProfiler_StoreData(int tid)
   }
   finalizeTrace(tid);
 
-#ifndef TAU_WINDOWS  
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
