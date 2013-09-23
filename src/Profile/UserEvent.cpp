@@ -208,7 +208,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
         pos = name.find("=>");
         if (pos == std::string::npos) {
           DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT(ename.c_str(), data);
+          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename.c_str(), data, tid);
         }
       }
     }
@@ -226,7 +226,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
         pos = name.find("=>");
         if (pos == std::string::npos) {
           DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT(ename.c_str(), data);
+          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename.c_str(), data, tid);
         }
       }
       

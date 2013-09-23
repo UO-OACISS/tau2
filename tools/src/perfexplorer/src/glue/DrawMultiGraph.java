@@ -5,6 +5,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -191,7 +192,12 @@ public class DrawMultiGraph extends AbstractPerformanceOperation {
 		
 	}
 
-	public static class GraphTab implements ActionListener {
+	public static class GraphTab implements ActionListener, Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -933317318947126719L;
+
 		public GraphTab(String name, List<GraphTabRegion> regions) {
 			super();
 			this.name = name;
@@ -246,6 +252,7 @@ public class DrawMultiGraph extends AbstractPerformanceOperation {
 		private JComboBox regionBox = null;
 		private JTable table = null;
 		private JPanel graphPanel = null;
+		private JScrollPane graphScroll = null;
 
 		public JComponent getTab() {
 			if (tab != null) {
@@ -300,7 +307,8 @@ tabData.getRegions().get(0)
 				}
 
 			}
-			return new JScrollPane(graphPanel);
+			graphScroll = new JScrollPane(graphPanel);
+			return graphScroll;
 		}
 
 		public void actionPerformed(ActionEvent e) {
@@ -316,14 +324,21 @@ tabData.getRegions().get(0)
 				for (int i = 0; i < selected.charts.size(); i++) {
 					graphPanel.add(selected.charts.get(i));
 				}
+
 				graphPanel.validate();
 				graphPanel.repaint();
+				graphScroll.revalidate();
 			}
 		}
 		
 	}
 	
-	public static class GraphTabRegion{
+	public static class GraphTabRegion implements Serializable{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -1219370845965690129L;
+
 		/**
 		 * @return the name
 		 */
@@ -349,6 +364,7 @@ tabData.getRegions().get(0)
 				graphs.get(i).processData();
 				ChartPanel cp = new ChartPanel(graphs.get(i).getChart());
 				cp.setDisplayToolTips(true);
+					cp.setMinimumSize(cp.getPreferredSize());
 				charts.add(cp);
 			}
 			}

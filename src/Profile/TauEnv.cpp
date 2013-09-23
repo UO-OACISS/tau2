@@ -502,7 +502,7 @@ char * Tau_check_dirname(const char * dir)
 
     char logfiledir[2048];
     char scratchdir[2048];
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || (defined(__linux__) && !defined(TAU_ANDROID)))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
@@ -1336,11 +1336,12 @@ void TauEnv_initialize()
     }
 
     const char *evt_threshold = getconf("TAU_EVENT_THRESHOLD");
-    env_evt_threshold = TAU_EVENT_THRESHOLD;
+    env_evt_threshold = TAU_EVENT_THRESHOLD_DEFAULT;
     if (evt_threshold) {
-      sscanf(evt_threshold,"%g",&env_evt_threshold);
+      double evt_value = 0.0;
+      sscanf(evt_threshold,"%g",&evt_value);
+      env_evt_threshold = evt_value;
       TAU_METADATA("TAU_EVENT_THRESHOLD", evt_threshold);
-      printf("TAU_EVENT_THRESHOLD set to %g\n", env_evt_threshold);
     }
 
     const char *numcalls = getconf("TAU_THROTTLE_NUMCALLS");

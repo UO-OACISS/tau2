@@ -15,19 +15,13 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=#FixMakefile#
 include $(TAUROOT)/include/Makefile
-
-CXX = $(TAU_CXX)
-CC  = $(TAU_CC)
 
 MKDIR = mkdir -p
 
 #This includes all profile options in $(PROFILEOPTS).
 
-
-BFDINCLUDE=-I/home/users/scottb/tau2/x86_64/binutils-2.23.2//include
-BFDLINK=-L/home/users/scottb/tau2/x86_64/binutils-2.23.2//lib -L/home/users/scottb/tau2/x86_64/binutils-2.23.2//lib64
 
 #TAU_PERFSUITE#PERFSUITE_OPT=-DTAU_PERFSUITE #ENDIF#
 PERFSUITEINCLUDE=
@@ -53,7 +47,7 @@ CEXTRA =
 #OPARI2#OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/_build/include -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/_build/build-frontend -I$(TAUROOT)/utils/opari2/src -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD #ENDIF#
 
 DEFINES = -DTAU_LIBRARY_SOURCE
-
+#ANDROID#DEFINES += -DTAU_ANDROID#ENDIF#
 
 LINKER	= $(TAU_CC)
 
@@ -147,9 +141,9 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 #       be built. The same is true for static builds of TAU if BFD is 
 #       not available.
 TAU_BFD_STATIC_O = TauBfdUnimplemented.o
-TAU_BFD_STATIC_O = TauBfd.o #ENDIF##TAU_BFD#
+#TAU_BFD#TAU_BFD_STATIC_O = TauBfd.o #ENDIF#
 TAU_BFD_SHARED_O = TauBfdUnimplemented.o
-TAU_BFD_SHARED_O = TauBfd.o #ENDIF##TAU_BFDSHAREDLINK#
+#TAU_BFDSHAREDLINK#TAU_BFD_SHARED_O = TauBfd.o #ENDIF#
 STATIC_OBJS   = $(TAU_BFD_STATIC_O) $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
@@ -399,7 +393,7 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS) $(MPI_WRAPPER)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS) $(TAU_LDFLAGS)
+		$(CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS) $(TAU_LDFLAGS)
 		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
@@ -407,30 +401,30 @@ $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
 
 $(TAU_NULL)$(TAU_OPENCL_LIB): $(TAU_OPENCL_OBJS) $(TAU_DSO) $(TAU_OPENCL_DEP)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_OPENCL_LIB) $(TAU_OPENCL_OBJS) \
+		$(CXX) $(TAU_ARFLAGS) $(TAU_OPENCL_LIB) $(TAU_OPENCL_OBJS) \
 		-L$(TAU_LIB_DIR) $(TAU_DSO) $(if $(shell grep pthread $(TAU_OPENCL_DEP)), -lpthread,)
 		$(TAU_RANLIB) $(TAU_OPENCL_LIB)
 
 $(TAU_NULL)$(TAU_CUDA_LIB): $(TAU_CUDA_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_CUDA_LIB) $(TAU_CUDA_OBJS) \
+		$(CXX) $(TAU_ARFLAGS) $(TAU_CUDA_LIB) $(TAU_CUDA_OBJS) \
 		-L$(TAU_LIB_DIR) $(TAU_DSO) $(SHARED_LIBS)
 		$(TAU_RANLIB) $(TAU_CUDA_LIB)
 
 $(TAU_NULL)$(TAU_PYCUDA_LIB): $(TAU_PYCUDA_OBJS) $(TAU_CUDA_LIB) $(TAU_DSO)
 	$(PRELINK_PHASE)
-	$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_PYCUDA_LIB) $(TAU_CUDA_LIB) $(TAU_PYCUDA_OBJS) $(BOOST_LIB)
+	$(CXX) $(TAU_ARFLAGS) $(TAU_PYCUDA_LIB) $(TAU_CUDA_LIB) $(TAU_PYCUDA_OBJS) $(BOOST_LIB)
 	$(TAU_RANLIB) $(TAU_PYCUDA_LIB)	
 
 $(TAU_NULL)$(TAU_CUPTI_LIB): $(TAU_CUPTI_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_LIB) $(TAU_CUPTI_OBJS) \
+		$(CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_LIB) $(TAU_CUPTI_OBJS) \
 		-L$(TAU_LIB_DIR) $(TAU_DSO) 
 		$(TAU_RANLIB) $(TAU_CUPTI_LIB)
 
 $(TAU_NULL)$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
-		$(TAU_CUDA_CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_ACTIVITY_LIB) $(TAU_CUPTI_ACTIVITY_OBJS) \
+		$(CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_ACTIVITY_LIB) $(TAU_CUPTI_ACTIVITY_OBJS) \
 		-L$(TAU_LIB_DIR) $(TAU_DSO) 
 		$(TAU_RANLIB) $(TAU_CUPTI_ACTIVITY_LIB)
 
@@ -440,7 +434,7 @@ $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
 		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_DISABLE_SHARED) : TauDisable.o TauKojakOpariDisable.o
-		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_DISABLE_SHARED) $(TAU_DISABLE_SHARED_COMPILATION_FLAG) TauDisable.o TauKojakOpariDisable.o
+		$(CXX) $(TAU_ARFLAGS)  $(TAU_DISABLE_SHARED) $(TAU_DISABLE_SHARED_COMPILATION_FLAG) TauDisable.o TauKojakOpariDisable.o
 
 libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauRequest.cpp TauTranslateRank.cpp TauFMpi.c ClockSync.c TauProfileMerge.cpp TauMpiExtensions.c TauMetaDataMerge.cpp
 		$(MAKE) -f Makefile.wrapper  
@@ -875,7 +869,7 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 $(TAU_PYCUDA_OBJS): TauGpuAdapterPyCuda.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUDA_INCLUDE) -I$(PYTHON_INCDIR) -c $<
@@ -887,16 +881,16 @@ TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauG
 	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@

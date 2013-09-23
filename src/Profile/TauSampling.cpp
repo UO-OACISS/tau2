@@ -78,7 +78,12 @@
 #include <stdlib.h>
 #include <strings.h>
 
+/* Android didn't provide <ucontext.h> so we make our own */
+#ifdef TAU_ANDROID
+#include "android_ucontext.h"
+#else
 #include <ucontext.h>
+#endif
 
 #include <string>
 #include <vector>
@@ -353,7 +358,7 @@ unsigned long get_pc(void *p)
 #ifdef TAU_BGP
   //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
   pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
-# elif TAU_BGQ
+# elif defined(TAU_BGQ)
   //  201203 - Thanks to the Open|Speedshop team!
   pc = (unsigned long)((struct pt_regs *)(((&(uc->uc_mcontext))->regs))->nip);
 # elif __x86_64__
@@ -1566,7 +1571,7 @@ int Tau_sampling_init(int tid)
    sev.sigev_signo = TAU_ALARM_TYPE;
    sev.sigev_notify = SIGEV_THREAD_ID;
    sev.sigev_value.sival_ptr = &timerid;
-   sev.sigev_notify_thread_id = syscall(SYS_gettid);
+   sev.sigev_notify_thread_id = syscall(__NR_gettid);
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
@@ -1804,4 +1809,4 @@ void Tau_sampling_finalize_if_necessary(void)
   }
 }
 
-#endif //TAU_WINDOWS
+#endif //TAU_WINDOWS && TAU_ANDROID
