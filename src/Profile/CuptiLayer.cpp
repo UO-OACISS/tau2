@@ -410,7 +410,9 @@ void Tau_CuptiLayer_read_counters(int device, uint64_t * counterDataBuffer)
       //printf("total instances avaiable: %ld.\n", numTotalInstances);
       
       //in case no events were read.
-      counterDataBuffer[0] = 0;
+      for (int n = 0; n < Tau_CuptiLayer_num_events; n++) {
+      	counterDataBuffer[n] = 0;
+			}
      
       int e = 0;
       //sum data.
