@@ -152,7 +152,7 @@ void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
   // are being destroyed from here on out.  Recording new events will segfault.
   Tau_global_incr_insideTAU();
 
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }

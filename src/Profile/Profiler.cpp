@@ -239,7 +239,7 @@ void Profiler::Start(int tid)
   }
 
   // An initialization of sorts. Call Paths (if any) will update this.
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteAddPath(NULL, tid);
   }
@@ -249,7 +249,7 @@ void Profiler::Start(int tid)
     CallPathStart(tid);
   }
 
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteStart(tid);
   }
@@ -393,7 +393,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   RtsLayer::getUSecD(tid, CurrentTime);
 #endif /* TAU_TRACK_IDLE_THREADS */
 
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_event_stop(tid, CurrentTime);
   }
@@ -460,7 +460,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     CallPathStop(TotalTime, tid);
   }
 
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     CallSiteStop(TotalTime, tid);
   }
@@ -1297,7 +1297,7 @@ int TauProfiler_StoreData(int tid)
   }
   finalizeTrace(tid);
 
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
