@@ -882,7 +882,7 @@ public abstract class DataSource {
         }
 		
 		// generate the intermediate sample aggregation data
-        //generateAggregateSampleData();
+        generateAggregateSampleData();
 
         checkForPhases();
 
