@@ -1604,6 +1604,10 @@ int Tau_sampling_init(int tid)
   //DEBUGMSG("setitimer called");
 #endif //SIGEV_THREAD_ID
 
+#ifndef TAU_BGQ
+}    //(TauEnv_get_ebs_source() == "itimer" || "TIME")
+#endif
+
   // set up the base timers
   double values[TAU_MAX_COUNTERS] = { 0 };
   /* Get the current metric values */
@@ -1623,10 +1627,6 @@ int Tau_sampling_init(int tid)
     }
     //printf("tid = %d, init previousTimestamp = %llu\n", tid, previousTimestamp[localIndex]); fflush(stdout);
   //}
-#ifndef TAU_BGQ
-}    //(TauEnv_get_ebs_source() == "itimer" || "TIME")
-#endif
-
   samplingEnabled[tid] = 1;
   collectingSamples = 1;
   return 0;
@@ -1767,8 +1767,9 @@ extern "C"
 void Tau_sampling_finalize_if_necessary(void)
 {
   static bool finalized = false;
-  static bool thrFinalized[TAU_MAX_THREADS];
-  TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), Tau_get_local_tid()); fflush(stdout);
+  static bool thrFinalized[TAU_MAX_THREADS] = {false};
+  int tid = Tau_get_local_tid();
+  TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -1783,7 +1784,6 @@ void Tau_sampling_finalize_if_necessary(void)
     sigprocmask(SIG_BLOCK, &x, NULL);
 #endif
 
-  if (RtsLayer::localThreadId() == 0) {
     if (!finalized) {
       RtsLayer::LockEnv();
       // check again, someone else might already have finalized by now.
@@ -1799,7 +1799,14 @@ void Tau_sampling_finalize_if_necessary(void)
       RtsLayer::UnLockEnv();
     }
 
+  if (!thrFinalized[tid]) {
+    samplingEnabled[tid] = 0;
+    thrFinalized[tid] = true;
+    Tau_sampling_finalize(tid);
+  }
+
     // Kevin: should we finalize all threads on this process? I think so.
+  if (tid == 0) {
     for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
       if (!thrFinalized[i]) {
         thrFinalized[i] = true;
