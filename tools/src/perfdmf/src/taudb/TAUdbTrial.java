@@ -805,10 +805,32 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			statement.setString(3, name);
 			statement.execute();
 			statement.close();
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
+
+	public static void addToPrimaryMetadataField(DB db, int trialID,
+			String name, String value) {
+		try {
+
+			PreparedStatement statement = db
+					.prepareStatement("INSERT INTO "
+							+ db.getSchemaPrefix()
+							+ "primary_metadata (trial, name, value) VALUES (?, ?, ?);");
+
+			statement.setInt(1, trialID);
+			statement.setString(2, name);
+			statement.setString(3, value);
+			statement.execute();
+			statement.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void updateFields(DB db,int trialID, String field,String value){
 //	int node_count = dataSource.getMaxNode();
 //	int contexts_per_node = dataSource.getMaxContextPerNode();
