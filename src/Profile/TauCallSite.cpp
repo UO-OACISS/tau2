@@ -11,10 +11,16 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauBfd.h>
 
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
-#include <ucontext.h>
+#ifndef TAU_WINDOWS
 
-#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
+/* Android didn't provide <ucontext.h> so we make our own */
+#ifdef TAU_ANDROID
+#include "android_ucontext.h"
+#else
+#include <ucontext.h>
+#endif
+
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
 #include <execinfo.h>
 #define TAU_EXECINFO 1
 #endif /* _AIX */

@@ -220,7 +220,7 @@ void Profiler::CallPathStart(int tid)
 
     // *CWL* - Send the path key off to be registered with CallSite discovery
     //         for later processing.
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
     if (TauEnv_get_callsite()) {
       CallSiteAddPath(comparison, tid);
     }
