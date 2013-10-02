@@ -138,7 +138,8 @@ public class TrialTableModel extends AbstractTableModel {
         }
         
         DB db=  paraProfManager.getDatabaseAPI(ppTrial.getDatabase()).db();
-        if(this.ppTrial.getDatabase().isTAUdb() || db.getSchemaVersion()>0){
+		if ((this.ppTrial.getDatabase() != null && this.ppTrial.getDatabase()
+				.isTAUdb()) || db.getSchemaVersion() > 0) {
         	//TAUdbTrial dbTrial = (TAUdbTrial) ppTrial.getTrial();
         	
         	int id= ppTrial.getID();

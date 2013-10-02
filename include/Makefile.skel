@@ -37,6 +37,9 @@ TAU_CXX_FE=$(CONFIG_CXX)
 
 TAU_CUDA_CXX=g++
 
+# Name prefix for cross compiler. E.g. `arm-linux-gnueabi-'.
+CROSS_PREFIX=#FixMakefile#
+
 TAU_BUILD_CC=
 TAU_BUILD_CXX=
 # Front end C/C++ Compilers
@@ -64,11 +67,10 @@ TAU_BUILD_CXX=
 TAU_LIBEX=lib64 #ENDIF##ARCH_WIDTH_64#
 
 
-
 USER_OPT=-O2
 EXTRADIR=
 EXTRADIRCXX=
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=#FixMakefile#
 TULIPDIR=
 TAUEXTRASHLIBOPTS=
 TAUGCCLIBOPTS=
@@ -214,6 +216,16 @@ F90_ABI	= $(ABI)
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
+BUILD_CC  = $(CONFIG_CC) $(ABI) $(ISA)
+HOST_CC   = $(CROSS_PREFIX)$(BUILD_CC) $(ABI) $(ISA)
+CC        = $(HOST_CC)
+BUILD_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
+HOST_CXX  = $(CROSS_PREFIX)$(BUILD_CXX) $(ABI) $(ISA)
+CXX       = $(HOST_CXX)
+
+#HOSTUTILS#TAU_CC_FE  = $(CROSS_PREFIX)$(BUILD_CC)  #ENDIF
+#HOSTUTILS#TAU_CXX_FE = $(CROSS_PREFIX)$(BUILD_CXX) #ENDIF
+
 #MPC#TAU_RUN_CC = mpc_cc #ENDIF#
 #XLUPC#TAU_RUN_CC = xlupc $(ABI) $(ISA) #ENDIF#
 #BUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
@@ -632,6 +644,7 @@ TAU_GCCLIB	= -lgcc_s
 #FREEBSD#TAU_GCCLIB	= -lgcc #ENDIF#
 #BGL#TAU_GCCLIB	= -lgcc #ENDIF#
 #BGQ#TAU_GCCLIB	= -lgcc #ENDIF#
+#ANDROID#TAU_GCCLIB = #ENDIF#
 TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) $(TAUGCCLIBOPTS) -lstdc++ $(TAU_GCCLIB) #ENDIF##GNU#
 #OPEN64ORC_FORTRAN#TAU_FORTRANLIBS       = -lfortran -lffio #ENDIF#
 #PATHSCALE_FORTRAN#TAU_FORTRANLIBS       = -lpathfstart -lpathfortran #ENDIF#
@@ -958,8 +971,9 @@ TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 # Compiler Instrumentation
 ##############################################
 
-BFDLINK=-L/home/users/scottb/tau2/x86_64/binutils-2.23.2//lib -L/home/users/scottb/tau2/x86_64/binutils-2.23.2//lib64
+BFDLINK=#FixMakefile#
 BFDLIBS=-lbfd -liberty -lz
+BFDINCLUDE=#FixMakefile#
 
 TAU_BFDLIB=$(BFDLINK) $(BFDLIBS) #ENDIF##TAU_BFD#
 TAU_COMPINST_PTHREAD_OPTIONS= -Dpthread_create=tau_pthread_create -Dpthread_exit=tau_pthread_exit#ENDIF##PTHREAD_AVAILABLE#
@@ -984,7 +998,7 @@ TAU_LINKER_OPT13=$(TAU_BFDLIB) #ENDIF##TAU_BFD#
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
 
-TAU_LINKER_OPT16= -lrt#ENDIF##TAU_LINKS_RT#
+#TAU_LINKS_RT#TAU_LINKER_OPT16= -lrt#ENDIF#
 
 ##############################################
 # Various Sampling Support Options
@@ -1015,7 +1029,7 @@ PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF##TAU_STRSIGNAL_OK#
 ##############################################
 # DL_AUDITOR
 ##############################################
-PROFILEOPT88 = -DTAU_TRACK_LD_LOADER #ENDIF##LD_AUDITOR_AVAILABLE#
+#LD_AUDITOR_AVAILABLE#PROFILEOPT88 = -DTAU_TRACK_LD_LOADER #ENDIF#
 
 
 ##############################################

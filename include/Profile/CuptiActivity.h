@@ -62,7 +62,8 @@ extern "C" void Tau_cupti_register_metadata(
 						int metadata_size);
 
 extern "C" void Tau_cupti_register_host_calling_site(
-						uint32_t correlationId);
+						uint32_t correlationId,
+						const char *name);
 
 extern "C" void Tau_cupti_register_device_calling_site(
 						int64_t correlationId,
@@ -173,7 +174,7 @@ void record_gpu_occupancy(int32_t blockX,
                           const char *name, 
                           eventMap_t *map);
 
-void record_gpu_launch(int cId);
+void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
 
 int get_device_count();
