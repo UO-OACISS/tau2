@@ -43,6 +43,7 @@ public class TreeUI {
 	public static JPopupMenu getViewPopUp(ActionListener l){
 		ArrayList<String> items = new ArrayList<String>(3);
 		items.add("Add Sub-View");
+		items.add("Add Metadata Field To All Trials");
 		items.add("Delete");
 		items.add("Rename");
 		return getTreePopupMenu(items,l);
