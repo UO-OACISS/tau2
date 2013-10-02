@@ -320,7 +320,7 @@ int RtsLayer::RegisterThread()
     exit(-1);
   }
 
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
   }

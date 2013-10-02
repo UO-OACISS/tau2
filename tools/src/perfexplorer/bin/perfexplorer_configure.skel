@@ -182,10 +182,18 @@ echo "TAU: installing tools in $targetdir"
 
 JAR_HOME=$HOME/.ParaProf
 
-WEKA_JAR=$JAR_HOME/weka-3-6-1.jar
+JAR_CACHE=$tauroot/tools/src/contrib
+echo $JAR_CACHE
+WEKA=weka-3-6-1.jar
+WEKA_JAR=$JAR_HOME/$WEKA
 WEKA_ZIP_DIR=$JAR_HOME
     
 if [ ! -r ${WEKA_JAR} ]; then
+  WEKA_CACHE=$JAR_CACHE/$WEKA
+  echo $WEKA_CACHE
+  if [ -r $WEKA_CACHE ]; then
+  	  cp $WEKA_CACHE $JAR_HOME
+  else
     echo ""
     echo "$WEKA_JAR not found."
     echo ""
@@ -225,6 +233,7 @@ if [ ! -r ${WEKA_JAR} ]; then
 		/bin/rm -f ${redirectfile}
 		/bin/rm -f $FILE
 		cp $DIR/weka.jar ./weka-3-6-1.jar
+		cp $DIR/weka.jar $WEKA_CACHE
 		/bin/rm -rf $DIR
 	    
 	    if [ ! -r ${WEKA_JAR} ]; then
@@ -262,13 +271,21 @@ if [ ! -r ${WEKA_JAR} ]; then
 
 
 	fi
+  fi
 fi
 
 RESPONSE=
-JBOSS_JAR=$JAR_HOME/drools-core-3.0.6.jar
+JBOSS=drools-core-3.0.6.jar
+JBOSS_JAR=$JAR_HOME/$JBOSS
 JBOSS_TAR_DIR=$JAR_HOME
+
     
 if [ ! -r ${JBOSS_JAR} ]; then
+  JBOSS_CACHE=$JAR_CACHE/jbossrules
+  if [ -r $JBOSS_CACHE ]; then
+  	  cp $JBOSS_CACHE/*.jar $JAR_HOME
+  	  cp $JBOSS_CACHE/lib/*.jar $JAR_HOME
+  else
     echo ""
     echo "$JBOSS_JAR not found."
     echo ""
@@ -294,6 +311,7 @@ if [ ! -r ${JBOSS_JAR} ]; then
 		cd ${JBOSS_TAR_DIR}/.
 		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.tar.Tar -xvzf ${FILE}
 		/bin/rm -f $FILE
+		cp -r jbossrules $JAR_CACHE
 		mv jbossrules/*.jar .
 		mv jbossrules/lib/*.jar .
 		rm -rf jbossrules
@@ -332,6 +350,7 @@ if [ ! -r ${JBOSS_JAR} ]; then
 	      exit
             fi
 	fi
+  fi
 fi
 
 # now to test the DB and upload schema (if necessary)

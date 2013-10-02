@@ -6324,11 +6324,25 @@ if [ "x$bfddir" = xnone ]; then
     turnbfdoff=yes
 fi
 if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
-    if [ "x$bfddir" = xdownload ] ; then
-	bfddir=${targetdir}/${architecture}/$binutils
+	
+    bfdtar=""
+    prebfddir=""
+    if [ ! -e "$bfddir/lib" ] && [ -f "$bfddir/$binutilstgz" ]; then
+    	    #if we do not have an install already at this location but we do have a valid tar file, build with the tar file here
+    	   bfdtar="yes"
+    	   prebfddir=`pwd`
+    fi
+    
+    if [ "x$bfddir" = xdownload ] || [ "x$bfdtar" = xyes ] ; then
+    	if [ "x$bfddir" = xdownload ]; then
+    	    #only change the bfddir if we are downloading
+	    bfddir=${targetdir}/${architecture}/$binutils
+	fi
 	if [ -r "$bfddir/lib/libbfd.a" ] ; then
 	    echo "BFD download already found, skipping"
 	else
+	if [ ! "x$bfdtar" = xyes ]; then
+	    #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
 	    tempdir=".tmp_bfdbuild_$$"
 	    mkdir $tempdir
 	    cd $tempdir
@@ -6344,6 +6358,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 		read RESPONSE
 		cp $RESPONSE/$binutilstgz .
 	    fi
+	  else
+	    cd $bfddir
+	  fi
 	    tar -xzf $binutilstgz
 	    cd $binutils
 	    if [ $machine = "bgp" ] ; then
@@ -6375,10 +6392,16 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 		mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
 	    fi
 
-	    cd ../..
-	    rm -rf $tempdir
+            if [ ! "x$bfdtar" = xyes ] ; then
+            	    #If we downloaded go back and remove the tempdir, otherwise just go back
+            	    cd ../..
+            	    rm -rf $tempdir
+            else
+            	    cd $prebfddir
+            fi
 	fi
-    fi
+    fi #bfd=download
+    
     bfdinclude="-I$bfddir/include"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     bfdlink="-L$bfddir/lib -L$bfddir/lib64"
