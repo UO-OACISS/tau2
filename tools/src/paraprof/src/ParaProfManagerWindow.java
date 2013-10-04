@@ -79,6 +79,7 @@ import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.TreeUI;
 import edu.uoregon.tau.common.Utility;
@@ -1295,11 +1296,22 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						Iterator<Trial> it = trials.iterator();
 						while (it.hasNext()) {
 							Trial t = it.next();
-							t.getMetaData().put(results[0], results[1]);
+							t.loadXMLMetadata(db);
+							MetaDataMap mdm = t.getMetaData();
+
+							String currentValue = mdm.get(results[0]);
+
+							mdm.put(results[0], results[1]);
 							int id = t.getID();
 							DB tdb = this.getDatabaseAPI(t.getDatabase()).db();
-							TAUdbTrial.addToPrimaryMetadataField(tdb, id,
+
+							if (currentValue == null) {
+								TAUdbTrial.addToPrimaryMetadataField(tdb, id,
 									results[0], results[1]);
+							} else if (!currentValue.equals(results[1])) {
+								TAUdbTrial.updatePrimaryMetadataField(tdb, id,
+										results[0], results[1]);
+							}
 
 						}
 
@@ -1307,6 +1319,51 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					} else {
 						System.out
 								.println("Error: Cannot add metadata for all trials in a view on a non TAUdb database.");
+					}
+
+				} else if (arg.equals("Remove Metadata Field From All Trials")) {
+					View view = (View) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+					Database database = view.getDatabase();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if (dbAPI instanceof TAUdbDatabaseAPI) {
+
+						String result = promptForMetadataRemoval();
+						if (result == null) {
+							return;
+						}
+
+						ArrayList<View> views = new ArrayList<View>(1);
+						views.add(view);
+						DB db = dbAPI.db();
+						List<Trial> trials = View.getTrialsForView(views, true,
+								db);
+						if (trials == null) {
+							return;
+						}
+						Iterator<Trial> it = trials.iterator();
+						while (it.hasNext()) {
+							Trial t = it.next();
+							t.loadXMLMetadata(db);
+							MetaDataMap mdm = t.getMetaData();
+
+							// String currentValue = mdm.get(results[0]);
+
+							// mdm.put(results[0], results[1]);
+							mdm.remove(result);
+							int id = t.getID();
+							DB tdb = this.getDatabaseAPI(t.getDatabase()).db();
+
+							// if (currentValue != null) {
+							TAUdbTrial.removeFromPrimaryMetadataField(tdb, id,
+									result);
+							// }
+
+						}
+
+					} else {
+						System.out
+								.println("Error: Cannot remove metadata for all trials in a view on a non TAUdb database.");
 					}
 
 				} else if (arg.equals("Upload Application to DB")) {
@@ -1601,6 +1658,27 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				return null;
 			} else
 				return results;
+		}
+		return null;
+	}
+
+	private static String promptForMetadataRemoval() {
+		JTextField nameF = new JTextField(15);
+		JPanel qpanel = new JPanel();
+		qpanel.add(new JLabel("Name:"));
+		qpanel.add(nameF);
+		int resultVal = JOptionPane.showConfirmDialog(null, qpanel,
+				"Input name of Metadata Field to Remove",
+				JOptionPane.OK_CANCEL_OPTION);
+		if (resultVal == JOptionPane.OK_OPTION) {
+			String result = nameF.getText();
+			if (result == null || result.trim().length() == 0) {
+				JOptionPane.showMessageDialog(null, "Invalid Input",
+						"Please input a valid string for the name",
+						JOptionPane.ERROR_MESSAGE);
+				return null;
+			} else
+				return result;
 		}
 		return null;
 	}
