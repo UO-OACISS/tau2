@@ -18,6 +18,8 @@ import java.awt.event.MouseListener;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -25,6 +27,8 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
@@ -131,6 +135,44 @@ public class ContextEventWindow extends JFrame implements Observer,
         addComponents();
     }
 
+	String hTitle = "Hide Totals";
+	String sTitle = "Show Totals";
+	class MidNodeActionListener implements ActionListener {
+		ContextEventTreeNode node;
+
+		MidNodeActionListener(ContextEventTreeNode node) {
+			this.node = node;
+		}
+
+		public void actionPerformed(ActionEvent e) {
+
+			String command = e.getActionCommand();
+			boolean show = true;
+			if (command.equals(hTitle)) {
+				show = false;
+			}
+			showHideTotals(show, node);
+			ppTrial.updateRegisteredObjects("colorEvent");
+
+		}
+
+		private void showHideTotals(boolean show, ContextEventTreeNode node) {
+			List<ContextEventTreeNode> children = node.getChildren();
+			Iterator<ContextEventTreeNode> cit = children.iterator();
+			while (cit.hasNext()) {
+				ContextEventTreeNode childNode = cit.next();
+				UserEventProfile uep = childNode.getUserEventProfile();
+				if (uep != null) {
+					uep.getUserEvent().setShowTotal(show);
+				} else {
+					showHideTotals(show, childNode);
+				}
+				// System.out.println(childNode);
+			}
+		}
+
+	}
+
     private void createTreeTable(AbstractTreeTableModel model) {
         treeTable = new JTreeTable(model, true, true);
         //final JComponent localThis = this;
@@ -154,7 +196,26 @@ public class ContextEventWindow extends JFrame implements Observer,
                                 		//.createFunctionClickPopUp(node.getModel().getPPTrial(),node.getFunctionProfile().getFunction(), getThread(), treeTable);
                                // popup.show(treeTable, evt.getX(), evt.getY());
                             } else {
-                                //popup = new JPopupMenu();
+								// ParaProfUtils.handleUserEventClick(ppTrial,
+								// null, thread,
+								// treeTable, evt);
+
+								JPopupMenu popup = new JPopupMenu();
+
+								ActionListener al = new MidNodeActionListener(
+										node);
+								JMenuItem menuItem = new JMenuItem(sTitle);
+
+								menuItem.addActionListener(al);
+								popup.add(menuItem);
+
+								menuItem = new JMenuItem(hTitle);
+
+								menuItem.addActionListener(al);
+								popup.add(menuItem);
+
+								popup.show(treeTable, evt.getX(), evt.getY());
+
                             }
                         }
                     }
