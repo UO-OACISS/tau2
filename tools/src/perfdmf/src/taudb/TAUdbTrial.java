@@ -831,6 +831,24 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		}
 	}
 
+	public static void removeFromPrimaryMetadataField(DB db, int trialID,
+			String name) {
+		try {
+
+			PreparedStatement statement = db.prepareStatement("DELETE FROM "
+					+ db.getSchemaPrefix()
+					+ "primary_metadata WHERE trial=? AND name=?;");
+
+			statement.setInt(1, trialID);
+			statement.setString(2, name);
+			statement.execute();
+			statement.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void updateFields(DB db,int trialID, String field,String value){
 //	int node_count = dataSource.getMaxNode();
 //	int contexts_per_node = dataSource.getMaxContextPerNode();
