@@ -44,6 +44,7 @@ public class TreeUI {
 		ArrayList<String> items = new ArrayList<String>(3);
 		items.add("Add Sub-View");
 		items.add("Add Metadata Field To All Trials");
+		items.add("Remove Metadata Field From All Trials");
 		items.add("Delete");
 		items.add("Rename");
 		return getTreePopupMenu(items,l);
