@@ -7398,11 +7398,14 @@ if [ $scorep = yes ] ; then
 	    fi
 	fi
     fi
-    scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
+    #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
+    scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 
-    fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLibs"
+    if [ $mpi = no ]; then
+      fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+    fi
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
 
