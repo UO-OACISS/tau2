@@ -10,6 +10,8 @@ import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -19,7 +21,9 @@ import java.awt.print.PrinterException;
 import java.util.Observable;
 import java.util.Observer;
 
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -41,7 +45,8 @@ import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 
-public class ContextEventWindow extends JFrame implements Observer, ParaProfWindow, Printable, ImageExport {
+public class ContextEventWindow extends JFrame implements Observer,
+		ParaProfWindow, Printable, ImageExport, ActionListener {
 
     /**
 	 * 
@@ -98,11 +103,21 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
 
     }
 
+	private static String showTot = "Show Total Column";
+	JCheckBoxMenuItem showTotalMenuItem;
     private void setupMenus() {
 
         JMenuBar mainMenu = new JMenuBar();
 
         mainMenu.add(ParaProfUtils.createFileMenu((ParaProfWindow) this, this, this));
+
+		JMenu optionsMenu = new JMenu("Options");
+		showTotalMenuItem = new JCheckBoxMenuItem(showTot);
+		showTotalMenuItem.setSelected(true);
+		showTotalMenuItem.addActionListener(this);
+		optionsMenu.add(showTotalMenuItem);
+		mainMenu.add(optionsMenu);
+
         mainMenu.add(ParaProfUtils.createWindowsMenu(ppTrial, this));
         mainMenu.add(ParaProfUtils.createHelpMenu(this, this));
 
@@ -111,6 +126,7 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
 
     private void setupData() {
         model = new ContextEventModel(this, ppTrial, thread, false);
+		model.showTotal(showTotalMenuItem.getState());
         createTreeTable(model);
         addComponents();
     }
@@ -426,4 +442,12 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
     	}
     	return 0;
     }
+
+	public void actionPerformed(ActionEvent e) {
+		if(e.getActionCommand().equals(showTot)){
+			model.showTotal(showTotalMenuItem.getState());
+			setupData();
+		}
+		
+	}
 }
