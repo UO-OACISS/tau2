@@ -238,7 +238,7 @@ if [ $apple = 1 ]; then
   TAU_LDD='otool -L'
 else
 #  TAU_LDD=ldd
-  TAU_LDD=$maqao_binary madras  --get-dynamic-lib 
+  TAU_LDD="$maqao_bin madras  --get-dynamic-lib "
 fi
 
 
