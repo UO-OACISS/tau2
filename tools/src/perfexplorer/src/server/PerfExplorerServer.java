@@ -1713,9 +1713,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
     ListIterator<View> litr = views.listIterator();
     while (litr.hasNext())
     {
-      List<View> subViews = getAllSubViews(litr.next().getID());
+			View pview = litr.next();
+			List<View> subViews = getAllSubViews(pview.getID());
       for (View subView : subViews)
       {
+				subView.setParent(pview);
         litr.add(subView);
       }
     }

@@ -152,6 +152,11 @@ public class Utilities {
     PerfExplorerServer server = getServer();
 
     List<View> views = new ArrayList<View>();
+		View parent = view.getParent();
+		while (parent != null) {
+			views.add(parent);
+			parent = parent.getParent();
+		}
     views.add(view);
 
     return server.getTrialsForTAUdbView(views); 
