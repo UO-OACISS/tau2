@@ -6343,7 +6343,11 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	else
 	if [ ! "x$bfdtar" = xyes ]; then
 	    #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
-	    tempdir=".tmp_bfdbuild_$$"
+      if [ -d /dev/shm -a -w /dev/shm ] ; then
+        tempdir=/dev/shm/tau_bfdbuild_$$
+      else
+        tempdir=".tmp_bfdbuild_$$"
+      fi
 	    mkdir $tempdir
 	    cd $tempdir
 	    if [ "$machine" = "apple" ] ; then
