@@ -6,11 +6,14 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Function;
@@ -414,6 +417,26 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	public void setSecondaryMetadata(
 			Map<Integer, TAUdbSecondaryMetadata> secondaryMetadata) {
 		this.secondaryMetadata = secondaryMetadata;
+	}
+
+	public MetaDataMap getMetaData() {
+		MetaDataMap core = super.getMetaData();
+		if (core == null || core.size() <= 0) {
+			MetaDataMap newm = new MetaDataMap();
+
+			if (primaryMetadata != null) {
+				Set<Entry<String, String>> entries = primaryMetadata.entrySet();
+				Iterator<Entry<String, String>> it = entries.iterator();
+				while (it.hasNext()) {
+					Entry<String, String> en = it.next();
+					newm.put(en.getKey(), en.getValue());
+				}
+			}
+
+			return newm;
+		} else {
+			return super.getMetaData();
+		}
 	}
 
 
