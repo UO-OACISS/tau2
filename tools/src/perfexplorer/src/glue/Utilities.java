@@ -147,6 +147,10 @@ public class Utilities {
 
   public static List<Trial> getTrialsForView(View view)
   {
+		return getTrialsForView(view, false);
+	}
+
+	public static List<Trial> getTrialsForView(View view, boolean getXMLMetadata) {
 		boolean message = false;
 
     PerfExplorerServer server = getServer();
@@ -159,7 +163,7 @@ public class Utilities {
 		}
     views.add(view);
 
-    return server.getTrialsForTAUdbView(views); 
+		return server.getTrialsForTAUdbView(views, getXMLMetadata);
   }
 
 	public static List<Trial> getTrialsForExperiment (String aName, String eName) {

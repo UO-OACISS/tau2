@@ -1736,15 +1736,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return View.getTrialsForView(views, getXMLMetadata, db);
 	}
 
+	public List<Trial> getTrialsForTAUdbView(List<View> views) {
+		return getTrialsForTAUdbView(views, false);
+	}
+
 	/**
 	 * Get the trials which are filtered by the defined view(s).
 	 * 
 	 * @param views
 	 * @return List
 	 */
-	public List<Trial> getTrialsForTAUdbView (List<View> views) {
+	public List<Trial> getTrialsForTAUdbView(List<View> views,
+			boolean getXMLMetadata) {
 		DB db = this.getDB();
-		return View.getTrialsForTAUdbView(views, db);
+		return View.getTrialsForTAUdbView(views, db, getXMLMetadata);
 	}
 
 	/* (non-Javadoc)

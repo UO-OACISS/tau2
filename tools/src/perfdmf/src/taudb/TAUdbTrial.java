@@ -641,7 +641,9 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
                 trial.setField("contexts_per_node",String.valueOf(contextsPerNode));
                 trial.setField("threads_per_context",String.valueOf(threadsPerContext));
                 trial.setField("total_threads",String.valueOf(totalThreads));
-                
+				if (getXMLMetadata) {
+					trial.loadXMLMetadata(db);
+				}
 
 				trials.addElement(trial);
 				//System.out.println("Added trial "+dex);
