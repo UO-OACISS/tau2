@@ -6388,8 +6388,8 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	    cp -R include/* $bfddir/include
 
             # Fix bfd.h
-            sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' $bfddir/include/bfd.h > /tmp/bfd.h
-            mv /tmp/bfd.h $bfddir/include
+            sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' $bfddir/include/bfd.h > $tempdir/bfd.h
+            mv $tempdir/bfd.h $bfddir/include
 	    
 	    # snow leopard
 	    if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
