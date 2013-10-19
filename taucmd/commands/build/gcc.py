@@ -38,22 +38,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import subprocess
 import taucmd
-from taucmd import project
 from pprint import pprint
 from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Show all TAU project configurations in this directory."
+SHORT_DESCRIPTION = "GNU C Compiler."
 
 USAGE = """
 Usage:
-  tau project list [<name>]
-  tau project list -h | --help
+  tau build gcc [<args>...]
 """
 
 HELP = """
-Help page to be written.
+'tau build gcc' help page to be written.
 """
 
 def getUsage():
@@ -62,26 +60,9 @@ def getUsage():
 def getHelp():
     return HELP
 
-def detectTarget():
-    """
-    Use TAU's archfind script to detect the target architecture
-    """
-    cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
-    return subprocess.check_output(cmd).strip()
-
 def main(argv):
     """
     Program entry point
     """
-
-    # Parse command line arguments
-    usage = getUsage()
-    args = docopt(usage, argv=argv)
-    LOGGER.debug('Arguments: %s' % args)
-    
-    all_proj = project.loadProjects()
-    if all_proj:
-        pprint(all_proj)
-    else:
-        print "No projects defined.  See 'tau project create --help'"
-    return 0
+   
+    print 'TODO: %r' % __name__

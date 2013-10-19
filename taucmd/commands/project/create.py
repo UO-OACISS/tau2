@@ -38,26 +38,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import subprocess
 import taucmd
+from taucmd import project
 from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
 
 SHORT_DESCRIPTION = "Create a new TAU project configuration."
 
-#   tau project create
-#   tau project list
-#   tau project edit <name>
-#   tau project delete <name>
-#   tau project select <name>
-#   tau project -h | --help
-
 USAGE = """
 Usage:
   tau project create [options]
   tau project create -h | --help
 
-Target Options:
-  --target=<name>                   Set target architecture. [default: %(target_default)s]
+Project Options:
+  --name=<name>                     Set project name.
+  --target-arch=<name>              Set target architecture. [default: %(target_default)s]
 
 Compiler Options:
   --cc=<compiler>                   Set C compiler. [default: gcc]
@@ -123,12 +118,14 @@ def getUsage():
 def getHelp():
     return HELP
 
+
 def detectTarget():
     """
     Use TAU's archfind script to detect the target architecture
     """
     cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
     return subprocess.check_output(cmd).strip()
+
 
 def main(argv):
     """
@@ -139,4 +136,24 @@ def main(argv):
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
     
-    print args
+    # Strip args   
+    config = {}
+    exclude = ['--help', '-h', 'create', 'project']
+    for key, val in args.iteritems():
+        if not key in exclude:
+            config[key[2:]] = val
+    
+    proj_name = project.getName(config)
+    all_proj = project.loadProjects()
+    if proj_name in all_proj:
+        LOGGER.error('Project %r already exists' % proj_name)
+        return 1
+
+    all_proj[proj_name] = config
+    if not 'default' in all_proj:
+        all_proj['default'] = proj_name
+    project.initialize(config)
+    project.saveProjects(all_proj)
+
+    LOGGER.info('Created project %r' % proj_name)
+    return 0

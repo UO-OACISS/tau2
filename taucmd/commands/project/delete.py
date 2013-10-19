@@ -80,3 +80,4 @@ def main(argv):
     LOGGER.debug('Arguments: %s' % args)
     
     print 'TODO: Delete %r' % args['<name>']
+    return 0

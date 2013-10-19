@@ -100,36 +100,6 @@ def translateConfigureArg(key, val):
 
 
 
-def cloneTauSource(dest, source=taucmd.TAU_ROOT_DIR):
-    """
-    Makes a fresh clone of the TAU source code
-    """
-    # Don't copy if the source already exists
-    if os.path.exists(dest) and os.path.isdir(dest):
-        LOGGER.debug('TAU source code directory %r already exists.' % dest)
-        return
-
-    # Filename filter for copytree
-    def ignore(path, names):
-        # Globs to ignore 
-        patterns = ['*.o', '*.a', '*.so', '*.dylib', '*.pyc', 'a.out', 
-                 '.all_configs', '.last_config', '.project', '.cproject',
-                 '.git', '.gitignore', '.ptp-sync', '.pydevproject']
-        # Ignore bindirs in the top level directory
-        if path == taucmd.TAU_ROOT_DIR:
-            bindirs = ['x86_64', 'bgl', 'bgp', 'bgq', 'craycnl', 'apple']
-            patterns.extend(bindirs)
-        # Build set of ignored files
-        ignored_names = []
-        for pattern in patterns:
-            ignored_names.extend(fnmatch.filter(names, pattern))
-        return set(ignored_names)
-
-    LOGGER.debug('Copying from %r to %r and ignoring %r' % (source, dest, ignore))
-    LOGGER.info('Creating new copy of TAU at %r.  This will only be done once.' % dest)
-    copytree(source, dest, ignore=ignore)
-
-
 class TauConfiguration(object):
     """
     A Tau configuration

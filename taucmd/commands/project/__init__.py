@@ -37,9 +37,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
 import taucmd
-#from taucmd import commands
+from taucmd import commands
 from taucmd.docopt import docopt
-from pkgutil import walk_packages
 
 LOGGER = taucmd.getLogger(__name__)
 
@@ -49,7 +48,7 @@ USAGE = """
 Usage:
   tau project <command> [<args>...]
   tau project -h | --help
-  
+
 Project Commands:
 %(command_descr)s
 """
@@ -59,24 +58,10 @@ HELP = """
 """
 
 def getUsage():
-    return USAGE % {'command_descr': getCommandDescr()}
+    return USAGE % {'command_descr': commands.getSubcommands(__name__)}
 
 def getHelp():
     return HELP
-
-def getCommandDescr():
-    """
-    Builds listing of command names with short description
-    """
-    parts = []
-    #for module in [name for _, name, _ in walk_packages(path=commands.project.__path__, prefix=commands.project.__name__+'.')]:
-    for module in [name for _, name, _ in walk_packages(sys.modules[__name__].__path__, prefix=sys.modules[__name__].__name__+'.')]:
-        __import__(module)
-        descr = sys.modules[module].SHORT_DESCRIPTION
-        name = '{:<15}'.format(module.split('.')[-1])
-        parts.append('  %s  %s' % (name, descr))
-    return '\n'.join(parts)
-
 
 def main(argv):
     """

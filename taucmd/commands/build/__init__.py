@@ -35,39 +35,56 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os
-import subprocess
+import sys
 import taucmd
-from taucmd import project
-from pprint import pprint
+from taucmd import commands
 from taucmd.docopt import docopt
+from pkgutil import walk_packages
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Show all TAU project configurations in this directory."
+SHORT_DESCRIPTION = "Instrument programs during compilation and/or linking."
 
 USAGE = """
 Usage:
-  tau project list [<name>]
-  tau project list -h | --help
+  tau build <compiler> [<args>...]
+  tau build -h | --help
+  
+Known Compilers:
+%(command_descr)s
 """
 
 HELP = """
-Help page to be written.
+'tau build' help page to be written.
 """
 
+# Tau compiler wrapper scripts
+TAU_CC = 'tau_cc.sh'
+TAU_CXX = 'tau_cxx.sh'
+TAU_F77 = 'tau_f90.sh'     # Yes, f90 not f77
+TAU_F90 = 'tau_f90.sh'
+TAU_UPC = 'tau_upc.sh'
+
+# Map compiler tags to Tau compiler wrapper scripts
+TAU_COMPILERS = {'CC':  ('C', TAU_CC),
+                 'CXX': ('C++', TAU_CXX),
+                 'F77': ('FORTRAN77', TAU_F77),
+                 'F90': ('Fortran90', TAU_F90),
+                 'UPC': ('Universal Parallel C', TAU_UPC)}
+
 def getUsage():
-    return USAGE
+    return USAGE % {'command_descr': commands.getSubcommands(__name__)}
 
 def getHelp():
     return HELP
 
-def detectTarget():
+def isKnownCompiler(cmd):
     """
-    Use TAU's archfind script to detect the target architecture
+    Returns True if cmd is a known compiler command
     """
-    cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
-    return subprocess.check_output(cmd).strip()
+    known = [n for _, n, _ in walk_packages(sys.modules[__name__].__path__)]
+    return cmd in known
+
 
 def main(argv):
     """
@@ -76,12 +93,25 @@ def main(argv):
 
     # Parse command line arguments
     usage = getUsage()
-    args = docopt(usage, argv=argv)
+    args = docopt(usage, argv=argv, options_first=True)
     LOGGER.debug('Arguments: %s' % args)
     
-    all_proj = project.loadProjects()
-    if all_proj:
-        pprint(all_proj)
-    else:
-        print "No projects defined.  See 'tau project create --help'"
-    return 0
+    # Check for -h | --help (why doesn't this work automatically?)
+    idx = args['<compiler>'].find('-h')
+    if (idx == 0) or (idx == 1):
+        print usage
+        return 0
+
+    # Try to execute as a tau command
+    cmd = args['<compiler>']
+    cmd_args = args['<args>']
+    cmd_module = 'taucmd.commands.build.%s' % cmd   
+    
+    try:
+        __import__(cmd_module)
+        LOGGER.debug('Recognized %r as a tau build command' % cmd)
+        return sys.modules[cmd_module].main(['build', cmd] + cmd_args)
+    except ImportError:
+        LOGGER.debug('%r not recognized as a tau build command' % cmd)
+        print usage
+        return 1
