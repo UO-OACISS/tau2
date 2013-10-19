@@ -50,7 +50,7 @@ Usage:
   tau help <command>
   tau -h | --help
   
-  Use quotes to group commands, e.g. tau help 'project create'.
+Use quotes to group commands, e.g. tau help 'project create'.
 """
 
 HELP = """

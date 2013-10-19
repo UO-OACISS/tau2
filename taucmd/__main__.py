@@ -37,12 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
 import re
-import signal
 import taucmd
 from pkgutil import walk_packages
-from taucmd import TauNotImplementedError
 from taucmd import commands
-from taucmd import compiler
 from taucmd.docopt import docopt
 
 USAGE = """
@@ -59,11 +56,11 @@ TAU Options:
                    <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
 
 Tau Commands:
-%(command_descr)s
   <compiler>       A compiler command, e.g. gcc, mpif90, upcc, nvcc, etc. 
                    An alias for 'tau build <compiler>'
   <executable>     A program executable, e.g. ./a.out
                    An alias for 'tau execute <executable>'
+%(command_descr)s
 
 See 'tau help <command>' for more information on a specific command.
 """
@@ -90,7 +87,7 @@ def getTauVersion():
     return '(unknown)'
 
 
-def getCommandDescr():
+def getCommands():
     """
     Builds listing of command names with short description
     """
@@ -102,6 +99,18 @@ def getCommandDescr():
         name = '{:<15}'.format(module.split('.')[-1])
         parts.append('  %s  %s' % (name, descr))
     return '\n'.join(parts)
+
+
+def executeCommand(cmd, cmd_args):
+    cmd_module = 'taucmd.commands.%s' % cmd
+    try:
+        __import__(cmd_module)
+        LOGGER.debug('Recognized %r as tau subcommand' % cmd)
+        exit(sys.modules[cmd_module].main([cmd] + cmd_args))
+    except ImportError:
+        # It wasn't a tau command, but that's OK
+        LOGGER.debug('%r not recognized as a TAU command' % cmd)
+        return None
 
 
 def main():
@@ -124,7 +133,7 @@ def main():
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
                      'log_default': taucmd.LOG_LEVEL,
-                     'command_descr': getCommandDescr()}
+                     'command_descr': getCommands()}
     args = docopt(usage, version=tau_version, options_first=True)
     
     # Set log level
@@ -135,36 +144,17 @@ def main():
     # Try to execute as a tau command
     cmd = args['<command>']
     cmd_args = args['<args>']
-    cmd_module = 'taucmd.commands.%s' % cmd   
-    
-    try:
-        __import__(cmd_module)
-        LOGGER.debug('Recognized %r as tau subcommand' % cmd)
-        return sys.modules[cmd_module].main([cmd] + cmd_args)
-    except ImportError:
-        # It wasn't a tau command, but that's OK
-        LOGGER.debug('%r not recognized as a TAU command' % cmd)
+    executeCommand(cmd, cmd_args)
 
     # Try to execute as a compiler command
-    try:
-        retval = compiler.compile(args)
-        if retval == 0:
-            LOGGER.info('Compilation successful')
-        elif retval > 0:
-            LOGGER.critical('Compilation failed')
-        elif retval < 0:
-            signal_names = dict((getattr(signal, n), n) for n in dir(signal) 
-                                if n.startswith('SIG') and '_' not in n)
-            LOGGER.critical('Compilation aborted by signal %s' % signal_names[-retval])
-        return retval
-    except TauNotImplementedError:
-        # It wasn't a compiler command, but that's OK
-        LOGGER.debug('%r not recognized as a compiler command' % cmd)
+    if commands.build.isKnownCompiler(args['<command>']):
+        cmd = 'build'
+        cmd_args = [args['<command>']] + args['<args>']
+        executeCommand(cmd, cmd_args)
 
     # Not sure what to do at this point, so advise the user and exit
     LOGGER.debug("Can't classify %r.  Calling 'tau help' to get advice." % cmd)
-    return commands.help.main(['help', cmd])
-
+    executeCommand('help', [cmd])
 
 # Command line execution
 if __name__ == "__main__":

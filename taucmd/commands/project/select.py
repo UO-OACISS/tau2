@@ -80,3 +80,4 @@ def main(argv):
     LOGGER.debug('Arguments: %s' % args)
     
     print 'TODO: Select %r as default' % args['<name>']
+    return 0

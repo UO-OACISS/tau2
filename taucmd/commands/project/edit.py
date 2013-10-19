@@ -80,3 +80,4 @@ def main(argv):
     LOGGER.debug('Arguments: %s' % args)
     
     print args
+    return 0
