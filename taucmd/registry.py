@@ -96,21 +96,21 @@ class Registry(object):
     def __contains__(self, item):
         return self.data.__contains__(item)
     
-    @classmethod
-    def load(cls, prefix=taucmd.HOME, default=taucmd.CONFIG):
-        """
-        Loads the configuration registry from file.
-        """
-        registry_file = os.path.join(prefix, 'registry')
-        if os.path.exists(registry_file):
-            with open(registry_file, 'rb') as f:
-                registry = pickle.load(f)
-                registry._registry_file = registry_file
-                LOGGER.debug('Registry loaded from file %r' % registry_file)
-                return registry
-        else:
-            LOGGER.debug('Registry file %r does not exist.' % registry_file)
-            return cls(registry_file, prefix,  default)
+#     @classmethod
+#     def load(cls, prefix=taucmd.TAU_HOME, default=taucmd.CONFIG):
+#         """
+#         Loads the configuration registry from file.
+#         """
+#         registry_file = os.path.join(prefix, 'registry')
+#         if os.path.exists(registry_file):
+#             with open(registry_file, 'rb') as f:
+#                 registry = pickle.load(f)
+#                 registry._registry_file = registry_file
+#                 LOGGER.debug('Registry loaded from file %r' % registry_file)
+#                 return registry
+#         else:
+#             LOGGER.debug('Registry file %r does not exist.' % registry_file)
+#             return cls(registry_file, prefix,  default)
 
     def save(self):
         """
@@ -136,22 +136,22 @@ class Registry(object):
         if len(self.data) == 1:
             self.setDefault(name)
 
-    def unregister(self, name):
-        """
-        Removes a configuration from the registry
-        """
-        id = self.data[name].data['id']
-        # Remove from registry
-        del self.data[name]
-        LOGGER.info('Unregistered configuration %r' % name)
-        # Remove old files
-        LOGGER.info('Deleting configuration files')
-        for path in glob.glob(os.path.join(taucmd.HOME, '*', id)):
-            LOGGER.debug('Deleting %r' % path)
-            shutil.rmtree(path, ignore_errors=True)
-        # Change default if we just deleted the default configuration
-        if name == self.default and len(self.data):
-            self.setDefault(self.data.values()[0]['name'])
+#     def unregister(self, name):
+#         """
+#         Removes a configuration from the registry
+#         """
+#         id = self.data[name].data['id']
+#         # Remove from registry
+#         del self.data[name]
+#         LOGGER.info('Unregistered configuration %r' % name)
+#         # Remove old files
+#         LOGGER.info('Deleting configuration files')
+#         for path in glob.glob(os.path.join(taucmd.HOME, '*', id)):
+#             LOGGER.debug('Deleting %r' % path)
+#             shutil.rmtree(path, ignore_errors=True)
+#         # Change default if we just deleted the default configuration
+#         if name == self.default and len(self.data):
+#             self.setDefault(self.data.values()[0]['name'])
 
     def setDefault(self, name):
         """

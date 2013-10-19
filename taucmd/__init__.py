@@ -51,13 +51,10 @@ EXPECT_PYTHON_VERSION = (2, 7)
 PACKAGE_HOME = os.path.dirname(os.path.realpath(__file__))
 
 # Search paths for included files
-INCLUDE_PATH = [ os.path.realpath('.') ]
+INCLUDE_PATH = [os.path.realpath('.')]
 
 # Tau configuration home
-HOME = os.path.join(os.path.expanduser('~'), '.tau')
-
-# Default Tau configuration
-CONFIG = 'simple'
+TAU_HOME = os.path.join(os.path.expanduser('~'), '.tau')
 
 # Logging level
 LOG_LEVEL = 'INFO'
@@ -109,7 +106,7 @@ class LogFormatter(logging.Formatter):
     """    
     def __init__(self):
         super(LogFormatter, self).__init__()
-        
+
     def msgbox(self, record, marker):
         hline = marker*80
         parts = [hline, marker, '%s %s' % (marker, record.levelname)]
