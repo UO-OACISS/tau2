@@ -37,82 +37,66 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import sys
 import re
-#import types
 import signal
-import textwrap
 import taucmd
-from docopt import docopt
 from pkgutil import walk_packages
 from taucmd import TauNotImplementedError
 from taucmd import commands
 from taucmd import compiler
-from taucmd.registry import Registry 
+from taucmd.docopt import docopt
 
 USAGE = """
-================================================================================
-The Tau Performance System (version %(tau_version)s)
+The Tau Performance System (%(tau_version)s)
 http://tau.uoregon.edu/
 
 Usage:
   tau [options] <command> [<args>...]
+  tau -h | --help
   tau --version
-  tau --help
   
-  <command> may be a subcommand or compiler.  See tau --help.
-  
-Subcommands:
-%(commands)s
-
-Known Compilers:
-%(compilers)s 
-
-Options:
-  --config=<name>  Tau configuration. %(config_default)s
-  --home=<path>    Tau configuration home. [default: %(home_default)s]
+TAU Options:
   --log=<level>    Output level.  [default: %(log_default)s]
-                     <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
-================================================================================
+                   <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
+
+Tau Commands:
+%(command_descr)s
+  <compiler>       A compiler command, e.g. gcc, mpif90, upcc, nvcc, etc. 
+                   An alias for 'tau build <compiler>'
+  <executable>     A program executable, e.g. ./a.out
+                   An alias for 'tau execute <executable>'
+
+See 'tau help <command>' for more information on a specific command.
 """
 
 LOGGER = taucmd.getLogger(__name__)
 
-def lookupTauVersion():
+
+def getTauVersion():
     """
-    Opens TAU.h to get the TAU version
+    Opens TAU header files to get the TAU version
     """
-    if not taucmd.TAU_ROOT_DIR:
-        return '(unknown)'
-    with open('%s/include/TAU.h' % taucmd.TAU_ROOT_DIR, 'r') as tau_h:
+    header_files=['TAU.h', 'TAU.h.default']
+    if taucmd.TAU_ROOT_DIR:
         pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
-        for line in tau_h:
-            match = pattern.match(line) 
-            if match:
-                return match.group(1)
+        for hfile in header_files:
+            try:
+                with open('%s/include/%s' % (taucmd.TAU_ROOT_DIR, hfile), 'r') as tau_h:
+                    for line in tau_h:
+                        match = pattern.match(line) 
+                        if match:
+                            return match.group(1)
+            except IOError:
+                continue
     return '(unknown)'
 
-def lookupDefaultConfig():
-    """
-    Loads the registry to get the default config.
-    """
-    registry = Registry.load()
-    if not len(registry):
-        return ''
-    else:
-        return '[default: %s]' % registry.default
 
-def getKnownCompilers():
-    """
-    Returns a string listing known compiler commands
-    """
-    known = ', '.join(compiler.knownCompilerCommands())
-    return textwrap.fill(known, width=70, initial_indent='  ', subsequent_indent='  ')
-
-def getCommandList():
+def getCommandDescr():
     """
     Builds listing of command names with short description
     """
     parts = []
-    for module in [name for _, name, _ in walk_packages(path=commands.__path__, prefix=commands.__name__+'.')]:
+    mod_names = [n for _, n, _ in walk_packages(commands.__path__, commands.__name__+'.') if n.count('.') == 2]
+    for module in mod_names:
         __import__(module)
         descr = sys.modules[module].SHORT_DESCRIPTION
         name = '{:<15}'.format(module.split('.')[-1])
@@ -120,7 +104,6 @@ def getCommandList():
     return '\n'.join(parts)
 
 
-        
 def main():
     """
     Program entry point
@@ -136,37 +119,31 @@ def main():
         LOGGER.warning("Your Python version is %s, but 'tau' expects Python %s or later.  Please update Python." % (version, expected))
 
     # Get tau version
-    tau_version = lookupTauVersion()
+    tau_version = getTauVersion()
     
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
-                     'home_default': taucmd.HOME,
-                     'config_default': lookupDefaultConfig(),
                      'log_default': taucmd.LOG_LEVEL,
-                     'compilers': getKnownCompilers(),
-                     'commands': getCommandList()}
+                     'command_descr': getCommandDescr()}
     args = docopt(usage, version=tau_version, options_first=True)
-
+    
     # Set log level
     taucmd.setLogLevel(args['--log'])
     LOGGER.debug('Arguments: %s' % args)
     LOGGER.debug('Verbosity level: %s' % taucmd.LOG_LEVEL)
-    
-    # Record global arguments
-    taucmd.HOME = args['--home']
-    taucmd.CONFIG = args['--config']
-    
+
     # Try to execute as a tau command
     cmd = args['<command>']
     cmd_args = args['<args>']
-    cmd_module = 'taucmd.commands.%s' % cmd
+    cmd_module = 'taucmd.commands.%s' % cmd   
+    
     try:
         __import__(cmd_module)
         LOGGER.debug('Recognized %r as tau subcommand' % cmd)
         return sys.modules[cmd_module].main([cmd] + cmd_args)
     except ImportError:
         # It wasn't a tau command, but that's OK
-        LOGGER.debug('%r not recognized as tau subcommand' % cmd)
+        LOGGER.debug('%r not recognized as a TAU command' % cmd)
 
     # Try to execute as a compiler command
     try:
@@ -175,15 +152,15 @@ def main():
             LOGGER.info('Compilation successful')
         elif retval > 0:
             LOGGER.critical('Compilation failed')
-        elif proc.returncode < 0:
+        elif retval < 0:
             signal_names = dict((getattr(signal, n), n) for n in dir(signal) 
                                 if n.startswith('SIG') and '_' not in n)
-            LOGGER.critical('Compilation aborted by signal %s' % signal_names[-proc.returncode])
+            LOGGER.critical('Compilation aborted by signal %s' % signal_names[-retval])
         return retval
     except TauNotImplementedError:
         # It wasn't a compiler command, but that's OK
         LOGGER.debug('%r not recognized as a compiler command' % cmd)
-        
+
     # Not sure what to do at this point, so advise the user and exit
     LOGGER.debug("Can't classify %r.  Calling 'tau help' to get advice." % cmd)
     return commands.help.main(['help', cmd])

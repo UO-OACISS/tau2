@@ -61,7 +61,7 @@ def translateConfigureArg(key, val):
     # Ignore some arguments
     if key in ['name', 'id', 'compiler']:
         return []
-    
+
     # Simple translations
     simple = {'bfd': '-bfd=%s',
               'cuda': '-cuda=%s',
