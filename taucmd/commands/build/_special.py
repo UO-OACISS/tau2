@@ -40,24 +40,25 @@ import sys
 import subprocess
 import taucmd
 from taucmd.project import Registry
-from taucmd.commands.build import TAU_CC
+from taucmd.commands.build import TAU_CXX
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "GNU C Compiler."
+SHORT_DESCRIPTION = "A special compiler template."
 
 USAGE = """
 Usage:
-  tau build gcc [<args>...]
+  tau build _special [<args>...]
 """
 
 HELP = """
-'tau build gcc' help page to be written.
+'tau build _special' help page to be written.
 """
 
-COMMAND = 'gcc'
+COMMAND = '_special'
 
-TAU_COMPILER = TAU_CC
+# Set appropriately
+TAU_COMPILER = TAU_CXX
 
 def getUsage():
     return USAGE
@@ -91,10 +92,10 @@ def main(argv):
 
     # Set the environment
     env = proj.getTauCompilerEnvironment()
-    
+
     # Get compiler flags
     flags = proj.getTauCompilerFlags()
-    
+
     # Execute the compiler wrapper script
     cmd = [TAU_COMPILER] + flags + cmd_args
 

@@ -102,15 +102,12 @@ def main(argv):
                 exe_idx = i + 1
                 break
             elif arg[0] == '-':
-                print 'adding %r' % arg
                 cmd.append(arg)
                 dash = True
             elif dash:
-                print 'dash: adding %r' % arg
                 cmd.append(arg)
                 dash = False
             else:
-                print 'exe_idx = %d' % i
                 exe_idx = i
                 break
         cmd += ['tau_exec'] + flags + argv[exe_idx:]
@@ -122,20 +119,20 @@ def main(argv):
     proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
     cmd_retval = proc.wait()
     
-    # Check for profiles
-    profiles = glob.glob('profile.*')
-    
-    # Pack the profiles
-    if profiles and proj.config['profile']:
-        ppk_name = '%s.%s.ppk' % (cmd_arg, proj.getName())
-        cmd = ['paraprof', '--pack', ppk_name]
-        proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-        retval = proc.wait()
-        if retval < 0:
-            print 'ERROR: paraprof killed by signal %d' % -retval
-        elif retval > 0:
-            print 'ERROR: paraprof failed'
-        else:
-            for profile in profiles:
-                os.remove(profile)
+#     # Check for profiles
+#     profiles = glob.glob('profile.*')
+#     
+#     # Pack the profiles
+#     if profiles and proj.config['profile']:
+#         ppk_name = '%s.%s.ppk' % (cmd_arg, proj.getName())
+#         cmd = ['paraprof', '--pack', ppk_name]
+#         proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+#         retval = proc.wait()
+#         if retval < 0:
+#             print 'ERROR: paraprof killed by signal %d' % -retval
+#         elif retval > 0:
+#             print 'ERROR: paraprof failed'
+#         else:
+#             for profile in profiles:
+#                 os.remove(profile)
     return cmd_retval

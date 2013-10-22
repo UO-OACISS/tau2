@@ -46,10 +46,10 @@ from taucmd import TauError, TauNotImplementedError
 LOGGER = taucmd.getLogger(__name__)
 
 # Default PDT download URL
-#PDT_URL = 'http://www.cs.uoregon.edu/research/tau/pdt_releases/pdtoolkit-3.19p1.tar.gz'
-#PDT_URL = 'http://tau.uoregon.edu/pdt.tgz'
+PDT_URL = 'http://tau.uoregon.edu/pdt.tgz'
 # For debugging
-PDT_URL = 'http://localhost:3000/pdtoolkit-3.19p1.tar.gz'
+#PDT_URL = 'http://localhost:3000/pdtoolkit-3.19p1.tar.gz'
+#PDT_URL = 'http://www.cs.uoregon.edu/research/tau/pdt_releases/pdtoolkit-3.19p1.tar.gz'
 
 # User specific PDT source code location
 PDT_SRC_DIR = os.path.join(taucmd.SRC_DIR, 'pdt')
