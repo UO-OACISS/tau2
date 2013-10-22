@@ -47,9 +47,9 @@ LOGGER = taucmd.getLogger(__name__)
 
 
 # Default BFD download URL
-#BFD_URL = 'http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.23.2.tar.gz'
+BFD_URL = 'http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.23.2.tar.gz'
 # For debugging
-BFD_URL = 'http://localhost:3000/binutils-2.23.2.tar.gz'
+#BFD_URL = 'http://localhost:3000/binutils-2.23.2.tar.gz'
 
 # User specific BFD source code location
 BFD_SRC_DIR = os.path.join(taucmd.SRC_DIR, 'bfd')
