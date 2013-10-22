@@ -271,7 +271,17 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			double calls = 0;
 //			System.out.println("Totals, mins, maxes...");
 			// add each input to the total
+			int statThreads = 0;
 			for (Integer thread : totalThreads) {
+				/*
+				 * We must only aggregate the real threads, not pre-generated
+				 * statistical threads. TODO: Use the pre-generated threads when
+				 * they are available instead of recalculating this information
+				 */
+				if (thread.intValue() < 0) {
+					statThreads++;
+					continue;
+				}
 				for (String event : totalEvents) {
 					calls = input.getCalls(thread, event);
 					// if not called, don't bother - everything is zero
@@ -310,6 +320,10 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 			
 	//		System.out.println("Means...");
 			int numInputs = input.getThreads().size();
+			/*
+			 * Only count real threads
+			 */
+			numInputs = numInputs - statThreads;
 			// divide the total to get the mean
 			for (String event : totalEvents) {
 				if (!includeNull) {
@@ -338,6 +352,9 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 //		System.out.println("variances...");
 		// do the sums for the stddev
 			for (Integer thread : totalThreads) {
+				if (thread.intValue() < 0) {
+					continue;
+				}
 				for (String event : totalEvents) {
 					if (!includeNull && (input.getCalls(thread, event) > 0)) {
 						for (String metric : totalMetrics) {
@@ -362,7 +379,7 @@ public class BasicStatisticsOperation extends AbstractPerformanceOperation {
 				}
 			}
 
-			numInputs = input.getThreads().size() - 1;
+			numInputs = input.getThreads().size() - 1 - statThreads;
 //		System.out.println("Standard Deviations...");
 			// divide the variances by n-1
 			for (String event : totalEvents) {

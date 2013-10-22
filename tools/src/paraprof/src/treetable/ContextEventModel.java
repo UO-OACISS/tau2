@@ -20,8 +20,13 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 public class ContextEventModel extends AbstractTreeTableModel {
 
     private static String[] cNames = { "Name", "Total", "NumSamples", "MaxValue", "MinValue", "MeanValue", "Std. Dev." };
+	private static String[] cNamesNoTotal = { "Name", "NumSamples", "MaxValue",
+			"MinValue", "MeanValue", "Std. Dev." };
     private static Class<?>[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class,
             Double.class };
+	private static Class<?>[] cTypesNoTotal = { TreeTableModel.class,
+			Double.class, Double.class, Double.class, Double.class,
+			Double.class };
 
     private List<ContextEventTreeNode> roots;
 
@@ -33,6 +38,7 @@ public class ContextEventModel extends AbstractTreeTableModel {
     private int sortColumn;
     private boolean sortAscending;
     DataSorter dataSorter;
+	private boolean showTotal = true;
 
     public ContextEventModel(ContextEventWindow window, ParaProfTrial ppTrial, Thread thread, boolean reversedCallPaths) {
         super(null);
@@ -48,6 +54,10 @@ public class ContextEventModel extends AbstractTreeTableModel {
     public Thread getThread() {
         return thread;
     }
+
+	public void showTotal(boolean show) {
+		this.showTotal = show;
+	}
 
     private void setupData() {
 
@@ -109,26 +119,37 @@ public class ContextEventModel extends AbstractTreeTableModel {
     }
 
     public String getColumnName(int column) {
-        return cNames[column];
+		if (showTotal) {
+			return cNames[column];
+		} else
+			return cNamesNoTotal[column];
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
 	public Class getColumnClass(int column) {
-        return cTypes[column];
+		if (showTotal) {
+			return cTypes[column];
+		} else
+			return cTypesNoTotal[column];
     }
 
     public int getColorMetric() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     public int getColumnCount() {
-        return cNames.length;
+		if (showTotal) {
+			return cNames.length;
+		} else
+			return cNamesNoTotal.length;
     }
 
     public Object getValueAt(Object node, int column) {
         ContextEventTreeNode cnode = (ContextEventTreeNode) node;
         UserEventProfile uep = cnode.getUserEventProfile();
+		if (!showTotal) {
+			column++;
+		}
         if (uep == null) {
             return null;
         } else {

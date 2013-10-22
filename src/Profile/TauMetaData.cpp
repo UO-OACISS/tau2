@@ -521,6 +521,24 @@ int Tau_metadata_fillMetaData()
   sprintf(bgqbuffer, "%d", tau_bgq_personality.DDR_Config.DDRSizeMB);
   Tau_metadata_register("BGQ DDR Size (MB)", bgqbuffer);
 
+  // I/O Bridge Network
+  sprintf(bgqbuffer, "(%d, %d, %d, %d, %d)",
+	tau_bgq_personality.Network_Config.cnBridge_A,
+	tau_bgq_personality.Network_Config.cnBridge_B,
+	tau_bgq_personality.Network_Config.cnBridge_C,
+	tau_bgq_personality.Network_Config.cnBridge_D,
+	tau_bgq_personality.Network_Config.cnBridge_E);
+
+  Tau_metadata_register("BGQ Bridge I/O Coordinates", bgqbuffer);
+  
+  sprintf(bgqbuffer, "(%d, %d, %d, %d, %d)",  
+	tau_bgq_personality.Network_Config.Acoord,
+	tau_bgq_personality.Network_Config.Bcoord,
+	tau_bgq_personality.Network_Config.Ccoord,
+	tau_bgq_personality.Network_Config.Dcoord,
+	tau_bgq_personality.Network_Config.Ecoord);
+
+  Tau_metadata_register("BGQ Node Coordinates", bgqbuffer);
 
 #endif /* TAU_BGQ */
 
