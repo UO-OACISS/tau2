@@ -10,13 +10,16 @@ import javax.swing.JSplitPane;
 import javax.swing.table.AbstractTableModel;
 
 import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
-import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.View;
-import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDataSource;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
@@ -61,7 +64,15 @@ public class PerfExplorerTableModel extends AbstractTableModel {
         } else if (object instanceof TAUdbTrial) {
             this.trial = (Trial) object;
             TAUdbTrial localTrial = (TAUdbTrial)this.trial;
-            System.err.println("PerfExplorerTableModel.updateObject() says: SET THE DATA SOURCE IN THE TRIAL!");
+
+			DatabaseAPI session = PerfExplorerServer.getServer().getSession();
+			try {
+				session.setTrial(trial.getID(), true);
+			} catch (DatabaseException e) {
+			}
+			DataSource dbDataSource = new TAUdbDataSource(session);
+
+			localTrial.setDataSource(dbDataSource);
             //localTrial.setDataSource(PerfExplorerServer.getServer().getSession());
             if(!localTrial.hasMetadata()){
 				localTrial.loadMetadata(PerfExplorerServer.getServer().getDB());

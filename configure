@@ -6343,7 +6343,11 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	else
 	if [ ! "x$bfdtar" = xyes ]; then
 	    #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
-	    tempdir=".tmp_bfdbuild_$$"
+      if [ -d /dev/shm -a -w /dev/shm ] ; then
+        tempdir=/dev/shm/tau_bfdbuild_$$
+      else
+        tempdir=".tmp_bfdbuild_$$"
+      fi
 	    mkdir $tempdir
 	    cd $tempdir
 	    if [ "$machine" = "apple" ] ; then
@@ -6384,8 +6388,8 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	    cp -R include/* $bfddir/include
 
             # Fix bfd.h
-            sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' $bfddir/include/bfd.h > /tmp/bfd.h
-            mv /tmp/bfd.h $bfddir/include
+            sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' $bfddir/include/bfd.h > $tempdir/bfd.h
+            mv $tempdir/bfd.h $bfddir/include
 	    
 	    # snow leopard
 	    if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
@@ -7398,11 +7402,14 @@ if [ $scorep = yes ] ; then
 	    fi
 	fi
     fi
-    scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
+    #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
+    scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 
-    fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLibs"
+    if [ $mpi = no ]; then
+      fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+    fi
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
 

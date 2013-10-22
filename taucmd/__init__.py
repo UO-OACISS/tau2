@@ -44,6 +44,9 @@ import textwrap
 # Contact for bugs, etc.
 HELP_CONTACT = '<tau-bugs@cs.uoregon.edu>'
 
+# Logging level
+LOG_LEVEL = 'INFO'
+
 #Expected Python version
 EXPECT_PYTHON_VERSION = (2, 7)
 
@@ -51,22 +54,22 @@ EXPECT_PYTHON_VERSION = (2, 7)
 PACKAGE_HOME = os.path.dirname(os.path.realpath(__file__))
 
 # Search paths for included files
-INCLUDE_PATH = [ os.path.realpath('.') ]
+INCLUDE_PATH = [os.path.realpath('.')]
 
-# Tau configuration home
-HOME = os.path.join(os.path.expanduser('~'), '.tau')
+# User-specific TAU files
+TAUCMD_HOME = os.path.join(os.path.expanduser('~'), '.tau')
 
-# Default Tau configuration
-CONFIG = 'simple'
-
-# Logging level
-LOG_LEVEL = 'INFO'
+# User-specific source code and build directory
+SRC_DIR = os.path.join(TAUCMD_HOME, 'src')
 
 # Tau source code root directory
 try:
-    TAU_ROOT_DIR = os.environ['TAU_ROOT_DIR']
+    TAU_MASTER_SRC_DIR = os.environ['TAU_MASTER_SRC_DIR']
 except KeyError:
-    TAU_ROOT_DIR = None
+    print 'CRITICAL ERROR: TAU_MASTER_SRC_DIR environment variable not set.'
+    exit(1)
+
+DEFAULT_TAU_COMPILER_OPTIONS = ['-optRevert', '-optVerbose']
 
 
 class TauError(Exception):
@@ -109,7 +112,7 @@ class LogFormatter(logging.Formatter):
     """    
     def __init__(self):
         super(LogFormatter, self).__init__()
-        
+
     def msgbox(self, record, marker):
         hline = marker*80
         parts = [hline, marker, '%s %s' % (marker, record.levelname)]
@@ -202,3 +205,4 @@ def excepthook(etype, e, tb):
         """ % {'typename': etype.__name__, 'cmd': ' '.join(args)})
         logger.critical(message)
         sys.exit(-1)
+        
