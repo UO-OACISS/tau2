@@ -23,13 +23,6 @@
 #define TAUDECL
 #endif /* TAU_WINDOWS */
 
-// IntelMPI needs mpi.h to be the very first header file included
-// Putting this here may be a bad idea.  Perhaps other MPI implementations
-// need mpi.h to be the last header?
-#ifdef TAU_MPI
-#include <mpi.h>
-#endif
-
 #if (!defined(TAU_LIBRARY_SOURCE) && !defined(TAU_WINDOWS))
 
 #include <sys/types.h>
