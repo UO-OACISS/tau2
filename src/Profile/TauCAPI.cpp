@@ -365,10 +365,15 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
     int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
+    //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth); 
     //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+#if 1
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
     free(Tau_thread_flags[tid].Tau_global_stack);
+#else
+    Profiler *newStack = (Profiler *) realloc(Tau_thread_flags[tid].Tau_global_stack, newDepth*sizeof(Profiler));
+#endif
     Tau_thread_flags[tid].Tau_global_stack = newStack;
     Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
