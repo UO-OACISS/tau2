@@ -38,7 +38,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import subprocess
 import taucmd
-from taucmd.project import Registry, ProjectNameError
+from datetime import datetime
+from taucmd.project import Registry, ProjectNameError, isProjectNameValid
 from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
@@ -58,9 +59,9 @@ Architecture Options:
   --target-arch=<name>              Set target architecture. [default: %(target_default)s]
 
 Compiler Options:
-  --cc=<compiler>                   Set C compiler. [default: gcc]
-  --c++=<compiler>                  Set C++ compiler. [default: g++]  
-  --fortran=<compiler>              Set Fortran compiler. [default: gfortran]
+  --cc=<compiler>                   Set C compiler.
+  --c++=<compiler>                  Set C++ compiler.  
+  --fortran=<compiler>              Set Fortran compiler.
   --upc=<compiler>                  Set UPC compiler.
 
 Assisting Library Options:
@@ -87,33 +88,31 @@ Universal Parallel C (UPC) Options:
   --upc-network=<network>           Set UPC network.
 
 Memory Options:
-  --memory                          Enable memory instrumentation. [default: False]
-  --memory-debug                    Enable memory debugging. [default: False]
+  --memory                          Enable memory instrumentation.
+  --memory-debug                    Enable memory debugging.
 
 I/O and Communication Options:
-  --comm-matrix                     Build the application's communication matrix. [default: False]
-  --io                              Enable I/O instrumentation. [default: False]
+  --comm-matrix                     Build the application's communication matrix.
+  --io                              Enable I/O instrumentation.
 
 Callpath Options:
-  --callpath                        Show callpaths in application profile. [default: False]
-  --callpath-depth=<number>         Set the depth of callpaths in the application profile. [default: 25]
-
-Instrumentation Options:
-  --source-inst                     Enable source instrumentation. Requires --pdt. [default: True]
-  --compiler-inst                   Enable compiler instrumentation. [default: False]
-  --binary-inst                     Enable binary rewriting instrumentation.  [default: False]
+  --callpath=<number>               Set the callpath depth in the application profile. [default: 0]
   
 Measurement Options:
-  --profile                         Enable application profiling. [default: True]
-  --trace                           Enable application tracing. [default: False]
-  --sample                          Enable application sampling.  Requires --bfd. [default: False]
-  --profile-format=(packed|merged)  Set profile file format. [default: packed]
-  --trace-format=(slog2|otf)        Set trace file format. [default: slog2] 
+  --profile                         Enable application profiling.
+  --trace                           Enable application tracing.
+  --sample                          Enable application sampling.  Requires --bfd.
 """
 
 HELP = """
 'project create' page to be written.
 """
+
+# # Compilers used when no other compiler specified
+# DEFAULT_COMPILERS = [('--cc', 'gcc'), ('--c++', 'g++'), ('--fortran', 'gfortran')]
+# 
+# # Compilers used when MPI specified
+# MPI_COMPILERS = [('--cc', 'mpicc'), ('--c++', 'mpicxx'), ('--fortran', 'mpif90')]
 
 def getUsage():
     return USAGE % {'target_default': detectTarget()}
@@ -138,20 +137,55 @@ def main(argv):
     usage = getUsage()
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
+    
+    # Make sure at least one measurement method is used
+    if not (args['--profile'] or args['--trace'] or args['--sample']):
+        args['--profile'] = True 
+        
+#     # Set compilers if not set
+#     if args['--mpi']:
+#         compilers = MPI_COMPILERS
+#     else:
+#         compilers = DEFAULT_COMPILERS
+#     for flag, comp in compilers:
+#         if not args[flag]:
+#             args[flag] = comp 
+
+    # Strip and check args
+    config = {'refresh': True,
+              'modified': datetime.now()}
+    exclude = ['--help', '-h', '--select']
+    for key, val in args.iteritems():
+        if key[0:2] == '--' and not key in exclude:
+            if key == '--name' and val and isProjectNameValid(val):
+                print "Error: %r cannot be used as a project name.  See 'tau project select --help'." % val
+                return 1
+            elif key in ['--pdt', '--bfd']:
+                if val.upper() == 'NONE':
+                    config[key[2:]] = None
+                elif val.upper() == 'DOWNLOAD':
+                    config[key[2:]] = 'download'
+                else:
+                    config[key[2:]] = val
+            else:
+                config[key[2:]] = val
+
+    # TODO: Other PDT compilers
+    config['pdt_c++'] = 'g++'
 
     registry = Registry()
     try:
-        proj = registry.newProject(args)
+        proj = registry.addProject(config, args['--select'])
     except ProjectNameError, e:
         print e.value
         return 1
     
     proj_name = proj.getName()
-    default_name = registry.getDefaultProject().getName()
+    select_name = registry.getSelectedProject().getName()
     if proj:
         print 'Created project %r' % proj_name
-        if default_name == proj_name:
-            print 'Selected %r as the new default project' % default_name
+        if select_name == proj_name:
+            print 'Selected %r as the new default project' % select_name
         else:
-            print "Note: The selected project is %r.\n      Type 'tau project select %s' to select this project." % (default_name, proj_name)
+            print "Note: The selected project is %r.\n      Type 'tau project select %s' to select this project." % (select_name, proj_name)
         return 0

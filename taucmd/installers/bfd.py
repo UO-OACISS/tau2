@@ -102,8 +102,8 @@ def getConfigureCommand(config):
 
 
 def getPrefix(config):
-    name = '_'.join([config['cc'], config['c++']]) 
-    prefix = os.path.join(taucmd.TAUCMD_HOME, 'bfd', name)
+    # TODO: Support other compilers 
+    prefix = os.path.join(taucmd.TAUCMD_HOME, 'bfd', 'GNU')
     return prefix
 
 
@@ -167,4 +167,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
         raise TauError('BFD compilation failed.')
+    
+    # Cleanup
+    shutil.rmtree(srcdir)
     print 'BFD installation complete.'
