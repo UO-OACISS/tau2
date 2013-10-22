@@ -35,7 +35,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import os
 import sys
+import glob
 import subprocess
 import taucmd
 from taucmd import util
@@ -68,19 +70,18 @@ def main(argv):
     Program entry point
     """
     LOGGER.debug('Arguments: %r' % argv)
-    cmd = argv[1]
-    cmd_args = argv[2:]
+    cmd_arg = argv[1]
     
     registry = Registry()
-    if not len(registry.projects):
-        print "There are no TAU projects in this directory.  See 'tau project create'."
+    if not len(registry):
+        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
         return 1
 
     # Check project compatibility
-    proj = registry.getDefaultProject()
+    proj = registry.getSelectedProject()
     print 'Using TAU project %r' % proj.getName()
-    if not proj.supportsExec(cmd):
-        print "Warning: %r project may not be compatible with %r." % (proj.getName(), cmd)
+    if not proj.supportsExec(cmd_arg):
+        print "Warning: %r project may not be compatible with %r." % (proj.getName(), cmd_arg)
         
     # Compile the project if needed
     proj.compile()
@@ -91,10 +92,50 @@ def main(argv):
     # Get compiler flags
     flags = proj.getTauExecFlags()
     
-    # Execute the compiler wrapper script
-    cmd = [cmd] + flags + cmd_args
-
+    # Construct command
+    if cmd_arg in ['mpirun', 'mpiexec', 'aprun']:
+        cmd = [cmd_arg]
+        dash = False
+        exe_idx = 2
+        for i, arg in enumerate(argv[2:], 2):
+            if arg == '--':
+                exe_idx = i + 1
+                break
+            elif arg[0] == '-':
+                print 'adding %r' % arg
+                cmd.append(arg)
+                dash = True
+            elif dash:
+                print 'dash: adding %r' % arg
+                cmd.append(arg)
+                dash = False
+            else:
+                print 'exe_idx = %d' % i
+                exe_idx = i
+                break
+        cmd += ['tau_exec'] + flags + argv[exe_idx:]
+    else:
+        cmd = ['tau_exec'] + flags + argv[1:]
+    
+    # Execute the application
     LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
     proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-    return proc.wait()
+    cmd_retval = proc.wait()
     
+    # Check for profiles
+    profiles = glob.glob('profile.*')
+    
+    # Pack the profiles
+    if profiles and proj.config['profile']:
+        ppk_name = '%s.%s.ppk' % (cmd_arg, proj.getName())
+        cmd = ['paraprof', '--pack', ppk_name]
+        proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+        retval = proc.wait()
+        if retval < 0:
+            print 'ERROR: paraprof killed by signal %d' % -retval
+        elif retval > 0:
+            print 'ERROR: paraprof failed'
+        else:
+            for profile in profiles:
+                os.remove(profile)
+    return cmd_retval

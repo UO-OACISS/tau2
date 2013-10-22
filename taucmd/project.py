@@ -48,6 +48,10 @@ from taucmd import util
 
 LOGGER = taucmd.getLogger(__name__)
 
+
+def isProjectNameValid(name):
+    return name.upper() not in ['DEFAULT', 'SELECT', 'SELECTED']
+
     
 class ProjectNameError(Exception):
     def __init__(self, value):
@@ -63,80 +67,68 @@ class Registry(object):
     def __init__(self, projects_dir='.tau'):
         self.projects_dir = projects_dir
         self.projects = None
+        self.selected = None
         self.load()
         
     def __str__(self):
-        return pprint.pformat(self.projects)
-
+        return 'Selected: %s\nProjects:\n%s' % (self.selected, pprint.pformat(self.projects))
+    
+    def __len__(self):
+        return len(self.projects)
+    
+    def __iter__(self):
+        for config in self.projects.itervalues():
+            yield Project(self, config)
+            
+    def __getitem__(self, key):
+        return Project(self, self.projects[key])
+    
     def load(self):
         if self.projects:
             LOGGER.debug('Project registry already loaded.')
         try:
             file_path = os.path.join(self.projects_dir, 'projects')
             with open(file_path, 'rb') as fp:
-                self.projects = pickle.load(fp)
+                self.selected, self.projects = pickle.load(fp)
             LOGGER.debug('Project registry loaded from %r' % file_path)
         except:
             LOGGER.debug('Project registry file %r does not exist.' % file_path)
+            self.selected = None
             self.projects = {}
 
     def save(self):
         util.mkdirp(self.projects_dir)
         file_path = os.path.join(self.projects_dir, 'projects')
         with open(file_path, 'wb') as fp:
-            pickle.dump(self.projects, fp)
+            pickle.dump((self.selected, self.projects), fp)
         LOGGER.debug('Project registry written to %r' % file_path)
 
-    def getDefaultProject(self):
-        projects = self.projects
-        if projects:
-            default = projects['default']
-            return Project(self, projects[default])
+    def getSelectedProject(self):
+        try:
+            return Project(self, self.projects[self.selected])
+        except:
+            pass
         return None
     
-    def setDefaultProject(self, proj_name):
-        # Set a project as default
+    def setSelectedProject(self, proj_name):
+        # Set a project as selected
         projects = self.projects
         if not proj_name in projects:
-            raise ProjectNameError("Error: No project named %r exists.  See 'tau project list' for project names." % proj_name)
-        # Update default
-        projects['default'] = proj_name
+            raise KeyError
+        self.selected = proj_name
         self.save()
 
-    def newProject(self, args):
-        # Strip and check args
-        config = {'refresh': True,
-                  'modified': datetime.now()}
-        exclude = ['--help', '-h', '--default']
-        for key, val in args.iteritems():
-            if key[0:2] == '--' and not key in exclude:
-                if key == '--name' and val == 'default':
-                    raise ProjectNameError("Error: 'default' cannot be used as a project name.  Use 'tau project select' to set the default project.")
-                elif key == '--pdt':
-                    if val.upper() == 'NONE':
-                        config['pdt'] = None
-                    elif val.upper() == 'DOWNLOAD':
-                        config['pdt'] = 'download'
-                    else:
-                        config['pdt'] = val
-                elif key == '--bfd':
-                    if val.upper() == 'NONE':
-                        config['bfd'] = None
-                    elif val.upper() == 'DOWNLOAD':
-                        config['bfd'] = 'download'
-                    else:
-                        config['bfd'] = val
-                else:
-                    config[key[2:]] = val
+    def addProject(self, config, select=False):
         # Create the project object and update the registry
+        LOGGER.debug('Adding project: %r' % config)
         proj = Project(self, config)
         proj_name = proj.getName()
         projects = self.projects
         if proj_name in projects:
             raise ProjectNameError("Error: Project %r already exists.  See 'tau project create --help' and maybe use the --name option." % proj_name)
         projects[proj_name] = proj.config
-        if args['--select'] or not 'default' in projects:
-            projects['default'] = proj_name
+        if select or not self.selected:
+            self.selected = proj_name
         self.save()
         return proj
 
@@ -147,16 +139,12 @@ class Registry(object):
             LOGGER.debug('Removed %r from project registry' % proj_name)
         except KeyError:
             raise ProjectNameError('Error: No project named %r.' % proj_name)
-        # Update default if necessary
-        new_default = None
-        if projects['default'] == proj_name:
-            if len(projects) > 1:
-                for new_default in projects.iterkeys():
-                    if new_default != 'default':
-                        break
-                projects['default'] = new_default
-            else:
-                self.projects = {}
+        # Update selected if necessary
+        if self.selected == proj_name:
+            for next_name in projects.iterkeys():
+                if next_name != proj_name:
+                    self.selected = next_name
+                    break
         # Save registry
         self.save()
         # TODO: Delete project files
@@ -174,17 +162,24 @@ class Project(object):
         self.registry = registry
         self.config = config
 
+    def __str__(self):
+        return pprint.pformat(self.config)
+
     def getName(self):
         config = self.config
+        callpath_depth = int(config['callpath'])
+        config['callpath'] = callpath_depth
         if config['name']:
             return config['name']
         else:
-            nameparts = ['bfd', 'binary-inst', 'callpath', 'comm-matrix', 'compiler-inst', 
+            nameparts = ['bfd', 'comm-matrix', 
                          'cuda', 'dyninst', 'io', 'memory', 'memory-debug', 'mpi', 'openmp',
-                         'papi', 'pdt', 'profile', 'pthreads', 'sample', 'source-inst', 'trace']
+                         'papi', 'pdt', 'profile', 'pthreads', 'sample', 'trace']
             valueparts = ['c++', 'cc', 'fortran', 'target-arch', 'upc', 'upc-network']
             parts = [config[part].lower() for part in valueparts if config[part]]
             parts.extend([part.lower() for part in nameparts if config[part]])
+            if callpath_depth:
+                parts.append('callpath%d' % callpath_depth)
             parts.sort()
             name = '_'.join(parts)
             config['name'] = name
@@ -195,7 +190,12 @@ class Project(object):
         return {key: self.config[key] for key in compiler_fields}
     
     def supportsCompiler(self, cmd):
-        return cmd in self.getCompilers().values()
+        compilers = self.getCompilers()
+        has_compilers = reduce(lambda a, b: a or b, compilers.values())
+        if has_compilers:
+            return cmd in compilers.values()
+        else:
+            return cmd in ['gcc', 'g++', 'gfortran', 'gupc']
     
     def supportsExec(self, cmd):
         config = self.config
@@ -236,6 +236,22 @@ class Project(object):
         config['refresh'] = False
         config['modified'] = datetime.now()
         self.registry.save()
+        
+    def getEnvironment(self):
+        """
+        Returns an environment for use with subprocess.Popen that specifies 
+        environment variables for this project
+        """
+        config = self.config
+        env = dict(os.environ)
+        bindir = os.path.join(config['tau-prefix'], config['target-arch'], 'bin')
+        try:
+            env['PATH'] = bindir + ':' + env['PATH']
+            LOGGER.debug('Updated PATH to %r' % env['PATH'])
+        except KeyError:
+            LOGGER.warning('The PATH environment variable was unset.')
+            env['PATH'] = bindir
+        return env
 
     def getTauMakefile(self):
         """
@@ -253,27 +269,22 @@ class Project(object):
         """
         makefile = self.getTauMakefile()
         start = makefile.find('Makefile.tau')
-        tags = makefile[start+12:].split('-')
-        if len(tags) > 1:
-            return map(lambda x: x.upper(), tags[1:])
-        return []
+        mktags = makefile[start+12:].split('-')
+        tags = []
+        if not self.config['mpi']:
+            tags += ['SERIAL']
+        if len(mktags) > 1:
+            tags.extend(map(lambda x: x.upper(), mktags[1:]))
+        return tags
         
     def getTauCompilerEnvironment(self):
         """
         Returns an environment for use with subprocess.Popen that specifies the
         compile-time TAU environment variables for this project
         """
-        config = self.config
-        env = dict(os.environ)
+        env = self.getEnvironment()
         env['TAU_OPTIONS'] = ' '.join(taucmd.DEFAULT_TAU_COMPILER_OPTIONS)
         env['TAU_MAKEFILE'] = self.getTauMakefile()
-        bindir = os.path.join(config['tau-prefix'], config['target-arch'], 'bin')
-        try:
-            env['PATH'] = bindir + ':' + env['PATH']
-            LOGGER.debug('Updated PATH to %r' % env['PATH'])
-        except KeyError:
-            LOGGER.warning('The PATH environment variable was unset.')
-            env['PATH'] = bindir
         return env
 
     def getTauCompilerFlags(self):
@@ -289,25 +300,33 @@ class Project(object):
         run-time TAU environment variables for this project
         """
         config = self.config
-        flags = {'callpath': ['TAU_CALLPATH'],
+        env = self.getEnvironment()
+        parts = {'callpath': ['TAU_CALLPATH'],
                   'comm-matrix': ['TAU_COMM_MATRIX'],
                   'memory': ['TAU_TRACK_HEAP', 'TAU_TRACK_MEMORY_LEAKS'],
                   'memory-debug': ['TAU_MEMDBG_PROTECT_ABOVE', 'TAU_TRACK_MEMORY_LEAKS'],
                   'profile': ['TAU_PROFILE'],
                   'sample': ['TAU_SAMPLING'],
                   'trace': ['TAU_TRACE']}
-        env = dict(os.environ)
         for key, val in config.iteritems():
-            if key in flags and val:
-                env.update([(x, 1) for x in flags[key]])
+            if key in parts and val:
+                env.update([(x, '1') for x in parts[key]])
         if config['callpath']:
-            env['TAU_CALLPATH_DEPTH'] = config['callpath-depth']
+            env['TAU_CALLPATH_DEPTH'] = str(config['callpath'])
         return env
 
     def getTauExecFlags(self):
         """
         Returns tau_exec flags
         """
+        config = self.config
+        parts = {'memory': '-memory',
+                 'memory-debug': '-memory_debug',
+                 'io': '-io'}
         tags = self.getTauTags()
-        print tags
-        
+        flags = ['-T', ','.join(tags)]
+        for key, val in config.iteritems():
+            if key in parts and val:
+                flags.append(parts[key])
+        return flags
+

@@ -40,7 +40,7 @@ import re
 import taucmd
 from pkgutil import walk_packages
 from taucmd import commands
-from taucmd.commands import build, run
+from taucmd.commands import build, run, display
 from taucmd.docopt import docopt
 
 USAGE = """
@@ -51,13 +51,19 @@ Usage:
   tau [options] <command> [<args>...]
   tau -h | --help
   tau --version
-  
+
 Tau Commands:
 %(command_descr)s
+
+Shortcuts:  
   <compiler>       A compiler command, e.g. gcc, mpif90, upcc, nvcc, etc. 
                    An alias for 'tau build <compiler>'
   <executable>     A program executable, e.g. ./a.out
                    An alias for 'tau execute <executable>'
+  <profile>        View profile data (*.ppk, *.xml, profile.*, etc.) in ParaProf
+                   An alias for 'tau display <profile>'
+  <trace>          View trace data (*.otf *.slog2, etc.) in Jumpshot
+                   An alias for 'tau display <trace>' 
 
 TAU Options:
   --log=<level>    Output level.  [default: %(log_default)s]
@@ -106,11 +112,11 @@ def executeCommand(cmd, cmd_args):
     try:
         __import__(cmd_module)
         LOGGER.debug('Recognized %r as tau subcommand' % cmd)
-        exit(sys.modules[cmd_module].main([cmd] + cmd_args))
+        return sys.modules[cmd_module].main([cmd] + cmd_args)
     except ImportError:
         # It wasn't a tau command, but that's OK
         LOGGER.debug('%r not recognized as a TAU command' % cmd)
-        return None
+    return None
 
 def main():
     """
@@ -143,23 +149,26 @@ def main():
     # Try to execute as a tau command
     cmd = args['<command>']
     cmd_args = args['<args>']
-    executeCommand(cmd, cmd_args)
+    retval = executeCommand(cmd, cmd_args)
+    if retval != None:
+        return retval
 
-    # Try to execute as a compiler command
-    if build.isKnownCompiler(args['<command>']):
-        cmd = 'build'
-        cmd_args = [args['<command>']] + args['<args>']
-        executeCommand(cmd, cmd_args)
-
-    # See if command can be executed
-    if run.isExecutable(args['<command>']):
-        cmd = 'run'
-        cmd_args = [args['<command>']] + args['<args>']
-        executeCommand(cmd, cmd_args)
+    # Check shortcuts
+    shortcut = None
+    if build.isKnownCompiler(cmd):
+        shortcut = 'build'
+    elif display.isKnownFileFormat(cmd):
+        shortcut = 'display'
+    elif run.isExecutable(cmd):
+        shortcut = 'run'
+    if shortcut:
+        retval = executeCommand(shortcut, [cmd] + cmd_args)
+        if retval != None:
+            return retval
 
     # Not sure what to do at this point, so advise the user and exit
     LOGGER.debug("Can't classify %r.  Calling 'tau help' to get advice." % cmd)
-    executeCommand('help', [cmd])
+    return executeCommand('help', [cmd]) 
 
 # Command line execution
 if __name__ == "__main__":

@@ -81,16 +81,13 @@ def getConfigureCommand(config):
     """
     Returns the command that will configure PDT for a project
     """
-    return ['./configure', '-prefix=%s' % config['pdt-prefix']]
+    # TODO: Support other compilers
+    return ['./configure', '-GNU', '-prefix=%s' % config['pdt-prefix']]
 
 
 def getPrefix(config):
-    if config['c++'] == 'g++':
-        name = 'GNU'
-    else:
-        raise TauNotImplementedError('Only g++ is supported for PDT at this time')
-        #name = config['c++']
-    prefix = os.path.join(taucmd.TAUCMD_HOME, 'pdt', name)
+    # TODO: Support other compilers
+    prefix = os.path.join(taucmd.TAUCMD_HOME, 'pdt', 'GNU')
     return prefix
 
 
@@ -141,4 +138,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
         raise TauError('PDT compilation failed.')
+    
+    # Clean up
+    shutil.rmtree(srcdir)
     print 'PDT installation complete.'

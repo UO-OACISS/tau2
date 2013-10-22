@@ -37,27 +37,32 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import sys
+import glob
 import subprocess
 import taucmd
+from threading import Thread
+from taucmd import util
 from taucmd.project import Registry
-from taucmd.commands.build import TAU_CC
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "GNU C Compiler."
+FILE_VIEWERS = {'profile': 'paraprof',
+                'ppk': 'paraprof',
+                'xml': 'paraprof',
+                'otf': 'jumpshot',
+                'slog2': 'jumpshot'}
+
+
+SHORT_DESCRIPTION = "Display application profile or trace data."
 
 USAGE = """
 Usage:
-  tau build gcc [<args>...]
+  tau display <files>...
 """
 
 HELP = """
-'tau build gcc' help page to be written.
+'tau display' help page to be written.
 """
-
-COMMAND = 'gcc'
-
-TAU_COMPILER = TAU_CC
 
 def getUsage():
     return USAGE
@@ -65,40 +70,64 @@ def getUsage():
 def getHelp():
     return HELP
 
+def isProfileFile(filename):
+    return filename[0:8] == 'profile.' and len(filename) == 13
+
+def isKnownFileFormat(fname):
+    return isProfileFile(fname) or fname.split('.')[-1] in FILE_VIEWERS 
+
+def launchViewer(cmd, env):
+    LOGGER.debug('Creating subprocess: cmd=%r' % cmd)
+    subprocess.call(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+
+
 def main(argv):
     """
     Program entry point
     """
     LOGGER.debug('Arguments: %r' % argv)
-    cmd_args = argv[2:]
-    if not cmd_args:
-        print "ERROR: no options specified"
-        return 1
     
     registry = Registry()
-    if not len(registry.projects):
+    if not len(registry):
         print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
         return 1
 
     # Check project compatibility
     proj = registry.getSelectedProject()
     print 'Using TAU project %r' % proj.getName()
-    if not proj.supportsCompiler(COMMAND):
-        print "Warning: %r project may not support the %r compiler command.  Supported compilers: %r" % (proj.getName(), COMMAND, proj.getCompilers())
-    
+        
     # Compile the project if needed
     proj.compile()
+    
+    # Sort files by type
+    all_files = {}
+    for arg in argv[1:]:
+        if isProfileFile(arg):
+            if 'profile' not in all_files:
+                all_files['profile'] = []
+            all_files['profile'].append(arg)
+        else:
+            ext = arg.split('.')[-1]
+            if ext not in all_files:
+                all_files[ext] = []
+            all_files[ext].append(arg)
+    LOGGER.debug('Sorted files: %r' % all_files)
+    
+    # Construct commands
+    cmds = []
+    for filetype, files in all_files.iteritems():
+        cmd = [FILE_VIEWERS[filetype]] + files
+        cmds.append(cmd)
+    LOGGER.debug('Commands: %r' % cmds)
+    
+    # Get environment
+    env = proj.getEnvironment()
+    
+    # Launch viewers
+    threads = [Thread(target=launchViewer, args=(cmd,env)) for cmd in cmds]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
 
-    # Set the environment
-    env = proj.getTauCompilerEnvironment()
-    
-    # Get compiler flags
-    flags = proj.getTauCompilerFlags()
-    
-    # Execute the compiler wrapper script
-    cmd = [TAU_COMPILER] + flags + cmd_args
-
-    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
-    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-    return proc.wait()
-    
+    return 0

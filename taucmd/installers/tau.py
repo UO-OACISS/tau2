@@ -89,7 +89,10 @@ def translateConfigureArg(config, key, val):
     # No parameter flags
     noparam = {'mpi': '-mpi',
                'openmp': '-openmp',
-               'pthreads': '-pthread'}
+               'pthreads': '-pthread',
+               'pdt': '-pdt=%s' % config['pdt-prefix'],
+               'bfd': '-bfd=%s' % config['bfd-prefix'],
+               'cuda': '-cuda=%s' % config['cuda-sdk']}
     # One parameter flags
     oneparam = {'dyninst': '-dyninst=%s',
                 'mpi-include': '-mpiinc=%s',
@@ -102,7 +105,9 @@ def translateConfigureArg(config, key, val):
                 'upc-network': '-upcnetwork=%s',
                 #TODO: Translate compiler command correctly
                 'cc': '-cc=%s',
-                'c++': '-c++=%s'}
+                'c++': '-c++=%s',
+                'fortran': '-fortran=%s',
+                'pdt_c++': '-pdt_c++=%s'}
     # Attempt no-argument translation
     try:
         return [noparam[key]]
@@ -113,19 +118,6 @@ def translateConfigureArg(config, key, val):
         return [oneparam[key] % val]
     except KeyError:
         pass
-    # Attempt a more complex translation
-    if key == 'pdt':
-        return ['-pdt=%s' % config['pdt-prefix']]
-    elif key == 'bfd':
-        return ['-bfd=%s' % config['bfd-prefix']]
-    elif key == 'cuda':
-        return ['-cuda=%s' % config['cuda-sdk']]
-    elif key == 'fortran':
-        # TODO: need other compilers
-        if val == 'gfortran':
-            return ['-fortran=%s' % val]
-        else:
-            raise TauNotImplementedError('Only gfortran is supported at this time') 
     # Couldn't translate the argument
     return []
 
@@ -188,5 +180,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
         raise TauError('TAU compilation failed.')
+    
+    # Leave source, we'll probably need it again soon
     print 'TAU installation complete.'
         

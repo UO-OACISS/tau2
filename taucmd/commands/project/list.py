@@ -46,8 +46,11 @@ SHORT_DESCRIPTION = "Show all TAU project configurations in this directory."
 
 USAGE = """
 Usage:
-  tau project list [<name>]
+  tau project list [options] [<name>]
   tau project list -h | --help
+  
+Options:
+  --long                     Show all project information.
 """
 
 HELP = """
@@ -69,10 +72,26 @@ def main(argv):
     usage = getUsage()
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
+    proj_name = args['<name>']
     
     registry = Registry()
-    if len(registry.projects):
-        print registry
+    
+    # Show a specific project's settings if name is given
+    if proj_name:
+        try:
+            print registry[proj_name]
+        except KeyError:
+            print "Error: No project named %r exists.  See 'tau project list --help'." % proj_name
+            return 1
     else:
-        print "No projects defined in %r.  See 'tau project create'." % os.getcwd()
+        if len(registry):
+                for project in registry:
+                    print project.getName()
+                    if args['--long']:
+                        print '-'*80
+                        print project
+                        print '\n'
+                         
+        else:
+            print "No projects defined in %r.  See 'tau project create'." % os.getcwd()
     return 0

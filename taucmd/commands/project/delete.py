@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import taucmd
-from taucmd.project import Registry, ProjectNameError
+from taucmd.project import Registry, ProjectNameError, isProjectNameValid
 from taucmd.docopt import docopt
 from shutil import rmtree
 
@@ -75,7 +75,7 @@ def main(argv):
     
     # Check for invalid request
     proj_name = args['<name>']
-    if proj_name.upper() == 'DEFAULT':
+    if not isProjectNameValid(proj_name):
         print "Error: See 'tau project select' to change the default project."
         return 1
 
