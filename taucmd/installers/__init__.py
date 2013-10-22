@@ -3,7 +3,7 @@
 @author John C. Linford (jlinford@paratools.com)
 @version 1.0
 
-@brief
+@brief 
 
 This file is part of the TAU Performance System
 
@@ -34,64 +34,3 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-
-import taucmd
-from taucmd.project import Registry, ProjectNameError
-from taucmd.docopt import docopt
-
-LOGGER = taucmd.getLogger(__name__)
-
-SHORT_DESCRIPTION = "Select a TAU project in this directory."
-
-USAGE = """
-Usage:
-  tau project select [<name>]
-  tau project select -h | --help
-
-See 'tau project list' for project names.
-"""
-
-HELP = """
-Help page to be written.
-"""
-
-def getUsage():
-    return USAGE
-
-def getHelp():
-    return HELP
-
-def main(argv):
-    """
-    Program entry point
-    """
-
-    # Parse command line arguments
-    usage = getUsage()
-    args = docopt(usage, argv=argv)
-    LOGGER.debug('Arguments: %s' % args)
-    proj_name = args['<name>']
-    
-    registry = Registry()
-    default_proj = registry.getDefaultProject()
-    
-    # If no project name given, print current default project name
-    if not proj_name:
-        if default_proj:
-            print default_proj.getName()
-        else:
-            print "No projects defined.  See 'tau project create' to create a new project."
-        return 0
-
-    # Check for invalid request
-    if proj_name.upper() == 'DEFAULT':
-        print "Error: See 'tau project select --help'."
-        return 1
-    
-    # Set a project as default
-    try:
-        registry.setDefaultProject(proj_name)
-    except ProjectNameError, e:
-        print e.value
-        return 1
-    return 0

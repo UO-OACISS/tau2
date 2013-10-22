@@ -50,54 +50,6 @@ LOGGER = taucmd.getLogger(__name__)
 # Default settings
 DEFAULT_TAU_OPTIONS = ['-optRevert']
 
-def translateConfigureArg(key, val):
-    """
-    Gets the configure script argument(s) corresponding to a Tau Commander argument
-    """
-    # Ignore empty arguments
-    if not val: 
-        return []
-
-    # Ignore some arguments
-    if key in ['name', 'id', 'compiler']:
-        return []
-
-    # Simple translations
-    simple = {'bfd': '-bfd=%s',
-              'cuda': '-cuda=%s',
-              'dyninst': '-dyninst=%s',
-              'mpi-include': '-mpiinc=%s',
-              'mpi-lib': '-mpilib=%s',
-              'papi': '-papi=%s',
-              'pdt': '-pdt=%s',
-              'prefix': '-prefix=%s',
-              'target': '-arch=%s',
-              'upc-gasnet': '-gasnet=%s',
-              'upc-network': '-upcnetwork=%s'}
-    
-    # Map of multithread options
-    threadmap = {'openmp': '-openmp',
-                 'pthread': '-pthread'}
-    
-    # Attempt a simple translation
-    try:
-        return [simple[key] % val]
-    except KeyError:
-        pass
-    
-    # Can't do a simple translation, do a more complex translation
-    if key == 'mpi':
-        mpiinc = os.path.join(val, 'include')
-        mpilib = os.path.join(val, 'lib')
-        if not (os.path.exists(mpilib) and os.path.isdir(mpilib)):
-            mpilib = os.path.join(val, 'lib64') 
-        return ['-mpiinc=%s' % mpiinc, '-mpilib=%s' % mpilib]
-    elif key == 'threads':
-        return [threadmap[val]]
-
-    # Couldn't translate the argument
-    raise TauError('Cannot translate configuration parameter %r' % key)
-
 
 
 class TauConfiguration(object):

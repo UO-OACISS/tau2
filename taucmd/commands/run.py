@@ -36,74 +36,65 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import sys
+import subprocess
 import taucmd
-from taucmd import commands
-from taucmd.docopt import docopt
-from pkgutil import walk_packages
+from taucmd import util
+from taucmd.project import Registry
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Instrument programs during compilation and/or linking."
+SHORT_DESCRIPTION = "Gather measurements from an application."
 
 USAGE = """
 Usage:
-  tau build <compiler> [<args>...]
-  tau build -h | --help
-  
-Known Compilers:
-%(command_descr)s
+  tau run [<args>...]
 """
 
 HELP = """
-'tau build' help page to be written.
+'tau run' help page to be written.
 """
 
-# Tau compiler wrapper scripts
-TAU_CC = 'tau_cc.sh'
-TAU_CXX = 'tau_cxx.sh'
-TAU_F77 = 'tau_f90.sh'     # Yes, f90 not f77
-TAU_F90 = 'tau_f90.sh'
-TAU_UPC = 'tau_upc.sh'
-
 def getUsage():
-    return USAGE % {'command_descr': commands.getSubcommands(__name__)}
+    return USAGE
 
 def getHelp():
     return HELP
 
-def isKnownCompiler(cmd):
-    """
-    Returns True if cmd is a known compiler command
-    """
-    known = [n for _, n, _ in walk_packages(sys.modules[__name__].__path__)]
-    return cmd in known
+def isExecutable(cmd):
+    return util.which(cmd) != None
 
 def main(argv):
     """
     Program entry point
     """
-
-    # Parse command line arguments
-    usage = getUsage()
-    args = docopt(usage, argv=argv, options_first=True)
-    LOGGER.debug('Arguments: %s' % args)
+    LOGGER.debug('Arguments: %r' % argv)
+    cmd = argv[1]
+    cmd_args = argv[2:]
     
-    # Check for -h | --help (why doesn't this work automatically?)
-    idx = args['<compiler>'].find('-h')
-    if (idx == 0) or (idx == 1):
-        print usage
-        return 0
-
-    # Try to execute as a tau command
-    cmd = args['<compiler>']
-    cmd_args = args['<args>']
-    cmd_module = 'taucmd.commands.build.%s' % cmd   
-    
-    try:
-        __import__(cmd_module)
-        LOGGER.debug('Recognized %r as a tau build command' % cmd)
-        return sys.modules[cmd_module].main(['build', cmd] + cmd_args)
-    except ImportError:
-        LOGGER.debug('%r not recognized as a tau build command' % cmd)
-        print usage
+    registry = Registry()
+    if not len(registry.projects):
+        print "There are no TAU projects in this directory.  See 'tau project create'."
         return 1
+
+    # Check project compatibility
+    proj = registry.getDefaultProject()
+    print 'Using TAU project %r' % proj.getName()
+    if not proj.supportsExec(cmd):
+        print "Warning: %r project may not be compatible with %r." % (proj.getName(), cmd)
+        
+    # Compile the project if needed
+    proj.compile()
+    
+    # Set the environment
+    env = proj.getTauExecEnvironment()
+    
+    # Get compiler flags
+    flags = proj.getTauExecFlags()
+    
+    # Execute the compiler wrapper script
+    cmd = [cmd] + flags + cmd_args
+
+    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
+    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    return proc.wait()
+    

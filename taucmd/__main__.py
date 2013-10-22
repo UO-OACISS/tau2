@@ -40,6 +40,7 @@ import re
 import taucmd
 from pkgutil import walk_packages
 from taucmd import commands
+from taucmd.commands import build, run
 from taucmd.docopt import docopt
 
 USAGE = """
@@ -51,16 +52,16 @@ Usage:
   tau -h | --help
   tau --version
   
-TAU Options:
-  --log=<level>    Output level.  [default: %(log_default)s]
-                   <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
-
 Tau Commands:
+%(command_descr)s
   <compiler>       A compiler command, e.g. gcc, mpif90, upcc, nvcc, etc. 
                    An alias for 'tau build <compiler>'
   <executable>     A program executable, e.g. ./a.out
                    An alias for 'tau execute <executable>'
-%(command_descr)s
+
+TAU Options:
+  --log=<level>    Output level.  [default: %(log_default)s]
+                   <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
 
 See 'tau help <command>' for more information on a specific command.
 """
@@ -73,17 +74,16 @@ def getTauVersion():
     Opens TAU header files to get the TAU version
     """
     header_files=['TAU.h', 'TAU.h.default']
-    if taucmd.TAU_ROOT_DIR:
-        pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
-        for hfile in header_files:
-            try:
-                with open('%s/include/%s' % (taucmd.TAU_ROOT_DIR, hfile), 'r') as tau_h:
-                    for line in tau_h:
-                        match = pattern.match(line) 
-                        if match:
-                            return match.group(1)
-            except IOError:
-                continue
+    pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
+    for hfile in header_files:
+        try:
+            with open('%s/include/%s' % (taucmd.TAU_MASTER_SRC_DIR, hfile), 'r') as tau_h:
+                for line in tau_h:
+                    match = pattern.match(line) 
+                    if match:
+                        return match.group(1)
+        except IOError:
+            continue
     return '(unknown)'
 
 
@@ -112,7 +112,6 @@ def executeCommand(cmd, cmd_args):
         LOGGER.debug('%r not recognized as a TAU command' % cmd)
         return None
 
-
 def main():
     """
     Program entry point
@@ -129,13 +128,13 @@ def main():
 
     # Get tau version
     tau_version = getTauVersion()
-    
+
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
                      'log_default': taucmd.LOG_LEVEL,
                      'command_descr': getCommands()}
     args = docopt(usage, version=tau_version, options_first=True)
-    
+
     # Set log level
     taucmd.setLogLevel(args['--log'])
     LOGGER.debug('Arguments: %s' % args)
@@ -147,8 +146,14 @@ def main():
     executeCommand(cmd, cmd_args)
 
     # Try to execute as a compiler command
-    if commands.build.isKnownCompiler(args['<command>']):
+    if build.isKnownCompiler(args['<command>']):
         cmd = 'build'
+        cmd_args = [args['<command>']] + args['<args>']
+        executeCommand(cmd, cmd_args)
+
+    # See if command can be executed
+    if run.isExecutable(args['<command>']):
+        cmd = 'run'
         cmd_args = [args['<command>']] + args['<args>']
         executeCommand(cmd, cmd_args)
 

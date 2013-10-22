@@ -35,8 +35,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os
-import subprocess
 import taucmd
 from taucmd.docopt import docopt
 
@@ -57,17 +55,10 @@ Help page to be written.
 """
 
 def getUsage():
-    return USAGE % {'target_default': detectTarget()}
+    return USAGE
 
 def getHelp():
     return HELP
-
-def detectTarget():
-    """
-    Use TAU's archfind script to detect the target architecture
-    """
-    cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
-    return subprocess.check_output(cmd).strip()
 
 def main(argv):
     """
@@ -78,6 +69,6 @@ def main(argv):
     usage = getUsage()
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
-    
     print args
+    raise taucmd.TauNotImplementedError('TODO: Implement project edit', 'project edit')
     return 0
