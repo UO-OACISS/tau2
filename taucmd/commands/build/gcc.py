@@ -35,11 +35,11 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os
+import sys
 import subprocess
 import taucmd
-from pprint import pprint
-from taucmd.docopt import docopt
+from taucmd.project import Registry
+from taucmd.commands.build import TAU_CC
 
 LOGGER = taucmd.getLogger(__name__)
 
@@ -54,6 +54,10 @@ HELP = """
 'tau build gcc' help page to be written.
 """
 
+COMMAND = 'gcc'
+
+TAU_COMPILER = TAU_CC
+
 def getUsage():
     return USAGE
 
@@ -64,5 +68,36 @@ def main(argv):
     """
     Program entry point
     """
-   
-    print 'TODO: %r' % __name__
+    LOGGER.debug('Arguments: %r' % argv)
+    cmd_args = argv[2:]
+    if not cmd_args:
+        print "ERROR: no options specified"
+        return 1
+    
+    registry = Registry()
+    if not len(registry.projects):
+        print "There are no TAU projects in this directory.  See 'tau project create'."
+        return 1
+
+    # Check project compatibility
+    proj = registry.getDefaultProject()
+    print 'Using TAU project %r' % proj.getName()
+    if not proj.supportsCompiler(COMMAND):
+        print "Warning: %r project may not support the %r compiler command.  Supported compilers: %r" % (proj.getName(), COMMAND, proj.getCompilers())
+    
+    # Compile the project if needed
+    proj.compile()
+
+    # Set the environment
+    env = proj.getTauCompilerEnvironment()
+    
+    # Get compiler flags
+    flags = proj.getTauCompilerFlags()
+    
+    # Execute the compiler wrapper script
+    cmd = [TAU_COMPILER] + flags + cmd_args
+
+    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
+    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    return proc.wait()
+    

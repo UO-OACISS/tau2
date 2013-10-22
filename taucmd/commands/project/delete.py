@@ -36,9 +36,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
-import subprocess
 import taucmd
+from taucmd.project import Registry, ProjectNameError
 from taucmd.docopt import docopt
+from shutil import rmtree
 
 LOGGER = taucmd.getLogger(__name__)
 
@@ -62,13 +63,6 @@ def getUsage():
 def getHelp():
     return HELP
 
-def detectTarget():
-    """
-    Use TAU's archfind script to detect the target architecture
-    """
-    cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
-    return subprocess.check_output(cmd).strip()
-
 def main(argv):
     """
     Program entry point
@@ -79,5 +73,16 @@ def main(argv):
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
     
-    print 'TODO: Delete %r' % args['<name>']
-    return 0
+    # Check for invalid request
+    proj_name = args['<name>']
+    if proj_name.upper() == 'DEFAULT':
+        print "Error: See 'tau project select' to change the default project."
+        return 1
+
+    registry = Registry()
+    try:
+        registry.deleteProject(proj_name)
+    except ProjectNameError:
+        print "Error: No project named %r exists.  See 'tau project list' for project names." % proj_name
+        return 1
+        

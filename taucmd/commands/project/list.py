@@ -36,10 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
-import subprocess
 import taucmd
-from taucmd import project
-from pprint import pprint
+from taucmd.project import Registry
 from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
@@ -62,13 +60,6 @@ def getUsage():
 def getHelp():
     return HELP
 
-def detectTarget():
-    """
-    Use TAU's archfind script to detect the target architecture
-    """
-    cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
-    return subprocess.check_output(cmd).strip()
-
 def main(argv):
     """
     Program entry point
@@ -79,9 +70,9 @@ def main(argv):
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
     
-    all_proj = project.loadProjects()
-    if all_proj:
-        pprint(all_proj)
+    registry = Registry()
+    if len(registry.projects):
+        print registry
     else:
-        print "No projects defined.  See 'tau project create --help'"
+        print "No projects defined in %r.  See 'tau project create'." % os.getcwd()
     return 0

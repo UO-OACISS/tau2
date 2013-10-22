@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import subprocess
 import taucmd
-from taucmd import project
+from taucmd.project import Registry, ProjectNameError
 from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
@@ -52,6 +52,9 @@ Usage:
 
 Project Options:
   --name=<name>                     Set project name.
+  --select                          Select this project after creating it.
+  
+Architecture Options:
   --target-arch=<name>              Set target architecture. [default: %(target_default)s]
 
 Compiler Options:
@@ -61,8 +64,8 @@ Compiler Options:
   --upc=<compiler>                  Set UPC compiler.
 
 Assisting Library Options:
-  --pdt=(download|<path>)           Program Database Toolkit (PDT) installation path. [default: download]
-  --bfd=(download|<path>)           GNU Binutils installation path. [default: download]
+  --pdt=(download|<path>|none)      Program Database Toolkit (PDT) installation path. [default: download]
+  --bfd=(download|<path>|none)      GNU Binutils installation path. [default: download]
   --dyninst=<path>                  DyninstAPI installation path.
   --papi=<path>                     Performance API (PAPI) installation path.
   
@@ -81,7 +84,7 @@ NVIDIA CUDA Options:
 
 Universal Parallel C (UPC) Options:
   --upc-gasnet=<path>               GASNET installation path.
-  --upc-network=(auto|mpi|smp)      Set UPC network.
+  --upc-network=<network>           Set UPC network.
 
 Memory Options:
   --memory                          Enable memory instrumentation. [default: False]
@@ -123,7 +126,7 @@ def detectTarget():
     """
     Use TAU's archfind script to detect the target architecture
     """
-    cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
+    cmd = os.path.join(taucmd.TAU_MASTER_SRC_DIR, 'utils', 'archfind')
     return subprocess.check_output(cmd).strip()
 
 
@@ -135,25 +138,20 @@ def main(argv):
     usage = getUsage()
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
-    
-    # Strip args   
-    config = {}
-    exclude = ['--help', '-h', 'create', 'project']
-    for key, val in args.iteritems():
-        if not key in exclude:
-            config[key[2:]] = val
-    
-    proj_name = project.getName(config)
-    all_proj = project.loadProjects()
-    if proj_name in all_proj:
-        LOGGER.error('Project %r already exists' % proj_name)
+
+    registry = Registry()
+    try:
+        proj = registry.newProject(args)
+    except ProjectNameError, e:
+        print e.value
         return 1
-
-    all_proj[proj_name] = config
-    if not 'default' in all_proj:
-        all_proj['default'] = proj_name
-    project.initialize(config)
-    project.saveProjects(all_proj)
-
-    LOGGER.info('Created project %r' % proj_name)
-    return 0
+    
+    proj_name = proj.getName()
+    default_name = registry.getDefaultProject().getName()
+    if proj:
+        print 'Created project %r' % proj_name
+        if default_name == proj_name:
+            print 'Selected %r as the new default project' % default_name
+        else:
+            print "Note: The selected project is %r.\n      Type 'tau project select %s' to select this project." % (default_name, proj_name)
+        return 0
