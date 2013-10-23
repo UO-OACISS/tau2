@@ -35,87 +35,60 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os
 import sys
 import taucmd
-from taucmd import TauUnknownCommandError
-from docopt import docopt
+from taucmd import commands
+from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Get help with a command."
+SHORT_DESCRIPTION = "Create and manage TAU projects."
 
 USAGE = """
 Usage:
-  tau help <command>
-  tau -h | --help
-  
-Use quotes to group commands, e.g. tau help 'project create'.
+  tau project <command> [<args>...]
+  tau project -h | --help
+
+Project Commands:
+%(command_descr)s
 """
 
 HELP = """
-Prints the help page for a specified command.
+'tau project' help page to be written.
 """
 
-ADVICE = {'make': """
-'make' is not a Tau command.
-
---- Did you try to build your codebase by typing 'tau make'?  
-
-Tau cannot rewrite your makefiles for you, but it's fairly easy to do yourself.
-All you need to do is put the 'tau' command before your compiler invocation.  
-If your makefile contains lines something like this:
-    CC = gcc
-you'll change it to:
-    CC = tau gcc
-You may also be able to override CC, CXX, etc. from the command line like this:
-> make CC="tau gcc" CXX="tau g++" F90="tau gfortran"
-Don't forget the double quotes!
-
-See 'tau --help' for a list of valid commands.
-"""}
-
 def getUsage():
-    return USAGE
+    return USAGE % {'command_descr': commands.getSubcommands(__name__)}
 
 def getHelp():
     return HELP
-
-def advise(cmd):
-    """
-    Print some advice about a system command.
-    """
-    try:
-        print ADVICE[cmd]
-    except KeyError:
-        LOGGER.debug('I have no advice for command %r' % cmd)
-        raise TauUnknownCommandError(cmd)
 
 def main(argv):
     """
     Program entry point
     """
-    
+
     # Parse command line arguments
-    args = docopt(USAGE, argv=argv)
+    usage = getUsage()
+    args = docopt(usage, argv=argv, options_first=True)
     LOGGER.debug('Arguments: %s' % args)
     
-    # Try to look up a Tau command's built-in help page
-    cmd = args['<command>'].replace(' ', '.')
-    cmd_module = 'taucmd.commands.%s' % cmd
+    # Check for -h | --help (why doesn't this work automatically?)
+    idx = args['<command>'].find('-h')
+    if (idx == 0) or (idx == 1):
+        print usage
+        return 0
+    
+    # Try to execute as a tau command
+    cmd = args['<command>']
+    cmd_args = args['<args>']
+    cmd_module = 'taucmd.commands.project.%s' % cmd   
+    
     try:
         __import__(cmd_module)
-        LOGGER.debug('Recognized %r as tau subcommand' % cmd)
-        print '-'*80
-        print sys.modules[cmd_module].getUsage()
-        print '-'*80
-        print '\nHelp:',
-        print sys.modules[cmd_module].getHelp()
-        print '-'*80
-        return 0
+        LOGGER.debug('Recognized %r as tau project command' % cmd)
+        return sys.modules[cmd_module].main(['project', cmd] + cmd_args)
     except ImportError:
-        # It wasn't a tau command, but that's OK
-        LOGGER.debug('%r not recognized as tau subcommand' % cmd)
-
-    # Do our best to give advice about this strange command
-    advise(cmd)
+        LOGGER.debug('%r not recognized as a tau project command' % cmd)
+        print usage
+        return 1
