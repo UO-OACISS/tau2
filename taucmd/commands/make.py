@@ -35,25 +35,28 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import os
+import sys
+import subprocess
 import taucmd
-from taucmd.project import Registry, ProjectNameError
+from taucmd import util
 from taucmd.docopt import docopt
+from taucmd.project import Registry
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Select a TAU project in this directory."
+SHORT_DESCRIPTION = "Build your application with 'make' and the TAU compilers."
 
 USAGE = """
 Usage:
-  tau project select [<name>]
-  tau project select -h | --help
-
-See 'tau project list' for project names.
+  tau make [<args>...]
+  tau make -h | --help
 """
 
 HELP = """
-Help page to be written.
+'tau make' help page to be written.
 """
+
 
 def getUsage():
     return USAGE
@@ -65,28 +68,32 @@ def main(argv):
     """
     Program entry point
     """
-
     # Parse command line arguments
-    usage = getUsage()
-    args = docopt(usage, argv=argv)
+    args = docopt(USAGE, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
-    proj_name = args['<name>']
     
     registry = Registry()
-    select_proj = registry.getSelectedProject()
-    
-    # If no project name given, print current selected project name
-    if not proj_name:
-        if select_proj:
-            print select_proj.getName()
-        else:
-            print "No projects defined.  See 'tau project create' to create a new project."
-        return 0
-
-    # Select the project
-    try:
-        registry.setSelectedProject(proj_name)
-    except KeyError:
-        print "Error: No project named %r exists.  See 'tau project list' for project names." % proj_name
+    if not len(registry):
+        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
         return 1
-    return 0
+
+    # Check project compatibility
+    proj = registry.getSelectedProject()
+    print 'Using TAU project %r' % proj.getName()
+        
+    # Compile the project if needed
+    proj.compile()
+    
+    # Set the environment
+    env = proj.getTauMakeEnvironment()
+    
+    # Get compiler flags
+    tau_flags = proj.getTauMakeFlags()
+    
+    # Execute the application
+    cmd = ['make'] + tau_flags + args['<args>']
+    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
+    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    retval = proc.wait()
+    
+    return retval

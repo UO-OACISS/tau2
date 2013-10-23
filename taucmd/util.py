@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
+import re
 import subprocess
 import errno
 import taucmd
@@ -103,4 +104,20 @@ def extract(tgz, dest):
     assert os.path.isdir(full_dest)
     LOGGER.debug('Created %r' % full_dest)
     return full_dest
-    
+
+def getTauVersion():
+    """
+    Opens TAU header files to get the TAU version
+    """
+    header_files=['TAU.h', 'TAU.h.default']
+    pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
+    for hfile in header_files:
+        try:
+            with open('%s/include/%s' % (taucmd.TAU_MASTER_SRC_DIR, hfile), 'r') as tau_h:
+                for line in tau_h:
+                    match = pattern.match(line) 
+                    if match:
+                        return match.group(1)
+        except IOError:
+            continue
+    return '(unknown)'
