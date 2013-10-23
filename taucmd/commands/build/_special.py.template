@@ -37,43 +37,28 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import sys
+import subprocess
 import taucmd
-from taucmd import TauUnknownCommandError
-from docopt import docopt
+from taucmd.project import Registry
+from taucmd.commands.build import TAU_CXX
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Get help with a command."
+SHORT_DESCRIPTION = "A special compiler template."
 
 USAGE = """
 Usage:
-  tau help <command>
-  tau -h | --help
-  
-Use quotes to group commands, e.g. tau help 'project create'.
+  tau build _special [<args>...]
 """
 
 HELP = """
-Prints the help page for a specified command.
+'tau build _special' help page to be written.
 """
 
-ADVICE = {'make': """
-'make' is not a Tau command.
+COMMAND = '_special'
 
---- Did you try to build your codebase by typing 'tau make'?  
-
-Tau cannot rewrite your makefiles for you, but it's fairly easy to do yourself.
-All you need to do is put the 'tau' command before your compiler invocation.  
-If your makefile contains lines something like this:
-    CC = gcc
-you'll change it to:
-    CC = tau gcc
-You may also be able to override CC, CXX, etc. from the command line like this:
-> make CC="tau gcc" CXX="tau g++" F90="tau gfortran"
-Don't forget the double quotes!
-
-See 'tau --help' for a list of valid commands.
-"""}
+# Set appropriately
+TAU_COMPILER = TAU_CXX
 
 def getUsage():
     return USAGE
@@ -81,41 +66,40 @@ def getUsage():
 def getHelp():
     return HELP
 
-def advise(cmd):
-    """
-    Print some advice about a system command.
-    """
-    try:
-        print ADVICE[cmd]
-    except KeyError:
-        LOGGER.debug('I have no advice for command %r' % cmd)
-        raise TauUnknownCommandError(cmd)
-
 def main(argv):
     """
     Program entry point
     """
+    LOGGER.debug('Arguments: %r' % argv)
+    cmd_args = argv[2:]
+    if not cmd_args:
+        print "ERROR: no options specified"
+        return 1
     
-    # Parse command line arguments
-    args = docopt(USAGE, argv=argv)
-    LOGGER.debug('Arguments: %s' % args)
-    
-    # Try to look up a Tau command's built-in help page
-    cmd = args['<command>'].replace(' ', '.')
-    cmd_module = 'taucmd.commands.%s' % cmd
-    try:
-        __import__(cmd_module)
-        LOGGER.debug('Recognized %r as tau subcommand' % cmd)
-        print '-'*80
-        print sys.modules[cmd_module].getUsage()
-        print '-'*80
-        print '\nHelp:',
-        print sys.modules[cmd_module].getHelp()
-        print '-'*80
-        return 0
-    except ImportError:
-        # It wasn't a tau command, but that's OK
-        LOGGER.debug('%r not recognized as tau subcommand' % cmd)
+    registry = Registry()
+    if not len(registry.projects):
+        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
+        return 1
 
-    # Do our best to give advice about this strange command
-    advise(cmd)
+    # Check project compatibility
+    proj = registry.getSelectedProject()
+    print 'Using TAU project %r' % proj.getName()
+    if not proj.supportsCompiler(COMMAND):
+        print "Warning: %r project may not support the %r compiler command.  Supported compilers: %r" % (proj.getName(), COMMAND, proj.getCompilers())
+    
+    # Compile the project if needed
+    proj.compile()
+
+    # Set the environment
+    env = proj.getTauCompilerEnvironment()
+
+    # Get compiler flags
+    flags = proj.getTauCompilerFlags()
+
+    # Execute the compiler wrapper script
+    cmd = [TAU_COMPILER] + flags + cmd_args
+
+    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
+    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    return proc.wait()
+    
