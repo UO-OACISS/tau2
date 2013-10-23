@@ -113,12 +113,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
         raise TauError('ERROR: Invalid PDT directory %r' % pdt)
     
     # Banner
-    print '*' * 80
-    print '*'
-    print '* Installing PDT at %r' % prefix
-    print '* This may take a long time but will only be done once.'
-    print '*'
-    print '*' * 80
+    print 'Installing PDT at %r' % prefix
 
     # Configure the source code for this configuration
     srcdir = PDT_SRC_DIR

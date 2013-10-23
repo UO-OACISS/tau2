@@ -49,7 +49,7 @@ SHORT_DESCRIPTION = "Gather measurements from an application."
 
 USAGE = """
 Usage:
-  tau run [<args>...]
+  tau run <exe> [<args>...]
 """
 
 HELP = """

@@ -129,12 +129,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
         raise TauError('ERROR: Invalid BFD directory %r' % bfd)
     
     # Banner
-    print '*' * 80
-    print '*'
-    print '* Installing BFD at %r' % prefix
-    print '* This may take a long time but will only be done once.'
-    print '*'
-    print '*' * 80
+    print 'Installing BFD at %r' % prefix
 
     # Configure the source code for this configuration
     srcdir = BFD_SRC_DIR

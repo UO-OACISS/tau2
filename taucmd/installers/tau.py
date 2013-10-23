@@ -139,7 +139,7 @@ def getPrefix(config):
     parts.extend([part.lower() for part in nameparts if config[part]])
     parts.sort()
     name = '_'.join(parts)
-    prefix = os.path.join(os.path.abspath('.tau'), 'tau', name)
+    prefix = os.path.join(taucmd.TAUCMD_HOME, 'tau', name)
     return prefix
 
 
@@ -150,14 +150,10 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     prefix = getPrefix(config)
     if os.path.isdir(prefix):
         LOGGER.debug("Skipping TAU installation.  %r is a directory." % prefix)
-
+        return
+    
     # Banner
-    print '*' * 80
-    print '*'
-    print '* Installing TAU at %r' % prefix
-    print '* This may take a long time but will only be done once.'
-    print '*'
-    print '*' * 80
+    print 'Installing TAU at %r' % prefix
 
     # Clone the TAU source code to the user's home directory
     cloneSource()

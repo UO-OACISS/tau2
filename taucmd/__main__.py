@@ -40,7 +40,7 @@ import re
 import taucmd
 from pkgutil import walk_packages
 from taucmd import commands
-from taucmd.commands import build, run, display
+from taucmd.commands import build, run, show
 from taucmd.docopt import docopt
 
 USAGE = """
@@ -61,9 +61,9 @@ Shortcuts:
   <executable>     A program executable, e.g. ./a.out
                    An alias for 'tau execute <executable>'
   <profile>        View profile data (*.ppk, *.xml, profile.*, etc.) in ParaProf
-                   An alias for 'tau display <profile>'
+                   An alias for 'tau show <profile>'
   <trace>          View trace data (*.otf *.slog2, etc.) in Jumpshot
-                   An alias for 'tau display <trace>' 
+                   An alias for 'tau show <trace>' 
 
 TAU Options:
   --log=<level>    Output level.  [default: %(log_default)s]
@@ -157,8 +157,8 @@ def main():
     shortcut = None
     if build.isKnownCompiler(cmd):
         shortcut = 'build'
-    elif display.isKnownFileFormat(cmd):
-        shortcut = 'display'
+    elif show.isKnownFileFormat(cmd):
+        shortcut = 'show'
     elif run.isExecutable(cmd):
         shortcut = 'run'
     if shortcut:

@@ -179,13 +179,13 @@ def main(argv):
     except ProjectNameError, e:
         print e.value
         return 1
-    
-    proj_name = proj.getName()
-    select_name = registry.getSelectedProject().getName()
     if proj:
+        proj_name = proj.getName()
+        select_name = registry.getSelectedProject().getName()
         print 'Created project %r' % proj_name
         if select_name == proj_name:
             print 'Selected %r as the new default project' % select_name
         else:
             print "Note: The selected project is %r.\n      Type 'tau project select %s' to select this project." % (select_name, proj_name)
         return 0
+    return 1
