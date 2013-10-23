@@ -138,7 +138,7 @@ def main(argv):
     # Get project name
     proj_name = args['--name']
     if proj_name and not isValidProjectName(proj_name):
-        print 'ERROR: %r is not a valid project name.  Use only letters, numbers, dot (.), dash (-), and underscore (_).' % proj_name
+        LOGGER.error('%r is not a valid project name.  Use only letters, numbers, dot (.), dash (-), and underscore (_).' % proj_name)
         return 1
     while not proj_name:
         print 'Enter project name:'
@@ -176,12 +176,12 @@ def main(argv):
     registry = Registry()
     try:
         proj = registry.addProject(config)
-    except ProjectNameError, e:
-        print e.value
+    except ProjectNameError:
+        LOGGER.error("Project %r already exists.  See 'tau project create --help' and maybe use the --name option." % proj_name)
         return 1
 
     proj_name = proj.getName()
-    print """
+    msg = """
 Created a new project named %(proj_name)r
 Selected %(proj_name)r as the new default project.  
 Use 'tau project select' to select a different project.
@@ -201,4 +201,5 @@ To execute with TAU:
     For example, if you launch your application with 'mpirun -np 4 ./foo' instead
     launch with 'tau mpirun -np 4 ./foo'.
 """ % {'proj_name': proj_name}
-    return 1
+    LOGGER.info(msg)
+    return 0

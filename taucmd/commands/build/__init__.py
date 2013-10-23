@@ -124,19 +124,16 @@ def simpleCompile(compiler, argv):
     registry = Registry()
     proj = registry.getSelectedProject()
     if not proj:
-        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
         return 1
-    print 'Using TAU project %r' % proj.getName()
+    LOGGER.info('Using TAU project %r' % proj.getName())
 
     # Check project compatibility
     if not proj.supportsCompiler(compiler):
-        print '!'*80
-        print '!'
-        print "! Warning: %r project may not support the %r compiler command." % (proj.getName(), compiler)
+        msg = "%r project may not support the %r compiler command." % (proj.getName(), compiler) 
         if proj.hasCompilers():
-            print "! Supported compilers: %r" % proj.getCompilers()
-        print '!'
-        print '!'*80
+            msg += "\nSupported compilers: %r" % proj.getCompilers()
+        LOGGER.warning(msg)
     
     # Compile the project if needed
     proj.compile()

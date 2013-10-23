@@ -78,7 +78,8 @@ def main(argv):
     try:
         registry.deleteProject(proj_name)
     except ProjectNameError:
-        print "Error: No project named %r exists.  See 'tau project list' for project names." % proj_name
+        LOGGER.error("No project named %r exists.  See 'tau project list' for project names." % proj_name)
         return 1
     
-    print "Project %r deleted.  See 'tau project list' for a listing of projects in %r" % (proj_name, os.getcwd())
+    LOGGER.info("Project %r deleted.  See 'tau project list' for a listing of projects in %r" % (proj_name, os.getcwd()))
+    return 0

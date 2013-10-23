@@ -77,14 +77,14 @@ def main(argv):
     
     registry = Registry()
     if not len(registry):
-        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
         return 1
 
     # Check project compatibility
     proj = registry.getSelectedProject()
-    print 'Using TAU project %r' % proj.getName()
+    LOGGER.info('Using TAU project %r' % proj.getName())
     if not proj.supportsExec(cmd):
-        print "Warning: %r project may not be compatible with %r." % (proj.getName(), cmd)
+        LOGGER.warning("%r project may not be compatible with %r." % (proj.getName(), cmd))
         
     # Compile the project if needed
     proj.compile()

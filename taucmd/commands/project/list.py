@@ -81,7 +81,7 @@ def main(argv):
         try:
             print registry[proj_name]
         except KeyError:
-            print "Error: No project named %r exists.  See 'tau project list --help'." % proj_name
+            LOGGER.error("No project named %r exists.  See 'tau project list --help'." % proj_name)
             return 1
     else:
         if len(registry):
@@ -100,5 +100,6 @@ def main(argv):
                     print '\n'
                          
         else:
-            print "No projects defined in %r.  See 'tau project create'." % os.getcwd()
+            LOGGER.info("No projects defined in %r.  See 'tau project create'." % os.getcwd())
+            return 1
     return 0

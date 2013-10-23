@@ -102,9 +102,9 @@ def main(argv):
     registry = Registry()
     proj = registry.getSelectedProject()
     if not proj:
-        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
         return 1
-    print 'Using TAU project %r' % proj.getName()
+    LOGGER.info('Using TAU project %r' % proj.getName())
     
     args_files = args['<files>']
     if not args_files:
@@ -137,7 +137,7 @@ def main(argv):
         try:
             viewer = FILE_VIEWERS[filetype]
         except KeyError:
-            print 'Error: unknown file type %r' % filetype
+            LOGGER.error('Unknown file type %r' % filetype)
             continue 
         cmd = [viewer] + files
         cmds.append(cmd)

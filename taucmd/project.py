@@ -41,6 +41,7 @@ import glob
 import taucmd
 import pickle
 import pprint
+from textwrap import dedent
 from datetime import datetime
 from taucmd.installers import pdt, bfd, tau
 from taucmd import util
@@ -122,7 +123,7 @@ class Registry(object):
         proj_name = proj.getName()
         projects = self.projects
         if proj_name in projects:
-            raise ProjectNameError("Error: Project %r already exists.  See 'tau project create --help' and maybe use the --name option." % proj_name)
+            raise ProjectNameError('Project %r already exists.')
         projects[proj_name] = proj.config
         if select or not self.selected:
             self.selected = proj_name
@@ -135,7 +136,7 @@ class Registry(object):
             del projects[proj_name]
             LOGGER.debug('Removed %r from project registry' % proj_name)
         except KeyError:
-            raise ProjectNameError('Error: No project named %r.' % proj_name)
+            raise ProjectNameError('No project named %r.' % proj_name)
         # Update selected if necessary
         if self.selected == proj_name:
             self.selected = None
@@ -214,12 +215,15 @@ class Project(object):
         if not config['refresh']:
             return
         
-        print '*' * 80
-        print '*'
-        print '* Compiling project %r.' % config['name']
-        print '* This may take a long time but will only be done once.'
-        print '*'
-        print '*' * 80
+        banner = """
+        %(bar)s
+        *
+        * Compiling project %(proj_name)r.
+        * This may take a long time but will only be done once.
+        *
+        %(bar)s
+        """ % {'bar': '*'*80, 'proj_name': config['name']}
+        LOGGER.info(dedent(banner))
 
         # Control configure/build output
         devnull = None
@@ -289,7 +293,12 @@ class Project(object):
         compile-time TAU environment variables for this project
         """
         env = self.getEnvironment()
-        env['TAU_OPTIONS'] = ' '.join(taucmd.DEFAULT_TAU_COMPILER_OPTIONS)
+        options = []
+        if taucmd.LOG_LEVEL == 'DEBUG':
+            options.append('-optVerbose')
+        else:
+            options.append('-optQuiet')
+        env['TAU_OPTIONS'] = ' '.join(taucmd.DEFAULT_TAU_COMPILER_OPTIONS + options)
         env['TAU_MAKEFILE'] = self.getTauMakefile()
         return env
 
