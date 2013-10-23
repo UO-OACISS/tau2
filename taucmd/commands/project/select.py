@@ -80,13 +80,13 @@ def main(argv):
         if select_proj:
             print select_proj.getName()
         else:
-            print "No projects defined.  See 'tau project create' to create a new project."
-        return 0
+            LOGGER.info("No projects defined.  See 'tau project create' to create a new project.")
+            return 1
 
     # Select the project
     try:
         registry.setSelectedProject(proj_name)
     except KeyError:
-        print "Error: No project named %r exists.  See 'tau project list' for project names." % proj_name
+        LOGGER.error("No project named %r exists.  See 'tau project list' for project names." % proj_name)
         return 1
     return 0

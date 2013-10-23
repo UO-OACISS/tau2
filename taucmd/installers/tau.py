@@ -153,7 +153,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
         return
     
     # Banner
-    print 'Installing TAU at %r' % prefix
+    LOGGER.info('Installing TAU at %r' % prefix)
 
     # Clone the TAU source code to the user's home directory
     cloneSource()
@@ -162,7 +162,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     srcdir = TAU_SRC_DIR
     cmd = getConfigureCommand(config)
     LOGGER.debug('Creating configure subprocess in %r: %r' % (srcdir, cmd))
-    print 'Configuring TAU...'
+    LOGGER.info('Configuring TAU...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
@@ -171,12 +171,13 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     # Execute make
     cmd = ['make', '-j', 'install']
     LOGGER.debug('Creating make subprocess in %r: %r' % (srcdir, cmd))
-    print 'Compiling TAU...'
+    LOGGER.info('Compiling TAU...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
         raise TauError('TAU compilation failed.')
     
     # Leave source, we'll probably need it again soon
-    print 'TAU installation complete.'
+    LOGGER.debug('Preserving %r for future use' % srcdir)
+    LOGGER.info('TAU installation complete.')
         
