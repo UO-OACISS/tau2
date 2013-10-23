@@ -3,12 +3,18 @@ package edu.uoregon.tau.perfexplorer.client;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.FieldPosition;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -186,6 +192,61 @@ public class PerfExplorerTableModel extends AbstractTableModel {
                 }
             }
         case 2:
+			if (trial instanceof TAUdbTrial && trial.getID() != currentTrial) {
+				TAUdbTrial dbTrial = (TAUdbTrial) trial;
+				int numFields = 0;
+				MetaDataMap mdm = dbTrial.getMetaData();
+				if (mdm != null) {
+					numFields += mdm.size();
+				}
+				// Map<String, String> pmd = dbTrial.getPrimaryMetadata();
+				// if (pmd != null) {
+				// numFields += pmd.size();
+				// }
+				MetaDataMap umd = dbTrial.getUncommonMetaData();
+				if (umd != null) {
+					numFields += umd.size();
+				}
+				String[][] data = new String[numFields][2];
+				String[] names = { "Name", "Value" };
+				int dex = 0;
+				if (mdm != null) {
+					Iterator<Entry<MetaDataKey, MetaDataValue>> it = mdm
+							.entrySet().iterator();
+					while (it.hasNext()) {
+						Entry<MetaDataKey, MetaDataValue> en = it.next();
+						data[dex][0] = en.getKey().toString();
+						data[dex][1] = en.getValue().toString();
+						dex++;
+					}
+				}
+
+				// if (pmd != null) {
+				// Iterator<Entry<String, String>> it = pmd.entrySet()
+				// .iterator();
+				// while (it.hasNext()) {
+				// Entry<String, String> en = it.next();
+				// data[dex][0] = en.getKey();
+				// data[dex][1] = en.getValue();
+				// dex++;
+				// }
+				// }
+
+				if (umd != null) {
+					Iterator<Entry<MetaDataKey, MetaDataValue>> it = umd
+							.entrySet().iterator();
+					while (it.hasNext()) {
+						Entry<MetaDataKey, MetaDataValue> en = it.next();
+						data[dex][0] = en.getKey().toString();
+						data[dex][1] = en.getValue().toString();
+						dex++;
+					}
+				}
+
+				JTable mdTable = new JTable(data, names);
+				JScrollPane treeView = new JScrollPane(mdTable);
+				setupMetadataTable(treeView);
+			}
             if (c == 0) {
                 switch (r) {
                 case (0):
@@ -209,18 +270,11 @@ public class PerfExplorerTableModel extends AbstractTableModel {
                     if (trial.getField(r - 2) != null) {
                         if (trial.getFieldName(r - 2).equalsIgnoreCase("XML_METADATA") && trial.getID() != currentTrial) {
                             try {
-                                // This is a trial with XML data, so in the bottom half of the split
-                                // pane, put the XML data in a tree viewer.
-                                SAXTreeViewer viewer = new SAXTreeViewer();
-                                JSplitPane tab = (JSplitPane) PerfExplorerJTabbedPane.getPane().getTab(0);
+
+								SAXTreeViewer viewer = new SAXTreeViewer();
                                 JScrollPane treeView = new JScrollPane(viewer.getTreeTable(trial.getField(r - 2)));
-                                JScrollBar jScrollBar = treeView.getVerticalScrollBar();
-                                jScrollBar.setUnitIncrement(35);
-                                tab.setBottomComponent(treeView);
-                                // restore the divider location from the last time we displayed
-                                // XML data to the user
-                                tab.setDividerLocation(dividerLocation);
-                                currentTrial = trial.getID();
+								setupMetadataTable(treeView);
+
                                 return trial.getFieldName(r - 2);
                             } catch (Exception e) {
                                 System.err.println(e.getMessage());
@@ -345,6 +399,20 @@ public class PerfExplorerTableModel extends AbstractTableModel {
             return "";
         }
     }
+
+	private void setupMetadataTable(JScrollPane treeView) {
+		// This is a trial with XML data, so in the bottom half of the split
+		// pane, put the XML data in a tree viewer.
+		JSplitPane tab = (JSplitPane) PerfExplorerJTabbedPane.getPane().getTab(
+				0);
+		JScrollBar jScrollBar = treeView.getVerticalScrollBar();
+		jScrollBar.setUnitIncrement(35);
+		tab.setBottomComponent(treeView);
+		// restore the divider location from the last time we displayed
+		// XML data to the user
+		tab.setDividerLocation(dividerLocation);
+		currentTrial = trial.getID();
+	}
 
     public boolean isCellEditable(int r, int c) {
         return false;
