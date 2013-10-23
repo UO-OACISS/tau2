@@ -109,7 +109,12 @@ class TauUnknownCommandError(TauError):
 class LogFormatter(logging.Formatter):
     """
     Custom log message formatter.
-    """    
+    """
+    
+    INFO_MARKER = 'TAU: '
+    INFO_FORMAT = textwrap.TextWrapper(initial_indent=INFO_MARKER, 
+                                       subsequent_indent=INFO_MARKER)
+    
     def __init__(self):
         super(LogFormatter, self).__init__()
 
@@ -128,7 +133,7 @@ class LogFormatter(logging.Formatter):
         elif record.levelno == logging.ERROR:
             return self.msgbox(record, '!')
         elif record.levelno == logging.WARNING:
-            return self.msgbox(record, '!')
+            return self.msgbox(record, '*')
         elif record.levelno == logging.INFO:
             return record.getMessage()
         else:
