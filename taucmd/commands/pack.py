@@ -40,28 +40,27 @@ import sys
 import glob
 import subprocess
 import taucmd
-from threading import Thread
 from taucmd import util
+from taucmd.docopt import docopt
 from taucmd.project import Registry
 
 LOGGER = taucmd.getLogger(__name__)
 
-FILE_VIEWERS = {'profile': 'paraprof',
-                'ppk': 'paraprof',
-                'xml': 'paraprof',
-                'otf': 'jumpshot',
-                'slog2': 'jumpshot'}
-
-
-SHORT_DESCRIPTION = "Display application profile or trace data."
+SHORT_DESCRIPTION = "Package profile files into a PPK file."
 
 USAGE = """
 Usage:
-  tau display <files>...
+  tau pack [options] [<profile>...]
+  tau pack -h | --help
+  
+Options:
+  --name=<name>            Specify the PPK file name.
+  --rm-profiles            Delete profile.* files after creating PPK file.
+  --no-project-name        Do not include the project name in the PPK file name.
 """
 
 HELP = """
-'tau display' help page to be written.
+'tau pack' help page to be written.
 """
 
 def getUsage():
@@ -70,64 +69,56 @@ def getUsage():
 def getHelp():
     return HELP
 
-def isProfileFile(filename):
-    return filename[0:8] == 'profile.' and len(filename) == 13
-
-def isKnownFileFormat(fname):
-    return isProfileFile(fname) or fname.split('.')[-1] in FILE_VIEWERS 
-
-def launchViewer(cmd, env):
-    LOGGER.debug('Creating subprocess: cmd=%r' % cmd)
-    subprocess.call(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-
+def isExecutable(cmd):
+    return util.which(cmd) != None
 
 def main(argv):
     """
     Program entry point
     """
-    LOGGER.debug('Arguments: %r' % argv)
-    
+    # Parse command line arguments
+    args = docopt(USAGE, argv=argv)
+    LOGGER.debug('Arguments: %s' % args)
+
+    # Get selected project
     registry = Registry()
-    if not len(registry):
+    proj = registry.getSelectedProject()
+    if not proj:
         print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
         return 1
 
-    # Check project compatibility
-    proj = registry.getSelectedProject()
-    print 'Using TAU project %r' % proj.getName()
-        
-    # Compile the project if needed
-    proj.compile()
-    
-    # Sort files by type
-    all_files = {}
-    for arg in argv[1:]:
-        if isProfileFile(arg):
-            if 'profile' not in all_files:
-                all_files['profile'] = []
-            all_files['profile'].append(arg)
-        else:
-            ext = arg.split('.')[-1]
-            if ext not in all_files:
-                all_files[ext] = []
-            all_files[ext].append(arg)
-    LOGGER.debug('Sorted files: %r' % all_files)
-    
-    # Construct commands
-    cmds = []
-    for filetype, files in all_files.iteritems():
-        cmd = [FILE_VIEWERS[filetype]] + files
-        cmds.append(cmd)
-    LOGGER.debug('Commands: %r' % cmds)
-    
-    # Get environment
-    env = proj.getEnvironment()
-    
-    # Launch viewers
-    threads = [Thread(target=launchViewer, args=(cmd,env)) for cmd in cmds]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    # Check for profiles
+    profiles = args['<profile>']
+    if not profiles:
+        profiles = glob.glob('profile.*.*.*')
+        if not profiles:
+            print 'Error: No profile files in %r' % os.getcwd()
 
-    return 0
+    # Get project name
+    if args['--no-project-name']:
+        proj_name = ''
+    else:
+        proj_name = proj.getName()
+        print 'Using TAU project %r' % proj_name 
+    
+    # Get PPK file name
+    name = args['--name']
+    if not name:
+        name = 'tau'
+    
+    # Pack the profiles
+    if proj_name:
+        ppk_name = '%s.%s.ppk' % (name, proj_name)
+    else:
+        ppk_name = '%s.ppk' % name
+    cmd = ['paraprof', '--pack', ppk_name]
+    proc = subprocess.Popen(cmd, env=proj.getEnvironment(), stdout=sys.stdout, stderr=sys.stderr)
+    retval = proc.wait()
+    if retval < 0:
+        print 'ERROR: paraprof killed by signal %d' % -retval
+    elif retval > 0:
+        print 'ERROR: paraprof failed'
+    elif args['--rm-profiles']:
+        for profile in profiles:
+            os.remove(profile)
+    return retval

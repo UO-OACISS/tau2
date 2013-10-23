@@ -141,6 +141,7 @@ class Registry(object):
             raise ProjectNameError('Error: No project named %r.' % proj_name)
         # Update selected if necessary
         if self.selected == proj_name:
+            self.selected = None
             for next_name in projects.iterkeys():
                 if next_name != proj_name:
                     self.selected = next_name
@@ -189,13 +190,18 @@ class Project(object):
         compiler_fields = ['cc', 'c++', 'fortran', 'upc']
         return {key: self.config[key] for key in compiler_fields}
     
-    def supportsCompiler(self, cmd):
+    def hasCompilers(self):
         compilers = self.getCompilers()
-        has_compilers = reduce(lambda a, b: a or b, compilers.values())
-        if has_compilers:
-            return cmd in compilers.values()
-        else:
-            return cmd in ['gcc', 'g++', 'gfortran', 'gupc']
+        return reduce(lambda a, b: a or b, compilers.values())
+
+    def supportsCompiler(self, cmd):
+        if (self.config['mpi'] and 
+            (cmd[0:3] == 'mpi' or cmd in ['cc', 'c++', 'CC', 'cxx', 'f77', 'f90', 'ftn'])):
+            return True
+        if self.hasCompilers():
+            return cmd in self.getCompilers().values()
+        # Assume compiler is supported unless explicitly stated otherwise 
+        return True
     
     def supportsExec(self, cmd):
         config = self.config

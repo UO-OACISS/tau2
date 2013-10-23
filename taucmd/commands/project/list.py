@@ -85,12 +85,19 @@ def main(argv):
             return 1
     else:
         if len(registry):
-                for project in registry:
-                    print project.getName()
-                    if args['--long']:
-                        print '-'*80
-                        print project
-                        print '\n'
+            print 'Projects in %r' % os.getcwd()
+            print '-'*80
+            for project in registry:
+                name = project.getName()
+                selected_name = registry.getSelectedProject().getName()
+                if name == selected_name:
+                    marker = '* '
+                else:
+                    marker = ''
+                print '%s%s' % (marker, name)
+                if args['--long']:
+                    print project
+                    print '\n'
                          
         else:
             print "No projects defined in %r.  See 'tau project create'." % os.getcwd()
