@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
+import re
 import subprocess
 import errno
 import taucmd
@@ -74,20 +75,24 @@ def which(program):
 
 
 def download(src, dest):
+    LOGGER.debug('Downloading %r to %r' % (src, dest))
     mkdirp(os.path.dirname(dest))
     curl = which('curl')
+    LOGGER.debug('which curl: %r' % curl)
     wget = which('wget')
+    LOGGER.debug('which wget: %r' % wget)
     if curl:
         if subprocess.call([curl, '-L', src, '-o', dest]) != 0:
-            LOGGER.warning('curl failed to download %r' % src)           
+            LOGGER.debug('curl failed to download %r.' % src)     
     elif wget:
         if subprocess.call([wget, src, '-O', dest]) != 0:
-            LOGGER.warning('wget failed to download %r' % src)
+            LOGGER.debug('wget failed to download %r' % src)
     else:
+        # Note, this is usually **much** slower than curl or wget
         def dlProgress(count, blockSize, totalSize):
             print "% 3.1f%% of %d bytes\r" % (min(100, float(count * blockSize) / totalSize * 100), totalSize),
         urllib.urlretrieve(src, dest, reporthook=dlProgress)
-    
+        
     
 def extract(tgz, dest):
     with tarfile.open(tgz) as fp:
@@ -97,10 +102,26 @@ def extract(tgz, dest):
         LOGGER.debug('Top-level directory in %r is %r' % (tgz, topdir))
         full_dest = os.path.join(dest, topdir)
         LOGGER.debug('Extracting %r to create %r' % (tgz, full_dest))
-        print 'Extracting %r' % tgz
+        LOGGER.info('Extracting %r' % tgz)
         mkdirp(dest)
         fp.extractall(dest)
     assert os.path.isdir(full_dest)
     LOGGER.debug('Created %r' % full_dest)
     return full_dest
-    
+
+def getTauVersion():
+    """
+    Opens TAU header files to get the TAU version
+    """
+    header_files=['TAU.h', 'TAU.h.default']
+    pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
+    for hfile in header_files:
+        try:
+            with open('%s/include/%s' % (taucmd.TAU_MASTER_SRC_DIR, hfile), 'r') as tau_h:
+                for line in tau_h:
+                    match = pattern.match(line) 
+                    if match:
+                        return match.group(1)
+        except IOError:
+            continue
+    return '(unknown)'

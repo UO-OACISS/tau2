@@ -84,7 +84,7 @@ def main(argv):
     registry = Registry()
     proj = registry.getSelectedProject()
     if not proj:
-        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
         return 1
 
     # Check for profiles
@@ -92,14 +92,15 @@ def main(argv):
     if not profiles:
         profiles = glob.glob('profile.*.*.*')
         if not profiles:
-            print 'Error: No profile files in %r' % os.getcwd()
+            LOGGER.error('No profile files in %r' % os.getcwd())
+            return 1
 
     # Get project name
     if args['--no-project-name']:
         proj_name = ''
     else:
         proj_name = proj.getName()
-        print 'Using TAU project %r' % proj_name 
+        LOGGER.info('Using TAU project %r' % proj.getName())
     
     # Get PPK file name
     name = args['--name']
@@ -115,10 +116,11 @@ def main(argv):
     proc = subprocess.Popen(cmd, env=proj.getEnvironment(), stdout=sys.stdout, stderr=sys.stderr)
     retval = proc.wait()
     if retval < 0:
-        print 'ERROR: paraprof killed by signal %d' % -retval
+        LOGGER.error('paraprof killed by signal %d' % -retval)
     elif retval > 0:
-        print 'ERROR: paraprof failed'
+        LOGGER.error('paraprof failed with exit code %d' % retval)
     elif args['--rm-profiles']:
+        LOGGER.debug('Removing profiles: %r' % profiles)
         for profile in profiles:
             os.remove(profile)
     return retval

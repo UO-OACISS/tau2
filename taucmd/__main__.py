@@ -36,10 +36,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import sys
-import re
 import taucmd
 from pkgutil import walk_packages
 from taucmd import commands
+from taucmd import util
 from taucmd.commands import build, run, show
 from taucmd.docopt import docopt
 
@@ -74,23 +74,6 @@ See 'tau help <command>' for more information on a specific command.
 
 LOGGER = taucmd.getLogger(__name__)
 
-
-def getTauVersion():
-    """
-    Opens TAU header files to get the TAU version
-    """
-    header_files=['TAU.h', 'TAU.h.default']
-    pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
-    for hfile in header_files:
-        try:
-            with open('%s/include/%s' % (taucmd.TAU_MASTER_SRC_DIR, hfile), 'r') as tau_h:
-                for line in tau_h:
-                    match = pattern.match(line) 
-                    if match:
-                        return match.group(1)
-        except IOError:
-            continue
-    return '(unknown)'
 
 
 def getCommands():
@@ -133,7 +116,7 @@ def main():
         LOGGER.warning("Your Python version is %s, but 'tau' expects Python %s or later.  Please update Python." % (version, expected))
 
     # Get tau version
-    tau_version = getTauVersion()
+    tau_version = util.getTauVersion()
 
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
