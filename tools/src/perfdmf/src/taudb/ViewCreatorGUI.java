@@ -37,25 +37,45 @@ package edu.uoregon.tau.perfdmf.taudb;
  * CardLayoutDemo.java
  *
  */
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Date;
+import java.util.List;
 
-import javax.swing.*;
-import javax.swing.text.NumberFormatter;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
-import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 
 
 public class ViewCreatorGUI extends JFrame implements ActionListener{
-    public class ViewCreatorListner implements ItemListener, ActionListener {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -5859741019248347898L;
+
+	public class ViewCreatorListner implements ItemListener, ActionListener {
     	JPanel cards;
 
 		public ViewCreatorListner(JPanel comparators) {
@@ -188,6 +208,16 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	}
 	public void actionPerformed(ActionEvent e) {
 		if("Save".equals(e.getActionCommand())){
+
+			String valid = checkValues();
+
+			if (valid != null) {
+				JOptionPane.showMessageDialog(this, valid
+						+ " is not a valid numeric value.", "Invalid Value",
+						JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+
 			String saveName = (String)JOptionPane.showInputDialog(
 			                    this,
 			                    "Please enter the name of this TAUdb View",
@@ -203,7 +233,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		}else if ("Cancel".equals(e.getActionCommand())){
 			close();
 		}else if ("comboBoxChanged".equals(e.getActionCommand())){
-			anyOrAll =((JComboBox) e.getSource()).getSelectedItem().toString();
+			anyOrAll = ((JComboBox<String>) e.getSource()).getSelectedItem()
+					.toString();
 		}
 		
 	}
@@ -233,10 +264,45 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		}
 
 	}
+
+	private static boolean isNumber(String str) {
+		try {
+			Double.parseDouble(str);
+		} catch (NumberFormatException nfe) {
+			return false;
+		}
+		return true;
+	}
+
+	private String checkValues() {
+		// Set<String> numberOps = new HashSet<String>(Arrays.asList(new
+		// String[] {
+		// NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS,
+		// NUMBER_RANGE }));
+		for (ViewCreatorRuleListener rule : ruleListeners) {
+			if (rule.type.equals(NUMBER)) {
+
+				String value = rule.getValue();
+				if (!isNumber(value)) {
+					return value;
+				}
+
+				if (rule.getOperator().equals(NUMBER_RANGE)) {
+					value = rule.getValue2();
+					if (!isNumber(value)) {
+						return value;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
 	private JPanel addMatch() {
 		JPanel panel = new JPanel();
 		String[] comboBoxItems = {ALL,  ANY};
-		JComboBox comboBox = new JComboBox(comboBoxItems);
+		JComboBox<String> comboBox = new JComboBox<String>(comboBoxItems);
 		JLabel label1 = new JLabel("Match ");
 		JLabel label2 = new JLabel(" of the following rules.");
 		
@@ -268,7 +334,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
     	JPanel cards;
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = comparatorTypes ;
-        JComboBox cb = new JComboBox(comboBoxItems);
+		JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
         cb.setEditable(false);
         cb.setName(READ_TYPE);
         
@@ -293,7 +359,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         minusButton.addActionListener(listner);
         
         String metadataList[] = getMetaDataList();
-        JComboBox metadataCB = new JComboBox(metadataList);
+        JComboBox<String> metadataCB = new JComboBox<String>(metadataList);
         metadataCB.addActionListener(listener);
         metadataCB.setEditable(false);
         metadataCB.setName(METADATA);
@@ -319,7 +385,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS, NUMBER_RANGE};
-        JComboBox cb = new JComboBox(comboBoxItems);
+        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
         cb.addActionListener(listener);
         cb.setEditable(false);
         //cb.setSelectedIndex(0);
@@ -327,44 +393,44 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         
         //Create the "cards".
         JPanel greaterCard = new JPanel();
-        JFormattedTextField text = new JFormattedTextField(new NumberFormatter());
-        text.setValue(0.0);  
+		JTextField text = new JTextField();
+		// text.setValue(0.0);
         text.setPreferredSize(new Dimension(100, 20));
         text.getDocument().addDocumentListener(listener);
         greaterCard.add(text);
         
         
         JPanel lessCard = new JPanel();
-         text = new JFormattedTextField(new NumberFormatter());
-        text.setValue(0.0);  
+		text = new JTextField();
+		// text.setValue(0.0);
         text.setPreferredSize(new Dimension(100, 20));
         text.getDocument().addDocumentListener(listener);
         lessCard.add(text);
         
         JPanel equalCard = new JPanel();
-         text = new JFormattedTextField(new NumberFormatter());
-        text.setValue(0.0);  
+		text = new JTextField();
+		// text.setValue(0.0);
         text.setPreferredSize(new Dimension(100, 20));
         text.getDocument().addDocumentListener(listener);
         equalCard.add(text);
         
         JPanel notEqualCard = new JPanel();
-        text = new JFormattedTextField(new NumberFormatter());
-       text.setValue(0.0);  
+		text = new JTextField();
+		// text.setValue(0.0);
        text.setPreferredSize(new Dimension(100, 20));
        text.getDocument().addDocumentListener(listener);
        notEqualCard.add(text);
         
         JPanel rangeCard = new JPanel();
-        text = new JFormattedTextField(new NumberFormatter());
-        text.setValue(0.0);  
+		text = new JTextField();
+		// text.setValue(0.0);
         text.setPreferredSize(new Dimension(100, 20));
         text.getDocument().addDocumentListener(listener);
         text.getDocument().putProperty(NUMBER_RANGE,"begin");
         rangeCard.add(text);
 
-         text = new JFormattedTextField(new NumberFormatter());
-        text.setValue(0.0);  
+		text = new JTextField();
+		// text.setValue(0.0);
         text.setPreferredSize(new Dimension(100, 20));
         text.getDocument().addDocumentListener(listener);
         text.getDocument().putProperty(NUMBER_RANGE,"end");
@@ -393,7 +459,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {DATE_IS, DATE_AFTER, DATE_BEFORE, DATE_RANGE};
-        JComboBox cb = new JComboBox(comboBoxItems);
+        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
         cb.setEditable(false);
         cb.setSelectedIndex(0);
         
@@ -442,7 +508,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS};
-        JComboBox cb = new JComboBox(comboBoxItems);
+        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
         cb.setEditable(false);
       //  cb.setName(STRING);
         cb.addActionListener(listener);
