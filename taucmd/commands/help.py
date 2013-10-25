@@ -57,39 +57,11 @@ HELP = """
 Prints the help page for a specified command.
 """
 
-ADVICE = {'make': """
-'make' is not a Tau command.
-
---- Did you try to build your codebase by typing 'tau make'?  
-
-Tau cannot rewrite your makefiles for you, but it's fairly easy to do yourself.
-All you need to do is put the 'tau' command before your compiler invocation.  
-If your makefile contains lines something like this:
-    CC = gcc
-you'll change it to:
-    CC = tau gcc
-You may also be able to override CC, CXX, etc. from the command line like this:
-> make CC="tau gcc" CXX="tau g++" F90="tau gfortran"
-Don't forget the double quotes!
-
-See 'tau --help' for a list of valid commands.
-"""}
-
 def getUsage():
     return USAGE
 
 def getHelp():
     return HELP
-
-def advise(cmd):
-    """
-    Print some advice about a system command.
-    """
-    try:
-        print ADVICE[cmd]
-    except KeyError:
-        LOGGER.debug('I have no advice for command %r' % cmd)
-        raise TauUnknownCommandError(cmd)
 
 def main(argv):
     """
@@ -112,10 +84,9 @@ def main(argv):
         print '\nHelp:',
         print sys.modules[cmd_module].getHelp()
         print '-'*80
-        return 0
     except ImportError:
         # It wasn't a tau command, but that's OK
-        LOGGER.debug('%r not recognized as tau subcommand' % cmd)
+        LOGGER.error('%r not recognized as tau subcommand' % cmd)
+        return 1
 
-    # Do our best to give advice about this strange command
-    advise(cmd)
+    return 0

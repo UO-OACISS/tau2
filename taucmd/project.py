@@ -41,6 +41,7 @@ import glob
 import taucmd
 import pickle
 import pprint
+from textwrap import dedent
 from datetime import datetime
 from taucmd.installers import pdt, bfd, tau
 from taucmd import util
@@ -48,9 +49,6 @@ from taucmd import util
 
 LOGGER = taucmd.getLogger(__name__)
 
-
-def isProjectNameValid(name):
-    return name.upper() not in ['DEFAULT', 'SELECT', 'SELECTED']
 
     
 class ProjectNameError(Exception):
@@ -118,14 +116,14 @@ class Registry(object):
         self.selected = proj_name
         self.save()
 
-    def addProject(self, config, select=False):
+    def addProject(self, config, select=True):
         # Create the project object and update the registry
         LOGGER.debug('Adding project: %r' % config)
         proj = Project(self, config)
         proj_name = proj.getName()
         projects = self.projects
         if proj_name in projects:
-            raise ProjectNameError("Error: Project %r already exists.  See 'tau project create --help' and maybe use the --name option." % proj_name)
+            raise ProjectNameError('Project %r already exists.')
         projects[proj_name] = proj.config
         if select or not self.selected:
             self.selected = proj_name
@@ -138,7 +136,7 @@ class Registry(object):
             del projects[proj_name]
             LOGGER.debug('Removed %r from project registry' % proj_name)
         except KeyError:
-            raise ProjectNameError('Error: No project named %r.' % proj_name)
+            raise ProjectNameError('No project named %r.' % proj_name)
         # Update selected if necessary
         if self.selected == proj_name:
             self.selected = None
@@ -195,9 +193,12 @@ class Project(object):
         return reduce(lambda a, b: a or b, compilers.values())
 
     def supportsCompiler(self, cmd):
-        if (self.config['mpi'] and 
-            (cmd[0:3] == 'mpi' or cmd in ['cc', 'c++', 'CC', 'cxx', 'f77', 'f90', 'ftn'])):
-            return True
+        config = self.config
+        if config['mpi']:
+            if cmd[0:3] == 'mpi' or cmd in ['cc', 'c++', 'CC', 'cxx', 'f77', 'f90', 'ftn']:
+                return True
+        elif cmd[0:3] == 'mpi':
+            return False
         if self.hasCompilers():
             return cmd in self.getCompilers().values()
         # Assume compiler is supported unless explicitly stated otherwise 
@@ -214,12 +215,15 @@ class Project(object):
         if not config['refresh']:
             return
         
-        print '*' * 80
-        print '*'
-        print '* Compiling project %r.' % config['name']
-        print '* This may take a long time but will only be done once.'
-        print '*'
-        print '*' * 80
+        banner = """
+        %(bar)s
+        *
+        * Compiling project %(proj_name)r.
+        * This may take a long time but will only be done once.
+        *
+        %(bar)s
+        """ % {'bar': '*'*80, 'proj_name': config['name']}
+        LOGGER.info(dedent(banner))
 
         # Control configure/build output
         devnull = None
@@ -289,7 +293,12 @@ class Project(object):
         compile-time TAU environment variables for this project
         """
         env = self.getEnvironment()
-        env['TAU_OPTIONS'] = ' '.join(taucmd.DEFAULT_TAU_COMPILER_OPTIONS)
+        options = []
+        if taucmd.LOG_LEVEL == 'DEBUG':
+            options.append('-optVerbose')
+        else:
+            options.append('-optQuiet')
+        env['TAU_OPTIONS'] = ' '.join(taucmd.DEFAULT_TAU_COMPILER_OPTIONS + options)
         env['TAU_MAKEFILE'] = self.getTauMakefile()
         return env
 
@@ -297,9 +306,36 @@ class Project(object):
         """
         Returns compiler flags for the TAU compiler wrappers (tau_cc.sh, etc.)
         """
-        # Perhaps someday...
+        # These are set in TAU_OPTIONS environment variable
         return []
     
+    def getTauMakeEnvironment(self):
+        """
+        Returns an environment for use with subprocess.Popen that specifies the
+        run-time TAU environment variables for this project
+        """
+        env = self.getTauCompilerEnvironment()
+        compilers = {'CC': 'tau_cc.sh',
+                     'CXX': 'tau_cxx.sh',
+                     'F77': 'tau_f77.sh',
+                     'F90': 'tau_f90.sh',
+                     'UPC': 'tau_upc.sh',
+                     'LD': 'tau_compiler.sh -optLinkOnly'}
+        env.update(compilers)
+        return env
+
+    def getTauMakeFlags(self):
+        """
+        Returns make flags
+        """
+        compilers = {'CC': 'tau_cc.sh',
+                     'CXX': 'tau_cxx.sh',
+                     'F77': 'tau_f77.sh',
+                     'F90': 'tau_f90.sh',
+                     'UPC': 'tau_upc.sh',
+                     'LD': 'tau_compiler.sh -optLinkOnly'}
+        return ['%s=%s' % t for t in compilers.iteritems()]
+
     def getTauExecEnvironment(self):
         """
         Returns an environment for use with subprocess.Popen that specifies the
@@ -308,12 +344,12 @@ class Project(object):
         config = self.config
         env = self.getEnvironment()
         parts = {'callpath': ['TAU_CALLPATH'],
-                  'comm-matrix': ['TAU_COMM_MATRIX'],
-                  'memory': ['TAU_TRACK_HEAP', 'TAU_TRACK_MEMORY_LEAKS'],
-                  'memory-debug': ['TAU_MEMDBG_PROTECT_ABOVE', 'TAU_TRACK_MEMORY_LEAKS'],
-                  'profile': ['TAU_PROFILE'],
-                  'sample': ['TAU_SAMPLING'],
-                  'trace': ['TAU_TRACE']}
+                 'comm-matrix': ['TAU_COMM_MATRIX'],
+                 'memory': ['TAU_TRACK_HEAP', 'TAU_TRACK_MEMORY_LEAKS'],
+                 'memory-debug': ['TAU_MEMDBG_PROTECT_ABOVE', 'TAU_TRACK_MEMORY_LEAKS'],
+                 'profile': ['TAU_PROFILE'],
+                 'sample': ['TAU_SAMPLING'],
+                 'trace': ['TAU_TRACE']}
         for key, val in config.iteritems():
             if key in parts and val:
                 env.update([(x, '1') for x in parts[key]])

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import taucmd
-from taucmd.project import Registry, ProjectNameError, isProjectNameValid
+from taucmd.project import Registry, ProjectNameError
 from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
@@ -80,18 +80,13 @@ def main(argv):
         if select_proj:
             print select_proj.getName()
         else:
-            print "No projects defined.  See 'tau project create' to create a new project."
-        return 0
+            LOGGER.info("No projects defined.  See 'tau project create' to create a new project.")
+            return 1
 
-    # Check for invalid request
-    if not isProjectNameValid(proj_name):
-        print "Error: See 'tau project select --help'."
-        return 1
-    
     # Select the project
     try:
         registry.setSelectedProject(proj_name)
     except KeyError:
-        print "Error: No project named %r exists.  See 'tau project list' for project names." % proj_name
+        LOGGER.error("No project named %r exists.  See 'tau project list' for project names." % proj_name)
         return 1
     return 0
