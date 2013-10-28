@@ -150,6 +150,18 @@ install: .clean
              $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?; done
 	@echo "***************** DONE ************************"
 
+javadoc:
+	cd tools/src; $(MAKE) javadoc
+
+doc: javadoc
+
+java:
+	cd tools/src/common; $(MAKE)
+	cd tools/src/vis; $(MAKE)
+	cd tools/src/perfdmf; $(MAKE) override
+	cd tools/src/paraprof; $(MAKE) override
+	cd tools/src/perfexplorer; ./configure; $(MAKE)
+
 .clean:
 	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean || exit 0); done
 	touch .clean
