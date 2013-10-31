@@ -186,7 +186,7 @@ class Project(object):
 
     def getCompilers(self):
         compiler_fields = ['cc', 'c++', 'fortran', 'upc']
-        return {key: self.config[key] for key in compiler_fields}
+        return dict((key, self.config[key]) for key in compiler_fields)
     
     def hasCompilers(self):
         compilers = self.getCompilers()
