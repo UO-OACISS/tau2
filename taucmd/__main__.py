@@ -85,7 +85,7 @@ def getCommands():
     for module in mod_names:
         __import__(module)
         descr = sys.modules[module].SHORT_DESCRIPTION
-        name = '{:<15}'.format(module.split('.')[-1])
+        name = '{0:<15}'.format(module.split('.')[-1])
         parts.append('  %s  %s' % (name, descr))
     return '\n'.join(parts)
 
