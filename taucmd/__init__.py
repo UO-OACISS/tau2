@@ -133,7 +133,7 @@ class LogFormatter(logging.Formatter):
         line_marker = self.LINE_MARKER
         hline = line_marker + marker*(79-len(line_marker))
         parts = [hline, line_marker, '%s %s' % (line_marker, record.levelname)]
-        message = textwrap.wrap(record.getMessage())
+        message = record.getMessage().split('\n')
         for line in message:
             parts.append('%s %s' % (line_marker, line))
         parts.append(line_marker)

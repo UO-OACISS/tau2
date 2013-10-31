@@ -69,7 +69,7 @@ def main(argv):
     Program entry point
     """
     # Parse command line arguments
-    args = docopt(USAGE, argv=argv)
+    args = docopt(USAGE, argv=argv, options_first=True)
     LOGGER.debug('Arguments: %s' % args)
     
     registry = Registry()

@@ -71,9 +71,14 @@ def main(argv):
     Program entry point
     """
     # Parse command line arguments
-    LOGGER.debug('Arguments: %s' % argv)
-    cmd = argv[1]
-    cmd_args = argv[2:]
+#     LOGGER.debug('Arguments: %s' % argv)
+#     cmd = argv[1]
+#     cmd_args = argv[2:]
+    args = docopt(USAGE, argv=argv, options_first=True)
+    LOGGER.debug('Arguments: %s' % args)
+    cmd = args['<command>']
+    cmd_args = args['<args>']
+
     
     registry = Registry()
     if not len(registry):
