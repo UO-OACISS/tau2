@@ -110,12 +110,13 @@ class TauUnknownCommandError(TauError):
         super(TauUnknownCommandError,self).__init__(value)
         self.hint = hint
 
-class LogFormatter(logging.Formatter):
+class LogFormatter(logging.Formatter, object):
     """
     Custom log message formatter.
     """
     
     LINE_MARKER = 'TAU:'
+    
     
     def __init__(self):
         super(LogFormatter, self).__init__()
