@@ -1604,6 +1604,10 @@ int Tau_sampling_init(int tid)
   //DEBUGMSG("setitimer called");
 #endif //SIGEV_THREAD_ID
 
+#ifndef TAU_BGQ
+}    //(TauEnv_get_ebs_source() == "itimer" || "TIME")
+#endif
+
   // set up the base timers
   double values[TAU_MAX_COUNTERS] = { 0 };
   /* Get the current metric values */
@@ -1623,10 +1627,6 @@ int Tau_sampling_init(int tid)
     }
     //printf("tid = %d, init previousTimestamp = %llu\n", tid, previousTimestamp[localIndex]); fflush(stdout);
   //}
-#ifndef TAU_BGQ
-}    //(TauEnv_get_ebs_source() == "itimer" || "TIME")
-#endif
-
   samplingEnabled[tid] = 1;
   collectingSamples = 1;
   return 0;
