@@ -140,6 +140,12 @@ then
   export LD_LIBRARY_PATH=$javaLocation:${LIBDIR}:${LD_LIBRARY_PATH}
 fi
 
+if [ $MACHINE = bgq  -o $MACHINE = bgp -o $MACHINE = bgl -o $MACHINE = ppc64 ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/ppc64"
+  export LD_LIBRARY_PATH=$javaLocation:${LIBDIR}:${LD_LIBRARY_PATH}
+fi
+
 
 
 

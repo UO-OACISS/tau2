@@ -1178,7 +1178,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
        
           std::string name = ue->GetName();
 
-          size_t del = name.rfind(std::string(":"));
+          size_t del = name.find(std::string(":"));
 
           fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", name.substr(del + 2, string::npos).c_str(), calls, 0, excltime,
               incltime);

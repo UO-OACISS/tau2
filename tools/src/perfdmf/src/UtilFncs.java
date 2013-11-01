@@ -422,7 +422,8 @@ public class UtilFncs {
             if (colon < 0) {
                 return str;
             } else {
-                return str.substring(colon + 1);
+				String result = str.substring(colon + 2);
+				return result.trim();
             }
         }
 		return str.substring(colon + 2, location).trim();
