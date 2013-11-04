@@ -36,11 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import sys
-import re
 import taucmd
 from pkgutil import walk_packages
 from taucmd import commands
-from taucmd.commands import build, run, display
+from taucmd import util
+from taucmd.commands import build, run, show
 from taucmd.docopt import docopt
 
 USAGE = """
@@ -61,9 +61,9 @@ Shortcuts:
   <executable>     A program executable, e.g. ./a.out
                    An alias for 'tau execute <executable>'
   <profile>        View profile data (*.ppk, *.xml, profile.*, etc.) in ParaProf
-                   An alias for 'tau display <profile>'
+                   An alias for 'tau show <profile>'
   <trace>          View trace data (*.otf *.slog2, etc.) in Jumpshot
-                   An alias for 'tau display <trace>' 
+                   An alias for 'tau show <trace>' 
 
 TAU Options:
   --log=<level>    Output level.  [default: %(log_default)s]
@@ -75,23 +75,6 @@ See 'tau help <command>' for more information on a specific command.
 LOGGER = taucmd.getLogger(__name__)
 
 
-def getTauVersion():
-    """
-    Opens TAU header files to get the TAU version
-    """
-    header_files=['TAU.h', 'TAU.h.default']
-    pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
-    for hfile in header_files:
-        try:
-            with open('%s/include/%s' % (taucmd.TAU_MASTER_SRC_DIR, hfile), 'r') as tau_h:
-                for line in tau_h:
-                    match = pattern.match(line) 
-                    if match:
-                        return match.group(1)
-        except IOError:
-            continue
-    return '(unknown)'
-
 
 def getCommands():
     """
@@ -102,7 +85,7 @@ def getCommands():
     for module in mod_names:
         __import__(module)
         descr = sys.modules[module].SHORT_DESCRIPTION
-        name = '{:<15}'.format(module.split('.')[-1])
+        name = '{0:<15}'.format(module.split('.')[-1])
         parts.append('  %s  %s' % (name, descr))
     return '\n'.join(parts)
 
@@ -133,7 +116,7 @@ def main():
         LOGGER.warning("Your Python version is %s, but 'tau' expects Python %s or later.  Please update Python." % (version, expected))
 
     # Get tau version
-    tau_version = getTauVersion()
+    tau_version = util.getTauVersion()
 
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
@@ -157,8 +140,8 @@ def main():
     shortcut = None
     if build.isKnownCompiler(cmd):
         shortcut = 'build'
-    elif display.isKnownFileFormat(cmd):
-        shortcut = 'display'
+    elif show.isKnownFileFormat(cmd):
+        shortcut = 'show'
     elif run.isExecutable(cmd):
         shortcut = 'run'
     if shortcut:

@@ -36,27 +36,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
+import sys
 import subprocess
+import string
 import taucmd
 from datetime import datetime
-from taucmd.project import Registry, ProjectNameError, isProjectNameValid
+from taucmd import util
+from taucmd.project import Registry, ProjectNameError
 from taucmd.docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Create a new TAU project configuration."
+SHORT_DESCRIPTION = "Create a new named TAU project configuration."
 
 USAGE = """
 Usage:
-  tau project create [options]
+  tau project create [--name=<name>] [options]
   tau project create -h | --help
-
-Project Options:
-  --name=<name>                     Set project name.
-  --select                          Select this project after creating it.
   
 Architecture Options:
-  --target-arch=<name>              Set target architecture. [default: %(target_default)s]
+  --target-arch=<arch>              Set target architecture. [default: %(target_default)s]
 
 Compiler Options:
   --cc=<compiler>                   Set C compiler.
@@ -108,12 +107,6 @@ HELP = """
 'project create' page to be written.
 """
 
-# # Compilers used when no other compiler specified
-# DEFAULT_COMPILERS = [('--cc', 'gcc'), ('--c++', 'g++'), ('--fortran', 'gfortran')]
-# 
-# # Compilers used when MPI specified
-# MPI_COMPILERS = [('--cc', 'mpicc'), ('--c++', 'mpicxx'), ('--fortran', 'mpif90')]
-
 def getUsage():
     return USAGE % {'target_default': detectTarget()}
 
@@ -128,6 +121,10 @@ def detectTarget():
     cmd = os.path.join(taucmd.TAU_MASTER_SRC_DIR, 'utils', 'archfind')
     return subprocess.check_output(cmd).strip()
 
+def isValidProjectName(name):
+    valid = set(string.digits + string.letters + '-_.')
+    return set(name) <= valid
+
 
 def main(argv):
     """
@@ -138,29 +135,32 @@ def main(argv):
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
     
+    # Get project name
+    proj_name = args['--name']
+    if proj_name and not isValidProjectName(proj_name):
+        LOGGER.error('%r is not a valid project name.  Use only letters, numbers, dot (.), dash (-), and underscore (_).' % proj_name)
+        return 1
+    while not proj_name:
+        print 'Enter project name:'
+        proj_name = sys.stdin.readline().strip()
+        if not isValidProjectName(proj_name):
+            print 'ERROR: %r is not a valid project name.  Use only letters, numbers, dot (.), dash (-), and underscore (_).' % proj_name
+            proj_name = None
+    args['--name'] = proj_name
+    
     # Make sure at least one measurement method is used
     if not (args['--profile'] or args['--trace'] or args['--sample']):
-        args['--profile'] = True 
+        args['--profile'] = True
         
-#     # Set compilers if not set
-#     if args['--mpi']:
-#         compilers = MPI_COMPILERS
-#     else:
-#         compilers = DEFAULT_COMPILERS
-#     for flag, comp in compilers:
-#         if not args[flag]:
-#             args[flag] = comp 
-
     # Strip and check args
-    config = {'refresh': True,
+    config = {'name': proj_name,
+              'refresh': True,
+              'tau-version': util.getTauVersion(),
               'modified': datetime.now()}
-    exclude = ['--help', '-h', '--select']
+    exclude = ['--help', '-h', '--no-select']
     for key, val in args.iteritems():
         if key[0:2] == '--' and not key in exclude:
-            if key == '--name' and val and isProjectNameValid(val):
-                print "Error: %r cannot be used as a project name.  See 'tau project select --help'." % val
-                return 1
-            elif key in ['--pdt', '--bfd']:
+            if key in ['--pdt', '--bfd']:
                 if val.upper() == 'NONE':
                     config[key[2:]] = None
                 elif val.upper() == 'DOWNLOAD':
@@ -175,17 +175,31 @@ def main(argv):
 
     registry = Registry()
     try:
-        proj = registry.addProject(config, args['--select'])
-    except ProjectNameError, e:
-        print e.value
+        proj = registry.addProject(config)
+    except ProjectNameError:
+        LOGGER.error("Project %r already exists.  See 'tau project create --help' and maybe use the --name option." % proj_name)
         return 1
-    
+
     proj_name = proj.getName()
-    select_name = registry.getSelectedProject().getName()
-    if proj:
-        print 'Created project %r' % proj_name
-        if select_name == proj_name:
-            print 'Selected %r as the new default project' % select_name
-        else:
-            print "Note: The selected project is %r.\n      Type 'tau project select %s' to select this project." % (select_name, proj_name)
-        return 0
+    msg = """
+Created a new project named %(proj_name)r
+Selected %(proj_name)r as the new default project.  
+Use 'tau project select' to select a different project.
+
+Next steps:
+Apply TAU to your application to gather performance data.  You can recompile
+your application with TAU and/or execute your application with TAU.
+
+To compile with TAU:
+  - Use the 'make' command.  For example, if you normally build your application
+    by typing 'make', instead type 'tau make'.  This works for any make target.
+  - Change your compiler command to 'tau <your_compiler>'.  For example, if your
+    compiler command is 'mpicc', compile your code with 'tau mpicc'.
+
+To execute with TAU:
+  - Change your application launch command to 'tau <your_application>'.
+    For example, if you launch your application with 'mpirun -np 4 ./foo' instead
+    launch with 'tau mpirun -np 4 ./foo'.
+""" % {'proj_name': proj_name}
+    LOGGER.info(msg)
+    return 0

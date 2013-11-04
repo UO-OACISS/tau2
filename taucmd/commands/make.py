@@ -36,26 +36,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
+import sys
+import subprocess
 import taucmd
-from taucmd.project import Registry
+from taucmd import util
 from taucmd.docopt import docopt
+from taucmd.project import Registry
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "Show all TAU project configurations in this directory."
+SHORT_DESCRIPTION = "Build your application with 'make' and the TAU compilers."
 
 USAGE = """
 Usage:
-  tau project list [options] [<name>]
-  tau project list -h | --help
-  
-Options:
-  --long                     Show all project information.
+  tau make [<args>...]
+  tau make -h | --help
 """
 
 HELP = """
-Help page to be written.
+'tau make' help page to be written.
 """
+
 
 def getUsage():
     return USAGE
@@ -67,39 +68,32 @@ def main(argv):
     """
     Program entry point
     """
-
     # Parse command line arguments
-    usage = getUsage()
-    args = docopt(usage, argv=argv)
+    args = docopt(USAGE, argv=argv, options_first=True)
     LOGGER.debug('Arguments: %s' % args)
-    proj_name = args['<name>']
     
     registry = Registry()
+    if not len(registry):
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
+        return 1
+
+    # Check project compatibility
+    proj = registry.getSelectedProject()
+    LOGGER.info('Using TAU project %r' % proj.getName())
+        
+    # Compile the project if needed
+    proj.compile()
     
-    # Show a specific project's settings if name is given
-    if proj_name:
-        try:
-            print registry[proj_name]
-        except KeyError:
-            LOGGER.error("No project named %r exists.  See 'tau project list --help'." % proj_name)
-            return 1
-    else:
-        if len(registry):
-            print 'Projects in %r' % os.getcwd()
-            print '-'*80
-            for project in registry:
-                name = project.getName()
-                selected_name = registry.getSelectedProject().getName()
-                if name == selected_name:
-                    marker = '* '
-                else:
-                    marker = ''
-                print '%s%s' % (marker, name)
-                if args['--long']:
-                    print project
-                    print '\n'
-                         
-        else:
-            LOGGER.info("No projects defined in %r.  See 'tau project create'." % os.getcwd())
-            return 1
-    return 0
+    # Set the environment
+    env = proj.getTauMakeEnvironment()
+    
+    # Get compiler flags
+    tau_flags = proj.getTauMakeFlags()
+    
+    # Execute the application
+    cmd = ['make'] + tau_flags + args['<args>']
+    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
+    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    retval = proc.wait()
+    
+    return retval

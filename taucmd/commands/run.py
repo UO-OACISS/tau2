@@ -37,10 +37,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import sys
-import glob
 import subprocess
 import taucmd
 from taucmd import util
+from taucmd.docopt import docopt
 from taucmd.project import Registry
 
 LOGGER = taucmd.getLogger(__name__)
@@ -49,12 +49,13 @@ SHORT_DESCRIPTION = "Gather measurements from an application."
 
 USAGE = """
 Usage:
-  tau run [<args>...]
+  tau run <command> [<args>...]
 """
 
 HELP = """
 'tau run' help page to be written.
 """
+
 
 def getUsage():
     return USAGE
@@ -69,19 +70,26 @@ def main(argv):
     """
     Program entry point
     """
-    LOGGER.debug('Arguments: %r' % argv)
-    cmd_arg = argv[1]
+    # Parse command line arguments
+#     LOGGER.debug('Arguments: %s' % argv)
+#     cmd = argv[1]
+#     cmd_args = argv[2:]
+    args = docopt(USAGE, argv=argv, options_first=True)
+    LOGGER.debug('Arguments: %s' % args)
+    cmd = args['<command>']
+    cmd_args = args['<args>']
+
     
     registry = Registry()
     if not len(registry):
-        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
         return 1
 
     # Check project compatibility
     proj = registry.getSelectedProject()
-    print 'Using TAU project %r' % proj.getName()
-    if not proj.supportsExec(cmd_arg):
-        print "Warning: %r project may not be compatible with %r." % (proj.getName(), cmd_arg)
+    LOGGER.info('Using TAU project %r' % proj.getName())
+    if not proj.supportsExec(cmd):
+        LOGGER.warning("%r project may not be compatible with %r." % (proj.getName(), cmd))
         
     # Compile the project if needed
     proj.compile()
@@ -90,52 +98,33 @@ def main(argv):
     env = proj.getTauExecEnvironment()
     
     # Get compiler flags
-    flags = proj.getTauExecFlags()
+    tau_flags = proj.getTauExecFlags()
     
     # Construct command
-    if cmd_arg in ['mpirun', 'mpiexec', 'aprun']:
-        cmd = [cmd_arg]
+    if cmd in ['mpirun', 'mpiexec', 'aprun']:
+        subcmd = [cmd]
         dash = False
-        exe_idx = 2
-        for i, arg in enumerate(argv[2:], 2):
+        exe_idx = 0
+        for i, arg in enumerate(cmd_args):
             if arg == '--':
                 exe_idx = i + 1
                 break
             elif arg[0] == '-':
-                print 'adding %r' % arg
-                cmd.append(arg)
+                subcmd.append(arg)
                 dash = True
             elif dash:
-                print 'dash: adding %r' % arg
-                cmd.append(arg)
+                subcmd.append(arg)
                 dash = False
             else:
-                print 'exe_idx = %d' % i
                 exe_idx = i
                 break
-        cmd += ['tau_exec'] + flags + argv[exe_idx:]
+        subcmd += ['tau_exec'] + tau_flags + cmd_args[exe_idx:]
     else:
-        cmd = ['tau_exec'] + flags + argv[1:]
+        subcmd = ['tau_exec'] + tau_flags + [cmd] + cmd_args
     
     # Execute the application
-    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
-    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-    cmd_retval = proc.wait()
+    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (subcmd, env))
+    proc = subprocess.Popen(subcmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    retval = proc.wait()
     
-    # Check for profiles
-    profiles = glob.glob('profile.*')
-    
-    # Pack the profiles
-    if profiles and proj.config['profile']:
-        ppk_name = '%s.%s.ppk' % (cmd_arg, proj.getName())
-        cmd = ['paraprof', '--pack', ppk_name]
-        proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-        retval = proc.wait()
-        if retval < 0:
-            print 'ERROR: paraprof killed by signal %d' % -retval
-        elif retval > 0:
-            print 'ERROR: paraprof failed'
-        else:
-            for profile in profiles:
-                os.remove(profile)
-    return cmd_retval
+    return retval

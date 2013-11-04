@@ -38,13 +38,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 import glob
+import re
 import subprocess
 import taucmd
 from threading import Thread
-from taucmd import util
+from taucmd import util, TauNotImplementedError
+from taucmd.docopt import docopt
 from taucmd.project import Registry
 
 LOGGER = taucmd.getLogger(__name__)
+
+SHORT_DESCRIPTION = "Display application profile or trace data."
+
+USAGE = """
+Usage:
+  tau show [options] [<files>...]
+  tau show -h | --help
+  
+Options:
+  --no-gui                Show as text in console instead of launching graphical tool.
+  
+<files> may be profile files (profile.*, *.ppk, *.xml, etc.) or traces (*.otf, *.slog2).
+If not files are given, show all files in current directory.
+"""
+
+HELP = """
+'tau show' help page to be written.
+"""
+
 
 FILE_VIEWERS = {'profile': 'paraprof',
                 'ppk': 'paraprof',
@@ -52,17 +73,8 @@ FILE_VIEWERS = {'profile': 'paraprof',
                 'otf': 'jumpshot',
                 'slog2': 'jumpshot'}
 
+PROFILE_PATTERN = re.compile('^profile\.-?\d+\.\d+\.\d+$')
 
-SHORT_DESCRIPTION = "Display application profile or trace data."
-
-USAGE = """
-Usage:
-  tau display <files>...
-"""
-
-HELP = """
-'tau display' help page to be written.
-"""
 
 def getUsage():
     return USAGE
@@ -71,7 +83,7 @@ def getHelp():
     return HELP
 
 def isProfileFile(filename):
-    return filename[0:8] == 'profile.' and len(filename) == 13
+    return PROFILE_PATTERN.match(filename) != None
 
 def isKnownFileFormat(fname):
     return isProfileFile(fname) or fname.split('.')[-1] in FILE_VIEWERS 
@@ -80,28 +92,41 @@ def launchViewer(cmd, env):
     LOGGER.debug('Creating subprocess: cmd=%r' % cmd)
     subprocess.call(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
 
-
 def main(argv):
     """
     Program entry point
     """
-    LOGGER.debug('Arguments: %r' % argv)
+    # Parse command line arguments
+    usage = getUsage()
+    args = docopt(usage, argv=argv)
+    LOGGER.debug('Arguments: %s' % args)
     
-    registry = Registry()
-    if not len(registry):
-        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
-        return 1
-
     # Check project compatibility
+    registry = Registry()
     proj = registry.getSelectedProject()
-    print 'Using TAU project %r' % proj.getName()
+    if not proj:
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
+        return 1
+    LOGGER.info('Using TAU project %r' % proj.getName())
+    
+    # Read files from PWD if no files given
+    args_files = args['<files>']
+    if not args_files:
+        args_files = glob.glob('profile.*.*.*')
+        for ext in FILE_VIEWERS:
+            if ext != 'profile':
+                args_files += glob.glob('*.%s' % ext)
+        LOGGER.debug('Found files: %r' % args_files)
+        
+    if args['--no-gui']:
+        raise TauNotImplementedError('--no-gui option is not implemented', '--no-gui')
         
     # Compile the project if needed
     proj.compile()
     
     # Sort files by type
     all_files = {}
-    for arg in argv[1:]:
+    for arg in args_files:
         if isProfileFile(arg):
             if 'profile' not in all_files:
                 all_files['profile'] = []
@@ -116,7 +141,12 @@ def main(argv):
     # Construct commands
     cmds = []
     for filetype, files in all_files.iteritems():
-        cmd = [FILE_VIEWERS[filetype]] + files
+        try:
+            viewer = FILE_VIEWERS[filetype]
+        except KeyError:
+            LOGGER.error('Unknown file type %r' % filetype)
+            continue 
+        cmd = [viewer] + files
         cmds.append(cmd)
     LOGGER.debug('Commands: %r' % cmds)
     

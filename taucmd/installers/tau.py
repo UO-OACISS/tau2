@@ -88,7 +88,7 @@ def translateConfigureArg(config, key, val):
         return []
     # No parameter flags
     noparam = {'mpi': '-mpi',
-               'openmp': '-openmp',
+               'openmp': '-opari',
                'pthreads': '-pthread',
                'pdt': '-pdt=%s' % config['pdt-prefix'],
                'bfd': '-bfd=%s' % config['bfd-prefix'],
@@ -139,7 +139,7 @@ def getPrefix(config):
     parts.extend([part.lower() for part in nameparts if config[part]])
     parts.sort()
     name = '_'.join(parts)
-    prefix = os.path.join(os.path.abspath('.tau'), 'tau', name)
+    prefix = os.path.join(taucmd.TAUCMD_HOME, 'tau', name)
     return prefix
 
 
@@ -150,14 +150,10 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     prefix = getPrefix(config)
     if os.path.isdir(prefix):
         LOGGER.debug("Skipping TAU installation.  %r is a directory." % prefix)
-
+        return
+    
     # Banner
-    print '*' * 80
-    print '*'
-    print '* Installing TAU at %r' % prefix
-    print '* This may take a long time but will only be done once.'
-    print '*'
-    print '*' * 80
+    LOGGER.info('Installing TAU at %r' % prefix)
 
     # Clone the TAU source code to the user's home directory
     cloneSource()
@@ -166,7 +162,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     srcdir = TAU_SRC_DIR
     cmd = getConfigureCommand(config)
     LOGGER.debug('Creating configure subprocess in %r: %r' % (srcdir, cmd))
-    print 'Configuring TAU...'
+    LOGGER.info('Configuring TAU...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
@@ -175,12 +171,13 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     # Execute make
     cmd = ['make', '-j', 'install']
     LOGGER.debug('Creating make subprocess in %r: %r' % (srcdir, cmd))
-    print 'Compiling TAU...'
+    LOGGER.info('Compiling TAU...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
         raise TauError('TAU compilation failed.')
     
     # Leave source, we'll probably need it again soon
-    print 'TAU installation complete.'
+    LOGGER.debug('Preserving %r for future use' % srcdir)
+    LOGGER.info('TAU installation complete.')
         

@@ -37,27 +37,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import sys
+import glob
 import subprocess
 import taucmd
+from taucmd import util
+from taucmd.docopt import docopt
 from taucmd.project import Registry
-from taucmd.commands.build import TAU_CC
 
 LOGGER = taucmd.getLogger(__name__)
 
-SHORT_DESCRIPTION = "GNU C Compiler."
+SHORT_DESCRIPTION = "Package profile files into a PPK file."
 
 USAGE = """
 Usage:
-  tau build gcc [<args>...]
+  tau pack [options] [<profile>...]
+  tau pack -h | --help
+  
+Options:
+  --name=<name>            Specify the PPK file name.
+  --rm-profiles            Delete profile.* files after creating PPK file.
+  --no-project-name        Do not include the project name in the PPK file name.
 """
 
 HELP = """
-'tau build gcc' help page to be written.
+'tau pack' help page to be written.
 """
-
-COMMAND = 'gcc'
-
-TAU_COMPILER = TAU_CC
 
 def getUsage():
     return USAGE
@@ -65,40 +69,58 @@ def getUsage():
 def getHelp():
     return HELP
 
+def isExecutable(cmd):
+    return util.which(cmd) != None
+
 def main(argv):
     """
     Program entry point
     """
-    LOGGER.debug('Arguments: %r' % argv)
-    cmd_args = argv[2:]
-    if not cmd_args:
-        print "ERROR: no options specified"
-        return 1
-    
+    # Parse command line arguments
+    args = docopt(USAGE, argv=argv)
+    LOGGER.debug('Arguments: %s' % args)
+
+    # Get selected project
     registry = Registry()
-    if not len(registry.projects):
-        print "There are no TAU projects in %r.  See 'tau project create'." % os.getcwd()
+    proj = registry.getSelectedProject()
+    if not proj:
+        LOGGER.info("There are no TAU projects in %r.  See 'tau project create'." % os.getcwd())
         return 1
 
-    # Check project compatibility
-    proj = registry.getSelectedProject()
-    print 'Using TAU project %r' % proj.getName()
-    if not proj.supportsCompiler(COMMAND):
-        print "Warning: %r project may not support the %r compiler command.  Supported compilers: %r" % (proj.getName(), COMMAND, proj.getCompilers())
-    
-    # Compile the project if needed
-    proj.compile()
+    # Check for profiles
+    profiles = args['<profile>']
+    if not profiles:
+        profiles = glob.glob('profile.*.*.*')
+        if not profiles:
+            LOGGER.error('No profile files in %r' % os.getcwd())
+            return 1
 
-    # Set the environment
-    env = proj.getTauCompilerEnvironment()
+    # Get project name
+    if args['--no-project-name']:
+        proj_name = ''
+    else:
+        proj_name = proj.getName()
+        LOGGER.info('Using TAU project %r' % proj.getName())
     
-    # Get compiler flags
-    flags = proj.getTauCompilerFlags()
+    # Get PPK file name
+    name = args['--name']
+    if not name:
+        name = 'tau'
     
-    # Execute the compiler wrapper script
-    cmd = [TAU_COMPILER] + flags + cmd_args
-
-    LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
-    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-    return proc.wait()
-    
+    # Pack the profiles
+    if proj_name:
+        ppk_name = '%s.%s.ppk' % (name, proj_name)
+    else:
+        ppk_name = '%s.ppk' % name
+    cmd = ['paraprof', '--pack', ppk_name]
+    proc = subprocess.Popen(cmd, env=proj.getEnvironment(), stdout=sys.stdout, stderr=sys.stderr)
+    retval = proc.wait()
+    if retval < 0:
+        LOGGER.error('paraprof killed by signal %d' % -retval)
+    elif retval > 0:
+        LOGGER.error('paraprof failed with exit code %d' % retval)
+    elif args['--rm-profiles']:
+        LOGGER.debug('Removing profiles: %r' % profiles)
+        for profile in profiles:
+            os.remove(profile)
+    return retval

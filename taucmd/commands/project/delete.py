@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import taucmd
-from taucmd.project import Registry, ProjectNameError, isProjectNameValid
+from taucmd.project import Registry, ProjectNameError
 from taucmd.docopt import docopt
 from shutil import rmtree
 
@@ -67,22 +67,19 @@ def main(argv):
     """
     Program entry point
     """
-
     # Parse command line arguments
     usage = getUsage()
     args = docopt(usage, argv=argv)
     LOGGER.debug('Arguments: %s' % args)
     
-    # Check for invalid request
     proj_name = args['<name>']
-    if not isProjectNameValid(proj_name):
-        print "Error: See 'tau project select' to change the default project."
-        return 1
 
     registry = Registry()
     try:
         registry.deleteProject(proj_name)
     except ProjectNameError:
-        print "Error: No project named %r exists.  See 'tau project list' for project names." % proj_name
+        LOGGER.error("No project named %r exists.  See 'tau project list' for project names." % proj_name)
         return 1
-        
+    
+    LOGGER.info("Project %r deleted.  See 'tau project list' for a listing of projects in %r" % (proj_name, os.getcwd()))
+    return 0

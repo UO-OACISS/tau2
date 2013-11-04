@@ -822,7 +822,14 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		statement.execute();
 	}
 	
-	public static void updatePrimaryMetadataField(DB db, int trialID, String name, String value){
+
+	public void updatePrimaryMetadataField(String name, String value){
+		updatePrimaryMetadataField(this.getSession().getDB(), this.trialID,
+				name, value);
+	}
+
+	public static void updatePrimaryMetadataField(DB db, int trialID,
+			String name, String value) {
 		try {
 			PreparedStatement statement = db.prepareStatement("update primary_metadata set value=? where trial=? and name=?;");
 			statement.setString(1, value);
@@ -834,6 +841,11 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void addToPrimaryMetadataField(String name, String value) {
+		addToPrimaryMetadataField(this.getSession().getDB(), this.trialID,
+				name, value);
 	}
 
 	public static void addToPrimaryMetadataField(DB db, int trialID,
@@ -854,6 +866,11 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void removeFromPrimaryMetadataField(String name) {
+		removeFromPrimaryMetadataField(this.getSession().getDB(), this.trialID,
+				name);
 	}
 
 	public static void removeFromPrimaryMetadataField(DB db, int trialID,

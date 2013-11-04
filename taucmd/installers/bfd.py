@@ -47,9 +47,9 @@ LOGGER = taucmd.getLogger(__name__)
 
 
 # Default BFD download URL
-#BFD_URL = 'http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.23.2.tar.gz'
+BFD_URL = 'http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.23.2.tar.gz'
 # For debugging
-BFD_URL = 'http://localhost:3000/binutils-2.23.2.tar.gz'
+#BFD_URL = 'http://localhost:3000/binutils-2.23.2.tar.gz'
 
 # User specific BFD source code location
 BFD_SRC_DIR = os.path.join(taucmd.SRC_DIR, 'bfd')
@@ -61,8 +61,7 @@ def downloadSource(src=BFD_URL):
     Download and extract a GNU Binutils archive
     """
     dest = os.path.join(taucmd.SRC_DIR, src.split('/')[-1])
-    LOGGER.debug('Downloading BFD from %r to %r' % (src, dest))
-    print 'Downloading BFD from %r' % src
+    LOGGER.info('Downloading BFD from %r' % src)
     util.download(src, dest)
     extractSource(dest)
     os.remove(dest)
@@ -126,21 +125,16 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
         LOGGER.debug('Assuming user-supplied BFD at %r is properly installed' % bfd)
         return
     else:
-        raise TauError('ERROR: Invalid BFD directory %r' % bfd)
+        raise TauError('Invalid BFD directory %r' % bfd)
     
     # Banner
-    print '*' * 80
-    print '*'
-    print '* Installing BFD at %r' % prefix
-    print '* This may take a long time but will only be done once.'
-    print '*'
-    print '*' * 80
+    LOGGER.info('Installing BFD at %r' % prefix)
 
     # Configure the source code for this configuration
     srcdir = BFD_SRC_DIR
     cmd = getConfigureCommand(config)
     LOGGER.debug('Creating configure subprocess in %r: %r' % (srcdir, cmd))
-    print 'Configuring BFD...'
+    LOGGER.info('Configuring BFD...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     #proc = subprocess.Popen(' '.join(cmd), cwd=srcdir, stdout=stdout, stderr=stderr, shell=True)
     if proc.wait():
@@ -150,18 +144,17 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     # Execute make
     cmd = ['make']
     LOGGER.debug('Creating make subprocess in %r: %r' % (srcdir, cmd))
-    print 'Compliling BFD...'
+    LOGGER.info('Compiling BFD...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     #proc = subprocess.Popen(' '.join(cmd), cwd=srcdir, stdout=stdout, stderr=stderr, shell=True)
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
         raise TauError('BFD compilation failed.')
-    print 'BFD installation complete.'
 
     # Execute make install
     cmd = ['make', 'install']
     LOGGER.debug('Creating make subprocess in %r: %r' % (srcdir, cmd))
-    print 'Compliling BFD...'
+    LOGGER.info('Installing BFD...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     #proc = subprocess.Popen(' '.join(cmd), cwd=srcdir, stdout=stdout, stderr=stderr, shell=True)
     if proc.wait():
@@ -170,4 +163,5 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     
     # Cleanup
     shutil.rmtree(srcdir)
-    print 'BFD installation complete.'
+    LOGGER.debug('Recursively deleting %r' % srcdir)
+    LOGGER.info('BFD installation complete.')
