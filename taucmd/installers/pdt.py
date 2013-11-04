@@ -46,10 +46,10 @@ from taucmd import TauError, TauNotImplementedError
 LOGGER = taucmd.getLogger(__name__)
 
 # Default PDT download URL
-#PDT_URL = 'http://www.cs.uoregon.edu/research/tau/pdt_releases/pdtoolkit-3.19p1.tar.gz'
-#PDT_URL = 'http://tau.uoregon.edu/pdt.tgz'
+PDT_URL = 'http://tau.uoregon.edu/pdt.tgz'
 # For debugging
-PDT_URL = 'http://localhost:3000/pdtoolkit-3.19p1.tar.gz'
+#PDT_URL = 'http://localhost:3000/pdtoolkit-3.19p1.tar.gz'
+#PDT_URL = 'http://www.cs.uoregon.edu/research/tau/pdt_releases/pdtoolkit-3.19p1.tar.gz'
 
 # User specific PDT source code location
 PDT_SRC_DIR = os.path.join(taucmd.SRC_DIR, 'pdt')
@@ -61,8 +61,7 @@ def downloadSource(src=PDT_URL):
     Downloads and extracts a PDT archive file
     """
     dest = os.path.join(taucmd.SRC_DIR, src.split('/')[-1])
-    LOGGER.debug('Downloading PDT from %r to %r' % (src, dest))
-    print 'Downloading PDT from %r' % src
+    LOGGER.info('Downloading PDT from %r' % src)
     util.download(src, dest)
     extractSource(dest)
     os.remove(dest)
@@ -110,21 +109,16 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
         LOGGER.debug('Assuming user-supplied PDT at %r is properly installed' % pdt)
         return
     else:
-        raise TauError('ERROR: Invalid PDT directory %r' % pdt)
+        raise TauError('Invalid PDT directory %r' % pdt)
     
     # Banner
-    print '*' * 80
-    print '*'
-    print '* Installing PDT at %r' % prefix
-    print '* This may take a long time but will only be done once.'
-    print '*'
-    print '*' * 80
+    LOGGER.info('Installing PDT at %r' % prefix)
 
     # Configure the source code for this configuration
     srcdir = PDT_SRC_DIR
     cmd = getConfigureCommand(config)
     LOGGER.debug('Creating configure subprocess in %r: %r' % (srcdir, cmd))
-    print 'Configuring PDT...'
+    LOGGER.info('Configuring PDT...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
@@ -133,7 +127,7 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     # Execute make
     cmd = ['make', '-j', 'install']
     LOGGER.debug('Creating make subprocess in %r: %r' % (srcdir, cmd))
-    print 'Compliling PDT...'
+    LOGGER.info('Installing PDT...')
     proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
     if proc.wait():
         shutil.rmtree(prefix, ignore_errors=True)
@@ -141,4 +135,5 @@ def install(config, stdout=sys.stdout, stderr=sys.stderr):
     
     # Clean up
     shutil.rmtree(srcdir)
-    print 'PDT installation complete.'
+    LOGGER.debug('Recursively deleting %r' % srcdir)
+    LOGGER.info('PDT installation complete.')

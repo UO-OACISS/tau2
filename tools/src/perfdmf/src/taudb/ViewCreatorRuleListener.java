@@ -1,5 +1,6 @@
 package edu.uoregon.tau.perfdmf.taudb;
 
+import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -73,6 +74,21 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 	String value=""; //value of field
 	String value2="";
 	String type = "";
+	Container container = null;
+
+	/**
+	 * We need to hang on to the container of the +/- buttons so we can check if
+	 * it is disabled. We ignore rules from disabled containers.
+	 * 
+	 * @param c
+	 */
+	public void setContainer(Container c) {
+		this.container = c;
+	}
+
+	public boolean isRuleEnabled() {
+		return (container != null && container.isEnabled());
+	}
 
 	private void change (DocumentEvent e){
 		try {			
@@ -103,7 +119,7 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 	}
 	public void actionPerformed(ActionEvent arg) {
 		if( "comboBoxChanged".equals(arg.getActionCommand())){
-			JComboBox combo = (JComboBox) arg.getSource();
+			JComboBox<String> combo = (JComboBox<String>) arg.getSource();
 			if(combo.getName() == ViewCreatorGUI.NUMBER_RANGE){
 				operator = ViewCreatorGUI.NUMBER_RANGE;
 			}else if(combo.getName() == ViewCreatorGUI.METADATA){

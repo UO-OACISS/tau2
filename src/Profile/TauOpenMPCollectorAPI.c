@@ -1142,7 +1142,8 @@ int ompt_initialize() {
 
   if (TauEnv_get_collector_api_events_enabled()) {
   /* optional events, "blameshifting" */
-#ifndef TAU_IBM_OMPT
+#ifndef TAU_IBM_OMPT 
+  // actually, don't do the idle event at all for now
   //CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
   //CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
 #endif
