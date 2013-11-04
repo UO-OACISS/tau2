@@ -110,6 +110,7 @@ using namespace tau;
 
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
+extern "C" char* Tau_get_thread_ompt_state(int tid);
 
 #if 1 // disabled for now -- no state tracking
 static string _gTauOmpStatesArray[17] = {
@@ -1185,13 +1186,19 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
 #ifdef TAU_OPENMP
   if (TauEnv_get_collector_api_states_enabled() == 1) {
     // get the thread state, too!
+#ifdef TAU_USE_OMPT
+    char* state_name = Tau_get_thread_ompt_state(tid);
+    if (state_name != NULL) {
+#else
     int thread_state = 0;
     thread_state = Tau_get_thread_omp_state(tid);
     if (thread_state >= 0) {
+      char* state_name = gTauOmpStates(thread_state)
+#endif
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during
       // the OpenMP Collector API initialization.
-      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(gTauOmpStates(thread_state));
+      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(state_name);
       stateContext->addPcSample(pcStack, tid, deltaValues);
     }
   } else {
