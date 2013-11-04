@@ -1184,7 +1184,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
   }
   //printf("tid = %d, Delta = %f, period = %d\n", tid, deltaValues[0], ebsPeriod); fflush(stdout);
 #ifdef TAU_OPENMP
-  if (TauEnv_get_collector_api_states_enabled() == 1) {
+  if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // get the thread state, too!
 #ifdef TAU_USE_OMPT
     char* state_name = Tau_get_thread_ompt_state(tid);
