@@ -48,8 +48,10 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -64,19 +66,20 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.JTree;
-import javax.swing.JComponent;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
+import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import javax.swing.table.TableCellRenderer;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.TreeUI;
 import edu.uoregon.tau.common.Utility;
@@ -98,16 +101,18 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
-import edu.uoregon.tau.perfdmf.taudb.TAUdbDataSource;
-import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 import edu.uoregon.tau.perfdmf.database.DBManagerListener;
 import edu.uoregon.tau.perfdmf.database.DatabaseManagerWindow;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDataSource;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 import edu.uoregon.tau.perfdmf.taudb.ViewCreatorGUI;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener,
@@ -684,6 +689,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		jMenuItem = new JMenuItem("Add Mean to Comparison Window");
 		jMenuItem.addActionListener(this);
 		stdTrialPopup.add(jMenuItem);
+		jMenuItem = new JMenuItem("Add Metadata Field");
+		jMenuItem.addActionListener(this);
+		stdTrialPopup.add(jMenuItem);
 		jMenuItem = new JMenuItem("Upload Trial to DB");
 		jMenuItem.addActionListener(this);
 		stdTrialPopup.add(jMenuItem);
@@ -718,6 +726,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		jMenuItem.addActionListener(this);
 		dbTrialPopup.add(jMenuItem);
 		jMenuItem = new JMenuItem("Add Mean to Comparison Window");
+		jMenuItem.addActionListener(this);
+		dbTrialPopup.add(jMenuItem);
+		jMenuItem = new JMenuItem("Add Metadata Field");
 		jMenuItem.addActionListener(this);
 		dbTrialPopup.add(jMenuItem);
 		jMenuItem = new JMenuItem("Delete");
@@ -1262,6 +1273,117 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						System.out.println("Error: Cannot create a view on a non TAUdb database.");
 					}
 
+				} else if (arg.equals("Add Metadata Field To All Trials")) {
+					View view = (View) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+					Database database = view.getDatabase();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if (dbAPI instanceof TAUdbDatabaseAPI) {
+
+						String[] results = promptForMetadata();
+						if (results == null) {
+							return;
+						}
+
+						ArrayList<View> views = new ArrayList<View>(1);
+						views.add(view);
+						DB db = dbAPI.db();
+						List<Trial> trials = View.getTrialsForView(views, true,
+								db);
+						if (trials == null) {
+							return;
+						}
+						Iterator<Trial> it = trials.iterator();
+						while (it.hasNext()) {
+							Trial t = it.next();
+							t.loadXMLMetadata(db);
+							MetaDataMap mdm = t.getMetaData();
+
+							String currentValue = mdm.get(results[0]);
+
+							mdm.put(results[0], results[1]);
+							int id = t.getID();
+							DB tdb = this.getDatabaseAPI(t.getDatabase()).db();
+
+							if (currentValue == null) {
+								TAUdbTrial.addToPrimaryMetadataField(tdb, id,
+									results[0], results[1]);
+							} else if (!currentValue.equals(results[1])) {
+								TAUdbTrial.updatePrimaryMetadataField(tdb, id,
+										results[0], results[1]);
+							}
+
+						}
+
+
+					} else {
+						System.out
+								.println("Error: Cannot add metadata for all trials in a view on a non TAUdb database.");
+					}
+
+				} else if (arg.equals("Remove Metadata Field From All Trials")) {
+					View view = (View) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+					Database database = view.getDatabase();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if (dbAPI instanceof TAUdbDatabaseAPI) {
+
+						String result = promptForMetadataRemoval();
+						if (result == null) {
+							return;
+						}
+
+						ArrayList<View> views = new ArrayList<View>(1);
+						views.add(view);
+						DB db = dbAPI.db();
+						List<Trial> trials = View.getTrialsForView(views, true,
+								db);
+						if (trials == null) {
+							return;
+						}
+						Iterator<Trial> it = trials.iterator();
+						while (it.hasNext()) {
+							Trial t = it.next();
+							t.loadXMLMetadata(db);
+							MetaDataMap mdm = t.getMetaData();
+
+							// String currentValue = mdm.get(results[0]);
+
+							// mdm.put(results[0], results[1]);
+							mdm.remove(result);
+							int id = t.getID();
+							DB tdb = this.getDatabaseAPI(t.getDatabase()).db();
+
+							// if (currentValue != null) {
+							TAUdbTrial.removeFromPrimaryMetadataField(tdb, id,
+									result);
+							// }
+
+						}
+
+					} else {
+						System.out
+								.println("Error: Cannot remove metadata for all trials in a view on a non TAUdb database.");
+					}
+
+				} else if (arg.equals("Edit")) {
+					View view = (View) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+
+					Database database = view.getDatabase();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if (dbAPI instanceof TAUdbDatabaseAPI) {
+						ViewCreatorGUI frame = new ViewCreatorGUI(
+								(TAUdbDatabaseAPI) dbAPI, view);
+
+						// Display the window.
+						frame.pack();
+						frame.setVisible(true);
+
+					} else {
+						System.out
+								.println("Error: Cannot edit a view on a non TAUdb database.");
+					}
 				} else if (arg.equals("Upload Application to DB")) {
 
 					java.lang.Thread thread = new java.lang.Thread(
@@ -1390,6 +1512,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
 					addMeanToComparisonWindow(ppTrial);
 
+				} else if (arg.equals("Add Metadata Field")) {
+					ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
+					addMetadataToTrial(ppTrial);
 				} else if (arg.equals("Export Profile")) {
 					ParaProfTrial ppTrial = (ParaProfTrial) clickedOnObject;
 					if (ppTrial.loading()) {
@@ -1460,6 +1585,120 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		} catch (SQLException e) {
 			ParaProfUtils.handleException(e);
 		}
+	}
+
+	private void addMetadataToTrial(ParaProfTrial ppTrial) {
+
+		if (ppTrial.loading()) {
+			JOptionPane.showMessageDialog(this,
+					"Cannot perform operation while loading");
+			return;
+		}
+
+		boolean loaded = true;
+
+		if (ppTrial.dBTrial()) {
+			loaded = false;
+			for (Enumeration<ParaProfTrial> e = loadedDBTrials.elements(); e
+					.hasMoreElements();) {
+				ParaProfTrial loadedTrial = e.nextElement();
+				if ((ppTrial.getID() == loadedTrial.getID())
+						&& (ppTrial.getExperimentID() == loadedTrial
+								.getExperimentID())
+						&& (ppTrial.getApplicationID() == loadedTrial
+								.getApplicationID())) {
+					ppTrial = loadedTrial;
+					loaded = true;
+				}
+			}
+		}
+
+		if (!loaded) {
+			JOptionPane.showMessageDialog(this,
+					"Please load the trial first (expand the tree)");
+			return;
+		}
+
+		String[] fields = promptForMetadata();
+		if (fields != null) {
+			String name = fields[0];
+			String value = fields[1];
+
+			if (ppTrial.getTrial().getMetaData().get(name) != null) {
+				JOptionPane.showMessageDialog(null, "Field Already Exists",
+						"Please input a unique string for the name.",
+						JOptionPane.ERROR_MESSAGE);
+			} else {
+				ppTrial.getTrial().getMetaData().put(name, value);
+
+				DB db = getDatabaseAPI(ppTrial.getDatabase()).db();
+				if ((ppTrial.getDatabase() != null && ppTrial.getDatabase()
+						.isTAUdb())
+						|| db.getSchemaVersion() > 0) {
+					int id = ppTrial.getID();
+					TAUdbTrial.addToPrimaryMetadataField(db, id, name, value);
+				}
+
+				int location = jSplitInnerPane.getDividerLocation();
+				jSplitInnerPane.setRightComponent(getTable(ppTrial));
+				jSplitInnerPane.setDividerLocation(location);
+
+				// System.out.println("name: " + name.getText());
+				// System.out.println("value: " + value.getText());
+
+			}
+
+		}
+	}
+
+	private static String[] promptForMetadata() {
+		JTextField nameF = new JTextField(15);
+		JTextField valueF = new JTextField(15);
+		JPanel qpanel = new JPanel();
+		qpanel.add(new JLabel("Name:"));
+		qpanel.add(nameF);
+		qpanel.add(Box.createHorizontalStrut(15)); // a spacer
+		qpanel.add(new JLabel("Value:"));
+		qpanel.add(valueF);
+		int result = JOptionPane.showConfirmDialog(null, qpanel,
+				"Input name and value for new metadata field",
+				JOptionPane.OK_CANCEL_OPTION);
+		if (result == JOptionPane.OK_OPTION) {
+			String[] results = { nameF.getText(), valueF.getText() };
+			if (results[0] == null || results[1] == null
+					|| results[0].trim().length() == 0) {
+				JOptionPane
+						.showMessageDialog(
+								null,
+								"Invalid Input",
+								"Please input a valid string for the name and value entry",
+								JOptionPane.ERROR_MESSAGE);
+				return null;
+			} else
+				return results;
+		}
+		return null;
+	}
+
+	private static String promptForMetadataRemoval() {
+		JTextField nameF = new JTextField(15);
+		JPanel qpanel = new JPanel();
+		qpanel.add(new JLabel("Name:"));
+		qpanel.add(nameF);
+		int resultVal = JOptionPane.showConfirmDialog(null, qpanel,
+				"Input name of Metadata Field to Remove",
+				JOptionPane.OK_CANCEL_OPTION);
+		if (resultVal == JOptionPane.OK_OPTION) {
+			String result = nameF.getText();
+			if (result == null || result.trim().length() == 0) {
+				JOptionPane.showMessageDialog(null, "Invalid Input",
+						"Please input a valid string for the name",
+						JOptionPane.ERROR_MESSAGE);
+				return null;
+			} else
+				return result;
+		}
+		return null;
 	}
 
 	private void addMeanToComparisonWindow(ParaProfTrial ppTrial) {

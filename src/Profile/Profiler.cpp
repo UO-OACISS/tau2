@@ -1,17 +1,17 @@
 /*****************************************************************************
- **			TAU Portable Profiling Package			    **
- **			http://www.cs.uoregon.edu/research/tau	            **
+ **      TAU Portable Profiling Package          **
+ **      http://www.cs.uoregon.edu/research/tau              **
  *****************************************************************************
- **    Copyright 1997-2009					   	    **
+ **    Copyright 1997-2009                   **
  **    Department of Computer and Information Science, University of Oregon **
  **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
  ****************************************************************************/
 /*****************************************************************************
- **	File 		: Profiler.cpp					    **
- **	Description 	: TAU Profiling Package				    **
- **	Author		: Sameer Shende					    **
- **	Contact		: tau-bugs@cs.uoregon.edu                 	    **
- **	Documentation	: See http://www.cs.uoregon.edu/research/tau        **
+ **  File     : Profiler.cpp              **
+ **  Description   : TAU Profiling Package            **
+ **  Author    : Sameer Shende              **
+ **  Contact    : tau-bugs@cs.uoregon.edu                       **
+ **  Documentation  : See http://www.cs.uoregon.edu/research/tau        **
  ****************************************************************************/
 
 #include <Profile/Profiler.h>
@@ -114,7 +114,7 @@ const char *TauGetCounterString(void)
 #ifdef SGI_HW_COUNTERS
   return "templated_functions_hw_counters";
 #elif (defined (TAU_PAPI) \
-       || defined(TAU_PAPI_WALLCLOCKTIME)	\
+       || defined(TAU_PAPI_WALLCLOCKTIME)  \
        || defined(TAU_PAPI_VIRTUAL))
   char *tau_env = NULL;
 
@@ -329,6 +329,18 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+#endif
+
+/* It is possible that when the event stack gets deep, and has to be
+ * reallocated, the pointers in the event stack get messed up. This
+ * fixes the parent pointer for flat profiles, but I don't know if it
+ * is a robust fix for all scenarios! - Kevin */
+
+#if 0
+  if (ParentProfiler != TauInternal_ParentProfiler(tid)) {
+    ParentProfiler = TauInternal_ParentProfiler(tid);
+    //printf ("%d: Warning! ParentProfiler pointer was bogus!\n", tid);
+  }
 #endif
 
   /********************************************************************************/
@@ -1174,21 +1186,26 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
           double excltime = ue->GetMean(tid);
           //double excltime = ue->GetMean(tid) * ue->GetNumEvents(tid);
           double incltime = excltime;
+          int calls = ue->GetNumEvents();
        
           std::string name = ue->GetName();
 
-          size_t del = name.rfind(std::string("=>"));
+          size_t del = name.find(std::string(":"));
 
-          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", name.substr(del + 3, string::npos).c_str(), fi->GetCalls(tid), 0, excltime,
+          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", name.substr(del + 2, string::npos).c_str(), calls, 0, excltime,
               incltime);
+          fprintf(fp, "0 ");    // Indicating that profile calls is turned off
+          fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
           
           found_one = true;
         }
       }
-      
+       /* 
       if (!found_one) {
         fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), 0, 0.0, 0.0);
-      }
+        fprintf(fp, "0 ");    // Indicating that profile calls is turned off
+        fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
+      }*/
       found_one = false;
 /*
       if (numEvents > 0) {
@@ -1205,34 +1222,53 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         }
       }
 */
-    } else {
-
-      // get currently stored values
-      double incltime = fi->getDumpInclusiveValues(tid)[metric];
-      double excltime = fi->getDumpExclusiveValues(tid)[metric];
-
-      if (strlen(fi->GetType()) > 0) {
-        fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
-            excltime, incltime);
-      } else {
-        fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), excltime,
-            incltime);
-      }
-
     }
-    
+
+    // get currently stored values
+    double incltime = fi->getDumpInclusiveValues(tid)[metric];
+    double excltime = fi->getDumpExclusiveValues(tid)[metric];
+
+    if (strlen(fi->GetType()) > 0) {
+      fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
+          excltime, incltime);
+    } else {
+      fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), excltime,
+          incltime);
+    }
+
     fprintf(fp, "0 ");    // Indicating that profile calls is turned off
     fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
-
+    
   }
 
   return 0;
 }
 
 // Writes function event data
-static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int numFuncs)
+static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int numFuncs, int metric)
 {
   int trueCount = count;
+
+  vector<TauUserEvent*>::iterator it2;
+  const char *metricName = TauMetrics_getMetricAtomic(metric);
+
+  if (metricName != NULL)
+  {
+      int tempCount = 0;
+      for (it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+        TauUserEvent *ue = *it2;
+
+        const char *str = ue->GetName().c_str();
+        if (strncmp(metricName, str, strlen(metricName)) == 0 && ue->GetNumEvents(tid) > 0)
+        {
+          tempCount++;
+        }
+      }
+      if (tempCount > 0)
+      {
+        trueCount += (tempCount - 1)*2; //account for noncontext event and two functions per event (callpath/noncallpath).
+      }
+  }
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
 
@@ -1241,15 +1277,15 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
     } else if (fi->GetCalls(tid) == 0) {
       trueCount--;
     }
+  
   }
-
   return trueCount;
 }
 
 // Writes a single profile file
 static int writeProfile(FILE *fp, char *metricName, int tid, int metric, const char **inFuncs, int numFuncs)
 {
-  int trueCount = getTrueFunctionCount(TheFunctionDB().size(), tid, inFuncs, numFuncs);
+  int trueCount = getTrueFunctionCount(TheFunctionDB().size(), tid, inFuncs, numFuncs, metric);
   //writeHeader(fp, TheFunctionDB().size(), metricName);
   writeHeader(fp, trueCount, metricName);
   fprintf(fp, " # ");
@@ -1297,8 +1333,7 @@ int TauProfiler_StoreData(int tid)
   }
   finalizeTrace(tid);
 
-#ifndef TAU_WINDOWS  
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
@@ -1422,7 +1457,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
       getMetricHeader(i, metricHeader);
       getProfileLocation(i, profileLocation);
 //       sprintf(filename, "%s/temp.%d.%d.%d", profileLocation, 
-// 	      RtsLayer::myNode(), RtsLayer::myContext(), tid);
+//         RtsLayer::myNode(), RtsLayer::myContext(), tid);
 
       const char *selectivePrefix = "";
       if (numFuncs > 0) {

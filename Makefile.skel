@@ -101,7 +101,7 @@ PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF##TAU_PTHREAD_WRAP#
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
-          $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER) $(TAUPRELOAD) \
+          $(ELGCONVERTER) $(IOWRAPPER) $(TAUPRELOAD) \
 	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) \
 	  $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
 	  $(PTHREAD_WRAPPER) $(GOMP_WRAPPER) $(OTF2PROFILE)
@@ -150,6 +150,18 @@ install: .clean
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?; done
 	@echo "***************** DONE ************************"
+
+javadoc:
+	cd tools/src; $(MAKE) javadoc
+
+doc: javadoc
+
+java:
+	cd tools/src/common; $(MAKE)
+	cd tools/src/vis; $(MAKE)
+	cd tools/src/perfdmf; $(MAKE) override
+	cd tools/src/paraprof; $(MAKE) override
+	cd tools/src/perfexplorer; ./configure; $(MAKE)
 
 .clean:
 	@for i in ${SUBDIR} ${EXAMPLES} ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean || exit 0); done

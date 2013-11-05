@@ -31,17 +31,19 @@
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
 struct Tau_collector_status_flags {
-    int idle; // 4 bytes
-    int busy; // 4 bytes
-    int parallel; // 4 bytes
-    int ordered_region_wait; // 4 bytes
-    int ordered_region; // 4 bytes
-    int task_exec; // 4 bytes
-    int looping; // 4 bytes
+    char idle; // 4 bytes
+    char busy; // 4 bytes
+    char parallel; // 4 bytes
+    char ordered_region_wait; // 4 bytes
+    char ordered_region; // 4 bytes
+    char task_exec; // 4 bytes
+    char looping; // 4 bytes
+    char acquired; // 4 bytes
+    char waiting; // 4 bytes
     char *timerContext; // 8 bytes(?)
     char *activeTimerContext; // 8 bytes(?)
     void *signal_message; // preallocated message for signal handling, 8 bytes
-    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(int)))];
+    char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(9*sizeof(char)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -65,10 +67,10 @@ static int Tau_collector_enabled = 1;
 
 extern void Tau_disable_collector_api() {
   // if we didn't initialize the lock, we will crash...
-  if (!TauEnv_get_collector_api_enabled()) return;
-  omp_set_lock(&writelock);
+  if (!TauEnv_get_openmp_runtime_enabled()) return;
+  //omp_set_lock(&writelock);
   Tau_collector_enabled = 0;
-  omp_unset_lock(&writelock);
+  //omp_unset_lock(&writelock);
 }
 
 extern void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COLLECTORAPI_EC ec, int rsz, int append_zero);
@@ -115,6 +117,15 @@ char OMP_EVENT_NAME[35][50]= {
     "OMP_EVENT_THR_END_FINISH_TASK"
 };
 
+// this is an array of state names for the OMPT interface.
+// For some reason, OMPT doesn't provide a fast lookup
+// for states based on the ID, so we have to make our own.
+// The states are enumerated, but not consecutive. :(
+// 128 should be enough, there aren't that many states.
+// but the bitcodes go up to about 110.
+static char OMPT_STATE_NAMES[128][32] = {0};
+static int OMPT_NUM_STATES;
+
 const int OMP_COLLECTORAPI_HEADERSIZE=4*sizeof(int);
 
 static int (*Tau_collector_api)(void*) = NULL;
@@ -142,7 +153,7 @@ typedef struct {
 } Tau_collector_api_CallSiteInfo;
 
 extern struct CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long address,
-        const char *tag, const char *childName, char **newShortName, char addAddress);
+        const char *tag, const char *childName, char **newShortName, char addAddress, bool useLineNumber);
 
 char * show_backtrace (int tid, int offset) {
     char * location = NULL;
@@ -175,13 +186,12 @@ char * show_backtrace (int tid, int offset) {
         // - ?? <- the source location we want
             unw_get_reg(&cursor, UNW_REG_IP, &ip);
             unw_get_reg(&cursor, UNW_REG_SP, &sp);
-            printf("Address: %p %p\n", ip, sp);
+            //printf("Address: %p %p\n", ip, sp);
         if (++index >= depth) {
             char * newShort = NULL;
-            void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
-            //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
+            void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0, true);
             Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
-            //TAU_VERBOSE ("index = %d, ip = %lx, sp = %lx, name= %s\n", index, (long) ip, (long) sp, myInfo->name);
+            //TAU_VERBOSE ("index = %d, ip = %lx, sp = %lx, name= %s\n", index, (long) ip, (long) sp, myInfo->name); fflush(stdout);
             location = malloc(strlen(myInfo->name)+1);
             strcpy(location, myInfo->name);
             break;
@@ -195,7 +205,7 @@ void Tau_get_current_region_context(int tid) {
     // Tau_get_region_id (tid);
     char * tmpStr = NULL;
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
-    if (TauEnv_get_collector_api_context() == 2) { // region
+    if (TauEnv_get_openmp_runtime_context() == 2) { // region
       tmpStr = show_backtrace(tid, 0); // find our source location
       if (tmpStr == NULL) {
           tmpStr = "UNKNOWN";
@@ -239,7 +249,7 @@ void Tau_get_my_region_context(int tid, int forking) {
     // Tau_get_region_id (tid);
     char * tmpStr = NULL;
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
-    if (TauEnv_get_collector_api_context() == 2) { // region
+    if (TauEnv_get_openmp_runtime_context() == 2) { // region
       tmpStr = show_backtrace(tid, 1); // find our source location
       if (tmpStr == NULL) {
           tmpStr = "UNKNOWN";
@@ -267,8 +277,9 @@ void Tau_get_my_region_context(int tid, int forking) {
 extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
 
 /*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context, int forking) {
-  //fprintf(stderr,"%d Starting %s\n", tid,state);
-  if (use_context == 0 || TauEnv_get_collector_api_context() == 0) {
+  //fprintf(stderr,"%d Starting %s %d\n", tid,state,Tau_collector_flags[tid].task_exec); fflush(stderr);
+  // 0 means no context wanted
+  if (use_context == 0 || TauEnv_get_openmp_runtime_context() == 0) {
     //  no context for the event
     Tau_pure_start_openmp_task(state, "", tid);
   } else {
@@ -276,7 +287,8 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
 #if 1
     char * regionIDstr = NULL;
     // don't do this if the worker thread is entering the parallel region - use the master's timer
-    if (TauEnv_get_collector_api_context() == 1 && forking == 0) {
+    // 1 means use the timer context
+    if (TauEnv_get_openmp_runtime_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
     }
@@ -304,7 +316,8 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
     free(regionIDstr);
 #else
     // don't do this if the worker thread is entering the parallel region - use the master's timer
-    if (TauEnv_get_collector_api_context() == 1 && forking == 0) {
+    // 1 means use the timer context
+    if (TauEnv_get_openmp_runtime_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
     }
@@ -332,10 +345,17 @@ extern void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
 }
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context) {
+    //fprintf(stderr,"%d Stopping %s %d\n", tid,state,Tau_collector_flags[tid].task_exec); fflush(stderr);
     //omp_set_lock(&writelock);
     if (Tau_collector_enabled) {
       //omp_unset_lock(&writelock);
+#if 1
       Tau_stop_current_timer_task(tid);
+#else
+      char event[256];
+      sprintf(event, "%s ", state);
+    Tau_pure_stop_task(event, tid);
+#endif
     //} else {
       //omp_unset_lock(&writelock);
     }
@@ -602,7 +622,7 @@ extern int __omp_collector_api(void *);
 int Tau_initialize_collector_api(void) {
     //if (Tau_collector_api != NULL || initializing) return 0;
     if (initialized || initializing) return 0;
-    if (!TauEnv_get_collector_api_enabled()) {
+    if (!TauEnv_get_openmp_runtime_enabled()) {
       TAU_VERBOSE("COLLECTOR API disabled.\n"); 
       return 0;
     }
@@ -697,7 +717,7 @@ int Tau_initialize_collector_api(void) {
     /*test for request of all events*/
     int i;
     int num_req=OMP_EVENT_THR_END_FINISH_TASK; /* last event */
-    if (!TauEnv_get_collector_api_events_enabled()) {
+    if (!TauEnv_get_openmp_runtime_events_enabled()) {
 	  // if events are disabled, only do the 4 major ones
 	  num_req = OMP_EVENT_THR_END_IDLE;
 	}
@@ -717,14 +737,14 @@ int Tau_initialize_collector_api(void) {
     int state_rsz = sizeof(OMP_COLLECTOR_API_THR_STATE)+sizeof(unsigned long);
     for(i=0;i<omp_get_max_threads();i++) {  
         Tau_collector_flags[i].signal_message = malloc(OMP_COLLECTORAPI_HEADERSIZE+state_rsz);
-        Tau_fill_header(Tau_collector_flags[i].signal_message, OMP_COLLECTORAPI_HEADERSIZE+state_rsz, OMP_REQ_STATE, OMP_ERRCODE_OK, state_rsz, 1);
+        Tau_fill_header(Tau_collector_flags[i].signal_message, OMP_COLLECTORAPI_HEADERSIZE+state_rsz, OMP_REQ_STATE, OMP_ERRCODE_OK, state_rsz, 0);
     }
 
 #ifdef TAU_UNWIND
     //Tau_Sampling_register_unit(); // not necessary now?
 #endif
 
-    if (TauEnv_get_collector_api_states_enabled() == 1) {
+    if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // now, for the collector API support, create the 12 OpenMP states.
     // preallocate State timers. If we create them now, we won't run into
     // malloc issues later when they are required during signal handling.
@@ -948,19 +968,27 @@ void my_shutdown() {
 void WAIT_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_ompt_start_timer(WAIT_NAME, 0); \
+  Tau_collector_flags[tid].waiting = 1; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
 void ACQUIRED_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
-  Tau_ompt_stop_timer(WAIT_NAME, 0); \
+  if (Tau_collector_flags[tid].waiting>0) { \
+    Tau_ompt_stop_timer(WAIT_NAME, 0); \
+  } \
+  Tau_collector_flags[tid].waiting = 0; \
   Tau_ompt_start_timer(REGION_NAME, 0); \
+  Tau_collector_flags[tid].acquired = 1; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
 void RELEASE_FUNC (ompt_wait_id_t *waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
-  Tau_ompt_stop_timer(REGION_NAME, 0); \
+  if (Tau_collector_flags[tid].acquired>0) { \
+    Tau_ompt_stop_timer(REGION_NAME, 0); \
+  } \
+  Tau_collector_flags[tid].acquired = 0; \
   TAU_OMPT_COMMON_EXIT; \
 } \
 
@@ -1013,8 +1041,8 @@ TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_barrier_begin,my_wait_barrier_end,"OpenMP_
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_master_begin,my_master_end,"OpenMP_MASTER_REGION")
 TAU_OMPT_LOOP_BEGIN_AND_END(my_loop_begin,my_loop_end,"OpenMP_LOOP")
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_section_begin,my_section_end,"OpenMP_SECTION") 
-TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end,"OpenMP_SINGLE_IN_BLOCK") 
-TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_others_begin,my_single_others_end,"OpenMP_SINGLE_OTHERS") 
+//TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end,"OpenMP_SINGLE_IN_BLOCK") 
+//TAU_OMPT_SIMPLE_BEGIN_AND_END(my_single_others_begin,my_single_others_end,"OpenMP_SINGLE_OTHERS") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_taskwait_begin,my_taskwait_end,"OpenMP_TASKWAIT") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_taskwait_begin,my_wait_taskwait_end,"OpenMP_WAIT_TASKWAIT") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_taskgroup_begin,my_taskgroup_end,"OpenMP_TASKGROUP") 
@@ -1091,8 +1119,9 @@ void my_idle_begin(ompt_data_t *thread_data) {
 //#endif /* TAU_IBM_OMPT */
 
 int ompt_initialize() {
+  Tau_init_initializeTAU();
   if (initialized || initializing) return 0;
-  //if (!TauEnv_get_collector_api_enabled()) return;
+  if (!TauEnv_get_openmp_runtime_enabled()) return 0;
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
   omp_init_lock(&writelock);
@@ -1111,11 +1140,12 @@ int ompt_initialize() {
   CHECK(ompt_event_runtime_shutdown, my_shutdown, "runtime_shutdown");
 #endif /* TAU_IBM_OMPT */
 
-  if (TauEnv_get_collector_api_events_enabled()) {
+  if (TauEnv_get_openmp_runtime_events_enabled()) {
   /* optional events, "blameshifting" */
-#ifndef TAU_IBM_OMPT
-  CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
-  CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
+#ifndef TAU_IBM_OMPT 
+  // actually, don't do the idle event at all for now
+  //CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
+  //CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
 #endif
   CHECK(ompt_event_wait_barrier_begin, my_wait_barrier_begin, "wait_barrier_begin");
   CHECK(ompt_event_wait_barrier_end, my_wait_barrier_end, "wait_barrier_end");
@@ -1145,10 +1175,14 @@ int ompt_initialize() {
 #endif
   CHECK(ompt_event_section_begin, my_section_begin, "section_begin");
   CHECK(ompt_event_section_end, my_section_end, "section_end");
-  CHECK(ompt_event_single_in_block_begin, my_single_in_block_begin, "single_in_block_begin");
-  CHECK(ompt_event_single_in_block_end, my_single_in_block_end, "single_in_block_end");
-  CHECK(ompt_event_single_others_begin, my_single_others_begin, "single_others_begin");
-  CHECK(ompt_event_single_others_end, my_single_others_end, "single_others_end");
+/* When using Intel, there are times when the non-single thread continues on its
+ * merry way. For now, don't track the time spent in the "other" threads. 
+ * We have no way of knowing when the other threads finish waiting, because for
+ * Intel they don't wait - they just continue. */
+  //CHECK(ompt_event_single_in_block_begin, my_single_in_block_begin, "single_in_block_begin");
+  //CHECK(ompt_event_single_in_block_end, my_single_in_block_end, "single_in_block_end");
+  //CHECK(ompt_event_single_others_begin, my_single_others_begin, "single_others_begin");
+  //CHECK(ompt_event_single_others_end, my_single_others_end, "single_others_end");
   CHECK(ompt_event_taskwait_begin, my_taskwait_begin, "taskwait_begin");
   CHECK(ompt_event_taskwait_end, my_taskwait_end, "taskwait_end");
   CHECK(ompt_event_taskgroup_begin, my_taskgroup_begin, "taskgroup_begin");
@@ -1176,12 +1210,47 @@ int ompt_initialize() {
 
 //ompt_event(ompt_event_flush, ompt_thread_callback_t, 57, ompt_event_flush_implemented) /* after executing f
   }
-
   TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
+
+// make the states
+  if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
+    // now, for the collector API support, create the OpenMP states.
+    // preallocate State timers. If we create them now, we won't run into
+    // malloc issues later when they are required during signal handling.
+    int current_state = ompt_state_work_serial;
+    int next_state = 0;
+    const char *next_state_name;
+    strcpy(OMPT_STATE_NAMES[ompt_state_work_serial], "ompt_state_work_serial");
+    Tau_create_thread_state_if_necessary("ompt_state_work_serial");
+    while (ompt_enumerate_state(current_state, &next_state, &next_state_name) == 1) {
+      TAU_VERBOSE("Got state %d: '%s'\n", next_state, next_state_name);
+      if (next_state >= 128) {
+        TAU_VERBOSE("WARNING! MORE OMPT STATES THAN EXPECTED! PROGRAM COULD CRASH!!!\n");
+      }
+      strcpy(OMPT_STATE_NAMES[next_state], next_state_name);
+      Tau_create_thread_state_if_necessary(next_state_name);
+      current_state = next_state;
+    }
+    // next_state now holds our max 
+  }
+  TAU_VERBOSE("OMPT states registered! \n"); fflush(stderr);
+
   initializing = false;
   initialized = true;
 
   return 1;
+}
+
+char* Tau_get_thread_ompt_state(int tid) {
+    // if not available, return something useful
+    if (!initialized) return NULL;
+    //TAU_VERBOSE("Thread %d, getting state...\n", tid);
+    // query the thread state
+    ompt_wait_id_t wait;
+    ompt_state_t state = ompt_get_state(&wait);
+    //TAU_VERBOSE("Thread %d, state : %d\n", tid, state);
+    // return the thread state as a string
+    return OMPT_STATE_NAMES[state];
 }
 
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE OMPT SUPPORT IS NONEXISTENT */

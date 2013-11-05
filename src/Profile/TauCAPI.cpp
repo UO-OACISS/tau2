@@ -62,7 +62,7 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
-#ifndef TAU_WINDOWS
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
 #include <execinfo.h>
 #endif
 
@@ -365,10 +365,15 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
     int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
+    //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth); 
     //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+#if 1
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
     free(Tau_thread_flags[tid].Tau_global_stack);
+#else
+    Profiler *newStack = (Profiler *) realloc(Tau_thread_flags[tid].Tau_global_stack, newDepth*sizeof(Profiler));
+#endif
     Tau_thread_flags[tid].Tau_global_stack = newStack;
     Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
@@ -504,7 +509,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
-#ifndef TAU_WINDOWS
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
      if(!TauEnv_get_ebs_enabled()) {
        void* callstack[128];
        int i, frames = backtrace(callstack, 128);
@@ -1461,6 +1466,14 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
   t->TriggerEvent(data);
 } 
 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_context_event_thread(const char *name, double data, int tid) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_context_userevent(&ue, name);
+  Tau_context_userevent_thread(ue, data, tid);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_context_event(const char *name, double data) {

@@ -12,6 +12,7 @@ import edu.uoregon.tau.common.treetable.TreeTableModel;
 import edu.uoregon.tau.paraprof.DataSorter;
 import edu.uoregon.tau.paraprof.PPUserEventProfile;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -19,8 +20,13 @@ import edu.uoregon.tau.perfdmf.UtilFncs;
 public class ContextEventModel extends AbstractTreeTableModel {
 
     private static String[] cNames = { "Name", "Total", "NumSamples", "MaxValue", "MinValue", "MeanValue", "Std. Dev." };
+	private static String[] cNamesNoTotal = { "Name", "NumSamples", "MaxValue",
+			"MinValue", "MeanValue", "Std. Dev." };
     private static Class<?>[] cTypes = { TreeTableModel.class, Double.class, Double.class, Double.class, Double.class, Double.class,
             Double.class };
+	private static Class<?>[] cTypesNoTotal = { TreeTableModel.class,
+			Double.class, Double.class, Double.class, Double.class,
+			Double.class };
 
     private List<ContextEventTreeNode> roots;
 
@@ -32,6 +38,7 @@ public class ContextEventModel extends AbstractTreeTableModel {
     private int sortColumn;
     private boolean sortAscending;
     DataSorter dataSorter;
+	private boolean showTotal = true;
 
     public ContextEventModel(ContextEventWindow window, ParaProfTrial ppTrial, Thread thread, boolean reversedCallPaths) {
         super(null);
@@ -47,6 +54,10 @@ public class ContextEventModel extends AbstractTreeTableModel {
     public Thread getThread() {
         return thread;
     }
+
+	public void showTotal(boolean show) {
+		this.showTotal = show;
+	}
 
     private void setupData() {
 
@@ -67,7 +78,9 @@ public class ContextEventModel extends AbstractTreeTableModel {
                 if (uep.getUserEvent().isContextEvent()) {
                     String rootName;
 
-                    rootName = UtilFncs.getContextEventRoot(uep.getName()).trim();
+					rootName = UtilFncs.getContextEventRoot(
+							ParaProfUtils.getUserEventDisplayName(uep
+									.getUserEvent())).trim();
 
                     rootNames.put(rootName, 1);
 
@@ -106,32 +119,48 @@ public class ContextEventModel extends AbstractTreeTableModel {
     }
 
     public String getColumnName(int column) {
-        return cNames[column];
+		if (showTotal) {
+			return cNames[column];
+		} else
+			return cNamesNoTotal[column];
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
 	public Class getColumnClass(int column) {
-        return cTypes[column];
+		if (showTotal) {
+			return cTypes[column];
+		} else
+			return cTypesNoTotal[column];
     }
 
     public int getColorMetric() {
-        // TODO Auto-generated method stub
         return 0;
     }
 
     public int getColumnCount() {
-        return cNames.length;
+		if (showTotal) {
+			return cNames.length;
+		} else
+			return cNamesNoTotal.length;
     }
 
     public Object getValueAt(Object node, int column) {
         ContextEventTreeNode cnode = (ContextEventTreeNode) node;
         UserEventProfile uep = cnode.getUserEventProfile();
+		if (!showTotal) {
+			column++;
+		}
         if (uep == null) {
             return null;
         } else {
             switch (column) {
             case 1:
-                if (uep.getName().startsWith("Memory Utilization (heap, in KB)") || uep.getName().contains("/s)")) { // rates are ignored for total
+				if (uep.getName()
+						.startsWith("Memory Utilization (heap, in KB)")
+						|| uep.getName().contains("/s)")
+						|| !uep.getUserEvent().isShowTotal()) { // rates are
+																// ignored for
+																// total
                     return null;
                 } else {
                     return new Double(uep.getNumSamples(dataSorter.getSelectedSnapshot())

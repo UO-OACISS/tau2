@@ -410,7 +410,13 @@ void Tau_CuptiLayer_read_counters(int device, uint64_t * counterDataBuffer)
       //printf("total instances avaiable: %ld.\n", numTotalInstances);
       
       //in case no events were read.
-      counterDataBuffer[0] = 0;
+			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+			{
+				counterDataBuffer[i] = 0;
+
+				//printf("init  events, values %d => %llu.\n",
+				//i, counterDataBuffer[i]);
+			}	
      
       int e = 0;
       //sum data.
@@ -452,13 +458,17 @@ void Tau_CuptiLayer_read_counters(int device, uint64_t * counterDataBuffer)
 #endif
 			//if ( events_read != ( size_t ) Tau_CuptiLayer_num_events )
 				//TODO error return -1;
-		
-      //printf("cupti last values    %llu.\n",
-      //lastDataBuffer[0]);
+	
 
-      //printf("cupti events, values %llu.\n",
-      //counterDataBuffer[0]);
-		
+			
+			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+			{
+				//printf("cupti last values  %d =>  %llu.\n",
+				//i, lastDataBuffer[i]);
+
+				//printf("cupti events, values %d => %llu.\n",
+				//i, counterDataBuffer[i]);
+			}	
 
 			//accumulate counter values.
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
