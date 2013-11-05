@@ -176,36 +176,36 @@ case $1 in
 
      oparicomp=*)
         oparicomp=`echo $1 | sed -e 's/^oparicomp=//'`
-	echo "s,^OPARICOMP=.*$,OPARICOMP=$oparicomp,g" >> $sedout
+	echo "s&^OPARICOMP=.*$&OPARICOMP=$oparicomp&g" >> $sedout
 	;;
 
      scorepdir=*)
         scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
-	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
+	echo "s&^SCOREPDIR=.*$&SCOREPDIR=$scorepdir&g" >> $sedout
 	;;
      scorep_opari_bin_dir=*)
         scorep_opari_bin_dir=`echo $1 | sed -e 's/^scorep_opari_bin_dir=//'`
-	    echo "s,^SCOREP_OPARI_BIN_DIR=.*$,SCOREP_OPARI_BIN_DIR=$scorep_opari_bin_dir,g" >> $sedout
+	    echo "s&^SCOREP_OPARI_BIN_DIR=.*$&SCOREP_OPARI_BIN_DIR=$scorep_opari_bin_dir&g" >> $sedout
 	;;
 
      scorepincs=*)
 	scorepincs=`echo $1 | sed -e 's/^scorepincs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPINCS=.*$,SCOREPINCS=$scorepincs,g" >> $sedout
+	echo "s&^SCOREPINCS=.*$&SCOREPINCS=$scorepincs&g" >> $sedout
 	;;
 
      scoreplibs=*)
-       scoreplibs=`echo $1 | sed -e 's+^scoreplibs=++' -e 's+#+ +g'`
-       echo "s+^SCOREPLIBS=.*$+SCOREPLIBS=$scoreplibs+g" >> $sedout
+       scoreplibs=`echo $1 | sed -e 's@^scoreplibs=@@' -e 's@#@ @g'`
+       echo "s&^SCOREPLIBS=.*$&SCOREPLIBS=$scoreplibs&g" >> $sedout
 	;;
 
      scorepmpilibs=*)
-       scorepmpilibs=`echo $1 | sed -e 's+^scorepmpilibs=++' -e 's+#+ +g'`
-       echo "s+^SCOREPMPILIBS=.*$+SCOREPMPILIBS=$scorepmpilibs+g" >> $sedout
+       scorepmpilibs=`echo $1 | sed -e 's@^scorepmpilibs=@@' -e 's@#@ @g'`
+       echo "s&^SCOREPMPILIBS=.*$&SCOREPMPILIBS=$scorepmpilibs&g" >> $sedout
 	;;
 
      scorepdir=*)
         scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
-	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
+	echo "s&^SCOREPDIR=.*$&SCOREPDIR=$scorepdir&g" >> $sedout
 	;;
 
      mrnet_root=*)
@@ -797,6 +797,22 @@ case $1 in
         config_arch=`echo $1 | sed 's/^arch=//'`
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
 	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
+	;;
+
+     host=*)
+        config_host=`echo $1 | sed 's/^host=//'`
+	echo "NOTE: Building TAU library for HOST (i.e. cross compile)"
+	echo "s/^CROSS_PREFIX=\(.*\)/CROSS_PREFIX=${config_host}-/g" >> $sedout
+	;;
+
+     HOSTUTILS)
+	echo "NOTE: Building TAU utils for HOST (i.e. cross compile)"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+
+     ANDROID)
+	echo NOTE: Building TAU for Android
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
      NO_RANLIB)

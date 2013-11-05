@@ -34,7 +34,7 @@
 #define TAU_ACTION_DUMP_BACKTRACES 3
 
 #ifndef TAU_EVENT_THRESHOLD
-#define TAU_EVENT_THRESHOLD .5
+#define TAU_EVENT_THRESHOLD_DEFAULT .5
 #endif /* TAU_EVENT_THRESHOLD */
 
 #ifdef __cplusplus
@@ -65,9 +65,9 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_signals_gdb();
-  int  TAUDECL TauEnv_get_collector_api_enabled();
-  int  TAUDECL TauEnv_get_collector_api_states_enabled();
-  int  TAUDECL TauEnv_get_collector_api_events_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_events_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
   void  TAUDECL TauEnv_force_set_ebs_period(int period);

@@ -192,7 +192,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
-				Tau_cupti_register_host_calling_site(cbInfo->correlationId);
+				Tau_cupti_register_host_calling_site(cbInfo->correlationId, cbInfo->functionName);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -251,7 +251,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           Tau_CuptiLayer_init();
 
           //printf("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
-				  record_gpu_launch(cbInfo->correlationId);
+				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 					CUdevice device;
 					cuCtxGetDevice(&device);
 					record_gpu_counters_at_launch(device);
@@ -262,7 +262,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			{
 				if (function_is_launch(id))
 				{
-				  record_gpu_launch(cbInfo->correlationId);
+				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 				}
       /* for testing only. 
 				if (function_is_launch(id))
@@ -828,9 +828,9 @@ int gpu_source_locations_available()
   return 1;
 }
 
-void record_gpu_launch(int correlationId)
+void record_gpu_launch(int correlationId, const char *name)
 {
-  Tau_cupti_register_host_calling_site(correlationId);	
+  Tau_cupti_register_host_calling_site(correlationId, name);	
 }
 void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
 {

@@ -113,7 +113,7 @@
 
 // Which platforms have pvalloc?
 #ifndef HAVE_PVALLOC
-#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS) || defined(TAU_ANDROID)
 #undef HAVE_PVALLOC
 #else
 #define HAVE_PVALLOC 1

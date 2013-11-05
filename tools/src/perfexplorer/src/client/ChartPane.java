@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -53,18 +54,14 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.general.SeriesException;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
-import org.python.antlr.base.mod;
 
-import edu.uoregon.tau.common.FileFilter;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
-import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 public class ChartPane extends JScrollPane implements ActionListener {
@@ -127,6 +124,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JComboBox units = new MyJComboBox();
 	private JLabel seriesXmlNameLabel = new JLabel("Series Metadata Field:");
 	private JComboBox seriesXmlName = new MyJComboBox();
+	private JCheckBox showSeriesLegend = new JCheckBox("Show Series Legend");
 
 	private JLabel xmlNameLabel = new JLabel("X Axis Metadata Field:");
 	private JComboBox xmlName = new MyJComboBox();
@@ -426,7 +424,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		seriesXmlName = new MyJComboBox();
 		this.seriesXmlName.addActionListener(this);
 		panel.add(seriesXmlName);
-
+		showSeriesLegend.setSelected(true);
+		panel.add(showSeriesLegend);
 
 		return (panel);
 	}
@@ -590,6 +589,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.eventLabel.setText(label);
 		this.event.setSelectedIndex(0);
 		int dex=0;
+		Collections.sort(events);
 		event.setListData(events.toArray());
 		eventScrollPane.setPreferredSize(new Dimension(oldWidth,eventScrollPane.getHeight()));//TODO: Keep the standard minimum size in effect
 		for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
@@ -1304,7 +1304,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						model.getChartYAxisLabel(),  // range axis label
 						xydataset,                         // data
 						PlotOrientation.VERTICAL,        // the plot orientation
-						true,                            // legend
+						showSeriesLegend.isSelected(), // legend
 						true,                            // tooltips
 						false                            // urls
 				);
@@ -1321,12 +1321,13 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						model.getChartYAxisLabel(),  // range axis label
 						dataset,                         // data
 						orientation,        // the plot orientation
-						true,                            // legend
+						showSeriesLegend.isSelected(), // legend
 						true,                            // tooltips
 						false                            // urls
 				);
 
 				// set the chart to a common style
+
 				Utility.applyDefaultChartTheme(chart);
 
 				customizeCategoryChart(model, rawData, chart);
@@ -1345,7 +1346,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					model.getChartYAxisLabel(),  // range axis label
 					dataset,                         // data
 					orientation,        // the plot orientation
-					true,                            // legend
+					showSeriesLegend.isSelected(), // legend
 					true,                            // tooltips
 					false                            // urls
 			);

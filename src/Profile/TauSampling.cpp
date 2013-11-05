@@ -78,7 +78,12 @@
 #include <stdlib.h>
 #include <strings.h>
 
+/* Android didn't provide <ucontext.h> so we make our own */
+#ifdef TAU_ANDROID
+#include "android_ucontext.h"
+#else
 #include <ucontext.h>
+#endif
 
 #include <string>
 #include <vector>
@@ -105,6 +110,7 @@ using namespace tau;
 
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
+extern "C" char* Tau_get_thread_ompt_state(int tid);
 
 #if 1 // disabled for now -- no state tracking
 static string _gTauOmpStatesArray[17] = {
@@ -353,7 +359,7 @@ unsigned long get_pc(void *p)
 #ifdef TAU_BGP
   //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
   pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
-# elif TAU_BGQ
+# elif defined(TAU_BGQ)
   //  201203 - Thanks to the Open|Speedshop team!
   pc = (unsigned long)((struct pt_regs *)(((&(uc->uc_mcontext))->regs))->nip);
 # elif __x86_64__
@@ -1178,15 +1184,21 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
   }
   //printf("tid = %d, Delta = %f, period = %d\n", tid, deltaValues[0], ebsPeriod); fflush(stdout);
 #ifdef TAU_OPENMP
-  if (TauEnv_get_collector_api_states_enabled() == 1) {
+  if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // get the thread state, too!
+#ifdef TAU_USE_OMPT
+    char* state_name = Tau_get_thread_ompt_state(tid);
+    if (state_name != NULL) {
+#else
     int thread_state = 0;
     thread_state = Tau_get_thread_omp_state(tid);
     if (thread_state >= 0) {
+      char* state_name = gTauOmpStates(thread_state)
+#endif
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during
       // the OpenMP Collector API initialization.
-      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(gTauOmpStates(thread_state));
+      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(state_name);
       stateContext->addPcSample(pcStack, tid, deltaValues);
     }
   } else {
@@ -1566,7 +1578,7 @@ int Tau_sampling_init(int tid)
    sev.sigev_signo = TAU_ALARM_TYPE;
    sev.sigev_notify = SIGEV_THREAD_ID;
    sev.sigev_value.sival_ptr = &timerid;
-   sev.sigev_notify_thread_id = syscall(SYS_gettid);
+   sev.sigev_notify_thread_id = syscall(__NR_gettid);
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
@@ -1599,6 +1611,10 @@ int Tau_sampling_init(int tid)
   //DEBUGMSG("setitimer called");
 #endif //SIGEV_THREAD_ID
 
+#ifndef TAU_BGQ
+}    //(TauEnv_get_ebs_source() == "itimer" || "TIME")
+#endif
+
   // set up the base timers
   double values[TAU_MAX_COUNTERS] = { 0 };
   /* Get the current metric values */
@@ -1618,10 +1634,6 @@ int Tau_sampling_init(int tid)
     }
     //printf("tid = %d, init previousTimestamp = %llu\n", tid, previousTimestamp[localIndex]); fflush(stdout);
   //}
-#ifndef TAU_BGQ
-}    //(TauEnv_get_ebs_source() == "itimer" || "TIME")
-#endif
-
   samplingEnabled[tid] = 1;
   collectingSamples = 1;
   return 0;
@@ -1762,8 +1774,9 @@ extern "C"
 void Tau_sampling_finalize_if_necessary(void)
 {
   static bool finalized = false;
-  static bool thrFinalized[TAU_MAX_THREADS];
-  TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), Tau_get_local_tid()); fflush(stdout);
+  static bool thrFinalized[TAU_MAX_THREADS] = {false};
+  int tid = Tau_get_local_tid();
+  TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -1778,7 +1791,6 @@ void Tau_sampling_finalize_if_necessary(void)
     sigprocmask(SIG_BLOCK, &x, NULL);
 #endif
 
-  if (RtsLayer::localThreadId() == 0) {
     if (!finalized) {
       RtsLayer::LockEnv();
       // check again, someone else might already have finalized by now.
@@ -1794,7 +1806,14 @@ void Tau_sampling_finalize_if_necessary(void)
       RtsLayer::UnLockEnv();
     }
 
+  if (!thrFinalized[tid]) {
+    samplingEnabled[tid] = 0;
+    thrFinalized[tid] = true;
+    Tau_sampling_finalize(tid);
+  }
+
     // Kevin: should we finalize all threads on this process? I think so.
+  if (tid == 0) {
     for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
       if (!thrFinalized[i]) {
         thrFinalized[i] = true;
@@ -1804,4 +1823,4 @@ void Tau_sampling_finalize_if_necessary(void)
   }
 }
 
-#endif //TAU_WINDOWS
+#endif //TAU_WINDOWS && TAU_ANDROID

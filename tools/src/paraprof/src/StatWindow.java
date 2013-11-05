@@ -73,6 +73,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     private JCheckBoxMenuItem descendingOrder = null;
     //private JCheckBoxMenuItem showPathTitleInReverse = null;
     private JCheckBoxMenuItem showMetaData = null;
+	private JCheckBoxMenuItem showTotal = null;
     private JCheckBoxMenuItem showFindPanelBox;
 
     private JScrollPane jScrollpane = null;
@@ -165,6 +166,12 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         showMetaData = new JCheckBoxMenuItem("Show Meta Data in Panel", true);
         showMetaData.addActionListener(this);
         optionsMenu.add(showMetaData);
+
+		// if (userEventWindow) {
+		// showTotal = new JCheckBoxMenuItem("Show Total", true);
+		// showTotal.addActionListener(this);
+		// optionsMenu.add(showTotal);
+		// }
 
         optionsMenu.add(new JSeparator());
 
@@ -405,6 +412,9 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
                     panel.repaint();
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     this.setHeader();
+				} else if (arg.equals("Show Total")) {
+					panel.setShowTotal(showTotal.isSelected());
+					panel.repaint();
                 }
             }
         } catch (Exception e) {

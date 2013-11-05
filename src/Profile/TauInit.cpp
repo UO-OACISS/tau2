@@ -26,9 +26,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
-#ifndef TAU_WINDOWS
-#include <ucontext.h>
-#endif //TAU_WINDOWS
+//#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+//#include <ucontext.h>
+//#endif //TAU_WINDOWS
 #include <string.h>
 
 #ifndef TAU_WINDOWS

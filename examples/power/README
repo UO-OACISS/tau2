@@ -1,0 +1,35 @@
+This example illustrates TAU's API for tracking Power. To track Power, simply insert:
+
+TAU_TRACK_POWER();
+
+in the code. An interrupt is generated every 10 seconds. To change the interrupt interval to say 1s, please insert:
+
+TAU_SET_INTERRUPT_INTERVAL(1);
+
+make
+
+To track Power, the following must be done:
+
+1. TAU must be configured to use PAPI configured with --with-component=rapl
+2. The executable must not rely on any LD_LIBRARY_PATH settings. So, we typically add -Wl,-rapth,/path/to/dso while linking 
+in the executable. So, we configure TAU using:
+
+ ./configure -pdt=/usr/local/packages/pdt -c++=mpicxx -cc=mpicc -fortran=mpif90 -mpilibrary=-lmpi_usempif08#-lmpi_usempi_ignore_tkr#-lmpi_mpifh#-lmpi#-Wl,-rpath,/usr/local/packages/openmpi/1.7_intel-14-tm/lib#-Wl,-rpath,/usr/local/packages/intel/14.0/compiler/lib/intel64/ -bfd=download -iowrapper -papi=/usr/local/packages/papi-5.2.0 -bfd=download -iowrapper
+
+make install
+
+3. The system on which you are running the executable must allow you to read the /dev/cpu/*/msr files:
+
+su
+# chmod o+r /dev/cpu/*/msr
+4. The executable must have special previleges to execute code. These are granted by root using:
+
+# setcap cap_sys_rawio=ep ./matmult
+
+5. The user then executes the code using:
+% mpirun -np 4 ./matmult
+
+6. Max and min marker events trigger when the usage is beyond a threshold of the value seen during the execution. To change 
+the event threshold, simply set:
+% export TAU_EVENT_THRESHOLD=0.01
+for capturing 1% variation in an atomic event. 

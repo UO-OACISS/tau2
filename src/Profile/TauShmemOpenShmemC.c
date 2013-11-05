@@ -2,6 +2,7 @@
 #include <pshmem.h>
 #include <Profile/Profiler.h>
 #include <stdio.h>
+#include <stddef.h>
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 static int tau_shmem_tagid_f=0 ; 
 #define TAU_SHMEM_TAGID tau_shmem_tagid_f=tau_shmem_tagid_f%250
