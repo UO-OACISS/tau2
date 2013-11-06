@@ -3,7 +3,7 @@
 #*                      http://www.cs.uoregon.edu/research/paracomp/tau    **
 #****************************************************************************
 
-OTFDIR=
+include ../include/Makefile
 CONFIG_ARCH=default
 CXX=g++
 CC=gcc
