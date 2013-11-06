@@ -20,6 +20,8 @@ OTFDIR=
 OTFLIB=
 OTFINC=
 PDTDIR=
+DYNINST_INC_DIR=$(DYNINST_ROOT)/include
+DYNINST_LIB_DIR=$(DYNINST_ROOT)/lib
 DYNINSTDIR=
 OPARICOMP=
 #######################################################################
@@ -112,6 +114,11 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #PERFLIB#PERF2TAU = perf2tau #ENDIF#
 #DYNINST_STATIC_REWRITING_UNSUPPORTED#DYNINSTFLAGS=-DTAU_DYNINST_STATIC_REWRITING_UNSUPPORTED #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h -I$(DYNINSTDIR)/core -I$(DYNINSTDIR)/src/core/dyninstAPI/h -I$(DYNINSTDIR)/src/core -I$(DYNINSTDIR)/src/include -I$(DYNINSTDIR)/include $(DYNINSTFLAGS) #ENDIF#
+#DYNINST#DYNINST_INC_OPTS	= -I$(DYNINSTDIR)/core/dyninstAPI/h -I$(DYNINSTDIR)/core -I$(DYNINSTDIR)/src/core/dyninstAPI/h -I$(DYNINSTDIR)/src/core -I$(DYNINSTDIR)/src/include -I$(DYNINSTDIR)/include $(DYNINSTFLAGS) #ENDIF#
+#DYNINST#DYNINC = $(DYNINST_INC_OPTS) #ENDIF#
+#DYNINST#DYNINST_LIB_DIR = $(DYNINSTDIR)/lib #ENDIF#
+#DYNINST_LIB#DYNINST_LIB_DIR = $(DYNINSTDIR)/lib #ENDIF#
+#DYNINST_INC#DYNINC 	= -I$(DYNINST_INC_DIR) $(DYNINSTFLAGS) #ENDIF#
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -liberty -lelf #ENDIF#
 #DYNINST5.2#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty#ENDIF#
 #DYNINST6#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI #ENDIF#
@@ -119,7 +126,7 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #SP1#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI #ENDIF#
 #SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI $(DWARFOPTS) -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
-#DYNINST8#DYNLIBS 	= -L$(DYNINSTDIR)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
+#DYNINST8#DYNLIBS 	= -L$(DYNINST_LIB_DIR) -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 #SUNCC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS #ENDIF#
