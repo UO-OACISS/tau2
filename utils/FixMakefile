@@ -1431,6 +1431,10 @@ case $1 in
 	echo "NOTE: Using SCOREP Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SCOREPMETADATA)
+	echo "NOTE: Using SCOREP's metadata mappings ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      SCOREPOPARI2)
 	echo "NOTE: Using Opari2 configured with SCOREP Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
