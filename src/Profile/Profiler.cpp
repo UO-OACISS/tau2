@@ -1317,6 +1317,9 @@ int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
 
+#ifdef TAU_SCOREP
+  Tau_write_metadata_records_in_scorep(tid);
+#endif /* TAU_SCOREP */
   profileWriteCount[tid]++;
   if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
 
