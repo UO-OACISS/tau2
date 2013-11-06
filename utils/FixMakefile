@@ -404,6 +404,16 @@ case $1 in
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
 	;;
 
+     dyninstinc=*)
+        dyninstinc=`echo $1 | sed -e 's/^dyninstinc=//'`
+	echo "s,^DYNINST_INC_DIR=.*$,DYNINST_INC_DIR=$dyninstinc,g" >> $sedout
+	;;
+
+     dyninstlib=*)
+        dyninstlib=`echo $1 | sed -e 's/^dyninstlib=//'`
+	echo "s,^DYNINST_LIB_DIR=.*$,DYNINST_LIB_DIR=$dyninstlib,g" >> $sedout
+	;;
+
      dwarfopts=*)
         dwarfopts=`echo $1 | sed -e 's/^dwarfopts=//'`
 	echo "s,^DWARFOPTS=.*$,DWARFOPTS=$dwarfopts,g" >> $sedout
@@ -1314,6 +1324,12 @@ case $1 in
 	;;
      DYNINST)
 	echo "NOTE: Using DYNINST for TAU Runtime Instrumentation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST_INC)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST_LIB)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST41)

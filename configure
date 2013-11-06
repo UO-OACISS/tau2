@@ -458,6 +458,8 @@ for arg in "$@"; do
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
+	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
 	    echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
 	    echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
 	    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
@@ -786,6 +788,8 @@ forceshared=no
 opari_region=no
 opari_construct=no
 dyninst=no
+dyninstinc=no
+dyninstlib=no
 dwarf=no
 java=no
 openmp=no
@@ -1467,6 +1471,28 @@ for arg in "$@"; do
 	    fi
 	    shift
 	    ;;
+
+	-dyninstinc=*)
+	    dyninstinc=yes
+	    dyninstincdir=`echo $arg | sed -e 's/-dyninstinc=//'`
+	    if [ ! -d $dyninstincdir ]
+	    then
+		echo "Error: Cannot access DyninstAPI include directory $dyninstincdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-dyninstlib=*)
+	    dyninstlib=yes
+	    dyninstlibdir=`echo $arg | sed -e 's/-dyninstlib=//'`
+	    if [ ! -d $dyninstlibdir ]
+	    then
+		echo "Error: Cannot access DyninstAPI lib directory $dyninstlibdir"
+		exit 1
+	    fi
+	    shift
+        ;;
 
 	-dwarf=*)
 	    dwarf=yes
@@ -7479,6 +7505,16 @@ if [ $epilog = yes ] ; then
 	fi
     fi
 fi
+if [ $dyninstinc = yes ] ; then
+    fixmakeargs="$fixmakeargs dyninstinc=$dyninstincdir DYNINST_INC"
+    dyninstdir=$dyninstincdir/..
+    dyninst=yes
+fi
+
+if [ $dyninstlib = yes ] ; then
+    fixmakeargs="$fixmakeargs dyninstlib=$dyninstlibdir DYNINST_LIB"
+    dyninst=yes
+fi
 
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
@@ -7501,6 +7537,7 @@ if [ $dyninst = yes ] ; then
 	fixmakeargs="$fixmakeargs DYNINST8"
     fi
 fi
+
 
 if [ $dwarf = yes ] ; then
     if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
