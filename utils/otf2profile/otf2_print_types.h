@@ -39,8 +39,8 @@ otf2_print_get_mapping_type( OTF2_MappingType mappingType )
             return "GROUP";
         case OTF2_MAPPING_METRIC:
             return "METRIC";
-        case OTF2_MAPPING_MPI_COMM:
-            return "MPI_COMM";
+        /*case OTF2_MAPPING_MPI_COMM:
+            return "MPI_COMM"; */
         case OTF2_MAPPING_PARAMETER:
             return "PARAMETER";
 
@@ -89,8 +89,8 @@ otf2_print_get_type( OTF2_Type type )
             return "GROUP";
         case OTF2_TYPE_METRIC:
             return "METRIC";
-        case OTF2_TYPE_MPI_COMM:
-            return "MPI_COMM";
+        /* case OTF2_TYPE_MPI_COMM:
+            return "MPI_COMM"; */
         case OTF2_TYPE_PARAMETER:
             return "PARAMETER";
 
@@ -247,12 +247,12 @@ otf2_print_get_group_type( OTF2_GroupType groupType )
             return "REGIONS";
         case OTF2_GROUP_TYPE_METRIC:
             return "METRIC";
-        case OTF2_GROUP_TYPE_MPI_GROUP:
-            return "MPI_GROUP";
+        /*case OTF2_GROUP_TYPE_MPI_GROUP:
+            return "MPI_GROUP"; 
         case OTF2_GROUP_TYPE_MPI_COMM_SELF:
-            return "MPI_COMM_SELF";
+            return "MPI_COMM_SELF"; 
         case OTF2_GROUP_TYPE_MPI_LOCATIONS:
-            return "MPI_LOCATIONS";
+            return "MPI_LOCATIONS"; */
 
         default:
             return otf2_print_get_invalid( groupType );
@@ -438,6 +438,19 @@ otf2_print_get_measurement_mode( OTF2_MeasurementMode measurementMode )
 }
 
 
+#ifdef TAU_OTF2_1_1
+static const char*
+otf2_print_get_mpi_collective_type( OTF2_MpiCollectiveType mpiCollectiveType ) { 
+return ""; 
+}
+#else 
+static const char*
+otf2_print_get_mpi_collective_type( OTF2_CollectiveOp mpiCollectiveType ) { 
+return ""; 
+}
+
+#endif /* TAU_OTF2_1_2 */
+/*
 static inline const char*
 otf2_print_get_mpi_collective_type( OTF2_MpiCollectiveType mpiCollectiveType )
 {
@@ -482,3 +495,4 @@ otf2_print_get_mpi_collective_type( OTF2_MpiCollectiveType mpiCollectiveType )
             return otf2_print_get_invalid( mpiCollectiveType );
     }
 }
+*/

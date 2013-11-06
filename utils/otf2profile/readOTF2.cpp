@@ -378,7 +378,11 @@ MpiCollectiveEnd_print( uint64_t               locationID,
                         uint64_t               time,
                         void*                  userData,
                         OTF2_AttributeList*    attributes,
+#ifdef TAU_OTF2_1_1
                         OTF2_MpiCollectiveType type,
+#else
+                        OTF2_CollectiveOp type,
+#endif /* TAU_OTF2_1_1 */
                         uint32_t               commId,
                         uint32_t               root,
                         uint64_t               sizeSent,
@@ -703,8 +707,10 @@ ReadTraceFile()
     OTF2_GlobalDefReaderCallbacks_SetLocationGroupCallback( def_callbacks, GlobDefLocationGroup_print );
     OTF2_GlobalDefReaderCallbacks_SetLocationCallback( def_callbacks, GlobDefLocation_print );
     OTF2_GlobalDefReaderCallbacks_SetRegionCallback( def_callbacks, GlobDefRegion_print );
+    /*
     OTF2_GlobalDefReaderCallbacks_SetGroupCallback( def_callbacks, GlobDefGroup_print );
     OTF2_GlobalDefReaderCallbacks_SetMpiCommCallback( def_callbacks, GlobDefMpiComm_print );
+    */
     OTF2_GlobalDefReaderCallbacks_SetMetricMemberCallback( def_callbacks, GlobDefMetricMember_print );
     OTF2_GlobalDefReaderCallbacks_SetAttributeCallback( def_callbacks, GlobDefAttribute_print );
     OTF2_GlobalDefReaderCallbacks_SetParameterCallback( def_callbacks, GlobDefParameter_print );
@@ -2096,10 +2102,12 @@ otf2_print_attributes( otf2_print_data*    data,
                 value_buffer      = ( char* )otf2_print_get_id( value.uint32 );
                 break;
 
+            /*
             case OTF2_TYPE_MPI_COMM:
                 value_type_string = "MPI_COMM";
                 value_buffer      = ( char* )otf2_print_get_def_name( data->mpi_comms, value.uint32 );
                 break;
+                */
 
             case OTF2_TYPE_PARAMETER:
                 value_type_string = "PARAMETER";
@@ -2489,7 +2497,11 @@ MpiCollectiveEnd_print( uint64_t               locationID,
                         uint64_t               time,
                         void*                  userData,
                         OTF2_AttributeList*    attributes,
+#ifdef TAU_OTF2_1_1                        
                         OTF2_MpiCollectiveType type,
+#else
+                        OTF2_CollectiveOp type,
+#endif /* TAU_OTF2_1_1 */
                         uint32_t               commId,
                         uint32_t               root,
                         uint64_t               sizeSent,
@@ -2506,7 +2518,7 @@ MpiCollectiveEnd_print( uint64_t               locationID,
             "Root: %s, Sent: %" PRIu64 ", Received: %" PRIu64 "\n",
             otf2_EVENT_COLUMN_WIDTH, "MPI_COLLECTIVE_END",
             locationID, time,
-            otf2_print_get_mpi_collective_type( type ),
+            "NULL",
             otf2_print_get_def_name( data->mpi_comms, commId ),
             otf2_print_get_id( root ),
             sizeSent,
