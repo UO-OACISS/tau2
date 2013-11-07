@@ -17,10 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef TAU_MPC
-#include <mpc.h>
-#endif /* TAU_MPC */
-
 ofstream snapshot;
 
 char * Converter::trc = NULL;
@@ -222,9 +218,9 @@ void InitSnapshot(){
 
 void writeStringXML(string *stringIn) {
 
-	cout << "Pointer: " << stringIn << endl;
+	//cout << "Pointer: " << stringIn << endl;
 
-	cout << "Printing: " << *stringIn << endl;
+	//cout << "Printing: " << *stringIn << endl;
 
   const char* s = stringIn->c_str();
   if (!s) return;
@@ -782,6 +778,9 @@ int main(int argc, char **argv)
 		Usage();
 		exit(1);
 	}
+	char * point = argv[1];
+	bool otf2=false;
+	bool trc=false;
 	for (i = 0; i < argc ; i++)
 	{
 		switch(i)
@@ -791,6 +790,15 @@ int main(int argc, char **argv)
 			case 1:
 			/*trace_file*/
 			Converter::trc = argv[1];
+
+			if((point = strrchr(argv[1],'.')) != NULL ) {
+			     if(strcmp(point,".trc") == 0) {
+			          trc=true;
+			      }
+			     else if(strcmp(point,".otf2") == 0) {
+			          otf2=true;
+			      }
+			  }
 			break;
 			//case 2:
 			/*edf_file*/
@@ -863,7 +871,7 @@ int main(int argc, char **argv)
 					Converter::edf = argv[2];
 					seenedf=true;
 				}
-				else
+				else if(!otf2)
 				{
 					Usage();
 					exit(1);
@@ -877,7 +885,7 @@ int main(int argc, char **argv)
 	if(useSnapshot)
 		InitSnapshot();
 
-	if(seenedf)
+	if(seenedf||otf2)
 		ReadTraceFile();
 	else
 	{
