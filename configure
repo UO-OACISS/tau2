@@ -5045,6 +5045,10 @@ case $machine in
 	    else
 		fixmakeargs="$fixmakeargs X86_64PAPI_NEW"
 	    fi
+        if [ "x$papidir" = "x/usr" -o "x$papidir" = "x/usr/" ]; then
+		  fixmakeargs="$fixmakeargs PAPI_WITHOUT_LIB_INC"
+        fi
+        
 	fi
 	;;
     ibm64)
