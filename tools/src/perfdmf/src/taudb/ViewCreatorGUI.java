@@ -317,7 +317,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		}else if ("Cancel".equals(e.getActionCommand())){
 			close();
 		}else if ("comboBoxChanged".equals(e.getActionCommand())){
-			anyOrAll = ((JComboBox<String>) e.getSource()).getSelectedItem()
+			anyOrAll = ((JComboBox) e.getSource()).getSelectedItem()
 					.toString();
 		}
 		
@@ -403,7 +403,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	private JPanel addMatch(String selection) {
 		JPanel panel = new JPanel();
 		String[] comboBoxItems = {ALL,  ANY};
-		JComboBox<String> comboBox = new JComboBox<String>(comboBoxItems);
+		JComboBox comboBox = new JComboBox(comboBoxItems);
 		JLabel label1 = new JLabel("Match ");
 		JLabel label2 = new JLabel(" of the following rules.");
 		
@@ -442,7 +442,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		JPanel cards;
 		JPanel comboBoxPane = new JPanel(); // use FlowLayout
 		String comboBoxItems[] = comparatorTypes;
-		JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
+		JComboBox cb = new JComboBox(comboBoxItems);
 		cb.setEditable(false);
 		cb.setName(READ_TYPE);
 
@@ -483,7 +483,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		minusButton.addActionListener(listner);
 
 		String metadataList[] = getMetaDataList();
-		JComboBox<String> metadataCB = new JComboBox<String>(metadataList);
+		JComboBox metadataCB = new JComboBox(metadataList);
 		metadataCB.addActionListener(listener);
 		metadataCB.setEditable(false);
 		metadataCB.setName(METADATA);
@@ -565,7 +565,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS, NUMBER_RANGE};
-        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
+		JComboBox cb = new JComboBox(comboBoxItems);
         cb.addActionListener(listener);
         cb.setEditable(false);
         //cb.setSelectedIndex(0);
@@ -660,7 +660,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {DATE_IS, DATE_AFTER, DATE_BEFORE, DATE_RANGE};
-        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
+		JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
         cb.setSelectedIndex(0);
         
@@ -713,7 +713,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS};
-        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
+		JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
       //  cb.setName(STRING);
         cb.addActionListener(listener);
