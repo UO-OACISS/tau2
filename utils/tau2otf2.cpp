@@ -360,7 +360,12 @@ int DefStateGroup( void *userData, unsigned int stateGroupToken,
   maxTauStringId=localmax(maxTauStringId,stateGroupToken);
 //TODO: I guess we need to make a bucket for each group and count them ourselves.
   /* create a default activity (group) */
+#ifdef TAU_OTF2_1_1
   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken, OTF2_GROUP_TYPE_REGIONS,0,0);
+#else
+  OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken,OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE,     OTF2_GROUP_TYPE_REGIONS,0,0);
+#endif /* TAU_OTF2_1_1 */
+  
   return 0;
 }
 OTF2_ErrorCode status;
@@ -470,7 +475,15 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
     OTF2_GlobalDefWriter_WriteMetricMember(glob_def_writer,userEventToken, userEventToken,  userEventToken,OTF2_METRIC_TYPE_PAPI,OTF2_METRIC_ACCUMULATED_START, OTF2_TYPE_UINT64,OTF2_BASE_DECIMAL,0,COUNTS);
     OTF2_MetricMemberRef* omr = new OTF2_MetricMemberRef[1];
     	omr[0]=userEventToken;
-    OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT);
+
+#ifdef TAU_OTF2_1_1
+          OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT);
+#else
+          OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT, OTF2_RECORDER_KIND_CPU);
+
+#endif /* TAU_OTF2_1_1 */
+
+
 
   }
   else
@@ -480,7 +493,12 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
 	  OTF2_GlobalDefWriter_WriteMetricMember(glob_def_writer,userEventToken, userEventToken,  userEventToken,OTF2_METRIC_TYPE_OTHER,OTF2_METRIC_ABSOLUTE_POINT, OTF2_TYPE_UINT64,OTF2_BASE_DECIMAL,0,COUNTS);
 	  OTF2_MetricMemberRef* omr = new OTF2_MetricMemberRef[1];
 	      	omr[0]=userEventToken;
+#ifdef TAU_OTF2_1_1
 	  OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT);
+#else
+          OTF2_GlobalDefWriter_WriteMetricClass (    glob_def_writer, userEventToken, 1, omr,    OTF2_METRIC_SYNCHRONOUS_STRICT, OTF2_RECORDER_KIND_CPU);
+#endif /* TAU_OTF2_1_1 */
+
     /* NOTE: WE DO NOT HAVE THE DO DIFFERENTIATION PARAMETER YET IN OTF */
   } 
 
@@ -1112,10 +1130,18 @@ int COMM_STRING=string;
 
 
 /*TODO: Need to define mpi ranks and rank-rank mapping*/
-OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_MPI_GROUP,nodes,mpi_ranks);
+#ifdef TAU_OTF2_1_1
+ OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_MPI_GROUP,nodes,mpi_ranks);
+#else
+ OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_COMM_GROUP,OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE,nodes,mpi_ranks);
+#endif /* TAU_OTF2_1_1 */
 
+#ifdef TAU_OTF2_1_1
+  status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
+#else
+  status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
+#endif /* TAU_OTF2_1_1 */
 
-status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
 check_status( status, "Write communicator." );
 
 
@@ -1159,7 +1185,12 @@ check_status( status, "Write communicator." );
               //{
                   /* Write MPI Comm mappings to local definitions. */
                   status = OTF2_DefWriter_WriteMappingTable( def_writer,
-                		  OTF2_MAPPING_MPI_COMM,
+#ifdef TAU_OTF2_1_1
+                        OTF2_MAPPING_MPI_COMM,
+#else
+                        OTF2_MAPPING_COMM,
+#endif /* TAU_OTF2_1_1 */
+                		  
                                                              mpi_comm_map );
                   check_status( status, "Write MPI Comm mapping." );
               //}

@@ -58,7 +58,7 @@ tau2otf2: 	tau2otf2.o
 		$(CXX) $(CFLAGS) tau2otf2.o -o tau2otf2 -lm $(LEXTRA) $(OTFLIBS)
 
 tau2otf2.o:	tau2otf2.cpp
-		$(CXX) $(CFLAGS)  tau2otf2.cpp -c -I$(OTFDIR)/include
+		$(CXX) $(CFLAGS) $(TAU_OTF2_1_1_FLAGS)  tau2otf2.cpp -c -I$(OTFDIR)/include
 
 ebs2otf/ebs2otf.so:
 		cd ebs2otf ; $(MAKE)
