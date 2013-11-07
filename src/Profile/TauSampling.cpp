@@ -1186,7 +1186,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
 #ifdef TAU_OPENMP
   if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // get the thread state, too!
-#ifdef TAU_USE_OMPT
+#if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
     // OMPT returns a character array
     char* state_name = Tau_get_thread_ompt_state(tid);
     if (state_name != NULL) {
