@@ -57,6 +57,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 using namespace std;
 using namespace tau;
 
+#ifdef TAU_SCOREP_METADATA
+#include <scorep/SCOREP_Tau.h>
+#endif /* TAU_SCOREP_METADATA */
+
 
 #ifdef TAU_BGL
 #include <rts.h>
@@ -236,6 +240,7 @@ void Tau_metadata_register(const char *name, int value) {
 void Tau_metadata_register(const char *name, const char *value) {
   Tau_metadata(name, value);
 }
+
 
 
 int Tau_metadata_fillMetaData() 
@@ -825,7 +830,9 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   if (newline) {
     endl = "\n";
   }
+#ifndef TAU_SCOREP
   Tau_util_output (out, "<metadata>%s", endl);
+#endif /* TAU_SCOREP */
 
   if (counter != -1) {
     Tau_XML_writeAttribute(out, "Metric Name", RtsLayer::getCounterName(counter), newline);
@@ -870,12 +877,20 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
       Tau_XML_writeAttribute(out, name, value, newline);
 	} else {
 	*/
+#ifndef TAU_SCOREP
       Tau_XML_writeAttribute(out, &(it->first), it->second, newline);
+#elif TAU_SCOREP_METADATA /* TAU_SCOREP */
+      if ( it->second) {
+        SCOREP_Tau_AddLocationProperty((it->first).name, it->second->data.cval);
+      }
+#endif 
 	//}
 	i++;
   }
 
+#ifndef TAU_SCOREP
   Tau_util_output (out, "</metadata>%s", endl);
+#endif /* TAU_SCOREP */
   return 0;
 }
 
@@ -1078,4 +1093,9 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
   }
 }
 
+int Tau_write_metadata_records_in_scorep(int tid) {
+  writeMetaData(0, false, -1, tid);
+
+  return 0;
+}
 

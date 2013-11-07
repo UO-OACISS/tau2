@@ -458,6 +458,8 @@ for arg in "$@"; do
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
+	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
 	    echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
 	    echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
 	    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
@@ -786,6 +788,8 @@ forceshared=no
 opari_region=no
 opari_construct=no
 dyninst=no
+dyninstinc=no
+dyninstlib=no
 dwarf=no
 java=no
 openmp=no
@@ -1467,6 +1471,28 @@ for arg in "$@"; do
 	    fi
 	    shift
 	    ;;
+
+	-dyninstinc=*)
+	    dyninstinc=yes
+	    dyninstincdir=`echo $arg | sed -e 's/-dyninstinc=//'`
+	    if [ ! -d $dyninstincdir ]
+	    then
+		echo "Error: Cannot access DyninstAPI include directory $dyninstincdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-dyninstlib=*)
+	    dyninstlib=yes
+	    dyninstlibdir=`echo $arg | sed -e 's/-dyninstlib=//'`
+	    if [ ! -d $dyninstlibdir ]
+	    then
+		echo "Error: Cannot access DyninstAPI lib directory $dyninstlibdir"
+		exit 1
+	    fi
+	    shift
+        ;;
 
 	-dwarf=*)
 	    dwarf=yes
@@ -7026,6 +7052,10 @@ fi
 
 if [ -d $otfdir/include/otf2 ]; then
     fixmakeargs="$fixmakeargs OTF2 otfdir=$otfdir"
+    otfversion_11=`$otfdir/bin/otf2-config --version | grep "^1.1" | wc -l ` 
+    if [ $otfversion_11 = 1 ]; then
+      fixmakeargs="$fixmakeargs OTF2_1_1"
+    fi
 else
     if [ $otf = yes ] ; then
 	fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
@@ -7357,6 +7387,12 @@ if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
     scorep11=`${scorepdir}/bin/scorep-config --version | grep "^1.1" | wc -l`
+    scorepmetadata=`nm -A ${scorepdir}/lib/*.a | grep SCOREP_Tau_AddLocationProperty | wc -l `
+    if [ $scorepmetadata != 0 ]; then
+      fixmakeargs="$fixmakeargs SCOREPMETADATA"
+      #echo "SCOREP: Adding TAU metadata..."
+    fi
+
     #echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
 	# default flags for Score-P 1.2+
@@ -7479,6 +7515,16 @@ if [ $epilog = yes ] ; then
 	fi
     fi
 fi
+if [ $dyninstinc = yes ] ; then
+    fixmakeargs="$fixmakeargs dyninstinc=$dyninstincdir DYNINST_INC"
+    dyninstdir=$dyninstincdir/..
+    dyninst=yes
+fi
+
+if [ $dyninstlib = yes ] ; then
+    fixmakeargs="$fixmakeargs dyninstlib=$dyninstlibdir DYNINST_LIB"
+    dyninst=yes
+fi
 
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
@@ -7501,6 +7547,7 @@ if [ $dyninst = yes ] ; then
 	fixmakeargs="$fixmakeargs DYNINST8"
     fi
 fi
+
 
 if [ $dwarf = yes ] ; then
     if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
