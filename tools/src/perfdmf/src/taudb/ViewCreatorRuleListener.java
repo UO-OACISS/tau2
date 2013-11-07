@@ -119,7 +119,7 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 	}
 	public void actionPerformed(ActionEvent arg) {
 		if( "comboBoxChanged".equals(arg.getActionCommand())){
-			JComboBox<String> combo = (JComboBox<String>) arg.getSource();
+			JComboBox combo = (JComboBox) arg.getSource();
 			if(combo.getName() == ViewCreatorGUI.NUMBER_RANGE){
 				operator = ViewCreatorGUI.NUMBER_RANGE;
 			}else if(combo.getName() == ViewCreatorGUI.METADATA){

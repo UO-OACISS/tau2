@@ -7,8 +7,8 @@ CXX=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_cc.sh
 LD=$(CXX)
 AR=ar
 ARFLAGS=rcv
-LDFLAGS         = -g -fopenmp -O0
-CFLAGS          = -g -fopenmp -O0
+LDFLAGS         = -g $(TAU_OPENMP_OPTION) -O0
+CFLAGS          = -g $(TAU_OPENMP_OPTION) -O0
 TARGET=matmult
 
 OBJS=$(TARGET).o 
