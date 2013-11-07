@@ -1187,18 +1187,22 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
   if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // get the thread state, too!
 #ifdef TAU_USE_OMPT
+    // OMPT returns a character array
     char* state_name = Tau_get_thread_ompt_state(tid);
     if (state_name != NULL) {
-#else
-    int thread_state = 0;
-    thread_state = Tau_get_thread_omp_state(tid);
-    if (thread_state >= 0) {
-      char* state_name = gTauOmpStates(thread_state)
-#endif
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during
       // the OpenMP Collector API initialization.
       FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(state_name);
+#else
+    // ORA returns an integer, which has to be mapped to a std::string
+    int thread_state = thread_state = Tau_get_thread_omp_state(tid);
+    if (thread_state >= 0) {
+      // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
+      // Instead, it will look it up and return the ones we created during
+      // the OpenMP Collector API initialization.
+      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(gTauOmpStates(thread_state));
+#endif
       stateContext->addPcSample(pcStack, tid, deltaValues);
     }
   } else {
