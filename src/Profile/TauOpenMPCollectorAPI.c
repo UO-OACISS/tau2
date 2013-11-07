@@ -627,7 +627,7 @@ int Tau_initialize_collector_api(void) {
       return 0;
     }
 
-#ifdef TAU_USE_OMPT
+#if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
     TAU_VERBOSE("COLLECTOR API disabled, using OMPT instead.\n"); 
     return 0;
 #endif
@@ -1212,7 +1212,7 @@ int ompt_initialize() {
   }
   TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
 
-#ifdef TAU_USE_OMPT
+#if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
 // make the states
   if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // now, for the collector API support, create the OpenMP states.
@@ -1243,7 +1243,7 @@ int ompt_initialize() {
   return 1;
 }
 
-#ifdef TAU_USE_OMPT
+#if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
 char* Tau_get_thread_ompt_state(int tid) {
     // if not available, return something useful
     if (!initialized) return NULL;
