@@ -1212,6 +1212,7 @@ int ompt_initialize() {
   }
   TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
 
+#ifdef TAU_USE_OMPT
 // make the states
   if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // now, for the collector API support, create the OpenMP states.
@@ -1234,6 +1235,7 @@ int ompt_initialize() {
     // next_state now holds our max 
   }
   TAU_VERBOSE("OMPT states registered! \n"); fflush(stderr);
+#endif
 
   initializing = false;
   initialized = true;
@@ -1241,6 +1243,7 @@ int ompt_initialize() {
   return 1;
 }
 
+#ifdef TAU_USE_OMPT
 char* Tau_get_thread_ompt_state(int tid) {
     // if not available, return something useful
     if (!initialized) return NULL;
@@ -1252,6 +1255,7 @@ char* Tau_get_thread_ompt_state(int tid) {
     // return the thread state as a string
     return OMPT_STATE_NAMES[state];
 }
+#endif
 
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE OMPT SUPPORT IS NONEXISTENT */
 
