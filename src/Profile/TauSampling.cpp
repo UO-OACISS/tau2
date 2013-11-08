@@ -188,8 +188,9 @@ extern void Tau_sampling_unwind(int tid, Profiler *profiler,
     void *pc, void *context, unsigned long stack[]);
 
 extern "C" bool unwind_cutoff(void **addresses, void *address) {
-/* Kevin disabled for now */
-  return false;
+  // if the unwind depth is not "auto", then return
+  if (TauEnv_get_ebs_unwind_depth() > 0) 
+    return false;
   bool found = false;
   for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
     if ((unsigned long)(addresses[i]) == (unsigned long)address) {
@@ -457,7 +458,8 @@ void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record, void *pc,
   }
 #endif /* TAU_UNWIND */
 
-  fprintf(ebsTrace[tid], "");
+  // do nothing?
+  //fprintf(ebsTrace[tid], "");
 }
 
 void Tau_sampling_outputTraceStop(int tid, Profiler *profiler, double *stopTime)
@@ -739,7 +741,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 	if (TauEnv_get_bfd_lookup()) {
           sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
         } else {
-          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, addr);
+          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, (void*)addr);
         }
       }
       // TODO: Leak?
@@ -1578,6 +1580,7 @@ int Tau_sampling_init(int tid)
  * systems, we have to use ITIMER_PROF with setitimer. */
 #if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ)
    struct sigevent sev;
+   memset (&sev,0,sizeof(sigevent));
    timer_t timerid = 0;
    sev.sigev_signo = TAU_ALARM_TYPE;
    sev.sigev_notify = SIGEV_THREAD_ID;
