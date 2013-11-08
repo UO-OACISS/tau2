@@ -1110,8 +1110,8 @@ void my_idle_begin(ompt_data_t *thread_data) {
 //#define CHECK(EVENT,FUNCTION,NAME) ompt_set_callback(EVENT, FUNCTION)
 //#else 
 #define CHECK(EVENT,FUNCTION,NAME) \
-  /*fprintf(stderr, "Registering OMPT callback %s!\n",NAME); \
-  fflush(stderr); */\
+  TAU_VERBOSE("Registering OMPT callback %s!\n",NAME); \
+  fflush(stderr); \
   if (ompt_set_callback(EVENT, FUNCTION) == 0) { \
     TAU_VERBOSE("Failed to register OMPT callback %s!\n",NAME); \
     fflush(stderr); \
@@ -1129,8 +1129,11 @@ int ompt_initialize() {
   /* required events */
   CHECK(ompt_event_parallel_create, my_parallel_region_create, "parallel_create");
   CHECK(ompt_event_parallel_exit, my_parallel_region_exit, "parallel_exit");
+#ifndef TAU_IBM_OMPT
+  // IBM will call task_create, but not task_exit. :(
   CHECK(ompt_event_task_create, my_task_create, "task_create");
   CHECK(ompt_event_task_exit, my_task_exit, "task_exit");
+#endif
 //#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_thread_create, my_thread_create, "thread_create");
 //#endif
@@ -1146,9 +1149,11 @@ int ompt_initialize() {
   // actually, don't do the idle event at all for now
   //CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
   //CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
-#endif
+  
+  // IBM will call wait_barrier_begin, but not wait_barrier_end. :(
   CHECK(ompt_event_wait_barrier_begin, my_wait_barrier_begin, "wait_barrier_begin");
   CHECK(ompt_event_wait_barrier_end, my_wait_barrier_end, "wait_barrier_end");
+#endif
   CHECK(ompt_event_wait_taskwait_begin, my_wait_taskwait_begin, "wait_taskwait_begin");
   CHECK(ompt_event_wait_taskwait_end, my_wait_taskwait_end, "wait_taskwait_end");
   CHECK(ompt_event_wait_taskgroup_begin, my_wait_taskgroup_begin, "wait_taskgroup_begin");
@@ -1161,6 +1166,7 @@ int ompt_initialize() {
 
   /* optional events, synchronous events */
 #ifndef TAU_IBM_OMPT
+  // IBM will call task_create, but not task_exit. :(
   CHECK(ompt_event_implicit_task_create, my_task_create, "task_create");
   CHECK(ompt_event_implicit_task_exit, my_task_exit, "task_exit");
 #endif
