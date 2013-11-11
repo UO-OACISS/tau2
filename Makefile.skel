@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=x86_64
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-O2
-TAUROOT=/home/users/scottb/tau2
+USER_OPT=-g
+TAUROOT=
 #######################################################################
  
 include include/Makefile
@@ -95,7 +95,7 @@ MEMORYWRAPPER=src/wrappers/memory
 
 #COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
 
-PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF##TAU_PTHREAD_WRAP#
+#TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#
 #GOMP_AVAILABLE#GOMP_WRAPPER=src/wrappers/gomp #ENDIF#
 #MPC#PTHREAD_WRAPPER=src/wrappers/mpcthread #ENDIF#
 
