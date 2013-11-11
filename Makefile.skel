@@ -76,7 +76,7 @@ TRACE2PROFILE=utils/trace2profile
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 #DMAPP#DMAPPWRAPPER=src/wrappers/dmapp#ENDIF#
 #GPI#GPIWRAPPER=src/wrappers/gpi#ENDIF#
-#TAU_MPC#MPC_MPI_WRAPPER=src/wrappers/mpc_mpi#ENDIF#
+#MPC#MPC_MPI_WRAPPER=src/wrappers/mpc_mpi#ENDIF#
 
 #ARMCI#ARMCIWRAPPER=src/wrappers/armci#ENDIF#
 
