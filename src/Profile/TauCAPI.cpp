@@ -36,7 +36,6 @@ using namespace std;
 #include <unistd.h>
 #endif /* TAU_WINDOWS */
 
-#include <Profile/TauEnv.h>
 #if defined(TAUKTAU)
 #include <Profile/KtauProfiler.h>
 #endif //TAUKTAU
