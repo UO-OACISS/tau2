@@ -7,20 +7,20 @@ INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 install: install-ld-lib install-preload-lib
 
-install-ld-lib: $(PTHREAD_LD_LIB)
+install-ld-lib: libTauMPCThreadWrap.a
 	mkdir -p $(INSTALLDEST)/wrappers/mpcthread_wrapper
 	$(TAU_STATIC_INSTALL_CMD)
 
-install-preload-lib: $(PTHREAD_LDPRELOAD_LIB)
+install-preload-lib: libTAU-MPCThreadWrap.so
 	$(TAU_SHARED_INSTALL_CMD)
 
-$(PTHREAD_LD_LIB): mpcthread_wrap_ld.o
+libTauMPCThreadWrap.a: mpcthread_wrap_ld.o
 	$(TAU_AR) $(ARFLAGS) $@ $<
 
 mpcthread_wrap_ld.o: mpcthread_wrap.c
 	$(CC) -DTAU_LIBRARY_SOURCE $(CFLAGS) -g -c $<  -o $@
 
-$(PTHREAD_LDPRELOAD_LIB): mpcthread_wrap_preload.o
+libTAU-MPCThreadWrap.so: mpcthread_wrap_preload.o
 	$(CC) $(TAU_SHFLAGS) $@ $(TAU_SHLIBS) -L$(INSTALLDEST) $< -ldl
 
 mpcthread_wrap_preload.o: mpcthread_wrap.c

@@ -143,7 +143,10 @@ extern int __wrap_sctk_user_thread_create (pthread_t* thread, const pthread_attr
   pack->arg = arg;
   pack->id = -1;
 	*/
-  return tau_sctk_user_thread_create_wrapper(__real_sctk_user_thread_create, thread, attr, start_routine, arg);
+  /* return tau_sctk_user_thread_create_wrapper(__real_sctk_user_thread_create, thread, attr, start_routine, arg);
+   */
+  printf("Inside __wrap_sctk_user_thread_create\n");
+  return __real_sctk_user_thread_create(thread, attr, start_routine, arg);
 }
 
 int __real_sctk_thread_join (pthread_t thread, void **retval);
