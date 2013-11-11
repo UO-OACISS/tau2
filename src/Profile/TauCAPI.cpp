@@ -455,7 +455,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
     // if the unwind depth should be "automatic", then get the stack for right now
-    if (TauEnv_get_ebs_unwind_depth == 0) {
+    if (TauEnv_get_ebs_unwind_depth() == 0) {
       Tau_sampling_event_start(tid, p->address);
     }
   }

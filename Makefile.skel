@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=x86_64
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-O2
-TAUROOT=/home/users/scottb/tau2
+USER_OPT=-g
+TAUROOT=
 #######################################################################
  
 include include/Makefile
@@ -76,6 +76,7 @@ TRACE2PROFILE=utils/trace2profile
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 #DMAPP#DMAPPWRAPPER=src/wrappers/dmapp#ENDIF#
 #GPI#GPIWRAPPER=src/wrappers/gpi#ENDIF#
+#MPC#MPC_MPI_WRAPPER=src/wrappers/mpc_mpi#ENDIF#
 
 #ARMCI#ARMCIWRAPPER=src/wrappers/armci#ENDIF#
 
@@ -95,7 +96,7 @@ MEMORYWRAPPER=src/wrappers/memory
 
 #COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
 
-PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF##TAU_PTHREAD_WRAP#
+#TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#
 #GOMP_AVAILABLE#GOMP_WRAPPER=src/wrappers/gomp #ENDIF#
 #MPC#PTHREAD_WRAPPER=src/wrappers/mpcthread #ENDIF#
 
@@ -104,7 +105,7 @@ SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(IOWRAPPER) $(TAUPRELOAD) \
 	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) \
 	  $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
-	  $(PTHREAD_WRAPPER) $(GOMP_WRAPPER) $(OTF2PROFILE)
+	  $(PTHREAD_WRAPPER) $(GOMP_WRAPPER) $(OTF2PROFILE) $(MPC_MPI_WRAPPER)
 
 
 CONFIGQUERY=`utils/ConfigQuery -arch`
