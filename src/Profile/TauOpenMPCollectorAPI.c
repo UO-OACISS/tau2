@@ -1175,10 +1175,8 @@ int ompt_initialize() {
   CHECK(ompt_event_master_begin, my_master_begin, "master_begin");
   CHECK(ompt_event_master_end, my_master_end, "master_end");
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
-#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
-#endif
   CHECK(ompt_event_section_begin, my_section_begin, "section_begin");
   CHECK(ompt_event_section_end, my_section_end, "section_end");
 /* When using Intel, there are times when the non-single thread continues on its
