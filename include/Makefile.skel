@@ -366,6 +366,8 @@ TAU_OPENMP_OPTION =
 #CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#MPC#TAU_F90     = mpc_f77 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#MPC#TAU_F77     = mpc_f77 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 
 TAU_F77 = $(TAU_F90)
 #IBM_FORTRAN#TAU_F77         = xlf$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -1047,6 +1049,7 @@ EBS_CLOCK_RES=
 #SGI_MPT_MPI#PROFILEOPT90= -DTAU_SGI_MPT_MPI -DTAU_MPI_F_STATUSES_IGNORE_ABSENT #ENDIF#
 #GPI#PROFILEOPT91 = -DTAU_GPI -I$(GPIDIR)/include #ENDIF#
 #GPI#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gpi/link_options.tau #ENDIF#
+#MPC#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/mpc_mpi/link_options.tau #ENDIF#
 
 #TAU_OPENMP_NESTED#PROFILEOPT92=-DTAU_OPENMP_NESTED#ENDIF#
 
