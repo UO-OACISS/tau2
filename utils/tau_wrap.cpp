@@ -511,7 +511,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 {
   sig.func = r->name() + "(";
   sig.proto = r->name() + "(";
-  sig.rcalledfunc = "(*" + r->name() + "_h)";
+  sig.rcalledfunc = "(*" + r->name() + "_h) (";
   sig.funchandle = "_h) (";
 
   pdbGroup const * grp = r->signature()->returnType()->isGroup();
