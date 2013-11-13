@@ -1205,8 +1205,9 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     samplingContext->addPcSample(pcStack, tid, deltaValues);
   }
 #else
-  samplingContext->addPcSample(pcStack, tid, deltaValues);
+  // also do the regular context!
 #endif
+  samplingContext->addPcSample(pcStack, tid, deltaValues);
 }
 
 /*********************************************************************
