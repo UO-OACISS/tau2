@@ -10,6 +10,27 @@
 
 Change log:
 ------------
+Version 2.23 changes (from 2.22):
+1. Added support for OpenMP Tools API (OMPT). 
+2. Added support for markers (events triggered when atomic events increase or decrease beyond a threshold). 
+3. Increase and decrease in heap memory tracked with TAU_TRACK_HEAP=1.
+4. ParaProf event window can be launched from a node view. 
+5. Better support for creating ppk files from tauprofile.xml.
+6. TAU_BFD_LOOKUP=0 and tau_resolve_addresses.py with TAU_PROFILE_FORMAT=merged for offline address translation with TAU_SAMPLING=1.
+7. Better configure step that builds TAU.h and Makefiles from a skeleton.
+8. Lower OpenMP runtime overhead. 
+9. Added support for tracking power (TAU_TRACK_POWER()) using PAPI --with-component=rapl.
+10. Added support for Intel OMPT (-ompt=download).
+11. Performance enhancements for OpenMP measurement.
+12. Added DrawMultiGraph ui element to PerfExplorer Scripting API
+13. Allowed specification of alternate binutils directory at configuration
+14. More intelligent management of ParaProf/PerfExplorer jar downloads
+15. Added support for adding/removing metadata fields for TauDB trials in ParaProf
+16. Added option to hide the legend in PerfExplorer charts
+17. Sorted event lists in PerfExplorer custom chart view
+18. Allow editing of existing TauDB views in ParaProf
+19. Updated Cube reader allows reading metadata and atomic events from Cube profiles in ParaProf
+
 Version 2.22 changes (from 2.21):
 1. Added support for TAUdb (formerly PerfDMF).
 2. Added support for GPI (www.gpi-site.com).
@@ -28,15 +49,6 @@ Version 2.22 changes (from 2.21):
 16. ParaProf, PerfExplorer enhancements.
 17. tau_show_libs lists extra static libs that are needed to link in TAU for tau_rewrite, tau_run. 
 18. OpenMP bug fixes.
-19. Added support for OpenMP Tools API (OMPT). 
-20. Added support for markers (events triggered when atomic events increase or decrease beyond a threshold). 
-21. Increase and decrease in heap memory tracked with TAU_TRACK_HEAP=1.
-22. ParaProf event window can be launched from a node view. 
-23. Better support for creating ppk files from tauprofile.xml.
-23. TAU_BFD_LOOKUP=0 and tau_resolve_addresses.py with TAU_PROFILE_FORMAT=merged for offline address translation with TAU_SAMPLING=1.
-24. Better configure step that builds TAU.h and Makefiles from a skeleton.
-25. Lower OpenMP runtime overhead. 
-26. Added support for tracking power (TAU_TRACK_POWER()) using PAPI --with-component=rapl.
 
 
 Version 2.21 changes (from 2.20):
