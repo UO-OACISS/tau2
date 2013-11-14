@@ -759,6 +759,7 @@ unwind_lib=
 unwind_flag=
 unwind_lib_flag=
 unwind_extras=
+download_unwind=no
 tau_links_rt=no
 opari=no
 mpc=no
@@ -797,6 +798,7 @@ ompt=no
 omptlib=
 omptlibrary=-liomp5
 omptenabled=no
+download_ompt=no
 xlsmp=no
 ibmxlc=no
 ibmxlc_r=no 
@@ -1168,6 +1170,17 @@ for arg in "$@"; do
 	    fi
 	    shift
 	    ;;
+
+        -unwind=download*)
+            echo "Downloading libunwind..."
+            # So that the user doesn't have to specify the unwinder,
+            # use libunwind as the default.
+            unwinder="libunwind"
+            unwind_flag="-DTAU_USE_LIBUNWIND"
+            unwind_lib_flag="-lunwind"
+            download_unwind=yes
+            shift
+            ;;
 
 	-unwind=*)
 	    unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
@@ -5360,6 +5373,74 @@ if [ $linuxtimers = yes ] ; then
     echo "LINUX_TIMERS enabled"
     fixmakeargs="$fixmakeargs LINUXTIMERS"
 fi
+
+######################################################################
+# Install libunwind if requested
+######################################################################
+libunwind=libunwind-1.1
+libunwindtgz=$libunwind.tar.gz
+libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+libunwinddir=${targetdir}/${architecture}
+libunwind_name=unwind
+if [ "x$download_unwind" = xyes ] ; then
+  unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  prebfddir=`pwd`
+
+  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" ] ; then
+    echo "libunwind download already found, skipping"
+  else
+    # get the tar file
+    echo "downloading $libunwindtgz..."
+    if [ "$machine" = "apple" ] ; then
+      curl -L $libunwindurl > $libunwindtgz
+    else 
+      wget $libunwindurl
+    fi
+
+    # check the tar file
+    if [ ! -f $libunwindtgz ] ; then
+      echo "$libunwindtgz did not download.  Please download it manually from: "
+      echo "$libunwindurl"
+      echo "Please enter the directory containing the tarball: ${nnl}" 
+      read RESPONSE
+      cp $RESPONSE/$libunwindtgz .
+    else
+      echo "expanding $libunwindtgz..."
+      tar -xzf $libunwindtgz
+      echo "removing $libunwindtgz..."
+      rm $libunwindtgz
+      cd $libunwind
+      configresult=0
+      makeresult=0
+      libunwind_log=configure.log
+      echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
+      ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
+      configresult=$?
+      if [ $configresult -eq 0 ] ; then
+        libunwind_log=build.log
+        echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
+        make >& $libunwind_log
+        makeresult=$?
+        if [ $makeresult -eq 0 ] ; then
+        libunwind_log=install.log
+        echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
+          make install >& $libunwind_log
+        makeresult=$?
+        fi
+      fi
+      if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+        echo "...Success."
+      else
+        echo "ERROR BUILDING $libunwind!"
+        echo "Please check `pwd`/config.log or `pwd`/${libunwind_log}"
+      fi
+    fi
+  fi
+  unwind_inc="$unwind_dir/include"
+  unwind_lib="$unwind_dir/lib"
+  cd $prebfddir
+fi #unwind=download
+    
 
 ######################################################################
 # Install Intel OpenMP runtime with OMPT if requested
