@@ -31,6 +31,10 @@
 #include "Profile/KtauCounters.h"
 #endif //TAUKTAU_SHCTR
 
+#ifdef TAU_WINDOWS
+#define strcasecmp stricmp
+#endif
+
 //using namespace std;
 using namespace tau;
 
