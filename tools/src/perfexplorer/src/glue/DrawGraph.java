@@ -246,7 +246,16 @@ public class DrawGraph extends AbstractPerformanceOperation {
     protected int chartType = LINECHART;
     protected boolean autoDisplayWindow = true;
     protected JFreeChart chart =null;
+	protected boolean showLegend = true;
     
+    public void setLegendVisible(boolean showLegend) {
+		this.showLegend = showLegend;
+	}
+
+	public boolean isLegendVisible() {
+		return showLegend;
+	}
+
     /**
      * Creates a graph drawing operator.
      *
@@ -449,6 +458,9 @@ public class DrawGraph extends AbstractPerformanceOperation {
             // set to a common style
             Utility.applyDefaultChartTheme(chart);
         
+			if (!this.showLegend) {
+				chart.removeLegend();
+			}
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
      
