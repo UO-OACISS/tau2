@@ -65,19 +65,17 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_signals_gdb();
-  int  TAUDECL TauEnv_get_collector_api_enabled();
-  int  TAUDECL TauEnv_get_collector_api_states_enabled();
-  int  TAUDECL TauEnv_get_collector_api_events_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_events_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
   int  TAUDECL TauEnv_get_ebs_period();
   int  TAUDECL TauEnv_get_ebs_inclusive();
   char *  TAUDECL Tau_check_dirname(const char *dirname);
-#ifdef TAU_UNWIND
   int  TAUDECL TauEnv_get_ebs_unwind();
   int  TAUDECL TauEnv_get_ebs_unwind_depth();
-#endif /* TAU_UNWIND */
   int  TAUDECL TauEnv_get_stat_precompute();
   int  TAUDECL TauEnv_get_child_forkdirs();
   int  TAUDECL TauEnv_get_summary_only();

@@ -1366,6 +1366,24 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 								.println("Error: Cannot remove metadata for all trials in a view on a non TAUdb database.");
 					}
 
+				} else if (arg.equals("Edit")) {
+					View view = (View) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+
+					Database database = view.getDatabase();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if (dbAPI instanceof TAUdbDatabaseAPI) {
+						ViewCreatorGUI frame = new ViewCreatorGUI(
+								(TAUdbDatabaseAPI) dbAPI, view);
+
+						// Display the window.
+						frame.pack();
+						frame.setVisible(true);
+
+					} else {
+						System.out
+								.println("Error: Cannot edit a view on a non TAUdb database.");
+					}
 				} else if (arg.equals("Upload Application to DB")) {
 
 					java.lang.Thread thread = new java.lang.Thread(

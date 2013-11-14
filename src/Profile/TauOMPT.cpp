@@ -10,7 +10,9 @@
 #include <Profile/Profiler.h>
 
 // set to enable debugging print statements
+#ifdef DEBUG_PROF 
 #define DEBUG 1
+#endif /* DEBUG_PROF */
 
 // set to enable numerous callbacks
 #define TAU_OMPT_CALLBACK 1
