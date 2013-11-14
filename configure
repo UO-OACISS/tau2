@@ -1524,6 +1524,7 @@ for arg in "$@"; do
 
 	-omptlib=*)
 	    ompt=yes
+	    openmp=yes
 	    omptlib=`echo $arg | sed -e 's/-omptlib=//'`
 	    if [ ! -d $omptlib ]
 	    then
@@ -1534,17 +1535,20 @@ for arg in "$@"; do
 	    ;;
 
 	-omptlibrary=*)
+	    openmp=yes
 	    omptlibrary=`echo $arg | sed -e 's/-omptlibrary=//'`
 	    shift
 	    ;;
 
 	-ompt=download*)
+	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
 	    shift
 	    ;;
 
 	-ompt*)
+	    openmp=yes
 	    ompt=yes
 	    shift
 	    ;;
@@ -5421,6 +5425,7 @@ if [ "x$download_ompt" = xyes ] ; then
   fi
   omptlib=${libomp_ossdir}
   omptlibrary=-l${libomp_oss_name}
+  tauoptions="${tauoptions}-ompt"
   cd $prebfddir
 fi #ompt=download
     
