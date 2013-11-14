@@ -1,1 +1,1 @@
--Wl,-wrap,sctk_user_thread_create -Wl,-wrap,sctk_thread_join -Wl,-wrap,sctk_thread_exit -Wl,-wrap,sctk_thread_barrier_wait -lTauMPCThreadWrap
+-Wl,-wrap,sctk_user_thread_create -Wl,-wrap,sctk_thread_join -Wl,-wrap,sctk_thread_exit -Wl,-wrap,sctk_thread_barrier_wait -lTauMPCThreadWrap \

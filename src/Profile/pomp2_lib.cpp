@@ -1117,6 +1117,8 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
+  Tau_create_top_level_timer_if_necessary_task(Tau_get_tid());
+
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tparallelf);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
@@ -1177,6 +1179,8 @@ POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
         POMP2_Assign_handle(pomp2_handle, ctc_string);
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+
+  Tau_create_top_level_timer_if_necessary_task(Tau_get_tid());
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tsectionb);

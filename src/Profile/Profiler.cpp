@@ -331,6 +331,18 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
 
+/* It is possible that when the event stack gets deep, and has to be
+ * reallocated, the pointers in the event stack get messed up. This
+ * fixes the parent pointer for flat profiles, but I don't know if it
+ * is a robust fix for all scenarios! - Kevin */
+
+#if 0
+  if (ParentProfiler != TauInternal_ParentProfiler(tid)) {
+    ParentProfiler = TauInternal_ParentProfiler(tid);
+    //printf ("%d: Warning! ParentProfiler pointer was bogus!\n", tid);
+  }
+#endif
+
   /********************************************************************************/
   /*** PerfSuite Integration Code ***/
   /********************************************************************************/
@@ -1305,6 +1317,9 @@ int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
 
+#ifdef TAU_SCOREP
+  Tau_write_metadata_records_in_scorep(tid);
+#endif /* TAU_SCOREP */
   profileWriteCount[tid]++;
   if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
 

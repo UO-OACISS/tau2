@@ -88,7 +88,7 @@ def translateConfigureArg(config, key, val):
         return []
     # No parameter flags
     noparam = {'mpi': '-mpi',
-               'openmp': '-openmp',
+               'openmp': '-opari',
                'pthreads': '-pthread',
                'pdt': '-pdt=%s' % config['pdt-prefix'],
                'bfd': '-bfd=%s' % config['bfd-prefix'],
