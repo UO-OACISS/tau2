@@ -1196,6 +1196,8 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
       // Instead, it will look it up and return the ones we created during
       // the OpenMP Collector API initialization.
       FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(state_name);
+      stateContext->addPcSample(pcStack, tid, deltaValues);
+    }
 #else
     // ORA returns an integer, which has to be mapped to a std::string
     int thread_state = thread_state = Tau_get_thread_omp_state(tid);
@@ -1204,16 +1206,16 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
       // Instead, it will look it up and return the ones we created during
       // the OpenMP Collector API initialization.
       FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(gTauOmpStates(thread_state));
-#endif
       stateContext->addPcSample(pcStack, tid, deltaValues);
     }
+#endif
   } else {
     samplingContext->addPcSample(pcStack, tid, deltaValues);
   }
 #else
   // also do the regular context!
-#endif
   samplingContext->addPcSample(pcStack, tid, deltaValues);
+#endif
 }
 
 /*********************************************************************
