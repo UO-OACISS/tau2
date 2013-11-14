@@ -585,20 +585,30 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		}
 		this.event.removeAll();
 		//this.eventModel.addElement(all);
-		events.add(0, all);
+
 		this.eventLabel.setText(label);
-		this.event.setSelectedIndex(0);
+
 		int dex=0;
 		Collections.sort(events);
+		events.add(0, all);
 		event.setListData(events.toArray());
+
 		eventScrollPane.setPreferredSize(new Dimension(oldWidth,eventScrollPane.getHeight()));//TODO: Keep the standard minimum size in effect
+		List<Object> ol = Arrays.asList(oldEvent);
+		if (oldEvent != null && oldEvent.length > 0) {
 		for (Iterator<String> itr = events.iterator() ; itr.hasNext() ; ) {
 			String next = itr.next();
 			//this.eventModel.addElement(next);
-			List<Object> ol = Arrays.asList(oldEvent);
+
 			if (ol.contains(next))
+ {
 				this.event.addSelectionInterval(dex, dex);
+				}
 			dex++;
+		}
+		}
+ else {
+			this.event.setSelectedIndex(0);
 		}
 	}
 

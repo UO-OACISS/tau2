@@ -367,13 +367,22 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
     //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth); 
     //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
-#if 1
+
+    //A deep copy is necessary here to keep the profiler pointers up to date
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
+
+    int tmpDepth=oldDepth;
+    Profiler *fixP = &(newStack[oldDepth]);
+    while(tmpDepth>0){
+    	tmpDepth--;
+    	fixP->ParentProfiler=&(newStack[tmpDepth]);
+    	fixP=fixP->ParentProfiler;
+
+    }
+
     free(Tau_thread_flags[tid].Tau_global_stack);
-#else
-    Profiler *newStack = (Profiler *) realloc(Tau_thread_flags[tid].Tau_global_stack, newDepth*sizeof(Profiler));
-#endif
+
     Tau_thread_flags[tid].Tau_global_stack = newStack;
     Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
@@ -445,7 +454,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
-    //Tau_sampling_event_start(tid, p->address);
+    // if the unwind depth should be "automatic", then get the stack for right now
+    if (TauEnv_get_ebs_unwind_depth() == 0) {
+      Tau_sampling_event_start(tid, p->address);
+    }
   }
 #endif
 }
