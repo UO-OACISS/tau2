@@ -1374,16 +1374,8 @@ int TauProfiler_StoreData(int tid)
 static int getProfileLocation(int metric, char *str)
 {
   const char *profiledir;
-#ifdef __MIC__
-  if (TauEnv_get_mic_offload())
-  {
-    profiledir = "./proxyfs";
-  }
-  else
-  {
-    profiledir = TauEnv_get_profiledir();
-  }
-#elif defined(KTAU_NG)
+  profiledir = TauEnv_get_profiledir();
+#if defined(KTAU_NG)
   if(profiledir == NULL) {
     int written_bytes = 0;
     unsigned int profile_dir_len = KTAU_NG_PREFIX_LEN + HOSTNAME_LEN;
