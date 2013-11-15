@@ -6543,7 +6543,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       if [ -d /dev/shm -a -w /dev/shm ] ; then
         tempdir=/dev/shm/tau_bfdbuild_$$
       else
-        tempdir=".tmp_bfdbuild_$$"
+        tempdir=`pwd`"/.tmp_bfdbuild_$$"
       fi
 	    mkdir $tempdir
 	    cd $tempdir
@@ -7688,7 +7688,7 @@ if [ $epilog = yes ] ; then
 fi
 if [ $dyninstinc = yes ] ; then
     fixmakeargs="$fixmakeargs dyninstinc=$dyninstincdir DYNINST_INC"
-    dyninstdir=$dyninstincdir/..
+    #dyninstdir=$dyninstincdir/..
     dyninst=yes
 fi
 
@@ -7698,9 +7698,12 @@ if [ $dyninstlib = yes ] ; then
 fi
 
 if [ $dyninst = yes ] ; then
-    fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
-    if [ ! -d $dyninstdir/lib ] ; then
-	fixmakeargs="$fixmakeargs DYNINST41"
+    fixmakeargs="$fixmakeargs DYNINST "
+    if [ "x$dyninstdir" != "x" ]; then
+      fixmakeargs="$fixmakeargs dyninstdir=$dyninstdir DYNINSTDIR"
+      if [ ! -d $dyninstdir/lib ] ; then
+	    fixmakeargs="$fixmakeargs DYNINST41"
+      fi
     fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
 	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
@@ -7708,13 +7711,13 @@ if [ $dyninst = yes ] ; then
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so -o -r $dyninstdir/lib/libcommon.so ] ; then
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so -o -r $dyninstdir/lib/libcommon.so -o -r $dyinstlibdir/libcommon.so ] ; then
 	fixmakeargs="$fixmakeargs DYNINST6"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so -o -r $dyninstdir/lib/libparseAPI.so ] ; then
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so -o -r $dyninstdir/lib/libparseAPI.so -o $dyninstlibdir/libparseAPI.so ] ; then
 	fixmakeargs="$fixmakeargs DYNINST7"
     fi
-    if [ -r $dyninstdir/include/walker.h ] ; then
+    if [ -r $dyninstdir/include/walker.h -o $dyninstincdir/walker.h ] ; then
 	fixmakeargs="$fixmakeargs DYNINST8"
     fi
 fi
