@@ -1109,6 +1109,9 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
+        if [ $papidir = "/usr" ]; then
+		  fixmakeargs="$fixmakeargs PAPINOINC"
+        fi
 	    shift
 	    ;;
 
@@ -1184,8 +1187,10 @@ for arg in "$@"; do
 
 	-unwind=*)
 	    unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
-	    unwind_inc="$unwind_dir/include"
-	    unwind_lib="$unwind_dir/lib"
+        if [ $unwind_dir != "/usr" ]; then
+	      unwind_inc="$unwind_dir/include"
+	      unwind_lib="$unwind_dir/lib"
+        fi
 	    # So that the user doesn't have to specify the unwinder,
 	    # use libunwind as the default.
 	    if [ "x$unwinder" = "xnone" ] ; then
@@ -4478,7 +4483,7 @@ if [ $papi = yes ] ; then
 		    papisubdir=xt-cnl/lib
 		    fixmakeargs="$fixmakeargs papisubdir=xt-cnl/lib"
                 else 
-		    if [ -f $papidir/lib64/libpapi.so ] ; then 
+		    if [ -f $papidir/lib64/libpapi.so -a $papidir != "/usr" ] ; then 
 			papisubdir=lib64
 			fixmakeargs="$fixmakeargs papisubdir=lib64"
 		    else
@@ -5436,8 +5441,10 @@ if [ "x$download_unwind" = xyes ] ; then
       fi
     fi
   fi
-  unwind_inc="$unwind_dir/include"
-  unwind_lib="$unwind_dir/lib"
+  if [ $unwind_dir != "/usr" ]; then
+    unwind_inc="$unwind_dir/include"
+    unwind_lib="$unwind_dir/lib"
+  fi
   cd $prebfddir
 fi #unwind=download
     

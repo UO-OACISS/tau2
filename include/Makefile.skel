@@ -387,6 +387,7 @@ TAU_F77 = $(TAU_F90)
 ############# Profiling Options #############
 #PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
 #PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src -I$(PAPIDIR)/include #ENDIF#
+#PAPINOINC#PROFILEOPT3              = -DTAU_PAPI #ENDIF#
 #PAPI#PAPI_O       	       = PapiLayer.o 	       #ENDIF#
 #PROFILEOPT4
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS       #ENDIF#
@@ -629,6 +630,7 @@ TAU_PAPI_EXTRA_FLAGS	       = $(LEXTRA)
 #PGI#TAU_PAPI_RPATH	= -R$(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
 #GNU#TAU_PAPI_RPATH	= $(UPCC_LINK_PREFIX)-Wl,-rpath,$(PAPIDIR)/$(PAPISUBDIR) #ENDIF#
 #USE_PATHCC#TAU_PAPI_RPATH	= #ENDIF#
+#PAPINOINC#TAU_PAPI_RPATH	= #ENDIF#
 
 # if the user has specified -cc=gcc -c++=g++ -fortran=intel, we shouldn't use -rpath
 # because they are likely going to link with ifort. Using -Wl,-rpath instead.

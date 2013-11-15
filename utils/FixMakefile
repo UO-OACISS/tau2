@@ -723,6 +723,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     PAPINOINC)
+        echo NOTE: Not adding -I/usr/include for PAPI
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      GPI)
         echo "NOTE: Using the TAU's GPI Wrapper Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
