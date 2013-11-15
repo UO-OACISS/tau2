@@ -170,6 +170,7 @@ void * threaded_func(void *data)
   // compute
   do_work();
 
+#ifdef APP_DO_LOCK_TEST
   // test locking - sampling should catch this
   if ((rc = pthread_mutex_lock(&mutexsum)) != 0)
   {
@@ -188,8 +189,9 @@ void * threaded_func(void *data)
   }
   pthread_exit((void*) 0);
   //return NULL;
+#endif // APP_DO_LOCK_TEST
 }
-#endif
+#endif // PTHREADS
 
 int main (int argc, char *argv[]) 
 {
