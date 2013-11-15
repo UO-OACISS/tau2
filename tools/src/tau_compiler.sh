@@ -106,7 +106,8 @@ printUsage () {
     echo -e "  -optTrackUPCR\t\t\tSpecify wrapping of UPC runtime calls at link time."
     echo -e "  -optTrackDMAPP\t\tSpecify wrapping of Cray DMAPP library calls at link time."
     echo -e "  -optTrackPthread\t\tSpecify wrapping of Pthread library calls at link time."
-    echo -e "  -optTrackGOMP\t\tSpecify wrapping of GOMP library calls at link time."
+    echo -e "  -optTrackGOMP\t\tSpecify wrapping of GOMP library calls at link time. (default)"
+    echo -e "  -optNoTrackGOMP\t\tDisable wrapping of GOMP library calls at link time."
     echo -e "  -optTrackMPCThread\t\tSpecify wrapping of MPC Thread library calls at link time."
     echo -e "  -optWrappersDir=\"\"\t\tSpecify the location of the link wrappers directory."
     echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
@@ -368,6 +369,11 @@ for arg in "$@" ; do
 			trackGOMP=$TRUE
 			echoIfDebug "NOTE: turning TrackGOMP on"
 			# use the wrapper link_options.tau during linking
+			;;
+
+		   -optNoTrackGOMP)
+			trackGOMP=$FALSE
+			echoIfDebug "NOTE: turning TrackGOMP off"
 			;;
 
 		   -optTrackMPCThread)
