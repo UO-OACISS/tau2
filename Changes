@@ -30,6 +30,8 @@ Version 2.23 changes (from 2.22):
 17. Sorted event lists in PerfExplorer custom chart view
 18. Allow editing of existing TauDB views in ParaProf
 19. Updated Cube reader allows reading metadata and atomic events from Cube profiles in ParaProf
+20. Improvements to call-site tracking to work more smoothly with multi-threaded application.
+21.  CUPTI counters are now assigned to the GPU kernels that produced them. If they cannot be attributed to a single kernel the values are automatically estimated given the structure of the application.
 
 Version 2.22 changes (from 2.21):
 1. Added support for TAUdb (formerly PerfDMF).
