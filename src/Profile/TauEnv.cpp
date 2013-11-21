@@ -65,13 +65,13 @@ using namespace std;
 #define TAU_CALLSITE_DEFAULT 0
 #define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
 
-/* If we are using OpenMP and the collector API */
-#define TAU_COLLECTOR_API_DEFAULT 1
-#define TAU_COLLECTOR_API_STATES_DEFAULT 0
-#define TAU_COLLECTOR_API_EVENTS_DEFAULT 1
-#define TAU_COLLECTOR_API_CONTEXT_TIMER "timer"
-#define TAU_COLLECTOR_API_CONTEXT_REGION "region"
-#define TAU_COLLECTOR_API_CONTEXT_NONE "none"
+/* If we are using OpenMP and the collector API or OMPT */
+#define TAU_OPENMP_RUNTIME_DEFAULT 1
+#define TAU_OPENMP_RUNTIME_STATES_DEFAULT 0
+#define TAU_OPENMP_RUNTIME_EVENTS_DEFAULT 1
+#define TAU_OPENMP_RUNTIME_CONTEXT_TIMER "timer"
+#define TAU_OPENMP_RUNTIME_CONTEXT_REGION "region"
+#define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
@@ -182,6 +182,7 @@ extern "C" {
 static int env_synchronize_clocks = 0;
 static int env_verbose = 0;
 static int env_throttle = 0;
+static double env_evt_threshold = 0.0;
 static int env_disable_instrumentation = 0;
 static double env_max_records = 0;
 static int env_callpath = 0;
@@ -207,10 +208,10 @@ static int env_ibm_bg_hwp_counters = 0;
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
-static int env_collector_api_enabled = 1;
-static int env_collector_api_states_enabled = 0;
-static int env_collector_api_events_enabled = 1;
-static int env_collector_api_context = 1;
+static int env_openmp_runtime_enabled = 1;
+static int env_openmp_runtime_states_enabled = 0;
+static int env_openmp_runtime_events_enabled = 1;
+static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
@@ -501,7 +502,7 @@ char * Tau_check_dirname(const char * dir)
 
     char logfiledir[2048];
     char scratchdir[2048];
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || (defined(__linux__) && !defined(TAU_ANDROID)))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
@@ -618,6 +619,11 @@ int TauEnv_get_disable_instrumentation() {
 double TauEnv_get_max_records() {
   return env_max_records;
 }
+
+double TauEnv_get_evt_threshold() {
+  return env_evt_threshold;
+}
+
 int TauEnv_get_callpath() {
   return env_callpath;
 }
@@ -735,20 +741,20 @@ int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
 }
 
-int TauEnv_get_collector_api_enabled() {
-  return env_collector_api_enabled;
+int TauEnv_get_openmp_runtime_enabled() {
+  return env_openmp_runtime_enabled;
 }
 
-int TauEnv_get_collector_api_states_enabled() {
-  return env_collector_api_states_enabled;
+int TauEnv_get_openmp_runtime_states_enabled() {
+  return env_openmp_runtime_states_enabled;
 }
 
-int TauEnv_get_collector_api_events_enabled() {
-  return env_collector_api_events_enabled;
+int TauEnv_get_openmp_runtime_events_enabled() {
+  return env_openmp_runtime_events_enabled;
 }
 
-int TauEnv_get_collector_api_context() {
-  return env_collector_api_context;
+int TauEnv_get_openmp_runtime_context() {
+  return env_openmp_runtime_context;
 }
 
 int TauEnv_get_ebs_unwind() {
@@ -1329,6 +1335,15 @@ void TauEnv_initialize()
       env_throttle_percall = strtod(percall, 0);
     }
 
+    const char *evt_threshold = getconf("TAU_EVENT_THRESHOLD");
+    env_evt_threshold = TAU_EVENT_THRESHOLD_DEFAULT;
+    if (evt_threshold) {
+      double evt_value = 0.0;
+      sscanf(evt_threshold,"%g",&evt_value);
+      env_evt_threshold = evt_value;
+      TAU_METADATA("TAU_EVENT_THRESHOLD", evt_threshold);
+    }
+
     const char *numcalls = getconf("TAU_THROTTLE_NUMCALLS");
     env_throttle_numcalls = TAU_THROTTLE_NUMCALLS_DEFAULT;
     if (numcalls) {
@@ -1413,53 +1428,53 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
 
-    tmp = getconf("TAU_COLLECTOR_API");
-    if (parse_bool(tmp, TAU_COLLECTOR_API_DEFAULT)) {
-      env_collector_api_enabled = 1;
-      TAU_VERBOSE("TAU: Collector API Enabled\n");
-      TAU_METADATA("TAU_COLLECTOR_API", "on");
+    tmp = getconf("TAU_OPENMP_RUNTIME");
+    if (parse_bool(tmp, TAU_OPENMP_RUNTIME_DEFAULT)) {
+      env_openmp_runtime_enabled = 1;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support Enabled\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME", "on");
     } else {
-      env_collector_api_enabled = 0;
-      TAU_VERBOSE("TAU: Collector API Disabled\n");
-      TAU_METADATA("TAU_COLLECTOR_API", "off");
+      env_openmp_runtime_enabled = 0;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support Disabled\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME", "off");
     }
 
-    tmp = getconf("TAU_COLLECTOR_API_STATES");
-    if (parse_bool(tmp, TAU_COLLECTOR_API_STATES_DEFAULT)) {
-      env_collector_api_states_enabled = 1;
-      TAU_VERBOSE("TAU: Collector API States Enabled\n");
-      TAU_METADATA("TAU_COLLECTOR_API_STATES", "on");
+    tmp = getconf("TAU_OPENMP_RUNTIME_STATES");
+    if (parse_bool(tmp, TAU_OPENMP_RUNTIME_STATES_DEFAULT)) {
+      env_openmp_runtime_states_enabled = 1;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support States Enabled\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME_STATES", "on");
     } else {
-      env_collector_api_states_enabled = 0;
-      TAU_VERBOSE("TAU: Collector API States Disabled\n");
-      TAU_METADATA("TAU_COLLECTOR_API_STATES", "off");
+      env_openmp_runtime_states_enabled = 0;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support States Disabled\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME_STATES", "off");
     }
 
-    tmp = getconf("TAU_COLLECTOR_API_EVENTS");
-    if (parse_bool(tmp, TAU_COLLECTOR_API_EVENTS_DEFAULT)) {
-      env_collector_api_events_enabled = 1;
-      TAU_VERBOSE("TAU: Collector API Events Enabled\n");
-      TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "on");
+    tmp = getconf("TAU_OPENMP_RUNTIME_EVENTS");
+    if (parse_bool(tmp, TAU_OPENMP_RUNTIME_EVENTS_DEFAULT)) {
+      env_openmp_runtime_events_enabled = 1;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support Events Enabled\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME_EVENTS", "on");
     } else {
-      env_collector_api_events_enabled = 0;
-      TAU_VERBOSE("TAU: Collector API Events Disabled\n");
-      TAU_METADATA("TAU_COLLECTOR_API_EVENTS", "off");
+      env_openmp_runtime_events_enabled = 0;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support Events Disabled\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME_EVENTS", "off");
     }
 
-    env_collector_api_context = 2; // the region is the default
-    const char *apiContext = getconf("TAU_COLLECTOR_API_CONTEXT");
-    if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_TIMER)) {
-      env_collector_api_context = 1;
-      TAU_VERBOSE("TAU: Collector API Context will be the current timer\n");
-      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "timer");
-    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_REGION)) {
-      env_collector_api_context = 2;
-      TAU_VERBOSE("TAU: Collector API Context will be the current parallel region\n");
-      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "region");
-    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_COLLECTOR_API_CONTEXT_NONE)) {
-      env_collector_api_context = 0;
-      TAU_VERBOSE("TAU: Collector API Context none\n");
-      TAU_METADATA("TAU_COLLECTOR_CONTEXT_API", "none");
+    env_openmp_runtime_context = 2; // the region is the default
+    const char *apiContext = getconf("TAU_OPENMP_RUNTIME_CONTEXT");
+    if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_OPENMP_RUNTIME_CONTEXT_TIMER)) {
+      env_openmp_runtime_context = 1;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support Context will be the current timer\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "timer");
+    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_OPENMP_RUNTIME_CONTEXT_REGION)) {
+      env_openmp_runtime_context = 2;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support Context will be the current parallel region\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "region");
+    } else if (apiContext != NULL && 0 == strcasecmp(apiContext, TAU_OPENMP_RUNTIME_CONTEXT_NONE)) {
+      env_openmp_runtime_context = 0;
+      TAU_VERBOSE("TAU: OpenMP Runtime Support Context none\n");
+      TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
     }
 
     tmp = getconf("TAU_SAMPLING");

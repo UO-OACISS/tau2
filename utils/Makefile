@@ -58,7 +58,7 @@ tau2otf2: 	tau2otf2.o
 		$(CXX) $(CFLAGS) tau2otf2.o -o tau2otf2 -lm $(LEXTRA) $(OTFLIBS)
 
 tau2otf2.o:	tau2otf2.cpp
-		$(CXX) $(CFLAGS)  tau2otf2.cpp -c -I$(OTFDIR)/include
+		$(CXX) $(CFLAGS) $(TAU_OTF2_1_1_FLAGS)  tau2otf2.cpp -c -I$(OTFDIR)/include
 
 ebs2otf/ebs2otf.so:
 		cd ebs2otf ; $(MAKE)
@@ -169,6 +169,8 @@ user_event_data.o:	user_event_data.cpp
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
+		cd trace2profile ; make clean
+		cd otf2profile ; make clean
 		cd opari2 ; /bin/rm -rf _build
 		cd ebs2otf ; $(MAKE) clean
 

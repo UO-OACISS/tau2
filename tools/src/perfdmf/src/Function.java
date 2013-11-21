@@ -171,7 +171,8 @@ public class Function implements Serializable, Comparable<Function> {
 
             sourceLink.setShortName(name.substring(0,fileIndex));
             String filename = name.substring(fileIndex + 5, left).trim();
-            if(filename.contains("/"))
+			File sourceFile = new File(filename);
+			if (!sourceFile.exists() && filename.contains("/"))
             {
             	filename = filename.substring(filename.lastIndexOf("/") + 1);
             }

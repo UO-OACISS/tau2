@@ -39,8 +39,8 @@
 ################################################################################
 
 # Add TAU top level directory to PYTHONPATH
-export TAU_ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-export PYTHONPATH=$TAU_ROOT_DIR:$PYTHONPATH
+export TAU_MASTER_SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export PYTHONPATH=$TAU_MASTER_SRC_DIR:$PYTHONPATH
 
 # Invoke TAU Commander
-python $TAU_ROOT_DIR/taucmd/__main__.py "$@"
+python $TAU_MASTER_SRC_DIR/taucmd/__main__.py "$@"

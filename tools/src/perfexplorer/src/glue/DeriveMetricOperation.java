@@ -24,6 +24,8 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 
 	private String firstMetric = null;
 	private String secondMetric = null;
+	private float multFactor = 1;
+	private float addFactor = 0;
 	private String operation = ADD;
 	private String newName = null;
 	
@@ -54,6 +56,22 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 	/**
 	 * @param input
 	 */
+	public DeriveMetricOperation(PerformanceResult input, String firstMetric, String secondMetric, String operation, float mf, float af) {
+		super(input);
+		this.firstMetric = firstMetric;
+		this.secondMetric = secondMetric;
+		this.multFactor = mf;
+		this.addFactor = af;
+		this.operation = operation;
+		this.newName = "(" + firstMetric + operation + secondMetric + ")";
+		// validate the input?
+		if(!(firstMetric.equals("CALLS")||firstMetric.equals("SUBROUTINES")||secondMetric.equals("CALLS")||secondMetric.equals("SUBROUTINES"))){
+		if (!(input.getMetrics().contains(firstMetric)))
+			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + firstMetric + " ***\n\n");
+		if (!(input.getMetrics().contains(secondMetric)))
+			System.err.println("\n\n *** ERROR: Trial does not have a metric named: " + secondMetric + " ***\n\n");
+		}
+	}
 	public DeriveMetricOperation(PerformanceResult input, String firstMetric, String secondMetric, String operation) {
 		super(input);
 		this.firstMetric = firstMetric;
@@ -124,6 +142,8 @@ public class DeriveMetricOperation extends AbstractPerformanceOperation {
 							value2 = leftExclusive / rightExclusive;;
 						}
 					}
+					value1 = value1*this.multFactor + this.addFactor;
+					value2 = value2*this.multFactor + this.addFactor;
 					output.putInclusive(thread, event, newName, value1);
 					output.putExclusive(thread, event, newName, value2);
 					output.putCalls(thread, event, input.getCalls(thread, event));

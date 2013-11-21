@@ -33,6 +33,10 @@
 #define TAU_ACTION_DUMP_CALLPATHS 2
 #define TAU_ACTION_DUMP_BACKTRACES 3
 
+#ifndef TAU_EVENT_THRESHOLD
+#define TAU_EVENT_THRESHOLD_DEFAULT .5
+#endif /* TAU_EVENT_THRESHOLD */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,24 +65,23 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_signals_gdb();
-  int  TAUDECL TauEnv_get_collector_api_enabled();
-  int  TAUDECL TauEnv_get_collector_api_states_enabled();
-  int  TAUDECL TauEnv_get_collector_api_events_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_events_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
   int  TAUDECL TauEnv_get_ebs_period();
   int  TAUDECL TauEnv_get_ebs_inclusive();
   char *  TAUDECL Tau_check_dirname(const char *dirname);
-#ifdef TAU_UNWIND
   int  TAUDECL TauEnv_get_ebs_unwind();
   int  TAUDECL TauEnv_get_ebs_unwind_depth();
-#endif /* TAU_UNWIND */
   int  TAUDECL TauEnv_get_stat_precompute();
   int  TAUDECL TauEnv_get_child_forkdirs();
   int  TAUDECL TauEnv_get_summary_only();
   int  TAUDECL TauEnv_get_ibm_bg_hwp_counters();
   double TAUDECL TauEnv_get_max_records(); 
+  double TAUDECL TauEnv_get_evt_threshold(); 
   int TAUDECL TauEnv_get_disable_instrumentation(); 
 
   const char* TAUDECL TauEnv_get_ebs_source();

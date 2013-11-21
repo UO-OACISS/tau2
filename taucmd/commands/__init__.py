@@ -34,3 +34,21 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
+import sys
+from pkgutil import walk_packages
+
+
+def getSubcommands(command):
+    """
+    Builds listing of command names with short description
+    """
+    parts = []
+    for module in [n for _, n, _ in walk_packages(sys.modules[command].__path__, sys.modules[command].__name__+'.')]:
+        __import__(module)
+        descr = sys.modules[module].SHORT_DESCRIPTION
+        name = '{:<15}'.format(module.split('.')[-1])
+        parts.append('  %s  %s' % (name, descr))
+    return '\n'.join(parts)
+
+

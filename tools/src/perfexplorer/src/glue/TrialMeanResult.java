@@ -50,6 +50,7 @@ public class TrialMeanResult extends AbstractResult {
 		super();
 		this.trialID = trial.getID();
 		this.callPath = callPath;
+		this.trial = trial;
 		this.name = this.trial.getName();
 		buildTrialMeanResult(trial, metric, event);
 	}
@@ -143,8 +144,9 @@ public class TrialMeanResult extends AbstractResult {
 				// easy query.
         		sql.append(" select t.name, m.name, tv.exclusive_value, ");
 				sql.append(" tv.inclusive_value, tcd.calls, tcd.subroutines, cp.id from timer t ");
-				sql.append(" left outer join timer_callpath cp on timer.trial = " + trial.getID());
-				sql.append(" and t.timer_callpath = cp.id ");
+				sql.append(" left outer join timer_callpath cp on t.trial = "
+						+ trial.getID());
+				sql.append(" and t.id = cp.timer ");
         		sql.append(" left outer join timer_call_data tcd on tcd.timer_callpath = cp.id ");
         		sql.append(" left outer join timer_value tv on tv.timer_call_data = tcd.id ");
         		sql.append(" left outer join metric m on m.trial = " + trial.getID() + " and tv.metric = m.id ");
@@ -191,8 +193,10 @@ public class TrialMeanResult extends AbstractResult {
 			System.out.println("Time to query interval data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
 				String eventName = results.getString(1);
-				this.putExclusive(0, eventName, results.getString(2), results.getDouble(3));
-				this.putInclusive(0, eventName, results.getString(2), results.getDouble(4));
+				this.putExclusive(0, eventName, results.getString(2),
+						results.getDouble(4));
+				this.putInclusive(0, eventName, results.getString(2),
+						results.getDouble(5));
 				this.putCalls(0, eventName, results.getDouble(5));
 				this.putSubroutines(0, eventName, results.getDouble(6));
 				Integer eventID = results.getInt(7);

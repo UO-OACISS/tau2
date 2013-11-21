@@ -12,6 +12,7 @@ s@^PAPIDIR=\(.*\)@PAPIDIR=@g
 s@^PAPISUBDIR=\(.*\)@PAPISUBDIR=@g
 s@^GPIDIR=\(.*\)@GPIDIR=@g
 s@^PDTDIR=\(.*\)@PDTDIR=@g
+s@^OMPTLIB=\(.*\)@OMPTLIB=@g
 s@^PDTCOMPDIR=\(.*\)@PDTCOMPDIR=@g
 s@^DYNINSTDIR=\(.*\)@DYNINSTDIR=@g
 s@^JDKDIR=\(.*\)@JDKDIR=@g

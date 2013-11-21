@@ -192,8 +192,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
-				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				Tau_cupti_register_host_calling_site(cbInfo->correlationId, p);
+				Tau_cupti_register_host_calling_site(cbInfo->correlationId, cbInfo->functionName);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -252,19 +251,25 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           Tau_CuptiLayer_init();
 
           //printf("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
-					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				  record_gpu_launch(cbInfo->correlationId, p);
+				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
+					CUdevice device;
+					cuCtxGetDevice(&device);
+					record_gpu_counters_at_launch(device);
 				}
 				//cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
 			}
 			else if (cbInfo->callbackSite == CUPTI_API_EXIT)
 			{
+				if (function_is_launch(id))
+				{
+				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
+				}
       /* for testing only. 
 				if (function_is_launch(id))
 				{
           printf("synthetic sync point.\n");
           cuCtxSynchronize();
-					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
+					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         }
       */
 				//cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
@@ -338,7 +343,9 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
    
     for (int i=0; i < device_count; i++) {
-      //printf("Kernels encountered/recorded: %d/%d.\n", CurrentGpuState[i].kernels_encountered, CurrentGpuState[0].kernels_recorded);
+#ifdef TAU_CUPTI_DEBUG_COUNTERS
+      printf("Kernels encountered/recorded: %d/%d.\n", kernels_encountered[i], kernels_recorded[i]);
+#endif
       if (kernels_recorded[i] == kernels_encountered[i])
       {
         clear_counters(i);
@@ -821,14 +828,9 @@ int gpu_source_locations_available()
   return 1;
 }
 
-void record_gpu_launch(int correlationId, FunctionInfo *current_function)
+void record_gpu_launch(int correlationId, const char *name)
 {
-  Tau_cupti_register_host_calling_site(correlationId, current_function);	
-
-  CUdevice device;
-  cuCtxGetDevice(&device);
-
-  record_gpu_counters_at_launch(device);
+  Tau_cupti_register_host_calling_site(correlationId, name);	
 }
 void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
 {
@@ -848,10 +850,11 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
     //increment kernel count.
     
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      //std::cout << "at record: "<< name << " ====> " << std::endl;
-      //std::cout << "\tstart: " << counters_at_last_launch[device_id][n] << std::endl;
-      //std::cout << "\t stop: " << current_counters[device_id][n] << std::endl;
-
+#ifdef TAU_CUPTI_DEBUG_COUNTERS
+      std::cout << "at record: "<< name << " ====> " << std::endl;
+      std::cout << "\tstart: " << counters_at_last_launch[device_id][n] << std::endl;
+      std::cout << "\t stop: " << current_counters[device_id][n] << std::endl;
+#endif
       TauContextUserEvent* c;
       const char *name = Tau_CuptiLayer_get_event_name(n);
       if (n >= counterEvents.size()) {

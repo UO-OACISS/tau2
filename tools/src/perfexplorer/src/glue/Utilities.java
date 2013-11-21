@@ -147,14 +147,23 @@ public class Utilities {
 
   public static List<Trial> getTrialsForView(View view)
   {
+		return getTrialsForView(view, false);
+	}
+
+	public static List<Trial> getTrialsForView(View view, boolean getXMLMetadata) {
 		boolean message = false;
 
     PerfExplorerServer server = getServer();
 
     List<View> views = new ArrayList<View>();
+		View parent = view.getParent();
+		while (parent != null) {
+			views.add(parent);
+			parent = parent.getParent();
+		}
     views.add(view);
 
-    return server.getTrialsForTAUdbView(views); 
+		return server.getTrialsForTAUdbView(views, getXMLMetadata);
   }
 
 	public static List<Trial> getTrialsForExperiment (String aName, String eName) {

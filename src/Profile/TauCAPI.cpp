@@ -62,7 +62,7 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
-#ifndef TAU_WINDOWS
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
 #include <execinfo.h>
 #endif
 
@@ -365,10 +365,24 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
     int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
+    //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth); 
     //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+
+    //A deep copy is necessary here to keep the profiler pointers up to date
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
+
+    int tmpDepth=oldDepth;
+    Profiler *fixP = &(newStack[oldDepth]);
+    while(tmpDepth>0){
+    	tmpDepth--;
+    	fixP->ParentProfiler=&(newStack[tmpDepth]);
+    	fixP=fixP->ParentProfiler;
+
+    }
+
     free(Tau_thread_flags[tid].Tau_global_stack);
+
     Tau_thread_flags[tid].Tau_global_stack = newStack;
     Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
@@ -440,7 +454,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
-    Tau_sampling_event_start(tid, p->address);
+    // if the unwind depth should be "automatic", then get the stack for right now
+    if (TauEnv_get_ebs_unwind_depth() == 0) {
+      Tau_sampling_event_start(tid, p->address);
+    }
   }
 #endif
 }
@@ -504,7 +521,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
-#ifndef TAU_WINDOWS
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
      if(!TauEnv_get_ebs_enabled()) {
        void* callstack[128];
        int i, frames = backtrace(callstack, 128);
@@ -1463,6 +1480,14 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
 
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_context_event_thread(const char *name, double data, int tid) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_context_userevent(&ue, name);
+  Tau_context_userevent_thread(ue, data, tid);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trigger_context_event(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
@@ -1685,6 +1710,16 @@ extern "C" void Tau_track_memory_here(void) {
   TauTrackMemoryHere();
 }
 
+extern "C" void Tau_track_power(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackPower();
+}
+
+
+extern "C" void Tau_track_power_here(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackPowerHere();
+}
 
 extern "C" void Tau_track_memory_headroom(void) {
   TauInternalFunctionGuard protects_this_function;
@@ -1705,6 +1740,14 @@ extern "C" void Tau_enable_tracking_memory(void) {
 
 extern "C" void Tau_disable_tracking_memory(void) {
   TauDisableTrackingMemory();
+}
+
+extern "C" void Tau_disable_tracking_power(void) {
+  TauDisableTrackingPower();
+}
+
+extern "C" void Tau_enable_tracking_power(void) {
+  TauEnableTrackingPower();
 }
 
 

@@ -6,11 +6,14 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Function;
@@ -416,6 +419,26 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		this.secondaryMetadata = secondaryMetadata;
 	}
 
+	public MetaDataMap getMetaData() {
+		MetaDataMap core = super.getMetaData();
+		if (core == null || core.size() <= 0) {
+			MetaDataMap newm = new MetaDataMap();
+
+			if (primaryMetadata != null) {
+				Set<Entry<String, String>> entries = primaryMetadata.entrySet();
+				Iterator<Entry<String, String>> it = entries.iterator();
+				while (it.hasNext()) {
+					Entry<String, String> en = it.next();
+					newm.put(en.getKey(), en.getValue());
+				}
+			}
+
+			return newm;
+		} else {
+			return super.getMetaData();
+		}
+	}
+
 
 
 	public static Map<Integer, TAUdbTrial> getTrials(TAUdbSession session) {
@@ -618,7 +641,9 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
                 trial.setField("contexts_per_node",String.valueOf(contextsPerNode));
                 trial.setField("threads_per_context",String.valueOf(threadsPerContext));
                 trial.setField("total_threads",String.valueOf(totalThreads));
-                
+				if (getXMLMetadata) {
+					trial.loadXMLMetadata(db);
+				}
 
 				trials.addElement(trial);
 				//System.out.println("Added trial "+dex);
@@ -797,7 +822,14 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		statement.execute();
 	}
 	
-	public static void updatePrimaryMetadataField(DB db, int trialID, String name, String value){
+
+	public void updatePrimaryMetadataField(String name, String value){
+		updatePrimaryMetadataField(this.getSession().getDB(), this.trialID,
+				name, value);
+	}
+
+	public static void updatePrimaryMetadataField(DB db, int trialID,
+			String name, String value) {
 		try {
 			PreparedStatement statement = db.prepareStatement("update primary_metadata set value=? where trial=? and name=?;");
 			statement.setString(1, value);
@@ -805,10 +837,60 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			statement.setString(3, name);
 			statement.execute();
 			statement.close();
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 	}
+
+	public void addToPrimaryMetadataField(String name, String value) {
+		addToPrimaryMetadataField(this.getSession().getDB(), this.trialID,
+				name, value);
+	}
+
+	public static void addToPrimaryMetadataField(DB db, int trialID,
+			String name, String value) {
+		try {
+
+			PreparedStatement statement = db
+					.prepareStatement("INSERT INTO "
+							+ db.getSchemaPrefix()
+							+ "primary_metadata (trial, name, value) VALUES (?, ?, ?);");
+
+			statement.setInt(1, trialID);
+			statement.setString(2, name);
+			statement.setString(3, value);
+			statement.execute();
+			statement.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void removeFromPrimaryMetadataField(String name) {
+		removeFromPrimaryMetadataField(this.getSession().getDB(), this.trialID,
+				name);
+	}
+
+	public static void removeFromPrimaryMetadataField(DB db, int trialID,
+			String name) {
+		try {
+
+			PreparedStatement statement = db.prepareStatement("DELETE FROM "
+					+ db.getSchemaPrefix()
+					+ "primary_metadata WHERE trial=? AND name=?;");
+
+			statement.setInt(1, trialID);
+			statement.setString(2, name);
+			statement.execute();
+			statement.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void updateFields(DB db,int trialID, String field,String value){
 //	int node_count = dataSource.getMaxNode();
 //	int contexts_per_node = dataSource.getMaxContextPerNode();

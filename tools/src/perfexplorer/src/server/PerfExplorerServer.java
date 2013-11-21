@@ -175,12 +175,16 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		theServer = this;
 		int i = 0;
 		List<String> configFiles = ConfigureFiles.getConfigurationNames();
-		if (configFile != null && configFile.length() > 0) {
+		if (configFile != null && configFile.equals("NONE")) {
+			configFiles = new ArrayList<String>();
+		} else if (configFile != null && configFile.length() > 0) {
 			// if the user supplied a config file, use just that one
 			configFiles = new ArrayList<String>();
 			configFiles.add(configFile);
+			addWorkingDatabase(configFiles);
+		} else {
+			addWorkingDatabase(configFiles);
 		}
-		addWorkingDatabase(configFiles);
         String home = System.getProperty("user.home");
         String slash = System.getProperty("file.separator");
         String prefix = home + slash + ".ParaProf" + slash + "perfdmf.cfg.";
@@ -1709,9 +1713,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
     ListIterator<View> litr = views.listIterator();
     while (litr.hasNext())
     {
-      List<View> subViews = getAllSubViews(litr.next().getID());
+			View pview = litr.next();
+			List<View> subViews = getAllSubViews(pview.getID());
       for (View subView : subViews)
       {
+				subView.setParent(pview);
         litr.add(subView);
       }
     }
@@ -1730,15 +1736,20 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return View.getTrialsForView(views, getXMLMetadata, db);
 	}
 
+	public List<Trial> getTrialsForTAUdbView(List<View> views) {
+		return getTrialsForTAUdbView(views, false);
+	}
+
 	/**
 	 * Get the trials which are filtered by the defined view(s).
 	 * 
 	 * @param views
 	 * @return List
 	 */
-	public List<Trial> getTrialsForTAUdbView (List<View> views) {
+	public List<Trial> getTrialsForTAUdbView(List<View> views,
+			boolean getXMLMetadata) {
 		DB db = this.getDB();
-		return View.getTrialsForTAUdbView(views, db);
+		return View.getTrialsForTAUdbView(views, db, getXMLMetadata);
 	}
 
 	/* (non-Javadoc)
