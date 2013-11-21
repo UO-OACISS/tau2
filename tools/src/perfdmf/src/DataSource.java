@@ -2128,7 +2128,6 @@ public abstract class DataSource {
 				totalTimers += stats.totalTimers;
 				remainingTimers += stats.remainingTimers;
 			}
-			/*
 			for (Thread thread : this.getAggThreads()) {
 				ReductionStats stats = reduceTrialThread(minPercent, metric, otherFunction, snapshot,
 						thread);
@@ -2138,7 +2137,6 @@ public abstract class DataSource {
 				totalTimers += stats.totalTimers;
 				remainingTimers += stats.remainingTimers;
 			}
-			*/
 		}
 		System.out.println ("Removed " + reducedTimers + " of " + totalTimers +
 			" timers from all threads, leaving " + remainingTimers);
