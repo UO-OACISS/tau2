@@ -188,7 +188,6 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public String getField(int idx) {
-
         return fields[idx];
     }
 

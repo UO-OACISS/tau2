@@ -44,6 +44,9 @@ import textwrap
 # Contact for bugs, etc.
 HELP_CONTACT = '<tau-bugs@cs.uoregon.edu>'
 
+# Logging level
+LOG_LEVEL = 'INFO'
+
 #Expected Python version
 EXPECT_PYTHON_VERSION = (2, 7)
 
@@ -51,22 +54,26 @@ EXPECT_PYTHON_VERSION = (2, 7)
 PACKAGE_HOME = os.path.dirname(os.path.realpath(__file__))
 
 # Search paths for included files
-INCLUDE_PATH = [ os.path.realpath('.') ]
+INCLUDE_PATH = [os.path.realpath('.')]
 
-# Tau configuration home
-HOME = os.path.join(os.path.expanduser('~'), '.tau')
+# User-specific TAU files
+TAUCMD_HOME = os.path.join(os.path.expanduser('~'), '.tau')
 
-# Default Tau configuration
-CONFIG = 'simple'
-
-# Logging level
-LOG_LEVEL = 'INFO'
+# User-specific source code and build directory
+SRC_DIR = os.path.join(TAUCMD_HOME, 'src')
 
 # Tau source code root directory
 try:
-    TAU_ROOT_DIR = os.environ['TAU_ROOT_DIR']
+    TAU_MASTER_SRC_DIR = os.environ['TAU_MASTER_SRC_DIR']
 except KeyError:
-    TAU_ROOT_DIR = None
+    print '!'*80
+    print '!'
+    print '! CRITICAL ERROR: TAU_MASTER_SRC_DIR environment variable not set.'
+    print '!'
+    print '!'*80
+    exit(1)
+
+DEFAULT_TAU_COMPILER_OPTIONS = ['-optRevert']
 
 
 class TauError(Exception):
@@ -103,19 +110,34 @@ class TauUnknownCommandError(TauError):
         super(TauUnknownCommandError,self).__init__(value)
         self.hint = hint
 
-class LogFormatter(logging.Formatter):
+class LogFormatter(logging.Formatter, object):
     """
     Custom log message formatter.
-    """    
+    """
+    
+    LINE_MARKER = 'TAU:'
+    
+    
     def __init__(self):
         super(LogFormatter, self).__init__()
         
-    def msgbox(self, record, marker):
-        hline = marker*80
-        parts = [hline, marker, '%s %s' % (marker, record.levelname)]
+    def debug_msg(self, record):
+        return '%s %s:%s: %s' % (self.LINE_MARKER, record.levelname, record.module, record.getMessage()) 
+
+    def info_msg(self, record):
+        parts = []
         for line in record.getMessage().split('\n'):
-            parts.append('%s %s' % (marker, line))
-        parts.append(marker)
+            parts.append('%s %s' % (self.LINE_MARKER, line))
+        return '\n'.join(parts)       
+    
+    def msgbox(self, record, marker):
+        line_marker = self.LINE_MARKER
+        hline = line_marker + marker*(79-len(line_marker))
+        parts = [hline, line_marker, '%s %s' % (line_marker, record.levelname)]
+        message = record.getMessage().split('\n')
+        for line in message:
+            parts.append('%s %s' % (line_marker, line))
+        parts.append(line_marker)
         parts.append(hline)
         return '\n'.join(parts)
 
@@ -125,14 +147,16 @@ class LogFormatter(logging.Formatter):
         elif record.levelno == logging.ERROR:
             return self.msgbox(record, '!')
         elif record.levelno == logging.WARNING:
-            return self.msgbox(record, '!')
+            return self.msgbox(record, '*')
         elif record.levelno == logging.INFO:
-            return record.getMessage()
+            return self.info_msg(record)
+        elif record.levelno == logging.DEBUG:
+            return self.debug_msg(record)
         else:
             return '%s:%s:%s' % (record.levelname, record.module, record.getMessage())
 
 _loggers = set()
-_handler = logging.StreamHandler(sys.stderr)
+_handler = logging.StreamHandler(sys.stdout)
 _handler.setFormatter(LogFormatter())
 
 def getLogger(name):
@@ -141,7 +165,8 @@ def getLogger(name):
     """
     logger = logging.getLogger(name)
     logger.setLevel(LOG_LEVEL)
-    logger.handlers = [_handler]
+    logger.addHandler(_handler)
+    logger.propagate = False
     _loggers.add(logger)
     return logger
 
@@ -151,6 +176,7 @@ def setLogLevel(level):
     """
     global LOG_LEVEL
     LOG_LEVEL = level.upper()
+    _handler.setLevel(LOG_LEVEL)
     for logger in _loggers:
         logger.setLevel(LOG_LEVEL)
 
@@ -202,3 +228,4 @@ def excepthook(etype, e, tb):
         """ % {'typename': etype.__name__, 'cmd': ' '.join(args)})
         logger.critical(message)
         sys.exit(-1)
+        

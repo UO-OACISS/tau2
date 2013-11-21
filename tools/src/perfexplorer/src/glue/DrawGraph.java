@@ -15,14 +15,11 @@ import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.general.Dataset;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.renderer.category.CategoryItemRenderer;
-
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
@@ -247,7 +244,18 @@ public class DrawGraph extends AbstractPerformanceOperation {
     protected PerfExplorerChart chartWindow = null;
     protected boolean shortenNames = false;
     protected int chartType = LINECHART;
+    protected boolean autoDisplayWindow = true;
+    protected JFreeChart chart =null;
+	protected boolean showLegend = true;
     
+    public void setLegendVisible(boolean showLegend) {
+		this.showLegend = showLegend;
+	}
+
+	public boolean isLegendVisible() {
+		return showLegend;
+	}
+
     /**
      * Creates a graph drawing operator.
      *
@@ -397,7 +405,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
                }
         }
         
-        JFreeChart chart = null;
+        chart = null;
     
         if (chartType == STACKEDAREACHART) {
 		DefaultTableXYDataset dataset2 = new DefaultTableXYDataset();
@@ -450,6 +458,9 @@ public class DrawGraph extends AbstractPerformanceOperation {
             // set to a common style
             Utility.applyDefaultChartTheme(chart);
         
+			if (!this.showLegend) {
+				chart.removeLegend();
+			}
         // get a reference to the plot for further customisation...
         CategoryPlot plot = (CategoryPlot)chart.getPlot();
      
@@ -491,9 +502,20 @@ public class DrawGraph extends AbstractPerformanceOperation {
         plot.setDomainAxis(domainAxis);
         }
 
-        this.chartWindow = new PerfExplorerChart(chart, "General Chart");
+        if(this.autoDisplayWindow)
+        {
+        	this.chartWindow = new PerfExplorerChart(chart, "General Chart");
+        }
         return null;
     }
+    
+    public void setAutoDisplayWindow(boolean display){
+    	autoDisplayWindow=display;
+    }
+
+	public JFreeChart getChart() {
+		return chart;
+	}
 
     /**
      * Set the events used for the graph.
@@ -659,6 +681,9 @@ public class DrawGraph extends AbstractPerformanceOperation {
      */
     public void drawChartToFile(String fileName) {
         try {
+        	if(chartWindow==null&&chart!=null){
+        		this.chartWindow = new PerfExplorerChart(chart, "General Chart");
+        	}
             VectorExport.export(chartWindow, new File(fileName), true, "PerfExplorer", true, true);
         } catch (Exception e) {
             System.err.println("Could not write graph to file:");

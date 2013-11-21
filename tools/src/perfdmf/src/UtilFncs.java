@@ -416,16 +416,17 @@ public class UtilFncs {
     }
 
     public static String getContextEventRoot(String str) {
-        int colon = str.indexOf(":");
+		int colon = str.lastIndexOf(" : ");
         int location = str.indexOf("=>");
         if (location < 0) {
             if (colon < 0) {
                 return str;
             } else {
-                return str.substring(colon + 1);
+				String result = str.substring(colon + 2);
+				return result.trim();
             }
         }
-        return str.substring(colon + 1, location).trim();
+		return str.substring(colon + 2, location).trim();
     }
 
     /**

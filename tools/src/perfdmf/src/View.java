@@ -342,6 +342,17 @@ public class View implements Serializable {
 	 * @return List
 	 */
 	public static List<Trial> getTrialsForTAUdbView (List<View> views, DB db) {
+		return getTrialsForTAUdbView(views, db, false);
+	}
+
+	/**
+	 * Get the trials which are filtered by the defined view(s).
+	 * 
+	 * @param views
+	 * @return List
+	 */
+	public static List<Trial> getTrialsForTAUdbView(List<View> views, DB db,
+			boolean getXMLMetadata) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
 		//List<Trial> trials = new ArrayList<Trial>();
 		HashMap<Integer, View> hashViews = new HashMap<Integer, View>();
@@ -357,11 +368,51 @@ public class View implements Serializable {
 		for(View view: views){
 			hashViews.put(view.getID(), view);
 		}
-		return getTrialsForTAUdbView(views, hashViews, db);
+		return getTrialsForTAUdbView(views, hashViews, db, getXMLMetadata);
 	}
 
+	private static List<Trial> getTrialsForTAUdbView(List<View> views,
+			HashMap<Integer, View> hashViews, DB db) {
+		return getTrialsForTAUdbView(views, hashViews, db, false);
+	}
 
-	private static List<Trial> getTrialsForTAUdbView(List<View> views,HashMap<Integer, View> hashViews, DB db) {
+	public static ResultSet getViewParameters(DB db, int viewID) {
+
+		StringBuilder sql = new StringBuilder();
+		sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
+
+		sql.append("?");
+
+		sql.append(") order by taudb_view.id");
+		PreparedStatement statement;
+		try {
+			statement = db.prepareStatement(sql.toString());
+
+			int i = 1;
+			// for (View view : views) {
+			statement.setInt(i, Integer.valueOf(viewID));
+			// i++;
+			// }
+			ResultSet results = statement.executeQuery();
+			return results;
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// StringBuilder sql = new StringBuilder();
+		// sql.append("select taudb_view_parameter where taudb_view.id = "
+		// + viewID);
+		// try {
+		// PreparedStatement statement = db.prepareStatement(sql.toString());
+		// ResultSet ress = statement.executeQuery();
+		// } catch (SQLException e) {
+		// e.printStackTrace();
+		// }
+		return null;
+	}
+
+	private static List<Trial> getTrialsForTAUdbView(List<View> views,
+			HashMap<Integer, View> hashViews, DB db, boolean getXMLMetadata) {
 		try {
 			StringBuilder sql = new StringBuilder();
 			sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
@@ -422,7 +473,8 @@ public class View implements Serializable {
 			
 			//PerfExplorerOutput.println(whereClause.toString());
 
-			return Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
+			return Trial.getTrialList(db, joinClause.toString() + " "
+					+ whereClause.toString(), getXMLMetadata);
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
 			System.err.println(error);
@@ -623,6 +675,17 @@ public class View implements Serializable {
 			statement.close();
 
 	}
+
+	public static void clearViewParameters(DB db, int viewID)
+			throws SQLException {
+		PreparedStatement statementParam = db.prepareStatement("DELETE FROM "
+				+ db.getSchemaPrefix()
+				+ "taudb_view_parameter WHERE taudb_view = ?");
+		statementParam.setInt(1, viewID);
+		statementParam.execute();
+		statementParam.close();
+	}
+
 
 public static void deleteView(int viewID, DB db) throws SQLException{
 	

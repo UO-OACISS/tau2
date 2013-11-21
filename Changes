@@ -10,6 +10,29 @@
 
 Change log:
 ------------
+Version 2.23 changes (from 2.22):
+1. Added support for OpenMP Tools API (OMPT). 
+2. Added support for markers (events triggered when atomic events increase or decrease beyond a threshold). 
+3. Increase and decrease in heap memory tracked with TAU_TRACK_HEAP=1.
+4. ParaProf event window can be launched from a node view. 
+5. Better support for creating ppk files from tauprofile.xml.
+6. TAU_BFD_LOOKUP=0 and tau_resolve_addresses.py with TAU_PROFILE_FORMAT=merged for offline address translation with TAU_SAMPLING=1.
+7. Better configure step that builds TAU.h and Makefiles from a skeleton.
+8. Lower OpenMP runtime overhead. 
+9. Added support for tracking power (TAU_TRACK_POWER()) using PAPI --with-component=rapl.
+10. Added support for Intel OMPT (-ompt=download).
+11. Performance enhancements for OpenMP measurement.
+12. Added DrawMultiGraph ui element to PerfExplorer Scripting API
+13. Allowed specification of alternate binutils directory at configuration
+14. More intelligent management of ParaProf/PerfExplorer jar downloads
+15. Added support for adding/removing metadata fields for TauDB trials in ParaProf
+16. Added option to hide the legend in PerfExplorer charts
+17. Sorted event lists in PerfExplorer custom chart view
+18. Allow editing of existing TauDB views in ParaProf
+19. Updated Cube reader allows reading metadata and atomic events from Cube profiles in ParaProf
+20. Improvements to call-site tracking to work more smoothly with multi-threaded application.
+21.  CUPTI counters are now assigned to the GPU kernels that produced them. If they cannot be attributed to a single kernel the values are automatically estimated given the structure of the application.
+
 Version 2.22 changes (from 2.21):
 1. Added support for TAUdb (formerly PerfDMF).
 2. Added support for GPI (www.gpi-site.com).

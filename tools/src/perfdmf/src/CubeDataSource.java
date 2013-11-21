@@ -1,29 +1,26 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
-import java.io.File;
-import java.io.IOException;
-import java.io.FileNotFoundException;
 
-import java.sql.SQLException;
-
-
-
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
-import org.xml.sax.helpers.XMLReaderFactory;
-
-import edu.uoregon.tau.common.TrackerInputStream;
-import java.util.zip.GZIPInputStream;
-
-import scalasca.cubex.cube.*;
-import scalasca.cubex.cube.datalayout.data.value.*;
-import scalasca.cubex.cube.errors.*;
-import java.util.*;
-import java.util.HashMap;
-import java.util.Map;
+import scalasca.cubex.cube.Cube;
+import scalasca.cubex.cube.LocationGroupType;
+import scalasca.cubex.cube.LocationType;
+import scalasca.cubex.cube.datalayout.data.value.CubeTauAtomicMetric;
+import scalasca.cubex.cube.datalayout.data.value.ValueType;
+import scalasca.cubex.cube.errors.BadCubeReportLayoutException;
+import scalasca.cubex.cube.errors.BadSyntaxException;
+import scalasca.cubex.cube.errors.NotEnumeratedCnodeException;
 
 
 /**
@@ -102,11 +99,13 @@ public class CubeDataSource extends DataSource
 
 			ArrayList<scalasca.cubex.cube.Metric> metrics = cube.get_metv();
 			ArrayList<scalasca.cubex.cube.Metric> root_metrics = cube.get_root_metv();
-			ArrayList<scalasca.cubex.cube.Region> regions = cube.get_regionv();
+			// ArrayList<scalasca.cubex.cube.Region> regions =
+			// cube.get_regionv();
 			ArrayList<scalasca.cubex.cube.Cnode> cnodes = cube.get_cnodev();
 			ArrayList<scalasca.cubex.cube.Cnode> root_cnodes = cube.get_root_cnodev();
-			ArrayList<scalasca.cubex.cube.Machine> machines = cube.get_machv();
-			ArrayList<scalasca.cubex.cube.Node> nodes = cube.get_nodev();
+			// ArrayList<scalasca.cubex.cube.Machine> machines =
+			// cube.get_machv();
+			// ArrayList<scalasca.cubex.cube.Node> nodes = cube.get_nodev();
 			ArrayList<scalasca.cubex.cube.LocationGroup> lgs = cube.get_location_groupv();
 			ArrayList<scalasca.cubex.cube.Location> locations = cube.get_locationv();
 			ArrayList<scalasca.cubex.cube.Cartesian> topologies = cube.get_cartv();
@@ -268,11 +267,11 @@ public class CubeDataSource extends DataSource
 			cube= null;
 			metrics = null;
 			root_metrics = null;
-			regions = null;
+			// regions = null;
 			cnodes = null;
 			root_cnodes = null;
-			machines = null;
-			nodes = null;
+			// machines = null;
+			// nodes = null;
 			lgs = null;
 			locations = null;
 			topologies = null;
@@ -467,7 +466,7 @@ public class CubeDataSource extends DataSource
 
 	public int getProgress()
 	{
-		int _progress;
+		// int _progress;
 		if (cube == null)
 			return 0;
 		if (cube.isLoading())
@@ -531,6 +530,7 @@ public class CubeDataSource extends DataSource
 
 	private void addCnodes(scalasca.cubex.cube.Cnode cnode, String prefix)
 	{
+
 		String new_prefix = prefix + cnode.getRegion().getName();
 		for (String key : cnode.get_str_parameters().keySet())
 		{
@@ -566,6 +566,7 @@ public class CubeDataSource extends DataSource
 
 	private void addProcess(scalasca.cubex.cube.LocationGroup lg)
 	{
+
         if (lg.getType() != LocationGroupType.PROCESS)
             return;
 		Node node = addNode((int)lg.getRank());
@@ -583,6 +584,13 @@ public class CubeDataSource extends DataSource
         if (location.getType() != LocationType.CPU_THREAD)
             return;
 		Thread tau_thread = context.addThread(threadID, getNumberOfMetrics());
+		Iterator<Entry<String, String>> it = location.get_attrs().entrySet()
+				.iterator();
+		while (it.hasNext()) {
+			Entry<String, String> item = it.next();
+			tau_thread.getMetaData().put(item.getKey(), item.getValue());
+		}
+
 		cube2tau_threads.put(location, tau_thread);
 // 		System.out.println("         Added "+ thread.getName());
 	}

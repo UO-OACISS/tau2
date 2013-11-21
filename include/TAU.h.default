@@ -89,6 +89,12 @@
 #define TAU_DISABLE_TRACKING_MEMORY()
 #define TAU_TRACK_MEMORY()
 #define TAU_TRACK_MEMORY_HERE()
+#define TAU_TRACK_POWER()                       
+#define TAU_TRACK_POWER_HERE()                 
+#define TAU_ENABLE_TRACKING_POWER()           
+#define TAU_DISABLE_TRACKING_POWER()         
+
+
 #define TAU_SET_INTERRUPT_INTERVAL(value)
 
 #define CT(obj)

@@ -14,7 +14,6 @@ import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -109,7 +108,8 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 			if(yAxisValue.equals("inclusive")) yAxisValue="inclusive_value";
 			if(yAxisValue.equals("exclusive")) yAxisValue="exclusive_value";
 			if(yAxisValue.equalsIgnoreCase("INCLUSIVE_PERCENTAGE")) yAxisValue = "inclusive_percent";
-			if(yAxisValue.equalsIgnoreCase("EXCLUSIVE_PERCENTAGE")) yAxisValue = "inclusive_percent";
+			if (yAxisValue.equalsIgnoreCase("EXCLUSIVE_PERCENTAGE"))
+				yAxisValue = "exclusive_percent";
 
 			String yAxisName = "timer_value";
 			

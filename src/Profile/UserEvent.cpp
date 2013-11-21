@@ -20,13 +20,9 @@
 #pragma mta instantiate used
 #endif /* TAU_CRAYXMT */
 
-//#define TAU_USE_EVENT_THRESHOLDS 1 
-
-#ifdef TAU_USE_EVENT_THRESHOLDS
-#ifndef TAU_EVENT_THRESHOLD
-#define TAU_EVENT_THRESHOLD .1
-#endif /* TAU_EVENT_THRESHOLD */
-#endif 
+#ifndef TAU_DISABLE_MARKERS
+#define TAU_USE_EVENT_THRESHOLDS 1 
+#endif /* TAU_DISABLE_MARKERS */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -205,14 +201,14 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   if (minEnabled && data < d.minVal) {
 
 #ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data <= (1.0 - TAU_EVENT_THRESHOLD) * d.minVal) 
+    if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) 
     {
       if (name.data()[0] != '[') { //re-entrant 
         string ename(string("[GROUP=MIN_MARKER] ")+name);
         pos = name.find("=>");
         if (pos == std::string::npos) {
           DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT(ename.c_str(), data);
+          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename.c_str(), data, tid);
         }
       }
     }
@@ -223,14 +219,14 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   }
   if (maxEnabled && data > d.maxVal) {
 #ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data >= (1.0 + TAU_EVENT_THRESHOLD) * d.maxVal) 
+    if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) 
     {
       if (name.data()[0] != '[') { //re-entrant 
         string ename(string("[GROUP=MAX_MARKER] ")+name);
         pos = name.find("=>");
         if (pos == std::string::npos) {
           DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT(ename.c_str(), data);
+          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename.c_str(), data, tid);
         }
       }
       

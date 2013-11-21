@@ -90,5 +90,7 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen);
 
 void Tau_metadata_register(const char *name, int value);
 int Tau_metadata_mergeMetaData();
+int Tau_write_metadata_records_in_scorep(int tid);
+
 
 #endif /* _TAU_METADATA_H_ */

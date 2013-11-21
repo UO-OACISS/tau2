@@ -22,4 +22,18 @@ public class SpeedupXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
 		else
 			return super.getSeriesPaint(series);
 	}
+
+	/*
+	 * These overrides cause lines to be drawn after shapes so the normal/ideal
+	 * line will be visible on top.
+	 * 
+	 * @see org.jfree.chart.renderer.xy.XYLineAndShapeRenderer#isLinePass(int)
+	 */
+	protected boolean isLinePass(int pass) {
+		return pass == 1;
+	}
+	protected boolean isItemPass(int pass) {
+		return pass == 0;
+	}
+
 }

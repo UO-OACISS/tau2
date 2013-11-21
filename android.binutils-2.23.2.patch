@@ -1,0 +1,34 @@
+diff -u -r binutils-2.23.2/libiberty/getpagesize.c binutils-2.23.2-patched/libiberty/getpagesize.c
+--- binutils-2.23.2/libiberty/getpagesize.c	2005-03-27 18:09:01.000000000 -0800
++++ binutils-2.23.2-patched/libiberty/getpagesize.c	2013-07-08 11:39:27.314956014 -0700
+@@ -60,11 +60,14 @@
+ # endif /* PAGESIZE */
+ #endif /* GNU_OUR_PAGESIZE */
+ 
++/* BIONIC has getpagesize() defined in <unistd.h> */
++#ifndef __BIONIC__
+ int
+ getpagesize (void)
+ {
+   return (GNU_OUR_PAGESIZE);
+ }
++#endif /* __BIONIC__ */
+ 
+ #else /* VMS */
+ 
+@@ -76,6 +79,8 @@
+ #endif
+ extern unsigned long lib$getsyi(const unsigned short *,...);
+ 
++/* BIONIC has getpagesize() defined in <unistd.h> */
++#ifndef __BIONIC__
+ int getpagesize (void)
+ {
+   long pagsiz = 0L;
+@@ -86,5 +91,6 @@
+     pagsiz = 512L;	/* VAX default */
+   return (int) pagsiz;
+ }
++#endif /* __BIONIC__ */
+ 
+ #endif /* VMS */

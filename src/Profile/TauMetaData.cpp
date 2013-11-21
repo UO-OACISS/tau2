@@ -57,6 +57,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 using namespace std;
 using namespace tau;
 
+#ifdef TAU_SCOREP_METADATA
+#include <scorep/SCOREP_Tau.h>
+#endif /* TAU_SCOREP_METADATA */
+
 
 #ifdef TAU_BGL
 #include <rts.h>
@@ -236,6 +240,7 @@ void Tau_metadata_register(const char *name, int value) {
 void Tau_metadata_register(const char *name, const char *value) {
   Tau_metadata(name, value);
 }
+
 
 
 int Tau_metadata_fillMetaData() 
@@ -521,6 +526,24 @@ int Tau_metadata_fillMetaData()
   sprintf(bgqbuffer, "%d", tau_bgq_personality.DDR_Config.DDRSizeMB);
   Tau_metadata_register("BGQ DDR Size (MB)", bgqbuffer);
 
+  // I/O Bridge Network
+  sprintf(bgqbuffer, "(%d, %d, %d, %d, %d)",
+	tau_bgq_personality.Network_Config.cnBridge_A,
+	tau_bgq_personality.Network_Config.cnBridge_B,
+	tau_bgq_personality.Network_Config.cnBridge_C,
+	tau_bgq_personality.Network_Config.cnBridge_D,
+	tau_bgq_personality.Network_Config.cnBridge_E);
+
+  Tau_metadata_register("BGQ Bridge I/O Coordinates", bgqbuffer);
+  
+  sprintf(bgqbuffer, "(%d, %d, %d, %d, %d)",  
+	tau_bgq_personality.Network_Config.Acoord,
+	tau_bgq_personality.Network_Config.Bcoord,
+	tau_bgq_personality.Network_Config.Ccoord,
+	tau_bgq_personality.Network_Config.Dcoord,
+	tau_bgq_personality.Network_Config.Ecoord);
+
+  Tau_metadata_register("BGQ Node Coordinates", bgqbuffer);
 
 #endif /* TAU_BGQ */
 
@@ -807,7 +830,9 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   if (newline) {
     endl = "\n";
   }
+#ifndef TAU_SCOREP
   Tau_util_output (out, "<metadata>%s", endl);
+#endif /* TAU_SCOREP */
 
   if (counter != -1) {
     Tau_XML_writeAttribute(out, "Metric Name", RtsLayer::getCounterName(counter), newline);
@@ -852,12 +877,20 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
       Tau_XML_writeAttribute(out, name, value, newline);
 	} else {
 	*/
+#ifndef TAU_SCOREP
       Tau_XML_writeAttribute(out, &(it->first), it->second, newline);
+#elif TAU_SCOREP_METADATA /* TAU_SCOREP */
+      if ( it->second) {
+        SCOREP_Tau_AddLocationProperty((it->first).name, it->second->data.cval);
+      }
+#endif 
 	//}
 	i++;
   }
 
+#ifndef TAU_SCOREP
   Tau_util_output (out, "</metadata>%s", endl);
+#endif /* TAU_SCOREP */
   return 0;
 }
 
@@ -1060,4 +1093,9 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
   }
 }
 
+int Tau_write_metadata_records_in_scorep(int tid) {
+  writeMetaData(0, false, -1, tid);
+
+  return 0;
+}
 

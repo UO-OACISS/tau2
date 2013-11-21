@@ -176,36 +176,36 @@ case $1 in
 
      oparicomp=*)
         oparicomp=`echo $1 | sed -e 's/^oparicomp=//'`
-	echo "s,^OPARICOMP=.*$,OPARICOMP=$oparicomp,g" >> $sedout
+	echo "s&^OPARICOMP=.*$&OPARICOMP=$oparicomp&g" >> $sedout
 	;;
 
      scorepdir=*)
         scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
-	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
+	echo "s&^SCOREPDIR=.*$&SCOREPDIR=$scorepdir&g" >> $sedout
 	;;
      scorep_opari_bin_dir=*)
         scorep_opari_bin_dir=`echo $1 | sed -e 's/^scorep_opari_bin_dir=//'`
-	    echo "s,^SCOREP_OPARI_BIN_DIR=.*$,SCOREP_OPARI_BIN_DIR=$scorep_opari_bin_dir,g" >> $sedout
+	    echo "s&^SCOREP_OPARI_BIN_DIR=.*$&SCOREP_OPARI_BIN_DIR=$scorep_opari_bin_dir&g" >> $sedout
 	;;
 
      scorepincs=*)
 	scorepincs=`echo $1 | sed -e 's/^scorepincs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPINCS=.*$,SCOREPINCS=$scorepincs,g" >> $sedout
+	echo "s&^SCOREPINCS=.*$&SCOREPINCS=$scorepincs&g" >> $sedout
 	;;
 
      scoreplibs=*)
-       scoreplibs=`echo $1 | sed -e 's+^scoreplibs=++' -e 's+#+ +g'`
-       echo "s+^SCOREPLIBS=.*$+SCOREPLIBS=$scoreplibs+g" >> $sedout
+       scoreplibs=`echo $1 | sed -e 's@^scoreplibs=@@' -e 's@#@ @g'`
+       echo "s&^SCOREPLIBS=.*$&SCOREPLIBS=$scoreplibs&g" >> $sedout
 	;;
 
      scorepmpilibs=*)
-       scorepmpilibs=`echo $1 | sed -e 's+^scorepmpilibs=++' -e 's+#+ +g'`
-       echo "s+^SCOREPMPILIBS=.*$+SCOREPMPILIBS=$scorepmpilibs+g" >> $sedout
+       scorepmpilibs=`echo $1 | sed -e 's@^scorepmpilibs=@@' -e 's@#@ @g'`
+       echo "s&^SCOREPMPILIBS=.*$&SCOREPMPILIBS=$scorepmpilibs&g" >> $sedout
 	;;
 
      scorepdir=*)
         scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
-	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout
+	echo "s&^SCOREPDIR=.*$&SCOREPDIR=$scorepdir&g" >> $sedout
 	;;
 
      mrnet_root=*)
@@ -402,6 +402,16 @@ case $1 in
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
+	;;
+
+     dyninstinc=*)
+        dyninstinc=`echo $1 | sed -e 's/^dyninstinc=//'`
+	echo "s,^DYNINST_INC_DIR=.*$,DYNINST_INC_DIR=$dyninstinc,g" >> $sedout
+	;;
+
+     dyninstlib=*)
+        dyninstlib=`echo $1 | sed -e 's/^dyninstlib=//'`
+	echo "s,^DYNINST_LIB_DIR=.*$,DYNINST_LIB_DIR=$dyninstlib,g" >> $sedout
 	;;
 
      dwarfopts=*)
@@ -713,6 +723,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     PAPINOINC)
+        echo NOTE: Not adding -I/usr/include for PAPI
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      GPI)
         echo "NOTE: Using the TAU's GPI Wrapper Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -797,6 +812,22 @@ case $1 in
         config_arch=`echo $1 | sed 's/^arch=//'`
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
 	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
+	;;
+
+     host=*)
+        config_host=`echo $1 | sed 's/^host=//'`
+	echo "NOTE: Building TAU library for HOST (i.e. cross compile)"
+	echo "s/^CROSS_PREFIX=\(.*\)/CROSS_PREFIX=${config_host}-/g" >> $sedout
+	;;
+
+     HOSTUTILS)
+	echo "NOTE: Building TAU utils for HOST (i.e. cross compile)"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+
+     ANDROID)
+	echo NOTE: Building TAU for Android
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
      NO_RANLIB)
@@ -1280,6 +1311,10 @@ case $1 in
 	echo "NOTE: Using OTF2 library to build tau2otf2 trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OTF2_1_1)
+	echo "NOTE: Using OTF2 v1.1 extensions to build otf2profile converter ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OTFSRC)
 	echo "NOTE: Using OTF source based distribution to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1300,6 +1335,12 @@ case $1 in
 	echo "NOTE: Using DYNINST for TAU Runtime Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DYNINST_INC)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST_LIB)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      DYNINST41)
 	echo "NOTE: Using newer version DYNINST 4.1+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1318,6 +1359,10 @@ case $1 in
 	;;
      DYNINST8)
 	echo "NOTE: Using newer version DYNINST 8+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINSTDIR)
+	echo "NOTE: -dyninst=DIR specified"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST5.2)
@@ -1393,6 +1438,10 @@ case $1 in
 	;;
      SCOREP)
 	echo "NOTE: Using SCOREP Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPMETADATA)
+	echo "NOTE: Using SCOREP's metadata mappings ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREPOPARI2)
@@ -1671,6 +1720,10 @@ case $1 in
         echo "NOTE: Using PAPI with x86_64 options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     PAPI_WITHOUT_LIB_INC)
+        echo "NOTE: Using PAPI from /usr  directory"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      IBMPAPI)
 	echo "NOTE: Using PAPI with PM Toolkit options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1714,6 +1767,10 @@ case $1 in
      IBM64PAPILINUX)
 	echo "NOTE: Using PAPI with IBM64 Linux options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ARMLINUXPAPI)
+	echo "NOTE: Using PAPI with ARM Linux options ***"
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      IBM64LINUX)
 	echo "NOTE: Using IBM64 Linux options ***"

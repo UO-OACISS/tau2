@@ -23,6 +23,10 @@ This is not a parallel implementation */
 
 #ifdef PTHREADS
 #include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+/*** NOTE THE ATTR INITIALIZER HERE! ***/
+pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
@@ -150,11 +154,44 @@ double do_work(void) {
   return c[0][1]; 
 }
 
+#ifdef PTHREADS
+int busy_sleep() {
+  int i, sum = 0;
+  for (i = 0 ; i < 100000000 ; i++) {
+    sum = sum+i;
+  }
+  return sum;
+}
+
 void * threaded_func(void *data)
 {
+  int rc;
+  int sum = 0;
+  // compute
   do_work();
-  return NULL;
+
+#ifdef APP_DO_LOCK_TEST
+  // test locking - sampling should catch this
+  if ((rc = pthread_mutex_lock(&mutexsum)) != 0)
+  {
+    errno = rc;
+    perror("thread lock error");
+    exit(1);
+  }
+  fprintf(stderr,"Thread 'sleeping'...\n"); fflush(stderr);
+  sum += busy_sleep();
+  fprintf(stderr,"Thread 'awake'...\n"); fflush(stderr);
+  if ((rc = pthread_mutex_unlock(&mutexsum)) != 0)
+  {
+    errno = rc;
+    perror("thread unlock error");
+    exit(1);
+  }
+  pthread_exit((void*) 0);
+  //return NULL;
+#endif // APP_DO_LOCK_TEST
 }
+#endif // PTHREADS
 
 int main (int argc, char *argv[]) 
 {
@@ -163,8 +200,13 @@ int main (int argc, char *argv[])
   int ret;
   pthread_attr_t  attr;
   pthread_t       tid1, tid2, tid3;
+  pthread_mutexattr_t Attr;
+  pthread_mutexattr_init(&Attr);
+  pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
+  if (pthread_mutex_init(&mutexsum, &Attr)) {
+   printf("Error while using pthread_mutex_init\n");
+  }
 #endif /* PTHREADS */
-
 
 #ifdef TAU_MPI
 #if (defined(PTHREADS) || defined(TAU_OPENMP))
@@ -218,6 +260,7 @@ int main (int argc, char *argv[])
     exit(1);
   }   
 
+  pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
 #ifdef TAU_MPI

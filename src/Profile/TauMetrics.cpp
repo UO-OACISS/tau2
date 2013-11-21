@@ -31,7 +31,11 @@
 #include "Profile/KtauCounters.h"
 #endif //TAUKTAU_SHCTR
 
-using namespace std;
+#ifdef TAU_WINDOWS
+#define strcasecmp stricmp
+#endif
+
+//using namespace std;
 using namespace tau;
 
 void metric_read_nullClock(int tid, int idx, double values[]);
@@ -560,13 +564,13 @@ int TauMetrics_init() {
     traceCounterEvents = new TauUserEvent *[nmetrics];
     /* We obtain the timestamp from COUNTER1, so we only need to trigger
        COUNTER2-N or i=1 through no. of active functions not through 0 */
-    string illegalChars("/\\?%*:|\"<> ");
+    std::string illegalChars("/\\?%*:|\"<> ");
     for (i = 1; i < nmetrics; i++) {
       //sanitize metricName before using it to create a name
-      string metricStr = string(metricv[i]);
+      std::string metricStr = std::string(metricv[i]);
       size_t found;
       found = metricStr.find_first_of(illegalChars, 0);
-      while (found != string::npos) {
+      while (found != std::string::npos) {
         metricStr[found] = '_';
         found = metricStr.find_first_of(illegalChars, found + 1);
       }
