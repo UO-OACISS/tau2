@@ -5489,8 +5489,12 @@ if [ "x$download_ompt" = xyes ] ; then
       rm $libomp_osstgz
       cd $libomp_oss
       libomp_oss_log=build-dynamic.log
+      if [ $machine = mic_linux ] ; then
+        libomp_oss_log=build-mic.log
+        archarg="arch=mic"
+	  fi
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
-      make linktype=dynamic >& $libomp_oss_log
+      make $archarg >& $libomp_oss_log
       result=$?
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
