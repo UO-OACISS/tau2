@@ -646,7 +646,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			Metric met = (Metric)currentSelection;
 			return met.getName();
 		}
-		if (currentSelection instanceof IntervalEvent) {
+		if ((currentSelection instanceof IntervalEvent) ||
+			(currentSelection instanceof RMISortableIntervalEvent)) {
 			if (metric != null)
 				return metric.getName();
 		}
