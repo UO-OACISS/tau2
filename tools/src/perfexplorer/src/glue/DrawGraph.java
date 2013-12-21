@@ -428,6 +428,9 @@ public class DrawGraph extends AbstractPerformanceOperation {
             );
         // set to a common style
         Utility.applyDefaultChartTheme(chart);
+			if (!this.showLegend) {
+				chart.removeLegend();
+			}
         } else if (chartType == STACKEDBARCHART) {
             chart = ChartFactory.createStackedBarChart3D(
                 this.title,  // chart title
@@ -441,6 +444,9 @@ public class DrawGraph extends AbstractPerformanceOperation {
             );
             // set to a common style
             Utility.applyDefaultChartTheme(chart);
+			if (!this.showLegend) {
+				chart.removeLegend();
+			}
 			CategoryPlot plot = (CategoryPlot)chart.getPlot();
 			CategoryItemRenderer renderer = plot.getRenderer();
 			PerfExplorerChart.customizeColors(renderer);
