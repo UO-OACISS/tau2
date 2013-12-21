@@ -1116,6 +1116,7 @@ public class DatabaseAPI {
                 addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
                         function.getMeanProfile(), intervalEventID.intValue(), false, dataSource.getAllThreads().size());
 
+                if (!summaryOnly) { System.out.println("Only doing summary!"); }
                 for (Iterator<Thread> it = dataSource.getAllThreads().iterator(); it.hasNext() && summaryOnly == false;) {
                     edu.uoregon.tau.perfdmf.Thread thread = it.next();
 
@@ -1217,7 +1218,7 @@ public class DatabaseAPI {
 
     public synchronized int uploadTrial(Trial trial, boolean summaryOnly) throws DatabaseException {
         //long start = System.currentTimeMillis();
-    	if(db.getSchemaVersion()>0) return TAUdbDatabaseAPI.uploadTrial(db,trial);
+    	if(db.getSchemaVersion()>0) return TAUdbDatabaseAPI.uploadTrial(db,trial,summaryOnly);
 
 
         DataSource dataSource = trial.getDataSource();
