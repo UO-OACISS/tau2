@@ -8303,10 +8303,6 @@ sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
 
-if [ $default = false ] ; then
-    # replace TAU_MAKEFILE in TAU.h
-    cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
-fi
 
 if [ $tauprefix != unknown ] ; then 
     echo "TAU: Copying include directory to ${tauprefix}"
@@ -8428,6 +8424,11 @@ if [ "y$1"  = "ydefault" ] ; then
     STUB="default"
 else
     STUB="$tautoplevel/$architecture/lib/Makefile.tau$tauoptions"
+fi
+
+if [ $default = false ] ; then
+    # replace TAU_MAKEFILE in TAU.h
+    cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
 fi
 
 
