@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -48,6 +49,8 @@ public class DataSorter implements Comparator<FunctionProfile> {
     
     private boolean selectedSnapshotOverride = false;
     private int selectedSnapshot = -1;
+
+	private static AlphanumComparator anComparator = new AlphanumComparator();
 
     public DataSorter(ParaProfTrial ppTrial) {
         this.ppTrial = ppTrial;
@@ -496,7 +499,8 @@ public class DataSorter implements Comparator<FunctionProfile> {
         ValueType type = getSortValueType();
 
         if (sortType == SortType.NAME) {
-            return getDisplayName(right).compareTo(getDisplayName(left));
+			return anComparator.compare(getDisplayName(right),
+					getDisplayName(left));// getDisplayName(right).compareTo(getDisplayName(left));
 
         } else if (sortType == SortType.NCT) {
             return compareNCT(left, right);
