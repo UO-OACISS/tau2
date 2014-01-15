@@ -6,12 +6,15 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.net.URL;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Scanner;
+import java.util.StringTokenizer;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
-
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
@@ -85,7 +88,8 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
                         if (event.startsWith("Message size") && event.indexOf("=>") == -1) {
                             //foundData = true;
                             // split the string
-                            foundData = extractData(uep, threadID, event, event, allPaths);
+							foundData = extractData(uep, threadID, event,
+									event, allPaths) || foundData;
                         } else if (event.startsWith("Message size") && event.indexOf("=>") >= 0) {
                             foundData = true;
                             StringTokenizer st = new StringTokenizer(event, ":");
