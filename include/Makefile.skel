@@ -1206,7 +1206,7 @@ TAU_MPI_FLIBS	= $(TAU_MPI_FLIB)
 ## TAU TRACE INPUT LIBRARY (can build a trace converter using TAU TIL)
 TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 
-TAU_OPENMP_LDFLAGS = $(TAU_OPENMP_OPTION)
+#OPENMP#TAU_OPENMP_LDFLAGS = $(TAU_OPENMP_OPTION) #ENDIF#
 
 ## Don't include -lpthread or -lsmarts. Let app. do that. 
 #############################################
