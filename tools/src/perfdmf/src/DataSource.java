@@ -1,9 +1,22 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,9 +30,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import edu.uoregon.tau.common.MetaDataMap;
-import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
+import edu.uoregon.tau.common.Utility;
 
 /**
  * This class represents a data source.  After loading, data is availiable through the
@@ -1369,6 +1382,27 @@ public abstract class DataSource {
 									callMax = (functionProfile.getNumCalls(s) > callMax) ? functionProfile.getNumCalls(s) : callMax; 
 									subrMax = (functionProfile.getNumSubr(s) > subrMax) ? functionProfile.getNumSubr(s) : subrMax; 
 								}
+							}
+						}
+ else if (i == numThreads - 1) {
+							// If we don't have this function on any thread the
+							// default values need to be zero, not max-int
+							for (int m = startMetric; m <= endMetric; m++) {
+								if (exclMin[m] == Integer.MAX_VALUE) {
+									exclMin[m] = 0;
+								}
+								if (inclMin[m] == Integer.MAX_VALUE) {
+									inclMin[m] = 0;
+								}
+								if (m == 0) {
+									if (callMin == Integer.MAX_VALUE) {
+										callMin = 0;
+									}
+									if (subrMin == Integer.MAX_VALUE) {
+										subrMin = 0;
+									}
+								}
+
 							}
 						}
     				}
