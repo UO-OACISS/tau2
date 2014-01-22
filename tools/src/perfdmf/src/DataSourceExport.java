@@ -562,11 +562,13 @@ public class DataSourceExport {
 			for (int i = 0; i < numMetrics; i++) {
 				String name = "MULTI__"
 						+ createSafeMetricName(dataSource.getMetricName(i));
-				boolean success = (new File(name).mkdir());
+				boolean success = (new File(directory + File.separator + name)
+						.mkdir());
 				if (!success) {
 					System.err.print("Failed to create directory: " + name);
 				} else {
-					writeMetric(new File(directory + "/" + name), dataSource,
+					writeMetric(new File(directory + File.separator + name),
+							dataSource,
 							i, functions, groupStrings, userEvents, threads);
 				}
 			}
