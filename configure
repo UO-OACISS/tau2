@@ -3183,7 +3183,7 @@ fi
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
     #turnbfdoff=yes
-    orig_useropt="-mmic -O2"
+    orig_useropt="-mmic -O2 -DPACKAGE=bfd -DPACKAGE_VERSION=2.22 "
 fi
 
 if [ $machine = apple ] ; then
