@@ -1,22 +1,22 @@
 package edu.uoregon.tau.perfdmf.taudb;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.LinkedHashMap;
-import java.util.ArrayList;
-import java.util.UUID;
-import java.util.Vector;
-import java.util.Map.Entry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Vector;
 
 import org.postgresql.PGConnection;
 import org.postgresql.copy.CopyManager;
@@ -420,6 +420,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			Function trueCurrent = dataSource.getFunction(timerName);
 			// get the timer ID
 			Integer timer = functionMap.get(trueCurrent);
+			if (timer == null) {
+				return null;
+			}
 			PreparedStatement statement = db.prepareStatement("INSERT INTO "
 					+ db.getSchemaPrefix()
 					+ "timer_callpath (timer, parent) "
