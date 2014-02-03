@@ -193,7 +193,7 @@ UNWIND_EXTRAS=
 #######################################################################
 F90_ABI	= $(ABI) 
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
-#MMIC#F90_ABI	     = -mmic  #ENDIF#
+#MMIC#F90_ABI	     = -mmic #ENDIF#
 #######################################################################
 
 ##############################################
@@ -552,7 +552,7 @@ JDKBINDIR = $(JDKDIR)/bin
 
 #TAU_TR1_HASH_MAP#PROFILEOPT79 = -DHAVE_TR1_HASH_MAP #ENDIF#
 #DARSHAN#PROFILEOPT80 = -DTAU_DARSHAN #ENDIF#
-#MMIC#PROFILEOPT87 = -DTAU_MIC_LINUX -mmic #ENDIF#
+#MMIC#PROFILEOPT87 = -DTAU_MIC_LINUX -mmic -DPACKAGE=bfd -DPACKAGE_VERSION=2.22 #ENDIF#
 
 MRNET_ROOT=
 MRNET_LW_OPTS=

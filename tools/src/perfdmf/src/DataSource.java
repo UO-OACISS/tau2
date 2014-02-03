@@ -1,9 +1,22 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -17,9 +30,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import edu.uoregon.tau.common.MetaDataMap;
-import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
+import edu.uoregon.tau.common.Utility;
 
 /**
  * This class represents a data source.  After loading, data is availiable through the
@@ -1396,10 +1409,40 @@ public abstract class DataSource {
 								}
 							}
 						}
-    				}
+ else if (i == numThreads - 1) {
+							// If we don't have this function on any thread the
+							// default values need to be zero, not max-int
+							for (int m = startMetric; m <= endMetric; m++) {
+								if (exclMin[m] == Integer.MAX_VALUE) {
+									exclMin[m] = 0;
+								}
+								if (inclMin[m] == Integer.MAX_VALUE) {
+									inclMin[m] = 0;
+								}
+								if (m == 0) {
+									if (callMin == Integer.MAX_VALUE) {
+										callMin = 0;
+									}
+									if (subrMin == Integer.MAX_VALUE) {
+										subrMin = 0;
+									}
+								}
 
+							}
+						}
+    				}
+					// We were having trouble with divison by zero, plus it's
+					// faster to divide once and then multiply.
     				int allDivider = numThreads;
     				int noNullDivider = numEvents;
+					double allRecip = 0;
+					if (numThreads != 0) {
+						allRecip = 1.0 / (double) numThreads;
+					}
+					double noNullRecip = 0;
+					if (numEvents != 0) {
+						noNullRecip = 1.0 / (double) numEvents;
+    				}
 
     				// we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
     				if (startMetric == 0) {
@@ -1408,17 +1451,23 @@ public abstract class DataSource {
     					totalProfile.setNumSubr(snapshot, subrSum);
 
     					// mean is just the total / divider
-    					meanNoNullProfile.setNumCalls(snapshot, (double) callSum / noNullDivider);
-    					meanAllProfile.setNumCalls(snapshot, (double) callSum / allDivider);
-    					meanNoNullProfile.setNumSubr(snapshot, (double) subrSum / noNullDivider);
-    					meanAllProfile.setNumSubr(snapshot, (double) subrSum / allDivider);
+						meanNoNullProfile.setNumCalls(snapshot,
+								(double) callSum * noNullRecip);
+						meanAllProfile.setNumCalls(snapshot, (double) callSum
+								* allRecip);
+						meanNoNullProfile.setNumSubr(snapshot, (double) subrSum
+								* noNullRecip);
+						meanAllProfile.setNumSubr(snapshot, (double) subrSum
+								* allRecip);
 
     					double stdDev = 0;
     					if (noNullDivider > 1) {
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (noNullDivider))
+							stdDev = java.lang.Math
+									.sqrt(java.lang.Math.abs((callSumSqr * (noNullRecip))
     								- (meanNoNullProfile.getNumCalls(snapshot) * meanNoNullProfile.getNumCalls(snapshot))));
     						stddevNoNullProfile.setNumCalls(snapshot, stdDev);
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (noNullDivider))
+							stdDev = java.lang.Math
+									.sqrt(java.lang.Math.abs((subrSumSqr * (noNullRecip))
     								- (meanNoNullProfile.getNumSubr(snapshot) * meanNoNullProfile.getNumSubr(snapshot))));
         					stddevNoNullProfile.setNumSubr(snapshot, stdDev);
     					} else {
@@ -1426,12 +1475,16 @@ public abstract class DataSource {
         					stddevNoNullProfile.setNumSubr(snapshot, 0.0);
     					}
 
-						meanAllProfile.setNumCalls(snapshot, (double) callSum / allDivider);
-						meanAllProfile.setNumSubr(snapshot, (double) subrSum / allDivider);
-						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (allDivider))
+						meanAllProfile.setNumCalls(snapshot, (double) callSum
+								* allRecip);
+						meanAllProfile.setNumSubr(snapshot, (double) subrSum
+								* allRecip);
+						stdDev = java.lang.Math
+								.sqrt(java.lang.Math.abs((callSumSqr * (allRecip))
 								- (meanAllProfile.getNumCalls(snapshot) * meanAllProfile.getNumCalls(snapshot))));
 						stddevAllProfile.setNumCalls(snapshot, stdDev);
-						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (allDivider))
+						stdDev = java.lang.Math
+								.sqrt(java.lang.Math.abs((subrSumSqr * (allRecip))
 								- (meanAllProfile.getNumSubr(snapshot) * meanAllProfile.getNumSubr(snapshot))));
 						stddevAllProfile.setNumSubr(snapshot, stdDev);
 						minProfile.setNumCalls(snapshot, callMin);
@@ -1446,8 +1499,10 @@ public abstract class DataSource {
     					totalProfile.setInclusive(snapshot, m, inclSum[m]);
 
     					// mean data computed as above in comments
-    					meanNoNullProfile.setExclusive(snapshot, m, exclSum[m] / noNullDivider);
-    					meanNoNullProfile.setInclusive(snapshot, m, inclSum[m] / noNullDivider);
+						meanNoNullProfile.setExclusive(snapshot, m, exclSum[m]
+								* noNullRecip);
+						meanNoNullProfile.setInclusive(snapshot, m, inclSum[m]
+								* noNullRecip);
 
     					double stdDev = 0;
     					if (noNullDivider > 1) {
@@ -1456,10 +1511,12 @@ public abstract class DataSource {
     						//stdDev = java.lang.Math.sqrt(((double) divider / (divider - 1))
     						//        * java.lang.Math.abs((exclSumSqr[i] / (divider))
     						//                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (noNullDivider))
+							stdDev = java.lang.Math
+									.sqrt(java.lang.Math.abs((exclSumSqr[m] * (noNullRecip))
     								- (meanNoNullProfile.getExclusive(snapshot, m) * meanNoNullProfile.getExclusive(snapshot, m))));
         					stddevNoNullProfile.setExclusive(snapshot, m, stdDev);
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (noNullDivider))
+							stdDev = java.lang.Math
+									.sqrt(java.lang.Math.abs((inclSumSqr[m] * (noNullRecip))
     								- (meanNoNullProfile.getInclusive(snapshot, m) * meanNoNullProfile.getInclusive(snapshot, m))));
         					stddevNoNullProfile.setInclusive(snapshot, m, stdDev);
     					} else {
@@ -1467,12 +1524,16 @@ public abstract class DataSource {
         					stddevNoNullProfile.setInclusive(snapshot, m, 0.0);
     					}
 
-    					meanAllProfile.setExclusive(snapshot, m, exclSum[m] / allDivider);
-    					meanAllProfile.setInclusive(snapshot, m, inclSum[m] / allDivider);
-						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (allDivider))
+						meanAllProfile.setExclusive(snapshot, m, exclSum[m]
+								* allRecip);
+						meanAllProfile.setInclusive(snapshot, m, inclSum[m]
+								* allRecip);
+						stdDev = java.lang.Math.sqrt(java.lang.Math
+								.abs((exclSumSqr[m] * (allRecip))
 								- (meanAllProfile.getExclusive(snapshot, m) * meanAllProfile.getExclusive(snapshot, m))));
     					stddevAllProfile.setExclusive(snapshot, m, stdDev);
-						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (allDivider))
+						stdDev = java.lang.Math.sqrt(java.lang.Math
+								.abs((inclSumSqr[m] * (allRecip))
 								- (meanAllProfile.getInclusive(snapshot, m) * meanAllProfile.getInclusive(snapshot, m))));
 						stddevAllProfile.setInclusive(snapshot, m, stdDev);
 						minProfile.setExclusive(snapshot,  m, exclMin[m]);
