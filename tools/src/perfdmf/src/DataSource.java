@@ -761,7 +761,7 @@ public abstract class DataSource {
 		 * For example:
 		 * [SAMPLE] foo(float) [{filename.c} {134}]
 		 * should also generate
-		 * [SAMPLE] foo(float) [{filename.c}]
+		 * [SUMMARY] foo(float) [{filename.c}]
          */
         if (!getCallPathDataPresent()) {
             return;
@@ -819,8 +819,33 @@ public abstract class DataSource {
 			//System.out.println("BEFORE: " + function.getName());
 			//System.out.println("AFTER:  " + bonusFunction.getName());
             bonusFunction.addGroup(derivedGroup);
-            for (int i = 0; i < numThreads; i++) {
-                Thread thread = allThreads.get(i);
+			int start = 0;
+    	    if(derivedProvided) {
+			  start = -7;
+			}
+            for (int i = start; i < numThreads; i++) {
+                Thread thread = null;
+				if (i < 0) {
+				  if (i == -1) {
+    		        thread = meanDataNoNull;
+    	          } else if (i == -2) {
+    		        thread = totalData;
+    	          } else if (i == -3) {
+    		        thread = stddevDataNoNull;
+    	          } else if (i == -4) {
+			        thread = minData;
+    	          } else if (i == -5) {
+			        thread = maxData;
+    	          } else if (i == -6) {
+			        thread = meanDataAll;
+    	          } else if (i == -7) {
+			        thread = stddevDataAll;
+				  } else {
+				    continue;
+				  }
+				} else {
+                  thread = allThreads.get(i);
+				}
 
                 FunctionProfile functionProfile = thread.getFunctionProfile(function);
                 if (functionProfile != null) {
@@ -2153,6 +2178,7 @@ public abstract class DataSource {
 				totalTimers += stats.totalTimers;
 				remainingTimers += stats.remainingTimers;
 			}
+			/*
 			for (Thread thread : this.getAggThreads()) {
 				ReductionStats stats = reduceTrialThread(minPercent, metric, otherFunction, snapshot,
 						thread);
@@ -2162,6 +2188,7 @@ public abstract class DataSource {
 				totalTimers += stats.totalTimers;
 				remainingTimers += stats.remainingTimers;
 			}
+			*/
 		}
 		System.out.println ("Removed " + reducedTimers + " of " + totalTimers +
 			" timers from all threads, leaving " + remainingTimers);
