@@ -2799,7 +2799,6 @@ case $machine in
 	    intel=yes
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
-	    #turnbfdoff=yes
 	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
@@ -3182,8 +3181,7 @@ fi
 
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
-    #turnbfdoff=yes
-    orig_useropt="-mmic -O2 -DPACKAGE=bfd -DPACKAGE_VERSION=2.22 "
+    orig_useropt="-mmic -O2 "
 fi
 
 if [ $machine = apple ] ; then
@@ -6520,110 +6518,172 @@ fi
 binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
+
 if [ "x$bfddir" = xnone ]; then
-    echo "BFD disabled."
-    turnbfdoff=yes
+  echo "BFD disabled."
+  turnbfdoff=yes
 fi
+
 if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
-	
-    bfdtar=""
-    prebfddir=""
-    if [ ! -e "$bfddir/lib" ] && [ -f "$bfddir/$binutilstgz" ]; then
-    	    #if we do not have an install already at this location but we do have a valid tar file, build with the tar file here
-    	   bfdtar="yes"
-    	   prebfddir=`pwd`
+  bfdtar=""
+  prebfddir="`pwd`"
+  if [ ! -e "$bfddir/lib" ] && [ -f "$bfddir/$binutilstgz" ]; then
+    #if we do not have an install already at this location but we do have a valid tar file, build with the tar file here
+    bfdtar="yes"
+  fi
+
+  if [ "x$bfddir" = xdownload ] || [ "x$bfdtar" = xyes ] ; then
+    if [ "x$bfddir" = xdownload ]; then
+      #only change the bfddir if we are downloading
+      bfddir="$targetdir/$architecture/$binutils"
     fi
-    
-    if [ "x$bfddir" = xdownload ] || [ "x$bfdtar" = xyes ] ; then
-    	if [ "x$bfddir" = xdownload ]; then
-    	    #only change the bfddir if we are downloading
-	    bfddir=${targetdir}/${architecture}/$binutils
-	fi
-	if [ -r "$bfddir/lib/libbfd.a" ] ; then
-	    echo "BFD download already found, skipping"
-	else
-	if [ ! "x$bfdtar" = xyes ]; then
-	    #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
-      if [ -d /dev/shm -a -w /dev/shm ] ; then
-        tempdir=/dev/shm/tau_bfdbuild_$$
-      else
-        tempdir=`pwd`"/.tmp_bfdbuild_$$"
-      fi
-	    mkdir $tempdir
-	    cd $tempdir
-	    if [ "$machine" = "apple" ] ; then
-                curl -L $binutilsurl > $binutilstgz
-	    else 
-                wget $binutilsurl
-	    fi
-	    if [ ! -f $binutilstgz ] ; then
-		echo "$binutilstgz did not download.  Please download it manually from: "
-                echo "$binutilsurl"
-		echo "Please enter the directory containing the tarball: ${nnl}" 
-		read RESPONSE
-		cp $RESPONSE/$binutilstgz .
-	    fi
-	  else
-	    cd $bfddir
-	  fi
-	    tar -xzf $binutilstgz
-	    cd $binutils
-	    if [ $machine = "bgp" ] ; then
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ --disable-nls --disable-werror
-		make && make install
-	    elif [ $machine = "bgq" ]; then
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ --disable-nls --disable-werror
-		make && make install
-	    elif [ $machine = "rs6000" -o  $machine = "ibm64" ]; then
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile
-		make && make install
-	    elif [ $machine = "arm_android" ]; then
-		patch -p1 <$START_DIR/android.binutils-2.23.2.patch
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile --host=$host
-		make && make install
-            else 
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
-		make && make install
-            fi
-            cp bfd/*.h $bfddir/include
-	    cp -R include/* $bfddir/include
-
-            # Fix bfd.h
-            sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' $bfddir/include/bfd.h > $tempdir/bfd.h
-            mv $tempdir/bfd.h $bfddir/include
-	    
-	    # snow leopard
-	    if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
-		mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
-	    fi
-
-            if [ ! "x$bfdtar" = xyes ] ; then
-            	    #If we downloaded go back and remove the tempdir, otherwise just go back
-            	    cd ../..
-            	    rm -rf $tempdir
-            else
-            	    cd $prebfddir
-            fi
-	fi
-    fi #bfd=download
-    
-    bfdinclude="-I$bfddir/include"
-    fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-    bfdlink="-L$bfddir/lib -L$bfddir/lib64"
-    # The libintl.dylib library is in /opt/local/lib... is that everywhere?
-    if [ "x$machine" = "xapple" ] ; then
-	bfdlink="$bfdlink -L/opt/local/lib"
-	fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
+    if [ -r "$bfddir/lib/libbfd.a" ] ; then
+      echo "BFD download already found, skipping"
     else
-	fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
-    fi
-    if [ ! -d $bfddir -a "$bfddif" = 'none' ] ; then
-        echo "Error: Cannot access BFD directory $bfddir"
+      if [ ! "x$bfdtar" = xyes ]; then
+        #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
+        if [ -d /dev/shm -a -w /dev/shm ] ; then
+          tempdir="/dev/shm/tau_bfdbuild_$$"
+        else
+          tempdir="`pwd`/.tmp_bfdbuild_$$"
+        fi
+        mkdir -p "$tempdir"
+        cd "$tempdir"
+        if [ "$machine" = apple ] ; then
+          curl -L "$binutilsurl" > "$binutilstgz"
+        else 
+          wget "$binutilsurl"
+        fi
+        if [ ! -f "$binutilstgz" ] ; then
+          echo "$binutilstgz did not download.  Please download it manually from: "
+          echo "$binutilsurl"
+          echo "Please enter the directory containing the tarball: ${nnl}" 
+          read RESPONSE
+          cp "$RESPONSE/$binutilstgz" .
+        fi
+      else # bfdtar = yes
+        cd "$bfddir"
+      fi
+
+      # Extract binutils archive
+      tar -xzf $binutilstgz
+      cd $binutils
+
+      # Configure binutils
+      case $machine in
+      bgp)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc \
+            CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      bgq)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc \
+            CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      rs6000|ibm64)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror --disable-largefile
+        err=$?
+        ;;
+      arm_android)
+        patch -p1 <$START_DIR/android.binutils-2.23.2.patch && \
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC 
+            --host=$host \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror  --disable-largefile 
+        err=$?
+        ;;
+      mic_linux)
+        # Note: may need to search other paths than just /usr/linux-k1om-*
+        k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
+        export PATH=$k1om_bin:$PATH
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --host=x86_64-k1om-linux \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      *)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      esac
+
+      # Build and install binutils if configure successful
+      if [ $err -eq 0 ] ; then
+        make && make install
+      else
+        echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
         exit 1
-    fi
-else
-    fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
-fi
+      fi
+
+      # Install additional headers
+      cp bfd/*.h "$bfddir/include"
+      cp -R include/* "$bfddir/include"
+
+      # Install additional libraries
+      if [ -r libiberty/libiberty.a ] ; then
+        cp libiberty/libiberty.a "$bfddir/lib"
+      fi
+      if [ -r opcodes/libopcodes.a ] ; then
+        cp opcodes/libopcodes.a "$bfddir/lib"
+      fi
+
+      # Fix bfd.h
+      sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' "$bfddir/include/bfd.h" > "$tempdir/bfd.h"
+      mv "$tempdir/bfd.h" "$bfddir/include"
+
+      # Fix library paths on snow leopard
+      if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
+        cp "$bfddir/lib/x86_64/libiberty.a" "$bfddir/lib/libiberty.a"
+      fi
+
+      if [ ! "x$bfdtar" = xyes ] ; then
+        #If we downloaded go back and remove the tempdir, otherwise just go back
+        cd ../..
+        rm -rf "$tempdir"
+      else
+        cd "$prebfddir"
+      fi
+
+    fi # -r $bfddir/lib/libbfd.a
+  fi # $bfddir = download || bfdtar = yes
+
+  # One way or another, we now have a working BFD at $bfddir or we give up
+  if [ ! -d $bfddir ] ; then
+    echo "Error: Cannot access BFD directory $bfddir"
+    exit 1
+  fi
+  bfdinclude="-I$bfddir/include"
+  fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
+  bfdlink="-L$bfddir/lib -L$bfddir/lib64"
+
+  # The libintl.dylib library is in /opt/local/lib... is that everywhere?
+  if [ "x$machine" = "xapple" ] ; then
+    bfdlink="$bfdlink -L/opt/local/lib"
+    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
+  else
+    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+  fi
+else 
+  fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
+fi # bfd = yes && turnbfdoff != yes
 
 
 
