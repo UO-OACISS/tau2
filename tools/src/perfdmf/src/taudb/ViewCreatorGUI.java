@@ -165,7 +165,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
     	this.parentID = parentID;
     	this.ruleListeners = new ArrayList<ViewCreatorRuleListener>();
     	this.setTitle("TAUdb View Creator");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             	
     	panel = new JPanel();
     	panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
