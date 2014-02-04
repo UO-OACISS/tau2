@@ -6606,7 +6606,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         err=$?
         ;;
       mic_linux)
-        export PATH=/usr/linux-k1om-*/bin:$PATH
+        # Note: may need to search other paths than just /usr/linux-k1om-*
+        k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
+        export PATH=$k1om_bin:$PATH
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=x86_64-k1om-linux \
@@ -6626,6 +6628,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       # Build and install binutils if configure successful
       if [ $err -eq 0 ] ; then
         make && make install
+      else
+        echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
+        exit 1
       fi
 
       # Install additional headers
