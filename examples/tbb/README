@@ -3,9 +3,8 @@ Thread Building Blocks) applications.  To enable this
 support, configure TAU with the following: 
 
 configure \
+-tbb \
 -bfd=download \
--pthread \
--useropt=-O2#-DTAU_TBB_SUPPORT \
 -cc=icc \
 -c++=icpc \
 -fortran=intel
@@ -15,8 +14,7 @@ To enable unwind support, use the -unwind option:
 configure \
 -bfd=download \
 -unwind=download \
--pthread \
--useropt=-O2#-DTAU_TBB_SUPPORT \
+-tbb \
 -cc=icc \
 -c++=icpc \
 -fortran=intel
@@ -28,8 +26,7 @@ For example, if the system installed libbfd.a and libiberty.a are in
 
 configure \
 -bfd=/usr \
--pthread \
--useropt=-O2#-DTAU_TBB_SUPPORT \
+-tbb \
 -cc=icc \
 -c++=icpc \
 -fortran=intel
@@ -40,8 +37,7 @@ use that instead:
 configure \
 -bfd=/usr \
 -unwind=/usr/local/packages/libunwind-1.1 \
--pthread \
--useropt=-O2#-DTAU_TBB_SUPPORT \
+-tbbb \
 -cc=icc \
 -c++=icpc \
 -fortran=intel
