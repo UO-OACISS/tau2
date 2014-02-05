@@ -668,6 +668,7 @@ sicortex=no
 extradir=
 extrashlibopts=
 pthread=no
+tbb=no
 papithread=no
 papipfm=no
 gupc=no
@@ -962,6 +963,12 @@ for arg in "$@"; do
 	
 	-pthread)
 	    pthread=yes
+	    shift
+	    ;;
+
+	-tbb)
+	    pthread=yes
+	    tbb=yes
 	    shift
 	    ;;
 
@@ -7124,9 +7131,16 @@ fi
 
 ######################################################################
 
-if [ $pthread = yes ] ; then
+# If TBB support is requested, then make that the tag, not pthread
+if [ $tbb = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
-    tauoptions="${tauoptions}-pthread"
+    fixmakeargs="$fixmakeargs TBB_AVAILABLE"
+    tauoptions="${tauoptions}-tbb"
+else
+  if [ $pthread = yes ] ; then
+      fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
+      tauoptions="${tauoptions}-pthread"
+  fi
 fi
 
 # GOMP wrapping is only available for openmp

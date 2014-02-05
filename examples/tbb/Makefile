@@ -23,11 +23,11 @@ CXXFLAGS=-I$(TBB_HOME)/include -L$(TBB_HOME)/lib/$(INTEL_ARCH)/gcc4.4 -Wl,-rpath
 
 # GNU Makefile that builds and runs example.
 # Unwound profile
-# run_cmd=TAU_EBS_UNWIND=1 TAU_EBS_KEEP_UNRESOLVED_ADDR=1 tau_exec -T pthread,icpc,serial -ebs
+# run_cmd=TAU_EBS_UNWIND=1 TAU_EBS_KEEP_UNRESOLVED_ADDR=1 tau_exec -T tbb,icpc,serial -ebs
 # Flat profile only
-run_cmd=TAU_EBS_KEEP_UNRESOLVED_ADDR=1 tau_exec -T pthread,icpc,serial -ebs
+run_cmd=TAU_EBS_KEEP_UNRESOLVED_ADDR=1 tau_exec -v -T tbb,icpc,serial -ebs
 PROG=tree_sum
-ARGS=
+ARGS=auto 100000000 silent
 PERF_RUN_ARGS=auto 100000000 silent
 
 # The C++ compiler
@@ -57,7 +57,6 @@ clean:
 
 test:
 	$(run_cmd) ./$(PROG) $(ARGS)
-	$(run_cmd) ./$(PROG) stdmalloc $(ARGS)
 
 perf_build: release
 
