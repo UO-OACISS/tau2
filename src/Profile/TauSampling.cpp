@@ -632,7 +632,8 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary()
   if (!name2FuncInfoMapInitialized) {
     RtsLayer::LockEnv();
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      name2FuncInfoMap[i] = NULL;
+      //name2FuncInfoMap[i] = NULL;
+      name2FuncInfoMap[i] = new map<string, FunctionInfo *>();
     }
     name2FuncInfoMapInitialized = true;
     RtsLayer::UnLockEnv();
@@ -967,6 +968,10 @@ void Tau_sampling_finalizeProfile(int tid)
 
     // STEP 2a: Locate or create Leaf Entry - the CONTEXT node
     *intermediateGlobalLeafString = "[CONTEXT] ";
+	bool needToUpdateContext = false;
+	if (strncmp(candidate->tauContext->GetName(), "OMP_", 4) == 0) {
+	  needToUpdateContext = true;
+	}
     *intermediateGlobalLeafString += Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName());
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
@@ -1008,9 +1013,16 @@ void Tau_sampling_finalizeProfile(int tid)
     // Accumulate the histogram into the Intermediate FunctionInfo objects.
     intermediatePathLeaf->SetCalls(tid, intermediatePathLeaf->GetCalls(tid) + binFreq);
     intermediateGlobalLeaf->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid) + binFreq);
+	if (needToUpdateContext) {
+      candidate->tauContext->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid) + binFreq);
+	}
     for (int m = 0; m < Tau_Global_numCounters; m++) {
       intermediatePathLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
       intermediateGlobalLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+	  if (needToUpdateContext) {
+        candidate->tauContext->AddInclTimeForCounter(candidate->counters[m], tid, m);
+        candidate->tauContext->AddExclTimeForCounter(candidate->counters[m], tid, m);
+	  }
     }
 
     // STEP 3: For each sample, construct all FunctionInfo objects
@@ -1315,6 +1327,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
 {
   if (collectingSamples) {
     int tid = Tau_get_local_tid();
+	//printf("%d SAMPLE: %p\n", tid, pc);
     if (samplingEnabled[tid]) {
       numSamples[tid]++;
 
