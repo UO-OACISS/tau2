@@ -563,7 +563,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
 	perror("Error in fgets: Cannot read invocation data ");
-	return 0;
+	exit(1);
       }//if
       /* use this data */
       sscanf(line, "%lG %lG", &exclthiscall, &inclthiscall);
@@ -836,7 +836,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
 	perror("Error in fgets: Cannot read invocation data ");
-	return 0;
+	exit(1);
       }//if
       /* use this data */
       sscanf(line, "%lG %lG", &exclthiscall, &inclthiscall);
