@@ -210,7 +210,13 @@ void * tau_pthread_function(void *arg)
 
   Tau_create_top_level_timer_if_necessary();
   void * ret = pack->start_routine(pack->arg);
+#ifndef TAU_TBB_SUPPORT
+  // Thread 0 in TBB will not wait for the other threads to finish
+  // (it does not join). DO NOT stop the timer for this thread, but
+  // let thread 0 do that when it shuts down all threads on exit.
+  // See src/wrappers/taupreload/taupreload.c:taupreload_fini() for details
   Tau_stop_top_level_timer_if_necessary();
+#endif
   return ret;
 }
 
