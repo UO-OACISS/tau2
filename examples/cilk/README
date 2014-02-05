@@ -1,0 +1,50 @@
+TAU uses binutils and pthread support to measure Intel Cilk++.
+applications.  To enable this support, configure TAU with the following: 
+
+configure \
+-tbb \
+-bfd=download \
+-cc=icc \
+-c++=icpc \
+-fortran=intel
+
+To enable unwind support, use the -unwind option:
+
+configure \
+-bfd=download \
+-unwind=download \
+-tbb \
+-cc=icc \
+-c++=icpc \
+-fortran=intel
+
+If you have a system-installed binutils that supports demangling and 
+shared objects, you should use that instead of the downloaded library.
+For example, if the system installed libbfd.a and libiberty.a are in
+/usr/lib and bfd.h is in /usr/include, you would configure with:
+
+configure \
+-bfd=/usr \
+-tbb \
+-cc=icc \
+-c++=icpc \
+-fortran=intel
+
+Similarly, if you have a system-installed libunwind-1.1, you should 
+use that instead:
+
+configure \
+-bfd=/usr \
+-unwind=/usr/local/packages/libunwind-1.1 \
+-tbbb \
+-cc=icc \
+-c++=icpc \
+-fortran=intel
+
+To build this Cilk example (from the Intel 13.1.2 installation),
+modify the Makefile to define the path to your installed TBB library -
+typically installed with the Intel compiler.  Then run "make", which 
+will build and run the example. Make sure tau_exec is in your path.
+
+To view the sampled profile, use paraprof. (again, make sure paraprof is
+in your path).
