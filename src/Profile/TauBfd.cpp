@@ -169,7 +169,9 @@ struct TauBfdUnit
 
   void ClearMaps() {
     for (size_t i = 0; i < addressMaps.size(); ++i) {
+	  if (addressMaps[i]) {
       delete addressMaps[i];
+	  }
     }
     addressMaps.clear();
   }
@@ -549,6 +551,9 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   }
 
   TauBfdUnit * unit = ThebfdUnits()[handle];
+  if (unit == NULL) {
+      return false;
+  }
   TauBfdModule * module;
   unsigned long addr0;
   unsigned long addr1;

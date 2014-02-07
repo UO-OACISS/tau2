@@ -191,7 +191,8 @@ public class GPTLDataSource extends DataSource {
                 	continue; // we already handled this file
                 }
                 
-        		System.out.println("Processing " + file + ", please wait ......");
+        		//System.out.println("Processing " + file + ", please wait ......");
+        		System.out.print(".");
         		fileIn = new FileInputStream(file);
         		tracker = new TrackerInputStream(fileIn);
         		inReader = new InputStreamReader(tracker);

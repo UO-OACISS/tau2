@@ -19,6 +19,7 @@ include $(TAU_MAKEFILE)
 #CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles -optNoCompInst -optLinkOnly
 CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh 
 #CC		= opencc -fopenmp
+CC		= icc -pthread -DPTHREADS
 
 PRINT	      	= pr
 

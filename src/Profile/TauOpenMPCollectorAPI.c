@@ -164,7 +164,7 @@ char * show_backtrace (int tid, int offset) {
     unw_init_local(&cursor, &uc);
     int index = 0;
 #if defined (TAU_OPEN64ORC)
-    int depth = 1 + offset;
+    int depth = 4 + offset; // I *think* this is the correct value.
 #elif defined (__INTEL_COMPILER)
     int depth = 5 + offset;
 #else /* assume we are using gcc */
@@ -525,6 +525,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
         case OMP_EVENT_THR_END_SCHD_TASK:
             Tau_omp_stop_timer("OpenMP_SCHEDULE_TASK", tid, 0);
             break;
+#if 0 // these events are somewhat unstable with OpenUH
         case OMP_EVENT_THR_BEGIN_SUSPEND_TASK:
             Tau_omp_start_timer("OpenMP_SUSPEND_TASK", tid, 0, 0);
             break;
@@ -539,6 +540,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
             break;
         case OMP_EVENT_THR_FETCHED_TASK:
             break;
+#endif
         case OMP_EVENT_THR_BEGIN_EXEC_TASK:
             Tau_omp_start_timer("OpenMP_EXECUTE_TASK", tid, 0, 0);
             Tau_collector_flags[tid].task_exec += 1;

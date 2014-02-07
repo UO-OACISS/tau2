@@ -52,6 +52,7 @@ __inline double multiply(double a, double b) {
 }
 #endif /* APP_USE_INLINE_MULTIPLY */
 
+#if 0
 // cols_a and rows_b are the same value
 void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
@@ -77,6 +78,7 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
     }
   }   /*** End of parallel region ***/
 }
+#endif
 
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
@@ -137,9 +139,11 @@ double do_work(void) {
 
   compute(a, b, c, NRA, NCA, NCB);
 #if defined(TAU_OPENMP)
+#if 0
   if (omp_get_nested()) {
     compute_nested(a, b, c, NRA, NCA, NCB);
   }
+#endif
 #endif
 #ifdef TAU_MPI
   if (provided == MPI_THREAD_MULTIPLE)
