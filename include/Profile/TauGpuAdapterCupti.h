@@ -142,6 +142,7 @@ public:
       if (it != functionInfoMap_deviceLaunch().end())
       { 
         funcInfo = it->second;
+        funcInfo->SetPrimaryGroupName("TAU_REMOTE");
         //printf("found device launch site: %s.\n", funcInfo->GetName());
       }
     } else {
@@ -149,6 +150,7 @@ public:
       if (it != functionInfoMap_hostLaunch().end())
       {
         funcInfo = it->second;
+        funcInfo->SetPrimaryGroupName("TAU_REMOTE");
         //printf("found host launch site: %s.\n", funcInfo->GetName());
       }
     }
