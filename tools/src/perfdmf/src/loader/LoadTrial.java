@@ -502,8 +502,12 @@ public class LoadTrial {
         trans.metadataFile = metadataFile;
         trans.metadataString = metadataString;
         trans.summaryOnly = summaryOnly.booleanValue();
-        //trans.appName = appName;
-        //trans.expName = expName;
+        if (appName != null) {
+		  trans.appName = appName;
+		}
+        if (expName != null) {
+		  trans.expName = expName;
+		}
         trans.useNulls = useNull.booleanValue();
         trans.reducePercentage = percentage;
         trans.loadTrial(fileType);
