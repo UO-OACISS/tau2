@@ -83,6 +83,7 @@ TRACE2PROFILE=utils/trace2profile
 TAUPRELOAD=src/wrappers/taupreload
 TAUCUDA=src/wrappers/cuda
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
+TAU_ENV=utils/tau_env
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 
@@ -103,7 +104,7 @@ MEMORYWRAPPER=src/wrappers/memory
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(IOWRAPPER) $(TAUPRELOAD) \
-	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) \
+	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAU_ENV) $(TAUOPENCL) \
 	  $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
 	  $(PTHREAD_WRAPPER) $(GOMP_WRAPPER) $(OTF2PROFILE) $(MPC_MPI_WRAPPER)
 
