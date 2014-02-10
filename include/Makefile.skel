@@ -249,8 +249,7 @@ JDKARCH                 = linux
 #############################################
 # JAVA OBJECTS
 #############################################
-#JAVA#TAU_JAVA_O 	= TauJava.o TauJAPI.o  #ENDIF#
-#JVMTI#TAU_JAVA_O 	= agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o TauJAPI.o#ENDIF#
+#JAVA#TAU_JAVA_O 	= TauJAPI.o JNIThreadLayer.o agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o adb.o jdwp.o #ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
 
@@ -433,7 +432,7 @@ THR_O       = PthreadLayer.o TauWrapSyscalls.o        #ENDIF##PTHREAD_AVAILABLE#
 #MPC#THR_O       = MPCThreadLayer.o #ENDIF#
 #TAU_PAPI_THREADS#THR_O       = PapiThreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
-#JAVA#THR_O       	       = JavaThreadLayer.o     #ENDIF#
+#JAVA#THR_O       	       = JNIThreadLayer.o JVMTIThreadLayer.o     #ENDIF#
 #JVMTI#THR_O       	       = #ENDIF#
 #TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 PLATFORM_O       = TauLinuxTimers.o       #ENDIF##LINUXTIMERS#

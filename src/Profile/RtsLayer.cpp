@@ -66,6 +66,7 @@ using namespace std;
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
+#include <sys/syscall.h>
 
 #ifdef KTAU_NG
 #ifdef __linux //To make getLinuxKernelTid work for ktau style file naming
@@ -144,6 +145,14 @@ int& RtsLayer::TheNode(void) {
  
   return Node;
 }
+
+#ifdef JAVA
+/////////////////////////////////////////////////////////////////////////
+bool& RtsLayer::TheUsingJNI(void) {
+  static bool isUsingJNI = false;
+  return isUsingJNI;
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheContext(void) {
@@ -425,7 +434,9 @@ extern "C" int Tau_RtsLayer_getTid()
 int RtsLayer::getTid() {
 #ifdef __linux
   //  return gettid();
-  return 0;
+    #define SYS_gettid __NR_gettid
+    return syscall(SYS_gettid);
+//  return 0;
 #else
   return 0;
 #endif

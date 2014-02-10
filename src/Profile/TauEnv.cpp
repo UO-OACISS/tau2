@@ -446,7 +446,12 @@ static int TauConf_read()
 
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
+#ifdef TAU_ANDROID
+      system("touch /data/data/org.connectbot/cache/mnt_obb_conf");
+    tmp = "/mnt/obb/tau.conf";
+#else
     tmp = "tau.conf";
+#endif
   }
   FILE * cfgFile = fopen(tmp, "r");
   if (!cfgFile) {
@@ -575,6 +580,27 @@ void TAU_VERBOSE(const char *format, ...)
   if (env_verbose == 1) {
     TauInternalFunctionGuard protects_this_function;
     va_list args;
+
+#ifdef TAU_ANDROID
+
+    char *str;
+    extern FILE *ender;
+    extern int android_log(char*);
+
+    va_start(args, format);
+    if (vasprintf(&str, format, args) < 0) {
+	return;
+    }
+    va_end(args);
+
+    //android_log(str);
+    fprintf(ender, str);
+    fflush(ender);
+
+    free(str);
+
+#else
+
     va_start(args, format);
 
 #ifdef TAU_GPI
@@ -583,7 +609,9 @@ void TAU_VERBOSE(const char *format, ...)
     vfprintf(stderr, format, args);
 #endif
     va_end(args);
-    fflush (stderr);
+    fflush(stderr);
+
+#endif
   } // END inside TAU
 }
 
@@ -895,6 +923,7 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_VERBOSE");
     if (parse_bool(tmp,env_verbose)) {
+	system("touch /data/data/com.example.stepstone/cache/TAU_VERBOSE");
       TAU_VERBOSE("TAU: VERBOSE enabled\n");
       TAU_METADATA("TAU_VERBOSE", "on");
       env_verbose = 1;

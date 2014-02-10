@@ -7,7 +7,7 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
-**	File 		: JavaThreadLayer.cpp				  **
+**	File 		: JNIThreadLayer.cpp				  **
 **	Description 	: TAU Profiling Package RTS Layer definitions     **
 **			  for supporting Java Threads 			  **
 **	Contact		: tau-team@cs.uoregon.edu 		 	  **
@@ -28,44 +28,44 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 #include <Profile/Profiler.h>
-#include <Profile/TauJava.h>
 #include <stdlib.h>
 
-
+#include <jni.h>
+#include <map>
+#include <mutex>
 
 /////////////////////////////////////////////////////////////////////////
-// Member Function Definitions For class JavaThreadLayer
+// Member Function Definitions For class JNIThreadLayer
 // This allows us to get thread ids from 0..N-1 
 /////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////
-// Define the static private members of JavaThreadLayer  
+// Define the static private members of JNIThreadLayer  
 /////////////////////////////////////////////////////////////////////////
 
-JavaVM 	* JavaThreadLayer::tauVM;
-int 	  JavaThreadLayer::tauThreadCount = 0; 
-JVMPI_RawMonitor JavaThreadLayer::tauNumThreadsLock ;
-JVMPI_RawMonitor JavaThreadLayer::tauDBMutex ;
-JVMPI_RawMonitor JavaThreadLayer::tauEnvMutex ;
-JVMPI_Interface  * JavaThreadLayer::tau_jvmpi_interface = NULL;
+int                JNIThreadLayer::tauThreadCount = 0; 
+map<JNIEnv*, int*> JNIThreadLayer::tauThreadsMap;
+JavaVM*            JNIThreadLayer::tauVM;  // init in JNI_OnLoad()
+recursive_mutex    JNIThreadLayer::tauNumThreadsLock;
+recursive_mutex    JNIThreadLayer::tauDBMutex;
+recursive_mutex    JNIThreadLayer::tauEnvMutex;
 
+static __thread int *tid;
 
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
 // FunctionInfo and Profiler classes. 
 ////////////////////////////////////////////////////////////////////////
-int * JavaThreadLayer::RegisterThread(JNIEnv *env_id)
+int * JNIThreadLayer::RegisterThread(JNIEnv *env_id)
 {
-  static int initflag = JavaThreadLayer::InitializeThreadData();
-  // if its in here the first time, setup mutexes etc.
+  static int initflag = JNIThreadLayer::InitializeThreadData();
 
-  //THIS IS CURRENTLY LEAKING!
   int *threadId = new int;
-
+  
   // Lock the mutex guarding the thread count before incrementing it.
-  tau_jvmpi_interface->RawMonitorEnter(tauNumThreadsLock); 
+  tauNumThreadsLock.lock();
 
   if (tauThreadCount == TAU_MAX_THREADS)
   {
@@ -73,109 +73,53 @@ int * JavaThreadLayer::RegisterThread(JNIEnv *env_id)
     fprintf(stderr, "Change TAU_MAX_THREADS parameter in <tau>/include/Profile/Profiler.h\n");
     fprintf(stderr, "And make install. Current value is %d\n", tauThreadCount);
     fprintf(stderr, "******************************************************************\n");
-    tau_jvmpi_interface->ProfilerExit(1);
+    exit(1);
   }
 
   // Increment the number of threads present
-  (*threadId) = RtsLayer::createThread();
-  //(*threadId) = tauThreadCount ++;
+  (*threadId) = tauThreadCount ++;
+
+  // Unlock it now 
+  tauNumThreadsLock.unlock();
+
+  tid = threadId;
 
   DEBUGPROFMSG("Thread id "<< *threadId << " Created! "<<endl);
-  // Unlock it now 
-  tau_jvmpi_interface->RawMonitorExit(tauNumThreadsLock); 
-  // A thread should call this routine exactly once. 
 
-  // Make this a thread specific data structure wrt the thread environment
-  tau_jvmpi_interface->SetThreadLocalStorage(env_id, threadId); 
-  
+  // A thread should call this routine exactly once. 
 
   return threadId;
 }
-
 
 ////////////////////////////////////////////////////////////////////////
 // GetThreadId wrapper to be used when we don't have the environment 
 // pointer (JNIEnv *) that we get from JVMPI. Typically called by entry/exit
 // of a non-Java layer. 
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::GetThreadId(void) 
+int JNIThreadLayer::GetThreadId(void) 
 {
-  // First get the environment id of the thread using the JVM
-  JNIEnv *env_id;
-
-  int res = tauVM->GetEnv( (void **) &env_id, JNI_VERSION_1_2 );
-  if (res < 0) {
-    //printf("JavaThreadLayer::GetThreadId() gets -ve GetEnv result \n");
-    DEBUGPROFMSG("JavaThreadLayer::GetThreadId() gets -ve GetEnv result \n");
-    return -1;
-  }
-  if (env_id == (JNIEnv *) NULL)
-  {
-    printf("JavaThreadLayer::GetThreadId(): env_id is null! res = %d\n", res);
-    return -1;
-  }
-
-  // We now have a valid env_id, call the other overloaded version of the 
-  // the GetThreadId member
-  return GetThreadId(env_id);
-
-}
-
-////////////////////////////////////////////////////////////////////////
-// GetThreadId returns an id in the range 0..N-1 by looking at the 
-// thread specific data.
-////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::GetThreadId(JNIEnv *env_id) 
-{
-  int *tid ;
+    int *threadId = tid;
    
-  tid = (int *) tau_jvmpi_interface->GetThreadLocalStorage(env_id);
-  // The thread id is stored in a thread specific storage
-
-  if (tid == (int *) NULL)
-  { // This thread needs to be registered
-    tid = RegisterThread(env_id);
-    if ((*tid) == 0) 
-    { // Main JVM thread has tid 0, others have tid > 0 
-      TauJavaLayer::CreateTopLevelRoutine(
-	"THREAD=JVM-MainThread; THREAD GROUP=system", " ", "THREAD", (*tid));
+    if (threadId == (int *) NULL) { // This thread needs to be registered
+	threadId = RegisterThread(0);
+	Tau_create_top_level_timer_if_necessary();
     }
-    else
-    { // Internal thread that was just registered.
-      TauJavaLayer::CreateTopLevelRoutine(
-        "THREAD=JVM-InternalThread; THREAD GROUP=system"," ", "THREAD", (*tid));
-    }
-
-  }
-  return (*tid); 
-
+    return (*threadId); 
 }
-
-  
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // InitializeThreadData is called before any thread operations are performed. 
 // It sets the default values for static private data members of the 
-// JavaThreadLayer class.
+// JNIThreadLayer class.
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::InitializeThreadData(void)
+int JNIThreadLayer::InitializeThreadData(void)
 {
-  // Initialize the mutex
-  tauNumThreadsLock = tau_jvmpi_interface->RawMonitorCreate("num threads lock");
-  
-  //cout <<" Initialized the thread Mutex data " <<endl;
   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::InitializeDBMutexData(void)
+int JNIThreadLayer::InitializeDBMutexData(void)
 {
-  // For locking functionDB 
-  tauDBMutex =  tau_jvmpi_interface->RawMonitorCreate("FuncDB lock");
-  
-  //cout <<" Initialized the functionDB Mutex data " <<endl;
   return 1;
 }
 
@@ -186,36 +130,27 @@ int JavaThreadLayer::InitializeDBMutexData(void)
 // followed by a GetFunctionID() ). This is used in 
 // FunctionInfo::FunctionInfoInit().
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::LockDB(void)
+int JNIThreadLayer::LockDB(void)
 {
   static int initflag=InitializeDBMutexData();
   // Lock the functionDB mutex
-  tau_jvmpi_interface->RawMonitorEnter(tauDBMutex);
+  tauDBMutex.lock();
   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////
 // UnLockDB() unlocks the mutex tauDBMutex used by the above lock operation
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::UnLockDB(void)
+int JNIThreadLayer::UnLockDB(void)
 {
   // Unlock the functionDB mutex
-  tau_jvmpi_interface->RawMonitorExit(tauDBMutex);
+  tauDBMutex.unlock();
   return 1;
 }  
 
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::InitializeEnvMutexData(void)
+int JNIThreadLayer::InitializeEnvMutexData(void)
 {
-  if (tau_jvmpi_interface == NULL) {
-    fprintf (stderr,"Error, TAU's jvmpi interface was not initialized properly (java -XrunTAU ...)\n");
-    fprintf (stderr,"When TAU is configured with -jdk=<dir>, it can only profile Java Programs!\n");
-    exit(-1);
-  }
-  // For locking functionDB 
-  tauEnvMutex =  tau_jvmpi_interface->RawMonitorCreate("Env lock");
-  
-  //cout <<" Initialized the Env Mutex data " <<endl;
   return 1;
 }
 
@@ -226,52 +161,53 @@ int JavaThreadLayer::InitializeEnvMutexData(void)
 // followed by a GetFunctionID() ). This is used in 
 // FunctionInfo::FunctionInfoInit().
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::LockEnv(void)
+int JNIThreadLayer::LockEnv(void)
 {
   static int initflag=InitializeEnvMutexData();
   // Lock the Env mutex
-  tau_jvmpi_interface->RawMonitorEnter(tauEnvMutex);
+  tauEnvMutex.lock();
   return 1;
 }
 
 ////////////////////////////////////////////////////////////////////////
 // UnLockDB() unlocks the mutex tauDBMutex used by the above lock operation
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::UnLockEnv(void)
+int JNIThreadLayer::UnLockEnv(void)
 {
   // Unlock the Env mutex
-  tau_jvmpi_interface->RawMonitorExit(tauEnvMutex);
+  tauEnvMutex.unlock();
   return 1;
 }  
 ////////////////////////////////////////////////////////////////////////
 // TotalThreads returns the number of active threads 
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::TotalThreads(void)
+int JNIThreadLayer::TotalThreads(void)
 {
   int count;
   // For synchronization, we lock the thread count mutex. If we had a 
   // set and increment operation, we wouldn't need this. Optimization for
   // the future.
 
-  tau_jvmpi_interface->RawMonitorEnter(tauNumThreadsLock);
+  tauNumThreadsLock.lock();
   count = tauThreadCount;
-  tau_jvmpi_interface->RawMonitorExit(tauNumThreadsLock);
+  tauNumThreadsLock.unlock();
 
   return count;
 }
 
 // Use JVMPI to get per thread cpu time (microseconds)
-jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
-  return tau_jvmpi_interface->GetCurrentThreadCpuTime() / 1000;
+jlong JNIThreadLayer::getCurrentThreadCpuTime(void) {
+  /* unimplemented */
+  return 0;
 }
   
-// EOF JavaThreadLayer.cpp 
+// EOF JNIThreadLayer.cpp 
 
 
 /***************************************************************************
- * $RCSfile: JavaThreadLayer.cpp,v $   $Author: khuck $
+ * $RCSfile: JNIThreadLayer.cpp,v $   $Author: khuck $
  * $Revision: 1.8 $   $Date: 2009/03/13 00:46:56 $
- * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.8 2009/03/13 00:46:56 khuck Exp $
+ * TAU_VERSION_ID: $Id: JNIThreadLayer.cpp,v 1.8 2009/03/13 00:46:56 khuck Exp $
  ***************************************************************************/
 
 
