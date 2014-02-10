@@ -1,0 +1,25 @@
+About
+----------
+Android is different from general Linux in several ways. This README will
+summerize those differences and highlight the constrains to TAU implied.
+
+BIONIC
+---------
+Android is not using standard glibc but a customized libc named "BIONIC".
+BIONIC lacks of some features which will affect TAU in several ways.
+
+1. <ucontext.h>/getcontext()/setcontext()
+2. <execinfo.h>/backtrace()
+3. pvalloc()
+4. cuserid()
+
+DELVIK VM
+---------
+The VM used by Android is named "Dalvik" and it is total different
+compared with the traditional JVM. Java bytecode won't run on Android
+directly. Java class should be compiled into Dalvik bytecode. Dalvik
+does not align to Java SE nor Java ME class library profiles. Instead it
+uses its own library built on a subset of the Apache Harmony Java
+implementation.
+
+<To be continued...>

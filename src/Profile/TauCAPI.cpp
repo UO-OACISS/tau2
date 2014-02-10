@@ -2255,8 +2255,10 @@ extern "C" int Tau_get_tid(void) {
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
   Tau_memory_wrapper_disable();
+//#ifndef JAVA
   Tau_stop_top_level_timer_if_necessary();
   Tau_global_setLightsOut();
+//#endif
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");

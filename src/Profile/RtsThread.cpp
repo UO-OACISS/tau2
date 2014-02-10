@@ -181,7 +181,11 @@ int RtsLayer::unsafeLocalThreadId(void)
 #elif  TULIPTHREADS
   return TulipThreadLayer::GetThreadId();
 #elif JAVA
-  return JavaThreadLayer::GetThreadId(); 
+  if (TheUsingJNI() == true) {
+      return JNIThreadLayer::GetThreadId();
+  } else {
+      return JVMTIThreadLayer::GetThreadId();
+  }
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
   return OpenMPLayer::GetThreadId();
@@ -211,7 +215,11 @@ int RtsLayer::unsafeThreadId(void)
 #elif  TULIPTHREADS
   return TulipThreadLayer::GetThreadId();
 #elif JAVA
-  return JavaThreadLayer::GetThreadId(); 
+  if (TheUsingJNI() == true) {
+      return JNIThreadLayer::GetThreadId();
+  } else {
+      return JVMTIThreadLayer::GetThreadId();
+  }
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
   return OpenMPLayer::GetTauThreadId();
@@ -550,7 +558,11 @@ void RtsLayer::threadLockDB(void) {
 #elif  TULIPTHREADS
   TulipThreadLayer::LockDB();
 #elif  JAVA
-  JavaThreadLayer::LockDB();
+  if (TheUsingJNI() == true) {
+      JNIThreadLayer::LockDB();
+  } else {
+      JVMTIThreadLayer::LockDB();
+  }
 #elif TAU_OPENMP
   OpenMPLayer::LockDB();
 #elif TAU_PAPI_THREADS
@@ -576,7 +588,11 @@ void RtsLayer::threadUnLockDB(void) {
 #elif  TULIPTHREADS
   TulipThreadLayer::UnLockDB();
 #elif JAVA
-  JavaThreadLayer::UnLockDB();
+  if (TheUsingJNI() == true) {
+      JNIThreadLayer::UnLockDB();
+  } else {
+      JVMTIThreadLayer::UnLockDB();
+  }
 #elif TAU_OPENMP
   OpenMPLayer::UnLockDB();
 #elif TAU_PAPI_THREADS
@@ -664,7 +680,11 @@ void RtsLayer::threadLockEnv(void)
 #elif  TULIPTHREADS
   TulipThreadLayer::LockEnv();
 #elif  JAVA
-  JavaThreadLayer::LockEnv();
+  if (TheUsingJNI() == true) {
+      JNIThreadLayer::LockEnv();
+  } else {
+      JVMTIThreadLayer::LockEnv();
+  }
 #elif TAU_OPENMP
   OpenMPLayer::LockEnv();
 #elif TAU_PAPI_THREADS
@@ -690,7 +710,11 @@ void RtsLayer::threadUnLockEnv(void)
 #elif  TULIPTHREADS
   TulipThreadLayer::UnLockEnv();
 #elif JAVA
-  JavaThreadLayer::UnLockEnv();
+  if (TheUsingJNI() == true) {
+      JNIThreadLayer::UnLockEnv();
+  } else {
+      JVMTIThreadLayer::UnLockEnv();
+  }
 #elif TAU_OPENMP
   OpenMPLayer::UnLockEnv();
 #elif TAU_PAPI_THREADS

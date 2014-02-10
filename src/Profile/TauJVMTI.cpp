@@ -48,7 +48,7 @@
 using namespace std;
 
 #include "TauJVMTI.h"
-#include "JavaThreadLayer.h"
+#include "JVMTIThreadLayer.h"
 
 extern "C" void Tau_profile_exit_all_threads(void);
 
@@ -259,7 +259,7 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
             cp = gdata->classes + cnum;
 
             if (gdata->vm_is_initialized) {
-	      int tid = JavaThreadLayer::GetThreadId(thread);
+	      int tid = JVMTIThreadLayer::GetThreadId(thread);
 	      long unique_method_id;
 
 	      unique_method_id = make_unique_method_id(mnum, cnum);
@@ -291,7 +291,7 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             }
             cp = gdata->classes + cnum;
             if (gdata->vm_is_initialized) {
-		int tid = JavaThreadLayer::GetThreadId(thread);
+		int tid = JVMTIThreadLayer::GetThreadId(thread);
 		unique_method_id = make_unique_method_id(mnum, cnum);
 		TAU_MAPPING_OBJECT(TauMethodName=NULL);
 		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
@@ -453,7 +453,7 @@ cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
 	    dprintf("Before RegisterThread in cbThreadStart\n");
-	    tid = JavaThreadLayer::RegisterThread(thread);
+	    tid = JVMTIThreadLayer::RegisterThread(thread);
             get_thread_group_name(jvmti, thread, gname, sizeof(gname));
 	    sprintf(final_thread_name,"%s GROUP=%s",tname, gname);
 	    CreateTopLevelRoutine(final_thread_name, " ", gname, *tid); 
@@ -474,7 +474,7 @@ cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
             get_thread_name(jvmti, thread, tname, sizeof(tname));
             DEBUGPROFMSG("ThreadEnd " << tname << endl;);
 
-	    JavaThreadLayer::ThreadEnd(thread);
+	    JVMTIThreadLayer::ThreadEnd(thread);
 	    //Inform Tau that the thread has ended.
 	    TAU_PROFILE_EXIT("END..."); 
         }
@@ -737,13 +737,13 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     gdata->jvmti = jvmti;
 
     /*Give our threading layer the handel it needs */
-    JavaThreadLayer::jvmti = jvmti;
+    JVMTIThreadLayer::jvmti = jvmti;
 
     /*Set up the necessary threading locks now, since they can only
      * be set up during the Onload and Running phases of the JVM
      */
-    //    JavaThreadLayer::InitializeDBMutexData();
-    //    JavaThreadLayer::InitializeEnvMutexData();
+    //    JVMTIThreadLayer::InitializeDBMutexData();
+    //    JVMTIThreadLayer::InitializeEnvMutexData();
 
     Tau_init_initializeTAU();
 #ifndef TAU_MPI
@@ -753,7 +753,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     /* Register the current thread, since the JVM makes calls with the first thread, before
      * calling cbThreadStart and we need to create the necessary locks and set it's thread ID.
      */
-    //JavaThreadLayer::RegisterThread();
+    //JVMTIThreadLayer::RegisterThread();
 
     /* Parse any options supplied on java command line */
     parse_agent_options(options);
