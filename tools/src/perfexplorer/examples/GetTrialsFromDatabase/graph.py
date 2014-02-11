@@ -6,11 +6,6 @@ from java.lang import *
 True = 1
 False = 0
 
-def loadDB(app, exp, trial):
-	trial = Utilities.getTrial(app, exp, trial)
-	input = TrialMeanResult(trial)
-	return input
-
 def loadFromDB():
 	Utilities.setSession("advection_test")
 	metadata = HashMap()
