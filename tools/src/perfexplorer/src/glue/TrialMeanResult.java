@@ -6,6 +6,7 @@ package edu.uoregon.tau.perfexplorer.glue;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -46,20 +47,20 @@ public class TrialMeanResult extends AbstractResult {
 		buildTrialMeanResult(trial, null, null);
 	}
 	
-	public TrialMeanResult(Trial trial, String metric, String event, boolean callPath) {
+	public TrialMeanResult(Trial trial, List<String> metrics, List<String> events, boolean callPath) {
 		super();
 		this.trialID = trial.getID();
 		this.callPath = callPath;
 		this.trial = trial;
 		this.name = this.trial.getName();
-		buildTrialMeanResult(trial, metric, event);
+		buildTrialMeanResult(trial, metrics, events);
 	}
 	
-	private void buildTrialMeanResult(Trial trial, String metric, String event) {
+	private void buildTrialMeanResult(Trial trial, List<String> metrics, List<String> events) {
 		// hit the databsae, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
 		if (db.getSchemaVersion() > 0) {
-			buildTrialResultFromTAUdb(trial, metric, event);
+			buildTrialResultFromTAUdb(trial, metrics, events);
 			return;
 		}
 		
@@ -89,11 +90,27 @@ public class TrialMeanResult extends AbstractResult {
 			sql.append("left outer join metric m on m.trial = e.trial ");
 			sql.append("and m.id = p.metric ");
 			sql.append("where e.trial = ? ");
-			if (metric != null) {
-				sql.append(" and m.name = ? ");
+			if (metrics != null) {
+				sql.append(" and m.name in (");
+				int count = 0;
+				for (String m : metrics) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + m + "'");
+				}
+				sql.append(") ");
 			}
-			if (event != null) {
-				sql.append(" and e.name = ? ");
+			if (events != null) {
+				sql.append(" and e.name in (");
+				int count = 0;
+				for (String e : events) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + e + "'");
+				}
+				sql.append(") ");
 			}
 			if (!callPath) {
             	sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
@@ -104,13 +121,6 @@ public class TrialMeanResult extends AbstractResult {
 			//System.out.println(sql.toString() + " " + trial.getID() + " " + metric + " " + event);
 			
 			statement.setInt(1, trial.getID());
-			int index = 1;
-			if (metric != null) {
-				statement.setString(index++, metric);
-			}
-			if (event != null) {
-				statement.setString(index++, event);
-			}
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
@@ -132,7 +142,7 @@ public class TrialMeanResult extends AbstractResult {
 		}
 	}
 
-	private void buildTrialResultFromTAUdb(Trial trial, String metric, String event) {
+	private void buildTrialResultFromTAUdb(Trial trial, List<String> metrics, List<String> events) {
 		// hit the database, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
 		StringBuilder sql = null;
@@ -174,11 +184,27 @@ public class TrialMeanResult extends AbstractResult {
             }
 
 			sql.append("where m.trial = " + trial.getID());
-			if (metric != null) {
-				sql.append(" and m.name = '" + metric + "'");
+			if (metrics != null) {
+				sql.append(" and m.name in (");
+				int count = 0;
+				for (String m : metrics) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + m + "'");
+				}
+				sql.append(") ");
 			}
-			if (event != null) {
-				sql.append(" and t.name = '" + event + "'");
+			if (events != null) {
+				sql.append(" and t.name in (");
+				int count = 0;
+				for (String e : events) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + e + "'");
+				}
+				sql.append(") ");
 			}
 			sql.append(" and h.thread_index = -1 ");
 			sql.append(" order by 3,2,1 ");

@@ -51,20 +51,20 @@ public class TrialResult extends AbstractResult {
 		buildTrialResult(trial, null, null, null);
 	}
 	
-	public TrialResult(Trial trial, String metric, String event, String thread, boolean callPath) {
+	public TrialResult(Trial trial, List<String> metrics, List<String> events, List<String> threads, boolean callPath) {
 		super();
 		this.trialID = trial.getID();
 		this.trial = trial;
 		this.callPath = callPath;
 		this.name = this.trial.getName();
-		buildTrialResult(trial, metric, event, thread);
+		buildTrialResult(trial, metrics, events, threads);
 	}
 	
-	private void buildTrialResult(Trial trial, String metric, String event, String thread) {
+	private void buildTrialResult(Trial trial, List<String> metrics, List<String> events, List<String> threads) {
 		// hit the databsae, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
 		if (db.getSchemaVersion() > 0) {
-			buildTrialResultFromTAUdb(trial, metric, event, thread);
+			buildTrialResultFromTAUdb(trial, metrics, events, threads);
 			return;
 		}
 
@@ -102,14 +102,40 @@ public class TrialResult extends AbstractResult {
 			sql.append("left outer join metric m on m.trial = e.trial ");
 			sql.append("and m.id = p.metric ");
 			sql.append("where e.trial = ? ");
-			if (metric != null) {
-				sql.append(" and m.name = ? ");
+			if (metrics != null) {
+                sql.append(" and m.name in (");
+                int count = 0;
+                for (String m : metrics) {
+                    if (count > 0) {
+                        sql.append(",");
+                    }
+                    sql.append("'" + m + "'");
+                }
+                sql.append(") ");
 			}
-			if (event != null) {
-				sql.append(" and e.name = ? ");
+			if (events != null) {
+                sql.append(" and e.name in (");
+                int count = 0;
+                for (String e : events) {
+                    if (count > 0) {
+                        sql.append(",");
+                    }
+                    sql.append("'" + e + "'");
+                }
+                sql.append(") ");
+
 			}
-			if (thread != null) {
-				sql.append(" and thread = ? ");				
+			if (threads != null) {
+                sql.append(" and thread in (");
+                int count = 0;
+                for (String h : threads) {
+                    if (count > 0) {
+                        sql.append(",");
+                    }
+                    sql.append(h);
+                }
+                sql.append(") ");
+
 			}
 			if (!callPath) {
             	sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
@@ -119,16 +145,6 @@ public class TrialResult extends AbstractResult {
 			statement = db.prepareStatement(sql.toString());
 			
 			statement.setInt(1, trial.getID());
-			int index = 2;
-			if (metric != null) {
-				statement.setString(index++, metric);
-			}
-			if (event != null) {
-				statement.setString(index++, event);
-			}
-			if (thread != null) {
-				statement.setString(index++, thread);
-			}
 			//System.out.println(statement.toString());
 			long start = System.currentTimeMillis();
 			ResultSet results = statement.executeQuery();
@@ -195,7 +211,7 @@ public class TrialResult extends AbstractResult {
 		}
 	}
 
-	private void buildTrialResultFromTAUdb(Trial trial, String metric, String event, String thread) {
+	private void buildTrialResultFromTAUdb(Trial trial, List<String> metrics, List<String> events, List<String> threads) {
 		// hit the database, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
 		StringBuilder sql = null;
@@ -207,8 +223,8 @@ public class TrialResult extends AbstractResult {
 				// easy query.
         		sql.append(" select t.name, m.name, h.thread_index, tv.exclusive_value, ");
 				sql.append(" tv.inclusive_value, tcd.calls, tcd.subroutines, cp.id from timer t ");
-				sql.append(" left outer join timer_callpath cp on timer.trial = " + trial.getID());
-				sql.append(" and t.timer_callpath = cp.id ");
+				sql.append(" left outer join timer_callpath cp on t.trial = " + trial.getID());
+				sql.append(" and cp.timer = t.id ");
         		sql.append(" left outer join timer_call_data tcd on tcd.timer_callpath = cp.id ");
         		sql.append(" left outer join timer_value tv on tv.timer_call_data = tcd.id ");
         		sql.append(" left outer join metric m on m.trial = " + trial.getID() + " and tv.metric = m.id ");
@@ -236,16 +252,42 @@ public class TrialResult extends AbstractResult {
             }
 
 			sql.append("where m.trial = " + trial.getID());
-			if (metric != null) {
-				sql.append(" and m.name = '" + metric + "'");
+			if (metrics != null) {
+                sql.append(" and m.name in (");
+                int count = 0;
+                for (String m : metrics) {
+                    if (count > 0) {
+                        sql.append(",");
+                    }
+                    sql.append("'" + m + "'");
+                }
+                sql.append(") ");
 			}
-			if (event != null) {
-				sql.append(" and cp.name = '" + event + "'");
+			if (events != null) {
+                sql.append(" and t.name in (");
+                int count = 0;
+                for (String e : events) {
+                    if (count > 0) {
+                        sql.append(",");
+                    }
+                    sql.append("'" + e + "'");
+                }
+                sql.append(") ");
+
 			}
-			if (thread != null) {
-				sql.append(" and h.id = " + thread + "'");
+			if (threads != null) {
+                sql.append(" and h.thread_index in (");
+                int count = 0;
+                for (String t : threads) {
+                    if (count > 0) {
+                        sql.append(",");
+                    }
+                    sql.append(t);
+                }
+                sql.append(") ");
+
 			} else {
-				sql.append(" and h.id > -1 ");
+				sql.append(" and h.thread_index > -1 ");
 			}
 			sql.append(" order by 3,2,1 ");
 			
@@ -288,10 +330,19 @@ public class TrialResult extends AbstractResult {
 			sql.append(" left outer join thread h ");
 			sql.append("on h.id = cv.thread and h.trial = " + trial.getID());
 			sql.append(" where c.trial = " + trial.getID());
-			if (thread != null) {
-				sql.append(" and h.id = " + thread + "'");
+			if (threads != null) {
+                sql.append(" and h.thread_index in (");
+                int count = 0;
+                for (String h : threads) {
+                    if (count > 0) {
+                        sql.append(",");
+                    }
+                    sql.append(h);
+                }
+                sql.append(") ");
+
 			} else {
-				sql.append(" and h.id > -1 ");
+				sql.append(" and h.thread_index > -1 ");
 			}
 			sql.append(" order by 2,1 ");
 			
