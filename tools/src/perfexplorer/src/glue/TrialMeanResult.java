@@ -98,6 +98,7 @@ public class TrialMeanResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + m + "'");
+					count++;
 				}
 				sql.append(") ");
 			}
@@ -109,6 +110,7 @@ public class TrialMeanResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + e + "'");
+					count++;
 				}
 				sql.append(") ");
 			}
@@ -192,6 +194,7 @@ public class TrialMeanResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + m + "'");
+				    count++;
 				}
 				sql.append(") ");
 			}
@@ -203,6 +206,7 @@ public class TrialMeanResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + e + "'");
+				    count++;
 				}
 				sql.append(") ");
 			}

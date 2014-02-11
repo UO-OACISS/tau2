@@ -501,7 +501,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
             domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
         } else if (categories.size() > 20) {
             domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
-        } else if (categoryNameLength / categories.size() > 10) {
+        } else if (categories.size() > 0 && (categoryNameLength / categories.size() > 10)) {
             domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
         }
 
