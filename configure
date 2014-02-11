@@ -5392,6 +5392,12 @@ libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 libunwinddir=${targetdir}/${architecture}
 libunwind_name=unwind
+if [ $machine = mic_linux ] ; then
+  libunwind=libunwind-mic-1.1
+  libunwindtgz=$libunwind.tgz
+  libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+fi
+  
 if [ "x$download_unwind" = xyes ] ; then
   unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
   prebfddir=`pwd`
@@ -5419,30 +5425,36 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
-      cd $libunwind
-      configresult=0
-      makeresult=0
-      libunwind_log=configure.log
-      echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
-      ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
-      configresult=$?
-      if [ $configresult -eq 0 ] ; then
-        libunwind_log=build.log
-        echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
-        make >& $libunwind_log
-        makeresult=$?
-        if [ $makeresult -eq 0 ] ; then
-        libunwind_log=install.log
-        echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
-          make install >& $libunwind_log
-        makeresult=$?
+      if [ $machine != mic_linux ]; then 
+        configresult=0
+        makeresult=0
+        libunwind_log=configure.log
+        cd $libunwind
+        echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
+        ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
+        configresult=$?
+        if [ $configresult -eq 0 ] ; then
+          libunwind_log=build.log
+          echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
+          make >& $libunwind_log
+          makeresult=$?
+          if [ $makeresult -eq 0 ] ; then
+          libunwind_log=install.log
+          echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
+            make install >& $libunwind_log
+          makeresult=$?
+          fi
         fi
-      fi
-      if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
-        echo "...Success."
-      else
-        echo "ERROR BUILDING $libunwind!"
-        echo "Please check `pwd`/config.log or `pwd`/${libunwind_log}"
+        if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+          echo "...Success."
+        else
+          echo "ERROR BUILDING $libunwind!"
+          echo "Please check `pwd`/config.log or `pwd`/${libunwind_log}"
+        fi
+      else 
+        # We need to install $libunwind
+        mv ${libunwind} ${unwind_dir}
+	echo "NOTE: Moving ${libunwind} to ${unwind_dir}"
       fi
     fi
   fi
