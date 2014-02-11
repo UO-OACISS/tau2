@@ -23,10 +23,10 @@ def loadFromDB():
 	trials = Utilities.getTrialsFromMetadata(metadata, conjoin)
 	inputs = ArrayList()
 	events = ArrayList()
-	events.add("tRunAlgorithm")
+	events.add(".TAU application")
 	for trial in trials:
 		# get just one event
-		inputs.add(TrialMeanResult(trial, None, events, False))
+		inputs.add(TrialResult(trial, None, events, None, False))
 		# or get all events
 		#inputs.add(TrialMeanResult(trial))
 	return inputs
@@ -41,10 +41,10 @@ def drawGraph(results):
 	grapher.setLogYAxis(False)
 	grapher.setShowZero(True)
 	grapher.setTitle("Graph of Multiple Trials: " + metric)
-	grapher.setSeriesType(DrawGraph.EVENTNAME)
+	grapher.setSeriesType(DrawGraph.TRIALNAME)
 	grapher.setUnits(DrawGraph.SECONDS)
-	grapher.setCategoryType(DrawGraph.TRIALNAME)
-	grapher.setXAxisLabel("Trial Name")
+	grapher.setCategoryType(DrawGraph.THREADNAME)
+	grapher.setXAxisLabel("Thread Index")
 	grapher.setValueType(AbstractResult.EXCLUSIVE)
 	grapher.setYAxisLabel("Exclusive " + metric + " (seconds)")
 	grapher.processData()
