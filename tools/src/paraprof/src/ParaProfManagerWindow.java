@@ -3202,8 +3202,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				.getChildAt(i);
 				if (node.getUserObject() == view.getDatabase()) {
 					dbNode = node;
+					break;
 					// db = (Database)
-					node.getUserObject();
+					//node.getUserObject();
 				}
 			}
 		} catch (Exception e) {
@@ -3213,15 +3214,35 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		// Test to see if dbApps is expanded, if not, expand it.
 		if (!(tree.isExpanded(new TreePath(dbNode.getPath()))))
 			tree.expandPath(new TreePath(dbNode.getPath()));
-
-		// Try and find the required view node.
-		for (int i = dbNode.getChildCount(); i > 0; i--) {
-			DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) dbNode
-			.getChildAt(i - 1);
-			if (view.getID() == ((ParaProfView) defaultMutableTreeNode
-					.getUserObject()).getID())
-				return defaultMutableTreeNode;
+		
+		//Make a list of the selected view's parents
+		ArrayList<View> treePath = new ArrayList<View>();
+		View tmpView=view;
+		while(tmpView!=null){
+			treePath.add(tmpView);
+			tmpView=tmpView.getParent();
 		}
+
+		//From the top of the tree, find each parent view
+		DefaultMutableTreeNode tmpNode=dbNode;
+		for(int v = treePath.size()-1;v>=0;v--)
+		{
+		// Try and find the required view node.
+		for (int i = tmpNode.getChildCount(); i > 0; i--) {
+			DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) tmpNode
+			.getChildAt(i - 1);
+			if (treePath.get(v).getID() == ((ParaProfView) defaultMutableTreeNode
+					.getUserObject()).getID()){
+				tmpNode = defaultMutableTreeNode;
+				break;
+			}
+		}
+		}
+		
+		if(tmpNode!=null&&((ParaProfView)tmpNode.getUserObject()).getID()==view.getID()){
+			return tmpNode;
+		}
+		
 		// Required view node was not found, try adding it.
 		if (view != null) {
 			DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
