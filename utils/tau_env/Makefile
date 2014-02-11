@@ -16,10 +16,10 @@ all: $(tau_env)
 install: $(INSTALLtau_env) $(INSTALLtau_env)
 
 $(tau_env): tau_env.o $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libtau$(TAU_CONFIG).a
-		$(CXX) -o $@ $< -L$(TAU_LIB_DIR) $(TAU_LIBS)
+		$(CXX) -o $@ $< -L$(TAU_LIB_DIR) $(TAU_LDFLAGS) $(TAU_LINKER_OPTS)  $(TAU_LIBS)
 
 tau_env.o: tau_env.cpp
-		$(CXX) $(CFLAGS) -I$(TAU_INC_DIR) -c $<
+		$(CXX) $(CFLAGS)  -I$(TAU_INC_DIR) -c $<
 
 $(INSTALLtau_env): $(tau_env)
 		@echo Installing $? in $(INSTALLDEST)
