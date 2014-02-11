@@ -42,6 +42,9 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 				||operator == ViewCreatorGUI.STRING_CONTAINS){
 			return "like";
 		}
+		else if(operator==ViewCreatorGUI.STRING_NOT){
+			return "not like";
+		}
 		return operator;
 	}
 	public void setOperator(String operator) {
@@ -52,7 +55,7 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 			return value+WILDCARD;
 		} else if(operator == ViewCreatorGUI.STRING_ENDS){
 			return WILDCARD + value;
-		}else if(operator == ViewCreatorGUI.STRING_CONTAINS){
+		}else if(operator == ViewCreatorGUI.STRING_CONTAINS||operator==ViewCreatorGUI.STRING_NOT){
 			return WILDCARD + value+WILDCARD;
 		}
 

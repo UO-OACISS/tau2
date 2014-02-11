@@ -112,7 +112,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	 static final String STRING_ENDS = "ends with";
 	 static final String STRING_CONTAINS = "contains";
 	 static final String STRING_EXACTLY = "is exactly";
-	 static final String STRING_NOT = "is not";
+	 static final String STRING_NOT = "does not contain";
 	 static final String STRING_BEGINS = "beings with";
 	
 	 static final String NUMBER_EQUAL = "is equal to";
@@ -712,7 +712,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
-        String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS};
+        String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS, STRING_NOT};
 		JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
       //  cb.setName(STRING);
@@ -740,6 +740,10 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         exactly.getDocument().addDocumentListener(listener);
         exactlyCard.add(exactly);
         
+        JPanel notCard = new JPanel();
+        JTextField not = new JTextField("", 20);
+        not.getDocument().addDocumentListener(listener);
+        notCard.add(not);
 
         
         //Create the panel that contains the "cards".
@@ -748,6 +752,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         comparators.add(beginCard, STRING_BEGINS);
         comparators.add(endCard, STRING_ENDS);
         comparators.add(containsCard, STRING_CONTAINS);
+        comparators.add(notCard, STRING_NOT);
 
         cb.addItemListener(new ViewCreatorListner(comparators));
 
@@ -771,6 +776,10 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 					cb.setSelectedItem(STRING_ENDS);
 					end.setText(value.substring(1));
 				}
+			}
+			else if (operator.equals("not like")){
+				cb.setSelectedItem(STRING_NOT);
+				not.setText(value.substring(1, value.length() - 1));
 			}
 		}
 
