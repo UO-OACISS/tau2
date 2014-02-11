@@ -132,8 +132,8 @@ public class GPTLDataSource extends DataSource {
 					createFunction(thread, eventData, true);
 				}
 			}
-        	this.generateDerivedData();
 		} // while process/thread
+    	this.generateDerivedData();
 
 		setGroupNamesPresent(true);
 
@@ -192,7 +192,7 @@ public class GPTLDataSource extends DataSource {
                 }
                 
         		//System.out.println("Processing " + file + ", please wait ......");
-        		System.out.print(".");
+        		//System.out.print(".");
         		fileIn = new FileInputStream(file);
         		tracker = new TrackerInputStream(fileIn);
         		inReader = new InputStreamReader(tracker);
@@ -218,7 +218,6 @@ public class GPTLDataSource extends DataSource {
         				if (!eventData.callpathName.equals(eventData.name))
         					createFunction(thread, eventData, true);
         			}
-        			this.generateDerivedData();
         		} // for data in dataList
 
         		fileIn.close();
@@ -229,6 +228,7 @@ public class GPTLDataSource extends DataSource {
     		//System.out.println("Done processing data!");
     		//System.out.println("Time to process (in milliseconds): " + time);
         }
+		this.generateDerivedData();
     }
 
 
