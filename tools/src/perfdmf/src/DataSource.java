@@ -740,6 +740,9 @@ public abstract class DataSource {
 			if (index == -1) {
 				index = tmpName.lastIndexOf("[UNWIND]");
 			}
+			if(index==-1){
+				return null;
+			}
 			// fortunately, SAMPLE and UNWIND are the same length.
 			b.replace(index, index+8, "[SUMMARY]");
 			tmpName = b.toString();
