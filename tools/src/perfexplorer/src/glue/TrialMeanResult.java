@@ -178,7 +178,7 @@ public class TrialMeanResult extends AbstractResult {
 				sql.append(" and m.name = '" + metric + "'");
 			}
 			if (event != null) {
-				sql.append(" and cp.name = '" + event + "'");
+				sql.append(" and t.name = '" + event + "'");
 			}
 			sql.append(" and h.thread_index = -1 ");
 			sql.append(" order by 3,2,1 ");

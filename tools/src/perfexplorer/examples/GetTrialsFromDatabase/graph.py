@@ -23,8 +23,10 @@ def loadFromDB():
 	trials = Utilities.getTrialsFromMetadata(metadata, conjoin)
 	inputs = ArrayList()
 	for trial in trials:
-		#inputs.add(TrialMeanResult(trial, None, "tRunAlgorithm", False))
-		inputs.add(TrialMeanResult(trial))
+		# get just one event
+		inputs.add(TrialMeanResult(trial, "TIME", "tRunAlgorithm", False))
+		# or get all events
+		#inputs.add(TrialMeanResult(trial))
 	return inputs
 
 def drawGraph(results):
@@ -60,14 +62,7 @@ def main():
 	# load the data
 	inputs = loadFromDB()
 
-	# extract the event of interest
-	events = ArrayList()
-	# change this to zoneLimitedGradient(PileOfScalars) as necessary
-	events.add("tRunAlgorithm")
-	extractor = ExtractEventOperation(inputs, events)
-	extracted = extractor.processData()
-
-	drawGraph(extracted)
+	drawGraph(inputs)
 	print "---------------- JPython test script end -------------"
 
 if __name__ == "__main__":
