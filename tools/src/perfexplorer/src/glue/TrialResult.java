@@ -110,6 +110,7 @@ public class TrialResult extends AbstractResult {
                         sql.append(",");
                     }
                     sql.append("'" + m + "'");
+					count++;
                 }
                 sql.append(") ");
 			}
@@ -121,6 +122,7 @@ public class TrialResult extends AbstractResult {
                         sql.append(",");
                     }
                     sql.append("'" + e + "'");
+					count++;
                 }
                 sql.append(") ");
 
@@ -133,6 +135,7 @@ public class TrialResult extends AbstractResult {
                         sql.append(",");
                     }
                     sql.append(h);
+					count++;
                 }
                 sql.append(") ");
 
@@ -260,6 +263,7 @@ public class TrialResult extends AbstractResult {
                         sql.append(",");
                     }
                     sql.append("'" + m + "'");
+					count++;
                 }
                 sql.append(") ");
 			}
@@ -271,6 +275,7 @@ public class TrialResult extends AbstractResult {
                         sql.append(",");
                     }
                     sql.append("'" + e + "'");
+					count++;
                 }
                 sql.append(") ");
 
@@ -283,6 +288,7 @@ public class TrialResult extends AbstractResult {
                         sql.append(",");
                     }
                     sql.append(t);
+					count++;
                 }
                 sql.append(") ");
 

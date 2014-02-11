@@ -101,6 +101,7 @@ public class TrialTotalResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + m + "'");
+					count++;
 				}
 				sql.append(") ");
 			}
@@ -112,6 +113,7 @@ public class TrialTotalResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + e + "'");
+					count++;
 				}
 				sql.append(") ");
 			}
@@ -194,6 +196,7 @@ public class TrialTotalResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + m + "'");
+					count++;
 				}
 				sql.append(") ");
 			}
@@ -205,6 +208,7 @@ public class TrialTotalResult extends AbstractResult {
 				        sql.append(",");
 					}
 				    sql.append("'" + e + "'");
+					count++;
 				}
 				sql.append(") ");
 			}
