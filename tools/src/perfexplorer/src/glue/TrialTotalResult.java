@@ -225,10 +225,9 @@ public class TrialTotalResult extends AbstractResult {
 			System.out.println("Time to query interval data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
 				String eventName = results.getString(1);
-				this.putExclusive(0, eventName, results.getString(2),
-						results.getDouble(4));
-				this.putInclusive(0, eventName, results.getString(2),
-						results.getDouble(5));
+				String metricName = results.getString(2);
+				this.putExclusive(0, eventName, metricName, results.getDouble(3));
+				this.putInclusive(0, eventName, metricName, results.getDouble(4));
 				this.putCalls(0, eventName, results.getDouble(5));
 				this.putSubroutines(0, eventName, results.getDouble(6));
 				Integer eventID = results.getInt(7);
@@ -294,6 +293,8 @@ public class TrialTotalResult extends AbstractResult {
 	 * @return the originalThreads
 	 */
 	public Integer getOriginalThreads() {
+		if (originalThreads == 0)
+			originalThreads = super.getOriginalThreads();
 		return originalThreads;
 	}
 
