@@ -513,7 +513,7 @@ adb_read(adb_ctx_t *ctx, char *buf, size_t count)
 		    ctx->backlog             = ctx->backlog->next;
 		}
 
-		//free(backlog);
+		free(backlog);
 	    }
 	} else {
 	    msg = recv_message(ctx);

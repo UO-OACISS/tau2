@@ -340,3 +340,73 @@ jdwp_get_thread_name(jdwp_ctx_t *ctx, long long threadID)
     free(reply);
     return name;
 }
+
+long long
+jdwp_get_thread_group(jdwp_ctx_t *ctx, long long threadID)
+{
+    int rv;
+    jdwp_reply_t *reply;
+    long long threadGroupID;
+
+    rv = jdwp_send_pkt(ctx, THREADREF_THREADGROUP, (char*)&threadID, sizeof(threadID));
+    if (rv < 0) {
+	return -1;
+    }
+
+    reply = jdwp_get_reply(ctx);
+    if (reply == NULL) {
+	return -1;
+    }
+
+    if (reply->error_code != 0) {
+	fprintf(stderr, "Error: JDWP: get reply with error code %d\n",
+		reply->error_code);
+	free(reply);
+	return -1;
+    }
+
+    threadGroupID =  *(long long*)(reply->data);
+
+    free(reply);
+
+    return threadGroupID;
+}
+
+char *
+jdwp_get_thread_group_name(jdwp_ctx_t *ctx, long long threadGroupID)
+{
+    int rv;
+    jdwp_reply_t *reply;
+
+    rv = jdwp_send_pkt(ctx, THREADGRPREF_NAME, (char*)&threadGroupID,
+		       sizeof(threadGroupID));
+    if (rv < 0) {
+	return NULL;
+    }
+
+    reply = jdwp_get_reply(ctx);
+    if (reply == NULL) {
+	return NULL;
+    }
+
+    if (reply->error_code != 0) {
+	fprintf(stderr, "Error: JDWP: get reply with error code %d\n",
+		reply->error_code);
+	free(reply);
+	return NULL;
+    }
+    /* reply->data[]: 4-byte length followed by a non-NULL-terminated string */
+    int len = ntohl(*(int*)(reply->data));
+    char *name = (char*)malloc(len + 1);
+    if (name == NULL) {
+	free(reply);
+	return NULL;
+    }
+
+    memcpy(name, reply->data+4, len);
+    name[len] = 0;
+
+    free(reply);
+    return name;
+}
+
