@@ -15,6 +15,7 @@ using namespace std;
 #include <unistd.h>
 #include <pthread.h>
 #include <dlfcn.h>
+#include <stdlib.h>
 
 #include "Profile/adb.h"
 #include "Profile/jdwp.h"
@@ -87,205 +88,67 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 #endif
 
-typedef struct jdwp_event {
-    char eventKind;
-    long long threadID;
-    struct jdwp_event *next;
-    struct jdwp_event *prev;
-} jdwp_event_t;
-
-static int
-event_backlog(jdwp_event_t **backlog, jdwp_cmd_t *cmd)
-{
-    int i, offset;
-    char *data;
-    char suspendPolicy;
-    int  eventCount;
-
-    jdwp_event_t *event;
-
-    /* this must be a command, not a reply */
-    if (cmd->flags == 0x80) {
-	fprintf(stderr, "Error: JDWP: ignore a reply pkt.\n");
-	return -1;
-    }
-
-    /* and the command must be EVENT_COMPOSIT */
-    if (((cmd->cmd_set << 8) | cmd->command) != EVENT_COMPOSIT) {
-	fprintf(stderr, "Error: JDWP: ignore a command pkt (%d, %d)\n",
-		cmd->cmd_set, cmd->command);
-	return -1;
-    }
-
-    data          = cmd->data;
-    suspendPolicy = data[0];
-    eventCount    = ntohl(*(int*)(data+1));
-    offset        = 5;
-
-    printf("Ender: eventCount = %d\n", eventCount);
-    /* link them as a ring */
-    for (i=0; i<eventCount; i++) {
-	event = (jdwp_event_t*)malloc(sizeof(jdwp_event_t));
-	if (event == NULL) {
-	    /* FIXME: memory leak */
-	    return -1;
-	}
-
-	if (*backlog == NULL) {
-	    *backlog          = event;
-	    event->next       = event;
-	    event->prev       = event;
-	} else {
-	    event->next       = *backlog;
-	    event->prev       = (*backlog)->prev;
-	    event->next->prev = event;
-	    event->prev->next = event;
-	}
-
-	event->eventKind = data[offset++];
-
-	switch (event->eventKind) {
-	case E_THREAD_START:
-	case E_THREAD_END:
-	case E_VM_START:
-	    memcpy(&event->threadID, data+offset+4, sizeof(long long));
-	    offset += 4 + 8; //requestID + threadID
-	    break;
-	case E_VM_DEATH:
-	    offset += 4; // requestID
-	    break;
-	default:  // this shouldn't happen
-	    fprintf(stderr, "Error: JDWP: ignore event %d\n", event->eventKind);
-	    /* FIXME: memory leak */
-	    free(event);
-	    return -1;
-	}
-    }
-
-    return 0;
-}
-
 static void*
 dalvik_thread_monitor(void *arg)
 {
-    adb_ctx_t *ctx;
+    jdwp_ctx_t jdwp;
     jdwp_cmd_t *cmd;
-    jdwp_event_t *jdwpEvents = NULL;
 
-    int i, offset;
-    char *data;
-    char suspendPolicy;
-    int  events;
-    char eventKind;
+    jdwp_init(&jdwp);
 
-    ctx = adb_open(getpid());
-
-    jdwp_handshake(ctx);
-
-    jdwp_set_event_request(ctx, E_THREAD_START, 1);
-    jdwp_set_event_request(ctx, E_THREAD_END, 0);
-
-    //jdwp_read_events(ctx);
+    jdwp_set_event_request(&jdwp, E_THREAD_START, SUSPEND_EVENT_THREAD);
+    jdwp_set_event_request(&jdwp, E_THREAD_END, SUSPEND_NONE);
 
     while (1) {
 	/* is there any pending events in backlog? */
-	if (jdwpEvents == NULL) {
+	if (jdwp.events == NULL) {
 	    /* Nope! Let's wait for new events coming */
-	    cmd = (jdwp_cmd_t*)jdwp_recv_pkt(ctx);
+	    cmd = (jdwp_cmd_t*)jdwp_recv_pkt(&jdwp);
 
-	    /* something really bad happened, time to end of watch */
+	    /* something really bad happened, end of watch */
 	    if (cmd == NULL) {
 		fprintf(stderr, "Error: JDWP: disconnect...\n");
 		break;
 	    }
 
 	    /* put the events into backlog */
-	    event_backlog(&jdwpEvents, cmd);	    
+	    jdwp_event_backlog(&jdwp, cmd);
 	} else {
 	    /* Yep! Let's deal with them first */
-	    jdwp_reply_t *reply;
-	    jdwp_event_t *event = jdwpEvents;
+	    jdwp_event_t *event = jdwp.events;
 
-	    if (jdwpEvents->next = jdwpEvents) {
-		jdwpEvents = NULL;
+	    if (jdwp.events->next == jdwp.events) {
+		jdwp.events = NULL;
 	    } else {
-		jdwpEvents->next->prev = jdwpEvents->prev;
-		jdwpEvents->prev->next = jdwpEvents->next;
-		jdwpEvents             = jdwpEvents->next;
+		jdwp.events->next->prev = jdwp.events->prev;
+		jdwp.events->prev->next = jdwp.events->next;
+		jdwp.events             = jdwp.events->next;
 	    }
 
 	    /* get thread name */
-
-	    jdwp_send_pkt(ctx, THREADREF_NAME, (char*)&event->threadID,
-			  sizeof(event->threadID));
-	    while (1) {
-		reply = (jdwp_reply_t*)jdwp_recv_pkt(ctx);
-
-		if (reply == NULL) {
-		    printf("Ender: reply == NULL\n");
-		    break;
-		}
-
-		if (reply->flags == 0x80) {
-		    /* okay, most likely we get our ack */
-		    break;
-		}
-
-		/*
-		 * dalvik send us some events, put them into backlog for
-		 * now, then continue to wait for our ack
-		 */
-		event_backlog(&jdwpEvents, (jdwp_cmd_t*)reply);
-	    }
-
-	    if (reply->error_code != 0) {
-		fprintf(stderr, "Error: JDWP: get reply with error code %d\n",
-			reply->error_code);
-		return NULL;
-	    }
-
-	    /* reply->data[]: 4-byte length followed by a non-NULL-terminated string */
-	    int len = ntohl(*(int*)(reply->data));
-	    char *name = (char*)malloc(len + 1);
+	    printf("Ender: get thread name...\n");
+	    char *name = jdwp_get_thread_name(&jdwp, event->threadID);
 	    if (name == NULL) {
-		return NULL;
+		printf("Thread name: failed!\n");
+		break;
+	    } else {
+		printf("Thread name: %s\n", name);
+		free(name);
 	    }
-	    memcpy(name, reply->data+4, len);
-	    name[len] = 0;
-	    printf("Thread Name : %s\n", name);
-	    free(name);
-	    free(reply);
 
 	    /* resume thread */
-
-	    jdwp_send_pkt(ctx, THREADREF_RESUME, (char*)&event->threadID,
-			  sizeof(event->threadID));
-	    while (1) {
-		reply = (jdwp_reply_t*)jdwp_recv_pkt(ctx);
-
-		/* okay, most likely we get our ack */
-		if (reply->flags == 0x80) {
-		    break;
-		}
-
-		/*
-		 * dalvik send us some events, put them into backlog for
-		 * now, then continue to wait for our ack
-		 */
-		event_backlog(&jdwpEvents, (jdwp_cmd_t*)reply);
+	    if (event->suspendPolicy != SUSPEND_NONE) {
+		printf("Ender: resume the thread...\n");
+		jdwp_resume_thread(&jdwp, event->threadID);
 	    }
-
-	    if (reply->error_code != 0) {
-		fprintf(stderr, "Error: JDWP: get reply with error code %d\n",
-			reply->error_code);
-		return NULL;
-	    }
-
-	    free(reply);
 
 	    /* we are done with this event */
 	    free(event);
 	}
+    }
+
+    if (!adb_is_active(jdwp.adb)) {
+	fprintf(stderr, "Error: JDWP: connection closed\n");
     }
 
     return NULL;
@@ -296,12 +159,12 @@ dalvik_thread_monitor(void *arg)
 /*
  * The VM calls JNI_OnLoad() when the native library is loaded
  */
-FILE *ender;
+FILE *tau_verbose_fp;
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
     printf("TAU: JNI_OnLoad\n");
 
-    ender = stderr;
+    tau_verbose_fp = stderr;
 
     /*
      * This is a good point to attach your gdb on JVM to debug TAU

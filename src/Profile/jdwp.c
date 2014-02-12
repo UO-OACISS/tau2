@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "adb.h"
 #include "jdwp.h"
@@ -8,14 +10,15 @@
 static int jdwp_cmd_id = 0;
 
 int
-jdwp_handshake(adb_ctx_t *ctx)
+jdwp_handshake(jdwp_ctx_t *ctx)
 {
-    int rv;
     char shake[] = HANDSHAKE;
     char response[sizeof(HANDSHAKE)-1];
 
-    adb_write(ctx, shake, sizeof(HANDSHAKE)-1);
-    adb_read(ctx, response, sizeof(HANDSHAKE)-1);
+    adb_ctx_t *adb = ctx->adb;
+
+    adb_write(adb, shake, sizeof(HANDSHAKE)-1);
+    adb_read(adb, response, sizeof(HANDSHAKE)-1);
 
     if (memcmp(shake, response, sizeof(response)) != 0) {
 	fprintf(stderr, "Error: JDWP: Handshake failed.\n");
@@ -26,10 +29,12 @@ jdwp_handshake(adb_ctx_t *ctx)
 }
 
 int
-jdwp_send_pkt(adb_ctx_t *ctx, short cmd, char *data, int len)
+jdwp_send_pkt(jdwp_ctx_t *ctx, short cmd, char *data, int len)
 {
     static int pkt_len = 0;
     static jdwp_cmd_t *pkt = NULL;
+
+    adb_ctx_t *adb = ctx->adb;
 
     if (pkt_len < sizeof(jdwp_cmd_t) + len) {
 	free(pkt); // free(NULL) has no effect
@@ -49,15 +54,13 @@ jdwp_send_pkt(adb_ctx_t *ctx, short cmd, char *data, int len)
     pkt->cmd_set = (cmd & 0xff00) >> 8;
     pkt->command = (cmd & 0x00ff) >> 0;
 
-    /* TODO: check length */
     memcpy(pkt->data, data, len);
 
-
-    return adb_write(ctx, (char*)pkt, sizeof(jdwp_cmd_t)+len);
+    return adb_write(adb, (char*)pkt, sizeof(jdwp_cmd_t)+len);
 }
 
 char *
-jdwp_recv_pkt(adb_ctx_t *ctx)
+jdwp_recv_pkt(jdwp_ctx_t *ctx)
 {
     int rv;
     int data_len;
@@ -65,7 +68,9 @@ jdwp_recv_pkt(adb_ctx_t *ctx)
     jdwp_cmd_t header;
     jdwp_reply_t *reply = (jdwp_reply_t*)&header;
 
-    rv = adb_read(ctx, (char*)&header, sizeof(jdwp_cmd_t));
+    adb_ctx_t *adb = ctx->adb;
+
+    rv = adb_read(adb, (char*)&header, sizeof(jdwp_cmd_t));
     if (rv < 0) {
 	return NULL;
     }
@@ -78,12 +83,13 @@ jdwp_recv_pkt(adb_ctx_t *ctx)
     }
 
     pkt = (char*)malloc(header.length);
+
     memcpy(pkt, &header, sizeof(header));
 
     data_len = header.length - sizeof(header);
 
     if (data_len > 0) {
-	rv = adb_read(ctx, pkt+sizeof(header), data_len);
+	rv = adb_read(adb, pkt+sizeof(header), data_len);
 	if (rv < 0) {
 	    free(pkt);
 	    return NULL;
@@ -94,15 +100,140 @@ jdwp_recv_pkt(adb_ctx_t *ctx)
 }
 
 int
-jdwp_get_vm_version(adb_ctx_t *ctx)
+jdwp_event_backlog(jdwp_ctx_t *ctx, jdwp_cmd_t *cmd)
+{
+    int i, offset;
+    char *data;
+    char suspendPolicy;
+    int  eventCount;
+
+    jdwp_event_t *event;
+
+    /* this must be a command, not a reply */
+    if (cmd->flags == 0x80) {
+	fprintf(stderr, "Error: JDWP: ignore a reply pkt.\n");
+	return -1;
+    }
+
+    /* and the command must be EVENT_COMPOSIT */
+    if (((cmd->cmd_set << 8) | cmd->command) != EVENT_COMPOSIT) {
+	fprintf(stderr, "Error: JDWP: ignore a command pkt (%d, %d)\n",
+		cmd->cmd_set, cmd->command);
+	return -1;
+    }
+
+    data          = cmd->data;
+    suspendPolicy = data[0];
+    eventCount    = ntohl(*(int*)(data+1));
+    offset        = 5;
+
+    /* link them as a ring */
+    for (i=0; i<eventCount; i++) {
+	event = (jdwp_event_t*)malloc(sizeof(jdwp_event_t));
+	if (event == NULL) {
+	    return -1;
+	}
+
+	if (ctx->events == NULL) {
+	    ctx->events       = event;
+	    event->next       = event;
+	    event->prev       = event;
+	} else {
+	    event->next       = ctx->events;
+	    event->prev       = ctx->events->prev;
+	    event->next->prev = event;
+	    event->prev->next = event;
+	}
+
+	event->suspendPolicy = suspendPolicy;
+	event->eventKind     = data[offset++];
+
+	switch (event->eventKind) {
+	case E_THREAD_START:
+	case E_THREAD_END:
+	case E_VM_START:
+	    memcpy(&event->threadID, data+offset+4, sizeof(event->threadID));
+	    offset += 4 + 8; //requestID + threadID
+	    break;
+	case E_VM_DEATH:
+	    offset += 4; // requestID
+	    break;
+	default:  // this shouldn't happen
+	    fprintf(stderr, "Error: JDWP: ignore event %d\n", event->eventKind);
+	    free(event);
+	    return -1;
+	}
+    }
+
+    return 0;
+}
+
+int
+jdwp_init(jdwp_ctx_t *ctx)
+{
+    ctx->events = NULL;
+    ctx->adb    = adb_open(getpid());
+
+    jdwp_handshake(ctx);
+
+    return 0;
+}
+
+jdwp_reply_t *
+jdwp_get_reply(jdwp_ctx_t *ctx)
+{
+    jdwp_reply_t *reply;
+
+    while (1) {
+	reply = (jdwp_reply_t*)jdwp_recv_pkt(ctx);
+	if (reply == NULL) {
+	    /* why? peer closed connection? */
+	    if (!adb_is_active(ctx->adb)) {
+		fprintf(stderr, "Error: JDWP: connection closed!\n");
+		return NULL;
+	    } else {
+		/* retry */
+		continue;
+	    }
+	}
+
+	switch (reply->flags) {
+	case 0x00:      /* jdwp events may come in anytime */
+	    jdwp_event_backlog(ctx, (jdwp_cmd_t*)reply);
+	    free(reply);
+	    break;
+	case 0x80:	/* okay, we get an reply */
+	    return reply;
+	default:        /* this can not happen */
+	    fprintf(stderr, "Error: JDWP: malformed pkt, flags=0x%x\n", reply->flags);
+	    free(reply);
+	    break;
+	}
+    }
+
+    return NULL;
+}
+
+int
+jdwp_get_vm_version(jdwp_ctx_t *ctx)
 {
     int rv;
     jdwp_reply_t *reply;
 
-    jdwp_send_pkt(ctx, VIRTUALMACHINE_VERSION, NULL, 0);
+    rv = jdwp_send_pkt(ctx, VIRTUALMACHINE_VERSION, NULL, 0);
+    if (rv < 0) {
+	return -1;
+    }
 
-    reply = (jdwp_reply_t*)jdwp_recv_pkt(ctx);
+    reply = jdwp_get_reply(ctx);
     if (reply == NULL) {
+	return -1;
+    }
+
+    if (reply->error_code != 0) {
+	fprintf(stderr, "Error: JDWP: get reply with error code %d\n",
+		reply->error_code);
+	free(reply);
 	return -1;
     }
 
@@ -112,16 +243,20 @@ jdwp_get_vm_version(adb_ctx_t *ctx)
 }
 
 int
-jdwp_set_event_request(adb_ctx_t *ctx, char eventKind, char suspendPolicy)
+jdwp_set_event_request(jdwp_ctx_t *ctx, char eventKind, char suspendPolicy)
 {
+    int rv;
     int requestID;
     jdwp_reply_t *reply;
 
     char data[] = {eventKind, suspendPolicy, 0, 0, 0, 0};
 
-    jdwp_send_pkt(ctx, EVENTREQUEST_SET, data, sizeof(data));
+    rv = jdwp_send_pkt(ctx, EVENTREQUEST_SET, data, sizeof(data));
+    if (rv < 0) {
+	return -1;
+    }
 
-    reply = (jdwp_reply_t*)jdwp_recv_pkt(ctx);
+    reply = jdwp_get_reply(ctx);
     if (reply == NULL) {
 	return -1;
     }
@@ -142,13 +277,17 @@ jdwp_set_event_request(adb_ctx_t *ctx, char eventKind, char suspendPolicy)
 }
 
 int
-jdwp_resume_thread(adb_ctx_t *ctx, long long*threadID)
+jdwp_resume_thread(jdwp_ctx_t *ctx, long long threadID)
 {
+    int rv;
     jdwp_reply_t *reply;
 
-    jdwp_send_pkt(ctx, THREADREF_RESUME, (char*)threadID, sizeof(*threadID));
+    rv = jdwp_send_pkt(ctx, THREADREF_RESUME, (char*)&threadID, sizeof(threadID));
+    if (rv < 0) {
+	return -1;
+    }
 
-    reply = (jdwp_reply_t*)jdwp_recv_pkt(ctx);
+    reply = jdwp_get_reply(ctx);
     if (reply == NULL) {
 	return -1;
     }
@@ -164,71 +303,40 @@ jdwp_resume_thread(adb_ctx_t *ctx, long long*threadID)
     return 0;
 }
 
-int
-jdwp_read_events(adb_ctx_t *ctx)
+char *
+jdwp_get_thread_name(jdwp_ctx_t *ctx, long long threadID)
 {
     int rv;
-    jdwp_cmd_t *cmd;
+    jdwp_reply_t *reply;
 
-    int  i, offset;
-    char *data;
-    char suspendPolicy;
-    int  events;
-    char eventKind;
-
-    while (1) {
-	cmd  = (jdwp_cmd_t*)jdwp_recv_pkt(ctx);
-	data = cmd->data;
-	if (cmd == NULL) {
-	    fprintf(stderr, "Error: JDWP: disconnect...\n");
-	    break;
-	}
-
-	if (cmd->flags == 0x80) {
-	    fprintf(stderr, "Error: JDWP: ignore a reply pkt.\n");
-	    continue;
-	}
-
-	if (((cmd->cmd_set << 8) | cmd->command) != EVENT_COMPOSIT) {
-	    fprintf(stderr, "Error: JDWP: ignore a command pkt (%d, %d)\n",
-		    cmd->cmd_set, cmd->command);
-	    continue;
-	}
-
-	suspendPolicy = data[0];
-	events = ntohl(*(int*)(data+1));
-
-	offset = 5;
-	for (i=0; i<events; i++) {
-	    eventKind = data[offset++];
-	    switch (eventKind) {
-	    case E_THREAD_START:
-		printf("Get Event THREAD_START\n");
-		if (suspendPolicy != 0) {
-		    printf("Resume the thread\n");
-		    jdwp_resume_thread(ctx, (long long*)(data+offset+4));
-		}
-		offset += 4 + 8; // requestID + thread
-		break;
-	    case E_THREAD_END:
-		printf("Get Event THREAD_END\n");
-		offset += 4 + 8; // requestID + thread
-		break;
-	    case E_VM_START:
-		printf("Get Event VM_START\n");
-		offset += 4 + 8; // requestID + thread
-		break;
-	    case E_VM_DEATH:
-		printf("Get Event VM_DEATH\n");
-		offset += 4; // requestID
-		break;
-	    default:
-		fprintf(stderr, "Error: JDWP: ignore event %d\n", eventKind);
-		break;
-	    }
-	}
+    rv = jdwp_send_pkt(ctx, THREADREF_NAME, (char*)&threadID, sizeof(threadID));
+    if (rv < 0) {
+	return NULL;
     }
 
-    return 0;
-}
+    reply = jdwp_get_reply(ctx);
+    if (reply == NULL) {
+	return NULL;
+    }
 
+    if (reply->error_code != 0) {
+	fprintf(stderr, "Error: JDWP: get reply with error code %d\n",
+		reply->error_code);
+	free(reply);
+	return NULL;
+    }
+
+    /* reply->data[]: 4-byte length followed by a non-NULL-terminated string */
+    int len = ntohl(*(int*)(reply->data));
+    char *name = (char*)malloc(len + 1);
+    if (name == NULL) {
+	free(reply);
+	return NULL;
+    }
+
+    memcpy(name, reply->data+4, len);
+    name[len] = 0;
+
+    free(reply);
+    return name;
+}

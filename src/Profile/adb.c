@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "adb.h"
 #include "jdwp.h"
@@ -203,7 +205,7 @@ adb_send_connect(adb_ctx_t *ctx)
 static int
 adb_send_open(adb_ctx_t *ctx, pid_t pid)
 {
-    char dst[16];
+    char dst[16]; // this should be enough 
 
     snprintf(dst, sizeof(dst), "jdwp:%d", pid);
 
@@ -304,7 +306,54 @@ rmsg_is_clse(adb_ctx_t *ctx)
 	return 0;
     }
 
-    return _id_is_ok(ctx, "CLSE");
+    return 1;
+}
+
+static int
+adb_backlog(adb_ctx_t *ctx, msg_t *msg)
+{
+    adb_backlog_t *backlog;
+
+    backlog = (adb_backlog_t*)malloc(sizeof(*backlog) +
+				     msg->data_length);
+    if (backlog == NULL) {
+	return -1;
+    }
+
+    backlog->len    = msg->data_length;
+    backlog->offset = 0;
+    memcpy(backlog->data, msg->data, backlog->len);
+
+    if (ctx->backlog == NULL) {
+	ctx->backlog  = backlog;
+	backlog->next = backlog;
+	backlog->prev = backlog;
+    } else {
+	backlog->next       = ctx->backlog;
+	backlog->prev       = ctx->backlog->prev;
+	backlog->next->prev = backlog;
+	backlog->prev->next = backlog;
+    }
+
+    return 0;
+}
+
+static int
+adb_free_backlog(adb_ctx_t *ctx)
+{
+    adb_backlog_t *this, *next;
+
+    /* free any backlog which remains unhandled */
+    if (ctx->backlog != NULL) {
+	this = ctx->backlog;
+	do {
+	    next = this->next;
+	    free(this);
+	    this = next;
+	} while (this != ctx->backlog);
+    }
+
+    return 0;
 }
 
 /*****************************************************/
@@ -331,6 +380,7 @@ adb_open(pid_t pid)
     ctx->lid         = local_id++;
     ctx->rid         = 0;
     ctx->max_payload = MAX_PAYLOAD;
+    ctx->backlog     = NULL;
 
     rv = connect(ctx->fd, (struct sockaddr*)&saddr, sizeof(saddr));
     if (rv < 0) {
@@ -384,7 +434,7 @@ adb_open(pid_t pid)
 
     if (rmsg_is_okay(ctx)) {
 	/* update remote id */
-	ctx->rid    = msg->arg0;
+	ctx->rid = msg->arg0;
     } else if (rmsg_is_clse(ctx)) {
 	fprintf(stderr, "Error: ADB: connection closed by peer.\n");
 	goto err_q_1;
@@ -393,6 +443,9 @@ adb_open(pid_t pid)
 		command_str(msg->command));
 	goto err_q_1;
     }
+
+    /* now the connection is considered as active */
+    ctx->active = 1;
 
     return ctx;
 
@@ -406,9 +459,17 @@ void
 adb_close(adb_ctx_t *ctx)
 {
     if (ctx) {
+	adb_free_backlog(ctx);
 	close(ctx->fd);
+
 	free(ctx);
     }
+}
+
+int
+adb_is_active(adb_ctx_t *ctx)
+{
+    return (ctx->active != 0);
 }
 
 ssize_t
@@ -416,25 +477,54 @@ adb_read(adb_ctx_t *ctx, char *buf, size_t count)
 {
     int rv;
     msg_t *msg;
-    int finished, remain, trunk, offset;
+    int finished, remain, trunk;
+    adb_backlog_t *backlog;
 
     finished = 0;
     remain   = count;
 
+    if (!ctx->active) {
+	return -1;
+    }
+
     while (remain > 0) {
-	if (ctx->backlog > 0) {
-	    msg = &ctx->rmsg;
-	    trunk  = remain>ctx->backlog? ctx->backlog : remain;
-	    offset = msg->data_length - ctx->backlog;
+	if (ctx->backlog != NULL) {
+	    backlog = ctx->backlog;
 
-	    memcpy(buf+finished, msg->data+offset, trunk);
+	    if (remain > backlog->len - backlog->offset) {
+		trunk = backlog->len - backlog->offset;
+	    } else {
+		trunk = remain;
+	    }
 
-	    finished     += trunk;
-	    remain       -= trunk;
-	    ctx->backlog -= trunk;
+	    memcpy(buf+finished, backlog->data + backlog->offset, trunk);
+
+	    finished        += trunk;
+	    remain          -= trunk;
+	    backlog->offset += trunk;
+
+	    /* remove the backlog if the data has all been handled */
+	    if (backlog->len - backlog->offset == 0) {
+		if (backlog->next == backlog) {
+		    ctx->backlog = NULL;
+		} else {
+		    ctx->backlog->next->prev = ctx->backlog->prev;
+		    ctx->backlog->prev->next = ctx->backlog->next;
+		    ctx->backlog             = ctx->backlog->next;
+		}
+
+		//free(backlog);
+	    }
 	} else {
 	    msg = recv_message(ctx);
 	    if (msg == NULL) {
+		return -1;
+	    }
+
+	    /* peer may close connection at anytime */
+	    if (rmsg_is_clse(ctx)) {
+		fprintf(stderr, "Error: ADB: connection closed by peer!\n");
+		ctx->active = 0;
 		return -1;
 	    }
 
@@ -443,7 +533,7 @@ adb_read(adb_ctx_t *ctx, char *buf, size_t count)
 	    }
 
 	    /* update backlog, next iteration will consume it */
-	    ctx->backlog = msg->data_length;
+	    adb_backlog(ctx, msg);
 
 	    /*
 	     * If the peer doesn't receive our ack, they will stop sending us
@@ -461,7 +551,7 @@ adb_read(adb_ctx_t *ctx, char *buf, size_t count)
 
 	    /* something REALLY BAD has happened... */
 	    if (rv < 0) {
-		ctx->backlog = 0;
+		adb_free_backlog(ctx);
 		return -1;
 	    }
 	}
@@ -480,6 +570,10 @@ adb_write(adb_ctx_t *ctx, char *buf, size_t count)
     finished = 0;
     remain   = count;
 
+    if (!ctx->active) {
+	return -1;
+    }
+
     while (remain > 0) {
 	trunk = remain>ctx->max_payload ? ctx->max_payload : remain;
 
@@ -491,70 +585,37 @@ adb_write(adb_ctx_t *ctx, char *buf, size_t count)
 	finished += trunk;
 	remain   -= trunk;
 
-	msg = recv_message(ctx);
-	if (msg == NULL) {
-	    return -1;
-	}
+	/* stay until we get our ack */
+	while (1) {
+	    msg = recv_message(ctx);
+	    if (msg == NULL) {
+		return -1;
+	    }
 
-	if (!rmsg_is_okay(ctx)) {
-	    return -1;
+	    /* nice, we get the ack */
+	    if (rmsg_is_okay(ctx)) {
+		break;
+	    }
+
+	    /* peer may close the connection at anytime */
+	    if (rmsg_is_clse(ctx)) {
+		fprintf(stderr, "Error: ADB: connection closed by peer!\n");
+		ctx->active = 0;
+		return -1;
+	    }
+
+	    /* peer may send us some data before the ack */
+	    if (rmsg_is_wrte(ctx)) {
+		adb_send_okay(ctx);
+		adb_backlog(ctx, msg);
+		continue;
+	    }
+
+	    /* that's all the posibilities above, we shouldn't reach here */
 	}
     }
 
-    return count;
+    return finished;
 }
 
 /*****************************************************/
-
-/*
-int
-main(void)
-{
-    int rv;
-    int threadStartReq, threadEndReq;
-    msg_t *msg;
-    struct sockaddr_in saddr;
-
-    saddr.sin_family      = AF_INET;
-    saddr.sin_port        = htons(ADBD_PORT);
-    saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-
-    adb_fd = socket(AF_INET, SOCK_STREAM, 0);
-    rv = connect(adb_fd, (struct sockaddr*)&saddr, sizeof(saddr));
-    if (rv < 0) {
-	perror("connect");
-	return -1;
-    }
-
-    msg = (msg_t*)buf;
-
-    adb_send_connect();
-    recv_message(msg);
-
-    adb_send_open();
-    remote_id = adb_recv_okay();
-
-    adb_send_okay();
-
-    jdwp_handshake();
-    jdwp_get_vm_version();
-
-    threadStartReq = jdwp_set_event_request(6);
-    if (threadStartReq < 0) {
-	fprintf(stderr, "Failed to request thread events: requestID=0x%08x\n", threadStartReq);
-	return -1;
-    }
-    threadEndReq = jdwp_set_event_request(7);
-    if (threadEndReq < 0) {
-	fprintf(stderr, "Failed to request thread events: requestID=0x%08x\n", threadEndReq);
-	return -1;
-    }
-
-    jdwp_read_events();
-
-    jdwp_clear_event_request(6, threadStartReq);
-    jdwp_clear_event_request(7, threadEndReq);
-
-    return 0;
-}
-*/

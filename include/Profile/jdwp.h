@@ -18,35 +18,55 @@
 #define E_VM_START     90
 #define E_VM_DEATH     99
 
+/* SuspendPolicy Constants */
+#define SUSPEND_NONE         0
+#define SUSPEND_EVENT_THREAD 1
+#define SUSPEND_ALL          2
+
 typedef struct __attribute__((packed)) {
-    unsigned int length;
-    unsigned int id;
-    char         flags;
-    char         cmd_set;
-    char         command;
-    char         data[];
+    unsigned int  length;
+    unsigned int  id;
+    unsigned char flags;
+    char          cmd_set;
+    char          command;
+    char          data[];
 } jdwp_cmd_t;
 
 typedef struct __attribute__((packed)) {
-    unsigned int length;
-    unsigned int id;
-    char         flags;
-    short        error_code;
-    char         data[];
+    unsigned int  length;
+    unsigned int  id;
+    unsigned char flags;
+    short         error_code;
+    char          data[];
 } jdwp_reply_t;
+
+typedef struct _jdwp_event_t {
+    char suspendPolicy;
+    char eventKind;
+    long long threadID;
+    struct _jdwp_event_t *next;
+    struct _jdwp_event_t *prev;
+} jdwp_event_t;
+
+typedef struct {
+    adb_ctx_t *adb;
+    jdwp_event_t *events;
+} jdwp_ctx_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-int jdwp_handshake(adb_ctx_t *ctx);
-int jdwp_read_events(adb_ctx_t *ctx);
-int jdwp_resume_thread(adb_ctx_t *ctx, long long *threadID);
-int jdwp_set_event_request(adb_ctx_t *ctx, char eventKind, char suspendPolicy);
-int jdwp_get_vm_version(adb_ctx_t *ctx);
-
-int jdwp_send_pkt(adb_ctx_t *ctx, short cmd, char *data, int len);
-char *jdwp_recv_pkt(adb_ctx_t *ctx);
+int jdwp_init(jdwp_ctx_t *ctx);
+int jdwp_handshake(jdwp_ctx_t *ctx);
+//int jdwp_read_events(jdwp_ctx_t *ctx);
+int jdwp_resume_thread(jdwp_ctx_t *ctx, long long threadID);
+char *jdwp_get_thread_name(jdwp_ctx_t *ctx, long long threadID);
+int jdwp_set_event_request(jdwp_ctx_t *ctx, char eventKind, char suspendPolicy);
+int jdwp_get_vm_version(jdwp_ctx_t *ctx);
+int jdwp_event_backlog(jdwp_ctx_t *ctx, jdwp_cmd_t *cmd);
+int jdwp_send_pkt(jdwp_ctx_t *ctx, short cmd, char *data, int len);
+char *jdwp_recv_pkt(jdwp_ctx_t *ctx);
 
 #ifdef __cplusplus
 }
