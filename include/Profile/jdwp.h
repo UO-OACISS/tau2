@@ -9,8 +9,10 @@
 #define VIRTUALMACHINE_VERSION 0x0101
 #define EVENTREQUEST_SET       0x0f01
 #define EVENT_COMPOSIT         0x4064
-#define THREADREF_RESUME       0x0b03
 #define THREADREF_NAME         0x0b01
+#define THREADREF_RESUME       0x0b03
+#define THREADREF_THREADGROUP  0x0b05
+#define THREADGRPREF_NAME      0x0c01
 
 /* EventKind Constants */
 #define E_THREAD_START 6
@@ -59,7 +61,6 @@ extern "C" {
 
 int jdwp_init(jdwp_ctx_t *ctx);
 int jdwp_handshake(jdwp_ctx_t *ctx);
-//int jdwp_read_events(jdwp_ctx_t *ctx);
 int jdwp_resume_thread(jdwp_ctx_t *ctx, long long threadID);
 char *jdwp_get_thread_name(jdwp_ctx_t *ctx, long long threadID);
 int jdwp_set_event_request(jdwp_ctx_t *ctx, char eventKind, char suspendPolicy);
@@ -67,6 +68,8 @@ int jdwp_get_vm_version(jdwp_ctx_t *ctx);
 int jdwp_event_backlog(jdwp_ctx_t *ctx, jdwp_cmd_t *cmd);
 int jdwp_send_pkt(jdwp_ctx_t *ctx, short cmd, char *data, int len);
 char *jdwp_recv_pkt(jdwp_ctx_t *ctx);
+long long jdwp_get_thread_group(jdwp_ctx_t *ctx, long long threadID);
+char *jdwp_get_thread_group_name(jdwp_ctx_t *ctx, long long threadGroupID);
 
 #ifdef __cplusplus
 }

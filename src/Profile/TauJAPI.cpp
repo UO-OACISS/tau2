@@ -125,14 +125,21 @@ dalvik_thread_monitor(void *arg)
 		jdwp.events             = jdwp.events->next;
 	    }
 
-	    /* get thread name */
-	    printf("Ender: get thread name...\n");
-	    char *name = jdwp_get_thread_name(&jdwp, event->threadID);
-	    if (name == NULL) {
-		printf("Thread name: failed!\n");
-		break;
-	    } else {
-		printf("Thread name: %s\n", name);
+	    if (event->eventKind == E_THREAD_START) {
+		/* get thread name */
+		printf("Ender: get thread name...\n");
+		char *name = jdwp_get_thread_name(&jdwp, event->threadID);
+		if (name == NULL) {
+		    printf("Thread name: failed!\n");
+		    break;
+		} else {
+		    printf("Thread name: %s\n", name);
+		    free(name);
+		}
+
+		long long grpID = jdwp_get_thread_group(&jdwp, event->threadID);
+		name = jdwp_get_thread_group_name(&jdwp, grpID);
+		printf("Thread Group name: %s\n", name);
 		free(name);
 	    }
 
