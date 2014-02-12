@@ -720,35 +720,55 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		statement.execute();
 	}
 
-	public static void deleteTrial(DB db, int trialID) throws SQLException {
+	private static PreparedStatement setTrialIDs(PreparedStatement statement,int[] trialIDs) throws SQLException{
+		for(int i=0;i<trialIDs.length;i++){
+			statement.setInt(i+1, trialIDs[i]);
+		}
+		return statement;
+	}
+	
+	public static void deleteTrial(DB db, int[] trialIDs) throws SQLException {
 
+		String whereClause=" IN (";
+		
+		for(int i=0;i<trialIDs.length;i++){
+			whereClause+="?";
+			if(i!=trialIDs.length-1){
+				whereClause+=",";
+			}
+		}
+		whereClause+=") ";
+		
+		String idClause =  " WHERE id "+whereClause;
+		whereClause=" WHERE trial "+whereClause;
+		
 		PreparedStatement statement = null;
 
 		// There's a chances that these might not work with MySQL, but after
 		// reading the manual
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "primary_metadata WHERE trial = ?");
-		statement.setInt(1, trialID);
+				+ "primary_metadata"+ whereClause);
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db
 				.prepareStatement(" DELETE FROM "
 						+ db.getSchemaPrefix()
-						+ "time_range WHERE id in (select time_range from secondary_metadata where trial = ?)");
-		statement.setInt(1, trialID);
+						+ "time_range WHERE id in (select time_range from secondary_metadata"+ whereClause+")");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "secondary_metadata WHERE trial = ?");
-		statement.setInt(1, trialID);
+				+ "secondary_metadata "+ whereClause);
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		// Postgresql, oracle, and DB2?
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "counter_value WHERE counter in (SELECT id FROM "
-				+ db.getSchemaPrefix() + "counter WHERE trial = ?)");
-		statement.setInt(1, trialID);
+				+ db.getSchemaPrefix() + "counter "+ whereClause+")");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db
@@ -759,8 +779,8 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 						+ "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM "
 						+ db.getSchemaPrefix()
 						+ "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM "
-						+ db.getSchemaPrefix() + "timer t WHERE trial = ?)))");
-		statement.setInt(1, trialID);
+						+ db.getSchemaPrefix() + "timer t "+ whereClause+")))");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db
@@ -769,56 +789,56 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 						+ "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM "
 						+ db.getSchemaPrefix()
 						+ "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM "
-						+ db.getSchemaPrefix() + "timer t WHERE trial = ?))");
-		statement.setInt(1, trialID);
+						+ db.getSchemaPrefix() + "timer t "+ whereClause+"))");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer_callpath WHERE timer IN (SELECT id FROM "
-				+ db.getSchemaPrefix() + "timer WHERE trial = ?)");
-		statement.setInt(1, trialID);
+				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer_parameter WHERE timer IN (SELECT id FROM "
-				+ db.getSchemaPrefix() + "timer WHERE trial = ?)");
-		statement.setInt(1, trialID);
+				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer_group WHERE timer IN (SELECT id FROM "
-				+ db.getSchemaPrefix() + "timer WHERE trial = ?)");
-		statement.setInt(1, trialID);
+				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer_group WHERE timer IN (SELECT id FROM "
-				+ db.getSchemaPrefix() + "timer WHERE trial = ?)");
-		statement.setInt(1, trialID);
+				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "counter WHERE trial = ?");
-		statement.setInt(1, trialID);
+				+ "counter "+ whereClause);
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "thread WHERE trial = ?");
-		statement.setInt(1, trialID);
+				+ "thread "+ whereClause);
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "timer WHERE trial = ?");
-		statement.setInt(1, trialID);
+				+ "timer "+ whereClause);
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "metric WHERE trial = ?");
-		statement.setInt(1, trialID);
+				+ "metric "+ whereClause);
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "trial WHERE id = ?");
-		statement.setInt(1, trialID);
+				+ "trial "+ idClause);
+		statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
 	}
 	
