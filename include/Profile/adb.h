@@ -27,14 +27,25 @@ typedef struct {
     char     data[];
 } msg_t;
 
+typedef struct _adb_backlog_t {
+    struct _adb_backlog_t *next;
+    struct _adb_backlog_t *prev;
+
+    int len;                /* data length                       */
+    int offset;             /* read pointer offset of data       */
+    char data[];
+} adb_backlog_t;
+
 typedef struct {
     int fd;                 /* socket fd                         */
 
     int lid;                /* local id                          */
     int rid;                /* remote id                         */
-
-    int backlog;            /* rmsg payload remain unhandled     */
     int max_payload;        /* max payload size                  */
+
+    adb_backlog_t *backlog; /* rmsg payload remain unhandled     */
+
+    int active;             /* the connection is active or not   */
 
     msg_t rmsg;             /* the last received message         */
     char  d1[MAX_PAYLOAD];  /* aka. rmsg.data                    */
@@ -48,6 +59,7 @@ extern "C" {
 
 adb_ctx_t* adb_open(pid_t pid);
 void adb_close(adb_ctx_t *ctx);
+int adb_is_active(adb_ctx_t *ctx);
 ssize_t adb_read(adb_ctx_t *ctx, char *buf, size_t count);
 ssize_t adb_write(adb_ctx_t *ctx, char *buf, size_t count);
 

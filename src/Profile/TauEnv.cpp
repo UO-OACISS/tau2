@@ -584,7 +584,7 @@ void TAU_VERBOSE(const char *format, ...)
 #ifdef TAU_ANDROID
 
     char *str;
-    extern FILE *ender;
+    extern FILE *tau_verbose_fp;
     extern int android_log(char*);
 
     va_start(args, format);
@@ -594,8 +594,8 @@ void TAU_VERBOSE(const char *format, ...)
     va_end(args);
 
     //android_log(str);
-    fprintf(ender, str);
-    fflush(ender);
+    fprintf(tau_verbose_fp, str);
+    fflush(tau_verbose_fp);
 
     free(str);
 
