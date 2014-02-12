@@ -771,11 +771,31 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		
 		if (object instanceof TreePath[]) {
 			TreePath[] paths = (TreePath[]) object;
+			ArrayList<ParaProfTrial> trials = new ArrayList<ParaProfTrial>(paths.length);
 			for (int i = 0; i < paths.length; i++) {
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) paths[i]
 				                                                                     .getLastPathComponent();
 				Object userObject = selectedNode.getUserObject();
-				handleDelete(userObject, false);
+				//Check if there are multiple trials to delete, if so delete them all at once
+								if (userObject instanceof ParaProfTrial) {
+										ParaProfTrial t = (ParaProfTrial) userObject;
+										if (t.dBTrial()
+					
+												&& (trials.size() == 0
+												|| trials.get(0).getDatabase()
+					.equals(t.getDatabase()))) {
+											trials.add(t);
+										} else {
+										handleDelete(userObject, false);
+										}
+									} else {
+										handleDelete(userObject, false);
+									}
+								}
+								if (trials.size() > 0) {
+									ParaProfTrial[] trialArray = new ParaProfTrial[trials.size()];
+									trialArray = trials.toArray(trialArray);
+									handleDelete(trialArray, false);
 			}
 
 		} else if (object instanceof ParaProfApplication) {
@@ -867,7 +887,39 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				ppTrial.getExperiment().removeTrial(ppTrial);
 				getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
 			}
-		} else if (object instanceof ParaProfMetric) {
+		} else if (object instanceof ParaProfTrial[]) {
+						ParaProfTrial[] ppTrials = (ParaProfTrial[]) object;
+			
+							DatabaseAPI databaseAPI = this.getDatabaseAPI(ppTrials[0]
+									.getDatabase());
+							if (databaseAPI != null) {
+							int[] trialIDs = new int[ppTrials.length];
+							for (int i = 0; i < ppTrials.length; i++) {
+							ParaProfTrial ppTrial = ppTrials[i];
+								trialIDs[i] = ppTrial.getID();
+								// Remove any loaded trials associated with this
+								// application.
+								for (Enumeration<ParaProfTrial> e = loadedDBTrials
+										.elements(); e.hasMoreElements();) {
+									ParaProfTrial loadedTrial = e.nextElement();
+									if (loadedTrial.getApplicationID() == ppTrial
+											.getApplicationID()
+											&& loadedTrial.getExperimentID() == ppTrial
+													.getID()
+											&& loadedTrial.getID() == ppTrial.getID()
+											&& loadedTrial.loading() == false) {
+										loadedDBTrials.remove(loadedTrial);
+									}
+								}
+								getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
+							}
+							databaseAPI.deleteTrial(trialIDs);
+							databaseAPI.terminate();
+						}
+			
+			 		}
+		
+		else if (object instanceof ParaProfMetric) {
 			ParaProfMetric ppMetric = (ParaProfMetric) object;
 			deleteMetric(ppMetric);
 		} else if (object instanceof DefaultMutableTreeNode){

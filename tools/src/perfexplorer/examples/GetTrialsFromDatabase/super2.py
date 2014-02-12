@@ -16,15 +16,14 @@ def loadFromDB():
 	metadata.put("model_size"," = '15km'")
 	# get just the first trial
 	metadata.put("processes"," = '4096'")
-	metadata.put("integer_core"," = 'd1'")
 	trials = Utilities.getTrialsFromMetadata(metadata, conjoin)
 	metrics = ArrayList()
 	metrics.add("WALL_CLOCK_TIME")
 	baseline = TrialMeanResult(trials.get(0), None, None, False)
-	extractor = TopXEvents(baseline, metrics.get(0), AbstractResult.EXCLUSIVE, 10)
+	print baseline.getOriginalThreads()
+	extractor = TopXEvents(baseline, metrics.get(0), AbstractResult.INCLUSIVE, 1)
 	topx = extractor.processData().get(0)
 	inputs = ArrayList()
-	#inputs.add(topx)
 	events = ArrayList()
 	# unfortunately, the events are returned as a set. :(
 	events.addAll(topx.getEvents())
@@ -48,27 +47,19 @@ def drawGraph(results):
 	grapher.setLogYAxis(True)
 	grapher.setShowZero(True)
 	grapher.setTitle("Graph of Multiple Trials: " + metric)
-	grapher.setSeriesType(DrawGraph.EVENTNAME)
+	grapher.setSeriesType(DrawGraph.METADATA)
 	grapher.setUnits(DrawGraph.SECONDS)
-	grapher.setCategoryType(DrawGraph.METADATA)
-	grapher.setMetadataField("processes")
+	grapher.setCategoryType(DrawGraph.PROCESSORCOUNT)
+	grapher.setMetadataField("integer_core")
 	grapher.setXAxisLabel("Processes")
-	grapher.setValueType(AbstractResult.EXCLUSIVE)
-	grapher.setYAxisLabel("Exclusive " + metric + " (seconds)")
-	#grapher.setChartType(DrawGraph.STACKEDAREACHART)
+	grapher.setValueType(AbstractResult.INCLUSIVE)
+	grapher.setYAxisLabel("Inclusive " + metric + " (seconds)")
 	grapher.processData()
 
 def main():
 	print "--------------- JPython test script start ------------"
 	# load the data
 	inputs = loadFromDB()
-
-	"""
-	for i in inputs:
-		print i.getName()
-		for e in i.getEvents():
-			print e
-	"""
 
 	drawGraph(inputs)
 	print "---------------- JPython test script end -------------"
