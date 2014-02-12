@@ -223,10 +223,9 @@ public class TrialMeanResult extends AbstractResult {
 			System.out.println("Time to query interval data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
 				String eventName = results.getString(1);
-				this.putExclusive(0, eventName, results.getString(2),
-						results.getDouble(4));
-				this.putInclusive(0, eventName, results.getString(2),
-						results.getDouble(5));
+				String metricName = results.getString(2);
+				this.putExclusive(0, eventName, metricName,	results.getDouble(3));
+				this.putInclusive(0, eventName, metricName,	results.getDouble(4));
 				this.putCalls(0, eventName, results.getDouble(5));
 				this.putSubroutines(0, eventName, results.getDouble(6));
 				Integer eventID = results.getInt(7);
@@ -261,11 +260,12 @@ public class TrialMeanResult extends AbstractResult {
 			elapsedTimeSec = elapsedTimeMillis/1000F;
 			System.out.println("Time to query counter data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
-				this.putUsereventNumevents(0, results.getString(1), results.getDouble(2));
-				this.putUsereventMax(0, results.getString(1), results.getDouble(3));
-				this.putUsereventMin(0, results.getString(1), results.getDouble(4));
-				this.putUsereventMean(0, results.getString(1), results.getDouble(5));
-				this.putUsereventSumsqr(0, results.getString(1), results.getDouble(6));
+				String counterName = results.getString(1);
+				this.putUsereventNumevents(0, counterName, results.getDouble(2));
+				this.putUsereventMax(0, counterName, results.getDouble(3));
+				this.putUsereventMin(0, counterName, results.getDouble(4));
+				this.putUsereventMean(0, counterName, results.getDouble(5));
+				this.putUsereventSumsqr(0, counterName, results.getDouble(6));
 			}
 			results.close();
 			statement.close();
@@ -292,6 +292,8 @@ public class TrialMeanResult extends AbstractResult {
 	 * @return the originalThreads
 	 */
 	public Integer getOriginalThreads() {
+		if (originalThreads == 0)
+			originalThreads = super.getOriginalThreads();
 		return originalThreads;
 	}
 

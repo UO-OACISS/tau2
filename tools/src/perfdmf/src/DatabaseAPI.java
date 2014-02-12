@@ -16,6 +16,7 @@ import java.util.Vector;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
 /**
  * This is the top level class for the Database API.
@@ -1310,8 +1311,22 @@ public class DatabaseAPI {
         return expid;
     }
 
+   	public void deleteTrial(int[] trialIDs) throws SQLException {
+    			if (db.getSchemaVersion() <= 0) {
+    				for (int i = 0; i < trialIDs.length; i++) {
+    					Trial.deleteTrial(db, trialIDs[i]);
+    				}
+    				return;
+    			} else {
+    			
+    			TAUdbTrial.deleteTrial(db, trialIDs);
+    			}
+    }
+    	
+    
     public void deleteTrial(int trialID) throws SQLException {
-        Trial.deleteTrial(db, trialID);
+    				int[] trialIDs = { trialID };
+    				Trial.deleteTrial(db, trialIDs[0]);
     }
 
     public void deleteExperiment(int experimentID) throws DatabaseException, SQLException {
