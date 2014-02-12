@@ -360,40 +360,56 @@ public class DrawGraph extends AbstractPerformanceOperation {
                     for (String metric : metrics) {
                         for (Integer thread : threads) {
                             // set the series name
-                            if (seriesType == TRIALNAME) {
-                                seriesName = input.getTrial().getName();
-                            } else if (seriesType == EVENTNAME) {
-                                if (shortenNames) {
-                                    seriesName = this.shortName(event);
-                                } else {
-                                    seriesName = event;
-                                }
-                            } else if (seriesType == METRICNAME) {
-                                seriesName = metric;
-                            } else if (seriesType == THREADNAME) {
-                                seriesName = thread.toString();
-                            }
+                        	switch (seriesType) {
+	                        	case TRIALNAME: 
+	                        		seriesName = input.getTrial().getName();
+	                        		break;
+	                        	case EVENTNAME:
+	                                if (shortenNames) {
+	                                    seriesName = this.shortName(event);
+	                                } else {
+	                                    seriesName = event;
+	                                }
+	                                break;
+	                        	case METRICNAME:
+	                                seriesName = metric;
+	                                break;
+	                        	case THREADNAME:
+	                                seriesName = thread.toString();
+	                                break;
+	                        	case METADATA:
+	                                TrialMetadata meta = new TrialMetadata(input.getTrial());
+	                                seriesName = meta.getCommonAttributes().get(this.metadataField);
+	                                break;
+                        	}
                         
                             // set the category name
-                            if (categoryType == TRIALNAME) {
-                                //categoryName = input.getTrial().getName();
-                                categoryName = input.getName();
-                            } else if (categoryType == EVENTNAME) {
-                                if (shortenNames) {
-                                    categoryName = this.shortName(event);
-                                } else {
-                                    categoryName = event;
-                                }
-                            } else if (categoryType == METRICNAME) {
-                                categoryName = metric;
-                            } else if (categoryType == THREADNAME) {
-                                categoryName = thread.toString();
-                               } else if (categoryType == PROCESSORCOUNT) {
-                                   categoryName = Integer.toString(input.getOriginalThreads());
-                               } else if (categoryType == METADATA) {
-                                   TrialMetadata meta = new TrialMetadata(input.getTrial());
-                                   categoryName = meta.getCommonAttributes().get(this.metadataField);
-                            }
+                        	switch (categoryType) {
+                        		case TRIALNAME:
+	                                //categoryName = input.getTrial().getName();
+	                                categoryName = input.getName();
+	                                break;
+                        		case EVENTNAME:
+	                                if (shortenNames) {
+	                                    categoryName = this.shortName(event);
+	                                } else {
+	                                    categoryName = event;
+	                                }
+                                    break;
+                        		case METRICNAME:
+                        			categoryName = metric;
+                                    break;
+                        		case THREADNAME:
+                        			categoryName = thread.toString();
+                                    break;
+                        		case PROCESSORCOUNT:
+                                    categoryName = Integer.toString(input.getOriginalThreads());
+                                    break;
+                        		case METADATA:
+                                    TrialMetadata meta = new TrialMetadata(input.getTrial());
+                                    categoryName = meta.getCommonAttributes().get(this.metadataField);
+                                    break;
+                        	}
 
                             dataset.addValue(input.getDataPoint(thread, event, metric, valueType)/this.units, seriesName, categoryName);
                             categories.add(categoryName);
@@ -589,7 +605,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
      * Set the type for the graph.
      * @param type The type of the graph
      */
-    public void setType(int type) {
+    public void setChartType(int type) {
         this.chartType = type;
     }
 
