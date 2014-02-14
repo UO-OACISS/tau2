@@ -177,7 +177,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 //			//End which events?
 //			
 //			buf.append(")");
-			buf.append(" group by series_name, xaxis_value ");
+			buf.append(" group by series_name, xaxis_value, yaxis_value ");
 			// add the order by clause
 			buf.append("order by 1, 2 ");
 
@@ -327,8 +327,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 				buffer.append("select "+seriesName +" as series_name, ");
 			}
 		    buffer.append(xAxisName + " as xaxis_value, ");
-		    buffer.append(yAxisStat+"("+yAxisName );
-		    buffer.append("."+yAxisValue+") as yaxis_value from  ");
+		    buffer.append(yAxisName+"."+yAxisValue+" as yaxis_value from  ");
 			buffer.append(" (select trial.id,  max(timer_value.inclusive_value) as maxinc ");
 			buffer.append(" from  timer_value");
 			buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
@@ -383,8 +382,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 			buffer.append("select "+seriesName +" as series_name, ");
 		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
+	    buffer.append(yAxisName+"."+yAxisValue+" as yaxis_value from  ");
 
 		buffer.append(" timer_value");
 		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
@@ -432,8 +430,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 			buffer.append("select "+seriesName +" as series_name, ");
 		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
+	    buffer.append(yAxisName+"."+yAxisValue+" as yaxis_value from  ");
 
 		buffer.append(" timer_value");
 		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");
@@ -517,8 +514,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 			buffer.append("select "+seriesName +" as series_name, ");
 		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from ");
+	    buffer.append(yAxisName+"."+yAxisValue+" as yaxis_value from ");
 	    buffer.append(" timer_value ");
 		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id   "); 
 		buffer.append(" inner join thread on thread.thread_rank = "+derivedThread); 
@@ -555,8 +551,7 @@ public class TAUdbGeneralChartData extends GeneralChartData {
 			buffer.append("select "+seriesName +" as series_name, ");
 		}
 	    buffer.append(xAxisName + " as xaxis_value, ");
-	    buffer.append(yAxisStat+"("+yAxisName );
-	    buffer.append("."+yAxisValue+") as yaxis_value from  ");
+	    buffer.append(yAxisName+"."+yAxisValue+" as yaxis_value from  ");
 		
 		buffer.append(" timer_value");
 		buffer.append(" inner join metric on metric.name in "+listOfMetrics+" and timer_value.metric=metric.id ");

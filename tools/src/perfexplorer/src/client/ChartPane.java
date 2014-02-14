@@ -785,9 +785,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		if (stat.equals(ATOMIC)) {
 			tmp = "atomic_location_profile"+"."+value;//tmp.replaceAll(ATOMIC, "atomic_location_profile");
 		} else if(stat.equals(MEAN)) {	
+			operation=stat;
 			tmp = "interval_mean_summary"+"."+value;
 		}
 		else if(stat.equals(TOTAL)){
+			operation=stat;
 			tmp = "interval_total_summary"+"."+value;
 		}
 		else{
@@ -821,7 +823,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				String labStat=operation;
 				if(stat.equals(MEAN)){
 					labStat="Mean";
-				}else if(stat.equals(TOTAL)){
+				} else if(stat.equals(TOTAL)){
 					labStat="Total";
 				}
 
