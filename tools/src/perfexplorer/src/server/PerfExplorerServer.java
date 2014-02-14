@@ -2482,7 +2482,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return userEvents;
 	}
 
-	@Override
 	public int getSchemaVersion(int index) {
 		if (!this.connected.get(index)) {
 			this.connectToDatabase(this.actualConfigFiles.get(index), true, index);

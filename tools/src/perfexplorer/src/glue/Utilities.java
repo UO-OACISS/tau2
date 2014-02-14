@@ -314,6 +314,8 @@ public class Utilities {
 //				System.out.println(server.getConnectionString());
 				String tmpname = (String)configNames.get(i);
 				if (tmpname.equals(name)) {
+					// getting the schema version forces the connection to be made
+					server.getSchemaVersion(i);
 //					System.out.println("selected: " + server.getConnectionString());
 					return i;
 				}
