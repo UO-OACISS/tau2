@@ -1003,7 +1003,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
     public static void deleteTrial(DB db, int trialID) throws SQLException {
     	if(db.getSchemaVersion()>0) {
-    		TAUdbTrial.deleteTrial(db, trialID);
+    		TAUdbTrial.deleteTrial(db, new int[]{trialID});
     		return;
     	}
         PreparedStatement statement = null;
