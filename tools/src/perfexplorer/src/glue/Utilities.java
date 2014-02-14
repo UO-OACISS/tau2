@@ -18,6 +18,8 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.View.ViewRule;
+import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
@@ -141,6 +143,23 @@ public class Utilities {
     return server.getAllSubViews(0); 
   }
 
+	
+	public static void createView(String name, boolean requireAll, List<ViewRule> rules) {
+			createSubView(name, requireAll, -1, rules);
+		}
+	
+	public static void createSubView(String name, boolean requireAll, int parent, List<ViewRule> rules) {
+			
+			PerfExplorerServer server = getServer();
+			DB db = server.getDB();
+			try {
+				View.createView(db, name, requireAll, parent, rules);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	
+	
 	public static View getView (String name) {
 		boolean message = false;
 

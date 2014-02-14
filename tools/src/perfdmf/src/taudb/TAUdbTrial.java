@@ -609,7 +609,7 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			Trial.getMetaData(db);
 
 			// create a string to hit the database
-			String buf = "SELECT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, "
+			String buf = "SELECT DISTINCT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, "
 					+ "t.threads_per_context, t.total_threads FROM "
 					+ db.getSchemaPrefix() + "trial t " + whereClause
 					+" order by t.id";
