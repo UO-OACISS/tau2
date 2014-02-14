@@ -131,7 +131,9 @@ std::vector<int> streamIds;
 
 std::vector<TauContextUserEvent *> counterEvents;
 
-void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream);
+void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
+
+void Tau_cupti_register_buffer_creation(uint8_t** buffer, size_t* size, size_t* maxNumRecords);
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params);
 

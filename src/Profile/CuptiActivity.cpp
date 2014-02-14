@@ -46,7 +46,9 @@ void Tau_cupti_subscribe()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_DEVICE);
 	
 	//setup global activity queue.
-	activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
+  size_t size;
+  size_t maxRecords;
+  Tau_cupti_register_buffer_creation(&activityBuffer, &size, &maxRecords);
 	err = cuptiActivityEnqueueBuffer(NULL, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
 
 }
@@ -168,13 +170,13 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
     for (int i=0; i<device_count; i++) {
       record_gpu_counters_at_sync(i);
     }
-		Tau_cupti_register_sync_event(NULL, 0);
+		Tau_cupti_register_sync_event(NULL, 0, NULL, 0, 0);
     
 		err = cuptiGetStreamId(sync->context, sync->stream, &stream);
-		Tau_cupti_register_sync_event(sync->context, stream);
+		Tau_cupti_register_sync_event(sync->context, stream, NULL, 0, 0);
 		for (int s=0; s<number_of_streams; s++)
 		{
-			Tau_cupti_register_sync_event(sync->context, streamIds.at(s));
+			Tau_cupti_register_sync_event(sync->context, streamIds.at(s), NULL, 0, 0);
 		}
 	}
 	else if (domain == CUPTI_CB_DOMAIN_DRIVER_API ||
@@ -231,7 +233,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           for (int i=0; i<device_count; i++) {
             record_gpu_counters_at_sync(i);
           }
-					Tau_cupti_register_sync_event(cbInfo->context, 0);
+					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
           
 				}
 			}
@@ -292,13 +294,13 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	}
 }
 
-void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
+void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
 {
 	//printf("in sync: context=%p stream=%d.\n", context, stream);
 	registered_sync = true;
   CUptiResult err, status;
   CUpti_Activity *record = NULL;
-	size_t bufferSize = 0;
+	//size_t bufferSize = 0;
   
   int device_count = get_device_count();
   //start
@@ -367,6 +369,19 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 
 
 }
+
+void CUPTIAPI Tau_cupti_register_buffer_creation(uint8_t **activityBuffer, size_t *size, size_t *maxNumRecords)
+{
+	uint8_t* bf = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
+  if (bf == NULL) {
+    printf("TAU: ERROR insufficient memory available to allocate activity buffer of size %d.", ACTIVITY_BUFFER_SIZE);
+    exit(1);
+  }
+  *activityBuffer = bf;
+  *size = ACTIVITY_BUFFER_SIZE;
+  *maxNumRecords = 0;
+}
+
 
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
