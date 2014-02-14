@@ -458,14 +458,13 @@ public class PerfExplorerConnection {
 	}
 
 	public int getSchemaVersion(int index) {
-		if (schemaVersion == null) {
-			try {
-				schemaVersion = server.getSchemaVersions();
-			} catch (RemoteException e) {
-				handleError(e, "getSchemaVersions(" + index + ")");
-			}
+		int version = 0;
+		try {
+			version = server.getSchemaVersion(index);
+		} catch (RemoteException e) {
+			handleError(e, "getSchemaVersion(" + index + ")");
 		}
-		return schemaVersion.get(index);
+		return version;
 	}
 
 }

@@ -19,4 +19,7 @@ public class ConnectionNodeObject implements Serializable {
 	public String toString() {
 		return string;
 	}
+	public void setString(String string) {
+		this.string = string;
+	}
 }

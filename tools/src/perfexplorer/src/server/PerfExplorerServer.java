@@ -81,6 +81,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private List<String> configNames = new ArrayList<String>();
 	private List<String> sessionStrings = new ArrayList<String>();
 	private List<Integer> schemaVersions = new ArrayList<Integer>();
+	private List<Boolean> connected = new ArrayList<Boolean>();
+	private List<String> actualConfigFiles = new ArrayList<String>();
 	private List<Queue<RMIPerfExplorerModel>> requestQueues = new ArrayList<Queue<RMIPerfExplorerModel>>();
 	private List<Thread> timerThreads = new ArrayList<Thread>();
 	private List<TimerThread> timers = new ArrayList<TimerThread>();
@@ -173,10 +175,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		this.tauArch = tauArch;
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
-		int i = 0;
+		boolean makeConnection = false;
 		List<String> configFiles = ConfigureFiles.getConfigurationNames();
 		if (configFile != null && configFile.equals("NONE")) {
 			configFiles = new ArrayList<String>();
+			makeConnection = true;
 		} else if (configFile != null && configFile.length() > 0) {
 			// if the user supplied a config file, use just that one
 			configFiles = new ArrayList<String>();
@@ -185,6 +188,25 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		} else {
 			addWorkingDatabase(configFiles);
 		}
+		for (Iterator<String> iter = configFiles.iterator() ; iter.hasNext() ; ) {
+			String tmpFile = iter.next();
+			if (tmpFile.contains("NO_DATABASE")) {
+				break;
+			}
+			connectToDatabase(tmpFile, makeConnection, -1);
+		}
+	}
+
+	/**
+	 * @param i
+	 * @param api
+	 * @param tmpFile
+	 * @param index 
+	 * @param configName
+	 * @return
+	 * @throws SQLException
+	 */
+	private void connectToDatabase(String tmpFile, boolean makeConnection, int index) {
         String home = System.getProperty("user.home");
         String slash = System.getProperty("file.separator");
         String prefix = home + slash + ".ParaProf" + slash + "perfdmf.cfg.";
@@ -192,52 +214,66 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		// as a regular expression...
 		prefix = prefix.replaceAll("\\\\", "\\\\\\\\");
 		//System.out.println(prefix);
-		for (Iterator<String> iter = configFiles.iterator() ; iter.hasNext() ; ) {
-			DatabaseAPI api = null;
-			String tmpFile = iter.next();
-			if (tmpFile.contains("NO_DATABASE")) {
-				break;
-			}
-			PerfExplorerOutput.print("Connecting...");
-			try {
-				api = new DatabaseAPI();
-				String configName = tmpFile.replaceAll(prefix, "");
+
+		try {
+			DatabaseAPI api = new DatabaseAPI();
+			String configName = tmpFile.replaceAll(prefix, "");
+			if (makeConnection) {
+				PerfExplorerOutput.print("Connecting...");
 				api.initialize(tmpFile, false);
 				if (api.db().getSchemaVersion() > 0) {
 					// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
 					api = new TAUdbDatabaseAPI(api);
 				}
 				PerfExplorerOutput.println(" Connected to " + api.db().getConnectString() + ".");
-				this.sessions.add(api);
-				this.configNames.add(configName);
-				this.sessionStrings.add(api.db().getConnectString());
-				this.schemaVersions.add(api.db().getSchemaVersion());
-				Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
-				this.requestQueues.add(requestQueue);
-				TimerThread timer = new TimerThread(this, api, i++);
-				this.timers.add(timer);
-				java.lang.Thread timerThread = new java.lang.Thread(timer);
-				this.timerThreads.add(timerThread);
-				timerThread.start();
-				this.session = api;
-			} catch (Exception e) {
-				if (e instanceof FileNotFoundException) {
-					System.err.println(e.getMessage());
+				if (index < 0) {
+					this.sessions.add(api);
+					this.connected.add(true);
+					this.configNames.add(configName);
+					this.sessionStrings.add(api.db().getConnectString());
+					this.schemaVersions.add(api.db().getSchemaVersion());
+					this.session = api;
+					this.actualConfigFiles.add(tmpFile);
 				} else {
-					System.err.println("Error connecting to " + tmpFile + "!");
-					System.err.println(e.getMessage());
-            		StringBuilder buf = new StringBuilder();
-            		buf.append("\nPlease make sure that your DBMS is ");
-            		buf.append("configured correctly, and the database ");
-            		buf.append("has been created.");
-            		buf.append("\nSee the PerfExplorer and/or PerfDMF");
-            		buf.append("configuration utilities for details.\n");
-            		System.err.println(buf.toString());
-					e.printStackTrace();
-					//System.exit(1);
+					this.sessions.set(index, api);
+					this.connected.set(index, true);
+					this.configNames.set(index, configName);
+					this.sessionStrings.set(index, api.db().getConnectString());
+					this.schemaVersions.set(index, api.db().getSchemaVersion());
+					this.session = api;
 				}
-        	}
-		}
+			} else {
+				this.sessions.add(null);
+				this.connected.add(false);
+				this.configNames.add(configName);
+				this.sessionStrings.add("jdbc:"+configName);
+				this.schemaVersions.add(0);
+				this.actualConfigFiles.add(tmpFile);
+			}
+			Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
+			this.requestQueues.add(requestQueue);
+			TimerThread timer = new TimerThread(this, api, this.sessions.size()-1);
+			this.timers.add(timer);
+			java.lang.Thread timerThread = new java.lang.Thread(timer);
+			this.timerThreads.add(timerThread);
+			timerThread.start();
+		} catch (Exception e) {
+			if (e instanceof FileNotFoundException) {
+				System.err.println(e.getMessage());
+			} else {
+				System.err.println("Error connecting to " + tmpFile + "!");
+				System.err.println(e.getMessage());
+        		StringBuilder buf = new StringBuilder();
+        		buf.append("\nPlease make sure that your DBMS is ");
+        		buf.append("configured correctly, and the database ");
+        		buf.append("has been created.");
+        		buf.append("\nSee the PerfExplorer and/or PerfDMF");
+        		buf.append("configuration utilities for details.\n");
+        		System.err.println(buf.toString());
+				e.printStackTrace();
+				//System.exit(1);
+			}
+    	}
 	}
 
 //	/**
@@ -2119,7 +2155,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public List<String> getChartFieldNames() {
 		DB db = this.getDB();
 		List<String> list = new ArrayList<String>();
-		if (db.getSchemaVersion() == 0) {
+		// This is called when PerfExplorer launches, so make sure we can do something
+		// if the database isn't connected yet
+		if (db != null && db.getSchemaVersion() == 0) {
 			list.add ("application.id");
 			list.add ("application.name");
 			if (db != null) {
@@ -2186,6 +2224,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * 
 	 * @param args
 	 */
+	/*
 	public static void main (String[] args) {
 		CmdLineParser parser = new CmdLineParser();
 		CmdLineParser.Option helpOpt = parser.addBooleanOption('h',"help");
@@ -2283,6 +2322,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			e.printStackTrace();
 		}
 	}
+	*/
 
 	public void setConnectionIndex(int connectionIndex) throws RemoteException {
 		this.session = this.sessions.get(connectionIndex);		
@@ -2440,6 +2480,14 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				System.err.println(sql);
 		}
 		return userEvents;
+	}
+
+	@Override
+	public int getSchemaVersion(int index) {
+		if (!this.connected.get(index)) {
+			this.connectToDatabase(this.actualConfigFiles.get(index), true, index);
+		}
+		return this.schemaVersions.get(index);
 	}
 
 }
