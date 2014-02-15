@@ -226,6 +226,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					api = new TAUdbDatabaseAPI(api);
 				}
 				PerfExplorerOutput.println(" Connected to " + api.db().getConnectString() + ".");
+				Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
+				TimerThread timer = new TimerThread(this, api, ((index<0)?this.sessions.size():index));
+				java.lang.Thread timerThread = new java.lang.Thread(timer);
 				if (index < 0) {
 					this.sessions.add(api);
 					this.connected.add(true);
@@ -234,6 +237,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					this.schemaVersions.add(api.db().getSchemaVersion());
 					this.session = api;
 					this.actualConfigFiles.add(tmpFile);
+					this.requestQueues.add(requestQueue);
+					this.timers.add(timer);
+					this.timerThreads.add(timerThread);
 				} else {
 					this.sessions.set(index, api);
 					this.connected.set(index, true);
@@ -241,7 +247,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					this.sessionStrings.set(index, api.db().getConnectString());
 					this.schemaVersions.set(index, api.db().getSchemaVersion());
 					this.session = api;
+					this.requestQueues.set(index,requestQueue);
+					this.timers.set(index,timer);
+					this.timerThreads.set(index,timerThread);
 				}
+				timerThread.start();
 			} else {
 				this.sessions.add(null);
 				this.connected.add(false);
@@ -249,14 +259,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				this.sessionStrings.add("jdbc:"+configName);
 				this.schemaVersions.add(0);
 				this.actualConfigFiles.add(tmpFile);
+				this.requestQueues.add(null);
+				this.timers.add(null);
+				this.timerThreads.add(null);
 			}
-			Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
-			this.requestQueues.add(requestQueue);
-			TimerThread timer = new TimerThread(this, api, this.sessions.size()-1);
-			this.timers.add(timer);
-			java.lang.Thread timerThread = new java.lang.Thread(timer);
-			this.timerThreads.add(timerThread);
-			timerThread.start();
 		} catch (Exception e) {
 			if (e instanceof FileNotFoundException) {
 				System.err.println(e.getMessage());
