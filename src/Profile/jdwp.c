@@ -277,7 +277,7 @@ jdwp_set_event_request(jdwp_ctx_t *ctx, char eventKind, char suspendPolicy)
 }
 
 int
-jdwp_resume_thread(jdwp_ctx_t *ctx, long long threadID)
+jdwp_resume_thread(jdwp_ctx_t *ctx, uint64_t threadID)
 {
     int rv;
     jdwp_reply_t *reply;
@@ -304,7 +304,7 @@ jdwp_resume_thread(jdwp_ctx_t *ctx, long long threadID)
 }
 
 char *
-jdwp_get_thread_name(jdwp_ctx_t *ctx, long long threadID)
+jdwp_get_thread_name(jdwp_ctx_t *ctx, uint64_t threadID)
 {
     int rv;
     jdwp_reply_t *reply;
@@ -341,12 +341,12 @@ jdwp_get_thread_name(jdwp_ctx_t *ctx, long long threadID)
     return name;
 }
 
-long long
-jdwp_get_thread_group(jdwp_ctx_t *ctx, long long threadID)
+uint64_t
+jdwp_get_thread_group(jdwp_ctx_t *ctx, uint64_t threadID)
 {
     int rv;
     jdwp_reply_t *reply;
-    long long threadGroupID;
+    uint64_t threadGroupID;
 
     rv = jdwp_send_pkt(ctx, THREADREF_THREADGROUP, (char*)&threadID, sizeof(threadID));
     if (rv < 0) {
@@ -365,7 +365,7 @@ jdwp_get_thread_group(jdwp_ctx_t *ctx, long long threadID)
 	return -1;
     }
 
-    threadGroupID =  *(long long*)(reply->data);
+    threadGroupID =  *(uint64_t*)(reply->data);
 
     free(reply);
 
@@ -373,7 +373,7 @@ jdwp_get_thread_group(jdwp_ctx_t *ctx, long long threadID)
 }
 
 char *
-jdwp_get_thread_group_name(jdwp_ctx_t *ctx, long long threadGroupID)
+jdwp_get_thread_group_name(jdwp_ctx_t *ctx, uint64_t threadGroupID)
 {
     int rv;
     jdwp_reply_t *reply;

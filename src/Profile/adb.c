@@ -102,7 +102,7 @@ send_message(adb_ctx_t *ctx)
     msg_t *msg = &ctx->smsg;
     char *data = (char*)msg;
 
-    dump_message(__func__, msg);
+    //dump_message(__func__, msg);
 
     finished = 0;
     remain   = sizeof(msg_t) + msg->data_length;
@@ -175,7 +175,7 @@ recv_message(adb_ctx_t *ctx)
 	remain   -= rv;
     }
 
-    dump_message(__func__, msg);
+    //dump_message(__func__, msg);
 
     /* sanity check */
     if ((msg->command ^ 0xffffffff) != msg->magic) {
@@ -483,10 +483,6 @@ adb_read(adb_ctx_t *ctx, char *buf, size_t count)
     finished = 0;
     remain   = count;
 
-    if (!ctx->active) {
-	return -1;
-    }
-
     while (remain > 0) {
 	if (ctx->backlog != NULL) {
 	    backlog = ctx->backlog;
@@ -516,6 +512,11 @@ adb_read(adb_ctx_t *ctx, char *buf, size_t count)
 		free(backlog);
 	    }
 	} else {
+	    /* bail out if connection is closed and no backlog remain */
+	    if (!ctx->active) {
+		return -1;
+	    }
+
 	    msg = recv_message(ctx);
 	    if (msg == NULL) {
 		return -1;

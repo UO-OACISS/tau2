@@ -4,11 +4,17 @@
 
 #ifndef _Included_edu_uoregon_TAU_Profile
 #define _Included_edu_uoregon_TAU_Profile
+
+jlong &TheLastJDWPEventThreadID(void);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 #undef edu_uoregon_TAU_Profile_TAU_DEFAULT
 #define edu_uoregon_TAU_Profile_TAU_DEFAULT 4294967295LL
+
+jlong get_java_thread_id(void);
+
 /*
  * Class:     edu_uoregon_TAU_Profile
  * Method:    NativeProfile
