@@ -16,6 +16,7 @@ using namespace std;
 #include <pthread.h>
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "Profile/adb.h"
 #include "Profile/jdwp.h"
@@ -23,6 +24,7 @@ using namespace std;
 extern "C" {
     jint android_log(const char *message);
 }
+extern void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid);
 
 #ifdef TAU_PTHREAD_WRAP
 
@@ -88,11 +90,24 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 #endif
 
+
+jlong &TheLastJDWPEventThreadID()
+{
+    static jlong jid = 1;
+
+    return jid;
+}
+
+static int dalvik_vm_running = 1;
+
 static void*
 dalvik_thread_monitor(void *arg)
 {
     jdwp_ctx_t jdwp;
     jdwp_cmd_t *cmd;
+
+    jlong jid = 9;
+    std::map<uint64_t, jlong> java_threads;
 
     jdwp_init(&jdwp);
 
@@ -127,25 +142,43 @@ dalvik_thread_monitor(void *arg)
 
 	    if (event->eventKind == E_THREAD_START) {
 		/* get thread name */
-		printf("Ender: get thread name...\n");
-		char *name = jdwp_get_thread_name(&jdwp, event->threadID);
-		if (name == NULL) {
-		    printf("Thread name: failed!\n");
+		char *tname = jdwp_get_thread_name(&jdwp, event->threadID);
+		if (tname == NULL) {
 		    break;
-		} else {
-		    printf("Thread name: %s\n", name);
-		    free(name);
 		}
 
-		long long grpID = jdwp_get_thread_group(&jdwp, event->threadID);
-		name = jdwp_get_thread_group_name(&jdwp, grpID);
-		printf("Thread Group name: %s\n", name);
-		free(name);
+		uint64_t grpID = jdwp_get_thread_group(&jdwp, event->threadID);
+		char *gname = jdwp_get_thread_group_name(&jdwp, grpID);
+
+		java_threads[event->threadID] = jid;
+		TheLastJDWPEventThreadID()    = jid;
+		int tid = JNIThreadLayer::RegisterThread(jid);
+
+		CreateTopLevelRoutine(strchr(tname, ' ')+1, (char*)" ", gname, tid);
+
+		jid++;
+
+		free(tname);
+		free(gname);
+	    }
+
+	    if (event->eventKind == E_THREAD_END) {
+		if (java_threads.find(event->threadID) != java_threads.end()) {
+		    TheLastJDWPEventThreadID() = java_threads[event->threadID];
+		    java_threads.erase(event->threadID);
+
+		    TAU_PROFILE_EXIT("END...");
+		}
+	    }
+
+	    if (event->eventKind == E_VM_DEATH) {
+		dalvik_vm_running = 0;
+		printf(" *** dalvik dead\n");
+		break;
 	    }
 
 	    /* resume thread */
 	    if (event->suspendPolicy != SUSPEND_NONE) {
-		printf("Ender: resume the thread...\n");
 		jdwp_resume_thread(&jdwp, event->threadID);
 	    }
 
@@ -181,6 +214,14 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     RtsLayer::TheUsingJNI() = true;
     JNIThreadLayer::tauVM = vm;
 
+    /*
+     * thread ID of Java main() is 1.
+     *
+     * NOTE: This is not a portable implementation as we made this asusmption.
+     *       See dalvik_thread_monitor() for more details.
+     */
+    JNIThreadLayer::RegisterThread(1);
+
 #ifdef TAU_ANDROID
     pthread_t thr;
     printf("TAU: start thread monitor\n");
@@ -188,6 +229,56 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 #endif
 
     return JNI_VERSION_1_6;
+}
+
+// Java: Thread.currentThread().getId();
+jlong get_java_thread_id(void)
+{
+    JavaVM *vm = JNIThreadLayer::tauVM;
+    JNIEnv *env;
+
+    if (!dalvik_vm_running) {
+	return 1;
+    }
+
+    if (vm == NULL) {
+	return -1;
+    }
+
+    if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
+	return -1;
+    }
+
+    jclass thread = env->FindClass("java/lang/Thread");
+    if (thread == NULL) {
+	return -1;
+    }
+
+    jmethodID currentThread = env->GetStaticMethodID(thread, "currentThread", "()Ljava/lang/Thread;");
+    if (currentThread == NULL) {
+	return -1;
+    }
+
+    jobject thisThread = env->CallStaticObjectMethod(thread, currentThread);
+    if (thisThread == NULL) {
+	return -1;
+    }
+
+    jmethodID getId = env->GetMethodID(thread, "getId", "()J");
+    if (getId == NULL) {
+	return -1;
+    }
+
+    jlong id = env->CallLongMethod(thisThread, getId);
+
+    /*
+     * LocalRef should be deleted after use, otherwise it may overflow
+     * Java native method's local reference table
+     */
+    env->DeleteLocalRef(thread);
+    env->DeleteLocalRef(thisThread);
+
+    return id;
 }
 
 jint android_log(const char *message)
@@ -296,7 +387,7 @@ JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeStart
 
   fid = env->GetFieldID(cls, "FuncInfoPtr", "J");
 
-  f = (FunctionInfo *) env->GetLongField(obj, fid); 
+  f = (FunctionInfo *) env->GetLongField(obj, fid);
 
   TAU_PROFILE_START(f);
 }

@@ -45,7 +45,7 @@ typedef struct __attribute__((packed)) {
 typedef struct _jdwp_event_t {
     char suspendPolicy;
     char eventKind;
-    long long threadID;
+    uint64_t threadID;
     struct _jdwp_event_t *next;
     struct _jdwp_event_t *prev;
 } jdwp_event_t;
@@ -61,15 +61,15 @@ extern "C" {
 
 int jdwp_init(jdwp_ctx_t *ctx);
 int jdwp_handshake(jdwp_ctx_t *ctx);
-int jdwp_resume_thread(jdwp_ctx_t *ctx, long long threadID);
-char *jdwp_get_thread_name(jdwp_ctx_t *ctx, long long threadID);
+int jdwp_resume_thread(jdwp_ctx_t *ctx, uint64_t threadID);
+char *jdwp_get_thread_name(jdwp_ctx_t *ctx, uint64_t threadID);
 int jdwp_set_event_request(jdwp_ctx_t *ctx, char eventKind, char suspendPolicy);
 int jdwp_get_vm_version(jdwp_ctx_t *ctx);
 int jdwp_event_backlog(jdwp_ctx_t *ctx, jdwp_cmd_t *cmd);
 int jdwp_send_pkt(jdwp_ctx_t *ctx, short cmd, char *data, int len);
 char *jdwp_recv_pkt(jdwp_ctx_t *ctx);
-long long jdwp_get_thread_group(jdwp_ctx_t *ctx, long long threadID);
-char *jdwp_get_thread_group_name(jdwp_ctx_t *ctx, long long threadGroupID);
+uint64_t jdwp_get_thread_group(jdwp_ctx_t *ctx, uint64_t threadID);
+char *jdwp_get_thread_group_name(jdwp_ctx_t *ctx, uint64_t threadGroupID);
 
 #ifdef __cplusplus
 }

@@ -34,6 +34,8 @@ using namespace std;
 #include <map>
 #include <mutex>
 
+#include "Profile/TauJAPI.h"
+
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class JNIThreadLayer
 // This allows us to get thread ids from 0..N-1 
@@ -45,25 +47,21 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 int                JNIThreadLayer::tauThreadCount = 0; 
-map<JNIEnv*, int*> JNIThreadLayer::tauThreadsMap;
+map<jlong, int>    JNIThreadLayer::tauThreadsMap;
 JavaVM*            JNIThreadLayer::tauVM;  // init in JNI_OnLoad()
 recursive_mutex    JNIThreadLayer::tauNumThreadsLock;
 recursive_mutex    JNIThreadLayer::tauDBMutex;
 recursive_mutex    JNIThreadLayer::tauEnvMutex;
-
-static __thread int *tid;
 
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
 // FunctionInfo and Profiler classes. 
 ////////////////////////////////////////////////////////////////////////
-int * JNIThreadLayer::RegisterThread(JNIEnv *env_id)
+int JNIThreadLayer::RegisterThread(jlong jid)
 {
   static int initflag = JNIThreadLayer::InitializeThreadData();
 
-  int *threadId = new int;
-  
   // Lock the mutex guarding the thread count before incrementing it.
   tauNumThreadsLock.lock();
 
@@ -77,18 +75,16 @@ int * JNIThreadLayer::RegisterThread(JNIEnv *env_id)
   }
 
   // Increment the number of threads present
-  (*threadId) = tauThreadCount ++;
+  tauThreadsMap[jid] = tauThreadCount++;
 
   // Unlock it now 
   tauNumThreadsLock.unlock();
-
-  tid = threadId;
 
   DEBUGPROFMSG("Thread id "<< *threadId << " Created! "<<endl);
 
   // A thread should call this routine exactly once. 
 
-  return threadId;
+  return tauThreadsMap[jid];
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -98,13 +94,12 @@ int * JNIThreadLayer::RegisterThread(JNIEnv *env_id)
 ////////////////////////////////////////////////////////////////////////
 int JNIThreadLayer::GetThreadId(void) 
 {
-    int *threadId = tid;
-   
-    if (threadId == (int *) NULL) { // This thread needs to be registered
-	threadId = RegisterThread(0);
-	Tau_create_top_level_timer_if_necessary();
+    jlong jid = get_java_thread_id();
+    if (jid == -1) {
+	jid = TheLastJDWPEventThreadID();
     }
-    return (*threadId); 
+
+    return tauThreadsMap[jid];
 }
 
 ////////////////////////////////////////////////////////////////////////
