@@ -11,12 +11,11 @@ def loadFromDB():
 	metadata = HashMap()
 	conjoin = " and "
 	# here are the conditions for the selection
-	metadata.put("days"," = '30'")
-	metadata.put("machine"," = 'titan'")
+	metadata.put("days"," = '5'")
+	metadata.put("machine"," = 'eos'")
 	metadata.put("model_size"," = '15km'")
 	# get just the first trial
-	metadata.put("processes"," = '4096'")
-	metadata.put("integer_core"," = 'd1'")
+	metadata.put("processes"," = '1024'")
 	trials = Utilities.getTrialsFromMetadata(metadata, conjoin)
 	metrics = ArrayList()
 	metrics.add("WALL_CLOCK_TIME")
