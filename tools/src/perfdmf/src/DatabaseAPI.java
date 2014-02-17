@@ -146,8 +146,10 @@ public class DatabaseAPI {
         connector = new ConnectionManager(database, prompt);
         connector.connect();
         db = connector.getDB();
-        Application.getMetaData(db);
-        Experiment.getMetaData(db);
+		if (db.getSchemaVersion() == 0) {
+	        Application.getMetaData(db);
+	        Experiment.getMetaData(db);
+		}
         Trial.getMetaData(db);
     }
 
@@ -156,8 +158,10 @@ public class DatabaseAPI {
         connector = new ConnectionManager(database, password);
         connector.connect();
         db = connector.getDB();
-        Application.getMetaData(db);
-        Experiment.getMetaData(db);
+		if (db.getSchemaVersion() == 0) {
+	        Application.getMetaData(db);
+	        Experiment.getMetaData(db);
+		}
         Trial.getMetaData(db);
     }
 
@@ -166,8 +170,10 @@ public class DatabaseAPI {
         connector = new ConnectionManager(database);
         connector.connect();
         db = connector.getDB();
-        Application.getMetaData(db);
-        Experiment.getMetaData(db);
+		if (db.getSchemaVersion() == 0) {
+	        Application.getMetaData(db);
+	        Experiment.getMetaData(db);
+		}
         Trial.getMetaData(db);
     }
 

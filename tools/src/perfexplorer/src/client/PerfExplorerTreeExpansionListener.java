@@ -28,6 +28,7 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 	}
 
 	public void treeWillExpand (TreeExpansionEvent e) {
+
 		TreePath path = e.getPath();
 		if (path == null)
 			return;
@@ -48,6 +49,11 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 			// get the schema version for the connection
 			int index = PerfExplorerJTree.getConnectionIndex(node);
 			int schemaVersion = PerfExplorerConnection.getConnection().getSchemaVersion(index);
+			if (object instanceof ConnectionNodeObject) {
+				ConnectionNodeObject tmp = (ConnectionNodeObject)object;
+				tmp.setString(PerfExplorerConnection.getConnection().getConnectionStrings().get(index));
+				PerfExplorerJTree.nodeChanged(node);
+			}
             if (schemaVersion < 1) {
             	PerfExplorerJTree.addApplicationNodes(node, false);
             	PerfExplorerJTree.getTree().addViewNode(node);
