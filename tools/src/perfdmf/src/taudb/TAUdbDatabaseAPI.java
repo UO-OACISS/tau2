@@ -217,7 +217,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
 			System.out.print("Querying new call data for IDs...");
-            Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
+            Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, callpathMap, db);
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
@@ -722,12 +722,26 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         return map;
 	}
 	
-	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, DB db) throws SQLException {
+	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, Map<Function, Integer> callpathMap, DB db) throws SQLException {
 		Map<TimerCallData, Integer> map = new HashMap<TimerCallData, Integer>();
 		StringBuilder sb = new StringBuilder();
+		Map<Integer,Function> reverseMap = new HashMap<Integer,Function>();
+		// The callpath map is from function to ID. we need the reverse, so build it.
+		if (callpathMap != null) {
+			for (Function key : callpathMap.keySet()) {
+				reverseMap.put(callpathMap.get(key), key);
+			}
+		} else {
+			// build a new one from the functions! (for saving a pre-loaded trial)
+			Iterator<Function> iter = dataSource.getFunctionIterator();
+			while (iter.hasNext()) {
+				Function f = iter.next();
+				reverseMap.put(f.getID(), f);
+			}
+		}
 		/* Apparently, the H2 database doesn't handle parameters in the 
 		   recursive part of the query. So, we don't add them as parameters. */
-		sb.append("with recursive cp (id, parent, timer, name) as ( " +
+/*		sb.append("with recursive cp (id, parent, timer, name) as ( " +
 				"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
 				db.getSchemaPrefix() +
 				"timer_callpath tc inner join " +
@@ -749,6 +763,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("thread h on tcd.thread = h.id where h.trial = " + trialID);
+*/
+		sb.append("select distinct tcd.id, tcd.time_range, cp.id, h.node_rank, h.context_rank, h.thread_rank ");
+		sb.append("from timer_callpath cp ");
+		sb.append("join timer_call_data tcd on tcd.timer_callpath = cp.id ");
+		sb.append("join thread h on tcd.thread = h.id where h.trial = " + trialID);
 		PreparedStatement statement = db.prepareStatement(sb.toString());
 		//System.out.println(statement);
 		statement.execute();
@@ -757,11 +776,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		while (results.next()) {
 			int id = results.getInt(1);
 			Double timestamp = results.getDouble(2);
-			String functionName = results.getString(3);
+			Function f = reverseMap.get(results.getInt(3));
 			int node = results.getInt(4);
 			int context =results.getInt(5);
 			int thread = results.getInt(6);
-			Function f = dataSource.getFunction(functionName);
 			Thread t = null;
 			if (node < 0) {
 				switch (node) {
@@ -1651,7 +1669,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
                 Map<Metric, Integer> metricMap = new HashMap<Metric, Integer>();
                 // create a hash map with one metric, so that we can reuse code but only save one metric.
                 metricMap.put(trial.getDataSource().getMetrics().get(saveMetricIndex), metricHash.get(saveMetricIndex));
-                Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
+                Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, null, db);
 
                 // now upload the measurements
                 if(db.getDBType().equals("postgresql")){
