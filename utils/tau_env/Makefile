@@ -1,9 +1,8 @@
 include ../../include/Makefile
 include ../include/Makefile
 
-CC     = $(TAU_CC)
-CXX		 = $(TAU_CXX)
-
+CC  = $(TAU_CC) $(PROFILEOPT87)
+CXX = $(TAU_CXX) $(PROFILEOPT87)
 
 RM      = /bin/rm -f
 
