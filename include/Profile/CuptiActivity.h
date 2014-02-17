@@ -41,6 +41,10 @@
 
 #endif
 
+#if CUPTI_API_VERSION >= 4
+#define TAU_ASYNC_ACTIVITY_API
+#endif
+
 extern "C" void Tau_cupti_set_offset(
             uint64_t timestamp
             );
@@ -191,8 +195,9 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 
+#ifndef TAU_MAX_GPU_DEVICES
 #define TAU_MAX_GPU_DEVICES 16
-
+#endif
 
 /* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
  * allocate/deallocate memory. So all the counters values need to be allocated

@@ -48,9 +48,17 @@ void Tau_cupti_subscribe()
 	//setup global activity queue.
   size_t size;
   size_t maxRecords;
+
+  // With the ASYNC ACTIVITY API CUPTI will call 
+  // Tau_cupti_register_buffer_creation() when it needs a new activity buffer
+  // and Tau_cupti_register_sync_event() when a buffer is completed so all we
+  // need to do here is to register these callback functions.
+#ifdef TAU_ASYNC_ACTIVITY_API
+  err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
+#else
   Tau_cupti_register_buffer_creation(&activityBuffer, &size, &maxRecords);
 	err = cuptiActivityEnqueueBuffer(NULL, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
-
+#endif
 }
 void Tau_cupti_onload()
 {
@@ -124,13 +132,15 @@ void Tau_cupti_onload()
   Tau_gpu_init();
 }
 
-void Tau_cupti_onunload() {}
+void Tau_cupti_onunload() {
+}
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
 	//Just in case we encounter a callback before TAU is intialized or finished.
   if (!Tau_init_check_initialized() || Tau_global_getLightsOut()) { return; }
 
+#ifndef TAU_ASYNC_ACTIVITY_API
 	if (domain == CUPTI_CB_DOMAIN_RESOURCE)
 	{
 		//A resource was created, let us enqueue a buffer in order to capture events
@@ -179,6 +189,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			Tau_cupti_register_sync_event(sync->context, streamIds.at(s), NULL, 0, 0);
 		}
 	}
+
+#endif //TAU_ASYNC_ACTIVITY_API
 	else if (domain == CUPTI_CB_DOMAIN_DRIVER_API ||
 					 domain == CUPTI_CB_DOMAIN_RUNTIME_API)
 	{
@@ -233,7 +245,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           for (int i=0; i<device_count; i++) {
             record_gpu_counters_at_sync(i);
           }
+
+#ifdef TAU_ASYNC_ACTIVITY_API
+          cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
+#else
 					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
+#endif
           
 				}
 			}
@@ -296,6 +313,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 
 void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
 {
+  //TAU_PROFILE("Tau_cupti_register_sync_event", "", TAU_DEFAULT);
 	//printf("in sync: context=%p stream=%d.\n", context, stream);
 	registered_sync = true;
   CUptiResult err, status;
@@ -309,16 +327,28 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
     exit(1);
   }
 
+// for the ASYNC ACTIVITY API assume that the activityBuffer is vaild
+#ifdef TAU_ASYNC_ACTIVITY_API
+  err = CUPTI_SUCCESS;
+#else
 	err = cuptiActivityDequeueBuffer(context, stream, &activityBuffer, &bufferSize);
+#endif
 	//printf("err: %d.\n", err);
 
 	if (err == CUPTI_SUCCESS)
 	{
 		//printf("succesfully dequeue'd buffer.\n");
+    //TAU_START("next record loop");
+    //TAU_PROFILE_TIMER(g, "getNextRecord", "", TAU_DEFAULT);
+    //TAU_PROFILE_TIMER(r, "record_activity", "", TAU_DEFAULT);
 		do {
+      //TAU_PROFILE_START(g);
 			status = cuptiActivityGetNextRecord(activityBuffer, bufferSize, &record);
+      //TAU_PROFILE_STOP(g);
 			if (status == CUPTI_SUCCESS) {
+        //TAU_PROFILE_START(r);
 				Tau_cupti_record_activity(record);
+        //TAU_PROFILE_STOP(r);
 			}
 			else if (status == CUPTI_ERROR_MAX_LIMIT_REACHED) {
 				//const char *str;
@@ -333,6 +363,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 				break;
 			}
 		} while (status != CUPTI_ERROR_MAX_LIMIT_REACHED);
+    //TAU_STOP("next record loop");
 			
 		size_t number_dropped;
 		err = cuptiActivityGetNumDroppedRecords(NULL, 0, &number_dropped);
@@ -340,8 +371,15 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 		if (number_dropped > 0)
 			printf("TAU WARNING: %d CUDA records dropped, consider increasing the CUPTI_BUFFER size.", number_dropped);
 
+    // With the ASYNC ACTIVITY API CUPTI will take care of calling
+    // Tau_cupti_register_buffer_creation() when it needs a new activity buffer so
+    // we are free to deallocate it here.
+#ifdef TAU_ASYNC_ACTIVITY_API
+    free(activityBuffer);
+#else
 		//Need to requeue buffer by context, stream.
 		err = cuptiActivityEnqueueBuffer(context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
+#endif
 		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
    
     for (int i=0; i < device_count; i++) {
@@ -387,7 +425,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
   
-	//printf("in record activity.\n");
+	printf("in record activity, kind: %d\n", record->kind);
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 #if CUDA_VERSION >= 5050
@@ -415,9 +453,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         bytes = memcpy->bytes;
         copyKind = memcpy->copyKind;
         id = memcpy->correlationId;
-        cerr << "recording memcpy (device, stream, context, correlation): " << memcpy->deviceId << ", " << memcpy->streamId << ", " << memcpy->contextId << ", " << memcpy->correlationId << ", " << memcpy->start << "-" << memcpy->end << "ns.\n" << endl;
-		    cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
-		    cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
+        //cerr << "recording memcpy (device, stream, context, correlation): " << memcpy->deviceId << ", " << memcpy->streamId << ", " << memcpy->contextId << ", " << memcpy->correlationId << ", " << memcpy->start << "-" << memcpy->end << "ns.\n" << endl;
+		    //cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
+		    //cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
         Tau_cupti_register_memcpy_event(
           TAU_GPU_USE_DEFAULT_NAME,
           memcpy->srcDeviceId,
@@ -585,19 +623,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
 			name = demangleName(name);
 
-      eventMap.erase(eventMap.begin(), eventMap.end());
-			if (gpu_occupancy_available(deviceId))
-			{
-        record_gpu_occupancy(blockX, 
-                            blockY,
-                            blockZ,
-                            registersPerThread,
-                            staticSharedMemory,
-                            deviceId,
-                            name, 
-                            &eventMap);
-			}
-
 			uint32_t id;
 			if (cupti_api_runtime())
 			{
@@ -617,22 +642,35 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #else
       record_gpu_counters(deviceId, name, id, &eventMap);
 #endif
-			static TauContextUserEvent* bs;
-			static TauContextUserEvent* dm;
-			static TauContextUserEvent* sm;
-			static TauContextUserEvent* lm;
-			static TauContextUserEvent* lr;
-			Tau_get_context_userevent((void **) &bs, "Block Size");
-			Tau_get_context_userevent((void **) &dm, "Shared Dynamic Memory (bytes)");
-			Tau_get_context_userevent((void **) &sm, "Shared Static Memory (bytes)");
-			Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
-			Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
+      eventMap.erase(eventMap.begin(), eventMap.end());
+			if (gpu_occupancy_available(deviceId))
+			{
+        record_gpu_occupancy(blockX, 
+                            blockY,
+                            blockZ,
+                            registersPerThread,
+                            staticSharedMemory,
+                            deviceId,
+                            name, 
+                            &eventMap);
 
-      eventMap[bs] = blockX * blockY * blockZ;
-      eventMap[dm] = dynamicSharedMemory;
-      eventMap[sm] = staticSharedMemory;
-      eventMap[lm] = localMemoryPerThread;
-      eventMap[lr] = registersPerThread;
+        static TauContextUserEvent* bs;
+        static TauContextUserEvent* dm;
+        static TauContextUserEvent* sm;
+        static TauContextUserEvent* lm;
+        static TauContextUserEvent* lr;
+        Tau_get_context_userevent((void **) &bs, "Block Size");
+        Tau_get_context_userevent((void **) &dm, "Shared Dynamic Memory (bytes)");
+        Tau_get_context_userevent((void **) &sm, "Shared Static Memory (bytes)");
+        Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
+        Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
+
+        eventMap[bs] = blockX * blockY * blockZ;
+        eventMap[dm] = dynamicSharedMemory;
+        eventMap[sm] = staticSharedMemory;
+        eventMap[lm] = localMemoryPerThread;
+        eventMap[lr] = registersPerThread;
+			}
       
       GpuEventAttributes *map;
 			int map_size = eventMap.size();
@@ -818,7 +856,8 @@ int ceil(float value, int significance)
 }
 
 int gpu_occupancy_available(int deviceId)
-{
+{ 
+  return 0;
 	//device callback not called.
 	if (deviceMap.empty())
 	{
