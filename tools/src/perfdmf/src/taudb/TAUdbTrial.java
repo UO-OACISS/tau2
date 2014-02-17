@@ -708,16 +708,23 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			throws SQLException {
 		PreparedStatement statement = null;
 
-		// delete from the interval_location_profile table
-		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "timer_value WHERE metric = ?");
-		statement.setInt(1, metricID);
-		statement.execute();
-
-		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "metric WHERE id = ?");
-		statement.setInt(1, metricID);
-		statement.execute();
+		db.setAutoCommit(false);
+		try {
+			// delete from the interval_location_profile table
+			statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+					+ "timer_value WHERE metric = ?");
+			statement.setInt(1, metricID);
+			statement.execute();
+	
+			statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+					+ "metric WHERE id = ?");
+			statement.setInt(1, metricID);
+			statement.execute();
+			db.commit();
+		} catch (SQLException e) {
+			db.rollback();
+		}
+		db.setAutoCommit(true);
 	}
 
 	private static PreparedStatement setTrialIDs(PreparedStatement statement,int[] trialIDs) throws SQLException{
@@ -728,20 +735,18 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	}
 	
 	public static void deleteTrial(DB db, int[] trialIDs) throws SQLException {
-
-		String whereClause=" IN (";
 		
 		for(int i=0;i<trialIDs.length;i++){
-			whereClause+="?";
-			if(i!=trialIDs.length-1){
-				whereClause+=",";
-			}
-		}
-		whereClause+=") ";
 		
-		String idClause =  " WHERE id "+whereClause;
-		whereClause=" WHERE trial "+whereClause;
+		String trialList=" = " + trialIDs[i];
+		String idClause =  " WHERE id "+trialList;
+		String whereClause=" WHERE trial "+trialList;
 		
+		System.out.print("Deleting trial ID " + trialIDs[i]);
+		long before = System.currentTimeMillis();
+		db.setAutoCommit(false);
+		try{
+
 		PreparedStatement statement = null;
 
 		// There's a chances that these might not work with MySQL, but after
@@ -749,97 +754,167 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "primary_metadata"+ whereClause);
-		statement=setTrialIDs(statement,trialIDs);
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
-		statement = db
-				.prepareStatement(" DELETE FROM "
-						+ db.getSchemaPrefix()
-						+ "time_range WHERE id in (select time_range from secondary_metadata"+ whereClause+")");
-		statement=setTrialIDs(statement,trialIDs);
+		// "USING" is faster than a subquery - but not all databases support it.
+		if (db.getDBType().compareTo("postgresql") == 0) {
+			statement = db .prepareStatement(" DELETE FROM " +
+				db.getSchemaPrefix() + "time_range x using " + db.getSchemaPrefix() +
+				"secondary_metadata y where y.trial " + trialList + " and x.id = y.time_range ");
+		} else {
+			statement = db .prepareStatement(" DELETE FROM " +
+				db.getSchemaPrefix() + "time_range where id in (select time_range from " +
+				db.getSchemaPrefix() + "secondary_metadata " + whereClause + ")");
+		}
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "secondary_metadata "+ whereClause);
-		statement=setTrialIDs(statement,trialIDs);
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
-		// Postgresql, oracle, and DB2?
-		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		// "USING" is faster than a subquery - but not all databases support it.
+		if (db.getDBType().compareTo("postgresql") == 0) {
+			statement = db.prepareStatement(" DELETE FROM " 
+				+ db.getSchemaPrefix() + "counter_value x using " 
+				+ db.getSchemaPrefix() + "counter y where y.trial "
+				+ trialList + " and x.counter = y.id ");
+		} else {
+			statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "counter_value WHERE counter in (SELECT id FROM "
 				+ db.getSchemaPrefix() + "counter "+ whereClause+")");
-		statement=setTrialIDs(statement,trialIDs);
+		}
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
-		statement = db
-				.prepareStatement(" DELETE FROM "
-						+ db.getSchemaPrefix()
-						+ "timer_value tv WHERE tv.timer_call_data IN (SELECT tcd.id FROM "
-						+ db.getSchemaPrefix()
-						+ "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM "
-						+ db.getSchemaPrefix()
-						+ "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM "
-						+ db.getSchemaPrefix() + "timer t "+ whereClause+")))");
-		statement=setTrialIDs(statement,trialIDs);
+		// "USING" is faster than a subquery - but not all databases support it.
+		if (db.getDBType().compareTo("postgresql") == 0) {
+			statement = db .prepareStatement(" DELETE FROM " 
+				+ db.getSchemaPrefix() + "timer_value tv using "
+				+ db.getSchemaPrefix() + "timer_call_data tcd, "
+				+ db.getSchemaPrefix() + "timer_callpath tcp, " 
+				+ db.getSchemaPrefix() + "timer t where t.trial " + trialList 
+				+ " and tcp.timer = t.id and tcd.timer_callpath = tcp.id and tv.timer_call_data = tcd.id" );
+		} else {
+			statement = db .prepareStatement(" DELETE FROM "
+				+ db.getSchemaPrefix()
+				+ "timer_value tv WHERE tv.timer_call_data IN (SELECT tcd.id FROM "
+				+ db.getSchemaPrefix()
+				+ "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM "
+				+ db.getSchemaPrefix()
+				+ "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM "
+				+ db.getSchemaPrefix() + "timer t "+ whereClause+")))");
+		}
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
-		statement = db
-				.prepareStatement(" DELETE FROM "
-						+ db.getSchemaPrefix()
-						+ "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM "
-						+ db.getSchemaPrefix()
-						+ "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM "
-						+ db.getSchemaPrefix() + "timer t "+ whereClause+"))");
-		statement=setTrialIDs(statement,trialIDs);
+		// "USING" is faster than a subquery - but not all databases support it.
+		if (db.getDBType().compareTo("postgresql") == 0) {
+			statement = db .prepareStatement(" DELETE FROM "
+				+ db.getSchemaPrefix() + "timer_call_data tcd using "
+				+ db.getSchemaPrefix() + "timer_callpath tcp, "
+				+ db.getSchemaPrefix() + "timer t where t.trial " + trialList
+				+ " and tcp.timer = t.id and tcd.timer_callpath = tcp.id " );
+		} else {
+			statement = db .prepareStatement(" DELETE FROM "
+				+ db.getSchemaPrefix()
+				+ "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM "
+				+ db.getSchemaPrefix()
+				+ "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM "
+				+ db.getSchemaPrefix() + "timer t "+ whereClause+"))");
+		}
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
-		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		// "USING" is faster than a subquery - but not all databases support it.
+		if (db.getDBType().compareTo("postgresql") == 0) {
+			statement = db .prepareStatement(" DELETE FROM "
+				+ db.getSchemaPrefix() + "timer_callpath tcp using "
+				+ db.getSchemaPrefix() + "timer t where t.trial " 
+				+ trialList + " and tcp.timer = t.id " );
+		} else {
+			statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer_callpath WHERE timer IN (SELECT id FROM "
 				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
-		statement=setTrialIDs(statement,trialIDs);
+		}
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
-		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+
+		// "USING" is faster than a subquery - but not all databases support it.
+		if (db.getDBType().compareTo("postgresql") == 0) {
+			statement = db .prepareStatement(" DELETE FROM "
+				+ db.getSchemaPrefix() + "timer_parameter tp using "
+				+ db.getSchemaPrefix() + "timer t where t.trial " 
+				+ trialList + " and tp.timer = t.id " );
+		} else {
+			statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer_parameter WHERE timer IN (SELECT id FROM "
 				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
-		statement=setTrialIDs(statement,trialIDs);
+		}
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
-		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		// "USING" is faster than a subquery - but not all databases support it.
+		if (db.getDBType().compareTo("postgresql") == 0) {
+			statement = db .prepareStatement(" DELETE FROM "
+				+ db.getSchemaPrefix() + "timer_group tg using "
+				+ db.getSchemaPrefix() + "timer t where t.trial " 
+				+ trialList + " and tg.timer = t.id " );
+		} else {
+			statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer_group WHERE timer IN (SELECT id FROM "
 				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
-		statement=setTrialIDs(statement,trialIDs);
-		statement.execute();
-
-		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-				+ "timer_group WHERE timer IN (SELECT id FROM "
-				+ db.getSchemaPrefix() + "timer "+ whereClause+")");
-		statement=setTrialIDs(statement,trialIDs);
+		}
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "counter "+ whereClause);
-		statement=setTrialIDs(statement,trialIDs);
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "thread "+ whereClause);
-		statement=setTrialIDs(statement,trialIDs);
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "timer "+ whereClause);
-		statement=setTrialIDs(statement,trialIDs);
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "metric "+ whereClause);
-		statement=setTrialIDs(statement,trialIDs);
+		//statement=setTrialIDs(statement,trialIDs);
+		System.out.print(".");
 		statement.execute();
 
 		statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 				+ "trial "+ idClause);
-		statement=setTrialIDs(statement,trialIDs);
+		//statement=setTrialIDs(statement,trialIDs);
 		statement.execute();
+		long after = System.currentTimeMillis();
+		System.out.println("done. (" + (after - before) / 1000.0 + " seconds)");
+		db.commit();
+		} catch (SQLException e) {
+			db.rollback();
+		}
+		db.setAutoCommit(true);
+		}
 	}
 	
 
