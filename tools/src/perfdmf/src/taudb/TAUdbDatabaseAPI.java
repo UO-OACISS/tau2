@@ -739,31 +739,6 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				reverseMap.put(f.getID(), f);
 			}
 		}
-		/* Apparently, the H2 database doesn't handle parameters in the 
-		   recursive part of the query. So, we don't add them as parameters. */
-/*		sb.append("with recursive cp (id, parent, timer, name) as ( " +
-				"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
-				db.getSchemaPrefix() +
-				"timer_callpath tc inner join " +
-				db.getSchemaPrefix() +
-				"timer t on tc.timer = t.id where ");
-				sb.append("t.trial = " + trialID + " and tc.parent is null ");
-				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
-        if (db.getDBType().compareTo("h2") == 0) {
-			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
-        } else {
-			sb.append("cp.name || ' => ' || dt.name FROM ");
-        }
-			sb.append(db.getSchemaPrefix() +
-				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
-				db.getSchemaPrefix());
-				sb.append("timer dt on d.timer = dt.id where dt.trial = " + trialID + ") ");
-	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
-		sb.append(db.getSchemaPrefix());
-		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
-		sb.append(db.getSchemaPrefix());
-		sb.append("thread h on tcd.thread = h.id where h.trial = " + trialID);
-*/
 		sb.append("select distinct tcd.id, tcd.time_range, cp.id, h.node_rank, h.context_rank, h.thread_rank ");
 		sb.append("from timer_callpath cp ");
 		sb.append("join timer_call_data tcd on tcd.timer_callpath = cp.id ");
