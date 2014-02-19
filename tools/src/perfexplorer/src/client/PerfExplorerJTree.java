@@ -62,7 +62,7 @@ public class PerfExplorerJTree extends JTree{
 				MutableTreeNode aNode = (MutableTreeNode) path
 				.getLastPathComponent();
 				handleRename((DefaultMutableTreeNode) aNode, newValue);
-				nodeChanged(aNode);
+				PerfExplorerJTree.nodeChanged((DefaultMutableTreeNode) aNode);
 
 			}
 		};
