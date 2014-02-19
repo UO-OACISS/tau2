@@ -1825,7 +1825,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	       filePathInclude=-I${arrFileNameDirectory[$tempCounter]}
             fi
 
-	    newCmd="$CMD $headerInstFlag $filePathInclude $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt"
+	    newCmd="$CMD $headerInstFlag $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt $filePathInclude"
 #-I${arrFileNameDirectory[$tempCounter]}
 
 	    echoIfDebug "cmd before appending the .o file is $newCmd"
