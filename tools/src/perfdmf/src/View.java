@@ -716,27 +716,6 @@ public class View implements Serializable {
 	}
     public void setField(int idx, String field) {
     	int[] types = database.getAppFieldTypes();
-    	if(types.length<=idx){
-    		System.err.println("Warning: Invalid Index for App Field Types");
-    		return;
-    	}
-        if (DBConnector.isIntegerType(types[idx]) && field != null) {
-            try {
-                //int test = 
-                	Integer.parseInt(field);
-            } catch (java.lang.NumberFormatException e) {
-                return;
-            }
-        }
-
-        if (DBConnector.isFloatingPointType(database.getAppFieldTypes()[idx]) && field != null) {
-            try {
-                //double test = 
-                	Double.parseDouble(field);
-            } catch (java.lang.NumberFormatException e) {
-                return;
-            }
-        }
         fields.set(idx, field);
     }
     public void rename(DB db, String newName) {

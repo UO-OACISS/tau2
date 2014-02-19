@@ -112,8 +112,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		Iterator<DatabaseAPI> sit = sessions.iterator();
 		while(sit.hasNext()){
 			DatabaseAPI next = sit.next();
-			if(next.getDb().getDatabase().getID()==database.getID())
-				return next;
+			if (next != null) {
+				if(next.getDb().getDatabase().getID()==database.getID()) {
+					return next;
+				}
+			}
 		}
 		return null;
 	}
