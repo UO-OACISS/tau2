@@ -36,7 +36,7 @@ extern "C" void Tau_cupti_register_host_calling_site(
 							FunctionInfo* launch = (FunctionInfo *) Tau_pure_search_for_function(name);
 							for (int i=0; i<TAU_MAX_THREADS; i++)
 							{
-								if (launch == TauInternal_CurrentProfiler(i)->ThisFunction)
+								if (TauInternal_CurrentProfiler(i) != NULL and launch == TauInternal_CurrentProfiler(i)->ThisFunction)
 								{
 									functionInfoMap_hostLaunch()[correlationId] = TauInternal_CurrentProfiler(i)->CallPathFunction;
 									break;
