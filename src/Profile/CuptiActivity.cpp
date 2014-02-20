@@ -189,11 +189,14 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			Tau_cupti_register_sync_event(sync->context, streamIds.at(s), NULL, 0, 0);
 		}
 	}
-
-#endif //TAU_ASYNC_ACTIVITY_API
 	else if (domain == CUPTI_CB_DOMAIN_DRIVER_API ||
 					 domain == CUPTI_CB_DOMAIN_RUNTIME_API)
 	{
+#else
+	if (domain == CUPTI_CB_DOMAIN_DRIVER_API ||
+					 domain == CUPTI_CB_DOMAIN_RUNTIME_API)
+	{
+#endif //TAU_ASYNC_ACTIVITY_API
 		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 		if (function_is_memcpy(id, domain))
 		{
@@ -247,7 +250,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           }
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-          cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
+          cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+          //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
 #else
 					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
 #endif
@@ -298,7 +302,20 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				{
 					//cerr << "sync function name: " << cbInfo->functionName << endl;
 					//Tau_CuptiLayer_disable();
-					cuCtxSynchronize();
+					//cuCtxSynchronize();
+					cudaDeviceSynchronize();
+					//Tau_CuptiLayer_enable();
+          int device_count = get_device_count();
+          for (int i=0; i<device_count; i++) {
+            record_gpu_counters_at_sync(i);
+          }
+
+#ifdef TAU_ASYNC_ACTIVITY_API
+          cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+          //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
+#else
+					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
+#endif
 					//Tau_CuptiLayer_enable();
 				}
 			}
@@ -425,7 +442,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
   
-	printf("in record activity, kind: %d\n", record->kind);
+	//printf("in record activity, kind: %d\n", record->kind);
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 #if CUDA_VERSION >= 5050
@@ -857,7 +874,6 @@ int ceil(float value, int significance)
 
 int gpu_occupancy_available(int deviceId)
 { 
-  return 0;
 	//device callback not called.
 	if (deviceMap.empty())
 	{
