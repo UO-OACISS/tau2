@@ -537,13 +537,16 @@ void Tau_CuptiLayer_Initialize_Map()
 	CUresult er;
 	CUptiResult err = CUPTI_SUCCESS;
 
-	cuInit(0);
 	int deviceCount;
 	uint32_t domainCount;
 	uint32_t eventCount;
 	//CuptiCounterEvent::printHeader();
 	// for each device 
   er = cuDeviceGetCount(&deviceCount);
+  if (er == CUDA_ERROR_NOT_INITIALIZED) {
+	  cuInit(0);
+    er = cuDeviceGetCount(&deviceCount);
+  }
   if (er != CUDA_SUCCESS) {
     //no devices found.
     return;
