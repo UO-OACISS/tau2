@@ -184,7 +184,7 @@ uint32_t get_name_hash(uint32_t hash, char ** pdata, size_t * plen, bool * pexcl
       char c = data[len];
       if (c == 0) {
         break;
-      } else if (c == '@') {
+      } else if (c == '@' || c == '$') {
         // Exclude IBM OpenMP runtime functions
         exclude = true;
       } else if (c < 32 || c > 126) {
