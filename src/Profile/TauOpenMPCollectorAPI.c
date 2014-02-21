@@ -163,20 +163,15 @@ char * show_backtrace (int tid, int offset) {
     unw_getcontext(&uc);
     unw_init_local(&cursor, &uc);
     int index = 0;
-#if defined (TAU_OPEN64ORC)
-    int depth = 4 + offset; // I *think* this is the correct value.
-#elif defined (__INTEL_COMPILER)
-    int depth = 5 + offset;
-#else /* assume we are using gcc */
-    //#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
-    int depth = 6 + offset;
+    static int basedepth = -1;
+    int depth = basedepth + offset;
+
 //ip = 7f735e98ad00, sp = 7fff7cd55c90, name= [OPENMP] Tau_get_current_region_context
 //ip = 7f735e98b515, sp = 7fff7cd55cd0, name= [OPENMP] Tau_omp_event_handler
 //ip = 7f735ed029b0, sp = 7fff7cd55d00, name= [OPENMP] __ompc_event_callback
 //ip = 7f735ed03d38, sp = 7fff7cd55d20, name= [OPENMP] tau_GOMP_parallel_start
 //ip = 7f735ed01c91, sp = 7fff7cdd9c60, name= [OPENMP] GOMP_parallel_start
 
-#endif /* (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__) */
     while (unw_step(&cursor) > 0) {
         // we want to pop 3 or 4 levels of the stack:
         // - Tau_get_current_region_context()
@@ -184,14 +179,43 @@ char * show_backtrace (int tid, int offset) {
         // - __ompc_event_callback() or fork()
         // - GOMP_parallel_begin() * maybe - only if using GOMP *
         // - ?? <- the source location we want
-            unw_get_reg(&cursor, UNW_REG_IP, &ip);
-            unw_get_reg(&cursor, UNW_REG_SP, &sp);
-            //printf("Address: %p %p\n", ip, sp);
         if (++index >= depth) {
+            unw_get_reg(&cursor, UNW_REG_IP, &ip);
+            //unw_get_reg(&cursor, UNW_REG_SP, &sp);
+            //printf("Address: %p %p\n", ip, sp);
             char * newShort = NULL;
             void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0, true);
             Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
             //TAU_VERBOSE ("index = %d, ip = %lx, sp = %lx, name= %s\n", index, (long) ip, (long) sp, myInfo->name); fflush(stdout);
+			//printf("%d %d %d %s\n",basedepth, depth, index, myInfo->name); fflush(stdout);
+			if (basedepth == -1) {
+				if (strncmp(myInfo->name,"[OPENMP] Tau_", 13) == 0) {  // in TAU
+			    	continue; // keep unwinding
+#if defined (TAU_OPEN64ORC)
+				} else if (strncmp(myInfo->name,"[OPENMP] __ompc_", 16) == 0) { // in OpenUH runtime
+			    	continue; // keep unwinding
+				}
+#elif defined (__INTEL_COMPILER)
+				} else if (strncmp(myInfo->name,"[OPENMP] my_", 12) == 0) { // in OMPT wraper (see below)
+			    	continue; // keep unwinding
+				} else if (strncmp(myInfo->name,"[OPENMP] __kmp", 14) == 0) { // in Intel runtime
+			    	continue; // keep unwinding
+				}
+#elif defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
+#else /* assume we are using gcc */
+				} else if (strncmp(myInfo->name,"[OPENMP] tau_GOMP", 17) == 0) {  // in GOMP wrapper
+			    	continue; // keep unwinding
+				} else if (strncmp(myInfo->name,"[OPENMP] __wrap_GOMP", 20) == 0) {  // in GOMP wrapper
+			    	continue; // keep unwinding
+				} else if (strncmp(myInfo->name,"[OPENMP] GOMP_", 14) == 0) {  // in GOMP runtime
+			    	continue; // keep unwinding
+				} else if (strncmp(myInfo->name,"[OPENMP] __ompc_event_callback", 30) == 0) { // in GOMP wrapper
+			    	continue; // keep unwinding
+				} 
+#endif
+				// stop unwinding
+				basedepth = index;
+			}
             location = malloc(strlen(myInfo->name)+1);
             strcpy(location, myInfo->name);
             break;
