@@ -1331,18 +1331,19 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
     if (samplingEnabled[tid]) {
       numSamples[tid]++;
 
-#ifndef TAU_SAMPLING_PROFILE_TAU
-      // Exclude TAU from sampling
-      if (Tau_global_get_insideTAU() > 0) {
-        samplesDroppedTau[tid]++;
-        return;
+      // we might want to sample TAU to measure overhead
+      if (!TauEnv_get_ebs_enabled_tau()) {
+        // Exclude TAU from sampling
+        if (Tau_global_get_insideTAU() > 0) {
+          samplesDroppedTau[tid]++;
+          return;
+        }
       }
 
       if (suspendSampling[tid]) {
         samplesDroppedSuspended[tid]++;
         return;
       }
-#endif
 
       // disable sampling until we handle this sample
       {
