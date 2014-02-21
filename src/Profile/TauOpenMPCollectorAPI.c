@@ -187,7 +187,7 @@ char * show_backtrace (int tid, int offset) {
             void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0, true);
             Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
             //TAU_VERBOSE ("index = %d, ip = %lx, sp = %lx, name= %s\n", index, (long) ip, (long) sp, myInfo->name); fflush(stdout);
-			//printf("%d %d %d %s\n",basedepth, depth, index, myInfo->name); fflush(stdout);
+			//TAU_VERBOSE("%d %d %d %s\n",basedepth, depth, index, myInfo->name); fflush(stderr);
 			if (basedepth == -1) {
 				if (strncmp(myInfo->name,"[OPENMP] Tau_", 13) == 0) {  // in TAU
 			    	continue; // keep unwinding
@@ -202,6 +202,11 @@ char * show_backtrace (int tid, int offset) {
 			    	continue; // keep unwinding
 				}
 #elif defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
+				} else if (strncmp(myInfo->name,"[OPENMP] my_", 12) == 0) { // in OMPT wraper (see below)
+			    	continue; // keep unwinding
+				} else if (strncmp(myInfo->name,"[OPENMP] UNRESOLVED", 19) == 0) { // in OMPT wraper (see below)
+			    	continue; // keep unwinding
+				}
 #else /* assume we are using gcc */
 				} else if (strncmp(myInfo->name,"[OPENMP] tau_GOMP", 17) == 0) {  // in GOMP wrapper
 			    	continue; // keep unwinding
