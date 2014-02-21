@@ -213,6 +213,7 @@ static int env_openmp_runtime_states_enabled = 0;
 static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
+static int env_ebs_enabled_tau = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -739,6 +740,10 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_ebs_enabled_tau() {
+  return env_ebs_enabled_tau;
 }
 
 int TauEnv_get_openmp_runtime_enabled() {
@@ -1475,6 +1480,19 @@ void TauEnv_initialize()
       env_openmp_runtime_context = 0;
       TAU_VERBOSE("TAU: OpenMP Runtime Support Context none\n");
       TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
+    }
+
+    tmp = getconf("TAU_MEASURE_TAU");
+    if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
+      env_ebs_enabled = 1;
+      env_ebs_enabled_tau = 1;
+      TAU_VERBOSE("TAU: Sampling TAU overhead\n");
+      TAU_METADATA("TAU_SAMPLING", "on");
+      TAU_METADATA("TAU_MEASURE_TAU", "on");
+    } else {
+      env_ebs_enabled = 0;
+      TAU_VERBOSE("TAU: Not sampling TAU overhead\n");
+      TAU_METADATA("TAU_MEASURE_TAU", "off");
     }
 
     tmp = getconf("TAU_SAMPLING");
