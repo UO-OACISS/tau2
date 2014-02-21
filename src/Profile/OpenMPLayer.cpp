@@ -134,7 +134,7 @@ int OpenMPLayer::GetTauThreadId(void)
     _thread_count = _thread_count + 1;
     omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     Tau_global_decr_insideTAU();
-    Tau_create_top_level_timer_if_necessary_task(_tau_thread_id);
+    Tau_create_top_level_timer_if_necessary_task(tmp->threadID);
   }
   return tmp->threadID;
 #endif // TAU_USE_TLS
