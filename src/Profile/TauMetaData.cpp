@@ -143,7 +143,7 @@ int tau_bgq_init(void) {
 class MetaDataRepo : public map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> {
 public :
   virtual ~MetaDataRepo() {
-    Tau_destructor_trigger();
+    //Tau_destructor_trigger();
   }
 };
 
