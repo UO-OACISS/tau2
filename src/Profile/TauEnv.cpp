@@ -75,6 +75,7 @@ using namespace std;
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
+#define TAU_EBS_DEFAULT_TAU 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
 #if (defined (TAU_BGL) || defined(TAU_BGP))
 #define TAU_EBS_PERIOD_DEFAULT 20000 // Kevin made this bigger,
@@ -1483,14 +1484,14 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_MEASURE_TAU");
-    if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
-      env_ebs_enabled = 1;
+    if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
+      env_ebs_enabled = 1; // enable samping too?
       env_ebs_enabled_tau = 1;
       TAU_VERBOSE("TAU: Sampling TAU overhead\n");
       TAU_METADATA("TAU_SAMPLING", "on");
       TAU_METADATA("TAU_MEASURE_TAU", "on");
     } else {
-      env_ebs_enabled = 0;
+      env_ebs_enabled_tau = 0;
       TAU_VERBOSE("TAU: Not sampling TAU overhead\n");
       TAU_METADATA("TAU_MEASURE_TAU", "off");
     }
