@@ -264,11 +264,17 @@ struct CallSiteCacheNode {
   TauBfdInfo info;
 };
 
-typedef TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> CallSiteCacheMap;
-static CallSiteCacheMap & TheCallSiteCacheWithLines() {
-  static CallSiteCacheMap map;
-  return map;
-}
+//typedef TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> CallSiteCacheMap;
+struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> 
+{
+  CallSiteCacheMap() {}
+  virtual ~CallSiteCacheMap() {
+    //Wait! We might not be done! Unbelieveable as it may seem, this map
+	//could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+    Tau_sampling_finalize_if_necessary();
+  }
+};
+
 
 static CallSiteCacheMap & TheCallSiteCache() {
   static CallSiteCacheMap map;
@@ -647,7 +653,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
-    char const * childName, char ** newShortName, bool addAddress, bool useLineNumber)
+    char const * childName, char ** newShortName, bool addAddress)
 {
   int printMessage=0;
   if (strcmp(tag, "UNWIND") == 0) {
@@ -657,14 +663,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   }
   CallSiteInfo * callsite = new CallSiteInfo(addr);
 
-  // we are using two caches - one for the location with line numbers,
-  // and one without. This is somewhat inefficient(?), but it works.
   CallSiteCacheMap & callSiteCache = TheCallSiteCache();
-#if 0
-  if (useLineNumber) {
-    callSiteCache = TheCallSiteCacheWithLines();
-  }
-#endif
   // does the node exist in the cache? if not, look it up
   CallSiteCacheNode * node = callSiteCache[addr];
   if (!node) {
@@ -687,36 +686,22 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
-    if (useLineNumber) {
-      if (childName) {
-        sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
-            tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
-      } else {
-        sprintf(buff, "[%s] %s [{%s} {%d}]",
-            tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
-      }
-      // TODO: Leak?
-      char lineno[32];
-      sprintf(lineno, "%d", resolvedInfo.lineno);
+    if (childName) {
+      sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+          tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    } else {
+      sprintf(buff, "[%s] %s [{%s} {%d}]",
+          tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    }
+    // TODO: Leak?
+    char lineno[32];
+    sprintf(lineno, "%d", resolvedInfo.lineno);
 //      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
 //      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-      newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
-      sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-      newShortName = &newName; 
-      //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
-#if 0
-    } else {
-      if (childName) {
-        sprintf(buff, "[%s] %s [@] %s [{%s}]",
-            tag, childName, resolvedInfo.funcname, resolvedInfo.filename);
-      } else {
-        sprintf(buff, "[%s] %s [{%s}]",
-            tag, resolvedInfo.funcname, resolvedInfo.filename);
-      }
-      // TODO: Leak?
-      *newShortName = strdup(resolvedInfo.funcname);
-#endif
-    }
+    newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+    sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+    newShortName = &newName; 
+    //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
   } else {
     char const * mapName = "UNKNOWN";
     TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
@@ -795,28 +780,16 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       char * prevShortName = NULL;
       char * newShortName = NULL;
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, true));
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress));
       // move the pointers
       if (newShortName) {
         prevShortName = newShortName;
         newShortName = NULL;
       }
-#if 0
-      // resolve it again, without the line number
-      callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, false));
-      // free the previous short name now.
-      if (prevShortName) {
-        free(prevShortName);
-        if (newShortName) {
-          prevShortName = newShortName;
-        }
-      }
-#endif
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, &newShortName, addAddress, 1));
+            address, "UNWIND", prevShortName, &newShortName, addAddress));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
@@ -1331,13 +1304,10 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
     if (samplingEnabled[tid]) {
       numSamples[tid]++;
 
-      // we might want to sample TAU to measure overhead
-      if (!TauEnv_get_ebs_enabled_tau()) {
-        // Exclude TAU from sampling
-        if (Tau_global_get_insideTAU() > 0) {
-          samplesDroppedTau[tid]++;
-          return;
-        }
+      // Exclude TAU from sampling
+      if ((Tau_global_get_insideTAU() > 0) && (!TauEnv_get_ebs_enabled_tau())) {
+        samplesDroppedTau[tid]++;
+        return;
       }
 
       if (suspendSampling[tid]) {
