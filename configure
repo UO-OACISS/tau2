@@ -5402,7 +5402,7 @@ if [ "x$download_unwind" = xyes ] ; then
   unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
   prebfddir=`pwd`
 
-  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" ] ; then
+  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o -r "$unwind_dir/lib/lib${libunwind_name}.a" ] ; then
     echo "libunwind download already found, skipping"
   else
     # get the tar file
