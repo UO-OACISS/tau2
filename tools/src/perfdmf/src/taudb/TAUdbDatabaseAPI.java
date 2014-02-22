@@ -194,7 +194,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             
-			if (!summaryOnly) { System.out.println("Only doing summary!"); }
+			if (summaryOnly) { System.out.println("Only doing summary!"); }
 
 			if (!summaryOnly) { 
             // now that the graph is created, insert the call and subroutine data.

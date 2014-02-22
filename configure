@@ -5402,15 +5402,17 @@ if [ "x$download_unwind" = xyes ] ; then
   unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
   prebfddir=`pwd`
 
-  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" ] ; then
+  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o -r "$unwind_dir/lib64/lib${libunwind_name}.a" ] ; then
     echo "libunwind download already found, skipping"
   else
     # get the tar file
-    echo "downloading $libunwindtgz..."
-    if [ "$machine" = "apple" ] ; then
-      curl -L $libunwindurl > $libunwindtgz
-    else 
-      wget $libunwindurl
+    if [ ! -f $libunwindtgz ] ; then
+      echo "downloading $libunwindtgz..."
+      if [ "$machine" = "apple" ] ; then
+        curl -L $libunwindurl > $libunwindtgz
+      else 
+        wget $libunwindurl
+      fi
     fi
 
     # check the tar file
@@ -5431,17 +5433,24 @@ if [ "x$download_unwind" = xyes ] ; then
         libunwind_log=configure.log
         cd $libunwind
         echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
-        ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
+        if [ "x$machine" == "xbgq" ] ; then
+          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} --disable-shared >& ${libunwind_log}
+          cp src/unwind/Resume.c tmp.c
+          sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
+          rm tmp.c
+        else
+          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
+        fi
         configresult=$?
         if [ $configresult -eq 0 ] ; then
           libunwind_log=build.log
           echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
-          make >& $libunwind_log
+          make -i >& $libunwind_log
           makeresult=$?
           if [ $makeresult -eq 0 ] ; then
           libunwind_log=install.log
           echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
-            make install >& $libunwind_log
+            make -i install >& $libunwind_log
           makeresult=$?
           fi
         fi
@@ -5460,7 +5469,11 @@ if [ "x$download_unwind" = xyes ] ; then
   fi
   if [ $unwind_dir != "/usr" ]; then
     unwind_inc="$unwind_dir/include"
-    unwind_lib="$unwind_dir/lib"
+    if [ "x$machine" == "xbgq" ] ; then
+      unwind_lib="$unwind_dir/lib64"
+    else
+      unwind_lib="$unwind_dir/lib"
+    fi
   fi
   cd $prebfddir
 fi #unwind=download

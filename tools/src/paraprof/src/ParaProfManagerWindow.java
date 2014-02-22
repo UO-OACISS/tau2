@@ -2520,8 +2520,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				// load the trial in from the db
 				ppTrial.setLoading(true);
 
-				DatabaseAPI databaseAPI = this.getDatabaseAPI(ppTrial
-						.getDatabase());
+				Database database=ppTrial.getDatabase();
+				if(database!=null&&database.getLatch()!=null){
+				try {
+					database.getLatch().await();
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				}
+				database.setLatch();
+				
+				DatabaseAPI databaseAPI = this.getDatabaseAPI(database);
 				if (databaseAPI != null) {
 					databaseAPI.setApplication(ppTrial.getApplicationID());
 					databaseAPI.setExperiment(ppTrial.getExperimentID());
@@ -2551,6 +2560,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 										theTrial.finishLoad();
 										ParaProf.paraProfManagerWindow
 										.populateTrialMetrics(theTrial);
+										theTrial.getDatabase().getLatch().countDown();
 									} catch (final Exception e) {
 										EventQueue.invokeLater(new Runnable() {
 											public void run() {
