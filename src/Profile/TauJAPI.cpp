@@ -20,6 +20,9 @@ using namespace std;
 
 #include "Profile/adb.h"
 #include "Profile/jdwp.h"
+#include "Profile/ddm.h"
+
+FILE *tau_verbose_fp;
 
 extern "C" {
     jint android_log(const char *message);
@@ -98,7 +101,114 @@ jlong &TheLastJDWPEventThreadID()
     return jid;
 }
 
+static char *
+utf16_to_ascii(char *utf16, int len)
+{
+    int i;
+    char *ascii;
+
+    ascii = (char*)malloc(len+1);
+    if (ascii == NULL) {
+	return NULL;
+    }
+
+    for (i=0; i<len; i++) {
+	ascii[i] = ntohs(((short*)utf16)[i]) & 0xff;
+    }
+
+    ascii[i] = 0;
+
+    return ascii;
+}
+
 static int dalvik_vm_running = 1;
+
+static int
+handle_ddm_event(ddm_trunk_t *trunk)
+{
+    ddm_thcr_t *thcr;
+    ddm_thde_t *thde;
+
+    int tid;    // tau internal thread id, +1 for each new thread
+    char *tname;
+
+    static jlong jid = 0;  // java thread id, +1 for each new thread
+
+    uint32_t lid;  // dalvik vm-local thread id, free after thread death, reuseable
+    static map<uint32_t, char*> java_thread_name;  // lid ==> tname
+    static map<uint32_t, jlong> java_thread_id;    // lid ==> jid
+
+    switch (ntohl(trunk->type)) {
+    case DDM_THCR:
+	thcr  = (ddm_thcr_t*)trunk;
+	lid   = ntohl(thcr->lid);
+	tname = utf16_to_ascii(thcr->tname, ntohl(thcr->tname_len));
+
+	jid += 1;
+
+	/* setup mapping between lid and tname */
+	if (java_thread_name.find(lid) != java_thread_name.end()) {
+	    free(java_thread_name[lid]);
+	}
+	java_thread_name[lid] = tname;
+
+	/*
+	 * lid 1  : main
+	 * lid 2~8: dalvik internel threads
+	 * lid 9~ : user threads
+	 */
+	if (lid >= 9) {
+	    /* setup mapping between lid and jid */
+	    java_thread_id[lid] = jid;
+
+	    /*
+	     * Try to register this new thread.
+	     * Note that this is an async event, hence the thread may be
+	     * running and already registered itself. We shall handle this
+	     * in RegisterThread().
+	     */
+	    tid = JNIThreadLayer::RegisterThread(jid);
+
+	    TheLastJDWPEventThreadID() = jid;
+	    CreateTopLevelRoutine(tname, (char*)" ", "DTM", tid);
+
+	    fprintf(tau_verbose_fp, " *** DDM THCR <%d> %s -- Registered\n", lid, tname);
+	} else {
+	    fprintf(tau_verbose_fp, " *** DDM THCR <%d> %s\n", lid, tname);
+	}
+
+	break;
+
+    case DDM_THDE:
+	thde  = (ddm_thde_t*)trunk;
+	lid   = ntohl(thde->lid);
+	tname = java_thread_name[lid];
+
+	fprintf(tau_verbose_fp, " *** DDM THDE <%d> %s\n", lid, tname);
+	free(tname);
+	java_thread_name.erase(lid);
+
+	if (lid == 1) {
+	    dalvik_vm_running = 0;
+	}
+
+	if (java_thread_id.find(lid) != java_thread_id.end()) {
+	    TheLastJDWPEventThreadID() = java_thread_id[lid];
+	    java_thread_id.erase(lid);
+
+	    TAU_PROFILE_EXIT("END...");
+	}
+
+	break;
+
+    defalt:
+	fprintf(tau_verbose_fp, "Error: DTM: ignore DDM event %08x\n",
+		ntohl(trunk->type));
+	break;
+    }
+
+    return 0;
+}
 
 static void*
 dalvik_thread_monitor(void *arg)
@@ -106,13 +216,10 @@ dalvik_thread_monitor(void *arg)
     jdwp_ctx_t jdwp;
     jdwp_cmd_t *cmd;
 
-    jlong jid = 9;
-    std::map<uint64_t, jlong> java_threads;
-
     jdwp_init(&jdwp);
 
-    jdwp_set_event_request(&jdwp, E_THREAD_START, SUSPEND_EVENT_THREAD);
-    jdwp_set_event_request(&jdwp, E_THREAD_END, SUSPEND_NONE);
+    ddm_helo(&jdwp);
+    ddm_then(&jdwp);
 
     while (1) {
 	/* is there any pending events in backlog? */
@@ -122,7 +229,7 @@ dalvik_thread_monitor(void *arg)
 
 	    /* something really bad happened, end of watch */
 	    if (cmd == NULL) {
-		fprintf(stderr, "Error: JDWP: disconnect...\n");
+		fprintf(tau_verbose_fp, "Error: JDWP: disconnect...\n");
 		break;
 	    }
 
@@ -140,8 +247,22 @@ dalvik_thread_monitor(void *arg)
 		jdwp.events             = jdwp.events->next;
 	    }
 
+	    switch ((event->cmd->cmd_set << 8) | event->cmd->command) {
+	    case DDM_TRUNK:
+		handle_ddm_event((ddm_trunk_t*)event->cmd->data);
+		free(event->cmd);
+		free(event);
+		break;
+	    case EVENT_COMPOSIT:
+		fprintf(tau_verbose_fp, "Error: DTM: ignore JDWP EVENT COMPOSIT\n");
+		break;
+	    default:
+		fprintf(tau_verbose_fp, "Error: DTM: ignore unknown JDWP event\n");
+		break;
+	    }
+
+	    /*
 	    if (event->eventKind == E_THREAD_START) {
-		/* get thread name */
 		char *tname = jdwp_get_thread_name(&jdwp, event->threadID);
 		if (tname == NULL) {
 		    break;
@@ -177,18 +298,17 @@ dalvik_thread_monitor(void *arg)
 		break;
 	    }
 
-	    /* resume thread */
 	    if (event->suspendPolicy != SUSPEND_NONE) {
 		jdwp_resume_thread(&jdwp, event->threadID);
 	    }
 
-	    /* we are done with this event */
 	    free(event);
+	    */
 	}
     }
 
     if (!adb_is_active(jdwp.adb)) {
-	fprintf(stderr, "Error: JDWP: connection closed\n");
+	printf("Error: JDWP: connection closed\n");
     }
 
     return NULL;
@@ -199,12 +319,12 @@ dalvik_thread_monitor(void *arg)
 /*
  * The VM calls JNI_OnLoad() when the native library is loaded
  */
-FILE *tau_verbose_fp;
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
     printf("TAU: JNI_OnLoad\n");
 
-    tau_verbose_fp = stderr;
+    //tau_verbose_fp = stderr;
+    tau_verbose_fp = fopen("/data/data/org.tomdroid/cache/tau.log", "w+");
 
     /*
      * This is a good point to attach your gdb on JVM to debug TAU
@@ -237,14 +357,24 @@ jlong get_java_thread_id(void)
     JavaVM *vm = JNIThreadLayer::tauVM;
     JNIEnv *env;
 
+    /*
+     * Note that we may still running even after dalvik vm is dead, in which
+     * case the jid should be 1, i.e. the "main" thread.
+     */
     if (!dalvik_vm_running) {
 	return 1;
     }
 
+    /* sanity check */
     if (vm == NULL) {
 	return -1;
     }
 
+    /*
+     * Note that DTM(Dalvik Monitor Thread) is just a pthread. It's not attached
+     * to dalvik vm, i.e. not a java thread. So there is no env pointer, and it
+     * doesn't have a java thread id.
+     */
     if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
 	return -1;
     }
@@ -254,7 +384,8 @@ jlong get_java_thread_id(void)
 	return -1;
     }
 
-    jmethodID currentThread = env->GetStaticMethodID(thread, "currentThread", "()Ljava/lang/Thread;");
+    jmethodID currentThread = env->GetStaticMethodID(thread, "currentThread",
+						     "()Ljava/lang/Thread;");
     if (currentThread == NULL) {
 	return -1;
     }
@@ -286,7 +417,12 @@ jint android_log(const char *message)
     JavaVM *vm = JNIThreadLayer::tauVM;
     JNIEnv *env;
 
-    printf("android_log(\"%s\")\n", message);
+    printf(" *** android_log(\"%s\")\n", message);
+
+    if (!dalvik_vm_running) {
+	printf(" **** but vm is dead\n");
+	return 1;
+    }
 
     if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
 	printf("can't GetEnv\n");
@@ -318,7 +454,11 @@ jint android_log(const char *message)
 
     printf("going to call static method\n");
 
-    return env->CallStaticIntMethod(log, logV, tag, msg);
+    env->CallStaticIntMethod(log, logV, tag, msg);
+
+    env->DeleteLocalRef(log);
+
+    return 0;
 }
 
 
