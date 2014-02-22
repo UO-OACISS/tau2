@@ -672,45 +672,47 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COLLECTORAPI_EC ec, int rsz, int append_zero)
 {
     int *psz = (int *) message; 
+    int *start = (int *) message; 
     *psz = sz;
 
-    OMP_COLLECTORAPI_REQUEST *rnum = (OMP_COLLECTORAPI_REQUEST *) (message+sizeof(int));
+    OMP_COLLECTORAPI_REQUEST *rnum = (OMP_COLLECTORAPI_REQUEST *) (start+sizeof(int));
     *rnum = rq;
 
-    OMP_COLLECTORAPI_EC *pec = (OMP_COLLECTORAPI_EC *)(message+(sizeof(int)*2));
+    OMP_COLLECTORAPI_EC *pec = (OMP_COLLECTORAPI_EC *)(start+(sizeof(int)*2));
     *pec = ec;
 
-    int *prsz = (int *) (message+ sizeof(int)*3);
+    int *prsz = (int *) (start+ sizeof(int)*3);
     *prsz = rsz;
 
     if(append_zero) {
-        psz = (int *)(message+(sizeof(int)*4)+rsz);
+        psz = (int *)(start+(sizeof(int)*4)+rsz);
         *psz =0; 
     }   
 }
 
 void Tau_fill_register(void *message, OMP_COLLECTORAPI_EVENT event, int append_func, void (*func)(OMP_COLLECTORAPI_EVENT), int append_zero) {
 
+    int *start = (int *) message; 
     // get a pointer to the head of the message
     OMP_COLLECTORAPI_EVENT *pevent = (OMP_COLLECTORAPI_EVENT *) message;
     // assign the event to the first parameter
     *pevent = event;
 
     // increment to the next parameter
-    char *mem = (char *)(message + sizeof(OMP_COLLECTORAPI_EVENT));
+    char *mem = (char *)(start + sizeof(OMP_COLLECTORAPI_EVENT));
     if(append_func) {
-        unsigned long * lmem = (unsigned long *)(message + sizeof(OMP_COLLECTORAPI_EVENT));
+        unsigned long * lmem = (unsigned long *)(start + sizeof(OMP_COLLECTORAPI_EVENT));
         *lmem = (unsigned long)func;
     }
 
     if(append_zero) {
         int *psz;
         if(append_func) {
-            psz = (int *)(message+sizeof(OMP_COLLECTORAPI_EVENT)+ sizeof(void *)); 
+            psz = (int *)(start+sizeof(OMP_COLLECTORAPI_EVENT)+ sizeof(void *)); 
 
         } else {
 
-            psz = (int *)(message+sizeof(OMP_COLLECTORAPI_EVENT));
+            psz = (int *)(start+sizeof(OMP_COLLECTORAPI_EVENT));
 
         }
         *psz =0;  
@@ -831,9 +833,10 @@ extern "C" int Tau_initialize_collector_api(void) {
     int register_sz = sizeof(OMP_COLLECTORAPI_EVENT)+sizeof(void *);
     int mes_size = OMP_COLLECTORAPI_HEADERSIZE+register_sz;
     message = (void *) malloc(num_req*mes_size+sizeof(int));
+	int *start = (int *)message;
     for(i=0;i<num_req;i++) {  
-        Tau_fill_header(message+mes_size*i,mes_size, OMP_REQ_REGISTER, OMP_ERRCODE_OK, 0, 0);
-        Tau_fill_register((message+mes_size*i)+OMP_COLLECTORAPI_HEADERSIZE,
+        Tau_fill_header(start+mes_size*i,mes_size, OMP_REQ_REGISTER, OMP_ERRCODE_OK, 0, 0);
+        Tau_fill_register((start+mes_size*i)+OMP_COLLECTORAPI_HEADERSIZE,
 		                  (OMP_COLLECTORAPI_EVENT)(OMP_EVENT_FORK+i),
 						  1, Tau_omp_event_handler, i==(num_req-1));
     } 
