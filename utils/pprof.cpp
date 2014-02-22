@@ -214,12 +214,12 @@ bool IsDynamicProfiling(char *filename) {
     printf("Error: fscanf returns EOF file %s", filename);
     return false;
   }//if
-  //fclose(fp); // thats all we wanted to read
+  fclose(fp); // thats all we wanted to read
   if (strcmp(version,"templated_functions") == 0  || (strstr(version,"MULTI") != NULL)) { // correct version
     if(strstr(version,"MULTI") != NULL){
       multipleCounters = true;
       counterName = strdup(version);
-      if((strstr(version,"TIME") != NULL) || (strstr(version, "Time") != NULL))
+      if(strstr(version,"TIME") != NULL)
 	hwcounters = false;
       else
 	hwcounters = true;
@@ -563,7 +563,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
 	perror("Error in fgets: Cannot read invocation data ");
-	exit(1);
+	return 0;
       }//if
       /* use this data */
       sscanf(line, "%lG %lG", &exclthiscall, &inclthiscall);
@@ -836,7 +836,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     for(k = 0; k < numinvocations; k++) {
       if(fgets(line,SIZE_OF_LINE,fp) == NULL) {
 	perror("Error in fgets: Cannot read invocation data ");
-	exit(1);
+	return 0;
       }//if
       /* use this data */
       sscanf(line, "%lG %lG", &exclthiscall, &inclthiscall);
