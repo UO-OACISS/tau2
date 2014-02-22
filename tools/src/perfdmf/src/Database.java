@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 
@@ -32,6 +33,14 @@ public class Database implements Serializable {
     private String atomicEventFieldNames[];
     private String atomicEventFieldTypeNames[];
 	private boolean isTAUdb;
+	
+    private CountDownLatch latch;
+    public void setLatch(){
+    	latch = new CountDownLatch(1);
+    }
+    public CountDownLatch getLatch(){
+    	return latch;
+    }
 
     public boolean isTAUdb() {
 		return isTAUdb;
