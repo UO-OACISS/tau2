@@ -53,6 +53,8 @@ recursive_mutex    JNIThreadLayer::tauNumThreadsLock;
 recursive_mutex    JNIThreadLayer::tauDBMutex;
 recursive_mutex    JNIThreadLayer::tauEnvMutex;
 
+static thread_local int tid = 0;
+
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
@@ -74,8 +76,12 @@ int JNIThreadLayer::RegisterThread(jlong jid)
     exit(1);
   }
 
-  // Increment the number of threads present
-  tauThreadsMap[jid] = tauThreadCount++;
+  /* register only if it's not registered yet */
+  if (tauThreadsMap.find(jid) == tauThreadsMap.end()) {
+      tid = tauThreadCount;
+      tauThreadsMap[jid] = tauThreadCount++;
+//      printf(" *** register jid = %lld to tid = %d\n", jid, tauThreadsMap[jid]);
+  }
 
   // Unlock it now 
   tauNumThreadsLock.unlock();
@@ -97,6 +103,14 @@ int JNIThreadLayer::GetThreadId(void)
     jlong jid = get_java_thread_id();
     if (jid == -1) {
 	jid = TheLastJDWPEventThreadID();
+//	printf(" *** %d: last jid = %lld, tid = %d\n", gettid(), jid, tauThreadsMap[jid]);
+    } else {
+	/* if this is a java thread and not get registered, register itself */
+	if (tauThreadsMap.find(jid) == tauThreadsMap.end()) {
+	    RegisterThread(jid);
+	}
+	
+//	printf(" *** %d: java jid = %lld, tid = %d\n", gettid(), jid, tauThreadsMap[jid]);
     }
 
     return tauThreadsMap[jid];

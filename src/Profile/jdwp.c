@@ -102,11 +102,6 @@ jdwp_recv_pkt(jdwp_ctx_t *ctx)
 int
 jdwp_event_backlog(jdwp_ctx_t *ctx, jdwp_cmd_t *cmd)
 {
-    int i, offset;
-    char *data;
-    char suspendPolicy;
-    int  eventCount;
-
     jdwp_event_t *event;
 
     /* this must be a command, not a reply */
@@ -115,54 +110,22 @@ jdwp_event_backlog(jdwp_ctx_t *ctx, jdwp_cmd_t *cmd)
 	return -1;
     }
 
-    /* and the command must be EVENT_COMPOSIT */
-    if (((cmd->cmd_set << 8) | cmd->command) != EVENT_COMPOSIT) {
-	fprintf(stderr, "Error: JDWP: ignore a command pkt (%d, %d)\n",
-		cmd->cmd_set, cmd->command);
+    event = (jdwp_event_t*)malloc(sizeof(jdwp_event_t));
+    if (event == NULL) {
 	return -1;
     }
 
-    data          = cmd->data;
-    suspendPolicy = data[0];
-    eventCount    = ntohl(*(int*)(data+1));
-    offset        = 5;
+    event->cmd = cmd;
 
-    /* link them as a ring */
-    for (i=0; i<eventCount; i++) {
-	event = (jdwp_event_t*)malloc(sizeof(jdwp_event_t));
-	if (event == NULL) {
-	    return -1;
-	}
-
-	if (ctx->events == NULL) {
-	    ctx->events       = event;
-	    event->next       = event;
-	    event->prev       = event;
-	} else {
-	    event->next       = ctx->events;
-	    event->prev       = ctx->events->prev;
-	    event->next->prev = event;
-	    event->prev->next = event;
-	}
-
-	event->suspendPolicy = suspendPolicy;
-	event->eventKind     = data[offset++];
-
-	switch (event->eventKind) {
-	case E_THREAD_START:
-	case E_THREAD_END:
-	case E_VM_START:
-	    memcpy(&event->threadID, data+offset+4, sizeof(event->threadID));
-	    offset += 4 + 8; //requestID + threadID
-	    break;
-	case E_VM_DEATH:
-	    offset += 4; // requestID
-	    break;
-	default:  // this shouldn't happen
-	    fprintf(stderr, "Error: JDWP: ignore event %d\n", event->eventKind);
-	    free(event);
-	    return -1;
-	}
+    if (ctx->events == NULL) {
+	ctx->events       = event;
+	event->next       = event;
+	event->prev       = event;
+    } else {
+	event->next       = ctx->events;
+	event->prev       = ctx->events->prev;
+	event->next->prev = event;
+	event->prev->next = event;
     }
 
     return 0;
@@ -200,7 +163,6 @@ jdwp_get_reply(jdwp_ctx_t *ctx)
 	switch (reply->flags) {
 	case 0x00:      /* jdwp events may come in anytime */
 	    jdwp_event_backlog(ctx, (jdwp_cmd_t*)reply);
-	    free(reply);
 	    break;
 	case 0x80:	/* okay, we get an reply */
 	    return reply;

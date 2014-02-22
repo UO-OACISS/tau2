@@ -43,9 +43,7 @@ typedef struct __attribute__((packed)) {
 } jdwp_reply_t;
 
 typedef struct _jdwp_event_t {
-    char suspendPolicy;
-    char eventKind;
-    uint64_t threadID;
+    jdwp_cmd_t *cmd;
     struct _jdwp_event_t *next;
     struct _jdwp_event_t *prev;
 } jdwp_event_t;
@@ -70,6 +68,8 @@ int jdwp_send_pkt(jdwp_ctx_t *ctx, short cmd, char *data, int len);
 char *jdwp_recv_pkt(jdwp_ctx_t *ctx);
 uint64_t jdwp_get_thread_group(jdwp_ctx_t *ctx, uint64_t threadID);
 char *jdwp_get_thread_group_name(jdwp_ctx_t *ctx, uint64_t threadGroupID);
+
+jdwp_reply_t *jdwp_get_reply(jdwp_ctx_t *ctx);
 
 #ifdef __cplusplus
 }
