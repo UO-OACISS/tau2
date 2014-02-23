@@ -18,16 +18,13 @@ using namespace std;
 #include <stdlib.h>
 #include <stdint.h>
 
+#include <android/log.h>
+
 #include "Profile/adb.h"
 #include "Profile/jdwp.h"
 #include "Profile/ddm.h"
 
-FILE *tau_verbose_fp;
-
-extern "C" {
-    jint android_log(const char *message);
-}
-extern void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid);
+#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
 
 #ifdef TAU_PTHREAD_WRAP
 
@@ -43,7 +40,6 @@ typedef struct {
 static void
 cleanup_handler(void *arg)
 {
-    printf("thread %d terminate\n", gettid());
     Tau_stop_top_level_timer_if_necessary();
 }
 
@@ -52,9 +48,9 @@ thread_wrap(void *arg)
 {
     void *rv;
     arg_t *arg_wrap = (arg_t*)arg;
-    printf("thread %d start\n", gettid());
+    static jlong jid = 0;
 
-    JNIThreadLayer::RegisterThread(NULL);
+    JNIThreadLayer::RegisterThread(jid++, "thread-"+gettid());
     Tau_create_top_level_timer_if_necessary();
 
     pthread_cleanup_push(cleanup_handler, NULL);
@@ -84,7 +80,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 	arg_wrap->start_routing = start_routing;
 	arg_wrap->arg           = arg;
 
-	printf("pthread_create: %p %p %p %p\n", pcreate, arg_wrap, start_routing, arg);
 	return pcreate(thread, attr, thread_wrap, arg_wrap);
     } else {
 	return pcreate(thread, attr, start_routing, arg);
@@ -157,7 +152,7 @@ handle_ddm_event(ddm_trunk_t *trunk)
 	 * lid 2~8: dalvik internel threads
 	 * lid 9~ : user threads
 	 */
-	if (lid >= 9) {
+	if ((lid == 1) || (lid >= 9)) {
 	    /* setup mapping between lid and jid */
 	    java_thread_id[lid] = jid;
 
@@ -167,14 +162,12 @@ handle_ddm_event(ddm_trunk_t *trunk)
 	     * running and already registered itself. We shall handle this
 	     * in RegisterThread().
 	     */
-	    tid = JNIThreadLayer::RegisterThread(jid);
-
 	    TheLastJDWPEventThreadID() = jid;
-	    CreateTopLevelRoutine(tname, (char*)" ", "DTM", tid);
+	    tid = JNIThreadLayer::RegisterThread(jid, tname);
 
-	    fprintf(tau_verbose_fp, " *** DDM THCR <%d> %s -- Registered\n", lid, tname);
+	    LOGV(" *** DDM THCR <%d> %s -- Registered\n", lid, tname);
 	} else {
-	    fprintf(tau_verbose_fp, " *** DDM THCR <%d> %s\n", lid, tname);
+	    LOGV(" *** DDM THCR <%d> %s\n", lid, tname);
 	}
 
 	break;
@@ -184,7 +177,7 @@ handle_ddm_event(ddm_trunk_t *trunk)
 	lid   = ntohl(thde->lid);
 	tname = java_thread_name[lid];
 
-	fprintf(tau_verbose_fp, " *** DDM THDE <%d> %s\n", lid, tname);
+	LOGV(" *** DDM THDE <%d> %s\n", lid, tname);
 	free(tname);
 	java_thread_name.erase(lid);
 
@@ -202,8 +195,7 @@ handle_ddm_event(ddm_trunk_t *trunk)
 	break;
 
     defalt:
-	fprintf(tau_verbose_fp, "Error: DTM: ignore DDM event %08x\n",
-		ntohl(trunk->type));
+	LOGV("Error: DTM: ignore DDM event %08x\n", ntohl(trunk->type));
 	break;
     }
 
@@ -229,7 +221,7 @@ dalvik_thread_monitor(void *arg)
 
 	    /* something really bad happened, end of watch */
 	    if (cmd == NULL) {
-		fprintf(tau_verbose_fp, "Error: JDWP: disconnect...\n");
+		LOGV("Error: JDWP: disconnect...\n");
 		break;
 	    }
 
@@ -254,10 +246,10 @@ dalvik_thread_monitor(void *arg)
 		free(event);
 		break;
 	    case EVENT_COMPOSIT:
-		fprintf(tau_verbose_fp, "Error: DTM: ignore JDWP EVENT COMPOSIT\n");
+		LOGV("Error: DTM: ignore JDWP EVENT COMPOSIT\n");
 		break;
 	    default:
-		fprintf(tau_verbose_fp, "Error: DTM: ignore unknown JDWP event\n");
+		LOGV("Error: DTM: ignore unknown JDWP event\n");
 		break;
 	    }
 
@@ -308,7 +300,7 @@ dalvik_thread_monitor(void *arg)
     }
 
     if (!adb_is_active(jdwp.adb)) {
-	printf("Error: JDWP: connection closed\n");
+	LOGV("Error: JDWP: connection closed\n");
     }
 
     return NULL;
@@ -321,15 +313,20 @@ dalvik_thread_monitor(void *arg)
  */
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
-    printf("TAU: JNI_OnLoad\n");
-
-    //tau_verbose_fp = stderr;
-    tau_verbose_fp = fopen("/data/data/org.tomdroid/cache/tau.log", "w+");
+    LOGV(" *** JNI_OnLoad");
 
     /*
      * This is a good point to attach your gdb on JVM to debug TAU
      */
     //getchar();
+
+    /* do we have a JNI Env pointer? */
+    JNIEnv *env;
+    if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
+	LOGV(" *** can not get env pointer in JNI_OnLoad\n");
+    } else {
+	LOGV(" *** env pointer in JNI_OnLoad is %p\n", env);
+    }
 
     RtsLayer::TheUsingJNI() = true;
     JNIThreadLayer::tauVM = vm;
@@ -340,7 +337,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
      * NOTE: This is not a portable implementation as we made this asusmption.
      *       See dalvik_thread_monitor() for more details.
      */
-    JNIThreadLayer::RegisterThread(1);
+    //JNIThreadLayer::RegisterThread(1, "main");
 
 #ifdef TAU_ANDROID
     pthread_t thr;
@@ -410,6 +407,73 @@ jlong get_java_thread_id(void)
     env->DeleteLocalRef(thisThread);
 
     return id;
+}
+
+// Java: Thread.currentThread().getName();
+char *get_java_thread_name(void)
+{
+    JavaVM *vm = JNIThreadLayer::tauVM;
+    JNIEnv *env;
+
+    /*
+     * Note that we may still running even after dalvik vm is dead, in which
+     * case the jid should be 1, i.e. the "main" thread.
+     */
+    if (!dalvik_vm_running) {
+	return NULL;
+    }
+
+    /* sanity check */
+    if (vm == NULL) {
+	return NULL;
+    }
+
+    /*
+     * Note that DTM(Dalvik Monitor Thread) is just a pthread. It's not attached
+     * to dalvik vm, i.e. not a java thread. So there is no env pointer, and it
+     * doesn't have a java thread id.
+     */
+    if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
+	return NULL;
+    }
+
+    jclass thread = env->FindClass("java/lang/Thread");
+    if (thread == NULL) {
+	return NULL;
+    }
+
+    jmethodID currentThread = env->GetStaticMethodID(thread, "currentThread",
+						     "()Ljava/lang/Thread;");
+    if (currentThread == NULL) {
+	return NULL;
+    }
+
+    jobject thisThread = env->CallStaticObjectMethod(thread, currentThread);
+    if (thisThread == NULL) {
+	return NULL;
+    }
+
+    jmethodID getName = env->GetMethodID(thread, "getName", "()Ljava/lang/String;");
+    if (getName == NULL) {
+	return NULL;
+    }
+
+    jstring jstr = (jstring) env->CallObjectMethod(thisThread, getName);
+
+    const char *jname = env->GetStringUTFChars(jstr, NULL);
+
+    char *name = strdup(jname);
+
+    env->ReleaseStringUTFChars(jstr, jname);
+
+    /*
+     * LocalRef should be deleted after use, otherwise it may overflow
+     * Java native method's local reference table
+     */
+    env->DeleteLocalRef(thread);
+    env->DeleteLocalRef(thisThread);
+
+    return name;
 }
 
 jint android_log(const char *message)

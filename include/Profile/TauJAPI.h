@@ -14,6 +14,7 @@ extern "C" {
 #define edu_uoregon_TAU_Profile_TAU_DEFAULT 4294967295LL
 
 jlong get_java_thread_id(void);
+char *get_java_thread_name(void);
 
 /*
  * Class:     edu_uoregon_TAU_Profile

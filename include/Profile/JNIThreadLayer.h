@@ -35,7 +35,7 @@ class  JNIThreadLayer
  	JNIThreadLayer () { }  // defaults
 	~JNIThreadLayer () { } 
 
-	static int RegisterThread(jlong jid);
+	static int RegisterThread(jlong jid, char *tname);
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
         static int InitializeEnvMutexData(void);     // init tauEnv mutex

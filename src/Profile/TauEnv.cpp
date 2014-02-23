@@ -22,12 +22,18 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #ifndef TAU_WINDOWS
 #include <strings.h>
 #else
 #define strcasecmp(X, Y)  stricmp(X, Y)
 #define unsetenv(X)
 #endif
+
+#ifdef TAU_ANDROID
+#include <android/log.h>
+#endif
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -447,7 +453,7 @@ static int TauConf_read()
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
 #ifdef TAU_ANDROID
-      system("touch /data/data/org.connectbot/cache/mnt_obb_conf");
+    system("touch /data/data/org.connectbot/cache/mnt_obb_conf");
     tmp = "/mnt/obb/tau.conf";
 #else
     tmp = "tau.conf";
@@ -583,21 +589,13 @@ void TAU_VERBOSE(const char *format, ...)
 
 #ifdef TAU_ANDROID
 
-    char *str;
-    extern FILE *tau_verbose_fp;
-    extern int android_log(char*);
-
     va_start(args, format);
-    if (vasprintf(&str, format, args) < 0) {
-	return;
-    }
+
+    __android_log_vprint(ANDROID_LOG_VERBOSE, "TAU", format, args);
+
+    //vasprintf(&str, format, args);
+
     va_end(args);
-
-    //android_log(str);
-    fprintf(tau_verbose_fp, str);
-    fflush(tau_verbose_fp);
-
-    free(str);
 
 #else
 

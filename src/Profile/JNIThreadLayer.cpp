@@ -55,12 +55,14 @@ recursive_mutex    JNIThreadLayer::tauEnvMutex;
 
 static thread_local int tid = 0;
 
+extern void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid);
+
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
 // FunctionInfo and Profiler classes. 
 ////////////////////////////////////////////////////////////////////////
-int JNIThreadLayer::RegisterThread(jlong jid)
+int JNIThreadLayer::RegisterThread(jlong jid, char *tname)
 {
   static int initflag = JNIThreadLayer::InitializeThreadData();
 
@@ -80,7 +82,9 @@ int JNIThreadLayer::RegisterThread(jlong jid)
   if (tauThreadsMap.find(jid) == tauThreadsMap.end()) {
       tid = tauThreadCount;
       tauThreadsMap[jid] = tauThreadCount++;
-//      printf(" *** register jid = %lld to tid = %d\n", jid, tauThreadsMap[jid]);
+
+      /* create top level profiler for this thread */
+      CreateTopLevelRoutine(tname, (char*)"<ThreadEvents>", "DTM", tid);
   }
 
   // Unlock it now 
@@ -107,7 +111,9 @@ int JNIThreadLayer::GetThreadId(void)
     } else {
 	/* if this is a java thread and not get registered, register itself */
 	if (tauThreadsMap.find(jid) == tauThreadsMap.end()) {
-	    RegisterThread(jid);
+	    char *tname = get_java_thread_name();
+	    RegisterThread(jid, tname);
+	    free(tname);
 	}
 	
 //	printf(" *** %d: java jid = %lld, tid = %d\n", gettid(), jid, tauThreadsMap[jid]);
