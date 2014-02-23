@@ -771,24 +771,39 @@ extern "C" int Tau_profile_exit_all_tasks() {
   return 0;
 }
 
+extern "C" int Tau_show_profiles()
+{
+  for (int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+      int pos = Tau_thread_flags[tid].Tau_global_stackpos;
+      while (pos >= 0) {
+	  Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[pos]);
+	  TAU_VERBOSE(" *** Alfred Profile (%d:%d) :  %s\n", tid, pos, p->ThisFunction->Name);
+	  pos--;
+      }
+  }
+
+  return 0;
+}
 
 extern "C" int Tau_profile_exit_all_threads() 
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-	for (int tid=0; tid < TAU_MAX_THREADS; ++tid) {
-		while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-			Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-			//Make sure even throttled routines are stopped.
-      int my_tid = RtsLayer::myThread();
-			if (Tau_stop_timer(p->ThisFunction, my_tid)) {
-				p->Stop(my_tid);
-  			Tau_thread_flags[my_tid].Tau_global_stackpos--; /* pop */
-			}
-			// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
-		}
-	}
+  for (int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+      while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+	  Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+
+	  TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
+
+	  //Make sure even throttled routines are stopped.
+	  if (Tau_stop_timer(p->ThisFunction, tid)) {
+	      p->Stop(tid);
+	      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+	  }
+	  // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+      }
+  }
   Tau_disable_instrumentation();
   return 0;
 }
@@ -800,15 +815,15 @@ extern "C" int Tau_profile_exit()
   TauInternalFunctionGuard protects_this_function;
 
   int tid = RtsLayer::myThread();
-	while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-		Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-		//Make sure even throttled routines are stopped.
-		if (Tau_stop_timer(p->ThisFunction, tid)) {
-			p->Stop(tid);
-			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-		}
-		// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
-	}
+  while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+      //Make sure even throttled routines are stopped.
+      if (Tau_stop_timer(p->ThisFunction, tid)) {
+	  p->Stop(tid);
+	  Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      }
+      // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+  }
   return 0;
 }
 
