@@ -263,6 +263,9 @@ static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
 
+#ifdef TAU_ANDROID
+static int env_alfred_port = 6113;
+#endif
 } // extern "C"
 
 /*********************************************************************
@@ -453,8 +456,7 @@ static int TauConf_read()
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
 #ifdef TAU_ANDROID
-    system("touch /data/data/org.connectbot/cache/mnt_obb_conf");
-    tmp = "/mnt/obb/tau.conf";
+    tmp = "/sdcard/tau.conf";
 #else
     tmp = "tau.conf";
 #endif
@@ -900,6 +902,11 @@ int TauEnv_get_pthread_stack_size() {
   return env_pthread_stack_size;
 }
 
+#ifdef TAU_ANDROID
+int TauEnv_get_alfred_port() {
+  return env_alfred_port;
+}
+#endif
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -1704,6 +1711,14 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
       TAU_METADATA("TAU_BFD_LOOKUP", "off");
     }
+
+#ifdef TAU_ANDROID
+    tmp = getconf("TAU_ALFRED_PORT");
+    if (tmp) {
+	env_alfred_port = atoi(tmp);
+    }
+    TAU_VERBOSE("TAU: Alfred will listen on port %d\n", env_alfred_port);
+#endif
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

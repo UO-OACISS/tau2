@@ -8,8 +8,9 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
-#ifdef TAU_ANDROID
-
+#ifndef TAU_ANDROID
+#define LOGV(...) printf(__VA_ARGS__)
+#else
 #include <sys/types.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -252,50 +253,6 @@ dalvik_thread_monitor(void *arg)
 		LOGV("Error: DTM: ignore unknown JDWP event\n");
 		break;
 	    }
-
-	    /*
-	    if (event->eventKind == E_THREAD_START) {
-		char *tname = jdwp_get_thread_name(&jdwp, event->threadID);
-		if (tname == NULL) {
-		    break;
-		}
-
-		uint64_t grpID = jdwp_get_thread_group(&jdwp, event->threadID);
-		char *gname = jdwp_get_thread_group_name(&jdwp, grpID);
-
-		java_threads[event->threadID] = jid;
-		TheLastJDWPEventThreadID()    = jid;
-		int tid = JNIThreadLayer::RegisterThread(jid);
-
-		CreateTopLevelRoutine(strchr(tname, ' ')+1, (char*)" ", gname, tid);
-
-		jid++;
-
-		free(tname);
-		free(gname);
-	    }
-
-	    if (event->eventKind == E_THREAD_END) {
-		if (java_threads.find(event->threadID) != java_threads.end()) {
-		    TheLastJDWPEventThreadID() = java_threads[event->threadID];
-		    java_threads.erase(event->threadID);
-
-		    TAU_PROFILE_EXIT("END...");
-		}
-	    }
-
-	    if (event->eventKind == E_VM_DEATH) {
-		dalvik_vm_running = 0;
-		printf(" *** dalvik dead\n");
-		break;
-	    }
-
-	    if (event->suspendPolicy != SUSPEND_NONE) {
-		jdwp_resume_thread(&jdwp, event->threadID);
-	    }
-
-	    free(event);
-	    */
 	}
     }
 
@@ -475,56 +432,6 @@ char *get_java_thread_name(void)
 
     return name;
 }
-
-jint android_log(const char *message)
-{
-    JavaVM *vm = JNIThreadLayer::tauVM;
-    JNIEnv *env;
-
-    printf(" *** android_log(\"%s\")\n", message);
-
-    if (!dalvik_vm_running) {
-	printf(" **** but vm is dead\n");
-	return 1;
-    }
-
-    if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
-	printf("can't GetEnv\n");
-	return -1;
-    }
- 
-    jclass log = env->FindClass("android/util/Log");
-    if (log == NULL) {
-	printf("can't FindClass(\"android/util/Log\")\n");
-	return -1;
-    }
-
-    jstring tag = env->NewStringUTF("TAU");
-    if (tag == NULL) {
-	printf("can't NewStringUTF(\"TAU\")\n");
-	return -1;
-    }
-    jstring msg = env->NewStringUTF(message);
-    if (msg == NULL) {
-	printf("can't NewStringUTF(\"%s\")\n", message);
-	return -1;
-    }
-
-    jmethodID logV = env->GetStaticMethodID(log, "v", "(Ljava/lang/String;Ljava/lang/String;)I");
-    if (logV == NULL) {
-	printf("cant GetStaticMethodID\n");
-	return -1;
-    }
-
-    printf("going to call static method\n");
-
-    env->CallStaticIntMethod(log, logV, tag, msg);
-
-    env->DeleteLocalRef(log);
-
-    return 0;
-}
-
 
 /*
  * Class:     Profile
