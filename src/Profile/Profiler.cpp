@@ -20,6 +20,7 @@
 #include <Profile/TauTrace.h>
 #include <Profile/TauMetaData.h>
 #include <Profile/TauSampling.h>
+#include <Profile/TauMetaDataMerge.h>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -1365,7 +1366,7 @@ int TauProfiler_StoreData(int tid)
     Tau_snapshot_writeFinal("final");
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
-    }
+	}
   }
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   if (RtsLayer::myThread() == 0 && tid == 0) {
@@ -1375,6 +1376,12 @@ int TauProfiler_StoreData(int tid)
         TauProfiler_StoreData(i);
       }
     }
+	/* Only thread 0 should create a merged profile. */
+    if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+      Tau_metadataMerge_mergeMetaData();
+      /* Create a merged profile if requested */
+      Tau_mergeProfiles();
+	}
   }
 #endif /* PTHREADS */
 
