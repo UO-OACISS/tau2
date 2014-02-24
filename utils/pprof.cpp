@@ -202,16 +202,26 @@ bool IsDynamicProfiling(char *filename) {
   //This function determines if dynamic profiling is used by opening the
   //profile and examing the version that is contained on the first line.  
   //It then returns the corresponding boolean.
-  FILE *fp;
-  char error_msg[SIZE_OF_FILENAME], version[64];
+  FILE * fp;
+  char error_msg[SIZE_OF_FILENAME];
   int numberOfFunctions;
+  char *line, *version;
+  size_t len;
+  int retval;
   if ((fp = fopen(filename, "r")) == NULL) {
     sprintf(error_msg,"Error: Could not open %s",filename);
     perror(error_msg);
     return false;
   }//if
-  if (fscanf(fp, "%d %s",&numberOfFunctions, version) == EOF) {
+  if ((getline(&line, &len, fp) == EINVAL))
+  {
+    sprintf(error_msg,"Error: Could read line from %s",filename);
+    return false;
+  }
+  version = (char *) malloc(sizeof(char)*len);
+  if (sscanf(line, "%d %s", &numberOfFunctions, version) == EOF) {
     printf("Error: fscanf returns EOF file %s", filename);
+    free(version);
     return false;
   }//if
   fclose(fp); // thats all we wanted to read
@@ -220,24 +230,28 @@ bool IsDynamicProfiling(char *filename) {
       multipleCounters = true;
       counterName = strdup(version);
       if(strstr(version,"TIME") != NULL)
-	hwcounters = false;
+        hwcounters = false;
       else
-	hwcounters = true;
-      return true;
+        hwcounters = true;
+      retval = true;
     }//if
     else{
       hwcounters = false; // Timing data is in the profile files  
-      return true;
+      retval = true;
     }//else
   }//if
   else  { 
     if ((strcmp(version,"templated_functions_hw_counters") == 0)) {
       hwcounters  = true; // Counters - do not use time string formatting
-      return true; // It is dynamic profiling
+      retval = true; // It is dynamic profiling
     }//if
     else // Neither  - static profiling 
-      return false;
+      retval = false;
   }//else
+
+  free(version);
+  return retval;
+
 }//IsDynamicProfiling()
 
 
