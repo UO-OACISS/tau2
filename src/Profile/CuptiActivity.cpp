@@ -265,6 +265,10 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			{
 				if (function_is_exit(id))
 				{
+          //Do one last flush since this is our last opportunity.
+#ifdef TAU_ASYNC_ACTIVITY_API
+          cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+#endif
 					//Stop collecting cupti counters.
 					Tau_CuptiLayer_finalize();
 				}
@@ -330,6 +334,14 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 
 void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
 {
+  int device_count = get_device_count();
+  //Since we do not control the synchronization points this is only place where
+  //we can record the gpu counters.
+#ifdef TAU_ASYNC_ACTIVITY_API
+  for (int i=0; i<device_count; i++) {
+    record_gpu_counters_at_sync(i);
+  }
+#endif
   //TAU_PROFILE("Tau_cupti_register_sync_event", "", TAU_DEFAULT);
 	//printf("in sync: context=%p stream=%d.\n", context, stream);
 	registered_sync = true;
@@ -337,7 +349,6 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
   CUpti_Activity *record = NULL;
 	//size_t bufferSize = 0;
   
-  int device_count = get_device_count();
   //start
   if (device_count > TAU_MAX_GPU_DEVICES) {
     printf("TAU ERROR: Maximum number of devices (%d) exceeded. Please reconfigure TAU with -useropt=-DTAU_MAX_GPU_DEVICES=32 or some higher number\n", TAU_MAX_GPU_DEVICES);
@@ -638,6 +649,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			//cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
       
 
+      eventMap.erase(eventMap.begin(), eventMap.end());
 			name = demangleName(name);
 
 			uint32_t id;
@@ -659,7 +671,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #else
       record_gpu_counters(deviceId, name, id, &eventMap);
 #endif
-      eventMap.erase(eventMap.begin(), eventMap.end());
 			if (gpu_occupancy_available(deviceId))
 			{
         record_gpu_occupancy(blockX, 
