@@ -24,7 +24,6 @@
 #include "TauEnv.h"
 #include <Profile/TauBfd.h>
 
-
 /* An array of this struct is shared by all threads. To make sure we don't have false
  * sharing, the struct is 64 bytes in size, so that it fits exactly in
  * one (or two) cache lines. That way, when one thread updates its data
@@ -44,7 +43,7 @@ struct Tau_collector_status_flags {
     char waiting; // 4 bytes
     char *timerContext; // 8 bytes(?)
     char *activeTimerContext; // 8 bytes(?)
-    void *signal_message; // preallocated message for signal handling, 8 bytes
+    int *signal_message; // preallocated message for signal handling, 8 bytes
     char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(9*sizeof(char)))];
 };
 
@@ -74,8 +73,6 @@ extern "C" void Tau_disable_collector_api() {
   Tau_collector_enabled = 0;
   //omp_unset_lock(&writelock);
 }
-
-extern void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COLLECTORAPI_EC ec, int rsz, int append_zero);
 
 static char* __UNKNOWN__ = "UNKNOWN";
 
@@ -210,8 +207,11 @@ void Tau_get_region_id(int tid) {
     /* get the region ID */
     omp_collector_message req;
     int currentid_rsz = sizeof(long);
-    void * message = (void *) calloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int), sizeof(char));
-    Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz, OMP_REQ_CURRENT_PRID, OMP_ERRCODE_OK, currentid_rsz, 1);
+    int * message = (int *) calloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int), sizeof(char));
+    message[0] = OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz;
+    message[1] = OMP_REQ_CURRENT_PRID;
+    message[2] = OMP_ERRCODE_OK;
+    message[3] = currentid_rsz;
     long * rid = (long *)(message) + OMP_COLLECTORAPI_HEADERSIZE;
     int rc = (Tau_collector_api)(message);
     //TAU_VERBOSE("Thread %d, region ID : %ld\n", tid, *rid);
@@ -270,7 +270,7 @@ char * show_backtrace (int tid, int offset) {
 			    	continue; // keep unwinding
 				}
 #if defined (TAU_OPEN64ORC)
-				else if (strncmp(node->info.funcname,"__ompc_", 16) == 0) { // in OpenUH runtime
+				else if (strncmp(node->info.funcname,"__ompc_", 7) == 0) { // in OpenUH runtime
 			    	continue; // keep unwinding
 				}
 #elif defined (__INTEL_COMPILER)
@@ -669,58 +669,6 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
     return;
 }
 
-void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COLLECTORAPI_EC ec, int rsz, int append_zero)
-{
-    int *psz = (int *) message; 
-    int *start = (int *) message; 
-    *psz = sz;
-
-    OMP_COLLECTORAPI_REQUEST *rnum = (OMP_COLLECTORAPI_REQUEST *) (start+sizeof(int));
-    *rnum = rq;
-
-    OMP_COLLECTORAPI_EC *pec = (OMP_COLLECTORAPI_EC *)(start+(sizeof(int)*2));
-    *pec = ec;
-
-    int *prsz = (int *) (start+ sizeof(int)*3);
-    *prsz = rsz;
-
-    if(append_zero) {
-        psz = (int *)(start+(sizeof(int)*4)+rsz);
-        *psz =0; 
-    }   
-}
-
-void Tau_fill_register(void *message, OMP_COLLECTORAPI_EVENT event, int append_func, void (*func)(OMP_COLLECTORAPI_EVENT), int append_zero) {
-
-    int *start = (int *) message; 
-    // get a pointer to the head of the message
-    OMP_COLLECTORAPI_EVENT *pevent = (OMP_COLLECTORAPI_EVENT *) message;
-    // assign the event to the first parameter
-    *pevent = event;
-
-    // increment to the next parameter
-    char *mem = (char *)(start + sizeof(OMP_COLLECTORAPI_EVENT));
-    if(append_func) {
-        unsigned long * lmem = (unsigned long *)(start + sizeof(OMP_COLLECTORAPI_EVENT));
-        *lmem = (unsigned long)func;
-    }
-
-    if(append_zero) {
-        int *psz;
-        if(append_func) {
-            psz = (int *)(start+sizeof(OMP_COLLECTORAPI_EVENT)+ sizeof(void *)); 
-
-        } else {
-
-            psz = (int *)(start+sizeof(OMP_COLLECTORAPI_EVENT));
-
-        }
-        *psz =0;  
-    } 
-}
-
-//int __attribute__ ((constructor)) Tau_initialize_collector_api(void);
-
 static bool initializing = false;
 static bool initialized = false;
 
@@ -775,16 +723,6 @@ extern "C" int Tau_initialize_collector_api(void) {
 
         TAU_VERBOSE("Looking for library: %s\n", libname); fflush(stdout); fflush(stderr);
         void * handle = dlopen(libname, RTLD_NOW | RTLD_GLOBAL);
-#if 0
-    char * err = dlerror();
-    if (err) { 
-        if (!handle) { 
-            TAU_VERBOSE("Error loading library: %s\n", libname, err); fflush(stdout); fflush(stderr);
-            /* don't quit, because it might have been preloaded... */
-            //return -1;
-        }
-    }
-#endif
 
         if (handle != NULL) {
             TAU_VERBOSE("Looking for symbol in library: %s\n", libname); fflush(stdout); fflush(stderr);
@@ -793,14 +731,6 @@ extern "C" int Tau_initialize_collector_api(void) {
     }
     // set this now, either it's there or it isn't.
     initialized = true;
-#if 0
-    err = dlerror();
-    if (err) { 
-        TAU_VERBOSE("Error getting '__omp_collector_api' handle: %s\n", err); fflush(stdout); fflush(stderr);
-        initializing = false;
-        return -1;
-    }
-#endif
 #endif //if defined (BGL) || defined (BGP) || defined (BGQ) || defined (TAU_CRAYCNL)
     if (Tau_collector_api == NULL) {
         TAU_VERBOSE("__omp_collector_api symbol not found... collector API not enabled. \n"); fflush(stdout); fflush(stderr);
@@ -811,14 +741,17 @@ extern "C" int Tau_initialize_collector_api(void) {
     TAU_VERBOSE("__omp_collector_api symbol found! Collector API enabled. \n"); fflush(stdout); fflush(stderr);
 
     omp_collector_message req;
-    void *message = (void *) malloc(4);   
-    int *sz = (int *) message; 
-    *sz = 0;
     int rc = 0;
 
     /*test: check for request start, 1 message */
-    message = (void *) malloc(OMP_COLLECTORAPI_HEADERSIZE+sizeof(int));
-    Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE, OMP_REQ_START, OMP_ERRCODE_OK, 0, 1);
+    int * message = (int *)malloc(OMP_COLLECTORAPI_HEADERSIZE+sizeof(int));
+	memset(message, 0, OMP_COLLECTORAPI_HEADERSIZE+sizeof(int));
+    message[0] = OMP_COLLECTORAPI_HEADERSIZE;
+    message[1] = OMP_REQ_START;
+    message[2] = OMP_ERRCODE_OK;
+    message[3] = 0;
+	OMP_COLLECTOR_MESSAGE *foo = (OMP_COLLECTOR_MESSAGE*)message;
+	//printf("Sending message: %p, %d, %d, %d, %d\n", message, message[0], message[1], message[2], message[3]);
     rc = (Tau_collector_api)(message);
     //TAU_VERBOSE("__omp_collector_api() returned %d\n", rc); fflush(stdout); fflush(stderr);
     free(message);
@@ -830,15 +763,24 @@ extern "C" int Tau_initialize_collector_api(void) {
 	  // if events are disabled, only do the 4 major ones
 	  num_req = OMP_EVENT_THR_END_IDLE;
 	}
-    int register_sz = sizeof(OMP_COLLECTORAPI_EVENT)+sizeof(void *);
-    int mes_size = OMP_COLLECTORAPI_HEADERSIZE+register_sz;
-    message = (void *) malloc(num_req*mes_size+sizeof(int));
-	int *start = (int *)message;
+    int register_sz = sizeof(OMP_COLLECTORAPI_EVENT) + sizeof(unsigned long *);
+    int message_sz = OMP_COLLECTORAPI_HEADERSIZE + register_sz;
+	//printf("Register size: %d, Message size: %d, bytes: %d\n", register_sz, message_sz, num_req*message_sz+sizeof(int));
+    message = (int *) malloc(num_req*message_sz+sizeof(int));
+	memset(message, 0, num_req*message_sz+sizeof(int));
+	int * ptr = message;
     for(i=0;i<num_req;i++) {  
-        Tau_fill_header(start+mes_size*i,mes_size, OMP_REQ_REGISTER, OMP_ERRCODE_OK, 0, 0);
-        Tau_fill_register((start+mes_size*i)+OMP_COLLECTORAPI_HEADERSIZE,
-		                  (OMP_COLLECTORAPI_EVENT)(OMP_EVENT_FORK+i),
-						  1, Tau_omp_event_handler, i==(num_req-1));
+	    //printf("Ptr: %p\n", ptr);
+        ptr[0] = message_sz;
+        ptr[1] = OMP_REQ_REGISTER;
+        ptr[2] = OMP_ERRCODE_OK;
+        ptr[3] = 0;
+        ptr[4] = OMP_EVENT_FORK + i;  // iterate over the events
+        unsigned long * lmem = (unsigned long *)(ptr+5);
+        *lmem = (unsigned long)Tau_omp_event_handler;
+	    //printf("Sending message: %p, %d, %d, %d, %d, %d, %p, %p\n", ptr, ptr[0], ptr[1], ptr[2], ptr[3], ptr[4], (unsigned long *)(*(ptr+5)), ptr + message_sz); fflush(stdout);
+		ptr = ptr + 7;
+	    //printf("Ptr: %p\n", ptr); fflush(stdout);
     } 
     rc = (Tau_collector_api)(message);
     //TAU_VERBOSE("__omp_collector_api() returned %d\n", rc); fflush(stdout); fflush(stderr);
@@ -846,10 +788,15 @@ extern "C" int Tau_initialize_collector_api(void) {
 
     // preallocate messages, because we can't malloc when signals are
     // handled
-    int state_rsz = sizeof(OMP_COLLECTOR_API_THR_STATE)+sizeof(unsigned long);
+    //int state_rsz = sizeof(OMP_COLLECTOR_API_THR_STATE)+sizeof(unsigned long);
+    int state_rsz = sizeof(OMP_COLLECTOR_API_THR_STATE);
     for(i=0;i<omp_get_max_threads();i++) {  
-        Tau_collector_flags[i].signal_message = (void*)malloc(OMP_COLLECTORAPI_HEADERSIZE+state_rsz);
-        Tau_fill_header(Tau_collector_flags[i].signal_message, OMP_COLLECTORAPI_HEADERSIZE+state_rsz, OMP_REQ_STATE, OMP_ERRCODE_OK, state_rsz, 0);
+        Tau_collector_flags[i].signal_message = (int*)malloc(OMP_COLLECTORAPI_HEADERSIZE+state_rsz+sizeof(int));
+        memset(Tau_collector_flags[i].signal_message, 0, (OMP_COLLECTORAPI_HEADERSIZE+state_rsz+sizeof(int)));
+        Tau_collector_flags[i].signal_message[0] = OMP_COLLECTORAPI_HEADERSIZE+state_rsz;
+        Tau_collector_flags[i].signal_message[1] = OMP_REQ_STATE;
+        Tau_collector_flags[i].signal_message[2] = OMP_ERRCODE_OK;
+        Tau_collector_flags[i].signal_message[3] = state_rsz;
     }
 
 #ifdef TAU_UNWIND
@@ -914,9 +861,11 @@ extern "C" int Tau_get_thread_omp_state(int tid) {
 
     OMP_COLLECTOR_API_THR_STATE thread_state = THR_LAST_STATE;
     // query the thread state
+	//printf("Sending message: %p, %d, %d, %d, %d\n", Tau_collector_flags[tid].signal_message, Tau_collector_flags[tid].signal_message[0], Tau_collector_flags[tid].signal_message[1], Tau_collector_flags[tid].signal_message[2], Tau_collector_flags[tid].signal_message[3]);
     (Tau_collector_api)(Tau_collector_flags[tid].signal_message);
-    OMP_COLLECTOR_API_THR_STATE * rid = (OMP_COLLECTOR_API_THR_STATE*)Tau_collector_flags[tid].signal_message + OMP_COLLECTORAPI_HEADERSIZE;
-    thread_state = *rid;
+    //OMP_COLLECTOR_API_THR_STATE * rid = (OMP_COLLECTOR_API_THR_STATE*)Tau_collector_flags[tid].signal_message + OMP_COLLECTORAPI_HEADERSIZE;
+    //thread_state = *rid;
+    thread_state = (OMP_COLLECTOR_API_THR_STATE)Tau_collector_flags[tid].signal_message[4];
     //TAU_VERBOSE("Thread %d, state : %d\n", tid, thread_state);
     // return the thread state as a string
     return (int)(thread_state);

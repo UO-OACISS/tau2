@@ -17,8 +17,8 @@
 
 
 #ifdef TAU_MPI
-
 #include <mpi.h>
+#endif /* TAU_MPI */
 
 #ifdef TAU_UNIFY
 
@@ -83,10 +83,11 @@ public:
 /** Return a table represeting a sorted list of the events */
 int *Tau_unify_generateSortMap(EventLister *eventLister) {
   int rank, numRanks, i;
+#ifdef TAU_MPI
   MPI_Status status;
-
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+#endif /* TAU_MPI */
 
   int numEvents = eventLister->getNumEvents();
   int *sortMap = (int*) TAU_UTIL_MALLOC(numEvents*sizeof(int));
@@ -233,10 +234,14 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 /** Using MPI, unify events for a given EventLister */
 Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   int rank, numRanks, i;
+  rank = 0;
+  numRanks = 1;
+#ifdef TAU_MPI
   MPI_Status status;
 
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+#endif /* TAU_MPI */
 
   // for internal timing
   x_uint64 start, end;
@@ -271,12 +276,15 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
       int source = (rank | mask);
       if (source < numRanks) {
 	
+	int recv_buflen = 0;
+
+#ifdef TAU_MPI
 	// send ok-to-go
 	PMPI_Send(NULL, 0, MPI_INT, source, 0, MPI_COMM_WORLD);
 	
 	// receive buffer length
-	int recv_buflen;
 	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
+#endif /* TAU_MPI */
 
 	// Only receive and allocate memory if there's something to receive.
 	//   Note that this condition only applies to Atomic events.
@@ -284,8 +292,10 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	  // allocate buffer
 	  char *recv_buf = (char *) TAU_UTIL_MALLOC(recv_buflen);
 	  
+#ifdef TAU_MPI
 	  // receive buffer
 	  PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
+#endif /* TAU_MPI */
 	  
 	  // add unification object to array
 	  unifyObjects->push_back(Tau_unify_processBuffer(recv_buf, source));
@@ -307,17 +317,21 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 
       parent = (rank & (~ mask));
 
+#ifdef TAU_MPI
       // recieve ok to go
       PMPI_Recv(NULL, 0, MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
       
       // send length
       PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
       
       // Send data only if the buffer size is greater than 0.
       //   This applies only to Atomic events.
       if (defBufSize > 0) {
+#ifdef TAU_MPI
 	// send data
 	PMPI_Send(defBuf, defBufSize, MPI_CHAR, parent, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
       }
       break;
     }
@@ -345,8 +359,10 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   if (parent != -1) {
     mergedObject->mapping = (int *) TAU_UTIL_MALLOC(sizeof(int)* mergedObject->numStrings);
     
+#ifdef TAU_MPI
     PMPI_Recv(mergedObject->mapping, mergedObject->numStrings, 
 	      MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
+#endif /* TAU_MPI */
 
     // apply mapping table to children
     for (int i=0; i<unifyObjects->size(); i++) {
@@ -358,8 +374,10 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 
   // send tables to children
   for (int i=1; i<unifyObjects->size(); i++) {
+#ifdef TAU_MPI
     PMPI_Send((*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents, 
 	      MPI_INT, (*unifyObjects)[i]->rank, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
   }
 
   /* debug: output final table */
@@ -384,7 +402,9 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   // the local object
   unify_object_t *object = (*unifyObjects)[0];
 
+#ifdef TAU_MPI
   PMPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
 
   Tau_unify_object_t *tau_unify_object = (Tau_unify_object_t*) TAU_UTIL_MALLOC(sizeof(Tau_unify_object_t));
   tau_unify_object->globalNumItems = globalNumItems;
@@ -483,12 +503,11 @@ extern "C" int TauGetMpiRank(void)
 {
   int rank;
 
+#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
+#else
+  return 0;
+#endif /* TAU_MPI */
 }
 #endif /* TAU_MPC */
-#else /* !TAU_MPI */
-extern "C" int TauGetMpiRank(void) {
-  return 0;
-}
-#endif /* TAU_MPI */

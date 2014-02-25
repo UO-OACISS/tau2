@@ -96,7 +96,8 @@ using namespace std;
 #define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
 /* Experimental feature - pre-computation of statistics */
-#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+//#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+#if defined(TAU_UNIFY)
 #define TAU_PRECOMPUTE_DEFAULT 1
 #endif /* TAU_UNIFY && TAU_MPI */
 
@@ -1389,15 +1390,15 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Output Format: snapshot\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "snapshot");
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
-#ifdef TAU_MPI
+//#ifdef TAU_MPI
       env_profile_format = TAU_FORMAT_MERGED;
       TAU_VERBOSE("TAU: Output Format: merged\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
-#else
-      env_profile_format = TAU_FORMAT_PROFILE;
-      TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
-      TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
-#endif /* TAU_MPI */
+//#else
+      //env_profile_format = TAU_FORMAT_PROFILE;
+      //TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
+      //TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
+//#endif /* TAU_MPI */
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "none")) {
       env_profile_format = TAU_FORMAT_NONE;
       TAU_VERBOSE("TAU: Output Format: none\n");
@@ -1624,7 +1625,8 @@ void TauEnv_initialize()
       }
     }
 
-#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+//#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+#if defined(TAU_UNIFY)
     tmp = getconf("TAU_STAT_PRECOMPUTE");
     if (parse_bool(tmp, TAU_PRECOMPUTE_DEFAULT)) {
       env_stat_precompute = 1;
