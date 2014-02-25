@@ -7555,7 +7555,7 @@ if [ $openmp = yes ] ; then
     if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
     if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
     if [ "$fujitsu" = "yes" ]; then openmp_flag=-Kopenmp; fi
-    if [ "$default_fortran" = "cray" ]; then openmp_flag=-h omp; fi
+    if [ "$default_fortran" = "cray" ]; then openmp_flag=-h#omp; fi
     if [ "$intel" = "yes" ]; then openmp_flag=-openmp; fi
 
 
