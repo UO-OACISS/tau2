@@ -202,10 +202,13 @@ bool IsDynamicProfiling(char *filename) {
   //This function determines if dynamic profiling is used by opening the
   //profile and examing the version that is contained on the first line.  
   //It then returns the corresponding boolean.
+  //
+  //max line length for the first line of the profile file.
+  const int MAX_LINE_LEN = 100;
   FILE * fp;
   char error_msg[SIZE_OF_FILENAME];
   int numberOfFunctions;
-  char *line, *version;
+  char line[MAX_LINE_LEN], version[MAX_LINE_LEN];
   size_t len;
   int retval;
   if ((fp = fopen(filename, "r")) == NULL) {
@@ -213,15 +216,13 @@ bool IsDynamicProfiling(char *filename) {
     perror(error_msg);
     return false;
   }//if
-  if ((getline(&line, &len, fp) == EINVAL))
+  if ((fgets(line, MAX_LINE_LEN, fp) == NULL))
   {
     sprintf(error_msg,"Error: Could read line from %s",filename);
     return false;
   }
-  version = (char *) malloc(sizeof(char)*len);
   if (sscanf(line, "%d %s", &numberOfFunctions, version) == EOF) {
     printf("Error: fscanf returns EOF file %s", filename);
-    free(version);
     return false;
   }//if
   fclose(fp); // thats all we wanted to read
@@ -249,7 +250,6 @@ bool IsDynamicProfiling(char *filename) {
       retval = false;
   }//else
 
-  free(version);
   return retval;
 
 }//IsDynamicProfiling()
