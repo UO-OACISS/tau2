@@ -1376,12 +1376,14 @@ int TauProfiler_StoreData(int tid)
         TauProfiler_StoreData(i);
       }
     }
+#ifndef TAU_MPI
 	/* Only thread 0 should create a merged profile. */
     if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
       Tau_metadataMerge_mergeMetaData();
       /* Create a merged profile if requested */
       Tau_mergeProfiles();
 	}
+#endif
   }
 #endif /* PTHREADS */
 
