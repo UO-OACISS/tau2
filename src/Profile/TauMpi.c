@@ -1639,14 +1639,13 @@ int *provided;
  
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
-
-  Tau_signal_initialization(); 
-
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
   }
 #endif /* TAU_WINDOWS */
+
+  Tau_signal_initialization(); 
 
 #ifdef TAU_BGP
   if (TauEnv_get_ibm_bg_hwp_counters()) {
