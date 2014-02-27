@@ -4,6 +4,8 @@
 #****************************************************************************
 
 include ../include/Makefile
+#include ../../include/Makefile
+
 CONFIG_ARCH=default
 CXX=g++
 CC=gcc
@@ -12,8 +14,6 @@ INCLUDES= -I.
 OTF_SOURCE=$(OTFDIR)/include
 OTF_UTIL_INCLUDE=$(OTFDIR)/include
 RM=/bin/rm -f
-
-include ../../include/Makefile
 
 #The following are variables for all the files and their associated variations.
 HANDLERS=handlers.o handlers.*.~*
