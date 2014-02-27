@@ -4,16 +4,11 @@
 #****************************************************************************
 
 include ../include/Makefile
-#include ../../include/Makefile
+include ../../include/Makefile
 
-CONFIG_ARCH=default
-CXX=g++
-CC=gcc
-LIBS=
-INCLUDES= -I.
+INCLUDES=-I.
 OTF_SOURCE=$(OTFDIR)/include
 OTF_UTIL_INCLUDE=$(OTFDIR)/include
-RM=/bin/rm -f
 
 #The following are variables for all the files and their associated variations.
 HANDLERS=handlers.o handlers.*.~*
@@ -21,7 +16,7 @@ READTRACE=readTrace.o readTrace.*.~*
 MAKEFILE=Makefile.~*
 
 CXXFLAGS = $(USER_OPT)
-OTF2FLAGS = -DNOCROSS_BUILD -D__STDC_FORMAT_MACROS -DFRONTEND_BUILD  -fpermissive $(TAU_OTF2_1_1_FLAGS)
+OTF2FLAGS = -DNOCROSS_BUILD -D__STDC_FORMAT_MACROS -DFRONTEND_BUILD  $(TAU_OTF2_1_1_FLAGS)
 
 OTFLIBS=-L$(OTFDIR)/lib -lotf2 -lrt
 
