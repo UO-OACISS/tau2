@@ -6,6 +6,8 @@
 #include <iostream>
 #include <limits.h>
 
+//#define TAU_CUPTI_DEBUG_COUNTERS
+
 #if CUPTI_API_VERSION >= 2
 
 #ifdef TAU_BFD
@@ -229,9 +231,11 @@ void record_gpu_counters_at_launch(int device)
     Tau_CuptiLayer_read_counters(device, counters_at_last_launch[device]);
   }
 #ifdef TAU_CUPTI_DEBUG_COUNTERS
-  std::cout << "at launch ====> " << std::endl;
-  std::cout << "\tlast launch:      " << counters_at_last_launch[device][0] << std::endl;
-  std::cout << "\tcurrent counters: " << current_counters[device][0] << std::endl;
+  std::cout << "at launch (" << device << ") ====> " << std::endl;
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
+      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
+      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
+    }
 #endif
 }
   
@@ -242,9 +246,11 @@ void record_gpu_counters_at_sync(int device)
   }
   Tau_CuptiLayer_read_counters(device, current_counters[device]);
 #ifdef TAU_CUPTI_DEBUG_COUNTERS
-  std::cout << "at sync   ====> " << std::endl;
-  std::cout << "\tlast launch:      " << counters_at_last_launch[device][0] << std::endl;
-  std::cout << "\tcurrent counters: " << current_counters[device][0] << std::endl;
+  std::cout << "at sync (" << device << ") ====> " << std::endl;
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
+      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
+      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
+    }
 #endif
 }
 
