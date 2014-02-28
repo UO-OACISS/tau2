@@ -38,7 +38,7 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(OBJS) $(TAU_LIB_DIR)/libTAU.so
+$(TARGET):	$(OBJS) $(TAU_LIB_DIR)/libTAU$(TAU_SHLIBX)
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 matmult.o: matmult.c
