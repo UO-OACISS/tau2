@@ -35,7 +35,8 @@ class  JNIThreadLayer
  	JNIThreadLayer () { }  // defaults
 	~JNIThreadLayer () { } 
 
-	static int RegisterThread(jlong jid, char *tname);
+	static int RegisterThread(jlong jid, int sid, char *tname);
+	static int GetSidFromJid(jlong jid);
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
         static int InitializeEnvMutexData(void);     // init tauEnv mutex
@@ -51,7 +52,8 @@ class  JNIThreadLayer
 	static JavaVM 	   	    *tauVM; 	     // Virtual machine 
   private:
         static int                      tauThreadCount;  // Number of threads
-	static std::map<jlong, int>     tauThreadsMap;
+	static std::map<jlong, int>     tauTidMap;
+	static std::map<jlong, int>     tauSidMap;
 	static std::recursive_mutex     tauNumThreadsLock; // to protect counter
 	static std::recursive_mutex     tauDBMutex; // to protect counter
 	static std::recursive_mutex     tauEnvMutex; // second mutex

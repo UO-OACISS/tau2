@@ -137,6 +137,10 @@ jdwp_init(jdwp_ctx_t *ctx)
     ctx->events = NULL;
     ctx->adb    = adb_open(getpid());
 
+    if (ctx->adb == NULL) {
+	return -1;
+    }
+
     jdwp_handshake(ctx);
 
     return 0;

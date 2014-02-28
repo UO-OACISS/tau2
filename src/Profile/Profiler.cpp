@@ -185,7 +185,7 @@ void Profiler::Start(int tid)
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
-  TAU_VERBOSE("[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+//  TAU_VERBOSE("[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
   ParentProfiler = TauInternal_ParentProfiler(tid);
 
   /********************************************************************************/
@@ -330,7 +330,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
-  TAU_VERBOSE("[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+//  TAU_VERBOSE("[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
   /********************************************************************************/
   /*** PerfSuite Integration Code ***/
   /********************************************************************************/

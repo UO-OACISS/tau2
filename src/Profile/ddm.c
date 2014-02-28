@@ -111,3 +111,34 @@ ddm_then(jdwp_ctx_t *jdwp)
     free(reply);
     return 0;
 }
+
+/* get thread status */
+ddm_thst_t *
+ddm_thst(jdwp_ctx_t *jdwp)
+{
+    jdwp_reply_t *reply;
+    ddm_trunk_t trunk;
+    ddm_thst_t *thst;
+
+    trunk.type   = htonl(DDM_THST);
+    trunk.length = htonl(0);
+
+    jdwp_send_pkt(jdwp, DDM_TRUNK, (char*)&trunk, sizeof(trunk));
+
+    reply = jdwp_get_reply(jdwp);
+    if (reply == NULL) {
+	return NULL;
+    }
+
+    if (reply->error_code != 0) {
+	free(reply);
+	return NULL;
+    }
+
+    /* can we do zero copy? */
+    thst = (ddm_thst_t*)malloc(reply->length - sizeof(*reply));
+    memcpy(thst, reply->data, reply->length - sizeof(*reply));
+
+    free(reply);
+    return thst;
+}
