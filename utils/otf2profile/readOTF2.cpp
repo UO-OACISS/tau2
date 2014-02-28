@@ -643,7 +643,7 @@ DefClockOffset_print( void*    userData,
  *  @return                  Returns EXIT_SUCCESS if successful, EXIT_FAILURE
  *                           if an error occures.
  */
-void
+int
 ReadTraceFile()
 {
     char* anchor_file = NULL;
@@ -859,7 +859,7 @@ ReadTraceFile()
 
     for ( size_t i = 0; i < otf2_vector_size( user_data.locations_to_read ); i++ )
     {
-        uint64_t* location_item      = otf2_vector_at( user_data.locations_to_read, i );
+        uint64_t* location_item      = (uint64_t *) otf2_vector_at( user_data.locations_to_read, i );
         uint64_t  locationIdentifier = *location_item;
 
         /* Do not open the event reader, when only showing the global defs */
@@ -1552,7 +1552,7 @@ void
 otf2_print_add_location_to_read( otf2_print_data* data,
                                  uint64_t         locationID )
 {
-    uint64_t* location_item = malloc( sizeof( *location_item ) );
+    uint64_t* location_item = (uint64_t *) malloc( sizeof( *location_item ) );
     assert( location_item );
 
     *location_item = locationID;
@@ -1590,7 +1590,7 @@ otf2_print_add_string( otf2_hash_table* strings,
         return;
     }
 
-    otf2_print_def_name* new_string = malloc( sizeof( *new_string )
+    otf2_print_def_name* new_string = (otf2_print_def_name *) malloc( sizeof( *new_string )
                                               + strlen( content ) + 1 );
     assert( new_string );
 
@@ -1637,7 +1637,7 @@ otf2_print_add_def64_name( otf2_hash_table* defs,
         return;
     }
 
-    otf2_print_def_name* new_def = malloc( sizeof( *new_def ) );
+    otf2_print_def_name* new_def = (otf2_print_def_name *) malloc( sizeof( *new_def ) );
     assert( new_def );
 
     new_def->def_id = defID;
@@ -1790,7 +1790,7 @@ otf2_print_get_buffer( size_t len )
 
     if ( next->size <= len )
     {
-        next->buffer = realloc( next->buffer, len );
+        next->buffer = (char *) realloc( next->buffer, len );
         assert( next->buffer );
         next->size = len;
     }
@@ -1911,7 +1911,7 @@ otf2_print_get_def64_name( const otf2_hash_table* defs,
         return otf2_print_get_invalid( defID );
     }
 
-    otf2_print_def_name* def = entry->value;
+    otf2_print_def_name* def = (otf2_print_def_name *) entry->value;
 
     return otf2_print_get_name( def->name, defID );
 }
@@ -1940,7 +1940,7 @@ otf2_print_get_string( const otf2_hash_table* strings,
         return NULL;
     }
 
-    otf2_print_def_name* def = entry->value;
+    otf2_print_def_name* def = (otf2_print_def_name *) entry->value;
 
     return def->name;
 }
@@ -3051,7 +3051,7 @@ GlobDefRegion_print( void*           userData,
 
     const char * myname;
     int i;
-    char *getname = otf2_print_get_def_name(data->strings, name);
+    char *getname = (char *) otf2_print_get_def_name(data->strings, name);
     for (i = 1; i < strlen(getname); i++) {
        if (getname[i] == '"') {
           getname[i] = '\0';
@@ -3448,7 +3448,7 @@ DefMappingTable_print( void*             userData,
                        OTF2_MappingType  mapType,
                        const OTF2_IdMap* iDMap )
 {
-    uint64_t* location_id_ptr = userData;
+    uint64_t* location_id_ptr = (uint64_t *) userData;
 
     dprintf( "%-*s %12" PRIu64 "  Type: %s, ",
             otf2_DEF_COLUMN_WIDTH, "MAPPING_TABLE",
@@ -3488,7 +3488,7 @@ DefClockOffset_print( void*    userData,
                       int64_t  offset,
                       double   stddev )
 {
-    uint64_t* location_id_ptr = userData;
+    uint64_t* location_id_ptr = (uint64_t *) userData;
 
     dprintf( "%-*s %12" PRIu64 "  Time: %" PRIu64 ", Offset: %+" PRIi64 ", "
             "StdDev: %f\n",

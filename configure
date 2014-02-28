@@ -5402,7 +5402,7 @@ if [ "x$download_unwind" = xyes ] ; then
   unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
   prebfddir=`pwd`
 
-  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" ] ; then
+  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o -r "$unwind_dir/lib64/lib${libunwind_name}.a" ] ; then
     echo "libunwind download already found, skipping"
   else
     # get the tar file
@@ -5656,6 +5656,26 @@ cat <<EOF > mpi2iorequest.$msuf
   }
 EOF
 
+cat <<EOF > mpi3const.$msuf
+#include <mpi.h>
+
+#ifndef TAU_MPICH3_CONST
+#define TAU_MPICH3_CONST 
+#endif 
+
+int  MPI_Send( buf, count, datatype, dest, tag, comm )
+TAU_MPICH3_CONST void * buf;
+int count;
+MPI_Datatype datatype;
+int dest;
+int tag;
+MPI_Comm comm;
+{
+  return PMPI_Send(buf, count, datatype, dest, tag, comm);
+}
+  
+EOF
+
 cat <<EOF > mpi2attr.$msuf
   #include <mpi.h>
 
@@ -5835,6 +5855,21 @@ else
     echo "no"
 fi
 
+$echo "Checking for MPI 3 const interface... ${nnl}"
+if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  1> /dev/null 2>&1 ; then
+    echo "no"
+# MPI works. 
+else
+  if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
+    echo "yes"
+# MPI requires the const keyword 
+    fixmakeargs="$fixmakeargs MPICH3_CONST"
+   else
+    echo "no" 
+  fi
+fi
+
+
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
     fixmakeargs="$fixmakeargs LAMPI"
@@ -5949,7 +5984,7 @@ else
     fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
 fi
 
-/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o
+/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
 else
     fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
     mpilibargs_added_to_fixmakeargs=yes
@@ -7555,7 +7590,7 @@ if [ $openmp = yes ] ; then
     if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
     if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
     if [ "$fujitsu" = "yes" ]; then openmp_flag=-Kopenmp; fi
-    if [ "$default_fortran" = "cray" ]; then openmp_flag=-h omp; fi
+    if [ "$default_fortran" = "cray" ]; then openmp_flag=-h#omp; fi
     if [ "$intel" = "yes" ]; then openmp_flag=-openmp; fi
 
 

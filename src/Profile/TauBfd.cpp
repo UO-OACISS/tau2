@@ -802,6 +802,8 @@ static bool Tau_bfd_internal_loadExecSymTab(TauBfdUnit *unit)
 // Internal BFD helper functions
 static int Tau_bfd_internal_getModuleIndex(TauBfdUnit *unit, unsigned long probe_addr)
 {
+  if (!unit)
+    return -1;
   vector<TauBfdAddrMap*> const & addressMaps = unit->addressMaps;
   for (int i = 0; i < addressMaps.size(); i++) {
     if (probe_addr >= addressMaps[i]->start && probe_addr <= addressMaps[i]->end) return i;

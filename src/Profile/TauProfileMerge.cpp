@@ -18,8 +18,9 @@
 
 
 #ifdef TAU_MPI
-
 #include <mpi.h>
+#endif  /* TAU_MPI */
+
 #include <TAU.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -107,7 +108,9 @@ int Tau_mergeProfiles()
   int rank, size, tid, i, buflen;
   FILE *f;
   char *buf;
+#ifdef TAU_MPI
   MPI_Status status;
+#endif  /* TAU_MPI */
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
@@ -128,15 +131,21 @@ int Tau_mergeProfiles()
   // temp: write regular profiles too, for comparison
   //TauProfiler_DumpData(false, 0, "profile");
   
+  rank = 0;
+  size = 1;
+#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
+#endif  /* TAU_MPI */
 
 	buflen = Tau_snapshot_getBufferLength()+1;
 	buf = (char *) malloc(buflen);
 	Tau_snapshot_getBuffer(buf);
 
   int maxBuflen;
+#ifdef TAU_MPI
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+#endif  /* TAU_MPI */
 
 #ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
@@ -264,6 +273,8 @@ int Tau_mergeProfiles()
 #endif
 
     for (i=1; i<size; i++) {
+
+#ifdef TAU_MPI
       /* send ok-to-go */
       PMPI_Send(NULL, 0, MPI_INT, i, 0, MPI_COMM_WORLD);
       
@@ -272,6 +283,8 @@ int Tau_mergeProfiles()
 
       /* receive buffer */
       PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
+#endif  /* TAU_MPI */
+
       if (!TauEnv_get_summary_only()) { /* write each rank? */
         fwrite (recv_buf, buflen, 1, f);
       } else {
@@ -412,6 +425,7 @@ int Tau_mergeProfiles()
 #endif
   } else {
 
+#ifdef TAU_MPI
     /* recieve ok to go */
     PMPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 
@@ -420,13 +434,10 @@ int Tau_mergeProfiles()
 
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+#endif  /* TAU_MPI */
+
   }
 	free(buf);
   return 0;
 }
 
-#else /* TAU_MPI */
-int Tau_mergeProfiles() {
-  return 0;
-}
-#endif /* TAU_MPI */

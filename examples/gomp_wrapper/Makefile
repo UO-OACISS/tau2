@@ -2,8 +2,8 @@ TAU_MAKEFILE ?=../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
-CXX=opencc -fopenmp
-#CXX=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_cc.sh
+#CXX=opencc -fopenmp
+CXX=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_cc.sh -optCompInst
 LD=$(CXX)
 AR=ar
 ARFLAGS=rcv
@@ -12,7 +12,7 @@ CFLAGS          = -g $(TAU_OPENMP_OPTION) -O0
 TARGET=matmult
 
 OBJS=$(TARGET).o 
-$(TARGET): $(OBJS) 
+$(TARGET): $(OBJS) $(TAU_LIB_DIR)/libTAU.so
 	$(LD) -g $(TARGET).o -o $@ $(LDFLAGS) 
 
 .c.o:
