@@ -36,6 +36,9 @@ using namespace std;
 
 #include "Profile/TauJAPI.h"
 
+#include <android/log.h>
+#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
+
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class JNIThreadLayer
 // This allows us to get thread ids from 0..N-1 
@@ -47,7 +50,8 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////
 
 int                JNIThreadLayer::tauThreadCount = 0; 
-map<jlong, int>    JNIThreadLayer::tauThreadsMap;
+map<jlong, int>    JNIThreadLayer::tauTidMap; // jid ==> tid
+map<jlong, int>    JNIThreadLayer::tauSidMap; // jid ==> sid
 JavaVM*            JNIThreadLayer::tauVM;  // init in JNI_OnLoad()
 recursive_mutex    JNIThreadLayer::tauNumThreadsLock;
 recursive_mutex    JNIThreadLayer::tauDBMutex;
@@ -57,12 +61,17 @@ static thread_local int tid = 0;
 
 extern void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid);
 
+int JNIThreadLayer::GetSidFromJid(jlong jid)
+{
+    return tauSidMap[jid];
+}
+
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
 // FunctionInfo and Profiler classes. 
 ////////////////////////////////////////////////////////////////////////
-int JNIThreadLayer::RegisterThread(jlong jid, char *tname)
+int JNIThreadLayer::RegisterThread(jlong jid, int sid, char *tname)
 {
   static int initflag = JNIThreadLayer::InitializeThreadData();
 
@@ -79,12 +88,17 @@ int JNIThreadLayer::RegisterThread(jlong jid, char *tname)
   }
 
   /* register only if it's not registered yet */
-  if (tauThreadsMap.find(jid) == tauThreadsMap.end()) {
+  if (tauTidMap.find(jid) == tauTidMap.end()) {
       tid = tauThreadCount;
-      tauThreadsMap[jid] = tauThreadCount++;
+      tauTidMap[jid] = tauThreadCount++;
+
+      LOGV(" *** map jid %lld to sid %d\n", jid, sid);
+      tauSidMap[jid] = sid;
+
+      RtsLayer::setMyNode(0, tid);
 
       /* create top level profiler for this thread */
-      CreateTopLevelRoutine(tname, (char*)"<ThreadEvents>", "DTM", tid);
+      CreateTopLevelRoutine(tname, (char*)"<ThreadEvents>", (char*)"DTM", tid);
   }
 
   // Unlock it now 
@@ -94,7 +108,7 @@ int JNIThreadLayer::RegisterThread(jlong jid, char *tname)
 
   // A thread should call this routine exactly once. 
 
-  return tauThreadsMap[jid];
+  return tauTidMap[jid];
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -107,19 +121,19 @@ int JNIThreadLayer::GetThreadId(void)
     jlong jid = get_java_thread_id();
     if (jid == -1) {
 	jid = TheLastJDWPEventThreadID();
-//	printf(" *** %d: last jid = %lld, tid = %d\n", gettid(), jid, tauThreadsMap[jid]);
+//	printf(" *** %d: last jid = %lld, tid = %d\n", gettid(), jid, tauTidMap[jid]);
     } else {
 	/* if this is a java thread and not get registered, register itself */
-	if (tauThreadsMap.find(jid) == tauThreadsMap.end()) {
+	if (tauTidMap.find(jid) == tauTidMap.end()) {
 	    char *tname = get_java_thread_name();
-	    RegisterThread(jid, tname);
+	    RegisterThread(jid, gettid(), tname);
 	    free(tname);
 	}
 	
-//	printf(" *** %d: java jid = %lld, tid = %d\n", gettid(), jid, tauThreadsMap[jid]);
+//	printf(" *** %d: java jid = %lld, tid = %d\n", gettid(), jid, tauTidMap[jid]);
     }
 
-    return tauThreadsMap[jid];
+    return tauTidMap[jid];
 }
 
 ////////////////////////////////////////////////////////////////////////

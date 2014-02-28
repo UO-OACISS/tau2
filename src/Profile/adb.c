@@ -7,8 +7,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <android/log.h>
+
 #include "adb.h"
 #include "jdwp.h"
+
+#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
 
 static unsigned local_id = 1;
 
@@ -38,10 +42,13 @@ dump_message(const char *label, msg_t *msg)
 
     tag = command_str(msg->command);
 
-    fprintf(stderr, "%s: %s %08x %08x %04x %08x\"",
-            label, tag, msg->arg0, msg->arg1, msg->data_length, msg->data_check);
+    LOGV("%s: %s %08x %08x %04x %08x\"",
+	 label, tag, msg->arg0, msg->arg1, msg->data_length, msg->data_check);
+
     count = msg->data_length;
     x = (char*) msg->data;
+
+    /*
     if(count > DUMPMAX) {
         count = DUMPMAX;
         tag = "";
@@ -63,6 +70,30 @@ dump_message(const char *label, msg_t *msg)
     for(i=0; i<count; i++) {
 	printf("%02x ", *x++);
     }
+    */
+
+#define H(m) ((m<c) ? x[16*r+m] : 0)
+#define C(m) ((m<c) ? ((x[16*r+m]>=' ')&&(x[16*r+m]<127) ? x[16*r+m] : '.') : ' ')
+    char *line;
+    int r, c; // row, column
+    for (r=0; r<(count+15)/16; r++) {
+	c = (count - 16 * r) > 16 ? 16 : (count - 16 * r);
+
+	asprintf(&line,
+		 "\t"						      \
+		 "%02x %02x %02x %02x %02x %02x %02x %02x    "	      \
+		 "%02x %02x %02x %02x %02x %02x %02x %02x    "	      \
+		 "| %c%c%c%c%c%c%c%c %c%c%c%c%c%c%c%c |",
+		 H( 0), H( 1), H( 2), H( 3), H( 4), H( 5), H( 6), H( 7),
+		 H( 8), H( 9), H(10), H(11), H(12), H(13), H(14), H(15),
+		 C( 0), C( 1), C( 2), C( 3), C( 4), C( 5), C( 6), C( 7),
+		 C( 8), C( 9), C(10), C(11), C(12), C(13), C(14), C(15));
+
+	LOGV(line);
+
+	free(line);
+    }
+    
     printf("\n");
 }
 
@@ -102,7 +133,7 @@ send_message(adb_ctx_t *ctx)
     msg_t *msg = &ctx->smsg;
     char *data = (char*)msg;
 
-    //dump_message(__func__, msg);
+    dump_message(__func__, msg);
 
     finished = 0;
     remain   = sizeof(msg_t) + msg->data_length;
@@ -175,7 +206,7 @@ recv_message(adb_ctx_t *ctx)
 	remain   -= rv;
     }
 
-    //dump_message(__func__, msg);
+    dump_message(__func__, msg);
 
     /* sanity check */
     if ((msg->command ^ 0xffffffff) != msg->magic) {
@@ -194,7 +225,7 @@ recv_message(adb_ctx_t *ctx)
 static int
 adb_send_connect(adb_ctx_t *ctx)
 {
-    char id_string[] = "host:TAU:thread_event_monitor";
+    char id_string[] = "host::";
 
     new_message(ctx,
 		A_CNXN, A_VERSION, MAX_PAYLOAD, sizeof(id_string), id_string);
@@ -384,7 +415,7 @@ adb_open(pid_t pid)
 
     rv = connect(ctx->fd, (struct sockaddr*)&saddr, sizeof(saddr));
     if (rv < 0) {
-	perror("connect");
+	LOGV(" *** Error: ADB: adb_open: %s", strerror(errno));
 	goto err_q_1;
     }
 
@@ -415,7 +446,7 @@ adb_open(pid_t pid)
 	/* update max_payload limitation */
 	ctx->max_payload = msg->arg1;
     } else {
-	fprintf(stderr, "Error: ADB: need CNXN, get %s\n",
+	LOGV(" *** Error: ADB: need CNXN, get %s\n",
 		command_str(msg->command));
 	goto err_q_1;
     }
@@ -436,10 +467,10 @@ adb_open(pid_t pid)
 	/* update remote id */
 	ctx->rid = msg->arg0;
     } else if (rmsg_is_clse(ctx)) {
-	fprintf(stderr, "Error: ADB: connection closed by peer.\n");
+	LOGV(" *** Error: ADB: connection closed by peer.\n");
 	goto err_q_1;
     } else {
-	fprintf(stderr, "Error: ADB: need OKAY, get %s\n",
+	LOGV(" *** Error: ADB: need OKAY, get %s\n",
 		command_str(msg->command));
 	goto err_q_1;
     }

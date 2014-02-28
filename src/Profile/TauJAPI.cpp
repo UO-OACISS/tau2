@@ -119,20 +119,49 @@ utf16_to_ascii(char *utf16, int len)
 
 static int dalvik_vm_running = 1;
 
-static int
-handle_ddm_event(ddm_trunk_t *trunk)
+static jlong
+get_jid_from_lid(uint32_t lid)
 {
+    static int sys_count = 0;  // how many system thread has appeared?
+    static jlong jid = 0;
+
+    jid++;
+
+    /* this is a system thread, jid == lid */
+    if (lid < 9) {
+	sys_count++;
+	return (jlong)lid;
+    }
+
+    /*
+     * this is not a system thread, and not all system thread has been
+     * populated, jid == lid
+     */
+    if (sys_count < 8) {
+	return (jlong)lid;
+    }
+
+    return jid;
+}
+
+static int
+handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
+{
+    int i;
     ddm_thcr_t *thcr;
     ddm_thde_t *thde;
+    ddm_thst_t *thst;
 
-    int tid;    // tau internal thread id, +1 for each new thread
+    int tid;         // tau internal thread id, +1 for each new thread
+    int sid = -1;    // system thread id, i.e. gettid()
+    jlong jid = 0;   // java thread id, +1 for each new thread
     char *tname;
 
-    static jlong jid = 0;  // java thread id, +1 for each new thread
+    // dalvik vm-local thread id, free after thread death, reuseable
+    uint32_t lid;  
 
-    uint32_t lid;  // dalvik vm-local thread id, free after thread death, reuseable
     static map<uint32_t, char*> java_thread_name;  // lid ==> tname
-    static map<uint32_t, jlong> java_thread_id;    // lid ==> jid
+    static map<uint32_t, jlong> java_thread_jid;   // lid ==> jid
 
     switch (ntohl(trunk->type)) {
     case DDM_THCR:
@@ -140,7 +169,7 @@ handle_ddm_event(ddm_trunk_t *trunk)
 	lid   = ntohl(thcr->lid);
 	tname = utf16_to_ascii(thcr->tname, ntohl(thcr->tname_len));
 
-	jid += 1;
+	jid = get_jid_from_lid(lid);
 
 	/* setup mapping between lid and tname */
 	if (java_thread_name.find(lid) != java_thread_name.end()) {
@@ -154,19 +183,42 @@ handle_ddm_event(ddm_trunk_t *trunk)
 	 * lid 9~ : user threads
 	 */
 	if ((lid == 1) || (lid >= 9)) {
-	    /* setup mapping between lid and jid */
-	    java_thread_id[lid] = jid;
+	    /* find out sid of this thread, we will need this for sampling */
+	    thst = ddm_thst(jdwp);
+	    for (i=0; i<ntohs(thst->count); i++) {
+		TAU_VERBOSE(" *** THST: %d: %08x -> %08x, %d -> %d\n", i,
+			    thst->thst[i].lid, thst->thst[i].sid,
+			    ntohl(thst->thst[i].lid), ntohl(thst->thst[i].sid));
+		if (lid == ntohl(thst->thst[i].lid)) {
+		    sid = ntohl(thst->thst[i].sid);
+
+		    TAU_VERBOSE(" *** going to map jid %lld to sid %d, i=%d\n",
+				jid, sid, i);
+		    break;
+		}
+	    }
+	    free(thst);
 
 	    /*
 	     * Try to register this new thread.
-	     * Note that this is an async event, hence the thread may be
-	     * running and already registered itself. We shall handle this
-	     * in RegisterThread().
+	     *
+	     * Note that this is an async event, hence
+	     * 1. the thread may be running and already registered itself. We
+	     *    shall handle this in RegisterThread().
+	     * 2. the thread may already dead, in which case sid will be -1.
+	     *    Let's don't bother to register it.
 	     */
-	    TheLastJDWPEventThreadID() = jid;
-	    tid = JNIThreadLayer::RegisterThread(jid, tname);
+	    if (sid != -1) {
+		/* setup mapping between lid and jid */
+		java_thread_jid[lid]  = jid;
 
-	    LOGV(" *** DDM THCR <%d> %s -- Registered\n", lid, tname);
+		TheLastJDWPEventThreadID() = jid;
+		tid = JNIThreadLayer::RegisterThread(jid, sid, tname);
+
+		LOGV(" *** DDM THCR <%d> %s -- Registered\n", lid, tname);
+	    } else {
+		LOGV(" *** DDM THCR <%d> %s\n", lid, tname);
+	    }
 	} else {
 	    LOGV(" *** DDM THCR <%d> %s\n", lid, tname);
 	}
@@ -186,9 +238,9 @@ handle_ddm_event(ddm_trunk_t *trunk)
 	    dalvik_vm_running = 0;
 	}
 
-	if (java_thread_id.find(lid) != java_thread_id.end()) {
-	    TheLastJDWPEventThreadID() = java_thread_id[lid];
-	    java_thread_id.erase(lid);
+	if (java_thread_jid.find(lid) != java_thread_jid.end()) {
+	    TheLastJDWPEventThreadID() = java_thread_jid[lid];
+	    java_thread_jid.erase(lid);
 
 	    TAU_PROFILE_EXIT("END...");
 	}
@@ -209,7 +261,10 @@ dalvik_thread_monitor(void *arg)
     jdwp_ctx_t jdwp;
     jdwp_cmd_t *cmd;
 
-    jdwp_init(&jdwp);
+    if (jdwp_init(&jdwp) < 0) {
+	LOGV(" *** Error: DTM: jdwp failed to init\n");
+	return NULL;
+    }
 
     ddm_helo(&jdwp);
     ddm_then(&jdwp);
@@ -242,7 +297,7 @@ dalvik_thread_monitor(void *arg)
 
 	    switch ((event->cmd->cmd_set << 8) | event->cmd->command) {
 	    case DDM_TRUNK:
-		handle_ddm_event((ddm_trunk_t*)event->cmd->data);
+		handle_ddm_event(&jdwp, (ddm_trunk_t*)event->cmd->data);
 		free(event->cmd);
 		free(event);
 		break;
@@ -263,6 +318,39 @@ dalvik_thread_monitor(void *arg)
     return NULL;
 }
 
+#include <sys/stat.h>
+#include <fcntl.h>
+static void
+dump_proc_self_maps(void)
+{
+    char buf[128];
+
+    int ifd = open("/proc/self/maps", O_RDONLY);
+    if (ifd < 0) {
+	LOGV(" *** open maps: %s", strerror(errno));
+	return;
+    }
+
+    int ofd = open("/sdcard/self_maps", O_WRONLY);
+    if (ofd < 0) {
+	LOGV(" *** open sdcard maps: %s", strerror(errno));
+	return;
+    }
+
+    while (1) {
+	int rv = read(ifd, buf, sizeof(buf));
+
+	if (rv > 0) {
+	    write(ofd, buf, rv);
+	} else {
+	    break;
+	}
+    }
+
+    close(ifd);
+    close(ofd);
+}
+
 #endif
 
 /*
@@ -271,6 +359,8 @@ dalvik_thread_monitor(void *arg)
 jint JNI_OnLoad(JavaVM *vm, void *reserved)
 {
     LOGV(" *** JNI_OnLoad");
+
+    //dump_proc_self_maps();
 
     /*
      * This is a good point to attach your gdb on JVM to debug TAU
