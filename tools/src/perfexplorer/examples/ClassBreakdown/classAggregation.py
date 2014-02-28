@@ -2,6 +2,7 @@ from edu.uoregon.tau.perfexplorer.glue import *
 from edu.uoregon.tau.perfexplorer.client import PerfExplorerModel
 from java.util import *
 import sys
+import operator
 
 tauData = "tauprofile.xml.gz"
 
@@ -34,8 +35,12 @@ def stripIntro(ebd):
 	tmp = ebd.fullName
 	if "[UNWIND]" in tmp:
 		ebd.type = "UNWIND"
-	# remove [UNWIND] or [SAMPLE] from start
-	tmp = tmp[9:]
+		# remove [UNWIND] from start
+		tmp = tmp[9:]
+	if "[SAMPLE]" in tmp:
+		ebd.type = "SAMPLE"
+		# remove [SAMPLE] from start
+		tmp = tmp[9:]
 	index = tmp.find("[@] ")
 	if index > -1:
 		tmp = tmp[index+4:]
@@ -50,7 +55,7 @@ def stripSource(tmp, ebd):
 		ebd.file = tmp[s+3:m]
 		ebd.line = tmp[m+3:e]
 		tmp = tmp[:s]
-		ebd.file, ebd.line
+		#ebd.file, ebd.line
 	# check for const at the end
 	index = tmp.rfind(" const")
 	if index == len(tmp)-6:
@@ -108,30 +113,33 @@ def parseFullName(ebd):
 		e2 = tmp.rfind(" ")
 		# if we found a :: after a space
 		if e > -1 and e > e2:
-			if len(ebd.className) > 0:
-				ebd.className = tmp[e+2:] + "::" + ebd.className
-			else:
-				ebd.className = tmp[e+2:]
+			ebd.className = tmp[e+2:] + "::" + ebd.className
+			ebd.className = ebd.className.rstrip(':')
+			ebd.className = ebd.className.lstrip('*')
+			ebd.className = ebd.className.lstrip('&')
 			tmp = tmp[:e] # strip the delimiter
 		# if a space is before the :: (if one exists)
 		# plain old method, has a return type (can be a class or primitive)
 		elif e2 > -1 and e2 > e:
 			ebd.nameSpace = tmp[e2+1:]
 			ebd.className = tmp[e2+1:] + "::" + ebd.className
+			ebd.className = ebd.className.rstrip(':')
+			ebd.className = ebd.className.lstrip('*')
+			ebd.className = ebd.className.lstrip('&')
 			ebd.returnType = tmp[:e2]
 			return
 		# nothing left but a namespace/class name
 		elif e2 == -1 and e == -1:
 			ebd.nameSpace = tmp
-			if len(ebd.className) > 0:
-				ebd.className = tmp + "::" + ebd.className
-			else:
-				ebd.className = tmp
+			ebd.className = tmp + "::" + ebd.className
+			ebd.className = ebd.className.rstrip(':')
+			ebd.className = ebd.className.lstrip('*')
+			ebd.className = ebd.className.lstrip('&')
 			return
 		
 class EventBreakdown:
 	fullName = "" # done
-	type = "SAMPLE" # done
+	type = "Function" # done
 	nameSpace = ""
 	className = ""
 	classTemplates = ""
@@ -197,6 +205,8 @@ def dumpResult(ebd):
 		print "const: False"
 	print "file: " + ebd.file
 	print "line: " + ebd.line
+	print "inclusive: ", ebd.inclusive
+	print "exclusive: ", ebd.exclusive
 
 def checkParents(ebd, full, ebds):
 	# iterate over the callpath events
@@ -226,6 +236,9 @@ def main():
 
 	# set the metric, type we are interested in
 	metric = result.getTimeMetric()
+	if metric == None:
+		metrics = result.getMetrics().toArray()
+		metric = metrics[0]
 	type = result.EXCLUSIVE
 	
 	# then, extract those events from the actual data
@@ -251,6 +264,11 @@ def main():
 				ebd.inclusive = stats.getInclusive(0,event,metric)
 				ebd.exclusive = stats.getExclusive(0,event,metric)
 				ebds[event] = ebd
+		elif event != ".TAU application":
+			ebd = EventBreakdown(event)
+			ebd.inclusive = stats.getInclusive(0,event,metric)
+			ebd.exclusive = stats.getExclusive(0,event,metric)
+			ebds[event] = ebd
 
 	classes = dict()
 	for event,ebd in ebds.items():
@@ -258,22 +276,20 @@ def main():
 		if ebd.type == "UNWIND":
 			value = checkParents(ebd,full,ebds)
 		else:
-			value = ebd.inclusive
+			value = ebd.exclusive
 		if ebd.className in classes:
 			classes[ebd.className] = classes[ebd.className] + value
 		else:
 			classes[ebd.className] = value
 
-	values = dict()
-	for c,v in classes.items():
-		values[v] = c
-		
-	vsort = values.keys()
-	vsort.sort()
-	for v in vsort:
-		c = values[v]
-		if c != "":
-			print c, ":", v/1000000
+	"""
+	sorted_classes = sorted(classes.iteritems(), key=operator.itemgetter(1))
+	for c,v in sorted_classes:
+		print c, ":", v/1000000
+	"""
+	for c in sorted(classes, key=classes.get, reverse=False):
+		print c, ":", classes[c]/1000000
+	print "\nMetric:", metric
 
 	print "---------------- JPython test script end -------------"
 
