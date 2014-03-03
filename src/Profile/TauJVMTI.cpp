@@ -140,7 +140,9 @@ make_unique_method_id(unsigned cnum, unsigned mnum){
     fatal_error("method number is too large for use in method id.\n");
   }
   //shift cnum into the top half of the return, and place mnum int he bottom.
-  return (cnum << 4*sizeof(unsigned long)) + mnum;
+  //It's not likely that MSB of cnum is set. Let's set this bit so we will have
+  //no collision with CreateTopLevelRoutine().
+  return ((unsigned long)cnum << 4*sizeof(unsigned long)) | mnum | 1l<<(sizeof(long)*8 -1);
 }
 
 /* Extract method and class number from unique method_id */
@@ -229,7 +231,7 @@ mnum_callback(const unsigned cnum, const unsigned mnum, const char *class_name, 
     int tid = 0;
     long unique_method_id;
     sprintf(funcname, "%s %s %s", class_name, method_name, method_sig);
-    unique_method_id = make_unique_method_id(mnum, cnum);
+    unique_method_id = make_unique_method_id(cnum, mnum);
     //Use of dummy TID is fine, library doesn't use it anyways.
     TAU_MAPPING_CREATE(funcname, " ",
 		       unique_method_id , 
@@ -262,7 +264,7 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
 	      int tid = JavaThreadLayer::GetThreadId(thread);
 	      long unique_method_id;
 
-	      unique_method_id = make_unique_method_id(mnum, cnum);
+	      unique_method_id = make_unique_method_id(cnum, mnum);
 
 	      //Define a new mapping object TauMethodName
 	      TAU_MAPPING_OBJECT(TauMethodName=NULL);
@@ -292,7 +294,7 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             cp = gdata->classes + cnum;
             if (gdata->vm_is_initialized) {
 		int tid = JavaThreadLayer::GetThreadId(thread);
-		unique_method_id = make_unique_method_id(mnum, cnum);
+		unique_method_id = make_unique_method_id(cnum, mnum);
 		TAU_MAPPING_OBJECT(TauMethodName=NULL);
 		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
 		TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);

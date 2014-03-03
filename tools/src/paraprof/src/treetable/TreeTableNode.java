@@ -265,7 +265,19 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
             Comparable<Comparable> a = (Comparable<Comparable>) column.getValueFor(this, true);
             Comparable b = (Comparable) column.getValueFor((TreeTableNode) o, true);
             try {
-                result = a.compareTo(b);
+            	if(a==null&&b==null){
+            		result=0;
+            	}
+            	else if(a==null){
+            		result = -1;
+            	}
+            	else if(b==null){
+            		result = 1;
+            	}
+            	else
+                {
+            		result = a.compareTo(b);
+                }
 
             } catch (Exception e) {
                 e.printStackTrace();
