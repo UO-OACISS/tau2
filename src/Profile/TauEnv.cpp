@@ -1615,6 +1615,12 @@ void TauEnv_initialize()
             env_ebs_unwind_depth = TAU_CALLPATH_DEPTH_DEFAULT;
           }
         }
+		if (env_ebs_unwind_depth == 0) {
+          sprintf(tmpstr, "auto");
+        } else {
+          sprintf(tmpstr, "%d", env_ebs_unwind_depth);
+		}
+        TAU_METADATA("TAU_EBS_UNWIND_DEPTH", tmpstr);
       }
 #endif /* TAU_UNWIND */
 

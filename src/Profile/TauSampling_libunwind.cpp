@@ -162,7 +162,7 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
   unw_init_local(&cursor, &uc);
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
-    if ((unwindDepth >= depthCutoff) ||
+    if ((depthCutoff > 0 && unwindDepth >= depthCutoff) ||
 	(unwind_cutoff(profiler->address, (void *)unwind_ip))) {
       pcStack[index++] = (unsigned long)unwind_ip;
       unwindDepth++;  // for accounting only

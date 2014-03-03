@@ -4,6 +4,9 @@ from java.util import *
 import sys
 import operator
 
+# This flag determines whether or not to include UNWIND events.
+# This can be helpful when unresolved samples come from unwound functions.
+doInclusive = True
 tauData = "tauprofile.xml.gz"
 
 def matchBrackets(tmp, startchar, endchar):
@@ -223,9 +226,44 @@ def checkParents(ebd, full, ebds):
 						return 0
 	return ebd.inclusive
 
+def showChildren(ebds, className, full):
+
+	# build a dictionary of values. We need to do this, because 
+	# methods can have multiple values that need to be aggregated.
+	# For example, samples can be at multiple lines of a method.
+	# Also, Multiple methods could have different templated instances.
+
+	methods = dict()
+	for event,ebd in ebds.items():
+		if ebd.className == className:
+			value = 0.0
+			if ebd.type == "UNWIND":
+				value = checkParents(ebd,full,ebds)
+			elif ebd.type == "SAMPLE":
+				value = ebd.inclusive # should be the same as exclusive, but...
+			else:
+				value = ebd.exclusive
+			if ebd.method in methods:
+				methods[ebd.method] = methods[ebd.method] + value
+			else:
+				methods[ebd.method] = value
+	
+	# Iterate over the methods in this class, sorted by value
+
+	othervalue = 0
+	showmax=5 # set to 0 to show all methods
+	for m in sorted(methods, key=methods.get, reverse=True):
+		if showmax > 0:
+			print "\tMethod '%s' : %f" % (m,methods[m]/1000000)
+			showmax = showmax - 1
+		else:
+			othervalue = othervalue + methods[m]
+	print "\tAll other methods : %f" % (othervalue/1000000)
+
 def main():
 	global filename
 	global tauData
+	global doInclusive
 	print "--------------- JPython test script start ------------"
 	print "doing cluster test"
 	# get the parameters
@@ -240,6 +278,7 @@ def main():
 		metrics = result.getMetrics().toArray()
 		metric = metrics[0]
 	type = result.EXCLUSIVE
+	mainEvent = result.getMainEvent()
 	
 	# then, extract those events from the actual data
 	print "Extracting non-callpath data..."
@@ -256,10 +295,14 @@ def main():
 
 	ebds = dict()
 	for event in flat.getEvents():
-		#if event.startswith("[SAMPLE] "):
-		#if event.startswith("[UNWIND] "):
-		if event.startswith("[SAMPLE] ") or event.startswith("[UNWIND] "):
+		if event.startswith("[SAMPLE] "):
 			if "UNRESOLVED" not in event:
+				ebd = EventBreakdown(event)
+				ebd.inclusive = stats.getInclusive(0,event,metric)
+				ebd.exclusive = stats.getExclusive(0,event,metric)
+				ebds[event] = ebd
+		elif event.startswith("[UNWIND] "):
+			if doInclusive and "UNRESOLVED" not in event:
 				ebd = EventBreakdown(event)
 				ebd.inclusive = stats.getInclusive(0,event,metric)
 				ebd.exclusive = stats.getExclusive(0,event,metric)
@@ -282,14 +325,19 @@ def main():
 		else:
 			classes[ebd.className] = value
 
-	"""
-	sorted_classes = sorted(classes.iteritems(), key=operator.itemgetter(1))
-	for c,v in sorted_classes:
-		print c, ":", v/1000000
-	"""
-	for c in sorted(classes, key=classes.get, reverse=False):
-		print c, ":", classes[c]/1000000
-	print "\nMetric:", metric
+	othervalue = 0
+	showmax=10 # set to 0 to show all classes
+	for c in sorted(classes, key=classes.get, reverse=True):
+		#if len(c) > 0:
+		if showmax > 0:
+			print "\nClass '%s' : %f" % (c,classes[c]/1000000)
+			showmax = showmax - 1
+			showChildren(ebds,c,full)
+		else:
+			othervalue = othervalue + classes[c]
+	print "\nAll other classes : %f, application total : %f" % (othervalue/1000000, stats.getInclusive(0,mainEvent,metric)/1000000)
+	print "(inclusive aggregation of unwound samples and means without NULLs can be more than application total)"
+	print "\nMetric:", metric, "/ 1,000,000"
 
 	print "---------------- JPython test script end -------------"
 
