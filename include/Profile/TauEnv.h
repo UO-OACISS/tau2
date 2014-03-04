@@ -66,9 +66,11 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_signals_gdb();
   int  TAUDECL TauEnv_get_openmp_runtime_enabled();
+  int  TAUDECL TauEnv_get_openmp_runtime_context();
   int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
   int  TAUDECL TauEnv_get_openmp_runtime_events_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled();
+  int  TAUDECL TauEnv_get_ebs_enabled_tau();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
   int  TAUDECL TauEnv_get_ebs_period();

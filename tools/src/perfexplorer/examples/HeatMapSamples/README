@@ -1,0 +1,9 @@
+This example shows how samples and timer contexts interact.
+
+This example uses gnuplot - make it is in your path prior to running the example.
+The gnuplot script will generate a PNG file.
+
+To run the example:
+
+perfexplorer -n -i ./heatmap.py -p inputData=./matmult.ppk
+

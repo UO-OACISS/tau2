@@ -16,7 +16,7 @@
 #include <math.h>
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 1024
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -31,7 +31,7 @@ void initialize(double **matrix, int rows, int cols) {
   {
     //set_num_threads();
     /*** Initialize matrices ***/
-#pragma omp for nowait
+#pragma omp for nowait schedule(runtime)
     for (i=0; i<rows; i++) {
       for (j=0; j<cols; j++) {
         matrix[i][j]= i+j;
@@ -66,7 +66,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for nowait schedule(runtime)
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
@@ -90,7 +90,7 @@ void compute_triangular(double **a, double **b, double **c, int rows_a, int cols
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for nowait schedule(runtime)
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b-i; j++) {
         for (k=0; k<cols_a-j; k++) {
@@ -113,7 +113,7 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for nowait schedule(runtime)
     for (i=0; i<rows_a; i++) {
       for (k=0; k<cols_a; k++) {
         for(j=0; j<cols_b; j++) {
@@ -503,7 +503,7 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
 #if !defined(TAU_OPEN64ORC) && !defined(TAU_IBM_OMPT)
   // OpenUH and IBM don't handle the ordered test well.
-  printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
+  //printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
 #endif
   printf ("\n\nDoing sections: %d\n\n", sections()); fflush(stdout);
   printf ("\n\nDoing single: %d\n\n", single()); fflush(stdout);

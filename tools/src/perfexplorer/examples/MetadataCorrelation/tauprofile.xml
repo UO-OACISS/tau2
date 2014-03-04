@@ -1,0 +1,4794 @@
+<profile_xml>
+
+<definitions thread="*">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+<event id="0"><name>.TAU application</name><group>TAU_USER</group></event>
+<event id="1"><name>MPI_Allreduce()</name><group>MPI</group></event>
+<event id="2"><name>MPI_Barrier()</name><group>MPI</group></event>
+<event id="3"><name>MPI_Bcast()</name><group>MPI</group></event>
+<event id="4"><name>MPI_Comm_create()</name><group>MPI</group></event>
+<event id="5"><name>MPI_Comm_dup()</name><group>MPI</group></event>
+<event id="6"><name>MPI_Comm_free()</name><group>MPI</group></event>
+<event id="7"><name>MPI_Comm_group()</name><group>MPI</group></event>
+<event id="8"><name>MPI_Comm_rank()</name><group>MPI</group></event>
+<event id="9"><name>MPI_Comm_size()</name><group>MPI</group></event>
+<event id="10"><name>MPI_File_close()</name><group>MPI</group></event>
+<event id="11"><name>MPI_File_delete()</name><group>MPI</group></event>
+<event id="12"><name>MPI_File_get_info()</name><group>MPI</group></event>
+<event id="13"><name>MPI_File_open()</name><group>MPI</group></event>
+<event id="14"><name>MPI_File_read_all()</name><group>MPI</group></event>
+<event id="15"><name>MPI_File_read_at()</name><group>MPI</group></event>
+<event id="16"><name>MPI_File_set_view()</name><group>MPI</group></event>
+<event id="17"><name>MPI_File_write_at()</name><group>MPI</group></event>
+<event id="18"><name>MPI_Finalize()</name><group>MPI</group></event>
+<event id="19"><name>MPI_Group_incl()</name><group>MPI</group></event>
+<event id="20"><name>MPI_Info_create()</name><group>MPI</group></event>
+<event id="21"><name>MPI_Info_free()</name><group>MPI</group></event>
+<event id="22"><name>MPI_Init()</name><group>MPI</group></event>
+<event id="23"><name>MPI_Irecv()</name><group>MPI</group></event>
+<event id="24"><name>MPI_Isend()</name><group>MPI</group></event>
+<event id="25"><name>MPI_Recv()</name><group>MPI</group></event>
+<event id="26"><name>MPI_Rsend()</name><group>MPI</group></event>
+<event id="27"><name>MPI_Scatterv()</name><group>MPI</group></event>
+<event id="28"><name>MPI_Send()</name><group>MPI</group></event>
+<event id="29"><name>MPI_Status_set_elements()</name><group>MPI</group></event>
+<event id="30"><name>MPI_Type_commit()</name><group>MPI</group></event>
+<event id="31"><name>MPI_Type_contiguous()</name><group>MPI</group></event>
+<event id="32"><name>MPI_Type_create_indexed_block()</name><group>MPI</group></event>
+<event id="33"><name>MPI_Type_free()</name><group>MPI</group></event>
+<event id="34"><name>MPI_Type_get_contents()</name><group>MPI</group></event>
+<event id="35"><name>MPI_Type_get_envelope()</name><group>MPI</group></event>
+<event id="36"><name>MPI_Type_size()</name><group>MPI</group></event>
+<event id="37"><name>MPI_Wait()</name><group>MPI</group></event>
+<event id="38"><name>adv</name><group>TAU_USER</group></event>
+<event id="39"><name>coriolis</name><group>TAU_USER</group></event>
+<event id="40"><name>del2</name><group>TAU_USER</group></event>
+<event id="41"><name>del2_tensor</name><group>TAU_USER</group></event>
+<event id="42"><name>del4</name><group>TAU_USER</group></event>
+<event id="43"><name>del4_tensor</name><group>TAU_USER</group></event>
+<event id="44"><name>diagnostic block loop</name><group>TAU_USER</group></event>
+<event id="45"><name>diagnostic solve</name><group>TAU_USER</group></event>
+<event id="46"><name>diagnostics mpi</name><group>TAU_USER</group></event>
+<event id="47"><name>eos rich</name><group>TAU_USER</group></event>
+<event id="48"><name>equation of state</name><group>TAU_USER</group></event>
+<event id="49"><name>forcings</name><group>TAU_USER</group></event>
+<event id="50"><name>global diagnostics</name><group>TAU_USER</group></event>
+<event id="51"><name>hadv</name><group>TAU_USER</group></event>
+<event id="52"><name>hmix</name><group>TAU_USER</group></event>
+<event id="53"><name>initialize</name><group>TAU_USER</group></event>
+<event id="54"><name>leith</name><group>TAU_USER</group></event>
+<event id="55"><name>ocn_fuperp</name><group>TAU_USER</group></event>
+<event id="56"><name>ocn_tend_thick</name><group>TAU_USER</group></event>
+<event id="57"><name>ocn_tend_tracer</name><group>TAU_USER</group></event>
+<event id="58"><name>ocn_tend_vel</name><group>TAU_USER</group></event>
+<event id="59"><name>pressure grad</name><group>TAU_USER</group></event>
+<event id="60"><name>se bcl vel</name><group>TAU_USER</group></event>
+<event id="61"><name>se btr vel</name><group>TAU_USER</group></event>
+<event id="62"><name>se halo F</name><group>TAU_USER</group></event>
+<event id="63"><name>se halo diag</name><group>TAU_USER</group></event>
+<event id="64"><name>se halo normalBaroclinicVelocity</name><group>TAU_USER</group></event>
+<event id="65"><name>se halo normalBarotropicVelocity</name><group>TAU_USER</group></event>
+<event id="66"><name>se halo ssh</name><group>TAU_USER</group></event>
+<event id="67"><name>se halo thickness</name><group>TAU_USER</group></event>
+<event id="68"><name>se halo tracers</name><group>TAU_USER</group></event>
+<event id="69"><name>se implicit vert mix halos</name><group>TAU_USER</group></event>
+<event id="70"><name>se implicit vert mix</name><group>TAU_USER</group></event>
+<event id="71"><name>se prep</name><group>TAU_USER</group></event>
+<event id="72"><name>se timestep</name><group>TAU_USER</group></event>
+<event id="73"><name>short wave</name><group>TAU_USER</group></event>
+<event id="74"><name>surface flux</name><group>TAU_USER</group></event>
+<event id="75"><name>surface_flux</name><group>TAU_USER</group></event>
+<event id="76"><name>time integration</name><group>TAU_USER</group></event>
+<event id="77"><name>total time</name><group>TAU_USER</group></event>
+<event id="78"><name>vadv</name><group>TAU_USER</group></event>
+<userevent id="0"><name>MPI-IO Bytes Read</name></userevent>
+<userevent id="1"><name>MPI-IO Bytes Read</name></userevent>
+<userevent id="2"><name>MPI-IO Bytes Read : initialize =&gt; MPI_File_read_all()</name></userevent>
+<userevent id="3"><name>MPI-IO Bytes Read : initialize =&gt; MPI_File_read_at()</name></userevent>
+<userevent id="4"><name>MPI-IO Bytes Written</name></userevent>
+<userevent id="5"><name>MPI-IO Bytes Written : total time =&gt; MPI_File_write_at()</name></userevent>
+<userevent id="6"><name>MPI-IO Read Bandwidth (MB/s)</name></userevent>
+<userevent id="7"><name>MPI-IO Read Bandwidth (MB/s)</name></userevent>
+<userevent id="8"><name>MPI-IO Read Bandwidth (MB/s) : initialize =&gt; MPI_File_read_all()</name></userevent>
+<userevent id="9"><name>MPI-IO Read Bandwidth (MB/s) : initialize =&gt; MPI_File_read_at()</name></userevent>
+<userevent id="10"><name>MPI-IO Write Bandwidth (MB/s)</name></userevent>
+<userevent id="11"><name>MPI-IO Write Bandwidth (MB/s) : total time =&gt; MPI_File_write_at()</name></userevent>
+<userevent id="12"><name>Message size for all-reduce</name></userevent>
+<userevent id="13"><name>Message size for broadcast</name></userevent>
+<userevent id="14"><name>Message size for scatter</name></userevent>
+<userevent id="15"><name>Message size received from all nodes</name></userevent>
+<userevent id="16"><name>Message size received in wait</name></userevent>
+<userevent id="17"><name>Message size received in wait : initialize =&gt; MPI_Wait()  </name></userevent>
+<userevent id="18"><name>Message size received in wait : se halo F =&gt; MPI_Wait()  </name></userevent>
+<userevent id="19"><name>Message size received in wait : se halo diag =&gt; MPI_Wait()  </name></userevent>
+<userevent id="20"><name>Message size received in wait : se halo normalBaroclinicVelocity =&gt; MPI_Wait()  </name></userevent>
+<userevent id="21"><name>Message size received in wait : se halo normalBarotropicVelocity =&gt; MPI_Wait()  </name></userevent>
+<userevent id="22"><name>Message size received in wait : se halo ssh =&gt; MPI_Wait()  </name></userevent>
+<userevent id="23"><name>Message size received in wait : se halo thickness =&gt; MPI_Wait()  </name></userevent>
+<userevent id="24"><name>Message size received in wait : se halo tracers =&gt; MPI_Wait()  </name></userevent>
+<userevent id="25"><name>Message size received in wait : se implicit vert mix halos =&gt; MPI_Wait()  </name></userevent>
+<userevent id="26"><name>Message size received in wait : total time =&gt; MPI_Wait()  </name></userevent>
+<userevent id="27"><name>Message size sent to all nodes</name></userevent>
+<userevent id="28"><name>Message size sent to node 0</name></userevent>
+<userevent id="29"><name>Message size sent to node 0 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="30"><name>Message size sent to node 0 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="31"><name>Message size sent to node 0 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="32"><name>Message size sent to node 0 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="33"><name>Message size sent to node 0 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="34"><name>Message size sent to node 0 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="35"><name>Message size sent to node 0 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="36"><name>Message size sent to node 0 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="37"><name>Message size sent to node 0 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="38"><name>Message size sent to node 0 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="39"><name>Message size sent to node 0 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="40"><name>Message size sent to node 0 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="41"><name>Message size sent to node 0 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="42"><name>Message size sent to node 1</name></userevent>
+<userevent id="43"><name>Message size sent to node 1 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="44"><name>Message size sent to node 1 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="45"><name>Message size sent to node 1 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="46"><name>Message size sent to node 1 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="47"><name>Message size sent to node 1 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="48"><name>Message size sent to node 1 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="49"><name>Message size sent to node 1 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="50"><name>Message size sent to node 1 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="51"><name>Message size sent to node 1 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="52"><name>Message size sent to node 1 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="53"><name>Message size sent to node 1 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="54"><name>Message size sent to node 1 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="55"><name>Message size sent to node 1 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="56"><name>Message size sent to node 2</name></userevent>
+<userevent id="57"><name>Message size sent to node 2 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="58"><name>Message size sent to node 2 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="59"><name>Message size sent to node 2 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="60"><name>Message size sent to node 2 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="61"><name>Message size sent to node 2 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="62"><name>Message size sent to node 2 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="63"><name>Message size sent to node 2 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="64"><name>Message size sent to node 2 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="65"><name>Message size sent to node 2 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="66"><name>Message size sent to node 2 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="67"><name>Message size sent to node 2 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="68"><name>Message size sent to node 2 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="69"><name>Message size sent to node 2 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="70"><name>Message size sent to node 3</name></userevent>
+<userevent id="71"><name>Message size sent to node 3 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="72"><name>Message size sent to node 3 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="73"><name>Message size sent to node 3 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="74"><name>Message size sent to node 3 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="75"><name>Message size sent to node 3 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="76"><name>Message size sent to node 3 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="77"><name>Message size sent to node 3 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="78"><name>Message size sent to node 3 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="79"><name>Message size sent to node 3 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="80"><name>Message size sent to node 3 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="81"><name>Message size sent to node 3 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="82"><name>Message size sent to node 3 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="83"><name>Message size sent to node 3 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="84"><name>Message size sent to node 4</name></userevent>
+<userevent id="85"><name>Message size sent to node 4 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="86"><name>Message size sent to node 4 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="87"><name>Message size sent to node 4 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="88"><name>Message size sent to node 4 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="89"><name>Message size sent to node 4 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="90"><name>Message size sent to node 4 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="91"><name>Message size sent to node 4 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="92"><name>Message size sent to node 4 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="93"><name>Message size sent to node 4 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="94"><name>Message size sent to node 4 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="95"><name>Message size sent to node 4 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="96"><name>Message size sent to node 4 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="97"><name>Message size sent to node 4 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="98"><name>Message size sent to node 5</name></userevent>
+<userevent id="99"><name>Message size sent to node 5 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="100"><name>Message size sent to node 5 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="101"><name>Message size sent to node 5 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="102"><name>Message size sent to node 5 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="103"><name>Message size sent to node 5 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="104"><name>Message size sent to node 5 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="105"><name>Message size sent to node 5 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="106"><name>Message size sent to node 5 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="107"><name>Message size sent to node 5 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="108"><name>Message size sent to node 5 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="109"><name>Message size sent to node 5 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="110"><name>Message size sent to node 5 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="111"><name>Message size sent to node 5 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="112"><name>Message size sent to node 6</name></userevent>
+<userevent id="113"><name>Message size sent to node 6 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="114"><name>Message size sent to node 6 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="115"><name>Message size sent to node 6 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="116"><name>Message size sent to node 6 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="117"><name>Message size sent to node 6 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="118"><name>Message size sent to node 6 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="119"><name>Message size sent to node 6 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="120"><name>Message size sent to node 6 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="121"><name>Message size sent to node 6 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="122"><name>Message size sent to node 6 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="123"><name>Message size sent to node 6 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="124"><name>Message size sent to node 6 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="125"><name>Message size sent to node 6 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="126"><name>Message size sent to node 7</name></userevent>
+<userevent id="127"><name>Message size sent to node 7 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="128"><name>Message size sent to node 7 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="129"><name>Message size sent to node 7 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="130"><name>Message size sent to node 7 : se halo F =&gt; MPI_Isend()  </name></userevent>
+<userevent id="131"><name>Message size sent to node 7 : se halo diag =&gt; MPI_Isend()  </name></userevent>
+<userevent id="132"><name>Message size sent to node 7 : se halo normalBaroclinicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="133"><name>Message size sent to node 7 : se halo normalBarotropicVelocity =&gt; MPI_Isend()  </name></userevent>
+<userevent id="134"><name>Message size sent to node 7 : se halo ssh =&gt; MPI_Isend()  </name></userevent>
+<userevent id="135"><name>Message size sent to node 7 : se halo thickness =&gt; MPI_Isend()  </name></userevent>
+<userevent id="136"><name>Message size sent to node 7 : se halo tracers =&gt; MPI_Isend()  </name></userevent>
+<userevent id="137"><name>Message size sent to node 7 : se implicit vert mix halos =&gt; MPI_Isend()  </name></userevent>
+<userevent id="138"><name>Message size sent to node 7 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="139"><name>Message size sent to node 7 : total time =&gt; MPI_Send()  </name></userevent>
+<userevent id="140"><name>[GROUP=MAX_MARKER] MPI-IO Bytes Read</name></userevent>
+<userevent id="141"><name>[GROUP=MAX_MARKER] MPI-IO Bytes Read : initialize =&gt; MPI_File_read_all()</name></userevent>
+<userevent id="142"><name>[GROUP=MAX_MARKER] MPI-IO Read Bandwidth (MB/s)</name></userevent>
+<userevent id="143"><name>[GROUP=MAX_MARKER] MPI-IO Read Bandwidth (MB/s) : initialize =&gt; MPI_File_read_all()</name></userevent>
+<userevent id="144"><name>[GROUP=MAX_MARKER] MPI-IO Read Bandwidth (MB/s) : initialize =&gt; MPI_File_read_at()</name></userevent>
+<userevent id="145"><name>[GROUP=MAX_MARKER] Message size for all-reduce</name></userevent>
+<userevent id="146"><name>[GROUP=MAX_MARKER] Message size for all-reduce : diagnostics mpi =&gt; MPI_Allreduce()  </name></userevent>
+<userevent id="147"><name>[GROUP=MAX_MARKER] Message size for all-reduce : initialize =&gt; MPI_Allreduce()  </name></userevent>
+<userevent id="148"><name>[GROUP=MAX_MARKER] Message size for broadcast</name></userevent>
+<userevent id="149"><name>[GROUP=MAX_MARKER] Message size for broadcast : .TAU application =&gt; MPI_Bcast()  </name></userevent>
+<userevent id="150"><name>[GROUP=MAX_MARKER] Message size for broadcast : initialize =&gt; MPI_Bcast()  </name></userevent>
+<userevent id="151"><name>[GROUP=MAX_MARKER] Message size received from all nodes</name></userevent>
+<userevent id="152"><name>[GROUP=MAX_MARKER] Message size received from all nodes : initialize =&gt; MPI_Wait()  </name></userevent>
+<userevent id="153"><name>[GROUP=MAX_MARKER] Message size received in wait</name></userevent>
+<userevent id="154"><name>[GROUP=MAX_MARKER] Message size received in wait : initialize =&gt; MPI_Wait()  </name></userevent>
+<userevent id="155"><name>[GROUP=MAX_MARKER] Message size sent to all nodes</name></userevent>
+<userevent id="156"><name>[GROUP=MAX_MARKER] Message size sent to all nodes : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="157"><name>[GROUP=MAX_MARKER] Message size sent to all nodes : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="158"><name>[GROUP=MAX_MARKER] Message size sent to all nodes : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="159"><name>[GROUP=MAX_MARKER] Message size sent to node 0</name></userevent>
+<userevent id="160"><name>[GROUP=MAX_MARKER] Message size sent to node 0 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="161"><name>[GROUP=MAX_MARKER] Message size sent to node 0 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="162"><name>[GROUP=MAX_MARKER] Message size sent to node 0 : total time =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="163"><name>[GROUP=MAX_MARKER] Message size sent to node 1</name></userevent>
+<userevent id="164"><name>[GROUP=MAX_MARKER] Message size sent to node 1 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="165"><name>[GROUP=MAX_MARKER] Message size sent to node 1 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="166"><name>[GROUP=MAX_MARKER] Message size sent to node 1 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="167"><name>[GROUP=MAX_MARKER] Message size sent to node 2</name></userevent>
+<userevent id="168"><name>[GROUP=MAX_MARKER] Message size sent to node 2 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="169"><name>[GROUP=MAX_MARKER] Message size sent to node 2 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="170"><name>[GROUP=MAX_MARKER] Message size sent to node 3</name></userevent>
+<userevent id="171"><name>[GROUP=MAX_MARKER] Message size sent to node 3 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="172"><name>[GROUP=MAX_MARKER] Message size sent to node 3 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="173"><name>[GROUP=MAX_MARKER] Message size sent to node 4</name></userevent>
+<userevent id="174"><name>[GROUP=MAX_MARKER] Message size sent to node 4 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="175"><name>[GROUP=MAX_MARKER] Message size sent to node 4 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="176"><name>[GROUP=MAX_MARKER] Message size sent to node 5</name></userevent>
+<userevent id="177"><name>[GROUP=MAX_MARKER] Message size sent to node 5 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="178"><name>[GROUP=MAX_MARKER] Message size sent to node 5 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="179"><name>[GROUP=MAX_MARKER] Message size sent to node 6</name></userevent>
+<userevent id="180"><name>[GROUP=MAX_MARKER] Message size sent to node 6 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="181"><name>[GROUP=MAX_MARKER] Message size sent to node 6 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="182"><name>[GROUP=MAX_MARKER] Message size sent to node 7</name></userevent>
+<userevent id="183"><name>[GROUP=MAX_MARKER] Message size sent to node 7 : initialize =&gt; MPI_Isend()  </name></userevent>
+<userevent id="184"><name>[GROUP=MAX_MARKER] Message size sent to node 7 : initialize =&gt; MPI_Rsend()  </name></userevent>
+<userevent id="185"><name>[GROUP=MIN_MARKER] MPI-IO Bytes Read</name></userevent>
+<userevent id="186"><name>[GROUP=MIN_MARKER] MPI-IO Bytes Read : initialize =&gt; MPI_File_read_all()</name></userevent>
+<userevent id="187"><name>[GROUP=MIN_MARKER] MPI-IO Read Bandwidth (MB/s)</name></userevent>
+<userevent id="188"><name>[GROUP=MIN_MARKER] MPI-IO Read Bandwidth (MB/s) : initialize =&gt; MPI_File_read_all()</name></userevent>
+<userevent id="189"><name>[GROUP=MIN_MARKER] Message size received from all nodes</name></userevent>
+<userevent id="190"><name>[GROUP=MIN_MARKER] Message size received from all nodes : initialize =&gt; MPI_Wait()  </name></userevent>
+<userevent id="191"><name>[GROUP=MIN_MARKER] Message size received in wait</name></userevent>
+<userevent id="192"><name>[GROUP=MIN_MARKER] Message size received in wait : initialize =&gt; MPI_Wait()  </name></userevent>
+<userevent id="193"><name>[GROUP=MIN_MARKER] Message size sent to all nodes</name></userevent>
+<userevent id="194"><name>[GROUP=MIN_MARKER] Message size sent to all nodes : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="195"><name>[GROUP=MIN_MARKER] Message size sent to node 0</name></userevent>
+<userevent id="196"><name>[GROUP=MIN_MARKER] Message size sent to node 0 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="197"><name>[GROUP=MIN_MARKER] Message size sent to node 1</name></userevent>
+<userevent id="198"><name>[GROUP=MIN_MARKER] Message size sent to node 1 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="199"><name>[GROUP=MIN_MARKER] Message size sent to node 2</name></userevent>
+<userevent id="200"><name>[GROUP=MIN_MARKER] Message size sent to node 2 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="201"><name>[GROUP=MIN_MARKER] Message size sent to node 3</name></userevent>
+<userevent id="202"><name>[GROUP=MIN_MARKER] Message size sent to node 3 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="203"><name>[GROUP=MIN_MARKER] Message size sent to node 4</name></userevent>
+<userevent id="204"><name>[GROUP=MIN_MARKER] Message size sent to node 4 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="205"><name>[GROUP=MIN_MARKER] Message size sent to node 5</name></userevent>
+<userevent id="206"><name>[GROUP=MIN_MARKER] Message size sent to node 5 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="207"><name>[GROUP=MIN_MARKER] Message size sent to node 6</name></userevent>
+<userevent id="208"><name>[GROUP=MIN_MARKER] Message size sent to node 6 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="209"><name>[GROUP=MIN_MARKER] Message size sent to node 7</name></userevent>
+<userevent id="210"><name>[GROUP=MIN_MARKER] Message size sent to node 7 : initialize =&gt; MPI_Send()  </name></userevent>
+<userevent id="211"><name>nCells</name></userevent>
+<userevent id="212"><name>nCells : ocn_tend_tracer =&gt; adv</name></userevent>
+<userevent id="213"><name>nCellsSolve</name></userevent>
+<userevent id="214"><name>nCellsSolve : ocn_tend_tracer =&gt; adv</name></userevent>
+<userevent id="215"><name>nEdges</name></userevent>
+<userevent id="216"><name>nEdges : ocn_tend_tracer =&gt; adv</name></userevent>
+
+</definitions>
+</profile_xml>
+<profile_xml>
+
+<thread id="1.0.0.20497" node="1" context="0" thread="0">
+<metadata>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871842346</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871842415</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>349</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>224</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1129</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20497</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="1.0.0.20497">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="1.0.0.20497">
+<timestamp>1386218888893418</timestamp>
+<interval_data metrics="0 ">
+0 1 243 1519 17050695 
+1 266 0 365206 365206 
+2 29 0 612 612 
+3 1380 0 110927 110927 
+4 1 0 213 213 
+5 3 0 2137 2137 
+6 4 0 20 20 
+7 1 0 3 3 
+8 65 0 18 18 
+9 61 0 16 16 
+10 3 0 316 316 
+12 3 0 26 26 
+13 3 0 5005 5005 
+14 62 62 23040 23062 
+16 124 0 219119 219119 
+18 1 0 1071 1071 
+19 1 0 12 12 
+20 1 0 8 8 
+21 4 0 7 7 
+22 1 0 29424 29424 
+23 162850 0 62305 62305 
+24 162308 0 272374 272374 
+25 58 0 1612 1612 
+26 294 0 2536 2536 
+27 2 0 13 13 
+28 306 0 3891 3891 
+29 62 0 22 22 
+30 75 0 91 91 
+31 33 0 80 80 
+32 42 0 479 479 
+33 73 0 107 107 
+34 1 0 4 4 
+35 63 0 39 39 
+36 62 0 8 8 
+37 325158 0 3082368 3082368 
+38 240 0 2529150 2529150 
+39 240 0 368299 368299 
+40 480 0 399 399 
+41 240 0 191 191 
+42 480 0 121777 121777 
+43 240 0 191 191 
+44 11 0 12005 12005 
+45 1 1 3896 4846 
+46 11 44 228 27447 
+47 120 0 80558 80558 
+48 481 0 608366 608366 
+49 240 0 216267 216267 
+50 11 22 332 39784 
+51 240 0 30775 30775 
+52 480 1680 19438 142147 
+53 1 4843 109717 544975 
+54 240 0 151 151 
+55 360 0 247069 247069 
+56 240 720 6748 54929 
+57 240 960 73304 2667910 
+58 240 1200 25210 828074 
+59 240 0 31870 31870 
+60 240 960 373381 1590546 
+61 240 38640 3335551 5381608 
+62 240 3840 3736 10541 
+63 240 11520 106290 1602661 
+64 360 5760 54664 142022 
+65 28800 460800 495726 1555802 
+66 9600 153600 119279 479714 
+67 240 3840 13958 44564 
+68 240 3840 64521 212251 
+69 120 3840 50718 227060 
+70 120 360 918035 1367262 
+71 120 0 245663 245663 
+72 120 2280 2351120 15984321 
+73 240 0 40806 40806 
+74 240 0 12938 12938 
+75 240 0 23576 23576 
+76 120 130 7484 16008323 
+77 1 1292 112857 17012141 
+78 480 0 49823 49823 
+</interval_data>
+<atomic_data>
+0 62 920640 0 14849.03225806452 847578009600
+2 62 920640 0 14849.03225806452 847578009600
+6 62 42.26415094339622 0 0.6816798539257456 1786.25845496618
+8 62 42.26415094339622 0 0.6816798539257456 1786.25845496618
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+15 162908 255512 4 1809.240921256169 8030954279088
+16 162850 255512 4 1809.882443966841 8030954275376
+17 956 249280 4 2920.824267782427 258195797616
+18 960 1512 248 848 953825280
+19 2880 60480 2240 22560 2391146496000
+20 1440 60480 9920 33920 2289180672000
+21 115200 1512 248 848 114459033600
+22 38400 480 56 250 3516211200
+23 960 19200 2240 10000 140648448000
+24 960 57600 6720 30000 1265836032000
+25 960 60480 6720 31960 1395978240000
+26 134 255512 4 7046.029850746268 171039519680
+27 162908 249280 4 1962.495936356717 9175706261664
+28 40722 225600 4 3750.860861450813 6010058226736
+29 77 71040 80 4390.337662337663 12021366656
+30 83 112800 4 6297.975903614458 41453884816
+31 82 4 4 4 1312
+32 240 1776 1776 1776 757002240
+33 720 71040 20160 47360 1930051584000
+34 360 71040 71040 71040 1816805376000
+35 28800 1776 1776 1776 90840268800
+36 9600 504 504 504 2438553600
+37 240 20160 20160 20160 97542144000
+38 240 60480 60480 60480 877879296000
+39 240 71040 60480 65760 1044541440000
+40 32 225600 4 20574 95727309184
+41 8 4 4 4 128
+42 32 131856 4 12164.125 50482504400
+45 23 128640 4 11189.73913043478 33096499536
+55 9 131856 4 14654.22222222222 17386004864
+56 40802 121920 4 825.9285329150532 301953073792
+57 301 15680 4 505.3023255813953 717345472
+58 22 121920 4 5545.636363636364 14864486736
+59 22 4 4 4 352
+60 240 392 392 392 36879360
+61 720 15680 4480 10453.33333333333 93929472000
+62 360 15680 15680 15680 88510464000
+63 28800 392 392 392 4425523200
+64 9600 112 112 112 120422400
+65 240 4480 4480 4480 4816896000
+66 240 13440 13440 13440 43352064000
+67 240 15680 13440 14560 51179520000
+68 8 4 4 4 128
+69 9 4 4 4 144
+70 40577 222720 4 2357.628705917145 2385989364464
+71 76 44160 52 2820.78947368421 4842166064
+72 22 222720 4 10127.45454545455 49604198736
+73 22 4 4 4 352
+74 240 1104 1104 1104 292515840
+75 720 44160 13120 29866.66666666667 760037376000
+76 360 44160 44160 44160 702038016000
+77 28800 1104 1104 1104 35101900800
+78 9600 328 328 328 1032806400
+79 240 13120 13120 13120 41312256000
+80 240 39360 39360 39360 371810304000
+81 240 44160 39360 41760 419917824000
+82 8 4 4 4 128
+83 9 4 4 4 144
+84 40577 249280 4 911.6918451339428 407561480608
+85 76 17600 8 1076.315789473684 677050848
+86 22 249280 4 11334.72727272727 62140518736
+87 22 4 4 4 352
+88 240 440 440 440 46464000
+89 720 17600 4480 11733.33333333333 120471552000
+90 360 17600 17600 17600 111513600000
+91 28800 440 440 440 5575680000
+92 9600 112 112 112 120422400
+93 240 4480 4480 4480 4816896000
+94 240 13440 13440 13440 43352064000
+95 240 17600 13440 15520 58847232000
+96 8 4 4 4 128
+97 9 4 4 4 144
+98 67 95680 4 1501.850746268657 9158992288
+99 6 1056 84 784 4328928
+100 22 95680 4 4352.909090909091 9154662736
+101 22 4 4 4 352
+110 8 4 4 4 128
+111 9 4 4 4 144
+112 67 102400 4 1610.029850746269 10491622464
+113 6 1280 128 872 5861504
+114 22 102400 4 4658.363636363636 10485760336
+115 22 4 4 4 352
+124 8 4 4 4 128
+125 9 4 4 4 144
+126 64 2328 4 112.9375 10996912
+127 6 2328 132 1166 10995984
+128 21 4 4 4 336
+129 21 4 4 4 336
+138 8 4 4 4 128
+139 8 4 4 4 128
+140 1 920640 920640 920640 847578009600
+141 1 920640 920640 920640 847578009600
+142 1 42.26415094339622 42.26415094339622 42.26415094339622 1786.25845496618
+143 1 42.26415094339622 42.26415094339622 42.26415094339622 1786.25845496618
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 222720 900 90315 66234258000
+152 4 222720 900 90315 66234258000
+153 4 222720 900 90315 66234258000
+154 4 222720 900 90315 66234258000
+155 5 222720 1800 88568 71617710400
+156 4 222720 1800 78550 55069460800
+157 1 128640 128640 128640 16548249600
+159 4 225600 1800 79270 56360622400
+160 3 71680 1800 30493.33333333333 5465262400
+162 1 225600 225600 225600 50895360000
+163 1 128640 128640 128640 16548249600
+166 1 128640 128640 128640 16548249600
+167 3 121920 896 41917.33333333334 14873909312
+168 2 2936 896 1916 9422912
+169 1 121920 121920 121920 14864486400
+170 3 222720 100 74606.66666666667 49605208400
+171 2 1000 100 550 1010000
+172 1 222720 222720 222720 49604198400
+173 3 249280 88 83416 62141300544
+174 2 880 88 484 782144
+175 1 249280 249280 249280 62140518400
+176 3 95680 84 32201.33333333333 9155375056
+177 2 840 84 462 712656
+178 1 95680 95680 95680 9154662400
+179 3 102400 128 34602.66666666666 10487414784
+180 2 1280 128 704 1654784
+181 1 102400 102400 102400 10485760000
+182 3 2328 132 1260 7179408
+183 3 2328 132 1260 7179408
+189 1 4 4 4 16
+190 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+211 240 349 349 349 29232240
+212 240 349 349 349 29232240
+213 240 224 224 224 12042240
+214 240 224 224 224 12042240
+215 240 1129 1129 1129 305913840
+216 240 1129 1129 1129 305913840
+</atomic_data>
+</profile>
+
+</profile_xml>
+ <profile_xml>
+
+<thread id="2.0.0.20498" node="2" context="0" thread="0">
+<metadata>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871842348</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871842415</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>378</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>224</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1267</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20498</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="2.0.0.20498">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="2.0.0.20498">
+<timestamp>1386218888893418</timestamp>
+<interval_data metrics="0 ">
+0 1 231 1553 17050706 
+1 266 0 365021 365021 
+2 29 0 648 648 
+3 1380 0 107412 107412 
+4 1 0 206 206 
+5 3 0 720 720 
+6 4 0 15 15 
+7 1 0 3 3 
+8 65 0 41 41 
+9 61 0 22 22 
+10 3 0 279 279 
+12 3 0 30 30 
+13 3 0 5002 5002 
+14 62 62 1202 1227 
+16 124 0 241945 241945 
+18 1 0 1071 1071 
+19 1 0 27 27 
+20 1 0 9 9 
+21 4 0 8 8 
+22 1 0 29469 29469 
+23 203347 0 67409 67409 
+24 202818 0 309128 309128 
+25 58 0 1493 1493 
+26 291 0 2920 2920 
+27 2 0 9 9 
+28 294 0 3459 3459 
+29 62 0 25 25 
+30 59 0 43 43 
+31 29 0 68 68 
+32 30 0 71 71 
+33 59 0 80 80 
+35 62 0 29 29 
+36 62 0 16 16 
+37 406165 0 3054919 3054919 
+38 240 0 2370939 2370939 
+39 240 0 279666 279666 
+40 480 0 399 399 
+41 240 0 177 177 
+42 480 0 139056 139056 
+43 240 0 181 181 
+44 11 0 10989 10989 
+45 1 1 4094 5286 
+46 11 44 219 27627 
+47 120 0 73557 73557 
+48 481 0 603278 603278 
+49 240 0 175236 175236 
+50 11 22 261 38877 
+51 240 0 29903 29903 
+52 480 1680 25287 165258 
+53 1 5078 142605 544915 
+54 240 0 158 158 
+55 360 0 197539 197539 
+56 240 720 5354 51456 
+57 240 960 73509 2507996 
+58 240 1200 22777 707324 
+59 240 0 27775 27775 
+60 240 960 345640 1587255 
+61 240 38640 3615412 5392746 
+62 240 4800 4378 9357 
+63 240 14400 111113 1591487 
+64 360 7200 62895 336752 
+65 28800 576000 587570 1381834 
+66 9600 192000 136672 386143 
+67 240 4800 15180 48838 
+68 240 4800 72611 411367 
+69 120 4800 57287 281870 
+70 120 360 885339 1385249 
+71 120 0 255207 255207 
+72 120 2280 2293638 15982842 
+73 240 0 40516 40516 
+74 240 0 11333 11333 
+75 240 0 22072 22072 
+76 120 130 7901 16008221 
+77 1 1260 106193 17012108 
+78 480 0 42438 42438 
+</interval_data>
+<atomic_data>
+0 62 0 0 0 0
+2 62 0 0 0 0
+6 62 0 0 0 0
+8 62 0 0 0 0
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+15 203405 121920 4 1814.675922420786 9136791768720
+16 203347 121920 4 1815.191234687505 9136791765008
+17 1018 121920 4 2015.143418467583 100575248384
+18 1200 1576 392 860.8 1152399360
+19 3600 63040 4480 22933.33333333333 2913804288000
+20 1800 63040 15680 34432 2765758464000
+21 144000 1576 392 860.8 138287923200
+22 48000 472 112 246.4 3950592000
+23 1200 18880 4480 9856 158023680000
+24 1200 56640 13440 29568 1422213120000
+25 1200 63040 13440 32000 1633026048000
+26 129 4 4 4 2064
+27 203403 233280 4 1808.038072201492 9522359034816
+28 40721 233280 4 2539.034994229022 2820819619120
+29 76 47680 52 2992.421052631579 5495106496
+30 83 116640 4 6585.012048192771 46247078544
+31 82 4 4 4 1312
+32 240 1192 1192 1192 341007360
+33 720 47680 13760 31893.33333333333 872423424000
+34 360 47680 47680 47680 818417664000
+35 28800 1192 1192 1192 40920883200
+36 9600 344 344 344 1136025600
+37 240 13760 13760 13760 45441024000
+38 240 41280 41280 41280 408969216000
+39 240 47680 41280 44480 477290496000
+40 32 233280 4 21463.25 104137692480
+41 8 4 4 4 128
+42 40578 124968 4 912.6134358519395 376765733616
+43 77 17280 16 1117.194805194805 705196288
+44 22 121920 4 5545.636363636364 14864486736
+45 22 4 4 4 352
+46 240 432 432 432 44789760
+47 720 17280 4800 11626.66666666667 116514816000
+48 360 17280 17280 17280 107495424000
+49 28800 432 432 432 5374771200
+50 9600 120 120 120 138240000
+51 240 4800 4800 4800 5529600000
+52 240 14400 14400 14400 49766400000
+53 240 17280 14400 15840 60715008000
+54 9 124968 4 13888.88888888889 15617001152
+55 8 4 4 4 128
+56 29 4 4 4 464
+59 21 4 4 4 336
+69 8 4 4 4 128
+70 40798 67520 4 3537.943036423354 5325048810176
+71 300 67520 4 1321.493333333333 11007347488
+72 21 4 4 4 336
+73 21 4 4 4 336
+74 240 1688 1688 1688 683842560
+75 720 67520 19200 45226.66666666666 1757921280000
+76 360 67520 67520 67520 1641222144000
+77 28800 1688 1688 1688 82061107200
+78 9600 480 480 480 2211840000
+79 240 19200 19200 19200 88473600000
+80 240 57600 57600 57600 796262400000
+81 240 67520 57600 62560 945205248000
+82 8 4 4 4 128
+83 8 4 4 4 128
+84 63 1080 4 73.77777777777777 4652416
+85 5 1080 108 883.2 4651488
+86 21 4 4 4 336
+87 21 4 4 4 336
+96 8 4 4 4 128
+97 8 4 4 4 128
+98 64 1440 4 108.5625 8841584
+99 6 1440 144 1119.333333333333 8840656
+100 21 4 4 4 336
+101 21 4 4 4 336
+110 8 4 4 4 128
+111 8 4 4 4 128
+112 40575 27520 4 1399.264670363524 823367565776
+113 77 27520 20 1602.753246753247 1599024688
+114 21 4 4 4 336
+115 21 4 4 4 336
+116 240 688 688 688 113602560
+117 720 27520 6720 18026.66666666667 287072256000
+118 360 27520 27520 27520 272646144000
+119 28800 688 688 688 13632307200
+120 9600 168 168 168 270950400
+121 240 6720 6720 6720 10838016000
+122 240 20160 20160 20160 97542144000
+123 240 27520 20160 23840 139653120000
+124 8 4 4 4 128
+125 8 4 4 4 128
+126 40575 12160 4 645.9253234750462 176343811664
+127 77 12160 12 800.3636363636364 361771696
+128 21 4 4 4 336
+129 21 4 4 4 336
+130 240 304 304 304 22179840
+131 720 12160 3520 8320 59129856000
+132 360 12160 12160 12160 53231616000
+133 28800 304 304 304 2661580800
+134 9600 88 88 88 74342400
+135 240 3520 3520 3520 2973696000
+136 240 10560 10560 10560 26763264000
+137 240 12160 10560 11360 31125504000
+138 8 4 4 4 128
+139 8 4 4 4 128
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 111360 896 48224 17620156416
+152 4 111360 896 48224 17620156416
+153 4 111360 896 48224 17620156416
+154 4 111360 896 48224 17620156416
+155 5 233280 1792 87206.39999999999 72282968064
+156 4 111360 1792 50688 17863409664
+158 1 233280 233280 233280 54419558400
+159 5 233280 1792 87206.39999999999 72282968064
+160 4 111360 1792 50688 17863409664
+162 1 233280 233280 233280 54419558400
+163 3 121920 132 41124 14866246224
+164 2 1320 132 726 1759824
+165 1 121920 121920 121920 14864486400
+170 4 57600 896 15878 3331743552
+171 4 57600 896 15878 3331743552
+173 2 1080 108 594 1178064
+174 2 1080 108 594 1178064
+176 2 1440 144 792 2094336
+177 2 1440 144 792 2094336
+179 4 20160 72 5562 408628800
+180 4 20160 72 5562 408628800
+182 3 10560 88 3842.666666666667 112295744
+183 3 10560 88 3842.666666666667 112295744
+189 1 4 4 4 16
+190 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+211 240 378 378 378 34292160
+212 240 378 378 378 34292160
+213 240 224 224 224 12042240
+214 240 224 224 224 12042240
+215 240 1267 1267 1267 385269360
+216 240 1267 1267 1267 385269360
+</atomic_data>
+</profile>
+
+</profile_xml>
+ <profile_xml>
+
+<thread id="3.0.0.20499" node="3" context="0" thread="0">
+<metadata>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871844421</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871844502</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>324</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>223</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1045</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20499</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="3.0.0.20499">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="3.0.0.20499">
+<timestamp>1386218888893413</timestamp>
+<interval_data metrics="0 ">
+0 1 229 869 17048594 
+1 266 0 392433 392433 
+2 29 0 684 684 
+3 1380 0 115635 115635 
+4 1 0 223 223 
+5 3 0 2140 2140 
+6 4 0 15 15 
+7 1 0 3 3 
+8 65 0 24 24 
+9 61 0 9 9 
+10 3 0 273 273 
+12 3 0 23 23 
+13 3 0 5002 5002 
+14 62 62 1194 1218 
+16 124 0 241780 241780 
+18 1 0 1108 1108 
+19 1 0 8 8 
+20 1 0 6 6 
+21 4 0 7 7 
+22 1 0 27340 27340 
+23 81804 0 36940 36940 
+24 81286 0 167110 167110 
+25 58 0 1781 1781 
+26 289 0 2366 2366 
+27 2 0 17 17 
+28 293 0 2231 2231 
+29 62 0 24 24 
+30 57 0 28 28 
+31 29 0 68 68 
+32 28 0 36 36 
+33 57 0 47 47 
+35 62 0 23 23 
+36 62 0 9 9 
+37 163090 0 4637184 4637184 
+38 240 0 2387260 2387260 
+39 240 0 325183 325183 
+40 480 0 497 497 
+41 240 0 184 184 
+42 480 0 114064 114064 
+43 240 0 172 172 
+44 11 0 12190 12190 
+45 1 1 3346 4306 
+46 11 44 236 43414 
+47 120 0 74474 74474 
+48 481 0 527974 527974 
+49 240 0 217421 217421 
+50 11 22 294 55898 
+51 240 0 29062 29062 
+52 480 1680 15856 130909 
+53 1 4206 91870 544972 
+54 240 0 136 136 
+55 360 0 237443 237443 
+56 240 720 6190 50516 
+57 240 960 57438 2504911 
+58 240 1200 21414 761597 
+59 240 0 25507 25507 
+60 240 960 331986 1560657 
+61 240 38640 3010252 5394023 
+62 240 1920 2198 11063 
+63 240 5760 66466 1898113 
+64 360 2880 39798 229631 
+65 28800 230400 328924 1840224 
+66 9600 76800 72390 532484 
+67 240 1920 9588 83566 
+68 240 1920 47275 285648 
+69 120 1920 38247 506062 
+70 120 360 820634 1526021 
+71 120 0 228944 228944 
+72 120 2280 2041540 15976102 
+73 240 0 38119 38119 
+74 240 0 10682 10682 
+75 240 0 21089 21089 
+76 120 130 7069 16011855 
+77 1 1255 101792 17012143 
+78 480 0 46750 46750 
+</interval_data>
+<atomic_data>
+0 62 0 0 0 0
+2 62 0 0 0 0
+6 62 0 0 0 0
+8 62 0 0 0 0
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+15 81862 222720 4 2942.963866018421 7763498335632
+16 81804 222720 4 2945.04478998582 7763498331920
+17 796 222720 4 2190.266331658292 117913869072
+18 480 1688 1104 1396 976358400
+19 1440 67520 13120 37546.66666666666 2517958656000
+20 720 67520 44160 55840 2343260160000
+21 57600 1688 1104 1396 117163008000
+22 19200 480 328 404 3244646400
+23 480 19200 13120 16160 129785856000
+24 480 57600 39360 48480 1168072704000
+25 480 67520 39360 52160 1365123072000
+26 128 4 4 4 2048
+27 81868 228288 4 2929.200273611179 7621333634336
+28 208 222720 4 4692.98076923077 114232856560
+29 6 1296 100 775.3333333333334 4755152
+30 82 111360 4 5135.170731707317 31331301648
+31 81 4 4 4 1296
+40 31 222720 4 17743.48387096774 82896798336
+41 8 4 4 4 128
+42 40578 228288 4 2532.592636403963 2774153948384
+43 77 48000 52 2985.714285714286 5538056496
+44 22 222720 4 10127.45454545455 49604198736
+45 22 4 4 4 352
+46 240 1200 1200 1200 345600000
+47 720 48000 13760 31573.33333333333 859127808000
+48 360 48000 48000 48000 829440000000
+49 28800 1200 1200 1200 41472000000
+50 9600 344 344 344 1136025600
+51 240 13760 13760 13760 45441024000
+52 240 41280 41280 41280 408969216000
+53 240 48000 41280 44640 480964608000
+54 9 228288 4 25368.88888888889 52115411072
+55 8 4 4 4 128
+56 40575 63040 4 3351.133752310536 4732805516400
+57 77 63040 72 4033.506493506493 9950670032
+58 21 4 4 4 336
+59 21 4 4 4 336
+60 240 1576 1576 1576 596106240
+61 720 63040 18880 41920 1500585984000
+62 360 63040 63040 63040 1430654976000
+63 28800 1576 1576 1576 71532748800
+64 9600 472 472 472 2138726400
+65 240 18880 18880 18880 85549056000
+66 240 56640 56640 56640 769941504000
+67 240 63040 56640 59840 861855744000
+68 8 4 4 4 128
+69 8 4 4 4 128
+70 29 4 4 4 464
+73 21 4 4 4 336
+83 8 4 4 4 128
+84 287 3124 4 271.7212543554007 127662848
+85 229 3124 4 339.528384279476 127661920
+86 21 4 4 4 336
+87 21 4 4 4 336
+96 8 4 4 4 128
+97 8 4 4 4 128
+98 64 1008 4 69.25 3837664
+99 6 1008 96 700 3836736
+100 21 4 4 4 336
+101 21 4 4 4 336
+110 8 4 4 4 128
+111 8 4 4 4 128
+112 64 1680 4 103.625 8218880
+113 6 1680 124 1066.666666666667 8217952
+114 21 4 4 4 336
+115 21 4 4 4 336
+124 8 4 4 4 128
+125 8 4 4 4 128
+126 63 948 4 42.34920634920635 1593136
+127 5 948 48 487.2 1592208
+128 21 4 4 4 336
+129 21 4 4 4 336
+138 8 4 4 4 128
+139 8 4 4 4 128
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 222720 896 75984 54777532416
+152 4 222720 896 75984 54777532416
+153 4 222720 896 75984 54777532416
+154 4 222720 896 75984 54777532416
+155 4 222720 1792 78448 55020785664
+156 4 222720 1792 78448 55020785664
+159 5 222720 1792 85030.39999999999 67421835264
+160 4 111360 1792 50608 17817636864
+162 1 222720 222720 222720 49604198400
+163 3 222720 108 74636 49605376464
+164 2 1080 108 594 1178064
+165 1 222720 222720 222720 49604198400
+167 3 56640 228 19716 3213339984
+168 3 56640 228 19716 3213339984
+173 2 2920 892 1906 9322064
+174 2 2920 892 1906 9322064
+176 2 960 96 528 930816
+177 2 960 96 528 930816
+179 2 1240 124 682 1552976
+180 2 1240 124 682 1552976
+182 3 948 48 492 1131408
+183 3 948 48 492 1131408
+189 1 4 4 4 16
+190 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+211 240 324 324 324 25194240
+212 240 324 324 324 25194240
+213 240 223 223 223 11934960
+214 240 223 223 223 11934960
+215 240 1045 1045 1045 262086000
+216 240 1045 1045 1045 262086000
+</atomic_data>
+</profile>
+
+</profile_xml>
+ <profile_xml>
+
+<thread id="4.0.0.20500" node="4" context="0" thread="0">
+<metadata>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871844995</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871845070</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>290</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>230</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1002</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20500</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="4.0.0.20500">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="4.0.0.20500">
+<timestamp>1386218888893413</timestamp>
+<interval_data metrics="0 ">
+0 1 229 935 17048040 
+1 266 0 406177 406177 
+2 29 0 689 689 
+3 1380 0 99244 99244 
+4 1 0 220 220 
+5 3 0 2140 2140 
+6 4 0 14 14 
+7 1 0 2 2 
+8 65 0 20 20 
+9 61 0 24 24 
+10 3 0 227 227 
+12 3 0 30 30 
+13 3 0 4996 4996 
+14 62 62 1134 1159 
+16 124 0 240354 240354 
+18 1 0 1095 1095 
+19 1 0 6 6 
+20 1 0 6 6 
+21 4 0 6 6 
+22 1 0 26834 26834 
+23 81808 0 38983 38983 
+24 81285 0 159020 159020 
+25 58 0 1786 1786 
+26 289 0 2656 2656 
+27 2 0 17 17 
+28 293 0 2475 2475 
+29 62 0 25 25 
+30 57 0 43 43 
+31 29 0 75 75 
+32 28 0 49 49 
+33 57 0 52 52 
+35 62 0 31 31 
+36 62 0 10 10 
+37 163093 0 6762462 6762462 
+38 240 0 1673132 1673132 
+39 240 0 265032 265032 
+40 480 0 372 372 
+41 240 0 185 185 
+42 480 0 91625 91625 
+43 240 0 193 193 
+44 11 0 13202 13202 
+45 1 1 2628 3340 
+46 11 44 265 67615 
+47 120 0 62088 62088 
+48 481 0 405240 405240 
+49 240 0 171804 171804 
+50 11 22 304 81121 
+51 240 0 24908 24908 
+52 480 1680 11816 104360 
+53 1 4212 119349 544968 
+54 240 0 169 169 
+55 360 0 190798 190798 
+56 240 720 4628 43515 
+57 240 960 48506 1769880 
+58 240 1200 21376 619479 
+59 240 0 21668 21668 
+60 240 960 249641 1579738 
+61 240 38640 2704003 5369939 
+62 240 1920 1931 12993 
+63 240 5760 47258 2188894 
+64 360 2880 27087 519820 
+65 28800 230400 281599 2061787 
+66 9600 76800 67348 591156 
+67 240 1920 7393 116983 
+68 240 1920 28581 1029930 
+69 120 1920 25292 902819 
+70 120 360 654088 1720949 
+71 120 0 200902 200902 
+72 120 2280 1645983 15969287 
+73 240 0 30853 30853 
+74 240 0 9571 9571 
+75 240 0 16402 16402 
+76 120 130 6913 16022345 
+77 1 1255 121436 17012136 
+78 480 0 40634 40634 
+</interval_data>
+<atomic_data>
+0 62 0 0 0 0
+2 62 0 0 0 0
+6 62 0 0 0 0
+8 62 0 0 0 0
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+15 81866 249280 4 1854.396110717514 3773748908096
+16 81808 249280 4 1855.705163309212 3773748904384
+17 800 249280 4 2028.57 128488988096
+18 480 1344 440 892 479984640
+19 1440 53760 4480 23733.33333333333 1225924608000
+20 720 53760 17600 35680 1151963136000
+21 57600 1344 440 892 57598156800
+22 19200 368 112 240 1420492800
+23 480 14720 4480 9600 56819712000
+24 480 44160 13440 28800 511377408000
+25 480 53760 13440 32240 639676416000
+26 128 4 4 4 2048
+27 81867 255512 4 1599.28806478801 3422711635760
+28 207 249280 4 5182.338164251208 142603379552
+29 5 1440 144 969.6 6388992
+30 82 124640 4 5589.024390243902 38095290256
+31 81 4 4 4 1296
+40 31 249280 4 19652.90322580645 104501698880
+41 8 4 4 4 128
+42 40578 255512 4 513.7774163339741 234322966064
+43 77 9920 4 606.6493506493506 201802816
+44 22 249280 4 11334.72727272727 62140518736
+45 22 4 4 4 352
+46 240 248 248 248 14760960
+47 720 9920 2240 6720 40181760000
+48 360 9920 9920 9920 35426304000
+49 28800 248 248 248 1771315200
+50 9600 56 56 56 30105600
+51 240 2240 2240 2240 1204224000
+52 240 6720 6720 6720 10838016000
+53 240 9920 6720 8320 17227776000
+54 9 255512 4 28393.77777777778 65286382272
+55 8 4 4 4 128
+56 64 1256 4 41.5 2107104
+57 6 1256 16 404 2106176
+58 21 4 4 4 336
+59 21 4 4 4 336
+68 8 4 4 4 128
+69 8 4 4 4 128
+70 63 880 4 55.87301587301587 2645472
+71 5 880 88 657.6 2644544
+72 21 4 4 4 336
+73 21 4 4 4 336
+82 8 4 4 4 128
+83 8 4 4 4 128
+84 29 4 4 4 464
+87 21 4 4 4 336
+97 8 4 4 4 128
+98 40799 52480 4 2671.329689453173 3045759576048
+99 301 52480 4 1022.152823920266 5929313360
+100 21 4 4 4 336
+101 21 4 4 4 336
+102 240 1312 1312 1312 413122560
+103 720 52480 12800 35306.66666666666 1096704000000
+104 360 52480 52480 52480 991494144000
+105 28800 1312 1312 1312 49574707200
+106 9600 320 320 320 983040000
+107 240 12800 12800 12800 39321600000
+108 240 38400 38400 38400 353894400000
+109 240 52480 38400 45440 507445248000
+110 8 4 4 4 128
+111 8 4 4 4 128
+112 64 1480 4 111.375 9386496
+113 6 1480 148 1149.333333333333 9385568
+114 21 4 4 4 336
+115 21 4 4 4 336
+124 8 4 4 4 128
+125 8 4 4 4 128
+126 63 1840 4 112.8888888888889 11574560
+127 5 1840 184 1376 11573632
+128 21 4 4 4 336
+129 21 4 4 4 336
+138 8 4 4 4 128
+139 8 4 4 4 128
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 249280 896 83184 67638562816
+152 4 249280 896 83184 67638562816
+153 4 249280 896 83184 67638562816
+154 4 249280 896 83184 67638562816
+155 4 249280 1792 85648 67881816064
+156 4 249280 1792 85648 67881816064
+159 5 249280 1792 93446.39999999999 83416945664
+160 4 124640 1792 54488 21276427264
+162 1 249280 249280 249280 62140518400
+163 4 249280 96 62984 62144009216
+164 3 1600 96 885.3333333333334 3490816
+165 1 249280 249280 249280 62140518400
+167 3 1256 16 477.3333333333333 1603392
+168 3 1256 16 477.3333333333333 1603392
+170 2 880 88 484 782144
+171 2 880 88 484 782144
+176 3 38400 920 14146.66666666667 1485140800
+177 3 38400 920 14146.66666666667 1485140800
+179 2 1480 148 814 2212304
+180 2 1480 148 814 2212304
+182 2 1840 184 1012 3419456
+183 2 1840 184 1012 3419456
+189 1 4 4 4 16
+190 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+211 240 290 290 290 20184000
+212 240 290 290 290 20184000
+213 240 230 230 230 12696000
+214 240 230 230 230 12696000
+215 240 1002 1002 1002 240960960
+216 240 1002 1002 1002 240960960
+</atomic_data>
+</profile>
+
+</profile_xml>
+ <profile_xml>
+
+<thread id="5.0.0.20501" node="5" context="0" thread="0">
+<metadata>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871845934</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871846017</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>321</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>228</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1102</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20501</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="5.0.0.20501">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="5.0.0.20501">
+<timestamp>1386218888893421</timestamp>
+<interval_data metrics="0 ">
+0 1 231 1583 17047069 
+1 266 0 393475 393475 
+2 29 0 665 665 
+3 1380 0 113088 113088 
+4 1 0 105 105 
+5 3 0 2140 2140 
+6 4 0 14 14 
+7 1 0 3 3 
+8 65 0 15 15 
+9 61 0 16 16 
+10 3 0 198 198 
+12 3 0 26 26 
+13 3 0 4998 4998 
+14 62 62 1308 1330 
+16 124 0 239472 239472 
+18 1 0 1109 1109 
+19 1 0 8 8 
+20 1 0 9 9 
+21 4 0 8 8 
+22 1 0 25875 25875 
+23 122325 0 52800 52800 
+24 121793 0 235461 235461 
+25 58 0 1954 1954 
+26 291 0 2816 2816 
+27 2 0 19 19 
+28 294 0 3388 3388 
+29 62 0 22 22 
+30 59 0 30 30 
+31 29 0 56 56 
+32 30 0 53 53 
+33 59 0 73 73 
+35 62 0 21 21 
+36 62 0 8 8 
+37 244118 0 4875327 4875327 
+38 240 0 2045112 2045112 
+39 240 0 286700 286700 
+40 480 0 419 419 
+41 240 0 178 178 
+42 480 0 126723 126723 
+43 240 0 200 200 
+44 11 0 12853 12853 
+45 1 1 3289 4238 
+46 11 44 241 46857 
+47 120 0 78418 78418 
+48 481 0 499921 499921 
+49 240 0 179851 179851 
+50 11 22 301 60011 
+51 240 0 28710 28710 
+52 480 1680 16052 143770 
+53 1 4504 97299 544962 
+54 240 0 198 198 
+55 360 0 200524 200524 
+56 240 720 5285 49586 
+57 240 960 56497 2157309 
+58 240 1200 25628 695873 
+59 240 0 23327 23327 
+60 240 960 299329 1562783 
+61 240 38640 3131993 5411068 
+62 240 2880 3138 10987 
+63 240 8640 80876 1856953 
+64 360 4320 46630 367057 
+65 28800 345600 436934 1742280 
+66 9600 115200 100881 525808 
+67 240 2880 11276 80531 
+68 240 2880 51025 734450 
+69 120 2880 42932 562909 
+70 120 360 775516 1527036 
+71 120 0 227493 227493 
+72 120 2280 1980775 15976763 
+73 240 0 35388 35388 
+74 240 0 11083 11083 
+75 240 0 19325 19325 
+76 120 130 7619 16015852 
+77 1 1260 98895 17012140 
+78 480 0 42092 42092 
+</interval_data>
+<atomic_data>
+0 62 0 0 0 0
+2 62 0 0 0 0
+6 62 0 0 0 0
+8 62 0 0 0 0
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+15 122383 142400 4 1973.392284876167 5988852289008
+16 122325 142400 4 1974.324169221337 5988852285296
+17 876 142400 4 2033.479452054795 97598594912
+18 720 1312 360 954.6666666666666 785233920
+19 2160 52480 3520 25528.88888888889 2039463936000
+20 1080 52480 14400 38186.66666666666 1884561408000
+21 86400 1312 360 954.6666666666666 94228070400
+22 28800 336 88 248 2141184000
+23 720 13440 3520 9920 85647360000
+24 720 40320 10560 29760 770826240000
+25 720 52480 10560 33973.33333333334 1013600256000
+26 129 4 4 4 2064
+27 122378 238080 4 2073.490006373695 6741603053824
+28 40721 238080 4 765.9571228604406 400405043536
+29 76 14080 8 891.7894736842105 458918496
+30 83 142400 4 7054.024096385542 55480731664
+31 82 4 4 4 1312
+32 240 352 352 352 29736960
+33 720 14080 3840 9493.333333333334 77881344000
+34 360 14080 14080 14080 71368704000
+35 28800 352 352 352 3568435200
+36 9600 96 96 96 88473600
+37 240 3840 3840 3840 3538944000
+38 240 11520 11520 11520 31850496000
+39 240 14080 11520 12800 39714816000
+40 32 238080 4 22838.75 116424442176
+41 8 4 4 4 128
+42 67 98072 4 3022.44776119403 18787977216
+43 6 2080 208 1419.333333333333 15196688
+44 22 95680 4 4352.909090909091 9154662736
+45 22 4 4 4 352
+54 9 98072 4 10900.44444444445 9618117312
+55 8 4 4 4 128
+56 64 1520 4 111.3125 9332400
+57 6 1520 152 1148.666666666667 9331472
+58 21 4 4 4 336
+59 21 4 4 4 336
+68 8 4 4 4 128
+69 8 4 4 4 128
+70 64 2120 4 132.875 15166272
+71 6 2120 212 1378.666666666667 15165344
+72 21 4 4 4 336
+73 21 4 4 4 336
+82 8 4 4 4 128
+83 8 4 4 4 128
+84 40575 53760 4 2804.134861367837 3307190817840
+85 77 53760 44 3269.87012987013 6674813072
+86 21 4 4 4 336
+87 21 4 4 4 336
+88 240 1344 1344 1344 433520640
+89 720 53760 14720 35733.33333333334 1105453056000
+90 360 53760 53760 53760 1040449536000
+91 28800 1344 1344 1344 52022476800
+92 9600 368 368 368 1300070400
+93 240 14720 14720 14720 52002816000
+94 240 44160 44160 44160 468025344000
+95 240 53760 44160 48960 580829184000
+96 8 4 4 4 128
+97 8 4 4 4 128
+98 29 4 4 4 464
+101 21 4 4 4 336
+111 8 4 4 4 128
+112 288 3124 4 271.0416666666667 126841616
+113 230 3124 4 338.3826086956522 126840688
+114 21 4 4 4 336
+115 21 4 4 4 336
+124 8 4 4 4 128
+125 8 4 4 4 128
+126 40570 50240 4 2674.018733053981 3015067874480
+127 72 50240 56 3345.388888888889 6306698512
+128 21 4 4 4 336
+129 21 4 4 4 336
+130 240 1256 1256 1256 378608640
+131 720 50240 15040 33600 962863104000
+132 360 50240 50240 50240 908660736000
+133 28800 1256 1256 1256 45433036800
+134 9600 376 376 376 1357209600
+135 240 15040 15040 15040 54288384000
+136 240 45120 45120 45120 488595456000
+137 240 50240 45120 47680 547184640000
+138 8 4 4 4 128
+139 8 4 4 4 128
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 3 72960 900 27620 5404971600
+152 3 72960 900 27620 5404971600
+153 3 72960 900 27620 5404971600
+154 3 72960 900 27620 5404971600
+155 4 238080 1800 82710 62332488000
+156 3 72960 1800 30920 5650401600
+158 1 238080 238080 238080 56682086400
+159 5 238080 1800 94648 82610248000
+160 4 142400 1800 58790 25928161600
+162 1 238080 238080 238080 56682086400
+163 3 95680 208 32656 9159032064
+164 2 2080 208 1144 4369664
+165 1 95680 95680 95680 9154662400
+167 2 1520 152 836 2333504
+168 2 1520 152 836 2333504
+170 2 2120 212 1166 4539344
+171 2 2120 212 1166 4539344
+173 3 44160 112 15130.66666666667 1951372544
+174 3 44160 112 15130.66666666667 1951372544
+179 2 3124 912 2018 10591120
+180 2 3124 912 2018 10591120
+182 2 45120 612 22866 2036188944
+183 2 45120 612 22866 2036188944
+189 1 4 4 4 16
+190 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+211 240 321 321 321 24729840
+212 240 321 321 321 24729840
+213 240 228 228 228 12476160
+214 240 228 228 228 12476160
+215 240 1102 1102 1102 291456960
+216 240 1102 1102 1102 291456960
+</atomic_data>
+</profile>
+
+</profile_xml>
+ <profile_xml>
+
+<thread id="6.0.0.20502" node="6" context="0" thread="0">
+<metadata>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871846600</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871846665</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>301</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>223</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1005</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20502</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="6.0.0.20502">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="6.0.0.20502">
+<timestamp>1386218888893414</timestamp>
+<interval_data metrics="0 ">
+0 1 231 1418 17046413 
+1 266 0 405036 405036 
+2 29 0 683 683 
+3 1380 0 115388 115388 
+4 1 0 217 217 
+5 3 0 674 674 
+6 4 0 14 14 
+7 1 0 3 3 
+8 65 0 19 19 
+9 61 0 11 11 
+10 3 0 193 193 
+12 3 0 23 23 
+13 3 0 5005 5005 
+14 62 62 1111 1136 
+16 124 0 238742 238742 
+18 1 0 1097 1097 
+19 1 0 6 6 
+20 1 0 7 7 
+21 4 0 7 7 
+22 1 0 25204 25204 
+23 81813 0 36632 36632 
+24 81281 0 152073 152073 
+25 58 0 1997 1997 
+26 291 0 2669 2669 
+27 2 0 17 17 
+28 294 0 3270 3270 
+29 62 0 25 25 
+30 59 0 35 35 
+31 29 0 57 57 
+32 30 0 55 55 
+33 59 0 48 48 
+35 62 0 34 34 
+36 62 0 9 9 
+37 163094 0 5868524 5868524 
+38 240 0 1910251 1910251 
+39 240 0 298211 298211 
+40 480 0 392 392 
+41 240 0 184 184 
+42 480 0 121126 121126 
+43 240 0 187 187 
+44 11 0 13191 13191 
+45 1 1 2938 3920 
+46 11 44 254 58446 
+47 120 0 70464 70464 
+48 481 0 458951 458951 
+49 240 0 183603 183603 
+50 11 22 321 71958 
+51 240 0 26879 26879 
+52 480 1680 16561 138608 
+53 1 4216 91538 544942 
+54 240 0 158 158 
+55 360 0 200647 200647 
+56 240 720 4663 45894 
+57 240 960 55657 2019171 
+58 240 1200 23392 706017 
+59 240 0 24677 24677 
+60 240 960 279257 1516808 
+61 240 38640 2888408 5436984 
+62 240 1920 2102 11247 
+63 240 5760 62358 2106741 
+64 360 2880 35270 330887 
+65 28800 230400 305557 1945345 
+66 9600 76800 66628 591984 
+67 240 1920 8789 104296 
+68 240 1920 39549 693406 
+69 120 1920 35198 768045 
+70 120 360 730989 1688558 
+71 120 0 211207 211207 
+72 120 2280 1806888 15968862 
+73 240 0 33938 33938 
+74 240 0 10274 10274 
+75 240 0 18219 18219 
+76 120 130 7981 16017381 
+77 1 1260 96543 17012114 
+78 480 0 42710 42710 
+</interval_data>
+<atomic_data>
+0 62 0 0 0 0
+2 62 0 0 0 0
+6 62 0 0 0 0
+8 62 0 0 0 0
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+15 81871 128320 4 2366.369972273455 5619255246544
+16 81813 128320 4 2368.041900431472 5619255242832
+17 804 128320 4 2054.248756218905 92005320768
+18 480 1584 688 1136 715776000
+19 1440 63360 6720 30240 1832951808000
+20 720 63360 27520 45440 1717862400000
+21 57600 1584 688 1136 85893120000
+22 19200 456 168 312 2267136000
+23 480 18240 6720 12480 90685440000
+24 480 54720 20160 37440 816168960000
+25 480 63360 20160 41440 980705280000
+26 129 4 4 4 2064
+27 81866 230720 4 2398.005081474605 5857159278800
+28 210 230720 4 6013.676190476191 156167673024
+29 5 1000 100 759.2 3494416
+30 83 128320 4 6745.78313253012 49657336848
+31 82 4 4 4 1312
+40 32 230720 4 21838 106506840320
+41 8 4 4 4 128
+42 67 104960 4 3135.940298507463 21503760848
+43 6 828 36 418.6666666666667 1398304
+44 22 102400 4 4658.363636363636 10485760336
+45 22 4 4 4 352
+54 9 104960 4 11665.77777777778 11016601728
+55 8 4 4 4 128
+56 40575 27520 4 1406.802316697474 835949573968
+57 77 27520 8 1585.090909090909 1598120880
+58 21 4 4 4 336
+59 21 4 4 4 336
+60 240 688 688 688 113602560
+61 720 27520 6720 18453.33333333333 299655168000
+62 360 27520 27520 27520 272646144000
+63 28800 688 688 688 13632307200
+64 9600 168 168 168 270950400
+65 240 6720 6720 6720 10838016000
+66 240 20160 20160 20160 97542144000
+67 240 27520 20160 23840 139653120000
+68 8 4 4 4 128
+69 8 4 4 4 128
+70 60 2208 4 55.86666666666667 5707936
+71 2 2208 912 1560 5707008
+72 21 4 4 4 336
+73 21 4 4 4 336
+82 8 4 4 4 128
+83 8 4 4 4 128
+84 64 2176 4 119.375 11567264
+85 6 2176 144 1234.666666666667 11566336
+86 21 4 4 4 336
+87 21 4 4 4 336
+96 8 4 4 4 128
+97 8 4 4 4 128
+98 63 1680 4 100.0634920634921 9242848
+99 5 1680 168 1214.4 9241920
+100 21 4 4 4 336
+101 21 4 4 4 336
+110 8 4 4 4 128
+111 8 4 4 4 128
+112 29 4 4 4 464
+115 21 4 4 4 336
+125 8 4 4 4 128
+126 40798 64640 4 3376.236286092455 4843511752448
+127 300 64640 4 1276.053333333333 10038563680
+128 21 4 4 4 336
+129 21 4 4 4 336
+130 240 1616 1616 1616 626749440
+131 720 64640 18240 42986.66666666666 1592254464000
+132 360 64640 64640 64640 1504198656000
+133 28800 1616 1616 1616 75209932800
+134 9600 456 456 456 1996185600
+135 240 18240 18240 18240 79847424000
+136 240 54720 54720 54720 718626816000
+137 240 64640 54720 59680 860712960000
+138 8 4 4 4 128
+139 8 4 4 4 128
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 128320 896 52384 21639356416
+152 4 128320 896 52384 21639356416
+153 4 128320 896 52384 21639356416
+154 4 128320 896 52384 21639356416
+155 5 230720 1792 90022.39999999999 75114328064
+156 4 128320 1792 54848 21882609664
+158 1 230720 230720 230720 53231718400
+159 5 230720 1792 90022.39999999999 75114328064
+160 4 128320 1792 54848 21882609664
+162 1 230720 230720 230720 53231718400
+163 4 102400 36 25841 10486213520
+164 3 568 36 321.3333333333333 453520
+165 1 102400 102400 102400 10485760000
+167 4 20160 8 5270 407124288
+168 4 20160 8 5270 407124288
+170 1 2208 2208 2208 4875264
+171 1 2208 2208 2208 4875264
+173 3 2176 144 1253.333333333333 6829312
+174 3 2176 144 1253.333333333333 6829312
+176 2 1680 168 924 2850624
+177 2 1680 168 924 2850624
+182 3 54720 892 19404 3001834064
+183 3 54720 892 19404 3001834064
+189 1 4 4 4 16
+190 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+211 240 301 301 301 21744240
+212 240 301 301 301 21744240
+213 240 223 223 223 11934960
+214 240 223 223 223 11934960
+215 240 1005 1005 1005 242406000
+216 240 1005 1005 1005 242406000
+</atomic_data>
+</profile>
+
+</profile_xml>
+ <profile_xml>
+
+<thread id="7.0.0.20503" node="7" context="0" thread="0">
+<metadata>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871844894</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871844949</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>365</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>222</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1211</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20503</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="7.0.0.20503">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="7.0.0.20503">
+<timestamp>1386218888893422</timestamp>
+<interval_data metrics="0 ">
+0 1 229 1535 17048228 
+1 266 0 380290 380290 
+2 29 0 635 635 
+3 1380 0 112314 112314 
+4 1 0 217 217 
+5 3 0 2134 2134 
+6 4 0 19 19 
+7 1 0 3 3 
+8 65 0 17 17 
+9 61 0 16 16 
+10 3 0 151 151 
+12 3 0 24 24 
+13 3 0 5001 5001 
+14 62 62 1142 1166 
+16 124 0 237806 237806 
+18 1 0 1015 1015 
+19 1 0 7 7 
+20 1 0 8 8 
+21 4 0 9 9 
+22 1 0 27008 27008 
+23 162826 0 58073 58073 
+24 162306 0 267305 267305 
+25 58 0 2111 2111 
+26 289 0 2745 2745 
+27 2 0 19 19 
+28 293 0 3210 3210 
+29 62 0 24 24 
+30 57 0 31 31 
+31 29 0 55 55 
+32 28 0 29 29 
+33 57 0 57 57 
+35 62 0 40 40 
+36 62 0 13 13 
+37 325132 0 2966062 2966062 
+38 240 0 2486076 2486076 
+39 240 0 323818 323818 
+40 480 0 432 432 
+41 240 0 192 192 
+42 480 0 130778 130778 
+43 240 0 190 190 
+44 11 0 10987 10987 
+45 1 1 4135 5295 
+46 11 44 215 34226 
+47 120 0 77107 77107 
+48 481 0 602680 602680 
+49 240 0 204681 204681 
+50 11 22 270 45483 
+51 240 0 30818 30818 
+52 480 1680 24041 155787 
+53 1 4770 102951 544970 
+54 240 0 154 154 
+55 360 0 231695 231695 
+56 240 720 5515 51963 
+57 240 960 70170 2622513 
+58 240 1200 22970 780577 
+59 240 0 31054 31054 
+60 240 960 356927 1560189 
+61 240 38640 3563363 5429889 
+62 240 3840 3990 9211 
+63 240 11520 101356 1571787 
+64 360 5760 59840 190990 
+65 28800 460800 534960 1446145 
+66 9600 153600 123536 411170 
+67 240 3840 14251 47232 
+68 240 3840 68062 270279 
+69 120 3840 55520 244728 
+70 120 360 904965 1376062 
+71 120 0 259539 259539 
+72 120 2280 2335220 15976931 
+73 240 0 41926 41926 
+74 240 0 10983 10983 
+75 240 0 23360 23360 
+76 120 130 8032 16008742 
+77 1 1255 104449 17012151 
+78 480 0 47895 47895 
+</interval_data>
+<atomic_data>
+0 62 0 0 0 0
+2 62 0 0 0 0
+6 62 0 0 0 0
+8 62 0 0 0 0
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+15 162884 225600 4 2126.891652955478 9495513227952
+16 162826 225600 4 2127.646420104897 9495513224240
+17 938 225600 4 2106.742004264392 122837259312
+18 960 1616 304 1012 1210030080
+19 2880 64640 3520 27013.33333333333 3082788864000
+20 1440 64640 12160 40480 2904072192000
+21 115200 1616 304 1012 145203609600
+22 38400 456 88 286 3909427200
+23 960 18240 3520 11440 156377088000
+24 960 54720 10560 34320 1407393792000
+25 960 64640 10560 37400 1671720960000
+26 128 4 4 4 2048
+27 162888 231240 4 2108.943863268013 9119851367168
+28 40945 231240 4 1737.474758822811 1460009853152
+29 300 32960 4 769.1333333333333 2625259568
+30 83 225600 4 7834.939759036145 82845003664
+31 82 4 4 4 1312
+32 240 824 824 824 162954240
+33 720 32960 8960 21866.66666666667 414572544000
+34 360 32960 32960 32960 391090176000
+35 28800 824 824 824 19554508800
+36 9600 224 224 224 481689600
+37 240 8960 8960 8960 19267584000
+38 240 26880 26880 26880 173408256000
+39 240 32960 26880 29920 217067520000
+40 32 231240 4 24629.5 138934355840
+41 8 4 4 4 128
+42 63 840 4 56.25396825396825 2626048
+43 5 840 84 662.4 2625120
+44 21 4 4 4 336
+45 21 4 4 4 336
+54 8 4 4 4 128
+55 8 4 4 4 128
+56 40574 16640 4 867.6285305860896 317189950368
+57 76 16640 12 1082.736842105263 641484800
+58 21 4 4 4 336
+59 21 4 4 4 336
+60 240 416 416 416 41533440
+61 720 16640 4480 11200 108650496000
+62 360 16640 16640 16640 99680256000
+63 28800 416 416 416 4984012800
+64 9600 112 112 112 120422400
+65 240 4480 4480 4480 4816896000
+66 240 13440 13440 13440 43352064000
+67 240 16640 13440 15040 54902784000
+68 8 4 4 4 128
+69 8 4 4 4 128
+70 64 1912 4 83.75 6155072
+71 6 1912 84 854.6666666666666 6154144
+72 21 4 4 4 336
+73 21 4 4 4 336
+82 8 4 4 4 128
+83 8 4 4 4 128
+84 64 2184 4 94.25 7890272
+85 6 2184 88 966.6666666666666 7889344
+86 21 4 4 4 336
+87 21 4 4 4 336
+96 8 4 4 4 128
+97 8 4 4 4 128
+98 40575 47680 4 2499.771583487369 2627472839552
+99 77 47680 52 2944.415584415584 5384426464
+100 21 4 4 4 336
+101 21 4 4 4 336
+102 240 1192 1192 1192 341007360
+103 720 47680 13440 31573.33333333333 859914240000
+104 360 47680 47680 47680 818417664000
+105 28800 1192 1192 1192 40920883200
+106 9600 336 336 336 1083801600
+107 240 13440 13440 13440 43352064000
+108 240 40320 40320 40320 390168576000
+109 240 47680 40320 44000 467890176000
+110 8 4 4 4 128
+111 8 4 4 4 128
+112 40574 63360 4 3345.351703061074 4715162052240
+113 76 63360 72 3961.947368421052 9680671472
+114 21 4 4 4 336
+115 21 4 4 4 336
+116 240 1584 1584 1584 602173440
+117 720 63360 18240 42453.33333333334 1545879552000
+118 360 63360 63360 63360 1445216256000
+119 28800 1584 1584 1584 72260812800
+120 9600 456 456 456 1996185600
+121 240 18240 18240 18240 79847424000
+122 240 54720 54720 54720 718626816000
+123 240 63360 54720 59040 841052160000
+124 8 4 4 4 128
+125 8 4 4 4 128
+126 29 4 4 4 464
+129 21 4 4 4 336
+139 8 4 4 4 128
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 225600 896 76624 56023126016
+152 4 225600 896 76624 56023126016
+153 4 225600 896 76624 56023126016
+154 4 225600 896 76624 56023126016
+155 4 225600 1792 79088 56266379264
+156 4 225600 1792 79088 56266379264
+159 4 225600 1792 79088 56266379264
+160 4 225600 1792 79088 56266379264
+163 2 840 84 462 712656
+164 2 840 84 462 712656
+167 3 13440 192 5184 184356864
+168 3 13440 192 5184 184356864
+170 3 1912 84 945.3333333333334 4368400
+171 3 1912 84 945.3333333333334 4368400
+173 3 2184 88 1050.666666666667 5552000
+174 3 2184 88 1050.666666666667 5552000
+176 4 40320 100 10779 1629588816
+177 4 40320 100 10779 1629588816
+179 3 54720 92 18577.33333333333 2995133264
+180 3 54720 92 18577.33333333333 2995133264
+189 1 4 4 4 16
+190 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+211 240 365 365 365 31974000
+212 240 365 365 365 31974000
+213 240 222 222 222 11828160
+214 240 222 222 222 11828160
+215 240 1211 1211 1211 351965040
+216 240 1211 1211 1211 351965040
+</atomic_data>
+</profile>
+
+</profile_xml>
+ <profile_xml>
+
+<thread id="0.0.0.20496" node="0" context="0" thread="0">
+<metadata>
+<attribute>
+<name>CPU Cores</name>
+<value>6</value>
+</attribute>
+<attribute>
+<name>CPU MHz</name>
+<value>2666.000</value>
+</attribute>
+<attribute>
+<name>CPU Type</name>
+<value>Intel(R) Xeon(R) CPU X5650 @ 2.67GHz</value>
+</attribute>
+<attribute>
+<name>CPU Vendor</name>
+<value>GenuineIntel</value>
+</attribute>
+<attribute>
+<name>CWD</name>
+<value>/storage/users/khuck/src/super-project-svn/partnerships/MULTISCALE/MPAS-Release-2.0/worldOcean_QU_240km</value>
+</attribute>
+<attribute>
+<name>Cache Size</name>
+<value>12288 KB</value>
+</attribute>
+<attribute>
+<name>Command Line</name>
+<value>../ocean_model</value>
+</attribute>
+<attribute>
+<name>Executable</name>
+<value>/storage/users/khuck/src/super-project-svn/partnerships/MULTISCALE/MPAS-Release-2.0/ocean_model</value>
+</attribute>
+<attribute>
+<name>Hostname</name>
+<value>manticore.nic.uoregon.edu</value>
+</attribute>
+<attribute>
+<name>Local Time</name>
+<value>2013-12-04T20:47:51-08:00</value>
+</attribute>
+<attribute>
+<name>MPI Processor Name</name>
+<value>manticore.nic.uoregon.edu</value>
+</attribute>
+<attribute>
+<name>Memory Size</name>
+<value>49412268 kB</value>
+</attribute>
+<attribute>
+<name>Node Name</name>
+<value>manticore.nic.uoregon.edu</value>
+</attribute>
+<attribute>
+<name>OS Machine</name>
+<value>x86_64</value>
+</attribute>
+<attribute>
+<name>OS Name</name>
+<value>Linux</value>
+</attribute>
+<attribute>
+<name>OS Release</name>
+<value>2.6.32-358.23.2.el6.x86_64</value>
+</attribute>
+<attribute>
+<name>OS Version</name>
+<value>#1 SMP Sat Sep 14 05:32:37 EDT 2013</value>
+</attribute>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871843360</value>
+</attribute>
+<attribute>
+<name>TAU Architecture</name>
+<value>default</value>
+</attribute>
+<attribute>
+<name>TAU Config</name>
+<value> -cc=icc -c++=icpc -fortran=intel -bfd=download -unwind=download -mpi -papi=/usr/local/packages/papi/5.0.1 -pdt=/home/users/khuck/install/pdtoolkit-3.19p1 -mpilibrary=-lmpi#-lmpi_cxx#-lmpi_mpifh</value>
+</attribute>
+<attribute>
+<name>TAU Makefile</name>
+<value></value>
+</attribute>
+<attribute>
+<name>TAU MetaData Merge Time</name>
+<value>7.8E-05 seconds</value>
+</attribute>
+<attribute>
+<name>TAU Unification Time</name>
+<value>0.000457 seconds</value>
+</attribute>
+<attribute>
+<name>TAU Version</name>
+<value>2.22.2-git</value>
+</attribute>
+<attribute>
+<name>TAU_BFD_LOOKUP</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_CALLPATH</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_CALLPATH_DEPTH</name>
+<value>2</value>
+</attribute>
+<attribute>
+<name>TAU_CALLSITE_LIMIT</name>
+<value>1</value>
+</attribute>
+<attribute>
+<name>TAU_COMM_MATRIX</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_COMPENSATE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_CUPTI_API</name>
+<value>runtime</value>
+</attribute>
+<attribute>
+<name>TAU_EBS_KEEP_UNRESOLVED_ADDR</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_IBM_BG_HWP_COUNTERS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_MAX_THREADS</name>
+<value>1</value>
+</attribute>
+<attribute>
+<name>TAU_MEMDBG_PROTECT_ABOVE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_MEMDBG_PROTECT_BELOW</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_MEMDBG_PROTECT_FREE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_OPENMP_RUNTIME</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_OPENMP_RUNTIME_EVENTS</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_OPENMP_RUNTIME_STATES</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_PROFILE</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_PROFILE_FORMAT</name>
+<value>merged</value>
+</attribute>
+<attribute>
+<name>TAU_SAMPLING</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_SIGNALS_GDB</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_THROTTLE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_CUDA_CDP</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_CUDA_INSTRUCTIONS</name>
+<value></value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_HEADROOM</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_HEAP</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_IO_PARAMS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_MEMORY_LEAKS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_MESSAGE</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_SIGNALS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871843442</value>
+</attribute>
+<attribute>
+<name>UTC Time</name>
+<value>2013-12-05T04:47:51Z</value>
+</attribute>
+<attribute>
+<name>maxEdges</name>
+<value>10</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>366</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>220</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1193</value>
+</attribute>
+<attribute>
+<name>nVertLevels</name>
+<value>40</value>
+</attribute>
+<attribute>
+<name>num_tracers</name>
+<value>3</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20496</value>
+</attribute>
+<attribute>
+<name>username</name>
+<value>khuck</value>
+</attribute>
+</metadata>
+</thread>
+
+<definitions thread="0.0.0.20496">
+<metric id="0"><name>TIME</name>
+<units>unknown</units>
+</metric>
+</definitions>
+
+<profile thread="0.0.0.20496">
+<timestamp>1386218888893550</timestamp>
+<interval_data metrics="0 ">
+0 1 451 4760 17049753 
+1 266 0 20578 20578 
+2 29 0 127 127 
+3 1380 0 7443 7443 
+4 1 0 215 215 
+5 3 0 1631 1631 
+6 4 0 25 25 
+7 1 0 3 3 
+8 65 0 23 23 
+9 61 0 18 18 
+10 3 0 168 168 
+11 1 0 489 489 
+12 3 0 40 40 
+13 3 0 4993 4993 
+14 62 62 230190 230274 
+15 2 2 57020 57028 
+16 124 0 2200 2200 
+17 1 1 4248 4249 
+18 1 0 1109 1109 
+19 1 0 3 3 
+20 1 0 8 8 
+21 4 0 11 11 
+22 1 0 28370 28370 
+23 163854 0 65675 65675 
+24 162306 0 276018 276018 
+26 628 0 6641 6641 
+27 2 0 23 23 
+28 921 0 5446 5446 
+29 65 0 93 93 
+30 337 0 1110 1110 
+31 87 0 160 160 
+32 250 0 7784 7784 
+33 308 0 503 503 
+34 62 0 48 48 
+35 124 0 69 69 
+36 62 0 24 24 
+37 326160 0 1690199 1690199 
+38 240 0 2563269 2563269 
+39 240 0 313458 313458 
+40 480 0 377 377 
+41 240 0 188 188 
+42 480 0 127971 127971 
+43 240 0 188 188 
+44 11 0 11183 11183 
+45 1 1 3806 4891 
+46 11 44 219 12311 
+47 120 0 79509 79509 
+48 481 0 620098 620098 
+49 240 0 206063 206063 
+50 11 22 1518725 1542219 
+51 240 0 31655 31655 
+52 480 1680 18256 147135 
+53 1 7820 197020 553188 
+54 240 0 155 155 
+55 360 0 229967 229967 
+56 240 720 5669 53563 
+57 240 960 70724 2701072 
+58 240 1200 24165 757323 
+59 240 0 26236 26236 
+60 240 960 359533 1606422 
+61 240 38640 3463077 5367005 
+62 240 3840 3905 9261 
+63 240 11520 100487 312499 
+64 360 5760 60287 259599 
+65 28800 460800 534463 1479709 
+66 9600 153600 145789 414958 
+67 240 3840 14819 59043 
+68 240 3840 69742 243439 
+69 120 3840 55217 205092 
+70 120 360 912349 1341573 
+71 120 0 255542 255542 
+72 120 2280 2319244 14733792 
+73 240 0 42427 42427 
+74 240 0 11602 11602 
+75 240 0 23735 23735 
+76 120 130 7825 16274551 
+77 1 1887 157524 17012145 
+78 480 0 45820 45820 
+</interval_data>
+<atomic_data>
+0 2 262144 262144 262144 137438953472
+1 62 920640 320 130668.3225806452 4299739063504
+2 62 920640 320 130668.3225806452 4299739063504
+3 2 262144 262144 262144 137438953472
+4 1 15400 15400 15400 237160000
+5 1 15400 15400 15400 237160000
+6 2 51.63364191451645 5.051722808910815 28.34268236171363 2691.552880694579
+7 62 88.01529636711281 0.3686635944700461 24.59850008812355 57185.76666745852
+8 62 88.01529636711281 0.3686635944700461 24.59850008812355 57185.76666745852
+9 2 51.63364191451645 5.051722808910815 28.34268236171363 2691.552880694579
+10 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+11 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+14 2 7176 7176 7176 102989952
+15 163854 249280 4 2222.990491535147 11405045884912
+16 163854 249280 4 2222.990491535147 11405045884912
+17 1800 225600 4 3519.46 539222740272
+18 960 1776 352 1036 1290700800
+19 2880 71040 3840 27653.33333333333 3294928896000
+20 1440 71040 14080 41440 3097681920000
+21 115200 1776 352 1036 154884096000
+22 38400 504 96 292 4144742400
+23 960 20160 3840 11680 165789696000
+24 960 60480 11520 35040 1492107264000
+25 960 71040 11520 38240 1778614272000
+26 294 249280 4 18637.74149659864 876381557440
+27 163855 225600 4 2140.444246437399 9752935673584
+28 120 221400 4 20567.36666666666 300749233232
+31 104 216000 4 16452.80769230769 173496813904
+41 16 221400 4 47312 127252419328
+42 40945 112800 4 3255.263890584931 4554934762512
+43 300 60480 4 1255.24 9800924304
+44 82 112800 4 12051.26829268293 62584467696
+45 83 8 4 6.024096385542169 3344
+46 240 1512 1512 1512 548674560
+47 720 60480 19200 40320 1375322112000
+48 360 60480 60480 60480 1316818944000
+49 28800 1512 1512 1512 65840947200
+50 9600 480 480 480 2211840000
+51 240 19200 19200 19200 88473600000
+52 240 57600 57600 57600 796262400000
+53 240 60480 57600 59040 837070848000
+54 8 4 4 4 128
+55 32 8 4 6 1280
+56 40722 116640 4 2631.214282206178 2948882214224
+57 77 49280 8 3108.415584415584 6058624944
+58 82 116640 4 12348.24390243902 66733073168
+59 83 8 4 6.024096385542169 3344
+60 240 1232 1232 1232 364277760
+61 720 49280 14720 32640 910983168000
+62 360 49280 49280 49280 874266624000
+63 28800 1232 1232 1232 43713331200
+64 9600 368 368 368 1300070400
+65 240 14720 14720 14720 52002816000
+66 240 44160 44160 44160 468025344000
+67 240 49280 44160 46720 525434880000
+68 8 4 4 4 128
+69 32 8 4 6 1280
+70 207 111360 4 4297.371980676328 52430485776
+71 5 1320 132 1000.8 6076368
+72 81 111360 4 10911.55555555555 52424404688
+73 82 8 4 6.048780487804878 3328
+82 8 4 4 4 128
+83 31 8 4 6.064516129032258 1264
+84 207 124640 4 4560.772946859904 58844836384
+85 5 1400 140 1026.4 6526864
+86 81 124640 4 11583.11111111111 58838304800
+87 82 8 4 6.048780487804878 3328
+96 8 4 4 4 128
+97 31 8 4 6.064516129032258 1264
+98 40722 142400 4 760.655959923383 306438958560
+99 77 14400 8 885.2987012987013 443619776
+100 82 142400 4 12928.53658536585 76660319632
+101 83 8 4 6.024096385542169 3344
+102 240 360 360 360 31104000
+103 720 14400 3520 9706.666666666666 82845696000
+104 360 14400 14400 14400 74649600000
+105 28800 360 360 360 3732480000
+106 9600 88 88 88 74342400
+107 240 3520 3520 3520 2973696000
+108 240 10560 10560 10560 26763264000
+109 240 14400 10560 12480 38264832000
+110 8 4 4 4 128
+111 32 8 4 6 1280
+112 210 128320 4 4894.304761904762 70089558608
+113 5 880 88 684.8 2815360
+114 82 128320 4 12483.60975609756 70086738496
+115 83 8 4 6.024096385542169 3344
+124 8 4 4 4 128
+125 32 8 4 6 1280
+126 40722 225600 4 1816.768528068366 1460565624288
+127 77 34880 24 2099.688311688312 2676660848
+128 82 225600 4 13555.70731707317 103429397728
+129 83 8 4 6.024096385542169 3344
+130 240 872 872 872 182492160
+131 720 34880 8960 23146.66666666667 468541440000
+132 360 34880 34880 34880 437981184000
+133 28800 872 872 872 21899059200
+134 9600 224 224 224 481689600
+135 240 8960 8960 8960 19267584000
+136 240 26880 26880 26880 173408256000
+137 240 34880 26880 30880 232697856000
+138 8 4 4 4 128
+139 32 8 4 6 1280
+140 3 920640 71760 522160 1182295353600
+141 3 920640 71760 522160 1182295353600
+142 3 84.74756421612047 49.90264255910987 62.09461622991559 12338.45635230426
+143 2 84.74756421612047 49.90264255910987 67.32510338761517 9672.423374947746
+144 1 51.63364191451645 51.63364191451645 51.63364191451645 2666.032977356509
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 216000 1792 76528 51936497664
+152 4 216000 1792 76528 51936497664
+153 4 216000 1792 76528 51936497664
+154 4 216000 1792 76528 51936497664
+155 4 216000 1792 76528 51936497664
+157 4 216000 1792 76528 51936497664
+159 4 216000 1792 76528 51936497664
+161 4 216000 1792 76528 51936497664
+163 3 71680 900 27193.33333333333 5219832400
+165 3 71680 900 27193.33333333333 5219832400
+167 4 111360 896 48224 17620156416
+169 4 111360 896 48224 17620156416
+170 4 111360 896 48144 17574383616
+172 4 111360 896 48144 17574383616
+173 4 124640 896 52024 21033174016
+175 4 124640 896 52024 21033174016
+176 4 142400 900 56315 25682731600
+178 4 142400 900 56315 25682731600
+179 4 128320 896 52384 21639356416
+181 4 128320 896 52384 21639356416
+182 4 225600 896 76624 56023126016
+184 4 225600 896 76624 56023126016
+185 1 320 320 320 102400
+186 1 320 320 320 102400
+187 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+188 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+189 1 4 4 4 16
+190 1 4 4 4 16
+191 1 4 4 4 16
+192 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+197 1 4 4 4 16
+198 1 4 4 4 16
+199 1 4 4 4 16
+200 1 4 4 4 16
+201 1 4 4 4 16
+202 1 4 4 4 16
+203 1 4 4 4 16
+204 1 4 4 4 16
+205 1 4 4 4 16
+206 1 4 4 4 16
+207 1 4 4 4 16
+208 1 4 4 4 16
+209 1 4 4 4 16
+210 1 4 4 4 16
+211 240 366 366 366 32149440
+212 240 366 366 366 32149440
+213 240 220 220 220 11616000
+214 240 220 220 220 11616000
+215 240 1193 1193 1193 341579760
+216 240 1193 1193 1193 341579760
+</atomic_data>
+</profile>
+
+</profile_xml>
+<profile_xml>
+
+<thread id="0.0.0.20496" node="0" context="0" thread="0">
+<metadata>
+<attribute>
+<name>CPU Cores</name>
+<value>6</value>
+</attribute>
+<attribute>
+<name>CPU MHz</name>
+<value>2666.000</value>
+</attribute>
+<attribute>
+<name>CPU Type</name>
+<value>Intel(R) Xeon(R) CPU X5650 @ 2.67GHz</value>
+</attribute>
+<attribute>
+<name>CPU Vendor</name>
+<value>GenuineIntel</value>
+</attribute>
+<attribute>
+<name>CWD</name>
+<value>/storage/users/khuck/src/super-project-svn/partnerships/MULTISCALE/MPAS-Release-2.0/worldOcean_QU_240km</value>
+</attribute>
+<attribute>
+<name>Cache Size</name>
+<value>12288 KB</value>
+</attribute>
+<attribute>
+<name>Command Line</name>
+<value>../ocean_model</value>
+</attribute>
+<attribute>
+<name>Executable</name>
+<value>/storage/users/khuck/src/super-project-svn/partnerships/MULTISCALE/MPAS-Release-2.0/ocean_model</value>
+</attribute>
+<attribute>
+<name>Hostname</name>
+<value>manticore.nic.uoregon.edu</value>
+</attribute>
+<attribute>
+<name>Local Time</name>
+<value>2013-12-04T20:47:51-08:00</value>
+</attribute>
+<attribute>
+<name>MPI Processor Name</name>
+<value>manticore.nic.uoregon.edu</value>
+</attribute>
+<attribute>
+<name>Memory Size</name>
+<value>49412268 kB</value>
+</attribute>
+<attribute>
+<name>Node Name</name>
+<value>manticore.nic.uoregon.edu</value>
+</attribute>
+<attribute>
+<name>OS Machine</name>
+<value>x86_64</value>
+</attribute>
+<attribute>
+<name>OS Name</name>
+<value>Linux</value>
+</attribute>
+<attribute>
+<name>OS Release</name>
+<value>2.6.32-358.23.2.el6.x86_64</value>
+</attribute>
+<attribute>
+<name>OS Version</name>
+<value>#1 SMP Sat Sep 14 05:32:37 EDT 2013</value>
+</attribute>
+<attribute>
+<name>Starting Timestamp</name>
+<value>1386218871843360</value>
+</attribute>
+<attribute>
+<name>TAU Architecture</name>
+<value>default</value>
+</attribute>
+<attribute>
+<name>TAU Config</name>
+<value> -cc=icc -c++=icpc -fortran=intel -bfd=download -unwind=download -mpi -papi=/usr/local/packages/papi/5.0.1 -pdt=/home/users/khuck/install/pdtoolkit-3.19p1 -mpilibrary=-lmpi#-lmpi_cxx#-lmpi_mpifh</value>
+</attribute>
+<attribute>
+<name>TAU Makefile</name>
+<value></value>
+</attribute>
+<attribute>
+<name>TAU MetaData Merge Time</name>
+<value>7.8E-05 seconds</value>
+</attribute>
+<attribute>
+<name>TAU Profile Merge Time</name>
+<value>0.001324 seconds</value>
+</attribute>
+<attribute>
+<name>TAU Unification Time</name>
+<value>0.000457 seconds</value>
+</attribute>
+<attribute>
+<name>TAU Version</name>
+<value>2.22.2-git</value>
+</attribute>
+<attribute>
+<name>TAU_BFD_LOOKUP</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_CALLPATH</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_CALLPATH_DEPTH</name>
+<value>2</value>
+</attribute>
+<attribute>
+<name>TAU_CALLSITE_LIMIT</name>
+<value>1</value>
+</attribute>
+<attribute>
+<name>TAU_COMM_MATRIX</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_COMPENSATE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_CUPTI_API</name>
+<value>runtime</value>
+</attribute>
+<attribute>
+<name>TAU_EBS_KEEP_UNRESOLVED_ADDR</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_IBM_BG_HWP_COUNTERS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_MAX_THREADS</name>
+<value>1</value>
+</attribute>
+<attribute>
+<name>TAU_MEMDBG_PROTECT_ABOVE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_MEMDBG_PROTECT_BELOW</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_MEMDBG_PROTECT_FREE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_OPENMP_RUNTIME</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_OPENMP_RUNTIME_EVENTS</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_OPENMP_RUNTIME_STATES</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_PRECOMPUTE</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_PROFILE</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_PROFILE_FORMAT</name>
+<value>merged</value>
+</attribute>
+<attribute>
+<name>TAU_SAMPLING</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_SIGNALS_GDB</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_THROTTLE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACE</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_CUDA_CDP</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_CUDA_INSTRUCTIONS</name>
+<value></value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_HEADROOM</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_HEAP</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_IO_PARAMS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_MEMORY_LEAKS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_MESSAGE</name>
+<value>on</value>
+</attribute>
+<attribute>
+<name>TAU_TRACK_SIGNALS</name>
+<value>off</value>
+</attribute>
+<attribute>
+<name>Timestamp</name>
+<value>1386218871843442</value>
+</attribute>
+<attribute>
+<name>UTC Time</name>
+<value>2013-12-05T04:47:51Z</value>
+</attribute>
+<attribute>
+<name>maxEdges</name>
+<value>10</value>
+</attribute>
+<attribute>
+<name>nCells</name>
+<value>366</value>
+</attribute>
+<attribute>
+<name>nCellsSolve</name>
+<value>220</value>
+</attribute>
+<attribute>
+<name>nEdges</name>
+<value>1193</value>
+</attribute>
+<attribute>
+<name>nVertLevels</name>
+<value>40</value>
+</attribute>
+<attribute>
+<name>num_tracers</name>
+<value>3</value>
+</attribute>
+<attribute>
+<name>pid</name>
+<value>20496</value>
+</attribute>
+<attribute>
+<name>username</name>
+<value>khuck</value>
+</attribute>
+</metadata>
+</thread>
+</profile_xml>
+ <profile_xml>
+<derivedentity id="total">
+</derivedentity>
+<derivedprofile derivedentity="total">
+<derivedinterval_data metrics="0 ">
+0 8 2074 14172 136389498 
+1 2128 0 2728216 2728216 
+2 232 0 4743 4743 
+3 11040 0 781451 781451 
+4 8 0 1616 1616 
+5 24 0 13716 13716 
+6 32 0 136 136 
+7 8 0 23 23 
+8 520 0 177 177 
+9 488 0 132 132 
+10 24 0 1805 1805 
+11 1 0 489 489 
+12 24 0 222 222 
+13 24 0 40002 40002 
+14 496 496 260321 260572 
+15 2 2 57020 57028 
+16 992 0 1661418 1661418 
+17 1 1 4248 4249 
+18 8 0 8675 8675 
+19 8 0 77 77 
+20 8 0 61 61 
+21 32 0 63 63 
+22 8 0 219524 219524 
+23 1060627 0 418817 418817 
+24 1055383 0 1838489 1838489 
+25 406 0 12734 12734 
+26 2662 0 25349 25349 
+27 16 0 134 134 
+28 2988 0 27370 27370 
+29 499 0 260 260 
+30 760 0 1411 1411 
+31 294 0 619 619 
+32 466 0 8556 8556 
+33 729 0 967 967 
+34 63 0 52 52 
+35 559 0 286 286 
+36 496 0 97 97 
+37 2116010 0 32937045 32937045 
+38 1920 0 17965189 17965189 
+39 1920 0 2460367 2460367 
+40 3840 0 3287 3287 
+41 1920 0 1479 1479 
+42 3840 0 973120 973120 
+43 1920 0 1502 1502 
+44 88 0 96600 96600 
+45 8 8 28132 36122 
+46 88 352 1877 317943 
+47 960 0 596175 596175 
+48 3848 0 4326508 4326508 
+49 1920 0 1554926 1554926 
+50 88 176 1520808 1935351 
+51 1920 0 232710 232710 
+52 3840 13440 147307 1127974 
+53 8 39649 952349 4367892 
+54 1920 0 1279 1279 
+55 2880 0 1735682 1735682 
+56 1920 5760 44052 401422 
+57 1920 7680 505805 18950762 
+58 1920 9600 186932 5856264 
+59 1920 0 212114 212114 
+60 1920 7680 2595694 12564398 
+61 1920 309120 25712059 43183262 
+62 1920 24960 25378 84660 
+63 1920 74880 676204 13129135 
+64 2880 37440 386471 2376758 
+65 230400 2995200 3505733 13453126 
+66 76800 998400 832523 3933417 
+67 1920 24960 95254 585053 
+68 1920 24960 441366 3880770 
+69 960 24960 360411 3698585 
+70 960 2880 6601915 11932710 
+71 960 0 1884497 1884497 
+72 960 18240 16774408 126568900 
+73 1920 0 303973 303973 
+74 1920 0 88466 88466 
+75 1920 0 167778 167778 
+76 960 1040 60824 128367270 
+77 8 10724 899689 136097078 
+78 3840 0 358162 358162 
+</derivedinterval_data>
+</derivedprofile>
+
+</profile_xml>
+<profile_xml>
+<derivedentity id="mean_all">
+</derivedentity>
+<derivedprofile derivedentity="mean_all">
+<derivedinterval_data metrics="0 ">
+0 1 259.25 1771.5 17048687.25 
+1 266 0 341027 341027 
+2 29 0 592.875 592.875 
+3 1380 0 97681.375 97681.375 
+4 1 0 202 202 
+5 3 0 1714.5 1714.5 
+6 4 0 17 17 
+7 1 0 2.875 2.875 
+8 65 0 22.125 22.125 
+9 61 0 16.5 16.5 
+10 3 0 225.625 225.625 
+11 0.125 0 61.125 61.125 
+12 3 0 27.75 27.75 
+13 3 0 5000.25 5000.25 
+14 62 62 32540.125 32571.5 
+15 0.25 0.25 7127.5 7128.5 
+16 124 0 207677.25 207677.25 
+17 0.125 0.125 531 531.125 
+18 1 0 1084.375 1084.375 
+19 1 0 9.625 9.625 
+20 1 0 7.625 7.625 
+21 4 0 7.875 7.875 
+22 1 0 27440.5 27440.5 
+23 132578.375 0 52352.125 52352.125 
+24 131922.875 0 229811.125 229811.125 
+25 50.75 0 1591.75 1591.75 
+26 332.75 0 3168.625 3168.625 
+27 2 0 16.75 16.75 
+28 373.5 0 3421.25 3421.25 
+29 62.375 0 32.5 32.5 
+30 95 0 176.375 176.375 
+31 36.75 0 77.375 77.375 
+32 58.25 0 1069.5 1069.5 
+33 91.125 0 120.875 120.875 
+34 7.875 0 6.5 6.5 
+35 69.875 0 35.75 35.75 
+36 62 0 12.125 12.125 
+37 264501.25 0 4117130.625 4117130.625 
+38 240 0 2245648.625 2245648.625 
+39 240 0 307545.875 307545.875 
+40 480 0 410.875 410.875 
+41 240 0 184.875 184.875 
+42 480 0 121640 121640 
+43 240 0 187.75 187.75 
+44 11 0 12075 12075 
+45 1 1 3516.5 4515.25 
+46 11 44 234.625 39742.875 
+47 120 0 74521.875 74521.875 
+48 481 0 540813.5 540813.5 
+49 240 0 194365.75 194365.75 
+50 11 22 190101 241918.875 
+51 240 0 29088.75 29088.75 
+52 480 1680 18413.375 140996.75 
+53 1 4956.125 119043.625 545986.5 
+54 240 0 159.875 159.875 
+55 360 0 216960.25 216960.25 
+56 240 720 5506.5 50177.75 
+57 240 960 63225.625 2368845.25 
+58 240 1200 23366.5 732033 
+59 240 0 26514.25 26514.25 
+60 240 960 324461.75 1570549.75 
+61 240 38640 3214007.375 5397907.75 
+62 240 3120 3172.25 10582.5 
+63 240 9360 84525.5 1641141.875 
+64 360 4680 48308.875 297094.75 
+65 28800 374400 438216.625 1681640.75 
+66 9600 124800 104065.375 491677.125 
+67 240 3120 11906.75 73131.625 
+68 240 3120 55170.75 485096.25 
+69 120 3120 45051.375 462323.125 
+70 120 360 825239.375 1491588.75 
+71 120 0 235562.125 235562.125 
+72 120 2280 2096801 15821112.5 
+73 240 0 37996.625 37996.625 
+74 240 0 11058.25 11058.25 
+75 240 0 20972.25 20972.25 
+76 120 130 7603 16045908.75 
+77 1 1340.5 112461.125 17012134.75 
+78 480 0 44770.25 44770.25 
+</derivedinterval_data>
+<derivedatomic_data>
+0 54.5 147848 32768 34624.12903225807 123127120384
+1 7.75 115080 40 16333.54032258065 537467382938
+2 62 230160 40 18189.66935483871 643414634138
+3 0.25 32768 32768 32768 17179869184
+4 0.125 1925 1925 1925 29645000
+5 0.125 1925 1925 1925 29645000
+6 54.5 11.73722410723908 0.6314653511138518 3.628045276954922 559.7264169575949
+7 7.75 11.0019120458891 0.04608294930875576 3.074812511015443 7148.220833432315
+8 62 16.28493091381363 0.04608294930875576 3.160022492756162 7371.503140303087
+9 0.25 6.454205239314556 0.6314653511138518 3.542835295214204 336.4441100868224
+10 0.125 0.4563774300616406 0.4563774300616406 0.4563774300616406 1.666242869357341
+11 0.125 0.4563774300616406 0.4563774300616406 0.4563774300616406 1.666242869357341
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+14 0.25 897 897 897 12873744
+15 132629.125 199379 4 2138.865152756642 7651707492494
+16 132578.375 199379 4 2139.853326655279 7651707489246
+17 998.5 195640 4 2358.591778805799 182104727304
+18 780 1551 486 1016.933333333333 945538560
+19 2340 62040 5240 27151.11111111111 2412370944000
+20 1170 62040 19440 40677.33333333333 2269292544000
+21 93600 1551 486 1016.933333333333 113464627200
+22 31200 444 131 284.8 3074304000
+23 780 17760 5240 11392 122972160000
+24 780 53280 15720 34176 1106749440000
+25 780 62040 15720 37426.66666666667 1309805568000
+26 149.875 63102 4 3213.471418418113 130927636182
+27 132629.125 236500 4 2127.488193063889 7651707492494
+28 20481.75 231540 4 5656.21119099849 1425630735614
+29 68.125 21187 61 1443.476856915015 2576911222
+30 72.375 120220 3.5 5655.241257713782 43138828430
+31 84.5 27003.5 4 2060.100961538461 21687102882
+32 120 518 518 518 161337600
+33 360 20720 5840 13826.66666666667 411866112000
+34 180 20720 20720 20720 387210240000
+35 14400 518 518 518 19360512000
+36 4800 146 146 146 518092800
+37 120 5840 5840 5840 20723712000
+38 120 17520 17520 17520 186513408000
+39 120 20720 17520 19120 222326784000
+40 27.75 203865 3.5 18592.48588709677 93641142152
+41 9 27678.5 4 5917.5 15906552528
+42 20363.5 132162 4 3199.126800891284 1003869284886
+43 68.5 17428.5 50.5 1058.149805194805 2033150002
+44 26.625 113100.5 3.5 6009.29490022173 26104261914
+45 29.625 16084 4 1402.47040335254 4137063122
+46 120 424 424 424 119228160
+47 360 16960 5000 11280 298893312000
+48 180 16960 16960 16960 286147584000
+49 14400 424 424 424 14307379200
+50 4800 125 125 125 439526400
+51 120 5000 5000 5000 17581056000
+52 120 15000 15000 15000 158229504000
+53 120 16960 15000 15980 174497280000
+54 7.625 101476 3.5 11278.22222222222 19206689224
+55 11.125 16486 4 1835.527777777778 2173250864
+56 25425.625 43567.5 4 1154.939989339416 1142098971090
+57 77.5 21867 34 1483.464852670789 2372210472
+58 26.125 29822.5 3.5 2239.235033259423 10199695198
+59 28.875 4.5 4 4.253012048192771 714
+60 150 538 538 538 144049920
+61 450 21520 6160 14333.33333333333 364225536000
+62 225 21520 21520 21520 345719808000
+63 18000 538 538 538 17285990400
+64 6000 154 154 154 493824000
+65 150 6160 6160 6160 19752960000
+66 150 18480 18480 18480 177776640000
+67 150 21520 18480 20000 204128256000
+68 7 3.5 3.5 3.5 112
+69 11.125 4.5 4 4.25 274
+70 10232.75 51090.5 4 1315.663550694564 970437291954
+71 50 15015 185.5 1199.252017543859 1985657620
+72 26 41762.5 3.5 2632.376262626262 12753575638
+73 28.75 4.5 4 4.25609756097561 712
+74 60 349 349 349 122044800
+75 180 13960 4040 9386.666666666666 314744832000
+76 90 13960 13960 13960 292907520000
+77 7200 349 349 349 14645376000
+78 2400 101 101 101 405580800
+79 60 4040 4040 4040 16223232000
+80 60 12120 12120 12120 146009088000
+81 60 13960 12120 13040 170640384000
+82 7 3.5 3.5 3.5 112
+83 11 4.5 4 4.258064516129032 272
+84 10233.25 54531 4 1104.965460686858 471718613512
+85 50.5 10165.5 67 1099.580954619578 938769984
+86 26 46742.5 3.5 2867.229797979798 15122353152
+87 28.75 4.5 4 4.25609756097561 712
+88 60 223 223 223 59998080
+89 180 8920 2400 5933.333333333334 153240576000
+90 90 8920 8920 8920 143995392000
+91 7200 223 223 223 7199769600
+92 2400 60 60 60 177561600
+93 60 2400 2400 2400 7102464000
+94 60 7200 7200 7200 63922176000
+95 60 8920 7200 8060 79959552000
+96 7 3.5 3.5 3.5 112
+97 11 4.5 4 4.258064516129032 272
+98 15297.875 42796.5 4 964.4354963995092 748606536126
+99 59.75 14968 69.5 1083.700055370985 1472950980
+100 26.125 29762.5 3.5 2162.680709534368 10726873006
+101 28.875 4.5 4 4.253012048192771 714
+102 90 358 358 358 98154240
+103 270 14320 3720 9573.333333333334 254932992000
+104 135 14320 14320 14320 235570176000
+105 10800 358 358 358 11778508800
+106 3600 93 93 93 267648000
+107 90 3720 3720 3720 10705920000
+108 90 11160 11160 11160 96353280000
+109 90 14320 11160 12740 126700032000
+110 7 3.5 3.5 3.5 112
+111 11.125 4.5 4 4.25 274
+112 10233.875 40986 4 1467.374081592787 702406905818
+113 50.75 12415.5 73 1209.485402983744 1429102154
+114 26.125 28842.5 3.5 2145.24667405765 10071562564
+115 28.875 4.5 4 4.253012048192771 714
+116 60 284 284 284 89472000
+117 180 11360 3120 7560 229118976000
+118 90 11360 11360 11360 214732800000
+119 7200 284 284 284 10736640000
+120 2400 78 78 78 283392000
+121 60 3120 3120 3120 11335680000
+122 60 9360 9360 9360 102021120000
+123 60 11360 9360 10360 122588160000
+124 7 3.5 3.5 3.5 112
+125 11.125 4.5 4 4.25 274
+126 20360.5 44720 4 1098.140558240993 1186939153494
+127 67.75 20879.5 57.5 1318.836771284271 2425982070
+128 26 28203 3.5 1697.463414634146 12928674968
+129 28.75 4.5 4 4.253012048192771 712
+130 120 506 506 506 151253760
+131 360 20240 5720 13506.66666666667 385348608000
+132 180 20240 20240 20240 363009024000
+133 14400 506 506 506 18150451200
+134 4800 143 143 143 488678400
+135 120 5720 5720 5720 19547136000
+136 120 17160 17160 17160 175924224000
+137 120 20240 17160 18700 208965120000
+138 7 3.5 3.5 3.5 112
+139 11 4.5 4 4.25 272
+140 0.5 230160 124050 180350 253734170400
+141 0.5 230160 124050 180350 253734170400
+142 0.5 15.87646439493959 11.52084918781326 13.04484589666398 1765.589350908805
+143 0.375 15.87646439493959 11.52084918781326 13.69865679137643 1432.335228739241
+144 0.125 6.454205239314556 6.454205239314556 6.454205239314556 333.2541221695637
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 3.875 181120 1009 66357.875 42659307668
+152 3.875 181120 1009 66357.875 42659307668
+153 3.875 181120 1009 66357.875 42659307668
+154 3.875 181120 1009 66357.875 42659307668
+155 4.375 229800 1794 83527.35000000001 64056621648
+156 3.375 154120 1570 57273.75 34954357840
+157 0.625 43080 16304 25646 8560593408
+158 0.375 87760 87760 87760 20541670400
+159 4.625 230160 1794 85654.95 68176228048
+160 3.375 114420 1570 47375.41666666667 20812485840
+161 0.5 27000 224 9566 6492062208
+162 0.75 174960 174960 174960 40871680000
+163 2.875 124145 16275.5 49192.04166666667 21003709018
+164 1.75 936 83 516.5833333333334 1495568
+165 1 107960 99112.5 102399.1666666667 18933682250
+166 0.125 16080 16080 16080 2068531200
+167 2.75 40787 298.5 15203.08333333333 4537852970
+168 2.125 11994 186.5 4174.916666666667 477272618
+169 0.625 29160 15352 21268 4060580352
+170 2.375 49850 560.5 17929 8815737590
+171 1.75 8215 448.5 2653.916666666667 418414838
+172 0.625 41760 27952 33858 8397322752
+173 2.5 53305 291 19421.83333333333 10643591068
+174 1.875 6675 179 2552.333333333333 246879516
+175 0.625 46740 31272 37663 10396711552
+176 2.5 40110 301.5 14460.75 4744839006
+177 1.875 10455 189 3453.958333333333 390164756
+178 0.625 29760 12072.5 18999.375 4354674250
+179 2.5 38930.5 296.5 14330 4443111208
+180 1.875 10250.5 184.5 3544.666666666667 427471656
+181 0.625 28840 12912 19348 4015639552
+182 2.5 42639.5 356.5 15687.58333333333 7648146880
+183 2 14439.5 244.5 6109.583333333333 645256128
+184 0.5 28200 112 9578 7002890752
+185 0.125 40 40 40 12800
+186 0.125 40 40 40 12800
+187 0.125 0.04608294930875576 0.04608294930875576 0.04608294930875576 0.01698910573594683
+188 0.125 0.04608294930875576 0.04608294930875576 0.04608294930875576 0.01698910573594683
+189 1 4 4 4 16
+190 1 4 4 4 16
+191 0.125 0.5 0.5 0.5 2
+192 0.125 0.5 0.5 0.5 2
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 0.875 3.5 3.5 3.5 14
+196 0.875 3.5 3.5 3.5 14
+197 0.125 0.5 0.5 0.5 2
+198 0.125 0.5 0.5 0.5 2
+199 0.125 0.5 0.5 0.5 2
+200 0.125 0.5 0.5 0.5 2
+201 0.125 0.5 0.5 0.5 2
+202 0.125 0.5 0.5 0.5 2
+203 0.125 0.5 0.5 0.5 2
+204 0.125 0.5 0.5 0.5 2
+205 0.125 0.5 0.5 0.5 2
+206 0.125 0.5 0.5 0.5 2
+207 0.125 0.5 0.5 0.5 2
+208 0.125 0.5 0.5 0.5 2
+209 0.125 0.5 0.5 0.5 2
+210 0.125 0.5 0.5 0.5 2
+211 240 336.75 336.75 336.75 27437520
+212 240 336.75 336.75 336.75 27437520
+213 240 224.25 224.25 224.25 12071340
+214 240 224.25 224.25 224.25 12071340
+215 240 1119.25 1119.25 1119.25 302704740
+216 240 1119.25 1119.25 1119.25 302704740
+</derivedatomic_data>
+</derivedprofile>
+
+</profile_xml>
+<profile_xml>
+<derivedentity id="mean_no_null">
+</derivedentity>
+<derivedprofile derivedentity="mean_no_null">
+<derivedinterval_data metrics="0 ">
+0 1 259.25 1771.5 17048687.25 
+1 266 0 341027 341027 
+2 29 0 592.875 592.875 
+3 1380 0 97681.375 97681.375 
+4 1 0 202 202 
+5 3 0 1714.5 1714.5 
+6 4 0 17 17 
+7 1 0 2.875 2.875 
+8 65 0 22.125 22.125 
+9 61 0 16.5 16.5 
+10 3 0 225.625 225.625 
+11 1 0 489 489 
+12 3 0 27.75 27.75 
+13 3 0 5000.25 5000.25 
+14 62 62 32540.125 32571.5 
+15 2 2 57020 57028 
+16 124 0 207677.25 207677.25 
+17 1 1 4248 4249 
+18 1 0 1084.375 1084.375 
+19 1 0 9.625 9.625 
+20 1 0 7.625 7.625 
+21 4 0 7.875 7.875 
+22 1 0 27440.5 27440.5 
+23 132578.375 0 52352.125 52352.125 
+24 131922.875 0 229811.125 229811.125 
+25 58 0 1819.142857142857 1819.142857142857 
+26 332.75 0 3168.625 3168.625 
+27 2 0 16.75 16.75 
+28 373.5 0 3421.25 3421.25 
+29 62.375 0 32.5 32.5 
+30 95 0 176.375 176.375 
+31 36.75 0 77.375 77.375 
+32 58.25 0 1069.5 1069.5 
+33 91.125 0 120.875 120.875 
+34 31.5 0 26 26 
+35 69.875 0 35.75 35.75 
+36 62 0 12.125 12.125 
+37 264501.25 0 4117130.625 4117130.625 
+38 240 0 2245648.625 2245648.625 
+39 240 0 307545.875 307545.875 
+40 480 0 410.875 410.875 
+41 240 0 184.875 184.875 
+42 480 0 121640 121640 
+43 240 0 187.75 187.75 
+44 11 0 12075 12075 
+45 1 1 3516.5 4515.25 
+46 11 44 234.625 39742.875 
+47 120 0 74521.875 74521.875 
+48 481 0 540813.5 540813.5 
+49 240 0 194365.75 194365.75 
+50 11 22 190101 241918.875 
+51 240 0 29088.75 29088.75 
+52 480 1680 18413.375 140996.75 
+53 1 4956.125 119043.625 545986.5 
+54 240 0 159.875 159.875 
+55 360 0 216960.25 216960.25 
+56 240 720 5506.5 50177.75 
+57 240 960 63225.625 2368845.25 
+58 240 1200 23366.5 732033 
+59 240 0 26514.25 26514.25 
+60 240 960 324461.75 1570549.75 
+61 240 38640 3214007.375 5397907.75 
+62 240 3120 3172.25 10582.5 
+63 240 9360 84525.5 1641141.875 
+64 360 4680 48308.875 297094.75 
+65 28800 374400 438216.625 1681640.75 
+66 9600 124800 104065.375 491677.125 
+67 240 3120 11906.75 73131.625 
+68 240 3120 55170.75 485096.25 
+69 120 3120 45051.375 462323.125 
+70 120 360 825239.375 1491588.75 
+71 120 0 235562.125 235562.125 
+72 120 2280 2096801 15821112.5 
+73 240 0 37996.625 37996.625 
+74 240 0 11058.25 11058.25 
+75 240 0 20972.25 20972.25 
+76 120 130 7603 16045908.75 
+77 1 1340.5 112461.125 17012134.75 
+78 480 0 44770.25 44770.25 
+</derivedinterval_data>
+<derivedatomic_data>
+0 54.5 147848 32768 34624.12903225807 123127120384
+1 62 920640 320 130668.3225806452 4299739063504
+2 62 230160 40 18189.66935483871 643414634138
+3 2 262144 262144 262144 137438953472
+4 1 15400 15400 15400 237160000
+5 1 15400 15400 15400 237160000
+6 54.5 11.73722410723908 0.6314653511138518 3.628045276954922 559.7264169575949
+7 62 88.01529636711281 0.3686635944700461 24.59850008812355 57185.76666745852
+8 62 16.28493091381363 0.04608294930875576 3.160022492756162 7371.503140303087
+9 2 51.63364191451645 5.051722808910815 28.34268236171363 2691.552880694579
+10 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+11 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+14 2 7176 7176 7176 102989952
+15 132629.125 199379 4 2138.865152756642 7651707492494
+16 132578.375 199379 4 2139.853326655279 7651707489246
+17 998.5 195640 4 2358.591778805799 182104727304
+18 780 1551 486 1016.933333333333 945538560
+19 2340 62040 5240 27151.11111111111 2412370944000
+20 1170 62040 19440 40677.33333333333 2269292544000
+21 93600 1551 486 1016.933333333333 113464627200
+22 31200 444 131 284.8 3074304000
+23 780 17760 5240 11392 122972160000
+24 780 53280 15720 34176 1106749440000
+25 780 62040 15720 37426.66666666667 1309805568000
+26 149.875 63102 4 3213.471418418113 130927636182
+27 132629.125 236500 4 2127.488193063889 7651707492494
+28 20481.75 231540 4 5656.21119099849 1425630735614
+29 77.85714285714286 24213.71428571429 69.71428571428571 1649.687836474303 2945041396.571429
+30 82.71428571428571 137394.2857142857 4 6463.132865958608 49301518205.71429
+31 84.5 27003.5 4 2060.100961538461 21687102882
+32 240 1036 1036 1036 322675200
+33 720 41440 11680 27653.33333333333 823732224000
+34 360 41440 41440 41440 774420480000
+35 28800 1036 1036 1036 38721024000
+36 9600 292 292 292 1036185600
+37 240 11680 11680 11680 41447424000
+38 240 35040 35040 35040 373026816000
+39 240 41440 35040 38240 444653568000
+40 31.71428571428572 232988.5714285714 4 21248.55529953917 107018448173.7143
+41 9 27678.5 4 5917.5 15906552528
+42 20363.5 132162 4 3199.126800891284 1003869284886
+43 78.28571428571429 19918.28571428571 57.71428571428572 1209.314063079777 2323600002.285714
+44 30.42857142857143 129257.7142857143 4 6867.765600253406 29833442187.42857
+45 29.625 16084 4 1402.47040335254 4137063122
+46 240 848 848 848 238456320
+47 720 33920 10000 22560 597786624000
+48 360 33920 33920 33920 572295168000
+49 28800 848 848 848 28614758400
+50 9600 250 250 250 879052800
+51 240 10000 10000 10000 35162112000
+52 240 30000 30000 30000 316459008000
+53 240 33920 30000 31960 348994560000
+54 8.714285714285714 115972.5714285714 4 12889.39682539683 21950501970.28571
+55 11.125 16486 4 1835.527777777778 2173250864
+56 25425.625 43567.5 4 1154.939989339416 1142098971090
+57 88.57142857142857 24990.85714285714 38.85714285714285 1695.38840305233 2711097682.285714
+58 29.85714285714286 34082.85714285714 4 2559.125752296484 11656794512
+59 28.875 4.5 4 4.253012048192771 714
+60 240 860.8 860.8 860.8 230479872
+61 720 34432 9856 22933.33333333334 582760857600
+62 360 34432 34432 34432 553151692800
+63 28800 860.8 860.8 860.8 27657584640
+64 9600 246.4 246.4 246.4 790118400
+65 240 9856 9856 9856 31604736000
+66 240 29568 29568 29568 284442624000
+67 240 34432 29568 32000 326605209600
+68 8 4 4 4 128
+69 11.125 4.5 4 4.25 274
+70 10232.75 51090.5 4 1315.663550694564 970437291954
+71 57.14285714285715 17160 212 1370.573734335839 2269322994.285714
+72 29.71428571428572 47728.57142857143 4 3008.430014430014 14575515014.85714
+73 28.75 4.5 4 4.25609756097561 712
+74 240 1396 1396 1396 488179200
+75 720 55840 16160 37546.66666666666 1258979328000
+76 360 55840 55840 55840 1171630080000
+77 28800 1396 1396 1396 58581504000
+78 9600 404 404 404 1622323200
+79 240 16160 16160 16160 64892928000
+80 240 48480 48480 48480 584036352000
+81 240 55840 48480 52160 682561536000
+82 8 4 4 4 128
+83 11 4.5 4 4.258064516129032 272
+84 10233.25 54531 4 1104.965460686858 471718613512
+85 57.71428571428572 11617.71428571429 76.57142857142857 1256.66394813666 1072879981.714286
+86 29.71428571428572 53420 4 3276.834054834054 17282689316.57143
+87 28.75 4.5 4 4.25609756097561 712
+88 240 892 892 892 239992320
+89 720 35680 9600 23733.33333333334 612962304000
+90 360 35680 35680 35680 575981568000
+91 28800 892 892 892 28799078400
+92 9600 240 240 240 710246400
+93 240 9600 9600 9600 28409856000
+94 240 28800 28800 28800 255688704000
+95 240 35680 28800 32240 319838208000
+96 8 4 4 4 128
+97 11 4.5 4 4.258064516129032 272
+98 15297.875 42796.5 4 964.4354963995092 748606536126
+99 68.28571428571429 17106.28571428571 79.42857142857143 1238.514348995412 1683372548.571429
+100 29.85714285714286 34014.28571428572 4 2471.635096610706 12259283435.42857
+101 28.875 4.5 4 4.253012048192771 714
+102 240 954.6666666666666 954.6666666666666 954.6666666666666 261744640
+103 720 38186.66666666666 9920 25528.88888888889 679821312000
+104 360 38186.66666666666 38186.66666666666 38186.66666666666 628187136000
+105 28800 954.6666666666666 954.6666666666666 954.6666666666666 31409356800
+106 9600 248 248 248 713728000
+107 240 9920 9920 9920 28549120000
+108 240 29760 29760 29760 256942080000
+109 240 38186.66666666666 29760 33973.33333333334 337866752000
+110 8 4 4 4 128
+111 11.125 4.5 4 4.25 274
+112 10233.875 40986 4 1467.374081592787 702406905818
+113 58 14189.14285714286 83.42857142857143 1382.269031981421 1633259604.571429
+114 29.85714285714286 32962.85714285714 4 2451.710484637314 11510357216
+115 28.875 4.5 4 4.253012048192771 714
+116 240 1136 1136 1136 357888000
+117 720 45440 12480 30240 916475904000
+118 360 45440 45440 45440 858931200000
+119 28800 1136 1136 1136 42946560000
+120 9600 312 312 312 1133568000
+121 240 12480 12480 12480 45342720000
+122 240 37440 37440 37440 408084480000
+123 240 45440 37440 41440 490352640000
+124 8 4 4 4 128
+125 11.125 4.5 4 4.25 274
+126 20360.5 44720 4 1098.140558240993 1186939153494
+127 77.42857142857143 23862.28571428571 65.71428571428571 1507.242024324881 2772550937.142857
+128 29.71428571428572 32232 4 1939.95818815331 14775628534.85714
+129 28.75 4.5 4 4.253012048192771 712
+130 240 1012 1012 1012 302507520
+131 720 40480 11440 27013.33333333333 770697216000
+132 360 40480 40480 40480 726018048000
+133 28800 1012 1012 1012 36300902400
+134 9600 286 286 286 977356800
+135 240 11440 11440 11440 39094272000
+136 240 34320 34320 34320 351848448000
+137 240 40480 34320 37400 417930240000
+138 8 4 4 4 128
+139 11 4.5 4 4.25 272
+140 2 920640 496200 721400 1014936681600
+141 2 920640 496200 721400 1014936681600
+142 2 63.50585757975834 46.08339675125305 52.17938358665591 7062.357403635218
+143 1.5 63.50585757975834 46.08339675125305 54.7946271655057 5729.340914956963
+144 1 51.63364191451645 51.63364191451645 51.63364191451645 2666.032977356509
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 3.875 181120 1009 66357.875 42659307668
+152 3.875 181120 1009 66357.875 42659307668
+153 3.875 181120 1009 66357.875 42659307668
+154 3.875 181120 1009 66357.875 42659307668
+155 4.375 229800 1794 83527.35000000001 64056621648
+156 3.857142857142857 176137.1428571429 1794.285714285714 65455.71428571428 39947837531.42857
+157 2.5 172320 65216 102584 34242373632
+158 1 234026.6666666667 234026.6666666667 234026.6666666667 54777787733.33334
+159 4.625 230160 1794 85654.95 68176228048
+160 3.857142857142857 130765.7142857143 1794.285714285714 54143.33333333334 23785698102.85714
+161 4 216000 1792 76528 51936497664
+162 1 233280 233280 233280 54495573333.33334
+163 2.875 124145 16275.5 49192.04166666667 21003709018
+164 2.333333333333333 1248 110.6666666666667 688.7777777777778 1994090.666666667
+165 1.333333333333333 143946.6666666667 132150 136532.2222222222 25244909666.66667
+166 1 128640 128640 128640 16548249600
+167 3.142857142857143 46613.71428571428 341.1428571428572 17374.95238095238 5186117680
+168 2.833333333333333 15992 248.6666666666667 5566.555555555556 636363490.6666666
+169 2.5 116640 61408 85072 16242321408
+170 2.714285714285714 56971.42857142857 640.5714285714286 20490.28571428572 10075128674.28572
+171 2.333333333333333 10953.33333333333 598 3538.555555555556 557886450.6666666
+172 2.5 167040 111808 135432 33589291008
+173 2.857142857142857 60920 332.5714285714286 22196.38095238095 12164104077.71428
+174 2.5 8900 238.6666666666667 3403.111111111111 329172688
+175 2.5 186960 125088 150652 41586846208
+176 2.857142857142857 45840 344.5714285714286 16526.57142857143 5422673149.714286
+177 2.5 13940 252 4605.277777777777 520219674.6666667
+178 2.5 119040 48290 75997.5 17418697000
+179 2.857142857142857 44492 338.8571428571428 16377.14285714286 5077841380.571428
+180 2.5 13667.33333333333 246 4726.222222222222 569962208
+181 2.5 115360 51648 77392 16062558208
+182 2.857142857142857 48730.85714285714 407.4285714285714 17928.66666666667 8740739291.428572
+183 2.666666666666667 19252.66666666667 326 8146.11111111111 860341504
+184 4 225600 896 76624 56023126016
+185 1 320 320 320 102400
+186 1 320 320 320 102400
+187 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+188 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+189 1 4 4 4 16
+190 1 4 4 4 16
+191 1 4 4 4 16
+192 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+197 1 4 4 4 16
+198 1 4 4 4 16
+199 1 4 4 4 16
+200 1 4 4 4 16
+201 1 4 4 4 16
+202 1 4 4 4 16
+203 1 4 4 4 16
+204 1 4 4 4 16
+205 1 4 4 4 16
+206 1 4 4 4 16
+207 1 4 4 4 16
+208 1 4 4 4 16
+209 1 4 4 4 16
+210 1 4 4 4 16
+211 240 336.75 336.75 336.75 27437520
+212 240 336.75 336.75 336.75 27437520
+213 240 224.25 224.25 224.25 12071340
+214 240 224.25 224.25 224.25 12071340
+215 240 1119.25 1119.25 1119.25 302704740
+216 240 1119.25 1119.25 1119.25 302704740
+</derivedatomic_data>
+</derivedprofile>
+
+</profile_xml>
+<profile_xml>
+<derivedentity id="stddev_all">
+</derivedentity>
+<derivedprofile derivedentity="stddev_all">
+<derivedinterval_data metrics="0 ">
+0 0 72.60466582803063 1160.457668336075 1486.258704768453 
+1 0 0 122026.9053159999 122026.9053159999 
+2 0 0 177.8647221204925 177.8647221204925 
+3 0 0 34465.33184207538 34465.33184207538 
+4 0 0 36.96281915655244 36.96281915655244 
+5 0 0 609.9467189845356 609.9467189845356 
+6 0 0 3.741657386773941 3.741657386773941 
+7 0 0 0.3307189138830738 0.3307189138830738 
+8 0 0 7.65567599889128 7.65567599889128 
+9 0 0 4.69041575982343 4.69041575982343 
+10 0 0 54.74928652503154 54.74928652503154 
+11 0.3307189138830738 0 161.7215488888231 161.7215488888231 
+12 0 0 5.309190145398825 5.309190145398825 
+13 0 0 3.992179855667828 3.992179855667828 
+14 0 0 75046.49022845355 75066.22185443997 
+15 0.6614378277661477 0.6614378277661477 18857.59246961287 18860.23822092393 
+16 0 0 77974.77680755168 77974.77680755168 
+17 0.3307189138830738 0.3307189138830738 1404.893946175298 1405.224665089181 
+18 0 0 30.02889233721417 30.02889233721417 
+19 0 0 6.981001002721601 6.981001002721601 
+20 0 0 1.111024302164449 1.111024302164449 
+21 0 0 1.452368754827781 1.452368754827781 
+22 0 0 1454.766991651928 1454.766991651928 
+23 44237.39401495498 0 12245.3390973617 12245.3390973617 
+24 44146.26896023462 0 57729.52295930892 57729.52295930892 
+25 19.18169700521828 0 630.7189845723688 630.7189845723688 
+26 111.6050514089752 0 1321.922646895423 1321.922646895423 
+27 0 0 3.929058411375428 3.929058411375428 
+28 206.9764479355079 0 915.3138464483097 915.3138464483097 
+29 0.9921567416492215 0 22.89650628371062 22.89650628371062 
+30 91.64060235506966 0 353.3914039347873 353.3914039347873 
+31 19.03779136349592 0 32.38030844510287 32.38030844510287 
+32 72.60466582803063 0 2541.772708170422 2541.772708170422 
+33 82.12252659897892 0 145.6738115619963 145.6738115619963 
+34 20.45994562553869 0 15.74007623869719 15.74007623869719 
+35 20.45994562553869 0 14.07790822530109 14.07790822530109 
+36 0 0 5.18260311040697 5.18260311040697 
+37 88383.06590454701 0 1593912.537269999 1593912.537269999 
+38 0 0 307265.0128984496 307265.0128984496 
+39 0 0 30430.56243909032 30430.56243909032 
+40 0 0 37.46143850681658 37.46143850681658 
+41 0 0 5.109733358992424 5.109733358992424 
+42 0 0 13282.11916450082 13282.11916450082 
+43 0 0 7.806247497997997 7.806247497997997 
+44 0 0 887.2568681052855 887.2568681052855 
+45 0 0 518.2663407939975 643.1210519801074 
+46 0 0 16.79983258845159 16851.10090941761 
+47 0 0 5647.673800723179 5647.673800723179 
+48 0 0 75413.31273720841 75413.31273720841 
+49 0 0 17521.18003125075 17521.18003125075 
+50 0 0 502172.6704725178 491666.6649411564 
+51 0 0 2109.153251307263 2109.153251307263 
+52 0 0 4169.298740121053 16969.72350798621 
+53 0 1125.426856519339 33446.4109357697 2721.976579620038 
+54 0 0 16.77377044674214 16.77377044674214 
+55 0 0 20341.73355905293 20341.73355905293 
+56 0 0 669.9389897595154 3571.810946494789 
+57 0 0 9113.820945924657 321678.7065402954 
+58 0 0 1476.067241015802 59537.09270908347 
+59 0 0 3335.32313839304 3335.32313839304 
+60 0 0 41011.40061236022 25504.57652927215 
+61 0 0 311116.0520275905 24412.07072203216 
+62 0 1046.135746449762 909.2412702357939 1213.338266931362 
+63 0 3138.407239349285 22187.70163852038 548118.5898971675 
+64 0 1569.203619674642 12375.47389433532 110949.8375660708 
+65 0 125536.2895739714 110854.9636438729 235804.7462816164 
+66 0 41845.42985799046 29953.72430908008 76186.79563651023 
+67 0 1046.135746449762 2845.330637641257 25819.94779689484 
+68 0 1046.135746449762 15002.82947271947 279870.2543768049 
+69 0 1046.135746449762 10799.68962444639 250240.0464006698 
+70 0 0 91403.50434055783 139848.8181517366 
+71 0 0 20510.48958726668 20510.48958726668 
+72 0 0 253364.7799196842 411000.7817459111 
+73 0 0 3931.153836264234 3931.153836264234 
+74 0 0 927.3221864594851 927.3221864594851 
+75 0 0 2562.17035684593 2562.17035684593 
+76 0 0 393.8092812517247 86547.56628402384 
+77 0 206.877379140398 18594.71705510399 14.36793304550101 
+78 0 0 3047.157230518307 3047.157230518307 
+</derivedinterval_data>
+<derivedatomic_data>
+0 19.84313483298443 304430.8701298211 86695.97896096451 86131.67826434519 277487757859.8126
+1 20.50457266075058 304473.0608773131 105.8300524425836 43214.4857227941 1422005033062.668
+2 0 398648.8138700528 105.8300524425836 42789.88156552568 1409533848706.562
+3 0.6614378277661477 86695.97896096451 86695.97896096451 86695.97896096451 45453661417.48616
+4 0.3307189138830738 5093.071273799337 5093.071273799337 5093.071273799337 78433297.6165098
+5 0.3307189138830738 5093.071273799337 5093.071273799337 5093.071273799337 78433297.6165098
+6 19.84313483298443 20.46396831743008 1.670700280601335 9.343919350486455 995.5417421429372
+7 20.50457266075058 29.1083232196284 0.1219240235513636 8.135189232296915 18912.41464183277
+8 0 30.43714640578067 0.1219240235513636 8.106054502429524 18837.09823802807
+9 0.6614378277661477 17.07622197379644 1.670700280601335 9.373461127198885 890.1474453621698
+10 0.3307189138830738 1.207461183925874 1.207461183925874 1.207461183925874 4.408464256154211
+11 0.3307189138830738 1.207461183925874 1.207461183925874 1.207461183925874 4.408464256154211
+12 0 0 0 0 0
+13 0 0 0 0 0
+14 0.6614378277661477 2373.238926024938 2373.238926024938 2373.238926024938 34060725.06630991
+15 44232.27216195631 54382.16736210501 0 358.4006692648622 2285374193799.716
+16 44237.39401495498 54382.16736210501 0 358.7984205391311 2285374194561.759
+17 312.5487961902909 51337.30027962125 0 522.0962572698347 143934498168.4214
+18 261.5339366124404 148.6707772226943 263.9318093750732 169.8005627526334 256936646.5996534
+19 784.6018098373212 5946.831088907772 3207.740637894529 4624.132084063369 649407850148.4254
+20 392.3009049186606 5946.831088907772 10557.27237500293 6792.022510105377 616647951839.1687
+21 31384.07239349285 148.6707772226943 263.9318093750732 169.8005627526334 30832397591.95841
+22 10461.35746449762 55.56977595779922 80.19351594736322 51.29405423633413 941592593.218787
+23 261.5339366124404 2222.791038311969 3207.740637894529 2051.76216945337 37663703728.75148
+24 261.5339366124404 6668.373114935906 9623.221913683587 6155.28650836011 338973333558.7633
+25 261.5339366124404 5946.831088907772 9623.221913683587 6442.052812919511 372632401474.874
+26 54.5055903096187 109300.0465507678 0 6268.97970462221 287263551504.4669
+27 44232.16025822586 9905.63152958962 0 375.4356473928464 2071428783927.438
+28 20295.63358058822 8493.856603451697 0 5876.233218781754 1944820542514.968
+29 93.83421217764872 25045.74181372954 50.18964036531842 1372.276857159999 4010741043.416925
+30 27.35844248125247 57316.29785671786 1.322875655532295 2275.718398207827 21822315462.71165
+31 7.3824115301167 71433.96252308841 0 5439.93181467155 57378677424.1133
+32 120 635.5438615862795 635.5438615862795 635.5438615862795 252125517.5188358
+33 360 25421.75446345118 7227.945766260286 16952.1942204804 642951017954.974
+34 180 25421.75446345118 25421.75446345118 25421.75446345118 605101242045.2061
+35 14400 635.5438615862795 635.5438615862795 635.5438615862795 30255062102.2603
+36 4800 180.6986441565072 180.6986441565072 180.6986441565072 816209920.706579
+37 120 7227.945766260286 7227.945766260286 7227.945766260286 32648396828.26316
+38 120 21683.83729878086 21683.83729878086 21683.83729878086 293835571454.3685
+39 120 25421.75446345118 21683.83729878086 23551.27172787066 348592710270.1307
+40 10.49702338760851 77425.66741720733 1.322875655532295 7286.144091373575 38491339833.14259
+41 2.645751311064591 73219.84465805702 0 15645.65037798046 42084781866.81761
+42 20306.56356329155 74187.01813659853 0 3591.147348345268 1603962127222.096
+43 93.7723306738187 22176.93589633158 65.38921929492659 849.8072934446933 3431414822.772719
+44 22.11864315458794 84142.49878479958 1.322875655532295 4455.105383110105 25500216329.40686
+45 20.18004893452937 42542.16924417466 0 3699.239925962527 10945638122.86178
+46 120 563.0346348138806 563.0346348138806 563.0346348138806 196527449.8118164
+47 360 22521.38539255523 6946.538706435026 14937.40420703826 491185311612.7103
+48 180 22521.38539255523 22521.38539255523 22521.38539255523 471665879548.3593
+49 14400 563.0346348138806 563.0346348138806 563.0346348138806 23583293977.41796
+50 4800 173.6634676608757 173.6634676608757 173.6634676608757 762998963.2882079
+51 120 6946.538706435026 6946.538706435026 6946.538706435026 30519958531.52832
+52 120 20839.61611930508 20839.61611930508 20839.61611930508 274679626783.7549
+53 120 22521.38539255523 20839.61611930508 21667.07179108428 294194506526.5478
+54 2.912795049432761 94389.14418512332 1.322875655532295 10488.16055616293 23677301664.86737
+55 7.896795236043543 43605.76127073119 0 4845.011134588869 5749880548.629026
+56 19654.21390527678 47823.2802905656 0 1167.821352051001 1641296389481.875
+57 90.95740761477319 21969.36737823827 49.47726750741192 1310.95824382415 3431178355.250917
+58 22.2285711416636 51665.17689653254 1.322875655532295 4229.655746606304 21914566398.04199
+59 20.45994562553869 1.322875655532295 0 0.6694069582211656 994.0603603403569
+60 116.1895003862225 557.462106335489 557.462106335489 557.462106335489 205556730.5065383
+61 348.5685011586675 22298.48425341956 6660.210206892873 14808.52007010379 516089574936.006
+62 174.2842505793338 22298.48425341956 22298.48425341956 22298.48425341956 493336153215.6918
+63 13942.7400463467 557.462106335489 557.462106335489 557.462106335489 24666807660.78459
+64 4647.580015448901 166.5052551723218 166.5052551723218 166.5052551723218 742954721.3078331
+65 116.1895003862225 6660.210206892873 6660.210206892873 6660.210206892873 29718188852.31332
+66 116.1895003862225 19980.63062067862 19980.63062067862 19980.63062067862 267463699670.8199
+67 116.1895003862225 22298.48425341956 19980.63062067862 21124.99940828402 298049289189.2445
+68 2.645751311064591 1.322875655532295 1.322875655532295 1.322875655532295 42.33202097703345
+69 7.896795236043543 1.322875655532295 0 0.6614378277661477 380.2683263170889
+70 17583.21573084684 75577.84455612637 0 1685.453353763662 1820640365823.185
+71 97.40508200294275 24292.47930944884 282.0350155565794 766.1894316287617 3759420264.298889
+72 21.91460700081113 77501.93290331539 1.322875655532295 4557.853413449109 22101089358.61048
+73 20.12926973340066 1.322875655532295 0 0.6775704577116651 988.768931550744
+74 103.9230484541326 621.8673491991681 621.8673491991681 621.8673491991681 232928824.3922216
+75 311.7691453623979 24874.69396796672 7160.670359680021 16705.51206438561 599523724033.1005
+76 155.884572681199 24874.69396796672 24874.69396796672 24874.69396796672 559029178541.3318
+77 12470.76581449592 621.8673491991681 621.8673491991681 621.8673491991681 27951458927.06659
+78 4156.921938165306 179.0167589920005 179.0167589920005 179.0167589920005 761820103.6704663
+79 103.9230484541326 7160.670359680021 7160.670359680021 7160.670359680021 30472804146.81865
+80 103.9230484541326 21482.01107904006 21482.01107904006 21482.01107904006 274255237321.3679
+81 103.9230484541326 24874.69396796672 21482.01107904006 23176.81600220358 323419003489.7255
+82 2.645751311064591 1.322875655532295 1.322875655532295 1.322875655532295 42.33202097703345
+83 7.566372975210778 1.322875655532295 0 0.6827745318876383 374.9773326482549
+84 17518.58487970704 84259.40343368211 0 1574.398294318788 1079753015433.141
+85 74.0489702831849 17304.58424088831 56.84188596448925 907.2999149085225 2178811962.917932
+86 21.91460700081113 86744.42174428278 1.322875655532295 4960.803005109996 26205690368.90279
+87 20.12926973340066 1.322875655532295 0 0.6775704577116651 988.768931550744
+88 103.9230484541326 447.5075418358891 447.5075418358891 447.5075418358891 141995110.7311967
+89 311.7691453623979 17900.30167343556 4881.966816765555 11900.14005519823 362056359700.8299
+90 155.884572681199 17900.30167343556 17900.30167343556 17900.30167343556 340788265754.8719
+91 12470.76581449592 447.5075418358891 447.5075418358891 447.5075418358891 17039413287.7436
+92 4156.921938165306 122.0491704191389 122.0491704191389 122.0491704191389 426095591.5374859
+93 103.9230484541326 4881.966816765555 4881.966816765555 4881.966816765555 17043823661.49944
+94 103.9230484541326 14645.90045029666 14645.90045029666 14645.90045029666 153394412953.4949
+95 103.9230484541326 17900.30167343556 14645.90045029666 16272.07423778542 190288366056.5728
+96 2.645751311064591 1.322875655532295 1.322875655532295 1.322875655532295 42.33202097703345
+97 7.566372975210778 1.322875655532295 0 0.6827745318876383 374.9773326482549
+98 19675.45413985088 49766.384214146 0 1049.079173634363 1214030460535.711
+99 96.19738821818397 20765.3311074011 60.59496678767965 785.4311961226464 2423559471.302933
+100 22.2285711416636 52851.1722079085 1.322875655532295 4310.995432926799 25100014990.02416
+101 20.45994562553869 1.322875655532295 0 0.6694069582211656 994.0603603403569
+102 116.1895003862225 529.9169746290451 529.9169746290451 529.9169746290451 162345961.3492519
+103 348.5685011586675 21196.6789851618 5547.035244164219 14161.85800741633 422662532322.763
+104 174.2842505793338 21196.6789851618 21196.6789851618 21196.6789851618 389630307238.2047
+105 13942.7400463467 529.9169746290451 529.9169746290451 529.9169746290451 19481515361.91023
+106 4647.580015448901 138.6758811041055 138.6758811041055 138.6758811041055 443485727.9226018
+107 116.1895003862225 5547.035244164219 5547.035244164219 5547.035244164219 17739429116.90407
+108 116.1895003862225 16641.10573249266 16641.10573249266 16641.10573249266 159654862052.1367
+109 116.1895003862225 21196.6789851618 16641.10573249266 18901.33328630549 209004458389.2508
+110 2.645751311064591 1.322875655532295 1.322875655532295 1.322875655532295 42.33202097703345
+111 7.896795236043543 1.322875655532295 0 0.6614378277661477 380.2683263170889
+112 17517.35955728988 47827.26343833609 0 1679.540986820361 1539833849524.914
+113 74.27440676302976 21082.77689845434 55.19963767997033 1138.287536094634 3161287372.97647
+114 22.2285711416636 50369.46499368441 1.322875655532295 4194.107145309446 22941804372.65721
+115 20.45994562553869 1.322875655532295 0 0.6694069582211656 994.0603603403569
+116 103.9230484541326 540.5034689990435 540.5034689990435 540.5034689990435 197318423.876227
+117 311.7691453623979 21620.13875996174 6123.528394643075 14448.25864171104 506481740558.1298
+118 155.884572681199 21620.13875996174 21620.13875996174 21620.13875996174 473564217302.9449
+119 12470.76581449592 540.5034689990435 540.5034689990435 540.5034689990435 23678210865.14724
+120 4156.921938165306 153.0882098660769 153.0882098660769 153.0882098660769 653422036.6267425
+121 103.9230484541326 6123.528394643075 6123.528394643075 6123.528394643075 26136881465.0697
+122 103.9230484541326 18370.58518392923 18370.58518392923 18370.58518392923 235231933185.6273
+123 103.9230484541326 21620.13875996174 18370.58518392923 19985.7148983968 275374489102.7751
+124 2.645751311064591 1.322875655532295 1.322875655532295 1.322875655532295 42.33202097703345
+125 7.896795236043543 1.322875655532295 0 0.6614378277661477 380.2683263170889
+126 20305.8698594766 72246.35761060899 0 1257.339542572209 1711870067866.872
+127 93.81331195518044 23950.32078595191 62.25552184344775 964.6802766806932 3548939001.623887
+128 22.25421308426789 74609.05309009088 1.322875655532295 4481.995098641616 34206057984.93758
+129 20.50457266075058 1.322875655532295 0 0.6694069582211656 994.802492960286
+130 120 611.7090811815696 611.7090811815696 611.7090811815696 219924162.2905933
+131 360 24468.36324726278 6980.544391378082 16287.89325439808 558732791518.0023
+132 180 24468.36324726278 24468.36324726278 24468.36324726278 527817989497.4238
+133 14400 611.7090811815696 611.7090811815696 611.7090811815696 26390899474.87119
+134 4800 174.5136097844521 174.5136097844521 174.5136097844521 720579097.1636077
+135 120 6980.544391378082 6980.544391378082 6980.544391378082 28823163886.54431
+136 120 20941.63317413425 20941.63317413425 20941.63317413425 259408474978.8988
+137 120 24468.36324726278 20941.63317413425 22694.13139998974 305373449225.9492
+138 2.645751311064591 1.322875655532295 1.322875655532295 1.322875655532295 42.33202097703345
+139 7.937253933193772 1.322875655532295 0 0.6614378277661477 380.988188793301
+140 1 398648.8138700528 301997.5759836492 327875.7568043115 447376037533.4486
+141 1 398648.8138700528 301997.5759836492 327875.7568043115 447376037533.4486
+142 1 29.47861750926713 20.04586135989722 23.1318389453935 4038.715426613313
+143 0.6959705453537527 29.47861750926713 20.04586135989722 24.54002449574945 3168.868480078374
+144 0.3307189138830738 17.07622197379644 17.07622197379644 17.07622197379644 881.7075306478024
+145 0 0 0 0 0
+146 0 0 0 0 0
+147 0 0 0 0 0
+148 0 0 0 0 0
+149 0 0 0 0 0
+150 0 0 0 0 0
+151 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+152 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+153 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+154 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+155 0.4841229182759271 9806.365279755797 3.464101615137754 4753.853417754817 8321298520.432513
+156 1.316956719106592 83972.25255999746 593.4138522144558 27852.39259807854 24721445012.9629
+157 1.316956719106592 77747.31377996285 42463.06856551938 46291.25977978997 17266203543.51903
+158 0.4841229182759271 113313.0742677119 113313.0742677119 113313.0742677119 26533660971.36589
+159 0.4841229182759271 9590.328461528312 3.464101615137754 6428.908887011851 11463932228.51991
+160 1.316956719106592 59559.74143664494 593.4138522144558 21775.17693112835 15695827904.58894
+161 1.322875655532295 71435.28539874394 592.6482936784683 25309.25704164387 17176382098.32888
+162 0.4330127018922193 101295.0067871067 101295.0067871067 101295.0067871067 23865161549.32404
+163 0.9270248108869579 74700.02928379613 42470.59912162766 36898.43570548963 20944181621.08458
+164 1.089724735885168 690.5302310543689 65.96211033616193 379.8512044208889 1524153.246132422
+165 0.8660254037844386 85253.11959101555 91967.47682604977 88814.68650056951 22068372590.17707
+166 0.3307189138830738 42543.68108191861 42543.68108191861 42543.68108191861 5472819134.378011
+167 1.19895788082818 47111.48716608297 354.4513365752766 18295.63206808754 6869238615.334919
+168 1.363589014329464 18223.64036080607 282.1413652763451 6210.130611772814 1043016963.200583
+169 1.316956719106592 50575.5514057929 40279.98570009677 41187.70748657905 7066791755.277844
+170 1.316956719106592 75379.56272093915 710.4011190869564 26391.00399336444 16427486132.27482
+171 1.299038105676658 18683.78310193094 719.25360617796 5042.691812442812 1101136479.485846
+172 1.316956719106592 77503.27993059391 73615.96870244933 73101.92355882299 16603144367.7803
+173 1.118033988749895 84345.69271160205 350.2613310087198 29331.42990557323 20619940035.26378
+174 1.165922381636102 14202.25612358825 273.8083271195381 4792.13552488751 644246188.0738523
+175 1.316956719106592 86745.76877289174 82399.80077645819 81776.37374572194 20733745282.28123
+176 1.224744871391589 49583.27036410567 354.3328237688402 18886.08486333993 8427461314.021032
+177 1.268611445636527 16704.52558440377 281.9272955923211 5277.898036038538 674850770.2687013
+178 1.316956719106592 52852.57988026696 31602.03781008434 34347.91045659655 8600182000.303162
+179 1.224744871391589 47751.05121094194 353.3012170938561 18302.62958642222 7326797028.206249
+180 1.268611445636527 17941.73825887559 279.8959628147573 5929.075850791963 979544973.9546202
+181 1.316956719106592 50370.89635890948 33824.55628681624 35768.49630610714 7493413948.124599
+182 1.118033988749895 72025.73724544581 356.653543372276 24544.40943572713 18316001170.54221
+183 1.224744871391589 20866.59113870783 306.8578661204565 8791.849912387293 1108991898.554117
+184 1.322875655532295 74610.18697202146 296.3241468392342 25341.00605737665 18527907388.3461
+185 0.3307189138830738 105.8300524425836 105.8300524425836 105.8300524425836 33865.61678162676
+186 0.3307189138830738 105.8300524425836 105.8300524425836 105.8300524425836 33865.61678162676
+187 0.3307189138830738 0.1219240235513636 0.1219240235513636 0.1219240235513636 0.04494894877469627
+188 0.3307189138830738 0.1219240235513636 0.1219240235513636 0.1219240235513636 0.04494894877469627
+189 0 0 0 0 0
+190 0 0 0 0 0
+191 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+192 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+193 0 0 0 0 0
+194 0 0 0 0 0
+195 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+196 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+197 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+198 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+199 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+200 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+201 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+202 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+203 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+204 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+205 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+206 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+207 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+208 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+209 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+210 0.3307189138830738 1.322875655532295 1.322875655532295 1.322875655532295 5.291502622129181
+211 0 30.37165619455087 30.37165619455087 30.37165619455087 4878265.265112179
+212 0 30.37165619455087 30.37165619455087 30.37165619455087 4878265.265112179
+213 0 3.031088913245535 3.031088913245535 3.031088913245535 327765.7328031715
+214 0 3.031088913245535 3.031088913245535 3.031088913245535 327765.7328031715
+215 0 92.46181644332972 92.46181644332972 92.46181644332972 49987106.01624783
+216 0 92.46181644332972 92.46181644332972 92.46181644332972 49987106.01624783
+</derivedatomic_data>
+</derivedprofile>
+
+</profile_xml>
+<profile_xml>
+<derivedentity id="stddev_no_null">
+</derivedentity>
+<derivedprofile derivedentity="stddev_no_null">
+<derivedinterval_data metrics="0 ">
+0 0 72.60466582803063 1160.457668336075 1486.258704768453 
+1 0 0 122026.9053159999 122026.9053159999 
+2 0 0 177.8647221204925 177.8647221204925 
+3 0 0 34465.33184207538 34465.33184207538 
+4 0 0 36.96281915655244 36.96281915655244 
+5 0 0 609.9467189845356 609.9467189845356 
+6 0 0 3.741657386773941 3.741657386773941 
+7 0 0 0.3307189138830738 0.3307189138830738 
+8 0 0 7.65567599889128 7.65567599889128 
+9 0 0 4.69041575982343 4.69041575982343 
+10 0 0 54.74928652503154 54.74928652503154 
+11 0 0 0 0 
+12 0 0 5.309190145398825 5.309190145398825 
+13 0 0 3.992179855667828 3.992179855667828 
+14 0 0 75046.49022845355 75066.22185443997 
+15 0 0 0 0 
+16 0 0 77974.77680755168 77974.77680755168 
+17 0 0 0 0 
+18 0 0 30.02889233721417 30.02889233721417 
+19 0 0 6.981001002721601 6.981001002721601 
+20 0 0 1.111024302164449 1.111024302164449 
+21 0 0 1.452368754827781 1.452368754827781 
+22 0 0 1454.766991651928 1454.766991651928 
+23 44237.39401495498 0 12245.3390973617 12245.3390973617 
+24 44146.26896023462 0 57729.52295930892 57729.52295930892 
+25 0 0 202.4248915886926 202.4248915886926 
+26 111.6050514089752 0 1321.922646895423 1321.922646895423 
+27 0 0 3.929058411375428 3.929058411375428 
+28 206.9764479355079 0 915.3138464483097 915.3138464483097 
+29 0.9921567416492215 0 22.89650628371062 22.89650628371062 
+30 91.64060235506966 0 353.3914039347873 353.3914039347873 
+31 19.03779136349592 0 32.38030844510287 32.38030844510287 
+32 72.60466582803063 0 2541.772708170422 2541.772708170422 
+33 82.12252659897892 0 145.6738115619963 145.6738115619963 
+34 30.5 0 22 22 
+35 20.45994562553869 0 14.07790822530109 14.07790822530109 
+36 0 0 5.18260311040697 5.18260311040697 
+37 88383.06590454701 0 1593912.537269999 1593912.537269999 
+38 0 0 307265.0128984496 307265.0128984496 
+39 0 0 30430.56243909032 30430.56243909032 
+40 0 0 37.46143850681658 37.46143850681658 
+41 0 0 5.109733358992424 5.109733358992424 
+42 0 0 13282.11916450082 13282.11916450082 
+43 0 0 7.806247497997997 7.806247497997997 
+44 0 0 887.2568681052855 887.2568681052855 
+45 0 0 518.2663407939975 643.1210519801074 
+46 0 0 16.79983258845159 16851.10090941761 
+47 0 0 5647.673800723179 5647.673800723179 
+48 0 0 75413.31273720841 75413.31273720841 
+49 0 0 17521.18003125075 17521.18003125075 
+50 0 0 502172.6704725178 491666.6649411564 
+51 0 0 2109.153251307263 2109.153251307263 
+52 0 0 4169.298740121053 16969.72350798621 
+53 0 1125.426856519339 33446.4109357697 2721.976579620038 
+54 0 0 16.77377044674214 16.77377044674214 
+55 0 0 20341.73355905293 20341.73355905293 
+56 0 0 669.9389897595154 3571.810946494789 
+57 0 0 9113.820945924657 321678.7065402954 
+58 0 0 1476.067241015802 59537.09270908347 
+59 0 0 3335.32313839304 3335.32313839304 
+60 0 0 41011.40061236022 25504.57652927215 
+61 0 0 311116.0520275905 24412.07072203216 
+62 0 1046.135746449762 909.2412702357939 1213.338266931362 
+63 0 3138.407239349285 22187.70163852038 548118.5898971675 
+64 0 1569.203619674642 12375.47389433532 110949.8375660708 
+65 0 125536.2895739714 110854.9636438729 235804.7462816164 
+66 0 41845.42985799046 29953.72430908008 76186.79563651023 
+67 0 1046.135746449762 2845.330637641257 25819.94779689484 
+68 0 1046.135746449762 15002.82947271947 279870.2543768049 
+69 0 1046.135746449762 10799.68962444639 250240.0464006698 
+70 0 0 91403.50434055783 139848.8181517366 
+71 0 0 20510.48958726668 20510.48958726668 
+72 0 0 253364.7799196842 411000.7817459111 
+73 0 0 3931.153836264234 3931.153836264234 
+74 0 0 927.3221864594851 927.3221864594851 
+75 0 0 2562.17035684593 2562.17035684593 
+76 0 0 393.8092812517247 86547.56628402384 
+77 0 206.877379140398 18594.71705510399 14.36793304550101 
+78 0 0 3047.157230518307 3047.157230518307 
+</derivedinterval_data>
+<derivedatomic_data>
+0 19.84313483298443 304430.8701298211 86695.97896096451 86131.67826434519 277487757859.8126
+1 0 0 0 0 0
+2 0 398648.8138700528 105.8300524425836 42789.88156552568 1409533848706.562
+3 0 0 0 0 0
+4 0 0 0 0 0
+5 0 0 0 0 0
+6 19.84313483298443 20.46396831743008 1.670700280601335 9.343919350486455 995.5417421429372
+7 0 0 0 0 0
+8 0 30.43714640578067 0.1219240235513636 8.106054502429524 18837.09823802807
+9 0 0 0 0 0
+10 0 0 0 0 0
+11 0 0 0 0 0
+12 0 0 0 0 0
+13 0 0 0 0 0
+14 0 0 0 0 0
+15 44232.27216195631 54382.16736210501 0 358.4006692648622 2285374193799.716
+16 44237.39401495498 54382.16736210501 0 358.7984205391311 2285374194561.759
+17 312.5487961902909 51337.30027962125 0 522.0962572698347 143934498168.4214
+18 261.5339366124404 148.6707772226943 263.9318093750732 169.8005627526334 256936646.5996534
+19 784.6018098373212 5946.831088907772 3207.740637894529 4624.132084063369 649407850148.4254
+20 392.3009049186606 5946.831088907772 10557.27237500293 6792.022510105377 616647951839.1687
+21 31384.07239349285 148.6707772226943 263.9318093750732 169.8005627526334 30832397591.95841
+22 10461.35746449762 55.56977595779922 80.19351594736322 51.29405423633413 941592593.218787
+23 261.5339366124404 2222.791038311969 3207.740637894529 2051.76216945337 37663703728.75148
+24 261.5339366124404 6668.373114935906 9623.221913683587 6155.28650836011 338973333558.7633
+25 261.5339366124404 5946.831088907772 9623.221913683587 6442.052812919511 372632401474.874
+26 54.5055903096187 109300.0465507678 0 6268.97970462221 287263551504.4669
+27 44232.16025822586 9905.63152958962 0 375.4356473928464 2071428783927.438
+28 20295.63358058822 8493.856603451697 0 5876.233218781754 1944820542514.968
+29 96.4623221358305 25369.54726615743 47.65865019884125 1346.09827536002 4159313808.70027
+30 0.4517539514540842 37347.25649022882 0 835.0002725301346 15505288876.55528
+31 7.3824115301167 71433.96252308841 0 5439.93181467155 57378677424.1133
+32 0 520.7533005176251 520.7533005176251 520.7533005176251 273998012.4394365
+33 0 20830.132020705 6022.889671909988 13870.84552417608 698215321051.2367
+34 0 20830.132020705 20830.132020705 20830.132020705 657595229854.6476
+35 0 520.7533005176251 520.7533005176251 520.7533005176251 32879761492.73238
+36 0 150.5722417977497 150.5722417977497 150.5722417977497 891940003.8657309
+37 0 6022.889671909988 6022.889671909988 6022.889671909988 35677600154.62923
+38 0 18068.66901572996 18068.66901572996 18068.66901572996 321098401391.6631
+39 0 20830.132020705 18068.66901572996 19446.74780008215 379704302766.4887
+40 0.4517539514525742 8103.409209482757 0 2057.727638307668 16174654860.00744
+41 2.645751311064591 73219.84465805702 0 15645.65037798046 42084781866.81761
+42 20306.56356329155 74187.01813659853 0 3591.147348345268 1603962127222.096
+43 96.35012682283045 22638.10328825708 66.85958481498859 801.5827243350813 3575165013.939122
+44 21.05677456549414 77478.6318002109 0 4097.268828995587 25137644718.95708
+45 20.18004893452937 42542.16924417466 0 3699.239925962527 10945638122.86178
+46 0 523.8931188706338 523.8931188706338 523.8931188706338 220942003.2160042
+47 0 20955.72475482535 6819.736065274081 13848.29552287533 551227354883.166
+48 0 20955.72475482535 20955.72475482535 20955.72475482535 530260807718.41
+49 0 523.8931188706338 523.8931188706338 523.8931188706338 26513040385.9205
+50 0 170.493401631852 170.493401631852 170.493401631852 882024899.5146565
+51 0 6819.736065274081 6819.736065274081 6819.736065274081 35280995980.58627
+52 0 20459.20819582224 20459.20819582224 20459.20819582224 317528963825.2764
+53 0 20955.72475482535 20459.20819582224 20693.07130418295 334965989148.1539
+54 0.4517539514526372 92200.13298852686 0 10244.45922094743 24093035281.05455
+55 7.896795236043543 43605.76127073119 0 4845.011134588869 5749880548.629026
+56 19654.21390527678 47823.2802905656 0 1167.821352051001 1641296389481.875
+57 92.05721379796857 21760.87495239743 51.07817138305496 1266.82071281108 3540633214.791752
+58 21.29002832601331 53901.87913880069 0 4430.243750781007 23062306947.87309
+59 20.45994562553869 1.322875655532295 0 0.6694069582211656 994.0603603403569
+60 0 468.3547373519351 468.3547373519351 468.3547373519351 218369748.0342321
+61 0 18734.1894940774 5877.555954646455 12395.19907060794 546629387739.7153
+62 0 18734.1894940774 18734.1894940774 18734.1894940774 524087395282.157
+63 0 468.3547373519351 468.3547373519351 468.3547373519351 26204369764.10785
+64 0 146.9388988661613 146.9388988661613 146.9388988661613 805644519.2544911
+65 0 5877.555954646455 5877.555954646455 5877.555954646455 32225780770.17964
+66 0 17632.66786393936 17632.66786393936 17632.66786393936 290032026931.6168
+67 0 18734.1894940774 17632.66786393936 18166.58911298431 319580654852.9568
+68 0 0 0 0 0
+69 7.896795236043543 1.322875655532295 0 0.6614378277661477 380.2683263170889
+70 17583.21573084684 75577.84455612637 0 1685.453353763662 1820640365823.185
+71 102.151747864815 25251.13578209333 292.0430496641597 660.3793979894069 3938089226.536218
+72 20.94014794404202 81116.43515493577 0 4755.04096647757 23058234579.59526
+73 20.12926973340066 1.322875655532295 0 0.6775704577116651 988.768931550744
+74 0 292 292 292 195663360
+75 0 11680 3040 7680 498941952000
+76 0 11680 11680 11680 469592064000
+77 0 292 292 292 23479603200
+78 0 76 76 76 589516800
+79 0 3040 3040 3040 23580672000
+80 0 9120 9120 9120 212226048000
+81 0 11680 9120 10400 262643712000
+82 0 0 0 0 0
+83 7.566372975210778 1.322875655532295 0 0.6827745318876383 374.9773326482549
+84 17518.58487970704 84259.40343368211 0 1574.398294318788 1079753015433.141
+85 76.48662681562479 18037.61629574853 54.40288107616872 862.2016122376136 2298154073.995863
+86 20.94014794404202 90790.00360329167 0 5175.230780209734 27340578764.97064
+87 20.12926973340066 1.322875655532295 0 0.6775704577116651 988.768931550744
+88 0 452 452 452 193528320
+89 0 18080 5120 12000 492490752000
+90 0 18080 18080 18080 464467968000
+91 0 452 452 452 23223398400
+92 0 128 128 128 589824000
+93 0 5120 5120 5120 23592960000
+94 0 15360 15360 15360 212336640000
+95 0 18080 15360 16720 260990976000
+96 0 0 0 0 0
+97 7.566372975210778 1.322875655532295 0 0.6827745318876383 374.9773326482549
+98 19675.45413985088 49766.384214146 0 1049.079173634363 1214030460535.711
+99 99.96530010203438 21359.32356950797 58.37528132170119 716.4435220644821 2521609430.571045
+100 21.29002832601331 55205.61701678627 0 4525.042942768257 26480672853.55518
+101 20.45994562553869 1.322875655532295 0 0.6694069582211656 994.0603603403569
+102 0 423.3370078580685 423.3370078580685 423.3370078580685 165723623.6076342
+103 0 16933.48031432274 4533.019596986833 11291.33831694251 433052931471.5458
+104 0 16933.48031432274 16933.48031432274 16933.48031432274 397736696658.322
+105 0 423.3370078580685 423.3370078580685 423.3370078580685 19886834832.9161
+106 0 113.3254899246708 113.3254899246708 113.3254899246708 453981412.3391397
+107 0 4533.019596986833 4533.019596986833 4533.019596986833 18159256493.56559
+108 0 13599.0587909605 13599.0587909605 13599.0587909605 163433308442.0903
+109 0 16933.48031432274 13599.0587909605 15209.44735645871 212465108948.8909
+110 0 0 0 0 0
+111 7.896795236043543 1.322875655532295 0 0.6614378277661477 380.2683263170889
+112 17517.35955728988 47827.26343833609 0 1679.540986820361 1539833849524.914
+113 76.70909798899811 21973.04371548123 51.1101251999952 1114.434763933791 3329860743.922003
+114 21.29002832601331 52570.94909719237 0 4399.103061303123 24185839482.02293
+115 20.45994562553869 1.322875655532295 0 0.6694069582211656 994.0603603403569
+116 0 448 448 448 244285440
+117 0 17920 5760 12213.33333333334 629403648000
+118 0 17920 17920 17920 586285056000
+119 0 448 448 448 29314252800
+120 0 144 144 144 862617600
+121 0 5760 5760 5760 34504704000
+122 0 17280 17280 17280 310542336000
+123 0 17920 17280 17600 350699520000
+124 0 0 0 0 0
+125 7.896795236043543 1.322875655532295 0 0.6614378277661477 380.2683263170889
+126 20305.8698594766 72246.35761060899 0 1257.339542572209 1711870067866.872
+127 96.48220730544369 24174.10164213102 62.36691954122173 882.9381215035331 3665156115.098489
+128 21.34555347282484 78942.15543041627 0 4742.109724338639 36192749716.27846
+129 20.50457266075058 1.322875655532295 0 0.6694069582211656 994.802492960286
+130 0 486.1110984126983 486.1110984126983 486.1110984126983 225782803.796399
+131 0 19444.44393650793 5658.551051285125 12873.6492279557 572169175384.277
+132 0 19444.44393650793 19444.44393650793 19444.44393650793 541878729111.3575
+133 0 486.1110984126983 486.1110984126983 486.1110984126983 27093936455.56788
+134 0 141.4637762821282 141.4637762821282 141.4637762821282 748902739.5363966
+135 0 5658.551051285125 5658.551051285125 5658.551051285125 29956109581.45587
+136 0 16975.65315385538 16975.65315385538 16975.65315385538 269604986233.1028
+137 0 19444.44393650793 16975.65315385538 18184.2569273534 314917519727.1151
+138 0 0 0 0 0
+139 7.937253933193772 1.322875655532295 0 0.6614378277661477 380.988188793301
+140 1 0 424440 199240 167358672000.0001
+141 1 0 424440 199240 167358672000.0001
+142 1 21.24170663636214 3.819245807856795 9.915232643259689 5276.098948669038
+143 0.5 21.24170663636214 3.819245807856795 12.53047622210945 3943.082459990783
+144 0 0 0 0 0
+145 0 0 0 0 0
+146 0 0 0 0 0
+147 0 0 0 0 0
+148 0 0 0 0 0
+149 0 0 0 0 0
+150 0 0 0 0 0
+151 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+152 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+153 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+154 0.3307189138830738 61902.01289134304 295.951009459336 19947.6782260336 22494259653.66745
+155 0.4841229182759271 9806.365279755797 3.464101615137754 4753.853417754817 8321298520.432513
+156 0.3499271061118809 64657.84356668471 3.614031611705151 18735.57338871916 22337821035.26229
+157 1.5 43680 63424 26056 17694124032
+158 0 3050.741257830464 3050.741257830464 3050.741257830464 1431201366.056033
+159 0.4841229182759271 9590.328461528312 3.464101615137754 6428.908887011851 11463932228.51991
+160 0.3499271061118809 43779.7888323377 3.614031611705151 13246.04343442473 14520097421.5718
+161 0 0 0 0 0
+162 0 8718.654330419109 8718.654330419109 8718.654330419109 4117366002.871419
+163 0.9270248108869579 74700.02928379613 42470.59912162766 36898.43570548963 20944181621.08458
+164 0.4714045207910308 496.3869458396343 52.34076380370805 271.6226731022464 1450272.880141144
+165 0.74535599249993 67161.23749769822 83135.13156301613 76531.92879244163 22136494581.39879
+166 0 0 0 0 0
+167 0.6388765649999409 47591.57221223789 359.2163807000807 18569.13096361174 7110933972.394801
+168 0.6871842709362762 19464.46526365418 301.1304626827973 6608.655518744497 1161582063.811617
+169 1.5 5280 60512 36848 1377835008
+170 1.030157507275425 78026.1879972856 724.8958264355463 27267.22365680293 17196672080.17156
+171 0.9428090415820626 20867.46567160362 774.8333154083313 5547.489861679072 1240507720.913745
+172 1.5 55680 110912 87288 16014907392
+173 0.6388765649999396 87559.14444534048 355.5048149735637 30358.73098934549 21620049117.66328
+174 0.5 15784.05119099656 292.78129873489 5265.37044058091 725476075.7591985
+175 1.5 62320 124192 98628 20553672192
+176 0.8329931278350431 50468.32556875932 358.6732923040757 19326.10002020402 8802979386.199844
+177 0.7637626158259732 17985.38295394346 300.1688413765382 5642.646930812035 734557205.8721994
+178 1.5 23360 47390 19682.5 8264034600.000001
+179 0.8329931278350431 48563.95978206766 358.190463529203 18689.97264035056 7624155443.530332
+180 0.7637626158259732 19557.83633795472 298.87567091797 6425.544838310274 1094591359.836759
+181 1.5 12960 50752 25008 5576798208
+182 0.6388765649999396 75046.45725230771 353.0207833391509 25461.9234600553 19335225932.7514
+183 0.4714045207910318 22088.15385877436 314.6108707594192 9299.052906109166 1206138673.150248
+184 0 0 0 0 0
+185 0 0 0 0 0
+186 0 0 0 0 0
+187 0 0 0 0 0
+188 0 0 0 0 0
+189 0 0 0 0 0
+190 0 0 0 0 0
+191 0 0 0 0 0
+192 0 0 0 0 0
+193 0 0 0 0 0
+194 0 0 0 0 0
+195 0 0 0 0 0
+196 0 0 0 0 0
+197 0 0 0 0 0
+198 0 0 0 0 0
+199 0 0 0 0 0
+200 0 0 0 0 0
+201 0 0 0 0 0
+202 0 0 0 0 0
+203 0 0 0 0 0
+204 0 0 0 0 0
+205 0 0 0 0 0
+206 0 0 0 0 0
+207 0 0 0 0 0
+208 0 0 0 0 0
+209 0 0 0 0 0
+210 0 0 0 0 0
+211 0 30.37165619455087 30.37165619455087 30.37165619455087 4878265.265112179
+212 0 30.37165619455087 30.37165619455087 30.37165619455087 4878265.265112179
+213 0 3.031088913245535 3.031088913245535 3.031088913245535 327765.7328031715
+214 0 3.031088913245535 3.031088913245535 3.031088913245535 327765.7328031715
+215 0 92.46181644332972 92.46181644332972 92.46181644332972 49987106.01624783
+216 0 92.46181644332972 92.46181644332972 92.46181644332972 49987106.01624783
+</derivedatomic_data>
+</derivedprofile>
+
+</profile_xml>
+<profile_xml>
+<derivedentity id="min_no_null">
+</derivedentity>
+<min_no_null_derivedprofile derivedentity="min_no_null">
+<derivedinterval_data metrics="0 ">
+0 1 229 869 17046413 
+1 266 -1 20578 20578 
+2 29 -1 127 127 
+3 1380 -1 7443 7443 
+4 1 -1 105 105 
+5 3 -1 674 674 
+6 4 -1 14 14 
+7 1 -1 2 2 
+8 65 -1 15 15 
+9 61 -1 9 9 
+10 3 -1 151 151 
+11 1 -1 489 489 
+12 3 -1 23 23 
+13 3 -1 4993 4993 
+14 62 62 1111 1136 
+15 2 2 57020 57028 
+16 124 -1 2200 2200 
+17 1 1 4248 4249 
+18 1 -1 1015 1015 
+19 1 -1 3 3 
+20 1 -1 6 6 
+21 4 -1 6 6 
+22 1 -1 25204 25204 
+23 81804 -1 36632 36632 
+24 81281 -1 152073 152073 
+25 58 -1 1493 1493 
+26 289 -1 2366 2366 
+27 2 -1 9 9 
+28 293 -1 2231 2231 
+29 62 -1 22 22 
+30 57 -1 28 28 
+31 29 -1 55 55 
+32 28 -1 29 29 
+33 57 -1 47 47 
+34 1 -1 4 4 
+35 62 -1 21 21 
+36 62 -1 8 8 
+37 163090 -1 1690199 1690199 
+38 240 -1 1673132 1673132 
+39 240 -1 265032 265032 
+40 480 -1 372 372 
+41 240 -1 177 177 
+42 480 -1 91625 91625 
+43 240 -1 172 172 
+44 11 -1 10987 10987 
+45 1 1 2628 3340 
+46 11 44 215 12311 
+47 120 -1 62088 62088 
+48 481 -1 405240 405240 
+49 240 -1 171804 171804 
+50 11 22 261 38877 
+51 240 -1 24908 24908 
+52 480 1680 11816 104360 
+53 1 4206 91538 544915 
+54 240 -1 136 136 
+55 360 -1 190798 190798 
+56 240 720 4628 43515 
+57 240 960 48506 1769880 
+58 240 1200 21376 619479 
+59 240 -1 21668 21668 
+60 240 960 249641 1516808 
+61 240 38640 2704003 5367005 
+62 240 1920 1931 9211 
+63 240 5760 47258 312499 
+64 360 2880 27087 142022 
+65 28800 230400 281599 1381834 
+66 9600 76800 66628 386143 
+67 240 1920 7393 44564 
+68 240 1920 28581 212251 
+69 120 1920 25292 205092 
+70 120 360 654088 1341573 
+71 120 -1 200902 200902 
+72 120 2280 1645983 14733792 
+73 240 -1 30853 30853 
+74 240 -1 9571 9571 
+75 240 -1 16402 16402 
+76 120 130 6913 16008221 
+77 1 1255 96543 17012108 
+78 480 -1 40634 40634 
+</derivedinterval_data>
+<derivedatomic_data>
+0 2 262144 262144 14849.03225806452 137438953472
+1 62 920640 320 130668.3225806452 4299739063504
+2 62 920640 320 14849.03225806452 847578009600
+3 2 262144 262144 262144 137438953472
+4 1 15400 15400 15400 237160000
+5 1 15400 15400 15400 237160000
+6 2 42.26415094339622 5.051722808910815 0.6816798539257456 1786.25845496618
+7 62 88.01529636711281 0.3686635944700461 24.59850008812355 57185.76666745852
+8 62 42.26415094339622 0.3686635944700461 0.6816798539257456 1786.25845496618
+9 2 51.63364191451645 5.051722808910815 28.34268236171363 2691.552880694579
+10 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+11 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+14 2 7176 7176 7176 102989952
+15 81862 121920 4 1809.240921256169 3773748908096
+16 81804 121920 4 1809.882443966841 3773748904384
+17 796 121920 4 2015.143418467583 92005320768
+18 480 1312 248 848 479984640
+19 1440 52480 2240 22560 1225924608000
+20 720 52480 9920 33920 1151963136000
+21 57600 1312 248 848 57598156800
+22 19200 336 56 240 1420492800
+23 480 13440 2240 9600 56819712000
+24 480 40320 6720 28800 511377408000
+25 480 52480 6720 31960 639676416000
+26 128 4 4 4 2048
+27 81866 225600 4 1599.28806478801 3422711635760
+28 120 221400 4 765.9571228604406 114232856560
+29 5 1000 4 759.2 3494416
+30 82 111360 4 5135.170731707317 31331301648
+31 81 4 4 4 1296
+32 240 352 352 352 29736960
+33 720 14080 3840 9493.333333333334 77881344000
+34 360 14080 14080 14080 71368704000
+35 28800 352 352 352 3568435200
+36 9600 96 96 96 88473600
+37 240 3840 3840 3840 3538944000
+38 240 11520 11520 11520 31850496000
+39 240 14080 11520 12800 39714816000
+40 31 222720 4 17743.48387096774 82896798336
+41 8 4 4 4 128
+42 32 840 4 56.25396825396825 2626048
+43 5 828 4 418.6666666666667 1398304
+44 21 4 4 4 336
+45 21 4 4 4 336
+46 240 248 248 248 14760960
+47 720 9920 2240 6720 40181760000
+48 360 9920 9920 9920 35426304000
+49 28800 248 248 248 1771315200
+50 9600 56 56 56 30105600
+51 240 2240 2240 2240 1204224000
+52 240 6720 6720 6720 10838016000
+53 240 9920 6720 8320 17227776000
+54 8 4 4 4 128
+55 8 4 4 4 128
+56 29 4 4 4 464
+57 6 1256 4 404 2106176
+58 21 4 4 4 336
+59 21 4 4 4 336
+60 240 392 392 392 36879360
+61 720 15680 4480 10453.33333333333 93929472000
+62 360 15680 15680 15680 88510464000
+63 28800 392 392 392 4425523200
+64 9600 112 112 112 120422400
+65 240 4480 4480 4480 4816896000
+66 240 13440 13440 13440 43352064000
+67 240 15680 13440 14560 51179520000
+68 8 4 4 4 128
+69 8 4 4 4 128
+70 29 4 4 4 464
+71 2 880 4 657.6 2644544
+72 21 4 4 4 336
+73 21 4 4 4 336
+74 240 1104 1104 1104 292515840
+75 720 44160 13120 29866.66666666667 760037376000
+76 360 44160 44160 44160 702038016000
+77 28800 1104 1104 1104 35101900800
+78 9600 328 328 328 1032806400
+79 240 13120 13120 13120 41312256000
+80 240 39360 39360 39360 371810304000
+81 240 44160 39360 41760 419917824000
+82 8 4 4 4 128
+83 8 4 4 4 128
+84 29 4 4 4 464
+85 5 1080 4 339.528384279476 4651488
+86 21 4 4 4 336
+87 21 4 4 4 336
+88 240 440 440 440 46464000
+89 720 17600 4480 11733.33333333333 120471552000
+90 360 17600 17600 17600 111513600000
+91 28800 440 440 440 5575680000
+92 9600 112 112 112 120422400
+93 240 4480 4480 4480 4816896000
+94 240 13440 13440 13440 43352064000
+95 240 17600 13440 15520 58847232000
+96 8 4 4 4 128
+97 8 4 4 4 128
+98 29 4 4 4 464
+99 5 1008 4 700 3836736
+100 21 4 4 4 336
+101 21 4 4 4 336
+102 240 360 360 360 31104000
+103 720 14400 3520 9706.666666666666 82845696000
+104 360 14400 14400 14400 74649600000
+105 28800 360 360 360 3732480000
+106 9600 88 88 88 74342400
+107 240 3520 3520 3520 2973696000
+108 240 10560 10560 10560 26763264000
+109 240 14400 10560 12480 38264832000
+110 8 4 4 4 128
+111 8 4 4 4 128
+112 29 4 4 4 464
+113 5 880 4 338.3826086956522 2815360
+114 21 4 4 4 336
+115 21 4 4 4 336
+116 240 688 688 688 113602560
+117 720 27520 6720 18026.66666666667 287072256000
+118 360 27520 27520 27520 272646144000
+119 28800 688 688 688 13632307200
+120 9600 168 168 168 270950400
+121 240 6720 6720 6720 10838016000
+122 240 20160 20160 20160 97542144000
+123 240 27520 20160 23840 139653120000
+124 8 4 4 4 128
+125 8 4 4 4 128
+126 29 4 4 4 464
+127 5 948 4 487.2 1592208
+128 21 4 4 4 336
+129 21 4 4 4 336
+130 240 304 304 304 22179840
+131 720 12160 3520 8320 59129856000
+132 360 12160 12160 12160 53231616000
+133 28800 304 304 304 2661580800
+134 9600 88 88 88 74342400
+135 240 3520 3520 3520 2973696000
+136 240 10560 10560 10560 26763264000
+137 240 12160 10560 11360 31125504000
+138 8 4 4 4 128
+139 8 4 4 4 128
+140 1 920640 71760 522160 847578009600
+141 1 920640 71760 522160 847578009600
+142 1 42.26415094339622 42.26415094339622 42.26415094339622 1786.25845496618
+143 1 42.26415094339622 42.26415094339622 42.26415094339622 1786.25845496618
+144 1 51.63364191451645 51.63364191451645 51.63364191451645 2666.032977356509
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 3 72960 896 27620 5404971600
+152 3 72960 896 27620 5404971600
+153 3 72960 896 27620 5404971600
+154 3 72960 896 27620 5404971600
+155 4 216000 1792 76528 51936497664
+156 3 72960 1792 30920 5650401600
+157 1 128640 1792 76528 16548249600
+158 1 230720 230720 230720 53231718400
+159 4 216000 1792 76528 51936497664
+160 3 71680 1792 30493.33333333333 5465262400
+161 4 216000 1792 76528 51936497664
+162 1 222720 222720 222720 49604198400
+163 1 840 36 462 712656
+164 2 568 36 321.3333333333333 453520
+165 1 71680 900 27193.33333333333 5219832400
+166 1 128640 128640 128640 16548249600
+167 2 1256 8 477.3333333333333 1603392
+168 2 1256 8 477.3333333333333 1603392
+169 1 111360 896 48224 14864486400
+170 1 880 84 484 782144
+171 1 880 84 484 782144
+172 1 111360 896 48144 17574383616
+173 2 1080 88 594 1178064
+174 2 880 88 484 782144
+175 1 124640 896 52024 21033174016
+176 2 960 84 528 930816
+177 2 840 84 462 712656
+178 1 95680 900 56315 9154662400
+179 2 1240 72 682 1552976
+180 2 1240 72 682 1552976
+181 1 102400 896 52384 10485760000
+182 2 948 48 492 1131408
+183 2 948 48 492 1131408
+184 4 225600 896 76624 56023126016
+185 1 320 320 320 102400
+186 1 320 320 320 102400
+187 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+188 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+189 1 4 4 4 16
+190 1 4 4 4 16
+191 1 4 4 4 16
+192 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+197 1 4 4 4 16
+198 1 4 4 4 16
+199 1 4 4 4 16
+200 1 4 4 4 16
+201 1 4 4 4 16
+202 1 4 4 4 16
+203 1 4 4 4 16
+204 1 4 4 4 16
+205 1 4 4 4 16
+206 1 4 4 4 16
+207 1 4 4 4 16
+208 1 4 4 4 16
+209 1 4 4 4 16
+210 1 4 4 4 16
+211 240 290 290 290 20184000
+212 240 290 290 290 20184000
+213 240 220 220 220 11616000
+214 240 220 220 220 11616000
+215 240 1002 1002 1002 240960960
+216 240 1002 1002 1002 240960960
+</derivedatomic_data>
+</min_no_null_derivedprofile>
+
+</profile_xml>
+<profile_xml>
+<derivedentity id="max_no_null">
+</derivedentity>
+<max_no_null_derivedprofile derivedentity="max_no_null">
+<derivedinterval_data metrics="0 ">
+0 1 451 4760 17050706 
+1 266 0 406177 406177 
+2 29 0 689 689 
+3 1380 0 115635 115635 
+4 1 0 223 223 
+5 3 0 2140 2140 
+6 4 0 25 25 
+7 1 0 3 3 
+8 65 0 41 41 
+9 61 0 24 24 
+10 3 0 316 316 
+11 1 0 489 489 
+12 3 0 40 40 
+13 3 0 5005 5005 
+14 62 62 230190 230274 
+15 2 2 57020 57028 
+16 124 0 241945 241945 
+17 1 1 4248 4249 
+18 1 0 1109 1109 
+19 1 0 27 27 
+20 1 0 9 9 
+21 4 0 11 11 
+22 1 0 29469 29469 
+23 203347 0 67409 67409 
+24 202818 0 309128 309128 
+25 58 0 2111 2111 
+26 628 0 6641 6641 
+27 2 0 23 23 
+28 921 0 5446 5446 
+29 65 0 93 93 
+30 337 0 1110 1110 
+31 87 0 160 160 
+32 250 0 7784 7784 
+33 308 0 503 503 
+34 62 0 48 48 
+35 124 0 69 69 
+36 62 0 24 24 
+37 406165 0 6762462 6762462 
+38 240 0 2563269 2563269 
+39 240 0 368299 368299 
+40 480 0 497 497 
+41 240 0 192 192 
+42 480 0 139056 139056 
+43 240 0 200 200 
+44 11 0 13202 13202 
+45 1 1 4135 5295 
+46 11 44 265 67615 
+47 120 0 80558 80558 
+48 481 0 620098 620098 
+49 240 0 217421 217421 
+50 11 22 1518725 1542219 
+51 240 0 31655 31655 
+52 480 1680 25287 165258 
+53 1 7820 197020 553188 
+54 240 0 198 198 
+55 360 0 247069 247069 
+56 240 720 6748 54929 
+57 240 960 73509 2701072 
+58 240 1200 25628 828074 
+59 240 0 31870 31870 
+60 240 960 373381 1606422 
+61 240 38640 3615412 5436984 
+62 240 4800 4378 12993 
+63 240 14400 111113 2188894 
+64 360 7200 62895 519820 
+65 28800 576000 587570 2061787 
+66 9600 192000 145789 591984 
+67 240 4800 15180 116983 
+68 240 4800 72611 1029930 
+69 120 4800 57287 902819 
+70 120 360 918035 1720949 
+71 120 0 259539 259539 
+72 120 2280 2351120 15984321 
+73 240 0 42427 42427 
+74 240 0 12938 12938 
+75 240 0 23735 23735 
+76 120 130 8032 16274551 
+77 1 1887 157524 17012151 
+78 480 0 49823 49823 
+</derivedinterval_data>
+<derivedatomic_data>
+0 62 920640 262144 262144 847578009600
+1 62 920640 320 130668.3225806452 4299739063504
+2 62 920640 320 130668.3225806452 4299739063504
+3 2 262144 262144 262144 137438953472
+4 1 15400 15400 15400 237160000
+5 1 15400 15400 15400 237160000
+6 62 51.63364191451645 5.051722808910815 28.34268236171363 2691.552880694579
+7 62 88.01529636711281 0.3686635944700461 24.59850008812355 57185.76666745852
+8 62 88.01529636711281 0.3686635944700461 24.59850008812355 57185.76666745852
+9 2 51.63364191451645 5.051722808910815 28.34268236171363 2691.552880694579
+10 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+11 1 3.651019440493125 3.651019440493125 3.651019440493125 13.32994295485873
+12 266 280 4 39.44360902255639 2255792
+13 1380 262144 4 408.3644927536232 137683016491
+14 2 7176 7176 7176 102989952
+15 203405 255512 4 2942.963866018421 11405045884912
+16 203347 255512 4 2945.04478998582 11405045884912
+17 1800 249280 4 3519.46 539222740272
+18 1200 1776 1104 1396 1290700800
+19 3600 71040 13120 37546.66666666666 3294928896000
+20 1800 71040 44160 55840 3097681920000
+21 144000 1776 1104 1396 154884096000
+22 48000 504 328 404 4144742400
+23 1200 20160 13120 16160 165789696000
+24 1200 60480 39360 48480 1492107264000
+25 1200 71040 39360 52160 1778614272000
+26 294 255512 4 18637.74149659864 876381557440
+27 203403 255512 4 2929.200273611179 9752935673584
+28 40945 249280 4 20567.36666666666 6010058226736
+29 300 71040 144 4390.337662337663 12021366656
+30 83 225600 4 7834.939759036145 82845003664
+31 104 216000 4 16452.80769230769 173496813904
+32 240 1776 1776 1776 757002240
+33 720 71040 20160 47360 1930051584000
+34 360 71040 71040 71040 1816805376000
+35 28800 1776 1776 1776 90840268800
+36 9600 504 504 504 2438553600
+37 240 20160 20160 20160 97542144000
+38 240 60480 60480 60480 877879296000
+39 240 71040 60480 65760 1044541440000
+40 32 249280 4 24629.5 138934355840
+41 16 221400 4 47312 127252419328
+42 40945 255512 4 12164.125 4554934762512
+43 300 60480 208 2985.714285714286 9800924304
+44 82 249280 4 12051.26829268293 62584467696
+45 83 128640 4 11189.73913043478 33096499536
+46 240 1512 1512 1512 548674560
+47 720 60480 19200 40320 1375322112000
+48 360 60480 60480 60480 1316818944000
+49 28800 1512 1512 1512 65840947200
+50 9600 480 480 480 2211840000
+51 240 19200 19200 19200 88473600000
+52 240 57600 57600 57600 796262400000
+53 240 60480 57600 59040 837070848000
+54 9 255512 4 28393.77777777778 65286382272
+55 32 131856 4 14654.22222222222 17386004864
+56 40802 121920 4 3351.133752310536 4732805516400
+57 301 63040 152 4033.506493506493 9950670032
+58 82 121920 4 12348.24390243902 66733073168
+59 83 8 4 6.024096385542169 3344
+60 240 1576 1576 1576 596106240
+61 720 63040 18880 41920 1500585984000
+62 360 63040 63040 63040 1430654976000
+63 28800 1576 1576 1576 71532748800
+64 9600 472 472 472 2138726400
+65 240 18880 18880 18880 85549056000
+66 240 56640 56640 56640 769941504000
+67 240 63040 56640 59840 861855744000
+68 8 4 4 4 128
+69 32 8 4 6 1280
+70 40798 222720 4 4297.371980676328 5325048810176
+71 300 67520 912 2820.78947368421 11007347488
+72 81 222720 4 10911.55555555555 52424404688
+73 82 8 4 6.048780487804878 3328
+74 240 1688 1688 1688 683842560
+75 720 67520 19200 45226.66666666666 1757921280000
+76 360 67520 67520 67520 1641222144000
+77 28800 1688 1688 1688 82061107200
+78 9600 480 480 480 2211840000
+79 240 19200 19200 19200 88473600000
+80 240 57600 57600 57600 796262400000
+81 240 67520 57600 62560 945205248000
+82 8 4 4 4 128
+83 31 8 4 6.064516129032258 1264
+84 40577 249280 4 4560.772946859904 3307190817840
+85 229 53760 144 3269.87012987013 6674813072
+86 81 249280 4 11583.11111111111 62140518736
+87 82 8 4 6.048780487804878 3328
+88 240 1344 1344 1344 433520640
+89 720 53760 14720 35733.33333333334 1105453056000
+90 360 53760 53760 53760 1040449536000
+91 28800 1344 1344 1344 52022476800
+92 9600 368 368 368 1300070400
+93 240 14720 14720 14720 52002816000
+94 240 44160 44160 44160 468025344000
+95 240 53760 44160 48960 580829184000
+96 8 4 4 4 128
+97 31 8 4 6.064516129032258 1264
+98 40799 142400 4 2671.329689453173 3045759576048
+99 301 52480 168 2944.415584415584 5929313360
+100 82 142400 4 12928.53658536585 76660319632
+101 83 8 4 6.024096385542169 3344
+102 240 1312 1312 1312 413122560
+103 720 52480 13440 35306.66666666666 1096704000000
+104 360 52480 52480 52480 991494144000
+105 28800 1312 1312 1312 49574707200
+106 9600 336 336 336 1083801600
+107 240 13440 13440 13440 43352064000
+108 240 40320 40320 40320 390168576000
+109 240 52480 40320 45440 507445248000
+110 8 4 4 4 128
+111 32 8 4 6 1280
+112 40575 128320 4 4894.304761904762 4715162052240
+113 230 63360 148 3961.947368421052 9680671472
+114 82 128320 4 12483.60975609756 70086738496
+115 83 8 4 6.024096385542169 3344
+116 240 1584 1584 1584 602173440
+117 720 63360 18240 42453.33333333334 1545879552000
+118 360 63360 63360 63360 1445216256000
+119 28800 1584 1584 1584 72260812800
+120 9600 456 456 456 1996185600
+121 240 18240 18240 18240 79847424000
+122 240 54720 54720 54720 718626816000
+123 240 63360 54720 59040 841052160000
+124 8 4 4 4 128
+125 32 8 4 6 1280
+126 40798 225600 4 3376.236286092455 4843511752448
+127 300 64640 184 3345.388888888889 10038563680
+128 82 225600 4 13555.70731707317 103429397728
+129 83 8 4 6.024096385542169 3344
+130 240 1616 1616 1616 626749440
+131 720 64640 18240 42986.66666666666 1592254464000
+132 360 64640 64640 64640 1504198656000
+133 28800 1616 1616 1616 75209932800
+134 9600 456 456 456 1996185600
+135 240 18240 18240 18240 79847424000
+136 240 54720 54720 54720 718626816000
+137 240 64640 54720 59680 860712960000
+138 8 4 4 4 128
+139 32 8 4 6 1280
+140 3 920640 920640 920640 1182295353600
+141 3 920640 920640 920640 1182295353600
+142 3 84.74756421612047 49.90264255910987 62.09461622991559 12338.45635230426
+143 2 84.74756421612047 49.90264255910987 67.32510338761517 9672.423374947746
+144 1 51.63364191451645 51.63364191451645 51.63364191451645 2666.032977356509
+145 2 184 8 96 33920
+146 1 184 184 184 33856
+147 1 8 8 8 64
+148 2 262144 512 131328 68719738880
+149 1 512 512 512 262144
+150 1 262144 262144 262144 68719476736
+151 4 249280 1792 90315 67638562816
+152 4 249280 1792 90315 67638562816
+153 4 249280 1792 90315 67638562816
+154 4 249280 1792 90315 67638562816
+155 5 249280 1800 90022.39999999999 75114328064
+156 4 249280 1800 85648 67881816064
+157 4 216000 128640 128640 51936497664
+158 1 238080 238080 238080 56682086400
+159 5 249280 1800 94648 83416945664
+160 4 225600 1800 79088 56266379264
+161 4 216000 1792 76528 51936497664
+162 1 249280 249280 249280 62140518400
+163 4 249280 128640 128640 62144009216
+164 3 2080 208 1144 4369664
+165 3 249280 249280 249280 62140518400
+166 1 128640 128640 128640 16548249600
+167 4 121920 896 48224 17620156416
+168 4 56640 896 19716 3213339984
+169 4 121920 121920 121920 17620156416
+170 4 222720 2208 74606.66666666667 49605208400
+171 4 57600 2208 15878 3331743552
+172 4 222720 222720 222720 49604198400
+173 4 249280 896 83416 62141300544
+174 3 44160 892 15130.66666666667 1951372544
+175 4 249280 249280 249280 62140518400
+176 4 142400 920 56315 25682731600
+177 4 40320 920 14146.66666666667 1629588816
+178 4 142400 95680 95680 25682731600
+179 4 128320 912 52384 21639356416
+180 4 54720 912 18577.33333333333 2995133264
+181 4 128320 102400 102400 21639356416
+182 4 225600 896 76624 56023126016
+183 3 54720 892 22866 3001834064
+184 4 225600 896 76624 56023126016
+185 1 320 320 320 102400
+186 1 320 320 320 102400
+187 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+188 1 0.3686635944700461 0.3686635944700461 0.3686635944700461 0.1359128458875746
+189 1 4 4 4 16
+190 1 4 4 4 16
+191 1 4 4 4 16
+192 1 4 4 4 16
+193 1 4 4 4 16
+194 1 4 4 4 16
+195 1 4 4 4 16
+196 1 4 4 4 16
+197 1 4 4 4 16
+198 1 4 4 4 16
+199 1 4 4 4 16
+200 1 4 4 4 16
+201 1 4 4 4 16
+202 1 4 4 4 16
+203 1 4 4 4 16
+204 1 4 4 4 16
+205 1 4 4 4 16
+206 1 4 4 4 16
+207 1 4 4 4 16
+208 1 4 4 4 16
+209 1 4 4 4 16
+210 1 4 4 4 16
+211 240 378 378 378 34292160
+212 240 378 378 378 34292160
+213 240 230 230 230 12696000
+214 240 230 230 230 12696000
+215 240 1267 1267 1267 385269360
+216 240 1267 1267 1267 385269360
+</derivedatomic_data>
+</max_no_null_derivedprofile>
+
+</profile_xml>

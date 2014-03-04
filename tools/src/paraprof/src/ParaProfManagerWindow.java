@@ -771,11 +771,31 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		
 		if (object instanceof TreePath[]) {
 			TreePath[] paths = (TreePath[]) object;
+			ArrayList<ParaProfTrial> trials = new ArrayList<ParaProfTrial>(paths.length);
 			for (int i = 0; i < paths.length; i++) {
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) paths[i]
 				                                                                     .getLastPathComponent();
 				Object userObject = selectedNode.getUserObject();
-				handleDelete(userObject, false);
+				//Check if there are multiple trials to delete, if so delete them all at once
+								if (userObject instanceof ParaProfTrial) {
+										ParaProfTrial t = (ParaProfTrial) userObject;
+										if (t.dBTrial()
+					
+												&& (trials.size() == 0
+												|| trials.get(0).getDatabase()
+					.equals(t.getDatabase()))) {
+											trials.add(t);
+										} else {
+										handleDelete(userObject, false);
+										}
+									} else {
+										handleDelete(userObject, false);
+									}
+								}
+								if (trials.size() > 0) {
+									ParaProfTrial[] trialArray = new ParaProfTrial[trials.size()];
+									trialArray = trials.toArray(trialArray);
+									handleDelete(trialArray, false);
 			}
 
 		} else if (object instanceof ParaProfApplication) {
@@ -867,7 +887,39 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				ppTrial.getExperiment().removeTrial(ppTrial);
 				getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
 			}
-		} else if (object instanceof ParaProfMetric) {
+		} else if (object instanceof ParaProfTrial[]) {
+						ParaProfTrial[] ppTrials = (ParaProfTrial[]) object;
+			
+							DatabaseAPI databaseAPI = this.getDatabaseAPI(ppTrials[0]
+									.getDatabase());
+							if (databaseAPI != null) {
+							int[] trialIDs = new int[ppTrials.length];
+							for (int i = 0; i < ppTrials.length; i++) {
+							ParaProfTrial ppTrial = ppTrials[i];
+								trialIDs[i] = ppTrial.getID();
+								// Remove any loaded trials associated with this
+								// application.
+								for (Enumeration<ParaProfTrial> e = loadedDBTrials
+										.elements(); e.hasMoreElements();) {
+									ParaProfTrial loadedTrial = e.nextElement();
+									if (loadedTrial.getApplicationID() == ppTrial
+											.getApplicationID()
+											&& loadedTrial.getExperimentID() == ppTrial
+													.getID()
+											&& loadedTrial.getID() == ppTrial.getID()
+											&& loadedTrial.loading() == false) {
+										loadedDBTrials.remove(loadedTrial);
+									}
+								}
+								getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
+							}
+							databaseAPI.deleteTrial(trialIDs);
+							databaseAPI.terminate();
+						}
+			
+			 		}
+		
+		else if (object instanceof ParaProfMetric) {
 			ParaProfMetric ppMetric = (ParaProfMetric) object;
 			deleteMetric(ppMetric);
 		} else if (object instanceof DefaultMutableTreeNode){
@@ -2468,8 +2520,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				// load the trial in from the db
 				ppTrial.setLoading(true);
 
-				DatabaseAPI databaseAPI = this.getDatabaseAPI(ppTrial
-						.getDatabase());
+				Database database=ppTrial.getDatabase();
+				if(database!=null&&database.getLatch()!=null){
+				try {
+					database.getLatch().await();
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+				}
+				database.setLatch();
+				
+				DatabaseAPI databaseAPI = this.getDatabaseAPI(database);
 				if (databaseAPI != null) {
 					databaseAPI.setApplication(ppTrial.getApplicationID());
 					databaseAPI.setExperiment(ppTrial.getExperimentID());
@@ -2499,6 +2560,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 										theTrial.finishLoad();
 										ParaProf.paraProfManagerWindow
 										.populateTrialMetrics(theTrial);
+										theTrial.getDatabase().getLatch().countDown();
 									} catch (final Exception e) {
 										EventQueue.invokeLater(new Runnable() {
 											public void run() {
@@ -3202,8 +3264,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				.getChildAt(i);
 				if (node.getUserObject() == view.getDatabase()) {
 					dbNode = node;
+					break;
 					// db = (Database)
-					node.getUserObject();
+					//node.getUserObject();
 				}
 			}
 		} catch (Exception e) {
@@ -3213,15 +3276,35 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		// Test to see if dbApps is expanded, if not, expand it.
 		if (!(tree.isExpanded(new TreePath(dbNode.getPath()))))
 			tree.expandPath(new TreePath(dbNode.getPath()));
-
-		// Try and find the required view node.
-		for (int i = dbNode.getChildCount(); i > 0; i--) {
-			DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) dbNode
-			.getChildAt(i - 1);
-			if (view.getID() == ((ParaProfView) defaultMutableTreeNode
-					.getUserObject()).getID())
-				return defaultMutableTreeNode;
+		
+		//Make a list of the selected view's parents
+		ArrayList<View> treePath = new ArrayList<View>();
+		View tmpView=view;
+		while(tmpView!=null){
+			treePath.add(tmpView);
+			tmpView=tmpView.getParent();
 		}
+
+		//From the top of the tree, find each parent view
+		DefaultMutableTreeNode tmpNode=dbNode;
+		for(int v = treePath.size()-1;v>=0;v--)
+		{
+		// Try and find the required view node.
+		for (int i = tmpNode.getChildCount(); i > 0; i--) {
+			DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) tmpNode
+			.getChildAt(i - 1);
+			if (treePath.get(v).getID() == ((ParaProfView) defaultMutableTreeNode
+					.getUserObject()).getID()){
+				tmpNode = defaultMutableTreeNode;
+				break;
+			}
+		}
+		}
+		
+		if(tmpNode!=null&&((ParaProfView)tmpNode.getUserObject()).getID()==view.getID()){
+			return tmpNode;
+		}
+		
 		// Required view node was not found, try adding it.
 		if (view != null) {
 			DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(

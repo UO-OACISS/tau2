@@ -1825,7 +1825,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	       filePathInclude=-I${arrFileNameDirectory[$tempCounter]}
             fi
 
-	    newCmd="$CMD $headerInstFlag $filePathInclude $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt"
+	    newCmd="$CMD $headerInstFlag $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt $filePathInclude"
 #-I${arrFileNameDirectory[$tempCounter]}
 
 	    echoIfDebug "cmd before appending the .o file is $newCmd"
@@ -1958,7 +1958,7 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 	   objectFilesForLinking="pompregions.o $objectFilesForLinking"
 	fi
 
-	newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
+	newCmd="$CMD $listOfObjectFiles $argsRemaining $objectFilesForLinking $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
 
         # check for -lc, if found, move it to the end
 	check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`

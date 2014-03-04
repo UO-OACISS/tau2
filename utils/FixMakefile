@@ -613,6 +613,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
+     MPICH3_CONST)
+	echo "NOTE: Using the -DTAU_MPICH3_CONST=const to compile programs"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPICH2_MPI_INPLACE)
 	echo "NOTE: Using the -DMPICH2_MPI_INPLACE flag"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1253,6 +1258,10 @@ case $1 in
 	;;
      PTHREAD_AVAILABLE)
         echo "NOTE: Using pthreads as the thread package. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TBB_AVAILABLE)
+        echo "NOTE: Using pthreads as the thread package for TBB support. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_PTHREAD_WRAP)

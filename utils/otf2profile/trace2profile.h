@@ -297,7 +297,7 @@ static char * out;
 void StateLeave(double time, Thread &thread, State &state);
 void StateEnter(double time, Thread &thread, State &state);
 void SnapshotControl(double time, int stateToken, Thread &thread);
-void ReadTraceFile();
+int  ReadTraceFile();
 void ReadOTFFile();
 void ProcessDefs();
 

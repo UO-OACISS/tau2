@@ -75,6 +75,7 @@ using namespace std;
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
+#define TAU_EBS_DEFAULT_TAU 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
 #if (defined (TAU_BGL) || defined(TAU_BGP))
 #define TAU_EBS_PERIOD_DEFAULT 20000 // Kevin made this bigger,
@@ -95,7 +96,8 @@ using namespace std;
 #define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
 /* Experimental feature - pre-computation of statistics */
-#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+//#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+#if defined(TAU_UNIFY)
 #define TAU_PRECOMPUTE_DEFAULT 1
 #endif /* TAU_UNIFY && TAU_MPI */
 
@@ -213,6 +215,7 @@ static int env_openmp_runtime_states_enabled = 0;
 static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
+static int env_ebs_enabled_tau = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -739,6 +742,10 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_ebs_enabled_tau() {
+  return env_ebs_enabled_tau;
 }
 
 int TauEnv_get_openmp_runtime_enabled() {
@@ -1383,15 +1390,15 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Output Format: snapshot\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "snapshot");
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
-#ifdef TAU_MPI
+//#ifdef TAU_MPI
       env_profile_format = TAU_FORMAT_MERGED;
       TAU_VERBOSE("TAU: Output Format: merged\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
-#else
-      env_profile_format = TAU_FORMAT_PROFILE;
-      TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
-      TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
-#endif /* TAU_MPI */
+//#else
+      //env_profile_format = TAU_FORMAT_PROFILE;
+      //TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
+      //TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
+//#endif /* TAU_MPI */
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "none")) {
       env_profile_format = TAU_FORMAT_NONE;
       TAU_VERBOSE("TAU: Output Format: none\n");
@@ -1475,6 +1482,19 @@ void TauEnv_initialize()
       env_openmp_runtime_context = 0;
       TAU_VERBOSE("TAU: OpenMP Runtime Support Context none\n");
       TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
+    }
+
+    tmp = getconf("TAU_MEASURE_TAU");
+    if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
+      env_ebs_enabled = 1; // enable samping too?
+      env_ebs_enabled_tau = 1;
+      TAU_VERBOSE("TAU: Sampling TAU overhead\n");
+      TAU_METADATA("TAU_SAMPLING", "on");
+      TAU_METADATA("TAU_MEASURE_TAU", "on");
+    } else {
+      env_ebs_enabled_tau = 0;
+      TAU_VERBOSE("TAU: Not sampling TAU overhead\n");
+      TAU_METADATA("TAU_MEASURE_TAU", "off");
     }
 
     tmp = getconf("TAU_SAMPLING");
@@ -1595,6 +1615,12 @@ void TauEnv_initialize()
             env_ebs_unwind_depth = TAU_CALLPATH_DEPTH_DEFAULT;
           }
         }
+		if (env_ebs_unwind_depth == 0) {
+          sprintf(tmpstr, "auto");
+        } else {
+          sprintf(tmpstr, "%d", env_ebs_unwind_depth);
+		}
+        TAU_METADATA("TAU_EBS_UNWIND_DEPTH", tmpstr);
       }
 #endif /* TAU_UNWIND */
 
@@ -1605,7 +1631,8 @@ void TauEnv_initialize()
       }
     }
 
-#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+//#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+#if defined(TAU_UNIFY)
     tmp = getconf("TAU_STAT_PRECOMPUTE");
     if (parse_bool(tmp, TAU_PRECOMPUTE_DEFAULT)) {
       env_stat_precompute = 1;

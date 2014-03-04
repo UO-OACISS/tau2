@@ -202,42 +202,56 @@ bool IsDynamicProfiling(char *filename) {
   //This function determines if dynamic profiling is used by opening the
   //profile and examing the version that is contained on the first line.  
   //It then returns the corresponding boolean.
-  FILE *fp;
-  char error_msg[SIZE_OF_FILENAME], version[64];
+  //
+  //max line length for the first line of the profile file.
+  const int MAX_LINE_LEN = 100;
+  FILE * fp;
+  char error_msg[SIZE_OF_FILENAME];
   int numberOfFunctions;
+  char line[MAX_LINE_LEN], version[MAX_LINE_LEN];
+  size_t len;
+  int retval;
   if ((fp = fopen(filename, "r")) == NULL) {
     sprintf(error_msg,"Error: Could not open %s",filename);
     perror(error_msg);
     return false;
   }//if
-  if (fscanf(fp, "%d %s",&numberOfFunctions, version) == EOF) {
+  if ((fgets(line, MAX_LINE_LEN, fp) == NULL))
+  {
+    sprintf(error_msg,"Error: Could read line from %s",filename);
+    return false;
+  }
+  if (sscanf(line, "%d %s", &numberOfFunctions, version) == EOF) {
     printf("Error: fscanf returns EOF file %s", filename);
     return false;
   }//if
-  //fclose(fp); // thats all we wanted to read
+  fclose(fp); // thats all we wanted to read
   if (strcmp(version,"templated_functions") == 0  || (strstr(version,"MULTI") != NULL)) { // correct version
     if(strstr(version,"MULTI") != NULL){
       multipleCounters = true;
       counterName = strdup(version);
-      if((strstr(version,"TIME") != NULL) || (strstr(version, "Time") != NULL))
-	hwcounters = false;
+      if(strstr(version,"TIME") != NULL)
+        hwcounters = false;
       else
-	hwcounters = true;
-      return true;
+        hwcounters = true;
+      retval = true;
     }//if
     else{
       hwcounters = false; // Timing data is in the profile files  
-      return true;
+      retval = true;
     }//else
   }//if
   else  { 
     if ((strcmp(version,"templated_functions_hw_counters") == 0)) {
       hwcounters  = true; // Counters - do not use time string formatting
-      return true; // It is dynamic profiling
+      retval = true; // It is dynamic profiling
     }//if
     else // Neither  - static profiling 
-      return false;
+      retval = false;
   }//else
+
+  return retval;
+
 }//IsDynamicProfiling()
 
 

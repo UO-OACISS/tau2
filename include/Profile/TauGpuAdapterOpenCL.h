@@ -110,7 +110,15 @@ public:
 
 	const char *getName() const { return name; }
 
-	FunctionInfo *getCallingSite() const { return callingSite; }
+	FunctionInfo *getCallingSite() const { 
+  
+    if (callingSite != NULL)
+    {
+      callingSite->SetPrimaryGroupName("TAU_REMOTE");
+    }
+    
+    return callingSite; 
+  }
 
 	double syncOffset() const
 	{

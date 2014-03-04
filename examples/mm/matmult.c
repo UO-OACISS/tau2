@@ -52,6 +52,7 @@ __inline double multiply(double a, double b) {
 }
 #endif /* APP_USE_INLINE_MULTIPLY */
 
+#if 0
 // cols_a and rows_b are the same value
 void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
@@ -77,6 +78,7 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
     }
   }   /*** End of parallel region ***/
 }
+#endif
 
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
@@ -137,16 +139,17 @@ double do_work(void) {
 
   compute(a, b, c, NRA, NCA, NCB);
 #if defined(TAU_OPENMP)
+#if 0
   if (omp_get_nested()) {
     compute_nested(a, b, c, NRA, NCA, NCB);
   }
 #endif
+#endif
 #ifdef TAU_MPI
-  if (provided == MPI_THREAD_MULTIPLE)
-  { 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-//    printf("Rank: %d: provided is MPI_THREAD_MULTIPLE\n", rank);
+  if (provided == MPI_THREAD_MULTIPLE) { 
+    printf("provided is MPI_THREAD_MULTIPLE\n");
+  } else if (provided == MPI_THREAD_FUNNELED) { 
+    printf("provided is MPI_THREAD_FUNNELED\n");
   }
 #endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
@@ -209,12 +212,23 @@ int main (int argc, char *argv[])
 #endif /* PTHREADS */
 
 #ifdef TAU_MPI
-#if (defined(PTHREADS) || defined(TAU_OPENMP))
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+  int rc = MPI_SUCCESS;
+#if defined(PTHREADS)
+  rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
+#elif defined(TAU_OPENMP)
+  rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+  printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
 #else
-  MPI_Init(&argc, &argv); 
+  rc = MPI_Init(&argc, &argv); 
 #endif /* THREADS */
+  if (rc != MPI_SUCCESS) {
+    char *errorstring;
+    int length = 0;
+    MPI_Error_string(rc, errorstring, &length);
+    printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
+    exit(1);
+  }
 #endif /* TAU_MPI */
 
 #ifdef PTHREADS

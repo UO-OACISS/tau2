@@ -129,9 +129,15 @@ public class ParseConfig implements Serializable {
             connectionString = "jdbc:" + getDBType() + ":" + getDBName();
         } else if (getDBType().equals("sqlite")) {
             connectionString = "jdbc:" + getDBType() + ":" + getDBName();
-        } else if (getDBType().equals("mysql")) {
-            connectionString = "jdbc:" + getDBType() + ":" + getDBName();
-        } else if (getDBType().equals("h2")) {
+		}
+		/*
+		 * The default connect string URL is necessary for successfully
+		 * connecting to mysql databases via the portal
+		 */
+		// else if (getDBType().equals("mysql")) {
+		// connectionString = "jdbc:" + getDBType() + ":" + getDBName();
+		// }
+		else if (getDBType().equals("h2")) {
             connectionString = "jdbc:" + getDBType() + ":" + getDBName() + ";AUTO_SERVER=TRUE";
         } else {
             if (getDBType().equals("oracle")) {
