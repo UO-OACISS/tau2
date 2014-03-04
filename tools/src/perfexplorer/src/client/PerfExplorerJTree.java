@@ -62,7 +62,7 @@ public class PerfExplorerJTree extends JTree{
 				MutableTreeNode aNode = (MutableTreeNode) path
 				.getLastPathComponent();
 				handleRename((DefaultMutableTreeNode) aNode, newValue);
-				nodeChanged(aNode);
+				PerfExplorerJTree.nodeChanged((DefaultMutableTreeNode) aNode);
 
 			}
 		};
@@ -312,7 +312,8 @@ public class PerfExplorerJTree extends JTree{
 	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
 	    parentNode.add(node);
 
-	    addTAUdbViewNodes(node, view.getID());
+	    // DO NOT iterate over the children of this view. They will get loaded if they are expanded.
+	    //addTAUdbViewNodes(node, view.getID());
 	}
 //	if (viewVector.size() == 0) {
 //	    leafViews.add(parentNode);

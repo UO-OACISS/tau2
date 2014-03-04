@@ -15,5 +15,7 @@ void taupreload_init() {
 }
 
 void taupreload_fini() {
-  Tau_stop_top_level_timer_if_necessary();
+  //Tau_stop_top_level_timer_if_necessary();
+  // To make sure all threads write profiles, stop all timers.
+  Tau_profile_exit_all_threads();
 }

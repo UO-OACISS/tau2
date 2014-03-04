@@ -18,6 +18,8 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.View.ViewRule;
+import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
@@ -54,7 +56,33 @@ public class Utilities {
 		message = true;
     return null;
   }
-	
+
+  public static List<Trial> getTrialsFromMetadata (Map<String,String> metadata, String conjoin) {
+      boolean message = false;
+      PerfExplorerServer server = getServer();
+	  // shortcut - assume this is a TAUdb database.
+	  String whereClause = "";
+	  int i = 0;
+	  for (String key : metadata.keySet()) {
+	    whereClause += " inner join primary_metadata pm" + i + " on pm" + i;
+		whereClause += ".trial = t.id and pm" + i;
+		whereClause += ".name = '" + key + "' ";
+		i++;
+	  }
+	  whereClause += " where ";
+	  i = 0;
+	  for (String key : metadata.keySet()) {
+	    if (i > 0) {
+		  whereClause += conjoin;
+		}
+		whereClause += "pm" + i + ".value " + metadata.get(key) + " ";
+		i++;
+	  }
+      List<Trial> trials = Trial.getTrialList(server.getDB(), whereClause, false); 
+      message = true;
+      return trials;
+  }
+
   public static Trial getTrial (String aName, String eName, String tName) {
 		boolean message = false;
         PerfExplorerServer server = getServer();
@@ -115,6 +143,23 @@ public class Utilities {
     return server.getAllSubViews(0); 
   }
 
+	
+	public static void createView(String name, boolean requireAll, List<ViewRule> rules) {
+			createSubView(name, requireAll, -1, rules);
+		}
+	
+	public static void createSubView(String name, boolean requireAll, int parent, List<ViewRule> rules) {
+			
+			PerfExplorerServer server = getServer();
+			DB db = server.getDB();
+			try {
+				View.createView(db, name, requireAll, parent, rules);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	
+	
 	public static View getView (String name) {
 		boolean message = false;
 
@@ -269,6 +314,8 @@ public class Utilities {
 //				System.out.println(server.getConnectionString());
 				String tmpname = (String)configNames.get(i);
 				if (tmpname.equals(name)) {
+					// getting the schema version forces the connection to be made
+					server.getSchemaVersion(i);
 //					System.out.println("selected: " + server.getConnectionString());
 					return i;
 				}
@@ -316,6 +363,7 @@ public class Utilities {
 	public static String shortenEventName(String longName) {
 		StringTokenizer st = new StringTokenizer(longName, "(");
 		String shorter = null;
+		// trim the function arguments
 		try {
 			shorter = st.nextToken();
 			if (shorter.length() < longName.length()) {
@@ -325,13 +373,21 @@ public class Utilities {
 			shorter = longName;
 		}
 		longName = shorter;
-		st = new StringTokenizer(longName, "[{");
-		shorter = null;
-		try {
-			shorter = st.nextToken();
-		} catch (NoSuchElementException e) {
+		// trim the source location
+		int index = longName.indexOf(" [{");
+		if (index >= 0) {
+		    int last = longName.lastIndexOf("/");
+			if (last >= 0) {
+			    shorter = longName.substring(0,index+3) + longName.substring(last+1,longName.length());
+			} else {
+			    shorter = longName.substring(0,index);
+			}
+		} else {
 			shorter = longName;
 		}
+		// remove any OPENMP annotation
+		shorter = shorter.replace("[OPENMP] ", "");
+		shorter = shorter.replace("OpenMP_", "");
 		return shorter.trim();
 	}
 

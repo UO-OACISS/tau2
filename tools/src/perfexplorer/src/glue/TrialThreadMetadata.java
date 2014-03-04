@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.List;
+import java.util.Iterator;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -19,7 +21,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.perfexplorer.server.TauNamespaceContext;
 
 /**
@@ -28,13 +34,13 @@ import edu.uoregon.tau.perfexplorer.server.TauNamespaceContext;
  */
 public class TrialThreadMetadata extends AbstractResult {
 
-    /**
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 2805778968974861504L;
 	protected Map<Integer, Map<String, String>> stringData =
-	            new HashMap<Integer, Map<String, String>>();
-    protected Set<String> fields = new TreeSet<String>();
+		new HashMap<Integer, Map<String, String>>();
+	protected Set<String> fields = new TreeSet<String>();
 
 	/**
 	 * 
@@ -46,7 +52,7 @@ public class TrialThreadMetadata extends AbstractResult {
 	public TrialThreadMetadata() {
 		super();
 	}
-	
+
 	/**
 	 * @param input
 	 */
@@ -58,31 +64,65 @@ public class TrialThreadMetadata extends AbstractResult {
 			getMetadata(trial);
 		}
 	}
-	
+
+	/**
+	 * @param input
+	 */
+	public TrialThreadMetadata(DataSourceResult input) {
+		DataSource datasource = input.getDataSource();
+		getMetadata(datasource);
+	}
+
+	private void getMetadata(DataSource datasource) {
+		String metric = "METADATA";
+		List<edu.uoregon.tau.perfdmf.Thread> threads = datasource.getThreads();
+		Integer tid = 0;
+		for (edu.uoregon.tau.perfdmf.Thread thread : threads) {
+			MetaDataMap metaData = thread.getMetaData();
+			Iterator<MetaDataKey> iter = metaData.keySet().iterator();
+			while (iter.hasNext()) {
+				// we can safely assume that the name is a string
+				MetaDataKey key = iter.next();
+				MetaDataValue value = metaData.get(key);
+				if (key.toString().contains("Timestamp") || key.toString().contains("pid")) {
+					putNameValue(tid, key.toString(), value.toString());
+				} else {
+					try {
+						Double tmpDouble = Double.parseDouble(value.toString());
+						this.putExclusive(tid, key.toString(), metric, tmpDouble.doubleValue());
+					} catch (NumberFormatException e) { 
+						putNameValue(tid, key.toString(), value.toString());
+					}
+				}
+			}
+			tid++;
+		}
+	}
+
 	private void getMetadata(Trial trial) {
 		try {
 			// build a factory
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			// ask the factory for the document builder
 			DocumentBuilder builder = factory.newDocumentBuilder();
-	
+
 			Reader reader = new StringReader(trial.getField(Trial.XML_METADATA));
 			InputSource source = new InputSource(reader);
 			Document metadata = builder.parse(source);
-	
+
 			//NodeList names = null;
 			//NodeList values = null;
-	
+
 			// build the xpath object to jump around in that document
 			javax.xml.xpath.XPath xpath = javax.xml.xpath.XPathFactory.newInstance().newXPath();
 			xpath.setNamespaceContext(new TauNamespaceContext());
-	
+
 			// get the profile attributes from the metadata
-			
+
 			NodeList profileAttributes = (NodeList) xpath.evaluate("/metadata/ProfileAttributes", metadata, javax.xml.xpath.XPathConstants.NODESET);
-	
+
 			for (int i = 0 ; i < profileAttributes.getLength() ; i++) {
-//				System.out.println("Got profile attributes..." + i);
+				//		System.out.println("Got profile attributes..." + i);
 				NamedNodeMap attributes = profileAttributes.item(i).getAttributes();
 				String node = attributes.getNamedItem("node").getNodeValue();
 				//String context = attributes.getNamedItem("context").getNodeValue();
@@ -101,8 +141,8 @@ public class TrialThreadMetadata extends AbstractResult {
 					while (value.getFirstChild() == null || value.getFirstChild().getNodeValue() == null) {
 						value = value.getNextSibling();
 					}
-//					if (value == null) { // if there is no value
-//					} else 
+					//			if (value == null) { // if there is no value
+					//			} else 
 					{
 						String tmp = value.getFirstChild().getNodeValue();
 						String tmpName = name.getFirstChild().getNodeValue();
@@ -111,10 +151,10 @@ public class TrialThreadMetadata extends AbstractResult {
 								Double tmpDouble = Double.parseDouble(tmp);
 								// The metric name is "metadata"
 								this.putExclusive(Integer.parseInt(node), tmpName, "METADATA", tmpDouble.doubleValue());
-//								System.out.println(tmpName + node + " " + tmp);
+								//				System.out.println(tmpName + node + " " + tmp);
 								// TODO : this is a hack for sweep3d support - REMOVE IT!
 								// if (tmpName.startsWith("processor neighbor") && tmpDouble > 0.0) {
-									// neighbors++;
+								// neighbors++;
 								// }
 							} catch (NumberFormatException e) { 
 								putNameValue(Integer.parseInt(node), tmpName, tmp);
@@ -147,18 +187,18 @@ public class TrialThreadMetadata extends AbstractResult {
 
 	}
 
-    public void putNameValue(Integer thread, String field, String value) {
-        if (!threads.contains(thread)) {
-            threads.add(thread);
-        }
-        if (!fields.contains(field)) {
-            fields.add(field);
-        }
-        if (!stringData.containsKey(thread)) {
-            stringData.put(thread, new HashMap<String, String>());
-        }
-        stringData.get(thread).put(field, value);
-    }
+	public void putNameValue(Integer thread, String field, String value) {
+		if (!threads.contains(thread)) {
+			threads.add(thread);
+		}
+		if (!fields.contains(field)) {
+			fields.add(field);
+		}
+		if (!stringData.containsKey(thread)) {
+			stringData.put(thread, new HashMap<String, String>());
+		}
+		stringData.get(thread).put(field, value);
+	}
 
 	public String getNameValue(Integer thread, String field) {
 		String value = null;
@@ -170,11 +210,11 @@ public class TrialThreadMetadata extends AbstractResult {
 		return value;
 	}
 
-    public Set<String> getFields() {
+	public Set<String> getFields() {
 		return fields;
 	}
 
-    public int getThreadCount() {
+	public int getThreadCount() {
 		return stringData.size();
 	}
 }
