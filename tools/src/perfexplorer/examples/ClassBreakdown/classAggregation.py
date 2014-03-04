@@ -255,10 +255,11 @@ def showChildren(ebds, className, full):
 	for m in sorted(methods, key=methods.get, reverse=True):
 		if showmax > 0:
 			print "\tMethod '%s' : %f" % (m,methods[m]/1000000)
-			showmax = showmax - 1
 		else:
 			othervalue = othervalue + methods[m]
-	print "\tAll other methods : %f" % (othervalue/1000000)
+		showmax = showmax - 1
+	if showmax < 0:
+		print "\tAll other methods : %f" % (othervalue/1000000)
 
 def main():
 	global filename
@@ -335,7 +336,8 @@ def main():
 			showChildren(ebds,c,full)
 		else:
 			othervalue = othervalue + classes[c]
-	print "\nAll other classes : %f, application total : %f" % (othervalue/1000000, stats.getInclusive(0,mainEvent,metric)/1000000)
+	# get the application total from the original profile, thread 0. It is the true application main.
+	print "\nAll other classes : %f, application total : %f" % (othervalue/1000000, result.getInclusive(0,mainEvent,metric)/1000000)
 	print "(inclusive aggregation of unwound samples and means without NULLs can be more than application total)"
 	print "\nMetric:", metric, "/ 1,000,000"
 
