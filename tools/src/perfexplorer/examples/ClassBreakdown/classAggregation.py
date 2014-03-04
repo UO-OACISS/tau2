@@ -266,7 +266,6 @@ def main():
 	global tauData
 	global doInclusive
 	print "--------------- JPython test script start ------------"
-	print "doing cluster test"
 	# get the parameters
 	getParameters()
 	# load the data
@@ -286,11 +285,13 @@ def main():
 	flatten = ExtractNonCallpathEventOperation(result)
 	flat = flatten.processData().get(0)
 
+	print "Computing statistics..."
 	statmaker = BasicStatisticsOperation(flat, False)
 	statmaker.setIncludeNull(False)
 	stats = statmaker.processData().get(BasicStatisticsOperation.MEAN)
 
 	# get the callpath events
+	print "Extracting callpath data..."
 	fullen = ExtractCallpathEventOperation(result)
 	full = fullen.processData().get(0)
 
@@ -338,7 +339,7 @@ def main():
 			othervalue = othervalue + classes[c]
 	# get the application total from the original profile, thread 0. It is the true application main.
 	print "\nAll other classes : %f, application total : %f" % (othervalue/1000000, result.getInclusive(0,mainEvent,metric)/1000000)
-	print "(inclusive aggregation of unwound samples and means without NULLs can be more than application total)"
+	print "(inclusive aggregation of unwound samples and means without NULLs can add up to more than application total)"
 	print "\nMetric:", metric, "/ 1,000,000"
 
 	print "---------------- JPython test script end -------------"
