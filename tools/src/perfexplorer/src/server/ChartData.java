@@ -806,15 +806,19 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" and m.name = ? ");
 			}
-
-//			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append(" and ie.group_name like '%TAU_PHASE%' ");
-			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append(" and ie.group_name not like '%TAU_PARAM%' ");
-
+			if (db.getSchemaVersion() == 0) {
+//				buf.append("and ims.inclusive_percentage < 100.0 ");
+				buf.append(" and ie.group_name like '%TAU_PHASE%' ");
+				buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
+				buf.append(" and ie.group_name not like '%TAU_PARAM%' ");
+			}
 			buf.append(" group by ");
 			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
-				buf.append(tmpBuf.toString() + ", ");
+				buf.append(tmpBuf.toString());
+				String commaTest=tmpBuf.toString().trim();
+				if(commaTest.charAt(commaTest.length()-1)!=','){
+					buf.append(", ");
+				}
 			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
@@ -895,13 +899,27 @@ public class ChartData extends RMIChartData {
 				buf.append(" and m.name = ? ");
 			}
 
-			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ie.group_name like '%TAU_PHASE%' ");
-			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+			
+			
+			
+			
+			if (db.getSchemaVersion() == 0) {
+				buf.append("and ims.inclusive_percentage < 100.0 ");
+				buf.append("and ie.group_name like '%TAU_PHASE%' ");
+				buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
+				buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+			} else {
+				buf.append("and ims.inclusive_percent < 100.0 ");
+			}
+
+			
 			buf.append(" group by ");
 			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
-				buf.append(tmpBuf.toString() + ", ");
+				buf.append(tmpBuf.toString());
+				String commaTest=tmpBuf.toString().trim();
+				if(commaTest.charAt(commaTest.length()-1)!=','){
+					buf.append(", ");
+				}
 			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
