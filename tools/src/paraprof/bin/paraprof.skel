@@ -97,7 +97,8 @@ if [ "x$MACHINE" = "xx86_64" ] ; then
 fi
 
 testmax=`$BINDIR/tau_javamax.sh`
-if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
+#if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
+if [ "x$testmax" != "xfailed" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
 if [ "x$platform" = "xDarwin" ] ; then 

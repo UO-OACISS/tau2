@@ -1,5 +1,15 @@
 #!/bin/bash
 
+myhost=`hostname`
+cached=$HOME/.ParaProf/tau_javamax-$myhost
+if [ -f $cached ] ; then
+	cat $cached
+	exit
+else
+	mkdir -p $HOME/.ParaProf
+	echo "failed" > $cached
+fi
+
 # don't want the user to see glibc errors (on Franklin)
 export MALLOC_CHECK_=0
 
@@ -23,7 +33,12 @@ if [ "x$ver" != "xJavaHotSpot(TM)" ] ; then
 fi
 
 if [ $(uname) = "Darwin" ]; then
-	memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
+    memtotal=`java -XX:+PrintFlagsFinal -version 2>&1 | grep MaxHeapSize | awk '{print $4}'`
+	# memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
+    trymem=$(($memtotal/(1024*1024)))
+	echo "$trymem" > $cached
+	echo $trymem
+	exit
 else
 	memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
         if [ $(uname -m) = "i686" ]; then
@@ -62,8 +77,8 @@ while [ $trymem -gt 250 ] ; do
     fi
 
     echo "$oldmem"
+	echo "$oldmem" > $cached
     exit
-
 done
 
 echo "failed"
