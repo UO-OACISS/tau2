@@ -471,7 +471,6 @@ void TAUDECL Tau_trace_sendmsg_remote(int type, int destination, int length, int
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_create_top_level_timer_if_necessary_task(int task);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
-void TAUDECL Tau_create_thread_state_if_necessary(const char* name);
 
 // metadata functions
 void TAUDECL Tau_metadata(const char *name, const char *value);
