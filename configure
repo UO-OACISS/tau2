@@ -5523,16 +5523,25 @@ if [ "x$download_ompt" = xyes ] ; then
         libomp_oss_log=build-mic.log
         archarg="arch=mic"
 	  fi
+	  # fix the expected path for bin 
+      cp tools/common.inc tmp.inc
+      sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
+      rm tmp.inc
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
-      make $archarg >& $libomp_oss_log
+      make CXXFLAGS=-D__MIC2__ CFLAGS=-D__MIC2__ $archarg >& $libomp_oss_log
       result=$?
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
-      cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
       if [ $result -eq 0 ] ; then
+        cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
         echo "...Success."
       else
-        echo "ERROR BUILDING $libomp_ossdir!"
-        echo "Please check `pwd`/${libomp_oss_log}"
+        if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
+          cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+          echo "...Success."
+		else
+          echo "ERROR BUILDING $libomp_ossdir!"
+          echo "Please check `pwd`/${libomp_oss_log}"
+		fi
       fi
 
       # only build the dynamic version for now
