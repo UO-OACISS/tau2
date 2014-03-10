@@ -1810,6 +1810,11 @@ if [ $gotoNextStep == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.pp//'`
 	    fi
 
+            # remove the .continue from the name of the output file
+	    if [ $continueBeforeOMP == $TRUE ]; then
+		outputFile=`echo $outputFile | sed -e 's/\.continue//'`
+	    fi
+
             # remove the .pomp from the name of the output file
 	    if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
@@ -2107,14 +2112,19 @@ fi
 if [ $needToCleanPdbInstFiles == $TRUE ]; then
     tempCounter=0
     while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
-	evalWithDebugMessage "/bin/rm -f ${arrTau[$tempCounter]##*/}" "cleaning inst file"
+        tmpname="${arrTau[$tempCounter]##*/}"
+	evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
+        tmpname="`echo $tmpname | sed -e 's/\.inst//'`"
+        if [ $continueBeforeOMP == $TRUE ] ; then
+            evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning continue file"
+            tmpname="`echo $tmpname | sed -e 's/\.continue//'`"
+        fi
 	if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
 	    if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
-		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.chk\.pomp\.inst//'`
-	    else
-		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.inst//'`
+		tmpname="`echo $tmpname | sed -e 's/\.chk\.pomp//'`"
 	    fi
-	    evalWithDebugMessage "/bin/rm -f $secondSource" "cleaning pp file"
+	    evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning pp file"
+            tmpname="`echo $tmpname | sed -e 's/\.pp//'`"
 	fi
 	if [ $pdbFileSpecified == $FALSE ]; then
 	    evalWithDebugMessage "/bin/rm -f ${arrPdb[$tempCounter]##*/}" "cleaning PDB file"
