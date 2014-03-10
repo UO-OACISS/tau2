@@ -52,6 +52,7 @@ declare -i temp=0
 declare -i idcounter=0
 
 declare -i preprocess=$FALSE
+declare -i continueBeforeOMP=$FALSE
 declare -i trackIO=$FALSE
 declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
@@ -97,6 +98,7 @@ printUsage () {
     echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
     echo -e "  -optTauInstr=\"\"\t\tSpecify location of tau_instrumentor. Typically \$(TAUROOT)/\$(CONFIG_ARCH)/bin/tau_instrumentor"
     echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
+    echo -e "  -optContinueBeforeOMP\t\tInsert a CONTINUE statement before !\$OMP directives."
     echo -e "  -optCPP=\"\"\t\t\tSpecify an alternative preprocessor and pre-process the sources."
     echo -e "  -optCPPOpts=\"\"\t\tSpecify additional options to the C pre-processor."
     echo -e "  -optCPPReset=\"\"\t\tReset C preprocessor options to the specified list."
@@ -332,6 +334,11 @@ for arg in "$@" ; do
 				# Default options 	
 			echoIfDebug "\tPreprocessing turned on. preprocessor used is $preprocessor with options $preprocessorOpts"
 			;;
+
+                    -optContinueBeforeOMP)
+                        continueBeforeOMP=$TRUE
+                        echoIfDebug "NOTE: inserting CONTINUE statement after OMP directives"
+                        ;;
 
 		    -optTrackIO)
 			trackIO=$TRUE
@@ -1164,6 +1171,19 @@ while [ $tempCounter -lt $numFiles ]; do
         fi
 	arrFileName[$tempCounter]=$base$suf
 	echoIfDebug "Completed Preprocessing\n"
+    fi
+
+    if [ $continueBeforeOMP == $TRUE ] ; then
+      base=${base}.continue
+      pattern='s/^[ \t]*..OMP (PARALLEL|SECTIONS|WORKSHARE|SINGLE|MASTER|CRITICAL|BARRIER|TASKWAIT|ATOMIC|FLUSH|ORDERED)/\n      CONTINUE\n&/i'
+      cmdToExecute="sed -r -e '$pattern' ${arrFileName[$tempCounter]} > $base$suf"
+      evalWithDebugMessage "$cmdToExecute" "Inserting CONTINUE statement before OMP directives"
+      if [ ! -f $base$suf ]; then
+          echoIfVerbose "ERROR: Did not generate .continue file"
+          printError "sed" "$cmdToExecute"
+      fi
+      arrFileName[$tempCounter]=$base$suf
+      echoIfDebug "Completed CONTINUE insertion\n"
     fi
 
     # Before we pass it to Opari for OpenMP instrumentation
