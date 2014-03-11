@@ -5,7 +5,10 @@ import jargs.gnu.CmdLineParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.uoregon.tau.common.MetaDataMap;
@@ -17,6 +20,10 @@ import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfdmf.SnapshotDataSource;
+import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.View.ViewRule;
+import edu.uoregon.tau.perfdmf.View.ViewRule.NumericViewComparator;
+import edu.uoregon.tau.perfdmf.View.ViewRule.StringViewComparator;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 public class LoadTrial {
@@ -223,10 +230,64 @@ public class LoadTrial {
 
     public void saveTrial() {
         trial.setName(trialName);
+        int appView=-2;
+        String NAME="NAME";
+        String ID="ID";
+        String appViewName="Application-"+this.appName;
+        List<ViewRule> rules = new ArrayList<ViewRule>(2);
+        boolean createAppView=true;
         if (this.appName != null)
+        {
+        	//First see if this view already exists
+        	List<View>checkViews = View.getViews(0, this.databaseAPI.db());
+        	if(checkViews!=null){
+        		for(View topView:checkViews){
+        			String vname = topView.getField(NAME);
+        			if(vname.equals(appViewName)){
+        				createAppView=false;
+        				appView=Integer.parseInt(topView.getField(ID));
+        				break;
+        			}
+        		}
+        	}
+        	//If it doesn't then make it, otherwise use its id when making the experiment view
+        	if(createAppView){
+        	rules.add(ViewRule.createStringViewRule("Application", this.appName, StringViewComparator.EXACTLY));
+        	try {
+				appView=View.createView(this.databaseAPI.db(), appViewName, true, -1, rules);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+        	}
         	trial.getMetaData().put("Application", this.appName);
+        }
         if (this.expName != null)
+        {
+        	if(appView>=0)
+        	{
+        		String expViewName="Experiment-"+this.expName;
+        		boolean createExpView=true;
+        		List<View>checkViews = View.getViews(appView, this.databaseAPI.db());
+               	if(checkViews!=null){
+            		for(View expView:checkViews){
+            			String vname = expView.getField(NAME);
+            			if(vname.equals(expViewName)){
+            				createExpView=false;
+            				break;
+            			}
+            		}
+            	}
+        		if(createExpView){
+        		rules.add(ViewRule.createStringViewRule("Experiment", this.expName, StringViewComparator.EXACTLY));
+        		try {
+					View.createView(this.databaseAPI.db(), expViewName, true, appView, rules);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+        		}
+        	}
         	trial.getMetaData().put("Experiment", this.expName);
+        }
 
         System.err.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
