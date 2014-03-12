@@ -1543,9 +1543,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			}
 			trials = new HashMap<Integer, Trial>();
 			List<Trial> ts = View.getTrialsForTAUdbView(parents, db);
+			if(ts!=null){
 			for (Trial t : ts) {
 				trials.put(t.getID(), t);
-			}
+			}}
 			return ts;
 		}
 		return new ArrayList<Trial>(trials.values());
