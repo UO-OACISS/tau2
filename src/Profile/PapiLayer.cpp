@@ -27,6 +27,7 @@ using namespace std;
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 #ifdef TAU_AT_FORK
 #include <pthread.h>
@@ -124,6 +125,37 @@ void Tau_parent(void)
   TAU_VERBOSE("inside Tau_parent: pid = %d\n", getpid());
 }
 
+static int Tau_initialize_papi_library(void)
+{
+  int err = PAPI_library_init(PAPI_VER_CURRENT);
+  switch (err) {
+    case PAPI_VER_CURRENT:
+      // Initialized successfully
+      break;
+    case PAPI_EINVAL:
+      fprintf(stderr, "TAU: PAPI_library_init: papi.h is different from the version used to compile the PAPI library.\n");
+      break;
+    case PAPI_ENOMEM:
+      fprintf(stderr, "TAU: PAPI_library_init: Insufficient memory to complete the operation.\n");
+      break;
+    case PAPI_ESBSTR:
+      fprintf(stderr, "TAU: PAPI_library_init: This substrate does not support the underlying hardware.\n");
+      break;
+    case PAPI_ESYS:
+      // Use perror to see the value of errno
+      perror("TAU: PAPI_library_init: A system or C library call failed inside PAPI");
+      break;
+    default:
+      if (err > 0) {
+        fprintf(stderr, "TAU: PAPI_library_init: version mismatch: %d != %d\n", err, PAPI_VER_CURRENT);
+      } else {
+        fprintf(stderr, "TAU: PAPI_library_init: %s\n", PAPI_strerror(err));
+      }
+      break;
+  }
+  return err;
+}
+
 void Tau_child(void)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -135,13 +167,7 @@ void Tau_child(void)
   TheSafeToDumpData() = 1;
   TAU_VERBOSE("--->[pid=%d, Rank=%d]: Setting TheSafeToDumpData=1\n", getpid(), RtsLayer::myNode());
 
-  int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
-  if (papi_ver != PAPI_VER_CURRENT) {
-    if (papi_ver > 0) {
-      fprintf(stderr, "TAU: Error initializing PAPI: version mismatch: %d\n", papi_ver);
-    } else {
-      fprintf(stderr, "TAU: Error initializing PAPI: %s\n", PAPI_strerror(papi_ver));
-    }
+  if (Tau_initialize_papi_library() != PAPI_VER_CURRENT) {
     return;
   }
 
@@ -208,13 +234,13 @@ if(  tid >= TAU_MAX_THREADS) {
 
 
 /////////////////////////////////////////////////
-int PapiLayer::addCounter(char *name) {
-  int code, rc;
-
+int PapiLayer::addCounter(char *name) 
+{
+  int code;
   TAU_VERBOSE("TAU: PAPI: Adding counter %s\n", name);
 
-  rc = PAPI_event_name_to_code(name, &code);
-#ifndef TAU_COMPONENT_PAPI
+  int rc = PAPI_event_name_to_code(name, &code);
+#if (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3 && PAPI_VERSION_MINOR(PAPI_VERSION) == 9)
   // There is currently a bug in PAPI-C 3.9 that causes the return code to not
   // be PAPI_OK, even if it has succeeded, for now, we will just not check.
   if (rc != PAPI_OK) {
@@ -499,16 +525,9 @@ int PapiLayer::initializePAPI() {
   }
 
   // Initialize PAPI
-  int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
-  if (papi_ver != PAPI_VER_CURRENT) {
-    if (papi_ver > 0) {
-      fprintf(stderr, "TAU: Error initializing PAPI: version mismatch: %d\n", papi_ver);
-    } else {
-      fprintf(stderr, "TAU: Error initializing PAPI: %s\n", PAPI_strerror(papi_ver));
-    }
+  if (Tau_initialize_papi_library() != PAPI_VER_CURRENT) {
     return -1;
   }
-
 
   int rc;
 
@@ -757,7 +776,7 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
   static int rapl_cid = PapiLayer::initializeRAPL(tid); 
   static bool firsttime = true;
   dmesg(1,"rapl_cid = %d\n", rapl_cid);
-  int ret, i; 
+  int i; 
   long long tmpCounters[MAX_PAPI_COUNTERS];
   double elapsedTimeInSecs = 0.0;
   long long curtime; 
