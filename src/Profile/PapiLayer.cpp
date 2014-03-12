@@ -83,6 +83,38 @@ int tauSampEvent = 0;
 extern "C" int Tau_is_thread_fake(int tid);
 extern "C" int TauMetrics_init(void);
 
+
+static int Tau_initialize_papi_library(void)
+{
+  int err = PAPI_library_init(PAPI_VER_CURRENT);
+  switch (err) {
+    case PAPI_VER_CURRENT:
+      // Initialized successfully
+      break;
+    case PAPI_EINVAL:
+      fprintf(stderr, "TAU: PAPI_library_init: papi.h is different from the version used to compile the PAPI library.\n");
+      break;
+    case PAPI_ENOMEM:
+      fprintf(stderr, "TAU: PAPI_library_init: Insufficient memory to complete the operation.\n");
+      break;
+    case PAPI_ESBSTR:
+      fprintf(stderr, "TAU: PAPI_library_init: This substrate does not support the underlying hardware.\n");
+      break;
+    case PAPI_ESYS:
+      // Use perror to see the value of errno
+      perror("TAU: PAPI_library_init: A system or C library call failed inside PAPI");
+      break;
+    default:
+      if (err > 0) {
+        fprintf(stderr, "TAU: PAPI_library_init: version mismatch: %d != %d\n", err, PAPI_VER_CURRENT);
+      } else {
+        fprintf(stderr, "TAU: PAPI_library_init: %s\n", PAPI_strerror(err));
+      }
+      break;
+  }
+  return err;
+}
+
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
 // we'll print out a warning
@@ -125,36 +157,6 @@ void Tau_parent(void)
   TAU_VERBOSE("inside Tau_parent: pid = %d\n", getpid());
 }
 
-static int Tau_initialize_papi_library(void)
-{
-  int err = PAPI_library_init(PAPI_VER_CURRENT);
-  switch (err) {
-    case PAPI_VER_CURRENT:
-      // Initialized successfully
-      break;
-    case PAPI_EINVAL:
-      fprintf(stderr, "TAU: PAPI_library_init: papi.h is different from the version used to compile the PAPI library.\n");
-      break;
-    case PAPI_ENOMEM:
-      fprintf(stderr, "TAU: PAPI_library_init: Insufficient memory to complete the operation.\n");
-      break;
-    case PAPI_ESBSTR:
-      fprintf(stderr, "TAU: PAPI_library_init: This substrate does not support the underlying hardware.\n");
-      break;
-    case PAPI_ESYS:
-      // Use perror to see the value of errno
-      perror("TAU: PAPI_library_init: A system or C library call failed inside PAPI");
-      break;
-    default:
-      if (err > 0) {
-        fprintf(stderr, "TAU: PAPI_library_init: version mismatch: %d != %d\n", err, PAPI_VER_CURRENT);
-      } else {
-        fprintf(stderr, "TAU: PAPI_library_init: %s\n", PAPI_strerror(err));
-      }
-      break;
-  }
-  return err;
-}
 
 void Tau_child(void)
 {
