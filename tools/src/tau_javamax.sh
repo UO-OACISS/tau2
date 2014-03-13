@@ -33,12 +33,12 @@ if [ "x$ver" != "xJavaHotSpot(TM)" ] ; then
 fi
 
 if [ $(uname) = "Darwin" ]; then
-    memtotal=`java -XX:+PrintFlagsFinal -version 2>&1 | grep MaxHeapSize | awk '{print $4}'`
-	# memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
+    # memtotal=`java -XX:+PrintFlagsFinal -version 2>&1 | grep MaxHeapSize | awk '{print $4}'`
+    memtotal=`sysctl -a | grep "hw.memsize:" | awk '{print $2}'`
     trymem=$(($memtotal/(1024*1024)))
-	echo "$trymem" > $cached
-	echo $trymem
-	exit
+#	echo "$trymem" > $cached
+#	echo $trymem
+#	exit
 else
 	memtotal=`cat /proc/meminfo | head -1 | awk '{print $2}'`
         if [ $(uname -m) = "i686" ]; then
