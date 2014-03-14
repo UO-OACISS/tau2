@@ -2332,6 +2332,14 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	    ;;
 
+        mic_linux)
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+            ;;
+
+
 	ia64)
 	    gunzip -c tools/src/contrib/jogl/ia64/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/ia64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
