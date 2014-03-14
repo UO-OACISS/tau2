@@ -7212,6 +7212,11 @@ else
   fi
 fi
 
+if [ $ompt = yes -a $opari = yes ] ; then
+  echo "ERROR: Please enable either OMPT or Opari for instrumentation, but not both"
+  exit 1
+fi 
+
 # GOMP wrapping is only available for openmp
 if [ $openmp = yes ] ; then
     # GOMP wrapping is only available for GCC
