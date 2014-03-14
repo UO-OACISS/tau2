@@ -39,7 +39,10 @@ def getTopX(inTrial, threshold, timerType, metric=None, filterMPI=True):
 
 	for event in topped.getEvents():
 		shortEvent = Utilities.shortenEventName(event)
-		exclusivePercent = topped.getDataPoint(0,event,metric, timerType) / extracted.getInclusive(0,extracted.getMainEvent(),metric) * 100.0
+		tmp = extracted.getInclusive(0,extracted.getMainEvent(),metric)
+		exclusivePercent = 0.0
+		if tmp > 0:
+			exclusivePercent = topped.getDataPoint(0,event,metric, timerType) / tmp * 100.0
 		if (exclusivePercent > 1.0):
 			print "%00.2f%%\t %d\t %s" % (exclusivePercent, extracted.getCalls(0,event), shortEvent)
 			myEvents.add(event)
