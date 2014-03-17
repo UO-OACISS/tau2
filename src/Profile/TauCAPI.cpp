@@ -798,10 +798,9 @@ extern "C" int Tau_profile_exit_all_threads()
 		while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
 			Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 			//Make sure even throttled routines are stopped.
-      int my_tid = RtsLayer::myThread();
-			if (Tau_stop_timer(p->ThisFunction, my_tid)) {
-				p->Stop(my_tid);
-  			Tau_thread_flags[my_tid].Tau_global_stackpos--; /* pop */
+			if (Tau_stop_timer(p->ThisFunction, tid)) {
+				p->Stop(tid);
+  			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 			}
 			// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
 		}
