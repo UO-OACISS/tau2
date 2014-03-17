@@ -8,9 +8,11 @@ import operator
 # This can be helpful when unresolved samples come from unwound functions.
 doInclusive = True
 tauData = "tauprofile.xml.gz"
-threshold = 1000 # instructions per call
+threshold = 1000.0
+percentClass = 1.0
 stats = None
 metric = "TIME"
+metricUnits = "usec"
 
 def matchBrackets(tmp, startchar, endchar):
 	left = tmp
@@ -164,7 +166,7 @@ class EventBreakdown:
 def getParameters():
 	global tauData
 	global threshold
-	global callsCutoff
+	global percentClass
 	parameterMap = PerfExplorerModel.getModel().getScriptParameters()
 	keys = parameterMap.keySet()
 	tmp = parameterMap.get("tauData")
@@ -173,6 +175,14 @@ def getParameters():
 		print "Performance data: " + tauData
 	else:
 		print "TAU profile data path not specified... using current directory of profile.x.x.x files."
+	tmp = parameterMap.get("threshold1")
+	if tmp != None:
+		threshold = float(tmp)
+	print "Max per call threshold: %f" % (threshold)
+	tmp = parameterMap.get("threshold2")
+	if tmp != None:
+		percentClass = float(tmp)
+	print "Min percent of class: %f" % (percentClass)
 
 def loadFile(fileName):
 	# load the trial
@@ -234,6 +244,8 @@ def checkParents(ebd, full, ebds):
 def showChildren(ebds, className, full, classTotal):
 	global stats
 	global metric
+	global threshold
+	global percentClass
 
 	# build a dictionary of values. We need to do this, because 
 	# methods can have multiple values that need to be aggregated.
@@ -266,8 +278,9 @@ def showChildren(ebds, className, full, classTotal):
 	showmax=len(methods) # set to len(methods) to show all methods
 	for m in sorted(methods, key=methods.get, reverse=True):
 		percall = methods[m] / methodcalls[m]
-		if percall < threshold:
-			print "\tMethod '%s' : total = %.2e, calls = %.2e, percall = %.2f, %%class = %.2f %%" % (m,methods[m],methodcalls[m],percall,methods[m]/classTotal)
+		perclass = methods[m] / classTotal
+		if percall < threshold and perclass > percentClass:
+			print "\tMethod '%s' : total = %.2e, calls = %.2e, percall = %.2f, %%class = %.2f%%" % (m,methods[m],methodcalls[m],percall,perclass)
 
 def main():
 	global filename
@@ -290,29 +303,37 @@ def main():
 		for m in result.getMetrics():
 			if m == "PAPI_TOT_INS":
 				metric = m
+				metricUnits = "(instructions completed)"
 			elif m == "PAPI_TOT_IIS":
 				metric = m
+				metricUnits = "(instructions issued)"
 		if metric == None:
 			metrics = result.getMetrics().toArray()
 			metric = metrics[0]
+
+	print "Using metric:", metric
 	type = result.EXCLUSIVE
 	mainEvent = result.getMainEvent()
 	
 	# then, extract those events from the actual data
-	print "Extracting non-callpath data..."
+	print "Extracting non-callpath data...",
 	flatten = ExtractNonCallpathEventOperation(result)
 	flat = flatten.processData().get(0)
+	print "done."
 
-	print "Computing statistics..."
+	print "Computing statistics...",
 	statmaker = BasicStatisticsOperation(flat, False)
 	statmaker.setIncludeNull(False)
 	stats = statmaker.processData().get(BasicStatisticsOperation.MEAN)
+	print "done."
 
 	# get the callpath events
-	print "Extracting callpath data..."
+	print "Extracting callpath data...",
 	fullen = ExtractCallpathEventOperation(result)
 	full = fullen.processData().get(0)
+	print "done."
 
+	print "Iterating over methods...",
     # Iterate over all methods, and parse out the class for each method
 	ebds = dict()
 	for event in flat.getEvents():
@@ -330,10 +351,15 @@ def main():
 		elif event != ".TAU application":
 			ebd = EventBreakdown(event)
 			ebds[event] = ebd
+	print "done."
 
 	# iterate over the parsed events, and aggreate them by class
 	classes = dict()
+	progress = 0.0
+	print "Aggregating by class...",
 	for event,ebd in ebds.items():
+		progress = progress + 1.0
+		print "\rAggregating by class... %.2f%% (%d of %d methods)" % ((progress / len(ebds))*100.0,progress,len(ebds)),
 		value = 0
 		if ebd.type == "UNWIND":
 			value = checkParents(ebd,full,ebds)
@@ -343,6 +369,7 @@ def main():
 			classes[ebd.className] = classes[ebd.className] + value
 		else:
 			classes[ebd.className] = value
+	print "done. %d classes found." % (len(classes))
 
 	appTotal = result.getInclusive(0,mainEvent,metric) / 100.0 # for scaling to percent
 	othervalue = 0
@@ -350,7 +377,7 @@ def main():
 	for c in sorted(classes, key=classes.get, reverse=True):
 		#if len(c) > 0:
 		if showmax > 0:
-			print "\nClass '%s' : total = %.2e, %% application = %.2f %%" % (c,classes[c],classes[c]/appTotal)
+			print "\nClass '%s' : total = %.2e, %% application = %.2f%%" % (c,classes[c],classes[c]/appTotal)
 			showmax = showmax - 1
 			showChildren(ebds,c,full,classes[c]/100.0) # for scaling to percent
 		else:
