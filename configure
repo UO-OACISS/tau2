@@ -5411,6 +5411,7 @@ if [ "x$download_unwind" = xyes ] ; then
   prebfddir=`pwd`
 
   if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o -r "$unwind_dir/lib64/lib${libunwind_name}.a" ] ; then
+    echo "Found: $unwind_dir/lib/lib${libunwind_name}.so $unwind_dir/lib64/lib${libunwind_name}.a"
     echo "libunwind download already found, skipping"
   else
     # get the tar file
@@ -5503,6 +5504,7 @@ if [ "x$download_ompt" = xyes ] ; then
   # if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" ] && [ -r "$libomp_ossdir/lib${libomp_oss_name}.a" ] ; then
 
   if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" ] ; then
+    echo "Found: $libomp_ossdir/lib${libomp_oss_name}.so"
     echo "libomp_oss download already found, skipping"
   else
     # get the tar file
@@ -5527,16 +5529,18 @@ if [ "x$download_ompt" = xyes ] ; then
       rm $libomp_osstgz
       cd $libomp_oss
       libomp_oss_log=build-dynamic.log
+      specialflags=""
       if [ $machine = mic_linux ] ; then
         libomp_oss_log=build-mic.log
         archarg="arch=mic"
+        specialflags="CXXFLAGS=-D__MIC2__ CFLAGS=-D__MIC2__"
 	  fi
 	  # fix the expected path for bin 
       cp tools/common.inc tmp.inc
       sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
       rm tmp.inc
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
-      make CXXFLAGS=-D__MIC2__ CFLAGS=-D__MIC2__ $archarg >& $libomp_oss_log
+      make $specialflags $archarg >& $libomp_oss_log
       result=$?
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
@@ -6622,6 +6626,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       bfddir="$targetdir/$architecture/$binutils"
     fi
     if [ -r "$bfddir/lib/libbfd.a" ] ; then
+      echo "Found: $bfddir/lib/libbfd.a"
       echo "BFD download already found, skipping"
     else
       if [ ! "x$bfdtar" = xyes ]; then
