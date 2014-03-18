@@ -8636,4 +8636,10 @@ else
 fi
 echo '   Type "make install" to begin compilation'
 
+if [ -d /usr/linux-k1om-*  -a $machine=x86_64 ]
+then
+   echo "NOTE: This system supports Intel MIC. You may configure with -arch=mic_linux to enable this option." 
+fi
+
+
 exit 0
