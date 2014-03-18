@@ -888,7 +888,7 @@ public class TriangleMeshPlot implements Plot {
         });
 
         final JSlider plotWidthSlider = new JSlider(5, 400, (int) xSize);
-        final JSlider plotDepthSlider = new JSlider(5, 400, (int) ySize);
+        final JSlider plotDepthSlider = new JSlider(5, 800, (int) ySize);
         final JSlider plotHeightSlider = new JSlider(2, 50, (int) zSize);
 
         ChangeListener chageListener = new ChangeListener() {

@@ -174,6 +174,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
 
         JPanel fontPanel = new JPanel();
         fontPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Font"));
+        fontPanel.setToolTipText("Restart the application to apply these changes to the whole UI.");
         fontPanel.setLayout(new GridBagLayout());
 
         gbc.fill = GridBagConstraints.NONE;
