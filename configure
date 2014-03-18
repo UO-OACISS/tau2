@@ -4052,16 +4052,10 @@ then
 	    ;;
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
-	    mpiinc=$MPICH_DIR/include
+	    mpiinc=$CRAY_MPICH2_DIR/include
             if [ ! -r $mpiinc ] ; then
-		if [ $default_fortran = gfortran ] ; then
-                    mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-gnu/include
-		else
-                    mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-$default_fortran/include
-		fi
-		if [ ! -r $mpiinc ] ; then
-                    mpiinc=/opt/mpt/default/xt/mpich2-pgi/include
-		fi
+		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
+		exit 1
             fi
             echo "Using MPI INCLUDE dir from $mpiinc"
 	    ;;
@@ -8636,9 +8630,14 @@ else
 fi
 echo '   Type "make install" to begin compilation'
 
-if [ -d /usr/linux-k1om-*  -a $machine=x86_64 ]
+if [ -d /usr/linux-k1om-*  -a $machine = x86_64 ]
 then
    echo "NOTE: This system supports Intel MIC. You may configure with -arch=mic_linux to enable this option." 
+fi
+
+if [ "x$PE_ENV" != "x" -a $machine = x86_64 ]
+then
+   echo "NOTE: This system supports the Cray CNL platform. You may configure with -arch=craycnl to enable this option." 
 fi
 
 
