@@ -5441,6 +5441,8 @@ if [ "x$download_unwind" = xyes ] ; then
           cp src/unwind/Resume.c tmp.c
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
+        elif [ "$machine" == "craycnl" ] ; then
+          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared >& ${libunwind_log}
         else
           ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
         fi
