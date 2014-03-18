@@ -5557,13 +5557,24 @@ if [ "x$download_ompt" = xyes ] ; then
       fi
 
       # only build the dynamic version for now
-
-      # libomp_oss_log=build-static.log
-      # echo "building static $libomp_oss... (see `pwd`/${libomp_oss_log} for log)"
-      # make linktype=static >& $libomp_oss_log
-      # signature=`ls -tr tmp | grep rel | grep sta | tail -1`
-      # cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
-
+      if [ ${architecture} == "craycnl" ] ; then
+        libomp_oss_log=build-static.log
+        echo "building static $libomp_oss... (see `pwd`/${libomp_oss_log} for log)"
+        make linktype=static $specialflags $archarg >& $libomp_oss_log
+        signature=`ls -tr tmp | grep rel | grep sta | tail -1`
+        if [ $result -eq 0 ] ; then
+          cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+          echo "...Success."
+        else
+          if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
+            cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+            echo "...Success."
+		  else
+            echo "ERROR BUILDING $libomp_ossdir!"
+            echo "Please check `pwd`/${libomp_oss_log}"
+	  fi # if library exists
+        fi # if result == 0
+      fi # if arch == craycnl
     fi
   fi
   omptlib=${libomp_ossdir}
