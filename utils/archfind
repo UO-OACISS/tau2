@@ -44,10 +44,10 @@ then
     ARCH=arm_linux
 fi
 
-if [ -d /usr/linux-k1om-* ]
-then
-    ARCH=mic_linux
-fi
+#if [ -d /usr/linux-k1om-* ]
+#then
+#    ARCH=mic_linux
+#fi
 
 if [ `uname -s ` = "HI-UX/MPP" ]; then 
       ARCH=`$TAU_CCOM $MSG_EQ_E -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
