@@ -798,10 +798,9 @@ extern "C" int Tau_profile_exit_all_threads()
 		while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
 			Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 			//Make sure even throttled routines are stopped.
-      int my_tid = RtsLayer::myThread();
-			if (Tau_stop_timer(p->ThisFunction, my_tid)) {
-				p->Stop(my_tid);
-  			Tau_thread_flags[my_tid].Tau_global_stackpos--; /* pop */
+			if (Tau_stop_timer(p->ThisFunction, tid)) {
+				p->Stop(tid);
+  			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 			}
 			// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
 		}
@@ -1964,7 +1963,7 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
 
 // This function will return a timer for the Collector API OpenMP state, if available
 // This is called by the OpenMP collector API wrapper initialization...
-extern "C" void Tau_create_thread_state_if_necessary(const char *name)
+FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
@@ -1973,12 +1972,13 @@ extern "C" void Tau_create_thread_state_if_necessary(const char *name)
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(n);
   if (it == pure.end()) {
-    tauCreateFI((void**)&fi, n, "", TAU_USER, "TAU_OMP_STATE");
+    tauCreateFI_signalSafe((void**)&fi, n, "", TAU_USER, "TAU_OMP_STATE");
     pure[n] = fi;
   } else {
     fi = it->second;
   }
   RtsLayer::UnLockEnv();
+  return fi;
 }
 
 // This function will return a timer for the Collector API OpenMP state, if available

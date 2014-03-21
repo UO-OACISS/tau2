@@ -122,7 +122,7 @@ char OMP_EVENT_NAME[35][50]= {
 // The states are enumerated, but not consecutive. :(
 // 128 should be enough, there aren't that many states.
 // but the bitcodes go up to about 110.
-static char OMPT_STATE_NAMES[128][32] = {0};
+static std::string* OMPT_STATE_NAMES[128] = {0};
 static int OMPT_NUM_STATES;
 
 const int OMP_COLLECTORAPI_HEADERSIZE=4*sizeof(int);
@@ -130,6 +130,9 @@ const int OMP_COLLECTORAPI_HEADERSIZE=4*sizeof(int);
 static int (*Tau_collector_api)(void*) = NULL;
 
 using namespace std;
+
+extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
+extern FunctionInfo * Tau_create_thread_state_if_necessary_string(std::string thread_state);
 
 /*
  *-----------------------------------------------------------------------------
@@ -1288,14 +1291,17 @@ int ompt_initialize() {
     int current_state = ompt_state_work_serial;
     int next_state = 0;
     const char *next_state_name;
-    strcpy(OMPT_STATE_NAMES[ompt_state_work_serial], "ompt_state_work_serial");
+    std::string *next_state_name_string;
+	std::string *serial = new std::string("ompt_state_work_serial");
+    OMPT_STATE_NAMES[ompt_state_work_serial] = serial;
     Tau_create_thread_state_if_necessary("ompt_state_work_serial");
     while (ompt_enumerate_state(current_state, &next_state, &next_state_name) == 1) {
       TAU_VERBOSE("Got state %d: '%s'\n", next_state, next_state_name);
       if (next_state >= 128) {
         TAU_VERBOSE("WARNING! MORE OMPT STATES THAN EXPECTED! PROGRAM COULD CRASH!!!\n");
       }
-      strcpy(OMPT_STATE_NAMES[next_state], next_state_name);
+	  next_state_name_string = new std::string(next_state_name);
+      OMPT_STATE_NAMES[next_state] = next_state_name_string;
       Tau_create_thread_state_if_necessary(next_state_name);
       current_state = next_state;
     }
@@ -1311,7 +1317,7 @@ int ompt_initialize() {
 }
 
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
-extern "C" char* Tau_get_thread_ompt_state(int tid) {
+std::string * Tau_get_thread_ompt_state(int tid) {
     // if not available, return something useful
     if (!initialized) return NULL;
     //TAU_VERBOSE("Thread %d, getting state...\n", tid);
