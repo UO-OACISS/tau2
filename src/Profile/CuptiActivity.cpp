@@ -945,8 +945,13 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
         c = counterEvents[n];
       }
       Tau_set_context_event_name(c, name);
-      eventMap[c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]) * kernels_encountered[device_id];
-
+      if (counters_averaged_warning_issued[device_id] == true)
+      {
+        eventMap[c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]);
+      }
+      else {
+        eventMap[c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]) * kernels_encountered[device_id];
+      }
       
     }
     kernels_recorded[device_id]++;
