@@ -1,0 +1,33 @@
+#!/bin/bash
+
+th1=1000
+th2=1.0
+
+if [ $# -lt 1 ]
+then
+  echo ""
+  echo "Usage: "
+  echo ""
+  echo "  $0 <path-to-TAU-data> <threshold1> <threshold2>"
+  echo ""
+  echo "Notes:"
+  echo ""
+  echo "  * Specify the file as either the path to the TAU profiles, or the"
+  echo "    filename of the packed TAU data."
+  echo "  * Threshold1 is the amount of the counter per method call"
+  echo "  * Threshold2 is the method percentage of the class"
+  echo ""
+  exit 1
+fi
+
+if [ $# -gt 2 ] ; then
+  th1=$2
+fi
+
+if [ $# -gt 3 ] ; then
+  th2=$3
+fi
+
+working_path=`echo $0 | sed 's/doClasses//'`
+
+eval perfexplorer -n -i ${working_path}classAggregation.py -p "tauData=$1,threshold1=$th1,threshold2=$th2"
