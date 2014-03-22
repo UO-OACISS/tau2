@@ -8483,15 +8483,6 @@ sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
 
 
-if [ $tauprefix != unknown ] ; then 
-    echo "TAU: Copying include directory to ${tauprefix}"
-    cp -r include ${tauprefix}
-    echo "TAU: Copying man directory to ${tauprefix}"
-    cp -r man ${tauprefix}
-fi
-
-
-
 #############################################################################
 
 echo " "
@@ -8610,6 +8601,12 @@ if [ $default = false ] ; then
     cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
 fi
 
+if [ $tauprefix != unknown ] ; then
+    echo "TAU: Copying include directory to ${tauprefix}"
+    cp -r include ${tauprefix}
+    echo "TAU: Copying man directory to ${tauprefix}"
+    cp -r man ${tauprefix}
+fi
 
 if [ $default = false ] ; then
     rm -f .active_stub
