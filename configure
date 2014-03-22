@@ -6638,10 +6638,17 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     else
       if [ ! "x$bfdtar" = xyes ]; then
         #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
+        tempdir="`pwd`/.tmp_bfdbuild_$$"
         if [ -d /dev/shm -a -w /dev/shm ] ; then
-          tempdir="/dev/shm/tau_bfdbuild_$$"
-        else
-          tempdir="`pwd`/.tmp_bfdbuild_$$"
+          # some linux distributions set noexec flag when mount tmpfs on /dev/shm
+          # make sure we can exec under /dev/shm
+          execheck="/dev/shm/tau_$$"
+          touch $execheck
+          chmod +x $execheck
+          if [ -x $execheck ]; then
+            tempdir="/dev/shm/tau_bfdbuild_$$"
+          fi
+          rm -f $execheck
         fi
         mkdir -p "$tempdir"
         cd "$tempdir"
