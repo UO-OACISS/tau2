@@ -609,7 +609,7 @@ parse_agent_options(char *options)
     }
 
     /* Get the first token from the options string. */
-    next = get_token(options, ",=", token, sizeof(token));
+    next = get_token(options, ",;=", token, sizeof(token));
 
     /* While not at the end of the options string, process this option. */
     while ( next != NULL ) {
@@ -622,11 +622,12 @@ parse_agent_options(char *options)
             stdout_message("Within an options the arguments are comma separated:\n");
             stdout_message("\t help\t\t\t Print help information\n");
             stdout_message("\t max=n\t\t Only list top n classes\n");
-            stdout_message("\t include=item\t\t Only these classes/methods\n");
-            stdout_message("\t exclude=item\t\t Exclude these classes/methods\n");
+            stdout_message("\t include=<item>\t\t Only these classes/methods\n");
+            stdout_message("\t exclude=<item>\t\t Exclude these classes/methods\n");
+            stdout_message("\t node=<NodeID>\t\t Use designated <NodeID> (default=0)\n");
             stdout_message("\n");
-            stdout_message("item\t Qualified class and/or method names\n");
-            stdout_message("\t\t e.g. (*.<init>;Foobar.method;sun.*)\n");
+            stdout_message("<item>\t Qualified class and/or method names\n");
+            stdout_message("\t\t e.g. (*.<init>,Foobar.method,sun.*)\n");
             stdout_message("\n");
             exit(0);
         } else if ( strcmp(token,"include")==0 ) {
@@ -677,12 +678,17 @@ parse_agent_options(char *options)
             if ( next==NULL ) {
                 fatal_error("ERROR: exclude option error\n");
             }
+#ifndef TAU_MPI
+	} else if ( strcmp(token,"node")==0 ) {
+	    next = get_token(next, ";=", token, sizeof(token));
+	    TAU_PROFILE_SET_NODE(atoi(token)); 
+#endif
         } else if ( token[0]!=0 ) {
             /* We got a non-empty token and we don't know what it is. */
             fatal_error("ERROR: Unknown option: %s\n", token);
         }
         /* Get the next token (returns NULL if there are no more) */
-        next = get_token(next, ",=", token, sizeof(token));
+        next = get_token(next, ",;=", token, sizeof(token));
     }
 }
 
