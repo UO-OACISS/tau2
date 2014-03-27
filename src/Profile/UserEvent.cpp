@@ -196,45 +196,39 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   // Increment number of events
   ++d.nEvents;
 
-  std::size_t pos;
   // Compute relevant statistics for the data 
   if (minEnabled && data < d.minVal) {
-
-#ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) 
-    {
-      if (name.data()[0] != '[') { //re-entrant 
-        string ename(string("[GROUP=MIN_MARKER] ")+name);
-        pos = name.find("=>");
-        if (pos == std::string::npos) {
-          DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename.c_str(), data, tid);
-        }
-      }
-    }
-   
-#endif /* TAU_USE_EVENT_THRESHOLDS */
     d.minVal = data;
-    
-  }
-  if (maxEnabled && data > d.maxVal) {
 #ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) 
-    {
-      if (name.data()[0] != '[') { //re-entrant 
-        string ename(string("[GROUP=MAX_MARKER] ")+name);
-        pos = name.find("=>");
-        if (pos == std::string::npos) {
-          DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename.c_str(), data, tid);
+    if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
+      if (name[0] != '[') { //re-entrant 
+        char ename[20 + name.length()];
+        sprintf(ename, "[GROUP=MIN_MARKER] %s", name.c_str());
+        if (name.find("=>") == std::string::npos) {
+          //DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
+          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
         }
       }
-      
     }
 #endif /* TAU_USE_EVENT_THRESHOLDS */
-
-    d.maxVal = data;
   }
+
+  if (maxEnabled && data > d.maxVal) {
+    d.maxVal = data;
+#ifdef TAU_USE_EVENT_THRESHOLDS
+    if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
+      if (name[0] != '[') { //re-entrant 
+        char ename[20 + name.length()];
+        sprintf(ename, "[GROUP=MAX_MARKER] %s", name.c_str());
+        if (name.find("=>") == std::string::npos) {
+          //DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
+          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
+        }
+      }
+    }
+#endif /* TAU_USE_EVENT_THRESHOLDS */
+  }
+
   if (meanEnabled) {
     d.sumVal += data;
   }
