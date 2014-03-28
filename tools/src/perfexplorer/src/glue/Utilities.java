@@ -57,6 +57,18 @@ public class Utilities {
     return null;
   }
 
+  public static List<Trial> getTrialByName (String tName) {
+	boolean message = false;
+    PerfExplorerServer server = getServer();
+    // shortcut - assume this is a TAUdb database.
+	String whereClause = "";
+	int i = 0;
+	whereClause += " where trial.name = '" + tName + "'";
+    List<Trial> trials = Trial.getTrialList(server.getDB(), whereClause, false); 
+    message = true;
+    return trials;
+  }
+
   public static List<Trial> getTrialsFromMetadata (Map<String,String> metadata, String conjoin) {
       boolean message = false;
       PerfExplorerServer server = getServer();
