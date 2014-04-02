@@ -9,8 +9,9 @@
 
 /* This structure holds thread-specific global data structures */
 struct _tau_global_data {
-  int insideTAU; // prevents re-entry into TAU
-  int threadID;  // the thread's TAU ID
+  int insideTAU;  // prevents re-entry into TAU
+  int threadID;   // the thread's TAU ID
+  int lightsOut;  // Application has exited, TAU is finalizing
 };
 
 class TauGlobal {
