@@ -145,6 +145,7 @@ union Tau_thread_status_flags
     int Tau_global_stackpos;
     int Tau_global_insideTAU;
     int Tau_is_thread_fake_for_task_api;
+    int lightsOut;
   };
 
   char _pad[64];
@@ -156,8 +157,9 @@ struct Tau_thread_status_flags {
   int Tau_global_stackpos;
   int Tau_global_insideTAU;
   int Tau_is_thread_fake_for_task_api;
+  int lightsOut;
   // Not as elegant, but similar effect
-  char _pad[64-sizeof(Profiler*)-4*sizeof(int)];
+  char _pad[64-sizeof(Profiler*)-5*sizeof(int)];
 };
 #endif
 
@@ -181,13 +183,13 @@ static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 
 #if defined (TAU_USE_TLS)
 __thread int _Tau_global_insideTAU = 0;
+__thread int lightsOut = 0;
 #elif defined (TAU_USE_DTLS)
 __declspec(thread) int _Tau_global_insideTAU = 0;
+__declspec(thread) int lightsOut = 0;
 #elif defined (TAU_USE_PGS)
 #include "TauPthreadGlobal.h"
 #endif
-
-int lightsOut = 0;
 
 
 static void Tau_stack_checkInit() {
@@ -195,7 +197,13 @@ static void Tau_stack_checkInit() {
   if (init) return;
   init = true;
 
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   lightsOut = 0;
+#elif defined(TAU_USE_PGS)
+  TauGlobal::getInstance().getValue()->lightsOut = 0;
+#else
+  Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut = 0;
+#endif
 
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     Tau_thread_flags[i].Tau_global_stackdepth = 0;
@@ -208,14 +216,26 @@ static void Tau_stack_checkInit() {
 
 extern "C" int Tau_global_getLightsOut() {
   Tau_stack_checkInit();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return lightsOut;
+#elif defined(TAU_USE_PGS)
+  return TauGlobal::getInstance().getValue()->lightsOut;
+#else
+  return Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut;
+#endif
 }
 
 extern "C" void Tau_global_setLightsOut() {
   Tau_stack_checkInit();
   // Disable profiling from here on out
   Tau_global_incr_insideTAU();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   lightsOut = 1;
+#elif defined(TAU_USE_PGS)
+  TauGlobal::getInstance().getValue()->lightsOut = 1;
+#else
+  Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut = 1;
+#endif
 }
 
 /* the task API does not have a real thread associated with the tid */
@@ -246,13 +266,13 @@ extern "C" int Tau_global_get_insideTAU() {
 extern "C" int Tau_global_incr_insideTAU()
 {
   Tau_stack_checkInit();
+  Tau_memory_wrapper_disable();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return ++_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   return ++(tmp->insideTAU);
 #else
-  Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
@@ -263,22 +283,25 @@ extern "C" int Tau_global_incr_insideTAU()
 
 extern "C" int Tau_global_decr_insideTAU()
 {
+  int retval;
   Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
-  return --_Tau_global_insideTAU;
+  retval = --_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
-  return --(tmp->insideTAU);
+  retval = --(tmp->insideTAU);
 #else
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
   *insideTAU = *insideTAU - 1;
-  TAU_ASSERT(*insideTAU >= 0, "Thread has decremented the insideTAU counter past 0");
-
-  if (*insideTAU == 0) Tau_memory_wrapper_enable();
-  return *insideTAU;
+  retval = *insideTAU;
 #endif
+  TAU_ASSERT(retval >= 0, "Thread has decremented the insideTAU counter past 0");
+  if (retval == 0) {
+    Tau_memory_wrapper_enable();
+  }
+  return retval;
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
