@@ -578,6 +578,16 @@ void tau_trace_exit(int id) {
   traceExit(id);
 }
 
+void tau_loop_trace_entry(int id) {
+  dprintf("TAU: tau_loop_trace_entry: id = %d\n", id);
+  traceEntry(id);
+}
+
+void tau_loop_trace_exit(int id) {
+  dprintf("TAU: tau_loop_trace_exit : id = %d\n", id);
+  traceExit(id);
+}
+
 #if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
 #include <pthread.h>
 void* tool_thread_init(pthread_t args) {
@@ -591,6 +601,12 @@ void* tool_thread_fini(pthread_t args) {
   Tau_stop_top_level_timer_if_necessary(); 
   return NULL;
 }
+
+void  tau_trace_register_loop(int id, char *loopname) {
+  trace_register_func(loopname, id);
+  dprintf("TAU: tau_trace_register_loop: id = %d, loopname = %s\n", loopname);
+}
+
 void  tau_register_loop(char **func, char** file, int* lineno, 
   int id) {
 
@@ -606,6 +622,7 @@ void  tau_register_loop(char **func, char** file, int* lineno,
 
 }
 #endif /* TAU_PEBIL_DISABLE */
+
 
 } /* extern "C" */
   
