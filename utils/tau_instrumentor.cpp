@@ -1,4 +1,4 @@
-#define DEBUG 0
+//#define DEBUG
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
