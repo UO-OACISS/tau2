@@ -32,9 +32,9 @@ typedef struct __attribute__((packed)) {
     uint32_t type;
     uint32_t length;
 
-    uint32_t lid;        /* VM-local thread ID (usually a small int */
-    uint32_t tname_len;  /* thread name len (in 16-bit chars        */
-    char     tname[];    /* thread name (UTF-16                     */
+    uint32_t lid;        /* VM-local thread ID (usually a small int) */
+    uint32_t tname_len;  /* thread name len (in 16-bit chars)        */
+    char     tname[];    /* thread name (UTF-16)                     */
 } ddm_thcr_t;
 
 /* DDM Chunk THDE */
@@ -42,7 +42,7 @@ typedef struct __attribute__((packed)) {
     uint32_t type;
     uint32_t length;
 
-    uint32_t lid;        /* VM-local thread ID (usually a small int */
+    uint32_t lid;        /* VM-local thread ID (usually a small int) */
 } ddm_thde_t;
 
 typedef struct __attribute__((packed)) {

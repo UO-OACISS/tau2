@@ -1581,12 +1581,8 @@ int Tau_sampling_init(int tid)
 #ifndef TAU_ANDROID
    sev.sigev_notify_thread_id = syscall(__NR_gettid);
 #else
-   jlong jid = get_java_thread_id();
-    if (jid == -1) {
-	jid = TheLastJDWPEventThreadID();
-    }
-    sev.sigev_notify_thread_id = JNIThreadLayer::GetSidFromJid(jid);
-    TAU_VERBOSE(" *** jid %lld, send alarm to %d by %d", jid, sev.sigev_notify_thread_id, gettid());
+   sev.sigev_notify_thread_id = JNIThreadLayer::GetThreadSid();
+   TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
