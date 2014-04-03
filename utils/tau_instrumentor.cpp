@@ -1,4 +1,4 @@
-//#define DEBUG 1
+#define DEBUG 0
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -3984,11 +3984,12 @@ int main(int argc, char **argv)
 
   if (argc < 3) {
     cout << "Usage : " << argv[0]
-         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>] [-nolinemarker]"
+         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-inline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>] [-nolinemarker]"
          << endl
          << "----------------------------------------------------------------------------------------------------------"
          << endl
-         << "-noinline: disables the instrumentation of inline functions in C++" << endl
+         << "-noinline: disables the instrumentation of inline functions in C++ (default)" << endl
+         << "-inline: enables the instrumentation of inline functions in C++" << endl
          << "-noinit: does not call TAU_INIT(&argc,&argv). This disables a.out --profile <group[+<group>]> processing."
          << endl
          << "-memory: calls #include <malloc.h> at the beginning of each C/C++ file for malloc/free replacement and traps Fortran 90 allocate/deallocate statements."
@@ -4046,6 +4047,12 @@ int main(int argc, char **argv)
         printf("Noinline flag\n");
 #endif /* DEBUG */
         noinline_flag = true;
+      }
+      if (strcmp(argv[i], "-inline") == 0) {
+#ifdef DEBUG
+        printf("Inline flag\n");
+#endif /* DEBUG */
+        noinline_flag = false;
       }
       if (strcmp(argv[i], "-nolinemarker") == 0) {
 #ifdef DEBUG
