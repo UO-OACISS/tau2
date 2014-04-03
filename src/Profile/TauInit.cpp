@@ -335,6 +335,8 @@ alfred(void *arg)
     int sfd;
     struct sockaddr_in saddr;
 
+    JNIThreadLayer::IgnoreThisThread();
+
     sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd < 0) {
 	TAU_VERBOSE(" *** Alfred failed to start: %s", strerror(errno));
@@ -367,7 +369,7 @@ alfred(void *arg)
 	char cmd[18];
 	int fd;
 
-	TAU_VERBOSE(" *** Alfred at your service\n");
+	TAU_VERBOSE(" *** (S%d) Alfred at your service\n", gettid());
 
 	fd = accept(sfd, NULL, NULL);
 	if (fd < 0) {

@@ -89,14 +89,6 @@ pthread_create(pthread_t *thread, const pthread_attr_t *attr,
 
 #endif
 
-
-jlong &TheLastJDWPEventThreadID()
-{
-    static jlong jid = 1;
-
-    return jid;
-}
-
 static char *
 utf16_to_ascii(char *utf16, int len)
 {
@@ -152,24 +144,20 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
     ddm_thde_t *thde;
     ddm_thst_t *thst;
 
-    int tid;         // tau internal thread id, +1 for each new thread
-    int sid = -1;    // system thread id, i.e. gettid()
-    jlong jid = 0;   // java thread id, +1 for each new thread
     char *tname;
+    pid_t sid = -1;    // system thread id, i.e. gettid()
 
     // dalvik vm-local thread id, free after thread death, reuseable
     uint32_t lid;  
 
     static map<uint32_t, char*> java_thread_name;  // lid ==> tname
-    static map<uint32_t, jlong> java_thread_jid;   // lid ==> jid
+    static map<uint32_t, pid_t> java_thread_sid;   // lid ==> sid
 
     switch (ntohl(trunk->type)) {
     case DDM_THCR:
 	thcr  = (ddm_thcr_t*)trunk;
 	lid   = ntohl(thcr->lid);
 	tname = utf16_to_ascii(thcr->tname, ntohl(thcr->tname_len));
-
-	jid = get_jid_from_lid(lid);
 
 	/* setup mapping between lid and tname */
 	if (java_thread_name.find(lid) != java_thread_name.end()) {
@@ -186,14 +174,10 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	    /* find out sid of this thread, we will need this for sampling */
 	    thst = ddm_thst(jdwp);
 	    for (i=0; i<ntohs(thst->count); i++) {
-		TAU_VERBOSE(" *** THST: %d: %08x -> %08x, %d -> %d\n", i,
-			    thst->thst[i].lid, thst->thst[i].sid,
+		TAU_VERBOSE(" *** DTM THST: %d: %d -> %d\n", i,
 			    ntohl(thst->thst[i].lid), ntohl(thst->thst[i].sid));
 		if (lid == ntohl(thst->thst[i].lid)) {
 		    sid = ntohl(thst->thst[i].sid);
-
-		    TAU_VERBOSE(" *** going to map jid %lld to sid %d, i=%d\n",
-				jid, sid, i);
 		    break;
 		}
 	    }
@@ -209,20 +193,15 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	     *    Let's don't bother to register it.
 	     */
 	    if (sid != -1) {
-		/* setup mapping between lid and jid */
-		java_thread_jid[lid]  = jid;
+		/* setup mapping between lid and sid */
+		java_thread_sid[lid] = sid;
 
-		TheLastJDWPEventThreadID() = jid;
-		tid = JNIThreadLayer::RegisterThread(jid, sid, tname);
-
-		LOGV(" *** DDM THCR <%d> %s -- Registered\n", lid, tname);
-	    } else {
-		LOGV(" *** DDM THCR <%d> %s\n", lid, tname);
+		JNIThreadLayer::SuThread(sid, tname);
+		JNIThreadLayer::RegisterThread(sid, tname);
 	    }
-	} else {
-	    LOGV(" *** DDM THCR <%d> %s\n", lid, tname);
 	}
 
+	LOGV(" *** DDM THCR <%d> %s\n", lid, tname);
 	break;
 
     case DDM_THDE:
@@ -230,20 +209,24 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	lid   = ntohl(thde->lid);
 	tname = java_thread_name[lid];
 
-	LOGV(" *** DDM THDE <%d> %s\n", lid, tname);
-	free(tname);
-	java_thread_name.erase(lid);
 
 	if (lid == 1) {
 	    dalvik_vm_running = 0;
 	}
 
-	if (java_thread_jid.find(lid) != java_thread_jid.end()) {
-	    TheLastJDWPEventThreadID() = java_thread_jid[lid];
-	    java_thread_jid.erase(lid);
+	if (java_thread_sid.find(lid) != java_thread_sid.end()) {
+	    sid = java_thread_sid[lid];
 
+	    JNIThreadLayer::SuThread(sid, tname);
 	    TAU_PROFILE_EXIT("END...");
+
+	    java_thread_sid.erase(lid);
 	}
+
+	LOGV(" *** DDM THDE <%d> %s\n", lid, tname);
+
+	free(tname);
+	java_thread_name.erase(lid);
 
 	break;
 
@@ -261,6 +244,8 @@ dalvik_thread_monitor(void *arg)
     jdwp_ctx_t jdwp;
     jdwp_cmd_t *cmd;
 
+    JNIThreadLayer::IgnoreThisThread();
+
     if (jdwp_init(&jdwp) < 0) {
 	LOGV(" *** Error: DTM: jdwp failed to init\n");
 	return NULL;
@@ -268,6 +253,8 @@ dalvik_thread_monitor(void *arg)
 
     ddm_helo(&jdwp);
     ddm_then(&jdwp);
+
+    LOGV(" *** (S%d) DTM started\n", gettid());
 
     while (1) {
 	/* is there any pending events in backlog? */
@@ -388,7 +375,6 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
 
 #ifdef TAU_ANDROID
     pthread_t thr;
-    printf("TAU: start thread monitor\n");
     pthread_create(&thr, NULL, dalvik_thread_monitor, NULL);
 #endif
 
@@ -506,8 +492,14 @@ char *get_java_thread_name(void)
     }
 
     jstring jstr = (jstring) env->CallObjectMethod(thisThread, getName);
+    if (jstr == NULL) {
+	return NULL;
+    }
 
     const char *jname = env->GetStringUTFChars(jstr, NULL);
+    if (jname == NULL) {
+	return NULL;
+    }
 
     char *name = strdup(jname);
 
@@ -533,6 +525,7 @@ JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeProfile
   (JNIEnv *env, jobject obj, jstring name, jstring type, jstring groupname, 
 	jlong group)
 {
+  JNIThreadLayer::WaitForDTM();
 
   /* Get name and type strings from the JVM */
   const char *blockName = env->GetStringUTFChars(name, 0);

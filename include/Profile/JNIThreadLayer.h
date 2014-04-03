@@ -25,6 +25,7 @@
 
 #ifdef JAVA
 
+#include <sys/types.h>
 #include <jni.h>
 #include <map>
 #include <mutex>
@@ -35,8 +36,13 @@ class  JNIThreadLayer
  	JNIThreadLayer () { }  // defaults
 	~JNIThreadLayer () { } 
 
-	static int RegisterThread(jlong jid, int sid, char *tname);
-	static int GetSidFromJid(jlong jid);
+	static void WaitForDTM(void);
+	static void SuThread(pid_t sid, char *tname);
+	static void SuThread(pid_t tid);
+	static void IgnoreThisThread(void);
+	static int RegisterThread(int sid, char *tname);
+	static char *GetThreadName(void);
+	static pid_t GetThreadSid(void);
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
         static int InitializeEnvMutexData(void);     // init tauEnv mutex
@@ -52,11 +58,12 @@ class  JNIThreadLayer
 	static JavaVM 	   	    *tauVM; 	     // Virtual machine 
   private:
         static int                      tauThreadCount;  // Number of threads
-	static std::map<jlong, int>     tauTidMap;
+	static std::map<pid_t, int>     tauTidMap;
 	static std::map<jlong, int>     tauSidMap;
-	static std::recursive_mutex     tauNumThreadsLock; // to protect counter
+	static std::mutex               tauNumThreadsLock; // to protect counter
 	static std::recursive_mutex     tauDBMutex; // to protect counter
 	static std::recursive_mutex     tauEnvMutex; // second mutex
+	static std::map<pid_t, std::mutex> tauDTMLock;
 };
 
 #endif // JAVA 
