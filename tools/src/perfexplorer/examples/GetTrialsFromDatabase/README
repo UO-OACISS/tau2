@@ -1,0 +1,6 @@
+This example shows how to select trials based on metadata values.
+
+To run the example:
+
+perfexplorer -c advection_test -i ./graph.py
+

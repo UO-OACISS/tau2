@@ -42,7 +42,7 @@ import re
 import subprocess
 import taucmd
 from threading import Thread
-from taucmd import util
+from taucmd import util, TauNotImplementedError
 from taucmd.docopt import docopt
 from taucmd.project import Registry
 
@@ -52,8 +52,11 @@ SHORT_DESCRIPTION = "Display application profile or trace data."
 
 USAGE = """
 Usage:
-  tau show [<files>...]
+  tau show [options] [<files>...]
   tau show -h | --help
+  
+Options:
+  --no-gui                Show as text in console instead of launching graphical tool.
   
 <files> may be profile files (profile.*, *.ppk, *.xml, etc.) or traces (*.otf, *.slog2).
 If not files are given, show all files in current directory.
@@ -106,6 +109,7 @@ def main(argv):
         return 1
     LOGGER.info('Using TAU project %r' % proj.getName())
     
+    # Read files from PWD if no files given
     args_files = args['<files>']
     if not args_files:
         args_files = glob.glob('profile.*.*.*')
@@ -113,6 +117,9 @@ def main(argv):
             if ext != 'profile':
                 args_files += glob.glob('*.%s' % ext)
         LOGGER.debug('Found files: %r' % args_files)
+        
+    if args['--no-gui']:
+        raise TauNotImplementedError('--no-gui option is not implemented', '--no-gui')
         
     # Compile the project if needed
     proj.compile()

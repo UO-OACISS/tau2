@@ -132,8 +132,8 @@ public class GPTLDataSource extends DataSource {
 					createFunction(thread, eventData, true);
 				}
 			}
-        	this.generateDerivedData();
 		} // while process/thread
+    	this.generateDerivedData();
 
 		setGroupNamesPresent(true);
 
@@ -192,6 +192,7 @@ public class GPTLDataSource extends DataSource {
                 }
                 
         		//System.out.println("Processing " + file + ", please wait ......");
+        		//System.out.print(".");
         		fileIn = new FileInputStream(file);
         		tracker = new TrackerInputStream(fileIn);
         		inReader = new InputStreamReader(tracker);
@@ -217,7 +218,6 @@ public class GPTLDataSource extends DataSource {
         				if (!eventData.callpathName.equals(eventData.name))
         					createFunction(thread, eventData, true);
         			}
-        			this.generateDerivedData();
         		} // for data in dataList
 
         		fileIn.close();
@@ -228,6 +228,7 @@ public class GPTLDataSource extends DataSource {
     		//System.out.println("Done processing data!");
     		//System.out.println("Time to process (in milliseconds): " + time);
         }
+		this.generateDerivedData();
     }
 
 
@@ -532,15 +533,25 @@ public class GPTLDataSource extends DataSource {
 		}
 	}
 
+	public static String rtrim(String s) {
+        int i = s.length()-1;
+        while (i >= 0 && Character.isWhitespace(s.charAt(i))) {
+            i--;
+        }
+        return s.substring(0,i+1);
+    }
+	
 	private EventData processEventLine(String inputString) {
 		EventData data = new EventData();
+		inputString = rtrim(inputString);
 		// process the inclusive values for this event
-        StringTokenizer st = new StringTokenizer(inputString, " \t\n\r()");
+		String upToNCharacters = inputString.substring(0,60);
 		// name
-        data.name = st.nextToken();
+		data.name = upToNCharacters.trim();
+
 		// we may have parsed an asterix... check for it!
-		if (data.name.equals("*")) {
-        	data.name = st.nextToken();
+		if (data.name.startsWith("*")) {
+        	data.name = data.name.replaceFirst("\\*","").trim();
 			// get the depth of this event
 			data.depth = inputString.length() - inputString.replaceFirst("\\*","").trim().length();
 		} else {
@@ -548,6 +559,10 @@ public class GPTLDataSource extends DataSource {
 			data.depth = inputString.length() - inputString.trim().length();
 		}
 		data.callpathName = data.name;
+		
+		String theRest = inputString.substring(60,inputString.length());
+		
+        StringTokenizer st = new StringTokenizer(theRest, " \t\n\r()");
         // keep track of where we are in the data columns
 		int skip = 0;
         for (String column : this.dataColumns) {

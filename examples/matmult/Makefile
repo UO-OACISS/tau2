@@ -11,7 +11,9 @@
 
 .SUFFIXES : .f90
 
-F90=tau_f90.sh
+TAU_MAKEFILE ?=../../include/Makefile
+include $(TAU_MAKEFILE)
+F90=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_f90.sh
 
 LIBS= 
 INCLUDE=

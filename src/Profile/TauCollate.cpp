@@ -16,12 +16,20 @@
 **                                                                         **
 ****************************************************************************/
 
-#ifdef TAU_MPI
 // The subsequent guards are for existing dependencies. These may go away as we
 //   expand TAUmon MPI capabilities.
 #ifdef TAU_UNIFY
 
+#ifdef TAU_MPI
 #include <mpi.h>
+#else
+// define some MPI things with dummy values, it makes it easier later.
+#define MPI_Op int
+#define MPI_MIN 0 
+#define MPI_MAX 0
+#define MPI_SUM 0
+#define MPI_SUM 0
+#endif /* TAU_MPI */
 #include <TAU.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,8 +68,10 @@ const char** collate_op_names[NUM_COLLATE_OP_TYPES] =
 #ifdef DEBUG
 
 void TAU_MPI_DEBUG0(const char *format, ...) {
-  int rank;
+  int rank = 0;
+#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif /* TAU_MPI */
   if (rank != 0) {
     return;
   }
@@ -223,8 +233,13 @@ static int getStepValue(collate_step step, int prevValue, int nextValue) {
  * An MPI_Reduce operator similar to MPI_MIN, but it allows for -1 values
  * to represent "non-existent"
  ********************************************************************/
+#ifdef TAU_MPI
 static void stat_min (void *i, void *o, int *len,  MPI_Datatype *type) {
   if (*type == MPI_INT) {
+#else  /* TAU_MPI */
+static void stat_min (void *i, void *o, int *len,  int *type) {
+  if (*type == -1) {
+#endif /* TAU_MPI */
     int *in = (int *) i;
     int *inout = (int *) o;
     for (int i=0; i<*len; i++) {
@@ -421,11 +436,19 @@ int Tau_collate_get_local_threads(int id, bool isAtomic){
 void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
 				   int **numEventThreads,
 				   int numEvents, int *globalEventMap,bool isAtomic) {
-  int rank;
+  int rank = 0;
+#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif /* TAU_MPI */
   
-  int *numThreadsGlobal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
+#ifdef TAU_MPI
+  int *numThreadsGlobal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
+#else
+  // in the non-MPI case, just point to the same memory.
+  int *numThreadsGlobal = numThreadsLocal;
+#endif /* TAU_MPI */
+
   
   
 
@@ -460,8 +483,10 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 	}
   /* Extra slot in array indicates number of threads on rank */
   numThreadsLocal[numEvents] = RtsLayer::getTotalThreads();
+#ifdef TAU_MPI
   PMPI_Reduce(numThreadsLocal, numThreadsGlobal, numEvents+1, 
 	      MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
 
   /* Now rank 0 knows all about global thread counts */
   if (rank == 0) {
@@ -493,22 +518,38 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 					  double ***sAtomicCalls, 
 					  double ***sAtomicMean,
 					  double ***sAtomicSumSqr) {
-  int rank;
+  int rank = 0;
+#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif /* TAU_MPI */
   
   MPI_Op min_op;
+#ifdef TAU_MPI
   PMPI_Op_create(stat_min, 1, &min_op);
+#endif /* TAU_MPI */
   collate_op[step_min] = min_op;
 
   // allocate memory for values to fill with performance data and sent to
   //   the root node
   double *atomicMin, *atomicMax;
   double *atomicCalls, *atomicMean, *atomicSumSqr;
+
+#ifdef TAU_MPI
   Tau_collate_allocateUnitAtomicBuffer(&atomicMin, &atomicMax, 
 				       &atomicCalls, &atomicMean,
 				       &atomicSumSqr,
 				       numItems);
+#endif /* TAU_MPI */
+
   for (int s=0; s<NUM_COLLATE_STEPS; s++) {
+#ifndef TAU_MPI
+    // in the non-MPI case, just point to the same memory.
+    atomicMin = &((*gAtomicMin)[s][0]);
+    atomicMax = &((*gAtomicMax)[s][0]);
+    atomicCalls = &((*gAtomicCalls)[s][0]);
+    atomicMean = &((*gAtomicMean)[s][0]);
+    atomicSumSqr = &((*gAtomicSumSqr)[s][0]);
+#endif /* !TAU_MPI */
     // Initialize to -1 only for step_min to handle unrepresented values for
     //   minimum.
     double fillDbl = 0.0;
@@ -552,6 +593,7 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
     }
 
     // reduce data to rank 0
+#ifdef TAU_MPI
     PMPI_Reduce(atomicMin, (*gAtomicMin)[s], numItems, MPI_DOUBLE, 
 		collate_op[s], 0, MPI_COMM_WORLD);
     PMPI_Reduce(atomicMax, (*gAtomicMax)[s], numItems, MPI_DOUBLE, 
@@ -562,11 +604,14 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 		collate_op[s], 0, MPI_COMM_WORLD);
     PMPI_Reduce(atomicSumSqr, (*gAtomicSumSqr)[s], numItems, MPI_DOUBLE, 
 		collate_op[s], 0, MPI_COMM_WORLD);
-  }    
+#endif /* TAU_MPI */
+  }
+#ifndef TAU_MPI
   // free memory for basic information
   Tau_collate_freeUnitAtomicBuffer(&atomicMin, &atomicMax, 
 				   &atomicCalls, &atomicMean, 
 				   &atomicSumSqr);
+#endif /* ! TAU_MPI */
   
   // Compute derived statistics on rank 0
   if (rank == 0) {
@@ -588,7 +633,9 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 			numEventThreads[i], event->GetName().c_str());
     }    
   }
+#ifdef TAU_MPI
   PMPI_Op_free(&min_op);
+#endif /* TAU_MPI */
 }
 
 /***
@@ -603,24 +650,37 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 				    double ***gNumCalls, double ***gNumSubr,
 				    double ****sExcl, double ****sIncl,
 				    double ***sNumCalls, double ***sNumSubr) {
-  int rank;
+  int rank = 0;
+#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif /* TAU_MPI */
 
   // *CWL* - Minimum needs to be handled with out-of-band values for now.
   MPI_Op min_op;
+#ifdef TAU_MPI
   PMPI_Op_create (stat_min, 1, &min_op);
+#endif /* TAU_MPI */
   collate_op[step_min] = min_op;
 
   // allocate memory for values to fill with performance data and sent to
   //   the root node
   double **excl, **incl;
   double *numCalls, *numSubr;
+#ifdef TAU_MPI
   Tau_collate_allocateUnitFunctionBuffer(&excl, &incl, 
 					 &numCalls, &numSubr, 
 					 numItems, Tau_Global_numCounters);
+#endif /* TAU_MPI */
 
   // Fill the data, once for each basic statistic
   for (int s=0; s<NUM_COLLATE_STEPS; s++) {
+#ifndef TAU_MPI
+    // in the non-MPI case, just point to the same memory.
+    excl = &((*gExcl)[s][0]);
+    incl = &((*gIncl)[s][0]);
+    numCalls = &((*gNumCalls)[s][0]);
+    numSubr = &((*gNumSubr)[s][0]);
+#endif /* !TAU_MPI */
     // Initialize to -1 only for step_min to handle unrepresented values for
     //   minimum.
     double fillDbl = 0.0;
@@ -676,6 +736,7 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
       }
     }
     
+#ifdef TAU_MPI
     // reduce data to rank 0
     for (int m=0; m<Tau_Global_numCounters; m++) {
       PMPI_Reduce(excl[m], (*gExcl)[s][m], numItems, MPI_DOUBLE, 
@@ -687,9 +748,12 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 		collate_op[s], 0, MPI_COMM_WORLD);
     PMPI_Reduce(numSubr, (*gNumSubr)[s], numItems, MPI_DOUBLE, 
 		collate_op[s], 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
   }
+#ifdef TAU_MPI
   // Free allocated memory for basic info.
   Tau_collate_freeUnitFunctionBuffer(&excl, &incl, &numCalls, &numSubr, Tau_Global_numCounters);
+#endif
 
   // Now compute the actual statistics on rank 0 only. The assumption
   //   is that at least one thread would be active across the node-space
@@ -712,7 +776,9 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 			 globalNumThreads, numEventThreads);
 		}    
   }
+#ifdef TAU_MPI
   PMPI_Op_free(&min_op);
+#endif /* TAU_MPI */
 }
 
 static void Tau_collate_incrementHistogram(int *histogram, double min, 
@@ -741,14 +807,20 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
 				    double **gNumCalls, double **gNumSubr) {
   // two for each metric (excl, incl) and numCalls/numSubr;
   int histogramBufSize = sizeof(int) * numBins * numHistograms;
+#ifdef TAU_MPI
   int *histogram = (int *) TAU_UTIL_MALLOC(histogramBufSize);
+#else /* !TAU_MPI */
+  int *histogram = &((*outHistogram)[0]);
+#endif /* TAU_MPI */
 
 #ifndef TAU_WINDOWS
   bzero(histogram, histogramBufSize);
 #endif /* TAU_WINDOWS */
 
-  int rank;
+  int rank = 0;
+#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif /* TAU_MPI */
   
   if (globalEventMap[e] != -1) { // if it occurred in our rank
     int local_index = functionUnifier->sortMap[globalEventMap[e]];
@@ -781,8 +853,10 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
 				     fi->GetSubrs(tid), numBins);
     }
   }    
+#ifdef TAU_MPI
   PMPI_Reduce (histogram, *outHistogram, 
 	       numBins*numHistograms, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
 }
 
 /* Only enable profile writing and dump operation if TAU MPI Monitoring
@@ -1072,4 +1146,3 @@ extern "C" void Tau_mon_internal_onlineDump() {
 #endif /* TAU_MONITORING */
 
 #endif /* TAU_UNIFY */
-#endif /* TAU_MPI */

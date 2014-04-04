@@ -169,7 +169,9 @@ struct TauBfdUnit
 
   void ClearMaps() {
     for (size_t i = 0; i < addressMaps.size(); ++i) {
+	  if (addressMaps[i]) {
       delete addressMaps[i];
+	  }
     }
     addressMaps.clear();
   }
@@ -549,6 +551,9 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   }
 
   TauBfdUnit * unit = ThebfdUnits()[handle];
+  if (unit == NULL) {
+      return false;
+  }
   TauBfdModule * module;
   unsigned long addr0;
   unsigned long addr1;
@@ -797,6 +802,8 @@ static bool Tau_bfd_internal_loadExecSymTab(TauBfdUnit *unit)
 // Internal BFD helper functions
 static int Tau_bfd_internal_getModuleIndex(TauBfdUnit *unit, unsigned long probe_addr)
 {
+  if (!unit)
+    return -1;
   vector<TauBfdAddrMap*> const & addressMaps = unit->addressMaps;
   for (int i = 0; i < addressMaps.size(); i++) {
     if (probe_addr >= addressMaps[i]->start && probe_addr <= addressMaps[i]->end) return i;

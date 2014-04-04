@@ -45,6 +45,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.View.ViewRule;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 
@@ -98,6 +100,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 			    	panel.validate();
 				}else if(button.getText().equals("-")){
 					rulePane.remove(button.getParent());
+					button.getParent().setEnabled(false);
 					rulePane.getParent().validate();
 				}
 			}
@@ -106,34 +109,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 
 	}
 
-
-	 static final String STRING_ENDS = "ends with";
-	 static final String STRING_CONTAINS = "contains";
-	 static final String STRING_EXACTLY = "is exactly";
-	 static final String STRING_NOT = "is not";
-	 static final String STRING_BEGINS = "beings with";
-	
-	 static final String NUMBER_EQUAL = "is equal to";
-	 static final String NUMBER_NOT = "is not equal to";
-	 static final String NUMBER_LESS = "is less than";
-	 static final String NUMBER_RANGE = "is in the range";
-	 static final String NUMBER_GREATER = "is greater than";
-	 
-	 static final String DATE_IS = "is";
-	 static final String DATE_RANGE = "is between";
-	 static final String DATE_BEFORE = "is before";
-	 static final String DATE_AFTER = "is after";
-	 
-	 static final String STRING = "read as a string";
-	 static final String NUMBER = "read as a number";
-	 static final String DATE = "read as a date";
-	 
-	 static final String ANY="or";
-	 static final String ALL="and";
 	 static final String METADATA = "METADATA";
 	 static final String READ_TYPE = "Read Type";
-	 
-
 	 
 	private JPanel panel;
 	private JPanel rulePane;
@@ -142,6 +119,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	private TAUdbDatabaseAPI databaseAPI;
 	private DB db;
 	private int parentID;
+	private View edit = null;
 
 	
     
@@ -159,7 +137,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
     	this.parentID = parentID;
     	this.ruleListeners = new ArrayList<ViewCreatorRuleListener>();
     	this.setTitle("TAUdb View Creator");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             	
     	panel = new JPanel();
     	panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -179,13 +157,88 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         rulePane.setVisible(true);
 
 
-    	panel.add(addMatch());
+		panel.add(addMatch(View.ALL));
     	panel.add(scrollRule);
     	panel.add(getSaveButtons());
     	panel.validate();
     	
     	this.getContentPane().add(panel);
 	}
+
+	public ViewCreatorGUI(TAUdbDatabaseAPI databaseAPI, View view) {
+		super();
+		try {
+			// UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+		}
+		this.databaseAPI = databaseAPI;
+		this.db = databaseAPI.getDb();
+		this.edit = view;
+		this.parentID = -1;
+		if(view.getParent()!=null){
+			this.parentID=view.getParent().getID();
+		}
+		this.ruleListeners = new ArrayList<ViewCreatorRuleListener>();
+		this.setTitle("TAUdb View Creator");
+		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		panel = new JPanel();
+		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+		rulePane = new JPanel();
+
+		rulePane.setLayout(new BoxLayout(rulePane, BoxLayout.Y_AXIS));
+
+		JScrollPane scrollRule = new JScrollPane(rulePane);
+		scrollRule.setPreferredSize(new Dimension(800, 200));
+
+		ResultSet rs = View.getViewParameters(db, view.getID());
+		String match = View.ALL;
+		try {
+			while (rs.next()) {
+				if (rs.getRow() == 1) {
+					if (rs.getString(1).equals(View.ANY)) {
+						match = View.ANY;
+					}
+				}
+				// String table_name=rs.getString(4);
+				String column_name = rs.getString(4);
+				String operator = rs.getString(5);
+				String value = rs.getString(6);
+				String value2 = null;
+
+				if (operator == null || value == null) {
+					createNewRule();
+					break;
+				}
+
+				if (operator.equals(View.GTE)) {
+					rs.next();
+					value2 = rs.getString(6);
+				}
+
+				copyRule(column_name, operator, value, value2);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+
+		rulePane.validate();
+		// Display the window.
+		rulePane.setVisible(true);
+
+		panel.add(addMatch(match));
+		panel.add(scrollRule);
+		panel.add(getSaveButtons());
+		panel.validate();
+
+		this.getContentPane().add(panel);
+		// edit = true;
+	}
+
 	private JPanel getSaveButtons() {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
@@ -218,6 +271,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 				return;
 			}
 
+			if (edit == null) {
+
 			String saveName = (String)JOptionPane.showInputDialog(
 			                    this,
 			                    "Please enter the name of this TAUdb View",
@@ -229,11 +284,15 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 				saveView(saveName);
 				close();
 			}
+			} else {
+				editView();
+				close();
+			}
 			
 		}else if ("Cancel".equals(e.getActionCommand())){
 			close();
 		}else if ("comboBoxChanged".equals(e.getActionCommand())){
-			anyOrAll = ((JComboBox<String>) e.getSource()).getSelectedItem()
+			anyOrAll = ((JComboBox) e.getSource()).getSelectedItem()
 					.toString();
 		}
 		
@@ -244,20 +303,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		int viewID;
 		try {
 			viewID = View.saveView(db, saveName, anyOrAll, parentID);
+			saveViewParameters(viewID);
 
-			for (ViewCreatorRuleListener rule : ruleListeners) {
-
-				if (rule.getOperator().equals(NUMBER_RANGE)) {
-					View.saveViewParameter(db, viewID, rule.getTable_name(),
-							rule.getColumn_name(), ">=", rule.getValue());
-					View.saveViewParameter(db, viewID, rule.getTable_name(),
-							rule.getColumn_name(), "<=", rule.getValue2());
-				} else {
-					View.saveViewParameter(db, viewID, rule.getTable_name(),
-							rule.getColumn_name(), rule.getOperator(),
-							rule.getValue());
-				}
-			}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -265,31 +312,45 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 
 	}
 
-	private static boolean isNumber(String str) {
+	private void editView() {
+		int viewID = edit.getID();
+
 		try {
-			Double.parseDouble(str);
-		} catch (NumberFormatException nfe) {
-			return false;
+			View.clearViewParameters(db, viewID);
+			saveViewParameters(viewID);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return true;
 	}
+
+	private void saveViewParameters(int viewID) throws SQLException {
+			for (ViewCreatorRuleListener ruleL : ruleListeners) {
+					if (ruleL.isRuleEnabled()) {
+						ViewRule rule = ruleL.getViewRule();
+						View.saveViewRule(db, viewID, rule);
+					}
+		}
+	}
+
 
 	private String checkValues() {
 		// Set<String> numberOps = new HashSet<String>(Arrays.asList(new
 		// String[] {
 		// NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS,
 		// NUMBER_RANGE }));
-		for (ViewCreatorRuleListener rule : ruleListeners) {
-			if (rule.type.equals(NUMBER)) {
+		for (ViewCreatorRuleListener ruleL : ruleListeners) {
+				ViewRule rule = ruleL.getViewRule();
+				if (rule.getType().equals(ViewRule.NUMBER)) {
 
 				String value = rule.getValue();
-				if (!isNumber(value)) {
+				if (!ViewRule.isNumber(value)) {
 					return value;
 				}
 
-				if (rule.getOperator().equals(NUMBER_RANGE)) {
+				if (rule.getOperator().equals(View.NUMBER_RANGE)) {
 					value = rule.getValue2();
-					if (!isNumber(value)) {
+					if (!ViewRule.isNumber(value)) {
 						return value;
 					}
 				}
@@ -299,15 +360,16 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		return null;
 	}
 
-	private JPanel addMatch() {
+	private JPanel addMatch(String selection) {
 		JPanel panel = new JPanel();
-		String[] comboBoxItems = {ALL,  ANY};
-		JComboBox<String> comboBox = new JComboBox<String>(comboBoxItems);
+		String[] comboBoxItems = {View.ALL,  View.ANY};
+		JComboBox comboBox = new JComboBox(comboBoxItems);
 		JLabel label1 = new JLabel("Match ");
 		JLabel label2 = new JLabel(" of the following rules.");
 		
 		comboBox.addActionListener(this);
-		comboBox.setSelectedIndex(0);
+		// comboBox.setSelectedIndex(0);
+		comboBox.setSelectedItem(selection);
 
 		panel.add(label1);
 		panel.add(comboBox);
@@ -326,54 +388,130 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 //	}
 
 	
-	public void createNewRule() {
+	public void copyRule(String column_name, String operator, String value,
+			String value2) {
 
-		//String[] comparatorTypes = {STRING,NUMBER, DATE};
-		String[] comparatorTypes = {STRING,NUMBER};
+		String type = ViewRule.STRING;
+		if (value != null && ViewRule.isNumber(value)) {
+			type = ViewRule.NUMBER;
+		}
 
-    	JPanel cards;
-        JPanel comboBoxPane = new JPanel(); //use FlowLayout
-        String comboBoxItems[] = comparatorTypes ;
-		JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
-        cb.setEditable(false);
-        cb.setName(READ_TYPE);
-        
-        
-        cards = new JPanel(new CardLayout());
-        ViewCreatorRuleListener listener = new ViewCreatorRuleListener();
-        ruleListeners.add(listener);
-        cb.addActionListener(listener);
-       
-        cards.add(addStringField(listener), STRING);
-        cards.add(addNumberField(listener),NUMBER);
-//        cards.add(addDateField(), DATE);
-        
-        
-        ViewCreatorListner listner = new ViewCreatorListner(cards);
-        cb.addItemListener(listner);
+		// String[] comparatorTypes = {STRING,NUMBER, DATE};
+		String[] comparatorTypes = { ViewRule.STRING, ViewRule.NUMBER };
 
-        
-        JButton plusButton = new JButton("+");
-        JButton minusButton = new JButton("-");
-        plusButton.addActionListener(listner);
-        minusButton.addActionListener(listner);
-        
-        String metadataList[] = getMetaDataList();
-        JComboBox<String> metadataCB = new JComboBox<String>(metadataList);
-        metadataCB.addActionListener(listener);
-        metadataCB.setEditable(false);
-        metadataCB.setName(METADATA);
-        if(metadataList.length>0)
-        metadataCB.setSelectedIndex(0);
-        
-        comboBoxPane.add(metadataCB, BorderLayout.WEST);
-        comboBoxPane.add(cb, BorderLayout.CENTER);
-        comboBoxPane.add(cards, BorderLayout.EAST);
-        comboBoxPane.add(minusButton);
-        comboBoxPane.add(plusButton);
-        comboBoxPane.setAlignmentX(Component.CENTER_ALIGNMENT);
-        rulePane.add(comboBoxPane);
+		JPanel cards;
+		JPanel comboBoxPane = new JPanel(); // use FlowLayout
+		String comboBoxItems[] = comparatorTypes;
+		JComboBox cb = new JComboBox(comboBoxItems);
+		cb.setEditable(false);
+		cb.setName(READ_TYPE);
+
+		cards = new JPanel(new CardLayout());
+		ViewCreatorRuleListener listener = new ViewCreatorRuleListener();
+		ruleListeners.add(listener);
+		cb.addActionListener(listener);
+
+		// I do not care for this logic but I'm not sure of a safer way to cover
+		// all of the cases
+		if (value == null) {
+			cards.add(addStringField(listener, null, null), ViewRule.STRING);
+			cards.add(addNumberField(listener, null, null, null), ViewRule.NUMBER);
+		} else {
+			if (type.equals(ViewRule.STRING)) {
+				cards.add(addStringField(listener, operator, value), ViewRule.STRING);
+				cards.add(addNumberField(listener, null, null, null), ViewRule.NUMBER);
+			} else if (type.equals(ViewRule.NUMBER)) {
+				cards.add(addStringField(listener, null, null), ViewRule.STRING);
+				cards.add(addNumberField(listener, operator, value, value2),
+						ViewRule.NUMBER);
+			}
+		}
+		// cards.add(addDateField(), DATE);
+
+		ViewCreatorListner listner = new ViewCreatorListner(cards);
+		cb.addItemListener(listner);
+
+		if (type.equals(ViewRule.NUMBER)) {
+			cb.setSelectedItem(ViewRule.NUMBER);
+		} else {
+			cb.setSelectedItem(ViewRule.STRING);
+		}
+
+		JButton plusButton = new JButton("+");
+		JButton minusButton = new JButton("-");
+		plusButton.addActionListener(listner);
+		minusButton.addActionListener(listner);
+
+		String metadataList[] = getMetaDataList();
+		JComboBox metadataCB = new JComboBox(metadataList);
+		metadataCB.addActionListener(listener);
+		metadataCB.setEditable(false);
+		metadataCB.setName(METADATA);
+		if (metadataList.length > 0)
+ {
+			if (column_name != null) {
+				metadataCB.setSelectedItem(column_name);
+			} else {
+				metadataCB.setSelectedIndex(0);
+			}
+		}
+
+		comboBoxPane.add(metadataCB, BorderLayout.WEST);
+		comboBoxPane.add(cb, BorderLayout.CENTER);
+		comboBoxPane.add(cards, BorderLayout.EAST);
+		comboBoxPane.add(minusButton);
+		comboBoxPane.add(plusButton);
+		comboBoxPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+		listener.setContainer(comboBoxPane);
+		rulePane.add(comboBoxPane);
+
 	}
+
+	public void createNewRule() {
+		copyRule(null, null, null, null);
+	}
+
+	/*
+	 * public void createNewRule() {
+	 * 
+	 * //String[] comparatorTypes = {STRING,NUMBER, DATE}; String[]
+	 * comparatorTypes = {STRING,NUMBER};
+	 * 
+	 * JPanel cards; JPanel comboBoxPane = new JPanel(); //use FlowLayout String
+	 * comboBoxItems[] = comparatorTypes ; JComboBox<String> cb = new
+	 * JComboBox<String>(comboBoxItems); cb.setEditable(false);
+	 * cb.setName(READ_TYPE);
+	 * 
+	 * 
+	 * cards = new JPanel(new CardLayout()); ViewCreatorRuleListener listener =
+	 * new ViewCreatorRuleListener(); ruleListeners.add(listener);
+	 * cb.addActionListener(listener);
+	 * 
+	 * cards.add(addStringField(listener, null, null), STRING);
+	 * cards.add(addNumberField(listener, null, null, null), NUMBER); //
+	 * cards.add(addDateField(), DATE);
+	 * 
+	 * 
+	 * ViewCreatorListner listner = new ViewCreatorListner(cards);
+	 * cb.addItemListener(listner);
+	 * 
+	 * 
+	 * JButton plusButton = new JButton("+"); JButton minusButton = new
+	 * JButton("-"); plusButton.addActionListener(listner);
+	 * minusButton.addActionListener(listner);
+	 * 
+	 * String metadataList[] = getMetaDataList(); JComboBox<String> metadataCB =
+	 * new JComboBox<String>(metadataList);
+	 * metadataCB.addActionListener(listener); metadataCB.setEditable(false);
+	 * metadataCB.setName(METADATA); if(metadataList.length>0)
+	 * metadataCB.setSelectedIndex(0);
+	 * 
+	 * comboBoxPane.add(metadataCB, BorderLayout.WEST); comboBoxPane.add(cb,
+	 * BorderLayout.CENTER); comboBoxPane.add(cards, BorderLayout.EAST);
+	 * comboBoxPane.add(minusButton); comboBoxPane.add(plusButton);
+	 * comboBoxPane.setAlignmentX(Component.CENTER_ALIGNMENT);
+	 * listener.setContainer(comboBoxPane); rulePane.add(comboBoxPane); }
+	 */
     private String[] getMetaDataList() {
     	String[] returnS = new String[0];
     	List<String> names = databaseAPI.getPrimaryMetadataNames();
@@ -381,11 +519,13 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
     		names.add(s);
 		return names.toArray(returnS);
 	}
-    private Component addNumberField(ViewCreatorRuleListener listener){
+
+	private Component addNumberField(ViewCreatorRuleListener listener,
+			String operator, String value, String value2) {
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
-        String comboBoxItems[] = {NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS, NUMBER_RANGE};
-        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
+        String comboBoxItems[] = {View.NUMBER_EQUAL, View.NUMBER_NOT, View.NUMBER_GREATER, View.NUMBER_LESS, View.NUMBER_RANGE};
+		JComboBox cb = new JComboBox(comboBoxItems);
         cb.addActionListener(listener);
         cb.setEditable(false);
         //cb.setSelectedIndex(0);
@@ -393,58 +533,58 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         
         //Create the "cards".
         JPanel greaterCard = new JPanel();
-		JTextField text = new JTextField();
+		JTextField greater = new JTextField();
 		// text.setValue(0.0);
-        text.setPreferredSize(new Dimension(100, 20));
-        text.getDocument().addDocumentListener(listener);
-        greaterCard.add(text);
+		greater.setPreferredSize(new Dimension(100, 20));
+		greater.getDocument().addDocumentListener(listener);
+		greaterCard.add(greater);
         
         
         JPanel lessCard = new JPanel();
-		text = new JTextField();
+		JTextField less = new JTextField();
 		// text.setValue(0.0);
-        text.setPreferredSize(new Dimension(100, 20));
-        text.getDocument().addDocumentListener(listener);
-        lessCard.add(text);
+		less.setPreferredSize(new Dimension(100, 20));
+		less.getDocument().addDocumentListener(listener);
+		lessCard.add(less);
         
         JPanel equalCard = new JPanel();
-		text = new JTextField();
+		JTextField equal = new JTextField();
 		// text.setValue(0.0);
-        text.setPreferredSize(new Dimension(100, 20));
-        text.getDocument().addDocumentListener(listener);
-        equalCard.add(text);
+		equal.setPreferredSize(new Dimension(100, 20));
+		equal.getDocument().addDocumentListener(listener);
+		equalCard.add(equal);
         
         JPanel notEqualCard = new JPanel();
-		text = new JTextField();
+		JTextField notEqual = new JTextField();
 		// text.setValue(0.0);
-       text.setPreferredSize(new Dimension(100, 20));
-       text.getDocument().addDocumentListener(listener);
-       notEqualCard.add(text);
+		notEqual.setPreferredSize(new Dimension(100, 20));
+		notEqual.getDocument().addDocumentListener(listener);
+		notEqualCard.add(notEqual);
         
         JPanel rangeCard = new JPanel();
-		text = new JTextField();
+		JTextField range1 = new JTextField();
 		// text.setValue(0.0);
-        text.setPreferredSize(new Dimension(100, 20));
-        text.getDocument().addDocumentListener(listener);
-        text.getDocument().putProperty(NUMBER_RANGE,"begin");
-        rangeCard.add(text);
+		range1.setPreferredSize(new Dimension(100, 20));
+		range1.getDocument().addDocumentListener(listener);
+		range1.getDocument().putProperty(View.NUMBER_RANGE, "begin");
+		rangeCard.add(range1);
 
-		text = new JTextField();
+		JTextField range2 = new JTextField();
 		// text.setValue(0.0);
-        text.setPreferredSize(new Dimension(100, 20));
-        text.getDocument().addDocumentListener(listener);
-        text.getDocument().putProperty(NUMBER_RANGE,"end");
-        rangeCard.add(text);
+		range2.setPreferredSize(new Dimension(100, 20));
+		range2.getDocument().addDocumentListener(listener);
+		range2.getDocument().putProperty(View.NUMBER_RANGE, "end");
+		rangeCard.add(range2);
 
 
         
         //Create the panel that contains the "cards".
         JPanel comparators = new JPanel(new CardLayout());
-        comparators.add(equalCard, NUMBER_EQUAL);
-        comparators.add(notEqualCard, NUMBER_NOT);
-        comparators.add(greaterCard, NUMBER_GREATER);
-        comparators.add(lessCard, NUMBER_LESS);
-        comparators.add(rangeCard, NUMBER_RANGE);
+        comparators.add(equalCard, View.NUMBER_EQUAL);
+        comparators.add(notEqualCard, View.NUMBER_NOT);
+        comparators.add(greaterCard, View.NUMBER_GREATER);
+        comparators.add(lessCard, View.NUMBER_LESS);
+        comparators.add(rangeCard, View.NUMBER_RANGE);
 
         cb.addItemListener(new ViewCreatorListner(comparators));
        
@@ -452,14 +592,35 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         comboBoxPane.add(cb, BorderLayout.WEST);
         comboBoxPane.add(comparators, BorderLayout.EAST);
         
+		if (operator != null && value != null) {
+			if (operator.equals("=")) {
+				cb.setSelectedItem(View.NUMBER_EQUAL);
+				equal.setText(value);
+			} else if (operator.equals("!=")) {
+				cb.setSelectedItem(View.NUMBER_NOT);
+				notEqual.setText(value);
+			} else if (operator.equals(">")) {
+				cb.setSelectedItem(View.NUMBER_GREATER);
+				greater.setText(value);
+			} else if (operator.equals("<")) {
+				cb.setSelectedItem(View.NUMBER_LESS);
+				less.setText(value);
+			} else if (value2 != null) {
+				cb.setSelectedItem(View.NUMBER_RANGE);
+				range1.setText(value);
+				range2.setText(value2);
+			}
+
+		}
+
         return comboBoxPane;
     	
     }
     private Component addDateField(){
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
-        String comboBoxItems[] = {DATE_IS, DATE_AFTER, DATE_BEFORE, DATE_RANGE};
-        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
+        String comboBoxItems[] = {View.DATE_IS, View.DATE_AFTER, View.DATE_BEFORE, View.DATE_RANGE};
+		JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
         cb.setSelectedIndex(0);
         
@@ -490,10 +651,10 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         
         //Create the panel that contains the "cards".
         JPanel comparators = new JPanel(new CardLayout());
-        comparators.add(equalCard, DATE_IS);
-        comparators.add(greaterCard, DATE_AFTER);
-        comparators.add(lessCard, DATE_BEFORE);
-        comparators.add(rangeCard, DATE_RANGE);
+        comparators.add(equalCard, View.DATE_IS);
+        comparators.add(greaterCard, View.DATE_AFTER);
+        comparators.add(lessCard, View.DATE_BEFORE);
+        comparators.add(rangeCard, View.DATE_RANGE);
 
         cb.addItemListener(new ViewCreatorListner(comparators));
        
@@ -504,11 +665,15 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         return comboBoxPane;
     	
     }
-	private Component addStringField(ViewCreatorRuleListener listener){
+
+	private Component addStringField(ViewCreatorRuleListener listener,
+			String operator, String value) {
+
+
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
-        String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS};
-        JComboBox<String> cb = new JComboBox<String>(comboBoxItems);
+        String comboBoxItems[] = {View.STRING_EXACTLY,View.STRING_BEGINS, View.STRING_ENDS, View.STRING_CONTAINS, View.STRING_NOT};
+		JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
       //  cb.setName(STRING);
         cb.addActionListener(listener);
@@ -535,20 +700,49 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         exactly.getDocument().addDocumentListener(listener);
         exactlyCard.add(exactly);
         
+        JPanel notCard = new JPanel();
+        JTextField not = new JTextField("", 20);
+        not.getDocument().addDocumentListener(listener);
+        notCard.add(not);
 
         
         //Create the panel that contains the "cards".
         JPanel comparators = new JPanel(new CardLayout());
-        comparators.add(exactlyCard, STRING_EXACTLY);
-        comparators.add(beginCard, STRING_BEGINS);
-        comparators.add(endCard, STRING_ENDS);
-        comparators.add(containsCard, STRING_CONTAINS);
+        comparators.add(exactlyCard, View.STRING_EXACTLY);
+        comparators.add(beginCard, View.STRING_BEGINS);
+        comparators.add(endCard, View.STRING_ENDS);
+        comparators.add(containsCard, View.STRING_CONTAINS);
+        comparators.add(notCard, View.STRING_NOT);
 
         cb.addItemListener(new ViewCreatorListner(comparators));
 
         comboBoxPane.add(cb, BorderLayout.WEST);
         comboBoxPane.add(comparators, BorderLayout.EAST);
         
+		if (operator != null && value != null) {
+			if (operator.equals("=")) {
+				cb.setSelectedItem(View.STRING_EXACTLY);
+				exactly.setText(value);
+			} else if (operator.equals("like")) {
+				boolean endsWith = value.startsWith(View.WILDCARD);
+				boolean startsWith = value.endsWith(View.WILDCARD);
+				if (startsWith && endsWith) {
+					cb.setSelectedItem(View.STRING_CONTAINS);
+					contains.setText(value.substring(1, value.length() - 1));
+				} else if (startsWith) {
+					cb.setSelectedItem(View.STRING_BEGINS);
+					begin.setText(value.substring(0, value.length() - 1));
+				} else if (endsWith) {
+					cb.setSelectedItem(View.STRING_ENDS);
+					end.setText(value.substring(1));
+				}
+			}
+			else if (operator.equals("not like")){
+				cb.setSelectedItem(View.STRING_NOT);
+				not.setText(value.substring(1, value.length() - 1));
+			}
+		}
+
         return comboBoxPane;
     	
     }

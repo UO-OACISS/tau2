@@ -30,14 +30,14 @@ TEST_TRIAL_ID=87 # taudbc
 TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
 
 # MacBook Air
-# PQDIR=/Library/PostgreSQL/9.2
-# DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/include
-# DB_LIBRARIES=-L$(PQDIR)/lib -lpq
-# XML_INCLUDES=-I/usr/include/libxml2
-# XML_LIBRARIES=-L/opt/local/lib -lxml2
-# ZLIB_INCLUDES=
-# ZLIB_LIBRARIES=-lz
-# UUID_LIBRARIES=
+PQDIR=/Library/PostgreSQL/9.2
+DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/include
+DB_LIBRARIES=-L$(PQDIR)/lib -lpq
+XML_INCLUDES=-I/usr/include/libxml2
+XML_LIBRARIES=-L/opt/local/lib -lxml2
+ZLIB_INCLUDES=
+ZLIB_LIBRARIES=-lz
+UUID_LIBRARIES=
 
 # Paratools03
 # PQDIR=/usr/local/pgsql
@@ -45,15 +45,15 @@ TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
 # DB_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
 
 # Mist / Tank
-PQDIR=/home/users/khuck/src/postgresql-8.4.9/src
-DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
-DB_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
-XML_INCLUDES=-I/usr/include/libxml2
-XML_LIBRARIES=-lxml2
-ZLIB_INCLUDES=
-ZLIB_LIBRARIES=-lz
-UUID_LIBRARIES=-luuid
-SYSTEM_DEFINE=-D__X86_64_LINUX__
+# PQDIR=/home/users/khuck/src/postgresql-8.4.9/src
+# DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
+# DB_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
+# XML_INCLUDES=-I/usr/include/libxml2
+# XML_LIBRARIES=-lxml2
+# ZLIB_INCLUDES=
+# ZLIB_LIBRARIES=-lz
+# UUID_LIBRARIES=-luuid
+# SYSTEM_DEFINE=-D__X86_64_LINUX__
 
 ################# SQLITE ########################
 # TAUDB_DATABASE_DEFINE="-D__TAUDB_SQLITE__"

@@ -2,6 +2,7 @@ package edu.uoregon.tau.paraprof;
 
 import jargs.gnu.CmdLineParser;
 
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -13,10 +14,12 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.ToolTipManager;
+import javax.swing.UIManager;
 
 import edu.uoregon.tau.common.TauScripter;
 import edu.uoregon.tau.paraprof.interfaces.EclipseHandler;
@@ -54,7 +57,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Wed Oct  9 12:06:03 PDT 2013";
+    private final static String VERSION = "Tue Mar 18 13:02:55 PDT 2014";
 
     public static int defaultNumberPrecision = 6;
 
@@ -276,6 +279,8 @@ public class ParaProf implements ActionListener {
 	    //            ParaProf.preferences.setDatabaseConfigurationFile(path);
 	    preferences = new Preferences();
 	}
+	
+	setUIFont (new javax.swing.plaf.FontUIResource(new Font(preferences.getFontName(),preferences.getFontStyle(), preferences.getFontSize())));
 
 	if (colorChooser == null) {
 	    // we create one if ParaProf.conf wasn't properly read
@@ -690,6 +695,8 @@ public class ParaProf implements ActionListener {
 	    ParaProf.loadScripts();
 	    ExternalController.runController();
 	} else {
+		
+		
 	    javax.swing.SwingUtilities.invokeLater(new Runnable() {
 		public void run() {
 		    try {
@@ -702,5 +709,19 @@ public class ParaProf implements ActionListener {
 		}
 	    });
 	}
+    }
+    
+    private static void setUIFont(javax.swing.plaf.FontUIResource f)
+    {
+        Enumeration<Object> keys = UIManager.getDefaults().keys();
+        while (keys.hasMoreElements())
+        {
+            Object key = keys.nextElement();
+            Object value = UIManager.get(key);
+            if (value instanceof javax.swing.plaf.FontUIResource)
+            {
+                UIManager.put(key, f);
+            }
+        }
     }
 }

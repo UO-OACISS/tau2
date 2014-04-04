@@ -20,6 +20,7 @@
 #include <Profile/TauTrace.h>
 #include <Profile/TauMetaData.h>
 #include <Profile/TauSampling.h>
+#include <Profile/TauMetaDataMerge.h>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -331,6 +332,19 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
 //  TAU_VERBOSE("[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+
+/* It is possible that when the event stack gets deep, and has to be
+ * reallocated, the pointers in the event stack get messed up. This
+ * fixes the parent pointer for flat profiles, but I don't know if it
+ * is a robust fix for all scenarios! - Kevin */
+
+#if 0
+  if (ParentProfiler != TauInternal_ParentProfiler(tid)) {
+    ParentProfiler = TauInternal_ParentProfiler(tid);
+    //printf ("%d: Warning! ParentProfiler pointer was bogus!\n", tid);
+  }
+#endif
+
   /********************************************************************************/
   /*** PerfSuite Integration Code ***/
   /********************************************************************************/
@@ -1145,14 +1159,14 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
       continue;
     }
 
+    bool found_one = false;
 
     if (TauMetrics_getMetricAtomic(metric) != NULL)
     {
       vector<TauUserEvent*>::iterator it2;
 
-      bool found_one;
       // Print UserEvent Data if any
-      for (it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+      for (it2 = TheEventDB().begin(); it2 != TheEventDB().end() && !found_one; ++it2) {
         TauUserEvent *ue = *it2;
         //printf("testing %s vs %s.\n", fi->GetName(), ue->GetName().c_str());
 
@@ -1174,13 +1188,13 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
           double excltime = ue->GetMean(tid);
           //double excltime = ue->GetMean(tid) * ue->GetNumEvents(tid);
           double incltime = excltime;
-          int calls = ue->GetNumEvents();
+          int calls = fi->GetCalls(tid);
        
-          std::string name = ue->GetName();
+          //std::string name = ue->GetName();
 
-          size_t del = name.find(std::string(":"));
+          //size_t del = name.find(std::string(":"));
 
-          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", name.substr(del + 2, string::npos).c_str(), calls, 0, excltime,
+          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", suffix, calls, 0, excltime,
               incltime);
           fprintf(fp, "0 ");    // Indicating that profile calls is turned off
           fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
@@ -1194,7 +1208,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         fprintf(fp, "0 ");    // Indicating that profile calls is turned off
         fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
       }*/
-      found_one = false;
+      //found_one = false;
 /*
       if (numEvents > 0) {
         // Data format 
@@ -1212,21 +1226,25 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
 */
     }
 
-    // get currently stored values
-    double incltime = fi->getDumpInclusiveValues(tid)[metric];
-    double excltime = fi->getDumpExclusiveValues(tid)[metric];
+    if (!found_one)
+    {
 
-    if (strlen(fi->GetType()) > 0) {
-      fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
-          excltime, incltime);
-    } else {
-      fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), excltime,
-          incltime);
+      // get currently stored values
+      double incltime = fi->getDumpInclusiveValues(tid)[metric];
+      double excltime = fi->getDumpExclusiveValues(tid)[metric];
+
+      if (strlen(fi->GetType()) > 0) {
+        fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
+            excltime, incltime);
+      } else {
+        fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), excltime,
+            incltime);
+      }
+
+      fprintf(fp, "0 ");    // Indicating that profile calls is turned off
+      fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
+      
     }
-
-    fprintf(fp, "0 ");    // Indicating that profile calls is turned off
-    fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
-    
   }
 
   return 0;
@@ -1240,23 +1258,6 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
   vector<TauUserEvent*>::iterator it2;
   const char *metricName = TauMetrics_getMetricAtomic(metric);
 
-  if (metricName != NULL)
-  {
-      int tempCount = 0;
-      for (it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
-        TauUserEvent *ue = *it2;
-
-        const char *str = ue->GetName().c_str();
-        if (strncmp(metricName, str, strlen(metricName)) == 0 && ue->GetNumEvents(tid) > 0)
-        {
-          tempCount++;
-        }
-      }
-      if (tempCount > 0)
-      {
-        trueCount += (tempCount - 1)*2; //account for noncontext event and two functions per event (callpath/noncallpath).
-      }
-  }
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
 
@@ -1265,7 +1266,35 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
     } else if (fi->GetCalls(tid) == 0) {
       trueCount--;
     }
+    if (metricName != NULL)
+    {
+        int tempCount = 0;
+        for (it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+          TauUserEvent *ue = *it2;
+
+          const char *str = ue->GetName().c_str();
+          const char *suffix = fi->GetName();
+
+          if (!str || !suffix)
+              continue;
+          size_t lenstr = strlen(str);
+          size_t lensuffix = strlen(suffix);
+          if (lensuffix >  lenstr) {
+              continue;
+          }
+          //printf("testing: %s vs. %s.\n", TauMetrics_getMetricAtomic(metric), str);
+          if (strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0 &&
+              strncmp(TauMetrics_getMetricAtomic(metric), str, strlen(TauMetrics_getMetricAtomic(metric))) == 0)
+          {
+              tempCount++;
+          }
+          /*if (tempCount > 0)
+          {
+            trueCount += (tempCount - 1)*2; //account for noncontext event and two functions per event (callpath/noncallpath).
+          }*/
+        }
   
+    }
   }
   return trueCount;
 }
@@ -1305,6 +1334,9 @@ int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
 
+#ifdef TAU_SCOREP
+  Tau_write_metadata_records_in_scorep(tid);
+#endif /* TAU_SCOREP */
   profileWriteCount[tid]++;
   if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
 
@@ -1335,7 +1367,7 @@ int TauProfiler_StoreData(int tid)
     Tau_snapshot_writeFinal("final");
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
-    }
+	}
   }
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   if (RtsLayer::myThread() == 0 && tid == 0) {
@@ -1345,6 +1377,14 @@ int TauProfiler_StoreData(int tid)
         TauProfiler_StoreData(i);
       }
     }
+#ifndef TAU_MPI
+	/* Only thread 0 should create a merged profile. */
+    if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+      Tau_metadataMerge_mergeMetaData();
+      /* Create a merged profile if requested */
+      Tau_mergeProfiles();
+	}
+#endif
   }
 #endif /* PTHREADS */
 
@@ -1374,16 +1414,8 @@ int TauProfiler_StoreData(int tid)
 static int getProfileLocation(int metric, char *str)
 {
   const char *profiledir;
-#ifdef __MIC__
-  if (TauEnv_get_mic_offload())
-  {
-    profiledir = "./proxyfs";
-  }
-  else
-  {
-    profiledir = TauEnv_get_profiledir();
-  }
-#elif defined(KTAU_NG)
+  profiledir = TauEnv_get_profiledir();
+#if defined(KTAU_NG)
   if(profiledir == NULL) {
     int written_bytes = 0;
     unsigned int profile_dir_len = KTAU_NG_PREFIX_LEN + HOSTNAME_LEN;

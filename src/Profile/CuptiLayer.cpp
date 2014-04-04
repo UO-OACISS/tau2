@@ -399,13 +399,41 @@ void Tau_CuptiLayer_read_counters(int device, uint64_t * counterDataBuffer)
 			eventIDArray = ( CUpti_EventID * ) malloc( arraySizeBytes );
 
 			// read counter data for the specified event from the CuPTI eventGroup 
+      
 			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup[device],
 													 CUPTI_EVENT_READ_FLAG_NONE,
 													 &bufferSizeBytes,
 													 instanceDataBuffer, &arraySizeBytes,
 													 eventIDArray, &events_read );
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupReadAllEvents" );
-      
+       
+			/* for validation, also read each event indiviually. */
+      /* 
+      for (counter_vec_t::iterator it = Tau_CuptiLayer_Added_counters.begin(); it !=
+            Tau_CuptiLayer_Added_counters.end(); it++)
+      {
+
+        bufferSizeBytes = numInstances * sizeof ( uint64_t ); 
+
+        uint64_t * instanceDataBuffer = (uint64_t *) malloc(bufferSizeBytes);
+
+        // read counter data for the specified event from the CuPTI eventGroup 
+        cuptiErr = cuptiEventGroupReadEvent( eventGroup[device],
+                             CUPTI_EVENT_READ_FLAG_NONE,
+                             (*it)->event,                       
+                             &bufferSizeBytes,
+                             instanceDataBuffer);
+        CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupReadEvent" );
+
+        uint64_t result = 0;
+        for (int n = 0; n < numInstances; n++) {
+          printf("results ++.\n");
+          result += instanceDataBuffer[n];
+        }
+
+        std::cout << (*it)->tag << " : " << result << std::endl;
+      }
+      */
       //printf("num instances profiled  : %ld.\n", numInstances);
       //printf("total instances avaiable: %ld.\n", numTotalInstances);
       
@@ -422,14 +450,17 @@ void Tau_CuptiLayer_read_counters(int device, uint64_t * counterDataBuffer)
       //sum data.
       for (int n = 0; n < numInstances*Tau_CuptiLayer_num_events; n++)
       {
-
-        if (n >= numInstances) { e++; }
+        e = n % Tau_CuptiLayer_num_events;
+        //if (n >= numInstances) { e++; }
       //for (int i = 0; i < numInstances; i++)
       //{
         //for (int e = 0; e < events_read; e++)
         //{
           //printf("instance: %llu.\n", instanceDataBuffer[n]);
           //printf("end.\n");
+          
+          //printf("e: %d, data: %llu.\n", e, instanceDataBuffer[n]);
+
           counterDataBuffer[e] += instanceDataBuffer[n];
         //}
       //}
@@ -537,13 +568,16 @@ void Tau_CuptiLayer_Initialize_Map()
 	CUresult er;
 	CUptiResult err = CUPTI_SUCCESS;
 
-	cuInit(0);
 	int deviceCount;
 	uint32_t domainCount;
 	uint32_t eventCount;
 	//CuptiCounterEvent::printHeader();
 	// for each device 
   er = cuDeviceGetCount(&deviceCount);
+  if (er == CUDA_ERROR_NOT_INITIALIZED) {
+	  cuInit(0);
+    er = cuDeviceGetCount(&deviceCount);
+  }
   if (er != CUDA_SUCCESS) {
     //no devices found.
     return;

@@ -158,7 +158,7 @@ static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwarg
   char * buff = new char[strlen(name) + strlen(type) + 5];
   sprintf(buff, "%s %s", name, type);
   string functionName(buff);
-  delete buff;
+  delete[] buff;
 
   PyFunctionDB & funcDB = ThePyFunctionDB();
   PyFunctionDB::iterator it = funcDB.find(functionName);

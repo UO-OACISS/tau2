@@ -84,7 +84,7 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 		
 		for (String event : trialData.getEvents()) {
 			for (String metric : trialData.getMetrics()) {
-				for (Integer type : AbstractResult.getTypes()) {
+				for (Integer type : AbstractResult.getTypes(false)) {
 //					Integer type = AbstractResult.EXCLUSIVE;
 					// now, loop over all metadata fields
 					for (String event2 : trialMetadata.getEvents()) {
@@ -197,4 +197,5 @@ public class CorrelateEventsWithMetadata extends AbstractPerformanceOperation {
 		processOneTrial();
 	}
 
+	
 }

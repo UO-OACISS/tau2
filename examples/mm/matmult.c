@@ -23,6 +23,10 @@ This is not a parallel implementation */
 
 #ifdef PTHREADS
 #include <pthread.h>
+#include <unistd.h>
+#include <errno.h>
+/*** NOTE THE ATTR INITIALIZER HERE! ***/
+pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
@@ -48,6 +52,7 @@ __inline double multiply(double a, double b) {
 }
 #endif /* APP_USE_INLINE_MULTIPLY */
 
+#if 0
 // cols_a and rows_b are the same value
 void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
@@ -73,6 +78,7 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
     }
   }   /*** End of parallel region ***/
 }
+#endif
 
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
@@ -133,16 +139,17 @@ double do_work(void) {
 
   compute(a, b, c, NRA, NCA, NCB);
 #if defined(TAU_OPENMP)
+#if 0
   if (omp_get_nested()) {
     compute_nested(a, b, c, NRA, NCA, NCB);
   }
 #endif
+#endif
 #ifdef TAU_MPI
-  if (provided == MPI_THREAD_MULTIPLE)
-  { 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-//    printf("Rank: %d: provided is MPI_THREAD_MULTIPLE\n", rank);
+  if (provided == MPI_THREAD_MULTIPLE) { 
+    printf("provided is MPI_THREAD_MULTIPLE\n");
+  } else if (provided == MPI_THREAD_FUNNELED) { 
+    printf("provided is MPI_THREAD_FUNNELED\n");
   }
 #endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
@@ -150,11 +157,44 @@ double do_work(void) {
   return c[0][1]; 
 }
 
+#ifdef PTHREADS
+int busy_sleep() {
+  int i, sum = 0;
+  for (i = 0 ; i < 100000000 ; i++) {
+    sum = sum+i;
+  }
+  return sum;
+}
+
 void * threaded_func(void *data)
 {
+  int rc;
+  int sum = 0;
+  // compute
   do_work();
-  return NULL;
+
+#ifdef APP_DO_LOCK_TEST
+  // test locking - sampling should catch this
+  if ((rc = pthread_mutex_lock(&mutexsum)) != 0)
+  {
+    errno = rc;
+    perror("thread lock error");
+    exit(1);
+  }
+  fprintf(stderr,"Thread 'sleeping'...\n"); fflush(stderr);
+  sum += busy_sleep();
+  fprintf(stderr,"Thread 'awake'...\n"); fflush(stderr);
+  if ((rc = pthread_mutex_unlock(&mutexsum)) != 0)
+  {
+    errno = rc;
+    perror("thread unlock error");
+    exit(1);
+  }
+  pthread_exit((void*) 0);
+  //return NULL;
+#endif // APP_DO_LOCK_TEST
 }
+#endif // PTHREADS
 
 int main (int argc, char *argv[]) 
 {
@@ -163,16 +203,32 @@ int main (int argc, char *argv[])
   int ret;
   pthread_attr_t  attr;
   pthread_t       tid1, tid2, tid3;
+  pthread_mutexattr_t Attr;
+  pthread_mutexattr_init(&Attr);
+  pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
+  if (pthread_mutex_init(&mutexsum, &Attr)) {
+   printf("Error while using pthread_mutex_init\n");
+  }
 #endif /* PTHREADS */
 
-
 #ifdef TAU_MPI
-#if (defined(PTHREADS) || defined(TAU_OPENMP))
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+  int rc = MPI_SUCCESS;
+#if defined(PTHREADS)
+  rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
+#elif defined(TAU_OPENMP)
+  rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+  printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
 #else
-  MPI_Init(&argc, &argv); 
+  rc = MPI_Init(&argc, &argv); 
 #endif /* THREADS */
+  if (rc != MPI_SUCCESS) {
+    char *errorstring;
+    int length = 0;
+    MPI_Error_string(rc, errorstring, &length);
+    printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
+    exit(1);
+  }
 #endif /* TAU_MPI */
 
 #ifdef PTHREADS
@@ -218,6 +274,7 @@ int main (int argc, char *argv[])
     exit(1);
   }   
 
+  pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
 #ifdef TAU_MPI

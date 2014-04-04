@@ -404,6 +404,16 @@ case $1 in
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
 	;;
 
+     dyninstinc=*)
+        dyninstinc=`echo $1 | sed -e 's/^dyninstinc=//'`
+	echo "s,^DYNINST_INC_DIR=.*$,DYNINST_INC_DIR=$dyninstinc,g" >> $sedout
+	;;
+
+     dyninstlib=*)
+        dyninstlib=`echo $1 | sed -e 's/^dyninstlib=//'`
+	echo "s,^DYNINST_LIB_DIR=.*$,DYNINST_LIB_DIR=$dyninstlib,g" >> $sedout
+	;;
+
      dwarfopts=*)
         dwarfopts=`echo $1 | sed -e 's/^dwarfopts=//'`
 	echo "s,^DWARFOPTS=.*$,DWARFOPTS=$dwarfopts,g" >> $sedout
@@ -422,7 +432,10 @@ case $1 in
 
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
+	# Discover python library version
+	pythonso=`ls $pythonlib/libpython*.so | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
 	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
+	echo "s,^PYTHON_LIB_SO=.*$,PYTHON_LIB_SO=$pythonso,g" >> $sedout
 	#echo "Using PYTHON LIB DIR =" $pythonlib
 	;;
 
@@ -603,6 +616,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
+     MPICH3_CONST)
+	echo "NOTE: Using the -DTAU_MPICH3_CONST=const to compile programs"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPICH2_MPI_INPLACE)
 	echo "NOTE: Using the -DMPICH2_MPI_INPLACE flag"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -710,6 +728,11 @@ case $1 in
 ###############################################################
      SHMEM)
         echo NOTE: Using the TAU SHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     PAPINOINC)
+        echo NOTE: Not adding -I/usr/include for PAPI
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1240,6 +1263,10 @@ case $1 in
         echo "NOTE: Using pthreads as the thread package. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     TBB_AVAILABLE)
+        echo "NOTE: Using pthreads as the thread package for TBB support. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU_PTHREAD_WRAP)
         echo "NOTE: Creating LD_PRELOAD wrapper for pthreads. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1296,6 +1323,10 @@ case $1 in
 	echo "NOTE: Using OTF2 library to build tau2otf2 trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OTF2_1_1)
+	echo "NOTE: Using OTF2 v1.1 extensions to build otf2profile converter ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OTFSRC)
 	echo "NOTE: Using OTF source based distribution to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1316,6 +1347,12 @@ case $1 in
 	echo "NOTE: Using DYNINST for TAU Runtime Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DYNINST_INC)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST_LIB)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      DYNINST41)
 	echo "NOTE: Using newer version DYNINST 4.1+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1334,6 +1371,10 @@ case $1 in
 	;;
      DYNINST8)
 	echo "NOTE: Using newer version DYNINST 8+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINSTDIR)
+	echo "NOTE: -dyninst=DIR specified"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST5.2)
@@ -1409,6 +1450,10 @@ case $1 in
 	;;
      SCOREP)
 	echo "NOTE: Using SCOREP Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPMETADATA)
+	echo "NOTE: Using SCOREP's metadata mappings ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      SCOREPOPARI2)
@@ -1685,6 +1730,10 @@ case $1 in
         ;;
      X86_64PAPI_NEW)
         echo "NOTE: Using PAPI with x86_64 options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     PAPI_WITHOUT_LIB_INC)
+        echo "NOTE: Using PAPI from /usr  directory"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      IBMPAPI)

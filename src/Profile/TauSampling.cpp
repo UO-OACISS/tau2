@@ -109,8 +109,10 @@
 using namespace std;
 using namespace tau;
 
+extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
+extern std::string * Tau_get_thread_ompt_state(int tid);
 
 #if 1 // disabled for now -- no state tracking
 static string _gTauOmpStatesArray[17] = {
@@ -188,8 +190,9 @@ extern void Tau_sampling_unwind(int tid, Profiler *profiler,
     void *pc, void *context, unsigned long stack[]);
 
 extern "C" bool unwind_cutoff(void **addresses, void *address) {
-/* Kevin disabled for now */
-  return false;
+  // if the unwind depth is not "auto", then return
+  if (TauEnv_get_ebs_unwind_depth() > 0) 
+    return false;
   bool found = false;
   for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
     if ((unsigned long)(addresses[i]) == (unsigned long)address) {
@@ -263,11 +266,17 @@ struct CallSiteCacheNode {
   TauBfdInfo info;
 };
 
-typedef TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> CallSiteCacheMap;
-static CallSiteCacheMap & TheCallSiteCacheWithLines() {
-  static CallSiteCacheMap map;
-  return map;
-}
+//typedef TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> CallSiteCacheMap;
+struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> 
+{
+  CallSiteCacheMap() {}
+  virtual ~CallSiteCacheMap() {
+    //Wait! We might not be done! Unbelieveable as it may seem, this map
+	//could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+    Tau_sampling_finalize_if_necessary();
+  }
+};
+
 
 static CallSiteCacheMap & TheCallSiteCache() {
   static CallSiteCacheMap map;
@@ -457,7 +466,8 @@ void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record, void *pc,
   }
 #endif /* TAU_UNWIND */
 
-  fprintf(ebsTrace[tid], "");
+  // do nothing?
+  //fprintf(ebsTrace[tid], "");
 }
 
 void Tau_sampling_outputTraceStop(int tid, Profiler *profiler, double *stopTime)
@@ -630,7 +640,8 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary()
   if (!name2FuncInfoMapInitialized) {
     RtsLayer::LockEnv();
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      name2FuncInfoMap[i] = NULL;
+      //name2FuncInfoMap[i] = NULL;
+      name2FuncInfoMap[i] = new map<string, FunctionInfo *>();
     }
     name2FuncInfoMapInitialized = true;
     RtsLayer::UnLockEnv();
@@ -644,7 +655,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
-    char const * childName, char ** newShortName, bool addAddress, bool useLineNumber)
+    char const * childName, char ** newShortName, bool addAddress)
 {
   int printMessage=0;
   if (strcmp(tag, "UNWIND") == 0) {
@@ -654,14 +665,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   }
   CallSiteInfo * callsite = new CallSiteInfo(addr);
 
-  // we are using two caches - one for the location with line numbers,
-  // and one without. This is somewhat inefficient(?), but it works.
   CallSiteCacheMap & callSiteCache = TheCallSiteCache();
-#if 0
-  if (useLineNumber) {
-    callSiteCache = TheCallSiteCacheWithLines();
-  }
-#endif
   // does the node exist in the cache? if not, look it up
   CallSiteCacheNode * node = callSiteCache[addr];
   if (!node) {
@@ -684,36 +688,22 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
-    if (useLineNumber) {
-      if (childName) {
-        sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
-            tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
-      } else {
-        sprintf(buff, "[%s] %s [{%s} {%d}]",
-            tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
-      }
-      // TODO: Leak?
-      char lineno[32];
-      sprintf(lineno, "%d", resolvedInfo.lineno);
+    if (childName) {
+      sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+          tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    } else {
+      sprintf(buff, "[%s] %s [{%s} {%d}]",
+          tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    }
+    // TODO: Leak?
+    char lineno[32];
+    sprintf(lineno, "%d", resolvedInfo.lineno);
 //      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
 //      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-      newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
-      sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-      newShortName = &newName; 
-      //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
-#if 0
-    } else {
-      if (childName) {
-        sprintf(buff, "[%s] %s [@] %s [{%s}]",
-            tag, childName, resolvedInfo.funcname, resolvedInfo.filename);
-      } else {
-        sprintf(buff, "[%s] %s [{%s}]",
-            tag, resolvedInfo.funcname, resolvedInfo.filename);
-      }
-      // TODO: Leak?
-      *newShortName = strdup(resolvedInfo.funcname);
-#endif
-    }
+    newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+    sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+    newShortName = &newName; 
+    //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
   } else {
     char const * mapName = "UNKNOWN";
     TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
@@ -739,7 +729,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 	if (TauEnv_get_bfd_lookup()) {
           sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
         } else {
-          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, addr);
+          sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, (void*)addr);
         }
       }
       // TODO: Leak?
@@ -792,28 +782,16 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       char * prevShortName = NULL;
       char * newShortName = NULL;
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, true));
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress));
       // move the pointers
       if (newShortName) {
         prevShortName = newShortName;
         newShortName = NULL;
       }
-#if 0
-      // resolve it again, without the line number
-      callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, false));
-      // free the previous short name now.
-      if (prevShortName) {
-        free(prevShortName);
-        if (newShortName) {
-          prevShortName = newShortName;
-        }
-      }
-#endif
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, &newShortName, addAddress, 1));
+            address, "UNWIND", prevShortName, &newShortName, addAddress));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
@@ -965,6 +943,10 @@ void Tau_sampling_finalizeProfile(int tid)
 
     // STEP 2a: Locate or create Leaf Entry - the CONTEXT node
     *intermediateGlobalLeafString = "[CONTEXT] ";
+	bool needToUpdateContext = false;
+	if (strncmp(candidate->tauContext->GetName(), "OMP_", 4) == 0) {
+	  needToUpdateContext = true;
+	}
     *intermediateGlobalLeafString += Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName());
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
@@ -1006,9 +988,16 @@ void Tau_sampling_finalizeProfile(int tid)
     // Accumulate the histogram into the Intermediate FunctionInfo objects.
     intermediatePathLeaf->SetCalls(tid, intermediatePathLeaf->GetCalls(tid) + binFreq);
     intermediateGlobalLeaf->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid) + binFreq);
+	if (needToUpdateContext) {
+      candidate->tauContext->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid) + binFreq);
+	}
     for (int m = 0; m < Tau_Global_numCounters; m++) {
       intermediatePathLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
       intermediateGlobalLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+	  if (needToUpdateContext) {
+        candidate->tauContext->AddInclTimeForCounter(candidate->counters[m], tid, m);
+        candidate->tauContext->AddExclTimeForCounter(candidate->counters[m], tid, m);
+	  }
     }
 
     // STEP 3: For each sample, construct all FunctionInfo objects
@@ -1184,10 +1173,21 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
   }
   //printf("tid = %d, Delta = %f, period = %d\n", tid, deltaValues[0], ebsPeriod); fflush(stdout);
 #ifdef TAU_OPENMP
-  if (TauEnv_get_collector_api_states_enabled() == 1) {
+  if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // get the thread state, too!
-    int thread_state = 0;
-    thread_state = Tau_get_thread_omp_state(tid);
+#if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
+    // OMPT returns a character array
+    std::string* state_name = Tau_get_thread_ompt_state(tid);
+    if (state_name != NULL) {
+      // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
+      // Instead, it will look it up and return the ones we created during
+      // the OpenMP Collector API initialization.
+      FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(*state_name);
+      stateContext->addPcSample(pcStack, tid, deltaValues);
+    }
+#else
+    // ORA returns an integer, which has to be mapped to a std::string
+    int thread_state = thread_state = Tau_get_thread_omp_state(tid);
     if (thread_state >= 0) {
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during
@@ -1195,10 +1195,12 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
       FunctionInfo *stateContext = Tau_create_thread_state_if_necessary_string(gTauOmpStates(thread_state));
       stateContext->addPcSample(pcStack, tid, deltaValues);
     }
+#endif
   } else {
     samplingContext->addPcSample(pcStack, tid, deltaValues);
   }
 #else
+  // also do the regular context!
   samplingContext->addPcSample(pcStack, tid, deltaValues);
 #endif
 }
@@ -1300,12 +1302,12 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
 {
   if (collectingSamples) {
     int tid = Tau_get_local_tid();
+	//printf("%d SAMPLE: %p\n", tid, pc);
     if (samplingEnabled[tid]) {
       numSamples[tid]++;
 
-#ifndef TAU_SAMPLING_PROFILE_TAU
       // Exclude TAU from sampling
-      if (Tau_global_get_insideTAU() > 0) {
+      if ((Tau_global_get_insideTAU() > 0) && (!TauEnv_get_ebs_enabled_tau())) {
         samplesDroppedTau[tid]++;
         return;
       }
@@ -1314,7 +1316,6 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
         samplesDroppedSuspended[tid]++;
         return;
       }
-#endif
 
       // disable sampling until we handle this sample
       {
@@ -1574,6 +1575,7 @@ int Tau_sampling_init(int tid)
  * systems, we have to use ITIMER_PROF with setitimer. */
 #if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ)
    struct sigevent sev;
+   memset (&sev,0,sizeof(sigevent));
    timer_t timerid = 0;
    sev.sigev_signo = TAU_ALARM_TYPE;
    sev.sigev_notify = SIGEV_THREAD_ID;

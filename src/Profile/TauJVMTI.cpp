@@ -140,7 +140,9 @@ make_unique_method_id(unsigned cnum, unsigned mnum){
     fatal_error("method number is too large for use in method id.\n");
   }
   //shift cnum into the top half of the return, and place mnum int he bottom.
-  return (cnum << 4*sizeof(unsigned long)) + mnum;
+  //It's not likely that MSB of cnum is set. Let's set this bit so we will have
+  //no collision with CreateTopLevelRoutine().
+  return ((unsigned long)cnum << 4*sizeof(unsigned long)) | mnum | 1l<<(sizeof(long)*8 -1);
 }
 
 /* Extract method and class number from unique method_id */
@@ -229,7 +231,7 @@ mnum_callback(const unsigned cnum, const unsigned mnum, const char *class_name, 
     int tid = 0;
     long unique_method_id;
     sprintf(funcname, "%s %s %s", class_name, method_name, method_sig);
-    unique_method_id = make_unique_method_id(mnum, cnum);
+    unique_method_id = make_unique_method_id(cnum, mnum);
     //Use of dummy TID is fine, library doesn't use it anyways.
     TAU_MAPPING_CREATE(funcname, " ",
 		       unique_method_id , 
@@ -262,7 +264,7 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
 	      int tid = JVMTIThreadLayer::GetThreadId(thread);
 	      long unique_method_id;
 
-	      unique_method_id = make_unique_method_id(mnum, cnum);
+	      unique_method_id = make_unique_method_id(cnum, mnum);
 
 	      //Define a new mapping object TauMethodName
 	      TAU_MAPPING_OBJECT(TauMethodName=NULL);
@@ -292,7 +294,7 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             cp = gdata->classes + cnum;
             if (gdata->vm_is_initialized) {
 		int tid = JVMTIThreadLayer::GetThreadId(thread);
-		unique_method_id = make_unique_method_id(mnum, cnum);
+		unique_method_id = make_unique_method_id(cnum, mnum);
 		TAU_MAPPING_OBJECT(TauMethodName=NULL);
 		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
 		TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);
@@ -607,7 +609,7 @@ parse_agent_options(char *options)
     }
 
     /* Get the first token from the options string. */
-    next = get_token(options, ",=", token, sizeof(token));
+    next = get_token(options, ",;=", token, sizeof(token));
 
     /* While not at the end of the options string, process this option. */
     while ( next != NULL ) {
@@ -620,11 +622,12 @@ parse_agent_options(char *options)
             stdout_message("Within an options the arguments are comma separated:\n");
             stdout_message("\t help\t\t\t Print help information\n");
             stdout_message("\t max=n\t\t Only list top n classes\n");
-            stdout_message("\t include=item\t\t Only these classes/methods\n");
-            stdout_message("\t exclude=item\t\t Exclude these classes/methods\n");
+            stdout_message("\t include=<item>\t\t Only these classes/methods\n");
+            stdout_message("\t exclude=<item>\t\t Exclude these classes/methods\n");
+            stdout_message("\t node=<NodeID>\t\t Use designated <NodeID> (default=0)\n");
             stdout_message("\n");
-            stdout_message("item\t Qualified class and/or method names\n");
-            stdout_message("\t\t e.g. (*.<init>;Foobar.method;sun.*)\n");
+            stdout_message("<item>\t Qualified class and/or method names\n");
+            stdout_message("\t\t e.g. (*.<init>,Foobar.method,sun.*)\n");
             stdout_message("\n");
             exit(0);
         } else if ( strcmp(token,"include")==0 ) {
@@ -675,12 +678,17 @@ parse_agent_options(char *options)
             if ( next==NULL ) {
                 fatal_error("ERROR: exclude option error\n");
             }
+#ifndef TAU_MPI
+	} else if ( strcmp(token,"node")==0 ) {
+	    next = get_token(next, ";=", token, sizeof(token));
+	    TAU_PROFILE_SET_NODE(atoi(token)); 
+#endif
         } else if ( token[0]!=0 ) {
             /* We got a non-empty token and we don't know what it is. */
             fatal_error("ERROR: Unknown option: %s\n", token);
         }
         /* Get the next token (returns NULL if there are no more) */
-        next = get_token(next, ",=", token, sizeof(token));
+        next = get_token(next, ",;=", token, sizeof(token));
     }
 }
 

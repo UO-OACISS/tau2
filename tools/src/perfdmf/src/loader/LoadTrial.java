@@ -5,7 +5,10 @@ import jargs.gnu.CmdLineParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.uoregon.tau.common.MetaDataMap;
@@ -17,6 +20,10 @@ import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfdmf.SnapshotDataSource;
+import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.View.ViewRule;
+import edu.uoregon.tau.perfdmf.View.ViewRule.NumericViewComparator;
+import edu.uoregon.tau.perfdmf.View.ViewRule.StringViewComparator;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 public class LoadTrial {
@@ -43,29 +50,32 @@ public class LoadTrial {
 	private Double reducePercentage;
 
     public static void usage() {
-        System.err.println("Usage: perfdmf_loadtrial -a <appName> -x <expName> -n <name> [options] <files>\n\n"
-                + "try `perfdmf_loadtrial --help' for more information");
+        //System.err.println("Usage: taudb_loadtrial -a <appName> -x <expName> -n <name> [options] <file>\n\n"
+        System.err.println("Usage: taudb_loadtrial -n <name> [options] <file>\n\n"
+                + "try `taudb_loadtrial --help' for more information");
     }
 
     public static void outputHelp() {
 
-        System.err.println("Usage: perfdmf_loadtrial -a <appName> -x <expName> -n <name> [options] <files>\n\n"
+        //System.err.println("Usage: taudb_loadtrial -a <appName> -x <expName> -n <name> [options] <file>\n\n"
+        System.err.println("Usage: taudb_loadtrial -n <name> [options] <file>\n\n"
                 + "Required Arguments:\n\n" + "  -n, --name <text>               Specify the name of the trial\n"
-                + "  -a, --applicationname <string>  Specify associated application name\n"
-                + "                                    for this trial\n"
-                + "  -x, --experimentname <string>   Specify associated experiment name\n"
-                + "                                    for this trial\n" + "               ...or...\n\n"
-                + "  -n, --name <text>               Specify the name of the trial\n"
-                + "  -e, --experimentid <number>     Specify associated experiment ID\n"
-                + "                                    for this trial\n" + "\n" + "Optional Arguments:\n\n"
+                //+ "  -a, --applicationname <string>  Specify associated application name\n"
+                //+ "                                    for this trial\n"
+                //+ "  -x, --experimentname <string>   Specify associated experiment name\n"
+                //+ "                                    for this trial\n" + "               ...or...\n\n"
+                //+ "  -n, --name <text>               Specify the name of the trial\n"
+                //+ "  -e, --experimentid <number>     Specify associated experiment ID\n"
+                //+ "                                    for this trial\n" 
                 + "  -c, --config <name>             Specify the name of the configuration to use\n"
+				+ "\n" + "Optional Arguments:\n\n"
                 + "  -g, --configFile <file>         Specify the configuration file to use\n"
                 + "                                    (overrides -c)\n"
                 + "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
                 + "                                    profiles (default), pprof, dynaprof, mpip,\n"
                 + "                                    gprof, psrun, hpm, packed, cube, hpc, ompp,\n"
                 + "                                    snap, perixml, gptl, paraver, ipm, google\n"
-                + "  -t, --trialid <number>          Specify trial ID\n"
+                //+ "  -t, --trialid <number>          Specify trial ID\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
                 + "  -z, --usenull                   Include NULL values as 0 for mean calculation\n"
                 + "  -r, --reduce <percentage>       Aggregate all timers less than percentage as \"other\"\n"
@@ -76,16 +86,12 @@ public class LoadTrial {
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
                 + "or, in the case of multiple counters, directories named MULTI_* containing\n" + "profile data.\n\n"
-                + "Examples:\n\n" + "  perfdmf_loadtrial -e 12 -n \"Batch 001\"\n"
+                + "Examples:\n\n" + "  taudb_loadtrial -c mydb -n \"Batch 001\"\n"
                 + "    This will load profile.* (or multiple counters directories MULTI_*) into\n"
-                + "    experiment 12 and give the trial the name \"Batch 001\"\n\n"
-                + "  perfdmf_loadtrial -e 12 -n \"HPM data 01\" -f hpm perfhpm*\n"
-                + "    This will load perfhpm* files of type HPMToolkit into experiment 12 and give\n"
-                + "    the trial the name \"HPM data 01\"\n\n"
-                + "  perfdmf_loadtrial -a \"NPB2.3\" -x \"parametric\" -n \"64\" par64.ppk\n"
-                + "    This will load packed profile par64.ppk into the experiment named\n"
-                + "    \"parametric\" under the application named \"NPB2.3\" and give the trial\n"
-                + "    the name \"64\".  The application and experiment will be created if not found.\n");
+                + "    database config mydb and give the trial the name \"Batch 001\"\n\n"
+                + "  taudb_loadtrial -c mydb -n \"HPM data 01\" -f hpm perfhpm*\n"
+                + "    This will load perfhpm* files of type HPMToolkit into datatabase mydb and give\n"
+                + "    the trial the name \"HPM data 01\"\n\n");
     }
 
     public LoadTrial(String configFileName, String sourceFiles[]) {
@@ -224,10 +230,64 @@ public class LoadTrial {
 
     public void saveTrial() {
         trial.setName(trialName);
+        int appView=-2;
+        String NAME="NAME";
+        String ID="ID";
+        String appViewName="Application-"+this.appName;
+        List<ViewRule> rules = new ArrayList<ViewRule>(2);
+        boolean createAppView=true;
         if (this.appName != null)
+        {
+        	//First see if this view already exists
+        	List<View>checkViews = View.getViews(0, this.databaseAPI.db());
+        	if(checkViews!=null){
+        		for(View topView:checkViews){
+        			String vname = topView.getField(NAME);
+        			if(vname.equals(appViewName)){
+        				createAppView=false;
+        				appView=Integer.parseInt(topView.getField(ID));
+        				break;
+        			}
+        		}
+        	}
+        	//If it doesn't then make it, otherwise use its id when making the experiment view
+        	if(createAppView){
+        	rules.add(ViewRule.createStringViewRule("Application", this.appName, StringViewComparator.EXACTLY));
+        	try {
+				appView=View.createView(this.databaseAPI.db(), appViewName, true, -1, rules);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+        	}
         	trial.getMetaData().put("Application", this.appName);
+        }
         if (this.expName != null)
+        {
+        	if(appView>=0)
+        	{
+        		String expViewName="Experiment-"+this.expName;
+        		boolean createExpView=true;
+        		List<View>checkViews = View.getViews(appView, this.databaseAPI.db());
+               	if(checkViews!=null){
+            		for(View expView:checkViews){
+            			String vname = expView.getField(NAME);
+            			if(vname.equals(expViewName)){
+            				createExpView=false;
+            				break;
+            			}
+            		}
+            	}
+        		if(createExpView){
+        		rules.add(ViewRule.createStringViewRule("Experiment", this.expName, StringViewComparator.EXACTLY));
+        		try {
+					View.createView(this.databaseAPI.db(), expViewName, true, appView, rules);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+        		}
+        	}
         	trial.getMetaData().put("Experiment", this.expName);
+        }
 
         System.err.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
@@ -377,6 +437,7 @@ public class LoadTrial {
             LoadTrial.usage();
             System.exit(-1);
         	}
+			/*
         } else if (experimentID == null && expName == null && tmpLT.getDatabaseAPI().getDb().getSchemaVersion()==0) {
             System.err.println("Error: Missing experiment id or name\n");
             LoadTrial.usage();
@@ -385,6 +446,7 @@ public class LoadTrial {
             System.err.println("Error: Missing application name\n");
             LoadTrial.usage();
             System.exit(-1);
+			*/
         }
 
         //String sourceFiles[] = parser.getRemainingArgs();
@@ -501,8 +563,12 @@ public class LoadTrial {
         trans.metadataFile = metadataFile;
         trans.metadataString = metadataString;
         trans.summaryOnly = summaryOnly.booleanValue();
-        trans.appName = appName;
-        trans.expName = expName;
+        if (appName != null) {
+		  trans.appName = appName;
+		}
+        if (expName != null) {
+		  trans.expName = expName;
+		}
         trans.useNulls = useNull.booleanValue();
         trans.reducePercentage = percentage;
         trans.loadTrial(fileType);

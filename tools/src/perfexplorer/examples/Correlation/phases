@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]
+then
+  echo ""
+  echo "Usage: "
+  echo ""
+  echo "  $0 <path-to-TAU-data> <phase-prefix>"
+  echo ""
+  echo "Notes:"
+  echo ""
+  echo "  * Specify the file as either the path to the TAU profiles, or the"
+  echo "    filename of the packed TAU data."
+  echo ""
+  exit 1
+fi
+
+if [ $# -lt 2 ] ; then 
+  PREFIX="iteration"
+else
+  PREFIX=$2
+fi
+
+working_path=`echo $0 | sed 's/phases//'`
+
+eval perfexplorer -n -c perfexplorer_working -i ${working_path}phases.py -p "tauData=$1,prefix=$PREFIX"

@@ -1,0 +1,7 @@
+This example shows how to select trials based on metadata values,
+and delete them.
+
+To run the example:
+
+perfexplorer -c super_test -i ./super.py
+

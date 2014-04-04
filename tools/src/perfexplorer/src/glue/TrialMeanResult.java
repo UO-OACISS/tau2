@@ -6,6 +6,7 @@ package edu.uoregon.tau.perfexplorer.glue;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -46,19 +47,20 @@ public class TrialMeanResult extends AbstractResult {
 		buildTrialMeanResult(trial, null, null);
 	}
 	
-	public TrialMeanResult(Trial trial, String metric, String event, boolean callPath) {
+	public TrialMeanResult(Trial trial, List<String> metrics, List<String> events, boolean callPath) {
 		super();
 		this.trialID = trial.getID();
 		this.callPath = callPath;
+		this.trial = trial;
 		this.name = this.trial.getName();
-		buildTrialMeanResult(trial, metric, event);
+		buildTrialMeanResult(trial, metrics, events);
 	}
 	
-	private void buildTrialMeanResult(Trial trial, String metric, String event) {
+	private void buildTrialMeanResult(Trial trial, List<String> metrics, List<String> events) {
 		// hit the databsae, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
 		if (db.getSchemaVersion() > 0) {
-			buildTrialResultFromTAUdb(trial, metric, event);
+			buildTrialResultFromTAUdb(trial, metrics, events);
 			return;
 		}
 		
@@ -88,11 +90,29 @@ public class TrialMeanResult extends AbstractResult {
 			sql.append("left outer join metric m on m.trial = e.trial ");
 			sql.append("and m.id = p.metric ");
 			sql.append("where e.trial = ? ");
-			if (metric != null) {
-				sql.append(" and m.name = ? ");
+			if (metrics != null) {
+				sql.append(" and m.name in (");
+				int count = 0;
+				for (String m : metrics) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + m + "'");
+					count++;
+				}
+				sql.append(") ");
 			}
-			if (event != null) {
-				sql.append(" and e.name = ? ");
+			if (events != null) {
+				sql.append(" and e.name in (");
+				int count = 0;
+				for (String e : events) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + e + "'");
+					count++;
+				}
+				sql.append(") ");
 			}
 			if (!callPath) {
             	sql.append(" and (e.group_name is null or e.group_name not like '%TAU_CALLPATH%') ");
@@ -103,13 +123,6 @@ public class TrialMeanResult extends AbstractResult {
 			//System.out.println(sql.toString() + " " + trial.getID() + " " + metric + " " + event);
 			
 			statement.setInt(1, trial.getID());
-			int index = 1;
-			if (metric != null) {
-				statement.setString(index++, metric);
-			}
-			if (event != null) {
-				statement.setString(index++, event);
-			}
 			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
@@ -131,7 +144,7 @@ public class TrialMeanResult extends AbstractResult {
 		}
 	}
 
-	private void buildTrialResultFromTAUdb(Trial trial, String metric, String event) {
+	private void buildTrialResultFromTAUdb(Trial trial, List<String> metrics, List<String> events) {
 		// hit the database, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
 		StringBuilder sql = null;
@@ -143,8 +156,9 @@ public class TrialMeanResult extends AbstractResult {
 				// easy query.
         		sql.append(" select t.name, m.name, tv.exclusive_value, ");
 				sql.append(" tv.inclusive_value, tcd.calls, tcd.subroutines, cp.id from timer t ");
-				sql.append(" left outer join timer_callpath cp on timer.trial = " + trial.getID());
-				sql.append(" and t.timer_callpath = cp.id ");
+				sql.append(" left outer join timer_callpath cp on t.trial = "
+						+ trial.getID());
+				sql.append(" and t.id = cp.timer ");
         		sql.append(" left outer join timer_call_data tcd on tcd.timer_callpath = cp.id ");
         		sql.append(" left outer join timer_value tv on tv.timer_call_data = tcd.id ");
         		sql.append(" left outer join metric m on m.trial = " + trial.getID() + " and tv.metric = m.id ");
@@ -172,11 +186,29 @@ public class TrialMeanResult extends AbstractResult {
             }
 
 			sql.append("where m.trial = " + trial.getID());
-			if (metric != null) {
-				sql.append(" and m.name = '" + metric + "'");
+			if (metrics != null) {
+				sql.append(" and m.name in (");
+				int count = 0;
+				for (String m : metrics) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + m + "'");
+				    count++;
+				}
+				sql.append(") ");
 			}
-			if (event != null) {
-				sql.append(" and cp.name = '" + event + "'");
+			if (events != null) {
+				sql.append(" and t.name in (");
+				int count = 0;
+				for (String e : events) {
+				    if (count > 0) {
+				        sql.append(",");
+					}
+				    sql.append("'" + e + "'");
+				    count++;
+				}
+				sql.append(") ");
 			}
 			sql.append(" and h.thread_index = -1 ");
 			sql.append(" order by 3,2,1 ");
@@ -191,8 +223,9 @@ public class TrialMeanResult extends AbstractResult {
 			System.out.println("Time to query interval data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
 				String eventName = results.getString(1);
-				this.putExclusive(0, eventName, results.getString(2), results.getDouble(3));
-				this.putInclusive(0, eventName, results.getString(2), results.getDouble(4));
+				String metricName = results.getString(2);
+				this.putExclusive(0, eventName, metricName,	results.getDouble(3));
+				this.putInclusive(0, eventName, metricName,	results.getDouble(4));
 				this.putCalls(0, eventName, results.getDouble(5));
 				this.putSubroutines(0, eventName, results.getDouble(6));
 				Integer eventID = results.getInt(7);
@@ -227,11 +260,12 @@ public class TrialMeanResult extends AbstractResult {
 			elapsedTimeSec = elapsedTimeMillis/1000F;
 			System.out.println("Time to query counter data: " + elapsedTimeSec + " seconds");
 			while (results.next() != false) {
-				this.putUsereventNumevents(0, results.getString(1), results.getDouble(2));
-				this.putUsereventMax(0, results.getString(1), results.getDouble(3));
-				this.putUsereventMin(0, results.getString(1), results.getDouble(4));
-				this.putUsereventMean(0, results.getString(1), results.getDouble(5));
-				this.putUsereventSumsqr(0, results.getString(1), results.getDouble(6));
+				String counterName = results.getString(1);
+				this.putUsereventNumevents(0, counterName, results.getDouble(2));
+				this.putUsereventMax(0, counterName, results.getDouble(3));
+				this.putUsereventMin(0, counterName, results.getDouble(4));
+				this.putUsereventMean(0, counterName, results.getDouble(5));
+				this.putUsereventSumsqr(0, counterName, results.getDouble(6));
 			}
 			results.close();
 			statement.close();
@@ -258,6 +292,8 @@ public class TrialMeanResult extends AbstractResult {
 	 * @return the originalThreads
 	 */
 	public Integer getOriginalThreads() {
+		if (originalThreads == 0)
+			originalThreads = super.getOriginalThreads();
 		return originalThreads;
 	}
 

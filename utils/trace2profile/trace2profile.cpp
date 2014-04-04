@@ -17,6 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef TAU_MPC
+#include <mpc.h>
+#endif /* TAU_MPC */
+
 ofstream snapshot;
 
 char * Converter::trc = NULL;

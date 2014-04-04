@@ -1,22 +1,22 @@
 package edu.uoregon.tau.perfdmf.taudb;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.LinkedHashMap;
-import java.util.ArrayList;
-import java.util.UUID;
-import java.util.Vector;
-import java.util.Map.Entry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Vector;
 
 import org.postgresql.PGConnection;
 import org.postgresql.copy.CopyManager;
@@ -130,7 +130,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		super();
 	}
 
-	public static int uploadTrial(DB db, Trial trial) {
+	public static int uploadTrial(DB db, Trial trial, boolean summaryOnly) {
 
         DataSource dataSource = trial.getDataSource();
 
@@ -169,12 +169,14 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             
+			if (!summaryOnly) { 
 			System.out.print("Inserting threads...");
             uploadThreads(newTrialID, dataSource, db);
             threadMap = getThreadsMap(newTrialID, dataSource, db, false);
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
+			}
             
 			System.out.print("Inserting timer groups and parameters...");
             uploadTimerGroups(functionMap, db);
@@ -192,12 +194,16 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             
+			if (summaryOnly) { System.out.println("Only doing summary!"); }
+
+			if (!summaryOnly) { 
             // now that the graph is created, insert the call and subroutine data.
 			System.out.print("Inserting per-thread call data...");
             uploadCallDataInfo(dataSource, callpathMap, metricMap, threadMap, db, false);
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
+			}
 
             // also do it for the derived threads
 			System.out.print("Inserting derived threads...");
@@ -211,12 +217,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
 			System.out.print("Querying new call data for IDs...");
-            Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
+            Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, callpathMap, db);
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
 
 			System.out.print("Inserting timer measurements...");
+			if (!summaryOnly) { 
             // now upload the measurements
             if(db.getDBType().equals("postgresql")){
                 uploadFunctionProfilesPSQL(dataSource, timerCallDataMap, metricMap, db);
@@ -224,10 +231,14 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
                 uploadFunctionProfiles(dataSource, timerCallDataMap, metricMap, db);
                 uploadStatistics(dataSource, timerCallDataMap, metricMap, db);
             }
+			} else {
+                uploadStatistics(dataSource, timerCallDataMap, metricMap, db);
+			}
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
 
+			if (!summaryOnly) { 
 			System.out.print("Inserting counters...");
            uploadUserEvents(newTrialID, functionMap, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
@@ -236,9 +247,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
+		    }
                         
 			System.out.print("Inserting metadata...");
-            uploadMetadata(dataSource, trial, callpathMap, threadMap, db);
+            uploadMetadata(dataSource, trial, callpathMap, threadMap, db, summaryOnly);
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			System.out.println("Total time to load : " + (after - veryStart) / 1000.0 + " seconds");
@@ -408,6 +420,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			Function trueCurrent = dataSource.getFunction(timerName);
 			// get the timer ID
 			Integer timer = functionMap.get(trueCurrent);
+			if (timer == null) {
+				return null;
+			}
 			PreparedStatement statement = db.prepareStatement("INSERT INTO "
 					+ db.getSchemaPrefix()
 					+ "timer_callpath (timer, parent) "
@@ -539,7 +554,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				
 				FunctionProfile fp = thread.getFunctionProfile(function);
 
-				if (fp != null) { // only if this thread calls this function
+				if (fp != null && fp.getNumCalls() > 0) { // only if this thread calls this function
 					// TODO: Deal with cancelUpload
 					// if (this.cancelUpload)
 					// return;
@@ -707,33 +722,27 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         return map;
 	}
 	
-	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, DB db) throws SQLException {
+	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, Map<Function, Integer> callpathMap, DB db) throws SQLException {
 		Map<TimerCallData, Integer> map = new HashMap<TimerCallData, Integer>();
 		StringBuilder sb = new StringBuilder();
-		/* Apparently, the H2 database doesn't handle parameters in the 
-		   recursive part of the query. So, we don't add them as parameters. */
-		sb.append("with recursive cp (id, parent, timer, name) as ( " +
-				"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
-				db.getSchemaPrefix() +
-				"timer_callpath tc inner join " +
-				db.getSchemaPrefix() +
-				"timer t on tc.timer = t.id where ");
-				sb.append("t.trial = " + trialID + " and tc.parent is null ");
-				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
-        if (db.getDBType().compareTo("h2") == 0) {
-			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
-        } else {
-			sb.append("cp.name || ' => ' || dt.name FROM ");
-        }
-			sb.append(db.getSchemaPrefix() +
-				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
-				db.getSchemaPrefix());
-				sb.append("timer dt on d.timer = dt.id where dt.trial = " + trialID + ") ");
-	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
-		sb.append(db.getSchemaPrefix());
-		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
-		sb.append(db.getSchemaPrefix());
-		sb.append("thread h on tcd.thread = h.id where h.trial = " + trialID);
+		Map<Integer,Function> reverseMap = new HashMap<Integer,Function>();
+		// The callpath map is from function to ID. we need the reverse, so build it.
+		if (callpathMap != null) {
+			for (Function key : callpathMap.keySet()) {
+				reverseMap.put(callpathMap.get(key), key);
+			}
+		} else {
+			// build a new one from the functions! (for saving a pre-loaded trial)
+			Iterator<Function> iter = dataSource.getFunctionIterator();
+			while (iter.hasNext()) {
+				Function f = iter.next();
+				reverseMap.put(f.getID(), f);
+			}
+		}
+		sb.append("select distinct tcd.id, tcd.time_range, cp.id, h.node_rank, h.context_rank, h.thread_rank ");
+		sb.append("from timer_callpath cp ");
+		sb.append("join timer_call_data tcd on tcd.timer_callpath = cp.id ");
+		sb.append("join thread h on tcd.thread = h.id where h.trial = " + trialID);
 		PreparedStatement statement = db.prepareStatement(sb.toString());
 		//System.out.println(statement);
 		statement.execute();
@@ -742,11 +751,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		while (results.next()) {
 			int id = results.getInt(1);
 			Double timestamp = results.getDouble(2);
-			String functionName = results.getString(3);
+			Function f = reverseMap.get(results.getInt(3));
 			int node = results.getInt(4);
 			int context =results.getInt(5);
 			int thread = results.getInt(6);
-			Function f = dataSource.getFunction(functionName);
 			Thread t = null;
 			if (node < 0) {
 				switch (node) {
@@ -1230,7 +1238,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 	private static void uploadMetadata(DataSource dataSource, Trial trial,
 			Map<Function, Integer> functionMap, Map<Thread, Integer> threadMap,
-			DB db) throws SQLException {
+			DB db, boolean summaryOnly) throws SQLException {
 		int trialID = trial.getID();
 		
 		// save the primary metadata
@@ -1247,6 +1255,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		}
         stmt.executeBatch();
         stmt.close();
+		if (!summaryOnly) { 
         Map<List<Integer>, Integer> timestampMap = new HashMap<List<Integer>, Integer>();
         stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
                 + "secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -1284,6 +1293,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
     	}
       	stmt.executeBatch();
         stmt.close();
+		}
 
         if (trial.getDataSource().getMetadataFile() != null) {
         	try {
@@ -1533,9 +1543,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			}
 			trials = new HashMap<Integer, Trial>();
 			List<Trial> ts = View.getTrialsForTAUdbView(parents, db);
+			if(ts!=null){
 			for (Trial t : ts) {
 				trials.put(t.getID(), t);
-			}
+			}}
 			return ts;
 		}
 		return new ArrayList<Trial>(trials.values());
@@ -1627,14 +1638,14 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
             Hashtable<Integer, Integer> metricHash = null;
             if (saveMetric == null) { // this means save the whole thing???
-            	uploadTrial(db, trial);
+            	uploadTrial(db, trial, false);
             } else {
                 newTrialID = trial.getID();
                 metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
                 Map<Metric, Integer> metricMap = new HashMap<Metric, Integer>();
                 // create a hash map with one metric, so that we can reuse code but only save one metric.
                 metricMap.put(trial.getDataSource().getMetrics().get(saveMetricIndex), metricHash.get(saveMetricIndex));
-                Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
+                Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, null, db);
 
                 // now upload the measurements
                 if(db.getDBType().equals("postgresql")){

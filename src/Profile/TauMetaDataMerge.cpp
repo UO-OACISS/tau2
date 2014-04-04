@@ -17,8 +17,8 @@
 ****************************************************************************/
 
 #ifdef TAU_MPI
-
 #include <mpi.h>
+#endif /* TAU_MPI */
 #include <TAU.h>
 #include <TauMetaData.h>
 #include <TauMetrics.h>
@@ -40,15 +40,17 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   }
   merged = 1;
 
+  int rank, numRanks;
+
+#ifdef TAU_MPI
   if (TAU_MPI_Finalized()) {
     return 0;
   }
 
-  int rank, numRanks;
   MPI_Status status;
-
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+#endif /* TAU_MPI */
 
   x_uint64 start, end;
 
@@ -61,8 +63,10 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     char *defBuf = Tau_util_getOutputBuffer(out);
     int defBufSize = Tau_util_getOutputBufferLength(out);
 
+#ifdef TAU_MPI
     PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
     PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
 
     end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
@@ -72,12 +76,15 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
 
   } else {
     int BufferSize;
+#ifdef TAU_MPI
     PMPI_Bcast(&BufferSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
     char *Buffer = (char*) TAU_UTIL_MALLOC(BufferSize);
+#ifdef TAU_MPI
     PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
     Tau_metadata_removeDuplicates(Buffer, BufferSize);
   }
   return 0;
 }
 
-#endif
