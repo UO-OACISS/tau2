@@ -1632,24 +1632,17 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 {
-#ifdef TAU_SCOREP
-//  printf("Returning from Tau_create_top_level_timer_if_necessary_task");
-  return;
-#endif /* TAU_SCOREP */
-#if ! (defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG))
+#if ! (defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG) || defined(TAU_SCOREP))
   TauInternalFunctionGuard protects_this_function;
 
   /* After creating the ".TAU application" timer, we start it. In the
    timer start code, it will call this function, so in that case,
    return right away. */
   static bool initialized = false;
-  static bool initthread[TAU_MAX_THREADS] = { false };
   static bool initializing[TAU_MAX_THREADS] = { false };
+  static bool initthread[TAU_MAX_THREADS] = { false };
 
-  if (!initialized) {
-    if (initializing[tid]) {
-      return;
-    }
+  if (!initialized && !initializing[tid]) {
     RtsLayer::LockDB();
     if (!initialized) {
       // whichever thread got here first, has the lock and will create the
@@ -1665,17 +1658,15 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     RtsLayer::UnLockDB();
   }
 
-  if (initthread[tid] == true) {
-    return;
-  }
-
-  // if there is no top-level timer, create one - But only create one FunctionInfo object.
-  // that should be handled by the Tau_pure_start_task call.
-  if (TauInternal_CurrentProfiler(tid) == NULL) {
-    initthread[tid] = true;
-    initializing[tid] = true;
-    Tau_pure_start_task_string(gTauApplication(), tid);
-    initializing[tid] = false;
+  if (!initthread[tid]) {
+    // if there is no top-level timer, create one - But only create one FunctionInfo object.
+    // that should be handled by the Tau_pure_start_task call.
+    if (!TauInternal_CurrentProfiler(tid)) {
+      initthread[tid] = true;
+      initializing[tid] = true;
+      Tau_pure_start_task_string(gTauApplication(), tid);
+      initializing[tid] = false;
+    }
   }
 
   atexit(Tau_destructor_trigger);
