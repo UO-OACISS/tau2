@@ -1346,10 +1346,6 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
 
   static int count=0;
 
-  if (count++ % 100 == 0) {
-      TAU_VERBOSE(" *** sampling (sig %d thread %d) count %d\n", signum, gettid(), count);
-  }
-
 #ifdef DEBUG_PROF
   double values[TAU_MAX_COUNTERS];
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values);

@@ -935,7 +935,6 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_VERBOSE");
     if (parse_bool(tmp,env_verbose)) {
-	system("touch /data/data/com.example.stepstone/cache/TAU_VERBOSE");
       TAU_VERBOSE("TAU: VERBOSE enabled\n");
       TAU_METADATA("TAU_VERBOSE", "on");
       env_verbose = 1;
