@@ -46,11 +46,14 @@ public:
   RtsLayer () { }  // defaults
   ~RtsLayer () { } 
 
-	static int _createThread(void);
-	static int createThread(void);
-	static void destroyThread(int id);
-	static void recycleThread(int id);
+  static int _createThread(void);
+  static int createThread(void);
+  static void destroyThread(int id);
+  static void recycleThread(int id);
 
+#ifdef JAVA
+  static bool& TheUsingJNI(void);
+#endif
 
   static TauGroup_t & TheProfileMask(void);
   static bool& TheEnableInstrumentation(void);
