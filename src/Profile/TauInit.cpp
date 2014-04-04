@@ -309,6 +309,9 @@ extern "C" int Tau_init_initializeTAU()
   if (initializing) return 0;
   initializing = 1;
 
+  //Initialize locks.
+  RtsLayer::Initialize();
+
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
@@ -327,14 +330,12 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
-  initializing = 1;
   Tau_init_epilog();
   return 0;
 #endif
 
 #ifdef TAU_SCOREP
   /* no more initialization necessary if using SCOREP */
-  initializing = 1;
   SCOREP_Tau_InitMeasurement();
   SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads);
   return 0;
@@ -342,7 +343,6 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
-  initializing = 1;
   Tau_init_vampirTrace();
   return 0;
 #endif
@@ -371,6 +371,7 @@ extern "C" int Tau_init_initializeTAU()
   if (TauEnv_get_compensate()) {
     Tau_compensate_initialization();
   }
+
   /* initialize sampling if requested */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
   if (TauEnv_get_ebs_enabled()) {
@@ -391,20 +392,16 @@ extern "C" int Tau_init_initializeTAU()
   Tau_initialize_collector_api();
 #endif
 
+  // Mark initialization complete so calls below can start timers
   tau_initialized = 1;
 
 #ifdef __MIC__
-  if (TauEnv_get_mic_offload())
-  {
+  if (TauEnv_get_mic_offload()) {
     TAU_PROFILE_SET_NODE(0);
     Tau_create_top_level_timer_if_necessary();
   }
 #endif
 
-  //Initialize locks.
-  RtsLayer::Initialize();
-
-  // FIXME: No so sure this is a good idea...
   Tau_memory_wrapper_enable();
 
   return 0;
