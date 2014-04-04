@@ -64,7 +64,6 @@ struct s1 {
   char *rout;
 };
 
-extern "C"  int Tau_profile_exit_all_threads(void); 
 #define dprintf TAU_VERBOSE
 // called during termination
 #pragma save_all_regs

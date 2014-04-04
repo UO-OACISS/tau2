@@ -786,44 +786,44 @@ extern "C" int Tau_stop_current_timer()
 
 extern "C" void Tau_disable_collector_api();
 
-extern "C" int Tau_profile_exit_all_tasks() {
-    // Stop the collector API. The main thread may exit with running
-    // worker threads. When those threads try to exit, they will 
-    // try to stop timers that aren't running.
-    RtsLayer::LockDB();
+extern "C" int Tau_profile_exit_all_tasks()
+{
+  // Stop the collector API. The main thread may exit with running
+  // worker threads. When those threads try to exit, they will
+  // try to stop timers that aren't running.
+  RtsLayer::LockDB();
 #ifdef TAU_OPENMP
-    Tau_disable_collector_api();
+  Tau_disable_collector_api();
 #endif
 
 #ifdef TAU_ANDROID
-    bool su = false;
-    if (JNIThreadLayer::GetThreadId() == 0) {
-	su = true;
-    }
+  bool su = false;
+  if (JNIThreadLayer::GetThreadId() == 0) {
+    su = true;
+  }
 #endif
 
-    int tid = 1;
-    while (tid < TAU_MAX_THREADS)
-    {
+  int tid = 1;
+  while (tid < TAU_MAX_THREADS) {
 #ifdef TAU_ANDROID
-	if (su == true) {
-	    JNIThreadLayer::SuThread(tid);
-	}
-#endif
-	while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-	    Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-	    //Make sure even throttled routines are stopped.
-	    if (Tau_stop_timer(p->ThisFunction, tid)) {
-		TAU_VERBOSE("Stopping timer on thread %d: %s\n",tid,p->ThisFunction->Name);
-		p->Stop(tid);
-		Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-	    }
-	}
-	tid++;
+    if (su == true) {
+      JNIThreadLayer::SuThread(tid);
     }
-    Tau_disable_instrumentation();
-    RtsLayer::UnLockDB();
-    return 0;
+#endif
+    while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+      Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+      //Make sure even throttled routines are stopped.
+      if (Tau_stop_timer(p->ThisFunction, tid)) {
+        TAU_VERBOSE("Stopping timer on thread %d: %s\n", tid, p->ThisFunction->Name);
+        p->Stop(tid);
+        Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      }
+    }
+    tid++;
+  }
+  Tau_disable_instrumentation();
+  RtsLayer::UnLockDB();
+  return 0;
 }
 
 extern "C" int Tau_show_profiles()
@@ -840,37 +840,36 @@ extern "C" int Tau_show_profiles()
   return 0;
 }
 
-extern "C" int Tau_profile_exit_all_threads() 
+extern "C" int Tau_profile_exit_all_threads()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-
 #ifdef TAU_ANDROID
   bool su = false;
   if (JNIThreadLayer::GetThreadId() == 0) {
-      su = true;
+    su = true;
   }
 #endif
 
-  for (int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+  for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
 #ifdef TAU_ANDROID
-      if (su == true) {
-	  JNIThreadLayer::SuThread(tid);
-      }
+    if (su == true) {
+      JNIThreadLayer::SuThread(tid);
+    }
 #endif
-      while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-	  Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 
-	  TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
+      TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
 
-	  //Make sure even throttled routines are stopped.
-	  if (Tau_stop_timer(p->ThisFunction, tid)) {
-	      p->Stop(tid);
-	      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-	  }
-	  // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+      //Make sure even throttled routines are stopped.
+      if (Tau_stop_timer(p->ThisFunction, tid)) {
+        p->Stop(tid);
+        Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
       }
+      // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+    }
   }
 
   Tau_disable_instrumentation();
@@ -878,20 +877,20 @@ extern "C" int Tau_profile_exit_all_threads()
 }
 
 
-extern "C" int Tau_profile_exit() 
+extern "C" int Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
   int tid = RtsLayer::myThread();
   while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-      //Make sure even throttled routines are stopped.
-      if (Tau_stop_timer(p->ThisFunction, tid)) {
-	  p->Stop(tid);
-	  Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-      }
-      // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+    Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    //Make sure even throttled routines are stopped.
+    if (Tau_stop_timer(p->ThisFunction, tid)) {
+      p->Stop(tid);
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+    }
+    // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
   }
   return 0;
 }
@@ -1714,7 +1713,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     }
   }
 
-  atexit(Tau_destructor_trigger);
+  atexit((void(*)(void))Tau_profile_exit_all_threads);
 #endif
 }
 
