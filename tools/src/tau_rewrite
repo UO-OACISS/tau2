@@ -99,6 +99,10 @@ binding_specified=""
 binding_options=""
 extraloadlibs=""
 tauluafile="tau_rewrite.lua"
+processf="false"
+includelist="false"
+looplist="false"
+excludelist="false"
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -109,6 +113,12 @@ for arg in "$@" ; do
       processT="false"
       shift
   else
+    if [ "$processf" = true ] 
+    then
+      selectfile=$arg
+      processf="false"
+      shift
+    else
       case $arg in 
 	  -v|-d|-verbose|--verbose)
 	      verbose=true
@@ -137,6 +147,10 @@ for arg in "$@" ; do
               binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
 	      shift
               ;;
+	  -f)
+          processf=true
+          echoIfShortVerbose "Process F is true!"
+          shift;;
 	  -loadlib=*)
 	      myarg=`echo $arg | sed 's/-loadlib=//'`
               if [ "x$extraloadlibs" = "x" ]
@@ -170,9 +184,30 @@ for arg in "$@" ; do
 	      break
 	      ;;
       esac
+    fi
   fi
 done
 
+
+if [ "x$selectfile" != "x" ] 
+then
+  echoIfShortVerbose "selectfile=$selectfile"
+  if [ `grep "^loops" $selectfile  | wc -l ` != 0 ] 
+  then
+    looplist="true"
+    echoIfShortVerbose "looplist=$looplist"
+  fi
+  if [ `grep "^BEGIN_EXCLUDE_LIST" $selectfile  | wc -l ` != 0 ] 
+  then
+    excludelist="true"
+    echoIfShortVerbose "excludelist=$excludelist"
+  fi
+  if [ `grep "^BEGIN_INCLUDE_LIST" $selectfile  | wc -l ` != 0 ] 
+  then
+    includelist="true"
+    echoIfShortVerbose "includelist=$includelist"
+  fi
+fi
 
 # choose TAU library
 new_binding_options=""
@@ -307,6 +342,31 @@ then
   outputdir=`pwd` 
 fi
 
+# define functions in the lua file
+defs="function isoutermost(loop)
+  if (loop:is_outermost() == true) then
+    return true;
+  end 
+end 
+          
+function getloopstring(loop) 
+  local filename = loop:get_function():get_src_file_name();
+  local functionname;
+  local startloop, stoploop = loop:get_src_line();
+  local returnstring;
+            
+  if(loop:get_function():get_demname()~= nil)
+  then
+    functionname = loop:get_function():get_demname();
+  else  
+    functionname = loop:get_function():get_name();
+  end     
+  returnstring=\"Loop: \"..functionname..\" [{\"..filename..\"} {\"..startloop..\",0}-{\"..stoploop..\"}]\";
+  print (returnstring); 
+  return returnstring;
+end 
+" 
+
 # Get the list of external libs
 prologue=""
 makefile_binding=`echo $theBinding | sed -e 's@shared@@g'`
@@ -329,8 +389,51 @@ if [ $isStatic = false ]; then
   prologue=""
 fi
 
+# Process loop text if it is relevant
+if [ $looplist = true ]
+then
+  looproutines=`sed '/BEGIN_INSTRUMENT_SECTION/,/END_INSTRUMENT_SECTION/{/BEGIN_INSTRUMENT_SECTION/{h;d};H;/END_INSTRUMENT_SECTION/{x;/BEGIN_INSTRUMENT_SECTION/,/END_INSTRUMENT_SECTION/p}};d' $selectfile | grep loops | grep routine | sed -e 's/loops\( *\)//' -e 's/routine=//' -e 's/#/\.\*/g'  | sed -n '1h;2,$H;${g;s/\n/,/g;p}' `
+  echoIfShortVerbose "Loop routines=$looproutines"
+  looptext=", {
+          filters = {{  
+            type = \"whitelist\", 
+            filter = { {subtype = \"regexplist\",value = {$looproutines}} }
+          }}, 
+          loops = {{
+            filters={{
+                type = \"user\",
+                filter = isoutermost;
+            }},
+            entries = {{
+                 at_program_entry = { 
+                   {   
+                      name = \"tau_trace_register_loop\",
+                      lib = \"$TAU_INST_LIBRARY\", 
+                      params = { 
+                        {type = \"macro\",value = \"profiler_id\"}, 
+                        {type = \"function\",value = getloopstring},
+                      }   
+                   }   
+                 },  
+                 name = \"tau_loop_trace_entry\",
+                 lib = \"$TAU_INST_LIBRARY\", 
+                 params = { 
+                     {type = \"macro\",value = \"profiler_id\"}
+                   }   
+                 }}, 
+            exits = {{
+               name = \"tau_loop_trace_exit\",
+               lib = \"$TAU_INST_LIBRARY\", 
+               params = { 
+                 {type = \"macro\",value = \"profiler_id\"}
+               }   
+            }}  
+          }}, 
+         }, 
+  " 
+fi
 # Now we write to the $outfile
-luafile="$prologue
+luafile="$defs $prologue
 events = {
   run_dir = \"$outputdir/\",
   functions_global_blacklist = {
@@ -383,7 +486,7 @@ events = {
                  }
               }
             }
-          }
+          } $looptext
         }
       }"
 echoIfVerbose "$luafile"
