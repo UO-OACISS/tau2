@@ -1336,19 +1336,6 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
 
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
 
-#include <sys/types.h>
-#include <linux/unistd.h>
-
-unsigned long tau_internal_gettid(void) {
-#ifdef SYS_gettid  
-  return(syscall(SYS_gettid));
-#elif defined(__NR_gettid)
-  return(syscall(__NR_gettid));
-#else
-  return(gettid());
-#endif
-}
-
 /*********************************************************************
  * Handler for itimer interrupt
  ********************************************************************/
@@ -1358,10 +1345,6 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
   pc = get_pc(context);
 
   static int count=0;
-
-  if (count++ % 100 == 0) {
-      TAU_VERBOSE(" *** sampling (sig %d thread %d) count %d\n", signum, tau_internal_gettid(), count);
-  }
 
 #ifdef DEBUG_PROF
   double values[TAU_MAX_COUNTERS];
@@ -1597,7 +1580,7 @@ int Tau_sampling_init(int tid)
    sev.sigev_notify_thread_id = syscall(__NR_gettid);
 #else
    sev.sigev_notify_thread_id = JNIThreadLayer::GetThreadSid();
-   TAU_VERBOSE(" *** (S%d) send alarm to %d\n", tau_internal_gettid(), sev.sigev_notify_thread_id);
+   TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
