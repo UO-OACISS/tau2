@@ -56,6 +56,7 @@ vector<int> TheFlag(TAU_MAX_THREADS);
 #endif /* IA64 */
 
 
+vector<string> TauLoopNames; /* holds just names of loops */
 vector<string> TauFuncNameVec; /* holds just names */
 vector<FunctionInfo*>& TheTauDynFI(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
@@ -578,6 +579,16 @@ void tau_trace_exit(int id) {
   traceExit(id);
 }
 
+void tau_loop_trace_entry(int id) {
+  dprintf("TAU: tau_loop_trace_entry: id = %d\n", id);
+  TAU_START(TauLoopNames[id].c_str());
+}
+
+void tau_loop_trace_exit(int id) {
+  dprintf("TAU: tau_loop_trace_exit : id = %d\n", id);
+  TAU_STOP(TauLoopNames[id].c_str());
+}
+
 #if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
 #include <pthread.h>
 void* tool_thread_init(pthread_t args) {
@@ -591,6 +602,21 @@ void* tool_thread_fini(pthread_t args) {
   Tau_stop_top_level_timer_if_necessary(); 
   return NULL;
 }
+
+void  tau_trace_register_loop(int id, char *loopname) {
+  static int invocations = 0;
+  dprintf("TAU: tau_trace_register_loop: id = %d, loopname = %s\n", id, loopname);
+  if (invocations == id) {
+    TauLoopNames.push_back(string(loopname));
+    invocations++;
+  } else {
+    printf("WARNING: id = %d, invocations = %d, loopname = %s\n", id, invocations, loopname);
+    TauLoopNames.resize(id+1);
+    TauLoopNames[id] = string(loopname);
+  }
+
+}
+
 void  tau_register_loop(char **func, char** file, int* lineno, 
   int id) {
 
@@ -606,6 +632,7 @@ void  tau_register_loop(char **func, char** file, int* lineno,
 
 }
 #endif /* TAU_PEBIL_DISABLE */
+
 
 } /* extern "C" */
   

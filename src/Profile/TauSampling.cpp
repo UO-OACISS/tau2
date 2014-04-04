@@ -80,6 +80,7 @@
 
 /* Android didn't provide <ucontext.h> so we make our own */
 #ifdef TAU_ANDROID
+#include "TauJAPI.h"
 #include "android_ucontext.h"
 #else
 #include <ucontext.h>
@@ -1343,6 +1344,8 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
   unsigned long pc;
   pc = get_pc(context);
 
+  static int count=0;
+
 #ifdef DEBUG_PROF
   double values[TAU_MAX_COUNTERS];
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values);
@@ -1573,7 +1576,12 @@ int Tau_sampling_init(int tid)
    sev.sigev_signo = TAU_ALARM_TYPE;
    sev.sigev_notify = SIGEV_THREAD_ID;
    sev.sigev_value.sival_ptr = &timerid;
+#ifndef TAU_ANDROID
    sev.sigev_notify_thread_id = syscall(__NR_gettid);
+#else
+   sev.sigev_notify_thread_id = JNIThreadLayer::GetThreadSid();
+   TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
+#endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
@@ -1591,7 +1599,7 @@ int Tau_sampling_init(int tid)
     fprintf(stderr, "TAU: Sampling error 7: %s\n", strerror(ret));
     return -1;
   }
-  TAU_VERBOSE("Thread %d called timer_settime...\n", tid);
+  TAU_VERBOSE("Thread %d (pthread id = %d) called timer_settime...\n", tid, syscall(__NR_gettid));
 
 #else /* use itimer when not on Linux */
   struct itimerval ovalue, pvalue;

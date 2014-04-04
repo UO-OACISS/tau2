@@ -81,7 +81,7 @@ TRACE2PROFILE=utils/trace2profile
 #ARMCI#ARMCIWRAPPER=src/wrappers/armci#ENDIF#
 
 TAUPRELOAD=src/wrappers/taupreload
-TAUCUDA=src/wrappers/cuda
+#CUDA#TAUCUDA=src/wrappers/cuda #ENDIF#
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 TAU_ENV=utils/tau_env
 TAUOPENCL=src/wrappers/opencl
