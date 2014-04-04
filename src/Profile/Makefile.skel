@@ -72,7 +72,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
 		$(INCDIR)/TauCppAPI.h 	 $(INCDIR)/bstring.h	      \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/TauMetrics.h       \
-		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
+		$(INCDIR)/PapiLayer.h    $(INCDIR)/JNIThreadLayer.h   \
+		$(INCDIR)/JVMTIThreadLayer.h                          \
 		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
 		$(INCDIR)/SprocLayer.h   $(INCDIR)/PyGroups.h         \
 		$(INCDIR)/PyExceptions.h $(INCDIR)/PyDatabase.h       \
@@ -88,6 +89,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauBfd.h \
 		$(INCDIR)/TauMmapMemMgr.h $(INCDIR)/TauPathHash.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
+		$(INCDIR)/adb.h         $(INCDIR)/jdwp.h          \
 
 LDFLAGS	      =
 
@@ -764,6 +766,12 @@ TauFAPI.o   : TauFAPI.cpp $(HDRS)
 
 TauJAPI.o   : TauJAPI.cpp $(HDRS) 
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+adb.o       : adb.c $(HDRS) 
+	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
+
+jdwp.o      : jdwp.c $(HDRS) 
+	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
 TauMapping.o   : TauMapping.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
