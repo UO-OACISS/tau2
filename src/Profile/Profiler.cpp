@@ -1467,8 +1467,6 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
   static bool createFlag = TauProfiler_createDirectories();
 
-  system("touch /data/data/com.example.stepstone/cache/TauProfiler_writeData");
-
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     if (TauMetrics_getMetricUsed(i)) {
 
