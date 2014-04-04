@@ -122,9 +122,6 @@ static void tauToggleInstrumentationHandler(int sig)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  system("touch /data/data/org.tomdroid/cache/CAUGHT_SIGUSR2");
-  Tau_exit("Caught SIGUSR2");
-
   fprintf(stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
   if (RtsLayer::TheEnableInstrumentation()) {
     RtsLayer::TheEnableInstrumentation() = false;
@@ -295,7 +292,7 @@ int Tau_signal_initialization()
     tauAddSignal(SIGILL);
     tauAddSignal(SIGINT);
     tauAddSignal(SIGQUIT);
-    //tauAddSignal(SIGTERM);
+    tauAddSignal(SIGTERM);
     tauAddSignal(SIGPIPE);
     tauAddSignal(SIGABRT);
     tauAddSignal(SIGFPE);
@@ -463,8 +460,6 @@ extern "C" int Tau_init_initializeTAU()
   if (signal(SIGUSR2, tauToggleInstrumentationHandler) == SIG_ERR) {
     perror("failed to register TAU instrumentation toggle signal handler");
   }
-
-  signal(SIGTERM, tauSignalHandler);
 #endif
 
   Tau_profiler_initialization();
