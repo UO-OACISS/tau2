@@ -119,6 +119,7 @@ extern "C" {
   int TAUDECL TauEnv_get_memdbg_zero_malloc();
   int TAUDECL TauEnv_get_memdbg_attempt_continue();
   int TAUDECL TauEnv_get_pthread_stack_size();
+  int TAUDECL TauEnv_get_alfred_port();
 
 #ifdef __cplusplus
 }

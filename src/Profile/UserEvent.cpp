@@ -133,109 +133,111 @@ void TauUserEvent::AddEventToDB()
 ///////////////////////////////////////////////////////////
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts)
 {
+  if (!Tau_global_getLightsOut()) {
 #ifdef TAU_VAMPIRTRACE
-  // *CWL* - x_uint64 (unsigned long long) violates the vampirtrace interface which expects
-  //         unsigned long (previously uint64_t). The change from uint64_t to x_uint64 was
-  //         previously made in response to problems with SCORE-P but was done as a global
-  //         cut-and-paste which turned out to be unsafe. Since the use of time and cval
-  //         are guarded for just vampirtrace, it should be safe to revert the changes
-  //         for just vampirtrace.
-  //
-  //         Keep an eye on this. We should expect trouble as long as we cannot provide 
-  //         a proper abstraction for what constitutes a 64-bit unsigned integer in TAU.
-  //         This should be a TODO item.
-  // x_uint64 time;
-  // x_uint64 cval;
-  uint64_t time;
-  uint64_t cval;
-  int id = eventId;
-  time = vt_pform_wtime();
-  // cval = (x_uint64) data;
-  cval = (uint64_t) data;
+    // *CWL* - x_uint64 (unsigned long long) violates the vampirtrace interface which expects
+    //         unsigned long (previously uint64_t). The change from uint64_t to x_uint64 was
+    //         previously made in response to problems with SCORE-P but was done as a global
+    //         cut-and-paste which turned out to be unsafe. Since the use of time and cval
+    //         are guarded for just vampirtrace, it should be safe to revert the changes
+    //         for just vampirtrace.
+    //
+    //         Keep an eye on this. We should expect trouble as long as we cannot provide
+    //         a proper abstraction for what constitutes a 64-bit unsigned integer in TAU.
+    //         This should be a TODO item.
+    // x_uint64 time;
+    // x_uint64 cval;
+    uint64_t time;
+    uint64_t cval;
+    int id = eventId;
+    time = vt_pform_wtime();
+    // cval = (x_uint64) data;
+    cval = (uint64_t) data;
 #ifdef TAU_VAMPIRTRACE_5_12_API
-  vt_count(VT_CURRENT_THREAD, &time, id, 0);
+    vt_count(VT_CURRENT_THREAD, &time, id, 0);
 #else
-  vt_count(&time, id, 0);
+    vt_count(&time, id, 0);
 #endif /* TAU_VAMPIRTRACE_5_12_API */
-  time = vt_pform_wtime();
+    time = vt_pform_wtime();
 #ifdef TAU_VAMPIRTRACE_5_12_API
-  vt_count(VT_CURRENT_THREAD, &time, id, cval);
+    vt_count(VT_CURRENT_THREAD, &time, id, cval);
 #else
-  vt_count(&time, id, cval);
+    vt_count(&time, id, cval);
 #endif /* TAU_VAMPIRTRACE_5_12_API */
-  time = vt_pform_wtime();
+    time = vt_pform_wtime();
 #ifdef TAU_VAMPIRTRACE_5_12_API
-  vt_count(VT_CURRENT_THREAD, &time, id, 0);
+    vt_count(VT_CURRENT_THREAD, &time, id, 0);
 #else
-  vt_count(&time, id, 0);
+    vt_count(&time, id, 0);
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
-  if (TauEnv_get_tracing()) {
-    TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
-    TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts);
-    TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
-  }
+    if (TauEnv_get_tracing()) {
+      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
+      TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts);
+      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
+    }
 #endif /* TAU_EPILOG */
-  /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
+    /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
-  SCOREP_Tau_TriggerMetricDouble( eventId, data );
+    SCOREP_Tau_TriggerMetricDouble( eventId, data );
 #endif /*TAU_SCOREP*/
 
-  TAU_ASSERT(this != NULL, "this == NULL in TauUserEvent::TriggerEvent!  Make sure all databases are appropriately locked.\n");
+    TAU_ASSERT(this != NULL, "this == NULL in TauUserEvent::TriggerEvent!  Make sure all databases are appropriately locked.\n");
 
 #ifdef PROFILING_ON
-  Data & d = ThreadData(tid);
+    Data & d = ThreadData(tid);
 
-  // Record this value
-  d.lastVal = data;
+    // Record this value
+    d.lastVal = data;
 
-  // Increment number of events
-  ++d.nEvents;
+    // Increment number of events
+    ++d.nEvents;
 
-  // Compute relevant statistics for the data 
-  if (minEnabled && data < d.minVal) {
-    d.minVal = data;
+    // Compute relevant statistics for the data
+    if (minEnabled && data < d.minVal) {
+      d.minVal = data;
 #ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
-      if (name[0] != '[') { //re-entrant 
-        char ename[20 + name.length()];
-        sprintf(ename, "[GROUP=MIN_MARKER] %s", name.c_str());
-        if (name.find("=>") == std::string::npos) {
-          //DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
+      if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
+        if (name[0] != '[') { //re-entrant
+          char ename[20 + name.length()];
+          sprintf(ename, "[GROUP=MIN_MARKER] %s", name.c_str());
+          if (name.find("=>") == std::string::npos) {
+            //DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
+            TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
+          }
         }
       }
-    }
 #endif /* TAU_USE_EVENT_THRESHOLDS */
-  }
+    }
 
-  if (maxEnabled && data > d.maxVal) {
-    d.maxVal = data;
+    if (maxEnabled && data > d.maxVal) {
+      d.maxVal = data;
 #ifdef TAU_USE_EVENT_THRESHOLDS
-    if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
-      if (name[0] != '[') { //re-entrant 
-        char ename[20 + name.length()];
-        sprintf(ename, "[GROUP=MAX_MARKER] %s", name.c_str());
-        if (name.find("=>") == std::string::npos) {
-          //DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
-          TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
+      if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
+        if (name[0] != '[') { //re-entrant
+          char ename[20 + name.length()];
+          sprintf(ename, "[GROUP=MAX_MARKER] %s", name.c_str());
+          if (name.find("=>") == std::string::npos) {
+            //DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
+            TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
+          }
         }
       }
-    }
 #endif /* TAU_USE_EVENT_THRESHOLDS */
-  }
+    }
 
-  if (meanEnabled) {
-    d.sumVal += data;
-  }
-  if (stdDevEnabled) {
-    d.sumSqrVal += data * data;
-  }
+    if (meanEnabled) {
+      d.sumVal += data;
+    }
+    if (stdDevEnabled) {
+      d.sumSqrVal += data * data;
+    }
 #endif /* PROFILING_ON */
+  } // Tau_global_getLightsOut
 }
 
 
@@ -389,29 +391,31 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
 void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts)
 {
   static ContextEventMap contextMap;
+  if (!Tau_global_getLightsOut()) {
 
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
-  if (contextEnabled) {
-    Profiler * current = TauInternal_CurrentProfiler(tid);
-    long * comparison = FormulateContextComparisonArray(current);
+    if (contextEnabled) {
+      Profiler * current = TauInternal_CurrentProfiler(tid);
+      long * comparison = FormulateContextComparisonArray(current);
 
-    RtsLayer::LockDB();
-    ContextEventMap::iterator it = contextMap.find(comparison);
-    if (it == contextMap.end()) {
-      contextEvent = new TauUserEvent(
-          FormulateContextNameString(current),
-          userEvent->IsMonotonicallyIncreasing());
-      contextMap[comparison] = contextEvent;
-    } else {
-      contextEvent = it->second;
-      delete[] comparison;
+      RtsLayer::LockDB();
+      ContextEventMap::iterator it = contextMap.find(comparison);
+      if (it == contextMap.end()) {
+        contextEvent = new TauUserEvent(
+            FormulateContextNameString(current),
+            userEvent->IsMonotonicallyIncreasing());
+        contextMap[comparison] = contextEvent;
+      } else {
+        contextEvent = it->second;
+        delete[] comparison;
+      }
+      RtsLayer::UnLockDB();
+      contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
     }
-    RtsLayer::UnLockDB();
-    contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
+    userEvent->TriggerEvent(data, tid, timestamp, use_ts);
   }
-  userEvent->TriggerEvent(data, tid, timestamp, use_ts);
 }
 
 } // END namespace tau
