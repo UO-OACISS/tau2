@@ -45,7 +45,7 @@ public class TrialResultTest extends TestCase {
 		System.out.println("Getting means");
 		means = new TrialMeanResult(trial, null, null, true);
 		System.out.println("Getting totals");
-		totals = new TrialTotalResult(trial, null, null);
+		totals = new TrialTotalResult(trial, null, null, true);
 
 		assertNotNull(result);
 //        assertEquals(result.getMainEvent(), "GTC [{main.F90} {10,9}]");

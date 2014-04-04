@@ -1,0 +1,52 @@
+#created on: Aug 5, 2007
+package edu.uoregon.tau.perfexplorer.rules
+
+#list any import classes here.
+import edu.uoregon.tau.perfexplorer.glue.CorrelationResult.FactData;
+import edu.uoregon.tau.perfexplorer.glue.AbstractResult;
+
+#declare any global variables here
+
+#function myFunction( ... ) 
+    #function content (can have multiple functions) 
+#end
+
+rule "High Correlation"
+	when 
+		// there is a high correlation
+		f : FactData ( 
+			m : metric, 
+			c : correlation > 0.70, 
+			s : slope,
+			i : intercept,
+			e : event, 
+			e2 : event2, 
+			t : type )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event '" + e + "' has a high correlation in metric " + AbstractResult.typeToString(t.intValue()) + " " + m + " with metadata " + e2);
+		System.out.println("\tCorreation: " + c);
+		//System.out.println("\tSlope: " + s);
+		//System.out.println("\tIntercept: " + i);
+end
+
+rule "High Negative Correlation"
+	when 
+		// there is a high correlation
+		f : FactData ( 
+			m : metric, 
+			c : correlation < -0.70, 
+			s : slope,
+			i : intercept,
+			e : event, 
+			e2 : event2, 
+			t : type )
+	then
+		//System.out.println ( f.toString() );
+		System.out.println("The event '" + e + "' has a high negative correlation in metric " + AbstractResult.typeToString(t.intValue()) + " " + m + " with metadata " + e2);
+		System.out.println("\tCorreation: " + c);
+		//System.out.println("\tSlope: " + s);
+		//System.out.println("\tIntercept: " + i);
+end
+
+

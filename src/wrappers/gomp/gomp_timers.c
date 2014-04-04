@@ -8,6 +8,7 @@
 
 #include "omp_collector_util.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "gomp_wrapper_types.h"
 #include "omp.h"
@@ -43,6 +44,8 @@ typedef struct Tau_gomp_proxy_wrapper {
     void (*a1)(void *);
     // The argument pointer
     void *a2;
+    // copy function buffer?
+    char *buf;
     // The function name
     char * name;
     //
@@ -70,26 +73,29 @@ void Tau_gomp_parallel_start_proxy(void * a2) {
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
     __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-    __ompc_set_state(THR_WORK_STATE);
+    OMP_COLLECTOR_API_THR_STATE previous;
+    previous = __ompc_set_state(THR_WORK_STATE);
     (proxy->a1)(proxy->a2);
-    __ompc_set_state(THR_IDLE_STATE);
+    __ompc_set_state(previous);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
 }
 
 /* This function is used to wrap the outlined functions for tasks.
 */
 void Tau_gomp_task_proxy(void * a2) {
-    DEBUGPRINT("Task Proxy %d!\n", Tau_get_tid());
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
+    DEBUGPRINT("Task Proxy %d, %p, %p\n", Tau_get_tid(), proxy->a1, proxy->a2);
 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_EXEC_TASK);
-    __ompc_set_state(THR_WORK_STATE);
+    OMP_COLLECTOR_API_THR_STATE previous;
+    previous = __ompc_set_state(THR_WORK_STATE);
     (proxy->a1)(proxy->a2);
+	//if (proxy->a3) free(proxy->a2);
     __ompc_set_state(THR_TASK_FINISH_STATE);
     // this pair of events goes together to end the task
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_FINISH_TASK);
     __ompc_event_callback(OMP_EVENT_THR_END_FINISH_TASK);
-    __ompc_set_state(THR_IDLE_STATE);
+    __ompc_set_state(previous);
 }
 
 /**********************************************************
@@ -97,7 +103,7 @@ void Tau_gomp_task_proxy(void * a2) {
  **********************************************************/
 
 void  tau_omp_set_lock(omp_set_lock_p omp_set_lock_h, omp_lock_t *lock)  {
-    DEBUGPRINT("omp_set_lock %d\n", Tau_get_tid());
+    //DEBUGPRINT("omp_set_lock %d\n", Tau_get_tid());
 
     OMP_COLLECTOR_API_THR_STATE previous;
     if (Tau_global_get_insideTAU() == 0) { 
@@ -119,7 +125,7 @@ void  tau_omp_set_lock(omp_set_lock_p omp_set_lock_h, omp_lock_t *lock)  {
  **********************************************************/
 
 void  tau_omp_set_nest_lock(omp_set_nest_lock_p omp_set_nest_lock_h, omp_nest_lock_t *nest_lock)  {
-    DEBUGPRINT("omp_set_nest_lock %d\n", Tau_get_tid());
+    //DEBUGPRINT("omp_set_nest_lock %d\n", Tau_get_tid());
 
     OMP_COLLECTOR_API_THR_STATE previous;
     if (Tau_global_get_insideTAU() == 0) { 
@@ -460,7 +466,8 @@ bool tau_GOMP_loop_ordered_static_next(GOMP_loop_ordered_static_next_p GOMP_loop
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_static_next %d\n", Tau_get_tid());
 
-    __ompc_set_state(THR_WORK_STATE);
+    OMP_COLLECTOR_API_THR_STATE previous;
+    previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
     retval  =  (*GOMP_loop_ordered_static_next_h)( a1,  a2);
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -481,7 +488,8 @@ bool tau_GOMP_loop_ordered_dynamic_next(GOMP_loop_ordered_dynamic_next_p GOMP_lo
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_dynamic_next %d\n", Tau_get_tid());
 
-    __ompc_set_state(THR_WORK_STATE);
+    OMP_COLLECTOR_API_THR_STATE previous;
+	previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
     retval  =  (*GOMP_loop_ordered_dynamic_next_h)( a1,  a2);
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -502,7 +510,8 @@ bool tau_GOMP_loop_ordered_guided_next(GOMP_loop_ordered_guided_next_p GOMP_loop
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_guided_next %d\n", Tau_get_tid());
 
-    __ompc_set_state(THR_WORK_STATE);
+    OMP_COLLECTOR_API_THR_STATE previous;
+	previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
     retval  =  (*GOMP_loop_ordered_guided_next_h)( a1,  a2);
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -523,7 +532,8 @@ bool tau_GOMP_loop_ordered_runtime_next(GOMP_loop_ordered_runtime_next_p GOMP_lo
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_runtime_next %d\n", Tau_get_tid());
 
-    __ompc_set_state(THR_WORK_STATE);
+    OMP_COLLECTOR_API_THR_STATE previous;
+    previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
     retval  =  (*GOMP_loop_ordered_runtime_next_h)( a1,  a2);
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -552,6 +562,7 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
+	proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     (*GOMP_parallel_loop_static_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
@@ -582,6 +593,7 @@ void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOM
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
+	proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     (*GOMP_parallel_loop_dynamic_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
@@ -612,6 +624,7 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
+    proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     (*GOMP_parallel_loop_guided_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
@@ -642,6 +655,7 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
+    proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     (*GOMP_parallel_loop_runtime_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6);
@@ -677,7 +691,7 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
     (*GOMP_loop_end_h)();
 
     __ompc_event_callback(OMP_EVENT_THR_END_IBAR);
-    __ompc_set_state(THR_WORK_STATE);
+    __ompc_set_state(previous);
 
 }
 
@@ -700,7 +714,7 @@ void tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_p GOMP_loop_end_nowait_h)  {
 
     (*GOMP_loop_end_nowait_h)();
 
-    __ompc_set_state(THR_WORK_STATE);
+    //__ompc_set_state(THR_WORK_STATE);
 
 }
 
@@ -1036,6 +1050,7 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
+    proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     // save the pointer so we can free it later
@@ -1121,33 +1136,37 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
+    proxy->buf = NULL;
     proxy->name = NULL;
 #ifdef TAU_UNWIND
     // this doesn't use unwind, but unwind support would include bfd, most likely
-    Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
+    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
 #endif
-    if (proxy->name != NULL) {
-        DEBUGPRINT("GOMP_task %s\n", proxy->name);
-        __ompc_set_state(THR_TASK_CREATE_STATE);
-        __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
-        (*GOMP_task_h)( Tau_gomp_task_proxy, proxy,  a3,  a4,  a5,  a6, a7);
-        __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
-        __ompc_set_state(THR_TASK_SCHEDULE_STATE);
-    } else {
-        __ompc_set_state(THR_TASK_CREATE_STATE);
-        __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
-        //(*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-        (*GOMP_task_h)( Tau_gomp_task_proxy, proxy,  a3,  a4,  a5,  a6, a7);
-        __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
-        __ompc_set_state(THR_TASK_SCHEDULE_STATE);
-    }
+    DEBUGPRINT("GOMP_task %p, %s\n", a1, proxy->name);
+    OMP_COLLECTOR_API_THR_STATE previous;
+    previous = __ompc_set_state(THR_TASK_CREATE_STATE);
+    __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
+	if (a3 != NULL) {
+      /*proxy->buf = (char*)(malloc(a4 + a5 - 1));
+      proxy->a2 = (char *) (((uintptr_t) proxy->buf + a5 - 1)
+                          & ~(uintptr_t) (a5 - 1));
+      a3(proxy->buf, proxy->a2);
+	  */
+      (*GOMP_task_h)( a1, a2, a3, a4, a5, a6, a7);
+	} else {
+      (*GOMP_task_h)( Tau_gomp_task_proxy, proxy,  NULL,  a4,  a5,  a6, a7);
+	}
+    __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
+    __ompc_set_state(previous);
 #else
     /* just call the task creation, for now */
-    __ompc_set_state(THR_TASK_CREATE_STATE);
+    OMP_COLLECTOR_API_THR_STATE previous;
+    previous = __ompc_set_state(THR_TASK_CREATE_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
     (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
     __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
-    __ompc_set_state(THR_TASK_SCHEDULE_STATE);
+    //__ompc_set_state(THR_TASK_SCHEDULE_STATE);
+    __ompc_set_state(previous);
 #endif
 
 }
@@ -1161,8 +1180,12 @@ void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
 
     DEBUGPRINT("GOMP_taskwait %d\n", Tau_get_tid());
 
+    OMP_COLLECTOR_API_THR_STATE previous;
+    previous = __ompc_set_state(THR_IBAR_STATE);
+    __ompc_event_callback(OMP_EVENT_THR_BEGIN_IBAR);
     (*GOMP_taskwait_h)();
-    __ompc_set_state(THR_IBAR_STATE);
+    __ompc_event_callback(OMP_EVENT_THR_END_IBAR);
+    __ompc_set_state(previous);
 
 }
 

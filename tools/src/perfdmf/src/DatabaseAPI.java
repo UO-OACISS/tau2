@@ -16,6 +16,7 @@ import java.util.Vector;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
 /**
  * This is the top level class for the Database API.
@@ -145,8 +146,10 @@ public class DatabaseAPI {
         connector = new ConnectionManager(database, prompt);
         connector.connect();
         db = connector.getDB();
-        Application.getMetaData(db);
-        Experiment.getMetaData(db);
+		if (db.getSchemaVersion() == 0) {
+	        Application.getMetaData(db);
+	        Experiment.getMetaData(db);
+		}
         Trial.getMetaData(db);
     }
 
@@ -155,8 +158,10 @@ public class DatabaseAPI {
         connector = new ConnectionManager(database, password);
         connector.connect();
         db = connector.getDB();
-        Application.getMetaData(db);
-        Experiment.getMetaData(db);
+		if (db.getSchemaVersion() == 0) {
+	        Application.getMetaData(db);
+	        Experiment.getMetaData(db);
+		}
         Trial.getMetaData(db);
     }
 
@@ -165,8 +170,10 @@ public class DatabaseAPI {
         connector = new ConnectionManager(database);
         connector.connect();
         db = connector.getDB();
-        Application.getMetaData(db);
-        Experiment.getMetaData(db);
+		if (db.getSchemaVersion() == 0) {
+	        Application.getMetaData(db);
+	        Experiment.getMetaData(db);
+		}
         Trial.getMetaData(db);
     }
 
@@ -1116,6 +1123,7 @@ public class DatabaseAPI {
                 addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
                         function.getMeanProfile(), intervalEventID.intValue(), false, dataSource.getAllThreads().size());
 
+                if (summaryOnly) { System.out.println("Only doing summary!"); }
                 for (Iterator<Thread> it = dataSource.getAllThreads().iterator(); it.hasNext() && summaryOnly == false;) {
                     edu.uoregon.tau.perfdmf.Thread thread = it.next();
 
@@ -1217,7 +1225,7 @@ public class DatabaseAPI {
 
     public synchronized int uploadTrial(Trial trial, boolean summaryOnly) throws DatabaseException {
         //long start = System.currentTimeMillis();
-    	if(db.getSchemaVersion()>0) return TAUdbDatabaseAPI.uploadTrial(db,trial);
+    	if(db.getSchemaVersion()>0) return TAUdbDatabaseAPI.uploadTrial(db,trial,summaryOnly);
 
 
         DataSource dataSource = trial.getDataSource();
@@ -1309,8 +1317,22 @@ public class DatabaseAPI {
         return expid;
     }
 
+   	public void deleteTrial(int[] trialIDs) throws SQLException {
+    			if (db.getSchemaVersion() <= 0) {
+    				for (int i = 0; i < trialIDs.length; i++) {
+    					Trial.deleteTrial(db, trialIDs[i]);
+    				}
+    				return;
+    			} else {
+    			
+    			TAUdbTrial.deleteTrial(db, trialIDs);
+    			}
+    }
+    	
+    
     public void deleteTrial(int trialID) throws SQLException {
-        Trial.deleteTrial(db, trialID);
+    				int[] trialIDs = { trialID };
+    				Trial.deleteTrial(db, trialIDs[0]);
     }
 
     public void deleteExperiment(int experimentID) throws DatabaseException, SQLException {

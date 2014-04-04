@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -458,6 +458,8 @@ for arg in "$@"; do
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
+	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
 	    echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
 	    echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
 	    echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
@@ -666,6 +668,7 @@ sicortex=no
 extradir=
 extrashlibopts=
 pthread=no
+tbb=no
 papithread=no
 papipfm=no
 gupc=no
@@ -757,6 +760,7 @@ unwind_lib=
 unwind_flag=
 unwind_lib_flag=
 unwind_extras=
+download_unwind=no
 tau_links_rt=no
 opari=no
 mpc=no
@@ -786,6 +790,8 @@ forceshared=no
 opari_region=no
 opari_construct=no
 dyninst=no
+dyninstinc=no
+dyninstlib=no
 dwarf=no
 java=no
 openmp=no
@@ -793,6 +799,7 @@ ompt=no
 omptlib=
 omptlibrary=-liomp5
 omptenabled=no
+download_ompt=no
 xlsmp=no
 ibmxlc=no
 ibmxlc_r=no 
@@ -959,6 +966,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-tbb)
+	    pthread=yes
+	    tbb=yes
+	    shift
+	    ;;
+
 	-papithread)
 	    papithread=yes
 	    shift
@@ -1103,6 +1116,9 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
+        if [ $papidir = "/usr" ]; then
+		  fixmakeargs="$fixmakeargs PAPINOINC"
+        fi
 	    shift
 	    ;;
 
@@ -1165,10 +1181,23 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+        -unwind=download*)
+            echo "Downloading libunwind..."
+            # So that the user doesn't have to specify the unwinder,
+            # use libunwind as the default.
+            unwinder="libunwind"
+            unwind_flag="-DTAU_USE_LIBUNWIND"
+            unwind_lib_flag="-lunwind"
+            download_unwind=yes
+            shift
+            ;;
+
 	-unwind=*)
 	    unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
-	    unwind_inc="$unwind_dir/include"
-	    unwind_lib="$unwind_dir/lib"
+        if [ $unwind_dir != "/usr" ]; then
+	      unwind_inc="$unwind_dir/include"
+	      unwind_lib="$unwind_dir/lib"
+        fi
 	    # So that the user doesn't have to specify the unwinder,
 	    # use libunwind as the default.
 	    if [ "x$unwinder" = "xnone" ] ; then
@@ -1468,6 +1497,28 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-dyninstinc=*)
+	    dyninstinc=yes
+	    dyninstincdir=`echo $arg | sed -e 's/-dyninstinc=//'`
+	    if [ ! -d $dyninstincdir ]
+	    then
+		echo "Error: Cannot access DyninstAPI include directory $dyninstincdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-dyninstlib=*)
+	    dyninstlib=yes
+	    dyninstlibdir=`echo $arg | sed -e 's/-dyninstlib=//'`
+	    if [ ! -d $dyninstlibdir ]
+	    then
+		echo "Error: Cannot access DyninstAPI lib directory $dyninstlibdir"
+		exit 1
+	    fi
+	    shift
+        ;;
+
 	-dwarf=*)
 	    dwarf=yes
 	    dwarfdir=`echo $arg | sed -e 's/-dwarf=//'`
@@ -1498,6 +1549,7 @@ for arg in "$@"; do
 
 	-omptlib=*)
 	    ompt=yes
+	    openmp=yes
 	    omptlib=`echo $arg | sed -e 's/-omptlib=//'`
 	    if [ ! -d $omptlib ]
 	    then
@@ -1508,11 +1560,20 @@ for arg in "$@"; do
 	    ;;
 
 	-omptlibrary=*)
+	    openmp=yes
 	    omptlibrary=`echo $arg | sed -e 's/-omptlibrary=//'`
 	    shift
 	    ;;
 
+	-ompt=download*)
+	    openmp=yes
+	    ompt=yes
+	    download_ompt=yes
+	    shift
+	    ;;
+
 	-ompt*)
+	    openmp=yes
 	    ompt=yes
 	    shift
 	    ;;
@@ -2271,6 +2332,14 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	    ;;
 
+        mic_linux)
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+            ;;
+
+
 	ia64)
 	    gunzip -c tools/src/contrib/jogl/ia64/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/ia64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
@@ -2745,7 +2814,6 @@ case $machine in
 	    intel=yes
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
-	    #turnbfdoff=yes
 	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
@@ -2876,40 +2944,6 @@ if [ "$machine" = "apple" ] ; then
     fi
 fi
 
-if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
-    if [ $ompt = yes -o $xlsmp = yes ]; then
-	comp=`which bgxlc_r`
-	if [ "x$xlsmpdir" = "x" ]; then 
-            if [ -x $comp ]; then 
-		xlsmpdir=`echo $comp | sed -e 's@bgxlc_r@../../../../xlsmp@' `
-		if [ ! -d $xlsmpdir ]; then 
-		    echo "NOTE: Could not locate the xlsmp directory using the location of bgxlc_r in your path."
-		    echo "To enable ompt support in TAU using IBM XL compilers, please configure with -xlsmp=<dir> option to specify the full path to the xlsmp directory inside the compiler directory".
-		    exit 1; 
-		fi
-            fi
-            if [ -d $xlsmpdir -a -r $xlsmpdir/bg/*/bglib64/ompt_full/libxllomp.a -a -r $xlsmpdir/bg/*/include/lomp/omp.h ]; then
-		lompinc=`echo $xlsmpdir/bg/*/include `
-		lomplib=`echo $xlsmpdir/bg/*/bglib64/ompt_full `
-		echo "NOTE: Found LOMP include directory $lompinc"
-		echo "NOTE: Found LOMP lib directory $lomplib"
-		omptenabled=yes
-		tauoptions="${tauoptions}-ompt"
-		fixmakeargs="$fixmakeargs IBMOMPT lompinc=$lompinc lomplib=$lomplib"
-            else
-		echo "NOTE: Did not find lomp/omp.h or lib64/libxllomp.a in the xlsmp subdirectory. Not enabling OMPT support for IBM compilers."
-            fi 
-	else
-	    echo "bgxlc_r not found in the path. Cannot test for OMPT support."
-	fi
-    fi
-else # intel OMPT support
-    if [ $ompt = yes ]; then
-	omptlinking="-Wl,-rpath=$omptlib#-L$omptlib#$omptlibrary"
-	fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-    fi
-
-fi 
 
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     config_compiler=`which $cxx_compiler`
@@ -3162,8 +3196,7 @@ fi
 
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
-    #turnbfdoff=yes
-    orig_useropt="-mmic -O2"
+    orig_useropt="-mmic -O2 "
 fi
 
 if [ $machine = apple ] ; then
@@ -4019,16 +4052,10 @@ then
 	    ;;
 	craycnl)
 	    #	mpiinc=/opt/xt-mpt/default/mpich2-64/P/include
-	    mpiinc=$MPICH_DIR/include
+	    mpiinc=$CRAY_MPICH2_DIR/include
             if [ ! -r $mpiinc ] ; then
-		if [ $default_fortran = gfortran ] ; then
-                    mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-gnu/include
-		else
-                    mpiinc=/opt/mpt/$MPT_VERSION/xt/mpich2-$default_fortran/include
-		fi
-		if [ ! -r $mpiinc ] ; then
-                    mpiinc=/opt/mpt/default/xt/mpich2-pgi/include
-		fi
+		echo "ERROR: $CRAY_MPICH2_DIR/include (CRAY_MPICH2_DIR/include) is not readable. Please configure with -mpiinc=<dir> to point to the MPI include directory."
+		exit 1
             fi
             echo "Using MPI INCLUDE dir from $mpiinc"
 	    ;;
@@ -4058,6 +4085,11 @@ then
             if [ $mpc = yes ]
             then
 		mpiinc=`which mpcrun | sed -e 's/\/bin\/mpcrun$//' -e 's/\/bin64\/mpcrun$//'`/include
+              if [ -r $mpiinc/../mpc-libsctk_arch-dev/include/sctk_config_arch.h ] 
+              then
+                echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
+                additional_mpiincs="-I$mpiinc/../mpc-libsctk_arch-dev/include"
+              fi 
             else
 		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
 		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
@@ -4463,7 +4495,7 @@ if [ $papi = yes ] ; then
 		    papisubdir=xt-cnl/lib
 		    fixmakeargs="$fixmakeargs papisubdir=xt-cnl/lib"
                 else 
-		    if [ -f $papidir/lib64/libpapi.so ] ; then 
+		    if [ -f $papidir/lib64/libpapi.so -a $papidir != "/usr" ] ; then 
 			papisubdir=lib64
 			fixmakeargs="$fixmakeargs papisubdir=lib64"
 		    else
@@ -5019,6 +5051,10 @@ case $machine in
 	    else
 		fixmakeargs="$fixmakeargs X86_64PAPI_NEW"
 	    fi
+        if [ "x$papidir" = "x/usr" -o "x$papidir" = "x/usr/" ]; then
+		  fixmakeargs="$fixmakeargs PAPI_WITHOUT_LIB_INC"
+        fi
+        
 	fi
 	;;
     ibm64)
@@ -5355,6 +5391,235 @@ if [ $linuxtimers = yes ] ; then
     fixmakeargs="$fixmakeargs LINUXTIMERS"
 fi
 
+######################################################################
+# Install libunwind if requested
+######################################################################
+libunwind=libunwind-1.1
+libunwindtgz=$libunwind.tar.gz
+libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+libunwinddir=${targetdir}/${architecture}
+libunwind_name=unwind
+if [ $machine = mic_linux ] ; then
+  libunwind=libunwind-mic-1.1
+  libunwindtgz=$libunwind.tgz
+  libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+fi
+  
+if [ "x$download_unwind" = xyes ] ; then
+  unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  prebfddir=`pwd`
+
+  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o -r "$unwind_dir/lib64/lib${libunwind_name}.a" ] ; then
+    echo "Found: $unwind_dir/lib/lib${libunwind_name}.so $unwind_dir/lib64/lib${libunwind_name}.a"
+    echo "libunwind download already found, skipping"
+  else
+    # get the tar file
+    if [ ! -f $libunwindtgz ] ; then
+      echo "downloading $libunwindtgz..."
+      if [ "$machine" = "apple" ] ; then
+        curl -L $libunwindurl > $libunwindtgz
+      else 
+        wget $libunwindurl
+      fi
+    fi
+
+    # check the tar file
+    if [ ! -f $libunwindtgz ] ; then
+      echo "$libunwindtgz did not download.  Please download it manually from: "
+      echo "$libunwindurl"
+      echo "Please enter the directory containing the tarball: ${nnl}" 
+      read RESPONSE
+      cp $RESPONSE/$libunwindtgz .
+    else
+      echo "expanding $libunwindtgz..."
+      tar -xzf $libunwindtgz
+      echo "removing $libunwindtgz..."
+      rm $libunwindtgz
+      if [ $machine != mic_linux ]; then 
+        configresult=0
+        makeresult=0
+        libunwind_log=configure.log
+        cd $libunwind
+        echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
+        if [ "x$machine" == "xbgq" ] ; then
+          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} --disable-shared >& ${libunwind_log}
+          cp src/unwind/Resume.c tmp.c
+          sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
+          rm tmp.c
+        elif [ "$machine" == "craycnl" ] ; then
+          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared >& ${libunwind_log}
+        else
+          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
+        fi
+        configresult=$?
+        if [ $configresult -eq 0 ] ; then
+          libunwind_log=build.log
+          echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
+          make -i >& $libunwind_log
+          makeresult=$?
+          if [ $makeresult -eq 0 ] ; then
+          libunwind_log=install.log
+          echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
+            make -i install >& $libunwind_log
+          makeresult=$?
+          fi
+        fi
+        if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+          echo "...Success."
+        else
+          echo "ERROR BUILDING $libunwind!"
+          echo "Please check `pwd`/config.log or `pwd`/${libunwind_log}"
+        fi
+      else 
+        # We need to install $libunwind
+        mv ${libunwind} ${unwind_dir}
+	echo "NOTE: Moving ${libunwind} to ${unwind_dir}"
+      fi
+    fi
+  fi
+  if [ $unwind_dir != "/usr" ]; then
+    unwind_inc="$unwind_dir/include"
+    if [ "x$machine" == "xbgq" ] ; then
+      unwind_lib="$unwind_dir/lib64"
+    else
+      unwind_lib="$unwind_dir/lib"
+    fi
+  fi
+  cd $prebfddir
+fi #unwind=download
+    
+
+######################################################################
+# Install Intel OpenMP runtime with OMPT if requested
+######################################################################
+libomp_oss=libomp_oss
+libomp_osstgz=$libomp_oss.tar.gz
+libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
+libomp_oss_name=iomp5
+libomp_ossdir=${targetdir}/${architecture}/lib
+if [ "x$download_ompt" = xyes ] ; then
+  prebfddir=`pwd`
+
+  # only build the dynamic version for now
+
+  # if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" ] && [ -r "$libomp_ossdir/lib${libomp_oss_name}.a" ] ; then
+
+  if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" ] ; then
+    echo "Found: $libomp_ossdir/lib${libomp_oss_name}.so"
+    echo "libomp_oss download already found, skipping"
+  else
+    # get the tar file
+    echo "downloading $libomp_osstgz..."
+    if [ "$machine" = "apple" ] ; then
+      curl -L $libomp_ossurl > $libomp_osstgz
+    else 
+      wget $libomp_ossurl
+    fi
+
+    # check the tar file
+    if [ ! -f $libomp_osstgz ] ; then
+      echo "$libomp_osstgz did not download.  Please download it manually from: "
+      echo "$libomp_ossurl"
+      echo "Please enter the directory containing the tarball: ${nnl}" 
+      read RESPONSE
+      cp $RESPONSE/$libomp_osstgz .
+    else
+      echo "expanding $libomp_osstgz..."
+      tar -xzf $libomp_osstgz
+      echo "removing $libomp_osstgz..."
+      rm $libomp_osstgz
+      cd $libomp_oss
+      libomp_oss_log=build-dynamic.log
+      specialflags=""
+      if [ $machine = mic_linux ] ; then
+        libomp_oss_log=build-mic.log
+        archarg="arch=mic"
+        specialflags="CXXFLAGS=-D__MIC2__ CFLAGS=-D__MIC2__"
+	  fi
+	  # fix the expected path for bin 
+      cp tools/common.inc tmp.inc
+      sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
+      rm tmp.inc
+      echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
+      make $specialflags $archarg >& $libomp_oss_log
+      result=$?
+      signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
+      if [ $result -eq 0 ] ; then
+        cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+        echo "...Success."
+      else
+        if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
+          cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+          echo "...Success."
+		else
+          echo "ERROR BUILDING $libomp_ossdir!"
+          echo "Please check `pwd`/${libomp_oss_log}"
+		fi
+      fi
+
+      # only build the dynamic version for now
+      if [ ${architecture} == "craycnl" ] ; then
+        libomp_oss_log=build-static.log
+        echo "building static $libomp_oss... (see `pwd`/${libomp_oss_log} for log)"
+        make linktype=static $specialflags $archarg >& $libomp_oss_log
+        signature=`ls -tr tmp | grep rel | grep sta | tail -1`
+        if [ $result -eq 0 ] ; then
+          cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+          echo "...Success."
+        else
+          if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
+            cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+            echo "...Success."
+		  else
+            echo "ERROR BUILDING $libomp_ossdir!"
+            echo "Please check `pwd`/${libomp_oss_log}"
+	  fi # if library exists
+        fi # if result == 0
+      fi # if arch == craycnl
+    fi
+  fi
+  omptlib=${libomp_ossdir}
+  omptlibrary=-l${libomp_oss_name}
+  tauoptions="${tauoptions}-ompt"
+  cd $prebfddir
+fi #ompt=download
+    
+
+if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
+    if [ $ompt = yes -o $xlsmp = yes ]; then
+	comp=`which bgxlc_r`
+	if [ "x$xlsmpdir" = "x" ]; then 
+            if [ -x $comp ]; then 
+		xlsmpdir=`echo $comp | sed -e 's@bgxlc_r@../../../../xlsmp@' `
+		if [ ! -d $xlsmpdir ]; then 
+		    echo "NOTE: Could not locate the xlsmp directory using the location of bgxlc_r in your path."
+		    echo "To enable ompt support in TAU using IBM XL compilers, please configure with -xlsmp=<dir> option to specify the full path to the xlsmp directory inside the compiler directory".
+		    exit 1; 
+		fi
+            fi
+            if [ -d $xlsmpdir -a -r $xlsmpdir/bg/*/bglib64/ompt_full/libxllomp.a -a -r $xlsmpdir/bg/*/include/lomp/omp.h ]; then
+		lompinc=`echo $xlsmpdir/bg/*/include `
+		lomplib=`echo $xlsmpdir/bg/*/bglib64/ompt_full `
+		echo "NOTE: Found LOMP include directory $lompinc"
+		echo "NOTE: Found LOMP lib directory $lomplib"
+		omptenabled=yes
+		tauoptions="${tauoptions}-ompt"
+		fixmakeargs="$fixmakeargs IBMOMPT lompinc=$lompinc lomplib=$lomplib"
+            else
+		echo "NOTE: Did not find lomp/omp.h or lib64/libxllomp.a in the xlsmp subdirectory. Not enabling OMPT support for IBM compilers."
+            fi 
+	else
+	    echo "bgxlc_r not found in the path. Cannot test for OMPT support."
+	fi
+    fi
+else # intel OMPT support
+    if [ $ompt = yes ]; then
+	omptlinking="-Wl,-rpath=$omptlib#-L$omptlib#$omptlibrary"
+	fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+    fi
+
+fi 
+
 
 echo "***********************************************************************"
 
@@ -5422,6 +5687,26 @@ cat <<EOF > mpi2iorequest.$msuf
     return MPI_File_iread_shared (fh, buf, count, datatype, request);
 
   }
+EOF
+
+cat <<EOF > mpi3const.$msuf
+#include <mpi.h>
+
+#ifndef TAU_MPICH3_CONST
+#define TAU_MPICH3_CONST 
+#endif 
+
+int  MPI_Send( buf, count, datatype, dest, tag, comm )
+TAU_MPICH3_CONST void * buf;
+int count;
+MPI_Datatype datatype;
+int dest;
+int tag;
+MPI_Comm comm;
+{
+  return PMPI_Send(buf, count, datatype, dest, tag, comm);
+}
+  
 EOF
 
 cat <<EOF > mpi2attr.$msuf
@@ -5603,6 +5888,21 @@ else
     echo "no"
 fi
 
+$echo "Checking for MPI 3 const interface... ${nnl}"
+if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  1> /dev/null 2>&1 ; then
+    echo "no"
+# MPI works. 
+else
+  if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
+    echo "yes"
+# MPI requires the const keyword 
+    fixmakeargs="$fixmakeargs MPICH3_CONST"
+   else
+    echo "no" 
+  fi
+fi
+
+
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
     fixmakeargs="$fixmakeargs LAMPI"
@@ -5717,7 +6017,7 @@ else
     fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
 fi
 
-/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o
+/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
 else
     fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
     mpilibargs_added_to_fixmakeargs=yes
@@ -6312,117 +6612,186 @@ fi
 ##########################################################################
 
 
-
 ######################################################################
 # Install BFD if requested
 ######################################################################
 binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
+
 if [ "x$bfddir" = xnone ]; then
-    echo "BFD disabled."
-    turnbfdoff=yes
+  echo "BFD disabled."
+  turnbfdoff=yes
 fi
+
 if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
-	
-    bfdtar=""
-    prebfddir=""
-    if [ ! -e "$bfddir/lib" ] && [ -f "$bfddir/$binutilstgz" ]; then
-    	    #if we do not have an install already at this location but we do have a valid tar file, build with the tar file here
-    	   bfdtar="yes"
-    	   prebfddir=`pwd`
+  bfdtar=""
+  prebfddir="`pwd`"
+  if [ ! -e "$bfddir/lib" ] && [ -f "$bfddir/$binutilstgz" ]; then
+    #if we do not have an install already at this location but we do have a valid tar file, build with the tar file here
+    bfdtar="yes"
+  fi
+
+  if [ "x$bfddir" = xdownload ] || [ "x$bfdtar" = xyes ] ; then
+    if [ "x$bfddir" = xdownload ]; then
+      #only change the bfddir if we are downloading
+      bfddir="$targetdir/$architecture/$binutils"
     fi
-    
-    if [ "x$bfddir" = xdownload ] || [ "x$bfdtar" = xyes ] ; then
-    	if [ "x$bfddir" = xdownload ]; then
-    	    #only change the bfddir if we are downloading
-	    bfddir=${targetdir}/${architecture}/$binutils
-	fi
-	if [ -r "$bfddir/lib/libbfd.a" ] ; then
-	    echo "BFD download already found, skipping"
-	else
-	if [ ! "x$bfdtar" = xyes ]; then
-	    #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
-      if [ -d /dev/shm -a -w /dev/shm ] ; then
-        tempdir=/dev/shm/tau_bfdbuild_$$
-      else
-        tempdir=".tmp_bfdbuild_$$"
-      fi
-	    mkdir $tempdir
-	    cd $tempdir
-	    if [ "$machine" = "apple" ] ; then
-                curl -L $binutilsurl > $binutilstgz
-	    else 
-                wget $binutilsurl
-	    fi
-	    if [ ! -f $binutilstgz ] ; then
-		echo "$binutilstgz did not download.  Please download it manually from: "
-                echo "$binutilsurl"
-		echo "Please enter the directory containing the tarball: ${nnl}" 
-		read RESPONSE
-		cp $RESPONSE/$binutilstgz .
-	    fi
-	  else
-	    cd $bfddir
-	  fi
-	    tar -xzf $binutilstgz
-	    cd $binutils
-	    if [ $machine = "bgp" ] ; then
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ --disable-nls --disable-werror
-		make && make install
-	    elif [ $machine = "bgq" ]; then
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ --disable-nls --disable-werror
-		make && make install
-	    elif [ $machine = "rs6000" -o  $machine = "ibm64" ]; then
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile
-		make && make install
-	    elif [ $machine = "arm_android" ]; then
-		patch -p1 <$START_DIR/android.binutils-2.23.2.patch
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile --host=$host
-		make && make install
-            else 
-		./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
-		make && make install
-            fi
-            cp bfd/*.h $bfddir/include
-	    cp -R include/* $bfddir/include
-
-            # Fix bfd.h
-            sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' $bfddir/include/bfd.h > $tempdir/bfd.h
-            mv $tempdir/bfd.h $bfddir/include
-	    
-	    # snow leopard
-	    if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
-		mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
-	    fi
-
-            if [ ! "x$bfdtar" = xyes ] ; then
-            	    #If we downloaded go back and remove the tempdir, otherwise just go back
-            	    cd ../..
-            	    rm -rf $tempdir
-            else
-            	    cd $prebfddir
-            fi
-	fi
-    fi #bfd=download
-    
-    bfdinclude="-I$bfddir/include"
-    fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-    bfdlink="-L$bfddir/lib -L$bfddir/lib64"
-    # The libintl.dylib library is in /opt/local/lib... is that everywhere?
-    if [ "x$machine" = "xapple" ] ; then
-	bfdlink="$bfdlink -L/opt/local/lib"
-	fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
+    if [ -r "$bfddir/lib/libbfd.a" ] ; then
+      echo "Found: $bfddir/lib/libbfd.a"
+      echo "BFD download already found, skipping"
     else
-	fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
-    fi
-    if [ ! -d $bfddir -a "$bfddif" = 'none' ] ; then
-        echo "Error: Cannot access BFD directory $bfddir"
+      if [ ! "x$bfdtar" = xyes ]; then
+        #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
+        tempdir="`pwd`/.tmp_bfdbuild_$$"
+        if [ -d /dev/shm -a -w /dev/shm ] ; then
+          # some linux distributions set noexec flag when mount tmpfs on /dev/shm
+          # make sure we can exec under /dev/shm
+          execheck="/dev/shm/tau_$$"
+          touch $execheck
+          chmod +x $execheck
+          if [ -x $execheck ]; then
+            tempdir="/dev/shm/tau_bfdbuild_$$"
+          fi
+          rm -f $execheck
+        fi
+        mkdir -p "$tempdir"
+        cd "$tempdir"
+        if [ "$machine" = apple ] ; then
+          curl -L "$binutilsurl" > "$binutilstgz"
+        else 
+          wget "$binutilsurl"
+        fi
+        if [ ! -f "$binutilstgz" ] ; then
+          echo "$binutilstgz did not download.  Please download it manually from: "
+          echo "$binutilsurl"
+          echo "Please enter the directory containing the tarball: ${nnl}" 
+          read RESPONSE
+          cp "$RESPONSE/$binutilstgz" .
+        fi
+      else # bfdtar = yes
+        cd "$bfddir"
+      fi
+
+      # Extract binutils archive
+      tar -xzf $binutilstgz
+      cd $binutils
+
+      # Configure binutils
+      case $machine in
+      bgp)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc \
+            CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      bgq)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc \
+            CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      rs6000|ibm64)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror --disable-largefile
+        err=$?
+        ;;
+      arm_android)
+        patch -p1 <$START_DIR/android.binutils-2.23.2.patch && \
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --host=$host \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror  --disable-largefile 
+        err=$?
+        ;;
+      mic_linux)
+        # Note: may need to search other paths than just /usr/linux-k1om-*
+        k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
+        export PATH=$k1om_bin:$PATH
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --host=x86_64-k1om-linux \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      *)
+        ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror
+        err=$?
+        ;;
+      esac
+
+      # Build and install binutils if configure successful
+      if [ $err -eq 0 ] ; then
+        make && make install
+      else
+        echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
         exit 1
-    fi
-else
-    fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
-fi
+      fi
+
+      # Install additional headers
+      cp bfd/*.h "$bfddir/include"
+      cp -R include/* "$bfddir/include"
+
+      # Install additional libraries
+      if [ -r libiberty/libiberty.a ] ; then
+        cp libiberty/libiberty.a "$bfddir/lib"
+      fi
+      if [ -r opcodes/libopcodes.a ] ; then
+        cp opcodes/libopcodes.a "$bfddir/lib"
+      fi
+
+      # Fix bfd.h
+      sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' "$bfddir/include/bfd.h" > "$tempdir/bfd.h"
+      mv "$tempdir/bfd.h" "$bfddir/include"
+
+      # Fix library paths on snow leopard
+      if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
+        cp "$bfddir/lib/x86_64/libiberty.a" "$bfddir/lib/libiberty.a"
+      fi
+
+      if [ ! "x$bfdtar" = xyes ] ; then
+        #If we downloaded go back and remove the tempdir, otherwise just go back
+        cd ../..
+        rm -rf "$tempdir"
+      else
+        cd "$prebfddir"
+      fi
+
+    fi # -r $bfddir/lib/libbfd.a
+  fi # $bfddir = download || bfdtar = yes
+
+  # One way or another, we now have a working BFD at $bfddir or we give up
+  if [ ! -d $bfddir ] ; then
+    echo "Error: Cannot access BFD directory $bfddir"
+    exit 1
+  fi
+  bfdinclude="-I$bfddir/include"
+  fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
+  bfdlink="-L$bfddir/lib -L$bfddir/lib64"
+
+  # The libintl.dylib library is in /opt/local/lib... is that everywhere?
+  if [ "x$machine" = "xapple" ] ; then
+    bfdlink="$bfdlink -L/opt/local/lib"
+    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
+  else
+    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+  fi
+else 
+  fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
+fi # bfd = yes && turnbfdoff != yes
 
 
 
@@ -6863,25 +7232,41 @@ fi
 
 ######################################################################
 
-if [ $pthread = yes ] ; then
+# If TBB support is requested, then make that the tag, not pthread
+if [ $tbb = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
-    tauoptions="${tauoptions}-pthread"
+    fixmakeargs="$fixmakeargs TBB_AVAILABLE"
+    tauoptions="${tauoptions}-tbb"
+else
+  if [ $pthread = yes ] ; then
+      fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
+      tauoptions="${tauoptions}-pthread"
+  fi
 fi
+
+if [ $ompt = yes -a $opari = yes ] ; then
+  echo "ERROR: Please enable either OMPT or Opari for instrumentation, but not both"
+  exit 1
+fi 
 
 # GOMP wrapping is only available for openmp
 if [ $openmp = yes ] ; then
     # GOMP wrapping is only available for GCC
     if [ $c_compiler = gcc ] || [ $machine = craycnl -a "x$PE_ENV" = xGNU ] ; then
-	# GOMP wrapping is not compatible with Opari.
-	if [ $opari = no ] ; then
-	    if [ $opari1 = no ] ; then
-		fixmakeargs="$fixmakeargs GOMP_AVAILABLE ptdir=$ptdir"
-	    else
-		echo "NOT using GOMP wrapper (Opari1)"
-	    fi
-	else
-	    echo "NOT using GOMP wrapper (Opari2)"
-	fi
+	  # GOMP wrapping is not compatible with Opari.
+	  if [ $opari = no ] ; then
+	      if [ $opari1 = no ] ; then
+	        if [ $ompt = no ] ; then
+		      fixmakeargs="$fixmakeargs GOMP_AVAILABLE ptdir=$ptdir"
+	        else
+		      echo "NOT using GOMP wrapper (OMPT)"
+			fi
+		  else 
+		    echo "NOT using GOMP wrapper (Opari1)"
+	      fi
+	  else
+	      echo "NOT using GOMP wrapper (Opari2)"
+	  fi
     fi
 fi
 
@@ -7026,6 +7411,10 @@ fi
 
 if [ -d $otfdir/include/otf2 ]; then
     fixmakeargs="$fixmakeargs OTF2 otfdir=$otfdir"
+    otfversion_11=`$otfdir/bin/otf2-config --version | grep "^1.1" | wc -l ` 
+    if [ $otfversion_11 = 1 ]; then
+      fixmakeargs="$fixmakeargs OTF2_1_1"
+    fi
 else
     if [ $otf = yes ] ; then
 	fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
@@ -7247,7 +7636,7 @@ if [ $openmp = yes ] ; then
     if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
     if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
     if [ "$fujitsu" = "yes" ]; then openmp_flag=-Kopenmp; fi
-    if [ "$default_fortran" = "cray" ]; then openmp_flag=-h omp; fi
+    if [ "$default_fortran" = "cray" ]; then openmp_flag=-h#omp; fi
     if [ "$intel" = "yes" ]; then openmp_flag=-openmp; fi
 
 
@@ -7357,6 +7746,12 @@ if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
     scorep11=`${scorepdir}/bin/scorep-config --version | grep "^1.1" | wc -l`
+    scorepmetadata=`nm -A ${scorepdir}/lib/*.a | grep SCOREP_Tau_AddLocationProperty | wc -l `
+    if [ $scorepmetadata != 0 ]; then
+      fixmakeargs="$fixmakeargs SCOREPMETADATA"
+      #echo "SCOREP: Adding TAU metadata..."
+    fi
+
     #echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
 	# default flags for Score-P 1.2+
@@ -7479,11 +7874,24 @@ if [ $epilog = yes ] ; then
 	fi
     fi
 fi
+if [ $dyninstinc = yes ] ; then
+    fixmakeargs="$fixmakeargs dyninstinc=$dyninstincdir DYNINST_INC"
+    #dyninstdir=$dyninstincdir/..
+    dyninst=yes
+fi
+
+if [ $dyninstlib = yes ] ; then
+    fixmakeargs="$fixmakeargs dyninstlib=$dyninstlibdir DYNINST_LIB"
+    dyninst=yes
+fi
 
 if [ $dyninst = yes ] ; then
-    fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
-    if [ ! -d $dyninstdir/lib ] ; then
-	fixmakeargs="$fixmakeargs DYNINST41"
+    fixmakeargs="$fixmakeargs DYNINST "
+    if [ "x$dyninstdir" != "x" ]; then
+      fixmakeargs="$fixmakeargs dyninstdir=$dyninstdir DYNINSTDIR"
+      if [ ! -d $dyninstdir/lib ] ; then
+	    fixmakeargs="$fixmakeargs DYNINST41"
+      fi
     fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
 	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
@@ -7491,16 +7899,17 @@ if [ $dyninst = yes ] ; then
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so -o -r $dyninstdir/lib/libcommon.so ] ; then
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so -o -r $dyninstdir/lib/libcommon.so -o -r $dyinstlibdir/libcommon.so ] ; then
 	fixmakeargs="$fixmakeargs DYNINST6"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so -o -r $dyninstdir/lib/libparseAPI.so ] ; then
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so -o -r $dyninstdir/lib/libparseAPI.so -o $dyninstlibdir/libparseAPI.so ] ; then
 	fixmakeargs="$fixmakeargs DYNINST7"
     fi
-    if [ -r $dyninstdir/include/walker.h ] ; then
+    if [ -r $dyninstdir/include/walker.h -o $dyninstincdir/walker.h ] ; then
 	fixmakeargs="$fixmakeargs DYNINST8"
     fi
 fi
+
 
 if [ $dwarf = yes ] ; then
     if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
@@ -8078,19 +8487,6 @@ sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
 
-if [ $default = false ] ; then
-    # replace TAU_MAKEFILE in TAU.h
-    cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
-fi
-
-if [ $tauprefix != unknown ] ; then 
-    echo "TAU: Copying include directory to ${tauprefix}"
-    cp -r include ${tauprefix}
-    echo "TAU: Copying man directory to ${tauprefix}"
-    cp -r man ${tauprefix}
-fi
-
-
 
 #############################################################################
 
@@ -8205,6 +8601,17 @@ else
     STUB="$tautoplevel/$architecture/lib/Makefile.tau$tauoptions"
 fi
 
+if [ $default = false ] ; then
+    # replace TAU_MAKEFILE in TAU.h
+    cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
+fi
+
+if [ $tauprefix != unknown ] ; then
+    echo "TAU: Copying include directory to ${tauprefix}"
+    cp -r include ${tauprefix}
+    echo "TAU: Copying man directory to ${tauprefix}"
+    cp -r man ${tauprefix}
+fi
 
 if [ $default = false ] ; then
     rm -f .active_stub
@@ -8244,5 +8651,16 @@ else
     echo "   Please add " $tauroot/$architecture/bin " to your path"
 fi
 echo '   Type "make install" to begin compilation'
+
+if [ -d /usr/linux-k1om-*  -a $machine = x86_64 ]
+then
+   echo "NOTE: This system supports Intel MIC. You may configure with -arch=mic_linux to enable this option." 
+fi
+
+if [ "x$PE_ENV" != "x" -a $machine = x86_64 ]
+then
+   echo "NOTE: This system supports the Cray CNL platform. You may configure with -arch=craycnl to enable this option." 
+fi
+
 
 exit 0

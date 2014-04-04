@@ -115,6 +115,9 @@ int OpenMPLayer::GetTauThreadId(void)
     _thread_count = _thread_count + 1;
     omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     Tau_global_decr_insideTAU();
+	// TAU may not be done initializing yet! So don't start the timer for thread 0
+	if (_tau_thread_id > 0) 
+      Tau_create_top_level_timer_if_necessary_task(_tau_thread_id);
   }
   return _tau_thread_id;
 #elif defined (TAU_USE_PGS)
@@ -133,6 +136,9 @@ int OpenMPLayer::GetTauThreadId(void)
     _thread_count = _thread_count + 1;
     omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     Tau_global_decr_insideTAU();
+	// TAU may not be done initializing yet! So don't start the timer for thread 0
+	if (tmp->threadID > 0)
+      Tau_create_top_level_timer_if_necessary_task(tmp->threadID);
   }
   return tmp->threadID;
 #endif // TAU_USE_TLS

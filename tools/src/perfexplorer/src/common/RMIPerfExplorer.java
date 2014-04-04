@@ -342,6 +342,8 @@ public interface RMIPerfExplorer extends Remote {
 
    public List<Integer> getSchemaVersions()
     throws RemoteException;
+
+   public int getSchemaVersion(int index) throws java.rmi.RemoteException;
    
 }
 

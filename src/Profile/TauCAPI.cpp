@@ -145,6 +145,7 @@ union Tau_thread_status_flags
     int Tau_global_stackpos;
     int Tau_global_insideTAU;
     int Tau_is_thread_fake_for_task_api;
+    int lightsOut;
   };
 
   char _pad[64];
@@ -156,8 +157,9 @@ struct Tau_thread_status_flags {
   int Tau_global_stackpos;
   int Tau_global_insideTAU;
   int Tau_is_thread_fake_for_task_api;
+  int lightsOut;
   // Not as elegant, but similar effect
-  char _pad[64-sizeof(Profiler*)-4*sizeof(int)];
+  char _pad[64-sizeof(Profiler*)-5*sizeof(int)];
 };
 #endif
 
@@ -181,13 +183,13 @@ static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 
 #if defined (TAU_USE_TLS)
 __thread int _Tau_global_insideTAU = 0;
+__thread int lightsOut = 0;
 #elif defined (TAU_USE_DTLS)
 __declspec(thread) int _Tau_global_insideTAU = 0;
+__declspec(thread) int lightsOut = 0;
 #elif defined (TAU_USE_PGS)
 #include "TauPthreadGlobal.h"
 #endif
-
-int lightsOut = 0;
 
 
 static void Tau_stack_checkInit() {
@@ -195,7 +197,13 @@ static void Tau_stack_checkInit() {
   if (init) return;
   init = true;
 
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   lightsOut = 0;
+#elif defined(TAU_USE_PGS)
+  TauGlobal::getInstance().getValue()->lightsOut = 0;
+#else
+  Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut = 0;
+#endif
 
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     Tau_thread_flags[i].Tau_global_stackdepth = 0;
@@ -208,14 +216,26 @@ static void Tau_stack_checkInit() {
 
 extern "C" int Tau_global_getLightsOut() {
   Tau_stack_checkInit();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return lightsOut;
+#elif defined(TAU_USE_PGS)
+  return TauGlobal::getInstance().getValue()->lightsOut;
+#else
+  return Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut;
+#endif
 }
 
 extern "C" void Tau_global_setLightsOut() {
   Tau_stack_checkInit();
   // Disable profiling from here on out
   Tau_global_incr_insideTAU();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   lightsOut = 1;
+#elif defined(TAU_USE_PGS)
+  TauGlobal::getInstance().getValue()->lightsOut = 1;
+#else
+  Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut = 1;
+#endif
 }
 
 /* the task API does not have a real thread associated with the tid */
@@ -246,13 +266,13 @@ extern "C" int Tau_global_get_insideTAU() {
 extern "C" int Tau_global_incr_insideTAU()
 {
   Tau_stack_checkInit();
+  Tau_memory_wrapper_disable();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return ++_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   return ++(tmp->insideTAU);
 #else
-  Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
@@ -263,22 +283,25 @@ extern "C" int Tau_global_incr_insideTAU()
 
 extern "C" int Tau_global_decr_insideTAU()
 {
+  int retval;
   Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
-  return --_Tau_global_insideTAU;
+  retval = --_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
-  return --(tmp->insideTAU);
+  retval = --(tmp->insideTAU);
 #else
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
   *insideTAU = *insideTAU - 1;
-  TAU_ASSERT(*insideTAU >= 0, "Thread has decremented the insideTAU counter past 0");
-
-  if (*insideTAU == 0) Tau_memory_wrapper_enable();
-  return *insideTAU;
+  retval = *insideTAU;
 #endif
+  TAU_ASSERT(retval >= 0, "Thread has decremented the insideTAU counter past 0");
+  if (retval == 0) {
+    Tau_memory_wrapper_enable();
+  }
+  return retval;
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
@@ -365,10 +388,24 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
     int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
+    //printf("%d: NEW STACK DEPTH: %d\n", tid, newDepth); 
     //Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+
+    //A deep copy is necessary here to keep the profiler pointers up to date
     Profiler *newStack = (Profiler *) calloc(newDepth, sizeof(Profiler));
     memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
+
+    int tmpDepth=oldDepth;
+    Profiler *fixP = &(newStack[oldDepth]);
+    while(tmpDepth>0){
+    	tmpDepth--;
+    	fixP->ParentProfiler=&(newStack[tmpDepth]);
+    	fixP=fixP->ParentProfiler;
+
+    }
+
     free(Tau_thread_flags[tid].Tau_global_stack);
+
     Tau_thread_flags[tid].Tau_global_stack = newStack;
     Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
@@ -440,7 +477,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
-    //Tau_sampling_event_start(tid, p->address);
+    // if the unwind depth should be "automatic", then get the stack for right now
+    if (TauEnv_get_ebs_unwind_depth() == 0) {
+      Tau_sampling_event_start(tid, p->address);
+    }
   }
 #endif
 }
@@ -805,6 +845,7 @@ extern "C" int Tau_profile_exit_all_threads()
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+
 #ifdef TAU_ANDROID
   bool su = false;
   if (JNIThreadLayer::GetThreadId() == 0) {
@@ -831,6 +872,7 @@ extern "C" int Tau_profile_exit_all_threads()
 	  // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
       }
   }
+
   Tau_disable_instrumentation();
   return 0;
 }
@@ -1989,7 +2031,7 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
 
 // This function will return a timer for the Collector API OpenMP state, if available
 // This is called by the OpenMP collector API wrapper initialization...
-extern "C" void Tau_create_thread_state_if_necessary(const char *name)
+FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
@@ -1998,12 +2040,13 @@ extern "C" void Tau_create_thread_state_if_necessary(const char *name)
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(n);
   if (it == pure.end()) {
-    tauCreateFI((void**)&fi, n, "", TAU_USER, "TAU_OMP_STATE");
+    tauCreateFI_signalSafe((void**)&fi, n, "", TAU_USER, "TAU_OMP_STATE");
     pure[n] = fi;
   } else {
     fi = it->second;
   }
   RtsLayer::UnLockEnv();
+  return fi;
 }
 
 // This function will return a timer for the Collector API OpenMP state, if available

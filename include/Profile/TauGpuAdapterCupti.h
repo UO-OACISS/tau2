@@ -152,6 +152,9 @@ public:
         //printf("found host launch site: %s.\n", funcInfo->GetName());
       }
     }
+    if (funcInfo != NULL) {
+      funcInfo->SetPrimaryGroupName("TAU_REMOTE");
+    }
     return funcInfo;
 	};
 

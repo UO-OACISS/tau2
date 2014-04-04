@@ -45,6 +45,7 @@ public class TreeUI {
 		items.add("Add Sub-View");
 		items.add("Add Metadata Field To All Trials");
 		items.add("Remove Metadata Field From All Trials");
+		items.add("Edit");
 		items.add("Delete");
 		items.add("Rename");
 		return getTreePopupMenu(items,l);
