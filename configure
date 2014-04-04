@@ -6707,7 +6707,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       arm_android)
         patch -p1 <$START_DIR/android.binutils-2.23.2.patch && \
         ./configure \
-            CFLAGS=-fPIC CXXFLAGS=-fPIC 
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=$host \
             --prefix=$bfddir \
             --disable-nls --disable-werror  --disable-largefile 
