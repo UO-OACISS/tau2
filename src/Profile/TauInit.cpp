@@ -398,9 +398,10 @@ extern "C" int Tau_init_initializeTAU()
 #ifdef __MIC__
   if (TauEnv_get_mic_offload()) {
     TAU_PROFILE_SET_NODE(0);
-    Tau_create_top_level_timer_if_necessary();
   }
 #endif
+
+  Tau_create_top_level_timer_if_necessary();
 
   Tau_memory_wrapper_enable();
 
