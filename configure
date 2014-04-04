@@ -5435,6 +5435,15 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
+      if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+      then
+        unwind_c_compiler=gcc
+        unwind_cxx_compiler=g++
+      else
+        unwind_c_compiler=${c_compiler}
+        unwind_cxx_compiler=${cxx_compiler}
+      fi
+
       if [ $machine != mic_linux ]; then 
         configresult=0
         makeresult=0
@@ -5442,14 +5451,14 @@ if [ "x$download_unwind" = xyes ] ; then
         cd $libunwind
         echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
         if [ "x$machine" = "xbgq" ] ; then
-          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} --disable-shared &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared &> ${libunwind_log}
           cp src/unwind/Resume.c tmp.c
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
           ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared &> ${libunwind_log}
         else
-          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} &> ${libunwind_log}
         fi
         configresult=$?
         if [ $configresult -eq 0 ] ; then
@@ -7428,7 +7437,7 @@ else
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
-    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc ] ; then
+    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc ] ; then
 	unwind_extras="-Wl\,-rpath=$unwind_lib"
     fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
