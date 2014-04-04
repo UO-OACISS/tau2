@@ -432,6 +432,33 @@ then
          }, 
   " 
 fi
+
+# Process exclude text if it is relevant
+if [ $excludelist = true ]
+then
+  excluderoutines=` sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' select.tau |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g'  -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' `
+
+  echoIfShortVerbose "Include Routines are $excluderoutines"
+  excludetext=" 
+          filters = {{  
+            type = \"blacklist\", 
+            filter = { {subtype = \"regexplist\",value = {$excluderoutines}} }
+            }},
+  "
+fi
+
+# Process include text if it is relevant
+if [ $includelist = true ]
+then
+  includeroutines=`sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' select.tau |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//' -e 's/#/\.\*/g'  -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g'`
+  echoIfShortVerbose "Include Routines are $includeroutines"
+  includetext=" 
+          filters = {{  
+            type = \"whitelist\", 
+            filter = { {subtype = \"regexplist\",value = {$includeroutines}} }
+            }},
+  "
+fi
 # Now we write to the $outfile
 luafile="$defs $prologue
 events = {
@@ -457,7 +484,7 @@ events = {
         output_suffix = \"_inst\",
         output_name = \"$baseinfile.tau_rewritten\",
         functions={
-          {
+          { $includetext $excludetext
             entries = {
               {
                  at_program_entry = {
