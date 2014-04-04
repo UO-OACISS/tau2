@@ -1336,6 +1336,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
 
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
 
+pid_t gettid(void);
 /*********************************************************************
  * Handler for itimer interrupt
  ********************************************************************/
