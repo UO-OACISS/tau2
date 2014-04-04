@@ -7,7 +7,7 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
-**	File 		: JavaThreadLayer.cpp				  **
+**	File 		: JVMTIThreadLayer.cpp				  **
 **	Description 	: TAU Profiling Package RTS Layer definitions     **
 **			  for supporting Java Threads 			  **
 **	Contact		: tau-team@cs.uoregon.edu 		 	  **
@@ -27,7 +27,7 @@ using namespace std;
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
 #include <Profile/Profiler.h>
-#include <Profile/JavaThreadLayer.h>
+#include <Profile/JVMTIThreadLayer.h>
 #include <Profile/TauJVMTI.h>
 #include <stdlib.h>
 
@@ -35,14 +35,14 @@ using namespace std;
 
 
 /////////////////////////////////////////////////////////////////////////
-// Define the static private members of JavaThreadLayer  
+// Define the static private members of JVMTIThreadLayer  
 /////////////////////////////////////////////////////////////////////////
 
-int 	  JavaThreadLayer::tauThreadCount = 0; 
-jrawMonitorID JavaThreadLayer::tauNumThreadsLock ;
-jrawMonitorID JavaThreadLayer::tauDBMutex ;
-jrawMonitorID JavaThreadLayer::tauEnvMutex ;
-jvmtiEnv  * JavaThreadLayer::jvmti = NULL;
+int 	  JVMTIThreadLayer::tauThreadCount = 0; 
+jrawMonitorID JVMTIThreadLayer::tauNumThreadsLock ;
+jrawMonitorID JVMTIThreadLayer::tauDBMutex ;
+jrawMonitorID JVMTIThreadLayer::tauEnvMutex ;
+jvmtiEnv  * JVMTIThreadLayer::jvmti = NULL;
 extern void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid);
 
 extern GlobalAgentData * get_global_data();
@@ -51,9 +51,9 @@ extern GlobalAgentData * get_global_data();
 // invoked. This routine sets the thread id that is used by the code in
 // FunctionInfo and Profiler classes. 
 ////////////////////////////////////////////////////////////////////////
-int * JavaThreadLayer::RegisterThread(jthread this_thread)
+int * JVMTIThreadLayer::RegisterThread(jthread this_thread)
 {
-  static int initflag = JavaThreadLayer::InitializeThreadData();
+  static int initflag = JVMTIThreadLayer::InitializeThreadData();
   // if its in here the first time, setup mutexes etc.
 
   dprintf("RegisterThread called\n");
@@ -91,7 +91,7 @@ int * JavaThreadLayer::RegisterThread(jthread this_thread)
 // ThreadEnd Cleans up the thread.
 // Needs to be issued before the thread is killed.
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::ThreadEnd(jthread this_thread){
+int JVMTIThreadLayer::ThreadEnd(jthread this_thread){
   int * tidp;
   jvmti->GetThreadLocalStorage(this_thread, (void **) &tidp);
 
@@ -104,7 +104,7 @@ int JavaThreadLayer::ThreadEnd(jthread this_thread){
 // GetThreadId returns an id in the range 0..N-1 by looking at the 
 // thread specific data.
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::GetThreadId(jthread this_thread) 
+int JVMTIThreadLayer::GetThreadId(jthread this_thread) 
 {
   int *tidp ;
   static GlobalAgentData * gdata = get_global_data();
@@ -122,7 +122,7 @@ int JavaThreadLayer::GetThreadId(jthread this_thread)
     DEBUGPROFMSG("This thread doesn't apear to be registered.\n";);
 
     dprintf("getThreadID calls RegisterThread\n"); 
-    tidp = JavaThreadLayer::RegisterThread(this_thread);
+    tidp = JVMTIThreadLayer::RegisterThread(this_thread);
     if ((*tidp) == 0) {
      // Main JVM thread has tid 0, others have tid > 0
       CreateTopLevelRoutine("THREAD=JVM-MainThread; THREAD GROUP=system", " ", "THREAD", (*tidp));
@@ -140,9 +140,9 @@ int JavaThreadLayer::GetThreadId(jthread this_thread)
 ////////////////////////////////////////////////////////////////////////
 // InitializeThreadData is called before any thread operations are performed. 
 // It sets the default values for static private data members of the 
-// JavaThreadLayer class.
+// JVMTIThreadLayer class.
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::InitializeThreadData(void)
+int JVMTIThreadLayer::InitializeThreadData(void)
 {
   // Initialize the mutex
   jvmtiError             error;
@@ -157,7 +157,7 @@ int JavaThreadLayer::InitializeThreadData(void)
 }
 
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::InitializeDBMutexData(void)
+int JVMTIThreadLayer::InitializeDBMutexData(void)
 {
   jvmtiError error;
   static bool initialized = false;
@@ -180,7 +180,7 @@ int JavaThreadLayer::InitializeDBMutexData(void)
 // followed by a GetFunctionID() ). This is used in 
 // FunctionInfo::FunctionInfoInit().
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::LockDB(void)
+int JVMTIThreadLayer::LockDB(void)
 {
   jvmtiError error;
   InitializeDBMutexData();
@@ -195,7 +195,7 @@ int JavaThreadLayer::LockDB(void)
 ////////////////////////////////////////////////////////////////////////
 // UnLockDB() unlocks the mutex tauDBMutex used by the above lock operation
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::UnLockDB(void)
+int JVMTIThreadLayer::UnLockDB(void)
 {
   jvmtiError error;
 
@@ -206,7 +206,7 @@ int JavaThreadLayer::UnLockDB(void)
 }  
 
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::InitializeEnvMutexData(void)
+int JVMTIThreadLayer::InitializeEnvMutexData(void)
 {
   jvmtiError             error;
   static bool initialized = false;
@@ -234,7 +234,7 @@ int JavaThreadLayer::InitializeEnvMutexData(void)
 // followed by a GetFunctionID() ). This is used in 
 // FunctionInfo::FunctionInfoInit().
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::LockEnv(void)
+int JVMTIThreadLayer::LockEnv(void)
 {
   jvmtiError error;
   InitializeEnvMutexData();
@@ -247,7 +247,7 @@ int JavaThreadLayer::LockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 // UnLockDB() unlocks the mutex tauDBMutex used by the above lock operation
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::UnLockEnv(void)
+int JVMTIThreadLayer::UnLockEnv(void)
 {
   jvmtiError error;
   // Unlock the Env mutex
@@ -259,7 +259,7 @@ int JavaThreadLayer::UnLockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 // TotalThreads returns the number of active threads 
 ////////////////////////////////////////////////////////////////////////
-int JavaThreadLayer::TotalThreads(void)
+int JVMTIThreadLayer::TotalThreads(void)
 {
   int count;
   // For synchronization, we lock the thread count mutex. If we had a 
@@ -274,19 +274,19 @@ int JavaThreadLayer::TotalThreads(void)
 }
 
 // Use JVMTI to get per thread cpu time (microseconds)
-jlong JavaThreadLayer::getCurrentThreadCpuTime(void) {
+jlong JVMTIThreadLayer::getCurrentThreadCpuTime(void) {
   jlong thread_time;
   jvmti->GetCurrentThreadCpuTime(&thread_time);
   return thread_time;
 }
   
-// EOF JavaThreadLayer.cpp 
+// EOF JVMTIThreadLayer.cpp 
 
 
 /***************************************************************************
- * $RCSfile: JavaThreadLayer.cpp,v $   $Author: khuck $
+ * $RCSfile: JVMTIThreadLayer.cpp,v $   $Author: khuck $
  * $Revision: 1.8 $   $Date: 2009/03/13 00:46:56 $
- * TAU_VERSION_ID: $Id: JavaThreadLayer.cpp,v 1.8 2009/03/13 00:46:56 khuck Exp $
+ * TAU_VERSION_ID: $Id: JVMTIThreadLayer.cpp,v 1.8 2009/03/13 00:46:56 khuck Exp $
  ***************************************************************************/
 
 

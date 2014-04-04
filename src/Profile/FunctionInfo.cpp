@@ -347,6 +347,8 @@ FunctionInfo::~FunctionInfo()
 // name, and type.
 //	delete [] Name;
 //	delete [] Type;
+  free(GroupName);
+  free(AllGroups);
   TheSafeToDumpData() = 0;
 }
 

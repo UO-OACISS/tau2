@@ -131,7 +131,8 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #include <Profile/ProfileHeaders.h>
 #include <Profile/PthreadLayer.h>
 #include <Profile/TulipThreadLayer.h>
-#include <Profile/JavaThreadLayer.h>
+#include <Profile/JNIThreadLayer.h>
+#include <Profile/JVMTIThreadLayer.h>
 #include <Profile/SprocLayer.h>
 #include <Profile/PapiThreadLayer.h>
 #include <Profile/RtsLayer.h>

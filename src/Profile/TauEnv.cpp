@@ -22,12 +22,18 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #ifndef TAU_WINDOWS
 #include <strings.h>
 #else
 #define strcasecmp(X, Y)  stricmp(X, Y)
 #define unsetenv(X)
 #endif
+
+#ifdef TAU_ANDROID
+#include <android/log.h>
+#endif
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -260,6 +266,9 @@ static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
 
+#ifdef TAU_ANDROID
+static int env_alfred_port = 6113;
+#endif
 } // extern "C"
 
 /*********************************************************************
@@ -449,7 +458,11 @@ static int TauConf_read()
 
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
+#ifdef TAU_ANDROID
+    tmp = "/sdcard/tau.conf";
+#else
     tmp = "tau.conf";
+#endif
   }
   FILE * cfgFile = fopen(tmp, "r");
   if (!cfgFile) {
@@ -578,6 +591,19 @@ void TAU_VERBOSE(const char *format, ...)
   if (env_verbose == 1) {
     TauInternalFunctionGuard protects_this_function;
     va_list args;
+
+#ifdef TAU_ANDROID
+
+    va_start(args, format);
+
+    __android_log_vprint(ANDROID_LOG_VERBOSE, "TAU", format, args);
+
+    //vasprintf(&str, format, args);
+
+    va_end(args);
+
+#else
+
     va_start(args, format);
 
 #ifdef TAU_GPI
@@ -586,7 +612,9 @@ void TAU_VERBOSE(const char *format, ...)
     vfprintf(stderr, format, args);
 #endif
     va_end(args);
-    fflush (stderr);
+    fflush(stderr);
+
+#endif
   } // END inside TAU
 }
 
@@ -881,6 +909,11 @@ int TauEnv_get_pthread_stack_size() {
   return env_pthread_stack_size;
 }
 
+#ifdef TAU_ANDROID
+int TauEnv_get_alfred_port() {
+  return env_alfred_port;
+}
+#endif
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -1704,6 +1737,14 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
       TAU_METADATA("TAU_BFD_LOOKUP", "off");
     }
+
+#ifdef TAU_ANDROID
+    tmp = getconf("TAU_ALFRED_PORT");
+    if (tmp) {
+	env_alfred_port = atoi(tmp);
+    }
+    TAU_VERBOSE("TAU: Alfred will listen on port %d\n", env_alfred_port);
+#endif
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
