@@ -6711,6 +6711,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         fi
       else # bfdtar = yes
         cd "$bfddir"
+        tempdir="$bfddir"
         # TAU uses -prefix=bfddir while configuring BFD. So, it must be set to TAU's dir
         bfddir=$targetdir/$architecture/$binutils
       fi
