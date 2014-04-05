@@ -1572,6 +1572,18 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-ompt=*)
+	    openmp=yes
+	    ompt=yes
+	    ompt_dir=`echo $arg | sed -e 's/-ompt=//'`
+        if [ ! -d $ompt_dir ] 
+        then
+          echo "Error: OMPT directory $ompt_dir cannot be accessed"
+          exit 1 
+        fi 
+	    shift
+	    ;;
+
 	-ompt*)
 	    openmp=yes
 	    ompt=yes
@@ -5404,6 +5416,14 @@ if [ $machine = mic_linux ] ; then
   libunwindtgz=$libunwind.tgz
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
+
+if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
+  if [ -r $unwind_dir/$libunwindtgz ]; then 
+    echo "NOTE: Copying $unwind_dir/$libunwindtgz "
+    cp $unwind_dir/$libunwindtgz .
+    download_unwind=yes
+  fi
+fi
   
 if [ "x$download_unwind" = xyes ] ; then
   unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
@@ -5506,6 +5526,15 @@ libomp_osstgz=$libomp_oss.tar.gz
 libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
+
+if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
+  if [ -r $ompt_dir/$libomp_osstgz ]; then 
+    echo "NOTE: Copying $ompt_dir/$libomp_osstgz"
+    cp $ompt_dir/$libomp_osstgz .
+    download_ompt=yes
+  fi
+fi
+
 if [ "x$download_ompt" = xyes ] ; then
   prebfddir=`pwd`
 
@@ -5519,10 +5548,12 @@ if [ "x$download_ompt" = xyes ] ; then
   else
     # get the tar file
     echo "downloading $libomp_osstgz..."
-    if [ "$machine" = "apple" ] ; then
-      curl -L $libomp_ossurl > $libomp_osstgz
-    else 
-      wget $libomp_ossurl
+    if [ ! -f $libomp_osstgz ]; then 
+      if [ "$machine" = "apple" ] ; then
+        curl -L $libomp_ossurl > $libomp_osstgz
+      else 
+        wget $libomp_ossurl
+      fi
     fi
 
     # check the tar file
