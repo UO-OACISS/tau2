@@ -16,6 +16,10 @@
 #include <mpi.h>
 #include <Profile/TauUtil.h>
 
+#ifdef TAU_MPC
+#define MPI_Comm_c2f PMPI_Comm_c2f
+#endif /* TAU_MPC */
+
 
 #ifdef TAU_LAMPI
 MPI_Fint TAU_MPI_Request_c2f(MPI_Request c_request) {
