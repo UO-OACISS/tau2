@@ -587,8 +587,6 @@ SDDF_DIR=
 
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
-#MPC#FWRAPPER	       = #ENDIF#
-# Disabling MPC support for MPI_Comm_c2f
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
 #APPLECXX#MPI2EXTENSIONS	       =  #ENDIF#
 #CRAYX1CC#MPI2EXTENSIONS	       =        #ENDIF#
