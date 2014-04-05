@@ -381,12 +381,13 @@ if [ $? = 1 ]; then
 else
   echoIfShortVerbose "Dynamic executable $infile"
 fi
-prologue="extlibs = { 
-`eval $BASEDIR/bin/tau_show_libs $BASEDIR/lib/Makefile.tau$makefile_binding`  
-};"
 
 if [ $isStatic = false ]; then
   prologue=""
+else
+  prologue="extlibs = { 
+`eval $BASEDIR/bin/tau_show_libs $BASEDIR/lib/Makefile.tau$makefile_binding`  
+};"
 fi
 
 # Process loop text if it is relevant
