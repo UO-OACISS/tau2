@@ -349,6 +349,7 @@ for arg in "$@"; do
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
+	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
 	    echo "-cube=<dir> | own | ext..... Specify location of CUBE or use TAU's jar."
 	    echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
 	    echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
@@ -457,6 +458,7 @@ for arg in "$@"; do
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
+	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
 	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
 	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
@@ -1610,6 +1612,17 @@ for arg in "$@"; do
 		echo "Error: Cannot access JDK directory $jdkdir"
 		exit 1
 	    fi 
+
+	    shift
+	    ;;
+
+	-android_sdk=*)
+	    android_sdk=`echo $arg | sed -e 's/-android_sdk=//'`
+	    if [ ! -d $android_sdk ]
+	    then
+		echo "Error: Cannot access Android SDK directory $android_sdk"
+		exit 1
+	    fi
 
 	    shift
 	    ;;
@@ -5344,7 +5357,13 @@ case $machine in
 
     arm_android)
 	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine ANDROID $fixmakeargs"
+	if [ "x$android_sdk" = "x" ]; then
+	    echo "Error: No Android SDK specified. You may want to specify \"-android_sdk=<dir>\""
+	    exit 1
+	fi
+
+	fixmakeargs="arch=$machine ANDROID android_sdk=$android_sdk $fixmakeargs"
+
 	if [ $papi = yes ] ; then
 	    fixmakeargs="ARMLINUXPAPI $fixmakeargs"
 	fi

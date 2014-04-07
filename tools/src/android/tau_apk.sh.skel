@@ -1,0 +1,60 @@
+#!/bin/sh
+
+JDKDIR=@JDKDIR@
+ANDROID_SDK=@ANDROID_SDK@
+TAU_BIN_DIR=@TAU_BIN_DIR@
+TAU_LIB_DIR=@TAU_LIB_DIR@
+
+BXML=$TAU_BIN_DIR/bxml
+JAVA="$JDKDIR/bin/java -cp $TAU_LIB_DIR/asmdex.jar:$TAU_LIB_DIR/DexInjector.jar"
+JAR=$JDKDIR/bin/jar
+JARSIGNER=$JDKDIR/bin/jarsigner
+KEYTOOL=$JDKDIR/bin/keytool
+ZIPALIGN=$ANDROID_SDK/tools/zipalign
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $0 <Package.apk> <InjectedPackage.apk>"
+    exit 1
+fi
+
+if [ ! -f $1 ]; then
+    echo "Error: Cannot open $1"
+    exit 1;
+fi
+
+if [ -f $2 ]; then
+    echo "Error: $2: file already exist"
+    exit 1
+fi
+
+apkfile=.`basename $1`.$$
+
+mkdir .tau_apk.$$
+cd .tau_apk.$$
+
+echo "Inflate $1 ..."
+$JAR xf $1
+
+echo "Inject AndroidManifest.xml ..."
+$BXML -i .new.xml.$$ AndroidManifest.xml
+mv .new.xml.$$ AndroidManifest.xml
+
+echo "Inject classes.dex ..."
+package=`$BXML -d AndroidManifest.xml | awk '/^<manifest.*android:package="(.*)">/ {print gensub(/^<manifest.*android:package="(.*)">/, "\\\\1", "g")}'`
+$JAVA edu.uoregon.TAU.dexInjector.DexInjector classes.dex .classes.dex.$$ $package >/dev/null
+mv .classes.dex.$$ classes.dex
+
+echo "Repack to $2 ..."
+rm -rf META-INF
+mkdir -p lib/armeabi/
+mv map.ser lib/armeabi/libTAU_fake.so
+cp $TAU_LIB_DIR/libTAU.so lib/armeabi/
+$JAR cf $apkfile .
+if [ ! -f ~/.android/debug.keystore ]; then
+    $KEYTOOL -genkey -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"
+fi
+$JARSIGNER -keystore ~/.android/debug.keystore -storepass android -keypass android $apkfile androiddebugkey
+$ZIPALIGN 4 $apkfile ../$2
+
+cd ..
+rm -rf .tau_apk.$$

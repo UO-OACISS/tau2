@@ -424,6 +424,11 @@ case $1 in
 	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout
 	;;
 
+     android_sdk=*)
+        android_sdk=`echo $1 | sed -e 's/^android_sdk=//'`
+	echo "s,^ANDROID_SDK=.*$,ANDROID_SDK=$android_sdk,g" >> $sedout
+	;;
+
      pythoninc=*)
         pythoninc=`echo $1 | sed -e 's/^pythoninc=//'`
 	echo "s,^PYTHON_INCDIR=.*$,PYTHON_INCDIR=$pythoninc,g" >> $sedout
