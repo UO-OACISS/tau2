@@ -659,7 +659,7 @@ vector<string> result;
   // try to grab CPU info
   FILE *f = fopen("/proc/cpuinfo", "r");
   if (f) {
-    char line[4096];
+    char line[4096] = {0};
     while (Tau_util_readFullLine(line, f)) {
       char const * value = strstr(line,":");
       if (!value) {
