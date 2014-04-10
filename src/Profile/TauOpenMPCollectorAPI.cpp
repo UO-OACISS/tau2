@@ -477,10 +477,6 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
     if (!Tau_collector_enabled || 
         !Tau_RtsLayer_TheEnableInstrumentation()) return;
 
-    /* Never process anything internal to TAU */
-    if (Tau_global_get_insideTAU() > 0) {
-        return;
-    }
     Tau_global_incr_insideTAU();
 
     int tid = Tau_get_tid();
