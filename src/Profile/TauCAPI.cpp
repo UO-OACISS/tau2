@@ -268,6 +268,7 @@ extern "C" int Tau_global_incr_insideTAU()
   Tau_stack_checkInit();
   Tau_memory_wrapper_disable();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
+  //printf("enter TAU: %d -> %d\n", _Tau_global_insideTAU, _Tau_global_insideTAU+1); fflush(stdout);
   return ++_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
@@ -286,6 +287,7 @@ extern "C" int Tau_global_decr_insideTAU()
   int retval;
   Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
+  //printf("exit TAU: %d -> %d\n", _Tau_global_insideTAU, _Tau_global_insideTAU-1); fflush(stdout);
   retval = --_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
