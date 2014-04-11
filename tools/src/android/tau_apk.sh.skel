@@ -53,7 +53,7 @@ $JAR cf $apkfile .
 if [ ! -f ~/.android/debug.keystore ]; then
     $KEYTOOL -genkey -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"
 fi
-$JARSIGNER -keystore ~/.android/debug.keystore -storepass android -keypass android $apkfile androiddebugkey
+$JARSIGNER -sigalg MD5withRSA -digestalg SHA1 -keystore ~/.android/debug.keystore -storepass android -keypass android $apkfile androiddebugkey
 $ZIPALIGN 4 $apkfile ../$2
 
 cd ..

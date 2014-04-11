@@ -697,7 +697,9 @@ bxml_add_cstring_at(bxml_t *xml, char *str, int pos)
 
     pool->stringCount  += 1;
     pool->stringOffset += 4;
-    pool->styleOffset  += 4 + sizeof(uint16_t) * (len + 2);
+    if (pool->styleCount > 0) {
+	pool->styleOffset  += 4 + sizeof(uint16_t) * (len + 2);
+    }
     pool->strings = (uint8_t**)malloc(sizeof(uint8_t*) * pool->stringCount);
     pool->cstrings = (char **)malloc(sizeof(char*) * pool->stringCount);
 
@@ -1075,9 +1077,9 @@ bxml_enable_debug(bxml_t *xml)
 {
     int i;
     node_t *node;
-    attr_t *attr;
+    attr_t *attr, *attrs;
     resourceMap_t *map;
-    uint32_t *ids;
+    int pos;
 
     node = bxml_find_node(xml->node, "manifest.application", NULL);
     if (node == NULL) {
@@ -1088,6 +1090,12 @@ bxml_enable_debug(bxml_t *xml)
     /* do we already have "debuggable" attribute in manifast.application? */
     for (i=0; i<node->attrCount; i++) {
 	attr = &node->attrs[i];
+
+	if (attr->name < xml->resourceMap->count) {
+	    if (xml->resourceMap->ids[attr->name] < 0x0101000f) {
+		pos = i;
+	    }
+	}
 
 	if (strcmp(STR(attr->name), "debuggable") == 0) {
 	    /* yes, now just need to make sure the value is true */
@@ -1100,10 +1108,21 @@ bxml_enable_debug(bxml_t *xml)
     }
 
     /* no, we do not, let's add it */
+    pos += 1;
     node->attrCount += 1;
-    node->attrs = realloc(node->attrs, sizeof(attr_t) * node->attrCount);
 
-    attr = &node->attrs[node->attrCount-1];
+    attrs = (attr_t*)malloc(sizeof(attr_t) * node->attrCount);
+
+    /* looks like attributes must appear in order of their resource id */
+    for (i=0; i<pos; i++) {
+	attrs[i] = node->attrs[i];
+    }
+    attr = &node->attrs[pos];
+    for (i=pos+1; i<node->attrCount; i++) {
+	attrs[i] = node->attrs[i-1];
+    }
+    free(node->attrs);
+    node->attrs = attrs;
 
     attr->ns                  =
 	bxml_add_cstring(xml, "http://schemas.android.com/apk/res/android");
@@ -1130,8 +1149,7 @@ bxml_enable_debug(bxml_t *xml)
      * Resource ID for attribute name "debuggable" is always 0x0101000f.
      * See <Android>/system/frameworks/base/core/res/res/values/public.xml
      */
-    map->ids[0] = 0x0101000f;
-
+    map->ids[0] = 0x0101000f;  // array index is 0 because attr->name==0
     for (i=1; i<map->count; i++) {
 	map->ids[i] = xml->resourceMap->ids[i-1];
     }
