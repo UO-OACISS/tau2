@@ -190,7 +190,7 @@ public class SelectiveFileGenerator extends JFrame {
         });
 
         lastDirectory = System.getProperty("user.dir");
-        fileLocation.setText(lastDirectory + "/select.tau");
+        fileLocation.setText(lastDirectory + File.separatorChar+ "select.tau");
 
         chooseFileButton.addActionListener(new ActionListener() {
 
