@@ -3,13 +3,15 @@ package edu.uoregon.TAU.dexInjector;
 import java.util.*;
 
 public class Filter {
-    public static String className;   // Full qualified class name
+    public static String   className;       // Full qualified class name
+    public static int      classAccess;     // access flags
     public static String[] classSignature;  // no use
-    public static String classSuperName; // Full qualified super class name
+    public static String   classSuperName;  // Full qualified super class name
 
-    public static String methodName;  // method name
-    public static String[] methodSignature;  // no use
-    public static String methodDesc;  // method descriptor
+    public static String   methodName;      // method name
+    public static int      methodAccess;    // access flags
+    public static String[] methodSignature; // no use
+    public static String   methodDesc;      // method descriptor
 
     public static boolean accept() {
 	/* ignore constructors */
