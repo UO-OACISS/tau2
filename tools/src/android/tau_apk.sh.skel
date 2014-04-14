@@ -44,15 +44,17 @@ $JAVA edu.uoregon.TAU.dexInjector.DexInjector classes.dex .classes.dex.$$  >/dev
 mv .classes.dex.$$ classes.dex
 
 echo "Repack to $2 ..."
-rm -rf META-INF
 mkdir -p lib/armeabi/
 cp $TAU_LIB_DIR/libTAU.so lib/armeabi/
-$JAR cf $apkfile .
+cp $1 $apkfile
+zip -d $apkfile META-INF/\*
+zip -r $apkfile classes.dex AndroidManifest.xml lib/armeabi/libTAU.so
 if [ ! -f ~/.android/debug.keystore ]; then
     $KEYTOOL -genkey -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"
 fi
 $JARSIGNER -sigalg MD5withRSA -digestalg SHA1 -keystore ~/.android/debug.keystore -storepass android -keypass android $apkfile androiddebugkey
-$ZIPALIGN 4 $apkfile ../$2
 
 cd ..
+
+$ZIPALIGN 4 .tau_apk.$$/$apkfile $2
 rm -rf .tau_apk.$$
