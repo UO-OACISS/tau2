@@ -79,7 +79,7 @@ extern "C" {
   int Ttf_FlushTrace(Ttf_FileHandleT file);
 
 
-  int Ttf_CloseOutputFile(Ttf_FileHandleT file);
+  Ttf_FileHandleT Ttf_CloseOutputFile(Ttf_FileHandleT file);
 
 #ifdef __cplusplus
 }
