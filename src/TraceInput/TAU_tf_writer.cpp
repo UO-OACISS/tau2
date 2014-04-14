@@ -47,7 +47,7 @@ extern "C" {
    * static constant strings. This prevents C++ compiler
    * warnings */
   static void assignStr(char* ptr, const char* instr) {
-    ptr = (char*)(malloc(sizeof(char)*(strlen(instr)+1)));
+    ptr = (char*)(calloc((strlen(instr)+1), sizeof(char)));
 	strcpy(ptr, instr);
   }
 
