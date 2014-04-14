@@ -127,27 +127,7 @@ public class ApplicationAdapter extends ApplicationVisitor implements Opcodes {
 	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ljava/lang/System;", "out", "Ljava/io/PrintStream;", 0, 0);
 	    mv.visitStringInsn(INSN_CONST_STRING, 1, "TAU: init Java Profiler");
 	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/io/PrintStream;", "println", "VLjava/lang/String;", new int[] { 0, 1 });
-	    Label l0 = new Label();
-	    mv.visitLabel(l0);
-	    Label l1 = new Label();
-	    Label l2 = new Label();
-	    mv.visitTryCatchBlock(l0, l1, l2, "Ljava/lang/Exception;");
-	    mv.visitTypeInsn(INSN_NEW_INSTANCE, 0, 0, 0, "Ljava/io/FileInputStream;");
-	    mv.visitStringInsn(INSN_CONST_STRING, 1, "/data/data/"+DexInjector.packageName+"/lib/libTAU_fake.so");
-	    mv.visitMethodInsn(INSN_INVOKE_DIRECT, "Ljava/io/FileInputStream;", "<init>", "VLjava/lang/String;", new int[] { 0, 1 });
-	    mv.visitTypeInsn(INSN_NEW_INSTANCE, 1, 0, 0, "Ljava/io/ObjectInputStream;");
-	    mv.visitMethodInsn(INSN_INVOKE_DIRECT, "Ljava/io/ObjectInputStream;", "<init>", "VLjava/io/InputStream;", new int[] { 1, 0 });
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/io/ObjectInputStream;", "readObject", "Ljava/lang/Object;", new int[] { 1 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 0, 0, "Ljava/util/HashMap;");
-	    mv.visitFieldInsn(INSN_SPUT_OBJECT, "Ledu/uoregon/TAU/Profiler;", "methodMap", "Ljava/util/HashMap;", 0, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/io/ObjectInputStream;", "close", "V", new int[] { 1 });
-	    mv.visitLabel(l1);
 	    mv.visitInsn(INSN_RETURN_VOID);
-	    mv.visitLabel(l2);
-	    mv.visitIntInsn(INSN_MOVE_EXCEPTION, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/Exception;", "printStackTrace", "V", new int[] { 0 });
-	    mv.visitJumpInsn(INSN_GOTO, l1, 0, 0);
 	    mv.visitEnd();
 	}
 	{
@@ -159,92 +139,22 @@ public class ApplicationAdapter extends ApplicationVisitor implements Opcodes {
 	    mv.visitEnd();
 	}
 	{
-	    mv = cv.visitMethod(ACC_STATIC, "getCallSiteSignature", "Ljava/lang/String;", null, null);
+	    mv = cv.visitMethod(ACC_PUBLIC + ACC_STATIC, "start", "VLjava/lang/String;", null, null);
 	    mv.visitCode();
-	    mv.visitMaxs(5, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ljava/lang/Thread;", "currentThread", "Ljava/lang/Thread;", new int[] {  });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/Thread;", "getStackTrace", "[Ljava/lang/StackTraceElement;", new int[] { 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitVarInsn(INSN_CONST_4, 1, 4);
-	    mv.visitArrayOperationInsn(INSN_AGET_OBJECT, 0, 0, 1);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/StackTraceElement;", "getLineNumber", "I", new int[] { 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT, 2);
-	    mv.visitTypeInsn(INSN_NEW_INSTANCE, 1, 0, 0, "Ljava/lang/StringBuilder;");
-	    mv.visitMethodInsn(INSN_INVOKE_DIRECT, "Ljava/lang/StringBuilder;", "<init>", "V", new int[] { 1 });
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/StackTraceElement;", "getClassName", "Ljava/lang/String;", new int[] { 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 3);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/StringBuilder;", "append", "Ljava/lang/StringBuilder;Ljava/lang/String;", new int[] { 1, 3 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 1);
-	    mv.visitStringInsn(INSN_CONST_STRING, 3, ":");
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/StringBuilder;", "append", "Ljava/lang/StringBuilder;Ljava/lang/String;", new int[] { 1, 3 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 1);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/StackTraceElement;", "getMethodName", "Ljava/lang/String;", new int[] { 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/StringBuilder;", "append", "Ljava/lang/StringBuilder;Ljava/lang/String;", new int[] { 1, 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/lang/StringBuilder;", "toString", "Ljava/lang/String;", new int[] { 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ledu/uoregon/TAU/Profiler;", "methodMap", "Ljava/util/HashMap;", 1, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/util/HashMap;", "get", "Ljava/lang/Object;Ljava/lang/Object;", new int[] { 1, 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 0, 0, "Ljava/util/ArrayList;");
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/util/ArrayList;", "iterator", "Ljava/util/Iterator;", new int[] { 0 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 3);
+	    mv.visitMaxs(7, 0);
 	    Label l0 = new Label();
-	    mv.visitLabel(l0);
-	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Iterator;", "hasNext", "Z", new int[] { 3 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT, 0);
-	    Label l1 = new Label();
-	    mv.visitJumpInsn(INSN_IF_EQZ, l1, 0, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Iterator;", "next", "Ljava/lang/Object;", new int[] { 3 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 0, 0, "Ljava/util/ArrayList;");
-	    mv.visitVarInsn(INSN_CONST_4, 1, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/util/ArrayList;", "get", "Ljava/lang/Object;I", new int[] { 0, 1 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 1);
-	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 1, 0, "Ljava/lang/String;");
-	    mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ljava/lang/Integer;", "parseInt", "ILjava/lang/String;", new int[] { 1 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT, 4);
-	    mv.visitVarInsn(INSN_CONST_4, 1, 1);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/util/ArrayList;", "get", "Ljava/lang/Object;I", new int[] { 0, 1 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 1);
-	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 1, 0, "Ljava/lang/String;");
-	    mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ljava/lang/Integer;", "parseInt", "ILjava/lang/String;", new int[] { 1 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT, 1);
-	    mv.visitJumpInsn(INSN_IF_LT, l0, 2, 4);
-	    mv.visitJumpInsn(INSN_IF_GT, l0, 2, 1);
-	    mv.visitVarInsn(INSN_CONST_4, 1, 2);
-	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ljava/util/ArrayList;", "get", "Ljava/lang/Object;I", new int[] { 0, 1 });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 0, 0, "Ljava/lang/String;");
-	    Label l2 = new Label();
-	    mv.visitLabel(l2);
-	    mv.visitIntInsn(INSN_RETURN_OBJECT, 0);
-	    mv.visitLabel(l1);
-	    mv.visitVarInsn(INSN_CONST_4, 0, 0);
-	    mv.visitJumpInsn(INSN_GOTO, l2, 0, 0);
-	    mv.visitEnd();
-	}
-	{
-	    mv = cv.visitMethod(ACC_PUBLIC + ACC_STATIC, "start", "V", null, null);
-	    mv.visitCode();
-	    mv.visitMaxs(6, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "getCallSiteSignature", "Ljava/lang/String;", new int[] {  });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 1);
-	    Label l0 = new Label();
-	    mv.visitJumpInsn(INSN_IF_NEZ, l0, 1, 0);
+	    mv.visitJumpInsn(INSN_IF_NEZ, l0, 6, 0);
 	    Label l1 = new Label();
 	    mv.visitLabel(l1);
 	    mv.visitInsn(INSN_RETURN_VOID);
 	    mv.visitLabel(l0);
 	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ledu/uoregon/TAU/Profiler;", "profiles", "Ljava/util/Map;", 0, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "containsKey", "ZLjava/lang/Object;", new int[] { 0, 1 });
+	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "containsKey", "ZLjava/lang/Object;", new int[] { 0, 6 });
 	    mv.visitIntInsn(INSN_MOVE_RESULT, 0);
 	    Label l2 = new Label();
 	    mv.visitJumpInsn(INSN_IF_EQZ, l2, 0, 0);
 	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ledu/uoregon/TAU/Profiler;", "profiles", "Ljava/util/Map;", 0, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "get", "Ljava/lang/Object;Ljava/lang/Object;", new int[] { 0, 1 });
+	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "get", "Ljava/lang/Object;Ljava/lang/Object;", new int[] { 0, 6 });
 	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
 	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 0, 0, "Ledu/uoregon/TAU/Profile;");
 	    Label l3 = new Label();
@@ -256,20 +166,19 @@ public class ApplicationAdapter extends ApplicationVisitor implements Opcodes {
 	    mv.visitStringInsn(INSN_CONST_STRING, 2, "myType");
 	    mv.visitStringInsn(INSN_CONST_STRING, 3, "myGroup");
 	    mv.visitVarInsn(INSN_CONST_WIDE, 4, 4294967295L);
+	    mv.visitVarInsn(INSN_MOVE_OBJECT, 1, 6);
 	    mv.visitMethodInsn(INSN_INVOKE_DIRECT_RANGE, "Ledu/uoregon/TAU/Profile;", "<init>", "VLjava/lang/String;Ljava/lang/String;Ljava/lang/String;J", new int[] { 0, 1, 2, 3, 4, 5 });
-	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ledu/uoregon/TAU/Profiler;", "profiles", "Ljava/util/Map;", 2, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "put", "Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;", new int[] { 2, 1, 0 });
+	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ledu/uoregon/TAU/Profiler;", "profiles", "Ljava/util/Map;", 1, 0);
+	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "put", "Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;", new int[] { 1, 6, 0 });
 	    mv.visitJumpInsn(INSN_GOTO, l3, 0, 0);
 	    mv.visitEnd();
 	}
 	{
-	    mv = cv.visitMethod(ACC_PUBLIC + ACC_STATIC, "stop", "V", null, null);
+	    mv = cv.visitMethod(ACC_PUBLIC + ACC_STATIC, "stop", "VLjava/lang/String;", null, null);
 	    mv.visitCode();
 	    mv.visitMaxs(2, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "getCallSiteSignature", "Ljava/lang/String;", new int[] {  });
-	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
-	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ledu/uoregon/TAU/Profiler;", "profiles", "Ljava/util/Map;", 1, 0);
-	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "get", "Ljava/lang/Object;Ljava/lang/Object;", new int[] { 1, 0 });
+	    mv.visitFieldInsn(INSN_SGET_OBJECT, "Ledu/uoregon/TAU/Profiler;", "profiles", "Ljava/util/Map;", 0, 0);
+	    mv.visitMethodInsn(INSN_INVOKE_INTERFACE, "Ljava/util/Map;", "get", "Ljava/lang/Object;Ljava/lang/Object;", new int[] { 0, 1 });
 	    mv.visitIntInsn(INSN_MOVE_RESULT_OBJECT, 0);
 	    mv.visitTypeInsn(INSN_CHECK_CAST, 0, 0, 0, "Ledu/uoregon/TAU/Profile;");
 	    mv.visitMethodInsn(INSN_INVOKE_VIRTUAL, "Ledu/uoregon/TAU/Profile;", "Stop", "V", new int[] { 0 });
@@ -291,7 +200,8 @@ public class ApplicationAdapter extends ApplicationVisitor implements Opcodes {
 
     public ClassVisitor visitClass(int access, String name, String[] signature,
 				   String superName, String[] interfaces) {
-	Filter.className = name;
+	Filter.className      = name;
+	Filter.classAccess    = access;
 	Filter.classSignature = signature;
 	Filter.classSuperName = superName;
 

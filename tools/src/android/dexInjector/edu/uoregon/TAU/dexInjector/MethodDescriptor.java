@@ -3,8 +3,11 @@ package edu.uoregon.TAU.dexInjector;
 import java.util.*;
 
 public class MethodDescriptor {
-    private String rawDesc;
-    private List<String> typeList;
+    private String className;
+    private String methodName;
+    private String rawMethodDesc;
+
+    private List<TypeDescriptor> typeList;
 
     private int index = 0;
 
@@ -16,77 +19,127 @@ public class MethodDescriptor {
 	    return className;
 	}
     }
-    private String parseTypeDescriptor(String typeDesc) {
+    private TypeDescriptor parseTypeDescriptor(String typeDesc) {
+	int    type;
 	String name;
 
 	switch(typeDesc.charAt(0)) {
 	case 'V':
 	    index++;
+	    type = TypeDescriptor.VOID;
 	    name = "void";
 	    break;
 	case 'Z':
 	    index++;
+	    type = TypeDescriptor.BOOL;
 	    name = "boolean";
 	    break;
 	case 'B':
 	    index++;
+	    type = TypeDescriptor.BYTE;
 	    name = "byte";
 	    break;
 	case 'S':
 	    index++;
+	    type = TypeDescriptor.SHORT;
 	    name = "short";
 	    break;
 	case 'C':
 	    index++;
+	    type = TypeDescriptor.CHAR;
 	    name = "char";
 	    break;
 	case 'I':
 	    index++;
+	    type = TypeDescriptor.INT;
 	    name = "int";
 	    break;
 	case 'J':
 	    index++;
+	    type = TypeDescriptor.LONG;
 	    name = "long";
 	    break;
 	case 'F':
 	    index++;
+	    type = TypeDescriptor.FLOAT;
 	    name = "float";
 	    break;
 	case 'D':
 	    index++;
+	    type = TypeDescriptor.DOUBLE;
 	    name = "double";
 	    break;
 	case 'L':
+	    type = TypeDescriptor.CLASS;
 	    name = parseClassName(typeDesc.substring(0, typeDesc.indexOf(';')+1));
 	    index += typeDesc.indexOf(';') + 1;
 	    break;
 	case '[':
 	    index++;
-	    name = parseTypeDescriptor(typeDesc.substring(1))+"[]";
+	    type = TypeDescriptor.ARRAY;
+	    name = parseTypeDescriptor(typeDesc.substring(1)) + "[]";
 	    break;
 	default:
 	    index++;
+	    type = TypeDescriptor.UNKNOWN;
 	    name = "<unknownType>";
 	}
 
-	return name;
+	return new TypeDescriptor(type, name);
     }
 
-    public MethodDescriptor(String desc) {
-	typeList = new ArrayList<String>();
-	rawDesc = desc;
+    public MethodDescriptor(String className, String methodName, String methodDesc) {
+	this.className     = parseClassName(className);
+	this.methodName    = methodName;
+	this.rawMethodDesc = methodDesc;
 
-	while(index < desc.length()) {
-	    String name = parseTypeDescriptor(desc.substring(index));
-	    typeList.add(name);
+	typeList = new ArrayList<TypeDescriptor>();
+
+	while(index < rawMethodDesc.length()) {
+	    TypeDescriptor desc = parseTypeDescriptor(rawMethodDesc.substring(index));
+	    typeList.add(desc);
 	}
     }
 
-    public String returnType() {
+    public String toString() {
+	StringBuilder desc = new StringBuilder();
+
+	/* return type */
+	desc.append(typeList.get(0));
+	/* className:methodName( */
+	desc.append(" " + className + ":" + methodName + "(");
+	/* argument list */
+	if (typeList.size() >= 2) {
+	    desc.append(typeList.get(1));
+	}
+	for (int i=2; i<typeList.size(); i++) {
+	    desc.append(", " + typeList.get(i));
+	}
+	/* ) */
+	desc.append(")");
+
+	return desc.toString();
+    }
+
+    public String getClassName() {
+	return className;
+    }
+
+    public String getMethodName() {
+	return methodName;
+    }
+
+    public List<TypeDescriptor> getTypeList() {
+	return typeList;
+    }
+    
+
+    /*
+    public TypeDescriptor returnType() {
 	return typeList.get(0);
     }
 
-    public String argsList() {
+    public TypeDescriptor argsList() {
 	String args = "";
 
 	if (typeList.size() >= 2) {
@@ -103,4 +156,5 @@ public class MethodDescriptor {
     public void print() {
 	System.out.println(returnType() + " (" + argsList() + ")");
     }
+    */
 }
