@@ -1117,7 +1117,7 @@ bxml_enable_debug(bxml_t *xml)
     for (i=0; i<pos; i++) {
 	attrs[i] = node->attrs[i];
     }
-    attr = &node->attrs[pos];
+    attr = &attrs[pos];
     for (i=pos+1; i<node->attrCount; i++) {
 	attrs[i] = node->attrs[i-1];
     }
