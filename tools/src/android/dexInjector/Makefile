@@ -9,9 +9,9 @@ dalvik_flags := -Xrunjdwp:server=y,transport=dt_android_adb
 
 pkg_prefix := edu/uoregon/TAU
 
+injector += $(pkg_prefix)/dexInjector/TypeDescriptor.class
 injector += $(pkg_prefix)/dexInjector/MethodDescriptor.class
 injector += $(pkg_prefix)/dexInjector/Filter.class
-injector += $(pkg_prefix)/dexInjector/MethodSignature.class
 injector += $(pkg_prefix)/dexInjector/MethodAdapter.class
 injector += $(pkg_prefix)/dexInjector/ClassAdapter.class
 injector += $(pkg_prefix)/dexInjector/ApplicationAdapter.class

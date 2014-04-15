@@ -7,30 +7,22 @@ public class ClassAdapter extends ClassVisitor implements Opcodes {
 	super(api, cv);
     }
 
-    public MethodVisitor visitMethod(int access, String name, String desc, String[] signature,
-				     String[] exceptions) {
-	Filter.methodName = name;
-	Filter.methodDesc = desc;
+    public MethodVisitor visitMethod(int access, String name, String desc,
+				     String[] signature, String[] exceptions) {
+	Filter.methodName      = name;
+	Filter.methodAccess    = access;
+	Filter.methodDesc      = desc;
 	Filter.methodSignature = signature;
 
 	MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
-
-	/*
-	if (name.equals("main")) {
-	    return ma;
-	} else {
-	    return mv;
-	}
-	*/
 
 	if ((access & ACC_ABSTRACT) != 0 ||
 	    (access & ACC_NATIVE)   != 0 ||
 	    !Filter.accept()) {
 	    return mv;
+	} else {
+	    MethodAdapter ma = new MethodAdapter(api, mv);
+	    return ma;
 	}
-
-	MethodAdapter ma = new MethodAdapter(api, mv);
-
-	return ma;
     }
 }

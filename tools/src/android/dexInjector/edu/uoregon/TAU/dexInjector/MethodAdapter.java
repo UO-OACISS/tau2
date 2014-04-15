@@ -5,47 +5,88 @@ import org.ow2.asmdex.*;
 import org.ow2.asmdex.structureCommon.Label;
 
 public class MethodAdapter extends MethodVisitor implements Opcodes {
+    private final static int EXTRA_REGS = 3;
+
+    private int registerCount;
+    private MethodDescriptor methodDesc;
+
     private Label handler;
 
     private Label last_start;
     private Label last_end;
 
-    private int lineBegin = 0;
-    private int lineEnd   = 0;
-
-    private boolean insertProfilerStart;
-
     private List<DelegatedReturn> drList;
 
     public MethodAdapter(int api, MethodVisitor mv) {
 	super(api, mv);
+	methodDesc = new MethodDescriptor(Filter.className, Filter.methodName, Filter.methodDesc);
     }
 
-    public void visitLineNumber(int line, Label start) {
-	if ((lineBegin == 0) ||
-	    (lineBegin > line)) {
-	    lineBegin = line;
+    private void shiftRegisters() {
+	List<TypeDescriptor> args = methodDesc.getTypeList();
+
+	/*
+	 * Note that instance method (i.e. non-STATIC) always explicitly
+	 * pass "this" as the first argument
+	 */
+
+	/* figure out how many registers are used for argument passing */
+	int argRegs = 0;
+	if ((Filter.methodAccess & ACC_STATIC) == 0) {
+	    argRegs += 1;  // this
+	}
+	for (int i=1; i<args.size(); i++) {
+	    argRegs += args.get(i).size;
 	}
 
-	if (lineEnd < line) {
-	    lineEnd   = line;
+	/* now shift the registers */
+	int reg = registerCount - argRegs; // first register used for argument passing
+	if ((Filter.methodAccess & ACC_STATIC) == 0) {
+	    mv.visitVarInsn(INSN_MOVE_OBJECT_16, reg-EXTRA_REGS, reg);
+	    reg += 1;
 	}
+	for (int i=1; i<args.size(); i++) {
+	    TypeDescriptor arg = args.get(i);
 
-	mv.visitLineNumber(line, start);
+	    /* Note that VOID never appears in argument list */
+	    switch (arg.type) {
+	    case TypeDescriptor.BOOL:
+	    case TypeDescriptor.BYTE:
+	    case TypeDescriptor.SHORT:
+	    case TypeDescriptor.CHAR:
+	    case TypeDescriptor.INT:
+	    case TypeDescriptor.FLOAT:
+		mv.visitVarInsn(INSN_MOVE_16, reg-EXTRA_REGS, reg);
+		break;
 
-	// injact Profiler.start() after the first visitLineNumber(), so it
-	// can have a line# at the runtime, i.e. Thread.currentThread().getStackTrace()
-	if (insertProfilerStart) {
-	    mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "start", "V", new int[] { });
-	    insertProfilerStart = false;
+	    case TypeDescriptor.CLASS:
+	    case TypeDescriptor.ARRAY:
+		mv.visitVarInsn(INSN_MOVE_OBJECT_16, reg-EXTRA_REGS, reg);
+		break;
+
+	    case TypeDescriptor.LONG:
+	    case TypeDescriptor.DOUBLE:
+		mv.visitVarInsn(INSN_MOVE_WIDE_16, reg-EXTRA_REGS, reg);
+		break;
+
+	    default:
+		/* this should never happen */
+		break;
+	    }
+
+	    reg += arg.size;
 	}
     }
 
     public void visitMaxs(int maxStack, int maxLocals) {
-	// we need at least 1 register for global exception handler
-	int regCount = maxStack==0 ? 1 : maxStack;
+	registerCount = maxStack + EXTRA_REGS;
 
-	mv.visitMaxs(regCount, maxLocals);
+	mv.visitMaxs(registerCount, maxLocals);
+
+	mv.visitStringInsn(INSN_CONST_STRING, 0, methodDesc.toString());
+	mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "start", "VLjava/lang/String;", new int[] { 0 });
+
+	shiftRegisters();
     }
 
     private void debugMsg() {
@@ -74,8 +115,6 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
     }
 
     public void visitCode() {
-	insertProfilerStart = true;
-
 	handler    = new Label();
 	last_start = new Label();
 	last_end   = last_start;
@@ -105,11 +144,9 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
     }
 
     public void visitEnd() {
-	MethodDescriptor desc = new MethodDescriptor(Filter.methodDesc);
-	String className = MethodDescriptor.parseClassName(Filter.className);
+	MethodDescriptor desc = new MethodDescriptor(Filter.className, Filter.methodName, Filter.methodDesc);
 
-	String signature = desc.returnType()+" "+className+":"+Filter.methodName+"("+desc.argsList()+")";
-	String key = className+":"+Filter.methodName;
+	String key = desc.getClassName() + ":" + desc.getMethodName();
 
 	// add global exception handler block
 	visitLabel(handler);
@@ -117,26 +154,13 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 	    mv.visitTryCatchBlock(last_end, handler, handler, null);
 	}
 	mv.visitIntInsn(INSN_MOVE_EXCEPTION, 0);
-	mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "V", new int[] { });
+	mv.visitStringInsn(INSN_CONST_STRING, 1, methodDesc.toString());
+	mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "VLjava/lang/String;", new int[] { 1 });
 	mv.visitIntInsn(INSN_THROW, 0);
 
 	// add delegated returns
 	for (DelegatedReturn dr: drList) {
 	    dr.visit();
-	}
-
-	// update method-line# map
-	ArrayList<String> sigList = new ArrayList<String>();
-	sigList.add(Integer.toString(lineBegin));
-	sigList.add(Integer.toString(lineEnd));
-	sigList.add(signature);
-	if (DexInjector.methodMap.containsKey(key)) {
-	    ArrayList<ArrayList<String>> val = (ArrayList<ArrayList<String>>)DexInjector.methodMap.get(key);
-	    val.add(sigList);
-	} else {
-	    ArrayList<ArrayList<String>> val = new ArrayList<ArrayList<String>>();
-	    val.add(sigList);
-	    DexInjector.methodMap.put(key, val);
 	}
 
 	mv.visitEnd();
@@ -154,16 +178,24 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 	}
 
 	public void visit() {
+	    int callsite = 0;
+
 	    mv.visitLabel(label);
-	    mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "V", new int[] { });
 
 	    switch (opcode) {
 	    case INSN_RETURN_VOID:
+		mv.visitStringInsn(INSN_CONST_STRING, callsite, methodDesc.toString());
+		mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "VLjava/lang/String;", new int[] { callsite });
 		mv.visitInsn(opcode);
 		break;
 	    case INSN_RETURN:
 	    case INSN_RETURN_WIDE:
 	    case INSN_RETURN_OBJECT:
+		if (register == 0) {
+		    callsite = 2;
+		}
+		mv.visitStringInsn(INSN_CONST_STRING, callsite, methodDesc.toString());
+		mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "VLjava/lang/String;", new int[] { callsite });
 		mv.visitIntInsn(opcode, register);
 		break;
 	    /* no default action */
@@ -172,8 +204,6 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
     }
 
     public void visitInsn(int opcode) {
-	boolean isInTryBlock;
-
 	switch (opcode) {
 	case INSN_RETURN_VOID:
 	    Label label = new Label();
@@ -188,8 +218,6 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
     }
 
     public void visitIntInsn(int opcode, int register) {
-	boolean isInTryBlock;
-
 	switch (opcode) {
 	case INSN_RETURN:
 	case INSN_RETURN_WIDE:
@@ -199,6 +227,7 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 	    drList.add(dr);
 	    mv.visitJumpInsn(INSN_GOTO_32, label, 0, 0);
 	    break;
+
 	default:
 	    mv.visitIntInsn(opcode, register);
 	    break;
