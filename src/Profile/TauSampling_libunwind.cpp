@@ -66,7 +66,11 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     // unw_get_reg(&cursor, UNW_REG_SP, &sp);
     if (found) {
+#ifdef __APPLE__
       fprintf(ebsTrace[tid], " %llx", ip);
+#else
+      fprintf(ebsTrace[tid], " %lx", ip);
+#endif
     }
     if (ip == (unw_word_t)pc) {
       found = 1;

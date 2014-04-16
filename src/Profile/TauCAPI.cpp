@@ -566,7 +566,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   TauInternalFunctionGuard protects_this_function;
 
   FunctionInfo *fi = (FunctionInfo *) function_info; 
-  double currentHeap;
+  double currentHeap = 0.0;
   bool enableHeapTracking;
 
   Profiler *profiler;

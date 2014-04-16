@@ -127,7 +127,7 @@ static void metricv_add(const char *name) {
 static void reorder_metrics(const char *match) {
   const char *newMetricV[TAU_MAX_METRICS];
   int idx = 0;
-  int newTraceMetric;
+  int newTraceMetric = 0;
 
   for (int i = 0; i < nmetrics; i++) {
     if (strncmp(match, metricv[i], strlen(match)) != 0) {

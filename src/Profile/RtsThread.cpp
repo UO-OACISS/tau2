@@ -486,7 +486,9 @@ int RtsLayer::getNumDBLocks(void) {
 }
 
 int RtsLayer::LockDB(void) {
-  initLocks();
+  static bool init = initLocks();
+  // use the init value so the compiler doesn't complain
+  if (!init) {}
   int tid=localThreadId();
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for DB lock but it is not in TAU");

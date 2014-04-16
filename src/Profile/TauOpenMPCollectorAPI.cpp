@@ -136,6 +136,7 @@ using namespace std;
 extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(std::string thread_state);
 
+#ifdef TAU_UNWIND
 /*
  *-----------------------------------------------------------------------------
  * Simple hash table to map function addresses to region names/identifier
@@ -174,6 +175,8 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
   }
   return OmpbfdUnitHandle;
 }
+
+#endif /* TAU_UNWIND */
 
 extern "C" char * TauInternal_CurrentCallsiteTimerName(int tid);
 
@@ -678,7 +681,11 @@ extern "C" int Tau_initialize_collector_api(void) {
 
 #else
 
-    *(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
+    // this funny code is to avoid a warning from the compiler, because
+	// dlsym returns a void*
+    //*(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
+    void *temp_fptr = dlsym(RTLD_DEFAULT, "__omp_collector_api");
+	memcpy(&Tau_collector_api, &temp_fptr, sizeof(temp_fptr));
     if (Tau_collector_api == NULL) {
 
 #if defined (__INTEL_COMPILER)
@@ -700,7 +707,11 @@ extern "C" int Tau_initialize_collector_api(void) {
 
         if (handle != NULL) {
             TAU_VERBOSE("Looking for symbol in library: %s\n", libname); fflush(stdout); fflush(stderr);
-            *(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
+            // this funny code is to avoid a warning from the compiler, because
+	        // dlsym returns a void*
+            //*(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
+            void *temp_fptr = dlsym(handle, "__omp_collector_api");
+	        memcpy(&Tau_collector_api, &temp_fptr, sizeof(temp_fptr));
         }
     }
     // set this now, either it's there or it isn't.
