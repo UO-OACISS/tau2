@@ -1151,7 +1151,6 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
 
     __ompc_set_state(THR_OVHD_STATE);
     __ompc_event_callback(OMP_EVENT_FORK);
-    //int tid = Tau_get_tid();
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
@@ -1163,8 +1162,6 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     // save the pointer so we can free it later
-    //Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
-    //Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
     _proxy[_depth] = proxy;
     _depth = _depth + 1;
 
@@ -1189,7 +1186,6 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
 
     __ompc_set_state(THR_IBAR_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IBAR);
-    //int tid = Tau_get_tid();
 	Tau_global_decr_insideTAU();
     (*GOMP_parallel_end_h)();
 	Tau_global_incr_insideTAU();
@@ -1198,22 +1194,15 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
     __ompc_event_callback(OMP_EVENT_JOIN);
     __ompc_set_state(THR_SERIAL_STATE);
     // free the proxy wrapper, and reduce the depth
-    //int depth = Tau_gomp_flags[tid].depth;
-    //if (Tau_gomp_flags[tid].proxy[depth] != NULL) {
-        //TAU_GOMP_PROXY_WRAPPER * proxy = Tau_gomp_flags[tid].proxy[depth];
-        //Tau_gomp_flags[tid].proxy[depth] = NULL;
-        //Tau_gomp_flags[tid].depth = depth - 1;
     int depth = _depth;
     if (_proxy[depth] != NULL) {
         TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
-        free(proxy->name);
+        //free(proxy->name); // never gets set!
         free(proxy);
         _proxy[depth] = NULL;
         _depth = depth - 1;
     } else {
         // assume the worst...
-        //Tau_gomp_flags[tid].depth = 0;
-        //Tau_gomp_flags[tid].proxy[0] = NULL;
         _depth = 0;
         _proxy[0] = NULL;
     }
