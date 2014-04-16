@@ -35,6 +35,8 @@ extern "C" int Tau_compensate_initialization() {
   //  Tau_create_top_level_timer_if_necessary();
   double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
   double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+  // use the values so we don't get a compiler warning
+  if (tover[0] == tnull[0]) {} ;
   compensateInitialized = 1;
   return 0;
 }

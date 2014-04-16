@@ -451,7 +451,6 @@ int RtsLayer::getLinuxKernelTid(){
 #endif /* KTAU_NG */
 
 const char *RtsLayer::getCounterName(int i) {
-  const char *foo = TauMetrics_getMetricName(i);
   return TauMetrics_getMetricName(i);
 }
 

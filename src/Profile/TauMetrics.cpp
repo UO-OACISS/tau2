@@ -105,7 +105,6 @@ char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = {NULL};
  ********************************************************************/
 static void metricv_add(const char *name) {
   int i;
-  char *ptr;
 
   if (nmetrics >= TAU_MAX_METRICS) {
     fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n", TAU_MAX_METRICS);
@@ -240,9 +239,8 @@ static void read_env_vars() {
 /*********************************************************************
  * Initialize KTAU metrics
  ********************************************************************/
-static void TauMetrics_initializeKTAU() {
 #ifdef TAUKTAU_SHCTR
-
+static void TauMetrics_initializeKTAU() {
   for (int i = 0; i < nmetrics; i++) {
     int cType = 0;
     if (strncmp("KTAU", metricv[i], 4) == 0) {
@@ -258,9 +256,8 @@ static void TauMetrics_initializeKTAU() {
       KtauCounters::addCounter(metric, cType);
     }
   }
-
-#endif
 }
+#endif
 
 /*********************************************************************
  * Query if a string is a PAPI metric
@@ -295,7 +292,6 @@ static int is_cupti_metric(char *str) {
  ********************************************************************/
 static void initialize_functionArray() 
 {
-  int usingPAPI = 0;
   int pos = 0;
   int found = 0;
   int ktau = 0;
@@ -305,6 +301,7 @@ static void initialize_functionArray()
 
   int papi_available = 0;
 #ifdef TAU_PAPI
+  int usingPAPI = 0;
   papi_available = 1;
 #endif
 
@@ -393,7 +390,9 @@ static void initialize_functionArray()
   for (int i = 0; i < nmetrics; i++) {
     if (is_papi_metric(metricv[i])) {
       functionArray[pos++] = metric_read_papi;
+#ifdef TAU_PAPI
       usingPAPI = 1;
+#endif /* TAU_PAPI */
       break;
     }
 	}

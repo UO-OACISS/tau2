@@ -901,6 +901,8 @@ void Tau_memory_initialize(void)
 
   // Trigger the map's constructor
   static TauAllocation::allocation_map_t const & alloc = TauAllocation::AllocationMap();
+  // use the map to prevent compiler warnings about unused variables
+  alloc.size();
 
   atexit(Tau_memory_wrapper_disable);
 }
