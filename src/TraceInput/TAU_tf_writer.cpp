@@ -159,6 +159,10 @@ extern "C" {
 
 
     Ttf_EventDescrT newEventDesc;
+    // prevent Compiler warnings by initializing these 
+    newEventDesc.Group = NULL;
+    newEventDesc.EventName = NULL;
+    newEventDesc.Param = NULL;
 
     newEventDesc.Eid = TAU_EV_INIT;
     assignStr(newEventDesc.Group, "TRACER");
@@ -274,6 +278,7 @@ extern "C" {
     newEventDesc.Group = const_cast<char*>((*tFile->groupNameMap)[stateGroupToken]);
     newEventDesc.EventName = strdup(stateName);
     newEventDesc.Tag = 0;
+    newEventDesc.Param = NULL;
     assignStr(newEventDesc.Param, "EntryExit");
 
     (*tFile->EventIdMap)[stateToken] = newEventDesc;
@@ -460,6 +465,11 @@ extern "C" {
 
 
     Ttf_EventDescrT newEventDesc;
+    // prevent Compiler warnings by initializing these 
+    newEventDesc.Group = NULL;
+    newEventDesc.EventName = NULL;
+    newEventDesc.Param = NULL;
+
     newEventDesc.Eid = userEventToken;
     assignStr(newEventDesc.Group, "TAUEVENT");
     newEventDesc.EventName = strdup(userEventName);
