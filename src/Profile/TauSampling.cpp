@@ -329,10 +329,10 @@ static struct sigaction application_sa;
 
 #define PPC_REG_PC 32
 
-#if (defined(sun) || defined(__APPLE__) || defined(_AIX)) && \
-    !defined(TAU_BGP) && !defined(TAU_BGQ) && !defined(__x86_64__) && \
+#if (defined(sun) || defined(__APPLE__) || defined(_AIX)) || \
+    (!defined(TAU_BGP) && !defined(TAU_BGQ) && !defined(__x86_64__) && \
     !defined(i386) && !defined(__ia64__) && !defined(__powerpc64__) && \
-	!defined(__powerpc__) && !defined(__arm__)
+	!defined(__powerpc__) && !defined(__arm__))
 static void issueUnavailableWarning(const char *text)
 {
   static bool warningIssued = false;
@@ -345,14 +345,18 @@ static void issueUnavailableWarning(const char *text)
 
 unsigned long get_pc(void *p)
 {
-  struct ucontext *uc = (struct ucontext *)p;
   unsigned long pc;
+
+/* SUN SUPPORT */
 
 #ifdef sun
   issueUnavailableWarning("Warning, TAU Sampling does not work on Solaris\n");
   return 0;
+
+/* APPLE SUPPORT */
+
 #elif __APPLE__
-  issueUnavailableWarning("Warning, TAU Sampling works on Apple, but symbol lookup using BFD does not.\n");
+  issueUnavailableWarning("Warning, TAU Sampling works on Apple, but symbol lookup using BFD might not.\n");
   ucontext_t *uct = (ucontext_t *)p;
   //printf("%p\n", uct->uc_mcontext->__ss.__rip);
   //Careful here, we need to support ppc macs as well.
@@ -362,12 +366,19 @@ unsigned long get_pc(void *p)
   pc = uct->uc_mcontext->__ss.__eip;
 #else
   pc = uct->uc_mcontext->__ss.__srr0;
-#endif
-  //return 0;
+#endif /* defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__) */
+  return pc;
+
+/* AIX SUPPORT */
+
 #elif _AIX
   issueUnavailableWarning("Warning, TAU Sampling does not work on AIX\n");
   return 0;
+
+/* EVERYTHING ELSE SUPPORT */
+
 #else
+  struct ucontext *uc = (struct ucontext *)p;
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
 #ifdef TAU_BGP
@@ -393,9 +404,9 @@ unsigned long get_pc(void *p)
 # else
   issueUnavailableWarning("Warning, TAU Sampling does not work on unknown platform.\n");
   return 0;
-# endif /* TAU_BGP */
+# endif /* TAU_BGP, BGQ, __x86_64__, i386, __ia64__, __powerpc64__, __powerpc__, __arm__ */
   return pc;
-#endif /* sun */
+#endif /* sun, APPLE, AIX */
 }
 
 extern "C" void Tau_sampling_suspend(int tid)
