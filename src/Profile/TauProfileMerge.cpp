@@ -147,10 +147,10 @@ int Tau_mergeProfiles()
 
 #ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
-  int numEvents;
+  int numEvents = 0;
   int globalNumThreads;
   int *numEventThreads;
-  int *globalEventMap;
+  int *globalEventMap = 0;
 
   double ***gExcl, ***gIncl;
   double **gNumCalls, **gNumSubr;
@@ -158,9 +158,9 @@ int Tau_mergeProfiles()
   double **sNumCalls, **sNumSubr;
 
   Tau_unify_object_t *atomicUnifier;
-  int numAtomicEvents;
+  int numAtomicEvents = 0;
   int *numAtomicEventThreads;
-  int *globalAtomicEventMap;
+  int *globalAtomicEventMap = 0;
   
   double **gAtomicMin, **gAtomicMax;
   double **gAtomicCalls, **gAtomicMean;

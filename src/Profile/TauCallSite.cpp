@@ -486,7 +486,7 @@ void Profiler::CallSiteStart(int tid)
     if ((array != NULL) && (size > 0)) {
       // construct the callsite structure from the buffer.
       callsites[0] = (unsigned long)size;
-      for (int i = 0; i < size; i++) {
+      for (unsigned int i = 0; i < size; i++) {
         callsites[i + 1] = (unsigned long)array[i];
       }
       retVal = true;
