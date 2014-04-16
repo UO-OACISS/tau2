@@ -5465,10 +5465,16 @@ if [ "x$download_unwind" = xyes ] ; then
   unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
   prebfddir=`pwd`
 
-  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o -r "$unwind_dir/lib64/lib${libunwind_name}.a" ] ; then
-    echo "Found: $unwind_dir/lib/lib${libunwind_name}.so $unwind_dir/lib64/lib${libunwind_name}.a"
+  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o \
+       -r "$unwind_dir/lib/lib${libunwind_name}.a" -o \
+       -r "$unwind_dir/lib/lib${libunwind_name}.dylib" -o \
+       -r "$unwind_dir/lib64/lib${libunwind_name}.so" -o \
+	   -r "$unwind_dir/lib64/lib${libunwind_name}.a" -o \
+	   -r "$unwind_dir/lib64/lib${libunwind_name}.dylib" ] ; then
+    echo "Found: lib${libunwind_name}"
     echo "libunwind download already found, skipping"
   else
+    echo "Not found in ${unwind_dir}: lib${libunwind_name}"
     # get the tar file
     if [ ! -f $libunwindtgz ] ; then
       echo "downloading $libunwindtgz..."
@@ -7519,6 +7525,7 @@ if [ "x$unwinder" != "xnone" ] ; then
     if [ "x$unwinder" = "xlibunwind" ] ; then
 	if [ $machine = apple ] ; then
 	    unwind_lib_flag="-framework#System"
+	    unwind_extras=""
 	fi
 	fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
     else

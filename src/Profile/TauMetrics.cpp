@@ -194,7 +194,7 @@ static void read_env_vars() {
           } 
         } else { 
            // printf("Alt_delimiter = %d, ptr = %c\n", alt_delimiter_found, *ptr);
-            if ((*ptr == ':')) {
+            if (*ptr == ':') {
 	     // printf("Checking for : in %s\n", metrics);
               *ptr = '^';
             }

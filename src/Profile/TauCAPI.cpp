@@ -1203,7 +1203,7 @@ extern "C" TauGroup_t Tau_disable_all_groups(void) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int& tau_totalnodes(int set_or_get, int value)
+extern "C" int tau_totalnodes(int set_or_get, int value)
 {
   static int nodes = 1;
   if (set_or_get == 1) {
@@ -2124,11 +2124,12 @@ extern "C" void Tau_static_phase_stop(char const * name)
         "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\n"
         "TAU Error: You will likely get an overlapping timer message next\n\n",
         name);
+    RtsLayer::UnLockDB();
   } else {
     fi = it->second;
+    RtsLayer::UnLockDB();
+    Tau_stop_timer(fi, Tau_get_tid());
   }
-  RtsLayer::UnLockDB();
-  Tau_stop_timer(fi, Tau_get_tid());
 }
 
 

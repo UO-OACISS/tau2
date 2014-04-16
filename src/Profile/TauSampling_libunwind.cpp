@@ -66,7 +66,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     // unw_get_reg(&cursor, UNW_REG_SP, &sp);
     if (found) {
-      fprintf(ebsTrace[tid], " %lx", ip);
+      fprintf(ebsTrace[tid], " %llx", ip);
     }
     if (ip == (unw_word_t)pc) {
       found = 1;
