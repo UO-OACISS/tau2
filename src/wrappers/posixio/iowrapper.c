@@ -4,6 +4,7 @@
 #include <TAU.h>
 #include <string.h>
 #include <stdlib.h>
+#include <Profile/TauEnv.h>
 
 #define TAU_READ TAU_IO
 #define TAU_WRITE TAU_IO
