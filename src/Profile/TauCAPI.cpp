@@ -175,7 +175,7 @@ struct Tau_thread_status_flags {
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #else
 #ifdef __GNUC__
-static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
 #else
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif

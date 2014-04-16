@@ -105,7 +105,7 @@ int Tau_mergeProfiles()
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  int rank, size, tid, i, buflen;
+  int rank, size, i, buflen;
   FILE *f;
   char *buf;
 #ifdef TAU_MPI
@@ -126,8 +126,6 @@ int Tau_mergeProfiles()
   Tau_snapshot_writeToBuffer("merge");
 #endif
 
-  tid = Tau_RtsLayer_myThread();
-
   // temp: write regular profiles too, for comparison
   //TauProfiler_DumpData(false, 0, "profile");
   
@@ -142,7 +140,7 @@ int Tau_mergeProfiles()
 	buf = (char *) malloc(buflen);
 	Tau_snapshot_getBuffer(buf);
 
-  int maxBuflen;
+  int maxBuflen = buflen;
 #ifdef TAU_MPI
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 #endif  /* TAU_MPI */

@@ -15,20 +15,20 @@ using namespace std;
 void show_backtrace_unwind(void *pc) {
   unw_cursor_t cursor;
   unw_context_t uc;
-  unw_word_t ip, sp;
-  int found = 0;
+  unw_word_t ip = 0;
+  unw_word_t sp = 0;
 
   unw_getcontext(&uc);
   unw_init_local(&cursor, &uc);
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     // unw_get_reg(&cursor, UNW_REG_SP, &sp);
+	/*
     if (ip == (unw_word_t)pc) {
-      found = 1;
+      printf("ip = %lx, sp = %lx\n", (long)ip, (long)sp);
     }
-    //    if (found) {
+	*/
     printf("ip = %lx, sp = %lx\n", (long)ip, (long)sp);
-    //    }
   }
 }
 
@@ -39,7 +39,7 @@ void printStack(unsigned long *pcStack) {
   int length = pcStack[0];
   printf("PC Stack: ");
   for (int i=0; i<length; i++) {
-    printf("%p ", pcStack[i+1]);
+    printf("%lx ", pcStack[i+1]);
   }
   printf("end\n");
 }
@@ -55,7 +55,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 				       void *context) {
   unw_cursor_t cursor;
   unw_context_t uc;
-  unw_word_t ip, sp;
+  unw_word_t ip; //, sp;
   int found = 0;
 
   fprintf(ebsTrace[tid], " |");
@@ -66,7 +66,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
     // unw_get_reg(&cursor, UNW_REG_SP, &sp);
     if (found) {
-      fprintf(ebsTrace[tid], " %p", ip);
+      fprintf(ebsTrace[tid], " %lx", ip);
     }
     if (ip == (unw_word_t)pc) {
       found = 1;
@@ -144,8 +144,7 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
   // stack points to valid array of max length TAU_SAMP_NUM_ADDRESSES + 1.
   unw_cursor_t cursor;
   unw_context_t uc;
-  unw_word_t unwind_ip, sp;
-  unw_word_t curr_ip;
+  unw_word_t unwind_ip; //, sp;
 
   int unwindDepth = 1; // We need to include the PC in unwind depth calculations
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
