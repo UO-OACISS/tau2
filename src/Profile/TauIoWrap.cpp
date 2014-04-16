@@ -95,7 +95,7 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
     }
     while ((int)(iowrap_events[i].size()) <= fid) {
       iowrap_events[i].push_back(unknown_ptr);
-      if (iowrap_events[i].size() - 1 != fid) {
+      if ((int)(iowrap_events[i].size() - 1) != fid) {
         dprintf("Registering %d with unknown\n", iowrap_events[i].size() - 2);
       }
     }
