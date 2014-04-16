@@ -6888,6 +6888,7 @@ cat <<EOF > conftest_bfd.c
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   if (!BfdImage) {}
    return;
 }
 EOF
@@ -6921,6 +6922,7 @@ cat <<EOF > conftest_bfd.c
 int main(int argc, char **argv) {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   if (!BfdImage) {}
    return 0;
 }
 EOF
@@ -7026,6 +7028,7 @@ char *** environ(void) { return (*_NSGetEnviron()); }
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   if (!BfdImage) {}
 
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
       cplus_demangle(NULL, DMGL_PARAMS | DMGL_ANSI 
