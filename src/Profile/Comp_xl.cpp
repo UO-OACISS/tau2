@@ -186,7 +186,7 @@ uint32_t get_name_hash(uint32_t hash, char ** pdata, size_t * plen, bool * pexcl
         break;
       } else if (c == '@' || c == '$') {
         // Exclude IBM OpenMP runtime functions
-        exclude = true;
+        //exclude = true;
       } else if (c < 32 || c > 126) {
         exclude = false;
         data = "(optimized out)";
@@ -288,6 +288,7 @@ extern "C" void __func_trace_enter(char * name, char * fname, int lno, void ** c
       TAU_VERBOSE("XL compiler-based instrumentation initialized\n");
     }
 
+#if 0
     // Guard against re-entry (does this actually happen?)
     int tid = Tau_get_tid();
 
@@ -364,6 +365,18 @@ extern "C" void __func_trace_enter(char * name, char * fname, int lno, void ** c
     // Start the timer
     //TAU_VERBOSE("Starting: %s\n", fi->GetName());
     Tau_start_timer(hn.fi, 0, tid);
+#else
+  // Build the routine name
+    size_t nlen, flen;
+    bool excluded = false;
+    key_type name_key, key;
+    name_key = get_name_hash(0, &name, &nlen, &excluded);
+    key = get_filename_hash(name_key, &fname, &flen, &excluded);
+    size_t size = nlen + flen + 32;
+    char * buff = (char*)malloc(size);
+    snprintf(buff, size, "%s [{%s} {%d,0}]", name, fname, lno);
+    Tau_pure_start(buff);
+#endif
   }    // END inside TAU
 }
 
@@ -387,6 +400,7 @@ extern "C" void __func_trace_exit(char * name, char * fname, int lno, void ** co
   {
     TauInternalFunctionGuard protects_this_function;
 
+#if 0
     int tid = Tau_get_tid();
 
     // Build the hashtable key while checking for exclusion
@@ -421,7 +435,10 @@ extern "C" void __func_trace_exit(char * name, char * fname, int lno, void ** co
         TAU_VERBOSE("Warning: unmached __func_trace_exit: %s [{%s} {%d,0}]\n", name, fname, lno);
       }
     }
+#else
+    Tau_stop_current_timer();
   } // END inside TAU
+#endif
 }
 
 extern "C" void __func_trace_catch(char * name, char * fname, int lno, void ** const user_data)
