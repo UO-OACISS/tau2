@@ -11,7 +11,9 @@ static void *tau_handle = NULL;
 static int subscribed = 0;
 
 CUresult cuInit(unsigned int a1) {
-
+#ifdef TAU_DEBUG_CUPTI
+  printf("in cuInit\n");
+#endif
   typedef CUresult (*cuInit_p_h) (unsigned int);
   static cuInit_p_h cuInit_h = NULL;
   CUresult retval;
@@ -38,28 +40,39 @@ CUresult cuInit(unsigned int a1) {
 
 void Tau_cupti_subscribe()
 {
+	if(subscribed) {
+		return;
+	}
 	//cerr << "in subscribe." << endl;
 	CUptiResult err;
 	TAU_VERBOSE("TAU: Subcribing to CUPTI.\n");
 	err = cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)Tau_cupti_callback_dispatch, NULL);
+    CUPTI_CHECK_ERROR(err, "cuptiSubscribe");
+	
 	//to collect device info 
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_DEVICE);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable");
+	
 	
 	//setup global activity queue.
-  size_t size;
-  size_t maxRecords;
+    size_t size;
+    size_t maxRecords;
 
   // With the ASYNC ACTIVITY API CUPTI will call 
   // Tau_cupti_register_buffer_creation() when it needs a new activity buffer
   // and Tau_cupti_register_sync_event() when a buffer is completed so all we
   // need to do here is to register these callback functions.
 #ifdef TAU_ASYNC_ACTIVITY_API
-  err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
+    err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
 #else
-  Tau_cupti_register_buffer_creation(&activityBuffer, &size, &maxRecords);
+    Tau_cupti_register_buffer_creation(&activityBuffer, &size, &maxRecords);
 	err = cuptiActivityEnqueueBuffer(NULL, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
+	CUPTI_CHECK_ERROR(err, "cuptiActivityEnqueueBuffer");
 #endif
+	subscribed = 1;
 }
+
 void Tau_cupti_onload()
 {
 	if (!subscribed) {
@@ -71,45 +84,64 @@ void Tau_cupti_onload()
   
 	if (cupti_api_runtime())
 	{
-		//printf("TAU: Subscribing to RUNTIME API.\n");
+#ifdef TAU_DEBUG_CUPTI
+		printf("TAU: Subscribing to RUNTIME API.\n");
+#endif
 		err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RUNTIME_API);
+	    CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RUNTIME_API)");
 		//runtime_enabled = true;
 	}
 	if (cupti_api_driver())
 	{
-		//printf("TAU: Subscribing to DRIVER API.\n");
+#ifdef TAU_DEBUG_CUPTI
+		printf("TAU: Subscribing to DRIVER API.\n");
+#endif
 		err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API);
+	    CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_DRIVER_API)");
 		//driver_enabled = true;
 	}
   
 	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE); 
+    CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_SYNCHRONIZE)");
 	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE); 
+    CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
+	
 
 	CUDA_CHECK_ERROR(err, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
 	
 
  	
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
 	
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
+	
 #if CUDA_VERSION >= 5050
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
 #endif
 #if CUDA_VERSION >= 5000
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
 #else
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
 #endif
 
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
   {
 	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
+      CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR)");
 	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS);
+      CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS)");
   } else if (strcasecmp(TauEnv_get_cuda_instructions(), "BRANCH") == 0)
   {
 	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
+      CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR)");
 	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
+      CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_BRANCH)");
   }
 #else
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0 ||
@@ -137,8 +169,16 @@ void Tau_cupti_onunload() {
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
+#ifdef TAU_DEBUG_CUPTI
+	printf("in Tau_cupti_callback_dispatch\n");
+#endif
 	//Just in case we encounter a callback before TAU is intialized or finished.
-  if (!Tau_init_check_initialized() || Tau_global_getLightsOut()) { return; }
+  if (!Tau_init_check_initialized() || Tau_global_getLightsOut()) { 
+#ifdef TAU_DEBUG_CUPTI
+      printf("TAU: [WARNING] Got CUPTI callback but TAU is either not yet initialized or has finished!\n");
+#endif
+	  return;
+  }
 
 #ifndef TAU_ASYNC_ACTIVITY_API
 	if (domain == CUPTI_CB_DOMAIN_RESOURCE)
@@ -149,7 +189,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		{
 			CUptiResult err;
 			CUpti_ResourceData* resource = (CUpti_ResourceData*) params;
-			//printf("Enqueuing Buffer with context=%p stream=%d.\n", resource->context, 0);
+#ifdef TAU_DEBUG_CUPTI
+			printf("TAU: Resource created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, 0);
+#endif
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 			err = cuptiActivityEnqueueBuffer(resource->context, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in context.\n");
@@ -158,9 +200,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		{
 			CUptiResult err;
 			CUpti_ResourceData* resource = (CUpti_ResourceData*) params;
-    	uint32_t stream;
+    		uint32_t stream;
 			err = cuptiGetStreamId(resource->context, resource->resourceHandle.stream, &stream);
-			//printf("Enqueuing Buffer with context=%p stream=%d.\n", resource->context, stream);
+			CUPTI_CHECK_ERROR(err, "cuptiGetStreamId");
+#ifdef TAU_DEBUG_CUPTI
+			printf("TAU: Stream created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, stream);
+#endif
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 			err = cuptiActivityEnqueueBuffer(resource->context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in stream.\n");
@@ -171,7 +216,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	}
 	else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE)
 	{
-		//printf("register sync from callback.\n");
+#ifdef TAU_DEBUG_CUPTI
+		printf("register sync from callback.\n");
+#endif
 		CUpti_SynchronizeData *sync = (CUpti_SynchronizeData *) params;
 		uint32_t stream;
 		CUptiResult err;
@@ -183,6 +230,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		Tau_cupti_register_sync_event(NULL, 0, NULL, 0, 0);
     
 		err = cuptiGetStreamId(sync->context, sync->stream, &stream);
+		CUPTI_CHECK_ERROR(err, " cuptiGetStreamId");
 		Tau_cupti_register_sync_event(sync->context, stream, NULL, 0, 0);
 		for (int s=0; s<number_of_streams; s++)
 		{
@@ -200,6 +248,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 		if (function_is_memcpy(id, domain))
 		{
+#ifdef TAU_DEBUG_CUPTI
+			printf("TAU: CUPTI callback for memcpy\n");
+#endif
 			int kind;
 			int count;
 			get_values_from_memcpy(cbInfo, id, domain, kind, count);
@@ -222,7 +273,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			}
 			else
 			{
-				//cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
+#ifdef TAU_DEBUG_CUPTI
+				cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
+#endif
 				Tau_cupti_exit_memcpy_event(
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
@@ -238,7 +291,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				if (function_is_sync(id))
 				{ 
           
-					//cerr << "sync function name: " << cbInfo->functionName << endl;
+#ifdef TAU_DEBUG_CUPTI
+					cerr << "sync function name: " << cbInfo->functionName << endl;
+#endif
 					//Disable counter tracking during the sync.
 					//Tau_CuptiLayer_disable();
 					//cuCtxSynchronize();
@@ -272,18 +327,25 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					//Stop collecting cupti counters.
 					Tau_CuptiLayer_finalize();
 				}
+                if(strcmp(cbInfo->functionName, "cudaDeviceReset") == 0) {
+                    fprintf(stderr, "TAU: WARNING! cudaDeviceReset was called. CUPTI counters will not be measured from now on.\n");
+                }
 				Tau_gpu_enter_event(cbInfo->functionName);
 				if (function_is_launch(id))
 				{
           Tau_CuptiLayer_init();
 
-          //printf("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
+#ifdef TAU_DEBUG_CUPTI
+          printf("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
+#endif
 				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 					CUdevice device;
 					cuCtxGetDevice(&device);
 					record_gpu_counters_at_launch(device);
 				}
-				//cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
+#ifdef TAU_DEBUG_CUPTI
+				cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
+#endif
 			}
 			else if (cbInfo->callbackSite == CUPTI_API_EXIT)
 			{
@@ -291,20 +353,27 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				{
 				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 				}
-      /* for testing only. 
+#ifdef TAU_DEBUG_CUPTI_FORCE_SYNC
+      //for testing only. 
 				if (function_is_launch(id))
 				{
-          printf("synthetic sync point.\n");
-          cuCtxSynchronize();
-					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
-        }
-      */
-				//cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
-        //printf("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
+                    printf("synthetic sync point.\n");
+                    cuCtxSynchronize();
+                    FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+                }
+#endif
+      
+			
+#ifdef TAU_DEBUG_CUPTI
+				cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
+				printf("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
+#endif
 				Tau_gpu_exit_event(cbInfo->functionName);
 				if (function_is_sync(id))
 				{
-					//cerr << "sync function name: " << cbInfo->functionName << endl;
+#ifdef TAU_DEBUG_CUPTI
+					cerr << "sync function name: " << cbInfo->functionName << endl;
+#endif
 					//Tau_CuptiLayer_disable();
 					//cuCtxSynchronize();
 					cudaDeviceSynchronize();
@@ -411,7 +480,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
    
     for (int i=0; i < device_count; i++) {
-#ifdef TAU_CUPTI_DEBUG_COUNTERS
+#ifdef TAU_DEBUG_CUPTI_COUNTERS
       printf("Kernels encountered/recorded: %d/%d.\n", kernels_encountered[i], kernels_recorded[i]);
 #endif
       if (kernels_recorded[i] == kernels_encountered[i])
@@ -425,12 +494,17 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
       }
     }
   } else if (err != CUPTI_ERROR_QUEUE_EMPTY) {
-		//printf("TAU: Activity queue is empty.\n");
+#ifdef TAU_DEBUG_CUPTI
+		printf("TAU: CUPTI Activity queue is empty.\n");
 		//CUDA_CHECK_ERROR(err, "Cannot dequeue buffer.\n");
+#endif
 	} else if (err != CUPTI_ERROR_INVALID_PARAMETER) {
+#ifdef TAU_DEBUG_CUPTI
+        printf("TAU: CUPTI Invalid buffer");
 		//CUDA_CHECK_ERROR(err, "Cannot dequeue buffer, invalid buffer.\n");
+#endif
 	} else {
-		printf("TAU: Unknown error cannot read from buffer.\n");
+		printf("TAU: CUPTI Unknown error cannot read from buffer.\n");
 	}
 
 
@@ -440,7 +514,7 @@ void CUPTIAPI Tau_cupti_register_buffer_creation(uint8_t **activityBuffer, size_
 {
 	uint8_t* bf = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
   if (bf == NULL) {
-    printf("TAU: ERROR insufficient memory available to allocate activity buffer of size %d.", ACTIVITY_BUFFER_SIZE);
+    printf("sufficient memory available to allocate activity buffer of size %d.", ACTIVITY_BUFFER_SIZE);
     exit(1);
   }
   *activityBuffer = bf;
@@ -481,9 +555,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         bytes = memcpy->bytes;
         copyKind = memcpy->copyKind;
         id = memcpy->correlationId;
-        //cerr << "recording memcpy (device, stream, context, correlation): " << memcpy->deviceId << ", " << memcpy->streamId << ", " << memcpy->contextId << ", " << memcpy->correlationId << ", " << memcpy->start << "-" << memcpy->end << "ns.\n" << endl;
-		    //cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
-		    //cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
+#ifdef TAU_DEBUG_CUPTI
+        cerr << "recording memcpy (device, stream, context, correlation): " << memcpy->deviceId << ", " << memcpy->streamId << ", " << memcpy->contextId << ", " << memcpy->correlationId << ", " << memcpy->start << "-" << memcpy->end << "ns.\n" << endl;
+		cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
+		cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
+#endif
         Tau_cupti_register_memcpy_event(
           TAU_GPU_USE_DEFAULT_NAME,
           memcpy->srcDeviceId,
@@ -531,9 +607,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         } else if (getMemcpyType(copyKind) == MemcpyDtoH) {
           direction = MESSAGE_SEND;
         }
-			//cerr << "recording memcpy: " << end - start << "ns.\n" << endl;
-		  //cerr << "recording memcpy on device: " << id << endl;
-		  //cerr << "recording memcpy kind: " << copyKind << endl;
+#ifdef TAU_DEBUG_CUPTI
+			cerr << "recording memcpy: " << end - start << "ns.\n" << endl;
+		    cerr << "recording memcpy on device: " << deviceId << endl;
+		    cerr << "recording memcpy kind: " << getMemcpyType(copyKind) << endl;
+#endif 
 			//We do not always know on the corresponding host event on
 			//the CPU what type of copy we have so we need to register 
 			//the bytes copied here. Be careful we only want to record 
@@ -642,11 +720,13 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUDA_VERSION >= 5050
       }
 #endif
-      //cerr << "recording kernel (device, stream, context, correlation, grid, name): " << deviceId << ", " << streamId << ", " << contextId << ", " << correlationId << ", " << gridId << ", " << name << ", "<< start << "-" << end << "ns.\n" << endl;
+#ifdef TAU_DEBUG_CUPTI
+      cerr << "recording kernel (device, stream, context, correlation, grid, name): " << deviceId << ", " << streamId << ", " << contextId << ", " << correlationId << ", " << gridId << ", " << name << ", "<< start << "-" << end << "ns.\n" << endl;
       /*if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
         cerr << "CDP kernel, parent is: " << parentGridId << endl;
       }*/
-			//cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
+	  cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
+#endif
       
 
       eventMap.erase(eventMap.begin(), eventMap.end());
@@ -784,13 +864,17 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
     case CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR:
     {
 			CUpti_ActivitySourceLocator *source = (CUpti_ActivitySourceLocator *)record;
-			//cerr << "source locator (id): " << source->id << ", " << source->fileName << ", " << source->lineNumber << ".\n" << endl;
+#ifdef TAU_DEBUG_CUPTI
+			cerr << "source locator (id): " << source->id << ", " << source->fileName << ", " << source->lineNumber << ".\n" << endl;
+#endif
       sourceLocatorMap[source->id] = *source;
     }
     case CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS:
     {
 			CUpti_ActivityGlobalAccess *global_access = (CUpti_ActivityGlobalAccess *)record;
-			//cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
+#ifdef TAU_DEBUG_CUPTI
+			cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
+#endif
       //globalAccessMap[global_access->correlationId] = *global_access;
      
       CUpti_ActivityKernel *kernel = &kernelMap[global_access->correlationId];
@@ -830,7 +914,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
     case CUPTI_ACTIVITY_KIND_BRANCH:
     {
 			CUpti_ActivityBranch *branch = (CUpti_ActivityBranch *)record;
-			//cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
+#ifdef TAU_DEBUG_CUPTI
+			cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
+#endif
      
       CUpti_ActivityKernel *kernel = &kernelMap[branch->correlationId];
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[branch->sourceLocatorId];
@@ -911,6 +997,9 @@ int gpu_source_locations_available()
 
 void record_gpu_launch(int correlationId, const char *name)
 {
+#ifdef TAU_DEBUG_CUPTI
+  printf("TAU: CUPTI recording GPU launch: %s\n", name);
+#endif
   Tau_cupti_register_host_calling_site(correlationId, name);	
 }
 void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
@@ -931,7 +1020,7 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
     //increment kernel count.
     
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-#ifdef TAU_CUPTI_DEBUG_COUNTERS
+#ifdef TAU_DEBUG_CUPTI_COUNTERS
       std::cout << "at record: "<< name << " ====> " << std::endl;
       std::cout << "\tstart: " << counters_at_last_launch[device_id][n] << std::endl;
       std::cout << "\t stop: " << current_counters[device_id][n] << std::endl;

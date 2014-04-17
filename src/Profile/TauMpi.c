@@ -93,7 +93,7 @@ static int procid_0;
   } 
 
 
-static int sum_array (int *counts, MPI_Datatype type, MPI_Comm comm) {
+static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm) {
 
   int typesize, commSize, commRank, i;
   int total = 0;
@@ -3430,7 +3430,7 @@ char * Tau_printRanks(void *comm_ptr) {
   char name[16384];
   char rankbuffer[256];
   int worldrank;
-  MPI_Comm comm = (MPI_Comm) comm_ptr;
+  MPI_Comm comm = (MPI_Comm)(intptr_t) comm_ptr;
   memset(name, 0, 16384);
   
   PMPI_Comm_size(comm, &size);
@@ -3447,7 +3447,7 @@ char * Tau_printRanks(void *comm_ptr) {
   if (limit < size) {
     strcat(name, " ...");
   }
-  sprintf(rankbuffer,"> <addr=%p", comm);
+  sprintf(rankbuffer,"> <addr=%p", comm_ptr);
   strcat(name, rankbuffer);
   return strdup(name);
 
