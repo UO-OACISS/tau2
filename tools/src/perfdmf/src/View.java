@@ -106,6 +106,22 @@ public class View implements Serializable {
 					else if(operator == STRING_NOT){
 						return "not like";
 					}
+					else if(operator == STRING_EXACTLY){
+						return "=";
+					}
+					else if (operator == View.NUMBER_EQUAL) {
+						return "=";
+					} else if (operator == View.NUMBER_NOT) {
+						return "!=";
+					} else if (operator == View.NUMBER_GREATER) {
+						return ">";
+					} else if (operator == View.NUMBER_LESS) {
+						return "<";
+					} else if (operator == View.NUMBER_RANGE) {
+					//Need to create two rules in this case.
+					return View.NUMBER_RANGE;
+				}
+					
 					return operator;
 				}
 		
@@ -172,7 +188,7 @@ public class View implements Serializable {
 						break;
 					case ENDS:vr.setOperator(STRING_ENDS);
 						break;
-					case EXACTLY:vr.setOperator(STRING_EXACTLY);
+					case EXACTLY:vr.setOperator(STRING_EXACTLY);//TODO: Must be equals?
 						break;
 					case NOT:vr.setOperator(STRING_NOT);
 						break;

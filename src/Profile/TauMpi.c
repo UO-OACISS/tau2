@@ -21,6 +21,7 @@
 #include <TauMetaDataMerge.h>
 #include <Profile/TauMon.h>
 #include <Profile/TauRequest.h>
+#include <Profile/TauSampling.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -92,7 +93,7 @@ static int procid_0;
   } 
 
 
-static int sum_array (int *counts, MPI_Datatype type, MPI_Comm comm) {
+static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm) {
 
   int typesize, commSize, commRank, i;
   int total = 0;
@@ -438,7 +439,6 @@ MPI_Datatype recvtype;
 MPI_Comm comm;
 {
   int   returnVal;
-  int   sendtypesize, recvtypesize;
   int tracksize = 0;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE);
@@ -482,8 +482,6 @@ MPI_Comm comm;
 {
   int   returnVal;
   int   typesize;
-  unsigned long long volume;
-  char *ranks; 
 #ifdef TAU_MPI_BCAST_HISTOGRAM
   TAU_REGISTER_CONTEXT_EVENT(c1, "Message size in MPI_Bcast [0, 1KB)");
   TAU_REGISTER_CONTEXT_EVENT(c2, "Message size in MPI_Bcast [1KB, 10KB)");
@@ -500,9 +498,9 @@ MPI_Comm comm;
 
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
   PMPI_Type_size( datatype, &typesize );
-  volume = typesize * count; 
 
 #ifdef TAU_MPI_BCAST_HISTOGRAM
+  unsigned long long volume = typesize * count; 
   if (volume  < 1024) { 
     TAU_CONTEXT_EVENT(c1, volume);
   } else {
@@ -573,8 +571,6 @@ int root;
 MPI_Comm comm;
 {
   int   returnVal;
-  int   typesize;
-  int   rank;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Gatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -814,6 +810,10 @@ int * result;
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
+}
+
+int Tau_setupCommunicatorInfo(MPI_Comm * comm)  {
+  return 0;
 }
 
 int   MPI_Comm_create( comm, group, comm_out )
@@ -1454,14 +1454,8 @@ void finalizeCallSites_if_necessary();
 int  MPI_Finalize(  )
 {
   int  returnVal;
-  int size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
-
-  /* BGP counters */
-  int numCounters, mode, upcErr;
-  x_uint64 counterVals[1024];
-
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -1484,6 +1478,10 @@ int  MPI_Finalize(  )
   }
 
 #ifdef TAU_BGP
+  /* BGP counters */
+  int numCounters, mode, upcErr;
+  x_uint64 counterVals[1024];
+
   if (TauEnv_get_ibm_bg_hwp_counters()) {
     PMPI_Barrier(MPI_COMM_WORLD); 
     Tau_Bg_hwp_counters_stop(&numCounters, counterVals, &mode, &upcErr);
@@ -3432,7 +3430,7 @@ char * Tau_printRanks(void *comm_ptr) {
   char name[16384];
   char rankbuffer[256];
   int worldrank;
-  MPI_Comm comm = (MPI_Comm) comm_ptr;
+  MPI_Comm comm = (MPI_Comm)(intptr_t) comm_ptr;
   memset(name, 0, 16384);
   
   PMPI_Comm_size(comm, &size);
@@ -3449,14 +3447,11 @@ char * Tau_printRanks(void *comm_ptr) {
   if (limit < size) {
     strcat(name, " ...");
   }
-  sprintf(rankbuffer,"> <addr=%p", comm);
+  sprintf(rankbuffer,"> <addr=%p", comm_ptr);
   strcat(name, rankbuffer);
   return strdup(name);
 
 
 }
 
-int Tau_setupCommunicatorInfo(MPI_Comm comm)  {
-  return 0;
-}
 /* EOF TauMpi.c */

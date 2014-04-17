@@ -43,6 +43,14 @@ extern "C" {
     }
   }
 
+  /* This function is used to assign character pointers to 
+   * static constant strings. This prevents C++ compiler
+   * warnings */
+  static void assignStr(char* ptr, const char* instr) {
+    ptr = (char*)(calloc((strlen(instr)+1), sizeof(char)));
+	strcpy(ptr, instr);
+  }
+
   static int flushEdf(Ttf_fileT *tFile) {
     FILE *fp;
     if ((fp = fopen (tFile->EdfFile, "wb")) == NULL) {
@@ -61,7 +69,7 @@ extern "C" {
       int id = (*it).first;
       Ttf_EventDescrT eventDesc = (*it).second;
 
-      fprintf(fp, "%ld %s %ld \"%s\" %s\n", id, eventDesc.Group, eventDesc.Tag, eventDesc.EventName, eventDesc.Param);
+      fprintf(fp, "%ld %s %ld \"%s\" %s\n", (long int)(id), eventDesc.Group, (long int)(eventDesc.Tag), eventDesc.EventName, eventDesc.Param);
 
     }
 
@@ -151,43 +159,47 @@ extern "C" {
 
 
     Ttf_EventDescrT newEventDesc;
+    // prevent Compiler warnings by initializing these 
+    newEventDesc.Group = NULL;
+    newEventDesc.EventName = NULL;
+    newEventDesc.Param = NULL;
 
     newEventDesc.Eid = TAU_EV_INIT;
-    newEventDesc.Group = "TRACER";
-    newEventDesc.EventName = "EV_INIT";
+    assignStr(newEventDesc.Group, "TRACER");
+    assignStr(newEventDesc.EventName, "EV_INIT");
     newEventDesc.Tag = 0;
-    newEventDesc.Param = "none";
+    assignStr(newEventDesc.Param, "none");
     (*tFile->EventIdMap)[TAU_EV_INIT] = newEventDesc;
 
     newEventDesc.Eid = TAU_EV_CLOSE;
-    newEventDesc.Group = "TRACER";
-    newEventDesc.EventName = "FLUSH_CLOSE";
+    assignStr(newEventDesc.Group, "TRACER");
+    assignStr(newEventDesc.EventName, "FLUSH_CLOSE");
     newEventDesc.Tag = 0;
-    newEventDesc.Param = "none";
+    assignStr(newEventDesc.Param, "none");
     (*tFile->EventIdMap)[TAU_EV_CLOSE] = newEventDesc;
 
 
     newEventDesc.Eid = TAU_EV_WALL_CLOCK;
-    newEventDesc.Group = "TRACER";
-    newEventDesc.EventName = "WALL_CLOCK";
+    assignStr(newEventDesc.Group, "TRACER");
+    assignStr(newEventDesc.EventName, "WALL_CLOCK");
     newEventDesc.Tag = 0;
-    newEventDesc.Param = "none";
+    assignStr(newEventDesc.Param, "none");
     (*tFile->EventIdMap)[TAU_EV_WALL_CLOCK] = newEventDesc;
 
 
     newEventDesc.Eid = TAU_MESSAGE_SEND;
-    newEventDesc.Group = "TAU_MESSAGE";
-    newEventDesc.EventName = "MESSAGE_SEND";
+    assignStr(newEventDesc.Group, "TAU_MESSAGE");
+    assignStr(newEventDesc.EventName, "MESSAGE_SEND");
     newEventDesc.Tag = -7;
-    newEventDesc.Param = "par";
+    assignStr(newEventDesc.Param, "par");
     (*tFile->EventIdMap)[TAU_MESSAGE_SEND] = newEventDesc;
 
 
     newEventDesc.Eid = TAU_MESSAGE_RECV;
-    newEventDesc.Group = "TAU_MESSAGE";
-    newEventDesc.EventName = "MESSAGE_RECV";
+    assignStr(newEventDesc.Group, "TAU_MESSAGE");
+    assignStr(newEventDesc.EventName, "MESSAGE_RECV");
     newEventDesc.Tag = -8;
-    newEventDesc.Param = "par";
+    assignStr(newEventDesc.Param, "par");
     (*tFile->EventIdMap)[TAU_MESSAGE_RECV] = newEventDesc;
 
     
@@ -266,7 +278,8 @@ extern "C" {
     newEventDesc.Group = const_cast<char*>((*tFile->groupNameMap)[stateGroupToken]);
     newEventDesc.EventName = strdup(stateName);
     newEventDesc.Tag = 0;
-    newEventDesc.Param = "EntryExit";
+    newEventDesc.Param = NULL;
+    assignStr(newEventDesc.Param, "EntryExit");
 
     (*tFile->EventIdMap)[stateToken] = newEventDesc;
 
@@ -306,11 +319,11 @@ extern "C" {
   }
 
 
-  int Ttf_CloseOutputFile(Ttf_FileHandleT file) {
+  Ttf_FileHandleT Ttf_CloseOutputFile(Ttf_FileHandleT file) {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
     if (tFile->forWriting == false) {
-      return (int)(Tau_convert_ptr_to_long_trc(Ttf_CloseFile(tFile)));
+      return (Ttf_CloseFile(tFile));
     }
 
     for (NidTidMapT::iterator it = tFile->NidTidMap->begin(); it != tFile->NidTidMap->end(); ++it) {
@@ -452,11 +465,16 @@ extern "C" {
 
 
     Ttf_EventDescrT newEventDesc;
+    // prevent Compiler warnings by initializing these 
+    newEventDesc.Group = NULL;
+    newEventDesc.EventName = NULL;
+    newEventDesc.Param = NULL;
+
     newEventDesc.Eid = userEventToken;
-    newEventDesc.Group = "TAUEVENT";
+    assignStr(newEventDesc.Group, "TAUEVENT");
     newEventDesc.EventName = strdup(userEventName);
     newEventDesc.Tag = monotonicallyIncreasing;
-    newEventDesc.Param = "TriggerValue";
+    assignStr(newEventDesc.Param, "TriggerValue");
 
     (*tFile->EventIdMap)[userEventToken] = newEventDesc;
 

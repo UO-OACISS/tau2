@@ -93,9 +93,9 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
     if (iowrap_events[i].size() > 0) {
       unknown_ptr = iowrap_events[i][0];
     }
-    while (iowrap_events[i].size() <= fid) {
+    while ((int)(iowrap_events[i].size()) <= fid) {
       iowrap_events[i].push_back(unknown_ptr);
-      if (iowrap_events[i].size() - 1 != fid) {
+      if ((int)(iowrap_events[i].size() - 1) != fid) {
         dprintf("Registering %d with unknown\n", iowrap_events[i].size() - 2);
       }
     }
@@ -112,7 +112,7 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
 /*********************************************************************
  * unregister events for a file descriptor
  ********************************************************************/
-extern "C" void Tau_iowrap_unregisterEvents(int fid)
+extern "C" void Tau_iowrap_unregisterEvents(unsigned int fid)
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -140,7 +140,7 @@ extern "C" void Tau_iowrap_unregisterEvents(int fid)
  * Tau_iowrap_dupEvents takes care of the associating the events with the 
  * new file descriptor obtained by using dup/dup2 calls.
  ********************************************************************/
-extern "C" void Tau_iowrap_dupEvents(int oldfid, int newfid)
+extern "C" void Tau_iowrap_dupEvents(unsigned int oldfid, unsigned int newfid)
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -190,7 +190,7 @@ extern "C" void Tau_iowrap_checkInit()
 /*********************************************************************
  * Get the user event for the given type of event and file descriptor
  ********************************************************************/
-extern "C" void *Tau_iowrap_getEvent(event_type type, int fid)
+extern "C" void *Tau_iowrap_getEvent(event_type type, unsigned int fid)
 {
   IOvector const & iowrap_events = TheIoWrapEvents();
   fid++;    // skip the "unknown" descriptor

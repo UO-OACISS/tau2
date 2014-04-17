@@ -268,6 +268,8 @@ public:
     // Initialize leak event map early on since Intel 12.x compilers 
     // can't construct tr1::hash_map from exit()
     static leak_event_map_t & leak_event_map = __leak_event_map();
+	// use the static object, so the compiler doesn't complain
+	leak_event_map.size();
   }
 
   // True if ptr is in the range tracked by this allocation

@@ -55,7 +55,7 @@ INSTALLDEST   = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
-CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE)
+CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE)
 
 SERIAL_CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE)
 
@@ -72,7 +72,8 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/FunctionInfo.h $(INCDIR)/UserEvent.h        \
 		$(INCDIR)/TauCppAPI.h 	 $(INCDIR)/bstring.h	      \
 		$(INCDIR)/TauFAPI.h 	 $(INCDIR)/TauMetrics.h       \
-		$(INCDIR)/PapiLayer.h    $(INCDIR)/JavaThreadLayer.h  \
+		$(INCDIR)/PapiLayer.h    $(INCDIR)/JNIThreadLayer.h   \
+		$(INCDIR)/JVMTIThreadLayer.h                          \
 		$(INCDIR)/OpenMPLayer.h  $(INCDIR)/TauJAPI.h	      \
 		$(INCDIR)/SprocLayer.h   $(INCDIR)/PyGroups.h         \
 		$(INCDIR)/PyExceptions.h $(INCDIR)/PyDatabase.h       \
@@ -88,6 +89,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauBfd.h \
 		$(INCDIR)/TauMmapMemMgr.h $(INCDIR)/TauPathHash.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
+		$(INCDIR)/adb.h         $(INCDIR)/jdwp.h          \
 
 LDFLAGS	      =
 
@@ -622,7 +624,7 @@ Profile.class	: Profile.java
 	$(JDKBINDIR)/javac Profile.java 
 
 Profiler.o 	: Profiler.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)   -c $(@:.o=.cpp)
 
 TauMetaData.o 	: TauMetaData.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
@@ -640,13 +642,13 @@ TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauOpenMPCollectorAPIDisable.o  : TauOpenMPCollectorAPIDisable.c $(HDRS)
-	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
+	$(CC) $(CFLAGS)  -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -676,7 +678,7 @@ TauCollate.o 	: TauCollate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauSampling.o 	: TauSampling.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauSampling_hpctoolkit.o 	: TauSampling_hpctoolkit.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -700,10 +702,10 @@ TauBacktrace.o 	: TauBackTrace.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauEnv.o 	: TauEnv.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauInit.o 	: TauInit.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 UserEvent.o 	: UserEvent.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -712,13 +714,13 @@ FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 Comp_pgi.o 	: Comp_pgi.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 Comp_xl.o 	: Comp_xl.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -730,13 +732,13 @@ RtsLayer.o 	: RtsLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 RtsThread.o 	: RtsThread.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Tracer.o   	: Tracer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
@@ -757,13 +759,19 @@ JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
 	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)   -c $(@:.o=.cpp)
 
 TauFAPI.o   : TauFAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauJAPI.o   : TauJAPI.cpp $(HDRS) 
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+adb.o       : adb.c $(HDRS) 
+	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
+
+jdwp.o      : jdwp.c $(HDRS) 
+	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
 TauMapping.o   : TauMapping.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -784,25 +792,25 @@ TauDisable.o 	: TauDisable.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 OpenMPLayer.o 	: OpenMPLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauOpari.o 	: TauOpari.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 pomp2_lib.o : pomp2_lib.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 pomp2_fwrapper_base.o : pomp2_fwrapper_base.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 pomp2_fwrapper.o : pomp2_fwrapper.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 pomp2_region_info.o : pomp2_region_info.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 TauKojakOpari.o : TauKojakOpari.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauKojakOpariDisable.o : TauKojakOpariDisable.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -886,10 +894,10 @@ CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
-	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
-	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
@@ -898,7 +906,7 @@ TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
 
 TauOMPT.o 	: TauOMPT.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes

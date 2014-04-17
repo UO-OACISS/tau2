@@ -18,6 +18,7 @@ usage(){
     echo "    -tau:bootclasspath=<bootclasspath>    To modify the bootclasspath to point to a different jar, not usually necessary."
     echo "    -tau:include=<item>      Only these classes/methods"
     echo "    -tau:exclude=<item>      Exclude these classes/methodsn"
+    echo "    -tau:node=<NodeID>       Use designated <NodeID> (default=0)"
     echo "    item    Qualified class and/or method names"
     echo "       e.g. (*.<init>;Foobar.method;sun.*)"
     exit
@@ -33,7 +34,7 @@ exclude=
 agentlib=-agentpath:${TAU_LIB_DIR}/libTAU.jnilib 
 classpatharg=-Xbootclasspath/a:$JARTARGET/TauJVMTI.jar
 java=java
-
+node=0
 
 for arg in "$@"; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -69,6 +70,10 @@ for arg in "$@"; do
           java=`echo $arg | sed 's/-tau:java=//'`
           shift
 	  ;;
+      -tau:node=*)
+	  node=`echo $arg | sed 's/-tau:node=//'`
+	  shift
+	  ;;
       *)
           NON_TAUARGS="$NON_TAUARGS $modarg"
 	  shift
@@ -76,12 +81,14 @@ for arg in "$@"; do
       esac
 done
 
+agentlib="$agentlib=node=$node"
+
 if [ "x$exclude" != "x" ]; then 
-  agentlib="$agentlib=exclude=$exclude" 
+  agentlib="$agentlib;exclude=$exclude" 
 fi
 
 if [ "x$include" != "x" ]; then 
-  agentlib="$agentlib=include=$include" 
+  agentlib="$agentlib;include=$include" 
 fi
 
 if [ $verbose = "true" ] ; then
@@ -93,6 +100,7 @@ if [ $verbose = "true" ] ; then
     echo "Exclude is $exclude"
     echo "AgentLib is $agentlib"
     echo "Java is $java"
+    echo "NodeID is $node"
     echo "Executing> $java $agentlib $classpatharg $NON_TAUARGS"
 fi
 

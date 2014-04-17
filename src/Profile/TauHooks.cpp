@@ -50,6 +50,7 @@ vector<int> TheFlag(TAU_MAX_THREADS);
 #endif /* IA64 */
 
 
+vector<string> TauLoopNames; /* holds just names of loops */
 vector<string> TauFuncNameVec; /* holds just names */
 vector<FunctionInfo*>& TheTauDynFI(void)
 { // FunctionDB contains pointers to each FunctionInfo static object
@@ -77,7 +78,6 @@ void TauInitCode(char *arg, int isMPI)
   int tid = 0;
   TAU_MONITOR_ENTER(0);
   int functionId = 0;
-  char funcname[1024];
   char *saveptr;
 
   int j;
@@ -105,6 +105,7 @@ void TauInitCode(char *arg, int isMPI)
     functionId ++; 
 #ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
     TAU_VERBOSE("Extracted : %s :id = %d\n", name, functionId);
+    char funcname[1024];
     TAU_MAPPING_CREATE(funcname, " ", functionId, "TAU_DEFAULT", tid);
 #else
     TAU_VERBOSE("Extracted : %s :id = %d\n", name, functionId-1);
@@ -362,7 +363,6 @@ void trace_register_func(char *origname, int id)
   } 
   if (func[0] == 't' && func[1] == 'a' && func[2] == 'r' && func[3] == 'g') {
     if (isdigit(func[4])) {
-      long addr;
       TAU_VERBOSE("trace_register_func: Routine name is targN...\n");
       ((FunctionInfo *)taufi)->SetProfileGroup(TAU_GROUP_31);
 
@@ -370,6 +370,7 @@ void trace_register_func(char *origname, int id)
     // This routine should be exited prior to the beginning of the next routine
     // Extract the name from the address:
 /*
+      long addr;
       sscanf(func, "targ%lx", &addr);
       TAU_VERBOSE("ADDR=%lx, name =%s\n", addr, func);
       char name[256];
@@ -443,8 +444,8 @@ void traceEntry(int id)
 
 void traceExit(int id)
 {
-  const char *strcurr;
-  const char *strbin;
+  //const char *strcurr;
+  //const char *strbin;
   //TAU_VERBOSE("Inside traceExit: id = %d\n", id);  
   
   if ( !RtsLayer::TheEnableInstrumentation()) return; 
@@ -533,13 +534,13 @@ void tau_dyninst_cleanup()
 
 /* PEBIL */
 char * tau_demangle_name(char **funcname) {
+#ifdef __GNUC__
   std::size_t len=1024;
   int stat;
   char *dem_name = NULL; 
-#ifdef __GNUC__
   char *out_buf= (char *) malloc (strlen(*funcname)+100);
   char *name = abi::__cxa_demangle(*funcname, out_buf, &len, &stat);
-  if (stat == 0) dem_name = out_buf;
+  if (stat == 0 && name != NULL) dem_name = out_buf;
   else dem_name = *funcname;
   return dem_name; 
 #else  /* __GNUC__ */
@@ -572,6 +573,16 @@ void tau_trace_exit(int id) {
   traceExit(id);
 }
 
+void tau_loop_trace_entry(int id) {
+  dprintf("TAU: tau_loop_trace_entry: id = %d\n", id);
+  TAU_START(TauLoopNames[id].c_str());
+}
+
+void tau_loop_trace_exit(int id) {
+  dprintf("TAU: tau_loop_trace_exit : id = %d\n", id);
+  TAU_STOP(TauLoopNames[id].c_str());
+}
+
 #if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
 #include <pthread.h>
 void* tool_thread_init(pthread_t args) {
@@ -585,6 +596,21 @@ void* tool_thread_fini(pthread_t args) {
   Tau_stop_top_level_timer_if_necessary(); 
   return NULL;
 }
+
+void  tau_trace_register_loop(int id, char *loopname) {
+  static int invocations = 0;
+  dprintf("TAU: tau_trace_register_loop: id = %d, loopname = %s\n", id, loopname);
+  if (invocations == id) {
+    TauLoopNames.push_back(string(loopname));
+    invocations++;
+  } else {
+    printf("WARNING: id = %d, invocations = %d, loopname = %s\n", id, invocations, loopname);
+    TauLoopNames.resize(id+1);
+    TauLoopNames[id] = string(loopname);
+  }
+
+}
+
 void  tau_register_loop(char **func, char** file, int* lineno, 
   int id) {
 
@@ -600,6 +626,7 @@ void  tau_register_loop(char **func, char** file, int* lineno,
 
 }
 #endif /* TAU_PEBIL_DISABLE */
+
 
 } /* extern "C" */
   

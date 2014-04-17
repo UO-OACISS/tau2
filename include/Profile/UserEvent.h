@@ -262,8 +262,9 @@ public:
   { }
   
   TauContextUserEvent(const TauContextUserEvent &c) :
+	  contextEnabled(c.contextEnabled),
       userEvent(c.userEvent),
-      contextEvent(c.contextEvent), contextEnabled(c.contextEnabled)
+      contextEvent(c.contextEvent)
   { }
 
   TauContextUserEvent & operator=(const TauContextUserEvent &rhs) {
@@ -289,7 +290,7 @@ public:
     userEvent->SetName(value);
     if (contextEvent != NULL)
     {
-      int sep_pos = contextEvent->GetName().find(':');
+      std::size_t sep_pos = contextEvent->GetName().find(':');
       if (sep_pos != std::string::npos)
       {
         std::string context_portion = contextEvent->GetName().substr(sep_pos, contextEvent->GetName().length()-sep_pos);

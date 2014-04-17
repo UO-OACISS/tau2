@@ -48,7 +48,7 @@
 using namespace std;
 
 #include "TauJVMTI.h"
-#include "JavaThreadLayer.h"
+#include "JVMTIThreadLayer.h"
 
 extern "C" void Tau_profile_exit_all_threads(void);
 
@@ -261,7 +261,7 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
             cp = gdata->classes + cnum;
 
             if (gdata->vm_is_initialized) {
-	      int tid = JavaThreadLayer::GetThreadId(thread);
+	      int tid = JVMTIThreadLayer::GetThreadId(thread);
 	      long unique_method_id;
 
 	      unique_method_id = make_unique_method_id(cnum, mnum);
@@ -293,7 +293,7 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             }
             cp = gdata->classes + cnum;
             if (gdata->vm_is_initialized) {
-		int tid = JavaThreadLayer::GetThreadId(thread);
+		int tid = JVMTIThreadLayer::GetThreadId(thread);
 		unique_method_id = make_unique_method_id(cnum, mnum);
 		TAU_MAPPING_OBJECT(TauMethodName=NULL);
 		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
@@ -455,7 +455,7 @@ cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
 	    dprintf("Before RegisterThread in cbThreadStart\n");
-	    tid = JavaThreadLayer::RegisterThread(thread);
+	    tid = JVMTIThreadLayer::RegisterThread(thread);
             get_thread_group_name(jvmti, thread, gname, sizeof(gname));
 	    sprintf(final_thread_name,"%s GROUP=%s",tname, gname);
 	    CreateTopLevelRoutine(final_thread_name, " ", gname, *tid); 
@@ -476,7 +476,7 @@ cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
             get_thread_name(jvmti, thread, tname, sizeof(tname));
             DEBUGPROFMSG("ThreadEnd " << tname << endl;);
 
-	    JavaThreadLayer::ThreadEnd(thread);
+	    JVMTIThreadLayer::ThreadEnd(thread);
 	    //Inform Tau that the thread has ended.
 	    TAU_PROFILE_EXIT("END..."); 
         }
@@ -609,7 +609,7 @@ parse_agent_options(char *options)
     }
 
     /* Get the first token from the options string. */
-    next = get_token(options, ",=", token, sizeof(token));
+    next = get_token(options, ",;=", token, sizeof(token));
 
     /* While not at the end of the options string, process this option. */
     while ( next != NULL ) {
@@ -622,11 +622,12 @@ parse_agent_options(char *options)
             stdout_message("Within an options the arguments are comma separated:\n");
             stdout_message("\t help\t\t\t Print help information\n");
             stdout_message("\t max=n\t\t Only list top n classes\n");
-            stdout_message("\t include=item\t\t Only these classes/methods\n");
-            stdout_message("\t exclude=item\t\t Exclude these classes/methods\n");
+            stdout_message("\t include=<item>\t\t Only these classes/methods\n");
+            stdout_message("\t exclude=<item>\t\t Exclude these classes/methods\n");
+            stdout_message("\t node=<NodeID>\t\t Use designated <NodeID> (default=0)\n");
             stdout_message("\n");
-            stdout_message("item\t Qualified class and/or method names\n");
-            stdout_message("\t\t e.g. (*.<init>;Foobar.method;sun.*)\n");
+            stdout_message("<item>\t Qualified class and/or method names\n");
+            stdout_message("\t\t e.g. (*.<init>,Foobar.method,sun.*)\n");
             stdout_message("\n");
             exit(0);
         } else if ( strcmp(token,"include")==0 ) {
@@ -677,12 +678,17 @@ parse_agent_options(char *options)
             if ( next==NULL ) {
                 fatal_error("ERROR: exclude option error\n");
             }
+#ifndef TAU_MPI
+	} else if ( strcmp(token,"node")==0 ) {
+	    next = get_token(next, ";=", token, sizeof(token));
+	    TAU_PROFILE_SET_NODE(atoi(token)); 
+#endif
         } else if ( token[0]!=0 ) {
             /* We got a non-empty token and we don't know what it is. */
             fatal_error("ERROR: Unknown option: %s\n", token);
         }
         /* Get the next token (returns NULL if there are no more) */
-        next = get_token(next, ",=", token, sizeof(token));
+        next = get_token(next, ",;=", token, sizeof(token));
     }
 }
 
@@ -739,13 +745,13 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     gdata->jvmti = jvmti;
 
     /*Give our threading layer the handel it needs */
-    JavaThreadLayer::jvmti = jvmti;
+    JVMTIThreadLayer::jvmti = jvmti;
 
     /*Set up the necessary threading locks now, since they can only
      * be set up during the Onload and Running phases of the JVM
      */
-    //    JavaThreadLayer::InitializeDBMutexData();
-    //    JavaThreadLayer::InitializeEnvMutexData();
+    //    JVMTIThreadLayer::InitializeDBMutexData();
+    //    JVMTIThreadLayer::InitializeEnvMutexData();
 
     Tau_init_initializeTAU();
 #ifndef TAU_MPI
@@ -755,7 +761,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     /* Register the current thread, since the JVM makes calls with the first thread, before
      * calling cbThreadStart and we need to create the necessary locks and set it's thread ID.
      */
-    //JavaThreadLayer::RegisterThread();
+    //JVMTIThreadLayer::RegisterThread();
 
     /* Parse any options supplied on java command line */
     parse_agent_options(options);

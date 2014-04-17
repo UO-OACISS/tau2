@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <Profile/TauUtil.h>
+#include <Profile/TauEnv.h>
 /******************************************************/
 /******************************************************/
 #ifdef TAU_MPICONSTCHAR
@@ -33,6 +34,7 @@
 #define TAU_WRITE TAU_IO
 
 
+#ifdef TAU_MPIFILE
 typedef struct iotracker {
   
   struct timeval t1, t2;
@@ -47,7 +49,7 @@ static int trackbegin(iotracker_t *tracker) {
 }
 
 static int trackend(iotracker_t *tracker, int count, MPI_Datatype datatype) {
-  int retvalue, typesize; 
+  int typesize; 
   double currentWrite = 0.0;
 
   gettimeofday(&(tracker->t2), 0);
@@ -65,6 +67,7 @@ static int trackend(iotracker_t *tracker, int count, MPI_Datatype datatype) {
   TAU_CONTEXT_EVENT(tracker->eventBytes, count*typesize);
   return 0;
 }
+#endif /* TAU_MPIFILE */
 
 
 #define MPIO_TRACK_INIT(tracker, name1, name2)	\
@@ -1104,7 +1107,8 @@ void MPI_COMM_CREATE_ERRHANDLER( MPI_Comm_errhandler_fn * function, MPI_Errhandl
   MPI_Errhandler local_errhandler; 
 
   *ierr = MPI_Comm_create_errhandler( function, &local_errhandler) ; 
-  *errhandler = MPI_Errhandler_c2f(local_errhandler);
+  // this returns MPI_Fint - so cast it
+  *errhandler = (MPI_Errhandler)(intptr_t)(MPI_Errhandler_c2f(local_errhandler));
   return ; 
 }
 
@@ -1647,9 +1651,11 @@ int MPI_Win_free( MPI_Win * win)
 ******************************************************/
 void MPI_WIN_FREE( MPI_Win * win, MPI_Fint * ierr)
 {
-  MPI_Win local_win = MPI_Win_f2c(*win);
+  // MPI_Win_f2c takes an MPI_Fint
+  MPI_Win local_win = MPI_Win_f2c((MPI_Fint)(intptr_t)(*win));
   *ierr = MPI_Win_free( &local_win) ; 
-  *win = MPI_Win_c2f(local_win);
+  // MPI_Win_f2c returns an MPI_Fint
+  *win = (MPI_Win)(intptr_t)(MPI_Win_c2f(local_win));
   return ; 
 }
 
@@ -2617,7 +2623,8 @@ void MPI_WIN_CREATE_ERRHANDLER( MPI_Win_errhandler_fn * function, MPI_Errhandler
 {
   MPI_Errhandler local_errhandler;
   *ierr = MPI_Win_create_errhandler( function, &local_errhandler) ; 
-  *errhandler = MPI_Errhandler_c2f(local_errhandler);
+  // this returns MPI_Fint - so cast it
+  *errhandler = (MPI_Errhandler)(intptr_t)(MPI_Errhandler_c2f(local_errhandler));
   return ; 
 }
 
@@ -2727,7 +2734,8 @@ void MPI_WIN_GET_ERRHANDLER( MPI_Fint *  win, MPI_Errhandler * errhandler, MPI_F
   MPI_Errhandler local_errhandler; 
   local_win = MPI_Win_f2c(*win);
   *ierr = MPI_Win_get_errhandler( local_win, &local_errhandler) ; 
-  *errhandler = MPI_Errhandler_c2f(local_errhandler);
+  // this returns MPI_Fint - so cast it
+  *errhandler = (MPI_Errhandler)(intptr_t)(MPI_Errhandler_c2f(local_errhandler));
   return ; 
 }
 

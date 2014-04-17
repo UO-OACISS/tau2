@@ -54,7 +54,7 @@ list<pair<int, list<string> > > additionalInvocations;
  the first element of the pair (the second is the list of strings). */
 
 /* These should *really* be in tau_instrumentor.cpp ... */
-bool noinline_flag = true; /* instrument inlined functions by default */
+bool noinline_flag = true; /* DO NOT instrument inlined functions by default */
 bool use_spec = false; /* by default, do not use code from specification file */
 
 // Loop instrumentation level
