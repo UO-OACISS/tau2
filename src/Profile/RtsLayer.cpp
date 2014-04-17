@@ -174,7 +174,7 @@ TauGroup_t RtsLayer::getProfileGroup(char const * ProfileGroup) {
   TauGroup_t gr;
   if (it == TheProfileMap().end()) {
 #ifdef DEBUG_PROF
-    cout <<ProfileGroup << " not found, adding ... "<<endl;
+    cerr <<ProfileGroup << " not found, adding ... "<<endl;
 #endif /* DEBUG_PROF */
     gr = generateProfileGroup();
     TheProfileMap()[string(ProfileGroup)] = gr; // Add
@@ -350,9 +350,9 @@ double TauWindowsUsecD(void) {
     PerfClockCheckedBefore = true;
     if (PerformanceClock) {
 #ifdef DEBUG_PROF
-      cout << "Frequency high part is: " << Frequency.HighPart << endl;
-      cout << "Frequency low part is: " << Frequency.LowPart << endl;
-      cout << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
+      cerr << "Frequency high part is: " << Frequency.HighPart << endl;
+      cerr << "Frequency low part is: " << Frequency.LowPart << endl;
+      cerr << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
 #endif /* DEBUG_PROF */
       //Shall be using Frequency.QuadPart and assuming a double as the main TAU
       //system does.

@@ -459,7 +459,7 @@ void POMP2_Finalize()
   if (!pomp2_finalize_called) {
     pomp2_finalize_called = 1;
 #ifdef DEBUG_PROF
-    fprintf( stderr, "  0: finalize\n" );
+    TAU_VERBOSE( "  0: finalize\n" );
 #endif /* DEBUG_PROF */
   }
 }
@@ -476,7 +476,7 @@ void POMP2_Init()
 
     atexit(POMP2_Finalize);
 #ifdef DEBUG_PROF
-    fprintf( stderr, "  0: init  code\n" );
+    TAU_VERBOSE( "  0: init  code\n" );
 #endif /* DEBUG_PROF */
 
     /* Allocate memory for your POMP2_Get_num_regions() regions */
@@ -525,7 +525,7 @@ void POMP2_Begin(POMP2_Region_handle* pomp2_handle)
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: begin region %s\n",
+    TAU_VERBOSE( "%3d: begin region %s\n",
         omp_get_thread_num(), region->name );
   }
 #endif /* DEBUG_PROF */
@@ -555,7 +555,7 @@ void POMP2_End(POMP2_Region_handle* pomp2_handle)
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: end   region %s\n",
+    TAU_VERBOSE( "%3d: end   region %s\n",
         omp_get_thread_num(), region->name );
   }
 #endif /* DEBUG_PROF */
@@ -588,7 +588,7 @@ void POMP2_Assign_handle(POMP2_Region_handle* pomp2_handle, const char ctc_strin
   initDummyRegionFromPOMP2RegionInfo(new_handle, &pomp2RegionInfo);
   new_handle->id = count;
 #ifdef DEBUG_PROF
-  printf( "assign_handle %d %s\n", ( int )count, new_handle->rtype );
+  TAU_VERBOSE( "assign_handle %d %s\n", ( int )count, new_handle->rtype );
 #endif /* DEBUG_PROF */
 
   *pomp2_handle = new_handle; 
@@ -619,7 +619,7 @@ void POMP2_Atomic_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: enter atomic\n", omp_get_thread_num() );
+    TAU_VERBOSE( "%3d: enter atomic\n", omp_get_thread_num() );
   }
 #endif /* DEBUG_PROF */
 }
@@ -645,7 +645,7 @@ void POMP2_Atomic_exit(POMP2_Region_handle* pomp2_handle)
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: exit  atomic\n", omp_get_thread_num() );
+    TAU_VERBOSE( "%3d: exit  atomic\n", omp_get_thread_num() );
   }
 #endif /* DEBUG_PROF */
 }
@@ -680,11 +680,11 @@ void POMP2_Barrier_enter(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle* p
   {
     if ( region->rtype[ 0 ] == 'b' )
     {
-      fprintf( stderr, "%3d: enter barrier\n", omp_get_thread_num() );
+      TAU_VERBOSE( "%3d: enter barrier\n", omp_get_thread_num() );
     }
     else
     {
-      fprintf( stderr, "%3d: enter implicit barrier of %s\n",
+      TAU_VERBOSE( "%3d: enter implicit barrier of %s\n",
           omp_get_thread_num(), region->rtype );
     }
   }
@@ -719,11 +719,11 @@ void POMP2_Barrier_exit(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle pom
   {
     if ( region->rtype[ 0 ] == 'b' )
     {
-      fprintf( stderr, "%3d: exit  barrier\n", omp_get_thread_num() );
+      TAU_VERBOSE( "%3d: exit  barrier\n", omp_get_thread_num() );
     }
     else
     {
-      fprintf( stderr, "%3d: exit  implicit barrier of %s\n",
+      TAU_VERBOSE( "%3d: exit  implicit barrier of %s\n",
           omp_get_thread_num(), region->rtype );
     }
   }
@@ -767,7 +767,7 @@ void POMP2_Flush_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: enter flush\n", omp_get_thread_num() );
+    TAU_VERBOSE( "%3d: enter flush\n", omp_get_thread_num() );
   }
 #endif /* DEBUG_PROF */
 }
@@ -796,7 +796,7 @@ void POMP2_Flush_exit(POMP2_Region_handle* pomp2_handle)
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: exit  flush\n", omp_get_thread_num() );
+    TAU_VERBOSE( "%3d: exit  flush\n", omp_get_thread_num() );
   }
 #endif /* DEBUG_PROF */
 }
@@ -821,7 +821,7 @@ void POMP2_Critical_begin(POMP2_Region_handle* pomp2_handle)
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: begin critical %s\n",
+    TAU_VERBOSE( "%3d: begin critical %s\n",
         omp_get_thread_num(), region->rtype );
   }
 #endif /* DEBUG_PROF */
@@ -850,7 +850,7 @@ void POMP2_Critical_end(POMP2_Region_handle* pomp2_handle)
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: end   critical %s\n",
+    TAU_VERBOSE( "%3d: end   critical %s\n",
         omp_get_thread_num(), region->name );
   }
 #endif /* DEBUG_PROF */
@@ -880,7 +880,7 @@ void POMP2_Critical_enter(POMP2_Region_handle* pomp2_handle, const char ctc_stri
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
-    fprintf( stderr, "%3d: enter critical %s\n",
+    TAU_VERBOSE( "%3d: enter critical %s\n",
         omp_get_thread_num(), region->name );
   }
 #endif /* DEBUG_PROF */
@@ -913,7 +913,7 @@ POMP2_Critical_exit( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: exit  critical %s\n",
+        TAU_VERBOSE( "%3d: exit  critical %s\n",
                  omp_get_thread_num(), region->name );
     }
 #endif /* DEBUG_PROF */
@@ -943,7 +943,7 @@ POMP2_For_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: enter for\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: enter for\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -973,7 +973,7 @@ POMP2_For_exit( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: exit  for\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: exit  for\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1004,7 +1004,7 @@ POMP2_Master_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: begin master\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: begin master\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1033,7 +1033,7 @@ POMP2_Master_end( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: end   master\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: end   master\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1062,7 +1062,7 @@ POMP2_Parallel_begin( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: begin parallel\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: begin parallel\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1092,7 +1092,7 @@ POMP2_Parallel_end( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: end   parallel\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: end   parallel\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1130,7 +1130,7 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: fork  parallel\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: fork  parallel\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1161,7 +1161,7 @@ POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: join  parallel\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: join  parallel\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1193,7 +1193,7 @@ POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: begin section\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: begin section\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1222,7 +1222,7 @@ POMP2_Section_end( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: end   section\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: end   section\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1252,7 +1252,7 @@ POMP2_Sections_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[]
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: enter sections (%d)\n",
+        TAU_VERBOSE( "%3d: enter sections (%d)\n",
                  omp_get_thread_num(), region->num_sections );
     }
 #endif /* DEBUG_PROF */
@@ -1282,7 +1282,7 @@ POMP2_Sections_exit( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: exit  sections\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: exit  sections\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1311,7 +1311,7 @@ POMP2_Single_begin( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: begin single\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: begin single\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1340,7 +1340,7 @@ POMP2_Single_end( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: end   single\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: end   single\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1370,7 +1370,7 @@ POMP2_Single_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: enter single\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: enter single\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1399,7 +1399,7 @@ POMP2_Single_exit( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: exit  single\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: exit  single\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1429,7 +1429,7 @@ POMP2_Workshare_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: enter workshare\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: enter workshare\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1458,7 +1458,7 @@ POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: exit  workshare\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: exit  workshare\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
 }
@@ -1489,7 +1489,7 @@ POMP2_Ordered_begin( POMP2_Region_handle* pomp2_handle )
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: begin ordered\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: begin ordered\n", omp_get_thread_num() );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1520,7 +1520,7 @@ POMP2_Ordered_end( POMP2_Region_handle* pomp2_handle )
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: end ordered\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: end ordered\n", omp_get_thread_num() );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1555,7 +1555,7 @@ POMP2_Ordered_enter( POMP2_Region_handle* pomp2_handle,
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: enter ordered\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: enter ordered\n", omp_get_thread_num() );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1586,7 +1586,7 @@ POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: exit ordered\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: exit ordered\n", omp_get_thread_num() );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1618,7 +1618,7 @@ POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: task create begin\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: task create begin\n", omp_get_thread_num() );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1646,7 +1646,7 @@ POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
 
    if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: task create end\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: task create end\n", omp_get_thread_num() );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1675,7 +1675,7 @@ POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: task begin\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: task begin\n", omp_get_thread_num() );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1700,7 +1700,7 @@ POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: task end\n", omp_get_thread_num());
+        TAU_VERBOSE( "%3d: task end\n", omp_get_thread_num());
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1733,8 +1733,8 @@ POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: create  untied task\n", omp_get_thread_num() );
-        fprintf( stderr, "%3d:         suspend task %lld\n", omp_get_thread_num(), pomp2_current_task );
+        TAU_VERBOSE( "%3d: create  untied task\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d:         suspend task %lld\n", omp_get_thread_num(), pomp2_current_task );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1763,8 +1763,8 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: created  untied task\n", omp_get_thread_num() );
-        fprintf( stderr, "%3d:          resume task %lld\n", omp_get_thread_num(), pomp2_current_task );
+        TAU_VERBOSE( "%3d: created  untied task\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d:          resume task %lld\n", omp_get_thread_num(), pomp2_current_task );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1793,7 +1793,7 @@ POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: start  untied task %lld\n", omp_get_thread_num(), pomp2_current_task );
+        TAU_VERBOSE( "%3d: start  untied task %lld\n", omp_get_thread_num(), pomp2_current_task );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1818,7 +1818,7 @@ POMP2_Untied_task_end( POMP2_Region_handle* pomp2_handle )
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: end  untied task %lld\n", omp_get_thread_num(), pomp2_current_task );
+        TAU_VERBOSE( "%3d: end  untied task %lld\n", omp_get_thread_num(), pomp2_current_task );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1848,8 +1848,8 @@ POMP2_Taskwait_begin( POMP2_Region_handle* pomp2_handle,
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: begin  taskwait\n", omp_get_thread_num() );
-        fprintf( stderr, "%3d:  suspend task: %lld\n", omp_get_thread_num(), pomp2_current_task );
+        TAU_VERBOSE( "%3d: begin  taskwait\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d:  suspend task: %lld\n", omp_get_thread_num(), pomp2_current_task );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1878,8 +1878,8 @@ POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
 
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: end  taskwait\n", omp_get_thread_num() );
-        fprintf( stderr, "%3d: resume task: %lld\n", omp_get_thread_num(), pomp2_current_task );
+        TAU_VERBOSE( "%3d: end  taskwait\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: resume task: %lld\n", omp_get_thread_num(), pomp2_current_task );
     }
 #endif /*DEBUG_PROF*/
 }
@@ -1902,7 +1902,7 @@ POMP2_Init_lock( omp_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: init lock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: init lock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_init_lock( s );
@@ -1919,7 +1919,7 @@ POMP2_Destroy_lock( omp_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: destroy lock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: destroy lock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_destroy_lock( s );
@@ -1936,7 +1936,7 @@ POMP2_Set_lock( omp_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: set lock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: set lock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_set_lock( s );
@@ -1953,7 +1953,7 @@ POMP2_Unset_lock( omp_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: unset lock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: unset lock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_unset_lock( s );
@@ -1970,7 +1970,7 @@ POMP2_Test_lock( omp_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: test lock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: test lock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     return omp_test_lock( s );
@@ -1987,7 +1987,7 @@ POMP2_Init_nest_lock( omp_nest_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: init nestlock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: init nestlock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_init_nest_lock( s );
@@ -2004,7 +2004,7 @@ POMP2_Destroy_nest_lock( omp_nest_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: destroy nestlock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: destroy nestlock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_destroy_nest_lock( s );
@@ -2021,7 +2021,7 @@ POMP2_Set_nest_lock( omp_nest_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: set nestlock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: set nestlock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_set_nest_lock( s );
@@ -2038,7 +2038,7 @@ POMP2_Unset_nest_lock( omp_nest_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: unset nestlock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: unset nestlock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     omp_unset_nest_lock( s );
@@ -2055,7 +2055,7 @@ POMP2_Test_nest_lock( omp_nest_lock_t* s )
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
-        fprintf( stderr, "%3d: test nestlock\n", omp_get_thread_num() );
+        TAU_VERBOSE( "%3d: test nestlock\n", omp_get_thread_num() );
     }
 #endif /* DEBUG_PROF */
     return omp_test_nest_lock( s );
@@ -2078,35 +2078,35 @@ POMP2_Test_nest_lock( omp_nest_lock_t* s )
 
 void FSUB(POMP2_Init_lock)(omp_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: init lock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: init lock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_init_lock)(s);
 }
 
 void FSUB(POMP2_Destroy_lock)(omp_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: destroy lock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: destroy lock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_destroy_lock)(s);
 }
 
 void FSUB(POMP2_Set_lock)(omp_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: set lock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: set lock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_set_lock)(s);
 }
 
 void FSUB(POMP2_Unset_lock)(omp_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: unset lock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: unset lock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_unset_lock)(s);
 }
 
 int  FSUB(POMP2_Test_lock)(omp_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: test lock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: test lock\n", omp_get_thread_num());
   }
   return CALLFSUB(omp_test_lock)(s);
 }
@@ -2114,35 +2114,35 @@ int  FSUB(POMP2_Test_lock)(omp_lock_t *s) {
 #ifndef __osf__
 void FSUB(POMP2_Init_nest_lock)(omp_nest_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: init nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: init nestlock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_init_nest_lock)(s);
 }
 
 void FSUB(POMP2_Destroy_nest_lock)(omp_nest_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: destroy nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: destroy nestlock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_destroy_nest_lock)(s);
 }
 
 void FSUB(POMP2_Set_nest_lock)(omp_nest_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: set nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: set nestlock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_set_nest_lock)(s);
 }
 
 void FSUB(POMP2_Unset_nest_lock)(omp_nest_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: unset nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: unset nestlock\n", omp_get_thread_num());
   }
   CALLFSUB(omp_unset_nest_lock)(s);
 }
 
 int  FSUB(POMP2_Test_nest_lock)(omp_nest_lock_t *s) {
   if ( pomp2_tracing ) {
-    fprintf(stderr, "%3d: test nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE("%3d: test nestlock\n", omp_get_thread_num());
   }
   return CALLFSUB(omp_test_nest_lock)(s);
 }

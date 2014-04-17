@@ -125,8 +125,8 @@ int TauCalibrateNullTimer(void) {
     TheTauFullTimerOverhead()[i] = (oneincltime[i] - TheTauNullTimerOverhead()[i]) / n; 
   }
 #ifdef DEBUG_PROF
-  cout <<"Calibrate: Tnull time "<< TheTauNullTimerOverhead() <<endl;
-  cout <<"Calibrate: Toverhead time = "<<TheTauFullTimerOverhead() <<endl;
+  cerr <<"Calibrate: Tnull time "<< TheTauNullTimerOverhead() <<endl;
+  cerr <<"Calibrate: Toverhead time = "<<TheTauFullTimerOverhead() <<endl;
 #endif /* DEBUG_PROF */
   return 0;
 }
