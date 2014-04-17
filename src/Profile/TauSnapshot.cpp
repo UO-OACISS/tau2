@@ -106,8 +106,6 @@ extern "C" int Tau_snapshot_writeToBuffer(const char *name) {
 
 
 extern "C" int Tau_snapshot_writeIntermediate(const char *name) {
-  int tid = RtsLayer::myThread();
-  
   TAU_PROFILE_TIMER(timer, "TAU_PROFILE_SNAPSHOT()", " ", TAU_IO);
   TAU_PROFILE_START(timer);
   
@@ -248,15 +246,13 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
 #ifdef TAU_UNIFY
 int Tau_snapshot_writeUnifiedBuffer(int tid) {
   //int tid = RtsLayer::myThread();
-  int i, c;
+  int c;
   Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
   
   char threadid[4096];
   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
   
   RtsLayer::LockDB();
-  int numFunc = TheFunctionDB().size();
-  int numEvents = TheEventDB().size();
 
    if (!out) {
      int to_buffer=1;
@@ -390,6 +386,13 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
 
     char cwd[1024];
     char *tst = getcwd(cwd, 1024);
+	if (tst == NULL) {
+      char errormsg[4096];
+      sprintf(errormsg,"Error: Could not get current working directory");
+      perror(errormsg);
+      RtsLayer::UnLockDB();
+      return 0;
+	}
     TAU_VERBOSE("TAU: Opening Snapshot File %s, cwd = %s\n", filename, cwd);
 
     if ((fp = fopen (filename, "w+")) == NULL) {

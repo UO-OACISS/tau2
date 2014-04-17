@@ -901,6 +901,8 @@ void Tau_memory_initialize(void)
 
   // Trigger the map's constructor
   static TauAllocation::allocation_map_t const & alloc = TauAllocation::AllocationMap();
+  // use the map to prevent compiler warnings about unused variables
+  alloc.size();
 
   atexit(Tau_memory_wrapper_disable);
 }
@@ -911,9 +913,9 @@ void Tau_memory_initialize(void)
 extern "C"
 int Tau_memory_is_tau_allocation(void * ptr)
 {
-  Tau_memory_wrapper_disable();
+  Tau_global_incr_insideTAU();
   TauAllocation * alloc = TauAllocation::Find(ptr);
-  Tau_memory_wrapper_enable();
+  Tau_global_decr_insideTAU();
   return alloc != NULL;
 }
 

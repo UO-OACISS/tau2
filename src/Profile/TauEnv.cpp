@@ -545,6 +545,7 @@ char * Tau_check_dirname(const char * dir)
     ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d", logdir, (thisTime->tm_year + 1900),
         (thisTime->tm_mon + 1), thisTime->tm_mday, user, jobid, (thisTime->tm_mon + 1), thisTime->tm_mday,
         (thisTime->tm_hour * 60 * 60 + thisTime->tm_min * 60 + thisTime->tm_sec));
+	if (ret < 0) { TAU_VERBOSE("sprintf failed! %s %s %s", __func__, __FILE__, __LINE__); }
     TAU_VERBOSE("Using logdir = %s\n", logfiledir);
     if (RtsLayer::myNode() < 1) {
 #ifdef TAU_WINDOWS
@@ -1379,7 +1380,7 @@ void TauEnv_initialize()
     env_evt_threshold = TAU_EVENT_THRESHOLD_DEFAULT;
     if (evt_threshold) {
       double evt_value = 0.0;
-      sscanf(evt_threshold,"%g",&evt_value);
+      sscanf(evt_threshold,"%lg",&evt_value);
       env_evt_threshold = evt_value;
       TAU_METADATA("TAU_EVENT_THRESHOLD", evt_threshold);
     }

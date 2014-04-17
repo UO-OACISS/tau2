@@ -84,7 +84,6 @@ void TauInitCode(char *arg, int isMPI)
   int tid = 0;
   TAU_MONITOR_ENTER(0);
   int functionId = 0;
-  char funcname[1024];
   char *saveptr;
 
   int j;
@@ -111,6 +110,7 @@ void TauInitCode(char *arg, int isMPI)
 
     functionId ++; 
 #ifdef ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP
+    char funcname[1024];
     dprintf("Extracted : %s :id = %d\n", name, functionId);
     TAU_MAPPING_CREATE(funcname, " ", functionId, "TAU_DEFAULT", tid);
 #else
@@ -369,7 +369,6 @@ void trace_register_func(char *origname, int id)
   } 
   if (func[0] == 't' && func[1] == 'a' && func[2] == 'r' && func[3] == 'g') {
     if (isdigit(func[4])) {
-      long addr;
       dprintf("trace_register_func: Routine name is targN...\n");
       ((FunctionInfo *)taufi)->SetProfileGroup(TAU_GROUP_31);
 
@@ -377,6 +376,7 @@ void trace_register_func(char *origname, int id)
     // This routine should be exited prior to the beginning of the next routine
     // Extract the name from the address:
 /*
+      long addr;
       sscanf(func, "targ%lx", &addr);
       dprintf("ADDR=%lx, name =%s\n", addr, func);
       char name[256];
@@ -450,8 +450,8 @@ void traceEntry(int id)
 
 void traceExit(int id)
 {
-  const char *strcurr;
-  const char *strbin;
+  //const char *strcurr;
+  //const char *strbin;
   //dprintf("Inside traceExit: id = %d\n", id);  
   
   if ( !RtsLayer::TheEnableInstrumentation()) return; 
@@ -540,13 +540,13 @@ void tau_dyninst_cleanup()
 
 /* PEBIL */
 char * tau_demangle_name(char **funcname) {
+#ifdef __GNUC__
   std::size_t len=1024;
   int stat;
   char *dem_name = NULL; 
-#ifdef __GNUC__
   char *out_buf= (char *) malloc (strlen(*funcname)+100);
   char *name = abi::__cxa_demangle(*funcname, out_buf, &len, &stat);
-  if (stat == 0) dem_name = out_buf;
+  if (stat == 0 && name != NULL) dem_name = out_buf;
   else dem_name = *funcname;
   return dem_name; 
 #else  /* __GNUC__ */

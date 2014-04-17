@@ -42,6 +42,9 @@
 #  include <omp.h>
 #endif
 
+// adding this check prevents compiler warnings for unknown pragmas.
+#ifdef __PGI
+
 enum RoutineState { ROUTINE_CREATED = 1, ROUTINE_THROTTLED = 2 };
 
 using namespace std;
@@ -190,3 +193,5 @@ extern "C" void ___rouret2(void) {
 #pragma save_used_gp_regs
 extern "C" void ___linent2(void *l) {
 }
+
+#endif //ifdef __PGI

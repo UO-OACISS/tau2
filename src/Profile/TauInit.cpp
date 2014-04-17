@@ -70,7 +70,11 @@ typedef void (*tau_sighandler_t)(int, siginfo_t*, void*);
 #endif
 
 #if defined(TAU_STRSIGNAL_OK)
+#if defined(__PGI)
+extern "C" char *strsignal(int sig) __THROW;
+#else
 extern "C" char *strsignal(int sig);
+#endif /* __PGI */
 #endif /* TAU_STRSIGNAL_OK */
 
 extern "C" void Tau_stack_initialization();

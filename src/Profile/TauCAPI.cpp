@@ -175,7 +175,7 @@ struct Tau_thread_status_flags {
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #else
 #ifdef __GNUC__
-static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
 #else
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
@@ -566,7 +566,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   TauInternalFunctionGuard protects_this_function;
 
   FunctionInfo *fi = (FunctionInfo *) function_info; 
-  double currentHeap;
+  double currentHeap = 0.0;
   bool enableHeapTracking;
 
   Profiler *profiler;
@@ -1203,7 +1203,7 @@ extern "C" TauGroup_t Tau_disable_all_groups(void) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int& tau_totalnodes(int set_or_get, int value)
+extern "C" int tau_totalnodes(int set_or_get, int value)
 {
   static int nodes = 1;
   if (set_or_get == 1) {
@@ -2124,11 +2124,12 @@ extern "C" void Tau_static_phase_stop(char const * name)
         "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\n"
         "TAU Error: You will likely get an overlapping timer message next\n\n",
         name);
+    RtsLayer::UnLockDB();
   } else {
     fi = it->second;
+    RtsLayer::UnLockDB();
+    Tau_stop_timer(fi, Tau_get_tid());
   }
-  RtsLayer::UnLockDB();
-  Tau_stop_timer(fi, Tau_get_tid());
 }
 
 

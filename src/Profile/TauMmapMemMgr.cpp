@@ -63,7 +63,6 @@ void Tau_MemMgr_initIfNecessary()
 void *Tau_MemMgr_mmap(int tid, size_t size)
 {
   int prot, flags, fd;
-  char *str;
   void *addr;
 
   // Always ensure the system is ready for the mmap call

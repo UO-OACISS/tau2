@@ -62,6 +62,7 @@ typedef struct HN {
 
 #define HASH_MAX 1021
 
+/*
 static HashNode* htab[HASH_MAX];
 
 static HashNode *hash_put(long h) {
@@ -85,13 +86,12 @@ static HashNode* hash_get(long h) {
   }
   return NULL;
 }
+*/
 
 
 static map<int*, FunctionInfo*> theMap;
 
 extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
-  HashNode *hn;
-  long frame;
 
   if (intel_init) { // initialization
     intel_init = 0;
@@ -114,16 +114,19 @@ extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
 
 #else
 
-//   if ((hn = hash_get((long)id2))) {
-//     Tau_start_timer(hn->fi,0);
-//   } else {
-//     hn = hash_put((long)id2);
-//     printf ("Registered %s for %p:%p\n", str, id, id2);
-//     void *handle=NULL;
-//     TAU_PROFILER_CREATE(handle, str, "", TAU_DEFAULT);
-//     hn->fi = (FunctionInfo*) handle;
-//     Tau_start_timer(hn->fi,0,Tau_get_tid());
-//   }
+/*
+   HashNode *hn;
+   if ((hn = hash_get((long)id2))) {
+     Tau_start_timer(hn->fi,0);
+   } else {
+     hn = hash_put((long)id2);
+     printf ("Registered %s for %p:%p\n", str, id, id2);
+     void *handle=NULL;
+     TAU_PROFILER_CREATE(handle, str, "", TAU_DEFAULT);
+     hn->fi = (FunctionInfo*) handle;
+     Tau_start_timer(hn->fi,0,Tau_get_tid());
+   }
+*/
 
   if (*id != 0) {
     Tau_start_timer(TheFunctionDB()[*id],0,Tau_get_tid());

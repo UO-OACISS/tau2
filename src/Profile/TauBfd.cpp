@@ -283,7 +283,8 @@ bool Tau_bfd_checkHandle(tau_bfd_handle_t handle)
     TAU_VERBOSE("TauBfd: Warning - attempt to use uninitialized BFD handle\n");
     return false;
   }
-  if (handle >= ThebfdUnits().size()) {
+  // cast to unsigned to prevent compiler warnings
+  if ((unsigned int)(handle) >= ThebfdUnits().size()) {
     TAU_VERBOSE("TauBfd: Warning - invalid BFD unit handle %d, max value %d\n", handle, ThebfdUnits().size());
     return false;
   }
@@ -367,6 +368,7 @@ static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit)
 }
 #endif /* TAU_BGP || TAU_BGQ */
 
+#if defined(TAU_WINDOWS) && defined(TAU_MINGW)
 // Executables compiled by MinGW are strange beasts in that
 // they use GNU debugger symbols, but are Windows executables.
 // BFD support for windows is incomplete (e.g. dl_iterate_phdr
@@ -378,7 +380,6 @@ static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit)
 // just an empty table.
 static void Tau_bfd_internal_updateWindowsMaps(TauBfdUnit *unit)
 {
-#if defined(TAU_WINDOWS) && defined(TAU_MINGW)
 
   // Use Windows Process API to find modules
   // This is preferable to walking the PE file headers with
@@ -438,9 +439,8 @@ static void Tau_bfd_internal_updateWindowsMaps(TauBfdUnit *unit)
 
   // Release the process handle
   CloseHandle(hProc);
-
-#endif /* TAU_WINDOWS && TAU_MINGW */
 }
+#endif /* TAU_WINDOWS && TAU_MINGW */
 
 void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
 {
@@ -665,7 +665,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   // Couldn't resolve the address so fill in fields as best we can.
   if (info.funcname == NULL) {
     info.funcname = (char*)malloc(128);
-    sprintf((char*)info.funcname, "addr=<%p>", probeAddr);
+    sprintf((char*)info.funcname, "addr=<%lx>", probeAddr);
   }
   if (info.filename == NULL) {
     if (matchingIdx != -1) {
@@ -805,7 +805,7 @@ static int Tau_bfd_internal_getModuleIndex(TauBfdUnit *unit, unsigned long probe
   if (!unit)
     return -1;
   vector<TauBfdAddrMap*> const & addressMaps = unit->addressMaps;
-  for (int i = 0; i < addressMaps.size(); i++) {
+  for (unsigned int i = 0; i < addressMaps.size(); i++) {
     if (probe_addr >= addressMaps[i]->start && probe_addr <= addressMaps[i]->end) return i;
   }
   return -1;
@@ -820,6 +820,7 @@ Tau_bfd_internal_getModuleFromIdx(TauBfdUnit * unit, int moduleIndex)
   return unit->modules[moduleIndex];
 }
 
+#if defined(TAU_BGP)
 static int Tau_bfd_internal_getBGPExePath(char * path)
 {
   DIR * pdir = opendir("/jobs");
@@ -842,6 +843,7 @@ static int Tau_bfd_internal_getBGPExePath(char * path)
   TAU_VERBOSE("Tau_bfd_internal_getBGPExePath: [%s]\n", path);
   return 0;
 }
+#endif
 
 static char const * Tau_bfd_internal_getExecutablePath()
 {

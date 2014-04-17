@@ -863,9 +863,11 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
       (*localRepo)[it->first] = it->second;
 	}
   }
+  /*
   int thread0 = Tau_metadata_getMetaData(0).size();
   int local = localRepo->size();
   int threadi = Tau_metadata_getMetaData(tid).size();
+  */
 
   // write out the user-specified (some from TAU) attributes
   int i = 0;
@@ -1069,8 +1071,8 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
   sscanf(buffer,"%d", &numItems);
   buffer = strchr(buffer, '\0')+1;
 
-  char **attributes = (char **) malloc(sizeof(char*) * numItems);
-  char **values = (char **) malloc(sizeof(char*) * numItems);
+  //char **attributes = (char **) malloc(sizeof(char*) * numItems);
+  //char **values = (char **) malloc(sizeof(char*) * numItems);
 
   // assign char pointers to the values inside the buffer
   for (int i=0; i<numItems; i++) {
