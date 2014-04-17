@@ -87,17 +87,23 @@ int Tau_sampling_event_stop(int tid, double* stopTime);
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, 
 					x_int64 overflow_vector, void *context);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* These must be extern "C" so that HPCToolkit can call them */
-extern "C" void Tau_sampling_suspend(int tid);
-extern "C" void Tau_sampling_resume(int tid);
+void Tau_sampling_suspend(int tid);
+void Tau_sampling_resume(int tid);
 
 /* For TauMpi.c workaround to handle conflict between EBS operation and
    mvapich2 on Hera.
 */
-extern "C" void Tau_sampling_init_if_necessary(void);
+void Tau_sampling_init_if_necessary(void);
 
 /* For TauMpi.c to invoke sampling finalization at MPI_Finalize */
-extern "C" void Tau_sampling_finalize_if_necessary(void);
+void Tau_sampling_finalize_if_necessary(void);
+#ifdef __cplusplus
+}
+#endif
 
 void Tau_sampling_outputTraceCallpath(int tid);
 void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);
@@ -111,7 +117,13 @@ extern FILE *ebsTrace[];
 
 #ifdef TAU_USE_HPCTOOLKIT
 extern int hpctoolkit_process_started; // this is defined in hpctoolkit patch
-extern "C" void Tau_sampling_event_startHpctoolkit(int tid, void **address);
+#ifdef __cplusplus
+extern "C" {
+#endif
+void Tau_sampling_event_startHpctoolkit(int tid, void **address);
+#ifdef __cplusplus
+}
+#endif
 #endif /* TAU_USE_HPCTOOLKIT */
 
 #endif /* _TAU_SAMPLING_H_ */

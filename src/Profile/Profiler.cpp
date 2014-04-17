@@ -1194,7 +1194,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
 
           //size_t del = name.find(std::string(":"));
 
-          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", suffix, calls, 0, excltime,
+          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", suffix, (long int)calls, 0L, excltime,
               incltime);
           fprintf(fp, "0 ");    // Indicating that profile calls is turned off
           fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
@@ -1466,6 +1466,9 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
   RtsLayer::LockDB();
 
   static bool createFlag = TauProfiler_createDirectories();
+  if (createFlag) {
+    TAU_VERBOSE ("Profile directories created\n");
+  }
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     if (TauMetrics_getMetricUsed(i)) {
@@ -1512,6 +1515,12 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
         char cwd[1024];
         char *tst = getcwd(cwd, 1024);
+		if (tst == NULL) {
+          char errormsg[1024];
+          sprintf(errormsg, "Error: Could not get current working directory");
+          perror(errormsg);
+          return 0;
+		}
 #ifndef TAU_WINDOWS
         TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
 #endif
@@ -1557,6 +1566,12 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           }
           char cwd[1024];
           char *tst = getcwd(cwd, 1024);
+		  if (tst == NULL) {
+            char errormsg[1024];
+            sprintf(errormsg, "Error: Could not get current working directory");
+            perror(errormsg);
+            return 0;
+		  }
 #ifndef TAU_WINDOWS
           TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
 #endif

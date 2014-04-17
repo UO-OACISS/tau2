@@ -262,8 +262,9 @@ public:
   { }
   
   TauContextUserEvent(const TauContextUserEvent &c) :
+	  contextEnabled(c.contextEnabled),
       userEvent(c.userEvent),
-      contextEvent(c.contextEvent), contextEnabled(c.contextEnabled)
+      contextEvent(c.contextEvent)
   { }
 
   TauContextUserEvent & operator=(const TauContextUserEvent &rhs) {

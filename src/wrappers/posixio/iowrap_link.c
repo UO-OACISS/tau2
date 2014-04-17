@@ -16,6 +16,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <Profile/TauIoWrap.h>
+#include <Profile/TauEnv.h>
 
 #define TAU_MAX_SOCKET_LEN 1024
 #define TAU_READ TAU_IO
@@ -27,9 +28,18 @@ extern void Tau_iowrap_checkInit(void);
 typedef int64_t               off64_t;
 #endif /* __APPLE__ */
 
+/* FIX for others... */
+#ifndef off64_t
+typedef int64_t               off64_t;
+typedef struct stat               STRUCT_STAT64;
+#else
+typedef struct stat64               STRUCT_STAT64;
+#endif
+
 /*********************************************************************
  * fsync
  ********************************************************************/
+int __real_fsync( int fd);
 int __wrap_fsync( int fd)
 {
   int ret;
@@ -60,6 +70,7 @@ int __wrap_fsync( int fd)
 /*********************************************************************
  * open
  ********************************************************************/
+int __real_open(const char *pathname, int flags, ...);
 int __wrap_open(const char *pathname, int flags, ...)
 {
   int ret;
@@ -112,6 +123,7 @@ int __wrap_open(const char *pathname, int flags, ...)
 /*********************************************************************
  * open64
  ********************************************************************/
+int __real_open64(const char *pathname, int flags, ...);
 int __wrap_open64(const char *pathname, int flags, ...)
 {
   int ret;
@@ -163,6 +175,7 @@ Tau_iowrap_checkInit();
 /*********************************************************************
  * creat
  ********************************************************************/
+int __real_creat(const char *pathname, mode_t mode);
 int __wrap_creat(const char *pathname, mode_t mode) 
 {
   int ret;
@@ -199,6 +212,7 @@ Tau_iowrap_checkInit();
 /*********************************************************************
  * creat64
  ********************************************************************/
+int __real_creat64(const char *pathname, mode_t mode);
 int __wrap_creat64(const char *pathname, mode_t mode)
 {
   int ret;
@@ -232,10 +246,10 @@ int __wrap_creat64(const char *pathname, mode_t mode)
   return ret;
 }
 
-FILE * __real_fopen(const char *pathname, const char * mode);
 /*********************************************************************
  * fopen
  ********************************************************************/
+FILE * __real_fopen(const char *pathname, const char * mode);
 FILE * __wrap_fopen(const char *pathname, const char * mode)
 {
   FILE * ret;
@@ -269,10 +283,10 @@ FILE * __wrap_fopen(const char *pathname, const char * mode)
   return ret;
 }
 
-FILE*  __real_fopen64(const char *pathname, const char * mode);
 /*********************************************************************
  * fopen64
  ********************************************************************/
+FILE*  __real_fopen64(const char *pathname, const char * mode);
 FILE * __wrap_fopen64(const char *pathname, const char * mode)
 {
   FILE * ret;
@@ -314,6 +328,7 @@ FILE * __wrap_fopen64(const char *pathname, const char * mode)
 /*********************************************************************
  * pipe
  ********************************************************************/
+int __real_pipe(int filedes[2]);
 int __wrap_pipe(int filedes[2])
 {
   int ret;
@@ -382,6 +397,7 @@ char * Tau_wrapper_get_socket_name(const struct sockaddr *sa, char *s, size_t le
 /*********************************************************************
  * socket
  ********************************************************************/
+int __real_socket(int domain, int type, int protocol);
 int __wrap_socket(int domain, int type, int protocol) {
   int ret;
 
@@ -421,6 +437,7 @@ int __wrap_socket(int domain, int type, int protocol) {
 /*********************************************************************
  * socketpair
  ********************************************************************/
+int __real_socketpair(int domain, int type, int protocol, int sv[2]);
 int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
   int ret;
 
@@ -462,6 +479,7 @@ int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
 /*********************************************************************
  * bind
  ********************************************************************/
+int __real_bind(int socket, const struct sockaddr *address, socklen_t address_len);
 int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_len) 
 {
   int ret;
@@ -502,6 +520,7 @@ int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_le
 /*********************************************************************
  * connect
  ********************************************************************/
+int __real_connect(int socket, struct sockaddr *address, socklen_t address_len);
 int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
 {
   int ret;
@@ -543,6 +562,7 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
 /*********************************************************************
  * accept
  ********************************************************************/
+int __real_accept(int socket, struct sockaddr *address, socklen_t* address_len);
 int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
 {
   int ret;
@@ -581,6 +601,7 @@ int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
 /*********************************************************************
  * fcntl
  ********************************************************************/
+int __real_fcntl(int fd, int cmd, ...) ;
 int __wrap_fcntl(int fd, int cmd, ...) 
 {
   va_list ap;
@@ -623,6 +644,7 @@ int __wrap_fcntl(int fd, int cmd, ...)
 /*********************************************************************
  * read
  ********************************************************************/
+size_t __real_read(int fd, void *buf, size_t nbytes);
 size_t __wrap_read(int fd, void *buf, size_t nbytes)
 {
   int ret;
@@ -678,6 +700,7 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
 /*********************************************************************
  * fread
  ********************************************************************/
+size_t __real_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) ;
 size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) 
 {
   size_t ret;
@@ -737,6 +760,7 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
 /*********************************************************************
  * readv
  ********************************************************************/
+ssize_t __real_readv(int fd, const struct iovec *vec, int count) ;
 ssize_t __wrap_readv(int fd, const struct iovec *vec, int count) 
 {
   ssize_t ret;
@@ -798,6 +822,7 @@ ssize_t __wrap_readv(int fd, const struct iovec *vec, int count)
 /*********************************************************************
  * write
  ********************************************************************/
+size_t __real_write(int fd, void *buf, size_t nbytes);
 size_t __wrap_write(int fd, void *buf, size_t nbytes)
 {
   int ret;
@@ -851,6 +876,7 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
 /*********************************************************************
  * fwrite
  ********************************************************************/
+size_t __real_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream);
 size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
 {
   size_t ret;
@@ -909,6 +935,7 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
 /*********************************************************************
  * writev
  ********************************************************************/
+ssize_t __real_writev(int fd,  const struct iovec *vec, int count) ;
 ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count) 
 {
   ssize_t ret;
@@ -962,6 +989,7 @@ ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
 /*********************************************************************
  * pwrite
  ********************************************************************/
+ssize_t __real_pwrite(int fd, void *buf, size_t nbytes, off_t offset);
 ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
 {
   ssize_t ret;
@@ -1017,6 +1045,7 @@ ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
 /*********************************************************************
  * pwrite64
  ********************************************************************/
+ssize_t __real_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset);
 ssize_t __wrap_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset)
 {
   ssize_t ret;
@@ -1072,6 +1101,7 @@ ssize_t __wrap_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset)
 /*********************************************************************
  * pread
  ********************************************************************/
+ssize_t __real_pread(int fd, void *buf, size_t nbytes, off_t offset);
 ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
 {
   ssize_t ret;
@@ -1129,6 +1159,7 @@ ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
 /*********************************************************************
  * pread64
  ********************************************************************/
+ssize_t __real_pread64(int fd, void *buf, size_t nbytes, off64_t offset);
 ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
 {
   ssize_t ret;
@@ -1186,6 +1217,7 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
 /*********************************************************************
  * close
  ********************************************************************/
+size_t __real_close(int fd);
 size_t __wrap_close(int fd)
 {
   int ret;
@@ -1218,6 +1250,7 @@ size_t __wrap_close(int fd)
 /*********************************************************************
  * fclose
  ********************************************************************/
+int __real_fclose(FILE *fp);
 int __wrap_fclose(FILE *fp)
 {
   int ret;
@@ -1254,6 +1287,7 @@ int __wrap_fclose(FILE *fp)
 /*********************************************************************
  * fdatasync
  ********************************************************************/
+int __real_fdatasync(int fd);
 int __wrap_fdatasync(int fd)
 {
   int ret;
@@ -1288,6 +1322,7 @@ int __wrap_fdatasync(int fd)
 /*********************************************************************
  * lseek
  ********************************************************************/
+off_t __real_lseek(int fd, off_t offset, int whence) ;
 off_t __wrap_lseek(int fd, off_t offset, int whence) 
 {
   int ret;
@@ -1323,6 +1358,7 @@ off_t __wrap_lseek(int fd, off_t offset, int whence)
 /*********************************************************************
  * lseek64
  ********************************************************************/
+off64_t __real_lseek64(int fd, off64_t offset, int whence);
 off64_t __wrap_lseek64(int fd, off64_t offset, int whence)
 {
   int ret;
@@ -1358,6 +1394,7 @@ off64_t __wrap_lseek64(int fd, off64_t offset, int whence)
 /*********************************************************************
  * fseek
  ********************************************************************/
+off_t __real_fseek(FILE *stream, long offset, int whence) ;
 off_t __wrap_fseek(FILE *stream, long offset, int whence) 
 {
   int ret;
@@ -1393,6 +1430,7 @@ off_t __wrap_fseek(FILE *stream, long offset, int whence)
 /*********************************************************************
  * stat
  ********************************************************************/
+int __real_stat(const char *path, struct stat *buf) ;
 int __wrap_stat(const char *path, struct stat *buf) 
 {
   int ret;
@@ -1425,6 +1463,7 @@ int __wrap_stat(const char *path, struct stat *buf)
 /*********************************************************************
  * stat64
  ********************************************************************/
+int __real_stat64(const char *path, struct stat *buf);
 int __wrap_stat64(const char *path, struct stat *buf)
 {
   int ret;
@@ -1457,7 +1496,8 @@ int __wrap_stat64(const char *path, struct stat *buf)
 /*********************************************************************
  * fstat
  ********************************************************************/
-int __wrap_fstat(int filedes, struct stat64 *buf)
+int __real_fstat(int filedes, STRUCT_STAT64 *buf);
+int __wrap_fstat(int filedes, STRUCT_STAT64 *buf)
 {
   int ret;
 
@@ -1490,7 +1530,8 @@ int __wrap_fstat(int filedes, struct stat64 *buf)
 /*********************************************************************
  * fstat64
  ********************************************************************/
-int __wrap_fstat64(int filedes, struct stat64 *buf)
+int __real_fstat64(int filedes, STRUCT_STAT64 *buf);
+int __wrap_fstat64(int filedes, STRUCT_STAT64 *buf)
 {
   int ret;
 
@@ -1523,6 +1564,7 @@ int __wrap_fstat64(int filedes, struct stat64 *buf)
 /*********************************************************************
  * lstat
  ********************************************************************/
+int __real_lstat(const char *path, struct stat *buf);
 int __wrap_lstat(const char *path, struct stat *buf)
 {
   int ret;
@@ -1554,7 +1596,8 @@ int __wrap_lstat(const char *path, struct stat *buf)
 /*********************************************************************
  * lstat64
  ********************************************************************/
-int __wrap_lstat64(const char *path, struct stat64 *buf)
+int __real_lstat64(const char *path, STRUCT_STAT64 *buf);
+int __wrap_lstat64(const char *path, STRUCT_STAT64 *buf)
 {
   int ret;
 
@@ -1585,6 +1628,7 @@ int __wrap_lstat64(const char *path, struct stat64 *buf)
 /*********************************************************************
  * dup
  ********************************************************************/
+int __real_dup(int filedes);
 int __wrap_dup(int filedes)
 {
   int ret;
@@ -1619,6 +1663,7 @@ int __wrap_dup(int filedes)
 /*********************************************************************
  * dup2
  ********************************************************************/
+int __real_dup2(int filedes1, int filedes2);
 int __wrap_dup2(int filedes1, int filedes2)
 {
   int ret;
@@ -1656,6 +1701,8 @@ int __wrap_dup2(int filedes1, int filedes2)
 /*********************************************************************
  * select
  ********************************************************************/
+int __real_select(int nfds, fd_set *readfds, fd_set *writefds, 
+  fd_set *exceptfds, const struct timeval *timeout);
 int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds, 
   fd_set *exceptfds, const struct timeval *timeout)
 {

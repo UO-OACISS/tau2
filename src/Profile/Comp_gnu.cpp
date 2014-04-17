@@ -307,7 +307,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         if (TauEnv_get_bfd_lookup()) {
           sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
         } else {
-          sprintf(routine, "[%s] UNRESOLVED %s ADDR %p", node->info.funcname, node->info.filename, addr);
+          sprintf(routine, "[%s] UNRESOLVED %s ADDR %lx", node->info.funcname, node->info.filename, addr);
         }
 
         // Create function info

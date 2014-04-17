@@ -35,6 +35,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
 #include "memory_wrapper.h"
+#include "Profile/TauInit.h"
 
 #ifndef TAU_MULTITHREAD
 #if defined(TAU_OPENMP) || defined(PTHREADS)

@@ -141,7 +141,7 @@ int OpenMPLayer::GetTauThreadId(void)
       Tau_create_top_level_timer_if_necessary_task(tmp->threadID);
   }
   return tmp->threadID;
-#endif // TAU_USE_TLS
+#else // TAU_USE_TLS
 
   int omp_thread_id = omp_get_thread_num();
 
@@ -181,6 +181,7 @@ int OpenMPLayer::GetTauThreadId(void)
   }
 
   return tau_thread_id;
+#endif // TAU_USE_TLS
 #else
   return 0;
 #endif /* TAU_OPENMP */
@@ -207,7 +208,7 @@ int OpenMPLayer::GetThreadId(void)
   } else {
     return tmp->threadID;
   }
-#endif //TAU_USE_TLS
+#else //TAU_USE_TLS
 
   int omp_thread_id = omp_get_thread_num();
 
@@ -227,6 +228,7 @@ int OpenMPLayer::GetThreadId(void)
 #endif /* TAU_OPENMP_NESTED */
 
   return omp_thread_id;
+#endif //TAU_USE_TLS
 #else
   return 0;
 #endif /* TAU_OPENMP */
@@ -264,6 +266,8 @@ void OpenMPLayer::Initialize(void)
   static int registerInitFlag = InitializeRegisterMutexData();
   static int dbInitFlag = InitializeDBMutexData();
   static int envInitFlag = InitializeEnvMutexData();
+  // use the flags so that the compiler doesn't complain
+  if (registerInitFlag && dbInitFlag && envInitFlag) {};
 }
 
 ////////////////////////////////////////////////////////////////////////

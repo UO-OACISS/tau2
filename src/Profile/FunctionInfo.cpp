@@ -128,12 +128,14 @@ static char *strip_tau_group(const char *ProfileGroupName) {
   const char *find = "TAU_GROUP_";
   char *ptr;
 
-  while (ptr = strstr(source,find)) {
+  ptr = strstr(source,find);
+  while (ptr != NULL) {
     char *endptr = ptr+strlen(find);
     while (*endptr != '\0') {
       *ptr++ = *endptr++;
     }
     *ptr = '\0';
+    ptr = strstr(source,find);
   }
   return source;
 }

@@ -79,7 +79,7 @@ struct TauCsULong
 {
   bool operator()(const unsigned long *l1, const unsigned long *l2) const
   {
-    int i;
+    unsigned int i;
 
     /* first check 0th index (size) */
     if (l1[0] != l2[0]) {
@@ -287,7 +287,9 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
   end++;
 
   // Set output size to minimum of trimmed string length and buffer size minus 1
-  out_size = (end - str) < len - 1 ? (end - str) : len - 1;
+  size_t diff = end - str;
+  size_t len_minus_1 = len - 1;
+  out_size = diff < len_minus_1 ? diff : len_minus_1;
 
   // Copy trimmed string and add null terminator
   memcpy(out, str, out_size);
@@ -324,9 +326,7 @@ bool nameInTau(const char *name)
       // no directory follows "tau". Not it.
       return false;
     }
-  } else {
-    return false;
-  }
+  } 
   return false;
 }
 
@@ -380,7 +380,6 @@ void registerNewCallsiteInfo(char *name, unsigned long callsite, int id)
 bool determineCallSiteViaString(unsigned long *addresses)
 {
   unsigned long length = addresses[0];
-  char *strPtr = NULL;
   char *name;
 
   map<TAU_CALLSITE_KEY_ID_MAP_TYPE>::iterator itCs = TheCallSiteKey2IdMap().find(addresses);
@@ -396,7 +395,7 @@ bool determineCallSiteViaString(unsigned long *addresses)
     // Was MPI in my unwind path at some point?
     bool hasMPI = false;
 
-    for (int i = 0; i < length; i++) {
+    for (unsigned int i = 0; i < length; i++) {
       name = Tau_callsite_resolveCallSite(addresses[i + 1]);
       if (nameInTau(name)) {
         hasMPI = hasMPI | nameInMPI(name);
@@ -487,7 +486,7 @@ void Profiler::CallSiteStart(int tid)
     if ((array != NULL) && (size > 0)) {
       // construct the callsite structure from the buffer.
       callsites[0] = (unsigned long)size;
-      for (int i = 0; i < size; i++) {
+      for (unsigned int i = 0; i < size; i++) {
         callsites[i + 1] = (unsigned long)array[i];
       }
       retVal = true;
@@ -703,6 +702,7 @@ void Profiler::CallSiteStop(double *TotalTime, int tid)
   }
 }
 
+/*
 static string getNameAndType(FunctionInfo *fi)
 {
   if (strlen(fi->GetType()) > 0) {
@@ -711,6 +711,7 @@ static string getNameAndType(FunctionInfo *fi)
     return string(fi->GetName());
   }
 }
+*/
 
 extern "C" void finalizeCallSites_if_necessary()
 {
@@ -738,7 +739,7 @@ extern "C" void finalizeCallSites_if_necessary()
 
   //  printf("Callsites finalizing\n");
   string delimiter = string(" --> ");
-  for (int i = 0; i < callSiteId[tid]; i++) {
+  for (unsigned int i = 0; i < callSiteId[tid]; i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
     if (callsiteInfo->hasName) {
       // We've already done this in the discovery phase.
