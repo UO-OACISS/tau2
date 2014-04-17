@@ -44,6 +44,7 @@
 #include <string.h>
 
 #include <Profile/TauIoWrap.h>
+#include <Profile/TauEnv.h>
     
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO
@@ -543,7 +544,6 @@ int fseek(FILE *stream, long offset, int whence) {
  ********************************************************************/
 void rewind(FILE *stream) {
   static void (*_rewind)(FILE *stream) = NULL;
-  int ret;
   if (_rewind == NULL) {
     _rewind = ( void (*)(FILE *stream)) dlsym(RTLD_NEXT, "rewind");
   }
@@ -671,7 +671,6 @@ ssize_t read (int fd, void *buf, size_t count) {
 ssize_t readv (int fd, const struct iovec *vec, int count) {
   static ssize_t (*_readv)(int fd, const struct iovec *vec, int count) = NULL;
   ssize_t ret; 
-  int i;
 
   if (_readv == NULL) {
     _readv = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "readv");
@@ -730,7 +729,6 @@ ssize_t writev (int fd, const struct iovec *vec, int count) {
   double currentWrite = 0.0;
   struct timeval t1, t2;
   double bw = 0.0;
-  int i;
 
   if (_writev == NULL) {
     _writev = ( ssize_t (*)(int fd, const struct iovec *vec, int count)) dlsym(RTLD_NEXT, "writev");
@@ -846,7 +844,7 @@ FILE* tmpfile () {
  ********************************************************************/
 int open (const char *pathname, int flags, ...) { 
   static int (*_open)(const char *pathname, int flags, ...)  = NULL;
-  mode_t mode; 
+  mode_t mode = 0777; // default value
   va_list args;
   int ret;
 
@@ -895,7 +893,7 @@ int open (const char *pathname, int flags, ...) {
  ********************************************************************/
 int open64 (const char *pathname, int flags, ...) { 
   static int (*_open64)(const char *pathname, int flags, ...)  = NULL;
-  mode_t mode; 
+  mode_t mode = 0777; // default value
   va_list args;
   int ret;
 
@@ -1475,7 +1473,6 @@ int dup(int oldfd) {
  ********************************************************************/
 int dup2(int oldfd, int newfd) {
   static int (*_dup2)(int oldfd, int newfd) = NULL;
-  int fd;
 
   if (_dup2 == NULL) {
     _dup2 = ( int(*)(int fd, int newfd)) dlsym(RTLD_NEXT, "dup2");   

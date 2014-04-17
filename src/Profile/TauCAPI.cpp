@@ -145,6 +145,7 @@ union Tau_thread_status_flags
     int Tau_global_stackpos;
     int Tau_global_insideTAU;
     int Tau_is_thread_fake_for_task_api;
+    int lightsOut;
   };
 
   char _pad[64];
@@ -156,8 +157,9 @@ struct Tau_thread_status_flags {
   int Tau_global_stackpos;
   int Tau_global_insideTAU;
   int Tau_is_thread_fake_for_task_api;
+  int lightsOut;
   // Not as elegant, but similar effect
-  char _pad[64-sizeof(Profiler*)-4*sizeof(int)];
+  char _pad[64-sizeof(Profiler*)-5*sizeof(int)];
 };
 #endif
 
@@ -173,7 +175,7 @@ struct Tau_thread_status_flags {
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #else
 #ifdef __GNUC__
-static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
 #else
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
@@ -181,13 +183,13 @@ static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 
 #if defined (TAU_USE_TLS)
 __thread int _Tau_global_insideTAU = 0;
+__thread int lightsOut = 0;
 #elif defined (TAU_USE_DTLS)
 __declspec(thread) int _Tau_global_insideTAU = 0;
+__declspec(thread) int lightsOut = 0;
 #elif defined (TAU_USE_PGS)
 #include "TauPthreadGlobal.h"
 #endif
-
-int lightsOut = 0;
 
 
 static void Tau_stack_checkInit() {
@@ -195,7 +197,13 @@ static void Tau_stack_checkInit() {
   if (init) return;
   init = true;
 
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   lightsOut = 0;
+#elif defined(TAU_USE_PGS)
+  TauGlobal::getInstance().getValue()->lightsOut = 0;
+#else
+  Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut = 0;
+#endif
 
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     Tau_thread_flags[i].Tau_global_stackdepth = 0;
@@ -208,14 +216,26 @@ static void Tau_stack_checkInit() {
 
 extern "C" int Tau_global_getLightsOut() {
   Tau_stack_checkInit();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return lightsOut;
+#elif defined(TAU_USE_PGS)
+  return TauGlobal::getInstance().getValue()->lightsOut;
+#else
+  return Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut;
+#endif
 }
 
 extern "C" void Tau_global_setLightsOut() {
   Tau_stack_checkInit();
   // Disable profiling from here on out
   Tau_global_incr_insideTAU();
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   lightsOut = 1;
+#elif defined(TAU_USE_PGS)
+  TauGlobal::getInstance().getValue()->lightsOut = 1;
+#else
+  Tau_thread_flags[RtsLayer::unsafeLocalThreadId()].lightsOut = 1;
+#endif
 }
 
 /* the task API does not have a real thread associated with the tid */
@@ -246,13 +266,14 @@ extern "C" int Tau_global_get_insideTAU() {
 extern "C" int Tau_global_incr_insideTAU()
 {
   Tau_stack_checkInit();
+  Tau_memory_wrapper_disable();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
+  //printf("enter TAU: %d -> %d\n", _Tau_global_insideTAU, _Tau_global_insideTAU+1); fflush(stdout);
   return ++_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
   return ++(tmp->insideTAU);
 #else
-  Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
@@ -263,22 +284,26 @@ extern "C" int Tau_global_incr_insideTAU()
 
 extern "C" int Tau_global_decr_insideTAU()
 {
+  int retval;
   Tau_stack_checkInit();
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
-  return --_Tau_global_insideTAU;
+  //printf("exit TAU: %d -> %d\n", _Tau_global_insideTAU, _Tau_global_insideTAU-1); fflush(stdout);
+  retval = --_Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
   struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
-  return --(tmp->insideTAU);
+  retval = --(tmp->insideTAU);
 #else
   int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
   *insideTAU = *insideTAU - 1;
-  TAU_ASSERT(*insideTAU >= 0, "Thread has decremented the insideTAU counter past 0");
-
-  if (*insideTAU == 0) Tau_memory_wrapper_enable();
-  return *insideTAU;
+  retval = *insideTAU;
 #endif
+  TAU_ASSERT(retval >= 0, "Thread has decremented the insideTAU counter past 0");
+  if (retval == 0) {
+    Tau_memory_wrapper_enable();
+  }
+  return retval;
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
@@ -540,16 +565,18 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-	FunctionInfo *fi = (FunctionInfo *) function_info; 
-        double currentHeap;
-        bool enableHeapTracking;
+  FunctionInfo *fi = (FunctionInfo *) function_info; 
+  double currentHeap = 0.0;
+  bool enableHeapTracking;
 
-	Profiler *profiler;
+  Profiler *profiler;
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend(tid);
   }
 #endif
+
+  //TAU_VERBOSE(" *** (S%d) going to stop T%d\n", gettid(), tid);
 
   /********************************************************************************/
   /*** Extras ***/
@@ -603,7 +630,6 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   SCOREP_Tau_ExitRegion(fi->GetFunctionId());
 #endif
 
-
   if (Tau_thread_flags[tid].Tau_global_stackpos < 0) {
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
@@ -616,20 +642,19 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
   
   while (profiler->ThisFunction != fi) { /* Check for overlapping timers */
-		/* We might have an inconstant stack because of throttling. If one thread
-		 * throttles a routine while it is on the top of the stack of another thread
-		 * it will remain there until a stop is called on its parent. Check for this
-		 * condition before printing a overlap error message. */
-		if (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask())
-		{
-			profiler->Stop();
-			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      /* We might have an inconstant stack because of throttling. If one thread
+       * throttles a routine while it is on the top of the stack of another thread
+       * it will remain there until a stop is called on its parent. Check for this
+       * condition before printing a overlap error message. */
+      if (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask())
+      {
+	  profiler->Stop();
+	  Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 
-  		profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-		}
-		else {
-    	reportOverlap (profiler->ThisFunction, fi);
-		}
+	  profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+      } else {
+	  reportOverlap (profiler->ThisFunction, fi);
+      }
   }
 
 
@@ -665,6 +690,8 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   profiler->Stop(tid);
 
   Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+
+  //TAU_VERBOSE(" *** (S%d) stop timer for T%d %s\n", gettid(), tid, profiler->ThisFunction->GetName());
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -761,71 +788,112 @@ extern "C" int Tau_stop_current_timer()
 
 extern "C" void Tau_disable_collector_api();
 
-extern "C" int Tau_profile_exit_all_tasks() {
-	// Stop the collector API. The main thread may exit with running
-	// worker threads. When those threads try to exit, they will 
-	// try to stop timers that aren't running.
-    RtsLayer::LockDB();
+extern "C" int Tau_profile_exit_all_tasks()
+{
+  // Stop the collector API. The main thread may exit with running
+  // worker threads. When those threads try to exit, they will
+  // try to stop timers that aren't running.
+  RtsLayer::LockDB();
 #ifdef TAU_OPENMP
-	Tau_disable_collector_api();
+  Tau_disable_collector_api();
 #endif
-	int tid = 1;
-	while (tid < TAU_MAX_THREADS)
-	{
-		while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-			Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-			//Make sure even throttled routines are stopped.
-			if (Tau_stop_timer(p->ThisFunction, tid)) {
-	            TAU_VERBOSE("Stopping timer on thread %d: %s\n",tid,p->ThisFunction->Name);
-				p->Stop(tid);
-  			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-			}
-		}
-	tid++;
-	}
+
+#ifdef TAU_ANDROID
+  bool su = false;
+  if (JNIThreadLayer::GetThreadId() == 0) {
+    su = true;
+  }
+#endif
+
+  int tid = 1;
+  while (tid < TAU_MAX_THREADS) {
+#ifdef TAU_ANDROID
+    if (su == true) {
+      JNIThreadLayer::SuThread(tid);
+    }
+#endif
+    while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+      Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+      //Make sure even throttled routines are stopped.
+      if (Tau_stop_timer(p->ThisFunction, tid)) {
+        TAU_VERBOSE("Stopping timer on thread %d: %s\n", tid, p->ThisFunction->Name);
+        p->Stop(tid);
+        Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      }
+    }
+    tid++;
+  }
   Tau_disable_instrumentation();
-    RtsLayer::UnLockDB();
+  RtsLayer::UnLockDB();
   return 0;
 }
 
+extern "C" int Tau_show_profiles()
+{
+  for (int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+      int pos = Tau_thread_flags[tid].Tau_global_stackpos;
+      while (pos >= 0) {
+	  Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[pos]);
+	  TAU_VERBOSE(" *** Alfred Profile (%d:%d) :  %s\n", tid, pos, p->ThisFunction->Name);
+	  pos--;
+      }
+  }
 
-extern "C" int Tau_profile_exit_all_threads() 
+  return 0;
+}
+
+extern "C" int Tau_profile_exit_all_threads()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-	for (int tid=0; tid < TAU_MAX_THREADS; ++tid) {
-		while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-			Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-			//Make sure even throttled routines are stopped.
-      int my_tid = RtsLayer::myThread();
-			if (Tau_stop_timer(p->ThisFunction, my_tid)) {
-				p->Stop(my_tid);
-  			Tau_thread_flags[my_tid].Tau_global_stackpos--; /* pop */
-			}
-			// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
-		}
-	}
+#ifdef TAU_ANDROID
+  bool su = false;
+  if (JNIThreadLayer::GetThreadId() == 0) {
+    su = true;
+  }
+#endif
+
+  for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
+#ifdef TAU_ANDROID
+    if (su == true) {
+      JNIThreadLayer::SuThread(tid);
+    }
+#endif
+    while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+
+      TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
+
+      //Make sure even throttled routines are stopped.
+      if (Tau_stop_timer(p->ThisFunction, tid)) {
+        p->Stop(tid);
+        Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      }
+      // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+    }
+  }
+
   Tau_disable_instrumentation();
   return 0;
 }
 
 
-extern "C" int Tau_profile_exit() 
+extern "C" int Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
   int tid = RtsLayer::myThread();
-	while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-		Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-		//Make sure even throttled routines are stopped.
-		if (Tau_stop_timer(p->ThisFunction, tid)) {
-			p->Stop(tid);
-			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-		}
-		// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
-	}
+  while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+    Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    //Make sure even throttled routines are stopped.
+    if (Tau_stop_timer(p->ThisFunction, tid)) {
+      p->Stop(tid);
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+    }
+    // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+  }
   return 0;
 }
 
@@ -1135,7 +1203,7 @@ extern "C" TauGroup_t Tau_disable_all_groups(void) {
 
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int& tau_totalnodes(int set_or_get, int value)
+extern "C" int tau_totalnodes(int set_or_get, int value)
 {
   static int nodes = 1;
   if (set_or_get == 1) {
@@ -1610,24 +1678,17 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 {
-#ifdef TAU_SCOREP
-//  printf("Returning from Tau_create_top_level_timer_if_necessary_task");
-  return;
-#endif /* TAU_SCOREP */
-#if ! (defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG))
+#if ! (defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG) || defined(TAU_SCOREP))
   TauInternalFunctionGuard protects_this_function;
 
   /* After creating the ".TAU application" timer, we start it. In the
    timer start code, it will call this function, so in that case,
    return right away. */
   static bool initialized = false;
-  static bool initthread[TAU_MAX_THREADS] = { false };
   static bool initializing[TAU_MAX_THREADS] = { false };
+  static bool initthread[TAU_MAX_THREADS] = { false };
 
-  if (!initialized) {
-    if (initializing[tid]) {
-      return;
-    }
+  if (!initialized && !initializing[tid]) {
     RtsLayer::LockDB();
     if (!initialized) {
       // whichever thread got here first, has the lock and will create the
@@ -1643,20 +1704,18 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     RtsLayer::UnLockDB();
   }
 
-  if (initthread[tid] == true) {
-    return;
+  if (!initthread[tid]) {
+    // if there is no top-level timer, create one - But only create one FunctionInfo object.
+    // that should be handled by the Tau_pure_start_task call.
+    if (!TauInternal_CurrentProfiler(tid)) {
+      initthread[tid] = true;
+      initializing[tid] = true;
+      Tau_pure_start_task_string(gTauApplication(), tid);
+      initializing[tid] = false;
+    }
   }
 
-  // if there is no top-level timer, create one - But only create one FunctionInfo object.
-  // that should be handled by the Tau_pure_start_task call.
-  if (TauInternal_CurrentProfiler(tid) == NULL) {
-    initthread[tid] = true;
-    initializing[tid] = true;
-    Tau_pure_start_task_string(gTauApplication(), tid);
-    initializing[tid] = false;
-  }
-
-  atexit(Tau_destructor_trigger);
+  atexit((void(*)(void))Tau_profile_exit_all_threads);
 #endif
 }
 
@@ -2065,11 +2124,12 @@ extern "C" void Tau_static_phase_stop(char const * name)
         "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\n"
         "TAU Error: You will likely get an overlapping timer message next\n\n",
         name);
+    RtsLayer::UnLockDB();
   } else {
     fi = it->second;
+    RtsLayer::UnLockDB();
+    Tau_stop_timer(fi, Tau_get_tid());
   }
-  RtsLayer::UnLockDB();
-  Tau_stop_timer(fi, Tau_get_tid());
 }
 
 
@@ -2273,8 +2333,10 @@ extern "C" int Tau_get_tid(void) {
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
   Tau_memory_wrapper_disable();
+//#ifndef JAVA
   Tau_stop_top_level_timer_if_necessary();
   Tau_global_setLightsOut();
+//#endif
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");

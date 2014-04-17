@@ -87,6 +87,7 @@ PDTDIR=
 PDTCOMPDIR=
 DYNINSTDIR=
 JDKDIR=
+ANDROID_SDK=
 OPARIDIR=
 SCOREP_OPARI_BIN_DIR=
 OPARIINCDIR=
@@ -112,6 +113,7 @@ KTAU_LIB=
 KTAU_KALLSYMS_PATH=
 PYTHON_INCDIR=
 PYTHON_LIBDIR=
+PYTHON_LIB_SO=
 TAU_BFD_DIR=
 PERFINCDIR=
 PERFLIBDIR=
@@ -227,6 +229,7 @@ CXX       = $(HOST_CXX)
 #HOSTUTILS#TAU_CXX_FE = $(CROSS_PREFIX)$(BUILD_CXX) #ENDIF
 
 #MPC#TAU_RUN_CC = mpc_cc #ENDIF#
+#MPCINTEL#TAU_RUN_CC = mpc_icc #ENDIF#
 #XLUPC#TAU_RUN_CC = xlupc $(ABI) $(ISA) #ENDIF#
 #BUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 #GUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
@@ -234,6 +237,7 @@ TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
 #IBMOMPT#TAU_RUN_CXX = CXX=$(EXTRADIRCXX)/bin/bgxlc++_r $(FULL_CXX) $(ABI) $(ISA) #ENDIF#
 #IBMOMPT#TAU_RUN_CC = CC=$(EXTRADIRCXX)/bin/bgxlc_r $(FULL_CC) $(ABI) $(ISA) #ENDIF#
 #MPC#TAU_RUN_CXX = mpc_cxx #ENDIF#
+#MPCINTEL#TAU_RUN_CXX = mpc_icpc #ENDIF#
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a
@@ -249,8 +253,7 @@ JDKARCH                 = linux
 #############################################
 # JAVA OBJECTS
 #############################################
-#JAVA#TAU_JAVA_O 	= TauJava.o TauJAPI.o  #ENDIF#
-#JVMTI#TAU_JAVA_O 	= agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o TauJAPI.o#ENDIF#
+#JAVA#TAU_JAVA_O 	= TauJAPI.o JNIThreadLayer.o agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o adb.o jdwp.o ddm.o #ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
 
@@ -368,6 +371,8 @@ TAU_OPENMP_OPTION =
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #MPC#TAU_F90     = mpc_f77 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #MPC#TAU_F77     = mpc_f77 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#MPCINTEL#TAU_F90     = mpc_ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#MPCINTEL#TAU_F77     = mpc_ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 
 TAU_F77 = $(TAU_F90)
 #IBM_FORTRAN#TAU_F77         = xlf$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -437,7 +442,7 @@ TAU_F77 = $(TAU_F90)
 #MPC#THR_O       = MPCThreadLayer.o #ENDIF#
 #TAU_PAPI_THREADS#THR_O       = PapiThreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
-#JAVA#THR_O       	       = JavaThreadLayer.o     #ENDIF#
+#JAVA#THR_O       	       = JNIThreadLayer.o JVMTIThreadLayer.o     #ENDIF#
 #JVMTI#THR_O       	       = #ENDIF#
 #TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 #LINUXTIMERS#PLATFORM_O       = TauLinuxTimers.o       #ENDIF#
@@ -872,6 +877,9 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #EPILOGMPI#TAU_MPI_WRAPPER_LIB= #ENDIF#
 #EPILOGOMPI#TAU_MPI_WRAPPER_LIB= #ENDIF#
 
+#PYTHON#TAU_PYTHON_LINKER_OPTS= -L$(PYTHON_LIBDIR) -l$(PYTHON_LIB_SO) #ENDIF#
+
+
 ##############################################
 # Build TAU_LINKER_SHOPTS
 #GNU#TAU_IBM_LINKER_SHOPTS=-Wl,-brtl -Wl,-bexpall #ENDIF#
@@ -1130,6 +1138,8 @@ TAU_CUDA_LIBRARY=
 #CUPTI#TAU_INTERNAL_FLAG2=-DCUPTI #ENDIF#
 TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1) $(TAU_INTERNAL_FLAG2)
 
+#ANDROID#TAU_ANDROID_LINKER_OPTS=-llog #ENDIF#
+
 ##############################################
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
@@ -1139,7 +1149,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
                   $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
-                  $(TAU_LINKER_OPT20) $(TAU_CUDA_LINKER_OPTS)
+                  $(TAU_LINKER_OPT20) $(TAU_CUDA_LINKER_OPTS) $(TAU_PYTHON_LINKER_OPTS) \
+                  $(TAU_ANDROID_LINKER_OPTS)
 
 ##############################################
 

@@ -35,6 +35,7 @@ cpuMHz = 2100.003 # this should get overridden by what is in the metadata
 mainEvent = ""
 cpiThreshold = 0.80			 # ignore clusters with CPI smaller than this
 								# Why: no need to examine good CPI clusters
+cacheMissMetric = "L1_DCM"
 
 #########################################################################################
 
@@ -104,8 +105,8 @@ def computeDerivedMetrics(inTrial):
 	tmp.add(deriver.processData().get(0))
 
 	print "Computing Cache Misses per Instruction..."
-	deriver  = DeriveMetricOperation(merged, "PAPI_L2_TCM", "PAPI_TOT_INS", DeriveMetricOperation.DIVIDE)
-	deriver.setNewName("L2_TCM/TOT_INS")
+	deriver  = DeriveMetricOperation(merged, "PAPI_" + cacheMissMetric, "PAPI_TOT_INS", DeriveMetricOperation.DIVIDE)
+	deriver.setNewName(cacheMissMetric + "/TOT_INS")
 	tmp.add(deriver.processData().get(0))
 	merger = MergeTrialsOperation(tmp)
 	merged = merger.processData().get(0)
@@ -121,11 +122,14 @@ def checkRatios(derived, events):
 	global mainEvent
 	for metric in derived.getMetrics():
 		mainValue = derived.getInclusive(0,mainEvent,metric)
-		print "===", metric, "( ", mainValue, ") ==="
+		print "\n===", metric, "( ", mainValue, ") ==="
 		for event in events:
 			shortName = Utilities.shortenEventName(event)
 			eventValue = derived.getExclusive(0,event,metric)
-			print "%s\t%0.3f\t%00.2f%%" % (shortName, eventValue, ((eventValue / mainValue) * 100.0))
+			tmp = 1.0
+			if mainValue > 0:
+				tmp = eventValue/mainValue
+			print "%s\t%0.3f\t%00.2f%%" % (shortName, eventValue, (tmp * 100.0))
 
 #########################################################################################
 
@@ -216,22 +220,16 @@ def main(argv):
 	topXevents = getTopX.getTopX(inTrial, 10, AbstractResult.EXCLUSIVE)
 	derived = computeDerivedMetrics(inTrial)
 	dump(inTrial, derived, topXevents)
-	System.exit(0)
 	checkRatios(derived, topXevents)
-	print "--- Examining Time Top Events ---"
+	print "\n--- Examining Time Top Events ---"
 	topXevents = getTopX.getTopX(inTrial, 10, AbstractResult.EXCLUSIVE, "TIME", False)
-	print "--- Examining L2_TCM Top Events ---"
-	topXevents = getTopX.getTopX(inTrial, 10, AbstractResult.EXCLUSIVE, "PAPI_L2_TCM")
-	print "--- Examining BR MSP Top Events ---"
+	print "\n--- Examining", cacheMissMetric, "Top Events ---"
+	topXevents = getTopX.getTopX(inTrial, 10, AbstractResult.EXCLUSIVE, "PAPI_" + cacheMissMetric)
+	print "\n--- Examining BR MSP Top Events ---"
 	topXevents = getTopX.getTopX(inTrial, 10, AbstractResult.EXCLUSIVE, "PAPI_BR_MSP")
-	print "--- Examining FP INS Top Events ---"
+	print "\n--- Examining FP INS Top Events ---"
 	topXevents = getTopX.getTopX(inTrial, 10, AbstractResult.EXCLUSIVE, "PAPI_FP_INS")
-	print "---------------- JPython test script end -------------"
-	System.exit(0)
-	for i in range(1,maxClusters):
-		print "\n>>>>>>>>>>>>>>>> Analyzing Stalls for Cluster", i, "<<<<<<<<<<<<<<<<\n"
-		cpiStack = computeCPIStats(names, percentDurations, counters, i)
-		processRules(cpiStack)
+	print "\n---------------- JPython test script end -------------"
 
 #########################################################################################
 

@@ -13,7 +13,7 @@
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
-package TAU;
+package edu.uoregon.TAU;
 
 public class Profile
 {
