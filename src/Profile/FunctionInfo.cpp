@@ -395,7 +395,7 @@ x_uint64 FunctionInfo::GetFunctionId(void) {
   // To avoid data races, we use a lock if the id has not been created
   if (FunctionId == 0) {
 #ifdef DEBUG_PROF
-    printf("Fid = 0! \n");
+    TAU_VERBOSE("Fid = 0! \n");
 #endif // DEBUG_PROF
     while (FunctionId ==0) {
       RtsLayer::LockDB();

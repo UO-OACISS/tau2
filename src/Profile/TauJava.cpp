@@ -42,7 +42,7 @@ bool& TheTauExcludeMethodsFlag()
 extern "C" {
   JNIEXPORT jint JNICALL JVM_OnLoad(JavaVM *jvm, char *options, void *reserved) {
 #ifdef DEBUG_PROF
-    fprintf(stdout, "TAU> initializing ..... \n");
+    TAU_VERBOSE( "TAU> initializing ..... \n");
 #endif /* DEBUG_PROF */
     // get jvmpi interface pointer
     if ((jvm->GetEnv((void **)&JavaThreadLayer::tau_jvmpi_interface, JVMPI_VERSION_1)) < 0) {
@@ -88,7 +88,7 @@ extern "C" {
     TauJavaLayer::Init("exclude=TAU/Profile,TAU.Profile");
 
 #ifdef DEBUG_PROF 
-    fprintf(stdout, "TAU> .... ok \n\n");
+    TAU_VERBOSE( "TAU> .... ok \n\n");
 #endif /* DEBUG_PROF */
     return JNI_OK;
   }
@@ -105,12 +105,12 @@ void TauJavaLayer::Init(char *options) {
   char *s2;
   
 #ifdef DEBUG_PROF
-  printf("Inside TauJavaLayer::Init options = %s\n",options);
+  TAU_VERBOSE("Inside TauJavaLayer::Init options = %s\n",options);
 #endif // DEBUG_PROF
   
   if(options && strlen(options)) {
 #ifdef DEBUG_PROF
-    fprintf(stdout,"Init: options = %s, len=%d\n", options, strlen(options));
+    TAU_VERBOSE("Init: options = %s, len=%d\n", options, strlen(options));
 #endif // DEBUG_PROF
 
     // There are problems with strtok. Since this is called twice,
@@ -145,7 +145,7 @@ void TauJavaLayer::Init(char *options) {
     
 #ifdef DEBUG_PROF
     for(int i = 0; i < TauExcludeListSize; i++) {
-      printf("ExcludeList[%d] = %s\n", i, TauExcludeList[i]);
+      TAU_VERBOSE("ExcludeList[%d] = %s\n", i, TauExcludeList[i]);
     }
 #endif // DEBUG_PROF
   }
@@ -194,12 +194,12 @@ void TauJavaLayer::NotifyEvent(JVMPI_Event *event) {
     break;
   case JVMPI_EVENT_GC_START:
 #ifdef DEBUG_PROF
-    printf("TAU>JVMPI_EVENT_GC_START\n");
+    TAU_VERBOSE("TAU>JVMPI_EVENT_GC_START\n");
 #endif 
     break;
   case JVMPI_EVENT_GC_FINISH:
 #ifdef DEBUG_PROF
-    printf("TAU>JVMPI_EVENT_GC_FINISH\n");
+    TAU_VERBOSE("TAU>JVMPI_EVENT_GC_FINISH\n");
 #endif
     break;
   /* Use Monitor contended enter, entered and exit events as well */
@@ -214,7 +214,7 @@ void TauJavaLayer::ClassLoad(JVMPI_Event *event) {
   char *groupname;
   int i;
 #ifdef DEBUG_PROF
-    fprintf(stdout, "TAU> Class Load : %s\n", event->u.class_load.class_name);
+    TAU_VERBOSE("TAU> Class Load : %s\n", event->u.class_load.class_name);
 #endif /* DEBUG_PROF */
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
 /* Do this for single threaded appls that don't have PROFILE_SET_NODE */
@@ -226,7 +226,7 @@ int origkey = 1;
       if (strncmp(event->u.class_load.class_name, 
 		  TauExcludeList[i], strlen(TauExcludeList[i])) == 0) {
 #ifdef DEBUG_PROF
-        printf("Excluding %s\n", event->u.class_load.class_name);
+        TAU_VERBOSE("Excluding %s\n", event->u.class_load.class_name);
 #endif // DEBUG_PROF
 	origkey = 0;
       }
@@ -267,7 +267,7 @@ int origkey = 1;
     
     
 #ifdef DEBUG_PROF 
-    printf("TAU> %s, id: %ld group:  %s\n", funcname,
+    TAU_VERBOSE("TAU> %s, id: %ld group:  %s\n", funcname,
 	   event->u.class_load.methods[i].method_id, groupname);
 #endif /* DEBUG_PROF */
     /* name, type, key, group name  are the four arguments above */
@@ -285,7 +285,7 @@ void TauJavaLayer::MethodEntry(JVMPI_Event *event) {
     TAU_MAPPING_PROFILE_START(TauTimer, tid);
 
 #ifdef DEBUG_PROF 
-  /*fprintf(stdout, "TAU> Method Entry %s %s:%ld TID = %d\n", 
+  /*TAU_VERBOSE( "TAU> Method Entry %s %s:%ld TID = %d\n", 
   		TauMethodName->ThisFunction()->GetName(), TauMethodName->ThisFunction()->GetType(), 
 	 	(long) event->u.method.method_id, tid);
 */
@@ -302,7 +302,7 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event) {
   if (TauMethodName) { // stop only if it has a finite group 
     TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName,tid);
 #ifdef DEBUG_PROF
-    fprintf(stdout, "TAU> Method Exit : %ld, TID = %d\n",
+    TAU_VERBOSE( "TAU> Method Exit : %ld, TID = %d\n",
 	    (long) event->u.method.method_id, tid);
 #endif /* DEBUG_PROF */
   }
@@ -311,7 +311,7 @@ void TauJavaLayer::MethodExit(JVMPI_Event *event) {
 void TauJavaLayer::CreateTopLevelRoutine(char *name, char *type, char *groupname, 
 			int tid) {
 #ifdef DEBUG_PROF
-  fprintf(stdout, "Inside CreateTopLevelRoutine: name = %s, type = %s, group = %s, tid = %d\n",
+  TAU_VERBOSE( "Inside CreateTopLevelRoutine: name = %s, type = %s, group = %s, tid = %d\n",
 	  name, type, groupname, tid); 
 #endif
   /* Create a top-level routine that is always called. Use the thread name in it */
@@ -329,7 +329,7 @@ void TauJavaLayer::ThreadStart(JVMPI_Event *event) {
   int tid = *ptid;
 
 #ifdef DEBUG_PROF
-  fprintf(stdout, "TAU> Thread Start : id = %d, name = %s, group = %s\n", 
+  TAU_VERBOSE( "TAU> Thread Start : id = %d, name = %s, group = %s\n", 
 	tid, event->u.thread_start.thread_name, 
 	event->u.thread_start.group_name);
 #endif /* DEBUG_PROF */
@@ -342,7 +342,7 @@ void TauJavaLayer::ThreadStart(JVMPI_Event *event) {
 void TauJavaLayer::ThreadEnd(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
 #ifdef DEBUG_PROF
-  fprintf(stdout, "TAU> Thread End : id = %d \n", tid);
+  TAU_VERBOSE( "TAU> Thread End : id = %d \n", tid);
 #endif /* DEBUG_PROF */
   // TAU_MAPPING_PROFILE_STOP(tid);
     TAU_MAPPING_PROFILE_EXIT("END...", tid);
@@ -352,7 +352,7 @@ void TauJavaLayer::ShutDown(JVMPI_Event *event) {
   int tid = JavaThreadLayer::GetThreadId(event->env_id);
   JVMPI_RawMonitor shutdown_lock = CALL(RawMonitorCreate)("Shutdown lock");
 #ifdef DEBUG_PROF
-  fprintf(stdout, "TAU> JVM SHUT DOWN : id = %d \n", tid);
+  TAU_VERBOSE( "TAU> JVM SHUT DOWN : id = %d \n", tid);
 #endif 
 
   //This call is bogus and should be removed..
@@ -374,7 +374,7 @@ void TauJavaLayer::DataDump(JVMPI_Event *event) {
   JVMPI_RawMonitor dump_lock = CALL(RawMonitorCreate)("Dump lock");
   
 #ifdef DEBUG_PROF
-  fprintf(stdout, "TAU> JVM DUMP : id = %d \n", tid);
+  TAU_VERBOSE( "TAU> JVM DUMP : id = %d \n", tid);
 #endif 
 
   CALL(RawMonitorEnter)(dump_lock);
@@ -389,7 +389,7 @@ void TauJavaLayer::DataPurge(JVMPI_Event *event) {
   JVMPI_RawMonitor purge_lock = CALL(RawMonitorCreate)("Purge lock");
 
 #ifdef DEBUG_PROF
-  fprintf(stdout, "TAU> JVM PURGE : id = %d \n", tid);
+  TAU_VERBOSE( "TAU> JVM PURGE : id = %d \n", tid);
 #endif 
 
   CALL(RawMonitorEnter)(purge_lock);

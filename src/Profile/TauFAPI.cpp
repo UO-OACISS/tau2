@@ -436,7 +436,7 @@ void tau_profile_timer_dynamic_(void **ptr, char const * infname, int slen)
 void tau_profile_start_(void **profiler)
 { 
 #ifdef DEBUG_PROF
-  printf("start_timer gets %lx\n", *profiler);
+  TAU_VERBOSE("start_timer gets %lx\n", *profiler);
 #endif /* DEBUG_PROF */
 
   Tau_lite_start_timer(*profiler, 0);

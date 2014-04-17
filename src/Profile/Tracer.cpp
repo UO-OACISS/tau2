@@ -204,8 +204,8 @@ void TauTraceFlushBuffer(int tid)
     ret = write(TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
-      printf("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
-      perror("Write Error in TauTraceFlush()");
+      TAU_VERBOSE("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
+      TAU_VERBOSE("Write Error in TauTraceFlush()");
 #endif
     }
   }
@@ -598,7 +598,7 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   /* create the command */
   sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, converter, outfile, rmcmd);
 #ifdef DEBUG_PROF
-  printf("The merge/convert cmd is: %s\n", cmd);
+  TAU_VERBOSE("The merge/convert cmd is: %s\n", cmd);
 #endif /* DEBUG_PROF */
   
   /* and execute it */

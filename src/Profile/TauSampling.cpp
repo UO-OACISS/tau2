@@ -1366,7 +1366,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
 #ifdef DEBUG_PROF
   double values2[TAU_MAX_COUNTERS];
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values2);
-  printf("Sampling took %f usec\n", values2[0] - values[0]);
+  TAU_VERBOSE("Sampling took %f usec\n", values2[0] - values[0]);
 #endif // DEBUG_PROF
 }
 
