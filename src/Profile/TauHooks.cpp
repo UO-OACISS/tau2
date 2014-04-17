@@ -574,12 +574,12 @@ void tau_trace_exit(int id) {
 }
 
 void tau_loop_trace_entry(int id) {
-  dprintf("TAU: tau_loop_trace_entry: id = %d\n", id);
+  TAU_VERBOSE("TAU: tau_loop_trace_entry: id = %d\n", id);
   TAU_START(TauLoopNames[id].c_str());
 }
 
 void tau_loop_trace_exit(int id) {
-  dprintf("TAU: tau_loop_trace_exit : id = %d\n", id);
+  TAU_VERBOSE("TAU: tau_loop_trace_exit : id = %d\n", id);
   TAU_STOP(TauLoopNames[id].c_str());
 }
 
@@ -599,7 +599,7 @@ void* tool_thread_fini(pthread_t args) {
 
 void  tau_trace_register_loop(int id, char *loopname) {
   static int invocations = 0;
-  dprintf("TAU: tau_trace_register_loop: id = %d, loopname = %s\n", id, loopname);
+  TAU_VERBOSE("TAU: tau_trace_register_loop: id = %d, loopname = %s\n", id, loopname);
   if (invocations == id) {
     TauLoopNames.push_back(string(loopname));
     invocations++;
