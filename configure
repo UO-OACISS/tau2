@@ -350,6 +350,7 @@ for arg in "$@"; do
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
+	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
 	    echo "-cube=<dir> | own | ext..... Specify location of CUBE or use TAU's jar."
 	    echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
 	    echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
@@ -459,6 +460,7 @@ for arg in "$@"; do
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
+	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
 	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
 	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
@@ -797,6 +799,7 @@ dyninstinc=no
 dyninstlib=no
 dwarf=no
 java=no
+asmdex=download
 openmp=no
 ompt=no
 omptlib=
@@ -1625,6 +1628,11 @@ for arg in "$@"; do
 		exit 1
 	    fi
 
+	    shift
+	    ;;
+
+	-asmdex=*)
+	    asmdex=`echo $arg | sed -e 's/-asmdex=//'`
 	    shift
 	    ;;
 
@@ -5781,7 +5789,7 @@ cat <<EOF > mpi2iorequest.$msuf
   }
 EOF
 
-cat <<EOF > mpi3const.$msuf
+cat <<EOF > mpi3const.c
 #include <mpi.h>
 
 #ifndef TAU_MPICH3_CONST
@@ -6702,6 +6710,54 @@ fi
 /bin/rm -f tau_weak_test.o tau_weak_test.c
 ##########################################################################
 
+######################################################################
+# Install asmdex if we are building for Android
+######################################################################
+asmdextarball=asmdex-r1707.tar.bz2
+asmdexurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$asmdextarball
+
+if [ "x$machine" = "xarm_android" ]; then
+    if [ -r "$targetdir/$architecture/lib/asmdex.jar" ]; then
+	echo "Found: $targetdir/$architecture/lib/asmdex.jar"
+	echo "asmdex.jar already found, skipping"
+    else
+	echo "asmdex.jar doesn't found, trying to build one..."
+	tmpdir="`pwd`/.tmp_asmdex_$$"
+	mkdir -p "$tmpdir"
+	cd "$tmpdir"
+	if [ "x$asmdex" = "xdownload" ]; then
+	    wget $asmdexurl
+	    if [ ! -f $asmdextarball ]; then
+		echo "$asmdextarball did not download. Please download it manually from:"
+		echo "$asmdexurl"
+		echo "Please enter the directory containing asmdex: ${nnl}"
+		read RESPONSE
+		cp -r $RESPONSE .
+		cd `basename $RESPONSE`
+	    else
+		tar jxf $asmdextarball
+		cd asmdex
+	    fi
+	else
+	    if [ ! -d "$asmdex" ]; then
+		echo "$asmdex is not a valid directory."
+		echo "Please enter the directory containing asmdex: ${nnl}"
+		read RESPONSE
+		cp -r $RESPONSE .
+		cd `basename $RESPONSE`
+	    else
+		cp -r $asmdex .
+		cd `basename $asmdex`
+	    fi
+	fi
+
+	ant -f build-main.xml jar
+	mkdir -p $targetdir/$architecture/lib
+	cp asmdex.jar $targetdir/$architecture/lib
+	cd ../..
+	rm -rf "$tmpdir"
+    fi
+fi
 
 ######################################################################
 # Install BFD if requested

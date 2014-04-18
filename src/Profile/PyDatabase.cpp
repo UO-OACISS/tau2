@@ -404,7 +404,7 @@ PyObject * pytau_setNode(PyObject *self, PyObject *args)
     }
 
 #ifdef DEBUG_PROF
-    printf("pytau_setnode: %d\n", node_number);
+    TAU_VERBOSE("pytau_setnode: %d\n", node_number);
 #endif /* DEBUG_PROF */
     TAU_PROFILE_SET_NODE(node_number);
 

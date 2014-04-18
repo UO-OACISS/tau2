@@ -44,7 +44,13 @@
 #include <string.h>
 
 #include <Profile/TauIoWrap.h>
+
+// We should forward declare the TauEnv functions, but TAU_ASSERT is defined
+// in tau_internal.h, and variadic macros are not supported by pgcc.
+// So, for PGI, don't include this header.
+#ifndef __PGI
 #include <Profile/TauEnv.h>
+#endif
     
 #define TAU_WRITE TAU_IO
 #define TAU_READ TAU_IO

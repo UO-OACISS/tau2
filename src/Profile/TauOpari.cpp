@@ -581,7 +581,7 @@ void pomp_finalize() {
     omp_fin_called = 1;
   }
 #ifdef DEBUG_PROF
-  fprintf(stderr, "  0: finalize\n");
+  TAU_VERBOSE( "  0: finalize\n");
 #endif /* DEBUG_PROF */
 }
 
@@ -591,7 +591,7 @@ void pomp_init() {
   atexit(pomp_finalize);
 
 #ifdef DEBUG_PROF
-  fprintf(stderr, "  0: init\n");
+  TAU_VERBOSE( "  0: init\n");
 #endif /* DEBUG_PROF */
 
   for(i=0; i<POMP_MAX_ID; ++i) {
@@ -623,7 +623,7 @@ void pomp_atomic_enter(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: enter atomic\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: enter atomic\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -640,7 +640,7 @@ void pomp_atomic_exit(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: exit  atomic\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: exit  atomic\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -658,9 +658,9 @@ void pomp_barrier_enter(struct ompregdescr* r) {
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     if ( r->name[0] == 'b' )
-      fprintf(stderr, "%3d: enter barrier\n", omp_get_thread_num());
+      TAU_VERBOSE( "%3d: enter barrier\n", omp_get_thread_num());
     else
-      fprintf(stderr, "%3d: enter implicit barrier of %s\n",
+      TAU_VERBOSE( "%3d: enter implicit barrier of %s\n",
 	      omp_get_thread_num(), r->name);
   }
 #endif /* DEBUG_PROF */
@@ -679,9 +679,9 @@ void pomp_barrier_exit(struct ompregdescr* r) {
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
     if ( r->name[0] == 'b' )
-      fprintf(stderr, "%3d: exit  barrier\n", omp_get_thread_num());
+      TAU_VERBOSE( "%3d: exit  barrier\n", omp_get_thread_num());
     else
-      fprintf(stderr, "%3d: exit  implicit barrier of %s\n",
+      TAU_VERBOSE( "%3d: exit  implicit barrier of %s\n",
 	      omp_get_thread_num(), r->name);
   }
 #endif /* DEBUG_PROF */
@@ -699,7 +699,7 @@ void pomp_critical_begin(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: begin critical %s\n",
+    TAU_VERBOSE( "%3d: begin critical %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -717,7 +717,7 @@ void pomp_critical_end(struct ompregdescr* r) {
   
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: end   critical %s\n",
+    TAU_VERBOSE( "%3d: end   critical %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -735,7 +735,7 @@ void pomp_critical_enter(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: enter critical %s\n",
+    TAU_VERBOSE( "%3d: enter critical %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -753,7 +753,7 @@ void pomp_critical_exit(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: exit  critical %s\n",
+    TAU_VERBOSE( "%3d: exit  critical %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -772,7 +772,7 @@ void pomp_for_enter(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: enter for\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: enter for\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -790,7 +790,7 @@ void pomp_for_exit(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: exit  for\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: exit  for\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -807,7 +807,7 @@ void pomp_master_begin(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: begin master\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: begin master\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -824,7 +824,7 @@ void pomp_master_end(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: end   master\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: end   master\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -843,7 +843,7 @@ void pomp_parallel_begin(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: begin parallel\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: begin parallel\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -860,7 +860,7 @@ void pomp_parallel_end(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: end   parallel\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: end   parallel\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -877,7 +877,7 @@ void pomp_parallel_fork(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: fork  parallel\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: fork  parallel\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -894,7 +894,7 @@ void pomp_parallel_join(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: join  parallel\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: join  parallel\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -911,7 +911,7 @@ void pomp_section_begin(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: begin section\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: begin section\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -928,7 +928,7 @@ void pomp_section_end(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: end   section\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: end   section\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -945,7 +945,7 @@ void pomp_sections_enter(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: enter sections\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: enter sections\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -962,7 +962,7 @@ void pomp_sections_exit(struct ompregdescr* r) {
   
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: exit  sections\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: exit  sections\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -979,7 +979,7 @@ void pomp_single_begin(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: begin single\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: begin single\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -996,7 +996,7 @@ void pomp_single_end(struct ompregdescr* r) {
   
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: end   single\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: end   single\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -1013,7 +1013,7 @@ void pomp_single_enter(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: enter single\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: enter single\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -1030,7 +1030,7 @@ void pomp_single_exit(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: exit  single\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: exit  single\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -1047,7 +1047,7 @@ void pomp_workshare_enter(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: enter workshare\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: enter workshare\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -1064,7 +1064,7 @@ void pomp_workshare_exit(struct ompregdescr* r) {
   
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: exit  workshare\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: exit  workshare\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
 }
@@ -1081,7 +1081,7 @@ void pomp_begin(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: begin region %s\n",
+    TAU_VERBOSE( "%3d: begin region %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -1099,7 +1099,7 @@ void pomp_end(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: end   region %s\n",
+    TAU_VERBOSE( "%3d: end   region %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -1118,7 +1118,7 @@ void pomp_flush_enter(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: flush enter region %s\n",
+    TAU_VERBOSE( "%3d: flush enter region %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -1136,7 +1136,7 @@ void pomp_flush_exit(struct ompregdescr* r) {
 
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: flush exit   region %s\n",
+    TAU_VERBOSE( "%3d: flush exit   region %s\n",
             omp_get_thread_num(), r->sub_name);
   }
 #endif /* DEBUG_PROF */
@@ -1147,7 +1147,7 @@ void pomp_init_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_init_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: init lock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: init lock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_init_lock(s);
@@ -1157,7 +1157,7 @@ void pomp_destroy_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_destroy_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: destroy lock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: destroy lock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_destroy_lock(s);
@@ -1167,7 +1167,7 @@ void pomp_set_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_set_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: set lock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: set lock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_set_lock(s);
@@ -1177,7 +1177,7 @@ void pomp_unset_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_unset_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: unset lock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: unset lock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_unset_lock(s);
@@ -1187,7 +1187,7 @@ int  pomp_test_lock(omp_lock_t *s) {
   TAU_PROFILE("omp_test_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: test lock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: test lock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   return omp_test_lock(s);
@@ -1197,7 +1197,7 @@ void pomp_init_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: init nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: init nestlock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_init_nest_lock(s);
@@ -1207,7 +1207,7 @@ void pomp_destroy_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: destroy nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: destroy nestlock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_destroy_nest_lock(s);
@@ -1217,7 +1217,7 @@ void pomp_set_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: set nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: set nestlock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_set_nest_lock(s);
@@ -1227,7 +1227,7 @@ void pomp_unset_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: unset nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: unset nestlock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   omp_unset_nest_lock(s);
@@ -1237,7 +1237,7 @@ int  pomp_test_nest_lock(omp_nest_lock_t *s) {
   TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", OpenMP);
 #ifdef DEBUG_PROF
   if ( omp_tracing ) {
-    fprintf(stderr, "%3d: test nestlock\n", omp_get_thread_num());
+    TAU_VERBOSE( "%3d: test nestlock\n", omp_get_thread_num());
   }
 #endif /* DEBUG_PROF */
   return omp_test_nest_lock(s);

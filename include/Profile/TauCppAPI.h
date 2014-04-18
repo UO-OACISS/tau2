@@ -21,7 +21,7 @@
 #include <string.h>
 
 #ifdef DEBUG_PROF
-#define DEBUGPROFMSG(msg) { cout<< msg; }
+#define DEBUGPROFMSG(msg) { cerr<< msg; }
 #else
 #define DEBUGPROFMSG(msg) 
 #endif // DEBUG_PROF

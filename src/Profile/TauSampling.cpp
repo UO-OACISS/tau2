@@ -763,7 +763,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 char *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
   char *ret;
   vector<CallSiteInfo*> & sites = callStack->callSites;
-  int startIdx;
+  unsigned int startIdx;
 
   if (sites.size() <= 0) {
     fprintf(stderr, "ERROR: EBS attempted to access 0 length callstack\n");
@@ -776,9 +776,11 @@ char *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
   
   startIdx = sites.size() - 1;
   std::string buffer = (sites[startIdx])->name;
-  for (unsigned int i=startIdx-1; i>=index; i--) {
-	buffer += " => ";
-    buffer += (sites[i])->name;
+  if (startIdx > 0) {
+    for (unsigned int i=startIdx-1; i>=index; i--) {
+	  buffer += " => ";
+      buffer += (sites[i])->name;
+    }
   }
   // copy the string so it doesn't go out of scope
   ret = strdup(buffer.c_str());
@@ -1383,7 +1385,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
 #ifdef DEBUG_PROF
   double values2[TAU_MAX_COUNTERS];
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values2);
-  printf("Sampling took %f usec\n", values2[0] - values[0]);
+  TAU_VERBOSE("Sampling took %f usec\n", values2[0] - values[0]);
 #endif // DEBUG_PROF
 }
 
@@ -1793,7 +1795,6 @@ void Tau_sampling_finalize_if_necessary(void)
   static bool finalized = false;
   static bool thrFinalized[TAU_MAX_THREADS] = {false};
   int tid = Tau_get_local_tid();
-  TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -1809,6 +1810,7 @@ void Tau_sampling_finalize_if_necessary(void)
 #endif
 
     if (!finalized) {
+      TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
       RtsLayer::LockEnv();
       // check again, someone else might already have finalized by now.
       if (!finalized) {

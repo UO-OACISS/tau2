@@ -94,7 +94,7 @@ void check_gpu_event(int gpuTask)
 void Tau_gpu_enter_event(const char* name)
 {
 #ifdef DEBUG_PROF
-	printf("entering cu event: %s.\n", name);
+	TAU_VERBOSE("entering cu event: %s.\n", name);
 #endif
 	TAU_START(name);
 }
@@ -102,7 +102,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent
 *device, int transferSize, int memcpyType)
 {
 #ifdef DEBUG_PROF
-	//printf("entering Memcpy event type: %d.\n", memcpyType);
+	//TAU_VERBOSE("entering Memcpy event type: %d.\n", memcpyType);
 #endif
 
 	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
@@ -178,7 +178,7 @@ void Tau_gpu_exit_memcpy_event(const char * functionName, GpuEvent *device, int
 memcpyType)
 {
 #ifdef DEBUG_PROF
-	//printf("exiting cuMemcpy event: %s.\n", name);
+	//TAU_VERBOSE("exiting cuMemcpy event: %s.\n", name);
 #endif
 
 	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
@@ -209,14 +209,14 @@ memcpyType)
 void Tau_gpu_exit_event(const char *name)
 {
 #ifdef DEBUG_PROF
-	printf("exit cu event: %s.\n", name);
+	TAU_VERBOSE("exit cu event: %s.\n", name);
 #endif
 	TAU_STOP(name);
 }
 void start_gpu_event(const char *name, int gpuTask)
 {
 #ifdef DEBUG_PROF
-	printf("staring %s event.\n", name);
+	TAU_VERBOSE("staring %s event.\n", name);
 #endif
 	TAU_START_TASK(name, gpuTask);
 }
@@ -224,7 +224,7 @@ void stage_gpu_event(const char *name, int gpuTask, double start_time,
 FunctionInfo* parent)
 {
 #ifdef DEBUG_PROF
-	cout << "setting gpu timestamp for start " <<  setprecision(16) << start_time << endl;
+	cerr << "setting gpu timestamp for start " <<  setprecision(16) << start_time << endl;
 #endif
 	metric_set_gpu_timestamp(gpuTask, start_time);
 
@@ -240,7 +240,7 @@ FunctionInfo* parent)
 void stop_gpu_event(const char *name, int gpuTask)
 {
 #ifdef DEBUG_PROF
-	printf("stopping %s event.\n", name);
+	TAU_VERBOSE("stopping %s event.\n", name);
 #endif
 /*
 	map<EventName,void*>::iterator it = events.find(name);
@@ -259,7 +259,7 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time,
 FunctionInfo* parent)
 {
 #ifdef DEBUG_PROF
-	cout << "setting gpu timestamp for stop: " <<  setprecision(16) << stop_time << endl;
+	cerr << "setting gpu timestamp for stop: " <<  setprecision(16) << stop_time << endl;
 #endif
 	metric_set_gpu_timestamp(gpuTask, stop_time);
 	stop_gpu_event(name, gpuTask);
@@ -375,10 +375,10 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 	}
 
 #ifdef DEBUG_PROF		
-	printf("recording memcopy event.\n");
-	printf("time is: %f:%f.\n", startTime, endTime);
-	printf("kind is: %d.\n", memcpyType);
-	printf("id is: %s.\n", id->gpuIdentifier());
+	TAU_VERBOSE("recording memcopy event.\n");
+	TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
+	TAU_VERBOSE("kind is: %d.\n", memcpyType);
+	TAU_VERBOSE("id is: %s.\n", id->gpuIdentifier());
 #endif
 	if (memcpyType == MemcpyHtoD) {
 		stage_gpu_event(functionName, task,
@@ -392,7 +392,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			//TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
-		printf("[%f] onesided event mem recv: %d, id: %s.\n", startTime, transferSize,
+		TAU_VERBOSE("[%f] onesided event mem recv: %d, id: %s.\n", startTime, transferSize,
 		id->gpuIdentifier());
 #endif
 		}
@@ -415,7 +415,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			TAU_CONTEXT_EVENT_THREAD(MemoryCopyEventDtoH, transferSize, task);
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
-		printf("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
+		TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
 		id->gpuIdentifier());
 #endif
 		}
@@ -442,7 +442,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			TAU_CONTEXT_EVENT_THREAD(MemoryCopyEventDtoD, transferSize, task);
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
-		printf("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
+		TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
 		id->gpuIdentifier());
 #endif
 		}
@@ -463,7 +463,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
 {
 #ifdef DEBUG_PROF		
-  printf("registering atomic event.\n");
+  TAU_VERBOSE("registering atomic event.\n");
 #endif //DEBUG_PROF
 	int task = get_task(event);
 	
@@ -493,7 +493,7 @@ void Tau_gpu_init(void)
 
 		
 #ifdef DEBUG_PROF
-		printf("started main.\n");
+		TAU_VERBOSE("started main.\n");
 #endif
 
 }
@@ -517,9 +517,9 @@ void Tau_gpu_exit(void)
 			Tau_stop_top_level_timer_if_necessary_task(it->second);
 		}
 #ifdef DEBUG_PROF
-		printf("stopping level 1.\n");
+		TAU_VERBOSE("stopping level 1.\n");
 #endif
 #ifdef DEBUG_PROF
-		printf("stopping level 2.\n");
+		TAU_VERBOSE("stopping level 2.\n");
 #endif
 }
