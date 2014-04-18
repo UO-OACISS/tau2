@@ -706,6 +706,7 @@ stdcxxlib=no
 intelcxxlibicc=no
 intelifort=no
 intel=no
+mpiwarnings=
 gnu=no
 sol2cc=no
 suncc=no
@@ -5469,8 +5470,8 @@ if [ "x$download_unwind" = xyes ] ; then
        -r "$unwind_dir/lib/lib${libunwind_name}.a" -o \
        -r "$unwind_dir/lib/lib${libunwind_name}.dylib" -o \
        -r "$unwind_dir/lib64/lib${libunwind_name}.so" -o \
-	   -r "$unwind_dir/lib64/lib${libunwind_name}.a" -o \
-	   -r "$unwind_dir/lib64/lib${libunwind_name}.dylib" ] ; then
+       -r "$unwind_dir/lib64/lib${libunwind_name}.a" -o \
+       -r "$unwind_dir/lib64/lib${libunwind_name}.dylib" ] ; then
     echo "Found: lib${libunwind_name}"
     echo "libunwind download already found, skipping"
   else
@@ -5730,6 +5731,15 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
 	mpicompiler=$c_compiler
 	msuf=c
     fi
+
+    # The Intel compiler doesn't give an error, but a warning
+    # if [ "$machine" = "craycnl" -a "$intel" == "yes" ]
+    if [ "$intel" == "yes" ]
+    then
+	mpicompiler=$c_compiler
+        mpiwarnings="-Werror"
+	msuf=c
+    fi
     cat <<EOF > mpi_thread_test.$msuf
   #include <mpi.h>
 
@@ -5971,11 +5981,11 @@ else
 fi
 
 $echo "Checking for MPI 3 const interface... ${nnl}"
-if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  1> /dev/null 2>&1 ; then
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.$msuf  1> /dev/null 2>&1 ; then
     echo "no"
 # MPI works. 
 else
-  if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.$msuf  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
     echo "yes"
 # MPI requires the const keyword 
     fixmakeargs="$fixmakeargs MPICH3_CONST"
@@ -5983,7 +5993,6 @@ else
     echo "no" 
   fi
 fi
-
 
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
