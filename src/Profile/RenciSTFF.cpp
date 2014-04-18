@@ -31,7 +31,7 @@ using namespace renci_stff;
 #ifdef DEBUG_PROF
 #include <iostream>
 #include <cstdio>
-#define DEBUGPRINTF(msg, val) { printf(msg, val); }
+#define DEBUGPRINTF(msg, val) { fprintf(stderr,msg, val); }
 #else //DEBUG_PROF
 #define DEBUGPRINTF(msg, val)
 #endif //DEBUG_PROF

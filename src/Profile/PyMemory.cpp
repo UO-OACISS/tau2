@@ -125,7 +125,7 @@ PyObject * pytau_setInterruptInterval(PyObject *self, PyObject *args)
     }
 
 #ifdef DEBUG_PROF
-    printf("pytau_setInterruptInterval: %d\n", interval);
+    TAU_VERBOSE("pytau_setInterruptInterval: %d\n", interval);
 #endif /* DEBUG_PROF */
     TAU_SET_INTERRUPT_INTERVAL(interval);
 

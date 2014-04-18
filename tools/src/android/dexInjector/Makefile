@@ -21,11 +21,8 @@ tau_env = LD_LIBRARY_PATH=/mnt/obb TAU_VERBOSE=1 PROFILEDIR=/mnt/obb
 
 install: $(injector)
 	jar cf DexInjector.jar $(injector) 'edu/uoregon/TAU/dexInjector/MethodAdapter$$DelegatedReturn.class'
-	@echo Installing asmdex.jar in $(INSTALLDEST)
 	@echo Installing DexInjector.jar in $(INSTALLDEST)
-	if [ -d $(INSTALLDEST) ] ; then true; \
-	else mkdir $(INSTALLDEST) ;fi
-	$(TAU_INSTALL) asmdex.jar $(INSTALLDEST)
+	if [ ! -d $(INSTALLDEST) ]; then mkdir -p $(INSTALLDEST); fi
 	$(TAU_INSTALL) DexInjector.jar $(INSTALLDEST)
 
 
@@ -60,4 +57,4 @@ clean:
 	find . -name '*.stub' -exec rm -f '{}' ';'
 
 %.class: %.java
-	javac -cp asmdex.jar:. $^
+	javac -cp $(TAU_LIB_DIR)/asmdex.jar:. $^
