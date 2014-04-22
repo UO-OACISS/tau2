@@ -1,0 +1,39 @@
+Index: asmdex/src/org/ow2/asmdex/MethodCodeReader.java
+===================================================================
+--- asmdex/src/org/ow2/asmdex/MethodCodeReader.java	(revision 1707)
++++ asmdex/src/org/ow2/asmdex/MethodCodeReader.java	(working copy)
+@@ -329,8 +329,9 @@
+ 	    
+     	// Parses all the instructions.
+     	dexFile.seek(instructionsStartOffset);
++    	int relativeOffset;
+ 		while (dexFile.getPos() < instructionsEndOffset) {
+-            int relativeOffset = dexFile.getPos() - instructionsStartOffset;
++            relativeOffset = dexFile.getPos() - instructionsStartOffset;
+ 			if (!skipDebug && (debugCurrentOpcodeOffset >= 0)) {
+ 				// Parses the Debug Information Item. This will work only if it has information
+ 				// to display for the current offset. Note that we don't need to parse
+@@ -993,6 +994,23 @@
+ 				}
+ 			}
+ 		}
++
++		/*
++		 * try-catch block may need a label after the last instruction
++		 */
++		relativeOffset = dexFile.getPos() - instructionsStartOffset;
++		if (labels.containsKey(relativeOffset)) {
++		    Label label = labels.get(relativeOffset);
++		    // The line number is valid only if set in the last occurrence
++		    // of the Debug Informations parsing (it implies !skipDebug).
++		    if (newDebugLineEmitted) {
++			label.setLine(debugEmittedLine);							
++		    }
++
++		    if (!findLabelsOnly) {
++			methodVisitor.visitLabel(label);
++		    }
++		}
+     }
+ 	
+ 	
