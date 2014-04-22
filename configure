@@ -5989,11 +5989,11 @@ else
 fi
 
 $echo "Checking for MPI 3 const interface... ${nnl}"
-if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.$msuf  1> /dev/null 2>&1 ; then
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/null 2>&1 ; then
     echo "no"
 # MPI works. 
 else
-  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.$msuf  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
     echo "yes"
 # MPI requires the const keyword 
     fixmakeargs="$fixmakeargs MPICH3_CONST"
@@ -6736,6 +6736,7 @@ if [ "x$machine" = "xarm_android" ]; then
 		cd `basename $RESPONSE`
 	    else
 		tar jxf $asmdextarball
+		patch -p0 < $START_DIR/tools/src/android/dexInjector/asmdex-r1707.patch
 		cd asmdex
 	    fi
 	else
