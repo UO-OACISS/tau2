@@ -763,7 +763,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 char *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
   char *ret;
   vector<CallSiteInfo*> & sites = callStack->callSites;
-  unsigned int startIdx;
+  int startIdx;
 
   if (sites.size() <= 0) {
     fprintf(stderr, "ERROR: EBS attempted to access 0 length callstack\n");
@@ -774,10 +774,12 @@ char *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
     exit(-1);
   }
   
-  startIdx = sites.size() - 1;
+  startIdx = (int)(sites.size()) - 1;
   std::string buffer = (sites[startIdx])->name;
+  // do some stupid conversions thanks to unsigned and signed behavior
   if (startIdx > 0) {
-    for (unsigned int i=startIdx-1; i>=index; i--) {
+    int limit = (int)index;
+    for (int i=startIdx-1; i>=limit; i--) {
 	  buffer += " => ";
       buffer += (sites[i])->name;
     }
