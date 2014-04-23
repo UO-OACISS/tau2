@@ -292,7 +292,9 @@ extern "C" void Tau_get_current_region_context(int tid) {
     if (TauEnv_get_openmp_runtime_context() == 2) { // region
       tmpStr = show_backtrace(tid, 0); // find our source location
       if (tmpStr == NULL) {
-          tmpStr = (char*)__UNKNOWN__;
+          // fall back to the top level timer
+          tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
+          //tmpStr = (char*)__UNKNOWN__;
       }
     } else { // timer or none
       tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
@@ -300,8 +302,9 @@ extern "C" void Tau_get_current_region_context(int tid) {
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
 #endif
-    if (tmpStr == NULL)
+    if (tmpStr == NULL) {
         tmpStr = (char*)__UNKNOWN__;
+    }
     if (Tau_collector_flags[tid].timerContext != NULL) {
 	    if (strstr(tmpStr, "OpenMP_PARALLEL_REGION: ") != NULL && strlen(tmpStr) > 23) {
 		    tmpStr = tmpStr+23;
