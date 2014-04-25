@@ -2039,7 +2039,13 @@ for arg in "$@"; do
 	    openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
 	    if [ ! -d $openclinclude ] ; then
 		echo "Error: Cannot access GPU include directory $openclinclude"
-		exit 1
+		if [ `uname -s ` = "Darwin" ];  then
+		  echo "Adding -useropt=-framework openCL"
+		  useropt="-framework#openCL"
+		  fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU "
+		else
+		  exit 1
+		fi
 	    fi
 	    if [ -f "$openclinclude/CL/cl.h" ] ; then
 		#			useropt="$useropt#-DTAU_MAX_THREADS=32"
