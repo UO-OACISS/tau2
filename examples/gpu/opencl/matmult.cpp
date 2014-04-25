@@ -323,7 +323,7 @@ int main(int argc, char**argv)
 
 	}
 	
-	cout << "Finnished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
+	cout << "Finished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
 	/*
 	std::cout << " results: " << std::endl;
 	for (int i=0; i<m; i++) {
