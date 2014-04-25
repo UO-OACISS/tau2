@@ -1,5 +1,6 @@
 package edu.uoregon.tau.paraprof.util;
 
+import java.awt.Font;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Iterator;
@@ -13,6 +14,7 @@ import javax.swing.JTable;
 import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
+import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 public class MapViewer extends JFrame {
@@ -24,7 +26,7 @@ public class MapViewer extends JFrame {
 
 	String[][] items=null;
 	
-	public MapViewer(String title, MetaDataMap map) {
+	public MapViewer(String title, MetaDataMap map, Font f) {
         JTable table;
 
         int num = map.size();
@@ -44,6 +46,8 @@ public class MapViewer extends JFrame {
         columns[1] = "Value";
 
         table = new JTable(items, columns);
+        
+        Utility.setTableFontHeight(table, f);
 
         JScrollPane scrollpane = new JScrollPane(table);
         getContentPane().add(scrollpane);

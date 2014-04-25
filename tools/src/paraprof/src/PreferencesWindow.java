@@ -80,7 +80,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             "<html>Generate data for reverse calltree<br>(requires lots of memory)<br>(does not apply to currently loaded profiles)</html>");
 
     private JCheckBox showSourceLocationsBox = new JCheckBox("<html>Show Source Locations</html>");
-
+    private boolean fontSet=false;
     public PreferencesWindow(Preferences preferences) {
         this.preferences = preferences;
 
@@ -370,6 +370,12 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
         ParaProf.preferences.setGenerateIntermediateCallPathData(generateIntermediateCallPathDataBox.isSelected());
         ParaProf.preferences.setShowSourceLocation(showSourceLocationsBox.isSelected());
+        //We only want to set this when the new font is loaded, not when it is changed while ParaProf is running.
+        if(!fontSet)
+        {
+        	ParaProf.preferences.setFont(new Font(ParaProf.preferences.getFontName(),ParaProf.preferences.getFontStyle(),ParaProf.preferences.getFontSize()));
+        	fontSet=true;
+        }
     }
 
     public String getFontName() {

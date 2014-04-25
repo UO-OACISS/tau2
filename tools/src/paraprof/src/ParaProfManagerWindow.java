@@ -21,6 +21,8 @@ package edu.uoregon.tau.paraprof;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -72,6 +74,7 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
@@ -2776,6 +2779,11 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
         return c;
       }
     };
+    
+    
+    Utility.setTableFontHeight(table, ParaProf.preferences.getFont());
+
+    
     table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
     if (obj instanceof ParaProfApplication) {
 			table.setModel(new ApplicationTableModel(this,
