@@ -1155,7 +1155,7 @@ public class ParaProfUtils {
                 MetaDataMap map = new MetaDataMap();
                 map.putAll(thread.getMetaData());
                 map.putAll(ppTrial.getDataSource().getMetaData());
-                Frame w = new MapViewer("Metadata for " + thread, map);
+                Frame w = new MapViewer("Metadata for " + thread, map, ParaProf.preferences.getFont());
                 w.setVisible(true);
             }
 
