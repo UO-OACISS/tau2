@@ -40,14 +40,14 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   }
   merged = 1;
 
-  int rank, numRanks;
+  int rank = 0;
 
 #ifdef TAU_MPI
+  int numRanks;
   if (TAU_MPI_Finalized()) {
     return 0;
   }
 
-  MPI_Status status;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
@@ -59,11 +59,11 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     TAU_VERBOSE("TAU: Merging MetaData...\n");
     start = TauMetrics_getTimeOfDay();
 
+#ifdef TAU_MPI
     Tau_util_outputDevice *out = Tau_metadata_generateMergeBuffer();
     char *defBuf = Tau_util_getOutputBuffer(out);
     int defBufSize = Tau_util_getOutputBufferLength(out);
 
-#ifdef TAU_MPI
     PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
     PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
@@ -75,15 +75,13 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
 
   } else {
+#ifdef TAU_MPI
     int BufferSize;
-#ifdef TAU_MPI
     PMPI_Bcast(&BufferSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-#endif /* TAU_MPI */
     char *Buffer = (char*) TAU_UTIL_MALLOC(BufferSize);
-#ifdef TAU_MPI
     PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, MPI_COMM_WORLD);
-#endif /* TAU_MPI */
     Tau_metadata_removeDuplicates(Buffer, BufferSize);
+#endif /* TAU_MPI */
   }
   return 0;
 }

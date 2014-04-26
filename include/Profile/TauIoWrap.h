@@ -34,11 +34,11 @@ extern "C" {
 
 
 void Tau_iowrap_checkInit();
-void *Tau_iowrap_getEvent(event_type type, int fid);
+void *Tau_iowrap_getEvent(event_type type, unsigned int fid);
 int Tau_iowrap_checkPassThrough();
 void Tau_iowrap_registerEvents(int fid, const char *pathname);
-void Tau_iowrap_unregisterEvents(int fid);
-void Tau_iowrap_dupEvents(int oldfid, int newfid);
+void Tau_iowrap_unregisterEvents(unsigned int fid);
+void Tau_iowrap_dupEvents(unsigned int oldfid, unsigned int newfid);
 
 extern void *global_write_bandwidth, *global_read_bandwidth, 
   *global_bytes_written, *global_bytes_read;

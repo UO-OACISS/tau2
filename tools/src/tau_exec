@@ -317,15 +317,15 @@ if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
     export TAU_TRACK_MEMORY_LEAKS=1
 fi
 if [ $track_cuda = "true" ] ; then
-		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so`
+		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
 		if [ $? == 0 ] ; then
 			#tell the user cupti is available.
 			echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' insteed of '-cuda' to get the latest available features."
 		fi
 		# Add the CUDA wrapper library to the LD_PRELOAD list
-		#TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
-		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt.so:$TAUEX_LD_PRELOAD
-		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
+		#TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
 			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
 		else
@@ -333,16 +333,16 @@ if [ $track_cuda = "true" ] ; then
 		fi
 fi
 if [ $track_cupti = "true" ] ; then
-		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so`
+		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
 		if [ $? != 0 ] ; then
 			#tell the user to add cupti to bindings list.
 			echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
 			exit
 		else
 			# Add the wrapper library to the LD_PRELOAD list
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact.so:$TAUEX_LD_PRELOAD
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
+			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 			if [ `echo $TAU_METRICS | grep "TIME"` ]; then
 				export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
 			else
@@ -367,8 +367,8 @@ if [ $track_cupti = "true" ] ; then
 fi
 if [ $track_opencl = "true" ] ; then
     # Add the OpenCL wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci.so:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
 			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
 		else
@@ -378,7 +378,7 @@ fi
 
 if [ $track_armci = "true" ] ; then
     # Add the ARMCI wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap.so:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $tau_use_ebs = "true" ] ; then
@@ -494,7 +494,7 @@ else
       if [ $apple = 1 ]; then
         echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
         echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
-        echo "export DYLD_FORCE_FLAT_NAMESPACE="
+        echo "export DYLD_FORCE_FLAT_NAMESPACE=1"
       else
         echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
         echo "export LD_AUDIT=$TAUEX_LD_AUDITOR"
@@ -517,7 +517,7 @@ else
       if [ $apple = 1 ]; then
         echo "set env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
         echo "set env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
-        echo "set env DYLD_FORCE_FLAT_NAMESPACE=" >> .gdb_commands  
+        echo "set env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
       else
         echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
         echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
@@ -534,7 +534,7 @@ else
     elif [ $apple = 1 ]; then
       export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
       export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
-      export DYLD_FORCE_FLAT_NAMESPACE=""
+      export DYLD_FORCE_FLAT_NAMESPACE=1
     else
       export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
       export LD_AUDIT=$TAUEX_LD_AUDITOR

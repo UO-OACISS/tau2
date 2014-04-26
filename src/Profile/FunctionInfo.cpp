@@ -128,12 +128,14 @@ static char *strip_tau_group(const char *ProfileGroupName) {
   const char *find = "TAU_GROUP_";
   char *ptr;
 
-  while (ptr = strstr(source,find)) {
+  ptr = strstr(source,find);
+  while (ptr != NULL) {
     char *endptr = ptr+strlen(find);
     while (*endptr != '\0') {
       *ptr++ = *endptr++;
     }
     *ptr = '\0';
+    ptr = strstr(source,find);
   }
   return source;
 }
@@ -347,6 +349,8 @@ FunctionInfo::~FunctionInfo()
 // name, and type.
 //	delete [] Name;
 //	delete [] Type;
+  free(GroupName);
+  free(AllGroups);
   TheSafeToDumpData() = 0;
 }
 
@@ -395,7 +399,7 @@ x_uint64 FunctionInfo::GetFunctionId(void) {
   // To avoid data races, we use a lock if the id has not been created
   if (FunctionId == 0) {
 #ifdef DEBUG_PROF
-    printf("Fid = 0! \n");
+    TAU_VERBOSE("Fid = 0! \n");
 #endif // DEBUG_PROF
     while (FunctionId ==0) {
       RtsLayer::LockDB();

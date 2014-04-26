@@ -9,12 +9,17 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Point;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Vector;
+
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 
 public class Preferences implements Serializable {
 
@@ -43,6 +48,8 @@ public class Preferences implements Serializable {
     private ArrayList<Object> sourceLocations;
     private boolean showSourceLocation = true;
     private boolean autoLabels = true;
+    
+    private Font font = null;
     
     static final long serialVersionUID = 183442743456314793L;
 
@@ -227,6 +234,17 @@ public class Preferences implements Serializable {
 
     public void setAutoLabels(boolean autoLabels) {
         this.autoLabels = autoLabels;
+    }
+    
+    public void setFont(Font f){
+    	font=f;
+    }
+    
+    public Font getFont(){
+    	if(font==null){
+    		font = new Font(ParaProf.preferences.getFontName(),ParaProf.preferences.getFontStyle(),ParaProf.preferences.getFontSize());
+    	}
+    	return font;
     }
 
 }

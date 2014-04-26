@@ -28,8 +28,9 @@
 #define CUPTI_CHECK_ERROR(err, str) \
 	if (err != CUPTI_SUCCESS) \
   { \
-		fprintf(stderr, str); \
-		exit(1); \
+	    const char * errStr; \
+		cuptiGetResultString(err, &errStr); \
+		fprintf(stderr, "TAU: CUPTI error in %s: %s\n", str, errStr); \
 	} \
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)

@@ -82,9 +82,8 @@ public:
 
 /** Return a table represeting a sorted list of the events */
 int *Tau_unify_generateSortMap(EventLister *eventLister) {
-  int rank, numRanks, i;
 #ifdef TAU_MPI
-  MPI_Status status;
+  int rank, numRanks;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
@@ -152,12 +151,10 @@ unify_object_t *Tau_unify_processBuffer(char *buffer, int rank) {
 /** Generates a definition buffer from a unify_merge_object_t */
 Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_object_t &mergedObject, 
 								EventLister *eventLister) {
-  int numEvents = eventLister->getNumEvents();
-
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
   Tau_util_output(out,"%d%c", mergedObject.strings.size(), '\0');
-  for(int i=0;i<mergedObject.strings.size();i++) {
+  for(unsigned int i=0;i<mergedObject.strings.size();i++) {
     Tau_util_output(out,"%s%c", mergedObject.strings[i], '\0');
   }
 
@@ -169,7 +166,7 @@ Tau_util_outputDevice *Tau_unify_generateMergedDefinitionBuffer(unify_merge_obje
 unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
   unify_merge_object_t *mergedObject = new unify_merge_object_t();
 
-  for (int i=0; i<objects.size(); i++) {
+  for (unsigned int i=0; i<objects.size(); i++) {
     // reset index pointers to start
     objects[i]->idx = 0;
   }
@@ -182,19 +179,16 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
     // merge objects
 
     char *nextString = NULL;
-    int objectIndex = 0;
-    for (int i=0; i<objects.size(); i++) {
+    for (unsigned int i=0; i<objects.size(); i++) {
       if (objects[i]->idx < objects[i]->numEvents) {
-	if (nextString == NULL) {
-	  nextString = objects[i]->strings[objects[i]->idx];
-	  objectIndex = i;
-	} else {
-	  char *compareString = objects[i]->strings[objects[i]->idx];
-	  if (strcmp(nextString, compareString) > 0) {
-	    nextString = compareString;
-	    objectIndex = i;
-	  }
-	}
+        if (nextString == NULL) {
+          nextString = objects[i]->strings[objects[i]->idx];
+        } else {
+          char *compareString = objects[i]->strings[objects[i]->idx];
+          if (strcmp(nextString, compareString) > 0) {
+            nextString = compareString;
+          }
+        }
       }
     }
  
@@ -206,7 +200,7 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
     finished = true;
 
     // write the mappings and check if we are finished
-    for (int i=0; i<objects.size(); i++) {
+    for (unsigned int i=0; i<objects.size(); i++) {
       if (objects[i]->idx < objects[i]->numEvents) {
 	char * compareString = objects[i]->strings[objects[i]->idx];
 	if (strcmp(nextString, compareString) == 0) {
@@ -233,7 +227,7 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 
 /** Using MPI, unify events for a given EventLister */
 Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
-  int rank, numRanks, i;
+  int rank, numRanks;
   rank = 0;
   numRanks = 1;
 #ifdef TAU_MPI
@@ -365,7 +359,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 #endif /* TAU_MPI */
 
     // apply mapping table to children
-    for (int i=0; i<unifyObjects->size(); i++) {
+    for (unsigned int i=0; i<unifyObjects->size(); i++) {
       for (int j=0; j<(*unifyObjects)[i]->numEvents; j++) {
 	(*unifyObjects)[i]->mapping[j] = mergedObject->mapping[(*unifyObjects)[i]->mapping[j]];
       }
@@ -373,7 +367,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   }
 
   // send tables to children
-  for (int i=1; i<unifyObjects->size(); i++) {
+  for (unsigned int i=1; i<unifyObjects->size(); i++) {
 #ifdef TAU_MPI
     PMPI_Send((*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents, 
 	      MPI_INT, (*unifyObjects)[i]->rank, 0, MPI_COMM_WORLD);
@@ -416,7 +410,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   if (rank == 0) {
     char **globalStrings = (char**)TAU_UTIL_MALLOC(sizeof(char*)*globalNumItems);
 
-    for (int i=0; i<mergedObject->strings.size(); i++) {
+    for (unsigned int i=0; i<mergedObject->strings.size(); i++) {
       globalStrings[i] = strdup(mergedObject->strings[i]);
     }
     tau_unify_object->globalStrings = globalStrings;
@@ -430,7 +424,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   free ((*unifyObjects)[0]->strings);
   free ((*unifyObjects)[0]);
 
-  for (int i=1; i<unifyObjects->size(); i++) {
+  for (unsigned int i=1; i<unifyObjects->size(); i++) {
     free ((*unifyObjects)[i]->buffer);
     free ((*unifyObjects)[i]->strings);
     free ((*unifyObjects)[i]->mapping);
@@ -501,9 +495,8 @@ extern "C" int TauGetMpiRank(void) {
 
 extern "C" int TauGetMpiRank(void)
 {
-  int rank;
-
 #ifdef TAU_MPI
+  int rank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 #else

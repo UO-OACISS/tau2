@@ -56,6 +56,13 @@
 #include <Profile/TauSCOREP.h>
 #endif
 
+#ifdef TAU_ANDROID
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#endif
+
 using namespace std;
 
 #ifndef TAU_WINDOWS
@@ -63,7 +70,11 @@ typedef void (*tau_sighandler_t)(int, siginfo_t*, void*);
 #endif
 
 #if defined(TAU_STRSIGNAL_OK)
+#if defined(__PGI)
+extern "C" char *strsignal(int sig) __THROW;
+#else
 extern "C" char *strsignal(int sig);
+#endif /* __PGI */
 #endif /* TAU_STRSIGNAL_OK */
 
 extern "C" void Tau_stack_initialization();
@@ -72,6 +83,9 @@ extern "C" int Tau_profiler_initialization();
 extern "C" int Tau_profile_exit_all_threads();
 extern "C" int Tau_dump_callpaths();
 extern "C" int Tau_initialize_collector_api(void);
+
+extern "C" int Tau_show_profiles();
+
 
 // True if TAU is fully initialized
 int tau_initialized = 0;
@@ -299,6 +313,98 @@ int Tau_signal_initialization()
   return 0;
 }
 
+#ifdef TAU_ANDROID
+
+static void
+alfred_handle_command(int fd, char *cmd, int len)
+{
+    if (strncasecmp(cmd, "DUMP", 4) == 0) {
+	Tau_profile_exit_all_threads();
+	write(fd, "OKAY\n", 5);
+    }
+
+    if (strncasecmp(cmd, "PROFILERS", 9) == 0) {
+	Tau_show_profiles();
+	write(fd, "OKAY\n", 5);
+    }
+}
+
+static void*
+alfred(void *arg)
+{
+    int rv;
+    int sfd;
+    struct sockaddr_in saddr;
+
+    JNIThreadLayer::IgnoreThisThread();
+
+    sfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sfd < 0) {
+	TAU_VERBOSE(" *** Alfred failed to start: %s", strerror(errno));
+	return NULL;
+    }
+
+    int on = 1;
+    rv = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+    if (rv < 0) {
+	TAU_VERBOSE(" *** Alfred failed to reuse socket: %s", strerror(errno));
+    }
+
+    saddr.sin_family = AF_INET;
+    saddr.sin_port   = htons(TauEnv_get_alfred_port());
+    saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(sfd, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
+	TAU_VERBOSE(" *** Alfred failed to start: %s", strerror(errno));
+	close(sfd);
+	return NULL;
+    }
+
+    if (listen(sfd, 1) < 0) {
+	TAU_VERBOSE(" *** Alfred failed to start: %s", strerror(errno));
+	close(sfd);
+	return NULL;
+    }
+
+    while (1) {
+	char cmd[18];
+	int fd;
+
+	TAU_VERBOSE(" *** (S%d) Alfred at your service\n", gettid());
+
+	fd = accept(sfd, NULL, NULL);
+	if (fd < 0) {
+	    TAU_VERBOSE(" *** Alfred failed to accept new connection: %s", strerror(errno));
+	    continue;
+	}
+
+	while (1) {
+	    TAU_VERBOSE(" *** Alfred waiting for command\n");
+	    rv = read(fd, cmd, sizeof(cmd));
+	    if (rv < 0) {
+		TAU_VERBOSE(" *** Alfred failed to read data: %s", strerror(errno));
+		break;
+	    }
+
+	    if (rv == sizeof(cmd)) {
+		TAU_VERBOSE(" *** Alfred can't understand the command");
+		write(fd, "UNKNOWN\n", 8);
+		close(fd);
+		break;
+	    }
+
+	    if (rv == 0) { // peer disconnected
+		break;
+	    }
+
+	    alfred_handle_command(fd, cmd, rv);
+	}
+    }
+
+    return NULL;
+}
+#endif
+
 #ifdef TAU_IBM_OMPT
 extern "C" void TauInitOMPT(void);
 #endif /* TAU_IBM_OMPT */
@@ -308,6 +414,9 @@ extern "C" int Tau_init_initializeTAU()
   //protect against reentrancy
   if (initializing) return 0;
   initializing = 1;
+
+  //Initialize locks.
+  RtsLayer::Initialize();
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -327,14 +436,12 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
-  initializing = 1;
   Tau_init_epilog();
   return 0;
 #endif
 
 #ifdef TAU_SCOREP
   /* no more initialization necessary if using SCOREP */
-  initializing = 1;
   SCOREP_Tau_InitMeasurement();
   SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads);
   return 0;
@@ -342,7 +449,6 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
-  initializing = 1;
   Tau_init_vampirTrace();
   return 0;
 #endif
@@ -371,6 +477,7 @@ extern "C" int Tau_init_initializeTAU()
   if (TauEnv_get_compensate()) {
     Tau_compensate_initialization();
   }
+
   /* initialize sampling if requested */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
   if (TauEnv_get_ebs_enabled()) {
@@ -391,21 +498,23 @@ extern "C" int Tau_init_initializeTAU()
   Tau_initialize_collector_api();
 #endif
 
+  // Mark initialization complete so calls below can start timers
   tau_initialized = 1;
 
 #ifdef __MIC__
-  if (TauEnv_get_mic_offload())
-  {
+  if (TauEnv_get_mic_offload()) {
     TAU_PROFILE_SET_NODE(0);
-    Tau_create_top_level_timer_if_necessary();
   }
 #endif
 
-  //Initialize locks.
-  RtsLayer::Initialize();
+  Tau_create_top_level_timer_if_necessary();
 
-  // FIXME: No so sure this is a good idea...
   Tau_memory_wrapper_enable();
+
+#ifdef TAU_ANDROID
+  pthread_t thr;
+  pthread_create(&thr, NULL, alfred, NULL);
+#endif
 
   return 0;
 }

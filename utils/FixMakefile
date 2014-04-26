@@ -424,6 +424,11 @@ case $1 in
 	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout
 	;;
 
+     android_sdk=*)
+        android_sdk=`echo $1 | sed -e 's/^android_sdk=//'`
+	echo "s,^ANDROID_SDK=.*$,ANDROID_SDK=$android_sdk,g" >> $sedout
+	;;
+
      pythoninc=*)
         pythoninc=`echo $1 | sed -e 's/^pythoninc=//'`
 	echo "s,^PYTHON_INCDIR=.*$,PYTHON_INCDIR=$pythoninc,g" >> $sedout
@@ -432,7 +437,10 @@ case $1 in
 
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
+	# Discover python library version
+	pythonso=`ls $pythonlib/libpython*.so | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
 	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
+	echo "s,^PYTHON_LIB_SO=.*$,PYTHON_LIB_SO=$pythonso,g" >> $sedout
 	#echo "Using PYTHON LIB DIR =" $pythonlib
 	;;
 
@@ -926,6 +934,10 @@ case $1 in
 	;;
      MPC)
 	echo NOTE: Using the TAU MPC options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MPCINTEL)
+	echo NOTE: Using the TAU MPC options for the Intel compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPENSATE)

@@ -69,33 +69,41 @@ extern struct CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long address,
 /* This function is used to wrap the outlined functions for parallel regions.
 */
 void Tau_gomp_parallel_start_proxy(void * a2) {
+	Tau_global_incr_insideTAU();
     DEBUGPRINT("Parallel Proxy %d!\n", Tau_get_tid());
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
     __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_WORK_STATE);
+	Tau_global_decr_insideTAU();
     (proxy->a1)(proxy->a2);
+	Tau_global_incr_insideTAU();
     __ompc_set_state(previous);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
+	Tau_global_decr_insideTAU();
 }
 
 /* This function is used to wrap the outlined functions for tasks.
 */
 void Tau_gomp_task_proxy(void * a2) {
+	Tau_global_incr_insideTAU();
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
     DEBUGPRINT("Task Proxy %d, %p, %p\n", Tau_get_tid(), proxy->a1, proxy->a2);
 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_EXEC_TASK);
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_WORK_STATE);
+	Tau_global_decr_insideTAU();
     (proxy->a1)(proxy->a2);
+	Tau_global_incr_insideTAU();
 	//if (proxy->a3) free(proxy->a2);
     __ompc_set_state(THR_TASK_FINISH_STATE);
     // this pair of events goes together to end the task
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_FINISH_TASK);
     __ompc_event_callback(OMP_EVENT_THR_END_FINISH_TASK);
     __ompc_set_state(previous);
+	Tau_global_decr_insideTAU();
 }
 
 /**********************************************************
@@ -152,7 +160,9 @@ void  tau_GOMP_barrier(GOMP_barrier_p GOMP_barrier_h)  {
     previous = __ompc_set_state(THR_EBAR_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_EBAR);
 
+	Tau_global_decr_insideTAU();
     (*GOMP_barrier_h)();
+	Tau_global_incr_insideTAU();
 
     __ompc_event_callback(OMP_EVENT_THR_END_EBAR);
     __ompc_set_state(previous);
@@ -164,7 +174,9 @@ void  tau_GOMP_barrier(GOMP_barrier_p GOMP_barrier_h)  {
 
 void  tau_GOMP_critical_start(GOMP_critical_start_p GOMP_critical_start_h)  {
     DEBUGPRINT("GOMP_critical_start %d\n", Tau_get_tid());
+	Tau_global_decr_insideTAU();
     (*GOMP_critical_start_h)();
+	Tau_global_incr_insideTAU();
     //__ompc_set_state(THR_CTWT_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_CTWT);
 }
@@ -178,7 +190,9 @@ void  tau_GOMP_critical_end(GOMP_critical_end_p GOMP_critical_end_h)  {
     DEBUGPRINT("GOMP_critical_end %d\n", Tau_get_tid());
     //__ompc_event_callback(OMP_EVENT_THR_END_CTWT);
     //__ompc_set_state(THR_WORK_STATE);
+	Tau_global_decr_insideTAU();
     (*GOMP_critical_end_h)();
+	Tau_global_incr_insideTAU();
 }
 
 
@@ -189,7 +203,9 @@ void  tau_GOMP_critical_end(GOMP_critical_end_p GOMP_critical_end_h)  {
 void  tau_GOMP_critical_name_start(GOMP_critical_name_start_p GOMP_critical_name_start_h, void ** a1)  {
     DEBUGPRINT("GOMP_critical_name_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     (*GOMP_critical_name_start_h)( a1);
+	Tau_global_incr_insideTAU();
     //__ompc_set_state(THR_CTWT_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_CTWT);
 
@@ -206,7 +222,9 @@ void  tau_GOMP_critical_name_end(GOMP_critical_name_end_p GOMP_critical_name_end
 
     //__ompc_event_callback(OMP_EVENT_THR_END_CTWT);
     //__ompc_set_state(THR_WORK_STATE);
+	Tau_global_decr_insideTAU();
     (*GOMP_critical_name_end_h)( a1);
+	Tau_global_incr_insideTAU();
 }
 
 
@@ -220,7 +238,9 @@ void  tau_GOMP_atomic_start(GOMP_atomic_start_p GOMP_atomic_start_h)  {
 
     __ompc_set_state(THR_ATWT_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_ATWT);
+	Tau_global_decr_insideTAU();
     (*GOMP_atomic_start_h)();
+	Tau_global_incr_insideTAU();
 }
 
 
@@ -232,7 +252,9 @@ void  tau_GOMP_atomic_end(GOMP_atomic_end_p GOMP_atomic_end_h)  {
 
     DEBUGPRINT("GOMP_atomic_end %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     (*GOMP_atomic_end_h)();
+	Tau_global_incr_insideTAU();
     __ompc_event_callback(OMP_EVENT_THR_END_ATWT);
     __ompc_set_state(THR_WORK_STATE);
 
@@ -248,7 +270,9 @@ bool  tau_GOMP_loop_static_start(GOMP_loop_static_start_p GOMP_loop_static_start
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_static_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
     return retval;
 
 }
@@ -263,7 +287,9 @@ bool tau_GOMP_loop_dynamic_start(GOMP_loop_dynamic_start_p GOMP_loop_dynamic_sta
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_dynamic_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
 
     return retval;
 
@@ -279,7 +305,9 @@ bool tau_GOMP_loop_guided_start(GOMP_loop_guided_start_p GOMP_loop_guided_start_
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_guided_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -296,7 +324,9 @@ bool tau_GOMP_loop_runtime_start(GOMP_loop_runtime_start_p GOMP_loop_runtime_sta
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_runtime_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_runtime_start_h)( a1,  a2,  a3,  a4,  a5);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -313,7 +343,9 @@ bool tau_GOMP_loop_ordered_static_start(GOMP_loop_ordered_static_start_p GOMP_lo
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_static_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
 
     //Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
     _ordered[_depth] = 1;
@@ -335,7 +367,9 @@ bool tau_GOMP_loop_ordered_dynamic_start(GOMP_loop_ordered_dynamic_start_p GOMP_
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_dynamic_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
 
     //Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
     _ordered[_depth] = 1;
@@ -356,7 +390,9 @@ bool tau_GOMP_loop_ordered_guided_start(GOMP_loop_ordered_guided_start_p GOMP_lo
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_guided_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
 
     //Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
     _ordered[_depth] = 1;
@@ -378,7 +414,9 @@ bool tau_GOMP_loop_ordered_runtime_start(GOMP_loop_ordered_runtime_start_p GOMP_
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_runtime_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_runtime_start_h)( a1,  a2,  a3,  a4,  a5);
+	Tau_global_incr_insideTAU();
 
     //Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
     _ordered[_depth] = 1;
@@ -400,7 +438,9 @@ bool tau_GOMP_loop_static_next(GOMP_loop_static_next_p GOMP_loop_static_next_h, 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_static_next %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_static_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
     return retval;
 
 }
@@ -415,7 +455,9 @@ bool tau_GOMP_loop_dynamic_next(GOMP_loop_dynamic_next_p GOMP_loop_dynamic_next_
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_dynamic_next %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_dynamic_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -432,7 +474,9 @@ bool tau_GOMP_loop_guided_next(GOMP_loop_guided_next_p GOMP_loop_guided_next_h, 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_guided_next %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_guided_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -449,7 +493,9 @@ bool tau_GOMP_loop_runtime_next(GOMP_loop_runtime_next_p GOMP_loop_runtime_next_
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_runtime_next %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_runtime_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -469,7 +515,9 @@ bool tau_GOMP_loop_ordered_static_next(GOMP_loop_ordered_static_next_p GOMP_loop
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_static_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     __ompc_set_state(THR_ODWT_STATE);
 
@@ -491,7 +539,9 @@ bool tau_GOMP_loop_ordered_dynamic_next(GOMP_loop_ordered_dynamic_next_p GOMP_lo
     OMP_COLLECTOR_API_THR_STATE previous;
 	previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_dynamic_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     __ompc_set_state(THR_ODWT_STATE);
 
@@ -513,7 +563,9 @@ bool tau_GOMP_loop_ordered_guided_next(GOMP_loop_ordered_guided_next_p GOMP_loop
     OMP_COLLECTOR_API_THR_STATE previous;
 	previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_guided_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     __ompc_set_state(THR_ODWT_STATE);
 
@@ -535,7 +587,9 @@ bool tau_GOMP_loop_ordered_runtime_next(GOMP_loop_ordered_runtime_next_p GOMP_lo
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_WORK_STATE);
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ordered_runtime_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     __ompc_set_state(THR_ODWT_STATE);
 
@@ -553,19 +607,23 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
 
     DEBUGPRINT("GOMP_parallel_loop_static_start %d\n", Tau_get_tid());
 
-    int tid = Tau_get_tid();
+    //int tid = Tau_get_tid();
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
      */
+	//Tau_global_decr_insideTAU();
     //(*GOMP_parallel_loop_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	//Tau_global_incr_insideTAU();
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
 	proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
+	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_static_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
     // save the pointer so we can free it later
     //Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
     _proxy[_depth] = proxy;
@@ -582,21 +640,25 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
 
 void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOMP_parallel_loop_dynamic_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7)  {
 
-    DEBUGPRINT("GOMP_parallel_loop_dynamic_start %d\n", Tau_get_tid());
+    //DEBUGPRINT("GOMP_parallel_loop_dynamic_start %d\n", Tau_get_tid());
 
-    int tid = Tau_get_tid();
+    //int tid = Tau_get_tid();
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
      */
+	//Tau_global_decr_insideTAU();
     //(*GOMP_parallel_loop_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	//Tau_global_incr_insideTAU();
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
 	proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
+	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_dynamic_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
     // save the pointer so we can free it later
     //Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
     //Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
@@ -615,19 +677,23 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
 
     DEBUGPRINT("GOMP_parallel_loop_guided_start %d\n", Tau_get_tid());
 
-    int tid = Tau_get_tid();
+    //int tid = Tau_get_tid();
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
      */
+	//Tau_global_decr_insideTAU();
     //(*GOMP_parallel_loop_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	//Tau_global_incr_insideTAU();
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
     proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
+	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_guided_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
     // save the pointer so we can free it later
     //Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
     //Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
@@ -646,19 +712,23 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
 
     DEBUGPRINT("GOMP_parallel_loop_runtime_start %d\n", Tau_get_tid());
 
-    int tid = Tau_get_tid();
+    //int tid = Tau_get_tid();
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
      */
+	//Tau_global_decr_insideTAU();
     //(*GOMP_parallel_loop_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	//Tau_global_incr_insideTAU();
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
     proxy->buf = NULL;
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
+	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_runtime_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
     // save the pointer so we can free it later
     //Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
     //Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
@@ -688,7 +758,9 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
     previous = __ompc_set_state(THR_IBAR_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IBAR);
 
+	Tau_global_decr_insideTAU();
     (*GOMP_loop_end_h)();
+	Tau_global_incr_insideTAU();
 
     __ompc_event_callback(OMP_EVENT_THR_END_IBAR);
     __ompc_set_state(previous);
@@ -712,7 +784,9 @@ void tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_p GOMP_loop_end_nowait_h)  {
         _ordered[_depth] = 0;
     }
 
+	Tau_global_decr_insideTAU();
     (*GOMP_loop_end_nowait_h)();
+	Tau_global_incr_insideTAU();
 
     //__ompc_set_state(THR_WORK_STATE);
 
@@ -728,7 +802,9 @@ bool tau_GOMP_loop_ull_static_start(GOMP_loop_ull_static_start_p GOMP_loop_ull_s
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_static_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
 
     return retval;
 
@@ -745,7 +821,9 @@ bool tau_GOMP_loop_ull_dynamic_start(GOMP_loop_ull_dynamic_start_p GOMP_loop_ull
     DEBUGPRINT("GOMP_loop_ull_dynamic_start %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -763,7 +841,9 @@ bool tau_GOMP_loop_ull_guided_start(GOMP_loop_ull_guided_start_p GOMP_loop_ull_g
     DEBUGPRINT("GOMP_loop_ull_guided_start %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -781,7 +861,9 @@ bool tau_GOMP_loop_ull_runtime_start(GOMP_loop_ull_runtime_start_p GOMP_loop_ull
     DEBUGPRINT("GOMP_loop_ull_runtime_start %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -799,7 +881,9 @@ bool tau_GOMP_loop_ull_ordered_static_start(GOMP_loop_ull_ordered_static_start_p
     DEBUGPRINT("GOMP_loop_ull_ordered_static_start %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -817,7 +901,9 @@ bool tau_GOMP_loop_ull_ordered_dynamic_start(GOMP_loop_ull_ordered_dynamic_start
     DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_start %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -835,7 +921,9 @@ bool tau_GOMP_loop_ull_ordered_guided_start(GOMP_loop_ull_ordered_guided_start_p
     DEBUGPRINT("GOMP_loop_ull_ordered_guided_start %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -853,7 +941,9 @@ bool tau_GOMP_loop_ull_ordered_runtime_start(GOMP_loop_ull_ordered_runtime_start
     DEBUGPRINT("GOMP_loop_ull_ordered_runtime_start %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -871,7 +961,9 @@ bool tau_GOMP_loop_ull_static_next(GOMP_loop_ull_static_next_p GOMP_loop_ull_sta
     DEBUGPRINT("GOMP_loop_ull_static_next %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_static_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -889,7 +981,9 @@ bool tau_GOMP_loop_ull_dynamic_next(GOMP_loop_ull_dynamic_next_p GOMP_loop_ull_d
     DEBUGPRINT("GOMP_loop_ull_dynamic_next %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_dynamic_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -907,7 +1001,9 @@ bool tau_GOMP_loop_ull_guided_next(GOMP_loop_ull_guided_next_p GOMP_loop_ull_gui
     DEBUGPRINT("GOMP_loop_ull_guided_next %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_guided_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -925,7 +1021,9 @@ bool tau_GOMP_loop_ull_runtime_next(GOMP_loop_ull_runtime_next_p GOMP_loop_ull_r
     DEBUGPRINT("GOMP_loop_ull_runtime_next %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_runtime_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -943,7 +1041,9 @@ bool tau_GOMP_loop_ull_ordered_static_next(GOMP_loop_ull_ordered_static_next_p G
     DEBUGPRINT("GOMP_loop_ull_ordered_static_next %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_static_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -961,7 +1061,9 @@ bool tau_GOMP_loop_ull_ordered_dynamic_next(GOMP_loop_ull_ordered_dynamic_next_p
     DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_next %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_dynamic_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -979,7 +1081,9 @@ bool tau_GOMP_loop_ull_ordered_guided_next(GOMP_loop_ull_ordered_guided_next_p G
     DEBUGPRINT("GOMP_loop_ull_ordered_guided_next %d\n", Tau_get_tid());
 
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_guided_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
 
 
     return retval;
@@ -996,7 +1100,9 @@ bool tau_GOMP_loop_ull_ordered_runtime_next(GOMP_loop_ull_ordered_runtime_next_p
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_runtime_next %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_loop_ull_ordered_runtime_next_h)( a1,  a2);
+	Tau_global_incr_insideTAU();
     return retval;
 
 }
@@ -1013,7 +1119,9 @@ void tau_GOMP_ordered_start(GOMP_ordered_start_p GOMP_ordered_start_h)  {
     // our turn to work in the ordered region!
     //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
     __ompc_set_state(THR_WORK_STATE);
+	Tau_global_decr_insideTAU();
     (*GOMP_ordered_start_h)();
+	Tau_global_incr_insideTAU();
 
 }
 
@@ -1026,7 +1134,9 @@ void tau_GOMP_ordered_end(GOMP_ordered_end_p GOMP_ordered_end_h)  {
 
     DEBUGPRINT("GOMP_ordered_end %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     (*GOMP_ordered_end_h)();
+	Tau_global_incr_insideTAU();
     // we can't do this, or we might get overlapping timers.
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     __ompc_set_state(THR_ODWT_STATE);
@@ -1037,12 +1147,10 @@ void tau_GOMP_ordered_end(GOMP_ordered_end_p GOMP_ordered_end_h)  {
  **********************************************************/
 
 void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (*a1)(void *), void * a2, unsigned int a3)  {
-    int numThreads = a3 == 0 ? omp_get_max_threads() : 1;
-    DEBUGPRINT("GOMP_parallel_start %d of %d\n", Tau_get_tid(), numThreads);
+    DEBUGPRINT("GOMP_parallel_start %d of %d\n", Tau_get_tid(), a3==0?omp_get_max_threads():1);
 
     __ompc_set_state(THR_OVHD_STATE);
     __ompc_event_callback(OMP_EVENT_FORK);
-    int tid = Tau_get_tid();
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
@@ -1054,13 +1162,13 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
     proxy->name = NULL;
     //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     // save the pointer so we can free it later
-    //Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
-    //Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
     _proxy[_depth] = proxy;
     _depth = _depth + 1;
 
     // time the call
+	Tau_global_decr_insideTAU();
     (*GOMP_parallel_start_h)( &Tau_gomp_parallel_start_proxy, proxy,  a3);
+	Tau_global_incr_insideTAU();
     __ompc_set_state(THR_WORK_STATE);
 
     DEBUGPRINT("GOMP_parallel_start %d of %d (on exit)\n", Tau_get_tid(), omp_get_num_threads());
@@ -1078,29 +1186,23 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
 
     __ompc_set_state(THR_IBAR_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IBAR);
-    int tid = Tau_get_tid();
+	Tau_global_decr_insideTAU();
     (*GOMP_parallel_end_h)();
+	Tau_global_incr_insideTAU();
     // do this at the end, so we can join all the threads.
     __ompc_event_callback(OMP_EVENT_THR_END_IBAR);
     __ompc_event_callback(OMP_EVENT_JOIN);
     __ompc_set_state(THR_SERIAL_STATE);
     // free the proxy wrapper, and reduce the depth
-    //int depth = Tau_gomp_flags[tid].depth;
-    //if (Tau_gomp_flags[tid].proxy[depth] != NULL) {
-        //TAU_GOMP_PROXY_WRAPPER * proxy = Tau_gomp_flags[tid].proxy[depth];
-        //Tau_gomp_flags[tid].proxy[depth] = NULL;
-        //Tau_gomp_flags[tid].depth = depth - 1;
     int depth = _depth;
     if (_proxy[depth] != NULL) {
         TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
-        free(proxy->name);
+        //free(proxy->name); // never gets set!
         free(proxy);
         _proxy[depth] = NULL;
         _depth = depth - 1;
     } else {
         // assume the worst...
-        //Tau_gomp_flags[tid].depth = 0;
-        //Tau_gomp_flags[tid].proxy[0] = NULL;
         _depth = 0;
         _proxy[0] = NULL;
     }
@@ -1116,7 +1218,7 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
 
     DEBUGPRINT("GOMP_task %d\n", Tau_get_tid());
 
-    int tid = Tau_get_tid();
+    //int tid = Tau_get_tid();
 
     /* 
      * Don't do the proxy wrapper for tasks. What we need to do is allocate the
@@ -1132,7 +1234,9 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
      */
+	//Tau_global_decr_insideTAU();
     //(*GOMP_parallel_loop_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
+	//Tau_global_incr_insideTAU();
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
     proxy->a1 = a1;
     proxy->a2 = a2;
@@ -1152,9 +1256,13 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
                           & ~(uintptr_t) (a5 - 1));
       a3(proxy->buf, proxy->a2);
 	  */
+	  Tau_global_decr_insideTAU();
       (*GOMP_task_h)( a1, a2, a3, a4, a5, a6, a7);
+	  Tau_global_incr_insideTAU();
 	} else {
+	  Tau_global_decr_insideTAU();
       (*GOMP_task_h)( Tau_gomp_task_proxy, proxy,  NULL,  a4,  a5,  a6, a7);
+	  Tau_global_incr_insideTAU();
 	}
     __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
     __ompc_set_state(previous);
@@ -1163,7 +1271,9 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_TASK_CREATE_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
+	Tau_global_decr_insideTAU();
     (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+	Tau_global_incr_insideTAU();
     __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
     //__ompc_set_state(THR_TASK_SCHEDULE_STATE);
     __ompc_set_state(previous);
@@ -1183,7 +1293,9 @@ void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_IBAR_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IBAR);
+	Tau_global_decr_insideTAU();
     (*GOMP_taskwait_h)();
+	Tau_global_incr_insideTAU();
     __ompc_event_callback(OMP_EVENT_THR_END_IBAR);
     __ompc_set_state(previous);
 
@@ -1197,7 +1309,9 @@ void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
 
   DEBUGPRINT("GOMP_taskyield %d\n", Tau_get_tid());
 
+  Tau_global_decr_insideTAU();
   (*GOMP_taskyield_h)();
+  Tau_global_incr_insideTAU();
 
   }
  **********************************************************/
@@ -1212,7 +1326,9 @@ unsigned int tau_GOMP_sections_start(GOMP_sections_start_p GOMP_sections_start_h
     unsigned int retval = 0;
     DEBUGPRINT("GOMP_sections_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_sections_start_h)( a1);
+	Tau_global_incr_insideTAU();
     return retval;
 
 }
@@ -1227,7 +1343,9 @@ unsigned int tau_GOMP_sections_next(GOMP_sections_next_p GOMP_sections_next_h)  
     unsigned int retval = 0;
     DEBUGPRINT("GOMP_sections_next %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_sections_next_h)();
+	Tau_global_incr_insideTAU();
     return retval;
 
 }
@@ -1241,7 +1359,9 @@ void tau_GOMP_parallel_sections_start(GOMP_parallel_sections_start_p GOMP_parall
 
     DEBUGPRINT("GOMP_parallel_sections_start %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     (*GOMP_parallel_sections_start_h)( a1,  a2,  a3,  a4);
+	Tau_global_incr_insideTAU();
     // do this AFTER the start, so we know how many threads there are.
     __ompc_event_callback(OMP_EVENT_FORK);
     __ompc_set_state(THR_WORK_STATE);
@@ -1257,7 +1377,9 @@ void tau_GOMP_sections_end(GOMP_sections_end_p GOMP_sections_end_h)  {
 
     DEBUGPRINT("GOMP_sections_end %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     (*GOMP_sections_end_h)();
+	Tau_global_incr_insideTAU();
 
 }
 
@@ -1270,7 +1392,9 @@ void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_sections_end_n
 
     DEBUGPRINT("GOMP_sections_end_nowait %d\n", Tau_get_tid());
 
+	Tau_global_decr_insideTAU();
     (*GOMP_sections_end_nowait_h)();
+	Tau_global_incr_insideTAU();
 
 }
 
@@ -1286,7 +1410,9 @@ bool tau_GOMP_single_start(GOMP_single_start_p GOMP_single_start_h)  {
 
     // in this case, the single region is entered and executed
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_SINGLE);
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_single_start_h)();
+	Tau_global_incr_insideTAU();
     // the code is done, so fire the callback end event
     __ompc_event_callback(OMP_EVENT_THR_END_SINGLE);
 
@@ -1305,7 +1431,9 @@ void * tau_GOMP_single_copy_start(GOMP_single_copy_start_p GOMP_single_copy_star
     DEBUGPRINT("GOMP_single_copy_start %d\n", Tau_get_tid());
 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_SINGLE);
+	Tau_global_decr_insideTAU();
     retval  =  (*GOMP_single_copy_start_h)();
+	Tau_global_incr_insideTAU();
     return retval;
 
 }
@@ -1320,7 +1448,9 @@ void tau_GOMP_single_copy_end(GOMP_single_copy_end_p GOMP_single_copy_end_h, voi
     DEBUGPRINT("GOMP_single_copy_end %d\n", Tau_get_tid());
 
     __ompc_event_callback(OMP_EVENT_THR_END_SINGLE);
+	Tau_global_decr_insideTAU();
     (*GOMP_single_copy_end_h)( a1);
+	Tau_global_incr_insideTAU();
 
 }
 

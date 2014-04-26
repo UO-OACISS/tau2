@@ -199,6 +199,9 @@ void determineFormat(Ttf_fileT *tFile) {
 
   // 32 bit regular
   bytesRead = read(tFile->Fid, &event32, sizeof(TAU_EV32));
+  if (bytesRead == -1) {
+    perror("ERROR: No bytes read from file");
+  }
   lseek(tFile->Fid, 0, SEEK_SET);
   if (event32.par == 3) {
     tFile->format = FORMAT_32;
@@ -209,6 +212,9 @@ void determineFormat(Ttf_fileT *tFile) {
 
   // 32 bit swapped
   bytesRead = read(tFile->Fid, &event32, sizeof(TAU_EV32));
+  if (bytesRead == -1) {
+    perror("ERROR: No bytes read from file");
+  }
   lseek(tFile->Fid, 0, SEEK_SET);
   if (swap64(event32.par) == 3) {
     if (formatFound == true) { // shouldn't happen, if it does, go to native
@@ -224,6 +230,9 @@ void determineFormat(Ttf_fileT *tFile) {
 
   // 64 bit regular
   bytesRead = read(tFile->Fid, &event64, sizeof(TAU_EV64));
+  if (bytesRead == -1) {
+    perror("ERROR: No bytes read from file");
+  }
   lseek(tFile->Fid, 0, SEEK_SET);
   if (event64.par == 3) {
     if (formatFound == true) { // shouldn't happen, if it does, go to native
@@ -239,6 +248,9 @@ void determineFormat(Ttf_fileT *tFile) {
 
   // 64 bit swapped
   bytesRead = read(tFile->Fid, &event64, sizeof(TAU_EV64));
+  if (bytesRead == -1) {
+    perror("ERROR: No bytes read from file");
+  }
   lseek(tFile->Fid, 0, SEEK_SET);
   if (swap64(event64.par) == 3) {
     if (formatFound == true) { // shouldn't happen, if it does, go to native
@@ -644,7 +656,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	/* extract the information from the parameter */
 	msgTag   = ((xpar>>16) & 0x000000FF) | (((xpar >> 48) & 0xFF) << 8);
 	otherNid = ((xpar>>24) & 0x000000FF) | (((xpar >> 56) & 0xFF) << 8);
-	msgLen   = xpar & 0x0000FFFF | (xpar << 22 >> 54 << 16);
+	msgLen   = (xpar & 0x0000FFFF) | (xpar << 22 >> 54 << 16);
 	unsigned int comm = xpar << 16 >> 58;
 
 // 	printf ("sent tag = %d\n", msgTag);
@@ -673,7 +685,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	  /* extract the information from the parameter */
 	  msgTag   = ((xpar>>16) & 0x000000FF) | (((xpar >> 48) & 0xFF) << 8);
 	  otherNid = ((xpar>>24) & 0x000000FF) | (((xpar >> 56) & 0xFF) << 8);
-	  msgLen   = xpar & 0x0000FFFF | (xpar << 22 >> 54 << 16);
+	  msgLen   = (xpar & 0x0000FFFF) | (xpar << 22 >> 54 << 16);
 	  unsigned int comm = xpar << 16 >> 58;
 
 

@@ -80,6 +80,7 @@
 
 /* Android didn't provide <ucontext.h> so we make our own */
 #ifdef TAU_ANDROID
+#include "TauJAPI.h"
 #include "android_ucontext.h"
 #else
 #include <ucontext.h>
@@ -113,7 +114,7 @@ extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string &
 extern "C" int Tau_get_thread_omp_state(int tid);
 extern std::string * Tau_get_thread_ompt_state(int tid);
 
-#if 1 // disabled for now -- no state tracking
+#if defined(TAU_OPENMP) && !defined(TAU_USE_OMPT)
 static string _gTauOmpStatesArray[17] = {
   "OMP_UNKNOWN",
   "OMP_OVERHEAD",
@@ -328,6 +329,10 @@ static struct sigaction application_sa;
 
 #define PPC_REG_PC 32
 
+#if (defined(sun) || defined(__APPLE__) || defined(_AIX)) || \
+    (!defined(TAU_BGP) && !defined(TAU_BGQ) && !defined(__x86_64__) && \
+    !defined(i386) && !defined(__ia64__) && !defined(__powerpc64__) && \
+	!defined(__powerpc__) && !defined(__arm__))
 static void issueUnavailableWarning(const char *text)
 {
   static bool warningIssued = false;
@@ -336,17 +341,22 @@ static void issueUnavailableWarning(const char *text)
     warningIssued = true;
   }
 }
+#endif
 
 unsigned long get_pc(void *p)
 {
-  struct ucontext *uc = (struct ucontext *)p;
   unsigned long pc;
+
+/* SUN SUPPORT */
 
 #ifdef sun
   issueUnavailableWarning("Warning, TAU Sampling does not work on Solaris\n");
   return 0;
+
+/* APPLE SUPPORT */
+
 #elif __APPLE__
-  issueUnavailableWarning("Warning, TAU Sampling works on Apple, but symbol lookup using BFD does not.\n");
+  issueUnavailableWarning("Warning, TAU Sampling works on Apple, but symbol lookup using BFD might not.\n");
   ucontext_t *uct = (ucontext_t *)p;
   //printf("%p\n", uct->uc_mcontext->__ss.__rip);
   //Careful here, we need to support ppc macs as well.
@@ -356,12 +366,19 @@ unsigned long get_pc(void *p)
   pc = uct->uc_mcontext->__ss.__eip;
 #else
   pc = uct->uc_mcontext->__ss.__srr0;
-#endif
-  //return 0;
+#endif /* defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__) */
+  return pc;
+
+/* AIX SUPPORT */
+
 #elif _AIX
   issueUnavailableWarning("Warning, TAU Sampling does not work on AIX\n");
   return 0;
+
+/* EVERYTHING ELSE SUPPORT */
+
 #else
+  struct ucontext *uc = (struct ucontext *)p;
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
 #ifdef TAU_BGP
@@ -387,9 +404,9 @@ unsigned long get_pc(void *p)
 # else
   issueUnavailableWarning("Warning, TAU Sampling does not work on unknown platform.\n");
   return 0;
-# endif /* TAU_BGP */
+# endif /* TAU_BGP, BGQ, __x86_64__, i386, __ia64__, __powerpc64__, __powerpc__, __arm__ */
   return pc;
-#endif /* sun */
+#endif /* sun, APPLE, AIX */
 }
 
 extern "C" void Tau_sampling_suspend(int tid)
@@ -743,7 +760,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   return callsite;
 }
 
-char *Tau_sampling_getPathName(int index, CallStackInfo *callStack) {
+char *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
   char *ret;
   vector<CallSiteInfo*> & sites = callStack->callSites;
   int startIdx;
@@ -757,11 +774,15 @@ char *Tau_sampling_getPathName(int index, CallStackInfo *callStack) {
     exit(-1);
   }
   
-  startIdx = sites.size() - 1;
+  startIdx = (int)(sites.size()) - 1;
   std::string buffer = (sites[startIdx])->name;
-  for (int i=startIdx-1; i>=index; i--) {
-	buffer += " => ";
-    buffer += (sites[i])->name;
+  // do some stupid conversions thanks to unsigned and signed behavior
+  if (startIdx > 0) {
+    int limit = (int)index;
+    for (int i=startIdx-1; i>=limit; i--) {
+	  buffer += " => ";
+      buffer += (sites[i])->name;
+    }
   }
   // copy the string so it doesn't go out of scope
   ret = strdup(buffer.c_str());
@@ -1010,7 +1031,7 @@ void Tau_sampling_finalizeProfile(int tid)
     //   2. Check and Create Path Entry (Requires Intermediate)
     vector<CallSiteInfo *> & sites = callStack->callSites;
     // *CWL* - we need the index, which is why the iterator is not used.
-    for (int i = 0; i < sites.size(); i++) {
+    for (unsigned int i = 0; i < sites.size(); i++) {
       string samplePathLeafString = Tau_sampling_getPathName(i, callStack);
       string sampleGlobalLeafString = sites[i]->name;
       FunctionInfo * samplePathLeaf = NULL;
@@ -1186,7 +1207,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     }
 #else
     // ORA returns an integer, which has to be mapped to a std::string
-    int thread_state = thread_state = Tau_get_thread_omp_state(tid);
+    int thread_state = Tau_get_thread_omp_state(tid);
     if (thread_state >= 0) {
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during
@@ -1366,7 +1387,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
 #ifdef DEBUG_PROF
   double values2[TAU_MAX_COUNTERS];
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values2);
-  printf("Sampling took %f usec\n", values2[0] - values[0]);
+  TAU_VERBOSE("Sampling took %f usec\n", values2[0] - values[0]);
 #endif // DEBUG_PROF
 }
 
@@ -1375,8 +1396,10 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
  ********************************************************************/
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context)
 {
+/*
   int tid = RtsLayer::localThreadId();
-//   fprintf(stderr,"[%d] Overflow at %p! bit=0x%llx \n", tid, address,overflow_vector);
+  fprintf(stderr,"[%d] Overflow at %p! bit=0x%llx \n", tid, address,overflow_vector);
+ */
 
   x_int64 value = (x_int64)address;
 
@@ -1394,8 +1417,6 @@ int Tau_sampling_init(int tid)
 {
   int ret;
 
-  static struct itimerval itval;
-
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
@@ -1406,11 +1427,6 @@ int Tau_sampling_init(int tid)
   numSamples[tid] = 0;
   samplesDroppedTau[tid] = 0;
   samplesDroppedSuspended[tid] = 0;
-
-  itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % TAU_MILLION;
-  itval.it_interval.tv_sec = itval.it_value.tv_sec = threshold / TAU_MILLION;
-
-  //DEBUGMSG("threshold=%d, itimer=(%d, %d)", threshold, itval.it_interval.tv_usec, itval.it_interval.tv_sec);
 
   const char *profiledir = TauEnv_get_profiledir();
 
@@ -1573,7 +1589,12 @@ int Tau_sampling_init(int tid)
    sev.sigev_signo = TAU_ALARM_TYPE;
    sev.sigev_notify = SIGEV_THREAD_ID;
    sev.sigev_value.sival_ptr = &timerid;
+#ifndef TAU_ANDROID
    sev.sigev_notify_thread_id = syscall(__NR_gettid);
+#else
+   sev.sigev_notify_thread_id = JNIThreadLayer::GetThreadSid();
+   TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
+#endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
@@ -1591,11 +1612,16 @@ int Tau_sampling_init(int tid)
     fprintf(stderr, "TAU: Sampling error 7: %s\n", strerror(ret));
     return -1;
   }
-  TAU_VERBOSE("Thread %d called timer_settime...\n", tid);
+  TAU_VERBOSE("Thread %d (pthread id = %d) called timer_settime...\n", tid, syscall(__NR_gettid));
 
 #else /* use itimer when not on Linux */
   struct itimerval ovalue, pvalue;
   getitimer(TAU_ITIMER_TYPE, &pvalue);
+
+  static struct itimerval itval;
+  itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % TAU_MILLION;
+  itval.it_interval.tv_sec = itval.it_value.tv_sec = threshold / TAU_MILLION;
+  //DEBUGMSG("threshold=%d, itimer=(%d, %d)", threshold, itval.it_interval.tv_usec, itval.it_interval.tv_sec);
 
   ret = setitimer(TAU_ITIMER_TYPE, &itval, &ovalue);
   if (ret != 0) {
@@ -1771,7 +1797,6 @@ void Tau_sampling_finalize_if_necessary(void)
   static bool finalized = false;
   static bool thrFinalized[TAU_MAX_THREADS] = {false};
   int tid = Tau_get_local_tid();
-  TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -1787,6 +1812,7 @@ void Tau_sampling_finalize_if_necessary(void)
 #endif
 
     if (!finalized) {
+      TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stdout);
       RtsLayer::LockEnv();
       // check again, someone else might already have finalized by now.
       if (!finalized) {

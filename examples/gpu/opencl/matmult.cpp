@@ -4,7 +4,11 @@
 #include <sstream>
 #include <math.h>
 #include <algorithm>
-#include "CL/cl.h"
+#ifdef __APPLE__
+#include <OpenCL/opencl.h>
+#else
+#include <CL/cl.h>
+#endif
 
 using namespace std;
 
@@ -319,7 +323,7 @@ int main(int argc, char**argv)
 
 	}
 	
-	cout << "Finnished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
+	cout << "Finished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
 	/*
 	std::cout << " results: " << std::endl;
 	for (int i=0; i<m; i++) {
