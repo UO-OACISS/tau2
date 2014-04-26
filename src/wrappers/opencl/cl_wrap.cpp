@@ -17,7 +17,12 @@
 using namespace std;
 
 
+#ifdef __APPLE__
+const char * tau_orig_libname = "libOpenCL.dylib";
+#else
 const char * tau_orig_libname = "libOpenCL.so";
+#endif /* __APPLE__ */
+
 static void *tau_handle = NULL;
 
 static TauContextUserEvent *MemoryCopyEventHtoD;
