@@ -324,6 +324,8 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		ParaProfTreeCellRenderer renderer = new ParaProfTreeCellRenderer();
 		tree.setCellRenderer(renderer);
 		tree.setEditable(true);
+		FontMetrics fm = tree.getFontMetrics(ParaProf.preferences.getFont());
+		tree.setRowHeight(fm.getHeight());
 
 		// Add a mouse listener for this tree.
 		MouseListener ml = new MouseAdapter() {
