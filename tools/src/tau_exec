@@ -494,7 +494,7 @@ else
       if [ $apple = 1 ]; then
         echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
         echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
-        #echo "export DYLD_FORCE_FLAT_NAMESPACE=1"
+        echo "export DYLD_FORCE_FLAT_NAMESPACE=1"
       else
         echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
         echo "export LD_AUDIT=$TAUEX_LD_AUDITOR"
@@ -517,7 +517,7 @@ else
       if [ $apple = 1 ]; then
         echo "set env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
         echo "set env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
-        #echo "set env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
+        echo "set env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
       else
         echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
         echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
@@ -534,7 +534,7 @@ else
     elif [ $apple = 1 ]; then
       export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
       export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
-      #export DYLD_FORCE_FLAT_NAMESPACE=1
+      export DYLD_FORCE_FLAT_NAMESPACE=1
     else
       export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
       export LD_AUDIT=$TAUEX_LD_AUDITOR
