@@ -1565,9 +1565,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	const char* name = "ReadBuffer";
 
         Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
-#ifdef DEBUG_PROF
-        printf("Profiler in OpenCL ReadBuffer: %p\n", p);
-#endif /* DEBUG_PROF */
+        TAU_VERBOSE("Profiler in OpenCL ReadBuffer: %p\n", p);
         if (p) {
           callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         } else {
@@ -1644,9 +1642,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 	//printf("name: %s.\n", name);
 
         Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
-#ifdef DEBUG_PROF
-        printf("Profiler in OpenCL WriteBuffer: %p\n", p);
-#endif /* DEBUG_PROF */
+        TAU_VERBOSE("Profiler in OpenCL WriteBuffer: %p\n", p);
         if (p) {
           callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         } else {
@@ -1748,9 +1744,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	char* name = "CopyBuffer";
 
         Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
-#ifdef DEBUG_PROF
-        printf("Profiler in OpenCL CopyBuffer: %p\n", p);
-#endif /* DEBUG_PROF */
+        TAU_VERBOSE("Profiler in OpenCL CopyBuffer: %p\n", p);
         if (p) {
           callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         } else {
@@ -2054,9 +2048,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 	//printf("name: %s.\n", name);
 
         Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
-#ifdef DEBUG_PROF
-        printf("Profiler in OpenCL UnmapBuffer: %p\n", p);
-#endif /* DEBUG_PROF */
+        TAU_VERBOSE("Profiler in OpenCL UnmapBuffer: %p\n", p);
         if (p) {
           callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         } else {
@@ -2115,9 +2107,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
         Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
-#ifdef DEBUG_PROF
-        printf("Profiler in OpenCL kernel_data: %p\n", p);
-#endif /* DEBUG_PROF */
+        TAU_VERBOSE("Profiler in OpenCL kernel_data: %p\n", p);
         if (p) {
           kernel_data->callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         } else {
@@ -2156,9 +2146,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	//printf("kernel name: %s.\n", name);	
 	//
         Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
-#ifdef DEBUG_PROF
-        printf("Profiler in OpenCL clEnqueueNDRangeKernel_h: %p\n", p);
-#endif /* DEBUG_PROF */
+        TAU_VERBOSE("Profiler in OpenCL clEnqueueNDRangeKernel_h: %p\n", p);
         if (p) {
           callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
         } else {
