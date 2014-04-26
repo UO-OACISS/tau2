@@ -199,6 +199,9 @@ bool *initialized = NULL;
 /* lifted from PAPI. */
 void Tau_CuptiLayer_init()
 {
+#ifdef TAU_DEBUG_CUPTI
+  printf("in Tau_CuptiLayer_init\n");
+#endif
   int device_count;
   cuDeviceGetCount(&device_count);
   if (initialized == NULL)
@@ -213,7 +216,9 @@ void Tau_CuptiLayer_init()
   cuCtxGetDevice(&device);
   if (!initialized[device] && Tau_CuptiLayer_Added_counters.size() > 0)
 	{
-	  //printf("in Tau_CuptiLayer_init, device = %d.\n");
+#ifdef TAU_DEBUG_CUPTI
+		printf("in Tau_CuptiLayer_init, device = %d.\n");
+#endif
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
 		CUresult cuErr = CUDA_SUCCESS;
 
@@ -273,6 +278,9 @@ void Tau_CuptiLayer_init()
         cerr << "TAU Error: Cannot add event: " << (*it)->tag << " to GPU device: " << device_char << endl << "             Only counters for a single GPU device model can be collected at the same time." << endl;
         exit(1);
       }
+#ifdef TAU_DEBUG_CUPTI
+	  cerr << "Will add event " << (*it)->tag << " to GPU device: " << device_char << endl;
+#endif
       cuptiErr = cuptiEventGroupAddEvent( eventGroup[device],
                   (*it)->event );
       CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupAddEvent" );
@@ -310,7 +318,8 @@ void Tau_CuptiLayer_init()
     }
     
     
-    cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_CONTINUOUS);
+    cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_CONTINUOUS);
+	CHECK_CUPTI_ERROR( cuptiErr, "cuptiSetEventCollectionMode" );
 		
 		lastDataBuffer = (uint64_t*) malloc
 			(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t)); 
@@ -324,15 +333,24 @@ void Tau_CuptiLayer_init()
     initialized[device] = true;
 		Tau_CuptiLayer_initialized = true;
 	}
+#ifdef TAU_DEBUG_CUPTI
+  printf("leaving Tau_CuptiLayer_init\n");
+#endif
 }
 
 void Tau_CuptiLayer_disable()
 {
+#ifdef TAU_DEBUG_CUPTI
+  printf("in Tau_CuptiLayer_disable: disabling CUPTI\n");
+#endif
 	Tau_CuptiLayer_enabled = false;
 }
 
 void Tau_CuptiLayer_enable()
 {
+#ifdef TAU_DEBUG_CUPTI
+  printf("in Tau_CuptiLayer_enable: enabling CUPTI\n");
+#endif
 	Tau_CuptiLayer_enabled = true;
 }
 
@@ -558,7 +576,9 @@ int Tau_CuptiLayer_Initialize_callbacks()
 }
 void Tau_CuptiLayer_Initialize_Map()
 {
-
+#ifdef TAU_DEBUG_CUPTI
+  printf("in Tau_CuptiLayer_Initialize_Map\n");
+#endif
   int callback_initialized = Tau_CuptiLayer_Initialize_callbacks();
 
 	CUdevice currDevice = -1;
@@ -585,7 +605,9 @@ void Tau_CuptiLayer_Initialize_Map()
 	for (int i=0; i<deviceCount; i++)
 	{
 		er = cuDeviceGet(&currDevice, i);
-		//printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
+#ifdef TAU_DEBUG_CUPTI
+		printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
+#endif
 		CHECK_CU_ERROR( er, "cuDeviceGet" );
 		err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
 		CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
@@ -593,7 +615,9 @@ void Tau_CuptiLayer_Initialize_Map()
 			printf( "No domain is exposed by dev = %d\n", i );
 			exit(1);
 		}
-		//printf("found %d domains.\n", domainCount);
+#ifdef TAU_DEBUG_CUPTI
+		printf("found %d domains.\n", domainCount);
+#endif
     // alloc domainId array
     size_t size = sizeof ( CUpti_EventDomainID ) * domainCount;
     CUpti_EventDomainID *domainId = (CUpti_EventDomainID*)malloc(size);
@@ -607,8 +631,10 @@ void Tau_CuptiLayer_Initialize_Map()
 			
 			er = cuDeviceGet(&currDevice, i);
 			CHECK_CU_ERROR( er, "cuDeviceGet" );
-			//printf("looping, j=%d. domainCount=%d \n", j, domainCount);
-			//printf("(1) currDevice=%d.\n", currDevice);
+#ifdef TAU_DEBUG_CUPTI
+			printf("looping, j=%d. domainCount=%d \n", j, domainCount);
+			printf("(1) currDevice=%d.\n", currDevice);
+#endif
 			err = cuptiDeviceGetNumEventDomains(currDevice, &num_domains );
 			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
 			if ( num_domains == 0 ) {
@@ -637,6 +663,9 @@ void Tau_CuptiLayer_Initialize_Map()
 		}
 		cuDeviceGetCount(&deviceCount);
 	}
+#ifdef TAU_DEBUG_CUPTI
+  printf("leaving Tau_CuptiLayer_Initialize_Map\n");
+#endif
 }
 
 bool Tau_CuptiLayer_is_cupti_counter(char* str)

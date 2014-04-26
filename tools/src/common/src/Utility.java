@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.GridBagConstraints;
 import java.net.URL;
 import java.util.NoSuchElementException;
@@ -11,6 +12,8 @@ import java.util.StringTokenizer;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.Axis;
@@ -169,6 +172,17 @@ public class Utility {
         gbc.gridwidth = w;
         gbc.gridheight = h;
         frame.getContentPane().add(c, gbc);
+    }
+    
+    
+    /**
+     *  Sets the given table's row height based on the size of the selected font.
+     */
+    public static void setTableFontHeight(JTable table, Font f){
+    	DefaultTableCellRenderer tcr = new DefaultTableCellRenderer();
+    	Component c = tcr.getTableCellRendererComponent(table, "null", true, true, 0, 0);
+    	FontMetrics fm = c.getFontMetrics(f);
+    	table.setRowHeight(fm.getHeight());
     }
 
 }

@@ -261,10 +261,10 @@ void metric_read_papivirtual(int tid, int idx, double values[]) {
 
 /* PAPI wallclock time */
 void metric_read_papiwallclock(int tid, int idx, double values[]) {
+#ifdef TAU_PAPI
   static long long oldvalue = 0L;
   static long long offset = 0;
   long long newvalue = 0L;
-#ifdef TAU_PAPI
   newvalue = PAPI_get_real_usec();
   if (newvalue < oldvalue) {
     offset += UINT_MAX;

@@ -349,6 +349,8 @@ for arg in "$@"; do
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
+	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
+	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
 	    echo "-cube=<dir> | own | ext..... Specify location of CUBE or use TAU's jar."
 	    echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
 	    echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
@@ -457,6 +459,8 @@ for arg in "$@"; do
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
+	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
+	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
 	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
 	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
@@ -704,6 +708,7 @@ stdcxxlib=no
 intelcxxlibicc=no
 intelifort=no
 intel=no
+mpiwarnings=
 gnu=no
 sol2cc=no
 suncc=no
@@ -794,6 +799,7 @@ dyninstinc=no
 dyninstlib=no
 dwarf=no
 java=no
+asmdex=download
 openmp=no
 ompt=no
 omptlib=
@@ -838,7 +844,7 @@ for arg in "$@"; do
 
 	-cc=*)
 	    myarg=`echo $arg | sed 's/-cc=//'`
-	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpicc -o $myarg = mcc ]
+	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc ]
 	    then
 		c_compiler=$myarg
 	    else
@@ -846,7 +852,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpifcc', 'mpifccpx', 'clang', 'bgclang', and 'mpicc'"
+		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'bgclang', and 'mpicc'"
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -862,7 +868,7 @@ for arg in "$@"; do
 
 	-c++=*)
 	    myarg=`echo $arg | sed 's/-c++=//'`
-	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx ] 
+	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx ] 
 	    then
 		cxx_compiler=$myarg
 	    else
@@ -870,7 +876,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx', 'clang++', 'bgclang++', and 'mpicxx' "
+		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'clang++', 'bgclang++', and 'mpicxx' "
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -894,14 +900,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', or 'mpif90' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort' "
 		exit 1
 	    fi
 	    shift
@@ -1572,6 +1578,18 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-ompt=*)
+	    openmp=yes
+	    ompt=yes
+	    ompt_dir=`echo $arg | sed -e 's/-ompt=//'`
+        if [ ! -d $ompt_dir ] 
+        then
+          echo "Error: OMPT directory $ompt_dir cannot be accessed"
+          exit 1 
+        fi 
+	    shift
+	    ;;
+
 	-ompt*)
 	    openmp=yes
 	    ompt=yes
@@ -1599,6 +1617,22 @@ for arg in "$@"; do
 		exit 1
 	    fi 
 
+	    shift
+	    ;;
+
+	-android_sdk=*)
+	    android_sdk=`echo $arg | sed -e 's/-android_sdk=//'`
+	    if [ ! -d $android_sdk ]
+	    then
+		echo "Error: Cannot access Android SDK directory $android_sdk"
+		exit 1
+	    fi
+
+	    shift
+	    ;;
+
+	-asmdex=*)
+	    asmdex=`echo $arg | sed -e 's/-asmdex=//'`
 	    shift
 	    ;;
 
@@ -2005,7 +2039,13 @@ for arg in "$@"; do
 	    openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
 	    if [ ! -d $openclinclude ] ; then
 		echo "Error: Cannot access GPU include directory $openclinclude"
-		exit 1
+		if [ `uname -s ` = "Darwin" ];  then
+		  echo "Adding -useropt=-framework openCL"
+		  useropt="-framework#openCL"
+		  fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU "
+		else
+		  exit 1
+		fi
 	    fi
 	    if [ -f "$openclinclude/CL/cl.h" ] ; then
 		#			useropt="$useropt#-DTAU_MAX_THREADS=32"
@@ -3705,6 +3745,23 @@ case $cxx_compiler in
         fi
         ;;
 
+    mpc_icpc)
+    if [ $machine = x86_64 -o $machine = mic_linux ] ; then 
+            full_cxx_compiler=`mpc_icpc -show | awk '{print $1;}'`
+            full_cc_compiler=`mpc_icc -show | awk '{ print $1;}'`
+            fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
+            mpilibrary=`mpc_icpc -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
+            full_cxx_compiler=`mpc_icpc -show -Dmain=mpc_user_main__ | sed -e "s@-mSYMTAB_mpc_privatize @@g" -e "s/ /#/g"`  
+            full_cc_compiler=`mpc_icc -show -Dmain=mpc_user_main__ | sed -e "s@-mSYMTAB_mpc_privatize @@g" -e "s/ /#/g"`
+        #echo "CC=$cc_compiler"
+        #echo "CXX=$cxx_compiler"
+        #echo "mpilibrary=$mpilibrary"
+        tauoptions="${tauoptions}-mpc-intel"
+            fixmakeargs="$fixmakeargs MPC MPCINTEL"
+            mpc=yes
+        fi   
+        ;;   
+
     *mpicxx)
         internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
         case $internal_compiler in 
@@ -4085,6 +4142,11 @@ then
             if [ $mpc = yes ]
             then
 		mpiinc=`which mpcrun | sed -e 's/\/bin\/mpcrun$//' -e 's/\/bin64\/mpcrun$//'`/include
+              if [ -r $mpiinc/../mpc-libsctk_arch-dev/include/sctk_config_arch.h ] 
+              then
+                echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
+                additional_mpiincs="-I$mpiinc/../mpc-libsctk_arch-dev/include"
+              fi 
             else
 		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
 		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
@@ -5319,7 +5381,13 @@ case $machine in
 
     arm_android)
 	echo Found a \"$machine\" configuration definition
-	fixmakeargs="arch=$machine ANDROID $fixmakeargs"
+	if [ "x$android_sdk" = "x" ]; then
+	    echo "Error: No Android SDK specified. You may want to specify \"-android_sdk=<dir>\""
+	    exit 1
+	fi
+
+	fixmakeargs="arch=$machine ANDROID android_sdk=$android_sdk $fixmakeargs"
+
 	if [ $papi = yes ] ; then
 	    fixmakeargs="ARMLINUXPAPI $fixmakeargs"
 	fi
@@ -5408,15 +5476,29 @@ if [ $machine = mic_linux ] ; then
   libunwindtgz=$libunwind.tgz
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
+
+if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
+  if [ -r $unwind_dir/$libunwindtgz ]; then 
+    echo "NOTE: Copying $unwind_dir/$libunwindtgz "
+    cp $unwind_dir/$libunwindtgz .
+    download_unwind=yes
+  fi
+fi
   
 if [ "x$download_unwind" = xyes ] ; then
   unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
   prebfddir=`pwd`
 
-  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o -r "$unwind_dir/lib64/lib${libunwind_name}.a" ] ; then
-    echo "Found: $unwind_dir/lib/lib${libunwind_name}.so $unwind_dir/lib64/lib${libunwind_name}.a"
+  if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o \
+       -r "$unwind_dir/lib/lib${libunwind_name}.a" -o \
+       -r "$unwind_dir/lib/lib${libunwind_name}.dylib" -o \
+       -r "$unwind_dir/lib64/lib${libunwind_name}.so" -o \
+       -r "$unwind_dir/lib64/lib${libunwind_name}.a" -o \
+       -r "$unwind_dir/lib64/lib${libunwind_name}.dylib" ] ; then
+    echo "Found: lib${libunwind_name}"
     echo "libunwind download already found, skipping"
   else
+    echo "Not found in ${unwind_dir}: lib${libunwind_name}"
     # get the tar file
     if [ ! -f $libunwindtgz ] ; then
       echo "downloading $libunwindtgz..."
@@ -5439,30 +5521,41 @@ if [ "x$download_unwind" = xyes ] ; then
       tar -xzf $libunwindtgz
       echo "removing $libunwindtgz..."
       rm $libunwindtgz
+      if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+      then
+        unwind_c_compiler=gcc
+        unwind_cxx_compiler=g++
+      else
+        unwind_c_compiler=${c_compiler}
+        unwind_cxx_compiler=${cxx_compiler}
+      fi
+
       if [ $machine != mic_linux ]; then 
         configresult=0
         makeresult=0
         libunwind_log=configure.log
         cd $libunwind
         echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
-        if [ "x$machine" == "xbgq" ] ; then
-          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} --disable-shared >& ${libunwind_log}
+        if [ "x$machine" = "xbgq" ] ; then
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared &> ${libunwind_log}
           cp src/unwind/Resume.c tmp.c
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
+        elif [ "$machine" = "craycnl" ] ; then
+          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared &> ${libunwind_log}
         else
-          ./configure --prefix=${unwind_dir} CC=${c_compiler} CXX=${cxx_compiler} >& ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} &> ${libunwind_log}
         fi
         configresult=$?
         if [ $configresult -eq 0 ] ; then
           libunwind_log=build.log
           echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
-          make -i >& $libunwind_log
+          make -i &> $libunwind_log
           makeresult=$?
           if [ $makeresult -eq 0 ] ; then
           libunwind_log=install.log
           echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
-            make -i install >& $libunwind_log
+            make -i install &> $libunwind_log
           makeresult=$?
           fi
         fi
@@ -5481,7 +5574,7 @@ if [ "x$download_unwind" = xyes ] ; then
   fi
   if [ $unwind_dir != "/usr" ]; then
     unwind_inc="$unwind_dir/include"
-    if [ "x$machine" == "xbgq" ] ; then
+    if [ "x$machine" = "xbgq" ] ; then
       unwind_lib="$unwind_dir/lib64"
     else
       unwind_lib="$unwind_dir/lib"
@@ -5499,6 +5592,15 @@ libomp_osstgz=$libomp_oss.tar.gz
 libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
+
+if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
+  if [ -r $ompt_dir/$libomp_osstgz ]; then 
+    echo "NOTE: Copying $ompt_dir/$libomp_osstgz"
+    cp $ompt_dir/$libomp_osstgz .
+    download_ompt=yes
+  fi
+fi
+
 if [ "x$download_ompt" = xyes ] ; then
   prebfddir=`pwd`
 
@@ -5512,10 +5614,12 @@ if [ "x$download_ompt" = xyes ] ; then
   else
     # get the tar file
     echo "downloading $libomp_osstgz..."
-    if [ "$machine" = "apple" ] ; then
-      curl -L $libomp_ossurl > $libomp_osstgz
-    else 
-      wget $libomp_ossurl
+    if [ ! -f $libomp_osstgz ]; then 
+      if [ "$machine" = "apple" ] ; then
+        curl -L $libomp_ossurl > $libomp_osstgz
+      else 
+        wget $libomp_ossurl
+      fi
     fi
 
     # check the tar file
@@ -5650,6 +5754,15 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
 	mpicompiler=$c_compiler
 	msuf=c
     fi
+
+    # The Intel compiler doesn't give an error, but a warning
+    # if [ "$machine" = "craycnl" -a "$intel" == "yes" ]
+    if [ "$intel" == "yes" ]
+    then
+	mpicompiler=$c_compiler
+        mpiwarnings="-Werror"
+	msuf=c
+    fi
     cat <<EOF > mpi_thread_test.$msuf
   #include <mpi.h>
 
@@ -5691,7 +5804,7 @@ cat <<EOF > mpi2iorequest.$msuf
   }
 EOF
 
-cat <<EOF > mpi3const.$msuf
+cat <<EOF > mpi3const.c
 #include <mpi.h>
 
 #ifndef TAU_MPICH3_CONST
@@ -5883,7 +5996,7 @@ then
 fi
 
 $echo "Checking for thread-safe MPI interface... ${nnl}"
-if $mpicompiler $orig_useropt $mpi_include -c mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPI_THREADED"
 else
@@ -5891,11 +6004,11 @@ else
 fi
 
 $echo "Checking for MPI 3 const interface... ${nnl}"
-if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  1> /dev/null 2>&1 ; then
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/null 2>&1 ; then
     echo "no"
 # MPI works. 
 else
-  if $c_compiler $orig_useropt $mpi_include -c mpi3const.$msuf  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
     echo "yes"
 # MPI requires the const keyword 
     fixmakeargs="$fixmakeargs MPICH3_CONST"
@@ -5904,14 +6017,13 @@ else
   fi
 fi
 
-
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
     fixmakeargs="$fixmakeargs LAMPI"
 fi
 
 $echo "Checking for MPI-2 interface... ${nnl}"
-if $mpicompiler $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] ; then
 	# Do not enable this for SGI Altix. Their MPI2 is not complete
@@ -5944,7 +6056,7 @@ fi
 if [ $mpi2 = yes ] ; then 
 
     $echo "Checking for MPI-2 Grequest interface... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIGREQUEST"
     else
@@ -5953,7 +6065,7 @@ if [ $mpi2 = yes ] ; then
     
     $echo "Checking for MPI-2 MPIO_Request interface... ${nnl}"
     if [ -f $mpilib/liblam.a -o -f $mpilib/liblammpi++.a ] ; then
-	if $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1 ; then
+	if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1 ; then
 	    echo "yes"
 	    fixmakeargs="$fixmakeargs MPIOREQUEST"
 	    mpiio=yes
@@ -5965,7 +6077,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking for MPI_Datarep_conversion_function interface... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2datarep.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2datarep.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIDATAREP"
     else
@@ -5973,7 +6085,7 @@ if [ $mpi2 = yes ] ; then
     fi
     
     $echo "Checking for Comm_create_errhandler interface... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2errhandler.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2errhandler.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIERRHANDLER"
     else
@@ -5981,7 +6093,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking if MPI_Info_set takes const char * instead of char * args... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2hpconst.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2hpconst.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPICONSTCHAR"
     else
@@ -5989,30 +6101,30 @@ if [ $mpi2 = yes ] ; then
     fi
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2attr.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2attr.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI*attr_functions are defined..."
     fixmakeargs="$fixmakeargs MPIATTR"
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2file.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_File functions are defined..."
     fixmakeargs="$fixmakeargs MPIFILE"
 else
     echo "MPI-2 MPI_File functions are NOT defined..."
-    #echo $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf
+    #echo $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2file.$msuf
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2typeex.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2typeex.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
     fixmakeargs="$fixmakeargs MPITYPEEX"
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2add.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2add.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_Add_error* functions are defined..."
     fixmakeargs="$fixmakeargs MPIADDERROR"
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpistatus.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpistatus.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI_Status f2c/c2f found..."
 else
     echo "MPI_Status c2f/f2c functions are needed"
@@ -6613,6 +6725,55 @@ fi
 /bin/rm -f tau_weak_test.o tau_weak_test.c
 ##########################################################################
 
+######################################################################
+# Install asmdex if we are building for Android
+######################################################################
+asmdextarball=asmdex-r1707.tar.bz2
+asmdexurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$asmdextarball
+
+if [ "x$machine" = "xarm_android" ]; then
+    if [ -r "$targetdir/$architecture/lib/asmdex.jar" ]; then
+	echo "Found: $targetdir/$architecture/lib/asmdex.jar"
+	echo "asmdex.jar already found, skipping"
+    else
+	echo "asmdex.jar doesn't found, trying to build one..."
+	tmpdir="`pwd`/.tmp_asmdex_$$"
+	mkdir -p "$tmpdir"
+	cd "$tmpdir"
+	if [ "x$asmdex" = "xdownload" ]; then
+	    wget $asmdexurl
+	    if [ ! -f $asmdextarball ]; then
+		echo "$asmdextarball did not download. Please download it manually from:"
+		echo "$asmdexurl"
+		echo "Please enter the directory containing asmdex: ${nnl}"
+		read RESPONSE
+		cp -r $RESPONSE .
+		cd `basename $RESPONSE`
+	    else
+		tar jxf $asmdextarball
+		patch -p0 < $START_DIR/tools/src/android/dexInjector/asmdex-r1707.patch
+		cd asmdex
+	    fi
+	else
+	    if [ ! -d "$asmdex" ]; then
+		echo "$asmdex is not a valid directory."
+		echo "Please enter the directory containing asmdex: ${nnl}"
+		read RESPONSE
+		cp -r $RESPONSE .
+		cd `basename $RESPONSE`
+	    else
+		cp -r $asmdex .
+		cd `basename $asmdex`
+	    fi
+	fi
+
+	ant -f build-main.xml jar
+	mkdir -p $targetdir/$architecture/lib
+	cp asmdex.jar $targetdir/$architecture/lib
+	cd ../..
+	rm -rf "$tmpdir"
+    fi
+fi
 
 ######################################################################
 # Install BFD if requested
@@ -6645,10 +6806,17 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     else
       if [ ! "x$bfdtar" = xyes ]; then
         #only download if we're set to download, otherwise we'll just build in the directory with the tarfile
+        tempdir="`pwd`/.tmp_bfdbuild_$$"
         if [ -d /dev/shm -a -w /dev/shm ] ; then
-          tempdir="/dev/shm/tau_bfdbuild_$$"
-        else
-          tempdir="`pwd`/.tmp_bfdbuild_$$"
+          # some linux distributions set noexec flag when mount tmpfs on /dev/shm
+          # make sure we can exec under /dev/shm
+          execheck="/dev/shm/tau_$$"
+          touch $execheck
+          chmod +x $execheck
+          if [ -x $execheck ]; then
+            tempdir="/dev/shm/tau_bfdbuild_$$"
+          fi
+          rm -f $execheck
         fi
         mkdir -p "$tempdir"
         cd "$tempdir"
@@ -6666,6 +6834,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         fi
       else # bfdtar = yes
         cd "$bfddir"
+        tempdir="$bfddir"
+        # TAU uses -prefix=bfddir while configuring BFD. So, it must be set to TAU's dir
+        bfddir=$targetdir/$architecture/$binutils
       fi
 
       # Extract binutils archive
@@ -6702,7 +6873,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       arm_android)
         patch -p1 <$START_DIR/android.binutils-2.23.2.patch && \
         ./configure \
-            CFLAGS=-fPIC CXXFLAGS=-fPIC 
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=$host \
             --prefix=$bfddir \
             --disable-nls --disable-werror  --disable-largefile 
@@ -6804,6 +6975,7 @@ cat <<EOF > conftest_bfd.c
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   if (!BfdImage) {}
    return;
 }
 EOF
@@ -6830,10 +7002,14 @@ fi
 # Check what is needed for linking with BFD
 ######################################################################
 cat <<EOF > conftest_bfd.c
+#ifdef MPC_MODULE_MPC_Config
+#include <mpc.h>
+#endif 
 #include <bfd.h>
 int main(int argc, char **argv) {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   if (!BfdImage) {}
    return 0;
 }
 EOF
@@ -6939,6 +7115,7 @@ char *** environ(void) { return (*_NSGetEnviron()); }
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
+   if (!BfdImage) {}
 
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
       cplus_demangle(NULL, DMGL_PARAMS | DMGL_ANSI 
@@ -7423,12 +7600,13 @@ else
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
-    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc ] ; then
+    if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc ] ; then
 	unwind_extras="-Wl\,-rpath=$unwind_lib"
     fi
     if [ "x$unwinder" = "xlibunwind" ] ; then
 	if [ $machine = apple ] ; then
 	    unwind_lib_flag="-framework#System"
+	    unwind_extras=""
 	fi
 	fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
     else
@@ -8483,15 +8661,6 @@ sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
 
 
-if [ $tauprefix != unknown ] ; then 
-    echo "TAU: Copying include directory to ${tauprefix}"
-    cp -r include ${tauprefix}
-    echo "TAU: Copying man directory to ${tauprefix}"
-    cp -r man ${tauprefix}
-fi
-
-
-
 #############################################################################
 
 echo " "
@@ -8610,6 +8779,12 @@ if [ $default = false ] ; then
     cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
 fi
 
+if [ $tauprefix != unknown ] ; then
+    echo "TAU: Copying include directory to ${tauprefix}"
+    cp -r include ${tauprefix}
+    echo "TAU: Copying man directory to ${tauprefix}"
+    cp -r man ${tauprefix}
+fi
 
 if [ $default = false ] ; then
     rm -f .active_stub

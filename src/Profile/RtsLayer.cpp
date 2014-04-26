@@ -66,6 +66,7 @@ using namespace std;
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
+#include <sys/syscall.h>
 
 #ifdef KTAU_NG
 #ifdef __linux //To make getLinuxKernelTid work for ktau style file naming
@@ -145,6 +146,14 @@ int& RtsLayer::TheNode(void) {
   return Node;
 }
 
+#ifdef JAVA
+/////////////////////////////////////////////////////////////////////////
+bool& RtsLayer::TheUsingJNI(void) {
+  static bool isUsingJNI = false;
+  return isUsingJNI;
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////////
 int& RtsLayer::TheContext(void) {
   static int Context = 0;
@@ -174,7 +183,7 @@ TauGroup_t RtsLayer::getProfileGroup(char const * ProfileGroup) {
   TauGroup_t gr;
   if (it == TheProfileMap().end()) {
 #ifdef DEBUG_PROF
-    cout <<ProfileGroup << " not found, adding ... "<<endl;
+    cerr <<ProfileGroup << " not found, adding ... "<<endl;
 #endif /* DEBUG_PROF */
     gr = generateProfileGroup();
     TheProfileMap()[string(ProfileGroup)] = gr; // Add
@@ -350,9 +359,9 @@ double TauWindowsUsecD(void) {
     PerfClockCheckedBefore = true;
     if (PerformanceClock) {
 #ifdef DEBUG_PROF
-      cout << "Frequency high part is: " << Frequency.HighPart << endl;
-      cout << "Frequency low part is: " << Frequency.LowPart << endl;
-      cout << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
+      cerr << "Frequency high part is: " << Frequency.HighPart << endl;
+      cerr << "Frequency low part is: " << Frequency.LowPart << endl;
+      cerr << "Frequency quad part is: " << (double) Frequency.QuadPart << endl;			
 #endif /* DEBUG_PROF */
       //Shall be using Frequency.QuadPart and assuming a double as the main TAU
       //system does.
@@ -425,7 +434,9 @@ extern "C" int Tau_RtsLayer_getTid()
 int RtsLayer::getTid() {
 #ifdef __linux
   //  return gettid();
-  return 0;
+    #define SYS_gettid __NR_gettid
+    return syscall(SYS_gettid);
+//  return 0;
 #else
   return 0;
 #endif
@@ -440,7 +451,6 @@ int RtsLayer::getLinuxKernelTid(){
 #endif /* KTAU_NG */
 
 const char *RtsLayer::getCounterName(int i) {
-  const char *foo = TauMetrics_getMetricName(i);
   return TauMetrics_getMetricName(i);
 }
 

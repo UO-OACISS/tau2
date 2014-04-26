@@ -26,9 +26,8 @@
 // define some MPI things with dummy values, it makes it easier later.
 #define MPI_Op int
 #define MPI_MIN 0 
-#define MPI_MAX 0
-#define MPI_SUM 0
-#define MPI_SUM 0
+#define MPI_MAX 1
+#define MPI_SUM 2
 #endif /* TAU_MPI */
 #include <TAU.h>
 #include <stdio.h>
@@ -51,9 +50,6 @@
 
 using namespace std;
 using namespace tau;
-
-#define DEBUG_NUM_CALLS
-#define DEBUG_FUNCTION_MAP
 
 const int collate_num_op_items[NUM_COLLATE_OP_TYPES] =
   { NUM_COLLATE_STEPS, NUM_STAT_TYPES };
@@ -93,7 +89,6 @@ void TAU_MPI_DEBUG0(const char *format, ...) {
 MPI_Op collate_op[NUM_COLLATE_STEPS] = { MPI_MIN, MPI_MAX, MPI_SUM, MPI_SUM };
 
 static double calculateMean(int count, double sum) {
-  double ret = 0.0;
   if (count <= 0) return 0.0;
   assert(count >= 0);
   assert(sum >= 0.0);
@@ -158,8 +153,7 @@ static void assignDerivedStats(double ***eventType, double ***gEventType,
  *               values for reduction purposes. This means -1 for 
  *               step_min and 0 for everything else.
  ********************************************************************/
-static double getStepValue(collate_step step, double prevValue, 
-			   double nextValue) {
+static double getStepValue(collate_step step, double prevValue, double nextValue) {
   double ret = prevValue;
   switch (step) {
   case step_sum: {
@@ -196,6 +190,8 @@ static double getStepValue(collate_step step, double prevValue,
  * getStepValue returns the incremental thread-combined value, similar 
  * to how MPI_Reduce will combine values across ranks, we need to do this for threads.
  ********************************************************************/
+/*
+ // INTEGER CASE NEVER USED?
 static int getStepValue(collate_step step, int prevValue, int nextValue) {
   int ret = prevValue;
   switch (step) {
@@ -228,6 +224,7 @@ static int getStepValue(collate_step step, int prevValue, int nextValue) {
   }
   return ret;
 }
+*/ 
 
 /*********************************************************************
  * An MPI_Reduce operator similar to MPI_MIN, but it allows for -1 values
@@ -236,10 +233,6 @@ static int getStepValue(collate_step step, int prevValue, int nextValue) {
 #ifdef TAU_MPI
 static void stat_min (void *i, void *o, int *len,  MPI_Datatype *type) {
   if (*type == MPI_INT) {
-#else  /* TAU_MPI */
-static void stat_min (void *i, void *o, int *len,  int *type) {
-  if (*type == -1) {
-#endif /* TAU_MPI */
     int *in = (int *) i;
     int *inout = (int *) o;
     for (int i=0; i<*len; i++) {
@@ -265,6 +258,7 @@ static void stat_min (void *i, void *o, int *len,  int *type) {
     }
   }
 }
+#endif /* TAU_MPI */
 
 void Tau_collate_allocateFunctionBuffers(double ****excl, double ****incl,
 					 double ***numCalls, double ***numSubr,
@@ -414,19 +408,15 @@ int Tau_collate_get_local_threads(int id, bool isAtomic){
 					numThreadsLocal += 1;
 				}
 			}
-    }
-    else{/*It is a function*/
+    } else {/*It is a function*/
         FunctionInfo *fi = TheFunctionDB()[id];
 		for (int t=0; t<numThreads; t++)
+		{
+			if (fi->GetCalls(t) > 0)
 			{
-				if (fi->GetCalls(t) > 0)
-				{
-					numThreadsLocal += 1;
-				}
+				numThreadsLocal += 1;
 			}
-			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
-			numThreadsLocal, fi->GetName());
-        
+		}
     }
     return numThreadsLocal;
 }
@@ -468,7 +458,6 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 					numThreadsLocal[i] += 1;
 				}
 			}
-			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
 			numThreadsLocal[i], fi->GetName());
 		}*/
 		if(globalEventMap[i]!=-1){
@@ -476,8 +465,6 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 		}
 		else
 		{	
-			DEBUG_NUM_CALLS("TAU [%d]: Skipping %d, does not occur in this rank.\n",
-			RtsLayer::myNode(), i);
 			numThreadsLocal[i] = 0;
 		}
 	}
@@ -492,8 +479,6 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
   if (rank == 0) {
     for (int i=0; i<numEvents; i++) {
       (*numEventThreads)[i] = numThreadsGlobal[i];
-	DEBUG_NUM_CALLS("TAU: Looking up global number of calls for    %d thread total = %d.\n",
-					i, numThreadsGlobal[i]);
     }
     *globalNumThreads = numThreadsGlobal[numEvents];
   }
@@ -523,7 +508,7 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif /* TAU_MPI */
   
-  MPI_Op min_op;
+  MPI_Op min_op = MPI_MIN;
 #ifdef TAU_MPI
   PMPI_Op_create(stat_min, 1, &min_op);
 #endif /* TAU_MPI */
@@ -616,21 +601,11 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
   // Compute derived statistics on rank 0
   if (rank == 0) {
     for (int i=0; i<numItems; i++) { // for each event
-			int local_index = atomicUnifier->sortMap[globalEventMap[i]];
-			TauUserEvent *event = TheEventDB()[local_index];
-			assignDerivedStats(sAtomicMin, gAtomicMin, i,
-			 globalNumThreads, numEventThreads);
-			assignDerivedStats(sAtomicMax, gAtomicMax, i,
-			 globalNumThreads, numEventThreads);
-			assignDerivedStats(sAtomicCalls, gAtomicCalls, i,
-			 globalNumThreads, numEventThreads);
-			assignDerivedStats(sAtomicMean, gAtomicMean, i,
-			 globalNumThreads, numEventThreads);
-			assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, i,
-			 globalNumThreads, numEventThreads);
-		
-			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
-			numEventThreads[i], event->GetName().c_str());
+      assignDerivedStats(sAtomicMin, gAtomicMin, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicMax, gAtomicMax, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicCalls, gAtomicCalls, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicMean, gAtomicMean, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, i, globalNumThreads, numEventThreads);
     }    
   }
 #ifdef TAU_MPI
@@ -656,7 +631,7 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 #endif /* TAU_MPI */
 
   // *CWL* - Minimum needs to be handled with out-of-band values for now.
-  MPI_Op min_op;
+  MPI_Op min_op = MPI_MIN;
 #ifdef TAU_MPI
   PMPI_Op_create (stat_min, 1, &min_op);
 #endif /* TAU_MPI */
@@ -728,8 +703,6 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 							 (double)fi->GetCalls(tid));
 			numSubr[i] = getStepValue((collate_step)s, numSubr[i],
 							(double)fi->GetSubrs(tid));
-		DEBUG_NUM_CALLS("function: %s, [%d, %d, %d] (i,local_index,tid) called %ld times on rank %d.\n", 
-		fi->GetName(), i, local_index, tid, fi->GetCalls(tid), RtsLayer::myNode());
 	}
 	//release lock
 	RtsLayer::UnLockDB();
@@ -761,20 +734,14 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
   if (rank == 0) {
     // *CWL* TODO - abstract the operations to avoid this nasty coding
     //     of individual operations.
-		DEBUG_FUNCTION_MAP("On rank 0, %d items to loop through.\n", numItems);
     for (int i=0; i<numItems; i++) { // for each event
-			int local_index = functionUnifier->sortMap[globalEventMap[i]];
-			for (int m=0; m<Tau_Global_numCounters; m++) {
-	assignDerivedStats(sIncl, gIncl, m, i,
-				 globalNumThreads, numEventThreads);
-	assignDerivedStats(sExcl, gExcl, m, i,
-				 globalNumThreads, numEventThreads);
-			}
-			assignDerivedStats(sNumCalls, gNumCalls, i,
-			 globalNumThreads, numEventThreads);
-			assignDerivedStats(sNumSubr, gNumSubr, i,
-			 globalNumThreads, numEventThreads);
-		}    
+      for (int m=0; m<Tau_Global_numCounters; m++) {
+	    assignDerivedStats(sIncl, gIncl, m, i, globalNumThreads, numEventThreads);
+	    assignDerivedStats(sExcl, gExcl, m, i, globalNumThreads, numEventThreads);
+	  }
+	  assignDerivedStats(sNumCalls, gNumCalls, i, globalNumThreads, numEventThreads);
+	  assignDerivedStats(sNumSubr, gNumSubr, i, globalNumThreads, numEventThreads);
+	}    
   }
 #ifdef TAU_MPI
   PMPI_Op_free(&min_op);
@@ -817,8 +784,8 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
   bzero(histogram, histogramBufSize);
 #endif /* TAU_WINDOWS */
 
-  int rank = 0;
 #ifdef TAU_MPI
+  int rank = 0;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif /* TAU_MPI */
   
@@ -826,7 +793,6 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
     int local_index = functionUnifier->sortMap[globalEventMap[e]];
     FunctionInfo *fi = TheFunctionDB()[local_index];
     
-    double min, max;
     //    int numThreads = RtsLayer::getNumThreads();
     int numThreads = RtsLayer::getTotalThreads();
     for (int tid = 0; tid<numThreads; tid++) { // for each thread

@@ -383,7 +383,7 @@ void tau_profile_timer_(void **ptr, char const * fname, int flen)
 
         /* See if a > appears in the function name. If it does, it separates the
          group name from the function name. Separate these two */
-        TauGroup_t gr;
+        TauGroup_t gr = TAU_USER;
         char const * gr_name = NULL;
         char *first, *second;
 
@@ -396,7 +396,6 @@ void tau_profile_timer_(void **ptr, char const * fname, int flen)
             localname = second;
           } else {
             localname = first;
-            gr = TAU_USER;
             gr_name = "TAU_DEFAULT";
           }
         }
@@ -436,7 +435,7 @@ void tau_profile_timer_dynamic_(void **ptr, char const * infname, int slen)
 void tau_profile_start_(void **profiler)
 { 
 #ifdef DEBUG_PROF
-  printf("start_timer gets %lx\n", *profiler);
+  TAU_VERBOSE("start_timer gets %lx\n", *profiler);
 #endif /* DEBUG_PROF */
 
   Tau_lite_start_timer(*profiler, 0);

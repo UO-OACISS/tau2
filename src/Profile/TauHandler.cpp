@@ -224,6 +224,8 @@ void TauTrackPower(void) {
 void TauTrackMemoryHere(void) {
   /* Enable tracking memory by default */
   static int flag = TauEnableTrackingMemory();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemory()) {
@@ -237,6 +239,8 @@ void TauTrackMemoryHere(void) {
 void TauTrackMemoryHeadroomHere(void) {
   /* Enable tracking memory by default */
   static int flag = TauEnableTrackingMemoryHeadroom();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemoryHeadroom()) {
@@ -250,6 +254,8 @@ void TauTrackMemoryHeadroomHere(void) {
 void TauTrackPowerHere(void) {
   /* Enable tracking power by default */
   static int flag = TauEnableTrackingPower();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemory()) {

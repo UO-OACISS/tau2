@@ -35,6 +35,8 @@ extern "C" int Tau_compensate_initialization() {
   //  Tau_create_top_level_timer_if_necessary();
   double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
   double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+  // use the values so we don't get a compiler warning
+  if (tover[0] == tnull[0]) {} ;
   compensateInitialized = 1;
   return 0;
 }
@@ -125,8 +127,8 @@ int TauCalibrateNullTimer(void) {
     TheTauFullTimerOverhead()[i] = (oneincltime[i] - TheTauNullTimerOverhead()[i]) / n; 
   }
 #ifdef DEBUG_PROF
-  cout <<"Calibrate: Tnull time "<< TheTauNullTimerOverhead() <<endl;
-  cout <<"Calibrate: Toverhead time = "<<TheTauFullTimerOverhead() <<endl;
+  cerr <<"Calibrate: Tnull time "<< TheTauNullTimerOverhead() <<endl;
+  cerr <<"Calibrate: Toverhead time = "<<TheTauFullTimerOverhead() <<endl;
 #endif /* DEBUG_PROF */
   return 0;
 }

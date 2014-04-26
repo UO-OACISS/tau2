@@ -49,7 +49,7 @@ static int TauBufferSize = 0;
 static TAU_EV *TraceBuffer[TAU_MAX_THREADS]; 
 
 /* Trace buffer pointer for each threads */
-static int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
+static unsigned int TauCurrentEvent[TAU_MAX_THREADS] = {0}; 
 
 /* Trace file descriptors */
 static int TauTraceFd[TAU_MAX_THREADS] = {0};
@@ -159,7 +159,7 @@ static int checkTraceFileInitialized(int tid) {
 
     if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
-      for (int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
+      for (unsigned int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
         int mynodeid = RtsLayer::myNode();
 	if ((mynodeid > 0) && (TraceBuffer[tid][iter].nid == 0)) {
           TraceBuffer[tid][iter].nid = RtsLayer::myNode();
@@ -204,8 +204,8 @@ void TauTraceFlushBuffer(int tid)
     ret = write(TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
-      printf("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
-      perror("Write Error in TauTraceFlush()");
+      TAU_VERBOSE("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
+      TAU_VERBOSE("Write Error in TauTraceFlush()");
 #endif
     }
   }
@@ -256,7 +256,7 @@ int TauTraceInit(int tid)
        first record has node id set properly */
     if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
-      for (int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
+      for (unsigned int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
         TraceBuffer[tid][iter].nid = RtsLayer::myNode();
       }
     } else {
@@ -585,7 +585,8 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   }
   
   /* Should we get rid of intermediate trace files? */
-  if ((keepfiles = getenv("TAU_KEEP_TRACEFILES")) == NULL) {
+  keepfiles = getenv("TAU_KEEP_TRACEFILES");
+  if (keepfiles == NULL) {
     strcpy(rmcmd, "/bin/rm -f app12345678.trc tautrace.*.trc tau.edf events.*.edf");
   } else { 
     strcpy(rmcmd," "); /* NOOP */
@@ -598,7 +599,7 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   /* create the command */
   sprintf(cmd, "%s /bin/rm -f app12345678.trc; %s/%s/bin/tau_merge tautrace.*.trc app12345678.trc; %s app12345678.trc tau.edf %s; %s", cdcmd,tauroot, tauarch, converter, outfile, rmcmd);
 #ifdef DEBUG_PROF
-  printf("The merge/convert cmd is: %s\n", cmd);
+  TAU_VERBOSE("The merge/convert cmd is: %s\n", cmd);
 #endif /* DEBUG_PROF */
   
   /* and execute it */

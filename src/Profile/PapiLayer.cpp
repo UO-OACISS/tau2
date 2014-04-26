@@ -243,6 +243,7 @@ int PapiLayer::addCounter(char *name)
 
   int rc = PAPI_event_name_to_code(name, &code);
 #if (PAPI_VERSION_MAJOR(PAPI_VERSION) == 3 && PAPI_VERSION_MINOR(PAPI_VERSION) == 9)
+#else
   // There is currently a bug in PAPI-C 3.9 that causes the return code to not
   // be PAPI_OK, even if it has succeeded, for now, we will just not check.
   if (rc != PAPI_OK) {
@@ -629,6 +630,8 @@ int PapiLayer::initializePapiLayer(bool lock)
 long long PapiLayer::getWallClockTime(void) { 
   // Returns the wall clock time from PAPI interface
   static int initflag = initializePapiLayer();
+  // check the flag to avoid compiler warnings
+  if (initflag != 0) { TAU_VERBOSE("Error when initilizing PAPI layer\n"); }
   static long long oldvalue = 0L;
   static long long offset = 0;
   long long newvalue = 0L;
@@ -649,6 +652,7 @@ long long PapiLayer::getWallClockTime(void) {
 long long PapiLayer::getVirtualTime(void) { 
   // Returns the virtual (user) time from PAPI interface
   static int initflag = initializePapiLayer();
+  if (initflag != 0) { TAU_VERBOSE("Error when initilizing PAPI layer\n"); }
   return PAPI_get_virt_usec();
 }
 
