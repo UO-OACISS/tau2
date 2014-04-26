@@ -18,7 +18,7 @@ using namespace std;
 
 
 #ifdef __APPLE__
-const char * tau_orig_libname = "libOpenCL.dylib";
+const char * tau_orig_libname = "/System/Library/Frameworks/OpenCL.framework/OpenCL";
 #else
 const char * tau_orig_libname = "libOpenCL.so";
 #endif /* __APPLE__ */
