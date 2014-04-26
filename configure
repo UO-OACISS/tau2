@@ -4683,6 +4683,15 @@ then
 		shmemlibrary=-lopenshmem
 	    fi
 	fi
+	if [ -r $openshmem_lib_dir/liboshmem.so -o -r $openshmem_lib_dir/liboshmem.a ] 
+	then
+	    shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
+	    then
+		shmemlibrary=-loshmem
+	    fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	    fi
+	fi
     fi
     
     if [ "x$shmemlib" != "x" ]
