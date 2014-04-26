@@ -112,6 +112,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #SGI_MPT_SHMEM#SHMEM_INSTALL   =  #ENDIF#
 #SGI_MPT_SHMEM#SHMEM_WRAPPER   =  #ENDIF#
 #SHMEM#TAU_SHMEM_OBJS   = $(SHMEM_OBJS) #ENDIF#
+#OPENMPI_SHMEM#TAU_SHMEM_OBJS   = $(SHMEM_OBJS) #ENDIF#
 ##############################################
 
 #############################################
@@ -637,6 +638,9 @@ TauShmemSgiC.o  : TauShmemSgiC.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
+	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
+
+TauOpenShmemOpenMPIC.o: TauOpenShmemOpenMPIC.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
