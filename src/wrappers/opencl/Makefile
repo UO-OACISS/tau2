@@ -13,7 +13,7 @@ $(TAU_OPENCL_SHARED): cl_wrap.o
 	$(TAU_CXX) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl
 
 cl_wrap.o: cl_wrap.cpp $(TAU_INC_DIR)/Profile/TauGpuAdapterOpenCL.h
-	$(TAU_CXX) -g $(CFLAGS) -I$(TAU_OPENCL_INC) -c $< -o $@
+	$(TAU_CXX) -g $(CFLAGS) $(TAU_OPENCL_INCLUDE) -c $< -o $@
 clean:
 	/bin/rm -f cl_wrap.o $(TAU_OPENCL_SHARED) 
 

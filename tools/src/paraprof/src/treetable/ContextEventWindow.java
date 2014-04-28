@@ -178,6 +178,8 @@ public class ContextEventWindow extends JFrame implements Observer,
         //final JComponent localThis = this;
        final JTree tree = 
         	treeTable.getTree();
+       FontMetrics fm = tree.getFontMetrics(ParaProf.preferences.getFont());
+		tree.setRowHeight(fm.getHeight());
 
         // Add a mouse listener for this tree.
         MouseListener ml = new MouseAdapter() {

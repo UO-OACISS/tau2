@@ -442,6 +442,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         treeTable = new JTreeTable(model, true, true);
 
         final JTree tree = treeTable.getTree();
+        FontMetrics fm = tree.getFontMetrics(ParaProf.preferences.getFont());
+		tree.setRowHeight(fm.getHeight());
 
         // Add a mouse listener for this tree.
         MouseListener ml = new MouseAdapter() {

@@ -245,7 +245,7 @@ char * show_backtrace (int tid, int offset) {
 			if (basedepth == -1) {
 				if (strncmp(node->info.funcname,"Tau_", 4) == 0) {  // in TAU
 			    	continue; // keep unwinding
-				} else if (strncmp(node->info.funcname,"addr=<0x", 8) == 0) { // in OpenMP runtime
+				} else if (strncmp(node->info.funcname,"addr=<", 6) == 0) { // in OpenMP runtime
 			    	continue; // keep unwinding
 				}
 #if defined (TAU_OPEN64ORC)
@@ -259,7 +259,7 @@ char * show_backtrace (int tid, int offset) {
 			    	continue; // keep unwinding
 				}
 #elif defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
-				else if (strncmp(node->info.funcname,"my_", 12) == 0) { // in OMPT wraper (see below)
+				else if (strncmp(node->info.funcname,"my_", 3) == 0) { // in OMPT wraper (see below)
 			    	continue; // keep unwinding
 				}
 #else /* assume we are using gcc */
@@ -292,7 +292,9 @@ extern "C" void Tau_get_current_region_context(int tid) {
     if (TauEnv_get_openmp_runtime_context() == 2) { // region
       tmpStr = show_backtrace(tid, 0); // find our source location
       if (tmpStr == NULL) {
-          tmpStr = (char*)__UNKNOWN__;
+          // fall back to the top level timer
+          tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
+          //tmpStr = (char*)__UNKNOWN__;
       }
     } else { // timer or none
       tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
@@ -300,8 +302,9 @@ extern "C" void Tau_get_current_region_context(int tid) {
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
 #endif
-    if (tmpStr == NULL)
+    if (tmpStr == NULL) {
         tmpStr = (char*)__UNKNOWN__;
+    }
     if (Tau_collector_flags[tid].timerContext != NULL) {
 	    if (strstr(tmpStr, "OpenMP_PARALLEL_REGION: ") != NULL && strlen(tmpStr) > 23) {
 		    tmpStr = tmpStr+23;
@@ -912,7 +915,7 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
 
 #define TAU_OMPT_COMMON_EXIT \
     Tau_global_decr_insideTAU(); \
-    /* TAU_VERBOSE ("%d : %s inside (exit): %d\n\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); */\
+    /*TAU_VERBOSE ("%d : %s inside (exit): %d\n\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \*/
 
 /*
  * Mandatory Events

@@ -53,7 +53,9 @@ map<GpuEvent*, int, bool(*)(GpuEvent*,GpuEvent*)>& TheGpuEventMap(void)
 //on the GPU thread.
 int counted_memcpys = 0;
 
+#ifndef __APPLE__
 #include <linux/unistd.h>
+#endif /* __APPLE__ */
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" void Tau_set_thread_fake(int tid);

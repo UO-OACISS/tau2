@@ -1,3 +1,11 @@
+On Apple Mac OS X, to use OpenCL, please configure TAU with:
+./configure -opencl=/System/Library/Frameworks/OpenCL.framework
+make install
+tau_exec -T serial -opencl ./a.out
+pprof
+
+On other systems, 
+./configure 
 Configure TAU with:
 
 ./configure -cuda=<path to cuda toolkit> 
