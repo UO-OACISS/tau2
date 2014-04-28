@@ -2039,7 +2039,13 @@ for arg in "$@"; do
 	    openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
 	    if [ ! -d $openclinclude ] ; then
 		echo "Error: Cannot access GPU include directory $openclinclude"
-		exit 1
+		if [ `uname -s ` = "Darwin" ];  then
+		  echo "Adding -useropt=-framework openCL"
+		  useropt="-framework#openCL"
+		  fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU "
+		else
+		  exit 1
+		fi
 	    fi
 	    if [ -f "$openclinclude/CL/cl.h" ] ; then
 		#			useropt="$useropt#-DTAU_MAX_THREADS=32"
@@ -4739,6 +4745,15 @@ then
 		shmemlibrary=-lopenshmem
 	    fi
 	fi
+	if [ -r $openshmem_lib_dir/liboshmem.so -o -r $openshmem_lib_dir/liboshmem.a ] 
+	then
+	    shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
+	    then
+		shmemlibrary=-loshmem
+	    fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	    fi
+	fi
     fi
     
     if [ "x$shmemlib" != "x" ]
@@ -5981,7 +5996,7 @@ then
 fi
 
 $echo "Checking for thread-safe MPI interface... ${nnl}"
-if $mpicompiler $orig_useropt $mpi_include -c mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_thread_test.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     fixmakeargs="$fixmakeargs MPI_THREADED"
 else
@@ -6008,7 +6023,7 @@ if [ -d "$mpiinc/ulm" ] ; then
 fi
 
 $echo "Checking for MPI-2 interface... ${nnl}"
-if $mpicompiler $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/null 2>&1 ; then
     echo "yes"
     if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] ; then
 	# Do not enable this for SGI Altix. Their MPI2 is not complete
@@ -6041,7 +6056,7 @@ fi
 if [ $mpi2 = yes ] ; then 
 
     $echo "Checking for MPI-2 Grequest interface... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIGREQUEST"
     else
@@ -6050,7 +6065,7 @@ if [ $mpi2 = yes ] ; then
     
     $echo "Checking for MPI-2 MPIO_Request interface... ${nnl}"
     if [ -f $mpilib/liblam.a -o -f $mpilib/liblammpi++.a ] ; then
-	if $mpicompiler $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1 ; then
+	if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2iorequest.$msuf  1> /dev/null 2>&1 ; then
 	    echo "yes"
 	    fixmakeargs="$fixmakeargs MPIOREQUEST"
 	    mpiio=yes
@@ -6062,7 +6077,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking for MPI_Datarep_conversion_function interface... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2datarep.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2datarep.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIDATAREP"
     else
@@ -6070,7 +6085,7 @@ if [ $mpi2 = yes ] ; then
     fi
     
     $echo "Checking for Comm_create_errhandler interface... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2errhandler.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2errhandler.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPIERRHANDLER"
     else
@@ -6078,7 +6093,7 @@ if [ $mpi2 = yes ] ; then
     fi
 
     $echo "Checking if MPI_Info_set takes const char * instead of char * args... ${nnl}"
-    if $mpicompiler $orig_useropt $mpi_include -c mpi2hpconst.$msuf  1> /dev/null 2>&1 ; then
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2hpconst.$msuf  1> /dev/null 2>&1 ; then
 	echo "yes"
 	fixmakeargs="$fixmakeargs MPICONSTCHAR"
     else
@@ -6086,30 +6101,30 @@ if [ $mpi2 = yes ] ; then
     fi
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2attr.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2attr.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI*attr_functions are defined..."
     fixmakeargs="$fixmakeargs MPIATTR"
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2file.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_File functions are defined..."
     fixmakeargs="$fixmakeargs MPIFILE"
 else
     echo "MPI-2 MPI_File functions are NOT defined..."
-    #echo $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf
+    #echo $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2file.$msuf
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2typeex.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2typeex.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_Type_dup and MPI_Exscan are defined..."
     fixmakeargs="$fixmakeargs MPITYPEEX"
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpi2add.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2add.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI_Add_error* functions are defined..."
     fixmakeargs="$fixmakeargs MPIADDERROR"
 fi
 
-if $mpicompiler $orig_useropt $mpi_include -c mpistatus.$msuf  1> /dev/null 2>&1 ; then
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpistatus.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI_Status f2c/c2f found..."
 else
     echo "MPI_Status c2f/f2c functions are needed"
