@@ -4,7 +4,7 @@
    Compatible with the 'profile' module.
 """
 
-__all__ = ["run", "runctx", "help", "Profile"]
+__all__ = ["run", "runctx", "exitAllThreads", "help", "Profile"]
 
 import ctau_impl
 
@@ -54,6 +54,9 @@ def runctx(statement, globals, locals, filename=None):
         else:
             result = prof.print_stats()
     return result
+
+def exitAllThreads():
+    Profile().exitAllThreads()
 
 # Backwards compatibility.
 def help():
