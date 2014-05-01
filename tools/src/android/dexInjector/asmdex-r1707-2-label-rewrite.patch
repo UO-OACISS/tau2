@@ -1,0 +1,19 @@
+Index: asmdex/src/org/ow2/asmdex/MethodWriter.java
+--- asmdex/src/org/ow2/asmdex/MethodWriter.java	2014-04-14 14:35:03.000000000 -0700
++++ asmdex/src/org/ow2/asmdex/MethodWriter.java	2014-05-01 15:50:16.190867938 -0700
+@@ -575,6 +575,7 @@
+ 		CodeItem codeItem = getCodeItem();
+ 		Instruction insn = InstructionEncoder.encodeTableSwitchInsn(register, switchLabel, codeItem.getSize());
+ 		addInstruction(insn);
++		dflt.addReferringInstruction(insn);
+ 		
+ 		// Adds the packed-switch pseudo instruction in a List to be parsed at the end of the
+ 		// method. We'll encode the table here.
+@@ -604,6 +605,7 @@
+ 		Label switchLabel = new Label();
+ 		Instruction insn = InstructionEncoder.encodeSparseSwitchInsn(register, switchLabel, codeItem.getSize());
+ 		addInstruction(insn);
++		dflt.addReferringInstruction(insn);
+ 		
+ 		// Adds the sparse-switch pseudo instruction in a List to be parsed at the end of the
+ 		// method. We'll encode the table here.
