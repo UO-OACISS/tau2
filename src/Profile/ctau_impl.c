@@ -800,6 +800,18 @@ static PyObject* profiler_disable(ProfilerObject *self, PyObject* noarg) {
   return Py_None;
 }
 
+PyDoc_STRVAR(exitAllThreads_doc, "\
+exitAllThreads()\n\
+\n\
+Write all information collected so far to file and disable instrumentation.\n\
+");
+
+static PyObject *profiler_exitAllThreads(ProfilerObject *pObj, PyObject* noarg) {
+  Tau_profile_exit_all_threads();
+  Py_INCREF(Py_None);
+  return Py_None;
+}
+
 PyDoc_STRVAR(clear_doc, "\
 clear()\n\
 \n\
@@ -857,6 +869,8 @@ static PyMethodDef profiler_methods[] = {
    METH_NOARGS,			disable_doc},
   {"clear",	(PyCFunction)profiler_clear,
    METH_NOARGS,			clear_doc},
+  {"exitAllThreads",	(PyCFunction)profiler_exitAllThreads,
+   METH_NOARGS,			exitAllThreads_doc},
   {NULL, NULL}
 };
 
