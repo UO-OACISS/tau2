@@ -1039,6 +1039,12 @@ int
 bxml_binary_dump(bxml_t *xml, char *filename)
 {
     int fd;
+    int pad;
+
+    /* make sure string pool is 4-bytes aligned */
+    pad = (4 - xml->stringPool->trunkSize & 0x03) & 0x03;
+    xml->stringPool->trunkSize += pad;
+    xml->size                  += pad;
 
     fd = open(filename, O_RDWR | O_CREAT | O_EXCL, 0644);
     if (fd < 0) {
@@ -1163,14 +1169,14 @@ bxml_enable_debug(bxml_t *xml)
 }
 
 int
-bxml_enable_internet(bxml_t *xml)
+bxml_enable_permission(bxml_t *xml, char *permission)
 {
     int i;
     attr_t *attr;
     node_t *node = NULL;
     node_t *perm;
 
-    /* do we already have INTERNET permissin set? */
+    /* do we already have the permissin set? */
     while (1) {
 	node = bxml_find_node(xml->node, "manifest.uses-permission", node);
 	if (node == NULL) {
@@ -1180,8 +1186,7 @@ bxml_enable_internet(bxml_t *xml)
 	for (i=0; i<node->attrCount; i++) {
 	    attr = &node->attrs[i];
 	    if ((strcmp(STR(attr->name), "name") == 0) &&
-		(strcmp(STR(attr->typedValue.data),
-			"android.permission.INTERNET") == 0)) {
+		(strcmp(STR(attr->typedValue.data), permission) == 0)) {
 		/* yes, we are good, just return */
 		return 0;
 	    }
@@ -1213,12 +1218,12 @@ bxml_enable_internet(bxml_t *xml)
 	bxml_add_cstring(xml, "http://schemas.android.com/apk/res/android");
     perm->attrs[0].name                = bxml_add_cstring(xml, "name");
     perm->attrs[0].rawValue            =
-	bxml_add_cstring(xml, "android.permission.INTERNET");
+	bxml_add_cstring(xml, permission);
     perm->attrs[0].typedValue.size     = 8;
     perm->attrs[0].typedValue.res0     = 0;
     perm->attrs[0].typedValue.dataType = TYPE_STRING;
     perm->attrs[0].typedValue.data     =
-	bxml_add_cstring(xml, "android.permission.INTERNET");
+	bxml_add_cstring(xml, permission);
 
     perm->end.headerSize = 16;
     perm->end.trunkSize  = 24;
@@ -1231,8 +1236,8 @@ bxml_enable_internet(bxml_t *xml)
 
     perm->child = NULL;
 
-    /* hook our new node after manifest.supports-screens */
-    node = bxml_find_node(xml->node, "manifest.supports-screens", NULL);
+    /* hook our new node after manifest.uses-sdk */
+    node = bxml_find_node(xml->node, "manifest.uses-sdk", NULL);
     perm->sibling = node->sibling;
     node->sibling = perm;
 
@@ -1247,7 +1252,8 @@ int
 bxml_inject(bxml_t *xml)
 {
     bxml_enable_debug(xml);
-    bxml_enable_internet(xml);
+    bxml_enable_permission(xml, "android.permission.INTERNET");
+    bxml_enable_permission(xml, "android.permission.WRITE_EXTERNAL_STORAGE");
 
     return 0;
 }
