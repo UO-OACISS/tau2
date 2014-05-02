@@ -417,26 +417,21 @@ void RtsLayer::getUSecD (int tid, double *values) {
 }
 
 
-int RtsLayer::getPid() {
-  #ifdef TAU_WINDOWS
-  return 0;
-  #else
-  return getpid();
-  #endif
-}
-
-// C interface.
-extern "C" int Tau_RtsLayer_getTid()
+int RtsLayer::getPid()
 {
-	return RtsLayer::getTid();
+#ifdef TAU_WINDOWS
+  return 0;
+#else
+  return getpid();
+#endif
 }
 
+//
+// Returns the **system** thread ID.  DO NOT use this to index arrays!
+//
 int RtsLayer::getTid() {
 #ifdef __linux
-  //  return gettid();
-    #define SYS_gettid __NR_gettid
-    return syscall(SYS_gettid);
-//  return 0;
+  return syscall(__NR_gettid);
 #else
   return 0;
 #endif

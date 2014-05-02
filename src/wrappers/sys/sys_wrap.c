@@ -48,8 +48,8 @@ pid_t __wrap_fork(void) {
   dprintf("TAU: calling _fork \n");
   
 	if (pid_ret == 0) {
-    TAU_REGISTER_FORK(getpid(), TAU_EXCLUDE_PARENT_DATA);
-    dprintf ("[%d] Registered Fork!\n", getpid());
+    TAU_REGISTER_FORK(RtsLayer::getPid(), TAU_EXCLUDE_PARENT_DATA);
+    dprintf ("[%d] Registered Fork!\n", RtsLayer::getPid());
   }
   return pid_ret;
 

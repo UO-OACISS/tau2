@@ -854,7 +854,7 @@ static char const * Tau_bfd_internal_getExecutablePath()
     RtsLayer::LockEnv();
     if (!init) {
 #if defined(TAU_AIX)
-      sprintf(path, "/proc/%d/object/a.out", getpid());
+      sprintf(path, "/proc/%d/object/a.out", RtsLayer::getPid());
 #elif defined(TAU_BGP)
       if (Tau_bfd_internal_getBGPExePath(path) != 0) {
         fprintf(stderr, "Tau_bfd_internal_getExecutablePath: "

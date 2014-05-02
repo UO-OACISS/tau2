@@ -95,8 +95,8 @@
 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 
-#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_tid())
-#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_tid())
+#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_thread())
+#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_thread())
 
 #define TAU_ENABLE_GROUP(group)			Tau_enable_group(group);
 #define TAU_DISABLE_GROUP(group)		Tau_disable_group(group);
@@ -119,7 +119,7 @@
 #define TAU_PROFILE_SET_CONTEXT(context)	Tau_set_context(context);
 #define TAU_PROFILE_GET_CONTEXT()               Tau_get_context();
 #define TAU_PROFILE_SET_THREAD(thread)          Tau_set_thread(thread);
-#define TAU_PROFILE_GET_THREAD()                Tau_get_tid();
+#define TAU_PROFILE_GET_THREAD()                Tau_get_thread();
 
 #define TAU_PROFILE_SET_GROUP_NAME(newname) Tau_profile_set_group_name(tauFI,newname);
 #define TAU_PROFILE_TIMER_SET_NAME(t, newname)  Tau_profile_set_name(t,newname);
@@ -207,7 +207,7 @@
   return ptr; \
 } 
 #define TAU_GLOBAL_TIMER_START(timer) { void *ptr = TauGlobal##timer(); \
-    Tau_start_timer(ptr, 0, Tau_get_tid()); }
+    Tau_start_timer(ptr, 0, Tau_get_thread()); }
 #define TAU_GLOBAL_TIMER_STOP()  Tau_global_stop();
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern void* TauGlobal##timer(void);
 
@@ -218,10 +218,10 @@
 } 
 
 #define TAU_GLOBAL_PHASE_START(timer) { void *ptr = TauGlobalPhase##timer(); \
-    Tau_start_timer(ptr, 1, Tau_get_tid()); } 
+    Tau_start_timer(ptr, 1, Tau_get_thread()); }
 
 #define TAU_GLOBAL_PHASE_STOP(timer)  { void *ptr = TauGlobalPhase##timer(); \
-	Tau_stop_timer(ptr, Tau_get_tid()); }
+	Tau_stop_timer(ptr, Tau_get_thread()); }
 
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer)  extern void * TauGlobalPhase##timer(void)
 
@@ -310,12 +310,12 @@
         Tau_trace_recvmsg_remote(type, source, length, remoteid);
 
 #define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
-#define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0, Tau_get_tid());
-#define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle, Tau_get_tid());
-#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_tid());
-#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, Tau_get_tid());
-#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_tid())
-#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, Tau_get_tid());
+#define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0, Tau_get_thread());
+#define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle, Tau_get_thread());
+#define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_thread());
+#define TAU_PROFILER_GET_EXCLUSIVE_VALUES(handle, data) Tau_get_exclusive_values(handle, (double *) data, Tau_get_thread());
+#define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_thread())
+#define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, Tau_get_thread());
 #define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
 
 #define TAU_CREATE_TASK(taskid) taskid = Tau_create_task()
@@ -395,7 +395,7 @@ void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 
 int TAUDECL Tau_get_local_tid(void);
-int TAUDECL Tau_get_tid(void);
+int TAUDECL Tau_get_thread(void);
 int TAUDECL Tau_get_node(void);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();

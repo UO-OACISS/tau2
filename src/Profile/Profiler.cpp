@@ -186,7 +186,6 @@ void Profiler::Start(int tid)
 #ifdef DEBUG_PROF
   TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
-//  TAU_VERBOSE("[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
   ParentProfiler = TauInternal_ParentProfiler(tid);
 
   /********************************************************************************/
@@ -331,7 +330,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifdef DEBUG_PROF
   TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
-//  TAU_VERBOSE("[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 
 /* It is possible that when the event stack gets deep, and has to be
  * reallocated, the pointers in the event stack get messed up. This
@@ -619,11 +617,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 
         // Write profile data
         TauProfiler_StoreData(tid);
-#ifndef TAU_WINDOWS
-        // getpid() not available on Windows
         TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfiler_StoreData\n", RtsLayer::myNode(),
-            RtsLayer::myThread(), getpid(), ThisFunction->GetName());
-#endif
+            RtsLayer::myThread(), RtsLayer::getPid(), ThisFunction->GetName());
 // Be careful here, we can not disable instrumentation in multithreaded
 // application because that will cause profilers on any other stack to never get
 // stopped.
@@ -1521,10 +1516,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           perror(errormsg);
           return 0;
 		}
-#ifndef TAU_WINDOWS
-        TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
-#endif
-
+        TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
       } else {
         int flags = O_CREAT | O_EXCL | O_WRONLY;
 #ifdef TAU_DISABLE_SIGUSR
@@ -1572,9 +1564,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
             perror(errormsg);
             return 0;
 		  }
-#ifndef TAU_WINDOWS
-          TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
-#endif
+          TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
         }
       }
       writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);

@@ -65,7 +65,7 @@ static void dmesg(int level, char* format, ...) {
     return;
   }
 
-  fprintf (stderr, "[%d] ", getpid());
+  fprintf (stderr, "[%d] ", RtsLayer::getPid());
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);

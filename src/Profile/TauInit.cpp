@@ -147,8 +147,8 @@ static void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
   TAU_METADATA("SIGNAL", strsignal(sig));
 
   Tau_backtrace_exit_with_backtrace(1,
-      "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n",
-      sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid());
+      "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, thread=%d, pid=%d, tid=%d]... \n",
+      sig, strsignal(sig), RtsLayer::myNode(), RtsLayer::myThread(), RtsLayer::getPid(), RtsLayer::getTid());
 }
 
 static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
@@ -179,7 +179,7 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
       Tau_backtrace_exit_with_backtrace(1,
           "TAU: Memory debugger caught invalid memory access and cannot continue. "
           "Dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n",
-          RtsLayer::myNode(), getpid(), Tau_get_tid());
+          RtsLayer::myNode(), RtsLayer::getPid(), RtsLayer::getTid());
     }
 
     // Trigger the context event and record a backtrace
@@ -192,7 +192,7 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
     Tau_backtrace_exit_with_backtrace(1,
         "TAU: Memory debugger caught invalid memory access. "
         "Dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n",
-        RtsLayer::myNode(), getpid(), Tau_get_tid());
+        RtsLayer::myNode(), RtsLayer::getPid(), RtsLayer::getTid());
   }
 
   // Exit the handler and return to the instruction that raised the signal

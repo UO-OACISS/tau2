@@ -149,12 +149,12 @@ static int Tau_initialize_papi_library(void)
 #ifdef TAU_AT_FORK
 void Tau_prepare(void)
 {
-  TAU_VERBOSE("inside Tau_prepare: pid = %d\n", getpid());
+  TAU_VERBOSE("inside Tau_prepare: pid = %d\n", RtsLayer::getPid());
 }
 
 void Tau_parent(void)
 {
-  TAU_VERBOSE("inside Tau_parent: pid = %d\n", getpid());
+  TAU_VERBOSE("inside Tau_parent: pid = %d\n", RtsLayer::getPid());
 }
 
 
@@ -163,11 +163,11 @@ void Tau_child(void)
   TauInternalFunctionGuard protects_this_function;
 
   int i, rc, numCounters;
-  int tid = Tau_get_tid();
+  int tid = Tau_get_thread();
   numCounters = PapiLayer::numCounters;
-  TAU_VERBOSE("inside Tau_child: pid = %d\n", getpid());
+  TAU_VERBOSE("inside Tau_child: pid = %d\n", RtsLayer::getPid());
   TheSafeToDumpData() = 1;
-  TAU_VERBOSE("--->[pid=%d, Rank=%d]: Setting TheSafeToDumpData=1\n", getpid(), RtsLayer::myNode());
+  TAU_VERBOSE("--->[pid=%d, Rank=%d]: Setting TheSafeToDumpData=1\n", RtsLayer::getPid(), RtsLayer::myNode());
 
   if (Tau_initialize_papi_library() != PAPI_VER_CURRENT) {
     return;
@@ -204,7 +204,7 @@ if(  tid >= TAU_MAX_THREADS) {
     int comp = PAPI_COMPONENT_INDEX (PapiLayer::counterList[i]);
     rc = PAPI_add_event(PapiLayer::ThreadList[tid]->EventSet[comp], PapiLayer::counterList[i]);
     if (rc != PAPI_OK) {
-      fprintf(stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", getpid(), PAPI_strerror(rc));
+      fprintf(stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", RtsLayer::getPid(), PAPI_strerror(rc));
       return;
     }
 
@@ -219,7 +219,7 @@ if(  tid >= TAU_MAX_THREADS) {
   }
 
   if (rc != PAPI_OK) {
-    fprintf(stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", getpid(), PAPI_strerror(rc), tid);
+    fprintf(stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
     return;
   }
 
@@ -353,7 +353,7 @@ int PapiLayer::initializeThread(int tid)
         if (ThreadList[tid]->NumEvents[i] > 0) { // if there were active counters for this component
           rc = PAPI_start(ThreadList[tid]->EventSet[i]);
           if (rc != PAPI_OK) {
-            fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", getpid(), PAPI_strerror(rc), tid);
+            fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", RtsLayer::getPid(), PAPI_strerror(rc), tid);
             RtsLayer::UnLockDB();
             return -1;
           }
@@ -441,7 +441,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 #endif
 
   if (rc != PAPI_OK) {
-    fprintf (stderr, "pid=%d, TAU: Error reading PAPI counters: %s\n", getpid(), PAPI_strerror(rc));
+    fprintf (stderr, "pid=%d, TAU: Error reading PAPI counters: %s\n", RtsLayer::getPid(), PAPI_strerror(rc));
     return NULL;
   }
   
@@ -518,7 +518,7 @@ int PapiLayer::initializePAPI() {
   TAU_VERBOSE("TAU: PapiLayer::initializePAPI: before pthread_at_fork()");
 #ifdef TAU_MPI
   TheSafeToDumpData() = 0; 
-  TAU_VERBOSE("[pid=%d, Rank=%d]: Setting TheSafeToDumpData=0\n", getpid(),RtsLayer::myNode());
+  TAU_VERBOSE("[pid=%d, Rank=%d]: Setting TheSafeToDumpData=0\n", RtsLayer::getPid(),RtsLayer::myNode());
   pthread_atfork(Tau_prepare, Tau_parent, Tau_child);
 #endif /* TAU_MPI */
 #endif /* TAU_AT_FORK */
@@ -608,7 +608,7 @@ int PapiLayer::initializePapiLayer(bool lock)
   static int rc = 0;
 
   TAU_VERBOSE("Inside TAU: PapiLayer::intializePapiLayer: papiInitialized = %d\n", papiInitialized); 
-  TAU_VERBOSE("[pid = %d] Inside TAU: Actually initializing PapiLayer::intializePapiLayer: papiInitialized = %d\n", getpid(), papiInitialized); 
+  TAU_VERBOSE("[pid = %d] Inside TAU: Actually initializing PapiLayer::intializePapiLayer: papiInitialized = %d\n", RtsLayer::getPid(), papiInitialized);
   dmesg(1, "TAU: PAPI: Initializing PAPI Layer: lock=%d\n", lock);
 
   if (lock) {
@@ -778,7 +778,7 @@ int PapiLayer::initializeRAPL(int tid) {
 /////////////////////////////////////////////////
 void PapiLayer::triggerRAPLPowerEvents(void) {
 #if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
-  int tid = Tau_get_tid();
+  int tid = Tau_get_thread();
   static int rapl_cid = PapiLayer::initializeRAPL(tid); 
   static bool firsttime = true;
   dmesg(1,"rapl_cid = %d\n", rapl_cid);

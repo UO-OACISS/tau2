@@ -517,7 +517,7 @@ int Tau_sampling_write_maps(int tid, int restart)
   int node = RtsLayer::myNode();
   node = 0;
   char filename[4096];
-  sprintf(filename, "%s/ebstrace.map.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+  sprintf(filename, "%s/ebstrace.map.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
 
   FILE *output = fopen(filename, "a");
 
@@ -551,7 +551,7 @@ void Tau_sampling_outputTraceDefinitions(int tid)
   char filename[4096];
   int node = RtsLayer::myNode();
   node = 0;
-  sprintf(filename, "%s/ebstrace.def.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+  sprintf(filename, "%s/ebstrace.def.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
 
   FILE *def = fopen(filename, "w");
 
@@ -1434,7 +1434,7 @@ int Tau_sampling_init(int tid)
   char filename[4096];
 
   if (TauEnv_get_tracing()) {
-    sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+    sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
 
     ebsTrace[tid] = fopen(filename, "w");
     if (ebsTrace[tid] == NULL) {
@@ -1761,8 +1761,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 #pragma omp critical (creatingtopleveltimer)
         {
           // Getting the thread ID registers the OpenMP thread.
-          //int myTid = RtsLayer::threadId();
-          int myTid = Tau_get_tid ();
+          int myTid = Tau_get_thread ();
           if (!samplingThrInitialized[myTid]) {
             Tau_sampling_init(myTid);
             samplingThrInitialized[myTid] = true;

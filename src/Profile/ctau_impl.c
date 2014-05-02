@@ -514,7 +514,7 @@ static void ptrace_enter_call(PyObject *self, void *key, PyObject *userObj, PyFr
   }
 
   if (profEntry->fi) {
-    Tau_start_timer(profEntry->fi,0,Tau_get_tid());
+    Tau_start_timer(profEntry->fi,0,Tau_get_thread());
   }
 
 /*   /\* grab a ProfilerContext out of the free list *\/ */
@@ -551,7 +551,7 @@ static void ptrace_leave_call(PyObject *self, void *key) {
   profEntry = getEntry(pObj, key);
   if (profEntry) {
     if (profEntry->fi) {
-      Tau_stop_timer(profEntry->fi, Tau_get_tid());
+      Tau_stop_timer(profEntry->fi, Tau_get_thread());
     }
   }
   else {

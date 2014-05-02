@@ -1156,12 +1156,12 @@ void TauEnv_initialize()
 #endif
 
 #ifdef TAU_VAMPIRTRACE
-    TAU_VERBOSE("[%d] TAU: VampirTrace active! (TAU measurement disabled)\n", getpid());
+    TAU_VERBOSE("[%d] TAU: VampirTrace active! (TAU measurement disabled)\n", RtsLayer::getPid());
     return;
 #endif
 
 #ifdef TAU_SCOREP
-    TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", getpid());
+    TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", RtsLayer::getPid());
     return;
 #endif
 

@@ -62,9 +62,7 @@ TauKtau::TauKtau(KtauSymbols& sym):KtauSym(sym)
         startSize= 0;
         stopSize = 0;
 	outSize = 0;
-	//ThisKtauOutputInfo.pid = gettid();
 	ThisKtauOutputInfo.pid = syscall(__NR_gettid);
-	//ThisKtauOutputInfo.pid = getpid();
 	ThisKtauOutputInfo.templ_fun_counter = 0;
 	ThisKtauOutputInfo.user_ev_counter = 0;
 	
@@ -128,8 +126,6 @@ int TauKtau::RegisterFork(TauKtau* pKernProf, enum TauFork_t opcode)
         pKernProf->stopSize = 0;
         pKernProf->outSize = 0;
         pKernProf->ThisKtauOutputInfo.pid = syscall(__NR_gettid);
-        //pKernProf->ThisKtauOutputInfo.pid = gettid();
-        //pKernProf->ThisKtauOutputInfo.pid = getpid();
         pKernProf->ThisKtauOutputInfo.templ_fun_counter = 0;
         pKernProf->ThisKtauOutputInfo.user_ev_counter = 0;
 

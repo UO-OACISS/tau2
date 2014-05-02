@@ -61,7 +61,7 @@ extern "C" void Tau_ompt_parallel_create(
       "##m parallel create: id %Ld, parent data %Ld, parent frame (0x%Lx, 0x%Lx), outlined fct 0x%L, TAU Tid=%d\n",
       (long long) parallel_id, parent_data->value, 
       parent_frame->exit_runtime_frame, parent_frame->reenter_runtime_frame,
-      0, Tau_get_tid());
+      0, Tau_get_thread());
   #endif
   TAU_START("OMPT parallel");
 
@@ -78,7 +78,7 @@ extern "C" void Tau_ompt_parallel_exit(
       "##m parallel exit: id %Ld, parent data %Ld, parent frame (0x%Lx, 0x%Lx), outlined fct 0x%Lx, TAU Tid=%d\n",
       parallel_id, parent_data->value, 
       parent_frame->exit_runtime_frame, parent_frame->reenter_runtime_frame,
-      0, Tau_get_tid());
+      0, Tau_get_thread());
   #endif
   TAU_STOP("OMPT parallel");
 }
@@ -115,7 +115,7 @@ extern "C" void Tau_ompt_thread_create(ompt_data_t *data)
   data->value = 1;
   #if DEBUG
     data->value = tau_ompt.GetNewThreadId();
-    PRINTF("##m thread create: data %Ld, TAU Tid=%d\n", data->value, Tau_get_tid());
+    PRINTF("##m thread create: data %Ld, TAU Tid=%d\n", data->value, Tau_get_thread());
   #endif
   Tau_create_top_level_timer_if_necessary();
   TAU_START("OMPT thread");
@@ -124,7 +124,7 @@ extern "C" void Tau_ompt_thread_create(ompt_data_t *data)
 extern "C" void Tau_ompt_thread_exit(ompt_data_t *data)								   
 {
   #if DEBUG
-    PRINTF("##m thread exit: data %Ld, TAU Tid = %d\n", data->value, Tau_get_tid());
+    PRINTF("##m thread exit: data %Ld, TAU Tid = %d\n", data->value, Tau_get_thread());
   #endif
   TAU_STOP("OMPT thread");
   Tau_stop_top_level_timer_if_necessary();
@@ -136,7 +136,7 @@ extern "C" void Tau_ompt_thread_exit(ompt_data_t *data)
 extern "C" void Tau_ompt_idle_begin(ompt_data_t *data)
 {
   #if DEBUG
-    PRINTF("##b idle begin: data %Ld, TAU Tid=%d\n", data->value, Tau_get_tid() );
+    PRINTF("##b idle begin: data %Ld, TAU Tid=%d\n", data->value, Tau_get_thread() );
   #endif
   Tau_create_top_level_timer_if_necessary();
   TAU_START("OMPT idle");
@@ -145,7 +145,7 @@ extern "C" void Tau_ompt_idle_begin(ompt_data_t *data)
 extern "C" void Tau_ompt_idle_end(ompt_data_t *data)
 {
   #if DEBUG
-    PRINTF("##b idle end: data %Ld, TAU Tid=%d\n", data->value, Tau_get_tid());
+    PRINTF("##b idle end: data %Ld, TAU Tid=%d\n", data->value, Tau_get_thread());
   #endif
   TAU_STOP("OMPT idle");
   Tau_stop_top_level_timer_if_necessary();
@@ -154,7 +154,7 @@ extern "C" void Tau_ompt_idle_end(ompt_data_t *data)
 extern "C" void Tau_ompt_wait_barrier_begin(ompt_data_t *data, ompt_parallel_id_t parallel_id)
 {
   #if DEBUG
-    PRINTF("##b wait barrier begin: id %Ld, data %Ld, TAU Tid=%d\n", parallel_id, data->value, Tau_get_tid());
+    PRINTF("##b wait barrier begin: id %Ld, data %Ld, TAU Tid=%d\n", parallel_id, data->value, Tau_get_thread());
   #endif
   //TAU_START("OMPT barrier");
 }
@@ -162,7 +162,7 @@ extern "C" void Tau_ompt_wait_barrier_begin(ompt_data_t *data, ompt_parallel_id_
 extern "C" void Tau_ompt_wait_barrier_end(ompt_data_t *data, ompt_parallel_id_t parallel_id)
 {
   #if DEBUG
-    PRINTF("##b wait barrier end: id %Ld, data %Ld, TAU Tid=%d\n", parallel_id, data->value, Tau_get_tid());
+    PRINTF("##b wait barrier end: id %Ld, data %Ld, TAU Tid=%d\n", parallel_id, data->value, Tau_get_thread());
   #endif
   //TAU_STOP("OMPT barrier");
 }
