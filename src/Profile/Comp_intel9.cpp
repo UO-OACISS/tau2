@@ -110,7 +110,7 @@ extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
   } else {
     fi = (*it).second;
   }
-  Tau_start_timer(fi,0,Tau_get_tid());
+  Tau_start_timer(fi,0,Tau_get_thread());
 
 #else
 
@@ -124,18 +124,18 @@ extern "C" void __VT_IntelEntry(char* str, int* id, int* id2) {
      void *handle=NULL;
      TAU_PROFILER_CREATE(handle, str, "", TAU_DEFAULT);
      hn->fi = (FunctionInfo*) handle;
-     Tau_start_timer(hn->fi,0,Tau_get_tid());
+     Tau_start_timer(hn->fi,0,Tau_get_thread());
    }
 */
 
   if (*id != 0) {
-    Tau_start_timer(TheFunctionDB()[*id],0,Tau_get_tid());
+    Tau_start_timer(TheFunctionDB()[*id],0,Tau_get_thread());
   } else {
     //printf ("Registered %s for %p:%p\n", str, id, id2);
     void *handle=NULL;
     TAU_PROFILER_CREATE(handle, str, "", TAU_DEFAULT);
     FunctionInfo *fi = (FunctionInfo*)handle;
-    Tau_start_timer(fi,0,Tau_get_tid());
+    Tau_start_timer(fi,0,Tau_get_thread());
     *id = TheFunctionDB().size()-1;
   }
   *id2 = *id;
@@ -161,7 +161,7 @@ extern "C" void __VT_IntelExit(int* id2) {
 //   if ((hn = hash_get((long)id2))) {
 //     Tau_stop_timer(hn->fi);
 //   }
-  Tau_stop_timer(TheFunctionDB()[*id2], Tau_get_tid());
+  Tau_stop_timer(TheFunctionDB()[*id2], Tau_get_thread());
 #endif
 
 

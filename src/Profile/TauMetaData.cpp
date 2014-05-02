@@ -314,7 +314,8 @@ int Tau_metadata_fillMetaData()
   Tau_metadata_register("TAU Makefile", TAU_MAKEFILE);
   Tau_metadata_register("TAU Version", TAU_VERSION);
 
-  Tau_metadata_register("pid", (int)getpid());
+  Tau_metadata_register("pid", RtsLayer::getPid());
+  Tau_metadata_register("tid", RtsLayer::getTid());
 #endif // windows
 
 #ifdef TAU_BGL

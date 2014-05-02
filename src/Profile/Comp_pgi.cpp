@@ -147,7 +147,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 			TAU_PROFILER_CREATE(vp, routine, "", TAU_DEFAULT);
 			FunctionInfo *fi = (FunctionInfo *)vp;
 			p->rid = Tau_get_function_index_in_DB(fi);
-			Tau_start_timer(fi, 0, Tau_get_tid());
+			Tau_start_timer(fi, 0, Tau_get_thread());
 			if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 				Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
 				p->isseen = ROUTINE_THROTTLED;	
@@ -167,7 +167,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 		RtsLayer::LockDB();
     FunctionInfo *fi = (FunctionInfo*)(TheFunctionDB()[p->rid]);
 		RtsLayer::UnLockDB();
-	  Tau_start_timer(fi, 0, Tau_get_tid());
+	  Tau_start_timer(fi, 0, Tau_get_thread());
 		if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 			Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
 			p->isseen = ROUTINE_THROTTLED;	

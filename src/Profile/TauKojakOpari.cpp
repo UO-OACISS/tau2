@@ -793,7 +793,7 @@ void TauStartOpenMPRegionTimer(struct ompregdescr *r, int index)
 #else 
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-  Tau_start_timer(f, 0, Tau_get_tid());
+  Tau_start_timer(f, 0, Tau_get_thread());
   
   omp_unset_lock(&tau_ompregdescr_lock);
 }
@@ -815,7 +815,7 @@ void TauStopOpenMPRegionTimer(struct ompregdescr *r, int index)
     int tid = RtsLayer::myThread(); 
     Profiler *p =TauInternal_CurrentProfiler(tid); 
     if (p != NULL && p->ThisFunction == f) {
-      Tau_stop_timer(f, Tau_get_tid());
+      Tau_stop_timer(f, Tau_get_thread());
     } else {
       // nothing, it must have been disabled/throttled
     }

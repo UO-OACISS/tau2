@@ -88,7 +88,7 @@ int SprocLayer::RegisterThread(void)
   if (uspsema(tauThreadCountMutex) == -1)
     perror("TAU ERROR: SprocLayer.cpp: SprocLayer::RegisterThread uspsema");
   
-  TheTauPidSprocMap()[getpid()] = RtsLayer::createThread();
+  TheTauPidSprocMap()[RtsLayer::getPid()] = RtsLayer::createThread();
   
   if (usvsema(tauThreadCountMutex) == -1)
     perror("TAU ERROR: SprocLayer.cpp: SprocLayer::RegisterThread usvsema");
@@ -117,7 +117,7 @@ int SprocLayer::GetThreadId(void)
     cout <<"THREADING PROBLEM!!! tauThreadCountMutex not initialized!!"<<endl;
 
   map<pid_t, int, less<pid_t> >::iterator it;
-  int pid = getpid(); 
+  int pid = RtsLayer::getPid();
   int tid;
   // Each sproc thread has a unique pid (not in 0..N-1 range)
   // This method converts it to that range as follows:

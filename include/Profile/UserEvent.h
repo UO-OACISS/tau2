@@ -222,7 +222,7 @@ public:
 private:
 
   Data & ThreadData() {
-    return eventData[RtsLayer::threadId()];
+    return eventData[RtsLayer::myThread()];
   }
 
   Data & ThreadData(int tid) {

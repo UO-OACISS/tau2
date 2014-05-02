@@ -458,7 +458,7 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 
     Tau_global_incr_insideTAU();
 
-    int tid = Tau_get_tid();
+    int tid = Tau_get_thread();
     //fprintf(stderr, "** Thread: %d, (i:%d b:%d p:%d w:%d o:%d t:%d) EVENT:%s **\n", tid, Tau_collector_flags[tid].idle, Tau_collector_flags[tid].busy, Tau_collector_flags[tid].parallel, Tau_collector_flags[tid].ordered_region_wait, Tau_collector_flags[tid].ordered_region, Tau_collector_flags[tid].task_exec, OMP_EVENT_NAME[event-1]); fflush(stderr);
 
     switch(event) {
@@ -881,10 +881,10 @@ void Tau_ompt_start_timer(const char * state, ompt_parallel_id_t regionid) {
       sprintf(regionIDstr, "%s %llx", state, regionid);
     else
       sprintf(regionIDstr, "%s", state);
-    Tau_pure_start_task(regionIDstr, Tau_get_tid());
+    Tau_pure_start_task(regionIDstr, Tau_get_thread());
     free(regionIDstr);
 #else
-    Tau_omp_start_timer(state, Tau_get_tid(), 1, 0);
+    Tau_omp_start_timer(state, Tau_get_thread(), 1, 0);
 #endif
 }
 
@@ -893,10 +893,10 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
     char * regionIDstr = NULL;
     regionIDstr = malloc(32);
     sprintf(regionIDstr, "%s %llx", state, regionid);
-    Tau_pure_stop_task(regionIDstr, Tau_get_tid());
+    Tau_pure_stop_task(regionIDstr, Tau_get_thread());
     free(regionIDstr);
 #else
-    Tau_omp_stop_timer(state, Tau_get_tid(), 1);
+    Tau_omp_stop_timer(state, Tau_get_thread(), 1);
 #endif
 }
 
@@ -905,17 +905,17 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
 #define TAU_OMPT_COMMON_ENTRY \
     /* Never process anything internal to TAU */ \
     if (Tau_global_get_insideTAU() > 0) { \
-        /*TAU_VERBOSE("%d : %s inside TAU - returning %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); */\
+        /*TAU_VERBOSE("%d : %s inside TAU - returning %d\n", Tau_get_thread(), __func__, Tau_global_get_insideTAU()); */\
         return; \
     } \
     Tau_global_incr_insideTAU(); \
-    int tid = Tau_get_tid(); \
-    /*TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \
+    int tid = Tau_get_thread(); \
+    /*TAU_VERBOSE ("%d : %s inside (enter): %d\n", Tau_get_thread(), __func__, Tau_global_get_insideTAU()); \
     fflush(stdout); */
 
 #define TAU_OMPT_COMMON_EXIT \
     Tau_global_decr_insideTAU(); \
-    /*TAU_VERBOSE ("%d : %s inside (exit): %d\n\n", Tau_get_tid(), __func__, Tau_global_get_insideTAU()); \*/
+    /*TAU_VERBOSE ("%d : %s inside (exit): %d\n\n", Tau_get_thread(), __func__, Tau_global_get_insideTAU()); \*/
 
 /*
  * Mandatory Events

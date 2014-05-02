@@ -76,10 +76,10 @@ omp_lock_t tau_ompregdescr_lock;
 } 
 
 #define TAU_OPARI_CONSTRUCT_TIMER_START(timer) \
-    Tau_start_timer(TauGlobal##timer(), 0, Tau_get_tid());
+    Tau_start_timer(TauGlobal##timer(), 0, Tau_get_thread());
 
 #define TAU_OPARI_CONSTRUCT_TIMER_STOP(timer) \
-    Tau_stop_timer(TauGlobal##timer(), Tau_get_tid());
+    Tau_stop_timer(TauGlobal##timer(), Tau_get_thread());
 
 TAU_OPARI_CONSTRUCT_TIMER(tatomic, "atomic enter/exit", "[OpenMP]", OpenMP); 
 TAU_OPARI_CONSTRUCT_TIMER(tbarrier, "barrier enter/exit", "[OpenMP]", OpenMP); 
@@ -384,7 +384,7 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
   }
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-  Tau_start_timer(f, 0, Tau_get_tid());
+  Tau_start_timer(f, 0, Tau_get_thread());
 }
 
 void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
@@ -395,7 +395,7 @@ void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
 #else
     FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-      Tau_stop_timer(f, Tau_get_tid());
+      Tau_stop_timer(f, Tau_get_thread());
 //This silently ignored bugs, 
 //Let the measurement layer deal with problems with the profiler
 //And report any errors
@@ -1110,7 +1110,7 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-  Tau_create_top_level_timer_if_necessary_task(Tau_get_tid());
+  Tau_create_top_level_timer_if_necessary_task(Tau_get_thread());
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tparallelf);
@@ -1173,7 +1173,7 @@ POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-  Tau_create_top_level_timer_if_necessary_task(Tau_get_tid());
+  Tau_create_top_level_timer_if_necessary_task(Tau_get_thread());
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tsectionb);

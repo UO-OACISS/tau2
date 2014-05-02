@@ -290,7 +290,7 @@ extern "C" void __func_trace_enter(char * name, char * fname, int lno, void ** c
 
 #if 0
     // Guard against re-entry (does this actually happen?)
-    int tid = Tau_get_tid();
+    int tid = Tau_get_thread();
 
     // Build the hashtable keys while checking for exclusion
     key_type name_key, key;
@@ -401,7 +401,7 @@ extern "C" void __func_trace_exit(char * name, char * fname, int lno, void ** co
     TauInternalFunctionGuard protects_this_function;
 
 #if 0
-    int tid = Tau_get_tid();
+    int tid = Tau_get_thread();
 
     // Build the hashtable key while checking for exclusion
     key_type name_key, key;

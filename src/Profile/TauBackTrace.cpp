@@ -89,14 +89,14 @@ static int getBacktraceFromGDB(int trim, BacktraceFrame ** oframes)
 
   path[readlink("/proc/self/exe", path, sizeof(path)-1)] = '\0';
 
-  sprintf(gdb_in_file, "tau_gdb_cmds_%d.txt", getpid());
-  sprintf(gdb_out_file, "tau_gdb_out_%d.txt", getpid());
+  sprintf(gdb_in_file, "tau_gdb_cmds_%d.txt", RtsLayer::getPid());
+  sprintf(gdb_out_file, "tau_gdb_out_%d.txt", RtsLayer::getPid());
 
   FILE * gdb_fp = fopen(gdb_in_file, "w+");
   fprintf(gdb_fp, "set logging on %s\nbt\nq\n", gdb_out_file);
   fclose(gdb_fp);
 
-  sprintf(cmd, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file, path, getpid());
+  sprintf(cmd, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file, path, RtsLayer::getPid());
   TAU_VERBOSE("Calling: str=%s\n", cmd);
   int systemRet = system(cmd);
 
@@ -116,7 +116,7 @@ int Tau_backtrace_record_backtrace(int trim)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  int & iter = iteration[RtsLayer::getTid()];
+  int & iter = iteration[RtsLayer::myThread()];
   ++iter;
 
   BacktraceFrame * frames;

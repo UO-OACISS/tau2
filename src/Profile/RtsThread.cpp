@@ -196,12 +196,6 @@ int RtsLayer::unsafeLocalThreadId(void)
 #endif // PTHREADS
 }
 
-int RtsLayer::threadId(void)
-{
-  TauInternalFunctionGuard protects_this_function;
-  return RtsLayer::unsafeThreadId();
-}
-
 int RtsLayer::unsafeThreadId(void)
 {
 #ifdef TAU_MPC
@@ -232,7 +226,8 @@ int RtsLayer::unsafeThreadId(void)
 
 int RtsLayer::myThread(void)
 {
-  return RtsLayer::threadId();
+  TauInternalFunctionGuard protects_this_function;
+  return RtsLayer::unsafeThreadId();
 }
 
 extern "C" int Tau_RtsLayer_myThread(void) {
@@ -263,7 +258,7 @@ int RtsLayer::myNode(void)
 #endif /* TAU_MPC */
 
 #ifdef TAU_PID_AS_NODE
-  return getpid();
+  return RtsLayer::getPid();
 #endif
 #ifdef KTAU_NG
 #ifdef TAU_TID_AS_NODE
@@ -284,7 +279,7 @@ int RtsLayer::myContext(void)
 #elif defined(__MIC__)
 if (TauEnv_get_mic_offload())
 {
-	return getpid();
+	return RtsLayer::getPid();
 }
 else
 #endif /* KTAU_NG */

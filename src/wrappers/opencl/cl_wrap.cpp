@@ -1569,16 +1569,16 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	int err;
 	const char* name = "ReadBuffer";
 
-        Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
+        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL ReadBuffer: %p\n", p);
         if (p) {
-          callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
         } else {
           callingSite = NULL;
         }
 	
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 	//callingSite = NULL;
 
 //	//OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
@@ -1646,16 +1646,16 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 	char* name = "WriteBuffer";
 	//printf("name: %s.\n", name);
 
-        Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
+        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL WriteBuffer: %p\n", p);
         if (p) {
-          callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
         } else {
           callingSite = NULL;
         }
 	
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 	//callingSite = NULL;
 	
 	//printf("CL WRAP: command queue is: %d.\n", a1);
@@ -1748,16 +1748,16 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	int err;
 	char* name = "CopyBuffer";
 
-        Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
+        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL CopyBuffer: %p\n", p);
         if (p) {
-          callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
         } else {
           callingSite = NULL;
         }
 	
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 	//callingSite = NULL;
 	
 //	OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
@@ -1965,7 +1965,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 	char* name = "MapBuffer";
 	//printf("name: %s.\n", name);
 
-	callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 	//callingSite = NULL;
 	
 	//printf("CL WRAP: command queue is: %d.\n", a1);
@@ -2052,16 +2052,16 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 	char* name = "UnmapBuffer";
 	//printf("name: %s.\n", name);
 
-        Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
+        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL UnmapBuffer: %p\n", p);
         if (p) {
-          callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
         } else {
           callingSite = NULL;
         }
 	
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 	//callingSite = NULL;
 	
 	//printf("CL WRAP (in Unmap: command queue is: %d.\n", a1);
@@ -2111,16 +2111,16 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	int err;
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
-        Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
+        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL kernel_data: %p\n", p);
         if (p) {
-          kernel_data->callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+          kernel_data->callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
         } else {
           kernel_data->callingSite = NULL;
         }
 	
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
-	//kernel_data->callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
+	//kernel_data->callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 	if (err != CL_SUCCESS)
 	{
 		printf("Cannot get Kernel name.\n");
@@ -2150,15 +2150,15 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 		sizeof(char[TAU_MAX_FUNCTIONNAME]), name, NULL);
 	//printf("kernel name: %s.\n", name);	
 	//
-        Profiler *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid());
+        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL clEnqueueNDRangeKernel_h: %p\n", p);
         if (p) {
-          callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
         } else {
           callingSite = NULL;
         }
 	
-	//callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 	//callingSite = NULL;
 
 	//printf("CL WRAP: command queue is: %d.\n", a1);

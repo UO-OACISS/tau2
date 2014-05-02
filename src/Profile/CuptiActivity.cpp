@@ -359,7 +359,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				{
                     printf("synthetic sync point.\n");
                     cuCtxSynchronize();
-                    FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+                    FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
                 }
 #endif
       

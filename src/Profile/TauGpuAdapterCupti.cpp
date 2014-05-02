@@ -42,7 +42,7 @@ extern "C" void Tau_cupti_register_host_calling_site(
 									break;
 								}
 							}
-							//functionInfoMap_hostLaunch()[correlationId] = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;	
+							//functionInfoMap_hostLaunch()[correlationId] = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
 						}	
 
 extern "C" void Tau_cupti_register_device_calling_site(
