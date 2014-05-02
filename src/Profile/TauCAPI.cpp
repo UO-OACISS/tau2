@@ -959,6 +959,7 @@ extern "C" int Tau_get_context(void) {
 extern "C" void Tau_set_thread(int threadId) {
   // Placeholder, probably shouldn't be a legal operation
   // Recommend we deprecate TAU_SET_THREAD
+  cerr << "TAU: ERROR: Unsafe and deprecated call to TAU_SET_THREAD!" << endl;
 }
 
 //////////////////////////////////////////////////////////////////////
