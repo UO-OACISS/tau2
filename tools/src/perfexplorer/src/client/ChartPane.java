@@ -785,7 +785,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		if (stat.equals(ATOMIC)) {
 			tmp = "atomic_location_profile"+"."+value;//tmp.replaceAll(ATOMIC, "atomic_location_profile");
 		} else if(stat.equals(MEAN)) {	
-			operation=stat;
+			//operation=stat;
 			tmp = "interval_mean_summary"+"."+value;
 		}
 		else if(stat.equals(TOTAL)){
