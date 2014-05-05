@@ -815,8 +815,11 @@ int main(int argc, char **argv)
   check_status( status, "Set flush callbacks." );
 
   /* Set master slave mode, description, and creator. */
+#if(defined(TAU_OTF2_1_1) || defined (TAU_OTF2_1_2))
   status = OTF2_Archive_SetMasterSlaveMode( archive, OTF2_MASTER );
   check_status( status, "Set master slave mode." );
+#endif /* TAU_OTF2_1_1 || TAU_OTF2_1_2 */
+
   status = OTF2_Archive_SetDescription( archive, "Data converted from TAU trace output" );
   check_status( status, "Set description." );
   status = OTF2_Archive_SetCreator( archive, "tau2otf2 converter version 2.21.x" );
