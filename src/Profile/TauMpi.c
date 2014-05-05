@@ -47,8 +47,14 @@
 
 #ifdef TAU_MPICH3
 #define TAU_MPICH3_CONST const
+#ifdef TAU_OPENMPI3
+#define TAU_OPENMPI3_CONST 
+#else
+#define TAU_OPENMPI3_CONST const
+#endif
 #else
 #define TAU_MPICH3_CONST 
+#define TAU_OPENMPI3_CONST 
 #endif
 
 void TauSyncClocks();
@@ -1749,7 +1755,7 @@ int MPI_Get_version( int *version, int *subversion )
 
 
 int  MPI_Address( location, address )
-TAU_MPICH3_CONST void * location;
+TAU_OPENMPI3_CONST void * location;
 MPI_Aint * address;
 {
   int  returnVal;
@@ -2759,8 +2765,8 @@ MPI_Datatype * datatype;
 
 int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
 int count;
-TAU_MPICH3_CONST int * blocklens;
-TAU_MPICH3_CONST MPI_Aint * indices;
+TAU_OPENMPI3_CONST int * blocklens;
+TAU_OPENMPI3_CONST MPI_Aint * indices;
 MPI_Datatype old_type;
 MPI_Datatype * newtype;
 {
@@ -2848,9 +2854,9 @@ int * size;
 
 int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
 int count;
-TAU_MPICH3_CONST int * blocklens;
-TAU_MPICH3_CONST MPI_Aint * indices;
-TAU_MPICH3_CONST MPI_Datatype * old_types;
+TAU_OPENMPI3_CONST int * blocklens;
+TAU_OPENMPI3_CONST MPI_Aint * indices;
+TAU_OPENMPI3_CONST MPI_Datatype * old_types;
 MPI_Datatype * newtype;
 {
   int  returnVal;

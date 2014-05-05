@@ -5824,6 +5824,22 @@ MPI_Comm comm;
   
 EOF
 
+cat <<EOF > openmpi3const.c
+#include <mpi.h>
+
+#ifndef TAU_MPICH3_CONST
+#define TAU_MPICH3_CONST 
+#endif 
+
+int  MPI_Address( location, address )
+TAU_MPICH3_CONST void * location;
+MPI_Aint * address;
+{
+  return PMPI_Address( location, address );
+}
+
+EOF
+
 cat <<EOF > mpi2attr.$msuf
   #include <mpi.h>
 
@@ -6010,10 +6026,17 @@ if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/n
 else
   if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
     echo "yes"
-# MPI requires the const keyword 
-    fixmakeargs="$fixmakeargs MPICH3_CONST"
-   else
-    echo "no" 
+
+    $echo "Checking for OpenMPI 3 const interface... ${nnl}"
+    if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
+    # MPI3 and OpenMPI detected. Boo.
+        echo "no"
+        fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+        echo "yes"
+    # MPICH requires the const keyword 
+        fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
+    fi
   fi
 fi
 
