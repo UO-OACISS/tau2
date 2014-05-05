@@ -722,7 +722,9 @@ ReadTraceFile()
         OTF2_GlobalDefReaderCallbacks_SetClockPropertiesCallback( def_callbacks, GlobDefClockProperties_print );
         OTF2_GlobalDefReaderCallbacks_SetCallsiteCallback( def_callbacks, GlobDefCallsite_print );
         OTF2_GlobalDefReaderCallbacks_SetCallpathCallback( def_callbacks, GlobDefCallpath_print );
+#ifdef TAU_OTF2_1_1
         OTF2_GlobalDefReaderCallbacks_SetMetricClassCallback( def_callbacks, GlobDefMetricClass_print );
+#endif /* TAU_OTF2_1_1 */
         OTF2_GlobalDefReaderCallbacks_SetMetricInstanceCallback( def_callbacks, GlobDefMetricInstance_print );
     }
 
