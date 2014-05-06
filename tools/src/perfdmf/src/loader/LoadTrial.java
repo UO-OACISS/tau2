@@ -82,6 +82,12 @@ public class LoadTrial {
                 + "  -d, --metadata-file <filename>  XML metadata for the trial\n" 
                 + "  -m, --metadata                  Colon seperated metadata name/value pairs \n" 
                 + "                                  <foo1=bar1:foo2=bar2>\n\n" + "Notes:\n"
+                
+                + "  -a, --applicationname <string>  Specify associated application name\n"
+                + "                                    for this trial. Creates a view.\n"
+                + "  -x, --experimentname <string>   Specify associated experiment name\n"
+                + "                                    for this trial. Creates a view.\n"
+                
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
