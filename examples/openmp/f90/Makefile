@@ -25,7 +25,7 @@ FFLAGS        	=
 LIBS            =  $(TAU_LIBS)  $(TAU_FORTRANLIBS)  $(LEXTRA1)
 #LIBS            = $(TAU_DISABLE)  $(TAU_FORTRANLIBS)
 
-LDFLAGS	      	= $(USER_OPT) 
+LDFLAGS	      	= $(USER_OPT) $(TAU_OPENMP_OPTION)
 
 MAKEFILE      	= Makefile
 
