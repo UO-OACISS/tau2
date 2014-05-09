@@ -166,11 +166,21 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	java_thread_name[lid] = tname;
 
 	/*
-	 * lid 1  : main
-	 * lid 2~8: dalvik internel threads
-	 * lid 9~ : user threads
+	 * lid:
+	 * <1> main
+	 * <2> GC                         \
+	 * <3> Signal Catcher              |
+	 * <4> JDWP                        |
+	 * <5> Compiler                    +> Dalvik internal threads
+	 * <6> ReferenceQueueDaemon        |
+	 * <7> FinalizerDaemon             |
+	 * <8> FinalizerWatchdogDaemon    /
+	 * <9> ~ : user threads
+	 *
+	 * We should monitor main and all user threads. We should also watch the
+	 * finalizer daemons as they may call user provided finalize() methods
 	 */
-	if ((lid == 1) || (lid >= 9)) {
+	if ((lid == 1) || (lid >= 7)) {
 	    /* find out sid of this thread, we will need this for sampling */
 	    thst = ddm_thst(jdwp);
 	    for (i=0; i<ntohs(thst->count); i++) {
@@ -186,11 +196,8 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	    /*
 	     * Try to register this new thread.
 	     *
-	     * Note that this is an async event, hence
-	     * 1. the thread may be running and already registered itself. We
-	     *    shall handle this in RegisterThread().
-	     * 2. the thread may already dead, in which case sid will be -1.
-	     *    Let's don't bother to register it.
+	     * Note that this is an async event, so the thread may already be dead
+	     * in which case sid will be -1. Let's don't bother to register it.
 	     */
 	    if (sid != -1) {
 		/* setup mapping between lid and sid */
