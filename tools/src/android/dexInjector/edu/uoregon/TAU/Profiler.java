@@ -4,13 +4,12 @@ import java.io.*;
 import java.util.*;
 
 public class Profiler {
-    static Map<String, Profile> profiles;
+    private static final String TAG = "TAU";
 
-    static HashMap<String,ArrayList<ArrayList<String>>> methodMap;
+    static Map<String, Profile> profiles;
 
     static {
 	profiles = new HashMap<String, Profile>();
-	System.out.println("TAU: init Java Profiler");
     }
 
     /*
@@ -19,15 +18,13 @@ public class Profiler {
     public static void start(String signature) {
 	Profile profile;
 
-	if (signature == null) {
-	    return;
-	}
-
-	if (profiles.containsKey(signature)) {
-	    profile = profiles.get(signature);
-	} else {
-	    profile = new Profile(signature, "myType", "myGroup", Profile.TAU_DEFAULT);
-	    profiles.put(signature, profile);
+	synchronized (profiles) {
+	    if (profiles.containsKey(signature)) {
+		profile = profiles.get(signature);
+	    } else {
+		profile = new Profile(signature, "myType", "myGroup", Profile.TAU_DEFAULT);
+		profiles.put(signature, profile);
+	    }
 	}
 
 	profile.Start();
@@ -38,7 +35,11 @@ public class Profiler {
      * Our injected code makes sure that the profile is always exist for stop()
      */
     public static void stop(String signature) {
-	Profile profile = profiles.get(signature);
+	Profile profile;
+
+	synchronized (profiles) {
+	    profile = profiles.get(signature);
+	}
 
 	profile.Stop();
     }
