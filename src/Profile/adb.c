@@ -12,7 +12,7 @@
 #include "adb.h"
 #include "jdwp.h"
 
-#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
+#define LOGV(...) //__android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
 
 static unsigned local_id = 1;
 

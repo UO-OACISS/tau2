@@ -25,7 +25,8 @@ using namespace std;
 #include "Profile/jdwp.h"
 #include "Profile/ddm.h"
 
-#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
+#define LOGV(...) //__android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
+#define LOGF(...) __android_log_print(ANDROID_LOG_FATAL, "TAU", __VA_ARGS__)
 
 #ifdef TAU_PTHREAD_WRAP
 
@@ -184,7 +185,7 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	    /* find out sid of this thread, we will need this for sampling */
 	    thst = ddm_thst(jdwp);
 	    for (i=0; i<ntohs(thst->count); i++) {
-		TAU_VERBOSE(" *** DTM THST: %d: %d -> %d\n", i,
+		LOGV(" *** DTM THST: %d: %d -> %d\n", i,
 			    ntohl(thst->thst[i].lid), ntohl(thst->thst[i].sid));
 		if (lid == ntohl(thst->thst[i].lid)) {
 		    sid = ntohl(thst->thst[i].sid);
@@ -254,7 +255,7 @@ dalvik_thread_monitor(void *arg)
     JNIThreadLayer::IgnoreThisThread();
 
     if (jdwp_init(&jdwp) < 0) {
-	LOGV(" *** Error: DTM: jdwp failed to init\n");
+	LOGF(" *** Error: DTM: jdwp failed to init\n");
 	return NULL;
     }
 
@@ -271,7 +272,7 @@ dalvik_thread_monitor(void *arg)
 
 	    /* something really bad happened, end of watch */
 	    if (cmd == NULL) {
-		LOGV("Error: JDWP: disconnect...\n");
+		LOGF("Error: JDWP: disconnect...\n");
 		break;
 	    }
 
@@ -306,7 +307,7 @@ dalvik_thread_monitor(void *arg)
     }
 
     if (!adb_is_active(jdwp.adb)) {
-	LOGV("Error: JDWP: connection closed\n");
+	LOGF("Error: JDWP: connection closed\n");
     }
 
     return NULL;
@@ -361,24 +362,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
      */
     //getchar();
 
-    /* do we have a JNI Env pointer? */
-    JNIEnv *env;
-    if (vm->GetEnv((void**)&env, JNI_VERSION_1_6) != JNI_OK) {
-	LOGV(" *** can not get env pointer in JNI_OnLoad\n");
-    } else {
-	LOGV(" *** env pointer in JNI_OnLoad is %p\n", env);
-    }
-
     RtsLayer::TheUsingJNI() = true;
     JNIThreadLayer::tauVM = vm;
-
-    /*
-     * thread ID of Java main() is 1.
-     *
-     * NOTE: This is not a portable implementation as we made this asusmption.
-     *       See dalvik_thread_monitor() for more details.
-     */
-    //JNIThreadLayer::RegisterThread(1, "main");
 
 #ifdef TAU_ANDROID
     pthread_t thr;
@@ -543,7 +528,6 @@ JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeProfile
 	blockGroup, true);
   /* true indicates InitData will ensure that all data is clean */
 
-
   /* Now release the strings back to the JVM */
   env->ReleaseStringUTFChars(name, blockName);
   env->ReleaseStringUTFChars(type, blockType);
@@ -585,6 +569,8 @@ JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeStart
   jclass cls = env->GetObjectClass(obj);
   jfieldID fid;
   FunctionInfo *f; 
+
+  JNIThreadLayer::WaitForDTM();
 
   fid = env->GetFieldID(cls, "FuncInfoPtr", "J");
 

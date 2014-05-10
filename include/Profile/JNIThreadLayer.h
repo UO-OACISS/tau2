@@ -40,6 +40,7 @@ class  JNIThreadLayer
 	static void SuThread(pid_t sid, char *tname);
 	static void SuThread(pid_t tid);
 	static void IgnoreThisThread(void);
+	static bool IsMgmtThread(void);
 	static int RegisterThread(int sid, char *tname);
 	static char *GetThreadName(void);
 	static pid_t GetThreadSid(void);
@@ -59,10 +60,9 @@ class  JNIThreadLayer
   private:
         static int                      tauThreadCount;  // Number of threads
 	static std::map<pid_t, int>     tauTidMap;
-	static std::map<jlong, int>     tauSidMap;
 	static std::mutex               tauNumThreadsLock; // to protect counter
-	static std::recursive_mutex     tauDBMutex; // to protect counter
-	static std::recursive_mutex     tauEnvMutex; // second mutex
+	static std::map<pid_t, std::mutex> tauDBMutex; // to protect counter
+	static std::map<pid_t, std::mutex> tauEnvMutex; // second mutex
 	static std::map<pid_t, std::mutex> tauDTMLock;
 };
 

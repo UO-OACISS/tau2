@@ -57,10 +57,16 @@
 #endif
 
 #ifdef TAU_ANDROID
+
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+
+/* There are something underhood TAU_VERBOSE which we don't want in Alfred */
+#include <android/log.h>
+#define LOGV(...) //__android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
+
 #endif
 
 using namespace std;
@@ -340,14 +346,14 @@ alfred(void *arg)
 
     sfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sfd < 0) {
-	TAU_VERBOSE(" *** Alfred failed to start: %s", strerror(errno));
+	LOGV(" *** Alfred failed to start: %s", strerror(errno));
 	return NULL;
     }
 
     int on = 1;
     rv = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
     if (rv < 0) {
-	TAU_VERBOSE(" *** Alfred failed to reuse socket: %s", strerror(errno));
+	LOGV(" *** Alfred failed to reuse socket: %s", strerror(errno));
     }
 
     saddr.sin_family = AF_INET;
@@ -355,13 +361,13 @@ alfred(void *arg)
     saddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
     if (bind(sfd, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
-	TAU_VERBOSE(" *** Alfred failed to start: %s", strerror(errno));
+	LOGV(" *** Alfred failed to start: %s", strerror(errno));
 	close(sfd);
 	return NULL;
     }
 
     if (listen(sfd, 1) < 0) {
-	TAU_VERBOSE(" *** Alfred failed to start: %s", strerror(errno));
+	LOGV(" *** Alfred failed to start: %s", strerror(errno));
 	close(sfd);
 	return NULL;
     }
@@ -370,24 +376,24 @@ alfred(void *arg)
 	char cmd[18];
 	int fd;
 
-	TAU_VERBOSE(" *** (S%d) Alfred at your service\n", gettid());
+	LOGV(" *** (S%d) Alfred at your service\n", gettid());
 
 	fd = accept(sfd, NULL, NULL);
 	if (fd < 0) {
-	    TAU_VERBOSE(" *** Alfred failed to accept new connection: %s", strerror(errno));
+	    LOGV(" *** Alfred failed to accept new connection: %s", strerror(errno));
 	    continue;
 	}
 
 	while (1) {
-	    TAU_VERBOSE(" *** Alfred waiting for command\n");
+	    LOGV(" *** Alfred waiting for command\n");
 	    rv = read(fd, cmd, sizeof(cmd));
 	    if (rv < 0) {
-		TAU_VERBOSE(" *** Alfred failed to read data: %s", strerror(errno));
+		LOGV(" *** Alfred failed to read data: %s", strerror(errno));
 		break;
 	    }
 
 	    if (rv == sizeof(cmd)) {
-		TAU_VERBOSE(" *** Alfred can't understand the command");
+		LOGV(" *** Alfred can't understand the command");
 		write(fd, "UNKNOWN\n", 8);
 		close(fd);
 		break;

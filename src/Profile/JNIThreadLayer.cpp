@@ -39,7 +39,8 @@ using namespace std;
 #include "Profile/TauJAPI.h"
 
 #include <android/log.h>
-#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
+#define LOGV(...) //__android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
+#define LOGF(...) __android_log_print(ANDROID_LOG_FATAL, "TAU", __VA_ARGS__)
 
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class JNIThreadLayer
@@ -55,14 +56,14 @@ int                JNIThreadLayer::tauThreadCount = 0;
 map<pid_t, int>    JNIThreadLayer::tauTidMap; // sid ==> tid
 JavaVM*            JNIThreadLayer::tauVM;  // init in JNI_OnLoad()
 mutex              JNIThreadLayer::tauNumThreadsLock;
-recursive_mutex    JNIThreadLayer::tauDBMutex;
-recursive_mutex    JNIThreadLayer::tauEnvMutex;
+map<pid_t, mutex>  JNIThreadLayer::tauDBMutex;
+map<pid_t, mutex>  JNIThreadLayer::tauEnvMutex;
 
 map<pid_t, mutex>  JNIThreadLayer::tauDTMLock;
 
 /* C++11 thread local variables */
 static thread_local pid_t _sid   = 0;
-static thread_local char *_tname = NULL;
+static thread_local const char *_tname = NULL;
 static thread_local bool  _isJavaThread = true;
 
 extern void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid);
@@ -150,9 +151,15 @@ char *JNIThreadLayer::GetThreadName(void)
 }
 
 /* mark this thread as not a java thread */
-void JNIThreadLayer::IgnoreThisThread()
+void JNIThreadLayer::IgnoreThisThread(void)
 {
     _isJavaThread = false;
+}
+
+/* Management threads include Alfred and DTM */
+bool JNIThreadLayer::IsMgmtThread(void)
+{
+    return (_isJavaThread == false);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -176,22 +183,23 @@ int JNIThreadLayer::RegisterThread(pid_t sid, char *tname)
 	exit(1);
     }
 
-    /* register only if it's not registered yet */
-    //if (tauTidMap.find(sid) == tauTidMap.end()) {
-	int tid = tauThreadCount;
+    int tid = tauThreadCount;
 
-	tauTidMap[sid] = tid;
-	RtsLayer::setMyNode(0, tid);
+    tauTidMap[sid] = tid;
 
-	LOGV(" *** (S%d) Register S%d %s to T%d\n", gettid(), sid, tname, tid);
+    RtsLayer::setMyNode(0, tid);
 
-	/* create top level profiler for this thread */
-	CreateTopLevelRoutine(tname, (char*)"<ThreadEvents>", (char*)"DTM", tid);
+    LOGV(" *** (S%d) Register S%d %s to T%d\n", gettid(), sid, tname, tid);
 
-	LOGV(" *** (S%d) Register done\n", gettid());
+    /*
+     * Create top level profiler for this thread
+     * This should only be done after updating tauTidMap
+     */
+    CreateTopLevelRoutine(tname, (char*)"<ThreadEvents>", (char*)"DTM", tid);
 
-	tauThreadCount++;
-	//}
+    LOGV(" *** (S%d) Register done\n", gettid());
+
+    tauThreadCount++;
 
     if (tauDTMLock.find(sid) != tauDTMLock.end()) {
 	LOGV(" *** (S%d) Unlock S%d\n", gettid(), sid);
@@ -201,26 +209,16 @@ int JNIThreadLayer::RegisterThread(pid_t sid, char *tname)
     // Unlock it now 
     tauNumThreadsLock.unlock();
 
-    DEBUGPROFMSG("Thread id "<< *threadId << " Created! "<<endl);
-
-    // A thread should call this routine exactly once. 
-
-    return tauTidMap[sid];
+    return tid;
 }
 
 int JNIThreadLayer::GetThreadId(void) 
 {
     pid_t sid = GetThreadSid();
 
-    /* if this thread is a java thread and not registeded, register it now 
-    if (_isJavaThread == true) {
-	if (tauTidMap.find(sid) == tauTidMap.end()) {
-	    char *tname = GetThreadName();
-	    RegisterThread(sid, tname);
-	    free(tname);
-	}
+    if (tauTidMap.find(sid) == tauTidMap.end()) {
+	LOGF(" *** GetThreadId: %d never regiested!", sid);
     }
-    */
 
     /* note that for DTM and Alfred, this will return 0 */
     return tauTidMap[sid];
@@ -252,8 +250,9 @@ int JNIThreadLayer::InitializeDBMutexData(void)
 int JNIThreadLayer::LockDB(void)
 {
   static int initflag=InitializeDBMutexData();
+  pid_t sid = GetThreadSid();
   // Lock the functionDB mutex
-  tauDBMutex.lock();
+  tauDBMutex[sid].lock();
   return 1;
 }
 
@@ -263,7 +262,8 @@ int JNIThreadLayer::LockDB(void)
 int JNIThreadLayer::UnLockDB(void)
 {
   // Unlock the functionDB mutex
-  tauDBMutex.unlock();
+  pid_t sid = GetThreadSid();
+  tauDBMutex[sid].unlock();
   return 1;
 }  
 
@@ -283,8 +283,9 @@ int JNIThreadLayer::InitializeEnvMutexData(void)
 int JNIThreadLayer::LockEnv(void)
 {
   static int initflag=InitializeEnvMutexData();
+  pid_t sid = GetThreadSid();
   // Lock the Env mutex
-  tauEnvMutex.lock();
+  tauEnvMutex[sid].lock();
   return 1;
 }
 
@@ -294,7 +295,8 @@ int JNIThreadLayer::LockEnv(void)
 int JNIThreadLayer::UnLockEnv(void)
 {
   // Unlock the Env mutex
-  tauEnvMutex.unlock();
+  pid_t sid = GetThreadSid();
+  tauEnvMutex[sid].unlock();
   return 1;
 }  
 ////////////////////////////////////////////////////////////////////////
@@ -302,16 +304,9 @@ int JNIThreadLayer::UnLockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 int JNIThreadLayer::TotalThreads(void)
 {
-  int count;
-  // For synchronization, we lock the thread count mutex. If we had a 
-  // set and increment operation, we wouldn't need this. Optimization for
-  // the future.
+  lock_guard<mutex> tidMapGuard(tauNumThreadsLock);
 
-  tauNumThreadsLock.lock();
-  count = tauThreadCount;
-  tauNumThreadsLock.unlock();
-
-  return count;
+  return tauThreadCount;
 }
 
 // Use JVMPI to get per thread cpu time (microseconds)

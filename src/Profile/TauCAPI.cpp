@@ -799,10 +799,7 @@ extern "C" int Tau_profile_exit_all_tasks()
 #endif
 
 #ifdef TAU_ANDROID
-  bool su = false;
-  if (JNIThreadLayer::GetThreadId() == 0) {
-    su = true;
-  }
+  bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
   int tid = 1;
@@ -848,10 +845,7 @@ extern "C" int Tau_profile_exit_all_threads()
   TauInternalFunctionGuard protects_this_function;
 
 #ifdef TAU_ANDROID
-  bool su = false;
-  if (JNIThreadLayer::GetThreadId() == 0) {
-    su = true;
-  }
+  bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
   for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
