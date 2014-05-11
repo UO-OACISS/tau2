@@ -46,9 +46,11 @@ mv .classes.dex.$$ classes.dex
 echo "Repack to $2 ..."
 mkdir -p lib/armeabi/
 cp $TAU_LIB_DIR/libTAU.so lib/armeabi/
+mkdir -p lib/armeabi-v7a/
+cp $TAU_LIB_DIR/libTAU.so lib/armeabi-v7a/
 cp $1 $apkfile
 zip -d $apkfile META-INF/\*
-zip -r $apkfile classes.dex AndroidManifest.xml lib/armeabi/libTAU.so
+zip -r $apkfile classes.dex AndroidManifest.xml lib/armeabi/libTAU.so lib/armeabi-v7a/libTAU.so
 if [ ! -f ~/.android/debug.keystore ]; then
     $KEYTOOL -genkey -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"
 fi
