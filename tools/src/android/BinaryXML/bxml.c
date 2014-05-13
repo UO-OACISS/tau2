@@ -1042,7 +1042,7 @@ bxml_binary_dump(bxml_t *xml, char *filename)
     int pad;
 
     /* make sure string pool is 4-bytes aligned */
-    pad = (4 - xml->stringPool->trunkSize & 0x03) & 0x03;
+    pad = (4 - (xml->stringPool->trunkSize & 0x03)) & 0x03;
     xml->stringPool->trunkSize += pad;
     xml->size                  += pad;
 
