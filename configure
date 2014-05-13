@@ -6229,7 +6229,7 @@ if [ $mpi = yes ] ; then
     fi 
 
     if [ $scorep = yes ] ; then
-	wrapperlib="\$(SCOREPMPILIBS)"
+	wrapperlib="\$(SCOREPMPILIBS) -Wl,-rpath,\$(TAU_MPILIB_DIR)"
     fi
     
     if [ $perf = yes ] ; then
@@ -7953,7 +7953,56 @@ if [ $scorep = yes ] ; then
       fixmakeargs="$fixmakeargs SCOREPMETADATA"
       #echo "SCOREP: Adding TAU metadata..."
     fi
+    x=`${scorepdir}/bin/scorep-config --adapter-init >& /dev/null ` 
+    if [ $? = 0 ]; then 
+      scorep_adapter_init=yes
+      fixmakeargs="$fixmakeargs SCOREP_ADAPTER_INIT" 
+      scorep_adapter="--adapter-init"
+    else
+      scorep_adapter_init=no
+    fi
 
+    if [ $mpi = yes ]; then 
+      scorep_adapter="$scorep_adapter --mpp=mpi"
+    fi
+
+    if [ $cuda = yes ]; then 
+      scorep_adapter="$scorep_adapter --cuda"
+    else
+      scorep_adapter="$scorep_adapter --nocuda"
+    fi
+
+    if [ $shmem = yes ]; then 
+      scorep_adapter="$scorep_adapter --mpp=shmem"
+    fi
+
+    if [ $pthread = yes ]; then 
+      scorep_adapter="$scorep_adapter --thread=pthread"
+    fi
+
+    if [ $openmp = yes ]; then 
+      if [ $opari = yes ]; then 
+        scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
+      else 
+        if [ $ompt = yes ]; then 
+          scorep_adapter="$scorep_adapter --thread=omp:ompt"
+        else 
+          scorep_adapter="$scorep_adapter --thread=ancestry"
+# Should we make an explicit option to enable Score-P thread=ancestry? 
+# It is enabled if ompt is not specified and opari is not specified. 
+        fi
+      fi
+    fi
+
+    if [ $scorep_adapter_init = yes ]; then 
+      x=`${scorepdir}/bin/scorep-config ${scorep_adapter} > src/Profile/TauScorePAdapterInit.c`
+      if [ $? = 0 ]; then
+        echo "NOTE: Built TauScorePAdapterInit.c with scorep-config ${scorep_adapter}"
+      else 
+       x=`${scorepdir}/bin/scorep-config --adapter-init >  src/Profile/TauScorePAdapterInit.c `
+       echo "NOTE: Using the default adapter-init code in Score-P"
+      fi
+    fi  
     #echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
 	# default flags for Score-P 1.2+
@@ -8321,9 +8370,13 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
 	echo "Error: Unable to identify ifort lib directory"
     fi
     if   [ -f "$libdir/for_main.o" ] ; then
-        :
+       echo "Found $libdir/for_main.o"
     elif [ -f "$libdir/intel64/for_main.o" ] ; then
         libdir="$libdir/intel64"
+       echo "Found $libdir/for_main.o"
+    elif [ -f "$var/compiler/lib/intel64/for_main.o" -a $machine=x86_64 ] ; then
+        libdir="$var/compiler/lib/intel64"
+       echo "Found $libdir/../../compiler/lib/intel64/for_main.o"
     elif [ -f "$libdir/ia32/for_main.o" ] ; then
         libdir="$libdir/ia32"
     elif [ -f "$libdir/ia64/for_main.o" ] ; then
