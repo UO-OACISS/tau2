@@ -6156,6 +6156,8 @@ fi
 
 /bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
 else
+    mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+    mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
     fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
     mpilibargs_added_to_fixmakeargs=yes
 fi
@@ -6550,6 +6552,8 @@ if [ $mpi = yes ] ; then
 		mpilibargs="-L$papidir/$\(PAPISUBDIR\)#$mpilibargs"
 		mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
 	    fi
+            mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+            mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
 	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 	    mpilibargs_added_to_fixmakeargs=yes
 
@@ -8506,14 +8510,26 @@ if [ $mrnet = yes ] ; then
     fi
 fi
 
-if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = bgp -o $machine = bgq -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 -o $enable_export_dynamic = yes ] ; then
-    extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
-else 
-    if [ $machine = apple ]; then 
-	#extra_linker_args="${extralinker_args}#-rdynamic"
-	extra_linker_args="${extralinker_args}"
-	# gcc 4.6 does not support this. 
+case "$machine" in
+ia64|x86_64|i386_linux|bgp|bgq|mips|mips32|ibm64linux|ppc64)
+    enable_export_dynamic="yes"
+    ;;
+apple)
+    # Detect if -rdynamic is supported. gcc 4.6 does not support this. 
+    echo "Checking if -rdynamic is supported... ${nnl}"
+    echo "int main(void) { return 0; }" > rdynamic_test.c
+    if $c_compiler $orig_useropt rdynamic_test.c -rdynamic >/dev/null 2>&1 ; then
+        echo "yes, passing -rdynamic to linker"
+        extra_linker_args="${extralinker_args}#-rdynamic"
+    else
+        echo "no"
     fi
+    rm -f rdynamic_test.c
+    ;;
+esac
+
+if [ "$enable_export_dymamic" = "yes" ] ; then
+    extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 fi
 
 if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
