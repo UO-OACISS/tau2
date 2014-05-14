@@ -61,7 +61,18 @@ typedef struct Tau_gomp_proxy_wrapper {
 //static struct Tau_gomp_wrapper_status_flags Tau_gomp_flags[TAU_MAX_THREADS] __attribute__ ((aligned(128))) = {0};
 static __thread int _depth = 0;
 static __thread int _ordered[10] = {0};
-static __thread void * _proxy[10] = {0};
+static __thread TAU_GOMP_PROXY_WRAPPER * _proxy[10] = {0};
+static __thread TAU_GOMP_PROXY_WRAPPER * _current_proxy = 0;
+
+extern void * Tau_get_gomp_proxy_address() {
+    if (_current_proxy != 0) {
+	    return _current_proxy->a1;
+	}
+    if (_depth == 0) {
+	    return 0;
+	}
+    return (_proxy[_depth-1])->a1;
+};
 
 extern struct CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long address,
         const char *tag, const char *childName, char **newShortName, char addAddress);
@@ -71,8 +82,9 @@ extern struct CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long address,
 void Tau_gomp_parallel_start_proxy(void * a2) {
 	Tau_global_incr_insideTAU();
     DEBUGPRINT("Parallel Proxy %d!\n", Tau_get_thread());
+    TAU_GOMP_PROXY_WRAPPER * old_proxy = _current_proxy;
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
-
+	_current_proxy = proxy;
     __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_WORK_STATE);
@@ -81,6 +93,7 @@ void Tau_gomp_parallel_start_proxy(void * a2) {
 	Tau_global_incr_insideTAU();
     __ompc_set_state(previous);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
+	_current_proxy = old_proxy;
 	Tau_global_decr_insideTAU();
 }
 
@@ -88,9 +101,10 @@ void Tau_gomp_parallel_start_proxy(void * a2) {
 */
 void Tau_gomp_task_proxy(void * a2) {
 	Tau_global_incr_insideTAU();
+    TAU_GOMP_PROXY_WRAPPER * old_proxy = _current_proxy;
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
     DEBUGPRINT("Task Proxy %d, %p, %p\n", Tau_get_thread(), proxy->a1, proxy->a2);
-
+	_current_proxy = proxy;
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_EXEC_TASK);
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_WORK_STATE);
@@ -103,6 +117,7 @@ void Tau_gomp_task_proxy(void * a2) {
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_FINISH_TASK);
     __ompc_event_callback(OMP_EVENT_THR_END_FINISH_TASK);
     __ompc_set_state(previous);
+	_current_proxy = old_proxy;
 	Tau_global_decr_insideTAU();
 }
 
@@ -1150,7 +1165,6 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
     DEBUGPRINT("GOMP_parallel_start %d of %d\n", Tau_get_thread(), a3==0?omp_get_max_threads():1);
 
     __ompc_set_state(THR_OVHD_STATE);
-    __ompc_event_callback(OMP_EVENT_FORK);
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer
      * to our proxy function with the data for the parallel region outlined function.
@@ -1164,6 +1178,8 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
     // save the pointer so we can free it later
     _proxy[_depth] = proxy;
     _depth = _depth + 1;
+	// do this now, so we can get the _proxy address.
+    __ompc_event_callback(OMP_EVENT_FORK);
 
     // time the call
 	Tau_global_decr_insideTAU();
