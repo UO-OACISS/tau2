@@ -1210,13 +1210,13 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
     __ompc_event_callback(OMP_EVENT_JOIN);
     __ompc_set_state(THR_SERIAL_STATE);
     // free the proxy wrapper, and reduce the depth
-    int depth = _depth;
-    if (_proxy[depth] != NULL) {
+    int depth = _depth - 1;
+    if (depth >= 0 && _proxy[depth] != NULL) {
         TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
         //free(proxy->name); // never gets set!
         free(proxy);
         _proxy[depth] = NULL;
-        _depth = depth - 1;
+        _depth = depth;
     } else {
         // assume the worst...
         _depth = 0;
