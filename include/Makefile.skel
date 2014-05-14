@@ -266,6 +266,10 @@ JDKARCH                 = linux
 #PGS_AVAILABLE#OPENMP_PGS_O 	= TauPthreadGlobal.o  #ENDIF#
 
 #############################################
+# Score-P Adapter Init OBJECTS
+#SCOREP_ADAPTER_INIT#TAU_SCOREP_ADAPTER_O = TauScorePAdapterInit.o  #ENDIF#
+
+#############################################
 # OpenMP extra libraries for collector API
 #############################################
 #OPENMP#TAU_LINKER_OPT19=-ldl#ENDIF#
