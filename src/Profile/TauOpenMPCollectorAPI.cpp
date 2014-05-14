@@ -136,7 +136,28 @@ using namespace std;
 extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(std::string thread_state);
 
-#ifdef TAU_UNWIND
+extern "C" char * TauInternal_CurrentCallsiteTimerName(int tid);
+
+void Tau_get_region_id(int tid) {
+    /* get the region ID */
+    int currentid_rsz = sizeof(long);
+    int * message = (int *) calloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int), sizeof(char));
+    message[0] = OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz;
+    message[1] = OMP_REQ_CURRENT_PRID;
+    message[2] = OMP_ERRCODE_OK;
+    message[3] = currentid_rsz;
+    long * rid = (long *)(message) + OMP_COLLECTORAPI_HEADERSIZE;
+    int rc = (Tau_collector_api)(message);
+	if (rc !=0) {
+      TAU_VERBOSE("Error getting region id from ORA!\n");
+	} else {
+      TAU_VERBOSE("Thread %d, region ID : %ld\n", tid, *rid);
+	}
+    free(message);
+    return;
+}
+
+#if defined (TAU_UNWIND) || (!defined (TAU_OPEN64ORC) && defined __GNUC__)
 /*
  *-----------------------------------------------------------------------------
  * Simple hash table to map function addresses to region names/identifier
@@ -175,29 +196,44 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
   }
   return OmpbfdUnitHandle;
 }
+#endif /* defined (TAU_UNWIND) || (!defined (TAU_OPEN64ORC) && defined __GNUC__) */
 
-#endif /* TAU_UNWIND */
-
-extern "C" char * TauInternal_CurrentCallsiteTimerName(int tid);
-
-void Tau_get_region_id(int tid) {
-    /* get the region ID */
-    int currentid_rsz = sizeof(long);
-    int * message = (int *) calloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int), sizeof(char));
-    message[0] = OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz;
-    message[1] = OMP_REQ_CURRENT_PRID;
-    message[2] = OMP_ERRCODE_OK;
-    message[3] = currentid_rsz;
-    long * rid = (long *)(message) + OMP_COLLECTORAPI_HEADERSIZE;
-    int rc = (Tau_collector_api)(message);
-	if (rc !=0) {
-      TAU_VERBOSE("Error getting region id from ORA!\n");
-	} else {
-      TAU_VERBOSE("Thread %d, region ID : %ld\n", tid, *rid);
+#if !defined (TAU_OPEN64ORC) && defined __GNUC__
+extern "C" void * Tau_get_gomp_proxy_address(void);
+// this function won't actually do the backtrace, but rather get the frame pointer
+// for the outlined region.
+char * get_proxy_name() {
+    char * location = NULL;
+    tau_bfd_handle_t & OmpbfdUnitHandle = OmpTheBfdUnitHandle();
+    unsigned long ip = (unsigned long)Tau_get_gomp_proxy_address();
+	if (ip == 0) {
+        location = (char*)malloc(strlen(__UNKNOWN__)+1);
+        strcpy(location, __UNKNOWN__);
+		return location;
 	}
-    free(message);
-    return;
+    RtsLayer::LockDB();
+    OmpHashNode * node = OmpTheHashTable()[ip];
+    if (!node) {
+        node = new OmpHashNode;
+        Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
+        // Build routine name for TAU function info
+        unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
+        char * routine = (char*)malloc(size);
+        if (TauEnv_get_bfd_lookup()) {
+            sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
+        } else {
+            sprintf(routine, "[%s] UNRESOLVED %s ADDR %p", node->info.funcname, node->info.filename, (void*)ip);
+        }
+	node->location = routine;
+        OmpTheHashTable()[ip] = node;
+    }
+    RtsLayer::UnLockDB();
+	TAU_VERBOSE("%s\n", node->location); fflush(stderr);
+    location = (char*)malloc(strlen(node->location)+1);
+    strcpy(location, node->location);
+    return location;
 }
+#endif
 
 #ifdef TAU_UNWIND
 typedef struct {
@@ -288,7 +324,9 @@ char * show_backtrace (int tid, int offset) {
 extern "C" void Tau_get_current_region_context(int tid) {
     // Tau_get_region_id (tid);
     char * tmpStr = NULL;
-#if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
+#if !defined (TAU_OPEN64ORC) && defined __GNUC__
+    tmpStr = get_proxy_name(); // find our top level timer
+#elif defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
     if (TauEnv_get_openmp_runtime_context() == 2) { // region
       tmpStr = show_backtrace(tid, 0); // find our source location
       if (tmpStr == NULL) {
@@ -309,23 +347,29 @@ extern "C" void Tau_get_current_region_context(int tid) {
 	    if (strstr(tmpStr, "OpenMP_PARALLEL_REGION: ") != NULL && strlen(tmpStr) > 23) {
 		    tmpStr = tmpStr+23;
 		}
-        Tau_collector_flags[tid].timerContext = (char*)realloc(Tau_collector_flags[tid].timerContext, strlen(tmpStr)+1);
+        //Tau_collector_flags[tid].timerContext = (char*)realloc(Tau_collector_flags[tid].timerContext, strlen(tmpStr)+1);
+        free(Tau_collector_flags[tid].timerContext);
+        Tau_collector_flags[tid].timerContext = (char*)malloc(strlen(tmpStr)+3);
     } else {
         Tau_collector_flags[tid].timerContext = (char*)malloc(strlen(tmpStr)+3);
     }
     strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
     //TAU_VERBOSE("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
     //TAU_VERBOSE("Forking with %d threads\n", omp_get_max_threads());
+#if 0
     int i;
     for (i = 0 ; i < omp_get_max_threads() ; i++) {
         if (i == tid) continue; // don't mess with yourself
         if (Tau_collector_flags[i].timerContext != NULL) {
-            Tau_collector_flags[i].timerContext = (char*)realloc(Tau_collector_flags[i].timerContext, strlen(tmpStr)+3);
+            //Tau_collector_flags[i].timerContext = (char*)realloc(Tau_collector_flags[i].timerContext, strlen(tmpStr)+3);
+            free(Tau_collector_flags[i].timerContext);
+            Tau_collector_flags[i].timerContext = (char*)malloc(strlen(tmpStr)+3);
         } else {
             Tau_collector_flags[i].timerContext = (char*)malloc(strlen(tmpStr)+3);
         }
         strcpy(Tau_collector_flags[i].timerContext, tmpStr);
     }
+#endif
     return;
 }
 
@@ -344,6 +388,8 @@ extern "C" void Tau_get_my_region_context(int tid, int forking) {
     } else { // timer or none
       tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
     }
+#elif !defined (TAU_OPEN64ORC) && defined __GNUC__
+    tmpStr = get_proxy_name(); // find our top level timer
 #else
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // find our top level timer
 #endif
@@ -353,7 +399,9 @@ extern "C" void Tau_get_my_region_context(int tid, int forking) {
 	    if (strstr(tmpStr, "OpenMP_PARALLEL_REGION: ") != NULL && strlen(tmpStr) > 23) {
 		    tmpStr = tmpStr+23;
 		}
-        Tau_collector_flags[tid].timerContext = (char*)realloc(Tau_collector_flags[tid].timerContext, strlen(tmpStr)+1);
+        //Tau_collector_flags[tid].timerContext = (char*)realloc(Tau_collector_flags[tid].timerContext, strlen(tmpStr)+1);
+        free(Tau_collector_flags[tid].timerContext);
+        Tau_collector_flags[tid].timerContext = (char*)malloc(strlen(tmpStr)+1);
     } else {
         Tau_collector_flags[tid].timerContext = (char*)malloc(strlen(tmpStr)+1);
     }
@@ -373,12 +421,17 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
     int contextLength = 10;
 #if 1
     char * regionIDstr = NULL;
+#if !defined (TAU_OPEN64ORC) && defined __GNUC__
+    // with the GOMP wrapper, we can get the proxy address directly!
+    Tau_get_my_region_context(tid, forking);
+#else
     // don't do this if the worker thread is entering the parallel region - use the master's timer
     // 1 means use the timer context
     if (TauEnv_get_openmp_runtime_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
     }
+#endif
     // use the current region as the context
     /* turns out the master thread wasn't updating it - so unlock and continue. */
     if (Tau_collector_flags[tid].timerContext == NULL) {
@@ -390,7 +443,9 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
     sprintf(regionIDstr, "%s: %s", state, Tau_collector_flags[tid].timerContext);
     // it is safe to set the active timer context now.
     if (Tau_collector_flags[tid].activeTimerContext != NULL) {
-      Tau_collector_flags[tid].activeTimerContext = (char*)realloc(Tau_collector_flags[tid].activeTimerContext, contextLength+1);
+      //Tau_collector_flags[tid].activeTimerContext = (char*)realloc(Tau_collector_flags[tid].activeTimerContext, contextLength+1);
+      free(Tau_collector_flags[tid].activeTimerContext);
+      Tau_collector_flags[tid].activeTimerContext = (char*)malloc(contextLength+1);
     } else {
       Tau_collector_flags[tid].activeTimerContext = (char*)malloc(contextLength+1);
     }
@@ -402,12 +457,17 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
     Tau_pure_start_openmp_task(regionIDstr, "", tid);
     free(regionIDstr);
 #else
+#if !defined (TAU_OPEN64ORC) && defined __GNUC__
+    // with the GOMP wrapper, we can get the proxy address directly!
+    Tau_get_my_region_context(tid, forking);
+#else
     // don't do this if the worker thread is entering the parallel region - use the master's timer
     // 1 means use the timer context
     if (TauEnv_get_openmp_runtime_context() == 1 && forking == 0) {
       // use the current timer as the context
       Tau_get_my_region_context(tid, forking);
     }
+#endif
     // use the current region as the context
     /* turns out the master thread wasn't updating it - so unlock and continue. */
     if (Tau_collector_flags[tid].timerContext == NULL || strlen(Tau_collector_flags[tid].timerContext)==0) {
@@ -418,7 +478,9 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
     }
     // it is safe to set the active timer context now.
     if (Tau_collector_flags[tid].activeTimerContext != NULL) {
-      Tau_collector_flags[tid].activeTimerContext = (char*)realloc(Tau_collector_flags[tid].activeTimerContext, contextLength+1);
+      //Tau_collector_flags[tid].activeTimerContext = (char*)realloc(Tau_collector_flags[tid].activeTimerContext, contextLength+1);
+      free(Tau_collector_flags[tid].activeTimerContext);
+      Tau_collector_flags[tid].activeTimerContext = (char*)malloc(contextLength+1);
     } else {
       Tau_collector_flags[tid].activeTimerContext = (char*)malloc(contextLength+1);
     }
@@ -508,7 +570,9 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
                 strcpy(Tau_collector_flags[tid].timerContext, __UNKNOWN__);
             }
             if (Tau_collector_flags[tid].activeTimerContext != NULL) {
-                Tau_collector_flags[tid].activeTimerContext = (char*)realloc(Tau_collector_flags[tid].activeTimerContext, strlen(Tau_collector_flags[tid].timerContext)+1);
+                //Tau_collector_flags[tid].activeTimerContext = (char*)realloc(Tau_collector_flags[tid].activeTimerContext, strlen(Tau_collector_flags[tid].timerContext)+1);
+                free(Tau_collector_flags[tid].activeTimerContext);
+                Tau_collector_flags[tid].activeTimerContext = (char*)malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
             } else {
                 Tau_collector_flags[tid].activeTimerContext = (char*)malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
             }
@@ -1115,6 +1179,7 @@ void my_idle_end(ompt_data_t *thread_data) {
   if (Tau_collector_flags[tid].parallel==0) {
     if (Tau_collector_flags[tid].activeTimerContext != NULL) {
         free(Tau_collector_flags[tid].activeTimerContext);
+		Tau_collector_flags[tid].activeTimerContext = NULL;
     }
     if (Tau_collector_flags[tid].timerContext == NULL) {
         Tau_collector_flags[tid].timerContext = (char*)malloc(strlen(__UNKNOWN__)+1);
@@ -1329,3 +1394,7 @@ extern __attribute__ ((weak))
   int __omp_collector_api(void *message) { TAU_VERBOSE ("Error linking GOMP wrapper. Try using tau_exec with the -gomp option.\n"); return -1; };
 #endif
 #endif
+
+extern "C" __attribute__ ((weak))
+void * Tau_get_gomp_proxy_address(void);
+
