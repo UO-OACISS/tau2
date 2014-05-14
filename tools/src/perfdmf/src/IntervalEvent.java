@@ -160,6 +160,15 @@ public class IntervalEvent {
                  String group = resultSet.getString(10);
                  int trialID = resultSet.getInt(11);
                  last = events.get(id);
+                 
+                 boolean isCallpath = false;
+                 if (name!=null&&name.contains(" => ")) {
+                 	isCallpath = true;
+                 	if(group!=null&&!group.contains("TAU_CALLPATH")){
+                 		group = group+"|TAU_CALLPATH";
+                 	}
+                 }
+                 
                  if (last != null) {
                 	 dataSource.addGroups(group, last);
                  } else {
@@ -173,9 +182,7 @@ public class IntervalEvent {
                     sourceRegion.setEndLine(resultSet.getInt(7));
                     sourceRegion.setStartColumn(resultSet.getInt(8));
                     sourceRegion.setEndColumn(resultSet.getInt(9));
-                    if (name.contains(" => ")) {
-                    	function.callpathFunction = true;
-                    }
+                    function.callpathFunction = isCallpath;
                     function.setShortName(resultSet.getString(4));
                     function.setSourceRegion(sourceRegion);
                  }
