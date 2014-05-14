@@ -232,6 +232,7 @@ public class UtilFncs {
         case 3:
             int hr = 0;
             int min = 0;
+            
             hr = (int) (d / 3600000000.00);
             //Calculate the number of microseconds left after hours are
             // subtracted.
@@ -252,19 +253,25 @@ public class UtilFncs {
 
             String secs;
 
-            if (hr >= 1 || min >= 1) {
-                // don't show fractional seconds if there is at least a minute
-                secs = formatDouble(d / 1000000, 1, false);
-            } else {
-                secs = formatDouble(d / 1000000, 3, false);
+//            if (hr >= 1 || min >= 1) {
+//                // don't show fractional seconds if there is at least a minute
+//                secs = formatDouble(d / 1000000, 3, false);
+//            } else {
+//                secs = formatDouble(d / 1000000, 3, false);
+//            }
+            
+            //To keep the columns even always create the seconds in the form dd.ddd. Pad with 0's if necessary.
+            secs = String.format("%.3f", d/1000000);
+            while(secs.length()<6){
+            	secs="0"+secs;
             }
 
-            if (secs.indexOf('E') != -1) { // never show exponential notation for hh:mm:ss
-                secs = "00";
-            }
-            if (secs.length() == 1) {
-                secs = "0" + secs;
-            }
+//            if (secs.indexOf('E') != -1) { // never show exponential notation for hh:mm:ss
+//                secs = "00";
+//            }
+//            if (secs.length() == 1) {
+//                secs = "0" + secs;
+//            }
             //System.out.println("secs = " + (d / 1000000) + ", out = " + secs);
             // remove the whitespace
             int idx = 0;
