@@ -6156,6 +6156,8 @@ fi
 
 /bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
 else
+    mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+    mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
     fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
     mpilibargs_added_to_fixmakeargs=yes
 fi
@@ -6550,6 +6552,8 @@ if [ $mpi = yes ] ; then
 		mpilibargs="-L$papidir/$\(PAPISUBDIR\)#$mpilibargs"
 		mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
 	    fi
+            mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+            mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
 	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 	    mpilibargs_added_to_fixmakeargs=yes
 
