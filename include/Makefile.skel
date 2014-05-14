@@ -984,9 +984,7 @@ HPCTOOLKIT_LINK=
 #       other variables like EXTRA_LINKER_ARGS. We are going to have to
 #       continually keep an eye on similar situations for Mac OS X until
 #       we can find a permanent fix.
-EXTRA_LINKER_ARGS=
-#APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
-# -rdynamic doesn't exist (nor does -export-dynamic) for gcc 4.6+
+EXTRA_LINKER_ARGS= 
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 ##############################################
