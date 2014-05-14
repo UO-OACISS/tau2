@@ -199,7 +199,6 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 
     // Compute relevant statistics for the data
     if (minEnabled && data < d.minVal) {
-      d.minVal = data;
 #ifdef TAU_USE_EVENT_THRESHOLDS
       if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
         if (name[0] != '[') { //re-entrant
@@ -207,15 +206,19 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
           sprintf(ename, "[GROUP=MIN_MARKER] %s", name.c_str());
           if (name.find("=>") == std::string::npos) {
             //DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
+#ifdef TAU_SCOREP
+            TAU_TRIGGER_EVENT(ename, data);
+#else /* TAU_SCOREP */
             TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
+#endif /* TAU_SCOREP */
           }
         }
       }
 #endif /* TAU_USE_EVENT_THRESHOLDS */
+      d.minVal = data;
     }
 
     if (maxEnabled && data > d.maxVal) {
-      d.maxVal = data;
 #ifdef TAU_USE_EVENT_THRESHOLDS
       if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
         if (name[0] != '[') { //re-entrant
@@ -223,11 +226,16 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
           sprintf(ename, "[GROUP=MAX_MARKER] %s", name.c_str());
           if (name.find("=>") == std::string::npos) {
             //DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
+#ifdef TAU_SCOREP
+            TAU_TRIGGER_EVENT(ename, data);
+#else /* TAU_SCOREP */
             TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
+#endif /* TAU_SCOREP */
           }
         }
       }
 #endif /* TAU_USE_EVENT_THRESHOLDS */
+      d.maxVal = data;
     }
 
     if (meanEnabled) {
