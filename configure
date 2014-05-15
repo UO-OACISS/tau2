@@ -6233,7 +6233,10 @@ if [ $mpi = yes ] ; then
     fi 
 
     if [ $scorep = yes ] ; then
-	wrapperlib="\$(SCOREPMPILIBS) -Wl,-rpath,\$(TAU_MPILIB_DIR)"
+	wrapperlib="\$(SCOREPMPILIBS)"
+        if [ $mpi = yes ]; then 
+          wrapperlib="$wrapperlib -Wl,-rpath,\$(TAU_MPILIB_DIR)"
+        fi
     fi
     
     if [ $perf = yes ] ; then
@@ -6554,8 +6557,10 @@ if [ $mpi = yes ] ; then
 		mpilibargs="-L$papidir/$\(PAPISUBDIR\)#$mpilibargs"
 		mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
 	    fi
-            mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
-            mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+            if [ $mpi = yes ]; then
+              mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+              mpiflibargs="$mpiflibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
+	    fi 
 	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
 	    mpilibargs_added_to_fixmakeargs=yes
 
