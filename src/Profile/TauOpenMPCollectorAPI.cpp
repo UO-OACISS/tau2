@@ -42,10 +42,11 @@ struct Tau_collector_status_flags {
     char acquired; // 4 bytes
     char waiting; // 4 bytes
 	unsigned long regionid; // 8 bytes
+	unsigned long taskid; // 8 bytes
     char *timerContext; // 8 bytes(?)
     int *signal_message; // preallocated message for signal handling, 8 bytes
     int *region_message; // preallocated message for region handling, 8 bytes
-    char _pad[128-((2*sizeof(int*))+(sizeof(char*))+(9*sizeof(char))+sizeof(unsigned long))];
+    char _pad[128-((2*sizeof(int*))+(sizeof(char*))+(9*sizeof(char))+(2*sizeof(unsigned long)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -207,12 +208,12 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
 
 #if !defined (TAU_OPEN64ORC) && defined __GNUC__
 extern "C" void * Tau_get_gomp_proxy_address(void);
-// this function won't actually do the backtrace, but rather get the frame pointer
-// for the outlined region.
-char * get_proxy_name() {
+
+// this function won't actually do the backtrace, but rather get the function
+// info for frame pointer of the outlined region.
+char * get_proxy_name(unsigned long ip) {
     char * location = NULL;
     tau_bfd_handle_t & OmpbfdUnitHandle = OmpTheBfdUnitHandle();
-    unsigned long ip = (unsigned long)Tau_get_gomp_proxy_address();
 	if (ip == 0) {
         location = (char*)malloc(strlen(__UNKNOWN__)+1);
         strcpy(location, __UNKNOWN__);
@@ -328,11 +329,14 @@ char * show_backtrace (int tid, int offset) {
 }
 #endif
 
-extern "C" void Tau_get_current_region_context(int tid) {
+extern "C" void Tau_get_current_region_context(int tid, unsigned long ip) {
     Tau_get_region_id (tid);
     char * tmpStr = NULL;
-#if !defined (TAU_OPEN64ORC) && defined __GNUC__
-    tmpStr = get_proxy_name(); // find our top level timer
+#if !defined (TAU_OPEN64ORC) // Generic ORA support requires unwinding
+#if !defined (TAU_USE_OMPT)  // OMPT already has the frame pointer
+    ip = (unsigned long)Tau_get_gomp_proxy_address();
+#endif
+    tmpStr = get_proxy_name(ip); // find our top level timer
 #elif defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
     if (TauEnv_get_openmp_runtime_context() == 2) { // region
       tmpStr = show_backtrace(tid, 0); // find our source location
@@ -373,8 +377,9 @@ extern "C" void Tau_get_current_region_context(int tid) {
 extern "C" void Tau_get_my_region_context(int tid, int forking) {
     Tau_get_region_id (tid);
     char * tmpStr = NULL;
-#if !defined (TAU_OPEN64ORC) && defined __GNUC__
-    tmpStr = get_proxy_name(); // find our top level timer
+#if !defined (TAU_OPEN64ORC) && !defined(TAU_USE_OMPT)
+    unsigned long ip = (unsigned long)Tau_get_gomp_proxy_address();
+    tmpStr = get_proxy_name(ip); // find our top level timer
 #else
     tmpStr = region_names[Tau_collector_flags[tid].regionid];
 #endif
@@ -452,7 +457,7 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 
     switch(event) {
         case OMP_EVENT_FORK:
-            Tau_get_current_region_context(tid);
+            Tau_get_current_region_context(tid, 0LU);
             Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1);
             Tau_collector_flags[tid].parallel++;
             break;
@@ -916,7 +921,8 @@ extern "C" void my_parallel_region_create (
   void *parallel_function)          /* pointer to outlined function */
 {
   TAU_OMPT_COMMON_ENTRY;
-  Tau_get_current_region_context(tid);
+  Tau_collector_flags[tid].regionid = parallel_id;
+  Tau_get_current_region_context(tid, (unsigned long)parallel_function);
   Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1);
   //Tau_ompt_start_timer("PARALLEL_REGION", parallel_id);
   Tau_collector_flags[tid].parallel++;
@@ -931,6 +937,7 @@ void my_parallel_region_exit (
   void *parallel_function)          /* pointer to outlined function */
 {
   TAU_OMPT_COMMON_ENTRY;
+  Tau_collector_flags[tid].regionid = parallel_id;
   if (Tau_collector_flags[tid].parallel>0) {
     Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1);
     //Tau_ompt_stop_timer("PARALLEL_REGION", parallel_id);
@@ -1053,6 +1060,7 @@ TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_lock,my_acquired_lock,my_release_lock,"Ope
 #define TAU_OMPT_SIMPLE_BEGIN_AND_END(BEGIN_FUNCTION,END_FUNCTION,NAME) \
 void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
+  Tau_collector_flags[tid].regionid = parallel_id; \
   /*Tau_ompt_start_timer(NAME, parallel_id); */ \
   Tau_omp_start_timer(NAME, tid, 1, 0); \
   TAU_OMPT_COMMON_EXIT; \
@@ -1060,6 +1068,7 @@ void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
 \
 void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
+  Tau_collector_flags[tid].regionid = parallel_id; \
   /*Tau_ompt_stop_timer(NAME, parallel_id); */ \
   Tau_omp_stop_timer(NAME, tid, 0); \
   TAU_OMPT_COMMON_EXIT; \
@@ -1068,6 +1077,7 @@ void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
 #define TAU_OMPT_LOOP_BEGIN_AND_END(BEGIN_FUNCTION,END_FUNCTION,NAME) \
 void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
+  Tau_collector_flags[tid].regionid = parallel_id; \
   /*Tau_ompt_start_timer(NAME, parallel_id); */ \
   Tau_omp_start_timer(NAME, tid, 1, 0); \
   Tau_collector_flags[tid].looping=1; \
@@ -1076,6 +1086,7 @@ void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
 \
 void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
+  Tau_collector_flags[tid].regionid = parallel_id; \
   /*Tau_ompt_stop_timer(NAME, parallel_id); */ \
   if (Tau_collector_flags[tid].looping==1) { \
   Tau_omp_stop_timer(NAME, tid, 0); } \
@@ -1152,6 +1163,12 @@ void my_idle_begin(void) {
     fflush(stderr); \
   }
 
+
+//ompt_get_task_frame_t ompt_get_task_frame;
+//ompt_enumerate_state_t ompt_enumerate_state;
+//ompt_set_callback_t ompt_set_callback;
+//ompt_get_state_t ompt_get_state;
+
 int ompt_initialize() {
   Tau_init_initializeTAU();
   if (initialized || initializing) return 0;
@@ -1159,6 +1176,8 @@ int ompt_initialize() {
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
   omp_init_lock(&writelock);
+
+  region_names = (char**)calloc(num_regions, sizeof(char*));
 
   /* required events */
   CHECK(ompt_event_parallel_create, my_parallel_region_create, "parallel_create");
@@ -1284,6 +1303,22 @@ int ompt_initialize() {
   return 1;
 }
 
+// the newer interface includes a callback method for function lookups
+int ompt_initialize(ompt_function_lookup_t lookup) {
+  //ompt_get_task_frame = (ompt_get_task_frame_t) lookup("ompt_get_task_frame");
+  //ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
+  //ompt_enumerate_state = (ompt_enumerate_state_t) lookup("ompt_enumerate_state");
+  //ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
+  ompt_initialize();
+}
+
+// the newer version of the library will have a version as well
+int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, int ompt_version) {
+  TAU_VERBOSE("Init: %s ver %i\n",runtime_version,ompt_version);
+  ompt_initialize(lookup);
+}
+
+
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
 std::string * Tau_get_thread_ompt_state(int tid) {
     // if not available, return something useful
@@ -1297,12 +1332,6 @@ std::string * Tau_get_thread_ompt_state(int tid) {
     return OMPT_STATE_NAMES[state];
 }
 #endif
-
-extern "C" void TauInitOMPT(void)
-{
-  TAU_VERBOSE("TauInitOMPT\n");
-  ompt_initialize();
-}
 
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE OMPT SUPPORT IS NONEXISTENT */
 
