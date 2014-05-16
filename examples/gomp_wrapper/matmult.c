@@ -261,7 +261,7 @@ int flush() {
 
   int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
   //int maxthreads = omp_get_num_threads();
-  #pragma omp parallel sections
+  #pragma omp parallel sections default(shared)
   {
     #pragma omp section
     {
@@ -404,10 +404,10 @@ void test2(int iter)
 int ordered( ) 
 {
   int i;
-#pragma omp parallel
+#pragma omp parallel shared(i)
   {
     i = test(1, 8);
-#pragma omp for ordered schedule(dynamic) 
+#pragma omp for ordered schedule(dynamic)
     for (i = 0 ; i < 5 ; i++)
       test2(i);
   }
