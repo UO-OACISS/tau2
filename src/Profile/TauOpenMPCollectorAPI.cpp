@@ -64,11 +64,9 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] __
 static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = {0};
 #endif
 
-// this is an array of region names, indexed by region id.
-static char ** region_names;
-static char ** task_names;
-static unsigned long num_regions = 1024UL;
-static unsigned long num_tasks = 1024UL;
+// this is map of region names, indexed by region id.
+static std::map<unsigned long, char*> region_names;
+static std::map<unsigned long, char*> task_names;
 
 static omp_lock_t writelock;
 
@@ -159,10 +157,6 @@ void Tau_get_region_id(int tid) {
       TAU_VERBOSE("Error getting region id from ORA!\n");
 	} else {
       TAU_VERBOSE("Thread %d, region ID : %lu\n", tid, Tau_collector_flags[tid].regionid);
-	}
-	if (Tau_collector_flags[tid].regionid >= num_regions) {
-        num_regions = num_regions + 1024UL;
-	    region_names = (char**)realloc(region_names, num_regions * sizeof(char*));
 	}
     return;
 }
@@ -369,10 +363,14 @@ extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool t
 	// save the region name for the worker threads in this team to access
 	if (task) {
 	    TAU_VERBOSE("Task %lu has name %s\n", Tau_collector_flags[tid].taskid, tmpStr);
+        omp_set_lock(&writelock);
 	    task_names[Tau_collector_flags[tid].taskid] = strdup(tmpStr);
+        omp_unset_lock(&writelock);
 	} else {
 	    TAU_VERBOSE("Region %lu has name %s\n", Tau_collector_flags[tid].regionid, tmpStr);
+        omp_set_lock(&writelock);
 	    region_names[Tau_collector_flags[tid].regionid] = strdup(tmpStr);
+        omp_unset_lock(&writelock);
 	}
     return;
 }
@@ -387,10 +385,14 @@ extern "C" void Tau_get_my_region_context(int tid, int forking, bool task) {
     tmpStr = get_proxy_name(ip); // find our top level timer
 #else
     if (task) {
+        omp_set_lock(&writelock);
         tmpStr = task_names[Tau_collector_flags[tid].taskid];
+        omp_unset_lock(&writelock);
 	    TAU_VERBOSE("Thread %d, Task %lu has name %s\n", tid, Tau_collector_flags[tid].taskid, tmpStr);
 	} else {
+        omp_set_lock(&writelock);
         tmpStr = region_names[Tau_collector_flags[tid].regionid];
+        omp_unset_lock(&writelock);
 	    TAU_VERBOSE("Thread %d, Region %lu has name %s\n", tid, Tau_collector_flags[tid].regionid, tmpStr);
 	}
 #endif
@@ -820,11 +822,6 @@ extern "C" int Tau_initialize_collector_api(void) {
       omp_unset_lock(&writelock);
     }
 
-    // start with the capacity to store 1k region names, we will
-	// extend that later if/when necessary.
-	region_names = (char**)calloc(num_regions, sizeof(char*));
-	task_names = (char**)calloc(num_tasks, sizeof(char*));
-
     initializing = false;
     return 0;
 }
@@ -956,6 +953,11 @@ void my_parallel_region_exit (
     //Tau_ompt_stop_timer("PARALLEL_REGION", parallel_id);
     Tau_collector_flags[tid].parallel--;
   }
+  omp_set_lock(&writelock);
+  char * tmpStr = region_names[Tau_collector_flags[tid].regionid];
+  free(tmpStr);
+  region_names.erase(Tau_collector_flags[tid].regionid);
+  omp_unset_lock(&writelock);
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -968,10 +970,6 @@ void my_task_create (
 {
   TAU_OMPT_COMMON_ENTRY;
   Tau_collector_flags[tid].taskid = new_task_id;
-  if (Tau_collector_flags[tid].taskid >= num_tasks) {
-    num_tasks = num_tasks + 1024UL;
-    task_names = (char**)realloc(task_names, num_tasks * sizeof(char*));
-  }
   Tau_get_current_region_context(tid, (unsigned long)task_function, true);
   Tau_omp_start_timer("OpenMP_TASK", tid, 1, 0, true);
   //Tau_ompt_start_timer("OpenMP_TASK", 0);
@@ -988,6 +986,11 @@ void my_task_exit (
   TAU_OMPT_COMMON_ENTRY;
   Tau_omp_stop_timer("OpenMP_TASK", tid, 1);
   //Tau_ompt_stop_timer("OpenMP_TASK", 0);
+  omp_set_lock(&writelock);
+  char * tmpStr = task_names[Tau_collector_flags[tid].taskid];
+  free(tmpStr);
+  task_names.erase(Tau_collector_flags[tid].taskid);
+  omp_unset_lock(&writelock);
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -1195,9 +1198,6 @@ int ompt_initialize() {
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
   omp_init_lock(&writelock);
-
-  region_names = (char**)calloc(num_regions, sizeof(char*));
-  task_names = (char**)calloc(num_tasks, sizeof(char*));
 
   /* required events */
   CHECK(ompt_event_parallel_create, my_parallel_region_create, "parallel_create");
