@@ -411,7 +411,7 @@ alfred(void *arg)
 }
 #endif
 
-#ifdef TAU_IBM_OMPT
+#if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
 extern "C" void TauInitOMPT(void);
 #endif /* TAU_IBM_OMPT */
 
@@ -436,7 +436,7 @@ extern "C" int Tau_init_initializeTAU()
   /* initialize environment variables */
   TauEnv_initialize();
 
-#ifdef TAU_IBM_OMPT
+#if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
   TauInitOMPT();
 #endif /* TAU_IBM_OMPT */
 

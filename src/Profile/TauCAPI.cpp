@@ -253,6 +253,7 @@ extern "C" void Tau_stack_initialization() {
 
 extern "C" int Tau_global_get_insideTAU() {
   Tau_stack_checkInit();
+  //printf("checking TAU: %d\n", _Tau_global_insideTAU); fflush(stdout);
 #if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return _Tau_global_insideTAU;
 #elif defined(TAU_USE_PGS)
