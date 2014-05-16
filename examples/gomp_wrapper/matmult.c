@@ -16,7 +16,7 @@
 #include <math.h>
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 1024
+#define MATRIX_SIZE 256
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -503,7 +503,7 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
 #if !defined(TAU_OPEN64ORC) && !defined(TAU_IBM_OMPT)
   // OpenUH and IBM don't handle the ordered test well.
-  //printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
+  printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
 #endif
   printf ("\n\nDoing sections: %d\n\n", sections()); fflush(stdout);
   printf ("\n\nDoing single: %d\n\n", single()); fflush(stdout);
