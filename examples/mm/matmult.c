@@ -46,6 +46,14 @@ double** allocateMatrix(int rows, int cols) {
   return matrix;
 }
 
+void freeMatrix(double** matrix, int rows, int cols) {
+  int i;
+  for (i=0; i<rows; i++) {
+    free(matrix[i]);
+  }
+  free(matrix);
+}
+
 #ifdef APP_USE_INLINE_MULTIPLY
 __inline double multiply(double a, double b) {
 	return a * b;
@@ -56,24 +64,29 @@ __inline double multiply(double a, double b) {
 // cols_a and rows_b are the same value
 void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
-#pragma omp parallel private(i) shared(a,b,c) num_threads(2)
+  double tmp = 0.0;
+//num_threads(2)
+#pragma omp parallel private(i) shared(a,b,c) 
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for nowait schedule(dynamic,1)
     for (i=0; i<rows_a; i++) {
-#pragma omp parallel private(i,j,k) shared(a,b,c) num_threads(2)
+//num_threads(2)
+#pragma omp parallel private(i,j,k) shared(a,b,c) 
       {
-#pragma omp for nowait
-      for(j=0; j<cols_b; j++) {
+#pragma omp for nowait schedule(dynamic,1)
         for (k=0; k<cols_a; k++) {
+          for(j=0; j<cols_b; j++) {
 #ifdef APP_USE_INLINE_MULTIPLY
-          c[i][j] += multiply(a[i][k], b[k][j]);
+              c[i][j] += multiply(a[i][k], b[k][j]);
 #else 
-          c[i][j] += a[i][k] * b[k][j];
+              tmp = a[i][k];
+			  tmp = tmp * b[k][j];
+              c[i][j] += tmp;
 #endif 
-        }
-      }
+            }
+          }
       }
     }
   }   /*** End of parallel region ***/
@@ -140,9 +153,9 @@ double do_work(void) {
   compute(a, b, c, NRA, NCA, NCB);
 #if defined(TAU_OPENMP)
 #if 0
-  if (omp_get_nested()) {
+  //if (omp_get_nested()) {
     compute_nested(a, b, c, NRA, NCA, NCB);
-  }
+  //}
 #endif
 #endif
 #ifdef TAU_MPI
@@ -154,7 +167,13 @@ double do_work(void) {
 #endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
-  return c[0][1]; 
+  double result = c[0][1];
+
+  freeMatrix(a, NRA, NCA);
+  freeMatrix(b, NCA, NCB);
+  freeMatrix(c, NCA, NCB);
+
+  return result;
 }
 
 #ifdef PTHREADS
@@ -253,7 +272,10 @@ int main (int argc, char *argv[])
 #endif /* PTHREADS */
 
 /* On thread 0: */
+  int i;
+  //for (i = 0 ; i < 100 ; i++) {
   do_work();
+  //}
 
 #ifdef PTHREADS 
   if (ret = pthread_join(tid1, NULL) )
