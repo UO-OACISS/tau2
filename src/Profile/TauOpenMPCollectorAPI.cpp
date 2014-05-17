@@ -174,7 +174,9 @@ void Tau_get_task_id(int tid) {
     return;
 }
 
-#if defined (TAU_UNWIND) || (!defined (TAU_OPEN64ORC) && defined __GNUC__)
+//#if defined (TAU_UNWIND) || (!defined (TAU_OPEN64ORC) && defined __GNUC__)
+#ifdef TAU_BFD
+
 /*
  *-----------------------------------------------------------------------------
  * Simple hash table to map function addresses to region names/identifier
@@ -217,6 +219,7 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
 
 #if !defined (TAU_OPEN64ORC) && defined __GNUC__
 extern "C" void * Tau_get_gomp_proxy_address(void);
+#endif
 
 // this function won't actually do the backtrace, but rather get the function
 // info for frame pointer of the outlined region.
@@ -249,7 +252,6 @@ char * get_proxy_name(unsigned long ip) {
     strcpy(location, node->location);
     return location;
 }
-#endif
 
 #ifdef TAU_UNWIND
 typedef struct {
@@ -339,7 +341,7 @@ char * show_backtrace (int tid, int offset) {
 
 extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool task) {
     char * tmpStr = NULL;
-#if !defined (TAU_OPEN64ORC) // Generic ORA support requires unwinding
+#if !defined (TAU_IBM_OMPT) && !defined (TAU_OPEN64ORC) // IBM OMPT and Generic ORA support requires unwinding
 #if !defined (TAU_USE_OMPT)  // OMPT already has the frame pointer
     // make a call to the GOMP wrapper to get the outlined function pointer
     ip = (unsigned long)Tau_get_gomp_proxy_address();
@@ -367,12 +369,12 @@ extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool t
 
 	// save the region name for the worker threads in this team to access
 	if (task) {
-	    //TAU_VERBOSE("Task %lu has name %s\n", Tau_collector_flags[tid].taskid, tmpStr);
+	    TAU_VERBOSE("Task %lu has name %s\n", Tau_collector_flags[tid].taskid, tmpStr);
         omp_set_lock(&writelock);
 	    task_names[Tau_collector_flags[tid].taskid] = strdup(tmpStr);
         omp_unset_lock(&writelock);
 	} else {
-	    //TAU_VERBOSE("Region %lu has name %s\n", Tau_collector_flags[tid].regionid, tmpStr);
+	    TAU_VERBOSE("Region %lu has name %s\n", Tau_collector_flags[tid].regionid, tmpStr);
         omp_set_lock(&writelock);
 	    region_names[Tau_collector_flags[tid].regionid] = strdup(tmpStr);
         omp_unset_lock(&writelock);
@@ -393,12 +395,16 @@ extern "C" char * Tau_get_my_region_context(int tid, int forking, bool task) {
         omp_set_lock(&writelock);
         tmpStr = task_names[Tau_collector_flags[tid].taskid];
         omp_unset_lock(&writelock);
-	    //TAU_VERBOSE("Thread %d, Task %lu has name %s\n", tid, Tau_collector_flags[tid].taskid, tmpStr);
+	    TAU_VERBOSE("Thread %d, Task %lu has name %s\n", tid, Tau_collector_flags[tid].taskid, tmpStr);
 	} else {
         omp_set_lock(&writelock);
+#if defined (TAU_IBM_OMPT) // IBM OMPT switches things up...
+        tmpStr = region_names[Tau_collector_flags[tid].taskid];
+#else
         tmpStr = region_names[Tau_collector_flags[tid].regionid];
+#endif
         omp_unset_lock(&writelock);
-	    //TAU_VERBOSE("Thread %d, Region %lu has name %s\n", tid, Tau_collector_flags[tid].regionid, tmpStr);
+	    TAU_VERBOSE("Thread %d, Region %lu has name %s\n", tid, Tau_collector_flags[tid].regionid, tmpStr);
 	}
 #endif
     if (tmpStr == NULL)
@@ -891,6 +897,10 @@ extern "C" void my_parallel_region_create (
 {
   TAU_OMPT_COMMON_ENTRY;
   Tau_collector_flags[tid].regionid = parallel_id;
+#ifdef TAU_IBM_OMPT
+  Tau_collector_flags[tid].taskid = parallel_id; // necessary for IBM, appears broken
+#endif
+  TAU_VERBOSE("New Region: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, parallel_id = %lu, parallel_function = %p\n", parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_id, parallel_function);
   Tau_get_current_region_context(tid, (unsigned long)parallel_function, false);
   Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1, false);
   Tau_collector_flags[tid].parallel++;
@@ -927,6 +937,7 @@ void my_task_create (
 {
   TAU_OMPT_COMMON_ENTRY;
   Tau_collector_flags[tid].taskid = new_task_id;
+  TAU_VERBOSE("New Task: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, new_task_id = %lu, task_function = %p\n", parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, new_task_id, task_function); fflush(stderr);
   Tau_get_current_region_context(tid, (unsigned long)task_function, true);
   Tau_omp_start_timer("OpenMP_TASK", tid, 1, 0, true);
   TAU_OMPT_COMMON_EXIT;
@@ -1038,6 +1049,8 @@ TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_lock,my_acquired_lock,my_release_lock,"Ope
 void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
+  Tau_collector_flags[tid].taskid = task_id; \
+  TAU_VERBOSE("New Entry: parallel_id = %lu, task_id = %lu %s\n", parallel_id, task_id, NAME); fflush(stderr); \
   Tau_omp_start_timer(NAME, tid, 1, 0, false); \
   TAU_OMPT_COMMON_EXIT; \
 } \
@@ -1045,6 +1058,7 @@ void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
 void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
+  Tau_collector_flags[tid].taskid = task_id; \
   Tau_omp_stop_timer(NAME, tid, 0); \
   TAU_OMPT_COMMON_EXIT; \
 }
@@ -1053,6 +1067,8 @@ void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
 void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
+  Tau_collector_flags[tid].taskid = task_id; \
+  TAU_VERBOSE("New Entry: parallel_id = %lu, task_id = %lu %s\n", parallel_id, task_id, NAME); fflush(stderr); \
   Tau_omp_start_timer(NAME, tid, 1, 0, false); \
   Tau_collector_flags[tid].looping=1; \
   TAU_OMPT_COMMON_EXIT; \
@@ -1061,6 +1077,7 @@ void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
 void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
+  Tau_collector_flags[tid].taskid = task_id; \
   if (Tau_collector_flags[tid].looping==1) { \
   Tau_omp_stop_timer(NAME, tid, 0); } \
   Tau_collector_flags[tid].looping=0; \
@@ -1278,13 +1295,13 @@ int ompt_initialize(ompt_function_lookup_t lookup) {
   //ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
   //ompt_enumerate_state = (ompt_enumerate_state_t) lookup("ompt_enumerate_state");
   //ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
-  ompt_initialize();
+  return ompt_initialize();
 }
 
 // the newest version of the library will have a version as well
 int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, int ompt_version) {
   TAU_VERBOSE("Init: %s ver %i\n",runtime_version,ompt_version);
-  ompt_initialize(lookup);
+  return ompt_initialize(lookup);
 }
 
 
