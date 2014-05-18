@@ -277,8 +277,12 @@ def showChildren(ebds, className, full, classTotal):
 	othervalue = 0
 	showmax=len(methods) # set to len(methods) to show all methods
 	for m in sorted(methods, key=methods.get, reverse=True):
-		percall = methods[m] / methodcalls[m]
-		perclass = methods[m] / classTotal
+		percall = 0.0
+		perclass = 0.0
+		if methodcalls[m] > 0:
+			percall = methods[m] / methodcalls[m]
+		if classTotal > 0:
+			perclass = methods[m] / classTotal
 		if percall < threshold and perclass > percentClass:
 			print "\tMethod '%s' : total = %.2e, calls = %.2e, percall = %.2f, %%class = %.2f%%" % (m,methods[m],methodcalls[m],percall,perclass)
 

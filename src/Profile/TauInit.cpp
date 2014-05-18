@@ -411,10 +411,6 @@ alfred(void *arg)
 }
 #endif
 
-#ifdef TAU_IBM_OMPT
-extern "C" void TauInitOMPT(void);
-#endif /* TAU_IBM_OMPT */
-
 extern "C" int Tau_init_initializeTAU()
 {
   //protect against reentrancy
@@ -435,10 +431,6 @@ extern "C" int Tau_init_initializeTAU()
 
   /* initialize environment variables */
   TauEnv_initialize();
-
-#ifdef TAU_IBM_OMPT
-  TauInitOMPT();
-#endif /* TAU_IBM_OMPT */
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */

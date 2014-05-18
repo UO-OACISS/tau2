@@ -3,7 +3,7 @@ TAU_MAKEFILE ?=../../include/Makefile
 include $(TAU_MAKEFILE)
 
 #CXX=opencc -fopenmp
-CXX=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_cc.sh -optCompInst
+CXX=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_cc.sh
 LD=$(CXX)
 AR=ar
 ARFLAGS=rcv
