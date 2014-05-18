@@ -73,7 +73,6 @@ declare -i optFixHashIf=$FALSE
 declare -i tauPreProcessor=$TRUE
 declare -i optMICOffload=$FALSE
 
-headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
@@ -269,7 +268,6 @@ for arg in "$@"; do
 done
 echoIfDebug "\nRegular command passed is --  $regularCmd "; 
 echoIfDebug "The compiler being read is $CMD \n"
-
 
 ####################################################################
 # Initialize optOpariOpts 
@@ -1707,6 +1705,7 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
     done
 fi
 
+
 ####################################################################
 # Header file instrumentation
 ####################################################################
@@ -1717,12 +1716,43 @@ if [ $optHeaderInst == $TRUE ]; then
 #     echo "*****************************"
 #     echo ""
 
-    headerInstFlag="-I.tau_tmp_$$"
+
+    #headerInstDir=".tau_tmp_$$"
+    # Save all the options and configuration variables to create a hash of this configuration
+    args=`set | grep -v BASH_ARGV | grep opt | tr '\n' ' '`
+    allopts=""
+    for opt in "$args disablePdtStep hasAnOutputFile fortranParserDefined gfparseUsed pdtUsed roseUsed isForCompilation \
+	hasAnObjectOutputFile removeMpi needToCleanPdbInstFiles pdbFileSpecified optResetUsed optMemDbg optFujitsu \
+        cleanUpOpariFileLater optPdtF95ResetSpecified isVerbose isCXXUsedForC isCurrentFileC isDebug \
+        opari opari2 opari2init \
+        errorStatus gotoNextStep counter errorStatus numFiles \
+        tempCounter counterForOutput counterForOptions temp idcounter \
+        preprocess continueBeforeOMP trackIO trackUPCR linkOnly trackDMAPP trackPthread trackGOMP trackMPCThread \
+        revertOnError revertForced optShared optCompInst optHeaderInst disableCompInst madeToLinkStep \
+        optFixHashIf tauPreProcessor optMICOffload"; do
+
+        allopts="$allopts $opt=`echo ${!opt}`"
+    done
+
+    # Portable hashing wrapper OSX uses md5
+    hashstr=""
+    if builtin command -v md5 > /dev/null; then
+        hashstr=`echo "$allopts" | md5`
+    elif builtin command -v md5sum > /dev/null ; then
+        hashstr=`echo "$allopts" | md5sum | awk '{print $1}'`
+    else
+        echo "TAU WARNING: Neither md5 nor md5sum were found in the PATH; " +
+           "Make sure to remove all generated directories named tau_headers_HASHSTR " +
+           "from your source tree before instrumenting with different options."
+    fi
+    headerInstDir="tau_headers_$hashstr"
+    #headerInstDir="tau_headers"
+    headerInstFlag="-I$headerInstDir"
     tempCounter=0
     while [ $tempCounter -lt $numFiles ]; do
 	instFileName=${arrTau[$tempCounter]##*/}
-	rm -rf $headerInstDir
-	mkdir "$headerInstDir"
+	#rm -rf $headerInstDir
+	if [ ! -d $headerInstDir ]; then mkdir "$headerInstDir"; fi
 	pdbFile=${arrPdb[$tempCounter]##*/}
         if [ $isCXXUsedForC == $TRUE ]; then
             pdbFile=${saveTempFile}
@@ -1739,13 +1769,19 @@ if [ $optHeaderInst == $TRUE ]; then
 
 	idcounter=0
 	for header in `$headerlister $pdbFile` ; do
+            # Check whether header is already instrumented; note that to force reinstrumentation
+            # users should remove all .tau_headers_* subdirectories in their source trees
 	    filebase=`echo ${header} | sed -e's/.*\///'`
-	    id=${idarray[$idcounter]};
-	    tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/${id}_tau_${filebase} "
-	    tauCmd="$tauCmd $optTau $optTauSelectFile"
-	    evalWithDebugMessage "$tauCmd" "Instrumenting header with TAU"
-	    $headerreplacer $pdbFile $header $headerInstDir/${id}_tau_${filebase} > $headerInstDir/${id}_tau_hr_${filebase}
-			cp $header $headerInstDir
+            if [ -e "$headerInstDir/$filebase" ]; then 
+                echo "Reusing TAU-instrumented header $headerInstDir/$filebase"; 
+            else
+	        id=${idarray[$idcounter]};
+	        tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/${id}_tau_${filebase} "
+	        tauCmd="$tauCmd $optTau $optTauSelectFile"
+	        evalWithDebugMessage "$tauCmd" "Instrumenting header with TAU"
+	        $headerreplacer $pdbFile $header $headerInstDir/${id}_tau_${filebase} > $headerInstDir/${id}_tau_hr_${filebase}
+		cp $header $headerInstDir
+            fi
 	    idcounter=idcounter+1
 	done
 
@@ -2142,9 +2178,9 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	tempCounter=tempCounter+1
     done
 
-    if [ $optHeaderInst == $TRUE ] ; then
-	evalWithDebugMessage "/bin/rm -rf $headerInstDir" "cleaning header instrumentation directory"
-    fi
+    #if [ $optHeaderInst == $TRUE ] ; then
+    #	evalWithDebugMessage "/bin/rm -rf $headerInstDir" "cleaning header instrumentation directory"
+    #fi
 
     if [ "x$filesToClean" != "x" ] ; then
 	evalWithDebugMessage "/bin/rm -f $filesToClean" "cleaning inst file"
