@@ -1,25 +1,894 @@
-About
-----------
-Android is different from general Linux in several ways. This README will
-summerize those differences and highlight the constrains to TAU implied.
+                  TAU for Android (1st draft)
 
-BIONIC
----------
-Android is not using standard glibc but a customized libc named "BIONIC".
-BIONIC lacks of some features which will affect TAU in several ways.
+This document describes the usage and some internals of TAU for
+Android App profiling.
 
-1. <ucontext.h>/getcontext()/setcontext()
-2. <execinfo.h>/backtrace()
-3. pvalloc()
-4. cuserid()
+=== Table of Contents
 
-DELVIK VM
----------
-The VM used by Android is named "Dalvik" and it is total different
-compared with the traditional JVM. Java bytecode won't run on Android
-directly. Java class should be compiled into Dalvik bytecode. Dalvik
-does not align to Java SE nor Java ME class library profiles. Instead it
-uses its own library built on a subset of the Apache Harmony Java
-implementation.
+	=== 1 Overview
+        === 2 User Notes
+	   --- 2.1 How to build
+	   --- 2.2 General usage
+	=== 3 Developer Notes
+	   --- 3.1 Zygote
+	   --- 3.2 ASMDEX
+	   --- 3.3 Binary Injection
+	   --- 3.4 Thread IDs
+	   --- 3.5 Thread Monitoring
+	   --- 3.6 Constructor and finalizer
+	   --- 3.7 Misc
 
-<To be continued...>
+=== 1 Overview
+
+Now TAU has some preliminary support for Android App profiling. This
+is still experimental but it works pretty well on many Apps. Some of
+the design goal and highlights of this feature include:
+
+ - Binary injection based, you do not need the App source code
+ - Root-free, you do not need to root the device or change the ROM
+   in any means
+ - Easy to use, you feed in the original APK package and we give you
+   back an injected one, which you can install and use as normal to
+   collect the profiling data
+ - Support most of the TAU features and works pretty much the same way
+
+There are some limitations though:
+
+ - This is experimental, not guarantied to work on your App or device
+ - Only tested on Linux (Host System) and ARM (Android Device)
+ - Runtime behavior can only be changed with configure file (tau.conf)
+ - Conflict with JDWP/DDM based tools. The JDWP channel is occupied
+   by TAU so you can not use tools like adb, DDMS, Traceview, etc.
+ - You need to setup network access for your device to collect the
+   profiling data. Internet access is not needed though
+
+We will explain the points above in detail in the following sections.
+	
+=== 2 User Notes
+
+--- 2.1 How to build
+
+PREREQUISITES
+
+ - Linux host system
+
+   You need a x86/x64 Linux system to compile and run the tools provided
+   by TAU package.
+
+ - JDK
+
+   Make sure JDK (either 1.6 or 1.7) is installed on your host system.
+   Oracle JDK is preferred [FIXME: or mandatory?].
+
+ - Know your Android Device
+
+   Find out the Android version installed on your device. Usually you can
+   figure it out through "Settings -> About phone". You may also need to
+   have a look at the page below to understand the API level:
+
+      https://source.android.com/source/build-numbers.html
+
+ - Android SDK
+
+   Download and install Android SDK from:
+
+      http://developer.android.com/sdk/index.html
+
+   Run "<sdk>/tools/android" to make sure following components are 
+   installed. Make sure the Android version and API level matches your
+   device (if applicable).
+
+     * Android SDK Tools
+     * Android SDK Platform-tools
+     * Android SDK Build-tools
+     * SDK Platform
+
+   Put those tools in your PATH.
+
+ - Cross-compiler
+
+   We are using the cross-compiler that comes with Android NDK. Download
+   and install from the link below:
+
+      https://developer.android.com/tools/sdk/ndk/index.html
+
+   Read and understand <ndk>/docs/STANDALONE-TOOLCHAIN.html. Make sure
+   you are choosing the right API level and gcc 4.8 (We are using
+   C++11 std::mutex which is not supported before gcc 4.8). Put the 
+   compiler binary in your PATH.
+
+CONFIGURE
+
+  Now run the configure scripts in the TAU package as usual. You must
+  specify following flags:
+
+    * -arch=arm_android
+    * -useropt=-std=c++0x
+    * -host=arm-linux-androideabi
+    * -jdk=<path_to_jdk_toplevel_dir>
+    * -android_sdk=<path_to_android_sdk_toplevel_dir>
+    * [FIXME: some Android version is hardcoded in TAU]
+    * [FIXME: do we really need -android_sdk ?]
+
+  You may also want to provide "-prefix=<install_dir>".
+
+  We depend on ASMDEX[1], a third party Java library which we will
+  talk more about it in the following sections. By default, configure
+  script will try to wget a source tarball of ASMDEX from TAU website
+  and build. If you don't have internet access, you may want to copy
+  it from other place and have a look at `-asmdex' option of the
+  configure script.
+
+BUILD
+
+  Simply run "make install"
+
+--- 2.2 General usage
+
+We provide two tools to the user which they can use to inject their
+APK packages.
+
+ - DexInjector
+
+   This is a Java application which could inject proper TAU API calls
+   into classes.dex (the compiled Dalvik bytecode in the APK
+   package). To be specific, we will create a profiler for each Java
+   method (except some special cases which we will discuss later) in
+   classes.dex, put a call to profiler.start() at the beginning of
+   each method, and a call to profiler.stop() at the end of each
+   method.
+
+   DexInjector depends on ASMDEX which we mentioned above to do the
+   binary injection. DexInjector and ASMDEX will be installed as
+   DexInjector.jar and asmdex.jar.
+
+ - bxml
+
+   As Android Apps do not have the concept of "normal exit"[2] as in
+   traditional OS, you need to explicitly tell TAU to dump collected
+   data. Since we assume your device is not rooted, the only (easy)
+   way we can think of now is to open a port on your device and wait
+   for command. So your App should have network access privilege.
+
+   The collected data should be dumped to some file on external
+   storage (sdcard). This implies that your App should be able to
+   write to external storage.
+
+   TAU will use JDWP[3] debug protocol to monitor thread creation /
+   termination events. JDWP is only enabled when the App is running on
+   debug mode. So we must make sure your App will be running on debug
+   mode.
+
+   All of the three points above require us to modify not only just
+   the bytecode, but also AndroidManifest.xml[4] in APK package. bxml
+   is the tool we provide for this purpose. To be specific, it will
+   modify AndroidManifest.xml when necessary to make sure your App
+
+     * has network access privilege (android.permission.INTERNET)
+     * has write access to external storage
+       (android.permission.WRITE_EXTERNAL_STORAGE)
+     * will run on debug mode (add "android:debuggable=true")
+
+  AndroidManifest.xml in APK package is compiled and saved in binary
+  format. That is where the "b" in "bxml" comes from.
+
+In order to hide all those details (which you already know) to the
+users, we provide a wrapper script so most likely you do not need to
+use DexInjector and bxml directly.
+
+ - tau_apk.sh
+
+   The syntax is pretty straight forward
+
+      $ tau_apk.sh <original.apk> <injected.apk>
+
+   You feed in <original.apk> and the wrapper script will inject it
+   and give you back <injected.apk> which you can install on your
+   device, use as normal and it will collect profiling data
+   automatically.
+
+Before you start running injected Apps on you device, a little
+preparation must be done. As TAU will connect to DDM[6] through adb[9]
+to monitor thread events, you must enable USB debugging on your
+device. This will start the adb daemon. You also need to put the adb
+daemon running on TCPIP mode (USB mode is the default). Connect the
+device to your computer with a USB cable and then run the command
+
+      $ adb tcpip 5555
+
+After installing <injected.apk> and poking around for a while, you
+decide it is time to dump and check the profiling data. To do so, run
+the command
+
+      $ echo DUMP | telnet <android_device>:6113
+
+Basically this will send a command string ("DUMP") to the TCP port
+6113 on your device. After receiving this message, TAU will dump all
+the collected data to external storage.
+
+You can definitely change the TCP port used to receive the command
+string. The "standard" way to do so is to set a environment variable
+which TAU could recognize. Unfortunately this does not work on
+Android. Part of the reason is that we assume your device is not
+rooted. But there are some other more important reasons which we will
+discuss in Developer Notes below.
+
+The other way is to put the variable settings into a configure file
+(tau.conf). This works in our case. Save all your runtime
+configurations into tau.conf and put the file into your device as
+/sdcard/tau.conf [FIXME: this path is hardcoded right now, maybe we
+should provide an addition option to configure script]. In addition to
+the usual TAU runtime variables, we provide a new one for Android,
+i.e. TAU_ALFRED_PORT. The default value of this variable is 6113. You
+can change it to the other port number if you need to. You may also
+want to change the variable PROFILEDIR which indicates the directory
+where TAU will dump collected data into.
+
+After you get the data files, you can copy them back and check with
+tools like pprof or paraprof. Please be aware of that those data files
+are created with permission 075 (due to the restrictions enforced by
+Android). You may want to change them to 644 after copy the file back.
+Otherwise you may have some trouble to view them.
+
+At last, we think you should know what exactly we have done to your
+original APK package. We will recap them here.
+
+ - STATIC
+
+   * classes.dex
+
+     Two (badly named) Java classes, namely edu.uoregon.TAU.Profile
+     and edu.uoregon.TAU.Profiler, are added into the bytecode.
+
+     Every Java method (except initializer and finalizer) is
+     injected. We add a call to Profiler.start() at the beginning of
+     the method, and a call to Profiler.stop() at the end of the
+     method. This is more complex than it looks. See Developer Notes
+     below if you want to know more details.
+
+   * AndroidManifest.xml
+
+     As discussed before, we add android.permission.INTERNET,
+     android.permission.WRITE_EXTERNAL_STORAGE and
+     "android:debuggable=true" to the AndroidManifest.xml.
+
+   * libTAU.so
+
+     We add libTAU.so into the package, put it under lib/armeabi-v7a
+     (preferred, if it exists) or lib/armeabi (as fall through).
+
+   * digital signature
+
+     As we modified files in original APK package and added new one,
+     we must resign the whole package. We choose to use the standard
+     Android debug keystore[5].
+
+ - RUNTIME
+
+   Two native threads are created in the runtime.
+
+   * DTM (Dalvik Thread Monitor)
+
+     As the name implies, DTM will connect to Dalvik's JDWP debug
+     interface (through adb protocol) and monitor the creation /
+     termination of Java threads with DDM[6] (Dalvik Debug Monitor,
+     Dalvik's extension to JDWP).
+
+   * Alfred
+
+     Alfred is a simple thread. The only thing it does it to open and
+     listen on TCP port TAU_ALFRED_PORT (default 6113). When receive
+     the command string "DUMP", it will dump all collected data under
+     the directory PROFILEDIR.
+     
+=== 3 Developer Notes
+
+This section is for TAU developers, ambitious hackers and curious end
+user. It is full of nitty-gritty details the sole purpose of which is
+to answer the question: why it was designed / implemented like this?
+
+Before we get started, you may want to get a local copy of Android
+source code. This is not mandatory but you may need them some days
+later. Follow the instructions[7] to fire the command. This will take
+you some time to finish and eat a bunch of disk space, so let it
+running on the background, go get a cup of tea and come back here.
+
+--- 3.1 Zygote
+
+Zygote is the "init" process for Android Apps framework. This implies
+that it works pretty much like the init (pid=1) process of the
+underlying Linux system. Zygote is a special Dalvik instance which is
+created (fork and exec) by init as a system service, so its ppid is 1.
+
+When Zygote gets started, it preloads a lot of classes and all the
+system-wide resources which are needed by all the Apps. When an App
+starts, a new Dalvik instance will be forked from Zygote. This new
+Dalvik is pre-warmed up with all system classes and resources
+preloaded by Zygote, so the start up time of the App is accelerated.
+
+   init
+    |
+    +--[fork]--[exec]--Zygote
+                         |
+			 +--[fork]--App1
+			 |
+			 +--[fork]--App2
+			 |
+			 .......
+
+Note that unlike system init, there is no exec after a new Dalvik
+instance is forked from Zygote. This is very important because
+LD_PRELOAD is only handled when exec. So if you want to use LD_PRELOAD
+to wrap some API calls (e.g. pthread_create()), you are in trouble.
+
+There are two problems here.
+
+First, LD_PRELOAD must take effect at the very early stage of Android
+boot up, so init can see it when exec Zygote. Most likely you need to
+modify init.rc. To do so you will need root access and do some hack.
+
+Second, LD_PRELOAD will take effect on *ALL* the Apps (or *ALL* the
+programs running in a Dalvik instance). You do not want this.
+
+Similarly, if you want to set some TAU runtime environment variables,
+it must be done in the same way as LD_PRELOAD. This is the most
+important reason why TAU for Android do not use runtime environment
+variables.
+
+--- 3.2 ASMDEX
+
+ASMDEX[1] is the Java library we are using for Dalvik bytecode
+injection. It is well written and easy to use. But unfortunately there
+are some bugs in the library. We find two of them based on their
+latest SVN source code (r1707 under /trunk/asmdex subdirectory). We
+tried to submit our patch but failed to reach the developer. This is
+why we will download a copy of source tarball of asmdex (exactly the
+same as r1707), apply our patch and then build.
+
+Do not use the binary they release on their webpage (asmdex-1.0.jar,
+released on April 1, 2012). It is outdated and buggy.
+
+Please kindly let us know if you can help us to reach the developer
+to submit the patch (and hopefully get some support).
+
+--- 3.3 Binary Injection
+
+As we discussed before, DexInjector will add two classes to the
+bytecode. This is relatively easy to do because you do not need to
+modify any existing classes. ASMDEX also gives us some help. It
+provides a tool (org.ow2.asmdex.util.AsmDexifierApplicationVisitor)
+which can read in some bytecode (input.dex) and then create some Java
+code which can generate exactly the same bytecode (input.dex). Note
+that the tool included in asmdex-1.0.jar (the one they put on their
+webpage) has some bug and will not generate correct Java code. Anyway,
+do not use it.
+
+So here is our approach. First we write Profile.java and
+Profiler.java. Then we generate corresponding Dalvik bytecode using
+standard process: compile the Java source code (*.java) to Java class
+file (*.class) with javac (provided by JDK), then translate the class
+file to Dalvik bytecode (*.dex) with dx (provided by Android SDK). At
+last we use the tool provided by ASMDEX to generate some Java code
+which can be used by DexInjector directly to inject those classes into
+Dalvik bytecode. See <tau>/tools/src/android/dexInjector/Makefile for
+more details.
+
+Recall we also need to put Profiler.start() and Profiler.stop() at the
+beginning and the end of each method. This is not as straight forward
+as it looks for some reason we will discuss now.
+
+CALLSITE
+
+  We need to know in which method Profiler.start() and Profiler.stop()
+  is called. The first attempt is to obtain this information in the
+  run time. Java provides us Thread.currentThread().getStackTrace() to
+  get the stack trace of current thread. This looks promising except
+  that the full signature of the methods on the stack is not provided
+  by this stack trace. To be specific, argument list of the method is
+  not included. So we can not distinguish overloaded methods in this
+  way. This is bad enough.
+
+  Since ASMDEX knows the method signature it is injecting, the second
+  way is to pass the full method signature as an argument to
+  Profiler.start() and Profiler.stop(). This is what we are doing.
+
+REGISTER ALLOCATION
+
+  Dalvik is register-based[8]. A method call needs one register (or
+  register pair) for each argument. If the method is not static, one
+  additional register is required to pass the "this" pointer. So the
+  only method call that takes no register is the call to a static
+  method which takes no argument. The number of registers needed by a
+  method itself is decided and fixed in compile time. This number (the
+  size of the register space) is saved in dex file (classes.dex).
+
+  So, as we decided to give Profiler.start()/stop() an argument, we
+  will need to allocate some registers to make the method call.
+  Ideally we can do some data flow analysis to reuse some registers.
+  There are two reasons preventing us to do so. First, data flow
+  analysis is somehow heavy weighted and ASMDEX is not the right tool
+  to make it. Most likely we must implement it by ourselves. Second,
+  more importantly, a static method which takes no argument and
+  returns void may have no register for us to reuse. We must extend the
+  register space of the method to allocate some new registers for us.
+
+  Simply modifying the size of the register space of a method will not
+  do the magic. The reason is that the N arguments to a method will be
+  put in the *last* N registers of the method register space by
+  Dalvik. Consider a method "void foobar(int)" which is allocated 8
+  registers, r0 to r7, by the compiler. When "foobar(0xff)" is called,
+  Dalvik will put the argument, 0xff, into r7 (which is decided in run
+  time). The bytecode of foobar will pick it up from r7 (which is
+  decided in compile time). Everything works. Now we extend the
+  register space by binary injection to include 9 registers, r0 to
+  r8. Run time will put the argument into r8 but the bytecode of
+  foobar will still try to pick it up from r7. The method is broken.
+
+  This evil design requires us to do more than just modify the size of
+  register space. The hard way to solve this problem is to fix the
+  registers used by every instruction one by one. Here we employ the
+  easy way: we extend the size of register space by N, then inject
+  some instructions at the beginning of the method to "shift" the
+  arguments back N slots, to the register slots they "should be".
+
+  Hooray! Here comes another pitfall. The registers and bytecode
+  instructions in Dalvik are typed. "long" and "double" occupies 2
+  registers (which forms a register pair). They can only be
+  manipulated by "move-wide" serials instruction. Object and array
+  references occupies 1 register and can only be manipulated by
+  "move-object" serials instructions. All the other data types should
+  use "move". So the "shift" instructions we injected must be aware of
+  the type of parameter it is shifting and choose the right
+  instruction accordingly. Luckily, if we are doing something wrong
+  here, most likely Dalvik will throw an VerifyError and refuse to run
+  our code.
+
+  At last, if you have noticed, I was referring the instructions as
+  "instruction serials". This is because the same instruction, say
+  "move", have different versions, namely "move", "move/from16",
+  "move/16". The difference between those instructions is the size of
+  register space they can address. For example, "move" use only 4 bits
+  to address the source and destination register. So you will not be
+  able to address r16 with "move". The good news is that it seems like
+  ASMDEX could automatically choose to use the right instruction if it
+  finds we are using the wrong version of the instruction.
+
+EXCEPTION HANDLING
+
+  Profiler.start() is quite straight forward. There is only one entry
+  point for each method so we just put it there. Profiler.stop() is
+  more complex. A method may have multiple "return" (implicit or
+  explicit) statements. We must put Profiler.stop() before each of
+  them.
+
+  Exception handler gives us some subtleties here. "throw" is also the
+  potential exit point of a method so we may want to put
+  Profiler.stop() before each "throw". This is not correct. Consider
+  the code snippet below:
+
+    void foo() throws FileNotFoundException {
+      ...
+      ...
+
+      try {
+        throw new IOException("failed");
+      } catch (IOException e) {
+        throw new FileNotFoundException("failed");
+      }
+    }
+
+    int bar(void) {
+      ...
+      ...
+
+      int rv = 0;
+
+      try {
+        throw new IOException("failed");
+      } catch (IOException e) {
+        rv = 1;
+      }
+
+      return rv;
+    }
+
+  If we blindly put Profiler.stop() before each "return" and "throw",
+  the code above becomes:
+
+    void foo() throws FileNotFoundException {
+      ...
+      ...
+
+      try {
+        Profiler.stop();
+        throw new IOException("failed");
+      } catch (IOException e) {
+        Profiler.stop();
+        throw new FileNotFoundException("failed");
+      }
+    }
+
+    int bar() {
+      ...
+      ...
+
+      int rv = 0;
+
+      try {
+        Profiler.stop();
+        throw new IOException("failed");
+      } catch (IOException e) {
+        rv = 1;
+      }
+
+      Profiler.stop();
+      return rv;
+    }
+
+  Apparently, Profiler.stop() could be called twice in both foo() and
+  bar(). The problem here is "throw" just "may" be the exit point but
+  not "must". The idea (thanks to Scott Biersdorff) to solve this is
+  to put the entire method body into a global try-catch block.
+      
+    void foo() throws FileNotFoundException {
+      try {
+        ...
+        ...
+
+        try {
+          throw new IOException("failed");
+        } catch (IOException e) {
+          throw new FileNotFoundException("failed");
+        }
+      } catch (Exception e) {
+        Profiler.stop();
+        throw e;
+      }
+    }
+
+    int bar(void) {
+      try {
+        ...
+        ...
+
+        int rv = 0;
+
+        try {
+          throw new IOException("failed");
+        } catch (IOException e) {
+          rv = 1;
+        }
+
+        Profiler.stop();
+        return rv;
+      } catch (Exception e) {
+        Profiler.stop();
+        throw e;
+      }
+    }
+
+  Essentially we "aggregate" all the throws into a global one, which
+  "must" be an exit point, and then put a Profiler.stop() before it.
+
+  Another subtlety comes with the Java keyword "synchronized", which
+  will be compiled to create a pair of instructions, namely
+  "monitor-enter" and "monitor-exit" (just take them as lock() and
+  unlock()). In order to make sure monitor-exit will be called to
+  release the lock, there is an implicit try-catch block which will
+  cover the critical section enclosed by "synchronized". The catch
+  handler of this block will call monitor-exit so the lock is
+  guarantied to be released.
+
+  Consider the class:
+
+    class SyncFault {
+      Object lock;
+
+      void doAnyThing() { }
+
+      int fault() {
+        lock = new Object();
+        if (lock != null) {
+          synchronized (lock) {
+            doAnyThing();
+          }
+        }
+
+        return 0;
+      }
+
+      static public void main(String args[]) { }
+    }
+
+  Compiled bytecode for fault() looks like below (from the output of
+  "dexdump -d", edited a little bit for clarity):
+
+    0000: new-instance v0, Ljava/lang/Object;
+    0002: invoke-direct {v0}, Ljava/lang/Object;.<init>
+    0005: iput-object v0, v2, LSyncFault;.lock:Ljava/lang/Object;
+    0007: iget-object v0, v2, LSyncFault;.lock:Ljava/lang/Object;
+    0009: if-eqz v0, 0012
+    000b: iget-object v1, v2, LSyncFault;.lock:Ljava/lang/Object;
+    000d: monitor-enter v1
+    000e: invoke-virtual {v2}, LSyncFault;.doAnyThing
+    0011: monitor-exit v1
+    0012: const/4 v0, #int 0
+    0013: return v0
+    0014: move-exception v0
+    0015: monitor-exit v1
+    0016: throw v0
+
+  You do not need to understand the cryptic bytecode above (unless you
+  are a developer). The important thing to know is that there is a try
+  block covers from 000e to 0015 inclusively (FYI, those numbers are
+  the byte offset of the instructions in the code segment of the
+  method). The catch handler of this block begins from 0014. Now we
+  insert a call to Profiler.stop() before 0013 (the "return"):
+
+    000d: monitor-enter v1
+    000e: invoke-virtual {v2}, LSyncFault;.doAnyThing
+    0011: monitor-exit v1
+    0012: const/4 v0, #int 0
+   *  +1: const-string v2, "int SyncFault:fault()" 
+   *  +2: invoke-static {v2}, Ledu/uoregon/TAU/Profiler;.stop
+    0013: return v0
+    0014: move-exception v0
+    0015: monitor-exit v1
+    0016: throw v0
+
+  +1 +2 will be put into that try block if we do not do anything
+  special. The problem is "invoke-static", which invokes a static
+  method, is considered to be "throwable", i.e. may throw some
+  exceptions, by the bytecode verifier in Dalvik. This is reasonable
+  but gives us some trouble. The vigilant verifier believes that there
+  exists an execution path which could call monitor-exit twice:
+
+    000d -> 000e -> 0011 -> 0012 -> +1 -> +2 -> 0014 -> 0015
+
+  This is impossible for compiler generated code. So the verifier
+  believes this is a bug, gives us some such complaints as "VFY:
+  monitor-exit on non-object" and refuses to execute the bytecode.
+
+  One way to fix this is to split the try block into two separate
+  ones, namely from 000e~0015 to 000e~0012 and 0013~0015. So +1 +2 is
+  not in the try block and will not be the trouble maker. We choose
+  the other way for easy implementation. The idea is simple. We copy
+  every "return" to the end of the code block of the method, insert a
+  call to Profiler.stop() before each of them, then replace the
+  original "return" with a "goto" which will jump to the
+  Profiler.stop() before the right "return" we just copied. "goto" is
+  a good boy. It will not change the register states in any means and
+  it will never throw an exception. So we are good. The code snippet
+  above will be transformed to
+  
+    0000: new-instance v0, Ljava/lang/Object;
+    0002: invoke-direct {v0}, Ljava/lang/Object;.<init>
+    0005: iput-object v0, v2, LSyncFault;.lock:Ljava/lang/Object;
+    0007: iget-object v0, v2, LSyncFault;.lock:Ljava/lang/Object;
+    0009: if-eqz v0, 0012
+    000b: iget-object v1, v2, LSyncFault;.lock:Ljava/lang/Object;
+    000d: monitor-enter v1
+    000e: invoke-virtual {v2}, LSyncFault;.doAnyThing
+    0011: monitor-exit v1
+    0012: const/4 v0, #int 0
+   *0013: goto +1
+    0014: move-exception v0
+    0015: monitor-exit v1
+    0016: throw v0
+   *  +1: const-string v2, "int SyncFault:fault()" 
+   *  +2: invoke-static {v2}, Ledu/uoregon/TAU/Profiler;.stop
+   *  +3: return v0
+
+ (RFC: I do not quite understand the essence of this kind of
+ problem. I am not a compiler expert so I have no idea how to check
+ and prevent them in general. This is so sad and makes me feel very
+ uncomfortable. Any comments or insights here will be appreciated.)
+
+--- 3.4 Thread IDs
+
+Thread IDs used in TAU are very confusing, so we will make them a
+little bit clear here. There are four different IDs for a single Java
+thread.
+
+ - sid
+
+   Sid means "system id". It is just the number returned by system
+   call gettid() / syscall(__NR_gettid). It should be called "tid" but
+   unfortunately the name is used by TAU. See below.
+
+ - tid
+
+   Tid is the internal id of the threads *registered* in TAU. It is a
+   number that starts from 0 and keeps count upwards. Tid is not
+   reusable.
+
+ - jid
+
+   Jid is the "Java thread id". It is a number returned by
+   Thread.currentThread.getId(). Jid also keeps count upwards but
+   starts from 1. Not every Java thread will be registered in TAU. So
+   there is no simple method to convert between tid and jid.
+
+   Jid is not used in TAU but we list it here for clarity.
+
+ - lid
+
+   Lid is the "vm-local thread id". It is used internally by Dalvik
+   and included as part of the response to some DDM[6] commands. Lid
+   counts from 0 and is reusable. Lid of a thread will be revoked
+   after its death. A new thread will always be assigned the smallest
+   lid available. (lid is the bit position of a bitmap in
+   implementation)
+
+   To my best knowledge, there is no Java or native API to get the lid
+   of a thread. Therefore a Java thread never knows its lid.
+
+--- 3.5 Thread Monitoring
+
+As discussed before, LD_PRELOAD is not so easy to use on Android, so
+we are not going to wrap pthread APIs. Instead, note that Dalvik
+supports JDWP[3], we will try to use that to monitor thread events.
+
+The EventRequest Command Set and the Event Command Set of JDWP give us
+some potentials. With those commands, we can ask Dalvik to send us
+notification when some things happen, including but not limited to
+VM_START, VM_DEATH, METHOD_ENTRY, METHOD_EXIT, THREAD_START and
+THREAD_DEATH. The best thing is that those notifications could be
+asked to be synchronous, meaning that Dalvik will suspend unless we
+ask it to resume explicitly. This is awesome except that Dalvik will
+switch to debug mode, which is a very different execution path, once
+it receives the JDWP commands, because JDWP is essentially a debug
+protocol. Dalvik suffers a heavy performance impact when running in
+debug mode. In our test, it could be 25x times slower than usual.
+
+Dalvik provides a JDWP protocol extension called DDM[6]. DDM commands
+are special because Dalvik will keep running on normal path so there
+is no performance impact. DDM also gives us some way to monitor thread
+events. To be specific, after you send DDM a THEN command to enable
+thread creation / death notification, Dalvik will send you THCR when
+some thread is created, and THDE when some thread is dead. The big
+difference here is that those messages are always asynchronous. This
+is not ideal and we will see the impact soon.
+
+So in the runtime, we create a native thread (DTM, Dalvik Thread
+Monitor) to connect to DDM, send it a THEN, then wait for THCR and
+THDE, register / un-register the thread in TAU respectively and assign
+tid to the new threads.
+
+Now what can we get from THCR and THDE? Well, not too much. The only
+thing that included in THCR / THDE which can be used to identify the
+thread that triggered the event is the lid. The thread name is
+included in THCR but it is not required to be unique. As there is no
+easy way to communicate directly between DTM and Java threads, DTM can
+not tell a Java thread its tid directly. The only thing it can do is
+to maintain a global lid-tid map and let the Java threads to look it
+up by themselves.
+
+However, recall that a Java thread never know its lid, how can it look
+up the lid-tid map? DDM gives us a THST command, the reply of which
+tells us the status of all living threads. Those information includes
+a lid-sid map (note that the DDM document is out dated and does not
+describe this, you must read Dalvik source code to figure it out). So,
+in DTM we send a THST after receiving a THCR to get the sid of just
+created Java thread. Instead of maintaining a lid-tid map, we make up
+a sid-tid map. Therefore Java threads can look up its tid with its sid
+in sid-tid map.
+
+As we have highlighted before, DDM messages are asynchronous. Many
+things could happen between THCR and THST. Imaging that a thread A is
+created and we get a THCR. A dies quickly and another thread B is
+created, which will reuse the lid of A. Before we receive the new
+messages (A THDE and B THCR), we send out a THST and get a copy of
+current lid-sid map. Unfortunately we will take the sid of B as A's
+sid: we do not know A is dead and B is created with the same lid!
+
+Also because of this asynchrony, we must check whether current thread
+is registered or not in Profiler.start(): basically TAU can not do
+anything without knowing the tid. We are blocked in Profiler.start()
+until current thread gets registered and assigned a tid. This behavior
+implies that the Java threads may block for a little while on its
+first call to Profiler.start(), but we are good here after.
+
+Special note: TAU_VERBOSE() also needs to know the tid. Do not use it
+until we get the tid.
+
+Conclusion: asynchrony is bad and special care must be taken to deal
+with it.
+
+[FIXME: We know there still exists some bug in our implementation of
+this part. Will add more details once we figure them out.]
+
+--- 3.6 Constructor and finalizer
+
+[FIXME: we made a decision to not inject class (instance and static)
+constructors but can not really remember the reason to do so. May be
+there is no reason...]
+
+Java class finalizers will be called by a thread (FinalizerDaemon)
+which is created internally by Dalvik for garbage collection. Thus, if
+we inject the finalizer but do not register FinalizerDaemon thread in
+TAU, Profiler.start() will block it forever. Therefore, theoretically
+we should also monitor and register FinalizerDaemon in TAU.
+
+However, in practice this most likely does not work. It looks like
+FinalizerDaemon is very delay-sensitive. Since the first call to
+Profile.start() may block for a little while, Dalvik will throw an
+error message telling that a timeout occurs in finalize(), then it
+aborts the App. Thus we choose to ignore FinalizerDaemon and do not
+inject finalizers.
+
+--- 3.7 Miscellaneous
+
+BXML
+
+  bxml works on Android binary format XML files. We did not find any
+  formal document for this format. To understand it, the best
+  reference we know is the header file
+
+      <Android>/frameworks/base/include/androidfw/ResourceTypes.h
+
+  It is still somehow cryptic and will spend you some time to
+  understand, but it is better than nothing.
+
+ADB
+
+  Dalvik's implementation of JDWP supports two transport layers:
+  direct socket and over adb. "Direct socket" just means it will
+  directly open and listen on some specific ports. "Over adb" means it
+  will enclose the JDWP packets into adb packets.
+
+  Dalvik provides some command line switches to choose between those
+  two options. See
+
+      <Android>/dalvik/docs/debugger.html
+
+  Zygote will choose the second option and there is no easy way to
+  change it [FIXME: to make sure]. So we must implement both JDWP
+  (with DDM extension) and adb protocol. JDWP and DDM are well
+  documented but adb is not the case. Reading adb source code is not a
+  very pleasant experience. They put all four variant of adb (adb
+  client and server, running on device and host) together and
+  distinguish them with pre-processor macros and mystic runtime
+  checks. The reason they do this is to "makes distribution and
+  starting the server easier".
+
+DOCUMENTS
+
+  We highly recommend you read all documents under
+
+     <ndk>/docs/
+     <Android>/dalvik/docs/
+  
+
+(THE END)
+
+REFERENCES
+
+[1] ASMDEX is the work of OW2 Consortium
+    http://asm.ow2.org/asmdex-index.html
+
+[2] Android activity lifecycle
+    http://developer.android.com/guide/components/activities.html#Lifecycle
+
+[3] JDWP: Java Debug Wire Protocol
+    http://docs.oracle.com/javase/1.5.0/docs/guide/jpda/jdwp-spec.html
+
+[4] AndroidManifest.xml
+    http://developer.android.com/guide/topics/manifest/manifest-intro.html
+
+[5] Signing in Debug Mode
+    http://developer.android.com/tools/publishing/app-signing.html#debugmode
+
+[6] Dalvik VM Debug Monitor
+    <android>/dalvik/docs/debugmon.html, or online:
+    http://www.netmite.com/android/mydroid/2.0/dalvik/docs/debugmon.html
+
+[7] Get the Android source code
+    http://source.android.com/source/downloading.html
+
+[8] General Design of Dalvik Bytecode
+    https://source.android.com/devices/tech/dalvik/dalvik-bytecode.html
+
+[9] ADB: Android Debug Bridge
+    http://developer.android.com/tools/help/adb.html
+
