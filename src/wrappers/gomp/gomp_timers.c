@@ -1375,8 +1375,23 @@ void tau_GOMP_parallel_sections_start(GOMP_parallel_sections_start_p GOMP_parall
 
     DEBUGPRINT("GOMP_parallel_sections_start %d\n", Tau_get_thread());
 
+    /* 
+     * Don't actually pass in the work for the parallel region, but a pointer
+     * to our proxy function with the data for the parallel region outlined function.
+     */
+    TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
+    proxy->a1 = a1;
+    proxy->a2 = a2;
+    proxy->buf = NULL;
+    proxy->name = NULL;
+    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
+    // save the pointer so we can free it later
+    _proxy[_depth] = proxy;
+    _depth = _depth + 1;
+
 	Tau_global_decr_insideTAU();
-    (*GOMP_parallel_sections_start_h)( a1,  a2,  a3,  a4);
+    //(*GOMP_parallel_sections_start_h)( a1,  a2,  a3,  a4);
+    (*GOMP_parallel_sections_start_h)( &Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4);
 	Tau_global_incr_insideTAU();
     // do this AFTER the start, so we know how many threads there are.
     __ompc_event_callback(OMP_EVENT_FORK);
@@ -1397,6 +1412,20 @@ void tau_GOMP_sections_end(GOMP_sections_end_p GOMP_sections_end_h)  {
     (*GOMP_sections_end_h)();
 	Tau_global_incr_insideTAU();
 
+    // free the proxy wrapper, and reduce the depth
+    int depth = _depth - 1;
+    if (depth >= 0 && _proxy[depth] != NULL) {
+        TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
+        //free(proxy->name); // never gets set!
+        free(proxy);
+        _proxy[depth] = NULL;
+        _depth = depth;
+    } else {
+        // assume the worst...
+        _depth = 0;
+        _proxy[0] = NULL;
+    }
+
 }
 
 
@@ -1411,6 +1440,22 @@ void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_sections_end_n
 	Tau_global_decr_insideTAU();
     (*GOMP_sections_end_nowait_h)();
 	Tau_global_incr_insideTAU();
+
+    // IS THIS RISKY? COULD WE FREE THE PROXY POINTER BEFORE THE OTHER THREADS ARE DONE?
+
+    // free the proxy wrapper, and reduce the depth
+    int depth = _depth - 1;
+    if (depth >= 0 && _proxy[depth] != NULL) {
+        TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
+        //free(proxy->name); // never gets set!
+        free(proxy);
+        _proxy[depth] = NULL;
+        _depth = depth;
+    } else {
+        // assume the worst...
+        _depth = 0;
+        _proxy[0] = NULL;
+    }
 
 }
 
