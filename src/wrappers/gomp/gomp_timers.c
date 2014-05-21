@@ -46,9 +46,6 @@ typedef struct Tau_gomp_proxy_wrapper {
     void *a2;
     // copy function buffer?
     char *buf;
-    // The function name
-    char * name;
-    //
 } TAU_GOMP_PROXY_WRAPPER;
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -666,8 +663,6 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
     proxy->a1 = a1;
     proxy->a2 = a2;
 	proxy->buf = NULL;
-    proxy->name = NULL;
-    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
 	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_static_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
 	Tau_global_incr_insideTAU();
@@ -701,8 +696,6 @@ void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOM
     proxy->a1 = a1;
     proxy->a2 = a2;
 	proxy->buf = NULL;
-    proxy->name = NULL;
-    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
 	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_dynamic_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
 	Tau_global_incr_insideTAU();
@@ -736,8 +729,6 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
     proxy->a1 = a1;
     proxy->a2 = a2;
     proxy->buf = NULL;
-    proxy->name = NULL;
-    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
 	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_guided_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
 	Tau_global_incr_insideTAU();
@@ -771,8 +762,6 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
     proxy->a1 = a1;
     proxy->a2 = a2;
     proxy->buf = NULL;
-    proxy->name = NULL;
-    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
 	Tau_global_decr_insideTAU();
     (*GOMP_parallel_loop_runtime_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6);
 	Tau_global_incr_insideTAU();
@@ -1205,8 +1194,6 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
     proxy->a1 = a1;
     proxy->a2 = a2;
     proxy->buf = NULL;
-    proxy->name = NULL;
-    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     // save the pointer so we can free it later
     _proxy[_depth] = proxy;
     _depth = _depth + 1;
@@ -1245,7 +1232,7 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
     int depth = _depth - 1;
     if (depth >= 0 && _proxy[depth] != NULL) {
         TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
-        //free(proxy->name); // never gets set!
+		//TAU_VERBOSE("1 Thread %d freeing proxy pointer %p\n", Tau_get_thread(), proxy); fflush(stderr);
         free(proxy);
         _proxy[depth] = NULL;
         _depth = depth;
@@ -1289,12 +1276,6 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
     proxy->a1 = a1;
     proxy->a2 = a2;
     proxy->buf = NULL;
-    proxy->name = NULL;
-#ifdef TAU_UNWIND
-    // this doesn't use unwind, but unwind support would include bfd, most likely
-    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
-#endif
-    DEBUGPRINT("GOMP_task %p, %s\n", a1, proxy->name);
     OMP_COLLECTOR_API_THR_STATE previous;
     previous = __ompc_set_state(THR_TASK_CREATE_STATE);
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
@@ -1415,8 +1396,6 @@ void tau_GOMP_parallel_sections_start(GOMP_parallel_sections_start_p GOMP_parall
     proxy->a1 = a1;
     proxy->a2 = a2;
     proxy->buf = NULL;
-    proxy->name = NULL;
-    //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
     // save the pointer so we can free it later
     _proxy[_depth] = proxy;
     _depth = _depth + 1;
@@ -1448,7 +1427,7 @@ void tau_GOMP_sections_end(GOMP_sections_end_p GOMP_sections_end_h)  {
     int depth = _depth - 1;
     if (depth >= 0 && _proxy[depth] != NULL) {
         TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
-        //free(proxy->name); // never gets set!
+		//TAU_VERBOSE("2 Thread %d freeing proxy pointer %p\n", Tau_get_thread(), proxy); fflush(stderr);
         free(proxy);
         _proxy[depth] = NULL;
         _depth = depth;
@@ -1479,8 +1458,13 @@ void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_sections_end_n
     int depth = _depth - 1;
     if (depth >= 0 && _proxy[depth] != NULL) {
         TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
-        //free(proxy->name); // never gets set!
-        free(proxy);
+		//TAU_VERBOSE("3 Thread %d freeing proxy pointer %p\n", Tau_get_thread(), proxy); fflush(stderr);
+		//
+		//Don't actually free the pointer - because this is a "no wait" situation, some
+		//other thread may need this pointer. Unfortunately, this will be a tiny memory
+		//leak...
+		//
+        //free(proxy);
         _proxy[depth] = NULL;
         _depth = depth;
     } else {
