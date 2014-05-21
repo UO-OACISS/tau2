@@ -1,4 +1,6 @@
 #include "omp.h"
+typedef void * (*start_routine_p)(void *);
+typedef int  (*pthread_create_p)(pthread_t *, const pthread_attr_t *, start_routine_p, void *arg);
 typedef void (*omp_set_lock_p) (omp_lock_t*);
 typedef void (*omp_set_nest_lock_p) (omp_nest_lock_t*);
 typedef void (*GOMP_barrier_p) ();

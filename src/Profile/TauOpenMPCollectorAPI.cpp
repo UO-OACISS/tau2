@@ -735,30 +735,28 @@ extern "C" int Tau_initialize_collector_api(void) {
     /*test for request of all events*/
     int i;
     int num_req=OMP_EVENT_THR_END_FINISH_TASK; /* last event */
-    if (!TauEnv_get_openmp_runtime_events_enabled()) {
-	  // if events are disabled, only do the 4 major ones
-	  num_req = OMP_EVENT_THR_END_IDLE;
+    if (TauEnv_get_openmp_runtime_events_enabled()) {
+      int register_sz = sizeof(OMP_COLLECTORAPI_EVENT) + sizeof(unsigned long *);
+      int message_sz = OMP_COLLECTORAPI_HEADERSIZE + register_sz;
+	  //printf("Register size: %d, Message size: %d, bytes: %d\n", register_sz, message_sz, num_req*message_sz+sizeof(int));
+      message = (int *) malloc(num_req*message_sz+sizeof(int));
+	  memset(message, 0, num_req*message_sz+sizeof(int));
+	  int * ptr = message;
+      for(i=0;i<num_req;i++) {  
+	      //printf("Ptr: %p\n", ptr);
+          ptr[0] = message_sz;
+          ptr[1] = OMP_REQ_REGISTER;
+          ptr[2] = OMP_ERRCODE_OK;
+          ptr[3] = 0;
+          ptr[4] = OMP_EVENT_FORK + i;  // iterate over the events
+          unsigned long * lmem = (unsigned long *)(ptr+5);
+          *lmem = (unsigned long)Tau_omp_event_handler;
+		  ptr = ptr + 7;
+      } 
+      rc = (Tau_collector_api)(message);
+      TAU_VERBOSE("__omp_collector_api() returned %d\n", rc); fflush(stdout); fflush(stderr);
+      free(message);
 	}
-    int register_sz = sizeof(OMP_COLLECTORAPI_EVENT) + sizeof(unsigned long *);
-    int message_sz = OMP_COLLECTORAPI_HEADERSIZE + register_sz;
-	//printf("Register size: %d, Message size: %d, bytes: %d\n", register_sz, message_sz, num_req*message_sz+sizeof(int));
-    message = (int *) malloc(num_req*message_sz+sizeof(int));
-	memset(message, 0, num_req*message_sz+sizeof(int));
-	int * ptr = message;
-    for(i=0;i<num_req;i++) {  
-	    //printf("Ptr: %p\n", ptr);
-        ptr[0] = message_sz;
-        ptr[1] = OMP_REQ_REGISTER;
-        ptr[2] = OMP_ERRCODE_OK;
-        ptr[3] = 0;
-        ptr[4] = OMP_EVENT_FORK + i;  // iterate over the events
-        unsigned long * lmem = (unsigned long *)(ptr+5);
-        *lmem = (unsigned long)Tau_omp_event_handler;
-		ptr = ptr + 7;
-    } 
-    rc = (Tau_collector_api)(message);
-    //TAU_VERBOSE("__omp_collector_api() returned %d\n", rc); fflush(stdout); fflush(stderr);
-    free(message);
 
     // preallocate messages, because we can't malloc when signals are
     // handled
