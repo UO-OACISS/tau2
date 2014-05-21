@@ -1,3 +1,4 @@
+extern int   tau_pthread_create_wrapper(pthread_create_p pthread_create_call, pthread_t * threadp, const pthread_attr_t * attr, start_routine_p, void * arg);
 extern void  tau_omp_set_lock(omp_set_lock_p omp_set_lock_h, omp_lock_t *lock) ;
 extern void  tau_omp_set_nest_lock(omp_set_nest_lock_p omp_set_nest_lock_h, omp_nest_lock_t *nest_lock) ;
 extern void  tau_GOMP_barrier(GOMP_barrier_p GOMP_barrier_h) ;

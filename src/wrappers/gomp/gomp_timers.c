@@ -122,6 +122,38 @@ void Tau_gomp_task_proxy(void * a2) {
 }
 
 /**********************************************************
+  pthread_create
+ **********************************************************/
+
+#if 1
+// proxy function pointer
+typedef struct tau_pthread_pack {
+  start_routine_p start_routine;
+  void * arg;
+} TAU_PTHREAD_PACK_T;
+
+// proxy function for starting the top level timer (and intitializing sampling)
+void * tau_pthread_function(void *arg)
+{
+  TAU_PTHREAD_PACK_T * pack = (TAU_PTHREAD_PACK_T*)arg;
+  //TAU_REGISTER_THREAD();
+  Tau_create_top_level_timer_if_necessary();
+  void * ret = pack->start_routine(pack->arg);
+  return ret;
+}
+
+// the actual wrapper
+int tau_pthread_create_wrapper(pthread_create_p pthread_create_call, pthread_t * threadp, const pthread_attr_t * attr, start_routine_p start_routine, void * arg) {
+  // create the proxy wrapper
+  TAU_PTHREAD_PACK_T * pack = (TAU_PTHREAD_PACK_T*)(malloc(sizeof(TAU_PTHREAD_PACK_T)));
+  pack->start_routine = start_routine;
+  pack->arg = arg;
+  // spawn the thread
+  return pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack);
+}
+#endif
+
+/**********************************************************
   omp_set_lock
  **********************************************************/
 
