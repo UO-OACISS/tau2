@@ -562,6 +562,9 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     Tau_bfd_updateAddressMaps(handle);
   }
 
+  // initialize this so we can check it later
+  info.lineno = 0;
+
   // Discover if we are searching in the executable or a module
   int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probeAddr);
   if (matchingIdx != -1) {
@@ -661,6 +664,18 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   // For Intel 12 workaround. Inform the module that the previous resolve failed.
   module->markLastResult(false);
 #endif /* TAU_INTEL12 */
+
+  TAU_VERBOSE("result: %p, %s, %s, %d\n", probeAddr, info.funcname, info.filename, info.lineno);
+
+  // we might have partial information, like filename and line number. 
+  // MOST LIKELY this is an outlined region or some other code that the compiler
+  // generated.
+  if ((info.funcname == NULL) && (info.filename != NULL) && (info.lineno > 0)) {
+    info.probeAddr = probeAddr;
+    info.funcname = (char*)malloc(32);
+    sprintf((char*)info.funcname, "anonymous");
+    return true;
+  }
 
   // Couldn't resolve the address so fill in fields as best we can.
   if (info.funcname == NULL) {
@@ -905,7 +920,7 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // TauBfdInfo fields without an extra copy.  This also means
   // that the pointers in TauBfdInfo must never be deleted
   // since they point directly into the module's BFD.
-#if TAU_BFD >= 022200
+#if (TAU_BFD >= 022200)
   data.found = bfd_find_nearest_line_discriminator(bfdptr, section,
       data.module->syms, (data.info.probeAddr - vma),
       &data.info.filename, &data.info.funcname,
@@ -916,6 +931,7 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
       &data.info.filename, &data.info.funcname,
       (unsigned int*)&data.info.lineno);
 #endif
+  return;
 }
 
 #endif /* TAU_BFD */
