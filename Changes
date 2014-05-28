@@ -32,6 +32,13 @@ Version 2.23 changes (from 2.22):
 19. Updated Cube reader allows reading metadata and atomic events from Cube profiles in ParaProf
 20. Improvements to call-site tracking to work more smoothly with multi-threaded application.
 21.  CUPTI counters are now assigned to the GPU kernels that produced them. If they cannot be attributed to a single kernel the values are automatically estimated given the structure of the application.
+22. Added support for context events and markers in Score-P using SCOREP_PROFILING_FORMAT=CUBE_TUPLE. 
+23. Added  TAU_OTF2_1_1 in tau2otf. 
+24. Added testing of MPICH3_CONST. 
+25. Added adapter-init options from scorep-config to generate TauScorePAdapterInit.c. 
+26. Added support for Intel MPC wrappers mpc_icc, mpc_icpc, mpc_ifort in configure. 
+27. Added support for Mellanox OpenSHMEM. 
+28. Added OpenCL support for Apple. 
 
 Version 2.22 changes (from 2.21):
 1. Added support for TAUdb (formerly PerfDMF).
@@ -51,13 +58,6 @@ Version 2.22 changes (from 2.21):
 16. ParaProf, PerfExplorer enhancements.
 17. tau_show_libs lists extra static libs that are needed to link in TAU for tau_rewrite, tau_run. 
 18. OpenMP bug fixes.
-19. Added support for context events and markers in Score-P using SCOREP_PROFILING_FORMAT=CUBE_TUPLE. 
-20. Added  TAU_OTF2_1_1 in tau2otf. 
-21. Added testing of MPICH3_CONST. 
-22. Added adapter-init options from scorep-config to generate TauScorePAdapterInit.c. 
-23. Added support for Intel MPC wrappers mpc_icc, mpc_icpc, mpc_ifort in configure. 
-24. Added support for Mellanox OpenSHMEM. 
-25. Added OpenCL support for Apple. 
 
 
 Version 2.21 changes (from 2.20):
