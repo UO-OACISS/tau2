@@ -5560,6 +5560,12 @@ if [ "x$download_unwind" = xyes ] ; then
           fi
         fi
         if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+          # Some systems install to lib64 instead of lib
+          if [ -d "$unwind_dir/lib64" -a ! -d "$unwind_dir/lib" ] ; then
+            pushd "$unwind_dir"
+            ln -s lib64 lib
+            popd
+          fi
           echo "...Success."
         else
           echo "ERROR BUILDING $libunwind!"
