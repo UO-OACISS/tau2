@@ -6942,11 +6942,23 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       esac
 
       # Build and install binutils if configure successful
-      if [ $err -eq 0 ] ; then
-        make && make install
-      else
+      if [ $err -ne 0 ] ; then
         echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
         exit 1
+      else
+        make && make install
+        err=$?
+        if [ $err -ne 0 ] ; then
+          echo "Error: BFD installation failed. Cannot proceed with -bfd=download"
+          exit 1
+        fi
+      fi
+
+      # Some systems use lib64 instead of lib
+      if [ -d "$bfddir/lib64" -a ! -d "$bfddir/lib" ] ; then
+        pushd "$bfddir"
+        ln -s lib64 lib
+        popd
       fi
 
       # Install additional headers
