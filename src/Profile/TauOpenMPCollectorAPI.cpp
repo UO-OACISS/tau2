@@ -174,7 +174,10 @@ void Tau_get_task_id(int tid) {
     return;
 }
 
-//#if defined (TAU_UNWIND) || (!defined (TAU_OPEN64ORC) && defined __GNUC__)
+#if !defined (TAU_OPEN64ORC) && defined __GNUC__
+extern "C" void * Tau_get_gomp_proxy_address(void);
+#endif
+
 #ifdef TAU_BFD
 
 /*
@@ -215,11 +218,6 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
   }
   return OmpbfdUnitHandle;
 }
-#endif /* defined (TAU_UNWIND) || (!defined (TAU_OPEN64ORC) && defined __GNUC__) */
-
-#if !defined (TAU_OPEN64ORC) && defined __GNUC__
-extern "C" void * Tau_get_gomp_proxy_address(void);
-#endif
 
 // this function won't actually do the backtrace, but rather get the function
 // info for frame pointer of the outlined region.
@@ -252,6 +250,20 @@ char * get_proxy_name(unsigned long ip) {
     strcpy(location, node->location);
     return location;
 }
+#else /* defined (TAU_BFD) */
+// this function will just format the instruction pointer
+char * get_proxy_name(unsigned long ip) {
+    char * location = NULL;
+	if (ip == 0) {
+        location = (char*)malloc(strlen(__UNKNOWN__)+1);
+        strcpy(location, __UNKNOWN__);
+		return location;
+	}
+    location = (char*)malloc(128);
+    sprintf(location, "ADDR %p", (void*)ip);
+    return location;
+}
+#endif /* defined (TAU_BFD) */
 
 #ifdef TAU_UNWIND
 typedef struct {
