@@ -260,7 +260,7 @@ char * get_proxy_name(unsigned long ip) {
 		return location;
 	}
     location = (char*)malloc(128);
-    sprintf(location, "ADDR %p", (void*)ip);
+    sprintf(location, "UNRESOLVED ADDR %p", (void*)ip);
     return location;
 }
 #endif /* defined (TAU_BFD) */
