@@ -113,7 +113,11 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);
 #define TAU_SAMP_NUM_ADDRESSES 10
 
 /* The trace for this node, mulithreaded execution currently not supported */
-extern FILE *ebsTrace[];
+#ifdef __cplusplus
+extern "C" FILE *Tau_sampling_get_ebsTrace();
+#else
+extern FILE *Tau_sampling_get_ebsTrace();
+#endif
 
 #ifdef TAU_USE_HPCTOOLKIT
 extern int hpctoolkit_process_started; // this is defined in hpctoolkit patch

@@ -48,13 +48,13 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 
   walker->walkStack(stackwalk);
 
-  fprintf(ebsTrace[tid], " |");
+  fprintf(Tau_sampling_get_ebsTrace(), " |");
 
   for (unsigned i = 0; i < stackwalk.size(); i++) {
     void *ip = (void *)stackwalk[i].getRA();
 
     if (found) {
-      fprintf(ebsTrace[tid], " %p", ip);
+      fprintf(Tau_sampling_get_ebsTrace(), " %p", ip);
     }
     if (ip == pc) {
       found = 1;

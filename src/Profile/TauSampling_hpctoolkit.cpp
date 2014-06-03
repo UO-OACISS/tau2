@@ -80,7 +80,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
       }
       // fprintf(stderr,"step %p\n", ip);
 
-      fprintf(ebsTrace[tid], " %p", ip);
+      fprintf(Tau_sampling_get_ebsTrace(), " %p", ip);
     }
   } else {
     fprintf(stderr, "*** unhandled sample:\n");

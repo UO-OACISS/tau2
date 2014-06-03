@@ -58,7 +58,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
   unw_word_t ip; //, sp;
   int found = 0;
 
-  fprintf(ebsTrace[tid], " |");
+  fprintf(Tau_sampling_get_ebsTrace(), " |");
 
   unw_getcontext(&uc);
   unw_init_local(&cursor, &uc);
@@ -67,9 +67,9 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
     // unw_get_reg(&cursor, UNW_REG_SP, &sp);
     if (found) {
 #ifdef __APPLE__
-      fprintf(ebsTrace[tid], " %llx", ip);
+      fprintf(Tau_sampling_get_ebsTrace(), " %llx", ip);
 #else
-      fprintf(ebsTrace[tid], " %lx", ip);
+      fprintf(Tau_sampling_get_ebsTrace(), " %lx", ip);
 #endif
     }
     if (ip == (unw_word_t)pc) {
