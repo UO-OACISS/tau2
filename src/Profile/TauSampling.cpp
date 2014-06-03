@@ -296,6 +296,8 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
   return bfdUnitHandle;
 }
 
+/* This structure holds the per-thread data for managing sampling results */
+
 struct tau_sampling_flags {
   /* Sample processing enabled/disabled */
   int samplingEnabled;
@@ -307,31 +309,29 @@ struct tau_sampling_flags {
   // save the previous timestamp so that we can increment the accumulator
   // each time we get a sample
   x_uint64 previousTimestamp[TAU_MAX_COUNTERS];
+  /* The trace for this node, mulithreaded execution currently not supported? */
+  FILE *ebsTrace;
 };
 
-//#ifdef TAU_USE_TLS
-//#undef TAU_USE_TLS
-//#endif
-//#ifdef TAU_USE_DTLS
-//#undef TAU_USE_DTLS
-//#endif
-//#ifdef TAU_USE_PGS
-//#undef TAU_USE_PGS
-//#endif
+/* depending on the compiler support, use the fastest solution */
 
 #ifdef TAU_USE_TLS
+// thread local storage
 __thread struct tau_sampling_flags tau_sampling_tls_flags;
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return &tau_sampling_tls_flags; }
 #elif defined(TAU_USE_DTLS)
+// thread local storage
 __declspec(thread) struct tau_sampling_flags tau_sampling_tls_flags;
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return &tau_sampling_tls_flags; }
 #elif defined(TAU_USE_PGS)
+// pthread specific
 pthread_key_t tau_sampling_tls_key;
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return (struct tau_sampling_flags*)(pthread_getspecific(tau_sampling_tls_key)); }
 #else
+// worst case - array of flags, one for each thread.
 struct tau_sampling_flags tau_sampling_tls_flags[TAU_MAX_THREADS];
 static inline struct tau_sampling_flags *tau_sampling_flags(void)
 { return &tau_sampling_tls_flags[Tau_get_local_tid()]; }
@@ -339,20 +339,10 @@ static inline struct tau_sampling_flags *tau_sampling_flags(void)
 
 
 /* The trace for this node, mulithreaded execution currently not supported */
-FILE *ebsTrace[TAU_MAX_THREADS] = { NULL };
+//FILE *ebsTrace[TAU_MAX_THREADS] = { NULL };
 
-/* Sample processing enabled/disabled */
-//int samplingEnabled[TAU_MAX_THREADS] = { 0 };
 /* we need a process-wide flag for disabling sampling at program exit. */
 int collectingSamples = 0;
-/* Sample processing suspended/resumed */
-//int suspendSampling[TAU_MAX_THREADS] = { 0 };
-//long long numSamples[TAU_MAX_THREADS] = { 0LL };
-//long long samplesDroppedTau[TAU_MAX_THREADS] = { 0LL };
-//long long samplesDroppedSuspended[TAU_MAX_THREADS] = { 0LL };
-// save the previous timestamp so that we can increment the accumulator
-// each time we get a sample
-//x_uint64 previousTimestamp[TAU_MAX_COUNTERS * TAU_MAX_THREADS] = { 0LL };
 
 // When we register our signal handler, we have to save any existing handler,
 // so that we can call it when we are done.
@@ -450,6 +440,11 @@ unsigned long get_pc(void *p)
 #endif /* sun, APPLE, AIX */
 }
 
+extern "C" FILE* Tau_sampling_get_ebsTrace()
+{
+  return tau_sampling_flags()->ebsTrace;
+}
+
 extern "C" void Tau_sampling_suspend(int tid)
 {
   tau_sampling_flags()->suspendSampling = 1;
@@ -472,17 +467,17 @@ extern "C" void Tau_sampling_dlopen()
 
 void Tau_sampling_outputTraceHeader(int tid)
 {
-  fprintf(ebsTrace[tid], "# Format version: 0.2\n");
-  fprintf(ebsTrace[tid],
+  fprintf(tau_sampling_flags()->ebsTrace, "# Format version: 0.2\n");
+  fprintf(tau_sampling_flags()->ebsTrace,
       "# $ | <timestamp> | <delta-begin> | <delta-end> | <metric 1> ... <metric N> | <tau callpath> | <location> [ PC callstack ]\n");
-  fprintf(ebsTrace[tid],
+  fprintf(tau_sampling_flags()->ebsTrace,
       "# %% | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
-  fprintf(ebsTrace[tid], "# Metrics:");
+  fprintf(tau_sampling_flags()->ebsTrace, "# Metrics:");
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
-    fprintf(ebsTrace[tid], " %s", name);
+    fprintf(tau_sampling_flags()->ebsTrace, " %s", name);
   }
-  fprintf(ebsTrace[tid], "\n");
+  fprintf(tau_sampling_flags()->ebsTrace, "\n");
 }
 
 void Tau_sampling_outputTraceCallpath(int tid)
@@ -490,32 +485,32 @@ void Tau_sampling_outputTraceCallpath(int tid)
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   // *CWL* 2012/3/18 - EBS traces cannot handle callsites for now. Do not track.
   if ((profiler->CallPathFunction != NULL) && (TauEnv_get_callpath())) {
-    fprintf(ebsTrace[tid], "%lld", profiler->CallPathFunction->GetFunctionId());
+    fprintf(tau_sampling_flags()->ebsTrace, "%lld", profiler->CallPathFunction->GetFunctionId());
   } else if (profiler->ThisFunction != NULL) {
-    fprintf(ebsTrace[tid], "%lld", profiler->ThisFunction->GetFunctionId());
+    fprintf(tau_sampling_flags()->ebsTrace, "%lld", profiler->ThisFunction->GetFunctionId());
   }
 }
 
 void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record, void *pc, ucontext_t *context)
 {
-  fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
+  fprintf(tau_sampling_flags()->ebsTrace, "$ | %lld | ", record->timestamp);
 
 #ifdef TAU_EXP_DISABLE_DELTAS
-  fprintf(ebsTrace[tid], "0 | 0 | ");
+  fprintf(tau_sampling_flags()->ebsTrace, "0 | 0 | ");
 #else
-  fprintf(ebsTrace[tid], "%lu | %lu | ", record->deltaStart, record->deltaStop);
+  fprintf(tau_sampling_flags()->ebsTrace, "%lu | %lu | ", record->deltaStart, record->deltaStop);
 #endif
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
-    fprintf(ebsTrace[tid], "%.16G ", record->counters[i]);
+    fprintf(tau_sampling_flags()->ebsTrace, "%.16G ", record->counters[i]);
   }
 
-  fprintf(ebsTrace[tid], "| ");
+  fprintf(tau_sampling_flags()->ebsTrace, "| ");
 
   /* *CWL* - consider a check for TauEnv_get_callpath() here */
   Tau_sampling_outputTraceCallpath(tid);
 
-  fprintf(ebsTrace[tid], " | %p", (void*)(record->pc));
+  fprintf(tau_sampling_flags()->ebsTrace, " | %p", (void*)(record->pc));
 
 #ifdef TAU_UNWIND
   if (TauEnv_get_ebs_unwind() == 1) {
@@ -524,28 +519,28 @@ void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record, void *pc,
 #endif /* TAU_UNWIND */
 
   // do nothing?
-  //fprintf(ebsTrace[tid], "");
+  //fprintf(tau_sampling_flags()->ebsTrace, "");
 }
 
 void Tau_sampling_outputTraceStop(int tid, Profiler *profiler, double *stopTime)
 {
-  fprintf(ebsTrace[tid], "%% | ");
+  fprintf(tau_sampling_flags()->ebsTrace, "%% | ");
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     double startTime = profiler->StartTime[i];    // gtod must be counter 0
     x_uint64 start = (x_uint64)startTime;
-    fprintf(ebsTrace[tid], "%lld ", start);
+    fprintf(tau_sampling_flags()->ebsTrace, "%lld ", start);
   }
-  fprintf(ebsTrace[tid], "| ");
+  fprintf(tau_sampling_flags()->ebsTrace, "| ");
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     x_uint64 stop = (x_uint64)stopTime[i];
-    fprintf(ebsTrace[tid], "%lld ", stop);
+    fprintf(tau_sampling_flags()->ebsTrace, "%lld ", stop);
   }
-  fprintf(ebsTrace[tid], "| ");
+  fprintf(tau_sampling_flags()->ebsTrace, "| ");
 
   Tau_sampling_outputTraceCallpath(tid);
-  fprintf(ebsTrace[tid], "\n");
+  fprintf(tau_sampling_flags()->ebsTrace, "\n");
 }
 
 /*********************************************************************
@@ -617,14 +612,14 @@ void Tau_sampling_outputTraceDefinitions(int tid)
     fprintf(stderr, "TAU Sampling: Error, unable to read /proc/self/exe\n");
   } else {
     buffer[rc] = 0;
-    fprintf(ebsTrace[tid], "# exe: %s\n", buffer);
+    fprintf(tau_sampling_flags()->ebsTrace, "# exe: %s\n", buffer);
   }
 
   /* write out the node number */
-  fprintf(ebsTrace[tid], "# node: %d\n", RtsLayer::myNode());
-  fprintf(ebsTrace[tid], "# thread: %d\n", tid);
+  fprintf(tau_sampling_flags()->ebsTrace, "# node: %d\n", RtsLayer::myNode());
+  fprintf(tau_sampling_flags()->ebsTrace, "# thread: %d\n", tid);
 
-  fclose(ebsTrace[tid]);
+  fclose(tau_sampling_flags()->ebsTrace);
 
 #if (defined (TAU_BGP) || (TAU_BGQ))
   /* do nothing */
@@ -1475,6 +1470,7 @@ int Tau_sampling_init(int tid)
   tau_sampling_tls_flags->numSamples = 0;
   tau_sampling_tls_flags->samplesDroppedTau = 0;
   tau_sampling_tls_flags->samplesDroppedSuspended = 0;
+  tau_sampling_tls_flags->ebsTrace = NULL;
   pthread_setspecific(tau_sampling_tls_key, tau_sampling_tls_flags);
 #else
   tau_sampling_flags()->samplingEnabled = 0;
@@ -1482,6 +1478,7 @@ int Tau_sampling_init(int tid)
   tau_sampling_flags()->numSamples = 0;
   tau_sampling_flags()->samplesDroppedTau = 0;
   tau_sampling_flags()->samplesDroppedSuspended = 0;
+  tau_sampling_flags()->ebsTrace = NULL;
 #endif
 
   const char *profiledir = TauEnv_get_profiledir();
@@ -1492,8 +1489,8 @@ int Tau_sampling_init(int tid)
   if (TauEnv_get_tracing()) {
     sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, RtsLayer::getPid(), node, RtsLayer::myContext(), tid);
 
-    ebsTrace[tid] = fopen(filename, "w");
-    if (ebsTrace[tid] == NULL) {
+    tau_sampling_flags()->ebsTrace = fopen(filename, "w");
+    if (tau_sampling_flags()->ebsTrace == NULL) {
       fprintf(stderr, "Tau Sampling Error: Unable to open %s for writing\n", filename);
       exit(-1);
     }
@@ -1717,7 +1714,7 @@ int Tau_sampling_init(int tid)
  ********************************************************************/
 int Tau_sampling_finalize(int tid)
 {
-  if (TauEnv_get_tracing() && !ebsTrace[tid]) return 0;
+  if (TauEnv_get_tracing() && !tau_sampling_flags()->ebsTrace) return 0;
   TAU_VERBOSE("TAU: <Node=%d.Thread=%d> finalizing sampling for %d...\n", RtsLayer::myNode(), Tau_get_local_tid(), tid); fflush(stdout);
 
   // Protect TAU from itself
