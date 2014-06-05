@@ -233,4 +233,26 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 	    break;
 	}
     }
+
+    public void visitLocalVariable(String name, String desc, String signature,
+				   Label start, List<Label> ends, List<Label> restarts,
+				   int index) {
+	/*
+	 * Name and desc of method parameters are not included in debug
+	 * info as they can be extracted from method descriptor. As we
+	 * have extended regester space of the method, we shall fix the
+	 * register allocation for method parameters recorded in debug
+	 * info.
+	 *
+	 * If you run "dexdump -d" on injected dex file without this fix,
+	 * most likely you will see dexdump complains like this:
+	 *
+	 *   E/dalvik: Invalid debug info stream.....
+	 */
+	if (name == null) {
+	    index += EXTRA_REGS;
+	}
+
+	mv.visitLocalVariable(name, desc, signature, start, ends, restarts, index);
+    }
 }
