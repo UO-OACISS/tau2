@@ -83,7 +83,7 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 
 	mv.visitMaxs(registerCount, maxLocals);
 
-	mv.visitStringInsn(INSN_CONST_STRING, 0, methodDesc.toString());
+	mv.visitStringInsn(INSN_CONST_STRING_JUMBO, 0, methodDesc.toString());
 	mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "start", "VLjava/lang/String;", new int[] { 0 });
 
 	shiftRegisters();
@@ -154,7 +154,7 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 	    mv.visitTryCatchBlock(last_end, handler, handler, null);
 	}
 	mv.visitIntInsn(INSN_MOVE_EXCEPTION, 0);
-	mv.visitStringInsn(INSN_CONST_STRING, 1, methodDesc.toString());
+	mv.visitStringInsn(INSN_CONST_STRING_JUMBO, 1, methodDesc.toString());
 	mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "VLjava/lang/String;", new int[] { 1 });
 	mv.visitIntInsn(INSN_THROW, 0);
 
@@ -184,7 +184,7 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 
 	    switch (opcode) {
 	    case INSN_RETURN_VOID:
-		mv.visitStringInsn(INSN_CONST_STRING, callsite, methodDesc.toString());
+		mv.visitStringInsn(INSN_CONST_STRING_JUMBO, callsite, methodDesc.toString());
 		mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "VLjava/lang/String;", new int[] { callsite });
 		mv.visitInsn(opcode);
 		break;
@@ -194,7 +194,7 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 		if (register == 0) {
 		    callsite = 2;
 		}
-		mv.visitStringInsn(INSN_CONST_STRING, callsite, methodDesc.toString());
+		mv.visitStringInsn(INSN_CONST_STRING_JUMBO, callsite, methodDesc.toString());
 		mv.visitMethodInsn(INSN_INVOKE_STATIC, "Ledu/uoregon/TAU/Profiler;", "stop", "VLjava/lang/String;", new int[] { callsite });
 		mv.visitIntInsn(opcode, register);
 		break;
@@ -232,6 +232,24 @@ public class MethodAdapter extends MethodVisitor implements Opcodes {
 	    mv.visitIntInsn(opcode, register);
 	    break;
 	}
+    }
+
+    public void visitStringInsn(int opcode, int destinationRegister, String string) {
+	/*
+	 * We pass the callsite as a string constant to Profiler.start()/stop().
+	 * As a result, we are increasing strings in dex constant pool. Chances
+	 * are that index of some strings in constant pool will be bigger than
+	 * 0xffff, i.e. can not be hold in 2 bytes.
+	 *
+	 * INSN_CONST_STRING is using 2 bytes to hold the string index, thus
+	 * it should be rewritten to INSN_CONST_STRING_JUMBO if the string index
+	 * it is referring does not fit in 2 bytes.
+	 *
+	 * ASMDEX hides the string index from us so this fix should be done by
+	 * ASMDEX. The fix is not trivial so instead we workaround this in our
+	 * code by blindly rewriting all INSN_CONST_STRING to its JUMBO version.
+	 */
+	mv.visitStringInsn(INSN_CONST_STRING_JUMBO, destinationRegister, string);
     }
 
     public void visitLocalVariable(String name, String desc, String signature,
