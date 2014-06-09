@@ -144,6 +144,7 @@ printUsage () {
     echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
     echo -e "  -optNoCompInst\t\tDo not revert to compiler instrumentation if source instrumentation fails."
     echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
+    echo -e "  -optReuseFiles\t\tReuses a pre-instrumented file and preserves it"
     echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
     echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
     echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
