@@ -436,6 +436,8 @@ unsigned long get_pc(void *p)
   pc = (unsigned long)sc->regs->nip;
 # elif __arm__
   pc = (unsigned long)sc->arm_pc;
+#elif defined(TAU_FUJITSU)
+  pc = ((struct sigcontext *)p)->sigc_regs.tpc; 
 # else
   issueUnavailableWarning("Warning, TAU Sampling does not work on unknown platform.\n");
   return 0;
@@ -1639,7 +1641,7 @@ int Tau_sampling_init(int tid)
 /* on Linux systems, we have the option of sampling based on the Wall clock
  * on a per-thread basis.  We don't have this ability everywhere - on those
  * systems, we have to use ITIMER_PROF with setitimer. */
-#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ)
+#if defined(SIGEV_THREAD_ID) && !defined(TAU_BGQ) && !defined(TAU_FUJITSU)
    struct sigevent sev;
    memset (&sev,0,sizeof(sigevent));
    timer_t timerid = 0;
@@ -1656,6 +1658,7 @@ int Tau_sampling_init(int tid)
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
+    syserr("Sampling in timer_create doesn't work!");
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
     return -1;
   }
