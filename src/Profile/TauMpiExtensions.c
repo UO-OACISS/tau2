@@ -11,8 +11,16 @@
 /******************************************************/
 #ifdef TAU_MPICONSTCHAR
 #define TAU_CONST const
+#define TAU_CONST2 const
 #else
 #define TAU_CONST
+#define TAU_CONST2
+#endif
+
+// OpenMPI is stupid. MPI_Info_set() doesn't use const, but
+// MPI_Info_delete() and MPI_Info_get_valuelen() do.
+#ifdef TAU_OPENMPI3
+#define TAU_CONST2 const
 #endif
 
 #ifdef TAU_MPICH3
@@ -6653,7 +6661,7 @@ void mpi_info_set__( MPI_Fint *  Info, TAU_CONST char * key, TAU_CONST char * va
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-int MPI_Info_delete( MPI_Info info, TAU_CONST char * key)
+int MPI_Info_delete( MPI_Info info, TAU_CONST2 char * key)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_delete()", "", TAU_MESSAGE); 
@@ -6666,7 +6674,7 @@ int MPI_Info_delete( MPI_Info info, TAU_CONST char * key)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-void MPI_INFO_DELETE( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
+void MPI_INFO_DELETE( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint * ierr)
 {
   MPI_Info local_info = MPI_Info_f2c(*info);
   *ierr = MPI_Info_delete( local_info, key) ; 
@@ -6676,7 +6684,7 @@ void MPI_INFO_DELETE( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-void mpi_info_delete( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
+void mpi_info_delete( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint * ierr)
 {
   MPI_INFO_DELETE( info, key, ierr) ; 
   return ; 
@@ -6685,7 +6693,7 @@ void mpi_info_delete( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-void mpi_info_delete_( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
+void mpi_info_delete_( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint * ierr)
 {
   MPI_INFO_DELETE( info, key, ierr) ; 
   return ; 
@@ -6694,7 +6702,7 @@ void mpi_info_delete_( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_delete wrapper function 
 ******************************************************/
-void mpi_info_delete__( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
+void mpi_info_delete__( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint * ierr)
 {
   MPI_INFO_DELETE( info, key, ierr) ; 
   return ; 
@@ -6773,7 +6781,7 @@ void mpi_info_get__( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuele
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-int MPI_Info_get_valuelen( MPI_Info info, TAU_CONST char * key, int * valuelen, int * flag)
+int MPI_Info_get_valuelen( MPI_Info info, TAU_CONST2 char * key, int * valuelen, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get_valuelen()", "", TAU_MESSAGE); 
@@ -6786,7 +6794,7 @@ int MPI_Info_get_valuelen( MPI_Info info, TAU_CONST char * key, int * valuelen, 
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-void MPI_INFO_GET_VALUELEN( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
+void MPI_INFO_GET_VALUELEN( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_Info local_info = MPI_Info_f2c(*info);
   *ierr = MPI_Info_get_valuelen( local_info, key, valuelen, flag) ; 
@@ -6796,7 +6804,7 @@ void MPI_INFO_GET_VALUELEN( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-void mpi_info_get_valuelen( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
+void mpi_info_get_valuelen( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_INFO_GET_VALUELEN( info, key, valuelen, flag, ierr) ; 
   return ; 
@@ -6805,7 +6813,7 @@ void mpi_info_get_valuelen( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-void mpi_info_get_valuelen_( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
+void mpi_info_get_valuelen_( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_INFO_GET_VALUELEN( info, key, valuelen, flag, ierr) ; 
   return ; 
@@ -6814,7 +6822,7 @@ void mpi_info_get_valuelen_( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * 
 /******************************************************
 ***      MPI_Info_get_valuelen wrapper function 
 ******************************************************/
-void mpi_info_get_valuelen__( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
+void mpi_info_get_valuelen__( MPI_Fint *  info, TAU_CONST2 char * key, MPI_Fint *  valuelen, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_INFO_GET_VALUELEN( info, key, valuelen, flag, ierr) ; 
   return ; 

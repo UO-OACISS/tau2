@@ -106,6 +106,10 @@
 #define TAU_MILLION  1000000
 #define TAU_BILLION  1000000000
 
+#if defined(TAU_USE_PGS)
+#include <pthread.h>
+#endif
+
 using namespace std;
 using namespace tau;
 

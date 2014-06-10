@@ -19,6 +19,8 @@ declare -i isForCompilation=$FALSE
 declare -i hasAnObjectOutputFile=$FALSE
 declare -i removeMpi=$FALSE
 declare -i needToCleanPdbInstFiles=$TRUE
+declare -i reuseFiles=$FALSE
+declare -i reusingInstFile=$FALSE;
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
 declare -i optMemDbg=$FALSE
@@ -142,6 +144,7 @@ printUsage () {
     echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
     echo -e "  -optNoCompInst\t\tDo not revert to compiler instrumentation if source instrumentation fails."
     echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
+    echo -e "  -optReuseFiles\t\tReuses a pre-instrumented file and preserves it"
     echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
     echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
     echo -e "  -optAppF90=\"<f90>\"\t\tSpecifies the fallback F90 compiler."
@@ -664,6 +667,12 @@ for arg in "$@" ; do
 			echoIfDebug "\tOption to remove *.inst.* and *.pdb files being passed"
 			needToCleanPdbInstFiles=$FALSE
 			;;
+		    -optReuseFiles*)
+				#By default this is False. 
+				#removes *.inst.* and *.pdb
+			echoIfDebug "\tOption to reuse *.inst.* and *.pdb files being passed"
+			reuseFiles=$TRUE
+			;;
                     -optOpariDir*)
                         optOpariDir="${arg#"-optOpariDir="}"
                         echoIfDebug "\tOpari Dir used: $optOpariDir"
@@ -1147,6 +1156,7 @@ while [ $tempCounter -lt $numFiles ]; do
     #echoIfDebug "suffix here is -- $suf"
     # If we need to pre-process the source code, we should do so here!
     #if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
+    origFileName=${arrFileName[$tempCounter]}
     if [ $preprocess == $TRUE ]; then
 	base=${base}.pp
         if [ $tauPreProcessor == $TRUE ]; then
@@ -1609,7 +1619,16 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $optCompInst == $FALSE ]; then
 	    if [ $disablePdtStep == $FALSE ]; then
 		if [ $pdbFileSpecified == $FALSE ]; then
-		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
+		  instFileName=${arrTau[$tempCounter]##*/} 
+		  reusingInstFile=$FALSE;
+                  if [ $reuseFiles == $TRUE  -a -r $instFileName ]; then 
+		      if [ $instFileName -nt $origFileName ]; then
+	                echoIfDebug "echo NOTE: Reusing instrumented file $instFileName. Not invoking the PDT Parser."
+		        reusingInstFile=$TRUE;
+                      fi 
+	          else
+		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser."
+		  fi
 		fi
 	    else
 	        if [ $linkOnly == $FALSE ]; then 
@@ -1629,7 +1648,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	  echoIfDebug "Looking for pdb file $pdbOutputFile "
 	fi 
 
-	if [  ! -e $pdbOutputFile  -a $disablePdtStep == $FALSE ]; then
+	if [  ! -e $pdbOutputFile  -a $disablePdtStep == $FALSE -a $reusingInstFile == $FALSE ]; then
 	    printError "$PDTPARSER" "$pdtCmd"
 	    break
 	fi
@@ -1655,7 +1674,17 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 	tauCmd="$tauCmd $optTau $optTauSelectFile"
 
 	if [ $disablePdtStep == $FALSE ]; then
-	    evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
+	    echoIfDebug "reuseFiles=$reuseFiles, source $tempInstFileName, output ${arrFileName[$tempCounter]}"
+		if [ $reuseFiles == $TRUE -a $tempInstFileName -nt ${arrFileName[$tempCounter]} ]; then
+		  echoIfDebug "$tempInstFileName is newer than ${arrFileName[$tempCounter]}"
+		else
+		  echoIfDebug $tempInstFileName is NOT newer than "${arrFileName[$tempCounter]} "
+		fi
+	    if [ $reusingInstFile == $TRUE ]; then
+	      evalWithDebugMessage "ls -l $tempInstFileName;" "Reusing pre-instrumented file $tempInstFileName."
+            else
+	      evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
+	    fi
 	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}.$$ ]; then
 	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}.$$ ${arrFileName[$tempCounter]}" "Moving temporary file"
             fi
@@ -2149,31 +2178,35 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
     tempCounter=0
     while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
         tmpname="${arrTau[$tempCounter]##*/}"
-	evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
-        tmpname="`echo $tmpname | sed -e 's/\.inst//'`"
-        if [ $continueBeforeOMP == $TRUE ] ; then
+	if [ $reusingInstFile == $FALSE ]; then 
+	  evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
+          tmpname="`echo $tmpname | sed -e 's/\.inst//'`"
+          if [ $continueBeforeOMP == $TRUE ] ; then
             evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning continue file"
             tmpname="`echo $tmpname | sed -e 's/\.continue//'`"
-        fi
-	if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
+          fi
+	  if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
 	    if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
 		tmpname="`echo $tmpname | sed -e 's/\.chk\.pomp//'`"
 	    fi
 	    evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning pp file"
             tmpname="`echo $tmpname | sed -e 's/\.pp//'`"
-	fi
-	if [ $pdbFileSpecified == $FALSE ]; then
+	  fi
+	  if [ $pdbFileSpecified == $FALSE ]; then
 	    evalWithDebugMessage "/bin/rm -f ${arrPdb[$tempCounter]##*/}" "cleaning PDB file"
 	    if [ $preprocess == $TRUE -o $opari == $TRUE ]; then
 		secondPDB=`echo $outputFile | sed -e 's/\.o/\.pdb/'`
 		evalWithDebugMessage "/bin/rm -f $secondPDB" "cleaning PDB file"
 	    fi
-	fi
-	if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
+	  fi
+	  if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
             if [ $errorStatus == $FALSE ]; then
 	      evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
             fi
 	    cleanUpOpariFileLater=$TRUE
+	  fi
+	else
+	  echoIfDebug "Not cleaning up instrumented files: reusingInstFile=$reusingInstFile"
 	fi
 	tempCounter=tempCounter+1
     done
