@@ -1647,7 +1647,9 @@ int Tau_sampling_init(int tid)
    sev.sigev_notify = SIGEV_THREAD_ID;
    sev.sigev_value.sival_ptr = &timerid;
 #ifndef TAU_ANDROID
+#ifndef TAU_FUJITSU
    sev.sigev_notify_thread_id = syscall(__NR_gettid);
+#endif /* TAU_FUJITSU */
 #else
    sev.sigev_notify_thread_id = JNIThreadLayer::GetThreadSid();
    TAU_VERBOSE(" *** (S%d) send alarm to %d\n", gettid(), sev.sigev_notify_thread_id);
