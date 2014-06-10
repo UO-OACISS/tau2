@@ -174,7 +174,10 @@ void Tau_get_task_id(int tid) {
     return;
 }
 
-#if !defined (TAU_OPEN64ORC) && defined __GNUC__
+#if !defined (TAU_OPEN64ORC) && \
+(defined (__GNUC__) && \
+defined (__GNUC_MINOR__) && \
+defined (__GNUC_PATCHLEVEL__))
 extern "C" void * Tau_get_gomp_proxy_address(void);
 #endif
 
@@ -353,7 +356,10 @@ char * show_backtrace (int tid, int offset) {
 
 extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool task) {
     char * tmpStr = NULL;
-#if !defined (TAU_IBM_OMPT) && !defined (TAU_OPEN64ORC) // IBM OMPT and Generic ORA support requires unwinding
+#if !defined (TAU_OPEN64ORC) && \
+(defined (__GNUC__) && \
+defined (__GNUC_MINOR__) && \
+defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwinding
 #if !defined (TAU_USE_OMPT)  // OMPT already has the frame pointer
     // make a call to the GOMP wrapper to get the outlined function pointer
     ip = (unsigned long)Tau_get_gomp_proxy_address();
@@ -397,7 +403,10 @@ extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool t
 /* Using the region or task ID, get our event context */
 extern "C" char * Tau_get_my_region_context(int tid, int forking, bool task) {
     char * tmpStr = NULL;
-#if !defined (TAU_OPEN64ORC) && !defined(TAU_USE_OMPT)
+#if !defined (TAU_OPEN64ORC) && \
+(defined (__GNUC__) && \
+defined (__GNUC_MINOR__) && \
+defined (__GNUC_PATCHLEVEL__))
     // if using the GOMP wrapper, we don't have a region or task ID
 	// so use the outlined function address
     unsigned long ip = (unsigned long)Tau_get_gomp_proxy_address();
