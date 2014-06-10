@@ -55,6 +55,24 @@ def runctx(statement, globals, locals, filename=None):
             result = prof.print_stats()
     return result
 
+def runmodule(modname, filename=None):
+    """
+    Compile and run a module specified by 'modname', setting __main__ to that module.
+    """
+    prof = Profile()
+    result = None
+    try:
+        try:
+            prof = prof.runmodule(modname)
+        except SystemExit:
+            pass
+    finally:
+        if filename is not None:
+            prof.dump_stats(filename)
+        else:
+            result = prof.print_stats()
+    return result
+
 def exitAllThreads():
     Profile().exitAllThreads()
 
@@ -144,6 +162,22 @@ class Profile(ctau_impl.Profiler):
             pytau.start(x)
             exec cmd in globals, locals
             pytau.stop(x)
+        finally:
+            self.disable()
+        return self
+
+    def runmodule(self, modname):
+        import sys
+        from imp import find_module, new_module, PY_SOURCE
+        self.enable()
+        try:
+            fileobj, path, desc = find_module(modname)
+            if desc[2] != PY_SOURCE:
+              raise ImportError('No source file found for module %s' % modname)
+            code = compile(fileobj.read(), path, 'exec')
+            module = new_module(modname)
+            sys.modules['__main__'] = module
+            exec code in module.__dict__
         finally:
             self.disable()
         return self
