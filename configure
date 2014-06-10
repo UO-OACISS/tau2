@@ -6932,6 +6932,22 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror
         err=$?
         ;;
+        sparc64fx)
+        fccpxpath=`which fccpx | sed 's/\/bin\/fccpx$//'`
+        if [ -r $fccpxpath/util/bin/sparc64-unknown-linux-gnu-ar ]; then
+          echo "NOTE: Using ar from $fccpxpath/util/bin/sparc64-unknown-linux-gnu-ar"
+          export PATH=$fccpxpath/util/bin:$PATH
+        fi
+        ./configure \
+            CFLAGS="-fPIC -Xg" CXXFLAGS="-fPIC -Xg" \
+                CC=$fccpxpath/bin/fccpx \
+                CXX=$fccpxpath/bin/FCCpx \
+                AR=sparc64-unknown-linux-gnu-ar \ 
+		--host=sparc64-unknown-linux-gnu \
+            	--prefix=$bfddir \
+		--disable-nls --disable-werror
+	err=$?
+	;;
       *)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
