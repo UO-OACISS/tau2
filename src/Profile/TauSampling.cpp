@@ -1658,7 +1658,6 @@ int Tau_sampling_init(int tid)
 #endif
    ret = timer_create(CLOCK_REALTIME, &sev, &timerid);
   if (ret != 0) {
-    syserr("Sampling in timer_create doesn't work!");
     fprintf(stderr, "TAU: (%d, %d) Sampling error 6: %s\n", RtsLayer::myNode(), RtsLayer::myThread(), strerror(ret));
     return -1;
   }
