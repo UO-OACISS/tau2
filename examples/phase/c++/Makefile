@@ -11,8 +11,11 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-include ../../../include/Makefile 
-include ../../Makefile
+#include ../../../include/Makefile 
+#include ../../Makefile
+TAU_MAKEFILE ?=../../include/Makefile
+
+include $(TAU_MAKEFILE)
 
 
 
