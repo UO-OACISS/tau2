@@ -5775,6 +5775,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
   int main(int argc, char **argv)
   {
     int ret, req, provided;
+    req = 0;
     ret = PMPI_Init_thread(&argc, &argv, req, &provided);
     return ret;
   }
