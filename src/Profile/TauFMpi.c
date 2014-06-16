@@ -190,6 +190,15 @@ MPI_Fint *ierr;
 extern int MPIR_F_MPI_IN_PLACE; 
 #endif /* TAU_MPICH2_MPI_IN_PLACE */
 
+void * tau_mpi_fortran_in_place = NULL; 
+void * tau_mpi_fortran_bottom = NULL; 
+void tau_mpi_fortran_init_in_place_(void * in_place) {
+  tau_mpi_fortran_in_place = in_place;
+}
+void tau_mpi_fortran_init_bottom_(void * bottom) {
+  tau_mpi_fortran_bottom = bottom;
+}
+
 void   mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr)
 void * sendbuf;
 void * recvbuf;
@@ -203,11 +212,14 @@ MPI_Fint *ierr;
     if (sendbuf == (void *) MPIR_F_MPI_IN_PLACE)
     {
       *ierr = MPI_Allreduce( MPI_IN_PLACE, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
-
     }
     else
 #endif /* TAU_MPICH2_MPI_IN_PLACE */
-      *ierr = MPI_Allreduce( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
+      if (sendbuf == tau_mpi_fortran_in_place) {
+        *ierr = MPI_Allreduce( MPI_IN_PLACE, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
+      } else {
+        *ierr = MPI_Allreduce( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
+      }
 
 }
 
@@ -2987,6 +2999,7 @@ void  mpi_init_( ierr)
 MPI_Fint *ierr; 
 {
   *ierr = MPI_Init( 0, (char ***)0);
+  tau_mpi_fortran_init_predefined_constants_();
 }
 
 void  mpi_init__( ierr)
@@ -3023,6 +3036,7 @@ MPI_Fint *provided;
 MPI_Fint *ierr;
 {
   *ierr = MPI_Init_thread( 0, (char ***)0, *required, provided );
+  tau_mpi_fortran_init_predefined_constants_();
 }
 
 void  mpi_init_thread__ (required, provided, ierr )
