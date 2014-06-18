@@ -381,11 +381,25 @@ private void collectTrials(DefaultMutableTreeNode sel, ArrayList<ParaProfTrial> 
       //de-select the text
       int pos=arg1Field.getSelectionStart();
       String text  =  arg1Field.getText();
-      String first = text.substring(0,pos-(metric.getName().length() +2));
-      String second = text.substring(pos+1);
+      String name = metric.getName();
+      int len = name.length();
+      int firstDex=pos-(len +2);
+      String first = "";
+      if(firstDex>0){
+    	  text.substring(0,firstDex);
+      }
+      int secondDex=pos+1;
+      String second = "";
+      if(secondDex>0)
+      {
+    	  second = text.substring(secondDex);
+      }
       arg1Field.setText(first+second);
       pos = pos-(metric.getName().length() +2);
-      arg1Field.setCaretPosition(pos);
+      if(pos>=0&&pos<arg1Field.getText().length())
+      {
+    	  arg1Field.setCaretPosition(pos);
+      }
       if(arg1Field.getText().length()==pos){
          arg1Field.setText(arg1Field.getText()+" ");
          arg1Field.setCaretPosition(pos);
