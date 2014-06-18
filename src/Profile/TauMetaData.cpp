@@ -1112,14 +1112,14 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
     const char *value = buffer;
     buffer = strchr(buffer, '\0')+1;
 
-    Tau_metadata_key *key = new Tau_metadata_key();
-	key->name = strdup(attribute);
-    MetaDataRepo::iterator iter = Tau_metadata_getMetaData(RtsLayer::myThread()).find(*key);
+    Tau_metadata_key key;
+	key.name = (char*)attribute;
+    MetaDataRepo::iterator iter = Tau_metadata_getMetaData(RtsLayer::myThread()).find(key);
     if (iter != Tau_metadata_getMetaData(RtsLayer::myThread()).end()) {
 	  if (iter->second->type == TAU_METADATA_TYPE_STRING) {
         const char *my_value = iter->second->data.cval;
         if (0 == strcmp(value, my_value)) {
-          Tau_metadata_getMetaData(RtsLayer::myThread()).erase(*key);
+          Tau_metadata_getMetaData(RtsLayer::myThread()).erase(key);
         }
 	  }
     }

@@ -102,3 +102,7 @@ tau_bfd_module_handle_t Tau_bfd_getModuleHandle(tau_bfd_handle_t handle, unsigne
   return TAU_BFD_UNIMPLEMENTED_MODULE_HANDLE;
 }
 
+void Tau_delete_bfd_units(void) {
+  return;
+}
+

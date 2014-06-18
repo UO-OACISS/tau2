@@ -237,7 +237,9 @@ void Tau_delete_hash_table(void) {
     delete node;
   }
   mytab.clear();
+#ifdef TAU_BFD
   Tau_delete_bfd_units();
+#endif
 }
 
 // this function won't actually do the backtrace, but rather get the function
