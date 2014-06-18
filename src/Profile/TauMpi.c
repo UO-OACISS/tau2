@@ -1581,6 +1581,7 @@ char *** argv;
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
   
+  tau_mpi_fortran_init_predefined_constants_();
   returnVal = PMPI_Init( argc, argv );
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -1641,6 +1642,7 @@ int *provided;
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
  
+  tau_mpi_fortran_init_predefined_constants_();
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
 #ifndef TAU_WINDOWS
