@@ -399,6 +399,7 @@ static char const * Tau_get_cwd_of_exe()
   FILE * f = fopen("/proc/self/cmdline", "r");
   if (f) {
     char * line = (char*)malloc(4096);
+    line[0] ='\0';
     if (Tau_util_readFullLine(line, f)) {
       int pos = strlen(line) - 1;
       while(pos >= 0) {
@@ -471,6 +472,7 @@ static int TauConf_read()
     sprintf(conf_file_name, "%s/tau.conf", exedir);
     TAU_VERBOSE("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
+    free(exedir);
   }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);
