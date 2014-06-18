@@ -197,10 +197,14 @@ struct OmpHashNode
   char * location;
 };
 
+extern void Tau_delete_hash_table(void);
+
 struct OmpHashTable : public TAU_HASH_MAP<unsigned long, OmpHashNode*>
 {
   OmpHashTable() { }
-  virtual ~OmpHashTable() { }
+  virtual ~OmpHashTable() {
+    Tau_delete_hash_table();
+  }
 };
 
 static OmpHashTable & OmpTheHashTable()
@@ -220,6 +224,20 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
     RtsLayer::UnLockEnv();
   }
   return OmpbfdUnitHandle;
+}
+
+void Tau_delete_hash_table(void) {
+  // clear the hash map to eliminate memory leaks
+  OmpHashTable & mytab = OmpTheHashTable();
+  for ( TAU_HASH_MAP<unsigned long, OmpHashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
+    OmpHashNode * node = it->second;
+    if (node->location) {
+        free (node->location);
+    }
+    delete node;
+  }
+  mytab.clear();
+  Tau_delete_bfd_units();
 }
 
 // this function won't actually do the backtrace, but rather get the function
@@ -382,7 +400,7 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
     tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // use the top level timer
 #endif
     if (tmpStr == NULL) {
-        tmpStr = (char*)__UNKNOWN__;
+        tmpStr = strdup((char*)__UNKNOWN__);
     }
 
 	// save the region name for the worker threads in this team to access
@@ -397,6 +415,7 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
 	    region_names[Tau_collector_flags[tid].regionid] = strdup(tmpStr);
         omp_unset_lock(&writelock);
 	}
+	free (tmpStr);
     return;
 }
 
@@ -429,7 +448,7 @@ defined (__GNUC_PATCHLEVEL__))
 	}
 #endif
     if (tmpStr == NULL)
-        tmpStr = (char*)__UNKNOWN__;
+        tmpStr = strdup((char*)__UNKNOWN__);
     return tmpStr;
 }
 
@@ -448,6 +467,7 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
 	regionIDstr = (char*)malloc(contextLength + 32);
     sprintf(regionIDstr, "%s: %s", state, tmpStr);
     Tau_pure_start_openmp_task(regionIDstr, "", tid);
+	free(tmpStr);
     free(regionIDstr);
   }
 }
@@ -841,10 +861,28 @@ extern "C" int Tau_initialize_collector_api(void) {
     return 0;
 }
 
-int __attribute__ ((destructor)) Tau_finalize_collector_api(void);
+void __attribute__ ((destructor)) Tau_finalize_collector_api(void);
 
-int Tau_finalize_collector_api(void) {
-    return 0;
+void Tau_finalize_collector_api(void) {
+    omp_set_lock(&writelock);
+    std::map<unsigned long, char*>::iterator it = region_names.begin();
+    while (it != region_names.end()) {
+      std::map<unsigned long, char*>::iterator eraseme = it;
+      ++it;
+	  free(eraseme->second);
+      region_names.erase(eraseme);
+    }
+    region_names.clear();
+    it = task_names.begin();
+    while (it != task_names.end()) {
+      std::map<unsigned long, char*>::iterator eraseme = it;
+      ++it;
+	  free(eraseme->second);
+      task_names.erase(eraseme);
+    }
+    task_names.clear();
+    omp_unset_lock(&writelock);
+    return;
 #if 0
     TAU_VERBOSE("Tau_finalize_collector_api()\n");
 

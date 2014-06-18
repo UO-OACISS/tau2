@@ -1185,6 +1185,8 @@ void tau_GOMP_ordered_end(GOMP_ordered_end_p GOMP_ordered_end_h)  {
 void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (*a1)(void *), void * a2, unsigned int a3)  {
     DEBUGPRINT("GOMP_parallel_start %d of %d\n", Tau_get_thread(), a3==0?omp_get_max_threads():1);
 
+    // increment the region counter
+	incr_current_region_id();
     __ompc_set_state(THR_OVHD_STATE);
     /* 
      * Don't actually pass in the work for the parallel region, but a pointer

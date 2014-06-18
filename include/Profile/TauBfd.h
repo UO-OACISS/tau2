@@ -88,6 +88,9 @@ void Tau_bfd_initializeBfd();
 // Register a BFD unit (i.e. an executable and its shared libraries)
 tau_bfd_handle_t Tau_bfd_registerUnit();
 
+// free the unit vector
+void Tau_delete_bfd_units(void);
+
 // Return true if the given handle is valid
 bool Tau_bfd_checkHandle(tau_bfd_handle_t handle);
 

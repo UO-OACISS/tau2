@@ -28,6 +28,8 @@ void __omp_collector_init(void);
 OMP_COLLECTOR_API_THR_STATE __ompc_set_state(OMP_COLLECTOR_API_THR_STATE state);
 void __ompc_event_callback(OMP_COLLECTORAPI_EVENT event);
 
+void incr_current_region_id(void);
+
 #ifdef __cplusplus
 }
 #endif

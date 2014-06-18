@@ -62,8 +62,10 @@ struct TauBfdModule
   { }
 
   ~TauBfdModule() {
+    if (bfdImage && bfdOpen)
+      bfd_close(bfdImage);
     free(syms);
-    delete bfdImage;
+	syms = NULL;
   }
 
 #ifdef TAU_INTEL12
@@ -225,6 +227,19 @@ static bfd_unit_vector_t & ThebfdUnits(void)
   // BFD units (e.g. executables and their dynamic libraries)
   static bfd_unit_vector_t internal_bfd_units;
   return internal_bfd_units;
+}
+
+void Tau_delete_bfd_units() {
+  bfd_unit_vector_t units = ThebfdUnits();
+  for (std::vector<TauBfdUnit*>::iterator it = units.begin();
+       it != units.end(); ++it) {
+    TauBfdUnit * unit = *it;
+    unit->ClearMaps();
+    unit->ClearModules();
+	delete unit->executableModule;
+    delete unit;
+  }
+  units.clear();
 }
 
 typedef int * (*objopen_counter_t)(void);

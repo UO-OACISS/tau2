@@ -1909,6 +1909,7 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
 #endif
 }
 
+extern void Tau_clear_pure_map(void);
 
 /*
   The following is for supporting pure and elemental fortran subroutines
@@ -1917,6 +1918,7 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
 struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
   virtual ~PureMap() {
     Tau_destructor_trigger();
+	Tau_clear_pure_map();
   }
 };
 
@@ -2327,9 +2329,13 @@ extern "C" int Tau_get_local_tid(void) {
   return RtsLayer::unsafeLocalThreadId();
 }
 
+extern void Tau_finalize_collector_api(void);
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+#ifdef TAU_OPENMP
+  Tau_finalize_collector_api();
+#endif
   Tau_memory_wrapper_disable();
 //#ifndef JAVA
   Tau_stop_top_level_timer_if_necessary();
@@ -2341,6 +2347,22 @@ void Tau_destructor_trigger() {
     TheSafeToDumpData() = 0;
 #endif
   }
+}
+
+void Tau_clear_pure_map(void) {
+  // clear the hash map to eliminate memory leaks
+  PureMap & mymap = ThePureMap();
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = mymap.begin();
+  while ( it != mymap.end() ) {
+	TAU_HASH_MAP<string, FunctionInfo *>::iterator eraseme = it;
+	FunctionInfo * fi = eraseme->second;
+    it++; // do this BEFORE the delete!
+	// The top level timer is not allocated? Weird. IF you free it you'll get a segv.
+	if (strcmp(fi->Name, ".TAU application") != 0)
+		delete fi;
+    //mymap.erase(eraseme);
+  }
+  mymap.clear(); 
 }
 
 //////////////////////////////////////////////////////////////////////

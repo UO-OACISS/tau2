@@ -347,10 +347,13 @@ FunctionInfo::~FunctionInfo()
 // Don't delete Name, Type - if dtor of static object dumps the data
 // after all these function objects are destroyed, it can't get the 
 // name, and type.
-//	delete [] Name;
-//	delete [] Type;
+//  delete [] Name;
+//  delete [] Type;
+  free(Name);
+  free(Type);
   free(GroupName);
   free(AllGroups);
+  Name = Type = GroupName = AllGroups = NULL;
   TheSafeToDumpData() = 0;
 }
 

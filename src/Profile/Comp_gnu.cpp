@@ -149,7 +149,20 @@ void updateHashTable(unsigned long addr, const char *funcname)
 static int executionFinished = 0;
 void runOnExit()
 {
-  executionFinished = 1;
+  executionFinished = 1; 
+
+  // clear the hash map to eliminate memory leaks
+  HashTable & mytab = TheHashTable();
+  for ( TAU_HASH_MAP<unsigned long, HashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
+  	HashNode * node = it->second;
+    if (node->fi) {
+		delete node->fi;
+	}
+    delete node;
+  }
+  mytab.clear();
+  Tau_delete_bfd_units();
+
   Tau_destructor_trigger();
 }
 
