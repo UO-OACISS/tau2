@@ -476,7 +476,6 @@ static int TauConf_read()
     }
     TAU_VERBOSE("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
-	free (exedir);
   }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);

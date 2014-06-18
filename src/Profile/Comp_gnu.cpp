@@ -161,8 +161,9 @@ void runOnExit()
     delete node;
   }
   mytab.clear();
+#ifdef TAU_BFD
   Tau_delete_bfd_units();
-
+#endif
   Tau_destructor_trigger();
 }
 

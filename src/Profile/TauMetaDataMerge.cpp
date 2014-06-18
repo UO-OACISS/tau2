@@ -73,6 +73,9 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     char tmpstr[256];
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
+#ifdef TAU_MPI
+	Tau_util_destroyOutputDevice(out);
+#endif /* TAU_MPI */
 
   } else {
 #ifdef TAU_MPI
@@ -81,6 +84,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     char *Buffer = (char*) TAU_UTIL_MALLOC(BufferSize);
     PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, MPI_COMM_WORLD);
     Tau_metadata_removeDuplicates(Buffer, BufferSize);
+	free(Buffer);
 #endif /* TAU_MPI */
   }
   return 0;

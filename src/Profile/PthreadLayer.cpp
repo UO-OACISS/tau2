@@ -217,6 +217,7 @@ void * tau_pthread_function(void *arg)
   // See src/wrappers/taupreload/taupreload.c:taupreload_fini() for details
   Tau_stop_top_level_timer_if_necessary();
 #endif
+  delete pack;
   return ret;
 }
 
