@@ -468,11 +468,14 @@ static int TauConf_read()
   FILE * cfgFile = fopen(tmp, "r");
   if (!cfgFile) {
     char const * exedir = Tau_get_cwd_of_exe();
-    if (!exedir) exedir = ".";
-    sprintf(conf_file_name, "%s/tau.conf", exedir);
+    if (!exedir) {
+      sprintf(conf_file_name, "./tau.conf");
+    } else {
+      sprintf(conf_file_name, "%s/tau.conf", exedir);
+      free((void*)exedir);
+    }
     TAU_VERBOSE("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
-    free(exedir);
   }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);
