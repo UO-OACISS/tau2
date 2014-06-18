@@ -140,18 +140,36 @@ int tau_bgq_init(void) {
 #include <signal.h>
 #include <stdarg.h>
 
-class MetaDataRepo : public map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> {
-public :
-  virtual ~MetaDataRepo() {
-    //Tau_destructor_trigger();
-  }
-};
-
-
 // These come from Tau_metadata_register calls
-map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> &Tau_metadata_getMetaData(int tid) {
+MetaDataRepo &Tau_metadata_getMetaData(int tid) {
   static MetaDataRepo metadata[TAU_MAX_THREADS];
   return metadata[tid];
+}
+
+void MetaDataRepo::freeMetadata (Tau_metadata_value_t * tmv) {
+  int i = 0;
+  Tau_metadata_object_t *tmo = tmv->data.oval;
+  Tau_metadata_array_t *tma = tmv->data.aval;
+  switch(tmv->type) {
+    case TAU_METADATA_TYPE_STRING:
+	  //if (strlen(tmv->data.cval)>0) {
+	    free(tmv->data.cval);
+	  //}
+	  break;
+    case TAU_METADATA_TYPE_OBJECT: 
+	  for (i = 0 ; i < tmo->count ; i++) {
+	    free(tmo->names[i]);
+	    freeMetadata(tmo->values[i]);
+	  }
+      break;
+    case TAU_METADATA_TYPE_ARRAY:
+	  for (i = 0 ; i < tma->length ; i++)
+	    freeMetadata(tma->values[i]);
+	break;
+	default:
+	break;
+  }
+  free(tmv);
 }
 
 extern "C" void Tau_metadata_create_value(Tau_metadata_value_t** tmv, const Tau_metadata_type_t type) {
@@ -215,14 +233,15 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   TauInternalFunctionGuard protects_this_function;
 
   // make the key
-  Tau_metadata_key *key = new Tau_metadata_key();
-  key->name = strdup(name);
+  Tau_metadata_key key;
+  //key.name = strdup(name);
+  key.name = (char*)(name);
   // make the value
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
   //RtsLayer::LockEnv();
-  Tau_metadata_getMetaData(tid)[*key] = tmv;
+  Tau_metadata_getMetaData(tid)[key] = tmv;
   //RtsLayer::UnLockEnv();
 #endif
 }
@@ -845,7 +864,8 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
    * metadata, basically) with the thread-specific metata. If the current
    * thread is 0, we have no aggregation to do.
    */
-  map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> *localRepo = NULL;
+  //map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> *localRepo = NULL;
+  MetaDataRepo *localRepo = NULL;
   if (tid == 0) {
     // just get a reference to thread 0 metadata
     localRepo = &(Tau_metadata_getMetaData(tid));
@@ -853,14 +873,14 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
     // create a new aggregator
     localRepo = new MetaDataRepo();
 	// copy all metadata from thread 0
-    for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = Tau_metadata_getMetaData(0).begin(); it != Tau_metadata_getMetaData(0).end(); it++) {
+    for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(0).begin(); it != Tau_metadata_getMetaData(0).end(); it++) {
 	  // DON'T copy the context metadata fields
 	  if (it->first.timer_context == NULL) {
         (*localRepo)[it->first] = it->second;
 	  }
 	}
  	// overwrite with thread-specific data
-    for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = Tau_metadata_getMetaData(tid).begin(); it != Tau_metadata_getMetaData(tid).end(); it++) {
+    for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); it != Tau_metadata_getMetaData(tid).end(); it++) {
       (*localRepo)[it->first] = it->second;
 	}
   }
@@ -872,7 +892,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 
   // write out the user-specified (some from TAU) attributes
   int i = 0;
-  for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
+  for (MetaDataRepo::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
   /*
 	if (it->first.timer_context == NULL) {
       const char *name = it->first.name;
@@ -891,9 +911,19 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 	i++;
   }
 
+// can't do full delete, because the aggregation does not do deep copies. :(
+  if (tid == 0) {
+    localRepo->emptyRepo();
+  } else {
+  	delete localRepo;
+  }
+
 #ifndef TAU_SCOREP
   Tau_util_output (out, "</metadata>%s", endl);
 #endif /* TAU_SCOREP */
+
+  /* free all the memory */
+
   return 0;
 }
 
@@ -1034,7 +1064,7 @@ Tau_util_outputDevice *Tau_metadata_generateMergeBuffer() {
 
   Tau_util_output(out,"%d%c", Tau_metadata_getMetaData(RtsLayer::myThread()).size(), '\0');
 
-  for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = Tau_metadata_getMetaData(RtsLayer::myThread()).begin(); it != Tau_metadata_getMetaData(RtsLayer::myThread()).end(); ++it) {
+  for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(RtsLayer::myThread()).begin(); it != Tau_metadata_getMetaData(RtsLayer::myThread()).end(); ++it) {
     const char *name = it->first.name;
     Tau_util_output(out,"%s%c", name, '\0');
 	switch (it->second->type) {
@@ -1084,7 +1114,7 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
 
     Tau_metadata_key *key = new Tau_metadata_key();
 	key->name = strdup(attribute);
-    map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator iter = Tau_metadata_getMetaData(RtsLayer::myThread()).find(*key);
+    MetaDataRepo::iterator iter = Tau_metadata_getMetaData(RtsLayer::myThread()).find(*key);
     if (iter != Tau_metadata_getMetaData(RtsLayer::myThread()).end()) {
 	  if (iter->second->type == TAU_METADATA_TYPE_STRING) {
         const char *my_value = iter->second->data.cval;

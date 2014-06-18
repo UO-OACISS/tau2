@@ -125,7 +125,7 @@ static void metricv_add(const char *name) {
  * Note: traceMetric must already be set
  ********************************************************************/
 static void reorder_metrics(const char *match) {
-  const char *newMetricV[TAU_MAX_METRICS];
+  char *newMetricV[TAU_MAX_METRICS];
   int idx = 0;
   int newTraceMetric = 0;
 
@@ -148,7 +148,7 @@ static void reorder_metrics(const char *match) {
   }
 
   for (int i = 0; i < nmetrics; i++) {
-    metricv[i] = strdup(newMetricV[i]);
+    metricv[i] = newMetricV[i];
   }
 
   traceMetric = newTraceMetric;

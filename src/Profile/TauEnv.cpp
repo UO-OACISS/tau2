@@ -392,7 +392,7 @@ extern int Tau_util_readFullLine(char *line, FILE *fp);
 /*********************************************************************
  * Get executable directory name: /usr/local/foo will return /usr/local
  ********************************************************************/
-static char const * Tau_get_cwd_of_exe()
+static char * Tau_get_cwd_of_exe()
 {
   char * retval = NULL;
 
@@ -466,11 +466,12 @@ static int TauConf_read()
   }
   FILE * cfgFile = fopen(tmp, "r");
   if (!cfgFile) {
-    char const * exedir = Tau_get_cwd_of_exe();
-    if (!exedir) exedir = ".";
+    char * exedir = Tau_get_cwd_of_exe();
+    if (!exedir) exedir = strdup(".");
     sprintf(conf_file_name, "%s/tau.conf", exedir);
     TAU_VERBOSE("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
+	free (exedir);
   }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);

@@ -40,6 +40,13 @@ class Tau_metadata_key {
     call_number = 0;
     timestamp = 0;
   }
+  /*
+  virtual ~Tau_metadata_key() {
+    if (name) free(name);
+    if (timer_context) free(timer_context);
+  }
+  */
+  
 };
 
 
@@ -79,7 +86,38 @@ struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_
   }
 };
 
-map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> &Tau_metadata_getMetaData(int tid);
+class MetaDataRepo : public map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> {
+private:
+  void freeMetadata (Tau_metadata_value_t * tmv);
+public :
+  void emptyRepo(void) {
+	MetaDataRepo::iterator it = this->begin();
+	while (it != this->end()) {
+	  MetaDataRepo::iterator eraseme = it;
+	  ++it;
+      //if (eraseme->first.name) free(eraseme->first.name);
+      if (eraseme->first.timer_context) free(eraseme->first.timer_context);
+	  this->freeMetadata(eraseme->second);
+	}
+	this->clear();
+  }
+  /* can't delete everything, just the map pointers. */
+  void shallowEmpty(void) {
+	MetaDataRepo::iterator it = this->begin();
+	while (it != this->end()) {
+	  MetaDataRepo::iterator eraseme = it;
+	  ++it;
+	  this->erase(eraseme); // deletes the key, keeps the value in memory for now
+	}
+	this->clear();
+  }
+  virtual ~MetaDataRepo() {
+    this->shallowEmpty();
+    //Tau_destructor_trigger();
+  }
+};
+
+MetaDataRepo &Tau_metadata_getMetaData(int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
 int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid);

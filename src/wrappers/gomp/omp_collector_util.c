@@ -440,6 +440,12 @@ void __omp_collector_init() {
   current_region_id = 0;
 }
 
+void incr_current_region_id() {
+  omp_set_lock(&event_lock);
+  current_region_id = current_region_id + 1;
+  omp_unset_lock(&event_lock);
+}
+
 OMP_COLLECTOR_API_THR_STATE __ompc_set_state(OMP_COLLECTOR_API_THR_STATE state)
 {
   OMP_COLLECTOR_API_THR_STATE previous = gomp_state;
