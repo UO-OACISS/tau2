@@ -38,7 +38,7 @@ class Tau_metadata_key {
     name = NULL;
     timer_context = NULL;
     call_number = 0;
-    timestamp = 0;
+    timestamp = 0L;
   }
   /*
   virtual ~Tau_metadata_key() {
@@ -54,23 +54,19 @@ struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_
 {
   bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const { 
     
-    char *left;
-    char *right;
+    char *left = lhs.name;
+    char *right = rhs.name;
     int allocate_left = 0;
     int allocate_right = 0;
 
 	// we are using C methods, because the C++ methods didn't work with PGI on Cray XK6.
 
-    if (lhs.timer_context == NULL) {
-        left = lhs.name;
-    } else {
+    if (lhs.timer_context != NULL) {
 	    allocate_left = strlen(lhs.name)+strlen(lhs.timer_context)+64;
         left = (char *) calloc(allocate_left, sizeof(char));
         sprintf(left, "%s%s%d:%llu", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
     }
-    if (rhs.timer_context == NULL) {
-        right = rhs.name;
-    } else {
+    if (rhs.timer_context != NULL) {
         allocate_right = strlen(rhs.name)+strlen(rhs.timer_context)+64;
         right = (char *) calloc(allocate_right, sizeof(char));
         sprintf(right, "%s%s%d:%llu", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);

@@ -860,9 +860,6 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
         if (prevShortName) {
           free(prevShortName);
           prevShortName = NULL;
-          if (newShortName) {
-            prevShortName = newShortName;
-          }
         }
         // move the pointers
         if (newShortName) {
@@ -1786,10 +1783,6 @@ int Tau_sampling_finalize(int tid)
       delete node;
     }
     TheCallSiteCache().clear();
-    //TheCallSiteCache().erase(TheCallSiteCache().begin(), TheCallSiteCache().end());
-#ifdef TAU_BFD
-    //Tau_delete_bfd_units();
-#endif
   }
 
   return 0;
