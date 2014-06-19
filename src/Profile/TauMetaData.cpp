@@ -871,7 +871,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
     localRepo = &(Tau_metadata_getMetaData(tid));
   } else {
     // create a new aggregator
-    localRepo = new MetaDataRepo();
+    localRepo = new MetaDataRepo(false);
 	// copy all metadata from thread 0
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(0).begin(); it != Tau_metadata_getMetaData(0).end(); it++) {
 	  // DON'T copy the context metadata fields
@@ -912,9 +912,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   }
 
 // can't do full delete, because the aggregation does not do deep copies. :(
-  if (tid == 0) {
-    localRepo->emptyRepo();
-  } else {
+  if (tid != 0) {
   	delete localRepo;
   }
 
