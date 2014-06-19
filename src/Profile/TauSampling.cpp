@@ -73,6 +73,7 @@
 #include <sys/time.h>
 #include <stdio.h>
 #include <string.h>
+#include <sstream>
 #include <sys/types.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -802,8 +803,8 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   return callsite;
 }
 
-char *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
-  char *ret;
+string *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
+  string *ret;
   vector<CallSiteInfo*> & sites = callStack->callSites;
   int startIdx;
 
@@ -817,17 +818,18 @@ char *Tau_sampling_getPathName(unsigned int index, CallStackInfo *callStack) {
   }
   
   startIdx = (int)(sites.size()) - 1;
-  std::string buffer = (sites[startIdx])->name;
+  stringstream buffer;
+  buffer << (sites[startIdx])->name;
   // do some stupid conversions thanks to unsigned and signed behavior
   if (startIdx > 0) {
     int limit = (int)index;
     for (int i=startIdx-1; i>=limit; i--) {
-	  buffer += " => ";
-      buffer += (sites[i])->name;
+	  buffer << " => ";
+      buffer << (sites[i])->name;
     }
   }
   // copy the string so it doesn't go out of scope
-  ret = strdup(buffer.c_str());
+  ret = new string(buffer.str());
   return ret;
 }
 
@@ -867,6 +869,12 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
           prevShortName = newShortName;
           newShortName = NULL;
         }
+      }
+      if (newShortName) {
+        free(newShortName);
+      }
+      if (prevShortName) {
+        free(prevShortName);
       }
     }
   }
@@ -1000,27 +1008,30 @@ void Tau_sampling_finalizeProfile(int tid)
     //         in a persistent mode across candidates.
     FunctionInfo *intermediateGlobalLeaf = NULL;
     FunctionInfo *intermediatePathLeaf = NULL;
-    string *intermediateGlobalLeafString = new string("");
-    string *intermediatePathLeafString = new string("");
+    stringstream intermediateGlobalLeafString;
+    stringstream intermediatePathLeafString;
 
     // STEP 2a: Locate or create Leaf Entry - the CONTEXT node
-    *intermediateGlobalLeafString = "[CONTEXT] ";
+    intermediateGlobalLeafString << "[CONTEXT] ";
 	bool needToUpdateContext = false;
 	if (strncmp(candidate->tauContext->GetName(), "OMP_", 4) == 0) {
 	  needToUpdateContext = true;
 	}
-    *intermediateGlobalLeafString += Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName());
-    fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
+	char * tmpStr = Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName());
+    intermediateGlobalLeafString << tmpStr;
+	free(tmpStr);
+	const string& iglstring = intermediateGlobalLeafString.str();
+    fi_it = name2FuncInfoMap[tid]->find(iglstring);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediateGlobalLeaf = 
-	new FunctionInfo((const char*)intermediateGlobalLeafString->c_str(),
+	new FunctionInfo(iglstring,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
 			 "TAU_SAMPLE_CONTEXT", true);
       RtsLayer::UnLockDB();
-      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediateGlobalLeafString->c_str(), intermediateGlobalLeaf));
+      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(iglstring, intermediateGlobalLeaf));
     } else {
       intermediateGlobalLeaf = (FunctionInfo *)fi_it->second;
     }
@@ -1028,22 +1039,21 @@ void Tau_sampling_finalizeProfile(int tid)
     // Step 2b: Locate or create Full Path Entry. Requires name
     //   information about the Leaf Entry available.
     //   This is the TIMER => SAMPLES entry.
-    *intermediatePathLeafString = candidate->tauContext->GetName();
-	*intermediatePathLeafString += " ";
-	*intermediatePathLeafString += candidate->tauContext->GetType();
-	*intermediatePathLeafString += " => ";
-	*intermediatePathLeafString += *intermediateGlobalLeafString;
-    fi_it = name2FuncInfoMap[tid]->find(*intermediatePathLeafString);
+    intermediatePathLeafString << candidate->tauContext->GetName() << " ";
+	intermediatePathLeafString << candidate->tauContext->GetType() << " => ";
+	intermediatePathLeafString << iglstring;
+	const string& iplstring = intermediatePathLeafString.str();
+    fi_it = name2FuncInfoMap[tid]->find(iplstring);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediatePathLeaf = 
-	new FunctionInfo((const char*)intermediatePathLeafString->c_str(),
+	new FunctionInfo(iplstring,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
 			 "TAU_SAMPLE_CONTEXT|TAU_CALLPATH", true);
       RtsLayer::UnLockDB();
-      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediatePathLeafString->c_str(), intermediatePathLeaf));
+      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(iplstring, intermediatePathLeaf));
     } else {
       intermediatePathLeaf = (FunctionInfo *)fi_it->second;
     }
@@ -1074,8 +1084,8 @@ void Tau_sampling_finalizeProfile(int tid)
     vector<CallSiteInfo *> & sites = callStack->callSites;
     // *CWL* - we need the index, which is why the iterator is not used.
     for (unsigned int i = 0; i < sites.size(); i++) {
-      string samplePathLeafString = Tau_sampling_getPathName(i, callStack);
-      string sampleGlobalLeafString = sites[i]->name;
+      string * samplePathLeafString = Tau_sampling_getPathName(i, callStack);
+      const string& sampleGlobalLeafString = sites[i]->name;
       FunctionInfo * samplePathLeaf = NULL;
       FunctionInfo * sampleGlobalLeaf = NULL;
 
@@ -1094,23 +1104,25 @@ void Tau_sampling_finalizeProfile(int tid)
         sampleGlobalLeaf = (FunctionInfo*)fi_it->second;
       }
       
-      string *callSiteKeyName = new string(intermediatePathLeafString->c_str());
-	  *callSiteKeyName += " ";
-	  *callSiteKeyName += candidate->tauContext->GetType();
-	  *callSiteKeyName += " => ";
-	  *callSiteKeyName += samplePathLeafString.c_str();
+      stringstream callSiteKeyName;
+	  callSiteKeyName << iplstring << " ";
+	  callSiteKeyName << candidate->tauContext->GetType() << " => ";
+	  callSiteKeyName << samplePathLeafString;
+      const string cskname(callSiteKeyName.str());
+	  delete samplePathLeafString;
       // try to find the key
-      fi_it = name2FuncInfoMap[tid]->find(*callSiteKeyName);
+      fi_it = name2FuncInfoMap[tid]->find(cskname);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
         char const * sampleGroup = "TAU_UNWIND|TAU_CALLPATH";
-        if (callSiteKeyName->find("UNWIND") == string::npos) {
+        if (cskname.find("UNWIND") == string::npos) {
           sampleGroup = "TAU_SAMPLE|TAU_CALLPATH";
         }
         RtsLayer::LockDB();
-        samplePathLeaf = new FunctionInfo(*callSiteKeyName, "",
+        samplePathLeaf = new FunctionInfo(cskname, "",
             candidate->tauContext->GetProfileGroup(), sampleGroup, true);
         RtsLayer::UnLockDB();
-        name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(callSiteKeyName->c_str(), samplePathLeaf));
+        //name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(callSiteKeyName->c_str(), samplePathLeaf));
+        name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(cskname, samplePathLeaf));
       } else {
         samplePathLeaf = (FunctionInfo*)fi_it->second;
       }
@@ -1133,6 +1145,13 @@ void Tau_sampling_finalizeProfile(int tid)
         }
       }
     }
+    while (!callStack->callSites.empty()) {
+      CallSiteInfo * tmp = callStack->callSites.back();
+      callStack->callSites.pop_back();
+	  free(tmp->name);
+	  delete tmp;
+    }
+	delete callStack;
   }
 
   // Write out Metadata.
@@ -1154,6 +1173,12 @@ void Tau_sampling_finalizeProfile(int tid)
   sprintf(tmpname, "TAU_EBS_SAMPLES_DROPPED_SUSPENDED_%d", tid);
   sprintf(tmpstr, "%lld", tau_sampling_flags()->samplesDroppedSuspended);
   TAU_METADATA(tmpname, tmpstr);
+
+  while (!candidates.empty()) {
+    CallSiteCandidate * tmp = candidates.back();
+    candidates.pop_back();
+	delete tmp;
+  }
 }
 
 void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
@@ -1751,6 +1776,20 @@ int Tau_sampling_finalize(int tid)
 
   if (TauEnv_get_profiling()) {
     Tau_sampling_finalizeProfile(tid);
+  }
+
+  if (tid == 0) {
+    // clear the hash map to eliminate memory leaks
+    CallSiteCacheMap & mytab = TheCallSiteCache();
+    for ( CallSiteCacheMap::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
+      CallSiteCacheNode * node = it->second;
+      delete node;
+    }
+    TheCallSiteCache().clear();
+    //TheCallSiteCache().erase(TheCallSiteCache().begin(), TheCallSiteCache().end());
+#ifdef TAU_BFD
+    //Tau_delete_bfd_units();
+#endif
   }
 
   return 0;
