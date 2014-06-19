@@ -354,6 +354,9 @@ FunctionInfo::~FunctionInfo()
   free(GroupName);
   free(AllGroups);
   Name = Type = GroupName = AllGroups = NULL;
+  for (int i = 0; i < TAU_MAX_THREADS; i++) {
+    delete pathHistogram[i];
+  }
   TheSafeToDumpData() = 0;
 }
 
