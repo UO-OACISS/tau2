@@ -2330,7 +2330,7 @@ extern "C" int Tau_get_local_tid(void) {
 }
 
 #ifdef TAU_OPENMP
-extern "C" void Tau_finalize_collector_api(void);
+extern void Tau_finalize_collector_api(void);
 #endif
 
 // this routine is called by the destructors of our static objects
