@@ -85,9 +85,8 @@ struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_
 class MetaDataRepo : public map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> {
 private:
   void freeMetadata (Tau_metadata_value_t * tmv);
-  bool _deep;
 public :
-  void deepEmpty(void) {
+  void emptyRepo(void) {
 	MetaDataRepo::iterator it = this->begin();
 	while (it != this->end()) {
 	  MetaDataRepo::iterator eraseme = it;
@@ -108,13 +107,8 @@ public :
 	}
 	this->clear();
   }
-  MetaDataRepo() : _deep(true) {}
-  MetaDataRepo(bool deep) : _deep(deep) {}
   virtual ~MetaDataRepo() {
-    if (_deep)
-      this->deepEmpty();
-	else
-      this->shallowEmpty();
+    this->shallowEmpty();
     //Tau_destructor_trigger();
   }
 };
