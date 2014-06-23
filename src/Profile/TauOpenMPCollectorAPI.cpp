@@ -866,6 +866,7 @@ extern "C" int Tau_initialize_collector_api(void) {
 void __attribute__ ((destructor)) Tau_finalize_collector_api(void);
 
 void Tau_finalize_collector_api(void) {
+    if (!initialized) return 0;
     omp_set_lock(&writelock);
     std::map<unsigned long, char*>::iterator it = region_names.begin();
     while (it != region_names.end()) {
