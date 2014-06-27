@@ -18,7 +18,7 @@ public class Filter {
 	if (methodName.equals("<init>")   ||
 	    methodName.equals("<clinit>") ||
 	    methodName.equals("finalize")) {
-	    return false;
+	    return true;
 	}
 
 	/*
