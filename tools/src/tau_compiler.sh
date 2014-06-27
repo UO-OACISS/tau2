@@ -1901,6 +1901,9 @@ if [ $gotoNextStep == $TRUE ]; then
 		tempTauFileName=${arrTau[$tempCounter]}
 		instrumentedFileForCompilation=" $tempTauFileName"
 		useCompInst=yes
+		if [ $linkOnly == $TRUE ]; then 
+		  useCompInst=no
+                fi
 		if [ "x$tauSelectFile" != "x" ] ; then
 		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
 		    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
