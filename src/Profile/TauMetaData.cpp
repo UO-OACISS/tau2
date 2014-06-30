@@ -243,7 +243,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   //RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[key] = tmv;
   //RtsLayer::UnLockEnv();
-  printf("%s : %s\n", key.name, tmv->data.cval);
+  //printf("%s : %s\n", key.name, tmv->data.cval);
 #endif
 }
 
