@@ -507,7 +507,7 @@ case $1 in
 ###############################################################
      tauprefix=*)
         tauprefix=`echo $1 | sed -e 's/^tauprefix=//' `
-        echo "s@^TAU_PREFIX_INSTALL_DIR=\(.*\)@TAU_PREFIX_INSTALL_DIR=$tauprefix@g" >> $sedout
+        echo "s;^TAU_PREFIX_INSTALL_DIR=\(.*\);TAU_PREFIX_INSTALL_DIR=$tauprefix;g" >> $sedout
         ;;
 ###############################################################
 # Set the CONFIG_ARCH variable using execprefix
