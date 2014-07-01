@@ -1164,13 +1164,13 @@ while [ $tempCounter -lt $numFiles ]; do
 	       optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
           fi
           if [ $groupType == $group_f_F ]; then
-	    cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+	    cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
           else 
 	    cmdToExecute="${preprocessor} ${arrFileName[$tempCounter]} $optTauIncludes $optIncludeDefs"
           fi
 # tau_macro.sh will generate the .pp$suf file.
         else 
-	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
         fi
 	evalWithDebugMessage "$cmdToExecute" "Preprocessing"
         if [ ! -f $base$suf ]; then
