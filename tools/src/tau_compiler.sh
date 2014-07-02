@@ -101,6 +101,7 @@ printUsage () {
     echo -e "  -optPreProcess\t\tPreprocess the source code before parsing. Uses /usr/bin/cpp -P by default."
     echo -e "  -optContinueBeforeOMP\t\tInsert a CONTINUE statement before !\$OMP directives."
     echo -e "  -optCPP=\"\"\t\t\tSpecify an alternative preprocessor and pre-process the sources."
+    echo -e "  -optFPP=\"\"\t\t\tSpecify an alternative preprocessor and pre-process the fortran sources."
     echo -e "  -optCPPOpts=\"\"\t\tSpecify additional options to the C pre-processor."
     echo -e "  -optCPPReset=\"\"\t\tReset C preprocessor options to the specified list."
     echo -e "  -optTauSelectFile=\"\"\t\tSpecify selective instrumentation file for tau_instrumentor."
@@ -398,6 +399,12 @@ for arg in "$@" ; do
 			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
 			;;
 		    
+                -optFPP=*)
+                        f90preprocessor=${arg#"-optFPP="}
+                        preprocess=$TRUE
+                        tauPreProcessor=$FALSE
+                        echoIfDebug "\tFotran preprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
+                        ;;
 		    -optCPPOpts=*)
 		        preprocessorOpts="$preprocessorOpts ${arg#"-optCPPOpts="}"
 			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
