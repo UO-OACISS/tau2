@@ -8916,7 +8916,7 @@ fi
 
 if [ $default = false ] ; then
     # replace TAU_MAKEFILE in TAU.h
-    cat ./include/TAU.h.default | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > include/TAU.h
+    cat ./include/TAU.h.default | sed -e "s;^#define TAU_MAKEFILE.*\$;#define TAU_MAKEFILE \"$STUB\";" > include/TAU.h
 fi
 
 if [ $tauprefix != unknown ] ; then
