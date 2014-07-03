@@ -412,7 +412,7 @@ for arg in "$@" ; do
                     -optFPP=*)
                         f90preprocessor=${arg#"-optFPP="}
                         preprocess=$TRUE
-                        #tauPreProcessor=$FALSE
+                        tauPreProcessor=$FALSE
                         echo "\tFortran preprocessing $preprocess. preprocessor used is $f90preprocessor with options $f90preprocessorOpts"
                         ;;
 		    -optFPPOpts=*)
@@ -1182,7 +1182,11 @@ while [ $tempCounter -lt $numFiles ]; do
           fi
 # tau_macro.sh will generate the .pp$suf file.
         else 
+          if [ $groupType == $group_f_F ]; then
+	    cmdToExecute="${f90preprocessor} $f90preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
+	  else
 	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+	  fi
         fi
 	evalWithDebugMessage "$cmdToExecute" "Preprocessing"
         if [ ! -f $base$suf ]; then
