@@ -1185,7 +1185,7 @@ while [ $tempCounter -lt $numFiles ]; do
           if [ $groupType == $group_f_F ]; then
 	    cmdToExecute="${f90preprocessor} $f90preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
 	  else
-	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
 	  fi
         fi
 	evalWithDebugMessage "$cmdToExecute" "Preprocessing"
