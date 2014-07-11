@@ -42,6 +42,13 @@ mpc_thread_mutex_t MPCThreadLayer::tauThreadCountMutex;
 mpc_thread_mutex_t MPCThreadLayer::tauDBMutex;
 mpc_thread_mutex_t MPCThreadLayer::tauEnvMutex;
 
+#if defined (TAU_OPENMP)
+#include "omp.h"
+__thread int __openmp_thread_id = -1;
+__thread int __openmp_thread_count = 0;
+omp_lock_t tauRegistermutex;
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
@@ -53,6 +60,16 @@ mpc_thread_mutex_t MPCThreadLayer::tauEnvMutex;
 int MPCThreadLayer::RegisterThread(void)
 {
   InitializeThreadData();
+#if defined (TAU_OPENMP)
+  if (__openmp_thread_id == -1) {
+    mpc_thread_mutex_lock(&tauThreadCountMutex);
+    omp_set_lock(&tauRegistermutex);
+    __openmp_thread_id = __openmp_thread_count++;
+    omp_unset_lock(&tauRegistermutex);
+    mpc_thread_mutex_unlock(&tauThreadCountMutex);
+  }
+  return __openmp_thread_id;
+#else
   int * id = (int*)mpc_thread_getspecific(tauThreadId);
   if (!id) {
     id = new int;
@@ -65,7 +82,8 @@ int MPCThreadLayer::RegisterThread(void)
     mpc_thread_mutex_unlock(&tauThreadCountMutex);
   }
   tls_args = (void*)id;
-  return 0;
+  return *id;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -79,11 +97,18 @@ int MPCThreadLayer::GetThreadId(void)
 {
   InitializeThreadData();
 
+#if defined (TAU_OPENMP)
+  if (__openmp_thread_id == -1) {
+    MPCThreadLayer::RegisterThread();
+  }
+  return __openmp_thread_id;
+#else
   int * id = (int*)mpc_thread_getspecific(tauThreadId);
   if (id) {
     return *id;
   }
   return 0; // main() thread
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////

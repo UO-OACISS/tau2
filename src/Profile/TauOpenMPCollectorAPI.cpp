@@ -23,6 +23,9 @@
 #endif
 #include "TauEnv.h"
 #include <Profile/TauBfd.h>
+#ifdef TAU_MPC
+#include <Profile/MPCThreadLayer.h>
+#endif
 
 /* An array of this struct is shared by all threads. To make sure we don't have false
  * sharing, the struct is 64 bytes in size, so that it fits exactly in
@@ -918,6 +921,7 @@ extern "C" int Tau_get_thread_omp_state(int tid) {
     return (int)(thread_state);
 }
 
+#ifdef TAU_USE_OMPT
 
 /********************************************************
  * The functions below are for the OMPT 4.0 interface.
@@ -936,6 +940,15 @@ extern "C" int Tau_get_thread_omp_state(int tid) {
 #ifdef TAU_MPC
 // updated header
 #include <ompt.h>
+__thread int __local_tau_tid = -1;
+int check_local_tid(void) {
+  if (__local_tau_tid == -1) {
+    fprintf(stderr,"NEW THREAD!"); fflush(stderr);
+    __local_tau_tid = MPCThreadLayer::RegisterThread();
+    fprintf(stderr," %d\n",__local_tau_tid); fflush(stderr);
+  }
+  return __local_tau_tid;
+}
 #else
 #include <ompt.h>
 // old event names
@@ -951,6 +964,16 @@ extern "C" int Tau_get_thread_omp_state(int tid) {
 
 /* These two macros make sure we don't time TAU related events */
 
+#ifdef TAU_MPC
+#define TAU_OMPT_COMMON_ENTRY \
+    /* Never process anything internal to TAU */ \
+    if (Tau_global_get_insideTAU() > 0) { \
+        return; \
+    } \
+    Tau_global_incr_insideTAU(); \
+    check_local_tid(); \
+    int tid = Tau_get_thread();
+#else
 #define TAU_OMPT_COMMON_ENTRY \
     /* Never process anything internal to TAU */ \
     if (Tau_global_get_insideTAU() > 0) { \
@@ -958,6 +981,7 @@ extern "C" int Tau_get_thread_omp_state(int tid) {
     } \
     Tau_global_incr_insideTAU(); \
     int tid = Tau_get_thread();
+#endif
 
 #define TAU_OMPT_COMMON_EXIT \
     Tau_global_decr_insideTAU();
@@ -1042,8 +1066,17 @@ extern "C" void my_task_end (
 
 /* Thread creation */
 extern "C" void my_thread_begin(void) {
+#ifdef TAU_MPC
+  /* Never process anything internal to TAU */
+  if (Tau_global_get_insideTAU() > 0) {
+        return;
+  }
+  Tau_global_incr_insideTAU();
+  int tid = MPCThreadLayer::RegisterThread();
+#else
   TAU_OMPT_COMMON_ENTRY;
   //TAU_VERBOSE("OMPT Created thread: %d\n", tid); fflush(stdout);
+#endif
   Tau_create_top_level_timer_if_necessary();
   TAU_OMPT_COMMON_EXIT;
 }
@@ -1245,11 +1278,12 @@ extern "C" int ompt_set_callback(ompt_event_t event_type, ompt_callback_t callba
 
 #ifdef TAU_MPC
 int __ompt_initialize() {
+  check_local_tid();
 #else
 int ompt_initialize() {
 #endif
   Tau_init_initializeTAU();
-  //if (initialized || initializing) return 0;
+  if (initialized || initializing) return 0;
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
@@ -1401,13 +1435,12 @@ std::string * Tau_get_thread_ompt_state(int tid) {
 }
 #endif
 
+#else // TAU_USE_OMPT
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE OMPT SUPPORT IS NONEXISTENT */
-
 /* initialization */
-#ifndef TAU_USE_OMPT
 extern "C" __attribute__ (( weak ))
   int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb) { return -1; };
-#endif
+#endif // TAU_USE_OMPT
 
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE COLLECTOR API SUPPORT IS NONEXISTENT */
 #if !defined (TAU_OPEN64ORC)
