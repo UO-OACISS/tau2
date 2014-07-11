@@ -1436,10 +1436,10 @@ std::string * Tau_get_thread_ompt_state(int tid) {
 #endif
 
 #else // TAU_USE_OMPT
-/* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE OMPT SUPPORT IS NONEXISTENT */
-/* initialization */
-extern "C" __attribute__ (( weak ))
-  int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb) { return -1; };
+///* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE OMPT SUPPORT IS NONEXISTENT */
+///* initialization */
+//extern "C" __attribute__ (( weak ))
+  //int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb) { return -1; };
 #endif // TAU_USE_OMPT
 
 /* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE COLLECTOR API SUPPORT IS NONEXISTENT */
