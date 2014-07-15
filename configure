@@ -5598,6 +5598,7 @@ libomp_osstgz=$libomp_oss.tar.gz
 libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
+libomp_ossinc=${targetdir}/include
 
 if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then 
@@ -5658,10 +5659,16 @@ if [ "x$download_ompt" = xyes ] ; then
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
         cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+        cp src/ompt.h ${libomp_ossinc}/.
+        cp src/ompt-event.h ${libomp_ossinc}/.
+        cp src/ompt-state.h ${libomp_ossinc}/.
         echo "...Success."
       else
         if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
           cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+          cp src/ompt.h ${libomp_ossinc}/.
+          cp src/ompt-event.h ${libomp_ossinc}/.
+          cp src/ompt-state.h ${libomp_ossinc}/.
           echo "...Success."
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
@@ -5677,10 +5684,16 @@ if [ "x$download_ompt" = xyes ] ; then
         signature=`ls -tr tmp | grep rel | grep sta | tail -1`
         if [ $result -eq 0 ] ; then
           cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+          cp src/ompt.h ${libomp_ossinc}/.
+          cp src/ompt-event.h ${libomp_ossinc}/.
+          cp src/ompt-state.h ${libomp_ossinc}/.
           echo "...Success."
         else
           if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
             cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+            cp src/ompt.h ${libomp_ossinc}/.
+            cp src/ompt-event.h ${libomp_ossinc}/.
+            cp src/ompt-state.h ${libomp_ossinc}/.
             echo "...Success."
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
