@@ -42,9 +42,9 @@ private:
   static int tauThreadCount;
   static mpc_thread_once_t initFlag;
   static pthread_key_t tauThreadId;
-  static mpc_thread_mutex_t tauThreadCountMutex;
-  static mpc_thread_mutex_t tauDBMutex;
-  static mpc_thread_mutex_t tauEnvMutex;
+  static sctk_thread_mutex_t tauThreadCountMutex;
+  static sctk_thread_mutex_t tauDBMutex;
+  static sctk_thread_mutex_t tauEnvMutex;
 
   friend void mpc_init_once(void);
 };
