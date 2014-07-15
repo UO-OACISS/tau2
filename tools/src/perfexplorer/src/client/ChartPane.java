@@ -1475,7 +1475,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private void customizeLineChart(PerfExplorerModel model,RMIGeneralChartData rawData, JFreeChart chart) {
 		// get a reference to the plot for further customisation...
 		XYPlot plot = (XYPlot)chart.getPlot();
-
+		plot.setRenderer(new GoodXYLineAndShapeRenderer());
 		//StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		XYLineAndShapeRenderer renderer = (XYLineAndShapeRenderer)plot.getRenderer();
 		renderer.setBaseShapesFilled(true);
@@ -1529,7 +1529,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			RMIGeneralChartData rawData, JFreeChart chart) {
 		// get a reference to the plot for further customisation...
 		CategoryPlot plot = (CategoryPlot)chart.getPlot();
-
+		plot.setRenderer(new GoodLineAndShapeRenderer());
 		//StandardXYItemRenderer renderer = (StandardXYItemRenderer) plot.getRenderer();
 		LineAndShapeRenderer renderer = (LineAndShapeRenderer)plot.getRenderer();
 		renderer.setBaseShapesFilled(true);
