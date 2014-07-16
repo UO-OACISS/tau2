@@ -269,19 +269,6 @@ TAU_INST_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 # remove double colons
 #TAU_INST_LIBRARY=`echo $TAU_INST_LIBRARY | sed -e "s/::/:/g" -e "s/:$//"`
 
-if [ $apple = 1 ]; then
-  TAU_LDD='otool -L'
-else
-  if [ "x$TAUARCH" = "xmic_linux" ]; then
-    TAU_LDD="$maqao_bin madras  --get-dynamic-lib "
-    echo "Using ldd=$TAU_LDD"
-  else 
-    TAU_LDD=ldd
-  fi
-fi
-
-
-
 if [ $verbose = "true" ] ; then
     echo "Matching bindings:"
     tau-config --list-matching $binding_options
@@ -375,9 +362,35 @@ end
 prologue=""
 makefile_binding=`echo $theBinding | sed -e 's@shared@@g'`
 
-isStatic=false
-lddoutput=`$TAU_LDD $infile`
-if [ $? = 1 ]; then
+
+if [ $apple = 1 ]; then
+  TAU_LDD=`otool -L $infile`
+  isStatic=$?
+else
+  if [ "x$TAUARCH" = "xmic_linux" ]; then
+    # Does the maqao binary support --check-dynamic flag?
+    if [ `$maqao_bin madras --check-dynamic ./foo 2>&1  | grep unrecognized | wc -l ` = 0 ]; then
+      echoIfShortVerbose "$maqao_bin supports --check-dynamic"
+      TAU_LDD=`$maqao_bin madras  --check-dynamic $infile 2>&1 | grep "is not a dynamic executable" | wc -l `
+      if [ $? = 0 ]; then
+        isStatic=0
+      fi
+     else
+      TAU_LDD=`$maqao_bin madras  --get-dynamic-lib $infile | grep 'is not a dynamic executable' | wc -l `
+      if [ $? = 0 ]; then
+        isStatic=1
+      fi
+    fi
+    echo "Using ldd=$TAU_LDD"
+  else
+    TAU_LDD=`ldd $infile`
+    isStatic=$?
+  fi
+fi
+
+
+
+if [ $isStatic = 1 ]; then
   echoIfShortVerbose "STATIC EXECUTABLE $infile"
   isStatic=true
   TAU_INST_LIBRARY=$BASEDIR/lib/libtau$makefile_binding.a
@@ -386,7 +399,7 @@ else
   echoIfShortVerbose "Dynamic executable $infile"
 fi
 
-if [ $isStatic = false ]; then
+if [ $isStatic = 0 ]; then
   prologue=""
 else
   prologue="extlibs = { 
