@@ -398,7 +398,8 @@ extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool t
 (defined (__GNUC__) && \
 defined (__GNUC_MINOR__) && \
 defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwinding
-#if !defined (TAU_USE_OMPT)  // OMPT already has the frame pointer
+#if !defined (TAU_USE_OMPT) && \
+    !defined (TAU_MPC)  // TAU_MPC without OMPT
     // make a call to the GOMP wrapper to get the outlined function pointer
     ip = (unsigned long)Tau_get_gomp_proxy_address();
 #endif
@@ -988,7 +989,7 @@ int check_local_tid(void) {
 
 #endif // not MPC
 
-#ifndef ompt_thread_type_t
+#ifndef TAU_MPC
 typedef enum ompt_thread_type_e {
  ompt_thread_initial = 1,
  ompt_thread_worker = 2,
@@ -1089,15 +1090,12 @@ extern "C" void my_task_end (
   ompt_task_id_t  task_id)      /* id of task           */
 {
   TAU_OMPT_COMMON_ENTRY;
-#ifdef TAU_MPC
   Tau_omp_stop_timer("OpenMP_TASK", tid, 1);
-#else
   TAU_OPENMP_SET_LOCK;
   char * tmpStr = task_names[Tau_collector_flags[tid].taskid];
   free(tmpStr);
   task_names.erase(Tau_collector_flags[tid].taskid);
   TAU_OPENMP_UNSET_LOCK;
-#endif
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -1359,11 +1357,10 @@ ompt_set_callback_t ompt_set_callback;
 ompt_get_state_t ompt_get_state;
 #endif
 
-#ifdef TAU_MPC
 int __ompt_initialize() {
+#ifdef TAU_MPC
   check_local_tid();
 #else
-int ompt_initialize() {
 #endif
   Tau_init_initializeTAU();
   if (initialized || initializing) return 0;
@@ -1498,16 +1495,16 @@ int ompt_initialize() {
   return 1;
 }
 
-#ifdef TAU_MPC
 // the newest version of the library will have a version as well
 extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, int ompt_version) {
-  //fprintf(stderr, "Init: %s ver %i\n",runtime_version,ompt_version);
-  //ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
-  //ompt_enumerate_state = (ompt_enumerate_state_t) lookup("ompt_enumerate_state");
-  //ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
+  fprintf(stderr, "Init: %s ver %i\n",runtime_version,ompt_version);
+#ifndef TAU_MPC
+  ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
+  ompt_enumerate_state = (ompt_enumerate_state_t) lookup("ompt_enumerate_state");
+  ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
+#endif
   __ompt_initialize();
 }
-#endif
 
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
 std::string * Tau_get_thread_ompt_state(int tid) {
