@@ -4146,7 +4146,13 @@ then
               then
                 echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
                 additional_mpiincs="-I$mpiinc/../mpc-libsctk_arch-dev/include"
-              fi 
+              else
+                if [ -r $mpiinc/sctk_config_arch.h -a $mpiinc/mpcframework/mpi.h ] 
+                then
+                  echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
+                  additional_mpiincs="-I$mpiinc/mpcframework -I$mpiinc"
+                fi 
+              fi
             else
 		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
 		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
