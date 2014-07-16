@@ -272,8 +272,12 @@ TAU_INST_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 if [ $apple = 1 ]; then
   TAU_LDD='otool -L'
 else
-  TAU_LDD=ldd
-#  TAU_LDD="$maqao_bin madras  --get-dynamic-lib "
+  if [ "x$TAUARCH" = "xmic_linux" ]; then
+    TAU_LDD="$maqao_bin madras  --get-dynamic-lib "
+    echo "Using ldd=$TAU_LDD"
+  else 
+    TAU_LDD=ldd
+  fi
 fi
 
 
