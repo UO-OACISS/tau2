@@ -29,8 +29,8 @@ RM 	      	= /bin/rm -rf
 TARGET	      	= matmult
 
 OBJS     	= matmult.o matmult_initialize.o
-CFLAGS=-g -O0
-LDFLAGS=-g -O0
+CFLAGS=-g $(TAU_OPENMP_OPTION)
+LDFLAGS=-g $(TAU_OPENMP_OPTION)
 
 ##############################################
 

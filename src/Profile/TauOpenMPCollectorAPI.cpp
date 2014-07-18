@@ -2,9 +2,28 @@
 #define _GNU_SOURCE
 #endif
 
-#ifdef TAU_IBM_OMPT
+// set some macros, so we get implementation-dependent differences.
+// Right now, there are 3 different interpretations of the OMPT "standard"
+
+#if defined(TAU_USE_OMPT) 
+// oldest implementation
+#if defined(TAU_IBM_OMPT)
+#define OMPT_VERSION 1
 #include <lomp/omp.h>
-#endif /* TAU_IBM_OMPT */
+#elif defined(__ICC) || defined(__INTEL_COMPILER)
+// check for intel second
+#define OMPT_VERSION 1 // someday we will update this, but in the meantime...
+#define BROKEN_CPLUSPLUS_INTERFACE
+#elif defined(TAU_MPC) 
+// check for MPC support
+#define OMPT_VERSION 3
+#define BROKEN_CPLUSPLUS_INTERFACE
+#else 
+// all else
+#define OMPT_VERSION 3
+#endif
+#endif // TAU_USE_OMPT
+
 
 #include "omp_collector_api.h"
 #include "omp.h"
@@ -434,7 +453,6 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
 	} else {
 	    //TAU_VERBOSE("Region %lu has name %s\n", Tau_collector_flags[tid].regionid, tmpStr);
         TAU_OPENMP_SET_LOCK;
-            printf("Region %d has name %s\n", Tau_collector_flags[tid].regionid, tmpStr); fflush(stdout);
 	    region_names[Tau_collector_flags[tid].regionid] = strdup(tmpStr);
         TAU_OPENMP_UNSET_LOCK;
 	}
@@ -445,8 +463,8 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
 /* Using the region or task ID, get our event context */
 extern "C" char * Tau_get_my_region_context(int tid, int forking, bool task) {
     char * tmpStr = NULL;
-#if !defined (TAU_OPEN64ORC) && \
-!defined (TAU_MPC) && \
+#if !defined (TAU_USE_OMPT) && \
+!defined (TAU_OPEN64ORC) && \
 (defined (__GNUC__) && \
 defined (__GNUC_MINOR__) && \
 defined (__GNUC_PATCHLEVEL__))
@@ -492,6 +510,7 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
     contextLength = strlen(tmpStr);
 	regionIDstr = (char*)malloc(contextLength + 32);
     sprintf(regionIDstr, "%s: %s", state, tmpStr);
+    //printf("%d: start '%s'\n", tid, regionIDstr); fflush(stdout);
     Tau_pure_start_openmp_task(regionIDstr, "", tid);
 	//free(tmpStr);
     free(regionIDstr);
@@ -500,7 +519,19 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context) {
     if (Tau_collector_enabled) {
+#if 0
+    int contextLength = 10;
+    char * regionIDstr = NULL;
+    char * tmpStr = Tau_get_my_region_context(tid, 0, 0);
+    contextLength = strlen(tmpStr);
+	regionIDstr = (char*)malloc(contextLength + 32);
+    sprintf(regionIDstr, "%s: %s", state, tmpStr);
+    //printf("%d: stop  '%s'\n", tid, regionIDstr); fflush(stdout);
+    //Tau_pure_stop_task(regionIDstr, tid);
       Tau_stop_current_timer_task(tid);
+#else
+      Tau_stop_current_timer_task(tid);
+#endif
     }
 }
 
@@ -952,54 +983,34 @@ extern "C" int Tau_get_thread_omp_state(int tid) {
  * relevant information.
  */
 
-/* MPC is using the latest version of the interface. Intel might also be using
+/* MPC is using the latest version of the interface. Intel is using close to
  * the latest version. IBM is lagging behind - we only have access to the 
  * June 2013 version that supports an older interface. */
 #ifdef TAU_MPC
-// updated header
-#include <ompt.h>
 __thread int __local_tau_tid = -1;
 int check_local_tid(void) {
-/*
   if (__local_tau_tid == -1) {
-    fprintf(stderr,"NEW THREAD!"); fflush(stderr);
+    //fprintf(stderr,"NEW THREAD!"); fflush(stderr);
     __local_tau_tid = MPCThreadLayer::RegisterThread();
-    fprintf(stderr," %d\n",__local_tau_tid); fflush(stderr);
+    //fprintf(stderr," %d\n",__local_tau_tid); fflush(stderr);
   }
-*/
   return __local_tau_tid;
 }
-#else
+#endif
+
 #include <ompt.h>
 
-#ifdef TAU_IBM_OMPT
-// old event names
-#define ompt_event_parallel_begin ompt_event_parallel_create 
-#define ompt_event_parallel_end ompt_event_parallel_exit 
-#define ompt_event_task_begin ompt_event_task_create 
-#define ompt_event_task_end ompt_event_task_exit 
-#define ompt_event_thread_begin ompt_event_thread_create 
-#define ompt_event_thread_end ompt_event_thread_exit 
-#define ompt_event_implicit_task_begin ompt_event_implicit_task_create 
-#define ompt_event_implicit_task_end ompt_event_implicit_task_exit 
-#else
-#define ompt_event_thread_begin ompt_event_openmp_thread_begin 
-#define ompt_event_thread_end ompt_event_openmp_thread_end 
-#endif // IBM
-
-#endif // not MPC
-
-#ifndef TAU_MPC
-typedef enum ompt_thread_type_e {
- ompt_thread_initial = 1,
- ompt_thread_worker = 2,
- ompt_thread_other = 3
-} ompt_thread_type_t;
-#endif
+typedef enum my_ompt_thread_type_e {
+ my_ompt_thread_initial = 1,
+ my_ompt_thread_worker = 2,
+ my_ompt_thread_other = 3
+} my_ompt_thread_type_t;
 
 /* These two macros make sure we don't time TAU related events */
 
-#ifdef TAU_MPC
+// because MPC can't tell us when a new thread is spawned by OpenMP,
+// we have to check for a new thread every time we get an event.
+#ifdef TAU_MPC 
 #define TAU_OMPT_COMMON_ENTRY \
     /*fprintf(stderr, "OMPT event: %s\n", __func__); fflush(stderr); */\
     /* Never process anything internal to TAU */ \
@@ -1030,12 +1041,20 @@ typedef enum ompt_thread_type_e {
  */
 
 /* Entering a parallel region */
+#if OMPT_VERSION < 3 // no team size!
+extern "C" void my_parallel_region_begin (
+  ompt_task_id_t parent_task_id,    /* id of parent task            */
+  ompt_frame_t *parent_task_frame,  /* frame data of parent task    */
+  ompt_parallel_id_t parallel_id,   /* id of parallel region        */
+  void *parallel_function)          /* pointer to outlined function */
+#else
 extern "C" void my_parallel_region_begin (
   ompt_task_id_t parent_task_id,    /* id of parent task            */
   ompt_frame_t *parent_task_frame,  /* frame data of parent task    */
   ompt_parallel_id_t parallel_id,   /* id of parallel region        */
   uint32_t requested_team_size,     /* Region team size             */
   void *parallel_function)          /* pointer to outlined function */
+#endif
 {
   TAU_OMPT_COMMON_ENTRY;
   Tau_collector_flags[tid].regionid = parallel_id;
@@ -1050,9 +1069,17 @@ extern "C" void my_parallel_region_begin (
 }
 
 /* Exiting a parallel region */
+#if OMPT_VERSION < 3
+extern "C" void my_parallel_region_end (
+  ompt_task_id_t parent_task_id,    /* id of parent task            */
+  ompt_frame_t *parent_task_frame,  /* frame data of parent task    */
+  ompt_parallel_id_t parallel_id,   /* id of parallel region        */
+  void *parallel_function)          /* pointer to outlined function */
+#else
 extern "C" void my_parallel_region_end (
   ompt_parallel_id_t parallel_id,   /* id of parallel region        */
   ompt_task_id_t parent_task_id)    /* id of parent task            */
+#endif
 {
   TAU_OMPT_COMMON_ENTRY;
   Tau_collector_flags[tid].regionid = parallel_id;
@@ -1100,24 +1127,24 @@ extern "C" void my_task_end (
 }
 
 /* Thread creation */
-extern "C" void my_thread_begin(ompt_thread_type_t thread_type, ompt_thread_id_t thread_id) {
-#ifdef TAU_MPC
-  /* Never process anything internal to TAU */
-  if (Tau_global_get_insideTAU() > 0) {
-        return;
-  }
-  Tau_global_incr_insideTAU();
-  int tid = MPCThreadLayer::RegisterThread();
+#if OMPT_VERSION < 3
+extern "C" void my_thread_begin() {
 #else
+extern "C" void my_thread_begin(my_ompt_thread_type_t thread_type, ompt_thread_id_t thread_id) {
+  // special entry?
+#endif // version
   TAU_OMPT_COMMON_ENTRY;
   //TAU_VERBOSE("OMPT Created thread: %d\n", tid); fflush(stdout);
-#endif
   Tau_create_top_level_timer_if_necessary();
   TAU_OMPT_COMMON_EXIT;
 }
 
 /* Thread exit */
-extern "C" void my_thread_end(ompt_thread_type_t thread_type, ompt_thread_id_t thread_id) {
+#if OMPT_VERSION < 3
+extern "C" void my_thread_end() {
+#else
+extern "C" void my_thread_end(my_ompt_thread_type_t thread_type, ompt_thread_id_t thread_id) {
+#endif
   if (!Tau_RtsLayer_TheEnableInstrumentation()) return;
   TAU_OMPT_COMMON_ENTRY;
   //TAU_VERBOSE("OMPT Exiting thread: %d\n", tid); fflush(stdout);
@@ -1255,7 +1282,6 @@ extern "C" void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t t
   Tau_collector_flags[tid].taskid = task_id; \
   Tau_get_current_region_context(tid, (unsigned long)parallel_function, false); \
   Tau_omp_start_timer(NAME, tid, 1, 0, false); \
-  Tau_collector_flags[tid].parallel++; \
   TAU_OMPT_COMMON_EXIT; \
 } \
 \
@@ -1263,14 +1289,24 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
-  if (Tau_collector_flags[tid].parallel>0) { \
   Tau_omp_stop_timer(NAME, tid, 0); \
-  Tau_collector_flags[tid].parallel--; } \
-  TAU_OPENMP_SET_LOCK; \
-  char * tmpStr = region_names[parallel_id]; \
-  free(tmpStr); \
-  region_names.erase(parallel_id); \
-  TAU_OPENMP_UNSET_LOCK; \
+  TAU_OMPT_COMMON_EXIT; \
+}
+
+#define TAU_OMPT_WORKSHARE2_BEGIN_AND_END(BEGIN_FUNCTION,END_FUNCTION,NAME) \
+extern "C" void BEGIN_FUNCTION (ompt_task_id_t parent_task_id, ompt_parallel_id_t parallel_id, void *parallel_function) { \
+  TAU_OMPT_COMMON_ENTRY; \
+  Tau_collector_flags[tid].regionid = parallel_id; \
+  Tau_get_current_region_context(tid, (unsigned long)parallel_function, false); \
+  Tau_omp_start_timer(NAME, tid, 1, 0, false); \
+  TAU_OMPT_COMMON_EXIT; \
+} \
+\
+extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t task_id) { \
+  TAU_OMPT_COMMON_ENTRY; \
+  Tau_collector_flags[tid].regionid = parallel_id; \
+  Tau_collector_flags[tid].taskid = task_id; \
+  Tau_omp_stop_timer(NAME, tid, 0); \
   TAU_OMPT_COMMON_EXIT; \
 }
 
@@ -1284,10 +1320,17 @@ TAU_OMPT_SIMPLE_BEGIN_AND_END(my_taskwait_begin,my_taskwait_end,"OpenMP_TASKWAIT
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_taskwait_begin,my_wait_taskwait_end,"OpenMP_WAIT_TASKWAIT") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_taskgroup_begin,my_taskgroup_end,"OpenMP_TASKGROUP") 
 TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_taskgroup_begin,my_wait_taskgroup_end,"OpenMP_WAIT_TASKGROUP") 
+#if OMPT_VERSION < 3
+TAU_OMPT_LOOP_BEGIN_AND_END(my_loop_begin,my_loop_end,"OpenMP_LOOP")
+TAU_OMPT_LOOP_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end,"OpenMP_SINGLE_IN_BLOCK") 
+TAU_OMPT_WORKSHARE2_BEGIN_AND_END(my_workshare_begin,my_workshare_end,"OpenMP_WORKSHARE")
+TAU_OMPT_LOOP_BEGIN_AND_END(my_sections_begin,my_sections_end,"OpenMP_SECTIONS") 
+#else
 TAU_OMPT_WORKSHARE_BEGIN_AND_END(my_loop_begin,my_loop_end,"OpenMP_LOOP")
-TAU_OMPT_WORKSHARE_BEGIN_AND_END(my_sections_begin,my_sections_end,"OpenMP_SECTIONS") 
 TAU_OMPT_WORKSHARE_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end,"OpenMP_SINGLE_IN_BLOCK") 
-//TAU_OMPT_WORKSHARE_BEGIN_AND_END(my_workshare_begin,my_workshare_end,"OpenMP_WORKSHARE")
+TAU_OMPT_WORKSHARE_BEGIN_AND_END(my_workshare_begin,my_workshare_end,"OpenMP_WORKSHARE")
+TAU_OMPT_WORKSHARE_BEGIN_AND_END(my_sections_begin,my_sections_end,"OpenMP_SECTIONS") 
+#endif
 
 #undef TAU_OMPT_SIMPLE_BEGIN_AND_END
 
@@ -1296,7 +1339,11 @@ TAU_OMPT_WORKSHARE_BEGIN_AND_END(my_single_in_block_begin,my_single_in_block_end
 /**********************************************************************/
 
 /* Thread end idle */
+#if OMPT_VERSION < 3
+extern "C" void my_idle_end() {
+#else
 extern "C" void my_idle_end(ompt_thread_id_t thread_id) {
+#endif
   if (!Tau_RtsLayer_TheEnableInstrumentation()) return;
   TAU_OMPT_COMMON_ENTRY;
   Tau_omp_stop_timer("IDLE", tid, 0);
@@ -1311,7 +1358,11 @@ extern "C" void my_idle_end(ompt_thread_id_t thread_id) {
 }
 
 /* Thread begin idle */
+#if OMPT_VERSION < 3
+extern "C" void my_idle_begin() {
+#else
 extern "C" void my_idle_begin(ompt_thread_id_t thread_id) {
+#endif
   TAU_OMPT_COMMON_ENTRY;
   // if this thread is not the master of a team, then assume this 
   // thread is exiting a parallel region
@@ -1347,7 +1398,7 @@ extern "C" void my_idle_begin(ompt_thread_id_t thread_id) {
 
 /* These will be used when the OMPT interface is updated */
 
-#ifdef TAU_MPC // the MPC C/C++ interface is broken. :( Can't do function pointers
+#ifdef BROKEN_CPLUSPLUS_INTERFACE // the C/C++ interface is broken. :( Can't do function pointers
 extern "C" ompt_state_t ompt_get_state(ompt_wait_id_t *ompt_wait_id);
 extern "C" int ompt_enumerate_state(int current_state, int *next_state, const char **next_state_name);
 extern "C" int ompt_set_callback(ompt_event_t event_type, ompt_callback_t callback);
@@ -1360,7 +1411,6 @@ ompt_get_state_t ompt_get_state;
 int __ompt_initialize() {
 #ifdef TAU_MPC
   check_local_tid();
-#else
 #endif
   Tau_init_initializeTAU();
   if (initialized || initializing) return 0;
@@ -1370,15 +1420,34 @@ int __ompt_initialize() {
   TAU_OPENMP_INIT_LOCK;
 
   /* required events */
+#if OMPT_VERSION < 2
+  CHECK(ompt_event_parallel_create, my_parallel_region_begin, "parallel_begin");
+  CHECK(ompt_event_parallel_exit, my_parallel_region_end, "parallel_end");
+#else
   CHECK(ompt_event_parallel_begin, my_parallel_region_begin, "parallel_begin");
   CHECK(ompt_event_parallel_end, my_parallel_region_end, "parallel_end");
+#endif
+#if OMPT_VERSION < 2
 #ifndef TAU_IBM_OMPT
-  // IBM will call task_begin, but not task_end. :(
+  // IBM will call task_create, but not task_exit. :(
+  CHECK(ompt_event_task_create, my_task_begin, "task_begin");
+  CHECK(ompt_event_task_exit, my_task_end, "task_end");
+#endif
+#else
   CHECK(ompt_event_task_begin, my_task_begin, "task_begin");
   CHECK(ompt_event_task_end, my_task_end, "task_end");
 #endif
+#if OMPT_VERSION < 2
+  CHECK(ompt_event_thread_create, my_thread_begin, "thread_begin");
+  CHECK(ompt_event_thread_exit, my_thread_end, "thread_end");
+#elif OMPT_VERSION < 3
+  CHECK(ompt_event_initial_thread_begin, my_thread_begin, "thread_begin");
+  CHECK(ompt_event_openmp_thread_begin, my_thread_begin, "thread_begin");
+  CHECK(ompt_event_openmp_thread_end, my_thread_end, "thread_end");
+#else
   CHECK(ompt_event_thread_begin, my_thread_begin, "thread_begin");
   CHECK(ompt_event_thread_end, my_thread_end, "thread_end");
+#endif
   CHECK(ompt_event_control, my_control, "event_control");
 #ifndef TAU_IBM_OMPT
   CHECK(ompt_event_runtime_shutdown, my_shutdown, "runtime_shutdown");
@@ -1406,13 +1475,18 @@ int __ompt_initialize() {
   CHECK(ompt_event_release_ordered, my_release_ordered, "release_ordered");
 
   /* optional events, synchronous events */
+#if OMPT_VERSION < 2
 #if !defined(TAU_IBM_OMPT) && !defined(TAU_MPC)
-  // IBM will call task_begin, but not task_end. :(
+  // IBM will call task_create, but not task_exit. :(
+  CHECK(ompt_event_implicit_task_create, my_implicit_task_begin, "implicit_task_begin");
+  CHECK(ompt_event_implicit_task_exit, my_implicit_task_end, "implicit_task_end");
+#endif
+#else
   CHECK(ompt_event_implicit_task_begin, my_implicit_task_begin, "implicit_task_begin");
   CHECK(ompt_event_implicit_task_end, my_implicit_task_end, "implicit_task_end");
-#endif
   CHECK(ompt_event_initial_task_begin, my_initial_task_begin, "initial_task_begin");
   CHECK(ompt_event_initial_task_end, my_initial_task_end, "initial_task_end");
+#endif
   CHECK(ompt_event_barrier_begin, my_barrier_begin, "barrier_begin");
   CHECK(ompt_event_barrier_end, my_barrier_end, "barrier_end");
   CHECK(ompt_event_master_begin, my_master_begin, "master_begin");
@@ -1420,8 +1494,13 @@ int __ompt_initialize() {
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
+#if OMPT_VERSION < 2
+  CHECK(ompt_event_section_begin, my_sections_begin, "section_begin");
+  CHECK(ompt_event_section_end, my_sections_end, "section_end");
+#else
   CHECK(ompt_event_sections_begin, my_sections_begin, "sections_begin");
   CHECK(ompt_event_sections_end, my_sections_end, "sections_end");
+#endif
 /* When using Intel, there are times when the non-single thread continues on its
  * merry way. For now, don't track the time spent in the "other" threads. 
  * We have no way of knowing when the other threads finish waiting, because for
@@ -1495,10 +1574,14 @@ int __ompt_initialize() {
   return 1;
 }
 
+#if OMPT_VERSION < 2
+extern "C" int ompt_initialize(ompt_function_lookup_t lookup) {
+#else
 // the newest version of the library will have a version as well
 extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, int ompt_version) {
   fprintf(stderr, "Init: %s ver %i\n",runtime_version,ompt_version);
-#ifndef TAU_MPC
+#endif
+#ifndef BROKEN_CPLUSPLUS_INTERFACE
   ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
   ompt_enumerate_state = (ompt_enumerate_state_t) lookup("ompt_enumerate_state");
   ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
