@@ -512,9 +512,9 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing critical: %d\n\n", critical()); fflush(stdout);
   printf ("\n\nDoing critical named: %d\n\n", critical_named()); fflush(stdout);
   printf ("\n\nDoing parallelfor: %d\n\n", parallelfor()); fflush(stdout);
+  printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic()); fflush(stdout);
 #if !defined(TAU_MPC)
   printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static()); fflush(stdout);
-  printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic()); fflush(stdout);
   printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime()); fflush(stdout);
   printf ("\n\nDoing tasks: %d\n\n", fibouter(20)); fflush(stdout);
 #endif
