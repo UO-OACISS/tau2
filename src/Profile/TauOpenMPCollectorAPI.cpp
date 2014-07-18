@@ -1088,12 +1088,14 @@ extern "C" void my_parallel_region_end (
     Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1);
     Tau_collector_flags[tid].parallel--;
   }
+#ifndef TAU_MPC 
   TAU_OPENMP_SET_LOCK;
   char * tmpStr = region_names[parallel_id];
   //printf("done with Region %d, name %s\n", parallel_id, tmpStr); fflush(stdout);
   free(tmpStr);
   region_names.erase(parallel_id);
   TAU_OPENMP_UNSET_LOCK;
+#endif
   TAU_OMPT_COMMON_EXIT;
 }
 
