@@ -459,6 +459,7 @@ int single( )
   return a[3];
 }
 
+#if !defined(TAU_MPC)
 int fib(int n) {
   int x,y;
   if (n<2) return n;
@@ -485,6 +486,7 @@ int fibouter(int n) {
   }
   return answer;
 }
+#endif
 
 int main (int argc, char *argv[]) 
 {
@@ -501,7 +503,7 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing flush: %d\n\n", flush()); fflush(stdout);
 #endif
   printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
-#if !defined(TAU_OPEN64ORC) && !defined(TAU_IBM_OMPT)
+#if !defined(TAU_OPEN64ORC) && !defined(TAU_IBM_OMPT) && !defined(TAU_MPC)
   // OpenUH and IBM don't handle the ordered test well.
   printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
 #endif
@@ -510,10 +512,12 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing critical: %d\n\n", critical()); fflush(stdout);
   printf ("\n\nDoing critical named: %d\n\n", critical_named()); fflush(stdout);
   printf ("\n\nDoing parallelfor: %d\n\n", parallelfor()); fflush(stdout);
+#if !defined(TAU_MPC)
   printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static()); fflush(stdout);
   printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic()); fflush(stdout);
   printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime()); fflush(stdout);
   printf ("\n\nDoing tasks: %d\n\n", fibouter(20)); fflush(stdout);
+#endif
 #if 0
 #endif
 
