@@ -44,6 +44,8 @@ public class DBConnector implements DB {
 
     private String driverName;
     private String JDBCjarFileName;
+	private boolean dbUseSSL = false;
+	private String dbKeystore;
 
     private Database database;
     
@@ -129,6 +131,11 @@ public class DBConnector implements DB {
         driverName = parser.getJDBCDriver();
         dbaddress = parser.getConnectionString();
         JDBCjarFileName = parser.getJDBCJarFile();
+		dbUseSSL = false;
+		dbKeystore = parser.getDBKeystore();
+		if (!dbKeystore.equals("")) {
+		  dbUseSSL = true;
+		}
     }
 
     public void close() {
@@ -169,17 +176,31 @@ public class DBConnector implements DB {
     }
 
     public boolean connect(String user, String password) throws SQLException {
-        String cs = "";
+        StringBuffer cs = new StringBuffer();
         try {
             if (conn != null) {
                 return true;
             }
-            cs = getConnectString();
-
-            if (password == null) {
-                password = findPassword(config);
-            }
-            conn = DriverManager.getConnection(cs, user, password);
+            cs.append(getConnectString());
+			Properties props = new Properties();
+			if (dbUseSSL) {
+                if (password == null) {
+                    password = findPassword(config);
+                }
+                System.setProperty("javax.net.ssl.keyStore",dbKeystore);
+                System.setProperty("javax.net.ssl.keyStorePassword",password);
+                System.setProperty("javax.net.ssl.trustStore",dbKeystore);
+                System.setProperty("javax.net.ssl.trustStorePassword",password);
+			    props.setProperty("user",user);
+			    props.setProperty("ssl","true");
+			} else {
+                if (password == null) {
+                    password = findPassword(config);
+                }
+			    props.setProperty("user",user);
+			    props.setProperty("password",password);
+			}
+            conn = DriverManager.getConnection(cs.toString(), props);
             return true;
         } catch (SQLException ex) {
             System.err.println("Cannot connect to server.");
