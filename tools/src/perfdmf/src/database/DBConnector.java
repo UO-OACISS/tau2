@@ -193,6 +193,7 @@ public class DBConnector implements DB {
                 System.setProperty("javax.net.ssl.trustStorePassword",password);
 			    props.setProperty("user",user);
 			    props.setProperty("ssl","true");
+				props.setProperty("sslfactory", "edu.uoregon.tau.perfdmf.database.CustomSSLSocketFactory");
 			} else {
                 if (password == null) {
                     password = findPassword(config);
