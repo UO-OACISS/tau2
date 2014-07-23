@@ -41,6 +41,7 @@ build: bin/perfdmf.jar
 
 override: build
     JAVAC=javac -source 1.5 -target 1.5
+    #JAVAC=javac
 
 #all: perfdmf.jar javadoc rebuilddb buildtest simple
 
@@ -60,7 +61,7 @@ BOTTOM = '<font size="-1">******************************************************
 
 javadoc: bin/perfdmf.jar $(SRC_PATH)/package.html
 	javadoc -d ./javadoc \
-	-classpath $(CLASSPATH) $(DSS_SOURCES) $(ANALYSIS_SOURCES) \
+	-classpath $(CLASSPATH):../common/bin/tau-common.jar $(DSS_SOURCES) $(ANALYSIS_SOURCES) \
 	-sourcepath src \
     -use \
     -windowtitle "PerfDMF" \
