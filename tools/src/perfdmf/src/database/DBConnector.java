@@ -133,7 +133,7 @@ public class DBConnector implements DB {
         JDBCjarFileName = parser.getJDBCJarFile();
 		dbUseSSL = false;
 		dbKeystore = parser.getDBKeystore();
-		if (!dbKeystore.equals("")) {
+		if (dbKeystore != null && !dbKeystore.equals("")) {
 		  dbUseSSL = true;
 		}
     }
