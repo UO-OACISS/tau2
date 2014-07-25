@@ -26,6 +26,7 @@ public class ParseConfig implements Serializable {
     private String dbUserName;
     private String dbPasswd;
     private String dbSchema;
+    private String dbKeystore;
     private String xmlSAXParser;
     private String path;
     private String name;
@@ -93,6 +94,8 @@ public class ParseConfig implements Serializable {
                         dbSchemaPrefix = value;
                     else if (name.equals("db_username"))
                         dbUserName = value;
+                    else if (name.equals("db_keystore"))
+                        dbKeystore = value;
                     else if (name.equals("db_password"))
                         dbPasswd = value;
                     else if (name.equals("db_schemafile"))
@@ -192,6 +195,10 @@ public class ParseConfig implements Serializable {
 
     public String getDBUserName() {
         return dbUserName;
+    }
+
+    public String getDBKeystore() {
+        return dbKeystore;
     }
 
     public String getDBPasswd() {

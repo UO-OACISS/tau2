@@ -913,7 +913,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		if (lastLineIdeal)
 			renderer = new SpeedupXYLineAndShapeRenderer(rows);
 		else
-			renderer = new XYLineAndShapeRenderer();
+			renderer = new GoodXYLineAndShapeRenderer();
 		renderer.setBaseShapesFilled(true);
 		//renderer.setPlotShapes(true);
 		renderer.setBaseItemLabelsVisible(true);

@@ -47,6 +47,8 @@ public class Configure {
     private boolean store_db_password = false;
     private String db_schemafile = "taudb.sql";
     private String xml_parser = "xerces.jar";
+	private boolean db_use_ssl = false;
+	private String db_keystore = "";
     private ParseConfig parser;
     private boolean configFileFound = false;
     //private String etc = File.separator + "etc" + File.separator;
@@ -140,6 +142,7 @@ public class Configure {
         db_hostname = "";
         db_portnum = "";
         store_db_password = true;
+        db_use_ssl = false;
     }
 
     public void promptForData() {
@@ -548,10 +551,12 @@ public class Configure {
             if (tmpString.length() > 0)
                 db_username = tmpString;
 
+            // Use SSL?
+
             boolean responded = false;
             boolean response = false;
             while (!responded) {
-                System.out.print("Store the database password in CLEAR TEXT in your configuration file? (y/n):");
+                System.out.print("Use SSL certificates? (y/n):");
                 tmpString = reader.readLine();
                 if (tmpString.compareToIgnoreCase("yes") == 0 || tmpString.compareToIgnoreCase("y") == 0) {
                     responded = true;
@@ -564,9 +569,53 @@ public class Configure {
             }
 
             if (response == true) {
-                PasswordField passwordField = new PasswordField();
-                db_password = passwordField.getPassword("Please enter the database password:");
-                store_db_password = true;
+                db_use_ssl = true;
+                System.out.print("Please enter the certificates keystore file.\n("
+                        + db_keystore + "):");
+                tmpString = reader.readLine();
+                if (tmpString.length() > 0)
+                    db_keystore = tmpString;
+                responded = false;
+                response = false;
+                while (!responded) {
+                    System.out.print("Store the keystore password in CLEAR TEXT in your configuration file? (y/n):");
+                    tmpString = reader.readLine();
+                    if (tmpString.compareToIgnoreCase("yes") == 0 || tmpString.compareToIgnoreCase("y") == 0) {
+                        responded = true;
+                        response = true;
+                    }
+                    if (tmpString.compareToIgnoreCase("no") == 0 || tmpString.compareToIgnoreCase("n") == 0) {
+                        responded = true;
+                        response = false;
+                    }
+                }
+
+                if (response == true) {
+                    PasswordField passwordField = new PasswordField();
+                    db_password = passwordField.getPassword("Please enter the keystore password:");
+                    store_db_password = true;
+                }
+            } else {
+                responded = false;
+                response = false;
+                while (!responded) {
+                    System.out.print("Store the database password in CLEAR TEXT in your configuration file? (y/n):");
+                    tmpString = reader.readLine();
+                    if (tmpString.compareToIgnoreCase("yes") == 0 || tmpString.compareToIgnoreCase("y") == 0) {
+                        responded = true;
+                        response = true;
+                    }
+                    if (tmpString.compareToIgnoreCase("no") == 0 || tmpString.compareToIgnoreCase("n") == 0) {
+                        responded = true;
+                        response = false;
+                    }
+                }
+
+                if (response == true) {
+                    PasswordField passwordField = new PasswordField();
+                    db_password = passwordField.getPassword("Please enter the database password:");
+                    store_db_password = true;
+                }
             }
 
             /*
@@ -703,6 +752,12 @@ public class Configure {
             configWriter.write("# Database username\n");
             configWriter.write("db_username:" + db_username + "\n");
             configWriter.newLine();
+
+            if (db_use_ssl) {
+                configWriter.write("# Database keystore file\n");
+                configWriter.write("db_keystore:" + db_keystore + "\n");
+                configWriter.newLine();
+			}
 
             if (store_db_password) {
                 configWriter.write("# Database password\n");

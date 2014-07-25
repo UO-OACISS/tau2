@@ -50,7 +50,7 @@
 #ifdef TAU_OPENMPI3
 #define TAU_OPENMPI3_CONST 
 #else
-#define TAU_OPENMPI3_CONST const
+#define TAU_OPENMPI3_CONST  const
 #endif
 #else
 #define TAU_MPICH3_CONST 
