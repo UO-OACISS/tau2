@@ -3733,9 +3733,9 @@ case $cxx_compiler in
             full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
             full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
             fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
-            mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
-            full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`  
-            full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`
+            mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g" -e "s/''//g"`
+            full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g"`  
+            full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g" `
 	    #echo "CC=$cc_compiler"
 	    #echo "CXX=$cxx_compiler"
 	    #echo "mpilibrary=$mpilibrary"
@@ -4146,7 +4146,13 @@ then
               then
                 echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
                 additional_mpiincs="-I$mpiinc/../mpc-libsctk_arch-dev/include"
-              fi 
+              else
+                if [ -r $mpiinc/sctk_config_arch.h -a $mpiinc/mpcframework/mpi.h ] 
+                then
+                  echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
+                  additional_mpiincs="-I$mpiinc/mpcframework -I$mpiinc"
+                fi 
+              fi
             else
 		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
 		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
@@ -5598,6 +5604,7 @@ libomp_osstgz=$libomp_oss.tar.gz
 libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
+libomp_ossinc=${targetdir}/include
 
 if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then 
@@ -5658,10 +5665,16 @@ if [ "x$download_ompt" = xyes ] ; then
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
         cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+        cp src/ompt.h ${libomp_ossinc}/.
+        cp src/ompt-event.h ${libomp_ossinc}/.
+        cp src/ompt-state.h ${libomp_ossinc}/.
         echo "...Success."
       else
         if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
           cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+          cp src/ompt.h ${libomp_ossinc}/.
+          cp src/ompt-event.h ${libomp_ossinc}/.
+          cp src/ompt-state.h ${libomp_ossinc}/.
           echo "...Success."
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
@@ -5677,10 +5690,16 @@ if [ "x$download_ompt" = xyes ] ; then
         signature=`ls -tr tmp | grep rel | grep sta | tail -1`
         if [ $result -eq 0 ] ; then
           cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+          cp src/ompt.h ${libomp_ossinc}/.
+          cp src/ompt-event.h ${libomp_ossinc}/.
+          cp src/ompt-state.h ${libomp_ossinc}/.
           echo "...Success."
         else
           if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
             cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+            cp src/ompt.h ${libomp_ossinc}/.
+            cp src/ompt-event.h ${libomp_ossinc}/.
+            cp src/ompt-state.h ${libomp_ossinc}/.
             echo "...Success."
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
@@ -5797,6 +5816,15 @@ EOF
     int ret;
     ret = MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
     return ret;
+  }
+EOF
+
+cat <<EOF > mpi_f_statuses_ignore.$msuf
+  #include <mpi.h>
+
+  //extern MPI_Fint * MPI_F_STATUSES_IGNORE;
+  MPI_Fint * foo(void) {
+    return MPI_F_STATUSES_IGNORE;
   }
 EOF
 
@@ -6131,6 +6159,13 @@ if [ $mpi2 = yes ] ; then
     fi
 fi
 
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_f_statuses_ignore.$msuf  1> /dev/null 2>&1 ; then
+    echo "MPI F_STATUSES_IGNORE types are defined..."
+else
+    echo "MPI F_STATUSES_IGNORE types are NOT defined..."
+    fixmakeargs="$fixmakeargs MPI_F_STATUSES_IGNORE_ABSENT"
+fi
+
 if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2attr.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI*attr_functions are defined..."
     fixmakeargs="$fixmakeargs MPIATTR"
@@ -6161,7 +6196,7 @@ else
     fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
 fi
 
-/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
+/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi_f_statuses_ignore.o mpi_f_statuses_ignore.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
 else
     if [ $mpi = yes ]; then 
       mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"

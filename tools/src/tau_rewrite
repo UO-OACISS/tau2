@@ -269,15 +269,6 @@ TAU_INST_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 # remove double colons
 #TAU_INST_LIBRARY=`echo $TAU_INST_LIBRARY | sed -e "s/::/:/g" -e "s/:$//"`
 
-if [ $apple = 1 ]; then
-  TAU_LDD='otool -L'
-else
-#  TAU_LDD=ldd
-  TAU_LDD="$maqao_bin madras  --get-dynamic-lib "
-fi
-
-
-
 if [ $verbose = "true" ] ; then
     echo "Matching bindings:"
     tau-config --list-matching $binding_options
@@ -371,9 +362,35 @@ end
 prologue=""
 makefile_binding=`echo $theBinding | sed -e 's@shared@@g'`
 
-isStatic=false
-lddoutput=`$TAU_LDD $infile`
-if [ $? = 1 ]; then
+
+if [ $apple = 1 ]; then
+  TAU_LDD=`otool -L $infile`
+  isStatic=$?
+else
+  if [ "x$TAUARCH" = "xmic_linux" ]; then
+    # Does the maqao binary support --check-dynamic flag?
+    if [ `$maqao_bin madras --check-dynamic ./foo 2>&1  | grep unrecognized | wc -l ` = 0 ]; then
+      echoIfShortVerbose "$maqao_bin supports --check-dynamic"
+      TAU_LDD=`$maqao_bin madras  --check-dynamic $infile 2>&1 | grep "is not a dynamic executable" | wc -l `
+      if [ $? = 0 ]; then
+        isStatic=0
+      fi
+     else
+      TAU_LDD=`$maqao_bin madras  --get-dynamic-lib $infile | grep 'is not a dynamic executable' | wc -l `
+      if [ $? = 0 ]; then
+        isStatic=1
+      fi
+    fi
+    echo "Using ldd=$TAU_LDD"
+  else
+    TAU_LDD=`ldd $infile`
+    isStatic=$?
+  fi
+fi
+
+
+
+if [ $isStatic = 1 ]; then
   echoIfShortVerbose "STATIC EXECUTABLE $infile"
   isStatic=true
   TAU_INST_LIBRARY=$BASEDIR/lib/libtau$makefile_binding.a
@@ -382,7 +399,7 @@ else
   echoIfShortVerbose "Dynamic executable $infile"
 fi
 
-if [ $isStatic = false ]; then
+if [ $isStatic = 0 ]; then
   prologue=""
 else
   prologue="extlibs = { 
@@ -437,7 +454,7 @@ fi
 # Process exclude text if it is relevant
 if [ $excludelist = true ]
 then
-  excluderoutines=` sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' select.tau |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g'  -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' `
+  excluderoutines=` sed '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $selectfile |  sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g'  -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' `
 
   echoIfShortVerbose "Include Routines are $excluderoutines"
   excludetext=" 
@@ -446,12 +463,20 @@ then
             filter = { {subtype = \"regexplist\",value = {$excluderoutines}} }
             }},
   "
+else
+  excludetext=" 
+          filters = {{  
+            type = \"blacklist\", 
+          {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
+          {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\",\"pgf90_.*\", \"pghpf_\", \"__hpf_\"}}
+            }},
+  "
 fi
 
 # Process include text if it is relevant
 if [ $includelist = true ]
 then
-  includeroutines=`sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' select.tau |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//' -e 's/#/\.\*/g'  -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g'`
+  includeroutines=`sed '/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/{/BEGIN_INCLUDE_LIST/{h;d};H;/END_INCLUDE_LIST/{x;/BEGIN_INCLUDE_LIST/,/END_INCLUDE_LIST/p}};d' $selectfile |  sed -e 's/BEGIN_INCLUDE_LIST//' -e 's/END_INCLUDE_LIST//' -e 's/#/\.\*/g'  -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g'`
   echoIfShortVerbose "Include Routines are $includeroutines"
   includetext=" 
           filters = {{  

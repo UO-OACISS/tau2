@@ -1,6 +1,7 @@
 package edu.uoregon.tau.perfexplorer.client;
 
 import java.awt.Color;
+import java.awt.Paint;
 
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 
@@ -20,7 +21,8 @@ public class SpeedupXYLineAndShapeRenderer extends XYLineAndShapeRenderer {
 		if (series == numRows)
 			return Color.black;
 		else
-			return super.getSeriesPaint(series);
+			//return super.getSeriesPaint(series);
+        	return GoodColors.colors[series%GoodColors.numcolors];
 	}
 
 	/*
