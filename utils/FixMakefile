@@ -1133,6 +1133,10 @@ case $1 in
 	echo NOTE: Apple c++ compiler will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     NOFORTRAN)
+	echo "NOTE: TAU's Fortran library bindings will not be compiled. "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      APPLEPGI)
 	echo NOTE: PGI c++ compiler on Mac OS X will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
