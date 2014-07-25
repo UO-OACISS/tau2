@@ -2965,6 +2965,9 @@ case $machine in
 	;;
 
 esac
+if [ "x$fortran_compiler" = "xno" ]; then
+    fixmakeargs="$fixmakeargs NOFORTRAN"
+fi
 
 if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ ]; then
     fixmakeargs="$fixmakeargs CLANG"
