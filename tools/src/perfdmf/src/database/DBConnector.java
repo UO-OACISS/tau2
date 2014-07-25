@@ -46,6 +46,7 @@ public class DBConnector implements DB {
     private String JDBCjarFileName;
 	private boolean dbUseSSL = false;
 	private String dbKeystore;
+	private String dbServerHostname;
 
     private Database database;
     
@@ -133,6 +134,7 @@ public class DBConnector implements DB {
         JDBCjarFileName = parser.getJDBCJarFile();
 		dbUseSSL = false;
 		dbKeystore = parser.getDBKeystore();
+		dbServerHostname = parser.getDBHost();
 		if (dbKeystore != null && !dbKeystore.equals("")) {
 		  dbUseSSL = true;
 		}
@@ -194,6 +196,7 @@ public class DBConnector implements DB {
 			    props.setProperty("user",user);
 			    props.setProperty("ssl","true");
 				props.setProperty("sslfactory", "edu.uoregon.tau.perfdmf.database.CustomSSLSocketFactory");
+				CustomX509KeyManager.setClientAlias(user + "@" + dbServerHostname);
 			} else {
                 if (password == null) {
                     password = findPassword(config);

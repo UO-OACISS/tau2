@@ -113,6 +113,7 @@ public class Configure {
         db_username = parser.getDBUserName();
         db_password = parser.getDBPasswd();
         db_schemafile = parser.getDBSchema();
+        db_keystore = parser.getDBKeystore();
         xml_parser = parser.getXMLSAXParser();
     }
 
@@ -570,6 +571,11 @@ public class Configure {
 
             if (response == true) {
                 db_use_ssl = true;
+				if (db_keystore == null) {
+					File keystore_path = new File(System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "keystore.taudb");
+					db_keystore = keystore_path.toString();
+				}
+
                 System.out.print("Please enter the certificates keystore file.\n("
                         + db_keystore + "):");
                 tmpString = reader.readLine();

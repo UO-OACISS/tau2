@@ -2167,6 +2167,10 @@ configure_perfexplorer () {
 	> ${targetdir}/${architecture}/bin/tau_user_setup.sh
     chmod a+rx ${targetdir}/${architecture}/bin/tau_user_setup.sh
 
+	# stuff for SSL key configuration
+    cp ${tauroot}/tools/src/perfdmf/bin/taudb_keygen ${targetdir}/${architecture}/bin/.
+    cp ${tauroot}/tools/src/perfdmf/bin/taudb_install_cert ${targetdir}/${architecture}/bin/.
+
     # copy these files to the etc directory for tau_user_setup.sh to find and use
     mkdir -p ${targetdir}/etc
     cp ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel ${targetdir}/etc
@@ -2671,12 +2675,12 @@ case $machine in
 	;;
 
     apple) 
-	if [ $cxx_compiler = default ]
+	if [ "$cxx_compiler = default" ]
 	then
             cxx_compiler=g++
 	fi
 
-	if [ $c_compiler = default ]
+	if [ "$c_compiler = default" ]
 	then
             c_compiler=gcc             
 	fi
