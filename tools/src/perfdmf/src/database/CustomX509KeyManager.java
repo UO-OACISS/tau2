@@ -28,6 +28,7 @@ public class CustomX509KeyManager implements X509KeyManager {
     private final String keyAlias;
     private char[] keyStorePassword;
     private static final Logger logger = Logger.getLogger(CustomX509KeyManager.class.getName());
+	private static String desiredAlias = null;
 
     public CustomX509KeyManager(KeyStore ks, char[] password) {
          keyStore = ks;
@@ -106,12 +107,14 @@ public class CustomX509KeyManager implements X509KeyManager {
             Enumeration<String> aliases = keyStore.aliases();
             while (aliases.hasMoreElements()) {
                 String alias = aliases.nextElement();
-                if (keyStore.isKeyEntry(alias)) {
-                    if (foundKeyAlias == null)
-                        foundKeyAlias = alias;
-                    else
-                        throw new CustomSSLError("Key store contains more than one key - aliases " + foundKeyAlias + " and " + alias);
-                }
+	            if (CustomX509KeyManager.desiredAlias.equals(alias)) {
+                	if (keyStore.isKeyEntry(alias)) {
+                    	if (foundKeyAlias == null) {
+                        	foundKeyAlias = alias;
+							break;
+						}
+                	}
+				}
             }
             if (foundKeyAlias == null) {
                 throw new CustomSSLError("Key store contains no keys, it is empty or contains only trusted certs");
@@ -121,4 +124,8 @@ public class CustomX509KeyManager implements X509KeyManager {
         }
         return foundKeyAlias;
     }
+
+	public static void setClientAlias(String alias) {
+	    CustomX509KeyManager.desiredAlias = alias;
+	}
 }
