@@ -3,8 +3,8 @@
 if [ $# -ne 2 ]; then 
 	echo "\nUsage: $0 username email"
 	echo "where:"
-	echo "\tusername = your database login username"
-	echo "\temail    = your email address\n"
+	echo "\tusername : your database login username"
+	echo "\temail    : your email address\n"
 	exit 1
 fi
 
