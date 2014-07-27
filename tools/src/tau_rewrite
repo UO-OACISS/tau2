@@ -460,7 +460,7 @@ then
   excludetext=" 
           filters = {{  
             type = \"blacklist\", 
-            filter = { {subtype = \"regexplist\",value = {$excluderoutines}} }
+            filter = { {subtype = \"regexplist\",value = {\"_init\", $excluderoutines}} }
             }},
   "
 else
