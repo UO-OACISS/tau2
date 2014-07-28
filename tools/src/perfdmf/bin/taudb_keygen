@@ -16,8 +16,8 @@ email=$2
 cmd=openssl
 command -v $cmd >/dev/null 2>&1 || { echo >&2 "I require $cmd but it's not installed.  Exiting."; exit 2; }
 
-# making sure the postgresql directory exists
-destdir=$HOME/.postgresql
+# making sure the .ParaProf directory exists
+destdir=$HOME/.ParaProf
 mkdir -p $destdir
 
 key=$destdir/$username.key
