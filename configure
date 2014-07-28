@@ -5550,25 +5550,25 @@ if [ "x$download_unwind" = xyes ] ; then
         cd $libunwind
         echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
         if [ "x$machine" = "xbgq" ] ; then
-          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared > ${libunwind_log} 2>&1 
           cp src/unwind/Resume.c tmp.c
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
-          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log} 2>&1 
         else
-          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1 
         fi
         configresult=$?
         if [ $configresult -eq 0 ] ; then
           libunwind_log=build.log
           echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
-          make -i &> $libunwind_log
+          make -i > $libunwind_log  2>&1
           makeresult=$?
           if [ $makeresult -eq 0 ] ; then
           libunwind_log=install.log
           echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
-            make -i install &> $libunwind_log
+            make -i install > $libunwind_log  2>&1
           makeresult=$?
           fi
         fi
@@ -6929,6 +6929,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       cd $binutils
 
       # Configure binutils
+      echo "Configuring binutils (see $tempdir/$binutils/tau_configure.log for details)..."
       case $machine in
       bgp)
         ./configure \
@@ -6936,7 +6937,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       bgq)
@@ -6945,14 +6946,14 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       rs6000|ibm64)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror --disable-largefile
+            --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
         err=$?
         ;;
       arm_android)
@@ -6961,7 +6962,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=$host \
             --prefix=$bfddir \
-            --disable-nls --disable-werror  --disable-largefile 
+            --disable-nls --disable-werror  --disable-largefile  > tau_configure.log 2>&1
         err=$?
         ;;
       mic_linux)
@@ -6972,7 +6973,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
         sparc64fx)
@@ -6988,14 +6989,14 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
                 AR=sparc64-unknown-linux-gnu-ar \
 		--host=sparc64-unknown-linux-gnu \
             	--prefix=$bfddir \
-		--disable-nls --disable-werror
+		--disable-nls --disable-werror > tau_configure.log 2>&1
 	err=$?
 	;;
       *)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       esac
@@ -7005,7 +7006,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
         exit 1
       else
-        make && make install
+        echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
+        make > tau_build.log 2>&1
+        err=$?
+        if [ $err -ne 0 ] ; then
+          echo "Error: BFD build failed. Cannot proceed with -bfd=download"
+          exit 1
+        fi
+        echo "Installing (see $tempdir/$binutils/tau_build.log for details)..."
+        make install > tau_install.log 2>&1
         err=$?
         if [ $err -ne 0 ] ; then
           echo "Error: BFD installation failed. Cannot proceed with -bfd=download"
