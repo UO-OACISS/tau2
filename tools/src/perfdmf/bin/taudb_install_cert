@@ -18,7 +18,7 @@ username=$1
 servername=$2
 servercrt=$3
 clientcrt=./$username.crt
-destdir=$HOME/.postgresql
+destdir=$HOME/.ParaProf
 clientkey=$destdir/$username.key
 store=$destdir/keystore.taudb
 
