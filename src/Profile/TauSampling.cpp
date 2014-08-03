@@ -1107,7 +1107,7 @@ void Tau_sampling_finalizeProfile(int tid)
       stringstream callSiteKeyName;
 	  callSiteKeyName << iplstring << " ";
 	  callSiteKeyName << candidate->tauContext->GetType() << " => ";
-	  callSiteKeyName << samplePathLeafString;
+	  callSiteKeyName << *samplePathLeafString;
       const string cskname(callSiteKeyName.str());
 	  delete samplePathLeafString;
       // try to find the key
