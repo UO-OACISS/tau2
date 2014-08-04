@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -1193,7 +1193,7 @@ for arg in "$@"; do
             # use libunwind as the default.
             unwinder="libunwind"
             unwind_flag="-DTAU_USE_LIBUNWIND"
-            unwind_lib_flag="-lunwind"
+            unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
             download_unwind=yes
             shift
             ;;
@@ -1209,7 +1209,7 @@ for arg in "$@"; do
 	    if [ "x$unwinder" = "xnone" ] ; then
 		unwinder="libunwind"
 		unwind_flag="-DTAU_USE_LIBUNWIND"
-		unwind_lib_flag="-lunwind"
+		unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
 	    fi
 	    shift
 	    ;;

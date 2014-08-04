@@ -122,7 +122,7 @@ case $1 in
 
      unwind_lib_flag=*)
         unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//' -e 's/#/ /g'`
-       echo "s,^UNWIND_LIB_FLAG=.*$,UNWIND_LIB_FLAG=$unwind_lib_flag,g" >> $sedout
+        echo "s@^UNWIND_LIB_FLAG=\(.*\)@UNWIND_LIB_FLAG=$unwind_lib_flag@g" >> $sedout
         ;;
 
      unwind_extras=*)
