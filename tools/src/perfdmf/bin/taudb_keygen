@@ -1,10 +1,12 @@
 #!/bin/sh
 
 if [ $# -ne 2 ]; then 
-	echo "\nUsage: $0 username email"
+	echo ""
+	echo "Usage: $0 username email"
 	echo "where:"
-	echo "\tusername : your database login username"
-	echo "\temail    : your email address\n"
+	echo "	username : your database login username"
+	echo "	email    : your email address"
+	echo ""
 	exit 1
 fi
 
