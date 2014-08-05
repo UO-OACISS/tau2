@@ -68,6 +68,8 @@ void esd_exit (elg_ui4 rid);
 
 using namespace tau;
 
+extern "C" void Tau_shutdown(void);
+
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
 
@@ -821,7 +823,7 @@ extern "C" int Tau_profile_exit_all_tasks()
     }
     tid++;
   }
-  Tau_disable_instrumentation();
+  Tau_shutdown();
   RtsLayer::UnLockDB();
   return 0;
 }
@@ -869,7 +871,7 @@ extern "C" int Tau_profile_exit_all_threads()
     }
   }
 
-  Tau_disable_instrumentation();
+  Tau_shutdown();
   return 0;
 }
 
@@ -889,6 +891,7 @@ extern "C" int Tau_profile_exit()
     }
     // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
   }
+  Tau_shutdown();
   return 0;
 }
 
