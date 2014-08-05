@@ -848,6 +848,12 @@ case $1 in
 	echo "s/^CROSS_PREFIX=\(.*\)/CROSS_PREFIX=${config_host}-/g" >> $sedout
 	;;
 
+     confenvfile=*)
+        confenvfile=`echo $1 | sed -e 's/^confenvfile=//' `
+	echo "NOTE: Saving configuration environment to $confenvfile"
+	echo "s@^CONF_ENV_FILE=\(.*\)@CONF_ENV_FILE=$confenvfile@g" >> $sedout
+        ;;
+
      HOSTUTILS)
 	echo "NOTE: Building TAU utils for HOST (i.e. cross compile)"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
