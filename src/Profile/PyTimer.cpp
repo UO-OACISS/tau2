@@ -82,6 +82,8 @@
 
 using namespace std;
 
+extern "C" int Tau_is_shutdown(void);
+
 // tells whether a FunctionInfo object is a phase or not
 struct PhaseMap : public TAU_HASH_MAP<int, bool>
 {
@@ -267,16 +269,19 @@ char pytau_stop__name__[] = "stop";
 char pytau_stop__doc__[] = "stop a TAU timer";
 extern "C" PyObject * pytau_stop(PyObject *self, PyObject *args)
 {
-  int tid = RtsLayer::myThread();
-  Profiler * p = TauInternal_CurrentProfiler(tid);
-  if (!p) {
-    printf("pytau_stop: Stack error. Profiler is NULL!");
-    return NULL;
-  }
+  if (!Tau_is_shutdown()) {
+    int tid = RtsLayer::myThread();
+    Profiler * p = TauInternal_CurrentProfiler(tid);
+    if (!p) {
+      fprintf(stderr, "TAU: pytau_stop: Stack error: profiler is NULL!\n");
+      return NULL;
+    }
 
-  Tau_stop_timer(p->ThisFunction, tid);
-  Py_INCREF (Py_None);
-  return Py_None;
+    Tau_stop_timer(p->ThisFunction, tid);
+    Py_INCREF (Py_None);
+    return Py_None;
+  }
+  return NULL;
 }
 
 
