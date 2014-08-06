@@ -22,3 +22,4 @@ mic_linux
 cscope.*
 tags
 TAGS
+.configure_env

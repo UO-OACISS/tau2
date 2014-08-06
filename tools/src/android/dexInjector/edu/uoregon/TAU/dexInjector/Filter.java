@@ -14,9 +14,11 @@ public class Filter {
     public static String   methodDesc;      // method descriptor
 
     public static boolean accept() {
-	/* ignore constructors */
-	if (methodName.equals("<init>") || methodName.equals("<clinit>")) {
-	    return false;
+	/* ignore constructors and finalizers */
+	if (methodName.equals("<init>")   ||
+	    methodName.equals("<clinit>") ||
+	    methodName.equals("finalize")) {
+	    return true;
 	}
 
 	/*

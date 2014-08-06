@@ -2985,7 +2985,6 @@ MPI_Fint *ierr;
 void  mpi_init_( ierr)
 MPI_Fint *ierr; 
 {
-  printf("%s\n", __PRETTY_FUNCTION__);
   *ierr = MPI_Init( 0, (char ***)0);
   tau_mpi_fortran_init_predefined_constants_();
 }

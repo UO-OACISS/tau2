@@ -10,6 +10,7 @@ using namespace std;
 
 #ifndef TAU_ANDROID
 #define LOGV(...) printf(__VA_ARGS__)
+#define LOGF(...) printf(__VA_ARGS__)
 #else
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -27,6 +28,8 @@ using namespace std;
 
 #define LOGV(...) //__android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
 #define LOGF(...) __android_log_print(ANDROID_LOG_FATAL, "TAU", __VA_ARGS__)
+
+static pid_t finalizer;
 
 #ifdef TAU_PTHREAD_WRAP
 
@@ -112,31 +115,6 @@ utf16_to_ascii(char *utf16, int len)
 
 static int dalvik_vm_running = 1;
 
-static jlong
-get_jid_from_lid(uint32_t lid)
-{
-    static int sys_count = 0;  // how many system thread has appeared?
-    static jlong jid = 0;
-
-    jid++;
-
-    /* this is a system thread, jid == lid */
-    if (lid < 9) {
-	sys_count++;
-	return (jlong)lid;
-    }
-
-    /*
-     * this is not a system thread, and not all system thread has been
-     * populated, jid == lid
-     */
-    if (sys_count < 8) {
-	return (jlong)lid;
-    }
-
-    return jid;
-}
-
 static int
 handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 {
@@ -144,16 +122,42 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
     ddm_thcr_t *thcr;
     ddm_thde_t *thde;
     ddm_thst_t *thst;
+    ddm_trunk_t query;
 
     char *tname;
     pid_t sid = -1;    // system thread id, i.e. gettid()
 
-    // dalvik vm-local thread id, free after thread death, reuseable
+    /*
+     * Dalvik vm-local thread id, free after thread death, reuseable
+     * See <android>/dalvik/vm/Thread.cpp
+     */
     uint32_t lid;  
 
     static map<uint32_t, char*> java_thread_name;  // lid ==> tname
     static map<uint32_t, pid_t> java_thread_sid;   // lid ==> sid
 
+    static map<uint32_t, pid_t> thst_map;          // lid ==> sid
+
+    /* list of <lid, live?> */
+    static list< pair <uint32_t, bool> > tstates;
+
+    /*
+     * How does this work:
+     *
+     *  - Each thread is represened as a lid
+     *  - We send THST as soon as we recv THCR for a lid to query for
+     *    the sid
+     *  - We don't play any fancy here, meaning that we will not cache
+     *    or reuse lid-sid map returned by THCR. We do not do that
+     *    because it is not reliable, Read Dalvik source code to see
+     *    why.
+     *  - If THDE for a lid comes before corresponding THST, we say the
+     *    lid is ephemeral. We do not register ephemeral lid as the THST
+     *    returns later is not reliable.
+     *
+     * In short: we only register the lid if its THST comes before THDE.
+     * We ignore all other lids.
+     */
     switch (ntohl(trunk->type)) {
     case DDM_THCR:
 	thcr  = (ddm_thcr_t*)trunk;
@@ -181,35 +185,70 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	 * We should monitor main and all user threads. We should also watch the
 	 * finalizer daemons as they may call user provided finalize() methods
 	 */
-	if ((lid == 1) || (lid >= 7)) {
-	    /* find out sid of this thread, we will need this for sampling */
-	    thst = ddm_thst(jdwp);
-	    for (i=0; i<ntohs(thst->count); i++) {
-		LOGV(" *** DTM THST: %d: %d -> %d\n", i,
-			    ntohl(thst->thst[i].lid), ntohl(thst->thst[i].sid));
-		if (lid == ntohl(thst->thst[i].lid)) {
-		    sid = ntohl(thst->thst[i].sid);
-		    break;
-		}
-	    }
-	    free(thst);
-
-	    /*
-	     * Try to register this new thread.
-	     *
-	     * Note that this is an async event, so the thread may already be dead
-	     * in which case sid will be -1. Let's don't bother to register it.
-	     */
-	    if (sid != -1) {
-		/* setup mapping between lid and sid */
-		java_thread_sid[lid] = sid;
-
-		JNIThreadLayer::SuThread(sid, tname);
-		JNIThreadLayer::RegisterThread(sid, tname);
-	    }
+	if ((lid >= 2) && (lid <=8 ) && (lid != 7)) {
+	    break;
 	}
 
-	LOGV(" *** DDM THCR <%d> %s\n", lid, tname);
+	query.type   = htonl(DDM_THST);
+	query.length = htonl(0);
+
+	jdwp_send_pkt(jdwp, DDM_TRUNK, (char*)&query, sizeof(query));
+
+	LOGV(" *** DDM THCR <%d> %s send THST", lid, tname);
+
+	tstates.push_back(pair<uint32_t,bool>(lid, true));
+
+	break;
+
+    case DDM_THST:
+	thst = (ddm_thst_t*)trunk;
+
+	/* decode lid-sid map */
+	thst_map.clear();
+	for (i=0; i<ntohs(thst->count); i++) {
+	    lid = ntohl(thst->thst[i].lid);
+	    sid = ntohl(thst->thst[i].sid);
+
+	    LOGV(" *** DDM THST: %d: %d -> %d\n", i, lid, sid);
+	    thst_map[lid] = sid;
+	}
+
+	/* tstates list must not be empty as we received a THST */
+	if (tstates.begin()->second == true) {
+	    /* the thread is still alive, let's register it */
+	    lid = tstates.begin()->first;
+	    if (lid == 7) {
+		/*
+		 * FinalizerDaemon will call Java class finalizers. Thus we
+		 * must register FinalizerDaemon if we are going to inject
+		 * the finalizer. However, this in practice usually doesn't
+		 * work. Dalvik will throw an error message telling that a
+		 * timeout occurs in finalize(), then it aborts the App.
+		 * Therefore we choose not to inject finalizer().
+		 *
+		 * Note that we don't know which method will be called by
+		 * finalizer(), so we save sid of FinalizerDaemon here and
+		 * avoid any TAU API call in that thread.
+		 */
+		finalizer = thst_map[lid];
+		tstates.pop_front();
+		LOGV(" *** Ignore finalizer daemon sid = %d", finalizer);
+		break;
+	    }
+
+	    if (thst_map.find(lid) != thst_map.end()) {
+		java_thread_sid[lid] = thst_map[lid];
+
+		JNIThreadLayer::SuThread(java_thread_sid[lid], java_thread_name[lid]);
+		JNIThreadLayer::RegisterThread(java_thread_sid[lid], java_thread_name[lid]);
+	    }
+
+	    tstates.pop_front();
+	} else {
+	    /* the thread is already dead */
+	    tstates.pop_front();
+	}
+
 	break;
 
     case DDM_THDE:
@@ -217,21 +256,35 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	lid   = ntohl(thde->lid);
 	tname = java_thread_name[lid];
 
-
 	if (lid == 1) {
 	    dalvik_vm_running = 0;
 	}
 
 	if (java_thread_sid.find(lid) != java_thread_sid.end()) {
+	    /* yes, we are registered, now unregester */
 	    sid = java_thread_sid[lid];
 
 	    JNIThreadLayer::SuThread(sid, tname);
 	    TAU_PROFILE_EXIT("END...");
 
 	    java_thread_sid.erase(lid);
-	}
 
-	LOGV(" *** DDM THDE <%d> %s\n", lid, tname);
+	    LOGV(" *** DDM THDE <%d> %s unregistered", lid, tname);
+	} else {
+	    /* no, we are not registered yet, remove from waiting list */
+	    list< pair<uint32_t, bool> >::iterator itor;
+	    for (itor=tstates.begin(); itor!=tstates.end(); itor++) {
+		if (itor->first == lid) {
+		    itor->second = false; // mark of death
+		    LOGV(" *** DDM THDE <%d> %s mark as death", lid, tname);
+		    break;
+		}
+	    }
+
+	    if (itor == tstates.end()) {
+		LOGF(" *** DDM THDE <%d> %s not regestered and not in waiting list\n", lid, tname);
+	    }
+	}
 
 	free(tname);
 	java_thread_name.erase(lid);
@@ -239,7 +292,7 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	break;
 
     defalt:
-	LOGV("Error: DTM: ignore DDM event %08x\n", ntohl(trunk->type));
+	LOGF(" *** DTM: ignore DDM event %08x\n", ntohl(trunk->type));
 	break;
     }
 
@@ -290,19 +343,18 @@ dalvik_thread_monitor(void *arg)
 		jdwp.events             = jdwp.events->next;
 	    }
 
-	    switch ((event->cmd->cmd_set << 8) | event->cmd->command) {
-	    case DDM_TRUNK:
+	    /* this should be a THST response */
+	    if (event->cmd->flags == 0x80) {
 		handle_ddm_event(&jdwp, (ddm_trunk_t*)event->cmd->data);
-		free(event->cmd);
-		free(event);
-		break;
-	    case EVENT_COMPOSIT:
-		LOGV("Error: DTM: ignore JDWP EVENT COMPOSIT\n");
-		break;
-	    default:
-		LOGV("Error: DTM: ignore unknown JDWP event\n");
-		break;
 	    }
+
+	    /* this should be a THCR/THDE notification */
+	    if (((event->cmd->cmd_set << 8) | event->cmd->command) == DDM_TRUNK) {
+		handle_ddm_event(&jdwp, (ddm_trunk_t*)event->cmd->data);
+	    }
+
+	    free(event->cmd);
+	    free(event);
 	}
     }
 
@@ -373,7 +425,11 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved)
     return JNI_VERSION_1_6;
 }
 
-// Java: Thread.currentThread().getId();
+/*
+ * Java: Thread.currentThread().getId();
+ * This ID (jid) simply count upwards, so each Thread has a unique ID.
+ * See <android>/libcore/libdvm/src/main/java/java/lang/Thread.java
+ */
 jlong get_java_thread_id(void)
 {
     JavaVM *vm = JNIThreadLayer::tauVM;
@@ -434,7 +490,9 @@ jlong get_java_thread_id(void)
     return id;
 }
 
-// Java: Thread.currentThread().getName();
+/*
+ * Java: Thread.currentThread().getName();
+ */
 char *get_java_thread_name(void)
 {
     JavaVM *vm = JNIThreadLayer::tauVM;
@@ -517,6 +575,9 @@ JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeProfile
   (JNIEnv *env, jobject obj, jstring name, jstring type, jstring groupname, 
 	jlong group)
 {
+  if (gettid() == finalizer) {
+    return;
+  }
   JNIThreadLayer::WaitForDTM();
 
   /* Get name and type strings from the JVM */
@@ -564,6 +625,9 @@ JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeProfile
 JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeStart
   (JNIEnv *env, jobject obj)
 {
+  if (gettid() == finalizer) {
+    return;
+  }
 
   /* Find the FunctionInfo Pointer associated with this method*/
   jclass cls = env->GetObjectClass(obj);
@@ -589,7 +653,11 @@ JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeStart
  */
 JNIEXPORT void JNICALL Java_edu_uoregon_TAU_Profile_NativeStop
   (JNIEnv * env, jobject obj) {
- TAU_GLOBAL_TIMER_STOP();
+  if (gettid() == finalizer) {
+    return;
+  }
+
+  TAU_GLOBAL_TIMER_STOP();
 }
 
 /* EOF Profile.cpp */
