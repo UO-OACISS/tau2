@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -58,6 +58,25 @@ copy_own_cube_reader_if_selected()
     fi
 }
 
+save_configure_env()
+{
+  # assuming configure is called from same directory
+  # tau's configure doesn't work anyway from another directory
+  _tauroot="."
+  confenvdir="$_tauroot/.configure_env"
+
+  md5sum="`which md5sum 2>/dev/null || which md5 2>/dev/null`"
+  if [ "x$md5sum" == "x" ] ; then
+    echo "Warning: can't find md5sum or md5."
+    return
+  fi
+  argsum=`echo "$all_args" | $md5sum | awk '{print $1}'`
+
+  mkdir -p "$confenvdir"
+  confenvfile="$confenvdir/$argsum"
+  set > "$confenvfile"
+  fixmakeargs="$fixmakeargs confenvfile=$confenvfile"
+}
 
 
 select_cube_reader_jar()
@@ -839,6 +858,7 @@ restore_perfdmf_and_paraprof
 ###############################################################
 # PARSE OPTIONS
 ###############################################################
+all_args="$@"
 for arg in "$@"; do
     case $arg in
 
@@ -1193,7 +1213,7 @@ for arg in "$@"; do
             # use libunwind as the default.
             unwinder="libunwind"
             unwind_flag="-DTAU_USE_LIBUNWIND"
-            unwind_lib_flag="-lunwind"
+            unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
             download_unwind=yes
             shift
             ;;
@@ -1209,7 +1229,7 @@ for arg in "$@"; do
 	    if [ "x$unwinder" = "xnone" ] ; then
 		unwinder="libunwind"
 		unwind_flag="-DTAU_USE_LIBUNWIND"
-		unwind_lib_flag="-lunwind"
+		unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
 	    fi
 	    shift
 	    ;;
@@ -2510,6 +2530,21 @@ echo "  tau root directory $tauroot."
 echo "  If you move the Tau distribution, you must run configure"
 echo "  again and recompile"
 echo "------------------------------------------------------------"
+
+#
+# Save configuration environment for future reference
+#
+md5sum="`which md5sum 2>/dev/null || which md5 2>/dev/null`"
+if [ "x$md5sum" == "x" ] ; then
+  echo "Warning: can't find md5sum or md5."
+else
+  confenvdir="$tauroot/.configure_env"
+  argsum=`echo "$all_args" | $md5sum | awk '{print $1}'`
+  mkdir -p "$confenvdir"
+  confenvfile="$confenvdir/$argsum"
+  set > "$confenvfile"
+  fixmakeargs="$fixmakeargs confenvfile=$confenvfile"
+fi
 
 fixmakeargs="$fixmakeargs tauroot=$tauroot"
 # Try and figure out architecture

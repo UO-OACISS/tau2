@@ -233,13 +233,22 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         addCompItem(defaultsPanel, gbc, 0, 1, 1, 1);
         addCompItem(settingsPanel, gbc, 1, 1, 1, 1);
 
+        JPanel modifyRestorePanel = new JPanel();
+
         JButton defaultButton = new JButton("Restore Defaults");
         defaultButton.addActionListener(this);
+        JButton sourceLookupButton = new JButton("Modify Source Lookup...");
+        sourceLookupButton.addActionListener(this);
+
+        //JButton defaultButton = new JButton("Restore Defaults");
+        modifyRestorePanel.add(sourceLookupButton);
+        modifyRestorePanel.add(defaultButton);
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        addCompItem(defaultButton, gbc, 0, 2, 1, 1);
+        //addCompItem(defaultButton, gbc, 0, 2, 1, 1);
+        addCompItem(modifyRestorePanel, gbc, 0, 2, 1, 1);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.anchor = GridBagConstraints.EAST;
@@ -370,12 +379,20 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
         ParaProf.preferences.setGenerateIntermediateCallPathData(generateIntermediateCallPathDataBox.isSelected());
         ParaProf.preferences.setShowSourceLocation(showSourceLocationsBox.isSelected());
+        ParaProf.preferences.setSourceLocations(ParaProf.getDirectoryManager().getCurrentElements());
         //We only want to set this when the new font is loaded, not when it is changed while ParaProf is running.
-        if(!fontSet)
-        {
-        	ParaProf.preferences.setFont(new Font(ParaProf.preferences.getFontName(),ParaProf.preferences.getFontStyle(),ParaProf.preferences.getFontSize()));
-        	fontSet=true;
+        if(!fontSet) {
+          ParaProf.preferences.setFont(new Font(ParaProf.preferences.getFontName(),
+                                                ParaProf.preferences.getFontStyle(),
+                                                ParaProf.preferences.getFontSize()));
+          fontSet = true;
         }
+	try {
+	    ParaProf.savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
+	} catch (Exception e) {
+	    System.err.println("An error occured while trying to save ParaProf preferences.");
+	    e.printStackTrace();
+	}
     }
 
     public String getFontName() {
@@ -520,6 +537,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     generateIntermediateCallPathDataBox.setSelected(false);
                     showSourceLocationsBox.setSelected(true);
                     setControls();
+                } else if (arg.equals("Modify Source Lookup...")) {
+                    ParaProf.getDirectoryManager().display(this);
                 }
 
             }

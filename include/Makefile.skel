@@ -27,6 +27,9 @@
 # TAUINC.
 #######################################################################
 
+# See this file for a record of the configuration environment 
+CONF_ENV_FILE=
+
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=default
 TAU_ARCH=default
