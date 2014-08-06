@@ -141,7 +141,7 @@ using namespace std;
 /* In TAU_TRACK_SIGNALS operations, do we invoke gdb? */
 #define TAU_SIGNALS_GDB_DEFAULT 0
 /* Also dump backtrace to stderr */
-#define TAU_ECHO_BACKTRACE 0
+#define TAU_ECHO_BACKTRACE_DEFAULT 0
 
 #define TAU_SUMMARY_DEFAULT 0
 
@@ -210,9 +210,9 @@ static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
-static int env_track_signals = 0;
-static int env_signals_gdb = 0;
-static int env_echo_backtrace = 0;
+static int env_track_signals = TAU_TRACK_SIGNALS_DEFAULT;
+static int env_signals_gdb = TAU_SIGNALS_GDB_DEFAULT;
+static int env_echo_backtrace = TAU_ECHO_BACKTRACE_DEFAULT;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
 /* This is a malleable default */
