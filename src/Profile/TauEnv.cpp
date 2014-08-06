@@ -1120,7 +1120,7 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_TRACK_IO_PARAMS");
-    if (parse_bool(tmp, env_track_memory_headroom)) {
+    if (parse_bool(tmp, env_track_io_params)) {
       TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
       env_track_io_params = 1;
