@@ -247,7 +247,7 @@ public class ParaProf implements ActionListener {
 		    colorChooser = new ColorChooser(ParaProf.preferences);
 		} catch (Exception e) {
 		    if (e instanceof FileNotFoundException) {
-			//System.out.println("No preference file present, using defaults!");
+			System.out.println("No preference file present, using defaults!");
 		    } else {
 			System.out.println("Error while trying to read the ParaProf preferences file, using defaults");
 			//System.out.println("Please delete this file, or replace it with a valid one!");
@@ -374,7 +374,8 @@ public class ParaProf implements ActionListener {
 	try {
 	    savePreferences(new File(ParaProf.paraProfHomeDirectory.getPath() + "/ParaProf.conf"));
 	} catch (Exception e) {
-	    // we'll get an exception here if running under Java Web Start
+	    System.err.println("An error occured while trying to save ParaProf preferences.");
+	    e.printStackTrace();
 	}
 	if (!insideEclipse && !controlMode) {
 	    // never call System.exit when invoked by the eclipse plugin, it will close the whole JVM, including the user's eclipse!
@@ -387,7 +388,7 @@ public class ParaProf implements ActionListener {
 
 	ParaProf.colorChooser.setSavedColors();
 	ParaProf.preferences.setAssignedColors(ParaProf.colorMap.getMap());
-	ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManagerWindow.getLocation());
+	//ParaProf.preferences.setManagerWindowPosition(ParaProf.paraProfManagerWindow.getLocation());
 	ParaProf.preferences.setSourceLocations(getDirectoryManager().getCurrentElements());
 	try {
 	    ObjectOutputStream prefsOut = new ObjectOutputStream(new FileOutputStream(file));
