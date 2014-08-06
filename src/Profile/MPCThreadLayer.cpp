@@ -38,9 +38,9 @@ extern __thread void * tls_args;
 int MPCThreadLayer::tauThreadCount = 0;
 mpc_thread_once_t MPCThreadLayer::initFlag = MPC_THREAD_ONCE_INIT;
 mpc_thread_key_t MPCThreadLayer::tauThreadId;
-mpc_thread_mutex_t MPCThreadLayer::tauThreadCountMutex;
-mpc_thread_mutex_t MPCThreadLayer::tauDBMutex;
-mpc_thread_mutex_t MPCThreadLayer::tauEnvMutex;
+sctk_thread_mutex_t MPCThreadLayer::tauThreadCountMutex = SCTK_THREAD_MUTEX_INITIALIZER;
+sctk_thread_mutex_t MPCThreadLayer::tauDBMutex = SCTK_THREAD_MUTEX_INITIALIZER;
+//sctk_thread_mutex_t MPCThreadLayer::tauEnvMutex = SCTK_THREAD_MUTEX_INITIALIZER;
 
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
@@ -57,15 +57,15 @@ int MPCThreadLayer::RegisterThread(void)
   if (!id) {
     id = new int;
     mpc_thread_setspecific(tauThreadId, id);
-    mpc_thread_mutex_lock(&tauThreadCountMutex);
+    sctk_thread_mutex_lock(&tauThreadCountMutex);
     // Which should it be?
     // *id = RtsLayer::_createThread() - 1;
     // Or this?
     *id = tauThreadCount++;
-    mpc_thread_mutex_unlock(&tauThreadCountMutex);
+    sctk_thread_mutex_unlock(&tauThreadCountMutex);
   }
   tls_args = (void*)id;
-  return 0;
+  return *id;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -95,9 +95,9 @@ extern "C"
 void mpc_init_once(void)
 {
   mpc_thread_key_create(&MPCThreadLayer::tauThreadId, NULL);
-  mpc_thread_mutex_init(&MPCThreadLayer::tauThreadCountMutex, NULL);
-  mpc_thread_mutex_init(&MPCThreadLayer::tauDBMutex, NULL);
-  mpc_thread_mutex_init(&MPCThreadLayer::tauEnvMutex, NULL);
+  //sctk_thread_mutex_init(&MPCThreadLayer::tauThreadCountMutex, NULL);
+  sctk_thread_mutex_init(&MPCThreadLayer::tauDBMutex, NULL);
+  //sctk_thread_mutex_init(&MPCThreadLayer::tauEnvMutex, NULL);
 }
 
 int MPCThreadLayer::InitializeThreadData(void)
@@ -125,7 +125,7 @@ int MPCThreadLayer::InitializeDBMutexData(void)
 int MPCThreadLayer::LockDB(void)
 {
   InitializeThreadData();
-  mpc_thread_mutex_lock(&tauDBMutex);
+  sctk_thread_mutex_lock(&tauDBMutex);
   return 1;
 }
 
@@ -134,7 +134,7 @@ int MPCThreadLayer::LockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int MPCThreadLayer::UnLockDB(void)
 {
-  mpc_thread_mutex_unlock(&tauDBMutex);
+  sctk_thread_mutex_unlock(&tauDBMutex);
   return 1;
 }
 
@@ -155,7 +155,7 @@ int MPCThreadLayer::InitializeEnvMutexData(void)
 int MPCThreadLayer::LockEnv(void)
 {
   InitializeThreadData();
-  mpc_thread_mutex_lock(&tauEnvMutex);
+  sctk_thread_mutex_lock(&tauDBMutex);
   return 1;
 }
 
@@ -164,7 +164,7 @@ int MPCThreadLayer::LockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 int MPCThreadLayer::UnLockEnv(void)
 {
-  mpc_thread_mutex_unlock(&tauEnvMutex);
+  sctk_thread_mutex_unlock(&tauDBMutex);
   return 1;
 }
 

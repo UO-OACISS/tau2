@@ -22,14 +22,8 @@ public class ApplicationAdapter extends ApplicationVisitor implements Opcodes {
 	Filter.classSuperName = superName;
 
 	ClassVisitor cv = av.visitClass(access, name, signature, superName, interfaces);
+	ClassAdapter ca = new ClassAdapter(api, cv);
 
-	if ((access & ACC_ABSTRACT)  != 0 ||
-	    (access & ACC_INTERFACE) != 0 ||
-	    (access & ACC_NATIVE)    != 0 ) {
-	    return cv;
-	} else {
-	    ClassAdapter ca = new ClassAdapter(api, cv);
-	    return ca;
-	}
+	return ca;
     }
 }

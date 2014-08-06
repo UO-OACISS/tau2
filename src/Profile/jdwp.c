@@ -104,12 +104,6 @@ jdwp_event_backlog(jdwp_ctx_t *ctx, jdwp_cmd_t *cmd)
 {
     jdwp_event_t *event;
 
-    /* this must be a command, not a reply */
-    if (cmd->flags == 0x80) {
-	fprintf(stderr, "Error: JDWP: ignore a reply pkt.\n");
-	return -1;
-    }
-
     event = (jdwp_event_t*)malloc(sizeof(jdwp_event_t));
     if (event == NULL) {
 	return -1;

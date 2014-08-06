@@ -1,0 +1,55 @@
+#!/bin/sh
+
+if [ $# -ne 2 ]; then 
+	echo ""
+	echo "Usage: $0 username email"
+	echo "where:"
+	echo "	username : your database login username"
+	echo "	email    : your email address"
+	echo ""
+	exit 1
+fi
+
+# get the user's arguments
+username=$1
+email=$2
+
+# make sure we have the openssl executable
+cmd=openssl
+command -v $cmd >/dev/null 2>&1 || { echo >&2 "I require $cmd but it's not installed.  Exiting."; exit 2; }
+
+# making sure the .ParaProf directory exists
+destdir=$HOME/.ParaProf
+mkdir -p $destdir
+
+key=$destdir/$username.key
+csr=./$username.csr
+
+# don't overwrite the key!
+if [ -f $key ] ; then
+	echo ""
+    echo "$key exists! I won't overwrite it. Exiting."
+	echo ""
+	exit 3
+fi
+# don't overwrite the request! unless the user says it's OK.
+if [ -f $csr ] ; then
+    echo "$csr exists! Should I overwrite it? (y/n)"
+    read response
+	if [ "$response" != "y" ] ; then
+	    echo "Exiting."
+		exit 4
+	fi
+	echo "OK, overwriting..."
+fi
+
+# make it!
+subject="/C=US/ST=Oregon/L=Eugene/O=University of Oregon/OU=Performance Research Laboratory/emailAddress=$email/CN=$username"
+umask u=rw,go= && $cmd req -new -nodes -subj "$subject" -keyout $key -out $csr
+
+echo ""
+echo "Created $key and $csr for user '$username'"
+echo "Get $csr signed by emailing it to your database administrator!"
+echo ""
+
+exit 0
