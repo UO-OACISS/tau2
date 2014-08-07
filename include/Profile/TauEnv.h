@@ -104,6 +104,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_sigusr1_action();
   
   int TAUDECL TauEnv_get_memdbg();
+  void TAUDECL TauEnv_set_memdbg(int);
   int TAUDECL TauEnv_get_memdbg_protect_above();
   int TAUDECL TauEnv_get_memdbg_protect_below();
   int TAUDECL TauEnv_get_memdbg_protect_free();
