@@ -163,6 +163,7 @@ using namespace std;
 #define TAU_BFD_LOOKUP 1
 
 // Memory debugging environment variable defaults
+#define TAU_MEMDBG_DEFAULT 0
 #define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  0
 #define TAU_MEMDBG_PROTECT_BELOW_DEFAULT  0
 #define TAU_MEMDBG_PROTECT_FREE_DEFAULT   0
@@ -246,7 +247,7 @@ static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
 
-static int env_memdbg = 0;
+static int env_memdbg = TAU_MEMDBG_DEFAULT;
 static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
 static int env_memdbg_protect_below = TAU_MEMDBG_PROTECT_BELOW_DEFAULT;
 static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
@@ -1001,10 +1002,18 @@ void TauEnv_initialize()
 
     // Setting TAU_MEMDBG_PROTECT_{ABOVE,BELOW,FREE} enables memory debugging.
 
+    tmp = getconf("TAU_MEMDBG");
+    env_memdbg = parse_bool(tmp, env_memdbg);
+    if(env_memdbg) {
+      TAU_VERBOSE("TAU: Memory debugging enabled on ALL allocations.\n");
+      TAU_METADATA("TAU_MEMDBG", "on");
+    } else {
+      TAU_METADATA("TAU_MEMDBG", "off");
+    }
+
     tmp = getconf("TAU_MEMDBG_PROTECT_ABOVE");
     env_memdbg_protect_above = parse_bool(tmp, env_memdbg_protect_above);
     if(env_memdbg_protect_above) {
-      env_memdbg = 1;
       TAU_VERBOSE("TAU: Bounds checking enabled on array end\n");
       TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "on");
     } else {
@@ -1014,7 +1023,6 @@ void TauEnv_initialize()
     tmp = getconf("TAU_MEMDBG_PROTECT_BELOW");
     env_memdbg_protect_below = parse_bool(tmp, env_memdbg_protect_below);
     if(env_memdbg_protect_below) {
-      env_memdbg = 1;
       TAU_VERBOSE("TAU: Bounds checking enabled on array beginning\n");
       TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "on");
     } else {
@@ -1024,7 +1032,6 @@ void TauEnv_initialize()
     tmp = getconf("TAU_MEMDBG_PROTECT_FREE");
     env_memdbg_protect_free = parse_bool(tmp, env_memdbg_protect_free);
     if(env_memdbg_protect_free) {
-      env_memdbg = 1;
       TAU_VERBOSE("TAU: Checking for free memory reuse errors\n");
       TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "on");
     } else {

@@ -235,9 +235,14 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 #ifndef PAGE_SIZE
   size_t const PAGE_SIZE = Tau_page_size();
 #endif
-  bool const protect_above = TauEnv_get_memdbg_protect_above();
-  bool const protect_below = TauEnv_get_memdbg_protect_below();
-  bool const fill_gap = TauEnv_get_memdbg_fill_gap();
+  bool protect_above = TauEnv_get_memdbg_protect_above();
+  bool protect_below = TauEnv_get_memdbg_protect_below();
+  bool fill_gap = TauEnv_get_memdbg_fill_gap();
+
+  // Assume TAU_MEMDBG_PROTECT_ABOVE if nothing specified
+  if (!protect_above && !protect_below) {
+    protect_above = 1;
+  }
 
   // Fail or not, this is a TAU allocation not a tracked system allocation
   tracked = false;
