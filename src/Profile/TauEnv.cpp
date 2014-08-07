@@ -857,6 +857,10 @@ int TauEnv_get_lite_enabled() {
 int TauEnv_get_memdbg() {
   return env_memdbg;
 }
+void TauEnv_set_memdbg(int value) {
+  env_memdbg = value;
+}
+
 
 int TauEnv_get_memdbg_protect_above() {
   return env_memdbg_protect_above;

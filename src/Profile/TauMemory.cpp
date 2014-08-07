@@ -75,6 +75,16 @@ using namespace tau;
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
 
+void Tau_enable_memdbg()
+{
+  TauEnv_set_memdbg(true);
+}
+
+void Tau_disable_memdbg()
+{
+  TauEnv_set_memdbg(false);
+}
+
 bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;
 wrapper_disable_handle_t wrapper_disable_handle = NULL;

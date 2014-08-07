@@ -642,6 +642,17 @@ void tau_disable_tracking_memory_headroom(void)
   Tau_disable_tracking_memory_headroom();
 } 
 
+void tau_enable_memdbg(void)
+{
+  Tau_enable_memdbg();
+}
+
+void tau_disable_memdbg(void)
+{
+  Tau_disable_memdbg();
+}
+
+
 
 void tau_set_interrupt_interval(int* value)
 {
@@ -817,6 +828,16 @@ void tau_disable_tracking_memory_headroom_(void)
 {
   Tau_disable_tracking_memory_headroom();
 } 
+
+void tau_enable_memdbg_(void)
+{
+  Tau_enable_memdbg();
+}
+
+void tau_disable_memdbg_(void)
+{
+  Tau_disable_memdbg();
+}
 
 
 void tau_set_interrupt_interval_(int* value)
@@ -1056,6 +1077,17 @@ void TAU_DISABLE_TRACKING_MEMORY_HEADROOM(void)
 {
   Tau_disable_tracking_memory_headroom();
 } 
+
+void TAU_ENABLE_MEMDBG(void)
+{
+  Tau_enable_memdbg();
+}
+
+void TAU_DISABLE_MEMDBG(void)
+{
+  Tau_disable_memdbg();
+}
+
 
 //////////////////////////////////////////////////////
 // POWER API
@@ -1442,6 +1474,16 @@ void tau_disable_tracking_memory_headroom__(void)
 {
   Tau_disable_tracking_memory_headroom();
 } 
+
+void tau_enable_memdbg__(void)
+{
+  Tau_enable_memdbg();
+}
+
+void tau_disable_memdbg__(void)
+{
+  Tau_disable_memdbg();
+}
 
 
 void tau_set_interrupt_interval__(int* value)
