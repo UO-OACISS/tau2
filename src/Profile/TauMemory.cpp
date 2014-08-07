@@ -75,16 +75,6 @@ using namespace tau;
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
 
-void Tau_enable_memdbg()
-{
-  TauEnv_set_memdbg(true);
-}
-
-void Tau_disable_memdbg()
-{
-  TauEnv_set_memdbg(false);
-}
-
 bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;
 wrapper_disable_handle_t wrapper_disable_handle = NULL;
@@ -235,14 +225,9 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 #ifndef PAGE_SIZE
   size_t const PAGE_SIZE = Tau_page_size();
 #endif
-  bool protect_above = TauEnv_get_memdbg_protect_above();
-  bool protect_below = TauEnv_get_memdbg_protect_below();
-  bool fill_gap = TauEnv_get_memdbg_fill_gap();
-
-  // Assume TAU_MEMDBG_PROTECT_ABOVE if nothing specified
-  if (!protect_above && !protect_below) {
-    protect_above = 1;
-  }
+  bool const protect_above = TauEnv_get_memdbg_protect_above();
+  bool const protect_below = TauEnv_get_memdbg_protect_below();
+  bool const fill_gap = TauEnv_get_memdbg_fill_gap();
 
   // Fail or not, this is a TAU allocation not a tracked system allocation
   tracked = false;
