@@ -642,14 +642,17 @@ void tau_disable_tracking_memory_headroom(void)
   Tau_disable_tracking_memory_headroom();
 } 
 
-void tau_enable_memdbg(void)
+void tau_memdbg_protect_above(int* value)
 {
-  Tau_enable_memdbg();
+  TauEnv_set_memdbg_protect_above(*value);
 }
-
-void tau_disable_memdbg(void)
+void tau_memdbg_protect_below(int* value)
 {
-  Tau_disable_memdbg();
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void tau_memdbg_protect_free(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
 }
 
 
@@ -829,14 +832,17 @@ void tau_disable_tracking_memory_headroom_(void)
   Tau_disable_tracking_memory_headroom();
 } 
 
-void tau_enable_memdbg_(void)
+void tau_memdbg_protect_above_(int* value)
 {
-  Tau_enable_memdbg();
+  TauEnv_set_memdbg_protect_above(*value);
 }
-
-void tau_disable_memdbg_(void)
+void tau_memdbg_protect_below_(int* value)
 {
-  Tau_disable_memdbg();
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void tau_memdbg_protect_free_(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
 }
 
 
@@ -1078,14 +1084,17 @@ void TAU_DISABLE_TRACKING_MEMORY_HEADROOM(void)
   Tau_disable_tracking_memory_headroom();
 } 
 
-void TAU_ENABLE_MEMDBG(void)
+void TAU_MEMDBG_PROTECT_ABOVE(int* value)
 {
-  Tau_enable_memdbg();
+  TauEnv_set_memdbg_protect_above(*value);
 }
-
-void TAU_DISABLE_MEMDBG(void)
+void TAU_MEMDBG_PROTECT_BELOW(int* value)
 {
-  Tau_disable_memdbg();
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void TAU_MEMDBG_PROTECT_FREE(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
 }
 
 
@@ -1475,14 +1484,17 @@ void tau_disable_tracking_memory_headroom__(void)
   Tau_disable_tracking_memory_headroom();
 } 
 
-void tau_enable_memdbg__(void)
+void tau_memdbg_protect_above__(int* value)
 {
-  Tau_enable_memdbg();
+  TauEnv_set_memdbg_protect_above(*value);
 }
-
-void tau_disable_memdbg__(void)
+void tau_memdbg_protect_below__(int* value)
 {
-  Tau_disable_memdbg();
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void tau_memdbg_protect_free__(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
 }
 
 

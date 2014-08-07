@@ -357,9 +357,6 @@ typedef void (*wrapper_disable_handle_t)(void);
 void Tau_memory_initialize(void);
 int Tau_memory_is_tau_allocation(void * ptr);
 
-void Tau_enable_memdbg();
-void Tau_disable_memdbg();
-
 void Tau_memory_wrapper_register(wrapper_enable_handle_t, wrapper_disable_handle_t);
 void Tau_memory_wrapper_enable(void);
 void Tau_memory_wrapper_disable(void);

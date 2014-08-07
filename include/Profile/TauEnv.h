@@ -104,10 +104,12 @@ extern "C" {
   int  TAUDECL TauEnv_get_sigusr1_action();
   
   int TAUDECL TauEnv_get_memdbg();
-  void TAUDECL TauEnv_set_memdbg(int);
   int TAUDECL TauEnv_get_memdbg_protect_above();
+  void TAUDECL TauEnv_set_memdbg_protect_above(int);
   int TAUDECL TauEnv_get_memdbg_protect_below();
+  void TAUDECL TauEnv_set_memdbg_protect_below(int);
   int TAUDECL TauEnv_get_memdbg_protect_free();
+  void TAUDECL TauEnv_set_memdbg_protect_free(int);
   int TAUDECL TauEnv_get_memdbg_protect_gap();
   int TAUDECL TauEnv_get_memdbg_fill_gap();
   unsigned char TAUDECL TauEnv_get_memdbg_fill_gap_value();
