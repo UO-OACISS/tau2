@@ -6122,6 +6122,8 @@ else
     # MPICH requires the const keyword 
         fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
     fi
+    # Clean up
+    rm -f openmpi3const.c openmpi3const.o a.out 
   fi
 fi
 
