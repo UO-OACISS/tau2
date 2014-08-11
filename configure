@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -58,6 +58,25 @@ copy_own_cube_reader_if_selected()
     fi
 }
 
+save_configure_env()
+{
+  # assuming configure is called from same directory
+  # tau's configure doesn't work anyway from another directory
+  _tauroot="."
+  confenvdir="$_tauroot/.configure_env"
+
+  md5sum="`which md5sum 2>/dev/null || which md5 2>/dev/null`"
+  if [ "x$md5sum" == "x" ] ; then
+    echo "Warning: can't find md5sum or md5."
+    return
+  fi
+  argsum=`echo "$all_args" | $md5sum | awk '{print $1}'`
+
+  mkdir -p "$confenvdir"
+  confenvfile="$confenvdir/$argsum"
+  set > "$confenvfile"
+  fixmakeargs="$fixmakeargs confenvfile=$confenvfile"
+}
 
 
 select_cube_reader_jar()
@@ -839,6 +858,7 @@ restore_perfdmf_and_paraprof
 ###############################################################
 # PARSE OPTIONS
 ###############################################################
+all_args="$@"
 for arg in "$@"; do
     case $arg in
 
@@ -1193,7 +1213,7 @@ for arg in "$@"; do
             # use libunwind as the default.
             unwinder="libunwind"
             unwind_flag="-DTAU_USE_LIBUNWIND"
-            unwind_lib_flag="-lunwind"
+            unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
             download_unwind=yes
             shift
             ;;
@@ -1209,7 +1229,7 @@ for arg in "$@"; do
 	    if [ "x$unwinder" = "xnone" ] ; then
 		unwinder="libunwind"
 		unwind_flag="-DTAU_USE_LIBUNWIND"
-		unwind_lib_flag="-lunwind"
+		unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
 	    fi
 	    shift
 	    ;;
@@ -2167,6 +2187,10 @@ configure_perfexplorer () {
 	> ${targetdir}/${architecture}/bin/tau_user_setup.sh
     chmod a+rx ${targetdir}/${architecture}/bin/tau_user_setup.sh
 
+	# stuff for SSL key configuration
+    cp ${tauroot}/tools/src/perfdmf/bin/taudb_keygen ${targetdir}/${architecture}/bin/.
+    cp ${tauroot}/tools/src/perfdmf/bin/taudb_install_cert ${targetdir}/${architecture}/bin/.
+
     # copy these files to the etc directory for tau_user_setup.sh to find and use
     mkdir -p ${targetdir}/etc
     cp ${tauroot}/tools/src/perfdmf/bin/derby.properties.skel ${targetdir}/etc
@@ -2507,6 +2531,21 @@ echo "  If you move the Tau distribution, you must run configure"
 echo "  again and recompile"
 echo "------------------------------------------------------------"
 
+#
+# Save configuration environment for future reference
+#
+md5sum="`which md5sum 2>/dev/null || which md5 2>/dev/null`"
+if [ "x$md5sum" == "x" ] ; then
+  echo "Warning: can't find md5sum or md5."
+else
+  confenvdir="$tauroot/.configure_env"
+  argsum=`echo "$all_args" | $md5sum | awk '{print $1}'`
+  mkdir -p "$confenvdir"
+  confenvfile="$confenvdir/$argsum"
+  set > "$confenvfile"
+  fixmakeargs="$fixmakeargs confenvfile=$confenvfile"
+fi
+
 fixmakeargs="$fixmakeargs tauroot=$tauroot"
 # Try and figure out architecture
 detectarch=unknown
@@ -2671,12 +2710,12 @@ case $machine in
 	;;
 
     apple) 
-	if [ $cxx_compiler = default ]
+	if [ "$cxx_compiler = default" ]
 	then
             cxx_compiler=g++
 	fi
 
-	if [ $c_compiler = default ]
+	if [ "$c_compiler = default" ]
 	then
             c_compiler=gcc             
 	fi
@@ -2965,6 +3004,9 @@ case $machine in
 	;;
 
 esac
+if [ "x$fortran_compiler" = "xno" ]; then
+    fixmakeargs="$fixmakeargs NOFORTRAN"
+fi
 
 if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ ]; then
     fixmakeargs="$fixmakeargs CLANG"
@@ -3733,9 +3775,9 @@ case $cxx_compiler in
             full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
             full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
             fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
-            mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
-            full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`  
-            full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`
+            mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g" -e "s/''//g"`
+            full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g"`  
+            full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g" `
 	    #echo "CC=$cc_compiler"
 	    #echo "CXX=$cxx_compiler"
 	    #echo "mpilibrary=$mpilibrary"
@@ -4146,7 +4188,13 @@ then
               then
                 echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
                 additional_mpiincs="-I$mpiinc/../mpc-libsctk_arch-dev/include"
-              fi 
+              else
+                if [ -r $mpiinc/sctk_config_arch.h -a $mpiinc/mpcframework/mpi.h ] 
+                then
+                  echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
+                  additional_mpiincs="-I$mpiinc/mpcframework -I$mpiinc"
+                fi 
+              fi
             else
 		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
 		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
@@ -5537,25 +5585,25 @@ if [ "x$download_unwind" = xyes ] ; then
         cd $libunwind
         echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
         if [ "x$machine" = "xbgq" ] ; then
-          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared > ${libunwind_log} 2>&1 
           cp src/unwind/Resume.c tmp.c
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
-          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log} 2>&1 
         else
-          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1 
         fi
         configresult=$?
         if [ $configresult -eq 0 ] ; then
           libunwind_log=build.log
           echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
-          make -i &> $libunwind_log
+          make -i > $libunwind_log  2>&1
           makeresult=$?
           if [ $makeresult -eq 0 ] ; then
           libunwind_log=install.log
           echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
-            make -i install &> $libunwind_log
+            make -i install > $libunwind_log  2>&1
           makeresult=$?
           fi
         fi
@@ -5598,6 +5646,7 @@ libomp_osstgz=$libomp_oss.tar.gz
 libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
+libomp_ossinc=${targetdir}/include
 
 if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then 
@@ -5658,10 +5707,16 @@ if [ "x$download_ompt" = xyes ] ; then
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
         cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+        cp src/ompt.h ${libomp_ossinc}/.
+        cp src/ompt-event.h ${libomp_ossinc}/.
+        cp src/ompt-state.h ${libomp_ossinc}/.
         echo "...Success."
       else
         if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
           cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
+          cp src/ompt.h ${libomp_ossinc}/.
+          cp src/ompt-event.h ${libomp_ossinc}/.
+          cp src/ompt-state.h ${libomp_ossinc}/.
           echo "...Success."
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
@@ -5677,10 +5732,16 @@ if [ "x$download_ompt" = xyes ] ; then
         signature=`ls -tr tmp | grep rel | grep sta | tail -1`
         if [ $result -eq 0 ] ; then
           cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+          cp src/ompt.h ${libomp_ossinc}/.
+          cp src/ompt-event.h ${libomp_ossinc}/.
+          cp src/ompt-state.h ${libomp_ossinc}/.
           echo "...Success."
         else
           if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
             cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
+            cp src/ompt.h ${libomp_ossinc}/.
+            cp src/ompt-event.h ${libomp_ossinc}/.
+            cp src/ompt-state.h ${libomp_ossinc}/.
             echo "...Success."
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
@@ -5797,6 +5858,15 @@ EOF
     int ret;
     ret = MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
     return ret;
+  }
+EOF
+
+cat <<EOF > mpi_f_statuses_ignore.$msuf
+  #include <mpi.h>
+
+  //extern MPI_Fint * MPI_F_STATUSES_IGNORE;
+  MPI_Fint * foo(void) {
+    return MPI_F_STATUSES_IGNORE;
   }
 EOF
 
@@ -6131,6 +6201,13 @@ if [ $mpi2 = yes ] ; then
     fi
 fi
 
+if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi_f_statuses_ignore.$msuf  1> /dev/null 2>&1 ; then
+    echo "MPI F_STATUSES_IGNORE types are defined..."
+else
+    echo "MPI F_STATUSES_IGNORE types are NOT defined..."
+    fixmakeargs="$fixmakeargs MPI_F_STATUSES_IGNORE_ABSENT"
+fi
+
 if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2attr.$msuf  1> /dev/null 2>&1 ; then
     echo "MPI-2 MPI*attr_functions are defined..."
     fixmakeargs="$fixmakeargs MPIATTR"
@@ -6161,7 +6238,7 @@ else
     fixmakeargs="$fixmakeargs MPINEEDSTATUSCONV"
 fi
 
-/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
+/bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi_f_statuses_ignore.o mpi_f_statuses_ignore.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o mpi3const.o mpi3const.$msuf
 else
     if [ $mpi = yes ]; then 
       mpilibargs="$mpilibargs#-Wl,-rpath,\$(TAU_MPILIB_DIR)"
@@ -6887,6 +6964,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       cd $binutils
 
       # Configure binutils
+      echo "Configuring binutils (see $tempdir/$binutils/tau_configure.log for details)..."
       case $machine in
       bgp)
         ./configure \
@@ -6894,7 +6972,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       bgq)
@@ -6903,14 +6981,14 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       rs6000|ibm64)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror --disable-largefile
+            --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
         err=$?
         ;;
       arm_android)
@@ -6919,7 +6997,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=$host \
             --prefix=$bfddir \
-            --disable-nls --disable-werror  --disable-largefile 
+            --disable-nls --disable-werror  --disable-largefile  > tau_configure.log 2>&1
         err=$?
         ;;
       mic_linux)
@@ -6930,7 +7008,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
         sparc64fx)
@@ -6946,14 +7024,14 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
                 AR=sparc64-unknown-linux-gnu-ar \
 		--host=sparc64-unknown-linux-gnu \
             	--prefix=$bfddir \
-		--disable-nls --disable-werror
+		--disable-nls --disable-werror > tau_configure.log 2>&1
 	err=$?
 	;;
       *)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       esac
@@ -6963,7 +7041,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
         exit 1
       else
-        make && make install
+        echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
+        make > tau_build.log 2>&1
+        err=$?
+        if [ $err -ne 0 ] ; then
+          echo "Error: BFD build failed. Cannot proceed with -bfd=download"
+          exit 1
+        fi
+        echo "Installing (see $tempdir/$binutils/tau_build.log for details)..."
+        make install > tau_install.log 2>&1
         err=$?
         if [ $err -ne 0 ] ; then
           echo "Error: BFD installation failed. Cannot proceed with -bfd=download"

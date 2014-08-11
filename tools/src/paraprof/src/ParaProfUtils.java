@@ -2,6 +2,7 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Frame;
@@ -42,6 +43,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -1181,8 +1183,24 @@ public class ParaProfUtils {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                ContextEventWindow w = new ContextEventWindow(ppTrial, thread, owner);
-                w.setVisible(true);
+
+            	Runnable bt = new Runnable(){
+
+					public void run() {
+						try{
+						owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+						ContextEventWindow w = new ContextEventWindow(ppTrial, thread, owner);
+		                w.setVisible(true);
+						}finally{
+							owner.setCursor(Cursor.getDefaultCursor());
+		            	}
+		                
+						
+					}
+            		
+            	};
+            	new java.lang.Thread(bt).start();
+
             }
         });
         return jMenuItem;

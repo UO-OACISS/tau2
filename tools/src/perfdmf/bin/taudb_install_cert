@@ -1,0 +1,129 @@
+#!/bin/bash
+TAUROOT=/Users/khuck/src/tau2
+MACHINE=apple
+
+if [ $# -ne 3 ]; then 
+	echo ""
+	echo "Usage: $0 username servername server.crt"
+	echo "where:"
+	echo "	username   : your database login username"
+	echo "	servername : the database server hostname"
+	echo "	server.crt : the database server certificate"
+	echo ""
+	exit 1
+fi
+
+# get the user's arguments
+username=$1
+servername=$2
+servercrt=$3
+clientcrt=./$username.crt
+destdir=$HOME/.ParaProf
+clientkey=$destdir/$username.key
+store=$destdir/keystore.taudb
+
+# make sure we can find the files where we expect them
+if [ ! -f $servercrt ] ; then
+  echo "$servercrt not found! Exiting."
+  exit 1
+fi
+if [ ! -f $clientcrt ] ; then
+  echo "$clientcrt not found! Exiting."
+  exit 1
+fi
+if [ ! -f $clientkey ] ; then
+  echo "$clientkey not found! Exiting."
+  exit 1
+fi
+
+# make sure we have the keytool and openssl executables
+cmd=openssl
+command -v $cmd >/dev/null 2>&1 || { echo >&2 "I require $cmd but it's not installed.  Exiting."; exit 2; }
+cmd=keytool
+command -v $cmd >/dev/null 2>&1 || { echo >&2 "I require $cmd but it's not installed.  Exiting."; exit 3; }
+
+# making sure the postgresql directory exists
+mkdir -p $destdir
+
+# from http://stackoverflow.com/questions/906402/importing-an-existing-x509-certificate-and-private-key-in-java-keystore-to-use-i
+
+# prompt the user for a keystore password
+read -s -p "Please enter the keystore password: " pass1
+echo ""
+if [ ${#pass1} -lt 6 ] ; then
+  echo "Keystore password is too short - must be at least 6 characters."
+  exit 4
+fi
+
+#read -s -p "Please re-enter the keystore password: " pass2
+#echo ""
+#if [ "$pass1" != "$pass2" ] ; then
+#  echo "Passwords did not match. Exiting."
+#  exit 5
+#fi
+
+log=./.log
+
+# safely redirect the password to the keytool command
+keytool -keystore $store -alias $servername -import -file $servercrt >& $log  <<EOD
+$pass1
+$pass1
+y
+EOD
+
+if [ $? -eq 0 ] ; then
+	echo "Registering server certificate: success."
+	rm $log
+else
+	if grep --quiet "exists" $log; then
+		echo "Registering server certificate: success."
+	else
+		echo "Registering server certificate: failed."
+		cat $log
+	fi
+	rm $log
+	# no need to exit, this isn't fatal. I hope.
+fi
+
+# safely pipe the password to the openssl command
+printf '%s\n' "$pass1" | openssl pkcs12 -export -in $clientcrt -inkey $clientkey -out $username.p12 -name $username@$servername -CAfile $servercrt -caname root -password fd:0 >& $log
+
+if [ $? -eq 0 ] ; then
+	echo "Converting client certificate: success."
+	rm $log
+else
+	echo "Converting client certificate: failed."
+	cat $log
+	rm $log
+	exit 5
+fi
+
+# safely redirect the password(s) to the keytool command
+keytool -importkeystore \
+        -destkeystore $store \
+        -srckeystore $username.p12 -srcstoretype PKCS12 \
+        -alias $username@$servername >& $log <<EOD
+$pass1
+$pass1
+y
+EOD
+
+if [ $? -eq 0 ] ; then
+	echo "Registering client certificate: success."
+	rm $log
+else
+	echo "Registering client certificate: failed."
+	cat $log
+	rm $log
+	exit 6
+fi
+
+# to do validation
+keytool -list -keystore $store  <<EOD
+$pass1
+EOD
+
+
+echo ""
+
+rm $username.p12

@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 
-"""Python interface for the 'lsprof' profiler.
-   Compatible with the 'profile' module.
-"""
+"""Python interface for TAU."""
 
 __all__ = ["run", "runctx", "exitAllThreads", "help", "Profile"]
 

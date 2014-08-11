@@ -41,8 +41,8 @@ all : 		$(TAU_TARGET)
 
 install:	$(INSTALLDEST)/$(TAU_TARGET) 
 
-$(TAU_TARGET) : TauMpi.o TauRequest.o TauTranslateRank.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS) TauFInit.o
-	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o TauRequest.o TauTranslateRank.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS) TauFInit.o
+$(TAU_TARGET) : TauMpi.o TauRequest.o TauTranslateRank.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS) $(MPI_FORTRAN_INIT)
+	$(AR) $(ARFLAGS) $(TAU_TARGET) TauMpi.o TauRequest.o TauTranslateRank.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS) $(MPI_FORTRAN_INIT)
 	$(TAU_RANLIB) $(TAU_TARGET)
 
 TauMpi.o : TauMpi.c
