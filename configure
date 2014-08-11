@@ -1785,16 +1785,6 @@ for arg in "$@"; do
 
 	-python)
 	    pythonbin=`which python | sed 's,[^/]*$,,'`
-	    pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
-	    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
-	    if [ ! -d $pythoninc ] ; then
-		echo "Error: Cannot access Python include directory $pythoninc"
-		exit 1
-	    fi
-	    if [ ! -d $pythonlib ] ; then
-		echo "Error: Cannot access Python lib directory $pythonlib"
-		exit 1
-	    fi
 	    python=yes
 	    shift
 	    ;;
@@ -2118,6 +2108,24 @@ for arg in "$@"; do
 	    ;;
     esac
 done
+
+# Check for Python
+if [ "x$python"  = "xyes" ] ; then
+  if [ "x$pythoninc" = "x" ] ; then
+    pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
+    if [ ! -d $pythoninc ] ; then
+        echo "Error: Cannot access Python include directory $pythoninc"
+        exit 1
+    fi
+  fi
+  if [ "x$pythonlib" = "x" ] ; then
+    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
+    if [ ! -d $pythonlib ] ; then
+        echo "Error: Cannot access Python lib directory $pythonlib"
+        exit 1
+    fi
+  fi
+fi
 
 if [ "x$upcnetwork" = "x" ] ; then
     if [ "$mpi" = "no" ] ; then
