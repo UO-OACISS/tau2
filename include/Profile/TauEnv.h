@@ -65,6 +65,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_signals_gdb();
+  int  TAUDECL TauEnv_get_echo_backtrace();
   int  TAUDECL TauEnv_get_openmp_runtime_enabled();
   int  TAUDECL TauEnv_get_openmp_runtime_context();
   int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
@@ -104,8 +105,11 @@ extern "C" {
   
   int TAUDECL TauEnv_get_memdbg();
   int TAUDECL TauEnv_get_memdbg_protect_above();
+  void TAUDECL TauEnv_set_memdbg_protect_above(int);
   int TAUDECL TauEnv_get_memdbg_protect_below();
+  void TAUDECL TauEnv_set_memdbg_protect_below(int);
   int TAUDECL TauEnv_get_memdbg_protect_free();
+  void TAUDECL TauEnv_set_memdbg_protect_free(int);
   int TAUDECL TauEnv_get_memdbg_protect_gap();
   int TAUDECL TauEnv_get_memdbg_fill_gap();
   unsigned char TAUDECL TauEnv_get_memdbg_fill_gap_value();

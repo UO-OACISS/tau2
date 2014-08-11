@@ -68,6 +68,8 @@ void esd_exit (elg_ui4 rid);
 
 using namespace tau;
 
+extern "C" void Tau_shutdown(void);
+
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
 
@@ -821,7 +823,7 @@ extern "C" int Tau_profile_exit_all_tasks()
     }
     tid++;
   }
-  Tau_disable_instrumentation();
+  Tau_shutdown();
   RtsLayer::UnLockDB();
   return 0;
 }
@@ -869,7 +871,7 @@ extern "C" int Tau_profile_exit_all_threads()
     }
   }
 
-  Tau_disable_instrumentation();
+  Tau_shutdown();
   return 0;
 }
 
@@ -889,6 +891,7 @@ extern "C" int Tau_profile_exit()
     }
     // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
   }
+  Tau_shutdown();
   return 0;
 }
 
@@ -1207,6 +1210,11 @@ extern "C" TauGroup_t Tau_enable_all_groups(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" TauGroup_t Tau_disable_all_groups(void) {
   return RtsLayer::disableAllGroups();
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_is_shutdown(void) {
+  return RtsLayer::TheShutdown();
 }
 
 
@@ -1909,7 +1917,7 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
 #endif
 }
 
-extern void Tau_clear_pure_map(void);
+//void Tau_clear_pure_map();
 
 /*
   The following is for supporting pure and elemental fortran subroutines
@@ -1918,7 +1926,7 @@ extern void Tau_clear_pure_map(void);
 struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
   virtual ~PureMap() {
     Tau_destructor_trigger();
-	Tau_clear_pure_map();
+	//Tau_clear_pure_map();
   }
 };
 
@@ -2352,6 +2360,15 @@ void Tau_destructor_trigger() {
   }
 }
 
+/*
+   This is causing segfaults on exit.
+
+   Destructors are called in any order as the application exits
+   so we can't deallocate things from a destructor called on application exit.
+
+   In any case, there's no need to deallocate memory as the application exits
+   because the OS will do that.
+
 void Tau_clear_pure_map(void) {
   // clear the hash map to eliminate memory leaks
   PureMap & mymap = ThePureMap();
@@ -2367,6 +2384,7 @@ void Tau_clear_pure_map(void) {
   }
   mymap.clear(); 
 }
+*/
 
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_create_task(void) {
