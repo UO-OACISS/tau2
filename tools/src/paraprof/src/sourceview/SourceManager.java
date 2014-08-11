@@ -50,15 +50,6 @@ public class SourceManager extends JFrame {
         return list;
     }
 
-//    private boolean match(String s1, String s2) {
-//        //System.out.println("comparing " + s1 + " to " + s2);
-//        if (s1.equals(s2)) {
-//            return true;
-//        }
-//
-//        return false;
-//    }
-    
     private boolean matchFiles(String s1, String s2) {
         //System.out.println("comparing " + s1 + " to " + s2);
     	
@@ -195,7 +186,7 @@ public class SourceManager extends JFrame {
         gbc.weighty = 0;
 
         // First add the label.
-        JLabel titleLabel = new JLabel("Current Source Directories (directories are searched recursively)");
+        JLabel titleLabel = new JLabel("Source Code Directories (searched recursively from top to bottom)");
         titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         addCompItem(titleLabel, gbc, 0, 0, 1, 1);
 
@@ -218,13 +209,13 @@ public class SourceManager extends JFrame {
         dirList.setSize(500, 300);
         // colorList.addMouseListener(this);
         JScrollPane sp = new JScrollPane(dirList);
-        addCompItem(sp, gbc, 0, 1, 1, 3);
+        addCompItem(sp, gbc, 0, 1, 1, 5);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTH;
         gbc.weightx = 0;
         gbc.weighty = 0;
-        JButton button = new JButton("Add");
+        JButton button = new JButton("Add...");
         button.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent evt) {
@@ -233,19 +224,60 @@ public class SourceManager extends JFrame {
                 jFileChooser.setMultiSelectionEnabled(false);
                 jFileChooser.setDialogTitle("Select Directory");
                 jFileChooser.setApproveButtonText("Select");
-                if ((jFileChooser.showOpenDialog(SourceManager.this)) != JFileChooser.APPROVE_OPTION) {
-                    return;
+                if ((jFileChooser.showOpenDialog(SourceManager.this)) == JFileChooser.APPROVE_OPTION) {
+                  try {
+                    Object path = (jFileChooser.getSelectedFile().getCanonicalPath());
+                    if (!listModel.contains(path)) {
+                        listModel.addElement(path);
+                    }
+                  } catch (Exception e) {
+                      ParaProfUtils.handleException(e);
+                  }
                 }
-                // lastDirectory = jFileChooser.getSelectedFile().getParent();
-                try {
-                    listModel.addElement(jFileChooser.getSelectedFile().getCanonicalPath());
-                } catch (Exception e) {
-                    ParaProfUtils.handleException(e);
-                }
-
             }
         });
         addCompItem(button, gbc, 1, 1, 1, 1);
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        button = new JButton("Move Up");
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+              int index = dirList.getSelectedIndex();
+              if (index > 0) {
+                Object obj = listModel.getElementAt(index-1);
+                listModel.insertElementAt(obj, index+1);
+                listModel.removeElementAt(index-1);
+                dirList.setSelectedIndex(index-1);
+                dirList.ensureIndexIsVisible(index-1);
+              }
+            }
+        });
+        addCompItem(button, gbc, 1, 2, 1, 1);
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        button = new JButton("Move Down");
+        button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+              int index = dirList.getSelectedIndex();
+              if (index != -1) {
+                int count = listModel.getSize();
+                if (index != count-1) {
+                  Object obj = listModel.getElementAt(index);
+                  listModel.insertElementAt(obj, index+2);
+                  listModel.removeElementAt(index);
+                  dirList.setSelectedIndex(index+1);
+                  dirList.ensureIndexIsVisible(index+1);
+                }
+              }
+            }
+        });
+        addCompItem(button, gbc, 1, 3, 1, 1);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.NORTH;
@@ -260,7 +292,7 @@ public class SourceManager extends JFrame {
                 }
             }
         });
-        addCompItem(button, gbc, 1, 2, 1, 1);
+        addCompItem(button, gbc, 1, 4, 1, 1);
 
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.SOUTH;
@@ -276,7 +308,7 @@ public class SourceManager extends JFrame {
                 SourceManager.this.setVisible(false);
             }
         });
-        addCompItem(button, gbc, 1, 3, 1, 1);
+        addCompItem(button, gbc, 1, 5, 1, 1);
 
     }
 

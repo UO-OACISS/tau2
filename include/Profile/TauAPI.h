@@ -186,6 +186,10 @@
 #define TAU_DISABLE_CONTEXT_EVENT(event) Tau_disable_context_event(event);
 #define TAU_ENABLE_CONTEXT_EVENT(event) Tau_enable_context_event(event);
 
+#define TAU_MEMDBG_PROTECT_ABOVE(value) TauEnv_set_memdbg_protect_above(value);
+#define TAU_MEMDBG_PROTECT_BELOW(value) TauEnv_set_memdbg_protect_below(value);
+#define TAU_MEMDBG_PROTECT_FREE(value)  TauEnv_set_memdbg_protect_free(value);
+
 #define TAU_ENABLE_TRACKING_MEMORY()	        Tau_enable_tracking_memory()
 #define TAU_DISABLE_TRACKING_MEMORY()	        Tau_disable_tracking_memory()
 #define TAU_TRACK_MEMORY()		        Tau_track_memory()

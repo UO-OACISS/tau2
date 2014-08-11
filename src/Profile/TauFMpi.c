@@ -20,6 +20,7 @@
 #define MPI_Comm_c2f PMPI_Comm_c2f
 #endif /* TAU_MPC */
 
+void tau_mpi_init_predefined_constants();
 
 #ifdef TAU_LAMPI
 MPI_Fint TAU_MPI_Request_c2f(MPI_Request c_request) {
@@ -2986,7 +2987,7 @@ void  mpi_init_( ierr)
 MPI_Fint *ierr; 
 {
   *ierr = MPI_Init( 0, (char ***)0);
-  tau_mpi_fortran_init_predefined_constants_();
+  tau_mpi_init_predefined_constants();
 }
 
 void  mpi_init__( ierr)
@@ -3023,7 +3024,7 @@ MPI_Fint *provided;
 MPI_Fint *ierr;
 {
   *ierr = MPI_Init_thread( 0, (char ***)0, *required, provided );
-  tau_mpi_fortran_init_predefined_constants_();
+  tau_mpi_init_predefined_constants();
 }
 
 void  mpi_init_thread__ (required, provided, ierr )

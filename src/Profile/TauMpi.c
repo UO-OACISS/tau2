@@ -68,6 +68,15 @@ extern int Tau_signal_initialization();
 /* JCL: Optimized rank translation with cache */
 int TauTranslateRankToWorld(MPI_Comm comm, int rank);
 
+void tau_mpi_init_predefined_constants()
+{
+#ifdef TAU_NO_FORTRAN
+    TAU_VERBOSE("TAU: WARNING: Not configured with Fortran. You may have trouble with MPI predefined constants like MPI_IN_PLACE\n");
+#else
+    tau_mpi_fortran_init_predefined_constants_();
+#endif
+}
+
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
    It has been adopted from the MPE Profiling interface wrapper generator
@@ -1581,7 +1590,7 @@ char *** argv;
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
   
-  tau_mpi_fortran_init_predefined_constants_();
+  tau_mpi_init_predefined_constants();
   returnVal = PMPI_Init( argc, argv );
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -1642,7 +1651,7 @@ int *provided;
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
  
-  tau_mpi_fortran_init_predefined_constants_();
+  tau_mpi_init_predefined_constants();
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
 #ifndef TAU_WINDOWS

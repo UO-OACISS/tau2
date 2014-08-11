@@ -131,11 +131,15 @@ int Tau_backtrace_record_backtrace(int trim)
   if (nframes) {
     char metadata[128];
     char field[4096];
+    bool echo = TauEnv_get_echo_backtrace();
     for (int i=0; i<nframes; ++i) {
       BacktraceFrame const & info = frames[i];
-      sprintf(metadata, "BACKTRACE(%d) %3d", iter, i+1);
+      sprintf(metadata, "BACKTRACE(%5d) %3d", iter, i+1);
       sprintf(field, "[%s] [%s:%d] [%s]", info.funcname, info.filename, info.lineno, info.mapname);
       TAU_METADATA(metadata, field);
+      if (echo) {
+        fprintf(stderr, "%s | %s\n", metadata, field);
+      }
     }
     delete[] frames;
   }
