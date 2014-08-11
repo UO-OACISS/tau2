@@ -926,7 +926,6 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
 #MPC#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
-#PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared -fPIC 	#ENDIF#
 #MMIC#AR_SHFLAGS  	= -shared -mmic #ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
