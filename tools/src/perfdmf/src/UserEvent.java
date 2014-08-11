@@ -3,6 +3,8 @@ package edu.uoregon.tau.perfdmf;
 import java.awt.Color;
 import java.io.Serializable;
 
+import edu.uoregon.tau.common.Utility;
+
 public class UserEvent implements Serializable, Comparable<UserEvent> {
     /**
 	 * 
@@ -41,7 +43,7 @@ public class UserEvent implements Serializable, Comparable<UserEvent> {
 	}
 
 	public UserEvent(String name, int id) {
-        this.name = name;
+        this.name =  Utility.removeRuns(name); //name;
         this.id = id;
     }
 
@@ -54,7 +56,7 @@ public class UserEvent implements Serializable, Comparable<UserEvent> {
     }
     
     public void setName(String name) {
-        this.name = name;
+        this.name =  Utility.removeRuns(name);// name;
     }
 
     public int getID() {

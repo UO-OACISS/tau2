@@ -27,6 +27,9 @@
 # TAUINC.
 #######################################################################
 
+# See this file for a record of the configuration environment 
+CONF_ENV_FILE=
+
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=default
 TAU_ARCH=default
@@ -923,7 +926,6 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
 #MPC#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
-#PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared -fPIC 	#ENDIF#
 #MMIC#AR_SHFLAGS  	= -shared -mmic #ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
@@ -1364,7 +1366,6 @@ TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 TAU_SHLIBX              = .so
 #HP#TAU_SHLIBX          = .sl                   #ENDIF#
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
-#PYTHON#TAU_APPLE_SHLIBX    = .so               #ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
 
 # For loading the collector API on Apple

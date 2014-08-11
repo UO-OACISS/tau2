@@ -3,9 +3,11 @@ package edu.uoregon.tau.paraprof.treetable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -40,9 +42,9 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
         } else {
 			name = ParaProfUtils.getUserEventDisplayName(uep.getUserEvent())
 					.trim();
-			if (name.indexOf(" : ") != -1) {
+			if (name.indexOf(SPACE_COLON_SPACE) != -1) {
                 // remove the path
-				displayName = name.substring(0, name.lastIndexOf(" : ")).trim();
+				displayName = name.substring(0, name.lastIndexOf(SPACE_COLON_SPACE)).trim();
             } else {
                 displayName = name;
             }
@@ -58,12 +60,16 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
         return children;
     }
 
+    private static final String SPACE_COLON_SPACE=" : ";
+    private static final String ARROW="=>";
+    private static final String SPACE_ARROW_SPACE=" => ";
+    //private static final String ONE="1";
     private void checkInitChildren() {
         if (children == null) {
             children = new ArrayList<ContextEventTreeNode>();
 
-            Map<String, String> internalMap = new HashMap<String, String>();
-
+            //Map<String, String> internalMap = new HashMap<String, String>();
+            Set<String> internalSet = new HashSet<String>();
             // search all the user events for this node and find our children 
             for (Iterator<UserEventProfile> it = model.getThread().getUserEventProfiles(); it.hasNext();) {
                 UserEventProfile uep = it.next();
@@ -76,17 +82,16 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
 
 				String uename = ParaProfUtils.getUserEventDisplayName(uep
 						.getUserEvent());
-				String path = uename.substring(uename.lastIndexOf(" : ") + 2)
+				String path = uename.substring(uename.lastIndexOf(SPACE_COLON_SPACE) + 2)
 						.trim();
-                path = Utility.removeRuns(path);
+				
                 if (path.startsWith(name)) {
-
                     String remain = path.substring(name.length()).trim();
-                    if (remain.startsWith("=>")) {
+                    if (remain.startsWith(ARROW)) {
                         remain = remain.substring(2).trim();
-                        String child = name + " => " + UtilFncs.getLeftSide(remain);
+                        String child = name + SPACE_ARROW_SPACE + UtilFncs.getLeftSide(remain);
 
-                        internalMap.put(child, "1");
+                        internalSet.add(child);//.put(child, ONE);
                     } else if (remain.length() == 0) {
                         ContextEventTreeNode node = new ContextEventTreeNode(uep, model, null);
                         children.add(node);
@@ -94,7 +99,7 @@ public class ContextEventTreeNode extends DefaultMutableTreeNode implements Comp
                 }
             }
 
-            for (Iterator<String> it = internalMap.keySet().iterator(); it.hasNext();) {
+            for (Iterator<String> it = internalSet.iterator(); it.hasNext();) {
                 String child = it.next();
                 ContextEventTreeNode node = new ContextEventTreeNode(child, model);
                 children.add(node);
