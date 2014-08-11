@@ -1366,7 +1366,6 @@ TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 TAU_SHLIBX              = .so
 #HP#TAU_SHLIBX          = .sl                   #ENDIF#
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
-#PYTHON#TAU_APPLE_SHLIBX    = .so               #ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
 
 # For loading the collector API on Apple
