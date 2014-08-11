@@ -439,6 +439,13 @@ case $1 in
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	# Discover python library version
 	pythonso=`ls $pythonlib/libpython*.so | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
+	if [ "x$pythonso" = "x" ] ; then
+	  pythonso=`ls $pythonlib/libpython*.dylib | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.dylib//'`
+	  if [ "x$pythonso" = "x" ] ; then
+	    echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
+	    exit 1
+	  fi
+	fi
 	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
 	echo "s,^PYTHON_LIB_SO=.*$,PYTHON_LIB_SO=$pythonso,g" >> $sedout
 	#echo "Using PYTHON LIB DIR =" $pythonlib
