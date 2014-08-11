@@ -8103,27 +8103,23 @@ if [ $scorep = yes ] ; then
     #echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
 	# default flags for Score-P 1.2+
-	scorepLibs=`${scorepdir}/bin/scorep-config --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepLD=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+	mod_scorep_adapter=`echo ${scorep_adapter} | sed -e 's/--adapter-init//g'`
+	#echo "WE HAVE mod_scorep_adapter = ${mod_scorep_adapter}"
+	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	scorepExtraLibs='-lscorep_adapter_user_event -lscorep_adapter_user_mgmt'
     fi
     # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
     if [ $mpi = yes ] ; then 
 	if [ $openmp = yes ] ; then
 	    fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	    if [ $scorep11 = 0 ]; then
-		scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi
 	else
 	    fixmakeargs="$fixmakeargs SCOREPMPI"
-	    if [ $scorep11 = 0 ]; then
-		scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi
@@ -8131,10 +8127,7 @@ if [ $scorep = yes ] ; then
     else
 	if [ $openmp = yes ] ; then
 	    fixmakeargs="$fixmakeargs SCOREPOMP" 
-	    if [ $scorep11 = 0 ]; then
-		scorepLD=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --ldflags --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLibs=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --libs  --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi
