@@ -651,6 +651,9 @@ START_DIR=`pwd`
 # Default compilers and options
 c_compiler=default
 cxx_compiler=default
+orig_c_compiler=default
+orig_cxx_compiler=default
+orig_fortran_compiler=default
 pdt_cxx_compiler=default
 fixmakeargs=""
 useropt=-O2
@@ -3352,11 +3355,14 @@ then
     mpi=yes
     if [ $cxxloaded = 1 ]
     then
+	orig_c_compiler=$c_compiler
 	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	orig_cxx_compiler=$cxx_compiler
 	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	f90loaded=`which mpif90 2>/dev/null | wc -l`
 	if [ $f90loaded = 1 ]
 	then 
+            orig_fortran_compiler=$fortran_compiler
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then 
 		fortran_compiler=intel
@@ -4066,8 +4072,20 @@ then
 	full_cc_compiler=`which oshcc`
     fi
 fi
+
+if [ $scorep = yes ]; then 
+  swap_full_cxx_compiler=$full_cxx_compiler
+  full_cxx_compiler=`which $orig_cxx_compiler`
+  swap_full_c_compiler=$swap_full_c_compiler
+  full_cc_compiler=`which $orig_c_compiler`
+fi 
+  
 fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
 
+if [ $scorep = yes ]; then 
+  full_cxx_compiler=$swap_full_cxx_compiler
+  full_cc_compiler=$swap_full_cc_compiler
+fi
 
 
 
@@ -4897,7 +4915,24 @@ fi
 
 
 
+if [ $scorep = yes ]
+then
+  swap_c_compiler=$c_compiler
+  c_compiler=$orig_c_compiler
+  swap_cxx_compiler=$cxx_compiler
+  cxx_compiler=$orig_cxx_compiler
+  swap_fortran_compiler=$fortran_compiler
+  fortran_compiler=$orig_fortran_compiler
+fi
 fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir extradircxx=$extradircxx extrashlibopts=$extrashlibopts $fixmakeargs"
+# We really need mpicc as the linker for Score-P.
+
+if [ $scorep = yes ]
+then
+  c_compiler=$swap_c_compiler
+  cxx_compiler=$swap_cxx_compiler
+  fortran_compiler=$swap_fortran_compiler
+fi
 
 ######################################################################
 # discover the paths for standard system include directories
