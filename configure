@@ -8106,6 +8106,10 @@ if [ $scorep = yes ] ; then
 
     if [ $mpi = yes ]; then 
       scorep_adapter="$scorep_adapter --mpp=mpi"
+    else 
+      if [ $shmem = no ]; then 
+        scorep_adapter="$scorep_adapter --mpp=none"
+      fi
     fi
 
     if [ $cuda = yes ]; then 
