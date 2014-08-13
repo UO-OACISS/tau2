@@ -2177,6 +2177,7 @@ MPI_Fint *ierr;
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPI_GROUP_RANGE_INCL_DEFINED
 void   mpi_group_range_incl_( group, n, ranges, newgroup, ierr )
 MPI_Fint *group;
 MPI_Fint *n;
@@ -2230,6 +2231,7 @@ MPI_Fint *ierr;
   mpi_group_range_incl_( group, n, ranges, newgroup, ierr );
 }
 
+#endif /* TAU_MPI_GROUP_RANGE_INCL_DEFINED */
 /******************************************************/
 /******************************************************/
 
