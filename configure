@@ -3349,20 +3349,21 @@ if [ $debugprof = yes ] ; then
 fi
 
 
+orig_c_compiler=$c_compiler
+orig_cxx_compiler=$cxx_compiler
+orig_fortran_compiler=$fortran_compiler
+# mpicxx may change it. 
 if [ $cxx_compiler = mpicxx ]
 then 
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
     then
-	orig_c_compiler=$c_compiler
 	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	orig_cxx_compiler=$cxx_compiler
 	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	f90loaded=`which mpif90 2>/dev/null | wc -l`
 	if [ $f90loaded = 1 ]
 	then 
-            orig_fortran_compiler=$fortran_compiler
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then 
 		fortran_compiler=intel
@@ -8135,6 +8136,15 @@ if [ $scorep = yes ] ; then
       scorep_adapter_init=yes
       fixmakeargs="$fixmakeargs SCOREP_ADAPTER_INIT" 
       scorep_adapter="--adapter-init"
+      if [ $opari = yes -a "x$oparidir" = "x" ]; then 
+        if [ `${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | grep internal | wc -l` = 1 ]; then 
+          oparidir=${scorepdir}	
+        else 
+	  oparidir=`${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | awk '{ print $7;}' | sed -e 's/opari2-config/../g'`
+        fi 
+	echo "NOTE: Using Opari from $oparidir"
+        fixmakeargs="$fixmakeargs oparidir=$oparidir"
+      fi 
     else
       scorep_adapter_init=no
     fi
