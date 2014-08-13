@@ -2173,6 +2173,10 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 	if [ $opari2 == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f pompregions.c pompregions.o *.opari.inc" "Removing pompregions.c pompregions.o *.opari.inc"
 	fi
+	if [ $needToCleanPdbInstFiles == $TRUE -a -r TauScorePAdapterInit.o ]; then
+	    evalWithDebugMessage "/bin/rm -f TauScorePAdapterInit.o"
+	fi
+	
     fi
 
 fi
@@ -2224,6 +2228,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 
     if [ "x$PE_ENV" == "xCRAY" -a -r Comp_gnu.o ] ; then
 	evalWithDebugMessage "/bin/rm -f Comp_gnu.o" "cleaning Comp_gnu.o"
+    fi
+
+    if [ $needToCleanPdbInstFiles == $TRUE -a -r TauScorePAdapterInit.o ]; then
+	    evalWithDebugMessage "/bin/rm -f TauScorePAdapterInit.o"
     fi
 fi
 
