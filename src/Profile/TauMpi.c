@@ -1181,6 +1181,7 @@ MPI_Group * newgroup;
   return returnVal;
 }
 
+#ifdef TAU_MPI_GROUP_RANGE_INCL_DEFINED
 int   MPI_Group_range_incl( group, n, ranges, newgroup )
 MPI_Group group;
 int n;
@@ -1198,6 +1199,7 @@ MPI_Group * newgroup;
 
   return returnVal;
 }
+#endif /* TAU_MPI_GROUP_RANGE_INCL_DEFINED */
 
 int   MPI_Group_size( group, size )
 MPI_Group group;
