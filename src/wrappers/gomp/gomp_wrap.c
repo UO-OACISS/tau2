@@ -25,6 +25,9 @@
     } \
 }
 
+/* so that OpenMP and PTHREAD can both be defined, don't wrap this one
+   if Pthreads is used. */
+#if defined (PTHREADS)
 static void * get_system_function_handle(char const * name, void * caller)
 {
     char const * err;
@@ -72,9 +75,10 @@ int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
     pthread_create_h = (pthread_create_p)get_system_function_handle(
         "pthread_create", (void*)pthread_create);
   }
-  return tau_pthread_create_wrapper(pthread_create_h, thread, attr, start_routine, arg);
+  return tau_gomp_pthread_create_wrapper(pthread_create_h, thread, attr, start_routine, arg);
 }
 #endif
+#endif // defined (PTHREADS)
 
 /**********************************************************
   omp_set_lock
@@ -1054,11 +1058,14 @@ void  GOMP_single_copy_end(void * a1)  {
 // that is already defined. Therefore, we can't capture the call to 
 // pthread_create from GOMP, only from user code. That said, the dlsym() 
 // (TAU_PRELOAD_LIB) method above will still work when using tau_exec.
-#if 1
+
+/* so that OpenMP and PTHREAD can both be defined, don't wrap this one
+   if Pthreads is used. */
+#if defined (PTHREADS)
 int __real_pthread_create(pthread_t *, const pthread_attr_t *, start_routine_p, void *);
 int __wrap_pthread_create(pthread_t * thread, const pthread_attr_t * attr, start_routine_p start_routine, void * arg)
 {
-  return tau_pthread_create_wrapper(__real_pthread_create, thread, attr, start_routine, arg);
+  return tau_gomp_pthread_create_wrapper(__real_pthread_create, thread, attr, start_routine, arg);
 }
 #endif
 
