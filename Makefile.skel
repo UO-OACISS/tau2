@@ -214,3 +214,7 @@ ${SUBDIR}: FRC
 
 FRC:
 
+validate:
+	@echo "Running TAU validation tests..."
+	./tau_validate --html --timeout 180 $(CONFIG_ARCH) > results.html
+	@echo "...done. Please see results.html for details."
