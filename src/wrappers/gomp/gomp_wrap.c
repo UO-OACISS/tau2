@@ -27,7 +27,6 @@
 
 /* so that OpenMP and PTHREAD can both be defined, don't wrap this one
    if Pthreads is used. */
-#if defined (PTHREADS)
 static void * get_system_function_handle(char const * name, void * caller)
 {
     char const * err;
@@ -78,7 +77,6 @@ int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
   return tau_gomp_pthread_create_wrapper(pthread_create_h, thread, attr, start_routine, arg);
 }
 #endif
-#endif // defined (PTHREADS)
 
 /**********************************************************
   omp_set_lock
@@ -1061,13 +1059,11 @@ void  GOMP_single_copy_end(void * a1)  {
 
 /* so that OpenMP and PTHREAD can both be defined, don't wrap this one
    if Pthreads is used. */
-#if defined (PTHREADS)
 int __real_pthread_create(pthread_t *, const pthread_attr_t *, start_routine_p, void *);
 int __wrap_pthread_create(pthread_t * thread, const pthread_attr_t * attr, start_routine_p start_routine, void * arg)
 {
   return tau_gomp_pthread_create_wrapper(__real_pthread_create, thread, attr, start_routine, arg);
 }
-#endif
 
 void __real_omp_set_lock(omp_lock_t *lock);
 void __wrap_omp_set_lock(omp_lock_t *lock) {
