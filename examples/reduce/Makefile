@@ -33,7 +33,7 @@ CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -UTAU_MPI
 
 LIBS 	      	= $(TAU_LIBS) 
 
-LDFLAGS	      	= $(USER_OPT)
+LDFLAGS	      	= $(USER_OPT) $(TAU_DEFS)
 
 MAKEFILE      	= Makefile
 
