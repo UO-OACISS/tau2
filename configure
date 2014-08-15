@@ -189,7 +189,7 @@ correction_paraprof()
 correction_perfdmf()
 {
     echo "Adjust PerfDmf to use CubeReader..."
-    cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+    cat  ${_tauroot}/tools/src/perfdmf/Makefile.skel |
     sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >${_tauroot}/tools/src/perfdmf/Makefile.new
     mv ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
 }
