@@ -22,7 +22,7 @@ CC		= $(TAU_CC)
 
 PDTPARSE 	= $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
 
-TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
+TAUINSTR 	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
 CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -UTAU_MPI
 
