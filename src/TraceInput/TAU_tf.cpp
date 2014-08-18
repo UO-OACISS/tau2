@@ -780,17 +780,22 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
     return 0;
   }
 
-  char * dummy; // prevent warnings from compiler
-  dummy = fgets (linebuf, LINEMAX, edf);
-  sscanf (linebuf, "%d %s", &numevents, traceflag);
-  if ((traceflag != NULL) && (strcmp(traceflag, "dynamic_trace_events") == 0)) 
-  { 
-    dynamictrace = TRUE;
+  char * str; // prevent warnings from compiler
+  str = fgets (linebuf, LINEMAX, edf);
+  if (str != NULL) {
+    sscanf (linebuf, "%d %s", &numevents, traceflag);
+    if ((traceflag != NULL) && (strcmp(traceflag, "dynamic_trace_events") == 0)) 
+    { 
+      dynamictrace = TRUE;
+    }
   }
 
   for (i=0; i<numevents; i++)
   {
-    dummy = fgets (linebuf, LINEMAX, edf);
+    str = fgets (linebuf, LINEMAX, edf);
+    if (str == NULL) {
+      continue;
+    }
     if ( (linebuf[0] == '\n') || (linebuf[0] == '#') )
     {
       /* -- skip empty, header and comment lines -- */
