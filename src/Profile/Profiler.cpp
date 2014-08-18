@@ -1355,7 +1355,7 @@ int TauProfiler_StoreData(int tid)
 
   if (TauEnv_get_ebs_enabled()) {
     // Tau_sampling_finalize(tid);
-    Tau_sampling_finalize_if_necessary();
+    Tau_sampling_finalize_if_necessary(tid);
   }
 #endif
   if (TauEnv_get_profiling()) {
