@@ -513,6 +513,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 	double mean=0;
 	double sum=0;
 	double num=0;
+	int status_code=0;
 	if(Converter::out!=NULL)
 	{
 		s_out=Converter::out;
@@ -525,14 +526,17 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 		s_out+=prefix;
 		cmd="mkdir ";
 		cmd+=s_out;
-		system(cmd.c_str());
+		status_code = system(cmd.c_str());
 	}*/
 
 	if(Converter::monincids.size()>0)
 	{
 		s_out+="MULTI__GET_TIME_OF_DAY/";
 		cmd="mkdir "+s_out;
-		system(cmd.c_str());
+		status_code = system(cmd.c_str());
+		if (status_code != 0) {
+			printf("Warning: Unable to create metric directory %s\n", s_out.c_str());
+		}
 	}
 
 	string profileUDEs="";
@@ -618,7 +622,7 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 				s_name+=prefix;
 				//cmd="mkdir ";
 				//cmd+=s_out;
-				//system(cmd.c_str());
+				//status_code = system(cmd.c_str());
 			}*/
 			eventID=(*miit).first;
 			eventname=*((*miit).second);//*Converter::monincnames[(*miit).second.eventToken];
@@ -626,7 +630,10 @@ void PrintSnapshot(double time, Thread &finalizer, bool printProfile){//map<int,
 			s_name+=eventname;
 			s_out=base+s_name+"/";
 			cmd="mkdir "+s_out;
-			system(cmd.c_str());
+			status_code = system(cmd.c_str());
+			if (status_code != 0) {
+				printf("Warning: Unable to create metric directory %s\n", s_out.c_str());
+			}
 
 			countFunc=0;
 			for(map<unsigned int,State*>:: iterator stateCount = Converter::allstate.begin(); stateCount!=Converter::allstate.end(); stateCount++)

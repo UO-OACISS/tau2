@@ -189,7 +189,7 @@ correction_paraprof()
 correction_perfdmf()
 {
     echo "Adjust PerfDmf to use CubeReader..."
-    cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+    cat  ${_tauroot}/tools/src/perfdmf/Makefile.skel |
     sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >${_tauroot}/tools/src/perfdmf/Makefile.new
     mv ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
 }
@@ -5868,7 +5868,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
 
     # The Intel compiler doesn't give an error, but a warning
     # if [ "$machine" = "craycnl" -a "$intel" == "yes" ]
-    if [ "$intel" == "yes" ]
+    if [ "$intel" = "yes" ]
     then
 	mpicompiler=$c_compiler
         mpiwarnings="-Werror"
