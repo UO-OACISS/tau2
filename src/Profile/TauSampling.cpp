@@ -570,17 +570,20 @@ int Tau_sampling_write_maps(int tid, int restart)
   }
 
   char line[4096];
+  char * str;
   while (!feof(mapsfile)) {
-    fgets(line, 4096, mapsfile);
-    unsigned long start, end, offset;
-    char module[4096];
-    char perms[5];
-    module[0] = 0;
+    str = fgets(line, 4096, mapsfile);
+    if (str != NULL) {
+      unsigned long start, end, offset;
+      char module[4096];
+      char perms[5];
+      module[0] = 0;
 
-    sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
+      sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
 
-    if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
-      fprintf(output, "%s %p %p %lu\n", module, (void*)start, (void*)end, offset);
+      if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
+        fprintf(output, "%s %p %p %lu\n", module, (void*)start, (void*)end, offset);
+      }
     }
   }
   fclose(output);
