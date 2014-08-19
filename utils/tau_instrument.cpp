@@ -1401,7 +1401,7 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
 
   string timername = string("Loop: ") + ro->fullName() + " [{" + filename + "} " + lines + "]";
 
-  DEBUG_MSG("Adding instrumentation at %s\n", timername->c_str());
+  DEBUG_MSG("Adding instrumentation at %s\n", timername.c_str());
 
   itemvec.push_back(new itemRef((const pdbItem *)ro, START_LOOP_TIMER, start.line(), start.col(), timername, BEFORE));
   itemvec.push_back(new itemRef((const pdbItem *)ro, STOP_LOOP_TIMER, stop.line(), stop.col() + 1, timername, AFTER));

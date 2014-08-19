@@ -23,17 +23,17 @@ CC		= $(TAU_CC)
 
 PDTPARSE 	= $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
 
-TAUINSTR 	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
+TAUINSTR 	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
-TAUREDUCE	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_reduce
+TAUREDUCE	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_reduce
 
-TAUPPROF	= $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/pprof
+TAUPPROF	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/pprof
 
 CFLAGS        	= $(TAU_INCLUDE) $(TAU_DEFS) -UTAU_MPI
 
 LIBS 	      	= $(TAU_LIBS) 
 
-LDFLAGS	      	= $(USER_OPT)
+LDFLAGS	      	= $(USER_OPT) $(TAU_DEFS)
 
 MAKEFILE      	= Makefile
 
