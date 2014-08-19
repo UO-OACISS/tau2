@@ -26,7 +26,7 @@
 #                            $(MPIF77) $(FFLAGS)
 # linking is done with       $(FLINK) $(FMPI_LIB) $(FLINKFLAGS)
 #---------------------------------------------------------------------------
-include ../../include/Makefile
+include ../../../include/Makefile
 include $(TAU_MAKEFILE_MPI_FORTRAN)
 
 #---------------------------------------------------------------------------

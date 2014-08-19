@@ -114,6 +114,7 @@ extern "C" void Tau_disable_collector_api() {
   //TAU_OPENMP_UNSET_LOCK;
 }
 
+static const char* __UNKNOWN_ADDR__ = "UNKNOWN addr=<0>";
 static const char* __UNKNOWN__ = "UNKNOWN";
 
 extern const int OMP_COLLECTORAPI_HEADERSIZE;
@@ -272,9 +273,7 @@ void Tau_delete_hash_table(void) {
     delete node;
   }
   mytab.clear();
-#ifdef TAU_BFD
   Tau_delete_bfd_units();
-#endif
 }
 
 // this function won't actually do the backtrace, but rather get the function
@@ -284,8 +283,8 @@ char * get_proxy_name(unsigned long ip) {
     tau_bfd_handle_t & OmpbfdUnitHandle = OmpTheBfdUnitHandle();
 	if (ip == 0) {
         //printf("IP IS ZERO!!!\n"); fflush(stdout); //abort();
-        location = (char*)malloc(strlen(__UNKNOWN__)+1);
-        strcpy(location, __UNKNOWN__);
+        location = (char*)malloc(strlen(__UNKNOWN_ADDR__)+1);
+        strcpy(location, __UNKNOWN_ADDR__);
 		return location;
 	}
     RtsLayer::LockDB();
@@ -315,8 +314,8 @@ char * get_proxy_name(unsigned long ip) {
     char * location = NULL;
 	if (ip == 0) {
         //printf("IP IS ZERO!!!\n"); fflush(stdout); //abort();
-        location = (char*)malloc(strlen(__UNKNOWN__)+1);
-        strcpy(location, __UNKNOWN__);
+        location = (char*)malloc(strlen(__UNKNOWN_ADDR__)+1);
+        strcpy(location, __UNKNOWN_ADDR__);
 		return location;
 	}
     location = (char*)malloc(128);
@@ -431,7 +430,6 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
       if (tmpStr == NULL) {
           // fall back to the top level timer
           tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // use the top level timer
-          //tmpStr = (char*)__UNKNOWN__;
       }
     } else { // timer or none
       tmpStr = TauInternal_CurrentCallsiteTimerName(tid); // use the top level timer
@@ -1588,7 +1586,7 @@ extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtim
   ompt_enumerate_state = (ompt_enumerate_state_t) lookup("ompt_enumerate_state");
   ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
 #endif
-  __ompt_initialize();
+  return __ompt_initialize();
 }
 
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)

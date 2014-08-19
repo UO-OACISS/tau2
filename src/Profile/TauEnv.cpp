@@ -861,13 +861,31 @@ int TauEnv_get_memdbg() {
 int TauEnv_get_memdbg_protect_above() {
   return env_memdbg_protect_above;
 }
+void TauEnv_set_memdbg_protect_above(int value) {
+  env_memdbg_protect_above = value;
+  env_memdbg = (env_memdbg_protect_above || 
+                env_memdbg_protect_below || 
+                env_memdbg_protect_free);
+}
 
 int TauEnv_get_memdbg_protect_below() {
   return env_memdbg_protect_below;
 }
+void TauEnv_set_memdbg_protect_below(int value) {
+  env_memdbg_protect_below = value;
+  env_memdbg = (env_memdbg_protect_above || 
+                env_memdbg_protect_below || 
+                env_memdbg_protect_free);
+}
 
 int TauEnv_get_memdbg_protect_free() {
   return env_memdbg_protect_free;
+}
+void TauEnv_set_memdbg_protect_free(int value) {
+  env_memdbg_protect_free = value;
+  env_memdbg = (env_memdbg_protect_above || 
+                env_memdbg_protect_below || 
+                env_memdbg_protect_free);
 }
 
 int TauEnv_get_memdbg_protect_gap() {
@@ -1120,7 +1138,7 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_TRACK_IO_PARAMS");
-    if (parse_bool(tmp, env_track_memory_headroom)) {
+    if (parse_bool(tmp, env_track_io_params)) {
       TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
       env_track_io_params = 1;
