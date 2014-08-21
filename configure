@@ -1738,6 +1738,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-ENABLE_TAUENV)
+	    tauenv=yes
+	    fixmakeargs="$fixmakeargs TAUENV"
+	    shift
+            ;;
+
 	-shmeminc=*)
 	    shmeminc=`echo $arg | sed -e 's/-shmeminc=//' -e 's/ /#/g'`
 	    if [ ! -d $shmeminc ]
