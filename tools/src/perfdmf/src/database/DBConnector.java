@@ -33,11 +33,11 @@ import edu.uoregon.tau.perfdmf.Database;
 
 public class DBConnector implements DB {
     public static final String DEFAULT_TRUSTSTORE_PATH =
-        System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "truststore";
+        System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "keystore.taudb";
     public static final String DEFAULT_TRUSTSTORE_PASSWORD = "changeit";
 
     public static final String DEFAULT_KEYSTORE_PATH =
-        System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "keystore";
+        System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "keystore.taudb";
     public static final String DEFAULT_KEYSTORE_PASSWORD = "changeit";
 
 
