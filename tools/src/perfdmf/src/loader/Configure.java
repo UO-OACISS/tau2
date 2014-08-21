@@ -735,7 +735,7 @@ public class Configure {
                 configWriter.newLine();
 
                 configWriter.write("# Truststore for server certs.\n");
-                configWriter.write("db_truststore_password:" + db_truststore + "\n");
+                configWriter.write("db_truststore:" + db_truststore + "\n");
                 configWriter.newLine();
 
                 configWriter.write("# Truststore password.\n");
