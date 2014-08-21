@@ -745,6 +745,10 @@ case $1 in
         #echo "TAU_MPILIB_DIR=$mpilibdir" 
         ;;
 
+     TAUENV)
+        echo NOTE: Building the tau_env tool
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 ###############################################################
 # Set up SHMEM stuff if possible
 ###############################################################
