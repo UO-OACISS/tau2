@@ -41,10 +41,11 @@ def dumpNode(myfile,node,parent,parentPath,result,metric):
 			return
 		"""
 		myfile.write("{\"name\":")
-		if value == {}:
-			myfile.write("\"" + key + "\", \"size\":")
-		else:
-			myfile.write("\"" + key[0:12] + "\", \"size\":")
+		myfile.write("\"" + key + "\", \"size\":")
+		#if value == {}:
+		#	myfile.write("\"" + key + "\", \"size\":")
+		#else:
+		#	myfile.write("\"" + key[0:12] + "\", \"size\":")
 		myfile.write(str(result.getInclusive(0, currentPath, metric)))
 		if value != {}:
 			myfile.write(", \"children\": [")
@@ -56,6 +57,27 @@ def dumpNode(myfile,node,parent,parentPath,result,metric):
 				myfile.write(str(result.getExclusive(0, currentPath, metric)))
 				myfile.write("}\n")
 			myfile.write("]")
+		myfile.write("}")
+		comma = True
+
+def dumpIcicleNode(myfile,node,parent,parentPath,result,metric):
+	comma = False
+	for key, value in node.iteritems():
+		currentPath = key
+		if parentPath != "":
+			currentPath = parentPath + " => " + key
+		if comma:
+			myfile.write(",")
+		myfile.write("{\"" + key + "\":")
+		if value == {}:
+			myfile.write(str(result.getInclusive(0, currentPath, metric)))
+		else:
+			dumpNode(myfile,value,key,currentPath,result,metric)
+			if parent != "":
+				myfile.write(",")
+				myfile.write("{\"" + key + "\":")
+				myfile.write(str(result.getExclusive(0, currentPath, metric)))
+				myfile.write("}\n")
 		myfile.write("}")
 		comma = True
 
@@ -83,9 +105,14 @@ def main():
 			if not n in current:
 				current[str(n)] = {}
 			current = current[str(n)]
+
 	mydata = open("profile.json",'w')
 	dumpNode(mydata,tree,"","",result,metric)
 	mydata.close()
+
+	mydata2 = open("profile2.json",'w')
+	dumpIcicleNode(mydata2,tree,"","",result,metric)
+	mydata2.close()
 
 	print "---------------- JPython test script end -------------"
 
