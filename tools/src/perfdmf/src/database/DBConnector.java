@@ -220,14 +220,7 @@ public class DBConnector implements DB {
             }
             cs.append(getConnectString());
 			Properties props = new Properties();
-
-            // We need a password in all cases:
-            //   1. Without SSL, DB requires a password.
-            //   2. Without keys, the DB requires a password.
-            //   3. With keys, we need the password for the *keystore*
-            if (password == null) {
-                password = findPassword(config);
-            }
+            
 
 			if (dbUseSSL) {
                 // Use SSL and set that up first.
@@ -252,11 +245,17 @@ public class DBConnector implements DB {
                     CustomX509KeyManager.setClientAlias(user + "@" + dbServerHostname);
 
                 } else {
+                	if (password == null) {
+                        password = findPassword(config);
+                    }
                     props.setProperty("password", password);
                 }
 
 			} else {
                 // Do not use SSL, just username/password
+				if (password == null) {
+	                password = findPassword(config);
+	            }
 			    props.setProperty("user",user);
 			    props.setProperty("password",password);
 			}
