@@ -188,20 +188,20 @@ public:
   }
 
   // Cough up the information about this function.
-  void SetName(std::string& str) { Name = strdup(str.c_str()); }
+  void SetName(std::string& str) { strcpy(Name, (char *)(str.c_str())); }
   const char* GetName() const { return Name; }
-  void SetType(std::string& str) { Type = strdup(str.c_str()); }
+  void SetType(std::string& str) { strcpy(Type, (char *)(str.c_str())); }
   const char* GetType() const { return Type; }
 
   const char* GetPrimaryGroup() const { return GroupName; }
   const char* GetAllGroups() const { return AllGroups; }
   void SetPrimaryGroupName(const char *newname) { 
-    GroupName = strdup(newname);
-    AllGroups = strdup(newname); /* to make it to the profile */
+    GroupName = (char *)newname;
+    AllGroups = (char *)newname; /* to make it to the profile */
   }
   void SetPrimaryGroupName(std::string newname) {
-    GroupName = strdup(newname.c_str()); 
-    AllGroups = strdup(newname.c_str()); /* to make it to the profile */
+    GroupName = (char *)(newname.c_str()); 
+    AllGroups = (char *)(newname.c_str()); /* to make it to the profile */
   }
 
   char const * GetFullName(); /* created on demand, cached */
