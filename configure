@@ -2578,6 +2578,7 @@ fi
 if [ "$tauarch" = "i386_linux" -o "$tauarch" = "i386_solaris" -o "$tauarch" = "arm_android" -o "$tauarch" = "arm_linux" -o "$tauarch" = "mpis32" -o "$tauarch" = "ppc64" ]; then
     fixmakeargs="$fixmakeargs arch_width=32bit"
 else
+echo "Setting 64BIT arch width! tauarch=$tauarch"
     fixmakeargs="$fixmakeargs arch_width=64bit"
 fi
 
@@ -5143,7 +5144,7 @@ case $machine in
 	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs PPC64PAPI"
 	fi
-	if [ $c_compiler = xlc ] ; then
+	if [ $c_compiler = xlc -o $c_compiler = xlc_r ] ; then
 	    fixmakeargs="$fixmakeargs PPC64XLC"
 	fi
 	if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ] ; then
