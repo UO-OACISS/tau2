@@ -183,6 +183,12 @@ public class ConnectionManager {
 
     public String getPassword(boolean prompt) {
         String tmpString = config.getDBPasswd();
+        if(tmpString==null)
+        {
+        	if(config.getDBKeystorePasswd()!=null){
+        		return tmpString;
+        	}
+        }
         if (prompt) {
             if (tmpString == null) {
                 try {
