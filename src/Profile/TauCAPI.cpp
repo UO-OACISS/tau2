@@ -1995,7 +1995,9 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     }
     RtsLayer::UnLockEnv();
   }
-  Tau_start_timer(fi, 0, tid);
+  if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    Tau_start_timer(fi, 0, tid);
+  }
 }
 
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
@@ -2092,7 +2094,9 @@ extern "C" void Tau_pure_stop_task(char const * n, int tid)
     fi = it->second;
   }
   RtsLayer::UnLockDB();
-  Tau_stop_timer(fi, tid);
+  if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    Tau_stop_timer(fi, tid);
+  }
 }
 
 extern "C" void Tau_pure_stop(const char *name)
