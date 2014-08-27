@@ -201,6 +201,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 #IBM64LINUX#GCC_ABI	     = -m64 		  #ENDIF#
 #PPC64XLC#GCC_ABI	     = -m32 		  #ENDIF#
+#ARCH_WIDTH_32#GCC_ABI	     = -m32 		  #ENDIF#
 
 
 
