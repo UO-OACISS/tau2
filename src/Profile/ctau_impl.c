@@ -410,13 +410,13 @@ static ProfilerEntry *newProfilerEntry(ProfilerObject *pObj, void *key, PyObject
       co_firstlineno = frame->f_code->co_firstlineno;
       sprintf (routine,"%s [{%s}{%d}]", co_name, co_filename, co_firstlineno);
       if (strcmp(co_filename,"<string>") != 0) { // suppress "? <string>"
-	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+	TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
       }
   } else {
     if (strcmp (cname, "profileTimer") && strcmp (cname, "start") && strcmp (cname, "stop") && strcmp (cname, "disable")) {
 /*       sprintf (routine,"C [%s]", cname); */
       sprintf (routine,"%s", cname);
-      TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+      TAU_PROFILER_CREATE(handle, routine, "", TAU_PYTHON);
     }
   }
 

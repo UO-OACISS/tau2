@@ -24,7 +24,7 @@ FFLAGS        	= $(TAU_INCLUDE) $(TAU_F90_FIXED)
 
 LIBS            = $(TAU_LIBS) $(TAU_FORTRANLIBS)
 
-LDFLAGS	      	= $(USER_OPT) 
+LDFLAGS	      	= $(USER_OPT) $(TAU_DEFS)
 
 MAKEFILE      	= Makefile
 

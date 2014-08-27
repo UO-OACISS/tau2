@@ -27,6 +27,9 @@
 # TAUINC.
 #######################################################################
 
+# See this file for a record of the configuration environment 
+CONF_ENV_FILE=
+
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=default
 TAU_ARCH=default
@@ -256,6 +259,11 @@ JDKARCH                 = linux
 #JAVA#TAU_JAVA_O 	= TauJAPI.o JNIThreadLayer.o agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o adb.o jdwp.o ddm.o #ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
+#############################################
+# Fortran MPI OBJECTS
+#############################################
+MPI_FORTRAN_INIT = TauFInit.o 
+#NOFORTRAN#MPI_FORTRAN_INIT = #ENDIF#
 
 #############################################
 # OpenMP OBJECTS
@@ -268,6 +276,7 @@ JDKARCH                 = linux
 #############################################
 # Score-P Adapter Init OBJECTS
 #SCOREP_ADAPTER_INIT#TAU_SCOREP_ADAPTER_O = TauScorePAdapterInit.o  #ENDIF#
+#SCOREP_ADAPTER_INIT#TAU_SCOREP_EXTRA_FLAGS = "`ar x $(TAU_LIB_DIR)/libtau$(TAU_CONFIG).a TauScorePAdapterInit.o`" TauScorePAdapterInit.o  #ENDIF#
 
 #############################################
 # OpenMP extra libraries for collector API
@@ -302,6 +311,8 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 
 ############# OpenMP Fortran Option ########
 TAU_OPENMP_OPTION = 
+#MPC#TAU_OPENMP_OPTION= -fopenmp #ENDIF#
+#MPCINTEL#TAU_OPENMP_OPTION= -openmp #ENDIF#
 #COMPINST_CRAYCC#TAU_OPENMP_OPTION= -h omp #ENDIF#
 #SOL2CC_OPENMP#TAU_OPENMP_OPTION = -xopenmp #ENDIF#
 #SUNCC_OPENMP#TAU_OPENMP_OPTION = -xopenmp=parallel #ENDIF#
@@ -364,6 +375,7 @@ TAU_OPENMP_OPTION =
 #INTEL32_FORTRAN#TAU_F90     = ifc 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTELIFORT#TAU_F90     = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #MPIIFORT#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#MPIF90#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #FX#TAU_F90       = mpifrtpx $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PATHSCALE_FORTRAN#TAU_F90     = pathf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SC_PATHSCALE#TAU_F90     = scpathf95         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -915,7 +927,6 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
 #MPC#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
-#PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared -fPIC 	#ENDIF#
 #MMIC#AR_SHFLAGS  	= -shared -mmic #ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
@@ -1076,6 +1087,7 @@ EBS_CLOCK_RES=
 #MPICH3_CONST#PROFILEOPT96 = -DTAU_MPICH3 #ENDIF#
 #OPENMPI3_CONST#PROFILEOPT97 = -DTAU_OPENMPI3 #ENDIF#
 #MPI_F_STATUSES_IGNORE_ABSENT#PROFILEOPT98=-DTAU_MPI_F_STATUSES_IGNORE_ABSENT#ENDIF#
+#NOFORTRAN#PROFILEOPT98=-DTAU_NO_FORTRAN#ENDIF#
 
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
@@ -1102,7 +1114,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT85) $(PROFILEOPT86) $(PROFILEOPT87) $(PROFILEOPT88)\
               $(PROFILEOPT89) $(PROFILEOPT90) $(PROFILEOPT91) $(PROFILEOPT92) \
               $(PROFILEOPT93) $(PROFILEOPT94) $(PROFILEOPT95) $(PROFILEOPT96) \
-              $(PROFILEOPT97) $(PROFILEOPT98) \
+              $(PROFILEOPT97) $(PROFILEOPT98) $(PROFILEOPT99) \
 	      $(TRACEOPT)
 
 
@@ -1136,7 +1148,7 @@ TAU_CUPTI_INC=
 #APPLECXX#TAU_OPENCL_INCLUDE=#ENDIF#
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
-#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti  -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
+#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti  -lcuda -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
 TAU_CUDA_LIBRARY=
 #############################################
 
@@ -1189,10 +1201,19 @@ TAU_INCLUDE 	= -I$(TAU_INC_DIR)
 #FX#TAU_COMPILER_EXTRA_OPTIONS1=-optFujitsu #ENDIF#
 
 #PTHREAD_AVAILABLE#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackPthread #ENDIF#
+#SCOREP#TAU_COMPILER_EXTRA_OPTIONS2= #ENDIF#
 #MPC#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackMPCThread #ENDIF#
 #GOMP_AVAILABLE#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackGOMP #ENDIF#
 
 #SCOREP#TAU_COMPILER_EXTRA_OPTIONS3=-optOpari2Opts=--tpd #ENDIF#
+TAU_COMPILER_SUITE_USED=gnu
+#GNU#TAU_COMPILER_SUITE_USED=gnu #ENDIF#
+#USE_IBMXLC#TAU_COMPILER_SUITE_USED=ibm #ENDIF#
+#USE_INTELCXX#TAU_COMPILER_SUITE_USED=intel #ENDIF#
+#SOL2CC#TAU_COMPILER_SUITE_USED=sun #ENDIF#
+#PGI#TAU_COMPILER_SUITE_USED=pgi #ENDIF#
+#COMPINST_CRAYCC#TAU_COMPILER_SUITE_USED=cray #ENDIF#
+#SCOREP_ADAPTER_INIT#TAU_COMPILER_EXTRA_OPTIONS3=-optOpari2Opts="--tpd --tpd-mangling=$(TAU_COMPILER_SUITE_USED)" #ENDIF#
 
 #SHMEM#TAU_CRAY_SHMEM_EXTRA_OPTS=-optPdtCOpts=-D__float128=float  -optPdtCxxOpts=-D__float128=float #ENDIF#
 #CRAYCNL#TAU_COMPILER_EXTRA_OPTIONS4=$(TAU_CRAY_SHMEM_EXTRA_OPTS) #ENDIF#
@@ -1320,7 +1341,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optTauCC="$(TAU_CCOMPILER)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_COMPILE_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
-        -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LDFLAGS) "\
+        -optLinking="$(TAU_SCOREP_EXTRA_FLAGS) $(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LDFLAGS) "\
         -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_CXXLIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LINKER_RPATH_OPT) \
 				 $(TAU_LDFLAGS)"\
 				-optMICOffloadLinking="$(MIC_OFFLOAD_LINKING)"\
@@ -1355,7 +1376,6 @@ TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 TAU_SHLIBX              = .so
 #HP#TAU_SHLIBX          = .sl                   #ENDIF#
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
-#PYTHON#TAU_APPLE_SHLIBX    = .so               #ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
 
 # For loading the collector API on Apple

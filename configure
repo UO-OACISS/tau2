@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -58,6 +58,25 @@ copy_own_cube_reader_if_selected()
     fi
 }
 
+save_configure_env()
+{
+  # assuming configure is called from same directory
+  # tau's configure doesn't work anyway from another directory
+  _tauroot="."
+  confenvdir="$_tauroot/.configure_env"
+
+  md5sum="`which md5sum 2>/dev/null || which md5 2>/dev/null`"
+  if [ "x$md5sum" == "x" ] ; then
+    echo "Warning: can't find md5sum or md5."
+    return
+  fi
+  argsum=`echo "$all_args" | $md5sum | awk '{print $1}'`
+
+  mkdir -p "$confenvdir"
+  confenvfile="$confenvdir/$argsum"
+  set > "$confenvfile"
+  fixmakeargs="$fixmakeargs confenvfile=$confenvfile"
+}
 
 
 select_cube_reader_jar()
@@ -170,7 +189,7 @@ correction_paraprof()
 correction_perfdmf()
 {
     echo "Adjust PerfDmf to use CubeReader..."
-    cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+    cat  ${_tauroot}/tools/src/perfdmf/Makefile.skel |
     sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >${_tauroot}/tools/src/perfdmf/Makefile.new
     mv ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
 }
@@ -632,6 +651,9 @@ START_DIR=`pwd`
 # Default compilers and options
 c_compiler=default
 cxx_compiler=default
+orig_c_compiler=default
+orig_cxx_compiler=default
+orig_fortran_compiler=default
 pdt_cxx_compiler=default
 fixmakeargs=""
 useropt=-O2
@@ -839,6 +861,7 @@ restore_perfdmf_and_paraprof
 ###############################################################
 # PARSE OPTIONS
 ###############################################################
+all_args="$@"
 for arg in "$@"; do
     case $arg in
 
@@ -1193,7 +1216,7 @@ for arg in "$@"; do
             # use libunwind as the default.
             unwinder="libunwind"
             unwind_flag="-DTAU_USE_LIBUNWIND"
-            unwind_lib_flag="-lunwind"
+            unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
             download_unwind=yes
             shift
             ;;
@@ -1209,7 +1232,7 @@ for arg in "$@"; do
 	    if [ "x$unwinder" = "xnone" ] ; then
 		unwinder="libunwind"
 		unwind_flag="-DTAU_USE_LIBUNWIND"
-		unwind_lib_flag="-lunwind"
+		unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
 	    fi
 	    shift
 	    ;;
@@ -1715,6 +1738,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-ENABLE_TAUENV)
+	    tauenv=yes
+	    fixmakeargs="$fixmakeargs TAUENV"
+	    shift
+            ;;
+
 	-shmeminc=*)
 	    shmeminc=`echo $arg | sed -e 's/-shmeminc=//' -e 's/ /#/g'`
 	    if [ ! -d $shmeminc ]
@@ -1765,16 +1794,6 @@ for arg in "$@"; do
 
 	-python)
 	    pythonbin=`which python | sed 's,[^/]*$,,'`
-	    pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
-	    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
-	    if [ ! -d $pythoninc ] ; then
-		echo "Error: Cannot access Python include directory $pythoninc"
-		exit 1
-	    fi
-	    if [ ! -d $pythonlib ] ; then
-		echo "Error: Cannot access Python lib directory $pythonlib"
-		exit 1
-	    fi
 	    python=yes
 	    shift
 	    ;;
@@ -2099,6 +2118,24 @@ for arg in "$@"; do
     esac
 done
 
+# Check for Python
+if [ "x$python"  = "xyes" ] ; then
+  if [ "x$pythoninc" = "x" ] ; then
+    pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
+    if [ ! -d $pythoninc ] ; then
+        echo "Error: Cannot access Python include directory $pythoninc"
+        exit 1
+    fi
+  fi
+  if [ "x$pythonlib" = "x" ] ; then
+    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
+    if [ ! -d $pythonlib ] ; then
+        echo "Error: Cannot access Python lib directory $pythonlib"
+        exit 1
+    fi
+  fi
+fi
+
 if [ "x$upcnetwork" = "x" ] ; then
     if [ "$mpi" = "no" ] ; then
 	#echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
@@ -2166,6 +2203,10 @@ configure_perfexplorer () {
     sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
 	> ${targetdir}/${architecture}/bin/tau_user_setup.sh
     chmod a+rx ${targetdir}/${architecture}/bin/tau_user_setup.sh
+
+	# stuff for SSL key configuration
+    cp ${tauroot}/tools/src/perfdmf/bin/taudb_keygen ${targetdir}/${architecture}/bin/.
+    cp ${tauroot}/tools/src/perfdmf/bin/taudb_install_cert ${targetdir}/${architecture}/bin/.
 
     # copy these files to the etc directory for tau_user_setup.sh to find and use
     mkdir -p ${targetdir}/etc
@@ -2507,6 +2548,21 @@ echo "  If you move the Tau distribution, you must run configure"
 echo "  again and recompile"
 echo "------------------------------------------------------------"
 
+#
+# Save configuration environment for future reference
+#
+md5sum="`which md5sum 2>/dev/null || which md5 2>/dev/null`"
+if [ "x$md5sum" == "x" ] ; then
+  echo "Warning: can't find md5sum or md5."
+else
+  confenvdir="$tauroot/.configure_env"
+  argsum=`echo "$all_args" | $md5sum | awk '{print $1}'`
+  mkdir -p "$confenvdir"
+  confenvfile="$confenvdir/$argsum"
+  set > "$confenvfile"
+  fixmakeargs="$fixmakeargs confenvfile=$confenvfile"
+fi
+
 fixmakeargs="$fixmakeargs tauroot=$tauroot"
 # Try and figure out architecture
 detectarch=unknown
@@ -2522,6 +2578,7 @@ fi
 if [ "$tauarch" = "i386_linux" -o "$tauarch" = "i386_solaris" -o "$tauarch" = "arm_android" -o "$tauarch" = "arm_linux" -o "$tauarch" = "mpis32" -o "$tauarch" = "ppc64" ]; then
     fixmakeargs="$fixmakeargs arch_width=32bit"
 else
+echo "Setting 64BIT arch width! tauarch=$tauarch"
     fixmakeargs="$fixmakeargs arch_width=64bit"
 fi
 
@@ -2671,12 +2728,12 @@ case $machine in
 	;;
 
     apple) 
-	if [ $cxx_compiler = default ]
+	if [ "$cxx_compiler = default" ]
 	then
             cxx_compiler=g++
 	fi
 
-	if [ $c_compiler = default ]
+	if [ "$c_compiler = default" ]
 	then
             c_compiler=gcc             
 	fi
@@ -2965,6 +3022,9 @@ case $machine in
 	;;
 
 esac
+if [ "x$fortran_compiler" = "xno" ]; then
+    fixmakeargs="$fixmakeargs NOFORTRAN"
+fi
 
 if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ ]; then
     fixmakeargs="$fixmakeargs CLANG"
@@ -3296,6 +3356,10 @@ if [ $debugprof = yes ] ; then
 fi
 
 
+orig_c_compiler=$c_compiler
+orig_cxx_compiler=$cxx_compiler
+orig_fortran_compiler=$fortran_compiler
+# mpicxx may change it. 
 if [ $cxx_compiler = mpicxx ]
 then 
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
@@ -4016,8 +4080,20 @@ then
 	full_cc_compiler=`which oshcc`
     fi
 fi
+
+if [ $scorep = yes ]; then 
+  swap_full_cxx_compiler=$full_cxx_compiler
+  full_cxx_compiler=`which $orig_cxx_compiler`
+  swap_full_c_compiler=$swap_full_c_compiler
+  full_cc_compiler=`which $orig_c_compiler`
+fi 
+  
 fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
 
+if [ $scorep = yes ]; then 
+  full_cxx_compiler=$swap_full_cxx_compiler
+  full_cc_compiler=$swap_full_cc_compiler
+fi
 
 
 
@@ -4146,7 +4222,13 @@ then
               then
                 echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
                 additional_mpiincs="-I$mpiinc/../mpc-libsctk_arch-dev/include"
-              fi 
+              else
+                if [ -r $mpiinc/sctk_config_arch.h -a $mpiinc/mpcframework/mpi.h ] 
+                then
+                  echo "NOTE: Found sctk_config_arch.h in $mpiinc/mpc-libsctk_arch-dev/include"
+                  additional_mpiincs="-I$mpiinc/mpcframework -I$mpiinc"
+                fi 
+              fi
             else
 		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
 		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
@@ -4841,7 +4923,24 @@ fi
 
 
 
+if [ $scorep = yes ]
+then
+  swap_c_compiler=$c_compiler
+  c_compiler=$orig_c_compiler
+  swap_cxx_compiler=$cxx_compiler
+  cxx_compiler=$orig_cxx_compiler
+  swap_fortran_compiler=$fortran_compiler
+  fortran_compiler=$orig_fortran_compiler
+fi
 fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir extradircxx=$extradircxx extrashlibopts=$extrashlibopts $fixmakeargs"
+# We really need mpicc as the linker for Score-P.
+
+if [ $scorep = yes ]
+then
+  c_compiler=$swap_c_compiler
+  cxx_compiler=$swap_cxx_compiler
+  fortran_compiler=$swap_fortran_compiler
+fi
 
 ######################################################################
 # discover the paths for standard system include directories
@@ -5045,7 +5144,7 @@ case $machine in
 	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs PPC64PAPI"
 	fi
-	if [ $c_compiler = xlc ] ; then
+	if [ $c_compiler = xlc -o $c_compiler = xlc_r ] ; then
 	    fixmakeargs="$fixmakeargs PPC64XLC"
 	fi
 	if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ] ; then
@@ -5537,25 +5636,25 @@ if [ "x$download_unwind" = xyes ] ; then
         cd $libunwind
         echo "configuring $libunwind... (see `pwd`/${libunwind_log} for log)..."
         if [ "x$machine" = "xbgq" ] ; then
-          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} --disable-shared > ${libunwind_log} 2>&1 
           cp src/unwind/Resume.c tmp.c
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
-          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log} 2>&1 
         else
-          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} &> ${libunwind_log}
+          ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1 
         fi
         configresult=$?
         if [ $configresult -eq 0 ] ; then
           libunwind_log=build.log
           echo "building ${libunwind}... (see `pwd`/${libunwind_log} for log)..."
-          make -i &> $libunwind_log
+          make -i > $libunwind_log  2>&1
           makeresult=$?
           if [ $makeresult -eq 0 ] ; then
           libunwind_log=install.log
           echo "installing ${libunwind} to ${unwind_dir}... (see `pwd`/${libunwind_log} for log)..."
-            make -i install &> $libunwind_log
+            make -i install > $libunwind_log  2>&1
           makeresult=$?
           fi
         fi
@@ -5776,7 +5875,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
 
     # The Intel compiler doesn't give an error, but a warning
     # if [ "$machine" = "craycnl" -a "$intel" == "yes" ]
-    if [ "$intel" == "yes" ]
+    if [ "$intel" = "yes" ]
     then
 	mpicompiler=$c_compiler
         mpiwarnings="-Werror"
@@ -6066,6 +6165,8 @@ else
     # MPICH requires the const keyword 
         fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
     fi
+    # Clean up
+    rm -f openmpi3const.c openmpi3const.o a.out 
   fi
 fi
 
@@ -6916,6 +7017,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
       cd $binutils
 
       # Configure binutils
+      echo "Configuring binutils (see $tempdir/$binutils/tau_configure.log for details)..."
       case $machine in
       bgp)
         ./configure \
@@ -6923,7 +7025,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       bgq)
@@ -6932,14 +7034,14 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc \
             CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       rs6000|ibm64)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror --disable-largefile
+            --disable-nls --disable-werror --disable-largefile > tau_configure.log 2>&1
         err=$?
         ;;
       arm_android)
@@ -6948,7 +7050,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=$host \
             --prefix=$bfddir \
-            --disable-nls --disable-werror  --disable-largefile 
+            --disable-nls --disable-werror  --disable-largefile  > tau_configure.log 2>&1
         err=$?
         ;;
       mic_linux)
@@ -6959,7 +7061,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
         sparc64fx)
@@ -6975,14 +7077,14 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
                 AR=sparc64-unknown-linux-gnu-ar \
 		--host=sparc64-unknown-linux-gnu \
             	--prefix=$bfddir \
-		--disable-nls --disable-werror
+		--disable-nls --disable-werror > tau_configure.log 2>&1
 	err=$?
 	;;
       *)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
-            --disable-nls --disable-werror
+            --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
       esac
@@ -6992,7 +7094,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         echo "Error: BFD configuration failed. Cannot proceed with -bfd=download"
         exit 1
       else
-        make && make install
+        echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
+        make > tau_build.log 2>&1
+        err=$?
+        if [ $err -ne 0 ] ; then
+          echo "Error: BFD build failed. Cannot proceed with -bfd=download"
+          exit 1
+        fi
+        echo "Installing (see $tempdir/$binutils/tau_build.log for details)..."
+        make install > tau_install.log 2>&1
         err=$?
         if [ $err -ne 0 ] ; then
           echo "Error: BFD installation failed. Cannot proceed with -bfd=download"
@@ -8033,12 +8143,25 @@ if [ $scorep = yes ] ; then
       scorep_adapter_init=yes
       fixmakeargs="$fixmakeargs SCOREP_ADAPTER_INIT" 
       scorep_adapter="--adapter-init"
+      if [ $opari = yes -a "x$oparidir" = "x" ]; then 
+        if [ `${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | grep internal | wc -l` = 1 ]; then 
+          oparidir=${scorepdir}	
+        else 
+	  oparidir=`${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | awk '{ print $7;}' | sed -e 's/opari2-config/../g'`
+        fi 
+	echo "NOTE: Using Opari from $oparidir"
+        fixmakeargs="$fixmakeargs oparidir=$oparidir"
+      fi 
     else
       scorep_adapter_init=no
     fi
 
     if [ $mpi = yes ]; then 
       scorep_adapter="$scorep_adapter --mpp=mpi"
+    else 
+      if [ $shmem = no ]; then 
+        scorep_adapter="$scorep_adapter --mpp=none"
+      fi
     fi
 
     if [ $cuda = yes ]; then 
@@ -8081,27 +8204,23 @@ if [ $scorep = yes ] ; then
     #echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
 	# default flags for Score-P 1.2+
-	scorepLibs=`${scorepdir}/bin/scorep-config --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepLD=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+	mod_scorep_adapter=`echo ${scorep_adapter} | sed -e 's/--adapter-init//g'`
+	#echo "WE HAVE mod_scorep_adapter = ${mod_scorep_adapter}"
+	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	scorepExtraLibs='-lscorep_adapter_user_event -lscorep_adapter_user_mgmt'
     fi
     # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
     if [ $mpi = yes ] ; then 
 	if [ $openmp = yes ] ; then
 	    fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	    if [ $scorep11 = 0 ]; then
-		scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi
 	else
 	    fixmakeargs="$fixmakeargs SCOREPMPI"
-	    if [ $scorep11 = 0 ]; then
-		scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi
@@ -8109,10 +8228,7 @@ if [ $scorep = yes ] ; then
     else
 	if [ $openmp = yes ] ; then
 	    fixmakeargs="$fixmakeargs SCOREPOMP" 
-	    if [ $scorep11 = 0 ]; then
-		scorepLD=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --ldflags --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLibs=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --libs  --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi

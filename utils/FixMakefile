@@ -122,7 +122,7 @@ case $1 in
 
      unwind_lib_flag=*)
         unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//' -e 's/#/ /g'`
-       echo "s,^UNWIND_LIB_FLAG=.*$,UNWIND_LIB_FLAG=$unwind_lib_flag,g" >> $sedout
+        echo "s@^UNWIND_LIB_FLAG=\(.*\)@UNWIND_LIB_FLAG=$unwind_lib_flag@g" >> $sedout
         ;;
 
      unwind_extras=*)
@@ -438,7 +438,14 @@ case $1 in
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	# Discover python library version
-	pythonso=`ls $pythonlib/libpython*.so | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
+	pythonso=`ls $pythonlib/libpython*.so 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
+	if [ "x$pythonso" = "x" ] ; then
+	  pythonso=`ls $pythonlib/libpython*.dylib 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.dylib//'`
+	  if [ "x$pythonso" = "x" ] ; then
+	    echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
+	    exit 1
+	  fi
+	fi
 	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
 	echo "s,^PYTHON_LIB_SO=.*$,PYTHON_LIB_SO=$pythonso,g" >> $sedout
 	#echo "Using PYTHON LIB DIR =" $pythonlib
@@ -738,6 +745,10 @@ case $1 in
         #echo "TAU_MPILIB_DIR=$mpilibdir" 
         ;;
 
+     TAUENV)
+        echo NOTE: Building the tau_env tool
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 ###############################################################
 # Set up SHMEM stuff if possible
 ###############################################################
@@ -847,6 +858,12 @@ case $1 in
 	echo "NOTE: Building TAU library for HOST (i.e. cross compile)"
 	echo "s/^CROSS_PREFIX=\(.*\)/CROSS_PREFIX=${config_host}-/g" >> $sedout
 	;;
+
+     confenvfile=*)
+        confenvfile=`echo $1 | sed -e 's/^confenvfile=//' `
+	echo "NOTE: Saving configuration environment to $confenvfile"
+	echo "s@^CONF_ENV_FILE=\(.*\)@CONF_ENV_FILE=$confenvfile@g" >> $sedout
+        ;;
 
      HOSTUTILS)
 	echo "NOTE: Building TAU utils for HOST (i.e. cross compile)"
@@ -1131,6 +1148,10 @@ case $1 in
 	;;
      APPLECXX)
 	echo NOTE: Apple c++ compiler will be used
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NOFORTRAN)
+	echo "NOTE: TAU's Fortran library bindings will not be compiled. "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      APPLEPGI)
