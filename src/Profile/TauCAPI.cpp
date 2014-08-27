@@ -453,11 +453,9 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   /*** Memory Profiling ***/
   if (TauEnv_get_track_memory_heap()) {
-    double *heapmem = new double; 
-    *heapmem = Tau_max_RSS();
-    TAU_CONTEXT_EVENT(TheHeapMemoryEntryEvent(), *heapmem);
-    p->extraInfo = heapmem;
-   
+    double heapmem = Tau_max_RSS();
+    TAU_CONTEXT_EVENT(TheHeapMemoryEntryEvent(), heapmem);
+    p->heapmem = heapmem;
   }
 
   if (TauEnv_get_track_memory_headroom()) {
@@ -675,17 +673,14 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 
   /* check memory */
-  if (enableHeapTracking && profiler->extraInfo) {
-    double *oldheap = (double *) (profiler->extraInfo);
-    double difference = currentHeap - *oldheap; 
+  if (enableHeapTracking && profiler->heapmem) {
+    double oldheap = profiler->heapmem;
+    double difference = currentHeap - oldheap; 
     if (difference > 0) {
       TAU_CONTEXT_EVENT(TheHeapMemoryIncreaseEvent(), difference);
-    } else {
-       if (difference < 0) {
-        TAU_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent(), (0 - difference));
-       }
+    } else if (difference < 0) {
+      TAU_CONTEXT_EVENT(TheHeapMemoryDecreaseEvent(), -difference);
     }
-			  
   }
 
   profiler->Stop(tid);
@@ -1909,16 +1904,12 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
 #endif
 }
 
-//void Tau_clear_pure_map();
-
 /*
   The following is for supporting pure and elemental fortran subroutines
 */
-
 struct PureMap : public TAU_HASH_MAP<string, FunctionInfo *> {
   virtual ~PureMap() {
     Tau_destructor_trigger();
-	//Tau_clear_pure_map();
   }
 };
 
