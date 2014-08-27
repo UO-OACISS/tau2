@@ -12,7 +12,7 @@ import java.net.URL;
 
 public class ParseConfig implements Serializable {
     /**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -22449977900556139L;
 	private String perfdmfHome;
@@ -26,9 +26,28 @@ public class ParseConfig implements Serializable {
     private String dbUserName;
     private String dbPasswd;
     private String dbSchema;
+    private boolean dbUseSSL = false;
+
+    private String dbKeystore;
+    private String dbKeystorePasswd;
+
+    private String dbTruststore;;
+    private String dbTruststorePasswd;
+
     private String xmlSAXParser;
     private String path;
     private String name;
+
+    /**
+     * acceptable values for booleans in config file.
+     */
+    private boolean stringToBool(String value) {
+        return (value != null &&
+                ("yes".equalsIgnoreCase(value)
+                 || "y".equalsIgnoreCase(value)
+                 || "true".equalsIgnoreCase(value)));
+    }
+
 
     public ParseConfig(String configLoc) {
 
@@ -61,12 +80,12 @@ public class ParseConfig implements Serializable {
 
             // The following is for reading perfdmf.cfg out of the jar file for Java Web Start
             //        URL url = ParseConfig.class.getResource("/perfdmf.cfg");
-            //        
+            //
             //        if (url == null) {
             //        }
             //            throw new IOException("Couldn't get perfdmf.cfg from the jar");
             //        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            //        
+            //
 
             while ((inputString = reader.readLine()) != null) {
                 inputString = inputString.trim();
@@ -93,6 +112,16 @@ public class ParseConfig implements Serializable {
                         dbSchemaPrefix = value;
                     else if (name.equals("db_username"))
                         dbUserName = value;
+                    else if (name.equals("db_use_ssl"))
+                        dbUseSSL = stringToBool(value);
+                    else if (name.equals("db_keystore"))
+                        dbKeystore = value;
+                    else if (name.equals("db_keystore_password"))
+                        dbKeystorePasswd = value;
+                    else if (name.equals("db_truststore"))
+                        dbTruststore = value;
+                    else if (name.equals("db_truststore_password"))
+                        dbTruststorePasswd = value;
                     else if (name.equals("db_password"))
                         dbPasswd = value;
                     else if (name.equals("db_schemafile"))
@@ -192,6 +221,26 @@ public class ParseConfig implements Serializable {
 
     public String getDBUserName() {
         return dbUserName;
+    }
+
+    public boolean getDBUseSSL() {
+        return dbUseSSL;
+    }
+
+    public String getDBKeystore() {
+        return dbKeystore;
+    }
+
+    public String getDBKeystorePasswd() {
+        return dbKeystorePasswd;
+    }
+
+    public String getDBTruststore() {
+        return dbTruststore;
+    }
+
+    public String getDBTruststorePasswd() {
+        return dbTruststorePasswd;
     }
 
     public String getDBPasswd() {

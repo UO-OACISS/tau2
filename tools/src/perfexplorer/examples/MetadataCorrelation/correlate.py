@@ -44,18 +44,18 @@ def dumpData(inputData, metadata):
 	global tauData
 	metric = inputData.getTimeMetric()
 	outfile = open(tauData+".csv", "w")
-	outfile.write("pid se_timestep adv se_btr_vel equation_of_state MPI_Wait() nCellsSolve nCells nEdges totalLevelCells tauTotalLevelEdgeTop\n")
+	outfile.write("pid, se_timestep, adv, se_btr_vel, equation_of_state, MPI_Wait(), nCellsSolve, nCells, nEdges, totalLevelCells, tauTotalLevelEdgeTop\n")
 	for thread in inputData.getThreads():
-		outfile.write(str(thread) + " ")
-		outfile.write(str(inputData.getExclusive(thread, "se timestep", metric)) + " ")
-		outfile.write(str(inputData.getExclusive(thread, "adv", metric)) + " ")
-		outfile.write(str(inputData.getExclusive(thread, "se btr vel", metric)) + " ")
-		outfile.write(str(inputData.getExclusive(thread, "equation of state", metric)) + " ")
-		outfile.write(str(inputData.getExclusive(thread, "MPI_Wait()", metric)) + " ")
-		outfile.write(str(metadata.getExclusive(thread, "nCellsSolve", "METADATA")) + " ")
-		outfile.write(str(metadata.getExclusive(thread, "nCells", "METADATA")) + " ")
-		outfile.write(str(metadata.getExclusive(thread, "nEdges", "METADATA")) + " ")
-		outfile.write(str(metadata.getExclusive(thread, "totalLevelCells", "METADATA")) + " ")
+		outfile.write(str(thread) + ", ")
+		outfile.write(str(inputData.getExclusive(thread, "se timestep", metric)) + ", ")
+		outfile.write(str(inputData.getExclusive(thread, "adv", metric)) + ", ")
+		outfile.write(str(inputData.getExclusive(thread, "se btr vel", metric)) + ", ")
+		outfile.write(str(inputData.getExclusive(thread, "equation of state", metric)) + ", ")
+		outfile.write(str(inputData.getExclusive(thread, "MPI_Wait()", metric)) + ", ")
+		outfile.write(str(metadata.getExclusive(thread, "nCellsSolve", "METADATA")) + ", ")
+		outfile.write(str(metadata.getExclusive(thread, "nCells", "METADATA")) + ", ")
+		outfile.write(str(metadata.getExclusive(thread, "nEdges", "METADATA")) + ", ")
+		outfile.write(str(metadata.getExclusive(thread, "totalLevelCells", "METADATA")) + ", ")
 		outfile.write(str(metadata.getExclusive(thread, "tauTotalLevelEdgeTop", "METADATA")) + " ")
 		outfile.write("\n")
 	outfile.close()
@@ -76,6 +76,7 @@ def main():
 
 	# get the metadata
 	metadata = TrialThreadMetadata(inputData)
+	#metadata.setIgnoreWarnings(True)
 
     # get the flat profile
 	extractor = ExtractNonCallpathEventOperation(inputData)
