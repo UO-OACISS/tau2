@@ -758,8 +758,8 @@ extern "C" int Tau_stop_current_timer_task(int tid)
      * throttles a routine while it is on the top of the stack of another thread
      * it will remain there until a stop is called on its parent. Check for this
      * condition before printing a overlap error message. */
-    while (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask() && 
-          (Tau_thread_flags[tid].Tau_global_stackpos >= 0))
+    while (!(profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask()) &&
+            (Tau_thread_flags[tid].Tau_global_stackpos >= 0))
     {
       profiler->Stop();
       Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
@@ -1978,11 +1978,10 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
   FunctionInfo * fi = NULL;
 
   PureMap & pure = ThePureMap();
-  int exists = pure.count(name);
-  if (exists > 0) {
-    PureMap::iterator it = pure.find(name);
+  PureMap::iterator it = pure.find(name);
+  if (it != pure.end()) {
     fi = it->second;
-  } 
+  }
   if (fi == NULL) {
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
