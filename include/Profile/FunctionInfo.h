@@ -259,6 +259,10 @@ public:
   TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
+  bool IsThrottled() const {
+    return (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
+  }
+
 private:
   TauGroup_t MyProfileGroup_;
 };
