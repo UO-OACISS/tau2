@@ -532,9 +532,9 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
 
   } else {    // not lite - default
     FunctionInfo *fi = (FunctionInfo *)functionInfo;
-    if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    //if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
       Tau_start_timer(functionInfo, phase, Tau_get_thread());
-    }
+    //}
   }
 }
     
@@ -2083,6 +2083,7 @@ extern "C" void Tau_pure_stop_task(char const * n, int tid)
   string name = n;
   FunctionInfo * fi = NULL;
 
+
   RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(name);
@@ -2094,9 +2095,9 @@ extern "C" void Tau_pure_stop_task(char const * n, int tid)
     fi = it->second;
   }
   RtsLayer::UnLockDB();
-  if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+  //if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
     Tau_stop_timer(fi, tid);
-  }
+  //}
 }
 
 extern "C" void Tau_pure_stop(const char *name)
