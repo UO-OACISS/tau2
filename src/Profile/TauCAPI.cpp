@@ -337,12 +337,11 @@ extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   FunctionInfo *fi = (FunctionInfo *) functionInfo;
 
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   // Don't start throttled timers
   if (fi->IsThrottled()) return;
 
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -495,9 +494,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
 {
-  if (TauEnv_get_lite_enabled()) {
-    FunctionInfo *fi = (FunctionInfo *)functionInfo;
+  FunctionInfo *fi = (FunctionInfo *)functionInfo;
+  // Don't start throttled timers
+  if (fi->IsThrottled()) return;
 
+  if (TauEnv_get_lite_enabled()) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
 
@@ -565,13 +566,13 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_stop_timer(void *function_info, int tid ) {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   FunctionInfo *fi = (FunctionInfo *) function_info;
 
   // Don't stop throttled timers
   if (fi->IsThrottled()) return;
+
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   double currentHeap = 0.0;
   bool enableHeapTracking;
@@ -704,6 +705,10 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_lite_stop_timer(void *function_info)
 {
+  FunctionInfo *fi = (FunctionInfo *)function_info;
+  // Don't stop throttled timers
+  if (fi->IsThrottled()) return;
+
   if (TauEnv_get_lite_enabled()) {
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -713,7 +718,6 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
     double delta[TAU_MAX_COUNTERS] = { 0 };
     RtsLayer::getUSecD(tid, timeStamp);
 
-    FunctionInfo *fi = (FunctionInfo *)function_info;
     Profiler *profiler;
     profiler = (Profiler *)&(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 
