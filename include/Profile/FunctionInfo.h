@@ -260,7 +260,7 @@ public:
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
   bool IsThrottled() const {
-    return (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
+    return ! (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
   }
 
 private:
