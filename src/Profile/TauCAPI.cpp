@@ -564,11 +564,15 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_stop_timer(void *function_info, int tid ) {
+extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  FunctionInfo *fi = (FunctionInfo *) function_info; 
+  FunctionInfo *fi = (FunctionInfo *) function_info;
+
+  // Don't stop throttled timers
+  if (fi->IsThrottled()) return;
+
   double currentHeap = 0.0;
   bool enableHeapTracking;
 
@@ -609,7 +613,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-  return 0;
+  return;
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
@@ -626,7 +630,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-  return 0;
+  return;
 #endif
 
 #ifdef TAU_SCOREP
@@ -639,18 +643,18 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-    return 0; 
+    return;
   }
 
   profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 
   /* Check for overlapping timers */
   while (profiler->ThisFunction != fi) {
-    /* We might have an inconstant stack because of throttling. If one thread
+    /* We might have an inconsistent stack because of throttling. If one thread
      * throttles a routine while it is on the top of the stack of another thread
      * it will remain there until a stop is called on its parent. Check for this
      * condition before printing a overlap error message. */
-    if (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask()) {
+    if (profiler->ThisFunction->IsThrottled()) {
       profiler->Stop();
       Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
       profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
@@ -669,7 +673,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-    return 0; 
+    return;
   }
 #endif /* TAU_DEPTH_LIMIT */
 
@@ -695,7 +699,6 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     Tau_sampling_resume(tid);
   }
 #endif
-  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -743,12 +746,12 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_stop_current_timer_task(int tid) 
+extern "C" void Tau_stop_current_timer_task(int tid)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   if (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
     Profiler * profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
     /* We might have an inconstant stack because of throttling. If one thread
      * throttles a routine while it is on the top of the stack of another thread
@@ -763,19 +766,16 @@ extern "C" int Tau_stop_current_timer_task(int tid)
     }
 
     FunctionInfo * functionInfo = profiler->ThisFunction;
-    return Tau_stop_timer(functionInfo, tid);
+    Tau_stop_timer(functionInfo, tid);
   }
-  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_stop_current_timer() 
+extern "C" void Tau_stop_current_timer()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
-  int tid = RtsLayer::myThread();
-  return Tau_stop_current_timer_task(tid);
+  Tau_stop_current_timer_task(RtsLayer::myThread());
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -806,11 +806,10 @@ extern "C" int Tau_profile_exit_all_tasks()
     while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
       Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
       //Make sure even throttled routines are stopped.
-      if (Tau_stop_timer(p->ThisFunction, tid)) {
-        TAU_VERBOSE("Stopping timer on thread %d: %s\n", tid, p->ThisFunction->Name);
-        p->Stop(tid);
-        Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-      }
+      Tau_stop_timer(p->ThisFunction, tid);
+      TAU_VERBOSE("Stopping timer on thread %d: %s\n", tid, p->ThisFunction->Name);
+      p->Stop(tid);
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
     }
     tid++;
   }
@@ -854,11 +853,9 @@ extern "C" int Tau_profile_exit_all_threads()
       TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
 
       //Make sure even throttled routines are stopped.
-      if (Tau_stop_timer(p->ThisFunction, tid)) {
-        p->Stop(tid);
-        Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-      }
-      // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+      Tau_stop_timer(p->ThisFunction, tid);
+      p->Stop(tid);
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
     }
   }
 
@@ -876,11 +873,9 @@ extern "C" int Tau_profile_exit()
   while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
     Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
     //Make sure even throttled routines are stopped.
-    if (Tau_stop_timer(p->ThisFunction, tid)) {
-      p->Stop(tid);
-      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
-    }
-    // DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
+    Tau_stop_timer(p->ThisFunction, tid);
+    p->Stop(tid);
+    Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
   }
   Tau_shutdown();
   return 0;
