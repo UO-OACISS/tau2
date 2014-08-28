@@ -531,10 +531,10 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
     }
 
   } else {    // not lite - default
-    FunctionInfo *fi = (FunctionInfo *)functionInfo;
-    //if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+//    FunctionInfo *fi = (FunctionInfo *)functionInfo;
+//    if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
       Tau_start_timer(functionInfo, phase, Tau_get_thread());
-    //}
+//    }
   }
 }
     
@@ -739,10 +739,10 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
     }
     Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
   } else {
-    FunctionInfo *fi = (FunctionInfo *)function_info;
-    if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+//    FunctionInfo *fi = (FunctionInfo *)function_info;
+//    if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
       Tau_stop_timer(function_info, Tau_get_thread());
-    }
+//    }
   }
 }
 
@@ -1349,8 +1349,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length)
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) 
 {
-  if (!RtsLayer::TheEnableInstrumentation()) return; 
-  if (TauEnv_get_tracing()) {
+  if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
     if (source >= 0) {
       TauTraceRecvMsgRemote(type, source, length, remoteid);
     }
