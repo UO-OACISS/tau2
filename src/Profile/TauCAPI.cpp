@@ -340,6 +340,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  // Don't start throttled timers
+  if (fi->IsThrottled()) return;
+
+
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -492,13 +496,14 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
 {
   if (TauEnv_get_lite_enabled()) {
+    FunctionInfo *fi = (FunctionInfo *)functionInfo;
+
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
 
     int tid = RtsLayer::myThread();
     // move the stack pointer
     Tau_thread_flags[tid].Tau_global_stackpos++; /* push */
-    FunctionInfo *fi = (FunctionInfo *)functionInfo;
     Profiler *pp = TauInternal_ParentProfiler(tid);
     if (fi) {
       fi->IncrNumCalls(tid);    // increment number of calls
@@ -531,10 +536,7 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
     }
 
   } else {    // not lite - default
-//    FunctionInfo *fi = (FunctionInfo *)functionInfo;
-//    if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-      Tau_start_timer(functionInfo, phase, Tau_get_thread());
-//    }
+    Tau_start_timer(functionInfo, phase, Tau_get_thread());
   }
 }
     
@@ -641,23 +643,21 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   }
 
   profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-  
-  while (profiler->ThisFunction != fi) { /* Check for overlapping timers */
-      /* We might have an inconstant stack because of throttling. If one thread
-       * throttles a routine while it is on the top of the stack of another thread
-       * it will remain there until a stop is called on its parent. Check for this
-       * condition before printing a overlap error message. */
-      if (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask())
-      {
-	  profiler->Stop();
-	  Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 
-	  profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-      } else {
-	  reportOverlap (profiler->ThisFunction, fi);
-      }
+  /* Check for overlapping timers */
+  while (profiler->ThisFunction != fi) {
+    /* We might have an inconstant stack because of throttling. If one thread
+     * throttles a routine while it is on the top of the stack of another thread
+     * it will remain there until a stop is called on its parent. Check for this
+     * condition before printing a overlap error message. */
+    if (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask()) {
+      profiler->Stop();
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    } else {
+      reportOverlap(profiler->ThisFunction, fi);
+    }
   }
-
 
 #ifdef TAU_DEPTH_LIMIT
   static int userspecifieddepth = TauEnv_get_depth_limit();
@@ -672,7 +672,6 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     return 0; 
   }
 #endif /* TAU_DEPTH_LIMIT */
-
 
   /* check memory */
   if (enableHeapTracking && profiler->heapmem) {
@@ -739,10 +738,7 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
     }
     Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
   } else {
-//    FunctionInfo *fi = (FunctionInfo *)function_info;
-//    if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-      Tau_stop_timer(function_info, Tau_get_thread());
-//    }
+    Tau_stop_timer(function_info, Tau_get_thread());
   }
 }
 
@@ -1993,9 +1989,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     }
     RtsLayer::UnLockEnv();
   }
-  //if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-    Tau_start_timer(fi, 0, tid);
-  //}
+  Tau_start_timer(fi, 0, tid);
 }
 
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
@@ -2081,7 +2075,6 @@ extern "C" void Tau_pure_stop_task(char const * n, int tid)
   string name = n;
   FunctionInfo * fi = NULL;
 
-
   RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(name);
@@ -2093,9 +2086,7 @@ extern "C" void Tau_pure_stop_task(char const * n, int tid)
     fi = it->second;
   }
   RtsLayer::UnLockDB();
-  //if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-    Tau_stop_timer(fi, tid);
-  //}
+  Tau_stop_timer(fi, tid);
 }
 
 extern "C" void Tau_pure_stop(const char *name)
