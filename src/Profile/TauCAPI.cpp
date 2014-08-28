@@ -1995,9 +1995,9 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     }
     RtsLayer::UnLockEnv();
   }
-  if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+  //if (RtsLayer::TheEnableInstrumentation() && (fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
     Tau_start_timer(fi, 0, tid);
-  }
+  //}
 }
 
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
