@@ -547,24 +547,23 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /********************************************************************************/
   if (TauEnv_get_throttle()) {
     /* if the frequency of events is high, disable them */
-    double inclusiveTime;
-    inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0);
+    long numCalls = ThisFunction->GetCalls(tid);
+    double inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0);
     /* here we get the array of double values representing the double 
      metrics. We choose the first counter */
 
-    if ((ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls())
-        && (inclusiveTime / ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag) {
+    /* Putting AddInclFlag means we can't throttle recursive calls */
+    if (AddInclFlag &&
+        (numCalls > TauEnv_get_throttle_numcalls()) &&
+        (inclusiveTime / numCalls < TauEnv_get_throttle_percall()))
+    {
       RtsLayer::LockDB();
-      /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE);
       ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
-      //const char *func_type = ThisFunction->GetType();
-      string ftype(string("[THROTTLED]"));
-      ThisFunction->SetType(ftype);
-      //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
-      TAU_VERBOSE("TAU<%d,%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), RtsLayer::myThread(),
-          ThisFunction->GetName());
+      ThisFunction->SetType("[THROTTLED]");
       RtsLayer::UnLockDB();
+      TAU_VERBOSE("TAU<%d,%d>: Throttle: Disabling %s\n",
+          RtsLayer::myNode(), RtsLayer::myThread(), ThisFunction->GetName());
     }
   }
   /********************************************************************************/

@@ -136,8 +136,8 @@ CONFIGQUERY=`utils/ConfigQuery -arch`
 
 .PHONY: all exports tests install clean cleandist cleaninstall cleangood
 
-all:
-	@echo "At the installation root, use \"make install\" "
+all: install
+	@echo
 
 exports : 
 	@echo "Determining Configuration..."
