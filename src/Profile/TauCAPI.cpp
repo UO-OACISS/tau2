@@ -691,7 +691,7 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 
   profiler->Stop(tid);
 
-  Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+  Tau_thread_flags[tid].Tau_global_stackpos--;
 
   //TAU_VERBOSE(" *** (S%d) stop timer for T%d %s\n", gettid(), tid, profiler->ThisFunction->GetName());
 
@@ -807,13 +807,10 @@ extern "C" int Tau_profile_exit_all_tasks()
       JNIThreadLayer::SuThread(tid);
     }
 #endif
+    //Make sure even throttled routines are stopped.
     while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
       Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-      //Make sure even throttled routines are stopped.
       Tau_stop_timer(p->ThisFunction, tid);
-      TAU_VERBOSE("Stopping timer on thread %d: %s\n", tid, p->ThisFunction->Name);
-      p->Stop(tid);
-      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
     }
     tid++;
   }
@@ -851,15 +848,11 @@ extern "C" int Tau_profile_exit_all_threads()
       JNIThreadLayer::SuThread(tid);
     }
 #endif
+    //Make sure even throttled routines are stopped.
     while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
       Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-
       TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
-
-      //Make sure even throttled routines are stopped.
       Tau_stop_timer(p->ThisFunction, tid);
-      p->Stop(tid);
-      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
     }
   }
 
@@ -872,14 +865,12 @@ extern "C" int Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
   int tid = RtsLayer::myThread();
+
+  //Make sure even throttled routines are stopped.
   while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
     Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-    //Make sure even throttled routines are stopped.
     Tau_stop_timer(p->ThisFunction, tid);
-    p->Stop(tid);
-    Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
   }
   Tau_shutdown();
   return 0;
