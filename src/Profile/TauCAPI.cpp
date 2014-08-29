@@ -1714,6 +1714,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
         initthread[tid] = true;
         initializing[tid] = true;
         Tau_pure_start_task_string(gTauApplication(), tid);
+        atexit((void(*)(void))Tau_profile_exit_all_threads);
         initializing[tid] = false;
         initialized = true;
       }
@@ -1732,7 +1733,6 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     }
   }
 
-  atexit((void(*)(void))Tau_profile_exit_all_threads);
 #endif
 }
 
