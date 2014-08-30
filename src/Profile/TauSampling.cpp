@@ -772,12 +772,13 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       mapName = addressMap->name;
     }
     if (addAddress) {
-      buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(mapName) + 128);
       char * tempAddrBuffer = (char*)malloc(32);    // not expecting more than 26 digits in addr
       if (childName) {
+      buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(mapName) + 128);
         sprintf(buff, "[%s] [%s] [@] UNRESOLVED %s ADDR %p",
             tag, childName, mapName, (void *)addr);
       } else {
+      buff = (char*)malloc(strlen(tag) + strlen(mapName) + 128);
         sprintf(buff, "[%s] UNRESOLVED %s ADDR %p",
             tag, mapName, (void *)addr);
       }
@@ -1900,7 +1901,7 @@ void Tau_sampling_finalize_if_necessary(int tid)
   static bool thrFinalized[TAU_MAX_THREADS] = {false};
   //int tid = Tau_get_local_tid();
 
-  TAU_VERBOSE("TAU: F.(i.n.) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
+  TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -1920,29 +1921,32 @@ void Tau_sampling_finalize_if_necessary(int tid)
       RtsLayer::LockEnv();
       // check again, someone else might already have finalized by now.
       if (!finalized) {
-        for (int i = 0; i < TAU_MAX_THREADS; i++) {
-          thrFinalized[i] = false;
-          // just in case, disable sampling.
-          //samplingEnabled[i] = 0;
-        }
         collectingSamples = 0;
         finalized = true;
       }
       RtsLayer::UnLockEnv();
     }
 
-  if (!thrFinalized[tid]) {
-    tau_sampling_flags()->samplingEnabled = 0;
-    thrFinalized[tid] = true;
-    Tau_sampling_finalize(tid);
-  }
+    if (!thrFinalized[tid]) {
+      RtsLayer::LockEnv();
+      if (!thrFinalized[tid]) {
+        tau_sampling_flags()->samplingEnabled = 0;
+        thrFinalized[tid] = true;
+        Tau_sampling_finalize(tid);
+      }
+      RtsLayer::UnLockEnv();
+    }
 
     // Kevin: should we finalize all threads on this process? I think so.
   if (tid == 0) {
     for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
       if (!thrFinalized[i]) {
-        thrFinalized[i] = true;
-        Tau_sampling_finalize(i);
+        RtsLayer::LockEnv();
+        if (!thrFinalized[i]) {
+          thrFinalized[i] = true;
+          Tau_sampling_finalize(i);
+        }
+        RtsLayer::UnLockEnv();
       }
     }
   }
