@@ -189,7 +189,7 @@ correction_paraprof()
 correction_perfdmf()
 {
     echo "Adjust PerfDmf to use CubeReader..."
-    cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+    cat  ${_tauroot}/tools/src/perfdmf/Makefile.skel |
     sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >${_tauroot}/tools/src/perfdmf/Makefile.new
     mv ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
 }
@@ -651,6 +651,9 @@ START_DIR=`pwd`
 # Default compilers and options
 c_compiler=default
 cxx_compiler=default
+orig_c_compiler=default
+orig_cxx_compiler=default
+orig_fortran_compiler=default
 pdt_cxx_compiler=default
 fixmakeargs=""
 useropt=-O2
@@ -1735,6 +1738,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-ENABLE_TAUENV)
+	    tauenv=yes
+	    fixmakeargs="$fixmakeargs TAUENV"
+	    shift
+            ;;
+
 	-shmeminc=*)
 	    shmeminc=`echo $arg | sed -e 's/-shmeminc=//' -e 's/ /#/g'`
 	    if [ ! -d $shmeminc ]
@@ -1785,16 +1794,6 @@ for arg in "$@"; do
 
 	-python)
 	    pythonbin=`which python | sed 's,[^/]*$,,'`
-	    pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
-	    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
-	    if [ ! -d $pythoninc ] ; then
-		echo "Error: Cannot access Python include directory $pythoninc"
-		exit 1
-	    fi
-	    if [ ! -d $pythonlib ] ; then
-		echo "Error: Cannot access Python lib directory $pythonlib"
-		exit 1
-	    fi
 	    python=yes
 	    shift
 	    ;;
@@ -2118,6 +2117,24 @@ for arg in "$@"; do
 	    ;;
     esac
 done
+
+# Check for Python
+if [ "x$python"  = "xyes" ] ; then
+  if [ "x$pythoninc" = "x" ] ; then
+    pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
+    if [ ! -d $pythoninc ] ; then
+        echo "Error: Cannot access Python include directory $pythoninc"
+        exit 1
+    fi
+  fi
+  if [ "x$pythonlib" = "x" ] ; then
+    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
+    if [ ! -d $pythonlib ] ; then
+        echo "Error: Cannot access Python lib directory $pythonlib"
+        exit 1
+    fi
+  fi
+fi
 
 if [ "x$upcnetwork" = "x" ] ; then
     if [ "$mpi" = "no" ] ; then
@@ -2561,6 +2578,7 @@ fi
 if [ "$tauarch" = "i386_linux" -o "$tauarch" = "i386_solaris" -o "$tauarch" = "arm_android" -o "$tauarch" = "arm_linux" -o "$tauarch" = "mpis32" -o "$tauarch" = "ppc64" ]; then
     fixmakeargs="$fixmakeargs arch_width=32bit"
 else
+echo "Setting 64BIT arch width! tauarch=$tauarch"
     fixmakeargs="$fixmakeargs arch_width=64bit"
 fi
 
@@ -3338,6 +3356,10 @@ if [ $debugprof = yes ] ; then
 fi
 
 
+orig_c_compiler=$c_compiler
+orig_cxx_compiler=$cxx_compiler
+orig_fortran_compiler=$fortran_compiler
+# mpicxx may change it. 
 if [ $cxx_compiler = mpicxx ]
 then 
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
@@ -4058,8 +4080,20 @@ then
 	full_cc_compiler=`which oshcc`
     fi
 fi
+
+if [ $scorep = yes ]; then 
+  swap_full_cxx_compiler=$full_cxx_compiler
+  full_cxx_compiler=`which $orig_cxx_compiler`
+  swap_full_c_compiler=$swap_full_c_compiler
+  full_cc_compiler=`which $orig_c_compiler`
+fi 
+  
 fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
 
+if [ $scorep = yes ]; then 
+  full_cxx_compiler=$swap_full_cxx_compiler
+  full_cc_compiler=$swap_full_cc_compiler
+fi
 
 
 
@@ -4889,7 +4923,24 @@ fi
 
 
 
+if [ $scorep = yes ]
+then
+  swap_c_compiler=$c_compiler
+  c_compiler=$orig_c_compiler
+  swap_cxx_compiler=$cxx_compiler
+  cxx_compiler=$orig_cxx_compiler
+  swap_fortran_compiler=$fortran_compiler
+  fortran_compiler=$orig_fortran_compiler
+fi
 fixmakeargs="c_compiler=$c_compiler cxx_compiler=$cxx_compiler useropt=$useropt extradir=$extradir extradircxx=$extradircxx extrashlibopts=$extrashlibopts $fixmakeargs"
+# We really need mpicc as the linker for Score-P.
+
+if [ $scorep = yes ]
+then
+  c_compiler=$swap_c_compiler
+  cxx_compiler=$swap_cxx_compiler
+  fortran_compiler=$swap_fortran_compiler
+fi
 
 ######################################################################
 # discover the paths for standard system include directories
@@ -5093,7 +5144,7 @@ case $machine in
 	if [ $papi = yes ] ; then
 	    fixmakeargs="$fixmakeargs PPC64PAPI"
 	fi
-	if [ $c_compiler = xlc ] ; then
+	if [ $c_compiler = xlc -o $c_compiler = xlc_r ] ; then
 	    fixmakeargs="$fixmakeargs PPC64XLC"
 	fi
 	if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ] ; then
@@ -5824,7 +5875,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
 
     # The Intel compiler doesn't give an error, but a warning
     # if [ "$machine" = "craycnl" -a "$intel" == "yes" ]
-    if [ "$intel" == "yes" ]
+    if [ "$intel" = "yes" ]
     then
 	mpicompiler=$c_compiler
         mpiwarnings="-Werror"
@@ -6114,6 +6165,8 @@ else
     # MPICH requires the const keyword 
         fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
     fi
+    # Clean up
+    rm -f openmpi3const.c openmpi3const.o a.out 
   fi
 fi
 
@@ -8090,12 +8143,25 @@ if [ $scorep = yes ] ; then
       scorep_adapter_init=yes
       fixmakeargs="$fixmakeargs SCOREP_ADAPTER_INIT" 
       scorep_adapter="--adapter-init"
+      if [ $opari = yes -a "x$oparidir" = "x" ]; then 
+        if [ `${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | grep internal | wc -l` = 1 ]; then 
+          oparidir=${scorepdir}	
+        else 
+	  oparidir=`${scorepdir}/bin/scorep-info config-summary | grep "opari2 support:" | awk '{ print $7;}' | sed -e 's/opari2-config/../g'`
+        fi 
+	echo "NOTE: Using Opari from $oparidir"
+        fixmakeargs="$fixmakeargs oparidir=$oparidir"
+      fi 
     else
       scorep_adapter_init=no
     fi
 
     if [ $mpi = yes ]; then 
       scorep_adapter="$scorep_adapter --mpp=mpi"
+    else 
+      if [ $shmem = no ]; then 
+        scorep_adapter="$scorep_adapter --mpp=none"
+      fi
     fi
 
     if [ $cuda = yes ]; then 
@@ -8138,27 +8204,23 @@ if [ $scorep = yes ] ; then
     #echo "SCORE-P version is 1.1? $scorep11"
     if [ $scorep11 = 0 ] ; then
 	# default flags for Score-P 1.2+
-	scorepLibs=`${scorepdir}/bin/scorep-config --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepLD=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+	mod_scorep_adapter=`echo ${scorep_adapter} | sed -e 's/--adapter-init//g'`
+	#echo "WE HAVE mod_scorep_adapter = ${mod_scorep_adapter}"
+	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	scorepExtraLibs='-lscorep_adapter_user_event -lscorep_adapter_user_mgmt'
     fi
     # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
     if [ $mpi = yes ] ; then 
 	if [ $openmp = yes ] ; then
 	    fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	    if [ $scorep11 = 0 ]; then
-		scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --thread=omp:pomp_tpd --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi
 	else
 	    fixmakeargs="$fixmakeargs SCOREPMPI"
-	    if [ $scorep11 = 0 ]; then
-		scorepLibs=`${scorepdir}/bin/scorep-config --mpp=mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLD=`${scorepdir}/bin/scorep-config --mpp=mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi
@@ -8166,10 +8228,7 @@ if [ $scorep = yes ] ; then
     else
 	if [ $openmp = yes ] ; then
 	    fixmakeargs="$fixmakeargs SCOREPOMP" 
-	    if [ $scorep11 = 0 ]; then
-		scorepLD=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --ldflags --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-		scorepLibs=`${scorepdir}/bin/scorep-config --thread=omp:pomp_tpd --libs  --mpp=none | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	    else
+	    if [ $scorep11 = 1 ]; then
 		scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 		scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
 	    fi

@@ -126,6 +126,7 @@ def main():
 
 	# get the metadata
 	metadata = TrialThreadMetadata(inputData)
+	#metadata.setIgnoreWarnings(True)
 
     # get the flat profile
 	extractor = ExtractNonCallpathEventOperation(inputData)

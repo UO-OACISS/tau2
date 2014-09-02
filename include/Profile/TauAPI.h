@@ -186,6 +186,10 @@
 #define TAU_DISABLE_CONTEXT_EVENT(event) Tau_disable_context_event(event);
 #define TAU_ENABLE_CONTEXT_EVENT(event) Tau_enable_context_event(event);
 
+#define TAU_MEMDBG_PROTECT_ABOVE(value) TauEnv_set_memdbg_protect_above(value);
+#define TAU_MEMDBG_PROTECT_BELOW(value) TauEnv_set_memdbg_protect_below(value);
+#define TAU_MEMDBG_PROTECT_FREE(value)  TauEnv_set_memdbg_protect_free(value);
+
 #define TAU_ENABLE_TRACKING_MEMORY()	        Tau_enable_tracking_memory()
 #define TAU_DISABLE_TRACKING_MEMORY()	        Tau_disable_tracking_memory()
 #define TAU_TRACK_MEMORY()		        Tau_track_memory()
@@ -373,8 +377,8 @@ void Tau_start(const char *name);
 void Tau_stop(const char *name);
 void Tau_pure_start_task(const char *name, int tid);
 void Tau_pure_stop_task(const char *name, int tid);
-int Tau_stop_current_timer();
-int Tau_stop_current_timer_task(int tid);
+void Tau_stop_current_timer();
+void Tau_stop_current_timer_task(int tid);
 char * Tau_phase_enable(const char *group);
 
 void Tau_dynamic_start(char const * name, int isPhase);
@@ -458,7 +462,7 @@ void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);
 
 void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
-int TAUDECL Tau_stop_timer(void *profiler, int tid);
+void TAUDECL Tau_stop_timer(void *profiler, int tid);
 void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
 void TAUDECL Tau_lite_stop_timer(void *profiler);
 void TAUDECL Tau_pure_start(const char *name);

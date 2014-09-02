@@ -30,7 +30,7 @@
 #define CALL(routine) (JVMPIThreadLayer::tau_jvmpi_interface->routine)
 
 extern "C" void Tau_profile_exit_all_threads(void);
-extern "C" int Tau_stop_timer(void* function_info, int tid);
+extern "C" void Tau_stop_timer(void* function_info, int tid);
 // Should we exclude all methods using -XrunTAU:nomethods flag? 
 bool& TheTauExcludeMethodsFlag()
 {

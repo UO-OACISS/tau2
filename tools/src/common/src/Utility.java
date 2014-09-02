@@ -24,13 +24,19 @@ import org.jfree.chart.title.LegendTitle;
 
 public class Utility {
 
+	private static final String SPACE=" ";
+	private static final String MSPACE_REGX=" {2,}";
     public static String removeRuns(String str) {
-        int loc = str.indexOf("  ");
-        while (loc > 0) {
-            str = str.substring(0, loc) + str.substring(loc + 1);
-            loc = str.indexOf("  ");
-        }
-        return str;
+    	
+    	String[] cut = str.split(MSPACE_REGX);
+    	StringBuilder strb = new StringBuilder(str.length());
+    	strb.append(cut[0]);
+    	for(int i =1;i<cut.length;i++){
+    		strb.append(SPACE);
+    		strb.append(cut[i]);
+    	}
+
+        return strb.toString();
     }
 
     public static ImageIcon getImageIconResource(String name) {

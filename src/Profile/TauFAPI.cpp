@@ -642,6 +642,20 @@ void tau_disable_tracking_memory_headroom(void)
   Tau_disable_tracking_memory_headroom();
 } 
 
+void tau_memdbg_protect_above(int* value)
+{
+  TauEnv_set_memdbg_protect_above(*value);
+}
+void tau_memdbg_protect_below(int* value)
+{
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void tau_memdbg_protect_free(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
+}
+
+
 
 void tau_set_interrupt_interval(int* value)
 {
@@ -817,6 +831,19 @@ void tau_disable_tracking_memory_headroom_(void)
 {
   Tau_disable_tracking_memory_headroom();
 } 
+
+void tau_memdbg_protect_above_(int* value)
+{
+  TauEnv_set_memdbg_protect_above(*value);
+}
+void tau_memdbg_protect_below_(int* value)
+{
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void tau_memdbg_protect_free_(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
+}
 
 
 void tau_set_interrupt_interval_(int* value)
@@ -1056,6 +1083,20 @@ void TAU_DISABLE_TRACKING_MEMORY_HEADROOM(void)
 {
   Tau_disable_tracking_memory_headroom();
 } 
+
+void TAU_MEMDBG_PROTECT_ABOVE(int* value)
+{
+  TauEnv_set_memdbg_protect_above(*value);
+}
+void TAU_MEMDBG_PROTECT_BELOW(int* value)
+{
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void TAU_MEMDBG_PROTECT_FREE(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
+}
+
 
 //////////////////////////////////////////////////////
 // POWER API
@@ -1442,6 +1483,19 @@ void tau_disable_tracking_memory_headroom__(void)
 {
   Tau_disable_tracking_memory_headroom();
 } 
+
+void tau_memdbg_protect_above__(int* value)
+{
+  TauEnv_set_memdbg_protect_above(*value);
+}
+void tau_memdbg_protect_below__(int* value)
+{
+  TauEnv_set_memdbg_protect_below(*value);
+}
+void tau_memdbg_protect_free__(int* value)
+{
+  TauEnv_set_memdbg_protect_free(*value);
+}
 
 
 void tau_set_interrupt_interval__(int* value)
