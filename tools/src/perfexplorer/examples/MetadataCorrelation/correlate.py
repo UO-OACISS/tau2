@@ -32,7 +32,7 @@ def loadFile(fileName):
 	input = None
 	if fileName.endswith("gz"):
 		input = DataSourceResult(DataSourceResult.SNAP, files, False)
-	elif fileName.endswith("xml"):
+	elif "xml" in fileName:
 		input = DataSourceResult(DataSourceResult.SNAP, files, False)
 	elif fileName.endswith("ppk"):
 		input = DataSourceResult(DataSourceResult.PACKED, files, False)
@@ -43,22 +43,72 @@ def loadFile(fileName):
 def dumpData(inputData, metadata):
 	global tauData
 	metric = inputData.getTimeMetric()
-	outfile = open(tauData+".csv", "w")
-	outfile.write("pid se_timestep adv se_btr_vel equation_of_state MPI_Wait() nCellsSolve nCells nEdges totalLevelCells tauTotalLevelEdgeTop\n")
+	mpiwait = open(tauData+".mpiwait", "w")
+	mpiwait2 = open(tauData+".mpiwaitcalls", "w")
+	computation = open(tauData+".computation", "w")
+	ncells = open(tauData+".ncells", "w")
+	ncellssolve = open(tauData+".ncellssolve", "w")
+	nodeid = open(tauData+".nodeid", "w")
+	nNeededList = open(tauData+".nNeededList", "w")
+	nOwnedList = open(tauData+".nOwnedList", "w")
+	neighbors = open(tauData+".neighbors", "w")
+	recvbytes = open(tauData+".recvbytes", "w")
+	nodes=[]
 	for thread in inputData.getThreads():
-		outfile.write(str(thread) + " ")
+		bytes = inputData.getUsereventNumevents(thread, "Message size received from all nodes") * inputData.getUsereventMean(thread, "Message size received from all nodes")
+		recvbytes.write(str(bytes) + "\n")
+		mpi = inputData.getExclusive(thread, "MPI_Wait()", metric)
+		comp = inputData.getInclusive(thread, "se timestep", metric)
+		mpiwait.write(str(mpi) + "\n")
+		computation.write(str(comp - mpi) + "\n")
+		mpi = inputData.getCalls(thread, "MPI_Wait()")
+		mpiwait2.write(str(mpi) + "\n")
+		tmp = metadata.getExclusive(thread, "nCells", "METADATA")
+		if tmp == 0.0:
+			tmp = metadata.getExclusive(0, "nCells", "METADATA")
+		ncells.write(str(tmp) + "\n")
+		tmp = metadata.getExclusive(thread, "nCellsSolve", "METADATA")
+		if tmp == 0.0:
+			tmp = metadata.getExclusive(0, "nCellsSolve", "METADATA")
+		ncellssolve.write(str(tmp) + "\n")
+		tmp = metadata.getExclusive(thread, "nNeededList", "METADATA")
+		if tmp == 0.0:
+			tmp = metadata.getExclusive(0, "nNeededList", "METADATA")
+		nNeededList.write(str(tmp) + "\n")
+		tmp = metadata.getExclusive(thread, "nOwnedList", "METADATA")
+		if tmp == 0.0:
+			tmp = metadata.getExclusive(0, "nOwnedList", "METADATA")
+		nOwnedList.write(str(tmp) + "\n")
+		tmp = metadata.getExclusive(thread, "neighbors", "METADATA")
+		if tmp == 0.0:
+			tmp = metadata.getExclusive(0, "neighbors", "METADATA")
+		neighbors.write(str(tmp) + "\n")
+		tmp = metadata.getNameValue(thread, "Hostname")
+		if tmp == None:
+			tmp = metadata.getNameValue(0, "Hostname")
+		if tmp not in nodes:
+			nodes.append(tmp)
+		nodeid.write(str(nodes.index(tmp)) + "\n")
+		"""
 		outfile.write(str(inputData.getExclusive(thread, "se timestep", metric)) + " ")
 		outfile.write(str(inputData.getExclusive(thread, "adv", metric)) + " ")
 		outfile.write(str(inputData.getExclusive(thread, "se btr vel", metric)) + " ")
 		outfile.write(str(inputData.getExclusive(thread, "equation of state", metric)) + " ")
-		outfile.write(str(inputData.getExclusive(thread, "MPI_Wait()", metric)) + " ")
 		outfile.write(str(metadata.getExclusive(thread, "nCellsSolve", "METADATA")) + " ")
-		outfile.write(str(metadata.getExclusive(thread, "nCells", "METADATA")) + " ")
 		outfile.write(str(metadata.getExclusive(thread, "nEdges", "METADATA")) + " ")
 		outfile.write(str(metadata.getExclusive(thread, "totalLevelCells", "METADATA")) + " ")
 		outfile.write(str(metadata.getExclusive(thread, "tauTotalLevelEdgeTop", "METADATA")) + " ")
-		outfile.write("\n")
-	outfile.close()
+		"""
+	recvbytes.close()
+	mpiwait.close()
+	mpiwait2.close()
+	ncells.close()
+	ncellssolve.close()
+	computation.close()
+	nodeid.close()
+	nNeededList.close()
+	nOwnedList.close()
+	neighbors.close()
 
 def main():
 	print "--------------- JPython test script start ------------"
