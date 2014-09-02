@@ -116,6 +116,7 @@ extern "C" void Tau_disable_collector_api() {
 
 static const char* __UNKNOWN_ADDR__ = "UNKNOWN addr=<0>";
 static const char* __UNKNOWN__ = "UNKNOWN";
+static const char* __BFD_UNKNOWN__ = "UNRESOLVED UNKNOWN ADDR";
 
 extern const int OMP_COLLECTORAPI_HEADERSIZE;
 char OMP_EVENT_NAME[35][50]= {
@@ -291,14 +292,19 @@ char * get_proxy_name(unsigned long ip) {
     OmpHashNode * node = OmpTheHashTable()[ip];
     if (!node) {
         node = new OmpHashNode;
-        Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
-        // Build routine name for TAU function info
-        unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
-        char * routine = (char*)malloc(size);
+        char * routine = NULL;
         if (TauEnv_get_bfd_lookup()) {
+            Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
+            // Build routine name for TAU function info
+            unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
+            routine = (char*)malloc(size);
             sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
         } else {
-            sprintf(routine, "[%s] UNRESOLVED %s ADDR %p", node->info.funcname, node->info.filename, (void*)ip);
+	    char addrString[64];
+	    sprintf(addrString, "%p", (void*)ip);
+            unsigned int size = strlen(__BFD_UNKNOWN__) + strlen(addrString) + 2;
+            routine = (char*)malloc(size);
+            sprintf(routine, "%s %s", __BFD_UNKNOWN__, addrString);
         }
 	node->location = routine;
         OmpTheHashTable()[ip] = node;
@@ -353,16 +359,21 @@ char * show_backtrace (int tid, int offset) {
 			OmpHashNode * node = OmpTheHashTable()[ip];
             if (!node) {
               node = new OmpHashNode;
-              Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
-              // Build routine name for TAU function info
-              unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
-              char * routine = (char*)malloc(size);
+              char * routine = NULL;
               if (TauEnv_get_bfd_lookup()) {
+                Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
+                // Build routine name for TAU function info
+                unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
+                routine = (char*)malloc(size);
                 sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
               } else {
-                sprintf(routine, "[%s] UNRESOLVED %s ADDR %p", node->info.funcname, node->info.filename, (void*)ip);
+	        char addrString[64];
+	        sprintf(addrString, "%p", (void*)ip);
+                unsigned int size = strlen(__BFD_UNKNOWN__) + strlen(addrString) + 2;
+                routine = (char*)malloc(size);
+                sprintf(routine, "%s %s", __BFD_UNKNOWN__, addrString);
               }
-			  node->location = routine;
+              node->location = routine;
               OmpTheHashTable()[ip] = node;
             }
             RtsLayer::UnLockDB();
@@ -920,6 +931,7 @@ extern "C" void __attribute__ ((destructor)) Tau_finalize_collector_api(void);
 
 extern "C" void Tau_finalize_collector_api(void) {
     if (!initialized) return;
+    Tau_global_incr_insideTAU();
     TAU_OPENMP_SET_LOCK;
     std::map<unsigned long, char*>::iterator it = region_names.begin();
     while (it != region_names.end()) {
@@ -938,6 +950,7 @@ extern "C" void Tau_finalize_collector_api(void) {
     }
     task_names.clear();
     TAU_OPENMP_UNSET_LOCK;
+    Tau_global_decr_insideTAU();
     return;
 #if 0
     TAU_VERBOSE("Tau_finalize_collector_api()\n");
