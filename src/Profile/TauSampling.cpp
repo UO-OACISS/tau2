@@ -278,7 +278,7 @@ struct CallSiteCacheMap : public TAU_HASH_MAP<unsigned long, CallSiteCacheNode*>
   virtual ~CallSiteCacheMap() {
     //Wait! We might not be done! Unbelieveable as it may seem, this map
 	//could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
-    Tau_sampling_finalize_if_necessary();
+    Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
   }
 };
 
@@ -570,17 +570,20 @@ int Tau_sampling_write_maps(int tid, int restart)
   }
 
   char line[4096];
+  char * str;
   while (!feof(mapsfile)) {
-    fgets(line, 4096, mapsfile);
-    unsigned long start, end, offset;
-    char module[4096];
-    char perms[5];
-    module[0] = 0;
+    str = fgets(line, 4096, mapsfile);
+    if (str != NULL) {
+      unsigned long start, end, offset;
+      char module[4096];
+      char perms[5];
+      module[0] = 0;
 
-    sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
+      sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
 
-    if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
-      fprintf(output, "%s %p %p %lu\n", module, (void*)start, (void*)end, offset);
+      if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
+        fprintf(output, "%s %p %p %lu\n", module, (void*)start, (void*)end, offset);
+      }
     }
   }
   fclose(output);
@@ -714,7 +717,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
-    char const * childName, char ** newShortName, bool addAddress)
+    char const * childName, char * newShortName, bool addAddress)
 {
   int printMessage=0;
   if (strcmp(tag, "UNWIND") == 0) {
@@ -739,29 +742,28 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     printMessage=1;
   }
 
-  char buff[4096];
-
-  char *newName = NULL;
-
+  char * buff = NULL;
 
   // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
+    char lineno[32];
+    sprintf(lineno, "%d", resolvedInfo.lineno);
+    // make sure we allocate enough space for the buffer!!!!
     if (childName) {
+      buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + strlen(lineno) + 32);
       sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
           tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
     } else {
+      buff = (char*)malloc(strlen(tag) + strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + strlen(lineno) + 32);
       sprintf(buff, "[%s] %s [{%s} {%d}]",
           tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
     }
-    // TODO: Leak?
-    char lineno[32];
-    sprintf(lineno, "%d", resolvedInfo.lineno);
-//      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
-//      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-    newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
-    sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-    newShortName = &newName; 
+    newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
+    sprintf(newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
+    //newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+    //sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+    //newShortName = &newName; 
     //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
   } else {
     char const * mapName = "UNKNOWN";
@@ -772,34 +774,40 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     if (addAddress) {
       char * tempAddrBuffer = (char*)malloc(32);    // not expecting more than 26 digits in addr
       if (childName) {
+      buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(mapName) + 128);
         sprintf(buff, "[%s] [%s] [@] UNRESOLVED %s ADDR %p",
             tag, childName, mapName, (void *)addr);
       } else {
+      buff = (char*)malloc(strlen(tag) + strlen(mapName) + 128);
         sprintf(buff, "[%s] UNRESOLVED %s ADDR %p",
             tag, mapName, (void *)addr);
       }
       sprintf(tempAddrBuffer, "ADDR %p", (void *)addr);
       // TODO: Leak?
-      *newShortName = tempAddrBuffer;
+      newShortName = tempAddrBuffer;
     } else {
       if (childName) {
+        buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(mapName) + 128);
         sprintf(buff, "[%s] [%s] [@] UNRESOLVED %s", tag, childName, mapName);
       } else {
 	if (TauEnv_get_bfd_lookup()) {
+          buff = (char*)malloc(strlen(tag) + strlen(mapName) + 128);
           sprintf(buff, "[%s] UNRESOLVED %s", tag, mapName);
         } else {
+          buff = (char*)malloc(strlen(tag) + strlen(mapName) + 128);
           sprintf(buff, "[%s] UNRESOLVED %s ADDR %p", tag, mapName, (void*)addr);
         }
       }
       // TODO: Leak?
-      *newShortName = strdup("UNRESOLVED");
+      newShortName = strdup("UNRESOLVED");
     }
   }
 
   // TODO: Leak?
-  callsite->name = strdup(buff);
+  //callsite->name = strdup(buff);
+  callsite->name = buff;
   // only print this for new addresses
-  if (printMessage==1) TAU_VERBOSE("Name %s, Address %p resolved to %s\n", *newShortName, (void*)addr, buff);
+  if (printMessage==1) TAU_VERBOSE("Name %s, Address %p resolved to %s\n", newShortName, (void*)addr, buff);
   return callsite;
 }
 
@@ -846,7 +854,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       char * prevShortName = NULL;
       char * newShortName = NULL;
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, &newShortName, addAddress));
+          addresses[1], "SAMPLE", NULL, newShortName, addAddress));
       // move the pointers
       if (newShortName) {
         prevShortName = newShortName;
@@ -855,7 +863,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, &newShortName, addAddress));
+            address, "UNWIND", prevShortName, newShortName, addAddress));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
@@ -1887,11 +1895,13 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 }
 
 extern "C"
-void Tau_sampling_finalize_if_necessary(void)
+void Tau_sampling_finalize_if_necessary(int tid)
 {
   static bool finalized = false;
   static bool thrFinalized[TAU_MAX_THREADS] = {false};
-  int tid = Tau_get_local_tid();
+  //int tid = Tau_get_local_tid();
+
+  TAU_VERBOSE("TAU: Finalize(if necessary) <Node=%d.Thread=%d> finalizing sampling...\n", RtsLayer::myNode(), tid); fflush(stderr);
 
     // Protect TAU from itself
     TauInternalFunctionGuard protects_this_function;
@@ -1911,29 +1921,32 @@ void Tau_sampling_finalize_if_necessary(void)
       RtsLayer::LockEnv();
       // check again, someone else might already have finalized by now.
       if (!finalized) {
-        for (int i = 0; i < TAU_MAX_THREADS; i++) {
-          thrFinalized[i] = false;
-          // just in case, disable sampling.
-          //samplingEnabled[i] = 0;
-        }
         collectingSamples = 0;
         finalized = true;
       }
       RtsLayer::UnLockEnv();
     }
 
-  if (!thrFinalized[tid]) {
-    tau_sampling_flags()->samplingEnabled = 0;
-    thrFinalized[tid] = true;
-    Tau_sampling_finalize(tid);
-  }
+    if (!thrFinalized[tid]) {
+      RtsLayer::LockEnv();
+      if (!thrFinalized[tid]) {
+        tau_sampling_flags()->samplingEnabled = 0;
+        thrFinalized[tid] = true;
+        Tau_sampling_finalize(tid);
+      }
+      RtsLayer::UnLockEnv();
+    }
 
     // Kevin: should we finalize all threads on this process? I think so.
   if (tid == 0) {
     for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
       if (!thrFinalized[i]) {
-        thrFinalized[i] = true;
-        Tau_sampling_finalize(i);
+        RtsLayer::LockEnv();
+        if (!thrFinalized[i]) {
+          thrFinalized[i] = true;
+          Tau_sampling_finalize(i);
+        }
+        RtsLayer::UnLockEnv();
       }
     }
   }

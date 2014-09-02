@@ -72,6 +72,7 @@ public class MpiPDataSource extends DataSource {
         Date stopTime = null;
 
         SimpleDateFormat sdfInput = new SimpleDateFormat("yyyy MM dd hh:mm:ss");
+        Boolean concise = false;
 
         // find the start and stop time
         while ((inputString = br.readLine()) != null) {
@@ -93,12 +94,70 @@ public class MpiPDataSource extends DataSource {
                 }
             }
                     
+            if (inputString.startsWith("@ MPIP env var")) {
+                String remainder = inputString.substring(inputString.indexOf(':') + 1);
+                if (remainder.contains("-c")) {
+                	concise = true;
+                	int numMetrics = this.getNumberOfMetrics();
+                	Thread firstThread = null;
+                    // initialize to the first thread
+                    List<Thread> allThreads=this.getAllThreads();
+                    if (allThreads != null && !allThreads.isEmpty()) {
+                        firstThread=allThreads.get(0);
+                    }
+                	if (meanDataNoNull == null) {
+                		meanDataNoNull = new Thread(-1, -1, -1, numMetrics, this);
+                		addDerivedSnapshots(firstThread, meanDataNoNull);
+                	}
+
+                	if (totalData == null) {
+                		totalData = new Thread(-2, -2, -2, numMetrics, this);
+                		addDerivedSnapshots(firstThread, totalData);
+                	}
+
+                	if (stddevDataNoNull == null) {
+                		stddevDataNoNull = new Thread(-3, -3, -3, numMetrics, this);
+                		addDerivedSnapshots(firstThread, stddevDataNoNull);
+                	}
+
+            		if (minData == null) {
+            			minData = new Thread(-4, -4, -4, numMetrics, this);
+            			addDerivedSnapshots(firstThread, minData);
+            		}
+            		if (maxData == null) {
+            			maxData = new Thread(-5, -5, -5, numMetrics, this);
+            			addDerivedSnapshots(firstThread, maxData);
+            		}
+            		if (meanDataAll == null) {
+            			meanDataAll = new Thread(-6, -6, -6, numMetrics, this);
+            			addDerivedSnapshots(firstThread, meanDataAll);
+            		}
+            		if (stddevDataAll == null) {
+            			stddevDataAll = new Thread(-7, -7, -7, numMetrics, this);
+            			addDerivedSnapshots(firstThread, stddevDataAll);
+            		}
+            		if(meanIncludeNulls){
+            			meanData=meanDataAll;
+            			stddevData=stddevDataAll;
+            		}else{
+            			meanData=meanDataNoNull;
+            			stddevData=stddevDataNoNull;
+            		}
+                }
+            }
             
             if (inputString.startsWith("@ Start time")) {
                 String remainder = inputString.substring(inputString.indexOf(':') + 1);
-
                 try {
                     startTime = sdfInput.parse(remainder);
+                } catch (java.text.ParseException except) {
+                    System.out.println("Warning, couldn't parse date \"" + remainder + "\"");
+                }
+            }
+            if (inputString.startsWith("@ Stop time")) {
+                String remainder = inputString.substring(inputString.indexOf(':') + 1);
+                try {
+                    stopTime = sdfInput.parse(remainder);
                 } catch (java.text.ParseException except) {
                     System.out.println("Warning, couldn't parse date \"" + remainder + "\"");
                 }
@@ -110,27 +169,9 @@ public class MpiPDataSource extends DataSource {
             }
         }
 
-        fileIn = new FileInputStream(file);
-        inReader = new InputStreamReader(fileIn);
-        br = new BufferedReader(inReader);
-
-        // find the start and stop time
-        while ((inputString = br.readLine()) != null) {
-            if (inputString.startsWith("@ Stop time")) {
-
-                String remainder = inputString.substring(inputString.indexOf(':') + 1);
-
-                try {
-                    stopTime = sdfInput.parse(remainder);
-                } catch (java.text.ParseException except) {
-                    System.out.println("Warning, couldn't parse date \"" + remainder + "\"");
-                }
-
-                // exit this while loop
-                break;
-            }
-        }
-
+        br.close();
+        inReader.close();
+        fileIn.close();
         // start from the top in case we couldn't find start and stop time
         fileIn = new FileInputStream(file);
         inReader = new InputStreamReader(fileIn);
@@ -199,6 +240,7 @@ public class MpiPDataSource extends DataSource {
                     if (level == 0) {
                         int loc = parent.lastIndexOf(" ");
                         if (loc == -1) {
+                        	br.close();
                             throw new RuntimeException("Couldn't find MPI Call!");
                         }
                         mpiCall = parent.substring(loc + 1);
@@ -297,10 +339,80 @@ public class MpiPDataSource extends DataSource {
                             thread.addFunctionProfile(functionProfile);
                         }
                         functionProfile.setExclusive(metric, callsiteData.d5);
-                        //functionProfile.setExclusivePercent(metric, callsiteData.d3);
                         functionProfile.setInclusive(metric, callsiteData.d5);
-                        //functionProfile.setInclusivePercent(metric, callsiteData.d3);
                         functionProfile.setNumCalls(callsiteData.i2);
+                        functionProfile.setNumSubr(0);
+
+                    } else if (concise) {
+                    	// we only have the concise output. We we have just min, mean, max.
+                    	functionProfile = this.meanDataNoNull.getFunctionProfile(function);
+                        if (functionProfile == null) {
+                            functionProfile = new FunctionProfile(function);
+                            this.meanDataNoNull.addFunctionProfile(functionProfile);
+                        }
+                        functionProfile.setExclusive(metric, callsiteData.d1);
+                        functionProfile.setInclusive(metric, callsiteData.d1);
+                        functionProfile.setNumCalls(1);
+                        functionProfile.setNumSubr(0);
+
+                    	functionProfile = this.meanDataAll.getFunctionProfile(function);
+                        if (functionProfile == null) {
+                            functionProfile = new FunctionProfile(function);
+                            this.meanDataAll.addFunctionProfile(functionProfile);
+                        }
+                        functionProfile.setExclusive(metric, callsiteData.d1);
+                        functionProfile.setInclusive(metric, callsiteData.d1);
+                        functionProfile.setNumCalls(1);
+                        functionProfile.setNumSubr(0);
+
+                    	functionProfile = this.totalData.getFunctionProfile(function);
+                        if (functionProfile == null) {
+                            functionProfile = new FunctionProfile(function);
+                            this.totalData.addFunctionProfile(functionProfile);
+                        }
+                        functionProfile.setExclusive(metric, callsiteData.d1);
+                        functionProfile.setInclusive(metric, callsiteData.d1);
+                        functionProfile.setNumCalls(1);
+                        functionProfile.setNumSubr(0);
+
+                        functionProfile = this.maxData.getFunctionProfile(function);
+                        if (functionProfile == null) {
+                            functionProfile = new FunctionProfile(function);
+                            this.maxData.addFunctionProfile(functionProfile);
+                        }
+                        functionProfile.setExclusive(metric, callsiteData.d0);
+                        functionProfile.setInclusive(metric, callsiteData.d0);
+                        functionProfile.setNumCalls(1);
+                        functionProfile.setNumSubr(0);
+                    	
+                        functionProfile = this.minData.getFunctionProfile(function);
+                        if (functionProfile == null) {
+                            functionProfile = new FunctionProfile(function);
+                            this.minData.addFunctionProfile(functionProfile);
+                        }
+                        functionProfile.setExclusive(metric, callsiteData.d2);
+                        functionProfile.setInclusive(metric, callsiteData.d2);
+                        functionProfile.setNumCalls(1);
+                        functionProfile.setNumSubr(0);
+
+                        functionProfile = this.stddevDataAll.getFunctionProfile(function);
+                        if (functionProfile == null) {
+                            functionProfile = new FunctionProfile(function);
+                            this.stddevDataAll.addFunctionProfile(functionProfile);
+                        }
+                        functionProfile.setExclusive(metric, 0);
+                        functionProfile.setInclusive(metric, 0);
+                        functionProfile.setNumCalls(0);
+                        functionProfile.setNumSubr(0);
+
+                        functionProfile = this.stddevDataNoNull.getFunctionProfile(function);
+                        if (functionProfile == null) {
+                            functionProfile = new FunctionProfile(function);
+                            this.stddevDataNoNull.addFunctionProfile(functionProfile);
+                        }
+                        functionProfile.setExclusive(metric, 0);
+                        functionProfile.setInclusive(metric, 0);
+                        functionProfile.setNumCalls(0);
                         functionProfile.setNumSubr(0);
 
                     } else {
@@ -334,7 +446,7 @@ public class MpiPDataSource extends DataSource {
             	if (inputString != null && 
 					inputString.length() > 0 &&
 					!inputString.startsWith("--------")) {
-					System.out.println("WHILE: " + inputString);
+					//System.out.println("WHILE: " + inputString);
                 	getUsereventData(inputString);
                 	userEvent = this.addUserEvent(eventNames[callsiteData.i0]);
                 	if (callsiteData.i1 >= 0) {
@@ -370,105 +482,162 @@ public class MpiPDataSource extends DataSource {
 
         //Close the file.
         br.close();
+        inReader.close();
+        fileIn.close();
 
         // Add the .MpiP.Application
 
         if (startTime != null && stopTime != null) {
-
-            double inclusive = (stopTime.getTime() - startTime.getTime()) * 1000;
-
             function = this.addFunction(".MpiP.Application", 1);
-
-            for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
-                Node node = it.next();
-                for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
-                    Context context = it2.next();
-                    for (Iterator<Thread> it3 = context.getThreads(); it3.hasNext();) {
-                        edu.uoregon.tau.perfdmf.Thread thread = it3.next();
-
-                        List<FunctionProfile> functions = thread.getFunctionProfiles();
-
-                        double exclusive = inclusive;
-                        double numSubroutines = 0;
-                        for (Iterator<FunctionProfile> e4 = functions.iterator(); e4.hasNext();) {
-                            FunctionProfile fp = e4.next();
-                            if (fp != null) {
-                                numSubroutines = numSubroutines + fp.getNumCalls();
-                                exclusive = exclusive - fp.getExclusive(metric);
-                            }
-                        }
-
-                        if (exclusive < 0 || inclusive <= 0) {
-                            inclusive = Math.abs(exclusive);
-                            exclusive = 0;
-                        }
-
-                        //double exclusivePercent = exclusive / inclusive;
-
-                        functionProfile = new FunctionProfile(function);
-
-                        thread.addFunctionProfile(functionProfile);
-
-                        functionProfile.setInclusive(metric, inclusive);
-                        //functionProfile.setInclusivePercent(metric, 100);
-
-                        functionProfile.setExclusive(metric, exclusive);
-                        //functionProfile.setExclusivePercent(metric, exclusivePercent);
-                        functionProfile.setNumCalls(1);
-                        functionProfile.setNumSubr(numSubroutines);
-                    }
+            if (concise) {
+                for (Iterator<Thread> it3 = this.getAggThreads().iterator(); it3.hasNext();) {
+                    edu.uoregon.tau.perfdmf.Thread thread = it3.next();
+	                List<FunctionProfile> functions = thread.getFunctionProfiles();
+	                double inclusive = (stopTime.getTime() - startTime.getTime()) * 1000;
+	                double exclusive = inclusive;
+	                double numSubroutines = 0;
+	                for (Iterator<FunctionProfile> e4 = functions.iterator(); e4.hasNext();) {
+	                    FunctionProfile fp = e4.next();
+	                    if (fp != null) {
+	                        numSubroutines = numSubroutines + fp.getNumCalls();
+	                        exclusive = exclusive - fp.getExclusive(metric);
+	                    }
+	                }
+	                if (exclusive < 0 || inclusive <= 0) {
+	                    inclusive = Math.abs(exclusive);
+	                    exclusive = 0;
+	                }
+	                if (thread == this.stddevDataAll || thread == this.stddevDataNoNull) {
+	                	inclusive = 0;
+	                	exclusive = 0;
+	                }
+	                functionProfile = new FunctionProfile(function);
+	                thread.addFunctionProfile(functionProfile);
+	                functionProfile.setInclusive(metric, inclusive);
+	                functionProfile.setExclusive(metric, exclusive);
+	                functionProfile.setNumCalls(1);
+	                functionProfile.setNumSubr(numSubroutines);
                 }
+            } else {
+                double inclusive = (stopTime.getTime() - startTime.getTime()) * 1000;
+	            for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+	                Node node = it.next();
+	                for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+	                    Context context = it2.next();
+	                    for (Iterator<Thread> it3 = context.getThreads(); it3.hasNext();) {
+	                        edu.uoregon.tau.perfdmf.Thread thread = it3.next();
+	
+	                        List<FunctionProfile> functions = thread.getFunctionProfiles();
+	
+	                        double exclusive = inclusive;
+	                        double numSubroutines = 0;
+	                        for (Iterator<FunctionProfile> e4 = functions.iterator(); e4.hasNext();) {
+	                            FunctionProfile fp = e4.next();
+	                            if (fp != null) {
+	                                numSubroutines = numSubroutines + fp.getNumCalls();
+	                                exclusive = exclusive - fp.getExclusive(metric);
+	                            }
+	                        }
+	
+	                        if (exclusive < 0 || inclusive <= 0) {
+	                            inclusive = Math.abs(exclusive);
+	                            exclusive = 0;
+	                        }
+	
+	                        //double exclusivePercent = exclusive / inclusive;
+	
+	                        functionProfile = new FunctionProfile(function);
+	
+	                        thread.addFunctionProfile(functionProfile);
+	
+	                        functionProfile.setInclusive(metric, inclusive);
+	                        //functionProfile.setInclusivePercent(metric, 100);
+	
+	                        functionProfile.setExclusive(metric, exclusive);
+	                        //functionProfile.setExclusivePercent(metric, exclusivePercent);
+	                        functionProfile.setNumCalls(1);
+	                        functionProfile.setNumSubr(numSubroutines);
+	                    }
+	                }
+	            }
             }
-
         }
 
         //                time = (System.currentTimeMillis()) - time;
         //                System.out.println("Done processing data file!");
         //                System.out.println("Time to process file (in milliseconds): " + time);
 
-        this.generateDerivedData();
+        if (concise) {
+        	derivedProvided = true;
+        }
+       	this.generateDerivedData();
         this.aggregateMetaData();
 
     }
 
     private void getCallsiteData(String string) {
         StringTokenizer st1 = new StringTokenizer(string, " ");
-        callsiteData.s0 = st1.nextToken(); // MPI function
-        callsiteData.i0 = Integer.parseInt(st1.nextToken()); // callsite
-        // index
-
-        String tmpString = st1.nextToken(); // rank
-        if (tmpString.equals("*")) {
+        if (st1.countTokens() == 8) {
+	        callsiteData.s0 = st1.nextToken(); // MPI function
+	        callsiteData.i0 = Integer.parseInt(st1.nextToken()); // callsite
+	        // index
             callsiteData.i1 = -1;
+	        callsiteData.i2 = Integer.parseInt(st1.nextToken()); // node count
+	        callsiteData.d0 = Double.parseDouble(st1.nextToken()) * 1000; // Max
+	        callsiteData.d1 = Double.parseDouble(st1.nextToken()) * 1000; // Mean
+	        callsiteData.d2 = Double.parseDouble(st1.nextToken()) * 1000; // Min
+	        //callsiteData.d3 = Double.parseDouble(st1.nextToken()); // App%
+	        //callsiteData.d4 = Double.parseDouble(st1.nextToken()); // MPI%
         } else {
-            callsiteData.i1 = Integer.parseInt(tmpString); // rank
+	        callsiteData.s0 = st1.nextToken(); // MPI function
+	        callsiteData.i0 = Integer.parseInt(st1.nextToken()); // callsite
+	        // index
+	
+	        String tmpString = st1.nextToken(); // rank
+	        if (tmpString.equals("*")) {
+	            callsiteData.i1 = -1;
+	        } else {
+	            callsiteData.i1 = Integer.parseInt(tmpString); // rank
+	        }
+	        callsiteData.i2 = Integer.parseInt(st1.nextToken()); // count
+	        callsiteData.d0 = Double.parseDouble(st1.nextToken()); // Max
+	        callsiteData.d1 = Double.parseDouble(st1.nextToken()) * 1000; // Mean
+	        callsiteData.d2 = Double.parseDouble(st1.nextToken()); // Min
+	        callsiteData.d3 = Double.parseDouble(st1.nextToken()); // App%
+	        callsiteData.d4 = Double.parseDouble(st1.nextToken()); // MPI%
+	        callsiteData.d5 = callsiteData.d1 * callsiteData.i2; // Total time for this node
         }
-        callsiteData.i2 = Integer.parseInt(st1.nextToken()); // count
-        callsiteData.d0 = Double.parseDouble(st1.nextToken()); // Max
-        callsiteData.d1 = Double.parseDouble(st1.nextToken()) * 1000; // Mean
-        callsiteData.d2 = Double.parseDouble(st1.nextToken()); // Min
-        callsiteData.d3 = Double.parseDouble(st1.nextToken()); // App%
-        callsiteData.d4 = Double.parseDouble(st1.nextToken()); // MPI%
-        callsiteData.d5 = callsiteData.d1 * callsiteData.i2; // Total time for this node
     }
 
     private void getUsereventData(String string) {
         StringTokenizer st1 = new StringTokenizer(string, " ");
-        callsiteData.s0 = st1.nextToken(); // MPI function
-        callsiteData.i0 = Integer.parseInt(st1.nextToken()); // callsite
-        // index
-
-        String tmpString = st1.nextToken(); // rank
-        if (tmpString.equals("*")) {
+        if (st1.countTokens() == 8) {
+	        callsiteData.s0 = st1.nextToken(); // MPI function
+	        callsiteData.i0 = Integer.parseInt(st1.nextToken()); // callsite
+	        // index
+	
             callsiteData.i1 = -1;
+	        callsiteData.i2 = Integer.parseInt(st1.nextToken()); // node count
+	        callsiteData.d0 = Double.parseDouble(st1.nextToken()); // Max
+	        callsiteData.d1 = Double.parseDouble(st1.nextToken()); // Mean
+	        callsiteData.d2 = Double.parseDouble(st1.nextToken()); // Min
         } else {
-            callsiteData.i1 = Integer.parseInt(tmpString); // rank
+	        callsiteData.s0 = st1.nextToken(); // MPI function
+	        callsiteData.i0 = Integer.parseInt(st1.nextToken()); // callsite
+	        // index
+	
+	        String tmpString = st1.nextToken(); // rank
+	        if (tmpString.equals("*")) {
+	            callsiteData.i1 = -1;
+	        } else {
+	            callsiteData.i1 = Integer.parseInt(tmpString); // rank
+	        }
+	        callsiteData.i2 = Integer.parseInt(st1.nextToken()); // count
+	        callsiteData.d0 = Double.parseDouble(st1.nextToken()); // Max
+	        callsiteData.d1 = Double.parseDouble(st1.nextToken()); // Mean
+	        callsiteData.d2 = Double.parseDouble(st1.nextToken()); // Min
+	        callsiteData.d3 = Double.parseDouble(st1.nextToken()); // Sum
         }
-        callsiteData.i2 = Integer.parseInt(st1.nextToken()); // count
-        callsiteData.d0 = Double.parseDouble(st1.nextToken()); // Max
-        callsiteData.d1 = Double.parseDouble(st1.nextToken()); // Mean
-        callsiteData.d2 = Double.parseDouble(st1.nextToken()); // Min
-        callsiteData.d3 = Double.parseDouble(st1.nextToken()); // Sum
     }
 
 }

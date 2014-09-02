@@ -575,6 +575,7 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   const char *conv="tau2vtf";
   char converter[1024] = {0}; 
   FILE *in;
+  int status_code = 0;
   
   /* If we can't find tau2vtf, use tau_convert! */
   sprintf(converter, "%s/%s/bin/%s",tauroot, tauarch, conv);
@@ -607,7 +608,10 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
   /* NOTE: BGL will not execute this code as well because the compute node 
      kernels cannot fork tasks. So, on BGL, nothing will happen when the 
      following system command executes */
-  system(cmd);
+  status_code = system(cmd);
+  if (status_code != 0) {
+    TAU_VERBOSE("Warning: unable to execute command: '%s'\n", cmd);
+  }
 #endif /* TAU_CATAMOUNT */
 
   return 0;

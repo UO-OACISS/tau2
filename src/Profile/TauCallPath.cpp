@@ -205,8 +205,6 @@ string TauFormulateNameString(Profiler * current)
 //////////////////////////////////////////////////////////////////////
 void Profiler::CallPathStart(int tid)
 {
-  long * comparison = NULL;
-
   // Start the callpath profiling
   if (ParentProfiler != NULL) {
     // There is a callpath 
@@ -216,7 +214,7 @@ void Profiler::CallPathStart(int tid)
 
     DEBUGPROFMSG("Inside CallPath Start "<<ThisFunction->GetName()<<endl;);
 
-    comparison = TauFormulateComparisonArray(this);
+    long * comparison = TauFormulateComparisonArray(this);
 
     // *CWL* - Send the path key off to be registered with CallSite discovery
     //         for later processing.

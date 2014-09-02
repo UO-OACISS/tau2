@@ -188,19 +188,24 @@ public:
   }
 
   // Cough up the information about this function.
-  void SetName(std::string& str) { Name = strdup(str.c_str()); }
+  void SetName(std::string & str) { Name = strdup(str.c_str()); }
   const char* GetName() const { return Name; }
-  void SetType(std::string& str) { Type = strdup(str.c_str()); }
-  const char* GetType() const { return Type; }
+
+  void SetType(char const * str) {
+    Type = strdup(str);
+  }
+  char const * GetType() const {
+    return Type;
+  }
 
   const char* GetPrimaryGroup() const { return GroupName; }
   const char* GetAllGroups() const { return AllGroups; }
-  void SetPrimaryGroupName(const char *newname) { 
+  void SetPrimaryGroupName(const char *newname) {
     GroupName = strdup(newname);
     AllGroups = strdup(newname); /* to make it to the profile */
   }
   void SetPrimaryGroupName(std::string newname) {
-    GroupName = strdup(newname.c_str()); 
+    GroupName = strdup(newname.c_str());
     AllGroups = strdup(newname.c_str()); /* to make it to the profile */
   }
 
@@ -253,6 +258,10 @@ public:
 
   TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
   void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
+
+  bool IsThrottled() const {
+    return ! (RtsLayer::TheEnableInstrumentation() && (MyProfileGroup_ & RtsLayer::TheProfileMask()));
+  }
 
 private:
   TauGroup_t MyProfileGroup_;
