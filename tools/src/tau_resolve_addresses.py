@@ -55,7 +55,7 @@ USAGE = """
 %prog [options] tauprofile.xml
 """
 
-PATTERN = re.compile('UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
+PATTERN = re.compile('(.*?)UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
 
 # Seconds
 TIMEOUT = 300
@@ -157,8 +157,9 @@ class Worker(Thread):
         """
         """
         def repl(match):
-            exe = match.group(1)
-            addr = match.group(2)
+            prefix = match.group(1)
+            exe = match.group(2)
+            addr = match.group(3)
             if exe == 'UNKNOWN':
                 for p in self.pipes.itervalues():
                     resolved = p.resolve(addr)
@@ -167,7 +168,7 @@ class Worker(Thread):
             else:
                 resolved = self.pipes[exe].resolve(addr)
             if resolved[0] != 'UNRESOLVED':
-                return saxutils.escape('%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2]))
+                return saxutils.escape('%s%s [{%s} {%s}]' % (prefix, resolved[0], resolved[1], resolved[2]))
             else:
                 return match.group(0)
 
@@ -230,7 +231,7 @@ def tauprofile_xml(infile, outfile, options):
                 match = re.search(PATTERN, line)
                 if match:
                     unresolved.append(len(linespan) - 1)
-                    exe = match.group(1)
+                    exe = match.group(2)
                     if exe != 'UNKNOWN':
                         all_exes.add(exe)
                 j += 1
