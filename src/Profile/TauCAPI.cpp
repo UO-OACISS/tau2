@@ -69,6 +69,7 @@ void esd_exit (elg_ui4 rid);
 using namespace tau;
 
 extern "C" void Tau_shutdown(void);
+extern "C" void Tau_disable_collector_api();
 
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
@@ -390,8 +391,6 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   // move the stack pointer
   Tau_thread_flags[tid].Tau_global_stackpos++; /* push */
-
-
 
   if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
     int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
@@ -780,7 +779,34 @@ extern "C" void Tau_stop_current_timer()
 
 ///////////////////////////////////////////////////////////////////////////
 
-extern "C" void Tau_disable_collector_api();
+extern "C" int Tau_show_profiles()
+{
+  for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
+    int pos = Tau_thread_flags[tid].Tau_global_stackpos;
+    while (pos >= 0) {
+      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[pos]);
+      TAU_VERBOSE(" *** Alfred Profile (%d:%d) :  %s\n", tid, pos, p->ThisFunction->Name);
+      pos--;
+    }
+  }
+
+  return 0;
+}
+
+static void StopAllTimers(int tid)
+{
+  //Make sure even throttled routines are stopped.
+  while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+    int stackpos = Tau_thread_flags[tid].Tau_global_stackpos;
+    Profiler * p = Tau_thread_flags[tid].Tau_global_stack + stackpos;
+    Tau_stop_timer(p->ThisFunction, tid);
+    // Make sure the stack is shrinking
+    // Throttling in multi-thread is very goofy right now so this can happen
+    if (Tau_thread_flags[tid].Tau_global_stackpos == stackpos) {
+      Tau_thread_flags[tid].Tau_global_stackpos--;
+    }
+  }
+}
 
 extern "C" void Tau_profile_exit_all_tasks()
 {
@@ -796,62 +822,33 @@ extern "C" void Tau_profile_exit_all_tasks()
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
-  int tid = 1;
-  while (tid < TAU_MAX_THREADS) {
+  for(int tid = 1; tid < TAU_MAX_THREADS; ++tid) {
 #ifdef TAU_ANDROID
-    if (su == true) {
+    if (su) {
       JNIThreadLayer::SuThread(tid);
     }
 #endif
-    //Make sure even throttled routines are stopped.
-    while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-      Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-      Tau_stop_timer(p->ThisFunction, tid);
-    }
-    tid++;
+    StopAllTimers(tid);
   }
   Tau_shutdown();
   RtsLayer::UnLockDB();
-}
-
-extern "C" int Tau_show_profiles()
-{
-  for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
-    int pos = Tau_thread_flags[tid].Tau_global_stackpos;
-    while (pos >= 0) {
-      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[pos]);
-      TAU_VERBOSE(" *** Alfred Profile (%d:%d) :  %s\n", tid, pos, p->ThisFunction->Name);
-      pos--;
-    }
-  }
-
-  return 0;
 }
 
 extern "C" void Tau_profile_exit_all_threads()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
 #ifdef TAU_ANDROID
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
-
   for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
 #ifdef TAU_ANDROID
     if (su == true) {
       JNIThreadLayer::SuThread(tid);
     }
 #endif
-    //Make sure even throttled routines are stopped.
-    while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-      // This verbose message can cause hangs on exit??
-      //TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
-      Tau_stop_timer(p->ThisFunction, tid);
-    }
+    StopAllTimers(tid);
   }
-
   Tau_shutdown();
 }
 
@@ -860,13 +857,7 @@ extern "C" void Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-  int tid = RtsLayer::myThread();
-
-  //Make sure even throttled routines are stopped.
-  while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-    Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-    Tau_stop_timer(p->ThisFunction, tid);
-  }
+  StopAllTimers(RtsLayer::myThread());
   Tau_shutdown();
 }
 
@@ -876,7 +867,9 @@ extern "C" void Tau_exit(const char * msg) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-#ifdef TAU_CUDA
+#if defined(TAU_OPENMP)
+  Tau_profile_exit_all_tasks();
+#elif defined(TAU_CUDA)
 	Tau_profile_exit_all_threads();
 #else
   Tau_profile_exit();
