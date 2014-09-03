@@ -94,10 +94,9 @@ static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
 
 extern "C" int Tau_get_usesMPI();
 extern "C" void Tau_shutdown(void);
-extern "C" int Tau_profile_exit_all_tasks();
+extern "C" void Tau_profile_exit_all_tasks();
 extern "C" int TauCompensateInitialized(void);
 
-void Tau_unwind_unwindTauContext(Profiler *myProfiler);
 x_uint64 Tau_get_firstTimeStamp();
 
 //////////////////////////////////////////////////////////////////////
@@ -601,11 +600,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
       Tau_profile_exit_all_tasks();
     }
 #endif
-#ifndef TAU_WINDOWS
-    if (tid == 0) {
-      atexit(Tau_shutdown);
-    }
-#endif //TAU_WINDOWS
     if (TheSafeToDumpData()) {
       if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
         // Not a destructor of a static object - its a function like main

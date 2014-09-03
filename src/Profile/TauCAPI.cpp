@@ -786,7 +786,7 @@ extern "C" void Tau_stop_current_timer()
 
 extern "C" void Tau_disable_collector_api();
 
-extern "C" int Tau_profile_exit_all_tasks()
+extern "C" void Tau_profile_exit_all_tasks()
 {
   // Stop the collector API. The main thread may exit with running
   // worker threads. When those threads try to exit, they will
@@ -816,7 +816,6 @@ extern "C" int Tau_profile_exit_all_tasks()
   }
   Tau_shutdown();
   RtsLayer::UnLockDB();
-  return 0;
 }
 
 extern "C" int Tau_show_profiles()
@@ -833,7 +832,7 @@ extern "C" int Tau_show_profiles()
   return 0;
 }
 
-extern "C" int Tau_profile_exit_all_threads()
+extern "C" void Tau_profile_exit_all_threads()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -857,11 +856,10 @@ extern "C" int Tau_profile_exit_all_threads()
   }
 
   Tau_shutdown();
-  return 0;
 }
 
 
-extern "C" int Tau_profile_exit()
+extern "C" void Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -873,7 +871,6 @@ extern "C" int Tau_profile_exit()
     Tau_stop_timer(p->ThisFunction, tid);
   }
   Tau_shutdown();
-  return 0;
 }
 
 
@@ -1694,7 +1691,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
         initthread[tid] = true;
         initializing[tid] = true;
         Tau_pure_start_task_string(gTauApplication(), tid);
-        atexit((void(*)(void))Tau_profile_exit_all_threads);
+        atexit(Tau_profile_exit_all_threads);
         initializing[tid] = false;
         initialized = true;
       }
@@ -2329,7 +2326,7 @@ void Tau_destructor_trigger() {
 //#endif
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
-    TAU_PROFILE_EXIT("FunctionDB destructor");
+    Tau_exit("FunctionDB destructor");
     TheSafeToDumpData() = 0;
 #endif
   }

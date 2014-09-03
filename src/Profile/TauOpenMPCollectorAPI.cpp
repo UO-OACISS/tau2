@@ -1173,7 +1173,7 @@ extern "C" void my_control(uint64_t command, uint64_t modifier) {
   TAU_OMPT_COMMON_EXIT;
 }
 
-extern "C" int Tau_profile_exit_all_tasks(void);
+extern "C" void Tau_profile_exit_all_tasks(void);
 
 /* Shutting down the OpenMP runtime */
 extern "C" void my_shutdown() {
