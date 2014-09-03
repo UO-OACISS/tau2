@@ -595,13 +595,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     if (strcmp(ThisFunction->GetName(), "_fini") == 0) {
       TheSafeToDumpData() = 0;
     }
-    if (tid == 0) {
-      Tau_profile_exit_all_tasks();
-    }
 #ifdef TAU_GPU
     //Stop all other running tasks.
     if (tid == 0) {
-      //printf("exiting all tasks....\n");
       Tau_profile_exit_all_tasks();
     }
 #endif
