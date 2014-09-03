@@ -276,8 +276,14 @@ def tauprofile_xml(infile, outfile, options):
                 w.start()
                 workers.append(w)
 
-            # Process worker output
+            # if there were no unresolved symbols, just copy the profile
+            if len(workers) == 0:
+                fin.seek(0, 0)
+                for line in fin:
+                    fout.write(line)
+
             i = 0
+            # Process worker output
             for rank, w in enumerate(workers):
                 w.join()
                 print '%s (%d/%d) completed' % (w.name, rank, len(workers))
