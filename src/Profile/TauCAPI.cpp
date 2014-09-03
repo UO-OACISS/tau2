@@ -584,8 +584,6 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   }
 #endif
 
-  //TAU_VERBOSE(" *** (S%d) going to stop T%d\n", gettid(), tid);
-
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
@@ -692,8 +690,6 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   profiler->Stop(tid);
 
   Tau_thread_flags[tid].Tau_global_stackpos--;
-
-  //TAU_VERBOSE(" *** (S%d) stop timer for T%d %s\n", gettid(), tid, profiler->ThisFunction->GetName());
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -820,13 +816,13 @@ extern "C" void Tau_profile_exit_all_tasks()
 
 extern "C" int Tau_show_profiles()
 {
-  for (int tid=0; tid < TAU_MAX_THREADS; ++tid) {
-      int pos = Tau_thread_flags[tid].Tau_global_stackpos;
-      while (pos >= 0) {
-	  Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[pos]);
-	  TAU_VERBOSE(" *** Alfred Profile (%d:%d) :  %s\n", tid, pos, p->ThisFunction->Name);
-	  pos--;
-      }
+  for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
+    int pos = Tau_thread_flags[tid].Tau_global_stackpos;
+    while (pos >= 0) {
+      Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[pos]);
+      TAU_VERBOSE(" *** Alfred Profile (%d:%d) :  %s\n", tid, pos, p->ThisFunction->Name);
+      pos--;
+    }
   }
 
   return 0;
@@ -850,7 +846,8 @@ extern "C" void Tau_profile_exit_all_threads()
     //Make sure even throttled routines are stopped.
     while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
       Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-      TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
+      // This verbose message can cause hangs on exit??
+      //TAU_VERBOSE(" *** Alfred (%d) : stop %s\n", tid, p->ThisFunction->Name);
       Tau_stop_timer(p->ThisFunction, tid);
     }
   }
