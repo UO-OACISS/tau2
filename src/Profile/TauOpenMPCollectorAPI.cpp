@@ -506,6 +506,7 @@ defined (__GNUC_PATCHLEVEL__))
 }
 
 extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int tid);
+extern "C" void Tau_pure_stop_openmp_task(const char * n, const char * t, int tid);
 
 /*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context, int forking, bool task) {
   // 0 means no context wanted
@@ -528,7 +529,7 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context) {
     if (Tau_collector_enabled) {
-#if 0
+#if 1
     int contextLength = 10;
     char * regionIDstr = NULL;
     char * tmpStr = Tau_get_my_region_context(tid, 0, 0);
@@ -536,8 +537,8 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
 	regionIDstr = (char*)malloc(contextLength + 32);
     sprintf(regionIDstr, "%s: %s", state, tmpStr);
     //printf("%d: stop  '%s'\n", tid, regionIDstr); fflush(stdout);
-    //Tau_pure_stop_task(regionIDstr, tid);
-      Tau_stop_current_timer_task(tid);
+    Tau_pure_stop_openmp_task(regionIDstr, "", tid);
+      //Tau_stop_current_timer_task(tid);
 #else
       Tau_stop_current_timer_task(tid);
 #endif
