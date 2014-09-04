@@ -735,7 +735,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     node = callSiteCache[addr];
     if (!node) {
       node = new CallSiteCacheNode;
-      node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
+      if (TauEnv_get_bfd_lookup()) {
+        node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
+      } else {
+        node->resolved = false;
+      }
       callSiteCache[addr] = node;
     }
     RtsLayer::UnLockDB();
@@ -767,9 +771,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
   } else {
     char const * mapName = "UNKNOWN";
-    TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
-    if (addressMap) {
-      mapName = addressMap->name;
+    if (TauEnv_get_bfd_lookup()) {
+      TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
+      if (addressMap) {
+        mapName = addressMap->name;
+      }
     }
     if (addAddress) {
       char * tempAddrBuffer = (char*)malloc(32);    // not expecting more than 26 digits in addr
