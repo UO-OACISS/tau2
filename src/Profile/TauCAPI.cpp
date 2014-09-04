@@ -2009,6 +2009,11 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int t
   Tau_start_timer(fi, 0, tid);
 }
 
+extern "C" void Tau_pure_stop_openmp_task(const char * n, const char * t, int tid) {
+  FunctionInfo * fi = Tau_make_openmp_timer(n, t);
+  Tau_stop_timer(fi, tid);
+}
+
 // This function will return a timer for the Collector API OpenMP state, if available
 // This is called by the OpenMP collector API wrapper initialization...
 FunctionInfo * Tau_create_thread_state_if_necessary(const char *name)
