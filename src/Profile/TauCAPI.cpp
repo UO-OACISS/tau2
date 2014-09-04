@@ -1969,10 +1969,10 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
   Tau_start_timer(fi, 0, tid);
 }
 
-extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
+extern FunctionInfo* Tau_make_openmp_timer(const char * n)
 {
   TauInternalFunctionGuard protects_this_function;
-  string name(n+string(" ")+ string(t)); // this is VERY bad if called from signalling! see above ^
+  string name(n); // this is VERY bad if called from signalling! see above ^
   string type = ""; // this is VERY bad if called from signalling! see above ^
   FunctionInfo * fi = NULL;
 
@@ -1997,13 +1997,13 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
   return fi;
 }
 
-extern "C" void Tau_pure_start_openmp_task(const char * n, const char * t, int tid) {
-  FunctionInfo * fi = Tau_make_openmp_timer(n, t);
+extern "C" void Tau_pure_start_openmp_task(const char * n, int tid) {
+  FunctionInfo * fi = Tau_make_openmp_timer(n);
   Tau_start_timer(fi, 0, tid);
 }
 
-extern "C" void Tau_pure_stop_openmp_task(const char * n, const char * t, int tid) {
-  FunctionInfo * fi = Tau_make_openmp_timer(n, t);
+extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid) {
+  FunctionInfo * fi = Tau_make_openmp_timer(n);
   Tau_stop_timer(fi, tid);
 }
 
