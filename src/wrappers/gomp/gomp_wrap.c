@@ -65,7 +65,6 @@ static void * get_system_function_handle(char const * name, void * caller)
 // this is here to capture when threads are spawned by GOMP.
 // That is in case we are sampling only, and not capturing
 // ORA events. This way, we can initialize sampling on all threads.
-#if 1
 int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
     start_routine_p start_routine, void* arg)
 {
@@ -76,7 +75,6 @@ int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
   }
   return tau_gomp_pthread_create_wrapper(pthread_create_h, thread, attr, start_routine, arg);
 }
-#endif
 
 /**********************************************************
   omp_set_lock

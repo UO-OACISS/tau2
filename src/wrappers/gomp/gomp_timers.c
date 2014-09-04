@@ -122,7 +122,6 @@ void Tau_gomp_task_proxy(void * a2) {
   pthread_create
  **********************************************************/
 
-#if 1
 // proxy function pointer
 typedef struct tau_pthread_pack {
   start_routine_p start_routine;
@@ -148,7 +147,6 @@ int tau_gomp_pthread_create_wrapper(pthread_create_p pthread_create_call, pthrea
   // spawn the thread
   return pthread_create_call(threadp, attr, tau_gomp_pthread_function, (void*)pack);
 }
-#endif
 
 /**********************************************************
   omp_set_lock
