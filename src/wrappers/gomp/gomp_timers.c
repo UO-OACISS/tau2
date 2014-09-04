@@ -13,6 +13,8 @@
 #include "gomp_wrapper_types.h"
 #include "omp.h"
 
+#define TAU_GOMP_INLINE inline
+
 #if 0
 #define DEBUGPRINT(format, args...) \
 { printf(format, ## args); fflush(stdout); }
@@ -152,7 +154,7 @@ int tau_gomp_pthread_create_wrapper(pthread_create_p pthread_create_call, pthrea
   omp_set_lock
  **********************************************************/
 
-void  tau_omp_set_lock(omp_set_lock_p omp_set_lock_h, omp_lock_t *lock)  {
+TAU_GOMP_INLINE void  tau_omp_set_lock(omp_set_lock_p omp_set_lock_h, omp_lock_t *lock)  {
     //DEBUGPRINT("omp_set_lock %d\n", Tau_get_thread());
 
     OMP_COLLECTOR_API_THR_STATE previous;
@@ -174,7 +176,7 @@ void  tau_omp_set_lock(omp_set_lock_p omp_set_lock_h, omp_lock_t *lock)  {
   omp_set_nest_lock
  **********************************************************/
 
-void  tau_omp_set_nest_lock(omp_set_nest_lock_p omp_set_nest_lock_h, omp_nest_lock_t *nest_lock)  {
+TAU_GOMP_INLINE void  tau_omp_set_nest_lock(omp_set_nest_lock_p omp_set_nest_lock_h, omp_nest_lock_t *nest_lock)  {
     //DEBUGPRINT("omp_set_nest_lock %d\n", Tau_get_thread());
 
     OMP_COLLECTOR_API_THR_STATE previous;
@@ -195,7 +197,7 @@ void  tau_omp_set_nest_lock(omp_set_nest_lock_p omp_set_nest_lock_h, omp_nest_lo
   GOMP_barrier
  **********************************************************/
 
-void  tau_GOMP_barrier(GOMP_barrier_p GOMP_barrier_h)  {
+TAU_GOMP_INLINE void  tau_GOMP_barrier(GOMP_barrier_p GOMP_barrier_h)  {
     DEBUGPRINT("GOMP_barrier %d\n", Tau_get_thread());
 
     OMP_COLLECTOR_API_THR_STATE previous;
@@ -214,7 +216,7 @@ void  tau_GOMP_barrier(GOMP_barrier_p GOMP_barrier_h)  {
   GOMP_critical_start
  **********************************************************/
 
-void  tau_GOMP_critical_start(GOMP_critical_start_p GOMP_critical_start_h)  {
+TAU_GOMP_INLINE void  tau_GOMP_critical_start(GOMP_critical_start_p GOMP_critical_start_h)  {
     DEBUGPRINT("GOMP_critical_start %d\n", Tau_get_thread());
 	Tau_global_decr_insideTAU();
     (*GOMP_critical_start_h)();
@@ -228,7 +230,7 @@ void  tau_GOMP_critical_start(GOMP_critical_start_p GOMP_critical_start_h)  {
   GOMP_critical_end
  **********************************************************/
 
-void  tau_GOMP_critical_end(GOMP_critical_end_p GOMP_critical_end_h)  {
+TAU_GOMP_INLINE void  tau_GOMP_critical_end(GOMP_critical_end_p GOMP_critical_end_h)  {
     DEBUGPRINT("GOMP_critical_end %d\n", Tau_get_thread());
     //__ompc_event_callback(OMP_EVENT_THR_END_CTWT);
     //__ompc_set_state(THR_WORK_STATE);
@@ -242,7 +244,7 @@ void  tau_GOMP_critical_end(GOMP_critical_end_p GOMP_critical_end_h)  {
   GOMP_critical_name_start
  **********************************************************/
 
-void  tau_GOMP_critical_name_start(GOMP_critical_name_start_p GOMP_critical_name_start_h, void ** a1)  {
+TAU_GOMP_INLINE void  tau_GOMP_critical_name_start(GOMP_critical_name_start_p GOMP_critical_name_start_h, void ** a1)  {
     DEBUGPRINT("GOMP_critical_name_start %d\n", Tau_get_thread());
 
 	Tau_global_decr_insideTAU();
@@ -258,7 +260,7 @@ void  tau_GOMP_critical_name_start(GOMP_critical_name_start_p GOMP_critical_name
   GOMP_critical_name_end
  **********************************************************/
 
-void  tau_GOMP_critical_name_end(GOMP_critical_name_end_p GOMP_critical_name_end_h, void ** a1)  {
+TAU_GOMP_INLINE void  tau_GOMP_critical_name_end(GOMP_critical_name_end_p GOMP_critical_name_end_h, void ** a1)  {
 
     DEBUGPRINT("GOMP_critical_name_end %d\n", Tau_get_thread());
 
@@ -274,7 +276,7 @@ void  tau_GOMP_critical_name_end(GOMP_critical_name_end_p GOMP_critical_name_end
   GOMP_atomic_start
  **********************************************************/
 
-void  tau_GOMP_atomic_start(GOMP_atomic_start_p GOMP_atomic_start_h)  {
+TAU_GOMP_INLINE void  tau_GOMP_atomic_start(GOMP_atomic_start_p GOMP_atomic_start_h)  {
 
     DEBUGPRINT("GOMP_atomic_start %d\n", Tau_get_thread());
 
@@ -290,7 +292,7 @@ void  tau_GOMP_atomic_start(GOMP_atomic_start_p GOMP_atomic_start_h)  {
   GOMP_atomic_end
  **********************************************************/
 
-void  tau_GOMP_atomic_end(GOMP_atomic_end_p GOMP_atomic_end_h)  {
+TAU_GOMP_INLINE void  tau_GOMP_atomic_end(GOMP_atomic_end_p GOMP_atomic_end_h)  {
 
     DEBUGPRINT("GOMP_atomic_end %d\n", Tau_get_thread());
 
@@ -307,7 +309,7 @@ void  tau_GOMP_atomic_end(GOMP_atomic_end_p GOMP_atomic_end_h)  {
   GOMP_loop_static_start
  **********************************************************/
 
-bool  tau_GOMP_loop_static_start(GOMP_loop_static_start_p GOMP_loop_static_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
+TAU_GOMP_INLINE bool  tau_GOMP_loop_static_start(GOMP_loop_static_start_p GOMP_loop_static_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_static_start %d\n", Tau_get_thread());
@@ -324,7 +326,7 @@ bool  tau_GOMP_loop_static_start(GOMP_loop_static_start_p GOMP_loop_static_start
   GOMP_loop_dynamic_start
  **********************************************************/
 
-bool tau_GOMP_loop_dynamic_start(GOMP_loop_dynamic_start_p GOMP_loop_dynamic_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_dynamic_start(GOMP_loop_dynamic_start_p GOMP_loop_dynamic_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_dynamic_start %d\n", Tau_get_thread());
@@ -342,7 +344,7 @@ bool tau_GOMP_loop_dynamic_start(GOMP_loop_dynamic_start_p GOMP_loop_dynamic_sta
   GOMP_loop_guided_start
  **********************************************************/
 
-bool tau_GOMP_loop_guided_start(GOMP_loop_guided_start_p GOMP_loop_guided_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_guided_start(GOMP_loop_guided_start_p GOMP_loop_guided_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_guided_start %d\n", Tau_get_thread());
@@ -361,7 +363,7 @@ bool tau_GOMP_loop_guided_start(GOMP_loop_guided_start_p GOMP_loop_guided_start_
   GOMP_loop_runtime_start
  **********************************************************/
 
-bool tau_GOMP_loop_runtime_start(GOMP_loop_runtime_start_p GOMP_loop_runtime_start_h, long a1, long a2, long a3, long * a4, long * a5)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_runtime_start(GOMP_loop_runtime_start_p GOMP_loop_runtime_start_h, long a1, long a2, long a3, long * a4, long * a5)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_runtime_start %d\n", Tau_get_thread());
@@ -380,7 +382,7 @@ bool tau_GOMP_loop_runtime_start(GOMP_loop_runtime_start_p GOMP_loop_runtime_sta
   GOMP_loop_ordered_static_start
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_static_start(GOMP_loop_ordered_static_start_p GOMP_loop_ordered_static_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_static_start(GOMP_loop_ordered_static_start_p GOMP_loop_ordered_static_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_static_start %d\n", Tau_get_thread());
@@ -404,7 +406,7 @@ bool tau_GOMP_loop_ordered_static_start(GOMP_loop_ordered_static_start_p GOMP_lo
   GOMP_loop_ordered_dynamic_start
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_dynamic_start(GOMP_loop_ordered_dynamic_start_p GOMP_loop_ordered_dynamic_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_dynamic_start(GOMP_loop_ordered_dynamic_start_p GOMP_loop_ordered_dynamic_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_dynamic_start %d\n", Tau_get_thread());
@@ -427,7 +429,7 @@ bool tau_GOMP_loop_ordered_dynamic_start(GOMP_loop_ordered_dynamic_start_p GOMP_
   GOMP_loop_ordered_guided_start
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_guided_start(GOMP_loop_ordered_guided_start_p GOMP_loop_ordered_guided_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_guided_start(GOMP_loop_ordered_guided_start_p GOMP_loop_ordered_guided_start_h, long a1, long a2, long a3, long a4, long * a5, long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_guided_start %d\n", Tau_get_thread());
@@ -451,7 +453,7 @@ bool tau_GOMP_loop_ordered_guided_start(GOMP_loop_ordered_guided_start_p GOMP_lo
   GOMP_loop_ordered_runtime_start
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_runtime_start(GOMP_loop_ordered_runtime_start_p GOMP_loop_ordered_runtime_start_h, long a1, long a2, long a3, long * a4, long * a5)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_runtime_start(GOMP_loop_ordered_runtime_start_p GOMP_loop_ordered_runtime_start_h, long a1, long a2, long a3, long * a4, long * a5)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_runtime_start %d\n", Tau_get_thread());
@@ -475,7 +477,7 @@ bool tau_GOMP_loop_ordered_runtime_start(GOMP_loop_ordered_runtime_start_p GOMP_
   GOMP_loop_static_next
  **********************************************************/
 
-bool tau_GOMP_loop_static_next(GOMP_loop_static_next_p GOMP_loop_static_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_static_next(GOMP_loop_static_next_p GOMP_loop_static_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_static_next %d\n", Tau_get_thread());
@@ -492,7 +494,7 @@ bool tau_GOMP_loop_static_next(GOMP_loop_static_next_p GOMP_loop_static_next_h, 
   GOMP_loop_dynamic_next
  **********************************************************/
 
-bool tau_GOMP_loop_dynamic_next(GOMP_loop_dynamic_next_p GOMP_loop_dynamic_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_dynamic_next(GOMP_loop_dynamic_next_p GOMP_loop_dynamic_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_dynamic_next %d\n", Tau_get_thread());
@@ -511,7 +513,7 @@ bool tau_GOMP_loop_dynamic_next(GOMP_loop_dynamic_next_p GOMP_loop_dynamic_next_
   GOMP_loop_guided_next
  **********************************************************/
 
-bool tau_GOMP_loop_guided_next(GOMP_loop_guided_next_p GOMP_loop_guided_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_guided_next(GOMP_loop_guided_next_p GOMP_loop_guided_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_guided_next %d\n", Tau_get_thread());
@@ -530,7 +532,7 @@ bool tau_GOMP_loop_guided_next(GOMP_loop_guided_next_p GOMP_loop_guided_next_h, 
   GOMP_loop_runtime_next
  **********************************************************/
 
-bool tau_GOMP_loop_runtime_next(GOMP_loop_runtime_next_p GOMP_loop_runtime_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_runtime_next(GOMP_loop_runtime_next_p GOMP_loop_runtime_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_runtime_next %d\n", Tau_get_thread());
@@ -549,7 +551,7 @@ bool tau_GOMP_loop_runtime_next(GOMP_loop_runtime_next_p GOMP_loop_runtime_next_
   GOMP_loop_ordered_static_next
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_static_next(GOMP_loop_ordered_static_next_p GOMP_loop_ordered_static_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_static_next(GOMP_loop_ordered_static_next_p GOMP_loop_ordered_static_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_static_next %d\n", Tau_get_thread());
@@ -573,7 +575,7 @@ bool tau_GOMP_loop_ordered_static_next(GOMP_loop_ordered_static_next_p GOMP_loop
   GOMP_loop_ordered_dynamic_next
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_dynamic_next(GOMP_loop_ordered_dynamic_next_p GOMP_loop_ordered_dynamic_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_dynamic_next(GOMP_loop_ordered_dynamic_next_p GOMP_loop_ordered_dynamic_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_dynamic_next %d\n", Tau_get_thread());
@@ -597,7 +599,7 @@ bool tau_GOMP_loop_ordered_dynamic_next(GOMP_loop_ordered_dynamic_next_p GOMP_lo
   GOMP_loop_ordered_guided_next
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_guided_next(GOMP_loop_ordered_guided_next_p GOMP_loop_ordered_guided_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_guided_next(GOMP_loop_ordered_guided_next_p GOMP_loop_ordered_guided_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_guided_next %d\n", Tau_get_thread());
@@ -621,7 +623,7 @@ bool tau_GOMP_loop_ordered_guided_next(GOMP_loop_ordered_guided_next_p GOMP_loop
   GOMP_loop_ordered_runtime_next
  **********************************************************/
 
-bool tau_GOMP_loop_ordered_runtime_next(GOMP_loop_ordered_runtime_next_p GOMP_loop_ordered_runtime_next_h, long * a1, long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ordered_runtime_next(GOMP_loop_ordered_runtime_next_p GOMP_loop_ordered_runtime_next_h, long * a1, long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ordered_runtime_next %d\n", Tau_get_thread());
@@ -645,7 +647,7 @@ bool tau_GOMP_loop_ordered_runtime_next(GOMP_loop_ordered_runtime_next_p GOMP_lo
   GOMP_parallel_loop_static_start
  **********************************************************/
 
-void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_parallel_loop_static_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7)  {
+TAU_GOMP_INLINE void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_parallel_loop_static_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7)  {
 
     DEBUGPRINT("GOMP_parallel_loop_static_start %d\n", Tau_get_thread());
 
@@ -678,7 +680,7 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
   GOMP_parallel_loop_dynamic_start
  **********************************************************/
 
-void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOMP_parallel_loop_dynamic_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7)  {
+TAU_GOMP_INLINE void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOMP_parallel_loop_dynamic_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7)  {
 
     //DEBUGPRINT("GOMP_parallel_loop_dynamic_start %d\n", Tau_get_thread());
 
@@ -711,7 +713,7 @@ void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOM
   GOMP_parallel_loop_guided_start
  **********************************************************/
 
-void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_parallel_loop_guided_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7)  {
+TAU_GOMP_INLINE void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_parallel_loop_guided_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7)  {
 
     DEBUGPRINT("GOMP_parallel_loop_guided_start %d\n", Tau_get_thread());
 
@@ -744,7 +746,7 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
   GOMP_parallel_loop_runtime_start
  **********************************************************/
 
-void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOMP_parallel_loop_runtime_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6)  {
+TAU_GOMP_INLINE void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOMP_parallel_loop_runtime_start_h, void (*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6)  {
 
     DEBUGPRINT("GOMP_parallel_loop_runtime_start %d\n", Tau_get_thread());
 
@@ -777,7 +779,7 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
   GOMP_loop_end
  **********************************************************/
 
-void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
+TAU_GOMP_INLINE void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
 
     DEBUGPRINT("GOMP_loop_end %d\n", Tau_get_thread());
 
@@ -806,7 +808,7 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
   GOMP_loop_end_nowait
  **********************************************************/
 
-void tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_p GOMP_loop_end_nowait_h)  {
+TAU_GOMP_INLINE void tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_p GOMP_loop_end_nowait_h)  {
 
     DEBUGPRINT("GOMP_loop_end_nowait %d\n", Tau_get_thread());
 
@@ -831,7 +833,7 @@ void tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_p GOMP_loop_end_nowait_h)  {
   GOMP_loop_ull_static_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_static_start(GOMP_loop_ull_static_start_p GOMP_loop_ull_static_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_static_start(GOMP_loop_ull_static_start_p GOMP_loop_ull_static_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_static_start %d\n", Tau_get_thread());
@@ -849,7 +851,7 @@ bool tau_GOMP_loop_ull_static_start(GOMP_loop_ull_static_start_p GOMP_loop_ull_s
   GOMP_loop_ull_dynamic_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_dynamic_start(GOMP_loop_ull_dynamic_start_p GOMP_loop_ull_dynamic_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_dynamic_start(GOMP_loop_ull_dynamic_start_p GOMP_loop_ull_dynamic_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_dynamic_start %d\n", Tau_get_thread());
@@ -869,7 +871,7 @@ bool tau_GOMP_loop_ull_dynamic_start(GOMP_loop_ull_dynamic_start_p GOMP_loop_ull
   GOMP_loop_ull_guided_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_guided_start(GOMP_loop_ull_guided_start_p GOMP_loop_ull_guided_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_guided_start(GOMP_loop_ull_guided_start_p GOMP_loop_ull_guided_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_guided_start %d\n", Tau_get_thread());
@@ -889,7 +891,7 @@ bool tau_GOMP_loop_ull_guided_start(GOMP_loop_ull_guided_start_p GOMP_loop_ull_g
   GOMP_loop_ull_runtime_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_runtime_start(GOMP_loop_ull_runtime_start_p GOMP_loop_ull_runtime_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long * a5, unsigned long long * a6)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_runtime_start(GOMP_loop_ull_runtime_start_p GOMP_loop_ull_runtime_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long * a5, unsigned long long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_runtime_start %d\n", Tau_get_thread());
@@ -909,7 +911,7 @@ bool tau_GOMP_loop_ull_runtime_start(GOMP_loop_ull_runtime_start_p GOMP_loop_ull
   GOMP_loop_ull_ordered_static_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_static_start(GOMP_loop_ull_ordered_static_start_p GOMP_loop_ull_ordered_static_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_static_start(GOMP_loop_ull_ordered_static_start_p GOMP_loop_ull_ordered_static_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_static_start %d\n", Tau_get_thread());
@@ -929,7 +931,7 @@ bool tau_GOMP_loop_ull_ordered_static_start(GOMP_loop_ull_ordered_static_start_p
   GOMP_loop_ull_ordered_dynamic_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_dynamic_start(GOMP_loop_ull_ordered_dynamic_start_p GOMP_loop_ull_ordered_dynamic_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_dynamic_start(GOMP_loop_ull_ordered_dynamic_start_p GOMP_loop_ull_ordered_dynamic_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_start %d\n", Tau_get_thread());
@@ -949,7 +951,7 @@ bool tau_GOMP_loop_ull_ordered_dynamic_start(GOMP_loop_ull_ordered_dynamic_start
   GOMP_loop_ull_ordered_guided_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_guided_start(GOMP_loop_ull_ordered_guided_start_p GOMP_loop_ull_ordered_guided_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_guided_start(GOMP_loop_ull_ordered_guided_start_p GOMP_loop_ull_ordered_guided_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_guided_start %d\n", Tau_get_thread());
@@ -969,7 +971,7 @@ bool tau_GOMP_loop_ull_ordered_guided_start(GOMP_loop_ull_ordered_guided_start_p
   GOMP_loop_ull_ordered_runtime_start
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_runtime_start(GOMP_loop_ull_ordered_runtime_start_p GOMP_loop_ull_ordered_runtime_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long * a5, unsigned long long * a6)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_runtime_start(GOMP_loop_ull_ordered_runtime_start_p GOMP_loop_ull_ordered_runtime_start_h, bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long * a5, unsigned long long * a6)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_runtime_start %d\n", Tau_get_thread());
@@ -989,7 +991,7 @@ bool tau_GOMP_loop_ull_ordered_runtime_start(GOMP_loop_ull_ordered_runtime_start
   GOMP_loop_ull_static_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_static_next(GOMP_loop_ull_static_next_p GOMP_loop_ull_static_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_static_next(GOMP_loop_ull_static_next_p GOMP_loop_ull_static_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_static_next %d\n", Tau_get_thread());
@@ -1009,7 +1011,7 @@ bool tau_GOMP_loop_ull_static_next(GOMP_loop_ull_static_next_p GOMP_loop_ull_sta
   GOMP_loop_ull_dynamic_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_dynamic_next(GOMP_loop_ull_dynamic_next_p GOMP_loop_ull_dynamic_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_dynamic_next(GOMP_loop_ull_dynamic_next_p GOMP_loop_ull_dynamic_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_dynamic_next %d\n", Tau_get_thread());
@@ -1029,7 +1031,7 @@ bool tau_GOMP_loop_ull_dynamic_next(GOMP_loop_ull_dynamic_next_p GOMP_loop_ull_d
   GOMP_loop_ull_guided_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_guided_next(GOMP_loop_ull_guided_next_p GOMP_loop_ull_guided_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_guided_next(GOMP_loop_ull_guided_next_p GOMP_loop_ull_guided_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_guided_next %d\n", Tau_get_thread());
@@ -1049,7 +1051,7 @@ bool tau_GOMP_loop_ull_guided_next(GOMP_loop_ull_guided_next_p GOMP_loop_ull_gui
   GOMP_loop_ull_runtime_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_runtime_next(GOMP_loop_ull_runtime_next_p GOMP_loop_ull_runtime_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_runtime_next(GOMP_loop_ull_runtime_next_p GOMP_loop_ull_runtime_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_runtime_next %d\n", Tau_get_thread());
@@ -1069,7 +1071,7 @@ bool tau_GOMP_loop_ull_runtime_next(GOMP_loop_ull_runtime_next_p GOMP_loop_ull_r
   GOMP_loop_ull_ordered_static_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_static_next(GOMP_loop_ull_ordered_static_next_p GOMP_loop_ull_ordered_static_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_static_next(GOMP_loop_ull_ordered_static_next_p GOMP_loop_ull_ordered_static_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_static_next %d\n", Tau_get_thread());
@@ -1089,7 +1091,7 @@ bool tau_GOMP_loop_ull_ordered_static_next(GOMP_loop_ull_ordered_static_next_p G
   GOMP_loop_ull_ordered_dynamic_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_dynamic_next(GOMP_loop_ull_ordered_dynamic_next_p GOMP_loop_ull_ordered_dynamic_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_dynamic_next(GOMP_loop_ull_ordered_dynamic_next_p GOMP_loop_ull_ordered_dynamic_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_next %d\n", Tau_get_thread());
@@ -1109,7 +1111,7 @@ bool tau_GOMP_loop_ull_ordered_dynamic_next(GOMP_loop_ull_ordered_dynamic_next_p
   GOMP_loop_ull_ordered_guided_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_guided_next(GOMP_loop_ull_ordered_guided_next_p GOMP_loop_ull_ordered_guided_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_guided_next(GOMP_loop_ull_ordered_guided_next_p GOMP_loop_ull_ordered_guided_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_guided_next %d\n", Tau_get_thread());
@@ -1129,7 +1131,7 @@ bool tau_GOMP_loop_ull_ordered_guided_next(GOMP_loop_ull_ordered_guided_next_p G
   GOMP_loop_ull_ordered_runtime_next
  **********************************************************/
 
-bool tau_GOMP_loop_ull_ordered_runtime_next(GOMP_loop_ull_ordered_runtime_next_p GOMP_loop_ull_ordered_runtime_next_h, unsigned long long * a1, unsigned long long * a2)  {
+TAU_GOMP_INLINE bool tau_GOMP_loop_ull_ordered_runtime_next(GOMP_loop_ull_ordered_runtime_next_p GOMP_loop_ull_ordered_runtime_next_h, unsigned long long * a1, unsigned long long * a2)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_runtime_next %d\n", Tau_get_thread());
@@ -1146,7 +1148,7 @@ bool tau_GOMP_loop_ull_ordered_runtime_next(GOMP_loop_ull_ordered_runtime_next_p
   GOMP_ordered_start
  **********************************************************/
 
-void tau_GOMP_ordered_start(GOMP_ordered_start_p GOMP_ordered_start_h)  {
+TAU_GOMP_INLINE void tau_GOMP_ordered_start(GOMP_ordered_start_p GOMP_ordered_start_h)  {
 
     DEBUGPRINT("GOMP_ordered_start %d\n", Tau_get_thread());
 
@@ -1164,7 +1166,7 @@ void tau_GOMP_ordered_start(GOMP_ordered_start_p GOMP_ordered_start_h)  {
   GOMP_ordered_end
  **********************************************************/
 
-void tau_GOMP_ordered_end(GOMP_ordered_end_p GOMP_ordered_end_h)  {
+TAU_GOMP_INLINE void tau_GOMP_ordered_end(GOMP_ordered_end_p GOMP_ordered_end_h)  {
 
     DEBUGPRINT("GOMP_ordered_end %d\n", Tau_get_thread());
 
@@ -1180,7 +1182,7 @@ void tau_GOMP_ordered_end(GOMP_ordered_end_p GOMP_ordered_end_h)  {
   GOMP_parallel_start
  **********************************************************/
 
-void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (*a1)(void *), void * a2, unsigned int a3)  {
+TAU_GOMP_INLINE void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (*a1)(void *), void * a2, unsigned int a3)  {
     DEBUGPRINT("GOMP_parallel_start %d of %d\n", Tau_get_thread(), a3==0?omp_get_max_threads():1);
 
     // increment the region counter
@@ -1215,7 +1217,7 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
   GOMP_parallel_end
  **********************************************************/
 
-void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
+TAU_GOMP_INLINE void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
 
     DEBUGPRINT("GOMP_parallel_end %d of %d\n", Tau_get_thread(), omp_get_num_threads());
 
@@ -1249,7 +1251,7 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
   GOMP_task
  **********************************************************/
 
-void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void (*a3)(void *, void *), long a4, long a5, bool a6, unsigned int a7)  {
+TAU_GOMP_INLINE void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void (*a3)(void *, void *), long a4, long a5, bool a6, unsigned int a7)  {
 
     DEBUGPRINT("GOMP_task %d\n", Tau_get_thread());
 
@@ -1315,7 +1317,7 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
   GOMP_taskwait
  **********************************************************/
 
-void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
+TAU_GOMP_INLINE void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
 
     DEBUGPRINT("GOMP_taskwait %d\n", Tau_get_thread());
 
@@ -1334,7 +1336,7 @@ void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
 /**********************************************************
   GOMP_taskyield - only exists in gcc 4.7 and greater, and only as a stub
 
-  void tau_GOMP_taskyield(GOMP_taskyield_p GOMP_taskyield_h)  {
+  TAU_GOMP_INLINE void tau_GOMP_taskyield(GOMP_taskyield_p GOMP_taskyield_h)  {
 
   DEBUGPRINT("GOMP_taskyield %d\n", Tau_get_thread());
 
@@ -1350,7 +1352,7 @@ void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
   GOMP_sections_start
  **********************************************************/
 
-unsigned int tau_GOMP_sections_start(GOMP_sections_start_p GOMP_sections_start_h, unsigned int a1)  {
+TAU_GOMP_INLINE unsigned int tau_GOMP_sections_start(GOMP_sections_start_p GOMP_sections_start_h, unsigned int a1)  {
 
     unsigned int retval = 0;
     DEBUGPRINT("GOMP_sections_start %d\n", Tau_get_thread());
@@ -1367,7 +1369,7 @@ unsigned int tau_GOMP_sections_start(GOMP_sections_start_p GOMP_sections_start_h
   GOMP_sections_next
  **********************************************************/
 
-unsigned int tau_GOMP_sections_next(GOMP_sections_next_p GOMP_sections_next_h)  {
+TAU_GOMP_INLINE unsigned int tau_GOMP_sections_next(GOMP_sections_next_p GOMP_sections_next_h)  {
 
     unsigned int retval = 0;
     DEBUGPRINT("GOMP_sections_next %d\n", Tau_get_thread());
@@ -1384,7 +1386,7 @@ unsigned int tau_GOMP_sections_next(GOMP_sections_next_p GOMP_sections_next_h)  
   GOMP_parallel_sections_start
  **********************************************************/
 
-void tau_GOMP_parallel_sections_start(GOMP_parallel_sections_start_p GOMP_parallel_sections_start_h, void (*a1)(void *), void * a2, unsigned int a3, unsigned int a4)  {
+TAU_GOMP_INLINE void tau_GOMP_parallel_sections_start(GOMP_parallel_sections_start_p GOMP_parallel_sections_start_h, void (*a1)(void *), void * a2, unsigned int a3, unsigned int a4)  {
 
     DEBUGPRINT("GOMP_parallel_sections_start %d\n", Tau_get_thread());
 
@@ -1415,7 +1417,7 @@ void tau_GOMP_parallel_sections_start(GOMP_parallel_sections_start_p GOMP_parall
   GOMP_sections_end
  **********************************************************/
 
-void tau_GOMP_sections_end(GOMP_sections_end_p GOMP_sections_end_h)  {
+TAU_GOMP_INLINE void tau_GOMP_sections_end(GOMP_sections_end_p GOMP_sections_end_h)  {
 
     DEBUGPRINT("GOMP_sections_end %d\n", Tau_get_thread());
 
@@ -1444,7 +1446,7 @@ void tau_GOMP_sections_end(GOMP_sections_end_p GOMP_sections_end_h)  {
   GOMP_sections_end_nowait
  **********************************************************/
 
-void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_sections_end_nowait_h)  {
+TAU_GOMP_INLINE void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_sections_end_nowait_h)  {
 
     DEBUGPRINT("GOMP_sections_end_nowait %d\n", Tau_get_thread());
 
@@ -1480,7 +1482,7 @@ void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_sections_end_n
   GOMP_single_start
  **********************************************************/
 
-bool tau_GOMP_single_start(GOMP_single_start_p GOMP_single_start_h)  {
+TAU_GOMP_INLINE bool tau_GOMP_single_start(GOMP_single_start_p GOMP_single_start_h)  {
 
     bool retval = 0;
     DEBUGPRINT("GOMP_single_start %d\n", Tau_get_thread());
@@ -1502,7 +1504,7 @@ bool tau_GOMP_single_start(GOMP_single_start_p GOMP_single_start_h)  {
   GOMP_single_copy_start
  **********************************************************/
 
-void * tau_GOMP_single_copy_start(GOMP_single_copy_start_p GOMP_single_copy_start_h)  {
+TAU_GOMP_INLINE void * tau_GOMP_single_copy_start(GOMP_single_copy_start_p GOMP_single_copy_start_h)  {
 
     void * retval = 0;
     DEBUGPRINT("GOMP_single_copy_start %d\n", Tau_get_thread());
@@ -1520,7 +1522,7 @@ void * tau_GOMP_single_copy_start(GOMP_single_copy_start_p GOMP_single_copy_star
   GOMP_single_copy_end
  **********************************************************/
 
-void tau_GOMP_single_copy_end(GOMP_single_copy_end_p GOMP_single_copy_end_h, void * a1)  {
+TAU_GOMP_INLINE void tau_GOMP_single_copy_end(GOMP_single_copy_end_p GOMP_single_copy_end_h, void * a1)  {
 
     DEBUGPRINT("GOMP_single_copy_end %d\n", Tau_get_thread());
 
