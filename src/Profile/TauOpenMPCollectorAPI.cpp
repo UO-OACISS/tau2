@@ -754,6 +754,7 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 
 static bool initializing = false;
 static bool initialized = false;
+static bool ora_success = false;
 
 #if TAU_DISABLE_SHARED
 extern int __omp_collector_api(void *);
@@ -929,13 +930,18 @@ extern "C" int Tau_initialize_collector_api(void) {
     }
 
     initializing = false;
+    ora_success = true;
     return 0;
 }
 
 extern "C" void __attribute__ ((destructor)) Tau_finalize_collector_api(void);
 
 extern "C" void Tau_finalize_collector_api(void) {
+#if defined(TAU_USE_OMPT)
+    return;
+#endif
     if (!initialized) return;
+    if (!ora_success) return;
     Tau_global_incr_insideTAU();
     TAU_OPENMP_SET_LOCK;
     std::map<unsigned long, char*>::iterator it = region_names.begin();
