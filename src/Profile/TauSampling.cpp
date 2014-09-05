@@ -751,6 +751,13 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
+    // prevent some crashes due to not fully resolved locations
+    if (resolvedInfo.funcname == NULL) {
+	    resolvedInfo.funcname = "";
+    }
+    if (resolvedInfo.filename == NULL) {
+	    resolvedInfo.filename = "";
+    }
     char lineno[32];
     sprintf(lineno, "%d", resolvedInfo.lineno);
     // make sure we allocate enough space for the buffer!!!!
