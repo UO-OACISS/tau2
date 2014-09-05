@@ -216,12 +216,22 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit);
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
 #endif /* TAU_BGP || TAU_BGQ */
 
+/* Create a type extension so that we can run our finalization
+ * when the destructor is called. Otherwise, this object will
+ * get destroyed while it is still needed. */
+extern "C" void Tau_profile_exit_all_threads(void);
+struct BfdUnitVector : public std::vector<TauBfdUnit*> {
+  virtual ~BfdUnitVector() {
+    Tau_profile_exit_all_threads();
+  }
+};
+
 //////////////////////////////////////////////////////////////////////
 // Instead of using a global var., use static inside a function  to
 // ensure that non-local static variables are initialised before being
 // used (Ref: Scott Meyers, Item 47 Eff. C++).
 //////////////////////////////////////////////////////////////////////
-typedef std::vector<TauBfdUnit*> bfd_unit_vector_t;
+typedef struct BfdUnitVector bfd_unit_vector_t;
 static bfd_unit_vector_t & ThebfdUnits(void)
 {
   // BFD units (e.g. executables and their dynamic libraries)
