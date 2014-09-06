@@ -1110,7 +1110,10 @@ extern "C" void my_parallel_region_end (
     Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1);
     Tau_collector_flags[tid].parallel--;
   }
-#ifndef TAU_MPC 
+//#ifndef TAU_MPC 
+#if 0 // for now, don't free the region name. this is a leak, but it is possible
+  // in the Intel runtime that the master thread can exit the region before the
+  // worker threads are done, and they still need the name.
   TAU_OPENMP_SET_LOCK;
   char * tmpStr = region_names[parallel_id];
   //printf("done with Region %d, name %s\n", parallel_id, tmpStr); fflush(stdout);
