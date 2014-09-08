@@ -425,7 +425,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         RtsLayer::UnLockDB();
         contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
       } else {
-        userEvent->TriggerEvent(data, tid, timestamp, use_ts);
+        // do nothing - there is no context.
       }
     }
     userEvent->TriggerEvent(data, tid, timestamp, use_ts);
