@@ -56,6 +56,8 @@ using namespace std;
 #include <Profile/UserEvent.h>
 #include <tau_internal.h>
 
+#include <execinfo.h>
+
 using namespace tau;
 
 #ifdef PGI
@@ -406,21 +408,25 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 
     if (contextEnabled) {
       Profiler * current = TauInternal_CurrentProfiler(tid);
-      long * comparison = FormulateContextComparisonArray(current);
+      if (current) {
+        long * comparison = FormulateContextComparisonArray(current);
 
-      RtsLayer::LockDB();
-      ContextEventMap::iterator it = contextMap.find(comparison);
-      if (it == contextMap.end()) {
-        contextEvent = new TauUserEvent(
-            FormulateContextNameString(current),
-            userEvent->IsMonotonicallyIncreasing());
-        contextMap[comparison] = contextEvent;
+        RtsLayer::LockDB();
+        ContextEventMap::iterator it = contextMap.find(comparison);
+        if (it == contextMap.end()) {
+          contextEvent = new TauUserEvent(
+              FormulateContextNameString(current),
+              userEvent->IsMonotonicallyIncreasing());
+          contextMap[comparison] = contextEvent;
+        } else {
+          contextEvent = it->second;
+          delete[] comparison;
+        }
+        RtsLayer::UnLockDB();
+        contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
       } else {
-        contextEvent = it->second;
-        delete[] comparison;
+        userEvent->TriggerEvent(data, tid, timestamp, use_ts);
       }
-      RtsLayer::UnLockDB();
-      contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
     }
     userEvent->TriggerEvent(data, tid, timestamp, use_ts);
   }
