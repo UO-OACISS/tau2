@@ -56,8 +56,6 @@ using namespace std;
 #include <Profile/UserEvent.h>
 #include <tau_internal.h>
 
-#include <execinfo.h>
-
 using namespace tau;
 
 #ifdef PGI
