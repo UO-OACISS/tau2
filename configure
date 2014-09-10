@@ -7722,7 +7722,7 @@ EOF
 		    cupti="$cudadir/extras/CUPTI"
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
-		    if [ ! -r /usr/lib64/libcuda.so ]; then 
+		    if [ $machine = craycnl ]; then 
 			# check if -lcuda is available to the linker somehow
 		      fixmakeargs="$fixmakeargs CUPTI_NOCUDA"
                     fi 
