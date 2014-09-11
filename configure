@@ -5699,6 +5699,13 @@ libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
 libomp_ossinc=${targetdir}/include
 
+if [ ! -r ${libomp_ossdir} ] ; then
+  mkdir -p ${libomp_ossdir}
+fi
+if [ ! -r ${libomp_ossinc} ] ; then
+  mkdir -p ${libomp_ossinc}
+fi
+
 if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then 
     echo "NOTE: Copying $ompt_dir/$libomp_osstgz"
@@ -5761,6 +5768,9 @@ if [ "x$download_ompt" = xyes ] ; then
         cp src/ompt.h ${libomp_ossinc}/.
         cp src/ompt-event.h ${libomp_ossinc}/.
         cp src/ompt-state.h ${libomp_ossinc}/.
+        cp src/ompt.h ${START_DIR}/include/.
+        cp src/ompt-event.h ${START_DIR}/include/.
+        cp src/ompt-state.h ${START_DIR}/include/.
         echo "...Success."
       else
         if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
@@ -5768,6 +5778,9 @@ if [ "x$download_ompt" = xyes ] ; then
           cp src/ompt.h ${libomp_ossinc}/.
           cp src/ompt-event.h ${libomp_ossinc}/.
           cp src/ompt-state.h ${libomp_ossinc}/.
+          cp src/ompt.h ${START_DIR}/include/.
+          cp src/ompt-event.h ${START_DIR}/include/.
+          cp src/ompt-state.h ${START_DIR}/include/.
           echo "...Success."
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
@@ -5786,6 +5799,9 @@ if [ "x$download_ompt" = xyes ] ; then
           cp src/ompt.h ${libomp_ossinc}/.
           cp src/ompt-event.h ${libomp_ossinc}/.
           cp src/ompt-state.h ${libomp_ossinc}/.
+          cp src/ompt.h ${START_DIR}/include/.
+          cp src/ompt-event.h ${START_DIR}/include/.
+          cp src/ompt-state.h ${START_DIR}/include/.
           echo "...Success."
         else
           if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
@@ -5793,6 +5809,9 @@ if [ "x$download_ompt" = xyes ] ; then
             cp src/ompt.h ${libomp_ossinc}/.
             cp src/ompt-event.h ${libomp_ossinc}/.
             cp src/ompt-state.h ${libomp_ossinc}/.
+            cp src/ompt.h ${START_DIR}/include/.
+            cp src/ompt-event.h ${START_DIR}/include/.
+            cp src/ompt-state.h ${START_DIR}/include/.
             echo "...Success."
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
