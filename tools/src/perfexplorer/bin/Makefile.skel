@@ -423,6 +423,7 @@ doccheck: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLU
 
 javadoc: Makefile src/overview.html ${CONSTANT_CLASSES} ${COMMON_CLASSES} ${CLUSTERING_CLASSES} ${SERVER_CLASSES} ${RMIC_CLASSES} ${CLIENT_CLASSES} ${CQOS_CLASSES} ${GLUE_CLASSES}
 	rm -rf javadoc
+	rm -rf src/edu
 	mkdir javadoc
 	mkdir -p src/edu/uoregon/tau/perfexplorer
 	ln -s ../../../../glue src/edu/uoregon/tau/perfexplorer/.
