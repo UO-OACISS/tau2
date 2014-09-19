@@ -63,7 +63,7 @@ TIMEOUT = 300
 # How many times do the workers report?
 ITERS_PER_REPORT = 5000
 
-
+isXML = False
 
 class Addr2LineError(RuntimeError):
     def __init__(self, value):
@@ -154,6 +154,7 @@ class Worker(Thread):
             self.pipes[exe] = Addr2Line(addr2line, exe)
 
     def run(self):
+        global isXML
         """
         """
         def repl(match):
@@ -168,7 +169,10 @@ class Worker(Thread):
             else:
                 resolved = self.pipes[exe].resolve(addr)
             if resolved[0] != 'UNRESOLVED':
-                return saxutils.escape('%s%s [{%s} {%s}]' % (prefix, resolved[0], resolved[1], resolved[2]))
+                if isXML:
+                    return '%s%s [{%s} {%s}]' % (prefix, saxutils.escape(resolved[0]), saxutils.escape(resolved[1]), saxutils.escape(resolved[2]))
+                else:
+                    return '%s%s [{%s} {%s}]' % (prefix, resolved[0], resolved[1], resolved[2])
             else:
                 return match.group(0)
 
@@ -201,12 +205,16 @@ class Worker(Thread):
 
 
 def tauprofile_xml(infile, outfile, options):
+    global isXML
     """
     Calls addr2line to resolve addresses in a tauprofile.xml file
     """ 
     fallback_exes = set(options.exe)
     addr2line = options.addr2line
     jobs = int(options.jobs)
+    
+    if "xml" in infile:
+        isXML = True
 
     with open(infile, 'r+b') as fin:
         with open(outfile, 'wb') as fout:

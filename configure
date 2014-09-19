@@ -7541,7 +7541,7 @@ fi
 
 tlsfound=no
 
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] || [ $pthread = yes ] ; then
     cat <<EOF > conftest_tls.cc
 __thread int number = -1;
 int main() {
@@ -7563,7 +7563,8 @@ fi
 ######################################################################
 # Check for declspec(thread) support
 ######################################################################
-if [ $openmp = yes ] && [ $tlsfound = no ] ; then
+if [ $tlsfound = no ] ; then
+  if [ $openmp = yes ] || [ $pthread = yes ] ; then
     cat <<EOF > conftest_dtls.cc
 __declspec(thread) int number = -1;
 int main() {
@@ -7580,12 +7581,14 @@ EOF
     fi
     
     /bin/rm -f conftest_dtls.o conftest_dtls.cc
+  fi
 fi
 
 ######################################################################
 # Check for pthread_getspecific() support
 ######################################################################
-if [ $openmp = yes ] && [ $tlsfound = no ] ; then
+if [ $tlsfound = no ] ; then
+  if [ $openmp = yes ] || [ $pthread = yes ] ; then
     cat <<EOF > conftest_pgs.cc
 #include "pthread.h"
 static pthread_key_t key;
@@ -7609,6 +7612,7 @@ EOF
     fi
     
     /bin/rm -f conftest_pgs.o conftest_pgs.cc
+  fi
 fi
 
 
@@ -7718,6 +7722,10 @@ EOF
 		    cupti="$cudadir/extras/CUPTI"
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
+		    if [ $machine = craycnl ]; then 
+			# check if -lcuda is available to the linker somehow
+		      fixmakeargs="$fixmakeargs CUPTI_NOCUDA"
+                    fi 
 		fi
 	    fi
 	else
