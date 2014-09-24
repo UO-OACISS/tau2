@@ -1187,14 +1187,14 @@ extern "C" void my_control(uint64_t command, uint64_t modifier) {
   TAU_OMPT_COMMON_EXIT;
 }
 
-extern "C" void Tau_profile_exit_all_tasks(void);
+extern "C" void Tau_profile_exit_most_threads(void);
 
 /* Shutting down the OpenMP runtime */
 extern "C" void my_shutdown() {
   if (!Tau_RtsLayer_TheEnableInstrumentation()) return;
   TAU_OMPT_COMMON_ENTRY;
   TAU_VERBOSE("OpenMP Shutdown on thread %d.\n", tid); fflush(stdout);
-  Tau_profile_exit_all_tasks();
+  Tau_profile_exit_most_threads();
   TAU_PROFILE_EXIT("exiting");
   // nothing to do here?
   TAU_OMPT_COMMON_EXIT;
