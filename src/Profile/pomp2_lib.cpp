@@ -60,10 +60,10 @@ views or both */
 #define TAU_OPENMP_REGION_VIEW
 #elif TAU_OPARI_CONSTRUCT
 #define TAU_AGGREGATE_OPENMP_TIMINGS
-#else
-#define TAU_AGGREGATE_OPENMP_TIMINGS
+#else /* in the default mode, define REGION! */
+// #define TAU_AGGREGATE_OPENMP_TIMINGS
 #define TAU_OPENMP_REGION_VIEW
-#endif /* in the default mode, define both! */
+#endif
 
 omp_lock_t tau_ompregdescr_lock; 
 #define OpenMP TAU_USER
