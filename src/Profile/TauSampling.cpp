@@ -714,7 +714,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
-    char const * childName, char * newShortName, bool addAddress)
+    char const * childName, char **newShortName, bool addAddress)
 {
   int printMessage=0;
   if (strcmp(tag, "UNWIND") == 0) {
@@ -767,11 +767,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       sprintf(buff, "[%s] %s [{%s} {%d}]",
           tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
     }
-    newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
-    sprintf(newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
+    *newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
+    sprintf(*newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
     //newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
     //sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-    //newShortName = &newName; 
+    //*newShortName = newName;
     //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
   } else {
     char const * mapName = "UNKNOWN";
@@ -794,7 +794,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       }
       sprintf(tempAddrBuffer, "ADDR %p", (void *)addr);
       // TODO: Leak?
-      newShortName = tempAddrBuffer;
+      *newShortName = tempAddrBuffer;
     } else {
       if (childName) {
         buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(mapName) + 128);
@@ -809,7 +809,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
         }
       }
       // TODO: Leak?
-      newShortName = strdup("UNRESOLVED");
+      *newShortName = strdup("UNRESOLVED");
     }
   }
 
@@ -817,7 +817,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   //callsite->name = strdup(buff);
   callsite->name = buff;
   // only print this for new addresses
-  if (printMessage==1) TAU_VERBOSE("Name %s, Address %p resolved to %s\n", newShortName, (void*)addr, buff);
+  if (printMessage==1) TAU_VERBOSE("Name %s, Address %p resolved to %s\n", *newShortName, (void*)addr, buff);
   return callsite;
 }
 
@@ -864,7 +864,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       char * prevShortName = NULL;
       char * newShortName = NULL;
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, newShortName, addAddress));
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress));
       // move the pointers
       if (newShortName) {
         prevShortName = newShortName;
@@ -873,7 +873,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, newShortName, addAddress));
+            address, "UNWIND", prevShortName, &newShortName, addAddress));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
