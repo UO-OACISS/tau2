@@ -793,8 +793,10 @@ extern "C" int Tau_show_profiles()
   return 0;
 }
 
-static void StopAllTimers(int tid)
+extern "C" void Tau_stop_all_timers(int tid)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   //Make sure even throttled routines are stopped.
   while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
     int stackpos = Tau_thread_flags[tid].Tau_global_stackpos;
@@ -829,7 +831,7 @@ inline void Tau_profile_exit_threads(int begin_index)
       JNIThreadLayer::SuThread(tid);
     }
 #endif
-    StopAllTimers(tid);
+    Tau_stop_all_timers(tid);
   }
 }
 
@@ -850,7 +852,7 @@ extern "C" void Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-  StopAllTimers(RtsLayer::myThread());
+  Tau_stop_all_timers(RtsLayer::myThread());
   Tau_shutdown();
 }
 

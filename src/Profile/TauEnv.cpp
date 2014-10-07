@@ -44,6 +44,10 @@
 #include <tauroot.h>
 #include <fcntl.h>
 #include <string>
+
+#if TAU_OPENMP // for querying OpenMP settings
+#include "omp.h"
+#endif
 using namespace std;
 
 #ifndef TAU_BGP
@@ -1556,6 +1560,51 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OpenMP Runtime Support Context none\n");
       TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
     }
+
+#if TAU_OPENMP
+    omp_sched_t kind;
+    int modifier;
+    omp_get_schedule(&kind, &modifier);
+    const char* schedule;
+    if (kind == omp_sched_static) {
+        schedule = "STATIC";
+    } else if (kind == omp_sched_dynamic) {
+        schedule = "DYNAMIC";
+    } else if ( kind == omp_sched_guided) {
+        schedule = "GUIDED";
+    } else if ( kind == omp_sched_auto) {
+        schedule = "AUTO";
+    } else {
+        schedule = "UNKNOWN";
+    }
+    TAU_METADATA("OMP_SCHEDULE", schedule);
+    sprintf(tmpstr,"%d",modifier);
+    TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
+
+    int value = omp_get_max_threads();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_MAX_THREADS", tmpstr);
+
+    value = omp_get_num_procs();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_NUM_PROCS", tmpstr);
+
+    value = omp_get_dynamic();
+    sprintf(tmpstr,"%s",value?"on":"off");
+    TAU_METADATA("OMP_DYNAMIC", tmpstr);
+
+    value = omp_get_nested();
+    sprintf(tmpstr,"%s",value?"on":"off");
+    TAU_METADATA("OMP_NESTED", tmpstr);
+
+    value = omp_get_thread_limit();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_THREAD_LIMIT", tmpstr);
+
+    value = omp_get_max_active_levels();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_MAX_ACTIVE_LEVELS", tmpstr);
+#endif
 
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
