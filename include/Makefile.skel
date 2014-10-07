@@ -155,6 +155,8 @@ UNWIND_LIB=
 UNWIND_LIB_FLAG=
 UNWIND_EXTRAS=
 
+HOST_SYSROOT=
+
 #######################################################################
 
 #OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari        #ENDIF#
@@ -258,7 +260,7 @@ JDKARCH                 = linux
 #############################################
 # JAVA OBJECTS
 #############################################
-#JAVA#TAU_JAVA_O 	= TauJAPI.o JNIThreadLayer.o agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o adb.o jdwp.o ddm.o #ENDIF#
+#JAVA#TAU_JAVA_O 	= TauJAPI.o agent_util.o java_crw_demo.o TauJVMTI.o adb.o jdwp.o ddm.o #ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
 #############################################
@@ -1046,6 +1048,7 @@ EBS_CLOCK_RES=
 # Support for non-portable features
 ##############################################
 #TAU_STRSIGNAL_OK#PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF#
+#HOST_SYSROOT#PROFILEOPT84 = --sysroot=$(HOST_SYSROOT)#ENDIF#
 
 ##############################################
 # TAU Unwinder flags                      

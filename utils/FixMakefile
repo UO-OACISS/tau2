@@ -873,6 +873,12 @@ case $1 in
 	echo "s/^CROSS_PREFIX=\(.*\)/CROSS_PREFIX=${config_host}-/g" >> $sedout
 	;;
 
+     host_sysroot=*)
+        host_sysroot=`echo $1 | sed 's/^host_sysroot=//'`
+        echo "s/#HOST_SYSROOT#\(.*\)/$bs\1#HOST_SYSROOT#/g" >> $sedout
+	echo "s@^HOST_SYSROOT=\(.*\)@HOST_SYSROOT=${host_sysroot}@g" >> $sedout
+	;;
+
      confenvfile=*)
         confenvfile=`echo $1 | sed -e 's/^confenvfile=//' `
 	echo "NOTE: Saving configuration environment to $confenvfile"
