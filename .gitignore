@@ -4,6 +4,7 @@
 *.dylib
 *.pyo
 *.pyc
+*.class
 a.out
 .all_configs
 .last_config
@@ -26,3 +27,7 @@ TAGS
 .configure_env
 .active_stub
 .active_stubs
+
+# Ignore build files
+tools/src/android/dexInjector/*.jar
+tools/src/android/dexInjector/edu
