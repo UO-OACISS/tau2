@@ -23,3 +23,5 @@ cscope.*
 tags
 TAGS
 .configure_env
+.active_stub
+.active_stubs
