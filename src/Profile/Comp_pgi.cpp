@@ -67,10 +67,13 @@ struct s1 {
   char *rout;
 };
 
+extern "C" void Tau_profile_exit_all_threads(void);
+
 #define dprintf TAU_VERBOSE
 // called during termination
 #pragma save_all_regs
 extern "C" void __rouexit() {
+  Tau_profile_exit_all_threads();
   Tau_destructor_trigger();
 }
 

@@ -229,7 +229,11 @@ static bfd_unit_vector_t & ThebfdUnits(void)
   return internal_bfd_units;
 }
 
+extern "C" void Tau_profile_exit_all_threads(void);
+
 void Tau_delete_bfd_units() {
+  // make sure all users of BFD are done with it!
+  Tau_profile_exit_all_threads();
   static bool deleted = false;
   if (!deleted) {
     deleted = true;

@@ -4,6 +4,7 @@
 *.dylib
 *.pyo
 *.pyc
+*.class
 a.out
 .all_configs
 .last_config
@@ -19,7 +20,14 @@ bgq
 craycnl
 apple
 mic_linux
+arm_android
 cscope.*
 tags
 TAGS
 .configure_env
+.active_stub
+.active_stubs
+
+# Ignore build files
+tools/src/android/dexInjector/*.jar
+tools/src/android/dexInjector/edu

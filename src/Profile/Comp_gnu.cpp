@@ -146,10 +146,13 @@ void updateHashTable(unsigned long addr, const char *funcname)
   hn->excluded = isExcluded(funcname);
 }
 
+extern "C" void Tau_profile_exit_all_threads(void);
+
 static int executionFinished = 0;
 void runOnExit()
 {
   executionFinished = 1; 
+  Tau_profile_exit_all_threads();
 
   // clear the hash map to eliminate memory leaks
   HashTable & mytab = TheHashTable();
