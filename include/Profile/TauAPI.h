@@ -467,6 +467,7 @@ void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
 void TAUDECL Tau_lite_stop_timer(void *profiler);
 void TAUDECL Tau_pure_start(const char *name);
 void TAUDECL Tau_pure_stop(const char *name);
+void TAUDECL Tau_stop_all_timers(int tid);
 
 void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);

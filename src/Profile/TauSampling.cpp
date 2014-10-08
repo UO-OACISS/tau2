@@ -264,7 +264,7 @@ struct CallStackInfo
 //   2. because multiple candidate samples can belong to the same
 //      TAU context and we need to determine if an intermediate
 //      FunctionInfo object has already been created for that context.
-static map<string, FunctionInfo *> *name2FuncInfoMap[TAU_MAX_THREADS];
+static map<string, FunctionInfo *> *name2FuncInfoMap;
 
 struct CallSiteCacheNode {
   bool resolved;
@@ -701,10 +701,7 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary()
   static bool name2FuncInfoMapInitialized = false;
   if (!name2FuncInfoMapInitialized) {
     RtsLayer::LockEnv();
-    for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      //name2FuncInfoMap[i] = NULL;
-      name2FuncInfoMap[i] = new map<string, FunctionInfo *>();
-    }
+    name2FuncInfoMap = new map<string, FunctionInfo *>();
     name2FuncInfoMapInitialized = true;
     RtsLayer::UnLockEnv();
   }
@@ -717,7 +714,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
-    char const * childName, char * newShortName, bool addAddress)
+    char const * childName, char **newShortName, bool addAddress)
 {
   int printMessage=0;
   if (strcmp(tag, "UNWIND") == 0) {
@@ -735,7 +732,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     node = callSiteCache[addr];
     if (!node) {
       node = new CallSiteCacheNode;
-      node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
+      if (TauEnv_get_bfd_lookup()) {
+        node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
+      } else {
+        node->resolved = false;
+      }
       callSiteCache[addr] = node;
     }
     RtsLayer::UnLockDB();
@@ -747,6 +748,13 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
+    // prevent some crashes due to not fully resolved locations
+    if (resolvedInfo.funcname == NULL) {
+	    resolvedInfo.funcname = "";
+    }
+    if (resolvedInfo.filename == NULL) {
+	    resolvedInfo.filename = "";
+    }
     char lineno[32];
     sprintf(lineno, "%d", resolvedInfo.lineno);
     // make sure we allocate enough space for the buffer!!!!
@@ -759,17 +767,19 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       sprintf(buff, "[%s] %s [{%s} {%d}]",
           tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
     }
-    newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
-    sprintf(newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
+    *newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
+    sprintf(*newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
     //newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
     //sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
-    //newShortName = &newName; 
+    //*newShortName = newName;
     //TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
   } else {
     char const * mapName = "UNKNOWN";
-    TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
-    if (addressMap) {
-      mapName = addressMap->name;
+    if (TauEnv_get_bfd_lookup()) {
+      TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
+      if (addressMap) {
+        mapName = addressMap->name;
+      }
     }
     if (addAddress) {
       char * tempAddrBuffer = (char*)malloc(32);    // not expecting more than 26 digits in addr
@@ -784,7 +794,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       }
       sprintf(tempAddrBuffer, "ADDR %p", (void *)addr);
       // TODO: Leak?
-      newShortName = tempAddrBuffer;
+      *newShortName = tempAddrBuffer;
     } else {
       if (childName) {
         buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(mapName) + 128);
@@ -799,7 +809,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
         }
       }
       // TODO: Leak?
-      newShortName = strdup("UNRESOLVED");
+      *newShortName = strdup("UNRESOLVED");
     }
   }
 
@@ -807,7 +817,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   //callsite->name = strdup(buff);
   callsite->name = buff;
   // only print this for new addresses
-  if (printMessage==1) TAU_VERBOSE("Name %s, Address %p resolved to %s\n", newShortName, (void*)addr, buff);
+  if (printMessage==1) TAU_VERBOSE("Name %s, Address %p resolved to %s\n", *newShortName, (void*)addr, buff);
   return callsite;
 }
 
@@ -854,7 +864,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       char * prevShortName = NULL;
       char * newShortName = NULL;
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, newShortName, addAddress));
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress));
       // move the pointers
       if (newShortName) {
         prevShortName = newShortName;
@@ -863,7 +873,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, newShortName, addAddress));
+            address, "UNWIND", prevShortName, &newShortName, addAddress));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
@@ -967,9 +977,6 @@ void Tau_sampling_finalizeProfile(int tid)
 
   // Initialization of maps for this thread if necessary.
   Tau_sampling_internal_initName2FuncInfoMapIfNecessary();
-  if (name2FuncInfoMap[tid] == NULL) {
-    name2FuncInfoMap[tid] = new map<string, FunctionInfo *>();
-  }
 
   // For each encountered sample PC in the non-empty TAU context,
   //
@@ -1029,20 +1036,20 @@ void Tau_sampling_finalizeProfile(int tid)
     intermediateGlobalLeafString << tmpStr;
 	free(tmpStr);
 	const string& iglstring = intermediateGlobalLeafString.str();
-    fi_it = name2FuncInfoMap[tid]->find(iglstring);
-    if (fi_it == name2FuncInfoMap[tid]->end()) {
+    RtsLayer::LockDB();
+    fi_it = name2FuncInfoMap->find(iglstring);
+    if (fi_it == name2FuncInfoMap->end()) {
       // Create the FunctionInfo object for the leaf Intermediate object.
-      RtsLayer::LockDB();
       intermediateGlobalLeaf = 
 	new FunctionInfo(iglstring,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
 			 "TAU_SAMPLE_CONTEXT", true);
-      RtsLayer::UnLockDB();
-      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(iglstring, intermediateGlobalLeaf));
+      name2FuncInfoMap->insert(std::pair<string, FunctionInfo*>(iglstring, intermediateGlobalLeaf));
     } else {
       intermediateGlobalLeaf = (FunctionInfo *)fi_it->second;
     }
+    RtsLayer::UnLockDB();
 
     // Step 2b: Locate or create Full Path Entry. Requires name
     //   information about the Leaf Entry available.
@@ -1051,20 +1058,20 @@ void Tau_sampling_finalizeProfile(int tid)
 	intermediatePathLeafString << candidate->tauContext->GetType() << " => ";
 	intermediatePathLeafString << iglstring;
 	const string& iplstring = intermediatePathLeafString.str();
-    fi_it = name2FuncInfoMap[tid]->find(iplstring);
-    if (fi_it == name2FuncInfoMap[tid]->end()) {
+    RtsLayer::LockDB();
+    fi_it = name2FuncInfoMap->find(iplstring);
+    if (fi_it == name2FuncInfoMap->end()) {
       // Create the FunctionInfo object for the leaf Intermediate object.
-      RtsLayer::LockDB();
       intermediatePathLeaf = 
 	new FunctionInfo(iplstring,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
 			 "TAU_SAMPLE_CONTEXT|TAU_CALLPATH", true);
-      RtsLayer::UnLockDB();
-      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(iplstring, intermediatePathLeaf));
+      name2FuncInfoMap->insert(std::pair<string, FunctionInfo*>(iplstring, intermediatePathLeaf));
     } else {
       intermediatePathLeaf = (FunctionInfo *)fi_it->second;
     }
+    RtsLayer::UnLockDB();
     // Accumulate the histogram into the Intermediate FunctionInfo objects.
     intermediatePathLeaf->SetCalls(tid, intermediatePathLeaf->GetCalls(tid) + binFreq);
     intermediateGlobalLeaf->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid) + binFreq);
@@ -1097,20 +1104,20 @@ void Tau_sampling_finalizeProfile(int tid)
       FunctionInfo * samplePathLeaf = NULL;
       FunctionInfo * sampleGlobalLeaf = NULL;
 
-      fi_it = name2FuncInfoMap[tid]->find(sampleGlobalLeafString);
-      if (fi_it == name2FuncInfoMap[tid]->end()) {
+      RtsLayer::LockDB();
+      fi_it = name2FuncInfoMap->find(sampleGlobalLeafString);
+      if (fi_it == name2FuncInfoMap->end()) {
         char const * sampleGroup = "TAU_UNWIND";
         if (sampleGlobalLeafString.find("UNWIND") == string::npos) {
           sampleGroup = "TAU_SAMPLE";
         }
-        RtsLayer::LockDB();
         sampleGlobalLeaf = new FunctionInfo(sampleGlobalLeafString,
             candidate->tauContext->GetType(), candidate->tauContext->GetProfileGroup(), sampleGroup, true);
-        RtsLayer::UnLockDB();
-        name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(sampleGlobalLeafString, sampleGlobalLeaf));
+        name2FuncInfoMap->insert(std::pair<string, FunctionInfo*>(sampleGlobalLeafString, sampleGlobalLeaf));
       } else {
         sampleGlobalLeaf = (FunctionInfo*)fi_it->second;
       }
+      RtsLayer::UnLockDB();
       
       stringstream callSiteKeyName;
 	  callSiteKeyName << iplstring << " ";
@@ -1119,21 +1126,20 @@ void Tau_sampling_finalizeProfile(int tid)
       const string cskname(callSiteKeyName.str());
 	  delete samplePathLeafString;
       // try to find the key
-      fi_it = name2FuncInfoMap[tid]->find(cskname);
-      if (fi_it == name2FuncInfoMap[tid]->end()) {
+      RtsLayer::LockDB();
+      fi_it = name2FuncInfoMap->find(cskname);
+      if (fi_it == name2FuncInfoMap->end()) {
         char const * sampleGroup = "TAU_UNWIND|TAU_CALLPATH";
         if (cskname.find("UNWIND") == string::npos) {
           sampleGroup = "TAU_SAMPLE|TAU_CALLPATH";
         }
-        RtsLayer::LockDB();
         samplePathLeaf = new FunctionInfo(cskname, "",
             candidate->tauContext->GetProfileGroup(), sampleGroup, true);
-        RtsLayer::UnLockDB();
-        //name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(callSiteKeyName->c_str(), samplePathLeaf));
-        name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(cskname, samplePathLeaf));
+        name2FuncInfoMap->insert(std::pair<string, FunctionInfo*>(cskname, samplePathLeaf));
       } else {
         samplePathLeaf = (FunctionInfo*)fi_it->second;
       }
+      RtsLayer::UnLockDB();
 
       // Update the count and time for the end of the path for sampled event.
       samplePathLeaf->SetCalls(tid, samplePathLeaf->GetCalls(tid) + binFreq);

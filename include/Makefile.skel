@@ -91,6 +91,8 @@ PDTCOMPDIR=
 DYNINSTDIR=
 JDKDIR=
 ANDROID_SDK=
+ANDROID_VERSION=
+ANDROID_PLATFORM=
 OPARIDIR=
 SCOREP_OPARI_BIN_DIR=
 OPARIINCDIR=
@@ -152,6 +154,8 @@ UNWIND_INC=
 UNWIND_LIB=
 UNWIND_LIB_FLAG=
 UNWIND_EXTRAS=
+
+HOST_SYSROOT=
 
 #######################################################################
 
@@ -256,7 +260,7 @@ JDKARCH                 = linux
 #############################################
 # JAVA OBJECTS
 #############################################
-#JAVA#TAU_JAVA_O 	= TauJAPI.o JNIThreadLayer.o agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o adb.o jdwp.o ddm.o #ENDIF#
+#JAVA#TAU_JAVA_O 	= TauJAPI.o agent_util.o java_crw_demo.o TauJVMTI.o adb.o jdwp.o ddm.o #ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
 #############################################
@@ -1044,6 +1048,7 @@ EBS_CLOCK_RES=
 # Support for non-portable features
 ##############################################
 #TAU_STRSIGNAL_OK#PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF#
+#HOST_SYSROOT#PROFILEOPT84 = --sysroot=$(HOST_SYSROOT)#ENDIF#
 
 ##############################################
 # TAU Unwinder flags                      
@@ -1149,6 +1154,7 @@ TAU_CUPTI_INC=
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
 #CUPTI#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti  -lcuda -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
+#CUPTI_NOCUDA#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti  -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
 TAU_CUDA_LIBRARY=
 #############################################
 

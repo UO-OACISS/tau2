@@ -60,6 +60,10 @@ PREREQUISITES
    Make sure JDK (either 1.6 or 1.7) is installed on your host system.
    Oracle JDK is preferred [FIXME: or mandatory?].
 
+ - ANT
+
+   To build asmdex.
+
  - Know your Android Device
 
    Find out the Android version installed on your device. Usually you can

@@ -247,10 +247,13 @@ uint32_t get_filename_hash(uint32_t hash, char ** pdata, size_t * plen, bool * p
   }
 }
 
+extern "C" void Tau_profile_exit_all_threads(void);
+
 // Cleanup function
 extern "C" void runOnExit()
 {
   finished = true;
+  Tau_profile_exit_all_threads();
   Tau_destructor_trigger();
 }
 

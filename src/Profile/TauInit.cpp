@@ -86,7 +86,7 @@ extern "C" char *strsignal(int sig);
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
-extern "C" int Tau_profile_exit_all_threads();
+extern "C" void Tau_profile_exit_all_threads();
 extern "C" int Tau_dump_callpaths();
 extern "C" int Tau_initialize_collector_api(void);
 
@@ -285,6 +285,12 @@ int Tau_init_check_dl_initialized()
   return dl_initialized;
 }
 
+extern "C"
+int Tau_profile_exit_scorep()
+{
+  Tau_profile_exit_all_threads();
+  return 0;
+}
 
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
@@ -441,7 +447,7 @@ extern "C" int Tau_init_initializeTAU()
 #ifdef TAU_SCOREP
   /* no more initialization necessary if using SCOREP */
   SCOREP_Tau_InitMeasurement();
-  SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads);
+  SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_scorep);
   return 0;
 #endif
 

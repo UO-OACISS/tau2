@@ -30,6 +30,21 @@
 #*  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #****************************************************************************
 
+download()
+{
+  src="$1"
+  dst="$2"
+  if which wget >/dev/null 2>&1 ; then
+    echo "wget: $src ==> $dst"
+    wget -O "$dst" "$src"
+  elif which curl >/dev/null 2>&1 ; then
+    echo "curl: $src ==> $dst"
+    curl -L "$src" > "$dst"
+  else
+    echo "ERROR: neither curl nor wget found in your path."
+    exit 199
+  fi
+}
 
 fix_tilde_at_the_start_of_cube_path()
 {
@@ -312,7 +327,8 @@ for arg in "$@"; do
 	    echo "       gfortran|gfortran4]"
 	    echo "-upc=<compiler> ............................. specify the UPC compiler."
 	    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
-	    echo "-host=<host-type>..................the type of system on which TAU runs"
+	    echo "-host=<host-type> ................ the type of system on which TAU runs"
+	    echo "-host_sysroot=<path> ............................ host compiler sysroot"
 	    echo "-hostutils..............................build TAU utils for <host-type>"
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
@@ -369,6 +385,8 @@ for arg in "$@"; do
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
+	    echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
+	    echo "-android_platform=VERSION ........ Android platform version, e.g. '19'."
 	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
 	    echo "-cube=<dir> | own | ext..... Specify location of CUBE or use TAU's jar."
 	    echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
@@ -445,8 +463,9 @@ for arg in "$@"; do
 	    echo "       gfortran|gfortran4]"
 	    echo "-upc=<compiler> ............................. specify the UPC compiler."
 	    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
-	    echo "-host=<host-type>..................the type of system on which TAU runs"
+	    echo "-host=<host-type> ................ the type of system on which TAU runs"
 	    echo "                                     this is used for cross-compilation"
+	    echo "-host_sysroot=<path> ............................ host compiler sysroot"
 	    echo "-hostutils..............................build TAU utils for <host-type>"
 	    echo "                                     this is used for cross-compilation"
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
@@ -479,6 +498,8 @@ for arg in "$@"; do
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
+	    echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
+	    echo "-android_platform=VERSION ........ Android platform version, e.g. '19'."
 	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
 	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
@@ -762,6 +783,7 @@ use_ansic=no
 tauarch=unknown
 host=
 host_prefix=
+host_sysroot=
 pdtcompdir=
 pdtarchdir=unknown
 tauprefix=unknown
@@ -853,6 +875,8 @@ zeptodir=
 cuda=no
 cupti=no
 strsignal_ok=no
+android_version=4.4
+android_platform=19
 
 restore_perfdmf_and_paraprof
 
@@ -1654,6 +1678,16 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-android_version=*)
+	    android_version=`echo $arg | sed -e 's/-android_version=//'`
+	    shift
+	    ;;
+
+	-android_platform=*)
+	    android_platform=`echo $arg | sed -e 's/-android_platform=//'`
+	    shift
+	    ;;
+
 	-asmdex=*)
 	    asmdex=`echo $arg | sed -e 's/-asmdex=//'`
 	    shift
@@ -2008,6 +2042,12 @@ for arg in "$@"; do
 
 	-hostutils)
 	    fixmakeargs="$fixmakeargs HOSTUTILS"
+	    shift
+	    ;;
+
+	-host_sysroot=*)
+	    host_sysroot=`echo $arg | sed -e 's/-host_sysroot=//'`
+	    fixmakeargs="$fixmakeargs host_sysroot=$host_sysroot"
 	    shift
 	    ;;
 
@@ -2575,13 +2615,14 @@ if [ "x$detectarch" = "x" ] ; then
 fi
 
 
-if [ "$tauarch" = "i386_linux" -o "$tauarch" = "i386_solaris" -o "$tauarch" = "arm_android" -o "$tauarch" = "arm_linux" -o "$tauarch" = "mpis32" -o "$tauarch" = "ppc64" ]; then
+case "$tauarch" in
+  i386_linux|i386_solaris|arm_android|arm_linux|mpis32|ppc64)
     fixmakeargs="$fixmakeargs arch_width=32bit"
-else
-echo "Setting 64BIT arch width! tauarch=$tauarch"
+    ;;
+  *)
     fixmakeargs="$fixmakeargs arch_width=64bit"
-fi
-
+    ;;
+esac
 
 ###############################################################
 # if there are no arguments, GUESS at system configuration
@@ -5481,12 +5522,11 @@ case $machine in
     arm_android)
 	echo Found a \"$machine\" configuration definition
 	if [ "x$android_sdk" = "x" ]; then
-	    echo "Error: No Android SDK specified. You may want to specify \"-android_sdk=<dir>\""
+	    echo "Error: No Android SDK specified. You may want to specify \"-android_sdk=<dir>\", \"-android_version=VERSION\", and \"-android_platform=VERSION\""
 	    exit 1
 	fi
 
-	fixmakeargs="arch=$machine ANDROID android_sdk=$android_sdk $fixmakeargs"
-
+	fixmakeargs="arch=$machine ANDROID android_sdk=$android_sdk android_version=$android_version android_platform=$android_platform $fixmakeargs"
 	if [ $papi = yes ] ; then
 	    fixmakeargs="ARMLINUXPAPI $fixmakeargs"
 	fi
@@ -5600,12 +5640,7 @@ if [ "x$download_unwind" = xyes ] ; then
     echo "Not found in ${unwind_dir}: lib${libunwind_name}"
     # get the tar file
     if [ ! -f $libunwindtgz ] ; then
-      echo "downloading $libunwindtgz..."
-      if [ "$machine" = "apple" ] ; then
-        curl -L $libunwindurl > $libunwindtgz
-      else 
-        wget $libunwindurl
-      fi
+      download "$libunwindurl" "$libunwindtgz"
     fi
 
     # check the tar file
@@ -5721,11 +5756,7 @@ if [ "x$download_ompt" = xyes ] ; then
     # get the tar file
     echo "downloading $libomp_osstgz..."
     if [ ! -f $libomp_osstgz ]; then 
-      if [ "$machine" = "apple" ] ; then
-        curl -L $libomp_ossurl > $libomp_osstgz
-      else 
-        wget $libomp_ossurl
-      fi
+      download "$libomp_ossurl" "$libomp_osstgz"
     fi
 
     # check the tar file
@@ -6908,11 +6939,16 @@ if [ "x$machine" = "xarm_android" ]; then
 	echo "asmdex.jar already found, skipping"
     else
 	echo "asmdex.jar doesn't found, trying to build one..."
+        # Check for ant before doing anything
+        if ! which ant >/dev/null 2>&1 ; then
+          echo "ERROR: Apache ant not found in your path.  Can't build asmdex."
+          exit 199
+        fi
 	tmpdir="`pwd`/.tmp_asmdex_$$"
 	mkdir -p "$tmpdir"
 	cd "$tmpdir"
 	if [ "x$asmdex" = "xdownload" ]; then
-	    wget $asmdexurl
+            download "$asmdexurl" "$asmdextarball"
 	    if [ ! -f $asmdextarball ]; then
 		echo "$asmdextarball did not download. Please download it manually from:"
 		echo "$asmdexurl"
@@ -6993,11 +7029,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         fi
         mkdir -p "$tempdir"
         cd "$tempdir"
-        if [ "$machine" = apple ] ; then
-          curl -L "$binutilsurl" > "$binutilstgz"
-        else 
-          wget "$binutilsurl"
-        fi
+        download "$binutilsurl" "$binutilstgz"
         if [ ! -f "$binutilstgz" ] ; then
           echo "$binutilstgz did not download.  Please download it manually from: "
           echo "$binutilsurl"
@@ -7541,7 +7573,7 @@ fi
 
 tlsfound=no
 
-if [ $openmp = yes ] ; then
+if [ $openmp = yes ] || [ $pthread = yes ] ; then
     cat <<EOF > conftest_tls.cc
 __thread int number = -1;
 int main() {
@@ -7563,7 +7595,8 @@ fi
 ######################################################################
 # Check for declspec(thread) support
 ######################################################################
-if [ $openmp = yes ] && [ $tlsfound = no ] ; then
+if [ $tlsfound = no ] ; then
+  if [ $openmp = yes ] || [ $pthread = yes ] ; then
     cat <<EOF > conftest_dtls.cc
 __declspec(thread) int number = -1;
 int main() {
@@ -7580,12 +7613,14 @@ EOF
     fi
     
     /bin/rm -f conftest_dtls.o conftest_dtls.cc
+  fi
 fi
 
 ######################################################################
 # Check for pthread_getspecific() support
 ######################################################################
-if [ $openmp = yes ] && [ $tlsfound = no ] ; then
+if [ $tlsfound = no ] ; then
+  if [ $openmp = yes ] || [ $pthread = yes ] ; then
     cat <<EOF > conftest_pgs.cc
 #include "pthread.h"
 static pthread_key_t key;
@@ -7609,6 +7644,7 @@ EOF
     fi
     
     /bin/rm -f conftest_pgs.o conftest_pgs.cc
+  fi
 fi
 
 
@@ -7718,6 +7754,10 @@ EOF
 		    cupti="$cudadir/extras/CUPTI"
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
+		    if [ $machine = craycnl ]; then 
+			# check if -lcuda is available to the linker somehow
+		      fixmakeargs="$fixmakeargs CUPTI_NOCUDA"
+                    fi 
 		fi
 	    fi
 	else
