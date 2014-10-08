@@ -8,7 +8,7 @@
 #****************************************************************************
  
 include ../../../include/Makefile 
-include ../../Makefile
+# include ../../Makefile
 include $(TAU_MAKEFILE_PDT_MPI)
 
 
@@ -22,7 +22,7 @@ CC		= $(TAU_CC)
 
 PDTCPARSE        = $(PDTDIR)/$(PDTARCHDIR)/bin/cparse
 
-TAUINSTR        = $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
+TAUINSTR        = $(TAUROOT)/$(CONFIG_ARCH)/bin/tau_instrumentor
 
 CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)
 
