@@ -793,8 +793,10 @@ extern "C" int Tau_show_profiles()
   return 0;
 }
 
-static void StopAllTimers(int tid)
+extern "C" void Tau_stop_all_timers(int tid)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   //Make sure even throttled routines are stopped.
   while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
     int stackpos = Tau_thread_flags[tid].Tau_global_stackpos;
@@ -808,12 +810,13 @@ static void StopAllTimers(int tid)
   }
 }
 
-extern "C" void Tau_profile_exit_all_tasks()
+inline void Tau_profile_exit_threads(int begin_index)
 {
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
   // Stop the collector API. The main thread may exit with running
   // worker threads. When those threads try to exit, they will
   // try to stop timers that aren't running.
-  RtsLayer::LockDB();
 #ifdef TAU_OPENMP
   Tau_disable_collector_api();
 #endif
@@ -822,33 +825,25 @@ extern "C" void Tau_profile_exit_all_tasks()
   bool su = JNIThreadLayer::IsMgmtThread();
 #endif
 
-  for(int tid = 1; tid < TAU_MAX_THREADS; ++tid) {
+  for(int tid = begin_index; tid < TAU_MAX_THREADS; ++tid) {
 #ifdef TAU_ANDROID
     if (su) {
       JNIThreadLayer::SuThread(tid);
     }
 #endif
-    StopAllTimers(tid);
+    Tau_stop_all_timers(tid);
   }
-  Tau_shutdown();
-  RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_profile_exit_most_threads()
+{
+  Tau_profile_exit_threads(1);
+  // DO NOT call Tau_shutdown() - thread 0 is still active
 }
 
 extern "C" void Tau_profile_exit_all_threads()
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-#ifdef TAU_ANDROID
-  bool su = JNIThreadLayer::IsMgmtThread();
-#endif
-  for (int tid = 0; tid < TAU_MAX_THREADS; ++tid) {
-#ifdef TAU_ANDROID
-    if (su == true) {
-      JNIThreadLayer::SuThread(tid);
-    }
-#endif
-    StopAllTimers(tid);
-  }
+  Tau_profile_exit_threads(0);
   Tau_shutdown();
 }
 
@@ -857,7 +852,7 @@ extern "C" void Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-  StopAllTimers(RtsLayer::myThread());
+  Tau_stop_all_timers(RtsLayer::myThread());
   Tau_shutdown();
 }
 
@@ -868,7 +863,7 @@ extern "C" void Tau_exit(const char * msg) {
   TauInternalFunctionGuard protects_this_function;
 
 #if defined(TAU_OPENMP)
-  Tau_profile_exit_all_tasks();
+  Tau_profile_exit_most_threads();
 #elif defined(TAU_CUDA)
 	Tau_profile_exit_all_threads();
 #else

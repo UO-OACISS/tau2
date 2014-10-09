@@ -32,6 +32,6 @@ extern struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS];
 extern TAU_CDECL void Tau_get_current_region_context(int tid);
 extern TAU_CDECL void Tau_omp_start_timer(const char * state, int tid, int use_context);
 extern TAU_CDECL void Tau_omp_stop_timer(const char * state, int tid, int use_context);
-extern TAU_CDECL void Tau_profile_exit_all_tasks();
+extern TAU_CDECL void Tau_profile_exit_most_threads();
 
 #undef TAU_CDECL

@@ -94,7 +94,7 @@ static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
 
 extern "C" int Tau_get_usesMPI();
 extern "C" void Tau_shutdown(void);
-extern "C" void Tau_profile_exit_all_tasks();
+extern "C" void Tau_profile_exit_most_threads();
 extern "C" int TauCompensateInitialized(void);
 
 x_uint64 Tau_get_firstTimeStamp();
@@ -597,7 +597,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #ifdef TAU_GPU
     //Stop all other running tasks.
     if (tid == 0) {
-      Tau_profile_exit_all_tasks();
+      Tau_profile_exit_most_threads();
     }
 #endif
     if (TheSafeToDumpData()) {
