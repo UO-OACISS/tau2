@@ -2,7 +2,25 @@
 #define _BXML_H_
 
 #include <stdint.h>
+#define _BSD_SOURCE
+#ifdef __APPLE_CC__
+#include <machine/endian.h>
+// Warning: assuming little endian host (x86_64, i386, etc.)
+#ifndef le16toh
+#define le16toh(x) (x)
+#endif
+#ifndef htole16
+#define htole16(x) (x)
+#endif
+#ifndef le32toh
+#define le32toh(x) (x)
+#endif
+#ifndef htole32
+#define htole32(x) (x)
+#endif
+#else
 #include <endian.h>
+#endif
 #include <sys/types.h>
 
 #define CHUNK_AXML_FILE           0x00080003

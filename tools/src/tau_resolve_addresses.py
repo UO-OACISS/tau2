@@ -170,7 +170,7 @@ class Worker(Thread):
                 resolved = self.pipes[exe].resolve(addr)
             if resolved[0] != 'UNRESOLVED':
                 if isXML:
-                    return saxutils.escape('%s%s [{%s} {%s}]' % (prefix, resolved[0], resolved[1], resolved[2]))
+                    return '%s%s [{%s} {%s}]' % (prefix, saxutils.escape(resolved[0]), saxutils.escape(resolved[1]), saxutils.escape(resolved[2]))
                 else:
                     return '%s%s [{%s} {%s}]' % (prefix, resolved[0], resolved[1], resolved[2])
             else:
