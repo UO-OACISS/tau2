@@ -987,6 +987,13 @@ void TauEnv_initialize()
       env_tau_lite = 1;
     }
 
+    tmp = getconf("TAU_TRACK_POWER");
+    if (parse_bool(tmp, env_track_memory_heap)) {
+      TAU_VERBOSE("TAU: Power tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_POWER", "on");
+      TAU_TRACK_POWER();
+    } 
+
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
