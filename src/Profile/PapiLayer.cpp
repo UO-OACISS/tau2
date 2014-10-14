@@ -74,6 +74,7 @@ extern "C" {
 //#define TAU_PAPI_DEBUG 1
 
 bool PapiLayer::papiInitialized = false;
+double PapiLayer::scalingFactor = 0.0;
 ThreadValue * PapiLayer::ThreadList[TAU_MAX_THREADS] = { 0 };
 int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
@@ -662,16 +663,10 @@ long long PapiLayer::getVirtualTime(void) {
 char Tau_rapl_event_names[TAU_MAX_RAPL_EVENTS][PAPI_MAX_STR_LEN];
 char Tau_rapl_units[TAU_MAX_RAPL_EVENTS][PAPI_MIN_STR_LEN];
 #endif /* VERSION */
-/////////////////////////////////////////////////
-int PapiLayer::initializeRAPL(int tid) {
-#if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
-  int ncomponents, i, code, ret, rapl_cid = -1;
-  PAPI_event_info_t evinfo;
-  const PAPI_component_info_t *cinfo = NULL;
-  int num_events = 0;
- 
-  
-  dmesg(1, "Inside PapiLayer::initializeRAPL(), papiLayer::numCounters=%d\n", numCounters);
+
+int PapiLayer::initializeAndCheckRAPL(int tid) {
+
+  dmesg(1, "Inside PapiLayer::initializeAndCheckRAPL(), papiLayer::numCounters=%d\n", numCounters);
   if (!papiInitialized)
     initializePapiLayer();
 
@@ -697,6 +692,136 @@ int PapiLayer::initializeRAPL(int tid) {
     printf("WARNING: TAU is already using PAPI counters. Please unset the TAU_METRICS environment variable so PAPI events do no appear in it if you plan to use TAU_TRACK_POWER API. Currently, TAU does not support both at the same time due to the higer overhead of power events.\n");
     return -1;
   }
+}
+/////////////////////////////////////////////////
+int PapiLayer::initializePerfRAPL(int tid) {
+#if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
+  int ret = 0; 
+  int set = PAPI_NULL;
+  int i; 
+  long long value; 
+  PAPI_cpu_option_t opt;
+
+  int rapl_cid  = 0; 
+  opt.cpu_num = 0; 
+
+  initializeAndCheckRAPL(tid);
+/* 
+  ret = PAPI_library_init(PAPI_VER_CURRENT);
+  if (PAPI_VER_CURRENT != ret) {
+    fprintf(stderr, "PAPI library version mismatch with header used to compile the  TAU library\n");
+    return -1; 
+  }
+*/
+
+  ret = PAPI_set_granularity(PAPI_GRN_SYS);
+  if (PAPI_OK != ret) {
+    fprintf(stderr,"PAPI_set_granularity\n");
+    exit(1);
+  }
+
+  ThreadList[tid]->EventSet[rapl_cid] = PAPI_NULL;
+  ret = PAPI_create_eventset(&(ThreadList[tid]->EventSet[rapl_cid]));
+  if (PAPI_OK != ret) {
+    fprintf(stderr,"PAPI_create_eventset.\n");
+    exit(1);
+  }
+  opt.eventset = ThreadList[tid]->EventSet[rapl_cid];
+  ret = PAPI_assign_eventset_component( ThreadList[tid]->EventSet[rapl_cid], 1 );
+
+  if ( PAPI_OK != ret ) {
+    fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(ret));
+    exit(1);
+  }
+
+  ret = PAPI_set_opt(PAPI_CPU_ATTACH, (PAPI_option_t*)&opt);
+  if ( PAPI_OK != ret ) {
+    fprintf(stderr, "PAPI_set_opt failed (%s)\n", PAPI_strerror(ret));
+    exit(1);
+  }
+
+/* Check paranoid setting */
+  FILE *para = fopen("/proc/sys/kernel/perf_event_paranoid", "r");
+  int para_val;
+  fscanf(para, "%d", &para_val);
+  if (para_val != -1) {
+    fprintf(stderr, "Error: To use TAU's PAPI Perf interface please ensure that /proc/sys/kernel/perf_event_paranoid has a -1 in it.\n");
+    exit(1);
+  }
+  fclose(para);
+
+  numCounters = 0;
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_CORES");
+  if (PAPI_OK != ret) {
+    fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_CORES) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
+    exit(1);
+  } else {
+    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_CORES"); 
+    sprintf(Tau_rapl_units[numCounters], "Joules"); 
+    numCounters++; 
+  }
+
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_PKG");
+  if (PAPI_OK != ret) {
+    fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_PKG) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
+    exit(1);
+  } else {
+    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_PKG"); 
+    sprintf(Tau_rapl_units[numCounters], "Joules"); 
+    numCounters++; 
+  }
+
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_GPU");
+  if (PAPI_OK != ret) {
+    fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_GPU) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
+    exit(1);
+  } else {
+    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_GPU"); 
+    sprintf(Tau_rapl_units[numCounters], "Joules"); 
+    numCounters++; 
+  }
+
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_DRAM");
+  if (PAPI_OK != ret) {
+   // OK: this event is only available on servers 
+  } else {
+    sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_DRAM"); 
+    sprintf(Tau_rapl_units[numCounters], "Joules"); 
+    numCounters++; 
+  }
+
+  FILE *fp = fopen ("/sys/devices/power/events/energy-pkg.scale", "r");
+  if (fp == NULL) {
+    perror("Couldn't open file /sys/devices/power/events/energy-pkg.scale");
+    exit(1);
+  }
+
+  char line[100];
+  fgets( line,100,fp );
+  if( sscanf(line,"%lf",&scalingFactor) != 1 ) {
+     printf("%s: /sys/devices/power/events/energy-pkg.scale doesn't contain a double", line);
+     exit(1);
+  }
+  ThreadList[tid]->NumEvents[rapl_cid] = numCounters; 
+
+  if (PAPI_start(ThreadList[tid]->EventSet[rapl_cid]) != PAPI_OK) {
+    printf("TAU PERF: Error in PAPI_Start\n");
+    return -1;
+  }
+  return rapl_cid; /* 0 in this case */ 
+#else /* PAPI >= 5 */
+  return -1; 
+#endif /* PAPI_VERSION_MAJOR >= 5 */
+}
+int PapiLayer::initializeRAPL(int tid) {
+#if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
+  int ncomponents, i, code, ret, rapl_cid = -1;
+  PAPI_event_info_t evinfo;
+  const PAPI_component_info_t *cinfo = NULL;
+  int num_events = 0;
+ 
+  initializeAndCheckRAPL(tid); 
+
   ncomponents = PAPI_num_components(); 
   for (i=0; i < ncomponents; i++) {
     if ((cinfo = PAPI_get_component_info(i)) == NULL) { 
@@ -718,8 +843,6 @@ int PapiLayer::initializeRAPL(int tid) {
         printf("WARNING: TAU couldn't create a PAPI eventset. Please check the LD_LIBRARY_PATH and ensure that there is no mismatch between the version of papi.h and the papi library that is loaded\n");
         return -1;
       }
-    
-
     
       /* Add RAPL events to the event set */
       code = PAPI_NATIVE_MASK;
@@ -744,6 +867,7 @@ int PapiLayer::initializeRAPL(int tid) {
        
          /* Check for nano Joules or nJ in the units */
         if ((evinfo.units[0] == 'n') && (evinfo.units[1] == 'J')) {
+          scalingFactor = 1.0e-9; /* nano Joules */
           strncpy(Tau_rapl_units[num_events], evinfo.units, PAPI_MIN_STR_LEN);
           ret = PAPI_add_event( (ThreadList[tid]->EventSet[rapl_cid]), code);
           if (ret != PAPI_OK) {
@@ -766,7 +890,7 @@ int PapiLayer::initializeRAPL(int tid) {
   } /* for ncomponents */
 
   if (PAPI_start(ThreadList[tid]->EventSet[rapl_cid]) != PAPI_OK) {
-    printf("Error in PAPI_Start\n");
+    printf("PAPI RAPL: Error in PAPI_Start\n");
     return -1;
   }
   return rapl_cid;
@@ -775,11 +899,17 @@ int PapiLayer::initializeRAPL(int tid) {
 #endif /* PAPI_VERSION */
 }
 
+
 /////////////////////////////////////////////////
 void PapiLayer::triggerRAPLPowerEvents(void) {
 #if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
   int tid = Tau_get_thread();
+#ifdef TAU_PAPI_PERF_RAPL
+  static int rapl_cid = PapiLayer::initializePerfRAPL(tid); 
+#else /*  TAU_PAPI_PERF_RAPL */
   static int rapl_cid = PapiLayer::initializeRAPL(tid); 
+#endif /* TAU_PAPI_PERF_RAPL */
+
   static bool firsttime = true;
   dmesg(1,"rapl_cid = %d\n", rapl_cid);
   int i; 
@@ -824,10 +954,10 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
 	
       }
       for(i=0; i < numCounters -1; i++) {
-        double value = (((double) tmpCounters[i]) /1.0e9)/elapsedTimeInSecs;
+        double value = (((double) tmpCounters[i]) *scalingFactor)/elapsedTimeInSecs;
 	dmesg(1,"Counter: %s: value %.9f, units = W\n", Tau_rapl_event_names[i], value);
 	if (value > 1e-5) {
-	  sprintf(ename,"%s (Power in Watts)", Tau_rapl_event_names[i]);
+	  sprintf(ename,"%s (Socket Power in Watts)", Tau_rapl_event_names[i]);
           TAU_TRIGGER_EVENT(ename, value);
         }
       }
