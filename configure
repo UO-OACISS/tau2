@@ -8236,6 +8236,8 @@ if [ $scorep = yes ] ; then
       fi
     fi
 
+    scorep_adapter="$scorep_adapter --user"
+
     if [ $scorep_adapter_init = yes ]; then 
       x=`${scorepdir}/bin/scorep-config ${scorep_adapter} > src/Profile/TauScorePAdapterInit.c`
       if [ $? = 0 ]; then
