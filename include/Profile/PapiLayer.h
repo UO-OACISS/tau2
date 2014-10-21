@@ -50,9 +50,12 @@ private:
   static int initializeSingleCounter();
   static int initializeThread(int tid);
   static int initializePAPI(void);
+  static int initializeAndCheckRAPL(int tid);
   static int initializeRAPL(int tid);
+  static int initializePerfRAPL(int tid);
   static void checkDomain(int domain, char* domainstr);
   static bool papiInitialized;
+  static double scalingFactor;
 };
 
 #endif /* TAU_PAPI */
