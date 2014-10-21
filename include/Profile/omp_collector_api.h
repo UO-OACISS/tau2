@@ -391,7 +391,7 @@ typedef enum {
 	     * implementation-specific events may be defined with any enum value
 	     * equal to or greater than OMP_EVENT_THR_RESERVED_IMPL
 	     */
-	OMP_EVENT_THR_RESERVED_IMPL = 4096,
+	OMP_EVENT_THR_RESERVED_IMPL = 256,
 	OMP_EVENT_LAST
 } OMP_COLLECTORAPI_EVENT;
 
