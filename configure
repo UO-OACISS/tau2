@@ -5807,6 +5807,7 @@ if [ "x$download_ompt" = xyes ] ; then
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
           echo "Please check `pwd`/${libomp_oss_log}"
+		    exit 1; 
 		fi
       fi
 
@@ -5832,6 +5833,7 @@ if [ "x$download_ompt" = xyes ] ; then
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
             echo "Please check `pwd`/${libomp_oss_log}"
+		    exit 1; 
 	  fi # if library exists
         fi # if result == 0
       fi # if arch == craycnl
