@@ -58,7 +58,15 @@ PREREQUISITES
  - JDK
 
    Make sure JDK (either 1.6 or 1.7) is installed on your host system.
-   Oracle JDK is preferred [FIXME: or mandatory?].
+   Oracle JDK is highly recommended.  Others *PROBABLY WON'T WORK*.
+
+   [FIXME]
+   On OS X (a.k.a "apple") you'll need to jimmy some paths to get this to
+   work:
+
+   cd /System/Library/Frameworks/JavaVM.framework/Versions/Current
+   sudo ln -s Commands bin
+   sudo ln -s Headers include
 
  - ANT
 
@@ -101,20 +109,36 @@ PREREQUISITES
    C++11 std::mutex which is not supported before gcc 4.8). Put the 
    compiler binary in your PATH.
 
+   Generate the standalone toolchain, e.g.:
+
+   /path/to/android-ndk-r10b/build/tools/make-standalone-toolchain.sh \
+      --platform=android-L \
+      --toolchain=arm-linux-androideabi-4.9 \
+      --install-dir=<NDK_TOOLCHAIN>
+
+   Be sure to replace <NDK_TOOLCHAIN> with some installation path.
+
+
 CONFIGURE
 
-  Now run the configure scripts in the TAU package as usual. You must
-  specify following flags:
+  Configure TAU more or less as shown below:
 
-    * -arch=arm_android
-    * -useropt=-std=c++0x
-    * -host=arm-linux-androideabi
-    * -jdk=<path_to_jdk_toplevel_dir>
-    * -android_sdk=<path_to_android_sdk_toplevel_dir>
-    * [FIXME: some Android version is hardcoded in TAU]
-    * [FIXME: do we really need -android_sdk ?]
+    ./configure -arch=arm_android \
+                -useropt="-std=c++0x" \
+                -host=arm-linux-androideabi \
+                -host_sysroot=<NDK_TOOLCHAIN>/sysroot \
+                -jdk=<jdk>
+                -android_sdk=<android_sdk>
+                -android_version=4.4W \
+                -android_platform=20
 
-  You may also want to provide "-prefix=<install_dir>".
+  * On OS X (a.k.a "apple") the JDK is installed at 
+  /System/Library/Frameworks/JavaVM.framework/Versions/Current
+
+  * Make sure the android_version and android_platform are available in the
+    SDK path you specified as android_sdk.
+
+  * You may also want to provide "-prefix=<install_dir>".
 
   We depend on ASMDEX[1], a third party Java library which we will
   talk more about it in the following sections. By default, configure

@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 JDKDIR=@JDKDIR@
 ANDROID_SDK=@ANDROID_SDK@
@@ -12,59 +13,94 @@ JARSIGNER=$JDKDIR/bin/jarsigner
 KEYTOOL=$JDKDIR/bin/keytool
 ZIPALIGN=$ANDROID_SDK/tools/zipalign
 
+function die() {
+  retval=${2:-100}
+  echo "ERROR: $1"
+  exit $retval
+}
+
+# Check arguments
+apk="$1"
+inj="$2"
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <Package.apk> <InjectedPackage.apk>"
     exit 1
 fi
-
-if [ ! -f $1 ]; then
-    echo "Error: Cannot open $1"
-    exit 1;
+if [ ! -f "$apk" ]; then
+    echo "Error: Cannot open $apk"
+    exit 1
 fi
-
-if [ -f $2 ]; then
-    echo "Error: $2: file already exist"
+if [ -f "$inj" ]; then
+    echo "Error: $inj already exists"
     exit 1
 fi
 
-apkfile=.`basename $1`.$$
+# Check java utilities
+for util in java jar jarsigner keytool ; do
+  if [ ! -x "$JDKDIR/bin/$util" ] ; then
+    echo "Error: $JDKDIR/bin/$util is not executable"
+    exit 1
+  fi
+done
 
-mkdir .tau_apk.$$
-cd .tau_apk.$$
+# Check system utils
+for util in zip ; do 
+  if ! which $util >/dev/null 2>&1 ; then
+    echo "Error: '$util' not in PATH"
+    exit 1
+  fi
+done
 
-echo "Inflate $1 ..."
-$JAR xf $1
+# Check zipalign
+if [ ! -x "$ZIPALIGN" ] ; then
+  ZIPALIGN=`which zipalign 2>/dev/null`
+  if [ ! -x "$ZIPALIGN" ] ; then
+    echo "Error: can't find zipalign"
+    exit 1
+  fi
+fi
+
+
+# Work in a safe space
+tmpdir="/tmp/`basename $0`.$$"
+apkfile=`basename $apk`
+mkdir -p "$tmpdir"
+cp "$apk" "$tmpdir"
+pushd "$tmpdir"
+
+echo "Inflate $apkfile ..."
+$JAR xf "$apkfile" || die "Can't inflake $apkfile"
 
 echo "Inject AndroidManifest.xml ..."
-$BXML -i .new.xml.$$ AndroidManifest.xml
-mv .new.xml.$$ AndroidManifest.xml
+($BXML -i new.xml AndroidManifest.xml && \
+ mv new.xml AndroidManifest.xml) || die "Can't inject AndroidManifest.xml"
 
 echo "Inject classes.dex ..."
-$JAVA edu.uoregon.TAU.dexInjector.DexInjector classes.dex .classes.dex.$$  >/dev/null
-mv .classes.dex.$$ classes.dex
+($JAVA edu.uoregon.TAU.dexInjector.DexInjector classes.dex classes.dex.$$ >/dev/null && \
+ mv classes.dex.$$ classes.dex) || die "Can't inject classes.dex"
 
-echo "Repack to $2 ..."
-
-cp $1 $apkfile
-
-zip -d $apkfile META-INF/\*
-zip -r $apkfile classes.dex AndroidManifest.xml
+echo "Repack to $inj ..."
+zip -d $apkfile META-INF/\* || die "Can't delete META-INF from $apkfile"
+zip -r $apkfile classes.dex AndroidManifest.xml || die "Can't add classes.dex AndroidManifext.xml to $apkfile"
 
 if [ -d lib/armeabi-v7a ]; then
-    cp $TAU_LIB_DIR/libTAU.so lib/armeabi-v7a/
-    zip -r $apkfile lib/armeabi-v7a/libTAU.so
+  (cp $TAU_LIB_DIR/libTAU.so lib/armeabi-v7a/ && \
+   zip -r $apkfile lib/armeabi-v7a/libTAU.so ) || die "Can't add libTAU.so to lib/armeabi-v7a in $apkfile"
 fi
 
-mkdir -p lib/armeabi/
-cp $TAU_LIB_DIR/libTAU.so lib/armeabi/
-zip -r $apkfile lib/armeabi/libTAU.so
+(mkdir -p lib/armeabi && \
+ cp $TAU_LIB_DIR/libTAU.so lib/armeabi && \
+ zip -r $apkfile lib/armeabi/libTAU.so) || die "Can't add libTAU.so to lib/armeabi"
 
 if [ ! -f ~/.android/debug.keystore ]; then
-    $KEYTOOL -genkey -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"
+    $KEYTOOL -genkey -keystore ~/.android/debug.keystore \
+             -storepass android -alias androiddebugkey \
+             -keypass android -dname "CN=Android Debug,O=Android,C=US" || die "Can't create debug.keystore"
 fi
-$JARSIGNER -sigalg MD5withRSA -digestalg SHA1 -keystore ~/.android/debug.keystore -storepass android -keypass android $apkfile androiddebugkey
+$JARSIGNER -sigalg MD5withRSA -digestalg SHA1 -keystore ~/.android/debug.keystore \
+           -storepass android -keypass android $apkfile androiddebugkey || die "Can't sign $apkfile"
 
-cd ..
+popd
+$ZIPALIGN 4 "$tmpdir/$apkfile" "$inj" || die "Can't zipalign $apkfile to $inj"
+#rm -rf "$tmpdir"
 
-$ZIPALIGN 4 .tau_apk.$$/$apkfile $2
-rm -rf .tau_apk.$$
