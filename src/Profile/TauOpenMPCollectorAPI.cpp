@@ -477,6 +477,7 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
 extern "C" char * Tau_get_my_region_context(int tid, int forking, bool task) {
     char * tmpStr = NULL;
 #if !defined (TAU_USE_OMPT) && \
+    !defined (TAU_MPC)  && \
 !defined (TAU_OPEN64ORC) && \
 (defined (__GNUC__) && \
 defined (__GNUC_MINOR__) && \
