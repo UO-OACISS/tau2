@@ -1129,7 +1129,7 @@ void Tau_sampling_finalizeProfile(int tid)
       RtsLayer::LockDB();
       fi_it = name2FuncInfoMap->find(cskname);
       if (fi_it == name2FuncInfoMap->end()) {
-        char const * sampleGroup = "TAU_UNWIND|TAU_CALLPATH";
+        char const * sampleGroup = "TAU_UNWIND|TAU_SAMPLE|TAU_CALLPATH";
         if (cskname.find("UNWIND") == string::npos) {
           sampleGroup = "TAU_SAMPLE|TAU_CALLPATH";
         }
