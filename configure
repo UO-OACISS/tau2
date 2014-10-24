@@ -1172,6 +1172,10 @@ for arg in "$@"; do
         if [ $papidir = "/usr" ]; then
 		  fixmakeargs="$fixmakeargs PAPINOINC"
         fi
+            if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
+		  fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
+            fi
+
 	    shift
 	    ;;
 
@@ -5803,6 +5807,7 @@ if [ "x$download_ompt" = xyes ] ; then
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
           echo "Please check `pwd`/${libomp_oss_log}"
+		    exit 1; 
 		fi
       fi
 
@@ -5828,6 +5833,7 @@ if [ "x$download_ompt" = xyes ] ; then
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
             echo "Please check `pwd`/${libomp_oss_log}"
+		    exit 1; 
 	  fi # if library exists
         fi # if result == 0
       fi # if arch == craycnl
@@ -8231,6 +8237,8 @@ if [ $scorep = yes ] ; then
         fi
       fi
     fi
+
+    scorep_adapter="$scorep_adapter --user"
 
     if [ $scorep_adapter_init = yes ]; then 
       x=`${scorepdir}/bin/scorep-config ${scorep_adapter} > src/Profile/TauScorePAdapterInit.c`

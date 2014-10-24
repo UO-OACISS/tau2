@@ -1613,6 +1613,10 @@ case $1 in
 	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PAPI_PERF_RAPL)
+	echo "NOTE: Enabling power measurements using PAPI's Perf RAPL interface ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      ANSIC)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
