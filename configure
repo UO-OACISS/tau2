@@ -2549,7 +2549,7 @@ configure_perfexplorer () {
 }
 
 make_directories () {
-    if [ $tauprefix = unknown ] ; then 
+    if [ "$tauprefix" = "unknown" ] ; then 
 	fixmakeargs="$fixmakeargs tauprefix=$tauroot"
     fi
 
