@@ -2,3 +2,7 @@ When configuring TAU for use on secure or other offline systems, please
 download and expand this file in the TAU root source directory:
 
 http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/tau-2.23.3-external_dependencies.tgz
+
+Download and expand this file before you configure and build TAU. It will 
+create a directory called external_dependencies, and the configuration
+process(es) will look there for the files before attempting to download them.
