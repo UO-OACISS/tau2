@@ -6,22 +6,22 @@
 // Right now, there are 3 different interpretations of the OMPT "standard"
 
 #if defined(TAU_USE_OMPT) 
-// oldest implementation
-#if defined(TAU_IBM_OMPT)
-#define OMPT_VERSION 1
-#include <lomp/omp.h>
-#elif defined(__ICC) || defined(__INTEL_COMPILER)
-// check for intel second
-#define OMPT_VERSION 1 // someday we will update this, but in the meantime...
-#define BROKEN_CPLUSPLUS_INTERFACE
-#elif defined(TAU_MPC) 
-// check for MPC support
-#define OMPT_VERSION 3
-#define BROKEN_CPLUSPLUS_INTERFACE
-#else 
-// all else
-#define OMPT_VERSION 3
-#endif
+ // oldest implementation
+ #if defined(TAU_IBM_OMPT)
+  #define OMPT_VERSION 1
+  #include <lomp/omp.h>
+ #elif defined(__ICC) || defined(__INTEL_COMPILER)
+  // check for intel second
+  #define OMPT_VERSION 1 // someday we will update this, but in the meantime...
+  #define BROKEN_CPLUSPLUS_INTERFACE
+ #elif defined(TAU_MPC) 
+  // check for MPC support
+  #define OMPT_VERSION 3
+  #define BROKEN_CPLUSPLUS_INTERFACE
+ #else 
+  // all else
+  #define OMPT_VERSION 3
+ #endif
 #endif // TAU_USE_OMPT
 
 
@@ -1244,6 +1244,7 @@ TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_atomic,my_acquired_atomic,my_release_atomi
 TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_ordered,my_acquired_ordered,my_release_ordered,"OpenMP_ORDERED_REGION_WAIT","OpenMP_ORDERED_REGION")
 TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_critical,my_acquired_critical,my_release_critical,"OpenMP_CRITICAL_REGION_WAIT","OpenMP_CRITICAL_REGION")
 TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_lock,my_acquired_lock,my_release_lock,"OpenMP_LOCK_WAIT","OpenMP_LOCK")
+TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_next_lock,my_acquired_next_lock,my_release_next_lock,"OpenMP_LOCK_WAIT","OpenMP_LOCK")
 
 #undef TAU_OMPT_WAIT_ACQUIRE_RELEASE
 
@@ -1525,7 +1526,7 @@ int __ompt_initialize() {
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
-#if OMPT_VERSION < 2
+#if OMPT_VERSION < 2 || defined(TAU_MPC)
   CHECK(ompt_event_section_begin, my_sections_begin, "section_begin");
   CHECK(ompt_event_section_end, my_sections_end, "section_end");
 #else
@@ -1568,6 +1569,23 @@ int __ompt_initialize() {
 //ompt_event(ompt_event_destroy_nest_lock, ompt_wait_callback_t, 56, ompt_event_destroy_nest_lock_implemented
 
 //ompt_event(ompt_event_flush, ompt_thread_callback_t, 57, ompt_event_flush_implemented) /* after executing f
+#if defined (TAU_MPC)
+  CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
+  CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
+#if defined (ompt_event_workshare_begin)
+  CHECK(ompt_event_workshare_begin, my_workshare_begin, "workshare_begin");
+  CHECK(ompt_event_workshare_end, my_workshare_end, "workshare_end");
+#endif
+  CHECK(ompt_event_release_lock, my_release_lock, "release_lock");
+  CHECK(ompt_event_wait_lock, my_wait_lock, "wait_lock");
+  CHECK(ompt_event_acquired_lock, my_acquired_lock, "acquired_lock");
+  //CHECK(ompt_event_release_nest_lock, my_release_nest_lock, "release_lock");
+  //CHECK(ompt_event_acquired_nest_lock, my_acquired_nest_lock, "acquired_lock");
+  //CHECK(ompt_event_release_nest_lock_first, my_release_nest_lock_first, "release_lock");
+  //CHECK(ompt_event_acquired_nest_lock_first, my_acquired_nest_lock_first, "acquired_lock");
+  //CHECK(ompt_event_release_nest_lock_last, my_release_nest_lock_last, "release_lock");
+  //CHECK(ompt_event_acquired_nest_lock_last, my_acquired_nest_lock_last, "acquired_lock");
+#endif
   }
   TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
 
