@@ -1568,7 +1568,8 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
     }
 
-#if TAU_OPENMP
+// MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
+#if TAU_OPENMP && !defined(TAU_MPC) 
     omp_sched_t kind;
     int modifier;
     omp_get_schedule(&kind, &modifier);
