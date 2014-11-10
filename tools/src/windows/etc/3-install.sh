@@ -5,9 +5,11 @@ ROOT=/cygdrive/c/tau
 
 # below is like a 'make install' style step
 rm -rf $ROOT/tau-windows
+
 mkdir -p $ROOT/tau-windows/bin
 mkdir -p $ROOT/tau-windows/bin/jogl32
 mkdir -p $ROOT/tau-windows/bin/jogl64
+
 mkdir -p $ROOT/tau-windows/include
 mkdir -p $ROOT/tau-windows/lib
 mkdir -p $ROOT/tau-windows/examples
@@ -15,6 +17,7 @@ mkdir -p $ROOT/tau-windows/JavaDLL
 cp -r $ROOT/tau2/include /c/tau/tau-windows
 
 
+cd $ROOT/tau2/tools/src/contrib/jogl/windows; gunzip *.dll.gz
 cd $ROOT/tau2
 rm $ROOT/tau2/win32/bin/TraceInput.exp
 rm $ROOT/tau2/win32/bin/TraceInput.lib
