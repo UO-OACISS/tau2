@@ -517,6 +517,7 @@ for arg in "$@"; do
 	    echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
 	    echo "-android_platform=VERSION ........ Android platform version, e.g. '19'."
 	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
+	    echo "-boost=<dir> ....................... Specify location of Boost Package."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
 	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
 	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
@@ -857,6 +858,7 @@ upc_compiler=default
 forceshared=no
 opari_region=no
 opari_construct=no
+boost=no
 dyninst=no
 dyninstinc=no
 dyninstlib=no
@@ -1559,6 +1561,17 @@ for arg in "$@"; do
 
 	-ebs2otf)
 	    ebs2otf=yes
+	    shift
+	    ;;
+
+	-boost=*)
+	    boost=yes
+	    boostdir=`echo $arg | sed -e 's/-boost=//'`
+	    if [ ! -d $boostdir ]
+	    then
+		echo "Error: Cannot access BOOST directory $boostdir"
+		exit 1
+	    fi
 	    shift
 	    ;;
 
@@ -8392,6 +8405,16 @@ fi
 if [ $dyninstlib = yes ] ; then
     fixmakeargs="$fixmakeargs dyninstlib=$dyninstlibdir DYNINST_LIB"
     dyninst=yes
+fi
+
+if [ $boost = yes ] ; then
+    fixmakeargs="$fixmakeargs BOOST "
+    if [ "x$boostdir" != "x" -a -d $boostdir -a -d $boostdir/include ]; then
+      fixmakeargs="$fixmakeargs boostinc=-I$boostdir/include"
+    fi
+    if [ "x$boostdir" != "x" -a -d $boostdir -a -d $boostdir/lib ]; then
+      fixmakeargs="$fixmakeargs boostlib=-L$boostdir/lib -Wl,-rpath,$boostdir/lib"
+    fi
 fi
 
 if [ $dyninst = yes ] ; then
