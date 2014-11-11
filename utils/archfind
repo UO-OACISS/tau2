@@ -72,7 +72,7 @@ else
 fi
 
 # Check for brain-dead solaris compiler
-if [ $ARCH = sun4 ]; then
+if [ "$ARCH" = "sun4" ]; then
     VER=`uname -r | cut -c0-2`
     if [ $VER = "5." ]; then
 	ARCH=solaris2
@@ -81,7 +81,7 @@ fi
 
 
 # Check for SGI Symmetric Multiprocessing engine
-if [ $ARCH = sgi4k -o $ARCH = sgi8k ]; then
+if [ "$ARCH" = "sgi4k" -o "$ARCH" = "sgi8k" ]; then
   # Run "hinv" and check for the number of processors
     /bin/hinv 2>&1 | /usr/bsd/head -1 2>&1 | /bin/grep "^1 " &> /dev/null
     if [ $? = 1 ]; then
@@ -90,30 +90,30 @@ if [ $ARCH = sgi4k -o $ARCH = sgi8k ]; then
 fi      
 
 # Check for Meiko CS2
-if [ $ARCH = solaris2 -a -d /opt/MEIKOcs2 ]; then
+if [ "$ARCH" = "solaris2" -a -d "/opt/MEIKOcs2" ]; then
     XDEV="cs2 $XDEV"
 fi
 
 # Check for cray-t3d xdev environment for Cray C90
-if [ $ARCH = c90 -a -d /mpp/bin ]; then
+if [ "$ARCH" = "c90" -a -d "/mpp/bin" ]; then
     XDEV="t3d $XDEV"
 fi
 
 # Check for Convex SPP engine
-if [ $ARCH = hp9000s800 ]; then
+if [ "$ARCH" = "hp9000s800" ]; then
     if [ -d /usr/convex ]; then
 	XDEV="cnxspp $XDEV"
     fi
 fi
 
 # Check for RS6000 based IBM SPx
-if [ $ARCH = rs6000 ]; then
+if [ "$ARCH" = "rs6000" ]; then
     if [ -f /bin/mpcc ]; then
 	XDEV="sp1 $XDEV"
     fi
 fi
 
-if [ $ARCH = unknown ]; then
+if [ "$ARCH" = "unknown" ]; then
 #See if users path finds an 'arch' command, if so, use it! (a little sloppy)
     arch &> /dev/null
     if [ $? != 0 ]; then
@@ -129,8 +129,8 @@ if [ $ARCH = unknown ]; then
 	ARCH=`arch`
     fi
 
-    if [ $ARCH = unknown ]; then
-	if [ `uname -s` = FreeBSD ]; then
+    if [ "$ARCH" = "unknown" ]; then
+	if [ `uname -s` = "FreeBSD" ]; then
 	    ARCH=freebsd
 	fi
     fi
@@ -147,7 +147,7 @@ if [ $ARCH = unknown ]; then
 	else
 	    if [ "$argv[1]" = "-l" ]; then
 		grep $ARCH $ARCHLISTFILE
-		if [ $ARCH = unknown ]; then
+		if [ $ARCH = "unknown" ]; then
 		    exit 1
 		else
 		    exit 0
@@ -168,7 +168,7 @@ if [ $ARCH = unknown ]; then
 fi
 
 echo $ARCH
-if [ $ARCH = unknown ]; then
+if [ "$ARCH" = "unknown" ]; then
     exit 1
 else
     exit 0

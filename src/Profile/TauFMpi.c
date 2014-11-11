@@ -18,6 +18,12 @@
 
 #ifdef TAU_MPC
 #define MPI_Comm_c2f PMPI_Comm_c2f
+#ifndef MPC_IN_PLACE
+#define MPC_IN_PLACE  (void *) -1
+#endif /* MPC_IN_PLACE */
+#ifndef MPI_F_STATUSES_IGNORE
+MPI_Fint *MPI_F_STATUSES_IGNORE = NULL;
+#endif /* MPI_F_STATUSES_IGNORE */
 #endif /* TAU_MPC */
 
 void tau_mpi_init_predefined_constants();

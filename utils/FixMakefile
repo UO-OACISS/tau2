@@ -399,6 +399,18 @@ case $1 in
 	echo "s@^TAU_BUILD_CXX=.*@TAU_BUILD_CXX=$tau_build_cxx@g" >> $sedout
 	;;
 
+     boostdir=*)
+        boostdir=`echo $1 | sed -e 's/^boostdir=//'`
+	echo "s,^BOOSTDIR=.*$,BOOSTDIR=$boostdir,g" >> $sedout
+	;;
+     boostinc=*)
+        boostinc=`echo $1 | sed -e 's/^boostinc=//'`
+	echo "s,^TAU_BOOSTINC=.*$,TAU_BOOSTINC=$boostinc,g" >> $sedout
+	;;
+     boostlib=*)
+        boostlib=`echo $1 | sed -e 's/^boostlib=//'`
+	echo "s,^TAU_BOOSTLIB=.*$,TAU_BOOSTLIB=$boostlib,g" >> $sedout
+	;;
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
