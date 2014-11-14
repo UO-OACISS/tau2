@@ -121,6 +121,8 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
 #endif
+
+#if CUDA_VERSION != 7000
 #if CUDA_VERSION >= 5000
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
@@ -128,6 +130,7 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
 #endif
+#endif /* CUDA 7.0 */
 
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
@@ -644,6 +647,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       
 				break;
 		}
+
+#if CUDA_VERSION != 7000
   	case CUPTI_ACTIVITY_KIND_KERNEL:
 #if CUDA_VERSION >= 5000
   	case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
@@ -818,6 +823,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
 			break;
     }
+#endif /* CUDA 7.0 */
   	case CUPTI_ACTIVITY_KIND_DEVICE:
 		{
 			CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
