@@ -37,12 +37,21 @@
 
 /* Some API calls deprecated in 5.5
  */
-#if CUDA_VERSION >= 5050
+#if CUDA_VERSION == 7000
+
+#define CUpti_ActivityKernel CUpti_ActivityKernel3
+#define CUpti_ActivityDevice CUpti_ActivityDevice2
+#define runtimeCorrelationId correlationId
+
+#endif
+
+#if CUDA_VERSION >= 5050 && CUDA_VERSION <= 6050
 
 #define runtimeCorrelationId correlationId
 #define CUpti_ActivityKernel CUpti_ActivityKernel2
 
 #endif
+
 
 #if CUPTI_API_VERSION >= 4
 #define TAU_ASYNC_ACTIVITY_API

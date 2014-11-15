@@ -121,8 +121,6 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
 #endif
-
-// #if CUDA_VERSION != 7000
 #if CUDA_VERSION >= 5000
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
@@ -130,7 +128,6 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
 #endif
-// #endif /* CUDA 7.0 */
 
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
@@ -530,8 +527,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
   
-	printf("in record activity, kind: %d\n", record->kind);
-	switch (record->kind) {
+	//printf("in record activity, kind: %d\n", record->kind);
+  switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 #if CUDA_VERSION >= 5050
 	  case CUPTI_ACTIVITY_KIND_MEMCPY2:
@@ -631,7 +628,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				getMemcpyType(copyKind),
         direction
 			);
-			printf("Tau_cupti_record_activity, just finished Tau_cupti_register_memcpy_event\n");
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->contextId, id, NULL, 0);
 			//cuptiGpuEvent cuRec = cuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, &gId, NULL); 
@@ -648,8 +644,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       
 				break;
 		}
-
-// #if CUDA_VERSION != 7000
   	case CUPTI_ACTIVITY_KIND_KERNEL:
 #if CUDA_VERSION >= 5000
   	case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
@@ -700,13 +694,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       }
       else {
 #endif
-#if CUDA_VERSION == 7000
-        CUpti_ActivityKernel3 *kernel = (CUpti_ActivityKernel3 *)record;
-#elif CUDA_VERSION == 6500
-        CUpti_ActivityKernel2 *kernel = (CUpti_ActivityKernel2 *)record;
-#else
         CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
-#endif
         name = kernel->name;
         deviceId = kernel->deviceId;
         streamId = kernel->streamId;
@@ -830,14 +818,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
 			break;
     }
-// #endif /* CUDA 7.0 */
   	case CUPTI_ACTIVITY_KIND_DEVICE:
 		{
-		  #if CUDA_VERSION == 7000
-			CUpti_ActivityDevice2 *device = (CUpti_ActivityDevice2 *)record;
-		  #else
 			CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
-		  #endif
+
 			int nMeta = 17;
 			
 			GpuMetadata *metadata = (GpuMetadata *) malloc(sizeof(GpuMetadata) * nMeta);
@@ -892,14 +876,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
 #endif
       //globalAccessMap[global_access->correlationId] = *global_access;
-
-#if CUDA_VERSION == 7000     
-      CUpti_ActivityKernel3 *kernel = &kernelMap[global_access->correlationId];
-#elif CUDA_VERSION == 6500
-      CUpti_ActivityKernel2 *kernel = &kernelMap[global_access->correlationId];
-#else
+     
       CUpti_ActivityKernel *kernel = &kernelMap[global_access->correlationId];
-#endif
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[global_access->sourceLocatorId];
 
       if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
@@ -939,14 +917,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #ifdef TAU_DEBUG_CUPTI
 			cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
 #endif
-
-#if CUDA_VERSION == 7000     
-      CUpti_ActivityKernel3 *kernel = &kernelMap[branch->correlationId];
-#elif CUDA_VERSION == 6500
-      CUpti_ActivityKernel2 *kernel = &kernelMap[branch->correlationId];
-#else
+     
       CUpti_ActivityKernel *kernel = &kernelMap[branch->correlationId];
-#endif
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[branch->sourceLocatorId];
 
       if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
@@ -1004,11 +976,9 @@ int gpu_occupancy_available(int deviceId)
 	{
 		return 0;
 	}
-	#if CUDA_VERSION == 7000
-	CUpti_ActivityDevice2 device = deviceMap[deviceId];
-	#else
+
 	CUpti_ActivityDevice device = deviceMap[deviceId];
-	#endif
+
 	if ((device.computeCapabilityMajor > 3) ||
 		device.computeCapabilityMajor == 3 &&
 		device.computeCapabilityMinor > 5)
@@ -1085,11 +1055,8 @@ void record_gpu_occupancy(int32_t blockX,
                           const char *name, 
                           eventMap_t *map)
 {
-#if CUDA_VERSION == 7000
-	CUpti_ActivityDevice2 device = deviceMap[deviceId];
-#else
 	CUpti_ActivityDevice device = deviceMap[deviceId];
-#endif
+
 
 	int myWarpsPerBlock = ceil(
 				(blockX * blockY * blockZ)/
@@ -1194,16 +1161,9 @@ void record_gpu_occupancy(int32_t blockX,
 }
 
 #if CUPTI_API_VERSION >= 3
-#if CUDA_VERSION == 7000
-void form_context_event_name(CUpti_ActivityKernel3 *kernel, CUpti_ActivitySourceLocator *source, const char *event_name, std::string *name)
-{         
-#elif CUDA_VERSION == 6500
-void form_context_event_name(CUpti_ActivityKernel2 *kernel, CUpti_ActivitySourceLocator *source, const char *event_name, std::string *name)
-{         
-#else
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event_name, std::string *name)
 {         
-#endif         
+
   stringstream file_and_line("");
   file_and_line << event_name << " : ";
   file_and_line << demangleName(kernel->name);
