@@ -1570,10 +1570,11 @@ void TauEnv_initialize()
 
 // MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
 #if TAU_OPENMP && !defined(TAU_MPC) 
-    omp_sched_t kind;
-    int modifier;
-    omp_get_schedule(&kind, &modifier);
     const char* schedule;
+    int modifier;
+#if defined(omp_sched_t)
+    omp_sched_t kind;
+    omp_get_schedule(&kind, &modifier);
     if (kind == omp_sched_static) {
         schedule = "STATIC";
     } else if (kind == omp_sched_dynamic) {
@@ -1588,6 +1589,13 @@ void TauEnv_initialize()
     TAU_METADATA("OMP_SCHEDULE", schedule);
     sprintf(tmpstr,"%d",modifier);
     TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
+#else
+    schedule = "UNKNOWN";
+    modifier = 1;
+    TAU_METADATA("OMP_SCHEDULE", schedule);
+    sprintf(tmpstr,"%d",modifier);
+    TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
+#endif
 
     int value = omp_get_max_threads();
     sprintf(tmpstr,"%d",value);
@@ -1605,13 +1613,17 @@ void TauEnv_initialize()
     sprintf(tmpstr,"%s",value?"on":"off");
     TAU_METADATA("OMP_NESTED", tmpstr);
 
+#if defined(omp_get_thread_limit)
     value = omp_get_thread_limit();
     sprintf(tmpstr,"%d",value);
     TAU_METADATA("OMP_THREAD_LIMIT", tmpstr);
+#endif
 
+#if defined(omp_get_max_active_levels)
     value = omp_get_max_active_levels();
     sprintf(tmpstr,"%d",value);
     TAU_METADATA("OMP_MAX_ACTIVE_LEVELS", tmpstr);
+#endif
 #endif
 
     tmp = getconf("TAU_MEASURE_TAU");
