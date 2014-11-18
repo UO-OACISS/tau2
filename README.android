@@ -50,7 +50,7 @@ We will explain the points above in detail in the following sections.
 
 PREREQUISITES
 
- - Linux host system
+ - Linux or OS X host system
 
    You need a x86/x64 Linux system to compile and run the tools provided
    by TAU package.
@@ -59,14 +59,6 @@ PREREQUISITES
 
    Make sure JDK (either 1.6 or 1.7) is installed on your host system.
    Oracle JDK is highly recommended.  Others *PROBABLY WON'T WORK*.
-
-   [FIXME]
-   On OS X (a.k.a "apple") you'll need to jimmy some paths to get this to
-   work:
-
-   cd /System/Library/Frameworks/JavaVM.framework/Versions/Current
-   sudo ln -s Commands bin
-   sudo ln -s Headers include
 
  - ANT
 
@@ -112,8 +104,8 @@ PREREQUISITES
    Generate the standalone toolchain, e.g.:
 
    /path/to/android-ndk-r10b/build/tools/make-standalone-toolchain.sh \
-      --platform=android-L \
-      --toolchain=arm-linux-androideabi-4.9 \
+      --platform=android-19 \
+      --toolchain=arm-linux-androideabi-4.8 \
       --install-dir=<NDK_TOOLCHAIN>
 
    Be sure to replace <NDK_TOOLCHAIN> with some installation path.
@@ -132,8 +124,9 @@ CONFIGURE
                 -android_version=4.4W \
                 -android_platform=20
 
-  * On OS X (a.k.a "apple") the JDK is installed at 
-  /System/Library/Frameworks/JavaVM.framework/Versions/Current
+  * On OS X (a.k.a "apple") JDK <VERSION> is installed at 
+    /Library/Java/JavaVirtualMachines/jdk<VERSION>.jdk/Contents/Home
+
 
   * Make sure the android_version and android_platform are available in the
     SDK path you specified as android_sdk.
@@ -149,7 +142,8 @@ CONFIGURE
 
 BUILD
 
-  Simply run "make install"
+  Run "make install"
+  [FIXME] Parallel make is not yet supported.
 
 --- 2.2 General usage
 
