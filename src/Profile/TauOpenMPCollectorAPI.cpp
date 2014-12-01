@@ -700,23 +700,23 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 // these events are somewhat unstable with OpenUH
         case OMP_EVENT_THR_BEGIN_SUSPEND_TASK:
             // query the ORA to get the task id
-            //Tau_get_task_id (tid);
-            //Tau_omp_start_timer("OpenMP_SUSPEND_TASK", tid, 0, 0, false);
+            Tau_get_task_id (tid);
+            Tau_omp_start_timer("OpenMP_SUSPEND_TASK", tid, 0, 0, false);
             break;
         case OMP_EVENT_THR_END_SUSPEND_TASK:
             // query the ORA to get the task id
-            //Tau_get_task_id (tid);
-            //Tau_omp_stop_timer("OpenMP_SUSPEND_TASK", tid, 0, false);
+            Tau_get_task_id (tid);
+            Tau_omp_stop_timer("OpenMP_SUSPEND_TASK", tid, 0, false);
             break;
         case OMP_EVENT_THR_BEGIN_STEAL_TASK:
             // query the ORA to get the task id
-            //Tau_get_task_id (tid);
-            //Tau_omp_start_timer("OpenMP_STEAL_TASK", tid, 0, 0, false);
+            Tau_get_task_id (tid);
+            Tau_omp_start_timer("OpenMP_STEAL_TASK", tid, 0, 0, false);
             break;
         case OMP_EVENT_THR_END_STEAL_TASK:
             // query the ORA to get the task id
-            //Tau_get_task_id (tid);
-            //Tau_omp_stop_timer("OpenMP_STEAL_TASK", tid, 0, false);
+            Tau_get_task_id (tid);
+            Tau_omp_stop_timer("OpenMP_STEAL_TASK", tid, 0, false);
             break;
         case OMP_EVENT_THR_FETCHED_TASK:
             // query the ORA to get the task id
@@ -737,12 +737,12 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
                 Tau_omp_stop_timer("OpenMP_EXECUTE_TASK", tid, 0, false);
                 Tau_collector_flags[tid].task_exec -= 1;
             }
-            //Tau_omp_start_timer("OpenMP_FINISH_TASK", tid, 0, 0, false);
+            Tau_omp_start_timer("OpenMP_FINISH_TASK", tid, 0, 0, false);
             break;
         case OMP_EVENT_THR_END_FINISH_TASK:
             // query the ORA to get the task id
-            //Tau_get_task_id (tid);
-            //Tau_omp_stop_timer("OpenMP_FINISH_TASK", tid, 0, false);
+            Tau_get_task_id (tid);
+            Tau_omp_stop_timer("OpenMP_FINISH_TASK", tid, 0, false);
             break;
         case OMP_EVENT_THR_RESERVED_IMPL:
             break;
