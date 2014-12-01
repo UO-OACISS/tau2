@@ -536,19 +536,17 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context, bool task) {
     if (Tau_collector_enabled) {
-#if 1
-    int contextLength = 10;
-    char * regionIDstr = NULL;
-    char * tmpStr = Tau_get_my_region_context(tid, 0, task);
-    contextLength = strlen(tmpStr);
-    regionIDstr = (char*)malloc(contextLength + 32);
-    sprintf(regionIDstr, "%s: %s", state, tmpStr);
-    //printf("%d: stop  '%s'\n", tid, regionIDstr); fflush(stdout);
-    Tau_pure_stop_openmp_task(regionIDstr, tid);
-      //Tau_stop_current_timer_task(tid);
-#else
-      Tau_stop_current_timer_task(tid);
-#endif
+      if (use_context) {
+        int contextLength = 10;
+        char * regionIDstr = NULL;
+        char * tmpStr = Tau_get_my_region_context(tid, 0, task);
+        contextLength = strlen(tmpStr);
+        regionIDstr = (char*)malloc(contextLength + 32);
+        sprintf(regionIDstr, "%s: %s", state, tmpStr);
+        Tau_pure_stop_openmp_task(regionIDstr, tid);
+      } else {
+        Tau_stop_current_timer_task(tid);
+      }
     }
 }
 
@@ -1148,7 +1146,11 @@ extern "C" void my_task_end (
 {
   TAU_OMPT_COMMON_ENTRY;
   //TAU_VERBOSE("End Task: task_id = %lu, %lu, %s\n", task_id, Tau_collector_flags[tid].taskid, task_names[Tau_collector_flags[tid].taskid]); fflush(stderr);
+#if OMPT_VERSION == 1
+  Tau_omp_stop_timer("OpenMP_TASK", tid, 0, true); // the Intel implementation reuses task ids!
+#else
   Tau_omp_stop_timer("OpenMP_TASK", tid, 1, true);
+#endif
   TAU_OPENMP_SET_LOCK;
   char * tmpStr = task_names[Tau_collector_flags[tid].taskid];
   //free(tmpStr);
