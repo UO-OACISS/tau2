@@ -109,10 +109,10 @@ tau_selective_dyn.o: tau_selective.dyn.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS  -I$(PDTDIR)/include -c tau_selective.dyn.cpp -o tau_selective_dyn.o
 
 tau_run: 	tau_run.o tau_selective_dyn.o  tau_instrument.dyn.o
-		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRAUTIL) 
+		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRAUTIL) $(TAU_BOOSTLIB)
 
 tau_run.o: 	tau_run.cpp
-		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp
+		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp $(TAU_BOOSTINC)
 
 tau_wrap: tau_wrap.o tau_selective.o tau_instrument.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_wrap.o tau_selective.o tau_instrument.o -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) 
