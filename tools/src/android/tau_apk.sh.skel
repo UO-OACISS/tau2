@@ -68,6 +68,10 @@ mkdir -p "$tmpdir"
 cp "$apk" "$tmpdir"
 pushd "$tmpdir"
 
+#
+# Get to work
+#
+
 echo "Inflate $apkfile ..."
 $JAR xf "$apkfile" || die "Can't inflake $apkfile"
 
@@ -93,14 +97,16 @@ fi
  zip -r $apkfile lib/armeabi/libTAU.so) || die "Can't add libTAU.so to lib/armeabi"
 
 if [ ! -f ~/.android/debug.keystore ]; then
-    $KEYTOOL -genkey -keystore ~/.android/debug.keystore \
-             -storepass android -alias androiddebugkey \
-             -keypass android -dname "CN=Android Debug,O=Android,C=US" || die "Can't create debug.keystore"
+  echo "Creating debug.keystore"
+  $KEYTOOL -genkey -keystore ~/.android/debug.keystore \
+           -sigalg MD5withRSA -keyalg RSA -keysize 1024 \
+           -storepass android -alias androiddebugkey \
+           -keypass android -dname "CN=Android Debug,O=Android,C=US" || die "Can't create debug.keystore"
 fi
 $JARSIGNER -sigalg MD5withRSA -digestalg SHA1 -keystore ~/.android/debug.keystore \
            -storepass android -keypass android $apkfile androiddebugkey || die "Can't sign $apkfile"
 
 popd
 $ZIPALIGN 4 "$tmpdir/$apkfile" "$inj" || die "Can't zipalign $apkfile to $inj"
-#rm -rf "$tmpdir"
+rm -rf "$tmpdir"
 
