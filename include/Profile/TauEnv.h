@@ -100,6 +100,7 @@ extern "C" {
   int TAUDECL TauEnv_get_mic_offload();
   int TAUDECL TauEnv_get_bfd_lookup();
 
+  const char*  TAUDECL TauEnv_get_profile_prefix();
   int  TAUDECL TauEnv_get_profile_format();
   int  TAUDECL TauEnv_get_sigusr1_action();
   

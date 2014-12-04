@@ -237,6 +237,7 @@ static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
 
 static int env_profile_format = TAU_FORMAT_PROFILE;
+static const char *env_profile_prefix = NULL;
 static double env_throttle_numcalls = 0;
 static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
@@ -760,6 +761,10 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
+const char* TauEnv_get_profile_prefix() {
+  return env_profile_prefix;
+}
+
 int TauEnv_get_sigusr1_action() {
   return env_sigusr1_action;
 }
@@ -1214,6 +1219,10 @@ void TauEnv_initialize()
     TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", RtsLayer::getPid());
     return;
 #endif
+
+    if ((env_profile_prefix = getconf("TAU_PROFILE_PREFIX")) == NULL) {
+      TAU_VERBOSE("TAU: PROFILE PREFIX is \"%s\"\n", env_profile_prefix);
+    }
 
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
