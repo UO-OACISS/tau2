@@ -63,7 +63,7 @@ public class Utilities {
     // shortcut - assume this is a TAUdb database.
 	String whereClause = "";
 	int i = 0;
-	whereClause += " where trial.name = '" + tName + "'";
+	whereClause += " where t.name = '" + tName + "'";
     List<Trial> trials = Trial.getTrialList(server.getDB(), whereClause, false); 
     message = true;
     return trials;
