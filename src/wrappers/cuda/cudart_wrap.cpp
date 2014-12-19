@@ -1282,6 +1282,33 @@ cudaError_t cudaSetDoubleForHost(double * a1) {
 
 }
 
+cudaError_t cudaMallocManaged(void ** a1, size_t a2, unsigned int a3) {
+  typedef cudaError_t (*cudaMallocManaged_p) (void **, size_t, unsigned int);
+  static cudaMallocManaged_p cudaMallocManaged_h = NULL;
+  cudaError_t retval;
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocManaged(void **, size_t, unsigned int) C", "", CUDART_API);
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
+
+  if (cudart_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cudaMallocManaged_h == NULL)
+	cudaMallocManaged_h = (cudaMallocManaged_p) dlsym(cudart_handle,"cudaMallocManaged"); 
+    if (cudaMallocManaged_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cudaMallocManaged_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
 cudaError_t cudaMalloc(void ** a1, size_t a2) {
 
   typedef cudaError_t (*cudaMalloc_p) (void **, size_t);
