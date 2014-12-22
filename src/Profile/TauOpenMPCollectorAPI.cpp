@@ -1050,7 +1050,7 @@ typedef enum my_ompt_thread_type_e {
     } \
     Tau_global_incr_insideTAU(); \
     int tid = Tau_get_thread(); \
-    /*fprintf(stderr, "%d OMPT event: %s\n", tid, __func__); fflush(stderr);*/
+    fprintf(stderr, "%d OMPT event: %s\n", tid, __func__); fflush(stderr);
 #endif
 
 #define TAU_OMPT_COMMON_EXIT \
@@ -1597,8 +1597,8 @@ int __ompt_initialize() {
     // now, for the collector API support, create the OpenMP states.
     // preallocate State timers. If we create them now, we won't run into
     // malloc issues later when they are required during signal handling.
-    int current_state = ompt_state_work_serial;
-    int next_state;
+    ompt_state_t current_state = ompt_state_work_serial;
+    ompt_state_t next_state;
     const char *next_state_name;
     std::string *next_state_name_string;
     std::string *serial = new std::string("ompt_state_work_serial");
@@ -1629,7 +1629,7 @@ int __ompt_initialize() {
 extern "C" int ompt_initialize(ompt_function_lookup_t lookup) {
 #else
 // the newest version of the library will have a version as well
-extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, int ompt_version) {
+extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, unsigned int ompt_version) {
   fprintf(stderr, "Init: %s ver %i\n",runtime_version,ompt_version);
 #endif
 #ifndef BROKEN_CPLUSPLUS_INTERFACE
