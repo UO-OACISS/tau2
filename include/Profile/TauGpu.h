@@ -8,6 +8,7 @@
 #define MESSAGE_RECIPROCAL_RECV 4
 
 enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
+enum Unifmem { BytesHtoD = 0, BytesDtoH = 1, CPUPageFault = 2, UnifmemUnknown = 3 };
 
 #define TAU_GPU_UNKNOWN_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""
@@ -104,12 +105,20 @@ extern "C" void Tau_gpu_enter_event(const char *functionName);
 extern "C" void Tau_gpu_enter_memcpy_event(const char *functionName,
 GpuEvent *gpu, int transferSize, int memcpyType);
 
+/* Entry point for CPU routines that initiate a unified memory copy to the GPU */
+extern "C" void Tau_gpu_enter_unifmem_event(const char *functionName,
+GpuEvent *gpu, int transferSize, int unifmemType);
+
 /* Exit point for CPU routines */
 extern "C" void Tau_gpu_exit_event(const char *functionName);
 
 /* Exit point for CPU routines that initiate a memory copy to the GPU */
 extern "C" void Tau_gpu_exit_memcpy_event(const char *functionName,
 GpuEvent *gpu, int memcpyType);
+
+/* Exit point for CPU routines that initiate a unified memory copy to the GPU */
+extern "C" void Tau_gpu_exit_unifmem_event(const char *functionName,
+GpuEvent *gpu, int unifmemType);
 
 /* Creates a GPU event that to be passed on to the register calls later. */
 //eventId Tau_gpu_create_gpu_event(const char* name, gpuId *device, FunctionInfo* callingSite, TauGpuContextMap* m);
@@ -121,6 +130,10 @@ extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, do
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType, int direction);
+
+/* Callback for a UnifMem event that occurred earlier in the execution of the
+ * program. Times are pre-aligned to the CPU clock. */
+extern "C" void Tau_gpu_register_unifmem_event(GpuEvent *event, double startTime, double endTime, int transferSize, int unifmemType, int direction);
 
 /* Callback for a GPU atomic event that is associated with this gpu event. */
 extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
