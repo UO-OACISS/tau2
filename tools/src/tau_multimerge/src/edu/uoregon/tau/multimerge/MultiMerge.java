@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.uoregon.tau.trace.TraceReader;
 import edu.uoregon.tau.trace.TraceReaderCallbacks;
@@ -66,10 +68,13 @@ class TotID{
  * @author wspear
  *
  */
-class TraceNameComparitor implements Comparator<String>{
+class TraceNameComparitor implements Comparator<File>{
 
-	public int compare(String o1, String o2) {
+	public int compare(File of1, File of2) {
 
+		String o1=of1.getName();
+		String o2=of2.getName();
+		
 		if(o1.equals(o2))
 			return 0;
 
@@ -238,6 +243,11 @@ public class MultiMerge {
 	 * The tau trace writer object which will write the merged trace
 	 */
 	static TraceWriter tw;
+	
+	/**
+	 * List of multiple directories of traces to merge into one.
+	 */
+	static List<File> multiDirs;
 
 	private static boolean synch = false;
 	
@@ -300,20 +310,21 @@ public class MultiMerge {
 
 	/**
 	 * Given the name of a trace file returns the name of the associated .edf file
-	 * @param trcName
+	 * @param trcFile
 	 * @return
 	 */
-	static String getEDFName(String trcName){
+	static String getEDFName(File trcFile){
 		String newname=null;
-		String[] a =trcName.split("\\.");
-		if(trcName.contains("cuda"))
+		String[] a =trcFile.getName().split("\\.");
+		
+		if(trcFile.getName().contains("cuda"))
 		{
 			newname = "taucudaevents."+a[1]+"."+a[2]+"."+a[3]+".edf";
 		}
 		else{
 			newname="events."+a[1]+".edf";
 		}
-
+		newname=trcFile.getParentFile().getAbsolutePath()+File.separatorChar+newname;
 
 		return newname;
 	}
@@ -322,35 +333,74 @@ public class MultiMerge {
 	 * Returns a sorted list of all trace files in the current directory
 	 * @return
 	 */
-	private static List<String> listTraces(){
-		List<String> traces = new ArrayList<String>();
-		File curDir=new File(".");
+	private static List<File> listTraces(File f){
+		List<File> traces = new ArrayList<File>();
+		File curDir;
+		if(f==null){
+		curDir=new File(".");
+		}
+		else{
+			curDir=f;
+		}
 		File[] tFiles=curDir.listFiles(new TraceFilter());
 
 		for(int i=0;i<tFiles.length;i++){
-			traces.add(tFiles[i].getName());
+			traces.add(tFiles[i]);
 		}
 		Collections.sort(traces, new TraceNameComparitor());
 		return traces;
 	}
 
 	/**
+	 * Counts all of the trace files in a list of lists of tracefiles
+	 * @param traces
+	 * @return
+	 */
+	private static int countTraces(List<List<File>> traces){
+		int count = 0;
+		for(List<File> sList:traces){
+			count+=sList.size();
+		}
+		return count;
+	}
+	
+	private static char numNid(List<File> traces){
+		
+		Set<Integer> counter=new HashSet<Integer>();
+		
+		for(File f:traces){
+			String[] a =f.getName().split("\\.");
+			counter.add(Integer.parseInt(a[1]));
+		}
+		
+		return (char) counter.size();
+	}
+	
+	/**
 	 * Performs the event initializations and reads all communication events to determine which are MPI vs. CUDA and which CUDA events communicate between which processes
 	 * @param traces
 	 */
-	private static void initializeMerge(List<String> traces){
+	private static void initializeMerge(List<List<File>> traces){
 
-		TraceReader[] initReaders = new TraceReader[traces.size()];
-		totIDs=new TotID[traces.size()];
+		int totalTraces=countTraces(traces);
+		
+		TraceReader[] initReaders = new TraceReader[totalTraces];
+		totIDs=new TotID[totalTraces];
 		TraceReaderCallbacks init_cb = new TAUReaderInit();
 		int recs_read;
-		for(int rs=0;rs<initReaders.length;rs++)
+		char nid_offset=0;
+		char rs=0;
+		for(List<File> sList:traces)
+		{
+		for(File trace:sList)
 		{	
-			String edf = getEDFName(traces.get(rs));
-			initReaders[rs]=new TraceReader(traces.get(rs),edf);
+			String edf = getEDFName(trace);
+			//System.out.println("nid_offset: "+(int)nid_offset);
+			initReaders[rs]=new TraceReader(trace.getAbsolutePath(),edf,nid_offset);
 			initReaders[rs].setDefsOnly(false);
 			initReaders[rs].setSubtractFirstTimestamp(false);
 			TotID t = new TotID(initReaders[rs].getTraceFile());
+			
 //			t=initTotLoc(t);
 			totIDs[rs]=t;
 			recs_read=0;
@@ -362,6 +412,10 @@ public class MultiMerge {
 				initReaders[rs].closeTrace();
 			}else System.out.println("Warning: Tried to close null trace");
 			initReaders[rs]=null;
+			rs++;
+		}
+		nid_offset=(char) (numNid(sList)+nid_offset);
+		//System.out.println("nidoffset-set: "+(int)nid_offset);
 		}
 		if(synch){
 		long base=0;
@@ -381,8 +435,9 @@ public class MultiMerge {
 	 * Merges the data in the provided trace files into a single trace.
 	 * @param traces
 	 */
-	private static void dataMerge(List<String> traces){
-		TraceReader[] readers = new TraceReader[traces.size()];
+	private static void dataMerge(List<List<File>> traces){
+		int totalTraces=countTraces(traces);
+		TraceReader[] readers = new TraceReader[totalTraces];
 		long[] sorter = new long[readers.length];
 		TraceReaderCallbacks read_cb = new TAUReaderWriteall();
 		long totalRecords=0;
@@ -390,14 +445,22 @@ public class MultiMerge {
 		/*
 		 * Create one reader for each trace file
 		 */
-		for(int rs=0;rs<readers.length;rs++)
+		char rs=0;
+		char nid_offset=0;
+		for(List<File> sList:traces)
 		{
-			readers[rs]=new TraceReader(traces.get(rs),getEDFName(traces.get(rs)));
+		for(File trace:sList)
+		{	
+			readers[rs]=new TraceReader(trace.getAbsolutePath(),getEDFName(trace),nid_offset);
 			readers[rs].setDefsOnly(false);
 			readers[rs].setSubtractFirstTimestamp(false);//TODO: Why is this needed only for cuda output?
 			totalRecords+=readers[rs].getNumRecords();
 			sorter[rs]=readers[rs].peekTime();
 			if(synch){sorter[rs]+=totIDs[rs].offset;}
+			rs++;
+		}
+		nid_offset=(char) (numNid(sList)+nid_offset);
+		System.out.println("nidoffset-set: "+(int)nid_offset);
 		}
 
 		if(!quiet)
@@ -439,9 +502,9 @@ public class MultiMerge {
 			minDex=minTime(sorter);
 		}
 
-		for(int rs=0;rs<readers.length;rs++){
-			if(readers[rs]!=null)
-				readers[rs].closeTrace();
+		for(int i=0;i<rs;i++){
+			if(readers[i]!=null)
+				readers[i].closeTrace();
 		}
 	}
 
@@ -461,10 +524,36 @@ public class MultiMerge {
 		
 		 for(int i=0;i<args.length;i++){
 			if(args[i].equals("-q"))
-			quiet=true;
+			{quiet=true;
+			continue;
+			}
+			if(args[i].equals("--multidir")){
+				multiDirs=new ArrayList<File>();
+				while(i<args.length){
+					if(i<args.length-1&&!args[i+1].startsWith("-")){
+						i++;
+					}
+					else{
+						break;
+					}
+					multiDirs.add(new File(args[i]));
+				}
+			}
+			
 		}
+		 
+		 
 
-		List<String> traces = listTraces();
+		 List<List<File>> traces=new ArrayList<List<File>>();
+		 if(multiDirs==null)
+		 {
+			traces.add(listTraces(null));
+		 }
+		 else{
+			 for(File f:multiDirs){
+				 traces.add(listTraces(f));
+			 }
+		 }
 
 		initializeMerge(traces);
 		if(!quiet){
