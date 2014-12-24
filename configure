@@ -8444,8 +8444,14 @@ if [ $dyninst = yes ] ; then
 	    fixmakeargs="$fixmakeargs DYNINST41"
       fi
     fi
-    if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
-	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
+    if [ "x$dyninstdir" != "x" ]; then
+        if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
+        fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
+        fi
+    else
+        if [ `grep isStaticExecutable $dyninstincdir/* | wc -l` = 0 ]; then
+        fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
+        fi
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
