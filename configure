@@ -7231,9 +7231,8 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         #If we downloaded go back and remove the tempdir, otherwise just go back
         cd ../..
         rm -rf "$tempdir"
-      else
-        cd "$prebfddir"
       fi
+      cd "$prebfddir"
 
     fi # -r $bfddir/lib/libbfd.a
   fi # $bfddir = download || bfdtar = yes
