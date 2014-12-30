@@ -1,8 +1,5 @@
 /*
- * Copyright 2013 NVIDIA Corporation. All rights reserved.
- *
  * Sample CUPTI app to demonstrate the usage of unified memory counter profiling
- *
  */
 
 #include <stdio.h>
@@ -66,12 +63,6 @@ __host__ __device__ void writeData(T *data, int size, int writeVal) {
         data[i] = writeVal;
     }
 }
-
-// __global__ void testKernel(float *data, int size, int expectedVal)
-// {
-//     checkData("GPU", data, size, expectedVal);
-//     writeData(data, size, -expectedVal);
-// }
 
 void sumMatrixOnHost(float *A, float *B, float *C, const int nx, const int ny)
 {
@@ -140,13 +131,6 @@ int main(int argc, char **argv)
 {
   float *data1, *data2, *data3 = NULL;
 
-  
-  int dev = 0;
-  cudaDeviceProp deviceProp;
-  cudaGetDeviceProperties(&deviceProp, dev);
-  printf("using Device %d: %s\n", dev, deviceProp.name);
-  cudaSetDevice(dev);
-  
   // set up data size of matrix
   int nx, ny;
   int ishift = 12;
@@ -160,7 +144,7 @@ int main(int argc, char **argv)
   printf("Matrix size: nx %d ny %d\n", nx, ny);
 
   // allocate unified memory
-  // printf("Allocation size in bytes %d\n", nBytes);
+  printf("Allocation size in bytes %d\n", nBytes);
   RUNTIME_API_CALL(cudaMallocManaged((void**)&data1, nBytes));
   RUNTIME_API_CALL(cudaMallocManaged((void**)&data2, nBytes));
   RUNTIME_API_CALL(cudaMallocManaged((void**)&data3, nBytes));
