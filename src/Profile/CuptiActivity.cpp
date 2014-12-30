@@ -34,6 +34,7 @@ typedef struct RuntimeApiTrace_st {
   uint64_t eventVal;
 } RuntimeApiTrace_t;
 
+#if CUDA_VERSION >= 6000
 static const char *
 getUvmCounterKindString(CUpti_ActivityUnifiedMemoryCounterKind kind)
 {
@@ -65,6 +66,7 @@ getUvmCounterScopeString(CUpti_ActivityUnifiedMemoryCounterScope scope)
     }
     return "<unknown>";
 }
+#endif
 /* END: Unified Memory */
 
 CUresult cuInit(unsigned int a1) {
@@ -1548,6 +1550,7 @@ int getMemcpyType(int kind)
 	}
 }
 
+#if CUDA_VERSION >= 6000
 int getUnifmemType(int kind)
 {
   switch(kind)
@@ -1562,6 +1565,7 @@ int getUnifmemType(int kind)
       return UnifmemUnknown;
     }
 }
+#endif
 
 const char *demangleName(const char* name)
 {
