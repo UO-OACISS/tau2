@@ -161,6 +161,7 @@ using namespace std;
 #define TAU_CUPTI_API_DEFAULT "runtime"
 #define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 #define TAU_TRACK_CUDA_CDP_DEFAULT 0
+#define TAU_TRACK_UNIFIED_MEMORY_DEFAULT 0
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
@@ -247,6 +248,7 @@ static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
+static int env_track_unified_memory = TAU_TRACK_UNIFIED_MEMORY_DEFAULT; 
 
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
@@ -849,6 +851,10 @@ const char* TauEnv_get_cuda_instructions(){
 
 int TauEnv_get_cuda_track_cdp(){
   return env_track_cuda_cdp;
+}
+
+int TauEnv_get_cuda_track_unified_memory(){
+  return env_track_unified_memory;
 }
 
 int TauEnv_get_mic_offload(){
@@ -1838,7 +1844,16 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: tracking CUDA CDP kernels Disabled\n");
       TAU_METADATA("TAU_TRACK_CUDA_CDP", "off");
     }
-		tmp = getconf("TAU_MIC_OFFLOAD");
+    tmp = getconf("TAU_TRACK_UNIFIED_MEMORY");
+    if (parse_bool(tmp, TAU_TRACK_UNIFIED_MEMORY_DEFAULT)) {
+      env_track_unified_memory = 1;
+      TAU_VERBOSE("TAU: tracking CUDA UNIFIED MEMORY Enabled\n");
+      TAU_METADATA("TAU_TRACK_UNIFIED_MEMORY", "on");
+    } else {
+      TAU_VERBOSE("TAU: tracking CUDA UNIFIED MEMORY Disabled\n");
+      TAU_METADATA("TAU_TRACK_UNIFIED_MEMORY", "off");
+    }
+    tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
       env_mic_offload = 1;
       TAU_VERBOSE("TAU: MIC offloading Enabled\n");

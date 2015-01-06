@@ -129,11 +129,11 @@ extern "C" void Tau_cupti_register_memcpy_event(
 
 extern "C" void Tau_cupti_register_unifmem_event(
 						 const char *name,
-						 uint32_t counterKind,
 						 uint32_t deviceId,
+						 uint32_t streamId,
 						 uint32_t processId,
-						 uint32_t scope,
-						 uint64_t timestamp,
+						 uint64_t start,
+						 uint64_t end,
 						 uint64_t value,
 						 int unifmem_type,
 						 int direction);
