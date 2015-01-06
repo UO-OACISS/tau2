@@ -1619,8 +1619,13 @@ int __ompt_initialize() {
     // now, for the collector API support, create the OpenMP states.
     // preallocate State timers. If we create them now, we won't run into
     // malloc issues later when they are required during signal handling.
+#ifdef BROKEN_CPLUSPLUS_INTERFACE // the C/C++ interface is broken. :( Can't do function pointers
+    int current_state = ompt_state_work_serial;
+    int next_state;
+#else
     ompt_state_t current_state = ompt_state_work_serial;
     ompt_state_t next_state;
+#endif
     const char *next_state_name;
     std::string *next_state_name_string;
     std::string *serial = new std::string("ompt_state_work_serial");
