@@ -5827,7 +5827,7 @@ if [ "x$download_ompt" = xyes ] ; then
       sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
       rm tmp.inc
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
-      make $specialflags $archarg >& $libomp_oss_log
+      make $specialflags $archarg > $libomp_oss_log 2>&1
       result=$?
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
@@ -5860,7 +5860,7 @@ if [ "x$download_ompt" = xyes ] ; then
       if [ ${architecture} == "craycnl" ] ; then
         libomp_oss_log=build-static.log
         echo "building static $libomp_oss... (see `pwd`/${libomp_oss_log} for log)"
-        make linktype=static $specialflags $archarg >& $libomp_oss_log
+        make linktype=static $specialflags $archarg > $libomp_oss_log 2>&1
         signature=`ls -tr tmp | grep rel | grep sta | tail -1`
         if [ $result -eq 0 ] ; then
           cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
@@ -8224,7 +8224,6 @@ fi
 #    fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
 #    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
-
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
@@ -8234,7 +8233,7 @@ if [ $scorep = yes ] ; then
       fixmakeargs="$fixmakeargs SCOREPMETADATA"
       #echo "SCOREP: Adding TAU metadata..."
     fi
-    x=`${scorepdir}/bin/scorep-config --adapter-init >& /dev/null ` 
+    x=`${scorepdir}/bin/scorep-config --adapter-init > /dev/null 2>&1` 
     if [ $? = 0 ]; then 
       scorep_adapter_init=yes
       fixmakeargs="$fixmakeargs SCOREP_ADAPTER_INIT" 
@@ -8281,7 +8280,7 @@ if [ $scorep = yes ] ; then
         if [ $ompt = yes ]; then 
           scorep_adapter="$scorep_adapter --thread=omp:ompt"
         else 
-          scorep_adapter="$scorep_adapter --thread=ancestry"
+          scorep_adapter="$scorep_adapter --thread=omp:ancestry"
 # Should we make an explicit option to enable Score-P thread=ancestry? 
 # It is enabled if ompt is not specified and opari is not specified. 
         fi
@@ -8291,6 +8290,7 @@ if [ $scorep = yes ] ; then
     scorep_adapter="$scorep_adapter --user"
 
     if [ $scorep_adapter_init = yes ]; then 
+      echo ${scorepdir}/bin/scorep-config ${scorep_adapter}
       x=`${scorepdir}/bin/scorep-config ${scorep_adapter} > src/Profile/TauScorePAdapterInit.c`
       if [ $? = 0 ]; then
         echo "NOTE: Built TauScorePAdapterInit.c with scorep-config ${scorep_adapter}"
@@ -8375,7 +8375,6 @@ if [ $scorep = yes ] ; then
     fi
 
 fi
-
 if [ $epilog = yes ] ; then
 
     if [ -f $epiloglibdir/libcubew3.a ] ; then
