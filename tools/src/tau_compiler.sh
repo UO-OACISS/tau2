@@ -1159,27 +1159,27 @@ while [ $tempCounter -lt $numFiles ]; do
     #if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
     origFileName=${arrFileName[$tempCounter]}
     if [ $preprocess == $TRUE ]; then
-	base=${base}.pp
-        if [ $tauPreProcessor == $TRUE ]; then
-          if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
-          fi
-          if [ $groupType == $group_f_F ]; then
-	    cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
-          else 
-	    cmdToExecute="${preprocessor} ${arrFileName[$tempCounter]} $optTauIncludes $optIncludeDefs"
-          fi
-# tau_macro.sh will generate the .pp$suf file.
+      base=${base}.pp
+      if [ $tauPreProcessor == $TRUE ]; then
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+          optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+        fi
+        if [ $groupType == $group_f_F ]; then
+          cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
         else 
-	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
+          cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
         fi
-	evalWithDebugMessage "$cmdToExecute" "Preprocessing"
-        if [ ! -f $base$suf ]; then
-            echoIfVerbose "ERROR: Did not generate .pp file"
-	    printError "$preprocessor" "$cmdToExecute"
-        fi
-	arrFileName[$tempCounter]=$base$suf
-	echoIfDebug "Completed Preprocessing\n"
+        # tau_macro.sh will generate the .pp$suf file.
+      else 
+        cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
+      fi
+      evalWithDebugMessage "$cmdToExecute" "Preprocessing"
+      if [ ! -f $base$suf ]; then
+        echoIfVerbose "ERROR: Did not generate .pp file"
+        printError "$preprocessor" "$cmdToExecute"
+      fi
+      arrFileName[$tempCounter]=$base$suf
+      echoIfDebug "Completed Preprocessing\n"
     fi
 
     if [ $continueBeforeOMP == $TRUE ] ; then
