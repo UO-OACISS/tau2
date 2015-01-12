@@ -322,12 +322,13 @@ for arg in "$@" ; do
 			    f90preprocessor=`which cpp`
 			fi
 
-			if [ $tauPreProcessor == $TRUE ]; then 
-			  # USE TAU's pre-processor for macro expansion by default, unless a different one is specified
-		          preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'` 
-			else
-			  preprocessor=$f90preprocessor
-                        fi
+      if [ $tauPreProcessor == $TRUE ]; then 
+        # USE TAU's pre-processor for macro expansion by default, unless a different one is specified
+        preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'` 
+        f90preprocessor=$preprocessor
+      else
+        preprocessor=$f90preprocessor
+      fi
 
 			if [ ! -x $preprocessor ]; then
  			    echo "ERROR: No working cpp found in path. Please specify -optCPP=<full_path_to_cpp> and recompile"
