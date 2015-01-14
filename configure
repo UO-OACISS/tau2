@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -3100,6 +3100,7 @@ case $machine in
 
 esac
 if [ "x$fortran_compiler" = "xno" ]; then
+    echo "Not configuring for fortran."
     fixmakeargs="$fixmakeargs NOFORTRAN"
 fi
 
@@ -3954,6 +3955,7 @@ esac
 
 ######################################################################
 # Set default F90 compiler in all Makefiles
+echo "Setting F90 compiler based on requested: $fortran_compiler"
 case $fortran_compiler in
     gnu)
 	echo "Default Fortran compiler will be GNU"
@@ -4031,9 +4033,15 @@ case $fortran_compiler in
 	;;
 
     pgi)
-	echo "Default Fortran compiler will be PGI"
+	echo "Default Fortran compiler will be PGI pgf90"
 	extradir=`which pgcc | sed s/pgcc/../`
 	fixmakeargs="$fixmakeargs PGI_FORTRAN"
+	;;
+
+    pgfortran)
+	echo "Default Fortran compiler will be PGI pgfortran"
+	extradir=`which pgcc | sed s/pgcc/../`
+	fixmakeargs="$fixmakeargs PGI_FORTRAN_OTHER"
 	;;
 
     absoft)
