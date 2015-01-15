@@ -23,13 +23,15 @@ class Event {
 	char tid;   /* -- thread id  uint16     -- */
 	long parameter;   /* -- event parameter int64 -- */
 	long time;    /* -- time [us]?   uint64   -- */
+	char nid_offset=0;
 	
-	Event(int ev, char nid, char tid, long par, long ti){
+	Event(int ev, char nid, char tid, long par, long ti,char nid_offset){
 		this.evid=ev;
-		this.nid=nid;
+		this.nid=(char) (nid+nid_offset);
 		this.tid=tid;
 		this.parameter=par;
 		this.time=ti;
+		this.nid_offset=nid_offset;
 	}
 	
 	Event(){}
@@ -44,7 +46,8 @@ class Event {
 		return nid;
 	}
 	public void setNodeID(char nid) {
-		this.nid = nid;
+		this.nid = (char) (nid+nid_offset);
+		//System.out.println("nid is "+(int)nid+" plus "+(int)nid_offset);
 	}
 	public long getParameter() {
 		return parameter;

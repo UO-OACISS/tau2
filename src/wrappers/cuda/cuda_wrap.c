@@ -916,6 +916,34 @@ CUresult cuMemGetInfo_v2(size_t * a1, size_t * a2) {
 
 }
 
+CUresult cuMemAllocManaged(CUdeviceptr * a1, size_t a2, unsigned int a3) {
+
+  typedef CUresult (*cuMemAllocManaged_p_h) (CUdeviceptr *, size_t, unsigned int);
+  static cuMemAllocManaged_p_h cuMemAllocManaged_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuMemAllocManaged(CUdeviceptr *, size_t, unsigned int) C", "", CUDA_API);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuMemAllocManaged_h == NULL)
+	cuMemAllocManaged_h = (cuMemAllocManaged_p_h) dlsym(tau_handle,"cuMemAllocManaged"); 
+    if (cuMemAllocManaged_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cuMemAllocManaged_h)( a1,  a2,  a3);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
 CUresult cuMemAlloc_v2(CUdeviceptr * a1, size_t a2) {
 
   typedef CUresult (*cuMemAlloc_v2_p_h) (CUdeviceptr *, size_t);
