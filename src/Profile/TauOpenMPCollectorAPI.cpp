@@ -71,6 +71,12 @@ struct Tau_collector_status_flags {
     char _pad[128-((3*sizeof(int*))+(9*sizeof(char))+(2*sizeof(unsigned long)))];
 };
 
+#define TAU_OMPT_WAIT_ACQ_CRITICAL  0x01
+#define TAU_OMPT_WAIT_ACQ_ORDERED   0x02
+#define TAU_OMPT_WAIT_ACQ_ATOMIC    0x04
+#define TAU_OMPT_WAIT_ACQ_LOCK      0x08
+#define TAU_OMPT_WAIT_ACQ_NEXT_LOCK 0x10
+
 /* This array is shared by all threads. To make sure we don't have false
  * sharing, the struct is 64 bytes in size, so that it fits exactly in
  * one (or two) cache lines. That way, when one thread updates its data
@@ -387,6 +393,8 @@ char * show_backtrace (int tid, int offset) {
             if (basedepth == -1) {
                 if (strncmp(node->info.funcname,"Tau_", 4) == 0) {  // in TAU
                     continue; // keep unwinding
+                } else if (strncmp(node->info.funcname,"my_", 3) == 0) { // in this file
+                    continue; // keep unwinding
                 } else if (strncmp(node->info.funcname,"addr=<", 6) == 0) { // in OpenMP runtime
                     continue; // keep unwinding
                 }
@@ -429,7 +437,8 @@ char * show_backtrace (int tid, int offset) {
 
 extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool task) {
     char * tmpStr = NULL;
-#if !defined (TAU_OPEN64ORC) && \
+    /* OpenUH can use OMPT. */
+#if (!defined (TAU_OPEN64ORC) || defined(TAU_USE_OMPT)) && \
 (defined (__GNUC__) && \
 defined (__GNUC_MINOR__) && \
 defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwinding
@@ -480,7 +489,7 @@ extern "C" char * Tau_get_my_region_context(int tid, int forking, bool task) {
     char * tmpStr = NULL;
 #if !defined (TAU_USE_OMPT) && \
     !defined (TAU_MPC)  && \
-!defined (TAU_OPEN64ORC) && \
+    (!defined (TAU_OPEN64ORC) || defined(TAU_USE_OMPT)) && \
 (defined (__GNUC__) && \
 defined (__GNUC_MINOR__) && \
 defined (__GNUC_PATCHLEVEL__))
@@ -527,7 +536,7 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
     contextLength = strlen(tmpStr);
     regionIDstr = (char*)malloc(contextLength + 32);
     sprintf(regionIDstr, "%s: %s", state, tmpStr);
-    //printf("%d: start '%s'\n", tid, regionIDstr); fflush(stdout);
+    //fprintf(stderr, "%d: start '%s'\n", tid, regionIDstr); fflush(stderr);
     Tau_pure_start_openmp_task(regionIDstr, tid);
     //free(tmpStr);
     free(regionIDstr);
@@ -536,16 +545,18 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context, bool task) {
     if (Tau_collector_enabled) {
-      if (use_context) {
+      if (use_context == 0 || TauEnv_get_openmp_runtime_context() == 0) {
+    //fprintf(stderr, "%d: stop \n", tid); fflush(stderr);
+        Tau_stop_current_timer_task(tid);
+      } else {
         int contextLength = 10;
         char * regionIDstr = NULL;
         char * tmpStr = Tau_get_my_region_context(tid, 0, task);
         contextLength = strlen(tmpStr);
         regionIDstr = (char*)malloc(contextLength + 32);
         sprintf(regionIDstr, "%s: %s", state, tmpStr);
+    //fprintf(stderr, "%d: stop '%s'\n", tid, regionIDstr); fflush(stderr);
         Tau_pure_stop_openmp_task(regionIDstr, tid);
-      } else {
-        Tau_stop_current_timer_task(tid);
       }
     }
 }
@@ -1050,7 +1061,7 @@ typedef enum my_ompt_thread_type_e {
     } \
     Tau_global_incr_insideTAU(); \
     int tid = Tau_get_thread(); \
-    /*fprintf(stderr, "%d OMPT event: %s\n", tid, __func__); fflush(stderr);*/
+    /* fprintf(stderr, "%d OMPT event: %s\n", tid, __func__); fflush(stderr); */
 #endif
 
 #define TAU_OMPT_COMMON_EXIT \
@@ -1214,11 +1225,14 @@ extern "C" void my_shutdown() {
 /* Macros for common wait, acquire, release functionality. */
 /**********************************************************************/
 
-#define TAU_OMPT_WAIT_ACQUIRE_RELEASE(WAIT_FUNC,ACQUIRED_FUNC,RELEASE_FUNC,WAIT_NAME,REGION_NAME) \
+#define TAU_OMPT_WAIT_ACQUIRE_RELEASE(WAIT_FUNC,ACQUIRED_FUNC,RELEASE_FUNC,WAIT_NAME,REGION_NAME,CAUSE) \
 extern "C" void WAIT_FUNC (ompt_wait_id_t waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
+  if (Tau_collector_flags[tid].waiting>0) { \
+    Tau_omp_stop_timer(WAIT_NAME,tid,0,false); \
+  } \
   Tau_omp_start_timer(WAIT_NAME,tid,1,0,false); \
-  Tau_collector_flags[tid].waiting = 1; \
+  Tau_collector_flags[tid].waiting = CAUSE; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
@@ -1228,8 +1242,8 @@ extern "C" void ACQUIRED_FUNC (ompt_wait_id_t waitid) { \
     Tau_omp_stop_timer(WAIT_NAME,tid,1,false); \
   } \
   Tau_collector_flags[tid].waiting = 0; \
-  Tau_omp_start_timer(REGION_NAME,tid,1,0,false); \
-  Tau_collector_flags[tid].acquired = 1; \
+  Tau_omp_start_timer(REGION_NAME,tid,1,0,false); fflush(stderr);\
+  Tau_collector_flags[tid].acquired += CAUSE; \
   TAU_OMPT_COMMON_EXIT; \
 } \
  \
@@ -1237,16 +1251,16 @@ extern "C" void RELEASE_FUNC (ompt_wait_id_t waitid) { \
   TAU_OMPT_COMMON_ENTRY; \
   if (Tau_collector_flags[tid].acquired>0) { \
     Tau_omp_stop_timer(REGION_NAME,tid,1,false); \
+    Tau_collector_flags[tid].acquired -= CAUSE; \
   } \
-  Tau_collector_flags[tid].acquired = 0; \
   TAU_OMPT_COMMON_EXIT; \
 } \
 
-TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_atomic,my_acquired_atomic,my_release_atomic,"OpenMP_ATOMIC_REGION_WAIT","OpenMP_ATOMIC_REGION")
-TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_ordered,my_acquired_ordered,my_release_ordered,"OpenMP_ORDERED_REGION_WAIT","OpenMP_ORDERED_REGION")
-TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_critical,my_acquired_critical,my_release_critical,"OpenMP_CRITICAL_REGION_WAIT","OpenMP_CRITICAL_REGION")
-TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_lock,my_acquired_lock,my_release_lock,"OpenMP_LOCK_WAIT","OpenMP_LOCK")
-TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_next_lock,my_acquired_next_lock,my_release_next_lock,"OpenMP_LOCK_WAIT","OpenMP_LOCK")
+TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_atomic,my_acquired_atomic,my_release_atomic,"OpenMP_ATOMIC_REGION_WAIT","OpenMP_ATOMIC_REGION",TAU_OMPT_WAIT_ACQ_ATOMIC)
+TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_ordered,my_acquired_ordered,my_release_ordered,"OpenMP_ORDERED_REGION_WAIT","OpenMP_ORDERED_REGION",TAU_OMPT_WAIT_ACQ_ORDERED)
+TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_critical,my_acquired_critical,my_release_critical,"OpenMP_CRITICAL_REGION_WAIT","OpenMP_CRITICAL_REGION",TAU_OMPT_WAIT_ACQ_CRITICAL)
+TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_lock,my_acquired_lock,my_release_lock,"OpenMP_LOCK_WAIT","OpenMP_LOCK",TAU_OMPT_WAIT_ACQ_LOCK)
+TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_next_lock,my_acquired_next_lock,my_release_next_lock,"OpenMP_LOCK_WAIT","OpenMP_LOCK",TAU_OMPT_WAIT_ACQ_NEXT_LOCK)
 
 #undef TAU_OMPT_WAIT_ACQUIRE_RELEASE
 
@@ -1268,7 +1282,7 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
-  Tau_omp_stop_timer(NAME, tid, 0,false); \
+  Tau_omp_stop_timer(NAME, tid, 1,false); \
   TAU_OMPT_COMMON_EXIT; \
 }
 
@@ -1284,7 +1298,7 @@ extern "C" void BEGIN_FUNCTION (ompt_task_id_t task_id) { \
 extern "C" void END_FUNCTION (ompt_task_id_t task_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].taskid = task_id; \
-  Tau_omp_stop_timer(NAME, tid, 0,false); \
+  Tau_omp_stop_timer(NAME, tid, 1,false); \
   TAU_OMPT_COMMON_EXIT; \
 }
 
@@ -1304,7 +1318,7 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
   if (Tau_collector_flags[tid].looping==1) { \
-  Tau_omp_stop_timer(NAME, tid, 0,false); } \
+  Tau_omp_stop_timer(NAME, tid, 1,false); } \
   Tau_collector_flags[tid].looping=0; \
   TAU_OMPT_COMMON_EXIT; \
 }
@@ -1323,7 +1337,7 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
-  Tau_omp_stop_timer(NAME, tid, 0,false); \
+  Tau_omp_stop_timer(NAME, tid, 1,false); \
   TAU_OMPT_COMMON_EXIT; \
 }
 
@@ -1340,7 +1354,7 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
-  Tau_omp_stop_timer(NAME, tid, 0,false); \
+  Tau_omp_stop_timer(NAME, tid, 1,false); \
   TAU_OMPT_COMMON_EXIT; \
 }
 
@@ -1468,8 +1482,8 @@ int __ompt_initialize() {
   CHECK(ompt_event_task_exit, my_task_end, "task_end");
 #endif
 #else
-  CHECK(ompt_event_task_begin, my_task_begin, "task_begin");
-  CHECK(ompt_event_task_end, my_task_end, "task_end");
+  //CHECK(ompt_event_task_begin, my_task_begin, "task_begin");
+  //CHECK(ompt_event_task_end, my_task_end, "task_end");
 #endif
 #if OMPT_VERSION < 2
   CHECK(ompt_event_thread_create, my_thread_begin, "thread_begin");
@@ -1479,8 +1493,8 @@ int __ompt_initialize() {
   CHECK(ompt_event_openmp_thread_begin, my_thread_begin, "thread_begin");
   CHECK(ompt_event_openmp_thread_end, my_thread_end, "thread_end");
 #else
-  CHECK(ompt_event_thread_begin, my_thread_begin, "thread_begin");
-  CHECK(ompt_event_thread_end, my_thread_end, "thread_end");
+  //CHECK(ompt_event_thread_begin, my_thread_begin, "thread_begin");
+  //CHECK(ompt_event_thread_end, my_thread_end, "thread_end");
 #endif
   CHECK(ompt_event_control, my_control, "event_control");
 #ifndef TAU_IBM_OMPT
@@ -1518,8 +1532,11 @@ int __ompt_initialize() {
 #else
   CHECK(ompt_event_implicit_task_begin, my_implicit_task_begin, "implicit_task_begin");
   CHECK(ompt_event_implicit_task_end, my_implicit_task_end, "implicit_task_end");
+  // openUH can't support this event yet
+#if !defined (TAU_OPEN64ORC)
   CHECK(ompt_event_initial_task_begin, my_initial_task_begin, "initial_task_begin");
   CHECK(ompt_event_initial_task_end, my_initial_task_end, "initial_task_end");
+#endif
 #endif
   CHECK(ompt_event_barrier_begin, my_barrier_begin, "barrier_begin");
   CHECK(ompt_event_barrier_end, my_barrier_end, "barrier_end");
@@ -1564,6 +1581,11 @@ int __ompt_initialize() {
   CHECK(ompt_event_acquired_critical, my_acquired_critical, "acquired_critical");
   CHECK(ompt_event_acquired_atomic, my_acquired_atomic, "acquired_atomic");
   CHECK(ompt_event_acquired_ordered, my_acquired_ordered, "acquired_ordered");
+#if defined (TAU_OPEN64ORC)
+  CHECK(ompt_event_release_lock, my_release_lock, "release_lock");
+  CHECK(ompt_event_wait_lock, my_wait_lock, "wait_lock");
+  CHECK(ompt_event_acquired_lock, my_acquired_lock, "acquired_lock");
+#endif
 
 //ompt_event(ompt_event_init_lock, ompt_wait_callback_t, 53, ompt_event_init_lock_implemented) /* lock init *
 //ompt_event(ompt_event_init_nest_lock, ompt_wait_callback_t, 54, ompt_event_init_nest_lock_implemented) /* n
@@ -1571,7 +1593,7 @@ int __ompt_initialize() {
 //ompt_event(ompt_event_destroy_nest_lock, ompt_wait_callback_t, 56, ompt_event_destroy_nest_lock_implemented
 
 //ompt_event(ompt_event_flush, ompt_thread_callback_t, 57, ompt_event_flush_implemented) /* after executing f
-#if defined (TAU_MPC)
+#if defined (TAU_MPC) 
   CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
   CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
 #if defined (ompt_event_workshare_begin)
@@ -1597,8 +1619,13 @@ int __ompt_initialize() {
     // now, for the collector API support, create the OpenMP states.
     // preallocate State timers. If we create them now, we won't run into
     // malloc issues later when they are required during signal handling.
+#ifdef BROKEN_CPLUSPLUS_INTERFACE // the C/C++ interface is broken. :( Can't do function pointers
     int current_state = ompt_state_work_serial;
     int next_state;
+#else
+    ompt_state_t current_state = ompt_state_work_serial;
+    ompt_state_t next_state;
+#endif
     const char *next_state_name;
     std::string *next_state_name_string;
     std::string *serial = new std::string("ompt_state_work_serial");
@@ -1629,7 +1656,7 @@ int __ompt_initialize() {
 extern "C" int ompt_initialize(ompt_function_lookup_t lookup) {
 #else
 // the newest version of the library will have a version as well
-extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, int ompt_version) {
+extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, unsigned int ompt_version) {
   fprintf(stderr, "Init: %s ver %i\n",runtime_version,ompt_version);
 #endif
 #ifndef BROKEN_CPLUSPLUS_INTERFACE

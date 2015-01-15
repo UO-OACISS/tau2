@@ -33,6 +33,7 @@ usage()
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
+    echo "        -uvm          Enable Unified Virtual Memory events via CUPTI"
     options=`tau-config --list-options`
     echo "        -T <$options> : Specify TAU tags"
     echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -51,6 +52,7 @@ usage()
 		echo "    tau_exec -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
 		echo "    tau_exec -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
 		echo "    tau_exec -T serial -opencl (OPENCL)"
+		echo "    tau_exec -T serial,cupti -cupti -uvm ./unified_memory (Unified Virtual Memory)"
     echo ""
     echo "qsub mode (IBM BG/P only):"
     echo "    Original:"
@@ -86,6 +88,7 @@ track_memory=false
 memory_debug=false
 track_cuda=false
 track_cupti=false
+unified_memory=false
 track_opencl=false
 track_armci=false
 tau_use_ebs=false
@@ -133,6 +136,10 @@ for arg in "$@" ; do
 	      ;;
 	  -cupti)
 	      track_cupti=true
+	      shift
+	      ;;
+	  -uvm)
+	      unified_memory=true
 	      shift
 	      ;;
 	  -opencl)
@@ -363,6 +370,10 @@ if [ $track_cupti = "true" ] ; then
 					export TAU_CUPTI_API=runtime
 				fi
 			fi
+		fi
+                ## Unified Memory called along with -cupti
+		if [ $unified_memory = "true" ] ; then
+		    export TAU_TRACK_UNIFIED_MEMORY=1
 		fi
 		#echo "api found: $TAU_CUPTI_API"
 fi

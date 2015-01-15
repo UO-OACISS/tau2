@@ -7,6 +7,7 @@
 #include <limits.h>
 
 //#define TAU_CUPTI_DEBUG_COUNTERS
+//#define TAU_DEBUG_CUPTI
 
 #if CUPTI_API_VERSION >= 2
 
@@ -37,18 +38,26 @@
 
 /* Some API calls deprecated in 5.5
  */
-#if CUDA_VERSION == 7000
+#if CUDA_VERSION >= 7000
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel3
 #define CUpti_ActivityDevice CUpti_ActivityDevice2
+#define CUpti_ActivityUnifiedMemoryCounter CUpti_ActivityUnifiedMemoryCounter2
 #define runtimeCorrelationId correlationId
 
 #endif
 
+/* #if CUDA_VERSION >= 6050 */
+
+/* #define CUpti_ActivityKernel CUpti_ActivityKernel3 */
+/* #define runtimeCorrelationId correlationId */
+
+/* #endif */
+
 #if CUDA_VERSION >= 5050 && CUDA_VERSION <= 6050
 
-#define runtimeCorrelationId correlationId
 #define CUpti_ActivityKernel CUpti_ActivityKernel2
+#define runtimeCorrelationId correlationId
 
 #endif
 
@@ -60,6 +69,9 @@
 extern "C" void Tau_cupti_set_offset(
             uint64_t timestamp
             );
+
+// unified memory
+extern "C" void Tau_cupti_configure_unified_memory(void);
 
 extern "C" void Tau_set_context_event_name(void *ue, const char *name);
 extern "C" void Tau_write_user_event_as_metric(void *ue);
@@ -115,6 +127,17 @@ extern "C" void Tau_cupti_register_memcpy_event(
 						int memcpy_type,
             int direction);
 
+extern "C" void Tau_cupti_register_unifmem_event(
+						 const char *name,
+						 uint32_t deviceId,
+						 uint32_t streamId,
+						 uint32_t processId,
+						 uint64_t start,
+						 uint64_t end,
+						 uint64_t value,
+						 int unifmem_type,
+						 int direction);
+
 extern "C" void Tau_cupti_register_gpu_event(
 						const char *name,
 						uint32_t deviceId,
@@ -164,6 +187,8 @@ void __attribute__ ((destructor)) Tau_cupti_onunload(void);
 void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, int &count);
 
 int getMemcpyType(int kind);
+int getUnifmemType(int kind);
+
 const char* demangleName(const char *n);
 
 int getParentFunction(uint32_t id);
