@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 tar -xzf profile_data.tgz
-taudb_configure --create-default -c Power
+taudb_configure --create-default -c PowerExample
 cd profile_data
 
 for app in am8 co8 lu8 ; do
@@ -15,7 +15,7 @@ for app in am8 co8 lu8 ; do
   for cap in {50..115} ; do 
     dir="cap${cap}_wrapped_${app}"
     if [ -d ${dir} ] ; then
-	  cmd="taudb_loadtrial -a $appname -x $cap -n $dir -c Power $dir"
+	  cmd="taudb_loadtrial -a $appname -x $cap -n $dir -c PowerExample $dir"
 	  echo $cmd
 	  $cmd
 	fi
