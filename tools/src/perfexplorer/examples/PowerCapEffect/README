@@ -1,0 +1,13 @@
+This example shows how to select trials based on metadata values,
+aggregate data by computation / communication, and then graph
+the effect of power caps on execution time.
+
+To run the example:
+
+./load_data.sh
+./run_script.sh
+
+WARNING! - The load_data.sh script will create a database called
+"PowerExample".  In the unlikely event that a database configuration with that
+name already exists, this script will overwrite it. The data loading script
+should also only be executed once.
