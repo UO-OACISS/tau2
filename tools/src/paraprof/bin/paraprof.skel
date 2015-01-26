@@ -43,6 +43,9 @@ if [ "$MACHINE" = "apple" ]; then
 	    --pack)
 		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
 		;;
+	    --text)
+		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
+		;;
 	    --dump)
 		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
 		;;
