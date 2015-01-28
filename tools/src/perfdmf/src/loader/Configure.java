@@ -170,10 +170,14 @@ public class Configure {
         }
     }
 
-    public void useDefaults() {
+    public void useDefaults(String dbname) {
         //String os = System.getProperty("os.name").toLowerCase();
         jdbc_db_jarfile = jardir + File.separator + "h2.jar";
-        db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf/perfdmf";
+		if (dbname == null) {
+          db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf" + File.separator + "perfdmf";
+		} else {
+          db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + dbname + File.separator + "perfdmf";
+		}
         jdbc_db_driver = "org.h2.Driver";
         db_schemafile = schemadir + File.separator + "taudb.sql";
         db_hostname = "";
@@ -893,7 +897,7 @@ public class Configure {
         // the process of creating/editing a configuration file.
         Configure config = new Configure(tauroot, arch);
         config.initialize(configFile);
-        config.useDefaults();
+        config.useDefaults(dbName);
         config.setDBName(dbName);
 
         // Write the configuration file to ${PerfDMF_Home}/bin/perfdmf.cfg
@@ -964,7 +968,7 @@ public class Configure {
             config.initialize(configFile, configName);
 
             if (useDefaults == Boolean.TRUE) {
-                config.useDefaults();
+                config.useDefaults(configName);
             } else {
                 // Give the user the ability to modify any/everything
                 config.promptForData();
