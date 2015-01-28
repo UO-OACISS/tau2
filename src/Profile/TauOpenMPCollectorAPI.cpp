@@ -1118,6 +1118,10 @@ extern "C" void my_parallel_region_end (
   TAU_OMPT_COMMON_ENTRY;
   Tau_collector_flags[tid].regionid = parallel_id;
   //printf("%d End Region: parent id = %lu, parallel_id = %lu\n", tid, parent_task_id, parallel_id); fflush(stdout);
+  if (Tau_collector_flags[tid].looping>0) {
+    Tau_omp_stop_timer("OpenMP_LOOP", tid, 0, false);
+    Tau_collector_flags[tid].looping = 0;
+  }
   if (Tau_collector_flags[tid].parallel>0) {
     Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1, false);
     Tau_collector_flags[tid].parallel--;
