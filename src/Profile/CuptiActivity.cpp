@@ -917,11 +917,12 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         streamId = kernel->streamId;
         contextId = kernel->contextId;
         correlationId = kernel->correlationId;
-        runtimeCorrelationId = kernel->runtimeCorrelationId;
 #if CUDA_VERSION >= 5050
         gridId = kernel->gridId;
+        runtimeCorrelationId = kernel->runtimeCorrelationId;
 #else
         gridId = 0;
+        runtimeCorrelationId = 0;
 #endif
         start = kernel->start;
         end = kernel->end;
