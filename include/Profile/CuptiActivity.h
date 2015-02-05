@@ -47,12 +47,14 @@
 
 #endif
 
-/* #if CUDA_VERSION >= 6050 */
+#if CUDA_VERSION >= 6050
 
-/* #define CUpti_ActivityKernel CUpti_ActivityKernel3 */
-/* #define runtimeCorrelationId correlationId */
+//#define CUpti_ActivityKernel CUpti_ActivityKernel3
+#define CUpti_ActivityBranch CUpti_ActivityBranch2
+#define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+#define runtimeCorrelationId correlationId
 
-/* #endif */
+#endif
 
 #if CUDA_VERSION >= 5050 && CUDA_VERSION <= 6050
 
