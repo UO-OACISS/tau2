@@ -7,7 +7,6 @@
 // Moved from header file
 using namespace std;
 
-
 #if CUPTI_API_VERSION >= 2
 
 #ifdef FALSE
@@ -570,6 +569,8 @@ uint64_t Tau_CuptiLayer_read_counter(int id)
 
 int Tau_CuptiLayer_Initialize_callbacks()
 {
+
+
 	typedef void (*Tau_cupti_onload_p) ();
   static Tau_cupti_onload_p Tau_cupti_onload_h = NULL;
 
