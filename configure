@@ -3461,8 +3461,11 @@ then
 	if [ $machine = bgq -o $machine = bgp ]; then
             c_compiler=mpicc
             cxx_compiler=mpicxx
-	    gnu=yes
-	    tauoptions="${tauoptions}-gnu"
+            is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
+            if [ $is_gnu_compiler = 1 ]; then
+              gnu=yes
+              tauoptions="${tauoptions}-gnu"
+            fi
 	else 
 	    # All other machines besides IBM BG*
             is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
