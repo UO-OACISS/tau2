@@ -6265,9 +6265,9 @@ else
         fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
     fi
     # Clean up
-    rm -f openmpi3const.c openmpi3const.o a.out 
   fi
-fi
+fi            
+rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out 
 
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
