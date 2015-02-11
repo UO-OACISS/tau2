@@ -265,7 +265,7 @@ handle_ddm_event(jdwp_ctx_t *jdwp, ddm_trunk_t *trunk)
 	    sid = java_thread_sid[lid];
 
 	    JNIThreadLayer::SuThread(sid, tname);
-	    TAU_PROFILE_EXIT("END...");
+	    Tau_stop_all_timers(RtsLayer::myThread());
 
 	    java_thread_sid.erase(lid);
 

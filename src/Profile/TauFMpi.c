@@ -18,8 +18,15 @@
 
 #ifdef TAU_MPC
 #define MPI_Comm_c2f PMPI_Comm_c2f
+#ifndef MPC_IN_PLACE
+#define MPC_IN_PLACE  (void *) -1
+#endif /* MPC_IN_PLACE */
+#ifndef MPI_F_STATUSES_IGNORE
+MPI_Fint *MPI_F_STATUSES_IGNORE = NULL;
+#endif /* MPI_F_STATUSES_IGNORE */
 #endif /* TAU_MPC */
 
+void tau_mpi_init_predefined_constants();
 
 #ifdef TAU_LAMPI
 MPI_Fint TAU_MPI_Request_c2f(MPI_Request c_request) {
@@ -2177,6 +2184,7 @@ MPI_Fint *ierr;
 /******************************************************/
 /******************************************************/
 
+#ifdef TAU_MPI_GROUP_RANGE_INCL_DEFINED
 void   mpi_group_range_incl_( group, n, ranges, newgroup, ierr )
 MPI_Fint *group;
 MPI_Fint *n;
@@ -2230,6 +2238,7 @@ MPI_Fint *ierr;
   mpi_group_range_incl_( group, n, ranges, newgroup, ierr );
 }
 
+#endif /* TAU_MPI_GROUP_RANGE_INCL_DEFINED */
 /******************************************************/
 /******************************************************/
 
@@ -2986,7 +2995,7 @@ void  mpi_init_( ierr)
 MPI_Fint *ierr; 
 {
   *ierr = MPI_Init( 0, (char ***)0);
-  tau_mpi_fortran_init_predefined_constants_();
+  tau_mpi_init_predefined_constants();
 }
 
 void  mpi_init__( ierr)
@@ -3023,7 +3032,7 @@ MPI_Fint *provided;
 MPI_Fint *ierr;
 {
   *ierr = MPI_Init_thread( 0, (char ***)0, *required, provided );
-  tau_mpi_fortran_init_predefined_constants_();
+  tau_mpi_init_predefined_constants();
 }
 
 void  mpi_init_thread__ (required, provided, ierr )

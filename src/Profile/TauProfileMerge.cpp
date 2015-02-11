@@ -113,6 +113,7 @@ int Tau_mergeProfiles()
 #endif  /* TAU_MPI */
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
+  const char *profile_prefix = TauEnv_get_profile_prefix();
 
   Tau_detect_memory_leaks();
 
@@ -258,7 +259,11 @@ int Tau_mergeProfiles()
 
 
     char filename[4096];
-    sprintf (filename,"%s/tauprofile.xml", profiledir);
+    if (profile_prefix != NULL) {
+      sprintf (filename,"%s/%s-tauprofile.xml", profiledir, profile_prefix);
+    } else {
+      sprintf (filename,"%s/tauprofile.xml", profiledir);
+    }
 
     if ((f = fopen (filename, "w+")) == NULL) {
       char errormsg[4096];

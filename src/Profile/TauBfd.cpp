@@ -229,17 +229,25 @@ static bfd_unit_vector_t & ThebfdUnits(void)
   return internal_bfd_units;
 }
 
+extern "C" void Tau_profile_exit_all_threads(void);
+
 void Tau_delete_bfd_units() {
-  bfd_unit_vector_t units = ThebfdUnits();
-  for (std::vector<TauBfdUnit*>::iterator it = units.begin();
-       it != units.end(); ++it) {
-    TauBfdUnit * unit = *it;
-    unit->ClearMaps();
-    unit->ClearModules();
-	delete unit->executableModule;
-    delete unit;
+  // make sure all users of BFD are done with it!
+  Tau_profile_exit_all_threads();
+  static bool deleted = false;
+  if (!deleted) {
+    deleted = true;
+    bfd_unit_vector_t units = ThebfdUnits();
+    for (std::vector<TauBfdUnit*>::iterator it = units.begin();
+         it != units.end(); ++it) {
+      TauBfdUnit * unit = *it;
+      unit->ClearMaps();
+      unit->ClearModules();
+	  delete unit->executableModule;
+      delete unit;
+    }
+    units.clear();
   }
-  units.clear();
 }
 
 typedef int * (*objopen_counter_t)(void);

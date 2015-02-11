@@ -25,7 +25,7 @@ CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
 
 LIBS            = $(TAU_LIBS) -lpthread
 
-LDFLAGS	      	= $(USER_OPT)
+LDFLAGS	      	= $(USER_OPT) $(TAU_DEFS)
 
 MAKEFILE      	= Makefile
 

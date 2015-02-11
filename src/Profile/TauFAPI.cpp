@@ -367,12 +367,12 @@ void Tau_stop(const char *name)
 
 void tau_profile_timer_(void **ptr, char const * fname, int flen)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   if (!*ptr) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
 #ifdef TAU_OPENMP
-#pragma omp critical (tau_profile_timer)
+#pragma omp critical (crit_tau_profile_timer)
     {
       if (!*ptr) {
 #endif /* TAU_OPENMP */
@@ -474,10 +474,11 @@ void tau_dynamic_iter(int *iteration, void **ptr, char *infname, int slen, int i
   getFortranName(&localname, &locallen, infname, slen);
   char const * newName = Tau_append_iteration_to_name(*iteration, localname, locallen);
   int newLength = strlen(newName);
-  if (isPhase) 
+  if (isPhase)  {
     tau_phase_create_dynamic_(ptr, newName, newLength);
-  else
+  } else {
     tau_profile_timer_dynamic_(ptr, newName, newLength);
+  }
 
   free((void*)newName);
   free((void*)localname);
@@ -857,16 +858,12 @@ void _main();
 #endif /* CRAYKAI || HP_FORTRAN */
 void TAU_PROFILE_TIMER(void **ptr, char *fname, int flen)
 {
-  if (*ptr == 0) {
-    tau_profile_timer_(ptr, fname, flen);
-  }
+  tau_profile_timer_(ptr, fname, flen);
 }
 
 void TAU_PROFILE_TIMER_(void **ptr, char *fname, int flen)
 {
-  if (*ptr == 0) {
-    tau_profile_timer_(ptr, fname, flen);
-  }
+  tau_profile_timer_(ptr, fname, flen);
 }
 
 void TAU_PROFILE_START(void **profiler)
@@ -1036,9 +1033,7 @@ void TAU_REPORT_THREAD_STATISTICS(void)
 
 void tau_profile_timer(void **ptr, char *fname, int flen)
 {
-  if (!*ptr) {
-    tau_profile_timer_(ptr, fname, flen);
-  }
+  tau_profile_timer_(ptr, fname, flen);
 }
 
 //////////////////////////////////////////////////////
@@ -1296,9 +1291,7 @@ void tau_context_event(int **ptr, double *data)
 #if (defined (TAU_GNU) || defined (TAU_PATHSCALE) || defined (TAU_OPEN64ORC))
 void tau_profile_timer__(void **ptr, char *fname, int flen)
 {
-  if (*ptr == 0) {
-    tau_profile_timer_(ptr, fname, flen);
-  }
+  tau_profile_timer_(ptr, fname, flen);
 }
 
 void tau_profile_start__(void **profiler)

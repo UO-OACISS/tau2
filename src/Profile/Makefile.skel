@@ -201,6 +201,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 #IBM64LINUX#GCC_ABI	     = -m64 		  #ENDIF#
 #PPC64XLC#GCC_ABI	     = -m32 		  #ENDIF#
+#ARCH_WIDTH_32#GCC_ABI	     = -m32 		  #ENDIF#
 
 
 
@@ -219,7 +220,6 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
 #MPC#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
-#PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
 #MMIC#AR_SHFLAGS 		= -shared -mmic 	#ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)     #ENDIF#
@@ -236,7 +236,6 @@ TAU_BGP_AR_SHFLAGS = -shared
 #ACC#AR_SHFLAGS  		= -b 		#ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
 TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
-#APPLECXX#TAU_SHLIB = $(INSTALLDEST)/libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX) #ENDIF#
 #APPLEPGI#TAU_SHLIB = #ENDIF#
 #APPLEPGI#TAU_DISABLE_SHARED	= #ENDIF#
 #HITACHI#TAU_SHLIB	= #ENDIF#
@@ -276,23 +275,16 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 #BGP#TAU_IBM_BG_HWP_OBJS=TauBgHwpCounters.o #ENDIF#
-#PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
-#PYTHON#TAUPYTHON_INSTALL = $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX) #ENDIF#
+#PYTHON#PYTAU = pytau$(TAU_SHLIBX) #ENDIF#
+#PYTHON#PYTAU_INSTALL = $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX) #ENDIF#
+#PYTHON#CTAU_IMPL = ctau_impl$(TAU_SHLIBX) #ENDIF#
+# Python on OS X expects .so files, not .dylib files
+#APPLECXX#PYTAU = pytau.so #ENDIF#
+#APPLECXX#PYTAU_INSTALL = $(TAU_SHAREDDIR)/pytau.so #ENDIF#
+#APPLECXX#CTAU_IMPL = ctau_impl.so #ENDIF#
 ##############################################
 TAU_DSO         = $(TAU_SHLIB)
 TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
-#APPLECXX#TAU_SHLIB_INSTALL= $(TAU_DSO) #ENDIF#
-TAU_MAKE_SYMLINKS= $(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX); \
-		cd $(INSTALLDEST) ;  ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX); \
-		if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-                    else $(MKDIR) $(TAU_SHAREDDIR); fi ; \
-                cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) ; \
-                cd $(TAU_SHAREDDIR) ; \
-		ln -s ../libTAU$(TAU_SHLIBX) libTAU$(TAU_SHLIBX) ;  \
-                ls $(TAU_SHAREDDIR) ;
-
-#APPLECXX#TAU_CREATE_SYMLINKS= $(TAU_MAKE_SYMLINKS) #ENDIF#
-
 
 BITS = 32
 #IBM64#BITS = 64#ENDIF#
@@ -374,7 +366,7 @@ CXXFLAGS+= $(TAU_CUDA_DEF) $(TAU_CUPTI_DEF) $(TAU_OPENCL_DEF)
 #	cp $(TAU_CUPTI_LIB) $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) \
-$(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_PYCUDA_LIB) \
+$(PYTAU) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_PYCUDA_LIB) \
 $(TAU_OPENCL_LIB) $(TAU_CUPTI_LIB) $(TAU_CUPTI_ACTIVITY_LIB)
 
 $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
@@ -396,7 +388,6 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS) $(MPI_WRAPPER)
 		$(PRELINK_PHASE)
 		$(CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS) $(TAU_LDFLAGS)
-		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
 	$(CXX) -M $(CXXFLAGS) -I$(TAU_OPENCL_INC) -c TauGpuAdapterOpenCL.cpp > $@
@@ -433,7 +424,6 @@ $(TAU_NULL)$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_OBJS) $(TAU_DSO)
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
 		$(AR) $(ARFLAGS) $(TAU_DISABLE) TauDisable.o TauKojakOpariDisable.o
 		$(TAU_RANLIB) $(TAU_DISABLE)
-		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_DISABLE_SHARED) : TauDisable.o TauKojakOpariDisable.o
 		$(CXX) $(TAU_ARFLAGS)  $(TAU_DISABLE_SHARED) $(TAU_DISABLE_SHARED_COMPILATION_FLAG) TauDisable.o TauKojakOpariDisable.o
@@ -541,20 +531,20 @@ $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@if [ ! -r $(INSTALLDEST)/libTAU.jnilib ] ; then \
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
 
-$(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
-		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
+$(PYTAU_INSTALL): $(TAU_SHLIB)
+		@echo Installing $(PYTAU), ltau.py, and tau.py in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
 		   else $(MKDIR) $(INSTALLDEST) ;fi
-		$(RM) $(INSTALLDEST)/$(TAUPYTHON) $(INSTALLDEST)/ctau_impl$(TAU_SHLIBX)
+		$(RM) $(INSTALLDEST)/$(PYTAU) $(INSTALLDEST)/$(CTAU_IMPL)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(TAUPYTHON)
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
-		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(TAU_SHAREDDIR)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(PYTAU)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(CTAU_IMPL)
+		@echo Installing $(PYTAU), ltau.py, and tau.py in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 		    else $(MKDIR) $(TAU_SHAREDDIR); fi
 		$(RM) $(TAU_SHAREDDIR)/*
-		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(PYTAU) && ln -s ../$(TAU_SHLIB) $(CTAU_IMPL)
 		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
 		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
@@ -613,8 +603,8 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
 install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) \
-$(MPI_INSTALL) $(GPU_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) \
-$(TAU_JAVA_CLASS2) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) \
+$(MPI_INSTALL) $(SHMEM_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) \
+$(TAU_JAVA_CLASS2) $(PYTAU_INSTALL) $(GPU_INSTALL) $(POELIB_INSTALL) \
 $(CRAY_PGI_HACK) $(INSTALLDEST)/$(TAU_PYCUDA_LIB)
 
 TauForceMPI.o : TauForceMPI.c

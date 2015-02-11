@@ -10,6 +10,66 @@ static void *tau_handle = NULL;
 
 static int subscribed = 0;
 
+
+/* BEGIN: unified memory */
+#define CUPTI_CALL(call)                                                    \
+do {                                                                        \
+    CUptiResult _status = call;                                             \
+    if (_status != CUPTI_SUCCESS) {                                         \
+      const char *errstr;                                                   \
+      cuptiGetResultString(_status, &errstr);                               \
+      fprintf(stderr, "%s:%d: error: function %s failed with error %s.\n",  \
+              __FILE__, __LINE__, #call, errstr);                           \
+      exit(-1);                                                             \
+    }                                                                       \
+} while (0)
+
+typedef struct cupti_eventData_st {
+  CUpti_EventGroup eventGroup;
+  CUpti_EventID eventId;
+} cupti_eventData;
+
+// Structure to hold data collected by callback
+typedef struct RuntimeApiTrace_st {
+  cupti_eventData *eventData;
+  uint64_t eventVal;
+} RuntimeApiTrace_t;
+
+#if CUDA_VERSION >= 6000
+static const char *
+getUvmCounterKindString(CUpti_ActivityUnifiedMemoryCounterKind kind)
+{
+    switch (kind) 
+    {
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD:
+        return "BYTES_TRANSFER_HTOD";
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_DTOH:
+        return "BYTES_TRANSFER_DTOH";
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_CPU_PAGE_FAULT_COUNT:
+        return "CPU_PAGE_FAULT_COUNT";
+    default:
+        break;
+    }
+    return "<unknown>";
+}
+
+static const char *
+getUvmCounterScopeString(CUpti_ActivityUnifiedMemoryCounterScope scope)
+{
+    switch (scope) 
+    {
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE:
+        return "PROCESS_SINGLE_DEVICE";
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_ALL_DEVICES:
+        return "PROCESS_ALL_DEVICES";
+    default:
+        break;
+    }
+    return "<unknown>";
+}
+#endif
+/* END: Unified Memory */
+
 CUresult cuInit(unsigned int a1) {
 #ifdef TAU_DEBUG_CUPTI
   printf("in cuInit\n");
@@ -31,9 +91,9 @@ CUresult cuInit(unsigned int a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-	Tau_cupti_subscribe();
-	subscribed = 1;
-  retval  =  (*cuInit_h)( a1);
+    Tau_cupti_subscribe();
+    subscribed = 1;
+    retval  =  (*cuInit_h)( a1);
   }
   return retval;
 }
@@ -66,6 +126,7 @@ void Tau_cupti_subscribe()
     err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
 #else
+
     Tau_cupti_register_buffer_creation(&activityBuffer, &size, &maxRecords);
 	err = cuptiActivityEnqueueBuffer(NULL, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
 	CUPTI_CHECK_ERROR(err, "cuptiActivityEnqueueBuffer");
@@ -101,20 +162,20 @@ void Tau_cupti_onload()
 		//driver_enabled = true;
 	}
   
-	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE); 
+    	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE); 
     CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_SYNCHRONIZE)");
-	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE); 
+    	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE); 
     CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
 	
 
-	CUDA_CHECK_ERROR(err, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
+    	CUDA_CHECK_ERROR(err, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
 	
 
  	
-	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
+    	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
 	
-	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
+    	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
 	
 #if CUDA_VERSION >= 5050
@@ -122,7 +183,7 @@ void Tau_cupti_onload()
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
 #endif
 #if CUDA_VERSION >= 5000
-	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
+    	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
 #else
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
@@ -150,21 +211,99 @@ void Tau_cupti_onload()
 		printf("TAU WARNING: DISABLING CUDA %s tracking. Please use CUDA 5.0 or greater.\n", TauEnv_get_cuda_instructions());
   }
 #endif //CUPTI_API_VERSIOn >= 3
-	
-  CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
 
+  if(TauEnv_get_cuda_track_unified_memory()) {
+#if CUDA_VERSION >= 7000
+    CUptiResult res;
+    CUpti_ActivityUnifiedMemoryCounterConfig config[2];
+    CUresult er;
+    cuInit(0);
+
+    // configure unified memory counters
+    config[0].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[0].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD;
+    config[0].deviceId = 0;
+    config[0].enable = 1;
+
+    config[1].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[1].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_DTOH;
+    config[1].deviceId = 0;
+    config[1].enable = 1;
+
+    res = cuptiActivityConfigureUnifiedMemoryCounter(config, 2);
+    if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED) {
+      printf("Test is waived, unified memory is not supported on the underlying platform.\n");
+    }
+    else if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED_ON_DEVICE) {
+      printf("Test is waived, unified memory is not supported on the device.\n");
+    }
+    else if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED_ON_NON_P2P_DEVICES) {
+      printf("Test is waived, unified memory is not supported on the non-P2P multi-gpu setup.\n");
+    }
+    else {
+      CUPTI_CALL(res);
+    }
+
+    // enable unified memory counter activity
+    CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+
+#elif CUDA_VERSION >= 6000 && CUDA_VERSION <= 6050
+    CUptiResult res;
+    CUpti_ActivityUnifiedMemoryCounterConfig config[3];
+
+    cuInit(0);
+
+    // configure unified memory counters
+    config[0].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[0].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD;
+    config[0].deviceId = 0;
+    config[0].enable = 1;
+
+    config[1].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[1].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_DTOH;
+    config[1].deviceId = 0;
+    config[1].enable = 1;
+
+    config[2].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[2].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_CPU_PAGE_FAULT_COUNT;
+    config[2].deviceId = 0;
+    config[2].enable = 1;
+
+    res = cuptiActivityConfigureUnifiedMemoryCounter(config, 3);
+    if (res == CUPTI_ERROR_NOT_SUPPORTED) {
+      printf("Test is waived, unified memory is not supported on the underlying platform.\n");
+    }
+    else {
+      CUPTI_CALL(res);
+    }
+
+    // enable unified memory counter activity
+    CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+
+#else
+    printf("Unified memory supported only in CUDA 6.0 and over.\n");
+#endif
+
+  }
+  
+  CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
+  
   uint64_t timestamp;
   err = cuptiGetTimestamp(&timestamp);
-	CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
+  CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
   Tau_cupti_set_offset(TauTraceGetTimeStamp() - ((double)timestamp / 1e3));
   //Tau_cupti_set_offset((-1) * timestamp / 1e3);
-	//cerr << "begining timestamp: " << TauTraceGetTimeStamp() - ((double)timestamp/1e3) << "ms.\n" << endl;
+  //cerr << "begining timestamp: " << TauTraceGetTimeStamp() - ((double)timestamp/1e3) << "ms.\n" << endl;
   //Tau_cupti_set_offset(0);
 
   Tau_gpu_init();
 }
 
 void Tau_cupti_onunload() {
+  if(TauEnv_get_cuda_track_unified_memory()) {
+    CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+  }
+
 }
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
@@ -193,6 +332,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			printf("TAU: Resource created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, 0);
 #endif
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
+
 			err = cuptiActivityEnqueueBuffer(resource->context, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in context.\n");
 		}
@@ -206,6 +346,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 #ifdef TAU_DEBUG_CUPTI
 			printf("TAU: Stream created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, stream);
 #endif
+
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 			err = cuptiActivityEnqueueBuffer(resource->context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in stream.\n");
@@ -474,6 +615,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 #ifdef TAU_ASYNC_ACTIVITY_API
     free(activityBuffer);
 #else
+
 		//Need to requeue buffer by context, stream.
 		err = cuptiActivityEnqueueBuffer(context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 #endif
@@ -527,7 +669,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
   
-	//printf("in record activity, kind: %d\n", record->kind);
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 #if CUDA_VERSION >= 5050
@@ -643,7 +784,83 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #endif
       
 				break;
-		}
+      }
+    if(TauEnv_get_cuda_track_unified_memory()) {
+#if CUDA_VERSION >= 6000
+    case CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER:
+    {	
+      CUpti_ActivityUnifiedMemoryCounterKind counterKind;
+      uint32_t deviceId;
+      uint32_t streamId;
+      uint32_t processId;
+      CUpti_ActivityUnifiedMemoryCounterScope scope;
+      uint64_t start;
+      uint64_t end;
+      uint64_t value;
+      int direction = MESSAGE_UNKNOWN;
+      CUpti_ActivityUnifiedMemoryCounter *umemcpy = (CUpti_ActivityUnifiedMemoryCounter *)record;
+      
+#ifdef TAU_DEBUG_CUPTI
+#if CUDA_VERSION >= 7000
+      printf("UNIFIED_MEMORY_COUNTER [ %llu %llu ] kind=%s value=%llu src %u dst %u, streamId=%u\n",
+	     (unsigned long long)(umemcpy->start),
+	     (unsigned long long)(umemcpy->end),
+	     getUvmCounterKindString(umemcpy->counterKind),
+	     (unsigned long long)umemcpy->value,
+	     umemcpy->srcId,
+	     umemcpy->dstId,
+	     umemcpy->streamId);
+#else
+      printf("UNIFIED_MEMORY_COUNTER [ %llu ], current stamp: %llu, scope=%d kind=%s value=%llu device %u\n",
+	     (unsigned long long)(umemcpy->timestamp), TauTraceGetTimeStamp(), 
+	     umemcpy->scope,
+	     getUvmCounterKindString(umemcpy->counterKind),
+	     (unsigned long long)umemcpy->value,
+	     umemcpy->deviceId);
+#endif
+#endif
+      counterKind = umemcpy->counterKind;
+#if CUDA_VERSION < 7000
+      streamId = -1;
+      start = umemcpy->timestamp;
+      end = umemcpy->timestamp;
+      deviceId = umemcpy->deviceId;
+#else
+      streamId = umemcpy->streamId;
+      start = umemcpy->start;
+      end=umemcpy->end;
+      deviceId = umemcpy->dstId;
+#endif
+      processId = umemcpy->processId;
+      value = umemcpy->value;
+      
+      if (getUnifmemType(counterKind) == BytesHtoD) {
+	direction = MESSAGE_RECV;
+      } else if (getUnifmemType(counterKind) == BytesDtoH) {
+	direction = MESSAGE_SEND;
+      }
+      
+      //We do not always know on the corresponding host event on
+      //the CPU what type of copy we have so we need to register 
+      //the bytes copied here. Be careful we only want to record 
+      //the bytes copied once.
+      Tau_cupti_register_unifmem_event(
+				       TAU_GPU_USE_DEFAULT_NAME,
+				       deviceId,
+				       streamId,
+				       processId,
+				       start,
+				       end,
+				       value,
+				       getUnifmemType(counterKind),
+				       direction
+				       );
+      
+      break;
+    }
+#endif
+    }
+
   	case CUPTI_ACTIVITY_KIND_KERNEL:
 #if CUDA_VERSION >= 5000
   	case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
@@ -674,6 +891,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
 #if CUDA_VERSION >= 5050
       if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+	printf(" inside cdp_kernel\n");
         CUpti_ActivityCdpKernel *kernel = (CUpti_ActivityCdpKernel *)record;
         name = kernel->name;
         deviceId = kernel->deviceId;
@@ -700,11 +918,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         streamId = kernel->streamId;
         contextId = kernel->contextId;
         correlationId = kernel->correlationId;
-        runtimeCorrelationId = kernel->runtimeCorrelationId;
-#if CUDA_VERSION >= 5050
+#if CUDA_VERSION >= 7000
+        runtimeCorrelationId = correlationId;
         gridId = kernel->gridId;
+#elif CUDA_VERSION >= 5050 && CUDA_VERSION <= 6500
+        gridId = kernel->gridId;
+        runtimeCorrelationId = kernel->runtimeCorrelationId;
 #else
         gridId = 0;
+        runtimeCorrelationId = correlationId;
 #endif
         start = kernel->start;
         end = kernel->end;
@@ -725,7 +947,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       /*if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
         cerr << "CDP kernel, parent is: " << parentGridId << endl;
       }*/
-	  cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
+	  // cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
 #endif
       
 
@@ -818,6 +1040,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
 			break;
     }
+
   	case CUPTI_ACTIVITY_KIND_DEVICE:
 		{
 			CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
@@ -901,7 +1124,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         uint32_t id;
         if (cupti_api_runtime())
         {
+	  #if CUDA_VERSION >= 6000 && CUDA_VERSION <= 6500
           id = kernel->runtimeCorrelationId;
+	  #else
+	  id = kernel->correlationId;
+	  #endif
         }
         else
         {
@@ -1331,6 +1558,23 @@ int getMemcpyType(int kind)
 			return MemcpyUnknown;
 	}
 }
+
+#if CUDA_VERSION >= 6000
+int getUnifmemType(int kind)
+{
+  switch(kind)
+    {
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD:
+      return BytesHtoD;
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_DTOH:
+      return BytesDtoH;
+    case CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_CPU_PAGE_FAULT_COUNT:
+      return CPUPageFault;
+    default:
+      return UnifmemUnknown;
+    }
+}
+#endif
 
 const char *demangleName(const char* name)
 {

@@ -44,6 +44,10 @@
 #include <tauroot.h>
 #include <fcntl.h>
 #include <string>
+
+#if TAU_OPENMP // for querying OpenMP settings
+#include "omp.h"
+#endif
 using namespace std;
 
 #ifndef TAU_BGP
@@ -157,6 +161,7 @@ using namespace std;
 #define TAU_CUPTI_API_DEFAULT "runtime"
 #define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 #define TAU_TRACK_CUDA_CDP_DEFAULT 0
+#define TAU_TRACK_UNIFIED_MEMORY_DEFAULT 0
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
@@ -233,6 +238,7 @@ static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
 
 static int env_profile_format = TAU_FORMAT_PROFILE;
+static const char *env_profile_prefix = NULL;
 static double env_throttle_numcalls = 0;
 static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
@@ -242,6 +248,7 @@ static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
+static int env_track_unified_memory = TAU_TRACK_UNIFIED_MEMORY_DEFAULT; 
 
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
@@ -756,6 +763,10 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
+const char* TauEnv_get_profile_prefix() {
+  return env_profile_prefix;
+}
+
 int TauEnv_get_sigusr1_action() {
   return env_sigusr1_action;
 }
@@ -840,6 +851,10 @@ const char* TauEnv_get_cuda_instructions(){
 
 int TauEnv_get_cuda_track_cdp(){
   return env_track_cuda_cdp;
+}
+
+int TauEnv_get_cuda_track_unified_memory(){
+  return env_track_unified_memory;
 }
 
 int TauEnv_get_mic_offload(){
@@ -982,6 +997,13 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_LITE", "on");
       env_tau_lite = 1;
     }
+
+    tmp = getconf("TAU_TRACK_POWER");
+    if (parse_bool(tmp, env_track_memory_heap)) {
+      TAU_VERBOSE("TAU: Power tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_POWER", "on");
+      TAU_TRACK_POWER();
+    } 
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
@@ -1203,6 +1225,10 @@ void TauEnv_initialize()
     TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", RtsLayer::getPid());
     return;
 #endif
+
+    if ((env_profile_prefix = getconf("TAU_PROFILE_PREFIX")) == NULL) {
+      TAU_VERBOSE("TAU: PROFILE PREFIX is \"%s\"\n", env_profile_prefix);
+    }
 
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
@@ -1557,6 +1583,64 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
     }
 
+// MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
+#if TAU_OPENMP && !defined(TAU_MPC) 
+    const char* schedule;
+    int modifier;
+#if defined(omp_sched_t)
+    omp_sched_t kind;
+    omp_get_schedule(&kind, &modifier);
+    if (kind == omp_sched_static) {
+        schedule = "STATIC";
+    } else if (kind == omp_sched_dynamic) {
+        schedule = "DYNAMIC";
+    } else if ( kind == omp_sched_guided) {
+        schedule = "GUIDED";
+    } else if ( kind == omp_sched_auto) {
+        schedule = "AUTO";
+    } else {
+        schedule = "UNKNOWN";
+    }
+    TAU_METADATA("OMP_SCHEDULE", schedule);
+    sprintf(tmpstr,"%d",modifier);
+    TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
+#else
+    schedule = "UNKNOWN";
+    modifier = 1;
+    TAU_METADATA("OMP_SCHEDULE", schedule);
+    sprintf(tmpstr,"%d",modifier);
+    TAU_METADATA("OMP_CHUNK_SIZE", tmpstr);
+#endif
+
+    int value = omp_get_max_threads();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_MAX_THREADS", tmpstr);
+
+    value = omp_get_num_procs();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_NUM_PROCS", tmpstr);
+
+    value = omp_get_dynamic();
+    sprintf(tmpstr,"%s",value?"on":"off");
+    TAU_METADATA("OMP_DYNAMIC", tmpstr);
+
+    value = omp_get_nested();
+    sprintf(tmpstr,"%s",value?"on":"off");
+    TAU_METADATA("OMP_NESTED", tmpstr);
+
+#if defined(omp_get_thread_limit)
+    value = omp_get_thread_limit();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_THREAD_LIMIT", tmpstr);
+#endif
+
+#if defined(omp_get_max_active_levels)
+    value = omp_get_max_active_levels();
+    sprintf(tmpstr,"%d",value);
+    TAU_METADATA("OMP_MAX_ACTIVE_LEVELS", tmpstr);
+#endif
+#endif
+
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
       env_ebs_enabled = 1; // enable samping too?
@@ -1760,7 +1844,16 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: tracking CUDA CDP kernels Disabled\n");
       TAU_METADATA("TAU_TRACK_CUDA_CDP", "off");
     }
-		tmp = getconf("TAU_MIC_OFFLOAD");
+    tmp = getconf("TAU_TRACK_UNIFIED_MEMORY");
+    if (parse_bool(tmp, TAU_TRACK_UNIFIED_MEMORY_DEFAULT)) {
+      env_track_unified_memory = 1;
+      TAU_VERBOSE("TAU: tracking CUDA UNIFIED MEMORY Enabled\n");
+      TAU_METADATA("TAU_TRACK_UNIFIED_MEMORY", "on");
+    } else {
+      TAU_VERBOSE("TAU: tracking CUDA UNIFIED MEMORY Disabled\n");
+      TAU_METADATA("TAU_TRACK_UNIFIED_MEMORY", "off");
+    }
+    tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
       env_mic_offload = 1;
       TAU_VERBOSE("TAU: MIC offloading Enabled\n");
