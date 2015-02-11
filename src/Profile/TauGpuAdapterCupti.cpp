@@ -108,6 +108,24 @@ extern "C" void Tau_cupti_register_memcpy_event(
 								start, stop, bytes_copied, memcpy_type, direction);
 						}
 
+extern "C" void Tau_cupti_register_unifmem_event(
+						 const char *name,
+						 uint32_t deviceId,
+						 uint32_t streamId,
+						 uint32_t processId,
+						 uint64_t start,
+						 uint64_t end,
+						 uint64_t value,
+						 int unifmem_type,
+						 int direction
+						) {
+							//Empty list of gpu attributes
+							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+								deviceId, streamId, processId, 0, -1, NULL, 0);
+							// start/stop times set to timestamp
+							Tau_gpu_register_unifmem_event(&gpu_event, start, end, value, unifmem_type, direction);
+						}
+
 extern "C" void Tau_cupti_register_gpu_event(
 						const char *name,
 						uint32_t deviceId,

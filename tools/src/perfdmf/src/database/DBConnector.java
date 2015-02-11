@@ -32,6 +32,14 @@ import edu.uoregon.tau.perfdmf.Database;
  *******************************************************/
 
 public class DBConnector implements DB {
+    public static final String DEFAULT_TRUSTSTORE_PATH =
+        System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "keystore.taudb";
+    public static final String DEFAULT_TRUSTSTORE_PASSWORD = "changeit";
+
+    public static final String DEFAULT_KEYSTORE_PATH =
+        System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "keystore.taudb";
+    public static final String DEFAULT_KEYSTORE_PASSWORD = "changeit";
+
 
     private Statement statement;
     private Connection conn;
@@ -44,21 +52,28 @@ public class DBConnector implements DB {
 
     private String driverName;
     private String JDBCjarFileName;
-	private boolean dbUseSSL = false;
-	private String dbKeystore;
 	private String dbServerHostname;
 
+	private boolean dbUseSSL = false;
+	private boolean dbUseKeys = false;
+	private boolean dbUseTrust = false;
+
+	private String dbKeystore;
+	private String dbKeystorePassword;
+
+	private String dbTruststore;
+	private String dbTruststorePassword;
+
     private Database database;
-    
     private int schemaVersion = -1;
 
-    
+
     private static Map<String, String> passwordMap = new HashMap<String, String>();
-    
+
     private static PasswordCallback passwordCallback;
-    
-    
-    
+
+
+
     /*
      * This class is here because the DriverManager refuses to use a driver that is not loaded
      * by the system ClassLoader.  So we wrap it with this.
@@ -128,16 +143,36 @@ public class DBConnector implements DB {
         }
     }
 
+
+    public String setDefault(String s, String default_value) {
+        if (s == null || s.equals("")) {
+            return default_value;
+        }
+        return s;
+    }
+
+
     public void setJDBC(ParseConfig parser) {
         driverName = parser.getJDBCDriver();
         dbaddress = parser.getConnectionString();
         JDBCjarFileName = parser.getJDBCJarFile();
-		dbUseSSL = false;
-		dbKeystore = parser.getDBKeystore();
 		dbServerHostname = parser.getDBHost();
-		if (dbKeystore != null && !dbKeystore.equals("")) {
-		  dbUseSSL = true;
-		}
+
+        // SSL keystore and truststore parameters
+		dbUseSSL = parser.getDBUseSSL();
+		dbKeystore =
+            setDefault(parser.getDBKeystore(), DEFAULT_KEYSTORE_PATH);
+		dbKeystorePassword =
+            setDefault(parser.getDBKeystorePasswd(), DEFAULT_KEYSTORE_PASSWORD);
+
+		dbTruststore =
+            setDefault(parser.getDBTruststore(), DEFAULT_TRUSTSTORE_PATH);
+		dbTruststorePassword =
+            setDefault(parser.getDBTruststorePasswd(), DEFAULT_TRUSTSTORE_PASSWORD);
+
+        // Check whether the keystore and trust store exist, disable if they don't
+        dbUseKeys = new File(dbKeystore).exists();
+        dbUseTrust = new File(dbTruststore).exists();
     }
 
     public void close() {
@@ -165,7 +200,7 @@ public class DBConnector implements DB {
     public void rollback() throws SQLException {
         conn.rollback();
     }
-    
+
     private static String findPassword(ParseConfig config) {
 
         //System.out.println("finding password, path: " + config.getPath());
@@ -185,31 +220,53 @@ public class DBConnector implements DB {
             }
             cs.append(getConnectString());
 			Properties props = new Properties();
+            
+
 			if (dbUseSSL) {
-                if (password == null) {
-                    password = findPassword(config);
-                }
-                System.setProperty("javax.net.ssl.keyStore",dbKeystore);
-                System.setProperty("javax.net.ssl.keyStorePassword",password);
-                System.setProperty("javax.net.ssl.trustStore",dbKeystore);
-                System.setProperty("javax.net.ssl.trustStorePassword",password);
-			    props.setProperty("user",user);
+                // Use SSL and set that up first.
+			    props.setProperty("user", user);
 			    props.setProperty("ssl","true");
-				props.setProperty("sslfactory", "edu.uoregon.tau.perfdmf.database.CustomSSLSocketFactory");
-				CustomX509KeyManager.setClientAlias(user + "@" + dbServerHostname);
-			} else {
-                if (password == null) {
-                    password = findPassword(config);
+                props.setProperty("sslfactory", "edu.uoregon.tau.perfdmf.database.CustomSSLSocketFactory");
+
+                if (dbUseTrust) {
+                    System.setProperty("javax.net.ssl.trustStore", dbTruststore);
+                    System.setProperty("javax.net.ssl.trustStorePassword", dbTruststorePassword);
                 }
+
+                if (dbUseKeys) {
+                    // Tell Java about the keystore and trust store.  User can
+                    // add trust certs if needed, but all we really need is
+                    // the client key.
+                    System.setProperty("javax.net.ssl.keyStore", dbKeystore);
+                    System.setProperty("javax.net.ssl.keyStorePassword", dbKeystorePassword);
+
+                    // require that the client alias is user@example.com, for
+                    // a DB hosted at example.com
+                    CustomX509KeyManager.setClientAlias(user + "@" + dbServerHostname);
+
+                } else {
+                	if (password == null) {
+                        password = findPassword(config);
+                    }
+                    props.setProperty("password", password);
+                }
+
+			} else {
+                // Do not use SSL, just username/password
+				if (password == null) {
+	                password = findPassword(config);
+	            }
 			    props.setProperty("user",user);
 			    props.setProperty("password",password);
 			}
             conn = DriverManager.getConnection(cs.toString(), props);
             return true;
+
         } catch (SQLException ex) {
             System.err.println("Cannot connect to server.");
             System.err.println("Connection String: " + cs);
             System.err.println("Exception Message: " + ex.getMessage());
+            ex.printStackTrace();
             throw ex;
         }
     }
@@ -219,7 +276,7 @@ public class DBConnector implements DB {
         try {
             cs.append(getConnectString());
             cs.append(";create=true");
-            
+
             if (password == null) {
                 password = findPassword(config);
             }
@@ -442,7 +499,7 @@ public class DBConnector implements DB {
     // REF          : 2006
 
     //     public static boolean isReadWriteType(int type) {
-    // 	if (type == java.sql.Types.VARCHAR 
+    // 	if (type == java.sql.Types.VARCHAR
     // 	    || type == java.sql.Types.CLOB
     // 	    || type == java.sql.Types.INTEGER
     // 	    || type == java.sql.Types.DECIMAL
@@ -452,19 +509,19 @@ public class DBConnector implements DB {
     //     }
 
     public static boolean isReadAbleType(int type) {
-        if (type == java.sql.Types.VARCHAR 
-            || type == java.sql.Types.CLOB 
+        if (type == java.sql.Types.VARCHAR
+            || type == java.sql.Types.CLOB
             || type == java.sql.Types.INTEGER
             || type == java.sql.Types.BIGINT
-            || type == java.sql.Types.DECIMAL 
-            || type == java.sql.Types.DOUBLE 
+            || type == java.sql.Types.DECIMAL
+            || type == java.sql.Types.DOUBLE
             || type == java.sql.Types.FLOAT
-            || type == java.sql.Types.LONGVARCHAR 
-            || type == java.sql.Types.TIME 
+            || type == java.sql.Types.LONGVARCHAR
+            || type == java.sql.Types.TIME
             || type == java.sql.Types.TIMESTAMP
                 // added binary types for XML_METADATA_GZ processing
-            || type == java.sql.Types.BINARY 
-            || type == java.sql.Types.VARBINARY 
+            || type == java.sql.Types.BINARY
+            || type == java.sql.Types.VARBINARY
             || type == java.sql.Types.LONGVARBINARY
             || type == java.sql.Types.BLOB)
             return true;
@@ -499,7 +556,7 @@ public class DBConnector implements DB {
     }
 
     //     public static boolean isReadOnlyType(int type) {
-    // 	if (type == java.sql.Types.TIME 
+    // 	if (type == java.sql.Types.TIME
     // 	    || type == java.sql.Types.TIMESTAMP)
     // 	    return true;
     // 	return false;
@@ -509,7 +566,7 @@ public class DBConnector implements DB {
         boolean checks[] = new boolean[columns.length];
 
         ResultSet resultSet = null;
-        if ((this.getDBType().compareTo("oracle") == 0) 
+        if ((this.getDBType().compareTo("oracle") == 0)
 		|| (this.getDBType().compareTo("derby") == 0)
                 || (this.getDBType().compareTo("h2") == 0)
                 || (this.getDBType().compareTo("db2") == 0)) {
@@ -723,7 +780,7 @@ public class DBConnector implements DB {
 	public Database getDatabase() {
         return database;
     }
-    
+
     public static void setPasswordCallback(PasswordCallback callback) {
         passwordCallback = callback;
     }
@@ -749,19 +806,19 @@ public class DBConnector implements DB {
                     tmpStr = "schema_version";
                 }
                 ResultSet r = meta.getTables(null, null, tmpStr, null);
-            
+
                 while (r.next()) {
                     String tablename = r.getString("TABLE_NAME");
                     if (tablename.equalsIgnoreCase("schema_version")) {
                         hasSchemaVersionTable = true;
                     }
 			    }
-			
+
 			    if (hasSchemaVersionTable) {
 				    String query = "SELECT version FROM " + getSchemaPrefix()
 						    + "schema_version";
 				    ResultSet resultSet = executeQuery(query);
-    
+
 				    if (resultSet.next()){
 					    schemaVersion = resultSet.getInt(1);
 					    return;

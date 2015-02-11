@@ -55,7 +55,7 @@ USAGE = """
 %prog [options] tauprofile.xml
 """
 
-PATTERN = re.compile('UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
+PATTERN = re.compile('(.*?)UNRESOLVED (.*?) ADDR (0x[a-fA-F0-9]+)')
 
 # Seconds
 TIMEOUT = 300
@@ -63,7 +63,7 @@ TIMEOUT = 300
 # How many times do the workers report?
 ITERS_PER_REPORT = 5000
 
-
+isXML = False
 
 class Addr2LineError(RuntimeError):
     def __init__(self, value):
@@ -154,11 +154,13 @@ class Worker(Thread):
             self.pipes[exe] = Addr2Line(addr2line, exe)
 
     def run(self):
+        global isXML
         """
         """
         def repl(match):
-            exe = match.group(1)
-            addr = match.group(2)
+            prefix = match.group(1)
+            exe = match.group(2)
+            addr = match.group(3)
             if exe == 'UNKNOWN':
                 for p in self.pipes.itervalues():
                     resolved = p.resolve(addr)
@@ -167,7 +169,10 @@ class Worker(Thread):
             else:
                 resolved = self.pipes[exe].resolve(addr)
             if resolved[0] != 'UNRESOLVED':
-                return saxutils.escape('%s [{%s} {%s}]' % (resolved[0], resolved[1], resolved[2]))
+                if isXML:
+                    return '%s%s [{%s} {%s}]' % (prefix, saxutils.escape(resolved[0]), saxutils.escape(resolved[1]), saxutils.escape(resolved[2]))
+                else:
+                    return '%s%s [{%s} {%s}]' % (prefix, resolved[0], resolved[1], resolved[2])
             else:
                 return match.group(0)
 
@@ -200,12 +205,16 @@ class Worker(Thread):
 
 
 def tauprofile_xml(infile, outfile, options):
+    global isXML
     """
     Calls addr2line to resolve addresses in a tauprofile.xml file
     """ 
     fallback_exes = set(options.exe)
     addr2line = options.addr2line
     jobs = int(options.jobs)
+    
+    if "xml" in infile:
+        isXML = True
 
     with open(infile, 'r+b') as fin:
         with open(outfile, 'wb') as fout:
@@ -230,7 +239,7 @@ def tauprofile_xml(infile, outfile, options):
                 match = re.search(PATTERN, line)
                 if match:
                     unresolved.append(len(linespan) - 1)
-                    exe = match.group(1)
+                    exe = match.group(2)
                     if exe != 'UNKNOWN':
                         all_exes.add(exe)
                 j += 1
@@ -275,8 +284,14 @@ def tauprofile_xml(infile, outfile, options):
                 w.start()
                 workers.append(w)
 
-            # Process worker output
+            # if there were no unresolved symbols, just copy the profile
+            if len(workers) == 0:
+                fin.seek(0, 0)
+                for line in fin:
+                    fout.write(line)
+
             i = 0
+            # Process worker output
             for rank, w in enumerate(workers):
                 w.join()
                 print '%s (%d/%d) completed' % (w.name, rank, len(workers))

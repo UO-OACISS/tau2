@@ -1,6 +1,7 @@
 #!/bin/sh
 
-REPO="http://www.nic.uoregon.edu/~amorris/regression"
+#REPO="http://www.nic.uoregon.edu/~amorris/regression"
+REPO="http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist"
 
 ROOT=/cygdrive/c/tau
 
@@ -11,12 +12,19 @@ ROOT=/cygdrive/c/tau
 
 cd $ROOT 
 rm -rf tau2
-rm tau2.tar.gz
-wget $REPO/checkouts/tau2.tar.gz
-tar -xzvf tau2.tar.gz
-
+rm tau.tgz tau-$1.tar.gz
+wget $REPO/tau-$1.tar.gz
+#cp tau-$1-win.tar.gz tau-$1.tar.gz
+tar -xzvf tau-$1.tar.gz
+mv tau-$1 tau2
 
 # set up for windows
+
+gunzip $ROOT/tau2/tools/src/contrib/jogl/windows64/jogl.dll.gz
+gunzip $ROOT/tau2/tools/src/contrib/jogl/windows64/jogl_awt.dll.gz
+gunzip $ROOT/tau2/tools/src/contrib/jogl/windows64/jogl_cg.dll.gz
+gunzip $ROOT/tau2/tools/src/contrib/jogl/windows64/gluegen-rt.dll.gz
+
 gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl.dll.gz
 gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl_awt.dll.gz
 gunzip $ROOT/tau2/tools/src/contrib/jogl/windows/jogl_cg.dll.gz

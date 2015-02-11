@@ -324,12 +324,13 @@ for arg in "$@" ; do
 			    f90preprocessor=`which cpp`
 			fi
 
-			if [ $tauPreProcessor == $TRUE ]; then 
-			  # USE TAU's pre-processor for macro expansion by default, unless a different one is specified
-		          preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'` 
-			else
-			  preprocessor=$f90preprocessor
-                        fi
+      if [ $tauPreProcessor == $TRUE ]; then 
+        # USE TAU's pre-processor for macro expansion by default, unless a different one is specified
+        preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'` 
+        f90preprocessor=$preprocessor
+      else
+        preprocessor=$f90preprocessor
+      fi
 
 			if [ ! -x $preprocessor ]; then
  			    echo "ERROR: No working cpp found in path. Please specify -optCPP=<full_path_to_cpp> and recompile"
@@ -1170,31 +1171,27 @@ while [ $tempCounter -lt $numFiles ]; do
     #if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
     origFileName=${arrFileName[$tempCounter]}
     if [ $preprocess == $TRUE ]; then
-	base=${base}.pp
-        if [ $tauPreProcessor == $TRUE ]; then
-          if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
-          fi
-          if [ $groupType == $group_f_F ]; then
-	    cmdToExecute="${f90preprocessor} $f90preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
-          else 
-	    cmdToExecute="${preprocessor} ${arrFileName[$tempCounter]} $optTauIncludes $optIncludeDefs"
-          fi
-# tau_macro.sh will generate the .pp$suf file.
+      base=${base}.pp
+      if [ $tauPreProcessor == $TRUE ]; then
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+          optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+        fi
+        if [ $groupType == $group_f_F ]; then
+          cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
         else 
-          if [ $groupType == $group_f_F ]; then
-	    cmdToExecute="${f90preprocessor} $f90preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
-	  else
-	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
-	  fi
+          cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
         fi
-	evalWithDebugMessage "$cmdToExecute" "Preprocessing"
-        if [ ! -f $base$suf ]; then
-            echoIfVerbose "ERROR: Did not generate .pp file"
-	    printError "$preprocessor" "$cmdToExecute"
-        fi
-	arrFileName[$tempCounter]=$base$suf
-	echoIfDebug "Completed Preprocessing\n"
+        # tau_macro.sh will generate the .pp$suf file.
+      else 
+        cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
+      fi
+      evalWithDebugMessage "$cmdToExecute" "Preprocessing"
+      if [ ! -f $base$suf ]; then
+        echoIfVerbose "ERROR: Did not generate .pp file"
+        printError "$preprocessor" "$cmdToExecute"
+      fi
+      arrFileName[$tempCounter]=$base$suf
+      echoIfDebug "Completed Preprocessing\n"
     fi
 
     if [ $continueBeforeOMP == $TRUE ] ; then
@@ -1438,7 +1435,7 @@ if [ $numFiles == 0 ]; then
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
     if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
-      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g' -e 's/-lunwind / /g'`
       linkCmd="$linkCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
       echoIfDebug "Linking command is $linkCmd"
     fi
@@ -2189,6 +2186,10 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 	if [ $opari2 == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f pompregions.c pompregions.o *.opari.inc" "Removing pompregions.c pompregions.o *.opari.inc"
 	fi
+	if [ $needToCleanPdbInstFiles == $TRUE -a -r TauScorePAdapterInit.o ]; then
+	    evalWithDebugMessage "/bin/rm -f TauScorePAdapterInit.o"
+	fi
+	
     fi
 
 fi
@@ -2240,6 +2241,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 
     if [ "x$PE_ENV" == "xCRAY" -a -r Comp_gnu.o ] ; then
 	evalWithDebugMessage "/bin/rm -f Comp_gnu.o" "cleaning Comp_gnu.o"
+    fi
+
+    if [ $needToCleanPdbInstFiles == $TRUE -a -r TauScorePAdapterInit.o ]; then
+	    evalWithDebugMessage "/bin/rm -f TauScorePAdapterInit.o"
     fi
 fi
 

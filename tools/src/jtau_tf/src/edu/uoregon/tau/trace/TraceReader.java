@@ -36,59 +36,71 @@ public class TraceReader extends TraceFile{
 	int format;
 	long totalRecords=0;
 	long totalRead=0;
+	char nid_offset=0;
 	//int eventSize;
 	
 	HashSet<Integer> nidTidSeen = new HashSet<Integer>();
 	HashSet<Integer> nidTidDone = new HashSet<Integer>();
 	
+	public TraceReader(String trace, String edf,char nid_offset){
+		this.nid_offset=nid_offset;
+		initialize(trace,edf);
+		//System.out.println("reader nid offset: "+(int)nid_offset);
+	}
+	
 	public TraceReader(String trace, String edf){
 		
+		initialize(trace,edf);
+
+	}
+	
+	
+	private void initialize(String trace, String edf){
+		subtractFirstTimestamp = true;
+		nonBlocking = false;
+
 		
-			subtractFirstTimestamp = true;
-			nonBlocking = false;
+		/* Open the trace file */
+		FileInputStream istream=null;;
+		
+		try {	  
+			istream = new FileInputStream(trace);
+			BufferedInputStream bw = new BufferedInputStream(istream);
+			Fiid = new DataInputStream(bw);
+			format=TraceReader.determineFormat(Fiid);
+		
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		totalRecords=getNumRecords(trace);
 
-			
-			/* Open the trace file */
-			FileInputStream istream=null;;
-			
-			try {	  
-				istream = new FileInputStream(trace);
-				BufferedInputStream bw = new BufferedInputStream(istream);
-				Fiid = new DataInputStream(bw);
-				format=TraceReader.determineFormat(Fiid);
-			
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-			totalRecords=getNumRecords(trace);
-
-			/* make a copy of the EDF file name */
-			EdfFile = edf;
-			TrcFile=trace;
-			String[] cutname = trace.split(".");
-			if(cutname.length==5){
-				node=Integer.parseInt(cutname[1]);
-				context=Integer.parseInt(cutname[2]);
-				thread=Integer.parseInt(cutname[3]);
-			}
-			/* Allocate space for nodeid, thread id map */
-			//tFile.NidTidMap=new HashMap();
-			/* Allocate space for event id map */
-			EventIdMap = new HashMap<Integer, EventDescr>();
-			/* Allocate space for group id map */
-			GroupIdMap = new HashMap<String, Integer>();
-			/* initialize clock */
-			ClkInitialized = false;
-			/* initialize the first timestamp for the trace */
-			//tFile.FirstTimestamp = 0;
-			/* determine the format */
-			//determineFormat (tFile);
-			/* return file handle */
-			
-
+		/* make a copy of the EDF file name */
+		EdfFile = edf;
+		TrcFile=trace;
+		String[] cutname = trace.split(".");
+		if(cutname.length==5){
+			node=Integer.parseInt(cutname[1])+nid_offset;
+			//System.out.println("Set Node to "+node);
+			context=Integer.parseInt(cutname[2]);
+			thread=Integer.parseInt(cutname[3]);
+		}
+		/* Allocate space for nodeid, thread id map */
+		//tFile.NidTidMap=new HashMap();
+		/* Allocate space for event id map */
+		EventIdMap = new HashMap<Integer, EventDescr>();
+		/* Allocate space for group id map */
+		GroupIdMap = new HashMap<String, Integer>();
+		/* initialize clock */
+		ClkInitialized = false;
+		/* initialize the first timestamp for the trace */
+		//tFile.FirstTimestamp = 0;
+		/* determine the format */
+		//determineFormat (tFile);
+		/* return file handle */
+		
 	}
 	
 	public static long getNumRecords(String name){
@@ -190,10 +202,15 @@ public class TraceReader extends TraceFile{
 		Fiid.reset();
 		return format;
 	}
+	
+	
+	
 
-	private static Event readEvent(int format, DataInputStream Fiid) throws IOException{
+	private static Event readEvent(int format, DataInputStream Fiid, char nid_offset) throws IOException{
 
 		Event evt=new Event();// = new Event();
+		evt.nid_offset=nid_offset;
+		//System.out.println("nid offset reading:"+(int)evt.nid_offset);
 		try{		
 		if(format<2)
 		{
@@ -206,7 +223,7 @@ public class TraceReader extends TraceFile{
 		else
 		if(format==2)
 		{
-				evt = new Event();
+				//evt = new Event();
 				evt.setEventID(intReverseBytes(Fiid.readInt()));
 				evt.setNodeID(charReverseBytes(Fiid.readChar()));
 				evt.setThreadID(charReverseBytes(Fiid.readChar()));
@@ -216,7 +233,7 @@ public class TraceReader extends TraceFile{
 		else
 		if(format==3)
 		{
-				evt = new Event();
+				//evt = new Event();
 				evt.setEventID((int)Fiid.readLong());
 				evt.setNodeID(Fiid.readChar());
 				evt.setThreadID(Fiid.readChar());
@@ -227,7 +244,7 @@ public class TraceReader extends TraceFile{
 		else
 		if(format==4)
 		{
-				evt = new Event();
+				//evt = new Event();
 				evt.setEventID((int)longReverseBytes(Fiid.readLong()));
 				evt.setNodeID(charReverseBytes(Fiid.readChar()));
 				evt.setThreadID(charReverseBytes(Fiid.readChar()));
@@ -436,7 +453,7 @@ public class TraceReader extends TraceFile{
 		Fiid.mark(64);
 		Event evt=null;
 		try {
-			evt = readEvent(format, Fiid);
+			evt = readEvent(format, Fiid, nid_offset);
 		
 			Fiid.reset();
 		} catch (IOException e) {
@@ -510,7 +527,7 @@ public class TraceReader extends TraceFile{
 		{
 			Event evt=null;
 			try{
-				evt = readEvent(this.format, Fiid);
+				evt = readEvent(this.format, Fiid, nid_offset);
 			}catch (IOException e) {e.printStackTrace(); return -1;}
 			if(evt==null){
 				break;
@@ -529,9 +546,10 @@ public class TraceReader extends TraceFile{
 			if (!nidTidSeen.contains(nidtid))
 			{
 				/* this pair of node and thread has not been encountered before*/
-				nodename="process "+evt.nid+":"+evt.tid;
+				nodename="process "+(int)evt.nid+":"+(int)evt.tid;
 				/* invoke callback routine */
 				callbacks.defThread(userData, evt.nid, evt.tid, nodename);
+				//System.out.println("Nodename: "+nodename);
 				/* add it to the map! */
 				//NidTidMap.put(nidtid, one);
 				nidTidSeen.add(nidtid);

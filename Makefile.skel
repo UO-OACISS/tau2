@@ -83,7 +83,8 @@ TRACE2PROFILE=utils/trace2profile
 TAUPRELOAD=src/wrappers/taupreload
 #CUDA#TAUCUDA=src/wrappers/cuda #ENDIF#
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
-TAU_ENV=utils/tau_env
+#SHMEM#TAU_CUPTI_AVAIL= #ENDIF#
+#TAUENV#TAU_ENV=utils/tau_env #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 #ANDROID#ANDROID_TOOLS=tools/src/android #ENDIF#
@@ -135,8 +136,8 @@ CONFIGQUERY=`utils/ConfigQuery -arch`
 
 .PHONY: all exports tests install clean cleandist cleaninstall cleangood
 
-all:
-	@echo "At the installation root, use \"make install\" "
+all: install
+	@echo
 
 exports : 
 	@echo "Determining Configuration..."
@@ -214,3 +215,7 @@ ${SUBDIR}: FRC
 
 FRC:
 
+validate:
+	@echo "Running TAU validation tests..."
+	./tau_validate --html --timeout 180 $(CONFIG_ARCH) > results.html
+	@echo "...done. Please see results.html for details."

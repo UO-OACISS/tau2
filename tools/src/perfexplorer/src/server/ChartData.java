@@ -293,6 +293,13 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" and m.name = ? ");
 			}
+
+                        // Exclude ".TAU application" timer"
+                        // Nonzero threads account idle time in ".TAU application", 
+                        // making it seem as if idle time is TAU overhead.  
+                        // Excluding the timer is a workaround.
+                        buf.append(" and ie.name not like '.TAU application' ");
+
 			if (db.getSchemaVersion() == 0) {
 				buf.append("and ims.exclusive_percentage > ");
 				buf.append(model.getXPercent());

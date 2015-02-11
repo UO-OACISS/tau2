@@ -399,6 +399,18 @@ case $1 in
 	echo "s@^TAU_BUILD_CXX=.*@TAU_BUILD_CXX=$tau_build_cxx@g" >> $sedout
 	;;
 
+     boostdir=*)
+        boostdir=`echo $1 | sed -e 's/^boostdir=//'`
+	echo "s,^BOOSTDIR=.*$,BOOSTDIR=$boostdir,g" >> $sedout
+	;;
+     boostinc=*)
+        boostinc=`echo $1 | sed -e 's/^boostinc=//'`
+	echo "s,^TAU_BOOSTINC=.*$,TAU_BOOSTINC=$boostinc,g" >> $sedout
+	;;
+     boostlib=*)
+        boostlib=`echo $1 | sed -e 's/^boostlib=//'`
+	echo "s,^TAU_BOOSTLIB=.*$,TAU_BOOSTLIB=$boostlib,g" >> $sedout
+	;;
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
@@ -429,6 +441,16 @@ case $1 in
 	echo "s,^ANDROID_SDK=.*$,ANDROID_SDK=$android_sdk,g" >> $sedout
 	;;
 
+     android_version=*)
+        android_version=`echo $1 | sed -e 's/^android_version=//'`
+	echo "s,^ANDROID_VERSION=.*$,ANDROID_VERSION=$android_version,g" >> $sedout
+	;;
+
+     android_platform=*)
+        android_platform=`echo $1 | sed -e 's/^android_platform=//'`
+	echo "s,^ANDROID_PLATFORM=.*$,ANDROID_PLATFORM=$android_platform,g" >> $sedout
+	;;
+
      pythoninc=*)
         pythoninc=`echo $1 | sed -e 's/^pythoninc=//'`
 	echo "s,^PYTHON_INCDIR=.*$,PYTHON_INCDIR=$pythoninc,g" >> $sedout
@@ -438,7 +460,14 @@ case $1 in
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	# Discover python library version
-	pythonso=`ls $pythonlib/libpython*.so | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
+	pythonso=`ls $pythonlib/libpython*.so 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
+	if [ "x$pythonso" = "x" ] ; then
+	  pythonso=`ls $pythonlib/libpython*.dylib 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.dylib//'`
+	  if [ "x$pythonso" = "x" ] ; then
+	    echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
+	    exit 1
+	  fi
+	fi
 	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
 	echo "s,^PYTHON_LIB_SO=.*$,PYTHON_LIB_SO=$pythonso,g" >> $sedout
 	#echo "Using PYTHON LIB DIR =" $pythonlib
@@ -738,6 +767,10 @@ case $1 in
         #echo "TAU_MPILIB_DIR=$mpilibdir" 
         ;;
 
+     TAUENV)
+        echo NOTE: Building the tau_env tool
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 ###############################################################
 # Set up SHMEM stuff if possible
 ###############################################################
@@ -806,6 +839,10 @@ case $1 in
         echo "NOTE: Using the TAU's CUPTI Profiling Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     CUPTI_NOCUDA)
+        echo "NOTE: Couldn't locate /usr/lib/libcuda.so. Is it somewhere else? "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      CUPTI_ACTIVITY)
         echo "NOTE: Using the TAU's CUPTI Activity API "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -848,6 +885,12 @@ case $1 in
 	echo "s/^CROSS_PREFIX=\(.*\)/CROSS_PREFIX=${config_host}-/g" >> $sedout
 	;;
 
+     host_sysroot=*)
+        host_sysroot=`echo $1 | sed 's/^host_sysroot=//'`
+        echo "s/#HOST_SYSROOT#\(.*\)/$bs\1#HOST_SYSROOT#/g" >> $sedout
+	echo "s@^HOST_SYSROOT=\(.*\)@HOST_SYSROOT=${host_sysroot}@g" >> $sedout
+	;;
+
      confenvfile=*)
         confenvfile=`echo $1 | sed -e 's/^confenvfile=//' `
 	echo "NOTE: Saving configuration environment to $confenvfile"
@@ -860,7 +903,7 @@ case $1 in
 	;;
 
      ANDROID)
-	echo NOTE: Building TAU for Android
+	echo "NOTE: Building TAU for Android $android_version, platform $android_platform"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 
@@ -1582,6 +1625,10 @@ case $1 in
 	echo "NOTE: Using multi-threaded access to H/W Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PAPI_PERF_RAPL)
+	echo "NOTE: Enabling power measurements using PAPI's Perf RAPL interface ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      ANSIC)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
@@ -1939,6 +1986,10 @@ case $1 in
 	;;
      PGI_FORTRAN)
 	echo "NOTE: PGI pgf90 compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGI_FORTRAN_OTHER)
+	echo "NOTE: PGI pgfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PGI_CATAMOUNT)

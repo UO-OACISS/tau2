@@ -218,15 +218,21 @@ if [ ! -r ${WEKA_JAR} ]; then
 	    #fi
 	    
 		/bin/rm -f ${redirectfile}
-		#wget http://www.cs.uoregon.edu/research/paracomp/tau/${redirectfile}
-		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget $redirect ${redirectfile} false
-		URL=`grep URL ${redirectfile} | sed s/URL=//`
-		FILE=`grep FILE ${redirectfile} | sed s/FILE=//`
-		DIR=`grep DIR ${redirectfile} | sed s/DIR=//`
-		/bin/rm -f ${redirectfile}
-		echo "Getting $FILE... please be patient..."
-		#wget "$URL"
-		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+		FILE=weka-3-6-1.zip
+		DIR=weka-3-6-1
+		if [ -e ${tauroot}/external_dependencies/${FILE} ] ; then
+		  cp ${tauroot}/external_dependencies/${FILE} ${FILE}
+		else
+		  #wget http://www.cs.uoregon.edu/research/paracomp/tau/${redirectfile}
+		  java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget $redirect ${redirectfile} false
+		  URL=`grep URL ${redirectfile} | sed s/URL=//`
+		  FILE=`grep FILE ${redirectfile} | sed s/FILE=//`
+		  DIR=`grep DIR ${redirectfile} | sed s/DIR=//`
+		  /bin/rm -f ${redirectfile}
+		  echo "Getting $FILE... please be patient..."
+		  #wget "$URL"
+		  java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+		fi
 		mv "$FILE" ${WEKA_ZIP_DIR}/.
 		cd ${WEKA_ZIP_DIR}/.
 		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Zip ${FILE}
@@ -304,9 +310,13 @@ if [ ! -r ${JBOSS_JAR} ]; then
 	
 	if [ "${RESPONSE}" = "y" ]; then 
 		/bin/rm -f $FILE
-		echo "Getting $FILE... please be patient..."
-		#wget "$URL"
-		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+		if [ -e ${tauroot}/external_dependencies/${FILE} ] ; then
+		  cp ${tauroot}/external_dependencies/${FILE} ${FILE}
+		else
+		  echo "Getting $FILE... please be patient..."
+		  #wget "$URL"
+		  java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.Wget "$URL" "$FILE" true
+	  	fi
 		mv "$FILE" ${JBOSS_TAR_DIR}/.
 		cd ${JBOSS_TAR_DIR}/.
 		java -cp ${LIBDIR}/tau-common.jar edu.uoregon.tau.common.tar.Tar -xvzf ${FILE}

@@ -2,8 +2,8 @@ include ../../../../include/Makefile
 
 INSTALLDEST = $(TAU_LIB_DIR)
 
-PATH  := $(JDKBINDIR):$(ANDROID_SDK)/build-tools/android-4.4:$(ANDROID_SDK)/platform-tools:$(PATH)
-JAVAC := javac -bootclasspath $(ANDROID_SDK)/platforms/android-19/android.jar 
+PATH  := $(JDKBINDIR):$(ANDROID_SDK)/build-tools/android-$(ANDROID_VERSION):$(ANDROID_SDK)/platform-tools:$(PATH)
+JAVAC := javac -bootclasspath $(ANDROID_SDK)/platforms/android-$(ANDROID_PLATFORM)/android.jar 
 
 dalvik_flags := -Xrunjdwp:server=y,transport=dt_android_adb
 

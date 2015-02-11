@@ -10,6 +10,22 @@
 
 Change log:
 ------------
+Version 2.24 changes (from 2.23):
+1. Reduced OpenMP profiling overhead and memory footprint.
+2. Include lists now work with tau_rewrite and MAQAO. 
+3. Impoved OMPT features with MPC. 
+4. Added support for 3D windows in ParaProf and PerfExplorer for Windows.
+5. External package dependencies resolved in configure. 
+6. Added support for DyninstAPI 8.2.1 (-boost=dir). 
+7. Updated support for Fujitsu K computer.
+8. Updated support for Score-P 1.3+ (--user). 
+9. Updated support for OpenSHMEM 1.0f. 
+10. Initial support for Android. 
+11. TAU Commander tool (tau) introduced. 
+12. Added support for tracking power (TAU_TRACK_POWER) with PAPI+PERF+RAPL. 
+13. Added support for OpenMP with GNU and Intel for MPC and TAU. 
+14. Added -optReuseFiles flag for hand-instrumentation, and speeding up header instrumentation.
+
 Version 2.23 changes (from 2.22):
 1. Added support for OpenMP Tools API (OMPT). 
 2. Added support for markers (events triggered when atomic events increase or decrease beyond a threshold). 
@@ -39,6 +55,12 @@ Version 2.23 changes (from 2.22):
 26. Added support for Intel MPC wrappers mpc_icc, mpc_icpc, mpc_ifort in configure. 
 27. Added support for Mellanox OpenSHMEM. 
 28. Added OpenCL support for Apple. 
+29. Added support for MPC's OMPT.
+30. Added support for OpenMPI SHMEM.
+31. Added support for Score-P 1.3.
+32. Added support for OpenSSL in TAUdb.
+33. Added support for Android. 
+34. Added support for DyninstAPI 8.2 with MPI.
 
 Version 2.22 changes (from 2.21):
 1. Added support for TAUdb (formerly PerfDMF).

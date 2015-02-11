@@ -107,6 +107,7 @@ struct HashTable : public TAU_HASH_MAP<key_type, HashNode*>
 // These static functions cause the initializer to be called
 // before we start working with the data structure
 
+#if 0
 // Prefered source of FunctionInfo pointers
 static HashTable & get_name_file_hashtable()
 {
@@ -122,6 +123,7 @@ static HashTable & get_name_only_hashtable()
   static HashTable htab;
   return htab;
 }
+#endif
 
 // Incremental string hashing function.
 // Uses Paul Hsieh's SuperFastHash, the same as in Google Chrome.
@@ -245,10 +247,13 @@ uint32_t get_filename_hash(uint32_t hash, char ** pdata, size_t * plen, bool * p
   }
 }
 
+extern "C" void Tau_profile_exit_all_threads(void);
+
 // Cleanup function
 extern "C" void runOnExit()
 {
   finished = true;
+  Tau_profile_exit_all_threads();
   Tau_destructor_trigger();
 }
 
@@ -372,6 +377,9 @@ extern "C" void __func_trace_enter(char * name, char * fname, int lno, void ** c
     key_type name_key, key;
     name_key = get_name_hash(0, &name, &nlen, &excluded);
     key = get_filename_hash(name_key, &fname, &flen, &excluded);
+    if (key == 0) {
+      TAU_VERBOSE("Warning: Filename hash is zero: %s\n", fname);
+    }
     size_t size = nlen + flen + 32;
     char * buff = (char*)malloc(size);
     snprintf(buff, size, "%s [{%s} {%d,0}]", name, fname, lno);
