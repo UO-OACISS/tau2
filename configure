@@ -894,6 +894,7 @@ dmapp=no
 zepto=no
 zeptodir=
 cuda=no
+use_opencl=no
 cupti=no
 strsignal_ok=no
 android_version=4.4
@@ -2127,6 +2128,7 @@ for arg in "$@"; do
 
 	-DISABLE_OPENCL)
 	    opencl=disable
+            use_opencl=no
 	    shift
 	    ;;
 
@@ -2138,6 +2140,7 @@ for arg in "$@"; do
 		  echo "Adding -useropt=-framework openCL"
 		  useropt="-framework#openCL"
 		  fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU "
+                  use_opencl=yes
 		else
 		  exit 1
 		fi
@@ -2145,6 +2148,7 @@ for arg in "$@"; do
 	    if [ -f "$openclinclude/CL/cl.h" ] ; then
 		#			useropt="$useropt#-DTAU_MAX_THREADS=32"
 		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
+                use_opencl=yes
 	    else
 		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
 	    fi
@@ -3461,8 +3465,11 @@ then
 	if [ $machine = bgq -o $machine = bgp ]; then
             c_compiler=mpicc
             cxx_compiler=mpicxx
-	    gnu=yes
-	    tauoptions="${tauoptions}-gnu"
+            is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l`
+            if [ $is_gnu_compiler = 1 ]; then
+              gnu=yes
+              tauoptions="${tauoptions}-gnu"
+            fi
 	else 
 	    # All other machines besides IBM BG*
             is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
@@ -6262,9 +6269,9 @@ else
         fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
     fi
     # Clean up
-    rm -f openmpi3const.c openmpi3const.o a.out 
   fi
-fi
+fi            
+rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out 
 
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
@@ -7807,6 +7814,7 @@ EOF
 		    if $cxx_compiler -I$cudainclude -c opencl.cpp 1>/dev/null 2>&1 ; then
 			echo "yes"
 			fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+                        use_opencl=yes
 		    else
 			echo "no"
 		    fi
@@ -8273,6 +8281,23 @@ if [ $scorep = yes ] ; then
       scorep_adapter="$scorep_adapter --nocuda"
     fi
 
+    scorep_supports_opencl=no
+    if [ -x $scorepdir/bin/scorep-config ]; then
+       retval=`$scorepdir/bin/scorep-config --noopencl &>/dev/null `
+       if [ $? == 0 ]; then 
+         scorep_supports_opencl=yes
+         echo "NOTE: Score-P's scorep-config supports --noopencl option"
+       fi
+    fi
+
+    if [ $scorep_supports_opencl = yes ]; then 
+       if [ $use_opencl = no ] ; then 
+         scorep_adapter="$scorep_adapter --noopencl"
+       else
+         scorep_adapter="$scorep_adapter --opencl"
+       fi
+    fi
+    
     if [ $shmem = yes ]; then 
       scorep_adapter="$scorep_adapter --mpp=shmem"
     fi
