@@ -68,7 +68,7 @@
 
 #ifdef __cplusplus
 
-#ifdef HAVE_TR1_HASH_MAP
+#if (defined(HAVE_TR1_HASH_MAP) && !(defined(TAU_CLANG)))
 #include <tr1/unordered_map>
 #define TAU_HASH_MAP std::tr1::unordered_map
 #else

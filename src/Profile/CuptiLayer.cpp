@@ -7,7 +7,6 @@
 // Moved from header file
 using namespace std;
 
-
 #if CUPTI_API_VERSION >= 2
 
 #ifdef FALSE
@@ -221,7 +220,8 @@ void Tau_CuptiLayer_init()
 #endif
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
 		CUresult cuErr = CUDA_SUCCESS;
-
+		CUpti_DeviceAttributeDeviceClass deviceClass;
+		size_t deviceClassSize = sizeof deviceClass;
     //int device_count;
     //cuDeviceGetCount(&device_count);
 	  //for (int currentDeviceID = 0; currentDeviceID < device_count; currentDeviceID++)
@@ -317,8 +317,20 @@ void Tau_CuptiLayer_init()
         printf("TAU ERROR: CUDA Event collection not available for devices with compute capability less than 2.0.\n");
     }
     
-    
-    cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_CONTINUOUS);
+    cuptiErr = cuptiDeviceGetAttribute(device, CUPTI_DEVICE_ATTR_DEVICE_CLASS, &deviceClassSize, &deviceClass);
+    CHECK_CUPTI_ERROR(cuptiErr, "cuptiDeviceGetAttribute");
+
+#if CUDA_VERSION >= 6500
+    cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL);
+#else
+    if (deviceClass != CUPTI_DEVICE_ATTR_DEVICE_CLASS_TESLA) {
+      printf("Event collection mode _CONTINUOUS is supported only on Tesla GPUs.\n");
+      cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL);
+    }
+    else {
+      cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_CONTINUOUS);
+    }
+#endif
 	CHECK_CUPTI_ERROR( cuptiErr, "cuptiSetEventCollectionMode" );
 		
 		lastDataBuffer = (uint64_t*) malloc
@@ -557,6 +569,8 @@ uint64_t Tau_CuptiLayer_read_counter(int id)
 
 int Tau_CuptiLayer_Initialize_callbacks()
 {
+
+
 	typedef void (*Tau_cupti_onload_p) ();
   static Tau_cupti_onload_p Tau_cupti_onload_h = NULL;
 

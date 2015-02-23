@@ -10,6 +10,7 @@ static void *tau_handle = NULL;
 
 static int subscribed = 0;
 
+
 /* BEGIN: unified memory */
 #define CUPTI_CALL(call)                                                    \
 do {                                                                        \
@@ -125,6 +126,7 @@ void Tau_cupti_subscribe()
     err = cuptiActivityRegisterCallbacks(Tau_cupti_register_buffer_creation, Tau_cupti_register_sync_event);
     CUPTI_CHECK_ERROR(err, "cuptiActivityRegisterCallbacks");
 #else
+
     Tau_cupti_register_buffer_creation(&activityBuffer, &size, &maxRecords);
 	err = cuptiActivityEnqueueBuffer(NULL, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
 	CUPTI_CHECK_ERROR(err, "cuptiActivityEnqueueBuffer");
@@ -173,7 +175,7 @@ void Tau_cupti_onload()
     	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
 	
-	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
+    	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
 	
 #if CUDA_VERSION >= 5050
@@ -211,84 +213,77 @@ void Tau_cupti_onload()
 #endif //CUPTI_API_VERSIOn >= 3
 
   if(TauEnv_get_cuda_track_unified_memory()) {
-#if CUDA_VERSION >= 6000
-    /* Unified Virtual Memory fully supported in 6.0 and 6.5, but still in beta for 7.0.
-       For 7.0 (Early Access):
-       -  CPU_PAGE_FAULT_COUNT event not supported
-       -  Activity Record redefined (added start, end, streamId; removed timestamp, deviceId)
-       -  CUDA_VISIBLE_DEVICES environment needs to be set with device ID for UVM-supported GPU
-          (config.deviceID deprecated, TODO:  toggle in TauEnv.cpp)
-       Unified Memory off by default (pass -uvm to tau_exec to track).
-    */
-    CUptiResult res;
-    int count = 0;
-    int dev = -1;
-    cudaDeviceProp deviceProp;
-#if CUDA_VERSION < 7000
-    CUpti_ActivityUnifiedMemoryCounterConfig config[3];
-#else
-    // char snum[5];
-    CUpti_ActivityUnifiedMemoryCounterConfig config[2];
-#endif
-    cuInit(0);
-    cudaGetDeviceCount(&count);
-    for(int i = 0; i < count; i++) {
-      cudaGetDeviceProperties(&deviceProp, i);
-      if(deviceProp.unifiedAddressing) {
-	dev = i;
-// #if CUDA_VERSION >= 7000
-// 	sprintf(snum, "%i", dev);
-// 	setenv("CUDA_VISIBLE_DEVICES", snum, true);
-// 	printf("CUDA_VISIBLE_DEVICES set to %i\n", dev);
-// #endif
-#ifdef TAU_DEBUG_CUPTI
-	printf("Using Device %d: %s, unifiedAddressing: %i\n", dev, deviceProp.name, deviceProp.unifiedAddressing);
-#endif
-	break;
-      }
-    }
-    if(dev != -1) 
-    {
-      config[0].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD;
-      config[0].enable = 1;    
-      config[1].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_DTOH;
-      config[1].enable = 1;
-#if CUDA_VERSION < 7000
-      config[0].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
-      config[0].deviceId = dev;
-      config[1].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
-      config[1].deviceId = dev;
-      config[2].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_CPU_PAGE_FAULT_COUNT;
-      config[2].enable = 1;
-      config[2].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
-      config[2].deviceId = dev;
-#endif
 #if CUDA_VERSION >= 7000
-      res = cuptiActivityConfigureUnifiedMemoryCounter(config, 2);
-      if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED) {
-        printf("Test is waived, unified memory is not supported on the underlying platform.\n");
-      }
-      else if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED_ON_DEVICE) {
-        printf("Test is waived, unified memory is not supported on the device.\n");
-      }
-      else if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED_ON_NON_P2P_DEVICES) {
-        printf("Test is waived, unified memory is not supported on the non-P2P multi-gpu setup.\n");
-      }
-#else
-      res = cuptiActivityConfigureUnifiedMemoryCounter(config, 3);
-      if (res == CUPTI_ERROR_NOT_SUPPORTED) {
-	printf("Compute capability for current device does not support Unified Memory. Skip UnifMem config.\n");
-      }
-#endif
-      else {
-	CUPTI_CALL(res);
-      }
-      // enable unified memory counter activity
-      CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+    CUptiResult res;
+    CUpti_ActivityUnifiedMemoryCounterConfig config[2];
+    CUresult er;
+    cuInit(0);
+
+    // configure unified memory counters
+    config[0].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[0].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD;
+    config[0].deviceId = 0;
+    config[0].enable = 1;
+
+    config[1].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[1].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_DTOH;
+    config[1].deviceId = 0;
+    config[1].enable = 1;
+
+    res = cuptiActivityConfigureUnifiedMemoryCounter(config, 2);
+    if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED) {
+      printf("Test is waived, unified memory is not supported on the underlying platform.\n");
     }
-    else
-      printf("Device does not support Unified Memory. Skip UnifMem config.\n");
+    else if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED_ON_DEVICE) {
+      printf("Test is waived, unified memory is not supported on the device.\n");
+    }
+    else if (res == CUPTI_ERROR_UM_PROFILING_NOT_SUPPORTED_ON_NON_P2P_DEVICES) {
+      printf("Test is waived, unified memory is not supported on the non-P2P multi-gpu setup.\n");
+    }
+    else {
+      CUPTI_CALL(res);
+    }
+
+    // enable unified memory counter activity
+    CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+
+#elif CUDA_VERSION >= 6000 && CUDA_VERSION <= 6050
+    CUptiResult res;
+    CUpti_ActivityUnifiedMemoryCounterConfig config[3];
+
+    cuInit(0);
+
+    // configure unified memory counters
+    config[0].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[0].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_HTOD;
+    config[0].deviceId = 0;
+    config[0].enable = 1;
+
+    config[1].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[1].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_BYTES_TRANSFER_DTOH;
+    config[1].deviceId = 0;
+    config[1].enable = 1;
+
+    config[2].scope = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_SCOPE_PROCESS_SINGLE_DEVICE;
+    config[2].kind = CUPTI_ACTIVITY_UNIFIED_MEMORY_COUNTER_KIND_CPU_PAGE_FAULT_COUNT;
+    config[2].deviceId = 0;
+    config[2].enable = 1;
+
+    res = cuptiActivityConfigureUnifiedMemoryCounter(config, 3);
+    if (res == CUPTI_ERROR_NOT_SUPPORTED) {
+      printf("Test is waived, unified memory is not supported on the underlying platform.\n");
+    }
+    else {
+      CUPTI_CALL(res);
+    }
+
+    // enable unified memory counter activity
+    CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+
+#else
+    printf("Unified memory supported only in CUDA 6.0 and over.\n");
 #endif
+
   }
   
   CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
@@ -305,6 +300,10 @@ void Tau_cupti_onload()
 }
 
 void Tau_cupti_onunload() {
+  if(TauEnv_get_cuda_track_unified_memory()) {
+    CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+  }
+
 }
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
@@ -333,6 +332,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			printf("TAU: Resource created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, 0);
 #endif
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
+
 			err = cuptiActivityEnqueueBuffer(resource->context, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in context.\n");
 		}
@@ -346,6 +346,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 #ifdef TAU_DEBUG_CUPTI
 			printf("TAU: Stream created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, stream);
 #endif
+
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 			err = cuptiActivityEnqueueBuffer(resource->context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in stream.\n");
@@ -614,6 +615,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 #ifdef TAU_ASYNC_ACTIVITY_API
     free(activityBuffer);
 #else
+
 		//Need to requeue buffer by context, stream.
 		err = cuptiActivityEnqueueBuffer(context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 #endif
@@ -667,7 +669,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
   
-	//printf("in record activity, kind: %d\n", record->kind);
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 #if CUDA_VERSION >= 5050
@@ -797,8 +798,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       uint64_t end;
       uint64_t value;
       int direction = MESSAGE_UNKNOWN;
-      
       CUpti_ActivityUnifiedMemoryCounter *umemcpy = (CUpti_ActivityUnifiedMemoryCounter *)record;
+      
 #ifdef TAU_DEBUG_CUPTI
 #if CUDA_VERSION >= 7000
       printf("UNIFIED_MEMORY_COUNTER [ %llu %llu ] kind=%s value=%llu src %u dst %u, streamId=%u\n",
@@ -917,11 +918,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         streamId = kernel->streamId;
         contextId = kernel->contextId;
         correlationId = kernel->correlationId;
-        runtimeCorrelationId = kernel->runtimeCorrelationId;
-#if CUDA_VERSION >= 5050
+#if CUDA_VERSION >= 7000
+        runtimeCorrelationId = correlationId;
         gridId = kernel->gridId;
+#elif CUDA_VERSION >= 5050 && CUDA_VERSION <= 6500
+        gridId = kernel->gridId;
+        runtimeCorrelationId = kernel->runtimeCorrelationId;
 #else
         gridId = 0;
+        runtimeCorrelationId = correlationId;
 #endif
         start = kernel->start;
         end = kernel->end;
@@ -1119,7 +1124,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         uint32_t id;
         if (cupti_api_runtime())
         {
+	  #if CUDA_VERSION >= 6000 && CUDA_VERSION <= 6500
           id = kernel->runtimeCorrelationId;
+	  #else
+	  id = kernel->correlationId;
+	  #endif
         }
         else
         {

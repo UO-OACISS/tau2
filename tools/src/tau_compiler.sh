@@ -1423,7 +1423,7 @@ if [ $numFiles == 0 ]; then
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
     if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
-      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g' -e 's/-lunwind / /g'`
       linkCmd="$linkCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
       echoIfDebug "Linking command is $linkCmd"
     fi
