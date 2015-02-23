@@ -3480,7 +3480,7 @@ then
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" ]; then
-		mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpilibrary=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
             fi
             full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
             full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
@@ -4201,6 +4201,10 @@ then
 	fixmakeargs="$fixmakeargs THREADSAFE_COMPILERS"
 	threadsafe=yes
     fi
+fi
+
+if [ $machine = apple -a $cxx_compiler = icpc ] ; then
+  fixmakeargs="$fixmakeargs APPLEINTEL"
 fi
 
 if [ $mpi = yes -a "x$mpiinc" = "x" ] 
