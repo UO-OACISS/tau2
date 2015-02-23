@@ -2809,12 +2809,12 @@ case $machine in
 	;;
 
     apple) 
-	if [ "$cxx_compiler = default" ]
+	if [ "$cxx_compiler" = "default" ]
 	then
             cxx_compiler=g++
 	fi
 
-	if [ "$c_compiler = default" ]
+	if [ "$c_compiler" = "default" ]
 	then
             c_compiler=gcc             
 	fi
@@ -5185,12 +5185,12 @@ cat << EOF > gccAuditorTest.c
 EOF
 
 $host_prefix$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
-if [ "$?" = "1" ]
+if [ "$?" = "0" ]
 then
-    echo "LD AUDITOR unavailable, disabling" 
-else
     echo "Using LD AUDITOR."
     fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
+else
+    echo "LD AUDITOR unavailable, disabling" 
 fi
 /bin/rm -f gccAuditorTest.*
 
