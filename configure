@@ -5172,6 +5172,12 @@ then
     taugcclibdir=`$host_prefix$c_compiler -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
     echo "Using GNU lib dir as $taugcclibdir"
     taugccstdcxxlibdir=`$host_prefix$c_compiler -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
+    if [ $machine = apple -a "x$taugcclibdir" = "x" -a "x$taugccstdcxxlibdir" = "x" ]; then
+# if it is blank, please use TAU libs so we don't have a -L<blank> -lgcc_s.1 
+      taugcclibdir=${tauroot}/${machine}/lib
+      taugccstdcxxlibdir=${tauroot}/${machine}/lib
+      echo "taugcclibdir = $taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir"
+    fi
     echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
@@ -9118,15 +9124,12 @@ exampleslist="instrument/Makefile mapping/embedded/Makefile \
 
 if [ "x$fortran_compiler" != "xno" ] ; then
     exampleslist="$exampleslist fortran/Makefile f90/Makefile"
-fi
-
-if [ $fortran_compiler != no ] ; then
     echo "s@.*TAU_MAKEFILE_FORTRAN=\(.*\)@TAU_MAKEFILE_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
 fi
 
 if [ $mpi = yes ] ; then
     echo "s@.*TAU_MAKEFILE_MPI=\(.*\)@TAU_MAKEFILE_MPI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
-    if [ $fortran_compiler != no ] ; then
+    if [ "$fortran_compiler" != "no" ] ; then
 	echo "s@.*TAU_MAKEFILE_MPI_FORTRAN=\(.*\)@TAU_MAKEFILE_MPI_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
     if [ $pdt = yes ] ; then
@@ -9173,7 +9176,7 @@ if [ $pdt = yes ] ; then
     if [ $opari1 = yes -o $opari = yes ] ; then
 	echo "s@.*TAU_MAKEFILE_PDT_OPARI=\(.*\)@TAU_MAKEFILE_PDT_OPARI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
-    if [ $fortran_compiler != no ] ; then
+    if [ "$fortran_compiler" != "no" ] ; then
 	echo "s@.*TAU_MAKEFILE_PDT_FORTRAN=\(.*\)@TAU_MAKEFILE_PDT_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
 fi
