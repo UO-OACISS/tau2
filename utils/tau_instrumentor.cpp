@@ -306,8 +306,8 @@ void mergeInstrumentationRequests(vector<itemRef *>& itemvec)
 {
   vector<itemRef *>::iterator i = itemvec.begin()+1;
   while (i < itemvec.end()) {
-    itemRef * item1 = *i;
-    itemRef * item2 = *(i-1);
+    itemRef * item1 = *(i-1);
+    itemRef * item2 = *i;
 
     if (item1->kind == item2->kind && item1->line == item2->line && item1->col == item2->col) {
       switch(item1->kind) {
