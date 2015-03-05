@@ -213,15 +213,14 @@ void Tau_CuptiLayer_init()
 	//if (!Tau_CuptiLayer_Added_counters.empty() && !Tau_CuptiLayer_is_initialized())
 	CUdevice device;
   cuCtxGetDevice(&device);
+  CUptiResult cuptiErr = CUPTI_SUCCESS;
+  CUresult cuErr = CUDA_SUCCESS;
+
   if (!initialized[device] && Tau_CuptiLayer_Added_counters.size() > 0)
 	{
 #ifdef TAU_DEBUG_CUPTI
 		printf("in Tau_CuptiLayer_init, device = %d.\n");
 #endif
-		CUptiResult cuptiErr = CUPTI_SUCCESS;
-		CUresult cuErr = CUDA_SUCCESS;
-		CUpti_DeviceAttributeDeviceClass deviceClass;
-		size_t deviceClassSize = sizeof deviceClass;
     //int device_count;
     //cuDeviceGetCount(&device_count);
 	  //for (int currentDeviceID = 0; currentDeviceID < device_count; currentDeviceID++)
@@ -316,20 +315,24 @@ void Tau_CuptiLayer_init()
         //Events are reset on kernel launch for compute < 2.0.
         printf("TAU ERROR: CUDA Event collection not available for devices with compute capability less than 2.0.\n");
     }
-    
-    cuptiErr = cuptiDeviceGetAttribute(device, CUPTI_DEVICE_ATTR_DEVICE_CLASS, &deviceClassSize, &deviceClass);
-    CHECK_CUPTI_ERROR(cuptiErr, "cuptiDeviceGetAttribute");
+
 
 #if CUDA_VERSION >= 6500
-    cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL);
-#else
-    if (deviceClass != CUPTI_DEVICE_ATTR_DEVICE_CLASS_TESLA) {
-      printf("Event collection mode _CONTINUOUS is supported only on Tesla GPUs.\n");
+
+    // CUpti_DeviceAttributeDeviceClass deviceClass;
+    // size_t deviceClassSize = sizeof deviceClass;
+    
+    // cuptiErr = cuptiDeviceGetAttribute(device, CUPTI_DEVICE_ATTR_DEVICE_CLASS, &deviceClassSize, &deviceClass);
+    // CHECK_CUPTI_ERROR(cuptiErr, "cuptiDeviceGetAttribute");
+    // if (deviceClass != CUPTI_DEVICE_ATTR_DEVICE_CLASS_TESLA) {
+    //   printf("Event collection mode _CONTINUOUS is supported only on Tesla GPUs.\n");
       cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL);
-    }
-    else {
+    // }
+    // else {
+    //   cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_CONTINUOUS);
+    // }    
+#else
       cuptiErr = cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_CONTINUOUS);
-    }
 #endif
 	CHECK_CUPTI_ERROR( cuptiErr, "cuptiSetEventCollectionMode" );
 		
