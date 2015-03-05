@@ -894,6 +894,7 @@ dmapp=no
 zepto=no
 zeptodir=
 cuda=no
+use_opencl=no
 cupti=no
 strsignal_ok=no
 android_version=4.4
@@ -2127,6 +2128,7 @@ for arg in "$@"; do
 
 	-DISABLE_OPENCL)
 	    opencl=disable
+            use_opencl=no
 	    shift
 	    ;;
 
@@ -2138,6 +2140,7 @@ for arg in "$@"; do
 		  echo "Adding -useropt=-framework openCL"
 		  useropt="-framework#openCL"
 		  fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU "
+                  use_opencl=yes
 		else
 		  exit 1
 		fi
@@ -2145,6 +2148,7 @@ for arg in "$@"; do
 	    if [ -f "$openclinclude/CL/cl.h" ] ; then
 		#			useropt="$useropt#-DTAU_MAX_THREADS=32"
 		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
+                use_opencl=yes
 	    else
 		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
 	    fi
@@ -2805,12 +2809,12 @@ case $machine in
 	;;
 
     apple) 
-	if [ "$cxx_compiler = default" ]
+	if [ "$cxx_compiler" = "default" ]
 	then
             cxx_compiler=g++
 	fi
 
-	if [ "$c_compiler = default" ]
+	if [ "$c_compiler" = "default" ]
 	then
             c_compiler=gcc             
 	fi
@@ -3476,7 +3480,7 @@ then
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" ]; then
-		mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpilibrary=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
             fi
             full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
             full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
@@ -4197,6 +4201,10 @@ then
 	fixmakeargs="$fixmakeargs THREADSAFE_COMPILERS"
 	threadsafe=yes
     fi
+fi
+
+if [ $machine = apple -a $cxx_compiler = icpc ] ; then
+  fixmakeargs="$fixmakeargs APPLEINTEL"
 fi
 
 if [ $mpi = yes -a "x$mpiinc" = "x" ] 
@@ -5164,6 +5172,12 @@ then
     taugcclibdir=`$host_prefix$c_compiler -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
     echo "Using GNU lib dir as $taugcclibdir"
     taugccstdcxxlibdir=`$host_prefix$c_compiler -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
+    if [ $machine = apple -a "x$taugcclibdir" = "x" -a "x$taugccstdcxxlibdir" = "x" ]; then
+# if it is blank, please use TAU libs so we don't have a -L<blank> -lgcc_s.1 
+      taugcclibdir=${tauroot}/${machine}/lib
+      taugccstdcxxlibdir=${tauroot}/${machine}/lib
+      echo "taugcclibdir = $taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir"
+    fi
     echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
@@ -5181,12 +5195,12 @@ cat << EOF > gccAuditorTest.c
 EOF
 
 $host_prefix$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
-if [ "$?" = "1" ]
+if [ "$?" = "0" ]
 then
-    echo "LD AUDITOR unavailable, disabling" 
-else
     echo "Using LD AUDITOR."
     fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
+else
+    echo "LD AUDITOR unavailable, disabling" 
 fi
 /bin/rm -f gccAuditorTest.*
 
@@ -7164,7 +7178,13 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
-        sparc64fx)
+      apple)
+	export CFLAGS="-Wno-error=unused-value -Wno-error=deprecated-declarations -fPIC"
+	export CXXFLAGS="-Wno-error=unused-value -Wno-error=deprecated-declarations -fPIC"
+	./configure --prefix=$bfddir --disable-nls --disable-werror > tau_configure.log 2>&1
+	err=$?
+        ;;
+      sparc64fx)
         fccpxpath=`which fccpx | sed 's/\/bin\/fccpx$//'`
         if [ -r $fccpxpath/util/bin/sparc64-unknown-linux-gnu-ar ]; then
           echo "NOTE: Using ar from $fccpxpath/util/bin/sparc64-unknown-linux-gnu-ar"
@@ -7810,6 +7830,7 @@ EOF
 		    if $cxx_compiler -I$cudainclude -c opencl.cpp 1>/dev/null 2>&1 ; then
 			echo "yes"
 			fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+                        use_opencl=yes
 		    else
 			echo "no"
 		    fi
@@ -8276,6 +8297,23 @@ if [ $scorep = yes ] ; then
       scorep_adapter="$scorep_adapter --nocuda"
     fi
 
+    scorep_supports_opencl=no
+    if [ -x $scorepdir/bin/scorep-config ]; then
+       retval=`$scorepdir/bin/scorep-config --noopencl &>/dev/null `
+       if [ $? == 0 ]; then 
+         scorep_supports_opencl=yes
+         echo "NOTE: Score-P's scorep-config supports --noopencl option"
+       fi
+    fi
+
+    if [ $scorep_supports_opencl = yes ]; then 
+       if [ $use_opencl = no ] ; then 
+         scorep_adapter="$scorep_adapter --noopencl"
+       else
+         scorep_adapter="$scorep_adapter --opencl"
+       fi
+    fi
+    
     if [ $shmem = yes ]; then 
       scorep_adapter="$scorep_adapter --mpp=shmem"
     fi
@@ -9092,15 +9130,12 @@ exampleslist="instrument/Makefile mapping/embedded/Makefile \
 
 if [ "x$fortran_compiler" != "xno" ] ; then
     exampleslist="$exampleslist fortran/Makefile f90/Makefile"
-fi
-
-if [ $fortran_compiler != no ] ; then
     echo "s@.*TAU_MAKEFILE_FORTRAN=\(.*\)@TAU_MAKEFILE_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
 fi
 
 if [ $mpi = yes ] ; then
     echo "s@.*TAU_MAKEFILE_MPI=\(.*\)@TAU_MAKEFILE_MPI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
-    if [ $fortran_compiler != no ] ; then
+    if [ "$fortran_compiler" != "no" ] ; then
 	echo "s@.*TAU_MAKEFILE_MPI_FORTRAN=\(.*\)@TAU_MAKEFILE_MPI_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
     if [ $pdt = yes ] ; then
@@ -9147,7 +9182,7 @@ if [ $pdt = yes ] ; then
     if [ $opari1 = yes -o $opari = yes ] ; then
 	echo "s@.*TAU_MAKEFILE_PDT_OPARI=\(.*\)@TAU_MAKEFILE_PDT_OPARI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
-    if [ $fortran_compiler != no ] ; then
+    if [ "$fortran_compiler" != "no" ] ; then
 	echo "s@.*TAU_MAKEFILE_PDT_FORTRAN=\(.*\)@TAU_MAKEFILE_PDT_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
 fi
