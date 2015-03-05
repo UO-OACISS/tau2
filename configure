@@ -5775,8 +5775,8 @@ fi #unwind=download
 # Install Intel OpenMP runtime with OMPT if requested
 ######################################################################
 libomp_oss=libomp_oss
-libomp_osstgz=$libomp_oss.tar.gz
-libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
+libomp_osstgz=${libomp_oss}-2015-03-05.tar.gz
+libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/${libomp_osstgz}
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
 libomp_ossinc=${targetdir}/include
@@ -5828,37 +5828,42 @@ if [ "x$download_ompt" = xyes ] ; then
       cd $libomp_oss
       libomp_oss_log=build-dynamic.log
       specialflags=""
-      if [ $machine = mic_linux ] ; then
+      if [ "x$machine" = "xmic_linux" ] ; then
         libomp_oss_log=build-mic.log
         archarg="arch=mic"
         specialflags="CXXFLAGS=-D__MIC2__ CFLAGS=-D__MIC2__"
 	  fi
+
+      if [ "$cxx_compiler" != "icpc" ] ; then
+        ompt_compiler="compiler=gcc"
+      fi
+
 	  # fix the expected path for bin 
       cp tools/common.inc tmp.inc
       sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
       rm tmp.inc
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
-      make $specialflags $archarg > $libomp_oss_log 2>&1
+      make $specialflags $ompt_compiler $archarg > $libomp_oss_log 2>&1
       result=$?
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
         cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
-        cp src/ompt.h ${libomp_ossinc}/.
-        cp src/ompt-event.h ${libomp_ossinc}/.
-        cp src/ompt-state.h ${libomp_ossinc}/.
-        cp src/ompt.h ${START_DIR}/include/.
-        cp src/ompt-event.h ${START_DIR}/include/.
-        cp src/ompt-state.h ${START_DIR}/include/.
+        cp exports/common/include/ompt.h ${libomp_ossinc}/.
+        #cp src/ompt-event.h ${libomp_ossinc}/.
+        #cp src/ompt-state.h ${libomp_ossinc}/.
+        cp exports/common/include/ompt.h ${START_DIR}/include/.
+        #cp src/ompt-event.h ${START_DIR}/include/.
+        #cp src/ompt-state.h ${START_DIR}/include/.
         echo "...Success."
       else
         if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
           cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
-          cp src/ompt.h ${libomp_ossinc}/.
-          cp src/ompt-event.h ${libomp_ossinc}/.
-          cp src/ompt-state.h ${libomp_ossinc}/.
-          cp src/ompt.h ${START_DIR}/include/.
-          cp src/ompt-event.h ${START_DIR}/include/.
-          cp src/ompt-state.h ${START_DIR}/include/.
+          cp exports/common/include/ompt.h ${libomp_ossinc}/.
+          #cp src/ompt-event.h ${libomp_ossinc}/.
+          #cp src/ompt-state.h ${libomp_ossinc}/.
+          cp exports/common/include/ompt.h ${START_DIR}/include/.
+          #cp src/ompt-event.h ${START_DIR}/include/.
+          #cp src/ompt-state.h ${START_DIR}/include/.
           echo "...Success."
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
@@ -5868,29 +5873,29 @@ if [ "x$download_ompt" = xyes ] ; then
       fi
 
       # only build the dynamic version for now
-      if [ ${architecture} == "craycnl" ] ; then
+      if [ "${architecture}" = "craycnl" ] ; then
         libomp_oss_log=build-static.log
         echo "building static $libomp_oss... (see `pwd`/${libomp_oss_log} for log)"
-        make linktype=static $specialflags $archarg > $libomp_oss_log 2>&1
+        make linktype=static $ompt_compiler $specialflags $archarg > $libomp_oss_log 2>&1
         signature=`ls -tr tmp | grep rel | grep sta | tail -1`
         if [ $result -eq 0 ] ; then
           cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
-          cp src/ompt.h ${libomp_ossinc}/.
-          cp src/ompt-event.h ${libomp_ossinc}/.
-          cp src/ompt-state.h ${libomp_ossinc}/.
-          cp src/ompt.h ${START_DIR}/include/.
-          cp src/ompt-event.h ${START_DIR}/include/.
-          cp src/ompt-state.h ${START_DIR}/include/.
+          cp exports/common/include/ompt.h ${libomp_ossinc}/.
+          #cp src/ompt-event.h ${libomp_ossinc}/.
+          #cp src/ompt-state.h ${libomp_ossinc}/.
+          cp exports/common/include/ompt.h ${START_DIR}/include/.
+          #cp src/ompt-event.h ${START_DIR}/include/.
+          #cp src/ompt-state.h ${START_DIR}/include/.
           echo "...Success."
         else
           if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
             cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
-            cp src/ompt.h ${libomp_ossinc}/.
-            cp src/ompt-event.h ${libomp_ossinc}/.
-            cp src/ompt-state.h ${libomp_ossinc}/.
-            cp src/ompt.h ${START_DIR}/include/.
-            cp src/ompt-event.h ${START_DIR}/include/.
-            cp src/ompt-state.h ${START_DIR}/include/.
+            cp exports/common/include/ompt.h ${libomp_ossinc}/.
+            #cp src/ompt-event.h ${libomp_ossinc}/.
+            #cp src/ompt-state.h ${libomp_ossinc}/.
+            cp exports/common/include/ompt.h ${START_DIR}/include/.
+            #cp src/ompt-event.h ${START_DIR}/include/.
+            #cp src/ompt-state.h ${START_DIR}/include/.
             echo "...Success."
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
