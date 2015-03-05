@@ -12,8 +12,9 @@
   #include <lomp/omp.h>
  #elif defined(__ICC) || defined(__INTEL_COMPILER)
   // check for intel second
-  #define OMPT_VERSION 1 // someday we will update this, but in the meantime...
-  #define BROKEN_CPLUSPLUS_INTERFACE
+  #define OMPT_VERSION 3 // someday we will update this, but in the meantime...
+  #define STATES_ARE_TYPE_INT
+  #define GOMP_USING_INTEL_RUNTIME
  #elif defined(TAU_MPC) 
   // check for MPC support
   #define OMPT_VERSION 3
