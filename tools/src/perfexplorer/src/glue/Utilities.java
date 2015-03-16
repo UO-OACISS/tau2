@@ -303,7 +303,10 @@ public class Utilities {
 	private static PerfExplorerServer getServer(String configName, String tauHome) {
 		String home = System.getProperty("user.home");
 		String slash = System.getProperty("file.separator");
-		String configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg." + configName;
+		String configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg";
+		if(configName!=null&&configName.length()>0){
+			configFile=configFile+"." + configName;
+		}
 		return PerfExplorerServer.getServer(configFile, tauHome, "");
 	}
 
@@ -325,7 +328,7 @@ public class Utilities {
 				server.setConnectionIndex(i);
 //				System.out.println(server.getConnectionString());
 				String tmpname = (String)configNames.get(i);
-				if (tmpname.equals(name)) {
+				if (tmpname.equals(name)||((name==null||name.length()==0)&&tmpname.endsWith("/perfdmf.cfg"))) {
 					// getting the schema version forces the connection to be made
 					server.getSchemaVersion(i);
 //					System.out.println("selected: " + server.getConnectionString());
