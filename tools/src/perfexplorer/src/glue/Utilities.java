@@ -320,9 +320,15 @@ public class Utilities {
 		return frame;
 	}
 
+	private static boolean isSet=false;
 	public static int setSession (String name) {
 		try {
+			
+			if(isSet){
+				PerfExplorerServer.hardResetServer();
+			}
 			PerfExplorerServer server = getServer(name, "");
+			isSet=true;
 			List<String> configNames = server.getConfigNames();
 			for (int i = 0 ; i < server.getSessionCount() ; i++) {
 				server.setConnectionIndex(i);

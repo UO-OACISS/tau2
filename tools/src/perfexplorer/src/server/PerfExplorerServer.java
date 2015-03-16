@@ -162,6 +162,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		getServer(configFile, tauHome, tauArch);
 	}
 	
+	public static void hardResetServer(){
+		PerfExplorerServer.theServer=null;
+	}
+	
 	/**
 	 * Private constructor, which uses the PerfDMF configuration file to
 	 * connect to the PerfDMF database.  A semaphore is also created to 
