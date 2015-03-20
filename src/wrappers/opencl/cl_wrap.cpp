@@ -1242,6 +1242,7 @@ cl_int clGetKernelWorkGroupInfo(cl_kernel a1, cl_device_id a2, cl_kernel_work_gr
 
 }
 
+#ifdef TAU_ENABLE_CL_WAIT_FOR_EVENTS
 cl_int clWaitForEvents(cl_uint a1, const cl_event * a2) {
 
   typedef cl_int (*clWaitForEvents_p) (cl_uint, const cl_event *);
@@ -1272,6 +1273,7 @@ cl_int clWaitForEvents(cl_uint a1, const cl_event * a2) {
   return retval;
 
 }
+#endif /* TAU_ENABLE_CL_WAIT_FOR_EVENTS */
 
 cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2) {
 

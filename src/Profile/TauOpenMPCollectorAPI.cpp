@@ -12,12 +12,19 @@
   #include <lomp/omp.h>
  #elif defined(__ICC) || defined(__INTEL_COMPILER)
   // check for intel second
-  #define OMPT_VERSION 1 // someday we will update this, but in the meantime...
-  #define BROKEN_CPLUSPLUS_INTERFACE
+  #define OMPT_VERSION 3 // someday we will update this, but in the meantime...
+  #define STATES_ARE_TYPE_INT
+  #define GOMP_USING_INTEL_RUNTIME
  #elif defined(TAU_MPC) 
   // check for MPC support
   #define OMPT_VERSION 3
   #define BROKEN_CPLUSPLUS_INTERFACE
+ #elif !defined (TAU_OPEN64ORC) && !defined (TAU_MPC) && \
+     (defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__))
+  // check for GOMP using Intel's runtime support
+  #define OMPT_VERSION 3
+  #define STATES_ARE_TYPE_INT
+  #define GOMP_USING_INTEL_RUNTIME
  #else 
   // all else
   #define OMPT_VERSION 3
@@ -96,7 +103,7 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = 
 static std::map<unsigned long, char*> region_names;
 static std::map<unsigned long, char*> task_names;
 
-#ifdef TAU_MPC
+#if defined(TAU_MPC) || defined(GOMP_USING_INTEL_RUNTIME)
 //static sctk_thread_mutex_t writelock = SCTK_THREAD_MUTEX_INITIALIZER;
 //#define TAU_OPENMP_SET_LOCK sctk_thread_mutex_lock(&writelock)
 //#define TAU_OPENMP_UNSET_LOCK sctk_thread_mutex_lock(&writelock)
@@ -1311,7 +1318,7 @@ extern "C" void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t t
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
-  /*TAU_VERBOSE("New Entry: parallel_id = %lu, task_id = %lu %s\n", parallel_id, task_id, NAME); fflush(stderr); */\
+  /* TAU_VERBOSE("New Entry: parallel_id = %lu, task_id = %lu %s\n", parallel_id, task_id, NAME); fflush(stderr); */ \
   Tau_omp_start_timer(NAME, tid, 1, 0, false); \
   Tau_collector_flags[tid].looping=1; \
   TAU_OMPT_COMMON_EXIT; \
@@ -1321,6 +1328,7 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
+  /* TAU_VERBOSE("End loop: parallel_id = %lu, task_id = %lu %s\n", parallel_id, task_id, NAME); fflush(stderr); */ \
   if (Tau_collector_flags[tid].looping==1) { \
   Tau_omp_stop_timer(NAME, tid, 1,false); } \
   Tau_collector_flags[tid].looping=0; \
@@ -1332,6 +1340,7 @@ extern "C" void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t t
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
+  /* TAU_VERBOSE("%d Workshare begin: parallel_id = %lu, task_id = %lu %s, %p\n", tid, parallel_id, task_id, NAME, parallel_function); fflush(stderr); */ \
   Tau_get_current_region_context(tid, (unsigned long)parallel_function, false); \
   Tau_omp_start_timer(NAME, tid, 1, 0, false); \
   TAU_OMPT_COMMON_EXIT; \
@@ -1341,6 +1350,7 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
+  /* TAU_VERBOSE("%d Workshare end: parallel_id = %lu, task_id = %lu %s\n", tid, parallel_id, task_id, NAME); fflush(stderr); */ \
   Tau_omp_stop_timer(NAME, tid, 1,false); \
   TAU_OMPT_COMMON_EXIT; \
 }
@@ -1464,7 +1474,9 @@ int __ompt_initialize() {
 #ifdef TAU_MPC
   check_local_tid();
 #endif
+#ifndef GOMP_USING_INTEL_RUNTIME // this causes probems with locks before the runtime is ready.
   Tau_init_initializeTAU();
+#endif
   if (initialized || initializing) return 0;
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
@@ -1623,7 +1635,7 @@ int __ompt_initialize() {
     // now, for the collector API support, create the OpenMP states.
     // preallocate State timers. If we create them now, we won't run into
     // malloc issues later when they are required during signal handling.
-#ifdef BROKEN_CPLUSPLUS_INTERFACE // the C/C++ interface is broken. :( Can't do function pointers
+#if defined(BROKEN_CPLUSPLUS_INTERFACE) || defined(STATES_ARE_TYPE_INT)
     int current_state = ompt_state_work_serial;
     int next_state;
 #else
