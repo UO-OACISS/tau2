@@ -2809,12 +2809,12 @@ case $machine in
 	;;
 
     apple) 
-	if [ "$cxx_compiler = default" ]
+	if [ "$cxx_compiler" = "default" ]
 	then
             cxx_compiler=g++
 	fi
 
-	if [ "$c_compiler = default" ]
+	if [ "$c_compiler" = "default" ]
 	then
             c_compiler=gcc             
 	fi
@@ -3480,7 +3480,7 @@ then
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" ]; then
-		mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpilibrary=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
             fi
             full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
             full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
@@ -4201,6 +4201,10 @@ then
 	fixmakeargs="$fixmakeargs THREADSAFE_COMPILERS"
 	threadsafe=yes
     fi
+fi
+
+if [ $machine = apple -a $cxx_compiler = icpc ] ; then
+  fixmakeargs="$fixmakeargs APPLEINTEL"
 fi
 
 if [ $mpi = yes -a "x$mpiinc" = "x" ] 
@@ -5168,6 +5172,12 @@ then
     taugcclibdir=`$host_prefix$c_compiler -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
     echo "Using GNU lib dir as $taugcclibdir"
     taugccstdcxxlibdir=`$host_prefix$c_compiler -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
+    if [ $machine = apple -a "x$taugcclibdir" = "x" -a "x$taugccstdcxxlibdir" = "x" ]; then
+# if it is blank, please use TAU libs so we don't have a -L<blank> -lgcc_s.1 
+      taugcclibdir=${tauroot}/${machine}/lib
+      taugccstdcxxlibdir=${tauroot}/${machine}/lib
+      echo "taugcclibdir = $taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir"
+    fi
     echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
@@ -5185,12 +5195,12 @@ cat << EOF > gccAuditorTest.c
 EOF
 
 $host_prefix$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
-if [ "$?" = "1" ]
+if [ "$?" = "0" ]
 then
-    echo "LD AUDITOR unavailable, disabling" 
-else
     echo "Using LD AUDITOR."
     fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
+else
+    echo "LD AUDITOR unavailable, disabling" 
 fi
 /bin/rm -f gccAuditorTest.*
 
@@ -5779,8 +5789,8 @@ fi #unwind=download
 # Install Intel OpenMP runtime with OMPT if requested
 ######################################################################
 libomp_oss=libomp_oss
-libomp_osstgz=$libomp_oss.tar.gz
-libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libomp_osstgz
+libomp_osstgz=${libomp_oss}-2015-03-05.tar.gz
+libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/${libomp_osstgz}
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
 libomp_ossinc=${targetdir}/include
@@ -5832,37 +5842,42 @@ if [ "x$download_ompt" = xyes ] ; then
       cd $libomp_oss
       libomp_oss_log=build-dynamic.log
       specialflags=""
-      if [ $machine = mic_linux ] ; then
+      if [ "x$machine" = "xmic_linux" ] ; then
         libomp_oss_log=build-mic.log
         archarg="arch=mic"
         specialflags="CXXFLAGS=-D__MIC2__ CFLAGS=-D__MIC2__"
 	  fi
+
+      if [ "$cxx_compiler" != "icpc" ] ; then
+        ompt_compiler="compiler=gcc"
+      fi
+
 	  # fix the expected path for bin 
       cp tools/common.inc tmp.inc
       sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
       rm tmp.inc
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
-      make $specialflags $archarg > $libomp_oss_log 2>&1
+      make $specialflags $ompt_compiler $archarg > $libomp_oss_log 2>&1
       result=$?
       signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
         cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
-        cp src/ompt.h ${libomp_ossinc}/.
-        cp src/ompt-event.h ${libomp_ossinc}/.
-        cp src/ompt-state.h ${libomp_ossinc}/.
-        cp src/ompt.h ${START_DIR}/include/.
-        cp src/ompt-event.h ${START_DIR}/include/.
-        cp src/ompt-state.h ${START_DIR}/include/.
+        cp exports/common/include/ompt.h ${libomp_ossinc}/.
+        #cp src/ompt-event.h ${libomp_ossinc}/.
+        #cp src/ompt-state.h ${libomp_ossinc}/.
+        cp exports/common/include/ompt.h ${START_DIR}/include/.
+        #cp src/ompt-event.h ${START_DIR}/include/.
+        #cp src/ompt-state.h ${START_DIR}/include/.
         echo "...Success."
       else
         if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
           cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
-          cp src/ompt.h ${libomp_ossinc}/.
-          cp src/ompt-event.h ${libomp_ossinc}/.
-          cp src/ompt-state.h ${libomp_ossinc}/.
-          cp src/ompt.h ${START_DIR}/include/.
-          cp src/ompt-event.h ${START_DIR}/include/.
-          cp src/ompt-state.h ${START_DIR}/include/.
+          cp exports/common/include/ompt.h ${libomp_ossinc}/.
+          #cp src/ompt-event.h ${libomp_ossinc}/.
+          #cp src/ompt-state.h ${libomp_ossinc}/.
+          cp exports/common/include/ompt.h ${START_DIR}/include/.
+          #cp src/ompt-event.h ${START_DIR}/include/.
+          #cp src/ompt-state.h ${START_DIR}/include/.
           echo "...Success."
 		else
           echo "ERROR BUILDING $libomp_ossdir!"
@@ -5872,29 +5887,29 @@ if [ "x$download_ompt" = xyes ] ; then
       fi
 
       # only build the dynamic version for now
-      if [ ${architecture} == "craycnl" ] ; then
+      if [ "${architecture}" = "craycnl" ] ; then
         libomp_oss_log=build-static.log
         echo "building static $libomp_oss... (see `pwd`/${libomp_oss_log} for log)"
-        make linktype=static $specialflags $archarg > $libomp_oss_log 2>&1
+        make linktype=static $ompt_compiler $specialflags $archarg > $libomp_oss_log 2>&1
         signature=`ls -tr tmp | grep rel | grep sta | tail -1`
         if [ $result -eq 0 ] ; then
           cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
-          cp src/ompt.h ${libomp_ossinc}/.
-          cp src/ompt-event.h ${libomp_ossinc}/.
-          cp src/ompt-state.h ${libomp_ossinc}/.
-          cp src/ompt.h ${START_DIR}/include/.
-          cp src/ompt-event.h ${START_DIR}/include/.
-          cp src/ompt-state.h ${START_DIR}/include/.
+          cp exports/common/include/ompt.h ${libomp_ossinc}/.
+          #cp src/ompt-event.h ${libomp_ossinc}/.
+          #cp src/ompt-state.h ${libomp_ossinc}/.
+          cp exports/common/include/ompt.h ${START_DIR}/include/.
+          #cp src/ompt-event.h ${START_DIR}/include/.
+          #cp src/ompt-state.h ${START_DIR}/include/.
           echo "...Success."
         else
           if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
             cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
-            cp src/ompt.h ${libomp_ossinc}/.
-            cp src/ompt-event.h ${libomp_ossinc}/.
-            cp src/ompt-state.h ${libomp_ossinc}/.
-            cp src/ompt.h ${START_DIR}/include/.
-            cp src/ompt-event.h ${START_DIR}/include/.
-            cp src/ompt-state.h ${START_DIR}/include/.
+            cp exports/common/include/ompt.h ${libomp_ossinc}/.
+            #cp src/ompt-event.h ${libomp_ossinc}/.
+            #cp src/ompt-state.h ${libomp_ossinc}/.
+            cp exports/common/include/ompt.h ${START_DIR}/include/.
+            #cp src/ompt-event.h ${START_DIR}/include/.
+            #cp src/ompt-state.h ${START_DIR}/include/.
             echo "...Success."
 		  else
             echo "ERROR BUILDING $libomp_ossdir!"
@@ -7168,7 +7183,13 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
         err=$?
         ;;
-        sparc64fx)
+      apple)
+	export CFLAGS="-Wno-error=unused-value -Wno-error=deprecated-declarations -fPIC"
+	export CXXFLAGS="-Wno-error=unused-value -Wno-error=deprecated-declarations -fPIC"
+	./configure --prefix=$bfddir --disable-nls --disable-werror > tau_configure.log 2>&1
+	err=$?
+        ;;
+      sparc64fx)
         fccpxpath=`which fccpx | sed 's/\/bin\/fccpx$//'`
         if [ -r $fccpxpath/util/bin/sparc64-unknown-linux-gnu-ar ]; then
           echo "NOTE: Using ar from $fccpxpath/util/bin/sparc64-unknown-linux-gnu-ar"
@@ -9114,15 +9135,12 @@ exampleslist="instrument/Makefile mapping/embedded/Makefile \
 
 if [ "x$fortran_compiler" != "xno" ] ; then
     exampleslist="$exampleslist fortran/Makefile f90/Makefile"
-fi
-
-if [ $fortran_compiler != no ] ; then
     echo "s@.*TAU_MAKEFILE_FORTRAN=\(.*\)@TAU_MAKEFILE_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
 fi
 
 if [ $mpi = yes ] ; then
     echo "s@.*TAU_MAKEFILE_MPI=\(.*\)@TAU_MAKEFILE_MPI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
-    if [ $fortran_compiler != no ] ; then
+    if [ "$fortran_compiler" != "no" ] ; then
 	echo "s@.*TAU_MAKEFILE_MPI_FORTRAN=\(.*\)@TAU_MAKEFILE_MPI_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
     if [ $pdt = yes ] ; then
@@ -9169,7 +9187,7 @@ if [ $pdt = yes ] ; then
     if [ $opari1 = yes -o $opari = yes ] ; then
 	echo "s@.*TAU_MAKEFILE_PDT_OPARI=\(.*\)@TAU_MAKEFILE_PDT_OPARI=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
-    if [ $fortran_compiler != no ] ; then
+    if [ "$fortran_compiler" != "no" ] ; then
 	echo "s@.*TAU_MAKEFILE_PDT_FORTRAN=\(.*\)@TAU_MAKEFILE_PDT_FORTRAN=$\(TAUROOT\)/$architecture/lib/Makefile.tau$tauoptions@" >> $sedex
     fi
 fi
