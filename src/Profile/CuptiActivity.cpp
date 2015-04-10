@@ -300,8 +300,11 @@ void Tau_cupti_onload()
 }
 
 void Tau_cupti_onunload() {
+
   if(TauEnv_get_cuda_track_unified_memory()) {
+#if CUDA_VERSION >= 6000
     CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+#endif
   }
 
 }
