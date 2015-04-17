@@ -24,7 +24,7 @@ EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(R
 all:		$(EXECUTABLES)
 
 tau_convert: 	tau_convert.c 
-		$(CC) $(CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRAUTIL)
+		$(CC) $(TAU_USEROPT_CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRAUTIL)
 
 #tau2profile:	tau2profile.o
 #		$(CXX) $(CFLAGS) tau2profile.o -o tau2profile -lm $(LEXTRAUTIL) $(TAU_TRACE_INPUT_LIB)
@@ -76,7 +76,7 @@ tau_merge: 	tau_merge.o tau_events.o
 		$(CXX) $(CFLAGS) tau_merge.o tau_events.o -o tau_merge -lm $(LEXTRAUTIL)
 
 tau_merge.o: 	tau_merge.c
-		$(CC) $(CFLAGS)  -c tau_merge.c
+		$(CC) $(TAU_USEROPT_CFLAGS)  -c tau_merge.c
 
 tau_events.o: 	tau_events.cpp
 		$(CXX) $(CFLAGS)  -c tau_events.cpp
