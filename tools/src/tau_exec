@@ -29,6 +29,7 @@ usage()
     echo "        -cuda         Track GPU events via CUDA"
     echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
     echo "        -opencl       Track GPU events via OpenCL"
+    echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
@@ -90,6 +91,7 @@ track_cuda=false
 track_cupti=false
 unified_memory=false
 track_opencl=false
+track_openacc=false
 track_armci=false
 tau_use_ebs=false
 tau_ebs_period=""
@@ -144,6 +146,10 @@ for arg in "$@" ; do
 	      ;;
 	  -opencl)
 	      track_opencl=true
+	      shift
+	      ;;
+	  -openacc)
+	      track_openacc=true
 	      shift
 	      ;;
 	  -gomp)
@@ -386,6 +392,10 @@ if [ $track_opencl = "true" ] ; then
 		else
 			export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
 		fi
+fi
+if [ $track_openacc = "true" ] ; then
+    export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+    export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
 fi
 
 if [ $track_armci = "true" ] ; then
