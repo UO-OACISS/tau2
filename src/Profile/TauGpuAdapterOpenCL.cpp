@@ -256,7 +256,7 @@ bool buffer_front_is_complete()
 	&status, NULL);
 	if (err != CL_SUCCESS)
 	{
-		printf("Fatel error: calling clGetEventInfo, exitiing.\n");
+		printf("Fatal error: calling clGetEventInfo, exiting.\n");
 		exit(1);
 	}
 	//printf("[TAU (opencl): event ready? %d.\n", status == CL_COMPLETE);

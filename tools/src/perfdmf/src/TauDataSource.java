@@ -30,6 +30,7 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
 import edu.uoregon.tau.common.LineCountBufferedReader;
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.Utility;
 
 public class TauDataSource extends DataSource {
@@ -242,7 +243,14 @@ public class TauDataSource extends DataSource {
                                 int end = inputString.indexOf("</metadata>") + 11;
                                 String metadata = inputString.substring(start, end);
                                 try {
-                                    thread.setMetaData(MetaDataParser.parse(metadata, thread));
+                                	MetaDataMap mdm = thread.getMetaData();
+                                	if(mdm==null)
+                                    {
+                                		thread.setMetaData(MetaDataParser.parse(metadata, thread));
+                                    }
+                                	else{
+                                		mdm.putAll(MetaDataParser.parse(metadata, thread));
+                                	}
                                 } catch (Exception exception) {
                                     exception.printStackTrace();
                                     throw new CorruptFileException("Unable to parse metadata block");

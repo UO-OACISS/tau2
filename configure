@@ -5106,7 +5106,23 @@ EOF
     else
 	echo "ERROR: Your PGI compiler is not working! Please check the license file"
     fi 
-    rm -f pgitest.o pgitest.C libpgitest.a
+    /bin/rm -f pgitest.o pgitest.C libpgitest.a
+cat <<EOF > pgiacctest.C
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <openacc.h>
+#include "pgi_acc_prof.h"
+EOF
+    if $cxx_compiler $orig_useropt -c pgiacctest.C 1> /dev/null 2>&1
+    then
+      echo "PGI compiler supports OpenACC profiling interface. Enabling OpenACC."
+      fixmakeargs="$fixmakeargs PGI_OPENACC"
+    else
+      echo "PGI compiler doesn't support OpenACC profiling interface."
+    fi
+    /bin/rm -f pgiacctest.C pgiacctest.o
 fi
 ######################################################################
 # If epilog is used, check and see if it supports v2.1s write interface
@@ -8984,6 +9000,7 @@ cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
+cp ${tauroot}/tools/src/tau_python $BINTARGET
 
 if [ $pdtarchdir != unknown ]
 then
