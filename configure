@@ -4304,7 +4304,7 @@ then
             fi
             ;;
 	mic_linux)
-            mpiinc=`which mpiicpc | sed -e 's/\/bin\/mpiicpc$//'`/include
+            mpiinc=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
             if [ -d $mpiinc ]
             then
 		echo "Using MPI include directory $mpiinc"
@@ -4498,6 +4498,23 @@ then
 		mpilibrary="$additional_mpilibs"
             fi
             ;;
+	mic_linux) 
+            if [ $mpc = yes ] 
+            then
+		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/../mic/lib
+            else
+                mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
+		if [ ! -d $mpilib ] ; then
+		    # Try the ".../lib64" directory instead of ".../lib"
+                    mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
+		fi
+		if [ -d $mpilib ] ; then
+		    echo "Using MPI lib directory $mpilib"
+		else
+ 		    mpilib=""
+		fi
+            fi
+	    ;;
 	*)    
             if [ $mpc = yes ] 
             then
@@ -5870,6 +5887,10 @@ if [ "x$download_ompt" = xyes ] ; then
 
 	  # fix the expected path for bin 
       cp tools/common.inc tmp.inc
+      if [ -r $ompt_dir/${libomp_oss_name}.so ]; then 
+        /bin/rm -f $ompt_dir/${libomp_oss_name}.so
+      fi
+
       sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
       rm tmp.inc
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
@@ -6622,7 +6643,16 @@ if [ $mpi = yes ] ; then
 		fi
 		
 		if [ "x$mpilibrary" = "xno" ] ; then 
-		    mpilibrary=-lmpi
+		    if [ $openmp = yes -o $pthread = yes ] ; then 
+		      if [ -r $mpilib/libmpi_mt.a -o -r $mpilib/libmpi_mt.so -o -r $mpilib/libmpi_mt.dylib ] ; then
+		        mpilibrary=-lmpi_mt
+                      else
+		       mpilibrary=-lmpi
+		      fi
+                    else 
+		      mpilibrary=-lmpi
+                    fi
+		    echo "SETTING mpilibrary=$mpilibrary"
 		    if [ -r $mpilib/libmpi++.so ] ; then
 			mpilibrary='-lmpi -lmpi++'
 			# SGI MPT
@@ -8748,6 +8778,9 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     elif [ -f "$libdir/intel64/for_main.o" ] ; then
         libdir="$libdir/intel64"
        echo "Found $libdir/for_main.o"
+    elif [ -f "$var/compiler/lib/mic/for_main.o" -a $machine=mic_linux ] ; then
+        libdir="$var/compiler/lib/mic"
+        echo "Found $libdir/for_main.o"
     elif [ -f "$var/compiler/lib/intel64/for_main.o" -a $machine=x86_64 ] ; then
         libdir="$var/compiler/lib/intel64"
        echo "Found $libdir/../../compiler/lib/intel64/for_main.o"
@@ -9102,6 +9135,24 @@ echo "... done"
 echo "***********************************************************************"
 
 
+#echo "Before HERE --> ompt=$ompt libomp_ossdir=${libomp_ossdir}  ${libomp_ossdir}/lib${libomp_oss_name}.so "
+# Special OMPT processing that needs tauoptions to be set
+if [ $ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
+  if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
+    echo "BGQ ompt"
+  else
+    echo "TAU: Copying libiomp5_ompt.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
+    mkdir -p ${targetdir}/${architecture}/lib/shared${tauoptions}
+    cp ${libomp_ossdir}/libiomp5.so ${targetdir}/${architecture}/lib/shared${tauoptions}/lib${libomp_oss_name}.so ; 
+    echo "ompt_dir=$ompt_dir"
+   # if [ "x$ompt_dir" = "x" -a -r ${libomp_ossdir}/libiomp5.so ]; then
+	#/bin/rm -f ${libomp_ossdir}/libiomp5.so
+#	echo "Removing ${libomp_ossdir}/libiomp5.so"
+   # fi
+    omptlinking="-Wl,-rpath=$omptlib/shared${tauoptions}#-L$omptlib/shared${tauoptions}#$omptlibrary"
+    fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+  fi
+fi
 # Save the FixMakefile args
 # Clear any old data
 grep "^#" ./utils/FixMakefile.info > ./utils/FixMakefile.info~~0
@@ -9279,6 +9330,7 @@ if [ $tauprefix != unknown ] ; then
     cp -r examples ${tauprefix}
     cp .all_configs .last_config .active_stubs .active_stub ${tauprefix}
 fi
+
 
 
 # bye bye
