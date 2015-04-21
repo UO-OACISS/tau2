@@ -268,7 +268,18 @@ if [ "x$binding_specified" = "x" ] ; then
     fi
     theBinding=`tau-config --binding $binding_options`
     if [ $? != 0 ] ; then
-	exit 1
+	if [ $verbose = "true" ]; then 
+	  echo "Binding options: $binding_options didn't work; trying without MPI using serial instead."
+        fi
+	new_binding_options=`echo $binding_options | sed -e 's/mpi/serial/' `
+	theBinding=`tau-config --binding $new_binding_options`
+	if [ $? != 0 ] ; then
+	  echo "Binding not found. Exiting..."
+	  exit 1
+        else 
+	  echo "Using $theBinding"
+	  binding_options=$new_binding_options
+	fi
     fi
 else
     theBinding=$binding_specified
