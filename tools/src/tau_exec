@@ -30,6 +30,7 @@ usage()
     echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
     echo "        -opencl       Track GPU events via OpenCL"
     echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
+    echo "        -ompt         Track OpenMP events via OMPT interface"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
@@ -88,6 +89,7 @@ track_io=false
 track_memory=false
 memory_debug=false
 track_cuda=false
+track_ompt=false
 track_cupti=false
 unified_memory=false
 track_opencl=false
@@ -134,6 +136,10 @@ for arg in "$@" ; do
 	      ;;
 	  -cuda)
 	      track_cuda=true
+	      shift
+	      ;;
+	  -ompt)
+	      track_ompt=true
 	      shift
 	      ;;
 	  -cupti)
@@ -415,6 +421,12 @@ if [ $tau_use_ebs = "true" ] ; then
     fi
 fi
 
+if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
+    if [ $verbose = "true" ]; then 
+      echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
+    fi
+fi
 # add libraries specified by -loadlib=<foo.so>
 TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
 
