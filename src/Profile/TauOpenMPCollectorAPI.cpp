@@ -1562,8 +1562,10 @@ int __ompt_initialize() {
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
 #if OMPT_VERSION < 2 || defined(TAU_MPC)
+#ifndef TAU_MPC
   CHECK(ompt_event_section_begin, my_sections_begin, "section_begin");
   CHECK(ompt_event_section_end, my_sections_end, "section_end");
+#endif /* TAU_MPC */
 #else
   CHECK(ompt_event_sections_begin, my_sections_begin, "sections_begin");
   CHECK(ompt_event_sections_end, my_sections_end, "sections_end");

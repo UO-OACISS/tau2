@@ -615,6 +615,7 @@ SDDF_DIR=
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
+#MPC#MPI2EXTENSIONS	       =        #ENDIF#
 #APPLECXX#MPI2EXTENSIONS	       =  #ENDIF#
 #CRAYX1CC#MPI2EXTENSIONS	       =        #ENDIF#
 
