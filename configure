@@ -8782,12 +8782,12 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     elif [ -f "$libdir/intel64/for_main.o" ] ; then
         libdir="$libdir/intel64"
        echo "Found $libdir/for_main.o"
-    elif [ -f "$var/compiler/lib/mic/for_main.o" -a $machine=mic_linux ] ; then
+    elif [ -f "$var/compiler/lib/mic/for_main.o" -a $machine = mic_linux ] ; then
         libdir="$var/compiler/lib/mic"
         echo "Found $libdir/for_main.o"
-    elif [ -f "$var/compiler/lib/intel64/for_main.o" -a $machine=x86_64 ] ; then
+    elif [ -f "$var/compiler/lib/intel64/for_main.o" -a $machine = x86_64 ] ; then
         libdir="$var/compiler/lib/intel64"
-       echo "Found $libdir/../../compiler/lib/intel64/for_main.o"
+       echo "Found $libdir/for_main.o"
     elif [ -f "$libdir/ia32/for_main.o" ] ; then
         libdir="$libdir/ia32"
     elif [ -f "$libdir/ia64/for_main.o" ] ; then
