@@ -194,6 +194,8 @@
 #define TAU_DISABLE_TRACKING_MEMORY()	        Tau_disable_tracking_memory()
 #define TAU_TRACK_MEMORY()		        Tau_track_memory()
 #define TAU_TRACK_MEMORY_HERE()	        	Tau_track_memory_here()
+#define TAU_TRACK_MEMORY_FOOTPRINT()		Tau_track_memory_rss_and_hwm()
+#define TAU_TRACK_MEMORY_FOOTPRINT_HERE()	Tau_track_memory_rss_and_hwm_here()
 #define TAU_TRACK_MEMORY_HEADROOM()        	Tau_track_memory_headroom()
 #define TAU_TRACK_MEMORY_HEADROOM_HERE()	Tau_track_memory_headroom_here()
 #define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()	Tau_enable_tracking_memory_headroom()
@@ -554,6 +556,8 @@ void Tau_track_memory_here(void);
 void Tau_track_memory_headroom(void);
 void Tau_track_power(void);
 void Tau_track_power_here(void);
+void Tau_track_memory_rss_and_hwm(void);
+void Tau_track_memory_rss_and_hwm_here(void);
 void Tau_enable_tracking_power();
 void Tau_disable_tracking_power();
 void Tau_track_memory_headroom_here(void);
