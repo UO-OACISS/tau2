@@ -765,6 +765,7 @@ tcltk=yes
 tcltkfile="/"
 kai=no
 pgi=no
+craymic=no
 fujitsu=no
 guidef90=no
 stdcxxlib=no
@@ -2973,6 +2974,12 @@ case $machine in
 	cxx_compiler=CC
 	c_compiler=cc
 	default_fortran=pgi
+	if [ "x$CRAY_CPU_TARGET" = "xknc" ] ; then
+	    fixmakeargs="$fixmakeargs CRAY_MIC"
+	    tauoptions="${tauoptions}-mic"
+	    craymic=yes
+        fi
+
 	if [ "x$PE_ENV" = xPGI ] ; then
 	    #tauoptions="${tauoptions}-pgi"
 	    pgi=yes
@@ -5704,7 +5711,7 @@ libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 libunwinddir=${targetdir}/${architecture}
 libunwind_name=unwind
-if [ $machine = mic_linux ] ; then
+if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwind=libunwind-mic-1.1
   libunwindtgz=$libunwind.tgz
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
@@ -5758,7 +5765,7 @@ if [ "x$download_unwind" = xyes ] ; then
         unwind_cxx_compiler=${cxx_compiler}
       fi
 
-      if [ $machine != mic_linux ]; then 
+      if [ $craymic = no -a $machine != mic_linux ]; then 
         configresult=0
         makeresult=0
         libunwind_log=configure.log
@@ -6727,7 +6734,12 @@ if [ $mpi = yes ] ; then
 				    elif [ -r $mpilib/libmpich_pgi.a ]; then 
 					mpilibrary="-lmpich_pgi $additional_mpilibs"
 				    else
-					mpilibrary="-lmpich $additional_mpilibs"
+					if [ "$craymic" = "no" ]; then 
+					  mpilibrary="-lmpich $additional_mpilibs"
+					else
+					  mpilibrary="$additional_mpilibs"
+					fi 
+					echo "Craymic=$craymic HERE!"
 				    fi
 				    echo "Using mpilibrary=$mpilibrary"
 				else
@@ -7145,6 +7157,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     if [ "x$bfddir" = xdownload ]; then
       #only change the bfddir if we are downloading
       bfddir="$targetdir/$architecture/$binutils"
+      if [ $machine = craycnl -a $craymic = yes ]; then 
+        bfddir="$targetdir/$architecture/$binutils-mic"
+      fi
     fi
     if [ -r "$bfddir/lib/libbfd.a" ] ; then
       echo "Found: $bfddir/lib/libbfd.a"
@@ -7255,6 +7270,25 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 		--disable-nls --disable-werror > tau_configure.log 2>&1
 	err=$?
 	;;
+      craycnl)
+	if [ $craymic = yes ]; then 
+          # Note: may need to search other paths than just /usr/linux-k1om-*
+          k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
+          export PATH=$k1om_bin:$PATH
+          ./configure \
+            CFLAGS='-mmic -fPIC' CXXFLAGS='-mmic -fPIC' \
+            --host=x86_64-k1om-linux \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror > tau_configure.log 2>&1
+          err=$?
+	else 
+          ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror > tau_configure.log 2>&1
+          err=$?
+        fi
+        ;;
       *)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
