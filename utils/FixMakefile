@@ -1143,6 +1143,10 @@ case $1 in
 	echo NOTE: Disabling the use of --prelink_objects for PGI 6.0+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PGI_OPENACC) 
+	echo NOTE: Enabling PGI OpenACC profiling interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      FUJITSU) 
 	echo NOTE: Using Fujitsu FCC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1727,6 +1731,10 @@ case $1 in
 	;;
      CRAYCNL_SHARED)
 	echo "NOTE: Using Cray Compute Node Shared Libraries"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAY_MIC)
+	echo "NOTE: Using Cray MIC Linux options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LINUXTIMERS)

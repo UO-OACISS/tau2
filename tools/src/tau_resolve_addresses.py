@@ -372,7 +372,8 @@ if __name__ == '__main__':
         os.mkdir(outdir)
 
     for infile in files:
-        outfile = os.path.join(outdir, infile)
+        outfile = os.path.join(outdir, os.path.basename(infile))
+        print '%s => %s' % (infile, outfile)
         try:
             tauprofile_xml(infile, outfile, options)
         except IOError:

@@ -29,6 +29,8 @@ usage()
     echo "        -cuda         Track GPU events via CUDA"
     echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
     echo "        -opencl       Track GPU events via OpenCL"
+    echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
+    echo "        -ompt         Track OpenMP events via OMPT interface"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
@@ -87,9 +89,11 @@ track_io=false
 track_memory=false
 memory_debug=false
 track_cuda=false
+track_ompt=false
 track_cupti=false
 unified_memory=false
 track_opencl=false
+track_openacc=false
 track_armci=false
 tau_use_ebs=false
 tau_ebs_period=""
@@ -134,6 +138,10 @@ for arg in "$@" ; do
 	      track_cuda=true
 	      shift
 	      ;;
+	  -ompt)
+	      track_ompt=true
+	      shift
+	      ;;
 	  -cupti)
 	      track_cupti=true
 	      shift
@@ -144,6 +152,10 @@ for arg in "$@" ; do
 	      ;;
 	  -opencl)
 	      track_opencl=true
+	      shift
+	      ;;
+	  -openacc)
+	      track_openacc=true
 	      shift
 	      ;;
 	  -gomp)
@@ -256,7 +268,18 @@ if [ "x$binding_specified" = "x" ] ; then
     fi
     theBinding=`tau-config --binding $binding_options`
     if [ $? != 0 ] ; then
-	exit 1
+	if [ $verbose = "true" ]; then 
+	  echo "Binding options: $binding_options didn't work; trying without MPI using serial instead."
+        fi
+	new_binding_options=`echo $binding_options | sed -e 's/mpi/serial/' `
+	theBinding=`tau-config --binding $new_binding_options`
+	if [ $? != 0 ] ; then
+	  echo "Binding not found. Exiting..."
+	  exit 1
+        else 
+	  echo "Using $theBinding"
+	  binding_options=$new_binding_options
+	fi
     fi
 else
     theBinding=$binding_specified
@@ -387,6 +410,10 @@ if [ $track_opencl = "true" ] ; then
 			export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
 		fi
 fi
+if [ $track_openacc = "true" ] ; then
+    export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+    export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+fi
 
 if [ $track_armci = "true" ] ; then
     # Add the ARMCI wrapper library to the LD_PRELOAD list
@@ -405,6 +432,12 @@ if [ $tau_use_ebs = "true" ] ; then
     fi
 fi
 
+if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
+    if [ $verbose = "true" ]; then 
+      echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
+    fi
+fi
 # add libraries specified by -loadlib=<foo.so>
 TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
 
