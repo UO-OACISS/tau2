@@ -1561,7 +1561,7 @@ int __ompt_initialize() {
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
-#if OMPT_VERSION < 2 //|| defined(TAU_MPC)
+#if OMPT_VERSION < 2 
   CHECK(ompt_event_section_begin, my_sections_begin, "section_begin");
   CHECK(ompt_event_section_end, my_sections_end, "section_end");
 #else
@@ -1615,7 +1615,7 @@ int __ompt_initialize() {
 #if defined (ompt_event_workshare_begin)
   CHECK(ompt_event_workshare_begin, my_workshare_begin, "workshare_begin");
   CHECK(ompt_event_workshare_end, my_workshare_end, "workshare_end");
-#endif
+#endif // ompt_event_workshare_begin
   CHECK(ompt_event_release_lock, my_release_lock, "release_lock");
   CHECK(ompt_event_wait_lock, my_wait_lock, "wait_lock");
   CHECK(ompt_event_acquired_lock, my_acquired_lock, "acquired_lock");
@@ -1625,7 +1625,7 @@ int __ompt_initialize() {
   //CHECK(ompt_event_acquired_nest_lock_first, my_acquired_nest_lock_first, "acquired_lock");
   //CHECK(ompt_event_release_nest_lock_last, my_release_nest_lock_last, "release_lock");
   //CHECK(ompt_event_acquired_nest_lock_last, my_acquired_nest_lock_last, "acquired_lock");
-#endif
+#endif // TAU_MPC
   }
   TAU_VERBOSE("OMPT events registered! \n"); fflush(stderr);
 
