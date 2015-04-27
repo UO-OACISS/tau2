@@ -5726,7 +5726,11 @@ if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
 fi
   
 if [ "x$download_unwind" = xyes ] ; then
-  unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  if [ $machine = craycnl ] ; then
+    unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}-${PE_ENV}
+  else
+    unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  fi
   prebfddir=`pwd`
 
   if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o \
