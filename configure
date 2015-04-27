@@ -7275,6 +7275,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	err=$?
 	;;
       craycnl)
+	unset CC CXX
 	if [ $craymic = yes ]; then 
           # Note: may need to search other paths than just /usr/linux-k1om-*
           k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
