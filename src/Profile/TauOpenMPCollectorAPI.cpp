@@ -1473,10 +1473,10 @@ ompt_get_state_t ompt_get_state;
 int __ompt_initialize() {
 #ifdef TAU_MPC
   check_local_tid();
-#endif
-#ifndef GOMP_USING_INTEL_RUNTIME // this causes probems with locks before the runtime is ready.
+#endif // TAU_MPC
+#if !defined(GOMP_USING_INTEL_RUNTIME) || defined(TAU_MPC)  // this causes probems with locks before the runtime is ready.
   Tau_init_initializeTAU();
-#endif
+#endif // !GOMP_USING_INTEL_RUNTIME
   if (initialized || initializing) return 0;
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
@@ -1561,11 +1561,9 @@ int __ompt_initialize() {
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
-#if OMPT_VERSION < 2 || defined(TAU_MPC)
-#ifndef TAU_MPC
+#if OMPT_VERSION < 2 //|| defined(TAU_MPC)
   CHECK(ompt_event_section_begin, my_sections_begin, "section_begin");
   CHECK(ompt_event_section_end, my_sections_end, "section_end");
-#endif /* TAU_MPC */
 #else
   CHECK(ompt_event_sections_begin, my_sections_begin, "sections_begin");
   CHECK(ompt_event_sections_end, my_sections_end, "sections_end");
