@@ -9,6 +9,10 @@ import ctau_impl
 # ____________________________________________________________
 # Simple interface
 
+def writeProfiles(prefix="profile"):
+    import pytau
+    pytau.dbDump(prefix)
+
 def run(statement, filename=None, sort=-1):
     """Run statement under profiler optionally saving results in filename
 
@@ -164,7 +168,7 @@ class Profile(ctau_impl.Profiler):
             self.disable()
         return self
 
-    def runmodule(self, modname):
+    def runmodule(self, modname, newname='__main__'):
         import sys
         from imp import find_module, new_module, PY_SOURCE
         self.enable()
@@ -173,7 +177,7 @@ class Profile(ctau_impl.Profiler):
             if desc[2] != PY_SOURCE:
               raise ImportError('No source file found for module %s' % modname)
             code = compile(fileobj.read(), path, 'exec')
-            module = new_module(modname)
+            module = new_module(newname)
             sys.modules['__main__'] = module
             exec code in module.__dict__
         finally:

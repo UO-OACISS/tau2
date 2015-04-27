@@ -41,6 +41,15 @@ bool& TheIsTauTrackingMemory(void) {
   return isit;
 }
 
+/////////////////////////////////////////////////////////////////////
+// Is TAU tracking memory resident set size and high water mark
+// from /proc/self/status?
+//////////////////////////////////////////////////////////////////////
+bool& TheIsTauTrackingMemoryRSSandHWM(void) {
+  static bool isit = false; /* TAU is not tracking memory */
+  return isit;
+}
+
 //////////////////////////////////////////////////////////////////////
 // Is TAU tracking memory headroom events? Set to true/false.
 //////////////////////////////////////////////////////////////////////
@@ -84,12 +93,28 @@ int TauEnableTrackingPower(void) {
   return 1;
 }
 
+//////////////////////////////////////////////////////////////////////
+// Start tracking memory rss and hwm
+//////////////////////////////////////////////////////////////////////
+int TauEnableTrackingMemoryRSSandHWM(void) {
+  // Set tracking to true
+  TheIsTauTrackingMemoryRSSandHWM() = true;
+  return 1;
+}
 
 //////////////////////////////////////////////////////////////////////
 // Stop tracking memory 
 //////////////////////////////////////////////////////////////////////
 int TauDisableTrackingMemory(void) {
   TheIsTauTrackingMemory() = false;
+  return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Stop tracking memory RSS and HWM
+//////////////////////////////////////////////////////////////////////
+int TauDisableTrackingMemoryRSSandHWM(void) {
+  TheIsTauTrackingMemoryRSSandHWM() = false;
   return 0;
 }
 
@@ -133,6 +158,7 @@ void TauTriggerPowerEvent(void) {
 #endif /* TAU_PAPI */
 }
 
+extern "C" int Tau_trigger_memory_rss_hwm(void);
 //////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
@@ -148,6 +174,11 @@ void TauAlarmHandler(int signum) {
 
   if (TheIsTauTrackingPower()) {
     TauTriggerPowerEvent();
+  }
+
+  if (TheIsTauTrackingMemoryRSSandHWM()) {
+    TAU_VERBOSE("Triggering memory rss and hwm event");
+    Tau_trigger_memory_rss_hwm();
   }
 
   /* Set alarm for the next interrupt */
@@ -215,6 +246,44 @@ void TauTrackPower(void) {
   /* activate alarm */
   alarm(TheTauInterruptInterval());
 #endif
+}
+
+//////////////////////////////////////////////////////////////////////
+// Track memory resident set size (RSS) and high water mark (hwm)
+//////////////////////////////////////////////////////////////////////
+void TauTrackMemoryFootPrint(void) {
+#ifndef TAU_WINDOWS 
+  struct sigaction new_action, old_action;
+  TheIsTauTrackingMemoryRSSandHWM() = true;
+  
+  // set signal handler 
+  new_action.sa_handler = TauAlarmHandler;
+
+  new_action.sa_flags = 0;
+  sigaction(SIGALRM, NULL, &old_action);
+  if (old_action.sa_handler != SIG_IGN) {
+    /* by default it is set to ignore */
+    sigaction(SIGALRM, &new_action, NULL);
+  }
+ 
+  /* activate alarm */
+  alarm(TheTauInterruptInterval());
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////
+// Track Memory events at this location in the source code
+//////////////////////////////////////////////////////////////////////
+void TauTrackMemoryFootPrintHere(void) {
+  /* Enable tracking memory by default */
+  static int flag = TauEnableTrackingMemoryRSSandHWM();
+  // use the variable to prevent compiler complaints
+  if (!flag) {};
+ 
+  /* Check and see if we're *still* tracking memory events */
+  if (TheIsTauTrackingMemoryRSSandHWM()) {
+    Tau_trigger_memory_rss_hwm();
+  }
 }
 
 
