@@ -29,6 +29,7 @@ Version 2.24 changes (from 2.23):
 16. Updated tau_instrumentor for use with Score-P. 
 17. Added tau_exec -ompt and -openacc (for PGI) flags. Uses PGI_ACC_PROF_LIB for OpenACC. 
 18. Added support for SGI_MPT_MPI for Fortran.
+19. Added support for Cray XC40 with mic_linux. Configure -using -arch=craycnl with MIC compilers (cc). 
 
 Version 2.23 changes (from 2.22):
 1. Added support for OpenMP Tools API (OMPT). 
