@@ -7475,6 +7475,13 @@ fi
 
 if [ $bfd_worked = "no" ] ; then
     echo "failed. Using -lbfd -liberty -lz."
+    echo ""
+    echo ""
+    echo "VERY IMPORTANT NOTE: Please configure TAU with -bfd=download. If a firewall prevents wget from accessing this binutils tarball"
+    echo "Please download http://tau.uoregon.edu/ext.tgz and untar it in this TAU directory and please use -bfd=download."
+    echo "***********************************************************************"
+    echo ""
+    echo ""
     BFDLIBS="-lbfd -liberty -lz"
     if [ $tauarch = i386_linux ]; then 
 	BFDLIBS=""
