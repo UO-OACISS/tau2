@@ -71,3 +71,13 @@ then run with tau_exec:
 
 tau_exec (-cuda|-cupti) ./a.out.
 
+
+== PGI OpenACC ==
+With PGI compilers, please use:
+./configure -c++=pgCC -cc=pgcc -fortran=pgi ...
+and OpenACC support will be configured in automatically if the PGI compiler has an 
+accelerator license and supports OpenACC. You may then use:
+
+% tau_exec -T openacc ./a.out
+
+to instrument the application using the OpenACC profiling API. 
