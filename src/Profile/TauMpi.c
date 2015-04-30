@@ -57,6 +57,7 @@
 #define TAU_OPENMPI3_CONST 
 #endif
 
+
 void TauSyncClocks();
 void TauSyncFinalClocks();
 int Tau_mergeProfiles();
@@ -2777,10 +2778,14 @@ MPI_Datatype * datatype;
   return returnVal;
 }
 
+#ifdef TAU_SGI_MPT_MPI
+#define TAU_HINDEXED_CONST const
+#endif /* TAU_SGI_MPT_MPI */
+
 int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
 int count;
-TAU_OPENMPI3_CONST int * blocklens;
-TAU_OPENMPI3_CONST MPI_Aint * indices;
+TAU_HINDEXED_CONST int * blocklens;
+TAU_HINDEXED_CONST MPI_Aint * indices;
 MPI_Datatype old_type;
 MPI_Datatype * newtype;
 {
@@ -2865,6 +2870,7 @@ int * size;
 
   return returnVal;
 }
+
 
 int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
 int count;

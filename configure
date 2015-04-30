@@ -5726,7 +5726,11 @@ if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
 fi
   
 if [ "x$download_unwind" = xyes ] ; then
-  unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  if [ $machine = craycnl ] ; then
+    unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}-${PE_ENV}
+  else
+    unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  fi
   prebfddir=`pwd`
 
   if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o \
@@ -5777,7 +5781,7 @@ if [ "x$download_unwind" = xyes ] ; then
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
-          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log} 2>&1 
+          ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log} 2>&1 
         else
           ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1 
         fi
@@ -6739,7 +6743,7 @@ if [ $mpi = yes ] ; then
 					else
 					  mpilibrary="$additional_mpilibs"
 					fi 
-					echo "Craymic=$craymic HERE!"
+					#echo "Craymic=$craymic "
 				    fi
 				    echo "Using mpilibrary=$mpilibrary"
 				else
@@ -7271,6 +7275,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 	err=$?
 	;;
       craycnl)
+	unset CC CXX
 	if [ $craymic = yes ]; then 
           # Note: may need to search other paths than just /usr/linux-k1om-*
           k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
@@ -7470,6 +7475,13 @@ fi
 
 if [ $bfd_worked = "no" ] ; then
     echo "failed. Using -lbfd -liberty -lz."
+    echo ""
+    echo ""
+    echo "VERY IMPORTANT NOTE: Please configure TAU with -bfd=download. If a firewall prevents wget from accessing this binutils tarball"
+    echo "Please download http://tau.uoregon.edu/ext.tgz and untar it in this TAU directory and please use -bfd=download."
+    echo "***********************************************************************"
+    echo ""
+    echo ""
     BFDLIBS="-lbfd -liberty -lz"
     if [ $tauarch = i386_linux ]; then 
 	BFDLIBS=""
