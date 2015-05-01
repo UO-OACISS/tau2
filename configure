@@ -8428,7 +8428,8 @@ if [ $scorep = yes ] ; then
         scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
       else 
         if [ $ompt = yes ]; then 
-          scorep_adapter="$scorep_adapter --thread=omp:ompt"
+          #scorep_adapter="$scorep_adapter --thread=omp:ompt"
+          scorep_adapter="$scorep_adapter --thread=omp"
         else 
           scorep_adapter="$scorep_adapter --thread=omp:ancestry"
 # Should we make an explicit option to enable Score-P thread=ancestry? 
@@ -8491,9 +8492,9 @@ if [ $scorep = yes ] ; then
     scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 
-    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     if [ $mpi = no ]; then
-      fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     fi
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
