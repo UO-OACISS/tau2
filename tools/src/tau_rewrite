@@ -98,6 +98,7 @@ shortverbose=false
 binding_specified=""
 binding_options=""
 extraloadlibs=""
+scorep=false
 tauluafile="tau_rewrite.lua"
 processf="false"
 includelist="false"
@@ -111,6 +112,9 @@ for arg in "$@" ; do
   if [ "$processT" = true ] ; then
       binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
       processT="false"
+      if [ "x$arg" = "xscorep" ]; then 
+        scorep=true
+      fi
       shift
   else
     if [ "$processf" = true ] 
@@ -259,9 +263,22 @@ else
   TAU_SHLIBX=.so
 fi
 
-TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
+TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
 TAU_INST_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+TAU_MOD_INST_LIBRARY=$TAU_INST_LIBRARY
 
+if [ $scorep = true ]; then
+  scoreplibrary=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
+  scorepdir=`echo $scoreplibrary | sed -e 's@libscorep_adapter_mpi_event.so.0@@g'`
+  echoIfVerbose "scorepdir= $scorepdir"
+  if [ -f $scoreplibrary -a -d $scorepdir ]; then 
+    echoIfVerbose "Preloading: $scoreplibrary from $scorepdir"
+    TAU_MOD_INST_LIBRARY="$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$scoreplibrary:$BASEDIR/lib/$theBinding/libTAU-preload.so"
+# NOTE: We should put this list of libraries in the LD_PRELOAD in $outfile but not inject it in the binary. 
+    TAU_MOD_LD_LIBRARY_PATH="$TAUEX_LD_LIBRARY_PATH:$scorepdir"
+    echoIfVerbose "TAU_MOD_LD_LIBRARY_PATH: $TAU_MOD_LD_LIBRARY_PATH"
+  fi
+fi
 
 # add libraries specified by -loadlib=<foo.so>
 #TAU_INST_LIBRARY=${TAU_INST_LIBRARY}${extraloadlibs}
@@ -628,10 +645,16 @@ else
   else
     mv  `ls -t *_0.run | head -1 ` $outfile~
     echo "#!/bin/sh
+          if test \"x\$LD_LIBRARY_PATH\" = \"x\" ; then
+            export LD_LIBRARY_PATH=$TAU_MOD_LD_LIBRARY_PATH
+          else 
+            export LD_LIBRARY_PATH=$TAU_MOD_LD_LIBRARY_PATH:\$LD_LIBRARY_PATH
+          fi
+
           if test \"x\$LD_PRELOAD\" = \"x\" ; then 
-             export LD_PRELOAD=$TAU_INST_LIBRARY
+             export LD_PRELOAD=$TAU_MOD_INST_LIBRARY
           else
-             export LD_PRELOAD=$TAU_INST_LIBRARY:\$LD_PRELOAD
+             export LD_PRELOAD=$TAU_MOD_INST_LIBRARY:\$LD_PRELOAD
           fi" > $outfile_1~
     cat $outfile_1~ $outfile~ > $outfile
     chmod +x $outfile
