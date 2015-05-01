@@ -98,6 +98,7 @@ track_armci=false
 tau_use_ebs=false
 tau_ebs_period=""
 tau_ebs_source=""
+scorep=false
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
@@ -112,6 +113,9 @@ for arg in "$@" ; do
   if [ "$processT" = true ] ; then
       binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
       processT="false"
+      if [ "x$arg" = "xscorep" ]; then 
+        scorep=true
+      fi
       shift
   else
       case $arg in 
@@ -438,11 +442,23 @@ if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; 
       echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
     fi
 fi
+
+if [ $scorep = true -a "x$extraloadlibs" = "x" ]; then
+  if [ $verbose = "true" ]; then 
+    echo "Score-P specified but loadlib is blank!"
+  fi
+  extraloadlibs=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
+  if [ -f $extraloadlibs -a $verbose = "true" ]; then 
+    echo "Preloading: $extraloadlibs"
+  fi
+fi
+
 # add libraries specified by -loadlib=<foo.so>
 TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
 
 # remove double colons
 TAUEX_LD_PRELOAD=`echo $TAUEX_LD_PRELOAD | sed -e "s/::/:/g" -e "s/:$//"`
+
 
 if [ $apple = 1 ]; then
   TAU_LDD='otool -L'
