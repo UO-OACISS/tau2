@@ -443,13 +443,18 @@ if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; 
     fi
 fi
 
-if [ $scorep = true -a "x$extraloadlibs" = "x" ]; then
+if [ $scorep = true ]; then
   if [ $verbose = "true" ]; then 
-    echo "Score-P specified but loadlib is blank!"
+    echo "Score-P is specified"
   fi
-  extraloadlibs=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
-  if [ -f $extraloadlibs -a $verbose = "true" ]; then 
-    echo "Preloading: $extraloadlibs"
+  scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
+  if [ -f $scoreplib -a $verbose = "true" ]; then 
+    echo "Preloading: $scoreplib"
+  fi
+  if [ "x$extraloadlibs" = "x" ]; then 
+    extraloadlibs=":$scoreplib"
+  else
+    extraloadlibs=":$scoreplib:$extraloadlibs"
   fi
 fi
 
