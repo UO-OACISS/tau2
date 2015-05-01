@@ -112,7 +112,8 @@ for arg in "$@" ; do
   if [ "$processT" = true ] ; then
       binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
       processT="false"
-      if [ "x$arg" = "xscorep" ]; then 
+      test_arg=`echo $arg | sed -e 's@scorep@@g'`
+      if [ "x$test_arg" != "x$arg" ]; then
         scorep=true
       fi
       shift
