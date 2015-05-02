@@ -1636,6 +1636,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(void) {
 
   // TAU_VERBOSE("Tau_trigger_memory_rss_hwm: rss = %lld, hwm = %lld in KB\n", vmrss, vmhwm);
 
+  return 1; // SUCCESS
 }
 
 
