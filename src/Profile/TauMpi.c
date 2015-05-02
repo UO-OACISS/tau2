@@ -2778,10 +2778,12 @@ MPI_Datatype * datatype;
   return returnVal;
 }
 
-#ifdef TAU_SGI_MPT_MPI
+#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_MPI_HINDEX_CONST))
 #define TAU_HINDEXED_CONST const
 #else
+#ifndef TAU_HINDEXED_CONST
 #define TAU_HINDEXED_CONST 
+#endif /* TAU_HINDEXED_CONST */
 #endif /* TAU_SGI_MPT_MPI */
 
 int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )

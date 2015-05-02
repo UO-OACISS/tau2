@@ -6138,6 +6138,34 @@ MPI_Aint * address;
 
 EOF
 
+cat <<EOF > mpihindex1.c
+#include <mpi.h>
+
+int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
+int count;
+int * blocklens;
+MPI_Aint * indices;
+MPI_Datatype old_type;
+MPI_Datatype * newtype;
+{
+  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
+}
+EOF
+
+cat <<EOF > mpihindex2.c
+#include <mpi.h>
+
+int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
+int count;
+const int * blocklens;
+const MPI_Aint * indices;
+MPI_Datatype old_type;
+MPI_Datatype * newtype;
+{
+  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
+}
+EOF
+
 cat <<EOF > mpi2attr.$msuf
   #include <mpi.h>
 
@@ -6339,6 +6367,19 @@ else
   fi
 fi            
 rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out 
+
+$echo "Checking for MPI_Type_hindexed const interface... ${nnl}"
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex1.c  1> /dev/null 2>&1 ; then
+  echo "not needed"
+else
+  echo "yes"
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex2.c 1> /dev/null 2>&1 ; then
+    echo "Using const in MPI_Type_hindexed interface "
+      fixmakeargs="$fixmakeargs TAU_MPI_HINDEX_CONST"
+  fi
+fi
+rm -f mpihindex1.c mpihindex2.c mpihindex1.o mpihindex2.o 
+
 
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
