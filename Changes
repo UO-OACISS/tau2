@@ -30,6 +30,9 @@ Version 2.24 changes (from 2.23):
 17. Added tau_exec -ompt and -openacc (for PGI) flags. Uses PGI_ACC_PROF_LIB for OpenACC. 
 18. Added support for SGI_MPT_MPI for Fortran.
 19. Added support for Cray XC40 with mic_linux. Configure -using -arch=craycnl with MIC compilers (cc). 
+20. Added support for tracking Unified Memory using CUPTI 6.5+ using tau_exec -um -cupti. 
+21. Better support for Cray UPC (tested with PrgEnv-cray/5.2.40 with cce/8.3.7). 
+22. Added support for MPI_IN_PLACE and MPI_BOTTOM in the MPI wrapper interposition library. 
 
 Version 2.23 changes (from 2.22):
 1. Added support for OpenMP Tools API (OMPT). 
