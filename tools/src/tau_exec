@@ -35,7 +35,7 @@ usage()
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
-    echo "        -uvm          Enable Unified Virtual Memory events via CUPTI"
+    echo "        -um          Enable Unified Memory events via CUPTI"
     options=`tau-config --list-options`
     echo "        -T <$options> : Specify TAU tags"
     echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -54,7 +54,7 @@ usage()
 		echo "    tau_exec -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
 		echo "    tau_exec -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
 		echo "    tau_exec -T serial -opencl (OPENCL)"
-		echo "    tau_exec -T serial,cupti -cupti -uvm ./unified_memory (Unified Virtual Memory)"
+		echo "    tau_exec -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
     echo ""
     echo "qsub mode (IBM BG/P only):"
     echo "    Original:"
@@ -151,7 +151,7 @@ for arg in "$@" ; do
 	      track_cupti=true
 	      shift
 	      ;;
-	  -uvm)
+	  -um | -uvm)
 	      unified_memory=true
 	      shift
 	      ;;
