@@ -558,6 +558,9 @@ MPI_Fint *root;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (buffer == *(mpi_predef_bottom)) {
+    buffer = MPI_BOTTOM;
+  }
   *ierr = MPI_Bcast( buffer, *count, MPI_Type_f2c(*datatype), *root, MPI_Comm_f2c(*comm) );
 }
 
@@ -7204,3 +7207,79 @@ MPI_Fint *ierr;
 
 /******************************************************/
 /******************************************************/
+/* Originally in TauMpiExtensions.c */
+#ifdef TAU_MPITYPEEX
+
+/******************************************************
+***      MPI_Exscan wrapper function 
+******************************************************/
+void MPI_EXSCAN( void * sendbuf, void * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
+{
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
+  *ierr = MPI_Exscan( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm)) ; 
+  return ; 
+}
+
+/******************************************************
+***      MPI_Exscan wrapper function 
+******************************************************/
+void mpi_exscan( void * sendbuf, void * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
+{
+  MPI_EXSCAN( sendbuf, recvbuf, count, datatype, op, comm, ierr) ; 
+  return ; 
+}
+
+/******************************************************
+***      MPI_Exscan wrapper function 
+******************************************************/
+void mpi_exscan_( void * sendbuf, void * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
+{
+  MPI_EXSCAN( sendbuf, recvbuf, count, datatype, op, comm, ierr) ; 
+  return ; 
+}
+
+/******************************************************
+***      MPI_Exscan wrapper function 
+******************************************************/
+void mpi_exscan__( void * sendbuf, void * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
+{
+  MPI_EXSCAN( sendbuf, recvbuf, count, datatype, op, comm, ierr) ; 
+  return ; 
+}
+
+#endif /* TAU_MPI_TYPEEX */
+
+#ifdef TAU_MPI_EXTENSIONS 
+
+/******************************************************
+***      MPI_Alltoallw wrapper function 
+******************************************************/
+void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sdispls, MPI_Fint * sendtypes, void * recvbuf, MPI_Fint *  recvcounts, MPI_Fint *  rdispls, MPI_Fint * recvtypes, MPI_Fint *  comm, MPI_Fint * ierr)
+{
+  TAU_DECL_LOCAL(MPI_Datatype, local_send_types);
+  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, *recvcounts);
+  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
+  TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
+  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
+
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
+  *ierr = MPI_Alltoallw( sendbuf, sendcounts, sdispls, local_send_types, recvbuf, recvcounts, rdispls, local_recv_types, MPI_Comm_f2c(*comm)) ; 
+  return ; 
+}
+#endif /* TAU_MPI_EXTENSIONS */
