@@ -4988,7 +4988,11 @@ then
 	    then
 		shmemlibargs="$shmemlibargs -L$MPT_DIR/sma/lib64/"
 	    else
-		shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+		if [ -r $CRAY_SHMEM_DIR/lib64/libsma.a ] ; then
+		  shmemlibargs="$shmemlibargs -L$CRAY_SHMEM_DIR/lib64/"
+                else 
+		  shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+                fi
 	    fi
 	fi
     fi
