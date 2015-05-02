@@ -28,6 +28,66 @@ MPI_Fint *MPI_F_STATUSES_IGNORE = NULL;
 
 void tau_mpi_init_predefined_constants();
 
+static void ** mpi_predef_in_place(void)
+{
+  static void * in_place_ptr = NULL;
+  return &in_place_ptr;
+}
+
+static void ** mpi_predef_bottom(void)
+{
+  static void * mpi_bottom_ptr = NULL;
+  return &mpi_bottom_ptr;
+}
+
+static void ** mpi_predef_status_ignore(void)
+{
+  static void * mpi_status_ignore_ptr = NULL;
+  return &mpi_status_ignore_ptr;
+}
+
+static void ** mpi_predef_statuses_ignore(void)
+{
+  static void * mpi_statuses_ignore_ptr = NULL;
+  return &mpi_statuses_ignore_ptr;
+}
+
+static void ** mpi_predef_unweighted(void)
+{
+  static void * mpi_unweighted_ptr = NULL;
+  return &mpi_unweighted_ptr;
+}
+
+void tau_mpi_predef_init_in_place(void * in_place) {
+  *(mpi_predef_in_place()) = in_place;
+}
+void tau_mpi_predef_init_in_place_(void * in_place) {
+  tau_mpi_predef_init_in_place(in_place);
+}
+void tau_mpi_predef_init_bottom(void * bottom) {
+  *(mpi_predef_bottom()) = bottom;
+}
+void tau_mpi_predef_init_bottom_(void * bottom) {
+  tau_mpi_predef_init_bottom(bottom);
+}
+void tau_mpi_predef_init_status_ignore(void * status_ignore) {
+  *(mpi_predef_status_ignore()) = status_ignore;
+}
+void tau_mpi_predef_init_status_ignore_(void * status_ignore) {
+  *(mpi_predef_status_ignore()) = status_ignore;
+}
+void tau_mpi_predef_init_statuses_ignore(void * statuses_ignore) {
+  *(mpi_predef_statuses_ignore()) = statuses_ignore;
+}
+void tau_mpi_predef_init_statuses_ignore_(void * statuses_ignore) {
+  *(mpi_predef_statuses_ignore()) = statuses_ignore;
+}
+void tau_mpi_predef_init_unweighted(void * unweighted) {
+  *(mpi_predef_unweighted()) = unweighted;
+}
+void tau_mpi_predef_init_unweighted_(void * unweighted) {
+  *(mpi_predef_unweighted()) = unweighted;
+}
 #ifdef TAU_LAMPI
 MPI_Fint TAU_MPI_Request_c2f(MPI_Request c_request) {
   MPI_Fint f_request;
@@ -58,6 +118,15 @@ MPI_Fint *recvtype;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Allgather( sendbuf, *sendcount, MPI_Type_f2c(*sendtype), recvbuf, *recvcount, MPI_Type_f2c(*recvtype), MPI_Comm_f2c(*comm) );
 
 }
@@ -130,6 +199,15 @@ MPI_Fint *recvtype;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Allgatherv( sendbuf, *sendcount, MPI_Type_f2c(*sendtype), recvbuf, recvcounts, displs, MPI_Type_f2c(*recvtype), MPI_Comm_f2c(*comm) );
 
 }
@@ -193,66 +271,6 @@ MPI_Fint *ierr;
 /******************************************************/
 /******************************************************/
 
-static void ** mpi_predef_in_place(void)
-{
-  static void * in_place_ptr = NULL;
-  return &in_place_ptr;
-}
-
-static void ** mpi_predef_bottom(void)
-{
-  static void * mpi_bottom_ptr = NULL;
-  return &mpi_bottom_ptr;
-}
-
-static void ** mpi_predef_status_ignore(void)
-{
-  static void * mpi_status_ignore_ptr = NULL;
-  return &mpi_status_ignore_ptr;
-}
-
-static void ** mpi_predef_statuses_ignore(void)
-{
-  static void * mpi_statuses_ignore_ptr = NULL;
-  return &mpi_statuses_ignore_ptr;
-}
-
-static void ** mpi_predef_unweighted(void)
-{
-  static void * mpi_unweighted_ptr = NULL;
-  return &mpi_unweighted_ptr;
-}
-
-void tau_mpi_predef_init_in_place(void * in_place) {
-  *(mpi_predef_in_place()) = in_place;
-}
-void tau_mpi_predef_init_in_place_(void * in_place) {
-  tau_mpi_predef_init_in_place(in_place);
-}
-void tau_mpi_predef_init_bottom(void * bottom) {
-  *(mpi_predef_bottom()) = bottom;
-}
-void tau_mpi_predef_init_bottom_(void * bottom) {
-  tau_mpi_predef_init_bottom(bottom);
-}
-void tau_mpi_predef_init_status_ignore(void * status_ignore) {
-  *(mpi_predef_status_ignore()) = status_ignore;
-}
-void tau_mpi_predef_init_status_ignore_(void * status_ignore) {
-  *(mpi_predef_status_ignore()) = status_ignore;
-}
-void tau_mpi_predef_init_statuses_ignore(void * statuses_ignore) {
-  *(mpi_predef_statuses_ignore()) = statuses_ignore;
-}
-void tau_mpi_predef_init_statuses_ignore_(void * statuses_ignore) {
-  *(mpi_predef_statuses_ignore()) = statuses_ignore;
-}
-void tau_mpi_predef_init_unweighted(void * unweighted) {
-  *(mpi_predef_unweighted()) = unweighted;
-}
-void tau_mpi_predef_init_unweighted_(void * unweighted) {
-  *(mpi_predef_unweighted()) = unweighted;
-}
 
 
 void   mpi_allreduce_( sendbuf, recvbuf, count, datatype, op, comm , ierr)
@@ -264,24 +282,17 @@ MPI_Fint *op;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
-    if (sendbuf == *(mpi_predef_in_place)) {
-      sendbuf = MPI_IN_PLACE;
-    }
-    if (sendbuf == *(mpi_predef_bottom)) {
-      sendbuf = MPI_BOTTOM;
-    }
-    if (recvbuf == *(mpi_predef_fortran_bottom)) {
-      recvbuf = MPI_BOTTOM;
-    }
-    *ierr = MPI_Allreduce( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
+  *ierr = MPI_Allreduce( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
 
-/*  old: only checked for MPI_IN_PLACE: 
-    if (sendbuf == *(mpi_predef_in_place())) {
-      *ierr = MPI_Allreduce( MPI_IN_PLACE, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
-    } else {
-      *ierr = MPI_Allreduce( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
-    }
- */
 }
 
 void   mpi_allreduce__( sendbuf, recvbuf, count, datatype, op, comm , ierr)
@@ -345,6 +356,15 @@ MPI_Fint *recvtype;
 MPI_Fint *comm;
 MPI_Fint *ierr; 
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Alltoall(sendbuf, *sendcount, MPI_Type_f2c(*sendtype), recvbuf, *recvcnt, MPI_Type_f2c(*recvtype), MPI_Comm_f2c(*comm) );
 }
 
@@ -416,6 +436,15 @@ MPI_Fint *recvtype;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Alltoallv( sendbuf, sendcnts, sdispls, MPI_Type_f2c(*sendtype), recvbuf, recvcnts, rdispls, MPI_Type_f2c(*recvtype), MPI_Comm_f2c(*comm) );
 
 }
