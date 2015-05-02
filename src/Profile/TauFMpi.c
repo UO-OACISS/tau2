@@ -624,6 +624,15 @@ MPI_Fint *comm;
 MPI_Fint *ierr;
 {
   
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Gather( sendbuf, *sendcnt, MPI_Type_f2c(*sendtype), recvbuf, *recvcount, MPI_Type_f2c(*recvtype), *root, MPI_Comm_f2c(*comm) );
 
 }
@@ -702,6 +711,15 @@ MPI_Fint *root;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Gatherv( sendbuf, *sendcnt, MPI_Type_f2c(*sendtype), recvbuf, recvcnts, displs, MPI_Type_f2c(*recvtype), *root, MPI_Comm_f2c(*comm) );
 
 }
@@ -872,6 +890,15 @@ MPI_Fint *op;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Reduce_scatter( sendbuf, recvbuf, recvcnts, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
 }
 
@@ -936,6 +963,15 @@ MPI_Fint *root;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Reduce( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), *root, MPI_Comm_f2c(*comm) );
 }
 
@@ -1004,6 +1040,15 @@ MPI_Fint *op;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Scan( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm) );
 }
 
@@ -1069,6 +1114,15 @@ MPI_Fint *root;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Scatter( sendbuf, *sendcnt, MPI_Type_f2c(*sendtype), recvbuf, *recvcnt, MPI_Type_f2c(*recvtype), *root, MPI_Comm_f2c(*comm) );
 }
 
@@ -1144,6 +1198,15 @@ MPI_Fint *root;
 MPI_Fint *comm;
 MPI_Fint *ierr;
 {
+  if (sendbuf == *(mpi_predef_in_place)) {
+    sendbuf = MPI_IN_PLACE;
+  }
+  if (sendbuf == *(mpi_predef_bottom)) {
+    sendbuf = MPI_BOTTOM;
+  }
+  if (recvbuf == *(mpi_predef_bottom)) {
+    recvbuf = MPI_BOTTOM;
+  }
   *ierr = MPI_Scatterv( sendbuf, sendcnts, displs, MPI_Type_f2c(*sendtype), recvbuf, *recvcnt, MPI_Type_f2c(*recvtype), *root, MPI_Comm_f2c(*comm) );
 }
 
