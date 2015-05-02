@@ -978,7 +978,9 @@ void mpi_type_match_size__( MPI_Fint *  typeclass, MPI_Fint *  size, MPI_Fint * 
 /******************************************************/
 /******************************************************/
 
-
+extern void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, 
+  MPI_Fint *  sdispls, MPI_Fint * sendtypes, void * recvbuf, MPI_Fint *  recvcounts, 
+  MPI_Fint *  rdispls, MPI_Fint * recvtypes, MPI_Fint *  comm, MPI_Fint * ierr); 
 /******************************************************
 ***      MPI_Alltoallw wrapper function 
 ******************************************************/
