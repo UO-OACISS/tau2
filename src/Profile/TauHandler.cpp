@@ -23,6 +23,8 @@
 #include <sys/time.h>
 #include <sys/resource.h>
 #endif
+#include <fcntl.h>
+#include <errno.h>
 
 #include <signal.h>
 #include <Profile/Profiler.h>
@@ -151,11 +153,70 @@ void TauSetInterruptInterval(int interval) {
   TheTauInterruptInterval() = interval;
 }
 
+int Tau_read_cray_power_events(int fd, unsigned long long int *value)  {
+  char buf[2048]; 
+  int ret, i, bytesread;
+  if (fd > 0) {
+    ret = lseek(fd, 0, SEEK_SET); 
+    if (ret < 0) {
+      perror("lseek failure:");
+      *value = 0;
+      return ret;
+    }
+  }
+  bytesread = read(fd, buf, 2048);
+  if (bytesread == -1) {
+    perror("Error reading from Cray power events");
+    return bytesread; 
+  }
+  ret = sscanf(buf, "%ul", value); 
+  return ret;
+}
+
+int Tau_open_cray_file(char *filename) {
+  
+  int fd = open(filename, O_RDONLY);
+  if (fd < 0) {
+    printf("Error: open: %s, fd = %d\n", filename, fd);
+    return fd; 
+  }
+  return fd; 
+}
+
+void TauTriggerCrayPowerEvent(int fd, char *event_name)  {
+  unsigned long long int value; 
+  if (fd) {
+    Tau_read_cray_power_events(fd, &value); 
+    if (value > 0) {
+      TAU_TRIGGER_EVENT(event_name, (double) value);
+      TAU_VERBOSE("Triggered %s with %ul\n", event_name, value);
+    }
+  }
+}
+
+void TauTriggerCrayPowerEvents(void) {
+  static int power_fd=Tau_open_cray_file("/sys/cray/pm_counters/power");
+  static int accel_power_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_power");
+  //static int accel_energy_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_energy");
+  //static int energy_fd=Tau_open_cray_file("/sys/cray/pm_counters/energy");
+
+  // this does not take into account the freshness file
+  TauTriggerCrayPowerEvent(power_fd, "Node Power (in Watts)");
+  TauTriggerCrayPowerEvent(accel_power_fd, "Accelerator Device Power (in Watts)");
+  //TauTriggerCrayPowerEvent(energy_fd, "Node Energy (in Joules)");
+  //TauTriggerCrayPowerEvent(accel_energy_fd, "Accel Energy (in Joules)");
+
+}
+
 void TauTriggerPowerEvent(void) {
   //printf("Inside TauTriggerPowerEvent\n");
+#ifdef TAU_CRAYCNL
+  TauTriggerCrayPowerEvents();
+#else 
 #ifdef TAU_PAPI
   PapiLayer::triggerRAPLPowerEvents();
 #endif /* TAU_PAPI */
+#endif /* TAU_CRAYCNL */
 }
 
 extern "C" int Tau_trigger_memory_rss_hwm(void);
