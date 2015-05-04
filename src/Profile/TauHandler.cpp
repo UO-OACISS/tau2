@@ -164,6 +164,10 @@ int Tau_read_cray_power_events(int fd, unsigned long long int *value)  {
       return ret;
     }
   }
+  else {
+    *value = 0;
+    return -1; 
+  }
   bytesread = read(fd, buf, 2048);
   if (bytesread == -1) {
     perror("Error reading from Cray power events");
@@ -176,10 +180,6 @@ int Tau_read_cray_power_events(int fd, unsigned long long int *value)  {
 int Tau_open_cray_file(char *filename) {
   
   int fd = open(filename, O_RDONLY);
-  if (fd < 0) {
-    printf("Error: open: %s, fd = %d\n", filename, fd);
-    return fd; 
-  }
   return fd; 
 }
 
