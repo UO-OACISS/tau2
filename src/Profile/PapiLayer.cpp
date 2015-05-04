@@ -957,7 +957,7 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
         double value = (((double) tmpCounters[i]) *scalingFactor)/elapsedTimeInSecs;
 	dmesg(1,"Counter: %s: value %.9f, units = W\n", Tau_rapl_event_names[i], value);
 	if (value > 1e-5) {
-	  sprintf(ename,"%s (Socket Power in Watts)", Tau_rapl_event_names[i]);
+	  sprintf(ename,"%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
           TAU_TRIGGER_EVENT(ename, value);
         }
       }
