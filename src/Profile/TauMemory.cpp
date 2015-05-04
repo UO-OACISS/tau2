@@ -1586,7 +1586,7 @@ extern "C" int Tau_read_status(int fd, unsigned long long * rss, unsigned long l
   bytesread = read(fd, buf, 2048);
   if (bytesread == -1) {
     perror("Error reading from /proc/self/status");
-    return ret;
+    return bytesread;
   }
   //printf("Read: %s\n", buf);
   for(i=0; i < bytesread; i++) {
