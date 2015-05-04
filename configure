@@ -5118,7 +5118,7 @@ fi
 
 
 ######################################################################
-if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp -o "x$PE_ENV" = "xPGI" ] 
 then
     cat <<EOF > pgitest.C
 int foo(int x)
