@@ -692,6 +692,7 @@ int PapiLayer::initializeAndCheckRAPL(int tid) {
     printf("WARNING: TAU is already using PAPI counters. Please unset the TAU_METRICS environment variable so PAPI events do no appear in it if you plan to use TAU_TRACK_POWER API. Currently, TAU does not support both at the same time due to the higer overhead of power events.\n");
     return -1;
   }
+  return 1; 
 }
 /////////////////////////////////////////////////
 int PapiLayer::initializePerfRAPL(int tid) {
