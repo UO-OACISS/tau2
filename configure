@@ -4780,13 +4780,13 @@ EOF
 	    fixmakeargs="$fixmakeargs PAPIPFM"
 	    papipfm=yes
 	    papiperfctr=no
-	fi
-
-        if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
+	else 
+          if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
 	    fixmakeargs="$fixmakeargs PAPIPFMPERFCTR"
 	    papipfm=yes
 	    papiperfctr=yes
-	fi
+	  fi
+	fi 
         
         if [ $machine = craycnl ] ; then
 	    $c_compiler $orig_useropt -c -fPIC tau_papi_test.c -I$papidir/include 
@@ -7488,6 +7488,10 @@ EOF
 $echo "Checking for linking dependencies for libbfd... ${nnl}"
 
 BFDLIBS="-lbfd"
+
+if [ $c_compiler = mpiicc ]; then 
+  BFDLIBS="-lbfd -liberty -ldl -lz"
+fi 
 
 bfd_worked="no"
 if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
