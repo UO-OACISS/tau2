@@ -240,7 +240,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
 
         Metric metric = dataSorter.getSelectedMetric();
 
-        String unitsString = UtilFncs.getUnitsString(window.units(), dataSorter.isTimeMetric(), false);
+        String unitsString = UtilFncs.getUnitsString(window.units(), dataSorter.isTimeMetric(), false,dataSorter.getSelectedMetric().getName());
 
         String exclusiveValue = UtilFncs.getOutputString(window.units(), fp.getExclusive(metric.getID()),
                 ParaProf.defaultNumberPrecision, metric.isTimeDenominator());

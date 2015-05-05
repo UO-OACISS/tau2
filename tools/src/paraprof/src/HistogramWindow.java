@@ -363,7 +363,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
                 return starter;
             } else {
                 return starter + "\nUnits: "
-                        + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+                        + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName()) + "\n";
             }
         } else {
             if (dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR) {
@@ -372,7 +372,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
             } else {
                 return "Metric Name: " +ppTrial.getDefaultMetric().getName() + "\n" + "Name: "
                         + ParaProfUtils.getDisplayName(function) + "\n" + "Value Type: " + dataSorter.getValueType() + "\n"
-                        + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+                        + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric(),dataSorter.getSelectedMetric().getName()) + "\n";
             }
         }
     }
@@ -454,7 +454,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
         if ((dataSorter.getValueType() != ValueType.NUMCALLS && dataSorter.getValueType() != ValueType.NUMSUBR)) {
             xAxis = xAxis + " " + dataSorter.getSelectedMetric().getName() + " ("
-                    + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + ")";
+                    + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName()) + ")";
         }
 
         JFreeChart chart = ChartFactory.createHistogram(function.getName(), xAxis, "Threads", dataset, PlotOrientation.VERTICAL,
