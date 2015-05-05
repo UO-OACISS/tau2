@@ -774,6 +774,7 @@ int keyval;
   return returnVal;
 }
 
+#ifdef TAU_ENABLE_MPI_ATTR_GET
 int   MPI_Attr_get( comm, keyval, attr_value, flag )
 MPI_Comm comm;
 int keyval;
@@ -792,6 +793,8 @@ int * flag;
 
   return returnVal;
 }
+
+#endif /* TAU_ENABLE_MPI_ATTR_GET */
 
 int   MPI_Attr_put( comm, keyval, attr_value )
 MPI_Comm comm;
