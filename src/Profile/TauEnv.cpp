@@ -212,7 +212,7 @@ static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
 static int env_track_power = 0;
-static int env_track_memory = 0;
+static int env_track_memory_footprint = 0;
 static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
@@ -717,8 +717,8 @@ int TauEnv_get_track_power() {
   return env_track_power;
 }
 
-int TauEnv_get_track_memory() {
-  return env_track_memory;
+int TauEnv_get_track_memory_footprint() {
+  return env_track_memory_footprint;
 }
 
 int TauEnv_get_track_memory_leaks() {
@@ -1025,15 +1025,15 @@ void TauEnv_initialize()
       env_track_memory_heap = 0;
     }
 
-    tmp = getconf("TAU_TRACK_MEMORY");
-    if (parse_bool(tmp, env_track_memory)) {
-      TAU_VERBOSE("TAU: TAU_TRACK_MEMORY VmRSS and VmHWM tracking Enabled\n");
-      TAU_METADATA("TAU_TRACK_MEMORY", "on");
+    tmp = getconf("TAU_TRACK_MEMORY_FOOTPRINT");
+    if (parse_bool(tmp, env_track_memory_footprint)) {
+      TAU_VERBOSE("TAU: TAU_TRACK_MEMORY_FOOTPRINT VmRSS and VmHWM tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "on");
       TAU_TRACK_MEMORY_FOOTPRINT();
-      env_track_memory = 1;
+      env_track_memory_footprint = 1;
     } else {
-      TAU_METADATA("TAU_TRACK_MEMORY", "off");
-      env_track_memory = 0;
+      TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "off");
+      env_track_memory_footprint = 0;
     }
 
     tmp = getconf("TAU_TRACK_HEADROOM");
