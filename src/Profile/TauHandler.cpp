@@ -153,7 +153,7 @@ void TauSetInterruptInterval(int interval) {
   TheTauInterruptInterval() = interval;
 }
 
-int Tau_read_cray_power_events(int fd, unsigned long long int *value)  {
+int Tau_read_cray_power_events(int fd, long long int *value)  {
   char buf[2048]; 
   int ret, i, bytesread;
   if (fd > 0) {
@@ -173,7 +173,7 @@ int Tau_read_cray_power_events(int fd, unsigned long long int *value)  {
     perror("Error reading from Cray power events");
     return bytesread; 
   }
-  ret = sscanf(buf, "%ul", value); 
+  ret = sscanf(buf, "%lld", value); 
   return ret;
 }
 
@@ -184,12 +184,12 @@ int Tau_open_cray_file(char *filename) {
 }
 
 void TauTriggerCrayPowerEvent(int fd, char *event_name)  {
-  unsigned long long int value; 
+  long long int value; 
   if (fd) {
     Tau_read_cray_power_events(fd, &value); 
     if (value > 0) {
       TAU_TRIGGER_EVENT(event_name, (double) value);
-      TAU_VERBOSE("Triggered %s with %ul\n", event_name, value);
+      TAU_VERBOSE("Triggered %s with %lld\n", event_name, value);
     }
   }
 }
