@@ -2389,11 +2389,11 @@ void shfree(void * a1) {
    shmem_init_thread
  **********************************************************/
 
-void shmem_init_thread(int a1, int * a2) {
+int shmem_init_thread(int a1) {
 
-  TAU_PROFILE_TIMER(t,"void shmem_init_thread(int, int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"void shmem_init_thread(int) C", "", TAU_USER);
   TAU_PROFILE_START(t);
-   pshmem_init_thread(a1, a2);
+   pshmem_init_thread(a1);
   tau_totalnodes(1,pshmem_n_pes());
   TAU_PROFILE_SET_NODE(pshmem_my_pe());
   TAU_PROFILE_STOP(t);
@@ -2405,11 +2405,11 @@ void shmem_init_thread(int a1, int * a2) {
    shmem_query_thread
  **********************************************************/
 
-void shmem_query_thread(int * a1) {
+int shmem_query_thread(void) {
 
-  TAU_PROFILE_TIMER(t,"void shmem_query_thread(int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"void shmem_query_thread() C", "", TAU_USER);
   TAU_PROFILE_START(t);
-   pshmem_query_thread(a1);
+   pshmem_query_thread();
   TAU_PROFILE_STOP(t);
 
 }
