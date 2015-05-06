@@ -9,6 +9,10 @@ import ctau_impl
 # ____________________________________________________________
 # Simple interface
 
+def writeProfiles(prefix="profile"):
+    import pytau
+    pytau.dbDump(prefix)
+
 def run(statement, filename=None, sort=-1):
     """Run statement under profiler optionally saving results in filename
 

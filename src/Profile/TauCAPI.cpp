@@ -1753,6 +1753,16 @@ extern "C" void Tau_track_power(void) {
   TauTrackPower();
 }
 
+extern "C" void Tau_track_memory_rss_and_hwm(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackMemoryFootPrint();
+}
+
+extern "C" void Tau_track_memory_rss_and_hwm_here(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackMemoryFootPrintHere();
+}
+
 
 extern "C" void Tau_track_power_here(void) {
   TauInternalFunctionGuard protects_this_function;

@@ -623,6 +623,16 @@ void tau_track_memory_headroom_here(void)
   Tau_track_memory_headroom_here();
 }
 
+void tau_track_memory_footprint(void)
+{
+  Tau_track_memory_rss_and_hwm();
+} 
+
+void tau_track_memory_footprint_here(void)
+{
+  Tau_track_memory_rss_and_hwm_here();
+} 
+
 void tau_enable_tracking_memory(void)
 {
   Tau_enable_tracking_memory();
@@ -812,6 +822,15 @@ void tau_track_memory_headroom_here_(void)
   Tau_track_memory_headroom_here();
 } 
 
+void tau_track_memory_footprint_(void)
+{
+  Tau_track_memory_rss_and_hwm();
+} 
+
+void tau_track_memory_footprint_here_(void)
+{
+  Tau_track_memory_rss_and_hwm_here();
+} 
 
 void tau_enable_tracking_memory_(void)
 {
@@ -1057,6 +1076,16 @@ void TAU_TRACK_MEMORY_HEADROOM(void)
 void TAU_TRACK_MEMORY_HEADROOM_HERE(void)
 {
   Tau_track_memory_headroom_here();
+} 
+
+void TAU_TRACK_MEMORY_FOOTPRINT(void)
+{
+  Tau_track_memory_rss_and_hwm();
+} 
+
+void TAU_TRACK_MEMORY_FOOTPRINT_HERE(void)
+{
+  Tau_track_memory_rss_and_hwm_here();
 } 
 
 void TAU_ENABLE_TRACKING_MEMORY(void)
@@ -1456,6 +1485,15 @@ void tau_track_memory_headroom_here__(void)
   Tau_track_memory_headroom_here();
 } 
 
+void tau_track_memory_footprint__(void)
+{
+  Tau_track_memory_rss_and_hwm();
+} 
+
+void tau_track_memory_footprint_here__(void)
+{
+  Tau_track_memory_rss_and_hwm_here();
+} 
 
 void tau_enable_tracking_memory__(void)
 {

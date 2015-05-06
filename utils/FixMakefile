@@ -660,6 +660,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     TAU_MPI_HINDEX_CONST)
+	echo "NOTE: Using the -DTAU_MPI_HINDEX_CONST to compile programs"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPICH2_MPI_INPLACE)
 	echo "NOTE: Using the -DMPICH2_MPI_INPLACE flag"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1141,6 +1146,10 @@ case $1 in
 	;;
      PGINOPRELINK) 
 	echo NOTE: Disabling the use of --prelink_objects for PGI 6.0+ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGI_OPENACC) 
+	echo NOTE: Enabling PGI OpenACC profiling interface
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      FUJITSU) 
@@ -1727,6 +1736,10 @@ case $1 in
 	;;
      CRAYCNL_SHARED)
 	echo "NOTE: Using Cray Compute Node Shared Libraries"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAY_MIC)
+	echo "NOTE: Using Cray MIC Linux options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LINUXTIMERS)

@@ -57,6 +57,7 @@
 #define TAU_OPENMPI3_CONST 
 #endif
 
+
 void TauSyncClocks();
 void TauSyncFinalClocks();
 int Tau_mergeProfiles();
@@ -773,6 +774,7 @@ int keyval;
   return returnVal;
 }
 
+#ifdef TAU_ENABLE_MPI_ATTR_GET
 int   MPI_Attr_get( comm, keyval, attr_value, flag )
 MPI_Comm comm;
 int keyval;
@@ -791,6 +793,8 @@ int * flag;
 
   return returnVal;
 }
+
+#endif /* TAU_ENABLE_MPI_ATTR_GET */
 
 int   MPI_Attr_put( comm, keyval, attr_value )
 MPI_Comm comm;
@@ -2777,10 +2781,18 @@ MPI_Datatype * datatype;
   return returnVal;
 }
 
+#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_MPI_HINDEX_CONST))
+#define TAU_HINDEXED_CONST const
+#else
+#ifndef TAU_HINDEXED_CONST
+#define TAU_HINDEXED_CONST 
+#endif /* TAU_HINDEXED_CONST */
+#endif /* TAU_SGI_MPT_MPI */
+
 int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
 int count;
-TAU_OPENMPI3_CONST int * blocklens;
-TAU_OPENMPI3_CONST MPI_Aint * indices;
+TAU_HINDEXED_CONST int * blocklens;
+TAU_HINDEXED_CONST MPI_Aint * indices;
 MPI_Datatype old_type;
 MPI_Datatype * newtype;
 {
@@ -2865,6 +2877,7 @@ int * size;
 
   return returnVal;
 }
+
 
 int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
 int count;

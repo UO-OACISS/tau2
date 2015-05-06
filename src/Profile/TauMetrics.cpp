@@ -48,6 +48,8 @@ void metric_read_linuxtimers(int tid, int idx, double values[]);
 void metric_read_bgtimers(int tid, int idx, double values[]);
 void metric_read_craytimers(int tid, int idx, double values[]);
 void metric_read_cputime(int tid, int idx, double values[]);
+void metric_read_cpuenergy(int tid, int idx, double values[]);
+void metric_read_accelenergy(int tid, int idx, double values[]);
 void metric_read_messagesize(int tid, int idx, double values[]);
 void metric_read_papivirtual(int tid, int idx, double values[]);
 void metric_read_papiwallclock(int tid, int idx, double values[]);
@@ -319,6 +321,10 @@ static void initialize_functionArray()
       functionArray[pos++] = metric_read_gettimeofday;
     } else if (strcasecmp(metricv[i], "CPU_TIME") == 0) {
       functionArray[pos++] = metric_read_cputime;
+    } else if (strcasecmp(metricv[i], "ENERGY") == 0) {
+      functionArray[pos++] = metric_read_cpuenergy;
+    } else if (strcasecmp(metricv[i], "ACCEL_ENERGY") == 0) {
+      functionArray[pos++] = metric_read_accelenergy;
 #ifdef TAU_LINUX_TIMERS
     } else if (strcasecmp(metricv[i], "LINUX_TIMERS") == 0) {
       functionArray[pos++] = metric_read_linuxtimers;

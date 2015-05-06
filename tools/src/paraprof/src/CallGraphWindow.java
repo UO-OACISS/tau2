@@ -204,7 +204,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
                 result = result + "<br>Width Value (" + widthOption;
                 if (widthOption != CallGraphOption.NUMCALLS && widthOption != CallGraphOption.NUMSUBR) {
-                    unitsString = UtilFncs.getUnitsString(window.units(), true, false);
+                    unitsString = UtilFncs.getUnitsString(window.units(), true, false,"");
                     widthValue = UtilFncs.getOutputString(window.units(), getValue(functionProfile, widthOption, 1, widthMetric),
                             ParaProf.defaultNumberPrecision, widthMetric.isTimeDenominator());
                     result = result + ", " + widthMetric.getName();
@@ -220,7 +220,7 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
                 result = result + "<br>Color Value (" + colorOption;
                 if (colorOption != CallGraphOption.NUMCALLS && colorOption != CallGraphOption.NUMSUBR) {
-                    unitsString = UtilFncs.getUnitsString(window.units(), true, false);
+                    unitsString = UtilFncs.getUnitsString(window.units(), true, false,"");
                     colorValue = UtilFncs.getOutputString(window.units(), getValue(functionProfile, colorOption, 1, colorMetric),
                             ParaProf.defaultNumberPrecision, colorMetric.isTimeDenominator());
                     result = result + ", " + colorMetric.getName();
