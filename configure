@@ -765,6 +765,7 @@ tcltk=yes
 tcltkfile="/"
 kai=no
 pgi=no
+craymic=no
 fujitsu=no
 guidef90=no
 stdcxxlib=no
@@ -2973,6 +2974,12 @@ case $machine in
 	cxx_compiler=CC
 	c_compiler=cc
 	default_fortran=pgi
+	if [ "x$CRAY_CPU_TARGET" = "xknc" ] ; then
+	    fixmakeargs="$fixmakeargs CRAY_MIC"
+	    tauoptions="${tauoptions}-mic"
+	    craymic=yes
+        fi
+
 	if [ "x$PE_ENV" = xPGI ] ; then
 	    #tauoptions="${tauoptions}-pgi"
 	    pgi=yes
@@ -4304,7 +4311,7 @@ then
             fi
             ;;
 	mic_linux)
-            mpiinc=`which mpiicpc | sed -e 's/\/bin\/mpiicpc$//'`/include
+            mpiinc=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
             if [ -d $mpiinc ]
             then
 		echo "Using MPI include directory $mpiinc"
@@ -4498,6 +4505,23 @@ then
 		mpilibrary="$additional_mpilibs"
             fi
             ;;
+	mic_linux) 
+            if [ $mpc = yes ] 
+            then
+		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/../mic/lib
+            else
+                mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
+		if [ ! -d $mpilib ] ; then
+		    # Try the ".../lib64" directory instead of ".../lib"
+                    mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
+		fi
+		if [ -d $mpilib ] ; then
+		    echo "Using MPI lib directory $mpilib"
+		else
+ 		    mpilib=""
+		fi
+            fi
+	    ;;
 	*)    
             if [ $mpc = yes ] 
             then
@@ -4756,13 +4780,13 @@ EOF
 	    fixmakeargs="$fixmakeargs PAPIPFM"
 	    papipfm=yes
 	    papiperfctr=no
-	fi
-
-        if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
+	else 
+          if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
 	    fixmakeargs="$fixmakeargs PAPIPFMPERFCTR"
 	    papipfm=yes
 	    papiperfctr=yes
-	fi
+	  fi
+	fi 
         
         if [ $machine = craycnl ] ; then
 	    $c_compiler $orig_useropt -c -fPIC tau_papi_test.c -I$papidir/include 
@@ -4867,7 +4891,11 @@ then
 		then
 		    shmemincargs="-I$MPT_DIR/sma/include/mpp/#-I$MPT_DIR/sma/include/"
 		else
-		    shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
+		    if [ -r $CRAY_MPICH2_BASEDIR/sma64/include/shmem.h ] ; then 
+		      shmemincargs="-I$CRAY_MPICH2_BASEDIR/sma64/include/mpp#-I$CRAY_MPICH2_BASEDIR/sma64/include"
+                    else
+		      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
+                    fi
 		    # old options 
 		fi
 	    fi
@@ -4964,7 +4992,11 @@ then
 	    then
 		shmemlibargs="$shmemlibargs -L$MPT_DIR/sma/lib64/"
 	    else
-		shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+		if [ -r $CRAY_SHMEM_DIR/lib64/libsma.a ] ; then
+		  shmemlibargs="$shmemlibargs -L$CRAY_SHMEM_DIR/lib64/"
+                else 
+		  shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+                fi
 	    fi
 	fi
     fi
@@ -5086,7 +5118,7 @@ fi
 
 
 ######################################################################
-if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp -o "x$PE_ENV" = "xPGI" ] 
 then
     cat <<EOF > pgitest.C
 int foo(int x)
@@ -5106,7 +5138,23 @@ EOF
     else
 	echo "ERROR: Your PGI compiler is not working! Please check the license file"
     fi 
-    rm -f pgitest.o pgitest.C libpgitest.a
+    /bin/rm -f pgitest.o pgitest.C libpgitest.a
+cat <<EOF > pgiacctest.C
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stddef.h>
+#include <openacc.h>
+#include "pgi_acc_prof.h"
+EOF
+    if $cxx_compiler $orig_useropt -c pgiacctest.C 1> /dev/null 2>&1
+    then
+      echo "PGI compiler supports OpenACC profiling interface. Enabling OpenACC."
+      fixmakeargs="$fixmakeargs PGI_OPENACC"
+    else
+      echo "PGI compiler doesn't support OpenACC profiling interface."
+    fi
+    /bin/rm -f pgiacctest.C pgiacctest.o
 fi
 ######################################################################
 # If epilog is used, check and see if it supports v2.1s write interface
@@ -5671,7 +5719,7 @@ libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 libunwinddir=${targetdir}/${architecture}
 libunwind_name=unwind
-if [ $machine = mic_linux ] ; then
+if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwind=libunwind-mic-1.1
   libunwindtgz=$libunwind.tgz
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
@@ -5686,7 +5734,11 @@ if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
 fi
   
 if [ "x$download_unwind" = xyes ] ; then
-  unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  if [ $machine = craycnl ] ; then
+    unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}-${PE_ENV}
+  else
+    unwind_dir=${libunwinddir}/${libunwind}-${c_compiler}
+  fi
   prebfddir=`pwd`
 
   if [ -r "$unwind_dir/lib/lib${libunwind_name}.so" -o \
@@ -5725,7 +5777,7 @@ if [ "x$download_unwind" = xyes ] ; then
         unwind_cxx_compiler=${cxx_compiler}
       fi
 
-      if [ $machine != mic_linux ]; then 
+      if [ $craymic = no -a $machine != mic_linux ]; then 
         configresult=0
         makeresult=0
         libunwind_log=configure.log
@@ -5737,7 +5789,7 @@ if [ "x$download_unwind" = xyes ] ; then
           sed 's/_Unwind_Resume/_Unwind_Resume_other/' tmp.c > src/unwind/Resume.c
           rm tmp.c
         elif [ "$machine" = "craycnl" ] ; then
-          ./configure --prefix=${unwind_dir} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log} 2>&1 
+          ./configure --prefix=${unwind_dir}  CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} CFLAGS=-fPIC CXXFLAGS=-fPIC --disable-shared > ${libunwind_log} 2>&1 
         else
           ./configure --prefix=${unwind_dir} CC=${unwind_c_compiler} CXX=${unwind_cxx_compiler} > ${libunwind_log} 2>&1 
         fi
@@ -5817,10 +5869,14 @@ if [ "x$download_ompt" = xyes ] ; then
 
   # if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" ] && [ -r "$libomp_ossdir/lib${libomp_oss_name}.a" ] ; then
 
-  if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" ] ; then
+  if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -nt ${libomp_oss} ]; then
     echo "Found: $libomp_ossdir/lib${libomp_oss_name}.so"
     echo "libomp_oss download already found, skipping"
   else
+    if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
+      echo "NOTE: $libomp_ossdir/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
+      /bin/rm -rf ${libomp_oss}
+    fi
     # get the tar file
     echo "downloading $libomp_osstgz..."
     if [ ! -f $libomp_osstgz ]; then 
@@ -5854,6 +5910,10 @@ if [ "x$download_ompt" = xyes ] ; then
 
 	  # fix the expected path for bin 
       cp tools/common.inc tmp.inc
+      if [ -r $ompt_dir/${libomp_oss_name}.so ]; then 
+        /bin/rm -f $ompt_dir/${libomp_oss_name}.so
+      fi
+
       sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
       rm tmp.inc
       echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
@@ -6086,6 +6146,34 @@ MPI_Aint * address;
 
 EOF
 
+cat <<EOF > mpihindex1.c
+#include <mpi.h>
+
+int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
+int count;
+int * blocklens;
+MPI_Aint * indices;
+MPI_Datatype old_type;
+MPI_Datatype * newtype;
+{
+  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
+}
+EOF
+
+cat <<EOF > mpihindex2.c
+#include <mpi.h>
+
+int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
+int count;
+const int * blocklens;
+const MPI_Aint * indices;
+MPI_Datatype old_type;
+MPI_Datatype * newtype;
+{
+  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
+}
+EOF
+
 cat <<EOF > mpi2attr.$msuf
   #include <mpi.h>
 
@@ -6287,6 +6375,19 @@ else
   fi
 fi            
 rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out 
+
+$echo "Checking for MPI_Type_hindexed const interface... ${nnl}"
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex1.c  1> /dev/null 2>&1 ; then
+  echo "not needed"
+else
+  echo "yes"
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex2.c 1> /dev/null 2>&1 ; then
+    echo "Using const in MPI_Type_hindexed interface "
+      fixmakeargs="$fixmakeargs TAU_MPI_HINDEX_CONST"
+  fi
+fi
+rm -f mpihindex1.c mpihindex2.c mpihindex1.o mpihindex2.o 
+
 
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
@@ -6606,7 +6707,16 @@ if [ $mpi = yes ] ; then
 		fi
 		
 		if [ "x$mpilibrary" = "xno" ] ; then 
-		    mpilibrary=-lmpi
+		    if [ $openmp = yes -o $pthread = yes ] ; then 
+		      if [ -r $mpilib/libmpi_mt.a -o -r $mpilib/libmpi_mt.so -o -r $mpilib/libmpi_mt.dylib ] ; then
+		        mpilibrary=-lmpi_mt
+                      else
+		       mpilibrary=-lmpi
+		      fi
+                    else 
+		      mpilibrary=-lmpi
+                    fi
+		    echo "SETTING mpilibrary=$mpilibrary"
 		    if [ -r $mpilib/libmpi++.so ] ; then
 			mpilibrary='-lmpi -lmpi++'
 			# SGI MPT
@@ -6677,7 +6787,12 @@ if [ $mpi = yes ] ; then
 				    elif [ -r $mpilib/libmpich_pgi.a ]; then 
 					mpilibrary="-lmpich_pgi $additional_mpilibs"
 				    else
-					mpilibrary="-lmpich $additional_mpilibs"
+					if [ "$craymic" = "no" ]; then 
+					  mpilibrary="-lmpich $additional_mpilibs"
+					else
+					  mpilibrary="$additional_mpilibs"
+					fi 
+					#echo "Craymic=$craymic "
 				    fi
 				    echo "Using mpilibrary=$mpilibrary"
 				else
@@ -7095,6 +7210,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     if [ "x$bfddir" = xdownload ]; then
       #only change the bfddir if we are downloading
       bfddir="$targetdir/$architecture/$binutils"
+      if [ $machine = craycnl -a $craymic = yes ]; then 
+        bfddir="$targetdir/$architecture/$binutils-mic"
+      fi
     fi
     if [ -r "$bfddir/lib/libbfd.a" ] ; then
       echo "Found: $bfddir/lib/libbfd.a"
@@ -7205,6 +7323,26 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 		--disable-nls --disable-werror > tau_configure.log 2>&1
 	err=$?
 	;;
+      craycnl)
+	unset CC CXX
+	if [ $craymic = yes ]; then 
+          # Note: may need to search other paths than just /usr/linux-k1om-*
+          k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
+          export PATH=$k1om_bin:$PATH
+          ./configure \
+            CFLAGS='-mmic -fPIC' CXXFLAGS='-mmic -fPIC' \
+            --host=x86_64-k1om-linux \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror > tau_configure.log 2>&1
+          err=$?
+	else 
+          ./configure \
+            CFLAGS=-fPIC CXXFLAGS=-fPIC \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror > tau_configure.log 2>&1
+          err=$?
+        fi
+        ;;
       *)
         ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
@@ -7351,6 +7489,10 @@ $echo "Checking for linking dependencies for libbfd... ${nnl}"
 
 BFDLIBS="-lbfd"
 
+if [ $c_compiler = mpiicc ]; then 
+  BFDLIBS="-lbfd -liberty -ldl -lz"
+fi 
+
 bfd_worked="no"
 if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
     bfd_worked="yes"
@@ -7386,6 +7528,13 @@ fi
 
 if [ $bfd_worked = "no" ] ; then
     echo "failed. Using -lbfd -liberty -lz."
+    echo ""
+    echo ""
+    echo "VERY IMPORTANT NOTE: Please configure TAU with -bfd=download. If a firewall prevents wget from accessing this binutils tarball"
+    echo "Please download http://tau.uoregon.edu/ext.tgz and untar it in this TAU directory and please use -bfd=download."
+    echo "***********************************************************************"
+    echo ""
+    echo ""
     BFDLIBS="-lbfd -liberty -lz"
     if [ $tauarch = i386_linux ]; then 
 	BFDLIBS=""
@@ -8332,7 +8481,8 @@ if [ $scorep = yes ] ; then
         scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
       else 
         if [ $ompt = yes ]; then 
-          scorep_adapter="$scorep_adapter --thread=omp:ompt"
+          #scorep_adapter="$scorep_adapter --thread=omp:ompt"
+          scorep_adapter="$scorep_adapter --thread=omp"
         else 
           scorep_adapter="$scorep_adapter --thread=omp:ancestry"
 # Should we make an explicit option to enable Score-P thread=ancestry? 
@@ -8395,9 +8545,9 @@ if [ $scorep = yes ] ; then
     scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 
-    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     if [ $mpi = no ]; then
-      fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     fi
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
@@ -8732,9 +8882,12 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     elif [ -f "$libdir/intel64/for_main.o" ] ; then
         libdir="$libdir/intel64"
        echo "Found $libdir/for_main.o"
-    elif [ -f "$var/compiler/lib/intel64/for_main.o" -a $machine=x86_64 ] ; then
+    elif [ -f "$var/compiler/lib/mic/for_main.o" -a $machine = mic_linux ] ; then
+        libdir="$var/compiler/lib/mic"
+        echo "Found $libdir/for_main.o"
+    elif [ -f "$var/compiler/lib/intel64/for_main.o" -a $machine = x86_64 ] ; then
         libdir="$var/compiler/lib/intel64"
-       echo "Found $libdir/../../compiler/lib/intel64/for_main.o"
+       echo "Found $libdir/for_main.o"
     elif [ -f "$libdir/ia32/for_main.o" ] ; then
         libdir="$libdir/ia32"
     elif [ -f "$libdir/ia64/for_main.o" ] ; then
@@ -8984,6 +9137,7 @@ cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
+cp ${tauroot}/tools/src/tau_python $BINTARGET
 
 if [ $pdtarchdir != unknown ]
 then
@@ -9085,6 +9239,24 @@ echo "... done"
 echo "***********************************************************************"
 
 
+#echo "Before HERE --> ompt=$ompt libomp_ossdir=${libomp_ossdir}  ${libomp_ossdir}/lib${libomp_oss_name}.so "
+# Special OMPT processing that needs tauoptions to be set
+if [ $ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
+  if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
+    echo "BGQ ompt"
+  else
+    echo "TAU: Copying libiomp5_ompt.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
+    mkdir -p ${targetdir}/${architecture}/lib/shared${tauoptions}
+    cp ${libomp_ossdir}/libiomp5.so ${targetdir}/${architecture}/lib/shared${tauoptions}/lib${libomp_oss_name}.so ; 
+    echo "ompt_dir=$ompt_dir"
+   # if [ "x$ompt_dir" = "x" -a -r ${libomp_ossdir}/libiomp5.so ]; then
+	#/bin/rm -f ${libomp_ossdir}/libiomp5.so
+#	echo "Removing ${libomp_ossdir}/libiomp5.so"
+   # fi
+    omptlinking="-Wl,-rpath=$omptlib/shared${tauoptions}#-L$omptlib/shared${tauoptions}#$omptlibrary"
+    fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+  fi
+fi
 # Save the FixMakefile args
 # Clear any old data
 grep "^#" ./utils/FixMakefile.info > ./utils/FixMakefile.info~~0
@@ -9262,6 +9434,7 @@ if [ $tauprefix != unknown ] ; then
     cp -r examples ${tauprefix}
     cp .all_configs .last_config .active_stubs .active_stub ${tauprefix}
 fi
+
 
 
 # bye bye

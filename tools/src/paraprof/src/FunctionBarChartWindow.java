@@ -619,7 +619,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                     || showValuesAsPercent.isSelected()) {
                 // nothing
             } else {
-                header += "\nUnits: " + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric());
+                header += "\nUnits: " + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName());
             }
             return header + "\n";
         } else {
@@ -637,7 +637,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
                 starter += "\n";
             } else {
                 starter += "\nUnits: "
-                        + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+                        + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName()) + "\n";
             }
             
             if(dataSorter.getSortType()==SortType.NAME){

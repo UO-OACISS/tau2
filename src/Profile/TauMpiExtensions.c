@@ -978,7 +978,9 @@ void mpi_type_match_size__( MPI_Fint *  typeclass, MPI_Fint *  size, MPI_Fint * 
 /******************************************************/
 /******************************************************/
 
-
+extern void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, 
+  MPI_Fint *  sdispls, MPI_Fint * sendtypes, void * recvbuf, MPI_Fint *  recvcounts, 
+  MPI_Fint *  rdispls, MPI_Fint * recvtypes, MPI_Fint *  comm, MPI_Fint * ierr); 
 /******************************************************
 ***      MPI_Alltoallw wrapper function 
 ******************************************************/
@@ -992,19 +994,6 @@ int MPI_Alltoallw( TAU_MPICH3_CONST void * sendbuf, TAU_MPICH3_CONST int * sendc
   return retvalue; 
 }
 
-/******************************************************
-***      MPI_Alltoallw wrapper function 
-******************************************************/
-void MPI_ALLTOALLW( MPI_Aint * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sdispls, MPI_Fint * sendtypes, MPI_Aint * recvbuf, MPI_Fint *  recvcounts, MPI_Fint *  rdispls, MPI_Fint * recvtypes, MPI_Fint *  comm, MPI_Fint * ierr)
-{
-  TAU_DECL_LOCAL(MPI_Datatype, local_send_types);
-  TAU_DECL_ALLOC_LOCAL(MPI_Datatype, local_recv_types, *recvcounts);
-  TAU_ALLOC_LOCAL(MPI_Datatype, local_send_types, *sendcounts);
-  TAU_ASSIGN_VALUES(local_send_types, sendtypes, *sendcounts, MPI_Type_f2c);
-  TAU_ASSIGN_VALUES(local_recv_types, recvtypes, *recvcounts, MPI_Type_f2c);
-  *ierr = MPI_Alltoallw( sendbuf, sendcounts, sdispls, local_send_types, recvbuf, recvcounts, rdispls, local_recv_types, MPI_Comm_f2c(*comm)) ; 
-  return ; 
-}
 
 /******************************************************
 ***      MPI_Alltoallw wrapper function 
@@ -1033,8 +1022,6 @@ void mpi_alltoallw__( MPI_Aint * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sd
   return ; 
 }
 
-/******************************************************/
-/******************************************************/
 
 #ifdef TAU_MPITYPEEX
 
@@ -1044,51 +1031,14 @@ void mpi_alltoallw__( MPI_Aint * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sd
 int MPI_Exscan( TAU_MPICH3_CONST void * sendbuf, void * recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
   int retvalue; 
+
   TAU_PROFILE_TIMER(t, "MPI_Exscan()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
   retvalue = PMPI_Exscan( sendbuf, recvbuf, count, datatype, op, comm) ; 
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
-
-/******************************************************
-***      MPI_Exscan wrapper function 
-******************************************************/
-void MPI_EXSCAN( MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
-{
-  *ierr = MPI_Exscan( sendbuf, recvbuf, *count, MPI_Type_f2c(*datatype), MPI_Op_f2c(*op), MPI_Comm_f2c(*comm)) ; 
-  return ; 
-}
-
-/******************************************************
-***      MPI_Exscan wrapper function 
-******************************************************/
-void mpi_exscan( MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
-{
-  MPI_EXSCAN( sendbuf, recvbuf, count, datatype, op, comm, ierr) ; 
-  return ; 
-}
-
-/******************************************************
-***      MPI_Exscan wrapper function 
-******************************************************/
-void mpi_exscan_( MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
-{
-  MPI_EXSCAN( sendbuf, recvbuf, count, datatype, op, comm, ierr) ; 
-  return ; 
-}
-
-/******************************************************
-***      MPI_Exscan wrapper function 
-******************************************************/
-void mpi_exscan__( MPI_Aint * sendbuf, MPI_Aint * recvbuf, MPI_Fint *  count, MPI_Fint *  datatype, MPI_Fint *  op, MPI_Fint *  comm, MPI_Fint * ierr)
-{
-  MPI_EXSCAN( sendbuf, recvbuf, count, datatype, op, comm, ierr) ; 
-  return ; 
-}
-
-#endif /* TAU_MPI_TYPEEX */
-
+#endif /* TAU_MPITYPEEX */
 /******************************************************/
 /******************************************************/
 

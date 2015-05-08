@@ -29,6 +29,8 @@ void TauTrackMemoryUtilization(bool allocated);
 void TauTrackMemoryHere(void);
 void TauTrackPower(void);
 void TauTrackPowerHere(void);
+void TauTrackMemoryFootPrint(void);
+void TauTrackMemoryFootPrintHere(void);
 int TauEnableTrackingPower(void);
 int TauDisableTrackingPower(void);
 

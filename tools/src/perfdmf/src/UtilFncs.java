@@ -290,10 +290,15 @@ public class UtilFncs {
         }
     }
 
-    public static String getUnitsString(int type, boolean time, boolean derived) {
+    public static String getUnitsString(int type, boolean time, boolean derived, String metricName) {
         if (derived) {
             if (!time)
-                return "counts";
+            {
+            	if(metricName.toLowerCase().contains("energy")&&!metricName.contains("/")){
+            		return "joules";
+            	}
+            	return "counts";
+            }
             switch (type) {
             case 0:
                 return "Derived metric shown in microseconds format";
@@ -309,7 +314,12 @@ public class UtilFncs {
             }
         } else {
             if (!time)
-                return "counts";
+            {
+            	if(metricName.toLowerCase().contains("energy")&&!metricName.contains("/")){
+            		return "joules";
+            	}
+            	return "counts";
+            }
             switch (type) {
             case 0:
                 return "microseconds";
