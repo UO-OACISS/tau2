@@ -532,6 +532,7 @@ extern "C" void Tau_pure_start_openmp_task(const char * n, int tid);
 extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
 
 /*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context, int forking, bool task) {
+  //TAU_TRACK_MEMORY_FOOTPRINT_HERE();
   // 0 means no context wanted
   if (use_context == 0 || TauEnv_get_openmp_runtime_context() == 0) {
     //  no context for the event
@@ -546,11 +547,17 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
     //fprintf(stderr, "%d: start '%s'\n", tid, regionIDstr); fflush(stderr);
     Tau_pure_start_openmp_task(regionIDstr, tid);
     //free(tmpStr);
+#ifndef TAU_FIX_LEAKS_OMPT
+    if ((tmpStr[0] == '(') && (tmpStr[1] == 'c') && (tmpStr[2] == 'h') && (tmpStr[9] == 'U')) { //(char*)__U 
+      free(tmpStr); // SSS
+    }
+#endif /* TAU_FIX_LEAKS_OMPT */
     free(regionIDstr);
   }
 }
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context, bool task) {
+  //TAU_TRACK_MEMORY_FOOTPRINT_HERE();
     if (Tau_collector_enabled) {
       if (use_context == 0 || TauEnv_get_openmp_runtime_context() == 0) {
     //fprintf(stderr, "%d: stop \n", tid); fflush(stderr);
@@ -564,6 +571,12 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
         sprintf(regionIDstr, "%s: %s", state, tmpStr);
     //fprintf(stderr, "%d: stop '%s'\n", tid, regionIDstr); fflush(stderr);
         Tau_pure_stop_openmp_task(regionIDstr, tid);
+#ifndef TAU_FIX_LEAKS_OMPT
+        free(regionIDstr); 
+        if ((tmpStr[0] == '(') && (tmpStr[1] == 'c') && (tmpStr[2] == 'h') && (tmpStr[9] == 'U')) { //(char*)__U 
+          free(tmpStr); 
+        }
+#endif /* TAU_FIX_LEAKS_OMPT */
       }
     }
 }
@@ -1176,6 +1189,9 @@ extern "C" void my_task_end (
   TAU_OPENMP_SET_LOCK;
   char * tmpStr = task_names[Tau_collector_flags[tid].taskid];
   //free(tmpStr);
+#ifndef TAU_FIX_LEAKS_OMPT
+  free(tmpStr); 
+#endif /* TAU_FIX_LEAKS_OMPT */
   //task_names.erase(Tau_collector_flags[tid].taskid);
   TAU_OPENMP_UNSET_LOCK;
   TAU_OMPT_COMMON_EXIT;
@@ -1554,10 +1570,12 @@ int __ompt_initialize() {
   CHECK(ompt_event_initial_task_end, my_initial_task_end, "initial_task_end");
 #endif
 #endif
+#ifndef TAU_FIX_LEAKS_OMPT
   CHECK(ompt_event_barrier_begin, my_barrier_begin, "barrier_begin");
   CHECK(ompt_event_barrier_end, my_barrier_end, "barrier_end");
   CHECK(ompt_event_master_begin, my_master_begin, "master_begin");
   CHECK(ompt_event_master_end, my_master_end, "master_end");
+#endif /* TAU_FIX_LEAKS_OMPT */
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
