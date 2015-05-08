@@ -29,11 +29,13 @@ usage()
     echo "        -cuda         Track GPU events via CUDA"
     echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
     echo "        -opencl       Track GPU events via OpenCL"
+    echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
+    echo "        -ompt         Track OpenMP events via OMPT interface"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
-    echo "        -uvm          Enable Unified Virtual Memory events via CUPTI"
+    echo "        -um          Enable Unified Memory events via CUPTI"
     options=`tau-config --list-options`
     echo "        -T <$options> : Specify TAU tags"
     echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -52,7 +54,7 @@ usage()
 		echo "    tau_exec -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
 		echo "    tau_exec -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
 		echo "    tau_exec -T serial -opencl (OPENCL)"
-		echo "    tau_exec -T serial,cupti -cupti -uvm ./unified_memory (Unified Virtual Memory)"
+		echo "    tau_exec -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
     echo ""
     echo "qsub mode (IBM BG/P only):"
     echo "    Original:"
@@ -87,13 +89,16 @@ track_io=false
 track_memory=false
 memory_debug=false
 track_cuda=false
+track_ompt=false
 track_cupti=false
 unified_memory=false
 track_opencl=false
+track_openacc=false
 track_armci=false
 tau_use_ebs=false
 tau_ebs_period=""
 tau_ebs_source=""
+scorep=false
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
@@ -108,6 +113,10 @@ for arg in "$@" ; do
   if [ "$processT" = true ] ; then
       binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
       processT="false"
+      test_arg=`echo $arg | sed -e 's@scorep@@g'`
+      if [ "x$test_arg" != "x$arg" ]; then 
+        scorep=true
+      fi
       shift
   else
       case $arg in 
@@ -134,16 +143,24 @@ for arg in "$@" ; do
 	      track_cuda=true
 	      shift
 	      ;;
+	  -ompt)
+	      track_ompt=true
+	      shift
+	      ;;
 	  -cupti)
 	      track_cupti=true
 	      shift
 	      ;;
-	  -uvm)
+	  -um | -uvm)
 	      unified_memory=true
 	      shift
 	      ;;
 	  -opencl)
 	      track_opencl=true
+	      shift
+	      ;;
+	  -openacc)
+	      track_openacc=true
 	      shift
 	      ;;
 	  -gomp)
@@ -256,7 +273,18 @@ if [ "x$binding_specified" = "x" ] ; then
     fi
     theBinding=`tau-config --binding $binding_options`
     if [ $? != 0 ] ; then
-	exit 1
+	if [ $verbose = "true" ]; then 
+	  echo "Binding options: $binding_options didn't work; trying without MPI using serial instead."
+        fi
+	new_binding_options=`echo $binding_options | sed -e 's/mpi/serial/' `
+	theBinding=`tau-config --binding $new_binding_options`
+	if [ $? != 0 ] ; then
+	  echo "Binding not found. Exiting..."
+	  exit 1
+        else 
+	  echo "Using $theBinding"
+	  binding_options=$new_binding_options
+	fi
     fi
 else
     theBinding=$binding_specified
@@ -387,6 +415,10 @@ if [ $track_opencl = "true" ] ; then
 			export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
 		fi
 fi
+if [ $track_openacc = "true" ] ; then
+    export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+    export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+fi
 
 if [ $track_armci = "true" ] ; then
     # Add the ARMCI wrapper library to the LD_PRELOAD list
@@ -405,11 +437,34 @@ if [ $tau_use_ebs = "true" ] ; then
     fi
 fi
 
+if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
+    if [ $verbose = "true" ]; then 
+      echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
+    fi
+fi
+
+if [ $scorep = true ]; then
+  if [ $verbose = "true" ]; then 
+    echo "Score-P is specified"
+  fi
+  scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
+  if [ -f $scoreplib -a $verbose = "true" ]; then 
+    echo "Preloading: $scoreplib"
+  fi
+  if [ "x$extraloadlibs" = "x" ]; then 
+    extraloadlibs=":$scoreplib"
+  else
+    extraloadlibs=":$scoreplib:$extraloadlibs"
+  fi
+fi
+
 # add libraries specified by -loadlib=<foo.so>
 TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
 
 # remove double colons
 TAUEX_LD_PRELOAD=`echo $TAUEX_LD_PRELOAD | sed -e "s/::/:/g" -e "s/:$//"`
+
 
 if [ $apple = 1 ]; then
   TAU_LDD='otool -L'

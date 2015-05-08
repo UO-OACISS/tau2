@@ -29,7 +29,7 @@ RM 	      	= /bin/rm -rf
 TARGET	      	= matmult
 
 OBJS     	= matmult.o matmult_initialize.o
-CFLAGS=-g $(TAU_OPENMP_OPTION)
+CFLAGS=-g -O0 $(TAU_OPENMP_OPTION)
 LDFLAGS=-g $(TAU_OPENMP_OPTION)
 
 ##############################################
@@ -38,7 +38,7 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(OBJS) $(TAU_LIB_DIR)/libTAU$(TAU_SHLIBX)
+$(TARGET):	$(OBJS) 
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
 matmult.o: matmult.c
