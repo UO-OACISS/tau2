@@ -195,6 +195,38 @@ extern FunctionInfo * Tau_create_thread_state_if_necessary_string(std::string th
 
 extern "C" char * TauInternal_CurrentCallsiteTimerName(int tid);
 
+/* This function provides a slightly "delayed" cleanup of region names.
+ * In some runtimes (Intel, for example) the master thread in the team
+ * can exit the region before all other threads are done with it. When
+ * those threads try to access the name in the map using the id, the
+ * name has to still be there. BUT, we can't leak memory. This code
+ * will temporarially put the region id on the trash heap to be thrown
+ * out when the heap exceeds a certain size.
+ */
+void region_name_cleanup(unsigned long parallel_id) {
+  // this should be enough. One for each thread to have its own parallel region.
+  static const unsigned int max_size = omp_get_max_threads();
+  TAU_OPENMP_SET_LOCK;
+  // clean the heap if necessary
+  if (region_trash_heap.size() > max_size) {
+    std::set<unsigned long>::iterator it;
+    for (it = region_trash_heap.begin(); it != region_trash_heap.end(); ++it)
+    {
+        unsigned long r = *it;
+        char * tmpStr = region_names[r];
+        //printf("done with Region %d, name %s\n", r, tmpStr); fflush(stdout);
+        free(tmpStr);
+        region_names.erase(r);
+    }
+    region_trash_heap.clear();
+  }
+  // put this region id on the trash heap.
+  if (parallel_id > 0) {
+    region_trash_heap.insert(parallel_id);
+  }
+  TAU_OPENMP_UNSET_LOCK;
+}
+
 void Tau_get_region_id(int tid) {
     // if not available, return something useful
     if (Tau_collector_api == NULL) {
@@ -613,6 +645,7 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
                 Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1, false);
                 Tau_collector_flags[tid].parallel--;
             }
+            region_name_cleanup(Tau_collector_flags[tid].regionid);
             break;
         case OMP_EVENT_THR_BEGIN_IDLE:
             // sometimes IDLE can be called twice in a row
@@ -1125,36 +1158,6 @@ extern "C" void my_parallel_region_begin (
   Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1, false);
   Tau_collector_flags[tid].parallel++;
   TAU_OMPT_COMMON_EXIT;
-}
-
-/* This function provides a slightly "delayed" cleanup of region names.
- * In some runtimes (Intel, for example) the master thread in the team
- * can exit the region before all other threads are done with it. When
- * those threads try to access the name in the map using the id, the
- * name has to still be there. BUT, we can't leak memory. This code
- * will temporarially put the region id on the trash heap to be thrown
- * out when the heap exceeds a certain size.
- */
-void region_name_cleanup(unsigned long parallel_id) {
-  // this should be enough. One for each thread to have its own parallel region.
-  static const unsigned int max_size = omp_get_max_threads();
-  TAU_OPENMP_SET_LOCK;
-  // clean the heap if necessary
-  if (region_trash_heap.size() > max_size) {
-    std::set<unsigned long>::iterator it;
-    for (it = region_trash_heap.begin(); it != region_trash_heap.end(); ++it)
-    {
-        unsigned long r = *it;
-        char * tmpStr = region_names[r];
-        //printf("done with Region %d, name %s\n", r, tmpStr); fflush(stdout);
-        free(tmpStr);
-        region_names.erase(r);
-    }
-    region_trash_heap.clear();
-  }
-  // put this region id on the trash heap.
-  region_trash_heap.insert(parallel_id);
-  TAU_OPENMP_UNSET_LOCK;
 }
 
 /* Exiting a parallel region */
