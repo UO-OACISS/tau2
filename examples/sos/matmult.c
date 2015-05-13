@@ -244,6 +244,7 @@ int main (int argc, char *argv[])
 #else
   rc = MPI_Init(&argc, &argv); 
 #endif /* THREADS */
+  TAU_SOS_init(argc, argv);
   if (rc != MPI_SUCCESS) {
     char *errorstring;
     int length = 0;
@@ -276,9 +277,10 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  //for (i = 0 ; i < 100 ; i++) {
+  for (i = 0 ; i < 100 ; i++) {
   do_work();
-  //}
+  TAU_SOS_send_data();
+  }
 
 #ifdef PTHREADS 
   if (ret = pthread_join(tid1, NULL) )
@@ -302,12 +304,11 @@ int main (int argc, char *argv[])
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
+  TAU_SOS_finalize();
 #ifdef TAU_MPI
   MPI_Finalize();
 #endif /* TAU_MPI */
   printf ("Done.\n");
-
-  TAU_SOS_send_data();
 
   return 0;
 }
