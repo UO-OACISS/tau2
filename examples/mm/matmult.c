@@ -273,9 +273,10 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  //for (i = 0 ; i < 100 ; i++) {
+  for (i = 0 ; i < 100 ; i++) {
   do_work();
-  //}
+  TAU_SOS_send_data();
+  }
 
 #ifdef PTHREADS 
   if (ret = pthread_join(tid1, NULL) )

@@ -283,8 +283,9 @@ MPI_FORTRAN_INIT = TauFInit.o
 # SOS OBJECTS and libs
 #############################################
 #SOS#SOS_O = TauSOS.o #ENDIF#
-#SOS#TAU_SOS_LINKER_OPTS=-L$(SOSDIR)/lib -lsos #ENDIF#
-#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include #ENDIF#
+#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR) -DTAU_SOS #ENDIF#
+#SOS#TAU_SOS_LIBS=-L$(SOSDIR) -Wl,-rpath,$(SOSDIR) -lsos #ENDIF#
+#SOS#TAU_SOS_LINKER_OPTS=$(TAU_SOS_LIBS) #ENDIF#
 
 #############################################
 # OpenMP OBJECTS

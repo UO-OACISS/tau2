@@ -1,69 +1,64 @@
 
 #include "Profile/Profiler.h"
+#include "TauMetrics.h"
 #include <iostream>
 #include <string>
-#include <map>
-#include <set>
+#include <sstream>
+#include <vector>
 #include <stdexcept>
 #include "sos.h"
 #include "stdio.h"
 
-// the set of keys (strings) that we have registered so far
-std::set<std::string> TAU_SOS_key_set;
-// the map of keys (strings) to SOS keys (integers)
-std::map<std::string,unsigned long> TAU_SOS_key_map;
+SOS_pub_handle *pub;
 
-void TAU_SOS_init(void) {
-    //SOS_init(SOS_APP);
+extern "C" void TAU_SOS_init(int argc, char ** argv) {
+    SOS_init(&argc, &argv, SOS_APP);
+    SOS_comm_split();
+    pub = SOS_new_pub((char *)"TAU Application");
 }
 
-void TAU_SOS_finalize(void) {
-    //SOS_finalize();
+extern "C" void TAU_SOS_finalize(void) {
+    SOS_finalize();
 }
+
+extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 
 extern "C" void TAU_SOS_send_data(void) {
-    // get the list of functions
-    const char **functionList;
-    int numOfFunctions;
-    TAU_GET_FUNC_NAMES(functionList, numOfFunctions);
-    // get the list of counters
-    // todo: get list of counters
-    // register keys (if necessary)
-    int index;
-    std::set<std::string>::iterator finder;
-    for (index = 0 ; index < numOfFunctions ; index++) {
-        std::string tmp(functionList[index]);
-        finder = TAU_SOS_key_set.find(tmp);
-        // if not found, register it and add it to the set
-        if (finder == TAU_SOS_key_set.end()) {
-            // todo: register
-            TAU_SOS_key_map[tmp] = TAU_SOS_key_set.size();
-            TAU_SOS_key_set.insert(tmp);
-        }
-    }
-    // send list of keys
-    std::map<std::string,unsigned long>::iterator it;
-    for (it = TAU_SOS_key_map.begin() ; it != TAU_SOS_key_map.end(); it++) {
-        std::cout << it->second << " " << it->first << std::endl;
-    }
+    // get the most up-to-date profile information
+    TauProfiler_updateAllIntermediateStatistics();
 
-    // send list of values
-    double **counterExclusiveValues;
-    double **counterInclusiveValues;
-    int *numOfCalls;
-    int *numOfSubRoutines;
-    const char **counterNames;
-    int numOfCounters;
-
-    TAU_GET_FUNC_VALS(functionList, numOfFunctions, counterExclusiveValues, 
-            counterInclusiveValues, numOfCalls, numOfSubRoutines, 
-            counterNames, numOfCounters);
-    for (index = 0 ; index < numOfFunctions ; index++) {
-        printf("%.*s...[%lu]: %d %10.1f %10.1f\n", 10,
-                functionList[index], 
-                TAU_SOS_key_map[std::string(functionList[index])],
-                numOfCalls[index], 
-                counterInclusiveValues[index][0], 
-                counterExclusiveValues[index][0]);
+    // get the FunctionInfo database, and iterate over it
+    std::vector<FunctionInfo*>::iterator it;
+  const char **counterNames;
+  int numCounters;
+  TauMetrics_getCounterList(&counterNames, &numCounters);
+  RtsLayer::LockDB();
+  for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    FunctionInfo *fi = *it;
+    // get the number of calls
+    int tid = 0; // todo: get ALL thread data.
+    SOS_val calls, inclusive, exclusive;
+    calls.d_val = fi->GetCalls(tid);
+    std::stringstream calls_str;
+    calls_str << "TAU::calls::" << fi->GetName();
+    const std::string& tmpcalls = calls_str.str();
+    SOS_pack(pub, tmpcalls.c_str(), SOS_DOUBLE, calls);
+    // todo - subroutines
+    // iterate over metrics 
+    std::stringstream incl_str;
+    std::stringstream excl_str;
+    for (int m = 0; m < Tau_Global_numCounters; m++) {
+        inclusive.d_val = fi->getDumpInclusiveValues(tid)[m];
+        incl_str.clear();
+        incl_str << "TAU::inclusive::" << counterNames[m] << "::" << fi->GetName();
+        const std::string& tmpincl = incl_str.str();
+        SOS_pack(pub, tmpincl.c_str(), SOS_DOUBLE, inclusive);
+        exclusive.d_val = fi->getDumpInclusiveValues(tid)[m];
+        excl_str.clear();
+        excl_str << "TAU::exclusive::" << counterNames[m] << "::" << fi->GetName();
+        const std::string& tmpexcl = excl_str.str();
+        SOS_pack(pub, tmpexcl.c_str(), SOS_DOUBLE, exclusive);
     }
+  }
+  RtsLayer::UnLockDB();
 }
