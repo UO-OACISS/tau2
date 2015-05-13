@@ -38,7 +38,12 @@ extern "C" void TAU_SOS_send_data(void) {
     // get the number of calls
     int tid = 0; // todo: get ALL thread data.
     SOS_val calls, inclusive, exclusive;
-    calls.d_val = fi->GetCalls(tid);
+    calls.d_val = 0.0;
+    inclusive.d_val = 0.0;
+    inclusive.d_val = 0.0;
+    for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+        calls.d_val += fi->GetCalls(tid);
+    }
     std::stringstream calls_str;
     calls_str << "TAU::calls::" << fi->GetName();
     const std::string& tmpcalls = calls_str.str();
@@ -48,15 +53,17 @@ extern "C" void TAU_SOS_send_data(void) {
     std::stringstream incl_str;
     std::stringstream excl_str;
     for (int m = 0; m < Tau_Global_numCounters; m++) {
-        inclusive.d_val = fi->getDumpInclusiveValues(tid)[m];
         incl_str.clear();
         incl_str << "TAU::inclusive::" << counterNames[m] << "::" << fi->GetName();
         const std::string& tmpincl = incl_str.str();
-        SOS_pack(pub, tmpincl.c_str(), SOS_DOUBLE, inclusive);
-        exclusive.d_val = fi->getDumpInclusiveValues(tid)[m];
         excl_str.clear();
         excl_str << "TAU::exclusive::" << counterNames[m] << "::" << fi->GetName();
         const std::string& tmpexcl = excl_str.str();
+        for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+            inclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
+            exclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
+        }
+        SOS_pack(pub, tmpincl.c_str(), SOS_DOUBLE, inclusive);
         SOS_pack(pub, tmpexcl.c_str(), SOS_DOUBLE, exclusive);
     }
   }

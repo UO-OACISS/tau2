@@ -30,7 +30,7 @@ pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 32
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -277,7 +277,7 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  for (i = 0 ; i < 100 ; i++) {
+  for (i = 0 ; i < 10 ; i++) {
   do_work();
   TAU_SOS_send_data();
   }
