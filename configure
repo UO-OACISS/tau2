@@ -860,6 +860,8 @@ forceshared=no
 opari_region=no
 opari_construct=no
 boost=no
+sos=no
+sosdir=
 dyninst=no
 dyninstinc=no
 dyninstlib=no
@@ -1572,6 +1574,17 @@ for arg in "$@"; do
 	    if [ ! -d $boostdir ]
 	    then
 		echo "Error: Cannot access BOOST directory $boostdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-sos=*)
+	    sos=yes
+	    sosdir=`echo $arg | sed -e 's/-sos=//'`
+	    if [ ! -d $sosdir ]
+	    then
+		echo "Error: Cannot access SOS directory $sosdir"
 		exit 1
 	    fi
 	    shift
@@ -8636,6 +8649,11 @@ if [ $boost = yes ] ; then
     if [ "x$boostdir" != "x" -a -d $boostdir -a -d $boostdir/lib ]; then
       fixmakeargs="$fixmakeargs boostlib=-L$boostdir/lib -Wl,-rpath,$boostdir/lib"
     fi
+fi
+
+if [ $sos = yes ] ; then
+    fixmakeargs="$fixmakeargs SOS "
+    fixmakeargs="$fixmakeargs sosdir=$sosdir"
 fi
 
 if [ $dyninst = yes ] ; then
