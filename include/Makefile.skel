@@ -98,6 +98,7 @@ DYNINSTDIR=
 BOOSTDIR=
 TAU_BOOSTINC=
 TAU_BOOSTLIB=
+SOSDIR=
 JDKDIR=
 ANDROID_SDK=
 ANDROID_VERSION=
@@ -277,6 +278,13 @@ JDKARCH                 = linux
 #############################################
 MPI_FORTRAN_INIT = TauFInit.o 
 #NOFORTRAN#MPI_FORTRAN_INIT = #ENDIF#
+
+#############################################
+# SOS OBJECTS and libs
+#############################################
+#SOS#SOS_O = TauSOS.o #ENDIF#
+#SOS#TAU_SOS_LINKER_OPTS=-L$(SOSDIR)/lib -lsos #ENDIF#
+#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include #ENDIF#
 
 #############################################
 # OpenMP OBJECTS
@@ -1196,7 +1204,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
                   $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
                   $(TAU_LINKER_OPT20) $(TAU_LINKER_OPT21) $(TAU_CUDA_LINKER_OPTS) $(TAU_PYTHON_LINKER_OPTS) \
-                  $(TAU_ANDROID_LINKER_OPTS)
+                  $(TAU_ANDROID_LINKER_OPTS) $(TAU_SOS_LINKER_OPTS)
 
 ##############################################
 
