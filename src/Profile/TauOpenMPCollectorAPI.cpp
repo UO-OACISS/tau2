@@ -56,6 +56,7 @@
 #ifdef TAU_MPC
 #include <Profile/MPCThreadLayer.h>
 #endif
+#include <set>
 
 /* An array of this struct is shared by all threads. To make sure we don't have false
  * sharing, the struct is 64 bytes in size, so that it fits exactly in
@@ -106,6 +107,7 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = 
 // this is map of region names, indexed by region id.
 static std::map<unsigned long, char*> region_names;
 static std::map<unsigned long, char*> task_names;
+static std::set<unsigned long> region_trash_heap; // for slightly delayed string cleanup
 
 #if defined(TAU_MPC) || defined(GOMP_USING_INTEL_RUNTIME)
 //static sctk_thread_mutex_t writelock = SCTK_THREAD_MUTEX_INITIALIZER;
@@ -196,6 +198,38 @@ extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_st
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(std::string thread_state);
 
 extern "C" char * TauInternal_CurrentCallsiteTimerName(int tid);
+
+/* This function provides a slightly "delayed" cleanup of region names.
+ * In some runtimes (Intel, for example) the master thread in the team
+ * can exit the region before all other threads are done with it. When
+ * those threads try to access the name in the map using the id, the
+ * name has to still be there. BUT, we can't leak memory. This code
+ * will temporarially put the region id on the trash heap to be thrown
+ * out when the heap exceeds a certain size.
+ */
+void region_name_cleanup(unsigned long parallel_id) {
+  // this should be enough. One for each thread to have its own parallel region.
+  static const unsigned int max_size = omp_get_max_threads();
+  TAU_OPENMP_SET_LOCK;
+  // clean the heap if necessary
+  if (region_trash_heap.size() > max_size) {
+    std::set<unsigned long>::iterator it;
+    for (it = region_trash_heap.begin(); it != region_trash_heap.end(); ++it)
+    {
+        unsigned long r = *it;
+        char * tmpStr = region_names[r];
+        //printf("done with Region %d, name %s\n", r, tmpStr); fflush(stdout);
+        free(tmpStr);
+        region_names.erase(r);
+    }
+    region_trash_heap.clear();
+  }
+  // put this region id on the trash heap.
+  if (parallel_id > 0) {
+    region_trash_heap.insert(parallel_id);
+  }
+  TAU_OPENMP_UNSET_LOCK;
+}
 
 void Tau_get_region_id(int tid) {
     // if not available, return something useful
@@ -550,12 +584,13 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
     sprintf(regionIDstr, "%s: %s", state, tmpStr);
     //fprintf(stderr, "%d: start '%s'\n", tid, regionIDstr); fflush(stderr);
     Tau_pure_start_openmp_task(regionIDstr, tid);
-    //free(tmpStr);
-#ifndef TAU_FIX_LEAKS_OMPT
-    if ((tmpStr[0] == '(') && (tmpStr[1] == 'c') && (tmpStr[2] == 'h') && (tmpStr[9] == 'U')) { //(char*)__U 
-      free(tmpStr); // SSS
+#if defined(TAU_USE_OMPT) 
+    if (strcmp(tmpStr, __UNKNOWN__) == 0) {
+      free(tmpStr);
     }
-#endif /* TAU_FIX_LEAKS_OMPT */
+#else
+    free(tmpStr);
+#endif
     free(regionIDstr);
   }
 }
@@ -575,12 +610,14 @@ extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
         sprintf(regionIDstr, "%s: %s", state, tmpStr);
     //fprintf(stderr, "%d: stop '%s'\n", tid, regionIDstr); fflush(stderr);
         Tau_pure_stop_openmp_task(regionIDstr, tid);
-#ifndef TAU_FIX_LEAKS_OMPT
         free(regionIDstr); 
-        if ((tmpStr[0] == '(') && (tmpStr[1] == 'c') && (tmpStr[2] == 'h') && (tmpStr[9] == 'U')) { //(char*)__U 
-          free(tmpStr); 
-        }
-#endif /* TAU_FIX_LEAKS_OMPT */
+#if defined(TAU_USE_OMPT) 
+    if (strcmp(tmpStr, __UNKNOWN__) == 0) {
+      free(tmpStr);
+    }
+#else
+    free(tmpStr);
+#endif
       }
     }
 }
@@ -612,6 +649,7 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
                 Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1, false);
                 Tau_collector_flags[tid].parallel--;
             }
+            region_name_cleanup(Tau_collector_flags[tid].regionid);
             break;
         case OMP_EVENT_THR_BEGIN_IDLE:
             // sometimes IDLE can be called twice in a row
@@ -1150,17 +1188,7 @@ extern "C" void my_parallel_region_end (
     Tau_omp_stop_timer("OpenMP_PARALLEL_REGION", tid, 1, false);
     Tau_collector_flags[tid].parallel--;
   }
-//#ifndef TAU_MPC 
-#if 0 // for now, don't free the region name. this is a leak, but it is possible
-  // in the Intel runtime that the master thread can exit the region before the
-  // worker threads are done, and they still need the name.
-  TAU_OPENMP_SET_LOCK;
-  char * tmpStr = region_names[parallel_id];
-  //printf("done with Region %d, name %s\n", parallel_id, tmpStr); fflush(stdout);
-  free(tmpStr);
-  region_names.erase(parallel_id);
-  TAU_OPENMP_UNSET_LOCK;
-#endif
+  region_name_cleanup(parallel_id);
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -1192,10 +1220,7 @@ extern "C" void my_task_end (
 #endif
   TAU_OPENMP_SET_LOCK;
   char * tmpStr = task_names[Tau_collector_flags[tid].taskid];
-  //free(tmpStr);
-#ifndef TAU_FIX_LEAKS_OMPT
   free(tmpStr); 
-#endif /* TAU_FIX_LEAKS_OMPT */
   //task_names.erase(Tau_collector_flags[tid].taskid);
   TAU_OPENMP_UNSET_LOCK;
   TAU_OMPT_COMMON_EXIT;
@@ -1245,6 +1270,7 @@ extern "C" void my_shutdown() {
   Tau_profile_exit_most_threads();
   TAU_PROFILE_EXIT("exiting");
   // nothing to do here?
+  region_name_cleanup(0);
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -1361,7 +1387,8 @@ extern "C" void BEGIN_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t t
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
   /* TAU_VERBOSE("%d Workshare begin: parallel_id = %lu, task_id = %lu %s, %p\n", tid, parallel_id, task_id, NAME, parallel_function); fflush(stderr); */ \
-  Tau_get_current_region_context(tid, (unsigned long)parallel_function, false); \
+  /* Don't do this now - the function is the same as the region, and there's no good time to free the string */\
+  /*Tau_get_current_region_context(tid, (unsigned long)parallel_function, false); */\
   Tau_omp_start_timer(NAME, tid, 1, 0, false); \
   TAU_OMPT_COMMON_EXIT; \
 } \
@@ -1370,7 +1397,7 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
   Tau_collector_flags[tid].taskid = task_id; \
-  /* TAU_VERBOSE("%d Workshare end: parallel_id = %lu, task_id = %lu %s\n", tid, parallel_id, task_id, NAME); fflush(stderr); */ \
+  /*TAU_VERBOSE("%d Workshare end: parallel_id = %lu, task_id = %lu %s\n", tid, parallel_id, task_id, NAME); fflush(stderr); */\
   Tau_omp_stop_timer(NAME, tid, 1,false); \
   TAU_OMPT_COMMON_EXIT; \
 }
@@ -1379,7 +1406,8 @@ extern "C" void END_FUNCTION (ompt_parallel_id_t parallel_id, ompt_task_id_t tas
 extern "C" void BEGIN_FUNCTION (ompt_task_id_t parent_task_id, ompt_parallel_id_t parallel_id, void *parallel_function) { \
   TAU_OMPT_COMMON_ENTRY; \
   Tau_collector_flags[tid].regionid = parallel_id; \
-  Tau_get_current_region_context(tid, (unsigned long)parallel_function, false); \
+  /* Don't do this now - the function is the same as the region, and there's no good time to free the string */\
+  /*Tau_get_current_region_context(tid, (unsigned long)parallel_function, false); */\
   Tau_omp_start_timer(NAME, tid, 1, 0, false); \
   TAU_OMPT_COMMON_EXIT; \
 } \
@@ -1574,12 +1602,10 @@ int __ompt_initialize() {
   CHECK(ompt_event_initial_task_end, my_initial_task_end, "initial_task_end");
 #endif
 #endif
-#ifndef TAU_FIX_LEAKS_OMPT
   CHECK(ompt_event_barrier_begin, my_barrier_begin, "barrier_begin");
   CHECK(ompt_event_barrier_end, my_barrier_end, "barrier_end");
   CHECK(ompt_event_master_begin, my_master_begin, "master_begin");
   CHECK(ompt_event_master_end, my_master_end, "master_end");
-#endif /* TAU_FIX_LEAKS_OMPT */
 //ompt_event(ompt_event_task_switch, ompt_task_switch_callback_t, 24, ompt_event_task_switch_implemented) /* 
   CHECK(ompt_event_loop_begin, my_loop_begin, "loop_begin");
   CHECK(ompt_event_loop_end, my_loop_end, "loop_end");
@@ -1695,7 +1721,7 @@ extern "C" int ompt_initialize(ompt_function_lookup_t lookup) {
 #else
 // the newest version of the library will have a version as well
 extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, unsigned int ompt_version) {
-  fprintf(stderr, "Init: %s ver %i\n",runtime_version,ompt_version);
+  TAU_VERBOSE("Init: %s ver %i\n",runtime_version,ompt_version);
 #endif
 #ifndef BROKEN_CPLUSPLUS_INTERFACE
   ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
