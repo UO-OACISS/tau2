@@ -4311,9 +4311,10 @@ then
             fi
             ;;
 	mic_linux)
-            mpiinc=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
-            if [ -d $mpiinc ]
+            mpiinc_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
+            if [ -d $mpiinc_search -a "x$mpiinc" = "x" ]
             then
+                mpiinc=$mpiinc_search 
 		echo "Using MPI include directory $mpiinc"
             fi
 	    ;;
@@ -4333,24 +4334,26 @@ then
                 fi 
               fi
             else
-		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
-		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
+		mpiinc_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+		if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 		then
+		    mpiinc=$mpiinc_search
 		    echo "Using MPI include directory $mpiinc"
 		    echo "machine is $machine"
 		else
-		    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
-		    if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
+		    mpiinc_search=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+		    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 		    then
+		        mpiinc=$mpiinc_search
 			echo "Using MPI include directory $mpiinc"
 		    else 
-			if [ -d $mpiinc -a ! -r $mpiinc/mpi.h ] ; then
-			    if [ -r $mpiinc/mpich2/mpi.h ] ; then
-				mpiinc=$mpiinc/mpich2 
+			if [ -d $mpiinc_search -a ! -r $mpiinc_search/mpi.h ] ; then
+			    if [ -r $mpiinc_search/mpich2/mpi.h -a "x$mpiinc" = "x" ] ; then
+				mpiinc=$mpiinc_search/mpich2 
 				echo "Correction: Using MPI include directory $mpiinc instead"
 			    else
-				if [ -r $mpiinc/openmpi/mpi.h ] ; then
-				    mpiinc=$mpiinc/openmpi
+				if [ -r $mpiinc_search/openmpi/mpi.h -a "x$mpiinc" = "x" ] ; then
+				    mpiinc=$mpiinc_search/openmpi
 				    echo "Correction: Using MPI include directory $mpiinc instead"
 				else
 				    mpiinc=""
@@ -4510,12 +4513,13 @@ then
             then
 		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/../mic/lib
             else
-                mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
-		if [ ! -d $mpilib ] ; then
+                mpilib_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
+		if [ ! -d $mpilib_search ] ; then
 		    # Try the ".../lib64" directory instead of ".../lib"
-                    mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
+                    mpilib_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
 		fi
-		if [ -d $mpilib ] ; then
+		if [ -d $mpilib_search -a "x$mpilib=x" ] ; then
+                    mpilib=$mpilib_search
 		    echo "Using MPI lib directory $mpilib"
 		else
  		    mpilib=""
@@ -4527,12 +4531,13 @@ then
             then
 		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/lib
             else
-		mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
-		if [ ! -d $mpilib ] ; then
+		mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
+		if [ ! -d $mpilib_search ] ; then
 		    # Try the ".../lib64" directory instead of ".../lib"
-		    mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
+		    mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
 		fi
-		if [ -d $mpilib ] ; then
+		if [ -d $mpilib_search -a "x$mpilib" = "x" ] ; then
+		    mpilib=$mpilib_search
 		    echo "Using MPI lib directory $mpilib"
 		else
  		    mpilib=""
