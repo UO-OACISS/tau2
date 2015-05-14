@@ -22,11 +22,13 @@ void pshmem_finalize (void)
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
+/*
 char * pshmem_nodename (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
+*/
 
 int pshmem_version (int *major, int *minor)
 {
@@ -56,11 +58,13 @@ void * pshmem_memalign (size_t alignment, size_t size)
     return NULL;
 }  
 
+/*
 char * psherror (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
+*/
 
 char * pshmem_error (void)
 {
@@ -80,12 +84,14 @@ void pshmem_sync_init (long *pSync)
 # include <complex.h>
 # define COMPLEXIFY(T) T complex
 #endif /* __cplusplus */
+/*
 void pshmem_complexd_put (COMPLEXIFY (double) * dest,
                                  const COMPLEXIFY (double) * src,
                                  size_t nelems, int pe)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
+*/
 
 /* Old API */
 
