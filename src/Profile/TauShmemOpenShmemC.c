@@ -22,13 +22,12 @@ void pshmem_finalize (void)
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
 
-/*
+#ifdef TAU_DEPRECATED_PSHMEM_ROUTINES
 char * pshmem_nodename (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
-*/
 
 int pshmem_version (int *major, int *minor)
 {
@@ -58,13 +57,11 @@ void * pshmem_memalign (size_t alignment, size_t size)
     return NULL;
 }  
 
-/*
 char * psherror (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
     return NULL;
 }  
-*/
 
 char * pshmem_error (void)
 {
@@ -76,6 +73,7 @@ void pshmem_sync_init (long *pSync)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
+#endif /* TAU_DEPRECATED_PSHMEM_ROUTINES */
 
 #ifdef __cplusplus
 # include <complex>
