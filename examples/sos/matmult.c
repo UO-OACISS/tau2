@@ -30,7 +30,7 @@ pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 32
+#define MATRIX_SIZE 512
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -161,13 +161,6 @@ double do_work(void) {
   //}
 #endif
 #endif
-#ifdef TAU_MPI
-  if (provided == MPI_THREAD_MULTIPLE) { 
-    printf("provided is MPI_THREAD_MULTIPLE\n");
-  } else if (provided == MPI_THREAD_FUNNELED) { 
-    printf("provided is MPI_THREAD_FUNNELED\n");
-  }
-#endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   double result = c[0][1];
@@ -244,6 +237,13 @@ int main (int argc, char *argv[])
 #else
   rc = MPI_Init(&argc, &argv); 
 #endif /* THREADS */
+#ifdef TAU_MPI
+  if (provided == MPI_THREAD_MULTIPLE) { 
+    printf("provided is MPI_THREAD_MULTIPLE\n");
+  } else if (provided == MPI_THREAD_FUNNELED) { 
+    printf("provided is MPI_THREAD_FUNNELED\n");
+  }
+#endif /* TAU_MPI */
   TAU_SOS_init(argc, argv);
   if (rc != MPI_SUCCESS) {
     char *errorstring;
@@ -277,7 +277,7 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  for (i = 0 ; i < 10 ; i++) {
+  for (i = 0 ; i < 100 ; i++) {
   do_work();
   TAU_SOS_send_data();
   }

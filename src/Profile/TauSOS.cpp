@@ -5,11 +5,13 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <set>
 #include <stdexcept>
 #include "sos.h"
 #include "stdio.h"
 
 SOS_pub_handle *pub;
+unsigned long fi_count = 0;
 
 extern "C" void TAU_SOS_init(int argc, char ** argv) {
     SOS_init(&argc, &argv, SOS_APP);
@@ -33,6 +35,7 @@ extern "C" void TAU_SOS_send_data(void) {
   int numCounters;
   TauMetrics_getCounterList(&counterNames, &numCounters);
   RtsLayer::LockDB();
+  bool keys_added = false;
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
     // get the number of calls
@@ -67,5 +70,13 @@ extern "C" void TAU_SOS_send_data(void) {
         SOS_pack(pub, tmpexcl.c_str(), SOS_DOUBLE, exclusive);
     }
   }
+  if (TheFunctionDB().size() > fi_count) {
+    keys_added = true;
+    fi_count = TheFunctionDB().size();
+  }
   RtsLayer::UnLockDB();
+  if (keys_added) {
+    SOS_announce(pub);
+  }
+  SOS_publish(pub);
 }
