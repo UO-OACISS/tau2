@@ -6021,7 +6021,7 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     fi
 else # intel OMPT support
     if [ $ompt = yes ]; then
-	omptlinking="-Wl,-rpath=$omptlib#-L$omptlib#$omptlibrary"
+	omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
 	fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     fi
 
