@@ -29,8 +29,10 @@ unsigned long fi_count = 0;
 bool done = false;
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_t worker_thread;
+bool _threaded = false;
 
 inline void init_lock(void) {
+    if (!_threaded) return;
     pthread_mutexattr_t Attr;
     pthread_mutexattr_init(&Attr);
     pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
@@ -42,6 +44,7 @@ inline void init_lock(void) {
     }
 }
 inline void do_lock(void) {
+    if (!_threaded) return;
     int rc;
     if ((rc = pthread_mutex_lock(&_my_mutex)) != 0) {
         errno = rc;
@@ -51,6 +54,7 @@ inline void do_lock(void) {
 }
 
 inline void do_unlock(void) {
+    if (!_threaded) return;
     int rc;
     if ((rc = pthread_mutex_unlock(&_my_mutex)) != 0) {
         errno = rc;
@@ -59,7 +63,7 @@ inline void do_unlock(void) {
     }
 }
 
-void TAU_SOS_send_data(void);
+extern "C" void TAU_SOS_send_data(void);
 
 void * Tau_sos_thread_function(void* data) {
     while (!done) {
@@ -69,24 +73,22 @@ void * Tau_sos_thread_function(void* data) {
     pthread_exit((void*)0L);
 }
 
-extern "C" void TAU_SOS_init(int argc, char ** argv) {
+extern "C" void TAU_SOS_init(int argc, char ** argv, int threaded) {
     static bool initialized = false;
-    /*
-#ifdef TAU_MPI
-    VMPI_Init(&argc, &argv);
-#endif
-*/
     if (!initialized) {
-        init_lock();
-        do_lock();
+        _threaded = threaded > 0 ? true : false;
+            init_lock();
+            do_lock();
         SOS_init(&argc, &argv, SOS_APP);
         SOS_comm_split();
         pub = SOS_new_pub((char *)"TAU Application");
-        int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
-        if (ret != 0) {
-            errno = ret;
-            perror("Error: pthread_create (1) fails\n");
-            exit(1);
+        if (_threaded) {
+            int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
+            if (ret != 0) {
+                errno = ret;
+                perror("Error: pthread_create (1) fails\n");
+                exit(1);
+            }
         }
         initialized = true;
         do_unlock();
@@ -101,17 +103,19 @@ extern "C" void TAU_SOS_finalize(void) {
     SOS_finalize();
     finalized = true;
     do_unlock();
-    int ret = pthread_join(worker_thread, NULL);
-    if (ret != 0) {
-        errno = ret;
-        perror("Error: pthread_join (1) fails\n");
-        exit(1);
+    if (_threaded) {
+        int ret = pthread_join(worker_thread, NULL);
+        if (ret != 0) {
+            errno = ret;
+            perror("Error: pthread_join (1) fails\n");
+            exit(1);
+        }
     }
 }
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 
-void TAU_SOS_send_data(void) {
+extern "C" void TAU_SOS_send_data(void) {
     assert(pub);
     do_lock();
     if (done) return;
