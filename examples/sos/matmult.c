@@ -285,8 +285,9 @@ int main (int argc, char *argv[])
   for (i = 0 ; i < 100 ; i++) {
   printf("%d working...", i);
   do_work();
-  printf("sending data...\n");
-  TAU_SOS_send_data();
+  // this is now done on a different thread, on a timer.
+  // printf("sending data...\n");
+  // TAU_SOS_send_data(); 
   }
 
 #ifdef PTHREADS 

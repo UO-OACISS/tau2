@@ -284,7 +284,7 @@ MPI_FORTRAN_INIT = TauFInit.o
 #############################################
 #SOS#SOS_O = TauSOS.o #ENDIF#
 #SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include -DTAU_SOS #ENDIF#
-#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos #ENDIF#
+#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos -pthread #ENDIF#
 #SOS#TAU_SOS_LINKER_OPTS=$(TAU_SOS_LIBS) #ENDIF#
 
 #############################################
