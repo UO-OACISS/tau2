@@ -7,27 +7,45 @@
 #include <vector>
 #include <set>
 #include <stdexcept>
+#include <cassert>
 #include "sos.h"
 #include "stdio.h"
+/*
+#ifdef TAU_MPI
 #include "VMPI.h"
+#endif
+*/
 
-SOS_pub_handle *pub;
+SOS_pub_handle *pub = NULL;
 unsigned long fi_count = 0;
 
 extern "C" void TAU_SOS_init(int argc, char ** argv) {
+    static bool initialized = false;
+    /*
+#ifdef TAU_MPI
     VMPI_Init(&argc, &argv);
-    SOS_init(&argc, &argv, SOS_APP);
-    SOS_comm_split();
-    pub = SOS_new_pub((char *)"TAU Application");
+#endif
+*/
+    if (!initialized) {
+        SOS_init(&argc, &argv, SOS_APP);
+        SOS_comm_split();
+        pub = SOS_new_pub((char *)"TAU Application");
+        initialized = true;
+    }
 }
 
 extern "C" void TAU_SOS_finalize(void) {
-    SOS_finalize();
+    static bool finalized = false;
+    if (!finalized) {
+        SOS_finalize();
+        finalized = true;
+    }
 }
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 
 extern "C" void TAU_SOS_send_data(void) {
+    assert(pub);
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
 
