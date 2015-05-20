@@ -14,12 +14,12 @@
 
 #include "matmult_initialize.h"
 
-#ifdef TAU_MPI
+#ifdef SOS_MPI
 int provided;
 #include <mpi.h>
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
-#endif /* TAU_MPI */
+#endif /* SOS_MPI */
 
 #ifdef PTHREADS
 #include <pthread.h>
@@ -226,7 +226,7 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
-#ifdef TAU_MPI
+#ifdef SOS_MPI
   int rc = MPI_SUCCESS;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
@@ -237,13 +237,13 @@ int main (int argc, char *argv[])
 #else
   rc = MPI_Init(&argc, &argv); 
 #endif /* THREADS */
-#ifdef TAU_MPI
+#ifdef SOS_MPI
   if (provided == MPI_THREAD_MULTIPLE) { 
     printf("provided is MPI_THREAD_MULTIPLE\n");
   } else if (provided == MPI_THREAD_FUNNELED) { 
     printf("provided is MPI_THREAD_FUNNELED\n");
   }
-#endif /* TAU_MPI */
+#endif /* SOS_MPI */
   if (rc != MPI_SUCCESS) {
     char *errorstring;
     int length = 0;
@@ -251,7 +251,13 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
-#endif /* TAU_MPI */
+#endif /* SOS_MPI */
+
+#ifdef SOS_MPI
+  printf("doing SOS init..."); fflush(stdout);
+  TAU_SOS_init(argc,argv);
+  printf("done.\n"); fflush(stdout);
+#endif
 
 #ifdef PTHREADS
   if (ret = pthread_create(&tid1, NULL, threaded_func, NULL) )
@@ -305,9 +311,13 @@ int main (int argc, char *argv[])
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
-#ifdef TAU_MPI
+#ifdef SOS_MPI
+  TAU_SOS_finalize();
+#endif
+
+#ifdef SOS_MPI
   MPI_Finalize();
-#endif /* TAU_MPI */
+#endif /* SOS_MPI */
   printf ("Done.\n");
 
   return 0;
