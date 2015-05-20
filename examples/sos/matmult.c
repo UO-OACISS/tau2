@@ -244,7 +244,6 @@ int main (int argc, char *argv[])
     printf("provided is MPI_THREAD_FUNNELED\n");
   }
 #endif /* TAU_MPI */
-  TAU_SOS_init(argc, argv);
   if (rc != MPI_SUCCESS) {
     char *errorstring;
     int length = 0;
@@ -278,7 +277,9 @@ int main (int argc, char *argv[])
 /* On thread 0: */
   int i;
   for (i = 0 ; i < 100 ; i++) {
+  printf("%d working...", i);
   do_work();
+  printf("sending data...\n");
   TAU_SOS_send_data();
   }
 
@@ -304,7 +305,6 @@ int main (int argc, char *argv[])
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
-  TAU_SOS_finalize();
 #ifdef TAU_MPI
   MPI_Finalize();
 #endif /* TAU_MPI */
