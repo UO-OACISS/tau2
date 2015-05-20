@@ -10,14 +10,64 @@
 #include <cassert>
 #include "sos.h"
 #include "stdio.h"
+#include "error.h"
+#include "errno.h"
+#include <pthread.h>
 /*
 #ifdef TAU_MPI
 #include "VMPI.h"
 #endif
 */
+#include <unistd.h>
+#include <sys/time.h>
+#include <signal.h>
+
+#define INTERRUPT_PERIOD 1 // one second
 
 SOS_pub_handle *pub = NULL;
 unsigned long fi_count = 0;
+bool done = false;
+pthread_mutex_t _my_mutex; // for initialization, termination
+pthread_t worker_thread;
+
+inline void init_lock(void) {
+    pthread_mutexattr_t Attr;
+    pthread_mutexattr_init(&Attr);
+    pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
+    int rc;
+    if ((rc = pthread_mutex_init(&_my_mutex, &Attr)) != 0) {
+        errno = rc;
+        perror("pthread_mutex_init error");
+        exit(1);
+    }
+}
+inline void do_lock(void) {
+    int rc;
+    if ((rc = pthread_mutex_lock(&_my_mutex)) != 0) {
+        errno = rc;
+        perror("pthread_mutex_lock error");
+        exit(1);
+    }
+}
+
+inline void do_unlock(void) {
+    int rc;
+    if ((rc = pthread_mutex_unlock(&_my_mutex)) != 0) {
+        errno = rc;
+        perror("pthread_mutex_unlock error");
+        exit(1);
+    }
+}
+
+void TAU_SOS_send_data(void);
+
+void * Tau_sos_thread_function(void* data) {
+    while (!done) {
+        sleep(1);
+        TAU_SOS_send_data();
+    }
+    pthread_exit((void*)0L);
+}
 
 extern "C" void TAU_SOS_init(int argc, char ** argv) {
     static bool initialized = false;
@@ -27,25 +77,44 @@ extern "C" void TAU_SOS_init(int argc, char ** argv) {
 #endif
 */
     if (!initialized) {
+        init_lock();
+        do_lock();
         SOS_init(&argc, &argv, SOS_APP);
         SOS_comm_split();
         pub = SOS_new_pub((char *)"TAU Application");
+        int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
+        if (ret != 0) {
+            errno = ret;
+            perror("Error: pthread_create (1) fails\n");
+            exit(1);
+        }
         initialized = true;
+        do_unlock();
     }
 }
 
 extern "C" void TAU_SOS_finalize(void) {
     static bool finalized = false;
-    if (!finalized) {
-        SOS_finalize();
-        finalized = true;
+    if (finalized) return;
+    do_lock();
+    done = true;
+    SOS_finalize();
+    finalized = true;
+    do_unlock();
+    int ret = pthread_join(worker_thread, NULL);
+    if (ret != 0) {
+        errno = ret;
+        perror("Error: pthread_join (1) fails\n");
+        exit(1);
     }
 }
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 
-extern "C" void TAU_SOS_send_data(void) {
+void TAU_SOS_send_data(void) {
     assert(pub);
+    do_lock();
+    if (done) return;
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
 
@@ -99,4 +168,6 @@ extern "C" void TAU_SOS_send_data(void) {
     SOS_announce(pub);
   }
   SOS_publish(pub);
+  do_unlock();
 }
+
