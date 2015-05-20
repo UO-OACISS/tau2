@@ -9,11 +9,13 @@
 #include <stdexcept>
 #include "sos.h"
 #include "stdio.h"
+#include "VMPI.h"
 
 SOS_pub_handle *pub;
 unsigned long fi_count = 0;
 
 extern "C" void TAU_SOS_init(int argc, char ** argv) {
+    VMPI_Init(&argc, &argv);
     SOS_init(&argc, &argv, SOS_APP);
     SOS_comm_split();
     pub = SOS_new_pub((char *)"TAU Application");
