@@ -283,8 +283,8 @@ MPI_FORTRAN_INIT = TauFInit.o
 # SOS OBJECTS and libs
 #############################################
 #SOS#SOS_O = TauSOS.o #ENDIF#
-#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR) -DTAU_SOS #ENDIF#
-#SOS#TAU_SOS_LIBS=-L$(SOSDIR) -Wl,-rpath,$(SOSDIR) -lsos #ENDIF#
+#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include -DTAU_SOS #ENDIF#
+#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos #ENDIF#
 #SOS#TAU_SOS_LINKER_OPTS=$(TAU_SOS_LIBS) #ENDIF#
 
 #############################################
@@ -1152,7 +1152,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT89) $(PROFILEOPT90) $(PROFILEOPT91) $(PROFILEOPT92) \
               $(PROFILEOPT93) $(PROFILEOPT94) $(PROFILEOPT95) $(PROFILEOPT96) \
               $(PROFILEOPT97) $(PROFILEOPT98) $(PROFILEOPT99) $(PROFILEOPT100) \
-	      $(PROFILEOPT101) $(TRACEOPT)
+	      $(PROFILEOPT101) $(TAU_SOS_INCLUDE_OPTS) $(TRACEOPT)
 
 
 ##############################################
