@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -1306,7 +1306,7 @@ if [ $optCompInst == $TRUE ]; then
     fi
 
 #    argsRemaining="$argsRemaining $optCompInstOption"
-    optLinking="$optLinking $optCompInstLinking"
+    optLinking="$optLinking ${optCompInstLinking}"
 fi
 
 if [ $upc == "berkeley" ]; then
@@ -1483,7 +1483,7 @@ if [ $numFiles == 0 ]; then
         ;;
         cray)
           if [ -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
-            linkCmd="$linkCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/cray/link_options.tau` "
             echoIfDebug "Linking command is $linkCmd"
           else
             echo "Warning: can't locate link_options.tau for CRAY UPC runtime tracking"
@@ -2128,7 +2128,7 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
             ;;
             cray)
               if [ -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
-                newCmd="$newCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
+                newCmd="$newCmd `cat $optWrappersDir/upc/cray/link_options.tau` "
                 echoIfDebug "Linking command is $newCmd"
               else
                 echo "Warning: can't locate link_options.tau for CRAY UPC runtime tracking"

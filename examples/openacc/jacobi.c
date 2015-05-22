@@ -17,6 +17,7 @@
 #include <math.h>
 #include <string.h>
 #include <openacc.h>
+#include <stdio.h>
 #include "timer.h"
 
 #define NN 1024

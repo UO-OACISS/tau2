@@ -450,7 +450,7 @@ public class CallPathTextWindow extends JFrame implements ActionListener, MenuLi
     public String getHeaderString() {
         return "Metric Name: " + (dataSorter.getSelectedMetric().getName()) + "\n" + "Sorted By: "
                 + dataSorter.getValueType() + "\n" + "Units: "
-                + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
+                + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric(),dataSorter.getSelectedMetric().getName()) + "\n";
     }
 
     public void closeThisWindow() {

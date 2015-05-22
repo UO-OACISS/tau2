@@ -1573,7 +1573,7 @@ extern "C" int Tau_open_status(void) {
 // RSS or resident set size) to give an accurate idea of the memory
 // footprint of the program. It gets this from parsing /proc/self/status
 //////////////////////////////////////////////////////////////////////
-extern "C" int Tau_read_status(int fd, unsigned long long * rss, unsigned long long * hwm) {
+extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
   char buf[2048];
   int ret, i, bytesread;
 
@@ -1586,7 +1586,7 @@ extern "C" int Tau_read_status(int fd, unsigned long long * rss, unsigned long l
   bytesread = read(fd, buf, 2048);
   if (bytesread == -1) {
     perror("Error reading from /proc/self/status");
-    return ret;
+    return bytesread;
   }
   //printf("Read: %s\n", buf);
   for(i=0; i < bytesread; i++) {
@@ -1623,7 +1623,7 @@ extern "C" int Tau_close_status(int fd) {
 extern "C" int Tau_trigger_memory_rss_hwm(void) {
   static int fd=Tau_open_status();
 
-  unsigned long long vmrss, vmhwm; 
+  long long vmrss, vmhwm; 
   TAU_REGISTER_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
   TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
 
@@ -1636,6 +1636,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(void) {
 
   // TAU_VERBOSE("Tau_trigger_memory_rss_hwm: rss = %lld, hwm = %lld in KB\n", vmrss, vmhwm);
 
+  return 1; // SUCCESS
 }
 
 
