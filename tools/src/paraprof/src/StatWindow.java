@@ -573,10 +573,10 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
             if (phase != null) {
                 return "Phase: " + phase.getName() + "\nMetric: " + ppTrial.getDefaultMetric().getName() + "\n" + "Sorted By: "
                         + dataSorter.getValueType() + "\n" + "Units: "
-                        + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric()) + "\n";
+                        + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric(),ppTrial.getDefaultMetric().getName()) + "\n";
             } else {
                 return "Metric: " + ppTrial.getDefaultMetric().getName() + "\n" + "Sorted By: " + dataSorter.getValueType()
-                        + "\n" + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric())
+                        + "\n" + "Units: " + UtilFncs.getUnitsString(units, ppTrial.isTimeMetric(), ppTrial.isDerivedMetric(),ppTrial.getDefaultMetric().getName())
                         + "\n";
             }
         }

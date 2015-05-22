@@ -4311,9 +4311,10 @@ then
             fi
             ;;
 	mic_linux)
-            mpiinc=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
-            if [ -d $mpiinc ]
+            mpiinc_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
+            if [ -d $mpiinc_search -a "x$mpiinc" = "x" ]
             then
+                mpiinc=$mpiinc_search 
 		echo "Using MPI include directory $mpiinc"
             fi
 	    ;;
@@ -4333,24 +4334,26 @@ then
                 fi 
               fi
             else
-		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
-		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
+		mpiinc_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+		if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 		then
+		    mpiinc=$mpiinc_search
 		    echo "Using MPI include directory $mpiinc"
 		    echo "machine is $machine"
 		else
-		    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
-		    if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
+		    mpiinc_search=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+		    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 		    then
+		        mpiinc=$mpiinc_search
 			echo "Using MPI include directory $mpiinc"
 		    else 
-			if [ -d $mpiinc -a ! -r $mpiinc/mpi.h ] ; then
-			    if [ -r $mpiinc/mpich2/mpi.h ] ; then
-				mpiinc=$mpiinc/mpich2 
+			if [ -d $mpiinc_search -a ! -r $mpiinc_search/mpi.h ] ; then
+			    if [ -r $mpiinc_search/mpich2/mpi.h -a "x$mpiinc" = "x" ] ; then
+				mpiinc=$mpiinc_search/mpich2 
 				echo "Correction: Using MPI include directory $mpiinc instead"
 			    else
-				if [ -r $mpiinc/openmpi/mpi.h ] ; then
-				    mpiinc=$mpiinc/openmpi
+				if [ -r $mpiinc_search/openmpi/mpi.h -a "x$mpiinc" = "x" ] ; then
+				    mpiinc=$mpiinc_search/openmpi
 				    echo "Correction: Using MPI include directory $mpiinc instead"
 				else
 				    mpiinc=""
@@ -4510,12 +4513,13 @@ then
             then
 		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/../mic/lib
             else
-                mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
-		if [ ! -d $mpilib ] ; then
+                mpilib_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
+		if [ ! -d $mpilib_search ] ; then
 		    # Try the ".../lib64" directory instead of ".../lib"
-                    mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
+                    mpilib_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
 		fi
-		if [ -d $mpilib ] ; then
+		if [ -d $mpilib_search -a "x$mpilib=x" ] ; then
+                    mpilib=$mpilib_search
 		    echo "Using MPI lib directory $mpilib"
 		else
  		    mpilib=""
@@ -4527,12 +4531,13 @@ then
             then
 		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/lib
             else
-		mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
-		if [ ! -d $mpilib ] ; then
+		mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
+		if [ ! -d $mpilib_search ] ; then
 		    # Try the ".../lib64" directory instead of ".../lib"
-		    mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
+		    mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
 		fi
-		if [ -d $mpilib ] ; then
+		if [ -d $mpilib_search -a "x$mpilib" = "x" ] ; then
+		    mpilib=$mpilib_search
 		    echo "Using MPI lib directory $mpilib"
 		else
  		    mpilib=""
@@ -4780,13 +4785,13 @@ EOF
 	    fixmakeargs="$fixmakeargs PAPIPFM"
 	    papipfm=yes
 	    papiperfctr=no
-	fi
-
-        if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
+	else 
+          if $c_compiler $orig_useropt tau_papi_test.c -I$papidir/include -L$papidir/$papisubdir -lpfm -lpapi -lpfm -lperfctr -o tau_papi_test 1> /dev/null 2>&1 ; then
 	    fixmakeargs="$fixmakeargs PAPIPFMPERFCTR"
 	    papipfm=yes
 	    papiperfctr=yes
-	fi
+	  fi
+	fi 
         
         if [ $machine = craycnl ] ; then
 	    $c_compiler $orig_useropt -c -fPIC tau_papi_test.c -I$papidir/include 
@@ -4891,7 +4896,11 @@ then
 		then
 		    shmemincargs="-I$MPT_DIR/sma/include/mpp/#-I$MPT_DIR/sma/include/"
 		else
-		    shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
+		    if [ -r $CRAY_MPICH2_BASEDIR/sma64/include/shmem.h ] ; then 
+		      shmemincargs="-I$CRAY_MPICH2_BASEDIR/sma64/include/mpp#-I$CRAY_MPICH2_BASEDIR/sma64/include"
+                    else
+		      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
+                    fi
 		    # old options 
 		fi
 	    fi
@@ -4988,7 +4997,11 @@ then
 	    then
 		shmemlibargs="$shmemlibargs -L$MPT_DIR/sma/lib64/"
 	    else
-		shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+		if [ -r $CRAY_SHMEM_DIR/lib64/libsma.a ] ; then
+		  shmemlibargs="$shmemlibargs -L$CRAY_SHMEM_DIR/lib64/"
+                else 
+		  shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+                fi
 	    fi
 	fi
     fi
@@ -5110,7 +5123,7 @@ fi
 
 
 ######################################################################
-if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp -o "x$PE_ENV" = "xPGI" ] 
 then
     cat <<EOF > pgitest.C
 int foo(int x)
@@ -6008,7 +6021,7 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     fi
 else # intel OMPT support
     if [ $ompt = yes ]; then
-	omptlinking="-Wl,-rpath=$omptlib#-L$omptlib#$omptlibrary"
+	omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
 	fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     fi
 
@@ -6136,6 +6149,34 @@ MPI_Aint * address;
   return PMPI_Address( location, address );
 }
 
+EOF
+
+cat <<EOF > mpihindex1.c
+#include <mpi.h>
+
+int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
+int count;
+int * blocklens;
+MPI_Aint * indices;
+MPI_Datatype old_type;
+MPI_Datatype * newtype;
+{
+  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
+}
+EOF
+
+cat <<EOF > mpihindex2.c
+#include <mpi.h>
+
+int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
+int count;
+const int * blocklens;
+const MPI_Aint * indices;
+MPI_Datatype old_type;
+MPI_Datatype * newtype;
+{
+  return PMPI_Type_hindexed( count, blocklens, indices, old_type, newtype );
+}
 EOF
 
 cat <<EOF > mpi2attr.$msuf
@@ -6339,6 +6380,19 @@ else
   fi
 fi            
 rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out 
+
+$echo "Checking for MPI_Type_hindexed const interface... ${nnl}"
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex1.c  1> /dev/null 2>&1 ; then
+  echo "not needed"
+else
+  echo "yes"
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpihindex2.c 1> /dev/null 2>&1 ; then
+    echo "Using const in MPI_Type_hindexed interface "
+      fixmakeargs="$fixmakeargs TAU_MPI_HINDEX_CONST"
+  fi
+fi
+rm -f mpihindex1.c mpihindex2.c mpihindex1.o mpihindex2.o 
+
 
 if [ -d "$mpiinc/ulm" ] ; then
     echo "LA-MPI detected, working around broken MPI_Request_c2f()"
@@ -7373,6 +7427,8 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?
   if [ "x$machine" = "xapple" ] ; then
+    bfdlink="-L$bfddir/lib" 
+# do not use lib64 for BFD on Mac. 
     bfdlink="$bfdlink -L/opt/local/lib"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
   else
@@ -7439,6 +7495,10 @@ EOF
 $echo "Checking for linking dependencies for libbfd... ${nnl}"
 
 BFDLIBS="-lbfd"
+
+if [ $c_compiler = mpiicc ]; then 
+  BFDLIBS="-lbfd -liberty -ldl -lz"
+fi 
 
 bfd_worked="no"
 if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
@@ -8428,7 +8488,8 @@ if [ $scorep = yes ] ; then
         scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
       else 
         if [ $ompt = yes ]; then 
-          scorep_adapter="$scorep_adapter --thread=omp:ompt"
+          #scorep_adapter="$scorep_adapter --thread=omp:ompt"
+          scorep_adapter="$scorep_adapter --thread=omp"
         else 
           scorep_adapter="$scorep_adapter --thread=omp:ancestry"
 # Should we make an explicit option to enable Score-P thread=ancestry? 
@@ -8491,9 +8552,9 @@ if [ $scorep = yes ] ; then
     scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 
-    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     if [ $mpi = no ]; then
-      fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     fi
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 

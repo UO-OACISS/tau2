@@ -89,8 +89,13 @@ public abstract class ValueType {
         }
 
         public String getSuffix(int units, Metric metric) {
-            if (!metric.isTimeMetric())
-                return " counts";
+            if (!metric.isTimeMetric()){
+            	if(metric.getName().toLowerCase().contains("energy")&&!metric.getName().contains("/")){
+            		return " joules";
+            	}
+            	 return " counts";
+            }
+               
             return timeUnits(units);
         }
 
