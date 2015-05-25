@@ -14,12 +14,10 @@
 
 #include "matmult_initialize.h"
 
-#ifdef SOS_MPI
-int provided;
 #include <mpi.h>
+int provided = MPI_THREAD_SINGLE;
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
-#endif /* SOS_MPI */
 
 #ifdef PTHREADS
 #include <pthread.h>
@@ -62,39 +60,6 @@ __inline double multiply(double a, double b) {
 	return a * b;
 }
 #endif /* APP_USE_INLINE_MULTIPLY */
-
-#if 0
-// cols_a and rows_b are the same value
-void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
-  int i,j,k;
-  double tmp = 0.0;
-//num_threads(2)
-#pragma omp parallel private(i) shared(a,b,c) 
-  {
-    /*** Do matrix multiply sharing iterations on outer loop ***/
-    /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait schedule(dynamic,1)
-    for (i=0; i<rows_a; i++) {
-//num_threads(2)
-#pragma omp parallel private(i,j,k) shared(a,b,c) 
-      {
-#pragma omp for nowait schedule(dynamic,1)
-        for (k=0; k<cols_a; k++) {
-          for(j=0; j<cols_b; j++) {
-#ifdef APP_USE_INLINE_MULTIPLY
-              c[i][j] += multiply(a[i][k], b[k][j]);
-#else 
-              tmp = a[i][k];
-			  tmp = tmp * b[k][j];
-              c[i][j] += tmp;
-#endif 
-            }
-          }
-      }
-    }
-  }   /*** End of parallel region ***/
-}
-#endif
 
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
@@ -154,13 +119,6 @@ double do_work(void) {
   initialize(c, NRA, NCB);
 
   compute(a, b, c, NRA, NCA, NCB);
-#if defined(TAU_OPENMP)
-#if 0
-  //if (omp_get_nested()) {
-    compute_nested(a, b, c, NRA, NCA, NCB);
-  //}
-#endif
-#endif
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   double result = c[0][1];
@@ -172,44 +130,10 @@ double do_work(void) {
   return result;
 }
 
-#ifdef PTHREADS
-int busy_sleep() {
-  int i, sum = 0;
-  for (i = 0 ; i < 100000000 ; i++) {
-    sum = sum+i;
-  }
-  return sum;
-}
-
 void * threaded_func(void *data)
 {
-  int rc;
-  int sum = 0;
-  // compute
   do_work();
-
-#ifdef APP_DO_LOCK_TEST
-  // test locking - sampling should catch this
-  if ((rc = pthread_mutex_lock(&mutexsum)) != 0)
-  {
-    errno = rc;
-    perror("thread lock error");
-    exit(1);
-  }
-  fprintf(stderr,"Thread 'sleeping'...\n"); fflush(stderr);
-  sum += busy_sleep();
-  fprintf(stderr,"Thread 'awake'...\n"); fflush(stderr);
-  if ((rc = pthread_mutex_unlock(&mutexsum)) != 0)
-  {
-    errno = rc;
-    perror("thread unlock error");
-    exit(1);
-  }
-  pthread_exit((void*) 0);
-  //return NULL;
-#endif // APP_DO_LOCK_TEST
 }
-#endif // PTHREADS
 
 int main (int argc, char *argv[]) 
 {
@@ -226,7 +150,6 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
-#ifdef SOS_MPI
   int rc = MPI_SUCCESS;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
@@ -243,7 +166,6 @@ int main (int argc, char *argv[])
   } else if (provided == MPI_THREAD_FUNNELED) { 
     printf("provided is MPI_THREAD_FUNNELED\n");
   }
-#endif /* SOS_MPI */
   if (rc != MPI_SUCCESS) {
     char *errorstring;
     int length = 0;
@@ -251,13 +173,10 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
-#endif /* SOS_MPI */
 
-#ifdef SOS_MPI_no_tau
   printf("doing SOS init..."); fflush(stdout);
-  TAU_SOS_init(argc,argv,SOS_APP);
-  printf("done with init.\n"); fflush(stdout);
-#endif
+  TAU_SOS_init(argc,argv,(provided == MPI_THREAD_MULTIPLE));
+  printf("done.\n"); fflush(stdout);
 
 #ifdef PTHREADS
   if (ret = pthread_create(&tid1, NULL, threaded_func, NULL) )
@@ -282,12 +201,14 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  for (i = 0 ; i < 1 ; i++) {
-  printf("%d working...", i); fflush(stdout);
-  do_work();
-  // this is now done on a different thread, on a timer.
-  // printf("sending data...\n");
-  // TAU_SOS_send_data(); 
+  for (i = 0 ; i < 100 ; i++) {
+    printf("%d working...", i);
+    do_work();
+    // this is now done on a different thread, on a timer.
+    if (provided < MPI_THREAD_MULTIPLE) {
+      printf("sending data...\n");
+      TAU_SOS_send_data(); 
+    }
   }
 
 #ifdef PTHREADS 
@@ -313,12 +234,10 @@ int main (int argc, char *argv[])
 #endif /* PTHREADS */
 
 #ifdef SOS_MPI_no_tau
-  TAU_SOS_finalize();
+  //TAU_SOS_finalize();
 #endif
 
-#ifdef SOS_MPI
   MPI_Finalize();
-#endif /* SOS_MPI */
   printf ("Done.\n");
 
   return 0;
