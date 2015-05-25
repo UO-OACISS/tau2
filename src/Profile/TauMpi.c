@@ -1618,7 +1618,7 @@ char *** argv;
   tau_mpi_init_predefined_constants();
   returnVal = PMPI_Init( argc, argv );
 #ifdef TAU_SOS
-  TAU_SOS_init(argc, argv);
+  TAU_SOS_init(argc, argv, 0);
 #endif
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -1682,7 +1682,7 @@ int *provided;
   tau_mpi_init_predefined_constants();
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 #ifdef TAU_SOS
-  TAU_SOS_init(argc, argv);
+  TAU_SOS_init(argc, argv, *provided == MPI_THREAD_MULTIPLE);
 #endif
 
 #ifndef TAU_WINDOWS
