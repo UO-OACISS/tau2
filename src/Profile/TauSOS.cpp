@@ -72,7 +72,7 @@ void * Tau_sos_thread_function(void* data) {
     pthread_exit((void*)0L);
 }
 
-extern "C" void TAU_SOS_init(int * argc, char *** argv) {
+extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     static bool initialized = false;
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;

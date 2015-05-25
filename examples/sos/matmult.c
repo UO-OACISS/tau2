@@ -35,9 +35,6 @@ pthread_mutex_t mutexsum;
 #define NCA MATRIX_SIZE                 /* number of columns in matrix A */
 #define NCB MATRIX_SIZE                 /* number of columns in matrix B */
 
-// forward declarations
-extern void TAU_SOS_send_data(void);
-
 double** allocateMatrix(int rows, int cols) {
   int i;
   double **matrix = (double**)malloc((sizeof(double*)) * rows);
@@ -160,7 +157,6 @@ int main (int argc, char *argv[])
 #else
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 #endif /* THREADS */
-#ifdef SOS_MPI
   if (provided == MPI_THREAD_MULTIPLE) { 
     printf("provided is MPI_THREAD_MULTIPLE\n");
   } else if (provided == MPI_THREAD_FUNNELED) { 
@@ -173,10 +169,6 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
-
-  printf("doing SOS init..."); fflush(stdout);
-  TAU_SOS_init(argc,argv,(provided == MPI_THREAD_MULTIPLE));
-  printf("done.\n"); fflush(stdout);
 
 #ifdef PTHREADS
   if (ret = pthread_create(&tid1, NULL, threaded_func, NULL) )
@@ -204,11 +196,6 @@ int main (int argc, char *argv[])
   for (i = 0 ; i < 100 ; i++) {
     printf("%d working...", i);
     do_work();
-    // this is now done on a different thread, on a timer.
-    if (provided < MPI_THREAD_MULTIPLE) {
-      printf("sending data...\n");
-      TAU_SOS_send_data(); 
-    }
   }
 
 #ifdef PTHREADS 
@@ -232,10 +219,6 @@ int main (int argc, char *argv[])
 
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
-
-#ifdef SOS_MPI_no_tau
-  //TAU_SOS_finalize();
-#endif
 
   MPI_Finalize();
   printf ("Done.\n");
