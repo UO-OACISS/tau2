@@ -8,25 +8,24 @@
 #include <set>
 #include <stdexcept>
 #include <cassert>
-#include "sos.h"
 #include "stdio.h"
 #include "error.h"
 #include "errno.h"
 #include <pthread.h>
-/*
-#ifdef TAU_MPI
-#include "VMPI.h"
-#endif
-*/
 #include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
+
+#ifndef TAU_MPI
+#define SOS_NO_VMPI
+#endif
+#include "sos.h"
 
 #define INTERRUPT_PERIOD 1 // one second
 
 SOS_pub_handle *pub = NULL;
 unsigned long fi_count = 0;
-bool done = false;
+static bool done = false;
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_t worker_thread;
 
@@ -69,17 +68,12 @@ void * Tau_sos_thread_function(void* data) {
     pthread_exit((void*)0L);
 }
 
-extern "C" void TAU_SOS_init(int argc, char ** argv) {
+extern "C" void TAU_SOS_init(int * argc, char *** argv) {
     static bool initialized = false;
-    /*
-#ifdef TAU_MPI
-    VMPI_Init(&argc, &argv);
-#endif
-*/
     if (!initialized) {
         init_lock();
         do_lock();
-        SOS_init(&argc, &argv, SOS_APP);
+        SOS_init(argc, argv, SOS_APP);
         SOS_comm_split();
         pub = SOS_new_pub((char *)"TAU Application");
         int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
@@ -95,6 +89,7 @@ extern "C" void TAU_SOS_init(int argc, char ** argv) {
 
 extern "C" void TAU_SOS_finalize(void) {
     static bool finalized = false;
+    printf("%s\n", __func__);
     if (finalized) return;
     do_lock();
     done = true;
@@ -114,7 +109,9 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 void TAU_SOS_send_data(void) {
     assert(pub);
     do_lock();
-    if (done) return;
+    if (done) {
+        return;
+    }
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
 
