@@ -39,13 +39,13 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(OBJS) 
+$(TARGET):	$(OBJS) $(TAU_LIB_DIR)/libTAU.so Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
-matmult.o: matmult.c
+matmult.o: matmult.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
-matmult_initialize.o: matmult_initialize.c matmult_initialize.h
+matmult_initialize.o: matmult_initialize.c matmult_initialize.h Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean: 	

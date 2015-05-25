@@ -235,7 +235,7 @@ int main (int argc, char *argv[])
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
   printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
 #else
-  rc = MPI_Init(&argc, &argv); 
+  rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 #endif /* THREADS */
 #ifdef SOS_MPI
   if (provided == MPI_THREAD_MULTIPLE) { 
@@ -253,10 +253,10 @@ int main (int argc, char *argv[])
   }
 #endif /* SOS_MPI */
 
-#ifdef SOS_MPI
+#ifdef SOS_MPI_no_tau
   printf("doing SOS init..."); fflush(stdout);
-  TAU_SOS_init(argc,argv);
-  printf("done.\n"); fflush(stdout);
+  TAU_SOS_init(argc,argv,SOS_APP);
+  printf("done with init.\n"); fflush(stdout);
 #endif
 
 #ifdef PTHREADS
@@ -282,8 +282,8 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  for (i = 0 ; i < 100 ; i++) {
-  printf("%d working...", i);
+  for (i = 0 ; i < 1 ; i++) {
+  printf("%d working...", i); fflush(stdout);
   do_work();
   // this is now done on a different thread, on a timer.
   // printf("sending data...\n");
@@ -312,7 +312,7 @@ int main (int argc, char *argv[])
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
-#ifdef SOS_MPI
+#ifdef SOS_MPI_no_tau
   TAU_SOS_finalize();
 #endif
 
