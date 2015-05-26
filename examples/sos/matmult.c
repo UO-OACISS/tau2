@@ -192,10 +192,20 @@ int main (int argc, char *argv[])
 #endif /* PTHREADS */
 
 /* On thread 0: */
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int i;
-  for (i = 0 ; i < 100 ; i++) {
-    printf("%d working...", i);
+  int maxi = 100;
+  for (i = 0 ; i < maxi ; i++) {
+    // for SOS testing purposes...
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
     do_work();
+    if (provided < MPI_THREAD_MULTIPLE) {
+        if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
+        TAU_SOS_send_data();
+    }
+    if (rank == 0) { printf("Iteration %d of %d done.\n", i, maxi); fflush(stdout); }
   }
 
 #ifdef PTHREADS 

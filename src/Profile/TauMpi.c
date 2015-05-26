@@ -1048,7 +1048,7 @@ MPI_Comm * comm_out;
   returnVal = PMPI_Comm_split( newcomm, color, key, comm_out );
 
 #ifdef TAU_EXP_TRACK_COMM
-  tau_exp_track_comm_split(comm, my_MACRO_MPI_Comm(*comm_out));
+  tau_exp_track_comm_split(newcomm, my_MACRO_MPI_Comm(*comm_out));
 #endif /* TAU_EXP_TRACK_COMM */
 
   TAU_PROFILE_STOP(tautimer);
