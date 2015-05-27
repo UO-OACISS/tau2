@@ -57,10 +57,9 @@
       integer i, j, numsent, sender 
       integer answertype, row, flag
       integer matsize
-#if defined USE_OPENMP
-       integer nthreads, tid, omp_get_num_threads, &
+      integer nthreads, tid, omp_get_num_threads, &
      &   omp_get_thread_num
-#endif
+
       call MPI_INIT( ierr ) 
       call MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr ) 
       call MPI_COMM_SIZE( MPI_COMM_WORLD, maxpe, ierr ) 
@@ -72,7 +71,6 @@
 
 
 !omp parallel private(tid)
-#if defined USE_OPENMP
 !     Obtain and print thread id
       tid = omp_get_thread_num()
       print *, 'hello world from thread = ', tid
@@ -80,7 +78,6 @@
         nthreads = omp_get_num_threads()
         print *, 'number of threads = ', nthreads
       end if
-#endif 
 !omp end parallel
 
       if ( myid .eq. master ) then 
