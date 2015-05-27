@@ -7,22 +7,22 @@
         integer n
 
 ! first initialize the A matrix
-!omp do
+!$omp parallel do 
         do i = 1,n 
           do j = 1,n 
             a(j,i) = i 
           end do
         end do
-
-!omp end do
+!$omp end parallel  do
+ 
 ! then initialize the B matrix
-!omp do
+!$omp parallel do
         do i = 1,n 
           do j = 1,n 
             b(j,i) = i 
           end do
         end do
-!omp end do
+!$omp end parallel do
       end subroutine initialize
       
       subroutine multiply_matrices(answer, buffer, b, matsize)
@@ -31,14 +31,14 @@
         integer i, j
 ! multiply the row with the column 
 
-!$omp do
+!$omp  parallel  do
         do i = 1,matsize 
           answer(i) = 0.0 
           do j = 1,matsize 
             answer(i) = answer(i) + buffer(j)*b(j,i) 
           end do
         end do
-!$omp end  do
+!$omp end parallel do
       end subroutine multiply_matrices
 
       program main
@@ -57,8 +57,10 @@
       integer i, j, numsent, sender 
       integer answertype, row, flag
       integer matsize
-      integer OMP_GET_NUM_THREADS
-
+#if defined USE_OPENMP
+       integer nthreads, tid, omp_get_num_threads, &
+     &   omp_get_thread_num
+#endif
       call MPI_INIT( ierr ) 
       call MPI_COMM_RANK( MPI_COMM_WORLD, myid, ierr ) 
       call MPI_COMM_SIZE( MPI_COMM_WORLD, maxpe, ierr ) 
@@ -66,14 +68,21 @@
 
       master = 0 
       matsize = SIZE_OF_MATRIX 
-#if defined USE_OPENMP
-!omp parallel
-        write (*,*) "USING OpenMP"
-        write (*,*) "number of threads = ", omp_get_num_threads()
-!omp end parallel
-#endif 
 
-!omp parallel
+
+
+!omp parallel private(tid)
+#if defined USE_OPENMP
+!     Obtain and print thread id
+      tid = omp_get_thread_num()
+      print *, 'hello world from thread = ', tid
+      if (tid .eq. 0) then
+        nthreads = omp_get_num_threads()
+        print *, 'number of threads = ', nthreads
+      end if
+#endif 
+!omp end parallel
+
       if ( myid .eq. master ) then 
 ! master initializes and then dispatches 
 ! initialize a and b 

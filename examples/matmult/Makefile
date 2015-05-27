@@ -30,3 +30,4 @@ clean:
 	/bin/rm -f matmult.o matmult *.pdb profile.* *.inst.* *.continue.*
 
 #intel compiler use -fpp for preprocessing + compiling
+#mpiifort matmult.f90 -fpp -DUSE_OPENMP -o matmult_omp -openmp
