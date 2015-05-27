@@ -82,6 +82,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         SOS_comm_split();
         pub = SOS_new_pub((char *)"TAU Application");
         if (_threaded) {
+            printf("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
                 errno = ret;
@@ -141,28 +142,28 @@ extern "C" void TAU_SOS_send_data(void) {
     inclusive.d_val = 0.0;
     for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
         calls.d_val += fi->GetCalls(tid);
-    }
-    std::stringstream calls_str;
-    calls_str << "TAU::calls::" << fi->GetName();
-    const std::string& tmpcalls = calls_str.str();
-    SOS_pack(pub, tmpcalls.c_str(), SOS_DOUBLE, calls);
-    // todo - subroutines
-    // iterate over metrics 
-    std::stringstream incl_str;
-    std::stringstream excl_str;
-    for (int m = 0; m < Tau_Global_numCounters; m++) {
-        incl_str.clear();
-        incl_str << "TAU::inclusive::" << counterNames[m] << "::" << fi->GetName();
-        const std::string& tmpincl = incl_str.str();
-        excl_str.clear();
-        excl_str << "TAU::exclusive::" << counterNames[m] << "::" << fi->GetName();
-        const std::string& tmpexcl = excl_str.str();
-        for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-            inclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
-            exclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
+        std::stringstream calls_str;
+        calls_str << "TAU::" << tid << "::calls::" << fi->GetName();
+        const std::string& tmpcalls = calls_str.str();
+        SOS_pack(pub, tmpcalls.c_str(), SOS_DOUBLE, calls);
+        // todo - subroutines
+        // iterate over metrics 
+        std::stringstream incl_str;
+        std::stringstream excl_str;
+        for (int m = 0; m < Tau_Global_numCounters; m++) {
+            incl_str.clear();
+            incl_str << "TAU::" << tid << "::inclusive::" << counterNames[m] << "::" << fi->GetName();
+            const std::string& tmpincl = incl_str.str();
+            excl_str.clear();
+            excl_str << "TAU::" << tid << "::exclusive::" << counterNames[m] << "::" << fi->GetName();
+            const std::string& tmpexcl = excl_str.str();
+            //for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+                inclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
+                exclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
+            //}
+            SOS_pack(pub, tmpincl.c_str(), SOS_DOUBLE, inclusive);
+            SOS_pack(pub, tmpexcl.c_str(), SOS_DOUBLE, exclusive);
         }
-        SOS_pack(pub, tmpincl.c_str(), SOS_DOUBLE, inclusive);
-        SOS_pack(pub, tmpexcl.c_str(), SOS_DOUBLE, exclusive);
     }
   }
   if (TheFunctionDB().size() > fi_count) {
