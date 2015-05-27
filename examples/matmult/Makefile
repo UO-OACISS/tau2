@@ -27,4 +27,6 @@ matmult: $(OBJS)
 	$(F90) -c $(INCLUDE) $< -o $@
 
 clean:
-	/bin/rm -f matmult.o matmult *.pdb profile.* *.inst.*
+	/bin/rm -f matmult.o matmult *.pdb profile.* *.inst.* *.continue.*
+
+#intel compiler use -fpp for preprocessing + compiling
