@@ -1,48 +1,10 @@
 !**********************************************************************
 !     matmult.f90 - simple matrix multiply implementation 
 !************************************************************************
-      subroutine initialize(a, b, n)
-        double precision a(n,n)
-        double precision b(n,n)
-        integer n
-
-! first initialize the A matrix
-!$omp parallel do 
-        do i = 1,n 
-          do j = 1,n 
-            a(j,i) = i 
-          end do
-        end do
-!$omp end parallel  do
- 
-! then initialize the B matrix
-!$omp parallel do
-        do i = 1,n 
-          do j = 1,n 
-            b(j,i) = i 
-          end do
-        end do
-!$omp end parallel do
-      end subroutine initialize
-      
-      subroutine multiply_matrices(answer, buffer, b, matsize)
-        double precision buffer(matsize), answer(matsize)
-        double precision b(matsize, matsize)
-        integer i, j
-! multiply the row with the column 
-
-!$omp  parallel  do
-        do i = 1,matsize 
-          answer(i) = 0.0 
-          do j = 1,matsize 
-            answer(i) = answer(i) + buffer(j)*b(j,i) 
-          end do
-        end do
-!$omp end parallel do
-      end subroutine multiply_matrices
 
       program main
       include "mpif.h"
+
 
       integer SIZE_OF_MATRIX
       parameter (SIZE_OF_MATRIX = 1000) 
@@ -70,7 +32,7 @@
 
 
 
-!omp parallel private(tid)
+!$omp parallel private(tid)
 !     Obtain and print thread id
       tid = omp_get_thread_num()
       print *, 'hello world from thread = ', tid
@@ -78,7 +40,7 @@
         nthreads = omp_get_num_threads()
         print *, 'number of threads = ', nthreads
       end if
-!omp end parallel
+!$omp end parallel
 
       if ( myid .eq. master ) then 
 ! master initializes and then dispatches 
@@ -150,3 +112,46 @@
 ! omp end parallel 
       call MPI_FINALIZE(ierr) 
       end program main
+!--------------------------------------------------------------------------------
+      subroutine initialize(a, b, n)
+        double precision a(n,n)
+        double precision b(n,n)
+        integer n
+
+! first initialize the A matrix
+!$omp parallel 
+!$omp do
+        do i = 1,n 
+          do j = 1,n 
+            a(j,i) = i 
+          end do
+        end do
+!$omp end do nowait
+ 
+! then initialize the B matrix
+!$omp do
+        do i = 1,n 
+          do j = 1,n 
+            b(j,i) = i 
+          end do
+        end do
+!$omp end do nowait
+!$omp end parallel 
+      end subroutine initialize
+      
+      subroutine multiply_matrices(answer, buffer, b, matsize)
+        double precision buffer(matsize), answer(matsize)
+        double precision b(matsize, matsize)
+        integer i, j
+! multiply the row with the column 
+
+!$omp  parallel  do
+        do i = 1,matsize 
+          answer(i) = 0.0 
+          do j = 1,matsize 
+            answer(i) = answer(i) + buffer(j)*b(j,i) 
+          end do
+        end do
+!$omp end parallel do
+      end subroutine multiply_matrices
+
