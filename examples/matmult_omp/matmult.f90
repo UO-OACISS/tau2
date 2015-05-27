@@ -109,7 +109,6 @@
         end do
       endif
 
-! omp end parallel 
       call MPI_FINALIZE(ierr) 
       end program main
 !--------------------------------------------------------------------------------
