@@ -33,7 +33,7 @@
 
 #ifdef TAU_SOS
 #include "VMPI.h"
-inline MPI_Comm my_MACRO_MPI_Comm(MPI_Comm _c) {
+static inline MPI_Comm my_MACRO_MPI_Comm(MPI_Comm _c) {
     if (_c==MPI_COMM_WORLD && __vmpi_status.numpartitions != 0) {
         return VMPI_Get_partition_comm();
     } else if( _c==MPI_COMM_UNIVERSE) {
