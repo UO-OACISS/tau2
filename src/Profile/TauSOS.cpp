@@ -1,4 +1,4 @@
-
+#include "Profile/TauSOS.h"
 #include "Profile/Profiler.h"
 #include "TauMetrics.h"
 #include <iostream>
@@ -15,13 +15,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
-
-#ifndef TAU_MPI
-#define SOS_NO_VMPI
-#endif
 #include "sos.h"
-
-#define INTERRUPT_PERIOD 1 // one second
 
 SOS_pub_handle *pub = NULL;
 unsigned long fi_count = 0;
@@ -62,13 +56,14 @@ inline void do_unlock(void) {
     }
 }
 
-extern "C" void TAU_SOS_send_data(void);
-
 void * Tau_sos_thread_function(void* data) {
+    sleep(8); // wait for things to get going.
     while (!done) {
-        sleep(1);
+        sleep(2);
+        //printf("Sending data from TAU thread...\n");
         TAU_SOS_send_data();
     }
+    TAU_VERBOSE("TAU SOS thread exiting.\n");
     pthread_exit((void*)0L);
 }
 
@@ -82,7 +77,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         SOS_comm_split();
         pub = SOS_new_pub((char *)"TAU Application");
         if (_threaded) {
-            printf("Spawning thread for SOS.\n");
+            TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
                 errno = ret;
@@ -95,23 +90,40 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     }
 }
 
-extern "C" void TAU_SOS_finalize(void) {
-    static bool finalized = false;
-    printf("%s\n", __func__);
-    if (finalized) return;
+extern "C" void TAU_SOS_stop_worker(void) {
+    //printf("%s\n", __func__); fflush(stdout);
     do_lock();
     done = true;
-    SOS_finalize();
-    finalized = true;
     do_unlock();
     if (_threaded) {
         int ret = pthread_join(worker_thread, NULL);
         if (ret != 0) {
-            errno = ret;
-            perror("Error: pthread_join (1) fails\n");
-            exit(1);
+            switch (ret) {
+                case ESRCH:
+                    // already exited.
+                    break;
+                case EINVAL:
+                    // Didn't exist?
+                    break;
+                case EDEADLK:
+                    // trying to join with itself?
+                    break;
+                default:
+                    errno = ret;
+                    perror("Warning: pthread_join failed\n");
+                    break;
+            }
         }
     }
+}
+
+extern "C" void TAU_SOS_finalize(void) {
+    static bool finalized = false;
+    //printf("%s\n", __func__); fflush(stdout);
+    if (finalized) return;
+    TAU_SOS_stop_worker();
+    SOS_finalize();
+    finalized = true;
 }
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
@@ -120,6 +132,7 @@ extern "C" void TAU_SOS_send_data(void) {
     assert(pub);
     do_lock();
     if (done) {
+        do_unlock();
         return;
     }
     // get the most up-to-date profile information

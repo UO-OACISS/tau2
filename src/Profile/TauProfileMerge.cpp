@@ -33,6 +33,8 @@
 #include <TauUtil.h>
 #include <TauXML.h>
 
+#include "Profile/TauSOS.h"
+
 // Moved from header file
 #ifdef __cplusplus
 using namespace std;
@@ -133,8 +135,8 @@ int Tau_mergeProfiles()
   rank = 0;
   size = 1;
 #ifdef TAU_MPI
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  PMPI_Comm_size(MPI_COMM_WORLD, &size);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
+  PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &size);
 #endif  /* TAU_MPI */
 
 	buflen = Tau_snapshot_getBufferLength()+1;
@@ -143,7 +145,7 @@ int Tau_mergeProfiles()
 
   int maxBuflen = buflen;
 #ifdef TAU_MPI
-  PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+  PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif  /* TAU_MPI */
 
 #ifdef TAU_UNIFY
@@ -279,13 +281,13 @@ int Tau_mergeProfiles()
 
 #ifdef TAU_MPI
       /* send ok-to-go */
-      PMPI_Send(NULL, 0, MPI_INT, i, 0, MPI_COMM_WORLD);
+      PMPI_Send(NULL, 0, MPI_INT, i, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
       
       /* receive buffer length */
-      PMPI_Recv(&buflen, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
+      PMPI_Recv(&buflen, 1, MPI_INT, i, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
 
       /* receive buffer */
-      PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
+      PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
 #endif  /* TAU_MPI */
 
       if (!TauEnv_get_summary_only()) { /* write each rank? */
@@ -430,13 +432,13 @@ int Tau_mergeProfiles()
 
 #ifdef TAU_MPI
     /* recieve ok to go */
-    PMPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+    PMPI_Recv(NULL, 0, MPI_INT, 0, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
 
     /* send length */
-    PMPI_Send(&buflen, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    PMPI_Send(&buflen, 1, MPI_INT, 0, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 
     /* send data */
-    PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
+    PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif  /* TAU_MPI */
 
   }

@@ -47,6 +47,7 @@
 
 #define NDEBUG  // Disable to enable assertions
 #include <assert.h>
+#include "Profile/TauSOS.h"
 
 using namespace std;
 using namespace tau;
@@ -66,7 +67,7 @@ const char** collate_op_names[NUM_COLLATE_OP_TYPES] =
 void TAU_MPI_DEBUG0(const char *format, ...) {
   int rank = 0;
 #ifdef TAU_MPI
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
 #endif /* TAU_MPI */
   if (rank != 0) {
     return;
@@ -428,7 +429,7 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 				   int numEvents, int *globalEventMap,bool isAtomic) {
   int rank = 0;
 #ifdef TAU_MPI
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
 #endif /* TAU_MPI */
   
   int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
@@ -472,7 +473,7 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
   numThreadsLocal[numEvents] = RtsLayer::getTotalThreads();
 #ifdef TAU_MPI
   PMPI_Reduce(numThreadsLocal, numThreadsGlobal, numEvents+1, 
-	      MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	      MPI_INT, MPI_SUM, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif /* TAU_MPI */
 
   /* Now rank 0 knows all about global thread counts */
@@ -505,7 +506,7 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 					  double ***sAtomicSumSqr) {
   int rank = 0;
 #ifdef TAU_MPI
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
 #endif /* TAU_MPI */
   
   MPI_Op min_op = MPI_MIN;
@@ -580,15 +581,15 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
     // reduce data to rank 0
 #ifdef TAU_MPI
     PMPI_Reduce(atomicMin, (*gAtomicMin)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     PMPI_Reduce(atomicMax, (*gAtomicMax)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     PMPI_Reduce(atomicCalls, (*gAtomicCalls)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     PMPI_Reduce(atomicMean, (*gAtomicMean)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     PMPI_Reduce(atomicSumSqr, (*gAtomicSumSqr)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif /* TAU_MPI */
   }
 #ifndef TAU_MPI
@@ -627,7 +628,7 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 				    double ***sNumCalls, double ***sNumSubr) {
   int rank = 0;
 #ifdef TAU_MPI
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
 #endif /* TAU_MPI */
 
   // *CWL* - Minimum needs to be handled with out-of-band values for now.
@@ -713,14 +714,14 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
     // reduce data to rank 0
     for (int m=0; m<Tau_Global_numCounters; m++) {
       PMPI_Reduce(excl[m], (*gExcl)[s][m], numItems, MPI_DOUBLE, 
-		  collate_op[s], 0, MPI_COMM_WORLD);
+		  collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
       PMPI_Reduce(incl[m], (*gIncl)[s][m], numItems, MPI_DOUBLE, 
-		  collate_op[s], 0, MPI_COMM_WORLD);
+		  collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     }
     PMPI_Reduce(numCalls, (*gNumCalls)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     PMPI_Reduce(numSubr, (*gNumSubr)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif /* TAU_MPI */
   }
 #ifdef TAU_MPI
@@ -786,7 +787,7 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
 
 #ifdef TAU_MPI
   int rank = 0;
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
 #endif /* TAU_MPI */
   
   if (globalEventMap[e] != -1) { // if it occurred in our rank
@@ -821,7 +822,7 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
   }    
 #ifdef TAU_MPI
   PMPI_Reduce (histogram, *outHistogram, 
-	       numBins*numHistograms, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	       numBins*numHistograms, MPI_INT, MPI_SUM, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif /* TAU_MPI */
 }
 
@@ -846,8 +847,8 @@ extern "C" int Tau_collate_writeProfile() {
   invocationIndex++;
 
   int rank, size;
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  PMPI_Comm_size(MPI_COMM_WORLD, &size);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
+  PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &size);
 
   // timing info
   x_uint64 start, end;
