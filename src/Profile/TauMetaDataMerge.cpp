@@ -22,6 +22,7 @@
 #include <TAU.h>
 #include <TauMetaData.h>
 #include <TauMetrics.h>
+#include "Profile/TauSOS.h"
 
 // Moved from header file
 using namespace std;
@@ -48,8 +49,8 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     return 0;
   }
 
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
+  PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &numRanks);
 #endif /* TAU_MPI */
 
   x_uint64 start, end;
@@ -64,8 +65,8 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     char *defBuf = Tau_util_getOutputBuffer(out);
     int defBufSize = Tau_util_getOutputBufferLength(out);
 
-    PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+    PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+    PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif /* TAU_MPI */
 
     end = TauMetrics_getTimeOfDay();
@@ -80,9 +81,9 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   } else {
 #ifdef TAU_MPI
     int BufferSize;
-    PMPI_Bcast(&BufferSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    PMPI_Bcast(&BufferSize, 1, MPI_INT, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     char *Buffer = (char*) TAU_UTIL_MALLOC(BufferSize);
-    PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+    PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
     Tau_metadata_removeDuplicates(Buffer, BufferSize);
 	free(Buffer);
 #endif /* TAU_MPI */
