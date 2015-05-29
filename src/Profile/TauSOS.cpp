@@ -24,7 +24,7 @@ pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_t worker_thread;
 bool _threaded = false;
 
-inline void init_lock(void) {
+void init_lock(void) {
     if (!_threaded) return;
     pthread_mutexattr_t Attr;
     pthread_mutexattr_init(&Attr);
@@ -36,7 +36,7 @@ inline void init_lock(void) {
         exit(1);
     }
 }
-inline void do_lock(void) {
+void do_lock(void) {
     if (!_threaded) return;
     int rc;
     if ((rc = pthread_mutex_lock(&_my_mutex)) != 0) {
@@ -46,7 +46,7 @@ inline void do_lock(void) {
     }
 }
 
-inline void do_unlock(void) {
+void do_unlock(void) {
     if (!_threaded) return;
     int rc;
     if ((rc = pthread_mutex_unlock(&_my_mutex)) != 0) {
@@ -56,14 +56,23 @@ inline void do_unlock(void) {
     }
 }
 
+class scoped_lock {
+public:
+    scoped_lock(void) { do_lock(); }
+    ~scoped_lock(void) { do_unlock(); }
+};
+
 void * Tau_sos_thread_function(void* data) {
-    sleep(8); // wait for things to get going.
+    sleep(10); // wait for things to get going.
     while (!done) {
-        sleep(2);
-        //printf("Sending data from TAU thread...\n");
+        //TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
+        do_lock();
         TAU_SOS_send_data();
+        do_unlock();
+        //TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+        sleep(2);
     }
-    TAU_VERBOSE("TAU SOS thread exiting.\n");
+    TAU_VERBOSE("TAU SOS thread exiting.\n"); fflush(stderr);
     pthread_exit((void*)0L);
 }
 
@@ -72,7 +81,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;
         init_lock();
-        do_lock();
+        scoped_lock mylock;  // lock from now to the end of this block
         SOS_init(argc, argv, SOS_APP);
         SOS_comm_split();
         pub = SOS_new_pub((char *)"TAU Application");
@@ -86,7 +95,6 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             }
         }
         initialized = true;
-        do_unlock();
     }
 }
 
@@ -96,6 +104,7 @@ extern "C" void TAU_SOS_stop_worker(void) {
     done = true;
     do_unlock();
     if (_threaded) {
+        TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
         int ret = pthread_join(worker_thread, NULL);
         if (ret != 0) {
             switch (ret) {
@@ -121,7 +130,9 @@ extern "C" void TAU_SOS_finalize(void) {
     static bool finalized = false;
     //printf("%s\n", __func__); fflush(stdout);
     if (finalized) return;
-    TAU_SOS_stop_worker();
+    if (!done) {
+        TAU_SOS_stop_worker();
+    }
     SOS_finalize();
     finalized = true;
 }
@@ -130,11 +141,7 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 
 extern "C" void TAU_SOS_send_data(void) {
     assert(pub);
-    do_lock();
-    if (done) {
-        do_unlock();
-        return;
-    }
+    if (done) { return; }
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
 
@@ -188,6 +195,5 @@ extern "C" void TAU_SOS_send_data(void) {
     SOS_announce(pub);
   }
   SOS_publish(pub);
-  do_unlock();
 }
 
