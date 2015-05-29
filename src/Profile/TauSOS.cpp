@@ -63,14 +63,14 @@ public:
 };
 
 void * Tau_sos_thread_function(void* data) {
-    sleep(10); // wait for things to get going.
+    PMPI_Barrier( TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD) ); // wait for everyone to join
     while (!done) {
+        sleep(2);
         //TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
         do_lock();
         TAU_SOS_send_data();
         do_unlock();
         //TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
-        sleep(2);
     }
     TAU_VERBOSE("TAU SOS thread exiting.\n"); fflush(stderr);
     pthread_exit((void*)0L);
