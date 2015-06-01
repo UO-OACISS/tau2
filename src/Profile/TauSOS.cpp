@@ -172,14 +172,14 @@ extern "C" void TAU_SOS_send_data(void) {
         std::stringstream excl_str;
         for (int m = 0; m < Tau_Global_numCounters; m++) {
             incl_str.clear();
-            incl_str << "TAU::" << tid << "::inclusive::" << counterNames[m] << "::" << fi->GetName();
+            incl_str << "TAU::" << tid << "::inclusive_" << counterNames[m] << "::" << fi->GetName();
             const std::string& tmpincl = incl_str.str();
             excl_str.clear();
-            excl_str << "TAU::" << tid << "::exclusive::" << counterNames[m] << "::" << fi->GetName();
+            excl_str << "TAU::" << tid << "::exclusive_" << counterNames[m] << "::" << fi->GetName();
             const std::string& tmpexcl = excl_str.str();
             //for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
                 inclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
-                exclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
+                exclusive.d_val += fi->getDumpExclusiveValues(tid)[m];
             //}
             SOS_pack(pub, tmpincl.c_str(), SOS_DOUBLE, inclusive);
             SOS_pack(pub, tmpexcl.c_str(), SOS_DOUBLE, exclusive);
