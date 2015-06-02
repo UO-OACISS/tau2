@@ -3468,12 +3468,12 @@ then
     mpi=yes
     if [ $cxxloaded = 1 ]
     then
-	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	c_compiler=`mpicc -show | tail -n 1 | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	f90loaded=`which mpif90 2>/dev/null | wc -l`
 	if [ $f90loaded = 1 ]
 	then 
-            fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+            fortran_compiler=`mpif90 -show | tail -n 1 | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then 
 		fortran_compiler=intel
 	    fi
@@ -3495,15 +3495,15 @@ then
             is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
             if [ $is_internal_compiler_loaded = 0 ]; then 
 		# Compiler is not loaded, use full path to it
-		c_compiler=`mpicc -show | awk '{ print $1;}' ` 
-		cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
-		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
+		c_compiler=`mpicc -show | tail -n 1 | awk '{ print $1;}' ` 
+		cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1;}' `
+		fortran_compiler=`mpif90 -show | tail -n 1 | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" ]; then
-		mpilibrary=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpilibrary=`mpicxx -show | tail -n 1 | cut -d' ' -f2- | sed -e 's@ @#@g'`
             fi
-            full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
-            full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
+            full_cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`mpicc -show | tail -n 1 | awk '{ print $1; }'`
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
 	fi
@@ -3932,7 +3932,7 @@ case $cxx_compiler in
         ;;   
 
     *mpicxx)
-        internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
+        internal_compiler=`$cxx_compiler -show | tail -n 1 | awk '{ print $1;}'`
         case $internal_compiler in 
             *bgclang++)
 		tauoptions="${tauoptions}-clang"
