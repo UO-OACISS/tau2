@@ -18,14 +18,17 @@ F90=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_f90.sh
 LIBS= 
 INCLUDE=
 OBJS= matmult.o
+OMP_FLAG= -openmp
 
 matmult: $(OBJS)
 	$(F90) $(OBJS) -o matmult $(LIBS)
 
 .f90.o: 
 	echo "Building $@ from $<"
-	$(F90) -c $(INCLUDE) $< -o $@
+	$(F90) $(OMP_FLAG) -c $(INCLUDE) $< -o $@
 
 clean:
 	/bin/rm -f matmult.o matmult *.pdb profile.* *.inst.* *.continue.*
 
+#intel compiler use -fpp for preprocessing + compiling
+#mpiifort matmult.f90 -fpp -DUSE_OPENMP -o matmult_omp -openmp

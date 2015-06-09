@@ -138,6 +138,7 @@ public class ParaProf implements ActionListener {
 		+ "The following options will run only from the console (no GUI will launch):\n" + "\n"
 		+ "  --merge <file.gz>               Merges snapshot profiles\n"
 		+ "  --pack <file>                   Pack the data into packed (.ppk) format\n"
+		+ "  --text <file>                   Dump the data into text (.csv) format\n"
 		+ "  --dump                          Dump profile data to TAU profile format\n"
 		+ "  --dumprank <rank>               Dump profile data for <rank> to TAU profile format\n"
 		+ "  -v, --dumpsummary               Dump derived statistical data to TAU profile format\n"
@@ -413,6 +414,7 @@ public class ParaProf implements ActionListener {
 
 	CmdLineParser.Option mergeOpt = parser.addStringOption('a', "merge");
 	CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
+	CmdLineParser.Option textOpt = parser.addStringOption('t', "text");
 	CmdLineParser.Option schemaLocationOpt = parser.addStringOption('c', "schemadir");
 	CmdLineParser.Option metadumpOpt = parser.addBooleanOption('d', "metadump");
 	CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
@@ -449,6 +451,7 @@ public class ParaProf implements ActionListener {
 	Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
 	String merge = (String) parser.getOptionValue(mergeOpt);
 	String pack = (String) parser.getOptionValue(packOpt);
+	String text = (String) parser.getOptionValue(textOpt);
 	Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
 	Boolean unpackSumm = (Boolean) parser.getOptionValue(unpackSummOpt);
 	
@@ -635,6 +638,21 @@ public class ParaProf implements ActionListener {
 		dataSource.load();
 		System.out.println("Packing data...");
 		DataSourceExport.writePacked(dataSource, new File(pack));
+
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+	    System.exit(0);
+	}
+
+	if (text != null) {
+	    try {
+
+		DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+		System.out.println("Loading data...");
+		dataSource.load();
+		System.out.println("Writing data...");
+		DataSourceExport.writeDelimited(dataSource, new FileOutputStream(new File(text)));
 
 	    } catch (Exception e) {
 		e.printStackTrace();
