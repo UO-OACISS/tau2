@@ -1,4 +1,3 @@
-include ../../../../include/include/Makefile 
 include ../../../include/Makefile
 TAUOPTS = -optVerbose -optKeepFiles -optDetectMemoryLeaks
 CC= $(TAU_COMPILER) $(TAUOPTS) $(TAU_CC)
