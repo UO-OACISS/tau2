@@ -8,11 +8,16 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
+#include <sys/types.h>
+
+
 #ifndef TAU_ANDROID
 #define LOGV(...) printf(__VA_ARGS__)
 #define LOGF(...) printf(__VA_ARGS__)
+pid_t gettid(void);
+static int dalvik_vm_running = 0;
+static pid_t finalizer;
 #else
-#include <sys/types.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <pthread.h>

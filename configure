@@ -2457,11 +2457,20 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
-	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
+              gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            fi
+
             if [ ! -r /usr/lib/libGL.so.1 ]
             then
 		echo "NOTE: Did not find OpenGL library, copying TAU's Mesa libGL.so.1 to arm_linux/lib directory"
 		gunzip -c tools/src/contrib/jogl/arm_linux/libGL.so.1.gz > $JARTARGET/libGL.so.1
+            fi
+
+
+            if [ -r tools/src/contrib/jogl/arm_linux/gluegen.jar.gz -a -r tools/src/contrib/jogl/arm_linux/libgluegen-rt.so.gz ] ; then
+              gunzip -c tools/src/contrib/jogl/arm_linux/libgluegen-rt.so.gz > $JARTARGET/libgluegen-rt.so
+              gunzip -c tools/src/contrib/jogl/arm_linux/gluegen.jar.gz > $JARTARGET/gluegen.jar
             fi
 
 	    ;;
