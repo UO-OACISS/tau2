@@ -269,7 +269,8 @@ JDKARCH                 = linux
 #############################################
 # JAVA OBJECTS
 #############################################
-#JAVA#TAU_JAVA_O 	= TauJAPI.o agent_util.o java_crw_demo.o TauJVMTI.o adb.o jdwp.o ddm.o #ENDIF#
+#ANDROID#TAU_ADB_O = adb.o #ENDIF#
+#JAVA#TAU_JAVA_O 	= TauJAPI.o agent_util.o java_crw_demo.o TauJVMTI.o $(TAU_ADB_O) jdwp.o ddm.o #ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
 #############################################
@@ -478,7 +479,7 @@ TAU_F77 = $(TAU_F90)
 #TAU_PAPI_THREADS#THR_O       = PapiThreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
 #JAVA#THR_O       	       = JNIThreadLayer.o JVMTIThreadLayer.o     #ENDIF#
-#JVMTI#THR_O       	       = #ENDIF#
+#JVMTI_BLANK_THR_O#THR_O       	       = #ENDIF#
 #TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 #LINUXTIMERS#PLATFORM_O       = TauLinuxTimers.o       #ENDIF#
 #TULIPTHREADS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/Tuliplib   #ENDIF#
