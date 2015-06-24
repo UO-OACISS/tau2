@@ -45,6 +45,7 @@
 //Supporting Libraries
 #include <limits.h>
 #include <iostream>
+#include <map>
 using namespace std;
 
 #include "TauJVMTI.h"
@@ -102,6 +103,7 @@ extern "C" void Tau_profile_exit_all_threads(void);
 
 //Get rid of the nasty globals!
 static GlobalAgentData *gdata;
+static std::map<std::string,long> name_to_id_map;
 
 GlobalAgentData * get_global_data(){
   return gdata;
@@ -233,6 +235,9 @@ mnum_callback(const unsigned cnum, const unsigned mnum, const char *class_name, 
     sprintf(funcname, "%s %s %s", class_name, method_name, method_sig);
     unique_method_id = make_unique_method_id(cnum, mnum);
     //Use of dummy TID is fine, library doesn't use it anyways.
+    DEBUGPROFMSG("Mapping (" << cnum << ", " << mnum << ")=" << \
+            unique_method_id << " to " << funcname << endl;);
+    name_to_id_map[funcname] = unique_method_id;
     TAU_MAPPING_CREATE(funcname, " ",
 		       unique_method_id , 
 		       class_name, tid);
@@ -272,6 +277,7 @@ TAUJVMTI_native_entry(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint
 	      TAU_MAPPING_LINK(TauMethodName, unique_method_id);
 		
 	      TAU_MAPPING_PROFILE_TIMER(TauTimer, TauMethodName, tid);
+          DEBUGPROFMSG("JVMTI Starting timer for (" << cnum << ", " << mnum << ")" << endl;)
 	      TAU_MAPPING_PROFILE_START(TauTimer,  tid);
             }
         }
@@ -297,6 +303,7 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
 		unique_method_id = make_unique_method_id(cnum, mnum);
 		TAU_MAPPING_OBJECT(TauMethodName=NULL);
 		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
+        DEBUGPROFMSG("JVMTI Stopping timer for (" << cnum << ", " << mnum << ")" << endl;)
 		TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);
             }
         }
@@ -357,7 +364,9 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
     enter_critical_section(jvmti); {
         char  tname[MAX_THREAD_NAME_LENGTH];
         static jvmtiEvent events[] =
-                { JVMTI_EVENT_THREAD_START, JVMTI_EVENT_THREAD_END };
+                { JVMTI_EVENT_THREAD_START, JVMTI_EVENT_THREAD_END,
+                  JVMTI_EVENT_EXCEPTION
+                };
         int        i;
 
         /* The VM has started. */
@@ -480,6 +489,65 @@ cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 	    //Inform Tau that the thread has ended.
 	    TAU_PROFILE_EXIT("END..."); 
         }
+    } exit_critical_section(jvmti);
+}
+
+/* Callback for JVMTI_EVENT_EXCEPTION */
+static void JNICALL
+cbException(jvmtiEnv *jvmti, JNIEnv* env,
+        jthread thread, jmethodID method, jlocation location,
+        jobject exception, jmethodID catch_method,
+        jlocation catch_location)
+{
+    dprintf("Exception!\n");
+    enter_critical_section(jvmti); {
+
+        // If this exception is caught in this same method,
+        // it doesn't cause us to return, so don't stop
+        // the timer
+        if(method == catch_method) {
+            return;
+        }
+
+        // Get the method name
+        char * name;
+        char * sig;
+        char * gen;
+        jvmti->GetMethodName(method, &name, &sig, &gen);
+        
+        // Get the class name
+        // (this has to be done by calling Java's getName on the Class)
+        jclass klass = NULL;
+        jvmti->GetMethodDeclaringClass(method, &klass);
+        jclass classObjDesc =  env->GetObjectClass(klass);
+        jmethodID getNameMID = env->GetMethodID(classObjDesc, "getName", "()Ljava/lang/String;");
+        jstring classNameStr = (jstring)env->CallObjectMethod(klass, getNameMID);
+        const char* className = env->GetStringUTFChars(classNameStr, NULL);
+
+        // Get the thread ID
+        const int tid = JVMTIThreadLayer::GetThreadId(thread);
+
+        // Find out whether we actually instrumented this method
+        const int instrumented = instrument_callback(className, name, sig);
+
+        // If so, stop the associated timer
+        if(instrumented) {
+            char timer_name[2048];
+            sprintf(timer_name, "%s %s %s", className, name, sig);
+            // which we have to look up in the map because we don't
+            // know cnum and mnum in this callback
+            long unique_method_id = name_to_id_map[timer_name];
+            DEBUGPROFMSG("Exception " << timer_name << " id " << unique_method_id << endl;);
+            TAU_MAPPING_OBJECT(TauMethodName=NULL);
+            TAU_MAPPING_LINK(TauMethodName, unique_method_id);
+            TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);
+        }
+
+        // Cleanup
+        env->ReleaseStringUTFChars(classNameStr, className);
+        jvmti->Deallocate((unsigned char *)name);
+        jvmti->Deallocate((unsigned char *)sig);
+        jvmti->Deallocate((unsigned char *)gen);
     } exit_critical_section(jvmti);
 }
 
@@ -692,6 +760,7 @@ parse_agent_options(char *options)
     }
 }
 
+
 /* Agent_OnLoad: This is called immediately after the shared library is
  *   loaded. This is the first code executed.
  */
@@ -772,6 +841,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
      */
     (void)memset(&capabilities,0, sizeof(capabilities));
     capabilities.can_generate_all_class_hook_events  = 1;
+    capabilities.can_generate_exception_events = 1;
     error = jvmti->AddCapabilities(&capabilities);
     check_jvmti_error(jvmti, error, "Unable to get necessary JVMTI capabilities.");
 
@@ -791,6 +861,8 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     callbacks.ThreadStart       = &cbThreadStart;
     /* JVMTI_EVENT_THREAD_END */
     callbacks.ThreadEnd         = &cbThreadEnd;
+    /* JVMTI_EVENT_EXCEPTION */
+    callbacks.Exception         = &cbException;
     error = jvmti->SetEventCallbacks(&callbacks, (jint)sizeof(callbacks));
     check_jvmti_error(jvmti, error, "Cannot set jvmti callbacks");
 
@@ -810,7 +882,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     error = jvmti->SetEventNotificationMode(JVMTI_ENABLE,
                           JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, (jthread)NULL);
     check_jvmti_error(jvmti, error, "Cannot set event notification");
-
+    
     /* Here we create a raw monitor for our use in this agent to
      *   protect critical sections of code.
      */
