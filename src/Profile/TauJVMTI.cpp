@@ -500,15 +500,13 @@ cbException(jvmtiEnv *jvmti, JNIEnv* env,
         jlocation catch_location)
 {
     dprintf("Exception!\n");
+    // If this exception is caught in this same method,
+    // it doesn't cause us to return, so don't stop
+    // the timer
+    if(method == catch_method) {
+        return;
+    }
     enter_critical_section(jvmti); {
-
-        // If this exception is caught in this same method,
-        // it doesn't cause us to return, so don't stop
-        // the timer
-        if(method == catch_method) {
-            return;
-        }
-
         // Get the method name
         char * name;
         char * sig;
