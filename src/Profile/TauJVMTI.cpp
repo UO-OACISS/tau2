@@ -520,7 +520,17 @@ cbException(jvmtiEnv *jvmti, JNIEnv* env,
         jclass classObjDesc =  env->GetObjectClass(klass);
         jmethodID getNameMID = env->GetMethodID(classObjDesc, "getName", "()Ljava/lang/String;");
         jstring classNameStr = (jstring)env->CallObjectMethod(klass, getNameMID);
-        const char* className = env->GetStringUTFChars(classNameStr, NULL);
+        const char* classNameC = env->GetStringUTFChars(classNameStr, NULL);
+        size_t classNameLen = strlen(classNameC);
+        char className[classNameLen];
+        strcpy(className, classNameC);
+
+        // Change '.' to '/' to match TAU's class name format
+        for(int i = 0; i < classNameLen; ++i) {
+            if(className[i] == '.') {
+                className[i] = '/';
+            }
+        }
 
         // Get the thread ID
         const int tid = JVMTIThreadLayer::GetThreadId(thread);
@@ -534,15 +544,21 @@ cbException(jvmtiEnv *jvmti, JNIEnv* env,
             sprintf(timer_name, "%s %s %s", className, name, sig);
             // which we have to look up in the map because we don't
             // know cnum and mnum in this callback
-            long unique_method_id = name_to_id_map[timer_name];
-            DEBUGPROFMSG("Exception " << timer_name << " id " << unique_method_id << endl;);
-            TAU_MAPPING_OBJECT(TauMethodName=NULL);
-            TAU_MAPPING_LINK(TauMethodName, unique_method_id);
-            TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);
+            map<std::string,long>::const_iterator it = name_to_id_map.find(timer_name);
+            if(it == name_to_id_map.end()) {
+                fprintf(stderr, "ERROR: method %s not in name map.\n", timer_name);
+                abort();
+            } else {
+                long unique_method_id = name_to_id_map[timer_name];
+                DEBUGPROFMSG("Exception " << timer_name << " id " << unique_method_id << endl;);
+                TAU_MAPPING_OBJECT(TauMethodName=NULL);
+                TAU_MAPPING_LINK(TauMethodName, unique_method_id);
+                TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);
+            }
         }
 
         // Cleanup
-        env->ReleaseStringUTFChars(classNameStr, className);
+        env->ReleaseStringUTFChars(classNameStr, classNameC);
         jvmti->Deallocate((unsigned char *)name);
         jvmti->Deallocate((unsigned char *)sig);
         jvmti->Deallocate((unsigned char *)gen);
