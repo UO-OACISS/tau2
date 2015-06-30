@@ -8524,9 +8524,13 @@ if [ $scorep = yes ] ; then
 	# default flags for Score-P 1.2+
 	mod_scorep_adapter=`echo ${scorep_adapter} | sed -e 's/--adapter-init//g'`
 	#echo "WE HAVE mod_scorep_adapter = ${mod_scorep_adapter}"
-	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepExtraLibs='-lscorep_adapter_user_event -lscorep_adapter_user_mgmt'
+        if [ $machine = "mic_linux" ]; then 
+          mod_scorep_adapter="$mod_scorep_adapter --target=mic "
+        fi
+	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
+	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
+	echo "Using scorepLD=$scorepLD"
+	scorepExtraLibs='-lscorep_adapter_user_event#-lscorep_adapter_user_mgmt'
     fi
     # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
     if [ $mpi = yes ] ; then 
@@ -8558,8 +8562,7 @@ if [ $scorep = yes ] ; then
 	fi
     fi
     #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
-    scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
-    scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
+    scorepLibs="$scorepExtraLibs#$scorepLD#$scorepLibs"
 
     fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     if [ $mpi = no ]; then
