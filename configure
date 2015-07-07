@@ -5829,6 +5829,7 @@ if [ "x$download_unwind" = xyes ] ; then
         if [ $machine = arm64_linux ]; then 
           configresult=0
           makeresult=0
+          mv ../${libunwind}  ${unwind_dir}
         fi
         if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
           # Some systems install to lib64 instead of lib
