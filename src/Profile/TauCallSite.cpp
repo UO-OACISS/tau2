@@ -741,12 +741,14 @@ extern "C" void finalizeCallSites_if_necessary()
   string delimiter = string(" --> ");
   for (unsigned int i = 0; i < callSiteId[tid]; i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
-    if (callsiteInfo->hasName) {
+    if (callsiteInfo && callsiteInfo->hasName) {
       // We've already done this in the discovery phase.
       continue;
     }
     char *name;
     string *tempName = new string("");
+    if (!callsiteInfo) return; 
+
     if (callsiteInfo->resolved) {
       //      printf("ID %d resolved\n", i);
       // resolve a single address
