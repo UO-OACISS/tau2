@@ -7464,6 +7464,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 else 
   fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
 fi # bfd = yes && turnbfdoff != yes
+bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir/lib64"
 
 
 
