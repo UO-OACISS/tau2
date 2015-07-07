@@ -60,6 +60,15 @@ double TauGetMHzRatings(void) {
   char *apple_cmd = "sysctl hw.cpufrequency | sed 's/^.*: //'";
   FILE *fp = fopen("/proc/cpuinfo", "r");
 
+#ifdef __aarch64__ 
+
+  long long freq; 
+  __asm__ __volatile__("mrs %0, CNTFRQ_EL0" : "=r" (freq));
+  rating = (double) freq/1.0e6;
+  return rating; 
+
+#endif /* __aarch64__ */
+
   if (fp) {
     while (TauReadFullLine(line, fp) != -1) {
       if (strncmp(line, "cpu MHz", 7) == 0) {
