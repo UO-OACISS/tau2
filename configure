@@ -5739,6 +5739,12 @@ if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
 
+if [ $machine = arm64_linux ] ; then
+  libunwind=libunwind-arm64-1.1
+  libunwindtgz=$libunwind.tgz
+  libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+fi
+
 if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
   if [ -r $unwind_dir/$libunwindtgz ]; then 
     echo "NOTE: Copying $unwind_dir/$libunwindtgz "
@@ -5819,6 +5825,10 @@ if [ "x$download_unwind" = xyes ] ; then
             make -i install > $libunwind_log  2>&1
           makeresult=$?
           fi
+        fi
+        if [ $machine = arm64_linux ]; then 
+          configresult=0
+          makeresult=0
         fi
         if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
           # Some systems install to lib64 instead of lib
@@ -7206,6 +7216,13 @@ fi
 binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
+
+if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/bfd.h ] ; then
+  binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/arm64-bfd.tgz 
+  binutilstgz=arm64-bfd.tgz
+  p=`pwd`
+  cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p}; 
+fi
 
 if [ "x$bfddir" = xnone ]; then
   echo "BFD disabled."
