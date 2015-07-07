@@ -12,6 +12,12 @@ unsigned long long getLinuxHighResolutionTscCounter(void) {
   __asm__ __volatile__("mov %0=ar.itc" : "=r"(tmp) :: "memory");
   return tmp;
 }
+#elif __aarch64__
+unsigned long long getLinuxHighResolutionTscCounter(void) {
+  unsigned long long tmp;
+  __asm__ __volatile__("mrs %0, CNTVCT_EL0" : "=r" (tmp));
+  return tmp;
+}
 #elif __powerpc__
 unsigned long long getLinuxHighResolutionTscCounter(void) {
   unsigned long long tmp;
