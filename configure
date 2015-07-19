@@ -9322,6 +9322,10 @@ sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
 
+if [ $armci = yes ]; then
+  sed -f $sedout < src/wrappers/armci/Makefile.skel > src/wrappers/armci/Makefile
+fi
+
 
 #############################################################################
 
