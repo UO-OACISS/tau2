@@ -1,0 +1,33 @@
+include ../../../include/Makefile
+include ../Makefile
+
+TAU_ARMCI_SHARED=libTAU-armciwrap$(TAU_SHLIBX)
+#NOSHARED#TAU_ARMCI_SHARED=#endif#
+CC = $(TAU_CC)
+CXX = $(TAU_CXX)
+CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) -I$(ARMCIDIR)/include
+ARFLAGS = rcv
+
+install-static: libTauARMCIWrapper.a
+	$(TAU_STATIC_INSTALL_CMD)
+
+install-shared: $(TAU_ARMCI_SHARED)
+	$(TAU_SHARED_INSTALL_CMD)
+
+install: install-static install-shared
+
+libTauARMCIWrapper.a: armciwrapper.o
+	$(TAU_AR) $(ARFLAGS) libTauARMCIWrapper.a armciwrapper.o
+
+armciwrapper.o: armciwrapper.c
+	$(CC) $(CFLAGS) -c armciwrapper.c
+
+armciwrap_shared.o: armciwrapper.c
+	$(CC) $(CFLAGS) $(TAU_INTERNAL_FLAGS) -c armciwrapper.c -o armciwrap_shared.o
+
+libTAU-armciwrap$(TAU_SHLIBX): armciwrap_shared.o
+	$(CC) $(TAU_SHFLAGS) libTAU-armciwrap$(TAU_SHLIBX) armciwrap_shared.o $(TAU_SHAREDLIBS) -ldl -L$(ARMCIDIR)/lib -larmci -lga
+
+clean:
+	/bin/rm -f armciwrapper.o libTauARMCIWrapper.a armciwrap_shared.o libTAU-armciwrap$(TAU_SHLIBX)
+
