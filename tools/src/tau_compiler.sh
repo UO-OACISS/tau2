@@ -59,6 +59,7 @@ declare -i trackIO=$FALSE
 declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
 declare -i trackDMAPP=$FALSE
+declare -i trackARMCI=$FALSE
 declare -i trackPthread=$FALSE
 declare -i trackGOMP=$FALSE
 declare -i trackMPCThread=$FALSE
@@ -367,6 +368,12 @@ for arg in "$@" ; do
 		    -optTrackDMAPP)
 			trackDMAPP=$TRUE
 			echoIfDebug "NOTE: turning TrackDMAPP on"
+			# use the wrapper link_options.tau during linking
+			;;
+
+		    -optTrackARMCI)
+			trackARMCI=$TRUE
+			echoIfDebug "NOTE: turning TrackARMCI on"
 			# use the wrapper link_options.tau during linking
 			;;
 		    
@@ -1451,6 +1458,11 @@ if [ $numFiles == 0 ]; then
       linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
+
+    if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then 
+      linkCmd="$linkCmd `cat $optWrappersDir/armci_wrapper/link_options.tau`"
+      echoIfDebug "Linking command is $linkCmd "
+    fi
     
     if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
@@ -1769,7 +1781,7 @@ if [ $optHeaderInst == $TRUE ]; then
         opari opari2 opari2init \
         errorStatus gotoNextStep counter errorStatus numFiles \
         tempCounter counterForOutput counterForOptions temp idcounter \
-        preprocess continueBeforeOMP trackIO trackUPCR linkOnly trackDMAPP trackPthread trackGOMP trackMPCThread \
+        preprocess continueBeforeOMP trackIO trackUPCR linkOnly trackDMAPP trackARMCI trackPthread trackGOMP trackMPCThread \
         revertOnError revertForced optShared optCompInst optHeaderInst disableCompInst madeToLinkStep \
         optFixHashIf tauPreProcessor optMICOffload"; do
 
@@ -2093,6 +2105,11 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 
         if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
           newCmd="$newCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
+          echoIfDebug "Linking command is $linkCmd"
+        fi
+
+        if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then 
+          newCmd="$newCmd `cat $optWrappersDir/armci_wrapper/link_options.tau`"
           echoIfDebug "Linking command is $linkCmd"
         fi
 		
