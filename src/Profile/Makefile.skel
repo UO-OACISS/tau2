@@ -895,7 +895,7 @@ CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
-jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
+JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
 TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar

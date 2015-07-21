@@ -19,6 +19,10 @@
   // check for MPC support
   #define OMPT_VERSION 3
   #define BROKEN_CPLUSPLUS_INTERFACE
+ #elif defined(TAU_OPEN64ORC) 
+  // check for MPC support
+  #define OMPT_VERSION 3
+  #define STATES_ARE_TYPE_INT
  #elif !defined (TAU_OPEN64ORC) && !defined (TAU_MPC) && \
      (defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__))
   // check for GOMP using Intel's runtime support

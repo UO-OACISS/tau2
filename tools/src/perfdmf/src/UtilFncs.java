@@ -295,7 +295,7 @@ public class UtilFncs {
             if (!time)
             {
             	if(metricName.toLowerCase().contains("energy")&&!metricName.contains("/")){
-            		return "joules";
+            		return "Joules";
             	}
             	return "counts";
             }
@@ -316,7 +316,7 @@ public class UtilFncs {
             if (!time)
             {
             	if(metricName.toLowerCase().contains("energy")&&!metricName.contains("/")){
-            		return "joules";
+            		return "Joules";
             	}
             	return "counts";
             }
