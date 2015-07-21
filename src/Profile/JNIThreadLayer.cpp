@@ -38,9 +38,14 @@ using namespace std;
 
 #include "Profile/TauJAPI.h"
 
+#ifdef TAU_ANDROID 
 #include <android/log.h>
 #define LOGV(...) //__android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
 #define LOGF(...) __android_log_print(ANDROID_LOG_FATAL, "TAU", __VA_ARGS__)
+#else
+#define LOGV(...) 
+#define LOGF(...)
+#endif /* TAU_ANDROID */
 
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class JNIThreadLayer

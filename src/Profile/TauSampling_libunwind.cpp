@@ -79,7 +79,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 }
 
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
-#ifdef __APPLE__
+#if (defined(__APPLE__) || defined(__arm__) || defined(__aarch64__))
   unw_context_t context;
   int ret = unw_getcontext(&context);
 #else
@@ -119,7 +119,7 @@ bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
 }
 
 void Tau_sampling_unwindTauContext(int tid, void **addresses) {
-#ifdef __APPLE__
+#if (defined(__APPLE__) || defined(__arm__) || defined(__aarch64__))
   unw_context_t context;
   int ret = unw_getcontext(&context);
 #else

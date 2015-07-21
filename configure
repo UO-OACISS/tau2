@@ -2457,11 +2457,20 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
-	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
+              gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            fi
+
             if [ ! -r /usr/lib/libGL.so.1 ]
             then
 		echo "NOTE: Did not find OpenGL library, copying TAU's Mesa libGL.so.1 to arm_linux/lib directory"
 		gunzip -c tools/src/contrib/jogl/arm_linux/libGL.so.1.gz > $JARTARGET/libGL.so.1
+            fi
+
+
+            if [ -r tools/src/contrib/jogl/arm_linux/gluegen.jar.gz -a -r tools/src/contrib/jogl/arm_linux/libgluegen-rt.so.gz ] ; then
+              gunzip -c tools/src/contrib/jogl/arm_linux/libgluegen-rt.so.gz > $JARTARGET/libgluegen-rt.so
+              gunzip -c tools/src/contrib/jogl/arm_linux/gluegen.jar.gz > $JARTARGET/gluegen.jar
             fi
 
 	    ;;
@@ -4311,9 +4320,10 @@ then
             fi
             ;;
 	mic_linux)
-            mpiinc=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
-            if [ -d $mpiinc ]
+            mpiinc_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@'`/include
+            if [ -d $mpiinc_search -a "x$mpiinc" = "x" ]
             then
+                mpiinc=$mpiinc_search 
 		echo "Using MPI include directory $mpiinc"
             fi
 	    ;;
@@ -4333,24 +4343,26 @@ then
                 fi 
               fi
             else
-		mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
-		if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
+		mpiinc_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+		if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 		then
+		    mpiinc=$mpiinc_search
 		    echo "Using MPI include directory $mpiinc"
 		    echo "machine is $machine"
 		else
-		    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
-		    if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
+		    mpiinc_search=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+		    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 		    then
+		        mpiinc=$mpiinc_search
 			echo "Using MPI include directory $mpiinc"
 		    else 
-			if [ -d $mpiinc -a ! -r $mpiinc/mpi.h ] ; then
-			    if [ -r $mpiinc/mpich2/mpi.h ] ; then
-				mpiinc=$mpiinc/mpich2 
+			if [ -d $mpiinc_search -a ! -r $mpiinc_search/mpi.h ] ; then
+			    if [ -r $mpiinc_search/mpich2/mpi.h -a "x$mpiinc" = "x" ] ; then
+				mpiinc=$mpiinc_search/mpich2 
 				echo "Correction: Using MPI include directory $mpiinc instead"
 			    else
-				if [ -r $mpiinc/openmpi/mpi.h ] ; then
-				    mpiinc=$mpiinc/openmpi
+				if [ -r $mpiinc_search/openmpi/mpi.h -a "x$mpiinc" = "x" ] ; then
+				    mpiinc=$mpiinc_search/openmpi
 				    echo "Correction: Using MPI include directory $mpiinc instead"
 				else
 				    mpiinc=""
@@ -4510,12 +4522,13 @@ then
             then
 		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/../mic/lib
             else
-                mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
-		if [ ! -d $mpilib ] ; then
+                mpilib_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib
+		if [ ! -d $mpilib_search ] ; then
 		    # Try the ".../lib64" directory instead of ".../lib"
-                    mpilib=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
+                    mpilib_search=`which mpirun | sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/lib64
 		fi
-		if [ -d $mpilib ] ; then
+		if [ -d $mpilib_search -a "x$mpilib=x" ] ; then
+                    mpilib=$mpilib_search
 		    echo "Using MPI lib directory $mpilib"
 		else
  		    mpilib=""
@@ -4527,12 +4540,13 @@ then
             then
 		mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/lib
             else
-		mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
-		if [ ! -d $mpilib ] ; then
+		mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
+		if [ ! -d $mpilib_search ] ; then
 		    # Try the ".../lib64" directory instead of ".../lib"
-		    mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
+		    mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
 		fi
-		if [ -d $mpilib ] ; then
+		if [ -d $mpilib_search -a "x$mpilib" = "x" ] ; then
+		    mpilib=$mpilib_search
 		    echo "Using MPI lib directory $mpilib"
 		else
  		    mpilib=""
@@ -5725,6 +5739,12 @@ if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
 
+if [ $machine = arm64_linux ] ; then
+  libunwind=libunwind-arm64-1.1
+  libunwindtgz=$libunwind.tgz
+  libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+fi
+
 if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
   if [ -r $unwind_dir/$libunwindtgz ]; then 
     echo "NOTE: Copying $unwind_dir/$libunwindtgz "
@@ -5805,6 +5825,11 @@ if [ "x$download_unwind" = xyes ] ; then
             make -i install > $libunwind_log  2>&1
           makeresult=$?
           fi
+        fi
+        if [ $machine = arm64_linux ]; then 
+          configresult=0
+          makeresult=0
+          mv ../${libunwind}  ${unwind_dir}
         fi
         if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
           # Some systems install to lib64 instead of lib
@@ -6018,7 +6043,7 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     fi
 else # intel OMPT support
     if [ $ompt = yes ]; then
-	omptlinking="-Wl,-rpath=$omptlib#-L$omptlib#$omptlibrary"
+	omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
 	fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     fi
 
@@ -7195,6 +7220,13 @@ binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 
+if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/bfd.h ] ; then
+  binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/arm64-bfd.tgz 
+  binutilstgz=arm64-bfd.tgz
+  p=`pwd`
+  cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p}; 
+fi
+
 if [ "x$bfddir" = xnone ]; then
   echo "BFD disabled."
   turnbfdoff=yes
@@ -7420,18 +7452,21 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
   fi
   bfdinclude="-I$bfddir/include"
   fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-  bfdlink="-L$bfddir/lib -L$bfddir/lib64"
+  bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?
   if [ "x$machine" = "xapple" ] ; then
+    bfdlink="-L$bfddir/lib" 
+# do not use lib64 for BFD on Mac. 
     bfdlink="$bfdlink -L/opt/local/lib"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
   else
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
   fi
 else 
   fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
 fi # bfd = yes && turnbfdoff != yes
+bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir/lib64"
 
 
 
@@ -8510,9 +8545,13 @@ if [ $scorep = yes ] ; then
 	# default flags for Score-P 1.2+
 	mod_scorep_adapter=`echo ${scorep_adapter} | sed -e 's/--adapter-init//g'`
 	#echo "WE HAVE mod_scorep_adapter = ${mod_scorep_adapter}"
-	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepExtraLibs='-lscorep_adapter_user_event -lscorep_adapter_user_mgmt'
+        if [ $machine = "mic_linux" ]; then 
+          mod_scorep_adapter="$mod_scorep_adapter --target=mic "
+        fi
+	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
+	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
+	echo "Using scorepLD=$scorepLD"
+	scorepExtraLibs='-lscorep_adapter_user_event#-lscorep_adapter_user_mgmt'
     fi
     # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
     if [ $mpi = yes ] ; then 
@@ -8544,8 +8583,7 @@ if [ $scorep = yes ] ; then
 	fi
     fi
     #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
-    scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
-    scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
+    scorepLibs="$scorepExtraLibs#$scorepLD#$scorepLibs"
 
     fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     if [ $mpi = no ]; then
@@ -9285,6 +9323,10 @@ sed -f $sedout < src/Profile/Makefile.skel > src/Profile/Makefile
 sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
+
+if [ $armci = yes ]; then
+  sed -f $sedout < src/wrappers/armci/Makefile.skel > src/wrappers/armci/Makefile
+fi
 
 
 #############################################################################

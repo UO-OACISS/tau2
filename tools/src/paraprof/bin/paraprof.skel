@@ -43,6 +43,9 @@ if [ "$MACHINE" = "apple" ]; then
 	    --pack)
 		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
 		;;
+	    --text)
+		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
+		;;
 	    --dump)
 		APPLE_OPTIONS="$APPLE_OPTIONS -Djava.awt.headless=true"
 		;;
@@ -82,6 +85,11 @@ if [ "x$JAVA_VERSION" = "x4" ] ; then
         exit 0
 fi
 
+
+
+if [ -r ${JARDIR}/gluegen.jar ] ; then
+  JARS=${JARS}:${JARDIR}/gluegen.jar
+fi
 
 
 # Default to 800m heap space
