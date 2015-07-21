@@ -5872,6 +5872,8 @@ if [ "x$download_ompt" = xyes ] ; then
   if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -nt ${libomp_oss} ]; then
     echo "Found: $libomp_ossdir/lib${libomp_oss_name}.so"
     echo "libomp_oss download already found, skipping"
+    # copy the header to our source area, anyway - we need it.
+    cp ${libomp_ossinc}/ompt.h ${START_DIR}/include/.
   else
     if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
       echo "NOTE: $libomp_ossdir/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
