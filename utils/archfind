@@ -36,6 +36,14 @@ fi
 
 # check for ARM linux so it covers uname -m output such as armv7l or arm*
 uname_output=`uname -m`
+match_string="aarch64"
+test_arg=${uname_output#$match_string}
+if [ "y$test_arg" != "y$uname_output" ]
+then
+    TAU_CCOM=gcc
+    ARCH=arm64_linux
+fi
+
 match_string="arm"
 test_arg=${uname_output#$match_string}
 if [ "y$test_arg" != "y$uname_output" ]
