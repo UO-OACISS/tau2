@@ -5739,6 +5739,12 @@ if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
 
+if [ $machine = arm64_linux ] ; then
+  libunwind=libunwind-arm64-1.1
+  libunwindtgz=$libunwind.tgz
+  libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
+fi
+
 if [ "x$unwind_dir" != "x" -a -d "$unwind_dir" ] ; then
   if [ -r $unwind_dir/$libunwindtgz ]; then 
     echo "NOTE: Copying $unwind_dir/$libunwindtgz "
@@ -5820,6 +5826,11 @@ if [ "x$download_unwind" = xyes ] ; then
           makeresult=$?
           fi
         fi
+        if [ $machine = arm64_linux ]; then 
+          configresult=0
+          makeresult=0
+          mv ../${libunwind}  ${unwind_dir}
+        fi
         if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
           # Some systems install to lib64 instead of lib
           if [ -d "$unwind_dir/lib64" -a ! -d "$unwind_dir/lib" ] ; then
@@ -5886,6 +5897,8 @@ if [ "x$download_ompt" = xyes ] ; then
   if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -nt ${libomp_oss} ]; then
     echo "Found: $libomp_ossdir/lib${libomp_oss_name}.so"
     echo "libomp_oss download already found, skipping"
+    # copy the header to our source area, anyway - we need it.
+    cp ${libomp_ossinc}/ompt.h ${START_DIR}/include/.
   else
     if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
       echo "NOTE: $libomp_ossdir/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
@@ -7207,6 +7220,13 @@ binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
 binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 
+if [ $machine = arm64_linux -a ! -r $targetdir/$architecture/$binutils/include/bfd.h ] ; then
+  binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/arm64-bfd.tgz 
+  binutilstgz=arm64-bfd.tgz
+  p=`pwd`
+  cd $targetdir/$architecture/; download "$binutilsurl" "$binutilstgz" ; tar zxf $binutilstgz; rm -f $binutilstgz ; cd ${p}; 
+fi
+
 if [ "x$bfddir" = xnone ]; then
   echo "BFD disabled."
   turnbfdoff=yes
@@ -7432,7 +7452,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
   fi
   bfdinclude="-I$bfddir/include"
   fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-  bfdlink="-L$bfddir/lib -L$bfddir/lib64"
+  bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?
   if [ "x$machine" = "xapple" ] ; then
@@ -7441,11 +7461,12 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     bfdlink="$bfdlink -L/opt/local/lib"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
   else
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
   fi
 else 
   fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
 fi # bfd = yes && turnbfdoff != yes
+bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir/lib64"
 
 
 
@@ -8524,9 +8545,13 @@ if [ $scorep = yes ] ; then
 	# default flags for Score-P 1.2+
 	mod_scorep_adapter=`echo ${scorep_adapter} | sed -e 's/--adapter-init//g'`
 	#echo "WE HAVE mod_scorep_adapter = ${mod_scorep_adapter}"
-	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
-	scorepExtraLibs='-lscorep_adapter_user_event -lscorep_adapter_user_mgmt'
+        if [ $machine = "mic_linux" ]; then 
+          mod_scorep_adapter="$mod_scorep_adapter --target=mic "
+        fi
+	scorepLibs=`${scorepdir}/bin/scorep-config --libs ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
+	scorepLD=`${scorepdir}/bin/scorep-config --ldflags ${mod_scorep_adapter} | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e  's@ @#@g'`
+	echo "Using scorepLD=$scorepLD"
+	scorepExtraLibs='-lscorep_adapter_user_event#-lscorep_adapter_user_mgmt'
     fi
     # in Score-P version 1.1+... < 1.2 we needed to explicitly specify --hyb --omp --seq --mpi to get the right flags
     if [ $mpi = yes ] ; then 
@@ -8558,8 +8583,7 @@ if [ $scorep = yes ] ; then
 	fi
     fi
     #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
-    scorepLibs="$scorepExtraLibs $scorepLD $scorepLibs"
-    scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
+    scorepLibs="$scorepExtraLibs#$scorepLD#$scorepLibs"
 
     fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
     if [ $mpi = no ]; then
@@ -9299,6 +9323,10 @@ sed -f $sedout < src/Profile/Makefile.skel > src/Profile/Makefile
 sed -f $sedout < src/TraceInput/Makefile.skel > src/TraceInput/Makefile
 sed -f $sedout < src/wrappers/Makefile.skel > src/wrappers/Makefile
 sed -f $sedout < utils/include/Makefile.skel > utils/include/Makefile
+
+if [ $armci = yes ]; then
+  sed -f $sedout < src/wrappers/armci/Makefile.skel > src/wrappers/armci/Makefile
+fi
 
 
 #############################################################################
