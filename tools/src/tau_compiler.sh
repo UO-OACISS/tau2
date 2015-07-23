@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -146,7 +146,7 @@ printUsage () {
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
     echo -e "  -optRevert\t\t\tRevert to the original compilation rule on error (default)."
     echo -e "  -optNoCompInst\t\tDo not revert to compiler instrumentation if source instrumentation fails."
-    echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files" 
+    echo -e "  -optKeepFiles\t\t\tDoes not remove intermediate .pdb and .inst.* files"
     echo -e "  -optReuseFiles\t\tReuses a pre-instrumented file and preserves it"
     echo -e "  -optAppCC=\"<cc>\"\t\tSpecifies the fallback C compiler."
     echo -e "  -optAppCXX=\"<cxx>\"\t\tSpecifies the fallback C++ compiler."
@@ -158,7 +158,7 @@ printUsage () {
     echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
     echo -e "  -optFixHashIf"
     echo -e "  -optMICOffload\t\tLinks code for Intel MIC offloading, requires both host and MIC TAU libraries"
-    
+
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
     fi
@@ -181,9 +181,9 @@ echoIfDebug () {
 
 printError() {
     # This steps ensures that the final regular command is executed
-    errorStatus=$TRUE 
+    errorStatus=$TRUE
     # This steps ensures that all the intermediate steps are ignored
-    gotoNextStep=$FALSE 
+    gotoNextStep=$FALSE
 
     echo -e "Error: Command(Executable) is -- $1"
     echo -e "Error: Full Command attempted is -- $2"
@@ -220,8 +220,8 @@ compilerSpecified=""
 #All the script options must be passed as -opt*
 #including verbose option [as -optVerbose]. The reason being
 #script assumes that all any tokens passed after -opt* sequenece
-#constitute the regular command, with the first command (immediately) 
-#after the sequence, being the compiler.  In this "for" loops, the 
+#constitute the regular command, with the first command (immediately)
+#after the sequence, being the compiler.  In this "for" loops, the
 #regular command is being read.
 
 for arg in "$@"; do
@@ -266,17 +266,17 @@ for arg in "$@"; do
         foundFirstArg=1
         compilerSpecified="$modarg"
       else
-        regularCmd="$regularCmd $modarg"	
+        regularCmd="$regularCmd $modarg"
       fi
       tempCounter=tempCounter+1
       ;;
   esac
 done
-echoIfDebug "\nRegular command passed is --  $regularCmd "; 
+echoIfDebug "\nRegular command passed is --  $regularCmd ";
 echoIfDebug "The compiler being read is $CMD \n"
 
 ####################################################################
-# Initialize optOpariOpts 
+# Initialize optOpariOpts
 ####################################################################
 optOpariOpts="-nosrc -table opari.tab.c"
 optOpari2Opts="--nosrc"
@@ -304,10 +304,10 @@ for arg in "$@" ; do
 	optIncludeDefs="$optIncludeDefs $mod_arg"
 	processingIncludeOrDefine=false
     else
-	
+
         case $arg in
-	    --help)   # Do not use -h as Cray compilers specify -h upc -h ... 
-		printUsage 0 
+	    --help)   # Do not use -h as Cray compilers specify -h upc -h ...
+		printUsage 0
 		;;
 
 	    -opt*)
@@ -325,9 +325,9 @@ for arg in "$@" ; do
 			    f90preprocessor=`which cpp`
 			fi
 
-      if [ $tauPreProcessor == $TRUE ]; then 
+      if [ $tauPreProcessor == $TRUE ]; then
         # USE TAU's pre-processor for macro expansion by default, unless a different one is specified
-        preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'` 
+        preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'`
         f90preprocessor=$preprocessor
       else
         preprocessor=$f90preprocessor
@@ -336,7 +336,7 @@ for arg in "$@" ; do
 			if [ ! -x $preprocessor ]; then
  			    echo "ERROR: No working cpp found in path. Please specify -optCPP=<full_path_to_cpp> and recompile"
 			fi
-				# Default options 	
+				# Default options
 			echoIfDebug "\tPreprocessing turned on. preprocessor used is $preprocessor with options $preprocessorOpts"
 			;;
 
@@ -361,7 +361,7 @@ for arg in "$@" ; do
 			linkOnly=$TRUE
 			echoIfDebug "NOTE: turning linkOnly on"
 			disablePdtStep=$TRUE
-			disableCompInst=$FALSE
+			disableCompInst=$TRUE
 			# disable instrumentation during .o file generation, just link in the TAU libs.
 			;;
 
@@ -376,7 +376,7 @@ for arg in "$@" ; do
 			echoIfDebug "NOTE: turning TrackARMCI on"
 			# use the wrapper link_options.tau during linking
 			;;
-		    
+
 		   -optTrackPthread)
 			trackPthread=$TRUE
 			echoIfDebug "NOTE: turning TrackPthread on"
@@ -407,7 +407,7 @@ for arg in "$@" ; do
 			tauPreProcessor=$FALSE
 			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
 			;;
-		    
+
 		    -optCPPOpts=*)
 		        preprocessorOpts="$preprocessorOpts ${arg#"-optCPPOpts="}"
 			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
@@ -416,7 +416,7 @@ for arg in "$@" ; do
                         preprocessorOpts="${arg#"-optCPPReset="}"
 			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
 			;;
-		    
+
                     -optFPP=*)
                         f90preprocessor=${arg#"-optFPP="}
                         preprocess=$TRUE
@@ -435,14 +435,14 @@ for arg in "$@" ; do
 			pdtParserF=${arg#"-optPdtF90Parser="}
 			echoIfDebug "\tF90Parser read is: $pdtParserF"
 				#if by mistake NULL is passed, or even simply
-				#few blank spaces are parsed (I have assumed 3), then 
+				#few blank spaces are parsed (I have assumed 3), then
 				#it would be equivalent to not being defined
-				#at all. So the default f95parser would be invoked. 
+				#at all. So the default f95parser would be invoked.
 			if [ ${#pdtParserF} -gt 4 ]; then
 			    fortranParserDefined=$TRUE
 			fi
 			;;
-		    
+
 		    -optPdtDir*)
 			optPdtDir=${arg#"-optPdtDir="}"/bin"
 			echoIfDebug "\tpdtDir read is: $optPdtDir"
@@ -451,7 +451,7 @@ for arg in "$@" ; do
 			    echoIfDebug "PDT is not configured."
 			else
 			    pdtUsed=$TRUE
-			fi 
+			fi
 			;;
 
 		    -optPdtGnuFortranParser*)
@@ -465,12 +465,12 @@ for arg in "$@" ; do
 			pdtParserF="$optPdtDir""/f95parse"
 			gfparseUsed=$FALSE
 			;;
-		    
+
 
 		    -optPdtF95Opts*)
 				#reads all the options needed for Parsing a Fortran file
 				#e.g ${FFLAGS}, ${FCPPFLAGS}. If one needs to pass any
-				#additional files for parsing, it can simply be appended before 
+				#additional files for parsing, it can simply be appended before
 				#the flags.
 				#e.g. -optPdtF95Opts="${APP_DEFAULT_DIR}/{APP_LOCATION}/*.F90 ${FFLAGS}, ${FCPPFLAGS}.
 				#It is imperative that the additional files for parsing be kept
@@ -500,16 +500,16 @@ for arg in "$@" ; do
 			;;
 
 		    -optDefaultParser=*)
-			if [ $defaultParser = "noparser" ]; then 
+			if [ $defaultParser = "noparser" ]; then
 		          defaultParser="${arg#"-optDefaultParser="}"
-			fi 
+			fi
 			pdtParserType=$defaultParser
 			if [ $pdtParserType = roseparse -o $pdtParserType = upcparse ] ; then
 			  roseUsed=$TRUE
 # roseUsed uses the ReturnFix.
 			fi
 			if [ $pdtParserType = edg44-upcparse -a ! -x $optPdtDir/edg44-upcparse -a -x $optPdtDir/upcparse ] ; then
-			  pdtParserType=upcparse; 
+			  pdtParserType=upcparse;
 			  roseUsed=$TRUE
 			fi
 
@@ -524,19 +524,19 @@ for arg in "$@" ; do
 			;;
 
 		    -optPdtCOpts*)
-				#Assumption: This reads ${CFLAGS} 
+				#Assumption: This reads ${CFLAGS}
 			optPdtCFlags="${arg#"-optPdtCOpts="} $optPdtCFlags"
 			echoIfDebug "\tCFLAGS is: $optPdtCFlags"
 			;;
 
 		    -optPdtCxxOpts*)
-				#Assumption: This reads both ${CPPFLAGS} 
+				#Assumption: This reads both ${CPPFLAGS}
 			optPdtCxxFlags="${arg#"-optPdtCxxOpts="} $optPdtCxxFlags"
 			echoIfDebug "\tCxxFLAGS is: $optPdtCxxFlags"
 			;;
 
 		    -optPdtUser*)
-				#Assumption: This reads options, which would be passed 
+				#Assumption: This reads options, which would be passed
 				#at the parsing stage irrespective of the file type.
 			optPdtUser=${arg#"-optPdtUser="}
 			echoIfDebug "\tPDT User Option is: $optPdtUser"
@@ -546,7 +546,7 @@ for arg in "$@" ; do
 			optWrappersDir=${arg#"-optWrappersDir="}
 			echoIfDebug "\tWrappers dir is: $optWrappersDir"
 			;;
-		
+
 		    -optTauWrapFile*)
 			tauWrapFile="$tauWrapFile ${arg#"-optTauWrapFile="}"
 			echoIfDebug "\ttauWrapFile is: $tauWrapFile"
@@ -561,11 +561,11 @@ for arg in "$@" ; do
 			optTauSelectFile=${arg#"-optTauSelectFile="}
 			tauSelectFile=${arg#"-optTauSelectFile="}
 			echoIfDebug "\tTauSelectFile is: "$optTauSelectFile
-				#Passing a blank file name with -f option would cause ERROR 
+				#Passing a blank file name with -f option would cause ERROR
 				#And so if it is blank, -f option should not be appended at the start.
 				#This is the reason, one cannot pass it as a generic optTau
 				#with -f selectFile. What if the selectFile is blank? An -f optoin
-				#without file would cause error. The reason I have kept 3 is 
+				#without file would cause error. The reason I have kept 3 is
 				#becuase, it allows the users to pass 2 blank spaces and the name
 				#of a selectFile would (hopefully) be more than 2 characters.
 			if [ ${#optTauSelectFile} -lt 3 ]; then
@@ -573,7 +573,7 @@ for arg in "$@" ; do
 			else
 			    optTauSelectFile=" -f "$optTauSelectFile
 			fi
-			
+
 			;;
 
 		    -optTau=*)
@@ -640,16 +640,16 @@ for arg in "$@" ; do
 
 		    -optPdtCReset*)
 			optPdtCFlags=${arg#"-optPdtCReset="}
-			echoIfDebug "\tParsing C Options are: $optPdtCFlags" 
+			echoIfDebug "\tParsing C Options are: $optPdtCFlags"
 			;;
 		    -optPdtCxxReset*)
 			optPdtCxxFlags=${arg#"-optPdtCxxOptsReset="}
-			echoIfDebug "\tParsing Cxx Options are: $optPdtCxxFlags" 
+			echoIfDebug "\tParsing Cxx Options are: $optPdtCxxFlags"
 			;;
 		    -optPdtF95Reset*)
-			optPdtF95=${arg#"-optPdtF95Reset="} 
+			optPdtF95=${arg#"-optPdtF95Reset="}
 			optPdtF95ResetSpecified=$TRUE
-			echoIfDebug "\tParsing F95 Options are: $optPdtF95" 
+			echoIfDebug "\tParsing F95 Options are: $optPdtF95"
 			;;
 		    -optVerbose*)
 			echoIfDebug "\tVerbose Option is being passed"
@@ -660,7 +660,7 @@ for arg in "$@" ; do
 			isVerbose=$FALSE
 			;;
 		    -optNoMpi*)
-				#By default this is true. When set to false, This option 
+				#By default this is true. When set to false, This option
 				#removes -l*mpi* options at the linking stage.
 			echoIfDebug "\tNo MPI Option is being passed"
 			removeMpi=$TRUE
@@ -682,13 +682,13 @@ for arg in "$@" ; do
 			;;
 
 		    -optKeepFiles*)
-				#By default this is False. 
+				#By default this is False.
 				#removes *.inst.* and *.pdb
 			echoIfDebug "\tOption to remove *.inst.* and *.pdb files being passed"
 			needToCleanPdbInstFiles=$FALSE
 			;;
 		    -optReuseFiles*)
-				#By default this is False. 
+				#By default this is False.
 				#removes *.inst.* and *.pdb
 			echoIfDebug "\tOption to reuse *.inst.* and *.pdb files being passed"
 			reuseFiles=$TRUE
@@ -891,14 +891,14 @@ for arg in "$@" ; do
                     fi
 		fi
 		;;
-	    
+
 	    *.upc)
-		if [ $defaultParser = "noparser" ]; then 
-		  if [ -x $optPdtDir/edg44-upcparse ]; then 
+		if [ $defaultParser = "noparser" ]; then
+		  if [ -x $optPdtDir/edg44-upcparse ]; then
 		    pdtParserType=edg44-upcparse
-                  else 
+                  else
 		    pdtParserType=upcparse
-                  fi 
+                  fi
  		fi
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
@@ -925,7 +925,7 @@ for arg in "$@" ; do
 			  #echoIfDebug "Resetting optCompile (removing -D* ): $optCompile"
 			  #optCompile="`echo $optCompile | sed -e 's/ -[^I][^ ]*//g'`"
 		    echoIfDebug "Keeping optCompile as it is: $optCompile"
-			  # Do not remove anything! Let TAU pass in -optCompile that we ignore 
+			  # Do not remove anything! Let TAU pass in -optCompile that we ignore
 		fi
 		groupType=$group_f_F
 		;;
@@ -998,7 +998,7 @@ for arg in "$@" ; do
 		optPdtCFlags="$optPdtCFlags --c99"
 		argsRemaining="$argsRemaining $arg"
 		;;
-		
+
 
 	    # if we recognize a request for 132 chars, convert it for gfparse
 	    -132)
@@ -1033,9 +1033,9 @@ for arg in "$@" ; do
 
 	    -MM|-S|-E)
 # We ignore -M processing step for making dependencies, -S for assembly
-# and -E for preprocessing the source code. These are the options that are 
+# and -E for preprocessing the source code. These are the options that are
 # ignored by PDT. Add to this list if you need an additional option that should
-# be ignored by the PDT step. 
+# be ignored by the PDT step.
 #			echoIfDebug "tau_compiler.sh> Ignoring -M* compilation step for making dependencies"
 		disablePdtStep=$TRUE
 		gotoNextStep=$FALSE
@@ -1102,7 +1102,7 @@ for arg in "$@" ; do
 		else
 		    argsRemaining="$argsRemaining ""$arg"
 		fi
-		
+
 		;;
         esac
     fi
@@ -1168,7 +1168,7 @@ tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do
     # Here arrays holding sourcefiles, .inst. and .pdb files
     # are created based on the baseName of the source file.
-    echoIfDebug "FileName: ${arrFileName[$tempCounter]}" 
+    echoIfDebug "FileName: ${arrFileName[$tempCounter]}"
     base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
     # this transforms /this/file\ name/has/spaces/ver1.0.2/foo.pp.F90 to foo.pp for base
     suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
@@ -1185,11 +1185,11 @@ while [ $tempCounter -lt $numFiles ]; do
         fi
         if [ $groupType == $group_f_F ]; then
           cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
-        else 
+        else
           cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
         fi
         # tau_macro.sh will generate the .pp$suf file.
-      else 
+      else
         cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} -o $base$suf"
       fi
       evalWithDebugMessage "$cmdToExecute" "Preprocessing"
@@ -1215,10 +1215,10 @@ while [ $tempCounter -lt $numFiles ]; do
     fi
 
     # Before we pass it to Opari for OpenMP instrumentation
-    # we should use tau_ompcheck to verify that OpenMP constructs are 
+    # we should use tau_ompcheck to verify that OpenMP constructs are
     # used correctly.
     if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
-	
+
 	case $groupType in
 	    $group_f_F)
 	    pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95} $optIncludes"
@@ -1236,26 +1236,26 @@ while [ $tempCounter -lt $numFiles ]; do
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	esac
-	evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT for OpenMP directives verification:" 
+	evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT for OpenMP directives verification:"
 	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
 	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.c.pdb"
         else
 	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"
 	fi
-	
-	evalWithDebugMessage "$pdbcommentCmd" "Using pdbcomment:" 
 
-	ompcheck=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_ompcheck@'` 
+	evalWithDebugMessage "$pdbcommentCmd" "Using pdbcomment:"
+
+	ompcheck=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_ompcheck@'`
 	ompcheckCmd="$ompcheck ${base}.comment.pdb ${arrFileName[$tempCounter]} -o ${base}.chk${suf}"
 	arrFileName[$tempCounter]=$base.chk$suf
 	base=${base}.chk
-	evalWithDebugMessage "$ompcheckCmd" "Using tau_ompcheck:" 
+	evalWithDebugMessage "$ompcheckCmd" "Using tau_ompcheck:"
     fi
     # And then pass it on to opari for OpenMP programs.
     if [ $opari = $TRUE ]; then
 	base=${base}.pomp
 	cmdToExecute="${optOpariTool} $optOpariOpts ${arrFileName[$tempCounter]} $base$suf"
-	evalWithDebugMessage "$cmdToExecute" "Parsing with Opari" 
+	evalWithDebugMessage "$cmdToExecute" "Parsing with Opari"
         if [ ! -f $base$suf ]; then
             echoIfVerbose "ERROR: Did not generate .pomp file"
 	    printError "$optOpariTool" "$cmdToExecute"
@@ -1305,7 +1305,7 @@ while [ $tempCounter -lt $numFiles ]; do
         fi
 
     else
-	newFile=$optPDBFile; 
+	newFile=$optPDBFile;
     fi
     arrPdb[$tempCounter]="${PDBARGSFORTAU}${newFile}"
     tempCounter=tempCounter+1
@@ -1315,7 +1315,7 @@ echoIfDebug "Completed Parsing\n"
 
 
 if [ $optCompInst == $TRUE ]; then
-    if [ $linkOnly == $FALSE ]; then 
+    if [ $linkOnly == $FALSE ]; then
       echoIfVerbose "Debug: Using compiler-based instrumentation"
     fi
 
@@ -1361,7 +1361,7 @@ if [ $numFiles == 0 ]; then
 	#*.c, *.cpp or *.F or *.F90 [basically source files]. Hence
 	#the script understands that there is nothing to compile so
 	#it simply carries out the current linking. Compilation steps are
-	#avoided by assinging a status of $FALSE to the $gotoNextStep. 
+	#avoided by assinging a status of $FALSE to the $gotoNextStep.
 
 
     if [ $removeMpi == $TRUE ]; then
@@ -1370,21 +1370,21 @@ if [ $numFiles == 0 ]; then
 	echoIfDebug "After filtering libmpi*.so options command is: $regularCmd"
 
 	echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
-	matchingmpi=`perl -se '@libraries = split(/ /, $libraries); 
+	matchingmpi=`perl -se '@libraries = split(/ /, $libraries);
   @exceptions = split(/ /, $exceptions);
   @hash{@exceptions}=();
     foreach $lib (@libraries) {
       if (not exists $hash{$lib} and $lib =~ /-l\S*mpi\S*/) {
         print " $lib " } } '\
    -- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
-	regularCmd=`perl -se '@libraries = split(/ /, $libraries); 
+	regularCmd=`perl -se '@libraries = split(/ /, $libraries);
   @exceptions = split(/ /, $exceptions);
   @hash{@exceptions}=();
     foreach $lib (@libraries) {
       if (exists $hash{$lib} or not $lib =~ /-l\S*mpi\S*/) {
         print " $lib " } } '\
    -- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
-	
+
 	echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
 	echoIfVerbose "Debug: Moving these libraries to the end of the link line: $matchingmpi"
 	optLinking="$optLinking $matchingmpi"
@@ -1397,7 +1397,7 @@ if [ $numFiles == 0 ]; then
 	fi
     fi
 
-    
+
     # check for -lc, if found, move it to the end
     check_lc=`echo "$regularCmd" | sed -e 's/.*\(-lc\)\W.*/\1/g'`
     regularCmd=`echo "$regularCmd" | sed -e 's/-lc\W/ /'`
@@ -1420,7 +1420,7 @@ if [ $numFiles == 0 ]; then
     if [ $opari2 == $TRUE -a $passCount == 1 -a $opari2init == $TRUE ]; then
 	linkCmd="$compilerSpecified  pompregions.o $regularCmd   $optLinking "
     fi
-    fi	
+    fi
 
     if [ $opari == $TRUE ]; then
 	evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
@@ -1428,7 +1428,7 @@ if [ $numFiles == 0 ]; then
 	evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	linkCmd="$linkCmd opari.tab.o"
     fi
-   
+
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
@@ -1441,40 +1441,40 @@ if [ $numFiles == 0 ]; then
 
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
-    if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
+    if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
       optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g' -e 's/-lunwind / /g'`
       linkCmd="$linkCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
       echoIfDebug "Linking command is $linkCmd"
     fi
 
     echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
-    if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then 
+    if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then
       optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
       linkCmd="$linkCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
       echoIfDebug "Linking command is $linkCmd"
     fi
 
-    if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
+    if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then
       linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
 
-    if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then 
+    if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then
       linkCmd="$linkCmd `cat $optWrappersDir/armci_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
-    
-    if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+
+    if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then
       linkCmd="$linkCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
 
-    if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then 
+    if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then
       linkCmd="$linkCmd `cat $optWrappersDir/gomp_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
 
-    if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
+    if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then
       linkCmd="$linkCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
@@ -1522,12 +1522,12 @@ if [ $numFiles == 0 ]; then
     if [ "x$tauWrapFile" != "x" ]; then
       linkCmd="$linkCmd `cat $tauWrapFile` "
       echoIfDebug "Linking command is $linkCmd"
-    fi 
+    fi
 
     if [ "x$optTauGASPU" != "x" ]; then
       linkCmd="$linkCmd $optTauGASPU"
       echoIfDebug "Linking command is $linkCmd"
-    fi 
+    fi
 
     if [ $optFujitsu == $TRUE ]; then
       oldLinkCmd=`echo $linkCmd`
@@ -1540,7 +1540,7 @@ if [ $numFiles == 0 ]; then
     fi
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
     buildSuccess=$?
-	    
+
     echoIfDebug "Looking for file: $passedOutputFile"
     if [  "x$buildSuccess" != "x0" ]; then
     	if [ ! -e $passedOutputFile ]; then
@@ -1549,7 +1549,7 @@ if [ $numFiles == 0 ]; then
 	echoIfVerbose "Error: Failed to link with TAU options"
 	if [ $revertForced == $TRUE -o $optCompInst = $FALSE ] ; then
 	    printError "$CMD" "$linkCmd"
-	else 
+	else
 	    revertOnError=false
 	    printError "$CMD" "$linkCmd"
 	    echo -e ""
@@ -1587,7 +1587,7 @@ if [ $gotoNextStep == $TRUE ]; then
         #Now all the types of all the flags, cFlags, fFlags.
         #optPdtF95 is a generic opt for all fortran files
         #and hence is appended for .f, .F, .F90 and .F95
-	
+
 	case $groupType in
 	    $group_f_F)
 	    pdtCmd="$pdtParserF"
@@ -1627,7 +1627,7 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	esac
 
-        #Assumption: The pdb file would be formed in the current directory, so need 
+        #Assumption: The pdb file would be formed in the current directory, so need
         #to strip the fileName from the directory. Since sometime,
         #you can be creating a pdb in the current directory using
         #a source file located in another directory.
@@ -1644,19 +1644,19 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $optCompInst == $FALSE ]; then
 	    if [ $disablePdtStep == $FALSE ]; then
 		if [ $pdbFileSpecified == $FALSE ]; then
-		  instFileName=${arrTau[$tempCounter]##*/} 
+		  instFileName=${arrTau[$tempCounter]##*/}
 		  reusingInstFile=$FALSE;
-                  if [ $reuseFiles == $TRUE  -a -r $instFileName ]; then 
+                  if [ $reuseFiles == $TRUE  -a -r $instFileName ]; then
 		      if [ $instFileName -nt $origFileName ]; then
 	                echoIfDebug "echo NOTE: Reusing instrumented file $instFileName. Not invoking the PDT Parser."
 		        reusingInstFile=$TRUE;
-                      fi 
+                      fi
 	          else
 		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser."
 		  fi
 		fi
 	    else
-	        if [ $linkOnly == $FALSE ]; then 
+	        if [ $linkOnly == $FALSE ]; then
 	  	    echo ""
 		    echo "WARNING: Disabling instrumentation of source code."
 		    echo "         Please either configure with -pdt=<dir> option"
@@ -1669,9 +1669,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	fi
 
 
-	if [ $linkOnly == $FALSE ]; then  
+	if [ $linkOnly == $FALSE ]; then
 	  echoIfDebug "Looking for pdb file $pdbOutputFile "
-	fi 
+	fi
 
 	if [  ! -e $pdbOutputFile  -a $disablePdtStep == $FALSE -a $reusingInstFile == $FALSE ]; then
 	    printError "$PDTPARSER" "$pdtCmd"
@@ -1742,7 +1742,7 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 	    test_instfile=$tempInstFileName
 	    test_instfile_base=`basename $tempInstFileName`
 	    TEST_HOME=$HOME/tau_instrumentor_tests
-	    mkdir -p $TEST_HOME 
+	    mkdir -p $TEST_HOME
 	    cat $test_pdb | sed -e "s#$test_source#$test_source_base#g" > $TEST_HOME/${test_source_base}.pdb
 	    cp $test_source $TEST_HOME
 	    cp $test_instfile $TEST_HOME/$test_instfile_base.check
@@ -1812,8 +1812,8 @@ if [ $optHeaderInst == $TRUE ]; then
             pdbFile=${saveTempFile}
         fi
 
-	headerlister=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_list@'` 
-	headerreplacer=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_replace.pl@'` 
+	headerlister=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_list@'`
+	headerreplacer=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_header_replace.pl@'`
 
 	idcounter=0
 	for id in `$headerlister --showallids $pdbFile` ; do
@@ -1826,8 +1826,8 @@ if [ $optHeaderInst == $TRUE ]; then
             # Check whether header is already instrumented; note that to force reinstrumentation
             # users should remove all .tau_headers_* subdirectories in their source trees
 	    filebase=`echo ${header} | sed -e's/.*\///'`
-            if [ -e "$headerInstDir/$filebase" ]; then 
-                echo "Reusing TAU-instrumented header $headerInstDir/$filebase"; 
+            if [ -e "$headerInstDir/$filebase" ]; then
+                echo "Reusing TAU-instrumented header $headerInstDir/$filebase";
             else
 	        id=${idarray[$idcounter]};
 	        tauCmd="$optTauInstr $pdbFile $header -o $headerInstDir/${id}_tau_${filebase} "
@@ -1842,7 +1842,7 @@ if [ $optHeaderInst == $TRUE ]; then
 	base=`echo ${instFileName} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
 	suf=`echo ${instFileName} | sed -e 's/.*\./\./' `
 	newfile=${base}.hr${suf}
-	
+
 	origfile=${arrFileName[$tempCounter]}
 	$headerreplacer $pdbFile $origfile $instFileName > $newfile
 	arrTau[$tempCounter]=$newfile
@@ -1878,13 +1878,13 @@ fi
 ####################################################################
 if [ $gotoNextStep == $TRUE ]; then
 
-    #optCompile= $TAU_DEFS + $TAU_INCLUDE + $TAU_MPI_INCLUDE 
+    #optCompile= $TAU_DEFS + $TAU_INCLUDE + $TAU_MPI_INCLUDE
     #Assumption: If -o option is not specified for compilation, then simply produce
     #an output -o with filebaseName.o as the output for EACH file. This is because, in the
     #common.mk file, even though there was no output generated by the regular command
     #description, the compilation of the scripted code created one with -o option.
     #The output is often needed for compilation of the instrumented phase.
-    #e.g. see compliation of mpi.c. So do not attempt to modify it simply 
+    #e.g. see compliation of mpi.c. So do not attempt to modify it simply
     #by placing the output to "a.out".
 
     if [ $isForCompilation == $TRUE ]; then
@@ -1894,7 +1894,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    base=`echo ${arrFileName[$tempCounter]} | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
 	    suf=`echo ${arrFileName[$tempCounter]} | sed -e 's/.*\./\./' `
 	    outputFile=${base##*/}.o  # strip off the directory
-	    
+
             # remove the .pp from the name of the output file
 	    if [ $preprocess == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.pp//'`
@@ -1911,7 +1911,7 @@ if [ $gotoNextStep == $TRUE ]; then
 			else
 		outputFile=`echo $outputFile | sed -e 's/\.pomp//'`
 	    fi
-  
+
 
             #echoIfDebug "\n\nThe output file passed is $passedOutputFile"
 	    #echoIfDebug "The output file generated locally is $outputFile"
@@ -1926,11 +1926,11 @@ if [ $gotoNextStep == $TRUE ]; then
 		tempTauFileName=${arrTau[$tempCounter]}
 		instrumentedFileForCompilation=" $tempTauFileName"
 		useCompInst=yes
-		if [ $linkOnly == $TRUE ]; then 
+		if [ $linkOnly == $TRUE ]; then
 		  useCompInst=no
                 fi
 		if [ "x$tauSelectFile" != "x" ] ; then
-		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
+		    selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
 		    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
 		fi
 		if [ "$useCompInst" = yes ]; then
@@ -1952,16 +1952,16 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	    echoIfDebug "cmd before appending the .o file is $newCmd"
 	    if [ $hasAnOutputFile == $TRUE ]; then
-		newCmd="$newCmd -o $passedOutputFile" 
+		newCmd="$newCmd -o $passedOutputFile"
 	    else
-		newCmd="$newCmd -o $outputFile" 
+		newCmd="$newCmd -o $outputFile"
 	    fi
 	    echoIfDebug "PassedOutFile: $passedOutputFile outputFile: $outputFile"
 	    #echoIfDebug "cmd after appending the .o file is $newCmd"
 
 	    evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
 	    buildSuccess=$?
-	    
+
 	    if [ "x$buildSuccess" != "x0" ]; then
 	    echoIfVerbose "Error: Compilation Failed"
 	    printError "$CMD" "$newCmd"
@@ -2010,13 +2010,13 @@ if [ $gotoNextStep == $TRUE ]; then
 		tempTauFileName=${arrTau[$tempCounter]}
 		instrumentedFileForCompilation=" $tempTauFileName"
 		useCompInst=yes
-		if [ $linkOnly == $TRUE ]; then 
+		if [ $linkOnly == $TRUE ]; then
 		  useCompInst=no
                 fi
 
 		if [ "x$tauSelectFile" != "x" ] ; then
 		    if [ -r "$tauSelectFile" ] ; then
-			selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'` 
+			selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
 			useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
 		    else
 			echo "Error: Unable to read $tauSelectFile"
@@ -2031,7 +2031,7 @@ if [ $gotoNextStep == $TRUE ]; then
                    fi
 		fi
 	    fi
-	    
+
             # newCmd="$CMD $argsRemaining  -c $instrumentedFileForCompilation  $OUTPUTARGSFORTAU $optCompile -o $outputFile"
 	    newCmd="$CMD $argsRemaining $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile -o $outputFile $extraopt"
 
@@ -2039,7 +2039,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	       # linkOnly: OUTPUTARGSFORTAU = $OUTPUTARGSFORTAU, optCompile=$optCompile. Get rid of $optCompile for linkOnly
 	       newCmd="$CMD $argsRemaining $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} -c $instrumentedFileForCompilation $OUTPUTARGSFORTAU -o $outputFile $extraopt"
 	       evalWithDebugMessage "$newCmd" "Compiling (Individually) with Uninstrumented Code"
-            else 
+            else
 	       evalWithDebugMessage "$newCmd" "Compiling (Individually) with Instrumented Code"
  	    fi
 
@@ -2056,7 +2056,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $hasAnOutputFile == $FALSE ]; then
 	    passedOutputFile="a.out"
 	fi
-	
+
 
 	if [ $opari == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
@@ -2071,7 +2071,7 @@ if [ $gotoNextStep == $TRUE ]; then
     fi
 	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-      
+
 cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
@@ -2103,27 +2103,27 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
           echoIfDebug "Linking command is $newCmd"
         fi
 
-        if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
+        if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then
           newCmd="$newCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
           echoIfDebug "Linking command is $linkCmd"
         fi
 
-        if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then 
+        if [ $trackARMCI == $TRUE -a -r $optWrappersDir/armci_wrapper/link_options.tau ] ; then
           newCmd="$newCmd `cat $optWrappersDir/armci_wrapper/link_options.tau`"
           echoIfDebug "Linking command is $linkCmd"
         fi
-		
-        if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+
+        if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then
 	  newCmd="$newCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
 	  echoIfDebug "Linking command is $linkCmd "
 	fi
 
-        if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then 
+        if [ $trackGOMP == $TRUE -a -r $optWrappersDir/gomp_wrapper/link_options.tau ] ; then
 	  newCmd="$newCmd `cat $optWrappersDir/gomp_wrapper/link_options.tau`"
 	  echoIfDebug "Linking command is $linkCmd "
 	fi
 
-        if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
+        if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then
 	  newCmd="$newCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
 	  echoIfDebug "Linking command is $linkCmd "
 	fi
@@ -2169,7 +2169,7 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
           esac
         fi
 
-        if [ "x$tauWrapFile" != "x" ]; then 
+        if [ "x$tauWrapFile" != "x" ]; then
           newCmd="$newCmd `cat $tauWrapFile` "
           echoIfDebug "Linking command is $newCmd"
         fi
@@ -2177,7 +2177,7 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
     if [ "x$optTauGASPU" != "x" ]; then
       newCmd="$newCmd $optTauGASPU"
       echoIfDebug "Linking command is $newCmd"
-    fi 
+    fi
 
 	madeToLinkStep=$TRUE
         if [ $optFujitsu == $TRUE ]; then
@@ -2196,7 +2196,7 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 	    echoIfVerbose "Error: Tried Looking for file: $passedOutputFile"
 	    printError "$CMD" "$newCmd"
 	fi
-	
+
 	if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
 	fi
@@ -2206,7 +2206,7 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
 	if [ $needToCleanPdbInstFiles == $TRUE -a -r TauScorePAdapterInit.o ]; then
 	    evalWithDebugMessage "/bin/rm -f TauScorePAdapterInit.o"
 	fi
-	
+
     fi
 
 fi
@@ -2215,7 +2215,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
     tempCounter=0
     while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
         tmpname="${arrTau[$tempCounter]##*/}"
-	if [ $reusingInstFile == $FALSE ]; then 
+	if [ $reusingInstFile == $FALSE ]; then
 	  evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
           tmpname="`echo $tmpname | sed -e 's/\.inst//'`"
           if [ $continueBeforeOMP == $TRUE ] ; then
@@ -2267,23 +2267,23 @@ fi
 
 
 ####################################################################
-# Regular Command: In case of an Intermediate Error. 
+# Regular Command: In case of an Intermediate Error.
 ####################################################################
 if [ $errorStatus == $TRUE ] ; then
     if [ $revertOnError == $FALSE ]; then
 	echo "Reverting to uninstrumented command disabled. To enable reverting pass -optRevert to tau_compiler.sh."
 	exit 1
     fi
-    
+
     # Try compiler-based instrumentation
-    if [ $disableCompInst == $FALSE ] ; then 
+    if [ $disableCompInst == $FALSE ] ; then
 	if [ "x$optCompInstOption" != x ] ; then
 	    if [ $madeToLinkStep == $FALSE ] ; then
 		continue;
 	    fi
 	fi
     fi
-    
+
     if [ $groupType == $group_f_F ]; then
 	if [ "x$optAppF90" == "x" ]; then
 	    regularCmd="$compilerSpecified $regularCmd"
