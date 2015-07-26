@@ -1587,7 +1587,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 //	//OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 	//callingSite, a9, MemcpyDtoH);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyDtoH);
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
 	gId, a5, MemcpyDtoH);
 	
@@ -1665,7 +1665,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9, MemcpyHtoD);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyHtoD);
 	
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a5);
@@ -1766,7 +1766,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9, MemcpyDtoD);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyDtoD);
 	
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, a6);
@@ -1975,7 +1975,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9, MemcpyHtoD);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyHtoD);
   
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a6);
@@ -2071,7 +2071,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a6, MemcpyDtoH);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a6, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a6, callingSite, MemcpyDtoH);
   
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, 0);
@@ -2150,7 +2150,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 		sizeof(char[TAU_MAX_FUNCTIONNAME]), name, NULL);
-	//printf("kernel name: %s.\n", name);	
+	//printf("clEnqueueNDRangeKernel. kernel name: %s.\n", name);	
 	//
         Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL clEnqueueNDRangeKernel_h: %p\n", p);
@@ -2169,7 +2169,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9);
 	
-	Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	Tau_opencl_enqueue_event(name, a1, a9, callingSite, -1);
 
 
 #endif
