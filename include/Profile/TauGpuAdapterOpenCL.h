@@ -186,7 +186,7 @@ void Tau_opencl_register_gpu_event(OpenCLGpuEvent *id, double start, double stop
 
 void Tau_opencl_register_memcpy_event(OpenCLGpuEvent *id, double start, double stop, int transferSize, int MemcpyType);
 
-OpenCLGpuEvent *Tau_opencl_enqueue_event(const char* name, cl_command_queue q, cl_event *e, FunctionInfo *fi);
+OpenCLGpuEvent *Tau_opencl_enqueue_event(const char* name, cl_command_queue q, cl_event *e, FunctionInfo *fi, int memcpy_type);
 
 void Tau_opencl_register_sync_event();
 
