@@ -33,8 +33,8 @@ declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
 declare -i isCurrentFileC=$FALSE
-#declare -i isDebug=$FALSE
-declare -i isDebug=$TRUE
+declare -i isDebug=$FALSE
+#declare -i isDebug=$TRUE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
