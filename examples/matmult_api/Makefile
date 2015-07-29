@@ -13,8 +13,7 @@
 
 TAU_MAKEFILE ?=../../include/Makefile
 include $(TAU_MAKEFILE)
-F90=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_f90.sh
-TAU_OPTIONS='-optLinkOnly'
+F90=TAU_MAKEFILE=$(TAU_MAKEFILE) tau_f90.sh -optLinkOnly
 
 LIBS=
 INCLUDE=
@@ -28,4 +27,4 @@ matmult.ss: $(OBJS)
 	$(F90) -c $(INCLUDE) $< -o $@
 
 clean:
-	/bin/rm -f matmult.ss.o matmult.ss profile.* 
+	/bin/rm -f matmult.ss.o matmult.ss profile.*
