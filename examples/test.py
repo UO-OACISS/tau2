@@ -54,8 +54,8 @@ def resultMeaning(result):
 
 def main():
     parser = argparse.ArgumentParser(description='Run all makefiles in each directory')
- # 20   parser.add_argument('-f','--figurename', default=None,
- # 21                       help='Name of histogram figure.')
+    parser.add_argument('-f','--filename', default='testResults.txt',
+                        help='Name of column format results file.')
  # 22
  # 23   parser.add_argument('-t','--figuretitle', default="NE=3, 1 mpi rank at full device thread use" ,
  # 24                       help='Title on histogram figure.')
@@ -91,9 +91,24 @@ def main():
 
         os.chdir(parentDir)
 
+    # for dir,resultDict in makeResults.iteritems():
+    #     for type,result in resultDict.iteritems():
+    #         print '%s: %s: %s' % (dir,type,resultMeaning(result))
+
+    target = open(args.filename,'w')
+
+    target.write("#dir   make    build.sh \n")
+    target.write("#_______________________\n")
+
     for dir,resultDict in makeResults.iteritems():
-        for type,result in resultDict.iteritems():
-            print '%s: %s: %s' % (dir,type,resultMeaning(result))
+        result=[]
+        result.append(dir + "   ")
+        for type,code in resultDict.iteritems():
+            result.append(resultMeaning(code)+ "    ")
+            #print '%s: %s: %s' % (dir,type,resultMeaning(result))}
+        result.append("\n")
+        target.writelines("%s" % item for item in result)
+    target.close()
 
 if __name__ == "__main__":
    main()
