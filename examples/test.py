@@ -97,14 +97,14 @@ def main():
 
     target = open(args.filename,'w')
 
-    target.write("#dir   make    build.sh \n")
-    target.write("#_______________________\n")
+    target.write("#dir,   make,    build.sh \n")
+    target.write("\n")
 
     for dir,resultDict in makeResults.iteritems():
         result=[]
-        result.append(dir + "   ")
+        result.append(dir + " , ")
         for type,code in resultDict.iteritems():
-            result.append(resultMeaning(code)+ "    ")
+            result.append(resultMeaning(code)+ " , ")
             #print '%s: %s: %s' % (dir,type,resultMeaning(result))}
         result.append("\n")
         target.writelines("%s" % item for item in result)
