@@ -44,6 +44,14 @@ def dumpclean(obj):
     else:
         print obj
 
+def resultMeaning(result):
+    if result == 0 :
+        return "PASS"
+    elif  result == -1:
+        return "NONE"
+    else:
+        return "FAIL"
+
 def main():
     parser = argparse.ArgumentParser(description='Run all makefiles in each directory')
  # 20   parser.add_argument('-f','--figurename', default=None,
@@ -63,27 +71,32 @@ def main():
 #get list of directories
 
     directories = filter(os.path.isdir, os.listdir(os.getcwd()))
-    makeResults=dict((dirs,[{"make":0},{"build.sh":0}]) for dirs in directories)
+    makeResults=dict((dirs,{"make":0,"build.sh":0}) for dirs in directories)
       # 0,1 normal, -1 if doesn't exist
     for currentDir in directories:
 #cd into dirs and run makefile
         os.chdir(currentDir)
+        print "*** CD into ", currentDir
         isBuild = os.path.isfile("build.sh")
         isMake = os.path.isfile("Makefile")
         if isMake :
+          shell_command("make clean", "make clean not working")
           makeError=shell_command("make","make not working")
           makeResults[currentDir]["make"] = makeError
         else:
             makeResults[currentDir]["make"] = -1
-        if isbuild :
+        if isBuild :
           buildError=shell_command("build","build not working")
-          makeResults[currentDir]["build"] = buildError
+          makeResults[currentDir]["build.sh"] = buildError
         else:
-            makeResults[currentDir]["build"] = -1
+            makeResults[currentDir]["build.sh"] = -1
 
         os.chdir(parentDir)
 
     dumpclean(makeResults)
+    for dir,resultDict in makeResults.iteritems():
+        for type,result in resultDict.iteritems():
+            print " %s: %s: %s", % (dir,type,resultMeaning(result))
 
 if __name__ == "__main__":
    main()
