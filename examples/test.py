@@ -93,10 +93,9 @@ def main():
 
         os.chdir(parentDir)
 
-    dumpclean(makeResults)
     for dir,resultDict in makeResults.iteritems():
         for type,result in resultDict.iteritems():
-            print " %s: %s: %s", % (dir,type,resultMeaning(result))
+            print '%s: %s: %s' % (dir,type,resultMeaning(result))
 
 if __name__ == "__main__":
    main()
