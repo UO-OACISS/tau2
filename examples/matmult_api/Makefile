@@ -28,4 +28,4 @@ matmult.ss: $(OBJS)
 	$(F90) -c $(INCLUDE) $< -o $@
 
 clean:
-	/bin/rm -f matmult.o matmult *.pdb profile.* *.inst.* *.continue.*
+	/bin/rm -f matmult.ss.o matmult.ss profile.* 
