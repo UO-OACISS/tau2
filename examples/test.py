@@ -68,13 +68,11 @@ def main():
     args = parser.parse_args()
     parentDir=os.getcwd()
 
-#get list of directories
 
     directories = filter(os.path.isdir, os.listdir(os.getcwd()))
     makeResults=dict((dirs,{"make":0,"build.sh":0}) for dirs in directories)
       # 0,1 normal, -1 if doesn't exist
     for currentDir in directories:
-#cd into dirs and run makefile
         os.chdir(currentDir)
         print "*** CD into ", currentDir
         isBuild = os.path.isfile("build.sh")
