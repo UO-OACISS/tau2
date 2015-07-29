@@ -361,7 +361,7 @@ for arg in "$@" ; do
 			linkOnly=$TRUE
 			echoIfDebug "NOTE: turning linkOnly on"
 			disablePdtStep=$TRUE
-			disableCompInst=$FALSE
+			disableCompInst=$TRUE
 			# disable instrumentation during .o file generation, just link in the TAU libs.
 			;;
 
