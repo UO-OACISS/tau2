@@ -86,7 +86,7 @@ def main():
         else:
             makeResults[currentDir]["make"] = -1
         if isBuild :
-          buildError=shell_command("build","build not working")
+          buildError=shell_command("./build.sh","build not working")
           makeResults[currentDir]["build.sh"] = buildError
         else:
             makeResults[currentDir]["build.sh"] = -1
