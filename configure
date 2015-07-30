@@ -3936,7 +3936,7 @@ case $cxx_compiler in
                     fixmakeargs="$fixmakeargs CLANG BGCLANG"
 		fi
 		;;
-            *g++)
+            *g++|*g++-*)
 		if [ $machine = bgq ] ; then
 	            echo "Using GNU Compilers for BGQ"
 		    fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
