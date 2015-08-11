@@ -3568,6 +3568,14 @@ case $cxx_compiler in
 	# No fixmakeargs needed because it is the default
 	;;
 
+    *-g++|g++-*)
+	echo "Default C++ compiler will be " \
+            `$cxx_compiler -v 2>&1 | tail -1 | sed 's/gcc/g++/g'`
+        cxx_compiler=g++
+	gnu=yes
+	# No fixmakeargs needed because it is the default
+	;;
+
     g++4)
 	echo "Default C++ compiler will be " \
             `gcc4 -v 2>&1 | tail -1 | sed 's/gcc4/g++4/g'`
@@ -5023,18 +5031,18 @@ then
 fi
 
 gcclibdir=unknown
-if [ $c_compiler != gcc ]
-then
+case $c_compiler in
+  gcc|gcc4)
+    echo "Default C compiler will be " `$c_compiler -v 2>&1 | tail -1`
+    # I must set the gcclibdir in the Makefiles if we combine gcc, cc, and CC 
+    gcclibdir=`$c_compiler -v 2>&1 | awk '{print $4;}' | \
+       awk -F/ '{for (i=2; i<NF; i++) printf("/%s",$i); printf("\n"); }'`
+    ;;
+  *)
     echo Default C compiler will be $c_compiler
     fixmakeargs="$fixmakeargs USE_CC"
-else
-    echo "Default C compiler will be " `gcc -v 2>&1 | tail -1`
-
-    # I must set the gcclibdir in the Makefiles if we combine gcc, cc, and CC 
-    gcclibdir=`gcc -v 2>&1 | awk '{print $4;}' | \
-       awk -F/ '{for (i=2; i<NF; i++) printf("/%s",$i); printf("\n"); }'`
-    #    echo $gcclibdir
-fi
+    ;;
+esac
 
 if [ $upc_compiler = gcc -o $upc_compiler = upc ] 
 then
@@ -5044,19 +5052,6 @@ fi
 if [ $upc_compiler = xlupc ]
 then
     fixmakeargs="$fixmakeargs XLUPC"
-fi
-
-if [ $c_compiler != gcc4 ]
-then
-    echo Default C compiler will be $c_compiler
-    fixmakeargs="$fixmakeargs USE_CC"
-else
-    echo "Default C compiler will be " `gcc4 -v 2>&1 | tail -1`
-
-    # I must set the gcclibdir in the Makefiles if we combine gcc, cc, and CC 
-    gcclibdir=`gcc4 -v 2>&1 | awk '{print $4;}' | \
-       awk -F/ '{for (i=2; i<NF; i++) printf("/%s",$i); printf("\n"); }'`
-    #    echo $gcclibdir
 fi
 
 ######################################################################
@@ -6383,9 +6378,8 @@ fi
 $echo "Checking for MPI 3 const interface... ${nnl}"
 if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/null 2>&1 ; then
     echo "no"
-# MPI works. 
 else
-  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const $1> /dev/null 2>&1 ; then
+  if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
 
     $echo "Checking for OpenMPI 3 const interface... ${nnl}"
@@ -6398,7 +6392,8 @@ else
     # MPICH requires the const keyword 
         fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
     fi
-    # Clean up
+  else
+    echo "no"
   fi
 fi            
 rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out 
