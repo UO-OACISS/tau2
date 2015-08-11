@@ -211,6 +211,8 @@ void Tau_opencl_register_gpu_event(OpenCLGpuEvent *evId, double start,
 double stop)
 {
 	lock_callback();
+    //printf("in Tau_opencl_register_gpu_event.\n");
+    //printf("name is: %s\n", evId->name);
 	//printf("locked for: %s.\n", name);
 	//eventId evId = Tau_gpu_create_gpu_event(name, gId, parent, map);
 	Tau_gpu_register_gpu_event(evId, start/1e3, stop/1e3);
@@ -221,7 +223,8 @@ double stop)
 void Tau_opencl_register_memcpy_event(OpenCLGpuEvent *evId, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	//printf("in Tau_open.\n");
+	//printf("in Tau_opencl_register_memcpy_event.\n");
+    //printf("name is: %s\n", evId->name);
 	//printf("Memcpy type is %d.\n", MemcpyType);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
@@ -235,12 +238,15 @@ transferSize, int MemcpyType)
 
 
 OpenCLGpuEvent *Tau_opencl_enqueue_event(const char* name, cl_command_queue command_queue, 
-	cl_event *opencl_event, FunctionInfo *callingSite)
+	cl_event *opencl_event, FunctionInfo *callingSite, int memcpy_type)
 {
-	OpenCLGpuEvent *new_data = Tau_opencl_retrive_gpu(command_queue);
+	OpenCLGpuEvent *gpu_event = Tau_opencl_retrive_gpu(command_queue);
+    OpenCLGpuEvent *new_data = gpu_event->getCopy();
 	new_data->name = name;
 	new_data->event = opencl_event;
 	new_data->callingSite = callingSite;
+    new_data->memcpy_type = memcpy_type;
+    //printf("Tau_opencl_enqueue_event: placing %s (%p) onto queue.\n", name, new_data);
 	KernelBuffer.push(new_data);	
 	return new_data;
 }
@@ -266,6 +272,7 @@ bool buffer_front_is_complete()
 
 void Tau_opencl_register_sync_event()
 {
+    //printf("\nin Tau_opencl_register_sync_event\n");
 	//printf("[TAU (opencl): registering sync.\n");
 	//printf("[TAU (opencl): empty buffer? %d.\n", KernelBuffer.empty());	
 	//printf("[TAU (opencl): size of buffer: %d.\n", KernelBuffer.size());	
@@ -275,6 +282,8 @@ void Tau_opencl_register_sync_event()
  	 cl_ulong startTime, endTime, queuedTime, submitTime;
 
 	 OpenCLGpuEvent* kernel_data = KernelBuffer.front();
+	 //printf("Size of buffer: %d.\n", KernelBuffer.size());	
+     //printf("Front of buffer is: %s\n", kernel_data->name);
 	 cl_int err;
   err = clGetEventProfilingInfo_noinst(*kernel_data->event, CL_PROFILING_COMMAND_QUEUED,
 															 sizeof(cl_ulong), &queuedTime, NULL);
@@ -332,14 +341,20 @@ void Tau_opencl_register_sync_event()
 			Tau_opencl_register_gpu_event(kernel_data, (double) startTime, (double) endTime);
 		}
 		KernelBuffer.pop();
+        //printf("Popped buffer.\n");
+        //printf("Now size of buffer is: %d.\n", KernelBuffer.size());
+        //if(!KernelBuffer.empty()) {
+        //    printf("Now front is: %s\n", KernelBuffer.front()->name);
+        //}
 
 	}
+    //printf("\n\n");
 }
 
 //flush all kernel events whether or not they can be recorded.
 void Tau_opencl_flush()
 {
-	//Tau_opencl_register_sync_event();
+	Tau_opencl_register_sync_event();
 
 	//remove remaining events.
 	while (!KernelBuffer.empty())
