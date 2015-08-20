@@ -602,8 +602,8 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     addr0 = probeAddr;
     addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
 #else
-    addr0 = probeAddr - unit->addressMaps[matchingIdx]->start;
-    addr1 = probeAddr;
+    addr0 = probeAddr;
+    addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
 #endif
   } else {
     if (!Tau_bfd_internal_loadExecSymTab(unit)) {
