@@ -114,31 +114,74 @@ struct TauCsULong
 /////////////////////////////////////////////////////////////////////////
 // We use global maps to maintain callsite book-keeping information
 /////////////////////////////////////////////////////////////////////////
-map<TAU_CALLSITE_KEY_ID_MAP_TYPE>& TheCallSiteKey2IdMap(void)
+
+extern "C" void finalizeCallSites_if_necessary();
+
+struct callsiteKey2IdMap_t : public map<TAU_CALLSITE_KEY_ID_MAP_TYPE>
 {
-  static map<TAU_CALLSITE_KEY_ID_MAP_TYPE> callsiteKey2IdMap[TAU_MAX_THREADS];
+  callsiteKey2IdMap_t() {}
+  virtual ~callsiteKey2IdMap_t() {
+  //Wait! We might not be done! Unbelieveable as it may seem, this object
+  //could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+    finalizeCallSites_if_necessary();
+  }
+};
+
+static callsiteKey2IdMap_t& TheCallSiteKey2IdMap(void)
+{
+  static callsiteKey2IdMap_t callsiteKey2IdMap[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
   return callsiteKey2IdMap[tid];
 }
 
-vector<tau_cs_info_t *>& TheCallSiteIdVector(void)
+struct callsiteId2KeyVec_t : public vector<tau_cs_info_t *>
 {
-  static vector<tau_cs_info_t *> callsiteId2KeyVec[TAU_MAX_THREADS];
+  callsiteId2KeyVec_t() {}
+  virtual ~callsiteId2KeyVec_t() {
+  //Wait! We might not be done! Unbelieveable as it may seem, this object
+  //could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+    finalizeCallSites_if_necessary();
+  }
+};
+
+static callsiteId2KeyVec_t& TheCallSiteIdVector(void)
+{
+  static callsiteId2KeyVec_t callsiteId2KeyVec[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
   return callsiteId2KeyVec[tid];
 }
 
-map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>& TheCallSiteFirstKeyMap(void)
+struct callsiteFirstKeyMap_t : public map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>
 {
-  static map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE> callsiteFirstKeyMap[TAU_MAX_THREADS];
+  callsiteFirstKeyMap_t() {}
+  virtual ~callsiteFirstKeyMap_t() {
+  //Wait! We might not be done! Unbelieveable as it may seem, this object
+  //could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+    finalizeCallSites_if_necessary();
+  }
+};
+
+static callsiteFirstKeyMap_t& TheCallSiteFirstKeyMap(void)
+{
+  static callsiteFirstKeyMap_t callsiteFirstKeyMap[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
   return callsiteFirstKeyMap[tid];
 }
 
-map<TAU_CALLSITE_PATH_MAP_TYPE>& TheCallSitePathMap(void)
+struct callsitePathMap_t : public map<TAU_CALLSITE_PATH_MAP_TYPE>
+{
+  callsitePathMap_t() {}
+  virtual ~callsitePathMap_t() {
+  //Wait! We might not be done! Unbelieveable as it may seem, this object
+  //could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+    finalizeCallSites_if_necessary();
+  }
+};
+
+static callsitePathMap_t& TheCallSitePathMap(void)
 {
   // to avoid initialization problems of non-local static variables
-  static map<TAU_CALLSITE_PATH_MAP_TYPE> callsitePathMap[TAU_MAX_THREADS];
+  static callsitePathMap_t callsitePathMap[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
   return callsitePathMap[tid];
 }
@@ -757,7 +800,7 @@ extern "C" void finalizeCallSites_if_necessary()
       *tempName = string(" [@] ") + string(name);
       callsiteInfo->resolvedName = tempName;
       free(name);
-    } else {
+	} else {
       unsigned long *key = callsiteInfo->key;
       // One last try with the string method.
       bool success = determineCallSiteViaString(key);
@@ -810,7 +853,9 @@ extern "C" void finalizeCallSites_if_necessary()
 
     string *callSiteName = new string("");
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[candidate->callSiteKeyId];
-    *callSiteName = *callSiteName + *(callsiteInfo->resolvedName);
+    if (callsiteInfo->hasName) {
+      *callSiteName = *callSiteName + *(callsiteInfo->resolvedName);
+	}
 
     if (TauEnv_get_callpath()) {
       RtsLayer::LockDB();
