@@ -50,6 +50,7 @@ public:
   static int UnLockDB(void);    // unlocks the tauDBMutex
   static int LockEnv(void);    // locks the tauEnvMutex
   static int UnLockEnv(void);    // unlocks the tauEnvMutex
+  static void delete_wrapper_flags_key(void*); // recycles the thread ID on exit.
 
 private:
   static int tauThreadCount;     // counter
