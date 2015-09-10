@@ -101,10 +101,20 @@ int PthreadLayer::GetThreadId(void)
 // It sets the default values for static private data members of the 
 // PthreadLayer class.
 ////////////////////////////////////////////////////////////////////////
+
+void PthreadLayer::delete_wrapper_flags_key(void* wrapped) {
+  if (wrapped != NULL) {
+    int * tmp = (int*)(wrapped);
+    //printf("Recycling %d\n", *tmp); fflush(stdout); 
+    RtsLayer::recycleThread(*tmp);
+    delete tmp;
+  }
+}
+
 extern "C"
 void pthread_init_once(void)
 {
-  pthread_key_create(&PthreadLayer::tauPthreadId, NULL);
+  pthread_key_create(&PthreadLayer::tauPthreadId, &PthreadLayer::delete_wrapper_flags_key);
   pthread_mutex_init(&PthreadLayer::tauThreadcountMutex, NULL);
   pthread_mutex_init(&PthreadLayer::tauDBMutex, NULL);
   pthread_mutex_init(&PthreadLayer::tauEnvMutex, NULL);
@@ -236,7 +246,14 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   }
 
   size_t stackSize = TauEnv_get_pthread_stack_size();
+  pthread_attr_t tmp;
+  bool destroy_attr = false;
   if (stackSize) {
+    if (attr == NULL) {
+	  destroy_attr = true;
+	  pthread_attr_init(&tmp);
+	  attr = &tmp;
+	}
     size_t defaultSize;
     if (pthread_attr_getstacksize(attr, &defaultSize)) {
       TAU_VERBOSE("TAU: ERROR - failed to get default pthread stack size.\n");
@@ -264,6 +281,9 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack);
     TAU_PROFILE_STOP(timer);
     *wrapped = false;
+	if (destroy_attr) {
+	    pthread_attr_destroy(&tmp);
+	}
   }
   return retval;
 }
