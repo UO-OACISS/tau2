@@ -15,4 +15,4 @@ clean:
 	rm -rf matmult matmult.o
 
 run:
-	tau_exec -T serial -opencl ./matmult
+	tau_exec -T serial,cupti -opencl ./matmult
