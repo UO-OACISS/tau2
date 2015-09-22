@@ -553,7 +553,7 @@ for arg in "$@"; do
 	    echo "-cudalibrary=<dir> ................ Additional options or library      "
 	    echo "            locations to add when linking to the cuda driver libraries."
 	    echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
-	    echo " (Not needed when used with -cuda=dir option.) "
+	    echo "  Note: This option is needed when used with -cuda=<dir> option. "
 	    echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
 	    echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
 	    echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
