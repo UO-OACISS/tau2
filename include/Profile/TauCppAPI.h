@@ -23,7 +23,7 @@
 #ifdef DEBUG_PROF
 #define DEBUGPROFMSG(msg) { cerr<< msg; }
 #else
-#define DEBUGPROFMSG(msg) 
+#define DEBUGPROFMSG(msg)
 #endif // DEBUG_PROF
 
 #define TAU_NEW(expr, size)        Tau_new(expr, size, __FILE__, __LINE__)

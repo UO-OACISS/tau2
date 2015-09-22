@@ -221,7 +221,27 @@ static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
 // ensure that non-local static variables are initialised before being
 // used (Ref: Scott Meyers, Item 47 Eff. C++).
 //////////////////////////////////////////////////////////////////////
-typedef std::vector<TauBfdUnit*> bfd_unit_vector_t;
+extern "C" void Tau_sampling_finalize_if_necessary(int tid);
+extern "C" void finalizeCallSites_if_necessary(void);
+struct bfd_unit_vector_t : public std::vector<TauBfdUnit*>
+{
+  bfd_unit_vector_t() {}
+  virtual ~bfd_unit_vector_t() {
+  //Wait! We might not be done! Unbelieveable as it may seem, this object
+  //could (and does sometimes) get destroyed BEFORE we have resolved the addresses. Bummer.
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_callsite()) {
+      finalizeCallSites_if_necessary();
+    }
+
+    if (TauEnv_get_ebs_enabled()) {
+      // Tau_sampling_finalize(tid);
+      Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
+    }
+#endif
+  }
+};
+
 static bfd_unit_vector_t & ThebfdUnits(void)
 {
   // BFD units (e.g. executables and their dynamic libraries)
@@ -602,8 +622,8 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     addr0 = probeAddr;
     addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
 #else
-    addr0 = probeAddr - unit->addressMaps[matchingIdx]->start;
-    addr1 = probeAddr;
+    addr0 = probeAddr;
+    addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
 #endif
   } else {
     if (!Tau_bfd_internal_loadExecSymTab(unit)) {

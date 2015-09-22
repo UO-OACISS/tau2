@@ -12,16 +12,16 @@
 ##           based on TAU/pC++/Sage++  Copyright (C) 1993,1995       ##
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
- 
+
 ########### Automatically modified by the configure script ############
 CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-g
+USER_OPT=-g -__DUSE_TAU
 TAUROOT=
 #######################################################################
- 
+
 include include/Makefile
 
 #INTELCXXLIBICC#INTELOPTS = -cxxlib-icc #ENDIF#
@@ -44,10 +44,10 @@ LINKER	= $(CC)
 
 # tools EVERYONE needs
 #BASIC = utils src/Profile examples/instrument
-BASIC = utils src/Profile 
+BASIC = utils src/Profile
 
 # library and tools
-EXPORTS = utils src/Profile 
+EXPORTS = utils src/Profile
 
 # Example Programs
 EXAMPLES = examples/instrument examples/threads \
@@ -139,7 +139,7 @@ CONFIGQUERY=`utils/ConfigQuery -arch`
 all: install
 	@echo
 
-exports : 
+exports :
 	@echo "Determining Configuration..."
 	@if [ x${CONFIGQUERY} = xdefault ] ; then \
           (echo Run the configure script before attempting to compile ; \
@@ -150,7 +150,7 @@ exports :
              $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ); done
 	@echo "***************** DONE ************************"
 
-tests: 
+tests:
 	@echo "Determining Configuration..."
 	@if [ x${CONFIGQUERY} = xdefault ] ; then \
           (echo Run the configure script before attempting to compile ; \

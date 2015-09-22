@@ -2,12 +2,15 @@ include ../../../include/Makefile
 include ../Makefile
 
 TAU_ARMCI_SHARED=libTAU-armciwrap$(TAU_SHLIBX)
+#NOSHARED#TAU_ARMCI_SHARED=#endif#
 CC = $(TAU_CC)
 CXX = $(TAU_CXX)
 CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) -I$(ARMCIDIR)/include
 ARFLAGS = rcv
+INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 install-static: libTauARMCIWrapper.a
+	mkdir -p $(INSTALLDEST)/wrappers/armci_wrapper && cp link_options.tau $(INSTALLDEST)/wrappers/armci_wrapper
 	$(TAU_STATIC_INSTALL_CMD)
 
 install-shared: $(TAU_ARMCI_SHARED)
