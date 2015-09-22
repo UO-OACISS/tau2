@@ -30,8 +30,6 @@
       master = 0 
       matsize = SIZE_OF_MATRIX 
 
-
-
 !$omp parallel private(tid)
 !     Obtain and print thread id
       tid = omp_get_thread_num()
@@ -143,7 +141,6 @@
         double precision b(matsize, matsize)
         integer i, j
 ! multiply the row with the column 
-
 !$omp  parallel  do
         do i = 1,matsize 
           answer(i) = 0.0 
