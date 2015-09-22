@@ -8009,8 +8009,8 @@ if [ $cuda = yes ] ; then
 	if [ -f "$cudainclude/cuda.h" ] ; then
 	    fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 	    if [ "$opencl" != "disable" ] ; then
-		if [ -f "$cudainclude/CL/cl.h" ] ; then
-		    $echo "Checking $cxx_compiler compatablity with OpenCL... ${nnl}"
+		if [ "$use_opencl" = "no" -a -f "$cudainclude/CL/cl.h" ] ; then
+		    $echo "Checking $cxx_compiler compatibility with OpenCL... ${nnl}"
 		    cat <<EOF>opencl.cpp
 #include "CL/cl.h"
 EOF
