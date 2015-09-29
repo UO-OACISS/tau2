@@ -552,7 +552,8 @@ for arg in "$@"; do
 	    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
 	    echo "-cudalibrary=<dir> ................ Additional options or library      "
 	    echo "            locations to add when linking to the cuda driver libraries."
-	    echo " "
+	    echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
+	    echo "  Note: This option is needed when used with -cuda=<dir> option. "
 	    echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
 	    echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
 	    echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -8008,8 +8009,8 @@ if [ $cuda = yes ] ; then
 	if [ -f "$cudainclude/cuda.h" ] ; then
 	    fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 	    if [ "$opencl" != "disable" ] ; then
-		if [ -f "$cudainclude/CL/cl.h" ] ; then
-		    $echo "Checking $cxx_compiler compatablity with OpenCL... ${nnl}"
+		if [ "$use_opencl" = "no" -a -f "$cudainclude/CL/cl.h" ] ; then
+		    $echo "Checking $cxx_compiler compatibility with OpenCL... ${nnl}"
 		    cat <<EOF>opencl.cpp
 #include "CL/cl.h"
 EOF
