@@ -33,6 +33,10 @@ using namespace std;
 #include <pthread.h>
 #endif /* TAU_AT_FORK */
 
+#ifdef TAU_BEACON
+#include <Profile/TauBeacon.h>
+#endif /* TAU_BEACON */
+
 extern "C" {
 #include "papi.h"
 }
@@ -775,6 +779,9 @@ int PapiLayer::initializePerfRAPL(int tid) {
     sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_PKG"); 
     sprintf(Tau_rapl_units[numCounters], "Joules"); 
     numCounters++; 
+#ifdef TAU_BEACON
+    TauBeaconInit();
+#endif /* TAU_BEACON */
   }
 
   ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_GPU");
@@ -967,6 +974,7 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
 	if (value > 1e-5) {
 	  sprintf(ename,"%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
           TAU_TRIGGER_EVENT(ename, value);
+          TauBeaconPublish(value, "Watts", "NODE_POWER", ename);
         }
       }
       
