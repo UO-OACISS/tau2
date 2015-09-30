@@ -396,6 +396,7 @@ for arg in "$@"; do
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
 	    echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
@@ -511,6 +512,7 @@ for arg in "$@"; do
 	    echo "    Note: 'download' will download and build the library automatically."
 	    echo "    Note: 'download' only supports the Intel OpenMP runtime."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
@@ -751,6 +753,7 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+beacon=no
 darshan=no
 enable_export_dynamic=no
 perfsuite=no
@@ -1186,6 +1189,15 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+    -beacon=*)
+        beacon=yes
+	    beacondir=`echo $arg | sed -e 's/-beacon=//'`
+	    if [ ! -d $beacondir ] ; then
+		echo "Error: Cannot access BEACON directory $beacondir"
+		exit 1
+	    fi
+        shift
+        ;;
 	-papi=*)
 	    papi=yes
 	    papidir=`echo $arg | sed -e 's/-papi=//'`
@@ -4754,7 +4766,10 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
-
+if [ $beacon = yes -a -d $beacondir -a -d $beacondir/include -a -d $beacondir/lib ]; then
+    fixmakeargs="$fixmakeargs BEACON beacondir=$beacondir"
+    tauoptions="${tauoptions}-beacon"
+fi
 
 if [ $papi = yes ] ; then
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
