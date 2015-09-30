@@ -754,8 +754,10 @@ int PapiLayer::initializePerfRAPL(int tid) {
   numCounters = 0;
   ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_CORES");
   if (PAPI_OK != ret) {
+#ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_CORES) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
-    exit(1);
+#endif /* DEBUG_PROF */
+    // don't exit(1);
   } else {
     sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_CORES"); 
     sprintf(Tau_rapl_units[numCounters], "Joules"); 
@@ -764,8 +766,11 @@ int PapiLayer::initializePerfRAPL(int tid) {
 
   ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_PKG");
   if (PAPI_OK != ret) {
+
+#ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_PKG) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
-    exit(1);
+// don't    exit(1);
+#endif /* DEBUG_PROF */
   } else {
     sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_PKG"); 
     sprintf(Tau_rapl_units[numCounters], "Joules"); 
@@ -774,8 +779,10 @@ int PapiLayer::initializePerfRAPL(int tid) {
 
   ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_GPU");
   if (PAPI_OK != ret) {
+#ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_GPU) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
-    exit(1);
+#endif /* DEBUG_PROF */
+    // exit(1);
   } else {
     sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_GPU"); 
     sprintf(Tau_rapl_units[numCounters], "Joules"); 
