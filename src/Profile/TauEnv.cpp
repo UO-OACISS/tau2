@@ -1013,11 +1013,24 @@ void TauEnv_initialize()
       env_tau_lite = 1;
     }
 
+    const char *interval = getconf("TAU_INTERRUPT_INTERVAL");
+    env_interval = TAU_INTERRUPT_INTERVAL_DEFAULT;;
+    if (interval) {
+      int interval_value = 0;
+      sscanf(interval,"%d",&interval_value);
+      env_interval = interval_value;
+      sprintf(tmpstr, "%d", env_interval);
+      TAU_SET_INTERRUPT_INTERVAL(interval_value); 
+      printf("Setting INTERRUPT_INTERVAL to %d\n", interval_value); 
+      TAU_METADATA("TAU_INTERRUPT_INTERVAL", tmpstr);
+    }
+
     tmp = getconf("TAU_TRACK_POWER");
     if (parse_bool(tmp, env_track_power)) {
       TAU_VERBOSE("TAU: Power tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
+      printf("Enabling power tracking!\n");
     } 
 
     tmp = getconf("TAU_TRACK_HEAP");
@@ -1476,15 +1489,6 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_EVENT_THRESHOLD", evt_threshold);
     }
 
-    const char *interval = getconf("TAU_INTERRUPT_INTERVAL");
-    env_interval = TAU_INTERRUPT_INTERVAL_DEFAULT;;
-    if (interval) {
-      int interval_value = 0;
-      sscanf(interval,"%d",&interval_value);
-      env_interval = interval_value;
-      sprintf(tmpstr, "%d", env_interval);
-      TAU_METADATA("TAU_INTERRUPT_INTERVAL", tmpstr);
-    }
 
     const char *numcalls = getconf("TAU_THROTTLE_NUMCALLS");
     env_throttle_numcalls = TAU_THROTTLE_NUMCALLS_DEFAULT;
