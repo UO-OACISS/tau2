@@ -18,6 +18,8 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+//#define DEBUG_PROF 1
+
 #include <tau_internal.h>
 #include <Profile/TauMetrics.h>
 #ifdef TAU_BEACON
