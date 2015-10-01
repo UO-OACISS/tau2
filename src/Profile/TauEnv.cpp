@@ -1021,7 +1021,6 @@ void TauEnv_initialize()
       env_interval = interval_value;
       sprintf(tmpstr, "%d", env_interval);
       TAU_SET_INTERRUPT_INTERVAL(interval_value); 
-      printf("Setting INTERRUPT_INTERVAL to %d\n", interval_value); 
       TAU_METADATA("TAU_INTERRUPT_INTERVAL", tmpstr);
     }
 
@@ -1030,7 +1029,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Power tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
-      printf("Enabling power tracking!\n");
     } 
 
     tmp = getconf("TAU_TRACK_HEAP");
