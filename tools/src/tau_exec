@@ -31,6 +31,7 @@ usage()
     echo "        -opencl       Track GPU events via OpenCL"
     echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
     echo "        -ompt         Track OpenMP events via OMPT interface"
+    echo "        -power        Track power events via PAPI's perf RAPL interface"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
@@ -90,6 +91,7 @@ track_memory=false
 memory_debug=false
 track_cuda=false
 track_ompt=false
+track_power=false
 track_cupti=false
 unified_memory=false
 track_opencl=false
@@ -145,6 +147,10 @@ for arg in "$@" ; do
 	      ;;
 	  -ompt)
 	      track_ompt=true
+	      shift
+	      ;;
+	  -power)
+	      track_power=true
 	      shift
 	      ;;
 	  -cupti)
@@ -437,6 +443,12 @@ if [ $tau_use_ebs = "true" ] ; then
     fi
 fi
 
+if [ $track_power = "true" ]; then
+    export TAU_TRACK_POWER=1
+    if [ "x$TAU_INTERRUPT_INTERVAL" == "x" ]; then 
+      export TAU_INTERRUPT_INTERVAL=1
+    fi
+fi
 if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
     TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
     if [ $verbose = "true" ]; then 
