@@ -37,6 +37,10 @@
 #define TAU_EVENT_THRESHOLD_DEFAULT .5
 #endif /* TAU_EVENT_THRESHOLD */
 
+#ifndef TAU_INTERRUPT_INTERVAL
+#define TAU_INTERRUPT_INTERVAL_DEFAULT 10.0
+#endif /* TAU_EVENT_THRESHOLD */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -85,6 +89,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_ibm_bg_hwp_counters();
   double TAUDECL TauEnv_get_max_records(); 
   double TAUDECL TauEnv_get_evt_threshold(); 
+  int TAUDECL TauEnv_get_interval(); 
   int TAUDECL TauEnv_get_disable_instrumentation(); 
 
   const char* TAUDECL TauEnv_get_ebs_source();
