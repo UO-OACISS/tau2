@@ -548,7 +548,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				Integer threadID = threadMap.get(thread);
 
 				if (threadID == null) { 
-					System.out.println("Can't find Thread ID for thread!");
+					System.out.println("Function: "+function+" Can't find Thread ID for thread: "+thread);
 					continue;
 				}
 				
@@ -833,13 +833,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			int id = results.getInt(2);
 			switch (thread_index) {
 			case MEAN_WITHOUT_NULL:
-				map.put(dataSource.getMeanData(), id);
+				map.put(dataSource.getMeanDataNoNull(), id);
 				break; 
 			case TOTAL:
 				map.put(dataSource.getTotalData(), id);
 				break;
 			case STDDEV_WITHOUT_NULL:
-				map.put(dataSource.getStdDevData(), id);
+				map.put(dataSource.getStdDevDataNoNull(), id);
 				break;
 			case MIN:
 				map.put(dataSource.getMinData(), id);
