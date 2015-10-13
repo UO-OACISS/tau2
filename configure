@@ -754,6 +754,7 @@ compensate=no
 smarts=no
 papi=no
 beacon=no
+beacondir="/"
 darshan=no
 enable_export_dynamic=no
 perfsuite=no
@@ -974,14 +975,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort' "
 		exit 1
 	    fi
 	    shift
@@ -4163,7 +4164,7 @@ case $fortran_compiler in
 	fixmakeargs="$fixmakeargs OPEN64ORC_FORTRAN"
 	;;  
 
-    intel)
+    intel|ifort)
 	if [ $cxx_compiler = ecpc ]
 	then
             echo "Default Fortran compiler will be Intel efc"
