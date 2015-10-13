@@ -974,7 +974,9 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
 	if (value > 1e-5) {
 	  sprintf(ename,"%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
           TAU_TRIGGER_EVENT(ename, value);
+#ifdef TAU_BEACON
           TauBeaconPublish(value, "Watts", "NODE_POWER", ename);
+#endif /* TAU_BEACON */
         }
       }
       
