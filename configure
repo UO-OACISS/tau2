@@ -8719,6 +8719,9 @@ if [ $dyninst = yes ] ; then
     if [ -r $dyninstdir/include/walker.h -o $dyninstincdir/walker.h ] ; then
 	fixmakeargs="$fixmakeargs DYNINST8"
     fi
+    if [ -r $dyninstdir/include/version.h ] ; then
+	fixmakeargs="$fixmakeargs DYNINST9"
+    fi
 fi
 
 
