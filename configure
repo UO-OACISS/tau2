@@ -396,6 +396,7 @@ for arg in "$@"; do
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
 	    echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
@@ -511,6 +512,7 @@ for arg in "$@"; do
 	    echo "    Note: 'download' will download and build the library automatically."
 	    echo "    Note: 'download' only supports the Intel OpenMP runtime."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
@@ -751,6 +753,8 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+beacon=no
+beacondir="/"
 darshan=no
 enable_export_dynamic=no
 perfsuite=no
@@ -971,14 +975,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort' "
 		exit 1
 	    fi
 	    shift
@@ -1186,6 +1190,15 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+    -beacon=*)
+        beacon=yes
+	    beacondir=`echo $arg | sed -e 's/-beacon=//'`
+	    if [ ! -d $beacondir ] ; then
+		echo "Error: Cannot access BEACON directory $beacondir"
+		exit 1
+	    fi
+        shift
+        ;;
 	-papi=*)
 	    papi=yes
 	    papidir=`echo $arg | sed -e 's/-papi=//'`
@@ -4152,7 +4165,7 @@ case $fortran_compiler in
 	fixmakeargs="$fixmakeargs OPEN64ORC_FORTRAN"
 	;;  
 
-    intel)
+    intel|ifort)
 	if [ $cxx_compiler = ecpc ]
 	then
             echo "Default Fortran compiler will be Intel efc"
@@ -4755,7 +4768,10 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
-
+if [ $beacon = yes -a -d $beacondir -a -d $beacondir/include -a -d $beacondir/lib ]; then
+    fixmakeargs="$fixmakeargs BEACON beacondir=$beacondir"
+    tauoptions="${tauoptions}-beacon"
+fi
 
 if [ $papi = yes ] ; then
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
@@ -8703,6 +8719,9 @@ if [ $dyninst = yes ] ; then
     fi
     if [ -r $dyninstdir/include/walker.h -o $dyninstincdir/walker.h ] ; then
 	fixmakeargs="$fixmakeargs DYNINST8"
+    fi
+    if [ -r $dyninstdir/include/version.h ] ; then
+	fixmakeargs="$fixmakeargs DYNINST9"
     fi
 fi
 

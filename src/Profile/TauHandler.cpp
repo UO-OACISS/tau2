@@ -141,7 +141,7 @@ int TauDisableTrackingPower(void) {
 // Set interrupt interval
 //////////////////////////////////////////////////////////////////////
 int& TheTauInterruptInterval(void) { 
-  static int interval = 10; /* interrupt every 10 seconds */
+  static int interval = TauEnv_get_interval(); /* interrupt every 10 seconds */
   return interval; 
 }
 
