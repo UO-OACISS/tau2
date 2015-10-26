@@ -1673,6 +1673,7 @@ for arg in "$@"; do
           echo "Error: OMPT directory $ompt_dir cannot be accessed"
           exit 1 
         fi 
+	    omptlib="${ompt_dir}/lib"
 	    shift
 	    ;;
 
