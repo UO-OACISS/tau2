@@ -5905,8 +5905,22 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   fi
 fi
 
-if [ "x$download_ompt" = xyes ] ; then
+if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so ] ; then
   prebfddir=`pwd`
+
+    ompt_c_compiler=$c_compiler
+    ompt_cxx_compiler=$cxx_compiler
+    if [ "${cxx_compiler}" != "icpc" ] ; then
+      ompt_c_compiler=gcc
+      ompt_cxx_compiler=g++
+      if [ "${architecture}" = "craycnl" ] ; then
+        if [ "${intel}" = "yes" ] ; then
+          ompt_c_compiler=icc
+          ompt_cxx_compiler=icpc
+        fi
+      fi
+    fi
+    echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
 
     if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
       echo "NOTE: $libomp_ossdir/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
@@ -5944,12 +5958,11 @@ if [ "x$download_ompt" = xyes ] ; then
         /bin/rm -f $ompt_dir/${libomp_oss_name}.so
       fi
 
-      echo "building $libomp_oss (see `pwd`/runtime/build-${c_compiler}/${libomp_oss_log} for log)..."
-      #make $specialflags $ompt_compiler $archarg > $libomp_oss_log 2>&1
+      echo "building $libomp_oss (see `pwd`/runtime/build-${ompt_cxx_compiler}/${libomp_oss_log} for log)..."
 	  cd runtime
-	  mkdir -p build-${c_compiler}
-	  cd build-${c_compiler}
-	  cmake -DCMAKE_C_COMPILER=${c_compiler} -DCMAKE_CXX_COMPILER=${cxx_compiler} -DCMAKE_INSTALL_PREFIX=${targetdir}/${architecture} .. > $libomp_oss_log 2>&1
+	  mkdir -p build-${ompt_cxx_compiler}
+	  cd build-${ompt_cxx_compiler}
+	  cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${targetdir}/${architecture} .. > $libomp_oss_log 2>&1
       result=$?
       if [ $result -eq 0 ] ; then
 	    make clean
@@ -5958,7 +5971,9 @@ if [ "x$download_ompt" = xyes ] ; then
         if [ $result -eq 0 ] ; then
 	      make install >> $libomp_oss_log 2>&1
           # copy the header to our source area, anyway - we need it.
-          cp runtime/src/ompt.h ${START_DIR}/include/.
+          cp ${targetdir}/${architecture}/include/*.h ${START_DIR}/include/.
+          # the "make install" will put an include directory under the $arch - remove it.
+          rm -rf ${targetdir}/${architecture}/include
           echo "...Success."
 		fi
       else
