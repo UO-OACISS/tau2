@@ -374,7 +374,7 @@ for arg in "$@"; do
 	    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
 	    echo "-ompt=<dir | download> ...... Specify a libiomp5 directory or download."
 	    echo "    Note: 'download' will download and build the library automatically."
-	    echo "    Note: 'download' only supports the Intel OpenMP runtime."
+	    echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
 	    echo ""
 	    echo "SHMEM Options:"
 	    echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
@@ -510,7 +510,7 @@ for arg in "$@"; do
 	    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
 	    echo "-ompt=<dir | download> ...... Specify a libiomp5 directory or download."
 	    echo "    Note: 'download' will download and build the library automatically."
-	    echo "    Note: 'download' only supports the Intel OpenMP runtime."
+	    echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
 	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
@@ -5908,17 +5908,26 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
 fi
 
 if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so ] ; then
-  prebfddir=`pwd`
+    preomptdir=`pwd`
+
+    #check the CMAKE version
+    [[ $(cmake --version) =~ ([0-9][.][0-9.]*) ]] && version="${BASH_REMATCH[1]}"
+    if ! awk -v ver="$version" 'BEGIN { if (ver < 2.8) exit 1; }'; then
+        echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
+	    exit 1;
+    fi
 
     ompt_c_compiler=$c_compiler
     ompt_cxx_compiler=$cxx_compiler
     if [ "${cxx_compiler}" != "icpc" ] ; then
       ompt_c_compiler=gcc
       ompt_cxx_compiler=g++
+      libomp_oss_name=gomp
       if [ "${architecture}" = "craycnl" ] ; then
         if [ "${intel}" = "yes" ] ; then
           ompt_c_compiler=icc
           ompt_cxx_compiler=icpc
+          libomp_oss_name=iomp5
         fi
       fi
     fi
@@ -5991,9 +6000,12 @@ if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so
     fi
   omptlib=${libomp_ossdir}
   omptlibrary=-l${libomp_oss_name}
-  cd $prebfddir
+  cd $preomptdir
 else
-  cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
+  if [ $ompt = "yes" ] ; then
+    # we need the ompt header for building TAU
+    cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
+  fi
 fi #ompt=download
     
 
@@ -9271,7 +9283,7 @@ if [ $ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetd
   if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     echo "BGQ ompt"
   else
-    echo "TAU: Copying libiomp5_ompt.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
+    echo "TAU: Copying lib${libomp_oss_name}.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
     ompt_instdir=${targetdir}/${architecture}/lib/shared${tauoptions}
     mkdir -p ${ompt_instdir}
     cp ${libomp_ossdir}/libiomp5.so ${ompt_instdir}/lib${libomp_oss_name}.so ; 
