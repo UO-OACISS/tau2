@@ -3161,8 +3161,10 @@ fi
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     config_compiler=`which $cxx_compiler`
     comp_minus_darshan=`echo $config_compiler | sed -e 's/darshan//g'` 
+    darshan_module_loaded=`env | grep LOADEDMODULES | grep darshan | wc -l`
+
     
-    if [ $config_compiler = $comp_minus_darshan ] ; then
+    if [ $config_compiler = $comp_minus_darshan -a $darshan_module_loaded -eq 0 ] ; then
 	echo "NOTE: Darshan test successful"
     else
 	echo "NOTE: --------------------------------------------------------------"
