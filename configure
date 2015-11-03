@@ -877,6 +877,7 @@ omptlib=
 omptlibrary=-liomp5
 omptenabled=no
 download_ompt=no
+install_ompt=no
 xlsmp=no
 ibmxlc=no
 ibmxlc_r=no 
@@ -5885,12 +5886,13 @@ if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
 fi
 
-libomp_oss=LLVM-openmp-0.1-spack
+libomp_oss=LLVM-openmp-0.1
 libomp_osstgz=${libomp_oss}.tar.gz
-libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1-spack.tar.gz
+libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
 libomp_ossinc=${targetdir}/include
+libomp_cmake_instdir=${targetdir}/${architecture}
 
 if [ ! -r ${libomp_ossdir} ] ; then
   mkdir -p ${libomp_ossdir}
@@ -5907,16 +5909,6 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   fi
 fi
 
-if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so ] ; then
-    preomptdir=`pwd`
-
-    #check the CMAKE version
-    [[ $(cmake --version) =~ ([0-9][.][0-9.]*) ]] && version="${BASH_REMATCH[1]}"
-    if ! awk -v ver="$version" 'BEGIN { if (ver < 2.8) exit 1; }'; then
-        echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
-	    exit 1;
-    fi
-
     ompt_c_compiler=$c_compiler
     ompt_cxx_compiler=$cxx_compiler
     if [ "${cxx_compiler}" != "icpc" ] ; then
@@ -5931,6 +5923,19 @@ if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so
         fi
       fi
     fi
+
+if [ "x$download_ompt" = xyes ] ; then
+  if [ ! -f ${targetdir}/${architecture}/lib/shared-disable/lib${libomp_oss_name}.a ] ; then
+    install_ompt=yes
+    preomptdir=`pwd`
+
+    #check the CMAKE version
+    [[ $(cmake --version) =~ ([0-9][.][0-9.]*) ]] && version="${BASH_REMATCH[1]}"
+    if ! awk -v ver="$version" 'BEGIN { if (ver < 2.8) exit 1; }'; then
+        echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
+	    exit 1;
+    fi
+
     echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
 
     if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
@@ -5959,9 +5964,9 @@ if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so
       libomp_oss_log=build.log
       specialflags=""
       if [ "x$machine" = "xmic_linux" ] ; then
-        libomp_oss_log=../build-mic.log
+        libomp_oss_log=build-mic.log
         archarg="arch=mic"
-        specialflags='CXXFLAGS="-mmic -D__MIC2__" CFLAGS=-mmic -D__MIC2__"'
+        specialflags='-DCMAKE_CXX_FLAGS="-mmic -D__MIC2__" -DCMAKE_C_FLAGS="-mmic -D__MIC2__"'
 	  fi
 
 	  # fix the expected path for bin 
@@ -5969,11 +5974,13 @@ if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so
         /bin/rm -f $ompt_dir/${libomp_oss_name}.so
       fi
 
-      echo "building $libomp_oss (see `pwd`/runtime/build-${ompt_cxx_compiler}/${libomp_oss_log} for log)..."
-	  cd runtime
-	  mkdir -p build-${ompt_cxx_compiler}
+      echo "building $libomp_oss (see `pwd`/build-${ompt_cxx_compiler}/${libomp_oss_log} for log)..."
+	  rm -rf build-${ompt_cxx_compiler}
+	  mkdir build-${ompt_cxx_compiler}
 	  cd build-${ompt_cxx_compiler}
-	  cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${targetdir}/${architecture} .. > $libomp_oss_log 2>&1
+      libomp_cmake_instdir=`pwd`
+	  echo cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. 
+	  cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
       result=$?
       if [ $result -eq 0 ] ; then
 	    make clean
@@ -5982,27 +5989,31 @@ if [ "x$download_ompt" = xyes -a ! -f ${targetdir}/${architecture}/lib/libomp.so
         if [ $result -eq 0 ] ; then
 	      make install >> $libomp_oss_log 2>&1
           # copy the header to our source area, anyway - we need it.
-          cp ${targetdir}/${architecture}/include/*.h ${START_DIR}/include/.
-          # the "make install" will put an include directory under the $arch - remove it.
-          rm -rf ${targetdir}/${architecture}/include
+          cp ./include/*.h ${START_DIR}/include/.
+          libomp_ossdir=${libomp_cmake_instdir}/lib
           echo "...Success."
-		fi
+        else
+          echo "ERROR BUILDING $libomp_ossdir!"
+          echo "Please check `pwd`/${libomp_oss_log}"
+		  exit 1; 
+        fi
       else
         echo "ERROR BUILDING $libomp_ossdir!"
         echo "Please check `pwd`/${libomp_oss_log}"
 		exit 1; 
       fi
-	  cd ../..
-
-      # only build the dynamic version for now
-      # if [ "${architecture}" = "craycnl" ] ; then
-      # fi # if arch == craycnl
+	  cd ..
     fi
+  else
+    install_ompt=no
+  fi
   omptlib=${libomp_ossdir}
   omptlibrary=-l${libomp_oss_name}
   cd $preomptdir
 else
-  if [ $ompt = "yes" ] ; then
+  # not building OMPT, but...
+  install_ompt=yes
+  if [ $ompt = "yes" -a ! -f ${START_DIR}/include/ompt.h ] ; then
     # we need the ompt header for building TAU
     cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
   fi
@@ -9279,19 +9290,24 @@ echo "***********************************************************************"
 
 #echo "Before HERE --> ompt=$ompt libomp_ossdir=${libomp_ossdir}  ${libomp_ossdir}/lib${libomp_oss_name}.so "
 # Special OMPT processing that needs tauoptions to be set
-if [ $ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
+if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
   if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     echo "BGQ ompt"
   else
     echo "TAU: Copying lib${libomp_oss_name}.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
     ompt_instdir=${targetdir}/${architecture}/lib/shared${tauoptions}
     mkdir -p ${ompt_instdir}
-    cp ${libomp_ossdir}/libiomp5.so ${ompt_instdir}/lib${libomp_oss_name}.so ; 
-    cp ${libomp_ossdir}/libomp.so ${ompt_instdir}/libomp.so ; 
-    cp ${libomp_ossdir}/libgomp.so ${ompt_instdir}/libgomp.so ; 
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ; 
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
     fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    ompt_instdir=${targetdir}/${architecture}/lib/static${tauoptions}
+    mkdir -p ${ompt_instdir}
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+    mkdir -p ${ompt_instdir}
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
   fi
 fi
 # Save the FixMakefile args
