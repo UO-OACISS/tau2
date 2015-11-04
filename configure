@@ -5929,11 +5929,11 @@ if [ "x$download_ompt" = xyes ] ; then
     install_ompt=yes
     preomptdir=`pwd`
 
-    #check the CMAKE version
-    [[ $(cmake --version) =~ ([0-9][.][0-9.]*) ]] && version="${BASH_REMATCH[1]}"
-    if ! awk -v ver="$version" 'BEGIN { if (ver < 2.8) exit 1; }'; then
+    #check Cmake exists
+    cmake_cmd=`which cmake`
+    if [ "x$cmake_cmd" = "x" ] ; then 
         echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
-	    exit 1;
+        exit 1;
     fi
 
     echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
