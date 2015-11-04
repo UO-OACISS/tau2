@@ -413,8 +413,8 @@ case $1 in
 	echo "s,^TAU_BOOSTINC=.*$,TAU_BOOSTINC=$boostinc,g" >> $sedout
 	;;
      boostlib=*)
-        boostlib=`echo $1 | sed -e 's/^boostlib=//'`
-	echo "s,^TAU_BOOSTLIB=.*$,TAU_BOOSTLIB=$boostlib,g" >> $sedout
+        boostlib=`echo $1 | sed -e 's/^boostlib=//' -e 's/#/ /g'`
+	echo "s&^TAU_BOOSTLIB=.*$&TAU_BOOSTLIB=$boostlib&g" >> $sedout
 	;;
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
@@ -1656,6 +1656,12 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      ANSIC)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     APEX)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BOOST)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 # PROFILING OPTIONS

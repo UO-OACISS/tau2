@@ -1,0 +1,14 @@
+include apex.mk
+
+build/CMakeCache.txt:
+	mkdir -p build
+	cd build && cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=$(CC) -DCMAKE_CXX_COMPILER=$(CXX) -DBUILD_TESTS=FALSE -DBUILD_EXAMPLES=TRUE -DBOOST_ROOT=$(BOOSTROOT) $(BFDOPT) -DUSE_ACTIVEHARMONY=TRUE -DACTIVEHARMONY_ROOT=$(PREFIX)/$(TAUARCH) -DTAU_ROOT=$(PREFIX) -DCMAKE_INSTALL_PREFIX=$(PREFIX)/$(TAUARCH) -DTAU_ARCH=$(TAUARCH) $(TAUCFLAGS) $(TAUCXXFLAGS) ..
+
+all : build/CMakeCache.txt
+	$(MAKE) -C build all
+
+install: all
+	$(MAKE) -C build install
+
+clean:
+	rm -rf build
