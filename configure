@@ -5183,6 +5183,11 @@ cat <<EOF > pgiacctest.C
 #include <stddef.h>
 #include <openacc.h>
 #include "pgi_acc_prof.h"
+extern "C" void
+acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup lookup)
+{ 
+return ;
+}
 EOF
     if $cxx_compiler $orig_useropt -c pgiacctest.C 1> /dev/null 2>&1
     then
