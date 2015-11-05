@@ -9354,16 +9354,20 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_n
     ompt_instdir=${targetdir}/${architecture}/lib/shared${tauoptions}
     mkdir -p ${ompt_instdir}
     cp ${libomp_ossdir}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ; 
+    cp ${libomp_ossdir}/libomp.so ${ompt_instdir}/libomp.so ;
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
     fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
     ompt_instdir=${targetdir}/${architecture}/lib/static${tauoptions}
     mkdir -p ${ompt_instdir}
     cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
     ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
     mkdir -p ${ompt_instdir}
     cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
 	# apex also needs the headers...
 	mkdir -p ${targetdir}/${architecture}/include
     cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include
