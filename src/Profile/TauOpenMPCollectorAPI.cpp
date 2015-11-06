@@ -1732,6 +1732,16 @@ void ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version,
   __ompt_initialize();
 }
 
+#ifndef ompt_initialize_t
+#define OMPT_API_FNTYPE(fn) fn##_t
+#define OMPT_API_FUNCTION(return_type, fn, args)  \
+        typedef return_type (*OMPT_API_FNTYPE(fn)) args
+OMPT_API_FUNCTION(void, ompt_initialize, (
+    ompt_function_lookup_t ompt_fn_lookup,
+    const char *runtime_version,
+    unsigned int ompt_version
+));
+#endif
 ompt_initialize_t ompt_tool() { return ompt_initialize; }
 
 }; // extern "C"
