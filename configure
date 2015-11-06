@@ -8339,10 +8339,11 @@ EOF
     fi
     /bin/rm -f vttest.cpp vttest.o
 fi
-	
+
+build_apex()
+{
 if [ $apex = yes ] ; then
     cd ${START_DIR}
-	echo "in directory: `pwd`"
     if [ $boost = no ] ; then 
 	    echo "Error: APEX requires Boost 1.54 or newer. Please specify the Boost installation location with the -boost option."
 	    exit 1;
@@ -8356,7 +8357,7 @@ if [ $apex = yes ] ; then
         echo 'ERROR: cmake version 2.8 or higher required to build APEX.'
         exit 1;
     fi
-	echo "Note: Building APEX"
+	echo "NOTE: Building APEX"
 	apex_include_file=apex/apex.mk
 	rm -f ${apex_include_file}
 	touch ${apex_include_file}
@@ -8364,6 +8365,7 @@ if [ $apex = yes ] ; then
     echo "CXX=${cxx_compiler}" >> ${apex_include_file}
     echo "PREFIX=${targetdir}" >> ${apex_include_file}
     echo "TAUARCH=${architecture}" >> ${apex_include_file}
+    echo "TAUOPTIONS=${tauoptions}" >> ${apex_include_file}
     echo "BOOSTROOT=${boostdir}" >> ${apex_include_file}
 	if [ ! "x${bfddir}" = "x" ] ; then
         echo "BFDOPT=-USE_BFD=TRUE -DBFD_ROOT=${bfddir}" >> ${apex_include_file}
@@ -8387,6 +8389,7 @@ if [ $apex = yes ] ; then
     fixmakeargs="$fixmakeargs APEX "
 	make -C apex clean
 fi
+}
 
 if [ $java = yes ] ; then
     fixmakeargs="$fixmakeargs JAVA jdkdir=$jdkdir"
@@ -9373,6 +9376,10 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_n
     cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include
   fi
 fi
+
+# doing this now, so that tauoptions is defined.
+build_apex
+
 # Save the FixMakefile args
 # Clear any old data
 grep "^#" ./utils/FixMakefile.info > ./utils/FixMakefile.info~~0
