@@ -513,7 +513,7 @@ for arg in "$@" ; do
 			  roseUsed=$TRUE
 			fi
 
-			if [ $pdtParserType = cxxparse ] ; then
+			if [ $pdtParserType = cxxparse -o $pdtParserType = cxxparse4101 ] ; then
 			    groupType=$group_C
 			    isCXXUsedForC=$TRUE
 			    isCurrentFileC=$TRUE
