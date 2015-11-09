@@ -374,7 +374,7 @@ for arg in "$@"; do
 	    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
 	    echo "-ompt=<dir | download> ...... Specify a libiomp5 directory or download."
 	    echo "    Note: 'download' will download and build the library automatically."
-	    echo "    Note: 'download' only supports the Intel OpenMP runtime."
+	    echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
 	    echo ""
 	    echo "SHMEM Options:"
 	    echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
@@ -396,6 +396,7 @@ for arg in "$@"; do
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
 	    echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
@@ -509,8 +510,9 @@ for arg in "$@"; do
 	    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
 	    echo "-ompt=<dir | download> ...... Specify a libiomp5 directory or download."
 	    echo "    Note: 'download' will download and build the library automatically."
-	    echo "    Note: 'download' only supports the Intel OpenMP runtime."
+	    echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
@@ -518,6 +520,7 @@ for arg in "$@"; do
 	    echo "-android_platform=VERSION ........ Android platform version, e.g. '19'."
 	    echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
 	    echo "-boost=<dir> ....................... Specify location of Boost Package."
+	    echo "-apex ......................................... Build the APEX package."
 	    echo "-dyninst=<dir> ................... Specify location of DynInst Package."
 	    echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
 	    echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
@@ -552,7 +555,8 @@ for arg in "$@"; do
 	    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
 	    echo "-cudalibrary=<dir> ................ Additional options or library      "
 	    echo "            locations to add when linking to the cuda driver libraries."
-	    echo " "
+	    echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
+	    echo "  Note: This option is needed when used with -cuda=<dir> option. "
 	    echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
 	    echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
 	    echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -750,6 +754,8 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+beacon=no
+beacondir="/"
 darshan=no
 enable_export_dynamic=no
 perfsuite=no
@@ -860,6 +866,7 @@ forceshared=no
 opari_region=no
 opari_construct=no
 boost=no
+apex=no
 dyninst=no
 dyninstinc=no
 dyninstlib=no
@@ -872,6 +879,7 @@ omptlib=
 omptlibrary=-liomp5
 omptenabled=no
 download_ompt=no
+install_ompt=no
 xlsmp=no
 ibmxlc=no
 ibmxlc_r=no 
@@ -970,14 +978,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort' "
 		exit 1
 	    fi
 	    shift
@@ -1185,6 +1193,15 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+    -beacon=*)
+        beacon=yes
+	    beacondir=`echo $arg | sed -e 's/-beacon=//'`
+	    if [ ! -d $beacondir ] ; then
+		echo "Error: Cannot access BEACON directory $beacondir"
+		exit 1
+	    fi
+        shift
+        ;;
 	-papi=*)
 	    papi=yes
 	    papidir=`echo $arg | sed -e 's/-papi=//'`
@@ -1566,6 +1583,11 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-apex)
+	    apex=yes
+	    shift
+	    ;;
+
 	-boost=*)
 	    boost=yes
 	    boostdir=`echo $arg | sed -e 's/-boost=//'`
@@ -1672,6 +1694,7 @@ for arg in "$@"; do
           echo "Error: OMPT directory $ompt_dir cannot be accessed"
           exit 1 
         fi 
+	    omptlib="${ompt_dir}/lib"
 	    shift
 	    ;;
 
@@ -3146,8 +3169,10 @@ fi
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     config_compiler=`which $cxx_compiler`
     comp_minus_darshan=`echo $config_compiler | sed -e 's/darshan//g'` 
+    darshan_module_loaded=`env | grep LOADEDMODULES | grep darshan | wc -l`
+
     
-    if [ $config_compiler = $comp_minus_darshan ] ; then
+    if [ $config_compiler = $comp_minus_darshan -a $darshan_module_loaded -eq 0 ] ; then
 	echo "NOTE: Darshan test successful"
     else
 	echo "NOTE: --------------------------------------------------------------"
@@ -4150,7 +4175,7 @@ case $fortran_compiler in
 	fixmakeargs="$fixmakeargs OPEN64ORC_FORTRAN"
 	;;  
 
-    intel)
+    intel|ifort)
 	if [ $cxx_compiler = ecpc ]
 	then
             echo "Default Fortran compiler will be Intel efc"
@@ -4753,7 +4778,10 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
-
+if [ $beacon = yes -a -d $beacondir -a -d $beacondir/include -a -d $beacondir/lib ]; then
+    fixmakeargs="$fixmakeargs BEACON beacondir=$beacondir"
+    tauoptions="${tauoptions}-beacon"
+fi
 
 if [ $papi = yes ] ; then
     fixmakeargs="$fixmakeargs PAPI papidir=$papidir"
@@ -5155,6 +5183,11 @@ cat <<EOF > pgiacctest.C
 #include <stddef.h>
 #include <openacc.h>
 #include "pgi_acc_prof.h"
+extern "C" void
+acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup lookup)
+{ 
+return ;
+}
 EOF
     if $cxx_compiler $orig_useropt -c pgiacctest.C 1> /dev/null 2>&1
     then
@@ -5858,14 +5891,20 @@ fi #unwind=download
     
 
 ######################################################################
-# Install Intel OpenMP runtime with OMPT if requested
+# Install Clang/LLVM OpenMP runtime with OMPT if requested
 ######################################################################
-libomp_oss=libomp_oss
-libomp_osstgz=${libomp_oss}-2015-03-05.tar.gz
-libomp_ossurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/${libomp_osstgz}
+
+if [ $ompt = yes ]; then
+  tauoptions="${tauoptions}-ompt"
+fi
+
+libomp_oss=LLVM-openmp-0.1
+libomp_osstgz=${libomp_oss}.tar.gz
+libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz
 libomp_oss_name=iomp5
 libomp_ossdir=${targetdir}/${architecture}/lib
 libomp_ossinc=${targetdir}/include
+libomp_cmake_instdir=${targetdir}/${architecture}
 
 if [ ! -r ${libomp_ossdir} ] ; then
   mkdir -p ${libomp_ossdir}
@@ -5882,19 +5921,35 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   fi
 fi
 
+    ompt_c_compiler=$c_compiler
+    ompt_cxx_compiler=$cxx_compiler
+    if [ "${cxx_compiler}" != "icpc" ] ; then
+      ompt_c_compiler=gcc
+      ompt_cxx_compiler=g++
+      libomp_oss_name=gomp
+      if [ "${architecture}" = "craycnl" ] ; then
+        if [ "${intel}" = "yes" ] ; then
+          ompt_c_compiler=icc
+          ompt_cxx_compiler=icpc
+          libomp_oss_name=iomp5
+        fi
+      fi
+    fi
+
 if [ "x$download_ompt" = xyes ] ; then
-  prebfddir=`pwd`
+  if [ ! -f ${targetdir}/${architecture}/lib/shared-disable/lib${libomp_oss_name}.a ] ; then
+    install_ompt=yes
+    preomptdir=`pwd`
 
-  # only build the dynamic version for now
+    #check Cmake exists
+    cmake_cmd=`which cmake`
+    if [ "x$cmake_cmd" = "x" ] ; then 
+        echo 'ERROR: cmake version 2.8 or higher required to build OMPT support.'
+        exit 1;
+    fi
 
-  # if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" ] && [ -r "$libomp_ossdir/lib${libomp_oss_name}.a" ] ; then
+    echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
 
-  if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -nt ${libomp_oss} ]; then
-    echo "Found: $libomp_ossdir/lib${libomp_oss_name}.so"
-    echo "libomp_oss download already found, skipping"
-    # copy the header to our source area, anyway - we need it.
-    cp ${libomp_ossinc}/ompt.h ${START_DIR}/include/.
-  else
     if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
       echo "NOTE: $libomp_ossdir/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
       /bin/rm -rf ${libomp_oss}
@@ -5918,94 +5973,61 @@ if [ "x$download_ompt" = xyes ] ; then
       echo "removing $libomp_osstgz..."
       rm $libomp_osstgz
       cd $libomp_oss
-      libomp_oss_log=build-dynamic.log
+      libomp_oss_log=build.log
       specialflags=""
       if [ "x$machine" = "xmic_linux" ] ; then
         libomp_oss_log=build-mic.log
         archarg="arch=mic"
-        specialflags="CXXFLAGS=-D__MIC2__ CFLAGS=-D__MIC2__"
+        specialflags='-DCMAKE_CXX_FLAGS="-mmic -D__MIC2__" -DCMAKE_C_FLAGS="-mmic -D__MIC2__"'
 	  fi
 
-      if [ "$cxx_compiler" != "icpc" ] ; then
-        ompt_compiler="compiler=gcc"
-      fi
-
 	  # fix the expected path for bin 
-      cp tools/common.inc tmp.inc
       if [ -r $ompt_dir/${libomp_oss_name}.so ]; then 
         /bin/rm -f $ompt_dir/${libomp_oss_name}.so
       fi
 
-      sed 's/x86_64-k1om-linux\///' tmp.inc > tools/common.inc
-      rm tmp.inc
-      echo "building dynamic $libomp_oss (see `pwd`/${libomp_oss_log} for log)..."
-      make $specialflags $ompt_compiler $archarg > $libomp_oss_log 2>&1
+      echo "building $libomp_oss (see `pwd`/build-${ompt_cxx_compiler}/${libomp_oss_log} for log)..."
+	  rm -rf build-${ompt_cxx_compiler}
+	  mkdir build-${ompt_cxx_compiler}
+	  cd build-${ompt_cxx_compiler}
+      libomp_cmake_instdir=`pwd`
+	  echo cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. 
+	  cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
       result=$?
-      signature=`ls -tr tmp | grep rel | grep dyn | tail -1`
       if [ $result -eq 0 ] ; then
-        cp tmp/${signature}/lib${libomp_oss_name}.so ${libomp_ossdir}/.
-        cp exports/common/include/ompt.h ${libomp_ossinc}/.
-        #cp src/ompt-event.h ${libomp_ossinc}/.
-        #cp src/ompt-state.h ${libomp_ossinc}/.
-        cp exports/common/include/ompt.h ${START_DIR}/include/.
-        #cp src/ompt-event.h ${START_DIR}/include/.
-        #cp src/ompt-state.h ${START_DIR}/include/.
-        echo "...Success."
-      else
-        if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.so ] ; then
-          cp tmp/${signature}/unstripped/lib${libomp_oss_name}.so ${libomp_ossdir}/.
-          cp exports/common/include/ompt.h ${libomp_ossinc}/.
-          #cp src/ompt-event.h ${libomp_ossinc}/.
-          #cp src/ompt-state.h ${libomp_ossinc}/.
-          cp exports/common/include/ompt.h ${START_DIR}/include/.
-          #cp src/ompt-event.h ${START_DIR}/include/.
-          #cp src/ompt-state.h ${START_DIR}/include/.
-          echo "...Success."
-		else
-          echo "ERROR BUILDING $libomp_ossdir!"
-          echo "Please check `pwd`/${libomp_oss_log}"
-		    exit 1; 
-		fi
-      fi
-
-      # only build the dynamic version for now
-      if [ "${architecture}" = "craycnl" ] ; then
-        libomp_oss_log=build-static.log
-        echo "building static $libomp_oss... (see `pwd`/${libomp_oss_log} for log)"
-        make linktype=static $ompt_compiler $specialflags $archarg > $libomp_oss_log 2>&1
-        signature=`ls -tr tmp | grep rel | grep sta | tail -1`
+	    make clean
+	    make >> $libomp_oss_log 2>&1
+        result=$?
         if [ $result -eq 0 ] ; then
-          cp tmp/${signature}/lib${libomp_oss_name}.a ${libomp_ossdir}/.
-          cp exports/common/include/ompt.h ${libomp_ossinc}/.
-          #cp src/ompt-event.h ${libomp_ossinc}/.
-          #cp src/ompt-state.h ${libomp_ossinc}/.
-          cp exports/common/include/ompt.h ${START_DIR}/include/.
-          #cp src/ompt-event.h ${START_DIR}/include/.
-          #cp src/ompt-state.h ${START_DIR}/include/.
+	      make install >> $libomp_oss_log 2>&1
+          # copy the header to our source area, anyway - we need it.
+          cp ./include/*.h ${START_DIR}/include/.
+          libomp_ossdir=${libomp_cmake_instdir}/lib
           echo "...Success."
         else
-          if [ -f tmp/${signature}/unstripped/lib${libomp_oss_name}.a ] ; then
-            cp tmp/${signature}/unstripped/lib${libomp_oss_name}.a ${libomp_ossdir}/.
-            cp exports/common/include/ompt.h ${libomp_ossinc}/.
-            #cp src/ompt-event.h ${libomp_ossinc}/.
-            #cp src/ompt-state.h ${libomp_ossinc}/.
-            cp exports/common/include/ompt.h ${START_DIR}/include/.
-            #cp src/ompt-event.h ${START_DIR}/include/.
-            #cp src/ompt-state.h ${START_DIR}/include/.
-            echo "...Success."
-		  else
-            echo "ERROR BUILDING $libomp_ossdir!"
-            echo "Please check `pwd`/${libomp_oss_log}"
-		    exit 1; 
-	  fi # if library exists
-        fi # if result == 0
-      fi # if arch == craycnl
+          echo "ERROR BUILDING $libomp_ossdir!"
+          echo "Please check `pwd`/${libomp_oss_log}"
+		  exit 1; 
+        fi
+      else
+        echo "ERROR BUILDING $libomp_ossdir!"
+        echo "Please check `pwd`/${libomp_oss_log}"
+		exit 1; 
+      fi
     fi
+  else
+    install_ompt=no
   fi
   omptlib=${libomp_ossdir}
   omptlibrary=-l${libomp_oss_name}
-  tauoptions="${tauoptions}-ompt"
-  cd $prebfddir
+  cd $preomptdir
+else
+  # not building OMPT, but...
+  install_ompt=yes
+  if [ $ompt = "yes" -a ! -f ${START_DIR}/include/ompt.h ] ; then
+    # we need the ompt header for building TAU
+    cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
+  fi
 fi #ompt=download
     
 
@@ -8008,8 +8030,8 @@ if [ $cuda = yes ] ; then
 	if [ -f "$cudainclude/cuda.h" ] ; then
 	    fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 	    if [ "$opencl" != "disable" ] ; then
-		if [ -f "$cudainclude/CL/cl.h" ] ; then
-		    $echo "Checking $cxx_compiler compatablity with OpenCL... ${nnl}"
+		if [ "$use_opencl" = "no" -a -f "$cudainclude/CL/cl.h" ] ; then
+		    $echo "Checking $cxx_compiler compatibility with OpenCL... ${nnl}"
 		    cat <<EOF>opencl.cpp
 #include "CL/cl.h"
 EOF
@@ -8317,9 +8339,57 @@ EOF
     fi
     /bin/rm -f vttest.cpp vttest.o
 fi
-	
-	
 
+build_apex()
+{
+if [ $apex = yes ] ; then
+    cd ${START_DIR}
+    if [ $boost = no ] ; then 
+	    echo "Error: APEX requires Boost 1.54 or newer. Please specify the Boost installation location with the -boost option."
+	    exit 1;
+	fi
+    if [ $openmp = no -a $pthread = no ] ; then 
+	    echo "Error: APEX is for multithreaded runtimes. Please configure TAU with thread support (pthread or OpenMP)."
+	    exit 1;
+	fi
+    cmake_cmd=`which cmake`
+    if [ "x$cmake_cmd" = "x" ] ; then 
+        echo 'ERROR: cmake version 2.8 or higher required to build APEX.'
+        exit 1;
+    fi
+	echo "NOTE: Building APEX"
+	apex_include_file=apex/apex.mk
+	rm -f ${apex_include_file}
+	touch ${apex_include_file}
+	echo "CC=${c_compiler}" >> ${apex_include_file}
+    echo "CXX=${cxx_compiler}" >> ${apex_include_file}
+    echo "PREFIX=${targetdir}" >> ${apex_include_file}
+    echo "TAUARCH=${architecture}" >> ${apex_include_file}
+    echo "TAUOPTIONS=${tauoptions}" >> ${apex_include_file}
+    echo "BOOSTROOT=${boostdir}" >> ${apex_include_file}
+	if [ ! "x${bfddir}" = "x" ] ; then
+        echo "BFDOPT=-USE_BFD=TRUE -DBFD_ROOT=${bfddir}" >> ${apex_include_file}
+	else 
+		if [ ${bfd_worked} = "yes" ] ; then
+        	echo 'BFDOPT=-DUSE_BFD=TRUE' >> ${apex_include_file}
+		fi
+	fi
+	if [ ${architecture} = "mic_linux" ] ; then
+		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-mmic' >> ${apex_include_file}
+		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-mmic -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
+	fi
+	if [ ! "x${omptlib}" = "x" ] ; then
+		if [ "${download_ompt}" = "yes" ] ; then
+        	echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${targetdir}/${architecture}" >> ${apex_include_file}
+		else
+        	echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${omptlib}" >> ${apex_include_file}
+		fi
+	fi
+	cp etc/Makefile.apex apex/Makefile
+    fixmakeargs="$fixmakeargs APEX "
+	make -C apex clean
+fi
+}
 
 if [ $java = yes ] ; then
     fixmakeargs="$fixmakeargs JAVA jdkdir=$jdkdir"
@@ -8669,7 +8739,7 @@ if [ $boost = yes ] ; then
       fixmakeargs="$fixmakeargs boostinc=-I$boostdir/include"
     fi
     if [ "x$boostdir" != "x" -a -d $boostdir -a -d $boostdir/lib ]; then
-      fixmakeargs="$fixmakeargs boostlib=-L$boostdir/lib -Wl,-rpath,$boostdir/lib"
+      fixmakeargs="$fixmakeargs boostlib=-L$boostdir/lib#-Wl,-rpath,$boostdir/lib"
     fi
 fi
 
@@ -8701,6 +8771,9 @@ if [ $dyninst = yes ] ; then
     fi
     if [ -r $dyninstdir/include/walker.h -o $dyninstincdir/walker.h ] ; then
 	fixmakeargs="$fixmakeargs DYNINST8"
+    fi
+    if [ -r $dyninstdir/include/version.h ] ; then
+	fixmakeargs="$fixmakeargs DYNINST9"
     fi
 fi
 
@@ -9276,22 +9349,37 @@ echo "***********************************************************************"
 
 #echo "Before HERE --> ompt=$ompt libomp_ossdir=${libomp_ossdir}  ${libomp_ossdir}/lib${libomp_oss_name}.so "
 # Special OMPT processing that needs tauoptions to be set
-if [ $ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
+if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
   if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     echo "BGQ ompt"
   else
-    echo "TAU: Copying libiomp5_ompt.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
-    mkdir -p ${targetdir}/${architecture}/lib/shared${tauoptions}
-    cp ${libomp_ossdir}/libiomp5.so ${targetdir}/${architecture}/lib/shared${tauoptions}/lib${libomp_oss_name}.so ; 
+    echo "TAU: Copying lib${libomp_oss_name}.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
+    ompt_instdir=${targetdir}/${architecture}/lib/shared${tauoptions}
+    mkdir -p ${ompt_instdir}
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ; 
+    cp ${libomp_ossdir}/libomp.so ${ompt_instdir}/libomp.so ;
     echo "ompt_dir=$ompt_dir"
-   # if [ "x$ompt_dir" = "x" -a -r ${libomp_ossdir}/libiomp5.so ]; then
-	#/bin/rm -f ${libomp_ossdir}/libiomp5.so
-#	echo "Removing ${libomp_ossdir}/libiomp5.so"
-   # fi
-    omptlinking="-Wl,-rpath=$omptlib/shared${tauoptions}#-L$omptlib/shared${tauoptions}#$omptlibrary"
+    omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
     fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
+    ompt_instdir=${targetdir}/${architecture}/lib/static${tauoptions}
+    mkdir -p ${ompt_instdir}
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
+    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+    mkdir -p ${ompt_instdir}
+    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
+	# apex also needs the headers...
+	mkdir -p ${targetdir}/${architecture}/include
+    cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include
   fi
 fi
+
+# doing this now, so that tauoptions is defined.
+build_apex
+
 # Save the FixMakefile args
 # Clear any old data
 grep "^#" ./utils/FixMakefile.info > ./utils/FixMakefile.info~~0
