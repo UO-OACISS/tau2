@@ -353,11 +353,12 @@ if [ $track_io = "true" ] ; then
 fi
 
 if [ $track_numa = "true" ]; then
-   echo "papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM > /dev/null"
    options=`echo $theBinding | sed -e 's/shared-//g' `
    mk=$BASEDIR/lib/Makefile.tau-$options
    if [ -r $mk ]; then 
-     echo "MAKEFILE=$mk"
+     if [ $verbose = "true" ]; then 
+       echo "Using TAU_MAKEFILE=$mk to extract PAPIDIR"
+     fi
      papibin=`grep "^PAPIDIR" $mk | sed -e 's/^PAPIDIR=//g' | head -n 1 `/bin
      if [ "x$papibin" != "x" -a -x $papibin/papi_event_chooser ]; then
        $papibin/papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM &> /dev/null
@@ -366,7 +367,7 @@ if [ $track_numa = "true" ]; then
           if [ $verbose = "true" ]; then 
 	    echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for tau_exec -numa"
           fi
-	  export TAU_METRICS=TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
+	  export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
        else 
          echo "WARNING: tau_exec: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
        fi
