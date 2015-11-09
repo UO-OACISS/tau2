@@ -107,6 +107,7 @@ extraloadlibs=""
 track_pthread=false
 track_gomp=false
 use_gdb=false
+track_numa=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -131,6 +132,10 @@ for arg in "$@" ; do
 	      ;;
 	  -io)
 	      track_io=true
+	      shift
+	      ;;
+	  -numa)
+	      track_numa=true
 	      shift
 	      ;;
 	  -memory)
@@ -344,6 +349,30 @@ if [ $track_io = "true" ] ; then
     TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
     #Needed for the auditor
     export LD_BIND_NOW=1
+fi
+
+if [ $track_numa = "true" ]; then
+   echo "papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM > /dev/null"
+   options=`echo $theBinding | sed -e 's/shared-//g' `
+   mk=$BASEDIR/lib/Makefile.tau-$options
+   if [ -r $mk ]; then 
+     echo "MAKEFILE=$mk"
+     papibin=`grep "^PAPIDIR" $mk | sed -e 's/^PAPIDIR=//g' | head -n 1 `/bin
+     if [ "x$papibin" != "x" -a -x $papibin/papi_event_chooser ]; then
+       $papibin/papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM &> /dev/null
+       ret=$?
+       if [ $ret = 0 -a "x$TAU_METRICS" = "x" ]; then
+          if [ $verbose = "true" ]; then 
+	    echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for tau_exec -numa"
+          fi
+	  export TAU_METRICS=TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
+       else 
+         echo "WARNING: tau_exec: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+       fi
+     fi
+   else
+     echo "WARNING: tau_exec: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+   fi
 fi
 
 if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
