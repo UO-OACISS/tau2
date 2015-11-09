@@ -7492,6 +7492,8 @@ bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir
 # Check for BFD
 ######################################################################
 cat <<EOF > conftest_bfd.c
+#define PACKAGE TAU
+#define PACKAGE_VERSION 2.25
 #include <bfd.h>
 //#ifdef __APPLE__
 //#include <crt_externs.h>
