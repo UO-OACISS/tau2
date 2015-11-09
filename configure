@@ -7533,6 +7533,8 @@ cat <<EOF > conftest_bfd.c
 #ifdef MPC_MODULE_MPC_Config
 #include <mpc.h>
 #endif 
+#define PACKAGE TAU
+#define PACKAGE_VERSION 2.25
 #include <bfd.h>
 int main(int argc, char **argv) {
    bfd_init();
