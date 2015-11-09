@@ -1716,11 +1716,12 @@ int __ompt_initialize() {
   return 1;
 }
 
+extern "C" {
 #if OMPT_VERSION < 2
-extern "C" int ompt_initialize(ompt_function_lookup_t lookup) {
+int ompt_initialize(ompt_function_lookup_t lookup) {
 #else
 // the newest version of the library will have a version as well
-extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, unsigned int ompt_version) {
+void ompt_initialize(ompt_function_lookup_t lookup, const char *runtime_version, unsigned int ompt_version) {
   TAU_VERBOSE("Init: %s ver %i\n",runtime_version,ompt_version);
 #endif
 #ifndef BROKEN_CPLUSPLUS_INTERFACE
@@ -1728,8 +1729,22 @@ extern "C" int ompt_initialize(ompt_function_lookup_t lookup, const char *runtim
   ompt_enumerate_state = (ompt_enumerate_state_t) lookup("ompt_enumerate_state");
   ompt_get_state = (ompt_get_state_t) lookup("ompt_get_state");
 #endif
-  return __ompt_initialize();
+  __ompt_initialize();
 }
+
+#ifndef ompt_initialize_t
+#define OMPT_API_FNTYPE(fn) fn##_t
+#define OMPT_API_FUNCTION(return_type, fn, args)  \
+        typedef return_type (*OMPT_API_FNTYPE(fn)) args
+OMPT_API_FUNCTION(void, ompt_initialize, (
+    ompt_function_lookup_t ompt_fn_lookup,
+    const char *runtime_version,
+    unsigned int ompt_version
+));
+#endif
+ompt_initialize_t ompt_tool() { return ompt_initialize; }
+
+}; // extern "C"
 
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
 std::string * Tau_get_thread_ompt_state(int tid) {

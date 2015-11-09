@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -513,7 +513,7 @@ for arg in "$@" ; do
 			  roseUsed=$TRUE
 			fi
 
-			if [ $pdtParserType = cxxparse ] ; then
+			if [ $pdtParserType = cxxparse -o $pdtParserType = cxxparse4101 ] ; then
 			    groupType=$group_C
 			    isCXXUsedForC=$TRUE
 			    isCurrentFileC=$TRUE
@@ -1292,6 +1292,12 @@ while [ $tempCounter -lt $numFiles ]; do
 
 	# if we are using cxxparse for a .c file, cxxparse spits out a .c.pdb file
 	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+	fi
+	if [ "x$defaultParser" = "xcxxparse4101" -a "x$suf" = "x.c" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+	fi
+	if [ "x$defaultParser" = "xedg44-cxx-roseparse" -a "x$suf" = "x.c" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
 	fi
         if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.for" ] ; then

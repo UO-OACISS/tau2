@@ -252,14 +252,14 @@ public class ChartData extends RMIChartData {
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			if (db.getSchemaVersion() == 0) {
-				buf.append(" avg(ims.exclusive_percentage), max(ims.inclusive) ");  // this ensures we get the main routine?
+				buf.append(" avg(ims.exclusive), max(ims.inclusive) ");  // this ensures we get the main routine?
 				buf.append("from interval_mean_summary ims ");
 				buf.append("inner join interval_event ie ");
 				buf.append("on ims.interval_event = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			} else {
-				buf.append(" avg(ims.exclusive_percent), max(ims.inclusive_value) ");  // this ensures we get the main routine?
+				buf.append(" avg(ims.exclusive_value), max(ims.inclusive_value) ");  // this ensures we get the main routine?
 				buf.append("from timer_value ims ");
 				buf.append("inner join timer_call_data tcd on tcd.id = ims.timer_call_data ");
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id and tcp.parent is null ");
@@ -1115,13 +1115,13 @@ public class ChartData extends RMIChartData {
 			buf.append("select ");
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 			if (db.getSchemaVersion() == 0) {
-				buf.append("sum(ims.exclusive_percentage) from interval_mean_summary ims ");
+				buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
 				buf.append("inner join interval_event ie ");
 				buf.append("on ims.interval_event = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			} else {
-				buf.append("sum(ims.exclusive_percent) from timer_value ims ");
+				buf.append("sum(ims.exclusive_value) from timer_value ims ");
 				buf.append("inner join timer_call_data tcd on tcd.id = ims.timer_call_data ");
 				buf.append("inner join timer_callpath tcp on tcp.id = tcd.timer_callpath ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
