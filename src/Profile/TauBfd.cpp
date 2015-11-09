@@ -16,6 +16,13 @@
 
 #include <TAU.h>
 #include <Profile/TauBfd.h>
+// Add these definitions because the Binutils comedians think all the world uses autotools
+#ifndef PACKAGE
+#define PACKAGE TAU
+#endif
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 2.25
+#endif
 #include <bfd.h>
 #if TAU_BFD >= 022300
 #include <elf-bfd.h>
