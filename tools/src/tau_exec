@@ -32,6 +32,7 @@ usage()
     echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
     echo "        -ompt         Track OpenMP events via OMPT interface"
     echo "        -power        Track power events via PAPI's perf RAPL interface"
+    echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
