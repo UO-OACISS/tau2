@@ -341,7 +341,7 @@ char * get_proxy_name(unsigned long ip) {
         strcpy(location, __UNKNOWN_ADDR__);
         return location;
     }
-    //TAU_OPENMP_SET_LOCK;
+    TAU_OPENMP_SET_LOCK;
     OmpHashNode * node = OmpTheHashTable()[ip];
     //TAU_OPENMP_UNSET_LOCK;
     if (!node) {
@@ -353,6 +353,7 @@ char * get_proxy_name(unsigned long ip) {
             unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
             routine = (char*)malloc(size);
             sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
+            fprintf(stdout, "TAU - get_proxy_name: node not found, routine=%s\n", routine); //AMAHEO
         } else {
         char addrString[64];
         sprintf(addrString, "%p", (void*)ip);
@@ -361,12 +362,15 @@ char * get_proxy_name(unsigned long ip) {
             sprintf(routine, "%s %s", __BFD_UNKNOWN__, addrString);
         }
     node->location = routine;
-        TAU_OPENMP_SET_LOCK;
+        //TAU_OPENMP_SET_LOCK;
         OmpTheHashTable()[ip] = node;
-        TAU_OPENMP_UNSET_LOCK;
+        //TAU_OPENMP_UNSET_LOCK;
     }
+
+    TAU_OPENMP_UNSET_LOCK; //AMAHEO
     location = (char*)malloc(strlen(node->location)+1);
     strcpy(location, node->location);
+    fprintf(stdout, "TAU - get_proxy_name: node found, location=%s\n", location); //AMAHEO
     return location;
 }
 #else /* defined (TAU_BFD) */
@@ -1159,7 +1163,7 @@ extern "C" void my_parallel_region_begin (
   Tau_collector_flags[tid].taskid = parallel_id; // necessary for IBM, appears broken
 #endif
   Tau_get_current_region_context(tid, (unsigned long)parallel_function, false);
-  //printf("%d New Region: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, parallel_id = %lu, parallel_function = %p %s %p\n", tid, parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_id, parallel_function, region_names[parallel_id], region_names[parallel_id]); fflush(stdout);
+  printf("%d New Region: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, parallel_id = %lu, parallel_function = %p %s %p\n", tid, parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_id, parallel_function, region_names[parallel_id], region_names[parallel_id]); fflush(stdout);
   Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1, false);
   Tau_collector_flags[tid].parallel++;
   TAU_OMPT_COMMON_EXIT;

@@ -597,11 +597,13 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
 {
   if (!TauEnv_get_bfd_lookup() || !Tau_bfd_checkHandle(handle)) {
     info.secure(probeAddr);
+    fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: could not get bfd lookup or check handle => FALSE\n"); //AMAHEO
     return false;
   }
 
   TauBfdUnit * unit = ThebfdUnits()[handle];
   if (unit == NULL) {
+    fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: unit NULL => FALSE\n"); //AMAHEO
       return false;
   }
   TauBfdModule * module;
@@ -620,6 +622,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   if (matchingIdx != -1) {
     if (!Tau_bfd_internal_loadSymTab(unit, matchingIdx)) {
       info.secure(probeAddr);
+     fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: no load symbol => FALSE\n"); //AMAHEO
       return false;
     }
     module = Tau_bfd_internal_getModuleFromIdx(unit, matchingIdx);
@@ -635,6 +638,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   } else {
     if (!Tau_bfd_internal_loadExecSymTab(unit)) {
       info.secure(probeAddr);
+     fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: no load exec symbol => FALSE\n"); //AMAHEO
       return false;
     }
     module = unit->executableModule;
@@ -680,6 +684,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     module->markLastResult(true);
 #endif /* TAU_INTEL12 */
     info.funcname = Tau_bfd_internal_tryDemangle(module->bfdImage, info.funcname);
+    fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: data found and func name => TRUE\n"); //AMAHEO
     return true;
   } 
 
@@ -703,6 +708,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
         // For Intel 12 workaround. Inform the module that the previous resolve was successful.
         module->markLastResult(true);
 #endif /* TAU_INTEL12 */
+        fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: data not found but match => TRUE\n"); //AMAHEO
         return true;
       }
     }
@@ -724,11 +730,13 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     info.probeAddr = probeAddr;
     info.funcname = (char*)malloc(32);
     sprintf((char*)info.funcname, "anonymous");
+    fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: partial info => TRUE\n"); //AMAHEO
     return true;
   }
 
   // Couldn't resolve the address so fill in fields as best we can.
   if (info.funcname == NULL) {
+    fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: funcname NULL => fill with address\n"); //AMAHEO
     info.funcname = (char*)malloc(128);
     sprintf((char*)info.funcname, "addr=<%lx>", probeAddr);
   }
@@ -742,6 +750,12 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   info.probeAddr = probeAddr;
   info.lineno = 0;
 
+  /* AMAHEO */
+  if(!info.funcname || info.funcname == NULL) {
+     fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: func name not found\n");
+  }
+
+  fprintf(stdout, "TAU - Tau_bfd_resolveBfdInfo: end of function => FALSE\n"); //AMAHEO
   return false;
 }
 
