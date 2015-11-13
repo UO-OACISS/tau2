@@ -43,6 +43,9 @@ $(TARGET):	$(OBJS)
 numa.o: numa.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+run: 
+	mpirun -np 4 tau_exec -T papi -numa ./$(TARGET)
+
 clean: 	
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
 ##############################################
