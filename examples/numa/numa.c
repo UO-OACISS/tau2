@@ -13,6 +13,7 @@
 
 #ifdef TAU_MPI
 #include <mpi.h>
+int rank;
 #endif /* TAU_MPI */
 
 ////////////////////////////////////////////////////////////////
@@ -42,6 +43,9 @@ void access_local( char *x, int node_id) {
         x = (char *) numa_alloc_onnode(array_size, node_id);
         //x = (char *) malloc(array_size);
         double t = measure_access(x, array_size, ntrips);
+#ifdef TAU_MPI
+  printf("Rank = %d ", rank);
+#endif /* TAU_MPI */
         printf("sequential core %d -> core 0 : BW %g MB/s\n",
             node_id, array_size*ntrips*cache_line_size / t / 1e6);
         numa_free(x, array_size);
@@ -55,6 +59,9 @@ void access_remote( char *x, int node_id) {
         x = (char *) numa_alloc_onnode(array_size, node_id);
         //x = (char *) malloc(array_size);
         double t = measure_access(x, array_size, ntrips);
+#ifdef TAU_MPI
+  printf("Rank = %d ", rank);
+#endif /* TAU_MPI */
         printf("sequential core %d -> core 0 : BW %g MB/s\n",
             node_id, array_size*ntrips*cache_line_size / t / 1e6);
         numa_free(x, array_size);
@@ -69,8 +76,6 @@ int main(int argc, char **argv)
   int num_cpus = numa_num_task_cpus();
   size_t i;
 #ifdef TAU_MPI
-  int rank;
-
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   printf("Rank = %d ", rank);
 #endif /* TAU_MPI */
