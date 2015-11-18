@@ -95,6 +95,8 @@ printUsage () {
     echo -e "  -optPdtCxxOpts=\"\"\t\tOptions for C++ parser in PDT (cxxparse). Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE) \$(TAU_DEFS)"
     echo -e "  -optPdtCxxReset=\"\"\t\tReset options to the C++ parser to the given list"
     echo -e "  -optPdtF90Parser=\"\"\t\tSpecify a different Fortran parser. For e.g., f90parse instead of f95parse"
+    echo -e "  -optPdtCParser=\"\"\t\tSpecify a different C parser. For e.g., cparse4101 instead of cparse"
+    echo -e "  -optPdtCxxParser=\"\"\t\tSpecify a different C++ parser. For e.g., cxxparse4101 instead of cxxparse"
     echo -e "  -optPdtGnuFortranParser\tSpecify the GNU gfortran PDT parser gfparse instead of f95parse"
     echo -e "  -optPdtCleanscapeParser\tSpecify the Cleanscape Fortran parser"
     echo -e "  -optPdtUser=\"\"\t\tOptional arguments for parsing source code"
@@ -441,6 +443,15 @@ for arg in "$@" ; do
 			if [ ${#pdtParserF} -gt 4 ]; then
 			    fortranParserDefined=$TRUE
 			fi
+			;;
+		    -optPdtCParser*)
+			pdtParserType=${arg#"-optPdtCParser="}
+			echoIfDebug "\tCParser read is: $pdtParserType"
+			;;
+
+		    -optPdtCxxParser*)
+			pdtParserType=${arg#"-optPdtCxxParser="}
+			echoIfDebug "\tCxxParser read is: $pdtParserType"
 			;;
 
 		    -optPdtDir*)
@@ -1237,7 +1248,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	    ;;
 	esac
 	evalWithDebugMessage "$pdtParserCmd" "Parsing with PDT for OpenMP directives verification:"
-	if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
+	if [ "x$defaultParser" = "xcxxparse" -o "x$defaultParser" = "xcxxparse4101" -a "x$suf" = "x.c" ] ; then
 	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.c.pdb"
         else
 	    pdbcommentCmd="$optPdtDir/pdbcomment -o ${base}.comment.pdb ${base}.pdb"

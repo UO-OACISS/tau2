@@ -4488,8 +4488,15 @@ void start_pes_(int * a1) {
     }
   TAU_PROFILE_START(t);
   (*start_pes__h)( a1);
+
+#ifdef TAU_PSHMEM_SGI_MPT
+  tau_totalnodes(1,pshmem_n_pes());
+  TAU_PROFILE_SET_NODE(pshmem_my_pe());
+#else /* TAU_PSHMEM_SGI_MPT */
   tau_totalnodes(1,_shmem_n_pes());
   TAU_PROFILE_SET_NODE(_shmem_my_pe());
+#endif /* TAU_PSHMEM_SGI_MPT */
+
   TAU_PROFILE_STOP(t);
   }
 
@@ -8973,8 +8980,13 @@ void start_pes__(int * a1) {
     }
   TAU_PROFILE_START(t);
   (*start_pes___h)( a1);
+#ifdef TAU_PSHMEM_SGI_MPT
+  tau_totalnodes(1,pshmem_n_pes());
+  TAU_PROFILE_SET_NODE(pshmem_my_pe());
+#else
   tau_totalnodes(1,_shmem_n_pes());
   TAU_PROFILE_SET_NODE(_shmem_my_pe());
+#endif
   TAU_PROFILE_STOP(t);
   }
 

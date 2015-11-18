@@ -829,6 +829,7 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 static bool initializing = false;
 static bool initialized = false;
 static bool ora_success = false;
+__thread bool is_master = false;
 
 #if TAU_DISABLE_SHARED
 extern int __omp_collector_api(void *);
@@ -1233,6 +1234,7 @@ extern "C" void my_thread_begin() {
 extern "C" void my_thread_begin(my_ompt_thread_type_t thread_type, ompt_thread_id_t thread_id) {
   // special entry?
 #endif // version
+  if (is_master) return;
   TAU_OMPT_COMMON_ENTRY;
   //TAU_VERBOSE("OMPT Created thread: %d\n", tid); fflush(stdout);
   Tau_create_top_level_timer_if_necessary();
@@ -1529,6 +1531,7 @@ int __ompt_initialize() {
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
+  is_master = true;
   TAU_OPENMP_INIT_LOCK;
 
   /* required events */
@@ -1557,8 +1560,8 @@ int __ompt_initialize() {
   CHECK(ompt_event_openmp_thread_begin, my_thread_begin, "thread_begin");
   CHECK(ompt_event_openmp_thread_end, my_thread_end, "thread_end");
 #else
-  //CHECK(ompt_event_thread_begin, my_thread_begin, "thread_begin");
-  //CHECK(ompt_event_thread_end, my_thread_end, "thread_end");
+  CHECK(ompt_event_thread_begin, my_thread_begin, "thread_begin");
+  CHECK(ompt_event_thread_end, my_thread_end, "thread_end");
 #endif
   CHECK(ompt_event_control, my_control, "event_control");
 #ifndef TAU_IBM_OMPT
