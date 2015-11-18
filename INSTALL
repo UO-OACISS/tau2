@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.24                          *
+ *                           Version 2.26                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -86,9 +86,9 @@ We typically use TAU by choosing a specific configuration by setting the
 TAU_MAKEFILE environment variable to point to the desired configuration. 
 
 e.g.,
-% export TAU_MAKEFILE=/path/to/tau-2.24.1/craycnl/lib/Makefile.tau-cray-papi-mpi-pdt
+% export TAU_MAKEFILE=/path/to/tau-2.25/craycnl/lib/Makefile.tau-cray-papi-mpi-pdt
 and then after putting TAU in the path:
-% export PATH=/path/to/tau-2.24.1/craycnl/bin:$PATH
+% export PATH=/path/to/tau-2.25/craycnl/bin:$PATH
 we substitute the compiler used with the TAU compiler scripts:
 
 % make CC=tau_cc.sh CXX=tau_cxx.sh F90=tau_f90.sh 
