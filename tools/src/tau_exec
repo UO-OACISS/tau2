@@ -487,6 +487,13 @@ if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; 
     fi
 fi
 
+if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX ]; then
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX
+    if [ $verbose = "true" ]; then
+      echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
+    fi
+fi
+
 if [ $scorep = true ]; then
   if [ $verbose = "true" ]; then 
     echo "Score-P is specified"
