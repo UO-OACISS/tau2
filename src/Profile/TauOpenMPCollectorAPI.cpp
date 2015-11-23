@@ -341,14 +341,16 @@ char * get_proxy_name(unsigned long ip) {
         strcpy(location, __UNKNOWN_ADDR__);
         return location;
     }
-    TAU_OPENMP_SET_LOCK;
+    //TAU_OPENMP_SET_LOCK;
     OmpHashNode * node = OmpTheHashTable()[ip];
     //TAU_OPENMP_UNSET_LOCK;
     if (!node) {
         node = new OmpHashNode;
         char * routine = NULL;
         if (TauEnv_get_bfd_lookup()) {
+            TAU_OPENMP_SET_LOCK;
             Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
+            TAU_OPENMP_UNSET_LOCK;
             // Build routine name for TAU function info
             unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
             routine = (char*)malloc(size);
@@ -362,12 +364,11 @@ char * get_proxy_name(unsigned long ip) {
             sprintf(routine, "%s %s", __BFD_UNKNOWN__, addrString);
         }
     node->location = routine;
-        //TAU_OPENMP_SET_LOCK;
+        TAU_OPENMP_SET_LOCK;
         OmpTheHashTable()[ip] = node;
-        //TAU_OPENMP_UNSET_LOCK;
+        TAU_OPENMP_UNSET_LOCK;
     }
 
-    TAU_OPENMP_UNSET_LOCK; //AMAHEO
     location = (char*)malloc(strlen(node->location)+1);
     strcpy(location, node->location);
     fprintf(stdout, "TAU - get_proxy_name: node found, location=%s\n", location); //AMAHEO
