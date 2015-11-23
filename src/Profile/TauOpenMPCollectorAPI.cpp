@@ -355,7 +355,6 @@ char * get_proxy_name(unsigned long ip) {
             unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
             routine = (char*)malloc(size);
             sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
-            fprintf(stdout, "TAU - get_proxy_name: node not found, routine=%s\n", routine); //AMAHEO
         } else {
         char addrString[64];
         sprintf(addrString, "%p", (void*)ip);
@@ -371,7 +370,6 @@ char * get_proxy_name(unsigned long ip) {
 
     location = (char*)malloc(strlen(node->location)+1);
     strcpy(location, node->location);
-    fprintf(stdout, "TAU - get_proxy_name: node found, location=%s\n", location); //AMAHEO
     return location;
 }
 #else /* defined (TAU_BFD) */
