@@ -182,7 +182,7 @@ if [ $options_specified = no ] ; then
     fi
 fi
 
-TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optDefaultParser=edg44-upcparse -optTau=-upc -optTrackDMAPP"
+TAUCOMPILER_OPTIONS="-optDefaultParser=edg44-upcparse -optTau=-upc -optTrackDMAPP $TAUCOMPILER_OPTIONS"
 
 retval=0
 

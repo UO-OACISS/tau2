@@ -4899,7 +4899,11 @@ then
 	    fi
 	    if [ -r $shmembindir/mpiexec_mpt ]
 	    then
-		fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+		if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+		  fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
+                else
+		  fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+                fi 
 	    fi
 	fi
     else
@@ -4911,7 +4915,11 @@ then
 	    if [ -r $openshmem_include_dir/mpp/shmem.h -a -r $openshmem_include_dir/../bin/mpiexec_mpt ] 
 	    then
 		shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
-		fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+		if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+		  fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
+                else
+		  fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+                fi 
 	    else
 		if [ -r $oshcc_var ]
 		then 
@@ -4961,7 +4969,11 @@ then
 		then
 		    shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
 		    echo "Detected SGI MPT: Using $shmeminclude as include dir and $shmemlibdir as SHMEM lib dir"
-		    fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+		    if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+		      fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
+                    else
+		      fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+                    fi 
 		    shmemincargs="-I$shmeminclude#-I$shmeminclude/mpp"
 		    if [ $shmemlibrary = no -a "x$shmemlib" = "x" ] 
 		    then
@@ -5027,7 +5039,11 @@ then
 	fi
 	if [ -r $shmembindir/mpiexec_mpt ]
 	then
-	    fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+            if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+	      fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
+            else
+	      fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+            fi 
 	    shmemlibrary=-lsma#-lmpi
 	fi
 
@@ -7492,6 +7508,8 @@ bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir
 # Check for BFD
 ######################################################################
 cat <<EOF > conftest_bfd.c
+#define PACKAGE TAU
+#define PACKAGE_VERSION 2.25
 #include <bfd.h>
 //#ifdef __APPLE__
 //#include <crt_externs.h>
@@ -7531,6 +7549,8 @@ cat <<EOF > conftest_bfd.c
 #ifdef MPC_MODULE_MPC_Config
 #include <mpc.h>
 #endif 
+#define PACKAGE TAU
+#define PACKAGE_VERSION 2.25
 #include <bfd.h>
 int main(int argc, char **argv) {
    bfd_init();

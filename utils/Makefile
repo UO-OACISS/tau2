@@ -23,6 +23,9 @@ EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(R
 
 all:		$(EXECUTABLES)
 
+printvar:	
+		@echo "AMAHEO --- CFLAGS "$(CFLAGS)" LEXTRAUTIL "$(LEXTRAUTIL)""
+
 tau_convert: 	tau_convert.c 
 		$(CC) $(TAU_USEROPT_CFLAGS)  tau_convert.c -o tau_convert -lm $(LEXTRAUTIL)
 
@@ -144,7 +147,8 @@ $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a:
 
 tau_reduce:	tau_reduce.o pprof_elem.o
 		$(CXX) $(CFLAGS) tau_reduce.o pprof_elem.o -o tau_reduce -lm $(LEXTRAUTIL)
-
+		@echo "AMAHEO --- CFLAGS "$(CFLAGS)" LEXTRAUTIL "$(LEXTRAUTIL)""
+	
 tau_reduce.o: 	tau_reduce.cpp
 		$(CXX) $(CFLAGS) -c tau_reduce.cpp
 
