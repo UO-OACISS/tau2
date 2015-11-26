@@ -10,6 +10,20 @@
 
 Change log:
 ------------
+Version 2.25 changes (from 2.24):
+1. Support for new PDT parsers cxxparse4101, cparse4101, and gfparse48
+2. Introducing APEX. 
+3. Added support for tau_exec -numa for tracking PAPI remote DRAM references. 
+4. Added support for recycling pthread ids. 
+5. Updates to TAU for OMPT support. 
+6. PerfExplorer fixes for mean calculation for runtime breakdown charts. 
+7. Added support for Argo ExaOSR BEACON backplane for event communication. 
+8. Added preliminary support for Power 8 and ARM64. 
+9. Added support for CUDA 7.5. 
+10. Added support for OpenACC with PGI 15.10. 
+11. Added support for new versions of MAQAO, PEBIL, and DyninstAPI 9.0.3. 
+12. Added support for SGI MPT 2.13 with PSHMEM interface. 
+ 
 Version 2.24 changes (from 2.23):
 1. Reduced OpenMP profiling overhead and memory footprint.
 2. Include lists now work with tau_rewrite and MAQAO. 
