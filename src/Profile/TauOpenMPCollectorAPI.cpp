@@ -1249,7 +1249,7 @@ extern "C" void my_thread_begin(my_ompt_thread_type_t thread_type, ompt_thread_i
 #elif defined (TAU_USE_DTLS)
   if (is_master) return; // master thread can't be a new worker.
 #elif defined (TAU_USE_PGS)
-  if (pthread_getspecific(thr_id_key) == NULL) return; // master thread can't be a new worker.
+  if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
 #endif
   TAU_OMPT_COMMON_ENTRY;
   //TAU_VERBOSE("OMPT Created thread: %d\n", tid); fflush(stdout);
