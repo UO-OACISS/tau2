@@ -7571,11 +7571,11 @@ bfd_worked="no"
 if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
     bfd_worked="yes"
 else
-    BFDLIBS="-lbfd -liberty -lz"  # always require -lz - it is usually needed.
+    BFDLIBS="-lbfd -liberty "  # -lz is not always available (e.g., BGQ)
     if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	bfd_worked="yes"
     else    
-	BFDLIBS="-lbfd -liberty -lz"
+	BFDLIBS="-lbfd -liberty -lz" # Next, check with -lz.
 	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
         else
