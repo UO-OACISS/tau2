@@ -304,7 +304,8 @@ public abstract class DataSource {
         return tmpValues.iterator();
     }
     
-    public UserEvent addUserEvent(String name) {
+    public UserEvent addUserEvent(String name_in) {
+    	String name = name_in.trim();
         Object obj = userEvents.get(name);
 
         if (obj != null) {
