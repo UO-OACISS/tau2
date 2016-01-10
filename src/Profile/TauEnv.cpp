@@ -221,6 +221,7 @@ static int env_track_io_params = 0;
 static int env_track_signals = TAU_TRACK_SIGNALS_DEFAULT;
 static int env_signals_gdb = TAU_SIGNALS_GDB_DEFAULT;
 static int env_echo_backtrace = TAU_ECHO_BACKTRACE_DEFAULT;
+static int env_track_mpi_t_pvars = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
 /* This is a malleable default */
@@ -698,6 +699,10 @@ int TauEnv_get_comm_matrix() {
   return env_comm_matrix;
 }
 
+int TauEnv_get_track_mpi_t_pvars() {
+  return env_track_mpi_t_pvars;
+}
+
 int TauEnv_get_track_signals() {
   return env_track_signals;
 }
@@ -1030,6 +1035,17 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
     } 
+
+#ifdef TAU_MPI_T
+    tmp = getconf("TAU_TRACK_MPI_T_PVARS");
+    if (parse_bool(tmp, env_track_mpi_t_pvars)) {
+      TAU_VERBOSE("TAU: MPI_T PVARS tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "on");
+      TAU_VERBOSE("TAU: Checking for performance variables from MPI_T\n");
+    } else {
+      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "off");
+    }
+#endif /* TAU_MPI_T */
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {

@@ -685,6 +685,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     MPI_T)
+        echo "NOTE: Using TAU's MPI-T extensions"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPIDATAREP)
         echo "NOTE: Using TAU's MPI-2 Datarep_conversion extensions"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
