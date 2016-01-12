@@ -1190,6 +1190,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			String name = results.getString(2);
 
 			UserEvent func = dataSource.getUserEvent(name);
+			if(func==null)
+			{
+				System.out.println("Warning: Event "+name+" not found in data-source.");
+			}
 			map.put(func, funcID);
 		}
 		statement.close();
@@ -1216,7 +1220,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				// return;
 
 				if (uep != null) {
-					int atomicEventID = userEventMap.get(uep.getUserEvent())
+					UserEvent ue = uep.getUserEvent();
+					Integer uei=userEventMap.get(ue);
+						if(uei==null){
+							System.out.println("Error: No id mapped for "+ue.getName());
+						}
+					int atomicEventID = uei
 							.intValue();
 				
 					statement.setInt(1, atomicEventID);
