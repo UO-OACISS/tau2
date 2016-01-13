@@ -306,6 +306,7 @@ public abstract class DataSource {
     
     public UserEvent addUserEvent(String name_in) {
     	String name = name_in.trim();
+    	name=Utility.removeRuns(name);
         Object obj = userEvents.get(name);
 
         if (obj != null) {
