@@ -66,6 +66,7 @@ int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
 extern int Tau_signal_initialization();
 extern int Tau_mpi_t_initialize();
+extern int Tau_track_mpi_t_here();
 
 /* JCL: Optimized rank translation with cache */
 int TauTranslateRankToWorld(MPI_Comm comm, int rank);
@@ -1482,6 +1483,9 @@ int  MPI_Finalize(  )
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+#ifdef TAU_MPI_T
+  Tau_track_mpi_t_here();
+#endif /* TAU_MPI_T */
   writeMetaDataAfterMPI_Init(); 
 
   if (TauEnv_get_synchronize_clocks()) {
