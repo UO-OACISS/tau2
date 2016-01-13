@@ -205,6 +205,11 @@
 #define TAU_ENABLE_TRACKING_POWER()		Tau_enable_tracking_power()
 #define TAU_DISABLE_TRACKING_POWER()		Tau_disable_tracking_power()
 
+#define TAU_TRACK_MPI_T()		        Tau_track_mpi_t()
+#define TAU_TRACK_MPI_T_HERE()		        Tau_track_mpi_t_here()
+#define TAU_ENABLE_TRACKING_MPI_T()		Tau_enable_tracking_mpi_t()
+#define TAU_DISABLE_TRACKING_MPI_T()		Tau_disable_tracking_mpi_t()
+
 #define TAU_SET_INTERRUPT_INTERVAL(value)	Tau_set_interrupt_interval(value)
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) void *TauGlobal##timer(void) \

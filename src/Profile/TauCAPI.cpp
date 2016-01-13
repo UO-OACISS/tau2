@@ -2490,6 +2490,68 @@ extern "C" void Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], 
 extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[], int* mode, int* error) {
 }
 #endif /* TAU_BGP */
+
+#ifdef TAU_MPI_T
+
+#include <mpi.h> 
+#define TAU_NAME_LENGTH 1024
+
+int Tau_fill_mpi_t_pvar_events(TauContextUserEvent*** event) {
+  int return_val, num_pvars, i, namelen, verb, varclass, bind, threadsup;
+  int index;
+  int readonly, continuous, atomic;
+  char event_name[TAU_NAME_LENGTH + 1] = "";
+  char concat_event_name[TAU_NAME_LENGTH + 1] = "";
+  int desc_len;
+  char description[TAU_NAME_LENGTH + 1] = "";
+  MPI_Datatype datatype;
+  MPI_T_enum enumtype;
+
+  return_val = MPI_T_pvar_get_num(&num_pvars);
+  if (return_val != MPI_SUCCESS) {
+    perror("MPI_T_pvar_get_num ERROR:");
+    return return_val;
+  }
+
+  /* Initialize variables. Get the names of performance variables */
+  for(i = 0; i < num_pvars; i++){
+    namelen = desc_len = TAU_NAME_LENGTH;
+    return_val = MPI_T_pvar_get_info(i/*IN*/,
+      event_name /*OUT*/,
+      &namelen /*INOUT*/,
+      &verb /*OUT*/,
+      &varclass /*OUT*/,
+      &datatype /*OUT*/,
+      &enumtype /*OUT*/,
+      description /*description: OUT*/,
+      &desc_len /*desc_len: INOUT*/,
+      &bind /*OUT*/,
+      &readonly /*OUT*/,
+      &continuous /*OUT*/,
+      &atomic/*OUT*/); 
+
+    sprintf(concat_event_name, "%s (%s)", event_name, description);
+    TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
+
+    (*event)[i] = new TauContextUserEvent(concat_event_name);
+  }
+} 
+TauContextUserEvent & ThePVarsMPIEvents(int index, int total_events) {
+    static TauContextUserEvent ** pvarEvents = NULL;
+
+
+    if(!pvarEvents) {
+        pvarEvents = (TauContextUserEvent**)calloc(total_events, sizeof(TauContextUserEvent*));
+	Tau_fill_mpi_t_pvar_events(&pvarEvents); 
+    }   
+
+    return *(pvarEvents[index]);
+}
+
+extern "C" void Tau_track_pvar_event(int index, int total_events, double data) {
+  ThePVarsMPIEvents(index, total_events).TriggerEvent(data, Tau_get_thread()); 
+}
+#endif /* TAU_MPI_T */
                     
 
 /***************************************************************************
