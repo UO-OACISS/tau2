@@ -790,8 +790,8 @@ int main (int argc, char *argv[]){
 #ifdef TAU_WINDOWS
   int optind = 0;
 #else
-  extern char *optarg;
-  extern int optind;
+  extern  char *optarg;
+  extern  int optind;
 #endif //TAU_WINDOWS
 
 #ifdef TAU_WINDOWS

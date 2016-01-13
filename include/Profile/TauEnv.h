@@ -68,6 +68,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_memory_headroom();
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
+  int  TAUDECL TauEnv_get_track_mpi_t_pvars();
   int  TAUDECL TauEnv_get_signals_gdb();
   int  TAUDECL TauEnv_get_echo_backtrace();
   int  TAUDECL TauEnv_get_openmp_runtime_enabled();
