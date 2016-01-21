@@ -1045,6 +1045,7 @@ void TauEnv_initialize()
 #ifdef TAU_MPI_T
     tmp = getconf("TAU_TRACK_MPI_T_PVARS");
     if (parse_bool(tmp, env_track_mpi_t_pvars)) {
+      env_track_mpi_t_pvars = 1;
       TAU_VERBOSE("TAU: MPI_T PVARS tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "on");
       TAU_VERBOSE("TAU: Checking for performance variables from MPI_T\n");

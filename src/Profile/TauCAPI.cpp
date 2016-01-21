@@ -2494,7 +2494,6 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 #ifdef TAU_MPI_T
 
 #include <mpi.h> 
-#define TAU_NAME_LENGTH 1024
 
 int Tau_fill_mpi_t_pvar_events(TauContextUserEvent*** event) {
   int return_val, num_pvars, i, namelen, verb, varclass, bind, threadsup;
@@ -2552,6 +2551,17 @@ extern "C" void Tau_track_pvar_event(int index, int total_events, double data) {
   ThePVarsMPIEvents(index, total_events).TriggerEvent(data, Tau_get_thread()); 
 }
 #endif /* TAU_MPI_T */
+
+
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_enable_tracking_mpi_t(void) {
+  TauEnv_set_track_mpi_t_pvars(1); 
+}
+
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_disable_tracking_mpi_t(void) {
+  TauEnv_set_track_mpi_t_pvars(0); 
+}
                     
 
 /***************************************************************************
