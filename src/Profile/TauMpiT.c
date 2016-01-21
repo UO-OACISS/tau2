@@ -40,7 +40,8 @@ int Tau_mpi_t_initialize(void) {
 
   /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
    * to initialize MPI_T */
-  if (TauEnv_get_track_mpi_t_pvars() == false) {
+  dprintf("TAU: Before MPI_T initialization\n");
+  if (TauEnv_get_track_mpi_t_pvars() == 0) {
     return MPI_SUCCESS; 
   } 
 
@@ -61,13 +62,14 @@ int Tau_mpi_t_initialize(void) {
     }  
   }
 
+  dprintf("MPI_T initialized successfully!\n");
   /* get the number of pvars exported by the implmentation */
   return_val = MPI_T_pvar_get_num(&num_pvars);
   if (return_val != MPI_SUCCESS) {
     perror("MPI_T_pvar_get_num ERROR:");
     return return_val;
   }
-  dprintf("TAU STARTED session: pvars exposed = %d\n", num_pvars);
+  dprintf("TAU MPI_T STARTED session: pvars exposed = %d\n", num_pvars);
   
   return return_val; 
 }
@@ -76,8 +78,6 @@ int Tau_mpi_t_initialize(void) {
 void Tau_track_mpi_t(void) {
 
 }
-
-#define TAU_NAME_LENGTH 1024
 
 static unsigned long long int **pvar_value_buffer;
 static void *read_value_buffer; // values are read into this buffer.
@@ -172,7 +172,8 @@ int Tau_track_mpi_t_here(void) {
       int is_double = 0; 
       if (tau_mpi_datatype[i] == MPI_DOUBLE) is_double=1; 
       if (is_double) {
-        double double_data = *((double*)(pvar_value_buffer[i][j]));
+        //double double_data = *((double*)(pvar_value_buffer[i][j]));
+        double double_data = ((double)(pvar_value_buffer[i][j]));
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%g, size = %d, is_double=%d\n",rank,i,j,double_data, size, is_double);
 
         Tau_track_pvar_event(i, num_pvars, double_data);
@@ -186,16 +187,6 @@ int Tau_track_mpi_t_here(void) {
 
   }
   dprintf("Finished!!\n");
-}
-
-//////////////////////////////////////////////////////////////////////
-void Tau_enable_tracking_mpi_t(void) {
-  TauEnv_set_track_mpi_t_pvars(1); 
-}
-
-//////////////////////////////////////////////////////////////////////
-void Tau_disable_tracking_mpi_t(void) {
-  TauEnv_set_track_mpi_t_pvars(0); 
 }
 
 
