@@ -33,6 +33,7 @@ extern "C" {
 
 extern void Tau_enable_tracking_mpi_t(void);
 extern void Tau_disable_tracking_mpi_t(void);
+extern void Tau_track_mpi_t(void);
 
 
 /* Utility function to retrieve fortran strings */
@@ -1168,6 +1169,26 @@ void tau_disable_tracking_mpi_t__(void)
 { 
   Tau_disable_tracking_mpi_t();
 }
+
+void TAU_TRACK_MPI_T(void)
+{
+  Tau_track_mpi_t();
+} 
+
+void tau_track_mpi_t(void)
+{
+  Tau_track_mpi_t();
+} 
+
+void tau_track_mpi_t_(void)
+{
+  Tau_track_mpi_t();
+} 
+
+void tau_track_mpi_t__(void)
+{
+  Tau_track_mpi_t();
+} 
 
 
 //////////////////////////////////////////////////////
