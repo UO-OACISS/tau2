@@ -74,10 +74,6 @@ int Tau_mpi_t_initialize(void) {
   return return_val; 
 }
 
-//////////////////////////////////////////////////////////////////////
-void Tau_track_mpi_t(void) {
-
-}
 
 static unsigned long long int **pvar_value_buffer;
 static void *read_value_buffer; // values are read into this buffer.
