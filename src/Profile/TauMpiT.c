@@ -38,6 +38,13 @@ extern void Tau_track_pvar_event(int index, int total_events, double data);
 int Tau_mpi_t_initialize(void) {
   int return_val, thread_provided, num_pvars;   
 
+  /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
+   * to initialize MPI_T */
+  if (TauEnv_get_track_mpi_t_pvars() == false) {
+    return MPI_SUCCESS; 
+  } 
+
+  /* Initialize MPI_T */
   return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided); 
 
   if (return_val != MPI_SUCCESS) 
@@ -54,6 +61,7 @@ int Tau_mpi_t_initialize(void) {
     }  
   }
 
+  /* get the number of pvars exported by the implmentation */
   return_val = MPI_T_pvar_get_num(&num_pvars);
   if (return_val != MPI_SUCCESS) {
     perror("MPI_T_pvar_get_num ERROR:");
@@ -89,11 +97,21 @@ int Tau_track_mpi_t_here(void) {
   static int *tau_pvar_count; 
   int returnVal;
 
+  
+  /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
+   * to process MPI_T events */
+  if (TauEnv_get_track_mpi_t_pvars() == 0) {
+    return MPI_SUCCESS; 
+  } 
+
+  /* get number of pvars from MPI_T */
   return_val = MPI_T_pvar_get_num(&num_pvars);
   if (return_val != MPI_SUCCESS) {
     perror("MPI_T_pvar_get_num ERROR:");
     return return_val;
   }
+
+  /* The first time this function is entered, allocate memory for the pvar data structures */
   if (first_time == 1) {
     first_time = 0;
     pvar_value_buffer = (unsigned long long int**)malloc(sizeof(unsigned long long int*) * (num_pvars + 1));
@@ -123,11 +141,14 @@ int Tau_track_mpi_t_here(void) {
         &atomic/*OUT*/);
      tau_mpi_datatype[i] = datatype;
 
+     /* allocate a pvar handle that will be used later */
      returnVal = MPI_T_pvar_handle_alloc(tau_pvar_session, i, NULL, &tau_pvar_handles[i], &tau_pvar_count[i]);
      if (return_val != MPI_SUCCESS) {
        perror("MPI_T_pvar_handle_alloc ERROR:");
        return return_val;
      }
+
+     /* and a buffer to store the results in */
      pvar_value_buffer[i] = (unsigned long long int*)malloc(sizeof(unsigned long long int) * (tau_pvar_count[i] + 1));
 
      dprintf("Name: %s (%s), i = %d\n", event_name, description, i); 
@@ -135,6 +156,8 @@ int Tau_track_mpi_t_here(void) {
   }
   int rank; 
   int size, j; 
+
+  /* We need the rank */
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   for(i = 0; i < num_pvars; i++){
     // get data from event 
@@ -144,11 +167,12 @@ int Tau_track_mpi_t_here(void) {
       pvar_value_buffer[i][j] = 0;
       memcpy(&(pvar_value_buffer[i][j]), read_value_buffer, size);
       long long int mydata = (long long int) (pvar_value_buffer[i][j]); 
-      /* unsigned long long int to double conversion can result in an error. We first convert it to a long long int. */
+      /* unsigned long long int to double conversion can result in an error. 
+       * We first convert it to a long long int. */
       int is_double = 0; 
       if (tau_mpi_datatype[i] == MPI_DOUBLE) is_double=1; 
       if (is_double) {
-        double double_data = *((double*)read_value_buffer);
+        double double_data = *((double*)(pvar_value_buffer[i][j]));
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%g, size = %d, is_double=%d\n",rank,i,j,double_data, size, is_double);
 
         Tau_track_pvar_event(i, num_pvars, double_data);
@@ -166,12 +190,12 @@ int Tau_track_mpi_t_here(void) {
 
 //////////////////////////////////////////////////////////////////////
 void Tau_enable_tracking_mpi_t(void) {
-
+  TauEnv_set_track_mpi_t_pvars(1); 
 }
 
 //////////////////////////////////////////////////////////////////////
 void Tau_disable_tracking_mpi_t(void) {
-
+  TauEnv_set_track_mpi_t_pvars(0); 
 }
 
 

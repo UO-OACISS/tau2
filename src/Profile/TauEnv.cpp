@@ -703,6 +703,12 @@ int TauEnv_get_track_mpi_t_pvars() {
   return env_track_mpi_t_pvars;
 }
 
+int TauEnv_set_track_mpi_t_pvars(int value) {
+  env_track_mpi_t_pvars = value;
+  return env_track_mpi_t_pvars; 
+}
+
+
 int TauEnv_get_track_signals() {
   return env_track_signals;
 }
