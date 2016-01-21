@@ -2495,7 +2495,7 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 
 #include <mpi.h> 
 
-int Tau_fill_mpi_t_pvar_events(TauContextUserEvent*** event) {
+int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event) {
   int return_val, num_pvars, i, namelen, verb, varclass, bind, threadsup;
   int index;
   int readonly, continuous, atomic;
@@ -2532,15 +2532,15 @@ int Tau_fill_mpi_t_pvar_events(TauContextUserEvent*** event) {
     sprintf(concat_event_name, "%s (%s)", event_name, description);
     TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
 
-    (*event)[i] = new TauContextUserEvent(concat_event_name);
+    (*event)[i] = new TauUserEvent(concat_event_name);
   }
 } 
-TauContextUserEvent & ThePVarsMPIEvents(int index, int total_events) {
-    static TauContextUserEvent ** pvarEvents = NULL;
+TauUserEvent & ThePVarsMPIEvents(int index, int total_events) {
+    static TauUserEvent ** pvarEvents = NULL;
 
 
     if(!pvarEvents) {
-        pvarEvents = (TauContextUserEvent**)calloc(total_events, sizeof(TauContextUserEvent*));
+        pvarEvents = (TauUserEvent**)calloc(total_events, sizeof(TauUserEvent*));
 	Tau_fill_mpi_t_pvar_events(&pvarEvents); 
     }   
 
