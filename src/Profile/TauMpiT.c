@@ -162,22 +162,27 @@ int Tau_track_mpi_t_here(void) {
     for(j = 0; j < tau_pvar_count[j]; j++){
       pvar_value_buffer[i][j] = 0;
       memcpy(&(pvar_value_buffer[i][j]), read_value_buffer, size);
-      long long int mydata = (long long int) (pvar_value_buffer[i][j]); 
       /* unsigned long long int to double conversion can result in an error. 
        * We first convert it to a long long int. */
+      long long int mydata = (long long int) pvar_value_buffer[i][j]; 
       int is_double = 0; 
       if (tau_mpi_datatype[i] == MPI_DOUBLE) is_double=1; 
       if (is_double) {
-        //double double_data = *((double*)(pvar_value_buffer[i][j]));
-        double double_data = ((double)(pvar_value_buffer[i][j]));
+        // long long int mydata_d = (long long int) (pvar_value_buffer[i][j]); 
+        // First convert it from unsigned long long to long long and then to a double
+        //double double_data = ((double)(pvar_value_buffer[i][j]));
+        double double_data = ((double)(mydata));
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%g, size = %d, is_double=%d\n",rank,i,j,double_data, size, is_double);
 
-        Tau_track_pvar_event(i, num_pvars, double_data);
+	if (double_data > 1e-14 )  {
+          Tau_track_pvar_event(i, num_pvars, double_data);
+        }
       } else {
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
         /* Trigger the TAU event if it is non-zero */
-	if (mydata != 0L) 
+	if (mydata > 0L) {
           Tau_track_pvar_event(i, num_pvars, mydata);
+        }
       }
     }
 
