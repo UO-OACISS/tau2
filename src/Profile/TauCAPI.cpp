@@ -2536,7 +2536,7 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event) {
     (*event)[i] = new TauUserEvent(concat_event_name);
 
     /* Add a metadata field */
-    sprintf(concat_event_name, "MPI_T PVAR: %s", event_name);
+    sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", i, event_name);
     TAU_METADATA(concat_event_name, description); 
   }
 } 
