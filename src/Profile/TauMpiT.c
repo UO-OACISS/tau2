@@ -148,13 +148,12 @@ int Tau_track_mpi_t_here(void) {
      pvar_value_buffer[i] = (unsigned long long int*)malloc(sizeof(unsigned long long int) * (tau_pvar_count[i] + 1));
 
      dprintf("Name: %s (%s), i = %d\n", event_name, description, i); 
+     //printf("MPI_T_PVAR_CLASS_TIMER: %d,  varclass = %d, i = %d, event_name = %s\n", MPI_T_PVAR_CLASS_TIMER, varclass, i, event_name);
     }
   }
-  int rank; 
+  int rank = Tau_get_node(); 
   int size, j; 
 
-  /* We need the rank */
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   for(i = 0; i < num_pvars; i++){
     // get data from event 
     MPI_T_pvar_read(tau_pvar_session, tau_pvar_handles[i], read_value_buffer);
@@ -172,11 +171,12 @@ int Tau_track_mpi_t_here(void) {
         // First convert it from unsigned long long to long long and then to a double
         //double double_data = ((double)(pvar_value_buffer[i][j]));
         double double_data = ((double)(mydata));
-        dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%g, size = %d, is_double=%d\n",rank,i,j,double_data, size, is_double);
 
 	if (double_data > 1e-14 )  {
-          Tau_track_pvar_event(i, num_pvars, double_data);
-        }
+      
+        // Double values are really large for timers. Please check 1E18?? 
+          //Tau_track_pvar_event(i, num_pvars, double_data);
+        } 
       } else {
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
         /* Trigger the TAU event if it is non-zero */
