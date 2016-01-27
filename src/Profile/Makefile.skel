@@ -139,7 +139,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
-		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(SOS_O)
+		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(SOS_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -874,6 +874,9 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauBeacon.o   : TauBeacon.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
@@ -898,7 +901,7 @@ CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
-jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
+JVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
 
 TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar

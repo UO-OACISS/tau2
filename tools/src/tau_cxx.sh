@@ -183,7 +183,7 @@ if [ $options_specified = no ] ; then
     fi
 fi
 
-TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optDefaultParser=cxxparse"
+TAUCOMPILER_OPTIONS="-optDefaultParser=cxxparse $TAUCOMPILER_OPTIONS"
 
 retval=0
 

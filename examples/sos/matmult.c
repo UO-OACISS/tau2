@@ -13,8 +13,11 @@
 #include <stdlib.h>
 
 #include "matmult_initialize.h"
+#include "Profile/TauSOS.h"
 
 #include <mpi.h>
+
+
 int provided = MPI_THREAD_SINGLE;
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
@@ -195,16 +198,16 @@ int main (int argc, char *argv[])
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int i;
-  int maxi = 100;
+  int maxi = 5;
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
     MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
     do_work();
-    if (provided < MPI_THREAD_MULTIPLE) {
-        if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
-        TAU_SOS_send_data();
-    }
+    //if (provided < MPI_THREAD_MULTIPLE) {
+    //    if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
+    //    TAU_SOS_send_data();
+    //}
     if (rank == 0) { printf("Iteration %d of %d done.\n", i, maxi); fflush(stdout); }
   }
 

@@ -89,6 +89,7 @@ IFORTLIBDIR=
 PERFSUITELINK=
 TAUGFORTRANLIBDIR=
 PAPIDIR=
+BEACONDIR=
 GPIDIR=
 PAPISUBDIR=
 CHARMDIR=
@@ -270,7 +271,8 @@ JDKARCH                 = linux
 #############################################
 # JAVA OBJECTS
 #############################################
-#JAVA#TAU_JAVA_O 	= TauJAPI.o agent_util.o java_crw_demo.o TauJVMTI.o adb.o jdwp.o ddm.o #ENDIF#
+#ANDROID#TAU_ADB_O = adb.o #ENDIF#
+#JAVA#TAU_JAVA_O 	= TauJAPI.o agent_util.o java_crw_demo.o TauJVMTI.o $(TAU_ADB_O) jdwp.o ddm.o #ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
 #############################################
@@ -283,8 +285,8 @@ MPI_FORTRAN_INIT = TauFInit.o
 # SOS OBJECTS and libs
 #############################################
 #SOS#SOS_O = TauSOS.o #ENDIF#
-#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include -I$(SOSDIR) -DTAU_SOS #ENDIF#
-#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos_nowrap -pthread #ENDIF#
+#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/src -I$(SOSDIR) -DTAU_SOS #ENDIF#
+#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos -pthread -fPIC #ENDIF#
 #SOS#TAU_SOS_LINKER_OPTS=$(TAU_SOS_LIBS) #ENDIF#
 
 #############################################
@@ -487,7 +489,7 @@ TAU_F77 = $(TAU_F90)
 #TAU_PAPI_THREADS#THR_O       = PapiThreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
 #JAVA#THR_O       	       = JNIThreadLayer.o JVMTIThreadLayer.o     #ENDIF#
-#JVMTI#THR_O       	       = #ENDIF#
+#JVMTI_BLANK_THR_O#THR_O       	       = #ENDIF#
 #TULIPTHREADS#THR_O       = TulipThreadLayer.o         #ENDIF#
 #LINUXTIMERS#PLATFORM_O       = TauLinuxTimers.o       #ENDIF#
 #TULIPTHREADS#PROFILEOPT17  = -I$(TULIPDIR)/include -I$(TULIPDIR)/Tuliplib   #ENDIF#
@@ -580,6 +582,7 @@ JDKBINDIR = $(JDKDIR)/bin
 #SHMEM#PROFILEOPT61           = -DTAU_SHMEM -DTAU_UNIFY  #ENDIF#
 #OPENSHMEM#PROFILEOPT61           = $(TAU_SHMEM_INC) -DTAU_OPENSHMEM -DTAU_SHMEM #ENDIF#
 #SGI_MPT_SHMEM#PROFILEOPT61           = -DTAU_SHMEM -DTAU_SGI_MPT_SHMEM #ENDIF#
+#SGI_MPT_PSHMEM#PROFILEOPT61           = -DTAU_SHMEM -DTAU_PSHMEM_SGI_MPT #ENDIF#
 #KTAU#PROFILEOPT62  = -DTAUKTAU -DKTAU_USER_SRC_COMPILE -I$(KTAU_INCDIR) -I$(KTAU_INCUSERDIR) -DKTAU_INCUSERDIR=\"$(KTAU_INCUSERDIR)\" -DKTAU_KALLSYMS_PATH=\"$(KTAU_KALLSYMS_PATH)\" #ENDIF#
 #KTAU_MERGE#PROFILEOPT63  = -DTAUKTAU_MERGE -DKTAU_USER_SRC_COMPILE -I$(KTAU_INCDIR) -DKTAU_INCUSERDIR=\"$(KTAU_INCUSERDIR)\" -DKTAU_KALLSYMS_PATH=\"$(KTAU_KALLSYMS_PATH)\" #ENDIF#
 #FREEBSD#PROFILEOPT64  = -DTAU_FREEBSD #ENDIF#
@@ -1124,6 +1127,8 @@ EBS_CLOCK_RES=
 #PAPI_PERF_RAPL#PROFILEOPT99 = -DTAU_PAPI_PERF_RAPL #ENDIF#
 #TAU_MPI_HINDEX_CONST#PROFILEOPT100 = -DTAU_MPI_HINDEX_CONST #ENDIF#
 #MPI2#PROFILEOPT101 = -DTAU_MPI_EXTENSIONS #ENDIF#
+#BEACON#PROFILEOPT102 = -DTAU_BEACON -I$(BEACONDIR)/include #ENDIF#
+#BEACON#BEACON_O       	       = TauBeacon.o 	       #ENDIF#
 
 
 
@@ -1152,8 +1157,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT89) $(PROFILEOPT90) $(PROFILEOPT91) $(PROFILEOPT92) \
               $(PROFILEOPT93) $(PROFILEOPT94) $(PROFILEOPT95) $(PROFILEOPT96) \
               $(PROFILEOPT97) $(PROFILEOPT98) $(PROFILEOPT99) $(PROFILEOPT100) \
-	      $(PROFILEOPT101) $(TAU_SOS_INCLUDE_OPTS) $(TRACEOPT)
-
+	      $(PROFILEOPT101) $(PROFILEOPT102) $(TRACEOPT) $(TAU_SOS_INCLUDE_OPTS)
 
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
@@ -1194,6 +1198,7 @@ TAU_CUDA_LIBRARY=
 TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1) $(TAU_INTERNAL_FLAG2)
 
 #ANDROID#TAU_ANDROID_LINKER_OPTS=-llog #ENDIF#
+#BEACON#TAU_BEACON_LINKER_OPTS=-L$(BEACONDIR)/lib -lbeacon -lpthread -Wl,-rpath,$(BEACONDIR)/lib #ENDIF#
 
 ##############################################
 
@@ -1205,7 +1210,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
                   $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
                   $(TAU_LINKER_OPT20) $(TAU_LINKER_OPT21) $(TAU_CUDA_LINKER_OPTS) $(TAU_PYTHON_LINKER_OPTS) \
-                  $(TAU_ANDROID_LINKER_OPTS) $(TAU_SOS_LINKER_OPTS)
+                  $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS) $(TAU_SOS_LINKER_OPTS)
 
 ##############################################
 
@@ -1310,6 +1315,7 @@ TAU_LDFLAGS = $(TAU_MPI_LDFLAGS) $(TAU_OPENMP_LDFLAGS)
 #OPENSHMEM#SHMEM_OBJS		     = TauShmemOpenShmemC.o TauShmemOpenShmemF.o  #ENDIF#
 #CRAYCNL#SHMEM_OBJS		     = TauShmemCrayC.o TauShmemCrayF.o  #ENDIF#
 #SGI_MPT_SHMEM#SHMEM_OBJS	= TauShmemSgiC.o TauShmemSgiF.o     #ENDIF#
+#SGI_MPT_PSHMEM#SHMEM_OBJS	= TauPShmemSgiC.o TauShmemSgiF.o     #ENDIF#
 #SP1#SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
 #GPSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 #OPENMPI_SHMEM#SHMEM_OBJS		     = TauOpenShmemOpenMPIC.o  #ENDIF#

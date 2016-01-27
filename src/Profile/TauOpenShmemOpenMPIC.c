@@ -1180,6 +1180,7 @@ void * shmem_ptr(void * a1, int a2)  {
    shmalloc
  **********************************************************/
 
+#ifdef TAU_ENABLE_SHMEM_SMALLOC
 void * shmalloc(size_t a1)  
 {
   void * retval = 0;
@@ -1189,6 +1190,7 @@ void * shmalloc(size_t a1)
   TAU_PROFILE_STOP(t);
   return retval;
 }
+#endif /* TAU_ENABLE_SHMEM_SMALLOC */
 
 
 /**********************************************************

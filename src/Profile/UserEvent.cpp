@@ -20,6 +20,10 @@
 #pragma mta instantiate used
 #endif /* TAU_CRAYXMT */
 
+#ifdef TAU_BEACON
+#include <Profile/TauBeacon.h>
+#endif /* TAU_BEACON */
+
 #ifndef TAU_DISABLE_MARKERS
 #define TAU_USE_EVENT_THRESHOLDS 1 
 #endif /* TAU_DISABLE_MARKERS */
@@ -211,6 +215,9 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #else /* TAU_SCOREP */
             TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
 #endif /* TAU_SCOREP */
+#ifdef TAU_BEACON
+            TauBeaconPublish(data,"counts", "MIN_MARKER", ename);
+#endif /* TAU_BEACON */
           }
         }
       }
@@ -231,6 +238,9 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #else /* TAU_SCOREP */
             TAU_TRIGGER_CONTEXT_EVENT_THREAD(ename, data, tid);
 #endif /* TAU_SCOREP */
+#ifdef TAU_BEACON
+            TauBeaconPublish(data,"counts", "MAX_MARKER", ename);
+#endif /* TAU_BEACON */
           }
         }
       }

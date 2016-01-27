@@ -1,0 +1,3 @@
+[submodule "apex"]
+	path = apex
+	url = git.nic.uoregon.edu:/gitroot/xpress-apex

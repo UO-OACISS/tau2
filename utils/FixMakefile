@@ -81,6 +81,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     beacondir=*)
+        beacondir=`echo $1 | sed -e 's/^beacondir=//'`
+	echo "s,^BEACONDIR=.*$,BEACONDIR=$beacondir,g" >> $sedout
+	;;
+
      gpidir=*)
         gpidir=`echo $1 | sed -e 's/^gpidir=//'`
 	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
@@ -408,8 +413,8 @@ case $1 in
 	echo "s,^TAU_BOOSTINC=.*$,TAU_BOOSTINC=$boostinc,g" >> $sedout
 	;;
      boostlib=*)
-        boostlib=`echo $1 | sed -e 's/^boostlib=//'`
-	echo "s,^TAU_BOOSTLIB=.*$,TAU_BOOSTLIB=$boostlib,g" >> $sedout
+        boostlib=`echo $1 | sed -e 's/^boostlib=//' -e 's/#/ /g'`
+	echo "s&^TAU_BOOSTLIB=.*$&TAU_BOOSTLIB=$boostlib&g" >> $sedout
 	;;
 
     sosdir=*)
@@ -812,6 +817,11 @@ case $1 in
 
      SGI_MPT_SHMEM)
         echo NOTE: Using the TAU SGI MPT SHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     SGI_MPT_PSHMEM)
+        echo NOTE: Using the TAU SGI MPT PSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1383,6 +1393,10 @@ case $1 in
 	echo "NOTE: Using PAPI interface for Hardware Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     BEACON)
+	echo "NOTE: Using BEACON interface for publishing performance data ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PERFLIB)
 	echo "NOTE: Using PERFLIB measurement library instead of TAU's"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1471,6 +1485,10 @@ case $1 in
 	;;
      DYNINST8)
 	echo "NOTE: Using newer version DYNINST 8+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST9)
+	echo "NOTE: Using newer version DYNINST 9+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINSTDIR)
@@ -1653,6 +1671,12 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      ANSIC)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     APEX)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BOOST)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 # PROFILING OPTIONS
