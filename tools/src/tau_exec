@@ -31,6 +31,8 @@ usage()
     echo "        -opencl       Track GPU events via OpenCL"
     echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
     echo "        -ompt         Track OpenMP events via OMPT interface"
+    echo "        -power        Track power events via PAPI's perf RAPL interface"
+    echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
@@ -90,6 +92,7 @@ track_memory=false
 memory_debug=false
 track_cuda=false
 track_ompt=false
+track_power=false
 track_cupti=false
 unified_memory=false
 track_opencl=false
@@ -105,6 +108,7 @@ extraloadlibs=""
 track_pthread=false
 track_gomp=false
 use_gdb=false
+track_numa=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -131,6 +135,10 @@ for arg in "$@" ; do
 	      track_io=true
 	      shift
 	      ;;
+	  -numa)
+	      track_numa=true
+	      shift
+	      ;;
 	  -memory)
 	      track_memory=true
 	      shift
@@ -145,6 +153,10 @@ for arg in "$@" ; do
 	      ;;
 	  -ompt)
 	      track_ompt=true
+	      shift
+	      ;;
+	  -power)
+	      track_power=true
 	      shift
 	      ;;
 	  -cupti)
@@ -340,6 +352,31 @@ if [ $track_io = "true" ] ; then
     export LD_BIND_NOW=1
 fi
 
+if [ $track_numa = "true" ]; then
+   options=`echo $theBinding | sed -e 's/shared-//g' `
+   mk=$BASEDIR/lib/Makefile.tau-$options
+   if [ -r $mk ]; then 
+     if [ $verbose = "true" ]; then 
+       echo "Using TAU_MAKEFILE=$mk to extract PAPIDIR"
+     fi
+     papibin=`grep "^PAPIDIR" $mk | sed -e 's/^PAPIDIR=//g' | head -n 1 `/bin
+     if [ "x$papibin" != "x" -a -x $papibin/papi_event_chooser ]; then
+       $papibin/papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM &> /dev/null
+       ret=$?
+       if [ $ret = 0 -a "x$TAU_METRICS" = "x" ]; then
+          if [ $verbose = "true" ]; then 
+	    echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for tau_exec -numa"
+          fi
+	  export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
+       else 
+         echo "WARNING: tau_exec: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+       fi
+     fi
+   else
+     echo "WARNING: tau_exec: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+   fi
+fi
+
 if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
@@ -437,6 +474,12 @@ if [ $tau_use_ebs = "true" ] ; then
     fi
 fi
 
+if [ $track_power = "true" ]; then
+    export TAU_TRACK_POWER=1
+    if [ "x$TAU_INTERRUPT_INTERVAL" == "x" ]; then 
+      export TAU_INTERRUPT_INTERVAL=1
+    fi
+fi
 if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
     TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
     if [ $verbose = "true" ]; then 

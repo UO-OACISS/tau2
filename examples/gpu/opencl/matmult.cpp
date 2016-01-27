@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <sstream>
+#include <unistd.h>
 #include <math.h>
 #include <algorithm>
 #ifdef __APPLE__

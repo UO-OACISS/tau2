@@ -785,7 +785,7 @@ extern "C" int Tau_show_profiles()
     int pos = Tau_thread_flags[tid].Tau_global_stackpos;
     while (pos >= 0) {
       Profiler * p = &(Tau_thread_flags[tid].Tau_global_stack[pos]);
-      TAU_VERBOSE(" *** Alfred Profile (%d:%d) :  %s\n", tid, pos, p->ThisFunction->Name);
+      TAU_VERBOSE(" *** Alfred Profile (%d:%d:%d) :  %s\n", Tau_get_node(), tid, pos, p->ThisFunction->Name);
       pos--;
     }
   }
@@ -896,6 +896,7 @@ extern "C" void Tau_set_node(int node) {
   TauInternalFunctionGuard protects_this_function;
   if (node >= 0) TheSafeToDumpData()=1;
   RtsLayer::setMyNode(node);
+  atexit(Tau_destructor_trigger);
 }
 
 ///////////////////////////////////////////////////////////////////////////

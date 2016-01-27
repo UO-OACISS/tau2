@@ -54,7 +54,7 @@ cl_int clGetPlatformIDs(cl_uint a1, cl_platform_id * a2, cl_uint * a3) {
 
   typedef cl_int (*clGetPlatformIDs_p) (cl_uint, cl_platform_id *, cl_uint *);
   static clGetPlatformIDs_p clGetPlatformIDs_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetPlatformIDs(cl_uint, cl_platform_id *, cl_uint *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -82,7 +82,7 @@ cl_int clGetPlatformInfo(cl_platform_id a1, cl_platform_info a2, size_t a3, void
 
   typedef cl_int (*clGetPlatformInfo_p) (cl_platform_id, cl_platform_info, size_t, void *, size_t *);
   static clGetPlatformInfo_p clGetPlatformInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetPlatformInfo(cl_platform_id, cl_platform_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -110,7 +110,7 @@ cl_int clGetDeviceIDs(cl_platform_id a1, cl_device_type a2, cl_uint a3, cl_devic
 
   typedef cl_int (*clGetDeviceIDs_p) (cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *);
   static clGetDeviceIDs_p clGetDeviceIDs_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetDeviceIDs(cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -138,7 +138,7 @@ cl_int clGetDeviceInfo(cl_device_id a1, cl_device_info a2, size_t a3, void * a4,
 
   typedef cl_int (*clGetDeviceInfo_p) (cl_device_id, cl_device_info, size_t, void *, size_t *);
   static clGetDeviceInfo_p clGetDeviceInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetDeviceInfo(cl_device_id, cl_device_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -166,7 +166,7 @@ cl_context clCreateContext(const cl_context_properties * a1, cl_uint a2, const c
 
   typedef cl_context (*clCreateContext_p) (const cl_context_properties *, cl_uint, const cl_device_id *, void (*)(const char *, const void *, size_t, void *), void *, cl_int *);
   static clCreateContext_p clCreateContext_h = NULL;
-  cl_context retval;
+  cl_context retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_context clCreateContext(const cl_context_properties *, cl_uint, const cl_device_id *, void (*)(const char *, const void *, size_t, void *) C, void *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -194,7 +194,7 @@ cl_context clCreateContextFromType(const cl_context_properties * a1, cl_device_t
 
   typedef cl_context (*clCreateContextFromType_p) (const cl_context_properties *, cl_device_type, void (*)(const char *, const void *, size_t, void *), void *, cl_int *);
   static clCreateContextFromType_p clCreateContextFromType_h = NULL;
-  cl_context retval;
+  cl_context retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_context clCreateContextFromType(const cl_context_properties *, cl_device_type, void (*)(const char *, const void *, size_t, void *) C, void *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -222,7 +222,7 @@ cl_int clRetainContext(cl_context a1) {
 
   typedef cl_int (*clRetainContext_p) (cl_context);
   static clRetainContext_p clRetainContext_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clRetainContext(cl_context) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -250,7 +250,7 @@ cl_int clReleaseContext(cl_context a1) {
 
   typedef cl_int (*clReleaseContext_p) (cl_context);
   static clReleaseContext_p clReleaseContext_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clReleaseContext(cl_context) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -283,7 +283,7 @@ cl_int clGetContextInfo(cl_context a1, cl_context_info a2, size_t a3, void * a4,
 
   typedef cl_int (*clGetContextInfo_p) (cl_context, cl_context_info, size_t, void *, size_t *);
   static clGetContextInfo_p clGetContextInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetContextInfo(cl_context, cl_context_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -311,7 +311,7 @@ cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command
 
   typedef cl_command_queue (*clCreateCommandQueue_p) (cl_context, cl_device_id, cl_command_queue_properties, cl_int *);
   static clCreateCommandQueue_p clCreateCommandQueue_h = NULL;
-  cl_command_queue retval;
+  cl_command_queue retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_command_queue clCreateCommandQueue(cl_context, cl_device_id, cl_command_queue_properties, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -346,7 +346,7 @@ cl_int clRetainCommandQueue(cl_command_queue a1) {
 
   typedef cl_int (*clRetainCommandQueue_p) (cl_command_queue);
   static clRetainCommandQueue_p clRetainCommandQueue_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clRetainCommandQueue(cl_command_queue) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -374,7 +374,7 @@ cl_int clReleaseCommandQueue(cl_command_queue a1) {
 
   typedef cl_int (*clReleaseCommandQueue_p) (cl_command_queue);
   static clReleaseCommandQueue_p clReleaseCommandQueue_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clReleaseCommandQueue(cl_command_queue) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -406,7 +406,7 @@ cl_int clGetCommandQueueInfo(cl_command_queue a1, cl_command_queue_info a2, size
 
   typedef cl_int (*clGetCommandQueueInfo_p) (cl_command_queue, cl_command_queue_info, size_t, void *, size_t *);
   static clGetCommandQueueInfo_p clGetCommandQueueInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetCommandQueueInfo(cl_command_queue, cl_command_queue_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -434,7 +434,7 @@ cl_int clSetCommandQueueProperty(cl_command_queue a1, cl_command_queue_propertie
 
   typedef cl_int (*clSetCommandQueueProperty_p) (cl_command_queue, cl_command_queue_properties, cl_bool, cl_command_queue_properties *);
   static clSetCommandQueueProperty_p clSetCommandQueueProperty_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clSetCommandQueueProperty(cl_command_queue, cl_command_queue_properties, cl_bool, cl_command_queue_properties *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -462,7 +462,7 @@ cl_mem clCreateBuffer(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_i
 
   typedef cl_mem (*clCreateBuffer_p) (cl_context, cl_mem_flags, size_t, void *, cl_int *);
   static clCreateBuffer_p clCreateBuffer_h = NULL;
-  cl_mem retval;
+  cl_mem retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_mem clCreateBuffer(cl_context, cl_mem_flags, size_t, void *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -490,7 +490,7 @@ cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void * a
 
   typedef cl_mem (*clCreateBuffer_p) (cl_context, cl_mem_flags, size_t, void *, cl_int *);
   static clCreateBuffer_p clCreateBuffer_h = NULL;
-  cl_mem retval;
+  cl_mem retval = NULL;
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -515,7 +515,7 @@ cl_mem clCreateImage2D(cl_context a1, cl_mem_flags a2, const cl_image_format * a
 
   typedef cl_mem (*clCreateImage2D_p) (cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, void *, cl_int *);
   static clCreateImage2D_p clCreateImage2D_h = NULL;
-  cl_mem retval;
+  cl_mem retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_mem clCreateImage2D(cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, void *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -543,7 +543,7 @@ cl_mem clCreateImage3D(cl_context a1, cl_mem_flags a2, const cl_image_format * a
 
   typedef cl_mem (*clCreateImage3D_p) (cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, size_t, size_t, void *, cl_int *);
   static clCreateImage3D_p clCreateImage3D_h = NULL;
-  cl_mem retval;
+  cl_mem retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_mem clCreateImage3D(cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, size_t, size_t, void *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -571,7 +571,7 @@ cl_int clRetainMemObject(cl_mem a1) {
 
   typedef cl_int (*clRetainMemObject_p) (cl_mem);
   static clRetainMemObject_p clRetainMemObject_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clRetainMemObject(cl_mem) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -599,7 +599,7 @@ cl_int clReleaseMemObject(cl_mem a1) {
 
   typedef cl_int (*clReleaseMemObject_p) (cl_mem);
   static clReleaseMemObject_p clReleaseMemObject_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clReleaseMemObject(cl_mem) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -627,7 +627,7 @@ cl_int clGetSupportedImageFormats(cl_context a1, cl_mem_flags a2, cl_mem_object_
 
   typedef cl_int (*clGetSupportedImageFormats_p) (cl_context, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format *, cl_uint *);
   static clGetSupportedImageFormats_p clGetSupportedImageFormats_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetSupportedImageFormats(cl_context, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format *, cl_uint *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -655,7 +655,7 @@ cl_int clGetMemObjectInfo(cl_mem a1, cl_mem_info a2, size_t a3, void * a4, size_
 
   typedef cl_int (*clGetMemObjectInfo_p) (cl_mem, cl_mem_info, size_t, void *, size_t *);
   static clGetMemObjectInfo_p clGetMemObjectInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetMemObjectInfo(cl_mem, cl_mem_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -683,7 +683,7 @@ cl_int clGetImageInfo(cl_mem a1, cl_image_info a2, size_t a3, void * a4, size_t 
 
   typedef cl_int (*clGetImageInfo_p) (cl_mem, cl_image_info, size_t, void *, size_t *);
   static clGetImageInfo_p clGetImageInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetImageInfo(cl_mem, cl_image_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -711,7 +711,7 @@ cl_sampler clCreateSampler(cl_context a1, cl_bool a2, cl_addressing_mode a3, cl_
 
   typedef cl_sampler (*clCreateSampler_p) (cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int *);
   static clCreateSampler_p clCreateSampler_h = NULL;
-  cl_sampler retval;
+  cl_sampler retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_sampler clCreateSampler(cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -739,7 +739,7 @@ cl_int clRetainSampler(cl_sampler a1) {
 
   typedef cl_int (*clRetainSampler_p) (cl_sampler);
   static clRetainSampler_p clRetainSampler_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clRetainSampler(cl_sampler) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -767,7 +767,7 @@ cl_int clReleaseSampler(cl_sampler a1) {
 
   typedef cl_int (*clReleaseSampler_p) (cl_sampler);
   static clReleaseSampler_p clReleaseSampler_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clReleaseSampler(cl_sampler) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -795,7 +795,7 @@ cl_int clGetSamplerInfo(cl_sampler a1, cl_sampler_info a2, size_t a3, void * a4,
 
   typedef cl_int (*clGetSamplerInfo_p) (cl_sampler, cl_sampler_info, size_t, void *, size_t *);
   static clGetSamplerInfo_p clGetSamplerInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetSamplerInfo(cl_sampler, cl_sampler_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -823,7 +823,7 @@ cl_program clCreateProgramWithSource(cl_context a1, cl_uint a2, const char ** a3
 
   typedef cl_program (*clCreateProgramWithSource_p) (cl_context, cl_uint, const char **, const size_t *, cl_int *);
   static clCreateProgramWithSource_p clCreateProgramWithSource_h = NULL;
-  cl_program retval;
+  cl_program retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_program clCreateProgramWithSource(cl_context, cl_uint, const char **, const size_t *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -851,7 +851,7 @@ cl_program clCreateProgramWithBinary(cl_context a1, cl_uint a2, const cl_device_
 
   typedef cl_program (*clCreateProgramWithBinary_p) (cl_context, cl_uint, const cl_device_id *, const size_t *, const unsigned char **, cl_int *, cl_int *);
   static clCreateProgramWithBinary_p clCreateProgramWithBinary_h = NULL;
-  cl_program retval;
+  cl_program retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_program clCreateProgramWithBinary(cl_context, cl_uint, const cl_device_id *, const size_t *, const unsigned char **, cl_int *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -879,7 +879,7 @@ cl_int clRetainProgram(cl_program a1) {
 
   typedef cl_int (*clRetainProgram_p) (cl_program);
   static clRetainProgram_p clRetainProgram_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clRetainProgram(cl_program) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -907,7 +907,7 @@ cl_int clReleaseProgram(cl_program a1) {
 
   typedef cl_int (*clReleaseProgram_p) (cl_program);
   static clReleaseProgram_p clReleaseProgram_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clReleaseProgram(cl_program) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -938,7 +938,7 @@ cl_int clBuildProgram(cl_program a1, cl_uint a2, const cl_device_id * a3, const 
 
   typedef cl_int (*clBuildProgram_p) (cl_program, cl_uint, const cl_device_id *, const char *, void (*)(cl_program, void *), void *);
   static clBuildProgram_p clBuildProgram_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clBuildProgram(cl_program, cl_uint, const cl_device_id *, const char *, void (*)(cl_program, void *) C, void *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -966,7 +966,7 @@ cl_int clUnloadCompiler() {
 
   typedef cl_int (*clUnloadCompiler_p) ();
   static clUnloadCompiler_p clUnloadCompiler_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clUnloadCompiler() C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -994,7 +994,7 @@ cl_int clGetProgramInfo(cl_program a1, cl_program_info a2, size_t a3, void * a4,
 
   typedef cl_int (*clGetProgramInfo_p) (cl_program, cl_program_info, size_t, void *, size_t *);
   static clGetProgramInfo_p clGetProgramInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetProgramInfo(cl_program, cl_program_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1022,7 +1022,7 @@ cl_int clGetProgramBuildInfo(cl_program a1, cl_device_id a2, cl_program_build_in
 
   typedef cl_int (*clGetProgramBuildInfo_p) (cl_program, cl_device_id, cl_program_build_info, size_t, void *, size_t *);
   static clGetProgramBuildInfo_p clGetProgramBuildInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetProgramBuildInfo(cl_program, cl_device_id, cl_program_build_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1050,7 +1050,7 @@ cl_kernel clCreateKernel(cl_program a1, const char * a2, cl_int * a3) {
 
   typedef cl_kernel (*clCreateKernel_p) (cl_program, const char *, cl_int *);
   static clCreateKernel_p clCreateKernel_h = NULL;
-  cl_kernel retval;
+  cl_kernel retval = NULL;
   TAU_PROFILE_TIMER(t,"cl_kernel clCreateKernel(cl_program, const char *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1078,7 +1078,7 @@ cl_int clCreateKernelsInProgram(cl_program a1, cl_uint a2, cl_kernel * a3, cl_ui
 
   typedef cl_int (*clCreateKernelsInProgram_p) (cl_program, cl_uint, cl_kernel *, cl_uint *);
   static clCreateKernelsInProgram_p clCreateKernelsInProgram_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clCreateKernelsInProgram(cl_program, cl_uint, cl_kernel *, cl_uint *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1106,7 +1106,7 @@ cl_int clRetainKernel(cl_kernel a1) {
 
   typedef cl_int (*clRetainKernel_p) (cl_kernel);
   static clRetainKernel_p clRetainKernel_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clRetainKernel(cl_kernel) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1134,7 +1134,7 @@ cl_int clReleaseKernel(cl_kernel a1) {
 
   typedef cl_int (*clReleaseKernel_p) (cl_kernel);
   static clReleaseKernel_p clReleaseKernel_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clReleaseKernel(cl_kernel) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1162,7 +1162,7 @@ cl_int clSetKernelArg(cl_kernel a1, cl_uint a2, size_t a3, const void * a4) {
 
   typedef cl_int (*clSetKernelArg_p) (cl_kernel, cl_uint, size_t, const void *);
   static clSetKernelArg_p clSetKernelArg_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clSetKernelArg(cl_kernel, cl_uint, size_t, const void *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1190,7 +1190,7 @@ cl_int clGetKernelInfo(cl_kernel a1, cl_kernel_info a2, size_t a3, void * a4, si
 
   typedef cl_int (*clGetKernelInfo_p) (cl_kernel, cl_kernel_info, size_t, void *, size_t *);
   static clGetKernelInfo_p clGetKernelInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetKernelInfo(cl_kernel, cl_kernel_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1218,7 +1218,7 @@ cl_int clGetKernelWorkGroupInfo(cl_kernel a1, cl_device_id a2, cl_kernel_work_gr
 
   typedef cl_int (*clGetKernelWorkGroupInfo_p) (cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *);
   static clGetKernelWorkGroupInfo_p clGetKernelWorkGroupInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetKernelWorkGroupInfo(cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1247,7 +1247,7 @@ cl_int clWaitForEvents(cl_uint a1, const cl_event * a2) {
 
   typedef cl_int (*clWaitForEvents_p) (cl_uint, const cl_event *);
   static clWaitForEvents_p clWaitForEvents_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clWaitForEvents(cl_uint, const cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1279,7 +1279,7 @@ cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2) {
 
   typedef cl_int (*clWaitForEvents_p) (cl_uint, const cl_event *);
   static clWaitForEvents_p clWaitForEvents_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1304,7 +1304,7 @@ cl_int clGetEventInfo(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_
 
   typedef cl_int (*clGetEventInfo_p) (cl_event, cl_event_info, size_t, void *, size_t *);
   static clGetEventInfo_p clGetEventInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetEventInfo(cl_event, cl_event_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1332,7 +1332,7 @@ cl_int clRetainEvent(cl_event a1) {
 
   typedef cl_int (*clRetainEvent_p) (cl_event);
   static clRetainEvent_p clRetainEvent_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clRetainEvent(cl_event) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1360,7 +1360,7 @@ cl_int clReleaseEvent_noinst(cl_event a1) {
 
   typedef cl_int (*clReleaseEvent_p) (cl_event);
   static clReleaseEvent_p clReleaseEvent_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1385,7 +1385,7 @@ cl_int clReleaseEvent(cl_event a1) {
 
   typedef cl_int (*clReleaseEvent_p) (cl_event);
   static clReleaseEvent_p clReleaseEvent_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clReleaseEvent(cl_event) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1419,7 +1419,7 @@ cl_int clGetEventProfilingInfo(cl_event a1, cl_profiling_info a2, size_t a3, voi
 
   typedef cl_int (*clGetEventProfilingInfo_p) (cl_event, cl_profiling_info, size_t, void *, size_t *);
   static clGetEventProfilingInfo_p clGetEventProfilingInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetEventProfilingInfo(cl_event, cl_profiling_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1446,7 +1446,7 @@ cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t 
 
   typedef cl_int (*clGetEventProfilingInfo_p) (cl_event, cl_profiling_info, size_t, void *, size_t *);
   static clGetEventProfilingInfo_p clGetEventProfilingInfo_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clGetEventProfilingInfo(cl_event, cl_profiling_info, size_t, void *, size_t *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1472,7 +1472,7 @@ cl_int clFlush(cl_command_queue a1) {
 
   typedef cl_int (*clFlush_p) (cl_command_queue);
   static clFlush_p clFlush_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clFlush(cl_command_queue) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1500,7 +1500,7 @@ cl_int clFinish(cl_command_queue a1) {
 
   typedef cl_int (*clFinish_p) (cl_command_queue);
   static clFinish_p clFinish_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clFinish(cl_command_queue) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1530,7 +1530,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 
   typedef cl_int (*clEnqueueReadBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueReadBuffer_p clEnqueueReadBuffer_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1568,8 +1568,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #else
 	FunctionInfo *callingSite;
-	int err;
-	const char* name = "ReadBuffer";
+	const char name[] = "ReadBuffer";
 
         Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL ReadBuffer: %p\n", p);
@@ -1587,7 +1586,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 //	//OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 	//callingSite, a9, MemcpyDtoH);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyDtoH);
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
 	gId, a5, MemcpyDtoH);
 	
@@ -1609,7 +1608,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 
   typedef cl_int (*clEnqueueWriteBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueWriteBuffer_p clEnqueueWriteBuffer_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1644,8 +1643,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #else
 	FunctionInfo *callingSite;
-	int err;
-	char* name = "WriteBuffer";
+	const char name[] = "WriteBuffer";
 	//printf("name: %s.\n", name);
 
         Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
@@ -1665,7 +1663,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9, MemcpyHtoD);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyHtoD);
 	
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a5);
@@ -1686,7 +1684,7 @@ cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3, s
 
   typedef cl_int (*clEnqueueWriteBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueWriteBuffer_p clEnqueueWriteBuffer_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1711,7 +1709,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 
   typedef cl_int (*clEnqueueCopyBuffer_p) (cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
   static clEnqueueCopyBuffer_p clEnqueueCopyBuffer_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1747,8 +1745,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 
 #else
 	FunctionInfo *callingSite;
-	int err;
-	char* name = "CopyBuffer";
+	const char name[] = "CopyBuffer";
 
         Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL CopyBuffer: %p\n", p);
@@ -1766,7 +1763,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9, MemcpyDtoD);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyDtoD);
 	
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, a6);
@@ -1790,7 +1787,7 @@ cl_int clEnqueueReadImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size
 
   typedef cl_int (*clEnqueueReadImage_p) (cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueReadImage_p clEnqueueReadImage_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueReadImage(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1819,7 +1816,7 @@ cl_int clEnqueueWriteImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const siz
 
   typedef cl_int (*clEnqueueWriteImage_p) (cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueWriteImage_p clEnqueueWriteImage_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueWriteImage(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1848,7 +1845,7 @@ cl_int clEnqueueCopyImage(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_
 
   typedef cl_int (*clEnqueueCopyImage_p) (cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueCopyImage_p clEnqueueCopyImage_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyImage(cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1877,7 +1874,7 @@ cl_int clEnqueueCopyImageToBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, con
 
   typedef cl_int (*clEnqueueCopyImageToBuffer_p) (cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, size_t, cl_uint, const cl_event *, cl_event *);
   static clEnqueueCopyImageToBuffer_p clEnqueueCopyImageToBuffer_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyImageToBuffer(cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, size_t, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1906,7 +1903,7 @@ cl_int clEnqueueCopyBufferToImage(cl_command_queue a1, cl_mem a2, cl_mem a3, siz
 
   typedef cl_int (*clEnqueueCopyBufferToImage_p) (cl_command_queue, cl_mem, cl_mem, size_t, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueCopyBufferToImage_p clEnqueueCopyBufferToImage_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyBufferToImage(cl_command_queue, cl_mem, cl_mem, size_t, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1934,7 +1931,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 
   typedef void * (*clEnqueueMapBuffer_p) (cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
   static clEnqueueMapBuffer_p clEnqueueMapBuffer_h = NULL;
-  void * retval;
+  void * retval = NULL;
   TAU_PROFILE_TIMER(t,"void *clEnqueueMapBuffer(cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -1963,8 +1960,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 	//printf("name %s.\n", mem_data->name);
 #endif
 	FunctionInfo *callingSite;
-	int err;
-	char* name = "MapBuffer";
+	const char name[] = "MapBuffer";
 	//printf("name: %s.\n", name);
 
 	callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
@@ -1975,7 +1971,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9, MemcpyHtoD);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyHtoD);
   
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a6);
@@ -1999,7 +1995,7 @@ void * clEnqueueMapImage(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_flag
 
   typedef void * (*clEnqueueMapImage_p) (cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *, const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *, cl_int *);
   static clEnqueueMapImage_p clEnqueueMapImage_h = NULL;
-  void * retval;
+  void * retval = NULL;
   TAU_PROFILE_TIMER(t,"void *clEnqueueMapImage(cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *, const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *, cl_int *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2027,7 +2023,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 
   typedef cl_int (*clEnqueueUnmapMemObject_p) (cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueUnmapMemObject_p clEnqueueUnmapMemObject_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueUnmapMemObject(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2050,8 +2046,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 		a6 = &(*new_event);
 	}
 	FunctionInfo *callingSite;
-	int err;
-	char* name = "UnmapBuffer";
+	const char name[] = "UnmapBuffer";
 	//printf("name: %s.\n", name);
 
         Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
@@ -2071,7 +2066,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a6, MemcpyDtoH);
 	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a6, callingSite);
+	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a6, callingSite, MemcpyDtoH);
   
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, 0);
@@ -2090,7 +2085,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 
   typedef cl_int (*clEnqueueNDRangeKernel_p) (cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
   static clEnqueueNDRangeKernel_p clEnqueueNDRangeKernel_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueNDRangeKernel(cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2110,7 +2105,6 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 
 #ifdef TAU_ENABLE_CL_CALLBACK
 	OpenCLGpuEvent *kernel_data = (OpenCLGpuEvent*) malloc(kernel_data_size);
-	int err;
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
         Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
@@ -2150,8 +2144,9 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 		sizeof(char[TAU_MAX_FUNCTIONNAME]), name, NULL);
-	//printf("kernel name: %s.\n", name);	
+	//printf("clEnqueueNDRangeKernel. kernel name: %s.\n", name);	
 	//
+	if (err == CL_SUCCESS) {
         Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
         TAU_VERBOSE("Profiler in OpenCL clEnqueueNDRangeKernel_h: %p\n", p);
         if (p) {
@@ -2169,7 +2164,8 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 //	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
 //	callingSite, a9);
 	
-	Tau_opencl_enqueue_event(name, a1, a9, callingSite);
+	Tau_opencl_enqueue_event(name, a1, a9, callingSite, -1);
+	}
 
 
 #endif
@@ -2183,7 +2179,7 @@ cl_int clEnqueueTask(cl_command_queue a1, cl_kernel a2, cl_uint a3, const cl_eve
 
   typedef cl_int (*clEnqueueTask_p) (cl_command_queue, cl_kernel, cl_uint, const cl_event *, cl_event *);
   static clEnqueueTask_p clEnqueueTask_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueTask(cl_command_queue, cl_kernel, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2211,7 +2207,7 @@ cl_int clEnqueueNativeKernel(cl_command_queue a1, void (*a2)(void *), void * a3,
 
   typedef cl_int (*clEnqueueNativeKernel_p) (cl_command_queue, void (*)(void *), void *, size_t, cl_uint, const cl_mem *, const void **, cl_uint, const cl_event *, cl_event *);
   static clEnqueueNativeKernel_p clEnqueueNativeKernel_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueNativeKernel(cl_command_queue, void (*)(void *) C, void *, size_t, cl_uint, const cl_mem *, const void **, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2239,7 +2235,7 @@ cl_int clEnqueueMarker(cl_command_queue a1, cl_event * a2) {
 
   typedef cl_int (*clEnqueueMarker_p) (cl_command_queue, cl_event *);
   static clEnqueueMarker_p clEnqueueMarker_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueMarker(cl_command_queue, cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2267,7 +2263,7 @@ cl_int clEnqueueWaitForEvents(cl_command_queue a1, cl_uint a2, const cl_event * 
 
   typedef cl_int (*clEnqueueWaitForEvents_p) (cl_command_queue, cl_uint, const cl_event *);
   static clEnqueueWaitForEvents_p clEnqueueWaitForEvents_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueWaitForEvents(cl_command_queue, cl_uint, const cl_event *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2297,7 +2293,7 @@ cl_int clEnqueueBarrier(cl_command_queue a1) {
 
   typedef cl_int (*clEnqueueBarrier_p) (cl_command_queue);
   static clEnqueueBarrier_p clEnqueueBarrier_h = NULL;
-  cl_int retval;
+  cl_int retval = CL_SUCCESS;
   TAU_PROFILE_TIMER(t,"cl_int clEnqueueBarrier(cl_command_queue) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
@@ -2327,7 +2323,7 @@ void * clGetExtensionFunctionAddress(const char * a1) {
 
   typedef void * (*clGetExtensionFunctionAddress_p) (const char *);
   static clGetExtensionFunctionAddress_p clGetExtensionFunctionAddress_h = NULL;
-  void * retval;
+  void * retval = NULL;
   TAU_PROFILE_TIMER(t,"void *clGetExtensionFunctionAddress(const char *) C", "", CL_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 

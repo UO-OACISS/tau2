@@ -3,6 +3,7 @@
 
 #define TAU_SOS_INTERRUPT_PERIOD 2 // two seconds
 
+/*
 #ifdef TAU_SOS
 #include "VMPI.h"
 static inline MPI_Comm TAU_SOS_MAP_COMMUNICATOR(MPI_Comm _c) {
@@ -15,6 +16,9 @@ static inline MPI_Comm TAU_SOS_MAP_COMMUNICATOR(MPI_Comm _c) {
 #else
 #define TAU_SOS_MAP_COMMUNICATOR(arg) arg
 #endif
+*/
+
+#define TAU_SOS_MAP_COMMUNICATOR(arg) arg
 
 #ifdef __cplusplus
 extern "C" {  // export a C interface for C++ codes

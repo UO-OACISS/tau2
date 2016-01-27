@@ -1,6 +1,8 @@
+
 #include "Profile/TauSOS.h"
 #include "Profile/Profiler.h"
-#include "TauMetrics.h"
+#include "Profile/TauMetrics.h"
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -15,9 +17,13 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
+
+#include <mpi.h>
+
 #include "sos.h"
 
-SOS_pub_handle *pub = NULL;
+
+SOS_pub *pub = NULL;
 unsigned long fi_count = 0;
 static bool done = false;
 pthread_mutex_t _my_mutex; // for initialization, termination
@@ -66,11 +72,11 @@ void * Tau_sos_thread_function(void* data) {
     PMPI_Barrier( TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD) ); // wait for everyone to join
     while (!done) {
         sleep(2);
-        //TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
+        TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
         do_lock();
         TAU_SOS_send_data();
         do_unlock();
-        //TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+        TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
     }
     TAU_VERBOSE("TAU SOS thread exiting.\n"); fflush(stderr);
     pthread_exit((void*)0L);
@@ -82,9 +88,8 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         _threaded = threaded > 0 ? true : false;
         init_lock();
         scoped_lock mylock;  // lock from now to the end of this block
-        SOS_init(argc, argv, SOS_APP);
-        SOS_comm_split();
-        pub = SOS_new_pub((char *)"TAU Application");
+        SOS_init(argc, argv, SOS_ROLE_CLIENT);
+        pub = SOS_pub_create((char *)"TAU Application");
         if (_threaded) {
             TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
@@ -165,7 +170,7 @@ extern "C" void TAU_SOS_send_data(void) {
         std::stringstream calls_str;
         calls_str << "TAU::" << tid << "::calls::" << fi->GetName();
         const std::string& tmpcalls = calls_str.str();
-        SOS_pack(pub, tmpcalls.c_str(), SOS_DOUBLE, calls);
+        SOS_pack(pub, tmpcalls.c_str(), SOS_VAL_TYPE_DOUBLE, calls);
         // todo - subroutines
         // iterate over metrics 
         std::stringstream incl_str;
@@ -181,8 +186,8 @@ extern "C" void TAU_SOS_send_data(void) {
                 inclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
                 exclusive.d_val += fi->getDumpExclusiveValues(tid)[m];
             //}
-            SOS_pack(pub, tmpincl.c_str(), SOS_DOUBLE, inclusive);
-            SOS_pack(pub, tmpexcl.c_str(), SOS_DOUBLE, exclusive);
+            SOS_pack(pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, inclusive);
+            SOS_pack(pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, exclusive);
         }
     }
   }

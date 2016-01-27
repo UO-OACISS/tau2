@@ -1611,14 +1611,14 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   tau_mpi_init_predefined_constants();
-#ifdef TAU_SOS
+  //#ifdef TAU_SOS
   int provided = 0;
-  returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &provided );
+  returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
   //printf("Requested: %d, Provided: %d\n", MPI_THREAD_MULTIPLE, provided);
-  TAU_SOS_init(argc, argv, provided == MPI_THREAD_MULTIPLE);
-#else
-  returnVal = PMPI_Init( argc, argv );
-#endif
+  TAU_SOS_init(argc, argv, provided >= MPI_THREAD_FUNNELED);
+  //#else
+  //returnVal = PMPI_Init( argc, argv );
+  //#endif
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -1680,10 +1680,11 @@ int *provided;
  
   tau_mpi_init_predefined_constants();
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
-#ifdef TAU_SOS
+  //#ifdef TAU_SOS
   //printf("Requested: %d, Provided: %d\n", required, provided);
-  TAU_SOS_init(argc, argv, *provided == MPI_THREAD_MULTIPLE);
-#endif
+  // Old version: TAU_SOS_init(argc, argv, *provided >= MPI_THREAD_FUNNELED);
+  TAU_SOS_init(argc, argv, true);
+  //#endif
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
