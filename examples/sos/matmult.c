@@ -15,10 +15,10 @@
 #include "matmult_initialize.h"
 #include "Profile/TauSOS.h"
 
-#include <mpi.h>
+// #include <mpi.h>
 
 
-int provided = MPI_THREAD_SINGLE;
+// int provided = MPI_THREAD_SINGLE;
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
 
@@ -150,6 +150,7 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
+#if 0
   int rc = MPI_SUCCESS;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
@@ -172,6 +173,7 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
+#endif
 
 #ifdef PTHREADS
   if (ret = pthread_create(&tid1, NULL, threaded_func, NULL) )
@@ -195,13 +197,13 @@ int main (int argc, char *argv[])
 #endif /* PTHREADS */
 
 /* On thread 0: */
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int rank = 0;
+  //MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int i;
   int maxi = 5;
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
-    MPI_Barrier(MPI_COMM_WORLD);
+    //MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
     do_work();
     //if (provided < MPI_THREAD_MULTIPLE) {
@@ -233,7 +235,7 @@ int main (int argc, char *argv[])
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
-  MPI_Finalize();
+  //MPI_Finalize();
   printf ("Done.\n");
 
   return 0;

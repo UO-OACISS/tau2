@@ -43,6 +43,7 @@
 #include <Profile/TauInit.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauBacktrace.h>
+#include "Profile/TauSOS.h"
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -500,6 +501,20 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef TAU_OPENMP
   Tau_initialize_collector_api();
+#endif
+
+#ifdef TAU_SOS
+  bool threads = false;
+#ifdef PTHREADS
+  threads = true; 
+#endif
+/* Fixme! Replace these with values from TAU metadata. */
+  int argc = 1;
+  char **argv;
+  argv = (char **)(malloc(sizeof(char*)));
+  argv[0] = (char *)(calloc(100, sizeof(char)));
+  sprintf(argv[0], "%s", "TAU");
+  TAU_SOS_init(&argc, &argv, threads);
 #endif
 
   // Mark initialization complete so calls below can start timers

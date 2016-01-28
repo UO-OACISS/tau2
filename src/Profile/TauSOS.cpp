@@ -18,10 +18,9 @@
 #include <sys/time.h>
 #include <signal.h>
 
-#include <mpi.h>
+//#include <mpi.h>
 
 #include "sos.h"
-
 
 SOS_pub *pub = NULL;
 unsigned long fi_count = 0;
@@ -69,7 +68,7 @@ public:
 };
 
 void * Tau_sos_thread_function(void* data) {
-    PMPI_Barrier( TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD) ); // wait for everyone to join
+    //PMPI_Barrier( TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD) ); // wait for everyone to join
     while (!done) {
         sleep(2);
         TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
@@ -89,7 +88,28 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         init_lock();
         scoped_lock mylock;  // lock from now to the end of this block
         SOS_init(argc, argv, SOS_ROLE_CLIENT);
-        pub = SOS_pub_create((char *)"TAU Application");
+
+        char pub_name[SOS_DEFAULT_STRING_LEN] = {0};
+        char app_version[SOS_DEFAULT_STRING_LEN] = {0};
+
+        TAU_VERBOSE("[TAU_SOS_init]: Creating new pub...\n");
+
+/* Fixme! Replace these with values from TAU metadata. */
+        sprintf(pub_name, "TAU_SOS_SUPPORT");
+        sprintf(app_version, "v0.alpha");
+/* Fixme! Replace these with values from TAU metadata. */
+        pub = SOS_pub_create(pub_name);
+
+        pub->prog_ver           = strdup(app_version);
+        pub->meta.channel       = 1;
+        pub->meta.nature        = SOS_NATURE_EXEC_WORK;
+        pub->meta.layer         = SOS_LAYER_FLOW;
+        pub->meta.pri_hint      = SOS_PRI_IMMEDIATE;
+        pub->meta.scope_hint    = SOS_SCOPE_SELF;
+        pub->meta.retain_hint   = SOS_RETAIN_SESSION;
+
+        TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", pub->guid);
+
         if (_threaded) {
             TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
@@ -100,6 +120,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             }
         }
         initialized = true;
+        /* Fixme! Insert all the data that was collected into Metadata */
     }
 }
 
@@ -157,20 +178,27 @@ extern "C" void TAU_SOS_send_data(void) {
   TauMetrics_getCounterList(&counterNames, &numCounters);
   RtsLayer::LockDB();
   bool keys_added = false;
+
+  //foreach: TIMER
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
     // get the number of calls
     int tid = 0; // todo: get ALL thread data.
-    SOS_val calls, inclusive, exclusive;
-    calls.d_val = 0.0;
+    SOS_val calls;
+    SOS_val inclusive, exclusive;
+    calls.i_val = 0.0;
     inclusive.d_val = 0.0;
-    inclusive.d_val = 0.0;
+    exclusive.d_val = 0.0;
+
+    //foreach: THREAD
     for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-        calls.d_val += fi->GetCalls(tid);
+        calls.i_val = fi->GetCalls(tid);
         std::stringstream calls_str;
         calls_str << "TAU::" << tid << "::calls::" << fi->GetName();
         const std::string& tmpcalls = calls_str.str();
-        SOS_pack(pub, tmpcalls.c_str(), SOS_VAL_TYPE_DOUBLE, calls);
+
+        SOS_pack(pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, calls);
+
         // todo - subroutines
         // iterate over metrics 
         std::stringstream incl_str;
@@ -182,10 +210,10 @@ extern "C" void TAU_SOS_send_data(void) {
             excl_str.clear();
             excl_str << "TAU::" << tid << "::exclusive_" << counterNames[m] << "::" << fi->GetName();
             const std::string& tmpexcl = excl_str.str();
-            //for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-                inclusive.d_val += fi->getDumpInclusiveValues(tid)[m];
-                exclusive.d_val += fi->getDumpExclusiveValues(tid)[m];
-            //}
+
+            inclusive.d_val = fi->getDumpInclusiveValues(tid)[m];
+            exclusive.d_val = fi->getDumpExclusiveValues(tid)[m];
+            
             SOS_pack(pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, inclusive);
             SOS_pack(pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, exclusive);
         }
@@ -197,8 +225,12 @@ extern "C" void TAU_SOS_send_data(void) {
   }
   RtsLayer::UnLockDB();
   if (keys_added) {
-    SOS_announce(pub);
+      TAU_VERBOSE("[TAU_SOS_send_data]: Announcing the pub...\n");
+      SOS_announce(pub);
+      TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
   }
+  TAU_VERBOSE("[TAU_SOS_send_data]: Publishing the values...\n");
   SOS_publish(pub);
+  TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
 }
 
