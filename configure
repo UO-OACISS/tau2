@@ -2232,10 +2232,15 @@ if [ "x$python"  = "xyes" ] ; then
     fi
   fi
   if [ "x$pythonlib" = "x" ] ; then
-    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
+    for libdir in "lib" "lib32" "lib64" ; do
+      pythonlib=`echo ${pythonbin}../${libdir}/python* | sed -e 's/ .*//g'`
+      if [ -d "$pythonlib" ] ; then
+        break
+      fi
+    done
     if [ ! -d $pythonlib ] ; then
-        echo "Error: Cannot access Python lib directory $pythonlib"
-        exit 1
+      echo "Error: Cannot access Python lib directory $pythonlib"
+      exit 1
     fi
   fi
 fi
@@ -9433,6 +9438,11 @@ echo $fixmakeargs >> ./utils/FixMakefile.info
 
 # Now FINALLY FixMakefile with the string I have built
 utils/FixMakefile $fixmakeargs
+retval=$?
+if [ $retval -ne 0 ] ; then
+  echo "ERROR: One or more TAU components could not be configured. Please check above for error messages"
+  exit $retval
+fi
 
 # Use default setups, forget everything else (PHB)
 if [ $machine = default ] ; then
