@@ -2232,7 +2232,7 @@ if [ "x$python"  = "xyes" ] ; then
     fi
   fi
   if [ "x$pythonlib" = "x" ] ; then
-    for libdir in "lib" "lib32" "lib64" ; do
+    for libdir in "lib64" "lib32" "lib" ; do
       pythonlib=`echo ${pythonbin}../${libdir}/python* | sed -e 's/ .*//g'`
       if [ -d "$pythonlib" ] ; then
         break
