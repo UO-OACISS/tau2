@@ -2555,6 +2555,10 @@ TauUserEvent & ThePVarsMPIEvents(int index, int total_events) {
 extern "C" void Tau_track_pvar_event(int index, int total_events, double data) {
   ThePVarsMPIEvents(index, total_events).TriggerEvent(data, Tau_get_thread()); 
 }
+#else /* TAU_MPI_T */
+extern "C" int Tau_track_mpi_t_here(void) { 
+ // do nothing when MPI_T is not enabled
+}
 #endif /* TAU_MPI_T */
 
 
