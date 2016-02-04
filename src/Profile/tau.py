@@ -171,16 +171,19 @@ class Profile(ctau_impl.Profiler):
     def runmodule(self, modname, newname='__main__'):
         import sys
         from imp import find_module, new_module, PY_SOURCE
+        replaced = sys.modules.get(newname, None)
         self.enable()
         try:
             fileobj, path, desc = find_module(modname)
             if desc[2] != PY_SOURCE:
-              raise ImportError('No source file found for module %s' % modname)
+                raise ImportError('No source file found for module %s' % modname)
             code = compile(fileobj.read(), path, 'exec')
             module = new_module(newname)
-            sys.modules['__main__'] = module
+            sys.modules[newname] = module
             exec code in module.__dict__
         finally:
+            if replaced:
+                sys.modules[newname] = replaced
             self.disable()
         return self
 
