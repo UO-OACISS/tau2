@@ -248,6 +248,8 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
+static const char *env_cvar_metrics = NULL;
+static const char *env_cvar_values = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
@@ -641,6 +643,16 @@ void TAU_VERBOSE(const char *format, ...)
 const char *TauEnv_get_metrics() {
   if (env_metrics == NULL) TauEnv_initialize();
   return env_metrics;
+}
+
+extern "C" const char *TauEnv_get_cvar_metrics() {
+  if (env_cvar_metrics == NULL) TauEnv_initialize();
+  return env_cvar_metrics;
+}
+
+extern "C" const char *TauEnv_get_cvar_values() {
+  if (env_cvar_values == NULL) TauEnv_initialize();
+  return env_cvar_values;
 }
 
 extern "C" const char *TauEnv_get_profiledir() {
@@ -1593,6 +1605,20 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: METRICS is not set\n", env_metrics);
     } else {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
+    }
+
+    if ((env_cvar_metrics = getconf("TAU_MPI_T_CVAR_METRICS")) == NULL) {
+      env_cvar_metrics = "";   /* default to 'time' */
+      TAU_VERBOSE("TAU: MPI_T_CVAR_METRICS is not set\n", env_cvar_metrics);
+    } else {
+      TAU_VERBOSE("TAU: MPI_T_CVAR_METRICS is \"%s\"\n", env_cvar_metrics);
+    }
+
+    if ((env_cvar_values = getconf("TAU_MPI_T_CVAR_VALUES")) == NULL) {
+      env_cvar_values = "";   /* default to 'time' */
+      TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is not set\n", env_cvar_values);
+    } else {
+      TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is \"%s\"\n", env_cvar_values);
     }
 
     tmp = getconf("TAU_OPENMP_RUNTIME");

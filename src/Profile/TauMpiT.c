@@ -70,10 +70,111 @@ int Tau_mpi_t_initialize(void) {
     return return_val;
   }
   dprintf("TAU MPI_T STARTED session: pvars exposed = %d\n", num_pvars);
-  
+  return return_val;
+} 
+
+int Tau_mpi_t_cvar_initialize(void) {
+  int return_val;
+  const char *cvars = TauEnv_get_cvar_metrics();
+  const char *values = TauEnv_get_cvar_values();
+  if (cvars == (const char *) NULL) {
+    dprintf("TAU: No CVARS specified using TAU_MPI_T_CVAR_METRICS and TAU_MPI_T_CVAR_VALUES\n");
+  } else {
+    dprintf("CVAR_METRICS=%s\n", cvars);
+    if (values == (char *) NULL) {
+      printf("TAU: WARNING: Environment variable TAU_MPI_T_CVAR_METRICS is not specified for TAU_MPI_T_CVAR_METRICS=%s\n", 
+	cvars);
+    } else { // both cvars and values are specified
+    // Use strtok and parse the names of all CVARS using , as a delimiter. For now assume only one is specifed. 
+      long long val; 
+      sscanf(values, "%lld", &val);
+      dprintf("TAU: cvars=%s, values=%s, val = %lld\n", cvars, values, val); 
+      MPI_T_cvar_handle chandle; 
+      int cindex, num_vals, num_cvars;
+      
+      char name[TAU_NAME_LENGTH]= ""; 
+      char desc[TAU_NAME_LENGTH]= ""; 
+      int verbosity, binding, scope, i;
+      int name_len;
+      int desc_len;
+      MPI_Datatype datatype; 
+      MPI_T_enum enumtype; 
+      
+      int rank ;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+      return_val = MPI_T_cvar_get_num(&num_cvars); 
+      if (return_val != MPI_SUCCESS) { 
+	printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
+        return return_val;
+      }
+      for (i=0; i < num_cvars; i++) {
+        name_len = desc_len = TAU_NAME_LENGTH;
+        return_val = MPI_T_cvar_get_info(i, name, &name_len, &verbosity, &datatype, &enumtype, desc, &desc_len, &binding, &scope);
+        if (return_val != MPI_SUCCESS) {
+	  printf("TAU: Rank %d: Can't get cvar info i=%d, num_cvars=%d\n", rank, i, num_cvars);
+	  return return_val; 
+        }
+        if (rank == 0) {
+	  dprintf("CVAR[%d] = %s \t \t desc = %s\n", i, name, desc);
+        }
+	if (strcmp(name,cvars)==0) {
+	  if (rank == 0) {
+            dprintf("Rank: %d FOUND CVAR match: %s, cvars = %s, desc = %s\n", rank, name, cvars, desc);
+          }
+          cindex = i; 
+          return_val = MPI_T_cvar_handle_alloc(cindex, NULL, &chandle, &num_vals);
+          if (return_val != MPI_SUCCESS) {
+	    printf("TAU: Rank %d: Can't allocate cvar handle in this MPI implementation\n", rank);
+            return return_val;
+          }
+          int oldval=0; 
+          return_val = MPI_T_cvar_read(chandle, &oldval); 
+          if (return_val != MPI_SUCCESS) {
+	     printf("TAU: Rank %d: Can't read cvar %s = %d in this MPI implementation\n", rank, cvars, oldval);
+             return return_val;
+          } else {
+            if (rank == 0) {
+              dprintf("Oldval = %d, newval=%lld, cvars=%s\n", oldval, val, cvars);
+            }
+          }
+          return_val = MPI_T_cvar_write(chandle, &val); 
+          if (return_val != MPI_SUCCESS) {
+	     printf("TAU: Rank %d: Can't write cvar %s = %lld in this MPI implementation\n", rank, cvars, val);
+             return return_val;
+          }
+          int reset_value; 
+          return_val = MPI_T_cvar_read(chandle, &reset_value); 
+          if (return_val != MPI_SUCCESS) {
+	     printf("TAU: Rank %d: Can't read cvar %s = %d in this MPI implementation\n", rank, cvars, reset_value);
+             return return_val;
+          } else {
+            if ((rank == 0) && (reset_value == (int) val)) {
+              dprintf("ResetValue=%d matches what we set for cvars=%s\n", reset_value, cvars);
+	      char metastring[TAU_NAME_LENGTH]; 
+	      sprintf(metastring,"%d (old) -> %d (new), %s", oldval, reset_value, desc);
+	      TAU_METADATA(name, metastring);
+	      TAU_METADATA("TAU_MPI_T_CVAR_METRICS", cvars);
+	      TAU_METADATA("TAU_MPI_T_CVAR_VALUES", values);
+	      sprintf(metastring, "%d", TauEnv_get_track_mpi_t_pvars());
+	      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", metastring);
+            }
+          }
+
+          MPI_T_cvar_handle_free(&chandle);
+        }
+      }
+      /* NOT implemented: return_val = MPI_T_cvar_get_index(cvars, &cindex);
+      if (return_val != MPI_SUCCESS) { 
+	printf("TAU: Rank %d: Can't access MPI_T variable %s in this MPI implementation\n", Tau_get_node(), cvars);
+        return return_val;
+      }
+      */
+    
+    }
+  }
   return return_val; 
 }
-
 
 static unsigned long long int **pvar_value_buffer;
 static void *read_value_buffer; // values are read into this buffer.
@@ -172,6 +273,7 @@ int Tau_track_mpi_t_here(void) {
         //double double_data = ((double)(pvar_value_buffer[i][j]));
         double double_data = ((double)(mydata));
 
+        dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, double_data=%g, size = %d, is_double=%d\n",rank,i,j,mydata, double_data, size, is_double);
 	if (double_data > 1e-14 )  {
       
         // Double values are really large for timers. Please check 1E18?? 
