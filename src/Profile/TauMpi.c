@@ -66,6 +66,7 @@ int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
 extern int Tau_signal_initialization();
 extern int Tau_mpi_t_initialize();
+extern int Tau_mpi_t_cvar_initialize();
 extern int Tau_track_mpi_t_here();
 
 /* JCL: Optimized rank translation with cache */
@@ -1607,6 +1608,9 @@ char *** argv;
   Tau_mpi_t_initialize();
 #endif /* TAU_MPI_T */
   returnVal = PMPI_Init( argc, argv );
+#ifdef TAU_MPI_T
+  returnVal = Tau_mpi_t_cvar_initialize();
+#endif /* TAU_MPI_T */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -1667,7 +1671,15 @@ int *provided;
   TAU_PROFILE_START(tautimer);
  
   tau_mpi_init_predefined_constants();
+#ifdef TAU_MPI_T
+  Tau_mpi_t_initialize();
+#endif /* TAU_MPI_T */
+
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
+
+#ifdef TAU_MPI_T
+  returnVal = Tau_mpi_t_cvar_initialize();
+#endif /* TAU_MPI_T */
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
