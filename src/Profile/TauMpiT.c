@@ -101,7 +101,8 @@ int Tau_mpi_t_cvar_initialize(void) {
       MPI_T_enum enumtype; 
       
       int rank ;
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      /* MPI_Comm_rank(MPI_COMM_WORLD, &rank); */
+      rank = Tau_get_node(); /* MPI_Init has not been invoked yet */
 
       return_val = MPI_T_cvar_get_num(&num_cvars); 
       if (return_val != MPI_SUCCESS) { 
