@@ -1606,11 +1606,11 @@ char *** argv;
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
   Tau_mpi_t_initialize();
-#endif /* TAU_MPI_T */
-  returnVal = PMPI_Init( argc, argv );
-#ifdef TAU_MPI_T
   returnVal = Tau_mpi_t_cvar_initialize();
 #endif /* TAU_MPI_T */
+
+  returnVal = PMPI_Init( argc, argv );
+
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -1673,13 +1673,10 @@ int *provided;
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
   Tau_mpi_t_initialize();
+  returnVal = Tau_mpi_t_cvar_initialize();
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
-
-#ifdef TAU_MPI_T
-  returnVal = Tau_mpi_t_cvar_initialize();
-#endif /* TAU_MPI_T */
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
