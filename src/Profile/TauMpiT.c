@@ -99,6 +99,7 @@ int Tau_mpi_t_cvar_initialize(void) {
       int desc_len;
       MPI_Datatype datatype; 
       MPI_T_enum enumtype; 
+      char metastring[TAU_NAME_LENGTH]; 
       
       int rank ;
       /* MPI_Comm_rank(MPI_COMM_WORLD, &rank); */
@@ -118,6 +119,7 @@ int Tau_mpi_t_cvar_initialize(void) {
         }
         if (rank == 0) {
 	  dprintf("CVAR[%d] = %s \t \t desc = %s\n", i, name, desc);
+	  TAU_METADATA(name, desc);
         }
 	if (strcmp(name,cvars)==0) {
 	  if (rank == 0) {
@@ -152,7 +154,6 @@ int Tau_mpi_t_cvar_initialize(void) {
           } else {
             if ((rank == 0) && (reset_value == (int) val)) {
               dprintf("ResetValue=%d matches what we set for cvars=%s\n", reset_value, cvars);
-	      char metastring[TAU_NAME_LENGTH]; 
 	      sprintf(metastring,"%d (old) -> %d (new), %s", oldval, reset_value, desc);
 	      TAU_METADATA(name, metastring);
 	      TAU_METADATA("TAU_MPI_T_CVAR_METRICS", cvars);
