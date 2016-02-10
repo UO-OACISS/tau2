@@ -441,6 +441,11 @@ for arg in "$@" ; do
 				#it would be equivalent to not being defined
 				#at all. So the default f95parser would be invoked.
 			if [ ${#pdtParserF} -gt 4 ]; then
+			    if [ ! -x $pdtParserF -a "x$optPdtDir" != "x" ] ; then 
+				if [ -x $optPdtDir/$pdtParserF ] ; then
+				  pdtParserF="$optPdtDir/$pdtParserF"
+				fi
+			    fi
 			    fortranParserDefined=$TRUE
 			fi
 			;;
