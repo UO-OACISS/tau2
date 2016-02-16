@@ -1566,7 +1566,6 @@ int  MPI_Finalize(  )
 #endif /* TAU_MONITORING */
 
 #ifdef TAU_SOS
-  PMPI_Barrier( TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD) );
   TAU_SOS_finalize();
 #endif
 

@@ -12,13 +12,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// #define PROFILING_ON
+#include "TAU.h"
 #include "matmult_initialize.h"
 #include "Profile/TauSOS.h"
 
-// #include <mpi.h>
-
-
-// int provided = MPI_THREAD_SINGLE;
+#include <mpi.h>
+int provided = MPI_THREAD_SINGLE;
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
 
@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
-#if 0
+#if 1
   int rc = MPI_SUCCESS;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
@@ -198,13 +198,15 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int rank = 0;
-  //MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int i;
   int maxi = 5;
+  TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
-    //MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
+    TAU_CONTEXT_EVENT(event, i);
     do_work();
     //if (provided < MPI_THREAD_MULTIPLE) {
     //    if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
@@ -235,7 +237,7 @@ int main (int argc, char *argv[])
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
-  //MPI_Finalize();
+  MPI_Finalize();
   printf ("Done.\n");
 
   return 0;

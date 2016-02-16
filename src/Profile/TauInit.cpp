@@ -509,12 +509,18 @@ extern "C" int Tau_init_initializeTAU()
   threads = true; 
 #endif
 /* Fixme! Replace these with values from TAU metadata. */
+  char * execname = Tau_metadata_get("Executable", 0);
   int argc = 1;
   char **argv;
   argv = (char **)(malloc(sizeof(char*)));
-  argv[0] = (char *)(calloc(100, sizeof(char)));
-  sprintf(argv[0], "%s", "TAU");
+  if (execname != NULL) {
+    argv[0] = execname;
+  } else {
+    argv[0] = (char *)(calloc(100, sizeof(char)));
+    sprintf(argv[0], "%s", "TAU");
+  }
   TAU_SOS_init(&argc, &argv, threads);
+  //free(argv[0]); // this may break SOS...
 #endif
 
   // Mark initialization complete so calls below can start timers

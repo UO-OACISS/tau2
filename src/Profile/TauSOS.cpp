@@ -1,6 +1,7 @@
 
 #include "Profile/TauSOS.h"
 #include "Profile/Profiler.h"
+#include "Profile/UserEvent.h"
 #include "Profile/TauMetrics.h"
 
 #include <iostream>
@@ -18,14 +19,18 @@
 #include <sys/time.h>
 #include <signal.h>
 
-//#include <mpi.h>
+#ifdef TAU_MPI
+#include <mpi.h>
+#endif
 
 #include "sos.h"
 
-SOS_pub *pub = NULL;
+SOS_pub *tau_sos_pub = NULL;
 unsigned long fi_count = 0;
+unsigned long ue_count = 0;
 static bool done = false;
 pthread_mutex_t _my_mutex; // for initialization, termination
+pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
 bool _threaded = false;
 
@@ -40,45 +45,65 @@ void init_lock(void) {
         perror("pthread_mutex_init error");
         exit(1);
     }
-}
-void do_lock(void) {
-    if (!_threaded) return;
-    int rc;
-    if ((rc = pthread_mutex_lock(&_my_mutex)) != 0) {
+    if ((rc = pthread_cond_init(&_my_cond, NULL)) != 0) {
         errno = rc;
-        perror("pthread_mutex_lock error");
+        perror("pthread_cond_init error");
         exit(1);
     }
 }
-
-void do_unlock(void) {
-    if (!_threaded) return;
-    int rc;
-    if ((rc = pthread_mutex_unlock(&_my_mutex)) != 0) {
-        errno = rc;
-        perror("pthread_mutex_unlock error");
-        exit(1);
-    }
-}
-
-class scoped_lock {
-public:
-    scoped_lock(void) { do_lock(); }
-    ~scoped_lock(void) { do_unlock(); }
-};
 
 void * Tau_sos_thread_function(void* data) {
-    //PMPI_Barrier( TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD) ); // wait for everyone to join
+    /* Set the wakeup time (ts) to 2 seconds in the future. */
+    struct timespec ts;
+    struct timeval  tp;
+
+    sleep(2);
     while (!done) {
-        sleep(2);
         TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
-        do_lock();
         TAU_SOS_send_data();
-        do_unlock();
         TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+        // wait 2 seconds for the next batch.
+        gettimeofday(&tp, NULL);
+        ts.tv_sec  = (tp.tv_sec + 2);
+        ts.tv_nsec = (1000 * tp.tv_usec);
+        pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
     }
+    // unlock after being signalled.
+    pthread_mutex_unlock(&_my_mutex);
     TAU_VERBOSE("TAU SOS thread exiting.\n"); fflush(stderr);
     pthread_exit((void*)0L);
+}
+
+void TAU_SOS_make_pub() {
+        char pub_name[SOS_DEFAULT_STRING_LEN] = {0};
+        char app_version[SOS_DEFAULT_STRING_LEN] = {0};
+
+        TAU_VERBOSE("[TAU_SOS_init]: Creating new pub...\n");
+
+#ifdef TAU_MPI
+        int rank;
+        int commsize;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+        SOS.config.comm_rank = rank;
+        SOS.config.comm_size = commsize;
+#endif
+
+/* Fixme! Replace these with values from TAU metadata. */
+        sprintf(pub_name, "TAU_SOS_SUPPORT");
+        sprintf(app_version, "v0.alpha");
+/* Fixme! Replace these with values from TAU metadata. */
+        tau_sos_pub = SOS_pub_create(pub_name);
+
+        tau_sos_pub->prog_ver           = strdup(app_version);
+        tau_sos_pub->meta.channel       = 1;
+        tau_sos_pub->meta.nature        = SOS_NATURE_EXEC_WORK;
+        tau_sos_pub->meta.layer         = SOS_LAYER_FLOW;
+        tau_sos_pub->meta.pri_hint      = SOS_PRI_IMMEDIATE;
+        tau_sos_pub->meta.scope_hint    = SOS_SCOPE_SELF;
+        tau_sos_pub->meta.retain_hint   = SOS_RETAIN_SESSION;
+
+        TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
 }
 
 extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
@@ -86,29 +111,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;
         init_lock();
-        scoped_lock mylock;  // lock from now to the end of this block
         SOS_init(argc, argv, SOS_ROLE_CLIENT);
-
-        char pub_name[SOS_DEFAULT_STRING_LEN] = {0};
-        char app_version[SOS_DEFAULT_STRING_LEN] = {0};
-
-        TAU_VERBOSE("[TAU_SOS_init]: Creating new pub...\n");
-
-/* Fixme! Replace these with values from TAU metadata. */
-        sprintf(pub_name, "TAU_SOS_SUPPORT");
-        sprintf(app_version, "v0.alpha");
-/* Fixme! Replace these with values from TAU metadata. */
-        pub = SOS_pub_create(pub_name);
-
-        pub->prog_ver           = strdup(app_version);
-        pub->meta.channel       = 1;
-        pub->meta.nature        = SOS_NATURE_EXEC_WORK;
-        pub->meta.layer         = SOS_LAYER_FLOW;
-        pub->meta.pri_hint      = SOS_PRI_IMMEDIATE;
-        pub->meta.scope_hint    = SOS_SCOPE_SELF;
-        pub->meta.retain_hint   = SOS_RETAIN_SESSION;
-
-        TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", pub->guid);
 
         if (_threaded) {
             TAU_VERBOSE("Spawning thread for SOS.\n");
@@ -126,11 +129,12 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
 
 extern "C" void TAU_SOS_stop_worker(void) {
     //printf("%s\n", __func__); fflush(stdout);
-    do_lock();
+    pthread_mutex_lock(&_my_mutex);
     done = true;
-    do_unlock();
+    pthread_mutex_unlock(&_my_mutex);
     if (_threaded) {
         TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
+        pthread_cond_signal(&_my_cond);
         int ret = pthread_join(worker_thread, NULL);
         if (ret != 0) {
             switch (ret) {
@@ -149,6 +153,8 @@ extern "C" void TAU_SOS_stop_worker(void) {
                     break;
             }
         }
+        pthread_cond_destroy(&_my_cond);
+        pthread_mutex_destroy(&_my_mutex);
     }
 }
 
@@ -166,8 +172,12 @@ extern "C" void TAU_SOS_finalize(void) {
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 
 extern "C" void TAU_SOS_send_data(void) {
-    assert(pub);
+    if (tau_sos_pub == NULL) {
+        TAU_SOS_make_pub();
+    }
+    assert(tau_sos_pub);
     if (done) { return; }
+    Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
 
@@ -197,25 +207,25 @@ extern "C" void TAU_SOS_send_data(void) {
         calls_str << "TAU::" << tid << "::calls::" << fi->GetName();
         const std::string& tmpcalls = calls_str.str();
 
-        SOS_pack(pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, calls);
+        SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, calls);
 
         // todo - subroutines
         // iterate over metrics 
         std::stringstream incl_str;
         std::stringstream excl_str;
         for (int m = 0; m < Tau_Global_numCounters; m++) {
-            incl_str.clear();
+            incl_str.str(std::string());
             incl_str << "TAU::" << tid << "::inclusive_" << counterNames[m] << "::" << fi->GetName();
             const std::string& tmpincl = incl_str.str();
-            excl_str.clear();
+            excl_str.str(std::string());
             excl_str << "TAU::" << tid << "::exclusive_" << counterNames[m] << "::" << fi->GetName();
             const std::string& tmpexcl = excl_str.str();
 
             inclusive.d_val = fi->getDumpInclusiveValues(tid)[m];
             exclusive.d_val = fi->getDumpExclusiveValues(tid)[m];
             
-            SOS_pack(pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, inclusive);
-            SOS_pack(pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, exclusive);
+            SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, inclusive);
+            SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, exclusive);
         }
     }
   }
@@ -223,14 +233,56 @@ extern "C" void TAU_SOS_send_data(void) {
     keys_added = true;
     fi_count = TheFunctionDB().size();
   }
+  // do the same with counters.
+  std::vector<tau::TauUserEvent*>::iterator it2;
+  SOS_val numEvents;
+  SOS_val max, min, mean, sumsqr;
+  std::stringstream tmp_str;
+  for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
+    tau::TauUserEvent *ue = (*it2);
+    int tid = 0;
+    for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+      if (ue && ue->GetNumEvents(tid) == 0) continue;
+      //if (ue && ue->GetWriteAsMetric()) continue;
+      numEvents.i_val = ue->GetNumEvents(tid);
+      tmp_str << "TAU::" << tid << "::NumEvents::" << ue->GetName();
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, numEvents);
+      tmp_str.str(std::string());
+      max.d_val = ue->GetMax(tid);
+      tmp_str << "TAU::" << tid << "::Max::" << ue->GetName();
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, max);
+      tmp_str.str(std::string());
+      min.d_val = ue->GetMin(tid);
+      tmp_str << "TAU::" << tid << "::Min::" << ue->GetName();
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, min);
+      tmp_str.str(std::string());
+      mean.d_val = ue->GetMean(tid);
+      tmp_str << "TAU::" << tid << "::Mean::" << ue->GetName();
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, mean);
+      tmp_str.str(std::string());
+      sumsqr.d_val = ue->GetSumSqr(tid);
+      tmp_str << "TAU::" << tid << "::SumSqr::" << ue->GetName();
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, sumsqr);
+      tmp_str.str(std::string());
+    }
+  }
+  if (tau::TheEventDB().size() > ue_count) {
+    keys_added = true;
+    ue_count = tau::TheEventDB().size();
+  }
+  if ((ue_count + fi_count) > SOS_DEFAULT_ELEM_MAX) {
+      TAU_VERBOSE("DANGER, WILL ROBINSON! EXCEEDING MAX ELEMENTS IN SOS. Bad things might happen?\n");
+  }
   RtsLayer::UnLockDB();
   if (keys_added) {
       TAU_VERBOSE("[TAU_SOS_send_data]: Announcing the pub...\n");
-      SOS_announce(pub);
+      SOS_announce(tau_sos_pub);
       TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
   }
   TAU_VERBOSE("[TAU_SOS_send_data]: Publishing the values...\n");
-  SOS_publish(pub);
+  TAU_VERBOSE("MY RANK IS: %d/%d\n", SOS.config.comm_rank, SOS.config.comm_size);
+  SOS_publish(tau_sos_pub);
   TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
+  Tau_global_decr_insideTAU();
 }
 
