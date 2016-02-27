@@ -31,6 +31,10 @@
 extern "C" {
 #endif
 
+extern void Tau_enable_tracking_mpi_t(void);
+extern void Tau_disable_tracking_mpi_t(void);
+extern void Tau_track_mpi_t(void);
+
 
 /* Utility function to retrieve fortran strings */
 static inline
@@ -1093,6 +1097,7 @@ void TAU_ENABLE_TRACKING_MEMORY(void)
   Tau_enable_tracking_memory();
 } 
 
+
 void TAU_DISABLE_TRACKING_MEMORY(void)
 {
   Tau_disable_tracking_memory();
@@ -1120,6 +1125,70 @@ void TAU_MEMDBG_PROTECT_FREE(int* value)
 {
   TauEnv_set_memdbg_protect_free(*value);
 }
+
+
+//////////////////////////////////////////////////////
+// MPI_T API
+//////////////////////////////////////////////////////
+void TAU_ENABLE_TRACKING_MPI_T(void) 
+{
+  Tau_enable_tracking_mpi_t();
+}
+
+void tau_enable_tracking_mpi_t(void) 
+{
+  Tau_enable_tracking_mpi_t();
+}
+
+void tau_enable_tracking_mpi_t_(void) 
+{
+  Tau_enable_tracking_mpi_t();
+}
+
+void tau_enable_tracking_mpi_t__(void) 
+{
+  Tau_enable_tracking_mpi_t();
+}
+
+void TAU_DISABLE_TRACKING_MPI_T(void)
+{
+  Tau_disable_tracking_mpi_t();
+}
+
+void tau_disable_tracking_mpi_t(void)
+{
+  Tau_disable_tracking_mpi_t();
+}
+
+void tau_disable_tracking_mpi_t_(void)
+{ 
+  Tau_disable_tracking_mpi_t();
+}
+
+void tau_disable_tracking_mpi_t__(void) 
+{ 
+  Tau_disable_tracking_mpi_t();
+}
+
+void TAU_TRACK_MPI_T(void)
+{
+  Tau_track_mpi_t();
+} 
+
+void tau_track_mpi_t(void)
+{
+  Tau_track_mpi_t();
+} 
+
+void tau_track_mpi_t_(void)
+{
+  Tau_track_mpi_t();
+} 
+
+void tau_track_mpi_t__(void)
+{
+  Tau_track_mpi_t();
+} 
 
 
 //////////////////////////////////////////////////////

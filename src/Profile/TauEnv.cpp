@@ -221,6 +221,7 @@ static int env_track_io_params = 0;
 static int env_track_signals = TAU_TRACK_SIGNALS_DEFAULT;
 static int env_signals_gdb = TAU_SIGNALS_GDB_DEFAULT;
 static int env_echo_backtrace = TAU_ECHO_BACKTRACE_DEFAULT;
+static int env_track_mpi_t_pvars = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
 /* This is a malleable default */
@@ -247,6 +248,8 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
+static const char *env_cvar_metrics = NULL;
+static const char *env_cvar_values = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
@@ -642,6 +645,16 @@ const char *TauEnv_get_metrics() {
   return env_metrics;
 }
 
+extern "C" const char *TauEnv_get_cvar_metrics() {
+  if (env_cvar_metrics == NULL) TauEnv_initialize();
+  return env_cvar_metrics;
+}
+
+extern "C" const char *TauEnv_get_cvar_values() {
+  if (env_cvar_values == NULL) TauEnv_initialize();
+  return env_cvar_values;
+}
+
 extern "C" const char *TauEnv_get_profiledir() {
   return env_profiledir;
 }
@@ -697,6 +710,16 @@ int TauEnv_get_compensate() {
 int TauEnv_get_comm_matrix() {
   return env_comm_matrix;
 }
+
+int TauEnv_get_track_mpi_t_pvars() {
+  return env_track_mpi_t_pvars;
+}
+
+int TauEnv_set_track_mpi_t_pvars(int value) {
+  env_track_mpi_t_pvars = value;
+  return env_track_mpi_t_pvars; 
+}
+
 
 int TauEnv_get_track_signals() {
   return env_track_signals;
@@ -1030,6 +1053,18 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
     } 
+
+#ifdef TAU_MPI_T
+    tmp = getconf("TAU_TRACK_MPI_T_PVARS");
+    if (parse_bool(tmp, env_track_mpi_t_pvars)) {
+      env_track_mpi_t_pvars = 1;
+      TAU_VERBOSE("TAU: MPI_T PVARS tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "on");
+      TAU_VERBOSE("TAU: Checking for performance variables from MPI_T\n");
+    } else {
+      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "off");
+    }
+#endif /* TAU_MPI_T */
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
@@ -1570,6 +1605,20 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: METRICS is not set\n", env_metrics);
     } else {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
+    }
+
+    if ((env_cvar_metrics = getconf("TAU_MPI_T_CVAR_METRICS")) == NULL) {
+      env_cvar_metrics = "";   /* default to 'time' */
+      TAU_VERBOSE("TAU: MPI_T_CVAR_METRICS is not set\n", env_cvar_metrics);
+    } else {
+      TAU_VERBOSE("TAU: MPI_T_CVAR_METRICS is \"%s\"\n", env_cvar_metrics);
+    }
+
+    if ((env_cvar_values = getconf("TAU_MPI_T_CVAR_VALUES")) == NULL) {
+      env_cvar_values = "";   /* default to 'time' */
+      TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is not set\n", env_cvar_values);
+    } else {
+      TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is \"%s\"\n", env_cvar_values);
     }
 
     tmp = getconf("TAU_OPENMP_RUNTIME");
