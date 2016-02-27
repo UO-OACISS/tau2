@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 if [ $# = 1 ]
 then
   echo "Usage: $0 [options] <infile> [-o outfile]"
@@ -42,8 +42,11 @@ if [ -n "$TAU_MAKEFILE" ] ; then
     fi
   fi
 fi
+grep -v __glibcxx_function_requires $filename.tau.inc > $filename.tau.inc~
 
-cpp $filename ${argv[@]} -dM  >> $filename.tau.inc
+cpp $filename ${argv[@]} -dM  >> $filename.tau.inc~
+grep -v __glibcxx_function_requires $filename.tau.inc~ > $filename.tau.inc
+
 sed -e 's@#include@//TAU_INCLUDE#include@g' $filename > $filename.tau.tmp
 cpp $filename.tau.tmp  ${argv[@]} -CC -P -w -include $filename.tau.inc  | sed -e 's@//TAU_INCLUDE#include@#include@g' > $base.pp$suf
 
