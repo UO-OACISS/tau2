@@ -1,6 +1,3 @@
-#include <dlfcn.h>
-#include <stdio.h>
-
 #ifdef __APPLE__
 #include <OpenCL/opencl.h>
 #else
@@ -10,49 +7,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <Profile/Profiler.h>
 #include <Profile/TauGpuAdapterOpenCL.h>
 
-
-#define TIMER_NAME(TYPE, NAME, ...) #TYPE " " #NAME "(" #__VA_ARGS__ ") C"
-
-#define HANDLE(TYPE, NAME, ...) \
-  typedef TYPE (*NAME##_p) (__VA_ARGS__); \
-  static NAME##_p NAME##_h = (NAME##_p)get_handle(#NAME)
-
-#define HANDLE_AND_AUTOTIMER(TYPE, NAME, ...) \
-  HANDLE(TYPE, NAME, __VA_ARGS__); \
-  TAU_PROFILE(TIMER_NAME(TYPE, NAME, __VA_ARGS__), "", TAU_USER)
-
-#define HANDLE_AND_TIMER(TYPE, NAME, ...) \
-  HANDLE(TYPE, NAME, __VA_ARGS__); \
-  TAU_PROFILE_TIMER(t, TIMER_NAME(TYPE, NAME, __VA_ARGS__), "", TAU_USER)
-
-
-void * get_handle(char const * fnc_name)
-{
-#ifdef __APPLE__
-  static char const * libname = "/System/Library/Frameworks/OpenCL.framework/OpenCL";
-#else
-  static char const * libname = "libOpenCL.so";
-#endif /* __APPLE__ */
-
-  static void * handle = NULL;
-  if (!handle) {
-    handle = (void *)dlopen(libname, RTLD_NOW); 
-  }
-  if (!handle) {
-    perror("Error opening library in dlopen call"); 
-    return NULL;
-  }
-
-  void * fnc_sym = dlsym(handle, fnc_name);
-  if (!fnc_sym) {
-    perror("Error obtaining symbol info from dlopen'ed lib"); 
-    return NULL;
-  }
-  return fnc_sym;
-}
 
 void MemoryCopyEventHtoD(size_t bytes)
 {
@@ -178,12 +134,6 @@ cl_int clSetCommandQueueProperty(cl_command_queue a1, cl_command_queue_propertie
 cl_mem clCreateBuffer(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5) 
 {
   HANDLE_AND_AUTOTIMER(cl_mem, clCreateBuffer, cl_context, cl_mem_flags, size_t, void *, cl_int *);
-  return clCreateBuffer_h(a1,  a2,  a3,  a4,  a5);
-}
-
-cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5) 
-{
-  HANDLE(cl_mem, clCreateBuffer, cl_context, cl_mem_flags, size_t, void *, cl_int *);
   return clCreateBuffer_h(a1,  a2,  a3,  a4,  a5);
 }
 
@@ -350,12 +300,6 @@ cl_int clWaitForEvents(cl_uint a1, const cl_event * a2)
 }
 #endif /* TAU_ENABLE_CL_WAIT_FOR_EVENTS */
 
-cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2) 
-{
-  HANDLE(cl_int, clWaitForEvents, cl_uint, const cl_event *);
-  return clWaitForEvents_h(a1,  a2);
-}
-
 cl_int clGetEventInfo(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_t * a5) 
 {
   HANDLE_AND_AUTOTIMER(cl_int, clGetEventInfo, cl_event, cl_event_info, size_t, void *, size_t *);
@@ -383,19 +327,7 @@ cl_int clReleaseEvent(cl_event a1)
   return retval;
 }
 
-cl_int clReleaseEvent_noinst(cl_event a1) 
-{
-  HANDLE(cl_int, clReleaseEvent, cl_event);
-  return clReleaseEvent_h(a1);
-}
-
 cl_int clGetEventProfilingInfo(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5) 
-{
-  HANDLE_AND_AUTOTIMER(cl_int, clGetEventProfilingInfo, cl_event, cl_profiling_info, size_t, void *, size_t *);
-  return clGetEventProfilingInfo_h(a1,  a2,  a3,  a4,  a5);
-}
-
-cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5)
 {
   HANDLE_AND_AUTOTIMER(cl_int, clGetEventProfilingInfo, cl_event, cl_profiling_info, size_t, void *, size_t *);
   return clGetEventProfilingInfo_h(a1,  a2,  a3,  a4,  a5);
@@ -425,18 +357,21 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
   static char const * timer_name = TIMER_NAME(cl_int, clEnqueueReadBuffer, cl_command_queue, cl_mem, 
                                               cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 
-  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
-  gId->name = "ReadBuffer";
-  gId->event = NULL;
-  gId->callingSite = p ? p->CallPathFunction : NULL;
-  gId->memcpy_type = MemcpyDtoH;
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "ReadBuffer", MemcpyDtoH);
+  if (!a9) {
+    a9 = &gId->event;
+  }
 
   MemoryCopyEventDtoH(a5);
 
   Tau_opencl_enter_memcpy_event(timer_name, gId, a5, MemcpyDtoH);
   cl_int retval = clEnqueueReadBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyDtoH);
+
+  if (!gId->event) {
+    gId->event = *a9;
+  }
+  Tau_opencl_enqueue_event(gId);
 
   Tau_opencl_register_sync_event();
   return retval;
@@ -450,12 +385,10 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
   static char const * timer_name = TIMER_NAME(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool,
                                               size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
-  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
-  gId->name = "WriteBuffer";
-  gId->event = NULL;
-  gId->callingSite = p ? p->CallPathFunction : NULL;
-  gId->memcpy_type = MemcpyHtoD;
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "ReadBuffer", MemcpyHtoD);
+  if (!a9) {
+    a9 = &gId->event;
+  }
 
   MemoryCopyEventHtoD(a5);
 
@@ -463,16 +396,13 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
   cl_int retval = clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyHtoD); 
 
+  if (!gId->event) {
+    gId->event = *a9;
+  }
+  Tau_opencl_enqueue_event(gId);
+
   Tau_opencl_register_sync_event();
   return retval;
-}
-
-cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6, 
-                                   cl_uint a7, const cl_event * a8, cl_event * a9) 
-{
-  HANDLE(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, 
-         const cl_event *, cl_event *);
-  return clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 }
 
 cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, size_t a5, size_t a6, 
@@ -483,18 +413,21 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
   static char const * timer_name = TIMER_NAME(cl_int, clEnqueueCopyBuffer, cl_command_queue, cl_mem, cl_mem, 
                                               size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
 
-  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
-  gId->name = "CopyBuffer";
-  gId->event = NULL;
-  gId->callingSite = p ? p->CallPathFunction : NULL;
-  gId->memcpy_type = MemcpyDtoD;
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "CopyBuffer", MemcpyDtoD);
+  if (!a9) {
+    a9 = &gId->event;
+  }
 
   MemoryCopyEventDtoD(a5);
 
   Tau_opencl_enter_memcpy_event(timer_name, gId, a5, MemcpyDtoD); 
   cl_int retval = clEnqueueCopyBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyDtoD); 
+
+  if (!gId->event) {
+    gId->event = *a9;
+  }
+  Tau_opencl_enqueue_event(gId);
 
   Tau_opencl_register_sync_event();
   return retval;
@@ -548,18 +481,21 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
   static char const * timer_name = TIMER_NAME(void *, clEnqueueMapBuffer, cl_command_queue, cl_mem, cl_bool, 
                                               cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
 
-  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
-  gId->name = "MapBuffer";
-  gId->event = NULL;
-  gId->callingSite = p ? p->CallPathFunction : NULL;
-  gId->memcpy_type = MemcpyHtoD;
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "MapBuffer", MemcpyHtoD);
+  if (!a9) {
+    a9 = &gId->event;
+  }
 
   MemoryCopyEventHtoD(a6);
 
   Tau_opencl_enter_memcpy_event(timer_name, gId, a6, MemcpyHtoD); 
   void * retval = clEnqueueMapBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9, a10);
   Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyHtoD); 
+
+  if (!gId->event) {
+    gId->event = *a9;
+  }
+  Tau_opencl_enqueue_event(gId);
 
   Tau_opencl_register_sync_event();
   return retval;
@@ -580,18 +516,21 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
   static char const * timer_name = TIMER_NAME(cl_int, clEnqueueUnmapMemObject, cl_command_queue, cl_mem, void *, cl_uint, 
                                               const cl_event *, cl_event *);
 
-  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
-  gId->name = "UnmapBuffer";
-  gId->event = NULL;
-  gId->callingSite = p ? p->CallPathFunction : NULL;
-  gId->memcpy_type = MemcpyDtoH;
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "UnmapBuffer", MemcpyDtoH);
+  if (!a6) {
+    a6 = &gId->event;
+  }
 
   MemoryCopyEventDtoH(0);
 
   Tau_opencl_enter_memcpy_event(timer_name, gId, 0, MemcpyDtoH); 
   cl_int retval = clEnqueueUnmapMemObject(a1,  a2,  a3,  a4,  a5,  a6);
   Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyDtoH); 
+
+  if (!gId->event) {
+    gId->event = *a6;
+  }
+  Tau_opencl_enqueue_event(gId);
 
   Tau_opencl_register_sync_event();
   return retval;
@@ -603,28 +542,31 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
   HANDLE_AND_TIMER(cl_int, clEnqueueNDRangeKernel, cl_command_queue, cl_kernel, cl_uint, const size_t *, 
                    const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
 
-  cl_int retval;
-  cl_event event;
+  char buf[4096];
+  size_t len;
+  char const * name;
+  cl_int err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME, sizeof(buf), buf, &len);
+  if (err != CL_SUCCESS) {
+    name = "NAME ERROR";
+  } else {
+    name = new char[len+1];
+    strncpy(const_cast<char*>(name), buf, len+1);
+  }
+
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, name, -1);
   if (!a9) {
-    a9 = &event;
+    a9 = &gId->event;
   }
 
   TAU_PROFILE_START(t);
-  retval = clEnqueueNDRangeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  cl_int retval = clEnqueueNDRangeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
 
-  char buf[4096];
-  size_t len;
-  if (clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME, sizeof(buf), buf, &len) == CL_SUCCESS) {
-    char * name = new char[len+1];
-    strncpy(name, buf, len+1);
-    FunctionInfo * callingSite = NULL;
-    Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-    if (p) {
-      callingSite = p->CallPathFunction;
-    }
-    Tau_opencl_enqueue_event(name, a1, a9, callingSite, -1);
+  if (!gId->event) {
+    gId->event = *a9;
   }
+  Tau_opencl_enqueue_event(gId);
+
   return retval;
 }
 
