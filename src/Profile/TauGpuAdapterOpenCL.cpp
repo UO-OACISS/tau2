@@ -17,7 +17,7 @@ void __attribute__ ((constructor)) Tau_opencl_init()
 
 void __attribute__ ((destructor)) Tau_opencl_exit()
 {
-  Tau_gpu_exit();
+  Tau_destructor_trigger();
 }
 
 static gpu_event_queue_t & KernelBuffer()
@@ -171,12 +171,15 @@ OpenCLGpuEvent * Tau_opencl_retrive_gpu(cl_command_queue q)
 OpenCLGpuEvent * Tau_opencl_new_gpu_event(cl_command_queue queue, char const * name, int memcpy_type)
 {
   Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-  OpenCLGpuEvent * gpu_event = Tau_opencl_retrive_gpu(queue)->getCopy();
-  gpu_event->name = name;
-  gpu_event->event = NULL;
-  gpu_event->callingSite = p ? p->CallPathFunction : NULL;
-  gpu_event->memcpy_type = memcpy_type;
-  return gpu_event;
+  if (p) {
+    OpenCLGpuEvent * gpu_event = Tau_opencl_retrive_gpu(queue)->getCopy();
+    gpu_event->name = name;
+    gpu_event->event = NULL;
+    gpu_event->callingSite = p->CallPathFunction;
+    gpu_event->memcpy_type = memcpy_type;
+    return gpu_event;
+  }
+  return NULL;
 }
 
 void Tau_opencl_enter_memcpy_event(const char *name, OpenCLGpuEvent *id, int size, int MemcpyType)

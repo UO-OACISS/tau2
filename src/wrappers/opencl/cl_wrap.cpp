@@ -354,6 +354,10 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
                                               cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "ReadBuffer", MemcpyDtoH);
+  if (!gId) {
+    return clEnqueueReadBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -383,6 +387,10 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
                                               size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "WriteBuffer", MemcpyHtoD);
+  if (!gId) {
+    return clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -412,6 +420,10 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
                                               size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "CopyBuffer", MemcpyDtoD);
+  if (!gId) {
+    return clEnqueueCopyBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -481,6 +493,10 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
                                               cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "MapBuffer", MemcpyHtoD);
+  if (!gId) {
+    return clEnqueueMapBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9, a10);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -517,6 +533,10 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
                                               const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "UnmapBuffer", MemcpyDtoH);
+  if (!gId) {
+    return clEnqueueUnmapMemObject(a1,  a2,  a3,  a4,  a5,  a6);
+  }
+
   if (!a6) {
     a6 = &gId->event;
   }
@@ -555,6 +575,10 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
   }
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, name, -1);
+  if (!gId) {
+    return clEnqueueNDRangeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
