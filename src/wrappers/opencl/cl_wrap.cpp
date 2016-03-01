@@ -13,2337 +13,664 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauGpuAdapterOpenCL.h>
 
-// Moved from header file
-using namespace std;
+
+#define TIMER_NAME(TYPE, NAME, ...) #TYPE " " #NAME "(" #__VA_ARGS__ ") C"
+
+#define HANDLE(TYPE, NAME, ...) \
+  typedef TYPE (*NAME##_p) (__VA_ARGS__); \
+  static NAME##_p NAME##_h = (NAME##_p)get_handle(#NAME)
+
+#define HANDLE_AND_AUTOTIMER(TYPE, NAME, ...) \
+  HANDLE(TYPE, NAME, __VA_ARGS__); \
+  TAU_PROFILE(TIMER_NAME(TYPE, NAME, __VA_ARGS__), "", TAU_USER)
+
+#define HANDLE_AND_TIMER(TYPE, NAME, ...) \
+  HANDLE(TYPE, NAME, __VA_ARGS__); \
+  TAU_PROFILE_TIMER(t, TIMER_NAME(TYPE, NAME, __VA_ARGS__), "", TAU_USER)
 
 
+void * get_handle(char const * fnc_name)
+{
 #ifdef __APPLE__
-const char * tau_orig_libname = "/System/Library/Frameworks/OpenCL.framework/OpenCL";
+  static char const * libname = "/System/Library/Frameworks/OpenCL.framework/OpenCL";
 #else
-const char * tau_orig_libname = "libOpenCL.so";
+  static char const * libname = "libOpenCL.so";
 #endif /* __APPLE__ */
 
-static void *tau_handle = NULL;
+  static void * handle = NULL;
+  if (!handle) {
+    handle = (void *)dlopen(libname, RTLD_NOW); 
+  }
+  if (!handle) {
+    perror("Error opening library in dlopen call"); 
+    return NULL;
+  }
 
-static TauContextUserEvent *MemoryCopyEventHtoD;
-static TauContextUserEvent *MemoryCopyEventDtoH;
-static TauContextUserEvent *MemoryCopyEventDtoD;
+  void * fnc_sym = dlsym(handle, fnc_name);
+  if (!fnc_sym) {
+    perror("Error obtaining symbol info from dlopen'ed lib"); 
+    return NULL;
+  }
+  return fnc_sym;
+}
 
-//static TauContextUserEvent *MemoryCopyEvent;
-
-#define CL_API TAU_USER
-
-void check_memory_init()
+void MemoryCopyEventHtoD(size_t bytes)
 {
-
-	static bool init = false;
-	if (!init)
-	{
-		
-		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, "Bytes copied from Host to Device");
-		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, "Bytes copied from Device to Host");
-		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied (Other)");
-		
-		//Tau_get_context_userevent((void **) &MemoryCopyEvent, "Bytes copied");
-		init = true;
-	}
+  static TauContextUserEvent * event = NULL;
+  if (!event) {
+    Tau_get_context_userevent((void **)&event, "Bytes copied from Host to Device");
+  }
+  TAU_CONTEXT_EVENT(event, bytes);
 }
 
-
-cl_int clGetPlatformIDs(cl_uint a1, cl_platform_id * a2, cl_uint * a3) {
-
-  typedef cl_int (*clGetPlatformIDs_p) (cl_uint, cl_platform_id *, cl_uint *);
-  static clGetPlatformIDs_p clGetPlatformIDs_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetPlatformIDs(cl_uint, cl_platform_id *, cl_uint *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetPlatformIDs_h == NULL)
-	clGetPlatformIDs_h = (clGetPlatformIDs_p) dlsym(tau_handle,"clGetPlatformIDs"); 
-    if (clGetPlatformIDs_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetPlatformIDs_h)( a1,  a2,  a3);
-  TAU_PROFILE_STOP(t);
+void MemoryCopyEventDtoH(size_t bytes)
+{
+  static TauContextUserEvent * event = NULL;
+  if (!event) {
+    Tau_get_context_userevent((void **)&event, "Bytes copied from Device to Host");
   }
-  return retval;
-
+  TAU_CONTEXT_EVENT(event, bytes);
 }
 
-cl_int clGetPlatformInfo(cl_platform_id a1, cl_platform_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetPlatformInfo_p) (cl_platform_id, cl_platform_info, size_t, void *, size_t *);
-  static clGetPlatformInfo_p clGetPlatformInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetPlatformInfo(cl_platform_id, cl_platform_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetPlatformInfo_h == NULL)
-	clGetPlatformInfo_h = (clGetPlatformInfo_p) dlsym(tau_handle,"clGetPlatformInfo"); 
-    if (clGetPlatformInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetPlatformInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
+void MemoryCopyEventDtoD(size_t bytes)
+{
+  static TauContextUserEvent * event = NULL;
+  if (!event) {
+    Tau_get_context_userevent((void **)&event, "Bytes copied (Other)");
   }
-  return retval;
-
+  TAU_CONTEXT_EVENT(event, bytes);
 }
 
-cl_int clGetDeviceIDs(cl_platform_id a1, cl_device_type a2, cl_uint a3, cl_device_id * a4, cl_uint * a5) {
-
-  typedef cl_int (*clGetDeviceIDs_p) (cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *);
-  static clGetDeviceIDs_p clGetDeviceIDs_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetDeviceIDs(cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetDeviceIDs_h == NULL)
-	clGetDeviceIDs_h = (clGetDeviceIDs_p) dlsym(tau_handle,"clGetDeviceIDs"); 
-    if (clGetDeviceIDs_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetDeviceIDs_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetPlatformIDs(cl_uint a1, cl_platform_id * a2, cl_uint * a3) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetPlatformIDs, cl_uint, cl_platform_id *, cl_uint *);
+  return clGetPlatformIDs_h(a1,  a2,  a3);
 }
 
-cl_int clGetDeviceInfo(cl_device_id a1, cl_device_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetDeviceInfo_p) (cl_device_id, cl_device_info, size_t, void *, size_t *);
-  static clGetDeviceInfo_p clGetDeviceInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetDeviceInfo(cl_device_id, cl_device_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetDeviceInfo_h == NULL)
-	clGetDeviceInfo_h = (clGetDeviceInfo_p) dlsym(tau_handle,"clGetDeviceInfo"); 
-    if (clGetDeviceInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetDeviceInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetPlatformInfo(cl_platform_id a1, cl_platform_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetPlatformInfo, cl_platform_id, cl_platform_info, size_t, void *, size_t *);
+  return clGetPlatformInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_context clCreateContext(const cl_context_properties * a1, cl_uint a2, const cl_device_id * a3, void (*a4)(const char *, const void *, size_t, void *), void * a5, cl_int * a6) {
-
-  typedef cl_context (*clCreateContext_p) (const cl_context_properties *, cl_uint, const cl_device_id *, void (*)(const char *, const void *, size_t, void *), void *, cl_int *);
-  static clCreateContext_p clCreateContext_h = NULL;
-  cl_context retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_context clCreateContext(const cl_context_properties *, cl_uint, const cl_device_id *, void (*)(const char *, const void *, size_t, void *) C, void *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateContext_h == NULL)
-	clCreateContext_h = (clCreateContext_p) dlsym(tau_handle,"clCreateContext"); 
-    if (clCreateContext_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateContext_h)( a1,  a2,  a3,  a4,  a5,  a6);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetDeviceIDs(cl_platform_id a1, cl_device_type a2, cl_uint a3, cl_device_id * a4, cl_uint * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetDeviceIDs, cl_platform_id, cl_device_type, cl_uint, cl_device_id *, cl_uint *);
+  return clGetDeviceIDs_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_context clCreateContextFromType(const cl_context_properties * a1, cl_device_type a2, void (*a3)(const char *, const void *, size_t, void *), void * a4, cl_int * a5) {
-
-  typedef cl_context (*clCreateContextFromType_p) (const cl_context_properties *, cl_device_type, void (*)(const char *, const void *, size_t, void *), void *, cl_int *);
-  static clCreateContextFromType_p clCreateContextFromType_h = NULL;
-  cl_context retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_context clCreateContextFromType(const cl_context_properties *, cl_device_type, void (*)(const char *, const void *, size_t, void *) C, void *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateContextFromType_h == NULL)
-	clCreateContextFromType_h = (clCreateContextFromType_p) dlsym(tau_handle,"clCreateContextFromType"); 
-    if (clCreateContextFromType_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateContextFromType_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetDeviceInfo(cl_device_id a1, cl_device_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetDeviceInfo, cl_device_id, cl_device_info, size_t, void *, size_t *);
+  return clGetDeviceInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clRetainContext(cl_context a1) {
-
-  typedef cl_int (*clRetainContext_p) (cl_context);
-  static clRetainContext_p clRetainContext_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clRetainContext(cl_context) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clRetainContext_h == NULL)
-	clRetainContext_h = (clRetainContext_p) dlsym(tau_handle,"clRetainContext"); 
-    if (clRetainContext_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clRetainContext_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_context clCreateContext(const cl_context_properties * a1, cl_uint a2, const cl_device_id * a3, 
+                           void (*a4)(const char *, const void *, size_t, void *), void * a5, cl_int * a6) 
+{
+  HANDLE_AND_AUTOTIMER(cl_context, clCreateContext, const cl_context_properties *, cl_uint, const cl_device_id *, 
+                   void (*)(const char *, const void *, size_t, void *), void *, cl_int *);
+  return clCreateContext_h(a1,  a2,  a3,  a4,  a5,  a6);
 }
 
-cl_int clReleaseContext(cl_context a1) {
-
-  typedef cl_int (*clReleaseContext_p) (cl_context);
-  static clReleaseContext_p clReleaseContext_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clReleaseContext(cl_context) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseContext_h == NULL)
-	clReleaseContext_h = (clReleaseContext_p) dlsym(tau_handle,"clReleaseContext"); 
-    if (clReleaseContext_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clReleaseContext_h)( a1);
-  TAU_PROFILE_STOP(t);
-	//Tau_opencl_register_sync_event();
-	Tau_opencl_exit();
-#ifdef TAU_ENABLE_CL_CALLBACK
-	//Tau_opencl_exit();
-#endif
-  }
-  return retval;
-
+cl_context clCreateContextFromType(const cl_context_properties * a1, cl_device_type a2, 
+                                   void (*a3)(const char *, const void *, size_t, void *), void * a4, cl_int * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_context, clCreateContextFromType, const cl_context_properties *, cl_device_type, 
+                   void (*)(const char *, const void *, size_t, void *), void *, cl_int *);
+  return clCreateContextFromType_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clGetContextInfo(cl_context a1, cl_context_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetContextInfo_p) (cl_context, cl_context_info, size_t, void *, size_t *);
-  static clGetContextInfo_p clGetContextInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetContextInfo(cl_context, cl_context_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetContextInfo_h == NULL)
-	clGetContextInfo_h = (clGetContextInfo_p) dlsym(tau_handle,"clGetContextInfo"); 
-    if (clGetContextInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetContextInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clRetainContext(cl_context a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clRetainContext, cl_context);
+  return clRetainContext_h(a1);
 }
 
-cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command_queue_properties a3, cl_int * a4) {
-
-  typedef cl_command_queue (*clCreateCommandQueue_p) (cl_context, cl_device_id, cl_command_queue_properties, cl_int *);
-  static clCreateCommandQueue_p clCreateCommandQueue_h = NULL;
-  cl_command_queue retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_command_queue clCreateCommandQueue(cl_context, cl_device_id, cl_command_queue_properties, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateCommandQueue_h == NULL)
-	clCreateCommandQueue_h = (clCreateCommandQueue_p) dlsym(tau_handle,"clCreateCommandQueue"); 
-    if (clCreateCommandQueue_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-
-	//Need to make sure that this command queue allows profiling:
-	a3 |= CL_QUEUE_PROFILING_ENABLE;
-
+cl_int clReleaseContext(cl_context a1) 
+{
+  HANDLE_AND_TIMER(cl_int, clReleaseContext, cl_context);
   TAU_PROFILE_START(t);
-  retval  =  (*clCreateCommandQueue_h)( a1,  a2,  a3,  a4);
+  cl_int retval = clReleaseContext_h(a1);
   TAU_PROFILE_STOP(t);
-
-	//static double sync_set = Tau_opencl_sync_clocks(retval, a1);
-
-  }
+  Tau_opencl_exit();
   return retval;
-
 }
 
-cl_int clRetainCommandQueue(cl_command_queue a1) {
-
-  typedef cl_int (*clRetainCommandQueue_p) (cl_command_queue);
-  static clRetainCommandQueue_p clRetainCommandQueue_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clRetainCommandQueue(cl_command_queue) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clRetainCommandQueue_h == NULL)
-	clRetainCommandQueue_h = (clRetainCommandQueue_p) dlsym(tau_handle,"clRetainCommandQueue"); 
-    if (clRetainCommandQueue_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clRetainCommandQueue_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetContextInfo(cl_context a1, cl_context_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetContextInfo, cl_context, cl_context_info, size_t, void *, size_t *);
+  return clGetContextInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clReleaseCommandQueue(cl_command_queue a1) {
-
-  typedef cl_int (*clReleaseCommandQueue_p) (cl_command_queue);
-  static clReleaseCommandQueue_p clReleaseCommandQueue_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clReleaseCommandQueue(cl_command_queue) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseCommandQueue_h == NULL)
-	clReleaseCommandQueue_h = (clReleaseCommandQueue_p) dlsym(tau_handle,"clReleaseCommandQueue"); 
-    if (clReleaseCommandQueue_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-	//In order to capture events
-	//clEnqueueBarrier(a1);
-
-  TAU_PROFILE_START(t);
-  retval  =  (*clReleaseCommandQueue_h)( a1);
-  TAU_PROFILE_STOP(t);
-	//Tau_opencl_register_sync_event();
-  }
-  return retval;
-
+cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command_queue_properties a3, cl_int * a4) 
+{
+  HANDLE_AND_AUTOTIMER(cl_command_queue, clCreateCommandQueue, cl_context, cl_device_id, cl_command_queue_properties, cl_int *);
+  // Make sure this command queue allows profiling
+  a3 |= CL_QUEUE_PROFILING_ENABLE;
+  return clCreateCommandQueue_h(a1,  a2,  a3,  a4);
 }
 
-cl_int clGetCommandQueueInfo(cl_command_queue a1, cl_command_queue_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetCommandQueueInfo_p) (cl_command_queue, cl_command_queue_info, size_t, void *, size_t *);
-  static clGetCommandQueueInfo_p clGetCommandQueueInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetCommandQueueInfo(cl_command_queue, cl_command_queue_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetCommandQueueInfo_h == NULL)
-	clGetCommandQueueInfo_h = (clGetCommandQueueInfo_p) dlsym(tau_handle,"clGetCommandQueueInfo"); 
-    if (clGetCommandQueueInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetCommandQueueInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clRetainCommandQueue(cl_command_queue a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clRetainCommandQueue, cl_command_queue);
+  return clRetainCommandQueue_h(a1);
 }
 
-cl_int clSetCommandQueueProperty(cl_command_queue a1, cl_command_queue_properties a2, cl_bool a3, cl_command_queue_properties * a4) {
-
-  typedef cl_int (*clSetCommandQueueProperty_p) (cl_command_queue, cl_command_queue_properties, cl_bool, cl_command_queue_properties *);
-  static clSetCommandQueueProperty_p clSetCommandQueueProperty_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clSetCommandQueueProperty(cl_command_queue, cl_command_queue_properties, cl_bool, cl_command_queue_properties *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clSetCommandQueueProperty_h == NULL)
-	clSetCommandQueueProperty_h = (clSetCommandQueueProperty_p) dlsym(tau_handle,"clSetCommandQueueProperty"); 
-    if (clSetCommandQueueProperty_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clSetCommandQueueProperty_h)( a1,  a2,  a3,  a4);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clReleaseCommandQueue(cl_command_queue a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clReleaseCommandQueue, cl_command_queue);
+  return clReleaseCommandQueue_h(a1);
 }
 
-cl_mem clCreateBuffer(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5) {
-
-  typedef cl_mem (*clCreateBuffer_p) (cl_context, cl_mem_flags, size_t, void *, cl_int *);
-  static clCreateBuffer_p clCreateBuffer_h = NULL;
-  cl_mem retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_mem clCreateBuffer(cl_context, cl_mem_flags, size_t, void *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateBuffer_h == NULL)
-	clCreateBuffer_h = (clCreateBuffer_p) dlsym(tau_handle,"clCreateBuffer"); 
-    if (clCreateBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateBuffer_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetCommandQueueInfo(cl_command_queue a1, cl_command_queue_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetCommandQueueInfo, cl_command_queue, cl_command_queue_info, size_t, void *, size_t *);
+  return clGetCommandQueueInfo_h( a1,  a2,  a3,  a4,  a5);
 }
 
-cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5) {
-
-  typedef cl_mem (*clCreateBuffer_p) (cl_context, cl_mem_flags, size_t, void *, cl_int *);
-  static clCreateBuffer_p clCreateBuffer_h = NULL;
-  cl_mem retval = NULL;
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateBuffer_h == NULL)
-	clCreateBuffer_h = (clCreateBuffer_p) dlsym(tau_handle,"clCreateBuffer"); 
-    if (clCreateBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  retval  =  (*clCreateBuffer_h)( a1,  a2,  a3,  a4,  a5);
-  }
-  return retval;
-
+cl_int clSetCommandQueueProperty(cl_command_queue a1, cl_command_queue_properties a2, cl_bool a3, cl_command_queue_properties * a4) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clSetCommandQueueProperty, cl_command_queue, cl_command_queue_properties, cl_bool, cl_command_queue_properties *);
+  return clSetCommandQueueProperty_h(a1,  a2,  a3,  a4);
 }
 
-cl_mem clCreateImage2D(cl_context a1, cl_mem_flags a2, const cl_image_format * a3, size_t a4, size_t a5, size_t a6, void * a7, cl_int * a8) {
-
-  typedef cl_mem (*clCreateImage2D_p) (cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, void *, cl_int *);
-  static clCreateImage2D_p clCreateImage2D_h = NULL;
-  cl_mem retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_mem clCreateImage2D(cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, void *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateImage2D_h == NULL)
-	clCreateImage2D_h = (clCreateImage2D_p) dlsym(tau_handle,"clCreateImage2D"); 
-    if (clCreateImage2D_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateImage2D_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_mem clCreateBuffer(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_mem, clCreateBuffer, cl_context, cl_mem_flags, size_t, void *, cl_int *);
+  return clCreateBuffer_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_mem clCreateImage3D(cl_context a1, cl_mem_flags a2, const cl_image_format * a3, size_t a4, size_t a5, size_t a6, size_t a7, size_t a8, void * a9, cl_int * a10) {
-
-  typedef cl_mem (*clCreateImage3D_p) (cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, size_t, size_t, void *, cl_int *);
-  static clCreateImage3D_p clCreateImage3D_h = NULL;
-  cl_mem retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_mem clCreateImage3D(cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, size_t, size_t, void *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateImage3D_h == NULL)
-	clCreateImage3D_h = (clCreateImage3D_p) dlsym(tau_handle,"clCreateImage3D"); 
-    if (clCreateImage3D_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateImage3D_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5) 
+{
+  HANDLE(cl_mem, clCreateBuffer, cl_context, cl_mem_flags, size_t, void *, cl_int *);
+  return clCreateBuffer_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clRetainMemObject(cl_mem a1) {
-
-  typedef cl_int (*clRetainMemObject_p) (cl_mem);
-  static clRetainMemObject_p clRetainMemObject_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clRetainMemObject(cl_mem) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clRetainMemObject_h == NULL)
-	clRetainMemObject_h = (clRetainMemObject_p) dlsym(tau_handle,"clRetainMemObject"); 
-    if (clRetainMemObject_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clRetainMemObject_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-/*
-cl_int clReleaseMemObject(cl_mem a1) {
-
-  typedef cl_int (*clReleaseMemObject_p) (cl_mem);
-  static clReleaseMemObject_p clReleaseMemObject_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clReleaseMemObject(cl_mem) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseMemObject_h == NULL)
-	clReleaseMemObject_h = (clReleaseMemObject_p) dlsym(tau_handle,"clReleaseMemObject"); 
-    if (clReleaseMemObject_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clReleaseMemObject_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}*/
-
-cl_int clGetSupportedImageFormats(cl_context a1, cl_mem_flags a2, cl_mem_object_type a3, cl_uint a4, cl_image_format * a5, cl_uint * a6) {
-
-  typedef cl_int (*clGetSupportedImageFormats_p) (cl_context, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format *, cl_uint *);
-  static clGetSupportedImageFormats_p clGetSupportedImageFormats_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetSupportedImageFormats(cl_context, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format *, cl_uint *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetSupportedImageFormats_h == NULL)
-	clGetSupportedImageFormats_h = (clGetSupportedImageFormats_p) dlsym(tau_handle,"clGetSupportedImageFormats"); 
-    if (clGetSupportedImageFormats_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetSupportedImageFormats_h)( a1,  a2,  a3,  a4,  a5,  a6);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_mem clCreateImage2D(cl_context a1, cl_mem_flags a2, const cl_image_format * a3, size_t a4, size_t a5, size_t a6, void * a7, cl_int * a8) 
+{
+  HANDLE_AND_AUTOTIMER(cl_mem, clCreateImage2D, cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, void *, cl_int *);
+  return clCreateImage2D_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8);
 }
 
-cl_int clGetMemObjectInfo(cl_mem a1, cl_mem_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetMemObjectInfo_p) (cl_mem, cl_mem_info, size_t, void *, size_t *);
-  static clGetMemObjectInfo_p clGetMemObjectInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetMemObjectInfo(cl_mem, cl_mem_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetMemObjectInfo_h == NULL)
-	clGetMemObjectInfo_h = (clGetMemObjectInfo_p) dlsym(tau_handle,"clGetMemObjectInfo"); 
-    if (clGetMemObjectInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetMemObjectInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_mem clCreateImage3D(cl_context a1, cl_mem_flags a2, const cl_image_format * a3, size_t a4, size_t a5, size_t a6, size_t a7, size_t a8, void * a9, cl_int * a10) 
+{
+  HANDLE_AND_AUTOTIMER(cl_mem, clCreateImage3D, cl_context, cl_mem_flags, const cl_image_format *, size_t, size_t, size_t, size_t, size_t, void *, cl_int *);
+  return clCreateImage3D_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
 }
 
-cl_int clGetImageInfo(cl_mem a1, cl_image_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetImageInfo_p) (cl_mem, cl_image_info, size_t, void *, size_t *);
-  static clGetImageInfo_p clGetImageInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetImageInfo(cl_mem, cl_image_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetImageInfo_h == NULL)
-	clGetImageInfo_h = (clGetImageInfo_p) dlsym(tau_handle,"clGetImageInfo"); 
-    if (clGetImageInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetImageInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clRetainMemObject(cl_mem a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clRetainMemObject, cl_mem);
+  return clRetainMemObject_h(a1);
 }
 
-cl_sampler clCreateSampler(cl_context a1, cl_bool a2, cl_addressing_mode a3, cl_filter_mode a4, cl_int * a5) {
-
-  typedef cl_sampler (*clCreateSampler_p) (cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int *);
-  static clCreateSampler_p clCreateSampler_h = NULL;
-  cl_sampler retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_sampler clCreateSampler(cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateSampler_h == NULL)
-	clCreateSampler_h = (clCreateSampler_p) dlsym(tau_handle,"clCreateSampler"); 
-    if (clCreateSampler_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateSampler_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetSupportedImageFormats(cl_context a1, cl_mem_flags a2, cl_mem_object_type a3, cl_uint a4, cl_image_format * a5, cl_uint * a6) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetSupportedImageFormats, cl_context, cl_mem_flags, cl_mem_object_type, cl_uint, cl_image_format *, cl_uint *);
+  return clGetSupportedImageFormats_h(a1,  a2,  a3,  a4,  a5,  a6);
 }
 
-cl_int clRetainSampler(cl_sampler a1) {
-
-  typedef cl_int (*clRetainSampler_p) (cl_sampler);
-  static clRetainSampler_p clRetainSampler_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clRetainSampler(cl_sampler) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clRetainSampler_h == NULL)
-	clRetainSampler_h = (clRetainSampler_p) dlsym(tau_handle,"clRetainSampler"); 
-    if (clRetainSampler_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clRetainSampler_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetMemObjectInfo(cl_mem a1, cl_mem_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetMemObjectInfo, cl_mem, cl_mem_info, size_t, void *, size_t *);
+  return clGetMemObjectInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clReleaseSampler(cl_sampler a1) {
-
-  typedef cl_int (*clReleaseSampler_p) (cl_sampler);
-  static clReleaseSampler_p clReleaseSampler_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clReleaseSampler(cl_sampler) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseSampler_h == NULL)
-	clReleaseSampler_h = (clReleaseSampler_p) dlsym(tau_handle,"clReleaseSampler"); 
-    if (clReleaseSampler_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clReleaseSampler_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetImageInfo(cl_mem a1, cl_image_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetImageInfo, cl_mem, cl_image_info, size_t, void *, size_t *);
+  return clGetImageInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clGetSamplerInfo(cl_sampler a1, cl_sampler_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetSamplerInfo_p) (cl_sampler, cl_sampler_info, size_t, void *, size_t *);
-  static clGetSamplerInfo_p clGetSamplerInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetSamplerInfo(cl_sampler, cl_sampler_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetSamplerInfo_h == NULL)
-	clGetSamplerInfo_h = (clGetSamplerInfo_p) dlsym(tau_handle,"clGetSamplerInfo"); 
-    if (clGetSamplerInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetSamplerInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_sampler clCreateSampler(cl_context a1, cl_bool a2, cl_addressing_mode a3, cl_filter_mode a4, cl_int * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_sampler, clCreateSampler, cl_context, cl_bool, cl_addressing_mode, cl_filter_mode, cl_int *);
+  return clCreateSampler_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_program clCreateProgramWithSource(cl_context a1, cl_uint a2, const char ** a3, const size_t * a4, cl_int * a5) {
-
-  typedef cl_program (*clCreateProgramWithSource_p) (cl_context, cl_uint, const char **, const size_t *, cl_int *);
-  static clCreateProgramWithSource_p clCreateProgramWithSource_h = NULL;
-  cl_program retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_program clCreateProgramWithSource(cl_context, cl_uint, const char **, const size_t *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateProgramWithSource_h == NULL)
-	clCreateProgramWithSource_h = (clCreateProgramWithSource_p) dlsym(tau_handle,"clCreateProgramWithSource"); 
-    if (clCreateProgramWithSource_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateProgramWithSource_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clRetainSampler(cl_sampler a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clRetainSampler, cl_sampler);
+  return clRetainSampler_h( a1);
 }
 
-cl_program clCreateProgramWithBinary(cl_context a1, cl_uint a2, const cl_device_id * a3, const size_t * a4, const unsigned char ** a5, cl_int * a6, cl_int * a7) {
-
-  typedef cl_program (*clCreateProgramWithBinary_p) (cl_context, cl_uint, const cl_device_id *, const size_t *, const unsigned char **, cl_int *, cl_int *);
-  static clCreateProgramWithBinary_p clCreateProgramWithBinary_h = NULL;
-  cl_program retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_program clCreateProgramWithBinary(cl_context, cl_uint, const cl_device_id *, const size_t *, const unsigned char **, cl_int *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateProgramWithBinary_h == NULL)
-	clCreateProgramWithBinary_h = (clCreateProgramWithBinary_p) dlsym(tau_handle,"clCreateProgramWithBinary"); 
-    if (clCreateProgramWithBinary_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateProgramWithBinary_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clReleaseSampler(cl_sampler a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clReleaseSampler, cl_sampler);
+  return clReleaseSampler_h( a1);
 }
 
-cl_int clRetainProgram(cl_program a1) {
-
-  typedef cl_int (*clRetainProgram_p) (cl_program);
-  static clRetainProgram_p clRetainProgram_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clRetainProgram(cl_program) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clRetainProgram_h == NULL)
-	clRetainProgram_h = (clRetainProgram_p) dlsym(tau_handle,"clRetainProgram"); 
-    if (clRetainProgram_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clRetainProgram_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetSamplerInfo(cl_sampler a1, cl_sampler_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetSamplerInfo, cl_sampler, cl_sampler_info, size_t, void *, size_t *);
+  return clGetSamplerInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clReleaseProgram(cl_program a1) {
-
-  typedef cl_int (*clReleaseProgram_p) (cl_program);
-  static clReleaseProgram_p clReleaseProgram_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clReleaseProgram(cl_program) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseProgram_h == NULL)
-	clReleaseProgram_h = (clReleaseProgram_p) dlsym(tau_handle,"clReleaseProgram"); 
-    if (clReleaseProgram_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clReleaseProgram_h)( a1);
-  TAU_PROFILE_STOP(t);
-#ifdef TAU_ENABLE_CL_CALLBACK
-	//Tau_opencl_exit();
-#endif
-  }
-  return retval;
-
+cl_program clCreateProgramWithSource(cl_context a1, cl_uint a2, const char ** a3, const size_t * a4, cl_int * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_program, clCreateProgramWithSource, cl_context, cl_uint, const char **, const size_t *, cl_int *);
+  return clCreateProgramWithSource_h( a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clBuildProgram(cl_program a1, cl_uint a2, const cl_device_id * a3, const char * a4, void (*a5)(cl_program, void *), void * a6) {
-
-  typedef cl_int (*clBuildProgram_p) (cl_program, cl_uint, const cl_device_id *, const char *, void (*)(cl_program, void *), void *);
-  static clBuildProgram_p clBuildProgram_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clBuildProgram(cl_program, cl_uint, const cl_device_id *, const char *, void (*)(cl_program, void *) C, void *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clBuildProgram_h == NULL)
-	clBuildProgram_h = (clBuildProgram_p) dlsym(tau_handle,"clBuildProgram"); 
-    if (clBuildProgram_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clBuildProgram_h)( a1,  a2,  a3,  a4,  a5,  a6);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_program clCreateProgramWithBinary(cl_context a1, cl_uint a2, const cl_device_id * a3, const size_t * a4, const unsigned char ** a5, cl_int * a6, cl_int * a7) 
+{
+  HANDLE_AND_AUTOTIMER(cl_program, clCreateProgramWithBinary, cl_context, cl_uint, const cl_device_id *, const size_t *, const unsigned char **, cl_int *, cl_int *);
+  return clCreateProgramWithBinary_h(a1,  a2,  a3,  a4,  a5,  a6,  a7);
 }
 
-cl_int clUnloadCompiler() {
-
-  typedef cl_int (*clUnloadCompiler_p) ();
-  static clUnloadCompiler_p clUnloadCompiler_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clUnloadCompiler() C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clUnloadCompiler_h == NULL)
-	clUnloadCompiler_h = (clUnloadCompiler_p) dlsym(tau_handle,"clUnloadCompiler"); 
-    if (clUnloadCompiler_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clUnloadCompiler_h)();
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clRetainProgram(cl_program a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clRetainProgram, cl_program);
+  return clRetainProgram_h(a1);
 }
 
-cl_int clGetProgramInfo(cl_program a1, cl_program_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetProgramInfo_p) (cl_program, cl_program_info, size_t, void *, size_t *);
-  static clGetProgramInfo_p clGetProgramInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetProgramInfo(cl_program, cl_program_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetProgramInfo_h == NULL)
-	clGetProgramInfo_h = (clGetProgramInfo_p) dlsym(tau_handle,"clGetProgramInfo"); 
-    if (clGetProgramInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetProgramInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clReleaseProgram(cl_program a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clReleaseProgram, cl_program);
+  return clReleaseProgram_h(a1);
 }
 
-cl_int clGetProgramBuildInfo(cl_program a1, cl_device_id a2, cl_program_build_info a3, size_t a4, void * a5, size_t * a6) {
-
-  typedef cl_int (*clGetProgramBuildInfo_p) (cl_program, cl_device_id, cl_program_build_info, size_t, void *, size_t *);
-  static clGetProgramBuildInfo_p clGetProgramBuildInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetProgramBuildInfo(cl_program, cl_device_id, cl_program_build_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetProgramBuildInfo_h == NULL)
-	clGetProgramBuildInfo_h = (clGetProgramBuildInfo_p) dlsym(tau_handle,"clGetProgramBuildInfo"); 
-    if (clGetProgramBuildInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetProgramBuildInfo_h)( a1,  a2,  a3,  a4,  a5,  a6);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clBuildProgram(cl_program a1, cl_uint a2, const cl_device_id * a3, const char * a4, void (*a5)(cl_program, void *), void * a6) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clBuildProgram, cl_program, cl_uint, const cl_device_id *, const char *, void (*)(cl_program, void *), void *);
+  return clBuildProgram_h(a1,  a2,  a3,  a4,  a5,  a6);
 }
 
-cl_kernel clCreateKernel(cl_program a1, const char * a2, cl_int * a3) {
-
-  typedef cl_kernel (*clCreateKernel_p) (cl_program, const char *, cl_int *);
-  static clCreateKernel_p clCreateKernel_h = NULL;
-  cl_kernel retval = NULL;
-  TAU_PROFILE_TIMER(t,"cl_kernel clCreateKernel(cl_program, const char *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateKernel_h == NULL)
-	clCreateKernel_h = (clCreateKernel_p) dlsym(tau_handle,"clCreateKernel"); 
-    if (clCreateKernel_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateKernel_h)( a1,  a2,  a3);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clUnloadCompiler() 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clUnloadCompiler);
+  return clUnloadCompiler_h();
 }
 
-cl_int clCreateKernelsInProgram(cl_program a1, cl_uint a2, cl_kernel * a3, cl_uint * a4) {
-
-  typedef cl_int (*clCreateKernelsInProgram_p) (cl_program, cl_uint, cl_kernel *, cl_uint *);
-  static clCreateKernelsInProgram_p clCreateKernelsInProgram_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clCreateKernelsInProgram(cl_program, cl_uint, cl_kernel *, cl_uint *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clCreateKernelsInProgram_h == NULL)
-	clCreateKernelsInProgram_h = (clCreateKernelsInProgram_p) dlsym(tau_handle,"clCreateKernelsInProgram"); 
-    if (clCreateKernelsInProgram_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clCreateKernelsInProgram_h)( a1,  a2,  a3,  a4);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetProgramInfo(cl_program a1, cl_program_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetProgramInfo, cl_program, cl_program_info, size_t, void *, size_t *);
+  return clGetProgramInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clRetainKernel(cl_kernel a1) {
-
-  typedef cl_int (*clRetainKernel_p) (cl_kernel);
-  static clRetainKernel_p clRetainKernel_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clRetainKernel(cl_kernel) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clRetainKernel_h == NULL)
-	clRetainKernel_h = (clRetainKernel_p) dlsym(tau_handle,"clRetainKernel"); 
-    if (clRetainKernel_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clRetainKernel_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetProgramBuildInfo(cl_program a1, cl_device_id a2, cl_program_build_info a3, size_t a4, void * a5, size_t * a6) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetProgramBuildInfo, cl_program, cl_device_id, cl_program_build_info, size_t, void *, size_t *);
+  return clGetProgramBuildInfo_h(a1,  a2,  a3,  a4,  a5,  a6);
 }
 
-cl_int clReleaseKernel(cl_kernel a1) {
-
-  typedef cl_int (*clReleaseKernel_p) (cl_kernel);
-  static clReleaseKernel_p clReleaseKernel_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clReleaseKernel(cl_kernel) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseKernel_h == NULL)
-	clReleaseKernel_h = (clReleaseKernel_p) dlsym(tau_handle,"clReleaseKernel"); 
-    if (clReleaseKernel_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clReleaseKernel_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_kernel clCreateKernel(cl_program a1, const char * a2, cl_int * a3) 
+{
+  HANDLE_AND_AUTOTIMER(cl_kernel, clCreateKernel, cl_program, const char *, cl_int *);
+  return clCreateKernel_h( a1,  a2,  a3);
 }
 
-cl_int clSetKernelArg(cl_kernel a1, cl_uint a2, size_t a3, const void * a4) {
-
-  typedef cl_int (*clSetKernelArg_p) (cl_kernel, cl_uint, size_t, const void *);
-  static clSetKernelArg_p clSetKernelArg_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clSetKernelArg(cl_kernel, cl_uint, size_t, const void *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clSetKernelArg_h == NULL)
-	clSetKernelArg_h = (clSetKernelArg_p) dlsym(tau_handle,"clSetKernelArg"); 
-    if (clSetKernelArg_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clSetKernelArg_h)( a1,  a2,  a3,  a4);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clCreateKernelsInProgram(cl_program a1, cl_uint a2, cl_kernel * a3, cl_uint * a4) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clCreateKernelsInProgram, cl_program, cl_uint, cl_kernel *, cl_uint *);
+  return clCreateKernelsInProgram_h( a1,  a2,  a3,  a4);
 }
 
-cl_int clGetKernelInfo(cl_kernel a1, cl_kernel_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetKernelInfo_p) (cl_kernel, cl_kernel_info, size_t, void *, size_t *);
-  static clGetKernelInfo_p clGetKernelInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetKernelInfo(cl_kernel, cl_kernel_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetKernelInfo_h == NULL)
-	clGetKernelInfo_h = (clGetKernelInfo_p) dlsym(tau_handle,"clGetKernelInfo"); 
-    if (clGetKernelInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetKernelInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clRetainKernel(cl_kernel a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clRetainKernel, cl_kernel);
+  return clRetainKernel_h(a1);
 }
 
-cl_int clGetKernelWorkGroupInfo(cl_kernel a1, cl_device_id a2, cl_kernel_work_group_info a3, size_t a4, void * a5, size_t * a6) {
+cl_int clReleaseKernel(cl_kernel a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clReleaseKernel, cl_kernel);
+  return clReleaseKernel_h(a1);
+}
 
-  typedef cl_int (*clGetKernelWorkGroupInfo_p) (cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *);
-  static clGetKernelWorkGroupInfo_p clGetKernelWorkGroupInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetKernelWorkGroupInfo(cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+cl_int clSetKernelArg(cl_kernel a1, cl_uint a2, size_t a3, const void * a4) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clSetKernelArg, cl_kernel, cl_uint, size_t, const void *);
+  return clSetKernelArg_h( a1,  a2,  a3,  a4);
+}
 
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetKernelWorkGroupInfo_h == NULL)
-	clGetKernelWorkGroupInfo_h = (clGetKernelWorkGroupInfo_p) dlsym(tau_handle,"clGetKernelWorkGroupInfo"); 
-    if (clGetKernelWorkGroupInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetKernelWorkGroupInfo_h)( a1,  a2,  a3,  a4,  a5,  a6);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
+cl_int clGetKernelInfo(cl_kernel a1, cl_kernel_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetKernelInfo, cl_kernel, cl_kernel_info, size_t, void *, size_t *);
+  return clGetKernelInfo_h( a1,  a2,  a3,  a4,  a5);
+}
 
+cl_int clGetKernelWorkGroupInfo(cl_kernel a1, cl_device_id a2, cl_kernel_work_group_info a3, size_t a4, void * a5, size_t * a6) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetKernelWorkGroupInfo, cl_kernel, cl_device_id, cl_kernel_work_group_info, size_t, void *, size_t *);
+  return clGetKernelWorkGroupInfo_h(a1,  a2,  a3,  a4,  a5,  a6);
 }
 
 #ifdef TAU_ENABLE_CL_WAIT_FOR_EVENTS
-cl_int clWaitForEvents(cl_uint a1, const cl_event * a2) {
-
-  typedef cl_int (*clWaitForEvents_p) (cl_uint, const cl_event *);
-  static clWaitForEvents_p clWaitForEvents_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clWaitForEvents(cl_uint, const cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clWaitForEvents_h == NULL)
-	clWaitForEvents_h = (clWaitForEvents_p) dlsym(tau_handle,"clWaitForEvents"); 
-    if (clWaitForEvents_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
+cl_int clWaitForEvents(cl_uint a1, const cl_event * a2) 
+{
+  HANDLE_AND_TIMER(cl_int, clWaitForEvents, cl_uint, const cl_event *);
   TAU_PROFILE_START(t);
-  retval  =  (*clWaitForEvents_h)( a1,  a2);
+  cl_int retval = clWaitForEvents_h(a1,  a2);
   TAU_PROFILE_STOP(t);
-
-	Tau_opencl_register_sync_event();
-
-  }
+  Tau_opencl_register_sync_event();
   return retval;
 
 }
 #endif /* TAU_ENABLE_CL_WAIT_FOR_EVENTS */
 
-cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2) {
-
-  typedef cl_int (*clWaitForEvents_p) (cl_uint, const cl_event *);
-  static clWaitForEvents_p clWaitForEvents_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clWaitForEvents_h == NULL)
-	clWaitForEvents_h = (clWaitForEvents_p) dlsym(tau_handle,"clWaitForEvents"); 
-    if (clWaitForEvents_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  retval  =  (*clWaitForEvents_h)( a1,  a2);
-  }
-  return retval;
-
+cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2) 
+{
+  HANDLE(cl_int, clWaitForEvents, cl_uint, const cl_event *);
+  return clWaitForEvents_h(a1,  a2);
 }
 
-cl_int clGetEventInfo(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetEventInfo_p) (cl_event, cl_event_info, size_t, void *, size_t *);
-  static clGetEventInfo_p clGetEventInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetEventInfo(cl_event, cl_event_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetEventInfo_h == NULL)
-	clGetEventInfo_h = (clGetEventInfo_p) dlsym(tau_handle,"clGetEventInfo"); 
-    if (clGetEventInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetEventInfo_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clGetEventInfo(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetEventInfo, cl_event, cl_event_info, size_t, void *, size_t *);
+  return clGetEventInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-cl_int clRetainEvent(cl_event a1) {
-
-  typedef cl_int (*clRetainEvent_p) (cl_event);
-  static clRetainEvent_p clRetainEvent_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clRetainEvent(cl_event) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clRetainEvent_h == NULL)
-	clRetainEvent_h = (clRetainEvent_p) dlsym(tau_handle,"clRetainEvent"); 
-    if (clRetainEvent_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clRetainEvent_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+cl_int clRetainEvent(cl_event a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clRetainEvent, cl_event);
+  return clRetainEvent_h(a1);
 }
 
-cl_int clReleaseEvent_noinst(cl_event a1) {
+cl_int clReleaseEvent(cl_event a1) 
+{
+  HANDLE_AND_TIMER(cl_int, clReleaseEvent, cl_event);
 
-  typedef cl_int (*clReleaseEvent_p) (cl_event);
-  static clReleaseEvent_p clReleaseEvent_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseEvent_h == NULL)
-	clReleaseEvent_h = (clReleaseEvent_p) dlsym(tau_handle,"clReleaseEvent"); 
-    if (clReleaseEvent_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  retval  =  (*clReleaseEvent_h)( a1);
-  }
-  return retval;
-
-}
-
-cl_int clReleaseEvent(cl_event a1) {
-
-  typedef cl_int (*clReleaseEvent_p) (cl_event);
-  static clReleaseEvent_p clReleaseEvent_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clReleaseEvent(cl_event) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clReleaseEvent_h == NULL)
-	clReleaseEvent_h = (clReleaseEvent_p) dlsym(tau_handle,"clReleaseEvent"); 
-    if (clReleaseEvent_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-
-	//clReleaseEvent is rather nasty, we will need to flush our event buffer in
-	//case one of them is being released.
-	Tau_opencl_flush();
-	//Tau_opencl_register_sync_event();
+  //clReleaseEvent is rather nasty, we will need to flush our event buffer in
+  //case one of them is being released.
+  Tau_opencl_flush();
+  //Tau_opencl_register_sync_event();
 
   TAU_PROFILE_START(t);
-  retval  =  (*clReleaseEvent_h)( a1);
+  cl_int retval = clReleaseEvent_h(a1);
   TAU_PROFILE_STOP(t);
-  }
   return retval;
-
 }
 
-cl_int clGetEventProfilingInfo(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5) {
+cl_int clReleaseEvent_noinst(cl_event a1) 
+{
+  HANDLE(cl_int, clReleaseEvent, cl_event);
+  return clReleaseEvent_h(a1);
+}
 
-  typedef cl_int (*clGetEventProfilingInfo_p) (cl_event, cl_profiling_info, size_t, void *, size_t *);
-  static clGetEventProfilingInfo_p clGetEventProfilingInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetEventProfilingInfo(cl_event, cl_profiling_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+cl_int clGetEventProfilingInfo(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetEventProfilingInfo, cl_event, cl_profiling_info, size_t, void *, size_t *);
+  return clGetEventProfilingInfo_h(a1,  a2,  a3,  a4,  a5);
+}
 
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetEventProfilingInfo_h == NULL)
-	clGetEventProfilingInfo_h = (clGetEventProfilingInfo_p) dlsym(tau_handle,"clGetEventProfilingInfo"); 
-    if (clGetEventProfilingInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
+cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5)
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clGetEventProfilingInfo, cl_event, cl_profiling_info, size_t, void *, size_t *);
+  return clGetEventProfilingInfo_h(a1,  a2,  a3,  a4,  a5);
+}
+
+cl_int clFlush(cl_command_queue a1) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clFlush, cl_command_queue);
+  return clFlush_h(a1);
+}
+
+cl_int clFinish(cl_command_queue a1) 
+{
+  HANDLE_AND_TIMER(cl_int, clFinish, cl_command_queue);
   TAU_PROFILE_START(t);
-  retval  =  (*clGetEventProfilingInfo_h)( a1,  a2,  a3,  a4,  a5);
+  cl_int retval = clFinish_h(a1);
   TAU_PROFILE_STOP(t);
-  }
+  Tau_opencl_register_sync_event();
   return retval;
-
-}
-cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5) {
-
-  typedef cl_int (*clGetEventProfilingInfo_p) (cl_event, cl_profiling_info, size_t, void *, size_t *);
-  static clGetEventProfilingInfo_p clGetEventProfilingInfo_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clGetEventProfilingInfo(cl_event, cl_profiling_info, size_t, void *, size_t *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetEventProfilingInfo_h == NULL)
-	clGetEventProfilingInfo_h = (clGetEventProfilingInfo_p) dlsym(tau_handle,"clGetEventProfilingInfo"); 
-    if (clGetEventProfilingInfo_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  retval  =  (*clGetEventProfilingInfo_h)( a1,  a2,  a3,  a4,  a5);
-  }
-  return retval;
-
 }
 
-cl_int clFlush(cl_command_queue a1) {
+cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, void * a6, 
+                           cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE_AND_TIMER(cl_int, clEnqueueReadBuffer, cl_command_queue, cl_mem, cl_bool, size_t, size_t, 
+                   void *, cl_uint, const cl_event *, cl_event *);
+  static char const * timer_name = TIMER_NAME(cl_int, clEnqueueReadBuffer, cl_command_queue, cl_mem, 
+                                              cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 
-  typedef cl_int (*clFlush_p) (cl_command_queue);
-  static clFlush_p clFlush_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clFlush(cl_command_queue) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
+  gId->name = "ReadBuffer";
+  gId->event = NULL;
+  gId->callingSite = p ? p->CallPathFunction : NULL;
+  gId->memcpy_type = MemcpyDtoH;
 
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clFlush_h == NULL)
-	clFlush_h = (clFlush_p) dlsym(tau_handle,"clFlush"); 
-    if (clFlush_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
+  MemoryCopyEventDtoH(a5);
+
+  Tau_opencl_enter_memcpy_event(timer_name, gId, a5, MemcpyDtoH);
+  cl_int retval = clEnqueueReadBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyDtoH);
+
+  Tau_opencl_register_sync_event();
+  return retval;
+}
+
+cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6, 
+                            cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE_AND_TIMER(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool, size_t, size_t,
+                   const void *, cl_uint, const cl_event *, cl_event *);
+  static char const * timer_name = TIMER_NAME(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool,
+                                              size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
+
+  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
+  gId->name = "WriteBuffer";
+  gId->event = NULL;
+  gId->callingSite = p ? p->CallPathFunction : NULL;
+  gId->memcpy_type = MemcpyHtoD;
+
+  MemoryCopyEventHtoD(a5);
+
+  Tau_opencl_enter_memcpy_event(timer_name, gId, a5, MemcpyHtoD); 
+  cl_int retval = clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyHtoD); 
+
+  Tau_opencl_register_sync_event();
+  return retval;
+}
+
+cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6, 
+                                   cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, 
+         const cl_event *, cl_event *);
+  return clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+}
+
+cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, size_t a5, size_t a6, 
+                           cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE_AND_TIMER(cl_int, clEnqueueCopyBuffer, cl_command_queue, cl_mem, cl_mem, 
+                   size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
+  static char const * timer_name = TIMER_NAME(cl_int, clEnqueueCopyBuffer, cl_command_queue, cl_mem, cl_mem, 
+                                              size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
+
+  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
+  gId->name = "CopyBuffer";
+  gId->event = NULL;
+  gId->callingSite = p ? p->CallPathFunction : NULL;
+  gId->memcpy_type = MemcpyDtoD;
+
+  MemoryCopyEventDtoD(a5);
+
+  Tau_opencl_enter_memcpy_event(timer_name, gId, a5, MemcpyDtoD); 
+  cl_int retval = clEnqueueCopyBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyDtoD); 
+
+  Tau_opencl_register_sync_event();
+  return retval;
+}
+
+cl_int clEnqueueReadImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size_t * a4, const size_t * a5, size_t a6, 
+                          size_t a7, void * a8, cl_uint a9, const cl_event * a10, cl_event * a11)
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueReadImage, cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, 
+                     size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
+  return clEnqueueReadImage_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10,  a11);
+}
+
+cl_int clEnqueueWriteImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size_t * a4, const size_t * a5, size_t a6, 
+                           size_t a7, const void * a8, cl_uint a9, const cl_event * a10, cl_event * a11) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueWriteImage, cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, 
+                     size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
+  return clEnqueueWriteImage_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10,  a11);
+}
+
+cl_int clEnqueueCopyImage(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_t * a4, const size_t * a5,
+                          const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueCopyImage, cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, 
+                     const size_t *, cl_uint, const cl_event *, cl_event *);
+  return clEnqueueCopyImage_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+}
+
+cl_int clEnqueueCopyImageToBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_t * a4, const size_t * a5, 
+                                  size_t a6, cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueCopyImageToBuffer, cl_command_queue, cl_mem, cl_mem, const size_t *, 
+                     const size_t *, size_t, cl_uint, const cl_event *, cl_event *);
+  return clEnqueueCopyImageToBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+}
+
+cl_int clEnqueueCopyBufferToImage(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, const size_t * a5, 
+                                  const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueCopyBufferToImage, cl_command_queue, cl_mem, cl_mem, size_t, const size_t *, 
+                     const size_t *, cl_uint, const cl_event *, cl_event *);
+  return clEnqueueCopyBufferToImage_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+}
+
+void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_flags a4, size_t a5, size_t a6, 
+                          cl_uint a7, const cl_event * a8, cl_event * a9, cl_int * a10) 
+{
+  HANDLE_AND_TIMER(void *, clEnqueueMapBuffer, cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, 
+                   size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
+  static char const * timer_name = TIMER_NAME(void *, clEnqueueMapBuffer, cl_command_queue, cl_mem, cl_bool, 
+                                              cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
+
+  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
+  gId->name = "MapBuffer";
+  gId->event = NULL;
+  gId->callingSite = p ? p->CallPathFunction : NULL;
+  gId->memcpy_type = MemcpyHtoD;
+
+  MemoryCopyEventHtoD(a6);
+
+  Tau_opencl_enter_memcpy_event(timer_name, gId, a6, MemcpyHtoD); 
+  void * retval = clEnqueueMapBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9, a10);
+  Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyHtoD); 
+
+  Tau_opencl_register_sync_event();
+  return retval;
+}
+
+void * clEnqueueMapImage(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_flags a4, const size_t * a5, 
+                         const size_t * a6, size_t * a7, size_t * a8, cl_uint a9, const cl_event * a10, 
+                         cl_event * a11, cl_int * a12) 
+{
+  HANDLE_AND_AUTOTIMER(void *, clEnqueueMapImage, cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *, 
+                     const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *, cl_int *);
+  return clEnqueueMapImage_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10,  a11,  a12);
+}
+
+cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uint a4, const cl_event * a5, cl_event * a6)
+{
+  HANDLE_AND_TIMER(cl_int, clEnqueueUnmapMemObject, cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *);
+  static char const * timer_name = TIMER_NAME(cl_int, clEnqueueUnmapMemObject, cl_command_queue, cl_mem, void *, cl_uint, 
+                                              const cl_event *, cl_event *);
+
+  Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  OpenCLGpuEvent * gId = Tau_opencl_retrive_gpu(a1)->getCopy();
+  gId->name = "UnmapBuffer";
+  gId->event = NULL;
+  gId->callingSite = p ? p->CallPathFunction : NULL;
+  gId->memcpy_type = MemcpyDtoH;
+
+  MemoryCopyEventDtoH(0);
+
+  Tau_opencl_enter_memcpy_event(timer_name, gId, 0, MemcpyDtoH); 
+  cl_int retval = clEnqueueUnmapMemObject(a1,  a2,  a3,  a4,  a5,  a6);
+  Tau_opencl_exit_memcpy_event(timer_name, gId, MemcpyDtoH); 
+
+  Tau_opencl_register_sync_event();
+  return retval;
+}
+
+cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, const size_t * a4, const size_t * a5, 
+                              const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) 
+{
+  HANDLE_AND_TIMER(cl_int, clEnqueueNDRangeKernel, cl_command_queue, cl_kernel, cl_uint, const size_t *, 
+                   const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
+
+  cl_int retval;
+  cl_event event;
+  if (!a9) {
+    a9 = &event;
+  }
+
   TAU_PROFILE_START(t);
-  retval  =  (*clFlush_h)( a1);
+  retval = clEnqueueNDRangeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
+
+  char buf[4096];
+  size_t len;
+  if (clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME, sizeof(buf), buf, &len) == CL_SUCCESS) {
+    char * name = new char[len+1];
+    strncpy(name, buf, len+1);
+    FunctionInfo * callingSite = NULL;
+    Profiler * p = TauInternal_CurrentProfiler(RtsLayer::myThread());
+    if (p) {
+      callingSite = p->CallPathFunction;
+    }
+    Tau_opencl_enqueue_event(name, a1, a9, callingSite, -1);
   }
   return retval;
-
 }
 
-cl_int clFinish(cl_command_queue a1) {
+cl_int clEnqueueTask(cl_command_queue a1, cl_kernel a2, cl_uint a3, const cl_event * a4, cl_event * a5) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueTask, cl_command_queue, cl_kernel, cl_uint, const cl_event *, cl_event *);
+  return clEnqueueTask_h(a1,  a2,  a3,  a4,  a5);
+}
 
-  typedef cl_int (*clFinish_p) (cl_command_queue);
-  static clFinish_p clFinish_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clFinish(cl_command_queue) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+cl_int clEnqueueNativeKernel(cl_command_queue a1, void (*a2)(void *), void * a3, size_t a4, cl_uint a5, 
+                             const cl_mem * a6, const void ** a7, cl_uint a8, const cl_event * a9, cl_event * a10)
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueNativeKernel, cl_command_queue, void (*)(void *), void *, size_t, cl_uint,  
+                       const cl_mem *, const void **, cl_uint, const cl_event *, cl_event *);
+  return clEnqueueNativeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
+}
 
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clFinish_h == NULL)
-	clFinish_h = (clFinish_p) dlsym(tau_handle,"clFinish"); 
-    if (clFinish_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
+cl_int clEnqueueMarker(cl_command_queue a1, cl_event * a2) 
+{
+  HANDLE_AND_AUTOTIMER(cl_int, clEnqueueMarker, cl_command_queue, cl_event *);
+  return clEnqueueMarker_h(a1,  a2);
+}
+
+cl_int clEnqueueWaitForEvents(cl_command_queue a1, cl_uint a2, const cl_event * a3) 
+{
+  HANDLE_AND_TIMER(cl_int, clEnqueueWaitForEvents, cl_command_queue, cl_uint, const cl_event *);
   TAU_PROFILE_START(t);
-  retval  =  (*clFinish_h)( a1);
+  cl_int retval = clEnqueueWaitForEvents_h(a1,  a2,  a3);
   TAU_PROFILE_STOP(t);
-	
-	Tau_opencl_register_sync_event();
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, void * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueReadBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueReadBuffer_p clEnqueueReadBuffer_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueReadBuffer_h == NULL)
-	clEnqueueReadBuffer_h = (clEnqueueReadBuffer_p) dlsym(tau_handle,"clEnqueueReadBuffer"); 
-    if (clEnqueueReadBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-	if (a9 == NULL)
-	{
-		//printf("cl_event is null.\n");
-		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
-		a9 = &(*new_event);
-	}
-#ifdef TAU_ENABLE_CL_CALLBACK
-	OpenCLGpuEvent *mem_data = (OpenCLGpuEvent*) malloc(memcpy_data_size);
-	strcpy(mem_data->name, "ReadBuffer");
-	mem_data->memcpy_type = MemcpyDtoH;
-	//printf("name %s.\n", mem_data->name);
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
-	0, a5, MemcpyDtoH);
-	
-  retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-	
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
-	0, MemcpyDtoH);
-	
-	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
-#else
-	FunctionInfo *callingSite;
-	const char name[] = "ReadBuffer";
-
-        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-        TAU_VERBOSE("Profiler in OpenCL ReadBuffer: %p\n", p);
-        if (p) {
-          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-        } else {
-          callingSite = NULL;
-        }
-	
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = NULL;
-
-//	//OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
-//	//OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
-	//callingSite, a9, MemcpyDtoH);
-	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyDtoH);
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
-	gId, a5, MemcpyDtoH);
-	
-  retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-	
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
-	gId, MemcpyDtoH);
-	
-	Tau_opencl_register_sync_event();
-#endif 
-
-	
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueWriteBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueWriteBuffer_p clEnqueueWriteBuffer_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueWriteBuffer_h == NULL)
-	clEnqueueWriteBuffer_h = (clEnqueueWriteBuffer_p) dlsym(tau_handle,"clEnqueueWriteBuffer"); 
-    if (clEnqueueWriteBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-	if (a9 == NULL)
-	{
-		//printf("cl_event is null.\n");
-		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
-		a9 = &(*new_event);
-	}
-#ifdef TAU_ENABLE_CL_CALLBACK
-	OpenCLGpuEvent *mem_data = (OpenCLGpuEvent*) malloc(memcpy_data_size);
-	strcpy(mem_data->name, "WriteBuffer");
-	mem_data->memcpy_type = MemcpyHtoD;
-	
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, a5, MemcpyHtoD); 
-  retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-	
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, MemcpyHtoD); 
-	
-	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
-#else
-	FunctionInfo *callingSite;
-	const char name[] = "WriteBuffer";
-	//printf("name: %s.\n", name);
-
-        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-        TAU_VERBOSE("Profiler in OpenCL WriteBuffer: %p\n", p);
-        if (p) {
-          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-        } else {
-          callingSite = NULL;
-        }
-	
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = NULL;
-	
-	//printf("CL WRAP: command queue is: %d.\n", a1);
-//	OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
-//	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
-//	callingSite, a9, MemcpyHtoD);
-	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyHtoD);
-	
-	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a5);
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", gId, a5, MemcpyHtoD); 
-  retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyHtoD); 
-	
-	Tau_opencl_register_sync_event();
-#endif
-  }
-	
-  return retval;
-
-}
-
-cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueWriteBuffer_p) (cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueWriteBuffer_p clEnqueueWriteBuffer_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueWriteBuffer_h == NULL)
-	clEnqueueWriteBuffer_h = (clEnqueueWriteBuffer_p) dlsym(tau_handle,"clEnqueueWriteBuffer"); 
-    if (clEnqueueWriteBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  }
+  Tau_opencl_register_sync_event();
   return retval;
 }
 
-/* Assuming copy is between two devices. */
-cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, size_t a5, size_t a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueCopyBuffer_p) (cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueCopyBuffer_p clEnqueueCopyBuffer_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueCopyBuffer_h == NULL)
-	clEnqueueCopyBuffer_h = (clEnqueueCopyBuffer_p) dlsym(tau_handle,"clEnqueueCopyBuffer"); 
-    if (clEnqueueCopyBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-	if (a9 == NULL)
-	{
-		//printf("cl_event is null.\n");
-		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
-		a9 = &(*new_event);
-	}
-#ifdef TAU_ENABLE_CL_CALLBACK
-	OpenCLGpuEvent *mem_data = (OpenCLGpuEvent*) malloc(memcpy_data_size);
-	strcpy(mem_data->name, "CopyBuffer");
-	mem_data->memcpy_type = MemcpyDtoD;
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyDtoD); 
-
-  retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, MemcpyDtoD);
-
-	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
-
-#else
-	FunctionInfo *callingSite;
-	const char name[] = "CopyBuffer";
-
-        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-        TAU_VERBOSE("Profiler in OpenCL CopyBuffer: %p\n", p);
-        if (p) {
-          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-        } else {
-          callingSite = NULL;
-        }
-	
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = NULL;
-	
-//	OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
-//	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
-//	callingSite, a9, MemcpyDtoD);
-	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyDtoD);
-	
-	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, a6);
-	
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", gId, a6, MemcpyDtoD); 
-  
-	retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-	
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyDtoD);
-	
-	Tau_opencl_register_sync_event();
-#endif
-  }
-  
-	return retval;
-
-}
-
-//No example found -- not implemented.
-cl_int clEnqueueReadImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size_t * a4, const size_t * a5, size_t a6, size_t a7, void * a8, cl_uint a9, const cl_event * a10, cl_event * a11) {
-
-  typedef cl_int (*clEnqueueReadImage_p) (cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueReadImage_p clEnqueueReadImage_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueReadImage(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueReadImage_h == NULL)
-	clEnqueueReadImage_h = (clEnqueueReadImage_p) dlsym(tau_handle,"clEnqueueReadImage"); 
-    if (clEnqueueReadImage_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
+cl_int clEnqueueBarrier(cl_command_queue a1) 
+{
+  HANDLE_AND_TIMER(cl_int, clEnqueueBarrier, cl_command_queue);
   TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueReadImage_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10,  a11);
+  cl_int retval = clEnqueueBarrier_h(a1);
   TAU_PROFILE_STOP(t);
-  }
+  Tau_opencl_register_sync_event();
   return retval;
-
 }
 
-//No example found -- not implemented.
-cl_int clEnqueueWriteImage(cl_command_queue a1, cl_mem a2, cl_bool a3, const size_t * a4, const size_t * a5, size_t a6, size_t a7, const void * a8, cl_uint a9, const cl_event * a10, cl_event * a11) {
-
-  typedef cl_int (*clEnqueueWriteImage_p) (cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueWriteImage_p clEnqueueWriteImage_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueWriteImage(cl_command_queue, cl_mem, cl_bool, const size_t *, const size_t *, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueWriteImage_h == NULL)
-	clEnqueueWriteImage_h = (clEnqueueWriteImage_p) dlsym(tau_handle,"clEnqueueWriteImage"); 
-    if (clEnqueueWriteImage_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueWriteImage_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10,  a11);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-//No example found -- not implemented.
-cl_int clEnqueueCopyImage(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_t * a4, const size_t * a5, const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueCopyImage_p) (cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueCopyImage_p clEnqueueCopyImage_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyImage(cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueCopyImage_h == NULL)
-	clEnqueueCopyImage_h = (clEnqueueCopyImage_p) dlsym(tau_handle,"clEnqueueCopyImage"); 
-    if (clEnqueueCopyImage_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueCopyImage_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-//No example found -- not implemented.
-cl_int clEnqueueCopyImageToBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, const size_t * a4, const size_t * a5, size_t a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueCopyImageToBuffer_p) (cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, size_t, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueCopyImageToBuffer_p clEnqueueCopyImageToBuffer_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyImageToBuffer(cl_command_queue, cl_mem, cl_mem, const size_t *, const size_t *, size_t, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueCopyImageToBuffer_h == NULL)
-	clEnqueueCopyImageToBuffer_h = (clEnqueueCopyImageToBuffer_p) dlsym(tau_handle,"clEnqueueCopyImageToBuffer"); 
-    if (clEnqueueCopyImageToBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueCopyImageToBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-//No example found -- not implemented.
-cl_int clEnqueueCopyBufferToImage(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4, const size_t * a5, const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueCopyBufferToImage_p) (cl_command_queue, cl_mem, cl_mem, size_t, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueCopyBufferToImage_p clEnqueueCopyBufferToImage_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueCopyBufferToImage(cl_command_queue, cl_mem, cl_mem, size_t, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueCopyBufferToImage_h == NULL)
-	clEnqueueCopyBufferToImage_h = (clEnqueueCopyBufferToImage_p) dlsym(tau_handle,"clEnqueueCopyBufferToImage"); 
-    if (clEnqueueCopyBufferToImage_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueCopyBufferToImage_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_flags a4, size_t a5, size_t a6, cl_uint a7, const cl_event * a8, cl_event * a9, cl_int * a10) {
-
-  typedef void * (*clEnqueueMapBuffer_p) (cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
-  static clEnqueueMapBuffer_p clEnqueueMapBuffer_h = NULL;
-  void * retval = NULL;
-  TAU_PROFILE_TIMER(t,"void *clEnqueueMapBuffer(cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueMapBuffer_h == NULL)
-	clEnqueueMapBuffer_h = (clEnqueueMapBuffer_p) dlsym(tau_handle,"clEnqueueMapBuffer"); 
-    if (clEnqueueMapBuffer_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-	if (a9 == NULL)
-	{
-		//printf("cl_event is null.\n");
-		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
-		a9 = &(*new_event);
-	}
-#ifdef TAU_ENABLE_CL_CALLBACK
-	OpenCLGpuEvent *mem_data = (OpenCLGpuEvent*) malloc(memcpy_data_size);
-	strcpy(mem_data->name, "MapBuffer");
-	mem_data->memcpy_type = MemcpyHtoD;
-	//printf("name %s.\n", mem_data->name);
-#endif
-	FunctionInfo *callingSite;
-	const char name[] = "MapBuffer";
-	//printf("name: %s.\n", name);
-
-	callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = NULL;
-	
-	//printf("CL WRAP: command queue is: %d.\n", a1);
-//	OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
-//	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
-//	callingSite, a9, MemcpyHtoD);
-	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a9, callingSite, MemcpyHtoD);
-  
-	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a6);
-  Tau_opencl_enter_memcpy_event("void *clEnqueueMapBuffer(cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *) C", gId, a6, MemcpyHtoD);
-  retval  =  (*clEnqueueMapBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
-  
-	Tau_opencl_exit_memcpy_event("void *clEnqueueMapBuffer(cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *) C", gId, MemcpyHtoD);
-#ifdef TAU_ENABLE_CL_CALLBACK
-	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
-#endif
-
-	//free(mem_data);
-	Tau_opencl_register_sync_event();
-  }
-  return retval;
-
-}
-
-//No example found -- not implemented.
-void * clEnqueueMapImage(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_flags a4, const size_t * a5, const size_t * a6, size_t * a7, size_t * a8, cl_uint a9, const cl_event * a10, cl_event * a11, cl_int * a12) {
-
-  typedef void * (*clEnqueueMapImage_p) (cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *, const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *, cl_int *);
-  static clEnqueueMapImage_p clEnqueueMapImage_h = NULL;
-  void * retval = NULL;
-  TAU_PROFILE_TIMER(t,"void *clEnqueueMapImage(cl_command_queue, cl_mem, cl_bool, cl_map_flags, const size_t *, const size_t *, size_t *, size_t *, cl_uint, const cl_event *, cl_event *, cl_int *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueMapImage_h == NULL)
-	clEnqueueMapImage_h = (clEnqueueMapImage_p) dlsym(tau_handle,"clEnqueueMapImage"); 
-    if (clEnqueueMapImage_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueMapImage_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10,  a11,  a12);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uint a4, const cl_event * a5, cl_event * a6) {
-
-  typedef cl_int (*clEnqueueUnmapMemObject_p) (cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueUnmapMemObject_p clEnqueueUnmapMemObject_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueUnmapMemObject(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueUnmapMemObject_h == NULL)
-	clEnqueueUnmapMemObject_h = (clEnqueueUnmapMemObject_p) dlsym(tau_handle,"clEnqueueUnmapMemObject"); 
-    if (clEnqueueUnmapMemObject_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-	if (a6 == NULL)
-	{
-		//printf("cl_event is null.\n");
-		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
-		a6 = &(*new_event);
-	}
-	FunctionInfo *callingSite;
-	const char name[] = "UnmapBuffer";
-	//printf("name: %s.\n", name);
-
-        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-        TAU_VERBOSE("Profiler in OpenCL UnmapBuffer: %p\n", p);
-        if (p) {
-          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-        } else {
-          callingSite = NULL;
-        }
-	
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = NULL;
-	
-	//printf("CL WRAP (in Unmap: command queue is: %d.\n", a1);
-//	OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
-//	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
-//	callingSite, a6, MemcpyDtoH);
-	
-	OpenCLGpuEvent *gId = Tau_opencl_enqueue_event(name, a1, a6, callingSite, MemcpyDtoH);
-  
-	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, 0);
-  Tau_opencl_enter_memcpy_event("cl_int clEnqueueUnmapMemObject(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *) C", gId, 0, MemcpyDtoH);
-  retval  =  (*clEnqueueUnmapMemObject_h)( a1,  a2,  a3,  a4,  a5,  a6);
-  Tau_opencl_exit_memcpy_event("cl_int clEnqueueUnmapMemObject(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyDtoH);
-  }
-	
-	Tau_opencl_register_sync_event();
-  
-	return retval;
-
-}
-
-cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, const size_t * a4, const size_t * a5, const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) {
-
-  typedef cl_int (*clEnqueueNDRangeKernel_p) (cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueNDRangeKernel_p clEnqueueNDRangeKernel_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueNDRangeKernel(cl_command_queue, cl_kernel, cl_uint, const size_t *, const size_t *, const size_t *, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueNDRangeKernel_h == NULL)
-	clEnqueueNDRangeKernel_h = (clEnqueueNDRangeKernel_p) dlsym(tau_handle,"clEnqueueNDRangeKernel"); 
-    if (clEnqueueNDRangeKernel_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-
-
-#ifdef TAU_ENABLE_CL_CALLBACK
-	OpenCLGpuEvent *kernel_data = (OpenCLGpuEvent*) malloc(kernel_data_size);
-	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
-	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
-        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-        TAU_VERBOSE("Profiler in OpenCL kernel_data: %p\n", p);
-        if (p) {
-          kernel_data->callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-        } else {
-          kernel_data->callingSite = NULL;
-        }
-	
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//kernel_data->callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	if (err != CL_SUCCESS)
-	{
-		printf("Cannot get Kernel name.\n");
-	  exit(1);	
-	}
-	//printf("name returned from KernelInfo: %s.\n", kernel_data->name);
-	//kernel_data.name = "NDRangeKernel";
-	//printf("name: %s.\n", kernel_data->name);
-#endif
-	if (a9 == NULL)
-	{
-		//printf("cl_event is null.\n");
-		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
-		a9 = &(*new_event);
-	}
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueNDRangeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
-#ifdef TAU_ENABLE_CL_CALLBACK
-	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_kernel_callback, kernel_data);
-#else
-	char *name = (char*)malloc(sizeof(char)*TAU_MAX_FUNCTIONNAME);
-	FunctionInfo *callingSite;
-	int err;
-	
-	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
-		sizeof(char[TAU_MAX_FUNCTIONNAME]), name, NULL);
-	//printf("clEnqueueNDRangeKernel. kernel name: %s.\n", name);	
-	//
-	if (err == CL_SUCCESS) {
-        Profiler *p = TauInternal_CurrentProfiler(RtsLayer::myThread());
-        TAU_VERBOSE("Profiler in OpenCL clEnqueueNDRangeKernel_h: %p\n", p);
-        if (p) {
-          callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-        } else {
-          callingSite = NULL;
-        }
-	
-	//callingSite = TauInternal_CurrentProfiler(RtsLayer::myThread())->CallPathFunction;
-	//callingSite = NULL;
-
-	//printf("CL WRAP: command queue is: %d.\n", a1);
-//	OpenCLGpuEvent *gId = Tau_opencl_retrive_gpu(a1);
-
-//	OpenCLGpuEvent *kernel_data = new OpenCLGpuEvent(name, gId,
-//	callingSite, a9);
-	
-	Tau_opencl_enqueue_event(name, a1, a9, callingSite, -1);
-	}
-
-
-#endif
-	//free(kernel_data);
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueTask(cl_command_queue a1, cl_kernel a2, cl_uint a3, const cl_event * a4, cl_event * a5) {
-
-  typedef cl_int (*clEnqueueTask_p) (cl_command_queue, cl_kernel, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueTask_p clEnqueueTask_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueTask(cl_command_queue, cl_kernel, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueTask_h == NULL)
-	clEnqueueTask_h = (clEnqueueTask_p) dlsym(tau_handle,"clEnqueueTask"); 
-    if (clEnqueueTask_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueTask_h)( a1,  a2,  a3,  a4,  a5);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueNativeKernel(cl_command_queue a1, void (*a2)(void *), void * a3, size_t a4, cl_uint a5, const cl_mem * a6, const void ** a7, cl_uint a8, const cl_event * a9, cl_event * a10) {
-
-  typedef cl_int (*clEnqueueNativeKernel_p) (cl_command_queue, void (*)(void *), void *, size_t, cl_uint, const cl_mem *, const void **, cl_uint, const cl_event *, cl_event *);
-  static clEnqueueNativeKernel_p clEnqueueNativeKernel_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueNativeKernel(cl_command_queue, void (*)(void *) C, void *, size_t, cl_uint, const cl_mem *, const void **, cl_uint, const cl_event *, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueNativeKernel_h == NULL)
-	clEnqueueNativeKernel_h = (clEnqueueNativeKernel_p) dlsym(tau_handle,"clEnqueueNativeKernel"); 
-    if (clEnqueueNativeKernel_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueNativeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueMarker(cl_command_queue a1, cl_event * a2) {
-
-  typedef cl_int (*clEnqueueMarker_p) (cl_command_queue, cl_event *);
-  static clEnqueueMarker_p clEnqueueMarker_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueMarker(cl_command_queue, cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueMarker_h == NULL)
-	clEnqueueMarker_h = (clEnqueueMarker_p) dlsym(tau_handle,"clEnqueueMarker"); 
-    if (clEnqueueMarker_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueMarker_h)( a1,  a2);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueWaitForEvents(cl_command_queue a1, cl_uint a2, const cl_event * a3) {
-
-  typedef cl_int (*clEnqueueWaitForEvents_p) (cl_command_queue, cl_uint, const cl_event *);
-  static clEnqueueWaitForEvents_p clEnqueueWaitForEvents_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueWaitForEvents(cl_command_queue, cl_uint, const cl_event *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueWaitForEvents_h == NULL)
-	clEnqueueWaitForEvents_h = (clEnqueueWaitForEvents_p) dlsym(tau_handle,"clEnqueueWaitForEvents"); 
-    if (clEnqueueWaitForEvents_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueWaitForEvents_h)( a1,  a2,  a3);
-  TAU_PROFILE_STOP(t);
-
-	Tau_opencl_register_sync_event();
-  }
-  return retval;
-
-}
-
-cl_int clEnqueueBarrier(cl_command_queue a1) {
-
-  typedef cl_int (*clEnqueueBarrier_p) (cl_command_queue);
-  static clEnqueueBarrier_p clEnqueueBarrier_h = NULL;
-  cl_int retval = CL_SUCCESS;
-  TAU_PROFILE_TIMER(t,"cl_int clEnqueueBarrier(cl_command_queue) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clEnqueueBarrier_h == NULL)
-	clEnqueueBarrier_h = (clEnqueueBarrier_p) dlsym(tau_handle,"clEnqueueBarrier"); 
-    if (clEnqueueBarrier_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueBarrier_h)( a1);
-  TAU_PROFILE_STOP(t);
-	
-	Tau_opencl_register_sync_event();
-  }
-  return retval;
-
-}
-
-void * clGetExtensionFunctionAddress(const char * a1) {
-
-  typedef void * (*clGetExtensionFunctionAddress_p) (const char *);
-  static clGetExtensionFunctionAddress_p clGetExtensionFunctionAddress_h = NULL;
-  void * retval = NULL;
-  TAU_PROFILE_TIMER(t,"void *clGetExtensionFunctionAddress(const char *) C", "", CL_API);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
-
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (clGetExtensionFunctionAddress_h == NULL)
-	clGetExtensionFunctionAddress_h = (clGetExtensionFunctionAddress_p) dlsym(tau_handle,"clGetExtensionFunctionAddress"); 
-    if (clGetExtensionFunctionAddress_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
-    }
-  TAU_PROFILE_START(t);
-  retval  =  (*clGetExtensionFunctionAddress_h)( a1);
-  TAU_PROFILE_STOP(t);
-  }
-  return retval;
-
+void * clGetExtensionFunctionAddress(const char * a1) 
+{
+  HANDLE_AND_AUTOTIMER(void *, clGetExtensionFunctionAddress, const char *);
+  return clGetExtensionFunctionAddress_h(a1);
 }
 
