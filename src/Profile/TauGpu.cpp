@@ -617,7 +617,6 @@ void Tau_gpu_exit(void)
   if (counted_memcpys != 0) {
     cerr << "TAU: warning not all bytes tranfered between CPU and GPU were recorded, some data maybe be incorrect." << endl;
   }
-#if 0
   cerr << "stopping first gpu event.\n" << endl;
   printf("stopping level %d tasks.\n", number_of_tasks);
   map<GpuEvent*, int>::iterator it;
@@ -625,6 +624,4 @@ void Tau_gpu_exit(void)
     Tau_stop_top_level_timer_if_necessary_task(it->second);
   }
   TAU_VERBOSE("stopping level 1.\n");
-#endif
-  Tau_destructor_trigger();
 }
