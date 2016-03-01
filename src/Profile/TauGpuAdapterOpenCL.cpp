@@ -5,7 +5,6 @@
 #include <queue>
 #include "TauGpuAdapterOpenCL.h"
 
-
 typedef std::queue<OpenCLGpuEvent*> gpu_event_queue_t;
 
 typedef std::map<cl_command_queue, OpenCLGpuEvent*> queue_event_map_t;
@@ -35,36 +34,36 @@ static queue_event_map_t & IdentityMap()
 }
 
 
-static cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5) 
+cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void * a4, cl_int * a5)
 {
   HANDLE(cl_mem, clCreateBuffer, cl_context, cl_mem_flags, size_t, void *, cl_int *);
   return clCreateBuffer_h(a1,  a2,  a3,  a4,  a5);
 }
 
-static cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2) 
-{
-  HANDLE(cl_int, clWaitForEvents, cl_uint, const cl_event *);
-  return clWaitForEvents_h(a1,  a2);
-}
-
-static cl_int clReleaseEvent_noinst(cl_event a1) 
-{
-  HANDLE(cl_int, clReleaseEvent, cl_event);
-  return clReleaseEvent_h(a1);
-}
-
-static cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5)
+cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t a3, void * a4, size_t * a5)
 {
   HANDLE(cl_int, clGetEventProfilingInfo, cl_event, cl_profiling_info, size_t, void *, size_t *);
   return clGetEventProfilingInfo_h(a1,  a2,  a3,  a4,  a5);
 }
 
-static cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6, 
+cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4, size_t a5, const void * a6,
                                    cl_uint a7, const cl_event * a8, cl_event * a9) 
 {
   HANDLE(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, 
          const cl_event *, cl_event *);
   return clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+}
+
+cl_int clGetEventInfo_noinst(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_t * a5)
+{
+  HANDLE(cl_int, clGetEventInfo, cl_event, cl_event_info, size_t, void *, size_t *);
+  return clGetEventInfo_h(a1,  a2,  a3,  a4,  a5);
+}
+
+cl_int clReleaseEvent_noinst(cl_event a1)
+{
+  HANDLE(cl_int, clReleaseEvent, cl_event);
+  return clReleaseEvent_h(a1);
 }
 
 static double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context context)
@@ -82,7 +81,7 @@ static double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context c
     exit(1);	
   }
 
-  double cpu_timestamp;	
+  double cpu_timestamp;
   struct timeval tp;
   cl_ulong gpu_timestamp;
 
@@ -105,19 +104,6 @@ static double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context c
 
   //printf("SYNC: CPU= %f GPU= %f.\n", cpu_timestamp, ((double)gpu_timestamp/1e3)); 
   return cpu_timestamp - (((double)gpu_timestamp)/1e3);
-}
-
-static bool buffer_front_is_complete()
-{
-  gpu_event_queue_t & event_queue = KernelBuffer();
-  cl_event event = event_queue.front()->event;
-
-  cl_int status;
-  if (clGetEventInfo(event, CL_EVENT_COMMAND_EXECUTION_STATUS, sizeof(cl_int), &status, NULL) != CL_SUCCESS) {
-    printf("Fatal error: calling clGetEventInfo, exiting.\n");
-    exit(1);
-  }
-  return status == CL_COMPLETE;
 }
 
 void * Tau_opencl_get_handle(char const * fnc_name)
@@ -220,45 +206,54 @@ void Tau_opencl_enqueue_event(OpenCLGpuEvent * event)
 
 void Tau_opencl_register_sync_event()
 {
-  //printf("\nin Tau_opencl_register_sync_event\n");
-  //printf("[TAU (opencl): registering sync.\n");
-  //printf("[TAU (opencl): empty buffer? %d.\n", event_queue.empty());	
-  //printf("[TAU (opencl): size of buffer: %d.\n", event_queue.size());	
   gpu_event_queue_t & event_queue = KernelBuffer();
-  while(!event_queue.empty() && buffer_front_is_complete())
-  {
-    cl_ulong startTime, endTime, queuedTime, submitTime;
 
-    OpenCLGpuEvent* kernel_data = event_queue.front();
-    //printf("Size of buffer: %d.\n", event_queue.size());	
-    //printf("Front of buffer is: %s\n", kernel_data->name);
+//  printf("\nin Tau_opencl_register_sync_event\n");
+//  printf("TAU (opencl): registering sync.\n");
+//  printf("TAU (opencl): empty buffer? %d.\n", event_queue.empty());
+//  printf("TAU (opencl): size of buffer: %d.\n", event_queue.size());
+
+  while(!event_queue.empty())
+  {
     cl_int err;
+    cl_ulong startTime, endTime, queuedTime, submitTime;
+    OpenCLGpuEvent* kernel_data = event_queue.front();
+
+//    printf("Checking event: %p (%s)\n", kernel_data->event, kernel_data->name);
+//    printf("Size of buffer: %d.\n", event_queue.size());
+//    printf("Front of buffer is: %s\n", kernel_data->name);
+
+    cl_int status;
+    err = clGetEventInfo_noinst(kernel_data->event, CL_EVENT_COMMAND_EXECUTION_STATUS, sizeof(cl_int), &status, NULL);
+    if (err != CL_SUCCESS) {
+      printf("Fatal error: calling clGetEventInfo, exiting.\n");
+      exit(1);
+    }
+    if (status != CL_COMPLETE) continue;
+//    printf("Complete: %p (%s)\n", kernel_data->event, kernel_data->name);
+
     err = clGetEventProfilingInfo_noinst(kernel_data->event, CL_PROFILING_COMMAND_QUEUED,
         sizeof(cl_ulong), &queuedTime, NULL);
-    if (err != CL_SUCCESS)
-    {
+    if (err != CL_SUCCESS) {
       printf("Cannot get queued time for Kernel event.\n");
       exit(1);	
     }
     err = clGetEventProfilingInfo_noinst(kernel_data->event, CL_PROFILING_COMMAND_SUBMIT,
         sizeof(cl_ulong), &submitTime, NULL);
-    if (err != CL_SUCCESS)
-    {
+    if (err != CL_SUCCESS) {
       printf("Cannot get submit time for Kernel event.\n");
       exit(1);	
     }
     err = clGetEventProfilingInfo_noinst(kernel_data->event, CL_PROFILING_COMMAND_START,
         sizeof(cl_ulong), &startTime, NULL);
-    if (err != CL_SUCCESS)
-    {
+    if (err != CL_SUCCESS) {
       printf("Cannot get start time for Kernel event.\n");
       exit(1);	
     }
 
     err = clGetEventProfilingInfo_noinst(kernel_data->event, CL_PROFILING_COMMAND_END,
         sizeof(cl_ulong), &endTime, NULL);
-    if (err != CL_SUCCESS)
-    {
+    if (err != CL_SUCCESS) {
       printf("Cannot get end time for Kernel event.\n");
       exit(1);	
     }
@@ -276,36 +271,17 @@ void Tau_opencl_register_sync_event()
     map[1].data = (startTime - submitTime)/1e3;
     kernel_data->gpu_event_attr = map;
 
-
-    if (kernel_data->isMemcpy())
-    {
-      //printf("TAU (opencl): isMemcpy kind: %d.\n", kernel_data->memcpy_type);
-      Tau_opencl_register_memcpy_event(kernel_data, (double) startTime,
-          (double) endTime, TAU_GPU_UNKNOWN_TRANSFER_SIZE, kernel_data->memcpy_type);
-    }
-    else
-    {
-      //printf("TAU (opencl): isKernel.\n");
-      Tau_opencl_register_gpu_event(kernel_data, (double) startTime, (double) endTime);
+    if (kernel_data->isMemcpy()) {
+//      printf("TAU (opencl): isMemcpy kind: %d.\n", kernel_data->memcpy_type);
+      Tau_opencl_register_memcpy_event(kernel_data, (double)startTime, (double)endTime,
+          TAU_GPU_UNKNOWN_TRANSFER_SIZE, kernel_data->memcpy_type);
+    } else {
+//      printf("TAU (opencl): isKernel.\n");
+      Tau_opencl_register_gpu_event(kernel_data, (double)startTime, (double)endTime);
     }
     event_queue.pop();
-    //printf("Popped buffer.\n");
-    //printf("Now size of buffer is: %d.\n", event_queue.size());
-    //if(!event_queue.empty()) {
-    //    printf("Now front is: %s\n", event_queue.front()->name);
-    //}
-
+    clReleaseEvent_noinst(kernel_data->event);
+//    printf("Popped buffer.\n");
   }
-  //printf("\n\n");
+//  printf("\n\n");
 }
-
-//flush all kernel events whether or not they can be recorded.
-void Tau_opencl_flush()
-{
-  Tau_opencl_register_sync_event();
-  gpu_event_queue_t & queue = KernelBuffer();
-  while(queue.size()) {
-    queue.pop();
-  }
-}
-

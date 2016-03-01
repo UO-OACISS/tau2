@@ -89,7 +89,6 @@ cl_int clReleaseContext(cl_context a1)
   TAU_PROFILE_START(t);
   cl_int retval = clReleaseContext_h(a1);
   TAU_PROFILE_STOP(t);
-  Tau_opencl_exit();
   return retval;
 }
 
@@ -295,7 +294,6 @@ cl_int clWaitForEvents(cl_uint a1, const cl_event * a2)
   TAU_PROFILE_STOP(t);
   Tau_opencl_register_sync_event();
   return retval;
-
 }
 
 cl_int clGetEventInfo(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_t * a5) 
@@ -310,15 +308,15 @@ cl_int clRetainEvent(cl_event a1)
   return clRetainEvent_h(a1);
 }
 
+cl_int clRetainEvent_noinst(cl_event a1)
+{
+  HANDLE(cl_int, clRetainEvent, cl_event);
+  return clRetainEvent_h(a1);
+}
+
 cl_int clReleaseEvent(cl_event a1) 
 {
   HANDLE_AND_TIMER(cl_int, clReleaseEvent, cl_event);
-
-  //clReleaseEvent is rather nasty, we will need to flush our event buffer in
-  //case one of them is being released.
-  Tau_opencl_flush();
-  //Tau_opencl_register_sync_event();
-
   TAU_PROFILE_START(t);
   cl_int retval = clReleaseEvent_h(a1);
   TAU_PROFILE_STOP(t);
@@ -368,6 +366,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -396,6 +395,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -424,6 +424,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -492,6 +493,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -527,6 +529,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 
   if (!gId->event) {
     gId->event = *a6;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -562,7 +565,9 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
+
   Tau_opencl_enqueue_event(gId);
 
   return retval;
