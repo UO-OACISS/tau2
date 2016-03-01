@@ -287,7 +287,6 @@ cl_int clGetKernelWorkGroupInfo(cl_kernel a1, cl_device_id a2, cl_kernel_work_gr
   return clGetKernelWorkGroupInfo_h(a1,  a2,  a3,  a4,  a5,  a6);
 }
 
-#ifdef TAU_ENABLE_CL_WAIT_FOR_EVENTS
 cl_int clWaitForEvents(cl_uint a1, const cl_event * a2) 
 {
   HANDLE_AND_TIMER(cl_int, clWaitForEvents, cl_uint, const cl_event *);
@@ -298,7 +297,6 @@ cl_int clWaitForEvents(cl_uint a1, const cl_event * a2)
   return retval;
 
 }
-#endif /* TAU_ENABLE_CL_WAIT_FOR_EVENTS */
 
 cl_int clGetEventInfo(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_t * a5) 
 {
@@ -385,7 +383,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
   static char const * timer_name = TIMER_NAME(cl_int, clEnqueueWriteBuffer, cl_command_queue, cl_mem, cl_bool,
                                               size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
-  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "ReadBuffer", MemcpyHtoD);
+  OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "WriteBuffer", MemcpyHtoD);
   if (!a9) {
     a9 = &gId->event;
   }
