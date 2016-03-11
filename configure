@@ -2232,10 +2232,15 @@ if [ "x$python"  = "xyes" ] ; then
     fi
   fi
   if [ "x$pythonlib" = "x" ] ; then
-    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
+    for libdir in "lib64" "lib32" "lib" ; do
+      pythonlib=`echo ${pythonbin}../${libdir}/python* | sed -e 's/ .*//g'`
+      if [ -d "$pythonlib" ] ; then
+        break
+      fi
+    done
     if [ ! -d $pythonlib ] ; then
-        echo "Error: Cannot access Python lib directory $pythonlib"
-        exit 1
+      echo "Error: Cannot access Python lib directory $pythonlib"
+      exit 1
     fi
   fi
 fi
@@ -6319,6 +6324,23 @@ int main( int argc, char *argv[] )
    
 EOF
 
+cat <<EOF > mpit.$msuf
+#include <mpi.h>
+int main(int argc, char **argv) {
+    MPI_T_cvar_handle handle;
+    MPI_T_enum enumtype;
+    int provided, ncvars, npvars; 
+
+    MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
+    MPI_Init(&argc, &argv); 
+    MPI_T_cvar_get_num(&ncvars);
+    MPI_T_pvar_get_num(&npvars);
+
+    MPI_Finalize(); 
+}
+
+EOF
+
 cat <<EOF > mpi2grequest.$msuf
   #include <mpi.h>
 
@@ -6486,6 +6508,14 @@ fi
   
 
 if [ $mpi2 = yes ] ; then 
+
+    $echo "Checking for MPI-T  interface... ${nnl}"
+    if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpit.$msuf  1> /dev/null 2>&1 ; then
+	echo "yes"
+	fixmakeargs="$fixmakeargs MPI_T"
+    else
+	echo "no"
+    fi
 
     $echo "Checking for MPI-2 Grequest interface... ${nnl}"
     if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2grequest.$msuf  1> /dev/null 2>&1 ; then
@@ -7571,11 +7601,11 @@ bfd_worked="no"
 if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
     bfd_worked="yes"
 else
-    BFDLIBS="-lbfd -liberty -lz"  # always require -lz - it is usually needed.
+    BFDLIBS="-lbfd -liberty "  # -lz is not always available (e.g., BGQ)
     if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	bfd_worked="yes"
     else    
-	BFDLIBS="-lbfd -liberty -lz"
+	BFDLIBS="-lbfd -liberty -lz" # Next, check with -lz.
 	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
         else
@@ -9265,7 +9295,8 @@ cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
-cp ${tauroot}/tools/src/tau_python $BINTARGET
+# tau_exec works differently when it's named "tau_python"
+cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_python
 
 if [ $pdtarchdir != unknown ]
 then
@@ -9408,6 +9439,11 @@ echo $fixmakeargs >> ./utils/FixMakefile.info
 
 # Now FINALLY FixMakefile with the string I have built
 utils/FixMakefile $fixmakeargs
+retval=$?
+if [ $retval -ne 0 ] ; then
+  echo "ERROR: One or more TAU components could not be configured. Please check above for error messages"
+  exit $retval
+fi
 
 # Use default setups, forget everything else (PHB)
 if [ $machine = default ] ; then

@@ -171,7 +171,7 @@ public class LoadTrial {
 
         try {
             dataSource = UtilFncs.initializeDataSource(files, fileType, fixNames);
-			dataSource.setMeanIncludeNulls(useNulls);
+			DataSource.setMeanIncludeNulls(useNulls);
         } catch (DataSourceException e) {
             e.printStackTrace();
             System.err.println("Error: Unable to initialize datasource!");

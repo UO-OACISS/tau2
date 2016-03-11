@@ -4,7 +4,8 @@ external association which involves a has table lookup (more expensive than
 embedded) for each invocation of the routine. */
 
 #include <Profile/Profiler.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std; 
 #include <unistd.h>
 #include <stdio.h>
 
@@ -46,6 +47,8 @@ int main(int argc, char **argv)
 
   a.Run();
   x.Run();
+  a.Run();
+  a.Run();
   y.Run();
 }
   
