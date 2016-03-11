@@ -52,6 +52,14 @@ then
     ARCH=arm_linux
 fi
 
+match_string="ppc64le"
+test_arg=${uname_output#$match_string}
+if [ "y$test_arg" != "y$uname_output" ]
+then
+    TAU_CCOM=gcc
+    ARCH=ibm64linux
+fi
+
 #if [ -d /usr/linux-k1om-* ]
 #then
 #    ARCH=mic_linux

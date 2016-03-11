@@ -441,6 +441,11 @@ for arg in "$@" ; do
 				#it would be equivalent to not being defined
 				#at all. So the default f95parser would be invoked.
 			if [ ${#pdtParserF} -gt 4 ]; then
+			    if [ ! -x $pdtParserF -a "x$optPdtDir" != "x" ] ; then 
+				if [ -x $optPdtDir/$pdtParserF ] ; then
+				  pdtParserF="$optPdtDir/$pdtParserF"
+				fi
+			    fi
 			    fortranParserDefined=$TRUE
 			fi
 			;;
@@ -999,6 +1004,16 @@ for arg in "$@" ; do
 		optPdtF95="$optPdtF95 -R free"
 		argsRemaining="$argsRemaining $arg"
 		;;
+ 	    # Intel fixed and free flags
+ 	    -FI)
+ 		optPdtF95="$optPdtF95 -R fixed"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+ 	    -FR)
+ 		optPdtF95="$optPdtF95 -R free"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
 
 	    -std=c99)
 		optPdtCFlags="$optPdtCFlags --c99"

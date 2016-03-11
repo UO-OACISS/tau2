@@ -348,7 +348,9 @@ char * get_proxy_name(unsigned long ip) {
         node = new OmpHashNode;
         char * routine = NULL;
         if (TauEnv_get_bfd_lookup()) {
+            TAU_OPENMP_SET_LOCK;
             Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
+            TAU_OPENMP_UNSET_LOCK;
             // Build routine name for TAU function info
             unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
             routine = (char*)malloc(size);
@@ -365,6 +367,7 @@ char * get_proxy_name(unsigned long ip) {
         OmpTheHashTable()[ip] = node;
         TAU_OPENMP_UNSET_LOCK;
     }
+
     location = (char*)malloc(strlen(node->location)+1);
     strcpy(location, node->location);
     return location;
@@ -829,7 +832,14 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 static bool initializing = false;
 static bool initialized = false;
 static bool ora_success = false;
+#if defined (TAU_USE_TLS)
 __thread bool is_master = false;
+#elif defined (TAU_USE_DTLS)
+__declspec(thread) bool is_master = false;
+#elif defined (TAU_USE_PGS)
+#include "pthread.h"
+pthread_key_t thr_id_key;
+#endif
 
 #if TAU_DISABLE_SHARED
 extern int __omp_collector_api(void *);
@@ -1159,7 +1169,7 @@ extern "C" void my_parallel_region_begin (
   Tau_collector_flags[tid].taskid = parallel_id; // necessary for IBM, appears broken
 #endif
   Tau_get_current_region_context(tid, (unsigned long)parallel_function, false);
-  //printf("%d New Region: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, parallel_id = %lu, parallel_function = %p %s %p\n", tid, parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_id, parallel_function, region_names[parallel_id], region_names[parallel_id]); fflush(stdout);
+  printf("%d New Region: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, parallel_id = %lu, parallel_function = %p %s %p\n", tid, parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_id, parallel_function, region_names[parallel_id], region_names[parallel_id]); fflush(stdout);
   Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1, false);
   Tau_collector_flags[tid].parallel++;
   TAU_OMPT_COMMON_EXIT;
@@ -1234,7 +1244,13 @@ extern "C" void my_thread_begin() {
 extern "C" void my_thread_begin(my_ompt_thread_type_t thread_type, ompt_thread_id_t thread_id) {
   // special entry?
 #endif // version
-  if (is_master) return;
+#if defined (TAU_USE_TLS)
+  if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_DTLS)
+  if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_PGS)
+  if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
+#endif
   TAU_OMPT_COMMON_ENTRY;
   //TAU_VERBOSE("OMPT Created thread: %d\n", tid); fflush(stdout);
   Tau_create_top_level_timer_if_necessary();
@@ -1531,7 +1547,14 @@ int __ompt_initialize() {
   if (!TauEnv_get_openmp_runtime_enabled()) return 0;
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   initializing = true;
+#if defined (TAU_USE_TLS)
   is_master = true;
+#elif defined (TAU_USE_DTLS)
+  is_master = true;
+#elif defined (TAU_USE_PGS)
+  pthread_key_create(&thr_id_key, NULL);
+  pthread_setspecific(thr_id_key, 1);
+#endif
   TAU_OPENMP_INIT_LOCK;
 
   /* required events */

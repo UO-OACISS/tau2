@@ -84,6 +84,10 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 
 
 
+#ifndef TAU_NAME_LENGTH
+#define TAU_NAME_LENGTH 1024
+#endif /* TAU_NAME_LENGTH: used in MPI_T */
+
 #ifndef TAU_MAX_COUNTERS
 #define TAU_MAX_COUNTERS 25
 #endif
