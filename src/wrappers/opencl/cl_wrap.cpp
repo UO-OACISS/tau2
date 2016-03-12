@@ -89,7 +89,6 @@ cl_int clReleaseContext(cl_context a1)
   TAU_PROFILE_START(t);
   cl_int retval = clReleaseContext_h(a1);
   TAU_PROFILE_STOP(t);
-  Tau_opencl_exit();
   return retval;
 }
 
@@ -295,7 +294,6 @@ cl_int clWaitForEvents(cl_uint a1, const cl_event * a2)
   TAU_PROFILE_STOP(t);
   Tau_opencl_register_sync_event();
   return retval;
-
 }
 
 cl_int clGetEventInfo(cl_event a1, cl_event_info a2, size_t a3, void * a4, size_t * a5) 
@@ -310,15 +308,15 @@ cl_int clRetainEvent(cl_event a1)
   return clRetainEvent_h(a1);
 }
 
+cl_int clRetainEvent_noinst(cl_event a1)
+{
+  HANDLE(cl_int, clRetainEvent, cl_event);
+  return clRetainEvent_h(a1);
+}
+
 cl_int clReleaseEvent(cl_event a1) 
 {
   HANDLE_AND_TIMER(cl_int, clReleaseEvent, cl_event);
-
-  //clReleaseEvent is rather nasty, we will need to flush our event buffer in
-  //case one of them is being released.
-  Tau_opencl_flush();
-  //Tau_opencl_register_sync_event();
-
   TAU_PROFILE_START(t);
   cl_int retval = clReleaseEvent_h(a1);
   TAU_PROFILE_STOP(t);
@@ -356,6 +354,10 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
                                               cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "ReadBuffer", MemcpyDtoH);
+  if (!gId) {
+    return clEnqueueReadBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -368,6 +370,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -384,6 +387,10 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
                                               size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "WriteBuffer", MemcpyHtoD);
+  if (!gId) {
+    return clEnqueueWriteBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -396,6 +403,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -412,6 +420,10 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
                                               size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "CopyBuffer", MemcpyDtoD);
+  if (!gId) {
+    return clEnqueueCopyBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -424,6 +436,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -480,6 +493,10 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
                                               cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "MapBuffer", MemcpyHtoD);
+  if (!gId) {
+    return clEnqueueMapBuffer_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9, a10);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -492,6 +509,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -515,6 +533,10 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
                                               const cl_event *, cl_event *);
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, "UnmapBuffer", MemcpyDtoH);
+  if (!gId) {
+    return clEnqueueUnmapMemObject(a1,  a2,  a3,  a4,  a5,  a6);
+  }
+
   if (!a6) {
     a6 = &gId->event;
   }
@@ -527,6 +549,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
 
   if (!gId->event) {
     gId->event = *a6;
+    clRetainEvent_noinst(gId->event);
   }
   Tau_opencl_enqueue_event(gId);
 
@@ -552,6 +575,10 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
   }
 
   OpenCLGpuEvent * gId = Tau_opencl_new_gpu_event(a1, name, -1);
+  if (!gId) {
+    return clEnqueueNDRangeKernel_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  }
+
   if (!a9) {
     a9 = &gId->event;
   }
@@ -562,7 +589,9 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 
   if (!gId->event) {
     gId->event = *a9;
+    clRetainEvent_noinst(gId->event);
   }
+
   Tau_opencl_enqueue_event(gId);
 
   return retval;
