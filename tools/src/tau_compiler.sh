@@ -1005,6 +1005,28 @@ for arg in "$@" ; do
 		argsRemaining="$argsRemaining $arg"
 		;;
 
+ 	    # Intel fixed and free flags
+ 	    -FI)
+ 		optPdtF95="$optPdtF95 -R fixed"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
+ 	    -FR)
+ 		optPdtF95="$optPdtF95 -R free"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
+ 	    # Cray fixed and free flags
+ 	    -ffixed)
+ 		optPdtF95="$optPdtF95 -R fixed"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
+ 	    -ffree)
+ 		optPdtF95="$optPdtF95 -R free"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
 	    -std=c99)
 		optPdtCFlags="$optPdtCFlags --c99"
 		argsRemaining="$argsRemaining $arg"

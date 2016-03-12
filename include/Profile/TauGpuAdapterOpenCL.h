@@ -26,10 +26,10 @@
   TAU_PROFILE_TIMER(t, TIMER_NAME(TYPE, NAME, __VA_ARGS__), "", TAU_USER)
 
 
-struct OpenCLGpuEvent : public GpuEvent 
+struct OpenCLGpuEvent : public GpuEvent
 {
-  x_uint64 commandId;
   cl_device_id id;
+  x_uint64 commandId;
   cl_event event;
   const char *name;
   FunctionInfo *callingSite;
@@ -48,14 +48,11 @@ struct OpenCLGpuEvent : public GpuEvent
     return memcpy_type != -1;
   }
 
-  OpenCLGpuEvent(cl_device_id i, x_uint64 cId, double sync)
-  {
-    id = i;
-    commandId = cId;
-    sync_offset = sync;
-  }
+  OpenCLGpuEvent(cl_device_id i, x_uint64 cId, double sync) :
+    id(i), commandId(cId), event(NULL), name(NULL), sync_offset(sync)
+  { }
 
-  OpenCLGpuEvent *getCopy() const { 
+  OpenCLGpuEvent *getCopy() const {
     OpenCLGpuEvent *c = new OpenCLGpuEvent(*this);
     return c;
   }
@@ -101,7 +98,7 @@ struct OpenCLGpuEvent : public GpuEvent
   /* CUDA Event are uniquely identified as the pair of two other ids:
    * context and call (API).
    */
-  const char* gpuIdentifier() const 
+  const char* gpuIdentifier() const
   {	
     char r[40];
     sprintf(r, "%d:%lld", id, commandId);
@@ -129,8 +126,6 @@ void Tau_opencl_register_memcpy_event(OpenCLGpuEvent *id, double start, double s
 void Tau_opencl_enqueue_event(OpenCLGpuEvent * event);
 
 void Tau_opencl_register_sync_event();
-
-void Tau_opencl_flush();
 
 OpenCLGpuEvent * Tau_opencl_new_gpu_event(cl_command_queue queue, char const * name, int memcpy_type);
 
