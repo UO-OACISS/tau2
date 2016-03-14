@@ -57,16 +57,22 @@ void * Tau_sos_thread_function(void* data) {
     struct timespec ts;
     struct timeval  tp;
 
-    sleep(2);
     while (!done) {
-        TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
-        TAU_SOS_send_data();
-        TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
         // wait 2 seconds for the next batch.
         gettimeofday(&tp, NULL);
         ts.tv_sec  = (tp.tv_sec + 2);
         ts.tv_nsec = (1000 * tp.tv_usec);
-        pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
+        pthread_mutex_lock(&_my_mutex);
+        int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
+        if (rc == ETIMEDOUT) {
+            TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
+            TAU_SOS_send_data();
+            TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
+        } else if (rc == EINVAL) {
+            printf("Invalid timeout!\n"); fflush(stdout);
+        } else if (rc == EPERM) {
+            printf("Mutex not locked!\n"); fflush(stdout);
+        }
     }
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
@@ -95,7 +101,7 @@ void TAU_SOS_make_pub() {
 /* Fixme! Replace these with values from TAU metadata. */
         tau_sos_pub = SOS_pub_create(pub_name);
 
-        tau_sos_pub->prog_ver           = strdup(app_version);
+        strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
         tau_sos_pub->meta.nature        = SOS_NATURE_EXEC_WORK;
         tau_sos_pub->meta.layer         = SOS_LAYER_FLOW;
