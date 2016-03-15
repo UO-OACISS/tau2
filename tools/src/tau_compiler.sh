@@ -999,6 +999,17 @@ for arg in "$@" ; do
 		argsRemaining="$argsRemaining $arg"
 		;;
 
+	    # GNU fixed and free flags
+	    -ffixed-form*)
+		optPdtF95="$optPdtF95 -R fixed"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -ffree-form*)
+		optPdtF95="$optPdtF95 -R free"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
 	    # PGI fixed and free flags
 	    -Mfixed*)
 		optPdtF95="$optPdtF95 -R fixed"
