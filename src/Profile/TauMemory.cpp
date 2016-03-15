@@ -79,6 +79,8 @@ bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;
 wrapper_disable_handle_t wrapper_disable_handle = NULL;
 
+extern "C" int Tau_trigger_memory_rss_hwm(void);
+
 // Returns true if the given allocation size should be protected
 static inline bool AllocationShouldBeProtected(size_t size)
 {
@@ -1551,6 +1553,92 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
   return NULL;
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////
+// Tau_open_status returns the file descriptor of /proc/self/status
+//////////////////////////////////////////////////////////////////////
+extern "C" int Tau_open_status(void) {
+
+  int fd = open ("/proc/self/status", O_RDONLY);
+
+  if (fd == -1) {
+    perror("Couldn't open /proc/self/status for tracking memory");
+  }
+
+  return fd;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Tau_read_status returns the VmRSS and VmHWM (high water mark of 
+// RSS or resident set size) to give an accurate idea of the memory
+// footprint of the program. It gets this from parsing /proc/self/status
+//////////////////////////////////////////////////////////////////////
+extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
+  char buf[2048];
+  int ret, i, bytesread;
+
+  ret = lseek(fd, 0, SEEK_SET);
+  if (ret == -1) {
+    perror("lseek failure on /proc/self/status");
+    return ret;
+  }
+
+  bytesread = read(fd, buf, 2048);
+  if (bytesread == -1) {
+    perror("Error reading from /proc/self/status");
+    return bytesread;
+  }
+  //printf("Read: %s\n", buf);
+  for(i=0; i < bytesread; i++) {
+   /* Search for VmHWM for high water mark of memory from /proc/self/status */
+    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'H' && buf[i+4] == 'W' && buf[i+5] == 'M') {
+       sscanf(&buf[i+8], "%lld", hwm);
+    }
+   /* Search for VmRSS for resident set size of memory from /proc/self/status */
+    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'R' && buf[i+4] == 'S' && buf[i+5] == 'S') {
+      // printf("buf[i+8] = %s\n", &buf[i+8]);
+      sscanf(&buf[i+8], "%lld", rss);
+      break;
+    }
+  }
+  return ret;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Tau_close_status closes the file descriptor associated with /proc/self/status
+//////////////////////////////////////////////////////////////////////
+extern "C" int Tau_close_status(int fd) {
+  int ret=close(fd);
+
+  if (ret == -1) {
+    perror("close failed on /proc/self/status");
+  }
+  return ret;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Tau_trigger_memory_rss_hwm triggers resident memory size and high water 
+// mark events
+//////////////////////////////////////////////////////////////////////
+extern "C" int Tau_trigger_memory_rss_hwm(void) {
+  static int fd=Tau_open_status();
+
+  long long vmrss, vmhwm; 
+  TAU_REGISTER_EVENT(proc_rss, "Memory Footprint (VmRSS) (KB)");
+  TAU_REGISTER_CONTEXT_EVENT(proc_vmhwm, "Peak Memory Usage Resident Set Size (VmHWM) (KB)");
+
+  Tau_read_status(fd, &vmrss, &vmhwm);
+
+  if (vmrss > 0)
+    TAU_EVENT(proc_rss, (double) vmrss);
+  if (vmhwm > 0)
+    TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
+
+  // TAU_VERBOSE("Tau_trigger_memory_rss_hwm: rss = %lld, hwm = %lld in KB\n", vmrss, vmhwm);
+
+  return 1; // SUCCESS
+}
+
 
 
 #if 0

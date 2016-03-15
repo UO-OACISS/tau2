@@ -548,7 +548,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				Integer threadID = threadMap.get(thread);
 
 				if (threadID == null) { 
-					System.out.println("Can't find Thread ID for thread!");
+					System.out.println("Function: "+function+" Can't find Thread ID for thread: "+thread);
 					continue;
 				}
 				
@@ -833,13 +833,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			int id = results.getInt(2);
 			switch (thread_index) {
 			case MEAN_WITHOUT_NULL:
-				map.put(dataSource.getMeanData(), id);
+				map.put(dataSource.getMeanDataNoNull(), id);
 				break; 
 			case TOTAL:
 				map.put(dataSource.getTotalData(), id);
 				break;
 			case STDDEV_WITHOUT_NULL:
-				map.put(dataSource.getStdDevData(), id);
+				map.put(dataSource.getStdDevDataNoNull(), id);
 				break;
 			case MIN:
 				map.put(dataSource.getMinData(), id);
@@ -1190,6 +1190,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			String name = results.getString(2);
 
 			UserEvent func = dataSource.getUserEvent(name);
+			if(func==null)
+			{
+				System.out.println("Warning: Event "+name+" not found in data-source.");
+			}
 			map.put(func, funcID);
 		}
 		statement.close();
@@ -1216,7 +1220,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				// return;
 
 				if (uep != null) {
-					int atomicEventID = userEventMap.get(uep.getUserEvent())
+					UserEvent ue = uep.getUserEvent();
+					Integer uei=userEventMap.get(ue);
+						if(uei==null){
+							System.out.println("Error: No id mapped for "+ue.getName());
+						}
+					int atomicEventID = uei
 							.intValue();
 				
 					statement.setInt(1, atomicEventID);

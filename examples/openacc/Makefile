@@ -1,5 +1,6 @@
-CC=pgcc 
-CFLAGS=-acc -g -O3 -ta=nvidia
+include ../../include/Makefile
+CC=$(TAU_CC)
+CFLAGS=-acc  -g
 LIBS=
 
 jacobi: jacobi.o

@@ -2,7 +2,8 @@
 time spent in each instance of an object. We use an embedded association here. */
 
 #include <Profile/Profiler.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 #include <unistd.h>
 #include <stdio.h>
 
@@ -44,5 +45,7 @@ int main(int argc, char **argv)
   a.Run();
   x.Run();
   y.Run();
+  a.Run();
+  a.Run();
 }
   

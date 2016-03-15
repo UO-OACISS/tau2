@@ -182,7 +182,7 @@ if [ $options_specified = no ] ; then
     fi
 fi
 
-TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optDefaultParser=cparse -optTau=-c"
+TAUCOMPILER_OPTIONS="-optDefaultParser=cparse -optTau=-c $TAUCOMPILER_OPTIONS"
 
 retval=0
 

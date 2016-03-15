@@ -25,6 +25,9 @@
 
 #if (!defined(TAU_LIBRARY_SOURCE) && !defined(TAU_WINDOWS))
 
+#ifdef TAU_MPI
+#include <mpi.h>
+#endif /* TAU_MPI */
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -80,6 +83,10 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #include <TAU.h>
 
 
+
+#ifndef TAU_NAME_LENGTH
+#define TAU_NAME_LENGTH 1024
+#endif /* TAU_NAME_LENGTH: used in MPI_T */
 
 #ifndef TAU_MAX_COUNTERS
 #define TAU_MAX_COUNTERS 25

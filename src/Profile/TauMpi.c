@@ -57,6 +57,7 @@
 #define TAU_OPENMPI3_CONST 
 #endif
 
+
 void TauSyncClocks();
 void TauSyncFinalClocks();
 int Tau_mergeProfiles();
@@ -64,6 +65,9 @@ void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
 extern int Tau_signal_initialization();
+extern int Tau_mpi_t_initialize();
+extern int Tau_mpi_t_cvar_initialize();
+extern int Tau_track_mpi_t_here();
 
 /* JCL: Optimized rank translation with cache */
 int TauTranslateRankToWorld(MPI_Comm comm, int rank);
@@ -773,6 +777,7 @@ int keyval;
   return returnVal;
 }
 
+#ifdef TAU_ENABLE_MPI_ATTR_GET
 int   MPI_Attr_get( comm, keyval, attr_value, flag )
 MPI_Comm comm;
 int keyval;
@@ -791,6 +796,8 @@ int * flag;
 
   return returnVal;
 }
+
+#endif /* TAU_ENABLE_MPI_ATTR_GET */
 
 int   MPI_Attr_put( comm, keyval, attr_value )
 MPI_Comm comm;
@@ -1477,6 +1484,9 @@ int  MPI_Finalize(  )
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+#ifdef TAU_MPI_T
+  Tau_track_mpi_t_here();
+#endif /* TAU_MPI_T */
   writeMetaDataAfterMPI_Init(); 
 
   if (TauEnv_get_synchronize_clocks()) {
@@ -1594,7 +1604,13 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   tau_mpi_init_predefined_constants();
+#ifdef TAU_MPI_T
+  Tau_mpi_t_initialize();
+  returnVal = Tau_mpi_t_cvar_initialize();
+#endif /* TAU_MPI_T */
+
   returnVal = PMPI_Init( argc, argv );
+
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -1655,6 +1671,11 @@ int *provided;
   TAU_PROFILE_START(tautimer);
  
   tau_mpi_init_predefined_constants();
+#ifdef TAU_MPI_T
+  Tau_mpi_t_initialize();
+  returnVal = Tau_mpi_t_cvar_initialize();
+#endif /* TAU_MPI_T */
+
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
 #ifndef TAU_WINDOWS
@@ -2777,10 +2798,18 @@ MPI_Datatype * datatype;
   return returnVal;
 }
 
+#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_MPI_HINDEX_CONST))
+#define TAU_HINDEXED_CONST const
+#else
+#ifndef TAU_HINDEXED_CONST
+#define TAU_HINDEXED_CONST 
+#endif /* TAU_HINDEXED_CONST */
+#endif /* TAU_SGI_MPT_MPI */
+
 int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
 int count;
-TAU_OPENMPI3_CONST int * blocklens;
-TAU_OPENMPI3_CONST MPI_Aint * indices;
+TAU_HINDEXED_CONST int * blocklens;
+TAU_HINDEXED_CONST MPI_Aint * indices;
 MPI_Datatype old_type;
 MPI_Datatype * newtype;
 {
@@ -2865,6 +2894,7 @@ int * size;
 
   return returnVal;
 }
+
 
 int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
 int count;

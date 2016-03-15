@@ -10,6 +10,20 @@
 
 Change log:
 ------------
+Version 2.25 changes (from 2.24):
+1. Support for new PDT parsers cxxparse4101, cparse4101, and gfparse48
+2. Introducing APEX. 
+3. Added support for tau_exec -numa for tracking PAPI remote DRAM references. 
+4. Added support for recycling pthread ids. 
+5. Updates to TAU for OMPT support. 
+6. PerfExplorer fixes for mean calculation for runtime breakdown charts. 
+7. Added support for Argo ExaOSR BEACON backplane for event communication. 
+8. Added preliminary support for Power 8 and ARM64. 
+9. Added support for CUDA 7.5. 
+10. Added support for OpenACC with PGI 15.10. 
+11. Added support for new versions of MAQAO, PEBIL, and DyninstAPI 9.0.3. 
+12. Added support for SGI MPT 2.13 with PSHMEM interface. 
+ 
 Version 2.24 changes (from 2.23):
 1. Reduced OpenMP profiling overhead and memory footprint.
 2. Include lists now work with tau_rewrite and MAQAO. 
@@ -25,6 +39,18 @@ Version 2.24 changes (from 2.23):
 12. Added support for tracking power (TAU_TRACK_POWER) with PAPI+PERF+RAPL. 
 13. Added support for OpenMP with GNU and Intel for MPC and TAU. 
 14. Added -optReuseFiles flag for hand-instrumentation, and speeding up header instrumentation.
+15. Added support for TAU_TRACK_MEMORY. 
+16. Updated tau_instrumentor for use with Score-P. 
+17. Added tau_exec -ompt and -openacc (for PGI) flags. Uses PGI_ACC_PROF_LIB for OpenACC. 
+18. Added support for SGI_MPT_MPI for Fortran.
+19. Added support for Cray XC40 with mic_linux. Configure -using -arch=craycnl with MIC compilers (cc). 
+20. Added support for tracking Unified Memory using CUPTI 6.5+ using tau_exec -um -cupti. 
+21. Better support for Cray UPC (tested with PrgEnv-cray/5.2.40 with cce/8.3.7). 
+22. Added support for MPI_IN_PLACE and MPI_BOTTOM in the MPI wrapper interposition library. 
+23. Added initial support for TAU_METRICS=ENERGY and ACCEL_ENERGY (in Joules). Currently, it supports -arch=craycnl only. 
+24. Added support for TAU_TRACK_POWER with Cray /sys/cray/pm_counters interface (default for -arch=craycnl).
+25. Added support for OpenACC with PGI (v14.9+) on Cray XC systems with GPUs (examples/openacc/README).
+
 
 Version 2.23 changes (from 2.22):
 1. Added support for OpenMP Tools API (OMPT). 

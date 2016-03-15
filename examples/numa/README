@@ -1,0 +1,11 @@
+To demonstrate PAPI's counters that help with evaluation of NUMA features, we
+have built this example that shows local and remote DRAM accesses. To use this,
+please configure PAPI with a perf on a Linux 4.x kernel and use:
+./configure -mpi -papi=<dir> -pdt=<dir> -bfd=download ; make install
+cd examples/numa
+make clean; make
+
+mpirun -np 4 tau_exec -T papi -numa ./numa 
+paraprof
+and see the remote DRAM and total DRAM accesses. You may use Options -> Show derived metric panel to create metrics such as the ratio of remote accesses to total accesses. 
+

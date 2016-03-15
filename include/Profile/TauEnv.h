@@ -37,6 +37,10 @@
 #define TAU_EVENT_THRESHOLD_DEFAULT .5
 #endif /* TAU_EVENT_THRESHOLD */
 
+#ifndef TAU_INTERRUPT_INTERVAL
+#define TAU_INTERRUPT_INTERVAL_DEFAULT 10.0
+#endif /* TAU_EVENT_THRESHOLD */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -64,6 +68,8 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_memory_headroom();
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
+  int  TAUDECL TauEnv_get_track_mpi_t_pvars();
+  int  TAUDECL TauEnv_set_track_mpi_t_pvars(int value);
   int  TAUDECL TauEnv_get_signals_gdb();
   int  TAUDECL TauEnv_get_echo_backtrace();
   int  TAUDECL TauEnv_get_openmp_runtime_enabled();
@@ -85,6 +91,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_ibm_bg_hwp_counters();
   double TAUDECL TauEnv_get_max_records(); 
   double TAUDECL TauEnv_get_evt_threshold(); 
+  int TAUDECL TauEnv_get_interval(); 
   int TAUDECL TauEnv_get_disable_instrumentation(); 
 
   const char* TAUDECL TauEnv_get_ebs_source();
@@ -94,6 +101,8 @@ extern "C" {
   const char* TAUDECL TauEnv_get_profiledir();
   const char* TAUDECL TauEnv_get_tracedir();
   const char* TAUDECL TauEnv_get_metrics();
+  const char* TAUDECL TauEnv_get_cvar_metrics();
+  const char* TAUDECL TauEnv_get_cvar_values();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_instructions();
   int TAUDECL TauEnv_get_cuda_track_cdp();
