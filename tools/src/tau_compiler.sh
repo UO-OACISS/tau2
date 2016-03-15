@@ -970,6 +970,16 @@ for arg in "$@" ; do
 		argsRemaining="$argsRemaining $arg"
 		;;
 
+	    -fpp)
+		optPdtF95="$optPdtF95 -cpp"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -cpp)
+		optPdtF95="$optPdtF95 -cpp"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
 	    -std=c99)
 		optPdtCFlags="$optPdtCFlags --c99"
 		argsRemaining="$argsRemaining $arg"
