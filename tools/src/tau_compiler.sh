@@ -933,7 +933,12 @@ for arg in "$@" ; do
 		numFiles=numFiles+1
 		if [ $fortranParserDefined == $FALSE ]; then
 				#If it is not passed EXPLICITY, use the default gfparse.
-		    pdtParserF="$optPdtDir""/gfparse"
+                    if [ -r "$optPdtDir"/gfparse485 ]; then
+                # New updated gfparse485 symlink exists! Use gfparse48 by default. 
+                      pdtParserF="$optPdtDir"/gfparse48
+                    else
+                      pdtParserF="$optPdtDir"/gfparse
+                    fi
 		fi
 		echoIfDebug "Using Fortran Parser"
 		if [ $optResetUsed == $FALSE ]; then
