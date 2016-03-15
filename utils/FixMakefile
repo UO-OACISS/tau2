@@ -81,6 +81,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     beacondir=*)
+        beacondir=`echo $1 | sed -e 's/^beacondir=//'`
+	echo "s,^BEACONDIR=.*$,BEACONDIR=$beacondir,g" >> $sedout
+	;;
+
      gpidir=*)
         gpidir=`echo $1 | sed -e 's/^gpidir=//'`
 	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
@@ -408,8 +413,8 @@ case $1 in
 	echo "s,^TAU_BOOSTINC=.*$,TAU_BOOSTINC=$boostinc,g" >> $sedout
 	;;
      boostlib=*)
-        boostlib=`echo $1 | sed -e 's/^boostlib=//'`
-	echo "s,^TAU_BOOSTLIB=.*$,TAU_BOOSTLIB=$boostlib,g" >> $sedout
+        boostlib=`echo $1 | sed -e 's/^boostlib=//' -e 's/#/ /g'`
+	echo "s&^TAU_BOOSTLIB=.*$&TAU_BOOSTLIB=$boostlib&g" >> $sedout
 	;;
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
@@ -460,17 +465,31 @@ case $1 in
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	# Discover python library version
-	pythonso=`ls $pythonlib/libpython*.so 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
-	if [ "x$pythonso" = "x" ] ; then
-	  pythonso=`ls $pythonlib/libpython*.dylib 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.dylib//'`
-	  if [ "x$pythonso" = "x" ] ; then
-	    echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
-	    exit 1
-	  fi
+	for subdir in "" ".." "python*" ; do
+          for ext in "so" "dylib" ; do
+            _checkpath="${pythonlib}/${subdir}/libpython*.${ext}"
+            echo "Checking ${_checkpath}"
+  	    pythonso=`ls ${_checkpath} 2>/dev/null | head -1`
+            if [ "x$pythonso" == "x" ] ; then
+              continue
+            fi
+            pythonlib=`dirname $pythonso`
+            pythonso=`echo $pythonso | xargs basename | sed -e "s#lib##" -e "s#\.${ext}##"`
+            if [ "x$pythonso" != "x" ] ; then
+              # Break out of both loops
+              break 2
+            fi
+          done
+        done
+	pythonlib_full="$pythonlib/lib$pythonso.$ext"
+	if [ ! -f "$pythonlib_full" ] ; then
+	  echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
+	  exit 1
+        else
+          echo "Found Python library: $pythonlib_full"
 	fi
 	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
 	echo "s,^PYTHON_LIB_SO=.*$,PYTHON_LIB_SO=$pythonso,g" >> $sedout
-	#echo "Using PYTHON LIB DIR =" $pythonlib
 	;;
 
      stffdir=*)
@@ -660,6 +679,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     TAU_MPI_HINDEX_CONST)
+	echo "NOTE: Using the -DTAU_MPI_HINDEX_CONST to compile programs"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      MPICH2_MPI_INPLACE)
 	echo "NOTE: Using the -DMPICH2_MPI_INPLACE flag"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -672,6 +696,11 @@ case $1 in
 
      MPIGREQUEST)
         echo "NOTE: Using TAU's MPI-2 Grequest extensions"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     MPI_T)
+        echo "NOTE: Using TAU's MPI-T extensions"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -801,6 +830,11 @@ case $1 in
 
      SGI_MPT_SHMEM)
         echo NOTE: Using the TAU SGI MPT SHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     SGI_MPT_PSHMEM)
+        echo NOTE: Using the TAU SGI MPT PSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1372,6 +1406,10 @@ case $1 in
 	echo "NOTE: Using PAPI interface for Hardware Performance Counters ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     BEACON)
+	echo "NOTE: Using BEACON interface for publishing performance data ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PERFLIB)
 	echo "NOTE: Using PERFLIB measurement library instead of TAU's"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1460,6 +1498,10 @@ case $1 in
 	;;
      DYNINST8)
 	echo "NOTE: Using newer version DYNINST 8+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST9)
+	echo "NOTE: Using newer version DYNINST 9+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINSTDIR)
@@ -1640,6 +1682,12 @@ case $1 in
      ANSIC)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     APEX)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BOOST)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
 # PROFILING OPTIONS
      PROFILE)
 	echo "NOTE: Enabled Profiling. Compiling with -DPROFILING_ON"
@@ -1731,6 +1779,10 @@ case $1 in
 	;;
      CRAYCNL_SHARED)
 	echo "NOTE: Using Cray Compute Node Shared Libraries"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAY_MIC)
+	echo "NOTE: Using Cray MIC Linux options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LINUXTIMERS)

@@ -3,7 +3,9 @@ package edu.uoregon.tau.perfexplorer.client;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
@@ -124,12 +126,28 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 
 		DefaultTableXYDataset dataset = new DefaultTableXYDataset();
 		List<String> rowLabels = rawData.getRowLabels();
+		
+		//Get normalization factors
+		Map<Double,Double> totals = new HashMap<Double,Double>();
+		for (int y = 0 ; y < rawData.getRows() ; y++) {
+			List<double[]> row = rawData.getRowData(y);
+			for (int x = 0 ; x < row.size() ; x++) {
+				double[] values = (row.get(x));
+				Double tmpTotal= totals.get(values[0]);
+				if(tmpTotal==null){
+					tmpTotal=0.0;
+				}
+				totals.put(values[0], tmpTotal+values[1]/100.0);
+			}
+		}
+		
+		
 		for (int y = 0 ; y < rawData.getRows() ; y++) {
 			List<double[]> row = rawData.getRowData(y);
 			XYSeries s = new XYSeries(shortName(rowLabels.get(y)), true, false);
 			for (int x = 0 ; x < row.size() ; x++) {
 				double[] values = (row.get(x));
-				s.add(values[0], values[1]);
+				s.add(values[0], values[1]/totals.get(values[0]));
 			}
 			dataset.addSeries(s);
 		}

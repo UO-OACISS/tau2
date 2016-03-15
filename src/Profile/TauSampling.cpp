@@ -368,7 +368,7 @@ static struct sigaction application_sa;
 #if (defined(sun) || defined(__APPLE__) || defined(_AIX)) || \
     (!defined(TAU_BGP) && !defined(TAU_BGQ) && !defined(__x86_64__) && \
     !defined(i386) && !defined(__ia64__) && !defined(__powerpc64__) && \
-	!defined(__powerpc__) && !defined(__arm__))
+	!defined(__powerpc__) && !defined(__arm__) && !defined(__aarch64__))
 static void issueUnavailableWarning(const char *text)
 {
   static bool warningIssued = false;
@@ -437,6 +437,8 @@ unsigned long get_pc(void *p)
   pc = (unsigned long)sc->regs->nip;
 # elif __arm__
   pc = (unsigned long)sc->arm_pc;
+# elif __aarch64__
+  pc = (unsigned long)sc->pc;
 #elif defined(TAU_FUJITSU)
   pc = ((struct sigcontext *)p)->sigc_regs.tpc; 
 # else

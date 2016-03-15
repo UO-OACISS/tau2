@@ -12,11 +12,10 @@
 #######################################################################
  
 include ../../../include/Makefile 
-include ../../Makefile
 
 
 
-CXX		= $(TAUROOTDIR)/$(TAU_ARCH)/bin/tau_cxx.sh
+CXX		= $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/tau_cxx.sh
 
 MAKEFILE      	= Makefile
 

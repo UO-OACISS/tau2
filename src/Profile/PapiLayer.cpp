@@ -33,6 +33,10 @@ using namespace std;
 #include <pthread.h>
 #endif /* TAU_AT_FORK */
 
+#ifdef TAU_BEACON
+#include <Profile/TauBeacon.h>
+#endif /* TAU_BEACON */
+
 extern "C" {
 #include "papi.h"
 }
@@ -692,6 +696,7 @@ int PapiLayer::initializeAndCheckRAPL(int tid) {
     printf("WARNING: TAU is already using PAPI counters. Please unset the TAU_METRICS environment variable so PAPI events do no appear in it if you plan to use TAU_TRACK_POWER API. Currently, TAU does not support both at the same time due to the higer overhead of power events.\n");
     return -1;
   }
+  return 1; 
 }
 /////////////////////////////////////////////////
 int PapiLayer::initializePerfRAPL(int tid) {
@@ -753,8 +758,10 @@ int PapiLayer::initializePerfRAPL(int tid) {
   numCounters = 0;
   ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_CORES");
   if (PAPI_OK != ret) {
+#ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_CORES) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
-    exit(1);
+#endif /* DEBUG_PROF */
+    // don't exit(1);
   } else {
     sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_CORES"); 
     sprintf(Tau_rapl_units[numCounters], "Joules"); 
@@ -763,18 +770,26 @@ int PapiLayer::initializePerfRAPL(int tid) {
 
   ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_PKG");
   if (PAPI_OK != ret) {
+
+#ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_PKG) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
-    exit(1);
+// don't    exit(1);
+#endif /* DEBUG_PROF */
   } else {
     sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_PKG"); 
     sprintf(Tau_rapl_units[numCounters], "Joules"); 
     numCounters++; 
+#ifdef TAU_BEACON
+    TauBeaconInit();
+#endif /* TAU_BEACON */
   }
 
   ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_GPU");
   if (PAPI_OK != ret) {
+#ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_GPU) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
-    exit(1);
+#endif /* DEBUG_PROF */
+    // exit(1);
   } else {
     sprintf(Tau_rapl_event_names[numCounters], "rapl::RAPL_ENERGY_GPU"); 
     sprintf(Tau_rapl_units[numCounters], "Joules"); 
@@ -957,8 +972,11 @@ void PapiLayer::triggerRAPLPowerEvents(void) {
         double value = (((double) tmpCounters[i]) *scalingFactor)/elapsedTimeInSecs;
 	dmesg(1,"Counter: %s: value %.9f, units = W\n", Tau_rapl_event_names[i], value);
 	if (value > 1e-5) {
-	  sprintf(ename,"%s (Socket Power in Watts)", Tau_rapl_event_names[i]);
+	  sprintf(ename,"%s (CPU Socket Power in Watts)", Tau_rapl_event_names[i]);
           TAU_TRIGGER_EVENT(ename, value);
+#ifdef TAU_BEACON
+          TauBeaconPublish(value, "Watts", "NODE_POWER", ename);
+#endif /* TAU_BEACON */
         }
       }
       

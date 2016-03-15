@@ -28,7 +28,6 @@ using namespace tau;
 typedef struct {
 	tau::TauContextUserEvent *userEvent;
 	tau::TAU_EVENT_DATATYPE data;
-
 } GpuEventAttributes;
 
 /* Struct to contain the metadata for each GPU. */

@@ -5,6 +5,14 @@ export LANG
 
 eval `tau-config`
 
+scriptname=`basename $0`
+if [ "$scriptname" == "tau_python" ] ; then
+  python_wrapper=true
+  default_tags="python,MPI"
+else
+  python_wrapper=false
+  default_tags="MPI"
+fi
 
 echoIfVerbose () {
     if [ $verbose = "true" ] ; then
@@ -15,7 +23,7 @@ echoIfVerbose () {
 usage()
 {
     echo ""
-    echo "Usage: tau_exec [options] [--] <exe> <exe options>"
+    echo "Usage: $scriptname [options] [--] <exe> <exe options>"
     echo ""
 # Common options first
     echo "Options:"
@@ -31,11 +39,13 @@ usage()
     echo "        -opencl       Track GPU events via OpenCL"
     echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
     echo "        -ompt         Track OpenMP events via OMPT interface"
+    echo "        -power        Track power events via PAPI's perf RAPL interface"
+    echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
-    echo "        -uvm          Enable Unified Virtual Memory events via CUPTI"
+    echo "        -um          Enable Unified Memory events via CUPTI"
     options=`tau-config --list-options`
     echo "        -T <$options> : Specify TAU tags"
     echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -43,24 +53,24 @@ usage()
     echo "        -gdb          Run program in the gdb debugger"
     echo ""
     echo "Notes:"
-    echo "	Defaults if unspecified: -T MPI"
+    echo "	Defaults if unspecified: -T $default_tags"
     echo "	MPI is assumed unless SERIAL is specified"
     echo ""
     echo "Example:"
-    echo "    mpirun -np 2 tau_exec -io ./ring"
+    echo "    mpirun -np 2 $scriptname -io ./ring"
     echo "Example - event-based sampling with samples taken every 1,000,000 FP instructions"
-    echo "    mpirun -np 8 tau_exec -ebs -ebs_period=1000000 -ebs_source=PAPI_FP_INS ./ring"
+    echo "    mpirun -np 8 $scriptname -ebs -ebs_period=1000000 -ebs_source=PAPI_FP_INS ./ring"
 		echo "Examples - GPU:"
-		echo "    tau_exec -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
-		echo "    tau_exec -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
-		echo "    tau_exec -T serial -opencl (OPENCL)"
-		echo "    tau_exec -T serial,cupti -cupti -uvm ./unified_memory (Unified Virtual Memory)"
+		echo "    $scriptname -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
+		echo "    $scriptname -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
+		echo "    $scriptname -T serial -opencl (OPENCL)"
+		echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
     echo ""
     echo "qsub mode (IBM BG/P only):"
     echo "    Original:"
     echo "      qsub -n 1 --mode smp -t 10 ./a.out"
     echo "    With TAU:"
-    echo "      tau_exec -qsub -io -memory -- qsub -n 1 --mode smp -t 10 ./a.out"
+    echo "      $scriptname -qsub -io -memory -- qsub -n 1 --mode smp -t 10 ./a.out"
     echo ""
     echo "Memory Debugging:"
     echo "    -memory option:"
@@ -78,7 +88,7 @@ if [ $# = 0 ] ; then
 fi
 
 
-dryrun=false
+dryrun=""
 processT=false
 TauOptions=""
 TauOptionsExclude=""
@@ -90,6 +100,7 @@ track_memory=false
 memory_debug=false
 track_cuda=false
 track_ompt=false
+track_power=false
 track_cupti=false
 unified_memory=false
 track_opencl=false
@@ -98,12 +109,14 @@ track_armci=false
 tau_use_ebs=false
 tau_ebs_period=""
 tau_ebs_source=""
+scorep=false
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
 track_pthread=false
 track_gomp=false
 use_gdb=false
+track_numa=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -112,6 +125,10 @@ for arg in "$@" ; do
   if [ "$processT" = true ] ; then
       binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
       processT="false"
+      test_arg=`echo $arg | sed -e 's@scorep@@g'`
+      if [ "x$test_arg" != "x$arg" ]; then 
+        scorep=true
+      fi
       shift
   else
       case $arg in 
@@ -124,6 +141,10 @@ for arg in "$@" ; do
 	      ;;
 	  -io)
 	      track_io=true
+	      shift
+	      ;;
+	  -numa)
+	      track_numa=true
 	      shift
 	      ;;
 	  -memory)
@@ -142,11 +163,15 @@ for arg in "$@" ; do
 	      track_ompt=true
 	      shift
 	      ;;
+	  -power)
+	      track_power=true
+	      shift
+	      ;;
 	  -cupti)
 	      track_cupti=true
 	      shift
 	      ;;
-	  -uvm)
+	  -um | -uvm)
 	      unified_memory=true
 	      shift
 	      ;;
@@ -187,16 +212,12 @@ for arg in "$@" ; do
 	      shift
 	      ;;
 	  -s)
-	      dryrun=true
+	      dryrun=echo
 	      shift
 	      ;;
 	  -gdb)
 	      use_gdb=true
 	      shift
-	      ;;
-	  -V)
-	      echo '$Id: tau_exec,v 1.19 2010/06/09 18:11:25 amorris Exp $';
-	      exit 0;
 	      ;;
 	  -T)
 	      processT=true
@@ -254,17 +275,18 @@ binding_options="$new_binding_options"
 
 if [ "x$binding_specified" = "x" ] ; then
     if [ "x$binding_options" = "x" ]; then
-	binding_options=$DEFAULT_BINDING
+	binding_options=`echo "$default_tags" | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
     else
         # Add MPI by default
-	serial=`echo $binding_options | grep serial`
-	if [ $? != 0 ] ; then
+	if ! echo "$binding_options" | grep -q "serial" >/dev/null 2>&1 ; then
            # add mpi if shmem is not specified
-	    shmem=`echo $binding_options | grep shmem`
-	    if [ $? != 0 ] ; then
+	    if echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
 	        binding_options="$binding_options mpi"
             fi
 	fi
+        if [ "$python_wrapper" == "true" ] ; then
+            binding_options="$binding_options python"
+        fi
     fi
     theBinding=`tau-config --binding $binding_options`
     if [ $? != 0 ] ; then
@@ -300,6 +322,9 @@ else
   TAU_SHLIBX=.so
 fi
 
+python_bindings=`echo $theBinding | sed -e 's/shared/bindings/'`
+export PYTHONPATH=$BASEDIR/lib/$python_bindings:$PYTHONPATH
+
 if [ "x$LD_LIBRARY_PATH" = "x" ] ; then
   TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$BASEDIR/lib
 else
@@ -333,6 +358,31 @@ if [ $track_io = "true" ] ; then
     TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
     #Needed for the auditor
     export LD_BIND_NOW=1
+fi
+
+if [ $track_numa = "true" ]; then
+   options=`echo $theBinding | sed -e 's/shared-//g' `
+   mk=$BASEDIR/lib/Makefile.tau-$options
+   if [ -r $mk ]; then 
+     if [ $verbose = "true" ]; then 
+       echo "Using TAU_MAKEFILE=$mk to extract PAPIDIR"
+     fi
+     papibin=`grep "^PAPIDIR" $mk | sed -e 's/^PAPIDIR=//g' | head -n 1 `/bin
+     if [ "x$papibin" != "x" -a -x $papibin/papi_event_chooser ]; then
+       $papibin/papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM &> /dev/null
+       ret=$?
+       if [ $ret = 0 -a "x$TAU_METRICS" = "x" ]; then
+          if [ $verbose = "true" ]; then 
+	    echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for $scriptname -numa"
+          fi
+	  export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
+       else 
+         echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+       fi
+     fi
+   else
+     echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+   fi
 fi
 
 if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
@@ -432,17 +482,47 @@ if [ $tau_use_ebs = "true" ] ; then
     fi
 fi
 
+if [ $track_power = "true" ]; then
+    export TAU_TRACK_POWER=1
+    if [ "x$TAU_INTERRUPT_INTERVAL" == "x" ]; then 
+      export TAU_INTERRUPT_INTERVAL=1
+    fi
+fi
 if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
     TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
     if [ $verbose = "true" ]; then 
       echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
     fi
 fi
+
+if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX ]; then
+    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX
+    if [ $verbose = "true" ]; then
+      echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
+    fi
+fi
+
+if [ $scorep = true ]; then
+  if [ $verbose = "true" ]; then 
+    echo "Score-P is specified"
+  fi
+  scoreplib=`ldd $BASEDIR/lib/$theBinding/libTAU.so | grep scorep_adapter_mpi_event.so | awk ' { print $3;}'`
+  if [ -f $scoreplib -a $verbose = "true" ]; then 
+    echo "Preloading: $scoreplib"
+  fi
+  if [ "x$extraloadlibs" = "x" ]; then 
+    extraloadlibs=":$scoreplib"
+  else
+    extraloadlibs=":$scoreplib:$extraloadlibs"
+  fi
+fi
+
 # add libraries specified by -loadlib=<foo.so>
 TAUEX_LD_PRELOAD=${TAUEX_LD_PRELOAD}${extraloadlibs}
 
 # remove double colons
 TAUEX_LD_PRELOAD=`echo $TAUEX_LD_PRELOAD | sed -e "s/::/:/g" -e "s/:$//"`
+
 
 if [ $apple = 1 ]; then
   TAU_LDD='otool -L'
@@ -457,8 +537,8 @@ if [ $qsub_mode = false ]; then
 	prog=`which $prog 2>/dev/null`
     fi
     
-    if [ ! -x "$prog" ] ; then
-	echo "tau_exec: $1: command not found"
+    if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
+	echo "$scriptname: $1: command not found"
 	exit
     fi 
 
@@ -521,37 +601,11 @@ if [ $qsub_mode = true ] ; then
     env_option="--env $envs"
 
     newCmd=`echo $newCmd | sed -e 's/^qsub //'`
-    if [ $dryrun = "true" ]; then
-	echo qsub $env_option $newCmd
-    else
-	qsub $env_option $newCmd
-    fi
+    $dryrun qsub $env_option $newCmd
     
 else
 
-    if [ $dryrun = "true" ]; then
-      if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
-        echo "export LD_BIND_NOW=1"
-      fi
-      if [ $track_io = "true" ] ; then
-        echo "export LD_BIND_NOW=1"
-      fi
-      if [ $apple = 1 ]; then
-        echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
-        echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
-        echo "export DYLD_FORCE_FLAT_NAMESPACE=1"
-      else
-        echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
-        echo "export LD_AUDIT=$TAUEX_LD_AUDITOR"
-        echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
-      fi
-      if [ $memory_debug = "true" ] ; then
-        echo "export TAU_TRACK_MEMORY_LEAKS=1"
-        echo "export TAU_MEMDBG_PROTECT_ABOVE=1"
-      fi
-      echo "$@"
-      exit 0;
-    elif [ $use_gdb = "true" ]; then
+    if [ $use_gdb = "true" ]; then
       echo "" > .gdb_commands
       if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
         echo "set env LD_BIND_NOW=1" >> .gdb_commands
@@ -576,24 +630,63 @@ else
       gdb -x .gdb_commands "$1"
       rm -f ./.gdb_commands
       exit 0;
-    elif [ $apple = 1 ]; then
-      export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
-      export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
-      export DYLD_FORCE_FLAT_NAMESPACE=1
+    fi
+
+    if [ $apple = 1 ]; then
+      $dryrun export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+      $dryrun export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
+      $dryrun export DYLD_FORCE_FLAT_NAMESPACE=1
     else
-      export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
-      export LD_AUDIT=$TAUEX_LD_AUDITOR
-      export LD_PRELOAD=$TAUEX_LD_PRELOAD
+      $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+      $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
+      $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     fi
     if [ $memory_debug = "true" ] ; then
-      export TAU_TRACK_MEMORY_LEAKS=1
-      export TAU_MEMDBG_PROTECT_ABOVE=1
+      $dryrun export TAU_TRACK_MEMORY_LEAKS=1
+      $dryrun export TAU_MEMDBG_PROTECT_ABOVE=1
     fi
     
-    $@
+    if [ "$python_wrapper" != "true" ] ; then
+      $dryrun $@
+    else
+      $dryrun python - $@ << EOF
+from __future__ import print_function
+import os
+import sys
+
+
+def dieInFlames(msg):
+  print(msg, file=sys.stderr)
+  sys.exit(-1)
+
+try:
+  import tau
+except ImportError:
+  dieInFlames("module 'tau' not found in PYTHONPATH")
+except:
+  dieInFlames("Unknown exception while importing tau: %s" % sys.exc_info()[0])
+
+if __name__ == '__main__':
+  try:
+    modname = sys.argv[1]
+  except IndexError:
+    print('Usage: %s <modulename>' % sys.argv[0])
+    sys.exit(1)
+
+  if os.path.exists(modname):
+    path = os.path.dirname(modname)
+    modname = os.path.basename(modname)
+    if modname[-3:].lower() != '.py':
+      dieInFlames("Sorry, I don't know how to instrument '%s'" % modname)
+    modname = modname[:-3]
+    sys.path.append(path)
+
+  tau.runmodule(modname)
+EOF
+    fi
+
     retval=$?
     unset LD_PRELOAD
     exit $retval
 fi
 
-fi
