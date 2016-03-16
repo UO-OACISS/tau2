@@ -429,8 +429,8 @@ static char * Tau_get_cwd_of_exe()
       }
       free((void*)line);
     }
+    fclose(f); // close the file if it is not null 
   }
-  fclose(f);
   return retval;
 }
 
