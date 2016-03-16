@@ -1169,7 +1169,7 @@ extern "C" void my_parallel_region_begin (
   Tau_collector_flags[tid].taskid = parallel_id; // necessary for IBM, appears broken
 #endif
   Tau_get_current_region_context(tid, (unsigned long)parallel_function, false);
-  printf("%d New Region: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, parallel_id = %lu, parallel_function = %p %s %p\n", tid, parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_id, parallel_function, region_names[parallel_id], region_names[parallel_id]); fflush(stdout);
+  //printf("%d New Region: parent id = %lu, exit_runtime_frame = %p, reenter_runtime_frame = %p, parallel_id = %lu, parallel_function = %p %s %p\n", tid, parent_task_id, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_id, parallel_function, region_names[parallel_id], region_names[parallel_id]); fflush(stdout);
   Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1, 1, false);
   Tau_collector_flags[tid].parallel++;
   TAU_OMPT_COMMON_EXIT;
