@@ -25,6 +25,11 @@
 
 #if (!defined(TAU_LIBRARY_SOURCE) && !defined(TAU_WINDOWS))
 
+/*
+#ifdef TAU_MPI
+#include <mpi.h>
+#endif */
+/* TAU_MPI */
 #include <sys/types.h>
 #include <unistd.h>
 

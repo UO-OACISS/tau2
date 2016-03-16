@@ -933,7 +933,12 @@ for arg in "$@" ; do
 		numFiles=numFiles+1
 		if [ $fortranParserDefined == $FALSE ]; then
 				#If it is not passed EXPLICITY, use the default gfparse.
-		    pdtParserF="$optPdtDir""/gfparse"
+                    if [ -r "$optPdtDir"/gfparse485 ]; then
+                # New updated gfparse485 symlink exists! Use gfparse48 by default. 
+                      pdtParserF="$optPdtDir"/gfparse48
+                    else
+                      pdtParserF="$optPdtDir"/gfparse
+                    fi
 		fi
 		echoIfDebug "Using Fortran Parser"
 		if [ $optResetUsed == $FALSE ]; then
@@ -994,6 +999,17 @@ for arg in "$@" ; do
 		argsRemaining="$argsRemaining $arg"
 		;;
 
+	    # GNU fixed and free flags
+	    -ffixed-form*)
+		optPdtF95="$optPdtF95 -R fixed"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -ffree-form*)
+		optPdtF95="$optPdtF95 -R free"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
 	    # PGI fixed and free flags
 	    -Mfixed*)
 		optPdtF95="$optPdtF95 -R fixed"
@@ -1004,6 +1020,38 @@ for arg in "$@" ; do
 		optPdtF95="$optPdtF95 -R free"
 		argsRemaining="$argsRemaining $arg"
 		;;
+
+	    -fpp)
+		optPdtF95="$optPdtF95 -cpp"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+	    -cpp)
+		optPdtF95="$optPdtF95 -cpp"
+		argsRemaining="$argsRemaining $arg"
+		;;
+
+ 	    # Intel fixed and free flags
+ 	    -FI)
+ 		optPdtF95="$optPdtF95 -R fixed"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
+ 	    -FR)
+ 		optPdtF95="$optPdtF95 -R free"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
+ 	    # Cray fixed and free flags
+ 	    -ffixed)
+ 		optPdtF95="$optPdtF95 -R fixed"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
+
+ 	    -ffree)
+ 		optPdtF95="$optPdtF95 -R free"
+ 		argsRemaining="$argsRemaining $arg"
+ 		;;
 
 	    -std=c99)
 		optPdtCFlags="$optPdtCFlags --c99"
