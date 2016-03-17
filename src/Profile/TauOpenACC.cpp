@@ -79,8 +79,10 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     case acc_ev_enqueue_download_end        : TAU_SET_EVENT_NAME(event_name, "<openacc_enqueue_download");
     case acc_ev_wait_start                  : TAU_SET_EVENT_NAME(event_name, ">openacc_wait");
     case acc_ev_wait_end                    : TAU_SET_EVENT_NAME(event_name, "<openacc_wait");
+#ifdef TAU_PGI_OPENACC_15
     case acc_ev_implicit_wait_start         : TAU_SET_EVENT_NAME(event_name, ">openacc_implicit_wait");
     case acc_ev_implicit_wait_end           : TAU_SET_EVENT_NAME(event_name, "<openacc_implicit_wait");
+#endif /* TAU_PGI_OPENACC_15 */
     case acc_ev_compute_construct_start     : TAU_SET_EVENT_NAME(event_name, ">openacc_compute_construct");
     case acc_ev_compute_construct_end       : TAU_SET_EVENT_NAME(event_name, "<openacc_compute_construct");
     case acc_ev_create                      : TAU_SET_EVENT_NAME(event_name, "openacc_create");
@@ -202,8 +204,10 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
     reg( acc_ev_enqueue_download_end, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_wait_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_wait_end, Tau_openacc_callback, (acc_register_t) 0 );
+#ifdef TAU_PGI_OPENACC_15
     reg( acc_ev_implicit_wait_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_implicit_wait_end, Tau_openacc_callback, (acc_register_t) 0 );
+#endif /* TAU_PGI_OPENACC_15 */
     reg( acc_ev_exit_data_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_exit_data_end, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_create, Tau_openacc_callback, (acc_register_t) 0 );
