@@ -324,7 +324,7 @@ for arg in "$@"; do
 	    echo ""
 	    echo "Compiler Options:"
 	    echo "-c++=<compiler>  ............................ specify the C++ compiler."
-	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
+	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
 	    echo "               clang++|bgclang++|g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
 	    echo "-cc=<compiler> ................................ specify the C compiler."
 	    echo "     options [cc|gcc|clang|bgclang|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
@@ -339,7 +339,7 @@ for arg in "$@"; do
 	    echo "-hostutils..............................build TAU utils for <host-type>"
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
-	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
+	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
 	    echo "                                          g++4|icpc|scgcc|pathCC|orCC]."
 	    echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
 	    echo ""
@@ -468,7 +468,7 @@ for arg in "$@"; do
 	    echo "Usage: configure [OPTIONS]"
 	    echo "  where [OPTIONS] are:"
 	    echo "-c++=<compiler>  ............................ specify the C++ compiler."
-	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
+	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
 	    echo "               clang++|bgclang++|g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
 	    echo "-cc=<compiler> ................................ specify the C compiler."
 	    echo "   options [cc|gcc|gcc4|scgcc|clang|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
@@ -485,7 +485,7 @@ for arg in "$@"; do
 	    echo "                                     this is used for cross-compilation"
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
-	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
+	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
 	    echo "                        clang++|bgclang++|g++4|icpc|scgcc|pathCC|orCC]."
 	    echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
 	    echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
@@ -948,7 +948,7 @@ for arg in "$@"; do
 
 	-c++=*)
 	    myarg=`echo $arg | sed 's/-c++=//'`
-	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx ] 
+	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx ] 
 	    then
 		cxx_compiler=$myarg
 	    else
@@ -3726,7 +3726,7 @@ case $cxx_compiler in
 	fixmakeargs="$fixmakeargs MERCURIUM"
 	;;
 
-    pgCC|pgcpp)
+    pgc++|pgCC|pgcpp)
 	echo "Default C++ compiler will be PGI pgCC C++ Compiler"
 	pgi=yes
 	pgiflag=`pgcc -help | head -1 | grep 1.7 | wc -l` 
@@ -3932,7 +3932,7 @@ case $cxx_compiler in
 
 	if [ $fortran_compiler = no ]
 	then 
-            extradir=`which pgCC | sed s/pgCC/../`
+            extradir=`which pgcc | sed s/pgcc/../`
             fixmakeargs="$fixmakeargs PGI_FORTRAN PGI_CATAMOUNT"
             fortran_compiler=yes
 	fi
@@ -5183,7 +5183,7 @@ fi
 
 
 ######################################################################
-if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp -o "x$PE_ENV" = "xPGI" ] 
+if [ $cxx_compiler = pgCC -o $cxx_compiler = pgc++ -o $cxx_compiler = pgcpp -o "x$PE_ENV" = "xPGI" ] 
 then
     cat <<EOF > pgitest.C
 int foo(int x)
@@ -7755,7 +7755,7 @@ new map<int, int, std::less<int>, tau_ss_allocator< std::pair<int, int> > >();
 EOF
 $echo "Checking for ss_allocator support... ${nnl}"
 if $cxx_compiler $orig_useropt -c conftest_ss_alloc.cpp -I$tauroot/include 1> /dev/null 2>&1 ; then
-    if [ $cxx_compiler = "pgCC" ]
+    if [ $cxx_compiler = "pgCC" -o $cxx_compiler = "pgc++" ]
     then
 	# PGI compilers do not play nice with the current allocator.
 	echo "no"
