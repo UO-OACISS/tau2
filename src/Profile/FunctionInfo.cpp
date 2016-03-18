@@ -354,9 +354,11 @@ FunctionInfo::~FunctionInfo()
   free(GroupName);
   free(AllGroups);
   Name = Type = GroupName = AllGroups = NULL;
+#ifndef TAU_WINDOWS
   for (int i = 0; i < TAU_MAX_THREADS; i++) {
     delete pathHistogram[i];
   }
+#endif /* TAU_WINDOWS */
   TheSafeToDumpData() = 0;
 }
 
@@ -510,7 +512,7 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
      *  the hash table. */
     new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
 #else
-    new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+    *ptr = (void *) new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
 #endif
     }
 #ifdef TAU_CHARM
