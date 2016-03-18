@@ -566,7 +566,11 @@ char * Tau_check_dirname(const char * dir)
     ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d", logdir, (thisTime->tm_year + 1900),
         (thisTime->tm_mon + 1), thisTime->tm_mday, user, jobid, (thisTime->tm_mon + 1), thisTime->tm_mday,
         (thisTime->tm_hour * 60 * 60 + thisTime->tm_min * 60 + thisTime->tm_sec));
+#ifndef TAU_WINDOWS
 	if (ret < 0) { TAU_VERBOSE("sprintf failed! %s %s %s", __func__, __FILE__, __LINE__); }
+#else
+        if (ret < 0) { TAU_VERBOSE("sprintf failed! %s %s", __FILE__, __LINE__); }
+#endif  /* TAU_WINDOWS */
     TAU_VERBOSE("Using logdir = %s\n", logfiledir);
     if (RtsLayer::myNode() < 1) {
 #ifdef TAU_WINDOWS
