@@ -206,7 +206,11 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #ifdef TAU_USE_EVENT_THRESHOLDS
       if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
         if (name[0] != '[') { //re-entrant
+#ifndef TAU_WINDOWS
           char ename[20 + name.length()];
+#else /* TAU_WINDOWS */
+	  char ename[2048];
+#endif /* TAU_WINDOWS */
           sprintf(ename, "[GROUP=MIN_MARKER] %s", name.c_str());
           if (name.find("=>") == std::string::npos) {
             //DEBUGPROFMSG("Marker: "<<ename<<"  d.minVal = "<<d.minVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
@@ -229,7 +233,12 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #ifdef TAU_USE_EVENT_THRESHOLDS
       if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
         if (name[0] != '[') { //re-entrant
+#ifndef TAU_WINDOWS
           char ename[20 + name.length()];
+#else /* TAU_WINDOWS */
+          char ename[2048];
+#endif /* TAU_WINDOWS */
+
           sprintf(ename, "[GROUP=MAX_MARKER] %s", name.c_str());
           if (name.find("=>") == std::string::npos) {
             //DEBUGPROFMSG("Marker: "<<ename<<"  d.maxVal = "<<d.maxVal<<" data = "<<data<<" d.nEvents = "<<d.nEvents<<endl;);
