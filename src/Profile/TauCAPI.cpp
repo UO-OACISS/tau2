@@ -339,7 +339,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   FunctionInfo *fi = (FunctionInfo *) functionInfo;
 
   // Don't start throttled timers
-  if (fi->IsThrottled()) return;
+  if (fi && fi->IsThrottled()) return;
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
