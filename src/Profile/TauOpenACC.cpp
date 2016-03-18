@@ -207,9 +207,9 @@ acc_register_library(acc_prof_reg reg, acc_prof_reg unreg, acc_prof_lookup looku
 #ifdef TAU_PGI_OPENACC_15
     reg( acc_ev_implicit_wait_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_implicit_wait_end, Tau_openacc_callback, (acc_register_t) 0 );
-#endif /* TAU_PGI_OPENACC_15 */
     reg( acc_ev_exit_data_start, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_exit_data_end, Tau_openacc_callback, (acc_register_t) 0 );
+#endif /* TAU_PGI_OPENACC_15 */
     reg( acc_ev_create, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_delete, Tau_openacc_callback, (acc_register_t) 0 );
     reg( acc_ev_alloc, Tau_openacc_callback, (acc_register_t) 0 );
