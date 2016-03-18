@@ -23,6 +23,12 @@ Version 2.25 changes (from 2.24):
 10. Added support for OpenACC with PGI 15.10. 
 11. Added support for new versions of MAQAO, PEBIL, and DyninstAPI 9.0.3. 
 12. Added support for SGI MPT 2.13 with PSHMEM interface. 
+13. Added support for PGI 16.x OpenACC compilers. 
+14. Added support for gfparse48 from PDT 3.22 in tau_compiler.sh. 
+15. Updated OpenCL support in TAU.
+16. Improved callsite resolution. 
+17. Improved BFD support for Xeon Phi. 
+
  
 Version 2.24 changes (from 2.23):
 1. Reduced OpenMP profiling overhead and memory footprint.

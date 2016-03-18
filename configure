@@ -5225,7 +5225,33 @@ EOF
       echo "PGI compiler doesn't support OpenACC profiling interface."
     fi
     /bin/rm -f pgiacctest.C pgiacctest.o
+
+cat <<EOF > pgiacc15.c
+#include <sys/types.h>
+#include <openacc.h>
+#include "pgi_acc_prof.h"
+
+static void
+Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_api_info* api_info )
+{
+    int x; 
+    switch (prof_info->event_type) {
+      case acc_ev_implicit_wait_start         :  x = 1;
+      default: x = 2;
+    } 
+    return;
+}
+EOF
+    if $cxx_compiler $orig_useropt -c pgiacc15.c 1> /dev/null 2>&1
+    then
+      echo "PGI compiler supports PGI v15.x OpenACC API (acc_ev_implicit_wait_start)"
+      fixmakeargs="$fixmakeargs PGI_OPENACC_15x"
+    fi
+    /bin/rm -f pgiacc15.c pgiacc15.o
+
 fi
+
+
 ######################################################################
 # If epilog is used, check and see if it supports v2.1s write interface
 if [ $epilog =  yes ]

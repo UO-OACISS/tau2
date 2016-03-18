@@ -66,7 +66,9 @@ using namespace std;
 #include <fcntl.h>
 #include <time.h>
 #include <stdlib.h>
+#ifndef TAU_WINDOWS
 #include <sys/syscall.h>
+#endif /* TAU_WINDOWS */
 
 #ifdef KTAU_NG
 #ifdef __linux //To make getLinuxKernelTid work for ktau style file naming

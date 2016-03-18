@@ -1559,7 +1559,11 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_open_status(void) {
 
+#ifndef TAU_WINDOWS 
   int fd = open ("/proc/self/status", O_RDONLY);
+#else
+  int fd = -1;
+#endif /* TAU_WINDOWS */
 
   if (fd == -1) {
     perror("Couldn't open /proc/self/status for tracking memory");
