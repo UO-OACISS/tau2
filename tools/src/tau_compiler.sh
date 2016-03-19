@@ -1042,6 +1042,26 @@ for arg in "$@" ; do
  		argsRemaining="$argsRemaining $arg"
  		;;
 
+            -free)
+                optPdtF95="$optPdtF95 -R free"
+                argsRemaining="$argsRemaining $arg"
+                ;;
+
+            -nofixed)
+                optPdtF95="$optPdtF95 -R free"
+                argsRemaining="$argsRemaining $arg"
+                ;;
+
+            -fixed)
+                optPdtF95="$optPdtF95 -R fixed"
+                argsRemaining="$argsRemaining $arg"
+                ;;
+
+            -nofree)
+                optPdtF95="$optPdtF95 -R fixed"
+                argsRemaining="$argsRemaining $arg"
+                ;;
+
  	    # Cray fixed and free flags
  	    -ffixed)
  		optPdtF95="$optPdtF95 -R fixed"
