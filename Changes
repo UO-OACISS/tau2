@@ -28,6 +28,7 @@ Version 2.25 changes (from 2.24):
 15. Updated OpenCL support in TAU.
 16. Improved callsite resolution. 
 17. Improved BFD support for Xeon Phi. 
+18. Added support for MPI-T interface (TAU_TRACK_MPI_T_PVARS, TAU_MPI_T_CVAR_METRICS, TAU_MPI_T_CVAR_VALUES). 
 
  
 Version 2.24 changes (from 2.23):
