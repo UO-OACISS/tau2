@@ -1062,6 +1062,17 @@ for arg in "$@" ; do
                 argsRemaining="$argsRemaining $arg"
                 ;;
 
+	   # Fujitsu mpifrtpx options
+            -Free)
+                optPdtF95="$optPdtF95 -R free"
+                argsRemaining="$argsRemaining $arg"
+                ;;
+
+            -Fixed)
+                optPdtF95="$optPdtF95 -R fixed"
+                argsRemaining="$argsRemaining $arg"
+                ;;
+
  	    # Cray fixed and free flags
  	    -ffixed)
  		optPdtF95="$optPdtF95 -R fixed"
