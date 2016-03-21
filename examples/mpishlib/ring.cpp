@@ -37,7 +37,6 @@ void C::method() {
     }
     if (me==0) {
       MPI_Send(&field, anz, MPI_INT, 1, 4711, MPI_COMM_WORLD);
-      Cary[n1][n2] = n1/(n2-n2);
       MPI_Recv(&field, anz, MPI_INT, proc-1, 4711, MPI_COMM_WORLD, &status);
     }
     else {
