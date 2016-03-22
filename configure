@@ -5251,6 +5251,13 @@ EOF
 
 fi
 
+if [ $pgi = yes ]; then
+  if [ -d $extradir/lib -a ! -r $extradir/lib/libstd.a ]; then
+    echo "NOTE: PGI 16+ compiler does not provide libstd.* files"
+    fixmakeargs="$fixmakeargs PGI_NO_LIBSTD"
+  fi
+fi 
+
 
 ######################################################################
 # If epilog is used, check and see if it supports v2.1s write interface
