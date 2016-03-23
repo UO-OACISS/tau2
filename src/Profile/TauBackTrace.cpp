@@ -157,6 +157,7 @@ void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
   Tau_global_incr_insideTAU();
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX 
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
@@ -164,6 +165,7 @@ void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
   }
+#endif /* _AIX */
 #endif
 
   // Increment trim to exclude this function from the backtrace

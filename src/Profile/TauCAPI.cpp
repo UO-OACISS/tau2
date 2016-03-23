@@ -62,7 +62,7 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
 #include <execinfo.h>
 #endif
 
@@ -345,10 +345,12 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   TauInternalFunctionGuard protects_this_function;
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
     Tau_sampling_suspend(tid);
   }
+#endif /* _AIX */
 #endif
 
 #ifdef TAU_TRACK_IDLE_THREADS
@@ -362,10 +364,12 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifdef TAU_EPILOG
   esd_enter(fi->GetFunctionId());
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
   }
-#endif
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
   return;
 #endif
 
@@ -377,10 +381,12 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
   }
-#endif
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
   return;
 #endif
 
@@ -441,9 +447,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   int mydepth = Tau_thread_flags[tid].Tau_global_stackpos;
   if (mydepth >= userspecifieddepth) { 
 #ifndef TAU_WINDOWS
+#ifndef _AIX 
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
+#endif /* _AIX */
 #endif
     return; 
   }
@@ -480,6 +488,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   /********************************************************************************/
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
     // if the unwind depth should be "automatic", then get the stack for right now
@@ -487,6 +496,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
       Tau_sampling_event_start(tid, p->address);
     }
   }
+#endif /* _AIX */
 #endif
 }
 
@@ -549,7 +559,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d][%d:%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n",
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
      if(!TauEnv_get_ebs_enabled()) {
        void* callstack[128];
        int i, frames = backtrace(callstack, 128);
@@ -578,9 +588,11 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 
   Profiler *profiler;
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend(tid);
   }
+#endif /* _AIX */
 #endif
 
   /********************************************************************************/
@@ -607,9 +619,11 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 #ifdef TAU_EPILOG
   esd_exit(fi->GetFunctionId());
 #ifndef TAU_WINDOWS
+#ifndef _AIX
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
+#endif /* _AIX */
 #endif
   return;
 #endif
@@ -624,9 +638,11 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
+#endif /* _AIX */
 #endif
   return;
 #endif
@@ -637,9 +653,11 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 
   if (Tau_thread_flags[tid].Tau_global_stackpos < 0) {
 #ifndef TAU_WINDOWS
+#ifndef _AIX
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
+#endif /* _AIX */
 #endif
     return;
   }
@@ -667,9 +685,11 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   if (mydepth >= userspecifieddepth) { 
     Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 #ifndef TAU_WINDOWS
+#ifndef _AIX
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
+#endif /* _AIX */
 #endif
     return;
   }
@@ -691,9 +711,11 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
   Tau_thread_flags[tid].Tau_global_stackpos--;
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX 
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
   }
+#endif /* _AIX */
 #endif
 }
 
