@@ -281,6 +281,8 @@ JDKARCH                 = linux
 #############################################
 MPI_FORTRAN_INIT = TauFInit.o 
 #NOFORTRAN#MPI_FORTRAN_INIT = #ENDIF#
+#SP1#MPI_FORTRAN_INIT = #ENDIF#
+
 
 #############################################
 # OpenMP OBJECTS
@@ -659,6 +661,7 @@ FWRAPPER	       = TauFMpi.o
 #BGPPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a  -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna #ENDIF#
 #BGQPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a  -L/bgsys/drivers/ppcfloor/spi/lib -lSPI #ENDIF#
 #IBM64PAPI#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a -L/usr/lpp/pmtoolkit/lib  -L/usr/pmapi/lib -lpmapi #ENDIF#
+#IBM64PAPI#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi64.a -L/usr/pmapi/lib -lpmapi #ENDIF#
 #IBM64PAPILINUX#LEXTRA = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
 #ARMLINUXPAPI#LEXTRA   = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #SGI64PAPI#LEXTRA  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi64 #ENDIF#
