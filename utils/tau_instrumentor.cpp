@@ -926,7 +926,7 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
               if (!(*it)->isTarget) { // it is a template member. Help it by giving an additional ()
                 // if the item is a member function or a static member func give
                 // it a class name using CT
-                ostr << "\", CT(*this), ";
+                ostr << "\", TAU_CT(*this), ";
               } else {
                 // it is not a class member
                 ostr << "\", \" \", "; // null type arg to TAU_PROFILE
