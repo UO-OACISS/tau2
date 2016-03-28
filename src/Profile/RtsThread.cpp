@@ -324,9 +324,11 @@ int RtsLayer::RegisterThread()
   }
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
   }
+#endif /* _AIX */
 #endif
 
   return numThreads;
