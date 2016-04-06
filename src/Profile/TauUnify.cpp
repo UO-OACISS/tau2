@@ -16,11 +16,13 @@
 ****************************************************************************/
 
 
-#ifdef TAU_MPI
+//#ifdef TAU_MPI
+
+#if (defined(TAU_MPI) || defined (TAU_MPC))
 #include <mpi.h>
 #endif /* TAU_MPI */
 
-#ifdef TAU_UNIFY
+//#ifdef TAU_UNIFY
 
 #include <TauUtil.h>
 #include <TauMetrics.h>
@@ -30,6 +32,7 @@
 #include <algorithm>
 using namespace std;
 
+#ifdef TAU_UNIFY
 /** local unification object, one is created for each child rank that we talk to */
 typedef struct {
   int rank;       // MPI rank of child
