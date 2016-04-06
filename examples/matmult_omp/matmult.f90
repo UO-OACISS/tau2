@@ -30,8 +30,8 @@
       master = 0 
       matsize = SIZE_OF_MATRIX 
 
-!$omp parallel private(tid)
 !     Obtain and print thread id
+!$omp parallel private(tid)
       tid = omp_get_thread_num()
       print *, 'hello world from thread = ', tid
       if (tid .eq. 0) then
@@ -116,6 +116,7 @@
         integer n
 
 ! first initialize the A matrix
+
 !$omp parallel 
 !$omp do
         do i = 1,n 
@@ -141,7 +142,9 @@
         double precision b(matsize, matsize)
         integer i, j
 ! multiply the row with the column 
-!$omp  parallel  do
+
+
+!$omp parallel do
         do i = 1,matsize 
           answer(i) = 0.0 
           do j = 1,matsize 

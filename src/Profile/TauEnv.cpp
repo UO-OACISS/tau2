@@ -49,6 +49,8 @@
 #if TAU_OPENMP // for querying OpenMP settings
 #include "omp.h"
 #endif
+
+#include <iostream>
 using namespace std;
 
 #ifndef TAU_BGP
