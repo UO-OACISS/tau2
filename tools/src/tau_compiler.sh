@@ -1929,7 +1929,7 @@ else
               # Check whether header is already instrumented; note that to force reinstrumentation
               # users should remove all .tau_headers_* subdirectories in their source trees
   	    filebase=`echo ${header} | sed -e's/.*\///'`
-              if [ -e "$headerInstDir/$filebase" ]; then
+              if [ -e "$headerInstDir/$filebase" -a -e "$headerInstDir/${id}_tau_${filebase}" ]; then
                   echo "Reusing TAU-instrumented header $headerInstDir/$filebase";
               else
   	        id=${idarray[$idcounter]};

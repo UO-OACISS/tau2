@@ -239,9 +239,11 @@ void Profiler::Start(int tid)
 
   // An initialization of sorts. Call Paths (if any) will update this.
 #ifndef TAU_WINDOWS
+#ifndef _AIX 
   if (TauEnv_get_callsite() == 1) {
     CallSiteAddPath(NULL, tid);
   }
+#endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
   if (TauEnv_get_callpath()) {
@@ -249,9 +251,11 @@ void Profiler::Start(int tid)
   }
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_callsite() == 1) {
     CallSiteStart(tid);
   }
+#endif /* _AIX */
 #endif
 
 #ifdef TAU_PROFILEPARAM
@@ -404,9 +408,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAU_TRACK_IDLE_THREADS */
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_event_stop(tid, CurrentTime);
   }
+#endif /* _AIX */
 #endif
 
 #if defined(TAUKTAU)
@@ -471,9 +477,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   }
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_callsite()) {
     CallSiteStop(TotalTime, tid);
   }
+#endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
 #ifdef RENCI_STFF
@@ -1355,6 +1363,7 @@ int TauProfiler_StoreData(int tid)
   finalizeTrace(tid);
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
@@ -1363,6 +1372,7 @@ int TauProfiler_StoreData(int tid)
     // Tau_sampling_finalize(tid);
     Tau_sampling_finalize_if_necessary(tid);
   }
+#endif /* _AIX */
 #endif
   if (TauEnv_get_profiling()) {
     Tau_snapshot_writeFinal("final");
