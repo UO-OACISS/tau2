@@ -7346,3 +7346,7 @@ void MPI_ALLTOALLW( void * sendbuf, MPI_Fint *  sendcounts, MPI_Fint *  sdispls,
   return ; 
 }
 #endif /* TAU_MPI_EXTENSIONS */
+double  mpi_wtime_(  )
+{
+  return MPI_Wtime(  );
+}
