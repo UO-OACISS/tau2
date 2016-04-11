@@ -12,6 +12,7 @@
 #include <Profile/TauBfd.h>
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
 
 /* Android didn't provide <ucontext.h> so we make our own */
 #ifdef TAU_ANDROID
@@ -879,4 +880,5 @@ extern "C" void finalizeCallSites_if_necessary()
     candidate->SetName(tempName);
   }
 }
+#endif /* _AIX */
 #endif

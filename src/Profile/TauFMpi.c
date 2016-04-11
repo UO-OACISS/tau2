@@ -26,6 +26,10 @@ MPI_Fint *MPI_F_STATUSES_IGNORE = NULL;
 #endif /* MPI_F_STATUSES_IGNORE */
 #endif /* TAU_MPC */
 
+#ifdef TAU_IBM_MPI
+MPI_Fint* MPI_F_STATUSES_IGNORE = NULL;
+#endif /* TAU_IBM_MPI */
+
 void tau_mpi_init_predefined_constants();
 
 static void ** mpi_predef_in_place(void)

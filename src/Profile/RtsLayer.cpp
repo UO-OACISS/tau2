@@ -67,7 +67,9 @@ using namespace std;
 #include <time.h>
 #include <stdlib.h>
 #ifndef TAU_WINDOWS
+#ifndef TAU_XLC
 #include <sys/syscall.h>
+#endif /* TAU_XLC */
 #endif /* TAU_WINDOWS */
 
 #ifdef KTAU_NG
