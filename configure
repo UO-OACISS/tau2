@@ -195,6 +195,9 @@ correction_paraprof()
 {
     # assuming configure is called from same directory
     # tau's configure doesn't work anyway from another directory
+    
+    cd ${tauroot}
+
     _tauroot="."
     echo "Adjust ParaProf to use CubeReader..."
     cat    ${_tauroot}/tools/src/paraprof/bin/paraprof.skel |
