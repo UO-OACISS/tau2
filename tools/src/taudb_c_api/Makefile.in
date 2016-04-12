@@ -39,6 +39,18 @@ ZLIB_INCLUDES=
 ZLIB_LIBRARIES=-lz
 UUID_LIBRARIES=
 
+#Ubuntu(~2015): apt-get install libpq-dev libxslt1-dev indent
+# PQINCDIR=/usr/include/postgresql
+# PQLIBDIR=/usr/lib/x86_64-linux-gnu
+# DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQINCDIR)/internal -I$(PQINCDIR)
+# DB_LIBRARIES=-L$(PQLIBDIR) -lpq -Wl,-rpath=$(PQLIBDIR) -lm
+# XML_INCLUDES=-I/usr/include/libxml2
+# XML_LIBRARIES=-lxml2
+# ZLIB_INCLUDES=
+# ZLIB_LIBRARIES=-lz
+# UUID_LIBRARIES=-luuid
+# SYSTEM_DEFINE=-D__X86_64_LINUX__
+
 # Paratools03
 # PQDIR=/usr/local/pgsql
 # DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
