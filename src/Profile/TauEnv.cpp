@@ -34,6 +34,7 @@
 #include <android/log.h>
 #endif
 
+#include <iostream>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -48,6 +49,8 @@
 #if TAU_OPENMP // for querying OpenMP settings
 #include "omp.h"
 #endif
+
+#include <iostream>
 using namespace std;
 
 #ifndef TAU_BGP
@@ -1961,6 +1964,12 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
       TAU_METADATA("TAU_BFD_LOOKUP", "off");
     }
+
+#if defined(TAU_TBB_SUPPORT) && defined(TAU_MPI)
+    if (env_profile_format != TAU_FORMAT_MERGED) {
+      std::cerr << "TAU: WARNING: TAU_PROFILE_FORMAT=merged is recommended when profiling TBB and MPI." << std::endl;
+    }
+#endif
 
 #ifdef TAU_ANDROID
     tmp = getconf("TAU_ALFRED_PORT");
