@@ -165,6 +165,9 @@ using namespace std;
 #define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 #define TAU_TRACK_CUDA_CDP_DEFAULT 0
 #define TAU_TRACK_UNIFIED_MEMORY_DEFAULT 0
+#define TAU_TRACK_CUDA_SASS_DEFAULT 0
+#define TAU_SASS_TYPE_DEFAULT "kernel"
+#define TAU_OUTPUT_CUDA_CSV_DEFAULT 0
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
@@ -258,6 +261,10 @@ static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
 static int env_track_unified_memory = TAU_TRACK_UNIFIED_MEMORY_DEFAULT; 
+static int env_track_cuda_sass = TAU_TRACK_CUDA_SASS_DEFAULT;
+static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
+static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
+static const char *env_binaryexe = NULL;
 
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
@@ -900,6 +907,22 @@ int TauEnv_get_cuda_track_cdp(){
 
 int TauEnv_get_cuda_track_unified_memory(){
   return env_track_unified_memory;
+}
+
+int TauEnv_get_cuda_track_sass(){
+  return env_track_cuda_sass;
+}
+
+const char* TauEnv_get_cuda_sass_type(){
+  return env_sass_type;
+}
+
+int TauEnv_get_cuda_csv_output(){
+  return env_output_cuda_csv;
+}
+
+const char* TauEnv_get_cuda_binary_exe(){
+  return env_binaryexe;
 }
 
 int TauEnv_get_mic_offload(){
@@ -1947,6 +1970,45 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: tracking CUDA UNIFIED MEMORY Disabled\n");
       TAU_METADATA("TAU_TRACK_UNIFIED_MEMORY", "off");
     }
+    tmp = getconf("TAU_TRACK_CUDA_SASS");
+    if (parse_bool(tmp, TAU_TRACK_CUDA_SASS_DEFAULT)) {
+      env_track_cuda_sass = 1;
+      TAU_VERBOSE("TAU: tracking CUDA SASS Enabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_SASS", "on");
+      // get arg of sass type
+      const char *sass_type = getconf("TAU_SASS_TYPE");
+      const char *default_sass_type = TAU_SASS_TYPE_DEFAULT;
+      if (sass_type) {
+	env_sass_type = sass_type; 
+      }
+      TAU_VERBOSE("TAU: SASS type = %s \n", env_sass_type);
+      sprintf(tmpstr, "%s", env_sass_type);
+      TAU_METADATA("TAU_SASS_TYPE", tmpstr);
+
+    } else {
+      TAU_VERBOSE("TAU: tracking CUDA SASS Disabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_SASS", "off");
+    }
+    tmp = getconf("TAU_OUTPUT_CUDA_CSV");
+    if (parse_bool(tmp, TAU_OUTPUT_CUDA_CSV_DEFAULT)) {
+      env_output_cuda_csv = 1;
+      TAU_VERBOSE("TAU: output CUDA CSV Enabled\n");
+      TAU_METADATA("TAU_OUTPUT_CUDA_CSV", "on");
+    } else {
+      TAU_VERBOSE("TAU: output CUDA CSV Disabled\n");
+      TAU_METADATA("TAU_OUTPUT_CUDA_CSV", "off");
+    }
+    env_binaryexe = getconf("TAU_CUDA_BINARY_EXE");
+    if (env_binaryexe == NULL || 0 == strcasecmp(env_binaryexe, "")) {
+      env_binaryexe = "";
+      TAU_VERBOSE("TAU: CUDA binary exe not provided: %s\n", env_binaryexe);
+      TAU_METADATA("TAU_CUDA_BINARY_EXE", env_binaryexe);
+    }
+    else {
+      TAU_VERBOSE("TAU: CUDA binary exe: %s\n", env_binaryexe);
+      TAU_METADATA("TAU_CUDA_BINARY_EXE", env_binaryexe);
+    }
+
     tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
       env_mic_offload = 1;
