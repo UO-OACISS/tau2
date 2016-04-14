@@ -161,3 +161,77 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 								deviceId, streamId, contextId, correlationId, 0, gpu_attributes, number_of_attributes);
 							Tau_gpu_register_gpu_atomic_event(&gpu_event);
 						}
+
+extern "C" void Tau_cupti_register_func_event(
+                                              const char *name,
+                                              uint32_t deviceId,
+                                              uint32_t streamId,
+                                              uint32_t contextId,
+                                              uint32_t functionIndex,
+                                              double timestamp,
+                                              uint32_t id,
+                                              uint32_t moduleId,
+					      const char *kname,
+                                              const char *demangled) {
+
+  //Empty list of gpu attributes                         
+  CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
+					  deviceId, streamId, contextId, 0, 
+					  functionIndex, NULL, 0);
+
+  Tau_gpu_register_func_event(&gpu_event, deviceId, timestamp, name,
+			      contextId, functionIndex, id,
+			      moduleId, kname, demangled);
+}
+
+extern "C" void Tau_cupti_register_instruction_event(
+						     const char *name,
+						     uint32_t deviceId,
+						     uint32_t streamId,
+						     uint32_t contextId,
+						     uint32_t correlationId,
+						     double start,
+						     double stop,
+						     double delta_tstamp,
+						     uint32_t sourceLocatorId,
+						     uint32_t functionId,
+						     uint32_t pcOffset,
+						     uint32_t executed, uint32_t threadsExecuted
+						     ) {
+  // printf("Tau_cupti_register_instruction_event: %f, %f\n", timestamp, delta_tstamp);
+  // uint64_t t_stamp = timestamp/1e3;
+  // double t_stamp2 = timestamp/1e3;
+  // double t_stamp3 = timestamp;
+  // printf("Tau_cupti_register_instruction_event: %u, t_stamp_orig: %u, t_stamp2: %f, t_stamp3: %f\n", 
+  // 	 timestamp, t_stamp, t_stamp2, t_stamp3);
+
+//Empty list of gpu attributes
+CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
+					deviceId, streamId, contextId, 0, correlationId, NULL, 0);
+
+ Tau_gpu_register_instruction_event(&gpu_event, start,
+				   stop, delta_tstamp, name,
+				   correlationId, sourceLocatorId, functionId, 
+				   pcOffset, executed, threadsExecuted);
+}
+
+extern "C" void Tau_cupti_register_source_event(
+						const char *name,
+						uint32_t deviceId,
+						uint32_t streamId,
+						uint32_t contextId,
+						uint32_t sourceId,
+						double timestamp,
+						const char *fileName,
+						uint32_t lineNumber) {
+
+  //  printf("@@ sourceLocatorId: %i, functionId: %i, samples: %i, stallReason: %s\n", sourceLocatorId, functionId, samples, stallReason);
+
+//Empty list of gpu attributes
+CuptiGpuEvent gpu_event = CuptiGpuEvent(name,
+					deviceId, streamId, contextId, 0, sourceId, NULL, 0);
+
+Tau_gpu_register_source_event(&gpu_event,
+			      timestamp, name, sourceId,
+			      fileName, lineNumber);
+}

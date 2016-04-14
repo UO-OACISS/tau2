@@ -46,6 +46,8 @@ usage()
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
     echo "        -um          Enable Unified Memory events via CUPTI"
+    echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
+    echo "        -csv          Outputs sass profile in CSV"
     options=`tau-config --list-options`
     echo "        -T <$options> : Specify TAU tags"
     echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -65,6 +67,7 @@ usage()
 		echo "    $scriptname -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
 		echo "    $scriptname -T serial -opencl (OPENCL)"
 		echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
+		echo "    $scriptname -T serial,cupti -cupti -sass=kernel -csv ./sass_source (Metrics Intensity)"
     echo ""
     echo "qsub mode (IBM BG/P only):"
     echo "    Original:"
@@ -103,6 +106,10 @@ track_ompt=false
 track_power=false
 track_cupti=false
 unified_memory=false
+track_sass=false
+sass_type=""
+csv_output=false
+binary_exe=""
 track_opencl=false
 track_openacc=false
 track_armci=false
@@ -173,6 +180,16 @@ for arg in "$@" ; do
 	      ;;
 	  -um | -uvm)
 	      unified_memory=true
+	      shift
+	      ;;
+	  -sass=*)
+	      track_sass=true
+	      myarg=`echo $arg | sed 's/-sass=//'`
+	      sass_type="$myarg"
+	      shift
+	      ;;
+	  -csv)
+	      csv_output=true
 	      shift
 	      ;;
 	  -opencl)
@@ -447,6 +464,17 @@ if [ $track_cupti = "true" ] ; then
                 ## Unified Memory called along with -cupti
 		if [ $unified_memory = "true" ] ; then
 		    export TAU_TRACK_UNIFIED_MEMORY=1
+		fi
+                ## SASS called along with -cupti
+		if [ $track_sass = "true" ] ; then
+		    export TAU_TRACK_CUDA_SASS=1
+		    if [ $csv_output = "true" ] ; then
+			export TAU_OUTPUT_CUDA_CSV=1
+		    fi
+		    if [ "x$sass_type" != "x" ] ; then
+			export TAU_SASS_TYPE=$sass_type
+		    fi
+		    export TAU_CUDA_BINARY_EXE=$binary_exe
 		fi
 		#echo "api found: $TAU_CUPTI_API"
 fi

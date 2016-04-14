@@ -18,9 +18,11 @@
 #include <limits.h>
 
 #ifdef TAU_DOT_H_LESS_HEADERS 
+#include <sstream>
 #include <iostream>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
+#include <sstream.h>
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
@@ -1995,6 +1997,40 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     RtsLayer::UnLockEnv();
   }
   Tau_start_timer(fi, 0, tid);
+}
+
+FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno)
+{
+  TauInternalFunctionGuard protects_this_function;
+  stringstream ss;
+  ss << function << " [{" << filename << "}{" << lineno << "}]";
+
+  string name = string(ss.str());
+  //string name = string(function);
+  //string dstream_name = string(ss.str());
+
+  string type = ""; // this is VERY bad if called from signalling! see above ^
+  FunctionInfo * fi = NULL;
+
+  PureMap & pure = ThePureMap();
+  int exists = pure.count(name);
+  if (exists > 0) {
+    PureMap::iterator it = pure.find(name);
+    fi = it->second;
+    //pure[dstream_name] = fi;
+  }
+  if (fi == NULL) {
+    RtsLayer::LockEnv();
+    PureMap::iterator it = pure.find(name);
+    if (it == pure.end()) {
+      tauCreateFI((void**)&fi, name, type, TAU_USER, "CUPTI_SAMPLES");
+      pure[name] = fi;
+    } else {
+      fi = it->second;
+    }
+    RtsLayer::UnLockEnv();
+  }
+  return fi;
 }
 
 extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
