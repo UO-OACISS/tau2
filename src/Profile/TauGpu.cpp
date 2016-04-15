@@ -28,7 +28,7 @@
 // Moved from header file
 using namespace std;
 
-// #define TAU_DEBUG_SASS 1
+#define TAU_DEBUG_SASS 1
 
 static TauContextUserEvent *MemoryCopyEventHtoD;
 static TauContextUserEvent *MemoryCopyEventDtoH;
@@ -345,6 +345,8 @@ void stop_gpu_event(const char *name, int gpuTask)
 		 it != funcMap.end(); ++it) {
 
 	      FuncSampling fTemp = it->second;
+	      printf("fTemp.fid: %i, fTemp.name: %s\n", fTemp.fid, fTemp.name);
+
 	      double kernel_exec_time;
 	      uint32_t kernel_samples;
 	      const char* filename;
@@ -353,28 +355,37 @@ void stop_gpu_event(const char *name, int gpuTask)
 	      kernel_samples = getKernelSamples(fTemp.fid);
 	      filename = getKernelFileName(fTemp.fid);
 	      lineno = getKernelLineNo(fTemp.fid);
-	      
 	      FunctionInfo* fi = Tau_make_cupti_sample_timer(filename, 
-							     fTemp.demangled, 
-							     lineno);
+	      						     fTemp.demangled, 
+	      						     lineno);
+
 #if TAU_DEBUG_SASS
-	      // prepare fi object
-	      printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", filename, fTemp.demangled, lineno);
+	      printf("[TauGPU]:  Created filePath: %s, demangled: %s, lineNumber: %i\n", filename, fTemp.demangled, lineno);
 	      // need samples, tstamp_delta
-	      printf("kernel_exec_time: %f, calls: %u, kernel launches: %u\n", 
+	      printf("[TauGPU]:  kernel_exec_time: %f, calls: %u, kernel launches: %u\n", 
 		     kernel_exec_time, fTemp.calls, fTemp.kernel_launches);
-	      printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
+	      printf("[TauGPU]:  fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
 #endif
-	      // // where tid is the gpu task/thread ID
-	      // // TODO:  Need to verify whether to include samples?
-	      // //fi->SetCalls(tid, fTemp.kernel_launches+fi->GetCalls(tid)); // including samples
-	      // fi->SetCalls(tid, fTemp.kernel_launches); // actual # kernel launches (MOST ACCURATE)
-	      // // fi->SetCalls(tid, fTemp.kernel_launches+kernel_samples); // sass samples
-	      // // where counter is the index of the metric (already in 1e3 scale)
-	      // fi->AddInclTimeForCounter(kernel_exec_time, tid, counter); 
-	      // // where counter is the index of the metric
-	      // fi->AddExclTimeForCounter(kernel_exec_time, tid, counter); 
-	      // resetKernelExecutionTimes(fTemp.fid);
+
+// #if TAU_DEBUG_SASS
+// 	      // prepare fi object
+// 	      printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", filename, fTemp.demangled, lineno);
+// 	      // need samples, tstamp_delta
+// 	      printf("kernel_exec_time: %f, calls: %u, kernel launches: %u\n", 
+// 		     kernel_exec_time, fTemp.calls, fTemp.kernel_launches);
+// 	      printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
+// #endif
+
+	      // where tid is the gpu task/thread ID
+	      // TODO:  Need to verify whether to include samples?
+	      //fi->SetCalls(tid, fTemp.kernel_launches+fi->GetCalls(tid)); // including samples
+	      fi->SetCalls(tid, fTemp.kernel_launches); // actual # kernel launches (MOST ACCURATE)
+	      // fi->SetCalls(tid, fTemp.kernel_launches+kernel_samples); // sass samples
+	      // where counter is the index of the metric (already in 1e3 scale)
+	      fi->AddInclTimeForCounter(kernel_exec_time, tid, counter); 
+	      // where counter is the index of the metric
+	      fi->AddExclTimeForCounter(kernel_exec_time, tid, counter); 
+	      resetKernelExecutionTimes(fTemp.fid);
 	    }
 	  }
 	  else {
@@ -387,19 +398,19 @@ void stop_gpu_event(const char *name, int gpuTask)
 		// lookup
 		FuncSampling fTemp = funcMap.find(sTemp.fid)->second;
 		
-		FunctionInfo* fi = Tau_make_cupti_sample_timer(sTemp.fileName, 
-							       fTemp.demangled, 
-							       sTemp.lineNumber);
+// 		FunctionInfo* fi = Tau_make_cupti_sample_timer(sTemp.fileName, 
+// 							       fTemp.demangled, 
+// 							       sTemp.lineNumber);
 		
-#if TAU_DEBUG_SASS
-		// prepare fi object
-		printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", sTemp.fileName, fTemp.demangled, sTemp.lineNumber);
-	      // need samples, tstamp_delta
-		printf("timestamp_delta: %f, samples: %u\n", 
-		       sTemp.timestamp_delta, sTemp.samples);
-		printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));
+// #if TAU_DEBUG_SASS
+// 		// prepare fi object
+// 		printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", sTemp.fileName, fTemp.demangled, sTemp.lineNumber);
+// 	      // need samples, tstamp_delta
+// 		printf("timestamp_delta: %f, samples: %u\n", 
+// 		       sTemp.timestamp_delta, sTemp.samples);
+// 		printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));
 		
-#endif
+// #endif
 		// // where tid is the gpu task/thread ID
 		// // fi->SetCalls(tid, sTemp.samples+fi->GetCalls(tid));
 		// fi->SetCalls(tid, sTemp.samples);
@@ -746,19 +757,21 @@ void Tau_gpu_register_instruction_event(GpuEvent *id, double start, double stop,
   int task = get_task(id);
 
   if (correlationId != 0) { // jibberish
-    // track last kernel called
-    if (recentKernelId == -1) {// || 
-#if TAU_DEBUG_SASS
-      printf("recent kernel id %i, functionId %i\n", recentKernelId, functionId);
-#endif
-      // base case
-      FuncSampling fs;	
-      fs.fid = functionId;
-      fs.calls = 1;
-      fs.kernel_launches = 1; // will always observe function call before kernel launch
-      funcMap[functionId] = fs;
-    }
-    else if (recentKernelId != functionId) {
+    if (recentKernelId != functionId) {
+//     // track last kernel called
+//     if (recentKernelId == -1) {// || 
+// #if TAU_DEBUG_SASS
+//       printf("recent kernel id %i, functionId %i\n", recentKernelId, functionId);
+// #endif
+//       // base case
+//       FuncSampling fs;	
+//       fs.fid = functionId;
+//       fs.calls = 1;
+//       fs.kernel_launches = 1; // will always observe function call before kernel launch
+//       funcMap[functionId] = fs;
+//     }
+//     else if (recentKernelId != functionId) {
+
       if(funcMap.count(functionId)) {
 	// jump in kernel call
 	funcMap.find(functionId)->second.calls += 1;
@@ -853,6 +866,10 @@ void Tau_gpu_register_source_event(GpuEvent *event, double timestamp, const char
 void Tau_gpu_register_func_event(GpuEvent *event, int deviceId, double timestamp, const char* name, uint32_t contextId, 
 				 uint32_t functionIndex, uint32_t id, uint32_t moduleid, const char *kname, const char *demangled)
 {
+  printf("[Tau_gpu_register_func_event]:  contextId: %i, functionIndex: %i, id: %i\n", contextId, functionIndex, id);
+  // blank funcId=1
+  if (contextId == 0)
+    return;
   curr_device_id = deviceId;
   // printf("curr_device_id: %i\n", curr_device_id);
 
