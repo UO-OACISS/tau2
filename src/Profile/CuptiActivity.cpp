@@ -11,7 +11,7 @@ static void *tau_handle = NULL;
 
 static int subscribed = 0;
 
-// #define TAU_DEBUG_CUPTI_SASS
+#define TAU_DEBUG_CUPTI_SASS 1
 // #define TAU_DEBUG_CUPTI_SAMPLE
 // #define TAU_DEBUG_CUPTI_COUNTERS
 
@@ -241,7 +241,8 @@ void Tau_cupti_onload()
 // 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
 //     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
 // #endif
-  if(!TauEnv_get_cuda_track_sass()) {
+/*  SASS incompatible with KIND_CONCURRENT_KERNEL  */
+if(!TauEnv_get_cuda_track_sass()) {
 #if CUDA_VERSION >= 5000
     	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
@@ -249,7 +250,7 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
 #endif
-  }
+}
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
   {
