@@ -11,7 +11,7 @@ static void *tau_handle = NULL;
 
 static int subscribed = 0;
 
-#define TAU_DEBUG_CUPTI_SASS 1
+// #define TAU_DEBUG_CUPTI_SASS 1
 // #define TAU_DEBUG_CUPTI_SAMPLE
 // #define TAU_DEBUG_CUPTI_COUNTERS
 

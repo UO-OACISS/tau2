@@ -114,6 +114,7 @@ class FuncSampling
   const char* demangled;
   uint32_t calls; // unique function calls
   uint32_t kernel_launches; // total kernel launches for this function
+  bool funcinfo_created;  // track whether FunctionInfo created for pprof
 };
 
 class SourceSampling
