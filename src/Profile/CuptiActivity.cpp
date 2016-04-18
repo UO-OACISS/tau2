@@ -630,7 +630,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
   device_count_total = device_count;
   if(TauEnv_get_cuda_track_sass()) {
     if(TauEnv_get_cuda_csv_output()) {
-      // printf("About to call createFilePointerSass, device_count: %i\n", device_count);
+      printf("[CuptiActivity]:  About to call createFilePointerSass, device_count: %i\n", device_count);
       createFilePointerSass(device_count);
     }
   }
@@ -1305,7 +1305,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  const char *kname;
 
 #ifdef TAU_DEBUG_CUPTI_SASS
-	  printf("FUNCTION contextId: %u, functionIndex: %u, id %u, kind: %u, moduleId %u, name %s, device: %i\n",
+	  printf("FUCTION contextId: %u, functionIndex: %u, id %u, kind: %u, moduleId %u, name %s, device: %i\n",
 	  	 fResult->contextId,
 	  	 fResult->functionIndex,
 	  	 fResult->id,
@@ -1314,11 +1314,21 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  	 fResult->name);
 #endif
 	  CUpti_ActivityContext cResult = contextMap.find(fResult->contextId)->second;
-	  // printf("context->contextId: %u, device: %u\n", cResult.contextId, cResult.deviceId);
+	  printf("context->contextId: %u, device: %u\n", cResult.contextId, cResult.deviceId);
 	  current_device_id = cResult.deviceId;
 	  current_context_id = cResult.contextId;
+	  
 	  if(TauEnv_get_cuda_csv_output()){
 	    if(fp_func != NULL) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	      printf("[CuptiActivity]:  About to write out to csv:\n  %f, %u, %u, %u, %u, %u, %s, %s\n",
+		     d_currentTimestamp, fResult->contextId,
+		     fResult->functionIndex,
+		     fResult->id,
+		     fResult->kind,
+		     fResult->moduleId,
+		     fResult->name, demangleName(fResult->name));
+#endif
 	    fprintf(fp_func[current_device_id], "%f;%u;%u;%u;%u;%u;%s;%s\n",
 		    d_currentTimestamp,
 		    fResult->contextId,
@@ -1326,8 +1336,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		    fResult->id,
 		    fResult->kind,
 		    fResult->moduleId,
-		    fResult->name,
-		    demangleName(fResult->name));
+		    fResult->name, demangleName(fResult->name));
 	  }
 	    else {
 	      printf("fp_func[%i] is NULL\n", current_device_id);
@@ -1931,60 +1940,90 @@ void createFilePointerSass(int device_count)
   }
 
   for (int i = 0; i < device_count; i++) {
-#ifdef TAU_DEBUG_CUPTI_SASS
-    printf("About to create file pointer csv: %i\n", i);
-#endif
-    char str_source[500];
     char str_int[5];
-    strcpy (str_source,TauEnv_get_profiledir());
-    strcat (str_source,"/");
-    strcat (str_source,"sass_source_");
     sprintf (str_int, "%d", (i+1));
-    strcat (str_source, str_int);
-    strcat (str_source, ".csv");
-    
-    fp_source[i] = fopen(str_source, "w");
-    fprintf(fp_source[i], "timestamp,id,fileName,lineNumber,kind\n");
-    if (fp_source[i] == NULL) {
-      // printf("fp_source[%i] failed\n", i);
+    if ( fp_source[i] == NULL ) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("About to create file pointer csv: %i\n", i);
+#endif
+      char str_source[500];
+      strcpy (str_source,TauEnv_get_profiledir());
+      strcat (str_source,"/");
+      strcat (str_source,"sass_source_");
+      strcat (str_source, str_int);
+      strcat (str_source, ".csv");
+      
+      fp_source[i] = fopen(str_source, "w");
+      fprintf(fp_source[i], "timestamp,id,fileName,lineNumber,kind\n");
+      if (fp_source[i] == NULL) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	printf("fp_source[%i] failed\n", i);
+#endif
+      }
+      else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	printf("fp_source[%i] created successfully\n", i);
+#endif
+      }
     }
     else {
-      // printf("fp_source[%i] created successfully\n", i);
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_source[%i] already exists!\n", i);
+#endif
     }
-    
-    char str_instr[500];
-    strcpy (str_instr,TauEnv_get_profiledir());
-    strcat (str_instr,"/");
-    strcat (str_instr,"sass_instr_");
-    strcat (str_instr, str_int);
-    strcat (str_instr, ".csv");
-    
-    fp_instr[i] = fopen(str_instr, "w");
-    fprintf(fp_instr[i], "timestamp,correlationId,executed,flags,functionId,kind,\
-notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
     if (fp_instr[i] == NULL) {
-      // printf("fp_instr[%i] failed\n", i);
+
+      char str_instr[500];
+      strcpy (str_instr,TauEnv_get_profiledir());
+      strcat (str_instr,"/");
+      strcat (str_instr,"sass_instr_");
+      strcat (str_instr, str_int);
+      strcat (str_instr, ".csv");
+      
+      fp_instr[i] = fopen(str_instr, "w");
+      fprintf(fp_instr[i], "timestamp,correlationId,executed,flags,functionId,kind,\
+notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
+      if (fp_instr[i] == NULL) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	printf("fp_instr[%i] failed\n", i);
+#endif
+      }
+      else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	printf("fp_instr[%i] created successfully\n", i);
+#endif
+      }
     }
     else {
-      // printf("fp_instr[%i] created successfully\n", i);
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_instr[%i] already exists!\n", i);
+#endif
     }
-    
-    char str_func[500];
-    strcpy (str_func,TauEnv_get_profiledir());
-    strcat (str_func,"/");
-    strcat (str_func,"sass_func");
-    strcat (str_func, str_int);
-    strcat (str_func, ".csv");
-    
-    fp_func[i] = fopen(str_func, "w");
-    
-    fprintf(fp_func[i], "timestamp;contextId;functionIndex;id;kind;moduleId;name;demangled\n");
-    
-    if (fp_func[i] == NULL) {
-      // printf("fp_func[%i] failed\n", i);
+    if(fp_func[i] == NULL) {
+      char str_func[500];
+      strcpy (str_func,TauEnv_get_profiledir());
+      strcat (str_func,"/");
+      strcat (str_func,"sass_func");
+      strcat (str_func, str_int);
+      strcat (str_func, ".csv");
+      
+      fp_func[i] = fopen(str_func, "w");
+      fprintf(fp_func[i], "timestamp;contextId;functionIndex;id;kind;moduleId;name;demangled\n");
+      if (fp_func[i] == NULL) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	printf("fp_func[%i] failed\n", i);
+#endif
+      }
+      else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	printf("fp_func[%i] created successfully\n", i);
+#endif
+      }
     }
     else {
-      // printf("fp_func[%i] created successfully\n", i);
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_func[%i] already exists!\n", i);
+#endif
     }
   } // deviceCount
 }
