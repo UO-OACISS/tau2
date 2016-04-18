@@ -28,7 +28,7 @@
 // Moved from header file
 using namespace std;
 
-#define TAU_DEBUG_SASS 1
+// #define TAU_DEBUG_SASS 1
 
 static TauContextUserEvent *MemoryCopyEventHtoD;
 static TauContextUserEvent *MemoryCopyEventDtoH;
@@ -300,133 +300,142 @@ void stage_gpu_event(const char *name, int gpuTask, double start_time, FunctionI
 }
 
 
-// void stop_gpu_event(const char *name, int gpuTask)
-// {
-// #ifdef DEBUG_PROF
-//   TAU_VERBOSE("stopping %s event.\n", name);
-// #endif
-//   /*
-//    map<EventName,void*>::iterator it = events.find(name);
-//    if (it == events.end())
-//    {
-//    printf("FATAL ERROR in stopping GPU event.\n");
-//    } else
-//    {
-//    void *ptr = (*it).second;
-//    TAU_PROFILER_STOP_TASK(ptr, gpuTask);
-//    }
-//    */
-//   TAU_STOP_TASK(name, gpuTask);
-// }
-
-FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno);
-
 void stop_gpu_event(const char *name, int gpuTask)
 {
 #ifdef DEBUG_PROF
-	TAU_VERBOSE("stopping %s event.\n", name);
+  TAU_VERBOSE("stopping %s event.\n", name);
 #endif
-
-	TAU_STOP_TASK(name, gpuTask);
-
-	if (!srcLocMap.empty()) {
-	  // build profile
-
-	  // filename, function, lineno
-	  int tid = gpuTask;
-
-	  // 0 is time, eventually want to index by stall reasons
-	  int counter = 0;
-	  char sass_level[] = "kernel";
-	  // check if we're displaying at kernel level or source level:
-	  if(strcmp(TauEnv_get_cuda_sass_type(), sass_level) == 0) {
-	    // kernel level
-	    for (std::map<uint32_t, FuncSampling>::iterator it=funcMap.begin(); 
-		 it != funcMap.end(); ++it) {
-
-	      FuncSampling fTemp = it->second;
-	      printf("fTemp.fid: %i, fTemp.name: %s\n", fTemp.fid, fTemp.name);
-
-	      double kernel_exec_time;
-	      uint32_t kernel_samples;
-	      const char* filename;
-	      uint32_t lineno;
-	      kernel_exec_time = getKernelExecutionTimes(fTemp.fid);
-	      kernel_samples = getKernelSamples(fTemp.fid);
-	      filename = getKernelFileName(fTemp.fid);
-	      lineno = getKernelLineNo(fTemp.fid);
-	      FunctionInfo* fi = Tau_make_cupti_sample_timer(filename, 
-	      						     fTemp.demangled, 
-	      						     lineno);
-
-#if TAU_DEBUG_SASS
-	      printf("[TauGPU]:  Created filePath: %s, demangled: %s, lineNumber: %i\n", filename, fTemp.demangled, lineno);
-	      // need samples, tstamp_delta
-	      printf("[TauGPU]:  kernel_exec_time: %f, calls: %u, kernel launches: %u\n", 
-		     kernel_exec_time, fTemp.calls, fTemp.kernel_launches);
-	      printf("[TauGPU]:  fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
-#endif
-
-// #if TAU_DEBUG_SASS
-// 	      // prepare fi object
-// 	      printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", filename, fTemp.demangled, lineno);
-// 	      // need samples, tstamp_delta
-// 	      printf("kernel_exec_time: %f, calls: %u, kernel launches: %u\n", 
-// 		     kernel_exec_time, fTemp.calls, fTemp.kernel_launches);
-// 	      printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
-// #endif
-
-	      // where tid is the gpu task/thread ID
-	      // TODO:  Need to verify whether to include samples?
-	      //fi->SetCalls(tid, fTemp.kernel_launches+fi->GetCalls(tid)); // including samples
-	      fi->SetCalls(tid, fTemp.kernel_launches); // actual # kernel launches (MOST ACCURATE)
-	      // fi->SetCalls(tid, fTemp.kernel_launches+kernel_samples); // sass samples
-	      // where counter is the index of the metric (already in 1e3 scale)
-	      fi->AddInclTimeForCounter(kernel_exec_time, tid, counter); 
-	      // where counter is the index of the metric
-	      fi->AddExclTimeForCounter(kernel_exec_time, tid, counter); 
-	      resetKernelExecutionTimes(fTemp.fid);
-	    }
-	  }
-	  else {
-	    // source level
-	    for (std::map<uint32_t, SourceSampling>::iterator it=srcLocMap.begin(); 
-		 it != srcLocMap.end(); ++it) {
-	      SourceSampling sTemp = it->second;
-	    
-	      if (funcMap.count(sTemp.fid)) {
-		// lookup
-		FuncSampling fTemp = funcMap.find(sTemp.fid)->second;
-		
-// 		FunctionInfo* fi = Tau_make_cupti_sample_timer(sTemp.fileName, 
-// 							       fTemp.demangled, 
-// 							       sTemp.lineNumber);
-		
-// #if TAU_DEBUG_SASS
-// 		// prepare fi object
-// 		printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", sTemp.fileName, fTemp.demangled, sTemp.lineNumber);
-// 	      // need samples, tstamp_delta
-// 		printf("timestamp_delta: %f, samples: %u\n", 
-// 		       sTemp.timestamp_delta, sTemp.samples);
-// 		printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));
-		
-// #endif
-		// // where tid is the gpu task/thread ID
-		// // fi->SetCalls(tid, sTemp.samples+fi->GetCalls(tid));
-		// fi->SetCalls(tid, sTemp.samples);
-		// // where counter is the index of the metric (already in 1e3 scale)
-		// fi->AddInclTimeForCounter(sTemp.timestamp_recentacc, tid, counter); 
-		// // where counter is the index of the metric
-		// fi->AddExclTimeForCounter(sTemp.timestamp_recentacc, tid, counter); 
-		// it->second.timestamp_recentacc=0; // reset
-	      }
-	    }
-	  } // source level
-	}
-	else {
-	  // srcLocMap is empty, can't build profile.
-	}
+  /*
+   map<EventName,void*>::iterator it = events.find(name);
+   if (it == events.end())
+   {
+   printf("FATAL ERROR in stopping GPU event.\n");
+   } else
+   {
+   void *ptr = (*it).second;
+   TAU_PROFILER_STOP_TASK(ptr, gpuTask);
+   }
+   */
+  TAU_STOP_TASK(name, gpuTask);
 }
+
+FunctionInfo* Tau_make_cupti_sample_timer(const char * filename, const char * function, int lineno);
+
+// void stop_gpu_event(const char *name, int gpuTask)
+// {
+// #ifdef DEBUG_PROF
+// 	TAU_VERBOSE("stopping %s event.\n", name);
+// #endif
+
+// 	TAU_STOP_TASK(name, gpuTask);
+
+// 	if (!srcLocMap.empty()) {
+// 	  // build profile
+
+// 	  // filename, function, lineno
+// 	  int tid = gpuTask;
+
+// 	  // 0 is time, eventually want to index by stall reasons
+// 	  int counter = 0;
+// 	  char sass_level[] = "kernel";
+// 	  // check if we're displaying at kernel level or source level:
+// 	  if(strcmp(TauEnv_get_cuda_sass_type(), sass_level) == 0) {
+// 	    // kernel level
+// 	    for (std::map<uint32_t, FuncSampling>::iterator it=funcMap.begin(); 
+// 		 it != funcMap.end(); ++it) {
+// 	      FuncSampling fTemp = it->second;
+// 	      printf("fTemp.fid: %i, fTemp.name: %s\n", fTemp.fid, fTemp.name);
+// 	      if (! fTemp.funcinfo_created) {
+// 		double kernel_exec_time;
+// 		uint32_t kernel_samples;
+// 		const char* filename;
+// 		uint32_t lineno;
+// 		kernel_exec_time = getKernelExecutionTimes(fTemp.fid);
+// 		kernel_samples = getKernelSamples(fTemp.fid);
+// 		filename = getKernelFileName(fTemp.fid);
+// 		lineno = getKernelLineNo(fTemp.fid);
+// 		FunctionInfo* fi = Tau_make_cupti_sample_timer(filename, 
+// 							       fTemp.demangled, 
+// 							       lineno);
+
+// 		// #if TAU_DEBUG_SASS
+// 		printf("[TauGPU]:  Created filePath: %s, demangled: %s, lineNumber: %i\n", filename, fTemp.demangled, lineno);
+// 		// need samples, tstamp_delta
+// 		printf("[TauGPU]:  kernel_exec_time: %f, calls: %u, kernel launches: %u\n", 
+// 		       kernel_exec_time, fTemp.calls, fTemp.kernel_launches);
+// 		printf("[TauGPU]:  fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
+// 		// #endif
+	      
+// // #if TAU_DEBUG_SASS
+// // 	      // prepare fi object
+// // 	      printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", filename, fTemp.demangled, lineno);
+// // 	      // need samples, tstamp_delta
+// // 	      printf("kernel_exec_time: %f, calls: %u, kernel launches: %u\n", 
+// // 		     kernel_exec_time, fTemp.calls, fTemp.kernel_launches);
+// // 	      printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
+// // #endif
+
+// 		// where tid is the gpu task/thread ID
+// 		// TODO:  Need to verify whether to include samples?
+// 		fi->SetCalls(tid, fTemp.kernel_launches+fi->GetCalls(tid)); // including samples
+// 		// fi->SetCalls(tid, fTemp.kernel_launches); // actual # kernel launches (MOST ACCURATE)
+// 		// fi->SetCalls(tid, fTemp.kernel_launches+kernel_samples); // sass samples
+// 		// where counter is the index of the metric (already in 1e3 scale)
+// 		fi->AddInclTimeForCounter(kernel_exec_time, tid, counter); 
+// 		// where counter is the index of the metric
+// 		fi->AddExclTimeForCounter(kernel_exec_time, tid, counter); 
+// 		resetKernelExecutionTimes(fTemp.fid);
+// 		funcMap.find(fTemp.fid)->second.funcinfo_created = true;
+// 	      }
+// 	      else {
+// 	      	// #if TAU_DEBUG_SASS
+// 	      	printf("[TauGPU]:  funcinfo already created for fid: %i\n", fTemp.fid);
+// 		// TODO:  update values instead of creating?
+
+// 	      	// #endif
+// 	      }
+// 	    }
+// 	  }
+// 	  else {
+// 	    // source level
+// 	    for (std::map<uint32_t, SourceSampling>::iterator it=srcLocMap.begin(); 
+// 		 it != srcLocMap.end(); ++it) {
+// 	      SourceSampling sTemp = it->second;
+	    
+// 	      if (funcMap.count(sTemp.fid)) {
+// 		// lookup
+// 		FuncSampling fTemp = funcMap.find(sTemp.fid)->second;
+		
+// // 		FunctionInfo* fi = Tau_make_cupti_sample_timer(sTemp.fileName, 
+// // 							       fTemp.demangled, 
+// // 							       sTemp.lineNumber);
+		
+// // #if TAU_DEBUG_SASS
+// // 		// prepare fi object
+// // 		printf("Created FunctionInfo, filePath: %s, demangled: %s, lineNumber: %i\n", sTemp.fileName, fTemp.demangled, sTemp.lineNumber);
+// // 	      // need samples, tstamp_delta
+// // 		printf("timestamp_delta: %f, samples: %u\n", 
+// // 		       sTemp.timestamp_delta, sTemp.samples);
+// // 		printf(" fi->GetCalls(tid): %u\n", fi->GetCalls(tid));
+		
+// // #endif
+// 		// // where tid is the gpu task/thread ID
+// 		// // fi->SetCalls(tid, sTemp.samples+fi->GetCalls(tid));
+// 		// fi->SetCalls(tid, sTemp.samples);
+// 		// // where counter is the index of the metric (already in 1e3 scale)
+// 		// fi->AddInclTimeForCounter(sTemp.timestamp_recentacc, tid, counter); 
+// 		// // where counter is the index of the metric
+// 		// fi->AddExclTimeForCounter(sTemp.timestamp_recentacc, tid, counter); 
+// 		// it->second.timestamp_recentacc=0; // reset
+// 	      }
+// 	    }
+// 	  } // source level
+// 	}
+// 	else {
+// 	  // srcLocMap is empty, can't build profile.
+// 	}
+// }
+
 	  
 // void printInstrMap(void)
 // {
@@ -785,6 +794,7 @@ void Tau_gpu_register_instruction_event(GpuEvent *id, double start, double stop,
 	fs.fid = functionId;
 	fs.calls = 1;
 	fs.kernel_launches = 1; // will always observe function call before kernel launch
+	fs.funcinfo_created = false;
 	funcMap[functionId] = fs;
       }
     }
@@ -885,6 +895,7 @@ void Tau_gpu_register_func_event(GpuEvent *event, int deviceId, double timestamp
   fs.functionIndex = functionIndex;
   fs.name = strdup(kname);
   fs.demangled = strdup(demangled);
+  fs.funcinfo_created = false;
   funcMap[id] = fs;
 
 #if TAU_DEBUG_SASS
