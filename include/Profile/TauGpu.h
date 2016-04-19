@@ -85,7 +85,7 @@ public:
 };
 
 /* BEGIN: PC Sampling structs */
-/*
+
 class InstrSampling
 {
  public:
@@ -94,14 +94,11 @@ class InstrSampling
   uint32_t pcOffset;
   uint32_t correlationId;
   uint32_t executed;
-  uint32_t uniqueKernels;
   uint32_t threadsExecuted;
-  uint64_t timestamp_delta;
-  uint64_t timestamp_current;
-  uint64_t timestamp_recent;
-
-  uint64_t samples;
-  };*/
+  double timestamp_delta;
+  double timestamp_current;
+  double timestamp_recent;
+  };
 
 class FuncSampling
 {
@@ -133,7 +130,8 @@ class SourceSampling
 // map<(functionID, correlationId), InstrSampling>
 //static std::map<std::pair<uint32_t, uint32_t>, InstrSampling> instrSamplingMap;
 // map<(functionID), InstrSampling>
-//static std::map<uint32_t, InstrSampling> instrSamplingMap;
+static std::map<uint32_t, std::list<InstrSampling> > instrSrcMap;
+static std::map<uint32_t, std::list<InstrSampling> > instrFuncMap;
 static std::map<uint32_t, SourceSampling> srcLocMap;
 static std::map<uint32_t, FuncSampling> funcMap;
 /* END: PC Sampling structs */
@@ -212,6 +210,7 @@ extern "C" uint32_t getKernelSamples(uint32_t functionIndex);
 extern "C" const char* getKernelFileName(uint32_t functionIndex);
 extern "C" uint32_t getKernelLineNo(uint32_t functionIndex);
 extern "C" void resetKernelExecutionTimes(uint32_t functionIndex);
+extern "C" uint32_t getUniqueKernelLaunches(uint32_t functionIndex);
 
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE

@@ -630,7 +630,9 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
   device_count_total = device_count;
   if(TauEnv_get_cuda_track_sass()) {
     if(TauEnv_get_cuda_csv_output()) {
+#ifdef TAU_DEBUG_CUPTI_SASS
       printf("[CuptiActivity]:  About to call createFilePointerSass, device_count: %i\n", device_count);
+#endif
       createFilePointerSass(device_count);
     }
   }
@@ -761,8 +763,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   uint64_t currentTimestamp;
   double d_currentTimestamp;
   CUptiResult err;
-  err = cuptiGetTimestamp(&currentTimestamp);
-  d_currentTimestamp = (double)currentTimestamp/1e3;
+  err = cuptiGetTimestamp(&currentTimestamp); // nanosec
+  //d_currentTimestamp = (double)currentTimestamp/1e3;
+  ///////
+  // Within python,
+  //   seconds = (int)(cumsum / 1000) % 60
+  //   minutes = (int)(cumsum / (1000*60)) % 60
+  ///////
+  //d_currentTimestamp = (double)currentTimestamp/1e3; 
+  d_currentTimestamp = (double)currentTimestamp/1e6; 
 
   CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
   
@@ -1314,7 +1323,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  	 fResult->name);
 #endif
 	  CUpti_ActivityContext cResult = contextMap.find(fResult->contextId)->second;
+#ifdef TAU_DEBUG_CUPTI_SASS
 	  printf("context->contextId: %u, device: %u\n", cResult.contextId, cResult.deviceId);
+#endif
 	  current_device_id = cResult.deviceId;
 	  current_context_id = cResult.contextId;
 	  
