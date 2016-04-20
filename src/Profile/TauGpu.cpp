@@ -358,12 +358,11 @@ void stop_gpu_event(const char *name, int gpuTask)
 	      kernel_exec_time = getKernelExecutionTimes(fTemp.fid);
 	      kernel_samples = getKernelSamples(fTemp.fid);
 	      kernel_launches = getUniqueKernelLaunches(fTemp.fid);
-	      filename = getKernelFileName(fTemp.fid);
+	      filename = getKernelFilePath(fTemp.fid);
 	      lineno = getKernelLineNo(fTemp.fid);
 	      FunctionInfo* fi = Tau_make_cupti_sample_timer(filename, 
 							     fTemp.demangled, 
-							     lineno);
-	      
+							     lineno);	      
 #if TAU_DEBUG_SASS
 	      printf("[TauGPU]:  Created filePath: %s, demangled: %s, lineno: %u\n", 
 		     filename, fTemp.demangled, lineno);
@@ -372,16 +371,16 @@ void stop_gpu_event(const char *name, int gpuTask)
 		     kernel_exec_time, kernel_samples, kernel_launches);
 	      printf("[TauGPU]:  fi->GetCalls(tid): %u\n", fi->GetCalls(tid));	      
 #endif
-	      
 	      // where tid is the gpu task/thread ID
 	      // TODO:  Need to verify whether to include samples?
-	      fi->SetCalls(tid, kernel_launches+fi->GetCalls(tid)); // including samples
-	      // fi->SetCalls(tid, kernel_launches); // actual # kernel launches (MOST ACCURATE)
+	      // fi->SetCalls(tid, kernel_launches+fi->GetCalls(tid)); // including samples
+	      fi->SetCalls(tid, kernel_launches); // actual # kernel launches (MOST ACCURATE)
 	      // where counter is the index of the metric (already in 1e3 scale)
+	      // TODO:  Get time from kernelMap (CuptiActivity)
 	      fi->AddInclTimeForCounter(kernel_exec_time, tid, counter); 
 	      // where counter is the index of the metric
 	      fi->AddExclTimeForCounter(kernel_exec_time, tid, counter); 
-	      // resetKernelExecutionTimes(fTemp.fid); // Might need to do...
+	      // resetKernelExecutionTimes(fTemp.fid); // verify whether needed??
 	    }
 	  }
 	  else {
@@ -1094,15 +1093,15 @@ double getKernelExecutionTimes(uint32_t functionIndex)
 
 void resetKernelExecutionTimes(uint32_t functionIndex)
 {
-  for (std::map<uint32_t, SourceSampling>::iterator it=srcLocMap.begin(); 
-       it != srcLocMap.end(); ++it) {
-	SourceSampling sTemp = it->second;
-    if (sTemp.fid == functionIndex) {
-      it->second.timestamp_recentacc = 0;
-    }
-  }
-  
+#ifdef TAU_DEBUG_SASS
+  printf("[TauGpu]:  About to remove items on list\n");
+#endif
+  //InstrSampling is_temp = instrFuncMap.find(functionIndex)->second.back();
+  instrFuncMap.find(functionIndex)->second.clear();
+  //instrFuncMap[functionIndex].push_back(is_temp);
+
 }
+
 
 uint32_t getKernelSamples(uint32_t functionIndex) 
 {
@@ -1123,10 +1122,11 @@ uint32_t getUniqueKernelLaunches(uint32_t functionIndex)
 }
 
 
-const char* getKernelFileName(uint32_t functionIndex)
+const char* getKernelFilePath(uint32_t functionIndex)
 {
-  FuncSampling fs = funcMap.find(functionIndex)->second;
-  return fs.demangled;
+  // assuming first entry's filepath is same for all
+  uint32_t srcId_temp = instrFuncMap.find(functionIndex)->second.front().sourceLocatorId;
+  return srcLocMap.find(srcId_temp)->second.fileName;
 }
 
 uint32_t getKernelLineNo(uint32_t functionIndex)
