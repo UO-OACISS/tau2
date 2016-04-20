@@ -680,6 +680,7 @@ if __name__ == '__main__':
       dieInFlames("Sorry, I don't know how to instrument '%s'" % modname)
     modname = modname[:-3]
     sys.path.append(path)
+    sys.argv = sys.argv[1:]
 
   tau.runmodule(modname)
 EOF
