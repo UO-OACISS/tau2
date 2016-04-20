@@ -207,10 +207,11 @@ extern "C" void printFuncMap(void);
 // routines for calculating kernel level stats
 extern "C" double getKernelExecutionTimes(uint32_t functionIndex);
 extern "C" uint32_t getKernelSamples(uint32_t functionIndex);
-extern "C" const char* getKernelFileName(uint32_t functionIndex);
+extern "C" const char* getKernelFilePath(uint32_t functionIndex);
 extern "C" uint32_t getKernelLineNo(uint32_t functionIndex);
 extern "C" void resetKernelExecutionTimes(uint32_t functionIndex);
 extern "C" uint32_t getUniqueKernelLaunches(uint32_t functionIndex);
+
 
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE

@@ -764,14 +764,14 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   double d_currentTimestamp;
   CUptiResult err;
   err = cuptiGetTimestamp(&currentTimestamp); // nanosec
-  //d_currentTimestamp = (double)currentTimestamp/1e3;
   ///////
   // Within python,
   //   seconds = (int)(cumsum / 1000) % 60
   //   minutes = (int)(cumsum / (1000*60)) % 60
   ///////
-  //d_currentTimestamp = (double)currentTimestamp/1e3; 
-  d_currentTimestamp = (double)currentTimestamp/1e6; 
+  d_currentTimestamp = (double)currentTimestamp/1e3; // orig
+  // d_currentTimestamp = (double)currentTimestamp/1e6; 
+
 
   CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
   
