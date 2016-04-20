@@ -5987,7 +5987,7 @@ fi
 
     ompt_c_compiler=$c_compiler
     ompt_cxx_compiler=$cxx_compiler
-    if [ "${cxx_compiler}" != "icpc" ] ; then
+    if [ $gnu = yes ] ; then
       ompt_c_compiler=gcc
       ompt_cxx_compiler=g++
       libomp_oss_name=gomp
