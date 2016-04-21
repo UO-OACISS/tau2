@@ -6,8 +6,10 @@
 int main (int argc, char** argv) {
    printf("Connecting...\n");
    TAUDB_CONNECTION* connection = NULL;
+   int items=0;
+   int* taudb_numItems=&items;
    if (argc >= 2) {
-     connection = taudb_connect_config(argv[1]);
+     connection = taudb_connect_config(argv[1],taudb_numItems);
    } else {
      fprintf(stderr, "Please specify a TAUdb config file.\n");
      exit(1);
@@ -39,8 +41,8 @@ int main (int argc, char** argv) {
      pm3->value = taudb_strdup("2012-10-17%");
      taudb_add_primary_metadata_to_trial(filter, pm3);
 
-     TAUDB_TRIAL* trials = taudb_query_trials(connection, FALSE, filter);
-     int numTrials = taudb_numItems;
+     TAUDB_TRIAL* trials = taudb_query_trials(connection, FALSE, filter,taudb_numItems);
+     int numTrials = *taudb_numItems;
      for (t = 0 ; t < numTrials ; t = t+1) {
         printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
 	    dump_metadata(trials[t].primary_metadata);

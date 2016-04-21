@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_primary_metadata(%p)\n", trial);
 #endif
@@ -58,7 +58,7 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   return trial->primary_metadata;
 }

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_counters(%p)\n", trial);
 #endif
@@ -17,7 +17,7 @@ TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 
   // if the Trial already has the data, return it.
   if (trial->counters_by_id != NULL) {
-    taudb_numItems = HASH_CNT(hh1,trial->counters_by_id);
+    *taudb_numItems = HASH_CNT(hh1,trial->counters_by_id);
     return trial->counters_by_id;
   }
 
@@ -38,7 +38,7 @@ TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
   taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(connection);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 #ifdef TAUDB_DEBUG
   printf("'%d' rows returned\n",nRows);
 #endif

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_metrics(%p)\n", trial);
 #endif
@@ -17,7 +17,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 
   //if the Trial already has the data, return it.
   if (trial->metrics_by_id != NULL) {
-    taudb_numItems = HASH_CNT(hh1,trial->metrics_by_id);
+    *taudb_numItems = HASH_CNT(hh1,trial->metrics_by_id);
     return trial->metrics_by_id;
   }
 
@@ -34,7 +34,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
   taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(connection);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   //TAUDB_METRIC* metrics = taudb_create_metrics(taudb_numItems);
   // allocation handled by the UThash structure!
