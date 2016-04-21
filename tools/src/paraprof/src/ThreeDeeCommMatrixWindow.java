@@ -22,10 +22,12 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
@@ -96,7 +98,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
     private int heightMetric = VOLUME;
     private int colorMetric = MAX;
 
-    private List<String> threadNames;
+    private List<String> nodeNames;
 
     // 3D elements
     private BarPlot barPlot;
@@ -665,8 +667,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         VisTools.addCompItem(selectionPanel, new JLabel("Height value"), gbc, 0, 2, 1, 1);
         VisTools.addCompItem(selectionPanel, new JLabel("Color value"), gbc, 0, 3, 1, 1);
 
-        JPanel functionSelectorPanel = createSelectorPanel(-1, threadNames.size(), threadNames, 1);
-        JPanel nodeSelectorPanel = createSelectorPanel(0, threadNames.size(), threadNames, 0);
+        JPanel functionSelectorPanel = createSelectorPanel(-1, nodeNames.size(), nodeNames, 1);
+        JPanel nodeSelectorPanel = createSelectorPanel(0, nodeNames.size(), nodeNames, 0);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
@@ -702,7 +704,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .75));
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue));
 
-        axes.setStrings("sender", "receiver", metricStrings[heightMetric], threadNames, threadNames, heightAxisStrings);
+        axes.setStrings("sender", "receiver", metricStrings[heightMetric], nodeNames, nodeNames, heightAxisStrings);
         axes.setOnEdge(true);
 
         //colorScale.setStrings(Float.toString(minColorValue), Float.toString(maxColorValue), metricStrings[colorMetric]);
@@ -845,7 +847,17 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         curHeightValues = new float[size][size];
         curColorValues = new float[size][size];
 
-        threadNames = ppTrial.getThreadNames();
+        List<String> tmpThreadNames = ppTrial.getThreadNames();
+        Set<String> nodeNameSet = new LinkedHashSet<String>();
+       //Only threads are relevant here, so extract the thread names and drop the nodes
+        for(String itThread:tmpThreadNames){
+        	int col=itThread.indexOf(':');
+        	if(col>=0){
+        		itThread=itThread.substring(0,col);
+        	}
+        	nodeNameSet.add(itThread);
+        }
+        nodeNames=new ArrayList<String>(nodeNameSet);
 
         barPlot = new BarPlot(axes, colorScale);
 
