@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_group(%p)\n", trial);
 #endif
@@ -17,7 +17,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 
   //if the Trial already has the data, return it.
   if (trial->timer_groups != NULL) {
-    taudb_numItems = HASH_CNT(trial_hash_by_name,trial->timer_groups);
+    *taudb_numItems = HASH_CNT(trial_hash_by_name,trial->timer_groups);
     return trial->timer_groups;
   }
 
@@ -40,7 +40,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 
   int nRows = taudb_get_num_rows(connection);
   TAUDB_TIMER_GROUP* timer_groups = NULL;
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 

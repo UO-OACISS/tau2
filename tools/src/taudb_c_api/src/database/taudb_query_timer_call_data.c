@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, boolean derived) {
+TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, boolean derived, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_call_data(%p,%p,%p)\n", trial, timer_callpath, thread);
 #endif
@@ -17,7 +17,7 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
   
   // if the Trial already has the callpath data, return it.
   if (trial->timer_call_data_by_id != NULL) {
-    taudb_numItems = HASH_CNT(hh1,trial->timer_callpaths_by_id);
+    *taudb_numItems = HASH_CNT(hh1,trial->timer_callpaths_by_id);
     return trial->timer_call_data_by_id;
   }
 
@@ -58,7 +58,7 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
   taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(connection);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 
@@ -120,26 +120,26 @@ void taudb_add_timer_call_data_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_CALL_DAT
 }
 
 // convenience method
-TAUDB_TIMER_CALL_DATA* taudb_query_all_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
-  return taudb_query_timer_call_data(connection, trial, NULL, NULL);
+TAUDB_TIMER_CALL_DATA* taudb_query_all_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
+  return taudb_query_timer_call_data(connection, trial, NULL, NULL, taudb_numItems);
 }
 
 // convenience method
-TAUDB_TIMER_CALL_DATA* taudb_query_all_timer_call_data_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
-  return taudb_query_timer_call_data_stats(connection, trial, NULL, NULL);
+TAUDB_TIMER_CALL_DATA* taudb_query_all_timer_call_data_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
+  return taudb_query_timer_call_data_stats(connection, trial, NULL, NULL, taudb_numItems);
 }
 
 // for getting call_datas for real threads
-TAUDB_TIMER_CALL_DATA* taudb_query_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread) {
-  return taudb_private_query_timer_call_data(connection, trial, timer_callpath, thread, FALSE);
+TAUDB_TIMER_CALL_DATA* taudb_query_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, int* taudb_numItems) {
+  return taudb_private_query_timer_call_data(connection, trial, timer_callpath, thread, FALSE, taudb_numItems);
 } 
 
 // for getting call_datas for derived threads
-TAUDB_TIMER_CALL_DATA* taudb_query_timer_call_data_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread) {
+TAUDB_TIMER_CALL_DATA* taudb_query_timer_call_data_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, int* taudb_numItems) {
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    return taudb_private_query_timer_call_data(connection, trial, timer_callpath, thread, TRUE);
+    return taudb_private_query_timer_call_data(connection, trial, timer_callpath, thread, TRUE, taudb_numItems);
   } else {
-    return taudb_private_query_timer_call_data(connection, trial, timer_callpath, thread, TRUE);
+    return taudb_private_query_timer_call_data(connection, trial, timer_callpath, thread, TRUE, taudb_numItems);
   }
 }
 

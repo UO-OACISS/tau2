@@ -6,8 +6,9 @@
 int main (int argc, char** argv) {
    printf("Connecting...\n");
    TAUDB_CONNECTION* connection = NULL;
+   int items=0;  int* taudb_numItems=&items;
    if (argc >= 2) {
-     connection = taudb_connect_config(argv[1]);
+     connection = taudb_connect_config(argv[1],taudb_numItems);
    } else {
      fprintf(stderr, "Please specify a TAUdb config file.\n");
      exit(1);
@@ -22,8 +23,8 @@ int main (int argc, char** argv) {
      // test the "find trials" method to populate the trial
      TAUDB_TRIAL* filter = taudb_create_trials(1);
      filter->id = atoi(argv[2]);
-     TAUDB_TRIAL* trials = taudb_query_trials(connection, FALSE, filter);
-     int numTrials = taudb_numItems;
+     TAUDB_TRIAL* trials = taudb_query_trials(connection, FALSE, filter,taudb_numItems);
+     int numTrials = *taudb_numItems;
      for (t = 0 ; t < numTrials ; t = t+1) {
         printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
         dump_counters(connection, &(trials[t]), TRUE);

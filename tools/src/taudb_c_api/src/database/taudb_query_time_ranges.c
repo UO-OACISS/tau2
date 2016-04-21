@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_time_ranges(%p)\n", trial);
 #endif
@@ -17,7 +17,7 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
 
   //if the Trial already has the data, return it.
   if (trial->time_ranges != NULL) {
-    taudb_numItems = HASH_COUNT(trial->time_ranges);
+    *taudb_numItems = HASH_COUNT(trial->time_ranges);
     return trial->time_ranges;
   }
 
@@ -34,9 +34,9 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
   taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(connection);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
-  TAUDB_TIME_RANGE* time_ranges = taudb_create_time_ranges(taudb_numItems);
+  TAUDB_TIME_RANGE* time_ranges = taudb_create_time_ranges(*taudb_numItems);
 
   nFields = taudb_get_num_columns(connection);
 

@@ -10,7 +10,7 @@ void taudb_add_data_source_to_connection(TAUDB_CONNECTION* connection, TAUDB_DAT
   HASH_ADD_KEYPTR(hh2, connection->data_sources_by_name, data_source->name, strlen(data_source->name), data_source);
 }
 
-TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
+TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_data_sources()\n");
 #endif
@@ -19,7 +19,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
 
   //if the connection already has the data, return it.
   if (connection->data_sources_by_id != NULL) {
-    taudb_numItems = HASH_CNT(hh1, connection->data_sources_by_id);
+    *taudb_numItems = HASH_CNT(hh1, connection->data_sources_by_id);
     return connection->data_sources_by_id;
   }
 
@@ -32,7 +32,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
   taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(connection);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 

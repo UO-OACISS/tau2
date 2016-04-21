@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, TAUDB_METRIC* metric, boolean derived) {
+TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, TAUDB_METRIC* metric, boolean derived, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_values(%p,%p,%p,%p)\n", trial, timer_callpath, thread, metric);
 #endif
@@ -19,7 +19,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
 /*
   //if the Trial already has the data, return it.
   if (trial->timer_values != NULL && trial->value_count > 0) {
-    taudb_numItems = trial->value_count;
+    *taudb_numItems = trial->value_count;
     return trial->timer_values;
   }
   */
@@ -91,7 +91,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
   int nRows = taudb_get_num_rows(connection);
   //TAUDB_TIMER_VALUE* timer_values = taudb_create_timer_values(nRows);
   TAUDB_TIMER_VALUE* timer_values = NULL;
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 
@@ -204,32 +204,32 @@ void taudb_add_timer_value_to_timer_call_data(TAUDB_TIMER_CALL_DATA* timer_call_
   //HASH_ADD_KEYPTR(hh, timer_call_data->timer_values, timer_value->metric, sizeof(timer_value->metric), timer_value);
 }
 
-TAUDB_TIMER_VALUE* taudb_query_all_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_TIMER_VALUE* taudb_query_all_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_all_timer_values(%p)\n", trial);
 #endif
-  return taudb_private_query_timer_values(connection, trial, NULL, NULL, NULL, FALSE);
+  return taudb_private_query_timer_values(connection, trial, NULL, NULL, NULL, FALSE, taudb_numItems);
 }
 
-TAUDB_TIMER_VALUE* taudb_query_all_timer_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_TIMER_VALUE* taudb_query_all_timer_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_all_timer_values(%p)\n", trial);
 #endif
-  return taudb_private_query_timer_values(connection, trial, NULL, NULL, NULL, TRUE);
+  return taudb_private_query_timer_values(connection, trial, NULL, NULL, NULL, TRUE, taudb_numItems);
 }
 
-TAUDB_TIMER_VALUE* taudb_query_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, TAUDB_METRIC* metric) {
+TAUDB_TIMER_VALUE* taudb_query_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, TAUDB_METRIC* metric, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_timer_values(%p,%p,%p,%p)\n", trial, timer_callpath, thread, metric);
 #endif
-  return taudb_private_query_timer_values(connection, trial, timer_callpath, thread, metric, FALSE);
+  return taudb_private_query_timer_values(connection, trial, timer_callpath, thread, metric, FALSE, taudb_numItems);
 }
 
-TAUDB_TIMER_VALUE* taudb_query_timer_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, TAUDB_METRIC* metric) {
+TAUDB_TIMER_VALUE* taudb_query_timer_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, TAUDB_METRIC* metric, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_timer_values(%p,%p,%p,%p)\n", trial, timer_callpath, thread, metric);
 #endif
-  return taudb_private_query_timer_values(connection, trial, timer_callpath, thread, metric, TRUE);
+  return taudb_private_query_timer_values(connection, trial, timer_callpath, thread, metric, TRUE, taudb_numItems);
 }
 
 TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data, TAUDB_METRIC* metric) {

@@ -7,8 +7,10 @@
 
 int main (int argc, char** argv) {
   TAUDB_CONNECTION* connection = NULL;
+  int items=0;
+  int* taudb_numItems=&items;
   if (argc >= 2) {
-    connection = taudb_connect_config(argv[1]);
+    connection = taudb_connect_config(argv[1],taudb_numItems);
   } else {
     fprintf(stderr, "Please specify a TAUdb config file.\n");
     exit(1);
@@ -20,7 +22,7 @@ int main (int argc, char** argv) {
   TAUDB_TRIAL* trial = taudb_create_trials(1);
   trial->name = taudb_strdup("TEST TRIAL");
   // set the data source to "other"
-  trial->data_source = taudb_get_data_source_by_id(taudb_query_data_sources(connection), 999);
+  trial->data_source = taudb_get_data_source_by_id(taudb_query_data_sources(connection,taudb_numItems), 999);
   
   // create some metadata
   TAUDB_PRIMARY_METADATA* pm = taudb_create_primary_metadata(1);
