@@ -12,7 +12,7 @@
 #pragma warning( disable : 4786 )
 #endif
 
-# include <getopt.h>
+//# include <getopt.h>
 # include <stdio.h>
 # include <stdlib.h>
 
