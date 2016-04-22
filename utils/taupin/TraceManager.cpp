@@ -277,6 +277,7 @@ void TraceManager::EndTrace()
 {
 	cerr<<"Tracing ended here"<<endl;
 	//this doesnt do anything as of now
+	/* // Monil commented this portion of code out as these code has no use and was not used anywhere hence was creating problems
 	bef_list.sort();
 	aft_list.sort();
 	list<RtnTrack*>::iterator it1,it2;
@@ -288,7 +289,7 @@ void TraceManager::EndTrace()
 			cerr<<*it2;
 			it2++;
 		}
-	}
+	} */ // Monil commented this portion of code out as these code has no use and was not used anywhere hence was creating problems
 	DumpTrace();
 }
 

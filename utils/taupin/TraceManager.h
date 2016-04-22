@@ -253,6 +253,7 @@ extern "C" {
    void MpiSetUp();
    void TauTest();
    void SetupProfileFile();
+   void ExitAndWriteProfile(); //monil included this function which is created at mpihook.c
 };
 
 
