@@ -386,7 +386,15 @@ bool SpecManager::InstImage(string image)
 		RuleSet* robj=*rit;
 		//Check if the image matches with specification
 		//if((robj->GetImagePat(),image))
-		if(Match(image,robj->GetImagePat()))
+		
+		//string image = robj->GetImagePat();
+ 		//int length = strlen(image);
+ 		string imagerobj = robj->GetImagePat();			//Monil wrote it for reversing and picking the image name excluding the directory name
+ 		reverse(imagerobj.begin(), imagerobj.end());    //Monil wrote it for reversing and picking the image name excluding the directory name
+ 		int start = imagerobj.find("/");					//Monil wrote it for reversing and picking the image name excluding the directory name
+ 		imagerobj = imagerobj.substr(0, start);			//Monil wrote it for reversing and picking the image name excluding the directory name
+ 		reverse(imagerobj.begin(), imagerobj.end());	//Monil wrote it for reversing and picking the image name excluding the directory name
+ 		if (Match(image, imagerobj))					//Monil chnaged the below line, this line was here before
 		{
 			DBG_TRACE("TRUE returning");
 			return true;

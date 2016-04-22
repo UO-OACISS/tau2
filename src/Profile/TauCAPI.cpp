@@ -2587,6 +2587,7 @@ extern "C" int Tau_track_mpi_t_here(void) {
 #else /* TAU_MPI_T */
 extern "C" int Tau_track_mpi_t_here(void) { 
  // do nothing when MPI_T is not enabled
+ return 0;
 }
 #endif /* TAU_MPI_T */
 
