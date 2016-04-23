@@ -2708,7 +2708,12 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
 #endif /* DEBUG */
     isfree = isFreeFormat(inbuf);
     do {
-      if (istr.getline(allocstmt, INBUF_SIZE) == NULL) {
+#ifdef TAU_WINDOWS
+      if (!(istr.getline(allocstmt, INBUF_SIZE))) 
+#else
+      if (istr.getline(allocstmt, INBUF_SIZE) == NULL) 
+#endif /* TAU_WINDOWS */
+      {
         perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
         exit(1);
       }
@@ -2816,7 +2821,11 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
 #endif /* DEBUG */
     isfree = isFreeFormat(inbuf);
     do {
+#ifdef TAU_WINDOWS
+       if (!(istr.getline(deallocstmt, INBUF_SIZE)))
+#else 
        if (istr.getline(deallocstmt, INBUF_SIZE) == NULL)
+#endif /* TAU_WINDOWS */
        {
          perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
          exit(1);
@@ -2929,7 +2938,11 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
     printf("Contination line: %s\n", inbuf);
 #endif /* DEBUG */
     isfree = isFreeFormat(inbuf);
+#ifdef TAU_WINDOWS
+    if (!(istr.getline(iostmt, INBUF_SIZE)))
+#else 
     if (istr.getline(iostmt, INBUF_SIZE) == NULL)
+#endif /* TAU_WINDOWS */
     {
       perror("ERROR in reading file: looking for continuation line instrumentation of io");
       exit(1);
