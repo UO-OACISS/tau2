@@ -271,6 +271,7 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 std::map<uint32_t, CUpti_ActivityContext> contextMap;
+std::list<std::string> kernelList;
 
 #ifndef TAU_MAX_GPU_DEVICES
 #define TAU_MAX_GPU_DEVICES 16
