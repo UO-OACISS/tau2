@@ -251,6 +251,10 @@ if(!TauEnv_get_cuda_track_sass()) {
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
 #endif
 }
+ else {
+   err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+   CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
+ }
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
   {
@@ -1066,9 +1070,51 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  // cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
 #endif
       
-
       eventMap.erase(eventMap.begin(), eventMap.end());
 			name = demangleName(name);
+
+			// if(TauEnv_get_cuda_track_sass()) {
+			// bool found = false;
+			// for (std::list<std::string>::iterator it = kernelList.begin();
+			//      it != kernelList.end(); ++it) {
+			//   if (name == *it) {
+			//     found = true;
+			//     break;
+			//   }
+			// }
+			// if (!found) {
+			//   // cout << "[CuptiActivity]:  Name (before): " << name << endl;
+			//   kernelList.push_back(name);
+			//   string filename = "/foo/foo.c";
+			//   int lineno = 99;
+			//     stringstream ss;
+			//     ss << name << " [{" << filename << "}{" << lineno << "}]";
+			//     name = ss.str().c_str();
+
+			//     //std::string name2;
+			//     //form_context_event_name(kernel, source, "CUPTI Samples", &name2);
+
+			//     // TauContextUserEvent* lineinfo;
+			//     // Tau_cupti_find_context_event(&lineinfo, name, false);
+			//     // eventMap[lineinfo] = correlationId;
+			//     // GpuEventAttributes *map;
+			//     // int map_size = eventMap.size();
+			//     // map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+			//     // int i = 0;
+			//     // for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
+			//     //   {
+			//     // 	map[i].userEvent = it->first;
+			//     // 	map[i].data = it->second;
+			//     // 	i++;
+			//     //   }
+
+			//     // // cout << "[CuptiActivity]:  Name (after): " << name << endl;
+			// }
+			// else {
+			//   //cout << "[CuptiActivity]:  Name (already created): " << name << endl;
+
+			// }
+			// }
 
 			uint32_t id;
 			if (cupti_api_runtime())
