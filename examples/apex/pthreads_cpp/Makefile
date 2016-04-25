@@ -1,0 +1,42 @@
+#****************************************************************************
+#*			TAU Portable Profiling Package			   **
+#*			http://www.cs.uoregon.edu/research/tau	           **
+#****************************************************************************
+#*    Copyright 1997  						   	   **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993,1995             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
+ 
+TAU_MAKEFILE ?=../../../include/Makefile
+include $(TAU_MAKEFILE)
+CXX      =g++
+PRINT	      	=pr
+RM 	      	=/bin/rm -rf
+TARGET	      	=matmult
+OBJS     	=matmult.o matmult_initialize.o
+CXXFLAGS=-g -O3 -pthread -DPTHREADS $(shell PKG_CONFIG_PATH=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/pkgconfig pkg-config --cflags apex) -std=c++11
+LDFLAGS=-g -O3 -pthread
+LIBS=$(shell PKG_CONFIG_PATH=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/pkgconfig pkg-config --libs apex)
+
+##############################################
+
+all:		$(TARGET)	
+
+install: 	$(TARGET)
+
+$(TARGET):	$(OBJS) 
+	$(CXX) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+
+matmult.o: matmult.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+matmult_initialize.o: matmult_initialize.cpp matmult_initialize.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean: 	
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o *.pomp.c *.opari.inc pompregions.* *.output *.error *.cobaltlog
+##############################################

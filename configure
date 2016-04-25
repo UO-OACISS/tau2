@@ -8438,7 +8438,7 @@ build_apex()
 {
 if [ $apex = yes ] ; then
     cd ${START_DIR}
-    if [ $boost = no ] ; then 
+    if [ $boost = no -a ${architecture} = "mic_linux" ] ; then 
 	    echo "Error: APEX requires Boost 1.54 or newer. Please specify the Boost installation location with the -boost option."
 	    exit 1;
 	fi
