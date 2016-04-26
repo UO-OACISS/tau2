@@ -1,0 +1,143 @@
+To build this example, configure TAU with APEX and either pthread 
+or OpenMP support (using -apex -pthread or -apex -openmp -ompt=download).
+
+Then build the example that matches the configuration - either pthread or OpenMP.
+
+To see the APEX output, set APEX_SCREEN_OUTPUT=1 before executing:
+
+$ cd pthreads_cpp
+$ make
+$ export APEX_SCREEN_OUPTUT=1
+$ ./matmult
+v0.5-rc0-4b144d8-develop
+Built on: 16:29:26 Apr 25 2016
+C++ Language Standard version : 201300
+GCC Compiler version : 4.9.3
+APEX_DISABLE : 0
+APEX_SUSPEND : 0
+APEX_PAPI_SUSPEND : 0
+APEX_TAU : 1
+APEX_POLICY : 1
+APEX_MEASURE_CONCURRENCY : 0
+APEX_MEASURE_CONCURRENCY_PERIOD : 1000000
+APEX_SCREEN_OUTPUT : 1
+APEX_PROFILE_OUTPUT : 0
+APEX_CSV_OUTPUT : 0
+APEX_TASKGRAPH_OUTPUT : 0
+APEX_PROC_CPUINFO : 0
+APEX_PROC_MEMINFO : 0
+APEX_PROC_NET_DEV : 0
+APEX_PROC_SELF_STATUS : 0
+APEX_PROC_STAT : 1
+APEX_THROTTLE_CONCURRENCY : 0
+APEX_THROTTLING_MAX_THREADS : 24
+APEX_THROTTLING_MIN_THREADS : 1
+APEX_THROTTLE_ENERGY : 0
+APEX_THROTTLING_MAX_WATTS : 300
+APEX_THROTTLING_MIN_WATTS : 150
+APEX_PTHREAD_WRAPPER_STACK_SIZE : 0
+APEX_PAPI_METRICS : 
+APEX_PLUGINS : 
+APEX_PLUGINS_PATH : ./
+Spawned thread 1...
+Spawned thread 2...
+Spawned thread 3...
+Done.
+CPU is 2.40043e+09 Hz.
+Elapsed time: 0.621796
+Cores detected: 24
+Worker Threads observed: 4
+Available CPU time: 2.48718
+Action                         :  #calls  |  minimum |    mean  |  maximum |   total  |  stddev  |  % total  
+------------------------------------------------------------------------------------------------------------
+                   CPU Guest % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                CPU I/O Wait % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                     CPU IRQ % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                    CPU Idle % :        1     87.895     87.895     87.895     87.895      0.000    --n/a-- 
+                    CPU Nice % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                   CPU Steal % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                  CPU System % :        1      0.672      0.672      0.672      0.672      0.000    --n/a-- 
+                    CPU User % :        1     11.432     11.432     11.432     11.432      0.000    --n/a-- 
+                CPU soft IRQ % :        1      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                allocateMatrix :       12    --n/a--   2.27e-02    --n/a--   2.72e-01    --n/a--     10.945
+                       compute :        4    --n/a--   3.43e-01    --n/a--   1.37e+00    --n/a--     55.168
+           compute_interchange :        4    --n/a--   7.68e-02    --n/a--   3.07e-01    --n/a--     12.347
+                       do_work :        4    --n/a--   4.91e-01    --n/a--   1.96e+00    --n/a--     78.886
+                    freeMatrix :       12    --n/a--   2.87e-05    --n/a--   3.45e-04    --n/a--      0.014
+                    initialize :       12    --n/a--   7.48e-04    --n/a--   8.98e-03    --n/a--      0.361
+                          main :        1    --n/a--   6.20e-01    --n/a--   6.20e-01    --n/a--     24.921
+                     APEX Idle :  --n/a--    --n/a--    --n/a--    --n/a--    --n/a--    --n/a--    --n/a--   
+------------------------------------------------------------------------------------------------------------
+
+
+...or...
+
+$ cd openmp_cpp
+$ make
+$ export APEX_SCREEN_OUPTUT=1
+$ ./openmp_test 
+Registering OMPT events...done.
+v0.5-rc0-4b144d8-develop
+Built on: 16:26:41 Apr 25 2016
+C++ Language Standard version : 201300
+GCC Compiler version : 4.9.3
+APEX_DISABLE : 0
+APEX_SUSPEND : 0
+APEX_PAPI_SUSPEND : 0
+APEX_TAU : 1
+APEX_POLICY : 1
+APEX_MEASURE_CONCURRENCY : 0
+APEX_MEASURE_CONCURRENCY_PERIOD : 1000000
+APEX_SCREEN_OUTPUT : 1
+APEX_PROFILE_OUTPUT : 0
+APEX_CSV_OUTPUT : 0
+APEX_TASKGRAPH_OUTPUT : 0
+APEX_PROC_CPUINFO : 0
+APEX_PROC_MEMINFO : 0
+APEX_PROC_NET_DEV : 0
+APEX_PROC_SELF_STATUS : 0
+APEX_PROC_STAT : 1
+APEX_THROTTLE_CONCURRENCY : 0
+APEX_THROTTLING_MAX_THREADS : 24
+APEX_THROTTLING_MIN_THREADS : 1
+APEX_THROTTLE_ENERGY : 0
+APEX_THROTTLING_MAX_WATTS : 300
+APEX_THROTTLING_MIN_WATTS : 150
+APEX_PTHREAD_WRAPPER_STACK_SIZE : 0
+APEX_PAPI_METRICS : 
+APEX_PLUGINS : 
+APEX_PLUGINS_PATH : ./
+Initializing...
+Initializing...
+True sharing...
+Result: 43049100.372098
+Reduction sharing...
+Result: 43049100.362144
+False sharing...
+Result: 43049100.362144
+No Sharing...
+Result: 43049100.362144
+CPU is 2.40037e+09 Hz.
+Elapsed time: 1.74094
+Cores detected: 24
+Worker Threads observed: 24
+Available CPU time: 41.7827
+Action                         :  #calls  |  minimum |    mean  |  maximum |   total  |  stddev  |  % total  
+------------------------------------------------------------------------------------------------------------
+                   CPU Guest % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                CPU I/O Wait % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                     CPU IRQ % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                    CPU Idle % :        2     34.374     46.194     58.014     92.387     11.820    --n/a-- 
+                    CPU Nice % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                   CPU Steal % :        2      0.000      0.000      0.000      0.000      0.000    --n/a-- 
+                  CPU System % :        2      0.169      0.542      0.916      1.085      0.373    --n/a-- 
+                    CPU User % :        2     41.817     53.243     64.669    106.486     11.426    --n/a-- 
+                CPU soft IRQ % :        2      0.000      0.021      0.042      0.042      0.021    --n/a-- 
+OpenMP_PARALLEL_REGION: ope... :        1    --n/a--   3.21e-02    --n/a--   3.21e-02    --n/a--      0.077
+OpenMP_PARALLEL_REGION: tru... :        1    --n/a--   1.60e+00    --n/a--   1.60e+00    --n/a--      3.825
+OpenMP_PARALLEL_REGION: fal... :        1    --n/a--   2.69e-02    --n/a--   2.69e-02    --n/a--      0.064
+OpenMP_PARALLEL_REGION: no_... :        1    --n/a--   2.63e-02    --n/a--   2.63e-02    --n/a--      0.063
+OpenMP_PARALLEL_REGION: my_... :        2    --n/a--   2.76e-02    --n/a--   5.52e-02    --n/a--      0.132
+                     APEX Idle :  --n/a--    --n/a--    --n/a--    --n/a--   4.00e+01    --n/a--     95.839
+------------------------------------------------------------------------------------------------------------
+
