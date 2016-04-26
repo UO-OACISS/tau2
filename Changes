@@ -29,6 +29,8 @@ Version 2.25 changes (from 2.24):
 16. Improved callsite resolution. 
 17. Improved BFD support for Xeon Phi. 
 18. Added support for MPI-T interface (TAU_TRACK_MPI_T_PVARS, TAU_MPI_T_CVAR_METRICS, TAU_MPI_T_CVAR_VALUES). 
+19. When a file is excluded from instrumentation, it is not parsed or compiled with compInst. 
+20. Added APEX measurement library.
 
  
 Version 2.24 changes (from 2.23):
