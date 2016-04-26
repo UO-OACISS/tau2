@@ -20,6 +20,7 @@ declare -i hasAnObjectOutputFile=$FALSE
 declare -i removeMpi=$FALSE
 declare -i needToCleanPdbInstFiles=$TRUE
 declare -i reuseFiles=$FALSE
+declare -i copyInsteadOfInstrument=$FALSE
 declare -i reusingInstFile=$FALSE;
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
@@ -1749,6 +1750,21 @@ else
   		if [ $pdbFileSpecified == $FALSE ]; then
   		  instFileName=${arrTau[$tempCounter]##*/}
   		  reusingInstFile=$FALSE;
+		    # check if an exclude list is specified
+		    if [ "x$tauSelectFile" != "x" ] ; then
+                      selectfile=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_selectfile@'`
+                      echoIfDebug "$selectfile $tauSelectFile ${arrFileName[$tempCounter]}"
+                      instrumentThisFile=`$selectfile $tauSelectFile ${arrFileName[$tempCounter]}`
+                      if [ "x$instrumentThisFile" == "xno" ]; then
+                      # it is equivalent to copying the original file as the instrumented file and not invoking the PDT Parser
+			if [ $reuseFiles == $FALSE ]; then
+                          needToCleanPdbInstFiles=$TRUE;
+                        fi
+			reuseFiles=$TRUE;
+			evalWithDebugMessage "cp $origFileName $instFileName" "File excluded from instrumentation. Copying original file as instrumented file." 
+			copyInsteadOfInstrument=$TRUE
+                      fi 
+                    fi
                     if [ $reuseFiles == $TRUE  -a -r $instFileName ]; then
   		      if [ $instFileName -nt $origFileName ]; then
   	                echoIfDebug "echo NOTE: Reusing instrumented file $instFileName. Not invoking the PDT Parser."
@@ -2346,7 +2362,11 @@ else
   	    cleanUpOpariFileLater=$TRUE
   	  fi
   	else
-  	  echoIfDebug "Not cleaning up instrumented files: reusingInstFile=$reusingInstFile"
+          if [ $copyInsteadOfInstrument == $TRUE ]; then
+  	    evalWithDebugMessage "/bin/rm -f $tmpname" "cleaning inst file"
+          else
+  	    echoIfDebug "Not cleaning up instrumented files: reusingInstFile=$reusingInstFile"
+          fi
   	fi
   	tempCounter=tempCounter+1
       done
