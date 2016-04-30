@@ -1249,6 +1249,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
     case CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR:
     {
 			CUpti_ActivitySourceLocator *source = (CUpti_ActivitySourceLocator *)record;
+			sourceLocatorMap[source->id] = *source;
 			double tstamp;
 			uint32_t sourceId;
 			const char *fileName;
@@ -1256,14 +1257,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #ifdef TAU_DEBUG_CUPTI
 			cerr << "source locator (id): " << source->id << ", " << source->fileName << ", " << source->lineNumber << ".\n" << endl;
 #endif
-      sourceLocatorMap[source->id] = *source;
+			SourceSampling ss1;
+			ss1.sid = source->id;
+			ss1.fileName = source->fileName;
+			ss1.lineNumber = source->lineNumber;
+			ss1.timestamp = d_currentTimestamp;
+			srcLocMap[ss1.sid] = ss1;
 
 #if CUDA_VERSION >= 5500
       if(TauEnv_get_cuda_track_sass()) {
-
-      sourceId = source->id;
-      fileName = source->fileName;
-      lineNumber = source->lineNumber;
 
 #ifdef TAU_DEBUG_CUPTI_SASS
 	  printf("SOURCE_LOCATOR SrcLctrId: %d, File: %s, Line: %d, Kind: %u\n", 
@@ -1281,8 +1283,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       }
 
     }
-      char name[] = "SOURCE_LOCATOR";
-      Tau_cupti_register_source_event(name, 0, 0, 0, sourceId, d_currentTimestamp, fileName, lineNumber);
+      // char name[] = "SOURCE_LOCATOR";
+      // Tau_cupti_register_source_event(name, 0, 0, 0, sourceId, d_currentTimestamp, fileName, lineNumber);
 
       }
 #endif
@@ -1325,25 +1327,28 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	    printf("fp_instr[%i] is null\n", current_device_id);
 	  }
   }
-	  char name[] = "INSTRUCTION";
-	  correlationId = sourceRecord->correlationId;
-	  executed = sourceRecord->executed;
-	  functionId = sourceRecord->functionId;
-	  pcOffset = sourceRecord->pcOffset;
-	  sourceLocatorId = sourceRecord->sourceLocatorId;
-	  threadsExecuted = sourceRecord->threadsExecuted;
+
+	  // char name[] = "INSTRUCTION";
+  InstrSampling is;
+  is.correlationId = sourceRecord->correlationId;
+  is.executed = sourceRecord->executed;
+  is.functionId = sourceRecord->functionId;
+  is.pcOffset = sourceRecord->pcOffset;
+  is.sourceLocatorId = sourceRecord->sourceLocatorId;
+  is.threadsExecuted = sourceRecord->threadsExecuted;
+  is.timestamp_delta = d_currentTimestamp-recentTimestamp;
+  is.timestamp_current = d_currentTimestamp;
+  instructionMap[is.functionId].push_back(is);
 	  
-	  double tstamp_delta;
-	  tstamp_delta = d_currentTimestamp-recentTimestamp;
-	  // printf("d_currentTImestamp: %f, recentTimestamp: %f, tstamp_delta: %f\n", 
-	  // 	 d_currentTimestamp, recentTimestamp, tstamp_delta);
-	  Tau_cupti_register_instruction_event(name,cResult.deviceId,
-					       (int)cResult.nullStreamId,
-					       cResult.contextId,correlationId,recentTimestamp,
-					       d_currentTimestamp,tstamp_delta,
-	  				       sourceLocatorId,functionId,
-	  				       pcOffset,executed,
-	  				       threadsExecuted);
+	  // // printf("d_currentTImestamp: %f, recentTimestamp: %f, tstamp_delta: %f\n", 
+	  // // 	 d_currentTimestamp, recentTimestamp, tstamp_delta);
+	  // Tau_cupti_register_instruction_event(name,cResult.deviceId,
+	  // 				       (int)cResult.nullStreamId,
+	  // 				       cResult.contextId,correlationId,recentTimestamp,
+	  // 				       d_currentTimestamp,tstamp_delta,
+	  // 				       sourceLocatorId,functionId,
+	  // 				       pcOffset,executed,
+	  // 				       threadsExecuted);
     }
 #endif
 	  break;
@@ -1368,13 +1373,27 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  	 fResult->moduleId,
 	  	 fResult->name);
 #endif
+	  char str_demangled[100];
+	  strcpy (str_demangled, demangleName(fResult->name));
 	  CUpti_ActivityContext cResult = contextMap.find(fResult->contextId)->second;
 #ifdef TAU_DEBUG_CUPTI_SASS
 	  printf("context->contextId: %u, device: %u\n", cResult.contextId, cResult.deviceId);
 #endif
 	  current_device_id = cResult.deviceId;
 	  current_context_id = cResult.contextId;
-	  
+
+	  FuncSampling fs;
+	  fs.fid = fResult->id;
+	  fs.contextId = fResult->contextId;
+	  fs.functionIndex = fResult->functionIndex;
+	  fs.moduleId = fResult->moduleId;
+	  fs.name = fResult->name;
+	  fs.demangled = str_demangled;
+	  fs.timestamp = d_currentTimestamp;
+	  fs.deviceId = cResult.deviceId;
+
+	  functionMap[fs.fid] = fs;
+
 	  if(TauEnv_get_cuda_csv_output()){
 	    if(fp_func != NULL) {
 #ifdef TAU_DEBUG_CUPTI_SASS
@@ -1399,19 +1418,19 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	      printf("fp_func[%i] is NULL\n", current_device_id);
 	    }
 	  }
-	  char name[] = "FUNCTION_ACTIVITY";
-	  char str_demangled[100];
-	  strcpy (str_demangled, demangleName(fResult->name));
-	  contextId = fResult->contextId;
-	  functionIndex = fResult->functionIndex;
-	  id = fResult->id;
-	  moduleId = fResult->moduleId;
-	  kname = fResult->name;
+	  // char name[] = "FUNCTION_ACTIVITY";
+	  // char str_demangled[100];
+	  // strcpy (str_demangled, demangleName(fResult->name));
+	  // contextId = fResult->contextId;
+	  // functionIndex = fResult->functionIndex;
+	  // id = fResult->id;
+	  // moduleId = fResult->moduleId;
+	  // kname = fResult->name;
 
-	  Tau_cupti_register_func_event(name, cResult.deviceId,
-	  				(int)cResult.nullStreamId, contextId, functionIndex,
-	  				d_currentTimestamp, id, moduleId,
-	  				kname, str_demangled);
+	  // Tau_cupti_register_func_event(name, cResult.deviceId,
+	  // 				(int)cResult.nullStreamId, contextId, functionIndex,
+	  // 				d_currentTimestamp, id, moduleId,
+	  // 				kname, str_demangled);
 	  }
                                                                                                                
 #endif

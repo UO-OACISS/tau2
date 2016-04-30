@@ -1989,19 +1989,20 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
     RtsLayer::LockEnv();
     PureMap::iterator it = pure.find(name);
     if (it == pure.end()) {
-      // check for paren
-      if(name.find("(") != -1) { 
-	stringstream ss;
-	string filename = "/foo/bar.c";
-	int lineno = 99;
-	ss << name << " [{" << filename << "}{" << lineno << "}]";
-	tauCreateFI((void**)&fi, ss.str(), "", TAU_USER, "TAU_USER");
-	printf("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
-	       name.c_str(), ss.str().c_str());
-      }
-      else {
-	tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
-      }
+      // // check for paren
+      // if(name.find("(") != -1) { 
+      // 	stringstream ss;
+      // 	string filename = "/foo/bar.c";
+      // 	int lineno = 99;
+      // 	ss << name << " [{" << filename << "}{" << lineno << "}]";
+      // 	tauCreateFI((void**)&fi, ss.str(), "", TAU_USER, "TAU_USER");
+      // 	printf("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
+      // 	       name.c_str(), ss.str().c_str());
+      // }
+      // else {
+      // tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+      // }
+      tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
       pure[name] = fi;
 
     } else {
