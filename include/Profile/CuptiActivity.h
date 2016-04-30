@@ -162,41 +162,41 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes);
 
-extern "C" void Tau_cupti_register_func_event(
-                                              const char *name,
-                                              uint32_t deviceId,
-                                              uint32_t streamId,
-                                              uint32_t contextId,
-                                              uint32_t functionIndex,
-                                              double timestamp,
-                                              uint32_t id,
-                                              uint32_t moduleId,
-					      const char *kname,
-                                              const char *demangled);
+/* extern "C" void Tau_cupti_register_func_event( */
+/*                                               const char *name, */
+/*                                               uint32_t deviceId, */
+/*                                               uint32_t streamId, */
+/*                                               uint32_t contextId, */
+/*                                               uint32_t functionIndex, */
+/*                                               double timestamp, */
+/*                                               uint32_t id, */
+/*                                               uint32_t moduleId, */
+/* 					      const char *kname, */
+/*                                               const char *demangled); */
 
-extern "C" void Tau_cupti_register_instruction_event(
-						     const char *name,
-						     uint32_t deviceId,
-						     uint32_t streamId,
-						     uint32_t contextId,
-						     uint32_t correlationId,
-						     double start,
-						     double stop, double delta_tstamp,
-						     uint32_t sourceLocatorId,
-						     uint32_t functionId,
-						     uint32_t pcOffset,
-						     uint32_t executed,
-						     uint32_t threadsExecuted);
+/* extern "C" void Tau_cupti_register_instruction_event( */
+/* 						     const char *name, */
+/* 						     uint32_t deviceId, */
+/* 						     uint32_t streamId, */
+/* 						     uint32_t contextId, */
+/* 						     uint32_t correlationId, */
+/* 						     double start, */
+/* 						     double stop, double delta_tstamp, */
+/* 						     uint32_t sourceLocatorId, */
+/* 						     uint32_t functionId, */
+/* 						     uint32_t pcOffset, */
+/* 						     uint32_t executed, */
+/* 						     uint32_t threadsExecuted); */
 
-extern "C" void Tau_cupti_register_source_event(
-                                                const char *name,
-                                                uint32_t deviceId,
-                                                uint32_t streamId,
-                                                uint32_t contextId,
-                                                uint32_t sourceId,
-                                                double timestamp,
-                                                const char *fileName,
-                                                uint32_t lineNumber);
+/* extern "C" void Tau_cupti_register_source_event( */
+/*                                                 const char *name, */
+/*                                                 uint32_t deviceId, */
+/*                                                 uint32_t streamId, */
+/*                                                 uint32_t contextId, */
+/*                                                 uint32_t sourceId, */
+/*                                                 double timestamp, */
+/*                                                 const char *fileName, */
+/*                                                 uint32_t lineNumber); */
 
 extern "C" x_uint64 TauTraceGetTimeStamp();
 
@@ -264,7 +264,47 @@ int get_device_id();
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
 
+
+/* BEGIN: SASS Structs */
+class InstrSampling
+{
+ public:
+  uint32_t sourceLocatorId;
+  uint32_t functionId;
+  uint32_t pcOffset;
+  uint32_t correlationId;
+  uint32_t executed;
+  uint32_t threadsExecuted;
+  double timestamp_delta;
+  double timestamp_current;
+};
+
+class FuncSampling
+{
+ public:
+  uint32_t fid;
+  uint32_t contextId;
+  uint32_t moduleId;
+  uint32_t functionIndex;
+  const char* name;
+  const char* demangled;
+  double timestamp;
+  uint32_t deviceId;
+};
+
+class SourceSampling
+{
+ public:
+  uint32_t sid;
+  const char* fileName;
+  uint32_t lineNumber;
+  double timestamp;
+};
+/* END: SASS Structs */
+
 std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
+std::map<uint32_t, SourceSampling> srcLocMap;
+
 #endif // CUPTI_API_VERSION >= 3
 
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
@@ -272,6 +312,9 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 std::map<uint32_t, CUpti_ActivityContext> contextMap;
 std::list<std::string> kernelList;
+
+std::map<uint32_t, FuncSampling> functionMap;
+std::map<uint32_t, std::list<InstrSampling> > instructionMap; // indexing by functionId 
 
 #ifndef TAU_MAX_GPU_DEVICES
 #define TAU_MAX_GPU_DEVICES 16
