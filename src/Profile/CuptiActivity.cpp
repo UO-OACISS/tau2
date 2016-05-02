@@ -30,6 +30,8 @@ do {                                                                        \
 /* END: Unified Memory */
 
 /* BEGIN:  Dump cubin (sass) */
+static std::map<std::string, ImixStats> map_imixStats;
+
 #if CUDA_VERSION >= 5500
 void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
 {
@@ -69,11 +71,11 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
       
       fwrite(pCubin, sizeof(uint8_t), cubinSize, cubin);
       fclose(cubin);
-      
-      // do disassembly here
-      print_hello_world(str_source, get_device_id());
+      std::map<std::string, ImixStats> map_imixStats;      
+      // do disassembly here (return map)
+      map_imixStats = print_instruction_mixes(str_source, get_device_id(), fp_imix_out[get_device_id()]);
       // if this flag not set, then pass TauEnv_get_cuda_binary_exe()
-      
+      cout << "[CuptiActivity]:  map_imixStats.empty(): " << map_imixStats.empty() << endl;
     }
     // else if (cbid == CUPTI_CBID_RESOURCE_MODULE_UNLOAD_STARTING) {
     //   // You can dump the cubin either at MODULE_LOADED or MODULE_UNLOAD_STARTING
