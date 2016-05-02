@@ -325,6 +325,7 @@ FILE *fp_source[TAU_MAX_GPU_DEVICES];
 FILE *fp_instr[TAU_MAX_GPU_DEVICES];
 FILE *fp_func[TAU_MAX_GPU_DEVICES];
 FILE *cubin;
+FILE *fp_imix_out[TAU_MAX_GPU_DEVICES];
 
 static int current_device_id = 0;
 static int current_context_id = 0;

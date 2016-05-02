@@ -1,4 +1,6 @@
 #include <Profile/CudaDisassembly.h>
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -136,20 +138,22 @@ void parse_disassem(std::vector<std::string> vec, int device_id)
   }
 }
 
-void print_hello_world(char* cubin_file, int device_id)
+std::map<std::string, ImixStats> print_instruction_mixes(char* cubin_file, int device_id, FILE* fp_imix_out)
 {
   init_instruction_set();
+  std::map<std::string, ImixStats> map_imixStats;
   string command1 = "nvdisasm -g -c -hex -sf " + (string)cubin_file;
   std::vector<std::string> res1 = get_disassem_from_out(command1);
   parse_disassem(res1, device_id);
-  //print_disassem();
-
+  map_imixStats = write_disassem(fp_imix_out);
+  // write out to textfile (static info)
   // test
-  int six = get_instruction_mix_category("CCTLT"); //6
-  int four = get_instruction_mix_category("PSETP");
-  int ten = get_instruction_mix_category("NOP"); //10
-  cout << "six:" << six << ", four:" << four << ", ten:" << ten << endl;
-
+  
+  // int six = get_instruction_mix_category("CCTLT"); //6
+  // int four = get_instruction_mix_category("PSETP");
+  // int ten = get_instruction_mix_category("NOP"); //10
+  // cout << "six:" << six << ", four:" << four << ", ten:" << ten << endl;
+  return map_imixStats;
 }
 
 void init_instruction_set() 
@@ -246,13 +250,92 @@ int get_instruction_mix_category(string instr)
   return -1;
 }
 
-void print_disassem()
+// const char *demangleName(const char* name);
+
+std::map<std::string, ImixStats> write_disassem(FILE* fp_imix_out)
 {
+  // break down by kernel, then iterate, do count of each instruction type, write to file
+  std::map<std::string, ImixStats> map_imixStats;
+  string current_kernel = "";
+  int flops_raw = 0;
+  int ctrlops_raw = 0;
+  int memops_raw = 0;
+  int totops_raw = 0;
+  double flops_pct = 0;
+  double ctrlops_pct = 0;
+  double memops_pct = 0;
+
   for(int i = 0; i < v_cudaOps.size(); i++) {
-    std::cout << v_cudaOps[i]->deviceid << ":" << v_cudaOps[i]->kernel << ":"
-	      << v_cudaOps[i]->filename << ":" << v_cudaOps[i]->lineno << ":"
-	      << v_cudaOps[i]->instruction << ":" << v_cudaOps[i]->pcoffset << std::endl;
+    int instr_type = get_instruction_mix_category(v_cudaOps[i]->instruction);
+    switch(instr_type) {
+      // Might be non-existing ops, don't count those!
+      case FloatingPoint: case Integer:
+      case SIMD: case Conversion: {
+	flops_raw++;
+	totops_raw++;
+	break;
+      }
+      case LoadStore: case Texture:
+      case Surface: {
+	memops_raw++;
+	totops_raw++;
+	break;
+      }
+      case Control: case Move:
+      case Predicate: {
+	ctrlops_raw++;
+	totops_raw++;
+	break;
+      }
+      case Misc: {
+        totops_raw++;
+	break;
+      }
+    }
+    string kernel_iter = demangleName(v_cudaOps[i]->kernel.c_str());
+    // cout << "[CudaDisassembly]:  demangleName: " << kernel_iter << endl;
+
+    if (current_kernel == "") {
+      current_kernel = kernel_iter;
+    }
+    else if (current_kernel != kernel_iter) {
+      flops_pct = ((float)flops_raw/totops_raw) * 100;
+      memops_pct = ((float)memops_raw/totops_raw) * 100;
+      ctrlops_pct = ((float)ctrlops_raw/totops_raw) * 100;
+      ImixStats imix_stats;
+      // push onto map
+      imix_stats.flops_raw = flops_raw;
+      imix_stats.ctrlops_raw = ctrlops_raw;
+      imix_stats.memops_raw = memops_raw;
+      imix_stats.totops_raw = totops_raw;
+      imix_stats.flops_pct = flops_pct;
+      imix_stats.ctrlops_pct = ctrlops_pct;
+      imix_stats.memops_pct = memops_pct;
+      imix_stats.kernel = kernel_iter;
+      map_imixStats[kernel_iter] = imix_stats;
+      current_kernel = kernel_iter;
+      // write out to file
+      cout << "[CudaDisassembly]:  current_kernel: " << kernel_iter << endl;
+      cout << "  FLOPS: " << flops_raw << ", MEMOPS: " << memops_raw 
+	   << ", CTRLOPS: " << ctrlops_raw << ", TOTOPS: " << totops_raw << "\n";
+      cout << setprecision(2) << "  FLOPS_pct: " << flops_pct << "%, MEMOPS_pct: " 
+	   << memops_pct << "%, CTRLOPS_pct: " << ctrlops_pct << "%\n";
+      flops_raw = 0;
+      ctrlops_raw = 0;
+      memops_raw = 0;
+      totops_raw = 0;
+      flops_pct = 0;
+      ctrlops_pct = 0;
+      memops_pct = 0;
+    }
   }
+    
+  return map_imixStats;
+  // for(int i = 0; i < v_cudaOps.size(); i++) {
+  //   std::cout << v_cudaOps[i]->deviceid << ":" << v_cudaOps[i]->kernel << ":"
+  // 	      << v_cudaOps[i]->filename << ":" << v_cudaOps[i]->lineno << ":"
+  // 	      << v_cudaOps[i]->instruction << ":" << v_cudaOps[i]->pcoffset << std::endl;
+  // }
 }
 
 std::string sanitize_instruction(std::string instr) 
@@ -302,5 +385,26 @@ std::string sanitize_instruction(std::string instr)
   return op;
 }
 
+const char *demangleName(const char* name)
+{
+	const char *dem_name = 0;
+	//printf("demangling: %s.\n", name);
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+	//printf("demangling name....\n");
+	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
+	DMGL_TYPES);
+	//check to see if demangling failed (name was not mangled).
+	if (dem_name == NULL)
+	{
+	  cout << "[CudaDisassembly]:  Demangle failed.\n";
+		dem_name = name;
+	}
+#else
+	cout << "[CudaDisassembly]: no HAVE_GNU_DEMANGLE" << endl;
+	dem_name = name;
+#endif /* HAVE_GPU_DEMANGLE */
+	//printf("demanged: %s.\n", dem_name);
+	return dem_name;
+}
 
 

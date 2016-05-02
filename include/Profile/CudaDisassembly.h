@@ -6,6 +6,14 @@
 #include <map>
 #include <set>
 
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+#  include <bfd.h>
+#endif /* TAU_BFD */
+
 using namespace std;
 
 // Look up ops
@@ -25,6 +33,18 @@ static std::set<std::string> s_SIMD;
 static std::set<std::string> s_Misc;
 
 static bool init_instruction = false;
+
+struct ImixStats {
+public:
+  std::string kernel;
+  int flops_raw;
+  int ctrlops_raw;
+  int memops_raw;
+  int totops_raw;
+  double flops_pct;
+  double ctrlops_pct;
+  double memops_pct;
+};
 
 class CudaOps 
 {
@@ -65,7 +85,7 @@ std::vector<std::string> get_disassem_from_out(std::string cmd);
 
 void parse_disassem(std::vector<std::string> vec, int device_id);
 
-void print_hello_world(char* cubin_file, int device_id);
+std::map<std::string, ImixStats> print_instruction_mixes(char* cubin_file, int device_id, FILE* fp_imix_out);
 
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems);
 
@@ -73,7 +93,7 @@ std::vector<std::string> split(const std::string &s, char delim);
 
 void print_vector(std::vector<std::string> vec);
 
-void print_disassem();
+std::map<std::string, ImixStats> write_disassem(FILE* fp_imix_out);
 
 void init_instruction_set();
 
@@ -83,4 +103,4 @@ void insert_instructions(std::set<std::string> *s_set, std::string Ins[], int si
 
 std::string sanitize_instruction(std::string instr);
 
-
+const char *demangleName(const char* name);
