@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
@@ -57,7 +58,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Thu Apr 21 09:55:31 PDT 2016";
+    private final static String VERSION = "Tue May  3 15:35:00 PDT 2016";
 
     public static int defaultNumberPrecision = 6;
 
@@ -633,11 +634,37 @@ public class ParaProf implements ActionListener {
 	if (pack != null) {
 	    try {
 
+	    File outPPK = new File(pack);
+	    if(outPPK.exists()){
+	    	System.out.println("The file "+pack+" already exists. Do you want to overwrite?");
+	    	Scanner scin = new Scanner(System.in);
+	    	
+	    	
+	    	boolean valid = false;
+	    	boolean write = false;
+	    	while(!valid){
+	    	System.out.print("[yes/no]: ");
+	    	String response = scin.nextLine();
+	    	response = response.toLowerCase().trim();
+	    	
+	    	if(response.equals("yes")||response.equals("y")){
+	    		write=true;
+	    		valid=true;
+	    	}
+	    	else if(response.equals("no")||response.equals("n")){
+	    		valid=true;
+	    	}
+	    	}
+	    	scin.close();
+	    	if(!write){
+	    		System.exit(0);
+	    	}
+	    }
 		DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
 		System.out.println("Loading data...");
 		dataSource.load();
 		System.out.println("Packing data...");
-		DataSourceExport.writePacked(dataSource, new File(pack));
+		DataSourceExport.writePacked(dataSource, outPPK);
 
 	    } catch (Exception e) {
 		e.printStackTrace();
