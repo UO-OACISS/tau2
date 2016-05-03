@@ -5991,12 +5991,12 @@ fi
       ompt_c_compiler=gcc
       ompt_cxx_compiler=g++
       libomp_oss_name=gomp
-      if [ "${architecture}" = "craycnl" ] ; then
-        if [ "${intel}" = "yes" ] ; then
-          ompt_c_compiler=icc
-          ompt_cxx_compiler=icpc
-          libomp_oss_name=iomp5
-        fi
+    fi
+    if [ "${architecture}" = "craycnl" ] ; then
+      if [ "${intel}" = "yes" ] ; then
+        ompt_c_compiler=icc
+        ompt_cxx_compiler=icpc
+        libomp_oss_name=iomp5
       fi
     fi
 
