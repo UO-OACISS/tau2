@@ -456,6 +456,7 @@ for arg in "$@"; do
 	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
+	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-help ...................................... display this help message."
@@ -618,6 +619,7 @@ for arg in "$@"; do
 	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
+	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
@@ -903,6 +905,7 @@ stff=no
 stffdir=
 sddf=no
 sddfdir=
+tau_uselm=yes
 iowrapper=no
 dmapp=no
 zepto=no
@@ -1019,6 +1022,11 @@ for arg in "$@"; do
 	    cxx_compiler=g++
 	    shift
 	    ;;
+
+	-nolm)
+            tau_uselm=no
+            shift
+            ;;
 
 	-ibm)
 	    c_compiler=xlc_r
@@ -5359,6 +5367,13 @@ fi
 /bin/rm -f gccAuditorTest.*
 
 
+######################################################################
+# Do we need -lm Ubuntu does!
+if [ -f /etc/issue -a "x$tau_uselm" != "xno" -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then
+  tau_uselm=yes
+  fixmakeargs="$fixmakeargs TAU_USELM"
+fi
+  
 ######################################################################
 # TEST FOR ALL MACHINE TYPES
 case $machine in
