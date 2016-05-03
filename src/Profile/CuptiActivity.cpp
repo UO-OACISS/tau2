@@ -1,5 +1,4 @@
 #include <Profile/CuptiActivity.h>
-#include <Profile/CudaDisassembly.h>
 #include <iostream>
 using namespace std;
 
@@ -11,7 +10,7 @@ static void *tau_handle = NULL;
 
 static int subscribed = 0;
 
-// #define TAU_DEBUG_CUPTI_SASS 1
+// #define TAU_DEBUG_CUPTI 1
 // #define TAU_DEBUG_CUPTI_SAMPLE
 // #define TAU_DEBUG_CUPTI_COUNTERS
 
@@ -30,7 +29,7 @@ do {                                                                        \
 /* END: Unified Memory */
 
 /* BEGIN:  Dump cubin (sass) */
-static std::map<std::string, ImixStats> map_imixStats;
+// static std::map<std::string, ImixStats> map_imixStats;
 
 #if CUDA_VERSION >= 5500
 void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
@@ -39,7 +38,7 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
   if(TauEnv_get_cuda_track_sass()) {
     const char *pCubin;
     size_t cubinSize;
-  
+    std::string border = "======================================================================";
     // dump the cubin at MODULE_LOADED_STARTING
     CUpti_ModuleResourceData *moduleResourceData = (CUpti_ModuleResourceData *)resourceDescriptor; 
     // #endif
@@ -53,7 +52,8 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
 
       pCubin = moduleResourceData->pCubin;
       cubinSize = moduleResourceData->cubinSize;
-
+      int i = get_device_id();
+      // BEGIN: CUBIN Dump
       char str_source[500];
       char str_int[5];
       strcpy (str_source,TauEnv_get_profiledir());
@@ -71,11 +71,55 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
       
       fwrite(pCubin, sizeof(uint8_t), cubinSize, cubin);
       fclose(cubin);
-      std::map<std::string, ImixStats> map_imixStats;      
+      // END:  CUBIN Dump
+            
       // do disassembly here (return map)
-      map_imixStats = print_instruction_mixes(str_source, get_device_id(), fp_imix_out[get_device_id()]);
-      // if this flag not set, then pass TauEnv_get_cuda_binary_exe()
-      cout << "[CuptiActivity]:  map_imixStats.empty(): " << map_imixStats.empty() << endl;
+#ifdef TAU_DEBUG_CUPTI_SASS
+      cout << "get_device_id(): " << get_device_id() << endl;
+#endif
+      map_disassem = parse_cubin(str_source, get_device_id());
+      map_imix_static = print_instruction_mixes();
+      // cout << "map_disassem.empty(): " << map_disassem.empty() << endl;
+      
+      for (std::map<std::pair<int, int>, CudaOps>::iterator it=map_disassem.begin(); 
+	   it != map_disassem.end(); ++it) {
+	CudaOps cuops = it->second;
+	cout << "[CuptiActivity]:  cuops.instruction: " << cuops.instruction << endl;
+      }      
+
+      // BEGIN:  Instruction mix output
+      if (fp_imix_out[i] == NULL) {
+	char str_int2[5];
+	sprintf (str_int2, "%d", (i+1));
+#ifdef TAU_DEBUG_CUPTI_SASS
+	printf("About to create file pointer for Instruction Mix output: %i\n", i);
+#endif
+	char str_imix[500];
+	strcpy (str_imix,TauEnv_get_profiledir());
+	strcat (str_imix,"/");
+	strcat (str_imix,"imix_stats_");
+	strcat (str_imix, str_int2);
+	strcat (str_imix, ".txt");
+	
+	fp_imix_out[i] = fopen(str_imix, "w");
+	fprintf(fp_imix_out[i], "=======================================================================\n");
+	fprintf(fp_imix_out[i], "\t\tCUDA Kernel Instruction Mix Breakdown (static)\n");
+	fprintf(fp_imix_out[i], "=======================================================================\n");
+	// BEGIN:  Instruction mix output
+	for (std::map<std::string, ImixStats>::iterator it=map_imix_static.begin(); 
+	     it != map_imix_static.end(); ++it) {
+	  ImixStats is = it->second;
+	  const char* kernel = demangleName(is.kernel.c_str());
+#ifdef TAU_DEBUG_CUPTI_SASS
+	  cout << "[CuptiActivity]:  kernel: " << kernel << ", flops_pct: " << is.flops_pct 
+	       << "%, ctrlops_pct: " << is.ctrlops_pct << "%, memops_pct: " << is.memops_pct << "%\n";
+#endif
+	  fprintf(fp_imix_out[i], "Kernel: %s\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n\n", 
+		  kernel, is.flops_raw, is.memops_raw, is.ctrlops_raw, 
+		  is.totops_raw, is.flops_pct, is.memops_pct, is.ctrlops_pct);
+	}
+	fprintf(fp_imix_out[i], "=======================================================================\n");	
+      }	// END:  Instruction mix output	  
     }
     // else if (cbid == CUPTI_CBID_RESOURCE_MODULE_UNLOAD_STARTING) {
     //   // You can dump the cubin either at MODULE_LOADED or MODULE_UNLOAD_STARTING
@@ -380,6 +424,7 @@ void Tau_cupti_onunload() {
        	fclose(fp_source[i]);
        	fclose(fp_instr[i]);
        	fclose(fp_func[i]);
+	fclose(fp_imix_out[i]);
       }
 #endif
     }
@@ -622,7 +667,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				}
 			}
 		}
-
 	}
 	//invaild or nvtx, do nothing
 	else {
@@ -717,11 +761,13 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 		err = cuptiActivityEnqueueBuffer(context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 #endif
 		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
-   
+		
+
     for (int i=0; i < device_count; i++) {
 #ifdef TAU_DEBUG_CUPTI_COUNTERS
       printf("Kernels encountered/recorded: %d/%d.\n", kernels_encountered[i], kernels_recorded[i]);
 #endif
+
       if (kernels_recorded[i] == kernels_encountered[i])
       {
         clear_counters(i);
@@ -1073,7 +1119,34 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #endif
       
       eventMap.erase(eventMap.begin(), eventMap.end());
-			name = demangleName(name);
+      const char* name_og = name;
+      name = demangleName(name);
+//       // BEGIN:  Instruction mix (dynamic)
+//       int k = get_device_id();
+//       if(TauEnv_get_cuda_track_sass()) {
+// 	uint32_t fid = getFunctionId(name_og, functionMap);
+// 	cout << "fid: " << fid << endl;
+// 	//  pass map_imixStats
+// 	std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
+// 	map_imix_dynamic = write_runtime_imix(fid, instrSamp_list, map_imix_static, srcLocMap, name);
+// 	// BEGIN:  Instruction mix output
+// 	fprintf(fp_imix_out[k], "\t\tCUDA Kernel Instruction Mix Breakdown (dynamic)\n");
+// 	fprintf(fp_imix_out[k], "=======================================================================\n");
+// 	for (std::map<std::string, ImixStats>::iterator it=map_imix_dynamic.begin(); 
+// 	     it != map_imix_dynamic.end(); ++it) {
+// 	  ImixStats is = it->second;
+// 	  const char* kernel = demangleName(is.kernel.c_str());
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	  cout << "[CuptiActivity]:  kernel: " << name << ", flops_pct: " << is.flops_pct 
+// 	       << "%, ctrlops_pct: " << is.ctrlops_pct << "%, memops_pct: " << is.memops_pct << "%\n";
+// #endif
+// 	  fprintf(fp_imix_out[k], "Kernel: %s\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n\n", 
+// 		  name, is.flops_raw, is.memops_raw, is.ctrlops_raw, 
+// 		  is.totops_raw, is.flops_pct, is.memops_pct, is.ctrlops_pct);
+// 	}
+// 	fprintf(fp_imix_out[k], "=======================================================================\n");	
+//       }
+//       // END:  Instruction mix (dynamic)
 
 			// if(TauEnv_get_cuda_track_sass()) {
 			// bool found = false;
@@ -2103,6 +2176,24 @@ notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
       printf("fp_func[%i] already exists!\n", i);
 #endif
     }
+    // // BEGIN:  Instruction mix output
+    // if (fp_imix_out[i] == NULL) {
+    //   char str_int2[5];
+    //   sprintf (str_int2, "%d", (i+1));
+    //   //#ifdef TAU_DEBUG_CUPTI_SASS
+    //   printf("About to create file pointer for Instruction Mix output: %i\n", i);
+    //   //#endif
+    //   char str_imix[500];
+    //   strcpy (str_imix,TauEnv_get_profiledir());
+    //   strcat (str_imix,"/");
+    //   strcat (str_imix,"imix_stats_");
+    //   strcat (str_imix, str_int2);
+    //   strcat (str_imix, ".txt");
+      
+    //   fp_imix_out[i] = fopen(str_imix, "w");
+    //   fprintf(fp_imix_out[i], "=======================================================================\n");
+    //   fprintf(fp_imix_out[i], "\t\t\tCUDA Kernel Instruction Mix Breakdown\n");
+    // }
   } // deviceCount
 }
 /*  END:  SASS added  */
