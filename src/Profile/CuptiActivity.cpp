@@ -73,20 +73,11 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
       fclose(cubin);
       // END:  CUBIN Dump
             
-      // do disassembly here (return map)
 #ifdef TAU_DEBUG_CUPTI_SASS
       cout << "get_device_id(): " << get_device_id() << endl;
 #endif
       map_disassem = parse_cubin(str_source, get_device_id());
       map_imix_static = print_instruction_mixes();
-      // cout << "map_disassem.empty(): " << map_disassem.empty() << endl;
-      
-      for (std::map<std::pair<int, int>, CudaOps>::iterator it=map_disassem.begin(); 
-	   it != map_disassem.end(); ++it) {
-	CudaOps cuops = it->second;
-	cout << "[CuptiActivity]:  cuops.instruction: " << cuops.instruction << endl;
-      }      
-
       // BEGIN:  Instruction mix output
       if (fp_imix_out[i] == NULL) {
 	char str_int2[5];
@@ -97,28 +88,11 @@ void CUPTIAPI dumpCudaModule(CUpti_CallbackId cbid, void *resourceDescriptor)
 	char str_imix[500];
 	strcpy (str_imix,TauEnv_get_profiledir());
 	strcat (str_imix,"/");
-	strcat (str_imix,"imix_stats_");
+	strcat (str_imix,"sass_imix_stats_");
 	strcat (str_imix, str_int2);
 	strcat (str_imix, ".txt");
 	
 	fp_imix_out[i] = fopen(str_imix, "w");
-	fprintf(fp_imix_out[i], "=======================================================================\n");
-	fprintf(fp_imix_out[i], "\t\tCUDA Kernel Instruction Mix Breakdown (static)\n");
-	fprintf(fp_imix_out[i], "=======================================================================\n");
-	// BEGIN:  Instruction mix output
-	for (std::map<std::string, ImixStats>::iterator it=map_imix_static.begin(); 
-	     it != map_imix_static.end(); ++it) {
-	  ImixStats is = it->second;
-	  const char* kernel = demangleName(is.kernel.c_str());
-#ifdef TAU_DEBUG_CUPTI_SASS
-	  cout << "[CuptiActivity]:  kernel: " << kernel << ", flops_pct: " << is.flops_pct 
-	       << "%, ctrlops_pct: " << is.ctrlops_pct << "%, memops_pct: " << is.memops_pct << "%\n";
-#endif
-	  fprintf(fp_imix_out[i], "Kernel: %s\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n\n", 
-		  kernel, is.flops_raw, is.memops_raw, is.ctrlops_raw, 
-		  is.totops_raw, is.flops_pct, is.memops_pct, is.ctrlops_pct);
-	}
-	fprintf(fp_imix_out[i], "=======================================================================\n");	
       }	// END:  Instruction mix output	  
     }
     // else if (cbid == CUPTI_CBID_RESOURCE_MODULE_UNLOAD_STARTING) {
@@ -419,7 +393,70 @@ void Tau_cupti_onunload() {
   }
   if(TauEnv_get_cuda_track_sass()) {
     if(TauEnv_get_cuda_csv_output()){
+      cout << "[CuptiActivity]:  Writing out instruction mix stats to file. This may take a few minutes.\n";
 #if CUDA_VERSION >= 5500
+//       // BEGIN:  Instruction mix (dynamic)
+      for (int k = 0; k < device_count_total; k++) {
+	fprintf(fp_imix_out[k], "=======================================================================\n");
+	fprintf(fp_imix_out[k], "\t\tCUDA Kernel Instruction Mix Breakdown\n");
+	fprintf(fp_imix_out[k], "=======================================================================\n");
+	for (std::map<uint32_t, FuncSampling>::iterator iter = functionMap.begin();
+	     iter != functionMap.end(); iter++) {
+	  uint32_t fid = iter->second.fid;
+	  string name = iter->second.name;
+	  //const char* name = demangleName(iter->second.name.c_str());
+#ifdef TAU_DEBUG_CUPTI_SASS
+	  cout << "[CuptiActivity]:  fid = " << fid << ".\n";
+#endif
+	  // check if fid exists
+	  if (functionMap.find(fid) != functionMap.end()) {
+	    std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
+	    ImixStats is_runtime = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
+	    cout << "[CuptiActivity]:  name: " << name << ".\n";
+
+	    for(std::map<string, ImixStats>::iterator it2= map_imix_static.begin();
+	  it2 != map_imix_static.end(); it2++) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	  cout << "it2->second.flops_pct: " << it2->second.flops_pct << ".\n";
+#endif
+	    }
+	    if (map_imix_static.find(name) != map_imix_static.end()) {
+	      ImixStats is_static = map_imix_static.find(name)->second;
+#ifdef TAU_DEBUG_CUPTI_SASS
+	      cout << "[CuptiActivity]:  kernel: " << demangleName(name.c_str()) 
+		   << ", flops_pct static: " << is_static.flops_pct 
+		   << "%, ctrlops_pct static: " << is_static.ctrlops_pct 
+		   << "%, memops_pct static: " << is_static.memops_pct
+		   << ", flops_pct rt: " << is_runtime.flops_pct 
+		   << "%, ctrlops_pct rt: " << is_runtime.ctrlops_pct 
+		   << "%, memops_pct rt: " << is_runtime.memops_pct << "%\n";
+#endif
+	      fprintf(fp_imix_out[k],"Kernel:  %s\n",demangleName(name.c_str()));
+	      fprintf(fp_imix_out[k], "STATIC:\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n", 
+	    is_static.flops_raw, is_static.memops_raw, 
+	    is_static.ctrlops_raw, is_static.totops_raw, 
+	    is_static.flops_pct, is_static.memops_pct, is_static.ctrlops_pct);	    
+	      fprintf(fp_imix_out[k], "DYNAMIC:\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n\n", 
+	      is_runtime.flops_raw, is_runtime.memops_raw, 
+	    is_runtime.ctrlops_raw, is_runtime.totops_raw, 
+	    is_runtime.flops_pct, is_runtime.memops_pct, is_runtime.ctrlops_pct);
+	    }
+	    else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	      cout << "[CuptiActivity]: is_static does not exist!\n";
+#endif
+	    }
+	  }
+	  else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+	    cout << "[CuptiActivity]:  FID: " << fid << " does not exist!\n";
+#endif
+	  }
+	}
+	fprintf(fp_imix_out[k], "=======================================================================\n");	
+	cout << "[CuptiActivity]:  Done.\n";
+//       // END:  Instruction mix (dynamic)
+      }
       for (int i = 0; i < device_count_total; i++) {
        	fclose(fp_source[i]);
        	fclose(fp_instr[i]);
@@ -672,6 +709,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	else {
 		return;
 	}
+
 }
 
 void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
@@ -791,7 +829,6 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 	} else {
 		printf("TAU: CUPTI Unknown error cannot read from buffer.\n");
 	}
-
 
 }
 
@@ -1125,26 +1162,36 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 //       int k = get_device_id();
 //       if(TauEnv_get_cuda_track_sass()) {
 // 	uint32_t fid = getFunctionId(name_og, functionMap);
-// 	cout << "fid: " << fid << endl;
-// 	//  pass map_imixStats
-// 	std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
-// 	map_imix_dynamic = write_runtime_imix(fid, instrSamp_list, map_imix_static, srcLocMap, name);
-// 	// BEGIN:  Instruction mix output
-// 	fprintf(fp_imix_out[k], "\t\tCUDA Kernel Instruction Mix Breakdown (dynamic)\n");
-// 	fprintf(fp_imix_out[k], "=======================================================================\n");
-// 	for (std::map<std::string, ImixStats>::iterator it=map_imix_dynamic.begin(); 
-// 	     it != map_imix_dynamic.end(); ++it) {
-// 	  ImixStats is = it->second;
-// 	  const char* kernel = demangleName(is.kernel.c_str());
-// #ifdef TAU_DEBUG_CUPTI_SASS
-// 	  cout << "[CuptiActivity]:  kernel: " << name << ", flops_pct: " << is.flops_pct 
-// 	       << "%, ctrlops_pct: " << is.ctrlops_pct << "%, memops_pct: " << is.memops_pct << "%\n";
-// #endif
-// 	  fprintf(fp_imix_out[k], "Kernel: %s\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n\n", 
-// 		  name, is.flops_raw, is.memops_raw, is.ctrlops_raw, 
-// 		  is.totops_raw, is.flops_pct, is.memops_pct, is.ctrlops_pct);
+// 	// check if fid exists
+// 	if (functionMap.find(fid) != functionMap.end()) {
+// 	  std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
+// 	  ImixStats is_runtime = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
+
+// 	  cout << "[CuptiActivity]:  kernel: " << name << ", flops_pct: " << is_runtime.flops_pct 
+// 	       << "%, ctrlops_pct: " << is_runtime.ctrlops_pct 
+// 	       << "%, memops_pct: " << is_runtime.memops_pct << "%\n";
+
 // 	}
-// 	fprintf(fp_imix_out[k], "=======================================================================\n");	
+// 	else {
+// 	  cout << "[CuptiActivity]:  FID: " << fid << " does not exist!\n";
+// 	}
+// 	// ImixStats is = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
+// 	// cout << "is.flops_pct: " << is.flops_pct << "%\n";
+
+// // 	map_imix_dynamic = write_runtime_imix(fid, instrSamp_list, map_imix_static, srcLocMap, name);
+// // 	for (std::map<std::string, ImixStats>::iterator it=map_imix_dynamic.begin(); 
+// // 	     it != map_imix_dynamic.end(); ++it) {
+// // 	  ImixStats is = it->second;
+// // 	  const char* kernel = demangleName(is.kernel.c_str());
+// // #ifdef TAU_DEBUG_CUPTI_SASS
+// // 	  cout << "[CuptiActivity]:  kernel: " << name << ", flops_pct: " << is.flops_pct 
+// // 	       << "%, ctrlops_pct: " << is.ctrlops_pct << "%, memops_pct: " << is.memops_pct << "%\n";
+// // #endif
+// // 	  fprintf(fp_imix_out[k], "Kernel: %s\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n\n", 
+// // 		  name, is.flops_raw, is.memops_raw, is.ctrlops_raw, 
+// // 		  is.totops_raw, is.flops_pct, is.memops_pct, is.ctrlops_pct);
+// // 	}
+// // 	fprintf(fp_imix_out[k], "=======================================================================\n");	
 //       }
 //       // END:  Instruction mix (dynamic)
 
@@ -2154,7 +2201,7 @@ notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
       char str_func[500];
       strcpy (str_func,TauEnv_get_profiledir());
       strcat (str_func,"/");
-      strcat (str_func,"sass_func");
+      strcat (str_func,"sass_func_");
       strcat (str_func, str_int);
       strcat (str_func, ".csv");
       
