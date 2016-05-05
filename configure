@@ -456,6 +456,7 @@ for arg in "$@"; do
 	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
+	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-help ...................................... display this help message."
@@ -618,6 +619,7 @@ for arg in "$@"; do
 	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
+	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
@@ -881,7 +883,7 @@ asmdex=download
 openmp=no
 ompt=no
 omptlib=
-omptlibrary=-liomp5
+omptlibrary=-lomp
 omptenabled=no
 download_ompt=no
 install_ompt=no
@@ -903,6 +905,7 @@ stff=no
 stffdir=
 sddf=no
 sddfdir=
+tau_uselm=yes
 iowrapper=no
 dmapp=no
 zepto=no
@@ -1019,6 +1022,11 @@ for arg in "$@"; do
 	    cxx_compiler=g++
 	    shift
 	    ;;
+
+	-nolm)
+            tau_uselm=no
+            shift
+            ;;
 
 	-ibm)
 	    c_compiler=xlc_r
@@ -5360,6 +5368,13 @@ fi
 
 
 ######################################################################
+# Do we need -lm Ubuntu does!
+if [ -f /etc/issue -a "x$tau_uselm" != "xno" -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then
+  tau_uselm=yes
+  fixmakeargs="$fixmakeargs TAU_USELM"
+fi
+  
+######################################################################
 # TEST FOR ALL MACHINE TYPES
 case $machine in
     hp9000s700 | hp9000s800)
@@ -5926,9 +5941,11 @@ if [ "x$download_unwind" = xyes ] ; then
         if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
           # Some systems install to lib64 instead of lib
           if [ -d "$unwind_dir/lib64" -a ! -d "$unwind_dir/lib" ] ; then
-            pushd "$unwind_dir"
+            tdir=$unwind_dir
+	    pwddir=${PWD}
+            cd $tdir
             ln -s lib64 lib
-            popd
+            cd $pwddir
           fi
           echo "...Success."
         else
@@ -5966,12 +5983,21 @@ libomp_oss=LLVM-openmp-0.1
 libomp_osstgz=${libomp_oss}.tar.gz
 libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz
 libomp_oss_name=iomp5
-libomp_ossdir=${targetdir}/${architecture}/lib
+if [ "${omptlib}" = "" ] ; then 
+    libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
+    libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable
+else
+    libomp_ossdir_shared=${omptlib}
+    libomp_ossdir_static=${omptlib}
+fi
 libomp_ossinc=${targetdir}/include
 libomp_cmake_instdir=${targetdir}/${architecture}
 
-if [ ! -r ${libomp_ossdir} ] ; then
-  mkdir -p ${libomp_ossdir}
+if [ ! -r ${libomp_ossdir_shared} ] ; then
+  mkdir -p ${libomp_ossdir_shared}
+fi
+if [ ! -r ${libomp_ossdir_static} ] ; then
+  mkdir -p ${libomp_ossdir_static}
 fi
 if [ ! -r ${libomp_ossinc} ] ; then
   mkdir -p ${libomp_ossinc}
@@ -5991,18 +6017,18 @@ fi
       ompt_c_compiler=gcc
       ompt_cxx_compiler=g++
       libomp_oss_name=gomp
-      if [ "${architecture}" = "craycnl" ] ; then
-        if [ "${intel}" = "yes" ] ; then
-          ompt_c_compiler=icc
-          ompt_cxx_compiler=icpc
-          libomp_oss_name=iomp5
-        fi
+    fi
+    if [ "${architecture}" = "craycnl" ] ; then
+      if [ "${intel}" = "yes" ] ; then
+        ompt_c_compiler=icc
+        ompt_cxx_compiler=icpc
+        libomp_oss_name=iomp5
       fi
     fi
 
 if [ "x$download_ompt" = xyes ] ; then
-  if [ ! -f ${targetdir}/${architecture}/lib/shared-disable/lib${libomp_oss_name}.a ] ; then
-    install_ompt=yes
+  install_ompt=yes
+  if [ ! -f ${libomp_ossdir_static}/lib${libomp_oss_name}.a -o ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ] ; then
     preomptdir=`pwd`
 
     #check Cmake exists
@@ -6014,8 +6040,8 @@ if [ "x$download_ompt" = xyes ] ; then
 
     echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
 
-    if [ -r "$libomp_ossdir/lib${libomp_oss_name}.so" -a $libomp_ossdir/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
-      echo "NOTE: $libomp_ossdir/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
+    if [ -r "${libomp_ossdir_static}/lib${libomp_oss_name}.a" -a ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
+      echo "NOTE: ${libomp_ossdir_shared}/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
       /bin/rm -rf ${libomp_oss}
     fi
     # get the tar file
@@ -6065,23 +6091,22 @@ if [ "x$download_ompt" = xyes ] ; then
 	      make install >> $libomp_oss_log 2>&1
           # copy the header to our source area, anyway - we need it.
           cp ./include/*.h ${START_DIR}/include/.
-          libomp_ossdir=${libomp_cmake_instdir}/lib
+          libomp_ossdir_shared=${libomp_cmake_instdir}/lib
+          libomp_ossdir_static=${libomp_cmake_instdir}/lib
           echo "...Success."
         else
-          echo "ERROR BUILDING $libomp_ossdir!"
+          echo "ERROR BUILDING OMPT support!"
           echo "Please check `pwd`/${libomp_oss_log}"
 		  exit 1; 
         fi
       else
-        echo "ERROR BUILDING $libomp_ossdir!"
+        echo "ERROR BUILDING OMPT support!"
         echo "Please check `pwd`/${libomp_oss_log}"
 		exit 1; 
       fi
     fi
-  else
-    install_ompt=no
   fi
-  omptlib=${libomp_ossdir}
+  omptlib=${libomp_ossdir_shared}
   omptlibrary=-l${libomp_oss_name}
   cd $preomptdir
 else
@@ -9446,31 +9471,54 @@ cp ${tauroot}/tools/src/tau_throttle.sh ${targetdir}/${architecture}/bin
 echo "... done"
 echo "***********************************************************************"
 
-
-#echo "Before HERE --> ompt=$ompt libomp_ossdir=${libomp_ossdir}  ${libomp_ossdir}/lib${libomp_oss_name}.so "
-# Special OMPT processing that needs tauoptions to be set
-if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
+# Install the Shared object library for LLVM-OMPT
+if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -a -d ${targetdir}/${architecture}/lib ]; then
   if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     echo "BGQ ompt"
   else
     echo "TAU: Copying lib${libomp_oss_name}.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
     ompt_instdir=${targetdir}/${architecture}/lib/shared${tauoptions}
     mkdir -p ${ompt_instdir}
-    cp ${libomp_ossdir}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ; 
-    cp ${libomp_ossdir}/libomp.so ${ompt_instdir}/libomp.so ;
+    cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ; 
+    cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
     fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
-    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
+
+    # also put them in the "disable" directory for later builds - but only do it once
+    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+    if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then
+        mkdir -p ${ompt_instdir}
+        cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
+        cp ${libomp_ossdir_shared}/libgomp.so ${ompt_instdir}/libgomp.so ; 
+        cp ${libomp_ossdir_shared}/libiomp5.so ${ompt_instdir}/libiomp5.so ;
+    fi
+	# apex also needs the headers...
+	mkdir -p ${targetdir}/${architecture}/include
+    cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include
+  fi
+fi
+
+# Install the Static object library for LLVM-OMPT
+if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_static}/lib${libomp_oss_name}.a -a -d ${targetdir}/${architecture}/lib ]; then
+  if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
+    echo "BGQ ompt"
+  else
+    echo "TAU: Copying lib${libomp_oss_name}.a to ${targetdir}/${architecture}/lib/static${tauoptions} ..."
     ompt_instdir=${targetdir}/${architecture}/lib/static${tauoptions}
     mkdir -p ${ompt_instdir}
-    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
-    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
-    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
-    mkdir -p ${ompt_instdir}
-    cp ${libomp_ossdir}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
-    cp ${libomp_ossdir}/libomp.a ${ompt_instdir}/libomp.a ; 
+    cp ${libomp_ossdir_static}/lib${libomp_oss_name}.a ${ompt_instdir}/lib${libomp_oss_name}.a ; 
+    cp ${libomp_ossdir_static}/libomp.a ${ompt_instdir}/libomp.a ;
+    echo "ompt_dir=$ompt_dir"
+
+    # also put them in the "disable" directory for later builds - but only do it once
+    ompt_instdir=${targetdir}/${architecture}/lib/static-disable
+    if [ ! ${libomp_ossdir_static} = ${ompt_instdir} ] ; then
+        mkdir -p ${ompt_instdir}
+        cp ${libomp_ossdir_static}/libomp.a ${ompt_instdir}/libomp.a ;
+        cp ${libomp_ossdir_static}/libgomp.a ${ompt_instdir}/libgomp.a ; 
+        cp ${libomp_ossdir_static}/libiomp5.a ${ompt_instdir}/libiomp5.a ;
+    fi
 	# apex also needs the headers...
 	mkdir -p ${targetdir}/${architecture}/include
     cp ${START_DIR}/include/omp*.h ${targetdir}/${architecture}/include

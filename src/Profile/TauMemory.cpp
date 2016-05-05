@@ -67,6 +67,10 @@
 #include <catamount/catmalloc.h>
 #endif /* TAU_CATAMOUNT */
 
+#ifdef TAU_BEACON
+#include <Profile/TauBeacon.h>
+#endif /* TAU_BEACON */
+
 using namespace std;
 using namespace tau;
 
@@ -1638,6 +1642,10 @@ extern "C" int Tau_trigger_memory_rss_hwm(void) {
   if (vmhwm > 0)
     TAU_CONTEXT_EVENT(proc_vmhwm, (double) vmhwm);
 
+#ifdef TAU_BEACON
+  TauBeaconPublish((double) vmrss, "KB", "MEMORY", "Memory Footprint (VmRSS - Resident Set Size)");
+  TauBeaconPublish((double) vmhwm, "KB", "MEMORY", "Peak Memory Usage (VmHWM - High Water Mark)");
+#endif /* TAU_BEACON */
   // TAU_VERBOSE("Tau_trigger_memory_rss_hwm: rss = %lld, hwm = %lld in KB\n", vmrss, vmhwm);
 
   return 1; // SUCCESS
