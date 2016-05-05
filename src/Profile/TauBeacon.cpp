@@ -84,8 +84,6 @@ int TauBeaconPublish(double value, char *units, char *topic, char *additional_in
        exit(1);
      }
 
-     strcpy(topic_info->topic_name, topic);
-     sprintf(topic_info->severity, "INFO"); 
      // initialize data structures 
      memset(&binfo, 0, sizeof(binfo));
      strcpy(binfo.beep_version, "1.0");
@@ -95,10 +93,14 @@ int TauBeaconPublish(double value, char *units, char *topic, char *additional_in
        fprintf(stderr, "BEACON_Connect failed. ret = %d\n", ret);
        exit(1); 
      }
-     strcpy(eprop->topic_scope, "node");
    }
    
+   // fill up the topic struct each time. 
+   strcpy(topic_info->topic_name, topic);
+   sprintf(topic_info->severity, "INFO"); 
    sprintf(eprop->topic_payload, "data=%g; units=%s; name=%s; node=%s; jobid=%d\n", value, units, additional_info, hostname, jobid); 
+   strcpy(eprop->topic_scope, "node");
+
    ret = BEACON_Publish(handle, topic_info->topic_name, eprop); 
    if (ret != BEACON_SUCCESS) {
      fprintf(stderr, "BEACON_Publish failed. ret = %d\n", ret);
