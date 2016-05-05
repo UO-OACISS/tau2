@@ -98,7 +98,7 @@ int TauBeaconPublish(double value, char *units, char *topic, char *additional_in
      strcpy(eprop->topic_scope, "node");
    }
    
-   sprintf(eprop->topic_payload, "data=%g; units=%s; name=%s; node=%s; jobid=%d", value, units, additional_info, hostname, jobid); 
+   sprintf(eprop->topic_payload, "data=%g; units=%s; name=%s; node=%s; jobid=%d\n", value, units, additional_info, hostname, jobid); 
    ret = BEACON_Publish(handle, topic_info->topic_name, eprop); 
    if (ret != BEACON_SUCCESS) {
      fprintf(stderr, "BEACON_Publish failed. ret = %d\n", ret);
