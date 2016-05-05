@@ -2581,7 +2581,7 @@ TauUserEvent & ThePVarsMPIEvents(int index, int total_events) {
 extern "C" void Tau_track_pvar_event(int index, int total_events, double data) {
   ThePVarsMPIEvents(index, total_events).TriggerEvent(data, Tau_get_thread()); 
 #ifdef TAU_BEACON
-  TauBeaconPublish(data, "counts", "MPI_T_PVAR", ThePVarsMPIEvents(index, total_events).GetName.c_str());
+  TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(index, total_events).GetName().c_str()));
 #endif /* TAU_BEACON */
 }
 #ifdef TAU_SCOREP
