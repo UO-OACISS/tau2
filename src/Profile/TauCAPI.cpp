@@ -59,6 +59,10 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauSCOREP.h>
 #endif
 
+#ifdef TAU_BEACON
+#include <Profile/TauBeacon.h>
+#endif /* TAU_BEACON */
+
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
@@ -2576,6 +2580,9 @@ TauUserEvent & ThePVarsMPIEvents(int index, int total_events) {
 
 extern "C" void Tau_track_pvar_event(int index, int total_events, double data) {
   ThePVarsMPIEvents(index, total_events).TriggerEvent(data, Tau_get_thread()); 
+#ifdef TAU_BEACON
+  TauBeaconPublish(data, "counts", "MPI_T_PVAR", ThePVarsMPIEvents(index, total_events).GetName.c_str());
+#endif /* TAU_BEACON */
 }
 #ifdef TAU_SCOREP
 /* If SCOREP is defined, there is TauMpi wrapper that typically contains this routine */
