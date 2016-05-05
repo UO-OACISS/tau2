@@ -1,5 +1,6 @@
 #include <Profile/TauGpu.h>
 #include <Profile/CuptiLayer.h>
+#include <Profile/CudaSass.h>
 #include <cuda.h>
 #include <cupti.h>
 #include <math.h>
@@ -35,7 +36,7 @@
 	} \
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
-
+// #define ACTIVITY_BUFFER_SIZE (8192*1024)
 /* Some API calls deprecated in 5.5
  */
 #if CUDA_VERSION >= 7000
@@ -162,6 +163,42 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes);
 
+/* extern "C" void Tau_cupti_register_func_event( */
+/*                                               const char *name, */
+/*                                               uint32_t deviceId, */
+/*                                               uint32_t streamId, */
+/*                                               uint32_t contextId, */
+/*                                               uint32_t functionIndex, */
+/*                                               double timestamp, */
+/*                                               uint32_t id, */
+/*                                               uint32_t moduleId, */
+/* 					      const char *kname, */
+/*                                               const char *demangled); */
+
+/* extern "C" void Tau_cupti_register_instruction_event( */
+/* 						     const char *name, */
+/* 						     uint32_t deviceId, */
+/* 						     uint32_t streamId, */
+/* 						     uint32_t contextId, */
+/* 						     uint32_t correlationId, */
+/* 						     double start, */
+/* 						     double stop, double delta_tstamp, */
+/* 						     uint32_t sourceLocatorId, */
+/* 						     uint32_t functionId, */
+/* 						     uint32_t pcOffset, */
+/* 						     uint32_t executed, */
+/* 						     uint32_t threadsExecuted); */
+
+/* extern "C" void Tau_cupti_register_source_event( */
+/*                                                 const char *name, */
+/*                                                 uint32_t deviceId, */
+/*                                                 uint32_t streamId, */
+/*                                                 uint32_t contextId, */
+/*                                                 uint32_t sourceId, */
+/*                                                 double timestamp, */
+/*                                                 const char *fileName, */
+/*                                                 uint32_t lineNumber); */
+
 extern "C" x_uint64 TauTraceGetTimeStamp();
 
 uint8_t *activityBuffer;
@@ -223,20 +260,44 @@ void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
 
 int get_device_count();
+int get_device_id();
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
 
+
 std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
+static std::map<uint32_t, SourceSampling> srcLocMap;
+
 #endif // CUPTI_API_VERSION >= 3
 
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
+std::map<uint32_t, CUpti_ActivityContext> contextMap;
+std::list<std::string> kernelList;
+
+static std::map<uint32_t, FuncSampling> functionMap;
+static std::map<uint32_t, std::list<InstrSampling> > instructionMap; // indexing by functionId 
+static std::map<std::pair<int, int>, CudaOps> map_disassem;
+static std::map<std::string, ImixStats> map_imix_static;
+static std::map<std::string, ImixStats> map_imix_dynamic;
 
 #ifndef TAU_MAX_GPU_DEVICES
 #define TAU_MAX_GPU_DEVICES 16
 #endif
+
+// sass output
+FILE *fp_source[TAU_MAX_GPU_DEVICES];
+FILE *fp_instr[TAU_MAX_GPU_DEVICES];
+FILE *fp_func[TAU_MAX_GPU_DEVICES];
+FILE *cubin;
+FILE *fp_imix_out[TAU_MAX_GPU_DEVICES];
+
+static int current_device_id = 0;
+static int current_context_id = 0;
+static int device_count_total = 1;
+static double recentTimestamp = 0;
 
 /* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
  * allocate/deallocate memory. So all the counters values need to be allocated
@@ -250,6 +311,22 @@ int kernels_recorded[TAU_MAX_GPU_DEVICES] = {0};
 
 bool counters_averaged_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
 bool counters_bounded_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
+
+void createFilePointerSass(int device_count);
+static const char * getUvmCounterKindString(CUpti_ActivityUnifiedMemoryCounterKind kind);
+static const char * getUvmCounterScopeString(CUpti_ActivityUnifiedMemoryCounterScope scope);
+static const char * getComputeApiKindString(CUpti_ActivityComputeApiKind kind);
+
+typedef struct cupti_eventData_st {
+  CUpti_EventGroup eventGroup;
+  CUpti_EventID eventId;
+} cupti_eventData;
+
+// Structure to hold data collected by callback
+typedef struct RuntimeApiTrace_st {
+  cupti_eventData *eventData;
+  uint64_t eventVal;
+} RuntimeApiTrace_t;
 
 void record_gpu_counters_at_launch(int device)
 { 

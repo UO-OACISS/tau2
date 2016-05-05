@@ -125,7 +125,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 #PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o ctau_impl.o #ENDIF#
 #CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF#
-#CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o CudaSass.o #ENDIF#
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
@@ -891,6 +891,9 @@ TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+
+CudaSass.o : CudaSass.cpp $(HDRS) ../../include/Profile/CudaSass.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
