@@ -1,6 +1,5 @@
 #include <Profile/TauGpu.h>
 #include <Profile/CuptiLayer.h>
-//#include <Profile/CudaDisassembly.h>
 #include <Profile/CudaSass.h>
 #include <cuda.h>
 #include <cupti.h>
@@ -267,45 +266,8 @@ int get_device_id();
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
 
 
-/* /\* BEGIN: SASS Structs *\/ */
-/* class InstrSampling */
-/* { */
-/*  public: */
-/*   uint32_t sourceLocatorId; */
-/*   uint32_t functionId; */
-/*   uint32_t pcOffset; */
-/*   uint32_t correlationId; */
-/*   uint32_t executed; */
-/*   uint32_t threadsExecuted; */
-/*   double timestamp_delta; */
-/*   double timestamp_current; */
-/* }; */
-
-/* class FuncSampling */
-/* { */
-/*  public: */
-/*   uint32_t fid; */
-/*   uint32_t contextId; */
-/*   uint32_t moduleId; */
-/*   uint32_t functionIndex; */
-/*   const char* name; */
-/*   const char* demangled; */
-/*   double timestamp; */
-/*   uint32_t deviceId; */
-/* }; */
-
-/* class SourceSampling */
-/* { */
-/*  public: */
-/*   uint32_t sid; */
-/*   const char* fileName; */
-/*   uint32_t lineNumber; */
-/*   double timestamp; */
-/* }; */
-/* /\* END: SASS Structs *\/ */
-
 std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
-std::map<uint32_t, SourceSampling> srcLocMap;
+static std::map<uint32_t, SourceSampling> srcLocMap;
 
 #endif // CUPTI_API_VERSION >= 3
 
@@ -315,11 +277,11 @@ std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 std::map<uint32_t, CUpti_ActivityContext> contextMap;
 std::list<std::string> kernelList;
 
-std::map<uint32_t, FuncSampling> functionMap;
-std::map<uint32_t, std::list<InstrSampling> > instructionMap; // indexing by functionId 
-std::map<std::pair<int, int>, CudaOps> map_disassem;
-std::map<std::string, ImixStats> map_imix_static;
-std::map<std::string, ImixStats> map_imix_dynamic;
+static std::map<uint32_t, FuncSampling> functionMap;
+static std::map<uint32_t, std::list<InstrSampling> > instructionMap; // indexing by functionId 
+static std::map<std::pair<int, int>, CudaOps> map_disassem;
+static std::map<std::string, ImixStats> map_imix_static;
+static std::map<std::string, ImixStats> map_imix_dynamic;
 
 #ifndef TAU_MAX_GPU_DEVICES
 #define TAU_MAX_GPU_DEVICES 16

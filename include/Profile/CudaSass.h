@@ -6,7 +6,6 @@
 #include <list>
 #include <vector>
 #include <sstream>
-// #include <Profile/CudaDisassembly.h>
 #include <set>
 
 using namespace std;
@@ -52,40 +51,6 @@ static std::set<std::string> s_SIMD;
 static std::set<std::string> s_Misc;
 static std::vector<CudaOps> v_cudaOps;
 static bool init_instruction = false;
-
-/* class CudaOps  */
-/* { */
-/*  public: */
-/*   std::string kernel; */
-/*   std::string filename; */
-/*   int lineno; */
-/*   std::string instruction; */
-/*   int pcoffset; */
-/*   int deviceid; */
-/*  CudaOps(std::string krnl, std::string fname, int lno, std::string instr, int pc, int deviceId) : \ */
-/*   kernel(krnl), filename(fname), lineno(lno), instruction(instr), pcoffset(pc), deviceid(deviceId) { } */
-/*   ~CudaOps(); */
-
-/* }; */
-
-
-/* CudaOps::~CudaOps() */
-/* { */
-/*   for (int i = 0; i < v_cudaOps.size(); i++) */
-/*     delete v_cudaOps[i]; */
-/*   v_cudaOps.clear(); */
-/*   s_FP.clear(); */
-/*   s_Int.clear(); */
-/*   s_Conv.clear(); */
-/*   s_Move.clear(); */
-/*   s_Pred.clear(); */
-/*   s_Tex.clear(); */
-/*   s_LdSt.clear(); */
-/*   s_Surf.clear(); */
-/*   s_Ctrl.clear(); */
-/*   s_SIMD.clear(); */
-/*   s_Misc.clear(); */
-/* } */
 /* END:  Disassem Structs */
 
 /* BEGIN: SASS Structs */
@@ -124,6 +89,8 @@ class SourceSampling
   double timestamp;
 };
 /* END: SASS Structs */
+
+/* // routines for calculating kernel level stats */
 /* void printInstrMap(std::map<uint32_t, std::list<InstrSampling> > instructionMap); */
 void printSourceMap(std::map<uint32_t, SourceSampling> srcLocMap);
 void printFuncMap(std::map<uint32_t, FuncSampling> funcMap);
@@ -134,19 +101,7 @@ uint32_t getKernelSamples(uint32_t functionIndex, std::map<uint32_t, std::list<I
 uint32_t getUniqueKernelLaunches(uint32_t functionIndex, std::map<uint32_t, std::list<InstrSampling> > instructionMap);
 const char* getKernelFilePath(uint32_t functionIndex, std::map<uint32_t, std::list<InstrSampling> > instructionMap, std::map<uint32_t, SourceSampling> srcLocMap);
 uint32_t getKernelLineNo(uint32_t functionIndex, std::map<uint32_t, std::list<InstrSampling> > instructionMap, std::map<uint32_t, SourceSampling> srcLocMap);
-std::map<std::string, ImixStats> write_runtime_imix(uint32_t functionId, std::list<InstrSampling> instrFunc_list, std::map<std::string, ImixStats> map_imix_static, std::map<uint32_t, SourceSampling> srcLocMap, std::string kernel);
-
-
-
-/* // routines for calculating kernel level stats */
-/* double getKernelExecutionTimes(uint32_t functionIndex); */
-/* uint32_t getKernelSamples(uint32_t functionIndex); */
-/* const char* getKernelFilePath(uint32_t functionIndex); */
-/* uint32_t getKernelLineNo(uint32_t functionIndex); */
-/* void resetKernelExecutionTimes(uint32_t functionIndex); */
-/* uint32_t getUniqueKernelLaunches(uint32_t functionIndex); */
-/* uint32_t getFunctionId(const char* name); */
-
+ImixStats write_runtime_imix(uint32_t functionId, std::list<InstrSampling> instrFunc_list, std::map<std::pair<int, int>, CudaOps> map_disassem, std::map<uint32_t, SourceSampling> srcLocMap, std::string kernel);
 std::vector<std::string> get_disassem_from_out(std::string cmd);
 std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file, int device_id);
 std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec, int device_id);
