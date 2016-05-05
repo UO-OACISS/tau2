@@ -1,0 +1,55 @@
+==================================================
+           CUDA SASS Sampling Example
+==================================================
+This example shows how to run the CUDA SASS sampling support in TAU.
+
+1)  Compile your binary with the "-g -lineinfo" flags:
+
+      nvcc -g -lineinfo matmult.cu -o matmult.o
+      nvcc -o matmult matmult.o
+
+2)  Assuming you've compiled TAU with CUDA support, issue the following command:
+
+      tau_exec -T cupti,serial -cupti -sass=kernel -csv ./matmult
+
+3)  The following files will be generated for each GPU, which can be 
+    post-processed with a script:
+
+    sass_func_i.csv
+    sass_imix_stats_i.txt
+    sass_instr_i.csv
+    sass_source_i.csv  
+
+Information about each of the files:
+
+    sass_func_i.csv
+    - timestamp - ns
+    - contextId - CUDA context id
+    - functionIndex - (not used)
+    - id - function's ID (same as functionId in sass_instr_i.csv)
+    - kind - (not used)
+    - moduleId - (not used) 
+    - name - kernel name
+    - demangled - kernel name (demangled)
+
+    sass_imix_stats_i.txt
+    - reports instruction mix statistics for static and dynamic collection methods  
+
+    sass_instr_i.csv
+    - timestamp - ns
+    - correlationId - kernel correlation ID (unique for each kernel instance) 
+    - executed - # times instruction executed
+    - flags - (not used)
+    - functionId - function's ID (same as id in sass_func_i.csv) 
+    - kind - (not used)
+    - notPredOffThreadsExecuted - (not used) 
+    - pcOffset - program counter offset
+    - sourceLocatorId - source location ID (same as id in sass_source_i.csv)
+    - threadsExecuted - # threads that executed instruction
+
+    sass_source_i.csv  
+    - timestamp - ns 
+    - id - source location ID (same as sourceLocatorId in sass_instr_i.csv)
+    - fileName - file path of source location
+    - lineNumber - source location line number
+    - kind - (not used)
