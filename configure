@@ -5941,9 +5941,11 @@ if [ "x$download_unwind" = xyes ] ; then
         if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
           # Some systems install to lib64 instead of lib
           if [ -d "$unwind_dir/lib64" -a ! -d "$unwind_dir/lib" ] ; then
-            pushd "$unwind_dir"
+            tdir=$unwind_dir
+	    pwddir=${PWD}
+            cd $tdir
             ln -s lib64 lib
-            popd
+            cd $pwddir
           fi
           echo "...Success."
         else
