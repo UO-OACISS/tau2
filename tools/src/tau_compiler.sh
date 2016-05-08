@@ -1534,7 +1534,12 @@ if [ $numFiles == 0 ]; then
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+        if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
+          OPARI_AWK_DIR=${optOpari2Dir}/libexec
+        else
+          OPARI_AWK_DIR=${TAU_BIN_DIR}
+        fi
+        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -2191,7 +2196,7 @@ else
   	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
               evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
 
-  cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+  cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${optOpariLibExecDir}/pomp2-parse-init-regions.awk > pompregions.c"
           evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
           cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
           evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
