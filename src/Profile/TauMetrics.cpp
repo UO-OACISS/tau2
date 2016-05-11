@@ -120,7 +120,7 @@ static void metricv_add(const char *name) {
   uint32_t numEvents, num_domains, num_events;
   size_t eventIdArraySizeBytes;
   size_t size, valueSize = TAU_CUPTI_MAX_NAME;
-  CUpti_EventID *eventIdArray;
+  CUpti_EventID *eventIdArray, *event_p;
   char event_char[TAU_CUPTI_MAX_NAME];
   char domain_char[TAU_CUPTI_MAX_NAME];
   cudaDeviceProp prop;
@@ -187,7 +187,7 @@ static void metricv_add(const char *name) {
                  domain = domainArray[domid];
 	         err = cuptiEventDomainGetNumEvents(domain, &num_events);
                  size = sizeof ( CUpti_EventID ) * num_events;
-                 CUpti_EventID* event_p = (CUpti_EventID*)malloc(size);
+                 event_p = (CUpti_EventID*)malloc(size);
                  err = cuptiEventDomainEnumEvents(domain, &size, event_p);
                  event_found = 0;
                  for(j = 0; j < size; j++)
@@ -199,6 +199,7 @@ static void metricv_add(const char *name) {
                       break;
                     }
                  }
+                 free(event_p);
                  if(event_found) break;
                }
                // get domain name
@@ -224,6 +225,8 @@ static void metricv_add(const char *name) {
              }
           }
         }
+        free(domainArray);
+        free(eventIdArray);
       }
     }
     if(!cupti_metric)
