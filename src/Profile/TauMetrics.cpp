@@ -84,6 +84,7 @@ typedef void (*function)(int, int, double[]);
 
 static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
+static int cumetric[TAU_MAX_METRICS];
 
 /* nfunctions can be different from nmetrics because
    a single call to PAPI can provide several metrics */
@@ -111,6 +112,7 @@ static void metricv_add(const char *name) {
   int j;
   int deviceCount, dev;
   int found, event_found;
+  int is_cupti_metric = 0;
   int domid, domainid;
   CUdevice device;
   CUpti_MetricID metricid;
@@ -171,6 +173,7 @@ static void metricv_add(const char *name) {
           // Metric was a Cupti metric, determine the events required
           if (retval2 == CUPTI_SUCCESS)
           {
+             is_cupti_metric = 1;
              cuptiMetricGetNumEvents(metricid, &numEvents);
              eventIdArraySizeBytes = numEvents * sizeof(CUpti_EventID);
              eventIdArray = (CUpti_EventID *) malloc(numEvents*sizeof(CUpti_EventID));
@@ -218,6 +221,7 @@ static void metricv_add(const char *name) {
                if(found != 1)
                {
                  metricv[nmetrics] = strdup(event_name.c_str());
+                 cumetric[nmetrics] = 1;
                  nmetrics++;
                }
              }
@@ -234,6 +238,12 @@ static void metricv_add(const char *name) {
       }
     }
     metricv[nmetrics] = strdup(name);
+#ifdef CUPTI
+    if(is_cupti_metric)
+      cumetric[nmetrics] = 2;
+    else
+#endif //CUPTI
+      cumetric[nmetrics] = 0;
     nmetrics++;
   }
 }
@@ -635,6 +645,13 @@ int TauMetrics_getMetricUsed(int metric) {
   } else {
     return 0;
   }
+}
+
+/*********************************************************************
+ * Query if a metric is Cupti metric or event
+ ********************************************************************/
+int TauMetrics_getIsCuptiMetric(int metric) {
+    return cumetric[metric];
 }
 
 /*********************************************************************
