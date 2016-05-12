@@ -76,6 +76,15 @@ extern "C" void esd_exit (elg_ui4 rid);
 double TauWindowsUsecD(void);
 #endif
 
+#ifdef CUPTI
+#ifdef __GNUC__
+#include "cupti_version.h"
+#include "cupti_events.h"
+#include "cupti_metrics.h"
+#include <cuda_runtime_api.h>
+#endif //__GNUC__
+#endif //CUPTI
+
 using namespace std;
 using namespace tau;
 
@@ -1421,6 +1430,45 @@ int TauProfiler_StoreData(int tid)
   return 1;
 }
 
+#ifdef CUPTI
+/*********************************************************************
+ * Query if a string is a CUPTI metric
+ ********************************************************************/
+static int is_cupti_metric(char const *str) {
+  int er, deviceCount, dev, retval;
+  CUpti_MetricID metricid;
+  CUdevice device;
+  er = cuDeviceGetCount(&deviceCount);
+  if (er == CUDA_ERROR_NOT_INITIALIZED) {
+    cuInit(0);
+    er = cuDeviceGetCount(&deviceCount);
+  }
+  if (er == CUDA_SUCCESS) {
+    // devices found.
+    //for(dev = 0; dev < deviceCount; dev++)
+    dev = 0;
+    {
+      retval = cuDeviceGet(&device, dev);
+      if(retval != CUDA_SUCCESS) {
+        fprintf(stderr, "Could not get device %d.\n", dev);
+      }
+      else {
+        retval = cuptiMetricGetIdFromName(device, str, &metricid);
+        // Metric was a Cupti metric.
+        if (retval == CUPTI_SUCCESS)
+        {
+          return 1;
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+#endif //CUPTI
+
+
 // Returns directory name for the location of a particular metric
 static int getProfileLocation(int metric, char *str)
 {
@@ -1480,6 +1528,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
   if (createFlag) {
     TAU_VERBOSE ("Profile directories created\n");
   }
+//exit(-1);
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     if (TauMetrics_getMetricUsed(i)) {
@@ -1489,6 +1538,9 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
       FILE* fp;
 
       getMetricHeader(i, metricHeader);
+#ifdef CUPTI
+      if(is_cupti_metric(&metricHeader[26])) continue;
+#endif //CUPTI
       getProfileLocation(i, profileLocation);
 //       sprintf(filename, "%s/temp.%d.%d.%d", profileLocation, 
 //         RtsLayer::myNode(), RtsLayer::myContext(), tid);
@@ -1608,8 +1660,17 @@ bool TauProfiler_createDirectories()
 
   static bool flag = true;
   if (flag && Tau_Global_numCounters > 1) {
+    string metricStr;
     for (int i = 0; i < Tau_Global_numCounters; i++) {
       if (TauMetrics_getMetricUsed(i)) {
+#ifdef CUPTI
+        metricStr = string(TauMetrics_getMetricName(i));
+        if(is_cupti_metric(metricStr.c_str()))
+        {
+          // metric is a cupti metric
+          continue;
+        }
+#endif //CUPTI
         char *newdirname = new char[1024];
         char *mkdircommand = new char[1024];
         getProfileLocation(i, newdirname);

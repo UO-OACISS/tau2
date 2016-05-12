@@ -110,7 +110,6 @@ static void metricv_add(const char *name) {
 #ifdef CUPTI
   int j;
   int deviceCount, dev;
-  int cupti_metric = 0;
   int found, event_found;
   int domid, domainid;
   CUdevice device;
@@ -177,7 +176,6 @@ static void metricv_add(const char *name) {
              eventIdArray = (CUpti_EventID *) malloc(numEvents*sizeof(CUpti_EventID));
              cuptiMetricEnumEvents(metricid, &eventIdArraySizeBytes, eventIdArray);
              // Get event name
-             cupti_metric = 1;
              for(i = 0; i < numEvents; i++) {
                // find domain for event i
                domid = 0;
@@ -229,19 +227,14 @@ static void metricv_add(const char *name) {
         free(eventIdArray);
       }
     }
-    if(!cupti_metric)
-    {
 #endif //CUPTI
-      for (i = 0; i < nmetrics; i++) {
-        if (strcasecmp(metricv[i], name) == 0) {
-          return;
-        }
+    for (i = 0; i < nmetrics; i++) {
+      if (strcasecmp(metricv[i], name) == 0) {
+        return;
       }
-      metricv[nmetrics] = strdup(name);
-      nmetrics++;
-#ifdef CUPTI
     }
-#endif //CUPTI
+    metricv[nmetrics] = strdup(name);
+    nmetrics++;
   }
 }
 
@@ -399,17 +392,55 @@ static int is_papi_metric(char *str) {
 
 #ifdef CUPTI
 /*********************************************************************
- * Query if a string is a CUPTI metric
+ * Query if a string is a CUPTI event
  ********************************************************************/
-static int is_cupti_metric(char *str) {
+static int is_cupti_event(char *str) {
   if (strncmp("CUDA", str, 4) == 0) {
 		if (Tau_CuptiLayer_is_cupti_counter(str))
 		{
 			return 1;
 		}
   }
+
   return 0;
 }
+
+/*********************************************************************
+ * Query if a string is a CUPTI metric
+ ********************************************************************/
+static int is_cupti_metric(char *str) {
+  int er, deviceCount, dev, retval;
+  CUpti_MetricID metricid;
+  CUdevice device;
+  er = cuDeviceGetCount(&deviceCount);
+  if (er == CUDA_ERROR_NOT_INITIALIZED) {
+    cuInit(0);
+    er = cuDeviceGetCount(&deviceCount);
+  }
+  if (er == CUDA_SUCCESS) {
+    // devices found.
+    //for(dev = 0; dev < deviceCount; dev++)
+    dev = 0;
+    {
+      retval = cuDeviceGet(&device, dev);
+      if(retval != CUDA_SUCCESS) {
+        fprintf(stderr, "Could not get device %d.\n", dev);
+      }
+      else {
+        retval = cuptiMetricGetIdFromName(device, str, &metricid);
+        // Metric was a Cupti metric.
+        if (retval == CUPTI_SUCCESS)
+        {
+          std::cout << str << " is a cupti metric." << std::endl;
+          return 1;
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
 #endif //CUPTI
 
 /*********************************************************************
@@ -463,7 +494,7 @@ static void initialize_functionArray()
     } else if (strcasecmp(metricv[i], "TAU_MPI_MESSAGE_SIZE") == 0) {
       functionArray[pos++] = metric_read_messagesize;
 #ifdef CUPTI
-		} else if (is_cupti_metric(metricv[i])) {
+		} else if (is_cupti_event(metricv[i])) {
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			//functionArray[pos++] = metric_read_cupti;
@@ -494,6 +525,8 @@ static void initialize_functionArray()
         /* PAPI handled separately */
       } else if (ktau && strncmp("KTAU", metricv[i], 4) == 0) {
         /* KTAU handled separately */
+      } else if(is_cupti_metric(metricv[i])) {
+        /* Cupti metrics handled separately */
       } else {
         fprintf(stderr, "TAU: Error: Unknown metric: %s\n", metricv[i]);
 
