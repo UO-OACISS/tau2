@@ -4241,6 +4241,9 @@ then
     if [ "x$oshcc_var" != "x" -a $? = 0 ]
     then 
 	full_cxx_compiler=`which oshCC`
+	if [ $? = 1 ]; then
+	  full_cxx_compiler=`which oshc++`
+        fi
 	full_cc_compiler=`which oshcc`
     fi
 fi
