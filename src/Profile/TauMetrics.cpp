@@ -85,6 +85,7 @@ typedef void (*function)(int, int, double[]);
 static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
 static int cumetric[TAU_MAX_METRICS];
+static int eventsv[TAU_MAX_METRICS];
 
 /* nfunctions can be different from nmetrics because
    a single call to PAPI can provide several metrics */
@@ -221,6 +222,7 @@ static void metricv_add(const char *name) {
                if(found != 1)
                {
                  metricv[nmetrics] = strdup(event_name.c_str());
+                 eventsv[nmetrics] = eventIdArray[i];
                  cumetric[nmetrics] = 1;
                  nmetrics++;
                }
@@ -244,6 +246,7 @@ static void metricv_add(const char *name) {
     else
 #endif //CUPTI
       cumetric[nmetrics] = 0;
+    eventsv[nmetrics] = 0;
     nmetrics++;
   }
 }
@@ -440,10 +443,7 @@ static int is_cupti_metric(char *str) {
         retval = cuptiMetricGetIdFromName(device, str, &metricid);
         // Metric was a Cupti metric.
         if (retval == CUPTI_SUCCESS)
-        {
-          std::cout << str << " is a cupti metric." << std::endl;
           return 1;
-        }
       }
     }
   }
@@ -660,6 +660,39 @@ int TauMetrics_getIsCuptiMetric(int metric) {
 const char* TauMetrics_getMetricAtomic(int metric) {
   return TauMetrics_atomicMetrics[metric];
 }
+
+#ifdef CUPTI
+/*********************************************************************
+ * Get id of time metric
+ ********************************************************************/
+int TauMetrics_getTimeMetric() {
+  int i, id = -1;
+  for(i = 0; i < nmetrics; i++) {
+    if(strcasecmp(metricv[i], "TAUGPU_TIME") == 0) id = i;
+  }
+  return id;
+}
+
+/*********************************************************************
+ * Get event id
+ ********************************************************************/
+int TauMetrics_getEventId(int metric) {
+  return eventsv[metric];
+}
+
+/*********************************************************************
+ * Get event index from event id
+ ********************************************************************/
+int TauMetrics_getEventIndex(int eventid) {
+  int i;
+  for(i = 0; i < nmetrics; i++) {
+    if(eventid == eventsv[i])
+      return i;
+  }
+  return -1;
+}
+
+#endif //CUPTI
 
 /*********************************************************************
  * Read the metrics
