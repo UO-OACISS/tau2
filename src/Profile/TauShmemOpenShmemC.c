@@ -12,6 +12,7 @@ static int tau_shmem_tagid_f=0 ;
 /* This section contains old API that are not part of openshmem.org specification
  *
  */
+#ifdef TAU_PSHMEM_OLD_API
 void pshmem_init (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
@@ -21,6 +22,14 @@ void pshmem_finalize (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
+#endif /* TAU_PSHMEM_OLD_API */
+
+/* Fix for OpenSHMEM 1.2 */
+char * pshmem_nodename (void)
+{
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
+    return NULL;
+}  
 
 #ifdef TAU_DEPRECATED_PSHMEM_ROUTINES
 char * pshmem_nodename (void)
@@ -29,6 +38,7 @@ char * pshmem_nodename (void)
     return NULL;
 }  
 #endif /* TAU_DEPRECATED_PSHMEM_ROUTINES */
+
 
 int pshmem_version (int *major, int *minor)
 {
