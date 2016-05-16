@@ -1146,10 +1146,10 @@ int shmem_pe_accessible(int a1)  {
    shmem_addr_accessible
  **********************************************************/
 
-int shmem_addr_accessible(void * a1, int a2)  {
+int shmem_addr_accessible(const void * a1, int a2)  {
 
   int retval = 0;
-  TAU_PROFILE_TIMER(t,"int shmem_addr_accessible(void *, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"int shmem_addr_accessible(const void *, int) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   retval  =   pshmem_addr_accessible(a1, a2);
   TAU_PROFILE_STOP(t);
