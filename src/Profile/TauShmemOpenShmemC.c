@@ -2615,6 +2615,8 @@ int shmem_test_lock(long * a1)  {
 void shmem_init()  {
 
   TAU_PROFILE_TIMER(t,"void shmem_init(void) C", "", TAU_USER);
+  Tau_create_top_level_timer_if_necessary();
+  //printf("called start in shmem_init()\n");
   TAU_PROFILE_START(t);
    pshmem_init();
   tau_totalnodes(1,_num_pes());
@@ -2634,6 +2636,8 @@ void shmem_finalize()  {
   TAU_PROFILE_START(t);
    pshmem_finalize();
   TAU_PROFILE_STOP(t);
+  Tau_stop_top_level_timer_if_necessary();
+  //printf("Called stop in shmem_finalize();\n");
 
 }
 
