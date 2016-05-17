@@ -3987,6 +3987,9 @@ case $cxx_compiler in
 	echo "Using OpenSHMEM C++ compiler"
 	fixmakeargs="$fixmakeargs GNU COMPINST_GNU GNU46PLUS"
 	fixmakeargs="$fixmakeargs OPENSHMEM"
+	gcclibdir=`oshcc  -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+	stdcxxlibdir=`oshcc  -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
+	fixmakeargs="$fixmakeargs taugcclibdir=$gcclibdir taugccstdcxxlibdir=$stdcxxlibdir"
 	;; 
 
     *mpicxx)
@@ -4251,8 +4254,13 @@ then
 	  full_cxx_compiler=`which oshc++`
         fi
 	full_cc_compiler=`which oshcc`
+        gcclibdir=`oshcc  -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
+        stdcxxlibdir=`oshcc  -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
+        fixmakeargs="$fixmakeargs taugcclibdir=$gcclibdir taugccstdcxxlibdir=$stdcxxlibdir"
+
     fi
 fi
+ 
 
 if [ $scorep = yes ]; then 
   swap_full_cxx_compiler=$full_cxx_compiler
