@@ -1253,7 +1253,8 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
       // Is a Cupti metric
       if(TauMetrics_getIsCuptiMetric(metric) == 2)
       {
-cout << "cupti metric" << endl;
+        //cout << "function is " << fi->GetName() << endl;
+        //cout << "tid is " << tid << endl;
         CUpti_MetricValue inclmetric, exclmetric;
         int device;
         uint32_t numEvents;
@@ -1266,7 +1267,6 @@ cout << "cupti metric" << endl;
         int tmetric = TauMetrics_getTimeMetric();
         incltime = fi->getDumpInclusiveValues(tid)[tmetric];
         excltime = fi->getDumpExclusiveValues(tid)[tmetric];
-//cout << TauMetrics_getMetricName(metric) << endl;
         cuptiMetricGetIdFromName(device, TauMetrics_getMetricName(metric), &metricid); // Get metric id
         // Get events
         cuptiMetricGetNumEvents(metricid, &numEvents);
@@ -1275,9 +1275,29 @@ cout << "cupti metric" << endl;
         cuptiMetricEnumEvents(metricid, &eventIdArraySizeBytes, eventIdArray);
         eventValueArraySizeBytes = numEvents*sizeof(uint64_t);
         eventValueArray = (uint64_t*) malloc(eventValueArraySizeBytes);
+        for(i = 0; i < numEvents; i++)
+          eventValueArray[i] = 0;
+
+
         for(i = 0; i < numEvents; i++) {
           eventIndex = TauMetrics_getEventIndex(eventIdArray[i]);
-          eventValueArray[i] = fi->getDumpInclusiveValues(tid)[eventIndex];
+          vector<TauUserEvent*>::iterator it2;
+          for (it2 = TheEventDB().begin(); it2 != TheEventDB().end() && !found_one; ++it2) {
+            TauUserEvent *ue = *it2;
+            //printf("testing %s vs %s.\n", fi->GetName(), ue->GetName().c_str());
+    
+            const char *str = ue->GetName().c_str();
+            const char *suffix = fi->GetName();
+    
+            if(strncmp(str, TauMetrics_getMetricName(eventIndex), strlen(TauMetrics_getMetricName(eventIndex))) == 0)
+            {
+              eventValueArray[i] = ue->GetMean(tid);
+              //cout << "get name: " << ue->GetName() << endl;
+              //cout << "get mean: " << ue->GetMean(tid) << endl;
+              break;
+            }
+          }
+          //cout << "eventValueArray: " << eventValueArray[i] << endl;
         }
         // Calculate value of Cupti metric
         cuptiMetricGetValue(device, metricid,
@@ -1287,23 +1307,8 @@ cout << "cupti metric" << endl;
                                          eventValueArray,
                                          incltime,
                                          &inclmetric);
+        exclmetric = inclmetric;
 
-        for(i = 0; i < numEvents; i++) {
-          eventIndex = TauMetrics_getEventIndex(eventIdArray[i]);
-          eventValueArray[i] = fi->getDumpExclusiveValues(tid)[eventIndex];
-        }
-
-        cuptiMetricGetValue(device, metricid,
-                                         eventIdArraySizeBytes,
-                                         eventIdArray,
-                                         eventValueArraySizeBytes,
-                                         eventValueArray,
-                                         excltime,
-                                         &exclmetric);
-        //inclmetric = incltime;
-        //exclmetric = excltime;
-cout << "inclmetric: " << inclmetric.metricValueDouble << endl;
-cout << "exclmetric: " << exclmetric.metricValueDouble << endl;
         if (strlen(fi->GetType()) > 0) {
           fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
               exclmetric.metricValueDouble, inclmetric.metricValueDouble);
@@ -1315,7 +1320,6 @@ cout << "exclmetric: " << exclmetric.metricValueDouble << endl;
       }
       else{
 #endif
-//cout << "not cupti metric" << endl;
       incltime = fi->getDumpInclusiveValues(tid)[metric];
       excltime = fi->getDumpExclusiveValues(tid)[metric];
       if (strlen(fi->GetType()) > 0) {
@@ -1596,7 +1600,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
       FILE* fp;
 
       getMetricHeader(i, metricHeader);
-cout << "metric name: " << metricHeader << endl;
+      //cout << "metric name: " << metricHeader << endl;
 #ifdef CUPTI
       // Is a Cupti event, do not record
       //if(TauMetrics_getIsCuptiMetric(i) == 1) continue;
