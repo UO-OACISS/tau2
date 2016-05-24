@@ -104,7 +104,7 @@ PGIACC_O=
 TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
 		TauSampling_libunwind.o TauMmapMemMgr.o 
 #BGL#TAU_SAMPLING_O= #ENDIF#
-#USE_IBMXLC#TAU_SAMPLING_O= #ENDIF#
+#SP1#TAU_SAMPLING_O= #ENDIF#
 #CATAMOUNT#TAU_SAMPLING_O= #ENDIF#
 #CRAYX1CC#TAU_SAMPLING_O= #ENDIF#
 #CRAYXMT#TAU_SAMPLING_O= #ENDIF#
