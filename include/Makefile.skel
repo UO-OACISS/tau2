@@ -10,24 +10,24 @@
 ##                  pC++/Sage++  Copyright (C) 1993,1995             ##
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
- 
+
 #######################################################################
-# This is a sample Makefile that contains the Profiling and Tracing 
-# options. Makefiles of other applications and libraries (not included 
+# This is a sample Makefile that contains the Profiling and Tracing
+# options. Makefiles of other applications and libraries (not included
 # in this distribution) should include this Makefile.
 # It defines the following variables that should be added to CFLAGS
 # TAU_INCLUDE  	-  Include path for tau headers
 # TAU_DEFS      -  Defines that are needed for tracing and profiling only.
-# And for linking add to LIBS 
-# TAU_LIBS	-  TAU Tracing and Profiling library libprof.a 
-# 
-# When the user needs to turn off tracing and profiling and run the 
+# And for linking add to LIBS
+# TAU_LIBS	-  TAU Tracing and Profiling library libprof.a
+#
+# When the user needs to turn off tracing and profiling and run the
 # application without any runtime overhead of instrumentation, simply
 # remove TAUDEFS and TAULIBS from CFLAGS and LIBS respectively but keep
 # TAUINC.
 #######################################################################
 
-# See this file for a record of the configuration environment 
+# See this file for a record of the configuration environment
 CONF_ENV_FILE=
 
 ########### Automatically modified by the configure script ############
@@ -49,7 +49,7 @@ TAU_SPECIAL_CC=gcc
 # LinuxTimers.c is compiled with TAU_SPECIAL_CC
 # For CRAY_TARGET_KNC it is cc in the path from
 # the craype-intel-knc module
-# 
+#
 #CRAY_MIC#TAU_SPECIAL_CC=cc #ENDIF#
 # Front end C/C++ Compilers
 #BGL#TAU_CC_FE=gcc #ENDIF#
@@ -78,7 +78,7 @@ TAU_SPECIAL_CC=gcc
 #ARCH_WIDTH_64#TAU_LIBEX=lib64 #ENDIF#
 
 
-USER_OPT=-g 
+USER_OPT=-g
 EXTRADIR=
 EXTRADIRCXX=
 TAUROOT=
@@ -212,13 +212,13 @@ HOST_SYSROOT=
 #SUNX86_64#ABI		     = $(SUN_ABI)	  #ENDIF#
 #FORCEIA32#ABI               = -m32#ENDIF#
 #######################################################################
-F90_ABI	= $(ABI) 
+F90_ABI	= $(ABI)
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
 #MMIC#F90_ABI	     = -mmic #ENDIF#
 #######################################################################
 
 ##############################################
-# UPC Flags 
+# UPC Flags
 ##############################################
 
 #BUPC#UPCC_C_PREFIX=-Wc,#ENDIF#
@@ -261,7 +261,7 @@ TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a
 #############################################
-# JAVA DEFAULT ARCH 
+# JAVA DEFAULT ARCH
 #############################################
 JDKARCH                 = linux
 #COMPAQ_ALPHA#JDKARCH   = alpha      #ENDIF#
@@ -279,7 +279,7 @@ JDKARCH                 = linux
 #############################################
 # Fortran MPI OBJECTS
 #############################################
-MPI_FORTRAN_INIT = TauFInit.o 
+MPI_FORTRAN_INIT = TauFInit.o
 #NOFORTRAN#MPI_FORTRAN_INIT = #ENDIF#
 #SP1#MPI_FORTRAN_INIT = #ENDIF#
 
@@ -331,7 +331,7 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 DYNINST_PLATFORM 	= $(PLATFORM)
 
 ############# OpenMP Fortran Option ########
-TAU_OPENMP_OPTION = 
+TAU_OPENMP_OPTION =
 #MPC#TAU_OPENMP_OPTION= -fopenmp #ENDIF#
 #CLANG#TAU_OPENMP_OPTION= -fopenmp #ENDIF#
 #MPCINTEL#TAU_OPENMP_OPTION= -openmp #ENDIF#
@@ -632,7 +632,7 @@ SDDF_DIR=
 #BGQ#PROFILEOPT72 = -DTAU_BGQ -I/bgsys/drivers/ppcfloor -I/bgsys/drivers/ppcfloor/comm/sys/include -I/bgsys/drivers/ppcfloor/spi/include -I/bgsys/drivers/ppcfloor/spi/include/kernel/cnk #ENDIF#
 
 #For F90 support for all platforms
-FWRAPPER	       = TauFMpi.o       
+FWRAPPER	       = TauFMpi.o
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
 #MPC#MPI2EXTENSIONS	       =        #ENDIF#
 #APPLECXX#MPI2EXTENSIONS	       =  #ENDIF#
@@ -700,7 +700,7 @@ TAU_PAPI_EXTRA_FLAGS	       = $(LEXTRA)
 #SMARTS##include $(TAU_INC_DIR)/makefiles/GNUmakefile-$(HOSTTYPE)  #ENDIF#
 #SMARTS#LEXTRA1	    = $(LSMARTS)	#ENDIF#
 
-TAU_GCCLIB	= -lgcc_s 
+TAU_GCCLIB	= -lgcc_s
 #INTEL32_ON_64#TAU_GCCLIB	= -lgcc #ENDIF#
 #FREEBSD#TAU_GCCLIB	= -lgcc #ENDIF#
 #BGL#TAU_GCCLIB	= -lgcc #ENDIF#
@@ -823,7 +823,7 @@ TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx
 ## Set the gfortran options on Zepto BGP
 #ZEPTO_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
 
-TAU_SGI_INIT = /usr/lib32/c++init.o 
+TAU_SGI_INIT = /usr/lib32/c++init.o
 #ENABLE64BIT#TAU_SGI_INIT  = /usr/lib64/c++init.o #ENDIF#
 #ENABLEN32BIT#TAU_SGI_INIT = /usr/lib32/c++init.o #ENDIF#
 #ENABLE32BIT#TAU_SGI_INIT  = /usr/lib/c++init.o   #ENDIF#
@@ -842,7 +842,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 
 #FX#TAU_CXXLIBS               = -Ntl_notrt #ENDIF#
 #FX#TAU_CXXLIBS               = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
-# NOTE:  No -lmpi_cxx, -lmpi_f90, -lmpi_f77, and --linkfortran for Fujitsu 
+# NOTE:  No -lmpi_cxx, -lmpi_f90, -lmpi_f77, and --linkfortran for Fujitsu
 # by default. See tau_compiler.sh $optFujitsu==true
 # Please add manually if needed
 
@@ -887,7 +887,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 TAU_LINKER_OPT4 = $(LEXTRA1)
 #HITACHI_OPENMP#TAU_LINKER_OPT4 = -lcompas -lpthreads -lc_r #ENDIF#
 
-# MALLINFO needs -lmalloc on sgi, sun 
+# MALLINFO needs -lmalloc on sgi, sun
 #SGIMP#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
 #SOL2#TAU_LINKER_OPT6 = #ENDIF#
 #SUN386I#TAU_LINKER_OPT6 = -lmalloc #ENDIF#
@@ -943,7 +943,7 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #BGQ#TAU_LINKER_SHOPTS= $(TAU_BGP_GNU_LINKER_SHOPTS) $(TAU_BGP_XLC_LINKER_SHOPTS) #ENDIF#
 
 ##############################################
-# RPATH for -lTAU 
+# RPATH for -lTAU
 #GNU#TAU_LINKER_RPATH_OPT= $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) #ENDIF#
 #USE_INTELCXX#TAU_LINKER_RPATH_OPT= $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) #ENDIF#
 #PGI#TAU_LINKER_RPATH_OPT= $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) #ENDIF#
@@ -980,12 +980,12 @@ TAU_BGQ_AR_SHFLAGS = -shared
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
 #ACC#AR_SHFLAGS  		= -b 		        #ENDIF#
 #MERCURIUM#AR_SHFLAGS  = -shared #ENDIF#
-TAU_ARFLAGS			= $(AR_SHFLAGS) -o 
+TAU_ARFLAGS			= $(AR_SHFLAGS) -o
 TAU_SHFLAGS = $(AR_SHFLAGS) -o
 
 ############# RANLIB Options #############
-TAU_RANLIB = echo "Built" 
-TAU_RANLIB_FE = echo "Built" 
+TAU_RANLIB = echo "Built"
+TAU_RANLIB_FE = echo "Built"
 #APPLECXX#TAU_RANLIB      = ranlib  #ENDIF#
 #IBMXLCAPPLE#TAU_RANLIB      = ranlib  #ENDIF#
 #APPLECXX#TAU_RANLIB_FE      = ranlib  #ENDIF#
@@ -1021,7 +1021,7 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
-# *CWL* NOTE: The extra space between EXTRA_LINKER_ARGS and "=" in the 
+# *CWL* NOTE: The extra space between EXTRA_LINKER_ARGS and "=" in the
 #       case of APPLECXX is necessary so FixMakefile.sed.default will not
 #       blow that entry away. It does so currently and I believe it may
 #       be because the order of the sed commands are not being respected
@@ -1030,7 +1030,7 @@ HPCTOOLKIT_LINK=
 #       other variables like EXTRA_LINKER_ARGS. We are going to have to
 #       continually keep an eye on similar situations for Mac OS X until
 #       we can find a permanent fix.
-EXTRA_LINKER_ARGS= 
+EXTRA_LINKER_ARGS=
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 ##############################################
@@ -1043,7 +1043,7 @@ BFDINCLUDE=
 
 #TAU_BFD#TAU_BFDLIB=$(BFDLINK) $(BFDLIBS) #ENDIF#
 #PTHREAD_AVAILABLE#TAU_COMPINST_PTHREAD_OPTIONS= -Dpthread_create=tau_pthread_create -Dpthread_exit=tau_pthread_exit#ENDIF#
-#COMPINST_INTEL9#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-tcollect #ENDIF#
+#COMPINST_INTEL9#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions -finstrument-functions-exclude-file-list=/usr/include #ENDIF#
 #OPEN64ORC#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
@@ -1082,7 +1082,7 @@ EBS_CLOCK_RES=
 #HOST_SYSROOT#PROFILEOPT84 = --sysroot=$(HOST_SYSROOT)#ENDIF#
 
 ##############################################
-# TAU Unwinder flags                      
+# TAU Unwinder flags
 ##############################################
 #TAU_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(UNWIND_FLAG) -I$(UNWIND_INC) #ENDIF#
 #TAU_UNWIND#TAU_LINKER_OPT17 = -L$(UNWIND_LIB) $(UNWIND_LIB_FLAG) $(UNWIND_EXTRAS)#ENDIF#
@@ -1222,7 +1222,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
 TAU_LINKER=$(TAU_CXX)
 #INTEL_FORTRAN##TAU_LINKER=$(TAU_F90) #ENDIF#
 #INTEL32_FORTRAN##TAU_LINKER=$(TAU_F90) #ENDIF#
-# Intel efc compiler acts as a linker - NO. Let C++ be the linker. 
+# Intel efc compiler acts as a linker - NO. Let C++ be the linker.
 
 ##############################################
 ############# TAU Options ####################
@@ -1298,7 +1298,7 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 
 #OPENMP#TAU_OPENMP_LDFLAGS = $(TAU_OPENMP_OPTION) #ENDIF#
 
-## Don't include -lpthread or -lsmarts. Let app. do that. 
+## Don't include -lpthread or -lsmarts. Let app. do that.
 #############################################
 ## IBM SPECIFIC CHANGES TO TAU_MPI_LIBS
 #SP1#TAU_MPI_LDFLAGS  = $(TAU_IBM_LD_FLAGS) #ENDIF#
@@ -1407,13 +1407,13 @@ SHAREDEXTRAS=
 #FORCESHARED#SHAREDEXTRAS=-optSharedLinkReset="$(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_MPI_FLIB) $(TAU_SHAREDLIBS)" -optShared #ENDIF#
 TAU_COMPILER=$(TAU_BIN_DIR)/tau_compiler.sh $(TAUCOMPILEROPTS) $(SHAREDEXTRAS)
 #############################################
-# These options could be included in the application Makefile as 
+# These options could be included in the application Makefile as
 #CFLAGS        	= $(TAUDEFS) $(TAUINC)
 #
 #LIBS 	      	= $(TAULIBS)
 #
 # To run the application without Profiling/Tracing use
-#CFLAGS		= $(TAUINC)   
+#CFLAGS		= $(TAUINC)
 # Don't use TAUDEFS but do include TAUINC
 # Also ignore TAULIBS when Profiling/Tracing is not used.
 #############################################
