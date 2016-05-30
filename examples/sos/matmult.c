@@ -28,6 +28,9 @@ This is not a parallel implementation */
 #include <errno.h>
 /*** NOTE THE ATTR INITIALIZER HERE! ***/
 pthread_mutex_t mutexsum;
+#ifndef PTHREAD_MUTEX_ERRORCHECK
+#define PTHREAD_MUTEX_ERRORCHECK 0
+#endif
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
@@ -133,6 +136,10 @@ double do_work(void) {
 void * threaded_func(void *data)
 {
   do_work();
+#ifdef PTHREADS
+  pthread_exit(NULL);
+#endif
+  return NULL;
 }
 
 int main (int argc, char *argv[]) 

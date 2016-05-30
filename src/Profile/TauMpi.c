@@ -1566,7 +1566,9 @@ int  MPI_Finalize(  )
 #endif /* TAU_MONITORING */
 
 #ifdef TAU_SOS
-  TAU_SOS_finalize();
+  if (TauEnv_get_sos_enabled()) {
+    TAU_SOS_finalize();
+  }
 #endif
 
   returnVal = PMPI_Finalize();
@@ -1614,7 +1616,9 @@ char *** argv;
   int provided = 0;
   returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
   //printf("Requested: %d, Provided: %d\n", MPI_THREAD_MULTIPLE, provided);
-  TAU_SOS_init(argc, argv, provided >= MPI_THREAD_FUNNELED);
+  if (TauEnv_get_sos_enabled()) {
+    TAU_SOS_init(argc, argv, provided >= MPI_THREAD_FUNNELED);
+  }
   //#else
   //returnVal = PMPI_Init( argc, argv );
   //#endif

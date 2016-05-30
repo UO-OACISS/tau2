@@ -508,10 +508,11 @@ extern "C" int Tau_init_initializeTAU()
 #ifdef PTHREADS
   threads = true; 
 #endif
+  if (TauEnv_get_sos_enabled()) {
 /* Fixme! Replace these with values from TAU metadata. */
-  char * execname = Tau_metadata_get("Executable", 0);
-  int argc = 1;
+  int argc = 0;
   char **argv;
+  char * execname = Tau_metadata_get("Executable", 0);
   argv = (char **)(malloc(sizeof(char*)));
   if (execname != NULL) {
     argv[0] = execname;
@@ -519,8 +520,19 @@ extern "C" int Tau_init_initializeTAU()
     argv[0] = (char *)(calloc(100, sizeof(char)));
     sprintf(argv[0], "%s", "TAU");
   }
+  /*
+        FILE *cmdline = fopen("/proc/self/cmdline", "rb");
+        size_t size = 0;
+        char * arg;
+        while (getdelim(&arg, &size, 0, cmdline) != -1) {
+            argv = (char**)realloc(argv, (sizeof(char*)) * (argc+1));
+            argv[argc] = arg;
+            argc++;
+        }
+        fclose(cmdline);
+  */
   TAU_SOS_init(&argc, &argv, threads);
-  //free(argv[0]); // this may break SOS...
+  }
 #endif
 
   // Mark initialization complete so calls below can start timers

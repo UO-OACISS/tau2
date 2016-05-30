@@ -31,7 +31,7 @@ TARGET	      	= matmult
 MPI_OPTS = $(shell mpicc -show | awk '{$$1 = ""; print $$0}')
 OBJS     	= matmult.o matmult_initialize.o
 CFLAGS=-g -O0 $(TAU_OPENMP_OPTION) -DSOS_MPI $(MPI_OPTS) -I../../include
-LDFLAGS=-rdynamic -g $(TAU_OPENMP_OPTION)
+LDFLAGS=-dynamic -g $(TAU_OPENMP_OPTION)
 
 ##############################################
 

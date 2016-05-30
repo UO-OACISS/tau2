@@ -29,6 +29,7 @@ SOS_pub *tau_sos_pub = NULL;
 unsigned long fi_count = 0;
 unsigned long ue_count = 0;
 static bool done = false;
+static SOS_runtime * _runtime = NULL;
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
@@ -91,33 +92,33 @@ void TAU_SOS_make_pub() {
         int commsize;
         MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         MPI_Comm_size(MPI_COMM_WORLD, &commsize);
-        SOS.config.comm_rank = rank;
-        SOS.config.comm_size = commsize;
+        _runtime->config.comm_rank = rank;
+        _runtime->config.comm_size = commsize;
 #endif
 
 /* Fixme! Replace these with values from TAU metadata. */
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
 /* Fixme! Replace these with values from TAU metadata. */
-        tau_sos_pub = SOS_pub_create(pub_name);
+        tau_sos_pub = SOS_pub_create(_runtime, pub_name, SOS_NATURE_DEFAULT);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
-        tau_sos_pub->meta.nature        = SOS_NATURE_EXEC_WORK;
-        tau_sos_pub->meta.layer         = SOS_LAYER_FLOW;
-        tau_sos_pub->meta.pri_hint      = SOS_PRI_IMMEDIATE;
-        tau_sos_pub->meta.scope_hint    = SOS_SCOPE_SELF;
-        tau_sos_pub->meta.retain_hint   = SOS_RETAIN_SESSION;
+        tau_sos_pub->meta.layer         = SOS_LAYER_LIB;
+        // tau_sos_pub->meta.pri_hint      = SOS_PRI_IMMEDIATE;
+        // tau_sos_pub->meta.scope_hint    = SOS_SCOPE_SELF;
+        // tau_sos_pub->meta.retain_hint   = SOS_RETAIN_SESSION;
 
         TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
 }
 
 extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     static bool initialized = false;
+    if (!TauEnv_get_sos_enabled()) { return; }
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;
         init_lock();
-        SOS_init(argc, argv, SOS_ROLE_CLIENT);
+        _runtime = SOS_init(argc, argv, SOS_ROLE_CLIENT, SOS_LAYER_LIB);
 
         if (_threaded) {
             TAU_VERBOSE("Spawning thread for SOS.\n");
@@ -166,12 +167,13 @@ extern "C" void TAU_SOS_stop_worker(void) {
 
 extern "C" void TAU_SOS_finalize(void) {
     static bool finalized = false;
+    if (!TauEnv_get_sos_enabled()) { return; }
     //printf("%s\n", __func__); fflush(stdout);
     if (finalized) return;
     if (!done) {
         TAU_SOS_stop_worker();
     }
-    SOS_finalize();
+    SOS_finalize(_runtime);
     finalized = true;
 }
 
@@ -200,20 +202,20 @@ extern "C" void TAU_SOS_send_data(void) {
     FunctionInfo *fi = *it;
     // get the number of calls
     int tid = 0; // todo: get ALL thread data.
-    SOS_val calls;
-    SOS_val inclusive, exclusive;
-    calls.i_val = 0.0;
-    inclusive.d_val = 0.0;
-    exclusive.d_val = 0.0;
+    int calls;
+    double inclusive, exclusive;
+    calls = 0;
+    inclusive = 0.0;
+    exclusive = 0.0;
 
     //foreach: THREAD
     for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-        calls.i_val = fi->GetCalls(tid);
+        calls = fi->GetCalls(tid);
         std::stringstream calls_str;
         calls_str << "TAU::" << tid << "::calls::" << fi->GetName();
         const std::string& tmpcalls = calls_str.str();
 
-        SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, calls);
+        SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
 
         // todo - subroutines
         // iterate over metrics 
@@ -227,11 +229,11 @@ extern "C" void TAU_SOS_send_data(void) {
             excl_str << "TAU::" << tid << "::exclusive_" << counterNames[m] << "::" << fi->GetName();
             const std::string& tmpexcl = excl_str.str();
 
-            inclusive.d_val = fi->getDumpInclusiveValues(tid)[m];
-            exclusive.d_val = fi->getDumpExclusiveValues(tid)[m];
+            inclusive = fi->getDumpInclusiveValues(tid)[m];
+            exclusive = fi->getDumpExclusiveValues(tid)[m];
             
-            SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, inclusive);
-            SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, exclusive);
+            SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, &inclusive);
+            SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, &exclusive);
         }
     }
   }
@@ -241,8 +243,8 @@ extern "C" void TAU_SOS_send_data(void) {
   }
   // do the same with counters.
   std::vector<tau::TauUserEvent*>::iterator it2;
-  SOS_val numEvents;
-  SOS_val max, min, mean, sumsqr;
+  int numEvents;
+  double max, min, mean, sumsqr;
   std::stringstream tmp_str;
   for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
     tau::TauUserEvent *ue = (*it2);
@@ -250,25 +252,25 @@ extern "C" void TAU_SOS_send_data(void) {
     for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
       if (ue && ue->GetNumEvents(tid) == 0) continue;
       //if (ue && ue->GetWriteAsMetric()) continue;
-      numEvents.i_val = ue->GetNumEvents(tid);
+      numEvents = ue->GetNumEvents(tid);
       tmp_str << "TAU::" << tid << "::NumEvents::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, numEvents);
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, &numEvents);
       tmp_str.str(std::string());
-      max.d_val = ue->GetMax(tid);
+      max = ue->GetMax(tid);
       tmp_str << "TAU::" << tid << "::Max::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, max);
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &max);
       tmp_str.str(std::string());
-      min.d_val = ue->GetMin(tid);
+      min = ue->GetMin(tid);
       tmp_str << "TAU::" << tid << "::Min::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, min);
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &min);
       tmp_str.str(std::string());
-      mean.d_val = ue->GetMean(tid);
+      mean = ue->GetMean(tid);
       tmp_str << "TAU::" << tid << "::Mean::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, mean);
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &mean);
       tmp_str.str(std::string());
-      sumsqr.d_val = ue->GetSumSqr(tid);
+      sumsqr = ue->GetSumSqr(tid);
       tmp_str << "TAU::" << tid << "::SumSqr::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, sumsqr);
+      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &sumsqr);
       tmp_str.str(std::string());
     }
   }
@@ -286,7 +288,7 @@ extern "C" void TAU_SOS_send_data(void) {
       TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
   }
   TAU_VERBOSE("[TAU_SOS_send_data]: Publishing the values...\n");
-  TAU_VERBOSE("MY RANK IS: %d/%d\n", SOS.config.comm_rank, SOS.config.comm_size);
+  TAU_VERBOSE("MY RANK IS: %d/%d\n", _runtime->config.comm_rank, _runtime->config.comm_size);
   SOS_publish(tau_sos_pub);
   TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
   Tau_global_decr_insideTAU();
