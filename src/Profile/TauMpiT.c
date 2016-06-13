@@ -77,11 +77,11 @@ int Tau_mpi_t_cvar_initialize(void) {
   int return_val;
   const char *cvars = TauEnv_get_cvar_metrics();
   const char *values = TauEnv_get_cvar_values();
-  if (cvars == (const char *) NULL) {
+  if (cvars == "") {
     dprintf("TAU: No CVARS specified using TAU_MPI_T_CVAR_METRICS and TAU_MPI_T_CVAR_VALUES\n");
   } else {
     dprintf("CVAR_METRICS=%s\n", cvars);
-    if (values == (char *) NULL) {
+    if (values == "") {
       printf("TAU: WARNING: Environment variable TAU_MPI_T_CVAR_METRICS is not specified for TAU_MPI_T_CVAR_METRICS=%s\n", 
 	cvars);
     } else { // both cvars and values are specified
