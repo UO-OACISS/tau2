@@ -6081,7 +6081,7 @@ if [ "x$download_ompt" = xyes ] ; then
       rm $libomp_osstgz
       cd $libomp_oss
       libomp_oss_log=build.log
-      specialflags=""
+      specialflags="-DCMAKE_C_FLAGS=-fPIC -DCMAKE_CXX_FLAGS=-fPIC"
       if [ "x$machine" = "xmic_linux" ] ; then
         libomp_oss_log=build-mic.log
         specialflags="-DLIBOMP_ARCH=mic"
