@@ -176,7 +176,11 @@ case $1 in
 
      oparidir=*)
         oparidir=`echo $1 | sed -e 's/^oparidir=//'`
-	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	    echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	    if [ -d ${oparidir} ] ; then
+		  opariincdir=-I${oparidir}/include
+	      echo "s,^OPARIINCDIR=.*$,OPARIINCDIR=${opariincdir},g" >> $sedout
+		fi
 	;;
 
      oparicomp=*)
