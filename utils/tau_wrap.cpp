@@ -138,6 +138,7 @@ struct FunctionSignatureInfo
   string returntypename;
   string funchandle;
   string rcalledfunc;
+  string funcarg;
 };
 
 
@@ -181,8 +182,10 @@ static bool isReturnTypeVoid(pdbRoutine *r)
 static bool doesRoutineNameContainGet(string const & rname)
 {
   size_t namelen = rname.size();
-  return ((rname.find("get") != string::npos) || 
-          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')));
+  return (((rname.find("get") != string::npos) || 
+          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')))
+          && (rname.find("name") == string::npos
+          && rname.find("version") == string::npos));
 }
 
 static bool doesRoutineNameContainPut(string const & rname)
@@ -459,16 +462,16 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
   is_it_a_fetchop = doesRoutineNameContainFetchOp(rname);
   is_it_a_cond_fetchop = doesRoutineNameContainCondFetchOp(rname);
 
-  if ((rname.find("start_pes") != string::npos) || 
-      (rname.find("shmem_init") != string::npos)) {
-    if (pshmem_use_underscore_instead_of_p) {
-      impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
-      impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
-    } else {
-      impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
-      impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
-    }
-  }
+//  if ((rname.find("start_pes") != string::npos) || 
+//      (rname.find("shmem_init") != string::npos)) {
+//    if (pshmem_use_underscore_instead_of_p) {
+//      impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
+//      impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
+//    } else {
+//      impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
+//      impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
+//    }
+//  }
 
   if (is_it_a_get || is_it_a_fetchop ) { /* Get */
 #ifdef DEBUG
@@ -511,8 +514,15 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 {
   sig.func = r->name() + "(";
   sig.proto = r->name() + "(";
-  sig.rcalledfunc = "(*" + r->name() + "_h) (";
-  sig.funchandle = "_h) (";
+  if(shmem_wrapper) {
+    sig.rcalledfunc = r->name() + "_handle (";
+    sig.funchandle = "_handle) (";
+  }
+  else {
+    sig.rcalledfunc = "(*" + r->name() + "_h) (";
+    sig.funchandle = "_h) (";
+  }
+  sig.funcarg = "(";
 
   pdbGroup const * grp = r->signature()->returnType()->isGroup();
   if (grp) { 
@@ -523,7 +533,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       sig.returntypename.replace(0, 10, "shared   ");
     }
   }
-  impl << sig.returntypename << prefix << sig.func; 
+  impl << "extern " << sig.returntypename << prefix << sig.func; 
 
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
@@ -573,6 +583,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       sig.proto.append(", ");
       sig.rcalledfunc.append(", ");
       sig.funchandle.append(", ");
+      sig.funcarg.append(", ");
       impl<<", ";
     }
 
@@ -609,6 +620,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     sig.proto.append(argtypename + " a" + string(number));
     sig.funchandle.append(argtypename);
     sig.rcalledfunc.append(" a" + string(number));
+    sig.funcarg.append(argtypename);
 
     /* We need to handle the case int (*)[] separately generating 
        int (*a1)[]  instead of int (*)[] a1 in the impl file */
@@ -623,6 +635,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
         impl << examinedarg[i];
       }
       impl<<"a"<<number;
+      sig.funcarg.append("a" + string(number));
       for(i=found - examinedarg; i < strlen(examinedarg); i++) {
         //printf("after number Printing %c\n", examinedarg[i]);
         impl << examinedarg[i];
@@ -648,6 +661,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       impl<<argtypename<<" ";
       /* print: for (int a, double b), this prints "a1" in int a1, */
       impl<<"a"<<number;
+      sig.funcarg.append(" a" + string(number));
     }
     if (r->signature()->hasEllipsis()) {
       //printf("Has ellipsis...\n");
@@ -657,6 +671,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
   sig.func.append(")");
   sig.proto.append(")");
   sig.rcalledfunc.append(")");
+  sig.funcarg.append(")");
   impl<<") ";
 }
 
@@ -686,12 +701,20 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     impl <<";"<<endl;
   }
 
+  if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
+    printFunctionNameInOutputFile(r, impl, "  __wrap_", sig);
+    impl <<";"<<endl;
+  }
+
   char const * prefix = " ";
-  if (!shmem_wrapper) {
+//  if (!shmem_wrapper) {
     switch (runtime) {
       case RUNTIME_INTERCEPT: 
         /* for runtime interception, put a blank, the name stays the same*/
-        prefix = "  ";
+        if(shmem_wrapper)
+          prefix = "  __real_";
+        else
+          prefix = "  ";
         break;
       case PREPROC_INTERCEPT:
         /* for standard preprocessor redirection, bar becomes tau_bar */
@@ -706,7 +729,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
         prefix = "  __wrap_";
         break;
     }
-  }
+//  }
 
   printFunctionNameInOutputFile(r, impl, prefix, sig);
   impl << " {\n" << endl;
@@ -715,42 +738,49 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   string funchandle = sig.funchandle + ") = NULL;";
 
   if (runtime == RUNTIME_INTERCEPT) {
-
-    if (isVoid) {
-      if (strict_typing) {
-        impl << "  typedef void (*"<<protoname<<funcprototype<<endl;
-        impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
-      } else {
-        impl <<"  static void (*"<<r->name()<<funchandle<<endl;
-      }
-    } else {
-      if (strict_typing) {
-        impl << "  typedef " << sig.returntypename << " (*"<<protoname<<funcprototype<<endl;
-        impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
-      } else {
-        impl <<"  static "<<sig.returntypename<<" (*"<<r->name()<<funchandle<<endl;
-      }
-      retstring = string("    return retval;");
+      ostringstream buff;
+    if(shmem_wrapper) {
+       if(isVoid) buff << "  typedef void (*" << r->name() << "_t)"<<sig.funcarg << ";" << endl;
+       else buff << "  typedef " << sig.returntypename  << " (*" << r->name() << "_t)"<<sig.funcarg << ";" << endl;
+       buff << "  " << r->name() << "_t " << r->name() << "_handle = (" << r->name();
+       buff << "_t)get_function_handle(\"" << r->name() << "\");" << endl;
     }
+    else {
+      if (isVoid) {
+        if (strict_typing) {
+          impl << "  typedef void (*"<<protoname<<funcprototype<<endl;
+          impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+        } else {
+          impl <<"  static void (*"<<r->name()<<funchandle<<endl;
+        }
+      } else {
+        if (strict_typing) {
+          impl << "  typedef " << sig.returntypename << " (*"<<protoname<<funcprototype<<endl;
+          impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+        } else {
+          impl <<"  static "<<sig.returntypename<<" (*"<<r->name()<<funchandle<<endl;
+        }
+        retstring = string("    return retval;");
+      }
 
-    ostringstream buff;
-    buff << "  if (tau_handle == NULL) \n"
-         << "    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n"
-         << "  if (tau_handle == NULL) { \n"
-         << "    perror(\"Error opening library in dlopen call\"); \n"
-         << retstring << "\n"
-         << "  } else { \n"
-         << "    if (" << r->name() << "_h == NULL)\n"
-         << "      ";
-    if (strict_typing)
-      buff << r->name() << "_h = (" << protoname << "_h) dlsym(tau_handle,\"" << r->name() << "\"); \n";
-    else
-      buff << r->name() << "_h = dlsym(tau_handle,\"" << r->name() << "\"); \n";
-    buff << "    if (" << r->name() << "_h == NULL) {\n"
-         << "      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n"
-         << "  " << retstring << "\n"
-         << "    }\n";
-     dltext = buff.str();
+      buff << "  if (tau_handle == NULL) \n"
+           << "    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n"
+           << "  if (tau_handle == NULL) { \n"
+           << "    perror(\"Error opening library in dlopen call\"); \n"
+           << retstring << "\n"
+           << "  } else { \n"
+           << "    if (" << r->name() << "_h == NULL)\n"
+           << "      ";
+      if (strict_typing)
+        buff << r->name() << "_h = (" << protoname << "_h) dlsym(tau_handle,\"" << r->name() << "\"); \n";
+      else
+        buff << r->name() << "_h = dlsym(tau_handle,\"" << r->name() << "\"); \n";
+      buff << "    if (" << r->name() << "_h == NULL) {\n"
+           << "      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n"
+           << "  " << retstring << "\n"
+           << "    }\n";
+    }
+    dltext = buff.str();
   } /* if (runtime == RUNTIME_INTERCEPT) */
 
   if (!isVoid) {
@@ -792,6 +822,8 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     }
     if (runtime == RUNTIME_INTERCEPT) {
       impl<<"  "<<sig.rcalledfunc<<";"<<endl;
+    } else if(runtime == WRAPPER_INTERCEPT) {
+      impl<<"  __real_"<<sig.func<<";"<<endl;
     } else {
       if (pshmem_use_underscore_instead_of_p) {
         impl <<"   _"<<sig.func<<";"<<endl;
@@ -834,16 +866,20 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 
   impl << "  TAU_PROFILE_STOP(t);" << endl;
 
-  if (runtime == RUNTIME_INTERCEPT) {
-    impl<<"  }"<<endl;
-  }
-
   if (!isVoid) {
     impl<<"  return retval;"<<endl;
   }
   impl<<endl;
 
   impl<<"}\n"<<endl;
+
+  if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
+    printFunctionNameInOutputFile(r, impl, "  ", sig);
+    impl << "{" << endl;
+    impl << "   __wrap_" << r->name() << ";" << endl;
+    impl << "}\n" << endl;
+  }
+
   if (runtime == PREPROC_INTERCEPT) { /* preprocessor instrumentation */
     macro.append(" "+sig.func+" " +"tau_"+sig.func);
 #ifdef DEBUG
@@ -942,7 +978,7 @@ void generateMakefile(string const & package, string const & outFileName,
     case PREPROC_INTERCEPT:
       makefile << "include ${TAU_MAKEFILE}\n"
                << "CC=" << compiler_name << "\n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I..\n"
+               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
                << "EXTRA_FLAGS=\n"
                << "\n"
                << "AR=ar\n"
@@ -960,7 +996,7 @@ void generateMakefile(string const & package, string const & outFileName,
     case RUNTIME_INTERCEPT:
       makefile << "include ${TAU_MAKEFILE}\n"
                << "CC=" << compiler_name << " \n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I..\n"
+               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
                << "EXTRA_FLAGS=\n"
                << "\n"
                << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
@@ -975,7 +1011,7 @@ void generateMakefile(string const & package, string const & outFileName,
     case WRAPPER_INTERCEPT:
       makefile << "include ${TAU_MAKEFILE} \n"
                << "CC=" << compiler_name << " \n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I..\n"
+               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
                << "EXTRA_FLAGS=\n"
                << "\n"
                << "AR=$(TAU_AR)\n"
@@ -1159,9 +1195,16 @@ int main(int argc, char **argv)
   }
 
   /* files created properly */
+  if (shmem_wrapper) {
+    impl << "#ifndef _GNU_SOURCE\n"
+         << "#define _GNU_SOURCE\n"
+         << "#endif\n"
+         << endl;
+  }
   impl << "#include <" << filename << ">\n"
        << "#include <" << header_file << ">\n"
        << "#include <stdio.h>\n"
+       << "#include <stdlib.h>\n"
        << endl;
   if (shmem_wrapper) {
     impl << "int TAUDECL tau_totalnodes(int set_or_get, int value);\n"
@@ -1192,6 +1235,28 @@ int main(int argc, char **argv)
     impl <<"const char * tau_orig_libname = "<<"\""<<
       runtime_libname<<"\";"<<endl; 
     impl <<"static void *tau_handle = NULL;"<<endl<<endl<<endl;
+
+    if(shmem_wrapper){
+      /* add get_function_handle function */
+      impl << "static void * get_function_handle(char const * name)"<<endl;
+      impl << "{"<<endl;
+      impl << "  char const * err;"<<endl;
+      impl << "  void * handle;"<<endl<<endl;;
+      impl << "  // Reset error pointer"<<endl;
+      impl << "  dlerror();"<<endl<<endl;
+      impl << "  fprintf(stderr, \"Using dlsym to get %s\\n\", name); fflush(stdout);"<<endl<<endl;
+      impl << "  // Attempt to get the function handle"<<endl;
+      impl << "  handle = dlsym(RTLD_NEXT, name);"<<endl<<endl;
+      impl << "  // Detect errors"<<endl;
+      impl << "  if ((err = dlerror())) {"<<endl;
+      impl << "    // These calls are unsafe, but we're about to die anyway.     "<<endl;
+      impl << "    fprintf(stderr, \"Error getting %s handle: %s\\n\", name, err);  "<<endl;
+      impl << "    fflush(stderr);"<<endl;
+      impl << "    exit(1);"<<endl;
+      impl << "  }"<<endl<<endl;;
+      impl << "  return handle;"<<endl;
+      impl << "}"<<endl;
+    }
   }
 
   defineTauGroup(impl, group_name); 
