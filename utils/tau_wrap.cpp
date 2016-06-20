@@ -1000,7 +1000,7 @@ void generateMakefile(string const & package, string const & outFileName,
                  << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
                  << "\n"
                  << "clean:\n"
-                 << "\t/bin/rm -f " << package << "_wrap_dynamic.o" << package << "_wrap_static.o lib" << package << "_wrap.so lib" << package << "_wrap.a\n"
+                 << "\t/bin/rm -f " << package << "_wrap_dynamic.o " << package << "_wrap_static.o lib" << package << "_wrap.so lib" << package << "_wrap.a\n"
                  << endl;
   } else {
     switch(runtime) {
