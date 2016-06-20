@@ -809,13 +809,15 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
          << endl;
   } 
 
-  impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "<<group_name<<");"<<endl;
+  if((shmem_wrapper && runtime != RUNTIME_INTERCEPT) || !shmem_wrapper)
+    impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "<<group_name<<");"<<endl;
   if (runtime == RUNTIME_INTERCEPT)
     impl <<dltext;
-  impl<<"  TAU_PROFILE_START(t);"<<endl;
+  if((shmem_wrapper && runtime != RUNTIME_INTERCEPT) || !shmem_wrapper)
+    impl<<"  TAU_PROFILE_START(t);"<<endl;
 
   if (shmem_wrapper) { /* generate pshmem calls here */
-    printShmemMessageBeforeRoutine(r, impl, sig);
+    if(runtime != RUNTIME_INTERCEPT) printShmemMessageBeforeRoutine(r, impl, sig);
     if (!isVoid)
     {
       impl<<"  retval  =";
@@ -831,7 +833,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
         impl <<"   p"<<sig.func<<";"<<endl;
       }
     }
-    printShmemMessageAfterRoutine(r, impl, sig);
+    if(runtime != RUNTIME_INTERCEPT) printShmemMessageAfterRoutine(r, impl, sig);
   } else if (upc_env) {
     printUPCMessageBeforeRoutine(r, impl, sig);
     if (!isVoid) {
@@ -864,7 +866,8 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     }
   }
 
-  impl << "  TAU_PROFILE_STOP(t);" << endl;
+  if((shmem_wrapper && runtime != RUNTIME_INTERCEPT) || !shmem_wrapper)
+    impl << "  TAU_PROFILE_STOP(t);" << endl;
 
   if (!isVoid) {
     impl<<"  return retval;"<<endl;
@@ -876,7 +879,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
     printFunctionNameInOutputFile(r, impl, "  ", sig);
     impl << "{" << endl;
-    impl << "   __wrap_" << r->name() << ";" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
     impl << "}\n" << endl;
   }
 
@@ -974,61 +977,88 @@ void generateMakefile(string const & package, string const & outFileName,
 
   ofstream makefile(buffer);
 
-  switch(runtime) {
-    case PREPROC_INTERCEPT:
-      makefile << "include ${TAU_MAKEFILE}\n"
-               << "CC=" << compiler_name << "\n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
-               << "EXTRA_FLAGS=\n"
-               << "\n"
-               << "AR=ar\n"
-               << "ARFLAGS=rcv\n"
-               << "\n"
-               << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
-               << "\t$(AR) $(ARFLAGS) $@ $<\n"
-               << "\n"
-               << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
-               << "clean:\n"
-               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
-               << endl;
-      break;
-    case RUNTIME_INTERCEPT:
-      makefile << "include ${TAU_MAKEFILE}\n"
-               << "CC=" << compiler_name << " \n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
-               << "EXTRA_FLAGS=\n"
-               << "\n"
-               << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
-               << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
-               << "\n"
-               << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
-               << "clean:\n"
-               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.so\n"
-               << endl;
-      break;
-    case WRAPPER_INTERCEPT:
-      makefile << "include ${TAU_MAKEFILE} \n"
-               << "CC=" << compiler_name << " \n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
-               << "EXTRA_FLAGS=\n"
-               << "\n"
-               << "AR=$(TAU_AR)\n"
-               << "ARFLAGS=rcv \n"
-               << "\n"
-               << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
-               << "\t$(AR) $(ARFLAGS) $@ $< \n"
-               << "\n"
-               << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
-               << "clean:\n"
-               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
-               << endl;
-      break;
-    default:
-      // Unknown runtime flag!
-      break;
+  if(shmem_wrapper) {
+  // Note: shmem wrapper assumes wr.c and wr_dynamic.c for outFileNames.
+        makefile << "include ${TAU_MAKEFILE}\n"
+                 << "CC=" << compiler_name << " \n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "AR=$(TAU_AR)\n"
+                 << "ARFLAGS=rcv \n"
+                 << "\n"
+                 << "all: lib" << package << "_wrap.so lib" << package << "_wrap.a \n"
+                 << "lib" << package << "_wrap.so: " << package << "_wrap_dynamic.o \n"
+                 << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
+                 << "\n"
+                 << "lib" << package << "_wrap.a: " << package << "_wrap_static.o \n"
+                 << "\t$(AR) $(ARFLAGS) $@ $< \n"
+                 << "\n"
+                 << package << "_wrap_dynamic.o: " << "wr_dynamic.c"<< "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << package << "_wrap_static.o: " << "wr.c" << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap_dynamic.o" << package << "_wrap_static.o lib" << package << "_wrap.so lib" << package << "_wrap.a\n"
+                 << endl;
+  } else {
+    switch(runtime) {
+      case PREPROC_INTERCEPT:
+        makefile << "include ${TAU_MAKEFILE}\n"
+                 << "CC=" << compiler_name << "\n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "AR=ar\n"
+                 << "ARFLAGS=rcv\n"
+                 << "\n"
+                 << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
+                 << "\t$(AR) $(ARFLAGS) $@ $<\n"
+                 << "\n"
+                 << package << "_wrap.o: " << outFileName << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
+                 << endl;
+        break;
+      case RUNTIME_INTERCEPT:
+        makefile << "include ${TAU_MAKEFILE}\n"
+                 << "CC=" << compiler_name << " \n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
+                 << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
+                 << "\n"
+                 << package << "_wrap.o: " << outFileName << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.so\n"
+                 << endl;
+        break;
+      case WRAPPER_INTERCEPT:
+        makefile << "include ${TAU_MAKEFILE} \n"
+                 << "CC=" << compiler_name << " \n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "AR=$(TAU_AR)\n"
+                 << "ARFLAGS=rcv \n"
+                 << "\n"
+                 << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
+                 << "\t$(AR) $(ARFLAGS) $@ $< \n"
+                 << "\n"
+                 << package << "_wrap.o: " << outFileName << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
+                 << endl;
+        break;
+      default:
+        // Unknown runtime flag!
+        break;
+    }
   }
 }
 

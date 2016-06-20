@@ -93,36 +93,6 @@ extern int  __wrap_shmem_n_pes()  {
 
 
 /**********************************************************
-   shmem_info_get_version
- **********************************************************/
-
-extern void  __real_shmem_info_get_version(int * a1, int * a2) ;
-extern void  __wrap_shmem_info_get_version(int * a1, int * a2)  {
-
-  TAU_PROFILE_TIMER(t,"void shmem_info_get_version(int *, int *) C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-  __real_shmem_info_get_version(a1, a2);
-  TAU_PROFILE_STOP(t);
-
-}
-
-
-/**********************************************************
-   shmem_info_get_name
- **********************************************************/
-
-extern void  __real_shmem_info_get_name(char * a1) ;
-extern void  __wrap_shmem_info_get_name(char * a1)  {
-
-  TAU_PROFILE_TIMER(t,"void shmem_info_get_name(char *) C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-  __real_shmem_info_get_name(a1);
-  TAU_PROFILE_STOP(t);
-
-}
-
-
-/**********************************************************
    shmem_short_put
  **********************************************************/
 
@@ -2784,23 +2754,6 @@ extern void  __wrap_shmemx_double_put_nb(double * a1, const double * a2, size_t 
 
 
 /**********************************************************
-   shmemx_complexd_put_nb
- **********************************************************/
-
-extern void  __real_shmemx_complexd_put_nb(double _Complex * a1, const double _Complex * a2, size_t a3, int a4, shmemx_request_handle_t * a5) ;
-extern void  __wrap_shmemx_complexd_put_nb(double _Complex * a1, const double _Complex * a2, size_t a3, int a4, shmemx_request_handle_t * a5)  {
-
-  TAU_PROFILE_TIMER(t,"void shmemx_complexd_put_nb(double _Complex *, const double _Complex *, size_t, int, shmemx_request_handle_t *) C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, a3);
-  __real_shmemx_complexd_put_nb(a1, a2, a3, a4, a5);
-  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), a3, a4);
-  TAU_PROFILE_STOP(t);
-
-}
-
-
-/**********************************************************
    shmemx_float_put_nb
  **********************************************************/
 
@@ -2982,23 +2935,6 @@ extern void  __wrap_shmemx_double_get_nb(double * a1, const double * a2, size_t 
   TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*a3, a4);
   __real_shmemx_double_get_nb(a1, a2, a3, a4, a5);
   TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(double)*a3);
-  TAU_PROFILE_STOP(t);
-
-}
-
-
-/**********************************************************
-   shmemx_complexd_get_nb
- **********************************************************/
-
-extern void  __real_shmemx_complexd_get_nb(double _Complex * a1, const double _Complex * a2, size_t a3, int a4, shmemx_request_handle_t * a5) ;
-extern void  __wrap_shmemx_complexd_get_nb(double _Complex * a1, const double _Complex * a2, size_t a3, int a4, shmemx_request_handle_t * a5)  {
-
-  TAU_PROFILE_TIMER(t,"void shmemx_complexd_get_nb(double _Complex *, const double _Complex *, size_t, int, shmemx_request_handle_t *) C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), a3, a4);
-  __real_shmemx_complexd_get_nb(a1, a2, a3, a4, a5);
-  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, a3);
   TAU_PROFILE_STOP(t);
 
 }
