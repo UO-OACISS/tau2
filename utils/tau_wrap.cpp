@@ -679,6 +679,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 {
   FunctionSignatureInfo sig(r);
 
+  string rname = r->name();
   string protoname = r->name() + "_p";
   string macro("#define ");
   string retstring("    return;");
@@ -878,6 +879,29 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 
   if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
     printFunctionNameInOutputFile(r, impl, "  ", sig);
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+    // Fortran wrapper functions
+    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcarg << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcarg << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+    transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
+
+    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcarg << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcarg << endl;
     impl << "{" << endl;
     impl << "   __wrap_" << sig.func << ";" << endl;
     impl << "}\n" << endl;
