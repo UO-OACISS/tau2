@@ -6,7 +6,7 @@ EXTRA_FLAGS=
 AR=$(TAU_AR)
 ARFLAGS=rcv 
 
-all: libtau_shmem_wrap.so libtau_shmem_wrap.a 
+all: libtau_shmem_wrap.a libtau_shmem_wrap.so 
 libtau_shmem_wrap.so: tau_shmem_wrap_static.o tau_shmem_wrap_dynamic.o 
 	$(CC) $(TAU_SHFLAGS) $@ $^ $(TAU_SHLIBS) -ldl
 
