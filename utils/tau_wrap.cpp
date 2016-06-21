@@ -987,7 +987,7 @@ void generateMakefile(string const & package, string const & outFileName,
                  << "AR=$(TAU_AR)\n"
                  << "ARFLAGS=rcv \n"
                  << "\n"
-                 << "all: lib" << package << "_wrap.so lib" << package << "_wrap.a \n"
+                 << "all: lib" << package << "_wrap.a lib" << package << "_wrap.so \n"
                  << "lib" << package << "_wrap.so: " << package << "_wrap_static.o " << package << "_wrap_dynamic.o \n"
                  << "\t$(CC) $(TAU_SHFLAGS) $@ $^ $(TAU_SHLIBS) -ldl\n"
                  << "\n"
