@@ -282,7 +282,10 @@ public static boolean validate(String expression){
 		break;
 		case ('/'):
 			if (arg2 != 0) {
-				return arg1 / arg2;
+				d = arg1 / arg2;
+				if(Double.isInfinite(d)){
+					return 0.0;
+				}
 			}
 		break;
 		default:
