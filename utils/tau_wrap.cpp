@@ -462,16 +462,15 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
   is_it_a_fetchop = doesRoutineNameContainFetchOp(rname);
   is_it_a_cond_fetchop = doesRoutineNameContainCondFetchOp(rname);
 
-//  if ((rname.find("start_pes") != string::npos) || 
-//      (rname.find("shmem_init") != string::npos)) {
+  if (rname.find("shmem_init") != string::npos) {
 //    if (pshmem_use_underscore_instead_of_p) {
 //      impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
 //      impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
 //    } else {
-//      impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
-//      impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
+      impl << "  tau_totalnodes(1,__real_shmem_n_pes());"<<endl;
+      impl << "  TAU_PROFILE_SET_NODE(__real_shmem_my_pe());"<<endl;
 //    }
-//  }
+  }
 
   if (is_it_a_get || is_it_a_fetchop ) { /* Get */
 #ifdef DEBUG
