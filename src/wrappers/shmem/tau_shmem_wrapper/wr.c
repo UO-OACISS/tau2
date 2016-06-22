@@ -23,6 +23,8 @@ extern void  __wrap_shmem_init()  {
   TAU_PROFILE_TIMER(t,"void shmem_init(void) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   __real_shmem_init();
+  tau_totalnodes(1,__real_shmem_n_pes());
+  TAU_PROFILE_SET_NODE(__real_shmem_my_pe());
   TAU_PROFILE_STOP(t);
 
 }
