@@ -1335,7 +1335,7 @@ int main(int argc, char **argv)
       instrumentCFile(p, *it, header, impl, linkoptsfile, group_name, header_file, runtime, runtime_libname, libname);
     }
   }
-  if (runtime == WRAPPER_INTERCEPT) {
+  if (runtime == WRAPPER_INTERCEPT && !shmem_wrapper) {
     char dirname[1024]; 
     getcwd(dirname, sizeof(dirname)); 
     linkoptsfile <<"-L"<<dirname<<"/"<<libname<<"_wrapper/ -l"<< libname<<"_wrap "<<runtime_libname<<endl;
