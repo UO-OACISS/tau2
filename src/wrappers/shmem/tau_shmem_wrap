@@ -118,10 +118,9 @@ dirname=`basename ${headerfile} .h`_wrapper
 #sed -e "s@^EXTRA_FLAGS=@EXTRA_FLAGS=-DGASNET_SEQ -I$upcdir/include -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS @g" $dirname/Makefile > $dirname/Makefile~
 #mv -f $dirname/Makefile~ $dirname/Makefile
 
-# Add the library to the link options
-# GNU UPC can't link static archives of UPC code as of Aug. 2012.
 # Link the object file directly.
-#sed -e "s@WRAPPER_LIBRARY@$basedir/lib/wrappers/upc/gupc/tau_gupc_wrap.o@" $dirname/link_options.tau.master > $dirname/link_options.tau
+echo -n "-L$basedir/lib -lTAU_shmem_wrap" >> $dirname/link_options.tau
+#sed -e "s@WRAPPER_LIBRARY@$basedir/lib/wrappers/shmem/tau_shmem_wrap_static.o@" $dirname/link_options.tau.master > $dirname/link_options.tau
 
 # Build and install
 cd $dirname
