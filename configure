@@ -5022,6 +5022,7 @@ then
 		    # old options 
 		fi
 	    fi
+            fixmakeargs="$fixmakeargs CRAYSHMEM"
 	fi
 	if [ $machine = x86_64 -o $machine = ia64 ]
 	then
