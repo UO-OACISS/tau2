@@ -2711,7 +2711,8 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
 #ifdef TAU_WINDOWS
       if (!(istr.getline(allocstmt, INBUF_SIZE))) 
 #else
-      if (istr.getline(allocstmt, INBUF_SIZE) == NULL) 
+      istr.getline(allocstmt, INBUF_SIZE);
+      if ((istr.rdstate() & std::ifstream::goodbit ) != 0) 
 #endif /* TAU_WINDOWS */
       {
         perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
@@ -2824,7 +2825,8 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
 #ifdef TAU_WINDOWS
        if (!(istr.getline(deallocstmt, INBUF_SIZE)))
 #else 
-       if (istr.getline(deallocstmt, INBUF_SIZE) == NULL)
+       istr.getline(deallocstmt, INBUF_SIZE);
+       if ((istr.rdstate() & std::ifstream::goodbit ) != 0)
 #endif /* TAU_WINDOWS */
        {
          perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
@@ -2940,8 +2942,9 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
     isfree = isFreeFormat(inbuf);
 #ifdef TAU_WINDOWS
     if (!(istr.getline(iostmt, INBUF_SIZE)))
-#else 
-    if (istr.getline(iostmt, INBUF_SIZE) == NULL)
+#else
+    istr.getline(iostmt, INBUF_SIZE); 
+    if ((istr.rdstate() & std::ifstream::goodbit ) != 0)
 #endif /* TAU_WINDOWS */
     {
       perror("ERROR in reading file: looking for continuation line instrumentation of io");
