@@ -1320,11 +1320,13 @@ TAU_LDFLAGS = $(TAU_MPI_LDFLAGS) $(TAU_OPENMP_LDFLAGS)
 #SHMEM#SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
 #OPENSHMEM#SHMEM_OBJS		     =   #ENDIF#
 #OPENSHMEM_PSHMEM#SHMEM_OBJS		     = TauShmemOpenShmemC.o TauShmemOpenShmemF.o  #ENDIF#
-#CRAYCNL#SHMEM_OBJS		     = TauShmemCrayC.o TauShmemCrayF.o  #ENDIF#
+#CRAYCNL#SHMEM_OBJS		     =   #ENDIF#
+#CRAYCNL_PSHMEM#SHMEM_OBJS		     = TauShmemCrayC.o TauShmemCrayF.o  #ENDIF#
 #SGI_MPT_SHMEM#SHMEM_OBJS	= TauShmemSgiC.o TauShmemSgiF.o     #ENDIF#
 #SGI_MPT_PSHMEM#SHMEM_OBJS	= TauPShmemSgiC.o TauShmemSgiF.o     #ENDIF#
 #SP1#SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
-#GPSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
+#GPSHMEM_PSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
+#GPSHMEM#SHMEM_OBJS		     = #ENDIF#
 #OPENMPI_SHMEM#SHMEM_OBJS		     = TauOpenShmemOpenMPIC.o  #ENDIF#
 
 TAU_CCOMPILER     = $(TAU_CC)
