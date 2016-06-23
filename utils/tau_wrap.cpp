@@ -485,7 +485,8 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 #endif /* DEBUG */
     }
     string indent(""); /* no indent by default */
-    if (is_it_a_cond_fetchop) {
+    bool isVoid = isReturnTypeVoid(r);
+    if (is_it_a_cond_fetchop && !isVoid) {
       indent=string("  ");
       if (fortran_interface) {
         sprintf(cond_string, "  if (retval == (*a%d)) { ", cond_argument_no);
@@ -496,7 +497,7 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
     }
     impl <<indent<<"  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, "<<processor_arg<<", "<<length_string<<");"<<endl;
     impl <<indent<<"  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), "<<length_string<<", "<<processor_arg<<");"<<endl;
-    if (is_it_a_cond_fetchop) {
+    if (is_it_a_cond_fetchop && !isVoid) {
       impl<<indent<<"}"<<endl;
     }
   }
