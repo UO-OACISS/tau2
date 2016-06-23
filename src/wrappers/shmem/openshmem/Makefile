@@ -1,4 +1,4 @@
-include ../../../include/Makefile
+include ../../../../include/Makefile
 
 shmemdir=`which oshcc | sed -e 's@bin/oshcc@@g'`
 
