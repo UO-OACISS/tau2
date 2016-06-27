@@ -380,7 +380,7 @@ for arg in "$@"; do
 	    echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
 	    echo ""
 	    echo "SHMEM Options:"
-	    echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
+	    echo "-shmem[=pshmem]............... Specify use of TAU SHMEM wrapper library."
 	    echo "-shmeminc=<dir> ......... Specify location of SHMEM include dir and use"
 	    echo "                         the TAU SHMEM Profiling and Tracing Interface."
 	    echo "-shmemlib=<dir> ......... Specify location of SHMEM library dir and use"
@@ -548,7 +548,7 @@ for arg in "$@"; do
 	    echo "                           the TAU MPI Profiling and Tracing Interface."
 	    echo "-mpilibrary=<library> ................ Specify a different MPI library."
 	    echo "            e.g., -mpilibrary=-lmpi_r                                  "
-	    echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
+	    echo "-shmem[=pshmem].............. Specify use of TAU SHMEM wrapper library."
 	    echo "-shmeminc=<dir> ......... Specify location of SHMEM include dir and use"
 	    echo "                         the TAU SHMEM Profiling and Tracing Interface."
 	    echo "-shmemlib=<dir> ......... Specify location of SHMEM library dir and use"
@@ -726,6 +726,7 @@ mrnet_root=
 mrnet_lib=
 ibmmpi=no
 shmem=no
+pshmem=no
 gpi=no
 gpidir=
 gpiinc=
@@ -1848,6 +1849,15 @@ for arg in "$@"; do
 
 	-shmem)
 	    shmem=yes
+	    shift
+	    ;;
+
+	-shmem=*)
+	    shmem=yes
+	    tmp=`echo $arg | sed -e 's/-shmem=//' -e 's/#/ /g'`
+            if [ "$tmp" == "pshmem" ] ; then
+                 pshmem=yes
+            fi 
 	    shift
 	    ;;
 
@@ -4928,14 +4938,24 @@ then
 	    gpshmem=no
 	    if [ -r $shmeminc/gpshmem.h ] 
 	    then
-		fixmakeargs="$fixmakeargs GPSHMEM"
-		gpshmem=yes
+                if [ $pshmem = yes ] ; then
+		    fixmakeargs="$fixmakeargs GPSHMEM_PSHMEM"
+		    gpshmem_pshmem=yes
+                else
+		    fixmakeargs="$fixmakeargs GPSHMEM"
+		    gpshmem=yes
+                fi
 	    fi
 	    shmembindir=`echo $shmeminc | sed -e 's@include@bin@g'`
 	    if [ -r $shmembindir/oshcc ]
 	    then
-		openshmem=yes
-		fixmakeargs="$fixmakeargs OPENSHMEM"
+                if [ $pshmem = yes ] ; then
+		    openshmem_pshmem=yes
+		    fixmakeargs="$fixmakeargs OPENSHMEM_PSHMEM"
+                else
+		    openshmem=yes
+		    fixmakeargs="$fixmakeargs OPENSHMEM"
+                fi
 	    fi
 	    if [ -r $shmembindir/mpiexec_mpt ]
 	    then
@@ -4963,12 +4983,17 @@ then
 	    else
 		if [ -r $oshcc_var ]
 		then 
-		    openshmem=yes
 		    if [ -r $openshmem_include_dir/mpp/shmem.h ] 
 		    then
 			shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
 		    fi
-		    fixmakeargs="$fixmakeargs OPENSHMEM"
+                    if [ $pshmem = yes ] ; then
+		        openshmem_pshmem=yes
+		        fixmakeargs="$fixmakeargs OPENSHMEM_PSHMEM"
+                    else
+		        openshmem=yes
+		        fixmakeargs="$fixmakeargs OPENSHMEM"
+                    fi
 		fi
 	    fi
 	fi
@@ -4997,6 +5022,7 @@ then
 		    # old options 
 		fi
 	    fi
+            fixmakeargs="$fixmakeargs CRAYSHMEM"
 	fi
 	if [ $machine = x86_64 -o $machine = ia64 ]
 	then
@@ -5038,8 +5064,13 @@ then
 	oshcc_var=`which oshcc  2>/dev/null`
 	if [ "x$oshcc_var" != "x" -a "$?" = 0 ]
 	then
-	    fixmakeargs="$fixmakeargs OPENSHMEM"
-	    openshmem=yes
+            if [ $pshmem = yes ] ; then
+                openshmem_pshmem=yes
+     	        fixmakeargs="$fixmakeargs OPENSHMEM_PSHMEM"
+            else
+	        fixmakeargs="$fixmakeargs OPENSHMEM"
+	        openshmem=yes
+            fi
 	fi
     fi
     if [ "x$oshcc_var" != "x" ]
@@ -5074,8 +5105,13 @@ then
 	shmembindir=`echo $shmemlib | sed -e 's@lib@bin@g'`
 	if [ -r $shmembindir/oshcc ]
 	then
-	    openshmem=yes
-	    fixmakeargs="$fixmakeargs OPENSHMEM"
+            if [ $pshmem = yes ] ; then
+                openshmem_pshmem=yes
+     	        fixmakeargs="$fixmakeargs OPENSHMEM_PSHMEM"
+            else
+	        openshmem=yes
+     	        fixmakeargs="$fixmakeargs OPENSHMEM"
+            fi
 	fi
 	if [ -r $shmembindir/mpiexec_mpt ]
 	then
@@ -5104,6 +5140,10 @@ then
 		  shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
                 fi
 	    fi
+            if [ $pshmem = yes ] ; then
+                craycnl_pshmem = yes
+	        fixmakeargs="$fixmakeargs CRAYCNL_PSHMEM"
+            fi
 	fi
     fi
 
