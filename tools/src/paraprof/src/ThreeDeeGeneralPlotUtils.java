@@ -437,18 +437,15 @@ public class ThreeDeeGeneralPlotUtils {
 		public void calculateXYZ(HostCoords minHC, HostCoords maxHC){
 			int rackWidth=maxHC.rackX-minHC.rackX+1;
 			int rackDepth=maxHC.rackY-minHC.rackY+1;
-			int slotWidth=maxHC.slot-minHC.slot+1;
+			int slotHeight=1;
+			int slotWidth=1;
 			int cageHeight=maxHC.cage-minHC.cage+1;
-			int nodeWidth=2;
-			int nodeHeight=2;
+			int nodeWidth=1;
+			int nodeDepth=1;
 			
-//			this.x=rackWidth*(rackX-minHC.rackX)+slotWidth*(slot-minHC.slot);
-//			this.y=rackDepth*(rackY-minHC.rackY)+nodeWidth*(node%2);
-//			this.x=cageHeight*(cage-minHC.cage)+nodeHeight*(node/2);
-			
-			this.x=rackWidth*(rackX)+slotWidth*(slot);
-			this.y=rackDepth*(rackY)+nodeWidth*(node%2);
-			this.z=cageHeight*(cage)+nodeHeight*(node/2);
+                        this.x = rackWidth*rackX + slotWidth*(slot%2);
+                        this.y = rackDepth*rackY + nodeDepth*node;
+                        this.z = cageHeight*cage + slotHeight*(slot/2);
 			
 			if(x==0&&y==0&&z==0){
 				System.out.println("All Zero! "+this.hostname+" rackWidth: "+rackWidth+" rackX: "+rackX+" slotWidth: "+slotWidth+" slot: "+slot);
@@ -629,17 +626,17 @@ public class ThreeDeeGeneralPlotUtils {
 
 		int[] min = new int[3];
 		int[] max = new int[3];
-		int[] coremax = { 2, 3, 4 };
-		int space = 2;
+		int[] coremax = { 4, 3, 2 };
+		int space = 1;
 		int[][] done = new int[ranks][3];
 		for (int i = 0; i < ranks; i++) {
 			int node = coords[i][3];
 			for (int j = 0; j < 3; j++) {
-				int sub = 1;
+				int sub = 6;
 				if (j == 1)
 					sub = 2;
 				if (j == 2)
-					sub = 6;
+					sub = 1;
 				int cc = (node / sub) % coremax[j];
 				// int cy=node%cymax;
 				// int cz=node%czmax;
