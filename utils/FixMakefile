@@ -832,6 +832,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     OPENSHMEM_PSHMEM)
+        echo NOTE: Using the TAU OpenSHMEM Profiling Interface using PSHMEM
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      OPENMPI_SHMEM)
         echo NOTE: Using the TAU OpenMPI OpenSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
