@@ -6036,9 +6036,9 @@ if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
 fi
 
-libomp_oss=LLVM-openmp-0.1
+libomp_oss=LLVM-openmp-0.1.1
 libomp_osstgz=${libomp_oss}.tar.gz
-libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz
+libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.1.tar.gz
 libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then 
     libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
@@ -6138,7 +6138,7 @@ if [ "x$download_ompt" = xyes ] ; then
 	  cd build-${ompt_cxx_compiler}
       libomp_cmake_instdir=`pwd`
 	  echo cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. 
-	  cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
+	  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
       result=$?
       if [ $result -eq 0 ] ; then
 	    make clean
