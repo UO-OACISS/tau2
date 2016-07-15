@@ -6036,9 +6036,9 @@ if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
 fi
 
-libomp_oss=LLVM-openmp-0.1.1
+libomp_oss=LLVM-openmp-0.1
 libomp_osstgz=${libomp_oss}.tar.gz
-libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.1.tar.gz
+libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz
 libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then 
     libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
