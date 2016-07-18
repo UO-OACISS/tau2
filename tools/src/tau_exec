@@ -16,7 +16,7 @@ fi
 
 echoIfVerbose () {
     if [ $verbose = "true" ] ; then
-	echo -e "$1"
+    echo -e "$1"
     fi
 }
 
@@ -42,6 +42,7 @@ usage()
     echo "        -power        Track power events via PAPI's perf RAPL interface"
     echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
     echo "        -armci        Track ARMCI events via PARMCI"
+    echo "        -shmem        Track SHMEM events"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
@@ -55,19 +56,19 @@ usage()
     echo "        -gdb          Run program in the gdb debugger"
     echo ""
     echo "Notes:"
-    echo "	Defaults if unspecified: -T $default_tags"
-    echo "	MPI is assumed unless SERIAL is specified"
+    echo "    Defaults if unspecified: -T $default_tags"
+    echo "    MPI is assumed unless SERIAL is specified"
     echo ""
     echo "Example:"
     echo "    mpirun -np 2 $scriptname -io ./ring"
     echo "Example - event-based sampling with samples taken every 1,000,000 FP instructions"
     echo "    mpirun -np 8 $scriptname -ebs -ebs_period=1000000 -ebs_source=PAPI_FP_INS ./ring"
-		echo "Examples - GPU:"
-		echo "    $scriptname -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
-		echo "    $scriptname -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
-		echo "    $scriptname -T serial -opencl (OPENCL)"
-		echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
-		echo "    $scriptname -T serial,cupti -cupti -sass=kernel -csv ./sass_source (Metrics Intensity)"
+    echo "Examples - GPU:"
+    echo "    $scriptname -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
+    echo "    $scriptname -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
+    echo "    $scriptname -T serial -opencl (OPENCL)"
+    echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
+    echo "    $scriptname -T serial,cupti -cupti -sass=kernel -csv ./sass_source (Metrics Intensity)"
     echo ""
     echo "qsub mode (IBM BG/P only):"
     echo "    Original:"
@@ -124,6 +125,7 @@ track_pthread=false
 track_gomp=false
 use_gdb=false
 track_numa=false
+track_shmem=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -139,138 +141,142 @@ for arg in "$@" ; do
       shift
   else
       case $arg in 
-	  -v|-d|-verbose|--verbose)
-	      verbose=true
-	      shift
-	      ;;
-	  -h|-help|--help)
-	      usage
-	      ;;
-	  -io)
-	      track_io=true
-	      shift
-	      ;;
-	  -numa)
-	      track_numa=true
-	      shift
-	      ;;
-	  -memory)
-	      track_memory=true
-	      shift
-	      ;;
-	  -memory_debug)
-	      memory_debug=true
-	      shift
-	      ;;
-	  -cuda)
-	      track_cuda=true
-	      shift
-	      ;;
-	  -ompt)
-	      track_ompt=true
-	      shift
-	      ;;
-	  -power)
-	      track_power=true
-	      shift
-	      ;;
-	  -cupti)
-	      track_cupti=true
-	      shift
-	      ;;
-	  -um | -uvm)
-	      unified_memory=true
-	      shift
-	      ;;
-	  -sass=*)
-	      track_sass=true
-	      myarg=`echo $arg | sed 's/-sass=//'`
-	      sass_type="$myarg"
-	      shift
-	      ;;
-	  -csv)
-	      csv_output=true
-	      shift
-	      ;;
-	  -opencl)
-	      track_opencl=true
-	      shift
-	      ;;
-	  -openacc)
-	      track_openacc=true
-	      shift
-	      ;;
-	  -gomp)
-	      track_gomp=true
-	      shift
-	      ;;
-	  -armci)
-	      track_armci=true
-	      shift
-	      ;;
-	  -ebs)
-	      tau_use_ebs=true
-	      shift
-	      ;;
-	  -ebs_period=*)
-	      tau_use_ebs=true
-	      myarg=`echo $arg | sed 's/-ebs_period=//'`
-	      tau_ebs_period="$myarg"
-	      shift
-	      ;;
-	  -ebs_source=*)
-	      tau_use_ebs=true
-	      myarg=`echo $arg | sed 's/-ebs_source=//'`
-	      tau_ebs_source="$myarg"
-	      shift
-	      ;;
-	  -qsub)
-	      qsub_mode=true
-	      shift
-	      ;;
-	  -s)
-	      dryrun=echo
-	      shift
-	      ;;
-	  -gdb)
-	      use_gdb=true
-	      shift
-	      ;;
-	  -T)
-	      processT=true
-	      shift
-	      ;;
-	  -tau:*)
+      -v|-d|-verbose|--verbose)
+          verbose=true
+          shift
+          ;;
+      -h|-help|--help)
+          usage
+          ;;
+      -io)
+          track_io=true
+          shift
+          ;;
+      -numa)
+          track_numa=true
+          shift
+          ;;
+      -memory)
+          track_memory=true
+          shift
+          ;;
+      -memory_debug)
+          memory_debug=true
+          shift
+          ;;
+      -cuda)
+          track_cuda=true
+          shift
+          ;;
+      -ompt)
+          track_ompt=true
+          shift
+          ;;
+      -power)
+          track_power=true
+          shift
+          ;;
+      -cupti)
+          track_cupti=true
+          shift
+          ;;
+      -um | -uvm)
+          unified_memory=true
+          shift
+          ;;
+      -sass=*)
+          track_sass=true
+          myarg=`echo $arg | sed 's/-sass=//'`
+          sass_type="$myarg"
+          shift
+          ;;
+      -csv)
+          csv_output=true
+          shift
+          ;;
+      -opencl)
+          track_opencl=true
+          shift
+          ;;
+      -openacc)
+          track_openacc=true
+          shift
+          ;;
+      -gomp)
+          track_gomp=true
+          shift
+          ;;
+      -armci)
+          track_armci=true
+          shift
+          ;;
+      -shmem)
+          track_shmem=true
+          shift
+          ;;
+      -ebs)
+          tau_use_ebs=true
+          shift
+          ;;
+      -ebs_period=*)
+          tau_use_ebs=true
+          myarg=`echo $arg | sed 's/-ebs_period=//'`
+          tau_ebs_period="$myarg"
+          shift
+          ;;
+      -ebs_source=*)
+          tau_use_ebs=true
+          myarg=`echo $arg | sed 's/-ebs_source=//'`
+          tau_ebs_source="$myarg"
+          shift
+          ;;
+      -qsub)
+          qsub_mode=true
+          shift
+          ;;
+      -s)
+          dryrun=echo
+          shift
+          ;;
+      -gdb)
+          use_gdb=true
+          shift
+          ;;
+      -T)
+          processT=true
+          shift
+          ;;
+      -tau:*)
               binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
-	      shift
+          shift
               ;;
-	  -loadlib=*)
-	      myarg=`echo $arg | sed 's/-loadlib=//'`
+      -loadlib=*)
+          myarg=`echo $arg | sed 's/-loadlib=//'`
               extraloadlibs="$extraloadlibs:$myarg"
-	      shift
+          shift
               ;;
-	  -XrunTAU-*)
-	      myarg=`echo $arg | sed 's/-XrunTAU-//'`
-	      binding_specified="shared-$myarg"
-	      shift
-	      ;;
-	  -XrunTAUsh-*)
-	      myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
-	      binding_specified="shared-$myarg"
-	      shift
-	      ;;
-	  --)
-	      shift
-	      break
-	      ;;
-	  -*)
-	      echo "Unknown option: $arg" >&2
-	      exit 1
+      -XrunTAU-*)
+          myarg=`echo $arg | sed 's/-XrunTAU-//'`
+          binding_specified="shared-$myarg"
+          shift
+          ;;
+      -XrunTAUsh-*)
+          myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
+          binding_specified="shared-$myarg"
+          shift
+          ;;
+      --)
+          shift
+          break
+          ;;
+      -*)
+          echo "Unknown option: $arg" >&2
+          exit 1
 # First non-option signifies end of options. This would be much easier with getopt()
-	      ;;
-	  *)
-	      break
-	      ;;
+          ;;
+      *)
+          break
+          ;;
       esac
   fi
 done
@@ -281,9 +287,9 @@ new_binding_options=""
 if [ "x$binding_options" != "x" ]; then
     for i in $binding_options ; do
       case $i in 
-	  *)
-	      new_binding_options="$new_binding_options $i"
-	      ;;
+      *)
+          new_binding_options="$new_binding_options $i"
+          ;;
       esac
     done
 fi
@@ -292,33 +298,33 @@ binding_options="$new_binding_options"
 
 if [ "x$binding_specified" = "x" ] ; then
     if [ "x$binding_options" = "x" ]; then
-	binding_options=`echo "$default_tags" | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
+    binding_options=`echo "$default_tags" | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
     else
         # Add MPI by default
-	if ! echo "$binding_options" | grep -q "serial" >/dev/null 2>&1 ; then
+    if ! echo "$binding_options" | grep -q "serial" >/dev/null 2>&1 ; then
            # add mpi if shmem is not specified
-	    if echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
-	        binding_options="$binding_options mpi"
+        if echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
+            binding_options="$binding_options mpi"
             fi
-	fi
+    fi
         if [ "$python_wrapper" == "true" ] ; then
             binding_options="$binding_options python"
         fi
     fi
     theBinding=`tau-config --binding $binding_options`
     if [ $? != 0 ] ; then
-	if [ $verbose = "true" ]; then 
-	  echo "Binding options: $binding_options didn't work; trying without MPI using serial instead."
+    if [ $verbose = "true" ]; then 
+      echo "Binding options: $binding_options didn't work; trying without MPI using serial instead."
         fi
-	new_binding_options=`echo $binding_options | sed -e 's/mpi/serial/' `
-	theBinding=`tau-config --binding $new_binding_options`
-	if [ $? != 0 ] ; then
-	  echo "Binding not found. Exiting..."
-	  exit 1
+    new_binding_options=`echo $binding_options | sed -e 's/mpi/serial/' `
+    theBinding=`tau-config --binding $new_binding_options`
+    if [ $? != 0 ] ; then
+      echo "Binding not found. Exiting..."
+      exit 1
         else 
-	  echo "Using $theBinding"
-	  binding_options=$new_binding_options
-	fi
+      echo "Using $theBinding"
+      binding_options=$new_binding_options
+    fi
     fi
 else
     theBinding=$binding_specified
@@ -390,9 +396,9 @@ if [ $track_numa = "true" ]; then
        ret=$?
        if [ $ret = 0 -a "x$TAU_METRICS" = "x" ]; then
           if [ $verbose = "true" ]; then 
-	    echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for $scriptname -numa"
+        echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for $scriptname -numa"
           fi
-	  export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
+      export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
        else 
          echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
        fi
@@ -415,78 +421,78 @@ if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
     export TAU_TRACK_MEMORY_LEAKS=1
 fi
 if [ $track_cuda = "true" ] ; then
-		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
-		if [ $? == 0 ] ; then
-			#tell the user cupti is available.
-			echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' insteed of '-cuda' to get the latest available features."
-		fi
-		# Add the CUDA wrapper library to the LD_PRELOAD list
-		#TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-		else
-			export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
-		fi
+    cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
+    if [ $? == 0 ] ; then
+        #tell the user cupti is available.
+        echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' insteed of '-cuda' to get the latest available features."
+    fi
+    # Add the CUDA wrapper library to the LD_PRELOAD list
+    #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+    fi
 fi
 if [ $track_cupti = "true" ] ; then
-		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
-		if [ $? != 0 ] ; then
-			#tell the user to add cupti to bindings list.
-			echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
-			exit
-		else
-			# Add the wrapper library to the LD_PRELOAD list
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-			if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-				export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-			else
-				export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
-			fi
-		fi
-		
-		#Attempt to find the CUPTI API type:
-		IFS=' ' && exe=($@)
-		cupti_api_driver=`ldd $exe | grep libcuda.so`
-		cupti_api_runtime=`ldd $exe | grep libcudart.so`
-		if [ -z "$TAU_CUPTI_API" ]; then
-			if [ -n "$cupti_api_driver" ]; then 
-					export TAU_CUPTI_API=driver
-			else
-				if [ -n "$cupti_api_runtime" ]; then
-					export TAU_CUPTI_API=runtime
-				fi
-			fi
-		fi
+    cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
+    if [ $? != 0 ] ; then
+        #tell the user to add cupti to bindings list.
+        echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
+        exit
+    else
+        # Add the wrapper library to the LD_PRELOAD list
+        TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+        TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+        TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+        if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+            export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        else
+            export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+        fi
+    fi
+    
+    #Attempt to find the CUPTI API type:
+    IFS=' ' && exe=($@)
+    cupti_api_driver=`ldd $exe | grep libcuda.so`
+    cupti_api_runtime=`ldd $exe | grep libcudart.so`
+    if [ -z "$TAU_CUPTI_API" ]; then
+        if [ -n "$cupti_api_driver" ]; then 
+                export TAU_CUPTI_API=driver
+        else
+            if [ -n "$cupti_api_runtime" ]; then
+                export TAU_CUPTI_API=runtime
+            fi
+        fi
+    fi
                 ## Unified Memory called along with -cupti
-		if [ $unified_memory = "true" ] ; then
-		    export TAU_TRACK_UNIFIED_MEMORY=1
-		fi
+    if [ $unified_memory = "true" ] ; then
+        export TAU_TRACK_UNIFIED_MEMORY=1
+    fi
                 ## SASS called along with -cupti
-		if [ $track_sass = "true" ] ; then
-		    export TAU_TRACK_CUDA_SASS=1
-		    if [ $csv_output = "true" ] ; then
-			export TAU_OUTPUT_CUDA_CSV=1
-		    fi
-		    if [ "x$sass_type" != "x" ] ; then
-			export TAU_SASS_TYPE=$sass_type
-		    fi
-		    export TAU_CUDA_BINARY_EXE=$binary_exe
-		fi
-		#echo "api found: $TAU_CUPTI_API"
+    if [ $track_sass = "true" ] ; then
+        export TAU_TRACK_CUDA_SASS=1
+        if [ $csv_output = "true" ] ; then
+        export TAU_OUTPUT_CUDA_CSV=1
+        fi
+        if [ "x$sass_type" != "x" ] ; then
+        export TAU_SASS_TYPE=$sass_type
+        fi
+        export TAU_CUDA_BINARY_EXE=$binary_exe
+    fi
+    #echo "api found: $TAU_CUPTI_API"
 fi
 if [ $track_opencl = "true" ] ; then
     # Add the OpenCL wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-		else
-			export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
-		fi
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+    else
+        export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+    fi
 fi
 if [ $track_openacc = "true" ] ; then
     export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
@@ -498,15 +504,20 @@ if [ $track_armci = "true" ] ; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
+if [ $track_shmem = "true" ] ; then
+    # Add the SHMEM wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/libTAUsh_shmem_wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
 if [ $tau_use_ebs = "true" ] ; then
     # Set TAU_SAMPLING=1 environment variable. Deferring the capability
     #    to enable HPCToolkit until later.
     export TAU_SAMPLING=1
     if [ "x$tau_ebs_period" != "x" ] ; then
-	export TAU_EBS_PERIOD=$tau_ebs_period
+    export TAU_EBS_PERIOD=$tau_ebs_period
     fi
     if [ "x$tau_ebs_source" != "x" ] ; then
-	export TAU_EBS_SOURCE=$tau_ebs_source
+    export TAU_EBS_SOURCE=$tau_ebs_source
     fi
 fi
 
@@ -562,12 +573,12 @@ fi
 if [ $qsub_mode = false ]; then
     prog="$1"
     if [ ! -x "$prog" ] ; then
-	prog=`which $prog 2>/dev/null`
+    prog=`which $prog 2>/dev/null`
     fi
     
     if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
-	echo "$scriptname: $1: command not found"
-	exit
+    echo "$scriptname: $1: command not found"
+    exit
     fi 
 
     # always use the basic preload library now
@@ -609,20 +620,20 @@ if [ $qsub_mode = true ] ; then
     newCmd=""
     for arg in $cmd ; do
         # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
-	modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
-	if [ "$processEnv" = true ] ; then
-	    prevEnv="$arg"
-	    processEnv=false
-	else
-	    case $arg in 
-	  --env)
-	      processEnv=true
-	      ;;
-	  *)
+    modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+    if [ "$processEnv" = true ] ; then
+        prevEnv="$arg"
+        processEnv=false
+    else
+        case $arg in 
+      --env)
+          processEnv=true
+          ;;
+      *)
               newCmd="$newCmd $arg"
-	      ;;
-	    esac
-	fi
+          ;;
+        esac
+    fi
     done
 
     envs="$envs:$prevEnv"
