@@ -14,6 +14,23 @@ static int tau_shmem_tagid_f=0;
 
 
 /**********************************************************
+   start_pes
+ **********************************************************/
+
+extern void  __real_start_pes(int a1) ;
+extern void  __wrap_start_pes(int a1)  {
+
+  TAU_PROFILE_TIMER(t,"void start_pes(int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_start_pes(a1);
+  tau_totalnodes(1,__real_shmem_n_pes());
+  TAU_PROFILE_SET_NODE(__real_shmem_my_pe());
+  TAU_PROFILE_STOP(t);
+
+}
+
+
+/**********************************************************
    shmem_init
  **********************************************************/
 
@@ -61,6 +78,23 @@ extern void  __wrap_shmem_global_exit(int a1)  {
 
 
 /**********************************************************
+   _my_pe
+ **********************************************************/
+
+extern int  __real__my_pe() ;
+extern int  __wrap__my_pe()  {
+
+  int retval;
+  TAU_PROFILE_TIMER(t,"int _my_pe(void) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =  __real__my_pe();
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+
+/**********************************************************
    shmem_my_pe
  **********************************************************/
 
@@ -71,6 +105,23 @@ extern int  __wrap_shmem_my_pe()  {
   TAU_PROFILE_TIMER(t,"int shmem_my_pe(void) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   retval  =  __real_shmem_my_pe();
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+
+/**********************************************************
+   _num_pes
+ **********************************************************/
+
+extern int  __real__num_pes() ;
+extern int  __wrap__num_pes()  {
+
+  int retval;
+  TAU_PROFILE_TIMER(t,"int _num_pes(void) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =  __real__num_pes();
   TAU_PROFILE_STOP(t);
   return retval;
 
@@ -1186,6 +1237,21 @@ extern int  __wrap_shmem_addr_accessible(const void * a1, int a2)  {
   retval  =  __real_shmem_addr_accessible(a1, a2);
   TAU_PROFILE_STOP(t);
   return retval;
+
+}
+
+
+/**********************************************************
+   shfree
+ **********************************************************/
+
+extern void  __real_shfree(void * a1) ;
+extern void  __wrap_shfree(void * a1)  {
+
+  TAU_PROFILE_TIMER(t,"void shfree(void *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shfree(a1);
+  TAU_PROFILE_STOP(t);
 
 }
 
@@ -3052,6 +3118,21 @@ extern void  __wrap_shmemx_test_req(shmemx_request_handle_t a1, int * a2)  {
   TAU_PROFILE_TIMER(t,"void shmemx_test_req(shmemx_request_handle_t, int *) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   __real_shmemx_test_req(a1, a2);
+  TAU_PROFILE_STOP(t);
+
+}
+
+
+/**********************************************************
+   shfree_nb
+ **********************************************************/
+
+extern void  __real_shfree_nb(void * a1) ;
+extern void  __wrap_shfree_nb(void * a1)  {
+
+  TAU_PROFILE_TIMER(t,"void shfree_nb(void *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shfree_nb(a1);
   TAU_PROFILE_STOP(t);
 
 }
