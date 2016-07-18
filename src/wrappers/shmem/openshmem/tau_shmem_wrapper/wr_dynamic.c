@@ -43,6 +43,44 @@ static void * get_function_handle(char const * name)
 }
 
 /**********************************************************
+   start_pes
+ **********************************************************/
+
+extern void  __wrap_start_pes(int a1) ;
+extern void  __real_start_pes(int a1)  {
+
+  typedef void (*start_pes_t)(int a1);
+  start_pes_t start_pes_handle = (start_pes_t)get_function_handle("start_pes");
+  start_pes_handle ( a1);
+
+}
+
+extern void  start_pes(int a1) {
+   __wrap_start_pes(a1);
+}
+
+extern void start_pes_(int a1)
+{
+   __wrap_start_pes(a1);
+}
+
+extern void start_pes__(int a1)
+{
+   __wrap_start_pes(a1);
+}
+
+extern void START_PES_(int a1)
+{
+   __wrap_start_pes(a1);
+}
+
+extern void START_PES__(int a1)
+{
+   __wrap_start_pes(a1);
+}
+
+
+/**********************************************************
    shmem_init
  **********************************************************/
 
@@ -157,6 +195,46 @@ extern void SHMEM_GLOBAL_EXIT__(int a1)
 
 
 /**********************************************************
+   _my_pe
+ **********************************************************/
+
+extern int  __wrap__my_pe() ;
+extern int  __real__my_pe()  {
+
+  int retval;
+  typedef int (*_my_pe_t)();
+  _my_pe_t _my_pe_handle = (_my_pe_t)get_function_handle("_my_pe");
+  retval  =  _my_pe_handle ();
+  return retval;
+
+}
+
+extern int  _my_pe() {
+   __wrap__my_pe();
+}
+
+extern int _my_pe_()
+{
+   __wrap__my_pe();
+}
+
+extern int _my_pe__()
+{
+   __wrap__my_pe();
+}
+
+extern int _MY_PE_()
+{
+   __wrap__my_pe();
+}
+
+extern int _MY_PE__()
+{
+   __wrap__my_pe();
+}
+
+
+/**********************************************************
    shmem_my_pe
  **********************************************************/
 
@@ -193,6 +271,46 @@ extern int SHMEM_MY_PE_()
 extern int SHMEM_MY_PE__()
 {
    __wrap_shmem_my_pe();
+}
+
+
+/**********************************************************
+   _num_pes
+ **********************************************************/
+
+extern int  __wrap__num_pes() ;
+extern int  __real__num_pes()  {
+
+  int retval;
+  typedef int (*_num_pes_t)();
+  _num_pes_t _num_pes_handle = (_num_pes_t)get_function_handle("_num_pes");
+  retval  =  _num_pes_handle ();
+  return retval;
+
+}
+
+extern int  _num_pes() {
+   __wrap__num_pes();
+}
+
+extern int _num_pes_()
+{
+   __wrap__num_pes();
+}
+
+extern int _num_pes__()
+{
+   __wrap__num_pes();
+}
+
+extern int _NUM_PES_()
+{
+   __wrap__num_pes();
+}
+
+extern int _NUM_PES__()
+{
+   __wrap__num_pes();
 }
 
 
@@ -2685,6 +2803,44 @@ extern int SHMEM_ADDR_ACCESSIBLE_(const void * a1, int a2)
 extern int SHMEM_ADDR_ACCESSIBLE__(const void * a1, int a2)
 {
    __wrap_shmem_addr_accessible(a1, a2);
+}
+
+
+/**********************************************************
+   shfree
+ **********************************************************/
+
+extern void  __wrap_shfree(void * a1) ;
+extern void  __real_shfree(void * a1)  {
+
+  typedef void (*shfree_t)(void * a1);
+  shfree_t shfree_handle = (shfree_t)get_function_handle("shfree");
+  shfree_handle ( a1);
+
+}
+
+extern void  shfree(void * a1) {
+   __wrap_shfree(a1);
+}
+
+extern void shfree_(void * a1)
+{
+   __wrap_shfree(a1);
+}
+
+extern void shfree__(void * a1)
+{
+   __wrap_shfree(a1);
+}
+
+extern void SHFREE_(void * a1)
+{
+   __wrap_shfree(a1);
+}
+
+extern void SHFREE__(void * a1)
+{
+   __wrap_shfree(a1);
 }
 
 
@@ -7087,6 +7243,44 @@ extern void SHMEMX_TEST_REQ_(shmemx_request_handle_t a1, int * a2)
 extern void SHMEMX_TEST_REQ__(shmemx_request_handle_t a1, int * a2)
 {
    __wrap_shmemx_test_req(a1, a2);
+}
+
+
+/**********************************************************
+   shfree_nb
+ **********************************************************/
+
+extern void  __wrap_shfree_nb(void * a1) ;
+extern void  __real_shfree_nb(void * a1)  {
+
+  typedef void (*shfree_nb_t)(void * a1);
+  shfree_nb_t shfree_nb_handle = (shfree_nb_t)get_function_handle("shfree_nb");
+  shfree_nb_handle ( a1);
+
+}
+
+extern void  shfree_nb(void * a1) {
+   __wrap_shfree_nb(a1);
+}
+
+extern void shfree_nb_(void * a1)
+{
+   __wrap_shfree_nb(a1);
+}
+
+extern void shfree_nb__(void * a1)
+{
+   __wrap_shfree_nb(a1);
+}
+
+extern void SHFREE_NB_(void * a1)
+{
+   __wrap_shfree_nb(a1);
+}
+
+extern void SHFREE_NB__(void * a1)
+{
+   __wrap_shfree_nb(a1);
 }
 
 
