@@ -1114,6 +1114,7 @@ EBS_CLOCK_RES=
 #GPI#PROFILEOPT91 = -DTAU_GPI -I$(GPIDIR)/include #ENDIF#
 #GPI#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gpi/link_options.tau #ENDIF#
 #MPC#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/mpc_mpi/link_options.tau #ENDIF#
+#SHMEM#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/shmem/link_options.tau #ENDIF#
 
 #TAU_OPENMP_NESTED#PROFILEOPT92=-DTAU_OPENMP_NESTED#ENDIF#
 

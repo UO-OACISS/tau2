@@ -1627,7 +1627,7 @@ if [ $numFiles == 0 ]; then
     fi
 
     if [ "x$tauWrapFile" != "x" ]; then
-      linkCmd="$linkCmd `cat $tauWrapFile` "
+      linkCmd="$linkCmd @$(echo -e $tauWrapFile | sed -e 's/[[:space:]]*$//') "
       echoIfDebug "Linking command is $linkCmd"
     fi
 
@@ -2294,8 +2294,9 @@ else
           fi
 
           if [ "x$tauWrapFile" != "x" ]; then
-            newCmd="$newCmd `cat $tauWrapFile` "
+            newCmd="$newCmd @$(echo -e $tauWrapFile | sed -e 's/[[:space:]]*$//') "
             echoIfDebug "Linking command is $newCmd"
+            echo "Linking command is $newCmd"
           fi
 
       if [ "x$optTauGASPU" != "x" ]; then
