@@ -14,13 +14,19 @@ ROTPUT = rotput
 
 ##############################################
 
-.PHONY: all clean run
+.PHONY: all clean profile trace
 
 all: $(ROTPUT)
 
-run: $(ROTPUT)
+profile: $(ROTPUT)
 	oshrun -np 4 ./$(ROTPUT)
 	pprof
+
+trace: $(ROTPUT)
+	TAU_TRACE=1 oshrun -np 4 ./$(ROTPUT)
+	tau_treemerge.pl
+	tau2slog2 tau.trc tau.edf -o tau.slog2
+	rm *.trc *.edf
 
 $(ROTPUT): $(OBJ)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LIBS)
