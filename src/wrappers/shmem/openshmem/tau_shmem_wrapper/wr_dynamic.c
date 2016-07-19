@@ -26,8 +26,6 @@ static void * get_function_handle(char const * name)
   // Reset error pointer
   dlerror();
 
-  fprintf(stderr, "Using dlsym to get %s\n", name); fflush(stdout);
-
   // Attempt to get the function handle
   handle = dlsym(RTLD_NEXT, name);
 
