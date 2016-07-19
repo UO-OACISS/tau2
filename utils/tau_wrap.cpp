@@ -1294,7 +1294,6 @@ int main(int argc, char **argv)
       impl << "  void * handle;"<<endl<<endl;;
       impl << "  // Reset error pointer"<<endl;
       impl << "  dlerror();"<<endl<<endl;
-      impl << "  fprintf(stderr, \"Using dlsym to get %s\\n\", name); fflush(stdout);"<<endl<<endl;
       impl << "  // Attempt to get the function handle"<<endl;
       impl << "  handle = dlsym(RTLD_NEXT, name);"<<endl<<endl;
       impl << "  // Detect errors"<<endl;
