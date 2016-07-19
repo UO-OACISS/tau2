@@ -937,24 +937,24 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 */
 
     // Fortran wrapper functions
-    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcargfort << endl;
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "_" << sig.funcargfort << endl;
     impl << "{" << endl;
     impl << "   __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
 
-    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcargfort << endl;
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "__" << sig.funcargfort << endl;
     impl << "{" << endl;
     impl << "   __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
 
     transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
 
-    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcargfort << endl;
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "_" << sig.funcargfort << endl;
     impl << "{" << endl;
     impl << "   __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
 
-    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcargfort << endl;
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "__" << sig.funcargfort << endl;
     impl << "{" << endl;
     impl << "   __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
@@ -1017,12 +1017,12 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl,
       if (runtime == WRAPPER_INTERCEPT) { /* -Wl,-wrap,<func>,-wrap,<func> */
         if (!(*rit)->signature()->hasEllipsis()) { /* does not have varargs */
           linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
-   //       rname = (*rit)->name();
-   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
-   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
-   //       transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
-   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
-   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
+          rname = (*rit)->name();
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
+          transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
         }
       }
     }
