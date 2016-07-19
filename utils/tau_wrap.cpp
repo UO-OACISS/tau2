@@ -134,11 +134,13 @@ struct FunctionSignatureInfo
   // ...
 
   string func;
+  string funcfort;
   string proto;
   string returntypename;
   string funchandle;
   string rcalledfunc;
   string funcarg;
+  string funcargfort;
 };
 
 
@@ -207,6 +209,10 @@ static bool doesRoutineNameContainFetchOp(string const & rname)
 static bool doesRoutineNameContainCondFetchOp(string const & rname)
 {
   return (rname.find("cswap") != string::npos); 
+}
+
+static bool isArgumentScalar(string argtype) {
+  return (argtype.find("*"));
 }
 
 static char const * getMultiplierString(string const & rname) 
@@ -509,6 +515,7 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * prefix, FunctionSignatureInfo & sig)
 {
   sig.func = r->name() + "(";
+  sig.funcfort = r->name() + "(";
   sig.proto = r->name() + "(";
   if(shmem_wrapper) {
     sig.rcalledfunc = r->name() + "_handle (";
@@ -519,6 +526,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     sig.funchandle = "_h) (";
   }
   sig.funcarg = "(";
+  sig.funcargfort = "(";
 
   pdbGroup const * grp = r->signature()->returnType()->isGroup();
   if (grp) { 
@@ -576,10 +584,12 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 
     if (argcount != 1) { /* not a startup */
       sig.func.append(", ");
+      sig.funcfort.append(", ");
       sig.proto.append(", ");
       sig.rcalledfunc.append(", ");
       sig.funchandle.append(", ");
       sig.funcarg.append(", ");
+      sig.funcargfort.append(", ");
       impl<<", ";
     }
 
@@ -612,6 +622,16 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       argtypename.replace(0, 10, "shared ");
     }
 
+    int pos3 = argtypename.find("*");
+    if(pos3 == string::npos) {
+      sig.funcargfort.append(argtypename + " *");
+      sig.funcfort.append("*a" + string(number));
+    }
+    else {
+      sig.funcargfort.append(argtypename);
+      sig.funcfort.append("a" + string(number));
+    }
+
     sig.func.append("a" + string(number));
     sig.proto.append(argtypename + " a" + string(number));
     sig.funchandle.append(argtypename);
@@ -632,6 +652,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       }
       impl<<"a"<<number;
       sig.funcarg.append("a" + string(number));
+      sig.funcargfort.append("a" + string(number));
       for(i=found - examinedarg; i < strlen(examinedarg); i++) {
         //printf("after number Printing %c\n", examinedarg[i]);
         impl << examinedarg[i];
@@ -658,6 +679,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       /* print: for (int a, double b), this prints "a1" in int a1, */
       impl<<"a"<<number;
       sig.funcarg.append(" a" + string(number));
+      sig.funcargfort.append(" a" + string(number));
     }
     if (r->signature()->hasEllipsis()) {
       //printf("Has ellipsis...\n");
@@ -665,9 +687,11 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     }
   }
   sig.func.append(")");
+  sig.funcfort.append(")");
   sig.proto.append(")");
   sig.rcalledfunc.append(")");
   sig.funcarg.append(")");
+  sig.funcargfort.append(")");
   impl<<") ";
 }
 
@@ -879,6 +903,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     impl << "   __wrap_" << sig.func << ";" << endl;
     impl << "}\n" << endl;
 
+#if 0
     // Fortran wrapper functions
     impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcarg << endl;
     impl << "{" << endl;
@@ -900,6 +925,38 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcarg << endl;
     impl << "{" << endl;
     impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+#endif
+  }
+  if (runtime == WRAPPER_INTERCEPT) {
+/*
+    printFunctionNameInOutputFile(r, impl, "  ", sig);
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+*/
+
+    // Fortran wrapper functions
+    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    impl << "}\n" << endl;
+
+    transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
+
+    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
   }
 
@@ -949,6 +1006,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl,
   vector<itemRef*> itemvec;
   getCReferencesForWrapper(itemvec, pdb, f);
   PDB::croutinevec routines = pdb.getCRoutineVec();
+  string rname;
   for (PDB::croutinevec::const_iterator rit=routines.begin(); rit!=routines.end(); ++rit) {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
     if ( (*rit)->location().file() == f
@@ -959,6 +1017,12 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl,
       if (runtime == WRAPPER_INTERCEPT) { /* -Wl,-wrap,<func>,-wrap,<func> */
         if (!(*rit)->signature()->hasEllipsis()) { /* does not have varargs */
           linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
+   //       rname = (*rit)->name();
+   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
+   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
+   //       transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
+   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
+   //       linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
         }
       }
     }
