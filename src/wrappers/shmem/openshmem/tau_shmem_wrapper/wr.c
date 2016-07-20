@@ -2,10 +2,6 @@
 #define _GNU_SOURCE
 #endif
 
-#ifndef SHMEM_FINT
-#define SHMEM_FINT int
-#endif
-
 #include <tau_shmem.h>
 #include <Profile/Profiler.h>
 #include <stdio.h>
@@ -7351,5 +7347,75 @@ extern int __wrap_SHMEMX_QUIET_TEST_()
 extern int __wrap_SHMEMX_QUIET_TEST__()
 {
    __wrap_shmemx_quiet_test();
+}
+
+
+/**********************************************************
+   shmem_broadcast4_
+ **********************************************************/
+
+extern void  __real_shmem_broadcast4_(void * a1, const void * a2, int * a3, int * a4, int * a5, int * a6, int * a7, long * a8) ;
+extern void  __wrap_shmem_broadcast4_(void * a1, const void * a2, int * a3, int * a4, int * a5, int * a6, int * a7, long * a8)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_broadcast4_(void *, const void *, int *, int *, int *, int *, int *, long *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_broadcast4_(a1, a2, a3, a4, a5, a6, a7, a8);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_broadcast4__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast4_(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+extern void __wrap_shmem_broadcast4___(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast4_(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+extern void __wrap_SHMEM_BROADCAST4__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast4_(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+extern void __wrap_SHMEM_BROADCAST4___(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast4_(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+
+/**********************************************************
+   shmem_broadcast8_
+ **********************************************************/
+
+extern void  __real_shmem_broadcast8_(void * a1, const void * a2, int * a3, int * a4, int * a5, int * a6, int * a7, long * a8) ;
+extern void  __wrap_shmem_broadcast8_(void * a1, const void * a2, int * a3, int * a4, int * a5, int * a6, int * a7, long * a8)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_broadcast8_(void *, const void *, int *, int *, int *, int *, int *, long *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_broadcast8_(a1, a2, a3, a4, a5, a6, a7, a8);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_broadcast8__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast8_(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+extern void __wrap_shmem_broadcast8___(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast8_(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+extern void __wrap_SHMEM_BROADCAST8__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast8_(a1, a2, a3, a4, a5, a6, a7, a8);
+}
+
+extern void __wrap_SHMEM_BROADCAST8___(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, long * a8)
+{
+   __wrap_shmem_broadcast8_(a1, a2, a3, a4, a5, a6, a7, a8);
 }
 

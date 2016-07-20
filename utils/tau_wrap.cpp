@@ -1327,12 +1327,6 @@ int main(int argc, char **argv)
          << "#define _GNU_SOURCE\n"
          << "#endif\n"
          << endl;
-    if (runtime == WRAPPER_INTERCEPT) {
-      impl << "#ifndef SHMEM_FINT\n"
-           << "#define SHMEM_FINT int\n"
-           << "#endif\n"
-           << endl;
-    }
   }
   impl << "#include <" << filename << ">\n"
        << "#include <" << header_file << ">\n"
