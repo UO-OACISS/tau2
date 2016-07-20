@@ -597,6 +597,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     sprintf(number, "%d", argcount);
     const pdbGroup *gr;
     string argtypename;
+    string argtypenamefort;
     if ((gr = argsit->type()->isGroup()) != 0) {
       argtypename = gr->name();
     } else {
@@ -622,13 +623,22 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       argtypename.replace(0, 10, "shared ");
     }
 
-    int pos3 = argtypename.find("*");
+    argtypenamefort = argtypename;
+    if(argtypenamefort.compare(0, 3, "int") == 0) {
+      argtypenamefort.erase(0, 3);
+      argtypenamefort.insert(0, "SHMEM_FINT");
+    }
+    if(argtypenamefort.compare(0, 6, "size_t") == 0) {
+      argtypenamefort.erase(0, 6);
+      argtypenamefort.insert(0, "SHMEM_FINT");
+    }
+    int pos3 = argtypenamefort.find("*");
     if(pos3 == string::npos) {
-      sig.funcargfort.append(argtypename + " *");
+      sig.funcargfort.append(argtypenamefort + " *");
       sig.funcfort.append("*a" + string(number));
     }
     else {
-      sig.funcargfort.append(argtypename);
+      sig.funcargfort.append(argtypenamefort);
       sig.funcfort.append("a" + string(number));
     }
 
@@ -1317,6 +1327,12 @@ int main(int argc, char **argv)
          << "#define _GNU_SOURCE\n"
          << "#endif\n"
          << endl;
+    if (runtime == WRAPPER_INTERCEPT) {
+      impl << "#ifndef SHMEM_FINT\n"
+           << "#define SHMEM_FINT int\n"
+           << "#endif\n"
+           << endl;
+    }
   }
   impl << "#include <" << filename << ">\n"
        << "#include <" << header_file << ">\n"
