@@ -1,7 +1,11 @@
 #include <shmem.h>
 #include <shmemx.h>
 
-void shmem_broadcast4(void *dest, const void *source, size_t nelems, int PE_root, int PE_start, int logPE_stride, int PE_size, long *pSync);
+#ifndef SHMEM_FINT
+#define SHMEM_FINT int
+#endif
 
-void shmem_broadcast8(void *dest, const void *source, size_t nelems, int PE_root, int PE_start, int logPE_stride, int PE_size, long *pSync);
+void shmem_broadcast4_(void *dest, const void *source, SHMEM_FINT *nelems, SHMEM_FINT *PE_root, SHMEM_FINT *PE_start, SHMEM_FINT *logPE_stride, SHMEM_FINT *PE_size, long *pSync);
+
+void shmem_broadcast8_(void *dest, const void *source, SHMEM_FINT *nelems, SHMEM_FINT *PE_root, SHMEM_FINT *PE_start, SHMEM_FINT *logPE_stride, SHMEM_FINT *PE_size, long *pSync);
 
