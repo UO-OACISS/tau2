@@ -761,10 +761,13 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   if (runtime == RUNTIME_INTERCEPT) {
       ostringstream buff;
     if(shmem_wrapper) {
-       if(isVoid) buff << "  typedef void (*" << r->name() << "_t)"<<sig.funcarg << ";" << endl;
-       else buff << "  typedef " << sig.returntypename  << " (*" << r->name() << "_t)"<<sig.funcarg << ";" << endl;
-       buff << "  " << r->name() << "_t " << r->name() << "_handle = (" << r->name();
-       buff << "_t)get_function_handle(\"" << r->name() << "\");" << endl;
+       std::string type = r->name() + "_t";
+       std::string handle =  r->name() + "_handle";
+       buff << "  typedef " << (isVoid ? "void" : sig.returntypename)  << " (*" << type << ")" << sig.funcarg << ";\n"
+            << "  static " << type << " " << handle << " = (" << type << ")NULL;\n"
+            << "  if (!" << handle << ") {\n"
+            << "    " << handle << " = get_function_handle(\"" << r->name() << "\");\n"
+            << "  }\n" << endl;
     }
     else {
       if (isVoid) {
