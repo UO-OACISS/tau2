@@ -385,12 +385,11 @@ if(!TauEnv_get_cuda_track_sass()) {
 }
 
 void Tau_cupti_onunload() {
-
-  if(TauEnv_get_cuda_track_unified_memory()) {
 #if CUDA_VERSION >= 6000
+  if(TauEnv_get_cuda_track_unified_memory()) {
     CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
-#endif
   }
+#endif
   if(TauEnv_get_cuda_track_sass()) {
     if(TauEnv_get_cuda_csv_output()){
       cout << "[CuptiActivity]:  Writing out instruction mix stats to file. This may take a few minutes.\n";
@@ -990,6 +989,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       
 				break;
       }
+
     if(TauEnv_get_cuda_track_unified_memory()) {
 #if CUDA_VERSION >= 6000
     case CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER:
@@ -1413,8 +1413,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
     }
 
-	case CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION: {
 #if CUDA_VERSION >= 5500
+	case CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION: {
     if(TauEnv_get_cuda_track_sass()) {
 	  CUpti_ActivityInstructionExecution *sourceRecord = (CUpti_ActivityInstructionExecution *)record;
 
@@ -1472,11 +1472,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  // 				       pcOffset,executed,
 	  // 				       threadsExecuted);
     }
-#endif
 	  break;
     }
-	case CUPTI_ACTIVITY_KIND_FUNCTION: {
+#endif
 #if CUDA_VERSION >= 5500
+	case CUPTI_ACTIVITY_KIND_FUNCTION: {
 	  if(TauEnv_get_cuda_track_sass()) {
 	  CUpti_ActivityFunction *fResult = (CUpti_ActivityFunction *)record;
 
@@ -1555,9 +1555,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  // 				kname, str_demangled);
 	  }
                                                                                                                
-#endif
 	  break;
 	}
+#endif
 
     case CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS:
     {
