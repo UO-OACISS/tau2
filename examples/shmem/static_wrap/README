@@ -32,17 +32,17 @@ Debug: Moving these libraries to the end of the link line:
 
 
 Debug: Linking with TAU Options
-Executing> /usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/bin/oshcc rotput.o -o rotput @/home/users/jlinford/workspace/tau2/x86_64/lib/wrappers/shmem/link_options.tau -L/home/users/jlinford/workspace/tau2/x86_64/lib -ltau-shmem-pdt -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -lbfd -liberty -lz -Wl,--export-dynamic -lrt -L/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -lunwind -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -ldl -lm -L/storage/packages/gcc/4.9.3/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.9.3/ -lstdc++ -lgcc_s -L/home/users/jlinford/workspace/tau2/x86_64/lib -lTauShmem-shmem-pdt -L/usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/lib -L/usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/lib -lopenshmem -L/home/users/jlinford/workspace/tau2/x86_64/lib/static-shmem-pdt
+Executing> /usr/local/packages/openshmem-1.2/bin/oshcc rotput.o -o rotput @/home/users/jlinford/workspace/tau2/x86_64/lib/wrappers/shmem/link_options.tau -L/home/users/jlinford/workspace/tau2/x86_64/lib -ltau-shmem-pdt -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -lbfd -liberty -lz -Wl,--export-dynamic -lrt -L/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -lunwind -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -ldl -lm -L/storage/packages/gcc/4.8.5/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.5/ -lstdc++ -lgcc_s -L/home/users/jlinford/workspace/tau2/x86_64/lib -lTauShmem-shmem-pdt -L/usr/local/packages/openshmem-1.2/lib -L/usr/local/packages/openshmem-1.2/lib -lopenshmem -L/home/users/jlinford/workspace/tau2/x86_64/lib/static-shmem-pdt
 
 
 Debug:
-Executing> /usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/bin/oshcc rotput.o -o rotput -I/home/users/jlinford/workspace/tau2/include -I/usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/include -I/usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/include/mpp @/home/users/jlinford/workspace/tau2/x86_64/lib/wrappers/shmem/link_options.tau -L/home/users/jlinford/workspace/tau2/x86_64/lib -ltau-shmem-pdt -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -lbfd -liberty -lz -Wl,--export-dynamic -lrt -L/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -lunwind -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -ldl -lm -L/storage/packages/gcc/4.9.3/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.9.3/ -lstdc++ -lgcc_s -L/home/users/jlinford/workspace/tau2/x86_64/lib -lTauShmem-shmem-pdt -L/usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/lib -L/usr/local/packages/openshmem/ornl_gasnet-1.26.3_gcc-4.9.3/lib -lopenshmem -L/home/users/jlinford/workspace/tau2/x86_64/lib/static-shmem-pdt
+Executing> /usr/local/packages/openshmem-1.2/bin/oshcc rotput.o -o rotput -I/home/users/jlinford/workspace/tau2/include -I/usr/local/packages/openshmem-1.2/include -I/usr/local/packages/openshmem-1.2/include/mpp @/home/users/jlinford/workspace/tau2/x86_64/lib/wrappers/shmem/link_options.tau -L/home/users/jlinford/workspace/tau2/x86_64/lib -ltau-shmem-pdt -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -L/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/binutils-2.23.2/lib64 -lbfd -liberty -lz -Wl,--export-dynamic -lrt -L/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -lunwind -Wl,-rpath,/home/users/jlinford/workspace/tau2/x86_64/libunwind-1.1-oshcc/lib -ldl -lm -L/storage/packages/gcc/4.8.5/bin/../lib/gcc/x86_64-unknown-linux-gnu/4.8.5/ -lstdc++ -lgcc_s -L/home/users/jlinford/workspace/tau2/x86_64/lib -lTauShmem-shmem-pdt -L/usr/local/packages/openshmem-1.2/lib -L/usr/local/packages/openshmem-1.2/lib -lopenshmem -L/home/users/jlinford/workspace/tau2/x86_64/lib/static-shmem-pdt
 
 oshrun -np 4 ./rotput
-   3: got    3: CORRECT
-   1: got    1: CORRECT
    2: got    2: CORRECT
    0: got    0: CORRECT
+   3: got    3: CORRECT
+   1: got    1: CORRECT
 pprof
 Reading Profile files in profile.*
 
@@ -51,12 +51,13 @@ NODE 0;CONTEXT 0;THREAD 0:
 %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
               msec   total msec                          usec/call 
 ---------------------------------------------------------------------------------------
-100.0        0.183            5           1           9       5414 .TAU application
- 90.5            4            4           1           0       4900 void shmem_init(void) C
-  4.7        0.256        0.256           1           0        256 void shmem_finalize(void) C
-  0.9        0.048        0.048           1           0         48 void shmem_int_put(int *, const int *, size_t, int) C
-  0.3        0.017        0.017           1           0         17 void shmem_free(void *) C
-  0.2        0.009        0.009           3           0          3 void shmem_barrier_all(void) C
+100.0         0.09           10           1          10      10041 .TAU application
+ 94.1            9            9           1           0       9444 void shmem_init(void) C
+  3.2        0.324        0.324           1           0        324 void shmem_finalize(void) C
+  1.4        0.135        0.143           5           5         29 void shmem_barrier_all(void) C
+  0.2        0.017        0.023           1           1         23 void shmem_free(void *) C
+  0.2        0.022        0.022           1           0         22 void shmem_int_put(int *, const int *, size_t, int) C
+  0.1        0.008        0.008           5           0          2 void shmem_quiet(void) C
   0.0        0.001        0.001           1           0          1 int shmem_my_pe(void) C
   0.0            0            0           1           0          0 int shmem_n_pes(void) C
 ---------------------------------------------------------------------------------------
@@ -73,13 +74,14 @@ NODE 1;CONTEXT 0;THREAD 0:
 %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
               msec   total msec                          usec/call 
 ---------------------------------------------------------------------------------------
-100.0        0.582            5           1           9       5258 .TAU application
- 85.3            4            4           1           0       4485 void shmem_init(void) C
-  1.9        0.101        0.101           1           0        101 void shmem_finalize(void) C
-  0.7        0.038        0.038           3           0         13 void shmem_barrier_all(void) C
-  0.7        0.035        0.035           1           0         35 void shmem_int_put(int *, const int *, size_t, int) C
-  0.3        0.017        0.017           1           0         17 void shmem_free(void *) C
-  0.0            0            0           1           0          0 int shmem_my_pe(void) C
+100.0        0.151           10           1          10      10042 .TAU application
+ 94.5            9            9           1           0       9488 void shmem_init(void) C
+  3.2        0.326        0.326           1           0        326 void shmem_finalize(void) C
+  0.3        0.025        0.035           5           5          7 void shmem_barrier_all(void) C
+  0.3        0.031        0.031           1           0         31 void shmem_int_put(int *, const int *, size_t, int) C
+  0.1         0.01        0.013           1           1         13 void shmem_free(void *) C
+  0.1         0.01         0.01           5           0          2 void shmem_quiet(void) C
+  0.0        0.001        0.001           1           0          1 int shmem_my_pe(void) C
   0.0            0            0           1           0          0 int shmem_n_pes(void) C
 ---------------------------------------------------------------------------------------
 
@@ -95,14 +97,15 @@ NODE 2;CONTEXT 0;THREAD 0:
 %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
               msec   total msec                          usec/call 
 ---------------------------------------------------------------------------------------
-100.0         0.19            5           1           9       5281 .TAU application
- 92.7            4            4           1           0       4898 void shmem_init(void) C
-  2.2        0.116        0.116           1           0        116 void shmem_finalize(void) C
-  0.9        0.047        0.047           1           0         47 void shmem_int_put(int *, const int *, size_t, int) C
-  0.3        0.018        0.018           1           0         18 void shmem_free(void *) C
-  0.2         0.01         0.01           3           0          3 void shmem_barrier_all(void) C
-  0.0        0.001        0.001           1           0          1 int shmem_my_pe(void) C
+100.0        0.103            9           1          10       9916 .TAU application
+ 87.7            8            8           1           0       8694 void shmem_init(void) C
+  8.9        0.872        0.881           5           5        176 void shmem_barrier_all(void) C
+  2.1        0.208        0.208           1           0        208 void shmem_finalize(void) C
+  0.2        0.022        0.022           1           0         22 void shmem_int_put(int *, const int *, size_t, int) C
+  0.1        0.007        0.013           1           1         13 void shmem_free(void *) C
+  0.1        0.009        0.009           5           0          2 void shmem_quiet(void) C
   0.0        0.001        0.001           1           0          1 int shmem_n_pes(void) C
+  0.0            0            0           1           0          0 int shmem_my_pe(void) C
 ---------------------------------------------------------------------------------------
 
 USER EVENTS Profile :NODE 2, CONTEXT 0, THREAD 0
@@ -117,13 +120,14 @@ NODE 3;CONTEXT 0;THREAD 0:
 %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
               msec   total msec                          usec/call 
 ---------------------------------------------------------------------------------------
-100.0         0.81            5           1           9       5223 .TAU application
- 81.1            4            4           1           0       4235 void shmem_init(void) C
-  1.3         0.07         0.07           1           0         70 void shmem_finalize(void) C
-  1.1         0.06         0.06           3           0         20 void shmem_barrier_all(void) C
-  0.6        0.031        0.031           1           0         31 void shmem_int_put(int *, const int *, size_t, int) C
-  0.3        0.017        0.017           1           0         17 void shmem_free(void *) C
-  0.0            0            0           1           0          0 int shmem_my_pe(void) C
+100.0        0.154           10           1          10      10042 .TAU application
+ 94.5            9            9           1           0       9489 void shmem_init(void) C
+  3.2        0.326        0.326           1           0        326 void shmem_finalize(void) C
+  0.3        0.021        0.032           5           5          6 void shmem_barrier_all(void) C
+  0.3         0.03         0.03           1           0         30 void shmem_int_put(int *, const int *, size_t, int) C
+  0.1         0.01        0.013           1           1         13 void shmem_free(void *) C
+  0.1        0.011        0.011           5           0          2 void shmem_quiet(void) C
+  0.0        0.001        0.001           1           0          1 int shmem_my_pe(void) C
   0.0            0            0           1           0          0 int shmem_n_pes(void) C
 ---------------------------------------------------------------------------------------
 
@@ -139,13 +143,14 @@ FUNCTION SUMMARY (total):
 %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
               msec   total msec                          usec/call 
 ---------------------------------------------------------------------------------------
-100.0            1           21           4          36       5294 .TAU application
- 87.4           18           18           4           0       4630 void shmem_init(void) C
-  2.6        0.543        0.543           4           0        136 void shmem_finalize(void) C
-  0.8        0.161        0.161           4           0         40 void shmem_int_put(int *, const int *, size_t, int) C
-  0.6        0.117        0.117          12           0         10 void shmem_barrier_all(void) C
-  0.3        0.069        0.069           4           0         17 void shmem_free(void *) C
-  0.0        0.002        0.002           4           0          0 int shmem_my_pe(void) C
+100.0        0.498           40           4          40      10010 .TAU application
+ 92.7           37           37           4           0       9279 void shmem_init(void) C
+  3.0            1            1           4           0        296 void shmem_finalize(void) C
+  2.7            1            1          20          20         55 void shmem_barrier_all(void) C
+  0.3        0.105        0.105           4           0         26 void shmem_int_put(int *, const int *, size_t, int) C
+  0.2        0.044        0.062           4           4         16 void shmem_free(void *) C
+  0.1        0.038        0.038          20           0          2 void shmem_quiet(void) C
+  0.0        0.003        0.003           4           0          1 int shmem_my_pe(void) C
   0.0        0.001        0.001           4           0          0 int shmem_n_pes(void) C
 
 FUNCTION SUMMARY (mean):
@@ -153,11 +158,12 @@ FUNCTION SUMMARY (mean):
 %Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
               msec   total msec                          usec/call 
 ---------------------------------------------------------------------------------------
-100.0        0.441            5           1           9       5294 .TAU application
- 87.4            4            4           1           0       4630 void shmem_init(void) C
-  2.6        0.136        0.136           1           0        136 void shmem_finalize(void) C
-  0.8       0.0403       0.0403           1           0         40 void shmem_int_put(int *, const int *, size_t, int) C
-  0.6       0.0293       0.0293           3           0         10 void shmem_barrier_all(void) C
-  0.3       0.0173       0.0173           1           0         17 void shmem_free(void *) C
-  0.0       0.0005       0.0005           1           0          0 int shmem_my_pe(void) C
+100.0        0.124           10           1          10      10010 .TAU application
+ 92.7            9            9           1           0       9279 void shmem_init(void) C
+  3.0        0.296        0.296           1           0        296 void shmem_finalize(void) C
+  2.7        0.263        0.273           5           5         55 void shmem_barrier_all(void) C
+  0.3       0.0262       0.0262           1           0         26 void shmem_int_put(int *, const int *, size_t, int) C
+  0.2        0.011       0.0155           1           1         16 void shmem_free(void *) C
+  0.1       0.0095       0.0095           5           0          2 void shmem_quiet(void) C
+  0.0      0.00075      0.00075           1           0          1 int shmem_my_pe(void) C
   0.0      0.00025      0.00025           1           0          0 int shmem_n_pes(void) C
