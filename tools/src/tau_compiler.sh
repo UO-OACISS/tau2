@@ -1584,7 +1584,7 @@ if [ $numFiles == 0 ]; then
 
     link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
     if [ "x$link_options_file" != "x" ] ; then
-        optLinking="@$link_options_file $optLinking"
+        optLinking="$optLinking @$link_options_file $optLinking"
     fi
 
     if [ $hasAnOutputFile == $FALSE ]; then
