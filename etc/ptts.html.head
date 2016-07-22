@@ -1,0 +1,86 @@
+<!DOCTYPE html 
+     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+<script src="tabber.js" type="text/javascript"></script>
+<script src="nav.js" type="text/javascript"></script>
+  <style type="text/css">.tabber{display:none;}</style>
+<link href="summary.css" rel="stylesheet" type="text/css"></link>
+<script src="table.js" type="text/javascript"></script>
+  <title>
+   ParaTools ThreadSpotter
+  </title>
+ </head>
+ <body>
+  <div class="overview">
+   <table>
+    <tr>
+     <td valign="top" width="70%">
+      <div class="t">
+       <div class="b">
+        <div class="l">
+         <div class="r">
+          <div class="bl">
+           <div class="br">
+            <div class="tl">
+             <div class="tr">
+              <div class="explanation">
+               <h3>
+                ThreadSpotter™
+               </h3>
+               <p>
+                ThreadSpotter™ is a tool to quickly analyze an application for a range of performance problems, particularly related to multicore optimization.
+               </p>
+               <div class="link">
+                <table>
+                 <tr>
+                  <td valign="top">
+                   <a href="javascript:void(0);" onclick="toggle('i35');">
+                    Read&nbsp;more...
+                   </a>
+                  </td>
+                  <td valign="top">
+                   <a href="manual_html/ch_intro.html" onclick="return popitup('manual_html/ch_intro.html')" target="help">
+                    Manual
+                   </a>
+                  </td>
+                 </tr>
+                </table>
+                <div id="i35" style="display:none">
+                 <p>A modern processor has two types of resources that are both limited and highly responsible for application performance:<ul><li><strong>The memory bus</strong>, which transports data between the memory and the processor, and</li><li><strong>The caches</strong>, which store often used data so each access doesn't have to go all the way to memory.</li></ul></p><p>A third resource, <strong>the hardware prefetcher</strong>, is also important for application performance, as it anticipates the application's memory access patterns, and tries to fetch data ahead of time. If it is successful, this hides some of the time it takes to access memory.</p><p>It is of great importance for application performance and scalability on multicore processors that these resources are used efficiently.</p><p>ThreadSpotter™ looks for abuse of these resources  and points out the responsible slowspots.</p>
+
+                </div>
+               </div>
+              </div>
+             </div>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <p style="height:0px">
+       &nbsp;
+      </p>
+      <div class="t">
+       <div class="b">
+        <div class="l">
+         <div class="r">
+          <div class="bl">
+           <div class="br">
+            <div class="tl">
+             <div class="tr">
+              <div class="execution">
+               <table width="100%">
+                   <thead>
+                       <tr>
+                           <td align="right"><h3>Node</h3></td>
+                           <td align="center"><h3>Memory Bandwidth</h3></td>
+                           <td align="center"><h3>Memory Latency</h3></td>
+                           <td align="center"><h3>Data Locality</h3></td>
+                           <td align="center"><h3>Thread Communication / Interaction</h3></td>
+                       <tr>
+                   </thead>

@@ -1,0 +1,163 @@
+               </table>
+               </div>
+              </div>
+             </div>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+     </td>
+     <td valign="top">
+      <div align="right">
+       <img align="right" src="pt-small.png" valign="top"/>
+      </div>
+      <p style="height:90px">
+       &nbsp;
+      </p>
+      <div class="t">
+       <div class="b">
+        <div class="l">
+         <div class="r">
+          <div class="bl">
+           <div class="br">
+            <div class="tl">
+             <div class="tr">
+              <div class="what">
+               <h3>
+                Next Steps
+               </h3>
+               <p>
+                The prepared report is divided into sections.
+               </p>
+               <ul>
+                <li>
+                 Select the tab 
+                 <strong>
+                  Summary
+                 </strong>
+                  to see global statistics for the entire application.
+                </li>
+<li>Select the tabs <strong>Bandwidth Issues</strong>, <strong>Latency Issues</strong> and <strong>MT Issues</strong> to browse through the detected problems.
+                </li>
+                <li>
+                 Select the tab 
+                 <strong>
+                  Loops
+                 </strong>
+                  to browse through statistics and detected problems loop by loop.
+                </li>
+               </ul>
+               <p>
+                The Issue and Source windows contain details and annotated source code for the detected problems.
+               </p>
+               <p align="center">
+                <img border="1" src="manual_html/images/report_layout_html.png" width="200"/>
+               </p>
+              </div>
+             </div>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+      <p style="height:0px">
+       &nbsp;
+      </p>
+      <div class="t">
+       <div class="b">
+        <div class="l">
+         <div class="r">
+          <div class="bl">
+           <div class="br">
+            <div class="tl">
+             <div class="tr">
+              <div class="resources">
+               <h3>
+                Resources
+               </h3>
+               <p>
+                <strong>
+                 Manual
+                </strong>
+               </p>
+               <div class="link">
+                <table width="100%">
+                 <tr>
+                  <td valign="top" width="50%">
+                   <a href="manual_html/index.html" onclick="return popitup('manual_html/index.html')" target="help">
+                    Table of Contents
+                   </a>
+                  </td>
+                  <td valign="top" width="50%">
+                   <a href="manual_html/ch_overview.html" onclick="return popitup('manual_html/ch_overview.html')" target="help">
+                    Overview
+                   </a>
+                  </td>
+                 </tr>
+                 <tr>
+                  <td valign="top" width="50%">
+                   <a href="manual_html/ch_workflow.html" onclick="return popitup('manual_html/ch_workflow.html')" target="help">
+                    Optimization Workflow
+                   </a>
+                  </td>
+                  <td valign="top" width="50%">
+                   <a href="manual_html/ch_ac_concepts.html" onclick="return popitup('manual_html/ch_ac_concepts.html')" target="help">
+                    Concepts
+                   </a>
+                  </td>
+                 </tr>
+                 <tr>
+                  <td valign="top" width="50%">
+                   <a href="manual_html/ch_reading_report.html" onclick="return popitup('manual_html/ch_reading_report.html')" target="help">
+                    Reading the Report
+                   </a>
+                  </td>
+                  <td valign="top" width="50%">
+                   <a href="manual_html/ch_issue_reference.html" onclick="return popitup('manual_html/ch_issue_reference.html')" target="help">
+                    Issue Reference
+                   </a>
+                  </td>
+                 </tr>
+                </table>
+               </div>
+               <p>
+                <strong>
+                 ParaTools Web Site
+                </strong>
+               </p>
+               <div class="link">
+                <table width="100%">
+                 <tr>
+                  <td valign="top" width="50%">
+                   <a href="http://www.paratools.com" target="#blank">
+                    ParaTools Web Site
+                   </a>
+                  </td>
+                  <td valign="top" width="50%">
+                   <a href="http://www.paratools.org/threadspotter" target="#blank">
+                    ThreadSpotter
+                   </a>
+                  </td>
+                 </tr>
+                </table>
+               </div>
+              </div>
+             </div>
+            </div>
+           </div>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div>
+     </td>
+    </tr>
+   </table>
+  </div>
+ </body>
+<html>

@@ -91,7 +91,7 @@ usage()
 set_node()
 {
     if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-        # ThreadSpotter's ts_sample uses the same method to determine MPI rank,
+        # ThreadSpotter's sample_ts uses the same method to determine MPI rank,
         # see get_rank() in library/exe_path/path_substitute.cc 
         for i in PMI_RANK OMPI_COMM_WORLD_RANK OMPI_MCA_ns_nds_vpid PMI_ID SLURM_PROCID LAMRANK MPI_RANKID MP_CHILD MP_RANK MPIRUN_RANK ; do
             eval node=\$$i
@@ -123,283 +123,19 @@ set_nodecount()
 
 write_ptts_index()
 {
-    cat > "$pttsprefix/index.html" <<"EOF"
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
- <head>
-  <meta content="0; URL=node_0/index.html" http-equiv="refresh"/>
- </head>
- <body/>
-</html>
-EOF
+    eval `tau-config | grep TAUROOT`
+    etcdir="$TAUROOT/etc"
+
+    cp "$etcdir/ptts.html.index" "$pttsprefix/index.html"
 
     index_html="$pttsprefix/node_0/index.html"
-    cat > "$index_html" <<"EOF"
-<!DOCTYPE html 
-     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
- <head>
-  <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
-<script src="tabber.js" type="text/javascript"></script>
-<script src="nav.js" type="text/javascript"></script>
-  <style type="text/css">.tabber{display:none;}</style>
-<link href="summary.css" rel="stylesheet" type="text/css"></link>
-<script src="table.js" type="text/javascript"></script>
-  <title>
-   ParaTools ThreadSpotter
-  </title>
- </head>
- <body>
-  <div class="overview">
-   <table>
-    <tr>
-     <td valign="top" width="70%">
-      <div class="t">
-       <div class="b">
-        <div class="l">
-         <div class="r">
-          <div class="bl">
-           <div class="br">
-            <div class="tl">
-             <div class="tr">
-              <div class="explanation">
-               <h3>
-                ThreadSpotter™
-               </h3>
-               <p>
-                ThreadSpotter™ is a tool to quickly analyze an application for a range of performance problems, particularly related to multicore optimization.
-               </p>
-               <div class="link">
-                <table>
-                 <tr>
-                  <td valign="top">
-                   <a href="javascript:void(0);" onclick="toggle('i35');">
-                    Read&nbsp;more...
-                   </a>
-                  </td>
-                  <td valign="top">
-                   <a href="manual_html/ch_intro.html" onclick="return popitup('manual_html/ch_intro.html')" target="help">
-                    Manual
-                   </a>
-                  </td>
-                 </tr>
-                </table>
-                <div id="i35" style="display:none">
-                 <p>A modern processor has two types of resources that are both limited and highly responsible for application performance:<ul><li><strong>The memory bus</strong>, which transports data between the memory and the processor, and</li><li><strong>The caches</strong>, which store often used data so each access doesn't have to go all the way to memory.</li></ul></p><p>A third resource, <strong>the hardware prefetcher</strong>, is also important for application performance, as it anticipates the application's memory access patterns, and tries to fetch data ahead of time. If it is successful, this hides some of the time it takes to access memory.</p><p>It is of great importance for application performance and scalability on multicore processors that these resources are used efficiently.</p><p>ThreadSpotter™ looks for abuse of these resources  and points out the responsible slowspots.</p>
-
-                </div>
-               </div>
-              </div>
-             </div>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-      <p style="height:0px">
-       &nbsp;
-      </p>
-      <div class="t">
-       <div class="b">
-        <div class="l">
-         <div class="r">
-          <div class="bl">
-           <div class="br">
-            <div class="tl">
-             <div class="tr">
-              <div class="execution">
-               <table width="100%">
-                   <thead>
-                       <tr>
-                           <td align="right"><h3>Node</h3></td>
-                           <td align="center"><h3>Memory Bandwidth</h3></td>
-                           <td align="center"><h3>Memory Latency</h3></td>
-                           <td align="center"><h3>Data Locality</h3></td>
-                           <td align="center"><h3>Thread Communication / Interaction</h3></td>
-                       <tr>
-                   </thead>
-EOF
+    cat "$etcdir/ptts.html.head" > "$index_html"
     i=0
     while [ $i -lt $nodecount ] ; do
-        cat >> "$index_html" <<EOF
-                   <tr>
-                       <td align="right"><h3><a href="../node_${i}/front.html">${i}</a></h3></td>
-                       <td align="center" height="20px"><img src="../node_${i}/bandwidth_gauge.png" height="20px"/></td>
-                       <td align="center" height="20px"><img src="../node_${i}/latency_gauge.png" height="20px"/></td>
-                       <td align="center" height="20px"><img src="../node_${i}/locality_gauge.png" height="20px"/></td>
-                       <td align="center" height="20px"><img src="../node_${i}/threading_gauge.png" height="20px"/></td>
-                    </tr>
-EOF
+        cat "$etcdir/ptts.html.body" | sed -e "s/%NODE%/$i/g" >> "$index_html"
         ((i++))
     done
-    cat >> "$index_html" <<"EOF"
-               </table>
-               </div>
-              </div>
-             </div>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-     </td>
-     <td valign="top">
-      <div align="right">
-       <img align="right" src="pt-small.png" valign="top"/>
-      </div>
-      <p style="height:90px">
-       &nbsp;
-      </p>
-      <div class="t">
-       <div class="b">
-        <div class="l">
-         <div class="r">
-          <div class="bl">
-           <div class="br">
-            <div class="tl">
-             <div class="tr">
-              <div class="what">
-               <h3>
-                Next Steps
-               </h3>
-               <p>
-                The prepared report is divided into sections.
-               </p>
-               <ul>
-                <li>
-                 Select the tab 
-                 <strong>
-                  Summary
-                 </strong>
-                  to see global statistics for the entire application.
-                </li>
-<li>Select the tabs <strong>Bandwidth Issues</strong>, <strong>Latency Issues</strong> and <strong>MT Issues</strong> to browse through the detected problems.
-                </li>
-                <li>
-                 Select the tab 
-                 <strong>
-                  Loops
-                 </strong>
-                  to browse through statistics and detected problems loop by loop.
-                </li>
-               </ul>
-               <p>
-                The Issue and Source windows contain details and annotated source code for the detected problems.
-               </p>
-               <p align="center">
-                <img border="1" src="manual_html/images/report_layout_html.png" width="200"/>
-               </p>
-              </div>
-             </div>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-      <p style="height:0px">
-       &nbsp;
-      </p>
-      <div class="t">
-       <div class="b">
-        <div class="l">
-         <div class="r">
-          <div class="bl">
-           <div class="br">
-            <div class="tl">
-             <div class="tr">
-              <div class="resources">
-               <h3>
-                Resources
-               </h3>
-               <p>
-                <strong>
-                 Manual
-                </strong>
-               </p>
-               <div class="link">
-                <table width="100%">
-                 <tr>
-                  <td valign="top" width="50%">
-                   <a href="manual_html/index.html" onclick="return popitup('manual_html/index.html')" target="help">
-                    Table of Contents
-                   </a>
-                  </td>
-                  <td valign="top" width="50%">
-                   <a href="manual_html/ch_overview.html" onclick="return popitup('manual_html/ch_overview.html')" target="help">
-                    Overview
-                   </a>
-                  </td>
-                 </tr>
-                 <tr>
-                  <td valign="top" width="50%">
-                   <a href="manual_html/ch_workflow.html" onclick="return popitup('manual_html/ch_workflow.html')" target="help">
-                    Optimization Workflow
-                   </a>
-                  </td>
-                  <td valign="top" width="50%">
-                   <a href="manual_html/ch_ac_concepts.html" onclick="return popitup('manual_html/ch_ac_concepts.html')" target="help">
-                    Concepts
-                   </a>
-                  </td>
-                 </tr>
-                 <tr>
-                  <td valign="top" width="50%">
-                   <a href="manual_html/ch_reading_report.html" onclick="return popitup('manual_html/ch_reading_report.html')" target="help">
-                    Reading the Report
-                   </a>
-                  </td>
-                  <td valign="top" width="50%">
-                   <a href="manual_html/ch_issue_reference.html" onclick="return popitup('manual_html/ch_issue_reference.html')" target="help">
-                    Issue Reference
-                   </a>
-                  </td>
-                 </tr>
-                </table>
-               </div>
-               <p>
-                <strong>
-                 ParaTools Web Site
-                </strong>
-               </p>
-               <div class="link">
-                <table width="100%">
-                 <tr>
-                  <td valign="top" width="50%">
-                   <a href="http://www.paratools.com" target="#blank">
-                    ParaTools Web Site
-                   </a>
-                  </td>
-                  <td valign="top" width="50%">
-                   <a href="http://www.paratools.org/threadspotter" target="#blank">
-                    ThreadSpotter
-                   </a>
-                  </td>
-                 </tr>
-                </table>
-               </div>
-              </div>
-             </div>
-            </div>
-           </div>
-          </div>
-         </div>
-        </div>
-       </div>
-      </div>
-     </td>
-    </tr>
-   </table>
-  </div>
- </body>
-</html>
-EOF
+    cat "$etcdir/ptts.html.foot" >> "$index_html"
 }
 
 
@@ -925,16 +661,25 @@ fi
 
 # Prep ThreadSpotter before LD_PRELOAD get set
 if $use_ptts ; then
-    if ! which ts_sample ts_report ts_view-static >/dev/null 2>&1 ; then
+    if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then
         echo "ERROR: ParaTools ThreadSpotter not found on PATH"
         exit 1
     fi
     set_node
-    set_nodecount
     if [ -z "$node" ] ; then
         echo "ERROR: Cannot determine node"
         exit 1
     fi
+    set_nodecount
+    if [ -z "$nodecount" ] ; then
+        echo "ERROR: Cannot determine node count"
+        exit 1
+    fi
+    pttsprefix="${PROFILEDIR:-.}/ptts"
+    if [ -d "$pttsprefix" ] ; then
+        rm -rf "$pttsprefix"
+    fi
+    mkdir -p "$pttsprefix"
 fi
 
 if [ $qsub_mode = true ] ; then
@@ -1028,14 +773,15 @@ else
       $dryrun python -m tau_python_wrapper $@
       retval=$?
     elif $use_ptts ; then
-        samplefile="sample_${node}.smp"
-        reportfile="report_${node}.tsr"
-        samplelog="ts_sample.${node}.log"
-        reportlog="ts_report.${node}.log"
+        samplefile="$pttsprefix/sample.${node}.smp"
+        samplelog="$pttsprefix/sample_ts.${node}.log"
+        reportfile="$pttsprefix/report.${node}.tsr"
+        reportlog="$pttsprefix/report_ts.${node}.log"
+        # view-static_ts paths should be relative to $pttsprefix
+        # since view-static_ts must be run with PWD=$pttsprefix
         viewdir="node_${node}"
-        viewlog="ts_view-static.${node}.log"
-        pttsprefix="${PROFILEDIR:-.}/ptts"
-        # Fork with LD_PRELOAD, etc. set
+        viewlog="view-static_ts.${node}.log"
+        # Fork with LD_PRELOAD
         $dryrun $@ &
         child_pid=$!
         # Restore environment and start sampling the child process
@@ -1048,23 +794,23 @@ else
             export LD_AUDIT=$ORIG_AUDIT_AUDIT
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
-        $dryrun ts_sample -o "$samplefile" -p "$child_pid" > "$samplelog" 2>&1
+        $dryrun sample_ts -o "$samplefile" -p "$child_pid" > "$samplelog" 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
         wait $child_pid
         retval=$?
         # Post-process samples
         echo "$node: Scanning for performance issues..."
-        $dryrun ts_report -i "$samplefile" -o "$reportfile" > "$reportlog" 2>&1
+        $dryrun report_ts -i "$samplefile" -o "$reportfile" > "$reportlog" 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
         # Generate report
         echo "$node: Generating report..."
-        $dryrun ts_view-static  -i "$reportfile" -o "$viewdir" > "$viewlog" 2>&1
+        cd "$pttsprefix"
+        $dryrun view-static_ts  -i "`basename $reportfile`" -o "$viewdir" > "$viewlog" 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
+        cd - >/dev/null
         # Clean up and package the report
-        rm -f "$samplefile" "$reportfile" "$samplelog" "$reportlog" "$viewlog" "${viewdir}.html"
-        mkdir -p "$pttsprefix"
-        mv -f "$viewdir" "$pttsprefix"
+        rm -f "$samplefile" "$reportfile" "$samplelog" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
         if [ "$node" -eq 0 ] ; then
             write_ptts_index
         fi
