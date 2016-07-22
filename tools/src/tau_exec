@@ -138,6 +138,66 @@ write_ptts_index()
     cat "$etcdir/ptts.html.foot" >> "$index_html"
 }
 
+compress_ptts_report()
+{
+    [ "$node" -eq 0 ] && return
+    shared=("bl.gif"
+            "br.gif"
+            "ch.png"
+            "cu.png"
+            "default-info.html"
+            "default-src.html"
+            "dot.gif"
+            "down.png"
+            "f.png"
+            "f1.png"
+            "f2.png"
+            "false.png"
+            "fh.png"
+            "filter.png"
+            "fpc.png"
+            "front.html"
+            "ft.png"
+            "fu.png"
+            "hover_popup.css"
+            "lo.png"
+            "manual_html"
+            "minus.png"
+            "nav.js"
+            "perf.csv"
+            "pfc.png"
+            "pff.png"
+            "pfh.png"
+            "pfnt.png"
+            "plus.png"
+            "pt-small.png"
+            "q-h.png"
+            "q.png"
+            "r.png"
+            "rw-small.png"
+            "sb.png"
+            "source.css"
+            "src.png"
+            "stb.png"
+            "summary.css"
+            "tabber.js"
+            "table.js"
+            "tb.png"
+            "tl.gif"
+            "tr.gif"
+            "u.png"
+            "up.png"
+            "wh.png"
+            "wnt.png"
+            "wu.png")
+    cd "$pttsprefix/$viewdir"
+    rm -rf "${shared[@]}"
+    for i in "${shared[@]}" ; do
+        ln -s "../node_0/$i" .
+    done
+    cd "$OLDPWD"
+}
+
 
 if [ $# = 0 ] ; then
     usage
@@ -665,6 +725,11 @@ if $use_ptts ; then
         echo "ERROR: ParaTools ThreadSpotter not found on PATH"
         exit 1
     fi
+    pttsprefix="${PROFILEDIR:-.}/ptts"
+    if [ -d "$pttsprefix" ] ; then
+        $dryrun rm -rf "$pttsprefix"
+    fi
+    $dryrun mkdir -p "$pttsprefix"
     set_node
     if [ -z "$node" ] ; then
         echo "ERROR: Cannot determine node"
@@ -675,11 +740,9 @@ if $use_ptts ; then
         echo "ERROR: Cannot determine node count"
         exit 1
     fi
-    pttsprefix="${PROFILEDIR:-.}/ptts"
-    if [ -d "$pttsprefix" ] ; then
-        rm -rf "$pttsprefix"
+    if [ -n "$dryrun" ] ; then
+        dryrun="$dryrun PTTS($node): "
     fi
-    mkdir -p "$pttsprefix"
 fi
 
 if [ $qsub_mode = true ] ; then
@@ -773,6 +836,11 @@ else
       $dryrun python -m tau_python_wrapper $@
       retval=$?
     elif $use_ptts ; then
+        # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
+        if [ -n "$dryrun" ] ; then
+            echo "ERROR: dryrun not implemented for ptts"
+            exit 1
+        fi
         samplefile="$pttsprefix/sample.${node}.smp"
         samplelog="$pttsprefix/sample_ts.${node}.log"
         reportfile="$pttsprefix/report.${node}.tsr"
@@ -782,7 +850,7 @@ else
         viewdir="node_${node}"
         viewlog="view-static_ts.${node}.log"
         # Fork with LD_PRELOAD
-        $dryrun $@ &
+        $@ &
         child_pid=$!
         # Restore environment and start sampling the child process
         if [ $apple = 1 ]; then
@@ -794,23 +862,23 @@ else
             export LD_AUDIT=$ORIG_AUDIT_AUDIT
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
-        $dryrun sample_ts -o "$samplefile" -p "$child_pid" > "$samplelog" 2>&1
+        sample_ts -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
         wait $child_pid
         retval=$?
         # Post-process samples
-        echo "$node: Scanning for performance issues..."
-        $dryrun report_ts -i "$samplefile" -o "$reportfile" > "$reportlog" 2>&1
+        echo "PTTS($node): Postprocessing samples..."
+        report_ts -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
-        # Generate report
-        echo "$node: Generating report..."
+        # Generate report. view-static must be run in $pttsprefix
         cd "$pttsprefix"
-        $dryrun view-static_ts  -i "`basename $reportfile`" -o "$viewdir" > "$viewlog" 2>&1
+        view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
-        cd - >/dev/null
+        cd "$OLDPWD"
         # Clean up and package the report
         rm -f "$samplefile" "$reportfile" "$samplelog" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
+        compress_ptts_report
         if [ "$node" -eq 0 ] ; then
             write_ptts_index
         fi
