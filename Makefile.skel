@@ -123,7 +123,7 @@ MEMORYWRAPPER=src/wrappers/memory
 #GOMP_AVAILABLE#GOMP_WRAPPER=src/wrappers/gomp #ENDIF#
 #MPC##PTHREAD_WRAPPER=src/wrappers/mpcthread #ENDIF#
 
-#SHMEM#SHMEM_WRAPPER=src/wrappers/shmem/openshmem #ENDIF#
+#SHMEM#SHMEM_WRAPPER=src/wrappers/shmem #ENDIF#
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
