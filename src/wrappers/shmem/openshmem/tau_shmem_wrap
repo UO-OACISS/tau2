@@ -3,10 +3,11 @@
 if [ $# -lt 3 ] ; then
     cmd=`basename $0`
     echo ""
-    echo " Usage: $cmd <headerfile> <library> -shmem=<path>"
+    echo " Usage: $cmd <headerfile> <library> -shmem=<path> [-parseropts=options]"
     echo "   <headerfile> : SHMEM header file to parse, e.g. shmem.h"
     echo "   <library>    : name of the library to generate, e.g. tau_shmem"
     echo "   -shmem=<dir> : path to SHMEM libraries and header files"
+    echo "   -parseropts=\"options\" : additional options to pass to the PDT parser"
     echo "NOTE: $cmd reads the TAU_MAKEFILE  environment variable to get PDT settings"
     echo ""
     exit 1
@@ -25,18 +26,27 @@ fi
 headerfile="$1"
 library="$2"
 shmemdir=`echo "$3" | sed -e 's/-shmem=//g'`
+parseropts=`echo "$4" | sed -e 's/-parseropts=//g'`
 
 if [ ! -d "$shmemdir" ] ; then
   echo "ERROR: invalid SHMEM directory: $shmemdir"
   exit 1
 fi
 
-if [ -r "$shmemdir/lib64/libopenshmem.a" ] ; then
-  libshmem="$shmemdir/lib64/libopenshmem.a"
-elif [ -r "$shmemdir/lib/libopenshmem.a" ] ; then
-  libshmem="$shmemdir/lib/libopenshmem.a"
-else
-  echo "ERROR: Cannot locate libopenshmem.a in $shmemdir"
+found=false
+for shmemlib in libopenshmem libsma ; do
+  for libext in a so ; do
+    for libdir in lib lib64 ; do
+      libshmem="$shmemdir/$libdir/$shmemlib.$libext"
+      if [ -r "$libshmem" ] ; then
+        found=true
+        break
+      fi
+    done
+  done
+done
+if ! $found ; then
+  echo "ERROR: Cannot locate SHMEM library in $shmemdir"
   exit 1
 fi
 
@@ -50,8 +60,19 @@ if [ ! -x $parser ]; then
   exit 1
 fi
 
-echo "$parser $headerfile -I$shmemdir/include"
-$parser $headerfile -I$shmemdir/include
+echo "$parser $headerfile -I$shmemdir/include $parseropts"
+$parser $headerfile -I$shmemdir/include $parseropts
+
+# Build select.tau
+case "$tauarch" in
+craycnl)
+  exclude_list=exclude_list.cray
+  ;;
+*)
+  exclude_list=exclude_list.openshmem
+  ;;
+esac
+cat include_list $exclude_list > select.tau
 
 # Generate wr_dynamic.c *BEFORE* wr.c or link_options.tau will be empty
 echo "$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr_dynamic.c -r $library $* -f select.tau --shmem"
