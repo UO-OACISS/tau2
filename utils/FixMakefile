@@ -857,6 +857,12 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     shmemdirargs=*)
+        shmemdir=`echo $1 | sed -e 's/^shmemdirargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_SHMEM_DIR=\(.*\)@TAU_SHMEM_DIR=$shmemdir@g" >> $sedout
+        #echo "SHMEMDIR=$shmemdir"
+        ;;
+
      shmemincargs=*)
         shmeminc=`echo $1 | sed -e 's/^shmemincargs=//' -e 's/#/ /g'`
 	echo "s@^TAU_SHMEM_INC=\(.*\)@TAU_SHMEM_INC=$shmeminc@g" >> $sedout

@@ -4929,6 +4929,7 @@ then
     then 
 	if [ -d $shmeminc ]
 	then
+            shmemdir="$shmeminc/.."
 	    #echo "Include dir found. adding -I$mpiinc to INC"
 	    shmemincargs="-I$shmeminc"
 	    if [ -r $shmeminc/mpp/shmem.h ]
@@ -4972,6 +4973,7 @@ then
 	if [ "x$oshcc_var" != "x" -a $? = 0 ]
 	then
 	    openshmem_include_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@include@g'`
+	    shmemdir="$openshmem_include_dir/.."
 	    if [ -r $openshmem_include_dir/mpp/shmem.h -a -r $openshmem_include_dir/../bin/mpiexec_mpt ] 
 	    then
 		shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
@@ -5000,16 +5002,19 @@ then
 	if [ $catamount = yes ] 
 	then
 	    shmemincargs="-I/opt/xt-mpt/default/include/mpp#-I/opt/xt-mpt/default/include"
+            shmemdir="/opt/xt-mpt/default"
 	fi
 	if [ $machine = craycnl ] 
 	then
 	    if [ "x$MPT_DIR" = "x" -a "x$CRAY_SHMEM_DIR" != "x" ] 
 	    then
+                shmemdir="$CRAY_SHMEM_DIR"
 		if [ -r $CRAY_SHMEM_DIR/include/mpp/shmem.h ]
 		then
 		    shmemincargs="-I$CRAY_SHMEM_DIR/include/mpp/#-I$CRAY_SHMEM_DIR/include"
 		fi
 	    else
+                shmemdir="$MPT_DIR/sma"
 		if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
 		then
 		    shmemincargs="-I$MPT_DIR/sma/include/mpp/#-I$MPT_DIR/sma/include/"
@@ -5031,6 +5036,7 @@ then
 	    then
 		libsmafile=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib/libsma.so@g'`
 		shmeminclude=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@include@g'`
+                shmemdir="$shmeminclude/.."
 		if [ -r $libsmafile -a -d $shmeminclude -a "x$shmeminclude" != "x" ]
 		then
 		    shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
@@ -5151,7 +5157,7 @@ then
     shmemlibargs=`echo $shmemlibargs | sed  -e 's/ /#/g'`
     fixmakeargs="$fixmakeargs SHMEM"
     tauoptions="${tauoptions}-shmem"
-    fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs"
+    fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs shmemdirargs=$shmemdir"
 fi
 
 gcclibdir=unknown
