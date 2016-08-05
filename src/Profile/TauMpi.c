@@ -1615,6 +1615,8 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+  if(Tau_get_usesMPI() == 0)
+  {
 
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
@@ -1666,6 +1668,10 @@ char *** argv;
 
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncClocks();
+  }
+  }
+  else {
+    returnVal = 0;
   }
 
 

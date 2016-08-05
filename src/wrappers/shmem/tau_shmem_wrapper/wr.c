@@ -18,6 +18,43 @@ static int tau_shmem_tagid_f=0;
 
 
 /**********************************************************
+   shmem_get8
+ **********************************************************/
+
+extern void  __real_shmem_get8(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_get8(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_get8(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*a3, a4);
+  __real_shmem_get8(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, 8*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_get8_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_get8__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET8_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET8__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
    shmem_get16
  **********************************************************/
 
@@ -199,6 +236,43 @@ extern void __wrap_SHMEM_GETMEM_(void * a1, const void * a2, SHMEM_FINT * a3, SH
 extern void __wrap_SHMEM_GETMEM__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
 {
    __wrap_shmem_getmem(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_char_get
+ **********************************************************/
+
+extern void  __real_shmem_char_get(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_char_get(char * a1, const char * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_char_get(char *, const char *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(char)*a3, a4);
+  __real_shmem_char_get(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(char)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_char_get_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_char_get__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_GET_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_GET__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get(a1, a2, *a3, *a4);
 }
 
 
@@ -462,6 +536,43 @@ extern void __wrap_SHMEM_FLOAT128_GET__(__float128 * a1, const __float128 * a2, 
 
 
 /**********************************************************
+   shmem_put8
+ **********************************************************/
+
+extern void  __real_shmem_put8(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_put8(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_put8(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, 8*a3);
+  __real_shmem_put8(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), 8*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_put8_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_put8__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT8_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT8__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
    shmem_put16
  **********************************************************/
 
@@ -643,6 +754,43 @@ extern void __wrap_SHMEM_PUTMEM_(void * a1, const void * a2, SHMEM_FINT * a3, SH
 extern void __wrap_SHMEM_PUTMEM__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
 {
    __wrap_shmem_putmem(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_char_put
+ **********************************************************/
+
+extern void  __real_shmem_char_put(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_char_put(char * a1, const char * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_char_put(char *, const char *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(char)*a3);
+  __real_shmem_char_put(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(char)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_char_put_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_char_put__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_PUT_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_PUT__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put(a1, a2, *a3, *a4);
 }
 
 
@@ -2201,6 +2349,1042 @@ extern void __wrap_SHMEM_FLOAT128_PUT_NB__(__float128 * a1, const __float128 * a
 
 
 /**********************************************************
+   shmem_get8_nbi
+ **********************************************************/
+
+extern void  __real_shmem_get8_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_get8_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_get8_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*a3, a4);
+  __real_shmem_get8_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, 8*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_get8_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_get8_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET8_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET8_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get8_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_get16_nbi
+ **********************************************************/
+
+extern void  __real_shmem_get16_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_get16_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_get16_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*a3, a4);
+  __real_shmem_get16_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, 2*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_get16_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get16_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_get16_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get16_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET16_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get16_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET16_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get16_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_get32_nbi
+ **********************************************************/
+
+extern void  __real_shmem_get32_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_get32_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_get32_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*a3, a4);
+  __real_shmem_get32_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, 4*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_get32_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get32_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_get32_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get32_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET32_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get32_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET32_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get32_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_get64_nbi
+ **********************************************************/
+
+extern void  __real_shmem_get64_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_get64_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_get64_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*a3, a4);
+  __real_shmem_get64_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, 8*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_get64_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get64_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_get64_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get64_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET64_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get64_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET64_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get64_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_get128_nbi
+ **********************************************************/
+
+extern void  __real_shmem_get128_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_get128_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_get128_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*a3, a4);
+  __real_shmem_get128_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, 16*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_get128_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get128_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_get128_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get128_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET128_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get128_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GET128_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_get128_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_getmem_nbi
+ **********************************************************/
+
+extern void  __real_shmem_getmem_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_getmem_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_getmem_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), a3, a4);
+  __real_shmem_getmem_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_getmem_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_getmem_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_getmem_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_getmem_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GETMEM_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_getmem_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_GETMEM_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_getmem_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_char_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_char_get_nbi(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_char_get_nbi(char * a1, const char * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_char_get_nbi(char *, const char *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(char)*a3, a4);
+  __real_shmem_char_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(char)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_char_get_nbi_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_char_get_nbi__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_GET_NBI_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_GET_NBI__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_short_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_short_get_nbi(short * a1, const short * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_short_get_nbi(short * a1, const short * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_short_get_nbi(short *, const short *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*a3, a4);
+  __real_shmem_short_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(short)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_short_get_nbi_(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_short_get_nbi__(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_SHORT_GET_NBI_(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_SHORT_GET_NBI__(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_int_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_int_get_nbi(int * a1, const int * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_int_get_nbi(int * a1, const int * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_int_get_nbi(int *, const int *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*a3, a4);
+  __real_shmem_int_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(int)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_int_get_nbi_(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_int_get_nbi__(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_INT_GET_NBI_(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_INT_GET_NBI__(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_long_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_long_get_nbi(long * a1, const long * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_long_get_nbi(long * a1, const long * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_long_get_nbi(long *, const long *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*a3, a4);
+  __real_shmem_long_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(long)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_long_get_nbi_(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_long_get_nbi__(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONG_GET_NBI_(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONG_GET_NBI__(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_longlong_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_longlong_get_nbi(long long * a1, const long long * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_longlong_get_nbi(long long * a1, const long long * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_longlong_get_nbi(long long *, const long long *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*a3, a4);
+  __real_shmem_longlong_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(long long)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_longlong_get_nbi_(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_longlong_get_nbi__(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONGLONG_GET_NBI_(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONGLONG_GET_NBI__(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_float_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_float_get_nbi(float * a1, const float * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_float_get_nbi(float * a1, const float * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_float_get_nbi(float *, const float *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*a3, a4);
+  __real_shmem_float_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(float)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_float_get_nbi_(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_float_get_nbi__(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT_GET_NBI_(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT_GET_NBI__(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_double_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_double_get_nbi(double * a1, const double * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_double_get_nbi(double * a1, const double * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_double_get_nbi(double *, const double *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*a3, a4);
+  __real_shmem_double_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(double)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_double_get_nbi_(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_double_get_nbi__(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_DOUBLE_GET_NBI_(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_DOUBLE_GET_NBI__(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_float128_get_nbi
+ **********************************************************/
+
+extern void  __real_shmem_float128_get_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_float128_get_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_float128_get_nbi(__float128 *, const __float128 *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*a3, a4);
+  __real_shmem_float128_get_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a4, sizeof(float)*a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_float128_get_nbi_(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_float128_get_nbi__(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT128_GET_NBI_(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_get_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT128_GET_NBI__(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_get_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_put8_nbi
+ **********************************************************/
+
+extern void  __real_shmem_put8_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_put8_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_put8_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, 8*a3);
+  __real_shmem_put8_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), 8*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_put8_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_put8_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT8_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT8_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put8_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_put16_nbi
+ **********************************************************/
+
+extern void  __real_shmem_put16_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_put16_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_put16_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, 2*a3);
+  __real_shmem_put16_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), 2*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_put16_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put16_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_put16_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put16_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT16_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put16_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT16_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put16_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_put32_nbi
+ **********************************************************/
+
+extern void  __real_shmem_put32_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_put32_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_put32_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, 4*a3);
+  __real_shmem_put32_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), 4*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_put32_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put32_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_put32_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put32_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT32_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put32_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT32_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put32_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_put64_nbi
+ **********************************************************/
+
+extern void  __real_shmem_put64_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_put64_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_put64_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, 8*a3);
+  __real_shmem_put64_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), 8*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_put64_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put64_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_put64_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put64_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT64_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put64_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT64_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put64_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_put128_nbi
+ **********************************************************/
+
+extern void  __real_shmem_put128_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_put128_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_put128_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, 16*a3);
+  __real_shmem_put128_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), 16*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_put128_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put128_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_put128_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put128_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT128_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put128_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUT128_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_put128_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_putmem_nbi
+ **********************************************************/
+
+extern void  __real_shmem_putmem_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_putmem_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_putmem_nbi(void *, const void *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, a3);
+  __real_shmem_putmem_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_putmem_nbi_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_putmem_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_putmem_nbi__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_putmem_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUTMEM_NBI_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_putmem_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_PUTMEM_NBI__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_putmem_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_char_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_char_put_nbi(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_char_put_nbi(char * a1, const char * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_char_put_nbi(char *, const char *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(char)*a3);
+  __real_shmem_char_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(char)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_char_put_nbi_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_char_put_nbi__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_PUT_NBI_(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_CHAR_PUT_NBI__(char * a1, const char * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_char_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_short_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_short_put_nbi(short * a1, const short * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_short_put_nbi(short * a1, const short * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_short_put_nbi(short *, const short *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(short)*a3);
+  __real_shmem_short_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(short)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_short_put_nbi_(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_short_put_nbi__(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_SHORT_PUT_NBI_(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_SHORT_PUT_NBI__(short * a1, const short * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_short_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_int_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_int_put_nbi(int * a1, const int * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_int_put_nbi(int * a1, const int * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_int_put_nbi(int *, const int *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(int)*a3);
+  __real_shmem_int_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(int)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_int_put_nbi_(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_int_put_nbi__(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_INT_PUT_NBI_(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_INT_PUT_NBI__(SHMEM_FINT * a1, const int * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_int_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_long_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_long_put_nbi(long * a1, const long * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_long_put_nbi(long * a1, const long * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_long_put_nbi(long *, const long *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(long)*a3);
+  __real_shmem_long_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(long)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_long_put_nbi_(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_long_put_nbi__(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONG_PUT_NBI_(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONG_PUT_NBI__(long * a1, const long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_long_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_longlong_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_longlong_put_nbi(long long * a1, const long long * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_longlong_put_nbi(long long * a1, const long long * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_longlong_put_nbi(long long *, const long long *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(long long)*a3);
+  __real_shmem_longlong_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(long long)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_longlong_put_nbi_(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_longlong_put_nbi__(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONGLONG_PUT_NBI_(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_LONGLONG_PUT_NBI__(long long * a1, const long long * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_longlong_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_float_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_float_put_nbi(float * a1, const float * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_float_put_nbi(float * a1, const float * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_float_put_nbi(float *, const float *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(float)*a3);
+  __real_shmem_float_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(float)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_float_put_nbi_(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_float_put_nbi__(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT_PUT_NBI_(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT_PUT_NBI__(float * a1, const float * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_double_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_double_put_nbi(double * a1, const double * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_double_put_nbi(double * a1, const double * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_double_put_nbi(double *, const double *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(double)*a3);
+  __real_shmem_double_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(double)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_double_put_nbi_(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_double_put_nbi__(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_DOUBLE_PUT_NBI_(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_DOUBLE_PUT_NBI__(double * a1, const double * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_double_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
+   shmem_float128_put_nbi
+ **********************************************************/
+
+extern void  __real_shmem_float128_put_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4) ;
+extern void  __wrap_shmem_float128_put_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_float128_put_nbi(__float128 *, const __float128 *, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a4, sizeof(float)*a3);
+  __real_shmem_float128_put_nbi(a1, a2, a3, a4);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(float)*a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_float128_put_nbi_(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_shmem_float128_put_nbi__(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT128_PUT_NBI_(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_put_nbi(a1, a2, *a3, *a4);
+}
+
+extern void __wrap_SHMEM_FLOAT128_PUT_NBI__(__float128 * a1, const __float128 * a2, SHMEM_FINT * a3, SHMEM_FINT * a4)
+{
+   __wrap_shmem_float128_put_nbi(a1, a2, *a3, *a4);
+}
+
+
+/**********************************************************
    shmem_put16_signal_nb
  **********************************************************/
 
@@ -2608,6 +3792,43 @@ extern void __wrap_SHMEM_DOUBLE_PUT_SIGNAL_NB__(double * a1, const double * a2, 
 
 
 /**********************************************************
+   shmem_char_iget
+ **********************************************************/
+
+extern void  __real_shmem_char_iget(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __wrap_shmem_char_iget(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_char_iget(char *, const char *, ptrdiff_t, ptrdiff_t, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(char)*a5, a6);
+  __real_shmem_char_iget(a1, a2, a3, a4, a5, a6);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a6, sizeof(char)*a5);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_char_iget_(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iget(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_shmem_char_iget__(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iget(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_CHAR_IGET_(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iget(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_CHAR_IGET__(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iget(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+
+/**********************************************************
    shmem_short_iget
  **********************************************************/
 
@@ -2867,6 +4088,43 @@ extern void __wrap_SHMEM_FLOAT128_IGET__(__float128 * a1, const __float128 * a2,
 
 
 /**********************************************************
+   shmem_iget8
+ **********************************************************/
+
+extern void  __real_shmem_iget8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __wrap_shmem_iget8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_iget8(void *, const void *, ptrdiff_t, ptrdiff_t, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*a5, a6);
+  __real_shmem_iget8(a1, a2, a3, a4, a5, a6);
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, a6, 8*a5);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_iget8_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iget8(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_shmem_iget8__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iget8(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_IGET8_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iget8(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_IGET8__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iget8(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+
+/**********************************************************
    shmem_iget16
  **********************************************************/
 
@@ -3011,6 +4269,43 @@ extern void __wrap_SHMEM_IGET128_(void * a1, const void * a2, ptrdiff_t * a3, pt
 extern void __wrap_SHMEM_IGET128__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
 {
    __wrap_shmem_iget128(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+
+/**********************************************************
+   shmem_char_iput
+ **********************************************************/
+
+extern void  __real_shmem_char_iput(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __wrap_shmem_char_iput(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_char_iput(char *, const char *, ptrdiff_t, ptrdiff_t, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a6, sizeof(char)*a5);
+  __real_shmem_char_iput(a1, a2, a3, a4, a5, a6);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), sizeof(char)*a5, a6);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_char_iput_(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iput(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_shmem_char_iput__(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iput(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_CHAR_IPUT_(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iput(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_CHAR_IPUT__(char * a1, const char * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_char_iput(a1, a2, *a3, *a4, *a5, *a6);
 }
 
 
@@ -3270,6 +4565,43 @@ extern void __wrap_SHMEM_FLOAT128_IPUT_(__float128 * a1, const __float128 * a2, 
 extern void __wrap_SHMEM_FLOAT128_IPUT__(__float128 * a1, const __float128 * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
 {
    __wrap_shmem_float128_iput(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+
+/**********************************************************
+   shmem_iput8
+ **********************************************************/
+
+extern void  __real_shmem_iput8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __wrap_shmem_iput8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_iput8(void *, const void *, ptrdiff_t, ptrdiff_t, size_t, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, a6, 8*a5);
+  __real_shmem_iput8(a1, a2, a3, a4, a5, a6);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), 8*a5, a6);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_iput8_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iput8(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_shmem_iput8__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iput8(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_IPUT8_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iput8(a1, a2, *a3, *a4, *a5, *a6);
+}
+
+extern void __wrap_SHMEM_IPUT8__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6)
+{
+   __wrap_shmem_iput8(a1, a2, *a3, *a4, *a5, *a6);
 }
 
 
@@ -6114,6 +7446,366 @@ extern void __wrap_SHMEM_LONGLONG_ADD_NB__(long long * a1, long long * a2, SHMEM
 
 
 /**********************************************************
+   shmem_int_fetch
+ **********************************************************/
+
+extern int  __real_shmem_int_fetch(const int * a1, int a2) ;
+extern int  __wrap_shmem_int_fetch(const int * a1, int a2)  {
+
+  int retval;
+  TAU_PROFILE_TIMER(t,"int shmem_int_fetch(const int *, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =  __real_shmem_int_fetch(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+extern int __wrap_shmem_int_fetch_(const int * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_int_fetch(a1, *a2);
+}
+
+extern int __wrap_shmem_int_fetch__(const int * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_int_fetch(a1, *a2);
+}
+
+extern int __wrap_SHMEM_INT_FETCH_(const int * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_int_fetch(a1, *a2);
+}
+
+extern int __wrap_SHMEM_INT_FETCH__(const int * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_int_fetch(a1, *a2);
+}
+
+
+/**********************************************************
+   shmem_long_fetch
+ **********************************************************/
+
+extern long  __real_shmem_long_fetch(const long * a1, int a2) ;
+extern long  __wrap_shmem_long_fetch(const long * a1, int a2)  {
+
+  long retval;
+  TAU_PROFILE_TIMER(t,"long shmem_long_fetch(const long *, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =  __real_shmem_long_fetch(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+extern long __wrap_shmem_long_fetch_(const long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_long_fetch(a1, *a2);
+}
+
+extern long __wrap_shmem_long_fetch__(const long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_long_fetch(a1, *a2);
+}
+
+extern long __wrap_SHMEM_LONG_FETCH_(const long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_long_fetch(a1, *a2);
+}
+
+extern long __wrap_SHMEM_LONG_FETCH__(const long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_long_fetch(a1, *a2);
+}
+
+
+/**********************************************************
+   shmem_float_fetch
+ **********************************************************/
+
+extern float  __real_shmem_float_fetch(const float * a1, int a2) ;
+extern float  __wrap_shmem_float_fetch(const float * a1, int a2)  {
+
+  float retval;
+  TAU_PROFILE_TIMER(t,"float shmem_float_fetch(const float *, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =  __real_shmem_float_fetch(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+extern float __wrap_shmem_float_fetch_(const float * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_float_fetch(a1, *a2);
+}
+
+extern float __wrap_shmem_float_fetch__(const float * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_float_fetch(a1, *a2);
+}
+
+extern float __wrap_SHMEM_FLOAT_FETCH_(const float * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_float_fetch(a1, *a2);
+}
+
+extern float __wrap_SHMEM_FLOAT_FETCH__(const float * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_float_fetch(a1, *a2);
+}
+
+
+/**********************************************************
+   shmem_double_fetch
+ **********************************************************/
+
+extern double  __real_shmem_double_fetch(const double * a1, int a2) ;
+extern double  __wrap_shmem_double_fetch(const double * a1, int a2)  {
+
+  double retval;
+  TAU_PROFILE_TIMER(t,"double shmem_double_fetch(const double *, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =  __real_shmem_double_fetch(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+extern double __wrap_shmem_double_fetch_(const double * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_double_fetch(a1, *a2);
+}
+
+extern double __wrap_shmem_double_fetch__(const double * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_double_fetch(a1, *a2);
+}
+
+extern double __wrap_SHMEM_DOUBLE_FETCH_(const double * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_double_fetch(a1, *a2);
+}
+
+extern double __wrap_SHMEM_DOUBLE_FETCH__(const double * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_double_fetch(a1, *a2);
+}
+
+
+/**********************************************************
+   shmem_longlong_fetch
+ **********************************************************/
+
+extern long long  __real_shmem_longlong_fetch(const long long * a1, int a2) ;
+extern long long  __wrap_shmem_longlong_fetch(const long long * a1, int a2)  {
+
+  long long retval;
+  TAU_PROFILE_TIMER(t,"long long shmem_longlong_fetch(const long long *, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =  __real_shmem_longlong_fetch(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+extern long long __wrap_shmem_longlong_fetch_(const long long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_longlong_fetch(a1, *a2);
+}
+
+extern long long __wrap_shmem_longlong_fetch__(const long long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_longlong_fetch(a1, *a2);
+}
+
+extern long long __wrap_SHMEM_LONGLONG_FETCH_(const long long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_longlong_fetch(a1, *a2);
+}
+
+extern long long __wrap_SHMEM_LONGLONG_FETCH__(const long long * a1, SHMEM_FINT * a2)
+{
+   __wrap_shmem_longlong_fetch(a1, *a2);
+}
+
+
+/**********************************************************
+   shmem_int_set
+ **********************************************************/
+
+extern void  __real_shmem_int_set(int * a1, int a2, int a3) ;
+extern void  __wrap_shmem_int_set(int * a1, int a2, int a3)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_int_set(int *, int, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_int_set(a1, a2, a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_int_set_(SHMEM_FINT * a1, SHMEM_FINT * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_int_set(a1, *a2, *a3);
+}
+
+extern void __wrap_shmem_int_set__(SHMEM_FINT * a1, SHMEM_FINT * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_int_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_INT_SET_(SHMEM_FINT * a1, SHMEM_FINT * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_int_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_INT_SET__(SHMEM_FINT * a1, SHMEM_FINT * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_int_set(a1, *a2, *a3);
+}
+
+
+/**********************************************************
+   shmem_long_set
+ **********************************************************/
+
+extern void  __real_shmem_long_set(long * a1, long a2, int a3) ;
+extern void  __wrap_shmem_long_set(long * a1, long a2, int a3)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_long_set(long *, long, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_long_set(a1, a2, a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_long_set_(long * a1, long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_long_set(a1, *a2, *a3);
+}
+
+extern void __wrap_shmem_long_set__(long * a1, long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_long_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_LONG_SET_(long * a1, long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_long_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_LONG_SET__(long * a1, long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_long_set(a1, *a2, *a3);
+}
+
+
+/**********************************************************
+   shmem_float_set
+ **********************************************************/
+
+extern void  __real_shmem_float_set(float * a1, float a2, int a3) ;
+extern void  __wrap_shmem_float_set(float * a1, float a2, int a3)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_float_set(float *, float, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_float_set(a1, a2, a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_float_set_(float * a1, float * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_float_set(a1, *a2, *a3);
+}
+
+extern void __wrap_shmem_float_set__(float * a1, float * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_float_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_FLOAT_SET_(float * a1, float * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_float_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_FLOAT_SET__(float * a1, float * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_float_set(a1, *a2, *a3);
+}
+
+
+/**********************************************************
+   shmem_double_set
+ **********************************************************/
+
+extern void  __real_shmem_double_set(double * a1, double a2, int a3) ;
+extern void  __wrap_shmem_double_set(double * a1, double a2, int a3)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_double_set(double *, double, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_double_set(a1, a2, a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_double_set_(double * a1, double * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_double_set(a1, *a2, *a3);
+}
+
+extern void __wrap_shmem_double_set__(double * a1, double * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_double_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_DOUBLE_SET_(double * a1, double * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_double_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_DOUBLE_SET__(double * a1, double * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_double_set(a1, *a2, *a3);
+}
+
+
+/**********************************************************
+   shmem_longlong_set
+ **********************************************************/
+
+extern void  __real_shmem_longlong_set(long long * a1, long long a2, int a3) ;
+extern void  __wrap_shmem_longlong_set(long long * a1, long long a2, int a3)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_longlong_set(long long *, long long, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_longlong_set(a1, a2, a3);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_longlong_set_(long long * a1, long long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_longlong_set(a1, *a2, *a3);
+}
+
+extern void __wrap_shmem_longlong_set__(long long * a1, long long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_longlong_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_LONGLONG_SET_(long long * a1, long long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_longlong_set(a1, *a2, *a3);
+}
+
+extern void __wrap_SHMEM_LONGLONG_SET__(long long * a1, long long * a2, SHMEM_FINT * a3)
+{
+   __wrap_shmem_longlong_set(a1, *a2, *a3);
+}
+
+
+/**********************************************************
    shmem_barrier_all
  **********************************************************/
 
@@ -8463,6 +10155,76 @@ extern void __wrap_SHMEM_ALLTOALL__(void * a1, const void * a2, SHMEM_FINT * a3,
 
 
 /**********************************************************
+   shmem_alltoall32
+ **********************************************************/
+
+extern void  __real_shmem_alltoall32(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7) ;
+extern void  __wrap_shmem_alltoall32(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_alltoall32(void *, const void *, size_t, int, int, int, long *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_alltoall32(a1, a2, a3, a4, a5, a6, a7);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_alltoall32_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall32(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+extern void __wrap_shmem_alltoall32__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall32(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+extern void __wrap_SHMEM_ALLTOALL32_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall32(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+extern void __wrap_SHMEM_ALLTOALL32__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall32(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+
+/**********************************************************
+   shmem_alltoall64
+ **********************************************************/
+
+extern void  __real_shmem_alltoall64(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7) ;
+extern void  __wrap_shmem_alltoall64(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_alltoall64(void *, const void *, size_t, int, int, int, long *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_alltoall64(a1, a2, a3, a4, a5, a6, a7);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_alltoall64_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall64(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+extern void __wrap_shmem_alltoall64__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall64(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+extern void __wrap_SHMEM_ALLTOALL64_(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall64(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+extern void __wrap_SHMEM_ALLTOALL64__(void * a1, const void * a2, SHMEM_FINT * a3, SHMEM_FINT * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, long * a7)
+{
+   __wrap_shmem_alltoall64(a1, a2, *a3, *a4, *a5, *a6, a7);
+}
+
+
+/**********************************************************
    shmem_team_alltoall
  **********************************************************/
 
@@ -8529,6 +10291,76 @@ extern void __wrap_PSHMEM_TEAM_ALLTOALL_(void * a1, const void * a2, SHMEM_FINT 
 extern void __wrap_PSHMEM_TEAM_ALLTOALL__(void * a1, const void * a2, SHMEM_FINT * a3, shmem_team_t * a4, long * a5)
 {
    __wrap_pshmem_team_alltoall(a1, a2, *a3, *a4, a5);
+}
+
+
+/**********************************************************
+   shmem_alltoalls32
+ **********************************************************/
+
+extern void  __real_shmem_alltoalls32(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9) ;
+extern void  __wrap_shmem_alltoalls32(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_alltoalls32(void *, const void *, ptrdiff_t, ptrdiff_t, size_t, int, int, int, long *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_alltoalls32(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_alltoalls32_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls32(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
+}
+
+extern void __wrap_shmem_alltoalls32__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls32(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
+}
+
+extern void __wrap_SHMEM_ALLTOALLS32_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls32(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
+}
+
+extern void __wrap_SHMEM_ALLTOALLS32__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls32(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
+}
+
+
+/**********************************************************
+   shmem_alltoalls64
+ **********************************************************/
+
+extern void  __real_shmem_alltoalls64(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9) ;
+extern void  __wrap_shmem_alltoalls64(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_alltoalls64(void *, const void *, ptrdiff_t, ptrdiff_t, size_t, int, int, int, long *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_alltoalls64(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_alltoalls64_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls64(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
+}
+
+extern void __wrap_shmem_alltoalls64__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls64(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
+}
+
+extern void __wrap_SHMEM_ALLTOALLS64_(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls64(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
+}
+
+extern void __wrap_SHMEM_ALLTOALLS64__(void * a1, const void * a2, ptrdiff_t * a3, ptrdiff_t * a4, SHMEM_FINT * a5, SHMEM_FINT * a6, SHMEM_FINT * a7, SHMEM_FINT * a8, long * a9)
+{
+   __wrap_shmem_alltoalls64(a1, a2, *a3, *a4, *a5, *a6, *a7, *a8, a9);
 }
 
 
@@ -9212,6 +11044,7 @@ extern int __wrap_PSHMEM_TEAM_TRANSLATE_PE__(shmem_team_t * a1, SHMEM_FINT * a2,
 extern void  __real_start_pes(int a1) ;
 extern void  __wrap_start_pes(int a1)  {
 
+  MPI_Init();
   TAU_PROFILE_TIMER(t,"void start_pes(int) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   __real_start_pes(a1);
@@ -9249,6 +11082,7 @@ extern void __wrap_START_PES__(SHMEM_FINT * a1)
 extern void  __real_shmem_init() ;
 extern void  __wrap_shmem_init()  {
 
+  MPI_Init();
   TAU_PROFILE_TIMER(t,"void shmem_init(void) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   __real_shmem_init();
@@ -10101,5 +11935,40 @@ extern void __wrap_SHFREE_(void * a1)
 extern void __wrap_SHFREE__(void * a1)
 {
    __wrap_shfree(a1);
+}
+
+
+/**********************************************************
+   shmem_free
+ **********************************************************/
+
+extern void  __real_shmem_free(void * a1) ;
+extern void  __wrap_shmem_free(void * a1)  {
+
+  TAU_PROFILE_TIMER(t,"void shmem_free(void *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  __real_shmem_free(a1);
+  TAU_PROFILE_STOP(t);
+
+}
+
+extern void __wrap_shmem_free_(void * a1)
+{
+   __wrap_shmem_free(a1);
+}
+
+extern void __wrap_shmem_free__(void * a1)
+{
+   __wrap_shmem_free(a1);
+}
+
+extern void __wrap_SHMEM_FREE_(void * a1)
+{
+   __wrap_shmem_free(a1);
+}
+
+extern void __wrap_SHMEM_FREE__(void * a1)
+{
+   __wrap_shmem_free(a1);
 }
 
