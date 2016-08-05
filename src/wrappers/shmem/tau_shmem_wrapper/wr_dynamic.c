@@ -41,6 +41,28 @@ static void * get_function_handle(char const * name)
 }
 
 /**********************************************************
+   shmem_get8
+ **********************************************************/
+
+extern void  __wrap_shmem_get8(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_get8(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_get8_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_get8_t shmem_get8_handle = (shmem_get8_t)NULL;
+  if (!shmem_get8_handle) {
+    shmem_get8_handle = get_function_handle("shmem_get8");
+  }
+
+  shmem_get8_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_get8(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_get8(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
    shmem_get16
  **********************************************************/
 
@@ -147,6 +169,28 @@ extern void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) 
 
 extern void  shmem_getmem(void * a1, const void * a2, size_t a3, int a4) {
    __wrap_shmem_getmem(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_char_get
+ **********************************************************/
+
+extern void  __wrap_shmem_char_get(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __real_shmem_char_get(char * a1, const char * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_char_get_t)(char * a1, const char * a2, size_t a3, int a4);
+  static shmem_char_get_t shmem_char_get_handle = (shmem_char_get_t)NULL;
+  if (!shmem_char_get_handle) {
+    shmem_char_get_handle = get_function_handle("shmem_char_get");
+  }
+
+  shmem_char_get_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_char_get(char * a1, const char * a2, size_t a3, int a4) {
+   __wrap_shmem_char_get(a1, a2, a3, a4);
 }
 
 
@@ -305,6 +349,28 @@ extern void  shmem_float128_get(__float128 * a1, const __float128 * a2, size_t a
 
 
 /**********************************************************
+   shmem_put8
+ **********************************************************/
+
+extern void  __wrap_shmem_put8(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_put8(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_put8_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_put8_t shmem_put8_handle = (shmem_put8_t)NULL;
+  if (!shmem_put8_handle) {
+    shmem_put8_handle = get_function_handle("shmem_put8");
+  }
+
+  shmem_put8_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_put8(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_put8(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
    shmem_put16
  **********************************************************/
 
@@ -411,6 +477,28 @@ extern void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) 
 
 extern void  shmem_putmem(void * a1, const void * a2, size_t a3, int a4) {
    __wrap_shmem_putmem(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_char_put
+ **********************************************************/
+
+extern void  __wrap_shmem_char_put(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __real_shmem_char_put(char * a1, const char * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_char_put_t)(char * a1, const char * a2, size_t a3, int a4);
+  static shmem_char_put_t shmem_char_put_handle = (shmem_char_put_t)NULL;
+  if (!shmem_char_put_handle) {
+    shmem_char_put_handle = get_function_handle("shmem_char_put");
+  }
+
+  shmem_char_put_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_char_put(char * a1, const char * a2, size_t a3, int a4) {
+   __wrap_shmem_char_put(a1, a2, a3, a4);
 }
 
 
@@ -1339,6 +1427,622 @@ extern void  shmem_float128_put_nb(__float128 * a1, const __float128 * a2, size_
 
 
 /**********************************************************
+   shmem_get8_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_get8_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_get8_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_get8_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_get8_nbi_t shmem_get8_nbi_handle = (shmem_get8_nbi_t)NULL;
+  if (!shmem_get8_nbi_handle) {
+    shmem_get8_nbi_handle = get_function_handle("shmem_get8_nbi");
+  }
+
+  shmem_get8_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_get8_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_get8_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_get16_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_get16_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_get16_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_get16_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_get16_nbi_t shmem_get16_nbi_handle = (shmem_get16_nbi_t)NULL;
+  if (!shmem_get16_nbi_handle) {
+    shmem_get16_nbi_handle = get_function_handle("shmem_get16_nbi");
+  }
+
+  shmem_get16_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_get16_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_get16_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_get32_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_get32_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_get32_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_get32_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_get32_nbi_t shmem_get32_nbi_handle = (shmem_get32_nbi_t)NULL;
+  if (!shmem_get32_nbi_handle) {
+    shmem_get32_nbi_handle = get_function_handle("shmem_get32_nbi");
+  }
+
+  shmem_get32_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_get32_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_get32_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_get64_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_get64_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_get64_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_get64_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_get64_nbi_t shmem_get64_nbi_handle = (shmem_get64_nbi_t)NULL;
+  if (!shmem_get64_nbi_handle) {
+    shmem_get64_nbi_handle = get_function_handle("shmem_get64_nbi");
+  }
+
+  shmem_get64_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_get64_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_get64_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_get128_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_get128_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_get128_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_get128_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_get128_nbi_t shmem_get128_nbi_handle = (shmem_get128_nbi_t)NULL;
+  if (!shmem_get128_nbi_handle) {
+    shmem_get128_nbi_handle = get_function_handle("shmem_get128_nbi");
+  }
+
+  shmem_get128_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_get128_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_get128_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_getmem_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_getmem_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_getmem_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_getmem_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_getmem_nbi_t shmem_getmem_nbi_handle = (shmem_getmem_nbi_t)NULL;
+  if (!shmem_getmem_nbi_handle) {
+    shmem_getmem_nbi_handle = get_function_handle("shmem_getmem_nbi");
+  }
+
+  shmem_getmem_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_getmem_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_getmem_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_char_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_char_get_nbi(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __real_shmem_char_get_nbi(char * a1, const char * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_char_get_nbi_t)(char * a1, const char * a2, size_t a3, int a4);
+  static shmem_char_get_nbi_t shmem_char_get_nbi_handle = (shmem_char_get_nbi_t)NULL;
+  if (!shmem_char_get_nbi_handle) {
+    shmem_char_get_nbi_handle = get_function_handle("shmem_char_get_nbi");
+  }
+
+  shmem_char_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_char_get_nbi(char * a1, const char * a2, size_t a3, int a4) {
+   __wrap_shmem_char_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_short_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_short_get_nbi(short * a1, const short * a2, size_t a3, int a4) ;
+extern void  __real_shmem_short_get_nbi(short * a1, const short * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_short_get_nbi_t)(short * a1, const short * a2, size_t a3, int a4);
+  static shmem_short_get_nbi_t shmem_short_get_nbi_handle = (shmem_short_get_nbi_t)NULL;
+  if (!shmem_short_get_nbi_handle) {
+    shmem_short_get_nbi_handle = get_function_handle("shmem_short_get_nbi");
+  }
+
+  shmem_short_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_short_get_nbi(short * a1, const short * a2, size_t a3, int a4) {
+   __wrap_shmem_short_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_int_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_int_get_nbi(int * a1, const int * a2, size_t a3, int a4) ;
+extern void  __real_shmem_int_get_nbi(int * a1, const int * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_int_get_nbi_t)(int * a1, const int * a2, size_t a3, int a4);
+  static shmem_int_get_nbi_t shmem_int_get_nbi_handle = (shmem_int_get_nbi_t)NULL;
+  if (!shmem_int_get_nbi_handle) {
+    shmem_int_get_nbi_handle = get_function_handle("shmem_int_get_nbi");
+  }
+
+  shmem_int_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_int_get_nbi(int * a1, const int * a2, size_t a3, int a4) {
+   __wrap_shmem_int_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_long_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_long_get_nbi(long * a1, const long * a2, size_t a3, int a4) ;
+extern void  __real_shmem_long_get_nbi(long * a1, const long * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_long_get_nbi_t)(long * a1, const long * a2, size_t a3, int a4);
+  static shmem_long_get_nbi_t shmem_long_get_nbi_handle = (shmem_long_get_nbi_t)NULL;
+  if (!shmem_long_get_nbi_handle) {
+    shmem_long_get_nbi_handle = get_function_handle("shmem_long_get_nbi");
+  }
+
+  shmem_long_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_long_get_nbi(long * a1, const long * a2, size_t a3, int a4) {
+   __wrap_shmem_long_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_longlong_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_longlong_get_nbi(long long * a1, const long long * a2, size_t a3, int a4) ;
+extern void  __real_shmem_longlong_get_nbi(long long * a1, const long long * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_longlong_get_nbi_t)(long long * a1, const long long * a2, size_t a3, int a4);
+  static shmem_longlong_get_nbi_t shmem_longlong_get_nbi_handle = (shmem_longlong_get_nbi_t)NULL;
+  if (!shmem_longlong_get_nbi_handle) {
+    shmem_longlong_get_nbi_handle = get_function_handle("shmem_longlong_get_nbi");
+  }
+
+  shmem_longlong_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_longlong_get_nbi(long long * a1, const long long * a2, size_t a3, int a4) {
+   __wrap_shmem_longlong_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_float_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_float_get_nbi(float * a1, const float * a2, size_t a3, int a4) ;
+extern void  __real_shmem_float_get_nbi(float * a1, const float * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_float_get_nbi_t)(float * a1, const float * a2, size_t a3, int a4);
+  static shmem_float_get_nbi_t shmem_float_get_nbi_handle = (shmem_float_get_nbi_t)NULL;
+  if (!shmem_float_get_nbi_handle) {
+    shmem_float_get_nbi_handle = get_function_handle("shmem_float_get_nbi");
+  }
+
+  shmem_float_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_float_get_nbi(float * a1, const float * a2, size_t a3, int a4) {
+   __wrap_shmem_float_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_double_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_double_get_nbi(double * a1, const double * a2, size_t a3, int a4) ;
+extern void  __real_shmem_double_get_nbi(double * a1, const double * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_double_get_nbi_t)(double * a1, const double * a2, size_t a3, int a4);
+  static shmem_double_get_nbi_t shmem_double_get_nbi_handle = (shmem_double_get_nbi_t)NULL;
+  if (!shmem_double_get_nbi_handle) {
+    shmem_double_get_nbi_handle = get_function_handle("shmem_double_get_nbi");
+  }
+
+  shmem_double_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_double_get_nbi(double * a1, const double * a2, size_t a3, int a4) {
+   __wrap_shmem_double_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_float128_get_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_float128_get_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4) ;
+extern void  __real_shmem_float128_get_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_float128_get_nbi_t)(__float128 * a1, const __float128 * a2, size_t a3, int a4);
+  static shmem_float128_get_nbi_t shmem_float128_get_nbi_handle = (shmem_float128_get_nbi_t)NULL;
+  if (!shmem_float128_get_nbi_handle) {
+    shmem_float128_get_nbi_handle = get_function_handle("shmem_float128_get_nbi");
+  }
+
+  shmem_float128_get_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_float128_get_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4) {
+   __wrap_shmem_float128_get_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_put8_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_put8_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_put8_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_put8_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_put8_nbi_t shmem_put8_nbi_handle = (shmem_put8_nbi_t)NULL;
+  if (!shmem_put8_nbi_handle) {
+    shmem_put8_nbi_handle = get_function_handle("shmem_put8_nbi");
+  }
+
+  shmem_put8_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_put8_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_put8_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_put16_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_put16_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_put16_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_put16_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_put16_nbi_t shmem_put16_nbi_handle = (shmem_put16_nbi_t)NULL;
+  if (!shmem_put16_nbi_handle) {
+    shmem_put16_nbi_handle = get_function_handle("shmem_put16_nbi");
+  }
+
+  shmem_put16_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_put16_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_put16_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_put32_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_put32_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_put32_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_put32_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_put32_nbi_t shmem_put32_nbi_handle = (shmem_put32_nbi_t)NULL;
+  if (!shmem_put32_nbi_handle) {
+    shmem_put32_nbi_handle = get_function_handle("shmem_put32_nbi");
+  }
+
+  shmem_put32_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_put32_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_put32_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_put64_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_put64_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_put64_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_put64_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_put64_nbi_t shmem_put64_nbi_handle = (shmem_put64_nbi_t)NULL;
+  if (!shmem_put64_nbi_handle) {
+    shmem_put64_nbi_handle = get_function_handle("shmem_put64_nbi");
+  }
+
+  shmem_put64_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_put64_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_put64_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_put128_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_put128_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_put128_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_put128_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_put128_nbi_t shmem_put128_nbi_handle = (shmem_put128_nbi_t)NULL;
+  if (!shmem_put128_nbi_handle) {
+    shmem_put128_nbi_handle = get_function_handle("shmem_put128_nbi");
+  }
+
+  shmem_put128_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_put128_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_put128_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_putmem_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_putmem_nbi(void * a1, const void * a2, size_t a3, int a4) ;
+extern void  __real_shmem_putmem_nbi(void * a1, const void * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_putmem_nbi_t)(void * a1, const void * a2, size_t a3, int a4);
+  static shmem_putmem_nbi_t shmem_putmem_nbi_handle = (shmem_putmem_nbi_t)NULL;
+  if (!shmem_putmem_nbi_handle) {
+    shmem_putmem_nbi_handle = get_function_handle("shmem_putmem_nbi");
+  }
+
+  shmem_putmem_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_putmem_nbi(void * a1, const void * a2, size_t a3, int a4) {
+   __wrap_shmem_putmem_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_char_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_char_put_nbi(char * a1, const char * a2, size_t a3, int a4) ;
+extern void  __real_shmem_char_put_nbi(char * a1, const char * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_char_put_nbi_t)(char * a1, const char * a2, size_t a3, int a4);
+  static shmem_char_put_nbi_t shmem_char_put_nbi_handle = (shmem_char_put_nbi_t)NULL;
+  if (!shmem_char_put_nbi_handle) {
+    shmem_char_put_nbi_handle = get_function_handle("shmem_char_put_nbi");
+  }
+
+  shmem_char_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_char_put_nbi(char * a1, const char * a2, size_t a3, int a4) {
+   __wrap_shmem_char_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_short_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_short_put_nbi(short * a1, const short * a2, size_t a3, int a4) ;
+extern void  __real_shmem_short_put_nbi(short * a1, const short * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_short_put_nbi_t)(short * a1, const short * a2, size_t a3, int a4);
+  static shmem_short_put_nbi_t shmem_short_put_nbi_handle = (shmem_short_put_nbi_t)NULL;
+  if (!shmem_short_put_nbi_handle) {
+    shmem_short_put_nbi_handle = get_function_handle("shmem_short_put_nbi");
+  }
+
+  shmem_short_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_short_put_nbi(short * a1, const short * a2, size_t a3, int a4) {
+   __wrap_shmem_short_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_int_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_int_put_nbi(int * a1, const int * a2, size_t a3, int a4) ;
+extern void  __real_shmem_int_put_nbi(int * a1, const int * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_int_put_nbi_t)(int * a1, const int * a2, size_t a3, int a4);
+  static shmem_int_put_nbi_t shmem_int_put_nbi_handle = (shmem_int_put_nbi_t)NULL;
+  if (!shmem_int_put_nbi_handle) {
+    shmem_int_put_nbi_handle = get_function_handle("shmem_int_put_nbi");
+  }
+
+  shmem_int_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_int_put_nbi(int * a1, const int * a2, size_t a3, int a4) {
+   __wrap_shmem_int_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_long_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_long_put_nbi(long * a1, const long * a2, size_t a3, int a4) ;
+extern void  __real_shmem_long_put_nbi(long * a1, const long * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_long_put_nbi_t)(long * a1, const long * a2, size_t a3, int a4);
+  static shmem_long_put_nbi_t shmem_long_put_nbi_handle = (shmem_long_put_nbi_t)NULL;
+  if (!shmem_long_put_nbi_handle) {
+    shmem_long_put_nbi_handle = get_function_handle("shmem_long_put_nbi");
+  }
+
+  shmem_long_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_long_put_nbi(long * a1, const long * a2, size_t a3, int a4) {
+   __wrap_shmem_long_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_longlong_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_longlong_put_nbi(long long * a1, const long long * a2, size_t a3, int a4) ;
+extern void  __real_shmem_longlong_put_nbi(long long * a1, const long long * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_longlong_put_nbi_t)(long long * a1, const long long * a2, size_t a3, int a4);
+  static shmem_longlong_put_nbi_t shmem_longlong_put_nbi_handle = (shmem_longlong_put_nbi_t)NULL;
+  if (!shmem_longlong_put_nbi_handle) {
+    shmem_longlong_put_nbi_handle = get_function_handle("shmem_longlong_put_nbi");
+  }
+
+  shmem_longlong_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_longlong_put_nbi(long long * a1, const long long * a2, size_t a3, int a4) {
+   __wrap_shmem_longlong_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_float_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_float_put_nbi(float * a1, const float * a2, size_t a3, int a4) ;
+extern void  __real_shmem_float_put_nbi(float * a1, const float * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_float_put_nbi_t)(float * a1, const float * a2, size_t a3, int a4);
+  static shmem_float_put_nbi_t shmem_float_put_nbi_handle = (shmem_float_put_nbi_t)NULL;
+  if (!shmem_float_put_nbi_handle) {
+    shmem_float_put_nbi_handle = get_function_handle("shmem_float_put_nbi");
+  }
+
+  shmem_float_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_float_put_nbi(float * a1, const float * a2, size_t a3, int a4) {
+   __wrap_shmem_float_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_double_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_double_put_nbi(double * a1, const double * a2, size_t a3, int a4) ;
+extern void  __real_shmem_double_put_nbi(double * a1, const double * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_double_put_nbi_t)(double * a1, const double * a2, size_t a3, int a4);
+  static shmem_double_put_nbi_t shmem_double_put_nbi_handle = (shmem_double_put_nbi_t)NULL;
+  if (!shmem_double_put_nbi_handle) {
+    shmem_double_put_nbi_handle = get_function_handle("shmem_double_put_nbi");
+  }
+
+  shmem_double_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_double_put_nbi(double * a1, const double * a2, size_t a3, int a4) {
+   __wrap_shmem_double_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
+   shmem_float128_put_nbi
+ **********************************************************/
+
+extern void  __wrap_shmem_float128_put_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4) ;
+extern void  __real_shmem_float128_put_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4)  {
+
+  typedef void (*shmem_float128_put_nbi_t)(__float128 * a1, const __float128 * a2, size_t a3, int a4);
+  static shmem_float128_put_nbi_t shmem_float128_put_nbi_handle = (shmem_float128_put_nbi_t)NULL;
+  if (!shmem_float128_put_nbi_handle) {
+    shmem_float128_put_nbi_handle = get_function_handle("shmem_float128_put_nbi");
+  }
+
+  shmem_float128_put_nbi_handle ( a1,  a2,  a3,  a4);
+
+}
+
+extern void  shmem_float128_put_nbi(__float128 * a1, const __float128 * a2, size_t a3, int a4) {
+   __wrap_shmem_float128_put_nbi(a1, a2, a3, a4);
+}
+
+
+/**********************************************************
    shmem_put16_signal_nb
  **********************************************************/
 
@@ -1581,6 +2285,28 @@ extern void  shmem_double_put_signal_nb(double * a1, const double * a2, size_t a
 
 
 /**********************************************************
+   shmem_char_iget
+ **********************************************************/
+
+extern void  __wrap_shmem_char_iget(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __real_shmem_char_iget(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  typedef void (*shmem_char_iget_t)(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6);
+  static shmem_char_iget_t shmem_char_iget_handle = (shmem_char_iget_t)NULL;
+  if (!shmem_char_iget_handle) {
+    shmem_char_iget_handle = get_function_handle("shmem_char_iget");
+  }
+
+  shmem_char_iget_handle ( a1,  a2,  a3,  a4,  a5,  a6);
+
+}
+
+extern void  shmem_char_iget(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) {
+   __wrap_shmem_char_iget(a1, a2, a3, a4, a5, a6);
+}
+
+
+/**********************************************************
    shmem_short_iget
  **********************************************************/
 
@@ -1735,6 +2461,28 @@ extern void  shmem_float128_iget(__float128 * a1, const __float128 * a2, ptrdiff
 
 
 /**********************************************************
+   shmem_iget8
+ **********************************************************/
+
+extern void  __wrap_shmem_iget8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __real_shmem_iget8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  typedef void (*shmem_iget8_t)(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6);
+  static shmem_iget8_t shmem_iget8_handle = (shmem_iget8_t)NULL;
+  if (!shmem_iget8_handle) {
+    shmem_iget8_handle = get_function_handle("shmem_iget8");
+  }
+
+  shmem_iget8_handle ( a1,  a2,  a3,  a4,  a5,  a6);
+
+}
+
+extern void  shmem_iget8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) {
+   __wrap_shmem_iget8(a1, a2, a3, a4, a5, a6);
+}
+
+
+/**********************************************************
    shmem_iget16
  **********************************************************/
 
@@ -1819,6 +2567,28 @@ extern void  __real_shmem_iget128(void * a1, const void * a2, ptrdiff_t a3, ptrd
 
 extern void  shmem_iget128(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) {
    __wrap_shmem_iget128(a1, a2, a3, a4, a5, a6);
+}
+
+
+/**********************************************************
+   shmem_char_iput
+ **********************************************************/
+
+extern void  __wrap_shmem_char_iput(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __real_shmem_char_iput(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  typedef void (*shmem_char_iput_t)(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6);
+  static shmem_char_iput_t shmem_char_iput_handle = (shmem_char_iput_t)NULL;
+  if (!shmem_char_iput_handle) {
+    shmem_char_iput_handle = get_function_handle("shmem_char_iput");
+  }
+
+  shmem_char_iput_handle ( a1,  a2,  a3,  a4,  a5,  a6);
+
+}
+
+extern void  shmem_char_iput(char * a1, const char * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) {
+   __wrap_shmem_char_iput(a1, a2, a3, a4, a5, a6);
 }
 
 
@@ -1973,6 +2743,28 @@ extern void  __real_shmem_float128_iput(__float128 * a1, const __float128 * a2, 
 
 extern void  shmem_float128_iput(__float128 * a1, const __float128 * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) {
    __wrap_shmem_float128_iput(a1, a2, a3, a4, a5, a6);
+}
+
+
+/**********************************************************
+   shmem_iput8
+ **********************************************************/
+
+extern void  __wrap_shmem_iput8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) ;
+extern void  __real_shmem_iput8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6)  {
+
+  typedef void (*shmem_iput8_t)(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6);
+  static shmem_iput8_t shmem_iput8_handle = (shmem_iput8_t)NULL;
+  if (!shmem_iput8_handle) {
+    shmem_iput8_handle = get_function_handle("shmem_iput8");
+  }
+
+  shmem_iput8_handle ( a1,  a2,  a3,  a4,  a5,  a6);
+
+}
+
+extern void  shmem_iput8(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6) {
+   __wrap_shmem_iput8(a1, a2, a3, a4, a5, a6);
 }
 
 
@@ -3659,6 +4451,236 @@ extern void  shmem_longlong_add_nb(long long * a1, long long a2, int a3, void **
 
 
 /**********************************************************
+   shmem_int_fetch
+ **********************************************************/
+
+extern int  __wrap_shmem_int_fetch(const int * a1, int a2) ;
+extern int  __real_shmem_int_fetch(const int * a1, int a2)  {
+
+  int retval;
+  typedef int (*shmem_int_fetch_t)(const int * a1, int a2);
+  static shmem_int_fetch_t shmem_int_fetch_handle = (shmem_int_fetch_t)NULL;
+  if (!shmem_int_fetch_handle) {
+    shmem_int_fetch_handle = get_function_handle("shmem_int_fetch");
+  }
+
+  retval  =  shmem_int_fetch_handle ( a1,  a2);
+  return retval;
+
+}
+
+extern int  shmem_int_fetch(const int * a1, int a2) {
+   __wrap_shmem_int_fetch(a1, a2);
+}
+
+
+/**********************************************************
+   shmem_long_fetch
+ **********************************************************/
+
+extern long  __wrap_shmem_long_fetch(const long * a1, int a2) ;
+extern long  __real_shmem_long_fetch(const long * a1, int a2)  {
+
+  long retval;
+  typedef long (*shmem_long_fetch_t)(const long * a1, int a2);
+  static shmem_long_fetch_t shmem_long_fetch_handle = (shmem_long_fetch_t)NULL;
+  if (!shmem_long_fetch_handle) {
+    shmem_long_fetch_handle = get_function_handle("shmem_long_fetch");
+  }
+
+  retval  =  shmem_long_fetch_handle ( a1,  a2);
+  return retval;
+
+}
+
+extern long  shmem_long_fetch(const long * a1, int a2) {
+   __wrap_shmem_long_fetch(a1, a2);
+}
+
+
+/**********************************************************
+   shmem_float_fetch
+ **********************************************************/
+
+extern float  __wrap_shmem_float_fetch(const float * a1, int a2) ;
+extern float  __real_shmem_float_fetch(const float * a1, int a2)  {
+
+  float retval;
+  typedef float (*shmem_float_fetch_t)(const float * a1, int a2);
+  static shmem_float_fetch_t shmem_float_fetch_handle = (shmem_float_fetch_t)NULL;
+  if (!shmem_float_fetch_handle) {
+    shmem_float_fetch_handle = get_function_handle("shmem_float_fetch");
+  }
+
+  retval  =  shmem_float_fetch_handle ( a1,  a2);
+  return retval;
+
+}
+
+extern float  shmem_float_fetch(const float * a1, int a2) {
+   __wrap_shmem_float_fetch(a1, a2);
+}
+
+
+/**********************************************************
+   shmem_double_fetch
+ **********************************************************/
+
+extern double  __wrap_shmem_double_fetch(const double * a1, int a2) ;
+extern double  __real_shmem_double_fetch(const double * a1, int a2)  {
+
+  double retval;
+  typedef double (*shmem_double_fetch_t)(const double * a1, int a2);
+  static shmem_double_fetch_t shmem_double_fetch_handle = (shmem_double_fetch_t)NULL;
+  if (!shmem_double_fetch_handle) {
+    shmem_double_fetch_handle = get_function_handle("shmem_double_fetch");
+  }
+
+  retval  =  shmem_double_fetch_handle ( a1,  a2);
+  return retval;
+
+}
+
+extern double  shmem_double_fetch(const double * a1, int a2) {
+   __wrap_shmem_double_fetch(a1, a2);
+}
+
+
+/**********************************************************
+   shmem_longlong_fetch
+ **********************************************************/
+
+extern long long  __wrap_shmem_longlong_fetch(const long long * a1, int a2) ;
+extern long long  __real_shmem_longlong_fetch(const long long * a1, int a2)  {
+
+  long long retval;
+  typedef long long (*shmem_longlong_fetch_t)(const long long * a1, int a2);
+  static shmem_longlong_fetch_t shmem_longlong_fetch_handle = (shmem_longlong_fetch_t)NULL;
+  if (!shmem_longlong_fetch_handle) {
+    shmem_longlong_fetch_handle = get_function_handle("shmem_longlong_fetch");
+  }
+
+  retval  =  shmem_longlong_fetch_handle ( a1,  a2);
+  return retval;
+
+}
+
+extern long long  shmem_longlong_fetch(const long long * a1, int a2) {
+   __wrap_shmem_longlong_fetch(a1, a2);
+}
+
+
+/**********************************************************
+   shmem_int_set
+ **********************************************************/
+
+extern void  __wrap_shmem_int_set(int * a1, int a2, int a3) ;
+extern void  __real_shmem_int_set(int * a1, int a2, int a3)  {
+
+  typedef void (*shmem_int_set_t)(int * a1, int a2, int a3);
+  static shmem_int_set_t shmem_int_set_handle = (shmem_int_set_t)NULL;
+  if (!shmem_int_set_handle) {
+    shmem_int_set_handle = get_function_handle("shmem_int_set");
+  }
+
+  shmem_int_set_handle ( a1,  a2,  a3);
+
+}
+
+extern void  shmem_int_set(int * a1, int a2, int a3) {
+   __wrap_shmem_int_set(a1, a2, a3);
+}
+
+
+/**********************************************************
+   shmem_long_set
+ **********************************************************/
+
+extern void  __wrap_shmem_long_set(long * a1, long a2, int a3) ;
+extern void  __real_shmem_long_set(long * a1, long a2, int a3)  {
+
+  typedef void (*shmem_long_set_t)(long * a1, long a2, int a3);
+  static shmem_long_set_t shmem_long_set_handle = (shmem_long_set_t)NULL;
+  if (!shmem_long_set_handle) {
+    shmem_long_set_handle = get_function_handle("shmem_long_set");
+  }
+
+  shmem_long_set_handle ( a1,  a2,  a3);
+
+}
+
+extern void  shmem_long_set(long * a1, long a2, int a3) {
+   __wrap_shmem_long_set(a1, a2, a3);
+}
+
+
+/**********************************************************
+   shmem_float_set
+ **********************************************************/
+
+extern void  __wrap_shmem_float_set(float * a1, float a2, int a3) ;
+extern void  __real_shmem_float_set(float * a1, float a2, int a3)  {
+
+  typedef void (*shmem_float_set_t)(float * a1, float a2, int a3);
+  static shmem_float_set_t shmem_float_set_handle = (shmem_float_set_t)NULL;
+  if (!shmem_float_set_handle) {
+    shmem_float_set_handle = get_function_handle("shmem_float_set");
+  }
+
+  shmem_float_set_handle ( a1,  a2,  a3);
+
+}
+
+extern void  shmem_float_set(float * a1, float a2, int a3) {
+   __wrap_shmem_float_set(a1, a2, a3);
+}
+
+
+/**********************************************************
+   shmem_double_set
+ **********************************************************/
+
+extern void  __wrap_shmem_double_set(double * a1, double a2, int a3) ;
+extern void  __real_shmem_double_set(double * a1, double a2, int a3)  {
+
+  typedef void (*shmem_double_set_t)(double * a1, double a2, int a3);
+  static shmem_double_set_t shmem_double_set_handle = (shmem_double_set_t)NULL;
+  if (!shmem_double_set_handle) {
+    shmem_double_set_handle = get_function_handle("shmem_double_set");
+  }
+
+  shmem_double_set_handle ( a1,  a2,  a3);
+
+}
+
+extern void  shmem_double_set(double * a1, double a2, int a3) {
+   __wrap_shmem_double_set(a1, a2, a3);
+}
+
+
+/**********************************************************
+   shmem_longlong_set
+ **********************************************************/
+
+extern void  __wrap_shmem_longlong_set(long long * a1, long long a2, int a3) ;
+extern void  __real_shmem_longlong_set(long long * a1, long long a2, int a3)  {
+
+  typedef void (*shmem_longlong_set_t)(long long * a1, long long a2, int a3);
+  static shmem_longlong_set_t shmem_longlong_set_handle = (shmem_longlong_set_t)NULL;
+  if (!shmem_longlong_set_handle) {
+    shmem_longlong_set_handle = get_function_handle("shmem_longlong_set");
+  }
+
+  shmem_longlong_set_handle ( a1,  a2,  a3);
+
+}
+
+extern void  shmem_longlong_set(long long * a1, long long a2, int a3) {
+   __wrap_shmem_longlong_set(a1, a2, a3);
+}
+
+
+/**********************************************************
    shmem_barrier_all
  **********************************************************/
 
@@ -5137,6 +6159,50 @@ extern void  shmem_alltoall(void * a1, const void * a2, size_t a3, int a4, int a
 
 
 /**********************************************************
+   shmem_alltoall32
+ **********************************************************/
+
+extern void  __wrap_shmem_alltoall32(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7) ;
+extern void  __real_shmem_alltoall32(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7)  {
+
+  typedef void (*shmem_alltoall32_t)(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7);
+  static shmem_alltoall32_t shmem_alltoall32_handle = (shmem_alltoall32_t)NULL;
+  if (!shmem_alltoall32_handle) {
+    shmem_alltoall32_handle = get_function_handle("shmem_alltoall32");
+  }
+
+  shmem_alltoall32_handle ( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+
+}
+
+extern void  shmem_alltoall32(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7) {
+   __wrap_shmem_alltoall32(a1, a2, a3, a4, a5, a6, a7);
+}
+
+
+/**********************************************************
+   shmem_alltoall64
+ **********************************************************/
+
+extern void  __wrap_shmem_alltoall64(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7) ;
+extern void  __real_shmem_alltoall64(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7)  {
+
+  typedef void (*shmem_alltoall64_t)(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7);
+  static shmem_alltoall64_t shmem_alltoall64_handle = (shmem_alltoall64_t)NULL;
+  if (!shmem_alltoall64_handle) {
+    shmem_alltoall64_handle = get_function_handle("shmem_alltoall64");
+  }
+
+  shmem_alltoall64_handle ( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+
+}
+
+extern void  shmem_alltoall64(void * a1, const void * a2, size_t a3, int a4, int a5, int a6, long * a7) {
+   __wrap_shmem_alltoall64(a1, a2, a3, a4, a5, a6, a7);
+}
+
+
+/**********************************************************
    shmem_team_alltoall
  **********************************************************/
 
@@ -5177,6 +6243,50 @@ extern void  __real_pshmem_team_alltoall(void * a1, const void * a2, size_t a3, 
 
 extern void  pshmem_team_alltoall(void * a1, const void * a2, size_t a3, shmem_team_t a4, long * a5) {
    __wrap_pshmem_team_alltoall(a1, a2, a3, a4, a5);
+}
+
+
+/**********************************************************
+   shmem_alltoalls32
+ **********************************************************/
+
+extern void  __wrap_shmem_alltoalls32(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9) ;
+extern void  __real_shmem_alltoalls32(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9)  {
+
+  typedef void (*shmem_alltoalls32_t)(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9);
+  static shmem_alltoalls32_t shmem_alltoalls32_handle = (shmem_alltoalls32_t)NULL;
+  if (!shmem_alltoalls32_handle) {
+    shmem_alltoalls32_handle = get_function_handle("shmem_alltoalls32");
+  }
+
+  shmem_alltoalls32_handle ( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+
+}
+
+extern void  shmem_alltoalls32(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9) {
+   __wrap_shmem_alltoalls32(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+}
+
+
+/**********************************************************
+   shmem_alltoalls64
+ **********************************************************/
+
+extern void  __wrap_shmem_alltoalls64(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9) ;
+extern void  __real_shmem_alltoalls64(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9)  {
+
+  typedef void (*shmem_alltoalls64_t)(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9);
+  static shmem_alltoalls64_t shmem_alltoalls64_handle = (shmem_alltoalls64_t)NULL;
+  if (!shmem_alltoalls64_handle) {
+    shmem_alltoalls64_handle = get_function_handle("shmem_alltoalls64");
+  }
+
+  shmem_alltoalls64_handle ( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+
+}
+
+extern void  shmem_alltoalls64(void * a1, const void * a2, ptrdiff_t a3, ptrdiff_t a4, size_t a5, int a6, int a7, int a8, long * a9) {
+   __wrap_shmem_alltoalls64(a1, a2, a3, a4, a5, a6, a7, a8, a9);
 }
 
 
@@ -6171,5 +7281,27 @@ extern void  __real_shfree(void * a1)  {
 
 extern void  shfree(void * a1) {
    __wrap_shfree(a1);
+}
+
+
+/**********************************************************
+   shmem_free
+ **********************************************************/
+
+extern void  __wrap_shmem_free(void * a1) ;
+extern void  __real_shmem_free(void * a1)  {
+
+  typedef void (*shmem_free_t)(void * a1);
+  static shmem_free_t shmem_free_handle = (shmem_free_t)NULL;
+  if (!shmem_free_handle) {
+    shmem_free_handle = get_function_handle("shmem_free");
+  }
+
+  shmem_free_handle ( a1);
+
+}
+
+extern void  shmem_free(void * a1) {
+   __wrap_shmem_free(a1);
 }
 

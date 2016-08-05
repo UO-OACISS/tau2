@@ -817,6 +817,17 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     dltext = buff.str();
   } /* if (runtime == RUNTIME_INTERCEPT) */
 
+#ifdef SHMEM
+#ifdef MPI
+#ifdef CRAY
+  if(runtime == WRAPPER_INTERCEPT && shmem_wrapper && 
+      ( rname == "start_pes"  || rname == "shmem_init")) {
+    impl << "  MPI_Init();" << endl;
+  }
+#endif
+#endif
+#endif
+
   if (!isVoid) {
     impl<<"  "<<sig.returntypename<< " retval;"<<endl;
   }
