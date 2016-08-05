@@ -108,13 +108,14 @@ int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
 void Tau_mpi_t_parse_cvar_string(int num_cvars, const char *cvar_string, char **cvar_array, int *number_of_elements) {
 
   /*A copy of the cvar string needs to be created because strtok doesn't accept const */
-  char *cvar_copy = (char*)malloc(strlen(cvar_string)*sizeof(char));
+  char *cvar_copy = (char*)malloc((strlen(cvar_string)+1)*sizeof(char));
   char *token;
   int current_index = 0;
   int iter = 0;
+  char *save_ptr;
 
   strcpy(cvar_copy, cvar_string);
-  token = strtok(cvar_copy, ",");
+  token = strtok_r(cvar_copy, ",", &save_ptr);
 
   /*Initialize the string pointers to NULL*/
   for(iter=0; iter<num_cvars; iter++) {
@@ -136,7 +137,7 @@ void Tau_mpi_t_parse_cvar_string(int num_cvars, const char *cvar_string, char **
     current_index = current_index + 1;
     *number_of_elements = current_index;
 
-    token = strtok(NULL, ",");
+    token = strtok_r(NULL, ",", &save_ptr);
   }
 
   free(cvar_copy);
@@ -433,7 +434,6 @@ int Tau_mpi_t_cvar_initialize(void) {
 
       cvar_metrics_array = (char**)malloc(sizeof(char*)*num_cvars);
       cvar_values_array = (char**)malloc(sizeof(char*)*num_cvars);
-
 
       /*Parse the metrics and values using strtok. At this stage, we aren't concerned with differenting between scalar and vector metrics.*/
       Tau_mpi_t_parse_cvar_string(num_cvars, cvars, cvar_metrics_array, &num_cvar_metrics);
