@@ -8805,7 +8805,9 @@ if [ "x$download_scorep" = xyes ] ; then
       if [ $makeresult -eq 0 ] ; then
         tauscorep_log=install.log
         echo "installing ${tauscorep} to ${scorep_dir}... (see `pwd`/${tau_scorep_log} for log)..."
-        make install 
+        make install > ${tauscorep_log} 2>&1 ;
+      else 
+        echo "Error building ${tauscorep}... (see `pwd`/${tauscorep_log} for log)..."
       fi
     else
       echo "ERROR: Score-P configure failed. See `pwd`/${tauscorep_log} for log"
