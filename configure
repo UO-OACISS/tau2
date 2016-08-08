@@ -8751,6 +8751,7 @@ if [ "x$download_scorep" = xyes ] ; then
         exit 1;
       fi
     fi 
+    /bin/rm -rf scorep-*; 
     echo "expanding $tauscoreptgz ..."
     tar -xzf $tauscoreptgz
     echo "removing $tauscoreptgz ..."
