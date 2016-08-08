@@ -914,6 +914,7 @@ zepto=no
 zeptodir=
 cuda=no
 use_opencl=no
+use_openacc=no
 cupti=no
 strsignal_ok=no
 android_version=4.4
@@ -5303,6 +5304,7 @@ EOF
     then
       echo "PGI compiler supports OpenACC profiling interface. Enabling OpenACC."
       fixmakeargs="$fixmakeargs PGI_OPENACC"
+      use_openacc=yes
     else
       echo "PGI compiler doesn't support OpenACC profiling interface."
     fi
@@ -8873,6 +8875,23 @@ if [ $scorep = yes ] ; then
          scorep_adapter="$scorep_adapter --noopencl"
        else
          scorep_adapter="$scorep_adapter --opencl"
+       fi
+    fi
+
+    scorep_supports_openacc=no
+    if [ -x $scorepdir/bin/scorep-config ]; then
+       retval=`$scorepdir/bin/scorep-config --noopenacc &>/dev/null `
+       if [ $? == 0 ]; then 
+         scorep_supports_openacc=yes
+         echo "NOTE: Score-P's scorep-config supports --noopenacc option"
+       fi
+    fi
+
+    if [ $scorep_supports_openacc = yes ]; then 
+       if [ $use_openacc = no ] ; then 
+         scorep_adapter="$scorep_adapter --noopenacc"
+       else
+         scorep_adapter="$scorep_adapter --openacc"
        fi
     fi
     
