@@ -6,11 +6,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.graphbuilder.math.Expression;
 import com.graphbuilder.math.ExpressionTree;
@@ -174,6 +177,7 @@ public class ThreeDeeGeneralPlotUtils {
 				}
 
 			}
+			br.close();
 
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -288,6 +292,7 @@ public class ThreeDeeGeneralPlotUtils {
 				}
 
 			}
+			br.close();
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -352,27 +357,190 @@ public class ThreeDeeGeneralPlotUtils {
 		
 		return nodeCoords;
 	}
+	
+	public static class HostCoords{
+		@Override
+		public String toString() {
+			return "HostCoords [rackX=" + rackX + ", rackY=" + rackY
+					+ ", cage=" + cage + ", slot=" + slot + ", node=" + node
+					+ ", x=" + x + ", y=" + y + ", z=" + z + ", ranks=" + ranks
+					+ "]";
+		}
+		
+		public HostCoords(String hostname){
+			int[] num = parseCrayNodeID(hostname);
+			this.rackX=num[0];
+			this.rackY=num[1];
+			this.cage=num[2];
+			this.slot=num[3];
+			this.node=num[4];
+			this.hostname=hostname;
+		}
+		
+		public HostCoords(HostCoords copy) {
+			super();
+			this.rackX = copy.rackX;
+			this.rackY = copy.rackY;
+			this.cage = copy.cage;
+			this.slot = copy.slot;
+			this.node = copy.node;
+			this.x = copy.x;
+			this.y = copy.y;
+			this.z = copy.z;
+			this.hostname=copy.hostname;
+		}
+		public HostCoords(int rackX, int rackY, int cage, int slot, int node) {
+			super();
+			this.rackX = rackX;
+			this.rackY = rackY;
+			this.cage = cage;
+			this.slot = slot;
+			this.node = node;
+			this.hostname="c"+rackX+"-"+rackY+"c"+cage+"s"+slot+"n"+node;
+		}
+		int rackX;
+		int rackY;
+		int cage;
+		int slot;
+		int node;
+		
+		int x;
+		int y;
+		int z;
+		
+		String hostname;
+		
+		Set<Integer> ranks = new HashSet<Integer>();
+		
+		
+		public void minimize(HostCoords hc){
+			this.rackX=Math.min(this.rackX, hc.rackX);
+			this.rackY=Math.min(this.rackY, hc.rackY);
+			this.cage=Math.min(this.cage, hc.cage);
+			this.slot=Math.min(this.slot, hc.slot);
+			this.node=Math.min(this.node, hc.node);
+			this.x=Math.min(this.x, hc.x);
+			this.y=Math.min(this.y, hc.y);
+			this.z=Math.min(this.z, hc.z);
+		}
+		public void maximize(HostCoords hc){
+			this.rackX=Math.max(this.rackX, hc.rackX);
+			this.rackY=Math.max(this.rackY, hc.rackY);
+			this.cage=Math.max(this.cage, hc.cage);
+			this.slot=Math.max(this.slot, hc.slot);
+			this.node=Math.max(this.node, hc.node);
+			this.x=Math.max(this.x, hc.x);
+			this.y=Math.max(this.y, hc.y);
+			this.z=Math.max(this.z, hc.z);
+		}
+		
+		public void calculateXYZ(HostCoords minHC, HostCoords maxHC){
+			int rackWidth=maxHC.rackX-minHC.rackX+1;
+			int rackDepth=maxHC.rackY-minHC.rackY+1;
+			int slotHeight=1;
+			int slotWidth=1;
+			int cageHeight=maxHC.cage-minHC.cage+1;
+			int nodeWidth=1;
+			int nodeDepth=1;
+			
+                        this.x = rackWidth*rackX + slotWidth*(slot%2);
+                        this.y = rackDepth*rackY + nodeDepth*node;
+                        this.z = cageHeight*cage + slotHeight*(slot/2);
+			
+			if(x==0&&y==0&&z==0){
+				System.out.println("All Zero! "+this.hostname+" rackWidth: "+rackWidth+" rackX: "+rackX+" slotWidth: "+slotWidth+" slot: "+slot);
+			}
+			
+		}
+	}
+	
+//	public static HostCoords parseCrayHost(String host){
+//		int[] xyz = new int[3];
+//		
+//		
+//		
+//		int dash=host.indexOf('-');
+//		int c2=host.lastIndexOf('c');
+//		int s=host.indexOf('s');
+//		int n=host.indexOf('n');
+//		
+//		int rackX=Integer.parseInt(host.substring(1,dash));
+//		int rackY=Integer.parseInt(host.substring(dash+1,c2));
+//		int cage=Integer.parseInt(host.substring(c2+1,s));
+//		int slot=Integer.parseInt(host.substring(s+1,n));
+//		int node=Integer.parseInt(host.substring(n+1));
+//		
+//		HostCoords hc = new HostCoords(rackX,rackY,cage,slot,node);
+//		
+//		
+//		System.out.println(host+": "+rackX+" "+rackY+" "+cage+" "+slot+" "+node+" ");
+//		//xyz[0]=
+//		
+//		return hc;
+//	}
 
 	public static CoordMap parseMapFile(String fileLoc) {
 		BufferedReader br;
 		int[][] coords = null;
-		boolean gotCores = false;
+		List<String> mapLines=new ArrayList<String>();
+		//boolean gotCores = false;
 		int ranks = 0;
+		List<String> nodes = null;
 		try {
 			br = new BufferedReader(new FileReader(new File(fileLoc)));
 
-			String s;
-			List<String> nodes = new ArrayList<String>();
-			while ((s = br.readLine()) != null) {
-				if (!gotCores) {
-					ranks = Integer.parseInt(s);
-					coords = new int[ranks][4];
-					gotCores = true;
-					// System.out.println(ranks);
-					continue;
-				}
+			String mapline;
+			nodes = new ArrayList<String>();
+			while ((mapline = br.readLine()) != null) {
+				mapLines.add(mapline);
+//				if (!gotCores) {
+//					ranks = Integer.parseInt(s);
+//					coords = new int[ranks][4];
+//					gotCores = true;
+//					// System.out.println(ranks);
+//					continue;
+//				}
 
-				if (s.indexOf('[') == 0) {
+				
+
+				// if (s.indexOf(',') > 0) {
+				// String[] corexyz = s.split(",");
+				// //
+				// System.out.println(corexyz[0]+", "+corexyz[1]+", "+corexyz[2]+", "+corexyz[3]);
+				// int core = Integer.parseInt(corexyz[0]);
+				// for (int i = 0; i < 3; i++) {
+				// coords[core][i] = Integer.parseInt(corexyz[i + 1]);
+				// }
+			}
+			br.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+			//ranks=mapLines.size();
+			
+			boolean noCore=true;
+			for(String s:mapLines){
+				if (s.indexOf('[') != -1){
+					noCore=false;
+				}
+				else{
+					ranks++;
+				}
+			}
+			coords=new int[ranks][4];
+			
+			Map<String,Integer> coreCount=new HashMap<String,Integer>();
+			Map<String,HostCoords> allHostCoords = new HashMap<String,HostCoords>();
+			HostCoords minHC = null;//new HostCoords();
+			HostCoords maxHC = null;//new HostCoords();
+			
+			for(String s:mapLines){
+				if (s.indexOf('[') != -1) {
 					int start = s.indexOf('_') + 1;
 					int end = s.indexOf(']');
 					String num = s.substring(start, end);
@@ -386,30 +554,62 @@ public class ThreeDeeGeneralPlotUtils {
 					int core = num.indexOf('1');
 					// System.out.println("Core: "+ core);
 					coords[rank][3] = core;
+					
 				} else {
 					String[] duo = s.split(":");
 					int rank = Integer.parseInt(duo[0]);
 					int place = nodes.indexOf(duo[1]);
 
 					if (place == -1) {
+						HostCoords newHC = new HostCoords(duo[1]);
+						if(minHC==null){
+							minHC=new HostCoords(newHC);
+							maxHC=new HostCoords(newHC);
+						}
+						else{
+							//The coordinates provided by the hostname could be from any space in the system so we need to normalize them with the max and min values
+							minHC.minimize(newHC);
+							maxHC.maximize(newHC);
+						}
+						allHostCoords.put(duo[1],newHC);
 						nodes.add(duo[1]);
 						place = nodes.size() - 1;
+						if(noCore)
+						{
+							coreCount.put(duo[1], 0);
+							//System.out.println("Initializing count for: "+duo[1]);
+						}
 					}
+					allHostCoords.get(duo[1]).ranks.add(rank);
 					// nodes.insert(rank,duo[1]);
 					coords[rank][0] = place % 10;
 					coords[rank][1] = (place / 10) % 8;
 					coords[rank][2] = (place / 10 / 8);
+					if(noCore){
+						int count=coreCount.get(duo[1]);
+						//System.out.println("NocoreCount for: "+duo[1]+": "+count);
+						coords[rank][3]=count;
+						count=count+1;
+						coreCount.put(duo[1], count);
+					}
 				}
-
-				// if (s.indexOf(',') > 0) {
-				// String[] corexyz = s.split(",");
-				// //
-				// System.out.println(corexyz[0]+", "+corexyz[1]+", "+corexyz[2]+", "+corexyz[3]);
-				// int core = Integer.parseInt(corexyz[0]);
-				// for (int i = 0; i < 3; i++) {
-				// coords[core][i] = Integer.parseInt(corexyz[i + 1]);
-				// }
 			}
+			System.out.println("min "+minHC.toString());
+			System.out.println("max "+maxHC.toString());
+			
+			for (Iterator<Entry<String, HostCoords>> iterator = allHostCoords.entrySet()
+					.iterator(); iterator.hasNext();) {
+				Entry<String, HostCoords> es = iterator.next();
+				HostCoords current=es.getValue();
+				current.calculateXYZ(minHC, maxHC);
+				for(int r:es.getValue().ranks){
+					coords[r][0]=current.x;
+					coords[r][1]=current.y;
+					coords[r][2]=current.z;
+				}
+				System.out.println(es.getKey()+": x="+current.x+" y="+current.y+" z="+current.z);
+			}
+			
 
 			// int x1 = s.indexOf('=');
 			// //int x2 = s.indexOf('"', x1 + 1);
@@ -421,28 +621,22 @@ public class ThreeDeeGeneralPlotUtils {
 
 			// }
 
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
 		// System.out.println(coords);
 
 		int[] min = new int[3];
 		int[] max = new int[3];
-		int[] coremax = { 2, 3, 4 };
-		int space = 2;
+		int[] coremax = { 4, 3, 2 };
+		int space = 1;
 		int[][] done = new int[ranks][3];
 		for (int i = 0; i < ranks; i++) {
 			int node = coords[i][3];
 			for (int j = 0; j < 3; j++) {
-				int sub = 1;
+				int sub = 6;
 				if (j == 1)
 					sub = 2;
 				if (j == 2)
-					sub = 6;
+					sub = 1;
 				int cc = (node / sub) % coremax[j];
 				// int cy=node%cymax;
 				// int cz=node%czmax;
@@ -467,5 +661,9 @@ public class ThreeDeeGeneralPlotUtils {
 		System.out.println("max: " + max[0] + "," + max[1] + "," + max[2]);
 
 		return new CoordMap(min, max, done);
+	}
+	
+	public static void main(String[] args){
+		parseMapFile(args[0]);
 	}
 }
