@@ -398,11 +398,11 @@ if(!TauEnv_get_cuda_track_sass()) {
 }
 
 void Tau_cupti_onunload() {
-// #if CUDA_VERSION >= 6000
-//   if(TauEnv_get_cuda_track_unified_memory()) {
-//     CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
-//   }
-// #endif
+#if CUDA_VERSION >= 6000
+  if(TauEnv_get_cuda_track_unified_memory()) {
+    CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+  }
+#endif
   if(TauEnv_get_cuda_track_sass()) {
     if(TauEnv_get_cuda_csv_output()){
       cout << "[CuptiActivity]:  Writing out instruction mix stats to file. This may take a few minutes.\n";
