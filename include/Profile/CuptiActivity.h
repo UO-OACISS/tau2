@@ -313,9 +313,12 @@ bool counters_averaged_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
 bool counters_bounded_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
 
 void createFilePointerSass(int device_count);
+
+#if CUDA_VERSION >= 6000
 static const char * getUvmCounterKindString(CUpti_ActivityUnifiedMemoryCounterKind kind);
 static const char * getUvmCounterScopeString(CUpti_ActivityUnifiedMemoryCounterScope scope);
 static const char * getComputeApiKindString(CUpti_ActivityComputeApiKind kind);
+#endif
 
 typedef struct cupti_eventData_st {
   CUpti_EventGroup eventGroup;

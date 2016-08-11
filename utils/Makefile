@@ -121,7 +121,7 @@ tau_wrap: tau_wrap.o tau_selective.o tau_instrument.o $(PDTDIR)/$(PDTARCHDIR)/li
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_wrap.o tau_selective.o tau_instrument.o -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) 
 
 tau_wrap.o: tau_wrap.cpp 
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_wrap.cpp
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_wrap.cpp $(WRAPOPTS)
 
 tau_ompcheck: tau_ompcheck.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_ompcheck.o -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) 

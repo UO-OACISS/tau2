@@ -31,3 +31,9 @@ TAGS
 # Ignore build files
 tools/src/android/dexInjector/*.jar
 tools/src/android/dexInjector/edu
+
+*.ppk
+profile.*
+*.edf
+*.trc
+*.slog2
