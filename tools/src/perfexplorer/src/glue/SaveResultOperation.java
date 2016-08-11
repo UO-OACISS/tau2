@@ -253,10 +253,29 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		for(String event: events){
 			int eventID = 0;
 			buf = new StringBuilder();
-			buf.append("select id from interval_event where trial = ? and name = ?");
-			statement = db.prepareStatement(buf.toString());
-			statement.setInt(1, trial.getID());
-			statement.setString(2, event);
+//			buf.append("select id from interval_event where trial = ? and name = ?");
+//			statement = db.prepareStatement(buf.toString());
+//			statement.setInt(1, trial.getID());
+//			statement.setString(2, event);
+			
+			 buf.append("with recursive cp (id, parent, timer, name) as ( ");
+		      buf.append("SELECT tc.id, tc.parent, tc.timer, timer.name ");
+		      buf.append("FROM  timer_callpath tc inner join timer on tc.timer = timer.id ");
+		      buf.append("where timer.trial = " + trial.getID() + " and tc.parent is null ");
+		      buf.append("UNION ALL ");
+		      buf.append("SELECT d.id, d.parent, d.timer, ");
+		      if (db.getDBType().compareTo("h2") == 0) {
+		        buf.append("concat (cp.name, ' => ', dt.name) ");
+		      } else {
+		        buf.append("cp.name || ' => ' || dt.name ");
+		      }
+		      buf.append("FROM timer_callpath AS d JOIN cp ON (d.parent = cp.id) ");
+		      buf.append("join timer dt on d.timer = dt.id where dt.trial = " + trial.getID() + " ) ");
+		      buf.append("select cp.id from cp where cp.name = ? ");
+		      statement = db.prepareStatement(buf.toString());
+		      statement.setString(1, event);
+			
+			
 			//System.out.println(statement);
 			ResultSet results = statement.executeQuery();
 			if (results.next() != false) {
