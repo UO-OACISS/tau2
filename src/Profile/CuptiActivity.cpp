@@ -200,6 +200,7 @@ void Tau_cupti_subscribe()
 
 void Tau_cupti_onload()
 {
+
 	if (!subscribed) {
 		Tau_cupti_subscribe();
 	}
@@ -297,6 +298,15 @@ if(!TauEnv_get_cuda_track_sass()) {
   }
 #endif //CUPTI_API_VERSIOn >= 3
 
+  //cout << "Tau_cupti_onload():  get_device_id(): " << get_device_id() << endl;
+
+  CUpti_ActivityDevice device = deviceMap[get_device_id()];
+
+	if ((device.computeCapabilityMajor > 3) ||
+		device.computeCapabilityMajor == 3 &&
+		device.computeCapabilityMinor >= 0)
+	{
+	  
   if(TauEnv_get_cuda_track_unified_memory()) {
 #if CUDA_VERSION >= 7000
     CUptiResult res;
@@ -370,7 +380,10 @@ if(!TauEnv_get_cuda_track_sass()) {
 #endif
 
   }
-  
+	}
+	else {
+	  CUDA_CHECK_ERROR(err, "CUDA Compute Capability 3.0 or higher required!\n");
+	}  
   CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
   
   uint64_t timestamp;
@@ -385,11 +398,11 @@ if(!TauEnv_get_cuda_track_sass()) {
 }
 
 void Tau_cupti_onunload() {
-#if CUDA_VERSION >= 6000
-  if(TauEnv_get_cuda_track_unified_memory()) {
-    CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
-  }
-#endif
+// #if CUDA_VERSION >= 6000
+//   if(TauEnv_get_cuda_track_unified_memory()) {
+//     CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
+//   }
+// #endif
   if(TauEnv_get_cuda_track_sass()) {
     if(TauEnv_get_cuda_csv_output()){
       cout << "[CuptiActivity]:  Writing out instruction mix stats to file. This may take a few minutes.\n";
