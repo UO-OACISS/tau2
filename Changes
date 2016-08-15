@@ -35,6 +35,10 @@ Version 2.25 changes (from 2.24):
 22. Added -scorep=download configuration option to build TAU with Score-P. 
 23. Updated CUDA support. 
 24. OMPT updates. 
+25. Added support for Cray KNL systems (module load craype-mic-knl). 
+26. Fixed Opari2 compilation issues on Cray. 
+27. Added support for launching ParaTools ThreadSpotter through tau_exec (-ptts). 
+
 
  
 Version 2.24 changes (from 2.23):
