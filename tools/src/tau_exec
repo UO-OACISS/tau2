@@ -44,6 +44,7 @@ usage()
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -shmem        Track SHMEM events"
     echo "        -ptts         Run with ParaTools ThreadSpotter"
+    echo "        -ptts_aprun   Run with ParaTools ThreadSpotter under aprun"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
@@ -250,6 +251,7 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
+use_ptts_aprun=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -342,7 +344,11 @@ for arg in "$@" ; do
           use_ptts=true
           shift
           ;;
-      -ebs)
+      -ptts_aprun)
+          use_ptts=true
+          shift
+          ;;
+     -ebs)
           tau_use_ebs=true
           shift
           ;;
@@ -731,7 +737,7 @@ if [ $verbose = "true" ] ; then
 fi
 
 # Prep ThreadSpotter before LD_PRELOAD get set
-if $use_ptts ; then
+if [ $use_ptts ] || [ $use_ptts_aprun ] ; then
     if [ -n "$dryrun" ] ; then
         dryrun="$dryrun PTTS($node): "
     fi
@@ -843,7 +849,7 @@ else
     if $python_wrapper ; then
       $dryrun python -m tau_python_wrapper $@
       retval=$?
-    elif $use_ptts ; then
+    elif [ $use_ptts ] || [ $use_ptts_aprun ] ; then
         # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
         if [ -n "$dryrun" ] ; then
             echo "ERROR: dryrun not implemented for ptts"
@@ -871,7 +877,15 @@ else
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
         rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
-        sample_ts -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
+
+	if $use_ptts_aprun ; then
+	  pttschild="-s 1 "
+	elif $use_ptts ; then
+          pttschild="-s 0 "
+	fi
+
+        sample_ts "$pttschild" -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
+
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
         wait $child_pid
