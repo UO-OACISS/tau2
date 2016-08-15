@@ -93,7 +93,18 @@ set_node()
     if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
         # ThreadSpotter's sample_ts uses the same method to determine MPI rank,
         # see get_rank() in library/exe_path/path_substitute.cc 
-        for i in PMI_RANK OMPI_COMM_WORLD_RANK OMPI_MCA_ns_nds_vpid PMI_ID SLURM_PROCID LAMRANK MPI_RANKID MP_CHILD MP_RANK MPIRUN_RANK ; do
+        rank_env_vars=("PMI_RANK"
+                       "OMPI_COMM_WORLD_RANK"
+                       "OMPI_MCA_ns_nds_vpid"
+                       "PMI_ID"
+                       "SLURM_PROCID"
+                       "LAMRANK"
+                       "MPI_RANKID"
+                       "MP_CHILD"
+                       "MP_RANK"
+                       "MPIRUN_RANK"
+                       "ALPS_APP_PE")
+        for i in ${rank_env_vars[@]}; do
             eval node=\$$i
             if [ -n "$node" ] ; then
                 break
