@@ -721,15 +721,13 @@ fi
 
 # Prep ThreadSpotter before LD_PRELOAD get set
 if $use_ptts ; then
+    if [ -n "$dryrun" ] ; then
+        dryrun="$dryrun PTTS($node): "
+    fi
     if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then
         echo "ERROR: ParaTools ThreadSpotter not found on PATH"
         exit 1
     fi
-    pttsprefix="${PROFILEDIR:-.}/ptts"
-    if [ -d "$pttsprefix" ] ; then
-        $dryrun rm -rf "$pttsprefix"
-    fi
-    $dryrun mkdir -p "$pttsprefix"
     set_node
     if [ -z "$node" ] ; then
         echo "ERROR: Cannot determine node"
@@ -740,9 +738,8 @@ if $use_ptts ; then
         echo "ERROR: Cannot determine node count"
         exit 1
     fi
-    if [ -n "$dryrun" ] ; then
-        dryrun="$dryrun PTTS($node): "
-    fi
+    pttsprefix="${PROFILEDIR:-.}/ptts"
+    mkdir -p "$pttsprefix"
 fi
 
 if [ $qsub_mode = true ] ; then
@@ -862,6 +859,7 @@ else
             export LD_AUDIT=$ORIG_AUDIT_AUDIT
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
+        rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
         sample_ts -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
