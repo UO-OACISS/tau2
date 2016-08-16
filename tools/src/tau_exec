@@ -44,6 +44,7 @@ usage()
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -shmem        Track SHMEM events"
     echo "        -ptts         Run with ParaTools ThreadSpotter"
+    echo "        -ptts_aprun   Run with ParaTools ThreadSpotter under aprun"
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
@@ -93,7 +94,18 @@ set_node()
     if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
         # ThreadSpotter's sample_ts uses the same method to determine MPI rank,
         # see get_rank() in library/exe_path/path_substitute.cc 
-        for i in PMI_RANK OMPI_COMM_WORLD_RANK OMPI_MCA_ns_nds_vpid PMI_ID SLURM_PROCID LAMRANK MPI_RANKID MP_CHILD MP_RANK MPIRUN_RANK ; do
+        rank_env_vars=("PMI_RANK"
+                       "OMPI_COMM_WORLD_RANK"
+                       "OMPI_MCA_ns_nds_vpid"
+                       "PMI_ID"
+                       "SLURM_PROCID"
+                       "LAMRANK"
+                       "MPI_RANKID"
+                       "MP_CHILD"
+                       "MP_RANK"
+                       "MPIRUN_RANK"
+                       "ALPS_APP_PE")
+        for i in ${rank_env_vars[@]}; do
             eval node=\$$i
             if [ -n "$node" ] ; then
                 break
@@ -239,6 +251,7 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
+use_ptts_aprun=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -331,7 +344,11 @@ for arg in "$@" ; do
           use_ptts=true
           shift
           ;;
-      -ebs)
+      -ptts_aprun)
+          use_ptts=true
+          shift
+          ;;
+     -ebs)
           tau_use_ebs=true
           shift
           ;;
@@ -720,16 +737,14 @@ if [ $verbose = "true" ] ; then
 fi
 
 # Prep ThreadSpotter before LD_PRELOAD get set
-if $use_ptts ; then
+if [ $use_ptts ] || [ $use_ptts_aprun ] ; then
+    if [ -n "$dryrun" ] ; then
+        dryrun="$dryrun PTTS($node): "
+    fi
     if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then
         echo "ERROR: ParaTools ThreadSpotter not found on PATH"
         exit 1
     fi
-    pttsprefix="${PROFILEDIR:-.}/ptts"
-    if [ -d "$pttsprefix" ] ; then
-        $dryrun rm -rf "$pttsprefix"
-    fi
-    $dryrun mkdir -p "$pttsprefix"
     set_node
     if [ -z "$node" ] ; then
         echo "ERROR: Cannot determine node"
@@ -740,9 +755,8 @@ if $use_ptts ; then
         echo "ERROR: Cannot determine node count"
         exit 1
     fi
-    if [ -n "$dryrun" ] ; then
-        dryrun="$dryrun PTTS($node): "
-    fi
+    pttsprefix="${PROFILEDIR:-.}/ptts"
+    mkdir -p "$pttsprefix"
 fi
 
 if [ $qsub_mode = true ] ; then
@@ -835,7 +849,7 @@ else
     if $python_wrapper ; then
       $dryrun python -m tau_python_wrapper $@
       retval=$?
-    elif $use_ptts ; then
+    elif [ $use_ptts ] || [ $use_ptts_aprun ] ; then
         # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
         if [ -n "$dryrun" ] ; then
             echo "ERROR: dryrun not implemented for ptts"
@@ -862,7 +876,16 @@ else
             export LD_AUDIT=$ORIG_AUDIT_AUDIT
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
-        sample_ts -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
+        rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
+
+	if $use_ptts_aprun ; then
+	  pttschild="-s 1 "
+	elif $use_ptts ; then
+          pttschild="-s 0 "
+	fi
+
+        sample_ts "$pttschild" -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
+
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
         wait $child_pid
