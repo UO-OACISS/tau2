@@ -624,13 +624,15 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     }
 
     argtypenamefort = argtypename;
-    if(argtypenamefort.compare(0, 3, "int") == 0) {
-      argtypenamefort.erase(0, 3);
-      argtypenamefort.insert(0, "SHMEM_FINT");
-    }
-    if(argtypenamefort.compare(0, 6, "size_t") == 0) {
-      argtypenamefort.erase(0, 6);
-      argtypenamefort.insert(0, "SHMEM_FINT");
+    if(shmem_wrapper) {
+      if(argtypenamefort.compare(0, 3, "int") == 0) {
+        argtypenamefort.erase(0, 3);
+        argtypenamefort.insert(0, "SHMEM_FINT");
+      }
+      if(argtypenamefort.compare(0, 6, "size_t") == 0) {
+        argtypenamefort.erase(0, 6);
+        argtypenamefort.insert(0, "SHMEM_FINT");
+      }
     }
     int pos3 = argtypenamefort.find("*");
     if(pos3 == string::npos) {
@@ -952,7 +954,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     impl << "}\n" << endl;
 #endif
   }
-  if (runtime == WRAPPER_INTERCEPT) {
+  if (runtime == WRAPPER_INTERCEPT && shmem_wrapper) {
 /*
     printFunctionNameInOutputFile(r, impl, "  ", sig);
     impl << "{" << endl;
