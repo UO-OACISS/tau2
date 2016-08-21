@@ -9203,7 +9203,24 @@ fi
 
 if [ $intel = yes ] ; then
     if [ $openmp = yes ] ; then
-	fixmakeargs="$fixmakeargs INTELOPENMP"
+cat <<EOF > intel_openmptest.c
+#include <omp.h>
+int main() {
+  return omp_get_max_threads();
+}
+EOF
+	if  $c_compiler intel_openmptest.c -qopenmp -o intel_openmptest 1> /dev/null 2>&1 ; then
+	  fixmakeargs="$fixmakeargs INTELOPENMP"
+        else
+	  if $c_compiler intel_openmptest.c -fopenmp -o intel_openmptest 1> /dev/null 2>&1 ;  then
+	    fixmakeargs="$fixmakeargs INTEL_FOPENMP"
+	  else
+	    echo "Warning: INTEL : Neither -qopenmp nor -fopenmp options work. Going with the older -fopenmp option for now."
+	    fixmakeargs="$fixmakeargs INTEL_FOPENMP"
+          fi
+        fi
+	/bin/rm -f intel_openmptest.c intel_openmptest
+
     fi
 fi 
 
