@@ -5911,7 +5911,12 @@ fi
 libunwind=libunwind-1.1
 libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
-libunwinddir=${targetdir}/${architecture}
+if [ "x$unwind_dir" = "x" ]; then 
+  libunwinddir=${targetdir}/${architecture}
+else
+  libunwinddir=$unwind_dir
+fi
+
 libunwind_name=unwind
 if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwind=libunwind-mic-1.1
@@ -8711,7 +8716,11 @@ fi
 tauscorep=scorep
 tauscoreptgz=$tauscorep.tgz
 tauscorepurl=http://tau.uoregon.edu/$tauscoreptgz
-tauscorepdir=${targetdir}/${architecture}
+if [ "x$scorepdir" = "x" ]; then
+  tauscorepdir=${targetdir}/${architecture}
+else 
+  tauscorepdir=$scorepdir
+fi
 tauscorep_name=scorep
 
 if [ "x$tauscorepdir" != "x" -a -d "$tauscorepdir" ] ; then
