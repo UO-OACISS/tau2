@@ -5911,7 +5911,12 @@ fi
 libunwind=libunwind-1.1
 libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
-libunwinddir=${targetdir}/${architecture}
+if [ "x$unwind_dir" = "x" ]; then 
+  libunwinddir=${targetdir}/${architecture}
+else
+  libunwinddir=$unwind_dir
+fi
+
 libunwind_name=unwind
 if [ $machine = mic_linux -o $craymic = yes ] ; then
   libunwind=libunwind-mic-1.1
@@ -8711,7 +8716,11 @@ fi
 tauscorep=scorep
 tauscoreptgz=$tauscorep.tgz
 tauscorepurl=http://tau.uoregon.edu/$tauscoreptgz
-tauscorepdir=${targetdir}/${architecture}
+if [ "x$scorepdir" = "x" ]; then
+  tauscorepdir=${targetdir}/${architecture}
+else 
+  tauscorepdir=$scorepdir
+fi
 tauscorep_name=scorep
 
 if [ "x$tauscorepdir" != "x" -a -d "$tauscorepdir" ] ; then
@@ -9203,7 +9212,24 @@ fi
 
 if [ $intel = yes ] ; then
     if [ $openmp = yes ] ; then
-	fixmakeargs="$fixmakeargs INTELOPENMP"
+cat <<EOF > intel_openmptest.c
+#include <omp.h>
+int main() {
+  return omp_get_max_threads();
+}
+EOF
+	if  $c_compiler intel_openmptest.c -qopenmp -o intel_openmptest 1> /dev/null 2>&1 ; then
+	  fixmakeargs="$fixmakeargs INTELOPENMP"
+        else
+	  if $c_compiler intel_openmptest.c -fopenmp -o intel_openmptest 1> /dev/null 2>&1 ;  then
+	    fixmakeargs="$fixmakeargs INTEL_FOPENMP"
+	  else
+	    echo "Warning: INTEL : Neither -qopenmp nor -fopenmp options work. Going with the older -fopenmp option for now."
+	    fixmakeargs="$fixmakeargs INTEL_FOPENMP"
+          fi
+        fi
+	/bin/rm -f intel_openmptest.c intel_openmptest
+
     fi
 fi 
 
