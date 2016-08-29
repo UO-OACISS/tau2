@@ -1544,7 +1544,7 @@ int shmemp_my_pe_()  {
   int retval = 0;
   TAU_PROFILE_TIMER(t,"int shmemp_my_pe_(void) C", "", TAU_USER);
   TAU_PROFILE_START(t);
-  retval  =   p_my_pe_();
+  retval  =   p_my_pe();
   TAU_PROFILE_STOP(t);
   return retval;
 

@@ -1,0 +1,7 @@
+                   <tr>
+                       <td align="right"><h3><a href="../node_%NODE%/front.html">%NODE%</a></h3></td>
+                       <td align="center" height="25px"><img src="../node_%NODE%/bandwidth_gauge.png" height="25px"/></td>
+                       <td align="center" height="25px"><img src="../node_%NODE%/latency_gauge.png" height="25px"/></td>
+                       <td align="center" height="25px"><img src="../node_%NODE%/locality_gauge.png" height="25px"/></td>
+                       <td align="center" height="25px"><img src="../node_%NODE%/threading_gauge.png" height="25px"/></td>
+                    </tr>

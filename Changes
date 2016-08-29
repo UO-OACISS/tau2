@@ -31,6 +31,14 @@ Version 2.25 changes (from 2.24):
 18. Added support for MPI-T interface (TAU_TRACK_MPI_T_PVARS, TAU_MPI_T_CVAR_METRICS, TAU_MPI_T_CVAR_VALUES). 
 19. When a file is excluded from instrumentation, it is not parsed or compiled with compInst. 
 20. Added APEX measurement library.
+21. Added OpenSHMEM wrapper generator. 
+22. Added -scorep=download configuration option to build TAU with Score-P. 
+23. Updated CUDA support. 
+24. OMPT updates. 
+25. Added support for Cray KNL systems (module load craype-mic-knl). 
+26. Fixed Opari2 compilation issues on Cray. 
+27. Added support for launching ParaTools ThreadSpotter through tau_exec (-ptts). 
+
 
  
 Version 2.24 changes (from 2.23):

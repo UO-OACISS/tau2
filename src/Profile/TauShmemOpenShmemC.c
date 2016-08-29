@@ -12,6 +12,7 @@ static int tau_shmem_tagid_f=0 ;
 /* This section contains old API that are not part of openshmem.org specification
  *
  */
+#ifdef TAU_PSHMEM_OLD_API
 void pshmem_init (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
@@ -21,6 +22,14 @@ void pshmem_finalize (void)
 {
     TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
 }  
+#endif /* TAU_PSHMEM_OLD_API */
+
+/* Fix for OpenSHMEM 1.2 */
+char * pshmem_nodename (void)
+{
+    TAU_VERBOSE("TAU: WARNING - Deprecated OpenSHMEM routine: %s\n", __FUNCTION__);
+    return NULL;
+}  
 
 #ifdef TAU_DEPRECATED_PSHMEM_ROUTINES
 char * pshmem_nodename (void)
@@ -29,6 +38,7 @@ char * pshmem_nodename (void)
     return NULL;
 }  
 #endif /* TAU_DEPRECATED_PSHMEM_ROUTINES */
+
 
 int pshmem_version (int *major, int *minor)
 {
@@ -1146,10 +1156,10 @@ int shmem_pe_accessible(int a1)  {
    shmem_addr_accessible
  **********************************************************/
 
-int shmem_addr_accessible(void * a1, int a2)  {
+int shmem_addr_accessible(const void * a1, int a2)  {
 
   int retval = 0;
-  TAU_PROFILE_TIMER(t,"int shmem_addr_accessible(void *, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"int shmem_addr_accessible(const void *, int) C", "", TAU_USER);
   TAU_PROFILE_START(t);
   retval  =   pshmem_addr_accessible(a1, a2);
   TAU_PROFILE_STOP(t);
@@ -2605,6 +2615,8 @@ int shmem_test_lock(long * a1)  {
 void shmem_init()  {
 
   TAU_PROFILE_TIMER(t,"void shmem_init(void) C", "", TAU_USER);
+  Tau_create_top_level_timer_if_necessary();
+  //printf("called start in shmem_init()\n");
   TAU_PROFILE_START(t);
    pshmem_init();
   tau_totalnodes(1,_num_pes());
@@ -2624,6 +2636,8 @@ void shmem_finalize()  {
   TAU_PROFILE_START(t);
    pshmem_finalize();
   TAU_PROFILE_STOP(t);
+  Tau_stop_top_level_timer_if_necessary();
+  //printf("Called stop in shmem_finalize();\n");
 
 }
 
