@@ -1594,6 +1594,18 @@ int * resultlen;
 
   return returnVal;
 }
+int Tau_MPI_T_initialization(void) {
+#ifdef TAU_MPI_T
+  int returnVal;
+  if (TauEnv_get_track_mpi_t_pvars()) {
+    Tau_mpi_t_initialize();
+  }
+  if (TauEnv_get_cvar_metrics() != (const char *) NULL) {
+    returnVal = Tau_mpi_t_cvar_initialize();
+  }
+  return returnVal;
+#endif /* TAU_MPI_T */
+}
 
 int  MPI_Init( argc, argv )
 int * argc;
@@ -1603,6 +1615,8 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+  if(Tau_get_usesMPI() == 0)
+  {
 
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
@@ -1611,8 +1625,7 @@ char *** argv;
   
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
-  Tau_mpi_t_initialize();
-  returnVal = Tau_mpi_t_cvar_initialize();
+  Tau_MPI_T_initialization();
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init( argc, argv );
@@ -1656,6 +1669,10 @@ char *** argv;
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncClocks();
   }
+  }
+  else {
+    returnVal = 0;
+  }
 
 
   return returnVal;
@@ -1680,8 +1697,7 @@ int *provided;
  
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
-  Tau_mpi_t_initialize();
-  returnVal = Tau_mpi_t_cvar_initialize();
+  returnVal = Tau_MPI_T_initialization();
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );

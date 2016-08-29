@@ -176,7 +176,11 @@ case $1 in
 
      oparidir=*)
         oparidir=`echo $1 | sed -e 's/^oparidir=//'`
-	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	    echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	    if [ -d ${oparidir} ] ; then
+		  opariincdir=-I${oparidir}/include
+	      echo "s,^OPARIINCDIR=.*$,OPARIINCDIR=${opariincdir},g" >> $sedout
+		fi
 	;;
 
      oparicomp=*)
@@ -828,6 +832,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     OPENSHMEM_PSHMEM)
+        echo NOTE: Using the TAU OpenSHMEM Profiling Interface using PSHMEM
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      OPENMPI_SHMEM)
         echo NOTE: Using the TAU OpenMPI OpenSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -846,6 +855,12 @@ case $1 in
      GPSHMEM)
         echo NOTE: Using the TAU GPSHMEM/PGPSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     shmemdirargs=*)
+        shmemdir=`echo $1 | sed -e 's/^shmemdirargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_SHMEM_DIR=\(.*\)@TAU_SHMEM_DIR=$shmemdir@g" >> $sedout
+        #echo "SHMEMDIR=$shmemdir"
         ;;
 
      shmemincargs=*)
@@ -1670,6 +1685,10 @@ case $1 in
 	;;
      INTELOPENMP)
 	echo "NOTE: Using Intel's OpenMP options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     INTEL_FOPENMP)
+	echo "NOTE: Using Intel's older -fopenmp OpenMP option ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      GNUOPENMP)

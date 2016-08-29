@@ -15,7 +15,11 @@ import java.util.StringTokenizer;
 import javax.swing.JFrame;
 
 import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.Database;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.View.ViewRule;
@@ -262,8 +266,28 @@ public class Utilities {
 		boolean message = false;
     PerfExplorerServer server = getServer();
 		try {
-		t.deleteTrial(server.getDB(), t.getID());
+		Trial.deleteTrial(server.getDB(), t.getID());
 		} catch (SQLException e) {}
+	}
+	
+	public static void saveMetric(Trial t, Metric metric){
+		boolean message = false;
+		if (metric != null) {
+			Database database = getServer().getDB().getDatabase();
+			
+			
+			DatabaseAPI databaseAPI = new DatabaseAPI();
+			try {
+				databaseAPI.initialize(database);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+
+			if (databaseAPI != null) {
+				databaseAPI.saveTrial(t,metric);
+				databaseAPI.terminate();
+			}
+		}
 	}
 
 	public static List<Application> getApplications () {
