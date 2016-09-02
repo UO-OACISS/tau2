@@ -630,6 +630,12 @@ public class Function implements Serializable, Comparable<Function> {
 
     public void setSourceRegion(SourceRegion sourceRegion) {
     	this.sourceLink = sourceRegion;
+    	if(sourceRegion.getShortName()==null){
+    		this.sourceLink=Function.getSourceLink(this.name);
+    	}
+    	if(this.short_name==null){
+    		this.short_name=this.sourceLink.getShortName();
+    	}
     }
 
 	public String getShortName() {
@@ -637,6 +643,9 @@ public class Function implements Serializable, Comparable<Function> {
 	}
 
 	public void setShortName(String short_name) {
+		if(short_name==null){
+			System.out.println("null short name");
+		}
 		this.short_name = short_name;
 	}
 
