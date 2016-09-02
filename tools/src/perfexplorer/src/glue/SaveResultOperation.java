@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -66,6 +67,11 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		super(inputs);
 		// TODO Auto-generated constructor stub
 	}
+	
+	private DataSource dataSource = null;
+	public void setDataSource(DataSource dataSource){
+		this.dataSource = dataSource;
+	}
 
 	/* (non-Javadoc)
 	 * @see glue.PerformanceAnalysisOperation#processData()
@@ -83,7 +89,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 				try {
 					db.setAutoCommit(false);
 
-					Map<String,Integer> events= insertEvents( input.getEvents());		 
+						 
 					//events= insertEvents( input.getEvents());
 
 
@@ -99,6 +105,11 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 						oldMetricSet.add(tmpMetric.getName());
 					}
 
+
+					//TODO: This doesn't do anything, just testing another database call
+					//Map<TimerCallData, Integer> testMap = getCallDataMap();
+					//Map<String,Integer> funcNameIDMap=this.getFunctionNameIDMap();
+					
 					// for each metric in the trial, check to see if it exists already.
 					for (String metric : input.getMetrics()) {
 
@@ -118,26 +129,43 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 							//PreparedStatement statementTA2 = getStatementTA2();
 							PreparedStatement statementTV = getStatementTV(); // timer value
 
+							if(dataSource!=null){
+								
+							}
 							// need to insert a new metric
 							int metricID = insertMetric(metric);
-							for (String event : input.getEvents()) {
-								// check for / insert the event
-								int eventID = events.get(event);
-								curNode = 0;
-								curContext = 0;
-								curThread = -1;
-								for (int i = 0 ; i < accumulators.length ; i++) 
-									accumulators[i] = 0.0;
+							
 								for (Integer thread : input.getThreads()) {
+									Map<String,Integer> events= insertEvents( input.getEvents(),thread);	
+									
+									for (String event : input.getEvents()) {
+										// check for / insert the event
+										Integer eventIDI = events.get(event);
+										if(eventIDI==null){
+											continue;
+										}
+										int eventID=eventIDI.intValue();
+										curNode = 0;
+										curContext = 0;
+										curThread = -1;
+										for (int i = 0 ; i < accumulators.length ; i++) 
+										{
+											accumulators[i] = 0.0;
+										}
+									
+									
 									// insert the Interval Location Profile
 									double exclusive = input.getExclusive(thread, event, metric);
 									double inclusive =input.getInclusive(thread, event, metric);
 									double calls = input.getCalls(thread, event);
 									double sub = input.getSubroutines(thread, event);
-									
+									if(calls>0){
+										//System.out.println("inserting actual event: "+event+" for thread: "+thread+" with inclusive time: "+inclusive);
+										insertTV(statementTV, metricID, eventID, inclusive, exclusive);
+									}
 									//insertILP(statementILP, metricID, eventID, inclusive, exclusive, calls, sub);
 									// eventID is timer_calldata id; don't need calls & sub
-									insertTV(statementTV, metricID, eventID, inclusive, exclusive);
+									
 								}
 								//insertTotalAndAverage(statementTA1, statementTA2, input.getThreads().size(), metricID, eventID);
 							}
@@ -242,9 +270,16 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		buf.append(" values (?, ?, ?, ?, ?, ?)");
 		return db.prepareStatement(buf.toString());
 	}
-
-	private Map<String, Integer> insertEvents(Set<String> events) throws SQLException {
+	
+	private Map<String, Integer> insertEvents(Set<String> events, int thread) throws SQLException {
 		HashMap<String, Integer> map = new HashMap<String, Integer>();
+//		Map<Integer,String> reverseMap = new HashMap<Integer,String>();
+//		// The callpath map is from function to ID. we need the reverse, so build it.
+//		if (funcIDMap != null) {
+//			for (String key : funcIDMap.keySet()) {
+//				reverseMap.put(funcIDMap.get(key), key);
+//			}
+//		}
 
 		buf = new StringBuilder();
 		buf.append("insert into interval_event (trial, name) values (?, ?)");
@@ -271,15 +306,20 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		      }
 		      buf.append("FROM timer_callpath AS d JOIN cp ON (d.parent = cp.id) ");
 		      buf.append("join timer dt on d.timer = dt.id where dt.trial = " + trial.getID() + " ) ");
-		      buf.append("select cp.id from cp where cp.name = ? ");
+		      buf.append("select cp.id from cp ");
+		      buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = cp.id ");
+		      buf.append("left outer join thread h on tcd.thread = h.id ");
+		      buf.append("where cp.name = ? and h.thread_index = ? ");
 		      statement = db.prepareStatement(buf.toString());
 		      statement.setString(1, event);
-			
+			  statement.setInt(2, thread);
 			
 			//System.out.println(statement);
 			ResultSet results = statement.executeQuery();
+			//int timerID=-1;
 			if (results.next() != false) {
 				eventID = results.getInt(1);
+				//timerID=results.getInt(3);
 			}
 			results.close();
 			statement.close();
@@ -288,7 +328,32 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 				preStatement.setInt(1, trial.getID());
 				preStatement.setString(2, event);	
 			}
-			map.put(event, eventID);
+			
+			
+			buf = new StringBuilder();
+			buf.append("SELECT timer_call_data.id ");
+			buf.append("FROM public.timer_call_data, public.timer_callpath, public.timer, public.thread ");
+			buf.append("WHERE timer_call_data.timer_callpath = timer_callpath.id AND timer_call_data.thread = thread.id "
+					+ "AND timer_callpath.timer = timer.id AND "
+					+ "timer.trial = ? AND "
+					+ "timer_callpath.id = ? AND "
+					+ "thread.thread_index = ?;");
+
+			statement = db.prepareStatement(buf.toString());
+			statement.setInt(1, trial.getID());
+			statement.setInt(2, eventID);
+			statement.setInt(3, thread);
+			results = statement.executeQuery();
+			int tcd_id=-1;
+			if (results.next() != false) {
+				tcd_id=results.getInt(1);
+			
+			
+			//System.out.println("SAVE: For Function: "+event+" on thread: "+thread+" id is: "+eventID +" tcd_id is: "+tcd_id);
+			map.put(event, tcd_id);
+			}
+			//else
+			//System.out.println("DID NOT SAVE: For Function: "+event+" on thread: "+thread+" id is: "+eventID +" tcd_id is: "+tcd_id);
 		}
 		preStatement.executeBatch();
 		preStatement.close();	
@@ -390,7 +455,7 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 		}
 
 		statementTV.addBatch();
-		//	System.out.println(statementILP);
+			//System.out.println(statementTV);
 		//	statement.execute();
 		//	statement.close();		
 //		if (mainInclusive == 0.0) {
