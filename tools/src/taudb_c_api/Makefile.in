@@ -18,38 +18,38 @@ RANLIB=ranlib
 #CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2-master/apple/lib/Makefile.tau-pdt -optQuiet -optPreProcess
 #TEST_CONFIG=ccsm
 #TEST_CONFIG=sqlite
-TEST_CONFIG=taudbc
+TEST_CONFIG=postgres-test
 #TEST_CONFIG=regression_taudb
 #TEST_CONFIG=alcf_working
 #TEST_CONFIG=facets
 #TEST_TRIAL_ID=1 # alcf_working
 #TEST_TRIAL_ID=25 # ccsm
-TEST_TRIAL_ID=87 # taudbc
+TEST_TRIAL_ID=1 # taudbc
 
 ################# POSTGRESQL ####################
 TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
 
 # MacBook Air
-PQDIR=/Library/PostgreSQL/9.2
-DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/include
-DB_LIBRARIES=-L$(PQDIR)/lib -lpq
-XML_INCLUDES=-I/usr/include/libxml2
-XML_LIBRARIES=-L/opt/local/lib -lxml2
-ZLIB_INCLUDES=
-ZLIB_LIBRARIES=-lz
-UUID_LIBRARIES=
+#PQDIR=/Library/PostgreSQL/9.2
+#DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/include
+#DB_LIBRARIES=-L$(PQDIR)/lib -lpq
+#XML_INCLUDES=-I/usr/include/libxml2
+#XML_LIBRARIES=-L/opt/local/lib -lxml2
+#ZLIB_INCLUDES=
+#ZLIB_LIBRARIES=-lz
+#UUID_LIBRARIES=
 
 #Ubuntu(~2015): apt-get install libpq-dev libxslt1-dev indent
-# PQINCDIR=/usr/include/postgresql
-# PQLIBDIR=/usr/lib/x86_64-linux-gnu
-# DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQINCDIR)/internal -I$(PQINCDIR)
-# DB_LIBRARIES=-L$(PQLIBDIR) -lpq -Wl,-rpath=$(PQLIBDIR) -lm
-# XML_INCLUDES=-I/usr/include/libxml2
-# XML_LIBRARIES=-lxml2
-# ZLIB_INCLUDES=
-# ZLIB_LIBRARIES=-lz
-# UUID_LIBRARIES=-luuid
-# SYSTEM_DEFINE=-D__X86_64_LINUX__
+ PQINCDIR=/usr/include/postgresql
+ PQLIBDIR=/usr/lib/x86_64-linux-gnu
+ DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQINCDIR)/internal -I$(PQINCDIR)
+ DB_LIBRARIES=-L$(PQLIBDIR) -lpq -Wl,-rpath=$(PQLIBDIR) -lm
+ XML_INCLUDES=-I/usr/include/libxml2
+ XML_LIBRARIES=-lxml2
+ ZLIB_INCLUDES=
+ ZLIB_LIBRARIES=-lz
+ UUID_LIBRARIES=-luuid
+ SYSTEM_DEFINE=-D__X86_64_LINUX__
 
 # Paratools03
 # PQDIR=/usr/local/pgsql
