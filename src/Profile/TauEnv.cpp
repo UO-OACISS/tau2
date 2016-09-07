@@ -220,6 +220,7 @@ static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
 static int env_track_power = 0;
 static int env_track_memory_footprint = 0;
+static int env_show_memory_functions = 0;
 static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
@@ -764,6 +765,10 @@ int TauEnv_get_track_memory_footprint() {
   return env_track_memory_footprint;
 }
 
+int TauEnv_get_show_memory_functions() {
+  return env_show_memory_functions;
+}
+
 int TauEnv_get_track_memory_leaks() {
   return env_track_memory_leaks;
 }
@@ -1109,6 +1114,16 @@ void TauEnv_initialize()
     } else {
       TAU_METADATA("TAU_TRACK_HEAP", "off");
       env_track_memory_heap = 0;
+    }
+
+    tmp = getconf("TAU_SHOW_MEMORY_FUNCTIONS");
+    if (parse_bool(tmp, env_show_memory_functions)) {
+      TAU_VERBOSE("TAU: Show memory functions Enabled\n");
+      TAU_METADATA("TAU_SHOW_MEMORY_FUNCTIONS", "on");
+      env_show_memory_functions = 1;
+    } else {
+      TAU_METADATA("TAU_SHOW_MEMORY_FUNCTIONS", "off");
+      env_show_memory_functions = 0;
     }
 
     tmp = getconf("TAU_TRACK_MEMORY_FOOTPRINT");
