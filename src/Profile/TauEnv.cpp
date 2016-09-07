@@ -291,6 +291,7 @@ static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
+static int env_papi_multiplexing = 0;
 
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
@@ -771,6 +772,10 @@ int TauEnv_get_track_memory_headroom() {
   return env_track_memory_headroom;
 }
 
+int TauEnv_get_papi_multiplexing() {
+  return env_papi_multiplexing;
+}
+
 int TauEnv_get_track_io_params() {
   return env_track_io_params;
 }
@@ -1135,6 +1140,16 @@ void TauEnv_initialize()
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
+    }
+
+    tmp = getconf("TAU_PAPI_MULTIPLEXING");
+    if (parse_bool(tmp, env_papi_multiplexing)) {
+      TAU_VERBOSE("TAU: PAPI multiplexing Enabled\n");
+      TAU_METADATA("TAU_PAPI_MULTIPLEXING", "on");
+      env_papi_multiplexing = 1;
+    } else {
+      TAU_METADATA("TAU_PAPI_MULTIPLEXING", "off");
+      env_papi_multiplexing = 0;
     }
 
     // Setting TAU_MEMDBG_PROTECT_{ABOVE,BELOW,FREE} enables memory debugging.
