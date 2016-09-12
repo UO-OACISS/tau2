@@ -5595,7 +5595,7 @@ case $machine in
 	    fixmakeargs="$fixmakeargs IBM64PAPILINUX"
 	fi
 
-        if [ $c_compiler = xlc ] ; then
+        if [ $c_compiler = xlc -o $c_compiler=xlc_r ] ; then
             fixmakeargs="$fixmakeargs IBM64LINUX_XLC"
         fi
 
