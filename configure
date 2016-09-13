@@ -4650,6 +4650,59 @@ then
     esac
 fi
 
+if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
+    echo "MPIINC and MPILIB are not set!"
+    mpiinc_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+    then
+         mpiinc=$mpiinc_search
+	 echo "Using MPI include directory $mpiinc"
+	 echo "machine is $machine"
+    else
+         mpiinc_search=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+	 if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+	 then
+	   mpiinc=$mpiinc_search
+	   echo "Using MPI include directory $mpiinc"
+	 else
+	   if [ -d $mpiinc_search -a ! -r $mpiinc_search/mpi.h ] ; then
+	     if [ -r $mpiinc_search/mpich2/mpi.h -a "x$mpiinc" = "x" ] ; then
+	       mpiinc=$mpiinc_search/mpich2
+	       echo "Correction: Using MPI include directory $mpiinc instead"
+	     else
+	       if [ -r $mpiinc_search/openmpi/mpi.h -a "x$mpiinc" = "x" ] ; then
+	         mpiinc=$mpiinc_search/openmpi
+	         echo "Correction: Using MPI include directory $mpiinc instead"
+	       else
+		 mpiinc=""
+	       fi
+	     fi
+	   else
+	     mpiinc=""
+	   fi
+         fi
+    fi
+    if [ ! -r $mpiinc/mpi.h -a -r $mpiinc/mpich2/mpi.h ] ; then
+	mpiinc=$mpiinc/mpich2
+	echo "Correction: Using MPI include directory $mpiinc instead"
+    fi
+
+    mpilib=""
+    mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
+    if [ ! -d $mpilib_search ] ; then
+    # Try the ".../lib64" directory instead of ".../lib"
+      mpilib_search=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
+    fi
+    if [ -d $mpilib_search -a "x$mpilib" = "x" ] ; then
+      mpilib=$mpilib_search
+      echo "Using MPI lib directory $mpilib"
+    else
+      mpilib=""
+    fi
+  
+
+fi
+# echo "MPI include and libs checks done"
 
 
 
@@ -5599,7 +5652,7 @@ case $machine in
             fixmakeargs="$fixmakeargs IBM64LINUX_XLC"
         fi
 
-        if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 ] ; then
+        if [ $fortran_compiler = ibm -o $fortran_compiler = ibm64 -o $fortran_compiler = xlf ] ; then
             fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
         fi
 
@@ -6271,6 +6324,11 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
         mpiwarnings="-Werror"
 	msuf=c
     fi
+    if [ $c_compiler = "xlc" -o $c_compiler="xlc_r" ]
+    then
+        mpiwarnings="-qhalt=w"
+    fi
+ 
     cat <<EOF > mpi_thread_test.$msuf
   #include <mpi.h>
 
@@ -6589,7 +6647,7 @@ else
   if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
 
-    $echo "Checking for OpenMPI 3 const interface... ${nnl}"
+    $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
     if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     # MPI3 and OpenMPI detected. Boo.
         echo "no"
