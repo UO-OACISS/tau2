@@ -3693,7 +3693,11 @@ case $cxx_compiler in
 	if [ "$machine" = "bgp" -o "$machine" = "bgq" ] ; then
 	    ibm_compiler=gxlc++
 	else
+	   if [ "$machine" = ibm64linux ] ; then 
+	    ibm_compiler=$c_compiler
+           else
 	    ibm_compiler=$cxx_compiler
+           fi
 	fi
 	compilerLocation=`which $ibm_compiler`
 
@@ -3708,7 +3712,7 @@ case $cxx_compiler in
 	    if [ "x$readlink" != "x" ] ; then
 		if [ -x "$readlink" ] ; then
 		    if [ -h $compilerLocation ] ; then
-			compilerLocation=`readlink $compilerLocation`
+			compilerLocation=`readlink -f $compilerLocation`
 		    fi
 		fi
 	    fi
