@@ -2404,7 +2404,9 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/perfdmf/etc/* ${targetdir}/etc/.
 
     # copy PTTS base html files
-    cp ${tauroot}/etc/ptts.html.* ${targetdir}/etc/.
+    if [ ! -r ${targetdir}/etc/ptts.html.index ] ; then
+      cp ${tauroot}/etc/ptts.html.* ${targetdir}/etc/.
+    fi 
 
     if [ ! -d ${targetdir}/tools/src/perfdmf/etc ] ; then
 	mkdir -p ${targetdir}/tools/src/perfdmf/etc
