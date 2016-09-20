@@ -203,15 +203,15 @@ if(  tid >= TAU_MAX_THREADS) {
       return;
     }
     if(TauEnv_get_papi_multiplexing()) {
-      ret = PAPI_assign_eventset_component( ThreadList[tid]->EventSet[i], 0 );
-      if ( PAPI_OK != ret ) {
-        fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(ret));
-        return -1;
+      rc = PAPI_assign_eventset_component( PapiLayer::ThreadList[tid]->EventSet[i], 0 );
+      if ( PAPI_OK != rc ) {
+        fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
+        return;
       }
-      ret = PAPI_set_multiplex(PapiLayer::ThreadList[tid]->EventSet[i]);
-      if ( PAPI_OK != ret ) {
-        fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(ret));
-        return -1;
+      rc = PAPI_set_multiplex(PapiLayer::ThreadList[tid]->EventSet[i]);
+      if ( PAPI_OK != rc ) {
+        fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(rc));
+        return;
       }
     }
   }
