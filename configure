@@ -6330,7 +6330,7 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
         mpiwarnings="-Werror"
 	msuf=c
     fi
-    if [ $c_compiler = "xlc" -o $c_compiler="xlc_r" ]
+    if [ $c_compiler = "xlc" -o $c_compiler = "xlc_r" ]
     then
         mpiwarnings="-qhalt=w"
     fi
@@ -6413,11 +6413,11 @@ cat <<EOF > openmpi3const.c
 #define TAU_MPICH3_CONST
 #endif
 
-int  MPI_Address( location, address )
+int  MPI_Get_address( location, address )
 TAU_MPICH3_CONST void * location;
 MPI_Aint * address;
 {
-  return PMPI_Address( location, address );
+  return PMPI_Get_address( location, address );
 }
 
 EOF
@@ -6655,13 +6655,13 @@ else
 
     $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
     if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
-    # MPI3 and OpenMPI detected. Boo.
-        echo "no"
-        fixmakeargs="$fixmakeargs MPICH3_CONST"
-    else
         echo "yes"
     # MPICH requires the const keyword
         fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
+    else
+    # MPI3 and OpenMPI detected. Boo.
+        echo "no"
+        fixmakeargs="$fixmakeargs MPICH3_CONST"
     fi
   else
     echo "no"
