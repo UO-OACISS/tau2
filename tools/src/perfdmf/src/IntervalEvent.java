@@ -323,7 +323,7 @@ public class IntervalEvent {
 					query.append("cp.name || ' => ' || dt.name FROM ");
 		        }
 				query.append("timer_callpath AS d JOIN cp on (d.parent = cp.id) " +
-        			"JOIN timer dt on d.timer = dt.idi " +
+        			"JOIN timer dt on d.timer = dt.id " +
 					"where dt.trial = " + newTrialID + " ) " +
         			"SELECT distinct cp.id, cp.timer, cp.name, t.trial " +
         			"FROM cp join timer t on cp.timer = t.id " +

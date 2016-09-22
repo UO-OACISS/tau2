@@ -202,6 +202,18 @@ if(  tid >= TAU_MAX_THREADS) {
       fprintf(stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
       return;
     }
+    if(TauEnv_get_papi_multiplexing()) {
+      rc = PAPI_assign_eventset_component( PapiLayer::ThreadList[tid]->EventSet[i], 0 );
+      if ( PAPI_OK != rc ) {
+        fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
+        return;
+      }
+      rc = PAPI_set_multiplex(PapiLayer::ThreadList[tid]->EventSet[i]);
+      if ( PAPI_OK != rc ) {
+        fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(rc));
+        return;
+      }
+    }
   }
 
   /* PAPI 3 support goes here */
@@ -306,6 +318,18 @@ int PapiLayer::initializeThread(int tid)
           fprintf (stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
           RtsLayer::UnLockDB();
           return -1;
+        }
+        if(TauEnv_get_papi_multiplexing()) {
+          rc = PAPI_assign_eventset_component( ThreadList[tid]->EventSet[i], 0 );
+          if ( PAPI_OK != rc ) {
+            fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(rc));
+            exit(1);
+          }
+          rc = PAPI_set_multiplex(ThreadList[tid]->EventSet[i]);
+          if ( PAPI_OK != rc ) {
+            fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(rc));
+            return -1;
+          }
         }
       }
 
@@ -745,6 +769,14 @@ int PapiLayer::initializePerfRAPL(int tid) {
     exit(1);
   }
 
+  if(TauEnv_get_papi_multiplexing()) {
+    ret = PAPI_set_multiplex(ThreadList[tid]->EventSet[rapl_cid]);
+    if ( PAPI_OK != ret ) {
+      fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(ret));
+      exit(1);
+    }
+  }
+
 /* Check paranoid setting */
   FILE *para = fopen("/proc/sys/kernel/perf_event_paranoid", "r");
   int para_val;
@@ -857,6 +889,19 @@ int PapiLayer::initializeRAPL(int tid) {
       if (ret != PAPI_OK) {
         printf("WARNING: TAU couldn't create a PAPI eventset. Please check the LD_LIBRARY_PATH and ensure that there is no mismatch between the version of papi.h and the papi library that is loaded\n");
         return -1;
+      }
+
+      if(TauEnv_get_papi_multiplexing()) {
+        ret = PAPI_assign_eventset_component( ThreadList[tid]->EventSet[rapl_cid], 0 );
+        if ( PAPI_OK != ret ) {
+          fprintf(stderr, "PAPI_assign_eventset_component failed (%s)\n", PAPI_strerror(ret));
+          return -1;
+        }
+        ret = PAPI_set_multiplex(ThreadList[tid]->EventSet[rapl_cid]);
+        if ( PAPI_OK != ret ) {
+          fprintf(stderr, "PAPI_set_multiplex failed (%s)\n", PAPI_strerror(ret));
+          return -1;
+        }
       }
     
       /* Add RAPL events to the event set */
