@@ -434,7 +434,7 @@ int RtsLayer::getPid()
 // Returns the **system** thread ID.  DO NOT use this to index arrays!
 //
 int RtsLayer::getTid() {
-#if defined(__linux) && !(defined(TAU_BGP) || defined(TAU_BGQ))
+#if defined(__linux) && !(defined(TAU_BGP) || defined(TAU_BGQ) || defined(_ARCH_PPC))
   return syscall(__NR_gettid);
 #else
   return 0;

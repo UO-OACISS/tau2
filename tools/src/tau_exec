@@ -871,7 +871,9 @@ else
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
         rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
+	echo "Finalizing sample_ts $@ on rank $node" 
         sample_ts -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
+	sleep 10
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
         wait $child_pid

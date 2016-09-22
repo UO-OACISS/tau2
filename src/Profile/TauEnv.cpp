@@ -220,6 +220,7 @@ static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
 static int env_track_power = 0;
 static int env_track_memory_footprint = 0;
+static int env_show_memory_functions = 0;
 static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
@@ -291,6 +292,7 @@ static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
+static int env_papi_multiplexing = 0;
 
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
@@ -763,12 +765,20 @@ int TauEnv_get_track_memory_footprint() {
   return env_track_memory_footprint;
 }
 
+int TauEnv_get_show_memory_functions() {
+  return env_show_memory_functions;
+}
+
 int TauEnv_get_track_memory_leaks() {
   return env_track_memory_leaks;
 }
 
 int TauEnv_get_track_memory_headroom() {
   return env_track_memory_headroom;
+}
+
+int TauEnv_get_papi_multiplexing() {
+  return env_papi_multiplexing;
 }
 
 int TauEnv_get_track_io_params() {
@@ -1106,6 +1116,16 @@ void TauEnv_initialize()
       env_track_memory_heap = 0;
     }
 
+    tmp = getconf("TAU_SHOW_MEMORY_FUNCTIONS");
+    if (parse_bool(tmp, env_show_memory_functions)) {
+      TAU_VERBOSE("TAU: Show memory functions Enabled\n");
+      TAU_METADATA("TAU_SHOW_MEMORY_FUNCTIONS", "on");
+      env_show_memory_functions = 1;
+    } else {
+      TAU_METADATA("TAU_SHOW_MEMORY_FUNCTIONS", "off");
+      env_show_memory_functions = 0;
+    }
+
     tmp = getconf("TAU_TRACK_MEMORY_FOOTPRINT");
     if (parse_bool(tmp, env_track_memory_footprint)) {
       TAU_VERBOSE("TAU: TAU_TRACK_MEMORY_FOOTPRINT VmRSS and VmHWM tracking Enabled\n");
@@ -1135,6 +1155,16 @@ void TauEnv_initialize()
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
+    }
+
+    tmp = getconf("TAU_PAPI_MULTIPLEXING");
+    if (parse_bool(tmp, env_papi_multiplexing)) {
+      TAU_VERBOSE("TAU: PAPI multiplexing Enabled\n");
+      TAU_METADATA("TAU_PAPI_MULTIPLEXING", "on");
+      env_papi_multiplexing = 1;
+    } else {
+      TAU_METADATA("TAU_PAPI_MULTIPLEXING", "off");
+      env_papi_multiplexing = 0;
     }
 
     // Setting TAU_MEMDBG_PROTECT_{ABOVE,BELOW,FREE} enables memory debugging.
