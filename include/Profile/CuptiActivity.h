@@ -201,14 +201,6 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 
 extern "C" x_uint64 TauTraceGetTimeStamp();
 
-uint8_t *activityBuffer;
-CUpti_SubscriberHandle subscriber;
-
-int number_of_streams;
-std::vector<int> streamIds;
-
-std::vector<TauContextUserEvent *> counterEvents;
-
 void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
 
 void Tau_cupti_register_buffer_creation(uint8_t** buffer, size_t* size, size_t* maxNumRecords);
@@ -237,13 +229,10 @@ bool function_is_memcpy(CUpti_CallbackId id, CUpti_CallbackDomain domain);
 bool function_is_launch(CUpti_CallbackId id);
 bool function_is_exit(CUpti_CallbackId id);
 
-bool registered_sync = false;
-
 bool cupti_api_runtime();
 bool cupti_api_driver();
 
 typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
-eventMap_t eventMap; 
 
 int gpu_occupancy_available(int deviceId);
 
@@ -266,51 +255,12 @@ int get_device_id();
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
 
 
-std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
-static std::map<uint32_t, SourceSampling> srcLocMap;
-
 #endif // CUPTI_API_VERSION >= 3
 
-std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
-//std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
-std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
-std::map<uint32_t, CUpti_ActivityContext> contextMap;
-std::list<std::string> kernelList;
-
-static std::map<uint32_t, FuncSampling> functionMap;
-static std::map<uint32_t, std::list<InstrSampling> > instructionMap; // indexing by functionId 
-static std::map<std::pair<int, int>, CudaOps> map_disassem;
-static std::map<std::string, ImixStats> map_imix_static;
-static std::map<std::string, ImixStats> map_imix_dynamic;
 
 #ifndef TAU_MAX_GPU_DEVICES
 #define TAU_MAX_GPU_DEVICES 16
 #endif
-
-// sass output
-FILE *fp_source[TAU_MAX_GPU_DEVICES];
-FILE *fp_instr[TAU_MAX_GPU_DEVICES];
-FILE *fp_func[TAU_MAX_GPU_DEVICES];
-FILE *cubin;
-FILE *fp_imix_out[TAU_MAX_GPU_DEVICES];
-
-static int current_device_id = 0;
-static int current_context_id = 0;
-static int device_count_total = 1;
-static double recentTimestamp = 0;
-
-/* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
- * allocate/deallocate memory. So all the counters values need to be allocated
- * on the Stack. */
-
-uint64_t counters_at_last_launch[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {ULONG_MAX};
-uint64_t current_counters[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {0};
-
-int kernels_encountered[TAU_MAX_GPU_DEVICES] = {0};
-int kernels_recorded[TAU_MAX_GPU_DEVICES] = {0};
-
-bool counters_averaged_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
-bool counters_bounded_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
 
 void createFilePointerSass(int device_count);
 
@@ -331,58 +281,15 @@ typedef struct RuntimeApiTrace_st {
   uint64_t eventVal;
 } RuntimeApiTrace_t;
 
-void record_gpu_counters_at_launch(int device)
-{ 
-  kernels_encountered[device]++;
-  if (Tau_CuptiLayer_get_num_events() > 0 &&
-      !counters_averaged_warning_issued[device] && 
-      kernels_encountered[device] > 1) {
-    TAU_VERBOSE("TAU Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
-    counters_averaged_warning_issued[device] = true;
-    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
-    }
-  }
-  int n_counters = Tau_CuptiLayer_get_num_events();
-  if (n_counters > 0 && counters_at_last_launch[device][0] == ULONG_MAX) {
-    Tau_CuptiLayer_read_counters(device, counters_at_last_launch[device]);
-  }
-#ifdef TAU_CUPTI_DEBUG_COUNTERS
-  std::cout << "at launch (" << device << ") ====> " << std::endl;
-    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
-      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
-    }
-#endif
-}
+typedef std::map<uint32_t, CUpti_ActivityDevice> device_map_t;
+//static std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
+
+void record_gpu_counters_at_launch(int device);
   
-void record_gpu_counters_at_sync(int device)
-{
-  if (kernels_encountered[device] == 0) {
-   return;
-  }
-  Tau_CuptiLayer_read_counters(device, current_counters[device]);
-#ifdef TAU_CUPTI_DEBUG_COUNTERS
-  std::cout << "at sync (" << device << ") ====> " << std::endl;
-    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
-      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
-    }
-#endif
-}
+void record_gpu_counters_at_sync(int device);
 
-void clear_counters(int device)
-{
-  for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
-  {
-    counters_at_last_launch[device][n] = ULONG_MAX;
-  }
-  kernels_encountered[device] = 0;
-  kernels_recorded[device] = 0;
+void clear_counters(int device);
 
-}
-
-const char *last_recorded_kernel_name;
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
