@@ -1280,21 +1280,30 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
 
 
         for(i = 0; i < numEvents; i++) {
+	  bool found_two = false;
           eventIndex = TauMetrics_getEventIndex(eventIdArray[i]);
           vector<TauUserEvent*>::iterator it2;
-          for (it2 = TheEventDB().begin(); it2 != TheEventDB().end() && !found_one; ++it2) {
+          for (it2 = TheEventDB().begin(); it2 != TheEventDB().end() && !found_two; ++it2) {
             TauUserEvent *ue = *it2;
             //printf("testing %s vs %s.\n", fi->GetName(), ue->GetName().c_str());
     
             const char *str = ue->GetName().c_str();
             const char *suffix = fi->GetName();
     
-            if(strncmp(str, TauMetrics_getMetricName(eventIndex), strlen(TauMetrics_getMetricName(eventIndex))) == 0)
+            if (!str || !suffix)
+                continue;
+            size_t lenstr = strlen(str);
+            size_t lensuffix = strlen(suffix);
+            if (lensuffix >  lenstr) {
+                continue;
+            }
+            if(strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0 && 
+               strncmp(str, TauMetrics_getMetricName(eventIndex), strlen(TauMetrics_getMetricName(eventIndex))) == 0)
             {
               eventValueArray[i] = ue->GetMean(tid);
               //cout << "get name: " << ue->GetName() << endl;
               //cout << "get mean: " << ue->GetMean(tid) << endl;
-              break;
+	      found_two = true;
             }
           }
           //cout << "eventValueArray: " << eventValueArray[i] << endl;
