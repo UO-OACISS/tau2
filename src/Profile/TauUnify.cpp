@@ -22,6 +22,10 @@
 #include <mpi.h>
 #endif /* TAU_MPI */
 
+#ifdef TAU_SHMEM
+#include <shmem.h>
+#endif /* TAU_SHMEM */
+
 //#ifdef TAU_UNIFY
 
 #include <TauUtil.h>
@@ -90,6 +94,11 @@ int *Tau_unify_generateSortMap(EventLister *eventLister) {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
+#ifdef TAU_SHMEM
+  int rank, numRanks;
+  numRanks = shmem_n_pes();
+  rank = shmem_my_pe();
+#endif /* TAU_SHMEM */
 
   int numEvents = eventLister->getNumEvents();
   int *sortMap = (int*) TAU_UTIL_MALLOC(numEvents*sizeof(int));
@@ -239,6 +248,10 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
+#ifdef TAU_SHMEM
+  rank = shmem_my_pe();
+  size = shmem_n_pes();
+#endif /* TAU_SHMEM */
 
   // for internal timing
   x_uint64 start, end;
@@ -264,10 +277,17 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   // define our merge object
   unify_merge_object_t *mergedObject = NULL;
 
+#ifdef TAU_SHMEM
+  
+#else
   // use binomial heap (like MPI_Reduce) to communicate with parent/children
   int mask = 0x1;
   int parent = -1;
 
+#ifdef TAU_SHMEM
+  int *shrecvbuflen = shmem_malloc(sizeof(int));
+  char *shrecv_buf;
+#endif /* TAU_SHMEM */
   while (mask < numRanks) {
     if ((mask & rank) == 0) {
       int source = (rank | mask);
@@ -282,6 +302,9 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	// receive buffer length
 	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
+#ifdef TAU_SHMEM
+        shmem_int_get(shrecv_buflen, shrecvbuflen, 1, source);
+#endif /* TAU_SHMEM */
 
 	// Only receive and allocate memory if there's something to receive.
 	//   Note that this condition only applies to Atomic events.
@@ -293,6 +316,9 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	  // receive buffer
 	  PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
+#ifdef TAU_SHMEM
+
+#endif /* TAU_SHMEM */
 	  
 	  // add unification object to array
 	  unifyObjects->push_back(Tau_unify_processBuffer(recv_buf, source));
@@ -321,6 +347,8 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
       // send length
       PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
+#ifdef TAU_SHMEM
+#endif /* TAU_SHMEM */
       
       // Send data only if the buffer size is greater than 0.
       //   This applies only to Atomic events.
@@ -334,6 +362,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     }
     mask <<= 1;
   }
+#endif /* !TAU_SHMEM */
 
   int globalNumItems;
 
