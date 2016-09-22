@@ -6655,13 +6655,13 @@ else
 
     $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
     if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
-        echo "yes"
-    # MPICH requires the const keyword
-        fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
-    else
     # MPI3 and OpenMPI detected. Boo.
         echo "no"
         fixmakeargs="$fixmakeargs MPICH3_CONST"
+    else
+        echo "yes"
+    # MPICH requires the const keyword
+        fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
     fi
   else
     echo "no"
