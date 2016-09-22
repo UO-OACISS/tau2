@@ -10,6 +10,66 @@ static void *tau_handle = NULL;
 
 static int subscribed = 0;
 
+// From CuptiActivity.h
+uint8_t *activityBuffer;
+CUpti_SubscriberHandle subscriber;
+
+int number_of_streams;
+std::vector<int> streamIds;
+
+std::vector<TauContextUserEvent *> counterEvents;
+
+bool registered_sync = false;
+eventMap_t eventMap; 
+#if CUPTI_API_VERSION >= 3
+std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
+static std::map<uint32_t, SourceSampling> srcLocMap;
+#endif // CUPTI_API_VERSION >= 3
+
+device_map_t & __deviceMap()
+{
+  static device_map_t deviceMap;
+  return deviceMap;
+}
+//std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
+std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
+std::map<uint32_t, CUpti_ActivityContext> contextMap;
+std::list<std::string> kernelList;
+
+static std::map<uint32_t, FuncSampling> functionMap;
+static std::map<uint32_t, std::list<InstrSampling> > instructionMap; // indexing by functionId 
+static std::map<std::pair<int, int>, CudaOps> map_disassem;
+static std::map<std::string, ImixStats> map_imix_static;
+static std::map<std::string, ImixStats> map_imix_dynamic;
+
+// sass output
+FILE *fp_source[TAU_MAX_GPU_DEVICES];
+FILE *fp_instr[TAU_MAX_GPU_DEVICES];
+FILE *fp_func[TAU_MAX_GPU_DEVICES];
+FILE *cubin;
+FILE *fp_imix_out[TAU_MAX_GPU_DEVICES];
+
+static int current_device_id = 0;
+static int current_context_id = 0;
+static int device_count_total = 1;
+static double recentTimestamp = 0;
+
+/* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
+ * allocate/deallocate memory. So all the counters values need to be allocated
+ * on the Stack. */
+
+uint64_t counters_at_last_launch[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {ULONG_MAX};
+uint64_t current_counters[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {0};
+
+int kernels_encountered[TAU_MAX_GPU_DEVICES] = {0};
+int kernels_recorded[TAU_MAX_GPU_DEVICES] = {0};
+
+bool counters_averaged_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
+bool counters_bounded_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
+const char *last_recorded_kernel_name;
+
+
+
 // #define TAU_DEBUG_CUPTI 1
 // #define TAU_DEBUG_CUPTI_SAMPLE
 // #define TAU_DEBUG_CUPTI_COUNTERS
@@ -300,7 +360,7 @@ if(!TauEnv_get_cuda_track_sass()) {
 
   //cout << "Tau_cupti_onload():  get_device_id(): " << get_device_id() << endl;
 
-  CUpti_ActivityDevice device = deviceMap[get_device_id()];
+  CUpti_ActivityDevice device = __deviceMap()[get_device_id()];
 
 	if ((device.computeCapabilityMajor > 3) ||
 		device.computeCapabilityMajor == 3 &&
@@ -1370,9 +1430,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			RECORD_DEVICE_METADATA(numThreadsPerWarp, device);
 	
 			//cerr << "recording metadata (device): " << device->id << endl;
-			deviceMap[device->id] = *device;
+			__deviceMap()[device->id] = *device;
 #if CUDA_VERSION < 5000
-      if (deviceMap.size() > 1 && Tau_CuptiLayer_get_num_events() > 0)
+      if (__deviceMap().size() > 1 && Tau_CuptiLayer_get_num_events() > 0)
       {
         TAU_VERBOSE("TAU Warning: CUDA 5.0 or greater is needed to record counters on more that one GPU device at the same time.\n");
       }
@@ -1681,12 +1741,12 @@ int ceil(float value, int significance)
 int gpu_occupancy_available(int deviceId)
 { 
 	//device callback not called.
-	if (deviceMap.empty())
+	if (__deviceMap().empty())
 	{
 		return 0;
 	}
 
-	CUpti_ActivityDevice device = deviceMap[deviceId];
+	CUpti_ActivityDevice device = __deviceMap()[deviceId];
 
 	if ((device.computeCapabilityMajor > 3) ||
 		device.computeCapabilityMajor == 3 &&
@@ -1764,7 +1824,7 @@ void record_gpu_occupancy(int32_t blockX,
                           const char *name, 
                           eventMap_t *map)
 {
-	CUpti_ActivityDevice device = deviceMap[deviceId];
+	CUpti_ActivityDevice device = __deviceMap()[deviceId];
 
 
 	int myWarpsPerBlock = ceil(
@@ -2255,6 +2315,57 @@ notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
     //   fprintf(fp_imix_out[i], "\t\t\tCUDA Kernel Instruction Mix Breakdown\n");
     // }
   } // deviceCount
+}
+
+void record_gpu_counters_at_launch(int device)
+{ 
+  kernels_encountered[device]++;
+  if (Tau_CuptiLayer_get_num_events() > 0 &&
+      !counters_averaged_warning_issued[device] && 
+      kernels_encountered[device] > 1) {
+    TAU_VERBOSE("TAU Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
+    counters_averaged_warning_issued[device] = true;
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
+      Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
+    }
+  }
+  int n_counters = Tau_CuptiLayer_get_num_events();
+  if (n_counters > 0 && counters_at_last_launch[device][0] == ULONG_MAX) {
+    Tau_CuptiLayer_read_counters(device, counters_at_last_launch[device]);
+  }
+#ifdef TAU_CUPTI_DEBUG_COUNTERS
+  std::cout << "at launch (" << device << ") ====> " << std::endl;
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
+      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
+      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
+    }
+#endif
+}
+  
+void record_gpu_counters_at_sync(int device)
+{
+  if (kernels_encountered[device] == 0) {
+   return;
+  }
+  Tau_CuptiLayer_read_counters(device, current_counters[device]);
+#ifdef TAU_CUPTI_DEBUG_COUNTERS
+  std::cout << "at sync (" << device << ") ====> " << std::endl;
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
+      std::cout << "\tlast launch:      " << counters_at_last_launch[device][n] << std::endl;
+      std::cout << "\tcurrent counters: " << current_counters[device][n] << std::endl;
+    }
+#endif
+}
+
+void clear_counters(int device)
+{
+  for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
+  {
+    counters_at_last_launch[device][n] = ULONG_MAX;
+  }
+  kernels_encountered[device] = 0;
+  kernels_recorded[device] = 0;
+
 }
 /*  END:  SASS added  */
 
