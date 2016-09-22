@@ -21,6 +21,10 @@
 #include <mpi.h>
 #endif  /* TAU_MPI */
 
+#ifdef TAU_SHMEM
+#include <shmem.h>
+#endif /* TAU_SHMEM */
+
 #include <TAU.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -136,6 +140,10 @@ int Tau_mergeProfiles()
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
 #endif  /* TAU_MPI */
+#ifdef TAU_SHMEM
+  size = shmem_n_pes();
+  rank = shmem_my_pe();
+#endif /* TAU_SHMEM */
 
 	buflen = Tau_snapshot_getBufferLength()+1;
 	buf = (char *) malloc(buflen);
@@ -145,6 +153,27 @@ int Tau_mergeProfiles()
 #ifdef TAU_MPI
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 #endif  /* TAU_MPI */
+#ifdef TAU_SHMEM
+  int *shbuflen = (int*)shmem_malloc(sizeof(int));
+  *shbuflen = buflen;
+  int *shmaxBuflen = (int*)shmem_malloc(sizeof(int));
+
+  int *maxBuflens = (int*)shmem_malloc(size*sizeof(int));
+  shmem_int_put(&maxBuflens[rank], &maxBuflen, 1, 0);
+  shmem_barrier_all();
+  if(rank == 0)
+    for(i =0; i < size; i++)
+      if(maxBuflen < maxBuflens[i]) maxBuflen = maxBuflens[i];
+  shmem_barrier_all();
+  *shmaxBuflen = maxBuflen;
+  shmem_int_get(shmaxBuflen, shmaxBuflen, 1, 0);
+  shmem_barrier_all();
+  maxBuflen = *shmaxBuflen;
+  shmem_free(shmaxBuflen);
+  shmem_free(maxBuflens);
+  char *shbuf = (char*)shmem_malloc(maxBuflen);
+  strncpy(shbuf, buf, maxBuflen);
+#endif /* TAU_SHMEM */
 
 #ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
@@ -174,6 +203,7 @@ int Tau_mergeProfiles()
     // Unification must already be called.
     functionUnifier = Tau_unify_getFunctionUnifier();
     numEvents = functionUnifier->globalNumItems;
+    printf("GLOBAL NUMITEMS=%d\n", numEvents);
     numEventThreads = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     globalEventMap = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     // initialize all to -1
@@ -184,6 +214,8 @@ int Tau_mergeProfiles()
     for (int i=0; i<functionUnifier->localNumItems; i++) {
       globalEventMap[functionUnifier->mapping[i]] = i; // set reverse mapping
     }
+  printf("(b) determine number of threads\n");
+  fflush(stdout);
     Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
 				  numEvents, globalEventMap,false);
     
@@ -219,6 +251,8 @@ int Tau_mergeProfiles()
       // set reverse mapping
       globalAtomicEventMap[atomicUnifier->mapping[i]] = i;
     }
+  printf("(c) determine number of threads\n");
+  fflush(stdout);
     Tau_collate_get_total_threads(atomicUnifier, &globalNumThreads, &numAtomicEventThreads,
 				  numAtomicEvents, globalAtomicEventMap,true);
     
@@ -234,6 +268,7 @@ int Tau_mergeProfiles()
 					numAtomicEvents,
 					COLLATE_OP_DERIVED);
     }
+    printf("need to compute atomic statistics\n");
     Tau_collate_compute_atomicStatistics(atomicUnifier, globalAtomicEventMap, 
 					 numAtomicEvents, 
 					 globalNumThreads, 
@@ -287,6 +322,13 @@ int Tau_mergeProfiles()
       /* receive buffer */
       PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
 #endif  /* TAU_MPI */
+#ifdef TAU_SHMEM
+      /* receive buffer length */
+      shmem_int_get(&buflen, shbuflen, 1, i);
+
+      /* receive buffer */
+      shmem_getmem(recv_buf, shbuf, buflen, i);
+#endif /* TAU_SHMEM */
 
       if (!TauEnv_get_summary_only()) { /* write each rank? */
         fwrite (recv_buf, buflen, 1, f);
@@ -438,9 +480,23 @@ int Tau_mergeProfiles()
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 #endif  /* TAU_MPI */
+//#ifdef TAU_SHMEM
+//    /* recieve ok to go */
+//    shmem_int_get(&okSignal, &okSignal, 1, i)
+//
+//    /* send length */
+//    shemem_int_put(&buflen, &buflen, 1, i);
+//
+//    /* send data */
+//    shmem_int_put(&recv_buf, &recv_buf, buflen, i);
+//#endif /* TAU_SHMEM */
 
   }
 	free(buf);
+        shmem_free(shbuf);
+        shmem_free(shbuflen);
+#ifdef TAU_SHMEM
+#endif /* TAU_SHMEM */
   return 0;
 }
 
