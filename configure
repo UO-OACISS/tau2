@@ -6420,6 +6420,20 @@ MPI_Aint * address;
   return PMPI_Get_address( location, address );
 }
 
+int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
+int count;
+TAU_MPICH3_CONST int * blocklens;
+TAU_MPICH3_CONST MPI_Aint * indices;
+TAU_MPICH3_CONST MPI_Datatype * old_types;
+MPI_Datatype * newtype;
+{
+  int  returnVal;
+
+  returnVal = PMPI_Type_struct( count, blocklens, indices, old_types, newtype );
+  return returnVal;
+}
+
+
 EOF
 
 cat <<EOF > mpihindex1.c
@@ -6652,20 +6666,20 @@ if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/n
 else
   if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
+    fixmakeargs="$fixmakeargs MPICH3_CONST"
 
-    $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
-    if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
-    # MPI3 and OpenMPI detected. Boo.
-        echo "no"
-        fixmakeargs="$fixmakeargs MPICH3_CONST"
-    else
-        echo "yes"
-    # MPICH requires the const keyword
-        fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
-    fi
   else
     echo "no"
   fi
+fi
+
+$echo "Checking for OpenMPI 3 const interface..... ${nnl}"
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
+# MPICH requires the const keyword
+  echo "yes"
+  fixmakeargs="$fixmakeargs OPENMPI3_CONST"
+else
+  echo "no"
 fi
 rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out
 
