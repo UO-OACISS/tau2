@@ -47,14 +47,14 @@
 
 #ifdef TAU_MPICH3
 #define TAU_MPICH3_CONST const
-#ifdef TAU_OPENMPI3
-#define TAU_OPENMPI3_CONST 
-#else
-#define TAU_OPENMPI3_CONST  const
-#endif
 #else
 #define TAU_MPICH3_CONST 
-#define TAU_OPENMPI3_CONST 
+#endif
+
+#ifdef TAU_OPENMPI3
+#define TAU_OPENMPI3_CONST  const
+#else
+#define TAU_OPENMPI3_CONST  
 #endif
 
 
