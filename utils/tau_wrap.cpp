@@ -865,15 +865,11 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 
   if (shmem_wrapper) { /* generate pshmem calls here */
     if(runtime != RUNTIME_INTERCEPT) printShmemMessageBeforeRoutine(r, impl, sig);
-    if(rname.find("shmem_finalize") != string::npos) {
+    if(rname.find("shmem_finalize") != string::npos && runtime == WRAPPER_INTERCEPT) {
         impl << "  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {\n"
              << "    Tau_metadataMerge_mergeMetaData();\n"
-             << "    printf(\"profiles merged\\n\");\n"
-             << "    //Tau_mergeSHMEMProfiles();\n"
              << "    Tau_mergeProfiles();\n"
-             << "  }\n"
-             << "  else\n"
-             << "    printf(\"profiles not merged\\n\");\n";
+             << "  }\n";
     }
     if (!isVoid)
     {
@@ -1363,9 +1359,10 @@ int main(int argc, char **argv)
        << "#include <stdlib.h>\n"
        << endl;
   if (shmem_wrapper) {
-    impl << "#include <Profile/TauEnv.h>\n"
-         << "#include <Profile/TauAPI.h>\n"
-         << endl;
+    if ( runtime == WRAPPER_INTERCEPT) 
+      impl << "#include <Profile/TauEnv.h>\n"
+           << "#include <Profile/TauAPI.h>\n"
+           << endl;
     impl << "int TAUDECL tau_totalnodes(int set_or_get, int value);\n"
          << "static int tau_shmem_tagid_f=0;\n"
          << "#define TAU_SHMEM_TAGID (tau_shmem_tagid_f = (tau_shmem_tagid_f & 255))\n"
