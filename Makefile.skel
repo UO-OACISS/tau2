@@ -68,7 +68,7 @@ examples/cthreads examples/fortran examples/f90 $(MPIEXAMPLES) $(PDTEXAMPLE)
 # Trace Reader Library
 TRACEINPUT=src/TraceInput
 TRACE2PROFILE=utils/trace2profile
-#OTF2#OTF2PROFILE=utils/otf2profile #ENDIF#
+##OTF2#OTF2PROFILE=utils/otf2profile #ENDIF#
 
 #PERFLIB#BASIC=utils #ENDIF#
 
