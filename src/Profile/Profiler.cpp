@@ -76,6 +76,15 @@ extern "C" void esd_exit (elg_ui4 rid);
 double TauWindowsUsecD(void);
 #endif
 
+#ifdef CUPTI
+#ifdef __GNUC__
+#include "cupti_version.h"
+#include "cupti_events.h"
+#include "cupti_metrics.h"
+#include <cuda_runtime_api.h>
+#endif //__GNUC__
+#endif //CUPTI
+
 using namespace std;
 using namespace tau;
 
@@ -1239,9 +1248,89 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
     {
 
       // get currently stored values
-      double incltime = fi->getDumpInclusiveValues(tid)[metric];
-      double excltime = fi->getDumpExclusiveValues(tid)[metric];
+      double incltime, excltime;
+#ifdef CUPTI
+      // Is a Cupti metric
+      if(TauMetrics_getIsCuptiMetric(metric) == 2)
+      {
+        //cout << "function is " << fi->GetName() << endl;
+        //cout << "tid is " << tid << endl;
+        CUpti_MetricValue inclmetric, exclmetric;
+        int device;
+        uint32_t numEvents;
+        CUpti_MetricID metricid;
+        size_t eventIdArraySizeBytes, eventValueArraySizeBytes;
+        CUpti_EventID *eventIdArray;
+        uint64_t *eventValueArray;
+        int i;
+        int eventIndex;
+        int tmetric = TauMetrics_getTimeMetric();
+        incltime = fi->getDumpInclusiveValues(tid)[tmetric];
+        excltime = fi->getDumpExclusiveValues(tid)[tmetric];
+        cuptiMetricGetIdFromName(device, TauMetrics_getMetricName(metric), &metricid); // Get metric id
+        // Get events
+        cuptiMetricGetNumEvents(metricid, &numEvents);
+        eventIdArraySizeBytes = numEvents * sizeof(CUpti_EventID);
+        eventIdArray = (CUpti_EventID *) malloc(numEvents*sizeof(CUpti_EventID));
+        cuptiMetricEnumEvents(metricid, &eventIdArraySizeBytes, eventIdArray);
+        eventValueArraySizeBytes = numEvents*sizeof(uint64_t);
+        eventValueArray = (uint64_t*) malloc(eventValueArraySizeBytes);
+        for(i = 0; i < numEvents; i++)
+          eventValueArray[i] = 0;
 
+
+        for(i = 0; i < numEvents; i++) {
+	  bool found_two = false;
+          eventIndex = TauMetrics_getEventIndex(eventIdArray[i]);
+          vector<TauUserEvent*>::iterator it2;
+          for (it2 = TheEventDB().begin(); it2 != TheEventDB().end() && !found_two; ++it2) {
+            TauUserEvent *ue = *it2;
+            //printf("testing %s vs %s.\n", fi->GetName(), ue->GetName().c_str());
+    
+            const char *str = ue->GetName().c_str();
+            const char *suffix = fi->GetName();
+    
+            if (!str || !suffix)
+                continue;
+            size_t lenstr = strlen(str);
+            size_t lensuffix = strlen(suffix);
+            if (lensuffix >  lenstr) {
+                continue;
+            }
+            if(strncmp(str + lenstr - lensuffix, suffix, lensuffix) == 0 && 
+               strncmp(str, TauMetrics_getMetricName(eventIndex), strlen(TauMetrics_getMetricName(eventIndex))) == 0)
+            {
+              eventValueArray[i] = ue->GetMean(tid);
+              //cout << "get name: " << ue->GetName() << endl;
+              //cout << "get mean: " << ue->GetMean(tid) << endl;
+	      found_two = true;
+            }
+          }
+          //cout << "eventValueArray: " << eventValueArray[i] << endl;
+        }
+        // Calculate value of Cupti metric
+        cuptiMetricGetValue(device, metricid,
+                                         eventIdArraySizeBytes,
+                                         eventIdArray,
+                                         eventValueArraySizeBytes,
+                                         eventValueArray,
+                                         incltime,
+                                         &inclmetric);
+        exclmetric = inclmetric;
+
+        if (strlen(fi->GetType()) > 0) {
+          fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
+              exclmetric.metricValueDouble, inclmetric.metricValueDouble);
+        } else {
+          fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), exclmetric.metricValueDouble,
+              inclmetric.metricValueDouble);
+        }
+
+      }
+      else{
+#endif
+      incltime = fi->getDumpInclusiveValues(tid)[metric];
+      excltime = fi->getDumpExclusiveValues(tid)[metric];
       if (strlen(fi->GetType()) > 0) {
         fprintf(fp, "\"%s %s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetType(), fi->GetCalls(tid), fi->GetSubrs(tid),
             excltime, incltime);
@@ -1249,6 +1338,9 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         fprintf(fp, "\"%s\" %ld %ld %.16G %.16G ", fi->GetName(), fi->GetCalls(tid), fi->GetSubrs(tid), excltime,
             incltime);
       }
+#ifdef CUPTI
+      }
+#endif //CUPTI
 
       fprintf(fp, "0 ");    // Indicating that profile calls is turned off
       fprintf(fp, "GROUP=\"%s\" \n", fi->GetAllGroups());
@@ -1481,6 +1573,34 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
     TAU_VERBOSE ("Profile directories created\n");
   }
 
+//#ifdef CUPTI
+//  CUdevice device;
+//  int retval;
+//  int er, err;
+//  int dev, deviceCount;
+//  int metricid;
+//  int numEvents;
+//  CUpti_EventID *eventIdArray;
+//  size_t eventValueArraySizeBytes, eventIdArraySizeBytes;
+//  uint64_t *eventValueArray, timeDuration;
+//  CUpti_MetricValue *metricValue;
+//
+//  er = cuDeviceGetCount(&deviceCount);
+//  if (er == CUDA_ERROR_NOT_INITIALIZED) {
+//    cuInit(0);
+//    er = cuDeviceGetCount(&deviceCount);
+//  }
+//  if (er == CUDA_SUCCESS) {
+//    dev = 0;
+//    {
+//      retval = cuDeviceGet(&device, dev);
+//      if(retval != CUDA_SUCCESS) {
+//        fprintf(stderr, "Could not get device %d.\n", dev);
+//      }
+//    }
+//  }
+//#endif //CUPTI
+
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     if (TauMetrics_getMetricUsed(i)) {
 
@@ -1489,6 +1609,31 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
       FILE* fp;
 
       getMetricHeader(i, metricHeader);
+      //cout << "metric name: " << metricHeader << endl;
+#ifdef CUPTI
+      // Is a Cupti event, do not record
+      //if(TauMetrics_getIsCuptiMetric(i) == 1) continue;
+      // Is a Cupti metric
+      //if(TauMetrics_getIsCuptiMetric(i) == 2)
+      //{
+      //  cout << TauMetrics_getMetricName(i) << endl;
+      //  cuptiMetricGetIdFromName(device, TauMetrics_getMetricName(i), &metricid); // Get metric id
+      //  // Get events
+      //  cuptiMetricGetNumEvents(metricid, &numEvents);
+      //  eventIdArraySizeBytes = numEvents * sizeof(CUpti_EventID);
+      //  eventIdArray = (CUpti_EventID *) malloc(numEvents*sizeof(CUpti_EventID));
+      //  cuptiMetricEnumEvents(metricid, &eventIdArraySizeBytes, eventIdArray);
+      //  eventValueArraySizeBytes = numEvents*sizeof(uint64_t);
+      //  // Calculate value of Cupti metric
+      //  cuptiMetricGetValuea(device, CUpti_MetricID metricid,
+      //                                   eventIdArraySizeBytes,
+      //                                   eventIdArray,
+      //                                   eventValueArraySizeBytes,
+      //                                   eventValueArray,
+      //                                   NULL, //uint64_t timeDuration,
+      //                                   &metricValue);
+      //}
+#endif //CUPTI
       getProfileLocation(i, profileLocation);
 //       sprintf(filename, "%s/temp.%d.%d.%d", profileLocation, 
 //         RtsLayer::myNode(), RtsLayer::myContext(), tid);
@@ -1610,6 +1755,10 @@ bool TauProfiler_createDirectories()
   if (flag && Tau_Global_numCounters > 1) {
     for (int i = 0; i < Tau_Global_numCounters; i++) {
       if (TauMetrics_getMetricUsed(i)) {
+//#ifdef CUPTI
+//        // Is a Cupti event
+//        if(TauMetrics_getIsCuptiMetric(i) == 1) continue;
+//#endif //CUPTI
         char *newdirname = new char[1024];
         char *mkdircommand = new char[1024];
         getProfileLocation(i, newdirname);
