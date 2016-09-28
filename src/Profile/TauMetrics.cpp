@@ -511,6 +511,8 @@ static void initialize_functionArray()
 			Tau_CuptiLayer_register_string(metricv[i], pos);
       TauMetrics_atomicMetrics[pos] = metricv[i];
       functionArray[pos++] = metric_read_cupti;
+      } else if(is_cupti_metric(metricv[i])) {
+        /* Cupti metrics handled separately */
 #endif //CUPTI
 #ifdef TAU_PAPI
     } else if (strcasecmp(metricv[i], "P_WALL_CLOCK_TIME") == 0) {
@@ -535,8 +537,6 @@ static void initialize_functionArray()
         /* PAPI handled separately */
       } else if (ktau && strncmp("KTAU", metricv[i], 4) == 0) {
         /* KTAU handled separately */
-      } else if(is_cupti_metric(metricv[i])) {
-        /* Cupti metrics handled separately */
       } else {
         fprintf(stderr, "TAU: Error: Unknown metric: %s\n", metricv[i]);
 
