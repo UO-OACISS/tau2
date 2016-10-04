@@ -44,6 +44,8 @@ usage()
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -shmem        Track SHMEM events"
     echo "        -ptts         Run with ParaTools ThreadSpotter"
+    echo "        -ts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+    echo "        -ts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
     echo "        -ebs          Enable event-based sampling"
     echo "        -ebs_period=<count> Sampling period (default 1000)"
     echo "        -ebs_source=<counter> Counter (default itimer)"
@@ -250,6 +252,8 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
+ts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
+ts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -342,6 +346,14 @@ for arg in "$@" ; do
           use_ptts=true
           shift
           ;;
+      -ts-sample-flags=*)
+	  ts_sample_flags="${arg/#-ts-sample-flags=/}" # bash parameter expansion, bash 3 and up
+	  shift
+	  ;;
+      -ts-report-flags=*)
+	  ts_report_flags="${arg/#-ts-report-flags=/}" # Also propper quoting must be used when multiple passed
+	  shift
+	  ;;
       -ebs)
           tau_use_ebs=true
           shift
@@ -872,7 +884,7 @@ else
         fi
         rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
 	echo "Finalizing sample_ts $@ on rank $node" 
-        sample_ts -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
+        sample_ts -o "$samplefile" -p "$child_pid" $ts_sample_flags >$samplelog 2>&1
 	sleep 10
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
@@ -880,7 +892,7 @@ else
         retval=$?
         # Post-process samples
         echo "PTTS($node): Postprocessing samples..."
-        report_ts -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
+        report_ts -i "$samplefile" -o "$reportfile" $ts_report_flags >$reportlog 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
         # Generate report. view-static must be run in $pttsprefix
         cd "$pttsprefix"
