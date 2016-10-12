@@ -2,15 +2,29 @@
  * This file is part of the Score-P software (http://www.score-p.org)
  *
  * Copyright (c) 2009-2012,
- *    RWTH Aachen University, Germany
- *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
- *    Technische Universitaet Dresden, Germany
- *    University of Oregon, Eugene, USA
- *    Forschungszentrum Juelich GmbH, Germany
- *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
- *    Technische Universitaet Muenchen, Germany
+ * RWTH Aachen University, Germany
  *
- * See the COPYING file in the package base directory for details.
+ * Copyright (c) 2009-2012,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2012,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license.  See the COPYING file in the package base
+ * directory for details.
  *
  */
 
@@ -19,9 +33,7 @@
 
 /*--- Header file documentation -------------------------------------------*/
 /**
- * @file            otf2_hash_table.h
- * @maintainer      Daniel Lorenz <d.lorenz@fz-juelich.de>
- * @status          ALPHA
+ * @file
  * @ingroup         otf2_hash_table_module
  *
  * @brief           This file provides the function header and type definiions for
@@ -103,7 +115,8 @@ typedef size_t ( *otf2_hash_table_hash_func )( const void* key );
  * return 0 if the given @a key equals the key of the current item (@a item_key)
  * or a non-zero value otherwise.
  */
-typedef int32_t ( *otf2_hash_table_compare_func )( const void* key, const void* item_key );
+typedef int32_t ( *otf2_hash_table_compare_func )( const void* key,
+                                                   const void* item_key );
 
 /**
  * Pointer-to-function type describing unary processing functions that can
@@ -131,7 +144,7 @@ typedef void ( *otf2_hash_table_delete_func )( void* item );
 /**
  * Creates and returns an instance of otf2_hash_table. Besides the @a size of the
  * hash table, pointers to a hashing function as well as a key comparison
- * function have to be provided. If the memory allocation request can not be
+ * function have to be provided. If the memory allocation request cannot be
  * fulfilled, an error message is printed and the program is aborted.
  *
  * @param size     Size of the hash table
@@ -190,7 +203,7 @@ otf2_hash_table_empty( const otf2_hash_table* instance );
  * (re-)calculated instead, @c NULL should be passed.
  *
  * This function also has to allocate memory for internal data structures. If
- * this memory allocation request can not be fulfilled, an error message is
+ * this memory allocation request cannot be fulfilled, an error message is
  * printed and the program is aborted.
  *
  * @param instance   Object in which the key/value pair should be inserted
@@ -278,7 +291,7 @@ otf2_hash_table_remove( const otf2_hash_table*      instance,
 
 /**
  * Creates and returns an iterator for the given otf2_hash_table @a instance. If
- * the memory allocation request can not be fulfilled, an error message is
+ * the memory allocation request cannot be fulfilled, an error message is
  * printed and the program is aborted.
  *
  * @return Pointer to new instance
@@ -421,6 +434,32 @@ otf2_hash_table_compare_int64( const void* key,
 
 /**
  * A comparison function for the hash table which interpretes the keys as pointers
+ * to unsigned 8-bit integers.
+ *
+ * @param key      Pointer to a 8-bit integer.
+ * @param item_key Pointer to a 8-bit integer that is compared to @a key.
+ * @return 0 if the given @a key equals the key of the current item (@a item_key)
+ * or a non-zero value otherwise.
+ */
+EXTERN int32_t
+otf2_hash_table_compare_uint8( const void* key,
+                               const void* item_key );
+
+/**
+ * A comparison function for the hash table which interpretes the keys as pointers
+ * to unsigned 16-bit integers.
+ *
+ * @param key      Pointer to a 16-bit integer.
+ * @param item_key Pointer to a 16-bit integer that is compared to @a key.
+ * @return 0 if the given @a key equals the key of the current item (@a item_key)
+ * or a non-zero value otherwise.
+ */
+EXTERN int32_t
+otf2_hash_table_compare_uint16( const void* key,
+                                const void* item_key );
+
+/**
+ * A comparison function for the hash table which interpretes the keys as pointers
  * to unsigned 32-bit integers.
  *
  * @param key      Pointer to a unsigned 32-bit integer.
@@ -473,14 +512,11 @@ otf2_hash_table_compare_pointer( const void* key,
 EXTERN size_t
 otf2_hash_table_hash_string( const void* key );
 
-/**
- * Default hash function for 64-integer values. It just returns the integer value.
- *
- * @param key A pointer to a 64-bit integer.
- * @return The value of the key.
- */
 EXTERN size_t
-otf2_hash_table_hash_int64( const void* key );
+otf2_hash_table_hash_uint8( const void* key );
+
+EXTERN size_t
+otf2_hash_table_hash_uint16( const void* key );
 
 /**
  * Default hash function for 32-integer values. It just returns the integer value.
@@ -489,7 +525,16 @@ otf2_hash_table_hash_int64( const void* key );
  * @return The value of the key.
  */
 EXTERN size_t
-otf2_hash_table_hash_int32( const void* key );
+otf2_hash_table_hash_uint32( const void* key );
+
+/**
+ * Default hash function for 64-integer values. It just returns the integer value.
+ *
+ * @param key A pointer to a 64-bit integer.
+ * @return The value of the key.
+ */
+EXTERN size_t
+otf2_hash_table_hash_uint64( const void* key );
 
 /**
  * Default hash function. It uses the adress/8 as hash value. The division by
