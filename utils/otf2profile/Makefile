@@ -15,7 +15,7 @@ HANDLERS=handlers.o handlers.*.~*
 READTRACE=readTrace.o readTrace.*.~*
 MAKEFILE=Makefile.~*
 
-CXXFLAGS = $(USER_OPT)
+CXXFLAGS = $(USER_OPT) -w
 OTF2FLAGS = -DNOCROSS_BUILD -D__STDC_FORMAT_MACROS -DFRONTEND_BUILD  $(TAU_OTF2_1_1_FLAGS)
 
 OTFLIBS=-L$(OTFDIR)/lib -lotf2 -lrt
@@ -27,23 +27,29 @@ install:       $(TAU_BIN_DIR)/otf2profile
 $(TAU_BIN_DIR)/otf2profile: otf2profile
 	/bin/cp $< $(TAU_BIN_DIR)
 
-otf2profile:     handlers.o otf2_hash_table.o otf2_vector.o readOTF2.o trace2profile.o
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ handlers.o otf2_hash_table.o otf2_vector.o readOTF2.o trace2profile.o $(LIBS) $(OTFLIBS)    
-
+otf2profile:    handlers.o otf2_hash_table.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o  otf2profile.o trace2profile.o handlers.o
+		$(CXX) $(CXXFLAGS) -static $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -o $@ otf2_hash_table.o  otf2profile.o trace2profile.o handlers.o otf2_vector.o UTILS_Error.o UTILS_IO_Tools.o $(LIBS) $(OTFLIBS)
+	
+otf2profile.o: otf2profile.cpp 
+	$(CXX) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2profile.cpp
+		
 handlers.o: handlers.h trace2profile.h handlers.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c handlers.cpp
 
 trace2profile.o: trace2profile.h trace2profile.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c trace2profile.cpp
 	
-readOTF2.o: handlers.h trace2profile.h readOTF2.cpp
-	$(CXX) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -c readOTF2.cpp
-	
 otf2_hash_table.o: otf2_hash_table.h
 	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2_hash_table.c
 	
 otf2_vector.o: otf2_vector.h
 	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2_vector.c
+	
+UTILS_Error.o: UTILS_Error.h
+	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_Error.c
+	
+UTILS_IO_Tools.o: UTILS_IO.h
+	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_IO_Tools.c
 
 clean:
 	$(RM) $(TRACE2PROFILE) $(HANDLERS) $(READTRACE) $(MAKEFILE) *.o otf2profile

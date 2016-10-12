@@ -2,15 +2,29 @@
  * This file is part of the Score-P software (http://www.score-p.org)
  *
  * Copyright (c) 2009-2012,
- *    RWTH Aachen University, Germany
- *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
- *    Technische Universitaet Dresden, Germany
- *    University of Oregon, Eugene, USA
- *    Forschungszentrum Juelich GmbH, Germany
- *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
- *    Technische Universitaet Muenchen, Germany
+ * RWTH Aachen University, Germany
  *
- * See the COPYING file in the package base directory for details.
+ * Copyright (c) 2009-2012,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2012, 2014,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2012,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license.  See the COPYING file in the package base
+ * directory for details.
  *
  */
 
@@ -19,13 +33,10 @@
 
 /**
  * @file            UTILS_Error.h
- * @maintainer      Daniel Lorenz <d.lorenz@fz-juelich.de>
- * @status          REVIEW
  * @ingroup         UTILS_Exception_module
  *
  * @brief           Module for error handling in SCOREP.
  *
- * @author          Dominic Eschweiler <d.eschweiler@fz-juelich.de>
  */
 
 #include <stdint.h>
@@ -33,20 +44,18 @@
 #include <stdbool.h>
 #endif
 #include <stdarg.h>
-#include <OTF2_ErrorCodes.h>
 
 /*
  * Include the package specific error codes.
  */
-//#include PACKAGE_ERROR_CODES_HEADER
+#include PACKAGE_ERROR_CODES_HEADER
 
 /*
  * The package specific name for error codes.
  *
  * This should be private, but to make this header readable is here defined.
  */
-#define PACKAGE_ErrorCode PACKAGE_MANGLE_NAME_CAPS( ErrorCode )
-#define PACKAGE_SYM_CAPS_ErrorCode int
+#define PACKAGE_ErrorCode PACKAGE_MANGLE_NAME( ErrorCode )
 
 UTILS_BEGIN_C_DECLS
 
@@ -57,7 +66,8 @@ UTILS_BEGIN_C_DECLS
  * @ingroup UTILS_Exception_module
  */
 #define UTILS_ERROR( errCode, ... ) \
-    UTILS_Error_Handler( __FILE__, \
+    UTILS_Error_Handler( AFS_PACKAGE_SRCDIR, \
+                         __FILE__, \
                          __LINE__, \
                          __func__, \
                          errCode, \
@@ -67,10 +77,11 @@ UTILS_BEGIN_C_DECLS
  * Emit a warning.
  */
 #define UTILS_WARNING( ... ) \
-    UTILS_Error_Handler( __FILE__, \
+    UTILS_Error_Handler( AFS_PACKAGE_SRCDIR, \
+                         __FILE__, \
                          __LINE__, \
                          __func__, \
-                         PACKAGE_MANGLE_NAME_CAPS( WARNING ), \
+                         PACKAGE_MANGLE_NAME( WARNING ), \
                          __VA_ARGS__ )
 /**
  * Emit a warning, but only on first occurrence
@@ -100,10 +111,11 @@ UTILS_BEGIN_C_DECLS
         if ( !utils_deprecated_##__LINE__ ) \
         { \
             utils_deprecated_##__LINE__ = 1; \
-            UTILS_Error_Handler( __FILE__, \
+            UTILS_Error_Handler( AFS_PACKAGE_SRCDIR, \
+                                 __FILE__, \
                                  __LINE__, \
                                  __func__, \
-                                 PACKAGE_MANGLE_NAME_CAPS( DEPRECATED ), \
+                                 PACKAGE_MANGLE_NAME( DEPRECATED ), \
                                  __VA_ARGS__ ); \
         } \
     } while ( 0 )
@@ -121,9 +133,10 @@ UTILS_BEGIN_C_DECLS
  * @returns Should return the ErrorCode
  * @ingroup UTILS_Exception_module
  */
-#define UTILS_Error_Handler PACKAGE_MANGLE_NAME_CAPS( UTILS_Error_Handler )
+#define UTILS_Error_Handler PACKAGE_MANGLE_NAME( UTILS_Error_Handler )
 PACKAGE_ErrorCode
-UTILS_Error_Handler( const char*       file,
+UTILS_Error_Handler( const char*       srcdir,
+                     const char*       file,
                      uint64_t          line,
                      const char*       function,
                      PACKAGE_ErrorCode errorCode,
@@ -150,11 +163,11 @@ UTILS_Error_Handler( const char*       file,
  * @returns Returns a UTILS error code (see the package depended ErrorCodes.h)
  * @ingroup UTILS_Exception_module
  */
-#define UTILS_Error_FromPosix PACKAGE_MANGLE_NAME_CAPS( UTILS_Error_FromPosix )
+#define UTILS_Error_FromPosix PACKAGE_MANGLE_NAME( UTILS_Error_FromPosix )
 PACKAGE_ErrorCode
 UTILS_Error_FromPosix( const int posixErrorCode );
 
-#define HAVE_UTILS_NO_ASSERT UTILS_JOIN_SYMS( HAVE_, PACKAGE_MANGLE_NAME_CAPS( NO_ASSERT ) )
+#define HAVE_UTILS_NO_ASSERT UTILS_JOIN_SYMS( HAVE_, PACKAGE_MANGLE_NAME( NO_ASSERT ) )
 
 /**
  * @def UTILS_ASSERT
@@ -167,11 +180,12 @@ UTILS_Error_FromPosix( const int posixErrorCode );
 #if !HAVE( UTILS_NO_ASSERT )
 
 #define UTILS_ASSERT( expression ) \
-    UTILS_Error_Abort( !!( expression ), \
-                       __FILE__, \
-                       __LINE__, \
-                       __func__, \
-                       "Assertion '" UTILS_STRINGIFY( expression ) "' failed" )
+    ( ( expression ) ? ( void )0 : \
+      UTILS_Error_Abort( AFS_PACKAGE_SRCDIR, \
+                         __FILE__, \
+                         __LINE__, \
+                         __func__, \
+                         "Assertion '" UTILS_STRINGIFY( expression ) "' failed" ) )
 
 #else
 
@@ -186,7 +200,7 @@ UTILS_Error_FromPosix( const int posixErrorCode );
  *
  */
 #define UTILS_FATAL( ... ) \
-    UTILS_Error_Abort( 0, \
+    UTILS_Error_Abort( AFS_PACKAGE_SRCDIR, \
                        __FILE__, \
                        __LINE__, \
                        __func__, \
@@ -201,7 +215,7 @@ UTILS_Error_FromPosix( const int posixErrorCode );
  *
  */
 #define UTILS_BUG( ... ) \
-    UTILS_Error_Abort( 0, \
+    UTILS_Error_Abort( AFS_PACKAGE_SRCDIR, \
                        __FILE__, \
                        __LINE__, \
                        __func__, \
@@ -215,32 +229,32 @@ UTILS_Error_FromPosix( const int posixErrorCode );
  *
  */
 #define UTILS_BUG_ON( expression, ... ) \
-    UTILS_Error_Abort( !( expression ), \
-                       __FILE__, \
-                       __LINE__, \
-                       __func__, \
-                       "Bug: " __VA_ARGS__ )
+    ( !( expression ) ? ( void )0 :     \
+      UTILS_Error_Abort( AFS_PACKAGE_SRCDIR, \
+                         __FILE__,      \
+                         __LINE__,      \
+                         __func__,      \
+                         "Bug '" #expression "': " __VA_ARGS__ ) )
 
 /**
- * This function implements the UTILS_ASSERT macro. If the assertion fails an error
- * message is output and the program is aborted. Do not insert calls to this function
- * directly, but use the UTILS_ASSERT macro instead.
- *  @param truthValue Contains the result of an evaluated logical expression. If it is
- *                    zero the assertion failed.
- *  @param file       The file name of the file which contains the source code where the
+ * This function implements the UTILS_ASSERT, UTILS_FATAL, UTILS_BUG, UTILS_BUG_ON macro.
+ * It prints an error message and aborts the program. Do not insert calls to this function
+ * directly, but use the macros instead.
+ *  @param fileName   The file name of the file which contains the source code where the
  *                    message was created.
  *  @param line       The line number of the source code line where the debug message
  *                    was created.
- *  @param function   A string containing the name of the function where the debug
- *                    message was called.
+ *  @param functionName  A string containing the name of the function where the debug
+ *                       message was called.
+ *  @param messageFormatString A printf-like format string.
  */
-#define UTILS_Error_Abort PACKAGE_MANGLE_NAME_CAPS( UTILS_Error_Abort )
+#define UTILS_Error_Abort PACKAGE_MANGLE_NAME( UTILS_Error_Abort )
 void
-UTILS_Error_Abort( const bool     truthValue,
-                   const char*    file,
-                   const uint64_t line,
-                   const char*    func,
-                   const char*    message,
+UTILS_Error_Abort( const char* srcdir,
+                   const char* fileName,
+                   uint64_t    line,
+                   const char* functionName,
+                   const char* messageFormatString,
                    ... );
 
 
