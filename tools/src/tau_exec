@@ -915,7 +915,7 @@ else
         fi
         rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
 	echo "Finalizing sample_ts $@ on rank $node" 
-        sample_ts -o "$samplefile" -p "$child_pid" $ts_sample_flags >$samplelog 2>&1
+        sample_ts $ts_sample_flags -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
 	sleep 10
         err=$? ; [ $err -eq 0 ] || exit $err
         # Get the return code of the child process as the tau_exec return code
@@ -923,7 +923,7 @@ else
         retval=$?
         # Post-process samples
         echo "PTTS($node): Postprocessing samples..."
-        report_ts -i "$samplefile" -o "$reportfile" $ts_report_flags >$reportlog 2>&1
+        report_ts $ts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
         # Generate report. view-static must be run in $pttsprefix
         cd "$pttsprefix"
