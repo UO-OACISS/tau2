@@ -44,6 +44,7 @@ usage()
     echo "        -armci        Track ARMCI events via PARMCI"
     echo "        -shmem        Track SHMEM events"
     echo "        -ptts         Run with ParaTools ThreadSpotter"
+    echo "        -aprun-num=<N>  Number of ranks used by aprun"    
     echo "        -ts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
     echo "        -ts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
     echo "        -ebs          Enable event-based sampling"
@@ -90,6 +91,7 @@ usage()
     exit
 }
 
+
 set_node()
 {
     if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
@@ -121,12 +123,20 @@ set_node()
 set_nodecount()
 {
     if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-        for i in PMI_SIZE OMPI_COMM_WORLD_SIZE ; do
+      if [ is_cray ]  && [ -z `printenv SLURM_NPROCS` ]; then
+	if [ -z "$aprun_N" ]; then
+	   echo "ERROR: Using aprun we need -aprun-num=<arg to -n> \n"
+ 	else
+	   nodecount="$aprun_N"
+	fi	
+      else	
+        for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS; do
             eval nodecount=\$$i
             if [ -n "$nodecount" ] ; then
                 break
             fi
         done
+      fi
     elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
         echo "ERROR: ptts support for SHMEM not implemented yet"
         exit 1
@@ -211,11 +221,25 @@ compress_ptts_report()
     cd "$OLDPWD"
 }
 
+is_cray()
+  {
+	arch=`tau-config | grep TAUARCH | sed -e 's/TAUARCH=//'`
+	if [ "x$arch" = "xcraycnl" ];  then
+  		echo "ON CRAY"	
+		on_craycnl=true
+	else
+		echo "not on CRAY"
+		
+	fi
+  }
 
 if [ $# = 0 ] ; then
     usage
 fi
 
+
+#is_cray
+##echo "on_craycnl = $on_craycnl"
 
 dryrun=""
 processT=false
@@ -252,8 +276,10 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
+aprun_N=""
 ts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
+on_craycnl=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -344,6 +370,11 @@ for arg in "$@" ; do
           ;;
       -ptts)
           use_ptts=true
+          shift
+          ;;
+      -aprun-num=*)
+          myarg=`echo $arg | sed 's/-aprun-num=//'`
+          aprun_N="$myarg"
           shift
           ;;
       -ts-sample-flags=*)
