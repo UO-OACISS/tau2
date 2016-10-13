@@ -58,7 +58,7 @@ static inline void
 check_pointer
 (
     void* pointer,
-    char* description
+    const char* description
 )
 {
     if ( pointer == NULL )
@@ -67,6 +67,7 @@ check_pointer
         exit( EXIT_FAILURE );
     }
 }
+/*
 static inline void
 otf2_get_parameters
 (
@@ -80,12 +81,12 @@ check_pointer
     void* pointer,
     char* description
 );
-
+*/
 static inline void
 check_status
 (
     OTF2_ErrorCode status,
-    char*             description
+    const char*             description
 );
 
 
@@ -132,7 +133,7 @@ uint64_t TauGetClockTicksInGHz(double time)
 
 /* implementation of callback routines */
 map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
-map< int,int, less<int > > numthreads; 
+map< int,int, less<int > > numthreads;
 /* numthreads[k] is no. of threads in rank k */
 
 int EndOfTrace = 0;  /* false */
@@ -180,6 +181,7 @@ enum
 };
 
 /* Define limits of sample data (user defined events) */
+/*
 struct {
   unsigned long long umin;
   unsigned long long umax;
@@ -189,7 +191,7 @@ struct {
   double fmin;
   double fmax;
 } taufloatbounds = {-1.0e+300, +1.0e+300};
-
+*/
 /* These structures are used in user defined event data */
 
 
@@ -199,6 +201,21 @@ int sampgroupid = 1;
 int sampclassid = 2; 
 vector<stack <unsigned int> > callstack;
 int *offset = 0; 
+
+
+struct group {
+	const char* name;
+	unsigned int groupid;
+	vector < uint64_t > members;
+};
+
+//Map of groupid to group object with other invo
+map< unsigned int, group > groups;
+
+
+struct source{
+
+};
 
 int maxTauStringId=0;
 
@@ -241,7 +258,7 @@ int EnterState(void *userData, double time,
 
   if (cpuid >= (int) callstack.size()+1) 
   {
-    fprintf(stderr, "ERROR: tau2otf: EnterState() cpuid %d exceeds callstack size %d\n", cpuid, callstack.size());
+    fprintf(stderr, "ERROR: tau2otf: EnterState() cpuid %d exceeds callstack size %d\n", cpuid, (int)callstack.size());
     exit(1);
 
   }
@@ -356,20 +373,9 @@ int DefStateGroup( void *userData, unsigned int stateGroupToken,
   dprintf("StateGroup groupid %d, group name %s\n", stateGroupToken, 
 		  stateGroupName);
 
-  OTF2_GlobalDefWriter* glob_def_writer = (OTF2_GlobalDefWriter*)userData;
-  OTF2_GlobalDefWriter_WriteString( glob_def_writer,string_id ,
-                                                   stateGroupName);
-  maxTauStringId=localmax(maxTauStringId,stateGroupToken);
-//TODO: I guess we need to make a bucket for each group and count them ourselves.
-  /* create a default activity (group) */
-#ifdef TAU_OTF2_1_1
-  OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string, OTF2_GROUP_TYPE_REGIONS,0,0);
-#else
-  //OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken,OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE,     OTF2_GROUP_TYPE_REGIONS,0,0);
-  OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string_id, OTF2_GROUP_TYPE_REGIONS, OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE, 0,0);
-#endif /* TAU_OTF2_1_1 */
-  
-  string_id++;
+  groups[stateGroupToken]=group();
+  groups[stateGroupToken].groupid=stateGroupToken;
+  groups[stateGroupToken].name=stateGroupName;
   return 0;
 }
 OTF2_ErrorCode status;
@@ -377,7 +383,7 @@ static inline void
 check_status
 (
 		OTF2_ErrorCode status,
-    char*             description
+    const char*             description
 )
 {
     if ( status != OTF2_SUCCESS )
@@ -430,6 +436,8 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
                                              0,  //Begin
                                              0 );  //End
   check_status( status, "Write region definition" );
+
+  groups[stateGroupToken].members.push_back(stateToken);
 
   //OTF2_EvtWriter_writeDefFunction((OTF2_EvtWriter*)userData, TAU_GLOBAL_STREAM_ID, stateToken, (const char *) name, stateGroupToken, TAU_SCL_NONE);
   string_id++;
@@ -774,7 +782,7 @@ int main(int argc, char **argv)
   }
   /* Finished parsing commandline options, now open the trace file */
 
-  fh = Ttf_OpenFileForInput( argv[1], argv[2]);
+  fh = Ttf_OpenFileForInput( trace_file, edf_file);
 
   if (!fh)
   {
@@ -860,7 +868,7 @@ int main(int argc, char **argv)
 
       char name_buffer[ 64 ];
 
-      sprintf( name_buffer, "" );
+      sprintf( name_buffer, "%s" ,"" );
       OTF2_GlobalDefWriter_WriteString( glob_def_writer,string_id, name_buffer );
       STRING_EMPTY=string_id;
       string_id++;
@@ -924,9 +932,9 @@ int main(int argc, char **argv)
 */
 
   /* create the thread ids */
-  unsigned int groupid = 1;
-  int tid = 0; 
-  int nodes = numthreads.size(); /* total no. of nodes */ 
+  //unsigned int groupid = 1;
+  //int tid = 0;
+  int nodes = numthreads.size(); /* total no. of nodes */
   int *threadnumarray = new int[nodes]; 
   offset = new int[nodes+1];
   offset[0] = 0; /* no offset for node 0 */
@@ -968,17 +976,17 @@ int main(int argc, char **argv)
   //uint64_t locations[ location_count ];
   locations = new uint64_t[location_count];
   uint64_t mpi_ranks[ nodes ];
-  uint64_t master_threads[ nodes ];
+  //uint64_t master_threads[ nodes ];
   uint64_t master_threads2[ nodes ];
 
-  for ( uint64_t rank = 0; rank < nodes; rank++ )
+  for ( uint64_t rank = 0; rank < (uint64_t)nodes; rank++ )
   {
-      for ( uint64_t thread = 0; thread < numthreads[rank]; thread++ )
+      for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
       {
           locations[ numthreads[rank] * rank + thread ] = GlobalId(rank,thread);// ( rank << 16 ) + thread;
       }
       mpi_ranks[ rank ]      = GlobalId(rank,0);//TODO: Just to make sure we have valid rank ids? formerly rank
-      master_threads[ rank ] = rank << 16;
+      //master_threads[ rank ] = rank << 16;
   }
 
 
@@ -998,11 +1006,11 @@ string_id++;
 
 
   /* Write location group and location definitions. */
-  for ( uint64_t rank = 0; rank < nodes; ++rank )
+  for ( uint64_t rank = 0; rank < (uint64_t)nodes; ++rank )
   {
       char name_buffer[ 64 ];
 
-      sprintf( name_buffer, "Process %d" , rank );//PRIu64
+      sprintf( name_buffer, "Process %d" , (int)rank );//PRIu64
       status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                  string_id,
                                                  name_buffer );
@@ -1018,15 +1026,15 @@ string_id++;
       string_id++;
       master_threads2[rank]=rank;
 
-      for ( uint64_t thread = 0; thread < numthreads[rank]; thread++ )
+      for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
       {
-          sprintf( name_buffer, "Thread %d.%d" , rank, thread );
+          sprintf( name_buffer, "Thread %d.%d" , (int)rank, (int)thread );
           status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                      string_id,
                                                      name_buffer );
           check_status( status, "Write string definition." );
 
-          OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter( archive, locations[ numthreads[rank] * rank + thread ] );
+          //OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter( archive, locations[ numthreads[rank] * rank + thread ] );
 
 
           //check_pointer( evt_writer, "Get event writer." );
@@ -1036,7 +1044,7 @@ string_id++;
           check_status( status, "Get the numberof written events." );
           //uint64_t loc = locations[ rank * numthreads[rank] + thread ];
           uint64_t loc = GlobalId(rank,thread);
-          dprintf("Writing location: %d\n",loc);
+          dprintf("Writing location: %d\n",(int)loc);
           status = OTF2_GlobalDefWriter_WriteLocation( glob_def_writer,
                                                        loc,
                                                        string_id,
@@ -1061,7 +1069,32 @@ string_id++;
   //callstack = new stack<unsigned int> [totalnidtids](); 
   callstack.resize(totalnidtids+1);
 
-  //TODO: We may have to define this after all
+  /**Set up the state groups*/
+  typedef std::map<unsigned int, group>::iterator group_type;
+  for(group_type iterator = groups.begin(); iterator != groups.end(); iterator++) {
+
+   const char* stateGroupName=iterator->second.name;
+   unsigned int stateGroupToken=iterator->first;
+   int nom = iterator->second.members.size();
+   //vector<unsigned int> mv = iterator->second.members;
+   uint64_t* membs=&iterator->second.members[0];
+   OTF2_GlobalDefWriter_WriteString( glob_def_writer,string_id ,
+                                                    stateGroupName);
+   maxTauStringId=localmax(maxTauStringId,stateGroupToken);
+ //TODO: I guess we need to make a bucket for each group and count them ourselves.
+   /* create a default activity (group) */
+ #ifdef TAU_OTF2_1_1
+   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string, OTF2_GROUP_TYPE_REGIONS,0,0);
+ #else
+   //OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken,OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE,     OTF2_GROUP_TYPE_REGIONS,0,0);
+   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string_id, OTF2_GROUP_TYPE_REGIONS, OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE, nom,membs);
+ #endif /* TAU_OTF2_1_1 */
+
+   dprintf("Writing group %s, id %d to otf2\n",stateGroupName,stateGroupToken);
+
+   string_id++;
+   } //Setting up state groups
+
   /* Define group ids */
   //char name[1024];
   //strcpy(name, "TAU default group");
@@ -1195,7 +1228,7 @@ check_status( status, "Write communicator." );
       }
 
 
-      for ( uint64_t rank = 0; rank < nodes; rank++ )
+      for ( uint64_t rank = 0; rank < (uint64_t)nodes; rank++ )
       {
           OTF2_IdMap* mpi_comm_map = OTF2_IdMap_Create( OTF2_ID_MAP_SPARSE, 2 );
           check_pointer( mpi_comm_map, "Create ID map for MPI Comms." );
@@ -1204,7 +1237,7 @@ check_status( status, "Write communicator." );
           OTF2_IdMap_AddIdPair( mpi_comm_map, rank, MPI_COMM_MPI_COMM_WORLD );
           OTF2_IdMap_AddIdPair( mpi_comm_map, rank + nodes, MPI_COMM_MPI_COMM_SELF );
 
-          for ( uint64_t thread = 0; thread < numthreads[rank]; thread++ )
+          for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
           {
               /* Open a definition writer, so the file is created. */
               OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(
