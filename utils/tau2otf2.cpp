@@ -213,11 +213,106 @@ struct group {
 map< unsigned int, group > groups;
 
 
-struct source{
-
+struct source_info{
+	bool sourceFound;
+	unsigned int startline;
+	unsigned int stopline;
+	const char* event_name;
+	const char* sourcefile;
+	source_info(){
+		startline=0;
+		stopline=0;
+		event_name="";
+		sourcefile="";
+		sourceFound=false;
+	}
 };
 
 int maxTauStringId=0;
+
+
+void tau_trim(char * s) {
+    char * p = s;
+    int l = strlen(p);
+
+    while((l > 0) && isspace(p[l - 1])) p[--l] = 0;
+    while(* p && isspace(* p)) ++p, --l;
+
+    memmove(s, p, l + 1);
+}
+
+char* tau_strdup(const char* in_string) {
+  // add one more character for the null terminator
+  int length = strlen(in_string) + 1;
+  char* new_string = (char*)calloc(length, sizeof(char));
+  strcpy(new_string, in_string);
+  return new_string;
+}
+
+
+source_info parseSourceInfo(const char * name){
+	source_info info = source_info();
+
+	  const char* throttled = "[THROTTLED]";
+	  const char* openmp = "[OpenMP]";
+	  const char* openmplocation = "[OpenMP location:";
+	  char* working = tau_strdup(name);
+	  //char* short_name = "";
+	  // printf("'%s'\n", working);
+	  // parse the components out of the timer name
+	  if (strstr(name, throttled) != NULL) {
+	    // 'MPI_Irecv() [THROTTLED]'
+	    // special case, handle it
+		int length = strlen(name) - 11;
+		working[length] = 0; // new terminator
+	    return parseSourceInfo(working);
+	  }  else if (strstr(name, openmp) != NULL) {
+	    // 'barrier enter/exit [OpenMP]'
+	    // special case, handle it
+		  info.event_name = tau_strdup(name);
+	  } else if (strstr(name, openmplocation) != NULL) {
+	    // 'paralleldo [OpenMP location: file:/global/u2/k/khuck/src/XGC-1_CPU/pushe2.F95 <72, 150>]'
+	    // special case, handle it
+	    char* tmp = strtok(working, " ");
+		tau_trim(tmp);
+		info.event_name = tau_strdup(tmp);
+	    tmp = strtok(NULL, ":");
+	    tmp = strtok(NULL, ":");
+	    tmp = strtok(NULL, " ");
+	    info.sourcefile = tau_strdup(tmp);//timer->source_file
+	    tmp = strtok(NULL, " <,>]");
+		info.startline = atoi(tmp);//timer->line_number
+	    tmp = strtok(NULL, " <,>]");
+		info.stopline = atoi(tmp);//timer->line_number_end
+	  } else if (strstr(name, "[") != NULL) {
+	    // regular case
+		// get the function signature
+	    char* tmp = strtok(working, "[");
+		tau_trim(tmp);
+		info.event_name = tau_strdup(tmp);
+		// get the filename
+	    tmp = strtok(NULL, "}");
+		info.sourcefile = tau_strdup(tmp+1);//timer->source_file
+		// get the line and column numbers
+	    tmp = strtok(NULL, " {},-");
+		info.startline = atoi(tmp);//timer->line_number
+	    tmp = strtok(NULL, " {},-");
+		//timer->column_number = atoi(tmp);
+	    tmp = strtok(NULL, " {},-");
+		info.stopline = atoi(tmp);//timer->line_number_end
+	    tmp = strtok(NULL, " {},-");
+		//timer->column_number_end = atoi(tmp);
+	  } else {
+	    // simple case.
+		info.event_name = tau_strdup(name);
+	  }
+	  free(working);
+
+	  //info.event_name=short_name;
+
+
+	return info;
+}
 
 
 /* FIX GlobalID so it takes into account numthreads */
@@ -423,24 +518,43 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                  string_id,
                                                  name );
+  int rawnameid = string_id;
+  string_id++;
+
+  source_info info = parseSourceInfo(stateName);
+
+  OTF2_GlobalDefWriter_WriteString( glob_def_writer,
+                                                 string_id,
+                                                 info.event_name );
+  int shortnameid = string_id;
+  string_id++;
+
+  OTF2_GlobalDefWriter_WriteString( glob_def_writer,
+                                                   string_id,
+                                                   info.sourcefile );
+    int sourceid = string_id;
+    string_id++;
+
+
+
   maxTauStringId=localmax(maxTauStringId,stateToken);
   status = OTF2_GlobalDefWriter_WriteRegion( glob_def_writer,
                                              stateToken,
-                                             string_id,
-                                             string_id,
-                                             string_id,
+                                             shortnameid,
+                                             rawnameid,
+                                             STRING_EMPTY,
                                              OTF2_REGION_ROLE_UNKNOWN,
                                              OTF2_PARADIGM_UNKNOWN,
                                              OTF2_REGION_FLAG_NONE,
-                                             STRING_EMPTY,  //Source
-                                             0,  //Begin
-                                             0 );  //End
+                                             sourceid,  //Source
+                                             info.startline,  //Begin
+                                             info.stopline );  //End
   check_status( status, "Write region definition" );
 
   groups[stateGroupToken].members.push_back(stateToken);
 
   //OTF2_EvtWriter_writeDefFunction((OTF2_EvtWriter*)userData, TAU_GLOBAL_STREAM_ID, stateToken, (const char *) name, stateGroupToken, TAU_SCL_NONE);
-  string_id++;
+
   return 0;
 }
 //int NUM_OF_CLASSES = 1;
