@@ -969,6 +969,7 @@ int main(int argc, char **argv)
   locations = new uint64_t[location_count];
   uint64_t mpi_ranks[ nodes ];
   uint64_t master_threads[ nodes ];
+  uint64_t master_threads2[ nodes ];
 
   for ( uint64_t rank = 0; rank < nodes; rank++ )
   {
@@ -1015,7 +1016,7 @@ string_id++;
                                                         0);//( rank / 2 ) + 1 );
       check_status( status, "Write location group definition." );
       string_id++;
-
+      master_threads2[rank]=rank;
 
       for ( uint64_t thread = 0; thread < numthreads[rank]; thread++ )
       {
@@ -1163,7 +1164,7 @@ int COMM_STRING=string_id;
                                           OTF2_PARADIGM_MPI,
                                           OTF2_GROUP_FLAG_NONE,
                                           nodes,
-                                          mpi_ranks );
+                                          master_threads2 );//master_threads );
 
 
 
