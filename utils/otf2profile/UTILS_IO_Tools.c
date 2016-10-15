@@ -302,7 +302,7 @@ UTILS_IO_JoinPath( int nPaths, ... )
     va_list paths;
 
     va_start( paths, nPaths );
-    for ( int i = 0; i < nPaths; i++ )
+    for ( i = 0; i < nPaths; i++ )
     {
         const char* path = va_arg( paths, const char* );
         if ( !path )
@@ -343,7 +343,7 @@ UTILS_IO_JoinPath( int nPaths, ... )
     va_start( paths, nPaths );
     total_length = 0;
     sep          = "";
-    for ( int i = 0; i < nPaths; i++ )
+    for ( i = 0; i < nPaths; i++ )
     {
         const char* path = va_arg( paths, const char* );
 
