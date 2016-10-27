@@ -8,6 +8,7 @@
 #include <link.h>
 #include <stdio.h>
 
+
 int * objopen_counter()
 {
   static int count = 0;
@@ -20,6 +21,7 @@ unsigned int la_version(unsigned int version)
   return version;
 }
 
+#if 1
 unsigned int la_objopen(struct link_map *map, Lmid_t lmid, uintptr_t *cookie)
 {
   (*objopen_counter())++;
@@ -54,6 +56,6 @@ void la_preinit(uintptr_t *cookie)
     printf("TAU: ERROR in opening TAU library in auditor.\n");
   }
 }
-
+#endif
 
 #endif //TAU_TRACK_LD_LOADER

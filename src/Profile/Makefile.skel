@@ -640,7 +640,7 @@ TauOpenShmemOpenMPIC.o: TauOpenShmemOpenMPIC.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC)  -c $(@:.o=.cpp)
 
 TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -727,10 +727,10 @@ PgiAcc.o 	: PgiAcc.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 RtsLayer.o 	: RtsLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 RtsThread.o 	: RtsThread.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -847,7 +847,8 @@ TauHandler.o : TauHandler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 MPCThreadLayer.o   : MPCThreadLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	@echo $(TAU_MPI_INC)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
