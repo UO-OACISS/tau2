@@ -9,10 +9,16 @@ HDRS	      =
 
 MAKEFILE      = Makefile
 
+#OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_selective.o \
+		tau_instrumentor.o tau_instrument.o user_event_data.o \
+		function_data.o pprof_elem.o tau_run.o \
+		tau_timecorrect.o tau_wrap.o
+
 OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
 		tau_instrumentor.o tau_instrument.o user_event_data.o \
 		function_data.o pprof_elem.o tau_run.o \
 		tau_timecorrect.o tau_wrap.o
+
 
 PRINT	      = pr
 
@@ -318,12 +324,20 @@ $(INSTALLLIBDEST)/ebs2otf.so: ebs2otf/ebs2otf.so
 		$(TAU_INSTALL) ebs2otf/ebs2otf.pm $(INSTALLLIBDEST)
 		cd ebs2otf; $(MAKE) cleanup
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce \
+#install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce \
 $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari  $(INSTALLOPARI2) \
 $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) \
 $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) \
 $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) \
 $(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS) $(INSTALLOPARI2CONFIG) $(INSTALLOPARI2AWK)
+
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce \
+$(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari  $(INSTALLOPARI2) \
+$(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) \
+$(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) \
+$(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) \
+$(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS) $(INSTALLOPARI2CONFIG) $(INSTALLOPARI2AWK)
+
 
 program:        $(PROGRAM)
 
