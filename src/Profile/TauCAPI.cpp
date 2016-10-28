@@ -76,6 +76,7 @@ using namespace tau;
 
 extern "C" void Tau_shutdown(void);
 extern "C" void Tau_disable_collector_api();
+extern int Tau_get_count_for_pvar(int index);
 
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
@@ -2583,8 +2584,8 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 
 #include <mpi.h> 
 
-int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event) {
-  int return_val, num_pvars, i, namelen, verb, varclass, bind, threadsup;
+int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvarindex, int pvarcount) {
+  int return_val, namelen, verb, varclass, bind, threadsup, i;
   int index;
   int readonly, continuous, atomic;
   char event_name[TAU_NAME_LENGTH + 1] = "";
@@ -2594,56 +2595,51 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event) {
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
 
-  return_val = MPI_T_pvar_get_num(&num_pvars);
-  if (return_val != MPI_SUCCESS) {
-    perror("MPI_T_pvar_get_num ERROR:");
-    return return_val;
+  namelen = desc_len = TAU_NAME_LENGTH;
+  return_val = MPI_T_pvar_get_info(pvarindex/*IN*/,
+    event_name /*OUT*/,
+    &namelen /*INOUT*/,
+    &verb /*OUT*/,
+    &varclass /*OUT*/,
+    &datatype /*OUT*/,
+    &enumtype /*OUT*/,
+    description /*description: OUT*/,
+    &desc_len /*desc_len: INOUT*/,
+    &bind /*OUT*/,
+    &readonly /*OUT*/,
+    &continuous /*OUT*/,
+    &atomic/*OUT*/); 
+
+  for(i=0; i<pvarcount; i++) {
+   sprintf(concat_event_name, "%s (%s)[%d]", event_name, description, i);
+   TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
+   (*event)[i] = new TauUserEvent(concat_event_name);
   }
 
-  /* Initialize variables. Get the names of performance variables */
-  for(i = 0; i < num_pvars; i++){
-    namelen = desc_len = TAU_NAME_LENGTH;
-    return_val = MPI_T_pvar_get_info(i/*IN*/,
-      event_name /*OUT*/,
-      &namelen /*INOUT*/,
-      &verb /*OUT*/,
-      &varclass /*OUT*/,
-      &datatype /*OUT*/,
-      &enumtype /*OUT*/,
-      description /*description: OUT*/,
-      &desc_len /*desc_len: INOUT*/,
-      &bind /*OUT*/,
-      &readonly /*OUT*/,
-      &continuous /*OUT*/,
-      &atomic/*OUT*/); 
-
-    sprintf(concat_event_name, "%s (%s)", event_name, description);
-    TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
-    
-
-    (*event)[i] = new TauUserEvent(concat_event_name);
-
-    /* Add a metadata field */
-    sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", i, event_name);
-    TAU_METADATA(concat_event_name, description); 
-  }
-} 
-TauUserEvent & ThePVarsMPIEvents(int index, int total_events) {
-    static TauUserEvent ** pvarEvents = NULL;
-
+  /* Add a metadata field */
+  sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", index, event_name);
+  TAU_METADATA(concat_event_name, description); 
+}
+ 
+TauUserEvent & ThePVarsMPIEvents(int index, int subindex, int total_events) {
+    static TauUserEvent *** pvarEvents = NULL;
+    int i;
 
     if(!pvarEvents) {
-        pvarEvents = (TauUserEvent**)calloc(total_events, sizeof(TauUserEvent*));
-	Tau_fill_mpi_t_pvar_events(&pvarEvents); 
+        pvarEvents = (TauUserEvent***)calloc(total_events, sizeof(TauUserEvent**));
+        for(i=0; i<total_events; i++) { 
+          pvarEvents[i] = (TauUserEvent**)calloc(Tau_get_count_for_pvar(index), sizeof(TauUserEvent*));
+	  Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), index, Tau_get_count_for_pvar(index));
+        }
     }   
-
-    return *(pvarEvents[index]);
+  
+    return *(pvarEvents[index][subindex]);
 }
 
-extern "C" void Tau_track_pvar_event(int index, int total_events, double data) {
-  ThePVarsMPIEvents(index, total_events).TriggerEvent(data, Tau_get_thread()); 
+extern "C" void Tau_track_pvar_event(int index, int subindex, int total_events, double data) {
+  ThePVarsMPIEvents(index, subindex, total_events).TriggerEvent(data, Tau_get_thread()); 
 #ifdef TAU_BEACON
-  TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(index, total_events).GetName().c_str()));
+  TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(index, subindex, total_events).GetName().c_str()));
 #endif /* TAU_BEACON */
 }
 #ifdef TAU_SCOREP

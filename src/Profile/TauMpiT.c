@@ -32,7 +32,7 @@ static MPI_T_pvar_session tau_pvar_session;
 //////////////////////////////////////////////////////////////////////
 // externs
 //////////////////////////////////////////////////////////////////////
-extern void Tau_track_pvar_event(int index, int total_events, double data);
+extern void Tau_track_pvar_event(int index, int subindex, int total_events, double data);
 
 #define dprintf TAU_VERBOSE
 
@@ -74,8 +74,6 @@ int Tau_mpi_t_initialize(void) {
   dprintf("TAU MPI_T STARTED session: pvars exposed = %d\n", num_pvars);
   return return_val;
 } 
-
-
 
 /*Iterates through all the cvars provided by the implementation and prints the name and description of each cvar*/
 int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
@@ -599,6 +597,7 @@ int Tau_mpi_t_cvar_initialize(void) {
 static unsigned long long int **pvar_value_buffer;
 static void *read_value_buffer; // values are read into this buffer.
 static MPI_Datatype *tau_mpi_datatype; 
+static int *tau_pvar_count;
 
 //////////////////////////////////////////////////////////////////////
 int Tau_track_mpi_t_here(void) {
@@ -611,7 +610,6 @@ int Tau_track_mpi_t_here(void) {
   char description[TAU_NAME_LENGTH + 1] = "";
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
-  static int *tau_pvar_count; 
   int returnVal;
 
   
@@ -707,13 +705,30 @@ int Tau_track_mpi_t_here(void) {
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
         /* Trigger the TAU event if it is non-zero */
 	if (mydata > 0L) {
-          Tau_track_pvar_event(i, num_pvars, mydata);
+          Tau_track_pvar_event(i, j, num_pvars, mydata);
         }
       }
     }
 
   }
   dprintf("Finished!!\n");
+}
+
+/*Return the count of number of pvars for a pvar of a given index*/
+int Tau_get_count_for_pvar(int index) {
+  int return_val, num_pvars;
+
+  /* get number of pvars from MPI_T */
+  return_val = MPI_T_pvar_get_num(&num_pvars);
+  if (return_val != MPI_SUCCESS) {
+    perror("MPI_T_pvar_get_num ERROR:");
+    return 0;
+  }
+  if((index < 0) ||(index >= num_pvars)) {
+    printf("TAU: PVAR index %d is out of range of total number of exposed pvars %d\n", index, num_pvars);
+    return 0;
+  }
+  return tau_pvar_count[index];
 }
 
 
