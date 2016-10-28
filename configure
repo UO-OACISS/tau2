@@ -2692,7 +2692,6 @@ if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
     if [ "$c_compiler" = mpc_cc ]
     then
       TAU_CCOM="$mpc_c_compiler"
-      echo $TAU_CCOM
     fi
     export TAU_CCOM
 fi
@@ -7689,9 +7688,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         fi
         ;;
       *)   
-        echo $c_compiler
-        echo $mpc_c_compiler
-        echo $mpc_cxx_compiler
+        #echo $c_compiler
         if [ "$c_compiler" = mpc_cc ]
         then
            ./configure \
@@ -7700,10 +7697,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
             err=$?
-            echo $err
-            echo "CHECK MPC"
         else
-          echo "NOT MPC"
           ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             #CC=$c_compiler CXX=$cxx_compiler \
