@@ -679,9 +679,13 @@ int Tau_track_mpi_t_here(void) {
     // get data from event 
     MPI_T_pvar_read(tau_pvar_session, tau_pvar_handles[i], read_value_buffer);
     MPI_Type_size(tau_mpi_datatype[i], &size); 
-    for(j = 0; j < tau_pvar_count[j]; j++){
+
+    for(j = 0; j < tau_pvar_count[i]; j++) {
       pvar_value_buffer[i][j] = 0;
-      memcpy(&(pvar_value_buffer[i][j]), read_value_buffer, size);
+    }
+    memcpy(pvar_value_buffer[i], read_value_buffer, size*tau_pvar_count[i]);
+
+    for(j = 0; j < tau_pvar_count[i]; j++){
       /* unsigned long long int to double conversion can result in an error. 
        * We first convert it to a long long int. */
       long long int mydata = (long long int) pvar_value_buffer[i][j]; 
