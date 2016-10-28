@@ -937,7 +937,7 @@ for arg in "$@"; do
 	    then
 		c_compiler=$myarg
 
-                if [[ ( $c_compiler = mpc_cc ) || ( $c_compiler = mpc_icc ) ]]
+                if [  $c_compiler = mpc_cc -o  $c_compiler = mpc_icc  ]
                 then
 	 	  mpc_c_compiler=`$myarg -show | awk '{ print $1; }'`
                 fi
@@ -965,7 +965,7 @@ for arg in "$@"; do
 	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ ]
 	    then
 		cxx_compiler=$myarg
-                if [[ ( $cxx_compiler = mpc_cxx ) || ( $cxx_compiler = mpc_icpc ) ]]
+                if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  ]
                 then
                   mpc_include=`mpc_cxx -show | grep -o '[^ ]*include/mpcframework[^ ]*'`
 	 	  mpc_cxx_compiler=`$myarg -show | awk '{ print $1; }'`
@@ -7696,11 +7696,10 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             CC=$mpc_c_compiler CXX=$mpc_cxx_compiler \
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
-            err=$?
+            err=$?	 
         else
           ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
-            #CC=$c_compiler CXX=$cxx_compiler \
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
             err=$?
