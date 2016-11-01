@@ -597,6 +597,7 @@ int Tau_mpi_t_cvar_initialize(void) {
 static unsigned long long int **pvar_value_buffer;
 static void *read_value_buffer; // values are read into this buffer.
 static MPI_Datatype *tau_mpi_datatype; 
+static int *tau_pvar_count;
 
 //////////////////////////////////////////////////////////////////////
 int Tau_track_mpi_t_here(void) {
@@ -610,7 +611,6 @@ int Tau_track_mpi_t_here(void) {
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
   int returnVal;
-  int *tau_pvar_count;
   
   /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
    * to process MPI_T events */
