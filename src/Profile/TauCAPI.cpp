@@ -2584,9 +2584,8 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 
 #include <mpi.h> 
 
-int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvarindex, int pvarcount) {
+int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
   int return_val, namelen, verb, varclass, bind, threadsup, i;
-  int index;
   int readonly, continuous, atomic;
   char event_name[TAU_NAME_LENGTH + 1] = "";
   char concat_event_name[TAU_NAME_LENGTH + 1] = "";
@@ -2596,7 +2595,7 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvarindex, int pvarcou
   MPI_T_enum enumtype;
 
   namelen = desc_len = TAU_NAME_LENGTH;
-  return_val = MPI_T_pvar_get_info(pvarindex/*IN*/,
+  return_val = MPI_T_pvar_get_info(pvar_index/*IN*/,
     event_name /*OUT*/,
     &namelen /*INOUT*/,
     &verb /*OUT*/,
@@ -2610,36 +2609,42 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvarindex, int pvarcou
     &continuous /*OUT*/,
     &atomic/*OUT*/); 
 
-  for(i=0; i<pvarcount; i++) {
-   sprintf(concat_event_name, "%s (%s)[%d]", event_name, description, i);
-   TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
-   (*event)[i] = new TauUserEvent(concat_event_name);
+  if(pvar_count == 1) {
+    sprintf(concat_event_name, "%s (%s)", event_name, description);
+    TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
+    (*event)[i] = new TauUserEvent(concat_event_name);
+  } else {
+    for(i=0; i < pvar_count; i++) {
+      sprintf(concat_event_name, "%s (%s)[%d]", event_name, description, i);
+      TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
+      (*event)[i] = new TauUserEvent(concat_event_name);
+    }
   }
 
   /* Add a metadata field */
-  sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", index, event_name);
+  sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", pvar_index, event_name);
   TAU_METADATA(concat_event_name, description); 
 }
  
-TauUserEvent & ThePVarsMPIEvents(int index, int subindex, int total_events) {
+TauUserEvent & ThePVarsMPIEvents(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars) {
     static TauUserEvent *** pvarEvents = NULL;
     int i;
 
     if(!pvarEvents) {
-        pvarEvents = (TauUserEvent***)calloc(total_events, sizeof(TauUserEvent**));
-        for(i=0; i<total_events; i++) { 
-          pvarEvents[i] = (TauUserEvent**)calloc(Tau_get_count_for_pvar(index), sizeof(TauUserEvent*));
-	  Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), index, Tau_get_count_for_pvar(index));
+        pvarEvents = (TauUserEvent***)calloc(num_pvars, sizeof(TauUserEvent**));
+        for(i=0; i < num_pvars; i++) { 
+          pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
+	  Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
     }   
   
-    return *(pvarEvents[index][subindex]);
+    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
 
-extern "C" void Tau_track_pvar_event(int index, int subindex, int total_events, double data) {
-  ThePVarsMPIEvents(index, subindex, total_events).TriggerEvent(data, Tau_get_thread()); 
+extern "C" void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data) {
+  ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).TriggerEvent(data, Tau_get_thread()); 
 #ifdef TAU_BEACON
-  TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(index, subindex, total_events).GetName().c_str()));
+  TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).GetName().c_str()));
 #endif /* TAU_BEACON */
 }
 #ifdef TAU_SCOREP

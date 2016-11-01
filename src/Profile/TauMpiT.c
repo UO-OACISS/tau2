@@ -32,7 +32,7 @@ static MPI_T_pvar_session tau_pvar_session;
 //////////////////////////////////////////////////////////////////////
 // externs
 //////////////////////////////////////////////////////////////////////
-extern void Tau_track_pvar_event(int index, int subindex, int total_events, double data);
+extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data);
 
 #define dprintf TAU_VERBOSE
 
@@ -597,7 +597,6 @@ int Tau_mpi_t_cvar_initialize(void) {
 static unsigned long long int **pvar_value_buffer;
 static void *read_value_buffer; // values are read into this buffer.
 static MPI_Datatype *tau_mpi_datatype; 
-static int *tau_pvar_count;
 
 //////////////////////////////////////////////////////////////////////
 int Tau_track_mpi_t_here(void) {
@@ -611,7 +610,7 @@ int Tau_track_mpi_t_here(void) {
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
   int returnVal;
-
+  int *tau_pvar_count;
   
   /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
    * to process MPI_T events */
@@ -705,7 +704,7 @@ int Tau_track_mpi_t_here(void) {
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
         /* Trigger the TAU event if it is non-zero */
 	if (mydata > 0L) {
-          Tau_track_pvar_event(i, j, num_pvars, mydata);
+          Tau_track_pvar_event(i, j, tau_pvar_count, num_pvars, mydata);
         }
       }
     }
@@ -713,24 +712,6 @@ int Tau_track_mpi_t_here(void) {
   }
   dprintf("Finished!!\n");
 }
-
-/*Return the count of number of pvars for a pvar of a given index*/
-int Tau_get_count_for_pvar(int index) {
-  int return_val, num_pvars;
-
-  /* get number of pvars from MPI_T */
-  return_val = MPI_T_pvar_get_num(&num_pvars);
-  if (return_val != MPI_SUCCESS) {
-    perror("MPI_T_pvar_get_num ERROR:");
-    return 0;
-  }
-  if((index < 0) ||(index >= num_pvars)) {
-    printf("TAU: PVAR index %d is out of range of total number of exposed pvars %d\n", index, num_pvars);
-    return 0;
-  }
-  return tau_pvar_count[index];
-}
-
 
 //////////////////////////////////////////////////////////////////////
 // EOF : TauMpiT.c
