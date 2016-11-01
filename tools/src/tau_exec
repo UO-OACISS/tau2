@@ -900,9 +900,6 @@ else
         # since view-static_ts must be run with PWD=$pttsprefix
         viewdir="node_${node}"
         viewlog="view-static_ts.${node}.log"
-        # Fork with LD_PRELOAD
-        $@ &
-        child_pid=$!
         # Restore environment and start sampling the child process
         if [ $apple = 1 ]; then
             export DYLD_LIBRARY_PATH=$ORIG_LIBRARY_PATH
@@ -914,13 +911,11 @@ else
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
         rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
-	echo "Finalizing sample_ts $@ on rank $node" 
-        sample_ts $ts_sample_flags -o "$samplefile" -p "$child_pid" >$samplelog 2>&1
-	sleep 10
+        sample_ts $ts_sample_flags -o "$samplefile" -r $@ >$samplelog 2>&1
         err=$? ; [ $err -eq 0 ] || exit $err
+        retval=$err
+	echo "Finalizing sample_ts $@ on rank $node" 
         # Get the return code of the child process as the tau_exec return code
-        wait $child_pid
-        retval=$?
         # Post-process samples
         echo "PTTS($node): Postprocessing samples..."
         report_ts $ts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
