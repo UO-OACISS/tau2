@@ -893,6 +893,7 @@ else
             exit 1
         fi
         samplefile="$pttsprefix/sample.${node}.smp"
+        samplefileopt="$pttsprefix/sample%U.smp"
         samplelog="$pttsprefix/sample_ts.${node}.log"
         reportfile="$pttsprefix/report.${node}.tsr"
         reportlog="$pttsprefix/report_ts.${node}.log"
@@ -911,9 +912,14 @@ else
             export LD_PRELOAD=$ORIG_LD_PRELOAD
         fi
         rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
-        sample_ts $ts_sample_flags -o "$samplefile" -r $@ >$samplelog 2>&1
+        sample_ts $ts_sample_flags -o "$samplefileopt" -r $@ >$samplelog 2>&1 &
         err=$? ; [ $err -eq 0 ] || exit $err
         retval=$err
+        while [ ! -f $samplefile ] ;
+        do
+              sleep 2
+        done
+        sleep 10
 	echo "Finalizing sample_ts $@ on rank $node" 
         # Get the return code of the child process as the tau_exec return code
         # Post-process samples
