@@ -1261,10 +1261,10 @@ else
 fi
 
 # Check if must cat link options file to link options
-archs=("ppc64", "ppc64le", "ibm64linux", "bgq")
+archs=("ppc64" "ppc64le" "ibm64linux" "bgq")
 cat_link_file=$FALSE
-for i in "${!archs}"; do
-	if [[ $i == $TAU_ARCH ]]; then
+for i in "${archs[@]}"; do
+	if [[ "$i" == "$TAUARCH" ]]; then
 		cat_link_file=$TRUE
 		break
 	fi
