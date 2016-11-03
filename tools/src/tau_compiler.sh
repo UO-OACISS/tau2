@@ -82,6 +82,7 @@ preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
 optWrappersDir="/tmp"
 TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
@@ -1259,6 +1260,16 @@ else
     echoIfDebug "Opari2 is off!"
 fi
 
+# Check if must cat link options file to link options
+archs=("ppc64", "ppc64le", "ibm64linux", "bgq")
+cat_link_file=$FALSE
+for i in "${!archs}"; do
+	if [[ $i == $TAU_ARCH ]]; then
+		cat_link_file=$TRUE
+		break
+	fi
+done
+
 
 tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do
@@ -1584,7 +1595,11 @@ if [ $numFiles == 0 ]; then
 
     link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
     if [ "x$link_options_file" != "x" ] ; then
-        optLinking="$optLinking @$link_options_file $optLinking"
+        if [ $cat_link_file == $TRUE ]; then
+		optLinking="$optLinking `cat $link_options_file` $optLinking"
+	else
+                optLinking="$optLinking @$link_options_file $optLinking"
+	fi
     fi
 
     if [ $hasAnOutputFile == $FALSE ]; then
@@ -2281,7 +2296,11 @@ else
 
           link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
           if [ "x$link_options_file" != "x" ] ; then
-              optLinking="@$link_options_file $optLinking"
+              if [ $cat_link_file == $TRUE ]; then
+		      optLinking="`cat $link_options_file` $optLinking"
+              else
+                      optLinking="@$link_options_file $optLinking"
+	      fi
           fi
           newCmd="$newCmd $optLinking -o $passedOutputFile"
 
