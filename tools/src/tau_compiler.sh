@@ -83,6 +83,7 @@ defaultParser="noparser"
 optWrappersDir="/tmp"
 TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
+TAUCOMP="`grep 'TAU_COMPILER_SUITE_USED=' $TAU_MAKEFILE | grep '##' | sed -e 's/TAU_COMPILER_SUITE_USED=\(.*\)#ENDIF##\(.*\)#/\1/'`"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
@@ -1269,6 +1270,10 @@ for i in "${archs[@]}"; do
 		break
 	fi
 done
+
+if [ $TAUCOMP = "pgi" ]; then
+	cat_link_file=$TRUE
+fi
 
 
 tempCounter=0
