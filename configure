@@ -1513,6 +1513,10 @@ for arg in "$@"; do
 		echo "Error: Cannot access SCOREP directory $scorepdir"
 		exit 1
 	    fi
+        if [ "x$otf" != xyes ] ; then
+           otf=yes
+           otfdir=${scorepdir}
+        fi
 	    shift
 	    ;;
 
