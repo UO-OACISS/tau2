@@ -64,7 +64,7 @@ int MPCThreadLayer::RegisterThread(void)
     *id = tauThreadCount++;
     sctk_thread_mutex_unlock(&tauThreadCountMutex);
   }
-  tls_args = (void*)id;
+  //tls_args = (void*)id;
   return *id;
 }
 
