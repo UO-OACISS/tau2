@@ -82,6 +82,8 @@ preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
 optWrappersDir="/tmp"
 TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TAUARCH="`grep 'TAU_ARCH=' $TAU_MAKEFILE | sed -e 's@TAU_ARCH=@@g' `"
+TAUCOMP="`grep 'TAU_COMPILER_SUITE_USED=' $TAU_MAKEFILE | grep '##' | sed -e 's/TAU_COMPILER_SUITE_USED=\(.*\)#ENDIF##\(.*\)#/\1/'`"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
@@ -1259,6 +1261,20 @@ else
     echoIfDebug "Opari2 is off!"
 fi
 
+# Check if must cat link options file to link options
+archs=("ppc64" "ppc64le" "ibm64linux" "bgq")
+cat_link_file=$FALSE
+for i in "${archs[@]}"; do
+	if [[ "$i" == "$TAUARCH" ]]; then
+		cat_link_file=$TRUE
+		break
+	fi
+done
+
+if [ $TAUCOMP = "pgi" ]; then
+	cat_link_file=$TRUE
+fi
+
 
 tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do
@@ -1584,7 +1600,11 @@ if [ $numFiles == 0 ]; then
 
     link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
     if [ "x$link_options_file" != "x" ] ; then
-        optLinking="$optLinking @$link_options_file $optLinking"
+        if [ $cat_link_file == $TRUE ]; then
+		optLinking="$optLinking `cat $link_options_file` $optLinking"
+	else
+                optLinking="$optLinking @$link_options_file $optLinking"
+	fi
     fi
 
     if [ $hasAnOutputFile == $FALSE ]; then
@@ -2275,15 +2295,19 @@ else
             esac
           fi
 
+          newCmd="$newCmd $optLinking -o $passedOutputFile"
           if [ "x$tauWrapFile" != "x" ]; then
             link_options_file="$tauWrapFile"
           fi
 
           link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
           if [ "x$link_options_file" != "x" ] ; then
-              optLinking="@$link_options_file $optLinking"
+              if [ $cat_link_file == $TRUE ]; then
+		      newCmd="$newCmd `cat $link_options_file`"
+              else
+                      newCmd="$newCmd @$link_options_file"
+	      fi
           fi
-          newCmd="$newCmd $optLinking -o $passedOutputFile"
 
           if [ "x$optTauGASPU" != "x" ]; then
             newCmd="$newCmd $optTauGASPU"
