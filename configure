@@ -8976,7 +8976,7 @@ if [ $scorep = yes ] ; then
     scorep_supports_opencl=no
     if [ -x $scorepdir/bin/scorep-config ]; then
        retval=`$scorepdir/bin/scorep-config --noopencl &>/dev/null `
-       if [ $? == 0 ]; then
+       if [ $? = 0 ]; then
          scorep_supports_opencl=yes
          echo "NOTE: Score-P's scorep-config supports --noopencl option"
        fi
@@ -8993,7 +8993,7 @@ if [ $scorep = yes ] ; then
     scorep_supports_openacc=no
     if [ -x $scorepdir/bin/scorep-config ]; then
        retval=`$scorepdir/bin/scorep-config --noopenacc &>/dev/null `
-       if [ $? == 0 ]; then
+       if [ $? = 0 ]; then
          scorep_supports_openacc=yes
          echo "NOTE: Score-P's scorep-config supports --noopenacc option"
        fi
