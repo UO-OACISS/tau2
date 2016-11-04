@@ -43,7 +43,7 @@ download()
     cp $local $dst
   elif which wget >/dev/null 2>&1 ; then
     echo "wget: $src ==> $dst"
-    wget -O "$dst" "$src"
+    wget --no-check-certificate -O "$dst" "$src"
   elif which curl >/dev/null 2>&1 ; then
     echo "curl: $src ==> $dst"
     curl -L "$src" > "$dst"
@@ -6138,9 +6138,9 @@ if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
 fi
 
-libomp_oss=LLVM-openmp-0.1
+libomp_oss=LLVM-openmp-0.2
 libomp_osstgz=${libomp_oss}.tar.gz
-libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz
+libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.2.tar.gz
 libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then
     libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
@@ -6244,6 +6244,7 @@ if [ "x$download_ompt" = xyes ] ; then
       result=$?
       if [ $result -eq 0 ] ; then
 	    make clean
+            make libomp-needed-headers >> $libomp_oss_log 2>&1
 	    make >> $libomp_oss_log 2>&1
         result=$?
         if [ $result -eq 0 ] ; then
