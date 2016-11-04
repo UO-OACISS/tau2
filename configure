@@ -6140,7 +6140,8 @@ fi
 
 libomp_oss=LLVM-openmp-0.2
 libomp_osstgz=${libomp_oss}.tar.gz
-libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.2.tar.gz
+#libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.2.tar.gz
+libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then
     libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
