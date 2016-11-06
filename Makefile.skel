@@ -124,6 +124,7 @@ MEMORYWRAPPER=src/wrappers/memory
 #MPC##PTHREAD_WRAPPER=src/wrappers/mpcthread #ENDIF#
 
 #SHMEM#SHMEM_WRAPPER=src/wrappers/shmem #ENDIF#
+#PGI_OPENACC#TAU_CUPTI_AVAIL= #ENDIF#
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
