@@ -521,7 +521,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   int rawnameid = string_id;
   string_id++;
 
-  source_info info = parseSourceInfo(stateName);
+  source_info info = parseSourceInfo(name);
 
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                  string_id,
