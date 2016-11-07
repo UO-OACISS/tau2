@@ -1617,7 +1617,9 @@ char *** argv;
   returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
   //printf("Requested: %d, Provided: %d\n", MPI_THREAD_MULTIPLE, provided);
   if (TauEnv_get_sos_enabled()) {
-    TAU_SOS_init(argc, argv, provided >= MPI_THREAD_FUNNELED);
+    TAU_SOS_init(argc, argv, true);
+  } else {
+    TAU_VERBOSE("*** AAAAARRRRGGGGHHHH!!!! ***\n");
   }
   //#else
   //returnVal = PMPI_Init( argc, argv );

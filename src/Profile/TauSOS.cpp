@@ -114,7 +114,7 @@ void TAU_SOS_make_pub() {
 
 extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     static bool initialized = false;
-    if (!TauEnv_get_sos_enabled()) { return; }
+    if (!TauEnv_get_sos_enabled()) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;
         init_lock();
@@ -185,6 +185,7 @@ extern "C" void TAU_SOS_send_data(void) {
     }
     assert(tau_sos_pub);
     if (done) { return; }
+    //TauTrackPowerHere(); // get a power measurement
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
@@ -284,7 +285,7 @@ extern "C" void TAU_SOS_send_data(void) {
   RtsLayer::UnLockDB();
   if (keys_added) {
       TAU_VERBOSE("[TAU_SOS_send_data]: Announcing the pub...\n");
-      SOS_announce(tau_sos_pub);
+      //SOS_announce(tau_sos_pub);
       TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
   }
   TAU_VERBOSE("[TAU_SOS_send_data]: Publishing the values...\n");

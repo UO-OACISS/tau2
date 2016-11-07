@@ -83,7 +83,7 @@ using namespace std;
 #define TAU_OPENMP_RUNTIME_CONTEXT_REGION "region"
 #define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
 
-#define TAU_SOS_DEFAULT 0
+#define TAU_SOS_DEFAULT 1
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
@@ -235,7 +235,7 @@ static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
-static int env_sos_enabled = 0;
+static int env_sos_enabled = 1;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;

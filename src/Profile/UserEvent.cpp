@@ -342,7 +342,8 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current)
 {
   int depth = TauEnv_get_callpath_depth();
 
-  long * ary = new long[depth+2];
+  //long * ary = new long[depth+2];
+  long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(long)*(depth+2));
   memset(ary, 0, (depth+2)*sizeof(long));
 
   int i=1;
@@ -422,13 +423,28 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         RtsLayer::LockDB();
         ContextEventMap::iterator it = contextMap.find(comparison);
         if (it == contextMap.end()) {
+  /* KAH - Whoops!! We can't call "new" here, because malloc is not
+   * safe in signal handling. therefore, use the special memory
+   * allocation routines */
+#ifndef TAU_WINDOWS
+          contextEvent = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
+  /*  now, use the pacement new function to create a object in
+   *  pre-allocated memory. NOTE - this memory needs to be explicitly
+   *  deallocated by explicitly calling the destructor. 
+   *  I think the best place for that is in the destructor for
+   *  the hash table. */
+          new(contextEvent) TauUserEvent(
+              FormulateContextNameString(current),
+              userEvent->IsMonotonicallyIncreasing());
+#else
           contextEvent = new TauUserEvent(
               FormulateContextNameString(current),
               userEvent->IsMonotonicallyIncreasing());
+#endif
           contextMap[comparison] = contextEvent;
         } else {
           contextEvent = it->second;
-          delete[] comparison;
+          //delete[] comparison;
         }
         RtsLayer::UnLockDB();
         contextEvent->TriggerEvent(data, tid, timestamp, use_ts);

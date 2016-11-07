@@ -3432,7 +3432,7 @@ fi
 
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
-    orig_useropt="-mmic -O2 "
+    orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
 if [ $machine = apple ] ; then
@@ -6007,7 +6007,7 @@ if [ "x$download_ompt" = xyes ] ; then
       if [ "x$machine" = "xmic_linux" ] ; then
         libomp_oss_log=build-mic.log
         archarg="arch=mic"
-        specialflags='-DCMAKE_CXX_FLAGS="-mmic -D__MIC2__" -DCMAKE_C_FLAGS="-mmic -D__MIC2__"'
+        specialflags='-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -D__MIC2__" -DCMAKE_C_FLAGS="-xMIC-AVX512 -D__MIC2__"'
 	  fi
 
 	  # fix the expected path for bin 
@@ -7410,7 +7410,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
           k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
           export PATH=$k1om_bin:$PATH
           ./configure \
-            CFLAGS='-mmic -fPIC' CXXFLAGS='-mmic -fPIC' \
+            CFLAGS='-xMIC-AVX512 -fPIC' CXXFLAGS='-xMIC-AVX512 -fPIC' \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
@@ -8408,8 +8408,8 @@ if [ $apex = yes ] ; then
 		fi
 	fi
 	if [ ${architecture} = "mic_linux" ] ; then
-		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-mmic' >> ${apex_include_file}
-		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-mmic -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
+		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-xMIC-AVX512' >> ${apex_include_file}
+		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
 	fi
 	if [ ! "x${omptlib}" = "x" ] ; then
 		if [ "${download_ompt}" = "yes" ] ; then
