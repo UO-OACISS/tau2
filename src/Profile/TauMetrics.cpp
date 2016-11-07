@@ -227,10 +227,10 @@ static void metricv_add(const char *name) {
                  nmetrics++;
                }
              }
+             free(eventIdArray);
           }
+          free(domainArray);
         }
-        free(domainArray);
-        free(eventIdArray);
       }
     }
 #endif //CUPTI
