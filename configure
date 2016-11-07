@@ -6195,7 +6195,7 @@ fi
 
 if [ "x$download_ompt" = xyes ] ; then
   install_ompt=yes
-  if [ ! -f ${libomp_ossdir_static}/lib${libomp_oss_name}.a -o ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ] ; then
+  if [ ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -o ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ]; then
     preomptdir=`pwd`
 
     #check Cmake exists
@@ -6207,7 +6207,7 @@ if [ "x$download_ompt" = xyes ] ; then
 
     echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
 
-    if [ -r "${libomp_ossdir_static}/lib${libomp_oss_name}.a" -a ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
+    if [ -r "${libomp_ossdir_static}/lib${libomp_oss_name}.so" -a ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
       echo "NOTE: ${libomp_ossdir_shared}/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
       /bin/rm -rf ${libomp_oss}
     fi
