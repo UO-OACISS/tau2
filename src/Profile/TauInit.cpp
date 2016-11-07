@@ -505,7 +505,7 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifdef TAU_SOS
   bool threads = false;
-#ifdef PTHREADS
+#if defined(PTHREADS) || defined(TAU_OPENMP)
   threads = true; 
 #endif
   if (TauEnv_get_sos_enabled()) {
@@ -532,6 +532,8 @@ extern "C" int Tau_init_initializeTAU()
         fclose(cmdline);
   */
   TAU_SOS_init(&argc, &argv, threads);
+  } else {
+    TAU_VERBOSE("*** AAAAARRRRGGGGHHHH!!!! (2) ***\n");
   }
 #endif
 
