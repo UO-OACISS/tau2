@@ -1271,7 +1271,7 @@ for i in "${archs[@]}"; do
 	fi
 done
 
-if [ "x$TAUCOMP" = "xpgi" ]; then
+if [ "x$TAUCOMP"="xpgi" ]; then
 	cat_link_file=$TRUE
 fi
 
