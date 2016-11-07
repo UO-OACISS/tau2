@@ -6140,6 +6140,9 @@ fi #unwind=download
 
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
+  if [ "x$CRAY_CPU_TARGET" = "xmic-knl" -a "x$PE_ENV" = "xINTEL" ] ; then
+    fixmakeargs="$fixmakeargs INTEL_CRAY_MIC_KNL_OMPT"
+  fi
 fi
 
 libomp_oss=LLVM-openmp-0.2
