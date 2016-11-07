@@ -137,7 +137,8 @@ static uint64_t otf2_STEP = OTF2_UNDEFINED_UINT64;
 
 /** @internal
  *  @brief Defines if events are printed or not. */
-static bool otf2_SILENT = true;
+static bool otf2_SILENT = false;
+static bool print_SILENT = true;
 
 /** @internal
  *  @brief Defines if dot output is selected. */
@@ -909,7 +910,7 @@ ReadTraceFile( int    argc, char** argv )
 
 
     /* Add a nice table header. */
-    if ( !otf2_SILENT )
+    if ( !otf2_SILENT && !print_SILENT)
     {
         printf( "=== Events =====================================================================\n" );
     }
@@ -939,7 +940,7 @@ ReadTraceFile( int    argc, char** argv )
 
     while ( events_read == otf2_STEP )
     {
-        if ( !otf2_SILENT )
+        if ( !otf2_SILENT && !print_SILENT)
         {
             printf( "%-*s %15s %20s  Attributes\n",
                     otf2_EVENT_COLUMN_WIDTH, "Event", "Location", "Timestamp" );
@@ -972,7 +973,7 @@ ReadTraceFile( int    argc, char** argv )
     if ( !otf2_NOSNAPSHOTS && number_of_snapshots > 0 )
     {
         /* Add a nice table header. */
-        if ( !otf2_SILENT )
+        if ( !otf2_SILENT && !print_SILENT)
         {
             printf( "=== Snapshots ==================================================================\n" );
         }
@@ -1001,7 +1002,7 @@ ReadTraceFile( int    argc, char** argv )
         uint64_t records_read = otf2_STEP;
         while ( records_read == otf2_STEP )
         {
-            if ( !otf2_SILENT )
+            if ( !otf2_SILENT && !print_SILENT)
             {
                 printf( "%-*s %15s %20s  Attributes\n",
                         otf2_EVENT_COLUMN_WIDTH, "Snapshot", "Location", "Timestamp" );
@@ -2956,11 +2957,12 @@ print_unknown( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20" PRIu64 "\n",
             otf2_EVENT_COLUMN_WIDTH, "UNKNOWN",
             location, time );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -2990,7 +2992,8 @@ print_buffer_flush( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Stop Time: %s"
             "%s",
@@ -2999,7 +3002,7 @@ print_buffer_flush( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_timestamp( data, stopTime ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3019,7 +3022,8 @@ print_measurement_on_off( OTF2_LocationRef     location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Mode: %s"
             "%s",
@@ -3028,7 +3032,7 @@ print_measurement_on_off( OTF2_LocationRef     location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_measurement_mode( measurementMode ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3049,8 +3053,8 @@ print_enter( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
-    printf( "%-*s %15" PRIu64 " %20s  "
+    if(!print_SILENT)
+    {printf( "%-*s %15" PRIu64 " %20s  "
             "Region: %s"
             "%s",
             otf2_EVENT_COLUMN_WIDTH, "ENTER",
@@ -3058,7 +3062,7 @@ print_enter( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->regions, region ),
             "\n" );
-
+    }
     otf2_print_attribute_list( data, attributes );
 
     //printf(":%d --- %d\n", location, region);
@@ -3084,7 +3088,8 @@ print_leave( OTF2_LocationRef    location,
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
 
-    printf( "%-*s %15" PRIu64 " %20s  "
+    if(!print_SILENT)
+       {printf( "%-*s %15" PRIu64 " %20s  "
             "Region: %s"
             "%s",
             otf2_EVENT_COLUMN_WIDTH, "LEAVE",
@@ -3092,7 +3097,7 @@ print_leave( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->regions, region ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     LeaveStateDef(time,location);
@@ -3118,7 +3123,8 @@ print_mpi_send( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Receiver: %s, "
             "Communicator: %s, "
@@ -3133,7 +3139,7 @@ print_mpi_send( OTF2_LocationRef    location,
             msgTag,
             msgLength,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3158,7 +3164,8 @@ print_mpi_isend( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Receiver: %s, "
             "Communicator: %s, "
@@ -3175,7 +3182,7 @@ print_mpi_isend( OTF2_LocationRef    location,
             msgLength,
             requestID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3195,7 +3202,8 @@ print_mpi_isend_complete( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Request: %" PRIUint64
             "%s",
@@ -3204,7 +3212,7 @@ print_mpi_isend_complete( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             requestID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3224,7 +3232,8 @@ print_mpi_irecv_request( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Request: %" PRIUint64
             "%s",
@@ -3233,7 +3242,7 @@ print_mpi_irecv_request( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             requestID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3257,7 +3266,8 @@ print_mpi_recv( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Sender: %s, "
             "Communicator: %s, "
@@ -3272,7 +3282,7 @@ print_mpi_recv( OTF2_LocationRef    location,
             msgTag,
             msgLength,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3297,7 +3307,8 @@ print_mpi_irecv( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Sender: %s, "
             "Communicator: %s, "
@@ -3314,7 +3325,7 @@ print_mpi_irecv( OTF2_LocationRef    location,
             msgLength,
             requestID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3334,7 +3345,8 @@ print_mpi_request_test( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Request: %" PRIUint64
             "%s",
@@ -3343,7 +3355,7 @@ print_mpi_request_test( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             requestID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3363,7 +3375,8 @@ print_mpi_request_cancelled( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Request: %" PRIUint64
             "%s",
@@ -3372,7 +3385,7 @@ print_mpi_request_cancelled( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             requestID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3391,14 +3404,15 @@ print_mpi_collective_begin( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "%s",
             otf2_EVENT_COLUMN_WIDTH, "MPI_COLLECTIVE_BEGIN",
             location,
             otf2_print_get_timestamp( data, time ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3423,7 +3437,8 @@ print_mpi_collective_end( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Operation: %s, "
             "Communicator: %s, "
@@ -3440,7 +3455,7 @@ print_mpi_collective_end( OTF2_LocationRef    location,
             sizeSent,
             sizeReceived,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3460,7 +3475,8 @@ print_omp_fork( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "# Requested Threads: %" PRIUint32
             "%s",
@@ -3469,7 +3485,7 @@ print_omp_fork( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             numberOfRequestedThreads,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3488,14 +3504,15 @@ print_omp_join( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "%s",
             otf2_EVENT_COLUMN_WIDTH, "OMP_JOIN",
             location,
             otf2_print_get_timestamp( data, time ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3516,7 +3533,8 @@ print_omp_acquire_lock( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Lock: %" PRIUint32 ", "
             "Acquisition Order: %" PRIUint32
@@ -3527,7 +3545,7 @@ print_omp_acquire_lock( OTF2_LocationRef    location,
             lockID,
             acquisitionOrder,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3548,7 +3566,8 @@ print_omp_release_lock( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Lock: %" PRIUint32 ", "
             "Acquisition Order: %" PRIUint32
@@ -3559,7 +3578,7 @@ print_omp_release_lock( OTF2_LocationRef    location,
             lockID,
             acquisitionOrder,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3579,7 +3598,8 @@ print_omp_task_create( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Task: %" PRIUint64
             "%s",
@@ -3588,7 +3608,7 @@ print_omp_task_create( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             taskID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3608,7 +3628,8 @@ print_omp_task_switch( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Task: %" PRIUint64
             "%s",
@@ -3617,7 +3638,7 @@ print_omp_task_switch( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             taskID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3637,7 +3658,8 @@ print_omp_task_complete( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Task: %" PRIUint64
             "%s",
@@ -3646,7 +3668,7 @@ print_omp_task_complete( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             taskID,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3670,7 +3692,8 @@ print_metric( OTF2_LocationRef        location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Metric: %s, "
             "%" PRIUint8 " Values: ",
@@ -3679,7 +3702,7 @@ print_metric( OTF2_LocationRef        location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->metrics, metric ),
             numberOfMetrics );
-
+       }
     const struct otf2_print_metric_def* metric_def =
         otf2_print_get_metric( defs->metrics, metric );
 
@@ -3696,31 +3719,46 @@ print_metric( OTF2_LocationRef        location,
         switch ( typeIDs[ i ] )
         {
             case OTF2_TYPE_INT64:
+            	 if(!print_SILENT)
+            	    {
                 printf( "%s(%s; INT64; %" PRId64 ")", sep,
                         metric_member_name,
                         metricValues[ i ].signed_int );
+            	    }
                 break;
             case OTF2_TYPE_UINT64:
+            	 if(!print_SILENT)
+            	    {
                 printf( "%s(%s; UINT64; %" PRIu64 ")", sep,
                         metric_member_name,
                         metricValues[ i ].unsigned_int );
+            	    }
                 break;
             case OTF2_TYPE_DOUBLE:
+            	 if(!print_SILENT)
+            	    {
                 printf( "%s(%s; DOUBLE; %f)", sep,
                         metric_member_name,
                         metricValues[ i ].floating_point );
+            	    }
                 break;
             default:
             {
+            	 if(!print_SILENT)
+            	    {
                 printf( "%s(%s; %s; %08" PRIx64 ")", sep,
                         metric_member_name,
                         otf2_print_get_invalid( typeIDs[ i ] ),
                         metricValues[ i ].unsigned_int );
+            	    }
             }
         }
         sep = ", ";
     }
+    if(!print_SILENT)
+       {
     printf( "\n" );
+       }
 
     otf2_print_attribute_list( data, attributes );
 
@@ -3743,7 +3781,8 @@ print_parameter_string( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Parameter: %s, "
             "Value: \"%s\""
@@ -3754,7 +3793,7 @@ print_parameter_string( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->parameters, parameter ),
             otf2_print_get_def_name( defs->strings, string ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3776,7 +3815,8 @@ print_parameter_int( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Parameter: %s, "
             "Value: %" PRIInt64
@@ -3787,7 +3827,7 @@ print_parameter_int( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->parameters, parameter ),
             value,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3809,7 +3849,8 @@ print_parameter_unsigned_int( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Parameter: %s, "
             "Value: %" PRIUint64
@@ -3820,7 +3861,7 @@ print_parameter_unsigned_int( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->parameters, parameter ),
             value,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3840,7 +3881,8 @@ print_rma_win_create( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s"
             "%s",
@@ -3849,7 +3891,7 @@ print_rma_win_create( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->rma_wins, win ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3870,7 +3912,8 @@ print_rma_win_destroy( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s"
             "%s",
@@ -3879,7 +3922,7 @@ print_rma_win_destroy( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->rma_wins, win ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3898,14 +3941,15 @@ print_rma_collective_begin( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "%s",
             otf2_EVENT_COLUMN_WIDTH, "RMA_COLLECTIVE_BEGIN",
             location,
             otf2_print_get_timestamp( data, time ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3931,7 +3975,8 @@ print_rma_collective_end( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Operation: %s, "
             "Window: %s, "
@@ -3953,7 +3998,7 @@ print_rma_collective_end( OTF2_LocationRef    location,
             bytesSent,
             bytesReceived,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -3976,7 +4021,8 @@ print_rma_group_sync( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Level of Synchronicity: %s, "
             "Window: %s, "
@@ -3989,7 +4035,7 @@ print_rma_group_sync( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->rma_wins, win ),
             otf2_print_get_def_name( defs->groups, group ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4013,7 +4059,8 @@ print_rma_request_lock( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4031,7 +4078,7 @@ print_rma_request_lock( OTF2_LocationRef    location,
             lockId,
             otf2_print_get_lock_type( lockType ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4055,7 +4102,8 @@ print_rma_acquire_lock( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4073,7 +4121,7 @@ print_rma_acquire_lock( OTF2_LocationRef    location,
             lockId,
             otf2_print_get_lock_type( lockType ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4097,7 +4145,8 @@ print_rma_try_lock( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4115,7 +4164,7 @@ print_rma_try_lock( OTF2_LocationRef    location,
             lockId,
             otf2_print_get_lock_type( lockType ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4138,7 +4187,8 @@ print_rma_release_lock( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4154,7 +4204,7 @@ print_rma_release_lock( OTF2_LocationRef    location,
                                               remote ),
             lockId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4177,7 +4227,8 @@ print_rma_sync( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4193,7 +4244,7 @@ print_rma_sync( OTF2_LocationRef    location,
                                               remote ),
             otf2_print_get_rma_sync_type( syncType ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4214,7 +4265,8 @@ print_rma_wait_change( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s"
             "%s",
@@ -4223,7 +4275,7 @@ print_rma_wait_change( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->rma_wins, win ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4247,7 +4299,8 @@ print_rma_put( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4265,7 +4318,7 @@ print_rma_put( OTF2_LocationRef    location,
             bytes,
             matchingId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4289,7 +4342,8 @@ print_rma_get( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4307,7 +4361,7 @@ print_rma_get( OTF2_LocationRef    location,
             bytes,
             matchingId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4333,7 +4387,8 @@ print_rma_atomic( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Remote: %s, "
@@ -4355,7 +4410,7 @@ print_rma_atomic( OTF2_LocationRef    location,
             bytesReceived,
             matchingId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4377,7 +4432,8 @@ print_rma_op_complete_blocking( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Matching: %" PRIUint64
@@ -4388,7 +4444,7 @@ print_rma_op_complete_blocking( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->rma_wins, win ),
             matchingId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4410,7 +4466,8 @@ print_rma_op_complete_non_blocking( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Matching: %" PRIUint64
@@ -4421,7 +4478,7 @@ print_rma_op_complete_non_blocking( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->rma_wins, win ),
             matchingId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4443,7 +4500,8 @@ print_rma_op_test( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Matching: %" PRIUint64
@@ -4454,7 +4512,7 @@ print_rma_op_test( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->rma_wins, win ),
             matchingId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4476,7 +4534,8 @@ print_rma_op_complete_remote( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Window: %s, "
             "Matching: %" PRIUint64
@@ -4487,7 +4546,7 @@ print_rma_op_complete_remote( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->rma_wins, win ),
             matchingId,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4508,7 +4567,8 @@ print_thread_fork( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Model: %s, "
             "# Requested Threads: %" PRIUint32
@@ -4519,7 +4579,7 @@ print_thread_fork( OTF2_LocationRef    location,
             otf2_print_get_paradigm_name( defs->paradigms, model ),
             numberOfRequestedThreads,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4540,7 +4600,8 @@ print_thread_join( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Model: %s"
             "%s",
@@ -4549,7 +4610,7 @@ print_thread_join( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_paradigm_name( defs->paradigms, model ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4570,7 +4631,8 @@ print_thread_team_begin( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Team: %s"
             "%s",
@@ -4579,7 +4641,7 @@ print_thread_team_begin( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->comms, threadTeam ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4600,7 +4662,8 @@ print_thread_team_end( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Team: %s"
             "%s",
@@ -4609,7 +4672,7 @@ print_thread_team_end( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->comms, threadTeam ),
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4632,7 +4695,8 @@ print_thread_acquire_lock( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Model: %s, "
             "Lock: %" PRIUint32 ", "
@@ -4645,7 +4709,7 @@ print_thread_acquire_lock( OTF2_LocationRef    location,
             lockID,
             acquisitionOrder,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4668,7 +4732,8 @@ print_thread_release_lock( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Model: %s, "
             "Lock: %" PRIUint32 ", "
@@ -4681,7 +4746,7 @@ print_thread_release_lock( OTF2_LocationRef    location,
             lockID,
             acquisitionOrder,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4704,7 +4769,8 @@ print_thread_task_create( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Team: %s, "
             "Creating Thread: %s, "
@@ -4720,7 +4786,7 @@ print_thread_task_create( OTF2_LocationRef    location,
                                            creatingThread ),
             generationNumber,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4743,7 +4809,8 @@ print_thread_task_switch( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Team: %s, "
             "Creating Thread: %s, "
@@ -4759,7 +4826,7 @@ print_thread_task_switch( OTF2_LocationRef    location,
                                            creatingThread ),
             generationNumber,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4782,7 +4849,8 @@ print_thread_task_complete( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Team: %s, "
             "Creating Thread: %s, "
@@ -4798,7 +4866,7 @@ print_thread_task_complete( OTF2_LocationRef    location,
                                            creatingThread ),
             generationNumber,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4820,7 +4888,8 @@ print_thread_create( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Contingent: %s, "
             "Sequence Count: %" PRIUint64
@@ -4831,7 +4900,7 @@ print_thread_create( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->comms, threadContingent ),
             sequenceCount,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4853,7 +4922,8 @@ print_thread_begin( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Contingent: %s, "
             "Sequence Count: %" PRIUint64
@@ -4864,7 +4934,7 @@ print_thread_begin( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->comms, threadContingent ),
             sequenceCount,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4886,7 +4956,8 @@ print_thread_wait( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Contingent: %s, "
             "Sequence Count: %" PRIUint64
@@ -4897,7 +4968,7 @@ print_thread_wait( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->comms, threadContingent ),
             sequenceCount,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4919,7 +4990,8 @@ print_thread_end( OTF2_LocationRef    location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Thread Contingent: %s, "
             "Sequence Count: %" PRIUint64
@@ -4930,7 +5002,7 @@ print_thread_end( OTF2_LocationRef    location,
             otf2_print_get_def_name( defs->comms, threadContingent ),
             sequenceCount,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -4998,7 +5070,8 @@ print_calling_context_sample( OTF2_LocationRef           location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Calling Context: %s, "
             "Unwind Distance: %s, "
@@ -5011,6 +5084,7 @@ print_calling_context_sample( OTF2_LocationRef           location,
             otf2_print_get_id( unwindDistance ),
             otf2_print_get_def_name( defs->interrupt_generators, interruptGenerator ),
             "\n" );
+       }
 
     if ( otf2_UNWIND_CALLING_CONTEXT )
     {
@@ -5040,7 +5114,8 @@ print_calling_context_enter( OTF2_LocationRef       location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Calling Context: %s, "
             "Unwind Distance: %s"
@@ -5051,7 +5126,7 @@ print_calling_context_enter( OTF2_LocationRef       location,
             otf2_print_get_def_name( defs->calling_contexts, callingContext ),
             otf2_print_get_id( unwindDistance ),
             "\n" );
-
+       }
     if ( otf2_UNWIND_CALLING_CONTEXT )
     {
         unwind_calling_context( defs,
@@ -5079,7 +5154,8 @@ print_calling_context_leave( OTF2_LocationRef       location,
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
     struct otf2_print_defs* defs = data->defs;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Calling Context: %s"
             "%s",
@@ -5088,7 +5164,7 @@ print_calling_context_leave( OTF2_LocationRef       location,
             otf2_print_get_timestamp( data, time ),
             otf2_print_get_def_name( defs->calling_contexts, callingContext ),
             "\n" );
-
+       }
     if ( otf2_UNWIND_CALLING_CONTEXT )
     {
         unwind_calling_context( defs,
@@ -5118,7 +5194,8 @@ print_snap_snapshot_start( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "# Events: %" PRIUint64
             "%s",
@@ -5127,7 +5204,7 @@ print_snap_snapshot_start( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, snapTime ),
             numberOfRecords,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -5147,7 +5224,8 @@ print_snap_snapshot_end( OTF2_LocationRef    location,
     }
 
     struct otf2_print_data* data = (otf2_print_data*)userData;
-
+    if(!print_SILENT)
+       {
     printf( "%-*s %15" PRIu64 " %20s  "
             "Cont. Read Position: %" PRIUint64
             "%s",
@@ -5156,7 +5234,7 @@ print_snap_snapshot_end( OTF2_LocationRef    location,
             otf2_print_get_timestamp( data, snapTime ),
             contReadPos,
             "\n" );
-
+       }
     otf2_print_attribute_list( data, attributes );
 
     return OTF2_CALLBACK_SUCCESS;
@@ -5593,15 +5671,29 @@ print_global_def_region( void*           userData,
 
     const char * myname;
         int i;
+
         char *getname = (char *) otf2_print_get_def_name(defs->strings, name);
-        for (i = 1; i < strlen(getname); i++) {
+
+        //cout << "Read name: " << getname << endl;
+
+        int quotebreak=-1;
+        bool findingFirstQuotes=true;
+        for (i = 0; i < strlen(getname); i++) {
+        	if(findingFirstQuotes){
+        		if(getname[i]!='"'){
+        			quotebreak=i;
+        			findingFirstQuotes=false;
+        		}
+        	}
+        	else
            if (getname[i] == '"') {
               getname[i] = '\0';
               break;
            }
         }
-        myname = &getname[1];
+        myname = &getname[quotebreak];
 
+        //cout << "Saving name: " << myname << endl;
     StateDef(self,myname, 0);
 
     /* Print definition if selected.
