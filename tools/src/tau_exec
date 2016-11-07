@@ -893,7 +893,6 @@ else
       exit 1
     fi
     samplefile="$pttsprefix/sample.${node}.smp"
-    samplelog="$pttsprefix/sample_ts.${node}.log"
     reportfile="$pttsprefix/report.${node}.tsr"
     reportlog="$pttsprefix/report_ts.${node}.log"
     # view-static_ts paths should be relative to $pttsprefix
@@ -910,8 +909,8 @@ else
       export LD_AUDIT=$ORIG_AUDIT_AUDIT
       export LD_PRELOAD=$ORIG_LD_PRELOAD
     fi
-    rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
-    sample_ts $ts_sample_flags -o "$samplefile" -r $@ >$samplelog 2>&1
+    rm -rf "$samplefile" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
+    sample_ts $ts_sample_flags -o "$samplefile" -r $@
     err=$? ; [ $err -eq 0 ] || exit $err
     retval=$err
     echo "Finalizing sample_ts $@ on rank $node" 
@@ -926,7 +925,7 @@ else
     err=$? ; [ $err -eq 0 ] || exit $err
     cd "$OLDPWD"
     # Clean up and package the report
-    rm -f "$samplefile" "$reportfile" "$samplelog" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
+    rm -f "$samplefile" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
     compress_ptts_report
     if [ "$node" -eq 0 ] ; then
       write_ptts_index
