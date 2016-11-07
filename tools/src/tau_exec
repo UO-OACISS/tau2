@@ -15,228 +15,228 @@ else
 fi
 
 echoIfVerbose () {
-    if [ $verbose = "true" ] ; then
+  if [ $verbose = "true" ] ; then
     echo -e "$1"
-    fi
+  fi
 }
 
 usage()
 {
-    echo ""
-    echo "Usage: $scriptname [options] [--] <exe> <exe options>"
-    echo ""
-# Common options first
-    echo "Options:"
+  echo ""
+  echo "Usage: $scriptname [options] [--] <exe> <exe options>"
+  echo ""
+  # Common options first
+  echo "Options:"
 
-    echo "        -v            Verbose mode"
-    echo "        -s            Show what will be done but don't actually do anything (dryrun)"
-    echo "        -qsub         Use qsub mode (BG/P only, see below)"
-    echo "        -io           Track I/O"
-    echo "        -memory       Track memory allocation/deallocation"
-    echo "        -memory_debug Enable memory debugger"
-    echo "        -cuda         Track GPU events via CUDA"
-    echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
-    echo "        -opencl       Track GPU events via OpenCL"
-    echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
-    echo "        -ompt         Track OpenMP events via OMPT interface"
-    echo "        -power        Track power events via PAPI's perf RAPL interface"
-    echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
-    echo "        -armci        Track ARMCI events via PARMCI"
-    echo "        -shmem        Track SHMEM events"
-    echo "        -ptts         Run with ParaTools ThreadSpotter"
-    echo "        -aprun-num=<N>  Number of ranks used by aprun"    
-    echo "        -ts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
-    echo "        -ts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
-    echo "        -ebs          Enable event-based sampling"
-    echo "        -ebs_period=<count> Sampling period (default 1000)"
-    echo "        -ebs_source=<counter> Counter (default itimer)"
-    echo "        -um          Enable Unified Memory events via CUPTI"
-    echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
-    echo "        -csv          Outputs sass profile in CSV"
-    options=`tau-config --list-options`
-    echo "        -T <$options> : Specify TAU tags"
-    echo "        -loadlib=<file.so>   : Specify additional load library"
-    echo "        -XrunTAUsh-<options> : Specify TAU library directly"
-    echo "        -gdb          Run program in the gdb debugger"
-    echo ""
-    echo "Notes:"
-    echo "    Defaults if unspecified: -T $default_tags"
-    echo "    MPI is assumed unless SERIAL is specified"
-    echo ""
-    echo "Example:"
-    echo "    mpirun -np 2 $scriptname -io ./ring"
-    echo "Example - event-based sampling with samples taken every 1,000,000 FP instructions"
-    echo "    mpirun -np 8 $scriptname -ebs -ebs_period=1000000 -ebs_source=PAPI_FP_INS ./ring"
-    echo "Examples - GPU:"
-    echo "    $scriptname -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
-    echo "    $scriptname -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
-    echo "    $scriptname -T serial -opencl (OPENCL)"
-    echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
-    echo "    $scriptname -T serial,cupti -cupti -sass=kernel -csv ./sass_source (Metrics Intensity)"
-    echo ""
-    echo "qsub mode (IBM BG/P only):"
-    echo "    Original:"
-    echo "      qsub -n 1 --mode smp -t 10 ./a.out"
-    echo "    With TAU:"
-    echo "      $scriptname -qsub -io -memory -- qsub -n 1 --mode smp -t 10 ./a.out"
-    echo ""
-    echo "Memory Debugging:"
-    echo "    -memory option:"
-    echo "      Tracks heap allocation/deallocation and memory leaks."
-    echo "    -memory_debug option:"
-    echo "      Detects memory leaks, checks for invalid alignment, and checks for"
-    echo "      array overflow.  This is exactly like setting TAU_TRACK_MEMORY_LEAKS=1"
-    echo "      and TAU_MEMDBG_PROTECT_ABOVE=1 and running with -memory"
-    echo ""
-    exit
+  echo "        -v            Verbose mode"
+  echo "        -s            Show what will be done but don't actually do anything (dryrun)"
+  echo "        -qsub         Use qsub mode (BG/P only, see below)"
+  echo "        -io           Track I/O"
+  echo "        -memory       Track memory allocation/deallocation"
+  echo "        -memory_debug Enable memory debugger"
+  echo "        -cuda         Track GPU events via CUDA"
+  echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
+  echo "        -opencl       Track GPU events via OpenCL"
+  echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
+  echo "        -ompt         Track OpenMP events via OMPT interface"
+  echo "        -power        Track power events via PAPI's perf RAPL interface"
+  echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
+  echo "        -armci        Track ARMCI events via PARMCI"
+  echo "        -shmem        Track SHMEM events"
+  echo "        -ptts         Run with ParaTools ThreadSpotter"
+  echo "        -aprun-num=<N>  Number of ranks used by aprun"    
+  echo "        -ts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+  echo "        -ts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
+  echo "        -ebs          Enable event-based sampling"
+  echo "        -ebs_period=<count> Sampling period (default 1000)"
+  echo "        -ebs_source=<counter> Counter (default itimer)"
+  echo "        -um          Enable Unified Memory events via CUPTI"
+  echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
+  echo "        -csv          Outputs sass profile in CSV"
+  options=`tau-config --list-options`
+  echo "        -T <$options> : Specify TAU tags"
+  echo "        -loadlib=<file.so>   : Specify additional load library"
+  echo "        -XrunTAUsh-<options> : Specify TAU library directly"
+  echo "        -gdb          Run program in the gdb debugger"
+  echo ""
+  echo "Notes:"
+  echo "    Defaults if unspecified: -T $default_tags"
+  echo "    MPI is assumed unless SERIAL is specified"
+  echo ""
+  echo "Example:"
+  echo "    mpirun -np 2 $scriptname -io ./ring"
+  echo "Example - event-based sampling with samples taken every 1,000,000 FP instructions"
+  echo "    mpirun -np 8 $scriptname -ebs -ebs_period=1000000 -ebs_source=PAPI_FP_INS ./ring"
+  echo "Examples - GPU:"
+  echo "    $scriptname -T serial,cupti -cupti ./matmult (Preferred for CUDA 4.1 or later)"
+  echo "    $scriptname -T serial -cuda ./matmult (Preferred for CUDA 4.0 or earlier)"
+  echo "    $scriptname -T serial -opencl (OPENCL)"
+  echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
+  echo "    $scriptname -T serial,cupti -cupti -sass=kernel -csv ./sass_source (Metrics Intensity)"
+  echo ""
+  echo "qsub mode (IBM BG/P only):"
+  echo "    Original:"
+  echo "      qsub -n 1 --mode smp -t 10 ./a.out"
+  echo "    With TAU:"
+  echo "      $scriptname -qsub -io -memory -- qsub -n 1 --mode smp -t 10 ./a.out"
+  echo ""
+  echo "Memory Debugging:"
+  echo "    -memory option:"
+  echo "      Tracks heap allocation/deallocation and memory leaks."
+  echo "    -memory_debug option:"
+  echo "      Detects memory leaks, checks for invalid alignment, and checks for"
+  echo "      array overflow.  This is exactly like setting TAU_TRACK_MEMORY_LEAKS=1"
+  echo "      and TAU_MEMDBG_PROTECT_ABOVE=1 and running with -memory"
+  echo ""
+  exit
 }
 
 
 set_node()
 {
-    if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-        # ThreadSpotter's sample_ts uses the same method to determine MPI rank,
-        # see get_rank() in library/exe_path/path_substitute.cc 
-        rank_env_vars=("PMI_RANK"
-                       "OMPI_COMM_WORLD_RANK"
-                       "OMPI_MCA_ns_nds_vpid"
-                       "PMI_ID"
-                       "SLURM_PROCID"
-                       "LAMRANK"
-                       "MPI_RANKID"
-                       "MP_CHILD"
-                       "MP_RANK"
-                       "MPIRUN_RANK"
-                       "ALPS_APP_PE")
-        for i in ${rank_env_vars[@]}; do
-            eval node=\$$i
-            if [ -n "$node" ] ; then
-                break
-            fi
-        done
-    elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
-        echo "ERROR: ptts support for SHMEM not implemented yet"
-        exit 1
-    fi
+  if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
+    # ThreadSpotter's sample_ts uses the same method to determine MPI rank,
+    # see get_rank() in library/exe_path/path_substitute.cc 
+    rank_env_vars=("PMI_RANK"
+    "OMPI_COMM_WORLD_RANK"
+    "OMPI_MCA_ns_nds_vpid"
+    "PMI_ID"
+    "SLURM_PROCID"
+    "LAMRANK"
+    "MPI_RANKID"
+    "MP_CHILD"
+    "MP_RANK"
+    "MPIRUN_RANK"
+    "ALPS_APP_PE")
+    for i in ${rank_env_vars[@]}; do
+      eval node=\$$i
+      if [ -n "$node" ] ; then
+        break
+      fi
+    done
+  elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
+    echo "ERROR: ptts support for SHMEM not implemented yet"
+    exit 1
+  fi
 }
 
 set_nodecount()
 {
-    if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-      is_cray
-      if [ "$on_craycnl" = true ]  ; then
-	if [ -z "$aprun_N" ]; then
-	   echo "ERROR: Using aprun we need -aprun-num=<arg to -n> \n"
- 	else
-	   nodecount="$aprun_N"
-	fi	
-      else	
-        for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS; do
-            eval nodecount=\$$i
-            if [ -n "$nodecount" ] ; then
-                break
-            fi
-        done
-      fi
-    elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
-        echo "ERROR: ptts support for SHMEM not implemented yet"
-        exit 1
+  if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
+    is_cray
+    if [ "$on_craycnl" = true ]  ; then
+      if [ -z "$aprun_N" ]; then
+        echo "ERROR: Using aprun we need -aprun-num=<arg to -n> \n"
+      else
+        nodecount="$aprun_N"
+      fi	
+    else	
+      for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS; do
+        eval nodecount=\$$i
+        if [ -n "$nodecount" ] ; then
+          break
+        fi
+      done
     fi
+  elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
+    echo "ERROR: ptts support for SHMEM not implemented yet"
+    exit 1
+  fi
 }
 
 
 write_ptts_index()
 {
-    eval `tau-config | grep TAUROOT`
-    etcdir="$TAUROOT/etc"
+  eval `tau-config | grep TAUROOT`
+  etcdir="$TAUROOT/etc"
 
-    cp "$etcdir/ptts.html.index" "$pttsprefix/index.html"
+  cp "$etcdir/ptts.html.index" "$pttsprefix/index.html"
 
-    index_html="$pttsprefix/node_0/index.html"
-    cat "$etcdir/ptts.html.head" > "$index_html"
-    i=0
-    while [ $i -lt $nodecount ] ; do
-        cat "$etcdir/ptts.html.body" | sed -e "s/%NODE%/$i/g" >> "$index_html"
-        ((i++))
-    done
-    cat "$etcdir/ptts.html.foot" >> "$index_html"
+  index_html="$pttsprefix/node_0/index.html"
+  cat "$etcdir/ptts.html.head" > "$index_html"
+  i=0
+  while [ $i -lt $nodecount ] ; do
+    cat "$etcdir/ptts.html.body" | sed -e "s/%NODE%/$i/g" >> "$index_html"
+    ((i++))
+  done
+  cat "$etcdir/ptts.html.foot" >> "$index_html"
 }
 
 compress_ptts_report()
 {
-    [ "$node" -eq 0 ] && return
-    shared=("bl.gif"
-            "br.gif"
-            "ch.png"
-            "cu.png"
-            "default-info.html"
-            "default-src.html"
-            "dot.gif"
-            "down.png"
-            "f.png"
-            "f1.png"
-            "f2.png"
-            "false.png"
-            "fh.png"
-            "filter.png"
-            "fpc.png"
-            "front.html"
-            "ft.png"
-            "fu.png"
-            "hover_popup.css"
-            "lo.png"
-            "manual_html"
-            "minus.png"
-            "nav.js"
-            "perf.csv"
-            "pfc.png"
-            "pff.png"
-            "pfh.png"
-            "pfnt.png"
-            "plus.png"
-            "pt-small.png"
-            "q-h.png"
-            "q.png"
-            "r.png"
-            "rw-small.png"
-            "sb.png"
-            "source.css"
-            "src.png"
-            "stb.png"
-            "summary.css"
-            "tabber.js"
-            "table.js"
-            "tb.png"
-            "tl.gif"
-            "tr.gif"
-            "u.png"
-            "up.png"
-            "wh.png"
-            "wnt.png"
-            "wu.png")
-    cd "$pttsprefix/$viewdir"
-    rm -rf "${shared[@]}"
-    for i in "${shared[@]}" ; do
-        ln -s "../node_0/$i" .
-    done
-    cd "$OLDPWD"
+  [ "$node" -eq 0 ] && return
+  shared=("bl.gif"
+  "br.gif"
+  "ch.png"
+  "cu.png"
+  "default-info.html"
+  "default-src.html"
+  "dot.gif"
+  "down.png"
+  "f.png"
+  "f1.png"
+  "f2.png"
+  "false.png"
+  "fh.png"
+  "filter.png"
+  "fpc.png"
+  "front.html"
+  "ft.png"
+  "fu.png"
+  "hover_popup.css"
+  "lo.png"
+  "manual_html"
+  "minus.png"
+  "nav.js"
+  "perf.csv"
+  "pfc.png"
+  "pff.png"
+  "pfh.png"
+  "pfnt.png"
+  "plus.png"
+  "pt-small.png"
+  "q-h.png"
+  "q.png"
+  "r.png"
+  "rw-small.png"
+  "sb.png"
+  "source.css"
+  "src.png"
+  "stb.png"
+  "summary.css"
+  "tabber.js"
+  "table.js"
+  "tb.png"
+  "tl.gif"
+  "tr.gif"
+  "u.png"
+  "up.png"
+  "wh.png"
+  "wnt.png"
+  "wu.png")
+  cd "$pttsprefix/$viewdir"
+  rm -rf "${shared[@]}"
+  for i in "${shared[@]}" ; do
+    ln -s "../node_0/$i" .
+  done
+  cd "$OLDPWD"
 }
 
 is_cray()
-  {
-	arch=`tau-config | grep TAUARCH | sed -e 's/TAUARCH=//'`
-	if [ "x$arch" = "xcraycnl" ];  then
-  		echo "ON CRAY"	
-		on_craycnl=true
-	else
-		echo "not on CRAY"
-		on_craycnl=false
-		
-	fi
-  }
+{
+  arch=`tau-config | grep TAUARCH | sed -e 's/TAUARCH=//'`
+  if [ "x$arch" = "xcraycnl" ];  then
+    echo "ON CRAY"	
+    on_craycnl=true
+  else
+    echo "not on CRAY"
+    on_craycnl=false
+
+  fi
+}
 
 if [ $# = 0 ] ; then
-    usage
+  usage
 fi
 
 
@@ -286,169 +286,169 @@ for arg in "$@" ; do
   modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
 
   if [ "$processT" = true ] ; then
-      binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
-      processT="false"
-      test_arg=`echo $arg | sed -e 's@scorep@@g'`
-      if [ "x$test_arg" != "x$arg" ]; then 
-        scorep=true
-      fi
-      shift
+    binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
+    processT="false"
+    test_arg=`echo $arg | sed -e 's@scorep@@g'`
+    if [ "x$test_arg" != "x$arg" ]; then 
+      scorep=true
+    fi
+    shift
   else
-      case $arg in 
+    case $arg in 
       -v|-d|-verbose|--verbose)
-          verbose=true
-          shift
-          ;;
+        verbose=true
+        shift
+        ;;
       -h|-help|--help)
-          usage
-          ;;
+        usage
+        ;;
       -io)
-          track_io=true
-          shift
-          ;;
+        track_io=true
+        shift
+        ;;
       -numa)
-          track_numa=true
-          shift
-          ;;
+        track_numa=true
+        shift
+        ;;
       -memory)
-          track_memory=true
-          shift
-          ;;
+        track_memory=true
+        shift
+        ;;
       -memory_debug)
-          memory_debug=true
-          shift
-          ;;
+        memory_debug=true
+        shift
+        ;;
       -cuda)
-          track_cuda=true
-          shift
-          ;;
+        track_cuda=true
+        shift
+        ;;
       -ompt)
-          track_ompt=true
-          shift
-          ;;
+        track_ompt=true
+        shift
+        ;;
       -power)
-          track_power=true
-          shift
-          ;;
+        track_power=true
+        shift
+        ;;
       -cupti)
-          track_cupti=true
-          shift
-          ;;
+        track_cupti=true
+        shift
+        ;;
       -um | -uvm)
-          unified_memory=true
-          shift
-          ;;
+        unified_memory=true
+        shift
+        ;;
       -sass=*)
-          track_sass=true
-          myarg=`echo $arg | sed 's/-sass=//'`
-          sass_type="$myarg"
-          shift
-          ;;
+        track_sass=true
+        myarg=`echo $arg | sed 's/-sass=//'`
+        sass_type="$myarg"
+        shift
+        ;;
       -csv)
-          csv_output=true
-          shift
-          ;;
+        csv_output=true
+        shift
+        ;;
       -opencl)
-          track_opencl=true
-          shift
-          ;;
+        track_opencl=true
+        shift
+        ;;
       -openacc)
-          track_openacc=true
-          shift
-          ;;
+        track_openacc=true
+        shift
+        ;;
       -gomp)
-          track_gomp=true
-          shift
-          ;;
+        track_gomp=true
+        shift
+        ;;
       -armci)
-          track_armci=true
-          shift
-          ;;
+        track_armci=true
+        shift
+        ;;
       -shmem)
-          track_shmem=true
-          shift
-          ;;
+        track_shmem=true
+        shift
+        ;;
       -ptts)
-          use_ptts=true
-          shift
-          ;;
+        use_ptts=true
+        shift
+        ;;
       -aprun-num=*)
-          myarg=`echo $arg | sed 's/-aprun-num=//'`
-          aprun_N="$myarg"
-          shift
-          ;;
+        myarg=`echo $arg | sed 's/-aprun-num=//'`
+        aprun_N="$myarg"
+        shift
+        ;;
       -ts-sample-flags=*)
-	  ts_sample_flags="${arg/#-ts-sample-flags=/}" # bash parameter expansion, bash 3 and up
-	  shift
-	  ;;
+        ts_sample_flags="${arg/#-ts-sample-flags=/}" # bash parameter expansion, bash 3 and up
+        shift
+        ;;
       -ts-report-flags=*)
-	  ts_report_flags="${arg/#-ts-report-flags=/}" # Also propper quoting must be used when multiple passed
-	  shift
-	  ;;
+        ts_report_flags="${arg/#-ts-report-flags=/}" # Also propper quoting must be used when multiple passed
+        shift
+        ;;
       -ebs)
-          tau_use_ebs=true
-          shift
-          ;;
+        tau_use_ebs=true
+        shift
+        ;;
       -ebs_period=*)
-          tau_use_ebs=true
-          myarg=`echo $arg | sed 's/-ebs_period=//'`
-          tau_ebs_period="$myarg"
-          shift
-          ;;
+        tau_use_ebs=true
+        myarg=`echo $arg | sed 's/-ebs_period=//'`
+        tau_ebs_period="$myarg"
+        shift
+        ;;
       -ebs_source=*)
-          tau_use_ebs=true
-          myarg=`echo $arg | sed 's/-ebs_source=//'`
-          tau_ebs_source="$myarg"
-          shift
-          ;;
+        tau_use_ebs=true
+        myarg=`echo $arg | sed 's/-ebs_source=//'`
+        tau_ebs_source="$myarg"
+        shift
+        ;;
       -qsub)
-          qsub_mode=true
-          shift
-          ;;
+        qsub_mode=true
+        shift
+        ;;
       -s)
-          dryrun=echo
-          shift
-          ;;
+        dryrun=echo
+        shift
+        ;;
       -gdb)
-          use_gdb=true
-          shift
-          ;;
+        use_gdb=true
+        shift
+        ;;
       -T)
-          processT=true
-          shift
-          ;;
+        processT=true
+        shift
+        ;;
       -tau:*)
-              binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
-          shift
-              ;;
+        binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
+        shift
+        ;;
       -loadlib=*)
-          myarg=`echo $arg | sed 's/-loadlib=//'`
-              extraloadlibs="$extraloadlibs:$myarg"
-          shift
-              ;;
+        myarg=`echo $arg | sed 's/-loadlib=//'`
+        extraloadlibs="$extraloadlibs:$myarg"
+        shift
+        ;;
       -XrunTAU-*)
-          myarg=`echo $arg | sed 's/-XrunTAU-//'`
-          binding_specified="shared-$myarg"
-          shift
-          ;;
+        myarg=`echo $arg | sed 's/-XrunTAU-//'`
+        binding_specified="shared-$myarg"
+        shift
+        ;;
       -XrunTAUsh-*)
-          myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
-          binding_specified="shared-$myarg"
-          shift
-          ;;
+        myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
+        binding_specified="shared-$myarg"
+        shift
+        ;;
       --)
-          shift
-          break
-          ;;
+        shift
+        break
+        ;;
       -*)
-          echo "Unknown option: $arg" >&2
-          exit 1
-# First non-option signifies end of options. This would be much easier with getopt()
-          ;;
+        echo "Unknown option: $arg" >&2
+        exit 1
+        # First non-option signifies end of options. This would be much easier with getopt()
+        ;;
       *)
-          break
-          ;;
-      esac
+        break
+        ;;
+    esac
   fi
 done
 
@@ -456,55 +456,55 @@ done
 # choose TAU library
 new_binding_options=""
 if [ "x$binding_options" != "x" ]; then
-    for i in $binding_options ; do
-      case $i in 
+  for i in $binding_options ; do
+    case $i in 
       *)
-          new_binding_options="$new_binding_options $i"
-          ;;
-      esac
-    done
+        new_binding_options="$new_binding_options $i"
+        ;;
+    esac
+  done
 fi
 binding_options="$new_binding_options"
 
 
 if [ "x$binding_specified" = "x" ] ; then
-    if [ "x$binding_options" = "x" ]; then
+  if [ "x$binding_options" = "x" ]; then
     binding_options=`echo "$default_tags" | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
-    else
-        # Add MPI by default
+  else
+    # Add MPI by default
     if ! echo "$binding_options" | grep -q "serial" >/dev/null 2>&1 ; then
-           # add mpi if shmem is not specified
-        if echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
-            binding_options="$binding_options mpi"
-            fi
+      # add mpi if shmem is not specified
+      if echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
+        binding_options="$binding_options mpi"
+      fi
     fi
-        if [ "$python_wrapper" == "true" ] ; then
-            binding_options="$binding_options python"
-        fi
+    if [ "$python_wrapper" == "true" ] ; then
+      binding_options="$binding_options python"
     fi
-    theBinding=`tau-config --binding $binding_options`
-    if [ $? != 0 ] ; then
+  fi
+  theBinding=`tau-config --binding $binding_options`
+  if [ $? != 0 ] ; then
     if [ $verbose = "true" ]; then 
       echo "Binding options: $binding_options didn't work; trying without MPI using serial instead."
-        fi
+    fi
     new_binding_options=`echo $binding_options | sed -e 's/mpi/serial/' `
     theBinding=`tau-config --binding $new_binding_options`
     if [ $? != 0 ] ; then
       echo "Binding not found. Exiting..."
       exit 1
-        else 
+    else 
       echo "Using $theBinding"
       binding_options=$new_binding_options
     fi
-    fi
+  fi
 else
-    theBinding=$binding_specified
+  theBinding=$binding_specified
 fi
 
 if [ $verbose = "true" ] ; then
-    echo ""
-    echo "Program to run : $@"
-    echo ""
+  echo ""
+  echo "Program to run : $@"
+  echo ""
 fi
 
 
@@ -533,183 +533,183 @@ fi
 
 isTBB=`echo $theBinding | grep tbb`
 if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 isPthread=`echo $theBinding | grep pthread`
 if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_gomp = "true" -a -r $BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX ]; then
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_io = "true" ] ; then
-    # Add the io wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    #use the auditor
-    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
-    #Needed for the auditor
-    export LD_BIND_NOW=1
+  # Add the io wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  #use the auditor
+  TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+  #Needed for the auditor
+  export LD_BIND_NOW=1
 fi
 
 if [ $track_numa = "true" ]; then
-   options=`echo $theBinding | sed -e 's/shared-//g' `
-   mk=$BASEDIR/lib/Makefile.tau-$options
-   if [ -r $mk ]; then 
-     if [ $verbose = "true" ]; then 
-       echo "Using TAU_MAKEFILE=$mk to extract PAPIDIR"
-     fi
-     papibin=`grep "^PAPIDIR" $mk | sed -e 's/^PAPIDIR=//g' | head -n 1 `/bin
-     if [ "x$papibin" != "x" -a -x $papibin/papi_event_chooser ]; then
-       $papibin/papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM &> /dev/null
-       ret=$?
-       if [ $ret = 0 -a "x$TAU_METRICS" = "x" ]; then
-          if [ $verbose = "true" ]; then 
-        echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for $scriptname -numa"
-          fi
-      export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
-       else 
-         echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
-       fi
-     fi
-   else
-     echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
-   fi
+  options=`echo $theBinding | sed -e 's/shared-//g' `
+  mk=$BASEDIR/lib/Makefile.tau-$options
+  if [ -r $mk ]; then 
+    if [ $verbose = "true" ]; then 
+      echo "Using TAU_MAKEFILE=$mk to extract PAPIDIR"
+    fi
+    papibin=`grep "^PAPIDIR" $mk | sed -e 's/^PAPIDIR=//g' | head -n 1 `/bin
+    if [ "x$papibin" != "x" -a -x $papibin/papi_event_chooser ]; then
+      $papibin/papi_event_chooser NATIVE perf::PERF_COUNT_HW_CACHE_NODE:ACCESS OFFCORE_RESPONSE_0:REMOTE_DRAM &> /dev/null
+      ret=$?
+      if [ $ret = 0 -a "x$TAU_METRICS" = "x" ]; then
+        if [ $verbose = "true" ]; then 
+          echo "Setting TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS  for $scriptname -numa"
+        fi
+        export TAU_METRICS=TIME,PAPI_NATIVE_OFFCORE_RESPONSE_0:REMOTE_DRAM,PAPI_NATIVE_perf::PERF_COUNT_HW_CACHE_NODE:ACCESS
+      else 
+        echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+      fi
+    fi
+  else
+    echo "WARNING: $scriptname: a PAPI configuration that supports perf events perf::PERF_COUNT_HW_CACHE_NODE:ACCESS and OFFCORE_RESPONSE_0:REMOTE_DRAM should be specified to use the -numa option"
+  fi
 fi
 
 if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
-    # Add the memory wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    #use the auditor
-    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
-    #Needed for the auditor
-    export LD_BIND_NOW=1
-    # Track heap usage
-    export TAU_TRACK_HEAP=1
-    # Track memory leaks
-    export TAU_TRACK_MEMORY_LEAKS=1
+  # Add the memory wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  #use the auditor
+  TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+  #Needed for the auditor
+  export LD_BIND_NOW=1
+  # Track heap usage
+  export TAU_TRACK_HEAP=1
+  # Track memory leaks
+  export TAU_TRACK_MEMORY_LEAKS=1
 fi
 if [ $track_cuda = "true" ] ; then
-    cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
-    if [ $? == 0 ] ; then
-        #tell the user cupti is available.
-        echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' insteed of '-cuda' to get the latest available features."
-    fi
-    # Add the CUDA wrapper library to the LD_PRELOAD list
-    #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-    else
-        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
-    fi
+  cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
+  if [ $? == 0 ] ; then
+    #tell the user cupti is available.
+    echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' insteed of '-cuda' to get the latest available features."
+  fi
+  # Add the CUDA wrapper library to the LD_PRELOAD list
+  #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+  else
+    export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+  fi
 fi
 if [ $track_cupti = "true" ] ; then
-    cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
-    if [ $? != 0 ] ; then
-        #tell the user to add cupti to bindings list.
-        echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
-        exit
+  cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
+  if [ $? != 0 ] ; then
+    #tell the user to add cupti to bindings list.
+    echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
+    exit
+  else
+    # Add the wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+      export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
     else
-        # Add the wrapper library to the LD_PRELOAD list
-        TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-        TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-        TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-        if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-            export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-        else
-            export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
-        fi
+      export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
     fi
-    
-    #Attempt to find the CUPTI API type:
-    IFS=' ' && exe=($@)
-    cupti_api_driver=`ldd $exe | grep libcuda.so`
-    cupti_api_runtime=`ldd $exe | grep libcudart.so`
-    if [ -z "$TAU_CUPTI_API" ]; then
-        if [ -n "$cupti_api_driver" ]; then 
-                export TAU_CUPTI_API=driver
-        else
-            if [ -n "$cupti_api_runtime" ]; then
-                export TAU_CUPTI_API=runtime
-            fi
-        fi
+  fi
+
+  #Attempt to find the CUPTI API type:
+  IFS=' ' && exe=($@)
+  cupti_api_driver=`ldd $exe | grep libcuda.so`
+  cupti_api_runtime=`ldd $exe | grep libcudart.so`
+  if [ -z "$TAU_CUPTI_API" ]; then
+    if [ -n "$cupti_api_driver" ]; then 
+      export TAU_CUPTI_API=driver
+    else
+      if [ -n "$cupti_api_runtime" ]; then
+        export TAU_CUPTI_API=runtime
+      fi
     fi
-                ## Unified Memory called along with -cupti
-    if [ $unified_memory = "true" ] ; then
-        export TAU_TRACK_UNIFIED_MEMORY=1
+  fi
+  ## Unified Memory called along with -cupti
+  if [ $unified_memory = "true" ] ; then
+    export TAU_TRACK_UNIFIED_MEMORY=1
+  fi
+  ## SASS called along with -cupti
+  if [ $track_sass = "true" ] ; then
+    export TAU_TRACK_CUDA_SASS=1
+    if [ $csv_output = "true" ] ; then
+      export TAU_OUTPUT_CUDA_CSV=1
     fi
-                ## SASS called along with -cupti
-    if [ $track_sass = "true" ] ; then
-        export TAU_TRACK_CUDA_SASS=1
-        if [ $csv_output = "true" ] ; then
-        export TAU_OUTPUT_CUDA_CSV=1
-        fi
-        if [ "x$sass_type" != "x" ] ; then
-        export TAU_SASS_TYPE=$sass_type
-        fi
-        export TAU_CUDA_BINARY_EXE=$binary_exe
+    if [ "x$sass_type" != "x" ] ; then
+      export TAU_SASS_TYPE=$sass_type
     fi
-    #echo "api found: $TAU_CUPTI_API"
+    export TAU_CUDA_BINARY_EXE=$binary_exe
+  fi
+  #echo "api found: $TAU_CUPTI_API"
 fi
 if [ $track_opencl = "true" ] ; then
-    # Add the OpenCL wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
-    else
-        export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
-    fi
+  # Add the OpenCL wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+    export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+  else
+    export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+  fi
 fi
 if [ $track_openacc = "true" ] ; then
-    export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
-    export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+  export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
+  export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
 fi
 
 if [ $track_armci = "true" ] ; then
-    # Add the ARMCI wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  # Add the ARMCI wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-armciwrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_shmem = "true" ] ; then
-    # Add the SHMEM wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/libTAUsh_shmem_wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+  # Add the SHMEM wrapper library to the LD_PRELOAD list
+  TAUEX_LD_PRELOAD=$BASEDIR/lib/libTAUsh_shmem_wrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $tau_use_ebs = "true" ] ; then
-    # Set TAU_SAMPLING=1 environment variable. Deferring the capability
-    #    to enable HPCToolkit until later.
-    export TAU_SAMPLING=1
-    if [ "x$tau_ebs_period" != "x" ] ; then
+  # Set TAU_SAMPLING=1 environment variable. Deferring the capability
+  #    to enable HPCToolkit until later.
+  export TAU_SAMPLING=1
+  if [ "x$tau_ebs_period" != "x" ] ; then
     export TAU_EBS_PERIOD=$tau_ebs_period
-    fi
-    if [ "x$tau_ebs_source" != "x" ] ; then
+  fi
+  if [ "x$tau_ebs_source" != "x" ] ; then
     export TAU_EBS_SOURCE=$tau_ebs_source
-    fi
+  fi
 fi
 
 if [ $track_power = "true" ]; then
-    export TAU_TRACK_POWER=1
-    if [ "x$TAU_INTERRUPT_INTERVAL" == "x" ]; then 
-      export TAU_INTERRUPT_INTERVAL=1
-    fi
+  export TAU_TRACK_POWER=1
+  if [ "x$TAU_INTERRUPT_INTERVAL" == "x" ]; then 
+    export TAU_INTERRUPT_INTERVAL=1
+  fi
 fi
 if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX ]; then
-    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
-    if [ $verbose = "true" ]; then 
-      echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
-    fi
+  TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX
+  if [ $verbose = "true" ]; then 
+    echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
+  fi
 fi
 
 if [ $track_ompt = "true" -a -r $BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX ]; then
-    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX
-    if [ $verbose = "true" ]; then
-      echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
-    fi
+  TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libomp$TAU_SHLIBX
+  if [ $verbose = "true" ]; then
+    echo "Tracking with TAU's OMPT wrapper is enabled by preloading $BASEDIR/lib/$theBinding/libiomp5$TAU_SHLIBX"
+  fi
 fi
 
 if [ $scorep = true ]; then
@@ -742,207 +742,206 @@ fi
 
 
 if [ $qsub_mode = false ]; then
-    prog="$1"
-    if [ ! -x "$prog" ] ; then
+  prog="$1"
+  if [ ! -x "$prog" ] ; then
     prog=`which $prog 2>/dev/null`
-    fi
+  fi
 
-    if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
+  if [ "$python_wrapper" != "true" -a ! -x "$prog" ] ; then
     echo "$scriptname: $1: command not found"
     exit
-    fi 
+  fi 
 
-    # always use the basic preload library now
-    TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
+  # always use the basic preload library now
+  TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
 fi
 
 
 if [ $verbose = "true" ] ; then
-    echo "Matching bindings:"
-    tau-config --list-matching $binding_options
-    echo ""
-    echo "Using:"
-    echo "$theBinding"
-    echo ""
-    echo "Configuration:"
-    echo ""
-    echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
-    echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
-    echo "Setting LD_AUDIT to $TAUEX_LD_AUDITOR"
-    echo "Setting PYTHONPATH to $PYTHONPATH"
-    echo ""
+  echo "Matching bindings:"
+  tau-config --list-matching $binding_options
+  echo ""
+  echo "Using:"
+  echo "$theBinding"
+  echo ""
+  echo "Configuration:"
+  echo ""
+  echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
+  echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
+  echo "Setting LD_AUDIT to $TAUEX_LD_AUDITOR"
+  echo "Setting PYTHONPATH to $PYTHONPATH"
+  echo ""
 fi
 
 # Prep ThreadSpotter before LD_PRELOAD get set
 if $use_ptts ; then
-    if [ -n "$dryrun" ] ; then
-        dryrun="$dryrun PTTS($node): "
-    fi
-    if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then
-        echo "ERROR: ParaTools ThreadSpotter not found on PATH"
-        exit 1
-    fi
-    set_node
-    if [ -z "$node" ] ; then
-        echo "ERROR: Cannot determine node"
-        exit 1
-    fi
-    set_nodecount
-    if [ -z "$nodecount" ] ; then
-        echo "ERROR: Cannot determine node count"
-        exit 1
-    fi
-    pttsprefix="${PROFILEDIR:-.}/ptts"
-    mkdir -p "$pttsprefix"
+  if [ -n "$dryrun" ] ; then
+    dryrun="$dryrun PTTS($node): "
+  fi
+  if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then
+    echo "ERROR: ParaTools ThreadSpotter not found on PATH"
+    exit 1
+  fi
+  set_node
+  if [ -z "$node" ] ; then
+    echo "ERROR: Cannot determine node"
+    exit 1
+  fi
+  set_nodecount
+  if [ -z "$nodecount" ] ; then
+    echo "ERROR: Cannot determine node count"
+    exit 1
+  fi
+  pttsprefix="${PROFILEDIR:-.}/ptts"
+  mkdir -p "$pttsprefix"
 fi
 
 if [ $qsub_mode = true ] ; then
 
-    # gather all TAU_* environment variabls, but skip TAU_OPTIONS since it often has spaces, 
-    # and the ACLF staff tells us that it's impossible to pass env vars with spaces through qsub
-    tau_vars=`env | grep TAU_ | grep -v TAU_OPTIONS | tr '\n' ':'`
-    cmd="$@"
-    # don't use the current LD_LIBRARY_PATH or it will screw things up for the backend
-    TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
-    envs="LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH:$tau_vars"
+  # gather all TAU_* environment variabls, but skip TAU_OPTIONS since it often has spaces, 
+  # and the ACLF staff tells us that it's impossible to pass env vars with spaces through qsub
+  tau_vars=`env | grep TAU_ | grep -v TAU_OPTIONS | tr '\n' ':'`
+  cmd="$@"
+  # don't use the current LD_LIBRARY_PATH or it will screw things up for the backend
+  TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding
+  envs="LD_PRELOAD=$TAUEX_LD_PRELOAD:LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH:$tau_vars"
 
-    prevEnv=""
-    processEnv=false
-    newCmd=""
-    for arg in $cmd ; do
-        # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+  prevEnv=""
+  processEnv=false
+  newCmd=""
+  for arg in $cmd ; do
+    # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
     modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
     if [ "$processEnv" = true ] ; then
-        prevEnv="$arg"
-        processEnv=false
+      prevEnv="$arg"
+      processEnv=false
     else
-        case $arg in 
-      --env)
+      case $arg in 
+        --env)
           processEnv=true
           ;;
-      *)
-              newCmd="$newCmd $arg"
+        *)
+          newCmd="$newCmd $arg"
           ;;
-        esac
+      esac
     fi
-    done
+  done
 
-    envs="$envs:$prevEnv"
-    envs=`echo $envs | sed -e "s/::/:/g" -e "s/:$//"`
-    env_option="--env $envs"
+  envs="$envs:$prevEnv"
+  envs=`echo $envs | sed -e "s/::/:/g" -e "s/:$//"`
+  env_option="--env $envs"
 
-    newCmd=`echo $newCmd | sed -e 's/^qsub //'`
-    $dryrun qsub $env_option $newCmd
+  newCmd=`echo $newCmd | sed -e 's/^qsub //'`
+  $dryrun qsub $env_option $newCmd
 
 else
 
-    if [ $use_gdb = "true" ]; then
-      echo "" > .gdb_commands
-      if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
-        echo "set env LD_BIND_NOW=1" >> .gdb_commands
-      fi
-      if [ $track_io = "true" ] ; then
-        echo "set env LD_BIND_NOW=1" >> .gdb_commands 
-      fi
-      if [ $apple = 1 ]; then
-        echo "set env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
-        echo "set env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
-        echo "set env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
-      else
-        echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
-        echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
-        echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
-      fi
-      if [ $memory_debug = "true" ] ; then
-        echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
-        echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
-      fi
-      echo "set arg ${*:2}" >> .gdb_commands
-      gdb -x .gdb_commands "$1"
-      rm -f ./.gdb_commands
-      exit 0;
+  if [ $use_gdb = "true" ]; then
+    echo "" > .gdb_commands
+    if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
+      echo "set env LD_BIND_NOW=1" >> .gdb_commands
     fi
-
+    if [ $track_io = "true" ] ; then
+      echo "set env LD_BIND_NOW=1" >> .gdb_commands 
+    fi
     if [ $apple = 1 ]; then
-      ORIG_LIBRARY_PATH=$DYLD_LIBRARY_PATH
-      ORIG_INSERT_LIBRARIES=$DYLD_INSERT_LIBRARIES
-      ORIG_FORCE_FLAT_NAMESPACE=$DYLD_FORCE_FLAT_NAMESPACE
-      $dryrun export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
-      $dryrun export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
-      $dryrun export DYLD_FORCE_FLAT_NAMESPACE=1
+      echo "set env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
+      echo "set env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
+      echo "set env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
     else
-      ORIG_LIBRARY_PATH=$LD_LIBRARY_PATH
-      ORIG_AUDIT_AUDIT=$LD_AUDIT
-      ORIG_LD_PRELOAD=$LD_PRELOAD
-      $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
-      $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
-      $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
+      echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
+      echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
+      echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
     fi
     if [ $memory_debug = "true" ] ; then
-      $dryrun export TAU_TRACK_MEMORY_LEAKS=1
-      $dryrun export TAU_MEMDBG_PROTECT_ABOVE=1
+      echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
+      echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
     fi
+    echo "set arg ${*:2}" >> .gdb_commands
+    gdb -x .gdb_commands "$1"
+    rm -f ./.gdb_commands
+    exit 0;
+  fi
 
-    if $python_wrapper ; then
-      $dryrun python -m tau_python_wrapper $@
-      retval=$?
-    elif $use_ptts ; then
-        # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
-        if [ -n "$dryrun" ] ; then
-            echo "ERROR: dryrun not implemented for ptts"
-            exit 1
-        fi
-        samplefile="$pttsprefix/sample.${node}.smp"
-        samplefileopt="$pttsprefix/sample%U.smp"
-        samplelog="$pttsprefix/sample_ts.${node}.log"
-        reportfile="$pttsprefix/report.${node}.tsr"
-        reportlog="$pttsprefix/report_ts.${node}.log"
-        # view-static_ts paths should be relative to $pttsprefix
-        # since view-static_ts must be run with PWD=$pttsprefix
-        viewdir="node_${node}"
-        viewlog="view-static_ts.${node}.log"
-        # Restore environment and start sampling the child process
-        if [ $apple = 1 ]; then
-            export DYLD_LIBRARY_PATH=$ORIG_LIBRARY_PATH
-            export DYLD_INSERT_LIBRARIES=$ORIG_INSERT_LIBRARIES
-            export DYLD_FORCE_FLAT_NAMESPACE=$ORIG_FORCE_FLAT_NAMESPACE
-        else
-            export LD_LIBRARY_PATH=$ORIG_LIBRARY_PATH
-            export LD_AUDIT=$ORIG_AUDIT_AUDIT
-            export LD_PRELOAD=$ORIG_LD_PRELOAD
-        fi
-        rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
-        sample_ts $ts_sample_flags -o "$samplefileopt" -r $@ >$samplelog 2>&1 &
-        err=$? ; [ $err -eq 0 ] || exit $err
-        retval=$err
-        while [ ! -f $samplefile ] ;
-        do
-              sleep 2
-        done
-        sleep 10
-	echo "Finalizing sample_ts $@ on rank $node" 
-        # Get the return code of the child process as the tau_exec return code
-        # Post-process samples
-        echo "PTTS($node): Postprocessing samples..."
-        report_ts $ts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
-        err=$? ; [ $err -eq 0 ] || exit $err
-        # Generate report. view-static must be run in $pttsprefix
-        cd "$pttsprefix"
-        view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
-        err=$? ; [ $err -eq 0 ] || exit $err
-        cd "$OLDPWD"
-        # Clean up and package the report
-        rm -f "$samplefile" "$reportfile" "$samplelog" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
-        compress_ptts_report
-        if [ "$node" -eq 0 ] ; then
-            write_ptts_index
-        fi
+  if [ $apple = 1 ]; then
+    ORIG_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+    ORIG_INSERT_LIBRARIES=$DYLD_INSERT_LIBRARIES
+    ORIG_FORCE_FLAT_NAMESPACE=$DYLD_FORCE_FLAT_NAMESPACE
+    $dryrun export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+    $dryrun export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
+    $dryrun export DYLD_FORCE_FLAT_NAMESPACE=1
+  else
+    ORIG_LIBRARY_PATH=$LD_LIBRARY_PATH
+    ORIG_AUDIT_AUDIT=$LD_AUDIT
+    ORIG_LD_PRELOAD=$LD_PRELOAD
+    $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+    $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
+    $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
+  fi
+  if [ $memory_debug = "true" ] ; then
+    $dryrun export TAU_TRACK_MEMORY_LEAKS=1
+    $dryrun export TAU_MEMDBG_PROTECT_ABOVE=1
+  fi
+
+  if $python_wrapper ; then
+    $dryrun python -m tau_python_wrapper $@
+    retval=$?
+  elif $use_ptts ; then
+    # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
+    if [ -n "$dryrun" ] ; then
+      echo "ERROR: dryrun not implemented for ptts"
+      exit 1
+    fi
+    samplefile="$pttsprefix/sample.${node}.smp"
+    samplelog="$pttsprefix/sample_ts.${node}.log"
+    reportfile="$pttsprefix/report.${node}.tsr"
+    reportlog="$pttsprefix/report_ts.${node}.log"
+    # view-static_ts paths should be relative to $pttsprefix
+    # since view-static_ts must be run with PWD=$pttsprefix
+    viewdir="node_${node}"
+    viewlog="view-static_ts.${node}.log"
+    # Restore environment and start sampling the child process
+    if [ $apple = 1 ]; then
+      export DYLD_LIBRARY_PATH=$ORIG_LIBRARY_PATH
+      export DYLD_INSERT_LIBRARIES=$ORIG_INSERT_LIBRARIES
+      export DYLD_FORCE_FLAT_NAMESPACE=$ORIG_FORCE_FLAT_NAMESPACE
     else
-      $dryrun $@
-      retval=$?
+      export LD_LIBRARY_PATH=$ORIG_LIBRARY_PATH
+      export LD_AUDIT=$ORIG_AUDIT_AUDIT
+      export LD_PRELOAD=$ORIG_LD_PRELOAD
     fi
+    rm -rf "$samplefile" "$samplelog" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
+    sample_ts $ts_sample_flags -o "$samplefile" -r $@ >$samplelog 2>&1 &
+    err=$? ; [ $err -eq 0 ] || exit $err
+    retval=$err
+    while [ ! -f $samplefile ] ;
+    do
+      sleep 2
+    done
+    sleep 10
+    echo "Finalizing sample_ts $@ on rank $node" 
+    # Get the return code of the child process as the tau_exec return code
+    # Post-process samples
+    echo "PTTS($node): Postprocessing samples..."
+    report_ts $ts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
+    err=$? ; [ $err -eq 0 ] || exit $err
+    # Generate report. view-static must be run in $pttsprefix
+    cd "$pttsprefix"
+    view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
+    err=$? ; [ $err -eq 0 ] || exit $err
+    cd "$OLDPWD"
+    # Clean up and package the report
+    rm -f "$samplefile" "$reportfile" "$samplelog" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
+    compress_ptts_report
+    if [ "$node" -eq 0 ] ; then
+      write_ptts_index
+    fi
+  else
+    $dryrun $@
+    retval=$?
+  fi
 
-    unset LD_PRELOAD
-    exit $retval
+  unset LD_PRELOAD
+  exit $retval
 fi
 
