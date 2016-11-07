@@ -123,10 +123,9 @@ set_node()
 set_nodecount()
 {
   if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-    is_cray
-    if [ "$on_craycnl" = true ]  ; then
+    if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
       if [ -z "$aprun_N" ]; then
-        echo "ERROR: Using aprun we need -aprun-num=<arg to -n> \n"
+        echo "ERROR: Using aprun we need -aprun-num=<arg to -n>"
       else
         nodecount="$aprun_N"
       fi	
@@ -220,19 +219,6 @@ compress_ptts_report()
     ln -s "../node_0/$i" .
   done
   cd "$OLDPWD"
-}
-
-is_cray()
-{
-  arch=`tau-config | grep TAUARCH | sed -e 's/TAUARCH=//'`
-  if [ "x$arch" = "xcraycnl" ];  then
-    echo "ON CRAY"	
-    on_craycnl=true
-  else
-    echo "not on CRAY"
-    on_craycnl=false
-
-  fi
 }
 
 if [ $# = 0 ] ; then
@@ -913,7 +899,6 @@ else
     sample_ts $ts_sample_flags -o "$samplefile" -r $@
     err=$? ; [ $err -eq 0 ] || exit $err
     retval=$err
-    echo "Finalizing sample_ts $@ on rank $node" 
     # Get the return code of the child process as the tau_exec return code
     # Post-process samples
     echo "PTTS($node): Postprocessing samples..."
