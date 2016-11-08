@@ -513,7 +513,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 
   OTF2_GlobalDefWriter* glob_def_writer = (OTF2_GlobalDefWriter*)userData;
       //glob_def_writer = OTF2_Archive_GetGlobalDefWriter( archive );
- //TODO: We need to parse the source location out of the event name
+
 
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                  string_id,
@@ -551,7 +551,13 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
                                              info.stopline );  //End
   check_status( status, "Write region definition" );
 
-  groups[stateGroupToken].members.push_back(stateToken);
+  map< unsigned int, group >::iterator it = groups.find(stateGroupToken);
+  if(it==groups.end()){
+	  printf("Warning: event %s (id %d) has undefined group id %d\n", name,stateToken,stateGroupToken);
+  }
+  else{
+	  groups[stateGroupToken].members.push_back(stateToken);
+  }
 
   //OTF2_EvtWriter_writeDefFunction((OTF2_EvtWriter*)userData, TAU_GLOBAL_STREAM_ID, stateToken, (const char *) name, stateGroupToken, TAU_SCL_NONE);
 
@@ -585,7 +591,6 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
 
   OTF2_GlobalDefWriter* glob_def_writer = (OTF2_GlobalDefWriter*)userData;
       //glob_def_writer = OTF2_Archive_GetGlobalDefWriter( archive );
- //TODO: We need to parse the source location out of the event name
 
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                  string_id,
@@ -1099,7 +1104,7 @@ int main(int argc, char **argv)
       {
           locations[ numthreads[rank] * rank + thread ] = GlobalId(rank,thread);// ( rank << 16 ) + thread;
       }
-      mpi_ranks[ rank ]      = GlobalId(rank,0);//TODO: Just to make sure we have valid rank ids? formerly rank
+      mpi_ranks[ rank ]      = GlobalId(rank,0);//Just to make sure we have valid rank ids. formerly rank
       //master_threads[ rank ] = rank << 16;
   }
 
@@ -1192,10 +1197,13 @@ string_id++;
    int nom = iterator->second.members.size();
    //vector<unsigned int> mv = iterator->second.members;
    uint64_t* membs=&iterator->second.members[0];
+
+   dprintf("Writing group id: %d, name: %s to otf2\n",stateGroupToken,stateGroupName);
+
    OTF2_GlobalDefWriter_WriteString( glob_def_writer,string_id ,
                                                     stateGroupName);
    maxTauStringId=localmax(maxTauStringId,stateGroupToken);
- //TODO: I guess we need to make a bucket for each group and count them ourselves.
+
    /* create a default activity (group) */
  #ifdef TAU_OTF2_1_1
    OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string, OTF2_GROUP_TYPE_REGIONS,0,0);
@@ -1290,7 +1298,7 @@ int COMM_STRING=string_id;
 
 
 
-/*TODO: Need to define mpi ranks and rank-rank mapping*/
+
 //#ifdef TAU_OTF2_1_1
 // OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_MPI_GROUP,nodes,mpi_ranks);
 //#else
