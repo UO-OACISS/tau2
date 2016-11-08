@@ -93,10 +93,12 @@ int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
       printf("TAU: Rank %d: Can't get cvar info i=%d, num_cvars=%d\n", rank, i, num_cvars);
       return return_val;
     }
-    if (rank == 0) {
+    // This code gets called before MPI_Init has taken place. 
+    // rank is -1 when TAU is linked in (as opposed to tau_exec). 
+    //if (rank == 0) {
       dprintf("CVAR[%d] = %s \t \t desc = %s\n", i, name, desc);
       TAU_METADATA(name, desc);
-    }
+    //} 
   }
 
   return MPI_SUCCESS;
