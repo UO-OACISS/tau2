@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2011						   **
+**    Copyright 1997-2016						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,18 @@
 
 Change log:
 ------------
+Version 2.26 changes (from 2.25):
+1. Upgraded OMPT to LLVM-0.2 and introduced TAU_OPENMP_RUNTIME_EVENTS=0. 
+2. Updated tau_exec -ptts for ThreadSpotter. 
+3. Fixed OMPT with Cray (-arch=craycnl) instrumentation on threads 1,..N-1. 
+4. Updated APEX API. 
+5. Added PAPI support for multiplexing. 
+6. Updated MPI-T interface for MVAPICH2. 
+7. Updated MPC support. 
+8. Added support for OpenACC (PGI 16.5) and CUDA (8.0). 
+9. Updated OTF2 support. 
+10. Updated ParaProf. 
+
 Version 2.25 changes (from 2.24):
 1. Support for new PDT parsers cxxparse4101, cparse4101, and gfparse48
 2. Introducing APEX. 
