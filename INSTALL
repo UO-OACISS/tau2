@@ -68,7 +68,7 @@ To use MPI compilers and OpenMP, please specify the appropriate compilers as:
 % ./configure -c++=mpicxx -cc=mpicc -fortran=mpif90 -mpi -ompt=download -bfd=download -unwind=download -pdt=<path_to_pdt_dir>
 % make install 
 
-If you are building for an IBM BGQ or a Cray system a KNC Linux system, please add the appropriate -arch option (typically, bgq, craycnl, mic_linux, or ibm64linux for Power 8/9 with Linux):
+It is important to note that if the OMPT package needs a newer cmake (3.3+) and a recent GCC backend for compilers (gcc 4.6+). If you are building for an IBM BGQ or a Cray system a KNC Linux system, please add the appropriate -arch option (typically, bgq, craycnl, mic_linux, or ibm64linux for Power 8/9 with Linux):
 % ./configure -arch=craycnl  -bfd=download -ompt=download -unwind=download -mpi; make install
 
 There is no need to specify compilers for standard architectures such as 
