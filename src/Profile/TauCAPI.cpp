@@ -2612,7 +2612,7 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
   if(pvar_count == 1) {
     sprintf(concat_event_name, "%s (%s)", event_name, description);
     TAU_VERBOSE("Concat Event name = %s\n", concat_event_name);
-    (*event)[i] = new TauUserEvent(concat_event_name);
+    (*event)[0] = new TauUserEvent(concat_event_name);
   } else {
     for(i=0; i < pvar_count; i++) {
       sprintf(concat_event_name, "%s (%s)[%d]", event_name, description, i);
