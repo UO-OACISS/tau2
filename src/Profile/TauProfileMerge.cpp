@@ -480,22 +480,12 @@ int Tau_mergeProfiles()
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
 #endif  /* TAU_MPI */
-//#ifdef TAU_SHMEM
-//    /* recieve ok to go */
-//    shmem_int_get(&okSignal, &okSignal, 1, i)
-//
-//    /* send length */
-//    shemem_int_put(&buflen, &buflen, 1, i);
-//
-//    /* send data */
-//    shmem_int_put(&recv_buf, &recv_buf, buflen, i);
-//#endif /* TAU_SHMEM */
 
   }
 	free(buf);
+#ifdef TAU_SHMEM
         shmem_free(shbuf);
         shmem_free(shbuflen);
-#ifdef TAU_SHMEM
 #endif /* TAU_SHMEM */
   return 0;
 }
