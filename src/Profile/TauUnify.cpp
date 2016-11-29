@@ -250,7 +250,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
   rank = shmem_my_pe();
-  size = shmem_n_pes();
+  numRanks = shmem_n_pes();
 #endif /* TAU_SHMEM */
 
   // for internal timing
@@ -278,16 +278,77 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   unify_merge_object_t *mergedObject = NULL;
 
 #ifdef TAU_SHMEM
-  
+  int *shmaxbuf = (int*)shmem_malloc(sizeof(int));
+  int *shmaxbufArr = (int*)shmem_malloc(numRanks*sizeof(int));
+
+  char *shbuff;
+  int i;
+
+
+  int mask = 0x1;
+  int parent = -1;
+  int source;
+  int break_flag = 0;
+  while (mask < numRanks) {
+    source = (rank | mask);
+    for(i=0; i<numRanks;i++) shmaxbufArr[i] = 0;
+
+    // sender
+    if ((mask & rank) != 0) {
+      if (unifyObjects->size() > 1) {
+	// merge children
+	mergedObject = Tau_unify_mergeObjects(*unifyObjects);
+
+	// generate buffer to send to parent
+	Tau_util_outputDevice *out = Tau_unify_generateMergedDefinitionBuffer(*mergedObject, eventLister);
+	defBuf = Tau_util_getOutputBuffer(out);
+	defBufSize = Tau_util_getOutputBufferLength(out);
+      }
+
+      // Send all defBufSize's to rank 0.
+      shmem_int_put(&shmaxbufArr[rank], &defBufSize, 1, 0);
+    }
+    shmem_barrier_all();
+    // Compute max buffer size on rank 0 and send to all pes.
+    if (rank == 0) {
+      *shmaxbuf = 0;
+      for(i = 0; i < numRanks; i++) {
+        if(shmaxbufArr[i] > *shmaxbuf) *shmaxbuf= shmaxbufArr[i];
+      }
+    }
+    shmem_barrier_all();
+    shmem_int_get(shmaxbuf, shmaxbuf, 1, 0);
+
+    shbuff = (char*)shmem_malloc(*shmaxbuf);
+
+    // sender
+    if((mask & rank) != 0) {
+      parent = (rank & (~ mask));
+      shmem_putmem(shbuff, defBuf, defBufSize, parent);
+    }
+    shmem_barrier_all();
+
+    // receiver
+    if((mask & rank) == 0 && source < numRanks && !break_flag) {
+       unifyObjects->push_back(Tau_unify_processBuffer(shbuff, source));
+    }
+    else {
+       break_flag = 1;
+    }
+    shmem_barrier_all();
+
+    mask <<= 1;
+    shmem_free(shbuff);
+  }
+  shmem_free(shmaxbuf);
+  shmem_free(shmaxbufArr);
+  shmem_barrier_all();
+
 #else
   // use binomial heap (like MPI_Reduce) to communicate with parent/children
   int mask = 0x1;
   int parent = -1;
 
-#ifdef TAU_SHMEM
-  int *shrecvbuflen = shmem_malloc(sizeof(int));
-  char *shrecv_buf;
-#endif /* TAU_SHMEM */
   while (mask < numRanks) {
     if ((mask & rank) == 0) {
       int source = (rank | mask);
@@ -302,9 +363,6 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	// receive buffer length
 	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
-#ifdef TAU_SHMEM
-        shmem_int_get(shrecv_buflen, shrecvbuflen, 1, source);
-#endif /* TAU_SHMEM */
 
 	// Only receive and allocate memory if there's something to receive.
 	//   Note that this condition only applies to Atomic events.
@@ -316,9 +374,6 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	  // receive buffer
 	  PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
-#ifdef TAU_SHMEM
-
-#endif /* TAU_SHMEM */
 	  
 	  // add unification object to array
 	  unifyObjects->push_back(Tau_unify_processBuffer(recv_buf, source));
@@ -347,8 +402,6 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
       // send length
       PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
-#ifdef TAU_SHMEM
-#endif /* TAU_SHMEM */
       
       // Send data only if the buffer size is greater than 0.
       //   This applies only to Atomic events.
@@ -382,6 +435,28 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   }
 
   // receive reverse mapping table from parent
+#ifdef TAU_SHMEM
+  int *shreceived_mapping = (int*)shmem_malloc(sizeof(int));
+  int *shmergedObject_mapping = (int*)shmem_malloc(mergedObject->numStrings*sizeof(int));
+  int sent=1;
+  *shreceived_mapping = 0;
+  for(i=0;i<mergedObject->numStrings;i++) shmergedObject_mapping[i] = -69;
+  while(parent != -1 && *shreceived_mapping == 0) {
+    sleep(0);
+  }
+  for (unsigned int i=1; i<unifyObjects->size(); i++) {
+      shmem_int_put(shmergedObject_mapping, (*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents, (*unifyObjects)[i]->rank);
+      shmem_int_put(shreceived_mapping, &sent, 1, (*unifyObjects)[i]->rank);
+  }
+  if (parent != -1) {
+    for (i=0; i<unifyObjects->size(); i++) {
+      for (int j=0; j<(*unifyObjects)[i]->numEvents; j++) {
+        (*unifyObjects)[i]->mapping[j] = shmergedObject_mapping[(*unifyObjects)[i]->mapping[j]];
+      }
+    }
+  }
+  shmem_free(shmergedObject_mapping);
+#else
   if (parent != -1) {
     mergedObject->mapping = (int *) TAU_UTIL_MALLOC(sizeof(int)* mergedObject->numStrings);
     
@@ -405,6 +480,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	      MPI_INT, (*unifyObjects)[i]->rank, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
   }
+#endif
 
   /* debug: output final table */
   // if (rank == 0) {
@@ -431,6 +507,12 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 #ifdef TAU_MPI
   PMPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
+#ifdef TAU_SHMEM
+  int *shglobalNumItems = (int*)shmem_malloc(sizeof(int));
+  *shglobalNumItems = globalNumItems;
+  shmem_int_get(&globalNumItems, shglobalNumItems, 1, 0);
+  shmem_free(shglobalNumItems);
+#endif /* TAU_SHMEM */
 
   Tau_unify_object_t *tau_unify_object = (Tau_unify_object_t*) TAU_UTIL_MALLOC(sizeof(Tau_unify_object_t));
   tau_unify_object->globalNumItems = globalNumItems;
@@ -457,7 +539,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   free ((*unifyObjects)[0]);
 
   for (unsigned int i=1; i<unifyObjects->size(); i++) {
-    free ((*unifyObjects)[i]->buffer);
+    //free ((*unifyObjects)[i]->buffer);
     free ((*unifyObjects)[i]->strings);
     free ((*unifyObjects)[i]->mapping);
     free ((*unifyObjects)[i]);
