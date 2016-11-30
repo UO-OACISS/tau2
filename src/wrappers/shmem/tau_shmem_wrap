@@ -3,10 +3,11 @@
 if [ $# -lt 3 ] ; then
     cmd=`basename $0`
     echo ""
-    echo " Usage: $cmd <headerfile> <library> -shmem=<path> [-parseropts=options]"
+    echo " Usage: $cmd <headerfile> <library> -shmemlib=<path> -shmeminc=<path> [-parseropts=options]"
     echo "   <headerfile> : SHMEM header file to parse, e.g. shmem.h"
     echo "   <library>    : name of the library to generate, e.g. tau_shmem"
-    echo "   -shmem=<dir> : path to SHMEM libraries and header files"
+    echo "   -shmemlib=<dir> : path to SHMEM libraries files"
+    echo "   -shmeminc=<dir> : path to SHMEM header files"
     echo "   -parseropts=\"options\" : additional options to pass to the PDT parser"
     echo "NOTE: $cmd reads the TAU_MAKEFILE  environment variable to get PDT settings"
     echo ""
@@ -25,24 +26,46 @@ fi
 
 headerfile="$1"
 library="$2"
-shmemdir=`echo "$3" | sed -e 's/-shmem=//g'`
-parseropts=`echo "$4" | sed -e 's/-parseropts=//g'`
+shmemlibdirs=`echo "$3" | sed -e 's/-shmemlib=-L//g'`
+shmemlibdirs=( $shmemlibdirs )
+shmemincdirs=`echo "$4" | sed -e 's/-shmeminc=//g'`
+shmemincdirs=( $shmemincdirs )
+parseropts=`echo "$5" | sed -e 's/-parseropts=//g'`
 
-if [ ! -d "$shmemdir" ] ; then
-  echo "ERROR: invalid SHMEM directory: $shmemdir"
-  exit 1
+found=false
+for i in `seq 0 ${#shmemincdirs[@]}`; do
+  shmemincdir=`echo ${shmemincdirs[$i]} | sed -e 's/-I//g'`
+  if [ -d "${shmemincdir}" ] ; then
+	  found=true
+	  break
+  fi
+done
+if ! $found ; then
+    echo "ERROR: invalid SHMEM include directory: $shmemincdirs"
+    exit 1
 fi
 
 found=false
-for shmemlib in libopenshmem libsma ; do
+for i in `seq 0 ${#shmemlibdirs[@]}`; do
+  shmemlibdir=`echo ${shmemlibdirs[$i]} | sed -e 's/-L//g'`
+  if [ -d "${shmemlibdir}" ] ; then
+	  found=true
+	  break
+  fi
+done
+if ! $found ; then
+    echo "ERROR: invalid SHMEM library directory: $shmemlibdirs"
+    exit 1
+fi
+
+found=false
+for shmemlib in libopenshmem libsma liboshmem; do
   for libext in a so ; do
-    for libdir in lib lib64 ; do
-      libshmem="$shmemdir/$libdir/$shmemlib.$libext"
+      libshmem="$shmemlibdir/$shmemlib.$libext"
       if [ -r "$libshmem" ] ; then
         found=true
         break
       fi
-    done
   done
 done
 if ! $found ; then
@@ -60,8 +83,8 @@ if [ ! -x $parser ]; then
   exit 1
 fi
 
-echo "$parser $headerfile -I$shmemdir/include $parseropts"
-$parser $headerfile -I$shmemdir/include $parseropts
+echo "$parser $headerfile -I$shmemincdir $parseropts"
+$parser $headerfile -I$shmemincdir $parseropts
 
 # Build select.tau
 case "$tauarch" in

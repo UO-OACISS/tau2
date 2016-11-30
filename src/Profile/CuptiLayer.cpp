@@ -49,6 +49,8 @@ int Tau_CuptiLayer_get_num_events()
 	return Tau_CuptiLayer_num_events;
 }
 
+cudaEvent_t TAU_cudaEvent;
+
 bool Tau_CuptiLayer_initialized = false;
 bool Tau_CuptiLayer_finalized = false;
 bool Tau_CuptiLayer_enabled = true;
@@ -60,6 +62,7 @@ void Tau_CuptiLayer_finalize()
 {
 	//cuptiEventGroupDisable(eventGroup);
 	//cuptiEventGroupDestroy(eventGroup);
+        cudaEventDestroy(TAU_cudaEvent);
 	Tau_CuptiLayer_finalized = true;
 }
 //running total for each counter.
@@ -348,6 +351,8 @@ void Tau_CuptiLayer_init()
     initialized[device] = true;
 		Tau_CuptiLayer_initialized = true;
 	}
+        cudaEventCreate(&TAU_cudaEvent);
+
 #ifdef TAU_DEBUG_CUPTI
   printf("leaving Tau_CuptiLayer_init\n");
 #endif
@@ -741,6 +746,11 @@ int Tau_CuptiLayer_get_cupti_event_id(int metric_id)
 int Tau_CuptiLayer_get_metric_event_id(int metric_id)
 {
   return internal_id_map_backwards[metric_id];
+}
+
+void Tau_cuda_Event_Synchonize()
+{
+  cudaEventSynchronize(TAU_cudaEvent);
 }
 
 #endif

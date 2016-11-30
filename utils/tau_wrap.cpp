@@ -171,6 +171,10 @@ static bool isExcluded(pdbRoutine *r) {
         if (r->name() == *ptr)
             return true;
     }
+    if(r->name().find("shmem_int16_wait_until") != string::npos ||
+       r->name().find("shmem_int16_wait") != string::npos ||
+       r->name().find("shmem_iget16") != string::npos)
+	    return true;
     return false;
 }
 
@@ -625,13 +629,13 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 
     argtypenamefort = argtypename;
     if(shmem_wrapper) {
-      if(argtypenamefort.compare(0, 3, "int") == 0) {
-        argtypenamefort.erase(0, 3);
-        argtypenamefort.insert(0, "SHMEM_FINT");
+      if(argtypenamefort.compare(0, 4, "int ") == 0) {
+        argtypenamefort.erase(0, 4);
+        argtypenamefort.insert(0, "SHMEM_FINT ");
       }
-      if(argtypenamefort.compare(0, 6, "size_t") == 0) {
-        argtypenamefort.erase(0, 6);
-        argtypenamefort.insert(0, "SHMEM_FINT");
+      if(argtypenamefort.compare(0, 7, "size_t ") == 0) {
+        argtypenamefort.erase(0, 7);
+        argtypenamefort.insert(0, "SHMEM_FINT ");
       }
     }
     int pos3 = argtypenamefort.find("*");
@@ -932,7 +936,10 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
     printFunctionNameInOutputFile(r, impl, "  ", sig);
     impl << "{" << endl;
-    impl << "   __wrap_" << sig.func << ";" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.func << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.func << ";" << endl;
     impl << "}\n" << endl;
 
 #if 0
@@ -971,24 +978,36 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     // Fortran wrapper functions
     impl << "extern " << sig.returntypename << " __wrap_" << rname << "_" << sig.funcargfort << endl;
     impl << "{" << endl;
-    impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+	    impl << "   return __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
 
     impl << "extern " << sig.returntypename << " __wrap_" << rname << "__" << sig.funcargfort << endl;
     impl << "{" << endl;
-    impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
 
     transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
 
     impl << "extern " << sig.returntypename << " __wrap_" << rname << "_" << sig.funcargfort << endl;
     impl << "{" << endl;
-    impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
 
     impl << "extern " << sig.returntypename << " __wrap_" << rname << "__" << sig.funcargfort << endl;
     impl << "{" << endl;
-    impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.funcfort << ";" << endl;
     impl << "}\n" << endl;
   }
 

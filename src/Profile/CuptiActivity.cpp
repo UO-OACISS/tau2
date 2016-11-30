@@ -724,6 +724,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 					CUdevice device;
 					cuCtxGetDevice(&device);
+                                        Tau_cuda_Event_Synchonize();
 					record_gpu_counters_at_launch(device);
 				}
 #ifdef TAU_DEBUG_CUPTI

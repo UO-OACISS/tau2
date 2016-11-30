@@ -886,7 +886,7 @@ int main(int argc, char **argv)
 		InitSnapshot();
 
 	if(seenedf||otf2)
-		ReadTraceFile();
+		ReadTraceFile( argc,  argv);
 	else
 	{
 		//TODO: Re-enable OTF with library detection

@@ -47,14 +47,14 @@
 
 #ifdef TAU_MPICH3
 #define TAU_MPICH3_CONST const
-#ifdef TAU_OPENMPI3
-#define TAU_OPENMPI3_CONST 
-#else
-#define TAU_OPENMPI3_CONST  const
-#endif
 #else
 #define TAU_MPICH3_CONST 
-#define TAU_OPENMPI3_CONST 
+#endif
+
+#ifdef TAU_OPENMPI3
+#define TAU_OPENMPI3_CONST  const
+#else
+#define TAU_OPENMPI3_CONST  
 #endif
 
 
@@ -1600,9 +1600,8 @@ int Tau_MPI_T_initialization(void) {
   if (TauEnv_get_track_mpi_t_pvars()) {
     Tau_mpi_t_initialize();
   }
-  if (TauEnv_get_cvar_metrics() != (const char *) NULL) {
-    returnVal = Tau_mpi_t_cvar_initialize();
-  }
+  
+  returnVal = Tau_mpi_t_cvar_initialize();
   return returnVal;
 #endif /* TAU_MPI_T */
 }
