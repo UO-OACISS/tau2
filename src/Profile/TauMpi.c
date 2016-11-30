@@ -1483,6 +1483,8 @@ int  MPI_Finalize(  )
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
+  fprintf(stdout, "TAU: Call MPI_Finalize()\n");
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
@@ -1561,7 +1563,7 @@ int  MPI_Finalize(  )
      */
     /* KAH - NO! this is the wrong time to do this. THis is also done in the
      * snapshot writer. If you do it twice, you get double values for main... */
-    //TauProfiler_updateAllIntermediateStatistics();
+    /* TauProfiler_updateAllIntermediateStatistics(); */
     Tau_mergeProfiles();
   }
   
@@ -1570,6 +1572,8 @@ int  MPI_Finalize(  )
 #endif /* TAU_MONITORING */
 
   returnVal = PMPI_Finalize();
+
+  fprintf(stdout, "PMPI_Finalize() return=%d\n", returnVal);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1615,6 +1619,9 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  fprintf(stdout, "call to TAU MPI_Init()\n");
+
   if(Tau_get_usesMPI() == 0)
   {
 
@@ -1690,6 +1697,8 @@ int *provided;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  fprintf(stdout, "call TAU MPI_Init_thread()\n");
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
