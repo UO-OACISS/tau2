@@ -2,6 +2,7 @@
 #include <Profile/Profiler.h>
 #include <stdio.h>
 
+#include <Profile/TauEnv.h>
 
 /**********************************************************
    MPI_Default_error
@@ -2153,10 +2154,31 @@ int   __real_MPI_Finalize() ;
 int   __wrap_MPI_Finalize()  {
 
   int  retval;
+  fprintf(stdout, "Wrapper to MPI_Finalize() for MPC\n");
   TAU_PROFILE_TIMER(t,"int MPI_Finalize()  C", "", TAU_USER);
+
+Tau_metadataMerge_mergeMetaData();
+
+  /* Create a merged profile if requested */
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    /* *CWL* - properly record intermediate values (the same way snapshots work).
+ *                Note that we do not want to shut down the timers as yet. There is
+ *                               still potentially life after MPI_Finalize where TAU is concerned.
+ *                                    */
+    /* KAH - NO! this is the wrong time to do this. THis is also done in the
+ *      * snapshot writer. If you do it twice, you get double values for main... */
+    /* TauProfiler_updateAllIntermediateStatistics(); */
+    Tau_mergeProfiles();
+  }
+
+
   TAU_PROFILE_START(t);
   retval  =  __real_MPI_Finalize();
   TAU_PROFILE_STOP(t);
+
+  Tau_stop_top_level_timer_if_necessary();
+  //tau_mpi_finalized = 1;
+
   return retval;
 
 }
