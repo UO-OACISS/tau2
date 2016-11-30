@@ -2,15 +2,29 @@
  * This file is part of the Score-P software (http://www.score-p.org)
  *
  * Copyright (c) 2009-2012,
- *    RWTH Aachen University, Germany
- *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
- *    Technische Universitaet Dresden, Germany
- *    University of Oregon, Eugene, USA
- *    Forschungszentrum Juelich GmbH, Germany
- *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
- *    Technische Universitaet Muenchen, Germany
+ * RWTH Aachen University, Germany
  *
- * See the COPYING file in the package base directory for details.
+ * Copyright (c) 2009-2012,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2012,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license.  See the COPYING file in the package base
+ * directory for details.
  *
  */
 
@@ -19,9 +33,7 @@
 
 /*--- Header file documentation -------------------------------------------*/
 /**
- * @file            otf2_vector.h
- * @maintainer      Daniel Lorenz <d.lorenz@fz-juelich.de>
- * @status          ALPHA
+ * @file
  * @ingroup         otf2_vector_module
  *
  * @brief           A STL-like C-implementation of a vector.
@@ -97,7 +109,7 @@ typedef void ( *otf2_vector_processing_func )( void* item );
 
 /**
  * Creates and returns an empty instance of otf2_vector with an initial
- * capacity of zero elements. If the memory allocation request can not
+ * capacity of zero elements. If the memory allocation request cannot
  * be fulfilled, an error message is printed and NULL is returned.
  *
  * @return Pointer to new instance or NULL if the memory could not be allocated.
@@ -107,7 +119,7 @@ otf2_vector_create();
 
 /**
  * Creates and returns an instance of otf2_vector with the given initial
- * @a capacity.  If the memory allocation request can not be fulfilled,
+ * @a capacity.  If the memory allocation request cannot be fulfilled,
  * an error message is printed and NULL is returned.
  *
  * @param capacity Initial capacity
@@ -167,7 +179,7 @@ otf2_vector_capacity( const otf2_vector* instance );
 
 /**
  * Resizes the otf2_vector @a instance to provide the given @a capacity. If
- * the memory reallocation request can not be fulfilled, an error message
+ * the memory reallocation request cannot be fulfilled, an error message
  * is printed.
  *
  * @note It is only possible to increase the size of an dynamic array.
@@ -187,7 +199,7 @@ otf2_vector_reserve( otf2_vector* instance,
 /**
  * Resizes the otf2_vector @a instance to provide the given @a size. Newly
  * created entries will be initialized with @c NULL. If the memory
- * reallocation request can not be fulfilled, an error message is printed.
+ * reallocation request cannot be fulfilled, an error message is printed.
  *
  * @note It is only possible to increase the size of an dynamic array.
  *       If the current size is equal to or larger than the requested
@@ -281,7 +293,7 @@ otf2_vector_end( const otf2_vector* instance );
  * Appends the given @a item (which can also be a @c NULL pointer) at the
  * end of the otf2_vector @a instance. If the current capacity does not suffice,
  * the data structure is automatically resized. If this memory reallocation
- * request can not be fulfilled, an error message is printed.
+ * request cannot be fulfilled, an error message is printed.
  *
  * @param instance Object to which the item should be appended
  * @param item     Item to append
@@ -306,7 +318,7 @@ otf2_vector_pop_back( otf2_vector* instance );
  * Inserts the given @a item (which can also be a @c NULL pointer) at the
  * given position @a index in the otf2_vector @a instance. If the current
  * capacity does not suffice, the data structure is automatically resized.
- * If this memory reallocation request can not be fulfilled, an error message
+ * If this memory reallocation request cannot be fulfilled, an error message
  * is printed and the program is aborted.
  *
  * @param instance Object to which the item should be inserted
@@ -366,8 +378,7 @@ EXTERN int32_t
 otf2_vector_find( const otf2_vector*       instance,
                   const void*              value,
                   otf2_vector_compare_func cmpfunc,
-                  size_t*                  index
-                  );
+                  size_t*                  index );
 
 /**
  * Determines the index of the first element that has a value greater than or

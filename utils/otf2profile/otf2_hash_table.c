@@ -2,29 +2,40 @@
  * This file is part of the Score-P software (http://www.score-p.org)
  *
  * Copyright (c) 2009-2012,
- *    RWTH Aachen University, Germany
- *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
- *    Technische Universitaet Dresden, Germany
- *    University of Oregon, Eugene, USA
- *    Forschungszentrum Juelich GmbH, Germany
- *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
- *    Technische Universitaet Muenchen, Germany
+ * RWTH Aachen University, Germany
  *
- * See the COPYING file in the package base directory for details.
+ * Copyright (c) 2009-2012,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2012,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license.  See the COPYING file in the package base
+ * directory for details.
  *
  */
 
 /**
- * @status          alpha
- * @file            otf2_hash_table.c
- * @maintainer      Daniel Lorenz <d.lorenz@fz-juelich.de>
+ * @file
  * @ingroup         otf2_hash_table_module
  *
  * @brief           Implementation of a STL-like hash table.
  */
 
 #include <config.h>
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -477,6 +488,20 @@ otf2_hash_table_compare_int64( const void* key,
 }
 
 int32_t
+otf2_hash_table_compare_uint8( const void* key,
+                               const void* item_key )
+{
+    return *( const uint8_t* )key == *( const uint8_t* )item_key ? 0 : 1;
+}
+
+int32_t
+otf2_hash_table_compare_uint16( const void* key,
+                                const void* item_key )
+{
+    return *( const uint16_t* )key == *( const uint16_t* )item_key ? 0 : 1;
+}
+
+int32_t
 otf2_hash_table_compare_uint32( const void* key,
                                 const void* item_key )
 {
@@ -519,15 +544,27 @@ otf2_hash_table_hash_string( const void* key )
 }
 
 size_t
-otf2_hash_table_hash_int64( const void* key )
+otf2_hash_table_hash_uint8( const void* key )
 {
-    return *( uint64_t* )key * UINT64_C( 11400714819323199488 );
+    return ( uint32_t )( *( uint8_t* )key ) * UINT32_C( 2654435761l );
 }
 
 size_t
-otf2_hash_table_hash_int32( const void* key )
+otf2_hash_table_hash_uint16( const void* key )
+{
+    return ( uint32_t )( *( uint16_t* )key ) * UINT32_C( 2654435761l );
+}
+
+size_t
+otf2_hash_table_hash_uint32( const void* key )
 {
     return *( uint32_t* )key * UINT32_C( 2654435761l );
+}
+
+size_t
+otf2_hash_table_hash_uint64( const void* key )
+{
+    return *( uint64_t* )key * UINT64_C( 11400714819323199488 );
 }
 
 size_t

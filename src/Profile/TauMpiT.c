@@ -32,7 +32,7 @@ static MPI_T_pvar_session tau_pvar_session;
 //////////////////////////////////////////////////////////////////////
 // externs
 //////////////////////////////////////////////////////////////////////
-extern void Tau_track_pvar_event(int index, int total_events, double data);
+extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data);
 
 #define dprintf TAU_VERBOSE
 
@@ -75,8 +75,6 @@ int Tau_mpi_t_initialize(void) {
   return return_val;
 } 
 
-
-
 /*Iterates through all the cvars provided by the implementation and prints the name and description of each cvar*/
 int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
   int i, name_len, desc_len, verbosity, binding, scope, rank, return_val;
@@ -95,10 +93,12 @@ int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
       printf("TAU: Rank %d: Can't get cvar info i=%d, num_cvars=%d\n", rank, i, num_cvars);
       return return_val;
     }
-    if (rank == 0) {
+    // This code gets called before MPI_Init has taken place. 
+    // rank is -1 when TAU is linked in (as opposed to tau_exec). 
+    //if (rank == 0) {
       dprintf("CVAR[%d] = %s \t \t desc = %s\n", i, name, desc);
       TAU_METADATA(name, desc);
-    }
+    //} 
   }
 
   return MPI_SUCCESS;
@@ -389,11 +389,36 @@ void Tau_mpi_t_convert_string_to_typed_value(char *string_value, MPI_Datatype da
 }
      
 int Tau_mpi_t_cvar_initialize(void) {
-  int return_val, iter;
+  int return_val, iter, num_cvars, thread_provided, rank;
   const char *cvars = TauEnv_get_cvar_metrics();
   const char *values = TauEnv_get_cvar_values();
+
+  /* MPI_Comm_rank(MPI_COMM_WORLD, &rank); */
+  rank = Tau_get_node(); /* MPI_Init has not been invoked yet */
+
+  /*Initialize the MPI_T interface in case we have not done so already. This can happen when performance variables are not being tracked.*/
+  return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
+
+  if (return_val != MPI_SUCCESS) {
+    perror("MPI_T_init_thread ERROR:");
+    return return_val;
+  }
+
+  return_val = MPI_T_cvar_get_num(&num_cvars);
+  if (return_val != MPI_SUCCESS) {
+    printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
+    return return_val;
+  }
+
+  return_val = Tau_mpi_t_print_all_cvar_desc(num_cvars);
+  if(return_val != MPI_SUCCESS) {
+    printf("TAU: Rank %d: Can't read the MPI_T control variables in this MPI implementation\n", rank);
+    return return_val;
+  }
+
   if (cvars == "") {
     dprintf("TAU: No CVARS specified using TAU_MPI_T_CVAR_METRICS and TAU_MPI_T_CVAR_VALUES\n");
+
   } else {
     dprintf("CVAR_METRICS=%s\n", cvars);
     if (values == "") {
@@ -401,7 +426,7 @@ int Tau_mpi_t_cvar_initialize(void) {
 	cvars);
     } else { // both cvars and values are specified
       MPI_T_cvar_handle chandle; 
-      int cindex, num_vals, num_cvars, num_cvar_metrics, num_cvar_values, num_scalars, num_vectors, array_index;
+      int cindex, num_vals, num_cvar_metrics, num_cvar_values, num_scalars, num_vectors, array_index;
        
       char name[TAU_NAME_LENGTH]= ""; 
       char desc[TAU_NAME_LENGTH]= ""; 
@@ -417,20 +442,6 @@ int Tau_mpi_t_cvar_initialize(void) {
       void *val, *oldval, *reset_value;
       ListStringPair *current_string_pair;
 
-      int rank;
-      /* MPI_Comm_rank(MPI_COMM_WORLD, &rank); */
-      rank = Tau_get_node(); /* MPI_Init has not been invoked yet */
-
-      return_val = MPI_T_cvar_get_num(&num_cvars); 
-      if (return_val != MPI_SUCCESS) { 
-	printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
-        return return_val;
-      }
-
-      return_val = Tau_mpi_t_print_all_cvar_desc(num_cvars);
-      if(return_val != MPI_SUCCESS) {
-        return return_val;
-      }
 
       cvar_metrics_array = (char**)malloc(sizeof(char*)*num_cvars);
       cvar_values_array = (char**)malloc(sizeof(char*)*num_cvars);
@@ -581,12 +592,14 @@ int Tau_mpi_t_cvar_initialize(void) {
       free(cvar_metrics_array); free(cvar_values_array); free(vectors); free(scalars);
     }
   }
+
   return return_val; 
 }
 
 static unsigned long long int **pvar_value_buffer;
 static void *read_value_buffer; // values are read into this buffer.
 static MPI_Datatype *tau_mpi_datatype; 
+static int *tau_pvar_count;
 
 //////////////////////////////////////////////////////////////////////
 int Tau_track_mpi_t_here(void) {
@@ -599,9 +612,7 @@ int Tau_track_mpi_t_here(void) {
   char description[TAU_NAME_LENGTH + 1] = "";
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
-  static int *tau_pvar_count; 
   int returnVal;
-
   
   /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
    * to process MPI_T events */
@@ -667,9 +678,13 @@ int Tau_track_mpi_t_here(void) {
     // get data from event 
     MPI_T_pvar_read(tau_pvar_session, tau_pvar_handles[i], read_value_buffer);
     MPI_Type_size(tau_mpi_datatype[i], &size); 
-    for(j = 0; j < tau_pvar_count[j]; j++){
+
+    for(j = 0; j < tau_pvar_count[i]; j++) {
       pvar_value_buffer[i][j] = 0;
-      memcpy(&(pvar_value_buffer[i][j]), read_value_buffer, size);
+    }
+    memcpy(pvar_value_buffer[i], read_value_buffer, size*tau_pvar_count[i]);
+
+    for(j = 0; j < tau_pvar_count[i]; j++){
       /* unsigned long long int to double conversion can result in an error. 
        * We first convert it to a long long int. */
       long long int mydata = (long long int) pvar_value_buffer[i][j]; 
@@ -691,7 +706,7 @@ int Tau_track_mpi_t_here(void) {
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
         /* Trigger the TAU event if it is non-zero */
 	if (mydata > 0L) {
-          Tau_track_pvar_event(i, num_pvars, mydata);
+          Tau_track_pvar_event(i, j, tau_pvar_count, num_pvars, mydata);
         }
       }
     }
@@ -699,7 +714,6 @@ int Tau_track_mpi_t_here(void) {
   }
   dprintf("Finished!!\n");
 }
-
 
 //////////////////////////////////////////////////////////////////////
 // EOF : TauMpiT.c

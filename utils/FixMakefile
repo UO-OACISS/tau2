@@ -1817,6 +1817,10 @@ case $1 in
 	echo "NOTE: Using Cray MIC Linux options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     INTEL_CRAY_MIC_KNL_OMPT)
+	echo "NOTE: Using Cray MIC KNL Linux options for Intel OMPT (-dynamic)"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      LINUXTIMERS)
 	echo "NOTE: Using Linux TSC Counters for low overhead wallclock time"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

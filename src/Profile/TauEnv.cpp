@@ -871,6 +871,15 @@ int TauEnv_get_openmp_runtime_states_enabled() {
 }
 
 int TauEnv_get_openmp_runtime_events_enabled() {
+  const char *tmp;
+
+  tmp = getconf("TAU_OPENMP_RUNTIME_EVENTS");
+  if (parse_bool(tmp, TAU_OPENMP_RUNTIME_EVENTS_DEFAULT)) {
+    env_openmp_runtime_events_enabled = 1;
+  } else {
+    env_openmp_runtime_events_enabled = 0;
+  } 
+
   return env_openmp_runtime_events_enabled;
 }
 

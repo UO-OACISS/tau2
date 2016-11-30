@@ -2,15 +2,29 @@
  * This file is part of the Score-P software (http://www.score-p.org)
  *
  * Copyright (c) 2009-2012,
- *    RWTH Aachen University, Germany
- *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
- *    Technische Universitaet Dresden, Germany
- *    University of Oregon, Eugene, USA
- *    Forschungszentrum Juelich GmbH, Germany
- *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
- *    Technische Universitaet Muenchen, Germany
+ * RWTH Aachen University, Germany
  *
- * See the COPYING file in the package base directory for details.
+ * Copyright (c) 2009-2012,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2012, 2014,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2012,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2012,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license.  See the COPYING file in the package base
+ * directory for details.
  *
  */
 
@@ -19,13 +33,10 @@
 
 /**
  * @file            UTILS_Debug.h
- * @maintainer      Daniel Lorenz <d.lorenz@fz-juelich.de>
- * @status          REVIEW
  * @ingroup         UTILS_Exception_module
  *
  * @brief           Module for debug output handling in UTILS
  *
- * @author          Dominic Eschweiler <d.eschweiler@fz-juelich.de>
  */
 
 #include <stdint.h>
@@ -70,7 +81,7 @@ enum
      * src/config-custom.h
      */
     #define UTILS_DEFINE_DEBUG_MODULE( name, bit ) \
-    PACKAGE_MANGLE_NAME_CAPS( DEBUG_ ## name ) = 1 << bit
+    PACKAGE_MANGLE_NAME( DEBUG_ ## name ) = 1 << bit
     UTILS_DEBUG_MODULES
     #undef UTILS_DEFINE_DEBUG_MODULE
 };
@@ -79,7 +90,7 @@ enum
 #define UTILS_DEBUG_FUNCTION_ENTRY ( UINT64_C( 1 ) << 62 )
 #define UTILS_DEBUG_FUNCTION_EXIT  ( UINT64_C( 1 ) << 63 )
 
-#define HAVE_UTILS_DEBUG UTILS_JOIN_SYMS( HAVE_, PACKAGE_MANGLE_NAME_CAPS( DEBUG ) )
+#define HAVE_UTILS_DEBUG UTILS_JOIN_SYMS( HAVE_, PACKAGE_MANGLE_NAME( DEBUG ) )
 
 /**
  * @def UTILS_DEBUG_PRINTF
@@ -104,60 +115,64 @@ enum
 /* *INDENT-OFF* */
 
 #define UTILS_DEBUG_PRINTF( debugLevel, ... ) \
-    UTILS_Debug_Printf(   \
-        debugLevel,       \
-        __FILE__,         \
-        __LINE__,         \
-        __func__,         \
+    UTILS_Debug_Printf( \
+        debugLevel, \
+        AFS_PACKAGE_SRCDIR, \
+        __FILE__, \
+        __LINE__, \
+        __func__, \
         __VA_ARGS__ )
 
 #define HAVE_DEBUG_MODULE_NAME_( sym ) defined( sym ## _DEBUG_MODULE_NAME )
 #define HAVE_DEBUG_MODULE_NAME( sym )  HAVE_DEBUG_MODULE_NAME_( sym )
 
-#if HAVE_DEBUG_MODULE_NAME( PACKAGE_SYM_CAPS )
+#if HAVE_DEBUG_MODULE_NAME( AFS_PACKAGE_NAME )
 
 #define UTILS_DEBUG( ... ) \
     UTILS_Debug_Printf( \
-        UTILS_JOIN_SYMS( PACKAGE_SYM_CAPS, \
+        UTILS_JOIN_SYMS( AFS_PACKAGE_NAME, \
                 UTILS_JOIN_SYMS( _DEBUG_, \
-                        PACKAGE_MANGLE_NAME_CAPS( DEBUG_MODULE_NAME ) ) ), \
-        __FILE__,                                  \
-        __LINE__,                                  \
-        __func__,                                  \
+                        PACKAGE_MANGLE_NAME( DEBUG_MODULE_NAME ) ) ), \
+        AFS_PACKAGE_SRCDIR, \
+        __FILE__, \
+        __LINE__, \
+        __func__, \
         "" __VA_ARGS__ )
 
 #define UTILS_DEBUG_ENTRY( ... ) \
     UTILS_Debug_Printf( \
-        UTILS_JOIN_SYMS( PACKAGE_SYM_CAPS, \
+        UTILS_JOIN_SYMS( AFS_PACKAGE_NAME, \
                 UTILS_JOIN_SYMS( _DEBUG_, \
-                        PACKAGE_MANGLE_NAME_CAPS( DEBUG_MODULE_NAME ) ) ) | \
-            UTILS_DEBUG_FUNCTION_ENTRY,            \
-        __FILE__,                                  \
-        __LINE__,                                  \
-        __func__,                                  \
+                        PACKAGE_MANGLE_NAME( DEBUG_MODULE_NAME ) ) ) | \
+            UTILS_DEBUG_FUNCTION_ENTRY, \
+        AFS_PACKAGE_SRCDIR, \
+        __FILE__, \
+        __LINE__, \
+        __func__, \
         "" __VA_ARGS__ )
 
 #define UTILS_DEBUG_EXIT( ... ) \
     UTILS_Debug_Printf( \
-        UTILS_JOIN_SYMS( PACKAGE_SYM_CAPS, \
+        UTILS_JOIN_SYMS( AFS_PACKAGE_NAME, \
                 UTILS_JOIN_SYMS( _DEBUG_, \
-                        PACKAGE_MANGLE_NAME_CAPS( DEBUG_MODULE_NAME ) ) ) | \
-            UTILS_DEBUG_FUNCTION_EXIT,             \
-        __FILE__,                                  \
-        __LINE__,                                  \
-        __func__,                                  \
+                        PACKAGE_MANGLE_NAME( DEBUG_MODULE_NAME ) ) ) | \
+            UTILS_DEBUG_FUNCTION_EXIT, \
+        AFS_PACKAGE_SRCDIR, \
+        __FILE__, \
+        __LINE__, \
+        __func__, \
         "" __VA_ARGS__ )
 
 #else
 
 #define UTILS_DEBUG( ... ) \
-    PACKAGE_MANGLE_NAME_CAPS( DEBUG_MODULE_NAME ) = "You need to define a debug module name before including <UTILS_Debug.h>."
+    PACKAGE_MANGLE_NAME( DEBUG_MODULE_NAME ) = "You need to define a debug module name before including <UTILS_Debug.h>."
 
 #define UTILS_DEBUG_ENTRY( ... ) \
-    PACKAGE_MANGLE_NAME_CAPS( DEBUG_MODULE_NAME ) = "You need to define a debug module name before including <UTILS_Debug.h>."
+    PACKAGE_MANGLE_NAME( DEBUG_MODULE_NAME ) = "You need to define a debug module name before including <UTILS_Debug.h>."
 
 #define UTILS_DEBUG_EXIT( ... ) \
-    PACKAGE_MANGLE_NAME_CAPS( DEBUG_MODULE_NAME ) = "You need to define a debug module name before including <UTILS_Debug.h>."
+    PACKAGE_MANGLE_NAME( DEBUG_MODULE_NAME ) = "You need to define a debug module name before including <UTILS_Debug.h>."
 
 #endif
 
@@ -197,10 +212,11 @@ enum
 #if HAVE( UTILS_DEBUG )
 
 #define UTILS_DEBUG_PREFIX( debugLevel ) \
-    UTILS_Debug_Prefix(   \
-        debugLevel,       \
-        __FILE__,         \
-        __LINE__,         \
+    UTILS_Debug_Prefix( \
+        debugLevel, \
+        AFS_PACKAGE_SRCDIR, \
+        __FILE__, \
+        __LINE__, \
         __func__ )
 
 #else
@@ -244,9 +260,10 @@ enum
  *                        parameters have the same syntax like in the POSIX
  *                        printf function.
  */
-#define UTILS_Debug_Printf PACKAGE_MANGLE_NAME_CAPS( UTILS_Debug_Printf )
+#define UTILS_Debug_Printf PACKAGE_MANGLE_NAME( UTILS_Debug_Printf )
 void
 UTILS_Debug_Printf( uint64_t    bitMask,
+                    const char* srcdir,
                     const char* file,
                     uint64_t    line,
                     const char* function,
@@ -264,7 +281,7 @@ UTILS_Debug_Printf( uint64_t    bitMask,
  *                        parameters have thesame syntax like in the POSIX
  *                        printf function.
  */
-#define UTILS_Debug_RawPrintf PACKAGE_MANGLE_NAME_CAPS( UTILS_Debug_RawPrintf )
+#define UTILS_Debug_RawPrintf PACKAGE_MANGLE_NAME( UTILS_Debug_RawPrintf )
 void
 UTILS_Debug_RawPrintf( uint64_t    bitMask,
                        const char* msgFormatString,
@@ -276,9 +293,10 @@ UTILS_Debug_RawPrintf( uint64_t    bitMask,
  * @param bitMask    The debug level which must be enabled to print out the
  *                   message.
  */
-#define UTILS_Debug_Prefix PACKAGE_MANGLE_NAME_CAPS( UTILS_Debug_Prefix )
+#define UTILS_Debug_Prefix PACKAGE_MANGLE_NAME( UTILS_Debug_Prefix )
 void
 UTILS_Debug_Prefix( uint64_t    bitMask,
+                    const char* srcdir,
                     const char* file,
                     uint64_t    line,
                     const char* function );

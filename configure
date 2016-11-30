@@ -43,7 +43,7 @@ download()
     cp $local $dst
   elif which wget >/dev/null 2>&1 ; then
     echo "wget: $src ==> $dst"
-    wget -O "$dst" "$src"
+    wget --no-check-certificate -O "$dst" "$src"
   elif which curl >/dev/null 2>&1 ; then
     echo "curl: $src ==> $dst"
     curl -L "$src" > "$dst"
@@ -936,6 +936,11 @@ for arg in "$@"; do
 	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc ]
 	    then
 		c_compiler=$myarg
+
+                if [  $c_compiler = mpc_cc -o  $c_compiler = mpc_icc  ]
+                then
+	 	  mpc_c_compiler=`$myarg -show | awk '{ print $1; }'`
+                fi
 	    else
 		testxlc=`echo $myarg | sed -e 's/xlc//'`
 		testmp=`echo $myarg | sed -e 's/^mp//'`
@@ -960,6 +965,12 @@ for arg in "$@"; do
 	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ ]
 	    then
 		cxx_compiler=$myarg
+                if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  ]
+                then
+                  mpc_include=`mpc_cxx -show | grep -o '[^ ]*include/mpcframework[^ ]*'`
+	 	  mpc_cxx_compiler=`$myarg -show | awk '{ print $1; }'`
+                fi
+
 	    else
 		testxlc=`echo $myarg | sed -e 's/xl//'`
 		testmp=`echo $myarg | sed -e 's/^mp//'`
@@ -1502,6 +1513,10 @@ for arg in "$@"; do
 		echo "Error: Cannot access SCOREP directory $scorepdir"
 		exit 1
 	    fi
+        if [ "x$otf" != xyes ] ; then
+           otf=yes
+           otfdir=${scorepdir}
+        fi
 	    shift
 	    ;;
 
@@ -2678,6 +2693,10 @@ esac
 
 if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
     TAU_CCOM="$c_compiler"          # for 'archfind'
+    if [ "$c_compiler" = mpc_cc ]
+    then
+      TAU_CCOM="$mpc_c_compiler"
+    fi
     export TAU_CCOM
 fi
 
@@ -3978,18 +3997,23 @@ case $cxx_compiler in
 
     mpc_cxx)
 	if [ $machine = x86_64 -o $machine = mic_linux ] ; then
+            #mpc_include=`mpc_cxx -show | grep '-I'`
+            #mpc_include=`mpc_cxx -show | grep -o '[^ ]-I[^ ]*'`
+            mpc_include=`mpc_cxx -show | grep -o '[^ ]*include/mpcframework[^ ]*'`
             full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
             full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
             fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
+            #mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g" -e "s/''//g"`
             mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g" -e "s/''//g"`
-            full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g"`
-            full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g" `
+            #full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g"`
+            #full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g" -e "s/''//g" `
 	    #echo "CC=$cc_compiler"
 	    #echo "CXX=$cxx_compiler"
 	    #echo "mpilibrary=$mpilibrary"
 	    tauoptions="${tauoptions}-mpc"
             fixmakeargs="$fixmakeargs MPC"
             mpc=yes
+            mpi=yes
         fi
         ;;
 
@@ -6116,11 +6140,15 @@ fi #unwind=download
 
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
+  if [ "x$CRAY_CPU_TARGET" != "x" -a "x$PE_ENV" = "xINTEL" ] ; then
+    fixmakeargs="$fixmakeargs INTEL_CRAY_MIC_KNL_OMPT"
+  fi
 fi
 
-libomp_oss=LLVM-openmp-0.1
+libomp_oss=LLVM-openmp-0.2
 libomp_osstgz=${libomp_oss}.tar.gz
-libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz
+#libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.2.tar.gz
+libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then
     libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
@@ -6167,7 +6195,7 @@ fi
 
 if [ "x$download_ompt" = xyes ] ; then
   install_ompt=yes
-  if [ ! -f ${libomp_ossdir_static}/lib${libomp_oss_name}.a -o ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ] ; then
+  if [ ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -o ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ]; then
     preomptdir=`pwd`
 
     #check Cmake exists
@@ -6179,7 +6207,7 @@ if [ "x$download_ompt" = xyes ] ; then
 
     echo "Note: Building LLVM-OpenMP with ${ompt_c_compiler} and ${ompt_cxx_compiler}"
 
-    if [ -r "${libomp_ossdir_static}/lib${libomp_oss_name}.a" -a ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
+    if [ -r "${libomp_ossdir_static}/lib${libomp_oss_name}.so" -a ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ] ; then
       echo "NOTE: ${libomp_ossdir_shared}/lib${libomp_oss_name}.so is older than ${libomp_oss} directory. Deleting and rebuilding."
       /bin/rm -rf ${libomp_oss}
     fi
@@ -6224,6 +6252,7 @@ if [ "x$download_ompt" = xyes ] ; then
       result=$?
       if [ $result -eq 0 ] ; then
 	    make clean
+            make libomp-needed-headers >> $libomp_oss_log 2>&1
 	    make >> $libomp_oss_log 2>&1
         result=$?
         if [ $result -eq 0 ] ; then
@@ -6419,6 +6448,20 @@ MPI_Aint * address;
 {
   return PMPI_Get_address( location, address );
 }
+
+int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
+int count;
+TAU_MPICH3_CONST int * blocklens;
+TAU_MPICH3_CONST MPI_Aint * indices;
+TAU_MPICH3_CONST MPI_Datatype * old_types;
+MPI_Datatype * newtype;
+{
+  int  returnVal;
+
+  returnVal = PMPI_Type_struct( count, blocklens, indices, old_types, newtype );
+  return returnVal;
+}
+
 
 EOF
 
@@ -6652,20 +6695,20 @@ if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  1> /dev/n
 else
   if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c mpi3const.c  -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
     echo "yes"
+    fixmakeargs="$fixmakeargs MPICH3_CONST"
 
-    $echo "Checking for OpenMPI 3 const interface..... ${nnl}"
-    if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
-        echo "yes"
-    # MPICH requires the const keyword
-        fixmakeargs="$fixmakeargs OPENMPI3_CONST MPICH3_CONST"
-    else
-    # MPI3 and OpenMPI detected. Boo.
-        echo "no"
-        fixmakeargs="$fixmakeargs MPICH3_CONST"
-    fi
   else
     echo "no"
   fi
+fi
+
+$echo "Checking for OpenMPI 3 const interface..... ${nnl}"
+if $c_compiler $mpiwarnings $orig_useropt $mpi_include -c openmpi3const.c -DTAU_MPICH3_CONST=const 1> /dev/null 2>&1 ; then
+# MPICH requires the const keyword
+  echo "yes"
+  fixmakeargs="$fixmakeargs OPENMPI3_CONST"
+else
+  echo "no"
 fi
 rm -f openmpi3const.c openmpi3const.o mpi3const.c mpi3const.o a.out
 
@@ -7653,12 +7696,23 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
           err=$?
         fi
         ;;
-      *)
-        ./configure \
+      *)   
+        #echo $c_compiler
+        if [ "$c_compiler" = mpc_cc ]
+        then
+           ./configure \
+            CFLAGS="-fPIC -Wno-error" CXXFLAGS="-fPIC -Wno-error" \
+            CC=$mpc_c_compiler CXX=$mpc_cxx_compiler \
+            --prefix=$bfddir \
+            --disable-nls --disable-werror > tau_configure.log 2>&1
+            err=$?	 
+        else
+          ./configure \
             CFLAGS=-fPIC CXXFLAGS=-fPIC \
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
-        err=$?
+            err=$?
+        fi
         ;;
       esac
 
@@ -8390,28 +8444,6 @@ if [ $vtf = yes ] ; then
     fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
 fi
 
-if [ -d $otfdir/include/otf2 ]; then
-    fixmakeargs="$fixmakeargs OTF2 otfdir=$otfdir"
-    otfversion_11=`$otfdir/bin/otf2-config --version | grep "^1.1" | wc -l `
-    if [ $otfversion_11 = 1 ]; then
-      fixmakeargs="$fixmakeargs OTF2_1_1"
-    fi
-    otfversion_12=`$otfdir/bin/otf2-config --version | grep "^1.2" | wc -l `
-    if [ $otfversion_12 = 1 ]; then
-      fixmakeargs="$fixmakeargs OTF2_1_2"
-    fi
-else
-    if [ $otf = yes ] ; then
-	fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
-	if [ ! -d $otfdir/${architecture} -a -d $otfdir/src ] ; then
-	    fixmakeargs="$fixmakeargs OTFSRC"
-	fi
-	if [ -r $otfdir/lib/libopen-trace-format.a ]; then
-	    fixmakeargs="$fixmakeargs OTFLIB_LONGNAME"
-	fi
-    fi
-fi
-
 if [ "x$unwinder" != "xnone" ] ; then
     if [ $c_compiler = gcc -o $c_compiler = icc -o $c_compiler = pgcc -o $c_compiler = mpc_icc -o $c_compiler = mpc_cc ] ; then
 	unwind_extras="-Wl\,-rpath=$unwind_lib"
@@ -8803,6 +8835,12 @@ if [ "x$download_scorep" = xyes ] ; then
   else
     scorepdir=${tauscorepdir}/${tauscorep}-${c_compiler}
   fi
+
+  if [ "x$otf" != xyes ] ; then
+    otf=yes
+    otfdir=${scorepdir}
+  fi
+
   if [ $tag = yes ] ; then
     scorepdir=${scorepdir}-$tautag
   fi
@@ -8945,7 +8983,7 @@ if [ $scorep = yes ] ; then
     scorep_supports_opencl=no
     if [ -x $scorepdir/bin/scorep-config ]; then
        retval=`$scorepdir/bin/scorep-config --noopencl &>/dev/null `
-       if [ $? == 0 ]; then
+       if [ $? = 0 ]; then
          scorep_supports_opencl=yes
          echo "NOTE: Score-P's scorep-config supports --noopencl option"
        fi
@@ -8962,7 +9000,7 @@ if [ $scorep = yes ] ; then
     scorep_supports_openacc=no
     if [ -x $scorepdir/bin/scorep-config ]; then
        retval=`$scorepdir/bin/scorep-config --noopenacc &>/dev/null `
-       if [ $? == 0 ]; then
+       if [ $? = 0 ]; then
          scorep_supports_openacc=yes
          echo "NOTE: Score-P's scorep-config supports --noopenacc option"
        fi
@@ -9128,6 +9166,31 @@ if [ $epilog = yes ] ; then
 	fi
     fi
 fi
+
+
+if [ -d $otfdir/include/otf2 ]; then
+    fixmakeargs="$fixmakeargs OTF2 otfdir=$otfdir"
+    otfversion_11=`$otfdir/bin/otf2-config --version | grep "^1.1" | wc -l `
+    if [ $otfversion_11 = 1 ]; then
+      fixmakeargs="$fixmakeargs OTF2_1_1"
+    fi
+    otfversion_12=`$otfdir/bin/otf2-config --version | grep "^1.2" | wc -l `
+    if [ $otfversion_12 = 1 ]; then
+      fixmakeargs="$fixmakeargs OTF2_1_2"
+    fi
+else
+    if [ $otf = yes ] ; then
+	fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
+	if [ ! -d $otfdir/${architecture} -a -d $otfdir/src ] ; then
+	    fixmakeargs="$fixmakeargs OTFSRC"
+	fi
+	if [ -r $otfdir/lib/libopen-trace-format.a ]; then
+	    fixmakeargs="$fixmakeargs OTFLIB_LONGNAME"
+	fi
+    fi
+fi
+
+
 if [ $dyninstinc = yes ] ; then
     fixmakeargs="$fixmakeargs dyninstinc=$dyninstincdir DYNINST_INC"
     #dyninstdir=$dyninstincdir/..

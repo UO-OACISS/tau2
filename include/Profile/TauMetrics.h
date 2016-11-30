@@ -44,6 +44,9 @@ void TauMetrics_getMetrics(int tid, double values[]);
 const char *TauMetrics_getMetricName(int metric);
 int TauMetrics_getMetricUsed(int metric);
 const char *TauMetrics_getMetricAtomic(int metric);
+int TauMetrics_getIsCuptiMetric(int metric);
+int TauMetrics_getTimeMetric();
+int TauMetrics_getEventIndex(int eventid);
 
 
 /**
