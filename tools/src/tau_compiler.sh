@@ -2295,7 +2295,6 @@ else
             esac
           fi
 
-          newCmd="$newCmd $optLinking -o $passedOutputFile"
           if [ "x$tauWrapFile" != "x" ]; then
             link_options_file="$tauWrapFile"
           fi
@@ -2303,11 +2302,12 @@ else
           link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
           if [ "x$link_options_file" != "x" ] ; then
               if [ $cat_link_file == $TRUE ]; then
-		      newCmd="$newCmd `cat $link_options_file`"
+		      optLinking="`cat $link_options_file` $optLinking"
               else
-                      newCmd="$newCmd @$link_options_file"
+		      optLinking="@$link_options_file $optLinking"
 	      fi
           fi
+          newCmd="$newCmd $optLinking -o $passedOutputFile"
 
           if [ "x$optTauGASPU" != "x" ]; then
             newCmd="$newCmd $optTauGASPU"
