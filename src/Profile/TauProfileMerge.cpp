@@ -203,7 +203,6 @@ int Tau_mergeProfiles()
     // Unification must already be called.
     functionUnifier = Tau_unify_getFunctionUnifier();
     numEvents = functionUnifier->globalNumItems;
-    printf("GLOBAL NUMITEMS=%d\n", numEvents);
     numEventThreads = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     globalEventMap = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     // initialize all to -1
@@ -214,8 +213,6 @@ int Tau_mergeProfiles()
     for (int i=0; i<functionUnifier->localNumItems; i++) {
       globalEventMap[functionUnifier->mapping[i]] = i; // set reverse mapping
     }
-  printf("(b) determine number of threads\n");
-  fflush(stdout);
     Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
 				  numEvents, globalEventMap,false);
     
@@ -251,8 +248,6 @@ int Tau_mergeProfiles()
       // set reverse mapping
       globalAtomicEventMap[atomicUnifier->mapping[i]] = i;
     }
-  printf("(c) determine number of threads\n");
-  fflush(stdout);
     Tau_collate_get_total_threads(atomicUnifier, &globalNumThreads, &numAtomicEventThreads,
 				  numAtomicEvents, globalAtomicEventMap,true);
     
@@ -268,7 +263,6 @@ int Tau_mergeProfiles()
 					numAtomicEvents,
 					COLLATE_OP_DERIVED);
     }
-    printf("need to compute atomic statistics\n");
     Tau_collate_compute_atomicStatistics(atomicUnifier, globalAtomicEventMap, 
 					 numAtomicEvents, 
 					 globalNumThreads, 
