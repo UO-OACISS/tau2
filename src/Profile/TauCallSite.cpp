@@ -692,6 +692,7 @@ void Profiler::CallSiteStart(int tid)
     }
 
     // Has the callsite key for the base function been seen before?
+/*
     map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>::iterator itKey = TheCallSiteFirstKeyMap().find(ThisFunction);
     if (itKey == TheCallSiteFirstKeyMap().end()) {
       // BASE Function not previously encountered. The callsite is necessarily unique.
@@ -727,6 +728,7 @@ void Profiler::CallSiteStart(int tid)
         }
       }
     }
+*/
     // Set up metrics. Increment number of calls and subrs
     CallSiteFunction->IncrNumCalls(tid);
   } else {    // Stub for the desire of callsites.
