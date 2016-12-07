@@ -469,9 +469,24 @@ bool determineCallSiteViaString(unsigned long *addresses)
           if (i + 2 < length) {
             callsite = addresses[i + 2];
             name = Tau_callsite_resolveCallSite(addresses[i + 2]);
-            registerNewCallsiteInfo(name, callsite, id);
+            if(strstr(name,"__wrap_") != NULL) {
+              //if(i + 3 < length) {
+              for(int j=3; j<length-i; j++) {
+                unsigned long callsite_unwrapped = addresses[i + j];//3];
+                char *name_unwrapped = Tau_callsite_resolveCallSite(addresses[i + j]);//3]);
+                if (strstr(name_unwrapped,"UNRESOLVED ADDR") == NULL) {
+                  callsite = callsite_unwrapped;
+                  strcpy(name, name_unwrapped);
+                }
+                free(name_unwrapped);
+              }
+            }
+            bool callsite_resolved = (strstr(name,"UNRESOLVED ADDR") == NULL);
+            if(callsite_resolved)
+              registerNewCallsiteInfo(name, callsite, id);
             free(name);
-            return true;
+            if(callsite_resolved)
+              return true;
           }
         } else {
           if (nameInMPI(name)) {
