@@ -1473,6 +1473,7 @@ MPI_Errhandler errhandler;
 
 int tau_mpi_finalized = 0;
 int TAU_MPI_Finalized() {
+  fprintf(stdout, "In TAU_MPI_Finalized(): tau_mpi_finalized=%d\n", tau_mpi_finalized);
   return tau_mpi_finalized;
 }
 
