@@ -30,29 +30,30 @@ using namespace std;
 extern "C" int TAU_MPI_Finalized();
 
 extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
-//extern int Tau_metadataMerge_mergeMetaData_bis() {
 
   Tau_metadata_fillMetaData();
 
+#if 1
   static int merged = 0;
   if (merged == 1) {
     return 0;
   }
   merged = 1;
+#endif
 
   int rank = 0;
 
 #ifdef TAU_MPI
   int numRanks;
-  if (TAU_MPI_Finalized()) {
-    fprintf(stdout, "TAU_MPI_Finalized() called\n");
-    return 0;
-  }
+  //if (TAU_MPI_Finalized()) {
+  //  fprintf(stdout, "TAU_MPI_Finalized() called\n");
+  //  return 0;
+  //}
 
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 
-  TAU_VERBOSE("TAU: rank=%d, numRanks=%d\n", rank, numRanks);
+  TAU_VERBOSE("TAU Nerge bis: rank=%d, numRanks=%d\n", rank, numRanks);
 #endif /* TAU_MPI */
 
   x_uint64 start, end;
@@ -69,8 +70,8 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
     char *defBuf = Tau_util_getOutputBuffer(out);
     int defBufSize = Tau_util_getOutputBufferLength(out);
 
-    //PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    //PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+    PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
 #endif
 
@@ -80,7 +81,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
 
-#if 0
+#if 1
 #ifdef TAU_MPI
 	Tau_util_destroyOutputDevice(out);
 #endif /* TAU_MPI */
@@ -88,7 +89,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
 
   } else {
 
-#if 0
+#if 1
 #ifdef TAU_MPI
     TAU_VERBOSE("TAU: Metadata, rank different from 0\n");
     int BufferSize;

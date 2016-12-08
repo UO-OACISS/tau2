@@ -12,6 +12,21 @@
 
 //#include "gen_prof.h"
 
+
+extern "C" int genProfileFakeExtern()
+{
+  int rank = 0;
+  int numRanks;
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+
+  TAU_VERBOSE("TAU - genProfileFake Extern C: rank=%d, numRanks=%d\n", rank, numRanks);
+
+ return 0;
+}
+
+
 #if 1
 extern "C" int genProfile()
 {
@@ -24,11 +39,13 @@ extern "C" int genProfile()
 
   Tau_metadata_fillMetaData();
 
+#if 0
   static int merged = 0;
   if (merged == 1) {
     return 0;
   }
   merged = 1;
+#endif
 
   int rank = 0;
 
@@ -42,7 +59,7 @@ extern "C" int genProfile()
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 
-  TAU_VERBOSE("TAU genProfile: rank=%d, numRanks=%d\n", rank, numRanks);
+  TAU_VERBOSE("TAU genProfile extern C: rank=%d, numRanks=%d\n", rank, numRanks);
 #endif /* TAU_MPI */
 
   x_uint64 start, end;
