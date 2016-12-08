@@ -2270,10 +2270,6 @@ int   __wrap_MPI_Finalize()  {
   TAU_VERBOSE("TAU - inside MPI_Finalize MPC wrapper: rank=%d, numRanks=%d\n", rank, numRanks);
 
   Tau_metadataMerge_mergeMetaData_bis();
-  //genTrace();
-  //genProfile();
-  //genProfileFake();
-  //genProfileFakeExtern();
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
@@ -2284,7 +2280,7 @@ int   __wrap_MPI_Finalize()  {
     /* KAH - NO! this is the wrong time to do this. THis is also done in the
  *      * snapshot writer. If you do it twice, you get double values for main... */
     /* TauProfiler_updateAllIntermediateStatistics(); */
-    fprintf(stdout, "Merge profiles\n");
+    //fprintf(stdout, "Merge profiles\n");
     Tau_mergeProfiles();
   }
 #endif

@@ -45,10 +45,13 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
 
 #ifdef TAU_MPI
   int numRanks;
-  //if (TAU_MPI_Finalized()) {
-  //  fprintf(stdout, "TAU_MPI_Finalized() called\n");
-  //  return 0;
-  //}
+
+#if 1
+  if (TAU_MPI_Finalized()) {
+    TAU_VERBOSE("TAU_MPI_Finalized() called\n");
+    return 0;
+  }
+#endif
 
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
