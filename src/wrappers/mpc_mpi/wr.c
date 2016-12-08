@@ -2155,6 +2155,14 @@ int   __wrap_MPI_Init(int *  a1, char ***  a2)  {
 
 int genProfileFake()
 {
+  int rank = 0;
+  int numRanks;
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+
+  TAU_VERBOSE("TAU - genProfileFake C: rank=%d, numRanks=%d\n", rank, numRanks);
+
  return 0;
 }
 
@@ -2261,9 +2269,11 @@ int   __wrap_MPI_Finalize()  {
 
   TAU_VERBOSE("TAU - inside MPI_Finalize MPC wrapper: rank=%d, numRanks=%d\n", rank, numRanks);
 
-  //Tau_metadataMerge_mergeMetaData_bis();
+  Tau_metadataMerge_mergeMetaData_bis();
   //genTrace();
-  genProfile();
+  //genProfile();
+  //genProfileFake();
+  //genProfileFakeExtern();
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
