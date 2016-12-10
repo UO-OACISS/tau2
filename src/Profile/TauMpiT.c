@@ -604,6 +604,7 @@ static int *tau_pvar_count;
 //////////////////////////////////////////////////////////////////////
 int Tau_track_mpi_t_here(void) {
   static int first_time = 1; 
+  static int tau_previous_pvar_count = 0;
   int return_val, num_pvars, i, namelen, verb, varclass, bind, threadsup;
   int index;
   int readonly, continuous, atomic;
@@ -627,20 +628,31 @@ int Tau_track_mpi_t_here(void) {
     return return_val;
   }
 
-  /* The first time this function is entered, allocate memory for the pvar data structures */
-  if (first_time == 1) {
-    first_time = 0;
-    pvar_value_buffer = (unsigned long long int**)malloc(sizeof(unsigned long long int*) * (num_pvars + 1));
-    tau_mpi_datatype = (MPI_Datatype *) malloc(sizeof(MPI_Datatype *) * (num_pvars+1)); 
-    tau_pvar_handles = (MPI_T_pvar_handle*)malloc(sizeof(MPI_T_pvar_handle) * (num_pvars + 1));
-    tau_pvar_count = (int*)malloc(sizeof(int) * (num_pvars + 1));
-    memset(tau_pvar_count, 0, sizeof(int) * (num_pvars + 1));
+  /* The MPI library can dynamically increase the number of PVARs exposed during runtime
+   * Reallocate buffers and handles if number of PVARs has increased from the last time this routine was invoked */
+  if (num_pvars > tau_previous_pvar_count) {
 
-    read_value_buffer = (void*)malloc(sizeof(unsigned long long int) * (TAU_NAME_LENGTH + 1));
-
+    /*Use malloc to allocate memory if this is the first time buffers are being allocated*/
+    if(first_time == 1) {
+      first_time = 0;
+      pvar_value_buffer = (unsigned long long int**)malloc(sizeof(unsigned long long int*) * (num_pvars + 1));
+      tau_mpi_datatype = (MPI_Datatype *) malloc(sizeof(MPI_Datatype *) * (num_pvars+1)); 
+      tau_pvar_handles = (MPI_T_pvar_handle*)malloc(sizeof(MPI_T_pvar_handle) * (num_pvars + 1));
+      tau_pvar_count = (int*)malloc(sizeof(int) * (num_pvars + 1));
+      memset(tau_pvar_count, 0, sizeof(int) * (num_pvars + 1));
+      read_value_buffer = (void*)malloc(sizeof(unsigned long long int) * (TAU_NAME_LENGTH + 1));
+    } else {
+      dprintf("The number of PVARS exposed have increased from %d to %d \n", tau_previous_pvar_count, num_pvars);
+      pvar_value_buffer = (unsigned long long int**)realloc(pvar_value_buffer, sizeof(unsigned long long int*) * (num_pvars + 1));
+      tau_mpi_datatype = (MPI_Datatype *)realloc(tau_mpi_datatype, sizeof(MPI_Datatype *) * (num_pvars+1)); 
+      tau_pvar_handles = (MPI_T_pvar_handle*)realloc(tau_pvar_handles, sizeof(MPI_T_pvar_handle) * (num_pvars + 1));
+      tau_pvar_count = (int*)realloc(tau_pvar_count, sizeof(int) * (num_pvars + 1));
+      memset(&(tau_pvar_count[tau_previous_pvar_count + 1]), 0, sizeof(int) * (num_pvars - tau_previous_pvar_count));
+      dprintf("Successfully reallocated buffers \n");
+    }  
 
     /* Initialize variables. Get the names of performance variables */
-    for(i = 0; i < num_pvars; i++){
+    for(i = tau_previous_pvar_count; i < num_pvars; i++){
       namelen = desc_len = TAU_NAME_LENGTH;
       return_val = MPI_T_pvar_get_info(i/*IN*/,
         event_name /*OUT*/,
@@ -663,11 +675,22 @@ int Tau_track_mpi_t_here(void) {
        perror("MPI_T_pvar_handle_alloc ERROR:");
        return return_val;
      }
+    
+     /*Non-continuous variables need to be started before being read. If this is not done
+     *TODO: Currently, the MVAPICH and MPICH implementations error out if non-continuous PVARs are not started before being read.
+     *Check if this is expected behaviour from an MPI implementation. No mention of the need to do this from a clients perspective in the 3.1 standard.*/
+     if(continuous == 0) {
+       returnVal = MPI_T_pvar_start(tau_pvar_session, tau_pvar_handles[i]);
+       if (return_val != MPI_SUCCESS) {
+         perror("MPI_T_pvar_start ERROR:");
+         return return_val;
+       }
+     }
 
      /* and a buffer to store the results in */
      pvar_value_buffer[i] = (unsigned long long int*)malloc(sizeof(unsigned long long int) * (tau_pvar_count[i] + 1));
 
-     dprintf("Name: %s (%s), i = %d\n", event_name, description, i); 
+     dprintf("Name: %s (%s), i = %d, varclass = %d, bind = %d, readonly = %d, continuous = %d, atomic = %d\n", event_name, description, i, varclass, bind, readonly, continuous, atomic); 
      //printf("MPI_T_PVAR_CLASS_TIMER: %d,  varclass = %d, i = %d, event_name = %s\n", MPI_T_PVAR_CLASS_TIMER, varclass, i, event_name);
     }
   }
@@ -675,7 +698,8 @@ int Tau_track_mpi_t_here(void) {
   int size, j; 
 
   for(i = 0; i < num_pvars; i++){
-    // get data from event 
+    // get data from event
+    //printf("Reading data for PVAR %d\n",i);
     MPI_T_pvar_read(tau_pvar_session, tau_pvar_handles[i], read_value_buffer);
     MPI_Type_size(tau_mpi_datatype[i], &size); 
 
@@ -701,6 +725,7 @@ int Tau_track_mpi_t_here(void) {
       
         // Double values are really large for timers. Please check 1E18?? 
           //Tau_track_pvar_event(i, num_pvars, double_data);
+          dprintf("Not tracking anything for now \n");
         } 
       } else {
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
@@ -712,6 +737,8 @@ int Tau_track_mpi_t_here(void) {
     }
 
   }
+  
+  tau_previous_pvar_count = num_pvars;
   dprintf("Finished!!\n");
 }
 
