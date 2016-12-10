@@ -2626,27 +2626,43 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
   TAU_METADATA(concat_event_name, description); 
 }
  
-TauUserEvent & ThePVarsMPIEvents(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars) {
+TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
     static TauUserEvent *** pvarEvents = NULL;
-    int i;
+    static int tau_previous_pvar_count = 0;
+    int i,j;
 
+
+    /* If this function is being invoked for the first time, allocate event buffers using malloc.
+     * If the number of pvars changes during runtime, reallocate event buffers accordingly*/
     if(!pvarEvents) {
         pvarEvents = (TauUserEvent***)calloc(num_pvars, sizeof(TauUserEvent**));
         for(i=0; i < num_pvars; i++) { 
           pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
 	  Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
-    }   
+    } else if ((tau_previous_pvar_count > 0) && (num_pvars > tau_previous_pvar_count) ) {
+        pvarEvents = (TauUserEvent***)realloc(pvarEvents, sizeof(TauUserEvent**)*num_pvars);
+        for(j=tau_previous_pvar_count; j < num_pvars; j++) {
+          pvarEvents[j] = NULL;
+        }
+
+        for(i=tau_previous_pvar_count; i < num_pvars; i++) {
+          pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
+          Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
+        }
+    }  
   
+    tau_previous_pvar_count = num_pvars;
     return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
 
-extern "C" void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data) {
+extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
   ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).TriggerEvent(data, Tau_get_thread()); 
 #ifdef TAU_BEACON
   TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).GetName().c_str()));
 #endif /* TAU_BEACON */
 }
+
 #ifdef TAU_SCOREP
 /* If SCOREP is defined, there is TauMpi wrapper that typically contains this routine */
 extern "C" int Tau_track_mpi_t_here(void) { 
