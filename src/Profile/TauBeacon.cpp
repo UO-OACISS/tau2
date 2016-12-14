@@ -46,12 +46,59 @@ int TauBeaconInit(void) {
   return 1;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////
+////// Handler receives messages on the MPI_T_CVAR topic and writes to the MPI_T interface
+/////////////////////////////////////////////////////////////////////////////////////////
+extern "C" void TauBeacon_MPI_T_CVAR_handler(BEACON_receive_topic_t * caught_topic) {
+   /*TODO: Add the code to write to the MPI_T interface. Re-use previous string manipulation functions in TauMpiT.c*/
+   fprintf(stderr, "[MESSAGE] Caught topic %s with payload %s\n", caught_topic->topic_name, caught_topic->topic_payload);
+}
+
+//////////////////////////////////////////////////////////////////////
+//// Subscribe to a given topic
+////////////////////////////////////////////////////////////////////////
+extern "C" int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*)) {
+
+   static BEACON_beep_t binfo;
+   static BEACON_beep_handle_t handle;
+   static bool first_time = true;
+   BEACON_subscribe_handle_t shandle;
+   char filter_string[1000] = "";
+   char beep_name[100];
+   int ret = 0;
+   
+   // initialize data structures 
+   memset(&binfo, 0, sizeof(binfo));
+   strcpy(binfo.beep_version, "1.0");
+   sprintf(beep_name, "TAU_BEACON_BEEP_%d", getpid());
+   strcpy(binfo.beep_name, beep_name);
+   
+   ret = BEACON_Connect(&binfo, &handle);
+   if (ret != BEACON_SUCCESS) {
+     fprintf(stderr, "BEACON_Connect failed. ret = %d\n", ret);
+     exit(1);
+   }
+
+   char* caddr = getenv("BEACON_TOPOLOGY_SERVER_ADDR");
+   sprintf(filter_string, "cluster_name=%s,cluster_port=10809,topic_scope=%s,topic_name=%s", caddr, topic_scope, topic_name);
+   printf("Filter string is %s \n", filter_string);
+
+   ret = BEACON_Subscribe(&shandle, handle, 0, filter_string, handler);
+   if (ret != BEACON_SUCCESS) {
+     fprintf(stderr, "BEACON_Subscribe failed ret = %d!\n", ret);
+     exit(-1);
+   }
+
+   return 1;
+}
+
 //////////////////////////////////////////////////////////////////////
 // Publish an event
 //////////////////////////////////////////////////////////////////////
 int TauBeaconPublish(double value, char *units, char *topic, char *additional_info) {
 
-   static BEACON_beep_t binfo;
+ static BEACON_beep_t binfo;
    static BEACON_beep_handle_t handle; 
    static BEACON_topic_info_t *topic_info;
    char data_buf[TAU_BEACON_BUFFER_SIZE]; 
@@ -61,6 +108,7 @@ int TauBeaconPublish(double value, char *units, char *topic, char *additional_in
    static BEACON_topic_properties_t *eprop; 
    static int jobid; 
    int ret = 0;
+
    if (first_time) {
      first_time = false; 
 
@@ -100,7 +148,6 @@ int TauBeaconPublish(double value, char *units, char *topic, char *additional_in
    sprintf(topic_info->severity, "INFO"); 
    sprintf(eprop->topic_payload, "data=%g; units=%s; name=%s; node=%s; jobid=%d\n", value, units, additional_info, hostname, jobid); 
    strcpy(eprop->topic_scope, "node");
-
    ret = BEACON_Publish(handle, topic_info->topic_name, eprop); 
    if (ret != BEACON_SUCCESS) {
      fprintf(stderr, "BEACON_Publish failed. ret = %d\n", ret);
