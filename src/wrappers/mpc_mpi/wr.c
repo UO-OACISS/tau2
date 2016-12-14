@@ -2250,6 +2250,14 @@ int genProfile()
 }
 #endif
 
+static int procid_0;
+
+int tau_mpi_finalized = 0;
+int TAU_MPI_Finalized() {
+  fprintf(stdout, "In TAU_MPI_Finalized(): tau_mpi_finalized=%d\n", tau_mpi_finalized);
+  return tau_mpi_finalized;
+}
+
 /**********************************************************
    MPI_Finalize
  **********************************************************/
@@ -2258,8 +2266,72 @@ int   __real_MPI_Finalize() ;
 int   __wrap_MPI_Finalize()  {
 
   int  retval;
-  fprintf(stdout, "Wrapper to MPI_Finalize() for MPC\n");
+  TAU_VERBOSE("Wrapper to MPI_Finalize() for MPC\n");
   TAU_PROFILE_TIMER(t,"int MPI_Finalize()  C", "", TAU_USER);
+
+  char procname[MPI_MAX_PROCESSOR_NAME];
+  int  procnamelength;
+
+  TAU_VERBOSE("TAU: Call MPI_Finalize()\n");
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+  
+#ifdef TAU_MPI_T
+  Tau_track_mpi_t_here();
+#endif /* TAU_MPI_T */
+  writeMetaDataAfterMPI_Init(); 
+
+  if (TauEnv_get_synchronize_clocks()) {
+    TauSyncFinalClocks();
+  }
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
+
+  if (Tau_get_node() < 0) {
+    /* Grab the node id, we don't always wrap mpi_init */
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    TAU_PROFILE_SET_NODE(procid_0 ); 
+    Tau_set_usesMPI(1);
+  }
+
+#ifdef TAU_BGP
+  /* BGP counters */
+  int numCounters, mode, upcErr;
+  x_uint64 counterVals[1024];
+
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
+    PMPI_Barrier(MPI_COMM_WORLD); 
+    Tau_Bg_hwp_counters_stop(&numCounters, counterVals, &mode, &upcErr);
+    if (upcErr != 0) {
+      printf("  ** Error stopping UPC performance counters");
+    }
+
+    Tau_Bg_hwp_counters_output(&numCounters, counterVals, &mode, &upcErr);
+  }
+#endif /* TAU_BGP */
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  /* Shutdown EBS after Finalize to allow Profiles to be written out
+ *      correctly. Also allows profile merging (or unification) to be
+ *           done correctly. */
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_ebs_enabled()) {
+    //    Tau_sampling_finalizeNode();
+    //
+        Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
 
 #if 1
   int rank = 0;
@@ -2269,8 +2341,12 @@ int   __wrap_MPI_Finalize()  {
 
   TAU_VERBOSE("TAU - inside MPI_Finalize MPC wrapper: rank=%d, numRanks=%d\n", rank, numRanks);
 
-  Tau_metadataMerge_mergeMetaData_bis();
+  //Tau_metadataMerge_mergeMetaData_bis();
+  Tau_metadataMerge_mergeMetaData();
+#endif
 
+  TAU_VERBOSE("Merge profile files if MERGED format specified\n");
+#if 1
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     /* *CWL* - properly record intermediate values (the same way snapshots work).
@@ -2285,13 +2361,17 @@ int   __wrap_MPI_Finalize()  {
   }
 #endif
 
-  TAU_PROFILE_START(t);
+  TAU_VERBOSE("Call real MPI_Finalize\n");
+
+  //TAU_PROFILE_START(t);
   retval  =  __real_MPI_Finalize();
-  TAU_PROFILE_STOP(t);
+  TAU_PROFILE_STOP(tautimer);
+
+  TAU_VERBOSE("Stop timer\n");
 
 #if 1
   Tau_stop_top_level_timer_if_necessary();
-  //tau_mpi_finalized = 1;
+  tau_mpi_finalized = 1;
 #endif
 
   return retval;

@@ -318,10 +318,12 @@ int Tau_mergeProfiles()
     if (TauEnv_get_summary_only()) { /* write only rank one metadata for summary
 		profile */
 			if (rank == 0) {
+                TAU_VERBOSE("Tau Profile merge - rank = 0: write meta data block\n");
     		Tau_snapshot_writeMetaDataBlock();
 			}
 	  }
 		else {
+        TAU_VERBOSE("Tau Profile merge - rank <> 0: write meta data block\n");
     	Tau_snapshot_writeMetaDataBlock();
 		}
     

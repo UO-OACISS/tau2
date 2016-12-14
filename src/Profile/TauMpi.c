@@ -1484,7 +1484,7 @@ int  MPI_Finalize(  )
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
-  fprintf(stdout, "TAU: Call MPI_Finalize()\n");
+  TAU_VERBOSE("TAU: Call MPI_Finalize()\n");
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
