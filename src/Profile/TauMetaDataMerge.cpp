@@ -36,6 +36,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
 #if 1
   static int merged = 0;
   if (merged == 1) {
+    TAU_VERBOSE("merged = 1, return\n");
     return 0;
   }
   merged = 1;
@@ -48,7 +49,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
 
 #if 1
   if (TAU_MPI_Finalized()) {
-    TAU_VERBOSE("TAU_MPI_Finalized() called\n");
+    TAU_VERBOSE("TAU_MPI_Finalized() called, return\n");
     return 0;
   }
 #endif
@@ -56,7 +57,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 
-  TAU_VERBOSE("TAU Nerge bis: rank=%d, numRanks=%d\n", rank, numRanks);
+  TAU_VERBOSE("TAU Merge bis: rank=%d, numRanks=%d\n", rank, numRanks);
 #endif /* TAU_MPI */
 
   x_uint64 start, end;
@@ -90,6 +91,8 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
 #endif /* TAU_MPI */
 #endif
 
+    TAU_VERBOSE("TAU - MetaData bis: end if condition for rank 0\n");
+
   } else {
 
 #if 1
@@ -103,21 +106,30 @@ extern "C" int Tau_metadataMerge_mergeMetaData_bis() {
 	free(Buffer);
 #endif /* TAU_MPI */
 #endif
+
+    TAU_VERBOSE("TAU - MetaData bis: end if condition for other ranks\n");
   }
 #endif
+
+  TAU_VERBOSE("Tau_metadataMerge_mergeMetaData_bis END for rank #%d\n", rank);
 
   return 0;
 }
 
 extern "C" int Tau_metadataMerge_mergeMetaData() {
 
+  TAU_VERBOSE("Tau_metadataMerge_mergeMetaData() begin\n");
+
   Tau_metadata_fillMetaData();
 
+#if 0
   static int merged = 0;
   if (merged == 1) {
+    TAU_VERBOSE("merged = 1, return\n");
     return 0;
   }
   merged = 1;
+#endif
 
   int rank = 0;
 
