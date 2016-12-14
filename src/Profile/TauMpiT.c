@@ -387,7 +387,8 @@ void Tau_mpi_t_convert_string_to_typed_value(char *string_value, MPI_Datatype da
     sscanf(string_value, "%lf", &((double*)val)[index]);
   }
 }
-     
+
+/*Read CVARs to be set and their values from the environment and write them to the MPI_T interface */
 int Tau_mpi_t_cvar_initialize(void) {
   int return_val, iter, num_cvars, thread_provided, rank;
   const char *cvars = TauEnv_get_cvar_metrics();

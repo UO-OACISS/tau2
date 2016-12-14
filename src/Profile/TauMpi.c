@@ -30,6 +30,9 @@
 #include <signal.h>
 
 #include <string.h>
+#ifdef TAU_BEACON
+#include <beacon.h>
+#endif /* TAU_BEACON */
 
 #define TAU_MAX_REQUESTS  4096
 #ifndef TAU_MAX_MPI_RANKS
@@ -68,6 +71,11 @@ extern int Tau_signal_initialization();
 extern int Tau_mpi_t_initialize();
 extern int Tau_mpi_t_cvar_initialize();
 extern int Tau_track_mpi_t_here();
+
+#ifdef TAU_BEACON
+extern int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*));
+extern void TauBeacon_MPI_T_CVAR_handler(BEACON_receive_topic_t * caught_topic);
+#endif /* TAU_BEACON */
 
 /* JCL: Optimized rank translation with cache */
 int TauTranslateRankToWorld(MPI_Comm comm, int rank);
@@ -1597,11 +1605,19 @@ int * resultlen;
 int Tau_MPI_T_initialization(void) {
 #ifdef TAU_MPI_T
   int returnVal;
+  char *pycoolr_cvar_topic_name = "MPI_T_CVARS";
+  char *pycoolr_cvar_topic_scope = "global";
+
   if (TauEnv_get_track_mpi_t_pvars()) {
     Tau_mpi_t_initialize();
   }
   
   returnVal = Tau_mpi_t_cvar_initialize();
+
+  #ifdef TAU_BEACON
+  returnVal = TauBeaconSubscribe(pycoolr_cvar_topic_name, pycoolr_cvar_topic_scope, TauBeacon_MPI_T_CVAR_handler);
+  #endif /* TAU_BEACON */
+
   return returnVal;
 #endif /* TAU_MPI_T */
 }
