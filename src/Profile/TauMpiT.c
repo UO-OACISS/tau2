@@ -388,46 +388,11 @@ void Tau_mpi_t_convert_string_to_typed_value(char *string_value, MPI_Datatype da
   }
 }
 
-/*Read CVARs to be set and their values from the environment and write them to the MPI_T interface */
-int Tau_mpi_t_cvar_initialize(void) {
-  int return_val, iter, num_cvars, thread_provided, rank;
-  const char *cvars = TauEnv_get_cvar_metrics();
-  const char *values = TauEnv_get_cvar_values();
+int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
 
-  /* MPI_Comm_rank(MPI_COMM_WORLD, &rank); */
-  rank = Tau_get_node(); /* MPI_Init has not been invoked yet */
-
-  /*Initialize the MPI_T interface in case we have not done so already. This can happen when performance variables are not being tracked.*/
-  return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
-
-  if (return_val != MPI_SUCCESS) {
-    perror("MPI_T_init_thread ERROR:");
-    return return_val;
-  }
-
-  return_val = MPI_T_cvar_get_num(&num_cvars);
-  if (return_val != MPI_SUCCESS) {
-    printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
-    return return_val;
-  }
-
-  return_val = Tau_mpi_t_print_all_cvar_desc(num_cvars);
-  if(return_val != MPI_SUCCESS) {
-    printf("TAU: Rank %d: Can't read the MPI_T control variables in this MPI implementation\n", rank);
-    return return_val;
-  }
-
-  if (cvars == "") {
-    dprintf("TAU: No CVARS specified using TAU_MPI_T_CVAR_METRICS and TAU_MPI_T_CVAR_VALUES\n");
-
-  } else {
-    dprintf("CVAR_METRICS=%s\n", cvars);
-    if (values == "") {
-      printf("TAU: WARNING: Environment variable TAU_MPI_T_CVAR_METRICS is not specified for TAU_MPI_T_CVAR_METRICS=%s\n", 
-	cvars);
-    } else { // both cvars and values are specified
       MPI_T_cvar_handle chandle; 
-      int cindex, num_vals, num_cvar_metrics, num_cvar_values, num_scalars, num_vectors, array_index;
+      int cindex, num_vals, num_cvar_metrics, num_cvar_values, num_scalars, num_vectors, array_index, thread_provided;
+      int return_val, iter, num_cvars, rank;
        
       char name[TAU_NAME_LENGTH]= ""; 
       char desc[TAU_NAME_LENGTH]= ""; 
@@ -436,13 +401,25 @@ int Tau_mpi_t_cvar_initialize(void) {
       int desc_len;
       MPI_Datatype datatype; 
       MPI_T_enum enumtype; 
-      char metastring[TAU_NAME_LENGTH];
       char **cvar_metrics_array, **cvar_values_array;
       VectorControlVariable *vectors;
       ScalarControlVariable *scalars;
       void *val, *oldval, *reset_value;
       ListStringPair *current_string_pair;
 
+      /*Initialize the MPI_T interface in case we have not done so already. No harm in re-initializing the interface.*/
+      return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
+
+      if (return_val != MPI_SUCCESS) {
+        perror("MPI_T_init_thread ERROR:");
+        return return_val;
+      }
+
+      return_val = MPI_T_cvar_get_num(&num_cvars);
+      if (return_val != MPI_SUCCESS) {
+        printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
+        return return_val;
+      }
 
       cvar_metrics_array = (char**)malloc(sizeof(char*)*num_cvars);
       cvar_values_array = (char**)malloc(sizeof(char*)*num_cvars);
@@ -467,7 +444,6 @@ int Tau_mpi_t_cvar_initialize(void) {
 
       /*Maps cvar metrics to values, handling both scalars and vectors appropriately*/
       Tau_mpi_t_map_cvar_metrics_to_values(cvar_metrics_array, cvar_values_array, num_cvar_metrics, vectors, scalars, num_scalars, num_vectors);
-      
       
       for (i=0; i < num_cvars; i++) {
         name_len = desc_len = TAU_NAME_LENGTH;
@@ -578,19 +554,82 @@ int Tau_mpi_t_cvar_initialize(void) {
 
           }
         }
-        TAU_METADATA("TAU_MPI_T_CVAR_METRICS", cvars);
-        TAU_METADATA("TAU_MPI_T_CVAR_VALUES", values);
-        sprintf(metastring, "%d", TauEnv_get_track_mpi_t_pvars());
-        TAU_METADATA("TAU_TRACK_MPI_T_PVARS", metastring);
-      
-      }
+
       /* NOT implemented: return_val = MPI_T_cvar_get_index(cvars, &cindex);
       if (return_val != MPI_SUCCESS) { 
-	printf("TAU: Rank %d: Can't access MPI_T variable %s in this MPI implementation\n", Tau_get_node(), cvars);
+        printf("TAU: Rank %d: Can't access MPI_T variable %s in this MPI implementation\n", Tau_get_node(), cvars);
         return return_val;
       }
       */
+      }  
+
       free(cvar_metrics_array); free(cvar_values_array); free(vectors); free(scalars);
+
+      /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
+      *state it was in before this function call.*/
+      return_val = MPI_T_finalize();
+      if (return_val != MPI_SUCCESS) {
+        printf("TAU: Rank %d: Call to MPI_T_finalize failed\n", rank);
+        return return_val;
+      }
+
+      return return_val;
+}
+
+/*Read CVARs to be set and their values from the environment and write them to the MPI_T interface */
+int Tau_mpi_t_cvar_initialize(void) {
+  int return_val, iter, num_cvars, thread_provided, rank;
+  const char *cvars = TauEnv_get_cvar_metrics();
+  const char *values = TauEnv_get_cvar_values();
+  char metastring[TAU_NAME_LENGTH] = "";
+
+  /* MPI_Comm_rank(MPI_COMM_WORLD, &rank); */
+  rank = Tau_get_node(); /* MPI_Init has not been invoked yet */
+
+  /*Initialize the MPI_T interface in case we have not done so already. This can happen when performance variables are not being tracked.*/
+  return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
+
+  if (return_val != MPI_SUCCESS) {
+    perror("MPI_T_init_thread ERROR:");
+    return return_val;
+  }
+
+  return_val = MPI_T_cvar_get_num(&num_cvars);
+  if (return_val != MPI_SUCCESS) {
+    printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
+    return return_val;
+  }
+
+  return_val = Tau_mpi_t_print_all_cvar_desc(num_cvars);
+  if(return_val != MPI_SUCCESS) {
+    printf("TAU: Rank %d: Can't read the MPI_T control variables in this MPI implementation\n", rank);
+    return return_val;
+  }
+
+  /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
+   *state it was in before this function call.*/
+  return_val = MPI_T_finalize();
+  if (return_val != MPI_SUCCESS) {
+    printf("TAU: Rank %d: Call to MPI_T_finalize failed\n", rank);
+    return return_val;
+  }
+
+  if (cvars == "") {
+    dprintf("TAU: No CVARS specified using TAU_MPI_T_CVAR_METRICS and TAU_MPI_T_CVAR_VALUES\n");
+
+  } else {
+    dprintf("CVAR_METRICS=%s\n", cvars);
+    if (values == "") {
+      printf("TAU: WARNING: Environment variable TAU_MPI_T_CVAR_METRICS is not specified for TAU_MPI_T_CVAR_METRICS=%s\n", 
+	cvars);
+    } else { // both cvars and values are specified
+      /*Parse the cvars and values and write to the MPI_T interface */
+      return_val = Tau_mpi_t_parse_and_write_cvars(cvars, values);
+
+      TAU_METADATA("TAU_MPI_T_CVAR_METRICS", cvars);
+      TAU_METADATA("TAU_MPI_T_CVAR_VALUES", values);
+      sprintf(metastring, "%d", TauEnv_get_track_mpi_t_pvars());
+      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", metastring);
     }
   }
 
