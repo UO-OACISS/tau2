@@ -46,13 +46,54 @@ int TauBeaconInit(void) {
   return 1;
 }
 
+extern "C" int Tau_mpi_t_parse_and_write_cvars(const char *cvar_metrics, const char *cvar_values);
 
-/////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////
 ////// Handler receives messages on the MPI_T_CVAR topic and writes to the MPI_T interface
-/////////////////////////////////////////////////////////////////////////////////////////
+////// Assumes that payload is of the form "MPI_T_CVAR_1,MPI_T_CVAR_2,...;VALUE_1,VALUE_2,..."
+//////////////////////////////////////////////////////////////////////////////////////////////
 extern "C" void TauBeacon_MPI_T_CVAR_handler(BEACON_receive_topic_t * caught_topic) {
-   /*TODO: Add the code to write to the MPI_T interface. Re-use previous string manipulation functions in TauMpiT.c*/
-   fprintf(stderr, "[MESSAGE] Caught topic %s with payload %s\n", caught_topic->topic_name, caught_topic->topic_payload);
+   char *token, *save_ptr;
+   char payload[TAU_BEACON_BUFFER_SIZE] = "";
+   char cvar_metrics[TAU_BEACON_BUFFER_SIZE] = "";
+   char cvar_values[TAU_BEACON_BUFFER_SIZE] = "";
+
+   strcpy(payload, caught_topic->topic_payload);
+
+   /*Handle case where payload is empty*/
+   if(payload == "" || payload == NULL) {
+     fprintf(stderr, "Topic: %s received empty message\n", caught_topic->topic_name);
+     exit(1);
+   }
+
+   #ifdef DEBUG_PROF
+   printf("Topic: %s received message %s\n", caught_topic->topic_name, payload);
+   #endif /* DEBUG_PROF */   
+   token = strtok_r(payload, ";", &save_ptr); 
+
+   if(token == NULL) {
+     fprintf(stderr, "Topic: %s received message in wrong format\n", caught_topic->topic_name);
+     exit(1);
+   }
+   
+   strcpy(cvar_metrics, token);
+   token = strtok_r(NULL, ";", &save_ptr);
+   strcpy(cvar_values, token);
+
+   token = strtok_r(NULL, ";", &save_ptr);     
+   if(token != NULL) {
+     fprintf(stderr, "Topic: %s received message in wrong format\n", caught_topic->topic_name);
+     exit(1);
+   } 
+
+   #ifdef DEBUG_PROF
+   printf("Extracted CVAR METRICS are %s and CVAR VALUES are %s\n", cvar_metrics, cvar_values);
+   #endif /* DEBUG_PROF */
+
+   #ifdef TAU_MPI_T
+   Tau_mpi_t_parse_and_write_cvars(cvar_metrics, cvar_values);
+   #endif /* TAU_MPI_T */
+
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -82,7 +123,9 @@ extern "C" int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*ha
 
    char* caddr = getenv("BEACON_TOPOLOGY_SERVER_ADDR");
    sprintf(filter_string, "cluster_name=%s,cluster_port=10809,topic_scope=%s,topic_name=%s", caddr, topic_scope, topic_name);
+   #ifdef DEBUG_PROF
    printf("Filter string is %s \n", filter_string);
+   #endif /* DEBUG_PROF */
 
    ret = BEACON_Subscribe(&shandle, handle, 0, filter_string, handler);
    if (ret != BEACON_SUCCESS) {
