@@ -1602,6 +1602,7 @@ int * resultlen;
 
   return returnVal;
 }
+
 int Tau_MPI_T_initialization(void) {
 #ifdef TAU_MPI_T
   int returnVal;
