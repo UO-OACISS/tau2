@@ -33,7 +33,7 @@ static MPI_T_pvar_session tau_pvar_session;
 // externs
 //////////////////////////////////////////////////////////////////////
 extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data);
-
+//extern "C" void Tau_mpi_t_enable_user_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
 #define dprintf TAU_VERBOSE
 
 //////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ int Tau_mpi_t_initialize(void) {
   } 
 
   /* Initialize MPI_T */
-  return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided); 
+  return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
 
   if (return_val != MPI_SUCCESS) 
   {
@@ -653,13 +653,17 @@ int Tau_track_mpi_t_here(void) {
   char description[TAU_NAME_LENGTH + 1] = "";
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
-  int returnVal;
+  int mpi_t_enable_user_tuning_policy = 0;
   
   /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
    * to process MPI_T events */
   if (TauEnv_get_track_mpi_t_pvars() == 0) {
     return MPI_SUCCESS; 
   } 
+
+  if(TauEnv_get_mpi_t_enable_user_tuning_policy() == 1) {
+    mpi_t_enable_user_tuning_policy = 1;
+  }
 
   /* get number of pvars from MPI_T */
   return_val = MPI_T_pvar_get_num(&num_pvars);
@@ -710,7 +714,7 @@ int Tau_track_mpi_t_here(void) {
      tau_mpi_datatype[i] = datatype;
 
      /* allocate a pvar handle that will be used later */
-     returnVal = MPI_T_pvar_handle_alloc(tau_pvar_session, i, NULL, &tau_pvar_handles[i], &tau_pvar_count[i]);
+     return_val = MPI_T_pvar_handle_alloc(tau_pvar_session, i, NULL, &tau_pvar_handles[i], &tau_pvar_count[i]);
      if (return_val != MPI_SUCCESS) {
        perror("MPI_T_pvar_handle_alloc ERROR:");
        return return_val;
@@ -720,7 +724,7 @@ int Tau_track_mpi_t_here(void) {
      *TODO: Currently, the MVAPICH and MPICH implementations error out if non-continuous PVARs are not started before being read.
      *Check if this is expected behaviour from an MPI implementation. No mention of the need to do this from a clients perspective in the 3.1 standard.*/
      if(continuous == 0) {
-       returnVal = MPI_T_pvar_start(tau_pvar_session, tau_pvar_handles[i]);
+       return_val = MPI_T_pvar_start(tau_pvar_session, tau_pvar_handles[i]);
        if (return_val != MPI_SUCCESS) {
          perror("MPI_T_pvar_start ERROR:");
          return return_val;
@@ -772,10 +776,17 @@ int Tau_track_mpi_t_here(void) {
         /* Trigger the TAU event if it is non-zero */
 	if (mydata > 0L) {
           Tau_track_pvar_event(i, j, tau_pvar_count, num_pvars, mydata);
+        
         }
       }
     }
 
+  }
+
+  /*Implement user based CVAR tuning policy if TAU_MPI_T_ENABLE_USER_TUNING_POLICY is set*/
+  if(mpi_t_enable_user_tuning_policy) {
+    dprintf("RANK:%d: User based tuning policy enabled \n", rank);
+    //Tau_mpi_t_enable_user_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
   }
   
   tau_previous_pvar_count = num_pvars;
