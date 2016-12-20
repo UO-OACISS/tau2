@@ -33,7 +33,7 @@ static MPI_T_pvar_session tau_pvar_session;
 // externs
 //////////////////////////////////////////////////////////////////////
 extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data);
-//extern "C" void Tau_mpi_t_enable_user_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
+
 #define dprintf TAU_VERBOSE
 
 //////////////////////////////////////////////////////////////////////
@@ -641,6 +641,66 @@ static void *read_value_buffer; // values are read into this buffer.
 static MPI_Datatype *tau_mpi_datatype; 
 static int *tau_pvar_count;
 
+/*Implement user based CVAR tuning policy based on a policy file (?)
+ * TODO: This tuning logic should be in a separate module/file. Currently implementing hard-coded policies for MVAPICH meant only for experimentation purposes*/
+void Tau_enable_user_cvar_tuning_policy(const int num_pvars, const int *tau_pvar_count, const unsigned long long int **pvar_value_buffer) {
+  int return_val, num_pvars, i, namelen, verb, varclass, bind, threadsup;
+  int index;
+  int readonly, continuous, atomic;
+  char event_name[TAU_NAME_LENGTH + 1] = "";
+  int desc_len;
+  char description[TAU_NAME_LENGTH + 1] = "";
+  MPI_Datatype datatype;
+  MPI_T_enum enumtype;
+
+  /*MVAPICH specific thresholds and names*/
+  char PVAR_MAX_VBUF_USAGE[TAU_NAME_LENGTH] = "mv2_vbuf_max_use_array";
+  char PVAR_VBUF_ALLOCATED[TAU_NAME_LENGTH] = = "mv2_vbuf_allocated_array";
+  int PVAR_VBUF_WASTED_THRESHOLD = 10; //This is the threshold above which we will be free from the pool
+
+  char CVAR_ENABLING_POOL_CONTROL = "MPIR_CVAR_VBUF_POOL_CONTROL_ID";
+  char CVAR_SPECIFYING_REDUCED_POOL_SIZE = "MPIR_CVAR_VBUF_POOL_REDUCED_VALUE";
+
+  int pvar_max_vbuf_usage_index, pvar_vbuf_allocated_index;
+  pvar_max_vbuf_usage_index = -1;
+  pvar_vbuf_allocated_index = -1;
+
+
+  for(i = tau_previous_pvar_count; i < num_pvars; i++){
+      namelen = desc_len = TAU_NAME_LENGTH;
+      return_val = MPI_T_pvar_get_info(i/*IN*/,
+      event_name /*OUT*/,
+      &namelen /*INOUT*/,
+      &verb /*OUT*/,
+      &varclass /*OUT*/,
+      &datatype /*OUT*/,
+      &enumtype /*OUT*/,
+      description /*description: OUT*/,
+      &desc_len /*desc_len: INOUT*/,
+      &bind /*OUT*/,
+      &readonly /*OUT*/,
+      &continuous /*OUT*/,
+      &atomic/*OUT*/);
+
+      if(strcmp(event_name, PVAR_MAX_VBUF_USAGE) == 0) {
+        pvar_max_vbuf_usage_index = i;
+      } else if (strcmp(event_name, PVAR_VBUF_ALLOCATED) == 0)
+        pvar_vbuf_allocated_index = i;
+      }
+  }
+
+  if((pvar_max_vbuf_usage_index == -1) || (pvar_vbuf_allocated_index == -1)) {
+    printf("Unable to find the indexes of PVARs required for tuning\n";
+    return;
+  } else {
+    printf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
+  }
+  
+  /*Tuning logic: If the difference between allocated vbufs and max use vbufs in a given
+  * vbuf pool is higher than a set threshhold, then we will free from that pool.*/
+  
+}
+
 //////////////////////////////////////////////////////////////////////
 int Tau_track_mpi_t_here(void) {
   static int first_time = 1; 
@@ -786,7 +846,7 @@ int Tau_track_mpi_t_here(void) {
   /*Implement user based CVAR tuning policy if TAU_MPI_T_ENABLE_USER_TUNING_POLICY is set*/
   if(mpi_t_enable_user_tuning_policy) {
     dprintf("RANK:%d: User based tuning policy enabled \n", rank);
-    //Tau_mpi_t_enable_user_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
+    Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
   }
   
   tau_previous_pvar_count = num_pvars;
