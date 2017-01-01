@@ -1605,7 +1605,7 @@ int * resultlen;
 
 int Tau_MPI_T_initialization(void) {
 #ifdef TAU_MPI_T
-  int returnVal;
+  int returnVal = 0;
   char *pycoolr_cvar_topic_name = "MPI_T_CVARS";
   char *pycoolr_cvar_topic_scope = "global";
 
