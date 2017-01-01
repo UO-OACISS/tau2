@@ -146,15 +146,17 @@ void Tau_mpi_t_parse_cvar_string(int num_cvars, const char *cvar_string, char **
 /*Iterates through the current list of vectors to see if the current vector element being added is new or already exists
  * If new, creates a new vector element. If vector element already exists, it appends a key value pair to the list of the corresponding vector element with the same name*/
 void Tau_mpi_t_add_vector_element(VectorControlVariable *vectors, char *vector_name, char *key, int index_into_value_array, int *current_vector, char **cvar_values) {
-  int iter;
+  int iter, counter;
   ListStringPair *current_string_pair;
 
   for(iter = 0; iter < *current_vector; iter++) {
     //Found a vector with the same name that already exits
     if(strcmp(vectors[iter].name, vector_name) == 0) {
+      counter = 0;
       current_string_pair = vectors[iter].list;
-      while(current_string_pair->link != NULL) {
+      while(counter < vectors[iter].number_of_elements - 1) {
         current_string_pair = current_string_pair->link;
+        counter = counter + 1;
       }
       current_string_pair->link = (ListStringPair *)malloc(sizeof(ListStringPair));
       current_string_pair = current_string_pair->link;
@@ -396,7 +398,7 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
        
       char name[TAU_NAME_LENGTH]= ""; 
       char desc[TAU_NAME_LENGTH]= ""; 
-      int verbosity, binding, scope, i, j;
+      int verbosity, binding, scope, i, j, k;
       int name_len;
       int desc_len;
       MPI_Datatype datatype; 
@@ -406,6 +408,8 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
       ScalarControlVariable *scalars;
       void *val, *oldval, *reset_value;
       ListStringPair *current_string_pair;
+
+      rank = Tau_get_node(); /* MPI_Init may not been invoked yet */
 
       /*Initialize the MPI_T interface in case we have not done so already. No harm in re-initializing the interface.*/
       return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
@@ -530,10 +534,12 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
             }
            
             current_string_pair = vectors[iter].list;
-            while(current_string_pair != NULL) {
+            k = 0;
+            while(k < vectors[iter].number_of_elements) {
               sscanf(current_string_pair->pair.first, "%d", &array_index);
               Tau_mpi_t_convert_string_to_typed_value(current_string_pair->pair.second, datatype, val, array_index);
               current_string_pair = current_string_pair->link;
+              k = k + 1;
             }
 
             return_val = MPI_T_cvar_write(chandle, val);
@@ -566,7 +572,7 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
       free(cvar_metrics_array); free(cvar_values_array); free(vectors); free(scalars);
 
       /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
-      *state it was in before this function call.*/
+       *state it was in before this function call.*/
       return_val = MPI_T_finalize();
       if (return_val != MPI_SUCCESS) {
         printf("TAU: Rank %d: Call to MPI_T_finalize failed\n", rank);
@@ -606,23 +612,15 @@ int Tau_mpi_t_cvar_initialize(void) {
     return return_val;
   }
 
-  /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
-   *state it was in before this function call.*/
-  return_val = MPI_T_finalize();
-  if (return_val != MPI_SUCCESS) {
-    printf("TAU: Rank %d: Call to MPI_T_finalize failed\n", rank);
-    return return_val;
-  }
-
-  if (cvars == "") {
+  if (strcmp(cvars, "") == 0) {
     dprintf("TAU: No CVARS specified using TAU_MPI_T_CVAR_METRICS and TAU_MPI_T_CVAR_VALUES\n");
 
   } else {
     dprintf("CVAR_METRICS=%s\n", cvars);
-    if (values == "") {
+    if (strcmp(values, "") == 0) {
       printf("TAU: WARNING: Environment variable TAU_MPI_T_CVAR_METRICS is not specified for TAU_MPI_T_CVAR_METRICS=%s\n", 
 	cvars);
-    } else { // both cvars and values are specified
+    } else { // both cvars and values are specified*/
       /*Parse the cvars and values and write to the MPI_T interface */
       return_val = Tau_mpi_t_parse_and_write_cvars(cvars, values);
 
