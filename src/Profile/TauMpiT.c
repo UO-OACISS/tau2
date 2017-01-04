@@ -75,6 +75,39 @@ int Tau_mpi_t_initialize(void) {
   return return_val;
 } 
 
+/*Cleanup by freeing handles and session*/
+int Tau_mpi_t_cleanup(void) {
+  int return_val, num_pvars, i;
+
+  /*Don't free any handles and handles if nobody is tracking anything!*/
+  if (TauEnv_get_track_mpi_t_pvars() == 0) {
+    return MPI_SUCCESS;
+  }
+
+  /* get number of pvars from MPI_T */
+  return_val = MPI_T_pvar_get_num(&num_pvars);
+  if (return_val != MPI_SUCCESS) {
+    perror("MPI_T_pvar_get_num ERROR:");
+    return return_val;
+  }
+  
+  for(i=0; i < num_pvars; i++) {
+    return_val = MPI_T_pvar_handle_free(tau_pvar_session, &(tau_pvar_handles[i]));
+    if (return_val != MPI_SUCCESS) {
+      perror("MPI_T_pvar_handle_free ERROR:");
+      return return_val;
+    }
+  }
+  
+  return_val = MPI_T_pvar_session_free(&tau_pvar_session);
+  if (return_val != MPI_SUCCESS) {
+    perror("MPI_T_pvar_session_free ERROR:");
+    return return_val;
+  }
+  
+  return return_val;
+}
+
 /*Iterates through all the cvars provided by the implementation and prints the name and description of each cvar*/
 int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
   int i, name_len, desc_len, verbosity, binding, scope, rank, return_val;
