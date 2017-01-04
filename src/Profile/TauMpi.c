@@ -71,6 +71,7 @@ extern int Tau_signal_initialization();
 extern int Tau_mpi_t_initialize();
 extern int Tau_mpi_t_cvar_initialize();
 extern int Tau_track_mpi_t_here();
+extern int Tau_mpi_t_cleanup();
 
 #ifdef TAU_BEACON
 extern int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*));
@@ -1497,9 +1498,10 @@ int  MPI_Finalize(  )
 #ifdef TAU_MPI_T
   Tau_track_mpi_t_here();
 
-  /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
-   *state it was in before this function call.*/
-  returnVal = MPI_T_finalize();
+  /*Clean up and finalize the MPI_T interface*/
+  Tau_mpi_t_cleanup();
+
+  returnVal = PMPI_T_finalize();
   if (returnVal != MPI_SUCCESS) {
     printf("TAU: Call to MPI_T_finalize failed\n");
   }
