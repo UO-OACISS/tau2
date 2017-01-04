@@ -1496,6 +1496,14 @@ int  MPI_Finalize(  )
   
 #ifdef TAU_MPI_T
   Tau_track_mpi_t_here();
+
+  /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
+   *state it was in before this function call.*/
+  returnVal = MPI_T_finalize();
+  if (returnVal != MPI_SUCCESS) {
+    printf("TAU: Call to MPI_T_finalize failed\n");
+  }
+
 #endif /* TAU_MPI_T */
   writeMetaDataAfterMPI_Init(); 
 

@@ -573,11 +573,11 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
 
       /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
        *state it was in before this function call.*/
-      return_val = MPI_T_finalize();
+      /*return_val = MPI_T_finalize();
       if (return_val != MPI_SUCCESS) {
         printf("TAU: Rank %d: Call to MPI_T_finalize failed\n", rank);
         return return_val;
-      }
+      }*/
 
       return return_val;
 }
