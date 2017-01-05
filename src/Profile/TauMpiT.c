@@ -22,6 +22,7 @@
 #include <Profile/TauMpiTTypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 //////////////////////////////////////////////////////////////////////
 // Global variables
@@ -32,7 +33,7 @@ static MPI_T_pvar_session tau_pvar_session;
 //////////////////////////////////////////////////////////////////////
 // externs
 //////////////////////////////////////////////////////////////////////
-extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data);
+extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data);extern void Tau_disable_tracking_mpi_t(void);
 
 #define dprintf TAU_VERBOSE
 
@@ -105,6 +106,9 @@ int Tau_mpi_t_cleanup(void) {
     return return_val;
   }
   
+  Tau_disable_tracking_mpi_t();
+  alarm(0);
+
   return return_val;
 }
 

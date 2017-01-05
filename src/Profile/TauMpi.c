@@ -71,6 +71,7 @@ extern int Tau_signal_initialization();
 extern int Tau_mpi_t_initialize();
 extern int Tau_mpi_t_cvar_initialize();
 extern int Tau_track_mpi_t_here();
+extern void Tau_track_mpi_t();
 extern int Tau_mpi_t_cleanup();
 
 #ifdef TAU_BEACON
@@ -1652,6 +1653,7 @@ char *** argv;
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
   Tau_MPI_T_initialization();
+  Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init( argc, argv );
