@@ -899,7 +899,7 @@ else
       export LD_AUDIT=$ORIG_AUDIT_AUDIT
       export LD_PRELOAD=$ORIG_LD_PRELOAD
     fi
-    rm -rf "$samplefile" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog"
+    rm -rf "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog" "$pttsprefix/$node"
     sample_ts $ts_sample_flags -o "$samplefile" -r $@
     if [[ -z "${ALPS_APP_PE}" ]]; then
       err=$? ; [ $err -eq 0 ] || exit $err
@@ -925,11 +925,16 @@ else
         # Get the return code of the child process as the tau_exec return code
         err=$? ; [ $err -eq 0 ] || exit $err
         retval=$err
-        touch ptts/done_sampling
+        touch "$pttsprefix/0"
+	while [ ! -f "$pttsprefix/1" ] ; do
+          sleep 1
+        done
       else
-	while [ ! -f $pttsprefix/done_sampling ] ; do
+        neighbor=$((($node+1)%$nodecount))
+	while [ ! -f "$pttsprefix/$neighbor" ] ; do
           sleep 1
 	done
+	touch "$pttsprefix/$node"
         retval=0
       fi
       # Post-process samples
@@ -942,7 +947,7 @@ else
       err=$? ; [ $err -eq 0 ] || exit $err
       cd "$OLDPWD"
       # Clean up and package the report
-      rm -f "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html" "$pttsprefix/done_sampling"
+      rm -f "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
       compress_ptts_report
       if [ "$node" -eq 0 ] ; then
         write_ptts_index
