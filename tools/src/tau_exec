@@ -922,38 +922,31 @@ else
       fi
     else
       if [ "$node" -eq 0 ] ; then
+        # Get the return code of the child process as the tau_exec return code
         err=$? ; [ $err -eq 0 ] || exit $err
         retval=$err
-        # Get the return code of the child process as the tau_exec return code
-        # Post-process samples
-        i=-1
-        while [ $i -lt $(($nodecount-1)) ] ; do
-          ((i++))
-          echo "PTTS($i): Postprocessing samples..."
-          report_ts $ts_report_flags -i "$pttsprefix/sample.${i}.smp" -o "$pttsprefix/report.${i}.tsr" >"$pttsprefix/report_ts.${i}.log" 2>&1
-          err=$?
-          if [ $err -ne 0 ] ; then
-            echo "PTTS($i): Error generating report.${i}.tsr"
-            retval=$(($retval+$err))
-            continue
-          fi
-          # Generate report. view-static must be run in $pttsprefix
-          cd "$pttsprefix"
-          view-static_ts  -i "report.${i}.tsr" -o "node_${i}" >"view-static_ts.${i}.log" 2>&1
-          if [ $err -ne 0 ] ; then
-            echo "PTTS($i): Error generating node_${i}"
-            retval=$(($retval+$err))
-            continue
-          fi
-          cd "$OLDPWD"
-          # Clean up and package the report
-          rm -f "$pttsprefix/sample.${i}.smp" "$pttsprefix/report.${i}.tsr" "$pttsprefix/report_ts.${i}.log" "$pttsprefix/view-static_ts.${i}.log" "$pttsprefix/node_${i}.html"
-        done
-        compress_ptts_report
-        write_ptts_index
+        touch ptts/done_sampling
       else
+	while [ ! -f $pttsprefix/done_sampling ] ; do
+          sleep 1
+	done
         retval=0
       fi
+      # Post-process samples
+      echo "PTTS($node): Postprocessing samples..."
+      report_ts $ts_report_flags -i "$pttsprefix/sample.${node}.smp" -o "$reportfile" >"$reportlog" 2>&1
+      err=$? ; [ $err -eq 0 ] || exit $err
+      # Generate report. view-static must be run in $pttsprefix
+      cd "$pttsprefix"
+      view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
+      err=$? ; [ $err -eq 0 ] || exit $err
+      cd "$OLDPWD"
+      # Clean up and package the report
+      rm -f "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html" "$pttsprefix/done_sampling"
+      compress_ptts_report
+      if [ "$node" -eq 0 ] ; then
+        write_ptts_index
+     fi
     fi
   else
     $dryrun $@
