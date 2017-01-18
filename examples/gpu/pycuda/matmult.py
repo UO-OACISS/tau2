@@ -114,8 +114,7 @@ def main():
 	multiply_matrices = multiply_source.get_function("multiply_matrices")
 	multiply_matrices_shared_blocks = multiply_source.get_function("multiply_matrices_shared_blocks")
 	
-	gId = cudaRuntimeGpuId()
-	Tau_pycuda_enqueue_kernel_enter_event("multiply_matrices", gId)
+	Tau_pycuda_enqueue_kernel_enter_event("multiply_matrices")
 	multiply_matrices(d_a, d_b, cuda.InOut(c), lda,
 										block=(number_of_threads,number_of_threads,1),
 										grid=(number_of_blocks,number_of_blocks))	
@@ -125,7 +124,7 @@ def main():
 	pycuda.driver.Context.synchronize()
 	Tau_pycuda_register_sync_event()
 	
-	Tau_pycuda_enqueue_kernel_enter_event("multiply_matrices_shared_blocks", gId)
+	Tau_pycuda_enqueue_kernel_enter_event("multiply_matrices_shared_blocks")
 	multiply_matrices_shared_blocks(d_a, d_b, cuda.InOut(c), lda,
 										block=(number_of_threads,number_of_threads,1),
 										grid=(number_of_blocks,number_of_blocks))	
@@ -139,8 +138,8 @@ def main():
 	#print "results:"
 	#print c
 
-	Tau_pycuda_exit()
 
 
 tau.run('main()')
-
+Tau_pycuda_exit()
+#main()
