@@ -1,4 +1,4 @@
 Launch as:
 
-tau_python -T serial,python,cupti -cupti ./matmult.py
+TAU_CUPTI_API=both tau_python -T serial,python,cupti -cupti ./matmult.py
 
