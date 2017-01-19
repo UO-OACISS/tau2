@@ -1,0 +1,4 @@
+Launch as:
+
+tau_python -T serial,python,cupti -cupti ./matmult.py
+

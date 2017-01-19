@@ -1,10 +1,10 @@
+#!/usr/bin/env python
 import pycuda.driver as cuda
 import pycuda.autoinit
 import math
 from pycuda.compiler import SourceModule
 
-import tau
-from pytau_cuda import *
+#import tau
 
 import numpy
 
@@ -93,8 +93,6 @@ int lda)
 
 def main():
 
-	Tau_pycuda_init()
-
 	#a = numpy.matrix('2 -1 -4 ; 4 1 -2; 6 3 0').astype(numpy.float32)
 	a = numpy.random.rand(SIZE_OF_MATRIX, SIZE_OF_MATRIX).astype(numpy.float32)
 	#print a
@@ -114,25 +112,19 @@ def main():
 	multiply_matrices = multiply_source.get_function("multiply_matrices")
 	multiply_matrices_shared_blocks = multiply_source.get_function("multiply_matrices_shared_blocks")
 	
-	Tau_pycuda_enqueue_kernel_enter_event("multiply_matrices")
 	multiply_matrices(d_a, d_b, cuda.InOut(c), lda,
 										block=(number_of_threads,number_of_threads,1),
 										grid=(number_of_blocks,number_of_blocks))	
 
-	Tau_pycuda_enqueue_kernel_exit_event()
 	
 	pycuda.driver.Context.synchronize()
-	Tau_pycuda_register_sync_event()
 	
-	Tau_pycuda_enqueue_kernel_enter_event("multiply_matrices_shared_blocks")
 	multiply_matrices_shared_blocks(d_a, d_b, cuda.InOut(c), lda,
 										block=(number_of_threads,number_of_threads,1),
 										grid=(number_of_blocks,number_of_blocks))	
 
-	Tau_pycuda_enqueue_kernel_exit_event()
 	
 	pycuda.driver.Context.synchronize()
-	Tau_pycuda_register_sync_event()
 
 
 	#print "results:"
@@ -140,6 +132,5 @@ def main():
 
 
 
-tau.run('main()')
-Tau_pycuda_exit()
-#main()
+#tau.run('main()')
+main()
