@@ -5,9 +5,6 @@ using namespace std;
 #if CUPTI_API_VERSION >= 2
 #include <dlfcn.h>
 
-const char * tau_orig_libname = "libcuda.so";
-static void *tau_handle = NULL;
-
 static int subscribed = 0;
 
 // From CuptiActivity.h
@@ -194,49 +191,40 @@ handleResource(CUpti_CallbackId cbid, const CUpti_ResourceData *resourceData)
 #endif
 /* END:  Dump cubin (sass) */
 
-CUresult cuInit(unsigned int a1) {
+CUresult cuInit(unsigned int a1)
+{
 #ifdef TAU_DEBUG_CUPTI
-  printf("in cuInit\n");
+    printf("in cuInit\n");
 #endif
-  typedef CUresult (*cuInit_p_h) (unsigned int);
-  static cuInit_p_h cuInit_h = NULL;
-  CUresult retval;
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
-    perror("Error opening library in dlopen call"); 
-    return retval;
-  } 
-  else { 
-    if (cuInit_h == NULL)
-	cuInit_h = (cuInit_p_h) dlsym(tau_handle,"cuInit"); 
-    if (cuInit_h == NULL) {
-      perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return retval;
+    typedef CUresult (*cuInit_p_h)(unsigned int);
+    static void *libcuda_handle = (void *)dlopen("libcuda.so", RTLD_NOW);
+    if (!libcuda_handle) {
+        perror("Error opening libcuda.so in dlopen call");
+        return CUDA_ERROR_NOT_INITIALIZED;
+    }
+    static cuInit_p_h cuInit_h = (cuInit_p_h)dlsym(libcuda_handle, "cuInit");
+    if (!cuInit_h) {
+        perror("Error obtaining cuInit symbol info from dlopen'ed lib");
+        return CUDA_ERROR_NOT_INITIALIZED;
     }
     Tau_cupti_subscribe();
-    subscribed = 1;
-    retval  =  (*cuInit_h)( a1);
-  }
-  return retval;
+    return cuInit_h(a1);
 }
 
 void Tau_cupti_subscribe()
 {
-	if(subscribed) {
-		return;
-	}
-	//cerr << "in subscribe." << endl;
+	if(subscribed) return;
+#ifdef TAU_DEBUG_CUPTI
+    printf("in Tau_cupti_subscribe\n");
+#endif
 	CUptiResult err;
+
 	TAU_VERBOSE("TAU: Subcribing to CUPTI.\n");
 	err = cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)Tau_cupti_callback_dispatch, NULL);
     CUPTI_CHECK_ERROR(err, "cuptiSubscribe");
-	
-	//to collect device info 
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_DEVICE);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable");
-	
 	
 	//setup global activity queue.
     size_t size;
@@ -260,7 +248,6 @@ void Tau_cupti_subscribe()
 
 void Tau_cupti_onload()
 {
-
 	if (!subscribed) {
 		Tau_cupti_subscribe();
 	}
