@@ -575,118 +575,101 @@ uint64_t Tau_CuptiLayer_read_counter(int id)
 	return cb;
 }
 
-int Tau_CuptiLayer_Initialize_callbacks()
+void Tau_CuptiLayer_Initialize_callbacks()
 {
-
-
-	typedef void (*Tau_cupti_onload_p) ();
-  static Tau_cupti_onload_p Tau_cupti_onload_h = NULL;
-
-	//simply loading this shared library will trigger the Tau_cupti_onload
-	//routine.
-	void *tau_so = dlmopen(LM_ID_BASE, "libTAU-CUact.so", RTLD_NOW);
-	/*if (tau_so != NULL) {
-		Tau_cupti_onload_h = (Tau_cupti_onload_p) dlsym(tau_so, "Tau_cupti_onload");
-		if (Tau_cupti_onload_h == NULL) {
-			printf("TAU: ERROR obtaining symbol info from libTAU-CUact.so.\n");
-		}
-		else {
-			(*Tau_cupti_onload_h)();
-		}
-		dlclose(tau_so);
-	}*/
+    // Simply loading this shared library will trigger Tau_cupti_onload()
+    if (!dlmopen(LM_ID_BASE, "libTAU-CUact.so", RTLD_NOW)) {
+        fprintf(stderr, "Failed to load libTAU-CUact.so\n");
+        exit(1);
+    }
 }
+
 void Tau_CuptiLayer_Initialize_Map()
 {
 #ifdef TAU_DEBUG_CUPTI
-  printf("in Tau_CuptiLayer_Initialize_Map\n");
+    printf("in Tau_CuptiLayer_Initialize_Map\n");
 #endif
-  int callback_initialized = Tau_CuptiLayer_Initialize_callbacks();
+    Tau_CuptiLayer_Initialize_callbacks();
 
-	CUdevice currDevice = -1;
-	uint32_t num_domains = -1;
-	CUpti_EventDomainID currDomain = -1;
+    CUdevice currDevice = -1;
+    uint32_t num_domains = -1;
+    CUpti_EventDomainID currDomain = -1;
 
-	CUresult er;
-	CUptiResult err = CUPTI_SUCCESS;
+    CUresult er;
+    CUptiResult err = CUPTI_SUCCESS;
 
-	int deviceCount;
-	uint32_t domainCount;
-	uint32_t eventCount;
-	//CuptiCounterEvent::printHeader();
-	// for each device 
-  er = cuDeviceGetCount(&deviceCount);
-  if (er == CUDA_ERROR_NOT_INITIALIZED) {
-	  cuInit(0);
+    int deviceCount;
+    uint32_t domainCount;
+    uint32_t eventCount;
+    //CuptiCounterEvent::printHeader();
+
     er = cuDeviceGetCount(&deviceCount);
-  }
-  if (er != CUDA_SUCCESS) {
-    //no devices found.
-    return;
-  }
-	for (int i=0; i<deviceCount; i++)
-	{
-		er = cuDeviceGet(&currDevice, i);
+    if (er == CUDA_ERROR_NOT_INITIALIZED) {
+        cuInit(0);
+        er = cuDeviceGetCount(&deviceCount);
+    }
+    if (er != CUDA_SUCCESS) {
+        //no devices found.
+        return;
+    }
+    for (int i = 0; i < deviceCount; i++) {
+        er = cuDeviceGet(&currDevice, i);
 #ifdef TAU_DEBUG_CUPTI
-		printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
+        printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
 #endif
-		CHECK_CU_ERROR( er, "cuDeviceGet" );
-		err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
-		CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
-		if ( domainCount == 0 ) {
-			printf( "No domain is exposed by dev = %d\n", i );
-			exit(1);
-		}
+        CHECK_CU_ERROR(er, "cuDeviceGet");
+        err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount);
+        CHECK_CUPTI_ERROR(err, "cuptiDeviceGetNumEventDomains");
+        if (domainCount == 0) {
+            printf("No domain is exposed by dev = %d\n", i);
+            exit(1);
+        }
 #ifdef TAU_DEBUG_CUPTI
-		printf("found %d domains.\n", domainCount);
+        printf("found %d domains.\n", domainCount);
 #endif
-    // alloc domainId array
-    size_t size = sizeof ( CUpti_EventDomainID ) * domainCount;
-    CUpti_EventDomainID *domainId = (CUpti_EventDomainID*)malloc(size);
+        // alloc domainId array
+        size_t size = sizeof(CUpti_EventDomainID) * domainCount;
+        CUpti_EventDomainID *domainId = (CUpti_EventDomainID*) malloc(size);
 
-    // fill domainId
-    err = cuptiDeviceEnumEventDomains(currDevice, &size, domainId);
-    CHECK_CUPTI_ERROR( err, "cuptiDeviceEnumEventDomains" );
-	
-		for (int j=0; j<domainCount; j++)
-		{
-			
-			er = cuDeviceGet(&currDevice, i);
-			CHECK_CU_ERROR( er, "cuDeviceGet" );
+        // fill domainId
+        err = cuptiDeviceEnumEventDomains(currDevice, &size, domainId);
+        CHECK_CUPTI_ERROR(err, "cuptiDeviceEnumEventDomains");
+
+        for (int j = 0; j < domainCount; j++) {
+            er = cuDeviceGet(&currDevice, i);
+            CHECK_CU_ERROR(er, "cuDeviceGet");
 #ifdef TAU_DEBUG_CUPTI
-			printf("looping, j=%d. domainCount=%d \n", j, domainCount);
-			printf("(1) currDevice=%d.\n", currDevice);
+            printf("looping, j=%d. domainCount=%d \n", j, domainCount);
+            printf("(1) currDevice=%d.\n", currDevice);
 #endif
-			err = cuptiDeviceGetNumEventDomains(currDevice, &num_domains );
-			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
-			if ( num_domains == 0 ) {
-				printf( "No domain is exposed by dev = %d\n", currDevice );
-				exit(1);
-			}
-			
-			currDomain = domainId[j];
+            err = cuptiDeviceGetNumEventDomains(currDevice, &num_domains);
+            CHECK_CUPTI_ERROR(err, "cuptiDeviceGetNumEventDomains");
+            if (num_domains == 0) {
+                printf("No domain is exposed by dev = %d\n", currDevice);
+                exit(1);
+            }
 
-    	err = cuptiEventDomainGetNumEvents(currDomain, &eventCount);
-			CHECK_CUPTI_ERROR( err, "cuptiEventDomainGetEnumEvent" );
-		
+            currDomain = domainId[j];
 
-			for (int k=0; k<eventCount; k++)
-			{
+            err = cuptiEventDomainGetNumEvents(currDomain, &eventCount);
+            CHECK_CUPTI_ERROR(err, "cuptiEventDomainGetEnumEvent");
 
-				CuptiCounterEvent* ev = new CuptiCounterEvent(i,j,k);
-
-				//ev->print();
-				Tau_CuptiLayer_Counter_Map().insert(std::make_pair(ev->tag, ev));
-			}
-		
-			er = cuDeviceGet(&currDevice, i);
-			err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
-			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
-		}
-		cuDeviceGetCount(&deviceCount);
-	}
+            for (int k = 0; k < eventCount; k++) {
+                CuptiCounterEvent* ev = new CuptiCounterEvent(i, j, k);
+                Tau_CuptiLayer_Counter_Map().insert(std::make_pair(ev->tag, ev));
 #ifdef TAU_DEBUG_CUPTI
-  printf("leaving Tau_CuptiLayer_Initialize_Map\n");
+                ev->print();
+#endif
+            }
+
+            er = cuDeviceGet(&currDevice, i);
+            err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount);
+            CHECK_CUPTI_ERROR(err, "cuptiDeviceGetNumEventDomains");
+        }
+        cuDeviceGetCount(&deviceCount);
+    }
+#ifdef TAU_DEBUG_CUPTI
+    printf("leaving Tau_CuptiLayer_Initialize_Map\n");
 #endif
 }
 

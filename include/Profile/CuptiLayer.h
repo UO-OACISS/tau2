@@ -51,6 +51,7 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 
 //#define DISABLE_CUPTI
 
+
 class CuptiCounterEvent
 {
 
@@ -122,7 +123,7 @@ extern void Tau_CuptiLayer_register_all_counters();
 
 extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
 
-extern int Tau_CuptiLayer_Initialize_callbacks();
+extern void Tau_CuptiLayer_Initialize_callbacks();
 
 extern void Tau_CuptiLayer_Initialize_Map();
 
