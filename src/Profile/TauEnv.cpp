@@ -162,6 +162,7 @@ using namespace std;
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+#define TAU_CUDA_DEVICE_NAME_DEFAULT NULL
 #define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 #define TAU_TRACK_CUDA_CDP_DEFAULT 0
 #define TAU_TRACK_UNIFIED_MEMORY_DEFAULT 0
@@ -257,7 +258,8 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cvar_metrics = NULL;
 static const char *env_cvar_values = NULL;
-static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
+static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
+static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 static int env_track_cuda_cdp = TAU_TRACK_CUDA_CDP_DEFAULT;
@@ -914,6 +916,10 @@ int TauEnv_get_child_forkdirs(){
 
 const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
+}
+
+const char* TauEnv_get_cuda_device_name(){
+  return env_cuda_device_name;
 }
 
 const char* TauEnv_get_cuda_instructions(){
@@ -1981,6 +1987,13 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
 		}
+    env_cuda_device_name = getconf("TAU_CUDA_DEVICE_NAME");
+    if (!env_cuda_device_name || 0 == strcasecmp(env_cuda_device_name, "")) {
+        env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
+    } else {
+        TAU_VERBOSE("TAU: CUDA device: %s\n", env_cuda_device_name);
+        TAU_METADATA("TAU_CUDA_DEVICE", env_cuda_device_name);
+    }
     env_track_cuda_instructions = getconf("TAU_TRACK_CUDA_INSTRUCTIONS");
     if (env_track_cuda_instructions == NULL || 0 == strcasecmp(env_track_cuda_instructions, "")) {
       env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
