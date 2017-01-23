@@ -39,7 +39,8 @@
 //using namespace std;
 using namespace tau;
 
-// This would be more useful in a utility header somewhere...
+// This would be more useful in a utility header somewhere, but the way people slap 'extern "C"'
+// on everything means we'll probably wind up with an C-linked template at some point...
 template < typename T >
 struct ScopedArray {
     ScopedArray(size_t count) :
@@ -157,6 +158,17 @@ static void metricv_add(const char *name)
 {
     int cupti_metric = 0;
 
+    char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
+
+    // Don't add metrics twice
+    for (int i=0; i<nmetrics; ++i) {
+        if (strcasecmp(metricv[i], name) == 0) {
+            return;
+        }
+    }
+
+    check_max_metrics();
+
 #ifdef CUPTI
     // Get events required to compute CUPTI metric
     for(int dev=0; dev<cuda_device_count(); ++dev) {
@@ -178,6 +190,9 @@ static void metricv_add(const char *name)
         cudaGetDeviceProperties(&deviceProps, dev);
         std::string device_name = deviceProps.name;
         std::replace(device_name.begin(), device_name.end(), ' ', '_');
+        if (tau_cuda_device_name && strcmp(tau_cuda_device_name, device_name.c_str())) {
+            continue;
+        }
 
         // Get the list of events required to calculate this metric on this device
         uint32_t numMetricEvents;
@@ -210,7 +225,7 @@ static void metricv_add(const char *name)
             continue;
         }
 
-        // Search domains for required events
+        // Search domains for required events and add events to TAU_METRICS
         for (int dom=0; dom<numDomains; ++dom) {
             CUpti_EventDomainID domain = domains[dom];
             uint32_t numDomainEvents;
@@ -281,11 +296,6 @@ static void metricv_add(const char *name)
     } // for (dev)
 #endif //CUPTI
 
-    for (int i=0; i<nmetrics; ++i) {
-        if (strcasecmp(metricv[i], name) == 0) {
-            return;
-        }
-    }
     check_max_metrics();
     metricv[nmetrics] = strdup(name);
     eventsv[nmetrics] = 0;
@@ -449,7 +459,7 @@ static int is_papi_metric(char *str) {
 /*********************************************************************
  * Query if a string is a CUPTI event
  ********************************************************************/
-static int is_cupti_event(char *str)
+static int is_cupti_event(char const * str)
 {
     if (strncmp("CUDA", str, 4) == 0 && Tau_CuptiLayer_is_cupti_counter(str)) {
         return 1;
@@ -646,18 +656,16 @@ static void initialize_functionArray()
 /*********************************************************************
  * Returns metric name for an index
  ********************************************************************/
-extern "C" const char *TauMetrics_getMetricName(int metric) {
+extern "C" const char *TauMetrics_getMetricName(int metric)
+{
+    char const * metric_name = metricv[metric];
 #ifdef CUPTI
-  if (Tau_CuptiLayer_is_cupti_counter(metricv[metric]) && Tau_CuptiLayer_get_cupti_event_id(metric) < Tau_CuptiLayer_get_num_events())
-  {
-      return Tau_CuptiLayer_get_event_name(Tau_CuptiLayer_get_cupti_event_id(metric));
-  }
-  else {
+    int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
+    if (Tau_CuptiLayer_is_cupti_counter(metric_name) && event_id < Tau_CuptiLayer_get_num_events()) {
+        return Tau_CuptiLayer_get_event_name(event_id);
+    }
 #endif
-    return metricv[metric];
-#ifdef CUPTI
-  }
-#endif
+    return metric_name;
 }
 
 /*********************************************************************
@@ -685,38 +693,43 @@ const char* TauMetrics_getMetricAtomic(int metric) {
   return TauMetrics_atomicMetrics[metric];
 }
 
-#ifdef CUPTI
 /*********************************************************************
  * Get id of time metric
  ********************************************************************/
-int TauMetrics_getTimeMetric() {
-  int i, id = -1;
-  for(i = 0; i < nmetrics; i++) {
-    if(strcasecmp(metricv[i], "TAUGPU_TIME") == 0) id = i;
-  }
-  return id;
+int TauMetrics_getTimeMetric()
+{
+#ifdef CUPTI
+    char const * const time = "TAUGPU_TIME";
+#else
+    char const * const time = "TIME";
+#endif
+    for (int i = 0; i < nmetrics; i++) {
+        if (strcasecmp(metricv[i], time) == 0)
+            return i;
+    }
+    return -1;
 }
 
 /*********************************************************************
  * Get event id
  ********************************************************************/
-int TauMetrics_getEventId(int metric) {
-  return eventsv[metric];
+int TauMetrics_getEventId(int metric)
+{
+    return eventsv[metric];
 }
 
 /*********************************************************************
  * Get event index from event id
  ********************************************************************/
-int TauMetrics_getEventIndex(int eventid) {
-  int i;
-  for(i = 0; i < nmetrics; i++) {
-    if(eventid == eventsv[i])
-      return i;
-  }
-  return -1;
+int TauMetrics_getEventIndex(int eventid)
+{
+    for (int i = 0; i < nmetrics; i++) {
+        if (eventid == eventsv[i])
+            return i;
+    }
+    return -1;
 }
 
-#endif //CUPTI
 
 /*********************************************************************
  * Read the metrics
