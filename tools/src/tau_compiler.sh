@@ -1528,7 +1528,7 @@ if [ $numFiles == 0 ]; then
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
     if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
-      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g' -e 's/-lunwind / /g'`
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
       link_options_file="$optWrappersDir/io_wrapper/link_options.tau"
     fi
 
@@ -2228,7 +2228,7 @@ else
 
           echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
           if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
-            optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g' -e 's/-lunwind / /g'`
+            optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
             link_options_file="$optWrappersDir/io_wrapper/link_options.tau"
           fi   
 
@@ -2302,9 +2302,9 @@ else
           link_options_file=$(echo -e "$link_options_file" | sed -e 's/[[:space:]]*$//' -e 's/^[[:space:]]*//')
           if [ "x$link_options_file" != "x" ] ; then
               if [ $cat_link_file == $TRUE ]; then
-		      optLinking="`cat $link_options_file` $optLinking"
+		      optLinking="`cat $link_options_file` $optLinking `cat $link_options_file`"
               else
-		      optLinking="@$link_options_file $optLinking"
+		      optLinking="@$link_options_file $optLinking @$link_options_file"
 	      fi
           fi
           newCmd="$newCmd $optLinking -o $passedOutputFile"
