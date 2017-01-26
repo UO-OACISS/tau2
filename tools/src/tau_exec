@@ -940,18 +940,26 @@ else
       # Post-process samples
       echo "PTTS($node): Postprocessing samples..."
       report_ts $ts_report_flags -i "$pttsprefix/sample.${node}.smp" -o "$reportfile" >"$reportlog" 2>&1
-      err=$? ; [ $err -eq 0 ] || exit $err
+      err=$? ; [ $err -eq 0 ] || echo "PTTS($node): report returned non-zero error code $err."
+      if [ ! -f "$reportfile" ]; then
+        echo "PTTS($node): Report file was not produced."
+        exit $err
+      fi
       # Generate report. view-static must be run in $pttsprefix
       cd "$pttsprefix"
       view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
-      err=$? ; [ $err -eq 0 ] || exit $err
+      err=$? ; [ $err -eq 0 ] || echo "PTTS($node): view-static returned non-zero error code $err."
       cd "$OLDPWD"
+      if [ ! -d "$pttsprefix/$viewdir" ]; then
+        echo "PTTS($node): view-static failed."
+        exit $err
+      fi
       # Clean up and package the report
       rm -f "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
       compress_ptts_report
       if [ "$node" -eq 0 ] ; then
         write_ptts_index
-     fi
+      fi
     fi
   else
     $dryrun $@
