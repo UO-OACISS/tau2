@@ -29,6 +29,9 @@
 //////////////////////////////////////////////////////////////////////
 static MPI_T_pvar_handle  *tau_pvar_handles; 
 static MPI_T_pvar_session tau_pvar_session;
+static MPI_T_cvar_handle *tau_cvar_handles;
+static int *tau_cvar_num_vals;
+int num_cvars = 0; //For now, we don't support case where number of CVARS changes dynamically at runtime
 
 //////////////////////////////////////////////////////////////////////
 // externs
@@ -39,7 +42,7 @@ extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subind
 
 //////////////////////////////////////////////////////////////////////
 int Tau_mpi_t_initialize(void) {
-  int return_val, thread_provided, num_pvars;   
+  int return_val, thread_provided, num_pvars, i;
 
   /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
    * to initialize MPI_T */
@@ -79,6 +82,14 @@ int Tau_mpi_t_initialize(void) {
 /*Cleanup by freeing handles and session*/
 int Tau_mpi_t_cleanup(void) {
   int return_val, num_pvars, i;
+
+  for(i=0;i < num_cvars;i++) {
+    return_val = MPI_T_cvar_handle_free(&(tau_cvar_handles[i]));
+    if (return_val != MPI_SUCCESS) {
+      printf("TAU: Can't free cvar handle for index %d in this MPI implementation\n", i);
+      return return_val;
+    }
+  }
 
   /*Don't free any handles and handles if nobody is tracking anything!*/
   if (TauEnv_get_track_mpi_t_pvars() == 0) {
@@ -338,7 +349,10 @@ void Tau_mpi_t_verify_write_and_log_scalar_metadata(int rank, void *val, void *r
       sprintf(metastring,"%s (old) -> %s (new), %s", (char *)oldval, (char *)reset_value, desc);
     }
   }
-  TAU_METADATA(metric_name, metastring);
+ 
+  if (rank == 0) {
+    TAU_METADATA(metric_name, metastring);
+  }
 }
 
 /*This function verifies that the vector cvar metric has been written correctly by reading and checking against the reset_value. Logs metadata*/
@@ -429,9 +443,8 @@ void Tau_mpi_t_convert_string_to_typed_value(char *string_value, MPI_Datatype da
 
 int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
 
-      MPI_T_cvar_handle chandle; 
-      int cindex, num_vals, num_cvar_metrics, num_cvar_values, num_scalars, num_vectors, array_index, thread_provided;
-      int return_val, iter, num_cvars, rank;
+      int cindex, num_cvar_metrics, num_cvar_values, num_scalars, num_vectors, array_index, thread_provided;
+      int return_val, iter, rank;
        
       char name[TAU_NAME_LENGTH]= ""; 
       char desc[TAU_NAME_LENGTH]= ""; 
@@ -453,12 +466,6 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
 
       if (return_val != MPI_SUCCESS) {
         perror("MPI_T_init_thread ERROR:");
-        return return_val;
-      }
-
-      return_val = MPI_T_cvar_get_num(&num_cvars);
-      if (return_val != MPI_SUCCESS) {
-        printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
         return return_val;
       }
 
@@ -500,20 +507,15 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
               dprintf("Rank: %d FOUND CVAR match: %s, cvars = %s, desc = %s\n", rank, name, scalars[iter].name, desc);
             }
             cindex = i;
-            return_val = MPI_T_cvar_handle_alloc(cindex, NULL, &chandle, &num_vals);
-            if (return_val != MPI_SUCCESS) {
-              printf("TAU: Rank %d: Can't allocate cvar handle in this MPI implementation\n", rank);
-              return return_val;
-            }
             /*This check is in place to handle the case where user inputs scalar values for a cvar that is a vector, except for a variable of type MPI_CHAR*/
-            if(num_vals != 1 && datatype != MPI_CHAR) { 
+            if(tau_cvar_num_vals[cindex] != 1 && datatype != MPI_CHAR) { 
               printf("TAU: Rank %d: CVAR %s assumed scalar by user, but is actually a vector\n", rank, scalars[iter].name);
               return return_val;
             }
  
-            Tau_mpi_t_allocate_read_write_buffers(&val, &oldval, &reset_value, datatype, num_vals);
+            Tau_mpi_t_allocate_read_write_buffers(&val, &oldval, &reset_value, datatype, tau_cvar_num_vals[cindex]);
 
-            return_val = MPI_T_cvar_read(chandle, oldval);
+            return_val = MPI_T_cvar_read(tau_cvar_handles[cindex], oldval);
             if (return_val != MPI_SUCCESS) {
                printf("TAU: Rank %d: Can't read cvar %s in this MPI implementation\n", rank, scalars[iter].name);
                return return_val;
@@ -526,19 +528,18 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
             array_index = 0; //for scalars, array index into the val array is 0 as there is only one element
             Tau_mpi_t_convert_string_to_typed_value(scalars[iter].value, datatype, val, array_index);
 
-            return_val = MPI_T_cvar_write(chandle, val);
+            return_val = MPI_T_cvar_write(tau_cvar_handles[cindex], val);
             if (return_val != MPI_SUCCESS) {
                printf("TAU: Rank %d: Can't write cvar %s in this MPI implementation\n", rank, scalars[iter].name);
                return return_val;
             }
-            return_val = MPI_T_cvar_read(chandle, reset_value);
+            return_val = MPI_T_cvar_read(tau_cvar_handles[cindex], reset_value);
             if (return_val != MPI_SUCCESS) {
               printf("TAU: Rank %d: Can't read cvar %s in this MPI implementation\n", rank, scalars[iter].name);
               return return_val;
             } else {
-              Tau_mpi_t_verify_write_and_log_scalar_metadata(rank, val, reset_value, oldval, datatype, num_vals, scalars[iter].name, desc);
+              Tau_mpi_t_verify_write_and_log_scalar_metadata(rank, val, reset_value, oldval, datatype, tau_cvar_num_vals[cindex], scalars[iter].name, desc);
             }
-            MPI_T_cvar_handle_free(&chandle);
             free(val); free(oldval); free(reset_value);
          
           }
@@ -551,17 +552,12 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
               dprintf("Rank: %d FOUND CVAR match: %s, cvars = %s, desc = %s\n", rank, name, vectors[iter].name, desc);
             }
             cindex = i;
-            return_val = MPI_T_cvar_handle_alloc(cindex, NULL, &chandle, &num_vals);
-            if (return_val != MPI_SUCCESS) {
-              printf("TAU: Rank %d: Can't allocate cvar handle in this MPI implementation\n", rank);
-              return return_val;
-            }
 
-            Tau_mpi_t_allocate_read_write_buffers(&val, &oldval, &reset_value, datatype, num_vals);
+            Tau_mpi_t_allocate_read_write_buffers(&val, &oldval, &reset_value, datatype, tau_cvar_num_vals[cindex]);
 
-            return_val = MPI_T_cvar_read(chandle, oldval);
+            return_val = MPI_T_cvar_read(tau_cvar_handles[cindex], oldval);
             
-            return_val = MPI_T_cvar_read(chandle, val);
+            return_val = MPI_T_cvar_read(tau_cvar_handles[cindex], val);
 
             if (return_val != MPI_SUCCESS) {
                printf("TAU: Rank %d: Can't read cvar %s in this MPI implementation\n", rank, vectors[iter].name);
@@ -579,20 +575,19 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
               k = k + 1;
             }
 
-            return_val = MPI_T_cvar_write(chandle, val);
+            return_val = MPI_T_cvar_write(tau_cvar_handles[cindex], val);
             if (return_val != MPI_SUCCESS) {
                printf("TAU: Rank %d: Can't write cvar %s in this MPI implementation\n", rank, vectors[iter].name);
                return return_val;
             }
-            return_val = MPI_T_cvar_read(chandle, reset_value);
+            return_val = MPI_T_cvar_read(tau_cvar_handles[cindex], reset_value);
 
             if (return_val != MPI_SUCCESS) {
               printf("TAU: Rank %d: Can't read cvar %s in this MPI implementation\n", rank, vectors[iter].name);
               return return_val;
             } else {
-              Tau_mpi_t_verify_write_and_log_vector_metadata(rank, val, reset_value, oldval, datatype, num_vals, vectors[iter].name);
+              Tau_mpi_t_verify_write_and_log_vector_metadata(rank, val, reset_value, oldval, datatype, tau_cvar_num_vals[cindex], vectors[iter].name);
             }
-            MPI_T_cvar_handle_free(&chandle);
             free(val); free(oldval); free(reset_value);
 
           }
@@ -621,7 +616,7 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
 
 /*Read CVARs to be set and their values from the environment and write them to the MPI_T interface */
 int Tau_mpi_t_cvar_initialize(void) {
-  int return_val, iter, num_cvars, thread_provided, rank;
+  int return_val, iter, thread_provided, rank, i;
   const char *cvars = TauEnv_get_cvar_metrics();
   const char *values = TauEnv_get_cvar_values();
   char metastring[TAU_NAME_LENGTH] = "";
@@ -637,10 +632,22 @@ int Tau_mpi_t_cvar_initialize(void) {
     return return_val;
   }
 
+  /* get number of cvars from MPI_T */
   return_val = MPI_T_cvar_get_num(&num_cvars);
   if (return_val != MPI_SUCCESS) {
-    printf("TAU: Rank %d: Can't read the number of MPI_T control variables in this MPI implementation\n", rank);
+    perror("MPI_T_cvar_get_num ERROR:");
     return return_val;
+  }
+
+  tau_cvar_handles = (MPI_T_cvar_handle *)malloc(num_cvars*sizeof(MPI_T_cvar_handle));
+  tau_cvar_num_vals = (int *)malloc(num_cvars*sizeof(int));
+
+  for(i=0;i < num_cvars;i++) {
+    return_val = MPI_T_cvar_handle_alloc(i, NULL, &(tau_cvar_handles[i]), &(tau_cvar_num_vals[i]));
+    if (return_val != MPI_SUCCESS) {
+      printf("TAU: Can't allocate cvar handle for index %d in this MPI implementation\n", i);
+      return return_val;
+    }
   }
 
   return_val = Tau_mpi_t_print_all_cvar_desc(num_cvars);
@@ -917,7 +924,7 @@ int Tau_track_mpi_t_here(void) {
         dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
         /* Trigger the TAU event if it is non-zero */
 	if (mydata > 0L) {
-          Tau_track_pvar_event(i, j, tau_pvar_count, num_pvars, mydata);
+          //Tau_track_pvar_event(i, j, tau_pvar_count, num_pvars, mydata);
         
         }
       }
