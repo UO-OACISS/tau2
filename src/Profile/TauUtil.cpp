@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <dlfcn.h>
 
 
 /*********************************************************************
@@ -166,5 +167,28 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
     TAU_ABORT("TAU: Abort: Unable to allocate memory (calloc) at %s:%d\n", file, line);
   }
   return ptr;
+}
+
+int Tau_util_load_plugin(char *name, char *path)
+{
+ 
+  //dstring slashedpath = dstring_format("./%s", dstring_cstr(fullpath));
+  char *slashedpath;
+  sprintf(slashedpath, "./%s", path);
+
+  void* libhandle = dlopen(slashedpath, RTLD_NOW);
+  //dstring_free(slashedpath);
+  if (!libhandle) {
+    printf("Error loading DSO: %s\n", dlerror());
+    return -1;
+  }
+
+  return 1;
+
+}
+
+int Tau_util_clear_plugin()
+{
+
 }
 
