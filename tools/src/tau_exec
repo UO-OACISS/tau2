@@ -516,6 +516,8 @@ else
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
 fi
 
+export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+
 
 isTBB=`echo $theBinding | grep tbb`
 if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
