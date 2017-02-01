@@ -127,7 +127,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF#
 #CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o CudaSass.o #ENDIF#
 
-OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
+OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o Comp_gnu.o \
@@ -709,6 +709,9 @@ UserEvent.o 	: UserEvent.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauKokkos.o 	: TauKokkos.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
