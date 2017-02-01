@@ -3,17 +3,24 @@
 ###############################################################################
 
 include ../include/Makefile
-include include/Makefile
+#include include/Makefile
 
 HDRS	      =
 
 MAKEFILE      = Makefile
 
+TAUINC        = -I/home/users/aurelem/tau/tau2_beacon/include -I/home/users/aurelem/tau/tau2_beacon/include/Profile
+
+CC            = $(TAU_CC)
+
+#CFLAGS        = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC
+CFLAGS        = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC
+
 OBJS	      = control_policies.o
 
 PRINT	      = pr
 
-SHAREDLIBS    = control_policies
+SHAREDLIBS    = control_policies.so
 
 all:		$(SHAREDLIBS)
 
@@ -24,7 +31,7 @@ control_policies.so:	control_policies.o
 			$(CC) -shared -fPIC -o control_policies.so control_policies.o
 
 control_policies.o:     control_policies.c
-			$(CC) $(CFLAGS) -fPIC control_policies.c 
+			$(CC) $(CFLAGS)  -c control_policies.c 
 
 #tau2vtf: 	tau2vtf.o
 #		$(CXX) $(CFLAGS) tau2vtf.o -o tau2vtf -lm $(LEXTRAUTIL) -L$(VTFDIR)/$(TAU_ARCH)/lib -lvtf3 $(TAU_TRACE_INPUT_LIB)
@@ -35,6 +42,6 @@ control_policies.o:     control_policies.c
 clean:
 		/bin/rm -rf *.o $(SHAREDLIBS) 
 
-install:	$(INSTALLDEST)/control_policies
+install:	$(INSTALLDEST)/control_policies.so
 
 program:        $(PROGRAM)
