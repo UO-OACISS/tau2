@@ -181,8 +181,7 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
   strcat(path, name);
 
   sprintf(fullpath, "%s.so", path);
-
-  void* libhandle = dlopen(fullpath, RTLD_NOW);
+  void *libhandle = dlopen(fullpath, RTLD_NOW);
   //dstring_free(slashedpath);
   if (!libhandle) {
     printf("Error loading DSO: %s\n", dlerror());
@@ -193,6 +192,13 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
 
   /* Get symbol of plugin entry point */
   void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(libhandle, initFuncName);
+
+  if(!fn) {
+    fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
+    dlclose(libhandle);
+    return -1;
+  }
+
   /* Call plugin function  */
   fn(num_args, args);
 
@@ -202,5 +208,6 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
 int Tau_util_close_plugin()
 {
 
+  return 1;
 }
 
