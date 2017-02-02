@@ -929,14 +929,21 @@ int Tau_track_mpi_t_here(void) {
   if(mpi_t_enable_user_tuning_policy) {
     dprintf("RANK:%d: User based tuning policy enabled \n", rank);
  
+    char *plugin_name;
+    const char *plugin_path;
     int num_args = 3;
     void **args = (void **)malloc(num_args*sizeof(void*));
     args[0] = (void *)num_pvars;
-    args[1] = (void *)tar_pvar_count;
+    args[1] = (void *)tau_pvar_count;
     args[2] = (void *)pvar_value_buffer;
-   
+
+    
+    strcpy(plugin_name, "tuning_policies");
+    plugin_path = getenv("PLUGIN_PATH");
+    //strcpy(plugin_path, "/home/users/aurelem/tau/tau2_beacon/plugins/"); 
+
     /* Load Tuning policy plugin */
-    Tau_util_load_plugin(char *name, char *path, num_args, args)
+    Tau_util_load_plugin(plugin_name, plugin_path, num_args, args);
     //Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
   }
   

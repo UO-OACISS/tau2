@@ -174,16 +174,15 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
  */
 int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
 {
- 
-  //dstring slashedpath = dstring_format("./%s", dstring_cstr(fullpath));
-  char *slashedpath;
   char *fullname;
+  char *fullpath;
   char *initFuncName;
   
   strcat(path, name);
-  sprintf(slashedpath, "./%s", path);
 
-  void* libhandle = dlopen(path, RTLD_NOW);
+  sprintf(fullpath, "%s.so", path);
+
+  void* libhandle = dlopen(fullpath, RTLD_NOW);
   //dstring_free(slashedpath);
   if (!libhandle) {
     printf("Error loading DSO: %s\n", dlerror());
@@ -192,7 +191,9 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
 
   sprintf(initFuncName, "plugin_%s", name);  
 
+  /* Get symbol of plugin entry point */
   void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(libhandle, initFuncName);
+  /* Call plugin function  */
   fn(num_args, args);
 
   return 1;
