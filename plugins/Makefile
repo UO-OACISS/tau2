@@ -16,22 +16,22 @@ CC            = $(TAU_CC)
 #CFLAGS        = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC
 CFLAGS        = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC
 
-OBJS	      = control_policies.o
+OBJS	      = tuning_policies.o
 
 PRINT	      = pr
 
-SHAREDLIBS    = control_policies.so
+SHAREDLIBS    = tuning_policies.so
 
 all:		$(SHAREDLIBS)
 
 printvar:	
 		@echo "CFLAGS "$(CFLAGS)" LEXTRAUTIL "$(LEXTRAUTIL)""
 
-control_policies.so:	control_policies.o
-			$(CC) -shared -fPIC -o control_policies.so control_policies.o
+tuning_policies.so:	tuning_policies.o
+			$(CC) -shared -fPIC -o tuning_policies.so tuning_policies.o
 
-control_policies.o:     control_policies.c
-			$(CC) $(CFLAGS)  -c control_policies.c 
+tuning_policies.o:      tuning_policies.c
+			$(CC) $(CFLAGS)  -c tuning_policies.c 
 
 #tau2vtf: 	tau2vtf.o
 #		$(CXX) $(CFLAGS) tau2vtf.o -o tau2vtf -lm $(LEXTRAUTIL) -L$(VTFDIR)/$(TAU_ARCH)/lib -lvtf3 $(TAU_TRACE_INPUT_LIB)
@@ -42,6 +42,6 @@ control_policies.o:     control_policies.c
 clean:
 		/bin/rm -rf *.o $(SHAREDLIBS) 
 
-install:	$(INSTALLDEST)/control_policies.so
+install:	$(INSTALLDEST)/tuning_policies.so
 
 program:        $(PROGRAM)
