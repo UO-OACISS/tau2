@@ -169,11 +169,16 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
   return ptr;
 }
 
+/*
+ * Load a plugin with its given name and path
+ */
 int Tau_util_load_plugin(char *name, char *path)
 {
  
   //dstring slashedpath = dstring_format("./%s", dstring_cstr(fullpath));
   char *slashedpath;
+  char *initFuncName;
+
   sprintf(slashedpath, "./%s", path);
 
   void* libhandle = dlopen(slashedpath, RTLD_NOW);
@@ -183,11 +188,15 @@ int Tau_util_load_plugin(char *name, char *path)
     return -1;
   }
 
+  sprintf(initFuncName, "init_%s", name);  
+
+  dlsym(libhandle, initFuncName);
+
   return 1;
 
 }
 
-int Tau_util_clear_plugin()
+int Tau_util_close_plugin()
 {
 
 }

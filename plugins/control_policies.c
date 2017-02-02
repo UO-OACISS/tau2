@@ -7,6 +7,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
+void init_control_policies()
+{
+
+ fprintf(stdout, "Control policies DSO init.....\n");
+
+}
+
 /*Implement user based CVAR tuning policy based on a policy file (?)
  * TODO: This tuning logic should be in a separate module/file. Currently implementing hard-coded policies for MVAPICH meant only for experimentation purposes*/
 void Tau_enable_user_cvar_tuning_policy(const int num_pvars, int *tau_pvar_count, unsigned long long int **pvar_value_buffer) {
