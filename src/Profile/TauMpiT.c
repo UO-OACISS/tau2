@@ -928,7 +928,16 @@ int Tau_track_mpi_t_here(void) {
   /*Implement user based CVAR tuning policy if TAU_MPI_T_ENABLE_USER_TUNING_POLICY is set*/
   if(mpi_t_enable_user_tuning_policy) {
     dprintf("RANK:%d: User based tuning policy enabled \n", rank);
-    Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
+ 
+    int num_args = 3;
+    void **args = (void **)malloc(num_args*sizeof(void*));
+    args[0] = (void *)num_pvars;
+    args[1] = (void *)tar_pvar_count;
+    args[2] = (void *)pvar_value_buffer;
+   
+    /* Load Tuning policy plugin */
+    Tau_util_load_plugin(char *name, char *path, num_args, args)
+    //Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
   }
   
   tau_previous_pvar_count = num_pvars;

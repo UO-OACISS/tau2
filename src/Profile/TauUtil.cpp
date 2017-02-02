@@ -190,7 +190,7 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
     return -1;
   }
 
-  sprintf(initFuncName, "init_%s", name);  
+  sprintf(initFuncName, "plugin_%s", name);  
 
   void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(libhandle, initFuncName);
   fn(num_args, args);
