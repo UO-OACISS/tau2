@@ -36,6 +36,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+enum TauMetricCuptiFlag {
+    TAU_METRIC_NOT_CUPTI,
+    TAU_METRIC_CUPTI_EVENT,
+    TAU_METRIC_CUPTI_METRIC
+};
 
 int TauMetrics_init();
 

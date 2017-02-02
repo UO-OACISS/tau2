@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <tau_internal.h>
+#include <Profile/TauMetrics.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauTrace.h>
 #ifdef CUPTI
@@ -37,6 +38,22 @@
 
 //using namespace std;
 using namespace tau;
+
+// This would be more useful in a utility header somewhere, but the way people slap 'extern "C"'
+// on everything means we'll probably wind up with an C-linked template at some point...
+template < typename T >
+struct ScopedArray {
+    ScopedArray(size_t count) :
+        size(count*sizeof(T)), ptr(new T[count]) {}
+    ~ScopedArray() {
+        if(ptr) delete[] ptr;
+    }
+    operator T*() const {
+        return ptr;
+    }
+    size_t size;
+    T * const ptr;
+};
 
 void metric_read_nullClock(int tid, int idx, double values[]);
 void metric_write_userClock(int tid, double value);
@@ -84,7 +101,7 @@ typedef void (*function)(int, int, double[]);
 
 static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
-static int cumetric[TAU_MAX_METRICS];
+static TauMetricCuptiFlag cumetric[TAU_MAX_METRICS];
 static int eventsv[TAU_MAX_METRICS];
 
 /* nfunctions can be different from nmetrics because
@@ -103,152 +120,187 @@ static x_uint64 initialTimeStamp;
 /* flags for atomic metrics */
 char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = {NULL};
 
+static int cuda_device_count()
+{
+#ifdef CUPTI
+    int deviceCount;
+    CUresult result = cuDeviceGetCount(&deviceCount);
+    if (result == CUDA_ERROR_NOT_INITIALIZED) {
+        cuInit(0);
+        result = cuDeviceGetCount(&deviceCount);
+    }
+    if (result != CUDA_SUCCESS) {
+        char const * err_str;
+        cuGetErrorString(result, &err_str);
+        fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
+        exit(result);
+    }
+    return deviceCount;
+#else
+    return 0;
+#endif
+}
+
+static void check_max_metrics()
+{
+    if (nmetrics >= TAU_MAX_METRICS) {
+        fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), "
+                "please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n",
+                TAU_MAX_METRICS);
+        exit(EXIT_FAILURE);
+    }
+}
 
 /*********************************************************************
  * Add a metric to the metrics vector
  ********************************************************************/
-static void metricv_add(const char *name) {
-  int i;
-#ifdef CUPTI
-  int j;
-  int deviceCount, dev;
-  int found, event_found;
-  int is_cupti_metric = 0;
-  int domid, domainid;
-  CUdevice device;
-  CUpti_MetricID metricid;
-  int retval, retval2;
-  int er, err;
-  uint32_t numEvents, num_domains, num_events;
-  size_t eventIdArraySizeBytes;
-  size_t size, valueSize = TAU_CUPTI_MAX_NAME;
-  CUpti_EventID *eventIdArray, *event_p;
-  char event_char[TAU_CUPTI_MAX_NAME];
-  char domain_char[TAU_CUPTI_MAX_NAME];
-  cudaDeviceProp prop;
-  std::string event_name, device_name, domain_name;
-  CUpti_EventDomainID domain, *domainArray;
-#endif //CUPTI
-  
+static void metricv_add(const char *name)
+{
+    int cupti_metric = 0;
 
-  if (nmetrics >= TAU_MAX_METRICS) {
-    fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n", TAU_MAX_METRICS);
- 		exit(1); 
-	} else {
+    char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
+
+    // Don't add metrics twice
+    for (int i=0; i<nmetrics; ++i) {
+        if (strcasecmp(metricv[i], name) == 0) {
+            return;
+        }
+    }
+
+    check_max_metrics();
 
 #ifdef CUPTI
-    er = cuDeviceGetCount(&deviceCount);
-    if (er == CUDA_ERROR_NOT_INITIALIZED) {
-      cuInit(0);
-      er = cuDeviceGetCount(&deviceCount);
-    }
-    if (er == CUDA_SUCCESS) {
-      // devices found.
-      // Get events required to compute Cupti metric
-      //for(dev = 0; dev < deviceCount; dev++)
-      dev = 0;
-      {
-        retval = cuDeviceGet(&device, dev);
-        if(retval != CUDA_SUCCESS) {
-          fprintf(stderr, "Could not get device %d.\n", dev);
+    // Get events required to compute CUPTI metric
+    for(int dev=0; dev<cuda_device_count(); ++dev) {
+        CUptiResult result;
+        CUdevice device;
+        cudaDeviceProp deviceProps;
+        if (cuDeviceGet(&device, dev) != CUDA_SUCCESS) {
+            fprintf(stderr, "Could not get device %d.\n", dev);
+            continue;
         }
-        else {
-          cudaGetDeviceProperties(&prop, dev);
-          device_name = prop.name;
-          for(i = 0; i < device_name.length(); i++)
-            if(device_name[i] == ' ') device_name[i] = '_';
 
-          // get list of domains on device
-          err = cuptiDeviceGetNumEventDomains(device, &num_domains );
-          CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
-          if ( num_domains == 0 ) { 
-            printf( "No domain is exposed by dev = %d\n", device );
-            exit(1);
-          }
-          size = sizeof ( CUpti_EventDomainID ) * num_domains;
-          domainArray = ( CUpti_EventDomainID *) malloc(size);
-          cuptiDeviceEnumEventDomains(device, &size, domainArray );
+        // Check if metric is a CUPTI metric we can calculate on this device
+        CUpti_MetricID metricID;
+        result = cuptiMetricGetIdFromName(device, name, &metricID);
+        cupti_metric = (result == CUPTI_SUCCESS);
+        if (!cupti_metric) continue;
 
-          retval2 = cuptiMetricGetIdFromName(device, name, &metricid);
-    
-          // Metric was a Cupti metric, determine the events required
-          if (retval2 == CUPTI_SUCCESS)
-          {
-             is_cupti_metric = 1;
-             cuptiMetricGetNumEvents(metricid, &numEvents);
-             eventIdArraySizeBytes = numEvents * sizeof(CUpti_EventID);
-             eventIdArray = (CUpti_EventID *) malloc(numEvents*sizeof(CUpti_EventID));
-             cuptiMetricEnumEvents(metricid, &eventIdArraySizeBytes, eventIdArray);
-             // Get event name
-             for(i = 0; i < numEvents; i++) {
-               // find domain for event i
-               domid = 0;
-               event_found = 0;
-               for(domid = 0; domid < num_domains; domid++)
-               {
-                 domain = domainArray[domid];
-	         err = cuptiEventDomainGetNumEvents(domain, &num_events);
-                 size = sizeof ( CUpti_EventID ) * num_events;
-                 event_p = (CUpti_EventID*)malloc(size);
-                 err = cuptiEventDomainEnumEvents(domain, &size, event_p);
-                 event_found = 0;
-                 for(j = 0; j < size; j++)
-                 {
-                    if(eventIdArray[i]  == event_p[j])
-                    {
-                      event_found = 1;
-                      domainid = domid;
-                      break;
-                    }
-                 }
-                 free(event_p);
-                 if(event_found) break;
-               }
-               // get domain name
-	       size = TAU_CUPTI_MAX_NAME;
-	       err = cuptiEventDomainGetAttribute(domainArray[domid], CUPTI_EVENT_DOMAIN_ATTR_NAME, &size, domain_char);
-	       CHECK_CUPTI_ERROR( err, "cuptiEventGetAttribute, domain_name" );
-	       domain_name = std::string(domain_char);
-
-               valueSize = TAU_CUPTI_MAX_NAME;
-               cuptiEventGetAttribute(eventIdArray[i], CUPTI_EVENT_ATTR_NAME, &valueSize, event_char);
-               event_name = "CUDA." + device_name + '.' + domain_name + '.' + std::string(event_char);
-               found = 0;
-               for(j = 0; j < nmetrics; j++) {
-                 if (strcasecmp(metricv[i], event_name.c_str()) == 0) {
-                   found = 1;
-                 }
-               }
-               if(found != 1)
-               {
-                 metricv[nmetrics] = strdup(event_name.c_str());
-                 eventsv[nmetrics] = eventIdArray[i];
-                 cumetric[nmetrics] = 1;
-                 nmetrics++;
-               }
-             }
-             free(eventIdArray);
-          }
-          free(domainArray);
+        // Get the device name to be used in the event name below
+        cudaGetDeviceProperties(&deviceProps, dev);
+        std::string device_name = deviceProps.name;
+        std::replace(device_name.begin(), device_name.end(), ' ', '_');
+        if (tau_cuda_device_name && strcmp(tau_cuda_device_name, device_name.c_str())) {
+            continue;
         }
-      }
-    }
+
+        // Get the list of events required to calculate this metric on this device
+        uint32_t numMetricEvents;
+        result = cuptiMetricGetNumEvents(metricID, &numMetricEvents);
+        if (result != CUPTI_SUCCESS) {
+            fprintf(stderr, "cuptiMetricGetNumEvents failed on device %d\n", dev);
+            continue;
+        }
+        ScopedArray<CUpti_EventID> metricEvents(numMetricEvents);
+        result = cuptiMetricEnumEvents(metricID, &metricEvents.size, metricEvents);
+        if (result != CUPTI_SUCCESS) {
+            fprintf(stderr, "cuptiMetricEnumEvents failed on device %d\n", dev);
+            continue;
+        }
+
+        // Get the list of domains on device so we can search for the required events
+        uint32_t numDomains;
+        if(cuptiDeviceGetNumEventDomains(device, &numDomains) != CUPTI_SUCCESS) {
+            fprintf(stderr, "cuptiDeviceGetNumEventDomains failed on device %d\n", dev);
+            continue;
+        }
+        if (!numDomains) {
+            fprintf(stderr, "No domain is exposed by device %d\n", device);
+            continue;
+        }
+        ScopedArray<CUpti_EventDomainID> domains(numDomains);
+        result = cuptiDeviceEnumEventDomains(device, &domains.size, domains);
+        if (result != CUPTI_SUCCESS) {
+            fprintf(stderr, "cuptiDeviceEnumEventDomains failed on device %d\n", dev);
+            continue;
+        }
+
+        // Search domains for required events and add events to TAU_METRICS
+        for (int dom=0; dom<numDomains; ++dom) {
+            CUpti_EventDomainID domain = domains[dom];
+            uint32_t numDomainEvents;
+            result = cuptiEventDomainGetNumEvents(domain, &numDomainEvents);
+            if (result != CUPTI_SUCCESS) {
+                fprintf(stderr, "cuptiEventDomainGetNumEvents failed for domain %d on device %d\n", dom, dev);
+                continue;
+            }
+            ScopedArray<CUpti_EventID> domainEvents(numDomainEvents);
+            result = cuptiEventDomainEnumEvents(domain, &domainEvents.size, domainEvents);
+            if (result != CUPTI_SUCCESS) {
+                fprintf(stderr, "cuptiEventDomainEnumEvents failed for domain %d on device %d\n", dom, dev);
+                continue;
+            }
+
+            // Compare metric event list to list of events in this domain
+            for (int i=0; i<numMetricEvents; ++i) {
+                CUpti_EventID event = metricEvents[i];
+                for (int j=0; j<numDomainEvents; ++j) {
+                    if (event == domainEvents[j]) {
+                        // Found an event that we'll need to measure, build the event name
+                        char buff[TAU_CUPTI_MAX_NAME];
+                        size_t buff_size = sizeof(buff);
+                        result = cuptiEventDomainGetAttribute(domain, CUPTI_EVENT_DOMAIN_ATTR_NAME, &buff_size, buff);
+                        if (result != CUPTI_SUCCESS) {
+                            fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
+                            continue;
+                        }
+                        if (buff_size == sizeof(buff)) {
+                            fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for domain name!\n", TAU_CUPTI_MAX_NAME);
+                            exit(EXIT_FAILURE);
+                        }
+                        std::string domain_name = buff;
+                        buff_size = sizeof(buff); // reset buff_size before reusing buff
+                        result = cuptiEventGetAttribute(event, CUPTI_EVENT_ATTR_NAME, &buff_size, buff);
+                        if (result != CUPTI_SUCCESS) {
+                            fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
+                            continue;
+                        }
+                        if (buff_size == sizeof(buff)) {
+                            fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for event name!\n", TAU_CUPTI_MAX_NAME);
+                            exit(EXIT_FAILURE);
+                        }
+                        std::string event_name = "CUDA." + device_name + '.' + domain_name + '.' + std::string(buff);
+                        TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
+
+                        // Add event to metricv if it's not already on the list.
+                        bool found = false;
+                        for (int k=0; k<nmetrics; ++k) {
+                            if (strcasecmp(metricv[k], event_name.c_str()) == 0) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            check_max_metrics();
+                            metricv[nmetrics] = strdup(event_name.c_str());
+                            eventsv[nmetrics] = event;  // This looks weird... is this right?
+                            cumetric[nmetrics] = TAU_METRIC_CUPTI_EVENT;
+                            nmetrics++;
+                        }
+                        // Go to the next event needed for this metric
+                        break;
+                    } // if (event)
+                } // for (j)
+            } // for (i)
+        } // for (dom)
+    } // for (dev)
 #endif //CUPTI
-    for (i = 0; i < nmetrics; i++) {
-      if (strcasecmp(metricv[i], name) == 0) {
-        return;
-      }
-    }
+
+    check_max_metrics();
     metricv[nmetrics] = strdup(name);
-#ifdef CUPTI
-    if(is_cupti_metric)
-      cumetric[nmetrics] = 2;
-    else
-#endif //CUPTI
-      cumetric[nmetrics] = 0;
     eventsv[nmetrics] = 0;
+    cumetric[nmetrics] = cupti_metric ? TAU_METRIC_CUPTI_METRIC : TAU_METRIC_NOT_CUPTI;
     nmetrics++;
-  }
 }
 
 /*********************************************************************
@@ -407,48 +459,30 @@ static int is_papi_metric(char *str) {
 /*********************************************************************
  * Query if a string is a CUPTI event
  ********************************************************************/
-static int is_cupti_event(char *str) {
-  if (strncmp("CUDA", str, 4) == 0) {
-		if (Tau_CuptiLayer_is_cupti_counter(str))
-		{
-			return 1;
-		}
-  }
-
-  return 0;
+static int is_cupti_event(char const * str)
+{
+    if (strncmp("CUDA", str, 4) == 0 && Tau_CuptiLayer_is_cupti_counter(str)) {
+        return 1;
+    }
+    return 0;
 }
 
 /*********************************************************************
  * Query if a string is a CUPTI metric
  ********************************************************************/
-static int is_cupti_metric(char *str) {
-  int er, deviceCount, dev, retval;
-  CUpti_MetricID metricid;
-  CUdevice device;
-  er = cuDeviceGetCount(&deviceCount);
-  if (er == CUDA_ERROR_NOT_INITIALIZED) {
-    cuInit(0);
-    er = cuDeviceGetCount(&deviceCount);
-  }
-  if (er == CUDA_SUCCESS) {
-    // devices found.
-    //for(dev = 0; dev < deviceCount; dev++)
-    dev = 0;
-    {
-      retval = cuDeviceGet(&device, dev);
-      if(retval != CUDA_SUCCESS) {
-        fprintf(stderr, "Could not get device %d.\n", dev);
-      }
-      else {
-        retval = cuptiMetricGetIdFromName(device, str, &metricid);
-        // Metric was a Cupti metric.
-        if (retval == CUPTI_SUCCESS)
-          return 1;
-      }
-    }
-  }
+static int is_cupti_metric(char const * const str)
+{
+    CUpti_MetricID metricid;
+    CUdevice device;
 
-  return 0;
+    for (int dev=0; dev<cuda_device_count(); ++dev) {
+        if (cuDeviceGet(&device, dev) != CUDA_SUCCESS) {
+            fprintf(stderr, "Could not get device %d.\n", dev);
+            return 0;
+        }
+        return (cuptiMetricGetIdFromName(device, str, &metricid) == CUPTI_SUCCESS);
+    }
+    return 0;
 }
 
 #endif //CUPTI
@@ -622,18 +656,16 @@ static void initialize_functionArray()
 /*********************************************************************
  * Returns metric name for an index
  ********************************************************************/
-extern "C" const char *TauMetrics_getMetricName(int metric) {
+extern "C" const char *TauMetrics_getMetricName(int metric)
+{
+    char const * metric_name = metricv[metric];
 #ifdef CUPTI
-  if (Tau_CuptiLayer_is_cupti_counter(metricv[metric]) && Tau_CuptiLayer_get_cupti_event_id(metric) < Tau_CuptiLayer_get_num_events())
-  {
-      return Tau_CuptiLayer_get_event_name(Tau_CuptiLayer_get_cupti_event_id(metric));
-  }
-  else {
+    int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
+    if (Tau_CuptiLayer_is_cupti_counter(metric_name) && event_id < Tau_CuptiLayer_get_num_events()) {
+        return Tau_CuptiLayer_get_event_name(event_id);
+    }
 #endif
-    return metricv[metric];
-#ifdef CUPTI
-  }
-#endif
+    return metric_name;
 }
 
 /*********************************************************************
@@ -661,38 +693,43 @@ const char* TauMetrics_getMetricAtomic(int metric) {
   return TauMetrics_atomicMetrics[metric];
 }
 
-#ifdef CUPTI
 /*********************************************************************
  * Get id of time metric
  ********************************************************************/
-int TauMetrics_getTimeMetric() {
-  int i, id = -1;
-  for(i = 0; i < nmetrics; i++) {
-    if(strcasecmp(metricv[i], "TAUGPU_TIME") == 0) id = i;
-  }
-  return id;
+int TauMetrics_getTimeMetric()
+{
+#ifdef CUPTI
+    char const * const time = "TAUGPU_TIME";
+#else
+    char const * const time = "TIME";
+#endif
+    for (int i = 0; i < nmetrics; i++) {
+        if (strcasecmp(metricv[i], time) == 0)
+            return i;
+    }
+    return -1;
 }
 
 /*********************************************************************
  * Get event id
  ********************************************************************/
-int TauMetrics_getEventId(int metric) {
-  return eventsv[metric];
+int TauMetrics_getEventId(int metric)
+{
+    return eventsv[metric];
 }
 
 /*********************************************************************
  * Get event index from event id
  ********************************************************************/
-int TauMetrics_getEventIndex(int eventid) {
-  int i;
-  for(i = 0; i < nmetrics; i++) {
-    if(eventid == eventsv[i])
-      return i;
-  }
-  return -1;
+int TauMetrics_getEventIndex(int eventid)
+{
+    for (int i = 0; i < nmetrics; i++) {
+        if (eventid == eventsv[i])
+            return i;
+    }
+    return -1;
 }
 
-#endif //CUPTI
 
 /*********************************************************************
  * Read the metrics

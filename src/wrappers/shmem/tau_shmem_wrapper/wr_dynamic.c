@@ -6,16 +6,7 @@
 #include <Profile/Profiler.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-int TAUDECL tau_totalnodes(int set_or_get, int value);
-static int tau_shmem_tagid_f=0;
-#define TAU_SHMEM_TAGID (tau_shmem_tagid_f = (tau_shmem_tagid_f & 255))
-#define TAU_SHMEM_TAGID_NEXT ((++tau_shmem_tagid_f) & 255)
-
 #include <dlfcn.h>
-
-const char * tau_orig_libname = "tau_shmem";
-static void *tau_handle = NULL;
 
 
 static void * get_function_handle(char const * name)
