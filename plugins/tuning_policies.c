@@ -32,6 +32,8 @@ void plugin_tuning_policy(int argc, void **args) {
   static unsigned long long int *reduced_value_array = NULL;
   static char *reduced_value_cvar_string = NULL;
   static char *reduced_value_cvar_value_string = NULL;
+  
+  fprintf(stdout, "plugin tuning policy ...\n");
 
   assert(argc=3);
 
