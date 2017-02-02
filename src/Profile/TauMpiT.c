@@ -928,7 +928,8 @@ int Tau_track_mpi_t_here(void) {
   /*Implement user based CVAR tuning policy if TAU_MPI_T_ENABLE_USER_TUNING_POLICY is set*/
   if(mpi_t_enable_user_tuning_policy) {
     dprintf("RANK:%d: User based tuning policy enabled \n", rank);
- 
+
+#if TAU_PLUGIN_ENABLED 
     char *plugin_name;
     const char *plugin_path;
     int num_args = 3;
@@ -937,14 +938,15 @@ int Tau_track_mpi_t_here(void) {
     args[1] = (void *)tau_pvar_count;
     args[2] = (void *)pvar_value_buffer;
 
-    
     strcpy(plugin_name, "tuning_policies");
     plugin_path = getenv("PLUGIN_PATH");
     //strcpy(plugin_path, "/home/users/aurelem/tau/tau2_beacon/plugins/"); 
 
     /* Load Tuning policy plugin */
     Tau_util_load_plugin(plugin_name, plugin_path, num_args, args);
-    //Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
+#else
+    Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
+#endif /* TAU_PLUGIN_ENABLED */
   }
   
   tau_previous_pvar_count = num_pvars;
