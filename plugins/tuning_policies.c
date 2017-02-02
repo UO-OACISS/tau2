@@ -17,7 +17,7 @@ void init_control_policies()
 /*Implement user based CVAR tuning policy based on a policy file (?)
  * TODO: This tuning logic should be in a separate module/file. Currently implementing hard-coded policies for MVAPICH meant only for experimentation purposes*/
 //void Tau_enable_user_cvar_tuning_policy(const int num_pvars, int *tau_pvar_count, unsigned long long int **pvar_value_buffer) {
-void plugin_tuning_policy(const int num_pvars, int *tau_pvar_count, unsigned long long int **pvar_value_buffer) {
+void plugin_tuning_policy(int argc, void **args) {
 
   int return_val, i, namelen, verb, varclass, bind, threadsup;
   int index;
@@ -32,6 +32,12 @@ void plugin_tuning_policy(const int num_pvars, int *tau_pvar_count, unsigned lon
   static unsigned long long int *reduced_value_array = NULL;
   static char *reduced_value_cvar_string = NULL;
   static char *reduced_value_cvar_value_string = NULL;
+
+  assert(argc=3);
+
+  const int num_pvars 				= (const int)(args[0]);
+  int *tau_pvar_count 				= (int *)(args[1]);
+  unsigned long long int **pvar_value_buffer 	= (unsigned long long int **)(args[2]);
 
   /*MVAPICH specific thresholds and names*/
   char PVAR_MAX_VBUF_USAGE[TAU_NAME_LENGTH] = "mv2_vbuf_max_use_array";
