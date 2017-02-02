@@ -9,7 +9,7 @@ double sync_offset = 0;
 
 class CudaGpuEvent : public GpuEvent {
 public:
-	char *name;
+	const char *name;
 	FunctionInfo *callingSite;
 	cudaEvent_t startEvent;
 	cudaEvent_t stopEvent;
@@ -245,7 +245,7 @@ void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType);
 
 void Tau_cuda_register_gpu_event(CudaGpuEvent* id, double start, double stop);
 
-void Tau_cuda_register_memcpy_event(CudaGpuEvent* id, double start, double stop, int
+void Tau_cuda_register_memcpy_event(const char *name, CudaGpuEvent* id, double start, double stop, int
 transferSize, int MemcpyType);
 
 void Tau_cuda_enqueue_kernel_enter_event(CudaGpuEvent *id);
