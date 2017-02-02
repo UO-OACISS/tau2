@@ -39,10 +39,8 @@ enum TauFork_t { TAU_EXCLUDE_PARENT_DATA, TAU_INCLUDE_PARENT_DATA};
 #define TAU_DESCRIPTOR_OVERHEAD 0x00008000   /* A++ Descriptor Overhead   'de' */
 #define TAU_BLITZ		0x00010000   /* Blitz++       'b' */
 #define TAU_HPCXX		0x00020000   /* HPC++ 	      'h' */
-#define TAU_PYTHON  0x00040000
-/*
-SPACE for 			0x00080000
-*/
+#define TAU_PYTHON  		0x00040000   /* Python        'p' */
+#define TAU_KOKKOS		0x00080000   /* KOKKOS 	      'k' */
 #define TAU_FFT 		0x00100000   /* FFT 'ff' */
 #define TAU_ACLMPL 		0x00200000   /* ACLMPL 'ac' */
 #define TAU_PAWS1		0x00400000   /* PAWS1  'paws1' */
