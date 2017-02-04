@@ -8,6 +8,8 @@
 #include <unistd.h>
 
 #define MAX_BUF 128
+#define MAX_SIZE_RULE 32
+#define MAX_NB_RULES 16
 
 typedef struct tuning_policy_rule_
 {
@@ -26,10 +28,14 @@ typedef struct tuning_policy_rule_
 
 //void plugin_tuning_policies(int argc, void **args)
 
+tuning_policy_rule *rules;
+
 void load_tuning_policies(int argc, void **args)
 {
  FILE *fp;
  char line[MAX_BUF];
+ int iline = 0;
+
  fprintf(stdout, "Tuning policies DSO init.....\n");
 
  fp=fopen("policy.conf","r");
@@ -39,7 +45,8 @@ void load_tuning_policies(int argc, void **args)
    // Read configuration file
    while(fgets(line, sizeof(line), fp) != NULL) 
    {
-       
+      
+     iline += 1; 
    } // End while 
  } // End if 
 
