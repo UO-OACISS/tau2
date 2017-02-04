@@ -7,12 +7,41 @@
 #include <stdio.h>
 #include <unistd.h>
 
-void init_control_policies(int argc, void **args)
+#define MAX_BUF 128
+
+typedef struct tuning_policy_rule_
+{
+ char **pvars;
+ char **cvars;
+ char *condition;
+ char *leftoperand;
+ char *rightoperand;
+ char *operator;
+ char *value;
+ char *logicop;
+ char *restleftoperand;
+ char *resoperator;
+ char *resrightoperand;
+}tuning_policy_rule;
+
+//void plugin_tuning_policies(int argc, void **args)
+
+void load_tuning_policies(int argc, void **args)
 {
  FILE *fp;
+ char line[MAX_BUF];
  fprintf(stdout, "Tuning policies DSO init.....\n");
-   
+
  fp=fopen("policy.conf","r");
+
+ if(fp != null) 
+ {
+   // Read configuration file
+   while(fgets(line, sizeof(line), fp) != NULL) 
+   {
+       
+   } // End while 
+ } // End if 
 
  fclose(fp);
 }
