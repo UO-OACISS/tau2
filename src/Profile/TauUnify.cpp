@@ -38,6 +38,10 @@ using namespace std;
 extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" int   __real_shmem_n_pes() ;
+extern "C" int   __real_shmem_my_pe() ;
+extern "C" void  __real_shmem_barrier_all() ;
+extern "C" void  __real_shmem_free(void * a1) ;
 
 #ifdef TAU_UNIFY
 /** local unification object, one is created for each child rank that we talk to */
@@ -99,8 +103,8 @@ int *Tau_unify_generateSortMap(EventLister *eventLister) {
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
   int rank, numRanks;
-  numRanks = shmem_n_pes();
-  rank = shmem_my_pe();
+  numRanks = __real_shmem_n_pes();
+  rank = __real_shmem_my_pe();
 #endif /* TAU_SHMEM */
 
   int numEvents = eventLister->getNumEvents();
@@ -252,8 +256,8 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  rank = shmem_my_pe();
-  numRanks = shmem_n_pes();
+  rank = __real_shmem_my_pe();
+  numRanks = __real_shmem_n_pes();
 #endif /* TAU_SHMEM */
 
   // for internal timing
@@ -311,7 +315,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
       // Send all defBufSize's to rank 0.
       __real_shmem_int_put(&shmaxbufArr[rank], &defBufSize, 1, 0);
     }
-    shmem_barrier_all();
+    __real_shmem_barrier_all();
     // Compute max buffer size on rank 0 and send to all pes.
     if (rank == 0) {
       *shmaxbuf = 0;
@@ -319,17 +323,17 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
         if(shmaxbufArr[i] > *shmaxbuf) *shmaxbuf= shmaxbufArr[i];
       }
     }
-    shmem_barrier_all();
+    __real_shmem_barrier_all();
     __real_shmem_int_get(shmaxbuf, shmaxbuf, 1, 0);
 
     shbuff = (char*)shmem_malloc(*shmaxbuf);
 
     // sender
-    if((mask & rank) != 0) {
+    if((mask & rank) != 0 && !break_flag) {
       parent = (rank & (~ mask));
       __real_shmem_putmem(shbuff, defBuf, defBufSize, parent);
     }
-    shmem_barrier_all();
+    __real_shmem_barrier_all();
 
     // receiver
     if((mask & rank) == 0 && source < numRanks && !break_flag) {
@@ -338,14 +342,14 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     else {
        break_flag = 1;
     }
-    shmem_barrier_all();
+    __real_shmem_barrier_all();
 
     mask <<= 1;
-    shmem_free(shbuff);
+    __real_shmem_free(shbuff);
   }
-  shmem_free(shmaxbuf);
-  shmem_free(shmaxbufArr);
-  shmem_barrier_all();
+  __real_shmem_free(shmaxbuf);
+  __real_shmem_free(shmaxbufArr);
+  __real_shmem_barrier_all();
 
 #else
   // use binomial heap (like MPI_Reduce) to communicate with parent/children
@@ -447,10 +451,6 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   while(parent != -1 && *shreceived_mapping == 0) {
     sleep(0);
   }
-  for (unsigned int i=1; i<unifyObjects->size(); i++) {
-      __real_shmem_int_put(shmergedObject_mapping, (*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents, (*unifyObjects)[i]->rank);
-      __real_shmem_int_put(shreceived_mapping, &sent, 1, (*unifyObjects)[i]->rank);
-  }
   if (parent != -1) {
     for (i=0; i<unifyObjects->size(); i++) {
       for (int j=0; j<(*unifyObjects)[i]->numEvents; j++) {
@@ -458,7 +458,11 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
       }
     }
   }
-  shmem_free(shmergedObject_mapping);
+  for (unsigned int i=1; i<unifyObjects->size(); i++) {
+      __real_shmem_int_put(shmergedObject_mapping, (*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents, (*unifyObjects)[i]->rank);
+      __real_shmem_int_put(shreceived_mapping, &sent, 1, (*unifyObjects)[i]->rank);
+  }
+  __real_shmem_free(shmergedObject_mapping);
 #else
   if (parent != -1) {
     mergedObject->mapping = (int *) TAU_UTIL_MALLOC(sizeof(int)* mergedObject->numStrings);
@@ -514,7 +518,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   int *shglobalNumItems = (int*)shmem_malloc(sizeof(int));
   *shglobalNumItems = globalNumItems;
   __real_shmem_int_get(&globalNumItems, shglobalNumItems, 1, 0);
-  shmem_free(shglobalNumItems);
+  __real_shmem_free(shglobalNumItems);
 #endif /* TAU_SHMEM */
 
   Tau_unify_object_t *tau_unify_object = (Tau_unify_object_t*) TAU_UTIL_MALLOC(sizeof(Tau_unify_object_t));
