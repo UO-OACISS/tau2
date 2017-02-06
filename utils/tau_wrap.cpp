@@ -869,12 +869,6 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 
   if (shmem_wrapper) { /* generate pshmem calls here */
     if(runtime != RUNTIME_INTERCEPT) printShmemMessageBeforeRoutine(r, impl, sig);
-    if(rname.find("shmem_finalize") != string::npos && runtime == WRAPPER_INTERCEPT) {
-        impl << "  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {\n"
-             << "    Tau_metadataMerge_mergeMetaData();\n"
-             << "    Tau_mergeProfiles();\n"
-             << "  }\n";
-    }
     if (!isVoid)
     {
       impl<<"  retval  =";
@@ -882,6 +876,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     if (runtime == RUNTIME_INTERCEPT) {
       impl<<"  "<<sig.rcalledfunc<<";"<<endl;
     } else if(runtime == WRAPPER_INTERCEPT) {
+      if(rname.find("shmem_finalize") != string::npos) impl<< "  if(TauEnv_get_profile_format() != TAU_FORMAT_MERGED)"<<endl<<"  ";
       impl<<"  __real_"<<sig.func<<";"<<endl;
     } else {
       if (pshmem_use_underscore_instead_of_p) {
