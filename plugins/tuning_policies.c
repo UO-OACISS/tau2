@@ -25,17 +25,17 @@ typedef struct tuning_policy_rule_
  char *restleftoperand;
  char *resoperator;
  char *resrightoperand;
-}tuning_policy_rule;
+} tuning_policy_rule;
 
 //void plugin_tuning_policies(int argc, void **args)
 
 tuning_policy_rule rules[MAX_NB_RULES];
 
 /* Parse field into 2 components: key and value */
-int parse_rule_field(char *line, char *key, char *value)
+int parse_rule_field(char *line, char *separator, char *key, char *value)
 {
   char *token;
-  char separator[2] = ":";
+  //char separator[2] = ":";
 
   /* Get field name */
   token = strtok(line, separator); 
@@ -55,8 +55,10 @@ void load_policy_rules(int argc, void **args)
  char fieldname[16];
  char fieldvalue[MAX_SIZE_FIELD_VALUE];
  char *token;
- char key[16];
- char value[16];
+ char *key = NULL;
+ //char key[16];
+ //char value[16];
+ char *value = NULL;
  char separator[2] = ":";
  int irule = 0;
 
@@ -74,22 +76,22 @@ void load_policy_rules(int argc, void **args)
      }
     
      if(strncmp(line,"PVARS",5) == 0) {
-       parse_rule_field(line, &(key), &(value));
+       parse_rule_field(line, separator,  key, value);
      } 
      if(strncmp(line,"CVARS",5) == 0) {
-       parse_rule_field(line, &(key), &(value));
+       parse_rule_field(line, separator, key, value);
      }
      if(strncmp(line,"CONDITION",9) == 0) {
-       parse_rule_field(line, &(key), &(value));
+       parse_rule_field(line, separator, key, value);
      } 
      if(strncmp(line,"LEFTOPERAND",11) == 0) {
-       parse_rule_field(line, &(key), &(value));
+       parse_rule_field(line, separator, key, value);
      }
      if(strncmp(line,"RIGHTOPERAND",12) == 0) {
-       parse_rule_field(line, &(key), &(value));
+       parse_rule_field(line, separator, key, value);
      }
      if(strncmp(line,"LOGICOP",7) == 0) {
-       parse_rule_field(line, &(key), &(value));
+       parse_rule_field(line, separator, key, value);
      }
 
    } // End while 
