@@ -21,13 +21,6 @@
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
 #include <shmem.h>
-#endif /* TAU_SHMEM */
-#include <TAU.h>
-#include <TauMetaData.h>
-#include <TauMetrics.h>
-
-// Moved from header file
-using namespace std;
 extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
@@ -36,6 +29,13 @@ extern "C" int   __real_shmem_n_pes() ;
 extern "C" int   __real_shmem_my_pe() ;
 extern "C" void  __real_shmem_free(void * a1) ;
 extern "C" void  __real_shmem_barrier_all() ;
+#endif /* TAU_SHMEM */
+#include <TAU.h>
+#include <TauMetaData.h>
+#include <TauMetrics.h>
+
+// Moved from header file
+using namespace std;
 
 
 extern "C" int TAU_MPI_Finalized();
