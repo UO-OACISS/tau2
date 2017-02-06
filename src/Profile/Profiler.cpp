@@ -85,6 +85,11 @@ double TauWindowsUsecD(void);
 #endif //__GNUC__
 #endif //CUPTI
 
+#ifdef TAU_SHMEM
+#include "shmem.h"
+extern "C" void  __real_shmem_finalize() ;
+#endif /* TAU_SHMEM */
+
 using namespace std;
 using namespace tau;
 
@@ -1420,6 +1425,14 @@ extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+
+#ifdef TAU_SHMEM
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    Tau_metadataMerge_mergeMetaData();
+    Tau_mergeProfiles();
+    __real_shmem_finalize();
+  }
+#endif /* TAU_SHMEM */
 
 #ifdef TAU_SCOREP
   Tau_write_metadata_records_in_scorep(tid);
