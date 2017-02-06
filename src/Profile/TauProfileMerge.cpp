@@ -84,7 +84,6 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 
     char *name = functionUnifier->globalStrings[i];
     char *group = strstr(name,":GROUP:");
-//fprintf(stderr, "name=%s\n", name);
     if (group == NULL) {
       fprintf (stderr, "TAU: Error extracting groups for %s!\n",name);
     } else {
@@ -285,10 +284,6 @@ int Tau_mergeProfiles()
 
   } /* TauEnv_get_stat_precompute() == 1 */
 #endif /* TAU_UNIFY */
-#ifdef TAU_SHMEM
-for(i=0; i<functionUnifier->localNumItems; i++)
-  printf("globalEventMap[%02d] = %d (r%02d)\n", i, globalEventMap[i], rank);
-#endif /* TAU_SHMEM */
       
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
