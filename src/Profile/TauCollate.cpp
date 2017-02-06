@@ -51,6 +51,14 @@
 #define NDEBUG  // Disable to enable assertions
 #include <assert.h>
 
+extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_double_put(double * a1, const double * a2, size_t a3, int a4);
+extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" int   __real_shmem_n_pes() ;
+extern "C" int   __real_shmem_my_pe() ;
+extern "C" void  __real_shmem_barrier_all() ;
+extern "C" void  __real_shmem_free(void * a1) ;
 using namespace std;
 using namespace tau;
 
@@ -435,7 +443,7 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  rank = shmem_my_pe();
+  rank = __real_shmem_my_pe();
 #endif
   
   int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
@@ -484,24 +492,24 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 	      MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  int size = shmem_n_pes();
+  int size = __real_shmem_n_pes();
   int *numEventsMax = (int*)shmem_malloc(sizeof(int));
   int *numEventsArr = (int*)shmem_malloc(size*sizeof(int));
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
   // gather numItems from all pes
-  shmem_int_put(&numEventsArr[rank], &numEvents, 1, 0);
+  __real_shmem_int_put(&numEventsArr[rank], &numEvents, 1, 0);
   // determine maximum value over all pes
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
   if(rank == 0) {
     *numEventsMax = numEventsArr[0];
     for(int i=1; i<size; i++)
       if(*numEventsMax < numEventsArr[i]) *numEventsMax = numEventsArr[i];
     for(int i=1; i<size; i++) {
-      shmem_int_put(numEventsMax, numEventsMax, 1, i);
-      shmem_int_put(numEventsArr, numEventsArr, size, i);
+      __real_shmem_int_put(numEventsMax, numEventsMax, 1, i);
+      __real_shmem_int_put(numEventsArr, numEventsArr, size, i);
     }
   }
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
   
   int *shlocal = (int*)shmem_malloc((*numEventsMax+1)*sizeof(int));
   for(int i = 0; i < *numEventsMax+1; i++) {
@@ -513,15 +521,15 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
       numThreadsGlobal[j] = 0;
     int *tmp = (int*)malloc((*numEventsMax+1)*sizeof(int));
     for(int i=0; i<size; i++) {
-      shmem_int_get(tmp, shlocal, *numEventsMax+1, i);
+      __real_shmem_int_get(tmp, shlocal, *numEventsMax+1, i);
       for(int j=0; j<*numEventsMax+1; j++)
         numThreadsGlobal[j] += tmp[j];
     }
     free(tmp);
   }
-  shmem_free(shlocal);
-  shmem_free(numEventsMax);
-  shmem_free(numEventsArr);
+  __real_shmem_free(shlocal);
+  __real_shmem_free(numEventsMax);
+  __real_shmem_free(numEventsArr);
 #endif /* TAU_SHMEM */
 
   /* Now rank 0 knows all about global thread counts */
@@ -557,7 +565,7 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  rank = shmem_my_pe();
+  rank = __real_shmem_my_pe();
 #endif /* TAU_SHMEM */
   
   MPI_Op min_op = MPI_MIN;
@@ -578,7 +586,7 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 				       numItems);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  int size = shmem_n_pes();
+  int size = __real_shmem_n_pes();
   Tau_collate_allocateUnitAtomicBuffer(&atomicMin, &atomicMax, 
 				       &atomicCalls, &atomicMean,
 				       &atomicSumSqr,
@@ -586,18 +594,18 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
   int *numItemsMax = (int*)shmem_malloc(sizeof(int));
   int *numItemsArr = (int*)shmem_malloc(size*sizeof(int));
   // gather numItems from all pes
-  shmem_int_put(&numItemsArr[rank], &numItems, 1, 0);
+  __real_shmem_int_put(&numItemsArr[rank], &numItems, 1, 0);
   // determine maximum value over all pes
   if(rank == 0) {
     *numItemsMax = numItemsArr[0];
     for(int i=1; i<size; i++)
       if(*numItemsMax < numItemsArr[i]) *numItemsMax = numItemsArr[i];
     for(int i=1; i<size; i++) {
-      shmem_int_put(numItemsMax, numItemsMax, 1, i);
-      shmem_int_put(numItemsArr, numItemsArr, size, i);
+      __real_shmem_int_put(numItemsMax, numItemsMax, 1, i);
+      __real_shmem_int_put(numItemsArr, numItemsArr, size, i);
     }
   }
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
 
   double *shgAtomicMin, *shgAtomicMax;
   double *shgAtomicCalls, *shgAtomicMean, *shgAtomicSumSqr;
@@ -717,7 +725,7 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  rank = shmem_my_pe();
+  rank = __real_shmem_my_pe();
 #endif /* TAU_SHMEM */
 
   // *CWL* - Minimum needs to be handled with out-of-band values for now.
@@ -737,7 +745,7 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 					 numItems, Tau_Global_numCounters);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  int size = shmem_n_pes();
+  int size = __real_shmem_n_pes();
   Tau_collate_allocateUnitFunctionBuffer(&excl, &incl, 
 					 &numCalls, &numSubr, 
 					 numItems, Tau_Global_numCounters);
@@ -746,18 +754,18 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
   int *numItemsMax = (int*)shmem_malloc(sizeof(int));
   int *numItemsArr = (int*)shmem_malloc(size*sizeof(int));
   // gather numItems from all pes
-  shmem_int_put(&numItemsArr[rank], &numItems, 1, 0);
+  __real_shmem_int_put(&numItemsArr[rank], &numItems, 1, 0);
   // determine maximum value over all pes
   if(rank == 0) {
     *numItemsMax = numItemsArr[0];
     for(int i=1; i<size; i++)
       if(*numItemsMax < numItemsArr[i]) *numItemsMax = numItemsArr[i];
     for(int i=1; i<size; i++) {
-      shmem_int_put(numItemsMax, numItemsMax, 1, i);
-      shmem_int_put(numItemsArr, numItemsArr, size, i);
+      __real_shmem_int_put(numItemsMax, numItemsMax, 1, i);
+      __real_shmem_int_put(numItemsArr, numItemsArr, size, i);
     }
   }
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
   // allocate g* shmem variables
   double ***shgExcl, ***shgIncl;
   double **shgNumCalls, **shgNumSubr;
@@ -869,15 +877,15 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
         shgNumSubr[rnk][i] = -1.0;
       }
     }
-    shmem_barrier_all();
+    __real_shmem_barrier_all();
 
     for(int m=0; m<Tau_Global_numCounters; m++) {
-      shmem_double_put(shgExcl[rank][m], excl[m], numItemsArr[rank], 0);
-      shmem_double_put(shgIncl[rank][m], incl[m], numItemsArr[rank], 0);
+      __real_shmem_double_put(shgExcl[rank][m], excl[m], numItemsArr[rank], 0);
+      __real_shmem_double_put(shgIncl[rank][m], incl[m], numItemsArr[rank], 0);
     }
-    shmem_double_put(shgNumCalls[rank], numCalls, numItemsArr[rank], 0);
-    shmem_double_put(shgNumSubr[rank], numSubr, numItemsArr[rank], 0);
-    shmem_barrier_all();
+    __real_shmem_double_put(shgNumCalls[rank], numCalls, numItemsArr[rank], 0);
+    __real_shmem_double_put(shgNumSubr[rank], numSubr, numItemsArr[rank], 0);
+    __real_shmem_barrier_all();
 
     if(rank == 0) {
 
@@ -958,10 +966,10 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
   Tau_collate_freeUnitFunctionBuffer(&excl, &incl, &numCalls, &numSubr, Tau_Global_numCounters);
 #endif
 #ifdef TAU_SHMEM
-  shmem_free(shgExcl);
-  shmem_free(shgIncl);
-  shmem_free(shgNumCalls);
-  shmem_free(shgNumSubr);
+  __real_shmem_free(shgExcl);
+  __real_shmem_free(shgIncl);
+  __real_shmem_free(shgNumCalls);
+  __real_shmem_free(shgNumSubr);
 #endif /* TAU_SHMEM */
 
   // Now compute the actual statistics on rank 0 only. The assumption
