@@ -22,6 +22,14 @@
 
 #ifdef TAU_SHMEM
 #include <shmem.h>
+extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_double_put(double * a1, const double * a2, size_t a3, int a4);
+extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" int   __real_shmem_n_pes() ;
+extern "C" int   __real_shmem_my_pe() ;
+extern "C" void  __real_shmem_barrier_all() ;
+extern "C" void  __real_shmem_free(void * a1) ;
 #endif /* TAU_SHMEM */
 #ifdef TAU_MPI
 #include <mpi.h>
@@ -51,14 +59,6 @@
 #define NDEBUG  // Disable to enable assertions
 #include <assert.h>
 
-extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
-extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
-extern "C" void  __real_shmem_double_put(double * a1, const double * a2, size_t a3, int a4);
-extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
-extern "C" int   __real_shmem_n_pes() ;
-extern "C" int   __real_shmem_my_pe() ;
-extern "C" void  __real_shmem_barrier_all() ;
-extern "C" void  __real_shmem_free(void * a1) ;
 using namespace std;
 using namespace tau;
 

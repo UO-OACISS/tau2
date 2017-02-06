@@ -23,6 +23,14 @@
 
 #ifdef TAU_SHMEM
 #include <shmem.h>
+extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" int   __real_shmem_n_pes() ;
+extern "C" int   __real_shmem_my_pe() ;
+extern "C" void  __real_shmem_barrier_all() ;
+extern "C" void  __real_shmem_free(void * a1) ;
 #endif /* TAU_SHMEM */
 
 #include <TAU.h>
@@ -37,14 +45,6 @@
 #include <TauUtil.h>
 #include <TauXML.h>
 
-extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
-extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
-extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
-extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
-extern "C" int   __real_shmem_n_pes() ;
-extern "C" int   __real_shmem_my_pe() ;
-extern "C" void  __real_shmem_barrier_all() ;
-extern "C" void  __real_shmem_free(void * a1) ;
 // Moved from header file
 #ifdef __cplusplus
 using namespace std;
