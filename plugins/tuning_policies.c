@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #define MAX_BUF 128
+#define MAX_SIZE_FIELD_VALUE 64
 #define MAX_SIZE_RULE 32
 #define MAX_NB_RULES 16
 
@@ -28,25 +29,69 @@ typedef struct tuning_policy_rule_
 
 //void plugin_tuning_policies(int argc, void **args)
 
-tuning_policy_rule *rules;
+tuning_policy_rule rules[MAX_NB_RULES];
 
-void load_tuning_policies(int argc, void **args)
+/* Parse field into 2 components: key and value */
+int parse_rule_field(char *line, char *key, char *value)
+{
+  char *token;
+  char separator[2] = ":";
+
+  /* Get field name */
+  token = strtok(line, separator); 
+  strcpy(key,token);
+  /* Get field name */
+  token = strtok(NULL, separator);
+  strcpy(value,token);
+
+  return 1;
+}
+
+/* Load policy rules from config file and populate dedicated structure */
+void load_policy_rules(int argc, void **args)
 {
  FILE *fp;
  char line[MAX_BUF];
- int iline = 0;
+ char fieldname[16];
+ char fieldvalue[MAX_SIZE_FIELD_VALUE];
+ char *token;
+ char key[16];
+ char value[16];
+ char separator[2] = ":";
+ int irule = 0;
 
  fprintf(stdout, "Tuning policies DSO init.....\n");
 
  fp=fopen("policy.conf","r");
 
- if(fp != null) 
+ if(fp != NULL) 
  {
    // Read configuration file
    while(fgets(line, sizeof(line), fp) != NULL) 
    {
-      
-     iline += 1; 
+     if(strncmp(line,"RULE",4) == 0) {     
+       irule += 1; 
+     }
+    
+     if(strncmp(line,"PVARS",5) == 0) {
+       parse_rule_field(line, &(key), &(value));
+     } 
+     if(strncmp(line,"CVARS",5) == 0) {
+       parse_rule_field(line, &(key), &(value));
+     }
+     if(strncmp(line,"CONDITION",9) == 0) {
+       parse_rule_field(line, &(key), &(value));
+     } 
+     if(strncmp(line,"LEFTOPERAND",11) == 0) {
+       parse_rule_field(line, &(key), &(value));
+     }
+     if(strncmp(line,"RIGHTOPERAND",12) == 0) {
+       parse_rule_field(line, &(key), &(value));
+     }
+     if(strncmp(line,"LOGICOP",7) == 0) {
+       parse_rule_field(line, &(key), &(value));
+     }
+
    } // End while 
  } // End if 
 
@@ -73,11 +118,9 @@ void plugin_generic_tuning_policy(int argc, void **args)
 
   assert(argc=3);
 
-  const int num_pvars 				= (const int)(args[0]);
-  int *tau_pvar_count 				= (int *)(args[1]);
-  unsigned long long int **pvar_value_buffer 	= (unsigned long long int **)(args[2]);
-
-
+  const int num_pvars 				= (const int)			(args[0]);
+  int *tau_pvar_count 				= (int *)			(args[1]);
+  unsigned long long int **pvar_value_buffer 	= (unsigned long long int **)	(args[2]);
 
   /*MVAPICH specific thresholds and names*/
   char PVAR_MAX_VBUF_USAGE[TAU_NAME_LENGTH] = "mv2_vbuf_max_use_array";
