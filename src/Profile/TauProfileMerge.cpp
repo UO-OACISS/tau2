@@ -37,6 +37,14 @@
 #include <TauUtil.h>
 #include <TauXML.h>
 
+extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" int   __real_shmem_n_pes() ;
+extern "C" int   __real_shmem_my_pe() ;
+extern "C" void  __real_shmem_barrier_all() ;
+extern "C" void  __real_shmem_free(void * a1) ;
 // Moved from header file
 #ifdef __cplusplus
 using namespace std;
@@ -76,6 +84,7 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 
     char *name = functionUnifier->globalStrings[i];
     char *group = strstr(name,":GROUP:");
+//fprintf(stderr, "name=%s\n", name);
     if (group == NULL) {
       fprintf (stderr, "TAU: Error extracting groups for %s!\n",name);
     } else {
@@ -141,8 +150,8 @@ int Tau_mergeProfiles()
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
 #endif  /* TAU_MPI */
 #ifdef TAU_SHMEM
-  size = shmem_n_pes();
-  rank = shmem_my_pe();
+  size = __real_shmem_n_pes();
+  rank = __real_shmem_my_pe();
 #endif /* TAU_SHMEM */
 
 	buflen = Tau_snapshot_getBufferLength()+1;
@@ -159,18 +168,18 @@ int Tau_mergeProfiles()
   int *shmaxBuflen = (int*)shmem_malloc(sizeof(int));
 
   int *maxBuflens = (int*)shmem_malloc(size*sizeof(int));
-  shmem_int_put(&maxBuflens[rank], &maxBuflen, 1, 0);
-  shmem_barrier_all();
+  __real_shmem_int_put(&maxBuflens[rank], &maxBuflen, 1, 0);
+  __real_shmem_barrier_all();
   if(rank == 0)
     for(i =0; i < size; i++)
       if(maxBuflen < maxBuflens[i]) maxBuflen = maxBuflens[i];
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
   *shmaxBuflen = maxBuflen;
-  shmem_int_get(shmaxBuflen, shmaxBuflen, 1, 0);
-  shmem_barrier_all();
+  __real_shmem_int_get(shmaxBuflen, shmaxBuflen, 1, 0);
+  __real_shmem_barrier_all();
   maxBuflen = *shmaxBuflen;
-  shmem_free(shmaxBuflen);
-  shmem_free(maxBuflens);
+  __real_shmem_free(shmaxBuflen);
+  __real_shmem_free(maxBuflens);
   char *shbuf = (char*)shmem_malloc(maxBuflen);
   strncpy(shbuf, buf, maxBuflen);
 #endif /* TAU_SHMEM */
@@ -276,6 +285,10 @@ int Tau_mergeProfiles()
 
   } /* TauEnv_get_stat_precompute() == 1 */
 #endif /* TAU_UNIFY */
+#ifdef TAU_SHMEM
+for(i=0; i<functionUnifier->localNumItems; i++)
+  printf("globalEventMap[%02d] = %d (r%02d)\n", i, globalEventMap[i], rank);
+#endif /* TAU_SHMEM */
       
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
@@ -318,10 +331,10 @@ int Tau_mergeProfiles()
 #endif  /* TAU_MPI */
 #ifdef TAU_SHMEM
       /* receive buffer length */
-      shmem_int_get(&buflen, shbuflen, 1, i);
+      __real_shmem_int_get(&buflen, shbuflen, 1, i);
 
       /* receive buffer */
-      shmem_getmem(recv_buf, shbuf, buflen, i);
+      __real_shmem_getmem(recv_buf, shbuf, buflen, i);
 #endif /* TAU_SHMEM */
 
       if (!TauEnv_get_summary_only()) { /* write each rank? */
@@ -478,8 +491,8 @@ int Tau_mergeProfiles()
   }
 	free(buf);
 #ifdef TAU_SHMEM
-        shmem_free(shbuf);
-        shmem_free(shbuflen);
+        __real_shmem_free(shbuf);
+        __real_shmem_free(shbuflen);
 #endif /* TAU_SHMEM */
   return 0;
 }

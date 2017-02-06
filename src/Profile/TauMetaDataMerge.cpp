@@ -31,6 +31,11 @@ using namespace std;
 extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" int   __real_shmem_n_pes() ;
+extern "C" int   __real_shmem_my_pe() ;
+extern "C" void  __real_shmem_free(void * a1) ;
+extern "C" void  __real_shmem_barrier_all() ;
 
 
 extern "C" int TAU_MPI_Finalized();
@@ -58,8 +63,8 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  int numRanks = shmem_n_pes();
-  rank = shmem_my_pe();
+  int numRanks = __real_shmem_n_pes();
+  rank = __real_shmem_my_pe();
   static int shBufferSize;
   int i, defBufSize;
   char *defBuf;
@@ -95,9 +100,9 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     for(i=0; i<shBufferSize; i++)
       shBuffer[i] = defBuf[i];
   }
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
 
-  shmem_getmem(Buffer, shBuffer, shBufferSize, 0);
+  __real_shmem_getmem(Buffer, shBuffer, shBufferSize, 0);
   
   if (rank == 0) {
 #endif /* TAU_SHMEM */
@@ -125,10 +130,10 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
 #endif /* TAU_MPI */
   }
 #ifdef TAU_SHMEM
-  shmem_barrier_all();
+  __real_shmem_barrier_all();
   if(rank != 0)
     Tau_metadata_removeDuplicates(Buffer, shBufferSize);
-  shmem_free(shBuffer);
+  __real_shmem_free(shBuffer);
   free(Buffer);
 #endif /* TAU_SHMEM */
   return 0;
