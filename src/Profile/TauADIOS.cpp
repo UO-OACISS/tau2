@@ -5,7 +5,7 @@
  * Copyright (c) 2008 - 2009.  UT-BATTELLE, LLC. All rights reserved.
  */
 
-/* ADIOS Event Callback API - Default tool implementation
+/* ADIOS Event Callback API - TAU Tool implementation
  *
  * This source file is a TAU implementation of the ADIOS callback API
  * for tools, or ADIOST.
@@ -216,7 +216,7 @@ ADIOST_EXTERN void my_finalize(void) {
         printf("success.\n"); \
     } \
 
-ADIOST_EXTERN void __default_adiost_initialize (adiost_function_lookup_t adiost_fn_lookup,
+ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_lookup,
     const char *runtime_version, unsigned int adiost_version) {
 
     adiost_set_callback_t adiost_fn_set_callback = 
@@ -255,5 +255,5 @@ ADIOST_EXTERN void __default_adiost_initialize (adiost_function_lookup_t adiost_
     CHECK(adiost_event_library_shutdown, my_finalize, "adios_finalize");
 }
 
-adiost_initialize_t adiost_tool() { return __default_adiost_initialize; }
+adiost_initialize_t adiost_tool() { return TAU_adiost_initialize; }
 
