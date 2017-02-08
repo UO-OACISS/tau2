@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean derived) {
+TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean derived, int* taudb_numItems) {
   if (derived) {
-    taudb_numItems = 2;
+    *taudb_numItems = 2;
     TAUDB_THREAD* thread = taudb_create_threads(1);
     thread->id = 0;
     thread->trial = trial;
@@ -25,7 +25,7 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     return trial->threads;
   } else {
     int i, j, k;
-    taudb_numItems = trial->node_count * trial->contexts_per_node * trial->threads_per_context;
+    *taudb_numItems = trial->node_count * trial->contexts_per_node * trial->threads_per_context;
     int threadIndex = 0;
     for (i = 0; i < trial->node_count; i++)
     {
@@ -49,7 +49,7 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
   }
 }
 
-TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean derived) {
+TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean derived, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG
   printf("Calling taudb_query_threads(%p)\n", trial);
 #endif
@@ -63,7 +63,7 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
 
   //if the Trial already has the data, return it.
   if (trial->threads != NULL) {
-    taudb_numItems = HASH_CNT(hh,trial->threads);
+    *taudb_numItems = HASH_CNT(hh,trial->threads);
     return trial->threads;
   }
 
@@ -85,7 +85,7 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
   taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(connection);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 
@@ -122,25 +122,25 @@ void taudb_add_thread_to_trial(TAUDB_TRIAL* trial, TAUDB_THREAD* thread) {
   HASH_ADD_INT(trial->threads, index, thread);
 }
 
-TAUDB_THREAD* taudb_query_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_THREAD* taudb_query_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG
   printf("Calling taudb_query_threads(%p)\n", trial);
 #endif
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    return taudb_query_threads_2005(connection, trial, FALSE);
+    return taudb_query_threads_2005(connection, trial, FALSE,taudb_numItems);
   } else {
-    return taudb_query_threads_2012(connection, trial, FALSE);
+    return taudb_query_threads_2012(connection, trial, FALSE,taudb_numItems);
   }
 }
 
-TAUDB_THREAD* taudb_query_derived_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_THREAD* taudb_query_derived_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial,int* taudb_numItems) {
 #ifdef TAUDB_DEBUG
   printf("Calling taudb_query_threads(%p)\n", trial);
 #endif
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    return taudb_query_threads_2005(connection, trial, TRUE);
+    return taudb_query_threads_2005(connection, trial, TRUE,taudb_numItems);
   } else {
-    return taudb_query_threads_2012(connection, trial, TRUE);
+    return taudb_query_threads_2012(connection, trial, TRUE,taudb_numItems);
   }
 }
 

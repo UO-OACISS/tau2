@@ -30,6 +30,9 @@
 #include <signal.h>
 
 #include <string.h>
+#ifdef TAU_BEACON
+#include <beacon.h>
+#endif /* TAU_BEACON */
 
 #include "Profile/TauSOS.h"
 
@@ -49,14 +52,14 @@
 
 #ifdef TAU_MPICH3
 #define TAU_MPICH3_CONST const
-#ifdef TAU_OPENMPI3
-#define TAU_OPENMPI3_CONST 
-#else
-#define TAU_OPENMPI3_CONST  const
-#endif
 #else
 #define TAU_MPICH3_CONST 
-#define TAU_OPENMPI3_CONST 
+#endif
+
+#ifdef TAU_OPENMPI3
+#define TAU_OPENMPI3_CONST  const
+#else
+#define TAU_OPENMPI3_CONST  
 #endif
 
 
@@ -67,6 +70,14 @@ void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
 extern int Tau_signal_initialization();
+extern int Tau_mpi_t_initialize();
+extern int Tau_mpi_t_cvar_initialize();
+extern int Tau_track_mpi_t_here();
+
+#ifdef TAU_BEACON
+extern int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*));
+extern void TauBeacon_MPI_T_CVAR_handler(BEACON_receive_topic_t * caught_topic);
+#endif /* TAU_BEACON */
 
 /* JCL: Optimized rank translation with cache */
 int TauTranslateRankToWorld(MPI_Comm comm, int rank);
@@ -76,7 +87,9 @@ void tau_mpi_init_predefined_constants()
 #ifdef TAU_NO_FORTRAN
     TAU_VERBOSE("TAU: WARNING: Not configured with Fortran. You may have trouble with MPI predefined constants like MPI_IN_PLACE\n");
 #else
+#ifndef _AIX
     tau_mpi_fortran_init_predefined_constants_();
+#endif /* _AIX */
 #endif
 }
 
@@ -1489,6 +1502,9 @@ int  MPI_Finalize(  )
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+#ifdef TAU_MPI_T
+  Tau_track_mpi_t_here();
+#endif /* TAU_MPI_T */
   writeMetaDataAfterMPI_Init(); 
 
   if (TauEnv_get_synchronize_clocks()) {
@@ -1523,20 +1539,24 @@ int  MPI_Finalize(  )
 #endif /* TAU_BGP */
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   /* Shutdown EBS after Finalize to allow Profiles to be written out
      correctly. Also allows profile merging (or unification) to be
      done correctly. */
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
+#endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     //    Tau_sampling_finalizeNode();
     
     Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
   }
+#endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
   /* *CWL* This might be generalized to perform a final monitoring dump.
@@ -1597,6 +1617,26 @@ int * resultlen;
   return returnVal;
 }
 
+int Tau_MPI_T_initialization(void) {
+#ifdef TAU_MPI_T
+  int returnVal = 0;
+  char *pycoolr_cvar_topic_name = "MPI_T_CVARS";
+  char *pycoolr_cvar_topic_scope = "global";
+
+  if (TauEnv_get_track_mpi_t_pvars()) {
+    Tau_mpi_t_initialize();
+  }
+  
+  returnVal = Tau_mpi_t_cvar_initialize();
+
+  #ifdef TAU_BEACON
+  returnVal = TauBeaconSubscribe(pycoolr_cvar_topic_name, pycoolr_cvar_topic_scope, TauBeacon_MPI_T_CVAR_handler);
+  #endif /* TAU_BEACON */
+
+  return returnVal;
+#endif /* TAU_MPI_T */
+}
+
 int  MPI_Init( argc, argv )
 int * argc;
 char *** argv;
@@ -1605,6 +1645,8 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+  if(Tau_get_usesMPI() == 0)
+  {
 
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
@@ -1612,22 +1654,26 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   tau_mpi_init_predefined_constants();
-  //#ifdef TAU_SOS
+#ifdef TAU_MPI_T
+  Tau_MPI_T_initialization();
+#endif /* TAU_MPI_T */
+
+#ifdef TAU_SOS
   int provided = 0;
   returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
-  //printf("Requested: %d, Provided: %d\n", MPI_THREAD_MULTIPLE, provided);
   if (TauEnv_get_sos_enabled()) {
     TAU_SOS_init(argc, argv, true);
-  } else {
-    TAU_VERBOSE("*** AAAAARRRRGGGGHHHH!!!! ***\n");
   }
-  //#else
-  //returnVal = PMPI_Init( argc, argv );
-  //#endif
+#else
+  returnVal = PMPI_Init( argc, argv );
+#endif
+
 #ifndef TAU_WINDOWS
+#ifndef _AIX 
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
   }
+#endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
   Tau_signal_initialization(); 
@@ -1661,6 +1707,10 @@ char *** argv;
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncClocks();
   }
+  }
+  else {
+    returnVal = 0;
+  }
 
 
   return returnVal;
@@ -1684,6 +1734,10 @@ int *provided;
   TAU_PROFILE_START(tautimer);
  
   tau_mpi_init_predefined_constants();
+#ifdef TAU_MPI_T
+  returnVal = Tau_MPI_T_initialization();
+#endif /* TAU_MPI_T */
+
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
   //#ifdef TAU_SOS
   //printf("Requested: %d, Provided: %d\n", required, provided);
@@ -1692,9 +1746,11 @@ int *provided;
   //#endif
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
   }
+#endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
   Tau_signal_initialization(); 

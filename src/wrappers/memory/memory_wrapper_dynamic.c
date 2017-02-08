@@ -32,7 +32,7 @@
 #include <memory_wrapper.h>
 
 
-
+#if 1
 void * get_system_function_handle(char const * name)
 {
   char const * err;
@@ -54,6 +54,7 @@ void * get_system_function_handle(char const * name)
 
   return handle;
 }
+#endif
 
 
 /******************************************************************************

@@ -3393,6 +3393,11 @@ void TauTest()
 	TAU_PROFILE_STOP(tautimer);
 }
 
+void ExitAndWriteProfile()
+{
 
+	Tau_profile_exit_all_threads();
+	Tau_destructor_trigger();
+}
 
 

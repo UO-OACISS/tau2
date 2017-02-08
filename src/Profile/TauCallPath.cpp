@@ -219,9 +219,11 @@ void Profiler::CallPathStart(int tid)
     // *CWL* - Send the path key off to be registered with CallSite discovery
     //         for later processing.
 #ifndef TAU_WINDOWS
+#ifndef _AIX
     if (TauEnv_get_callsite()) {
       CallSiteAddPath(comparison, tid);
     }
+#endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
     RtsLayer::LockDB();

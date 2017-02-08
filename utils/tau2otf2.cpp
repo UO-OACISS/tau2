@@ -27,6 +27,7 @@ using namespace std;
 int debugPrint = 0;
 int remoteThread = -1;
 bool multiThreaded = false;
+uint32_t string_id = 0;
 #define dprintf if (debugPrint) printf
 
 /* The choice of the following numbers is arbitrary */
@@ -57,7 +58,7 @@ static inline void
 check_pointer
 (
     void* pointer,
-    char* description
+    const char* description
 )
 {
     if ( pointer == NULL )
@@ -66,6 +67,7 @@ check_pointer
         exit( EXIT_FAILURE );
     }
 }
+/*
 static inline void
 otf2_get_parameters
 (
@@ -79,12 +81,12 @@ check_pointer
     void* pointer,
     char* description
 );
-
+*/
 static inline void
 check_status
 (
     OTF2_ErrorCode status,
-    char*             description
+    const char*             description
 );
 
 
@@ -131,7 +133,7 @@ uint64_t TauGetClockTicksInGHz(double time)
 
 /* implementation of callback routines */
 map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
-map< int,int, less<int > > numthreads; 
+map< int,int, less<int > > numthreads;
 /* numthreads[k] is no. of threads in rank k */
 
 int EndOfTrace = 0;  /* false */
@@ -139,10 +141,11 @@ int location_count = 0;
 
 
 /* empty string definition */
-enum
-{
-    STRING_EMPTY
-};
+uint32_t STRING_EMPTY=0;
+//enum
+//{
+ //   STRING_EMPTY
+//};
 enum
 {
     COUNTS
@@ -178,6 +181,7 @@ enum
 };
 
 /* Define limits of sample data (user defined events) */
+/*
 struct {
   unsigned long long umin;
   unsigned long long umax;
@@ -187,7 +191,7 @@ struct {
   double fmin;
   double fmax;
 } taufloatbounds = {-1.0e+300, +1.0e+300};
-
+*/
 /* These structures are used in user defined event data */
 
 
@@ -198,7 +202,117 @@ int sampclassid = 2;
 vector<stack <unsigned int> > callstack;
 int *offset = 0; 
 
+
+struct group {
+	const char* name;
+	unsigned int groupid;
+	vector < uint64_t > members;
+};
+
+//Map of groupid to group object with other invo
+map< unsigned int, group > groups;
+
+
+struct source_info{
+	bool sourceFound;
+	unsigned int startline;
+	unsigned int stopline;
+	const char* event_name;
+	const char* sourcefile;
+	source_info(){
+		startline=0;
+		stopline=0;
+		event_name="";
+		sourcefile="";
+		sourceFound=false;
+	}
+};
+
 int maxTauStringId=0;
+
+
+void tau_trim(char * s) {
+    char * p = s;
+    int l = strlen(p);
+
+    while((l > 0) && isspace(p[l - 1])) p[--l] = 0;
+    while(* p && isspace(* p)) ++p, --l;
+
+    memmove(s, p, l + 1);
+}
+
+char* tau_strdup(const char* in_string) {
+  // add one more character for the null terminator
+  int length = strlen(in_string) + 1;
+  char* new_string = (char*)calloc(length, sizeof(char));
+  strcpy(new_string, in_string);
+  return new_string;
+}
+
+
+source_info parseSourceInfo(const char * name){
+	source_info info = source_info();
+
+	  const char* throttled = "[THROTTLED]";
+	  const char* openmp = "[OpenMP]";
+	  const char* openmplocation = "[OpenMP location:";
+	  char* working = tau_strdup(name);
+	  //char* short_name = "";
+	  // printf("'%s'\n", working);
+	  // parse the components out of the timer name
+	  if (strstr(name, throttled) != NULL) {
+	    // 'MPI_Irecv() [THROTTLED]'
+	    // special case, handle it
+		int length = strlen(name) - 11;
+		working[length] = 0; // new terminator
+	    return parseSourceInfo(working);
+	  }  else if (strstr(name, openmp) != NULL) {
+	    // 'barrier enter/exit [OpenMP]'
+	    // special case, handle it
+		  info.event_name = tau_strdup(name);
+	  } else if (strstr(name, openmplocation) != NULL) {
+	    // 'paralleldo [OpenMP location: file:/global/u2/k/khuck/src/XGC-1_CPU/pushe2.F95 <72, 150>]'
+	    // special case, handle it
+	    char* tmp = strtok(working, " ");
+		tau_trim(tmp);
+		info.event_name = tau_strdup(tmp);
+	    tmp = strtok(NULL, ":");
+	    tmp = strtok(NULL, ":");
+	    tmp = strtok(NULL, " ");
+	    info.sourcefile = tau_strdup(tmp);//timer->source_file
+	    tmp = strtok(NULL, " <,>]");
+		info.startline = atoi(tmp);//timer->line_number
+	    tmp = strtok(NULL, " <,>]");
+		info.stopline = atoi(tmp);//timer->line_number_end
+	  } else if (strstr(name, "[") != NULL) {
+	    // regular case
+		// get the function signature
+	    char* tmp = strtok(working, "[");
+		tau_trim(tmp);
+		info.event_name = tau_strdup(tmp);
+		// get the filename
+	    tmp = strtok(NULL, "}");
+		info.sourcefile = tau_strdup(tmp+1);//timer->source_file
+		// get the line and column numbers
+	    tmp = strtok(NULL, " {},-");
+		info.startline = atoi(tmp);//timer->line_number
+	    tmp = strtok(NULL, " {},-");
+		//timer->column_number = atoi(tmp);
+	    tmp = strtok(NULL, " {},-");
+		info.stopline = atoi(tmp);//timer->line_number_end
+	    tmp = strtok(NULL, " {},-");
+		//timer->column_number_end = atoi(tmp);
+	  } else {
+	    // simple case.
+		info.event_name = tau_strdup(name);
+	  }
+	  free(working);
+
+	  //info.event_name=short_name;
+
+
+	return info;
+}
 
 
 /* FIX GlobalID so it takes into account numthreads */
@@ -211,15 +325,15 @@ int GlobalId(int localnodeid, int localthreadid)
     if (offset == (int *) NULL)
     {
       printf("Error: offset vector is NULL in GlobalId()\n");
-      return localnodeid+1;
+      return localnodeid;
     }
     
     /* for multithreaded programs, modify this routine */
-    return offset[localnodeid]+localthreadid+1;  /* for single node program */
+    return offset[localnodeid]+localthreadid;  /* for single node program */
   }
   else
   {  /* OTF node nos run from 1 to N, TAU's run from 0 to N-1 */
-    return localnodeid+1;
+    return localnodeid;
   }
 
 }
@@ -239,7 +353,7 @@ int EnterState(void *userData, double time,
 
   if (cpuid >= (int) callstack.size()+1) 
   {
-    fprintf(stderr, "ERROR: tau2otf: EnterState() cpuid %d exceeds callstack size %d\n", cpuid, callstack.size());
+    fprintf(stderr, "ERROR: tau2otf: EnterState() cpuid %d exceeds callstack size %d\n", cpuid, (int)callstack.size());
     exit(1);
 
   }
@@ -354,18 +468,9 @@ int DefStateGroup( void *userData, unsigned int stateGroupToken,
   dprintf("StateGroup groupid %d, group name %s\n", stateGroupToken, 
 		  stateGroupName);
 
-  OTF2_GlobalDefWriter* glob_def_writer = (OTF2_GlobalDefWriter*)userData;
-  OTF2_GlobalDefWriter_WriteString( glob_def_writer,stateGroupToken ,
-                                                   stateGroupName);
-  maxTauStringId=localmax(maxTauStringId,stateGroupToken);
-//TODO: I guess we need to make a bucket for each group and count them ourselves.
-  /* create a default activity (group) */
-#ifdef TAU_OTF2_1_1
-  OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken, OTF2_GROUP_TYPE_REGIONS,0,0);
-#else
-  OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken,OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE,     OTF2_GROUP_TYPE_REGIONS,0,0);
-#endif /* TAU_OTF2_1_1 */
-  
+  groups[stateGroupToken]=group();
+  groups[stateGroupToken].groupid=stateGroupToken;
+  groups[stateGroupToken].name=stateGroupName;
   return 0;
 }
 OTF2_ErrorCode status;
@@ -373,7 +478,7 @@ static inline void
 check_status
 (
 		OTF2_ErrorCode status,
-    char*             description
+    const char*             description
 )
 {
     if ( status != OTF2_SUCCESS )
@@ -408,24 +513,51 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 
   OTF2_GlobalDefWriter* glob_def_writer = (OTF2_GlobalDefWriter*)userData;
       //glob_def_writer = OTF2_Archive_GetGlobalDefWriter( archive );
- //TODO: We need to parse the source location out of the event name
+
 
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
-                                                 stateToken,
+                                                 string_id,
                                                  name );
+  int rawnameid = string_id;
+  string_id++;
+
+  source_info info = parseSourceInfo(name);
+
+  OTF2_GlobalDefWriter_WriteString( glob_def_writer,
+                                                 string_id,
+                                                 info.event_name );
+  int shortnameid = string_id;
+  string_id++;
+
+  OTF2_GlobalDefWriter_WriteString( glob_def_writer,
+                                                   string_id,
+                                                   info.sourcefile );
+    int sourceid = string_id;
+    string_id++;
+
+
+
   maxTauStringId=localmax(maxTauStringId,stateToken);
   status = OTF2_GlobalDefWriter_WriteRegion( glob_def_writer,
                                              stateToken,
-                                             stateToken,
-                                             stateToken,
-                                             stateToken,
+                                             shortnameid,
+                                             rawnameid,
+                                             STRING_EMPTY,
                                              OTF2_REGION_ROLE_UNKNOWN,
                                              OTF2_PARADIGM_UNKNOWN,
                                              OTF2_REGION_FLAG_NONE,
-                                             STRING_EMPTY,  //Source
-                                             0,  //Begin
-                                             0 );  //End
+                                             sourceid,  //Source
+                                             info.startline,  //Begin
+                                             info.stopline );  //End
   check_status( status, "Write region definition" );
+
+  map< unsigned int, group >::iterator it = groups.find(stateGroupToken);
+  if(it==groups.end()){
+	  printf("Warning: event %s (id %d) has undefined group id %d\n", name,stateToken,stateGroupToken);
+  }
+  else{
+	  groups[stateGroupToken].members.push_back(stateToken);
+  }
 
   //OTF2_EvtWriter_writeDefFunction((OTF2_EvtWriter*)userData, TAU_GLOBAL_STREAM_ID, stateToken, (const char *) name, stateGroupToken, TAU_SCL_NONE);
 
@@ -459,10 +591,9 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
 
   OTF2_GlobalDefWriter* glob_def_writer = (OTF2_GlobalDefWriter*)userData;
       //glob_def_writer = OTF2_Archive_GetGlobalDefWriter( archive );
- //TODO: We need to parse the source location out of the event name
 
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
-                                                 userEventToken,
+                                                 string_id,
                                                  name );
   maxTauStringId=localmax(maxTauStringId,userEventToken);
 
@@ -472,7 +603,7 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
   {
 	  //printf("MONO %s",name);
     //dodifferentiation = 1; /* for hw counter data */
-    OTF2_GlobalDefWriter_WriteMetricMember(glob_def_writer,userEventToken, userEventToken,  userEventToken,OTF2_METRIC_TYPE_PAPI,OTF2_METRIC_ACCUMULATED_START, OTF2_TYPE_UINT64,OTF2_BASE_DECIMAL,0,COUNTS);
+    OTF2_GlobalDefWriter_WriteMetricMember(glob_def_writer,userEventToken, string_id,  string_id,OTF2_METRIC_TYPE_PAPI,OTF2_METRIC_ACCUMULATED_START, OTF2_TYPE_UINT64,OTF2_BASE_DECIMAL,0,COUNTS);
     OTF2_MetricMemberRef* omr = new OTF2_MetricMemberRef[1];
     	omr[0]=userEventToken;
 
@@ -513,7 +644,7 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
 
 NUM_OF_CLASSES+=1;
 */
-
+  string_id++;
   return 0;
 }
 
@@ -770,7 +901,7 @@ int main(int argc, char **argv)
   }
   /* Finished parsing commandline options, now open the trace file */
 
-  fh = Ttf_OpenFileForInput( argv[1], argv[2]);
+  fh = Ttf_OpenFileForInput( trace_file, edf_file);
 
   if (!fh)
   {
@@ -820,6 +951,9 @@ int main(int argc, char **argv)
   check_status( status, "Set master slave mode." );
 #endif /* TAU_OTF2_1_1 || TAU_OTF2_1_2 */
 
+
+  OTF2_Archive_SetSerialCollectiveCallbacks( archive );
+
   status = OTF2_Archive_SetDescription( archive, "Data converted from TAU trace output" );
   check_status( status, "Set description." );
   status = OTF2_Archive_SetCreator( archive, "tau2otf2 converter version 2.21.x" );
@@ -853,9 +987,10 @@ int main(int argc, char **argv)
 
       char name_buffer[ 64 ];
 
-      sprintf( name_buffer, "" );
-      OTF2_GlobalDefWriter_WriteString( glob_def_writer,STRING_EMPTY, name_buffer );
-
+      sprintf( name_buffer, "%s" ,"" );
+      OTF2_GlobalDefWriter_WriteString( glob_def_writer,string_id, name_buffer );
+      STRING_EMPTY=string_id;
+      string_id++;
 
 /*This doesn't seem to be necessary since we write our groups below...
       OTF2_GlobalDefWriter_WriteLocationGroup( glob_def_writer, 0, 1, OTF2_LOCATION_GROUP_TYPE_PROCESS, 0 );
@@ -916,9 +1051,9 @@ int main(int argc, char **argv)
 */
 
   /* create the thread ids */
-  unsigned int groupid = 1;
-  int tid = 0; 
-  int nodes = numthreads.size(); /* total no. of nodes */ 
+  //unsigned int groupid = 1;
+  //int tid = 0;
+  int nodes = numthreads.size(); /* total no. of nodes */
   int *threadnumarray = new int[nodes]; 
   offset = new int[nodes+1];
   offset[0] = 0; /* no offset for node 0 */
@@ -960,64 +1095,65 @@ int main(int argc, char **argv)
   //uint64_t locations[ location_count ];
   locations = new uint64_t[location_count];
   uint64_t mpi_ranks[ nodes ];
-  uint64_t master_threads[ nodes ];
+  //uint64_t master_threads[ nodes ];
+  uint64_t master_threads2[ nodes ];
 
-  for ( uint64_t rank = 0; rank < nodes; rank++ )
+  for ( uint64_t rank = 0; rank < (uint64_t)nodes; rank++ )
   {
-      for ( uint64_t thread = 0; thread < numthreads[rank]; thread++ )
+      for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
       {
-          locations[ numthreads[rank] * rank + thread ] = ( rank << 16 ) + thread;
+          locations[ numthreads[rank] * rank + thread ] = GlobalId(rank,thread);// ( rank << 16 ) + thread;
       }
-      mpi_ranks[ rank ]      = rank;
-      master_threads[ rank ] = rank << 16;
+      mpi_ranks[ rank ]      = GlobalId(rank,0);//Just to make sure we have valid rank ids. formerly rank
+      //master_threads[ rank ] = rank << 16;
   }
 
 
 
   /*We can't overlap string ids, so the first location id must be above the last tau event id*/
-  uint32_t string = maxTauStringId + 1;
+  //uint32_t string = maxTauStringId + 1;
 
   sprintf( name_buffer, "System" );//PRIu64
 status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
-                                       string,
+                                       string_id,
                                        name_buffer );
 check_status( status, "Write string definition." );
 
-OTF2_GlobalDefWriter_WriteSystemTreeNode (glob_def_writer, 0,  string,string, OTF2_UNDEFINED_UINT32);
-string++;
+OTF2_GlobalDefWriter_WriteSystemTreeNode (glob_def_writer, 0,  string_id,string_id, OTF2_UNDEFINED_UINT32);
+string_id++;
 
 
 
   /* Write location group and location definitions. */
-  for ( uint64_t rank = 0; rank < nodes; ++rank )
+  for ( uint64_t rank = 0; rank < (uint64_t)nodes; ++rank )
   {
       char name_buffer[ 64 ];
 
-      sprintf( name_buffer, "Process %d" , rank );//PRIu64
+      sprintf( name_buffer, "Process %d" , (int)rank );//PRIu64
       status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
-                                                 string,
+                                                 string_id,
                                                  name_buffer );
       check_status( status, "Write string definition." );
 
 
       status = OTF2_GlobalDefWriter_WriteLocationGroup( glob_def_writer,
                                                         rank,
-                                                        string,
+                                                        string_id,
                                                         OTF2_LOCATION_GROUP_TYPE_PROCESS,
                                                         0);//( rank / 2 ) + 1 );
       check_status( status, "Write location group definition." );
-      string++;
+      string_id++;
+      master_threads2[rank]=rank;
 
-
-      for ( uint64_t thread = 0; thread < numthreads[rank]; thread++ )
+      for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
       {
-          sprintf( name_buffer, "Thread %d.%d" , rank, thread );
+          sprintf( name_buffer, "Thread %d.%d" , (int)rank, (int)thread );
           status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
-                                                     string,
+                                                     string_id,
                                                      name_buffer );
           check_status( status, "Write string definition." );
 
-          OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter( archive, locations[ numthreads[rank] * rank + thread ] );
+          //OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter( archive, locations[ numthreads[rank] * rank + thread ] );
 
 
           //check_pointer( evt_writer, "Get event writer." );
@@ -1025,14 +1161,16 @@ string++;
           uint64_t num_events = -1;
           //status = OTF2_EvtWriter_GetNumberOfEvents( evt_writer, &num_events );
           check_status( status, "Get the numberof written events." );
-
+          //uint64_t loc = locations[ rank * numthreads[rank] + thread ];
+          uint64_t loc = GlobalId(rank,thread);
+          dprintf("Writing location: %d\n",(int)loc);
           status = OTF2_GlobalDefWriter_WriteLocation( glob_def_writer,
-                                                       locations[ rank * numthreads[rank] + thread ],
-                                                       string,
+                                                       loc,
+                                                       string_id,
                                                        OTF2_LOCATION_TYPE_CPU_THREAD,
                                                        num_events, rank );
           check_status( status, "Write location definition." );
-          string++;
+          string_id++;
       }
   }
 
@@ -1050,7 +1188,35 @@ string++;
   //callstack = new stack<unsigned int> [totalnidtids](); 
   callstack.resize(totalnidtids+1);
 
-  //TODO: We may have to define this after all
+  /**Set up the state groups*/
+  typedef std::map<unsigned int, group>::iterator group_type;
+  for(group_type iterator = groups.begin(); iterator != groups.end(); iterator++) {
+
+   const char* stateGroupName=iterator->second.name;
+   unsigned int stateGroupToken=iterator->first;
+   int nom = iterator->second.members.size();
+   //vector<unsigned int> mv = iterator->second.members;
+   uint64_t* membs=&iterator->second.members[0];
+
+   dprintf("Writing group id: %d, name: %s to otf2\n",stateGroupToken,stateGroupName);
+
+   OTF2_GlobalDefWriter_WriteString( glob_def_writer,string_id ,
+                                                    stateGroupName);
+   maxTauStringId=localmax(maxTauStringId,stateGroupToken);
+
+   /* create a default activity (group) */
+ #ifdef TAU_OTF2_1_1
+   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string, OTF2_GROUP_TYPE_REGIONS,0,0);
+ #else
+   //OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken,OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE,     OTF2_GROUP_TYPE_REGIONS,0,0);
+   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, string_id, OTF2_GROUP_TYPE_REGIONS, OTF2_PARADIGM_UNKNOWN, OTF2_GROUP_FLAG_NONE, nom,membs);
+ #endif /* TAU_OTF2_1_1 */
+
+   dprintf("Writing group %s, id %d to otf2\n",stateGroupName,stateGroupToken);
+
+   string_id++;
+   } //Setting up state groups
+
   /* Define group ids */
   //char name[1024];
   //strcpy(name, "TAU default group");
@@ -1125,25 +1291,48 @@ string++;
 
   sprintf( name_buffer, "MPI_COMM_WORLD" );//PRIu64
 status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
-                                       string,
+                                       string_id,
                                        name_buffer );
 check_status( status, "Write string definition." );
-int COMM_STRING=string;
+int COMM_STRING=string_id;
 
 
 
-/*TODO: Need to define mpi ranks and rank-rank mapping*/
-#ifdef TAU_OTF2_1_1
- OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_MPI_GROUP,nodes,mpi_ranks);
-#else
- OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_COMM_GROUP,OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE,nodes,mpi_ranks);
-#endif /* TAU_OTF2_1_1 */
 
-#ifdef TAU_OTF2_1_1
-  status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
-#else
-  status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
-#endif /* TAU_OTF2_1_1 */
+//#ifdef TAU_OTF2_1_1
+// OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_MPI_GROUP,nodes,mpi_ranks);
+//#else
+ //OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_COMM_GROUP,OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE,nodes,mpi_ranks);
+
+ OTF2_GlobalDefWriter_WriteGroup( glob_def_writer,
+		 	 	 	 	 	 	 	 	 GROUP_MPI_LOCATIONS /* id */,
+                                         string_id /* name */,
+                                         OTF2_GROUP_TYPE_COMM_LOCATIONS,
+                                         OTF2_PARADIGM_MPI,
+                                         OTF2_GROUP_FLAG_NONE,
+                                         nodes,
+                                         mpi_ranks );
+ OTF2_GlobalDefWriter_WriteGroup( glob_def_writer,
+ 		 	 	 	 	 	 	 	 	 GROUP_MPI_COMM_WORLD /* id */,
+                                          STRING_EMPTY /* name */,
+                                          OTF2_GROUP_TYPE_COMM_GROUP,
+                                          OTF2_PARADIGM_MPI,
+                                          OTF2_GROUP_FLAG_NONE,
+                                          nodes,
+                                          master_threads2 );//master_threads );
+
+
+
+ //#endif /* TAU_OTF2_1_1 */
+
+//#ifdef TAU_OTF2_1_1
+//  status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
+//#else
+  status =OTF2_GlobalDefWriter_WriteComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_COMM);
+
+
+
+//#endif /* TAU_OTF2_1_1 */
 
 check_status( status, "Write communicator." );
 
@@ -1161,7 +1350,7 @@ check_status( status, "Write communicator." );
       }
 
 
-      for ( uint64_t rank = 0; rank < nodes; rank++ )
+      for ( uint64_t rank = 0; rank < (uint64_t)nodes; rank++ )
       {
           OTF2_IdMap* mpi_comm_map = OTF2_IdMap_Create( OTF2_ID_MAP_SPARSE, 2 );
           check_pointer( mpi_comm_map, "Create ID map for MPI Comms." );
@@ -1170,7 +1359,7 @@ check_status( status, "Write communicator." );
           OTF2_IdMap_AddIdPair( mpi_comm_map, rank, MPI_COMM_MPI_COMM_WORLD );
           OTF2_IdMap_AddIdPair( mpi_comm_map, rank + nodes, MPI_COMM_MPI_COMM_SELF );
 
-          for ( uint64_t thread = 0; thread < numthreads[rank]; thread++ )
+          for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
           {
               /* Open a definition writer, so the file is created. */
               OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(

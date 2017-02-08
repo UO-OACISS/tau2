@@ -87,7 +87,7 @@ boolean taudb_private_primary_metadata_from_xml(TAUDB_TRIAL * trial, char * xml)
 	return TRUE;
 }
 
-TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean full, char* my_query) {
+TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean full, char* my_query, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_trials(%d, %s)\n", full, my_query);
 #endif
@@ -148,49 +148,49 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
 
   for (i = 0 ; i < nRows ; i++) {
     if (taudb_version != TAUDB_2005_SCHEMA) {
-      trials[i].primary_metadata = taudb_query_primary_metadata(connection, &(trials[i]));
+      trials[i].primary_metadata = taudb_query_primary_metadata(connection, &(trials[i]), taudb_numItems);
 	}
     if (full) {
       if (taudb_version == TAUDB_2012_SCHEMA) {
 	    printf("Threads\n");
-        taudb_query_threads(connection, &(trials[i]));
+        taudb_query_threads(connection, &(trials[i]),taudb_numItems);
 	    printf("Metrics\n");
-        taudb_query_metrics(connection, &(trials[i]));
+        taudb_query_metrics(connection, &(trials[i]), taudb_numItems);
         //taudb_query_time_range(connection, &(trials[i]));
 	    printf("Timers\n");
-        taudb_query_timers(connection, &(trials[i]));
+        taudb_query_timers(connection, &(trials[i]), taudb_numItems);
 	    printf("Timer_groups\n");
-        taudb_query_timer_groups(connection, &(trials[i]));
+        taudb_query_timer_groups(connection, &(trials[i]), taudb_numItems);
 	    printf("Timer call paths\n");
-        taudb_query_timer_callpaths(connection, &(trials[i]), NULL);
+        taudb_query_timer_callpaths(connection, &(trials[i]), NULL,taudb_numItems);
 	    printf("Timer call data\n");
-        taudb_query_timer_call_data(connection, &(trials[i]), NULL, NULL);
+        taudb_query_timer_call_data(connection, &(trials[i]), NULL, NULL, taudb_numItems);
 	    printf("Timer values\n");
-        taudb_query_timer_values(connection, &(trials[i]), NULL, NULL, NULL);
+        taudb_query_timer_values(connection, &(trials[i]), NULL, NULL, NULL, taudb_numItems);
 	    printf("Counters \n");
-        taudb_query_counters(connection, &(trials[i]));
+        taudb_query_counters(connection, &(trials[i]), taudb_numItems);
 	    printf("Counter values\n");
-        taudb_query_counter_values(connection, &(trials[i]));
+        taudb_query_counter_values(connection, &(trials[i]),taudb_numItems);
 	    printf("Secondary metadata\n");
-        trials[i].secondary_metadata = taudb_query_secondary_metadata(connection, &(trials[i]));
+        trials[i].secondary_metadata = taudb_query_secondary_metadata(connection, &(trials[i]), taudb_numItems);
       } else {
-        taudb_query_threads(connection, &(trials[i]));
-        taudb_query_timers(connection, &(trials[i]));
-        taudb_query_all_timer_callpaths(connection, &(trials[i]));
+        taudb_query_threads(connection, &(trials[i]),taudb_numItems);
+        taudb_query_timers(connection, &(trials[i]), taudb_numItems);
+        taudb_query_all_timer_callpaths(connection, &(trials[i]), taudb_numItems);
         //taudb_query_all_timer_callpath_stats(connection, &(trials[i]));
-        taudb_query_metrics(connection, &(trials[i]));
+        taudb_query_metrics(connection, &(trials[i]), taudb_numItems);
         //taudb_query_all_timer_values(connection, &(trials[i]));
         //taudb_query_counters(&(trials[i]));
         //taudb_query_counter_values(&(trials[i]));
 	  }
     }
   }
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   return trials;
 }
 
-TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean full, TAUDB_TRIAL* trial) {
+TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean full, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_trials(%d, %p)\n", full, trial);
 #endif
@@ -237,17 +237,17 @@ TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean full, TAUD
 	}
   }
   printf("%s\n", my_query);
-  return taudb_private_query_trials(connection, full, my_query);
+  return taudb_private_query_trials(connection, full, my_query, taudb_numItems);
 }
 
-TAUDB_TRIAL* perfdmf_query_trials(TAUDB_CONNECTION* connection, PERFDMF_EXPERIMENT* experiment) {
+TAUDB_TRIAL* perfdmf_query_trials(TAUDB_CONNECTION* connection, PERFDMF_EXPERIMENT* experiment, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling perfdmf_query_trials(%p)\n", experiment);
 #endif
   char my_query[256];
   sprintf(my_query,"select * from trial where experiment = %d", experiment->id);
 
-  return taudb_private_query_trials(connection, FALSE, my_query);
+  return taudb_private_query_trials(connection, FALSE, my_query, taudb_numItems);
 }
 
 void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update, boolean cascade) {

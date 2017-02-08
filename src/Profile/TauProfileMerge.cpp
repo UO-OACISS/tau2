@@ -21,6 +21,18 @@
 #include <mpi.h>
 #endif  /* TAU_MPI */
 
+#ifdef TAU_SHMEM
+#include <shmem.h>
+extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" int   __real_shmem_n_pes() ;
+extern "C" int   __real_shmem_my_pe() ;
+extern "C" void  __real_shmem_barrier_all() ;
+extern "C" void  __real_shmem_free(void * a1) ;
+#endif /* TAU_SHMEM */
+
 #include <TAU.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -138,6 +150,10 @@ int Tau_mergeProfiles()
   PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
   PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &size);
 #endif  /* TAU_MPI */
+#ifdef TAU_SHMEM
+  size = __real_shmem_n_pes();
+  rank = __real_shmem_my_pe();
+#endif /* TAU_SHMEM */
 
 	buflen = Tau_snapshot_getBufferLength()+1;
 	buf = (char *) malloc(buflen);
@@ -147,6 +163,27 @@ int Tau_mergeProfiles()
 #ifdef TAU_MPI
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
 #endif  /* TAU_MPI */
+#ifdef TAU_SHMEM
+  int *shbuflen = (int*)shmem_malloc(sizeof(int));
+  *shbuflen = buflen;
+  int *shmaxBuflen = (int*)shmem_malloc(sizeof(int));
+
+  int *maxBuflens = (int*)shmem_malloc(size*sizeof(int));
+  __real_shmem_int_put(&maxBuflens[rank], &maxBuflen, 1, 0);
+  __real_shmem_barrier_all();
+  if(rank == 0)
+    for(i =0; i < size; i++)
+      if(maxBuflen < maxBuflens[i]) maxBuflen = maxBuflens[i];
+  __real_shmem_barrier_all();
+  *shmaxBuflen = maxBuflen;
+  __real_shmem_int_get(shmaxBuflen, shmaxBuflen, 1, 0);
+  __real_shmem_barrier_all();
+  maxBuflen = *shmaxBuflen;
+  __real_shmem_free(shmaxBuflen);
+  __real_shmem_free(maxBuflens);
+  char *shbuf = (char*)shmem_malloc(maxBuflen);
+  strncpy(shbuf, buf, maxBuflen);
+#endif /* TAU_SHMEM */
 
 #ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
@@ -289,6 +326,13 @@ int Tau_mergeProfiles()
       /* receive buffer */
       PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
 #endif  /* TAU_MPI */
+#ifdef TAU_SHMEM
+      /* receive buffer length */
+      __real_shmem_int_get(&buflen, shbuflen, 1, i);
+
+      /* receive buffer */
+      __real_shmem_getmem(recv_buf, shbuf, buflen, i);
+#endif /* TAU_SHMEM */
 
       if (!TauEnv_get_summary_only()) { /* write each rank? */
         fwrite (recv_buf, buflen, 1, f);
@@ -443,6 +487,10 @@ int Tau_mergeProfiles()
 
   }
 	free(buf);
+#ifdef TAU_SHMEM
+        __real_shmem_free(shbuf);
+        __real_shmem_free(shbuflen);
+#endif /* TAU_SHMEM */
   return 0;
 }
 

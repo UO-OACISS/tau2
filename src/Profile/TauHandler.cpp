@@ -30,7 +30,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
 
-
+extern "C" int Tau_track_mpi_t_here(void); 
 //////////////////////////////////////////////////////////////////////
 // Routines
 //////////////////////////////////////////////////////////////////////
@@ -177,13 +177,13 @@ int Tau_read_cray_power_events(int fd, long long int *value)  {
   return ret;
 }
 
-int Tau_open_cray_file(char *filename) {
+int Tau_open_cray_file(const char *filename) {
   
   int fd = open(filename, O_RDONLY);
   return fd; 
 }
 
-void TauTriggerCrayPowerEvent(int fd, char *event_name)  {
+void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
   long long int value; 
   if (fd) {
     Tau_read_cray_power_events(fd, &value); 
@@ -235,6 +235,10 @@ void TauAlarmHandler(int signum) {
 
   if (TheIsTauTrackingPower()) {
     TauTriggerPowerEvent();
+  }
+
+  if (TauEnv_get_track_mpi_t_pvars()) {
+    Tau_track_mpi_t_here();
   }
 
   if (TheIsTauTrackingMemoryRSSandHWM()) {
@@ -308,6 +312,30 @@ void TauTrackPower(void) {
   alarm(TheTauInterruptInterval());
 #endif
 }
+
+//////////////////////////////////////////////////////////////////////
+// Track MPI_T
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_mpi_t(void) {
+
+#ifndef TAU_WINDOWS
+  struct sigaction new_action, old_action;
+  
+  // set signal handler 
+  new_action.sa_handler = TauAlarmHandler;
+  
+  new_action.sa_flags = 0;
+  sigaction(SIGALRM, NULL, &old_action);
+  if (old_action.sa_handler != SIG_IGN) {
+    /* by default it is set to ignore */
+    sigaction(SIGALRM, &new_action, NULL);
+  } 
+  
+  /* activate alarm */
+  alarm(TheTauInterruptInterval());
+#endif
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // Track memory resident set size (RSS) and high water mark (hwm)

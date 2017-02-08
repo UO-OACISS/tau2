@@ -176,7 +176,11 @@ case $1 in
 
      oparidir=*)
         oparidir=`echo $1 | sed -e 's/^oparidir=//'`
-	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	    echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	    if [ -d ${oparidir} ] ; then
+		  opariincdir=-I${oparidir}/include
+	      echo "s,^OPARIINCDIR=.*$,OPARIINCDIR=${opariincdir},g" >> $sedout
+		fi
 	;;
 
      oparicomp=*)
@@ -476,17 +480,31 @@ case $1 in
      pythonlib=*)
         pythonlib=`echo $1 | sed -e 's/^pythonlib=//'`
 	# Discover python library version
-	pythonso=`ls $pythonlib/libpython*.so 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.so//'`
-	if [ "x$pythonso" = "x" ] ; then
-	  pythonso=`ls $pythonlib/libpython*.dylib 2>/dev/null | head -1 | xargs basename | sed -e 's/lib//' -e 's/\.dylib//'`
-	  if [ "x$pythonso" = "x" ] ; then
-	    echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
-	    exit 1
-	  fi
+	for subdir in "" ".." "python*" ; do
+          for ext in "so" "dylib" ; do
+            _checkpath="${pythonlib}/${subdir}/libpython*.${ext}"
+            echo "Checking ${_checkpath}"
+  	    pythonso=`ls ${_checkpath} 2>/dev/null | head -1`
+            if [ "x$pythonso" == "x" ] ; then
+              continue
+            fi
+            pythonlib=`dirname $pythonso`
+            pythonso=`echo $pythonso | xargs basename | sed -e "s#lib##" -e "s#\.${ext}##"`
+            if [ "x$pythonso" != "x" ] ; then
+              # Break out of both loops
+              break 2
+            fi
+          done
+        done
+	pythonlib_full="$pythonlib/lib$pythonso.$ext"
+	if [ ! -f "$pythonlib_full" ] ; then
+	  echo "ERROR: Cannot find python library (libpython*.[so|dylib]"
+	  exit 1
+        else
+          echo "Found Python library: $pythonlib_full"
 	fi
 	echo "s,^PYTHON_LIBDIR=.*$,PYTHON_LIBDIR=$pythonlib,g" >> $sedout
 	echo "s,^PYTHON_LIB_SO=.*$,PYTHON_LIB_SO=$pythonso,g" >> $sedout
-	#echo "Using PYTHON LIB DIR =" $pythonlib
 	;;
 
      stffdir=*)
@@ -632,6 +650,11 @@ case $1 in
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     TAU_USELM)
+	echo "NOTE: TAU is adding -lm to the link line. If you do not want this (e.g., -mkl) please use -nolm while configuring."
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
 
 ###############################################################
 # Set up MPI stuff if possible
@@ -693,6 +716,11 @@ case $1 in
 
      MPIGREQUEST)
         echo "NOTE: Using TAU's MPI-2 Grequest extensions"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     MPI_T)
+        echo "NOTE: Using TAU's MPI-T extensions"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -815,6 +843,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     OPENSHMEM_PSHMEM)
+        echo NOTE: Using the TAU OpenSHMEM Profiling Interface using PSHMEM
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      OPENMPI_SHMEM)
         echo NOTE: Using the TAU OpenMPI OpenSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -833,6 +866,12 @@ case $1 in
      GPSHMEM)
         echo NOTE: Using the TAU GPSHMEM/PGPSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     shmemdirargs=*)
+        shmemdir=`echo $1 | sed -e 's/^shmemdirargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_SHMEM_DIR=\(.*\)@TAU_SHMEM_DIR=$shmemdir@g" >> $sedout
+        #echo "SHMEMDIR=$shmemdir"
         ;;
 
      shmemincargs=*)
@@ -1171,6 +1210,14 @@ case $1 in
 	;;
      PGI_OPENACC) 
 	echo NOTE: Enabling PGI OpenACC profiling interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGI_OPENACC_15x) 
+	echo NOTE: Enabling PGI v15.x OpenACC profiling interface
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGI_NO_LIBSTD) 
+	echo NOTE: Disabling linking with -lstd for PGI 16.+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      FUJITSU) 
@@ -1659,6 +1706,10 @@ case $1 in
 	echo "NOTE: Using Intel's OpenMP options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     INTEL_FOPENMP)
+	echo "NOTE: Using Intel's older -fopenmp OpenMP option ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      GNUOPENMP)
 	echo "NOTE: Using GNU's OpenMP options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1783,6 +1834,10 @@ case $1 in
 	;;
      CRAY_MIC)
 	echo "NOTE: Using Cray MIC Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     INTEL_CRAY_MIC_KNL_OMPT)
+	echo "NOTE: Using Cray MIC KNL Linux options for Intel OMPT (-dynamic)"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      LINUXTIMERS)

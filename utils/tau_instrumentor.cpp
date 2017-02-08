@@ -72,6 +72,7 @@ static char const * return_nonvoid_string = "return";
 extern bool use_spec;
 /* For Pooma, add a -noinline flag */
 extern bool noinline_flag;
+extern bool ok_to_instrument_single_line_funcs_flag = false; /* enable by -single_line */
 extern bool nolinemarker_flag = false; /* by default, emit line marker */
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
@@ -409,8 +410,16 @@ bool retval;
 
     if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated() && 
 	 (((*rit)->bodyBegin().line() != 0) && (*rit)->kind() != pdbItem::RO_EXT) && 
-	 (instrumentEntity((*rit)->fullName())) && !identicalBeginEnd(*rit) ) {
+	 (instrumentEntity((*rit)->fullName())) 
+// && !identicalBeginEnd(*rit) ) 
+ )
+{
 
+      if ((ok_to_instrument_single_line_funcs_flag == false) && identicalBeginEnd(*rit)) {
+        continue;  
+      }
+
+        
 #ifdef DEBUG
 	cout <<"* Checking Routine: "<<(*rit)->fullName()<<endl;
 #endif // DEBUG
@@ -917,7 +926,7 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
               if (!(*it)->isTarget) { // it is a template member. Help it by giving an additional ()
                 // if the item is a member function or a static member func give
                 // it a class name using CT
-                ostr << "\", CT(*this), ";
+                ostr << "\", TAU_CT(*this), ";
               } else {
                 // it is not a class member
                 ostr << "\", \" \", "; // null type arg to TAU_PROFILE
@@ -2699,7 +2708,13 @@ int printTauAllocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemR
 #endif /* DEBUG */
     isfree = isFreeFormat(inbuf);
     do {
-      if (istr.getline(allocstmt, INBUF_SIZE) == NULL) {
+#ifdef TAU_WINDOWS
+      if (!(istr.getline(allocstmt, INBUF_SIZE))) 
+#else
+      istr.getline(allocstmt, INBUF_SIZE);
+      if ((istr.rdstate() & std::ifstream::goodbit ) != 0) 
+#endif /* TAU_WINDOWS */
+      {
         perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
         exit(1);
       }
@@ -2807,7 +2822,12 @@ int printTauDeallocStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<ite
 #endif /* DEBUG */
     isfree = isFreeFormat(inbuf);
     do {
-       if (istr.getline(deallocstmt, INBUF_SIZE) == NULL)
+#ifdef TAU_WINDOWS
+       if (!(istr.getline(deallocstmt, INBUF_SIZE)))
+#else 
+       istr.getline(deallocstmt, INBUF_SIZE);
+       if ((istr.rdstate() & std::ifstream::goodbit ) != 0)
+#endif /* TAU_WINDOWS */
        {
          perror("ERROR in reading file: looking for ) for continuation line instrumentation of alloc/dealloc");
          exit(1);
@@ -2920,7 +2940,12 @@ int printTauIOStmt(ifstream& istr, ofstream& ostr, char inbuf[], vector<itemRef 
     printf("Contination line: %s\n", inbuf);
 #endif /* DEBUG */
     isfree = isFreeFormat(inbuf);
-    if (istr.getline(iostmt, INBUF_SIZE) == NULL)
+#ifdef TAU_WINDOWS
+    if (!(istr.getline(iostmt, INBUF_SIZE)))
+#else
+    istr.getline(iostmt, INBUF_SIZE); 
+    if ((istr.rdstate() & std::ifstream::goodbit ) != 0)
+#endif /* TAU_WINDOWS */
     {
       perror("ERROR in reading file: looking for continuation line instrumentation of io");
       exit(1);
@@ -3984,7 +4009,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) {
     cout << "Usage : " << argv[0]
-         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-inline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>] [-nolinemarker]"
+         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-inline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>] [-nolinemarker] [-single]"
          << endl
          << "----------------------------------------------------------------------------------------------------------"
          << endl
@@ -4000,6 +4025,7 @@ int main(int argc, char **argv)
          << "-c : Force a C++ program to be instrumented as if it were a C program with explicit timer start/stops"
          << endl
          << "-c++ : Force instrumentation of file using TAU's C++ API in case it cannot infer the language" << endl
+         << "-single: Allow instrumentation of functions that span a single line (in C++, default: disable)" << endl
          << "-fortran : Force instrumentation using TAU's Fortran API in case it cannot infer the language" << endl
          << "-f <inst_req_file>: Specify an instrumentation specification file" << endl
          << "-rn <return_keyword>: Specify a different keyword for return (e.g., a  macro that calls return" << endl
@@ -4041,6 +4067,12 @@ int main(int argc, char **argv)
 #endif /* DEBUG */
         outFileName = string(argv[i]);
         outFileNameSpecified = true;
+      }
+      if (strcmp(argv[i], "-single") == 0) {
+#ifdef DEBUG
+        printf("Single line functions (begin and end are on the same line) flag\n");
+#endif /* DEBUG */
+        ok_to_instrument_single_line_funcs_flag = true;
       }
       if (strcmp(argv[i], "-noinline") == 0) {
 #ifdef DEBUG

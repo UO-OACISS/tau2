@@ -2,83 +2,43 @@
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
-#*    Copyright 2001  						   	   **
+#*    Copyright 1997  						   	   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #****************************************************************************
+#######################################################################
+##                  pC++/Sage++  Copyright (C) 1993,1995             ##
+##  Indiana University  University of Oregon  University of Rennes   ##
+#######################################################################
  
 include ../../../include/Makefile 
-include ../../Makefile
-include $(TAU_MAKEFILE_PDT_MPI)
 
 
-USE_TAU = 1
-# Comment above line to disable TAU 
 
+CXX		= $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/tau_cxx.sh
 
-CXX		= $(TAU_CXX)
+MAKEFILE      	= Makefile
 
-CC		= $(TAU_CC)
+PRINT	      	= pr
 
-PDTCXXPARSE        = $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
-
-TAUINSTR        = $(TAUROOTDIR)/$(CONFIG_ARCH)/bin/tau_instrumentor
-
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)
-
-LIBS            = $(TAU_MPI_LIBS) $(TAU_LIBS) $(LEXTRA1) $(EXTRALIBS) -lm 
-
-LDFLAGS	      	= $(USER_OPT)  $(TAU_LDFLAGS)
+RM 	      	= /bin/rm -f
 
 TARGET	      	= ring
 
 EXTRAOBJS     	= 
 
-RM		= /bin/rm -f
-
 ##############################################
-ifdef USE_TAU
-COMP_RULE = $(PDTCXXPARSE) $< $(CFLAGS); \
-	$(TAUINSTR) $*.pdb $< -o $*.inst.cpp -g RING; \
-	$(CXX) $(CFLAGS) -c $*.inst.cpp -o $@ ; \
-	rm -f $*.pdb ;      
-else
-# DISABLE TAU INSTRUMENTATION
-TAU_DEFS = 
-# Don't use TAU MPI wrapper library
-TAU_MPI_LIBS = -L/usr/local/lib -lmpich
-TAU_LIBS = 
-TAU_WRAPPER_LIB = 
-TAU_INCLUDE = 
-COMP_RULE = $(CXX) $(CFLAGS) -c $< -o $@ ;
-endif
-
-AR = ar
-ARFLAGS = rcv
-
-
+# Original Rules
 ##############################################
-
 all:		$(TARGET)	
 
-install: 	$(TARGET)
+$(TARGET):	$(TARGET).o
+	$(CXX) $(LDFLAGS) $(TARGET).o -o $@ $(LIBS)
 
+$(TARGET).o : $(TARGET).cpp
+	$(CXX) $(CFLAGS) -c $(TARGET).cpp
 
-OBJS	= ring.o
+clean:
+	$(RM) $(TARGET) $(TARGET).o $(TARGET).pdb
 
-$(TARGET):	$(OBJS)
-	$(CXX) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
-
-# Compilation rule
-.cpp.o:
-	$(COMP_RULE)
-
-
-#
-#$(TARGET).o : $(TARGET).cpp
-#	$(CXX) $(CFLAGS) -c $(TARGET).cpp
-
-clean: 	
-	$(RM) $(OBJS) $(TARGET) $(OBJS:.o=.inst.cpp) \
-	profile.* tautrace.* events.* *.ti *.elg
 ##############################################

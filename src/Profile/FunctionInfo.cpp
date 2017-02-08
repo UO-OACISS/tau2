@@ -164,7 +164,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 #ifndef TAU_WINDOWS
   // Necessary for signal-reentrancy to ensure the mmap memory manager
   //   is ready at this point.
+#ifndef _AIX
   Tau_MemMgr_initIfNecessary();
+#endif /* _AIX */
 #endif  
 
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
@@ -203,6 +205,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //         requires the use of an actual malloc
   //         while in the middle of some other malloc call.
 #ifndef TAU_WINDOWS
+#ifndef _AIX
   // create structure only if EBS is required.
   // Thread-safe, all (const char *) parameters. This check removes
   //   the need to create and allocate memory for EBS post-processed
@@ -228,6 +231,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //  callSiteKeyId = 0; // Any value works.
   firstSpecializedFunction = NULL;
 
+#endif // _AIX 
 #endif // TAU_WINDOWS
 
 #if defined(TAU_VAMPIRTRACE)
@@ -354,9 +358,13 @@ FunctionInfo::~FunctionInfo()
   free(GroupName);
   free(AllGroups);
   Name = Type = GroupName = AllGroups = NULL;
+#ifndef TAU_WINDOWS
+#ifndef _AIX
   for (int i = 0; i < TAU_MAX_THREADS; i++) {
     delete pathHistogram[i];
   }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
   TheSafeToDumpData() = 0;
 }
 
@@ -501,7 +509,7 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
-#ifndef TAU_WINDOWS
+#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
     *ptr = Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(FunctionInfo));
     /*  now, use the pacement new function to create a object in
      *  pre-allocated memory. NOTE - this memory needs to be explicitly
@@ -510,7 +518,7 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
      *  the hash table. */
     new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
 #else
-    new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+    *ptr = (void *) new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
 #endif
     }
 #ifdef TAU_CHARM
@@ -594,6 +602,7 @@ char const * FunctionInfo::GetFullName()
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
 void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS])
 {
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
@@ -623,6 +632,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
     }
   }
 }
+#endif // _AIX 
 #endif // TAU_WINDOWS
 
 /***************************************************************************

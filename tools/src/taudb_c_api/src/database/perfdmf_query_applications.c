@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-PERFDMF_APPLICATION* perfdmf_query_applications(TAUDB_CONNECTION* connection) {
+PERFDMF_APPLICATION* perfdmf_query_applications(TAUDB_CONNECTION* connection,int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling perfdmf_query_applications()\n");
 #endif
@@ -25,7 +25,7 @@ PERFDMF_APPLICATION* perfdmf_query_applications(TAUDB_CONNECTION* connection) {
 
   int nRows = taudb_get_num_rows(connection);
   PERFDMF_APPLICATION* applications = perfdmf_create_applications(nRows);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 

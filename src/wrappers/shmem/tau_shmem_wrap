@@ -1,0 +1,119 @@
+#!/bin/bash
+
+if [ $# -lt 3 ] ; then
+    cmd=`basename $0`
+    echo ""
+    echo " Usage: $cmd <headerfile> <library> -shmemlib=<path> -shmeminc=<path> [-parseropts=options]"
+    echo "   <headerfile> : SHMEM header file to parse, e.g. shmem.h"
+    echo "   <library>    : name of the library to generate, e.g. tau_shmem"
+    echo "   -shmemlib=<dir> : path to SHMEM libraries files"
+    echo "   -shmeminc=<dir> : path to SHMEM header files"
+    echo "   -parseropts=\"options\" : additional options to pass to the PDT parser"
+    echo "NOTE: $cmd reads the TAU_MAKEFILE  environment variable to get PDT settings"
+    echo ""
+    exit 1
+fi
+
+if [ -z "$TAU_MAKEFILE" ] ; then
+  echo "ERROR: Please set the TAU_MAKEFILE environment variable."
+  exit 1
+fi
+
+if [ ! -r $TAU_MAKEFILE ] ; then
+  echo "ERROR: environment variable TAU_MAKEFILE is set but the file is not readable"
+  exit 1
+fi
+
+headerfile="$1"
+library="$2"
+shmemlibdirs=`echo "$3" | sed -e 's/-shmemlib=-L//g'`
+shmemlibdirs=( $shmemlibdirs )
+shmemincdirs=`echo "$4" | sed -e 's/-shmeminc=//g'`
+shmemincdirs=( $shmemincdirs )
+parseropts=`echo "$5" | sed -e 's/-parseropts=//g'`
+
+found=false
+for i in `seq 0 ${#shmemincdirs[@]}`; do
+  shmemincdir=`echo ${shmemincdirs[$i]} | sed -e 's/-I//g'`
+  if [ -d "${shmemincdir}" ] ; then
+	  found=true
+	  break
+  fi
+done
+if ! $found ; then
+    echo "ERROR: invalid SHMEM include directory: $shmemincdirs"
+    exit 1
+fi
+
+found=false
+for i in `seq 0 ${#shmemlibdirs[@]}`; do
+  shmemlibdir=`echo ${shmemlibdirs[$i]} | sed -e 's/-L//g'`
+  if [ -d "${shmemlibdir}" ] ; then
+	  found=true
+	  break
+  fi
+done
+if ! $found ; then
+    echo "ERROR: invalid SHMEM library directory: $shmemlibdirs"
+    exit 1
+fi
+
+found=false
+for shmemlib in libopenshmem libsma liboshmem; do
+  for libext in a so ; do
+      libshmem="$shmemlibdir/$shmemlib.$libext"
+      if [ -r "$libshmem" ] ; then
+        found=true
+        break
+      fi
+  done
+done
+if ! $found ; then
+  echo "ERROR: Cannot locate SHMEM library in $shmemdir"
+  exit 1
+fi
+
+pdtdir="`grep PDTDIR= $TAU_MAKEFILE | sed -e 's/PDTDIR=//g' `"
+tauarch="`tau-config | grep TAUARCH | sed -e 's@TAUARCH=@@g' `"
+basedir="`tau-config | grep BASEDIR | sed -e 's@BASEDIR=@@g' `"
+
+parser=$pdtdir/$tauarch/bin/cparse
+if [ ! -x $parser ]; then
+  echo "ERROR: Can't execute $parser: Using PDT = $pdtdir, ARCH = $tauarch"
+  exit 1
+fi
+
+echo "$parser $headerfile -I$shmemincdir $parseropts"
+$parser $headerfile -I$shmemincdir $parseropts
+
+# Build select.tau
+case "$tauarch" in
+craycnl)
+  exclude_list=exclude_list.cray
+  ;;
+*)
+  exclude_list=exclude_list.openshmem
+  ;;
+esac
+cat include_list $exclude_list > select.tau
+
+# Generate wr_dynamic.c *BEFORE* wr.c or link_options.tau will be empty
+echo "$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr_dynamic.c -r $library $* -f select.tau --shmem"
+$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr_dynamic.c -r $library $* -f select.tau --shmem
+
+# Generate wr.c
+echo "$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c -w $library $* -f select.tau --shmem"
+$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c -w $library $* -f select.tau --shmem
+
+dirname=`basename ${headerfile} .h`_wrapper
+
+# Fix linker options for installation
+echo -n "-L$basedir/lib -lTAU_shmem_wrap" >> $dirname/link_options.tau
+
+# Build and install the wrapper
+make -C "$dirname"
+mkdir -p $basedir/lib/wrappers/shmem
+cp -fv $dirname/link_options.tau $basedir/lib/wrappers/shmem
+cp -fv $dirname/libtau_shmem_wrap.so $basedir/lib/libTAUsh_shmem_wrap.so
+cp -fv $dirname/libtau_shmem_wrap.a $basedir/lib/libTAU_shmem_wrap.a
+

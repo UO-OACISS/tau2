@@ -478,7 +478,7 @@ public class ParaProfUtils {
     	String lowerOS = System.getProperty("os.name").toLowerCase();
     	String macline="";
     	if(lowerOS.indexOf("mac")>=0){
-    		macline="You are on a 64 bit Mac and thus need to install 32 bit compatable Java 6, available here:\n http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/JavaForOSX2014-001.dmg\n\n";
+    		macline="You are on a 64 bit Mac and thus need to install 32 bit compatable Java 6, available here:\n http://tau.uoregon.edu/java.dmg\n\n";
     	}
     	
     	String text = "Unable to load jogl library.  Possible reasons:\n"

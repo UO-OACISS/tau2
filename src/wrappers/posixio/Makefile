@@ -19,7 +19,7 @@ install-shared: $(TAU_IOWRAP_SHARED)
 
 install: install-static-io install-static-posix install-shared
 	mkdir -p $(INSTALLDEST)/wrappers/io_wrapper
-	cp link_options.tau $(INSTALLDEST)/wrappers/io_wrapper
+	sed 's#UNWIND_LIB_FLAG#$(UNWIND_LIB_FLAG)#' link_options.tau.master > $(INSTALLDEST)/wrappers/io_wrapper/link_options.tau
 
 libTauPosixWrap.a: iowrap_link.o
 	$(TAU_AR) $(ARFLAGS) libTauPosixWrap.a iowrap_link.o

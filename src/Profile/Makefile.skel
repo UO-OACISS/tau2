@@ -104,6 +104,7 @@ PGIACC_O=
 TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
 		TauSampling_libunwind.o TauMmapMemMgr.o 
 #BGL#TAU_SAMPLING_O= #ENDIF#
+#SP1#TAU_SAMPLING_O= #ENDIF#
 #CATAMOUNT#TAU_SAMPLING_O= #ENDIF#
 #CRAYX1CC#TAU_SAMPLING_O= #ENDIF#
 #CRAYXMT#TAU_SAMPLING_O= #ENDIF#
@@ -124,9 +125,9 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 #PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o ctau_impl.o #ENDIF#
 #CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF#
-#CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o CudaSass.o #ENDIF#
 
-OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
+OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o Comp_gnu.o \
@@ -184,6 +185,7 @@ ARFLAGS	      = rcv
 ##################################################################
 
 RM 	      = /bin/rm -rf
+LN            = /bin/ln -sf
 
 TAU_TARGET	      = libtau$(TAU_CONFIG)$(LSX)
 
@@ -389,7 +391,7 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS) $(MPI_WRAPPER)
 		$(PRELINK_PHASE)
-		$(CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS) $(TAU_LDFLAGS)
+		$(CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS) $(TAU_LDFLAGS) 
 
 $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
 	$(CXX) -M $(CXXFLAGS) -I$(TAU_OPENCL_INC) -c TauGpuAdapterOpenCL.cpp > $@
@@ -452,8 +454,8 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 		@if [ -d $(TAU_DISABLE_SHAREDDIR) ] ; then true; \
 		    else $(MKDIR) $(TAU_DISABLE_SHAREDDIR); fi
 		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
-		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) libTAU$(TAU_SHLIBX)
-		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) TAU.dll
+		cd $(TAU_DISABLE_SHAREDDIR) ; $(LN) ../$(TAU_DISABLE_SHARED) libTAU$(TAU_SHLIBX)
+		cd $(TAU_DISABLE_SHAREDDIR) ; $(LN) ../$(TAU_DISABLE_SHARED) TAU.dll
 
 $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
@@ -497,13 +499,13 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)/
 		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX) $(INSTALLDEST)/TAU.dll
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) TAU.dll
+		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) TAU.dll
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 		    else $(MKDIR) $(TAU_SHAREDDIR); fi
 		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
-		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
-		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) TAU.dll
+		cd $(TAU_SHAREDDIR) ; $(LN) ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; $(LN) ../$(TAU_SHLIB) TAU.dll
 		ls $(TAU_SHAREDDIR)
 
 $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
@@ -531,27 +533,27 @@ $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@if [ ! -r $(INSTALLDEST)/TauJVMTI.jar ] ; then \
 		$(TAU_INSTALL) $? $(INSTALLDEST) ; fi 
 		@if [ ! -r $(INSTALLDEST)/libTAU.jnilib ] ; then \
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
+		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) libTAU.jnilib; fi
 
 $(PYTAU_INSTALL): $(TAU_SHLIB)
-		@echo Installing $(PYTAU), ltau.py, and tau.py in $(INSTALLDEST)
-		@if [ -d $(INSTALLDEST) ] ; then true; \
-		   else $(MKDIR) $(INSTALLDEST) ;fi
-		$(RM) $(INSTALLDEST)/$(PYTAU) $(INSTALLDEST)/$(CTAU_IMPL)
+		@echo Installing Python bindings in $(INSTALLDEST)
+		$(MKDIR) -p $(INSTALLDEST)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(PYTAU)
-		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) $(CTAU_IMPL)
-		@echo Installing $(PYTAU), ltau.py, and tau.py in $(TAU_SHAREDDIR)
-		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-		    else $(MKDIR) $(TAU_SHAREDDIR); fi
+		$(TAU_INSTALL) tau_python_wrapper.py $(INSTALLDEST)
+		$(RM) $(INSTALLDEST)/$(PYTAU) $(INSTALLDEST)/$(CTAU_IMPL)
+		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(PYTAU)
+		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(CTAU_IMPL)
+		@echo Installing Python bindings in $(TAU_SHAREDDIR)
+		$(MKDIR) -p $(TAU_SHAREDDIR)
 		$(RM) $(TAU_SHAREDDIR)/*
-		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(PYTAU) && ln -s ../$(TAU_SHLIB) $(CTAU_IMPL)
-		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
-		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
-		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
-		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) TAU.dll
-		cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
+		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(PYTAU) 
+		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(CTAU_IMPL)
+		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_python_wrapper.py .
+		cd $(TAU_SHAREDDIR) && $(RM) libTAU$(TAU_SHLIBX) TAU.dll
+		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) TAU.dll
+		cd $(INSTALLDEST) && $(LN) shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a : 
 	ar rcs $(INSTALLDEST)/libpgnod_prof.a
@@ -601,8 +603,8 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	cp libmpi_r.a $(TAU_SHAREDDIR)
 	$(RM) -f $(INSTALLDEST)/bindings-default
 	$(RM) -f $(INSTALLDEST)/bindings$(TAU_CONFIG)
-	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
-	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
+	cd $(INSTALLDEST) && $(LN) shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
+	cd $(INSTALLDEST) && $(LN) bindings$(TAU_CONFIG) bindings-default
 
 install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) \
 $(MPI_INSTALL) $(SHMEM_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) \
@@ -617,7 +619,7 @@ Profile.class	: Profile.java
 	$(JDKBINDIR)/javac Profile.java 
 
 Profiler.o 	: Profiler.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)   -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS)   $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 TauMetaData.o 	: TauMetaData.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
@@ -638,7 +640,7 @@ TauOpenShmemOpenMPIC.o: TauOpenShmemOpenMPIC.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC)  -c $(@:.o=.cpp)
 
 TauSOS.o  : TauSOS.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -pthread -c $(@:.o=.cpp)
@@ -712,6 +714,9 @@ UserEvent.o 	: UserEvent.cpp $(HDRS)
 FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauKokkos.o 	: TauKokkos.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
+
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
@@ -728,10 +733,10 @@ PgiAcc.o 	: PgiAcc.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 RtsLayer.o 	: RtsLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 RtsThread.o 	: RtsThread.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -758,7 +763,7 @@ JavaThreadLayer.o   : JavaThreadLayer.cpp $(HDRS)
 	$(CXX)  $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCAPI.o   : TauCAPI.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)   -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE)   -c $(@:.o=.cpp)
 
 TauFAPI.o   : TauFAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
@@ -848,7 +853,8 @@ TauHandler.o : TauHandler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 MPCThreadLayer.o   : MPCThreadLayer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	@echo $(TAU_MPI_INC)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC) -c $(@:.o=.cpp)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -893,6 +899,9 @@ TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+
+CudaSass.o : CudaSass.cpp $(HDRS) ../../include/Profile/CudaSass.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h

@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "zlib.h"
 
-int taudb_numItems = 0;
+//int taudb_numItems = 0;
 enum taudb_database_schema_version taudb_version = TAUDB_2005_SCHEMA;
 
 void taudb_exit_nicely(TAUDB_CONNECTION* connection) {
@@ -15,7 +15,7 @@ void taudb_exit_nicely(TAUDB_CONNECTION* connection) {
   exit (1);
 }
 
-TAUDB_CONNECTION* taudb_try_connect(char* host, char* port, char* database, char* login, char* password, taudb_error * err) {
+TAUDB_CONNECTION* taudb_try_connect(char* host, char* port, char* database, char* login, char* password, taudb_error * err, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_connect()\n");
 #endif
@@ -51,15 +51,15 @@ TAUDB_CONNECTION* taudb_try_connect(char* host, char* port, char* database, char
 
   /* get the data sources, if available */
   if (taudb_connection->schema_version == TAUDB_2012_SCHEMA) {
-    taudb_query_data_sources(taudb_connection);
+    taudb_query_data_sources(taudb_connection, taudb_numItems);
   }
 
   return taudb_connection;
 }
 
-TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* login, char* password) {
+TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* login, char* password, int* taudb_numItems) {
 	taudb_error err;
-	TAUDB_CONNECTION * taudb_connection = taudb_try_connect(host, port, database, login, password, &err);
+	TAUDB_CONNECTION * taudb_connection = taudb_try_connect(host, port, database, login, password, &err, taudb_numItems);
 	if(err != TAUDB_OK) {
     taudb_exit_nicely(taudb_connection);
 	}
@@ -128,7 +128,7 @@ int taudb_disconnect(TAUDB_CONNECTION* connection) {
   return 0;
 }
 
-TAUDB_CONNECTION* taudb_try_connect_config(char* config_name, taudb_error* err) {
+TAUDB_CONNECTION* taudb_try_connect_config(char* config_name, taudb_error* err, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_connect_config()\n");
 #endif
@@ -136,27 +136,27 @@ TAUDB_CONNECTION* taudb_try_connect_config(char* config_name, taudb_error* err) 
    const char* home = getenv("HOME");
    char config_file[256];
    sprintf(config_file, "%s/.ParaProf/%s.%s", home, config_prefix, config_name);
-   return taudb_try_connect_config_file(config_file, err);
+   return taudb_try_connect_config_file(config_file, err, taudb_numItems);
 }
 
-TAUDB_CONNECTION* taudb_try_connect_config_file(char* config_file_name, taudb_error *err) {
+TAUDB_CONNECTION* taudb_try_connect_config_file(char* config_file_name, taudb_error *err, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_connect_config_file()\n");
 #endif
   TAUDB_CONFIGURATION* config = taudb_parse_config_file(config_file_name);
-  TAUDB_CONNECTION* connection = taudb_try_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password, err);
+  TAUDB_CONNECTION* connection = taudb_try_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password, err, taudb_numItems);
   connection->configuration = config;
   return connection;
 }
 
-TAUDB_CONNECTION* taudb_connect_config(char* config_name) {
+TAUDB_CONNECTION* taudb_connect_config(char* config_name, int* taudb_numItems) {
 	taudb_error err;
-	return taudb_try_connect_config(config_name, &err);
+	return taudb_try_connect_config(config_name, &err, taudb_numItems);
 }
 
-TAUDB_CONNECTION * taudb_connect_config_file(char* config_file_name) {
+TAUDB_CONNECTION * taudb_connect_config_file(char* config_file_name, int* taudb_numItems) {
 	taudb_error err;
-	return taudb_try_connect_config_file(config_file_name, &err);
+	return taudb_try_connect_config_file(config_file_name, &err, taudb_numItems);
 }
 
 void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
@@ -471,6 +471,7 @@ int taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_
 	int rows_changed = atoi(rows_changed_str);
 	return rows_changed;
 #endif
+	return 0;
 }
 
 const char * taudb_error_str(taudb_error err) {

@@ -304,7 +304,9 @@ public abstract class DataSource {
         return tmpValues.iterator();
     }
     
-    public UserEvent addUserEvent(String name) {
+    public UserEvent addUserEvent(String name_in) {
+    	String name = name_in.trim();
+    	name=Utility.removeRuns(name);
         Object obj = userEvents.get(name);
 
         if (obj != null) {
@@ -761,6 +763,9 @@ public abstract class DataSource {
 			int index = tmpName.lastIndexOf("[SAMPLE]");
 			if (index == -1) {
 				index = tmpName.lastIndexOf("[UNWIND]");
+			}
+			if(index == -1){
+				return null; //TODO: Confirm that this is the intended behavior in this case.
 			}
 			// fortunately, SAMPLE and UNWIND are the same length.
 			b.replace(index, index+8, "[SUMMARY]");

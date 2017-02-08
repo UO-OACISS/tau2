@@ -134,10 +134,13 @@ struct FunctionSignatureInfo
   // ...
 
   string func;
+  string funcfort;
   string proto;
   string returntypename;
   string funchandle;
   string rcalledfunc;
+  string funcarg;
+  string funcargfort;
 };
 
 
@@ -168,6 +171,10 @@ static bool isExcluded(pdbRoutine *r) {
         if (r->name() == *ptr)
             return true;
     }
+    if(r->name().find("shmem_int16_wait_until") != string::npos ||
+       r->name().find("shmem_int16_wait") != string::npos ||
+       r->name().find("shmem_iget16") != string::npos)
+	    return true;
     return false;
 }
 
@@ -181,8 +188,10 @@ static bool isReturnTypeVoid(pdbRoutine *r)
 static bool doesRoutineNameContainGet(string const & rname)
 {
   size_t namelen = rname.size();
-  return ((rname.find("get") != string::npos) || 
-          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')));
+  return (((rname.find("get") != string::npos) || 
+          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')))
+          && (rname.find("name") == string::npos
+          && rname.find("version") == string::npos));
 }
 
 static bool doesRoutineNameContainPut(string const & rname)
@@ -204,6 +213,10 @@ static bool doesRoutineNameContainFetchOp(string const & rname)
 static bool doesRoutineNameContainCondFetchOp(string const & rname)
 {
   return (rname.find("cswap") != string::npos); 
+}
+
+static bool isArgumentScalar(string argtype) {
+  return (argtype.find("*"));
 }
 
 static char const * getMultiplierString(string const & rname) 
@@ -459,15 +472,10 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
   is_it_a_fetchop = doesRoutineNameContainFetchOp(rname);
   is_it_a_cond_fetchop = doesRoutineNameContainCondFetchOp(rname);
 
-  if ((rname.find("start_pes") != string::npos) || 
-      (rname.find("shmem_init") != string::npos)) {
-    if (pshmem_use_underscore_instead_of_p) {
-      impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
-      impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
-    } else {
-      impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
-      impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
-    }
+  if ((rname.find("shmem_init") != string::npos) ||
+      (rname.find("start_pes") != string::npos)) {
+      impl << "  tau_totalnodes(1,__real_shmem_n_pes());"<<endl;
+      impl << "  TAU_PROFILE_SET_NODE(__real_shmem_my_pe());"<<endl;
   }
 
   if (is_it_a_get || is_it_a_fetchop ) { /* Get */
@@ -483,7 +491,8 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 #endif /* DEBUG */
     }
     string indent(""); /* no indent by default */
-    if (is_it_a_cond_fetchop) {
+    bool isVoid = isReturnTypeVoid(r);
+    if (is_it_a_cond_fetchop && !isVoid) {
       indent=string("  ");
       if (fortran_interface) {
         sprintf(cond_string, "  if (retval == (*a%d)) { ", cond_argument_no);
@@ -494,7 +503,7 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
     }
     impl <<indent<<"  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, "<<processor_arg<<", "<<length_string<<");"<<endl;
     impl <<indent<<"  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), "<<length_string<<", "<<processor_arg<<");"<<endl;
-    if (is_it_a_cond_fetchop) {
+    if (is_it_a_cond_fetchop && !isVoid) {
       impl<<indent<<"}"<<endl;
     }
   }
@@ -510,9 +519,18 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * prefix, FunctionSignatureInfo & sig)
 {
   sig.func = r->name() + "(";
+  sig.funcfort = r->name() + "(";
   sig.proto = r->name() + "(";
-  sig.rcalledfunc = "(*" + r->name() + "_h) (";
-  sig.funchandle = "_h) (";
+  if(shmem_wrapper) {
+    sig.rcalledfunc = r->name() + "_handle (";
+    sig.funchandle = "_handle) (";
+  }
+  else {
+    sig.rcalledfunc = "(*" + r->name() + "_h) (";
+    sig.funchandle = "_h) (";
+  }
+  sig.funcarg = "(";
+  sig.funcargfort = "(";
 
   pdbGroup const * grp = r->signature()->returnType()->isGroup();
   if (grp) { 
@@ -523,7 +541,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       sig.returntypename.replace(0, 10, "shared   ");
     }
   }
-  impl << sig.returntypename << prefix << sig.func; 
+  impl << "extern " << sig.returntypename << prefix << sig.func; 
 
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
@@ -570,9 +588,12 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 
     if (argcount != 1) { /* not a startup */
       sig.func.append(", ");
+      sig.funcfort.append(", ");
       sig.proto.append(", ");
       sig.rcalledfunc.append(", ");
       sig.funchandle.append(", ");
+      sig.funcarg.append(", ");
+      sig.funcargfort.append(", ");
       impl<<", ";
     }
 
@@ -580,6 +601,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     sprintf(number, "%d", argcount);
     const pdbGroup *gr;
     string argtypename;
+    string argtypenamefort;
     if ((gr = argsit->type()->isGroup()) != 0) {
       argtypename = gr->name();
     } else {
@@ -605,10 +627,32 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       argtypename.replace(0, 10, "shared ");
     }
 
+    argtypenamefort = argtypename;
+    if(shmem_wrapper) {
+      if(argtypenamefort.compare(0, 4, "int ") == 0) {
+        argtypenamefort.erase(0, 4);
+        argtypenamefort.insert(0, "SHMEM_FINT ");
+      }
+      if(argtypenamefort.compare(0, 7, "size_t ") == 0) {
+        argtypenamefort.erase(0, 7);
+        argtypenamefort.insert(0, "SHMEM_FINT ");
+      }
+    }
+    int pos3 = argtypenamefort.find("*");
+    if(pos3 == string::npos) {
+      sig.funcargfort.append(argtypenamefort + " *");
+      sig.funcfort.append("*a" + string(number));
+    }
+    else {
+      sig.funcargfort.append(argtypenamefort);
+      sig.funcfort.append("a" + string(number));
+    }
+
     sig.func.append("a" + string(number));
     sig.proto.append(argtypename + " a" + string(number));
     sig.funchandle.append(argtypename);
     sig.rcalledfunc.append(" a" + string(number));
+    sig.funcarg.append(argtypename);
 
     /* We need to handle the case int (*)[] separately generating 
        int (*a1)[]  instead of int (*)[] a1 in the impl file */
@@ -623,6 +667,8 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
         impl << examinedarg[i];
       }
       impl<<"a"<<number;
+      sig.funcarg.append("a" + string(number));
+      sig.funcargfort.append("a" + string(number));
       for(i=found - examinedarg; i < strlen(examinedarg); i++) {
         //printf("after number Printing %c\n", examinedarg[i]);
         impl << examinedarg[i];
@@ -648,6 +694,8 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       impl<<argtypename<<" ";
       /* print: for (int a, double b), this prints "a1" in int a1, */
       impl<<"a"<<number;
+      sig.funcarg.append(" a" + string(number));
+      sig.funcargfort.append(" a" + string(number));
     }
     if (r->signature()->hasEllipsis()) {
       //printf("Has ellipsis...\n");
@@ -655,8 +703,11 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     }
   }
   sig.func.append(")");
+  sig.funcfort.append(")");
   sig.proto.append(")");
   sig.rcalledfunc.append(")");
+  sig.funcarg.append(")");
+  sig.funcargfort.append(")");
   impl<<") ";
 }
 
@@ -664,6 +715,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 {
   FunctionSignatureInfo sig(r);
 
+  string rname = r->name();
   string protoname = r->name() + "_p";
   string macro("#define ");
   string retstring("    return;");
@@ -686,12 +738,20 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     impl <<";"<<endl;
   }
 
+  if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
+    printFunctionNameInOutputFile(r, impl, "  __wrap_", sig);
+    impl <<";"<<endl;
+  }
+
   char const * prefix = " ";
-  if (!shmem_wrapper) {
+//  if (!shmem_wrapper) {
     switch (runtime) {
       case RUNTIME_INTERCEPT: 
         /* for runtime interception, put a blank, the name stays the same*/
-        prefix = "  ";
+        if(shmem_wrapper)
+          prefix = "  __real_";
+        else
+          prefix = "  ";
         break;
       case PREPROC_INTERCEPT:
         /* for standard preprocessor redirection, bar becomes tau_bar */
@@ -706,7 +766,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
         prefix = "  __wrap_";
         break;
     }
-  }
+//  }
 
   printFunctionNameInOutputFile(r, impl, prefix, sig);
   impl << " {\n" << endl;
@@ -715,43 +775,64 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   string funchandle = sig.funchandle + ") = NULL;";
 
   if (runtime == RUNTIME_INTERCEPT) {
-
-    if (isVoid) {
-      if (strict_typing) {
-        impl << "  typedef void (*"<<protoname<<funcprototype<<endl;
-        impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
-      } else {
-        impl <<"  static void (*"<<r->name()<<funchandle<<endl;
-      }
-    } else {
-      if (strict_typing) {
-        impl << "  typedef " << sig.returntypename << " (*"<<protoname<<funcprototype<<endl;
-        impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
-      } else {
-        impl <<"  static "<<sig.returntypename<<" (*"<<r->name()<<funchandle<<endl;
-      }
-      retstring = string("    return retval;");
+      ostringstream buff;
+    if(shmem_wrapper) {
+       std::string type = r->name() + "_t";
+       std::string handle =  r->name() + "_handle";
+       buff << "  typedef " << (isVoid ? "void" : sig.returntypename)  << " (*" << type << ")" << sig.funcarg << ";\n"
+            << "  static " << type << " " << handle << " = (" << type << ")NULL;\n"
+            << "  if (!" << handle << ") {\n"
+            << "    " << handle << " = get_function_handle(\"" << r->name() << "\");\n"
+            << "  }\n" << endl;
     }
+    else {
+      if (isVoid) {
+        if (strict_typing) {
+          impl << "  typedef void (*"<<protoname<<funcprototype<<endl;
+          impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+        } else {
+          impl <<"  static void (*"<<r->name()<<funchandle<<endl;
+        }
+      } else {
+        if (strict_typing) {
+          impl << "  typedef " << sig.returntypename << " (*"<<protoname<<funcprototype<<endl;
+          impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+        } else {
+          impl <<"  static "<<sig.returntypename<<" (*"<<r->name()<<funchandle<<endl;
+        }
+        retstring = string("    return retval;");
+      }
 
-    ostringstream buff;
-    buff << "  if (tau_handle == NULL) \n"
-         << "    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n"
-         << "  if (tau_handle == NULL) { \n"
-         << "    perror(\"Error opening library in dlopen call\"); \n"
-         << retstring << "\n"
-         << "  } else { \n"
-         << "    if (" << r->name() << "_h == NULL)\n"
-         << "      ";
-    if (strict_typing)
-      buff << r->name() << "_h = (" << protoname << "_h) dlsym(tau_handle,\"" << r->name() << "\"); \n";
-    else
-      buff << r->name() << "_h = dlsym(tau_handle,\"" << r->name() << "\"); \n";
-    buff << "    if (" << r->name() << "_h == NULL) {\n"
-         << "      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n"
-         << "  " << retstring << "\n"
-         << "    }\n";
-     dltext = buff.str();
+      buff << "  if (tau_handle == NULL) \n"
+           << "    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n"
+           << "  if (tau_handle == NULL) { \n"
+           << "    perror(\"Error opening library in dlopen call\"); \n"
+           << retstring << "\n"
+           << "  } else { \n"
+           << "    if (" << r->name() << "_h == NULL)\n"
+           << "      ";
+      if (strict_typing)
+        buff << r->name() << "_h = (" << protoname << "_h) dlsym(tau_handle,\"" << r->name() << "\"); \n";
+      else
+        buff << r->name() << "_h = dlsym(tau_handle,\"" << r->name() << "\"); \n";
+      buff << "    if (" << r->name() << "_h == NULL) {\n"
+           << "      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n"
+           << "  " << retstring << "\n"
+           << "    }\n";
+    }
+    dltext = buff.str();
   } /* if (runtime == RUNTIME_INTERCEPT) */
+
+#ifdef SHMEM
+#ifdef MPI
+#ifdef CRAY
+  if(runtime == WRAPPER_INTERCEPT && shmem_wrapper && 
+      ( rname == "start_pes"  || rname == "shmem_init")) {
+    impl << "  MPI_Init();" << endl;
+  }
+#endif
+#endif
+#endif
 
   if (!isVoid) {
     impl<<"  "<<sig.returntypename<< " retval;"<<endl;
@@ -779,19 +860,24 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
          << endl;
   } 
 
-  impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "<<group_name<<");"<<endl;
+  if((shmem_wrapper && runtime != RUNTIME_INTERCEPT) || !shmem_wrapper)
+    impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "<<group_name<<");"<<endl;
   if (runtime == RUNTIME_INTERCEPT)
     impl <<dltext;
-  impl<<"  TAU_PROFILE_START(t);"<<endl;
+  if((shmem_wrapper && runtime != RUNTIME_INTERCEPT) || !shmem_wrapper)
+    impl<<"  TAU_PROFILE_START(t);"<<endl;
 
   if (shmem_wrapper) { /* generate pshmem calls here */
-    printShmemMessageBeforeRoutine(r, impl, sig);
+    if(runtime != RUNTIME_INTERCEPT) printShmemMessageBeforeRoutine(r, impl, sig);
     if (!isVoid)
     {
       impl<<"  retval  =";
     }
     if (runtime == RUNTIME_INTERCEPT) {
       impl<<"  "<<sig.rcalledfunc<<";"<<endl;
+    } else if(runtime == WRAPPER_INTERCEPT) {
+      if(rname.find("shmem_finalize") != string::npos) impl<< "  if(TauEnv_get_profile_format() != TAU_FORMAT_MERGED)"<<endl<<"  ";
+      impl<<"  __real_"<<sig.func<<";"<<endl;
     } else {
       if (pshmem_use_underscore_instead_of_p) {
         impl <<"   _"<<sig.func<<";"<<endl;
@@ -799,7 +885,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
         impl <<"   p"<<sig.func<<";"<<endl;
       }
     }
-    printShmemMessageAfterRoutine(r, impl, sig);
+    if(runtime != RUNTIME_INTERCEPT) printShmemMessageAfterRoutine(r, impl, sig);
   } else if (upc_env) {
     printUPCMessageBeforeRoutine(r, impl, sig);
     if (!isVoid) {
@@ -832,11 +918,8 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     }
   }
 
-  impl << "  TAU_PROFILE_STOP(t);" << endl;
-
-  if (runtime == RUNTIME_INTERCEPT) {
-    impl<<"  }"<<endl;
-  }
+  if((shmem_wrapper && runtime != RUNTIME_INTERCEPT) || !shmem_wrapper)
+    impl << "  TAU_PROFILE_STOP(t);" << endl;
 
   if (!isVoid) {
     impl<<"  return retval;"<<endl;
@@ -844,6 +927,85 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   impl<<endl;
 
   impl<<"}\n"<<endl;
+
+  if (runtime == RUNTIME_INTERCEPT) { /* linker-based instrumentation */
+    printFunctionNameInOutputFile(r, impl, "  ", sig);
+    impl << "{" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.func << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+#if 0
+    // Fortran wrapper functions
+    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcarg << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcarg << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+    transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
+
+    impl << "extern " << sig.returntypename << " " << rname << "_" << sig.funcarg << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " " << rname << "__" << sig.funcarg << endl;
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+#endif
+  }
+  if (runtime == WRAPPER_INTERCEPT && shmem_wrapper) {
+/*
+    printFunctionNameInOutputFile(r, impl, "  ", sig);
+    impl << "{" << endl;
+    impl << "   __wrap_" << sig.func << ";" << endl;
+    impl << "}\n" << endl;
+*/
+
+    // Fortran wrapper functions
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "_" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+	    impl << "   return __wrap_" << sig.funcfort << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "__" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.funcfort << ";" << endl;
+    impl << "}\n" << endl;
+
+    transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
+
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "_" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.funcfort << ";" << endl;
+    impl << "}\n" << endl;
+
+    impl << "extern " << sig.returntypename << " __wrap_" << rname << "__" << sig.funcargfort << endl;
+    impl << "{" << endl;
+    if(sig.returntypename.compare(0, 4, "void") == 0)
+            impl << "   __wrap_" << sig.funcfort << ";" << endl;
+    else
+            impl << "   return __wrap_" << sig.funcfort << ";" << endl;
+    impl << "}\n" << endl;
+  }
+
   if (runtime == PREPROC_INTERCEPT) { /* preprocessor instrumentation */
     macro.append(" "+sig.func+" " +"tau_"+sig.func);
 #ifdef DEBUG
@@ -890,6 +1052,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl,
   vector<itemRef*> itemvec;
   getCReferencesForWrapper(itemvec, pdb, f);
   PDB::croutinevec routines = pdb.getCRoutineVec();
+  string rname;
   for (PDB::croutinevec::const_iterator rit=routines.begin(); rit!=routines.end(); ++rit) {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
     if ( (*rit)->location().file() == f
@@ -900,6 +1063,12 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl,
       if (runtime == WRAPPER_INTERCEPT) { /* -Wl,-wrap,<func>,-wrap,<func> */
         if (!(*rit)->signature()->hasEllipsis()) { /* does not have varargs */
           linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
+          rname = (*rit)->name();
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
+          transform(rname.begin(), rname.end(), rname.begin(), ::toupper);
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"_ ";
+          linkoptsfile <<"-Wl,-wrap,"<<rname<<"__ ";
         }
       }
     }
@@ -938,61 +1107,88 @@ void generateMakefile(string const & package, string const & outFileName,
 
   ofstream makefile(buffer);
 
-  switch(runtime) {
-    case PREPROC_INTERCEPT:
-      makefile << "include ${TAU_MAKEFILE}\n"
-               << "CC=" << compiler_name << "\n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I..\n"
-               << "EXTRA_FLAGS=\n"
-               << "\n"
-               << "AR=ar\n"
-               << "ARFLAGS=rcv\n"
-               << "\n"
-               << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
-               << "\t$(AR) $(ARFLAGS) $@ $<\n"
-               << "\n"
-               << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
-               << "clean:\n"
-               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
-               << endl;
-      break;
-    case RUNTIME_INTERCEPT:
-      makefile << "include ${TAU_MAKEFILE}\n"
-               << "CC=" << compiler_name << " \n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I..\n"
-               << "EXTRA_FLAGS=\n"
-               << "\n"
-               << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
-               << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
-               << "\n"
-               << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
-               << "clean:\n"
-               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.so\n"
-               << endl;
-      break;
-    case WRAPPER_INTERCEPT:
-      makefile << "include ${TAU_MAKEFILE} \n"
-               << "CC=" << compiler_name << " \n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I..\n"
-               << "EXTRA_FLAGS=\n"
-               << "\n"
-               << "AR=$(TAU_AR)\n"
-               << "ARFLAGS=rcv \n"
-               << "\n"
-               << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
-               << "\t$(AR) $(ARFLAGS) $@ $< \n"
-               << "\n"
-               << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
-               << "clean:\n"
-               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
-               << endl;
-      break;
-    default:
-      // Unknown runtime flag!
-      break;
+  if(shmem_wrapper) {
+  // Note: shmem wrapper assumes wr.c and wr_dynamic.c for outFileNames.
+        makefile << "include ${TAU_MAKEFILE}\n"
+                 << "CC=" << compiler_name << " \n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "AR=$(TAU_AR)\n"
+                 << "ARFLAGS=rcv \n"
+                 << "\n"
+                 << "all: lib" << package << "_wrap.a lib" << package << "_wrap.so \n"
+                 << "lib" << package << "_wrap.so: " << package << "_wrap_static.o " << package << "_wrap_dynamic.o \n"
+                 << "\t$(CC) $(TAU_SHFLAGS) $@ $^ $(TAU_SHLIBS) -ldl\n"
+                 << "\n"
+                 << "lib" << package << "_wrap.a: " << package << "_wrap_static.o \n"
+                 << "\t$(AR) $(ARFLAGS) $@ $^ \n"
+                 << "\n"
+                 << package << "_wrap_dynamic.o: " << "wr_dynamic.c"<< "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << package << "_wrap_static.o: " << "wr.c" << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap_dynamic.o " << package << "_wrap_static.o lib" << package << "_wrap.so lib" << package << "_wrap.a\n"
+                 << endl;
+  } else {
+    switch(runtime) {
+      case PREPROC_INTERCEPT:
+        makefile << "include ${TAU_MAKEFILE}\n"
+                 << "CC=" << compiler_name << "\n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "AR=ar\n"
+                 << "ARFLAGS=rcv\n"
+                 << "\n"
+                 << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
+                 << "\t$(AR) $(ARFLAGS) $@ $<\n"
+                 << "\n"
+                 << package << "_wrap.o: " << outFileName << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
+                 << endl;
+        break;
+      case RUNTIME_INTERCEPT:
+        makefile << "include ${TAU_MAKEFILE}\n"
+                 << "CC=" << compiler_name << " \n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
+                 << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
+                 << "\n"
+                 << package << "_wrap.o: " << outFileName << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.so\n"
+                 << endl;
+        break;
+      case WRAPPER_INTERCEPT:
+        makefile << "include ${TAU_MAKEFILE} \n"
+                 << "CC=" << compiler_name << " \n"
+                 << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. $(TAU_SHMEM_INC)\n"
+                 << "EXTRA_FLAGS=\n"
+                 << "\n"
+                 << "AR=$(TAU_AR)\n"
+                 << "ARFLAGS=rcv \n"
+                 << "\n"
+                 << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
+                 << "\t$(AR) $(ARFLAGS) $@ $< \n"
+                 << "\n"
+                 << package << "_wrap.o: " << outFileName << "\n"
+                 << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
+                 << "clean:\n"
+                 << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
+                 << endl;
+        break;
+      default:
+        // Unknown runtime flag!
+        break;
+    }
   }
 }
 
@@ -1159,11 +1355,28 @@ int main(int argc, char **argv)
   }
 
   /* files created properly */
+  if (shmem_wrapper) {
+    impl << "#ifndef _GNU_SOURCE\n"
+         << "#define _GNU_SOURCE\n"
+         << "#endif\n"
+         << endl;
+    if (runtime == WRAPPER_INTERCEPT) {
+      impl << "#ifndef SHMEM_FINT\n"
+           << "#define SHMEM_FINT int\n"
+           << "#endif\n"
+           << endl;
+    }
+  }
   impl << "#include <" << filename << ">\n"
        << "#include <" << header_file << ">\n"
        << "#include <stdio.h>\n"
+       << "#include <stdlib.h>\n"
        << endl;
   if (shmem_wrapper) {
+    if ( runtime == WRAPPER_INTERCEPT) 
+      impl << "#include <Profile/TauEnv.h>\n"
+           << "#include <Profile/TauAPI.h>\n"
+           << endl;
     impl << "int TAUDECL tau_totalnodes(int set_or_get, int value);\n"
          << "static int tau_shmem_tagid_f=0;\n"
          << "#define TAU_SHMEM_TAGID (tau_shmem_tagid_f = (tau_shmem_tagid_f & 255))\n"
@@ -1192,6 +1405,27 @@ int main(int argc, char **argv)
     impl <<"const char * tau_orig_libname = "<<"\""<<
       runtime_libname<<"\";"<<endl; 
     impl <<"static void *tau_handle = NULL;"<<endl<<endl<<endl;
+
+    if(shmem_wrapper){
+      /* add get_function_handle function */
+      impl << "static void * get_function_handle(char const * name)"<<endl;
+      impl << "{"<<endl;
+      impl << "  char const * err;"<<endl;
+      impl << "  void * handle;"<<endl<<endl;;
+      impl << "  // Reset error pointer"<<endl;
+      impl << "  dlerror();"<<endl<<endl;
+      impl << "  // Attempt to get the function handle"<<endl;
+      impl << "  handle = dlsym(RTLD_NEXT, name);"<<endl<<endl;
+      impl << "  // Detect errors"<<endl;
+      impl << "  if ((err = dlerror())) {"<<endl;
+      impl << "    // These calls are unsafe, but we're about to die anyway.     "<<endl;
+      impl << "    fprintf(stderr, \"Error getting %s handle: %s\\n\", name, err);  "<<endl;
+      impl << "    fflush(stderr);"<<endl;
+      impl << "    exit(1);"<<endl;
+      impl << "  }"<<endl<<endl;;
+      impl << "  return handle;"<<endl;
+      impl << "}"<<endl;
+    }
   }
 
   defineTauGroup(impl, group_name); 
@@ -1217,7 +1451,7 @@ int main(int argc, char **argv)
       instrumentCFile(p, *it, header, impl, linkoptsfile, group_name, header_file, runtime, runtime_libname, libname);
     }
   }
-  if (runtime == WRAPPER_INTERCEPT) {
+  if (runtime == WRAPPER_INTERCEPT && !shmem_wrapper) {
     char dirname[1024]; 
     getcwd(dirname, sizeof(dirname)); 
     linkoptsfile <<"-L"<<dirname<<"/"<<libname<<"_wrapper/ -l"<< libname<<"_wrap "<<runtime_libname<<endl;

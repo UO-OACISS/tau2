@@ -102,11 +102,7 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int domain_n, int event_n)
 	CHECK_CUPTI_ERROR( err, "cuptiEventGetAttribute, event_name" );
 	event_description = string(event_description_char);
 	
-	create_tag();
-}
 
-void CuptiCounterEvent::create_tag()
-{
 	//cout << "device name: " << device_name << endl;
 	stringstream tag_stream("");
 	stringstream original_device_name(device_name);
@@ -367,12 +363,12 @@ counter_map_t Tau_CuptiLayer_map()
 	return Tau_CuptiLayer_Counter_Map;
 }
 
-bool Tau_CuptiLayer_is_cupti_counter(char* str)
+bool Tau_CuptiLayer_is_cupti_counter(char const * str)
 {
 	return Tau_CuptiLayer_map().count(string(str)) > 0;
 }
 
-void Tau_CuptiLayer_register_string(char *str)
+void Tau_CuptiLayer_register_string(char const * str)
 {
 	Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[str]);
 }
