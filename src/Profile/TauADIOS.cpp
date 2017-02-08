@@ -11,17 +11,22 @@
  * for tools, or ADIOST.
  */
 
+#include "Profile/TauSOS.h"
+#include "Profile/Profiler.h"
+#include "Profile/UserEvent.h"
+#include "Profile/TauMetrics.h"
+
 #include "adiost_callback_api.h"
 #include <stdint.h>
 #define ADIOST_EXTERN extern "C"
 
-extern "C" void Tau_pure_start_openmp_task(const char * n, int tid);
-extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
+ADIOST_EXTERN void Tau_pure_start_openmp_task(const char * n, int tid);
+ADIOST_EXTERN void Tau_pure_stop_openmp_task(const char * n, int tid);
 
 ADIOST_EXTERN void my_open ( int64_t file_descriptor, adiost_event_type_t type,
     const char * group_name, const char * file_name, const char * mode) {
     if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS open to close", Tau_get_thread());
+        //Tau_pure_start_task("ADIOS open to close", Tau_get_thread());
         Tau_pure_start_task("ADIOS open", Tau_get_thread());
     } else {
         Tau_pure_stop_task("ADIOS open", Tau_get_thread());
@@ -33,7 +38,7 @@ ADIOST_EXTERN void my_close(int64_t file_descriptor, adiost_event_type_t type) {
         Tau_pure_start_task("ADIOS close", Tau_get_thread());
     } else {
         Tau_pure_stop_task("ADIOS close", Tau_get_thread());
-        Tau_pure_stop_task("ADIOS open to close", Tau_get_thread());
+        //Tau_pure_stop_task("ADIOS open to close", Tau_get_thread());
     }
 }
 
@@ -181,32 +186,12 @@ ADIOST_EXTERN void my_fp_copy_buffer(int64_t file_descriptor,
     }
 } 
 
-/* This function is for printing a timer */
-void print_timer(const char *_name, adiost_timer_index_t index) {
-    if (adiost_timers_count[index] > 0ULL) {
-        printf("%s: %s, %u calls, %3.9f seconds\n",
-            program_invocation_short_name, _name,
-            adiost_timers_count[index],
-            ((double)adiost_timers_accumulated[index])/ONE_BILLIONF);
-    }
-}
-
-/* This function is for printing a counter */
-void print_counter(const char *_name, adiost_timer_index_t index) {
-    if (adiost_counters_count[index] > 0ULL) {
-        printf("%s: %s, %u calls, %u bytes\n",
-            program_invocation_short_name, _name,
-            adiost_counters_count[index],
-            adiost_counters_accumulated[index]);
-    }
-}
-
 ADIOST_EXTERN void my_finalize(void) {
 }
 
 // This function is for checking that the function registration worked.
 #define CHECK(EVENT,FUNCTION,NAME) \
-    printf("Registering ADIOST callback %s...",NAME); \
+    printf("TAU: Registering ADIOST callback %s...",NAME); \
     fflush(stderr); \
     if (adiost_fn_set_callback(EVENT, (adiost_callback_t)(FUNCTION)) != \
                     adiost_set_result_registration_success) { \
