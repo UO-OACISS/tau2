@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2011						   **
+**    Copyright 1997-2016						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,18 @@
 
 Change log:
 ------------
+Version 2.26 changes (from 2.25):
+1. Upgraded OMPT to LLVM-0.2 and introduced TAU_OPENMP_RUNTIME_EVENTS=0. 
+2. Updated tau_exec -ptts for ThreadSpotter. 
+3. Fixed OMPT with Cray (-arch=craycnl) instrumentation on threads 1,..N-1. 
+4. Updated APEX API. 
+5. Added PAPI support for multiplexing. 
+6. Updated MPI-T interface for MVAPICH2. 
+7. Updated MPC support. 
+8. Added support for OpenACC (PGI 16.5) and CUDA (8.0). 
+9. Updated OTF2 support. 
+10. Updated ParaProf. 
+
 Version 2.25 changes (from 2.24):
 1. Support for new PDT parsers cxxparse4101, cparse4101, and gfparse48
 2. Introducing APEX. 
@@ -23,6 +35,23 @@ Version 2.25 changes (from 2.24):
 10. Added support for OpenACC with PGI 15.10. 
 11. Added support for new versions of MAQAO, PEBIL, and DyninstAPI 9.0.3. 
 12. Added support for SGI MPT 2.13 with PSHMEM interface. 
+13. Added support for PGI 16.x OpenACC compilers. 
+14. Added support for gfparse48 from PDT 3.22 in tau_compiler.sh. 
+15. Updated OpenCL support in TAU.
+16. Improved callsite resolution. 
+17. Improved BFD support for Xeon Phi. 
+18. Added support for MPI-T interface (TAU_TRACK_MPI_T_PVARS, TAU_MPI_T_CVAR_METRICS, TAU_MPI_T_CVAR_VALUES). 
+19. When a file is excluded from instrumentation, it is not parsed or compiled with compInst. 
+20. Added APEX measurement library.
+21. Added OpenSHMEM wrapper generator. 
+22. Added -scorep=download configuration option to build TAU with Score-P. 
+23. Updated CUDA support. 
+24. OMPT updates. 
+25. Added support for Cray KNL systems (module load craype-mic-knl). 
+26. Fixed Opari2 compilation issues on Cray. 
+27. Added support for launching ParaTools ThreadSpotter through tau_exec (-ptts). 
+
+
  
 Version 2.24 changes (from 2.23):
 1. Reduced OpenMP profiling overhead and memory footprint.

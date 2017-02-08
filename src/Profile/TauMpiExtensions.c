@@ -42,6 +42,33 @@
 #define TAU_WRITE TAU_IO
 
 
+// Easy way to debug troublesome wrappers.
+#define __WRAP_MPI_FILE_OPEN__
+#define __WRAP_MPI_FILE_CLOSE__
+#define __WRAP_MPI_FILE_GET_SIZE__
+#define __WRAP_MPI_FILE_READ__
+#define __WRAP_MPI_FILE_READ_ALL__
+#define __WRAP_MPI_FILE_SET_VIEW__
+#define __WRAP_MPI_FILE_WRITE__
+#define __WRAP_MPI_FILE_WRITE_ALL__
+#define __WRAP_MPI_FILE_WRITE_AT__
+
+
+/**
+ * Returns a copy of a string with leading and trailing spaces stripped.
+ */   
+static char const * trim_fortran_string(char const * fstr, size_t const fstrlen)
+{
+  char const * head;
+  char const * tail;
+  for (head=fstr; head < fstr+fstrlen && *head == ' '; ++head)
+    ; // Intentional
+  for (tail=fstr+fstrlen-1; tail > head && *tail == ' '; --tail)
+    ; // Intentional
+  return strndup(head, tail-head+1);
+}
+
+
 #ifdef TAU_MPIFILE
 typedef struct iotracker {
   
@@ -2837,6 +2864,8 @@ void mpi_free_mem__( MPI_Aint * base, MPI_Fint * ierr)
 
 #ifdef TAU_MPIFILE
 
+#ifdef __WRAP_MPI_FILE_OPEN__
+
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
@@ -2858,14 +2887,11 @@ void MPI_FILE_OPEN( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fi
   MPI_Comm local_comm;
   MPI_Info local_info; 
   MPI_File local_fh; 
-  char *newfilename = (char *) malloc ((file_len +1) * sizeof(char));
-  strncpy(newfilename, filename, file_len); 
-  newfilename[file_len] = '\0'; 
+  char const * newfilename = trim_fortran_string(filename, file_len);
   local_comm = MPI_Comm_f2c(*comm);
   local_info = MPI_Info_f2c(*info);
-  
   *ierr = MPI_File_open( local_comm, newfilename, *amode, local_info, &local_fh) ; 
-   free(newfilename);
+  free((void*)newfilename);
   *fh = MPI_File_c2f(local_fh);
   return ; 
 }
@@ -2897,9 +2923,12 @@ void mpi_file_open__( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_
   return ; 
 }
 
+#endif /* __WRAP_MPI_FILE_OPEN__ */
+
 /******************************************************/
 /******************************************************/
 
+#ifdef __WRAP_MPI_FILE_CLOSE__
 
 /******************************************************
 ***      MPI_File_close wrapper function 
@@ -2955,6 +2984,7 @@ void mpi_file_close__( MPI_Fint * fh, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_CLOSE__ */
 
 /******************************************************
 ***      MPI_File_delete wrapper function 
@@ -2975,11 +3005,9 @@ int MPI_File_delete( TAU_MPICH3_CONST char * filename, MPI_Info info)
 void MPI_FILE_DELETE( char * filename, MPI_Fint *  info, MPI_Fint * ierr, int filename_length)
 {
   MPI_Info local_info = PMPI_Info_f2c(*info);
-  char *newfilename = (char *) malloc((filename_length + 1) * sizeof(char));
-  strncpy (newfilename, filename, filename_length);
-  newfilename[filename_length] = '\0';
+  char const * newfilename = trim_fortran_string(filename, filename_length);
   *ierr = MPI_File_delete( newfilename, local_info) ; 
-  free (newfilename);
+  free ((void*)newfilename);
   return ; 
 }
 
@@ -3066,6 +3094,7 @@ void mpi_file_set_size__( MPI_Fint *  fh, MPI_Offset *  size, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
+#ifdef __WRAP_MPI_FILE_GET_SIZE__
 
 /******************************************************
 ***      MPI_File_get_size wrapper function 
@@ -3119,6 +3148,7 @@ void mpi_file_get_size__( MPI_Fint *  fh, MPI_Offset * size, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_GET_SIZE__ */
 
 /******************************************************
 ***      MPI_File_get_group wrapper function 
@@ -3341,6 +3371,7 @@ void mpi_file_get_info__( MPI_Fint *  fh, MPI_Fint * info_used, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
+#ifdef __WRAP_MPI_FILE_SET_VIEW__
 
 /******************************************************
 ***      MPI_File_set_view wrapper function 
@@ -3404,6 +3435,7 @@ void mpi_file_set_view__( MPI_Fint *  fh, MPI_Offset *  disp, MPI_Fint *  etype,
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_SET_VIEW__ */
 
 /******************************************************
 ***      MPI_File_get_view wrapper function 
@@ -3464,6 +3496,7 @@ void mpi_file_get_view__( MPI_Fint *  fh, MPI_Offset * disp, MPI_Fint * etype, M
 /******************************************************/
 /******************************************************/
 
+#ifdef __WRAP_MPI_FILE_READ_AT__
 
 /******************************************************
 ***      MPI_File_read_at wrapper function 
@@ -3529,6 +3562,7 @@ void mpi_file_read_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, M
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_READ_AT__ */
 
 /******************************************************
 ***      MPI_File_read_at_all wrapper function 
@@ -3594,6 +3628,7 @@ void mpi_file_read_at_all__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * bu
 /******************************************************/
 /******************************************************/
 
+#ifdef __WRAP_MPI_FILE_WRITE_AT__
 
 /******************************************************
 ***      MPI_File_write_at wrapper function 
@@ -3658,6 +3693,7 @@ void mpi_file_write_at__( MPI_Fint *  fh, MPI_Offset *  offset, MPI_Aint * buf, 
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_WRITE_AT__ */
 
 /******************************************************
 ***      MPI_File_write_at_all wrapper function 
@@ -5109,6 +5145,7 @@ void mpi_file_preallocate__( MPI_Fint *  fh, MPI_Fint *  size, MPI_Fint * ierr)
 /******************************************************/
 /******************************************************/
 
+#ifdef __WRAP_MPI_FILE_READ__
 
 /******************************************************
 ***      MPI_File_read wrapper function 
@@ -5173,6 +5210,9 @@ void mpi_file_read__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fin
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_READ__ */
+
+#ifdef __WRAP_MPI_FILE_READ_ALL__
 
 /******************************************************
 ***      MPI_File_read_all wrapper function 
@@ -5229,6 +5269,8 @@ void mpi_file_read_all__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI
   MPI_FILE_READ_ALL( fh, buf, count, datatype, status, ierr) ; 
   return ; 
 }
+
+#endif /* __WRAP_MPI_FILE_READ_ALL__ */
 
 /******************************************************/
 /******************************************************/
@@ -5848,6 +5890,7 @@ void mpi_file_set_atomicity__( MPI_Fint *  fh, MPI_Fint *  flag, MPI_Fint * ierr
 /******************************************************/
 
 
+#ifdef __WRAP_MPI_FILE_WRITE__
 
 
 /******************************************************
@@ -5913,6 +5956,9 @@ void mpi_file_write__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MPI_Fi
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_WRITE__ */
+
+#ifdef __WRAP_MPI_FILE_WRITE_ALL__
 
 /******************************************************
 ***      MPI_File_write_all wrapper function 
@@ -5978,6 +6024,7 @@ void mpi_file_write_all__( MPI_Fint *  fh, MPI_Aint * buf, MPI_Fint *  count, MP
 /******************************************************/
 /******************************************************/
 
+#endif /* __WRAP_MPI_FILE_WRITE_ALL__ */
 
 /******************************************************
 ***      MPI_File_write_all_begin wrapper function 

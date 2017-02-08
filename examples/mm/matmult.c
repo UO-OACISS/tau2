@@ -224,7 +224,9 @@ int main (int argc, char *argv[])
   pthread_t       tid1, tid2, tid3;
   pthread_mutexattr_t Attr;
   pthread_mutexattr_init(&Attr);
+#ifndef TAU_CRAYCNL
   pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
+#endif /* TAU_CRAYCNL */
   if (pthread_mutex_init(&mutexsum, &Attr)) {
    printf("Error while using pthread_mutex_init\n");
   }

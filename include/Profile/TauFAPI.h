@@ -62,6 +62,8 @@
 	parameter (TAU_DESCRIPTOR_OVERHEAD 	= Z"00008000")	
 	parameter (TAU_BLITZ			= Z"00010000")	
 	parameter (TAU_HPCXX 			= Z"00020000")	
+	parameter (TAU_PYTHON 			= Z"00040000")	
+	parameter (TAU_KOKKOS 			= Z"00080000")	
 	parameter (TAU_FFT 			= Z"00100000")	
 	parameter (TAU_ACLMPL 			= Z"00200000")	
 	parameter (TAU_PAWS1 			= Z"00400000")	

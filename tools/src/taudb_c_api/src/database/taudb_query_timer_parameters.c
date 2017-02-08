@@ -6,7 +6,7 @@
 extern TAUDB_TIMER_PARAMETER* taudb_process_parameter_timer(TAUDB_TRIAL* trial, TAUDB_TIMER_PARAMETER* timer_parameter);
 extern void taudb_trim(char * s);
 
-TAUDB_TIMER_PARAMETER* taudb_query_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer) {
+TAUDB_TIMER_PARAMETER* taudb_query_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_parameters(%p,%p)\n", trial, timer);
 #endif
@@ -20,7 +20,7 @@ TAUDB_TIMER_PARAMETER* taudb_query_timer_parameters(TAUDB_CONNECTION* connection
   
   // if the Trial already has the parameter data, return it.
   if (timer != NULL && timer->parameters != NULL) {
-    taudb_numItems = HASH_CNT(hh,timer->parameters);
+    *taudb_numItems = HASH_CNT(hh,timer->parameters);
     return timer->parameters;
   }
 
@@ -41,7 +41,7 @@ TAUDB_TIMER_PARAMETER* taudb_query_timer_parameters(TAUDB_CONNECTION* connection
   taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(connection);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 
@@ -77,8 +77,8 @@ TAUDB_TIMER_PARAMETER* taudb_query_timer_parameters(TAUDB_CONNECTION* connection
 }
 
 // convenience method
-TAUDB_TIMER_PARAMETER* taudb_query_all_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
-  return taudb_query_timer_parameters(connection, trial, NULL);
+TAUDB_TIMER_PARAMETER* taudb_query_all_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
+  return taudb_query_timer_parameters(connection, trial, NULL, taudb_numItems);
 }
 
 void taudb_add_timer_parameter_to_timer(TAUDB_TIMER* timer, TAUDB_TIMER_PARAMETER* timer_parameter) {

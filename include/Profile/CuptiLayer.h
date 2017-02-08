@@ -1,9 +1,5 @@
 #ifdef __GNUC__
-#include "cupti_version.h"
-#include "cupti_events.h"
-#include <cuda_runtime_api.h>
-
-#include <stdio.h>
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -11,14 +7,10 @@
 #include <string>
 #include <vector>
 
-// Putting "using namespace" statements in header files can create ambiguity
-// between user-defined symbols and std symbols, creating unparsable code
-// or even changing the behavior of user codes.  This is also widely considered
-// to be bad practice.  Here's a code PDT can't parse because of this line:
-//   EX: #include <complex>
-//   EX: typedef double real;
-//
-//using namespace std;
+#include <cupti_version.h>
+#include <cupti_events.h>
+#include <cupti_metrics.h>
+#include <cuda_runtime_api.h>
 
 /* Specific errors from CUDA lib */
 #define CHECK_CU_ERROR(err, cufunc) \
@@ -50,11 +42,20 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 
 //#define DISABLE_CUPTI
 
-class CuptiCounterEvent
-{
 
-public:
-	CUdevice device;
+// These really should come from TauInit.h and TauAPI.h but TAU's include files are so
+// jacked up that including those files causes weird errors.  Just work around the problem...
+extern "C" int Tau_init_initializeTAU();
+extern "C" void Tau_destructor_trigger();
+
+
+struct CuptiCounterEvent
+{
+    static void printHeader();
+
+    CuptiCounterEvent(int device_n, int domain_n, int event_n);
+
+    CUdevice device;
 	CUpti_EventDomainID domain;
 	CUpti_EventID event;
 
@@ -64,19 +65,42 @@ public:
 	std::string event_description;
 	std::string tag; // string presented to the user.
 
-	CuptiCounterEvent(int device_n, int domain_n, int event_n);
-
-	void create_tag();
-
-	static void printHeader();
 	void print();
-		
 };
 
-typedef std::map<std::string, CuptiCounterEvent*> counter_map_t;
-typedef std::vector<CuptiCounterEvent*> counter_vec_t;
-typedef std::map<std::string, CuptiCounterEvent*>::iterator counter_map_it;
-typedef std::map<int, int> counter_id_map_t;
+struct CuptiCounterMap: public std::map<std::string, CuptiCounterEvent*>
+{
+    CuptiCounterMap() {
+        Tau_init_initializeTAU();
+    }
+    ~CuptiCounterMap() {
+        Tau_destructor_trigger();
+    }
+};
+typedef CuptiCounterMap counter_map_t;
+typedef CuptiCounterMap::iterator counter_map_it;
+
+struct CuptiCounterVector: public std::vector<CuptiCounterEvent*>
+{
+    CuptiCounterVector() {
+        Tau_init_initializeTAU();
+    }
+    ~CuptiCounterVector() {
+        Tau_destructor_trigger();
+    }
+};
+typedef CuptiCounterVector counter_vec_t;
+
+struct CuptiCounterIdMap : public std::map<int, int>
+{
+    CuptiCounterIdMap() {
+        Tau_init_initializeTAU();
+    }
+    ~CuptiCounterIdMap() {
+        Tau_destructor_trigger();
+    }
+};
+typedef CuptiCounterIdMap counter_id_map_t;
 
 #ifdef DISABLE_CUPTI
 
@@ -121,7 +145,7 @@ extern void Tau_CuptiLayer_register_all_counters();
 
 extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
 
-extern int Tau_CuptiLayer_Initialize_callbacks();
+extern void Tau_CuptiLayer_Initialize_callbacks();
 
 extern void Tau_CuptiLayer_Initialize_Map();
 
@@ -129,6 +153,7 @@ extern counter_map_t& Tau_CuptiLayer_Counter_Map();
 
 extern counter_id_map_t interal_id_map();
 #endif
+
 #endif //__GNUC__
 
 /*
@@ -145,7 +170,7 @@ extern "C" int Tau_CuptiLayer_get_num_events();
 
 extern "C" void Tau_CuptiLayer_set_event_name(int metric_n, int type);
 
-extern "C" const char* Tau_CuptiLayer_get_event_name(int metric_n);
+extern "C" char const * Tau_CuptiLayer_get_event_name(int metric_n);
 
 extern "C" int Tau_CuptiLayer_get_cupti_event_id(int metric_n);
 
@@ -155,11 +180,8 @@ extern "C" void Tau_CuptiLayer_read_counters(int d, uint64_t *cb);
 
 extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 
-extern "C" bool Tau_CuptiLayer_is_cupti_counter(char *str);
+extern "C" bool Tau_CuptiLayer_is_cupti_counter(char const * str);
 
-extern "C" void Tau_CuptiLayer_register_string(char *str, int metric_n);
+extern "C" void Tau_CuptiLayer_register_string(char const * str, int metric_n);
 
-//extern counter_map_t& Tau_CuptiLayer_Counter_Map();
-
-//counter_map_it Tau_CuptiLayer_counters_iterator();
-
+extern "C" void Tau_cuda_Event_Synchonize();

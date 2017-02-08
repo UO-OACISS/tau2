@@ -5,7 +5,7 @@
 
 extern TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_METADATA* secondary_metadatas, const char* id);
 
-TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_secondary_metadata(%p)\n", trial);
 #endif
@@ -95,7 +95,7 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
-  taudb_numItems = nFields;
+  *taudb_numItems = nFields;
 
   return trial->secondary_metadata;
 }

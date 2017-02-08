@@ -36,6 +36,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 
+enum TauMetricCuptiFlag {
+    TAU_METRIC_NOT_CUPTI,
+    TAU_METRIC_CUPTI_EVENT,
+    TAU_METRIC_CUPTI_METRIC
+};
 
 int TauMetrics_init();
 
@@ -44,6 +49,9 @@ void TauMetrics_getMetrics(int tid, double values[]);
 const char *TauMetrics_getMetricName(int metric);
 int TauMetrics_getMetricUsed(int metric);
 const char *TauMetrics_getMetricAtomic(int metric);
+int TauMetrics_getIsCuptiMetric(int metric);
+int TauMetrics_getTimeMetric();
+int TauMetrics_getEventIndex(int eventid);
 
 
 /**

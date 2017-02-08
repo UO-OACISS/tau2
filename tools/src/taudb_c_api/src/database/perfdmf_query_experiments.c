@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
-PERFDMF_EXPERIMENT* perfdmf_query_experiments(TAUDB_CONNECTION* connection, PERFDMF_APPLICATION* application) {
+PERFDMF_EXPERIMENT* perfdmf_query_experiments(TAUDB_CONNECTION* connection, PERFDMF_APPLICATION* application, int* taudb_numItems) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling perfdmf_query_experiments(%p)\n", application);
 #endif
@@ -32,7 +32,7 @@ PERFDMF_EXPERIMENT* perfdmf_query_experiments(TAUDB_CONNECTION* connection, PERF
 
   int nRows = taudb_get_num_rows(connection);
   PERFDMF_EXPERIMENT* experiments = perfdmf_create_experiments(nRows);
-  taudb_numItems = nRows;
+  *taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(connection);
 

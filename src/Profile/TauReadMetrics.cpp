@@ -374,7 +374,7 @@ void metric_read_cupti(int tid, int idx, double values[])
 
 
 extern int  Tau_read_cray_power_events(int fd, long long int *value); 
-extern int  Tau_open_cray_file(char *filename); 
+extern int  Tau_open_cray_file(const char *filename); 
 void metric_read_cpuenergy(int tid, int idx, double values[]) 
 {
 

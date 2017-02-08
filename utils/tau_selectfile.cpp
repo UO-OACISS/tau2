@@ -19,8 +19,9 @@ int main(int argc, char **argv) {
   processInstrumentationRequests(argv[1]);
   if (processFileForInstrumentation(argv[2])) {
     printf ("yes\n");
+    return 1;
   } else {
     printf ("no\n");
+    return 0;
   }
-  return 0;
 }

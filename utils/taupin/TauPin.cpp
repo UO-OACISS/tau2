@@ -17,7 +17,9 @@ the traditional main. This becomes the exported api of the dll which will be inv
 
 SpecManager* mySpec;
 TraceManager* myTracer;
-FILE *sout,*sin,*serr;
+//FILE *sout,*sin,*serr;    //by monil
+FILE *sout,*serr;    //by monil
+
 
 INT32 Usage()
 {
@@ -68,6 +70,7 @@ VOID ExitHandle(INT32 code, VOID *v)
 	//simply call into tracemanager
     DBG_TRACE(code);
 	myTracer->EndTrace();
+	ExitAndWriteProfile(); // Monil put this function to invoke the profile writing module
 }
 
 VOID ImgInstrumentor( IMG img, VOID *v )

@@ -12,6 +12,7 @@
 #include <Profile/TauBfd.h>
 
 #ifndef TAU_WINDOWS
+#ifndef _AIX
 
 /* Android didn't provide <ucontext.h> so we make our own */
 #ifdef TAU_ANDROID
@@ -468,9 +469,24 @@ bool determineCallSiteViaString(unsigned long *addresses)
           if (i + 2 < length) {
             callsite = addresses[i + 2];
             name = Tau_callsite_resolveCallSite(addresses[i + 2]);
-            registerNewCallsiteInfo(name, callsite, id);
+            if(strstr(name,"__wrap_") != NULL) {
+              //if(i + 3 < length) {
+              for(int j=3; j<length-i; j++) {
+                unsigned long callsite_unwrapped = addresses[i + j];//3];
+                char *name_unwrapped = Tau_callsite_resolveCallSite(addresses[i + j]);//3]);
+                if (strstr(name_unwrapped,"UNRESOLVED ADDR") == NULL) {
+                  callsite = callsite_unwrapped;
+                  strcpy(name, name_unwrapped);
+                }
+                free(name_unwrapped);
+              }
+            }
+            bool callsite_resolved = (strstr(name,"UNRESOLVED ADDR") == NULL);
+            if(callsite_resolved)
+              registerNewCallsiteInfo(name, callsite, id);
             free(name);
-            return true;
+            if(callsite_resolved)
+              return true;
           }
         } else {
           if (nameInMPI(name)) {
@@ -676,6 +692,7 @@ void Profiler::CallSiteStart(int tid)
     }
 
     // Has the callsite key for the base function been seen before?
+/*
     map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>::iterator itKey = TheCallSiteFirstKeyMap().find(ThisFunction);
     if (itKey == TheCallSiteFirstKeyMap().end()) {
       // BASE Function not previously encountered. The callsite is necessarily unique.
@@ -711,6 +728,7 @@ void Profiler::CallSiteStart(int tid)
         }
       }
     }
+*/
     // Set up metrics. Increment number of calls and subrs
     CallSiteFunction->IncrNumCalls(tid);
   } else {    // Stub for the desire of callsites.
@@ -879,4 +897,5 @@ extern "C" void finalizeCallSites_if_necessary()
     candidate->SetName(tempName);
   }
 }
+#endif /* _AIX */
 #endif

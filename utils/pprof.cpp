@@ -33,9 +33,10 @@
  *              delete stddev column for mean
  */
 
+# include "tau_platforms.h"
 # include "function_data.h"
 # include "user_event_data.h"
-# include "tau_platforms.h"
+//# include "tau_platforms.h"
 #ifdef APPLECXX
 #define APPLE_SSCANF_BUG 1 
 /* developer.apple.com: Fixed sscanf() now works as expected for reading long doubles. (r. 2757634). */    
