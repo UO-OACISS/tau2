@@ -422,6 +422,11 @@ case $1 in
 	echo "s,^SOSDIR=.*$,SOSDIR=$sosdir,g" >> $sedout
 	;;
 
+    adiosdir=*)
+        adiosdir=`echo $1 | sed -e 's/^adiosdir=//'`
+	echo "s,^ADIOSDIR=.*$,ADIOSDIR=$adiosdir,g" >> $sedout
+	;;
+
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
@@ -1509,6 +1514,10 @@ case $1 in
 	;;
      SOS)
 	echo "NOTE: Using SOS ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     AOS)
+	echo "NOTE: Using AOS ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPENMP)

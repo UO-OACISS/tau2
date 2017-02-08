@@ -868,6 +868,8 @@ opari_construct=no
 boost=no
 sos=no
 sosdir=
+adios=no
+adiosdir=
 apex=no
 dyninst=no
 dyninstinc=no
@@ -1607,6 +1609,17 @@ for arg in "$@"; do
 	    if [ ! -d $sosdir ]
 	    then
 		echo "Error: Cannot access SOS directory $sosdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-adios=*)
+	    adios=yes
+	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
+	    if [ ! -d $adiosdir ]
+	    then
+		echo "Error: Cannot access ADIOS directory $adiosdir"
 		exit 1
 	    fi
 	    shift
@@ -8779,6 +8792,11 @@ fi
 if [ $sos = yes ] ; then
     fixmakeargs="$fixmakeargs SOS "
     fixmakeargs="$fixmakeargs sosdir=$sosdir"
+fi
+
+if [ $adios = yes ] ; then
+    fixmakeargs="$fixmakeargs ADIOS "
+    fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
 fi
 
 if [ $dyninst = yes ] ; then
