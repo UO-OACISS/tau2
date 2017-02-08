@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <mpi.h>
 #include <Profile/Profiler.h>
-#include "Profile/TauSOS.h"
 
 using namespace std;
 
@@ -17,7 +16,7 @@ extern "C" int TauTranslateRankToWorld(MPI_Comm comm, int rank)
     }
   } comms;
 
-  if (comm != TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD)) {
+  if (comm != MPI_COMM_WORLD) {
     // If the rank_map doesn't exist, it is created
     rank_map & comm_ranks = comms[comm];
 
@@ -28,7 +27,7 @@ extern "C" int TauTranslateRankToWorld(MPI_Comm comm, int rank)
       int result;
       int worldrank;
 
-      PMPI_Comm_compare(comm, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &result);
+      PMPI_Comm_compare(comm, MPI_COMM_WORLD, &result);
       if (result == MPI_CONGRUENT || result == MPI_IDENT) {
         worldrank = rank;
       } else {
@@ -38,7 +37,7 @@ extern "C" int TauTranslateRankToWorld(MPI_Comm comm, int rank)
         int worldranks[1];
 
         ranks[0] = rank;
-        PMPI_Comm_group(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &worldGroup);
+        PMPI_Comm_group(MPI_COMM_WORLD, &worldGroup);
         PMPI_Comm_group(comm, &commGroup);
         PMPI_Group_translate_ranks(commGroup, 1, ranks, worldGroup, worldranks);
 

@@ -32,7 +32,6 @@
 #include <Profile/tau_types.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauTrace.h>
-#include "Profile/TauSOS.h"
 
 #define SYNC_LOOP_COUNT 10
 
@@ -44,7 +43,7 @@ long TAUDECL TauUserEvent_GetEventId(void *evt);
 #include <winsock.h>
 static long gethostid() {
   int rank;
-  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 }
 #else
@@ -54,7 +53,7 @@ static long gethostid() {
 static long getUniqueMachineIdentifier() {
 #ifdef TAU_CATAMOUNT
   int rank;
-  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 #else
   return gethostid();
@@ -151,12 +150,12 @@ static double getTimeOffset() {
 
   offsetInfo = TheTauTraceOffsetInfo();
 
-  PMPI_Comm_split(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), getUniqueMachineIdentifier() & 0x7FFFFFFF, 0, &machineComm);
+  PMPI_Comm_split(MPI_COMM_WORLD, getUniqueMachineIdentifier() & 0x7FFFFFFF, 0, &machineComm);
   PMPI_Comm_rank(machineComm, &machineRank);
   PMPI_Comm_size(machineComm, &numProcsThisMachine);
 
   /* create a communicator with one process from each machine */
-  PMPI_Comm_split(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), machineRank, 0, &interMachineComm);
+  PMPI_Comm_split(MPI_COMM_WORLD, machineRank, 0, &interMachineComm);
   PMPI_Comm_rank(interMachineComm, &syncRank);
   PMPI_Comm_size(interMachineComm, &numMachines);
 
@@ -166,7 +165,7 @@ static double getTimeOffset() {
   offsetInfo->beginOffset = startOffset;
 
   offset = 0.0;
-  PMPI_Barrier(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+  PMPI_Barrier(MPI_COMM_WORLD);
 
   if (machineRank == 0) {
     for (i = 1; i < numMachines; i++) {
@@ -195,8 +194,8 @@ void TauSyncFinalClocks() {
   static void *userevent = 0;
   /* only do this when tracing */
 
-  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
-  PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &size );
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &size );
 
   offset = getTimeOffset();
 
@@ -213,10 +212,10 @@ void TauSyncClocks() {
   TauTraceOffsetInfo *offsetInfo;
   static void *userevent = 0;
 
-  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
-  PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &size );
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &size );
 
-  PMPI_Barrier(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+  PMPI_Barrier(MPI_COMM_WORLD);
   TAU_VERBOSE ("TAU: Clock Synchonization active on node : %d\n", rank);
 
   /* clear counter to zero, since the times might be wildly different (LINUX_TIMERS)
@@ -235,5 +234,5 @@ void TauSyncClocks() {
 /*   TAU_VERBOSE ("TAU: Clock Synchonization offset for node %d : %.16G\n", rank, offset); */
   TauTraceEventSimple(TauUserEvent_GetEventId(userevent), (x_int64) offset, 0);
 
-  PMPI_Barrier(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+  PMPI_Barrier(MPI_COMM_WORLD);
 }

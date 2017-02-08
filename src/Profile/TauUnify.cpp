@@ -43,8 +43,6 @@ extern "C" void  __real_shmem_free(void * a1) ;
 #include <algorithm>
 using namespace std;
 
-#include "Profile/TauSOS.h"
-
 #ifdef TAU_UNIFY
 /** local unification object, one is created for each child rank that we talk to */
 typedef struct {
@@ -100,8 +98,8 @@ public:
 int *Tau_unify_generateSortMap(EventLister *eventLister) {
 #ifdef TAU_MPI
   int rank, numRanks;
-  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
-  PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &numRanks);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
   int rank, numRanks;
@@ -254,8 +252,8 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 #ifdef TAU_MPI
   MPI_Status status;
 
-  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
-  PMPI_Comm_size(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &numRanks);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
   rank = __real_shmem_my_pe();
@@ -367,10 +365,10 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 
 #ifdef TAU_MPI
 	// send ok-to-go
-	PMPI_Send(NULL, 0, MPI_INT, source, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+	PMPI_Send(NULL, 0, MPI_INT, source, 0, MPI_COMM_WORLD);
 	
 	// receive buffer length
-	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
+	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
 
 	// Only receive and allocate memory if there's something to receive.
@@ -381,7 +379,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	  
 #ifdef TAU_MPI
 	  // receive buffer
-	  PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
+	  PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
 	  
 	  // add unification object to array
@@ -406,10 +404,10 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 
 #ifdef TAU_MPI
       // recieve ok to go
-      PMPI_Recv(NULL, 0, MPI_INT, parent, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
+      PMPI_Recv(NULL, 0, MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
       
       // send length
-      PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+      PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
       
       // Send data only if the buffer size is greater than 0.
@@ -417,7 +415,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
       if (defBufSize > 0) {
 #ifdef TAU_MPI
 	// send data
-	PMPI_Send(defBuf, defBufSize, MPI_CHAR, parent, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+	PMPI_Send(defBuf, defBufSize, MPI_CHAR, parent, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
       }
       break;
@@ -471,7 +469,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
     
 #ifdef TAU_MPI
     PMPI_Recv(mergedObject->mapping, mergedObject->numStrings, 
-	      MPI_INT, parent, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &status);
+	      MPI_INT, parent, 0, MPI_COMM_WORLD, &status);
 #endif /* TAU_MPI */
 
     // apply mapping table to children
@@ -486,7 +484,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   for (unsigned int i=1; i<unifyObjects->size(); i++) {
 #ifdef TAU_MPI
     PMPI_Send((*unifyObjects)[i]->mapping, (*unifyObjects)[i]->numEvents, 
-	      MPI_INT, (*unifyObjects)[i]->rank, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+	      MPI_INT, (*unifyObjects)[i]->rank, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
   }
 #endif
@@ -514,7 +512,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   unify_object_t *object = (*unifyObjects)[0];
 
 #ifdef TAU_MPI
-  PMPI_Bcast (&globalNumItems, 1, MPI_INT, 0, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+  PMPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
   int *shglobalNumItems = (int*)shmem_malloc(sizeof(int));
@@ -607,7 +605,7 @@ extern "C" int TauGetMpiRank(void) {
     }
   }
   if (rank[tid] == -1) {
-    PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank[tid]);
+    PMPI_Comm_rank(MPI_COMM_WORLD, &rank[tid]);
   }
   retval = rank[tid];
   RtsLayer::UnLockDB();
@@ -620,7 +618,7 @@ extern "C" int TauGetMpiRank(void)
 {
 #ifdef TAU_MPI
   int rank;
-  PMPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 #else
   return 0;

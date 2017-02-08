@@ -1489,6 +1489,7 @@ int TauProfiler_StoreData(int tid)
       Tau_mergeProfiles();
 	}
 #endif
+#endif
 
 #ifdef TAU_SOS
     //TAU_SOS_finalize();

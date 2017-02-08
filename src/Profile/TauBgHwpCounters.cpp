@@ -17,7 +17,6 @@
 #include "spi/UPC.h"
 #include "spi/kernel_interface.h"
 #include "upc_counters.h"
-#include "Profile/TauSOS.h"
 
 // define UPC_CONTROL_CORE as core zero since there is always a process on that core
 #define COUNTER_CONTROL_CORE 0
@@ -105,7 +104,7 @@ void Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, 
 void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error) {
 
     int rank;
-    MPI_Comm_rank(TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD), &rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     char metadata_string[1024];
 
     #ifdef COUNTER_REDUCE
@@ -129,9 +128,9 @@ void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode
       } 
 
       int err;
-      err = PMPI_Reduce(&core01Flag, &core01Count, 1, MPI_INT, MPI_SUM, ROOT_RANK, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+      err = PMPI_Reduce(&core01Flag, &core01Count, 1, MPI_INT, MPI_SUM, ROOT_RANK, MPI_COMM_WORLD);
       if (err != 0) *error = COUNTER_REDUCE_ERROR;
-      err = PMPI_Reduce(&core23Flag, &core23Count, 1, MPI_INT, MPI_SUM, ROOT_RANK, TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+      err = PMPI_Reduce(&core23Flag, &core23Count, 1, MPI_INT, MPI_SUM, ROOT_RANK, MPI_COMM_WORLD);
       if (err != 0) *error = COUNTER_REDUCE_ERROR;
 
       int i;
@@ -150,63 +149,63 @@ void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode
  
       if (*mode == COUNTER_MODE_CORES01) {
         err = PMPI_Reduce(counters, core01Min, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MIN, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(counters, core01Av, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(counters, core01Max, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MAX, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
   
         err = PMPI_Reduce(max, core23Min, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MIN, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core23Av, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core23Max, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MAX, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
       } else if (*mode == COUNTER_MODE_CORES23) {
         err = PMPI_Reduce(max, core01Min, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MIN, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core01Av, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core01Max, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MAX, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
 
         err = PMPI_Reduce(counters, core23Min, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MIN, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(counters, core23Av, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(counters, core23Max, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MAX, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
       } else {
         err = PMPI_Reduce(max, core01Min, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MIN, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core01Av, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core01Max, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MAX, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
 
         err = PMPI_Reduce(max, core23Min, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MIN, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core23Av, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_SUM, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
         err = PMPI_Reduce(zero, core23Max, COUNTER_ARRAY_LENGTH, MPI_UNSIGNED_LONG_LONG, MPI_MAX, ROOT_RANK,
-                          TAU_SOS_MAP_COMMUNICATOR(MPI_COMM_WORLD));
+                          MPI_COMM_WORLD);
         if (err != 0) *error = COUNTER_REDUCE_ERROR;
       }
 

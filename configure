@@ -3574,23 +3574,21 @@ orig_c_compiler=$c_compiler
 orig_cxx_compiler=$cxx_compiler
 orig_fortran_compiler=$fortran_compiler
 # mpicxx may change it.
-if [ $cxx_compiler = mpicxx ]
-then
+if [ $cxx_compiler = mpicxx ] ; then
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
     mpi=yes
-    if [ $cxxloaded = 1 ]
-    then
-	c_compiler=`mpicc -show | tail -n 1 | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	f90loaded=`which mpif90 2>/dev/null | wc -l`
-	if [ $f90loaded = 1 ]
+    if [ $cxxloaded = 1 ] ; then
+	    c_compiler=`mpicc -show | tail -n 1 | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+	    f90loaded=`which mpif90 2>/dev/null | wc -l`
+	    if [ $f90loaded = 1 ] ; then
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then
-		fortran_compiler=intel
-	    fi
-	else
+		        fortran_compiler=intel
+	        fi
+	    else
             fortran_compiler=no
-	fi
+	    fi
 
 	echo "NOTE: Found mpicxx in the path"
 	if [ $machine = bgq -o $machine = bgp ]; then
