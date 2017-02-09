@@ -48,6 +48,7 @@ typedef struct tuning_policy_rule_
 
 tuning_policy_rule rules[MAX_NB_RULES];
 
+/* Parse list of values for each field */
 int parse_list_values(char *value, char *separator, char **list)
 {
 
