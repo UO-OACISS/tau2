@@ -12,17 +12,34 @@
 #define MAX_SIZE_RULE 32
 #define MAX_NB_RULES 16
 
+typedef struct mpit_pvar_t
+{
+ char *pvar;
+ int is_array;
+ int size;
+
+}mpit_pvar;
+
+typedef struct mpit_cvar_t
+{
+ char *cvar;
+ int is_array;
+ int size;
+
+}mpit_cvar;
+
 typedef struct tuning_policy_rule_
 {
  char **pvars;
  char **cvars;
+ int num_pvars;
  char *condition;
  char *leftoperand;
  char *rightoperand;
  char *operator;
  char *value;
  char *logicop;
- char *restleftoperand;
+ char *resleftoperand;
  char *resoperator;
  char *resrightoperand;
 } tuning_policy_rule;
@@ -31,18 +48,35 @@ typedef struct tuning_policy_rule_
 
 tuning_policy_rule rules[MAX_NB_RULES];
 
+int parse_list_values(char *value, char *separator, char **list)
+{
+
+  char *token = strtok(value, separator);
+   
+  while (token != NULL)
+  {
+        printf("%s\n", token);
+        token = strtok(NULL, separator);
+  }
+
+  return 1;
+}
+
 /* Parse field into 2 components: key and value */
 int parse_rule_field(char *line, char *separator, char *key, char *value)
 {
   char *token;
   //char separator[2] = ":";
 
-  /* Get field name */
-  token = strtok(line, separator); 
-  strcpy(key,token);
-  /* Get field name */
-  token = strtok(NULL, separator);
-  strcpy(value,token);
+  if(strcmp(separator,":") == 0) 
+  {
+   /* Get field name */
+   token = strtok(line, separator); 
+   strcpy(key,token);
+   /* Get field name */
+   token = strtok(NULL, separator);
+   strcpy(value,token);
+  }
 
   return 1;
 }
@@ -60,7 +94,7 @@ void load_policy_rules(int argc, void **args)
  //char value[16];
  char *value = NULL;
  char separator[2] = ":";
- int irule = 0;
+ int irule = -1;
 
  fprintf(stdout, "Tuning policies DSO init.....\n");
 
@@ -68,36 +102,114 @@ void load_policy_rules(int argc, void **args)
 
  if(fp != NULL) 
  {
-   // Read configuration file
+   // Read configuration file, parse lines, and populate rule structure
    while(fgets(line, sizeof(line), fp) != NULL) 
    {
-     if(strncmp(line,"RULE",4) == 0) {     
+     if(strncmp(line,"RULE",4) == 0) {    
        irule += 1; 
      }
-    
      if(strncmp(line,"PVARS",5) == 0) {
-       parse_rule_field(line, separator,  key, value);
+       parse_rule_field(line, separator, key, value);
      } 
      if(strncmp(line,"CVARS",5) == 0) {
        parse_rule_field(line, separator, key, value);
      }
      if(strncmp(line,"CONDITION",9) == 0) {
        parse_rule_field(line, separator, key, value);
+       strcpy(rules[irule].condition,value);
      } 
      if(strncmp(line,"LEFTOPERAND",11) == 0) {
        parse_rule_field(line, separator, key, value);
+       strcpy(rules[irule].leftoperand,value);
      }
      if(strncmp(line,"RIGHTOPERAND",12) == 0) {
        parse_rule_field(line, separator, key, value);
+       strcpy(rules[irule].rightoperand,value);
+     }
+     if(strncmp(line,"OPERATOR",8) == 0) {
+       parse_rule_field(line, separator, key, value);
+       strcpy(rules[irule].operator,value);
      }
      if(strncmp(line,"LOGICOP",7) == 0) {
        parse_rule_field(line, separator, key, value);
+     }
+     if(strncmp(line,"RESLEFTOPERAND",14) == 0) {
+       parse_rule_field(line, separator, key, value);
+       strcpy(rules[irule].resleftoperand,value);
+     }
+     if(strncmp(line,"RESRIGHTOPERAND",15) == 0) {
+       parse_rule_field(line, separator, key, value);
+       strcpy(rules[irule].resrightoperand,value);
+     }
+     if(strncmp(line,"RESOPERATOR",11) == 0) {
+       parse_rule_field(line, separator, key, value);
+       strcpy(rules[irule].resoperator,value);
      }
 
    } // End while 
  } // End if 
 
  fclose(fp);
+}
+
+void generic_tuning_policy(int argc, void **args)
+{
+  int return_val, i, j, namelen, verb, varclass, bind, threadsup;
+  int index;
+  int readonly, continuous, atomic;
+  char event_name[TAU_NAME_LENGTH + 1] = "";
+  char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH];
+  int desc_len;
+  char description[TAU_NAME_LENGTH + 1] = "";
+  MPI_Datatype datatype;
+  MPI_T_enum enumtype;
+  static int firsttime = 1;
+  static unsigned long long int *reduced_value_array = NULL;
+  static char *reduced_value_cvar_string = NULL;
+  static char *reduced_value_cvar_value_string = NULL;
+ 
+  assert(argc=3);
+
+  const int num_pvars 				= (const int)			(args[0]);
+  int *tau_pvar_count 				= (int *)			(args[1]);
+  unsigned long long int **pvar_value_buffer 	= (unsigned long long int **)	(args[2]);
+
+  if(firsttime) {
+    firsttime = 0;
+    for(i = 0; i < num_pvars; i++){
+      namelen = desc_len = TAU_NAME_LENGTH;
+      return_val = MPI_T_pvar_get_info(i/*IN*/,
+      event_name /*OUT*/,
+      &namelen /*INOUT*/,
+      &verb /*OUT*/,
+      &varclass /*OUT*/,
+      &datatype /*OUT*/,
+      &enumtype /*OUT*/,
+      description /*description: OUT*/,
+      &desc_len /*desc_len: INOUT*/,
+      &bind /*OUT*/,
+      &readonly /*OUT*/,
+      &continuous /*OUT*/,
+      &atomic/*OUT*/);
+
+      for(j=0; j<rules[0].num_pvars; j++) {
+        if(strcmp(event_name, rules[0].pvars[j])) {
+
+        }
+      }
+    }
+  }
+
+/*
+  if((pvar_max_vbuf_usage_index == -1) || (pvar_vbuf_allocated_index == -1)) {
+    printf("Unable to find the indexes of PVARs required for tuning\n");
+    return;
+  } else {
+    dprintf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
+  }
+ }
+*/
+
 }
 
 void plugin_generic_tuning_policy(int argc, void **args)
@@ -137,9 +249,9 @@ void plugin_generic_tuning_policy(int argc, void **args)
   pvar_vbuf_allocated_index = -1;
   has_threshold_been_breached_in_any_pool = 0;
 
- if(firsttime) {
-  firsttime = 0;
-  for(i = 0; i < num_pvars; i++){
+  if(firsttime) {
+    firsttime = 0;
+    for(i = 0; i < num_pvars; i++){
       namelen = desc_len = TAU_NAME_LENGTH;
       return_val = MPI_T_pvar_get_info(i/*IN*/,
       event_name /*OUT*/,
