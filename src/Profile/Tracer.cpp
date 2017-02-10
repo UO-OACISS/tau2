@@ -174,6 +174,7 @@ static int checkTraceFileInitialized(int tid) {
 }
 
 /* Flush the trace buffer */
+extern "C" void finalizeCallSites_if_necessary();
 void TauTraceFlushBuffer(int tid)
 {
   // Protect TAU from itself
@@ -191,6 +192,14 @@ void TauTraceFlushBuffer(int tid)
       exit(1);
     }
   }
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+#endif /* TAU_WINDOWS */
+#endif /* _AIX */
 
   if (TauTraceGetFlushEvents()) {
     /* Dump the EDF file before writing trace data */
