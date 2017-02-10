@@ -7876,6 +7876,10 @@ else
 	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
         else
+	  BFDLIBS="-lbfd -liberty -lz -ldl" # Next, check with -lz -ldl.
+	  if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	    bfd_worked="yes"
+          else
 	    BFDLIBS="-lbfd -liberty -lintl"
 	    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	        bfd_worked="yes"
@@ -7883,8 +7887,14 @@ else
 	        BFDLIBS="-lbfd -liberty -lintl -lz"
 	        if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	            bfd_worked="yes"
+                else
+	          BFDLIBS="-lbfd -liberty -lintl -lz -ldl"
+	          if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	            bfd_worked="yes"
+                  fi
                 fi
             fi
+          fi
 	fi
     fi
 fi
