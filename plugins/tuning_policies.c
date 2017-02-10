@@ -14,7 +14,7 @@
 
 typedef struct mpit_pvar_t
 {
- char *pvar;
+ char *name;
  int is_array;
  int size;
 
@@ -22,7 +22,7 @@ typedef struct mpit_pvar_t
 
 typedef struct mpit_cvar_t
 {
- char *cvar;
+ char *name;
  int is_array;
  int size;
 
@@ -47,6 +47,26 @@ typedef struct tuning_policy_rule_
 //void plugin_tuning_policies(int argc, void **args)
 
 tuning_policy_rule rules[MAX_NB_RULES];
+
+/* Detect if given PVAR or CVAR is an array */
+int detect_array(char *value, char *separator, char *name, int *size)
+{
+
+  char *token;
+
+  if(strcmp(separator,"[") == 0) 
+  {
+   /* Get field name */
+   token = strtok(value, separator); 
+   strcpy(name,token);
+   /* Get field name */
+   token = strtok(NULL, separator);
+   *size = atoi(token); 
+   //strcpy(size,token);
+  }
+
+ return 1;
+}
 
 /* Parse list of values for each field */
 int parse_list_values(char *value, char *separator, char **list)
@@ -195,9 +215,9 @@ void generic_tuning_policy(int argc, void **args)
       &atomic/*OUT*/);
 
       for(j=0; j<rules[0].num_pvars; j++) {
-        if(strcmp(event_name, rules[0].pvars[j])) {
+        //if(strcmp(event_name, rules[0].pvars[j])) {
 
-        }
+        //}
       }
     }
   }
