@@ -30,8 +30,8 @@ typedef struct mpit_cvar_t
 
 typedef struct tuning_policy_rule_
 {
- char **pvars;
- char **cvars;
+ mpit_pvar *pvars;
+ mpit_cvar *cvars;
  int num_pvars;
  char *condition;
  char *leftoperand;
@@ -153,6 +153,7 @@ void load_policy_rules(int argc, void **args)
  fclose(fp);
 }
 
+/* Generic function for tuning policies */
 void generic_tuning_policy(int argc, void **args)
 {
   int return_val, i, j, namelen, verb, varclass, bind, threadsup;
