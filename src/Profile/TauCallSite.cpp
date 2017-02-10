@@ -10,6 +10,7 @@
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauBfd.h>
+#include <Profile/TauTrace.h>
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -511,7 +512,7 @@ bool determineCallSiteViaString(unsigned long *addresses)
 }
 
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
-void Profiler::CallSiteStart(int tid)
+void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
 {
 
   // We do not record callsites with the top level timer.
@@ -729,6 +730,11 @@ void Profiler::CallSiteStart(int tid)
       }
     }
 */
+    if (TraceTimeStamp && TauEnv_get_tracing()) {
+      // Tweak time stamp to preserve event order in trace
+      TauTraceEvent(CallSiteFunction->GetFunctionId(), 1 /* entry */, tid, TraceTimeStamp-1, 1);
+    }
+
     // Set up metrics. Increment number of calls and subrs
     CallSiteFunction->IncrNumCalls(tid);
   } else {    // Stub for the desire of callsites.
@@ -741,7 +747,7 @@ void Profiler::CallSiteStart(int tid)
 //         are essentially specialized mirrors of their CallPath or Base counterparts.
 //         This means that we need to make adjustments to any active callsites on the
 //         profiler stack the same way we would call paths or baseline functions.
-void Profiler::CallSiteStop(double *TotalTime, int tid)
+void Profiler::CallSiteStop(double *TotalTime, int tid, x_uint64 TraceTimeStamp)
 {
   if (CallSiteFunction != NULL) {
     // Is there an important distinction between callpaths and base functions?
@@ -755,12 +761,17 @@ void Profiler::CallSiteStop(double *TotalTime, int tid)
       }
     }
     CallSiteFunction->AddExclTime(TotalTime, tid);
+    if (TraceTimeStamp && TauEnv_get_tracing()) {
+      // Tweak time stamp to preserve event order in trace
+      TauTraceEvent(CallSiteFunction->GetFunctionId(), -1 /* exit */, tid, TraceTimeStamp+1, 1);
+    }
   }
   if (ParentProfiler != NULL) {
     if (ParentProfiler->CallSiteFunction != NULL) {
       ParentProfiler->CallSiteFunction->ExcludeTime(TotalTime, tid);
     }
   }
+
 }
 
 /*

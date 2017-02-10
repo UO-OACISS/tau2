@@ -276,17 +276,17 @@ void Profiler::Start(int tid)
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
-  if (TauEnv_get_callpath()) {
-    CallPathStart(tid);
-  }
-
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_callsite() == 1) {
-    CallSiteStart(tid);
+    CallSiteStart(tid, TimeStamp);
   }
 #endif /* _AIX */
 #endif
+
+  if (TauEnv_get_callpath()) {
+    CallPathStart(tid);
+  }
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -498,6 +498,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 }
 #endif /* TAU_MPITRACE */
 
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_callsite()) {
+    CallSiteStop(TotalTime, tid, TimeStamp);
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
@@ -505,14 +513,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
-
-#ifndef TAU_WINDOWS
-#ifndef _AIX
-  if (TauEnv_get_callsite()) {
-    CallSiteStop(TotalTime, tid);
-  }
-#endif /* _AIX */
-#endif /* TAU_WINDOWS */
 
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
