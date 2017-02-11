@@ -13,6 +13,8 @@
 #define TAU_MEMMGR_MAP_CREATION_FAILED -1
 #define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
 
+#define USE_RECYCLER
+
 struct TauMemMgrSummary
 {
   int numBlocks;
@@ -113,6 +115,7 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
     memInfo[tid][numBlocks].low = (unsigned long)addr;
     memInfo[tid][numBlocks].high = (unsigned long)addr + size;
     memSummary[tid].numBlocks++;
+    printf("********* %d: Incremented numblocks! %d\n", tid, memSummary[tid].numBlocks); fflush(stdout);
     memSummary[tid].totalAllocatedMemory += size;
   }
 
@@ -163,7 +166,11 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
     } else {
         queue = (*it).second;
     }
-    // Add this address to the end of the vector
+    // Does this vector have a chunk for us to use?
+    if (queue->empty()) {
+        return NULL;
+    }
+    // there is a chunk! Recycle it!
     void * tmp = queue->back();
     queue->pop_back();
     return tmp;
@@ -180,7 +187,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
   // can we recycle an old block?
   void * recycled = Tau_MemMgr_recycle(tid, size);
   if (recycled != NULL) { 
-    printf("Recycling block of size %d at address %p\n", size, recycled);
+    //printf("Recycling block of size %d at address %p\n", size, recycled);
     return recycled; 
   }
 #endif
@@ -217,7 +224,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
 void Tau_MemMgr_free(int tid, void *addr, size_t size)
 {
 #ifdef USE_RECYCLER
-    printf("Freeing %p, size %d\n", addr, size); fflush(stdout);
+    //printf("Freeing %p, size %d\n", addr, size); fflush(stdout);
     // get the vector for this size
     __custom_map_t::iterator it = free_chunks[tid].find(size);
     __custom_vector_t * queue;
