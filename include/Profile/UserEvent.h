@@ -35,6 +35,7 @@ class Profiler;
 //////////////////////////////////////////////////////////////////////
 typedef double TAU_EVENT_DATATYPE;
 
+typedef std::basic_string<char, std::char_traits<char>, TauSignalSafeAllocator<char> > TauSafeString;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -69,6 +70,7 @@ public:
       minEnabled(true), maxEnabled(true), meanEnabled(true),
       stdDevEnabled(true), monoIncreasing(false), writeAsMetric(false)
   {
+    //printf("Constructed UserEvent: %s\n", name.c_str()); fflush(stdout);
     AddEventToDB();
   }
 
@@ -78,13 +80,16 @@ public:
       meanEnabled(e.meanEnabled), stdDevEnabled(e.stdDevEnabled),
       monoIncreasing(e.monoIncreasing), writeAsMetric(false) 
   {
+    //printf("Constructed UserEvent: %s\n", name.c_str()); fflush(stdout);
     AddEventToDB();
   }
 
-  TauUserEvent(std::string const & name, bool increasing=false) :
+  //TauUserEvent(std::string const & name, bool increasing=false) :
+  TauUserEvent(const char * name, bool increasing=false) :
       eventId(0), name(name), minEnabled(true), maxEnabled(true),
       meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing), writeAsMetric(false) 
   {
+    //printf("Constructed UserEvent: %s\n", name); fflush(stdout);
     AddEventToDB();
   }
 
@@ -94,7 +99,7 @@ public:
 
   TauUserEvent & operator=(const TauUserEvent & e) {
     // Why isn't eventId copied?
-    name = e.name;
+    name.assign(e.name);
     minEnabled = e.minEnabled;
     maxEnabled = e.maxEnabled;
     meanEnabled = e.meanEnabled;
@@ -106,10 +111,15 @@ public:
     return eventId;
   }
 
-  std::string const & GetName(void) const {
+  TauSafeString const & GetName(void) {
     return name;
   }
-  void SetName(std::string const & value) {
+
+  //void SetName(std::string const & value) {
+    //name = value.c_str();
+  //}
+
+  void SetName(TauSafeString const & value) {
     name = value;
   }
 
@@ -234,7 +244,7 @@ private:
   Data eventData[TAU_MAX_THREADS];
 
   x_uint64 eventId;
-  std::string name;
+  TauSafeString name;
   bool minEnabled;
   bool maxEnabled;
   bool meanEnabled;
@@ -257,9 +267,24 @@ public:
 #else
       contextEnabled(TauEnv_get_callpath_depth() != 0),
 #endif
-      userEvent(new TauUserEvent(name, monoIncr)),
       contextEvent(NULL)
-  { }
+  { 
+    //printf("Constructing ContextUserEvent: %s\n", name); fflush(stdout);
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
+    userEvent = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(userEvent) TauUserEvent(name, monoIncr);
+#else
+      userEvent = new TauUserEvent(name, monoIncr);
+#endif
+  }
   
   TauContextUserEvent(const TauContextUserEvent &c) :
 	  contextEnabled(c.contextEnabled),
@@ -275,45 +300,56 @@ public:
   }
   
   ~TauContextUserEvent() {
-    delete userEvent;
+    // Because of the above "fixes" for pre-allocating memory, this delete
+    // method now crashes. Let's not and say we did, ok?
+    //
+    //delete userEvent;
   }
 
   void SetContextEnabled(bool value) {
     contextEnabled = value;
   }
 
-  std::string const & GetUserEventName() const {
+  TauSafeString const & GetUserEventName() const {
     return userEvent->GetName();
   }
   
   void SetAllEventName(std::string const & value) {
-    userEvent->SetName(value);
+    userEvent->SetName(TauSafeString(value.c_str()));
     if (contextEvent != NULL)
     {
       std::size_t sep_pos = contextEvent->GetName().find(':');
-      if (sep_pos != std::string::npos)
+      if (sep_pos != TauSafeString::npos)
       {
-        std::string context_portion = contextEvent->GetName().substr(sep_pos, contextEvent->GetName().length()-sep_pos);
+        TauSafeString context_portion = contextEvent->GetName().substr(sep_pos, contextEvent->GetName().length()-sep_pos);
         //form new string
         //contextEvent = userEvent;
-        std::string new_context = userEvent->GetName();
-        new_context += std::string(" ");
+        TauSafeString new_context = userEvent->GetName();
+        new_context += TauSafeString(" ");
         new_context += context_portion;
-        contextEvent->SetName(new_context);
+        contextEvent->SetName(TauSafeString(new_context.c_str()));
       }
       else {
-        contextEvent->SetName(value);
+        contextEvent->SetName(TauSafeString(value.c_str()));
       }
     }
 
   }
 
-  std::string const & GetName() const {
-    return contextEvent->GetName();
+  TauSafeString const & GetName() const {
+    if (contextEnabled && contextEvent != NULL) {
+        return contextEvent->GetName();
+    } else {
+        return userEvent->GetName();
+    }
   }
   
   void SetName(std::string const & value) {
-    contextEvent->SetName(value);
+    contextEvent->SetName(TauSafeString(value.c_str()));
+  }
+
+  void SetName(TauSafeString const & value) {
+    contextEvent->SetName(TauSafeString(value.c_str()));
   }
 
   TauUserEvent *getContextUserEvent() {
@@ -334,8 +370,8 @@ public:
 
 private:
 
-  long * FormulateContextComparisonArray(Profiler * current);
-  std::string FormulateContextNameString(Profiler * current);
+  long * FormulateContextComparisonArray(Profiler * current, std::size_t * size);
+  TauSafeString FormulateContextNameString(Profiler * current);
 
   bool contextEnabled;
   TauUserEvent * userEvent;
