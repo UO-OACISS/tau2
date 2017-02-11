@@ -242,8 +242,9 @@ void TauAlarmHandler(int signum) {
   }
 
   if (TheIsTauTrackingMemoryRSSandHWM()) {
-    TAU_VERBOSE("Triggering memory rss and hwm event");
+    TAU_VERBOSE("Triggering memory rss and hwm event\n");
     Tau_trigger_memory_rss_hwm();
+    TAU_VERBOSE("...done with trigger.\n");
   }
 
   /* Set alarm for the next interrupt */
@@ -272,6 +273,11 @@ void TauTrackMemoryUtilization(bool allocated) {
     TheIsTauTrackingMemoryHeadroom() = true; 
   }
 
+  // call the handler once, at startup.  This will pre-allocate some 
+  // necessary data structures for us, so they don't have to be created
+  // during the signal processing.
+  TauAlarmHandler(SIGINT); 
+
   // set signal handler 
   new_action.sa_handler = TauAlarmHandler; 
  
@@ -298,6 +304,11 @@ void TauTrackPower(void) {
   // Are we tracking memory or headroom. Check the allocated argument. 
   TheIsTauTrackingPower() = true;
 
+  // call the handler once, at startup.  This will pre-allocate some 
+  // necessary data structures for us, so they don't have to be created
+  // during the signal processing.
+  TauAlarmHandler(SIGINT); 
+
   // set signal handler 
   new_action.sa_handler = TauAlarmHandler;
 
@@ -321,6 +332,11 @@ extern "C" void Tau_track_mpi_t(void) {
 #ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
   
+  // call the handler once, at startup.  This will pre-allocate some 
+  // necessary data structures for us, so they don't have to be created
+  // during the signal processing.
+  TauAlarmHandler(SIGINT); 
+
   // set signal handler 
   new_action.sa_handler = TauAlarmHandler;
   
@@ -345,6 +361,11 @@ void TauTrackMemoryFootPrint(void) {
   struct sigaction new_action, old_action;
   TheIsTauTrackingMemoryRSSandHWM() = true;
   
+  // call the handler once, at startup.  This will pre-allocate some 
+  // necessary data structures for us, so they don't have to be created
+  // during the signal processing.
+  TauAlarmHandler(SIGINT); 
+
   // set signal handler 
   new_action.sa_handler = TauAlarmHandler;
 

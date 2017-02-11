@@ -7,6 +7,9 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+#include <vector>
+#include <map>
+
 #define TAU_MEMMGR_MAP_CREATION_FAILED -1
 #define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
 
@@ -27,6 +30,21 @@ struct TauMemMgrInfo
 TauMemMgrSummary memSummary[TAU_MAX_THREADS];
 TauMemMgrInfo memInfo[TAU_MAX_THREADS][TAU_MEMMGR_MAX_MEMBLOCKS];
 
+/* For "freeing" memory, we need to maintain a map of "queues"
+ * for each thread.  The map will map from a "length" to a 
+ * queue of free blocks of that length. Each thread will have
+ * its own map. The map and the queue require the custom allocator,
+ * so this memory manager will eat its own dog food, so to speak.
+ * We can't use a true "std::queue" class, because it doesn't
+ * support custom allocators. But if we use a vector like a queue,
+ * we can get custom allocator support. */
+
+#ifdef USE_RECYCLER
+typedef std::vector<void*, TauSignalSafeAllocator<void*> > __custom_vector_t;
+typedef std::pair<const std::size_t, std::vector<void*> > __custom_pair_t;
+typedef std::map<std::size_t, __custom_vector_t*, std::less<std::size_t>, TauSignalSafeAllocator<__custom_pair_t> > __custom_map_t;
+__custom_map_t free_chunks[TAU_MAX_THREADS];
+#endif
 
 void Tau_MemMgr_initIfNecessary()
 {
@@ -131,10 +149,41 @@ int Tau_MemMgr_findFit(int tid, size_t size)
   }
 }
 
+#ifdef USE_RECYCLER
+void * Tau_MemMgr_recycle(int tid, size_t size)
+{
+    // does the map for this thread exist?
+    // get the vector for this size
+    __custom_vector_t * queue;
+    __custom_map_t::iterator it = free_chunks[tid].find(size);
+
+    // is this a new size that we haven't freed yet?
+    if (it == free_chunks[tid].end()) {
+        return NULL;
+    } else {
+        queue = (*it).second;
+    }
+    // Add this address to the end of the vector
+    void * tmp = queue->back();
+    queue->pop_back();
+    return tmp;
+}
+#endif
+
 void * Tau_MemMgr_malloc(int tid, size_t size)
 {
+  //printf("Allocating %d\n", size); fflush(stdout);
   // Always ensure the system is ready for a malloc
   Tau_MemMgr_initIfNecessary();
+
+#ifdef USE_RECYCLER
+  // can we recycle an old block?
+  void * recycled = Tau_MemMgr_recycle(tid, size);
+  if (recycled != NULL) { 
+    printf("Recycling block of size %d at address %p\n", size, recycled);
+    return recycled; 
+  }
+#endif
 
   // Find (and attempt to create) a suitably sized memory block
   size_t myRequest = (size + (TAU_MEMMGR_ALIGN-1)) & ~(TAU_MEMMGR_ALIGN-1);
@@ -161,6 +210,33 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
 
   TAU_ASSERT(addr != NULL, "Tau_MemMgr_malloc unexpectedly returning NULL!");
 
+  //printf("Using new block of size %d at address %p\n", size, addr);
   return addr;
 }
+
+void Tau_MemMgr_free(int tid, void *addr, size_t size)
+{
+#ifdef USE_RECYCLER
+    printf("Freeing %p, size %d\n", addr, size); fflush(stdout);
+    // get the vector for this size
+    __custom_map_t::iterator it = free_chunks[tid].find(size);
+    __custom_vector_t * queue;
+
+    // is this a new size that we haven't freed yet?
+    if (it == free_chunks[tid].end()) {
+        // eat our own dog food.  Have to. Create the new vector...
+        queue = (__custom_vector_t*)Tau_MemMgr_malloc(tid, sizeof(__custom_vector_t));
+        // ...call its constructor...
+        new(queue) __custom_vector_t();
+        // ...and add the new vector into the map
+        free_chunks[tid][size] = queue;
+    } else {
+        queue = (*it).second;
+    }
+    // Add this address to the end of the vector
+    queue->push_back(addr);
+#endif
+    return;
+}
+
 #endif
