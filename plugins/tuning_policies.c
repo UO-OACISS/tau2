@@ -11,30 +11,37 @@
 #define MAX_SIZE_FIELD_VALUE 64
 #define MAX_SIZE_RULE 32
 #define MAX_NB_RULES 16
+#define MAX_NB_VALUES 16
 
 typedef struct mpit_pvar_t
 {
  char *name;
  int is_array;
  int size;
-
-}mpit_pvar;
+} mpit_pvar;
 
 typedef struct mpit_cvar_t
 {
  char *name;
  int is_array;
  int size;
+} mpit_cvar;
 
-}mpit_cvar;
+typedef struct mpit_var_t
+{
+ char *name;
+ int is_array;
+ int size;
+ int is_pvar;
+} mpit_var;
 
 typedef struct tuning_policy_rule_
 {
- mpit_pvar *pvars;
- mpit_cvar *cvars;
+ mpit_var *pvars;
+ mpit_var *cvars;
  int num_pvars;
  char *condition;
- char *leftoperand;
+ char **leftoperand;
  char *rightoperand;
  char *operator;
  char *value;
@@ -49,35 +56,64 @@ typedef struct tuning_policy_rule_
 tuning_policy_rule rules[MAX_NB_RULES];
 
 /* Detect if given PVAR or CVAR is an array */
-int detect_array(char *value, char *separator, char *name, int *size)
+int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
 {
-
   char *token;
+  char *rightpart;
+  char *name;
+  int size;
+  int is_array = 0;
+  int i = 0;
 
-  if(strcmp(separator,"[") == 0) 
-  {
-   /* Get field name */
-   token = strtok(value, separator); 
-   strcpy(name,token);
-   /* Get field name */
-   token = strtok(NULL, separator);
-   *size = atoi(token); 
-   //strcpy(size,token);
-  }
+  // Check if considered PVAR/CVAR is an array
+  while(i < MAX_SIZE_FIELD_VALUE) {
+    if(value[i] == '[') { is_array = 1; }
+    i++;
+  } 
 
- return 1;
+  if(is_array) {
+    if(strcmp(separator,"[") == 0) 
+    {
+      // Get field name 
+      token = strtok(value, separator); 
+      strcpy(name,token);
+      // Get field name 
+      token = strtok(NULL, separator);
+      strcpy(rightpart,token);
+      //strcpy(size,token);
+    }  
+
+    token = strtok(rightpart, "]");
+    size = atoi(token); 
+  } else {
+    strcpy(name,value);
+    size = 0;
+  } 
+  
+  strcpy(var->name, name);
+  var->is_array = is_array;
+  var->size = size;
+  var->is_pvar = is_pvar; 
+
+  return is_array;
 }
 
 /* Parse list of values for each field */
-int parse_list_values(char *value, char *separator, char **list)
+int parse_list_values(char *value, char *separator, mpit_var *listvars, int is_pvar)
 {
-
+  int i = 0;
   char *token = strtok(value, separator);
    
   while (token != NULL)
   {
-        printf("%s\n", token);
-        token = strtok(NULL, separator);
+    mpit_var var; 
+    printf("%s\n", token);
+    token = strtok(NULL, separator);
+   
+    detect_array(token, "[", &var, is_pvar); 
+    
+    listvars[i] = var; 
+    i += 1;
   }
 
   return 1;
