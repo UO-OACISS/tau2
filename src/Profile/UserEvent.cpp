@@ -453,7 +453,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         } else {
           //printf("**** FOUND **** \n"); fflush(stdout);
           contextEvent = it->second;
-          //Tau_MemMgr_free(comparison, size));
+          Tau_MemMgr_free(tid, (void*)comparison, size);
         }
         RtsLayer::UnLockDB();
         contextEvent->TriggerEvent(data, tid, timestamp, use_ts);

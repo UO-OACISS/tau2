@@ -14,7 +14,7 @@
 #define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
 
 #define USE_RECYCLER
-//#define DEBUG_ME
+// #define DEBUG_ME  /* <-- use this to debug for memory leaks */
 
 struct TauMemMgrSummary
 {
@@ -190,11 +190,6 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
 }
 #endif
 
-#ifdef DEBUG_ME
-void * Tau_MemMgr_malloc(int tid, size_t size) {
-    return malloc(size);
-}
-#else
 void * Tau_MemMgr_malloc(int tid, size_t size)
 {
   //printf("Allocating %d\n", size); fflush(stdout);
@@ -208,6 +203,10 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
     //printf("Recycling block of size %d at address %p\n", size, recycled);
     return recycled; 
   }
+#endif
+
+#ifdef DEBUG_ME
+    return malloc(size);
 #endif
 
   // Find (and attempt to create) a suitably sized memory block
@@ -238,14 +237,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
   //printf("Using new block of size %d at address %p\n", size, addr);
   return addr;
 }
-#endif
 
-#ifdef DEBUG_ME
-void Tau_MemMgr_free(int tid, void *addr, size_t size) {
-    free(addr);
-    return;
-}
-#else
 void Tau_MemMgr_free(int tid, void *addr, size_t size)
 {
     // If we are shutting down, don't bother recycling - we are going
@@ -274,6 +266,5 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
 #endif
     return;
 }
-#endif
 
 #endif
