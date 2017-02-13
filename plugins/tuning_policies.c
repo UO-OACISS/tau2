@@ -18,7 +18,7 @@ typedef enum leftop_enum_t
   pvar,
   sign,
   number
-}leftop_enum;
+} leftop_enum;
 
 typedef struct mpit_pvar_t
 {
@@ -54,7 +54,7 @@ typedef struct tuning_policy_rule_
  mpit_var *cvars;
  int num_pvars;
  char *condition;
- void **leftoperand;
+ leftop *leftoperand;
  char *rightoperand;
  char *operator;
  char *value;
