@@ -474,7 +474,7 @@ case $1 in
             _checkpath="${pythonlib}/${subdir}/libpython*.${ext}"
             echo "Checking ${_checkpath}"
   	    pythonso=`ls ${_checkpath} 2>/dev/null | head -1`
-            if [ "x$pythonso" == "x" ] ; then
+            if [ "x$pythonso" = "x" ] ; then
               continue
             fi
             pythonlib=`dirname $pythonso`
