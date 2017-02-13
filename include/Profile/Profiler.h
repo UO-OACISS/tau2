@@ -252,9 +252,9 @@ public:
   unsigned long callsites[TAU_SAMP_NUM_ADDRESSES+1];
   unsigned long callsiteKeyId;
   long *path;
-  void CallSiteStart(int tid);
+  void CallSiteStart(int tid, x_uint64 TraceTimeStamp);
   void CallSiteAddPath(long *comparison, int tid);
-  void CallSiteStop(double *totalTime, int tid);
+  void CallSiteStop(double *totalTime, int tid, x_uint64 TraceTimeStamp);
 };
 }
 #ifdef TAU_LIBRARY_SOURCE
