@@ -14,6 +14,7 @@
 #define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
 
 #define USE_RECYCLER
+//#define DEBUG_ME
 
 struct TauMemMgrSummary
 {
@@ -47,6 +48,7 @@ typedef std::pair<const std::size_t, std::vector<void*> > __custom_pair_t;
 typedef std::map<std::size_t, __custom_vector_t*, std::less<std::size_t>, TauSignalSafeAllocator<__custom_pair_t> > __custom_map_t;
 __custom_map_t free_chunks[TAU_MAX_THREADS];
 #endif
+bool finalized = false;
 
 void Tau_MemMgr_initIfNecessary()
 {
@@ -77,6 +79,17 @@ void Tau_MemMgr_initIfNecessary()
     memSummary[myTid].numBlocks = 0;
     memSummary[myTid].totalAllocatedMemory = 0;
     thrInitialized[myTid] = true;
+  }
+}
+
+void Tau_MemMgr_finalizeIfNecessary(void) {
+  if (!finalized) {
+    RtsLayer::LockEnv();
+    // check again, someone else might already have initialized by now.
+    if (!finalized) {
+      finalized = true;
+    }
+    RtsLayer::UnLockEnv();
   }
 }
 
@@ -115,7 +128,7 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
     memInfo[tid][numBlocks].low = (unsigned long)addr;
     memInfo[tid][numBlocks].high = (unsigned long)addr + size;
     memSummary[tid].numBlocks++;
-    printf("********* %d: Incremented numblocks! %d\n", tid, memSummary[tid].numBlocks); fflush(stdout);
+    //printf("********* %d: Incremented numblocks! %d\n", tid, memSummary[tid].numBlocks); fflush(stdout);
     memSummary[tid].totalAllocatedMemory += size;
   }
 
@@ -177,6 +190,11 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
 }
 #endif
 
+#ifdef DEBUG_ME
+void * Tau_MemMgr_malloc(int tid, size_t size) {
+    return malloc(size);
+}
+#else
 void * Tau_MemMgr_malloc(int tid, size_t size)
 {
   //printf("Allocating %d\n", size); fflush(stdout);
@@ -220,9 +238,20 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
   //printf("Using new block of size %d at address %p\n", size, addr);
   return addr;
 }
+#endif
 
+#ifdef DEBUG_ME
+void Tau_MemMgr_free(int tid, void *addr, size_t size) {
+    free(addr);
+    return;
+}
+#else
 void Tau_MemMgr_free(int tid, void *addr, size_t size)
 {
+    // If we are shutting down, don't bother recycling - we are going
+    // to have to free all this memory anyway, so keeping track of the
+    // freed memory just allocates more memory...
+    if (finalized) return;
 #ifdef USE_RECYCLER
     //printf("Freeing %p, size %d\n", addr, size); fflush(stdout);
     // get the vector for this size
@@ -245,5 +274,6 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
 #endif
     return;
 }
+#endif
 
 #endif
