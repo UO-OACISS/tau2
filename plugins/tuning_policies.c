@@ -13,6 +13,13 @@
 #define MAX_NB_RULES 16
 #define MAX_NB_VALUES 16
 
+typedef enum leftop_enum_t
+{
+  pvar,
+  sign,
+  number
+}leftop_enum;
+
 typedef struct mpit_pvar_t
 {
  char *name;
@@ -35,13 +42,19 @@ typedef struct mpit_var_t
  int is_pvar;
 } mpit_var;
 
+typedef struct leftop_t
+{
+  char *value;
+  leftop_enum type;
+} leftop;
+
 typedef struct tuning_policy_rule_
 {
  mpit_var *pvars;
  mpit_var *cvars;
  int num_pvars;
  char *condition;
- char **leftoperand;
+ void **leftoperand;
  char *rightoperand;
  char *operator;
  char *value;
@@ -76,6 +89,7 @@ int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
     {
       // Get field name 
       token = strtok(value, separator); 
+      fprintf(stdout, "Name of array PVAR/CVAR: %s\n", token); 
       strcpy(name,token);
       // Get field name 
       token = strtok(NULL, separator);
@@ -84,9 +98,11 @@ int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
     }  
 
     token = strtok(rightpart, "]");
+    fprintf(stdout, "Size of PVAR/CVAR array:%s\n", token);
     size = atoi(token); 
   } else {
     strcpy(name,value);
+    fprintf(stdout, "Name of name PVAR/CVAR: %s\n", name); 
     size = 0;
   } 
   
@@ -96,6 +112,11 @@ int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
   var->is_pvar = is_pvar; 
 
   return is_array;
+}
+
+int analyze_leftoperand(char *leftoperand)
+{
+  return 1;
 }
 
 /* Parse list of values for each field */
@@ -145,6 +166,8 @@ void load_policy_rules(int argc, void **args)
  char line[MAX_BUF];
  char fieldname[16];
  char fieldvalue[MAX_SIZE_FIELD_VALUE];
+ mpit_var *pvars = NULL;
+ mpit_var *cvars = NULL;
  char *token;
  char *key = NULL;
  //char key[16];
@@ -167,11 +190,17 @@ void load_policy_rules(int argc, void **args)
      }
      if(strncmp(line,"PVARS",5) == 0) {
        parse_rule_field(line, separator, key, value);
+       parse_list_values(value, ",", pvars, 0);
+       rules[irule].pvars = pvars;
+       //strcpy(rules[irule].pvars,pvars);
      } 
      if(strncmp(line,"CVARS",5) == 0) {
        parse_rule_field(line, separator, key, value);
+       parse_list_values(value, ",", cvars, 1);
+       rules[irule].cvars = cvars;
+       //strcpy(rules[irule].cvars,cvars);
      }
-     if(strncmp(line,"CONDITION",9) == 0) {
+     if(strncmp(line,"STMT",4) == 0) {
        parse_rule_field(line, separator, key, value);
        strcpy(rules[irule].condition,value);
      } 
