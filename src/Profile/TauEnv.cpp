@@ -1154,9 +1154,14 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_HEADROOM");
     if (parse_bool(tmp, env_track_memory_headroom)) {
+    /*
       TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEADROOM", "on");
       env_track_memory_headroom = 1;
+      */
+      TAU_VERBOSE("NOTE: Entry/Exit Headroom tracking is permanently disabled!\n");
+      TAU_METADATA("TAU_TRACK_HEADROOM", "off");
+      env_track_memory_headroom = 0;
     } else {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;
