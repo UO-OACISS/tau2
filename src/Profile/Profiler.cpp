@@ -1453,6 +1453,8 @@ int TauProfiler_StoreData(int tid)
   }
   finalizeTrace(tid);
 
+  Tau_MemMgr_finalizeIfNecessary();
+
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_callsite()) {

@@ -1541,6 +1541,8 @@ int  MPI_Finalize(  )
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
+  Tau_MemMgr_finalizeIfNecessary();
+
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {

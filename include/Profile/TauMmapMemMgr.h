@@ -17,6 +17,7 @@ void Tau_MemMgr_initIfNecessary();
 void *Tau_MemMgr_mmap(int tid, std::size_t size);
 void *Tau_MemMgr_malloc(int tid, std::size_t size);
 void Tau_MemMgr_free(int tid, void *addr, std::size_t size);
+void Tau_MemMgr_finalizeIfNecessary();
 
 template <typename T> 
 class TauSignalSafeAllocator {
