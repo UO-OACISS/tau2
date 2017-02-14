@@ -59,7 +59,8 @@ typedef struct tuning_policy_rule_
  char *operator;
  char *value;
  char *logicop;
- char *resleftoperand;
+ mpit_cvar *resleftoperand;
+ //char *resleftoperand;
  char *resoperator;
  char *resrightoperand;
 } tuning_policy_rule;
@@ -114,6 +115,7 @@ int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
   return is_array;
 }
 
+/* Analyze each element of leftoperand field */
 int analyze_leftoperand(char *leftoperand, leftop *op)
 {
 
@@ -131,7 +133,7 @@ int analyze_leftoperand(char *leftoperand, leftop *op)
 }
 
 /* Parse list of values for each leftoperand list */
-int parse_list_leftop(char *value, char *separator, leftop *listleftops, int size)
+int parse_list_leftop(char *value, char *separator, leftop *listleftops)
 {
   int i = 0;
   char *token = strtok(value, separator);
@@ -190,6 +192,12 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
+void read_json_rules()
+{
+ 
+
+}
+
 /* Load policy rules from config file and populate dedicated structure */
 void load_policy_rules(int argc, void **args)
 {
@@ -199,6 +207,7 @@ void load_policy_rules(int argc, void **args)
  char fieldvalue[MAX_SIZE_FIELD_VALUE];
  mpit_var *pvars = NULL;
  mpit_var *cvars = NULL;
+ leftop *listleftops = NULL;
  char *token;
  char *key = NULL;
  //char key[16];
@@ -236,8 +245,9 @@ void load_policy_rules(int argc, void **args)
        strcpy(rules[irule].condition,value);
      } 
      if(strncmp(line,"LEFTOPERAND",11) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].leftoperand,value);
+       parse_rule_field(line, separator, key, value);  
+       parse_list_leftop(value, ",", listleftops);
+       strcpy(rules[irule].leftoperand,listleftops);
      }
      if(strncmp(line,"RIGHTOPERAND",12) == 0) {
        parse_rule_field(line, separator, key, value);
@@ -281,10 +291,14 @@ void generic_tuning_policy(int argc, void **args)
   char description[TAU_NAME_LENGTH + 1] = "";
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
+
+
   static int firsttime = 1;
-  static unsigned long long int *reduced_value_array = NULL;
-  static char *reduced_value_cvar_string = NULL;
-  static char *reduced_value_cvar_value_string = NULL;
+
+
+  static unsigned long long int *cvar_value_array = NULL;
+  static char *cvar_string = NULL;
+  static char *cvar_value_string = NULL;
  
   assert(argc=3);
 
