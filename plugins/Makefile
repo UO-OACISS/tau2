@@ -9,12 +9,14 @@ HDRS	      =
 
 MAKEFILE      = Makefile
 
-TAUINC        = -I/home/users/aurelem/tau/tau2_beacon/include -I/home/users/aurelem/tau/tau2_beacon/include/Profile
+TAUINC        = -I/home/users/aurelem/tau/tau2_beacon/include -I/home/users/aurelem/tau/tau2_beacon/include/Profile -I/home/users/aurelem/tau/tau2_beacon/plugins/json-c/inst/include/json-c
 
 CC            = $(TAU_CC)
 
 #CFLAGS        = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC
 CFLAGS        = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC
+
+LDFLAGS       = -ljson-c -L/home/users/aurelem/tau/tau2_beacon/plugins/json-c/inst/lib 
 
 OBJS	      = tuning_policies.o
 

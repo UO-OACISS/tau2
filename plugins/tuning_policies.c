@@ -6,6 +6,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/types.h>
+
+
+#include "json.h"
+#include "json_util.h"
 
 #define MAX_BUF 128
 #define MAX_SIZE_FIELD_VALUE 64
@@ -194,7 +202,34 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
 
 void read_json_rules()
 {
- 
+  const char *filename = "./policy.json";
+
+  int d = open(filename, O_RDONLY, 0);
+
+  if (d < 0)
+  {
+    fprintf(stderr,
+            "FAIL: unable to open %s: %s\n",
+            filename, strerror(errno));
+
+    exit(EXIT_FAILURE);
+ }
+
+ json_object *jso = json_object_from_fd(d);
+
+ if (jso != NULL)
+ {
+                printf("OK: json_object_from_fd(%s)=%s\n",
+                       filename, json_object_to_json_string(jso));
+                json_object_put(jso);
+ }
+ else
+ {
+   fprintf(stderr,
+           "FAIL: unable to parse contents of %s: %s\n",
+           filename, json_util_get_last_err());
+ }
+ close(d);
 
 }
 
