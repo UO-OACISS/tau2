@@ -114,8 +114,39 @@ int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
   return is_array;
 }
 
-int analyze_leftoperand(char *leftoperand)
+int analyze_leftoperand(char *leftoperand, leftop *op)
 {
+
+  if(strncmp(leftoperand, "+", 1) == 0 || strncmp(leftoperand, "-", 1) == 0 || strncmp(leftoperand, "*", 1) == 0) {
+   op->type = sign;
+  } else if(atol(leftoperand) != 0L) {
+   op->type = number;
+  } else {
+    op->type = pvar;
+  }
+
+  strcpy(op->value,leftoperand);
+  
+  return 1;
+}
+
+/* Parse list of values for each leftoperand list */
+int parse_list_leftop(char *value, char *separator, leftop *listleftops, int size)
+{
+  int i = 0;
+  char *token = strtok(value, separator);
+
+  while(token != NULL)
+  {
+    leftop lop;
+    token = strtok(NULL, separator);
+
+    analyze_leftoperand(token, &lop);
+    strcpy(lop.value, token);
+    listleftops[i] = lop; 
+    i += 1;
+  }
+
   return 1;
 }
 
