@@ -78,6 +78,9 @@ extern "C" void Tau_shutdown(void);
 extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
+//Static variables with file scope
+static TauUserEvent *** pvarEvents = NULL;
+
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
 
@@ -2684,18 +2687,23 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
 }
  
 TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
-    static TauUserEvent *** pvarEvents = NULL;
+    /*All this routine does is to return the event at the current PVAR index and subindex*/
+    
+    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
+}
+
+/*Allocate events to track PVARs*/
+extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count) {
     static int tau_previous_pvar_count = 0;
     int i,j;
-
 
     /* If this function is being invoked for the first time, allocate event buffers using malloc.
      * If the number of pvars changes during runtime, reallocate event buffers accordingly*/
     if(!pvarEvents) {
         pvarEvents = (TauUserEvent***)calloc(num_pvars, sizeof(TauUserEvent**));
-        for(i=0; i < num_pvars; i++) { 
+        for(i=0; i < num_pvars; i++) {
           pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
-	  Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
+          Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
     } else if ((tau_previous_pvar_count > 0) && (num_pvars > tau_previous_pvar_count) ) {
         pvarEvents = (TauUserEvent***)realloc(pvarEvents, sizeof(TauUserEvent**)*num_pvars);
@@ -2707,10 +2715,9 @@ TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current
           pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
           Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
-    }  
-  
+    }
+
     tau_previous_pvar_count = num_pvars;
-    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
