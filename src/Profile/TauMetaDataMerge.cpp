@@ -107,6 +107,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     for(i=0; i<numRanks; i++)
       __real_shmem_int_put(&shBufferSize, &defBufSize, 1, i);
   }
+  __real_shmem_barrier_all();
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   char *shBuffer = (char*)__real_shmalloc((shBufferSize));
 #else
