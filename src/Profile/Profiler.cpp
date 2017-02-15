@@ -1531,9 +1531,13 @@ static int getProfileLocation(int metric, char *str)
     if (Tau_Global_numCounters <= 1) {
         sprintf(str, "%s", profiledir);
     } else {
+#ifdef DEBUGPROF
         cout << "metric: " << metric << endl;
+#endif /* DEBUGPROF */
         string metricStr = string(TauMetrics_getMetricName(metric));
+#ifdef DEBUGPROF
         cout << "metricStr: " << metricStr << endl;
+#endif /* DEBUGPROF */
 
         //sanitize metricName before creating a directory name from it.
         string illegalChars("/\\?%*:|\"<> ");
