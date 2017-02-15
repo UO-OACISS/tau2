@@ -875,6 +875,11 @@ case $1 in
         #echo "SHMEMLIB=$shmemlib" 
         ;;
 
+     shmemmpiincargs=*)
+        shmemmpiinc=`echo $1 | sed -e 's/^shmemmpiincargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_SHMEMMPI_INC=\(.*\)@TAU_SHMEMMPI_INC=$shmemmpiinc@g" >> $sedout
+        ;;
+
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
