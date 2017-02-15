@@ -4,4 +4,8 @@ BEGIN_EXCLUDE_LIST
 "# shmemx_complexd_put_nb#"
 "# shmemx_complexd_get_nb#"
 "# shmem_swap#"
+"# shmem_complexd_sum_to_all#"
+"# shmem_complexf_sum_to_all#"
+"# shmem_complexd_prod_to_all#"
+"# shmem_complexf_prod_to_all#"
 END_EXCLUDE_LIST

@@ -3,7 +3,7 @@ BEGIN_INCLUDE_LIST
 "# shmemx_#"
 "# _my_pe#"
 "# _num_pes#"
-"# shmalloc#"
+"#shmalloc#"
 "# shfree#"
 "# shrealloc#"
 "# shmemalign#"
