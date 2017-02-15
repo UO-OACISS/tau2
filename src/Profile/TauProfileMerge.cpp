@@ -27,10 +27,18 @@ extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a
 extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_barrier_all() ;
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+extern "C" int   __real__num_pes() ;
+extern "C" int   __real__my_pe() ;
+extern "C" void* __real_shmalloc(size_t a1) ;
+extern "C" void  __real_shfree(void * a1) ;
+#else
 extern "C" int   __real_shmem_n_pes() ;
 extern "C" int   __real_shmem_my_pe() ;
-extern "C" void  __real_shmem_barrier_all() ;
+extern "C" void* __real_shmem_malloc(size_t a1) ;
 extern "C" void  __real_shmem_free(void * a1) ;
+#endif
 #endif /* TAU_SHMEM */
 
 #include <TAU.h>
@@ -149,8 +157,13 @@ int Tau_mergeProfiles()
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
 #endif  /* TAU_MPI */
 #ifdef TAU_SHMEM
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  size = __real__num_pes();
+  rank = __real__my_pe();
+#else
   size = __real_shmem_n_pes();
   rank = __real_shmem_my_pe();
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #endif /* TAU_SHMEM */
 
 	buflen = Tau_snapshot_getBufferLength()+1;
@@ -162,11 +175,16 @@ int Tau_mergeProfiles()
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 #endif  /* TAU_MPI */
 #ifdef TAU_SHMEM
-  int *shbuflen = (int*)shmem_malloc(sizeof(int));
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  int *shbuflen = (int*)__real_shmalloc(sizeof(int));
+  int *shmaxBuflen = (int*)__real_shmalloc(sizeof(int));
+  int *maxBuflens = (int*)__real_shmalloc(size*sizeof(int));
+#else
+  int *shbuflen = (int*)__real_shmem_malloc(sizeof(int));
+  int *shmaxBuflen = (int*)__real_shmem_malloc(sizeof(int));
+  int *maxBuflens = (int*)__real_shmem_malloc(size*sizeof(int));
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
   *shbuflen = buflen;
-  int *shmaxBuflen = (int*)shmem_malloc(sizeof(int));
-
-  int *maxBuflens = (int*)shmem_malloc(size*sizeof(int));
   __real_shmem_int_put(&maxBuflens[rank], &maxBuflen, 1, 0);
   __real_shmem_barrier_all();
   if(rank == 0)
@@ -177,9 +195,15 @@ int Tau_mergeProfiles()
   __real_shmem_int_get(shmaxBuflen, shmaxBuflen, 1, 0);
   __real_shmem_barrier_all();
   maxBuflen = *shmaxBuflen;
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  __real_shfree(shmaxBuflen);
+  __real_shfree(maxBuflens);
+  char *shbuf = (char*)__real_shmalloc(maxBuflen);
+#else
   __real_shmem_free(shmaxBuflen);
   __real_shmem_free(maxBuflens);
-  char *shbuf = (char*)shmem_malloc(maxBuflen);
+  char *shbuf = (char*)__real_shmem_malloc(maxBuflen);
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
   strncpy(shbuf, buf, maxBuflen);
 #endif /* TAU_SHMEM */
 
@@ -486,8 +510,13 @@ int Tau_mergeProfiles()
   }
 	free(buf);
 #ifdef TAU_SHMEM
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+        __real_shfree(shbuf);
+        __real_shfree(shbuflen);
+#else
         __real_shmem_free(shbuf);
         __real_shmem_free(shbuflen);
+#endif
 #endif /* TAU_SHMEM */
   return 0;
 }
