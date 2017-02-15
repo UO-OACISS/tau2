@@ -1919,6 +1919,17 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+    -shmemmpiinc=*)
+	    shmemmpiinc=`echo $arg | sed -e 's/-shmemmpiinc=//' -e 's/#/ /g'`
+	    if [ ! -d $shmemmpiinc ]
+	    then
+		echo "Error: Cannot access SHMEM include directory $shmeminc"
+		exit 1
+	    fi
+	    shmem=yes
+	    shift
+	    ;;
+
 	-stff=*)
 	    stffdir=`echo $arg | sed -e 's/-stff=//' -e 's/ /#/g'`
 	    if [ ! -d $stffdir ] ; then
@@ -5193,6 +5204,15 @@ then
 	    fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
 	    fi
 	fi
+	if [ -r $openshmem_lib_dir/libshmem.so -o -r $openshmem_lib_dir/libshmem.a ]
+	then
+	    shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
+	    then
+		shmemlibrary=-lshmem
+	    #fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	    fi
+	fi
     fi
 
     if [ "x$shmemlib" != "x" ]
@@ -5247,11 +5267,15 @@ then
 	fi
     fi
 
+    if [ "x$shmemmpiinc" != "x" ] ; then
+	    shmemmpiincargs="-I$shmemmpiinc"
+    fi
+
     shmemlibargs="$shmemlibargs $shmemlibrary"
     shmemlibargs=`echo $shmemlibargs | sed  -e 's/ /#/g'`
     fixmakeargs="$fixmakeargs SHMEM"
     tauoptions="${tauoptions}-shmem"
-    fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs shmemdirargs=$shmemdir"
+    fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs shmemdirargs=$shmemdir shmemmpiincargs=$shmemmpiincargs"
 fi
 
 gcclibdir=unknown
