@@ -59,7 +59,7 @@ if ! $found ; then
 fi
 
 found=false
-for shmemlib in libopenshmem libsma liboshmem; do
+for shmemlib in libopenshmem libsma liboshmem libshmem; do
   for libext in a so ; do
       libshmem="$shmemlibdir/$shmemlib.$libext"
       if [ -r "$libshmem" ] ; then
@@ -69,7 +69,7 @@ for shmemlib in libopenshmem libsma liboshmem; do
   done
 done
 if ! $found ; then
-  echo "ERROR: Cannot locate SHMEM library in $shmemdir"
+  echo "ERROR: Cannot locate SHMEM library in $shmemlibdir"
   exit 1
 fi
 
