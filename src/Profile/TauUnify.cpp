@@ -307,8 +307,8 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   int *shmaxbuf = (int*)__real_shmalloc(sizeof(int));
   int *shmaxbufArr = (int*)__real_shmalloc(numRanks*sizeof(int));
 #else
-  int *shmaxbuf = (int*)shmem_malloc(sizeof(int));
-  int *shmaxbufArr = (int*)shmem_malloc(numRanks*sizeof(int));
+  int *shmaxbuf = (int*)__real_shmem_malloc(sizeof(int));
+  int *shmaxbufArr = (int*)__real_shmem_malloc(numRanks*sizeof(int));
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
 
   char *shbuff;
