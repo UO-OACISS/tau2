@@ -25,10 +25,18 @@ extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a
 extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_barrier_all() ;
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+extern "C" int   __real__num_pes() ;
+extern "C" int   __real__my_pe() ;
+extern "C" void* __real_shmalloc(size_t a1) ;
+extern "C" void  __real_shfree(void * a1) ;
+#else
 extern "C" int   __real_shmem_n_pes() ;
 extern "C" int   __real_shmem_my_pe() ;
+extern "C" void* __real_shmem_malloc(size_t a1) ;
 extern "C" void  __real_shmem_free(void * a1) ;
-extern "C" void  __real_shmem_barrier_all() ;
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #endif /* TAU_SHMEM */
 #include <TAU.h>
 #include <TauMetaData.h>
@@ -63,8 +71,13 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  int numRanks = __real__num_pes();
+  rank = __real__my_pe();
+#else
   int numRanks = __real_shmem_n_pes();
   rank = __real_shmem_my_pe();
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
   static int shBufferSize;
   int i, defBufSize;
   char *defBuf;
@@ -94,7 +107,11 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     for(i=0; i<numRanks; i++)
       __real_shmem_int_put(&shBufferSize, &defBufSize, 1, i);
   }
-  char *shBuffer = (char*)shmem_malloc((shBufferSize));
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  char *shBuffer = (char*)__real_shmalloc((shBufferSize));
+#else
+  char *shBuffer = (char*)__real_shmem_malloc((shBufferSize));
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
   char *Buffer = (char*)TAU_UTIL_MALLOC(shBufferSize);
   if(rank == 0) {
     for(i=0; i<shBufferSize; i++)
@@ -133,7 +150,11 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   __real_shmem_barrier_all();
   if(rank != 0)
     Tau_metadata_removeDuplicates(Buffer, shBufferSize);
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  __real_shfree(shBuffer);
+#else
   __real_shmem_free(shBuffer);
+#endif
   free(Buffer);
 #endif /* TAU_SHMEM */
   return 0;
