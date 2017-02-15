@@ -335,7 +335,9 @@ extern "C" void Tau_track_mpi_t(void) {
   // call the handler once, at startup.  This will pre-allocate some 
   // necessary data structures for us, so they don't have to be created
   // during the signal processing.
-  TauAlarmHandler(SIGINT); 
+  // Not doing anything for now. This causes MPI code to error out with
+  // "Called an MPI routine befor MPI_Init, when we track PVARs
+  //TauAlarmHandler(SIGINT); 
 
   // set signal handler 
   new_action.sa_handler = TauAlarmHandler;
