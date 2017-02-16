@@ -382,7 +382,7 @@ private:
 //////////////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////////////
-struct AtomicEventDB : public std::vector<TauUserEvent*>
+struct AtomicEventDB : public std::vector<tau::TauUserEvent*, TauSignalSafeAllocator<tau::TauUserEvent*> >
 {
   AtomicEventDB() {
     Tau_init_initializeTAU();
