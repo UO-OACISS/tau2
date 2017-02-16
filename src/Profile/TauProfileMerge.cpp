@@ -204,6 +204,7 @@ int Tau_mergeProfiles()
   char *shbuf = (char*)__real_shmem_malloc(maxBuflen);
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
   strncpy(shbuf, buf, maxBuflen);
+  __real_shmem_barrier_all();
 #endif /* TAU_SHMEM */
 
 #ifdef TAU_UNIFY
@@ -308,7 +309,6 @@ int Tau_mergeProfiles()
   } /* TauEnv_get_stat_precompute() == 1 */
 #endif /* TAU_UNIFY */
       
-  __real_shmem_barrier_all();
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
 
