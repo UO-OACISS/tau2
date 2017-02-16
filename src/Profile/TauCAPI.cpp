@@ -1287,7 +1287,11 @@ TauContextUserEvent & TheMsgVolRecvContextEvent(int tid) {
 
 ///////////////////////////////////////////////////////////////////////////
 #ifdef TAU_SHMEM 
-extern "C" int shmem_n_pes(void); 
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+extern "C" int __real__num_pes(void);
+#else
+extern "C" int __real_shmem_n_pes(void); 
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #endif /* TAU_SHMEM */
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1306,7 +1310,11 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
 #ifdef TAU_SHMEM
-      tau_totalnodes(1,shmem_n_pes());
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+      tau_totalnodes(1,__real__num_pes());
+#else
+      tau_totalnodes(1,__real_shmem_n_pes());
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #else /* TAU_SHMEM */
       fprintf(stderr, 
           "TAU Error: Comm Matrix destination %d exceeds node count %d. "
@@ -1376,7 +1384,11 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
     if (TauEnv_get_comm_matrix()) {
       if (destination >= tau_totalnodes(0,0)) {
 #ifdef TAU_SHMEM
-        tau_totalnodes(1,shmem_n_pes());
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+        tau_totalnodes(1,__real__num_pes());
+#else
+        tau_totalnodes(1,__real_shmem_n_pes());
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #else /* TAU_SHMEM */
         fprintf(stderr, 
             "TAU Error: Comm Matrix destination %d exceeds node count %d. "
