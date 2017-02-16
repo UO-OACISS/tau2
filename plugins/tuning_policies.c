@@ -77,6 +77,8 @@ typedef struct tuning_policy_rule_
 
 tuning_policy_rule rules[MAX_NB_RULES];
 
+static json_object *jso = NULL;
+
 /* Detect if given PVAR or CVAR is an array */
 int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
 {
@@ -200,6 +202,67 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
+void json_parse_array( json_object *jobj, char *key) 
+{
+  void json_parse(json_object * jobj); /*Forward Declaration*/
+  enum json_type type;
+
+  json_object *jarray = jobj; /*Simply get the array*/
+
+  if(key) {
+    jarray = json_object_object_get(jobj, key); /*Getting the array if it is a key value pair*/
+  }
+
+  int arraylen = json_object_array_length(jarray); /*Getting the length of the array*/
+  printf("Array Length: %dn",arraylen);
+  int i;
+  json_object * jvalue;
+
+  for (i=0; i< arraylen; i++){
+    jvalue = json_object_array_get_idx(jarray, i); /*Getting the array element at position i*/
+    type = json_object_get_type(jvalue);
+    if (type == json_type_array) {
+      json_parse_array(jvalue, NULL);
+    }
+    else if (type != json_type_object) {
+      printf("value[%d]: ",i);
+      print_json_value(jvalue);
+    }
+    else {
+      json_parse(jvalue);
+    }
+  }
+}
+
+/*Parsing the json object*/
+void json_parse(json_object * jobj) 
+{
+
+  enum json_type type;
+
+  json_object_object_foreach(jobj, key, val) { /*Passing through every array element*/
+
+    printf("type: ",type);
+    type = json_object_get_type(val);
+
+    switch (type) {
+      case json_type_boolean: 
+      case json_type_double: 
+      case json_type_int: 
+      case json_type_string: print_json_value(val);
+                           break; 
+      case json_type_object: printf("json_type_objectn");
+                           jobj = json_object_object_get(jobj, key);
+                           json_parse(jobj); 
+                           break;
+      case json_type_array: printf("type: json_type_array, ");
+                          json_parse_array(jobj, key);
+                          break;
+    }
+  }
+} 
+
+/* Load JSON file and store string into a JSON object  */
 void read_json_rules()
 {
   const char *filename = "./policy.json";
@@ -219,9 +282,9 @@ void read_json_rules()
 
  if (jso != NULL)
  {
-                printf("OK: json_object_from_fd(%s)=%s\n",
+   printf("OK: json_object_from_fd(%s)=%s\n",
                        filename, json_object_to_json_string(jso));
-                json_object_put(jso);
+   json_object_put(jso);
  }
  else
  {
