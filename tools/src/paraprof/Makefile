@@ -9,7 +9,7 @@ SOURCES = $(filter-out src/ParaProf.java, $(BASE_SRC))
 
 NOW = $(shell date)
 
-CUBE_JAVA_READER=@CUBECLASSPATH@
+CUBE_JAVA_READER=../contrib/CubeReader.jar
 ifndef $(TAUROOT)
 TOOLS_SRC=..
 else
