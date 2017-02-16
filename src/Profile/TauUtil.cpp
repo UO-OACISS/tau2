@@ -225,10 +225,15 @@ int Tau_util_close_plugin()
 /*
  * Clean up all plugins and free associated structures
  */
-void Tau_util_cleanup_plugins(void *vpds)
+int Tau_util_cleanup_plugins()
 {
 
-  PluginDiscoveryState* pds = (PluginDiscoveryState*)vpds;
+  if(pds == NULL) {
+    fprintf(stdout, "No plugin to clean\n");
+    return -1;
+  }
+
+  //PluginDiscoveryState* pds = (PluginDiscoveryState*)vpds;
   PluginHandleList* node = pds->handle_list;
 
   while (node) {

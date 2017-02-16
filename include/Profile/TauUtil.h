@@ -63,7 +63,7 @@ void *Tau_util_calloc(size_t size, const char *file, int line);
 
 int Tau_util_load_plugin(char *name, char *path, void *args);
 int Tau_util_close_plugin();
-void Tau_util_cleanup_plugins();
+int Tau_util_cleanup_plugins();
 
 /* The following macros help create a local array and assign to elements of 
    the local C array, values from Fortran array after conversion using f2c 
