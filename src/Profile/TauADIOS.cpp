@@ -20,9 +20,6 @@
 #include <stdint.h>
 #define ADIOST_EXTERN extern "C"
 
-ADIOST_EXTERN void Tau_pure_start_openmp_task(const char * n, int tid);
-ADIOST_EXTERN void Tau_pure_stop_openmp_task(const char * n, int tid);
-
 ADIOST_EXTERN void my_open ( int64_t file_descriptor, adiost_event_type_t type,
     const char * group_name, const char * file_name, const char * mode) {
     if (type == adiost_event_enter) {

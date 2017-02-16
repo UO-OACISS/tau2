@@ -173,15 +173,44 @@ extern "C" void TAU_SOS_finalize(void) {
     if (!done) {
         TAU_SOS_stop_worker();
     }
+    // flush any outstanding packs
+    TAU_SOS_send_data();
     SOS_finalize(_runtime);
     finalized = true;
 }
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
+extern "C" Profiler * Tau_get_current_profiler(void);
+
+extern "C" void Tau_SOS_pack_double(const char * event_name) {
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    if (done) { return; }
+    // get the current profiler
+    Profiler * p = Tau_get_current_profiler();
+    // get the current time
+    double current;
+    int tid = RtsLayer::myThread();
+    RtsLayer::getUSecD(tid, &current);
+    // assume time is the first counter!
+    double value = current - p->StartTime[0];
+    RtsLayer::LockDB();
+    SOS_pack(tau_sos_pub, event_name, SOS_VAL_TYPE_DOUBLE, &value);
+    RtsLayer::UnLockDB();
+}
 
 extern "C" void TAU_SOS_send_data(void) {
     if (tau_sos_pub == NULL) {
-        TAU_SOS_make_pub();
+        RtsLayer::LockDB();
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
     }
     assert(tau_sos_pub);
     if (done) { return; }

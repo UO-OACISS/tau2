@@ -773,6 +773,11 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
   }
 }
 
+extern "C" Profiler * Tau_get_current_profiler(void) {
+    int tid = RtsLayer::myThread();
+    return &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_stop_current_timer_task(int tid)
 {

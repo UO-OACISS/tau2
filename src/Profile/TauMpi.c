@@ -468,6 +468,7 @@ MPI_Comm comm;
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Barrier( comm );
 
+  Tau_SOS_pack_double(__func__);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
