@@ -63,7 +63,7 @@ using namespace std;
 using namespace tau;
 
 #ifdef PGI
-template void vector<TauUserEvent *>::insert_aux(vector<TauUserEvent *>::iterator, TauUserEvent *const &);
+template void AtomicEventDB::insert_aux(AtomicEventDB::iterator, TauUserEvent *const &);
 template TauUserEvent** copy_backward(TauUserEvent**,TauUserEvent**,TauUserEvent**);
 template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUserEvent**);
 #endif // PGI
@@ -269,7 +269,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 void TauUserEvent::ReportStatistics(bool ForEachThread)
 {
   TAU_EVENT_DATATYPE TotalNumEvents, TotalSumValue, Minima, Maxima;
-  vector<TauUserEvent*>::iterator it;
+  AtomicEventDB::iterator it;
 
   Maxima = Minima = 0;
   cout << "TAU Runtime Statistics" << endl;

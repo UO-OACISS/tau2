@@ -453,7 +453,7 @@ TauTraceOffsetInfo *TheTauTraceOffsetInfo() {
 /* Write event definition file (EDF) */
 int TauTraceDumpEDF(int tid) {
   vector<FunctionInfo*>::iterator it;
-  vector<TauUserEvent*>::iterator uit;
+  AtomicEventDB::iterator uit;
   char filename[1024], errormsg[1024];
   const char *dirname;
   FILE* fp;

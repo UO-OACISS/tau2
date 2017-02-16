@@ -748,7 +748,7 @@ void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents)
 
   *numUserEvents = 0;
 
-  vector<TauUserEvent*>::iterator eit;
+  AtomicEventDB::iterator eit;
 
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
     (*numUserEvents)++;
@@ -777,7 +777,7 @@ void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents
   RtsLayer::LockDB();
 
   int idx = 0;
-  vector<TauUserEvent*>::iterator eit;
+  AtomicEventDB::iterator eit;
 
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
     for (int i = 0; i < numUserEvents; i++) {
@@ -902,7 +902,7 @@ void TauProfiler_PurgeData(int tid)
   TauInternalFunctionGuard protects_this_function;
 
   vector<FunctionInfo*>::iterator it;
-  vector<TauUserEvent*>::iterator eit;
+  AtomicEventDB::iterator eit;
   Profiler *curr;
 
   DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
@@ -1003,7 +1003,7 @@ void Profiler::SetPhase(bool flag) {
 // writes user events to the file
 static int writeUserEvents(FILE *fp, int tid)
 {
-  vector<TauUserEvent*>::iterator it;
+  AtomicEventDB::iterator it;
 
   fprintf(fp, "0 aggregates\n");    // For now there are no aggregates
 
@@ -1197,7 +1197,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         bool found_one = false;
         char const * const atomic_metric = TauMetrics_getMetricAtomic(metric);
         if (atomic_metric) {
-            for (vector<TauUserEvent*>::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+            for (AtomicEventDB::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
                 TauUserEvent *ue = *it2;
 
                 char const * str = ue->GetName().c_str();
@@ -1287,7 +1287,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
                     int eventIndex = TauMetrics_getEventIndex(metricEvents[i]);
                     char const * const event_name = TauMetrics_getMetricName(eventIndex);
 
-                    for (vector<TauUserEvent*>::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+                    for (AtomicEventDB::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
                         TauUserEvent *ue = *it2;
 
                         const char *str = ue->GetName().c_str();
@@ -1347,7 +1347,7 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
 {
   int trueCount = count;
 
-  vector<TauUserEvent*>::iterator it2;
+  AtomicEventDB::iterator it2;
   const char *metricName = TauMetrics_getMetricAtomic(metric);
 
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
