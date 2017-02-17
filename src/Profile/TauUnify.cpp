@@ -563,6 +563,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   int *shglobalNumItems = (int*)__real_shmalloc(sizeof(int));
   *shglobalNumItems = globalNumItems;
+  __real_shmem_barrier_all();
   __real_shmem_int_get(&globalNumItems, shglobalNumItems, 1, 0);
   __real_shfree(shglobalNumItems);
 #else
