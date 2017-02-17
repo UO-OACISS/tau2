@@ -80,8 +80,8 @@ def exitAllThreads():
 
 # Backwards compatibility.
 def help():
-    print "Documentation for the profile/cProfile modules can be found "
-    print "in the Python Library Reference, section 'The Python Profiler'."
+    print("Documentation for the profile/cProfile modules can be found ")
+    print("in the Python Library Reference, section 'The Python Profiler'.")
 
 # ____________________________________________________________
 
@@ -162,7 +162,7 @@ class Profile(ctau_impl.Profiler):
             import pytau
             x = pytau.profileTimer(cmd)
             pytau.start(x)
-            exec cmd in globals, locals
+            exec(cmd, globals, locals)
             pytau.stop(x)
         finally:
             self.disable()
@@ -180,7 +180,7 @@ class Profile(ctau_impl.Profiler):
             code = compile(fileobj.read(), path, 'exec')
             module = new_module(newname)
             sys.modules[newname] = module
-            exec code in module.__dict__
+            exec(code, module.__dict__)
         finally:
             if replaced:
                 sys.modules[newname] = replaced

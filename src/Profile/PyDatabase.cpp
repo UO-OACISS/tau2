@@ -77,6 +77,12 @@
 
 #include "Profile/Profiler.h"
 
+// Python 3 compatibility
+#if PY_MAJOR_VERSION >= 3
+#define PyString_FromString(s) PyUnicode_FromString(s)
+#define PyString_AsString(s) PyUnicode_AsUTF8(s)
+#define PyInt_FromLong(l) PyLong_FromLong(l)
+#endif
 
 char pytau_snapshot__name__[] = "snapshot";
 char pytau_snapshot__doc__[] = "take a snapshot of the current profile";
