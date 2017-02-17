@@ -43,6 +43,8 @@ int num_cvars = 0; //For now, we don't support case where number of CVARS change
 //////////////////////////////////////////////////////////////////////
 extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subindex, const int *tau_pvar_count, int num_pvars, double data);extern void Tau_disable_tracking_mpi_t(void);
 extern void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count);
+extern void *Tau_MemMgr_malloc(int tid, size_t size);
+extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
 
 #define dprintf TAU_VERBOSE
 
@@ -221,7 +223,7 @@ int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
 void Tau_mpi_t_parse_cvar_string(int num_cvars, const char *cvar_string, char **cvar_array, int *number_of_elements) {
 
   /*A copy of the cvar string needs to be created because strtok doesn't accept const */
-  char *cvar_copy = (char*)malloc((strlen(cvar_string)+1)*sizeof(char));
+  char *cvar_copy = Tau_MemMgr_malloc(Tau_get_thread(), (strlen(cvar_string)+1)*sizeof(char));
   char *token;
   int current_index = 0;
   int iter = 0;
@@ -237,7 +239,7 @@ void Tau_mpi_t_parse_cvar_string(int num_cvars, const char *cvar_string, char **
 
   /*Handling case where only one cvar metric or value is provided*/
   if(token == NULL) {
-    cvar_array[current_index] = (char*)malloc(sizeof(char)*TAU_NAME_LENGTH);
+    cvar_array[current_index] = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
     strcpy(cvar_array[current_index], cvar_string);
     *number_of_elements = 1;
   }
@@ -245,7 +247,7 @@ void Tau_mpi_t_parse_cvar_string(int num_cvars, const char *cvar_string, char **
   /*Handling case where there are more than one cvar metric or values are provided. We choose to ignore
    *trailing "," */
   while(token != NULL && token != "") {
-    cvar_array[current_index] = (char*)malloc(sizeof(char)*TAU_NAME_LENGTH);
+    cvar_array[current_index] = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
     strcpy(cvar_array[current_index], token);
     current_index = current_index + 1;
     *number_of_elements = current_index;
@@ -253,7 +255,7 @@ void Tau_mpi_t_parse_cvar_string(int num_cvars, const char *cvar_string, char **
     token = strtok_r(NULL, ",", &save_ptr);
   }
 
-  free(cvar_copy);
+  //Tau_MemMgr_free(Tau_get_thread(), cvar_copy);
 }
 
 /*Iterates through the current list of vectors to see if the current vector element being added is new or already exists
@@ -271,7 +273,7 @@ void Tau_mpi_t_add_vector_element(VectorControlVariable *vectors, char *vector_n
         current_string_pair = current_string_pair->link;
         counter = counter + 1;
       }
-      current_string_pair->link = (ListStringPair *)malloc(sizeof(ListStringPair));
+      current_string_pair->link = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(ListStringPair));
       current_string_pair = current_string_pair->link;
       strcpy(current_string_pair->pair.first, key);
       strcpy(current_string_pair->pair.second, cvar_values[index_into_value_array]);
@@ -282,7 +284,7 @@ void Tau_mpi_t_add_vector_element(VectorControlVariable *vectors, char *vector_n
   //Vector with this name doesn't exist. Add it!
   strcpy(vectors[*current_vector].name, vector_name);
   vectors[*current_vector].number_of_elements = 1;
-  vectors[*current_vector].list = (ListStringPair *)malloc(sizeof(ListStringPair));
+  vectors[*current_vector].list = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(ListStringPair));
   strcpy(vectors[*current_vector].list->pair.first, key);
   strcpy(vectors[*current_vector].list->pair.second, cvar_values[index_into_value_array]);
   vectors[*current_vector].list->link = NULL;
@@ -304,9 +306,9 @@ void Tau_mpi_t_count_scalar_and_vector_metrics(const char *cvars, char **cvar_me
   *num_vectors = 0;
   current_scalar = current_vector = 0;
 
-  temporary_string = (char*)malloc(sizeof(char)*TAU_NAME_LENGTH);
-  temporary_string2 = (char*)malloc(sizeof(char)*TAU_NAME_LENGTH);
-  vector_metric_names = (char*)malloc(sizeof(char)*strlen(cvars));
+  temporary_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
+  temporary_string2 = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
+  vector_metric_names = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*strlen(cvars));
 
   /*Iterates through all cvar metrics to find out how many scalar and vector elements are present. Vector elements in the cvar metrics 
    * string are considered unique only if they have different names*/
@@ -325,7 +327,7 @@ void Tau_mpi_t_count_scalar_and_vector_metrics(const char *cvars, char **cvar_me
     }
   }
 
-  free(temporary_string); free(temporary_string2); free(vector_metric_names);
+  ///Tau_MemMgr_free(Tau_get_thread(), temporary_string); Tau_MemMgr_free(Tau_get_thread(), temporary_string2); Tau_MemMgr_free(Tau_get_thread(), vector_metric_names);
 }
 
 /*Separates out scalar and vector elements into two different lists for ease of use*/
@@ -338,8 +340,8 @@ void Tau_mpi_t_map_cvar_metrics_to_values(char **cvar_metrics, char **cvar_value
 
   current_scalar = current_vector = 0;
 
-  temporary_string = (char*)malloc(sizeof(char)*TAU_NAME_LENGTH);
-  temporary_string2 = (char*)malloc(sizeof(char)*TAU_NAME_LENGTH);
+  temporary_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
+  temporary_string2 = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
 
   /*Logic for separating the scalars and vectors into two separate lists*/
   for(iter=0; iter < num_cvar_metrics; iter++) {
@@ -358,34 +360,34 @@ void Tau_mpi_t_map_cvar_metrics_to_values(char **cvar_metrics, char **cvar_value
     }
   }
 
-  free(temporary_string); free(temporary_string2);
+  //Tau_MemMgr_free(Tau_get_thread(), temporary_string); Tau_MemMgr_free(Tau_get_thread(), temporary_string2);
 }
 
 /*Type the read, write and reset_value buffers depending on the MPI_Datatype of the cvar*/
 void Tau_mpi_t_allocate_read_write_buffers(void **val, void **oldval, void **reset_value, MPI_Datatype datatype, int num_vals) {
 
   if(datatype == MPI_UNSIGNED || datatype == MPI_UNSIGNED_LONG || datatype == MPI_UNSIGNED_LONG_LONG || datatype == MPI_COUNT) {
-    *val = (unsigned long long*)malloc(num_vals*sizeof(unsigned long long));
-    *oldval = (unsigned long long*)malloc(num_vals*sizeof(unsigned long long));
-    *reset_value = (unsigned long long*)malloc(num_vals*sizeof(unsigned long long));
+    *val = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(unsigned long long));
+    *oldval = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(unsigned long long));
+    *reset_value = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(unsigned long long));
   }
 
   if(datatype == MPI_INT) {
-    *val = (signed int*)malloc(num_vals*sizeof(signed int));
-    *oldval = (signed int*)malloc(num_vals*sizeof(signed int));
-    *reset_value = (signed int*)malloc(num_vals*sizeof(signed int));
+    *val = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(signed int));
+    *oldval = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(signed int));
+    *reset_value = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(signed int));
   }
 
   if(datatype == MPI_CHAR) {
-    *val = (char*)malloc(num_vals*sizeof(char));
-    *oldval = (char*)malloc(num_vals*sizeof(char));
-    *reset_value = (char*)malloc(num_vals*sizeof(char));
+    *val = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(char));
+    *oldval = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(char));
+    *reset_value = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(char));
   }
 
   if(datatype == MPI_DOUBLE) {
-    *val = (double*)malloc(num_vals*sizeof(double));
-    *oldval = (double*)malloc(num_vals*sizeof(double));
-    *reset_value = (double*)malloc(num_vals*sizeof(double));
+    *val = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(double));
+    *oldval = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(double));
+    *reset_value = Tau_MemMgr_malloc(Tau_get_thread(), num_vals*sizeof(double));
   }
 }
 
@@ -534,8 +536,8 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
         return return_val;
       }
 
-      cvar_metrics_array = (char**)malloc(sizeof(char*)*num_cvars);
-      cvar_values_array = (char**)malloc(sizeof(char*)*num_cvars);
+      cvar_metrics_array = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char*)*num_cvars);
+      cvar_values_array = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char*)*num_cvars);
 
       /*Parse the metrics and values using strtok. At this stage, we aren't concerned with differenting between scalar and vector metrics.*/
       Tau_mpi_t_parse_cvar_string(num_cvars, cvars, cvar_metrics_array, &num_cvar_metrics);
@@ -552,8 +554,8 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
       Tau_mpi_t_count_scalar_and_vector_metrics(cvars, cvar_metrics_array, num_cvar_metrics, &num_scalars, &num_vectors);
 
 
-      scalars = (ScalarControlVariable*)malloc((num_scalars)*sizeof(ScalarControlVariable));
-      vectors = (VectorControlVariable*)malloc((num_vectors)*sizeof(VectorControlVariable));
+      scalars = Tau_MemMgr_malloc(Tau_get_thread(), (num_scalars)*sizeof(ScalarControlVariable));
+      vectors = Tau_MemMgr_malloc(Tau_get_thread(), (num_vectors)*sizeof(VectorControlVariable));
 
       /*Maps cvar metrics to values, handling both scalars and vectors appropriately*/
       Tau_mpi_t_map_cvar_metrics_to_values(cvar_metrics_array, cvar_values_array, num_cvar_metrics, vectors, scalars, num_scalars, num_vectors);
@@ -605,7 +607,7 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
             } else {
               Tau_mpi_t_verify_write_and_log_scalar_metadata(rank, val, reset_value, oldval, datatype, tau_cvar_num_vals[cindex], scalars[iter].name, desc);
             }
-            free(val); free(oldval); free(reset_value);
+            //Tau_MemMgr_free(Tau_get_thread(), val); Tau_MemMgr_free(Tau_get_thread(), oldval); Tau_MemMgr_free(Tau_get_thread(), reset_value);
          
           }
         }
@@ -653,7 +655,7 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
             } else {
               Tau_mpi_t_verify_write_and_log_vector_metadata(rank, val, reset_value, oldval, datatype, tau_cvar_num_vals[cindex], vectors[iter].name);
             }
-            free(val); free(oldval); free(reset_value);
+            //Tau_MemMgr_free(Tau_get_thread(), val); Tau_MemMgr_free(Tau_get_thread(), oldval); Tau_MemMgr_free(Tau_get_thread(), reset_value);
 
           }
         }
@@ -666,7 +668,7 @@ int Tau_mpi_t_parse_and_write_cvars(const char *cvars, const char *values) {
       */
       }  
 
-      free(cvar_metrics_array); free(cvar_values_array); free(vectors); free(scalars);
+      //Tau_MemMgr_free(Tau_get_thread(), cvar_metrics_array); Tau_MemMgr_free(Tau_get_thread(), cvar_values_array); Tau_MemMgr_free(Tau_get_thread(), vectors); Tau_MemMgr_free(Tau_get_thread(), scalars);
 
       /*Finalize the MPI_T since we called MPI_T_init_thread above. This ensure the tools interface is back to the state
        *state it was in before this function call.*/
@@ -704,8 +706,8 @@ int Tau_mpi_t_cvar_initialize(void) {
     return return_val;
   }
 
-  tau_cvar_handles = (MPI_T_cvar_handle *)malloc(num_cvars*sizeof(MPI_T_cvar_handle));
-  tau_cvar_num_vals = (int *)malloc(num_cvars*sizeof(int));
+  tau_cvar_handles = Tau_MemMgr_malloc(Tau_get_thread(), num_cvars*sizeof(MPI_T_cvar_handle));
+  tau_cvar_num_vals = Tau_MemMgr_malloc(Tau_get_thread(), num_cvars*sizeof(int));
 
   for(i=0;i < num_cvars;i++) {
     return_val = MPI_T_cvar_handle_alloc(i, NULL, &(tau_cvar_handles[i]), &(tau_cvar_num_vals[i]));
@@ -797,9 +799,9 @@ void Tau_enable_user_cvar_tuning_policy(const int num_pvars, int *tau_pvar_count
         pvar_vbuf_allocated_index = i;
       }
       reduced_value_array = (unsigned long long int *)calloc(sizeof(unsigned long long int), tau_pvar_count[pvar_max_vbuf_usage_index]);
-      reduced_value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH);
+      reduced_value_cvar_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
       strcpy(reduced_value_cvar_string, "");
-      reduced_value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH);
+      reduced_value_cvar_value_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
       strcpy(reduced_value_cvar_value_string, "");
   }
 
@@ -939,7 +941,7 @@ int Tau_track_mpi_t_here(void) {
     char *plugin_name;
     const char *plugin_path;
     int num_args = 3;
-    void **args = (void **)malloc(num_args*sizeof(void*));
+    void **args = Tau_MemMgr_malloc(Tau_get_thread(), num_args*sizeof(void*));
     args[0] = (void *)num_pvars;
     args[1] = (void *)tau_pvar_count;
     args[2] = (void *)pvar_value_buffer;
