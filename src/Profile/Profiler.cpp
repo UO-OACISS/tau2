@@ -1426,14 +1426,6 @@ int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
 
-#ifdef TAU_SHMEM
-  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-    Tau_metadataMerge_mergeMetaData();
-    Tau_mergeProfiles();
-    __real_shmem_finalize();
-  }
-#endif /* TAU_SHMEM */
-
 #ifdef TAU_SCOREP
   Tau_write_metadata_records_in_scorep(tid);
 #endif /* TAU_SCOREP */
@@ -1494,25 +1486,14 @@ int TauProfiler_StoreData(int tid)
   }
 #endif /* PTHREADS */
 
-// this doesn't work... apparently "getTotalThreads() lies to us.
-// Is there a reliable way to get the number of threads seen by
-// OpenMP???
-#if 0
-#ifndef TAU_SCOREP
-#if defined(TAU_OPENMP)
-  fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
-  if (RtsLayer::getTotalThreads() == 1) {
-    // issue a warning, because this is a multithreaded config,
-    // and we saw no threads other than 0!
-    fprintf(stderr,
-        "\nTAU: WARNING! TAU did not detect more than one thread.\n"
-        "If running an OpenMP application with tau_exec and you expected\n"
-        "more than one thread, try using the '-T pthread' configuration,\n"
-        "or instrument your code with TAU.\n\n");
+#ifdef TAU_SHMEM
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    Tau_metadataMerge_mergeMetaData();
+    Tau_mergeProfiles();
+    __real_shmem_finalize();
   }
-#endif /* OPENMP */
-#endif /* SCOREP */
-#endif
+#endif /* TAU_SHMEM */
+
   return 1;
 }
 
