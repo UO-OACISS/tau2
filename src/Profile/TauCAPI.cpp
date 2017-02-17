@@ -78,6 +78,9 @@ extern "C" void Tau_shutdown(void);
 extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
+//Static variables with file scope
+static TauUserEvent *** pvarEvents = NULL;
+
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
 
@@ -1472,7 +1475,20 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 extern "C" void * Tau_get_userevent(char const * name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *ue;
-  ue = new TauUserEvent(std::string(name));
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
+    ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+  new(ue) TauUserEvent(name);
+#else
+  ue = new TauUserEvent(name);
+#endif
   return (void *) ue;
 }
 
@@ -1514,7 +1530,32 @@ extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
   }
 }
 
-typedef TAU_HASH_MAP<string, TauContextUserEvent *> pure_atomic_map_t;
+struct cmp_str
+{
+   bool operator()(char const *a, char const *b)
+   {
+      return std::strcmp(a, b) < 0;
+   }
+};
+
+struct StrCompare : public std::binary_function<const char*, const char*, bool> {
+public:
+    bool operator() (const char* str1, const char* str2) const
+        { return std::strcmp(str1, str2) < 0; }
+};
+
+typedef bool(*_my_compare_const_char_func)(const char *, const char *);
+bool _my_compare_const_char(const char * lhs, const char * rhs) {
+   return (strcmp(lhs, rhs) < 0);
+}
+
+struct StrCompare2 {
+public:
+    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const
+        { return std::strcmp(lhs.c_str(), rhs.c_str()) < 0; }
+};
+
+typedef std::map<TauSafeString, TauContextUserEvent *, std::less<TauSafeString>, TauSignalSafeAllocator<std::pair<const TauSafeString, TauContextUserEvent *> > > pure_atomic_map_t;
 pure_atomic_map_t & ThePureAtomicMap() {
   static pure_atomic_map_t pureAtomicMap;
   return pureAtomicMap;
@@ -1531,11 +1572,30 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *ue = 0;
   RtsLayer::LockEnv();
-  pure_atomic_map_t::iterator it = ThePureAtomicMap().find(string(name));
+  TauSafeString tmp(name);
+  pure_atomic_map_t::iterator it = ThePureAtomicMap().find(tmp);
   if (it == ThePureAtomicMap().end()) {
+    //printf("Adding %s to the map.\n", name); fflush(stdout);
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
+    ue = (TauContextUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauContextUserEvent));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(ue) TauContextUserEvent(name);
+    //ThePureAtomicMap().insert(std::pair<const TauSafeString, TauContextUserEvent *>(ue->GetName(), ue));
+    TauSafeString tmp = ue->GetName();
+    ThePureAtomicMap()[tmp] = ue;
+#else
     ue = new TauContextUserEvent(name); 
-    ThePureAtomicMap()[string(name)] = ue;
+    ThePureAtomicMap()[ue->GetName()] = ue;
+#endif
   } else {
+    //printf("Found %s in the map.\n", name); fflush(stdout);
     ue = (*it).second;
   }
   RtsLayer::UnLockEnv();
@@ -2639,18 +2699,23 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
 }
  
 TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
-    static TauUserEvent *** pvarEvents = NULL;
+    /*All this routine does is to return the event at the current PVAR index and subindex*/
+    
+    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
+}
+
+/*Allocate events to track PVARs*/
+extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count) {
     static int tau_previous_pvar_count = 0;
     int i,j;
-
 
     /* If this function is being invoked for the first time, allocate event buffers using malloc.
      * If the number of pvars changes during runtime, reallocate event buffers accordingly*/
     if(!pvarEvents) {
         pvarEvents = (TauUserEvent***)calloc(num_pvars, sizeof(TauUserEvent**));
-        for(i=0; i < num_pvars; i++) { 
+        for(i=0; i < num_pvars; i++) {
           pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
-	  Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
+          Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
     } else if ((tau_previous_pvar_count > 0) && (num_pvars > tau_previous_pvar_count) ) {
         pvarEvents = (TauUserEvent***)realloc(pvarEvents, sizeof(TauUserEvent**)*num_pvars);
@@ -2662,10 +2727,9 @@ TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current
           pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
           Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
-    }  
-  
+    }
+
     tau_previous_pvar_count = num_pvars;
-    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
