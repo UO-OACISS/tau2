@@ -34,14 +34,40 @@
 // Module documentation string
 char pytau_module__doc__[] = "Tau extensions module";
 
-// Initialization function for the module (*must* be called initpytau)
+// Python 3 uses a different module initialization procedure
+// than Python 2
+#if PY_MAJOR_VERSION >= 3
+static struct PyModuleDef pytau_moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "pytau",             /* m_name */
+        pytau_module__doc__, /* m_doc */
+        -1,                  /* m_size */
+        pytau_methods,       /* m_methods */
+        NULL,                /* m_reload */
+        NULL,                /* m_traverse */
+        NULL,                /* m_clear */
+        NULL,                /* m_free */
+    };
+#endif
+
+// Initialization function for the module (*must* be called initpytau
+// in Python 2 and PyInit_pytau in Python 3)
 extern "C"
+#if PY_MAJOR_VERSION >= 3
+PyMODINIT_FUNC
+PyInit_pytau()
+#else
 void
 initpytau()
+#endif
 {
 // create the module and add the functions
+#if PY_MAJOR_VERSION >= 3
+    PyObject * m = PyModule_Create(&pytau_moduledef);
+#else
     PyObject * m =
         Py_InitModule4("pytau", pytau_methods, pytau_module__doc__, 0, PYTHON_API_VERSION);
+#endif
 
 // get its dictionary
     PyObject * d = PyModule_GetDict(m);
@@ -56,7 +82,12 @@ initpytau()
     PyDict_SetItemString(d, "BadArgument", pytau_badArgument);
 
 // Finished
+#if PY_MAJOR_VERSION >= 3
+    // In Python 3, we have to return the created module object
+    return m;
+#else
     return;
+#endif
 }
 
 // version

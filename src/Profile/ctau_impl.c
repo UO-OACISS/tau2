@@ -4,6 +4,25 @@
 #include "structseq.h"
 #include <TAU.h>
 
+// Python 3 compatibility
+#if PY_MAJOR_VERSION >= 3
+#define PyString_FromString(s) PyUnicode_FromString(s)
+#define PyString_AsString(s) PyUnicode_AsUTF8(s)
+#define PyInt_FromLong(l) PyLong_FromLong(l)
+#define staticforward static
+#define statichere static
+#define PyString_Check(s) PyUnicode_Check(s)
+#define PyString_AS_STRING(s) PyUnicode_AsUTF8(s)
+#define PyString_FromFormat PyUnicode_FromFormat
+#endif
+#ifndef Py_TYPE
+#define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+#endif
+#ifndef PyVarObject_HEAD_INIT
+#define PyVarObject_HEAD_INIT(type, size) PyObject_HEAD_INIT(type) size,
+#endif
+
+
 /************************ rotatingtree.h *************************/
 
 /* "Rotating trees" (Armin Rigo)
@@ -829,7 +848,7 @@ static void profiler_dealloc(ProfilerObject *op) {
   flush_unmatched(op);
   clearEntries(op);
   Py_XDECREF(op->externalTimer);
-  op->ob_type->tp_free(op);
+  Py_TYPE(op)->tp_free(op);
 }
 
 static int profiler_init(ProfilerObject *pObj, PyObject *args, PyObject *kw) {
@@ -885,8 +904,7 @@ Profiler(custom_timer=None, time_unit=None, subcalls=True, builtins=True)\n\
 ");
 
 statichere PyTypeObject PyProfiler_Type = {
-  PyObject_HEAD_INIT(NULL)
-  0,                                      /* ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)
   "ctau_impl.Profiler",                     /* tp_name */
   sizeof(ProfilerObject),                 /* tp_basicsize */
   0,                                      /* tp_itemsize */
@@ -931,10 +949,33 @@ static PyMethodDef moduleMethods[] = {
   {NULL, NULL}
 };
 
+#if PY_MAJOR_VERSION >= 3
+    static struct PyModuleDef ctau_impl_moduledef = {
+            PyModuleDef_HEAD_INIT,
+            "ctau_impl",         /* m_name */
+            "TAU Fast Profiler", /* m_doc */
+            -1,                  /* m_size */
+            moduleMethods,       /* m_methods */
+            NULL,                /* m_reload */
+            NULL,                /* m_traverse */
+            NULL,                /* m_clear */
+            NULL,                /* m_free */
+        };
+#endif
+
 PyMODINIT_FUNC
-initctau_impl(void) {
+#if PY_MAJOR_VERSION >= 3
+PyInit_ctau_impl(void)
+#else
+initctau_impl(void)
+#endif
+{
   PyObject *module, *d;
+#if PY_MAJOR_VERSION >= 3
+  module = PyModule_Create(&ctau_impl_moduledef);
+#else
   module = Py_InitModule3("ctau_impl", moduleMethods, "TAU Fast profiler");
+#endif
   if (module == NULL)
     return;
   d = PyModule_GetDict(module);
@@ -956,4 +997,7 @@ initctau_impl(void) {
 		     (PyObject*) &StatsSubEntryType);
   empty_tuple = PyTuple_New(0);
   initialized = 1;
+#if PY_MAJOR_VERSION >= 3
+  return module; 
+#endif
 }
