@@ -175,15 +175,16 @@ int Tau_mergeProfiles()
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 #endif  /* TAU_MPI */
 #ifdef TAU_SHMEM
-  static int shbuflen;
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  int *shbuflen = (int*)__real_shmalloc(sizeof(int));
   int *shmaxBuflen = (int*)__real_shmalloc(sizeof(int));
   int *maxBuflens = (int*)__real_shmalloc(size*sizeof(int));
 #else
+  int *shbuflen = (int*)__real_shmem_malloc(sizeof(int));
   int *shmaxBuflen = (int*)__real_shmem_malloc(sizeof(int));
   int *maxBuflens = (int*)__real_shmem_malloc(size*sizeof(int));
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
-  shbuflen = buflen;
+  *shbuflen = buflen;
   __real_shmem_int_put(&maxBuflens[rank], &maxBuflen, 1, 0);
   __real_shmem_barrier_all();
   if(rank == 0)
@@ -350,7 +351,7 @@ int Tau_mergeProfiles()
 #endif  /* TAU_MPI */
 #ifdef TAU_SHMEM
       /* receive buffer length */
-      __real_shmem_int_get(&buflen, &shbuflen, 1, i);
+      __real_shmem_int_get(&buflen, shbuflen, 1, i);
 
       /* receive buffer */
       __real_shmem_getmem(recv_buf, shbuf, buflen, i);
