@@ -347,8 +347,24 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
 //         Also look for "tau*/include/" where * has no "/".
 bool nameInTau(const char *name)
 {
+  name = strchr(name, '{') + 1;
+  static char const * libprefix[] = {"libtau", "libTAU", NULL};
+  static char const * libsuffix[] = {".a", ".so", ".dylib", NULL};
   int offset = 0;
   int length = 0;
+  // Check libTAU and varients.
+  char const * prefix;
+  for (char const ** p=libprefix; (prefix = *p); ++p) {
+    char const * head = strstr(name, prefix);
+    if (!head) continue;
+    char const * suffix;
+    for (char const ** s=libsuffix; (suffix = *s); ++s) {
+      char const * tail = strrchr(head, '.');
+      if (tail && !strncmp(tail, suffix, strlen(suffix))) {
+        return true;
+      }
+    }
+  }
   // Pretty ugly hack, I foresee much trouble ahead.
   const char *strPtr = strstr(name, "tau");
   if (strPtr != NULL) {
@@ -385,29 +401,29 @@ bool nameIsUnknown(const char *name)
   return false;
 }
 
+static bool nameInSHMEM(const char *name)
+{
+  name = strchr(name, '[') + 1;
+  char buff[6];
+  if (strlen(name) < sizeof(buff)) return false;
+  for (int i=0; i<sizeof(buff); ++i) {
+    buff[i] = tolower(name[i]);
+  }
+  return !strncmp("shmem_", buff, 6);
+}
+
 bool nameInMPI(const char *name)
 {
-  int len = strlen(name);
-  char *outString = (char *)malloc(sizeof(char) * (len + 1));
-  trimwhitespace(outString, len, name);
-  int prefixLen = 6;
-  char* mpiCheckBuffer = (char*)malloc((prefixLen + 1) * sizeof(char));
-  for (int i = 0; i < prefixLen; i++) {
-    mpiCheckBuffer[i] = (char)tolower((int)outString[i]);
+  name = strchr(name, '[') + 1;
+  char buff[4];
+  if (strlen(name) < sizeof(buff)) return false;
+  for (int i=0; i<sizeof(buff); ++i) {
+    buff[i] = tolower(name[i]);
   }
-  mpiCheckBuffer[prefixLen] = '\0';
-
-  char *strPtr = NULL;
-  strPtr = strstr((char *)mpiCheckBuffer, "mpi_");
-
-  free(mpiCheckBuffer);
-  free(outString);
-
-  if (strPtr != NULL) {
-    return true;
-  }
-  return false;
+  return !strncmp("mpi_", buff, 4);
 }
+
+
 
 void registerNewCallsiteInfo(char *name, unsigned long callsite, int id)
 {
@@ -439,11 +455,13 @@ bool determineCallSiteViaString(unsigned long *addresses)
 
     // Was MPI in my unwind path at some point?
     bool hasMPI = false;
+    bool hasSHMEM = false;
 
     for (unsigned int i = 0; i < length; i++) {
       name = Tau_callsite_resolveCallSite(addresses[i + 1]);
       if (nameInTau(name)) {
-        hasMPI = hasMPI | nameInMPI(name);
+        hasMPI = hasMPI || nameInMPI(name);
+        hasSHMEM = hasSHMEM || nameInSHMEM(name);
         free(name);
         continue;
       } else {
@@ -467,9 +485,11 @@ bool determineCallSiteViaString(unsigned long *addresses)
           //   The callsite into a function probe is not the same as the callsite into
           //   the function itself.
           free(name);
-          if (i + 2 < length) {
-            callsite = addresses[i + 2];
-            name = Tau_callsite_resolveCallSite(addresses[i + 2]);
+          // No idea why this works, or why the magical "2" is required below.
+          int offset = hasSHMEM ? 1 : 2;
+          if (i + offset < length) {
+            callsite = addresses[i + offset];
+            name = Tau_callsite_resolveCallSite(addresses[i + offset]);
             if(strstr(name,"__wrap_") != NULL) {
               //if(i + 3 < length) {
               for(int j=3; j<length-i; j++) {
@@ -809,7 +829,6 @@ extern "C" void finalizeCallSites_if_necessary()
   }
 #endif /* TAU_BFD */
 
-  //  printf("Callsites finalizing\n");
   string delimiter = string(" --> ");
   for (unsigned int i = 0; i < callSiteId[tid]; i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
@@ -819,23 +838,21 @@ extern "C" void finalizeCallSites_if_necessary()
     }
     char *name;
     string *tempName = new string("");
-    if (!callsiteInfo) return; 
+    if (!callsiteInfo) return;
 
     if (callsiteInfo->resolved) {
-      //      printf("ID %d resolved\n", i);
       // resolve a single address
       unsigned long callsite = callsiteInfo->resolvedCallSite;
       name = Tau_callsite_resolveCallSite(callsite);
       *tempName = string(" [@] ") + string(name);
       callsiteInfo->resolvedName = tempName;
       free(name);
-	} else {
+    } else {
       unsigned long *key = callsiteInfo->key;
       // One last try with the string method.
       bool success = determineCallSiteViaString(key);
       // false; // *CWL* For debugging.
       if (!success) {
-        //      printf("ID %d not resolved\n", i);
         // resolve the unwound callsites as a sequence
         int keyLength = key[0];
         // Bad if not true. Also the head entry cannot be Tau_start_timer.
