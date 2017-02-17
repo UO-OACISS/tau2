@@ -6,6 +6,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/types.h>
+
+
+#include "json.h"
+#include "json_util.h"
 
 #define MAX_BUF 128
 #define MAX_SIZE_FIELD_VALUE 64
@@ -59,7 +67,8 @@ typedef struct tuning_policy_rule_
  char *operator;
  char *value;
  char *logicop;
- char *resleftoperand;
+ mpit_cvar *resleftoperand;
+ //char *resleftoperand;
  char *resoperator;
  char *resrightoperand;
 } tuning_policy_rule;
@@ -67,6 +76,8 @@ typedef struct tuning_policy_rule_
 //void plugin_tuning_policies(int argc, void **args)
 
 tuning_policy_rule rules[MAX_NB_RULES];
+
+static json_object *jso = NULL;
 
 /* Detect if given PVAR or CVAR is an array */
 int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
@@ -114,6 +125,7 @@ int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
   return is_array;
 }
 
+/* Analyze each element of leftoperand field */
 int analyze_leftoperand(char *leftoperand, leftop *op)
 {
 
@@ -131,7 +143,7 @@ int analyze_leftoperand(char *leftoperand, leftop *op)
 }
 
 /* Parse list of values for each leftoperand list */
-int parse_list_leftop(char *value, char *separator, leftop *listleftops, int size)
+int parse_list_leftop(char *value, char *separator, leftop *listleftops)
 {
   int i = 0;
   char *token = strtok(value, separator);
@@ -190,6 +202,100 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
+void json_parse_array( json_object *jobj, char *key) 
+{
+  void json_parse(json_object * jobj); /*Forward Declaration*/
+  enum json_type type;
+
+  json_object *jarray = jobj; /*Simply get the array*/
+
+  if(key) {
+    jarray = json_object_object_get(jobj, key); /*Getting the array if it is a key value pair*/
+  }
+
+  int arraylen = json_object_array_length(jarray); /*Getting the length of the array*/
+  printf("Array Length: %dn",arraylen);
+  int i;
+  json_object * jvalue;
+
+  for (i=0; i< arraylen; i++){
+    jvalue = json_object_array_get_idx(jarray, i); /*Getting the array element at position i*/
+    type = json_object_get_type(jvalue);
+    if (type == json_type_array) {
+      json_parse_array(jvalue, NULL);
+    }
+    else if (type != json_type_object) {
+      printf("value[%d]: ",i);
+      print_json_value(jvalue);
+    }
+    else {
+      json_parse(jvalue);
+    }
+  }
+}
+
+/*Parsing the json object*/
+void json_parse(json_object * jobj) 
+{
+
+  enum json_type type;
+
+  json_object_object_foreach(jobj, key, val) { /*Passing through every array element*/
+
+    printf("type: ",type);
+    type = json_object_get_type(val);
+
+    switch (type) {
+      case json_type_boolean: 
+      case json_type_double: 
+      case json_type_int: 
+      case json_type_string: print_json_value(val);
+                           break; 
+      case json_type_object: printf("json_type_objectn");
+                           jobj = json_object_object_get(jobj, key);
+                           json_parse(jobj); 
+                           break;
+      case json_type_array: printf("type: json_type_array, ");
+                          json_parse_array(jobj, key);
+                          break;
+    }
+  }
+} 
+
+/* Load JSON file and store string into a JSON object  */
+void read_json_rules()
+{
+  const char *filename = "./policy.json";
+
+  int d = open(filename, O_RDONLY, 0);
+
+  if (d < 0)
+  {
+    fprintf(stderr,
+            "FAIL: unable to open %s: %s\n",
+            filename, strerror(errno));
+
+    exit(EXIT_FAILURE);
+ }
+
+ json_object *jso = json_object_from_fd(d);
+
+ if (jso != NULL)
+ {
+   printf("OK: json_object_from_fd(%s)=%s\n",
+                       filename, json_object_to_json_string(jso));
+   json_object_put(jso);
+ }
+ else
+ {
+   fprintf(stderr,
+           "FAIL: unable to parse contents of %s: %s\n",
+           filename, json_util_get_last_err());
+ }
+ close(d);
+
+}
+
 /* Load policy rules from config file and populate dedicated structure */
 void load_policy_rules(int argc, void **args)
 {
@@ -199,6 +305,7 @@ void load_policy_rules(int argc, void **args)
  char fieldvalue[MAX_SIZE_FIELD_VALUE];
  mpit_var *pvars = NULL;
  mpit_var *cvars = NULL;
+ leftop *listleftops = NULL;
  char *token;
  char *key = NULL;
  //char key[16];
@@ -236,8 +343,9 @@ void load_policy_rules(int argc, void **args)
        strcpy(rules[irule].condition,value);
      } 
      if(strncmp(line,"LEFTOPERAND",11) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].leftoperand,value);
+       parse_rule_field(line, separator, key, value);  
+       parse_list_leftop(value, ",", listleftops);
+       strcpy(rules[irule].leftoperand,listleftops);
      }
      if(strncmp(line,"RIGHTOPERAND",12) == 0) {
        parse_rule_field(line, separator, key, value);
@@ -281,10 +389,14 @@ void generic_tuning_policy(int argc, void **args)
   char description[TAU_NAME_LENGTH + 1] = "";
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
+
+
   static int firsttime = 1;
-  static unsigned long long int *reduced_value_array = NULL;
-  static char *reduced_value_cvar_string = NULL;
-  static char *reduced_value_cvar_value_string = NULL;
+
+
+  static unsigned long long int *cvar_value_array = NULL;
+  static char *cvar_string = NULL;
+  static char *cvar_value_string = NULL;
  
   assert(argc=3);
 

@@ -30,6 +30,17 @@ typedef struct Tau_util_outputDevice_ {
   int buflen;
 } Tau_util_outputDevice;
 
+typedef struct PluginHandleList_t {
+    void* handle;
+    struct PluginHandleList_t* next;
+} PluginHandleList;
+
+typedef struct PluginDiscoveryState_t {
+    PluginHandleList* handle_list;
+} PluginDiscoveryState;
+
+static PluginDiscoveryState *pds = NULL;
+
 #define TAU_UTIL_OUTPUT_FILE 0
 #define TAU_UTIL_OUTPUT_BUFFER 1
 #define TAU_UTIL_INITIAL_BUFFER 5000000
@@ -52,6 +63,7 @@ void *Tau_util_calloc(size_t size, const char *file, int line);
 
 int Tau_util_load_plugin(char *name, char *path, void *args);
 int Tau_util_close_plugin();
+int Tau_util_cleanup_plugins();
 
 /* The following macros help create a local array and assign to elements of 
    the local C array, values from Fortran array after conversion using f2c 
