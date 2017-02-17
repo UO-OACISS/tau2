@@ -195,6 +195,7 @@ int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
   int i, name_len, desc_len, verbosity, binding, scope, rank, return_val;
   char name[TAU_NAME_LENGTH]= "";
   char desc[TAU_NAME_LENGTH]= "";
+  char tau_metric_name[TAU_NAME_LENGTH]= "";
 
   rank = Tau_get_node();
   MPI_Datatype datatype;
@@ -212,7 +213,8 @@ int Tau_mpi_t_print_all_cvar_desc(int num_cvars) {
     // rank is -1 when TAU is linked in (as opposed to tau_exec). 
     //if (rank == 0) {
       dprintf("CVAR[%d] = %s \t \t desc = %s\n", i, name, desc);
-      TAU_METADATA(name, desc);
+      sprintf(tau_metric_name, "MPI_T CVAR: %s", name);
+      TAU_METADATA(tau_metric_name, desc);
     //} 
   }
 
@@ -394,6 +396,7 @@ void Tau_mpi_t_allocate_read_write_buffers(void **val, void **oldval, void **res
 /*This function verifies that the scalar cvar metric has been written correctly by reading and checking against the reset_value. Logs metadata*/
 void Tau_mpi_t_verify_write_and_log_scalar_metadata(int rank, void *val, void *reset_value, void *oldval, MPI_Datatype datatype, int num_vals, char *metric_name, char desc[TAU_NAME_LENGTH]) {
   char metastring[TAU_NAME_LENGTH] = "";
+  char tau_metric_name[TAU_NAME_LENGTH] = "";
 
   if(datatype == MPI_UNSIGNED || datatype == MPI_UNSIGNED_LONG || datatype == MPI_UNSIGNED_LONG_LONG || datatype == MPI_COUNT) {
     if ((rank == 0) && (*(unsigned long long*)reset_value == *(unsigned long long*)val)) {
@@ -418,7 +421,8 @@ void Tau_mpi_t_verify_write_and_log_scalar_metadata(int rank, void *val, void *r
   }
  
   if (rank == 0) {
-    TAU_METADATA(metric_name, metastring);
+    sprintf(tau_metric_name, "MPI_T CVAR: %s", metric_name);
+    TAU_METADATA(tau_metric_name, metastring);
   }
 }
 
@@ -447,7 +451,7 @@ void Tau_mpi_t_verify_write_and_log_vector_metadata(int rank, void *val, void *r
           sprintf(old_value_string,"%lld,",((unsigned long long*)oldval)[iter]);
           sprintf(reset_value_string,"%lld,",((unsigned long long*)reset_value)[iter]);
           sprintf(metastring,"%s (old) -> %s (new)", old_value_string, reset_value_string);
-          sprintf(metric_name_with_array_index,"%s[%d]", metric_name, iter);
+          sprintf(metric_name_with_array_index,"MPI_T CVAR: %s[%d]", metric_name, iter);
           TAU_METADATA(metric_name_with_array_index, metastring);
           strcpy(old_value_string, ""); strcpy(reset_value_string, ""); strcpy(metastring, ""); strcpy(metric_name_with_array_index, "");
         }
@@ -467,7 +471,7 @@ void Tau_mpi_t_verify_write_and_log_vector_metadata(int rank, void *val, void *r
           sprintf(old_value_string,"%lld,",((signed int*)oldval)[iter]);
           sprintf(reset_value_string,"%lld,",((signed int*)reset_value)[iter]);
           sprintf(metastring,"%s (old) -> %s (new)", old_value_string, reset_value_string);
-          sprintf(metric_name_with_array_index,"%s[%d]", metric_name, iter);
+          sprintf(metric_name_with_array_index,"MPI_T CVAR: %s[%d]", metric_name, iter);
           TAU_METADATA(metric_name_with_array_index, metastring);
           strcpy(old_value_string, ""); strcpy(reset_value_string, ""); strcpy(metastring, ""); strcpy(metric_name_with_array_index, "");
         }
@@ -487,7 +491,7 @@ void Tau_mpi_t_verify_write_and_log_vector_metadata(int rank, void *val, void *r
           sprintf(old_value_string,"%lld,",((double*)oldval)[iter]);
           sprintf(reset_value_string,"%lld,",((double*)reset_value)[iter]);
           sprintf(metastring,"%s (old) -> %s (new)", old_value_string, reset_value_string);
-          sprintf(metric_name_with_array_index,"%s[%d]", metric_name, iter);
+          sprintf(metric_name_with_array_index,"MPI_T CVAR: %s[%d]", metric_name, iter);
           TAU_METADATA(metric_name_with_array_index, metastring);
           strcpy(old_value_string, ""); strcpy(reset_value_string, ""); strcpy(metastring, ""); strcpy(metric_name_with_array_index, "");
         }
