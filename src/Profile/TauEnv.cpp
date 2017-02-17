@@ -76,7 +76,7 @@ using namespace std;
 #endif
 
 #define TAU_CALLSITE_DEFAULT 0
-#define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
+#define TAU_CALLSITE_DEPTH_DEFAULT 1 /* default to be local */
 
 /* If we are using OpenMP and the collector API or OMPT */
 #define TAU_OPENMP_RUNTIME_DEFAULT 1
@@ -210,7 +210,7 @@ static int env_disable_instrumentation = 0;
 static double env_max_records = 0;
 static int env_callpath = 0;
 static int env_callsite = 0;
-static int env_callsite_limit = 0;
+static int env_callsite_depth = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
 static int env_tracing = 0;
@@ -717,8 +717,8 @@ int TauEnv_get_callsite() {
   return env_callsite;
 }
 
-int TauEnv_get_callsite_limit() {
-  return env_callsite_limit;
+int TauEnv_get_callsite_depth() {
+  return env_callsite_depth;
 }
 
 int TauEnv_get_compensate() {
@@ -1466,17 +1466,17 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_CALLSITE", "on");
     } 
 
-    const char *callsiteLimit = getconf("TAU_CALLSITE_LIMIT");
-    env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
-    if (callsiteLimit) {
-      env_callsite_limit = atoi(callsiteLimit);
-      if (env_callsite_limit < 0) {
-        env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
+    const char *callsiteDepth = getconf("TAU_CALLSITE_DEPTH");
+    env_callsite_depth = TAU_CALLSITE_DEPTH_DEFAULT;
+    if (callsiteDepth) {
+      env_callsite_depth = atoi(callsiteDepth);
+      if (env_callsite_depth < 0) {
+        env_callsite_depth = TAU_CALLSITE_DEPTH_DEFAULT;
       }
     }
-    TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_limit);
-    sprintf(tmpstr, "%d", env_callsite_limit);
-    TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
+    TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_depth);
+    sprintf(tmpstr, "%d", env_callsite_depth);
+    TAU_METADATA("TAU_CALLSITE_DEPTH", tmpstr);
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI))
     /* track comm (opposite of old -nocomm option) */

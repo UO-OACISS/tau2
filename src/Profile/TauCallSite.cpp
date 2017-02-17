@@ -545,74 +545,84 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
   CallSiteFunction = NULL;
 
   // *CWL* Stub for a test for whether we wish to acquire callsites for this function.
-  if (1) {
-    // *CWL* - It is EXTREMELY important that this be called at one and only one spot (here!)
-    //         for the purposes of callsite discovery.
-    bool retVal = false;
+  if (0) {
+    // We're not interested in this function's callsite.
+    CallSiteFunction = NULL;
+    return;
+  }
+
+  // *CWL* - It is EXTREMELY important that this be called at one and only one spot (here!)
+  //         for the purposes of callsite discovery.
+  bool retVal = false;
 #ifdef TAU_UNWIND
-    retVal = Tau_unwind_unwindTauContext(tid, callsites);
+  retVal = Tau_unwind_unwindTauContext(tid, callsites);
 #else
-    // No unwinder. We'll have to make do with backtrace. Unfortunately, backtrace will
-    //   not allow us to mitigate the effects of deep direct recursion, so expect some
-    //   strange results in that department.
+  // No unwinder. We'll have to make do with backtrace. Unfortunately, backtrace will
+  //   not allow us to mitigate the effects of deep direct recursion, so expect some
+  //   strange results in that department.
 #ifdef TAU_EXECINFO 
-    void *array[TAU_SAMP_NUM_ADDRESSES];
-    size_t size;
-    // get void*'s for all entries on the stack
-    size = backtrace(array, TAU_SAMP_NUM_ADDRESSES);
-    // *CWL* NOTE: backtrace_symbols() will work for __APPLE__. Since addr2line fails
-    //       there, backup information using the "-->" format could be employed for
-    //       Mac OS X instead of "unresolved".
-    if ((array != NULL) && (size > 0)) {
-      // construct the callsite structure from the buffer.
-      callsites[0] = (unsigned long)size;
-      for (unsigned int i = 0; i < size; i++) {
-        callsites[i + 1] = (unsigned long)array[i];
-      }
-      retVal = true;
-    } else {
-      // backtrace failed, we surrender.
-      retVal = false;
+  void *array[TAU_SAMP_NUM_ADDRESSES];
+  size_t size;
+  // get void*'s for all entries on the stack
+  size = backtrace(array, TAU_SAMP_NUM_ADDRESSES);
+  // *CWL* NOTE: backtrace_symbols() will work for __APPLE__. Since addr2line fails
+  //       there, backup information using the "-->" format could be employed for
+  //       Mac OS X instead of "unresolved".
+  if ((array != NULL) && (size > 0)) {
+    // construct the callsite structure from the buffer.
+    callsites[0] = (unsigned long)size;
+    for (unsigned int i = 0; i < size; i++) {
+      callsites[i + 1] = (unsigned long)array[i];
     }
-#else
-    // If no backtrace available, we raise our hands in surrender.
+    retVal = true;
+  } else {
+    // backtrace failed, we surrender.
     retVal = false;
+  }
+#else
+  // If no backtrace available, we raise our hands in surrender.
+  retVal = false;
 #endif /* TAU_EXECINFO = !(_AIX || sun || windows) */
 #endif /* TAU_UNWIND */
-    if (retVal) {
-      map<TAU_CALLSITE_KEY_ID_MAP_TYPE>::iterator itCs = TheCallSiteKey2IdMap().find(callsites);
+  if (!retVal) {
+    // Unwind failed. Issue warning if necessary. No Callsite information.
+    Tau_callsite_issueFailureNotice_ifNecessary();
+    CallSiteFunction = NULL;
+    return;
+  }
 
-      if (itCs == TheCallSiteKey2IdMap().end()) {
-        unsigned long *callsiteKey = NULL;
+  // Make sure we don't walk off the top of the stack
+  // First element of callsites is the number of callsites on the stack
+  int callsite_depth = TauEnv_get_callsite_depth();
+  if (callsite_depth > callsites[0]) {
+    callsite_depth = callsites[0];
+  }
+  for (int depth=0; depth<callsite_depth; ++depth) {
+    unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1];
+    memset(callsiteKey, 0, sizeof(callsiteKey));
+    memcpy(callsiteKey+1, callsites+1+depth, sizeof(callsiteKey)-(depth+1)*sizeof(unsigned long));
+    callsiteKey[0] = callsites[0] - depth;
 
-        //	printf("New CallSite Key %d\n", callSiteId[tid]);
-        // *CWL* - It is important to make a copy of the callsiteKey for registration.
-        callsiteKey = (unsigned long *)malloc(sizeof(unsigned long) * (TAU_SAMP_NUM_ADDRESSES + 1));
-        for (int i = 0; i < TAU_SAMP_NUM_ADDRESSES + 1; i++) {
-          //	  printf("%p ", callsites[i]);
-          callsiteKey[i] = callsites[i];
-        }
-        //	printf("\n");
-        callsiteKeyId = callSiteId[tid];
-        TheCallSiteKey2IdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE>::value_type(callsiteKey, callsiteKeyId));
-        tau_cs_info_t *callSiteInfo = (tau_cs_info_t *)malloc(sizeof(tau_cs_info_t));
-        callSiteInfo->key = callsiteKey;
-        callSiteInfo->resolved = false;
-        callSiteInfo->resolvedCallSite = 0;
-        callSiteInfo->hasName = false;
-        callSiteInfo->resolvedName = NULL;
-        TheCallSiteIdVector().push_back(callSiteInfo);
-        callSiteId[tid]++;
-      } else {
-        // We've seen this callsite key before.
-        callsiteKeyId = (*itCs).second;
-        //	printf("Recalled CallSite Key %d\n", callsiteKeyId);
-      }
+    map<TAU_CALLSITE_KEY_ID_MAP_TYPE>::iterator itCs = TheCallSiteKey2IdMap().find(callsiteKey);
+
+    if (itCs == TheCallSiteKey2IdMap().end()) {
+      // *CWL* - It is important to make a copy of the callsiteKey for registration.
+      unsigned long * callsiteKeyCopy = (unsigned long*)malloc(sizeof(callsiteKey));
+      memcpy(callsiteKeyCopy, callsiteKey, sizeof(callsiteKey));
+      callsiteKeyId = callSiteId[tid];
+      TheCallSiteKey2IdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE>::value_type(callsiteKeyCopy, callsiteKeyId));
+      tau_cs_info_t *callSiteInfo = (tau_cs_info_t *)malloc(sizeof(tau_cs_info_t));
+      callSiteInfo->key = callsiteKeyCopy;
+      callSiteInfo->resolved = false;
+      callSiteInfo->resolvedCallSite = 0;
+      callSiteInfo->hasName = false;
+      callSiteInfo->resolvedName = NULL;
+      TheCallSiteIdVector().push_back(callSiteInfo);
+      callSiteId[tid]++;
     } else {
-      // Unwind failed. Issue warning if necessary. No Callsite information.
-      Tau_callsite_issueFailureNotice_ifNecessary();
-      CallSiteFunction = NULL;
-      return;
+      // We've seen this callsite key before.
+      callsiteKeyId = (*itCs).second;
+      //	printf("Recalled CallSite Key %d\n", callsiteKeyId);
     }
 
     // Proceed to construct the key
@@ -712,44 +722,6 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
       }
     }
 
-    // Has the callsite key for the base function been seen before?
-/*
-    map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>::iterator itKey = TheCallSiteFirstKeyMap().find(ThisFunction);
-    if (itKey == TheCallSiteFirstKeyMap().end()) {
-      // BASE Function not previously encountered. The callsite is necessarily unique.
-      //   So, no callsite resolution is required.
-      ThisFunction->firstSpecializedFunction = CallSiteFunction;
-      TheCallSiteFirstKeyMap().insert(map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>::value_type(ThisFunction, CallSiteFunction));
-    } else {
-      FunctionInfo *firstCallSiteFunction = (*itKey).second;
-      if (CallSiteFunction->callSiteKeyId != firstCallSiteFunction->callSiteKeyId) {
-        // Different callsite. Try to resolve it if it has not already been resolved.
-        //   If it has already been resolved, the first FI must also necessarily
-        //   be resolved.
-        if (!CallSiteFunction->callSiteResolved) {
-          // resolve the local callsite first.
-          unsigned long resolvedCallSite = 0;
-          resolvedCallSite = determineCallSiteViaId(CallSiteFunction->callSiteKeyId,
-              firstCallSiteFunction->callSiteKeyId);
-          TAU_VERBOSE("%d Got the final callsite %p\n", CallSiteFunction->callSiteKeyId, resolvedCallSite);
-          // Register the resolution of this callsite key
-          CallSiteFunction->callSiteResolved = true;
-          TheCallSiteIdVector()[CallSiteFunction->callSiteKeyId]->resolved = true;
-          TheCallSiteIdVector()[CallSiteFunction->callSiteKeyId]->resolvedCallSite = resolvedCallSite;
-
-          if (!firstCallSiteFunction->callSiteResolved) {
-            resolvedCallSite = determineCallSiteViaId(firstCallSiteFunction->callSiteKeyId,
-                CallSiteFunction->callSiteKeyId);
-            TAU_VERBOSE("%d Got the final master callsite %p\n", firstCallSiteFunction->callSiteKeyId,
-                resolvedCallSite);
-            firstCallSiteFunction->callSiteResolved = true;
-            TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolved = true;
-            TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolvedCallSite = resolvedCallSite;
-          }
-        }
-      }
-    }
-*/
     if (TraceTimeStamp && TauEnv_get_tracing()) {
       // Tweak time stamp to preserve event order in trace
       TauTraceEvent(CallSiteFunction->GetFunctionId(), 1 /* entry */, tid, TraceTimeStamp-1, 1);
@@ -757,11 +729,10 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
 
     // Set up metrics. Increment number of calls and subrs
     CallSiteFunction->IncrNumCalls(tid);
-  } else {    // Stub for the desire of callsites.
-    // We're not interested in this function's callsite.
-    CallSiteFunction = NULL;
-  }
-}
+  } // END for (depth)
+
+} // END Profiler::CallSiteStart
+
 
 // *CWL* - Perform the necessary time accounting for CallSites. Note that CallSites
 //         are essentially specialized mirrors of their CallPath or Base counterparts.
