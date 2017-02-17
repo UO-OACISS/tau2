@@ -639,6 +639,9 @@ if [ $track_cupti = "true" ] ; then
     export TAU_CUDA_BINARY_EXE=$binary_exe
   fi
   #echo "api found: $TAU_CUPTI_API"
+  if [ $python_wrapper = "true" ] ; then
+    export TAU_CUPTI_API=both
+  fi
 fi
 if [ $track_opencl = "true" ] ; then
   # Add the OpenCL wrapper library to the LD_PRELOAD list
