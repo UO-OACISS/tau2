@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include <dlfcn.h>
 
 
 /*********************************************************************
@@ -167,4 +168,82 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
   }
   return ptr;
 }
+
+/*
+ * Load a plugin with its given name and path
+ */
+int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
+{
+  char *fullname;
+  char *fullpath;
+  char *initFuncName;
+  
+  strcat(path, name);
+
+  sprintf(fullpath, "%s.so", path);
+
+  if(pds == NULL)
+    pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
+
+  void *handle = dlopen(fullpath, RTLD_NOW);
+  //dstring_free(slashedpath);
+  
+  if (handle) {
+    //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
+    PluginHandleList* handle_node = (PluginHandleList *)malloc(sizeof(PluginHandleList));
+    handle_node->handle = handle;
+    handle_node->next = pds->handle_list;
+    pds->handle_list = handle_node;
+  } else {
+    printf("Error loading DSO: %s\n", dlerror());
+    return -1;
+  } 
+
+  sprintf(initFuncName, "plugin_%s", name);  
+
+  /* Get symbol of plugin entry point */
+  void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(handle, initFuncName);
+
+  if(!fn) {
+    fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
+    dlclose(handle);
+    return -1;
+  }
+
+  /* Call plugin function  */
+  fn(num_args, args);
+
+  return 1;
+}
+
+int Tau_util_close_plugin()
+{
+
+  return 1;
+}
+
+/*
+ * Clean up all plugins and free associated structures
+ */
+int Tau_util_cleanup_plugins()
+{
+
+  if(pds == NULL) {
+    fprintf(stdout, "No plugin to clean\n");
+    return -1;
+  }
+
+  //PluginDiscoveryState* pds = (PluginDiscoveryState*)vpds;
+  PluginHandleList* node = pds->handle_list;
+
+  while (node) {
+    PluginHandleList* next = node->next;
+    dlclose(node->handle);
+    free(node);
+    node = next;
+  }
+  
+  free(pds);
+}
+
 

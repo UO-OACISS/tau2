@@ -230,6 +230,7 @@ static int env_track_signals = TAU_TRACK_SIGNALS_DEFAULT;
 static int env_signals_gdb = TAU_SIGNALS_GDB_DEFAULT;
 static int env_echo_backtrace = TAU_ECHO_BACKTRACE_DEFAULT;
 static int env_track_mpi_t_pvars = 0;
+static int env_mpi_t_enable_user_tuning_policy = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
 /* This is a malleable default */
@@ -733,6 +734,10 @@ int TauEnv_get_track_mpi_t_pvars() {
   return env_track_mpi_t_pvars;
 }
 
+int TauEnv_get_mpi_t_enable_user_tuning_policy() {
+  return env_mpi_t_enable_user_tuning_policy;
+}
+
 int TauEnv_set_track_mpi_t_pvars(int value) {
   env_track_mpi_t_pvars = value;
   return env_track_mpi_t_pvars; 
@@ -1119,6 +1124,17 @@ void TauEnv_initialize()
     } else {
       TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "off");
     }
+
+    tmp = getconf("TAU_MPI_T_ENABLE_USER_TUNING_POLICY");
+    if (parse_bool(tmp, env_mpi_t_enable_user_tuning_policy)) {
+      env_mpi_t_enable_user_tuning_policy = 1;
+      TAU_VERBOSE("TAU: MPI_T enable user tuning policy enabled\n");
+      TAU_METADATA("TAU_MPI_T_ENABLE_USER_TUNING_POLICY", "on");
+      TAU_VERBOSE("TAU: Enabling user CVAR tuning policy\n");
+    } else {
+      TAU_METADATA("TAU_MPI_T_ENABLE_USER_TUNING_POLICY", "off");
+    }
+
 #endif /* TAU_MPI_T */
 
     tmp = getconf("TAU_TRACK_HEAP");
@@ -1154,9 +1170,14 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_HEADROOM");
     if (parse_bool(tmp, env_track_memory_headroom)) {
+    /*
       TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEADROOM", "on");
       env_track_memory_headroom = 1;
+      */
+      TAU_VERBOSE("NOTE: Entry/Exit Headroom tracking is permanently disabled!\n");
+      TAU_METADATA("TAU_TRACK_HEADROOM", "off");
+      env_track_memory_headroom = 0;
     } else {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;

@@ -162,6 +162,8 @@ void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
     finalizeCallSites_if_necessary();
   }
 
+  Tau_MemMgr_finalizeIfNecessary();
+
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
   }
