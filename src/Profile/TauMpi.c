@@ -34,7 +34,12 @@
 #include <beacon.h>
 #endif /* TAU_BEACON */
 
+#ifdef TAU_SOS
 #include "Profile/TauSOS.h"
+#define TAU_SOS_COLLECTIVE_EVENT Tau_SOS_pack_double(__func__);
+#else
+#define TAU_SOS_COLLECTIVE_EVENT // do nuthin.
+#endif
 
 #define TAU_MAX_REQUESTS  4096
 #ifndef TAU_MAX_MPI_RANKS
@@ -345,6 +350,7 @@ MPI_Comm comm;
   PMPI_Type_size( recvtype, &typesize );
   TAU_ALLGATHER_DATA(typesize*recvcount);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -372,6 +378,7 @@ MPI_Comm comm;
 
   track_allvector(TAU_ALLGATHER_DATA, recvcounts, typesize);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -396,6 +403,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_ALLREDUCE_DATA(typesize*count);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -422,6 +430,7 @@ MPI_Comm comm;
   PMPI_Type_size( sendtype, &typesize );
   TAU_ALLTOALL_DATA(typesize*sendcount);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -452,6 +461,7 @@ MPI_Comm comm;
 
   TAU_ALLTOALL_DATA(tracksize);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -468,7 +478,7 @@ MPI_Comm comm;
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Barrier( comm );
 
-  Tau_SOS_pack_double(__func__);
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -523,6 +533,7 @@ MPI_Comm comm;
 
   TAU_BCAST_DATA(typesize*count);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -555,6 +566,7 @@ MPI_Comm comm;
   }
 
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -581,6 +593,7 @@ MPI_Comm comm;
 
   track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -637,6 +650,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCESCATTER_DATA(typesize*(*recvcnts));
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -662,6 +676,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCE_DATA(typesize*count);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -686,6 +701,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_SCAN_DATA(typesize*count);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -712,6 +728,7 @@ MPI_Comm comm;
   PMPI_Type_size( sendtype, &typesize );
   TAU_SCATTER_DATA(typesize*sendcnt);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -738,6 +755,7 @@ MPI_Comm comm;
 
   track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
 
+  TAU_SOS_COLLECTIVE_EVENT
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
