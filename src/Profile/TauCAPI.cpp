@@ -239,6 +239,7 @@ extern "C" int Tau_global_getLightsOut() {
 }
 
 extern "C" void Tau_global_setLightsOut() {
+printf("set lights out\n");
   Tau_stack_checkInit();
   // Disable profiling from here on out
   Tau_global_incr_insideTAU();
@@ -350,6 +351,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   // Don't start throttled timers
   if (fi && fi->IsThrottled()) return;
+  //if (Tau_global_getLightsOut()) return;
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -516,6 +518,7 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
   FunctionInfo *fi = (FunctionInfo *)functionInfo;
   // Don't start throttled timers
   if (fi->IsThrottled()) return;
+  if (Tau_global_getLightsOut()) return;
 
   if (TauEnv_get_lite_enabled()) {
     // Protect TAU from itself
@@ -589,6 +592,7 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 
   // Don't stop throttled timers
   if (fi->IsThrottled()) return;
+  //if (Tau_global_getLightsOut()) return;
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -735,6 +739,7 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
   FunctionInfo *fi = (FunctionInfo *)function_info;
   // Don't stop throttled timers
   if (fi->IsThrottled()) return;
+  if (Tau_global_getLightsOut()) return;
 
   if (TauEnv_get_lite_enabled()) {
     // Protect TAU from itself
