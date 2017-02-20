@@ -513,8 +513,10 @@ int Tau_mergeProfiles()
 #ifdef TAU_SHMEM
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
         __real_shfree(shbuf);
+	__real_shfree(shbuflen);
 #else
         __real_shmem_free(shbuf);
+	__real_shmem_free(shbuflen);
 #endif
 #endif /* TAU_SHMEM */
   return 0;
