@@ -1740,7 +1740,8 @@ extern "C" int Tau_open_status(void) {
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
   char buf[2048];
-  int ret, i, bytesread;
+  int ret, i, j, bytesread;
+  memset(buf, 0, 2048);
 
   ret = lseek(fd, 0, SEEK_SET);
   if (ret == -1) {
@@ -1753,16 +1754,28 @@ extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm) {
     perror("Error reading from /proc/self/status");
     return bytesread;
   }
-  //printf("Read: %s\n", buf);
+  *hwm = 0LL;
+  *rss = 0LL;
   for(i=0; i < bytesread; i++) {
    /* Search for VmHWM for high water mark of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'H' && buf[i+4] == 'W' && buf[i+5] == 'M') {
-       sscanf(&buf[i+8], "%lld", hwm);
+    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'H' && buf[i+4] == 'W' && buf[i+5] == 'M' && buf[i+6] == ':') {
+        for (j = 7 ; j+i < bytesread ; j++) {
+            if (buf[i+j] != ' ') {
+                sscanf(&buf[i+j], "%lld", hwm);
+                //printf("VmHWM: %lld\n", *hwm);
+                break;
+            }
+        }
     }
    /* Search for VmRSS for resident set size of memory from /proc/self/status */
-    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'R' && buf[i+4] == 'S' && buf[i+5] == 'S') {
-      // printf("buf[i+8] = %s\n", &buf[i+8]);
-      sscanf(&buf[i+8], "%lld", rss);
+    if (buf[i] == '\n' && buf[i+1] == 'V' && buf[i+2] == 'm' && buf[i+3] == 'R' && buf[i+4] == 'S' && buf[i+5] == 'S' && buf[i+6] == ':') {
+        for (j = 7 ; j+i < bytesread ; j++) {
+            if (buf[i+j] != ' ') {
+                sscanf(&buf[i+j], "%lld", rss);
+                //printf("VmRSS: %lld\n", *rss);
+                break;
+            }
+        }
       break;
     }
   }
