@@ -177,34 +177,36 @@ int Tau_mergeProfiles()
 
 #elif defined(TAU_SHMEM)
 
+  int * allBuflen = (int*)malloc(size*sizeof(int));
+
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   int *shbuflen = (int*)__real_shmalloc(sizeof(int));
-  int *shmaxBuflen = (int*)__real_shmalloc(sizeof(int));
-  int * reduceWrk = (int*)__real_shmalloc(SHMEM_REDUCE_MIN_WRKDATA_SIZE*sizeof(int));
-  long * reduceSync = (long*)__real_shmalloc(SHMEM_REDUCE_SYNC_SIZE*sizeof(long));
 #else
   int *shbuflen = (int*)__real_shmem_malloc(sizeof(int));
-  int *shmaxBuflen = (int*)__real_shmem_malloc(sizeof(int));
-  int * reduceWrk = (int*)__real_shmem_malloc(SHMEM_REDUCE_MIN_WRKDATA_SIZE*sizeof(int));
-  long * reduceSync = (long*)__real_shmem_malloc(SHMEM_REDUCE_SYNC_SIZE*sizeof(long));
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
 
   *shbuflen = buflen;
-  for (int i=0; i<SHMEM_REDUCE_SYNC_SIZE; ++i)
-    reduceSync[i] = SHMEM_SYNC_VALUE;
   __real_shmem_barrier_all();
-  shmem_int_max_to_all(shmaxBuflen, shbuflen, 1, 0, 0, size, reduceWrk, reduceSync);
-  maxBuflen = *shmaxBuflen;
+  if (rank == 0) {
+    allBuflen[0] = buflen;
+    for (int i=1; i<size; ++i) {
+      __real_shmem_int_get(allBuflen+i, shbuflen, 1, i);
+      maxBuflen = max(maxBuflen, allBuflen[i]);
+    }
+    for (int i=1; i<size; ++i) {
+      __real_shmem_int_put(shbuflen, &maxBuflen, 1, i);
+    }
+  }
+  __real_shmem_barrier_all();
+  maxBuflen = *shbuflen;
+
+  printf("%d maxBuflen: %d\n", rank, maxBuflen);
 
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
-  __real_shfree(shmaxBuflen);
-  __real_shfree(reduceWrk);
-  __real_shfree(reduceSync);
+  __real_shfree(shbuflen);
   char *shbuf = (char*)__real_shmalloc(maxBuflen);
 #else
-  __real_shmem_free(shmaxBuflen);
-  __real_shmem_free(reduceWrk);
-  __real_shmem_free(reduceSync);
+  __real_shmem_free(shbuflen);
   char *shbuf = (char*)__real_shmem_malloc(maxBuflen);
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
 
@@ -356,10 +358,8 @@ int Tau_mergeProfiles()
 
 #elif defined(TAU_SHMEM)
 
-      /* receive buffer length */
-      __real_shmem_int_get(&buflen, shbuflen, 1, i);
-
       /* receive buffer */
+      buflen = allBuflen[i];
       __real_shmem_getmem(recv_buf, shbuf, buflen, i);
 
 #endif  /* TAU_MPI */
@@ -521,10 +521,8 @@ int Tau_mergeProfiles()
   __real_shmem_barrier_all();
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   __real_shfree(shbuf);
-	__real_shfree(shbuflen);
 #else
   __real_shmem_free(shbuf);
-	__real_shmem_free(shbuflen);
 #endif
 #endif /* TAU_MPI */
 
