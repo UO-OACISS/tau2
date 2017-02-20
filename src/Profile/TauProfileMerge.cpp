@@ -125,9 +125,7 @@ int Tau_mergeProfiles()
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
-  int rank, size, i, buflen;
   FILE *f;
-  char *buf;
 #ifdef TAU_MPI
   MPI_Status status;
 #endif  /* TAU_MPI */
@@ -147,16 +145,16 @@ int Tau_mergeProfiles()
   Tau_snapshot_writeToBuffer("merge");
 #endif
 
-  // temp: write regular profiles too, for comparison
-  //TauProfiler_DumpData(false, 0, "profile");
-  
-  rank = 0;
-  size = 1;
+  int rank = 0;
+  int size = 1;
+
 #ifdef TAU_MPI
+
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
-#endif  /* TAU_MPI */
-#ifdef TAU_SHMEM
+
+#elif defined(TAU_SHMEM)
+
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   size = __real__num_pes();
   rank = __real__my_pe();
@@ -164,49 +162,56 @@ int Tau_mergeProfiles()
   size = __real_shmem_n_pes();
   rank = __real_shmem_my_pe();
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
-#endif /* TAU_SHMEM */
 
-	buflen = Tau_snapshot_getBufferLength()+1;
-	buf = (char *) malloc(buflen);
+#endif /* TAU_MPI */
+
+	int buflen = Tau_snapshot_getBufferLength()+1;
+  int maxBuflen = buflen;
+
+#ifdef TAU_MPI
+
+  PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+
+	char * buf = (char *) malloc(buflen);
 	Tau_snapshot_getBuffer(buf);
 
-  int maxBuflen = buflen;
-#ifdef TAU_MPI
-  PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
-#endif  /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
+
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   int *shbuflen = (int*)__real_shmalloc(sizeof(int));
   int *shmaxBuflen = (int*)__real_shmalloc(sizeof(int));
-  int *maxBuflens = (int*)__real_shmalloc(size*sizeof(int));
+  int * reduceWrk = (int*)__real_shmalloc(SHMEM_REDUCE_MIN_WRKDATA_SIZE*sizeof(int));
+  long * reduceSync = (long*)__real_shmalloc(SHMEM_REDUCE_SYNC_SIZE*sizeof(long));
 #else
   int *shbuflen = (int*)__real_shmem_malloc(sizeof(int));
   int *shmaxBuflen = (int*)__real_shmem_malloc(sizeof(int));
-  int *maxBuflens = (int*)__real_shmem_malloc(size*sizeof(int));
+  int * reduceWrk = (int*)__real_shmem_malloc(SHMEM_REDUCE_MIN_WRKDATA_SIZE*sizeof(int));
+  long * reduceSync = (long*)__real_shmem_malloc(SHMEM_REDUCE_SYNC_SIZE*sizeof(long));
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
+
   *shbuflen = buflen;
-  __real_shmem_int_put(&maxBuflens[rank], &maxBuflen, 1, 0);
+  for (int i=0; i<SHMEM_REDUCE_SYNC_SIZE; ++i)
+    reduceSync[i] = SHMEM_SYNC_VALUE;
   __real_shmem_barrier_all();
-  if(rank == 0)
-    for(i =0; i < size; i++)
-      if(maxBuflen < maxBuflens[i]) maxBuflen = maxBuflens[i];
-  __real_shmem_barrier_all();
-  *shmaxBuflen = maxBuflen;
-  __real_shmem_int_get(shmaxBuflen, shmaxBuflen, 1, 0);
-  __real_shmem_barrier_all();
+  shmem_int_max_to_all(shmaxBuflen, shbuflen, 1, 0, 0, size, reduceWrk, reduceSync);
   maxBuflen = *shmaxBuflen;
+
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   __real_shfree(shmaxBuflen);
-  __real_shfree(maxBuflens);
+  __real_shfree(reduceWrk);
+  __real_shfree(reduceSync);
   char *shbuf = (char*)__real_shmalloc(maxBuflen);
 #else
   __real_shmem_free(shmaxBuflen);
-  __real_shmem_free(maxBuflens);
+  __real_shmem_free(reduceWrk);
+  __real_shmem_free(reduceSync);
   char *shbuf = (char*)__real_shmem_malloc(maxBuflen);
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
-  strncpy(shbuf, buf, maxBuflen);
+
+	Tau_snapshot_getBuffer(shbuf);
   __real_shmem_barrier_all();
-#endif /* TAU_SHMEM */
+
+#endif  /* TAU_MPI */
 
 #ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
@@ -248,7 +253,7 @@ int Tau_mergeProfiles()
     }
     Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
 				  numEvents, globalEventMap,false);
-    
+
     Tau_collate_allocateFunctionBuffers(&gExcl, &gIncl,
 					&gNumCalls, &gNumSubr,
 					numEvents,
@@ -309,16 +314,16 @@ int Tau_mergeProfiles()
 
   } /* TauEnv_get_stat_precompute() == 1 */
 #endif /* TAU_UNIFY */
-      
+
+
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
 
-    TAU_VERBOSE("Before Merging Profiles: Tau_check_dirname()");
+    TAU_VERBOSE("Before Merging Profiles: Tau_check_dirname()\n");
     profiledir=Tau_check_dirname(profiledir);
 
     TAU_VERBOSE("TAU: Merging Profiles\n");
     start = TauMetrics_getTimeOfDay();
-
 
     char filename[4096];
     if (profile_prefix != NULL) {
@@ -337,38 +342,40 @@ int Tau_mergeProfiles()
     Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, f);
 #endif
 
-    for (i=1; i<size; i++) {
+    for (int i=1; i<size; i++) {
 
 #ifdef TAU_MPI
       /* send ok-to-go */
       PMPI_Send(NULL, 0, MPI_INT, i, 0, MPI_COMM_WORLD);
-      
+
       /* receive buffer length */
       PMPI_Recv(&buflen, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
 
       /* receive buffer */
       PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
-#endif  /* TAU_MPI */
-#ifdef TAU_SHMEM
+
+#elif defined(TAU_SHMEM)
+
       /* receive buffer length */
       __real_shmem_int_get(&buflen, shbuflen, 1, i);
 
       /* receive buffer */
       __real_shmem_getmem(recv_buf, shbuf, buflen, i);
-#endif /* TAU_SHMEM */
+
+#endif  /* TAU_MPI */
 
       if (!TauEnv_get_summary_only()) { /* write each rank? */
         fwrite (recv_buf, buflen, 1, f);
       } else {
-	// If Summary is desired, write only rank 1's data along with rank 0.
-	// *CWL* NOTE: This is done so as to trick paraprof into displaying
-	//             statistics-based data that we generate using
-	//             pre-compute. This hack should be safe to remove after
-	//             paraprof has been fixed to handle pure summary-only
-	//             data.
-	if (i == 1) {
-	  fwrite (recv_buf, buflen, 1, f);
-	}
+        // If Summary is desired, write only rank 1's data along with rank 0.
+        // *CWL* NOTE: This is done so as to trick paraprof into displaying
+        //             statistics-based data that we generate using
+        //             pre-compute. This hack should be safe to remove after
+        //             paraprof has been fixed to handle pure summary-only
+        //             data.
+        if (i == 1) {
+          fwrite (recv_buf, buflen, 1, f);
+        }
       }
     }
     free (recv_buf);
@@ -384,23 +391,22 @@ int Tau_mergeProfiles()
     } else {
       TAU_METADATA("TAU_PRECOMPUTE", "off");
     }
-    if (TauEnv_get_summary_only()) { /* write only rank one metadata for summary
-		profile */
+    if (TauEnv_get_summary_only()) { /* write only rank one metadata for summary profile */
 			if (rank == 0) {
     		Tau_snapshot_writeMetaDataBlock();
 			}
-	  }
-		else {
+	  } else {
     	Tau_snapshot_writeMetaDataBlock();
 		}
-    
+
 		buflen = Tau_snapshot_getBufferLength()+1;
-		buf = (char *) malloc(buflen);
-    Tau_snapshot_getBuffer(buf);
-    fwrite (buf, buflen, 1, f);
+		char * local_buf = (char *) malloc(buflen);
+    Tau_snapshot_getBuffer(local_buf);
+    fwrite (local_buf, buflen, 1, f);
+    free(local_buf);
 
 #ifdef TAU_UNIFY
-    if (TauEnv_get_stat_precompute() == 1) {
+   if (TauEnv_get_stat_precompute() == 1) {
       if (rank == 0) {
 	// *CWL* Now write the computed statistics out in their own special
 	//   profile and definition blocks.
@@ -466,7 +472,6 @@ int Tau_mergeProfiles()
 		   sAtomicSumSqr[s][i]);
 	  }
 	  fprintf(f,"</derivedatomic_data>\n");
-	  
 
 	  // close
           if (s > NUM_STAT_TYPES -3) { // min & max 
@@ -491,7 +496,7 @@ int Tau_mergeProfiles()
 #endif /* TAU_UNIFY */
 
     fflush(f);
-    
+
 #ifdef TAU_FCLOSE_MERGE
     fclose(f);
 #endif
@@ -509,16 +514,20 @@ int Tau_mergeProfiles()
 #endif  /* TAU_MPI */
 
   }
+
+#ifdef TAU_MPI
 	free(buf);
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
+  __real_shmem_barrier_all();
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
-        __real_shfree(shbuf);
+  __real_shfree(shbuf);
 	__real_shfree(shbuflen);
 #else
-        __real_shmem_free(shbuf);
+  __real_shmem_free(shbuf);
 	__real_shmem_free(shbuflen);
 #endif
-#endif /* TAU_SHMEM */
+#endif /* TAU_MPI */
+
   return 0;
 }
 
