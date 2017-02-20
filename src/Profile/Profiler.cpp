@@ -1488,6 +1488,7 @@ int TauProfiler_StoreData(int tid)
 
 #ifdef TAU_SHMEM
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    Tau_global_setLightsOut();
     Tau_metadataMerge_mergeMetaData();
     Tau_mergeProfiles();
     __real_shmem_finalize();
