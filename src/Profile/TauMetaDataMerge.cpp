@@ -72,11 +72,11 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
-  int *shBufferSize = (int*)shmalloc(sizeof(int));
+  int *shBufferSize = (int*)__real_shmalloc(sizeof(int));
   int numRanks = __real__num_pes();
   rank = __real__my_pe();
 #else
-  int *shBufferSize = (int*)shmem_malloc(sizeof(int));
+  int *shBufferSize = (int*)__real_shmem_malloc(sizeof(int));
   int numRanks = __real_shmem_n_pes();
   rank = __real_shmem_my_pe();
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
@@ -154,8 +154,10 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     Tau_metadata_removeDuplicates(Buffer, *shBufferSize);
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   __real_shfree(shBuffer);
+  __real_shfree(shBufferSize);
 #else
   __real_shmem_free(shBuffer);
+  __real_shmem_free(shBufferSize);
 #endif
   free(Buffer);
 #endif /* TAU_SHMEM */
