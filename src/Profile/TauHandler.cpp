@@ -265,6 +265,8 @@ void TauTrackMemoryUtilization(bool allocated) {
 
 #ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
+  memset(&old_action, 0, sizeof(struct sigaction));
+  memset(&new_action, 0, sizeof(struct sigaction));
 
   // Are we tracking memory or headroom. Check the allocated argument. 
   if (allocated) {
@@ -300,6 +302,8 @@ void TauTrackPower(void) {
 
 #ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
+  memset(&old_action, 0, sizeof(struct sigaction));
+  memset(&new_action, 0, sizeof(struct sigaction));
 
   // Are we tracking memory or headroom. Check the allocated argument. 
   TheIsTauTrackingPower() = true;
@@ -331,6 +335,8 @@ extern "C" void Tau_track_mpi_t(void) {
 
 #ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
+  memset(&old_action, 0, sizeof(struct sigaction));
+  memset(&new_action, 0, sizeof(struct sigaction));
   
   // call the handler once, at startup.  This will pre-allocate some 
   // necessary data structures for us, so they don't have to be created
@@ -362,6 +368,8 @@ void TauTrackMemoryFootPrint(void) {
 #ifndef TAU_WINDOWS 
   struct sigaction new_action, old_action;
   TheIsTauTrackingMemoryRSSandHWM() = true;
+  memset(&old_action, 0, sizeof(struct sigaction));
+  memset(&new_action, 0, sizeof(struct sigaction));
   
   // call the handler once, at startup.  This will pre-allocate some 
   // necessary data structures for us, so they don't have to be created
