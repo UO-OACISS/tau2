@@ -2144,12 +2144,12 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
   if (exists > 0) {
-    PureMap::iterator it = pure.find(name);
+    PureMap::const_iterator it = pure.find(name);
     fi = it->second;
   }
   if (fi == NULL) {
     RtsLayer::LockEnv();
-    PureMap::iterator it = pure.find(name);
+    PureMap::const_iterator it = pure.find(name);
     if (it == pure.end()) {
       tauCreateFI((void**)&fi, name, type, TAU_USER, "OpenMP");
       pure[name] = fi;
