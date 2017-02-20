@@ -239,7 +239,6 @@ extern "C" int Tau_global_getLightsOut() {
 }
 
 extern "C" void Tau_global_setLightsOut() {
-printf("set lights out\n");
   Tau_stack_checkInit();
   // Disable profiling from here on out
   Tau_global_incr_insideTAU();
