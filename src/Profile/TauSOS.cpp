@@ -92,8 +92,8 @@ void TAU_SOS_make_pub() {
 #ifdef TAU_MPI
         int rank;
         int commsize;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        MPI_Comm_size(MPI_COMM_WORLD, &commsize);
+        PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        PMPI_Comm_size(MPI_COMM_WORLD, &commsize);
         _runtime->config.comm_rank = rank;
         _runtime->config.comm_size = commsize;
 #endif
@@ -114,13 +114,69 @@ void TAU_SOS_make_pub() {
         TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
 }
 
+void TAU_SOS_fork_exec_sosd(void) {
+#ifdef TAU_MPI
+    // first, figure out who should fork a daemon on this node
+    int i, rank, size, daemon_rank;
+    PMPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    PMPI_Comm_size(MPI_COMM_WORLD,&size);
+    // get my hostname
+    const int hostlength = 128;
+    char hostname[hostlength] = {0};
+    gethostname(hostname, sizeof(char)*hostlength);
+    std::cout << hostname << std::endl;
+    // make array for all hostnames
+    char * allhostnames = (char*)calloc(hostlength*size, sizeof(char));
+    // get all hostnames
+    PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames, 
+                   hostlength*size, MPI_CHAR, MPI_COMM_WORLD);
+    daemon_rank = 0;
+    // find the lowest rank with my hostname
+    for (i = 0 ; i < size ; i++) {
+        if (strncmp(hostname, &(allhostnames[i*128]), hostlength) == 0) {
+            daemon_rank = i;
+        }
+    }
+    // fork the daemon
+    if (rank == daemon_rank) {
+        int pid = vfork();
+        if (pid == 0) {
+            std::cout << "Rank " << rank << " spawning SOS daemon!" << std::endl;
+            char * args[] = {"sosd", "-l", "1", "-a", "1", "-w", "/tmp/sos_flow_working", NULL};
+            int rc = execvp(args[0],args);
+            if (rc < 0) {
+                perror("\nError in execvp");
+            }
+            // exit the daemon spawn!
+            //std::cout << "Daemon exited!" << std::endl;
+            _exit(0);
+        }
+    }
+    //
+    // wait until it is running
+    //
+    //wait(2);
+#endif
+}
+
 extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     static bool initialized = false;
     if (!TauEnv_get_sos_enabled()) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;
         init_lock();
+        // if runtime returns null, wait a bit and try again. If 
+        // we fail "too many" times, give an error and continue
         _runtime = SOS_init(argc, argv, SOS_ROLE_CLIENT, SOS_LAYER_LIB);
+        if(_runtime == NULL) {
+            TAU_SOS_fork_exec_sosd();
+        }
+        int repeat = 20;
+        while(_runtime == NULL) {
+            sleep(1);
+            _runtime = SOS_init(argc, argv, SOS_ROLE_CLIENT, SOS_LAYER_LIB);
+            if (--repeat < 0) { break; }
+        }
 
         if (_threaded) {
             TAU_VERBOSE("Spawning thread for SOS.\n");
