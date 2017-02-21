@@ -390,9 +390,9 @@ void generic_tuning_policy(int argc, void **args)
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
 
-
   static int firsttime = 1;
-
+  static int is_pvar_array = 0;
+  
 
   static unsigned long long int *cvar_value_array = NULL;
   static char *cvar_string = NULL;
@@ -403,6 +403,8 @@ void generic_tuning_policy(int argc, void **args)
   const int num_pvars 				= (const int)			(args[0]);
   int *tau_pvar_count 				= (int *)			(args[1]);
   unsigned long long int **pvar_value_buffer 	= (unsigned long long int **)	(args[2]);
+
+  int pvar_index[num_pvars];
 
   if(firsttime) {
     firsttime = 0;
@@ -422,12 +424,16 @@ void generic_tuning_policy(int argc, void **args)
       &continuous /*OUT*/,
       &atomic/*OUT*/);
 
-      for(j=0; j<rules[0].num_pvars; j++) {
-        //if(strcmp(event_name, rules[0].pvars[j])) {
-
-        //}
-      }
-    }
+      // Check pvar name match
+      for(j=0; j<rules[0].num_pvars; j++) { 
+        if(strcmp(event_name, rules[0].pvars[j].name) == 0) {
+          pvar_index[j] = j;
+          // Is considered pvar an array ?
+          if(rules[0].pvars[j].is_array == 1)
+            is_pvar_array = 1;
+        } 
+      } //for
+    } //for
   }
 
 /*
@@ -439,6 +445,8 @@ void generic_tuning_policy(int argc, void **args)
   }
  }
 */
+
+ 
 
 }
 
