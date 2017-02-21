@@ -4,14 +4,18 @@
  	"pvars":["pvar1","pvar2[10]"],
  	"cvars":["cvar1","cvar2[10]"],
         "operation": {
-		"stmt":"if",
- 		"leftoperand":["pvar1","-","pvar2[10]"],
- 		"rightoperand":10,
- 		"operator":"=",
-        },
- 	"resleftoperand":"cvar1",
- 	"resoperator":"=",
- 	"resrightoperand":10,
- 	"elsestmt":"else"
- }
+                "condition": {
+			"stmt":"if",
+ 			"leftoperand":["pvar1","-","pvar2[10]"],
+ 			"rightoperand":10,
+ 			"operator":"=="
+        	},
+                "result": {
+			"resleftoperand":"cvar1",
+ 			"resoperator":"=",
+ 			"resrightoperand":10,
+ 			"elsestmt":"else"
+                }
+        }
+  }
 }
