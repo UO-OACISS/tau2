@@ -1,6 +1,6 @@
 {
  "rule": {
-        "id": 1,
+        "id":1,
  	"pvars":["pvar1","pvar2[10]"],
  	"cvars":["cvar1","cvar2[10]"],
         "operation": {
