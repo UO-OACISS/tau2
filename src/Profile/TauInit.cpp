@@ -503,23 +503,23 @@ extern "C" int Tau_init_initializeTAU()
   Tau_initialize_collector_api();
 #endif
 
-#ifdef TAU_SOS
+#if defined(TAU_SOS) && !defined(TAU_MPI)
   bool threads = false;
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   threads = true; 
 #endif
   if (TauEnv_get_sos_enabled()) {
 /* Fixme! Replace these with values from TAU metadata. */
-  int argc = 0;
-  char **argv;
-  char * execname = Tau_metadata_get("Executable", 0);
-  argv = (char **)(malloc(sizeof(char*)));
-  if (execname != NULL) {
-    argv[0] = execname;
-  } else {
-    argv[0] = (char *)(calloc(100, sizeof(char)));
-    sprintf(argv[0], "%s", "TAU");
-  }
+    int argc = 0;
+    char **argv;
+    char * execname = Tau_metadata_get("Executable", 0);
+    argv = (char **)(malloc(sizeof(char*)));
+    if (execname != NULL) {
+        argv[0] = execname;
+    } else {
+        argv[0] = (char *)(calloc(100, sizeof(char)));
+        sprintf(argv[0], "%s", "TAU");
+    }
   /*
         FILE *cmdline = fopen("/proc/self/cmdline", "rb");
         size_t size = 0;
@@ -531,9 +531,7 @@ extern "C" int Tau_init_initializeTAU()
         }
         fclose(cmdline);
   */
-  TAU_SOS_init(&argc, &argv, threads);
-  } else {
-    TAU_VERBOSE("*** AAAAARRRRGGGGHHHH!!!! (2) ***\n");
+    TAU_SOS_init(&argc, &argv, threads);
   }
 #endif
 
