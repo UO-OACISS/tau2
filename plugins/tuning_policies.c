@@ -446,8 +446,9 @@ void generic_tuning_policy(int argc, void **args)
  }
 */
 
- 
-
+ if(pvar_value_buffer[pvar_index[0]] - pvar_value_buffer[pvar_index[1]] > rules[0].value) {
+   
+ }
 }
 
 void plugin_generic_tuning_policy(int argc, void **args)
@@ -478,8 +479,7 @@ void plugin_generic_tuning_policy(int argc, void **args)
   char PVAR_MAX_VBUF_USAGE[TAU_NAME_LENGTH] = "mv2_vbuf_max_use_array";
   char PVAR_VBUF_ALLOCATED[TAU_NAME_LENGTH] = "mv2_vbuf_allocated_array";
   int PVAR_VBUF_WASTED_THRESHOLD = 10; //This is the threshold above which we will be free from the pool
-
-  char CVAR_ENABLING_POOL_CONTROL[TAU_NAME_LENGTH] = "MPIR_CVAR_VBUF_POOL_CONTROL";
+char CVAR_ENABLING_POOL_CONTROL[TAU_NAME_LENGTH] = "MPIR_CVAR_VBUF_POOL_CONTROL";
   char CVAR_SPECIFYING_REDUCED_POOL_SIZE[TAU_NAME_LENGTH] = "MPIR_CVAR_VBUF_POOL_REDUCED_VALUE";
 
   int pvar_max_vbuf_usage_index, pvar_vbuf_allocated_index, has_threshold_been_breached_in_any_pool;

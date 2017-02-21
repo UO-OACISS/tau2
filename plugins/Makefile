@@ -2,6 +2,7 @@
 ## Makefile for just the basic utility tools #
 ###############################################################################
 
+TAUROOT       = /home/users/aurelem/tau/tau2_beacon 
 include ../include/Makefile
 #include include/Makefile
 
@@ -9,7 +10,7 @@ HDRS	      =
 
 MAKEFILE      = Makefile
 
-TAUINC        = -I/home/users/aurelem/tau/tau2_beacon/include -I/home/users/aurelem/tau/tau2_beacon/include/Profile -I/home/users/aurelem/tau/tau2_beacon/plugins/json-c/inst/include/json-c
+TAUINC        = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile -I$(TAUROOT)/plugins/json-c/inst/include/json-c
 
 CC            = $(TAU_CC)
 
