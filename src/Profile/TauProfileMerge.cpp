@@ -200,8 +200,6 @@ int Tau_mergeProfiles()
   __real_shmem_barrier_all();
   maxBuflen = *shbuflen;
 
-  printf("%d maxBuflen: %d\n", rank, maxBuflen);
-
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   __real_shfree(shbuflen);
   char *shbuf = (char*)__real_shmalloc(maxBuflen);
