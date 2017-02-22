@@ -31,6 +31,7 @@ typedef struct Tau_util_outputDevice_ {
 } Tau_util_outputDevice;
 
 typedef struct PluginHandleList_t {
+    int pluginid;
     void* handle;
     struct PluginHandleList_t* next;
 } PluginHandleList;
@@ -39,6 +40,7 @@ typedef struct PluginDiscoveryState_t {
     PluginHandleList* handle_list;
 } PluginDiscoveryState;
 
+static int currpluginid = 0;
 static PluginDiscoveryState *pds = NULL;
 
 #define TAU_UTIL_OUTPUT_FILE 0
@@ -62,6 +64,7 @@ void *Tau_util_calloc(size_t size, const char *file, int line);
 #define TAU_UTIL_CALLOC(size) Tau_util_calloc(size, __FILE__, __LINE__);
 
 int Tau_util_load_plugin(char *name, char *path, void *args);
+int Tau_util_call_plugin_func(char *name, int pluginid, char *funcName);
 int Tau_util_close_plugin();
 int Tau_util_cleanup_plugins();
 

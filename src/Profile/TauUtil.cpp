@@ -191,9 +191,11 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
   if (handle) {
     //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
     PluginHandleList* handle_node = (PluginHandleList *)malloc(sizeof(PluginHandleList));
+    handle_node->pluginid = currpluginid; 
     handle_node->handle = handle;
     handle_node->next = pds->handle_list;
     pds->handle_list = handle_node;
+    currpluginid += 1;
   } else {
     printf("Error loading DSO: %s\n", dlerror());
     return -1;
@@ -213,6 +215,33 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
   /* Call plugin function  */
   fn(num_args, args);
 
+  return 1;
+}
+
+int Tau_util_call_plugin_func(char *name, int pluginid, char *funcName)
+{
+  char *callFuncName;
+
+  PluginHandleList* node = pds->handle_list;
+
+  while (node->pluginid != pluginid) {
+    PluginHandleList* next = node->next;
+    node = next;
+  }
+
+  sprintf(callFuncName, "plugin_%s", funcName);
+ 
+  void (*fn)() = (void (*)())dlsym(node->handle, callFuncName); 
+  
+  if(!fn) {
+    fprintf(stdout, "Error called plugin function: %s\n", dlerror());
+    dlclose(node->handle);
+    return -1;
+  }
+
+  /* Call plugin function  */
+  fn();
+  
   return 1;
 }
 
