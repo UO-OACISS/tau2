@@ -191,7 +191,8 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
   if (handle) {
     //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
     PluginHandleList* handle_node = (PluginHandleList *)malloc(sizeof(PluginHandleList));
-    handle_node->pluginid = currpluginid; 
+    //handle_node->pluginid = currpluginid; 
+    strcpy(handle_node->plugin_name, name);
     handle_node->handle = handle;
     handle_node->next = pds->handle_list;
     pds->handle_list = handle_node;
@@ -218,13 +219,17 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
   return 1;
 }
 
-int Tau_util_call_plugin_func(char *name, int pluginid, char *funcName)
+/*
+ * Call a specific function of a specific plugin given their names
+ */
+int Tau_util_call_plugin_func(char *name, char *funcName)
 {
   char *callFuncName;
 
   PluginHandleList* node = pds->handle_list;
 
-  while (node->pluginid != pluginid) {
+  //while (node->pluginid != pluginid) {
+  while (strcmp(name,node->plugin_name) != 0) {
     PluginHandleList* next = node->next;
     node = next;
   }
