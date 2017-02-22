@@ -6,6 +6,11 @@
         "operation": {
                 "condition": {
 			"stmt":"if",
+                  	"leftoperand": {
+		   		     "leftoperand": "pvar1",
+              			     "rightoperand":"pvar2",
+ 				     "operator":"-"	
+			},
  			"leftoperand":["pvar1","-","pvar2[10]"],
  			"rightoperand":10,
  			"operator":"=="
