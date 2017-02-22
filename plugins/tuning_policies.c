@@ -11,7 +11,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 
-
 #include "json.h"
 #include "json_util.h"
 
@@ -20,6 +19,8 @@
 #define MAX_SIZE_RULE 32
 #define MAX_NB_RULES 16
 #define MAX_NB_VALUES 16
+
+
 
 typedef enum leftop_enum_t
 {
