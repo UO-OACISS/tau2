@@ -205,7 +205,7 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
   sprintf(initFuncName, "plugin_%s", name);  
 
   /* Get symbol of plugin entry point */
-  void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(handle, initFuncName);
+  void (*fn)(int num_args, void **args) = (void (*)(int, void **))dlsym(handle, initFuncName);
 
   if(!fn) {
     fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
@@ -222,7 +222,7 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
 /*
  * Call a specific function of a specific plugin given their names
  */
-int Tau_util_call_plugin_func(char *name, char *funcName)
+int Tau_util_call_plugin_func(char *name, char *funcName, int num_args, void **args)
 {
   char *callFuncName;
 
@@ -236,7 +236,7 @@ int Tau_util_call_plugin_func(char *name, char *funcName)
 
   sprintf(callFuncName, "plugin_%s", funcName);
  
-  void (*fn)() = (void (*)())dlsym(node->handle, callFuncName); 
+  void (*fn)(int num_args, void **args) = (void (*)(int, void **))dlsym(node->handle, callFuncName); 
   
   if(!fn) {
     fprintf(stdout, "Error called plugin function: %s\n", dlerror());
@@ -245,7 +245,7 @@ int Tau_util_call_plugin_func(char *name, char *funcName)
   }
 
   /* Call plugin function  */
-  fn();
+  fn(num_args, args);
   
   return 1;
 }
