@@ -53,6 +53,46 @@
 #define WHILESTMT(leftop,op,rightop) \
 	while(leftop op rightop)
 
+#define RESOPEQ(leftop,rightop) \
+	leftop = rightop
+
+#define RESOPPLUSEQ(leftop,rightop) \
+	leftop += rightop
+
+#define RESOPMINUSEQ(leftop,rightop) \
+	leftop -= rightop
+
+#define RESOPTIMESEQ(leftop,rightop) \
+	leftop *= rightop
+
+/*
+#define FOREACH(limit) \
+	for(i=0;i<limit;i++) {	\
+       	
+	}
+*/
+
+#define LEFTOPERAND(leftop,rightop,operator) \
+	leftop operator rightop
+
+#define CONDITION(stmt,leftoperand,rightoperand,operator) \
+	stmt(leftoperand operator rightoperand)
+
+#define RESULT(resleftop,resrightop,operator) \
+	resleftop operator resrightop
+
+#define ELSE(resleftop,resrightop,operator) \
+	resleftop operator resrightop
+
+#define LOGIC() \
+	CONDITION(stmt,leftoperand,rightoperand,operator) { \
+          RESULT(resleftop,resrightop,resoperator) \
+        } \
+        if(elsestmt) { \
+          ELSE(elseresleftop,elseresrightop, elseresoperator) \
+        }
+
+
 typedef enum leftop_enum_t
 {
   pvar,
@@ -409,6 +449,13 @@ void load_policy_rules(int argc, void **args)
  fclose(fp);
 }
 
+void tuning_policy_inner_logic()
+{
+ int id = 0;
+
+
+}
+
 /* Generic function for tuning policies */
 void generic_tuning_policy(int argc, void **args)
 {
@@ -477,6 +524,13 @@ void generic_tuning_policy(int argc, void **args)
   }
  }
 */
+
+ /*
+ * switch(stmt) {
+ *  case "if":
+ *     IFSTMT(leftop,rightop)    
+ * }
+ * */
 
  if(pvar_value_buffer[pvar_index[0]] - pvar_value_buffer[pvar_index[1]] > rules[0].value) {
    

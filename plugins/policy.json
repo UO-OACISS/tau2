@@ -4,6 +4,7 @@
  	"pvars":["pvar1","pvar2[10]"],
  	"cvars":["cvar1","cvar2[10]"],
         "operation": {
+                "for":"10",
                 "condition": {
 			"stmt":"if",
                   	"leftoperand": {
@@ -19,6 +20,15 @@
  			"resoperator":"=",
  			"resrightoperand":10,
  			"elsestmt":"else"
+                },
+                "else": {
+                	"resleftoperand":"cvar1",
+  		        "resoperator":"=",
+                        "resrightoperand": {
+                        	"leftoperand":"pvar1",
+ 				"operator":"+",
+			 	"rightoperand":10
+                        }	
                 }
         }
   }
