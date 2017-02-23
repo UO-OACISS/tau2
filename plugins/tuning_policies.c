@@ -20,7 +20,38 @@
 #define MAX_NB_RULES 16
 #define MAX_NB_VALUES 16
 
+#define LEFTOPPLUS(leftop,rightop) \
+	return leftop + rightop
 
+#define LEFTOPMINUS(leftop,rightop) \
+	return leftop - rightop
+
+#define LEFTOPTIMES(leftop,rightop) \
+	return leftop * rightop
+
+#define LEFTOPDIV(leftop,rightop) \
+	return leftop / rightop
+
+#define OPEQ(leftop,rightop) \
+        leftop == rightop	
+
+#define OPLOWER(leftop,rightop) \
+	leftop < rightop	
+
+#define OPUPPER(leftop,rightop) \
+	leftop > rightop	
+
+#define OPLOWEQ(leftop,rightop) \
+	leftop <= rightop	
+
+#define OPUPEQ(leftop,rightop) \
+	leftop >= rightop	
+
+#define IFSTMT(leftop,op,rightop) \
+	if(leftop op rightop) 
+
+#define WHILESTMT(leftop,op,rightop) \
+	while(leftop op rightop)
 
 typedef enum leftop_enum_t
 {
