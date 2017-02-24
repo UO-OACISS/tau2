@@ -275,10 +275,7 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  for (i = 0 ; i < 50 ; i++) {
-    printf("Iteration %d\n", i);
-    do_work();
-  }
+  do_work();
 
 #ifdef PTHREADS 
   if (ret = pthread_join(tid1, NULL) )
