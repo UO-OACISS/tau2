@@ -84,37 +84,69 @@
 #define ELSE(resleftop,resrightop,operator) \
 	resleftop operator resrightop
 
-#define LOGIC() \
-	CONDITION(stmt,leftoperand,rightoperand,operator) { \
+#define LOGIC(op) \
+	CONDITION(op->stmt,leftoperand,rightoperand,operator) { \
           RESULT(resleftop,resrightop,resoperator) \
         } \
         if(elsestmt) { \
           ELSE(elseresleftop,elseresrightop, elseresoperator) \
         }
 
-
-typedef enum leftop_enum_t
+enum operand_enum_e
 {
   pvar,
-  sign,
   number
-} leftop_enum;
+};
 
-typedef struct mpit_pvar_t
+typedef enum operand_enum_e operand_enum_t;
+
+enum stmt_enum_e
+{
+  IF,
+  WHILE
+};
+
+typedef enum stmt_enum_e stmt_enum_t;
+
+enum operator_enum_e
+{
+  EQUALS,
+  UPPER,
+  LOWER,
+  UPPEREQUAL,
+  LOWEREQUAL
+};
+
+typedef enum operator_enum_e operator_enum_t;
+
+enum res_operator_enum_e
+{
+  EQUAL,
+  INCR,
+  DECR
+};
+
+typedef enum res_operator_enum_e res_operator_enum_t;
+
+struct mpit_pvar_s
 {
  char *name;
  int is_array;
  int size;
 } mpit_pvar;
 
-typedef struct mpit_cvar_t
+typedef struct mpit_pvar_s mpit_pvar_t;
+
+struct mpit_cvar_s
 {
  char *name;
  int is_array;
  int size;
 } mpit_cvar;
 
-typedef struct mpit_var_t
+typedef struct mpit_cvar_s mpit_cvar_t;
+
+struct mpit_var_s
 {
  char *name;
  int is_array;
@@ -122,37 +154,110 @@ typedef struct mpit_var_t
  int is_pvar;
 } mpit_var;
 
-typedef struct leftop_t
-{
-  char *value;
-  leftop_enum type;
-} leftop;
+typedef struct mpit_var_s mpit_var_t;
 
-typedef struct tuning_policy_rule_
+struct operand_s
 {
- mpit_var *pvars;
- mpit_var *cvars;
+  //char *value;
+  operand_enum_t type;
+};
+
+typedef struct operand_s operand_t;
+
+struct groupoperand_s
+{
+ struct operand_s leftop;
+ struct operand_s rightop;
+ enum operator_enum_e operator; 
+};
+
+typedef struct groupoperand_s groupoperand_t;
+
+struct condition_s
+{
+  char *stmt;
+  
+  union {
+    struct groupoperand_s leftgroupoperand;
+    struct operand_s leftop; 
+  };
+
+  union {
+    struct groupoperand_s rightgroupoperand;
+    struct operand_s rightop;
+  };
+
+  enum operator_enum_e operator;  
+};
+
+typedef struct condition_s condition_t;
+
+struct res_s
+{
+
+  union {
+    struct groupoperand_s resleftgroupoperand;
+    struct operand_s resleftop; 
+  };
+
+  union {
+    struct groupoperand_s resrightgroupoperand;
+    struct operand_s resrightop;
+  };
+
+  enum operator_enum_e resoperator;  
+  
+};
+
+typedef struct res_s res_t;
+
+struct op_s
+{
+ struct condition_s *condition;
+ struct res_s *result;
+ struct res_s *elseresult;
+};
+
+typedef struct op_s op_t;
+
+struct tuning_policy_rule_s
+{
+  struct mpit_var_s *pvars;
+  struct mpit_var_s *cvars;
+  int num_pvars;
+  struct op_s *operation; 
+};
+
+typedef struct tuning_policy_rule_s tuning_policy_rule_t;
+
+/*
+struct tuning_policy_rule_s
+{
+ struct mpit_var_s *pvars;
+ struct mpit_var_s *cvars;
  int num_pvars;
  char *condition;
- leftop *leftoperand;
+ struct leftop_s *leftoperand;
  char *rightoperand;
  char *operator;
  char *value;
  char *logicop;
- mpit_cvar *resleftoperand;
+ struct mpit_cvar_s *resleftoperand;
  //char *resleftoperand;
  char *resoperator;
  char *resrightoperand;
-} tuning_policy_rule;
+};
+*/
 
+typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 //void plugin_tuning_policies(int argc, void **args)
 
-tuning_policy_rule rules[MAX_NB_RULES];
+tuning_policy_rule_t rules[MAX_NB_RULES];
 
 static json_object *jso = NULL;
 
 /* Detect if given PVAR or CVAR is an array */
-int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
+int detect_array(char *value, char *separator, mpit_var_t *var, int is_pvar)
 {
   char *token;
   char *rightpart;
@@ -197,8 +302,9 @@ int detect_array(char *value, char *separator, mpit_var *var, int is_pvar)
   return is_array;
 }
 
+#if 0
 /* Analyze each element of leftoperand field */
-int analyze_leftoperand(char *leftoperand, leftop *op)
+int analyze_leftoperand(char *leftoperand, leftop_t *op)
 {
 
   if(strncmp(leftoperand, "+", 1) == 0 || strncmp(leftoperand, "-", 1) == 0 || strncmp(leftoperand, "*", 1) == 0) {
@@ -215,14 +321,14 @@ int analyze_leftoperand(char *leftoperand, leftop *op)
 }
 
 /* Parse list of values for each leftoperand list */
-int parse_list_leftop(char *value, char *separator, leftop *listleftops)
+int parse_list_leftop(char *value, char *separator, leftop_t *listleftops)
 {
   int i = 0;
   char *token = strtok(value, separator);
 
   while(token != NULL)
   {
-    leftop lop;
+    leftop_t lop;
     token = strtok(NULL, separator);
 
     analyze_leftoperand(token, &lop);
@@ -233,16 +339,17 @@ int parse_list_leftop(char *value, char *separator, leftop *listleftops)
 
   return 1;
 }
+#endif
 
 /* Parse list of values for each field */
-int parse_list_values(char *value, char *separator, mpit_var *listvars, int is_pvar)
+int parse_list_values(char *value, char *separator, mpit_var_t *listvars, int is_pvar)
 {
   int i = 0;
   char *token = strtok(value, separator);
    
   while (token != NULL)
   {
-    mpit_var var; 
+    mpit_var_t var; 
     printf("%s\n", token);
     token = strtok(NULL, separator);
    
@@ -368,6 +475,7 @@ void read_json_rules()
 
 }
 
+#if 0
 /* Load policy rules from config file and populate dedicated structure */
 void load_policy_rules(int argc, void **args)
 {
@@ -375,9 +483,9 @@ void load_policy_rules(int argc, void **args)
  char line[MAX_BUF];
  char fieldname[16];
  char fieldvalue[MAX_SIZE_FIELD_VALUE];
- mpit_var *pvars = NULL;
- mpit_var *cvars = NULL;
- leftop *listleftops = NULL;
+ mpit_var_t *pvars = NULL;
+ mpit_var_t *cvars = NULL;
+ leftop_t *listleftops = NULL;
  char *token;
  char *key = NULL;
  //char key[16];
@@ -448,6 +556,7 @@ void load_policy_rules(int argc, void **args)
 
  fclose(fp);
 }
+#endif
 
 void tuning_policy_inner_logic()
 {
@@ -471,7 +580,6 @@ void generic_tuning_policy(int argc, void **args)
 
   static int firsttime = 1;
   static int is_pvar_array = 0;
-  
 
   static unsigned long long int *cvar_value_array = NULL;
   static char *cvar_string = NULL;
@@ -532,9 +640,12 @@ void generic_tuning_policy(int argc, void **args)
  * }
  * */
 
+/*
  if(pvar_value_buffer[pvar_index[0]] - pvar_value_buffer[pvar_index[1]] > rules[0].value) {
    
  }
+*/
+
 }
 
 void plugin_generic_tuning_policy(int argc, void **args)

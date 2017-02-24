@@ -19,7 +19,6 @@
 			"resleftoperand":"cvar1",
  			"resoperator":"=",
  			"resrightoperand":10,
- 			"elsestmt":"else"
                 },
                 "else": {
                 	"resleftoperand":"cvar1",
