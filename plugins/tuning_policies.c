@@ -86,10 +86,12 @@
 
 #define LOGIC(op) \
 	CONDITION(op->stmt,leftoperand,rightoperand,operator) { \
-          RESULT(resleftop,resrightop,resoperator) \
+          res_t res = op->result; \
+          RESULT(res->resleftop,res->resrightop,res->resoperator) \
         } \
-        if(elsestmt) { \
-          ELSE(elseresleftop,elseresrightop, elseresoperator) \
+        if(op->elseresult != NULL) { \
+          res_t elseres = op->elseresult; \
+          ELSE(elseres->resleftop,elseres->resrightop, elseres->resoperator) \
         }
 
 enum operand_enum_e
