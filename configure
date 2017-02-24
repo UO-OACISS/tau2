@@ -7612,6 +7612,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         mkdir -p "$tempdir"
         cd "$tempdir"
         download "$binutilsurl" "$binutilstgz"
+	if [ $? != 0 -a "x$execheck" != "x" ]; then 
+	  echo "Couldn't write to /dev/shm. Trying local directory."
+	  cd $prebfddir
+          tempdir="`pwd`/.tmp_bfdbuild_$$"
+	  mkdir -p "$tempdir"
+	  cd "$tempdir"
+          download "$binutilsurl" "$binutilstgz"
+        fi
+           
         if [ ! -f "$binutilstgz" ] ; then
           echo "$binutilstgz did not download.  Please download it manually from: "
           echo "$binutilsurl"
@@ -7746,7 +7755,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         exit 1
       else
         echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
-        make > tau_build.log 2>&1
+        make -j8 > tau_build.log 2>&1
         err=$?
         if [ $err -ne 0 ] ; then
           echo "Error: BFD build failed. Cannot proceed with -bfd=download"
