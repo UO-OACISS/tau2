@@ -420,6 +420,9 @@ alfred(void *arg)
 
 extern "C" int Tau_init_initializeTAU()
 {
+
+  fprintf(stdout, "Tau_init_initializeTAU()..\n");
+
   //protect against reentrancy
   if (initializing) return 0;
   initializing = 1;
@@ -516,6 +519,7 @@ extern "C" int Tau_init_initializeTAU()
 
   Tau_memory_wrapper_enable();
 
+  fprintf(stdout, "Tau init: load plugins..\n");
   /* Load plugins */
   Tau_util_load_plugins();
 

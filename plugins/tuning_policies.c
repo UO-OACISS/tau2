@@ -659,18 +659,18 @@ void generic_tuning_policy(int argc, void **args)
 
       if(i == op.loop.size) {
         sprintf(metric_string,"%s[%d]", rules[rule_id].cvars, i);
-        sprintf(value_string,"%llu", reduced_value_array[i]);
+        //sprintf(value_string,"%llu", reduced_value_array[i]);
       } else {
         sprintf(metric_string,"%s[%d],", rules[rule_id].cvars, i);
-        sprintf(value_string,"%llu,", reduced_value_array[i]);
+        //sprintf(value_string,"%llu,", reduced_value_array[i]);
       }
 
     }
 
   } else {
       INNERLOGIC(op);
-      sprintf(metric_string,"%s[%d]", rules[rule_id].cvar, i);
-      printf(value_string,"%llu", reduced_value_array[i]);
+      //sprintf(metric_string,"%s[%d]", rules[rule_id].cvar, i);
+      //printf(value_string,"%llu", reduced_value_array[i]);
   } 
  
   for(j=0; j<rules[rule_id].num_pvars; j++) {
