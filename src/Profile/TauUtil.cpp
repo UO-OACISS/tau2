@@ -183,6 +183,8 @@ int Tau_util_load_plugins()
   char *pluginname = NULL;
   char *initFuncName = NULL;
 
+  fprintf(stdout, "Tau_util_load_plugins\n");
+
   if(pds == NULL)
     pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
 
