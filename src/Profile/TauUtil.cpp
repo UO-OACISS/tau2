@@ -219,6 +219,8 @@ int Tau_util_load_plugins()
       return -1;
     }
 
+    sprintf(initFuncName, "plugin_init_%s", token);  
+
     /* Get symbol of plugin entry point */
     void (*fn)() = (void (*)())dlsym(handle, initFuncName);
 
