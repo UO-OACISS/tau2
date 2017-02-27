@@ -181,6 +181,7 @@ int Tau_util_load_plugins()
   char *fullpath = NULL;
   char *token = NULL;
   char *pluginname = NULL;
+  char *initFuncName = NULL;
 
   if(pds == NULL)
     pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
@@ -200,9 +201,9 @@ int Tau_util_load_plugins()
     printf("Tau_util_load_plugins(): token=%s\n", token);
     fullpath = NULL;
     strcpy(fullpath,pluginpath);
-    strcat(fullpath,token)
+    strcat(fullpath,token);
     
-    void *handle = dlopen(pluginpath, RTLD_NOW);
+    void *handle = dlopen(fullpath, RTLD_NOW);
 
     if (handle) {
       //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
@@ -217,6 +218,18 @@ int Tau_util_load_plugins()
       printf("Error loading DSO: %s\n", dlerror());
       return -1;
     }
+
+    /* Get symbol of plugin entry point */
+    void (*fn)() = (void (*)())dlsym(handle, initFuncName);
+
+    if(!fn) {
+      fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
+      dlclose(handle);
+      return -1;
+    }
+
+    /* Call plugin function  */
+    fn();
 
     token = strtok(NULL, ":"); 
 
