@@ -79,20 +79,23 @@
 	stmt(leftoperand operator rightoperand)
 
 #define RESULT(resleftop,resrightop,operator) \
-	resleftop operator resrightop
+	resleftop operator resrightop;
 
 #define ELSE(resleftop,resrightop,operator) \
-	resleftop operator resrightop
+	resleftop operator resrightop;
 
-#define LOGIC(op) \
-	CONDITION(op->stmt,leftoperand,rightoperand,operator) { \
-          res_t res = op->result; \
-          RESULT(res->resleftop,res->resrightop,res->resoperator) \
+
+/*
+#define INNERLOGIC(op) \
+	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
+          res_t res = op.result; \
+          RESULT(res.resleftop,res.resrightop,res.resoperator); \
         } \
-        if(op->elseresult != NULL) { \
-          res_t elseres = op->elseresult; \
-          ELSE(elseres->resleftop,elseres->resrightop, elseres->resoperator) \
+        if(op.elseresult != NULL) { \
+          res_t elseres = op.elseresult; \
+          ELSE(elseres.resleftop,elseres.resrightop, elseres.resoperator); \
         }
+*/
 
 enum operand_enum_e
 {
@@ -177,7 +180,8 @@ typedef struct groupoperand_s groupoperand_t;
 
 struct condition_s
 {
-  char *stmt;
+  //char *stmt;
+  enum stmt_enum_e stmt;
   
   union {
     struct groupoperand_s leftgroupoperand;
@@ -208,16 +212,23 @@ struct res_s
   };
 
   enum operator_enum_e resoperator;  
-  
 };
 
 typedef struct res_s res_t;
 
+struct loop_s
+{
+  int size;
+};
+
+typedef struct loop_s loop_t;
+
 struct op_s
 {
- struct condition_s *condition;
- struct res_s *result;
- struct res_s *elseresult;
+ struct loop_s loop; 
+ struct condition_s cond;
+ struct res_s result;
+ struct res_s elseresult;
 };
 
 typedef struct op_s op_t;
@@ -227,7 +238,8 @@ struct tuning_policy_rule_s
   struct mpit_var_s *pvars;
   struct mpit_var_s *cvars;
   int num_pvars;
-  struct op_s *operation; 
+  int is_array_pvar;
+  struct op_s operation; 
 };
 
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
@@ -572,6 +584,7 @@ void generic_tuning_policy(int argc, void **args)
 {
   int return_val, i, j, namelen, verb, varclass, bind, threadsup;
   int index;
+  int rule_id = 0;
   int readonly, continuous, atomic;
   char event_name[TAU_NAME_LENGTH + 1] = "";
   char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH];
@@ -614,16 +627,15 @@ void generic_tuning_policy(int argc, void **args)
       &atomic/*OUT*/);
 
       // Check pvar name match
-      for(j=0; j<rules[0].num_pvars; j++) { 
-        if(strcmp(event_name, rules[0].pvars[j].name) == 0) {
+      for(j=0; j<rules[rule_id].num_pvars; j++) { 
+        if(strcmp(event_name, rules[rule_id].pvars[j].name) == 0) {
           pvar_index[j] = j;
           // Is considered pvar an array ?
-          if(rules[0].pvars[j].is_array == 1)
+          if(rules[rule_id].pvars[j].is_array == 1)
             is_pvar_array = 1;
         } 
       } //for
     } //for
-  }
 
 /*
   if((pvar_max_vbuf_usage_index == -1) || (pvar_vbuf_allocated_index == -1)) {
@@ -635,6 +647,36 @@ void generic_tuning_policy(int argc, void **args)
  }
 */
 
+  }
+
+  /* Call the inner logic */  
+  op_t op = rules[rule_id].operation;
+
+  if(rules[rule_id].is_array_pvar == 1) {
+    
+    for(i=0; i<op.loop.size; i++) {
+      INNERLOGIC(op);
+
+      if(i == op.loop.size) {
+        sprintf(metric_string,"%s[%d]", rules[rule_id].cvars, i);
+        sprintf(value_string,"%llu", reduced_value_array[i]);
+      } else {
+        sprintf(metric_string,"%s[%d],", rules[rule_id].cvars, i);
+        sprintf(value_string,"%llu,", reduced_value_array[i]);
+      }
+
+    }
+
+  } else {
+      INNERLOGIC(op);
+      sprintf(metric_string,"%s[%d]", rules[rule_id].cvar, i);
+      printf(value_string,"%llu", reduced_value_array[i]);
+  } 
+ 
+  for(j=0; j<rules[rule_id].num_pvars; j++) {
+    if(j == (tau_pvar_count[j])) {}
+  }
+ 
  /*
  * switch(stmt) {
  *  case "if":
