@@ -43,6 +43,7 @@
 #include <Profile/TauInit.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauBacktrace.h>
+#include <Profile/TauUtil.h>
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -514,6 +515,9 @@ extern "C" int Tau_init_initializeTAU()
   Tau_create_top_level_timer_if_necessary();
 
   Tau_memory_wrapper_enable();
+
+  /* Load plugins */
+  Tau_util_load_plugins();
 
 #ifdef TAU_ANDROID
   pthread_t thr;
