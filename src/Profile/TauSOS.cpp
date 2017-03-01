@@ -18,6 +18,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <algorithm>
+#include <iterator>
 
 #ifdef TAU_MPI
 #include <mpi.h>
@@ -36,6 +38,8 @@ pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
 bool _threaded = false;
+int daemon_rank = 0;
+bool shutdown_daemon = false;
 
 void init_lock(void) {
     if (!_threaded) return;
@@ -114,10 +118,90 @@ void TAU_SOS_make_pub() {
         TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
 }
 
+void TAU_SOS_do_fork(char *forkCommand) {
+    std::istringstream iss(forkCommand);
+    std::vector<std::string> tokens;
+    copy(std::istream_iterator<std::string>(iss),
+         std::istream_iterator<std::string>(),
+         std::back_inserter(tokens));
+    const char **args = (const char **)calloc(tokens.size()+1, sizeof(char*));
+    for (int i = 0; i < tokens.size() ; i++) {
+        args[i] = tokens[i].c_str();
+    }
+    int rc = execvp(args[0],const_cast<char* const*>(args));
+    if (rc < 0) {
+        perror("\nError in execvp");
+    }
+    // exit the daemon spawn!
+    //std::cout << "Daemon exited!" << std::endl;
+    _exit(0);
+}
+
+void TAU_SOS_fork_exec_sosd_shutdown(void) {
+#ifdef TAU_MPI
+    // first, figure out who should fork a daemon on this node
+    int i, rank;
+    PMPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    if (rank == daemon_rank) {
+        int pid = vfork();
+        if (pid == 0) {
+            char* forkCommand;
+            forkCommand = getenv ("SOS_FORK_SHUTDOWN");
+            if (forkCommand) {
+                std::cout << "Rank " << rank << " stopping SOS daemon(s): " << forkCommand << std::endl;
+                TAU_SOS_do_fork(forkCommand);
+            } else {
+                std::cout << "Please set the SOS_FORK_SHUTDOWN environment variable to stop SOS in the background." << std::endl;
+            }
+        }
+    }
+    //
+    // wait until it is running
+    //
+    //wait(2);
+#endif
+}
+
+void TAU_SOS_send_shutdown_message(void) {
+#ifdef TAU_MPI
+    int i, rank;
+    PMPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    SOS_buffer     *buffer;
+    SOS_msg_header  header;
+    int offset;
+    if (rank == daemon_rank) {
+
+        SOS_buffer_init(_runtime, &buffer);
+
+        header.msg_size = -1;
+        header.msg_type = SOS_MSG_TYPE_SHUTDOWN;
+        header.msg_from = _runtime->my_guid;
+        header.pub_guid = 0;
+
+        offset = 0;
+        SOS_buffer_pack(buffer, &offset, "iigg",
+                header.msg_size,
+                header.msg_type,
+                header.msg_from,
+                header.pub_guid);
+
+        header.msg_size = offset;
+        offset = 0;
+        SOS_buffer_pack(buffer, &offset, "i", header.msg_size);
+
+        std::cout << "Sending SOS_MSG_TYPE_SHUTDOWN ..." << std::endl;
+
+        SOS_send_to_daemon(buffer, buffer);
+
+        SOS_buffer_destroy(buffer);
+    }
+#endif
+}
+
 void TAU_SOS_fork_exec_sosd(void) {
 #ifdef TAU_MPI
     // first, figure out who should fork a daemon on this node
-    int i, rank, size, daemon_rank;
+    int i, rank, size;
     PMPI_Comm_rank(MPI_COMM_WORLD,&rank);
     PMPI_Comm_size(MPI_COMM_WORLD,&size);
     // get my hostname
@@ -141,15 +225,14 @@ void TAU_SOS_fork_exec_sosd(void) {
     if (rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
-            std::cout << "Rank " << rank << " spawning SOS daemon!" << std::endl;
-            char * args[] = {"sosd", "-l", "1", "-a", "1", "-w", "/tmp/sos_flow_working", NULL};
-            int rc = execvp(args[0],args);
-            if (rc < 0) {
-                perror("\nError in execvp");
+            char* forkCommand;
+            forkCommand = getenv ("SOS_FORK_COMMAND");
+            if (forkCommand) {
+                std::cout << "Rank " << rank << " spawning SOS daemon(s): " << forkCommand << std::endl;
+                TAU_SOS_do_fork(forkCommand);
+            } else {
+                std::cout << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
             }
-            // exit the daemon spawn!
-            //std::cout << "Daemon exited!" << std::endl;
-            _exit(0);
         }
     }
     //
@@ -170,12 +253,16 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         _runtime = SOS_init(argc, argv, SOS_ROLE_CLIENT, SOS_LAYER_LIB);
         if(_runtime == NULL) {
             TAU_SOS_fork_exec_sosd();
+            shutdown_daemon = true;
         }
-        int repeat = 20;
+        int repeat = 10;
         while(_runtime == NULL) {
             sleep(1);
             _runtime = SOS_init(argc, argv, SOS_ROLE_CLIENT, SOS_LAYER_LIB);
-            if (--repeat < 0) { break; }
+            if (--repeat < 0) { 
+                TAU_VERBOSE("Unable to connect to SOS daemon. Continuing...\n");
+                return;
+            }
         }
 
         if (_threaded) {
@@ -193,6 +280,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
 }
 
 extern "C" void TAU_SOS_stop_worker(void) {
+    if (_runtime == NULL) { return; }
     //printf("%s\n", __func__); fflush(stdout);
     pthread_mutex_lock(&_my_mutex);
     done = true;
@@ -224,6 +312,7 @@ extern "C" void TAU_SOS_stop_worker(void) {
 }
 
 extern "C" void TAU_SOS_finalize(void) {
+    if (_runtime == NULL) { return; }
     static bool finalized = false;
     if (!TauEnv_get_sos_enabled()) { return; }
     //printf("%s\n", __func__); fflush(stdout);
@@ -233,6 +322,12 @@ extern "C" void TAU_SOS_finalize(void) {
     }
     // flush any outstanding packs
     TAU_SOS_send_data();
+    // shutdown the daemon, if necessary
+    if (shutdown_daemon) {
+        TAU_SOS_send_shutdown_message();
+        // shouldn't be necessary, but sometimes the shutdown message is ignored?
+        //TAU_SOS_fork_exec_sosd_shutdown();
+    }
     SOS_finalize(_runtime);
     finalized = true;
 }
@@ -241,6 +336,7 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 extern "C" Profiler * Tau_get_current_profiler(void);
 
 extern "C" void Tau_SOS_pack_double(const char * event_name) {
+    if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
         RtsLayer::LockDB();
@@ -266,6 +362,7 @@ extern "C" void Tau_SOS_pack_double(const char * event_name) {
 }
 
 extern "C" void TAU_SOS_send_data(void) {
+    if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
         RtsLayer::LockDB();
