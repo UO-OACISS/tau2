@@ -36,7 +36,7 @@
 
 #ifdef TAU_SOS
 #include "Profile/TauSOS.h"
-#define TAU_SOS_COLLECTIVE_EVENT Tau_SOS_pack_double(__func__);
+#define TAU_SOS_COLLECTIVE_EVENT Tau_SOS_pack_double("MPI collective");
 #else
 #define TAU_SOS_COLLECTIVE_EVENT // do nuthin.
 #endif
