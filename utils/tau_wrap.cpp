@@ -1117,7 +1117,7 @@ void generateMakefile(string const & package, string const & outFileName,
         makefile << "include ${TAU_MAKEFILE}\n"
                  << "CC=" << compiler_name << " \n"
                  << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
-                 << "EXTRA_FLAGS=\n"
+                 << "EXTRA_FLAGS=$(TAU_CRAY_SHMEM_EXTRA_DEFS)\n"
                  << "\n"
                  << "AR=$(TAU_AR)\n"
                  << "ARFLAGS=rcv \n"
