@@ -30,19 +30,6 @@ typedef struct Tau_util_outputDevice_ {
   int buflen;
 } Tau_util_outputDevice;
 
-typedef struct PluginHandleList_t {
-    char *plugin_name;
-    void* handle;
-    struct PluginHandleList_t* next;
-} PluginHandleList;
-
-typedef struct PluginDiscoveryState_t {
-    PluginHandleList* handle_list;
-} PluginDiscoveryState;
-
-static int currpluginid = 0;
-static PluginDiscoveryState *pds = NULL;
-
 #define TAU_UTIL_OUTPUT_FILE 0
 #define TAU_UTIL_OUTPUT_BUFFER 1
 #define TAU_UTIL_INITIAL_BUFFER 5000000
@@ -63,10 +50,38 @@ void *Tau_util_malloc(size_t size, const char *file, int line);
 void *Tau_util_calloc(size_t size, const char *file, int line);
 #define TAU_UTIL_CALLOC(size) Tau_util_calloc(size, __FILE__, __LINE__);
 
-int Tau_util_load_plugins();
-int Tau_util_load_plugin(char *name, char *path, int num_args, void **args);
+/*Plugin declarations*/
+#define TAU_PLUGIN_PATH "TAU_PLUGIN_PATH"
+#define TAU_PLUGINS "TAU_PLUGINS"
+#define TAU_PLUGIN_INIT_FUNC "Tau_plugin_init_func"
+
+typedef struct Plugin {
+    char plugin_name[1024];
+    void* handle;
+    struct Plugin* next;
+} Plugin;
+
+typedef struct PluginList {
+    struct Plugin* head;
+} PluginList;
+
+typedef struct PluginManager {
+    PluginList* plugin_list;
+} PluginManager;
+
+typedef struct PluginDiscoveryState_t {
+    PluginList* handle_list;
+} PluginDiscoveryState;
+
+typedef int (*PluginInitFunc) (PluginManager*);
+
+PluginManager* Tau_PluginManager_new();
+int Tau_util_load_and_register_plugins(PluginManager* plugin_manager);
+void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* plugin_manager);
+void* Tau_util_register_plugin(const char *name, void* handle, PluginManager* plugin_manager);
 int Tau_util_call_plugin_func(char *name, char *funcName, int num_args, void **args);
 int Tau_util_cleanup_plugins();
+/*end Plugin declarations*/
 
 /* The following macros help create a local array and assign to elements of 
    the local C array, values from Fortran array after conversion using f2c 
