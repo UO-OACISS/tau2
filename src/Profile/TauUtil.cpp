@@ -21,6 +21,7 @@
 
 #include <dlfcn.h>
 
+#define TAU_NAME_LENGTH 1024
 
 /*********************************************************************
  * Abort execution with a message
@@ -169,12 +170,21 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
   return ptr;
 }
 
+/*Create and return a new plugin manager*/
+PluginManager* Tau_PluginManager_new() {
+  PluginManager* plugin_manager = (PluginManager *)malloc(sizeof(PluginManager));
+  plugin_manager->plugin_list = (PluginList *)malloc(sizeof(PluginList));
+  (plugin_manager->plugin_list)->head = NULL;
+
+  return plugin_manager;
+}
+
 /* 
  * Load a list of plugins at TAU init, given following environment variables:
  *  - TAU_PLUGINS_NAMES
  *  - TAU_PLUGINS_PATH
  */
-int Tau_util_load_plugins()
+int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 {
   char *pluginpath = NULL;
   char *listpluginsnames = NULL;
@@ -183,149 +193,90 @@ int Tau_util_load_plugins()
   char *pluginname = NULL;
   char *initFuncName = NULL;
 
-  fprintf(stdout, "Tau_util_load_plugins\n");
+  printf("TAU: Entered plugin load and register function Tau_util_load_and_register_plugins\n");
 
-  if(pds == NULL)
-    pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
-
-  pluginpath = getenv("TAU_PLUGINS_PATH");
-  listpluginsnames = getenv("TAU_PLUGINS_NAMES");
+  pluginpath = getenv(TAU_PLUGIN_PATH);
+  listpluginsnames = getenv(TAU_PLUGINS);
 
   if(pluginpath == NULL|| listpluginsnames == NULL) {
-    printf("TAU_PLUGINS_PATH or TAU_PLUGINS_NAMES empty: return\n"); 
+    printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS_NAMES: %s are empty\n", pluginpath, listpluginsnames); 
     return -1;
   }
 
   token = strtok(listpluginsnames,":"); 
+  printf("TAU: Trying to load plugin with name %s\n", token);
+
+  fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
 
   while(token != NULL)
   {
-    printf("Tau_util_load_plugins(): token=%s\n", token);
-    fullpath = NULL;
+    printf("TAU: Loading plugin: %s\n", token);
+    strcpy(fullpath, "");
     strcpy(fullpath,pluginpath);
     strcat(fullpath,token);
-    
-    void *handle = dlopen(fullpath, RTLD_NOW);
+    printf("TAU: Full path for the current plugin: %s\n", fullpath);
+   
+    void* handle = Tau_util_load_plugin(token, fullpath, plugin_manager);
 
     if (handle) {
-      //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
-      PluginHandleList* handle_node = (PluginHandleList *)malloc(sizeof(PluginHandleList));
-      //handle_node->pluginid = currpluginid; 
-      strcpy(handle_node->plugin_name, token);
-      handle_node->handle = handle;
-      handle_node->next = pds->handle_list;
-      pds->handle_list = handle_node;
-      currpluginid += 1;
+      handle = Tau_util_register_plugin(token, handle, plugin_manager);
+      if(!handle) //Plugin registration failed. Bail.
+        return -1;
+      printf("TAU: Successfully called the init func of plugin: %s\n", token);
     } else {
-      printf("Error loading DSO: %s\n", dlerror());
+      /*Plugin loading failed for some reason*/
       return -1;
     }
-
-    sprintf(initFuncName, "plugin_init_%s", token);  
-
-    /* Get symbol of plugin entry point */
-    void (*fn)() = (void (*)())dlsym(handle, initFuncName);
-
-    if(!fn) {
-      fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
-      dlclose(handle);
-      return -1;
-    }
-
-    /* Call plugin function  */
-    fn();
-
-    token = strtok(NULL, ":"); 
-
+    token = strtok(NULL, ":");
   }
 
-  return 1;
+  free(fullpath);
+  return 0;
 }
 
-/*
- * Load a plugin with its given name and path
- */
-int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
-{
-  char *fullname;
-  char *fullpath;
-  char *initFuncName;
-  
-  strcat(path, name);
+/*Uses dlsym to find a function:TAU_PLUGIN_INIT_FUNC that the plugin MUST implement in order to register itself*/
+void* Tau_util_register_plugin(const char *name, void* handle, PluginManager* plugin_manager) {
+  PluginInitFunc init_func = (PluginInitFunc) dlsym(handle, TAU_PLUGIN_INIT_FUNC);
 
-  sprintf(fullpath, "%s.so", path);
+  if(!init_func) {
+    printf("TAU: Failed to retrieve TAU_PLUGIN_INIT_FUNC from plugin %s with error:%s\n", name, dlerror());
+    dlclose(handle); //Replace with Tau_plugin_cleanup();
+    return NULL;
+  }
 
-  if(pds == NULL)
-    pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
+  int return_val = init_func(plugin_manager);
+  if(return_val < 0) {
+    printf("TAU: Call to init func for plugin %s returned failure error code %d\n", name, return_val);
+    dlclose(handle); //Replace with Tau_plugin_cleanup();
+    return NULL;
+  } 
+  return handle;
+}
 
-  void *handle = dlopen(fullpath, RTLD_NOW);
-  //dstring_free(slashedpath);
+/*Given a plugin name and fullpath, it loads a plugin and returns a handle to the opened DSO*/
+void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* plugin_manager) {
+  void* handle = dlopen(path, RTLD_NOW);
   
   if (handle) {
-    //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
-    PluginHandleList* handle_node = (PluginHandleList *)malloc(sizeof(PluginHandleList));
-    //handle_node->pluginid = currpluginid; 
-    strcpy(handle_node->plugin_name, name);
-    handle_node->handle = handle;
-    handle_node->next = pds->handle_list;
-    pds->handle_list = handle_node;
-    currpluginid += 1;
+    Plugin* plugin = (Plugin *)malloc(sizeof(Plugin));
+    strcpy(plugin->plugin_name, name);
+    plugin->handle = handle;
+    plugin->next = (plugin_manager->plugin_list)->head;
+    (plugin_manager->plugin_list)->head = plugin;
+
+    printf("TAU: Successfully loaded plugin: %s\n", name);
+
+    return handle;    
   } else {
-    printf("Error loading DSO: %s\n", dlerror());
-    return -1;
-  } 
-
-  sprintf(initFuncName, "plugin_%s", name);  
-
-  /* Get symbol of plugin entry point */
-  void (*fn)(int num_args, void **args) = (void (*)(int, void **))dlsym(handle, initFuncName);
-
-  if(!fn) {
-    fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
-    dlclose(handle);
-    return -1;
+    printf("TAU: Failed loading %s plugin with error: %s\n", name, dlerror());
+    return NULL;
   }
-
-  /* Call plugin function  */
-  fn(num_args, args);
-
-  return 1;
 }
 
-/*
- * Call a specific function of a specific plugin given their names
- */
-int Tau_util_call_plugin_func(char *name, char *funcName, int num_args, void **args)
-{
-  char *callFuncName;
-
-  PluginHandleList* node = pds->handle_list;
-
-  //while (node->pluginid != pluginid) {
-  while (strcmp(name,node->plugin_name) != 0) {
-    PluginHandleList* next = node->next;
-    node = next;
-  }
-
-  sprintf(callFuncName, "plugin_%s", funcName);
- 
-  void (*fn)(int num_args, void **args) = (void (*)(int, void **))dlsym(node->handle, callFuncName); 
-  
-  if(!fn) {
-    fprintf(stdout, "Error called plugin function: %s\n", dlerror());
-    dlclose(node->handle);
-    return -1;
-  }
-
-  /* Call plugin function  */
-  fn(num_args, args);
-  
-  return 1;
-}
 
 /*
  * Clean up all plugins and free associated structures
- */
+ 
 int Tau_util_cleanup_plugins()
 {
 
@@ -335,16 +286,16 @@ int Tau_util_cleanup_plugins()
   }
 
   //PluginDiscoveryState* pds = (PluginDiscoveryState*)vpds;
-  PluginHandleList* node = pds->handle_list;
+  PluginList* node = pds->handle_list;
 
   while (node) {
-    PluginHandleList* next = node->next;
+    PluginList* next = node->next;
     dlclose(node->handle);
     free(node);
     node = next;
   }
   
   free(pds);
-}
+}*/
 
 
