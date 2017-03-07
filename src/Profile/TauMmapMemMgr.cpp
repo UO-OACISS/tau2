@@ -84,12 +84,14 @@ void Tau_MemMgr_initIfNecessary()
 
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
   if (!finalized) {
+    Tau_global_incr_insideTAU();
     RtsLayer::LockEnv();
     // check again, someone else might already have initialized by now.
     if (!finalized) {
       finalized = true;
     }
     RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
   }
 }
 
