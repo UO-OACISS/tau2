@@ -517,6 +517,14 @@ extern "C" int Tau_init_initializeTAU()
 
   Tau_memory_wrapper_enable();
 
+  printf("TAU INIT: Trying to load plugins..\n");
+  PluginManager* plugin_manager = Tau_PluginManager_new();
+
+  /* Load plugins */
+  if (!Tau_util_load_and_register_plugins(plugin_manager)) {
+    printf("TAU INIT: Successfully loaded all plugins!\n");
+  }
+
 #ifdef TAU_ANDROID
   pthread_t thr;
   pthread_create(&thr, NULL, alfred, NULL);
