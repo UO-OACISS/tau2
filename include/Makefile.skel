@@ -336,7 +336,7 @@ DYNINST_PLATFORM 	= $(PLATFORM)
 ############# OpenMP Fortran Option ########
 TAU_OPENMP_OPTION =
 #MPC#TAU_OPENMP_OPTION= -fopenmp #ENDIF#
-#CLANG#TAU_OPENMP_OPTION= -fopenmp #ENDIF#
+#CLANG_OPENMP#TAU_OPENMP_OPTION= -fopenmp #ENDIF#
 #MPCINTEL#TAU_OPENMP_OPTION= -openmp #ENDIF#
 #COMPINST_CRAYCC#TAU_OPENMP_OPTION= -h omp #ENDIF#
 #SOL2CC_OPENMP#TAU_OPENMP_OPTION = -xopenmp #ENDIF#
@@ -373,6 +373,7 @@ TAU_OPENMP_OPTION =
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM64LINUX_XLF#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#XLFLANG#TAU_F90         = xlflang    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGP#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGP_GFORTRAN#TAU_F90         = mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGQ#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#

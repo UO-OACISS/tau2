@@ -3227,6 +3227,7 @@ if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ ]; then
     fixmakeargs="$fixmakeargs CLANG"
 fi
 
+
 if [ "$machine" = "apple" ] ; then
     mkdir -p apple/lib
     cp tools/src/common/resources/tau-medium.png apple/lib/
@@ -3574,6 +3575,12 @@ then
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
 	    fi
+            if [ "x$fortran_compiler" = "xxlf_r" ]; then
+                fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
+	    fi
+            if [ "x$fortran_compiler" = "xxlflang" ]; then
+                fixmakeargs="$fixmakeargs XLFLANG"
+            fi
 	else
             fortran_compiler=no
 	fi
@@ -3597,7 +3604,14 @@ then
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
             if [ "x$mpilibrary" = "xno" ]; then
-		mpilibrary=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+
+		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
+		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	        mpilibargs_added_to_fixmakeargs=yes
+
             fi
             full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
             full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
@@ -3656,9 +3670,13 @@ case $cxx_compiler in
     *llvm*|*clang*)
 	echo "Using CLANG Compilers"
         fixmakeargs="$fixmakeargs CLANG"
+        tauoptions="${tauoptions}-clang"
 	if [ $machine = apple ]; then
 	    # MPI on Apple OS X has issues with shared objects
             fixmakeargs="$fixmakeargs NOSHARED APPLECXX"
+        fi
+        if [ $openmp = yes ]; then 
+          fixmakeargs="$fixmakeargs CLANG_OPENMP"
         fi
         ;;
 
@@ -4394,6 +4412,21 @@ then
 		fi
 		additional_mpiincs="$additional_mpiincs $mpiincf90dir"
             fi
+	
+            mpiinc_search=`which mpirun  | sed -e 's@//@/@g'| sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+		if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+		then
+		    mpiinc=$mpiinc_search
+		    echo "Using MPI include directory $mpiinc"
+		    echo "machine is $machine"
+		else
+		    mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include
+		    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+		    then
+		      mpiinc=$mpiinc_search
+		      echo "Using MPI include directory $mpiinc"
+                    fi
+                 fi
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4738,7 +4771,13 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
       mpilib=$mpilib_search
       echo "Using MPI lib directory $mpilib"
     else
-      mpilib=""
+      mpilib_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/lib
+      if [ -d $mpilib_search -a "x$mpilib" = "x" ] ; then
+        mpilib=$mpilib_search
+        echo "Using MPI lib directory $mpilib"
+      else
+        mpilib=""
+      fi
     fi
   
 
@@ -6387,6 +6426,10 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
     then
         mpiwarnings="-qhalt=w"
     fi
+    if [ $c_compiler = "clang" ]
+    then
+        mpiwarnings="-Werror"
+    fi
  
     cat <<EOF > mpi_thread_test.$msuf
   #include <mpi.h>
@@ -6969,7 +7012,7 @@ if [ $mpi = yes ] ; then
 	wrapperlib="-L$\(PERFLIBDIR) \$(PERFLIBRARY)"
     fi
 
-    mpilibargs=$wrapperlib
+    mpilibargs="$wrapperlib $mpilibargs"
     wrapperC=$wrapperlib
 
     if [ "x$mpilib" != "x" ] ; then
@@ -7360,7 +7403,6 @@ if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
 	else
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
 	fi
-	mpiflibargs=$mpilibargs
 	fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
     else
 	mpilibargs=""
