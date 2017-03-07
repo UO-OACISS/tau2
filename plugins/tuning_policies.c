@@ -84,6 +84,63 @@
 #define ELSE(resleftop,resrightop,operator) \
 	resleftop operator resrightop;
 
+#define WRITECVARS(op) \
+	CONDITION(op.cond.stmt,op.cond.leftop.op.cond.rightop,op.cond.operator) { \
+	  res_t res = op.result; \
+ 	  RESULT(res.resleftop,res.resrightop,res.resoperator); \
+          sprintf(metric_string,metric); \
+          sprintf(value_string,value); \
+          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        } \
+        if(op.elseresult != NULL) { \
+         res_t elseres = op.elseresult; \
+         sprintf(metric_string,metric); \
+         sprintf(value_string,value); \
+         Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        }
+
+#define INNERLOGIC(logic) 								\
+	if(logic.array == 1) { 								\
+	  for(i=0; i<logic.loopbound; i++) {						\
+            op_t op = logic.op; 							\
+            CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { 	\
+              res_t res = op.result; 							\
+              RESULT(res.resleftop,res.resrightop,res.resoperator); 			\
+	    } 										\
+            if(op.elseresult != NULL) { 						\
+              res_t elseres = op.elseresult; 						\
+              ELSE(elseres.resleftop,elseres.resrightop,elseres.resoperator); 		\
+            } 										\
+	    for(j=0; j<logic.num_pvars; j++) { 						\
+	      if(i == (tau_pvar_count[j])) {						\
+               sprintf(metric_string,"%s[%d]", res.resleftop, i);			\
+               sprintf(value_string,"%llu", reduced_value_array[i]);			\
+	      }										\
+            }										\
+            strcat(reduced_value_cvar_string, metric_string);				\
+            strcat(reduced_value_cvar_value_string, value_string);			\
+          } 										\
+        } else { 									\
+          op_t op = logic.op; 								\
+          CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { 	\
+            res_t res = op.result; 							\
+            RESULT(res.resleftop,res.resrightop,res.resoperator); 			\
+	  } 										\
+          if(op.elseresult != NULL) { 							\
+            res_t elseres = op.elseresult; 						\
+            ELSE(elseres.resleftop,elseres.resrightop,elseres.resoperator); 		\
+          } 										\
+	  for(j=0; j<logic.num_pvars; j++) { 						\
+	    if(i == (tau_pvar_count[j])) {						\
+              sprintf(metric_string,"%s", res.resleftop);				\
+              sprintf(value_string,"%llu", reduced_value_array);			\
+	    }										\
+          }										\
+          strcat(reduced_value_cvar_string, metric_string);				\
+          strcat(reduced_value_cvar_value_string, value_string);			\
+        }										\
+        WRITECVARS(op)
+        
 
 /*
 #define INNERLOGIC(op) \
@@ -652,6 +709,9 @@ void generic_tuning_policy(int argc, void **args)
   /* Call the inner logic */  
   op_t op = rules[rule_id].operation;
 
+
+
+#if 0
   if(rules[rule_id].is_array_pvar == 1) {
     
     for(i=0; i<op.loop.size; i++) {
@@ -676,19 +736,7 @@ void generic_tuning_policy(int argc, void **args)
   for(j=0; j<rules[rule_id].num_pvars; j++) {
     if(j == (tau_pvar_count[j])) {}
   }
- 
- /*
- * switch(stmt) {
- *  case "if":
- *     IFSTMT(leftop,rightop)    
- * }
- * */
-
-/*
- if(pvar_value_buffer[pvar_index[0]] - pvar_value_buffer[pvar_index[1]] > rules[0].value) {
-   
- }
-*/
+#endif 
 
 }
 
@@ -882,6 +930,7 @@ void plugin_tuning_policy(int argc, void **args) {
     dprintf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
   }
  }
+
   /*Tuning logic: If the difference between allocated vbufs and max use vbufs in a given
  *   * vbuf pool is higher than a set threshhold, then we will free from that pool.*/
   for(i = 0 ; i < tau_pvar_count[pvar_max_vbuf_usage_index]; i++) {

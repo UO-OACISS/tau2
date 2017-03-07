@@ -22,6 +22,7 @@
 #include <Profile/TauMon.h>
 #include <Profile/TauRequest.h>
 #include <Profile/TauSampling.h>
+#include <Profile/TauUtil.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -1644,6 +1645,11 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  fprintf(stdout, "Tau MPI init: load plugins..\n");
+  /* Load plugins */
+  Tau_util_load_plugins();
+
   if(Tau_get_usesMPI() == 0)
   {
 
