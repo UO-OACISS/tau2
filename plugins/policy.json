@@ -1,34 +1,55 @@
 {
  "rule": {
         "id":1,
+        "num_pvars":2
  	"pvars":["pvar1","pvar2[10]"],
  	"cvars":["cvar1","cvar2[10]"],
-        "operation": {
-                "for":"10",
-                "condition": {
-			"stmt":"if",
-                  	"leftoperand": {
-		   		     "leftoperand": "pvar1",
-              			     "rightoperand":"pvar2",
- 				     "operator":"-"	
-			},
- 			"rightoperand":10,
- 			"operator":"=="
+        "logic": {
+		"for": {
+        		"size":"pvar_max_vbuf_usage_index",
+        	        "operation": {
+               			"condition": {
+					"stmt":"if",
+                  			"leftoperand": {
+		   		     		"leftoperand": "pvar_vbuf_allocated_index",
+              			     		"rightoperand":"pvar_max_vbuf_usage_index",
+ 				     		"operator":"-"	
+					},
+ 					"rightoperand":"PVAR_VBUF_WASTED_THRESHOLD",
+ 					"operator":">"
+        			},
+                		"result": {
+					"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE"
+ 					"resoperator":"=",
+ 					"resrightoperand":"pvar_max_vbuf_usage_index",
+                		},
+                		"else": {
+                			"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+  		        		"resoperator":"=",
+                        		"resrightoperand": {
+                        			"leftoperand":"pvar1",
+ 						"operator":"+",
+			 			"rightoperand":10
+                        		}	
+               	 		}
+        		}
         	},
-                "result": {
-			"resleftoperand":"cvar1",
- 			"resoperator":"=",
- 			"resrightoperand":10,
-                },
-                "else": {
-                	"resleftoperand":"cvar1",
-  		        "resoperator":"=",
-                        "resrightoperand": {
-                        	"leftoperand":"pvar1",
- 				"operator":"+",
-			 	"rightoperand":10
-                        }	
-                }
+		"writecvars": {
+			"condition": {
+				"stmt":"if",
+				"leftoperand":"has_threshold_been_breached",
+				"rightoperand":1,
+				"operator":"=="
+			},
+			"result": {
+                        	"metrics":["CVAR_ENABLING_POOL_CONTROL","CVAR_SPECIFYING_REDUCED_POOL_SIZE"],
+                                "values":1,reduced_value_cvar_string
+                        },
+                        "else": {
+                        	"metrics":"CVAR_ENABLING_POOL_CONTROL",
+				"values":0
+                        }
+		}
         }
-  }
+ }
 }

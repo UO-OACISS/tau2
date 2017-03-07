@@ -29,7 +29,7 @@ RM 	      	= /bin/rm -rf
 TARGET	      	= matmult
 
 OBJS     	= matmult.o matmult_initialize.o
-CFLAGS=-g -O0 $(TAU_OPENMP_OPTION)
+CFLAGS=-g -O0 $(TAU_OPENMP_OPTION) -I//home/users/aurelem/tau/tau2_beacon/include
 LDFLAGS=-g $(TAU_OPENMP_OPTION)
 
 ##############################################

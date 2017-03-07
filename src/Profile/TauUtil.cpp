@@ -346,5 +346,3 @@ int Tau_util_cleanup_plugins()
   
   free(pds);
 }
-
-

@@ -421,8 +421,6 @@ alfred(void *arg)
 extern "C" int Tau_init_initializeTAU()
 {
 
-  fprintf(stdout, "Tau_init_initializeTAU()..\n");
-
   //protect against reentrancy
   if (initializing) return 0;
   initializing = 1;
@@ -518,10 +516,6 @@ extern "C" int Tau_init_initializeTAU()
   Tau_create_top_level_timer_if_necessary();
 
   Tau_memory_wrapper_enable();
-
-  fprintf(stdout, "Tau init: load plugins..\n");
-  /* Load plugins */
-  Tau_util_load_plugins();
 
 #ifdef TAU_ANDROID
   pthread_t thr;
