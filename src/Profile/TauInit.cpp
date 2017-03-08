@@ -525,6 +525,9 @@ extern "C" int Tau_init_initializeTAU()
     printf("TAU INIT: Successfully loaded all plugins!\n");
   }
 
+  if(!Tau_util_cleanup_all_plugins(plugin_manager))
+    printf("TAU: Successfully cleaned up all plugins\n");
+
 #ifdef TAU_ANDROID
   pthread_t thr;
   pthread_create(&thr, NULL, alfred, NULL);
