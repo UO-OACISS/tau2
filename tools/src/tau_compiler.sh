@@ -2309,6 +2309,10 @@ else
 		      optLinking="`cat $link_options_file` $optLinking `cat $link_options_file`"
               else
 		      optLinking="@$link_options_file $optLinking @$link_options_file"
+                if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
+                  echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                  optLinking=`echo $optLinking  | sed -e 's/-lgcc_s//g'`
+                fi
 	      fi
           fi
           newCmd="$newCmd $optLinking -o $passedOutputFile"
