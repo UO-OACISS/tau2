@@ -16,6 +16,7 @@
 ****************************************************************************/
 
 #include <TauUtil.h>
+#include <TauPlugin.h>
 #include <stdarg.h>
 #include <string.h>
 

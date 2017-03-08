@@ -70,6 +70,10 @@
 
 #endif
 
+/* TAU_PLUGIN: I think we may be need conditional compilation here */
+#include <Profile/TauPlugin.h>
+/* end TAU_PLUGIN */
+
 using namespace std;
 
 #ifndef TAU_WINDOWS
@@ -517,6 +521,7 @@ extern "C" int Tau_init_initializeTAU()
 
   Tau_memory_wrapper_enable();
 
+/* TAU_PLUGIN: I think we may need conditional compilation here */  
   printf("TAU INIT: Trying to load plugins..\n");
   PluginManager* plugin_manager = Tau_PluginManager_new();
 
@@ -524,6 +529,7 @@ extern "C" int Tau_init_initializeTAU()
   if (!Tau_util_load_and_register_plugins(plugin_manager)) {
     printf("TAU INIT: Successfully loaded all plugins!\n");
   }
+/* end TAU_PLUGIN */
 
   if(!Tau_util_cleanup_all_plugins(plugin_manager))
     printf("TAU: Successfully cleaned up all plugins\n");
