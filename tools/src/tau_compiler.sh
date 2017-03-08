@@ -1604,6 +1604,10 @@ if [ $numFiles == 0 ]; then
 		optLinking="$optLinking `cat $link_options_file` $optLinking"
 	else
                 optLinking="$optLinking @$link_options_file $optLinking"
+                if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
+                  echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                  optLinking=`echo $optLinking  | sed -e 's/-lgcc_s//g'`
+                fi
 	fi
     fi
 
