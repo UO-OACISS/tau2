@@ -5398,7 +5398,9 @@ rm -f get_stdinc.C find_stdinc.awk
 ######################################################################
 # Checking gcc 4.6+ version. It needs -lmpi to be added after -ltau
 cat << EOF > gcc46test.C
-#if ((__GNUC__ >= 4 ) && (__GNUC_MINOR__ >= 6))
+#if (__GNUC__ > 4 )
+#error "Using GCC 4.6+"
+#elif ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))
 #error "Using GCC 4.6+"
 #endif
 EOF
