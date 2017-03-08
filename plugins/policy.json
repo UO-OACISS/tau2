@@ -5,34 +5,32 @@
  	"pvars":["pvar1","pvar2[10]"],
  	"cvars":["cvar1","cvar2[10]"],
         "logic": {
-		"for": {
-        		"size":"pvar_max_vbuf_usage_index",
-        	        "operation": {
-               			"condition": {
-					"stmt":"if",
-                  			"leftoperand": {
-		   		     		"leftoperand": "pvar_vbuf_allocated_index",
-              			     		"rightoperand":"pvar_max_vbuf_usage_index",
- 				     		"operator":"-"	
-					},
- 					"rightoperand":"PVAR_VBUF_WASTED_THRESHOLD",
- 					"operator":">"
-        			},
-                		"result": {
-					"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE"
- 					"resoperator":"=",
- 					"resrightoperand":"pvar_max_vbuf_usage_index",
-                		},
-                		"else": {
-                			"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
-  		        		"resoperator":"=",
-                        		"resrightoperand": {
-                        			"leftoperand":"pvar1",
- 						"operator":"+",
-			 			"rightoperand":10
-                        		}	
-               	 		}
-        		}
+		"array": "pvar_max_vbuf_usage_index",
+        	"operation": {
+               		"condition": {
+				"stmt":"if",
+                		"leftoperand": {
+			     		"leftoperand":"pvar_vbuf_allocated_index",
+              		     		"rightoperand":"pvar_max_vbuf_usage_index",
+ 			     		"operator":"-"	
+				},
+ 				"rightoperand":"PVAR_VBUF_WASTED_THRESHOLD",
+ 				"operator":">"
+        		},
+                	"result": {
+				"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+ 				"resrightoperand":"pvar_max_vbuf_usage_index",
+ 				"resoperator":"="
+                	},
+                	"else": {
+                		"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+  		        	"resoperator":"=",
+                        	"resrightoperand": {
+                        		"leftoperand":"pvar_max_vbuf_allocated_index",
+					"rightoperand":10,
+ 					"operator":"+"
+                        	}	
+               	 	}
         	},
 		"writecvars": {
 			"condition": {

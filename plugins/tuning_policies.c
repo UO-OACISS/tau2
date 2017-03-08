@@ -290,12 +290,20 @@ struct op_s
 
 typedef struct op_s op_t;
 
+struct logic_s
+{
+  struct op_s;
+};
+
+typedef struct logic_s logic_t;
+
 struct tuning_policy_rule_s
 {
   struct mpit_var_s *pvars;
   struct mpit_var_s *cvars;
   int num_pvars;
   int is_array_pvar;
+  struct logic_s logic;
   struct op_s operation; 
 };
 
@@ -708,8 +716,9 @@ void generic_tuning_policy(int argc, void **args)
 
   /* Call the inner logic */  
   op_t op = rules[rule_id].operation;
+  logic_t logic = rules[rule_id].logic;
 
-
+  INNERLOGIC(logic);
 
 #if 0
   if(rules[rule_id].is_array_pvar == 1) {
