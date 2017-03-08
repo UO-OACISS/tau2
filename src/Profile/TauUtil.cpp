@@ -175,6 +175,8 @@ PluginManager* Tau_PluginManager_new() {
   PluginManager* plugin_manager = (PluginManager *)malloc(sizeof(PluginManager));
   plugin_manager->plugin_list = (PluginList *)malloc(sizeof(PluginList));
   (plugin_manager->plugin_list)->head = NULL;
+  plugin_manager->role_hook_list = (PluginRoleHookList*)malloc(sizeof(PluginRoleHookList));
+  (plugin_manager->role_hook_list)->head = NULL;
 
   return plugin_manager;
 }
@@ -273,29 +275,57 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
   }
 }
 
+/*Add role hook to the list of role_name:role_hook registered*/
+extern "C" void Tau_util_plugin_manager_register_role_hook(PluginManager* plugin_manager, const char* role_name, PluginRoleHook role_hook) {
+  PluginRoleHookNode* node = (PluginRoleHookNode*)malloc(sizeof(PluginRoleHookNode));
+  strcpy(node->role_name, role_name);
+  node->role_hook = role_hook;
+  node->next = (plugin_manager->role_hook_list)->head;
+  (plugin_manager->role_hook_list)->head = node;
+}
 
-/*
- * Clean up all plugins and free associated structures
- 
-int Tau_util_cleanup_plugins()
-{
+/*Apply all role hooks for a given role_name - There may be more than one*/
+void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name) {
+  int returnVal;
 
-  if(pds == NULL) {
-    fprintf(stdout, "No plugin to clean\n");
-    return -1;
+  PluginRoleHookNode* role_plugin = (plugin_manager->role_hook_list)->head;
+  Plugin* plugin = (plugin_manager->plugin_list)->head;
+
+  while(role_plugin) {
+    if(strcmp(role_name, role_plugin->role_name) == 0) {
+      returnVal = role_plugin->role_hook();
+      if(returnVal)
+        printf("TAU: Failure encountered when invoking role function of plugin: %s\n", plugin->plugin_name);
+    }
+    role_plugin = role_plugin->next;
+    plugin = plugin->next;
   }
+}
 
-  //PluginDiscoveryState* pds = (PluginDiscoveryState*)vpds;
-  PluginList* node = pds->handle_list;
+/*Clean up all plugins and free associated structures*/ 
+int Tau_util_cleanup_all_plugins(PluginManager* plugin_manager) {
+  PluginRoleHookNode* temp_role_plugin;
+  Plugin* temp_plugin;
 
-  while (node) {
-    PluginList* next = node->next;
-    dlclose(node->handle);
-    free(node);
-    node = next;
-  }
+  PluginRoleHookNode* role_plugin = (plugin_manager->role_hook_list)->head;
+  Plugin* plugin = (plugin_manager->plugin_list)->head;
   
-  free(pds);
-}*/
+  while(role_plugin) {
+    temp_role_plugin = role_plugin;
+    role_plugin = temp_role_plugin->next;
+    temp_role_plugin->next = NULL;
+    free(temp_role_plugin);
+  }   
+  
+  while(plugin) {
+    temp_plugin = plugin;
+    plugin = temp_plugin->next;
+    if(temp_plugin->handle)
+      dlclose(temp_plugin->handle);
+    temp_plugin->next = NULL;
+    free(temp_plugin);
+  }   
+  return 0;
+}
 
 
