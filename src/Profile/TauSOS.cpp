@@ -116,6 +116,8 @@ void TAU_SOS_make_pub() {
         // tau_sos_pub->meta.retain_hint   = SOS_RETAIN_SESSION;
 
         TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
+        TAU_VERBOSE("[TAU_SOS_send_data]: Announcing the pub...\n");
+        SOS_announce(tau_sos_pub);
 }
 
 void TAU_SOS_do_fork(char *forkCommand) {
