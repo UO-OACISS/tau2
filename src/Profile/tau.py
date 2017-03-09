@@ -195,6 +195,37 @@ class Profile(ctau_impl.Profiler):
         finally:
             self.disable()
 
+    def runcall_with_node(self, node, func, *args, **kw):
+        self.enable()
+        try:
+            import pytau
+            pytau.setNode(node)
+            return func(*args, **kw)
+        finally:
+            self.disable()
+
+try:
+    from pyspark import BasicProfiler
+    try:
+        from pyspark import TaskContext
+    except Exception:
+        print("WARNING: Your version of Spark does not expose TaskContext to Python." \
+              "PySpark tasks will not be profiled.")
+    from pyspark import TaskContext
+    class TauSparkProfiler(BasicProfiler):
+        
+        def __init__(self, ctx):
+            BasicProfiler.__init__(self, ctx)
+
+        def profile(self, func):
+            myId = TaskContext._getOrCreate()._taskAttemptId
+            prof = Profile()
+            prof.runcall_with_node(myId, func)
+            writeProfiles()
+except Exception:
+    # Do nothing if Spark isn't available
+    pass
+
 # ____________________________________________________________
 
 def label(code):
