@@ -144,6 +144,8 @@ extern "C" {
   int TAUDECL TauEnv_get_alfred_port();
   int TAUDECL TauEnv_get_papi_multiplexing();
   int TauEnv_get_show_memory_functions();
+  void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
+                          const std::string& replace);
 
 #ifdef __cplusplus
 }
