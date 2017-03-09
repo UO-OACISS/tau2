@@ -493,7 +493,11 @@ bool determineCallSiteViaString(unsigned long *addresses)
           //   the function itself.
           free(name);
           // No idea why this works, or why the magical "2" is required below.
+#ifdef __PGI
+          int offset = 6;
+#else /* __PGI */
           int offset = hasSHMEM ? 1 : 2;
+#endif /* __PGI */
           if (i + offset < length) {
             callsite = addresses[i + offset];
             name = Tau_callsite_resolveCallSite(addresses[i + offset]);
