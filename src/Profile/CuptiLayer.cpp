@@ -93,7 +93,10 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int domain_n, int event_n)
     cuErr = cuDeviceGetName(buff, sizeof(buff), device);
     CHECK_CU_ERROR(cuErr, "cuDeviceGetName");
     device_name = string(buff);
-    std::replace(device_name.begin(), device_name.end(), ' ', '_');
+    //std::replace(device_name.begin(), device_name.end(), ' ', '_');
+    //std::replace(device_name.begin(), device_name.end(), ' ', '_');
+    // PGI compiler has problems with -c++11
+    Tau_util_replaceStringInPlace(device_name, " ", "_"); 
 
     //Domain
     uint32_t num_domains;

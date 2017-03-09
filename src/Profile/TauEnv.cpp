@@ -450,6 +450,18 @@ static char * Tau_get_cwd_of_exe()
 }
 
 /*********************************************************************
+ * Replace part of a string with another. similar to <algorithm> replace.
+ ********************************************************************/
+void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
+                          const std::string& replace) {
+    size_t pos = 0; 
+    while ((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }           
+}               
+
+/*********************************************************************
  * Parse a boolean value
  ********************************************************************/
 static int parse_bool(const char *str, int default_value = 0) {
