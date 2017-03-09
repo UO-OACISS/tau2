@@ -5,6 +5,7 @@
  	"pvars":["pvar1","pvar2[10]"],
  	"cvars":["cvar1","cvar2[10]"],
         "logic": {
+  		"num_pvars":2,
 		"array": "pvar_max_vbuf_usage_index",
         	"operation": {
                		"condition": {
