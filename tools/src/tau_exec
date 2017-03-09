@@ -8,9 +8,15 @@ eval `tau-config`
 scriptname=`basename $0`
 if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
+  spark_wrapper=false
+  default_tags="python,MPI"
+elif [ "$scriptname" == "tau_spark_python" ] ; then
+  python_wrapper=true
+  spark_wrapper=true
   default_tags="python,MPI"
 else
   python_wrapper=false
+  spark_wrapper=false
   default_tags="MPI"
 fi
 
@@ -871,7 +877,9 @@ else
     $dryrun export TAU_MEMDBG_PROTECT_ABOVE=1
   fi
 
-  if $python_wrapper ; then
+  if $spark_wrapper ; then
+    $dryrun python -m tau_pyspark_wrapper $@
+  elif $python_wrapper ; then
     $dryrun python -m tau_python_wrapper $@
     retval=$?
   elif $use_ptts ; then
