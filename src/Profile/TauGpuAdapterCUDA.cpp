@@ -327,7 +327,7 @@ void Tau_cuda_register_sync_event()
 		lastEvent = kernel->stopEvent;
 		lastEventTime += (double) stop_sec;
 
-		free(kernel->name);
+		free((void *)(kernel->name));
 		delete kernel;
 		KernelBuffer.pop();
 
