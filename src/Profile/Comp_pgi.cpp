@@ -72,14 +72,14 @@ extern "C" void Tau_profile_exit_all_threads(void);
 #define dprintf TAU_VERBOSE
 // called during termination
 #pragma save_all_regs
-extern "C" void __rouexit() {
+extern "C" void __rouexit(void) {
   Tau_profile_exit_all_threads();
   Tau_destructor_trigger();
 }
 
 // called during program initialization
 #pragma save_all_regs
-extern "C" void __rouinit() {
+extern "C" void __rouinit(void) {
   Tau_init_initializeTAU();
   TheUsingCompInst() = 1;
 #if (defined (TAU_MPI) && defined(TAU_CRAYCNL))
@@ -178,6 +178,21 @@ extern "C" void ___rouent2(struct s1 *p) {
 	}
 }
 
+#pragma save_all_gp_regs
+extern "C" void ___instent64 (void* a1, void* a2, void* a3, void* a4, struct s1 *p) {
+  ___rouent2(p);
+}
+
+#pragma save_all_gp_regs
+extern "C" void ___rouent64 (void* a1, void* a2, void* a3, void* a4, struct s1 *p) {
+  ___rouent2(p);
+}
+
+#pragma save_all_gp_regs
+extern "C" void ___instentavx (void* a1, void* a2, void* a3, void* a4, struct s1 *p) {
+  ___rouent2(p);
+}
+
 
 // called at the end of each profiled routine
 #pragma save_all_regs
@@ -191,6 +206,26 @@ extern "C" void ___rouret2(void) {
 	} else {
     Tau_ignore[tid].count--;
 	}
+}
+
+#pragma save_all_gp_regs
+extern "C" void ___instret64(void* a1, void* a2, void* a3, void* a4, struct s1 *p) {
+  	___rouret2();
+}
+
+#pragma save_all_gp_regs
+extern "C" void ___rouret(void) {
+  	___rouret2();
+}
+
+#pragma save_all_gp_regs
+extern "C" void ___rouret64(void) {
+  	___rouret2();
+}
+
+#pragma save_all_gp_regs
+extern "C" void ___instretavx(void* a1, void* a2, void* a3, void* a4, struct s1 *p) {
+  	___rouret2();
 }
 
 #pragma save_used_gp_regs
