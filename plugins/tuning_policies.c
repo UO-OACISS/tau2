@@ -20,139 +20,6 @@
 #define MAX_NB_RULES 16
 #define MAX_NB_VALUES 16
 
-#define LEFTOPPLUS(leftop,rightop) \
-	return leftop + rightop
-
-#define LEFTOPMINUS(leftop,rightop) \
-	return leftop - rightop
-
-#define LEFTOPTIMES(leftop,rightop) \
-	return leftop * rightop
-
-#define LEFTOPDIV(leftop,rightop) \
-	return leftop / rightop
-
-#define OPEQ(leftop,rightop) \
-        leftop == rightop	
-
-#define OPLOWER(leftop,rightop) \
-	leftop < rightop	
-
-#define OPUPPER(leftop,rightop) \
-	leftop > rightop	
-
-#define OPLOWEQ(leftop,rightop) \
-	leftop <= rightop	
-
-#define OPUPEQ(leftop,rightop) \
-	leftop >= rightop	
-
-#define IFSTMT(leftop,op,rightop) \
-	if(leftop op rightop) 
-
-#define WHILESTMT(leftop,op,rightop) \
-	while(leftop op rightop)
-
-#define RESOPEQ(leftop,rightop) \
-	leftop = rightop
-
-#define RESOPPLUSEQ(leftop,rightop) \
-	leftop += rightop
-
-#define RESOPMINUSEQ(leftop,rightop) \
-	leftop -= rightop
-
-#define RESOPTIMESEQ(leftop,rightop) \
-	leftop *= rightop
-
-/*
-#define FOREACH(limit) \
-	for(i=0;i<limit;i++) {	\
-       	
-	}
-*/
-
-#define LEFTOPERAND(leftop,rightop,operator) \
-	leftop operator rightop
-
-#define CONDITION(stmt,leftoperand,rightoperand,operator) \
-	stmt(leftoperand operator rightoperand)
-
-#define RESULT(resleftop,resrightop,operator) \
-	resleftop operator resrightop;
-
-#define ELSE(resleftop,resrightop,operator) \
-	resleftop operator resrightop;
-
-#define WRITECVARS(op) \
-	CONDITION(op.cond.stmt,op.cond.leftop.op.cond.rightop,op.cond.operator) { \
-	  res_t res = op.result; \
- 	  RESULT(res.resleftop,res.resrightop,res.resoperator); \
-          sprintf(metric_string,metric); \
-          sprintf(value_string,value); \
-          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
-        } \
-        if(op.elseresult != NULL) { \
-         res_t elseres = op.elseresult; \
-         sprintf(metric_string,metric); \
-         sprintf(value_string,value); \
-         Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
-        }
-
-#define INNERLOGIC(logic) 								\
-	if(logic.array == 1) { 								\
-	  for(i=0; i<logic.loopbound; i++) {						\
-            op_t op = logic.op; 							\
-            CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { 	\
-              res_t res = op.result; 							\
-              RESULT(res.resleftop,res.resrightop,res.resoperator); 			\
-	    } 										\
-            if(op.elseresult != NULL) { 						\
-              res_t elseres = op.elseresult; 						\
-              ELSE(elseres.resleftop,elseres.resrightop,elseres.resoperator); 		\
-            } 										\
-	    for(j=0; j<logic.num_pvars; j++) { 						\
-	      if(i == (tau_pvar_count[j])) {						\
-               sprintf(metric_string,"%s[%d]", res.resleftop, i);			\
-               sprintf(value_string,"%llu", reduced_value_array[i]);			\
-	      }										\
-            }										\
-            strcat(reduced_value_cvar_string, metric_string);				\
-            strcat(reduced_value_cvar_value_string, value_string);			\
-          } 										\
-        } else { 									\
-          op_t op = logic.op; 								\
-          CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { 	\
-            res_t res = op.result; 							\
-            RESULT(res.resleftop,res.resrightop,res.resoperator); 			\
-	  } 										\
-          if(op.elseresult != NULL) { 							\
-            res_t elseres = op.elseresult; 						\
-            ELSE(elseres.resleftop,elseres.resrightop,elseres.resoperator); 		\
-          } 										\
-	  for(j=0; j<logic.num_pvars; j++) { 						\
-	    if(i == (tau_pvar_count[j])) {						\
-              sprintf(metric_string,"%s", res.resleftop);				\
-              sprintf(value_string,"%llu", reduced_value_array);			\
-	    }										\
-          }										\
-          strcat(reduced_value_cvar_string, metric_string);				\
-          strcat(reduced_value_cvar_value_string, value_string);			\
-        }										\
-        WRITECVARS(op)
-        
-
-/*
-#define INNERLOGIC(op) \
-	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
-          res_t res = op.result; \
-          RESULT(res.resleftop,res.resrightop,res.resoperator); \
-        } \
-        if(op.elseresult != NULL) { \
-          res_t elseres = op.elseresult; \
-          ELSE(elseres.resleftop,elseres.resrightop, elseres.resoperator); \
-        }
-*/
 
 enum operand_enum_e
 {
@@ -221,6 +88,7 @@ typedef struct mpit_var_s mpit_var_t;
 struct operand_s
 {
   //char *value;
+  int value;
   operand_enum_t type;
 };
 
@@ -235,20 +103,36 @@ struct groupoperand_s
 
 typedef struct groupoperand_s groupoperand_t;
 
+struct node_s
+{
+ struct node_s **children;
+ char *operator;
+};
+
+typedef struct node_s node_t;
+
 struct condition_s
 {
   //char *stmt;
   enum stmt_enum_e stmt;
-  
+
+#if 0  
   union {
     struct groupoperand_s leftgroupoperand;
     struct operand_s leftop; 
   };
+#endif
+ 
+  operand_t leftop;
 
+#if 0
   union {
     struct groupoperand_s rightgroupoperand;
     struct operand_s rightop;
   };
+#endif
+
+  operand_t rightop; 
 
   enum operator_enum_e operator;  
 };
@@ -258,6 +142,7 @@ typedef struct condition_s condition_t;
 struct res_s
 {
 
+#if 1
   union {
     struct groupoperand_s resleftgroupoperand;
     struct operand_s resleftop; 
@@ -267,6 +152,7 @@ struct res_s
     struct groupoperand_s resrightgroupoperand;
     struct operand_s resrightop;
   };
+#endif
 
   enum operator_enum_e resoperator;  
 };
@@ -283,16 +169,19 @@ typedef struct loop_s loop_t;
 struct op_s
 {
  struct loop_s loop; 
- struct condition_s cond;
- struct res_s result;
- struct res_s elseresult;
+ condition_t cond;
+ res_t *result;
+ res_t *elseresult;
 };
 
 typedef struct op_s op_t;
 
 struct logic_s
-{
-  struct op_s;
+{ 
+  int num_pvars; 
+  int is_pvar_array;
+  int array_size;
+  op_t op;
 };
 
 typedef struct logic_s logic_t;
@@ -309,6 +198,197 @@ struct tuning_policy_rule_s
 
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
+
+#define LEFTOPPLUS(leftop,rightop) \
+	return leftop + rightop
+
+#define LEFTOPMINUS(leftop,rightop) \
+	return leftop - rightop
+
+#define LEFTOPTIMES(leftop,rightop) \
+	return leftop * rightop
+
+#define LEFTOPDIV(leftop,rightop) \
+	return leftop / rightop
+
+#define OPEQ(leftop,rightop) \
+        leftop == rightop	
+
+#define OPLOWER(leftop,rightop) \
+	leftop < rightop	
+
+#define OPUPPER(leftop,rightop) \
+	leftop > rightop	
+
+#define OPLOWEQ(leftop,rightop) \
+	leftop <= rightop	
+
+#define OPUPEQ(leftop,rightop) \
+	leftop >= rightop	
+
+#define EVAL2(leftop,op,rightop) leftop > rightop ? 1 : 0
+#define EVAL(leftop,rightop) leftop > rightop ? 1 : 0
+
+#define IFSTMT(leftop,op,rightop) \
+	if(EVAL(5,4)) 
+
+#define IFSTMT2(leftop,op,rightop) \
+	printf("IFSTMT\n");
+
+#define WHILESTMT(leftop,op,rightop) \
+	while(leftop op rightop)
+
+#define RESOPEQ(leftop,rightop) \
+	leftop = rightop
+
+#define RESOPPLUSEQ(leftop,rightop) \
+	leftop += rightop
+
+#define RESOPMINUSEQ(leftop,rightop) \
+	leftop -= rightop
+
+#define RESOPTIMESEQ(leftop,rightop) \
+	leftop *= rightop
+
+/*
+#define FOREACH(limit) \
+	for(i=0;i<limit;i++) {	\
+       	
+	}
+*/
+
+#define LEFTOPERAND(leftop,rightop,operator) \
+	leftop operator rightop
+
+#define CONDITION(stmt,leftoperand,rightoperand,operator) \
+ 	IFSTMT(leftoperand,operator,rightoperand)
+//	stmt(leftoperand operator rightoperand)
+
+#define CONDITION2(stmt,leftoperand,rightoperand,operator) \
+	printf("CONDITION\n");
+
+#define RESULT2(resleftop,resrightop,operator) \
+	resleftop operator resrightop;
+
+#define RESULT(resleftop,resrightop,operator) \
+        printf("RESULT\n");
+
+#define ELSE2(resleftop,resrightop,operator) \
+	resleftop operator resrightop;
+
+#define ELSE(resleftop,resrightop,operator) \
+        printf("ELSE\n");
+
+#define WRITECVARS2(op) \
+	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
+	  res_t res = op.result; \
+ 	  RESULT(res.resleftop,res.resrightop,res.resoperator); \
+          sprintf(metric_string,metric); \
+          sprintf(value_string,value); \
+          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        } \
+        if(op.elseresult != NULL) { \
+         res_t elseres = op.elseresult; \
+         sprintf(metric_string,metric); \
+         sprintf(value_string,value); \
+         Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        }
+
+#define WRITECVARS3(op) \
+	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator); 
+
+#define WRITECVARS(op) \
+	printf("WRITECVARS\n");
+
+#define INNEROP2(op)									\
+	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) {	\
+	  res_t res = op.result;							\
+	  RESULT(res.resleftop,res.resrightop,res.resoperator)				\
+	}										\
+        if(op.elseresult != NULL) {							\
+          res_t elseres = op.elseresult;						\
+	  ELSE(elseres.resleftop,elseres.resrightop,elseres.resoperator);		\
+        }        									
+	
+#define INNEROP(op) \
+	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
+          res_t *res = op.result; \
+          RESULT(res->resleftop,res->resrightop,res->resoperator); \
+        } \
+        if(op.elseresult != NULL) { \
+          res_t *elseres = op.elseresult; \
+          ELSE(elseres->resleftop,elseres->resrightop,elseres->resoperator); \
+ 	} 
+
+#define INNERLOGIC2(logic) 								\
+	if(logic.is_pvar_array == 1) { 							\
+	  for(i=0; i<logic.array_size; i++) {						\
+            op_t op = logic.op;								\
+            INNEROP(op);								\
+	    for(j=0; j<logic.num_pvars; j++) { 						\
+	      if(i == (tau_pvar_count[j])) {						\
+               sprintf(metric_string,"%s[%d]", res.resleftop, i);			\
+               sprintf(value_string,"%llu", reduced_value_array[i]);			\
+	      }										\
+            }										\
+            strcat(reduced_value_cvar_string, metric_string);				\
+            strcat(reduced_value_cvar_value_string, value_string);			\
+          } 										\
+        } else { 									\
+          op_t op = logic.op; 								\
+          INNEROP(op)									\
+	  for(j=0; j<logic.num_pvars; j++) { 						\
+	    if(i == (tau_pvar_count[j])) {						\
+              sprintf(metric_string,"%s", res.resleftop);				\
+              sprintf(value_string,"%llu", reduced_value_array);			\
+	    }										\
+          }										\
+          strcat(reduced_value_cvar_string, metric_string);				\
+          strcat(reduced_value_cvar_value_string, value_string);			\
+        }										\
+        WRITECVARS(op)
+        
+
+#define INNERLOGIC(logic) \
+	if(logic.is_pvar_array == 1) { \
+          unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[logic.array_size],sizeof(unsigned long long int)); \
+          char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
+          strcpy(value_cvar_string,""); \
+          char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
+          strcpy(value_cvar_value_string,""); \
+          for(i=0; i<tau_pvar_count[logic.array_size]; i++) { \
+            op_t op = logic.op; \
+            INNEROP(op); \
+            for(j=0; j<logic.num_pvars; j++) { \
+              if(i == (tau_pvar_count[j])) { \
+                sprintf(metric_string, "%s[%d]", op.result->resleftop, i); \
+                sprintf(value_string, "%llu", value_array[i]); \
+              } \
+            } \
+          } \
+        } else { \
+          op_t op = logic.op; \
+          INNEROP(op); \
+          for(j=0; j<tau_pvar_count[logic.num_pvars]; j++) { \
+            if(i == (tau_pvar_count[j]))  { \
+              sprintf(metric_string,"%s", op.result->resleftop); \
+            } \
+          } \
+        } \
+        WRITECVARS(op)
+
+
+/*
+#define INNERLOGIC(op) \
+	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
+          res_t res = op.result; \
+          RESULT(res.resleftop,res.resrightop,res.resoperator); \
+        } \
+        if(op.elseresult != NULL) { \
+          res_t elseres = op.elseresult; \
+          ELSE(elseres.resleftop,elseres.resrightop, elseres.resoperator); \
+        }
+*/
 /*
 struct tuning_policy_rule_s
 {
@@ -977,4 +1057,5 @@ void plugin_tuning_policy(int argc, void **args) {
     dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
     Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   }
+
 }
