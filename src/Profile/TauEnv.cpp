@@ -1447,6 +1447,9 @@ void TauEnv_initialize()
       profiling_default = 0;
       TAU_VERBOSE("TAU: Tracing Enabled\n");
       TAU_METADATA("TAU_TRACE", "on");
+      if (TauEnv_get_callsite_depth() > 1) {
+        printf("WARNING: TAU_CALLSITE_DEPTH > 1 is not supported with tracing.\n");
+      }
     } else {
       env_tracing = 0;
       env_track_message = TAU_TRACK_MESSAGE_DEFAULT;
