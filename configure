@@ -9825,6 +9825,7 @@ cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 # tau_exec works differently when it's named "tau_python"
 cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_python
+cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_spark_python
 
 if [ $pdtarchdir != unknown ]
 then

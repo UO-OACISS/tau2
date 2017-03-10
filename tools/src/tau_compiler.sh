@@ -71,6 +71,7 @@ declare -i optShared=$FALSE
 declare -i optCompInst=$FALSE
 declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
+declare -i useNVCC=$FALSE
 declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
@@ -894,6 +895,21 @@ for arg in "$@" ; do
         	fi
         	;;
 
+            *.cu) 
+		CMD="nvcc -Xcompiler -finstrument-functions"
+		useNVCC=$TRUE;
+        	fileName=$arg
+        	arrFileName[$numFiles]=$arg
+        	arrFileNameDirectory[$numFiles]=`dirname $arg`
+        	numFiles=numFiles+1
+                groupType=$group_C
+
+        	linkOnly=$TRUE
+        	echoIfDebug "NOTE: turning linkOnly on"
+        	disablePdtStep=$TRUE
+        	disableCompInst=$TRUE
+        	;;
+
             *.c|*.s)
         	fileName=$arg
         	arrFileName[$numFiles]=$arg
@@ -1450,6 +1466,12 @@ if [ $upc == "berkeley" ]; then
     # Make any number of "-Wl," into exactly two "-Wl,"
     optLinking=`echo $optLinking | sed -e 's@\(-Wl,\)\+@-Wl,@g' -e 's@-Wl,@-Wl,-Wl,@g'`
     echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
+fi
+
+if [ $useNVCC == $TRUE ]; then
+    # Make any number of "-Wl," into exactly -Xlinker "-Wl,"
+    optLinking=`echo $optLinking | sed -e 's@-Wl,@-Xlinker -Wl,@g'`
+    echoIfDebug "optLinking modified to accomodate -Xlinker -Wl for nvcc optLinking=$optLinking"
 fi
 
 if [ $optMICOffload == $TRUE ]; then

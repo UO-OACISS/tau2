@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <map>
 #include <vector>
+#include <cxxabi.h>
 
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
@@ -233,8 +234,14 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
     // this should be enough...
     length = strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 100;
     resolvedBuffer = (char*)malloc(length * sizeof(char));
-    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
-        resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    int status;
+    char *demangled_funcname = abi::__cxa_demangle(resolvedInfo.funcname, 0, 0, &status);
+    if (status == 0)
+      sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+          demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    else
+      sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+          resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
   } else {
     // this should be enough...
     length = strlen(mapName) + 32;
@@ -484,9 +491,14 @@ bool determineCallSiteViaString(unsigned long *addresses)
           // This is not an MPI chain. We assume it is a function event. Skip one level.
           //   The callsite into a function probe is not the same as the callsite into
           //   the function itself.
+          hasSHMEM = hasSHMEM || nameInSHMEM(name);
           free(name);
           // No idea why this works, or why the magical "2" is required below.
+#ifdef __PGI
+          int offset = hasSHMEM ? 1 : 6;
+#else /* __PGI */
           int offset = hasSHMEM ? 1 : 2;
+#endif /* __PGI */
           if (i + offset < length) {
             callsite = addresses[i + offset];
             name = Tau_callsite_resolveCallSite(addresses[i + offset]);

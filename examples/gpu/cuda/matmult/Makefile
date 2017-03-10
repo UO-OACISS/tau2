@@ -1,10 +1,11 @@
+CC=nvcc
 all: matmult
 
 matmult: matmult.o
-	nvcc -o $@ $<
+	$(CC) -o $@ $<
 
 matmult.o: matmult.cu
-	nvcc -g -c $< -o $@
+	$(CC) -g -c $< -o $@
 
 clean: 
 	rm -rf matmult matmult.o
