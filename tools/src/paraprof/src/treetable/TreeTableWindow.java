@@ -21,8 +21,6 @@ import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
@@ -45,8 +43,6 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
-import javax.swing.text.Position.Bias;
-import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
@@ -653,25 +649,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     }
     
     public void select(final Function function){
-    	//System.out.println(function.getName());
     	String[] chunks = function.getName().split("=>");
-    	//model.getRoot();
-    	//int modelChildren=model.getChildCount(model.getRoot());
     	selectStrings(chunks);
     	
     }
-    
-    //List<Integer> lastExpanded = new ArrayList<Integer>();
+
     public void collapseTree(){
     	JTree jTree=treeTable.getTree();
-    	//System.out.println(jTree.getRowCount());
-//    	for(int exp:lastExpanded){
-//    		jTree.expandRow(exp);
-//    	}
-//    	Collections.reverse(lastExpanded);
-//    	for(int exp:lastExpanded){
-//    		jTree.collapseRow(exp);
-//    	}
     	for (int i = 0; i < jTree.getRowCount(); i++) {
     	         jTree.collapseRow(i);
     	}
@@ -781,51 +765,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     //Keeps track of every item we've found with 'next' so far.
     List<TreeTableNode> prevNodes=new ArrayList<TreeTableNode>();
     
-//    List<TreeTableNode> roots = new ArrayList<TreeTableNode>();
-//    public TreePath search(String find){
-//    	JTree tree = treeTable.getTree();
-//    	TreeModel treeModel=tree.getModel();
-//    	//TreeTableNode treeRoot = sn.getTtn();
-//    	TreePath path = null;
-////    	if(treeRoot==null){
-////    		treeRoot=(TreeTableNode) treeModel.getRoot();
-////    	}
-//    	
-//    	if(treeModel instanceof CallPathModel){
-//    		roots=((CallPathModel)treeModel).getRoots();
-//    	}
-//        	TreePath tp = tree.getNextMatch(find, 0, Bias.Forward);
-//    	if(tp!=null)
-//    	{tree.setSelectionPath(tp);
-//    	tree.scrollPathToVisible(tp);
-//    	}
-//    	
-//    	for(TreeTableNode treeRoot:roots)
-//    	{
-//    	    Enumeration<DefaultMutableTreeNode> e = treeRoot.depthFirstEnumeration();
-//    	    while (e.hasMoreElements()) {
-//    	        DefaultMutableTreeNode node = e.nextElement();
-//    	        if (node.toString().equalsIgnoreCase(find)) {
-//    	            path= new TreePath(node.getPath());
-//    	            break;
-//    	        }
-//    	    }
-//    	}
-//    	    if(path!=null)
-//    	    {
-//    	    	tree.setSelectionPath(path);
-//    	    	tree.scrollPathToVisible(path);
-//    	    }
-//    	       	    return path;
-//    	
-//    }
-    
     public SearchNode recSearch(String find, int row, TreeTableNode root, TreeModel tm){
     	int treeChildren = tm.getChildCount(root);
-    	//System.out.println(treeRoot.getClass());
-    	//int row=sn.getSearchRow();
-    	
-    		//System.out.println("seeking "+find+" from row "+row);
 
     		for(int j=0;j<treeChildren;j++){
     			TreeTableNode ttn = (TreeTableNode) tm.getChild(root, j);
@@ -833,26 +774,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     			if(!searchMatchCase){
     				subject=subject.toUpperCase();
     			}
-//    			System.out.println(find+" vs "+ttn);
-//    			if(subject.contains("SUMMARY")){
-//    				System.out.println("Introspect here");
-//    			}
     			if(subject.contains(find)&&!prevNodes.contains(ttn)){
     				SearchNode goodNode = new SearchNode(row+j,ttn);
     				goodNode.addNode(ttn);
     				lastNode=ttn;
-    				//System.out.println("Found it! "+find+" vs "+subject);
     				return  goodNode;
-    				
-//    				treeRoot=ttn;
-//    				treeChildren=treeModel.getChildCount(treeRoot);
-//    				row+=j;
-//    				tree.expandRow(row);
-//    				found=true;
-//    				row++;
-//    				break;
+
     			}
-    			//SearchNode tmpNode = new SearchNode(row+j,ttn);
     			SearchNode tmpNode = recSearch(find,j+row,ttn,tm);
     			if(tmpNode!=null){
     				tmpNode.addNode(ttn);
@@ -879,10 +807,6 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
       }
     
     public boolean search(String find){
-    	//System.out.println(function.getName());
-    	//String[] chunks = find.split("=>");
-    	//model.getRoot();
-    	//int modelChildren=model.getChildCount(model.getRoot());
     	boolean found=false;
     	JTree tree = treeTable.getTree();
     	TreeModel treeModel=tree.getModel();
@@ -907,86 +831,14 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     		prevNodes.clear();
     		return false;
     	}
-    	//int row = recBack.getSearchRow();
-    	
-    	//TreeTableNode ttn = recBack.getTtn();
-    	//TreePath tp = recBack.getPath();//getPath(ttn);
-    	//int tmprow = tree.getRowForPath(tp);
     	String[] nodeStrings=recBack.getPathStrings();
-//    	for(String s:nodeStrings){
-//    		System.out.print(s+"=>");
-//    	}System.out.println();
+
     	found=selectStrings(nodeStrings);
-    	
-    	//recBack.getTtn().get
-//    	if(row>0)
-//    		row--;
-//    	tree.expandRow(row);
-//    	tree.setSelectionRow(row);
-//    	int oneRow = treeTable.getRowHeight()+treeTable.getRowMargin();
-//    	treeTable.scrollRectToVisible(new Rectangle(0,oneRow*row,5,5));
-//    	if(!found){
-//    		return -1;
-//    	}
-//    	System.out.println("Found on row "+row);
+
     	return found;
     }
-    
-    
-    public int searchOld(String find){
-    	//System.out.println(function.getName());
-    	String[] chunks = find.split("=>");
-    	//model.getRoot();
-    	//int modelChildren=model.getChildCount(model.getRoot());
-    	boolean found=false;
-    	JTree tree = treeTable.getTree();
-    	TreeModel treeModel=tree.getModel();
-    	
-    	TreeTableNode treeRoot = sn.getTtn();
-    	if(treeRoot==null){
-    		treeRoot=(TreeTableNode) treeModel.getRoot();
-    	}
-    	int treeChildren = treeModel.getChildCount(treeRoot);
-    	//System.out.println(treeRoot.getClass());
-    	int row=sn.getSearchRow();
-    	for(int i=0;i<chunks.length;i++)
-    	{
-    		//System.out.println("seeking "+chunks[i]+" from row "+row);
-    		chunks[i]=chunks[i].trim();
-//    		if(row>=treeChildren){
-//    			row=0;
-//    		}
-    		for(int j=0;j+row<treeChildren;j++){
-    			TreeTableNode ttn = (TreeTableNode) treeModel.getChild(treeRoot, j+row);
-    			String subject=ttn.toString().trim();
-    			if(!searchMatchCase){
-    				subject=subject.toUpperCase();
-    			}
-    			//System.out.println(chunks[i]+" vs "+ttn);
-    			if(subject.contains(chunks[i])){
-    				treeRoot=ttn;
-    				treeChildren=treeModel.getChildCount(treeRoot);
-    				row+=j;
-    				tree.expandRow(row);
-    				found=true;
-    				row++;
-    				break;
-    			}
-    		}
-    	}
-    	if(row>0)
-    		row--;
-    	tree.setSelectionRow(row);
-    	int oneRow = treeTable.getRowHeight()+treeTable.getRowMargin();
-    	treeTable.scrollRectToVisible(new Rectangle(0,oneRow*(row*2),10,10));
-    	if(!found){
-    		return -1;
-    	}
-    	//System.out.println("Found on row "+row);
-    	return row;
-    }
 
-	@Override
+	
 	public void showSearchPanel(boolean show) {
 		if (show) {
             if (searchPanel == null) {
@@ -1001,7 +853,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
                 searchPanel.setFocus();
             }
         } else {
-            getContentPane().remove(searchPanel);
+        	if(searchPanel!=null)
+            {
+        		getContentPane().remove(searchPanel);
+            }
             searchPanel = null;
         }
 
@@ -1010,7 +865,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 		
 	}
 
-	@Override
+	
 	public void actionPerformed(ActionEvent evt) {
 		 try {
 	            Object EventSrc = evt.getSource();
@@ -1033,24 +888,24 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 		
 	}
 
-	@Override
+	
 	public void keyTyped(KeyEvent e) {
 	}
 
-	@Override
+	
 	public void keyPressed(KeyEvent e) {
         if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
             showSearchPanel(true);
         }
     }
 
-	@Override
+	
 	public void keyReleased(KeyEvent e) {
 	}
 
 	
 	String searchString="";
-	@Override
+	
 	public boolean setSearchString(String searchString) {
 		if(!nexting){
 			prevNodes.clear();
@@ -1060,12 +915,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 		}
 		this.searchString = searchString;
 
-//        if (searchLines == null)
-//            return false;
-
         if (searchString.length() == 0) { // reset
-//            searchLine = 0;
-//            searchColumn = 0;
         	sn.setSearchRow(0);
         	sn.setTtn(null);
             repaint();
@@ -1079,99 +929,12 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         boolean found = false;
 
 //        if (searchUp) {
-//
-//            for (int i = searchLine; i >= 0; i--) {
-//                String line = searchLines.get(i);
-//
-//                if (!searchMatchCase) {
-//                    line = line.toUpperCase();
-//                }
-//
-//                if (i != searchLine) {
-//                    searchColumn = line.length();
-//                } else {
-//                    searchColumn--;
-//                }
-//                if (line.lastIndexOf(searchString, searchColumn) != -1) {
-//                    searchLine = i;
-//                    searchColumn = line.lastIndexOf(searchString, searchColumn);
-//                    found = true;
-//                    break;
-//                }
-//            }
-//
-//            if (!found) { // wrap
-//                for (int i = searchLines.size() - 1; i >= 0; i--) {
-//                    String line = searchLines.get(i);
-//
-//                    if (!searchMatchCase) {
-//                        line = line.toUpperCase();
-//                    }
-//
-//                    if (i != searchLine) {
-//                        searchColumn = line.length();
-//                    } else {
-//                        searchColumn--;
-//                    }
-//                    if (line.lastIndexOf(searchString, searchColumn) != -1) {
-//                        searchLine = i;
-//                        searchColumn = line.lastIndexOf(searchString, searchColumn);
-//                        found = true;
-//                        break;
-//                    }
-//                }
-//            }
-//
+//        //TODO: Implement 'last' previous navigation here
 //        } else 
         {
-//            for (int i = searchLine; i < searchLines.size(); i++) {
-//                String line = searchLines.get(i);
-//
-//                if (!searchMatchCase) {
-//                    line = line.toUpperCase();
-//                }
-//
-//                if (line.indexOf(searchString, searchColumn) != -1) {
-//                    searchLine = i;
-//                    searchColumn = line.indexOf(searchString, searchColumn);
-//                    found = true;
-//                    break;
-//                }
-//
-//                searchColumn = 0;
-//
-//            }
-        	//boolean laterStart=(searchRow!=0);
-        	//int tmpSearchRow =  
-        			found=search(searchString);
-        	//		TreePath t = search(searchString);
-        	//found=tmpSearchRow>-1;//t!=null;//
-        	//searchRow=tmpSearchRow;
 
-//            if (tmpSearchRow==-1&&laterStart) { // wrap
-//            	searchRow=0;
-//            	searchRow=search(searchString,searchRow);
-////                for (int i = 0; i < searchLines.size(); i++) {
-////                    String line = searchLines.get(i);
-////
-////                    if (!searchMatchCase) {
-////                        line = line.toUpperCase();
-////                    }
-////
-////                    if (i == searchLine) {
-////                        searchColumn++;
-////                    } else {
-////                        searchColumn = 0;
-////                    }
-////
-////                    if (line.indexOf(searchString, searchColumn) != -1) {
-////                        searchLine = i;
-////                        searchColumn = line.indexOf(searchString, searchColumn);
-////                        found = true;
-////                        break;
-////                    }
-////                }
-//            }
+        			found=search(searchString);
+
         }
 
         if (!found) {
@@ -1185,20 +948,19 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         return true;
 	}
 
-	@Override
+	
 	public void setSearchHighlight(boolean highlight) {
-		// TODO Auto-generated method stub
-		
+	
 	}
 
-	@Override
+	
 	public void setSearchMatchCase(boolean matchCase) {
 		searchMatchCase = matchCase;
         repaint();
 		
 	}
 
-	@Override
+	
 	public boolean searchNext() {
 		nexting=true;
 		if(lastNode!=null)
@@ -1211,9 +973,9 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         return false;
 	}
 
-	@Override
+	
 	public boolean searchPrevious() {
-		// TODO Auto-generated method stub
+		// TODO Implement previous navigation in search
 		return false;
 	}
 }
