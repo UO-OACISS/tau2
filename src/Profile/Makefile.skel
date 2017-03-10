@@ -541,6 +541,7 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
 		$(TAU_INSTALL) tau_python_wrapper.py $(INSTALLDEST)
+		$(TAU_INSTALL) tau_pyspark_wrapper.py $(INSTALLDEST)
 		$(RM) $(INSTALLDEST)/$(PYTAU) $(INSTALLDEST)/$(CTAU_IMPL)
 		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(PYTAU)
 		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(CTAU_IMPL)
@@ -715,7 +716,7 @@ TauKokkos.o 	: TauKokkos.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
@@ -896,7 +897,7 @@ TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CudaSass.o : CudaSass.cpp $(HDRS) ../../include/Profile/CudaSass.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
