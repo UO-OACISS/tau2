@@ -60,6 +60,26 @@
 
 using namespace std;
 
+
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+// Add these definitions because the Binutils comedians think all the world uses autotools
+#ifndef PACKAGE
+#define PACKAGE TAU
+#endif
+#ifndef PACKAGE_VERSION
+#define PACKAGE_VERSION 2.25
+#endif
+#  include <bfd.h>
+#endif /* TAU_BFD */
+#define TAU_INTERNAL_DEMANGLE_NAME(name, dem_name)  dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES); \
+        if (dem_name == NULL) { \
+          dem_name = name; \
+        } \
+
 /*
  *-----------------------------------------------------------------------------
  * Simple hash table to map function addresses to region names/identifier
@@ -322,7 +342,11 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
         char * routine = (char*)malloc(size);
         if (TauEnv_get_bfd_lookup()) {
-          sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
+	const char *dem_name;
+        TAU_INTERNAL_DEMANGLE_NAME(node->info.funcname, dem_name);
+          //sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
+          printf("name = %s, dem_name = %s\n", node->info.funcname, dem_name);
+          sprintf(routine, "%s [{%s} {%d,0}]", dem_name, node->info.filename, node->info.lineno);
         } else {
           sprintf(routine, "[%s] UNRESOLVED %s ADDR %lx", node->info.funcname, node->info.filename, addr);
         }
