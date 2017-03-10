@@ -14,7 +14,7 @@ CXX = $(TAU_CXX)
 
 TAUINC = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile -I$(TAUROOT)/plugins/json-c/inst/include/json-c
 
-CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC -Wall -Werror
+CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC -Wall 
 
 #LDFLAGS =  -L/home/users/aurelem/tau/tau2_beacon/plugins/json-c/inst/lib -ljson-c -L/home/users/aurelem/tau/tau2_beacon/x86_64/lib -ltau-mvapich2-beacon-mpi-pdt-mpit -L/home/users/aurelem/tau/tau2_beacon/x86_64/lib -lTauMpi-mvapich2-beacon-mpi-pdt-mpit
 
@@ -30,13 +30,13 @@ install: $(SHAREDLIBS)
 	#@mkdir -p $(PLUGININSTALLDIR)
 	#$(TAU_INSTALL) $^ $(PLUGININSTALLDIR)
 
-tuning_policies.so: 
-#tuning_policies.so: tuning_policies.o
-#	$(CC) -shared -o tuning_policies.so tuning_policies.o
+#tuning_policies.so:  
+tuning_policies.so: tuning_policies.o
+	$(CC) -shared -o tuning_policies.so tuning_policies.o
 
-tuning_policies.o: 
-#tuning_policies.o:      tuning_policies.c
-#	$(CC) $(CFLAGS)  -c tuning_policies.c 
+#tuning_policies.o: 
+tuning_policies.o:      tuning_policies.c
+	$(CC) $(CFLAGS)  -c tuning_policies.c 
 
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)
