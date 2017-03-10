@@ -343,7 +343,12 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         char * routine = (char*)malloc(size);
         if (TauEnv_get_bfd_lookup()) {
 	const char *dem_name;
-        TAU_INTERNAL_DEMANGLE_NAME(node->info.funcname, dem_name);
+
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+        TAU_INTERNAL_DEMANGLE_NAME(name, dem_name);
+#else
+        dem_name = name;
+#endif /* HAVE_GNU_DEMANGLE */
           //sprintf(routine, "%s [{%s} {%d,0}]", node->info.funcname, node->info.filename, node->info.lineno);
 #ifdef DEBUG_PROF
           printf("name = %s, dem_name = %s\n", node->info.funcname, dem_name);
