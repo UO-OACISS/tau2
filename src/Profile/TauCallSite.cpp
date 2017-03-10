@@ -491,10 +491,11 @@ bool determineCallSiteViaString(unsigned long *addresses)
           // This is not an MPI chain. We assume it is a function event. Skip one level.
           //   The callsite into a function probe is not the same as the callsite into
           //   the function itself.
+          hasSHMEM = hasSHMEM || nameInSHMEM(name);
           free(name);
           // No idea why this works, or why the magical "2" is required below.
 #ifdef __PGI
-          int offset = 6;
+          int offset = hasSHMEM ? 1 : 6;
 #else /* __PGI */
           int offset = hasSHMEM ? 1 : 2;
 #endif /* __PGI */
