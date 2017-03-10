@@ -226,11 +226,18 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define OPUPEQ(leftop,rightop) \
 	leftop >= rightop	
 
-#define EVAL2(leftop,op,rightop) leftop > rightop ? 1 : 0
-#define EVAL(leftop,rightop) leftop > rightop ? 1 : 0
+#define RESULT(resleftop,resrightop,operator) \
+ 	resleftop = resrightop;
+
+#define EVAL(leftop,op,rightop) leftop > rightop ? 1 : 0
 
 #define IFSTMT(leftop,op,rightop) \
-	if(EVAL(5,4)) 
+	if(EVAL(leftop.value,op,rightop.value)) { \
+	  return 1; \
+        } \
+        else { \
+          return 0; \
+        }
 
 #define IFSTMT2(leftop,op,rightop) \
 	printf("IFSTMT\n");
@@ -269,15 +276,11 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
 #define RESULT2(resleftop,resrightop,operator) \
 	resleftop operator resrightop;
-
-#define RESULT(resleftop,resrightop,operator) \
-        printf("RESULT\n");
-
 #define ELSE2(resleftop,resrightop,operator) \
 	resleftop operator resrightop;
 
 #define ELSE(resleftop,resrightop,operator) \
-        printf("ELSE\n");
+        resleftop = resrightop;
 
 #define WRITECVARS2(op) \
 	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
@@ -294,11 +297,17 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
         }
 
-#define WRITECVARS3(op) \
-	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator); 
-
-#define WRITECVARS(op) \
-	printf("WRITECVARS\n");
+#define WRITECVARS(op,metric_string,value_string) \
+	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
+          res_t *res = op.result; \
+          RESULT(res->resleftop,res->resrightop,res->resoperator); \
+          sprintf(metric_string,"%d",res->resleftop); \
+          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        } \
+        if(op.elseresult != NULL) { \
+          res_t *elseres = op.elseresult; \
+         Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        }
 
 #define INNEROP2(op)									\
 	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) {	\
@@ -348,7 +357,6 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
         }										\
         WRITECVARS(op)
         
-
 #define INNERLOGIC(logic) \
 	if(logic.is_pvar_array == 1) { \
           unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[logic.array_size],sizeof(unsigned long long int)); \
@@ -367,28 +375,22 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
             } \
           } \
         } else { \
+          unsigned long long int value; \
+	  char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
+          strcpy(value_cvar_string,""); \
+          char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
+          strcpy(value_cvar_value_string,""); \
           op_t op = logic.op; \
           INNEROP(op); \
           for(j=0; j<tau_pvar_count[logic.num_pvars]; j++) { \
             if(i == (tau_pvar_count[j]))  { \
               sprintf(metric_string,"%s", op.result->resleftop); \
+              sprintf(value_string, "%llu", value); \
             } \
           } \
         } \
-        WRITECVARS(op)
+        WRITECVARS(op,metric_string,value_string)
 
-
-/*
-#define INNERLOGIC(op) \
-	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
-          res_t res = op.result; \
-          RESULT(res.resleftop,res.resrightop,res.resoperator); \
-        } \
-        if(op.elseresult != NULL) { \
-          res_t elseres = op.elseresult; \
-          ELSE(elseres.resleftop,elseres.resrightop, elseres.resoperator); \
-        }
-*/
 /*
 struct tuning_policy_rule_s
 {
