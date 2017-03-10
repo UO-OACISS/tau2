@@ -716,7 +716,7 @@ TauKokkos.o 	: TauKokkos.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
