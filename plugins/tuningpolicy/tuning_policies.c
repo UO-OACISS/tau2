@@ -21,6 +21,7 @@
 #define MAX_NB_RULES 16
 #define MAX_NB_VALUES 16
 
+#define MAX_TREE_DEPTH 32
 
 enum operand_enum_e
 {
@@ -242,6 +243,12 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
 #define EVALLOWEQ(leftop,op,rightop) leftop <= rightop ? 1 : 0
 
+#define EVAL(node) \
+        int curr_depth = 0; \
+ 	while((node->loperand != NULL) && (node->roperand != NULL)i && (curr_depth < MAX_TREE_DEPTH)) { \
+          /* Store tree for operation */ \ 
+        }
+
 #define IFSTMT(leftop,op,rightop) \
 	if(EVALEQ(leftop.value,op,rightop.value)) { \
 	  return 1; \
@@ -279,9 +286,15 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define LEFTOPERAND(leftop,rightop,operator) \
 	leftop operator rightop
 
+#define POPTREE(root) \
+        
+
 #define CONDITION(stmt,leftoperand,rightoperand,operator) \
  	IFSTMT(leftoperand,operator,rightoperand)
 //	stmt(leftoperand operator rightoperand)
+
+#define CONDITION2(node) \
+	printf("CONDITION: POP tree\n");
 
 #define RESULT2(resleftop,resrightop,operator) \
 	resleftop operator resrightop;
