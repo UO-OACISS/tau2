@@ -1,0 +1,4 @@
+#!/bin/bash 
+
+tau_python -spark-python $TAU_SPARK_PYTHON_ARGS $@
+
