@@ -23,6 +23,11 @@
  				"resrightoperand":"pvar_max_vbuf_usage_index",
  				"resoperator":"="
                 	},
+                        "result": {
+                        	"resleftoperand":"has_threshold_been_breached_in_any_pool",
+  				"resrightoperand":1,
+				"resoperator":"="
+                        },
                 	"else": {
                 		"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
   		        	"resoperator":"=",

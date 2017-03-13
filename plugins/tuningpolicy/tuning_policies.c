@@ -23,6 +23,23 @@
 
 #define MAX_TREE_DEPTH 32
 
+enum node_enum_e
+{
+  ID,
+  NUMPVARS,
+  LOGIC,
+  OPERATION,
+  STMT,
+  CONDITION,
+  LOPERAND,
+  ROPERAND,
+  OPERATOR,
+  RESULT,
+  ELSE
+};
+
+typedef enum node_enum_e node_enum_t;
+
 enum operand_enum_e
 {
   pvar,
