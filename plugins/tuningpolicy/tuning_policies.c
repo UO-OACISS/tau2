@@ -321,6 +321,9 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define ELSE(resleftop,resrightop,operator) \
         resleftop = resrightop;
 
+#define FOR(index) \
+	for(i=0; i<tau_pvar_count[index]; i++)
+
 #define WRITECVARS2(op) \
 	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
 	  res_t res = op.result; \
@@ -419,6 +422,12 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 tuning_policy_rule_t rules[MAX_NB_RULES];
 
 //static json_object *jso = NULL;
+
+int parse_logic(node_t *tree)
+{
+
+ return 1;
+}
 
 /* Detect if given PVAR or CVAR is an array */
 int detect_array(char *value, char *separator, mpit_var_t *var, int is_pvar)
