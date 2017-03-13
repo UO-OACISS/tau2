@@ -25,17 +25,17 @@
 
 enum node_enum_e
 {
-  ID,
-  NUMPVARS,
-  LOGIC,
-  OPERATION,
-  STMT,
-  CONDITION,
-  LOPERAND,
-  ROPERAND,
-  OPERATOR,
-  RESULT,
-  ELSE
+  ID = 0,
+  NUMPVARS = 1,
+  LOGIC = 2,
+  OPERATION = 3,
+  STMT = 4,
+  CONDITION = 5,
+  LOPERAND = 6,
+  ROPERAND = 7,
+  OPERATOR = 8,
+  RESULT = 9,
+  ELSE = 10
 };
 
 typedef enum node_enum_e node_enum_t;
@@ -944,7 +944,6 @@ int plugin_tuning_policy(int argc, void **args) {
     dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
     Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   }
-
  
   return return_val;
 }
