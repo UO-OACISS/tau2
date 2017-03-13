@@ -124,9 +124,8 @@ typedef struct groupoperand_s groupoperand_t;
 
 struct node_s
 {
- struct node_s *loperand;
- struct node_s *roperand;
- char *operator;
+ struct node_s **children;
+ node_enum_t type;
 };
 
 typedef struct node_s node_t;
