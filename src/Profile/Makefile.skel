@@ -551,6 +551,7 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(PYTAU) 
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(CTAU_IMPL)
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_python_wrapper.py .
+		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_pyspark_wrapper.py .
 		cd $(TAU_SHAREDDIR) && $(RM) libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) TAU.dll

@@ -10,10 +10,6 @@ if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
   spark_wrapper=false
   default_tags="python,MPI"
-elif [ "$scriptname" == "tau_spark_python" ] ; then
-  python_wrapper=true
-  spark_wrapper=true
-  default_tags="python,MPI"
 else
   python_wrapper=false
   spark_wrapper=false
@@ -423,6 +419,10 @@ for arg in "$@" ; do
       -XrunTAUsh-*)
         myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
         binding_specified="shared-$myarg"
+        shift
+        ;;
+      -spark-python)
+        spark_wrapper=true
         shift
         ;;
       --)
