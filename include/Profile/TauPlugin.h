@@ -16,7 +16,7 @@ typedef struct PluginList {
 } PluginList;
 
 
-typedef int (*PluginRoleHook)(); /*To be answered: What do I pass into the rolehook?*/
+typedef int (*PluginRoleHook)(int argc, void** argv); /*To be answered: What do I pass into the rolehook?*/
 
 typedef struct PluginRoleHookNode {
     char role_name[1024];
@@ -46,6 +46,6 @@ extern "C" void Tau_util_plugin_manager_register_role_hook(PluginManager* plugin
 void Tau_util_plugin_manager_register_role_hook(PluginManager* plugin_manager, const char* role_name, PluginRoleHook role_hook);
 #endif
 
-void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name);
+extern "C" void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
 int Tau_util_cleanup_all_plugins(PluginManager* plugin_manager);
 #endif /* _TAU_PLUGIN_H_ */

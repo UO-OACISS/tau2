@@ -20,6 +20,7 @@
 #include <Profile/Profiler.h> 
 #include <Profile/TauEnv.h> 
 #include <Profile/TauMpiTTypes.h>
+#include <Profile/TauPlugin.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -45,6 +46,10 @@ extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subind
 extern void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count);
 extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
+
+//Plugin related functions
+extern PluginManager* plugin_manager;
+extern void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
 
 #define dprintf TAU_VERBOSE
 
@@ -944,18 +949,15 @@ int Tau_track_mpi_t_here(void) {
 #if TAU_PLUGIN_ENABLED 
     char *plugin_name;
     const char *plugin_path;
-    int num_args = 3;
-    void **args = Tau_MemMgr_malloc(Tau_get_thread(), num_args*sizeof(void*));
-    args[0] = (void *)num_pvars;
-    args[1] = (void *)tau_pvar_count;
-    args[2] = (void *)pvar_value_buffer;
+    int argc = 3;
+    void **argv = Tau_MemMgr_malloc(Tau_get_thread(), argc*sizeof(void*));
+    int* num_pvars_heap = Tau_MemMgr_malloc(Tau_get_thread(), argc*sizeof(int));
+    (*num_pvars_heap) = tau_initial_pvar_count;
+    argv[0] = (void *)num_pvars_heap;
+    argv[1] = (void *)tau_pvar_count;
+    argv[2] = (void **)pvar_value_buffer;
+    Tau_util_apply_role_hook(plugin_manager, "MPIT", argc, argv);
 
-    strcpy(plugin_name, "tuning_policies");
-    plugin_path = getenv("PLUGIN_PATH");
-    //strcpy(plugin_path, "/home/users/aurelem/tau/tau2_beacon/plugins/"); 
-
-    /* Load Tuning policy plugin */
-    Tau_util_load_plugin(plugin_name, plugin_path, num_args, args);
 #else
     Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
 #endif /* TAU_PLUGIN_ENABLED */
