@@ -12,6 +12,9 @@
 #include <sys/types.h>
 #include <assert.h>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
 #include "json.h"
 #include "json_util.h"
 
@@ -22,6 +25,10 @@
 #define MAX_NB_VALUES 16
 
 #define MAX_TREE_DEPTH 32
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 enum node_enum_e
 {
@@ -113,6 +120,7 @@ struct operand_s
 
 typedef struct operand_s operand_t;
 
+#if 0
 struct groupoperand_s
 {
  struct operand_s leftop;
@@ -121,6 +129,7 @@ struct groupoperand_s
 };
 
 typedef struct groupoperand_s groupoperand_t;
+#endif
 
 struct node_s
 {
@@ -130,26 +139,23 @@ struct node_s
 
 typedef struct node_s node_t;
 
+#if 0
 struct condition_s
 {
   //char *stmt;
   enum stmt_enum_e stmt;
 
-#if 0  
   union {
     struct groupoperand_s leftgroupoperand;
     struct operand_s leftop; 
   };
-#endif
  
   operand_t leftop;
 
-#if 0
   union {
     struct groupoperand_s rightgroupoperand;
     struct operand_s rightop;
   };
-#endif
 
   operand_t rightop; 
 
@@ -157,11 +163,12 @@ struct condition_s
 };
 
 typedef struct condition_s condition_t;
+#endif
 
+#if 0
 struct res_s
 {
 
-#if 1
   union {
     struct groupoperand_s resleftgroupoperand;
     struct operand_s resleftop; 
@@ -171,7 +178,6 @@ struct res_s
     struct groupoperand_s resrightgroupoperand;
     struct operand_s resrightop;
   };
-#endif
 
   enum operator_enum_e resoperator;  
 };
@@ -204,6 +210,7 @@ struct logic_s
 };
 
 typedef struct logic_s logic_t;
+#endif
 
 struct tuning_policy_rule_s
 {
@@ -211,12 +218,11 @@ struct tuning_policy_rule_s
   struct mpit_var_s *cvars;
   int num_pvars;
   int is_array_pvar;
-  struct logic_s logic;
-  struct op_s operation; 
+  //struct logic_s logic;
+  //struct op_s operation; 
 };
 
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
-
 
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
@@ -368,7 +374,7 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
           strcpy(value_cvar_string,""); \
           char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
           strcpy(value_cvar_value_string,""); \
-          for(i=0; i<tau_pvar_count[logic.array_size]; i++) { \
+          FOR(logic.array_size) { \
             op_t op = logic.op; \
             INNEROP(op); \
             for(j=0; j<logic.num_pvars; j++) { \
@@ -650,6 +656,12 @@ void read_json_rules()
 
 }
 
+void tuningpolicies_load_rules()
+{
+
+ 
+}
+
 #if 0
 /* Load policy rules from config file and populate dedicated structure */
 void load_policy_rules(int argc, void **args)
@@ -735,7 +747,7 @@ void load_policy_rules(int argc, void **args)
 
 
 /* Generic function for tuning policies */
-int generic_tuning_policy(int argc, void **args)
+void generic_tuning_policy(int argc, void **args)
 {
   int i, j, namelen, verb, varclass, bind;
   int return_val;
@@ -804,10 +816,10 @@ int generic_tuning_policy(int argc, void **args)
   }
 
   /* Call the inner logic */  
-  op_t op = rules[rule_id].operation;
-  logic_t logic = rules[rule_id].logic;
+  //op_t op = rules[rule_id].operation;
+  //logic_t logic = rules[rule_id].logic;
 
-  INNERLOGIC(logic);
+ // INNERLOGIC(logic);
 
 #if 0
   if(rules[rule_id].is_array_pvar == 1) {
@@ -912,7 +924,8 @@ int plugin_tuning_policy(int argc, void **args) {
     printf("Unable to find the indexes of PVARs required for tuning\n");
     return -1;
   } else {
-    dprintf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
+    printf("dprintf\n");
+    //dprintf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
   }
  }
 
@@ -924,7 +937,7 @@ int plugin_tuning_policy(int argc, void **args) {
     if((pvar_value_buffer[pvar_vbuf_allocated_index][i] - pvar_value_buffer[pvar_max_vbuf_usage_index][i]) > PVAR_VBUF_WASTED_THRESHOLD) {
       has_threshold_been_breached_in_any_pool = 1;
       reduced_value_array[i] = pvar_value_buffer[pvar_max_vbuf_usage_index][i];
-      dprintf("Threshold breached: Max usage for %d pool is %llu but vbufs allocated are %llu\n", i, pvar_value_buffer[pvar_max_vbuf_usage_index][i], pvar_value_buffer[pvar_vbuf_allocated_index][i]);
+      //dprintf("Threshold breached: Max usage for %d pool is %llu but vbufs allocated are %llu\n", i, pvar_value_buffer[pvar_max_vbuf_usage_index][i], pvar_value_buffer[pvar_vbuf_allocated_index][i]);
     } else {
       reduced_value_array[i] = pvar_value_buffer[pvar_vbuf_allocated_index][i] + 10; //Some value higher than current allocated
     }
@@ -945,14 +958,20 @@ int plugin_tuning_policy(int argc, void **args) {
   if(has_threshold_been_breached_in_any_pool) {
     sprintf(metric_string,"%s,%s", CVAR_ENABLING_POOL_CONTROL, reduced_value_cvar_string);
     sprintf(value_string,"%d,%s", 1, reduced_value_cvar_value_string);
-    dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
+    printf("dprintf\n");
+    //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
+    //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   } else {
     sprintf(metric_string,"%s", CVAR_ENABLING_POOL_CONTROL);
     sprintf(value_string,"%d", 0);
-    dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
+    //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
+    //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   }
  
   return return_val;
 }
+
+
+#ifdef __cplusplus
+}
+#endif

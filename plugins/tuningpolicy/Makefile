@@ -12,7 +12,7 @@ CC = $(TAU_CC)
 
 CXX = $(TAU_CXX)
 
-TAUINC = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile -I$(TAUROOT)/plugins/json-c/inst/include/json-c
+TAUINC = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile -I$(TAUROOT)/plugins/json-c/inst/include/json-c -I$(TAUROOT)/plugins/tuningpolicy/boost_1_63_0
 
 CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAUINC) $(TAU_DEFS) $(USER_OPT) $(TAU_INTERNAL_FLAGS) -fPIC -Wall 
 
@@ -32,11 +32,11 @@ install: $(SHAREDLIBS)
 
 #tuning_policies.so:  
 tuning_policies.so: tuning_policies.o
-	$(CC) -shared -o tuning_policies.so tuning_policies.o
+	$(CXX) -shared -o tuning_policies.so tuning_policies.o
 
 #tuning_policies.o: 
 tuning_policies.o:      tuning_policies.c
-	$(CC) $(CFLAGS)  -c tuning_policies.c 
+	$(CXX) $(CFLAGS)  -c tuning_policies.c 
 
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)
