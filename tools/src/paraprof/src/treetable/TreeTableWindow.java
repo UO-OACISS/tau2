@@ -299,10 +299,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         }
 
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.anchor = GridBagConstraints.CENTER;//.SOUTH;
+        gbc.anchor = GridBagConstraints.SOUTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        addCompItem(scrollPane, gbc, 0, 1,1,1);// GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
+        addCompItem(scrollPane, gbc, 0, 1, GridBagConstraints.REMAINDER,1);
 
         validate();
     }
