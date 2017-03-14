@@ -1,7 +1,7 @@
 {
  "rule": {
         "id":1,
-        "num_pvars":2
+        "num_pvars":2,
  	"pvars":["pvar1","pvar2[10]"],
  	"cvars":["cvar1","cvar2[10]"],
         "logic": {
@@ -18,16 +18,18 @@
  				"rightoperand":"PVAR_VBUF_WASTED_THRESHOLD",
  				"operator":">"
         		},
-                	"result": {
-				"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
- 				"resrightoperand":"pvar_max_vbuf_usage_index",
- 				"resoperator":"="
-                	},
-                        "result": {
-                        	"resleftoperand":"has_threshold_been_breached_in_any_pool",
-  				"resrightoperand":1,
-				"resoperator":"="
-                        },
+                        "results": [
+				{ "result": {
+					"leftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+					"rightoperand":"pvar_max_vbuf_usage_index",
+					"operator":"="
+				}},
+ 				{ "result": {
+					"leftoperand":"has_threshold_been_breached_in_any_pool",
+					"rightoperand":1,
+					"operator":"="
+				}}
+			],
                 	"else": {
                 		"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
   		        	"resoperator":"=",
@@ -45,10 +47,12 @@
 				"rightoperand":1,
 				"operator":"=="
 			},
-			"result": {
-                        	"metrics":["CVAR_ENABLING_POOL_CONTROL","CVAR_SPECIFYING_REDUCED_POOL_SIZE"],
-                                "values":1,reduced_value_cvar_string
-                        },
+                        "results": [
+                        	{ "result": {
+					"metrics":["CVAR_ENABLING_POOL_CONTROL","CVAR_SPECIFYING_REDUCED_POOL_SIZE"],
+					"values":[1,"reduced_value_cvar_string"]	
+				}}
+                        ],
                         "else": {
                         	"metrics":"CVAR_ENABLING_POOL_CONTROL",
 				"values":0
