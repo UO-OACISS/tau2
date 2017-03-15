@@ -42,10 +42,11 @@ void* Tau_util_register_plugin(const char *name, void* handle, PluginManager* pl
 
 #ifdef __cplusplus
 extern "C" void Tau_util_plugin_manager_register_role_hook(PluginManager* plugin_manager, const char* role_name, PluginRoleHook role_hook);
+extern "C" void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
 #else
 void Tau_util_plugin_manager_register_role_hook(PluginManager* plugin_manager, const char* role_name, PluginRoleHook role_hook);
+void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
 #endif
 
-extern "C" void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
 int Tau_util_cleanup_all_plugins(PluginManager* plugin_manager);
 #endif /* _TAU_PLUGIN_H_ */
