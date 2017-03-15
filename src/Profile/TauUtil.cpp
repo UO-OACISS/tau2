@@ -286,7 +286,7 @@ extern "C" void Tau_util_plugin_manager_register_role_hook(PluginManager* plugin
 }
 
 /*Apply all role hooks for a given role_name - There may be more than one*/
-void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name) {
+extern "C" void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void **argv) {
   int returnVal;
 
   PluginRoleHookNode* role_plugin = (plugin_manager->role_hook_list)->head;
@@ -294,7 +294,7 @@ void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_na
 
   while(role_plugin) {
     if(strcmp(role_name, role_plugin->role_name) == 0) {
-      returnVal = role_plugin->role_hook();
+      returnVal = role_plugin->role_hook(argc, argv);
       if(returnVal)
         printf("TAU: Failure encountered when invoking role function of plugin: %s\n", plugin->plugin_name);
     }

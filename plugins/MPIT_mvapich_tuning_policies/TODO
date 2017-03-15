@@ -1,0 +1,6 @@
+List of things to do before PLugin can go mainstream (in order of importance:
+1. Define a clear interface that defines what information is shared between TAU and the plugins - and how that information is shared. As of now, we have a simple format of "argc, argv" that is passed to each role hook. This is clearly too crude for a generic interface
+2. Create a separate include file for the plguins - one that is included by TAU and plugins alike, and one specific to TAU that plugins should NOT be exposed to.
+3. Define correct cleanup functions for individual plugins - a linked link holding Plugin info is good enough for now, as long as it is implemented correctly. 
+4.Find the correct place for the cleanup function - Tau_Finalize?
+5. Define a TAU configure flag, just like for MPIT that generates appropriate compiler flags (-DTAU_PLUGIN ?) to compile plugins and call plugin code from within TAU only when tau is configured like this
