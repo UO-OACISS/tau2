@@ -6,8 +6,7 @@
  	"cvars":["cvar1","cvar2[10]"],
         "logic": {
   		"num_pvars":2,
-		"operations": [
-			{ "operation": {
+		 "operation": {
                                 "array": "pvar_max_vbuf_usage_index",
                			"condition": {
 					"stmt":"if",
@@ -32,16 +31,16 @@
 					}}
 				],
                 		"else": {
-                			"resleftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
-  		        		"resoperator":"=",
-                        		"resrightoperand": {
+                			"leftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+  		        		"operator":"=",
+                        		"rightoperand": {
                         			"leftoperand":"pvar_max_vbuf_allocated_index",
 						"rightoperand":10,
  						"operator":"+"
                         		}	
                	 		}
-        		}},
-			{ "writecvars": {
+        		},
+			"writecvars": {
 				"condition": {
 					"stmt":"if",
 					"leftoperand":"has_threshold_been_breached",
@@ -58,8 +57,7 @@
                         		"metrics":"CVAR_ENABLING_POOL_CONTROL",
 					"values":0
                         	}
-			}}
-		]
+			}
         }
  }
 }

@@ -120,15 +120,23 @@ struct groupoperand_s
 {
  struct operand_s leftop;
  struct operand_s rightop;
- enum operator_enum_e operator; 
+ enum operator_enum_e op; 
 };
 
 typedef struct groupoperand_s groupoperand_t;
 
 struct node_s
 {
- struct node_s **children;
- node_enum_t type;
+ //struct node_s **children;
+ //node_enum_t type;
+ 
+ //struct node_s *loperand;
+ //struct node_s *roperand;
+ 
+ operand_t *loperand;
+ operand_t *roperand;
+ 
+ operator_enum_t ope;
 };
 
 typedef struct node_s node_t;
@@ -138,14 +146,14 @@ struct condition_s
   //char *stmt;
   enum stmt_enum_e stmt;
 
+  node_t *root; // Tree containing operands and operators
+
 #if 0  
   union {
     struct groupoperand_s leftgroupoperand;
     struct operand_s leftop; 
   };
 #endif
- 
-  operand_t leftop;
 
 #if 0
   union {
@@ -154,9 +162,7 @@ struct condition_s
   };
 #endif
 
-  operand_t rightop; 
-
-  enum operator_enum_e operator;  
+  enum operator_enum_e ope;  
 };
 
 typedef struct condition_s condition_t;
@@ -164,7 +170,7 @@ typedef struct condition_s condition_t;
 struct res_s
 {
 
-#if 1
+#if 0
   union {
     struct groupoperand_s resleftgroupoperand;
     struct operand_s resleftop; 
@@ -175,6 +181,8 @@ struct res_s
     struct operand_s resrightop;
   };
 #endif
+
+  node_t *root; // Tree containing operands and operators
 
   enum operator_enum_e resoperator;  
 };
@@ -191,8 +199,9 @@ typedef struct loop_s loop_t;
 struct op_s
 {
  struct loop_s loop; 
- condition_t cond;
- res_t *result;
+ condition_t *cond;
+ int num_results;
+ res_t **results;
  res_t *elseresult;
 };
 
@@ -200,10 +209,11 @@ typedef struct op_s op_t;
 
 struct logic_s
 { 
-  int num_pvars; 
   int is_pvar_array;
   int array_size;
-  op_t op;
+  int num_ops;
+  int num_pvars;
+  op_t *op;
 };
 
 typedef struct logic_s logic_t;
@@ -215,7 +225,6 @@ struct tuning_policy_rule_s
   int num_pvars;
   int is_array_pvar;
   struct logic_s logic;
-  struct op_s operation; 
 };
 
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
@@ -248,9 +257,9 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define OPUPEQ(leftop,rightop) \
 	leftop >= rightop	
 
-#define RESULT(resleftop,resrightop,operator) \
- 	resleftop = resrightop;
-
+#define RESULT(root) \
+        printf("RESULT\n")
+ 	//resleftop = root->loperand;
 
 #define EVALEQ(leftop,op,rightop) leftop = rightop ? 1 : 0
 
@@ -269,7 +278,7 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
         }
 
 #define IFSTMT(leftop,op,rightop) \
-	if(EVALEQ(leftop.value,op,rightop.value)) { \
+	if(EVALEQ(leftop->value,op,rightop->value)) { \
 	  return 1; \
         } \
         else { \
@@ -305,15 +314,17 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define LEFTOPERAND(leftop,rightop,operator) \
 	leftop operator rightop
 
-#define POPTREE(root) \
-        
+//#define POPTREE(root) \
 
-#define CONDITION(stmt,leftoperand,rightoperand,operator) \
- 	IFSTMT(leftoperand,operator,rightoperand)
+#define CONDITION3(stmt,leftoperand,rightoperand,ope) \
+ 	IFSTMT(leftoperand,ope,rightoperand)
 //	stmt(leftoperand operator rightoperand)
 
 #define CONDITION2(node) \
 	printf("CONDITION: POP tree\n");
+
+#define CONDITION(stmt,root) \
+	IFSTMT(root->loperand,root->ope,root->roperand)
 
 #define RESULT2(resleftop,resrightop,operator) \
 	resleftop operator resrightop;
@@ -324,47 +335,53 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define ELSE(resleftop,resrightop,operator) \
         resleftop = resrightop;
 
-#define FOR(index) \
-	for(i=0; i<tau_pvar_count[index]; i++)
+#define FOR(bound) \
+	for(i=0; i<tau_pvar_count[bound]; i++)
 
+#if 0
 #define WRITECVARS2(op) \
 	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
-	  res_t res = op.result; \
+	  res_t *res = op->result; \
  	  RESULT(res.resleftop,res.resrightop,res.resoperator); \
           sprintf(metric_string,metric); \
           sprintf(value_string,value); \
           Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
         } \
-        if(op.elseresult != NULL) { \
-         res_t elseres = op.elseresult; \
+        if(op->elseresult != NULL) { \
+         res_t elseres = op->elseresult; \
          sprintf(metric_string,metric); \
          sprintf(value_string,value); \
          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
         }
+#endif
 
 #define WRITECVARS(op,metric_string,value_string) \
-	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
-          res_t *res = op.result; \
-          RESULT(res->resleftop,res->resrightop,res->resoperator); \
-          sprintf(metric_string,"%d",res->resleftop); \
-          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        condition_t *cond = op->cond; \
+	CONDITION(cond->stmt,cond->root) { \
+          res_t *res = op->results[0]; \
+          RESULT(res->root); \
+          sprintf(metric_string,"%d",res->root); \
         } \
-        if(op.elseresult != NULL) { \
-          res_t *elseres = op.elseresult; \
-         Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
+        if(op->elseresult != NULL) { \
+          res_t *elseres = op->elseresult; \
         }
 
 #define INNEROP(op) \
-	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
-          res_t *res = op.result; \
-          RESULT(res->resleftop,res->resrightop,res->resoperator); \
+        condition_t *cond = op->cond; \
+	CONDITION(cond->stmt,cond->root) { \
+          int j; \
+          for(j=0; j<op->num_results; j++) { \
+           res_t *res = op->results[j]; \
+           RESULT(res->root); \
+          } \
         } \
-        if(op.elseresult != NULL) { \
-          res_t *elseres = op.elseresult; \
-          RESULT(elseres->resleftop,elseres->resrightop,elseres->resoperator); \
+        if(op->elseresult != NULL) { \
+          res_t *elseres = op->elseresult; \
+          RESULT(elseres->root); \
  	} 
 
 #define INNERLOGIC(logic) \
+        op_t *op = logic.op; \
 	if(logic.is_pvar_array == 1) { \
           unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[logic.array_size],sizeof(unsigned long long int)); \
           char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
@@ -372,11 +389,10 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
           char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
           strcpy(value_cvar_value_string,""); \
           FOR(logic.array_size) { \
-            op_t op = logic.op; \
             INNEROP(op); \
             for(j=0; j<logic.num_pvars; j++) { \
               if(i == (tau_pvar_count[j])) { \
-                sprintf(metric_string, "%s[%d]", op.result->resleftop, i); \
+                sprintf(metric_string, "%s[%d]", op->results[0], i); \
                 sprintf(value_string, "%llu", value_array[i]); \
               } \
             } \
@@ -387,11 +403,10 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
           strcpy(value_cvar_string,""); \
           char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
           strcpy(value_cvar_value_string,""); \
-          op_t op = logic.op; \
           INNEROP(op); \
           for(j=0; j<tau_pvar_count[logic.num_pvars]; j++) { \
             if(i == (tau_pvar_count[j]))  { \
-              sprintf(metric_string,"%s", op.result->resleftop); \
+              sprintf(metric_string,"%s", op->results[0]); \
               sprintf(value_string, "%llu", value); \
             } \
           } \
@@ -619,7 +634,9 @@ void json_parse(json_object * jobj)
 } 
 #endif
 
-/* Load JSON file and store string into a JSON object  */
+/* Load JSON file and store string into a JSON object  
+ * DEPRECATED
+ * */
 void read_json_rules()
 {
   const char *filename = "./policy.json";
@@ -653,6 +670,9 @@ void read_json_rules()
 
 }
 
+/*
+ * Load JSON file using C++ Boost and store into proper structures
+ */
 void tuningpolicies_load_rules()
 {
 
@@ -806,14 +826,14 @@ int generic_tuning_policy(int argc, void **args)
     for(j=0; j<rules[rule_id].num_pvars; j++) {
       if(pvar_index[j] == -1) {
         printf("Unable to find the indexes of PVARs required for tuning\n");
-        return;
+        return -1;
       }
     }
 
   }
 
   /* Call the inner logic */  
-  op_t op = rules[rule_id].operation;
+  //op_t op = rules[rule_id].operation;
   logic_t logic = rules[rule_id].logic;
 
   INNERLOGIC(logic);
@@ -844,6 +864,8 @@ int generic_tuning_policy(int argc, void **args)
     if(j == (tau_pvar_count[j])) {}
   }
 #endif 
+
+  return 1;
 
 }
 
@@ -921,7 +943,8 @@ int plugin_tuning_policy(int argc, void **args) {
     printf("Unable to find the indexes of PVARs required for tuning\n");
     return -1;
   } else {
-    dprintf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
+    printf("dprintf\n");
+    //dprintf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
   }
  }
 
@@ -933,7 +956,7 @@ int plugin_tuning_policy(int argc, void **args) {
     if((pvar_value_buffer[pvar_vbuf_allocated_index][i] - pvar_value_buffer[pvar_max_vbuf_usage_index][i]) > PVAR_VBUF_WASTED_THRESHOLD) {
       has_threshold_been_breached_in_any_pool = 1;
       reduced_value_array[i] = pvar_value_buffer[pvar_max_vbuf_usage_index][i];
-      dprintf("Threshold breached: Max usage for %d pool is %llu but vbufs allocated are %llu\n", i, pvar_value_buffer[pvar_max_vbuf_usage_index][i], pvar_value_buffer[pvar_vbuf_allocated_index][i]);
+      //dprintf("Threshold breached: Max usage for %d pool is %llu but vbufs allocated are %llu\n", i, pvar_value_buffer[pvar_max_vbuf_usage_index][i], pvar_value_buffer[pvar_vbuf_allocated_index][i]);
     } else {
       reduced_value_array[i] = pvar_value_buffer[pvar_vbuf_allocated_index][i] + 10; //Some value higher than current allocated
     }
@@ -954,13 +977,13 @@ int plugin_tuning_policy(int argc, void **args) {
   if(has_threshold_been_breached_in_any_pool) {
     sprintf(metric_string,"%s,%s", CVAR_ENABLING_POOL_CONTROL, reduced_value_cvar_string);
     sprintf(value_string,"%d,%s", 1, reduced_value_cvar_value_string);
-    dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
+    //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
+    //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   } else {
     sprintf(metric_string,"%s", CVAR_ENABLING_POOL_CONTROL);
     sprintf(value_string,"%d", 0);
-    dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
+    //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
+    //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   }
  
   return return_val;
