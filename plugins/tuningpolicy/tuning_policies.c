@@ -441,6 +441,8 @@ tuning_policy_rule_t rules[MAX_NB_RULES];
 
 //static json_object *jso = NULL;
 
+extern "C" int Tau_mpi_t_parse_and_write_cvars(const char *cvar_metrics, const char *cvar_values);
+
 int parse_logic(node_t *tree)
 {
 
@@ -978,12 +980,12 @@ int plugin_tuning_policy(int argc, void **args) {
     sprintf(metric_string,"%s,%s", CVAR_ENABLING_POOL_CONTROL, reduced_value_cvar_string);
     sprintf(value_string,"%d,%s", 1, reduced_value_cvar_value_string);
     //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
+    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   } else {
     sprintf(metric_string,"%s", CVAR_ENABLING_POOL_CONTROL);
     sprintf(value_string,"%d", 0);
     //dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    //Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
+    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
   }
  
   return return_val;
