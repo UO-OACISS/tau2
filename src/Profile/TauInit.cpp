@@ -113,6 +113,8 @@ int dl_initialized = 0;
 int dl_initialized = 1;
 #endif
 
+//Globally visible plugin manager
+PluginManager* plugin_manager = NULL;
 
 #ifndef TAU_DISABLE_SIGUSR
 
@@ -523,7 +525,7 @@ extern "C" int Tau_init_initializeTAU()
 
 /* TAU_PLUGIN: I think we may need conditional compilation here */  
   printf("TAU INIT: Trying to load plugins..\n");
-  PluginManager* plugin_manager = Tau_PluginManager_new();
+  plugin_manager = Tau_PluginManager_new();
 
   /* Load plugins */
   if (!Tau_util_load_and_register_plugins(plugin_manager)) {
@@ -531,8 +533,8 @@ extern "C" int Tau_init_initializeTAU()
   }
 /* end TAU_PLUGIN */
 
-  if(!Tau_util_cleanup_all_plugins(plugin_manager))
-    printf("TAU: Successfully cleaned up all plugins\n");
+/*  if(!Tau_util_cleanup_all_plugins(plugin_manager))
+    printf("TAU: Successfully cleaned up all plugins\n");*/
 
 #ifdef TAU_ANDROID
   pthread_t thr;
