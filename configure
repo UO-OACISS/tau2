@@ -7784,11 +7784,20 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
             err=$?	 
         else
-          ./configure \
-            CFLAGS=-fPIC CXXFLAGS=-fPIC \
-            --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
-            err=$?
+	  if [ "$c_compiler" = pgcc ]
+	  then
+            ./configure \
+              CFLAGS="-fPIC -noswitcherror" CXX=pgc++ CXXFLAGS=-fPIC \
+              --prefix=$bfddir \
+              --disable-nls --disable-werror > tau_configure.log 2>&1
+              err=$?
+          else 
+            ./configure \
+              CFLAGS=-fPIC CXXFLAGS=-fPIC \
+              --prefix=$bfddir \
+              --disable-nls --disable-werror > tau_configure.log 2>&1
+              err=$?
+          fi 
         fi
         ;;
       esac
