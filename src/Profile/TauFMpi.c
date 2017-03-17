@@ -5190,14 +5190,26 @@ MPI_Fint *ierr;
 {
   TAU_DECL_LOCAL(MPI_Status, local_statuses);
   TAU_DECL_ALLOC_LOCAL(MPI_Request, local_requests, *count);
-  TAU_ALLOC_LOCAL(MPI_Status, local_statuses, *count);
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
+    TAU_ALLOC_LOCAL(MPI_Status, local_statuses, *count);
+  }
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
-  TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c);
-  *ierr = MPI_Testall( *count, local_requests, flag, local_statuses );
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
+    TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c);
+  }
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
+    *ierr = MPI_Testall( *count, local_requests, flag, local_statuses );
+  } else {
+    *ierr = MPI_Testall( *count, local_requests, flag, MPI_STATUSES_IGNORE);
+  }
   TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
-  TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *count, MPI_Status_c2f);
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
+    TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *count, MPI_Status_c2f);
+  }
   TAU_FREE_LOCAL(local_requests);
-  TAU_FREE_LOCAL(local_statuses);
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
+    TAU_FREE_LOCAL(local_statuses);
+  }
 }
 
 void  mpi_testall__( count, array_of_requests, flag, array_of_statuses, ierr )
@@ -6196,7 +6208,7 @@ MPI_Fint *ierr;
   TAU_DECL_LOCAL(MPI_Status, local_statuses);
   TAU_DECL_ALLOC_LOCAL(MPI_Request, local_requests, *count);
   /* *CWL* - keep an eye on this. Make sure MPI_F_STATUSES_IGNORE is portable. */
-  if (array_of_statuses != MPI_F_STATUSES_IGNORE) {
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
     TAU_ALLOC_LOCAL(MPI_Status, local_statuses, *count);
   }
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
@@ -6204,8 +6216,11 @@ MPI_Fint *ierr;
      MPI implementation on ember.ncsa.illinois.edu. Am leaving original code
      commented until the bugfix is confirmed rock-solid. */
   /*  TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c); */
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
+    TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c);
+  }
 
-  if (array_of_statuses != MPI_F_STATUSES_IGNORE) {
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
     *ierr = MPI_Waitall( *count, local_requests, local_statuses );
   } else {
     /* *CWL* - Remember, we're invoking the C interface now. */
@@ -6213,11 +6228,11 @@ MPI_Fint *ierr;
   }
   TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
 
-  if (array_of_statuses != MPI_F_STATUSES_IGNORE) {
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
     TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *count, MPI_Status_c2f);
   }
   TAU_FREE_LOCAL(local_requests);
-  if (array_of_statuses != MPI_F_STATUSES_IGNORE) {
+  if (array_of_statuses != *(mpi_predef_statuses_ignore())) {
     TAU_FREE_LOCAL(local_statuses);
   }
 }
