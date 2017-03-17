@@ -389,6 +389,12 @@ for arg in "$@" ; do
         		# use the wrapper link_options.tau during linking
         		;;
 
+        	   -optNoTrackPthread)
+        		trackPthread=$FALSE
+        		echoIfDebug "NOTE: turning TrackPthread on"
+        		# use the wrapper link_options.tau during linking
+        		;;
+
         	   -optTrackGOMP)
         		trackGOMP=$TRUE
         		echoIfDebug "NOTE: turning TrackGOMP on"
@@ -1628,7 +1634,7 @@ if [ $numFiles == 0 ]; then
                 optLinking="$optLinking @$link_options_file $optLinking"
                 if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
                   echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
-                  optLinking=`echo $optLinking  | sed -e 's/-lgcc_s//g'`
+                  optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
                 fi
 	fi
     fi
@@ -2333,7 +2339,7 @@ else
 		      optLinking="@$link_options_file $optLinking @$link_options_file"
                 if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
                   echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
-                  optLinking=`echo $optLinking  | sed -e 's/-lgcc_s//g'`
+                  optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
                 fi
 	      fi
           fi

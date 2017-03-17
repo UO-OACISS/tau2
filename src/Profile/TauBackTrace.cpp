@@ -17,6 +17,10 @@ using namespace std;
 #define TAU_EXECINFO 1
 #endif
 
+#ifdef __APPLE__
+#include <dlfcn.h>
+#endif /* __APPLE__ */
+
 extern "C" void finalizeCallSites_if_necessary();
 
 struct BacktraceFrame
@@ -53,16 +57,26 @@ static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
 
       // Get source information from BFD
       TauBfdInfo info;
+#if defined(__APPLE__)
+      Dl_info dlinfo;
+      int rc = dladdr((const void *)addr, &dlinfo);
+      if (rc != 0) {
+        info.filename = strdup(dlinfo.dli_fname);
+        info.funcname = strdup(dlinfo.dli_sname);
+        info.lineno = 0; // Apple doesn't give us line numbers.
+      }
+#else
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, info);
 
       // Try to get the name of the memory map containing the address
       TauBfdAddrMap const * map = Tau_bfd_getAddressMap(bfdUnitHandle, addr);
       char const * mapname = map ? map->name : "unknown";
-
+      // Record information
+      frames[j].mapname = mapname;
+#endif
       // Record information
       frames[j].funcname = info.funcname;
       frames[j].filename = info.filename;
-      frames[j].mapname = mapname;
       frames[j].lineno = info.lineno;
     }
   } else {
