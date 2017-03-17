@@ -1,4 +1,5 @@
 #ifdef __APPLE__
+#include <dlfcn.h>
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #endif /* __APPLE__ */
 
@@ -225,7 +226,22 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 
   // Use BFD to look up the callsite info
   TauBfdInfo resolvedInfo;
+#if defined(__APPLE__)
+  bool resolved;
+      Dl_info info;
+      int rc = dladdr((const void *)addr, &info);
+      if (rc == 0) {
+        resolved = false;
+      } else {
+        resolved = true;
+        resolvedInfo.probeAddr = addr;
+        resolvedInfo.filename = strdup(info.dli_fname);
+        resolvedInfo.funcname = strdup(info.dli_sname);
+        resolvedInfo.lineno = 0; // Apple doesn't give us line numbers.
+      }
+#else
   bool resolved = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, resolvedInfo);
+#endif
 
   // Prepare and return the callsite string
   char * resolvedBuffer = NULL;

@@ -56,6 +56,7 @@
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
+#include <dlfcn.h>
 #endif /* __APPLE__ */
 
 using namespace std;
@@ -133,9 +134,11 @@ static void issueBfdWarningIfNecessary()
 #ifndef TAU_BFD
   static bool warningIssued = false;
   if (!warningIssued) {
+#ifndef __APPLE__
     fprintf(stderr,"TAU Warning: Comp_gnu - "
         "BFD is not available during TAU build. Symbols may not be resolved!\n");
     fflush(stderr);
+#endif
     warningIssued = true;
   }
 #endif
@@ -332,7 +335,18 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       if (!node->fi) {
         // Resolve function info if it hasn't already been retrieved
         if (!node->info.probeAddr) {
+#if defined(__APPLE__)
+          Dl_info info;
+          int rc = dladdr((const void *)addr, &info);
+          if (rc != 0) {
+            node->info.probeAddr = addr;
+            node->info.filename = strdup(info.dli_fname);
+            node->info.funcname = strdup(info.dli_sname);
+            node->info.lineno = 0; // Apple doesn't give us line numbers.
+          }
+#else
           Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+#endif
         }
 
         //Do not profile this routine, causes crashes with the intel compilers.

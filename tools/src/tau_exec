@@ -752,6 +752,10 @@ fi
 
 
 if [ $verbose = "true" ] ; then
+  DY=""
+  if [ $apple = 1 ]; then
+    DY="DY"
+  fi
   echo "Matching bindings:"
   tau-config --list-matching $binding_options
   echo ""
@@ -760,9 +764,9 @@ if [ $verbose = "true" ] ; then
   echo ""
   echo "Configuration:"
   echo ""
-  echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
-  echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
-  echo "Setting LD_AUDIT to $TAUEX_LD_AUDITOR"
+  echo "Setting ${DY}LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
+  echo "Setting ${DY}LD_PRELOAD to $TAUEX_LD_PRELOAD"
+  echo "Setting ${DY}LD_AUDIT to $TAUEX_LD_AUDITOR"
   echo "Setting PYTHONPATH to $PYTHONPATH"
   echo ""
 fi
@@ -839,20 +843,28 @@ else
       echo "set env LD_BIND_NOW=1" >> .gdb_commands 
     fi
     if [ $apple = 1 ]; then
-      echo "set env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
-      echo "set env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
-      echo "set env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
+      echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
+      echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
+      echo "_regexp-env DYLD_LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands    
+      echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
+      if [ $# -gt 1 ] ; then
+        echo "settings set target.run-args ${*:2}" >> .gdb_commands
+      fi
     else
       echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
       echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
       echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
+      if [ $memory_debug = "true" ] ; then
+        echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
+        echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
+      fi
+      echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
     fi
-    if [ $memory_debug = "true" ] ; then
-      echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
-      echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
+    if [ $apple = 1 ]; then
+        lldb -s .gdb_commands "$1"
+    else
+        gdb -x .gdb_commands "$1"
     fi
-    echo "set arg ${*:2}" >> .gdb_commands
-    gdb -x .gdb_commands "$1"
     rm -f ./.gdb_commands
     exit 0;
   fi

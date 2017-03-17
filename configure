@@ -3672,8 +3672,11 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs CLANG"
         tauoptions="${tauoptions}-clang"
 	if [ $machine = apple ]; then
+	    gnu=yes
 	    # MPI on Apple OS X has issues with shared objects
+            fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
             fixmakeargs="$fixmakeargs NOSHARED APPLECXX"
+
         fi
         if [ $openmp = yes ]; then 
           fixmakeargs="$fixmakeargs CLANG_OPENMP"
@@ -7984,7 +7987,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
-if [ $bfd_worked = "no" ] ; then
+if [ $bfd_worked = "no" -a "$machine" != "apple" ] ; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
