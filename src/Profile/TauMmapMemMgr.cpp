@@ -279,4 +279,16 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
     return;
 }
 
+#else /* TAU_WINDOWS */
+#include <stdlib.h>
+extern "C" void Tau_MemMgr_initIfNecessary(void) {
+}
+extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
+}
+extern "C" void * Tau_MemMgr_malloc(int tid, size_t size) {
+  return malloc(size);
+}
+extern "C" void Tau_MemMgr_free(int tid, void *addr, size_t size) {
+  free(addr);
+}
 #endif
