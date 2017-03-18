@@ -390,12 +390,14 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
           strcpy(value_cvar_value_string,""); \
           FOR(logic.array_size) { \
             INNEROP(op); \
-            for(j=0; j<logic.num_pvars; j++) { \
+            for(j=0; j<tau_pvar_count[logic.num_pvars]; j++) { \
               if(i == (tau_pvar_count[j])) { \
                 sprintf(metric_string, "%s[%d]", op->results[0], i); \
                 sprintf(value_string, "%llu", value_array[i]); \
               } \
             } \
+            strcat(value_cvar_string,metric_string); \
+            strcat(value_cvar_value_string,value_string); \
           } \
         } else { \
           unsigned long long int value; \
@@ -574,7 +576,7 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
-#if 0
+#if 1
 void json_parse_array( json_object *jobj, char *key) 
 {
   void json_parse(json_object * jobj); /*Forward Declaration*/

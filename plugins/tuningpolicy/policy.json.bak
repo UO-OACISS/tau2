@@ -1,0 +1,63 @@
+{
+ "rule": {
+        "id":1,
+        "num_pvars":2,
+ 	"pvars":["pvar_max_vbuf_usage_index","pvar_vbuf_allocated_index"],
+ 	"cvars":["cvar1","cvar2[10]"],
+        "logic": {
+  		"num_pvars":2,
+		 "operation": {
+                                "array": "pvar_max_vbuf_usage_index",
+               			"condition": {
+					"stmt":"if",
+                			"leftoperand": {
+			     			"leftoperand":"pvar_vbuf_allocated_index",
+              		     			"rightoperand":"pvar_max_vbuf_usage_index",
+ 			     			"operator":"-"	
+					},
+ 					"rightoperand":"PVAR_VBUF_WASTED_THRESHOLD",
+ 					"operator":">"
+        			},
+                        	"results": [
+					{ "result": {
+						"leftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+						"rightoperand":"pvar_max_vbuf_usage_index",
+						"operator":"="
+					}},
+ 					{ "result": {
+						"leftoperand":"has_threshold_been_breached_in_any_pool",
+						"rightoperand":1,
+						"operator":"="
+					}}
+				],
+                		"else": {
+                			"leftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+  		        		"operator":"=",
+                        		"rightoperand": {
+                        			"leftoperand":"pvar_max_vbuf_allocated_index",
+						"rightoperand":10,
+ 						"operator":"+"
+                        		}	
+               	 		}
+        		},
+			"writecvars": {
+				"condition": {
+					"stmt":"if",
+					"leftoperand":"has_threshold_been_breached",
+					"rightoperand":1,
+					"operator":"=="
+				},
+                        	"results": [
+                        		{ "result": {
+						"metrics":["CVAR_ENABLING_POOL_CONTROL","CVAR_SPECIFYING_REDUCED_POOL_SIZE"],
+						"values":[1,"reduced_value_cvar_string"]	
+					}}
+                        	],
+                        	"else": {
+                        		"metrics":"CVAR_ENABLING_POOL_CONTROL",
+					"values":0
+                        	}
+			}
+        }
+ }
+}
