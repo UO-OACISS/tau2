@@ -19,7 +19,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+#ifndef TAU_WINDOWS
 #include <dlfcn.h>
+#endif /* TAU_WINDOWS */
 
 
 /*********************************************************************
@@ -185,7 +187,11 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
   if(pds == NULL)
     pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
 
+#ifndef TAU_WINDOWS
   void *handle = dlopen(fullpath, RTLD_NOW);
+#else
+  void *handle = NULL;
+#endif /* TAU_WINDOWS */
   //dstring_free(slashedpath);
   
   if (handle) {
@@ -195,13 +201,16 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
     handle_node->next = pds->handle_list;
     pds->handle_list = handle_node;
   } else {
+#ifndef TAU_WINDOWS 
     printf("Error loading DSO: %s\n", dlerror());
+#endif /* TAU_WINDOWS */
     return -1;
   } 
 
   sprintf(initFuncName, "plugin_%s", name);  
 
   /* Get symbol of plugin entry point */
+#ifndef TAU_WINDOWS
   void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(handle, initFuncName);
 
   if(!fn) {
@@ -212,6 +221,7 @@ int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
 
   /* Call plugin function  */
   fn(num_args, args);
+#endif /* TAU_WINDOWS */
 
   return 1;
 }
@@ -238,7 +248,9 @@ int Tau_util_cleanup_plugins()
 
   while (node) {
     PluginHandleList* next = node->next;
+#ifndef TAU_WINDOWS 
     dlclose(node->handle);
+#endif /* TAU_WINDOWS */
     free(node);
     node = next;
   }
