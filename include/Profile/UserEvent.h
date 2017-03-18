@@ -22,6 +22,7 @@
 #include <map>
 #include <Profile/TauInit.h>
 #include <Profile/TauEnv.h>
+#include <Profile/TauMmapMemMgr.h>
 
 
 namespace tau {
