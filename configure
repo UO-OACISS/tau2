@@ -3673,9 +3673,8 @@ case $cxx_compiler in
         tauoptions="${tauoptions}-clang"
 	if [ $machine = apple ]; then
 	    gnu=yes
-	    # MPI on Apple OS X has issues with shared objects
             fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
-            fixmakeargs="$fixmakeargs NOSHARED APPLECXX"
+            fixmakeargs="$fixmakeargs APPLECXX"
 
         fi
         if [ $openmp = yes ]; then 

@@ -35,7 +35,7 @@ extern int Tau_init_check_initialized();
 
 #define dprintf TAU_VERBOSE 
 
-#if (defined (TAU_BGP) || defined(TAU_XLC))
+#if (defined (TAU_BGP) || defined(TAU_XLC) || defined(__APPLE__))
 #define TAU_DISABLE_SYSCALL_WRAPPER
 #endif /* TAU_BGP || TAU_XLC */
 
