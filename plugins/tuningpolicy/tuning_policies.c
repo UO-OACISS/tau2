@@ -26,6 +26,7 @@
 
 #define MAX_TREE_DEPTH 32
 
+#if 0
 enum node_enum_e
 {
   ID = 0,
@@ -39,6 +40,18 @@ enum node_enum_e
   OPERATOR = 8,
   RESULT = 9,
   ELSE = 10
+};
+#endif
+
+enum node_enum_e
+{
+  OPEQUALS = 0,
+  OPUPPER = 1,
+  OPLOWER = 2,
+  OPUPPEREQUAL = 3,
+  OPLOWEREQUAL = 4,
+  LOPERAND = 5,
+  ROPRAND = 6
 };
 
 typedef enum node_enum_e node_enum_t;
@@ -127,14 +140,13 @@ typedef struct groupoperand_s groupoperand_t;
 
 struct node_s
 {
- //struct node_s **children;
- //node_enum_t type;
+ node_enum_t nodeType;
  
- //struct node_s *loperand;
- //struct node_s *roperand;
+ struct node_s *loperand;
+ struct node_s *roperand;
  
- operand_t *loperand;
- operand_t *roperand;
+ //operand_t *loperand;
+ //operand_t *roperand;
  
  operator_enum_t ope;
 };
@@ -203,8 +215,8 @@ struct op_s
  int array_size;
  condition_t *cond;
  int num_pvars;
- res_t *result;
- res_t *elseresult;
+ node_t *result;
+ node_t *elseresult;
 };
 
 typedef struct op_s op_t;
@@ -322,10 +334,10 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
  	IFSTMT(leftoperand,ope,rightoperand)
 //	stmt(leftoperand operator rightoperand)
 
-#define CONDITION2(node) \
+#define CONDITION(stmt,node) \
 	printf("CONDITION: POP tree\n");
 
-#define CONDITION(stmt,root) \
+#define CONDITION2(stmt,root) \
 	IFSTMT(root->loperand,root->ope,root->roperand)
 
 #define RESULT2(resleftop,resrightop,operator) \
@@ -341,22 +353,6 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 	for(i=0; i<tau_pvar_count[bound]; i++)
 
 #if 0
-#define WRITECVARS2(op) \
-	CONDITION(op.cond.stmt,op.cond.leftop,op.cond.rightop,op.cond.operator) { \
-	  res_t *res = op->result; \
- 	  RESULT(res.resleftop,res.resrightop,res.resoperator); \
-          sprintf(metric_string,metric); \
-          sprintf(value_string,value); \
-          Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
-        } \
-        if(op->elseresult != NULL) { \
-         res_t elseres = op->elseresult; \
-         sprintf(metric_string,metric); \
-         sprintf(value_string,value); \
-         Tau_mpi_t_parse_and_write_cvars(metric_string,value_string); \
-        }
-#endif
-
 #define WRITECVARS(op,metric_string,value_string) \
         condition_t *cond = op->cond; \
 	CONDITION(cond->stmt,cond->root) { \
@@ -371,12 +367,12 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define INNEROP(op) \
         condition_t *cond = op->cond; \
 	CONDITION(cond->stmt,cond->root) { \
-          res_t *res = op->result; \
-          RESULT(res->root); \
+          node_t *res = op->result; \
+          RESULT(res); \
         } \
         if(op->elseresult != NULL) { \
-          res_t *elseres = op->elseresult; \
-          RESULT(elseres->root); \
+          node_t *elseres = op->elseresult; \
+          RESULT(elseres); \
  	} 
 
 #define INNERLOGIC(op) \
@@ -413,6 +409,7 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
           strcat(value_cvar_string,metric_string); \
           strcat(value_cvar_value_string,value_string); \
         } 
+#endif
 
 /*
 struct tuning_policy_rule_s
@@ -439,6 +436,62 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 tuning_policy_rule_t rules[MAX_NB_RULES];
 
 //static json_object *jso = NULL;
+
+void innerop(struct op_s *op)
+{
+        condition_t *cond = op->cond; 
+	CONDITION(cond->stmt,cond->root) { 
+          node_t *res = op->result; 
+          RESULT(res); 
+        } 
+        if(op->elseresult != NULL) { 
+          node_t *elseres = op->elseresult; 
+          RESULT(elseres); 
+ 	} 
+}
+
+void outerop(struct op_s *op)
+{
+  char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH]; 
+  int *tau_pvar_count = NULL;
+  int i=0, j=0;
+
+  if(op->is_pvar_array == 1) { 
+    unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[op->array_size],sizeof(unsigned long long int)); 
+    char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
+    strcpy(value_cvar_string,""); 
+    char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
+    strcpy(value_cvar_value_string,""); 
+    for(i=0; i<op->array_size; i++) {
+      innerop(op); 
+      for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { 
+        if(i == (tau_pvar_count[j])) { 
+          sprintf(metric_string, "%s[%d]", op->result, i); 
+          sprintf(value_string, "%llu", value_array[i]); 
+        } 
+      } 
+      strcat(value_cvar_string,metric_string); 
+      strcat(value_cvar_value_string,value_string); 
+   } 
+  } else { 
+    unsigned long long int value; 
+    char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
+    strcpy(value_cvar_string,""); 
+    char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
+    strcpy(value_cvar_value_string,""); 
+    innerop(op); 
+    for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { 
+      if(i == (tau_pvar_count[j]))  { 
+        sprintf(metric_string,"%s", op->result); 
+        sprintf(value_string, "%llu", value); 
+      } 
+   } 
+   strcat(value_cvar_string,metric_string); 
+   strcat(value_cvar_value_string,value_string); 
+  }  
+
+}
+
 
 extern "C" int Tau_mpi_t_parse_and_write_cvars(const char *cvar_metrics, const char *cvar_values);
 
@@ -837,7 +890,8 @@ int generic_tuning_policy(int argc, void **args)
   op_t *op = rules[rule_id].op;
   //logic_t logic = rules[rule_id].logic;
 
-  INNERLOGIC(op);
+  outerop(op);
+  //INNERLOGIC(op);
 
 #if 0
   if(rules[rule_id].is_array_pvar == 1) {
