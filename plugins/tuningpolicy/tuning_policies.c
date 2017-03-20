@@ -199,9 +199,11 @@ typedef struct loop_s loop_t;
 struct op_s
 {
  struct loop_s loop; 
+ int is_pvar_array;
+ int array_size;
  condition_t *cond;
- int num_results;
- res_t **results;
+ int num_pvars;
+ res_t *result;
  res_t *elseresult;
 };
 
@@ -224,7 +226,7 @@ struct tuning_policy_rule_s
   struct mpit_var_s *cvars;
   int num_pvars;
   int is_array_pvar;
-  struct logic_s logic;
+  struct op_s *op;
 };
 
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
@@ -358,7 +360,7 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define WRITECVARS(op,metric_string,value_string) \
         condition_t *cond = op->cond; \
 	CONDITION(cond->stmt,cond->root) { \
-          res_t *res = op->results[0]; \
+          res_t *res = op->result; \
           RESULT(res->root); \
           sprintf(metric_string,"%d",res->root); \
         } \
@@ -369,30 +371,26 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 #define INNEROP(op) \
         condition_t *cond = op->cond; \
 	CONDITION(cond->stmt,cond->root) { \
-          int j; \
-          for(j=0; j<op->num_results; j++) { \
-           res_t *res = op->results[j]; \
-           RESULT(res->root); \
-          } \
+          res_t *res = op->result; \
+          RESULT(res->root); \
         } \
         if(op->elseresult != NULL) { \
           res_t *elseres = op->elseresult; \
           RESULT(elseres->root); \
  	} 
 
-#define INNERLOGIC(logic) \
-        op_t *op = logic.op; \
-	if(logic.is_pvar_array == 1) { \
-          unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[logic.array_size],sizeof(unsigned long long int)); \
+#define INNERLOGIC(op) \
+	if(op->is_pvar_array == 1) { \
+          unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[op->array_size],sizeof(unsigned long long int)); \
           char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
           strcpy(value_cvar_string,""); \
           char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
           strcpy(value_cvar_value_string,""); \
-          FOR(logic.array_size) { \
+          FOR(op->array_size) { \
             INNEROP(op); \
-            for(j=0; j<tau_pvar_count[logic.num_pvars]; j++) { \
+            for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { \
               if(i == (tau_pvar_count[j])) { \
-                sprintf(metric_string, "%s[%d]", op->results[0], i); \
+                sprintf(metric_string, "%s[%d]", op->result, i); \
                 sprintf(value_string, "%llu", value_array[i]); \
               } \
             } \
@@ -406,16 +404,15 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
           char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); \
           strcpy(value_cvar_value_string,""); \
           INNEROP(op); \
-          for(j=0; j<tau_pvar_count[logic.num_pvars]; j++) { \
+          for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { \
             if(i == (tau_pvar_count[j]))  { \
-              sprintf(metric_string,"%s", op->results[0]); \
+              sprintf(metric_string,"%s", op->result); \
               sprintf(value_string, "%llu", value); \
             } \
           } \
           strcat(value_cvar_string,metric_string); \
           strcat(value_cvar_value_string,value_string); \
-        } \
-        WRITECVARS(op,metric_string,value_string)
+        } 
 
 /*
 struct tuning_policy_rule_s
@@ -576,7 +573,7 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
-#if 1
+#if 0
 void json_parse_array( json_object *jobj, char *key) 
 {
   void json_parse(json_object * jobj); /*Forward Declaration*/
@@ -837,10 +834,10 @@ int generic_tuning_policy(int argc, void **args)
   }
 
   /* Call the inner logic */  
-  //op_t op = rules[rule_id].operation;
-  logic_t logic = rules[rule_id].logic;
+  op_t *op = rules[rule_id].op;
+  //logic_t logic = rules[rule_id].logic;
 
-  INNERLOGIC(logic);
+  INNERLOGIC(op);
 
 #if 0
   if(rules[rule_id].is_array_pvar == 1) {
