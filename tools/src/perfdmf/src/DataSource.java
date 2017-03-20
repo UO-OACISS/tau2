@@ -789,6 +789,7 @@ public abstract class DataSource {
         }
 
         List<Function> functions = new ArrayList<Function>();
+        List<Function> summaryFunctions = new ArrayList<Function>();
         Map<String, Integer> prefixes = new HashMap<String, Integer>();
 
         for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
@@ -824,19 +825,23 @@ public abstract class DataSource {
 
         for (Iterator<Function> l = functions.iterator(); l.hasNext();) {
             Function function = l.next();
-
+            
             String bonusName = null;
             Function bonusFunction = null;
             bonusName = sampleNameSummary(function.getName());
 			if (bonusName == null) continue;
 			if (prefixes.get(bonusName) < 3) continue;
 			bonusFunction = this.getFunction(bonusName);
+			
 			if (bonusFunction == null) {
 				bonusFunction = addFunction(bonusName);
 				for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
 					bonusFunction.addGroup(g.next());
 				}
+				
 			}
+			
+			summaryFunctions.add(bonusFunction);
 			//System.out.println("BEFORE: " + function.getName());
 			//System.out.println("AFTER:  " + bonusFunction.getName());
             bonusFunction.addGroup(derivedGroup);
@@ -874,12 +879,22 @@ public abstract class DataSource {
                     if (bfp == null) {
                         bfp = new FunctionProfile(bonusFunction, getNumberOfMetrics(), thread.getNumSnapshots());
                         thread.addFunctionProfile(bfp);
+                        /*We need to prime the min value we aren't minning against zero.*/
+                        if(thread.equals(minData)){
+                        	for(int metric = 0; metric < this.getNumberOfMetrics(); metric++){
+                        		bfp.setExclusive(metric, Double.MAX_VALUE);
+                        		bfp.setInclusive(metric, Double.MAX_VALUE);
+                        	}
+                        }
                     }
 
+                    
                     for (int metric = 0; metric < this.getNumberOfMetrics(); metric++) {
 
-                        bfp.setExclusive(metric, bfp.getExclusive(metric) + functionProfile.getExclusive(metric));
-                        bfp.setInclusive(metric, bfp.getInclusive(metric) + functionProfile.getInclusive(metric));
+                    	if(!thread.equals(minData)&&!thread.equals(maxData)){
+                    		bfp.setExclusive(metric, bfp.getExclusive(metric) + functionProfile.getExclusive(metric));
+                    		bfp.setInclusive(metric, bfp.getInclusive(metric) + functionProfile.getInclusive(metric));
+                    	}
                     }
                     bfp.setNumCalls(bfp.getNumCalls() + functionProfile.getNumCalls());
                     bfp.setNumSubr(bfp.getNumSubr() + functionProfile.getNumSubr());
@@ -893,6 +908,34 @@ public abstract class DataSource {
             bonusFunction.addGroup(callpathDerivedGroup);
 			String appendix = bonusName + function.getName().substring(end);
 			function.setName(appendix);
+			
+        }
+        
+        for(Function sumF:summaryFunctions){
+        	FunctionProfile maxFP = maxData.getFunctionProfile(sumF);
+    		FunctionProfile minFP = minData.getFunctionProfile(sumF);
+        	for (int i = 0; i < numThreads; i++) {
+                Thread thread = allThreads.get(i);
+        	
+        	//Summarize max
+        	
+        		FunctionProfile tmp=thread.getFunctionProfile(sumF);
+        		if(tmp==null){
+        			continue;
+        		}
+        		
+        		
+        	 for (int metric = 0; metric < this.getNumberOfMetrics(); metric++) {
+        		 //System.out.println(maxFP.getName()+" max "+maxFP.getExclusive(metric)+" vs "+tmp.getExclusive(metric));
+        		maxFP.setExclusive(metric, Math.max(maxFP.getExclusive(metric), tmp.getExclusive(metric)));
+        		maxFP.setInclusive(metric, Math.max(maxFP.getInclusive(metric), tmp.getInclusive(metric)));
+        	
+        		//Summarize Min
+        		//System.out.println(functionProfile.getName()+" min "+bfp.getExclusive(metric)+" vs "+functionProfile.getExclusive(metric));
+        		minFP.setExclusive(metric, Math.min(minFP.getExclusive(metric), tmp.getExclusive(metric)));
+        		minFP.setInclusive(metric, Math.min(minFP.getInclusive(metric), tmp.getInclusive(metric)));
+        	}
+        	}
         }
     }
 
