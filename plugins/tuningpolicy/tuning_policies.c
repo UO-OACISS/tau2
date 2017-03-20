@@ -45,13 +45,16 @@ enum node_enum_e
 
 enum node_enum_e
 {
-  OPEQUALS = 0,
-  OPUPPER = 1,
-  OPLOWER = 2,
-  OPUPPEREQUAL = 3,
-  OPLOWEREQUAL = 4,
-  LOPERAND = 5,
-  ROPRAND = 6
+  OPEQUALS 	= 0,
+  OPUPPER 	= 1,
+  OPLOWER 	= 2,
+  OPUPPEREQUAL 	= 3,
+  OPLOWEREQUAL	= 4,
+  OPEQUALASSIGN = 5,
+  OPINCR 	= 6,
+  OPDECR	= 7,
+  LOPERAND 	= 8,
+  ROPERAND 	= 7
 };
 
 typedef enum node_enum_e node_enum_t;
@@ -243,6 +246,8 @@ struct tuning_policy_rule_s
 
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
+tuning_policy_rule_t rules[MAX_NB_RULES];
+
 
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
@@ -287,7 +292,7 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
 #define EVAL(node) \
         int curr_depth = 0; \
- 	while((node->loperand != NULL) && (node->roperand != NULL)i && (curr_depth < MAX_TREE_DEPTH)) { \
+ 	while((node->loperand != NULL) && (node->roperand != NULL) && (curr_depth < MAX_TREE_DEPTH)) { \
           /* Store tree for operation */ \ 
         }
 
@@ -430,12 +435,14 @@ struct tuning_policy_rule_s
 };
 */
 
-typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 //void plugin_tuning_policies(int argc, void **args)
-
-tuning_policy_rule_t rules[MAX_NB_RULES];
-
 //static json_object *jso = NULL;
+
+void pop_tree(node_t *node)
+{
+
+
+}
 
 void innerop(struct op_s *op)
 {
