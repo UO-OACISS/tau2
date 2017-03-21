@@ -43,7 +43,7 @@ enum node_enum_e
 };
 #endif
 
-enum node_enum_e
+enum node_content_e
 {
   OPEQUALS 	= 0,
   OPUPPER 	= 1,
@@ -57,7 +57,15 @@ enum node_enum_e
   ROPERAND 	= 7
 };
 
-typedef enum node_enum_e node_enum_t;
+typedef enum node_content_e node_content_t;
+
+enum node_type_e
+{
+  NODE  = 0,
+  LEAF  = 1
+};
+
+typedef enum node_type_e nodeType;
 
 enum operand_enum_e
 {
@@ -143,7 +151,7 @@ typedef struct groupoperand_s groupoperand_t;
 
 struct node_s
 {
- node_enum_t nodeType;
+ nodeType type;
  
  struct node_s *loperand;
  struct node_s *roperand;
@@ -441,6 +449,11 @@ struct tuning_policy_rule_s
 void pop_tree(node_t *node)
 {
 
+ if (node->type == NODE) {
+
+ } else if(node->type == LEAF) {
+
+ }
 
 }
 
