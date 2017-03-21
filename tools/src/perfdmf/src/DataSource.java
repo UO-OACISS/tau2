@@ -912,6 +912,9 @@ public abstract class DataSource {
         }
         
         for(Function sumF:summaryFunctions){
+        	if(sumF==null||maxData==null||minData==null){
+        		continue;
+        	}
         	FunctionProfile maxFP = maxData.getFunctionProfile(sumF);
     		FunctionProfile minFP = minData.getFunctionProfile(sumF);
         	for (int i = 0; i < numThreads; i++) {
