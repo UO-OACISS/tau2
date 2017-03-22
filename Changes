@@ -31,6 +31,7 @@ Version 2.26 changes (from 2.25):
 18. Updated support for resolving symbols using an updated BFD package (2.27). ./configure -bfd=download
 19. Updated APEX with tau_exec. 
 20. Added support for Kokkos profiling interface. 
+21. Added tau_spark-submit wrapper for Spark profiling to propagate TAU environment variables. 
 
 
 
