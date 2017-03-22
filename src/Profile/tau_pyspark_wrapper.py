@@ -3,9 +3,24 @@
 """ Wrapper to force the use of TAU's TauSparkProfiler in Spark """
 
 import sys
-import pyspark
-import tau
+import os
+try:
+    import pyspark
+except ImportError:
+    raise ImportError("pyspark module not found. Are you running outside Spark?")
+try:
+    import tau
+except ImportError:
+    raise ImportError("tau module not found. Make sure your PYTHONPATH is set properly.")
 import runpy
+
+# Exit early if TauSparkProfiler doesn't exist
+try:
+    x = tau.TauSparkProfiler
+except Exception:
+    print("ERROR: Unable to initialize TAU's PySpark profiling support. \
+           Please check that you are using a supported version of Spark.")
+    sys.exit(1)
 
 # Remove the wrapper from argv so the script we're wrapping
 # will have its own path as argv[0]
@@ -33,7 +48,6 @@ def wrapped_context_init(self, master=None, appName=None, sparkHome=None, pyFile
             gateway=gateway, jsc=jsc, profiler_cls=profiler_cls)
 
 pyspark.SparkContext.__init__ = wrapped_context_init
-
 
 # Run the module or script we're wrapping
 if sys.argv[0] == '-m':

@@ -209,7 +209,7 @@ try:
     try:
         from pyspark import TaskContext
     except Exception:
-        print("WARNING: Your version of Spark does not expose TaskContext to Python." \
+        print("WARNING: Your version of Spark does not expose TaskContext to Python. " \
               "PySpark tasks will not be profiled.")
     from pyspark import TaskContext
     class TauSparkProfiler(BasicProfiler):
@@ -218,7 +218,7 @@ try:
             BasicProfiler.__init__(self, ctx)
 
         def profile(self, func):
-            myId = TaskContext._getOrCreate()._taskAttemptId
+            myId = TaskContext._getOrCreate()._taskAttemptId + 1 # Leave 0 for the driver
             prof = Profile()
             prof.runcall_with_node(myId, func)
             writeProfiles()
