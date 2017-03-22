@@ -890,6 +890,7 @@ else
   fi
 
   if $spark_wrapper ; then
+    $dryrun export PYTHONPATH=$PYTHONPATH
     $dryrun python -m tau_pyspark_wrapper $@
   elif $python_wrapper ; then
     $dryrun python -m tau_python_wrapper $@
