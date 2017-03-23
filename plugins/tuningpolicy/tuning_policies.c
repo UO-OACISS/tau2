@@ -471,6 +471,7 @@ int printInOrder(node_t *node)
   return 1;
 }
 
+/* Recursive evaluation of a tree based expression */
 int evalExpr(node_t *root)
 {
   // empty tree
@@ -493,6 +494,16 @@ int evalExpr(node_t *root)
     return l_val * r_val;
   } else if(root->data == "/") {
     return l_val / r_val;
+  } else if(root->data == "==") {
+
+  } else if(root->data == "<") {
+
+  } else if(root->data == ">") {
+
+  } else if(root->data == "<=") {
+
+  } else if(root->data == ">=") {
+
   }
   
   return 1;
