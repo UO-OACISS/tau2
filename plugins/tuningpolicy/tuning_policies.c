@@ -464,7 +464,6 @@ int printInOrder(node_t *node)
     return -1;
 
   printInOrder(node->loperand);
-
    
   printInOrder(node->roperand);
 
@@ -472,7 +471,7 @@ int printInOrder(node_t *node)
 }
 
 /* Recursive evaluation of a tree based expression */
-int evalExpr(node_t *root)
+int evalExpr(stmt_enum_t stmt,node_t *root)
 {
   // empty tree
   if (!root)
@@ -490,20 +489,12 @@ int evalExpr(node_t *root)
     return l_val + r_val;
   } else if(root->data == "-") {
     return l_val - r_val; 
-  } else if (root->data == "*") {
+  } else if(root->data == "*") {
     return l_val * r_val;
   } else if(root->data == "/") {
     return l_val / r_val;
-  } else if(root->data == "==") {
-
-  } else if(root->data == "<") {
-
-  } else if(root->data == ">") {
-
-  } else if(root->data == "<=") {
-
-  } else if(root->data == ">=") {
-
+  } else {
+    CONDITION(stmt,root);
   }
   
   return 1;
