@@ -43,6 +43,8 @@ enum node_enum_e
 };
 #endif
 
+using namespace std;
+
 enum node_content_e
 {
   OPEQUALS 	= 0,
@@ -108,7 +110,7 @@ struct mpit_pvar_s
  char *name;
  int is_array;
  int size;
-} mpit_pvar;
+};
 
 typedef struct mpit_pvar_s mpit_pvar_t;
 
@@ -117,7 +119,7 @@ struct mpit_cvar_s
  char *name;
  int is_array;
  int size;
-} mpit_cvar;
+};
 
 typedef struct mpit_cvar_s mpit_cvar_t;
 
@@ -127,7 +129,7 @@ struct mpit_var_s
  int is_array;
  int size;
  int is_pvar;
-} mpit_var;
+};
 
 typedef struct mpit_var_s mpit_var_t;
 
@@ -135,6 +137,7 @@ struct operand_s
 {
   //char *value;
   int value;
+  
   operand_enum_t type;
 };
 
@@ -158,6 +161,7 @@ struct node_s
  
  //operand_t *loperand;
  //operand_t *roperand;
+ string data;
  
  operator_enum_t ope;
 };
@@ -446,15 +450,86 @@ struct tuning_policy_rule_s
 //void plugin_tuning_policies(int argc, void **args)
 //static json_object *jso = NULL;
 
-void pop_tree(node_t *node)
+int toInt(string s)
+{
+    int num = 0;
+    for (int i=0; i<s.length();  i++)
+        num = num*10 + (int(s[i])-48);
+    return num;
+}
+
+int printInOrder(node_t *node)
+{
+  if(node->type == LEAF)
+    return -1;
+
+  printInOrder(node->loperand);
+
+   
+  printInOrder(node->roperand);
+
+  return 1;
+}
+
+int evalExpr(node_t *root)
+{
+  // empty tree
+  if (!root)
+    return 0;
+
+  // leaf node, value
+  if(!(root->loperand) && !(root->roperand)) {
+    return toInt(root->data);    
+  }
+
+  int l_val = evalExpr(root->loperand); // Evaluate left operand
+  int r_val = evalExpr(root->roperand); // Evaluate right operand
+
+  if(root->data == "+") {
+    return l_val + r_val;
+  } else if(root->data == "-") {
+    return l_val - r_val; 
+  } else if (root->data == "*") {
+    return l_val * r_val;
+  } else if(root->data == "/") {
+    return l_val / r_val;
+  }
+  
+  return 1;
+}
+
+int pop_tree(node_t *node)
 {
 
- if (node->type == NODE) {
-
+ if (node->type == NODE) { 
+   pop_tree(node->loperand);
+   pop_tree(node->roperand);
+   
  } else if(node->type == LEAF) {
 
  }
 
+  return 1;
+}
+
+int eval_condition(stmt_enum_t *stmt, node_t *root)
+{
+  
+ return 1;
+}
+
+int result(node_t *root)
+{
+  if((root->loperand->type == LEAF) && (root->roperand->type == LEAF)) { 
+   
+    /* Evaluate result */
+   
+  
+  } else {
+
+  }
+
+  return 1;
 }
 
 void innerop(struct op_s *op)
