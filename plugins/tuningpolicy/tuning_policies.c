@@ -260,7 +260,6 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
 tuning_policy_rule_t rules[MAX_NB_RULES];
 
-
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
 
@@ -290,39 +289,128 @@ tuning_policy_rule_t rules[MAX_NB_RULES];
 
 #define RESULT(root) \
         printf("RESULT\n")
- 	//resleftop = root->loperand;
 
-#define EVALEQ(leftop,op,rightop) leftop = rightop ? 1 : 0
+#define STRTOINT(str,num) \
+	for (int i=0; i<str.length();  i++) \
+	  num = num*10 + (int(str[i])-48); \
 
-#define EVALUPEQ(leftop,op,rightop) leftop >= rightop ? 1: 0
 
-#define EVALUPPER(leftop,op,rightop) leftop > rightop ? 1 : 0
+#if 0
+#define EVALEQ(node) \
+        int intlop = 0, introp = 0; \
+        STRTOINT(intlop,node->loperand->data); \
+        STRTOINT(introp,node->roperand->data); \
+        intlop = introp ? 1 : 0
 
-#define EVALLOWER(leftop,op,rightop) leftop < rightop ? 1 : 0
+#define EVALLOWER(node) \
+        int intlop = 0, introp = 0; \
+        STRTOINT(intlop,node->loperand->data); \
+        STRTOINT(introp,node->roperand->data); \
+        intlop = introp ? 1 : 0
 
-#define EVALLOWEQ(leftop,op,rightop) leftop <= rightop ? 1 : 0
+#define EVALGREATER(node) \
+        int intlop = 0, introp = 0; \
+	STRTOINT(intlop,node->loperand->data); \
+	STRTOINT(introp,node->roperand->data); \
+	intlop = introp ? 1 : 0
 
-#define EVAL(node) \
-        int curr_depth = 0; \
- 	while((node->loperand != NULL) && (node->roperand != NULL) && (curr_depth < MAX_TREE_DEPTH)) { \
-          /* Store tree for operation */ \ 
+#define EVALLOWEREQ(node) \
+        int intlop = 0, introp = 0; \
+        STRTOINT(intlop,node->loperand->data); \
+        STRTOINT(introp,node->roperand->data); \
+        intlop = introp ? 1 : 0
+
+#define EVALGREATEREQ(node) \
+        int intlop = 0, introp = 0; \
+        STRTOINT(intlop,node->loperand->data); \
+        STRTOINT(introp,node->roperand->data); \
+        intlop = introp ? 1 : 0
+
+
+#define EVALLOWER(node) \
+	TOINT(node->loperand->data) < TOINT(node->roperand->data) ? 1 : 0
+
+#define EVALGREATER(node) \
+	TOINT(node->loperand->data) > TOINT(node->roperand->data) ? 1 : 0
+
+#define EVALLOWEREQ(node) \
+	TOINT(node->loperand->data) <= TOINT(node->roperand->data) ? 1 : 0
+
+#define EVALGREATEREQ(node) \
+	TOINT(node->loperand->data) >= TOINT(node->roperand->data) ? 1 : 0
+
+#endif
+
+#define IFSTMT(returnval) if(returnval)
+
+#define WHILESTMT(returnval) while(returnval)
+
+#define IFSTMT2(node) \
+        if(node->data == "==") { \
+          if(EVALEQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == "<") { \
+          if(EVALLOWER(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == ">") { \
+          if(EVALGREATER(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == "<=") { \
+          if(EVALLOWEREQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == ">=") { \
+           if(EVALGREATEREQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
         }
 
-#define IFSTMT(leftop,op,rightop) \
-	if(EVALEQ(leftop->value,op,rightop->value)) { \
-	  return 1; \
-        } \
-        else { \
-          return 0; \
+#define WHILESTMT2(node) \
+        if(node->data == "==") { \
+          while(EVALEQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == "<") { \
+          while(EVALLOWER(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == ">") { \
+          while(EVALGREATER(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == "<=") { \
+          while(EVALLOWEREQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == ">=") { \
+           while(EVALGREATEREQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
         }
-
-#define WHILESTMT(leftop,op,rightop) \
-	while(EVALEQ(leftop,op,rightop)) { \
-          return 1; \
-       } else { \
-         return 0; \
-       }
-
+        
 #define RESOPEQ(leftop,rightop) \
 	leftop = rightop
 
@@ -351,11 +439,47 @@ tuning_policy_rule_t rules[MAX_NB_RULES];
  	IFSTMT(leftoperand,ope,rightoperand)
 //	stmt(leftoperand operator rightoperand)
 
-#define CONDITION(stmt,node) \
-	printf("CONDITION: POP tree\n");
+#define CONDITION2(stmt,node) \
+        if(stmt == IF) { \
+          IFSTMT(node); \
+        }
+        //} else if(stmt == WHILE) { \
+           //WHILESTMT(node); \
+        }
 
-#define CONDITION2(stmt,root) \
-	IFSTMT(root->loperand,root->ope,root->roperand)
+#define CONDITION(root) \
+	 if(node->data == "==") { \
+          if(EVALEQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == "<") { \
+          if(EVALLOWER(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == ">") { \
+          if(EVALGREATER(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == "<=") { \
+          if(EVALLOWEREQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        } else if(node->data == ">=") { \
+           if(EVALGREATEREQ(node)) { \
+            return 1; \
+          } else { \
+            return 0; \
+          } \
+        }
+        
 
 #define RESULT2(resleftop,resrightop,operator) \
 	resleftop operator resrightop;
@@ -471,8 +595,89 @@ int printInOrder(node_t *node)
 }
 
 /* Recursive evaluation of a tree based expression */
-int evalExpr(stmt_enum_t stmt,node_t *root)
+int evalRes(node_t *root)
 {
+  // empty tree
+  if (!root)
+    return 0;
+
+  // leaf node, value
+  if(!(root->loperand) && !(root->roperand)) {
+    return toInt(root->data);    
+  }
+
+  int l_val = evalRes(root->loperand); // Evaluate left operand
+  int r_val = evalRes(root->roperand); // Evaluate right operand
+
+  if(root->data == "+") {
+    return l_val + r_val;
+  } else if(root->data == "-") {
+    return l_val - r_val; 
+  } else if(root->data == "*") {
+    return l_val * r_val;
+  } else if(root->data == "/") {
+    return l_val / r_val;
+  }
+  
+  return 1;
+}
+
+int pop_tree(node_t *node)
+{
+
+ if (node->type == NODE) { 
+   pop_tree(node->loperand);
+   pop_tree(node->roperand);
+   
+ } else if(node->type == LEAF) {
+
+ }
+
+  return 1;
+}
+
+/* Evaluate condition expression */
+int evalCond(node_t *node) 
+{
+  int loperand = toInt(node->loperand->data);
+  int roperand = toInt(node->roperand->data);
+
+  if(node->data == "==") { 
+    if(loperand == roperand)
+      return 1;
+    else 
+      return 0;
+  } else if(node->data == "<") { 
+    if(loperand < roperand)
+      return 1;
+    else 
+      return 0;
+  } else if(node->data == ">") { 
+    if(loperand > roperand)
+      return 1;
+    else 
+      return 0;
+  } else if(node->data == "<=") { 
+    if(loperand <= roperand)
+      return 1;
+    else 
+      return 0;
+  } else if(node->data == ">=") { 
+    if(loperand >= roperand)
+      return 1;
+    else 
+      return 0;
+ }
+
+ return -1;
+        
+}
+
+/* Recursive evaluation of a tree based expression */
+int evalExpr(node_t *root)
+{
+  int resVal = 0;
+
   // empty tree
   if (!root)
     return 0;
@@ -494,12 +699,15 @@ int evalExpr(stmt_enum_t stmt,node_t *root)
   } else if(root->data == "/") {
     return l_val / r_val;
   } else {
-    CONDITION(stmt,root);
+    resVal = evalCond(root);
+    return resVal;
   }
   
-  return 1;
+  return -1;
 }
 
+
+/*
 int pop_tree(node_t *node)
 {
 
@@ -513,6 +721,7 @@ int pop_tree(node_t *node)
 
   return 1;
 }
+*/
 
 int eval_condition(stmt_enum_t *stmt, node_t *root)
 {
@@ -536,14 +745,24 @@ int result(node_t *root)
 
 void innerop(struct op_s *op)
 {
+        int resVal = 0;
         condition_t *cond = op->cond; 
-	CONDITION(cond->stmt,cond->root) { 
-          node_t *res = op->result; 
-          RESULT(res); 
-        } 
+        resVal = evalExpr(cond->root); 
+        if(cond->stmt == IF) {
+          IFSTMT(resVal) {
+            node_t *res = op->result;
+            evalExpr(res);
+          }
+        } else if(cond->stmt == WHILE) {
+          WHILESTMT(resVal) {
+            node_t *res = op->result;
+            evalExpr(res);
+          }
+        }
+        
         if(op->elseresult != NULL) { 
           node_t *elseres = op->elseresult; 
-          RESULT(elseres); 
+          evalExpr(elseres); 
  	} 
 }
 
