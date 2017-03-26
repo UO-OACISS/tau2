@@ -463,7 +463,7 @@ if [ "x$binding_specified" = "x" ] ; then
     # Add MPI by default
     if ! echo "$binding_options" | grep -q "serial" >/dev/null 2>&1 ; then
       # add mpi if shmem is not specified
-      if echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
+      if ! echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
         binding_options="$binding_options mpi"
       fi
     fi
