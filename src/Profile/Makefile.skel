@@ -883,7 +883,7 @@ TauBeacon.o   : TauBeacon.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 $(TAU_PYCUDA_OBJS): TauGpuAdapterPyCuda.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUDA_INCLUDE) -I$(PYTHON_INCDIR) -c $<
@@ -895,7 +895,7 @@ TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauG
 	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
