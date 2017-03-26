@@ -3603,7 +3603,7 @@ then
 		cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
-            if [ "x$mpilibrary" = "xno" ]; then
+            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
 		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
 		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
 
@@ -4726,7 +4726,7 @@ then
     esac
 fi
 
-if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
+if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "x" ]; then
     echo "MPIINC and MPILIB are not set!"
     mpiinc_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
     if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
@@ -4735,7 +4735,7 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
 	 echo "Using MPI include directory $mpiinc"
 	 echo "machine is $machine"
     else
-         mpiinc_search=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+         mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include
 	 if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 	 then
 	   mpiinc=$mpiinc_search
@@ -8974,7 +8974,7 @@ if [ "x$download_scorep" = xyes ] ; then
     rm $tauscoreptgz
   # Now we build Score-P
     cd scorep-*; mkdir -p build; cd build
-    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-otf2 --without-opari2 --without-cube --without-gui "
+    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-otf2 --without-opari2 --without-cube --without-gui ${TAU_SCOREP_CONFIGURATION_OPTIONS}"
     if [ $papi = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-papi=$papidir --with-papi-header=$papidir/include --with-papi-lib=$papidir/$papisubdir"
     fi
