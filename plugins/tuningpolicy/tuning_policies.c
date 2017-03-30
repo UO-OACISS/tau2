@@ -1189,6 +1189,55 @@ void parse_json_tree(Json::Value& value, JSONCPP_STRING path = ".")
 
 }
 
+/* Populate rule structure based on input json tree */
+void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
+{
+
+
+}
+
+/* Parse JSON tree */
+void parse_json_tree(Json::Value& value, JSONCPP_STRING path = ".")
+{
+
+  switch(value.type()) {
+    case Json::nullValue:
+    break;
+ 
+    case Json::intValue:
+    break;
+ 
+    case Json::uintValue:
+    break;
+ 
+    case Json::realValue:
+    break;
+
+    case Json::stringValue:
+    break;
+
+    case Json::booleanValue:
+    break;
+
+    case Json::arrayValue:
+    break;
+
+    case Json::objectValue: {
+      Json::Value::Members members(value.getMemberNames());
+      std::sort(members.begin(),members.end());
+      JSONCPP_STRING suffix = *(path.end() - 1) == '.' ? "": ".";
+      for(Json::Value::Members::iterator it = members.begin(); it != members.end(); ++it) {
+        const JSONCPP_STRING name = *it;
+        parse_json_tree(value[name], path + suffix + name);
+      }
+    } break;
+
+    default:
+    break;  
+  }
+
+}
+
 /* Load JSON file and store string into a JSON object  
  * DEPRECATED
  * */
@@ -1225,7 +1274,10 @@ void read_json_rules()
 
 }
 
-void read_json_rules(const JSONCPP_STRING& path)
+/*
+ * Load JSON file and store into proper structures
+ */
+void tuningpolicies_load_rules()
 {
   Json::Value root;
   //JSONCPP_STRING path = "";
