@@ -263,6 +263,8 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
 tuning_policy_rule_t rules[MAX_NB_RULES];
 
+static int rule_idx = 0;
+
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
 
@@ -1011,6 +1013,9 @@ void json_parse(json_object * jobj)
 void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
 {
 
+  if(path == ".rule") {
+    rule_idx++;
+  } 
 
 }
 
