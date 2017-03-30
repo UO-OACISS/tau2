@@ -297,6 +297,8 @@ private:
 
 Rule rules[MAX_NB_RULES];
 
+static int rule_idx = 0;
+
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
 
@@ -1193,6 +1195,9 @@ void parse_json_tree(Json::Value& value, JSONCPP_STRING path = ".")
 void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
 {
 
+  if(path == ".rule") {
+    rule_idx++;
+  } 
 
 }
 
