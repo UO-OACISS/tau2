@@ -12,8 +12,11 @@
 #include <sys/types.h>
 #include <assert.h>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+
+#include <json/json.h>
+
+//#include <boost/property_tree/ptree.hpp>
+//#include <boost/property_tree/json_parser.hpp>
 
 #include "json.h"
 #include "json_util.h"
@@ -1004,6 +1007,55 @@ void json_parse(json_object * jobj)
 } 
 #endif
 
+/* Populate rule structure based on input json tree */
+void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
+{
+
+
+}
+
+/* Parse JSON tree */
+void parse_json_tree(Json::Value& value, JSONCPP_STRING path = ".")
+{
+
+  switch(value.type()) {
+    case Json::nullValue:
+    break;
+ 
+    case Json::intValue:
+    break;
+ 
+    case Json::uintValue:
+    break;
+ 
+    case Json::realValue:
+    break;
+
+    case Json::stringValue:
+    break;
+
+    case Json::booleanValue:
+    break;
+
+    case Json::arrayValue:
+    break;
+
+    case Json::objectValue: {
+      Json::Value::Members members(value.getMemberNames());
+      std::sort(members.begin(),members.end());
+      JSONCPP_STRING suffix = *(path.end() - 1) == '.' ? "": ".";
+      for(Json::Value::Members::iterator it = members.begin(); it != members.end(); ++it) {
+        const JSONCPP_STRING name = *it;
+        parse_json_tree(value[name], path + suffix + name);
+      }
+    } break;
+
+    default:
+    break;  
+  }
+
+}
+
 /* Load JSON file and store string into a JSON object  
  * DEPRECATED
  * */
@@ -1041,7 +1093,7 @@ void read_json_rules()
 }
 
 /*
- * Load JSON file using C++ Boost and store into proper structures
+ * Load JSON file and store into proper structures
  */
 void tuningpolicies_load_rules()
 {
@@ -1206,6 +1258,7 @@ int generic_tuning_policy(int argc, void **args)
   op_t *op = rules[rule_id].op;
   //logic_t logic = rules[rule_id].logic;
 
+ // Call logic 
   outerop(op);
   //INNERLOGIC(op);
 
