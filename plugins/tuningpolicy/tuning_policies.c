@@ -262,6 +262,7 @@ struct tuning_policy_rule_s
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
 //tuning_policy_rule_t rules[MAX_NB_RULES];
+<<<<<<< HEAD
 
 static int rule_idx = 0;
 
@@ -316,16 +317,19 @@ private:
 
 class Rule
 {
-
 public:
+  int index;
   int num_pvars;  
   int is_array_pvar;
+  struct mpit_var_s *pvars;
   Op op;
 
 private:
-    
 
 };
+
+
+Rule rules[MAX_NB_RULES];
 
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
@@ -1232,6 +1236,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == ".rule.operation") {
+    
     //op_t *op = (struct op_s)malloc(sizeof(struct op_s));
     //rules[rule_idx].op = op; 
   }
