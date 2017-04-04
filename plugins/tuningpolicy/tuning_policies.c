@@ -261,7 +261,7 @@ struct tuning_policy_rule_s
 
 typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
-tuning_policy_rule_t rules[MAX_NB_RULES];
+//tuning_policy_rule_t rules[MAX_NB_RULES];
 
 static int rule_idx = 0;
 
@@ -282,16 +282,19 @@ private:
 
 class Rule
 {
-
 public:
+  int index;
   int num_pvars;  
   int is_array_pvar;
+  struct mpit_var_s *pvars;
   Op op;
 
 private:
-    
 
 };
+
+
+Rule rules[MAX_NB_RULES];
 
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
@@ -776,46 +779,48 @@ int result(node_t *root)
   return 1;
 }
 
-void innerop(struct op_s *op)
+//void innerop(struct op_s *op)
+void innerop(Op op)
 {
         int resVal = 0;
-        condition_t *cond = op->cond; 
+        condition_t *cond = op.cond; 
         resVal = evalExpr(cond->root); 
         if(cond->stmt == IF) {
           IFSTMT(resVal) {
-            node_t *res = op->result;
+            node_t *res = op.result;
             evalExpr(res);
           }
         } else if(cond->stmt == WHILE) {
           WHILESTMT(resVal) {
-            node_t *res = op->result;
+            node_t *res = op.result;
             evalExpr(res);
           }
         }
         
-        if(op->elseresult != NULL) { 
-          node_t *elseres = op->elseresult; 
+        if(op.elseresult != NULL) { 
+          node_t *elseres = op.elseresult; 
           evalExpr(elseres); 
  	} 
 }
 
-void outerop(struct op_s *op)
+//void outerop(struct op_s *op)
+void outerop(Op op)
 {
   char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH]; 
   int *tau_pvar_count = NULL;
   int i=0, j=0;
 
-  if(op->is_pvar_array == 1) { 
-    unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[op->array_size],sizeof(unsigned long long int)); 
+  if(op.is_pvar_array == 1) { 
+    unsigned long long int *value_array = (unsigned long long int *)calloc(tau_pvar_count[op.array_size],sizeof(unsigned long long int)); 
     char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_string,""); 
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_value_string,""); 
-    for(i=0; i<op->array_size; i++) {
+    for(i=0; i<op.array_size; i++) {
       innerop(op); 
-      for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { 
+      for(j=0; j<tau_pvar_count[op.num_pvars]; j++) { 
         if(i == (tau_pvar_count[j])) { 
-          sprintf(metric_string, "%s[%d]", op->result, i); 
+          sprintf(metric_string, "%s[%d]", op.result, i); 
           sprintf(value_string, "%llu", value_array[i]); 
         } 
       } 
@@ -829,9 +834,9 @@ void outerop(struct op_s *op)
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_value_string,""); 
     innerop(op); 
-    for(j=0; j<tau_pvar_count[op->num_pvars]; j++) { 
+    for(j=0; j<tau_pvar_count[op.num_pvars]; j++) { 
       if(i == (tau_pvar_count[j]))  { 
-        sprintf(metric_string,"%s", op->result); 
+        sprintf(metric_string,"%s", op.result); 
         sprintf(value_string, "%llu", value); 
       } 
    } 
@@ -1050,6 +1055,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == ".rule.operation") {
+    
     //op_t *op = (struct op_s)malloc(sizeof(struct op_s));
     //rules[rule_idx].op = op; 
   }
@@ -1297,7 +1303,8 @@ int generic_tuning_policy(int argc, void **args)
   }
 
   /* Call the inner logic */  
-  op_t *op = rules[rule_id].op;
+  //op_t *op = rules[rule_id].op;
+  Op op = rules[rule_id].op;
   //logic_t logic = rules[rule_id].logic;
 
  // Call logic 
