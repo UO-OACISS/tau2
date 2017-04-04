@@ -1236,10 +1236,48 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == ".rule.operation") {
-    
+    Op op;
+    rules[rule_idx].op = op; 
     //op_t *op = (struct op_s)malloc(sizeof(struct op_s));
     //rules[rule_idx].op = op; 
   }
+
+  if(path == "rule.operation.condition") {
+    condition_t cond;
+  }
+
+  if(path == "rule.operation.result") {
+    res_t *res; 
+  }
+
+  if(path == "rule.operation.else") {
+
+  }
+
+  if(path == "rule.operation.result.leftoperand") {
+
+  }
+
+  if(path == "rule.operation.result.rightoperand") {
+
+  }
+
+  if(path == "rule.operation.result.operator") {
+
+  }
+
+  if(path == "rule.operation.else.leftoperand") {
+
+  }
+
+  if(path == "rule.operation.else.rightoperand") {
+
+  }
+
+  if(path == "rule.operation.else.operator") {
+
+  }
+
 
 }
 
