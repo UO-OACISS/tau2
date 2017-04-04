@@ -265,6 +265,34 @@ tuning_policy_rule_t rules[MAX_NB_RULES];
 
 static int rule_idx = 0;
 
+class Op
+{
+public:
+  struct loop_s loop; 
+  int is_pvar_array;
+  int array_size;
+  condition_t *cond;
+  int num_pvars;
+  node_t *result;
+  node_t *elseresult;
+
+private:
+
+};
+
+class Rule
+{
+
+public:
+  int num_pvars;  
+  int is_array_pvar;
+  Op op;
+
+private:
+    
+
+};
+
 #define LEFTOPPLUS(leftop,rightop) \
 	return leftop + rightop
 
@@ -1016,6 +1044,15 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   if(path == ".rule") {
     rule_idx++;
   } 
+   
+  if(path == ".rule.num_pvars") {
+    rules[rule_idx].num_pvars = value.asLargestInt();
+  }
+
+  if(path == ".rule.operation") {
+    //op_t *op = (struct op_s)malloc(sizeof(struct op_s));
+    //rules[rule_idx].op = op; 
+  }
 
 }
 
