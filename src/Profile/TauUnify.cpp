@@ -105,13 +105,13 @@ public:
 
 /** Return a table represeting a sorted list of the events */
 int *Tau_unify_generateSortMap(EventLister *eventLister) {
+int rank = 0;
+int numRanks = 1;
 #ifdef TAU_MPI
-  int rank, numRanks;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
-  int rank, numRanks;
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   numRanks = __real__num_pes();
   rank = __real__my_pe();
