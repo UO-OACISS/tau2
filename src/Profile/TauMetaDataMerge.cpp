@@ -60,9 +60,9 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   merged = 1;
 
   int rank = 0;
+  int numRanks = 1;
 
 #ifdef TAU_MPI
-  int numRanks;
   if (TAU_MPI_Finalized()) {
     return 0;
   }
@@ -73,11 +73,11 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
 #ifdef TAU_SHMEM
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   int *shBufferSize = (int*)__real_shmalloc(sizeof(int));
-  int numRanks = __real__num_pes();
+  numRanks = __real__num_pes();
   rank = __real__my_pe();
 #else
   int *shBufferSize = (int*)__real_shmem_malloc(sizeof(int));
-  int numRanks = __real_shmem_n_pes();
+  numRanks = __real_shmem_n_pes();
   rank = __real_shmem_my_pe();
 #endif /* SHMEM_1_1 || SHMEM_1_2 */
   int i, defBufSize;
