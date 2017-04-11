@@ -25,6 +25,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 int Tau_metadataMerge_mergeMetaData();
+int Tau_metadataMerge_mergeMetaData_SHMEM();
 int writeMetaDataAfterMPI_Init(void);
 
 #ifdef __cplusplus
