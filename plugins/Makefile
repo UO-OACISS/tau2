@@ -13,11 +13,12 @@ CC = $(TAU_CC)
 CXX = $(TAU_CXX)
 
 #Defining the sub-directories that need to be made
-TUNING_POLICY=tuningpolicy
+
+#TUNING_POLICY=tuningpolicy
 TEST_PLUGINS=testplugin
 MPIT_MVAPICH_TUNING_POLICIES=MPIT_mvapich_tuning_policies
 
-SUBDIR = $(TUNING_POLICY) $(TEST_PLUGINS) $(MPIT_MVAPICH_TUNING_POLICIES)
+SUBDIR = $(TEST_PLUGINS) $(MPIT_MVAPICH_TUNING_POLICIES) #$(TUNING_POLICY)
 
 all: install
 	@echo
