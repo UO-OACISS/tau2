@@ -46,9 +46,9 @@ usage()
   echo "        -armci        Track ARMCI events via PARMCI"
   echo "        -shmem        Track SHMEM events"
   echo "        -ptts         Run with ParaTools ThreadSpotter"
-  echo "        -aprun-num=<N>  Number of ranks used by aprun"    
-  echo "        -ts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
-  echo "        -ts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
+  echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
+  echo "        -ptts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+  echo "        -ptts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
   echo "        -ebs          Enable event-based sampling"
   echo "        -ebs_period=<count> Sampling period (default 1000)"
   echo "        -ebs_source=<counter> Counter (default itimer)"
@@ -109,6 +109,7 @@ set_node()
     "MP_CHILD"
     "MP_RANK"
     "MPIRUN_RANK"
+    "MPT_MPI_RANK"
     "ALPS_APP_PE")
     for i in ${rank_env_vars[@]}; do
       eval node=\$$i
@@ -126,10 +127,10 @@ set_nodecount()
 {
   if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
     if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
-      if [ -z "$aprun_N" ]; then
-        echo "ERROR: Using aprun we need -aprun-num=<arg to -n>"
+      if [ -z "$ptts_N" ]; then
+        echo "ERROR: Using aprun we need -ptts-num=<arg to -n>"
       else
-        nodecount="$aprun_N"
+        nodecount="$ptts_N"
       fi	
     else	
       for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS; do
@@ -138,6 +139,9 @@ set_nodecount()
           break
         fi
       done
+      if [ -z "$nodecount" ] && [ ! -z "$ptts_N" ] ; then
+        nodecount="$ptts_N"
+      fi
     fi
   elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
     echo "ERROR: ptts support for SHMEM not implemented yet"
@@ -261,9 +265,9 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
-aprun_N=""
-ts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
-ts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
+ptts_N=""
+ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
+ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 on_craycnl=false
 
 for arg in "$@" ; do
@@ -357,17 +361,17 @@ for arg in "$@" ; do
         use_ptts=true
         shift
         ;;
-      -aprun-num=*)
-        myarg=`echo $arg | sed 's/-aprun-num=//'`
-        aprun_N="$myarg"
+      -ptts-num=*)
+        myarg=`echo $arg | sed 's/-ptts-num=//'`
+        ptts_N="$myarg"
         shift
         ;;
-      -ts-sample-flags=*)
-        ts_sample_flags="${arg/#-ts-sample-flags=/}" # bash parameter expansion, bash 3 and up
+      -ptts-sample-flags=*)
+        ptts_sample_flags="${arg/#-ptts-sample-flags=/}" # bash parameter expansion, bash 3 and up
         shift
         ;;
-      -ts-report-flags=*)
-        ts_report_flags="${arg/#-ts-report-flags=/}" # Also propper quoting must be used when multiple passed
+      -ptts-report-flags=*)
+        ptts_report_flags="${arg/#-ptts-report-flags=/}" # Also propper quoting must be used when multiple passed
         shift
         ;;
       -ebs)
@@ -923,18 +927,39 @@ else
       export LD_PRELOAD=$ORIG_LD_PRELOAD
     fi
     rm -rf "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog" "$pttsprefix/$node"
-    sample_ts $ts_sample_flags -o "$samplefile" -r $@
+    if [ "$node" -eq 0 ] ; then
+      samplingstarttime=`date +%s`
+    fi
+    sample_ts $ptts_sample_flags -o "$samplefile" -r $@
+    if [ "$node" -eq 0 ] ; then
+      samplingendtime=`date +%s`
+      echo "sampling time on rank 0: $((samplingendtime-samplingstarttime)) seconds"
+    fi
     if [[ -z "${ALPS_APP_PE}" ]]; then
       err=$? ; [ $err -eq 0 ] || exit $err
       retval=$err
       # Get the return code of the child process as the tau_exec return code
       # Post-process samples
       echo "PTTS($node): Postprocessing samples..."
-      report_ts $ts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
+      if [ "$node" -eq 0 ] ; then
+        reportstarttime=`date +%s`
+      fi
+      report_ts $ptts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
+      if [ "$node" -eq 0 ] ; then
+        reportendtime=`date +%s`
+        echo "report time on rank 0: $((reportendtime-reportstarttime)) seconds"
+      fi
       err=$? ; [ $err -eq 0 ] || exit $err
       # Generate report. view-static must be run in $pttsprefix
       cd "$pttsprefix"
+      if [ "$node" -eq 0 ] ; then
+        staticstarttime=`date +%s`
+      fi
       view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
+      if [ "$node" -eq 0 ] ; then
+        staticendtime=`date +%s`
+        echo "view-static time on rank 0: $((staticendtime-staticstarttime)) seconds"
+      fi
       err=$? ; [ $err -eq 0 ] || exit $err
       cd "$OLDPWD"
       # Clean up and package the report
@@ -962,7 +987,14 @@ else
       fi
       # Post-process samples
       echo "PTTS($node): Postprocessing samples..."
-      report_ts $ts_report_flags -i "$pttsprefix/sample.${node}.smp" -o "$reportfile" >"$reportlog" 2>&1
+      if [ "$node" -eq 0 ] ; then
+        reportstarttime=`date +%s`
+      fi
+      report_ts $ptts_report_flags -i "$pttsprefix/sample.${node}.smp" -o "$reportfile" >"$reportlog" 2>&1
+      if [ "$node" -eq 0 ] ; then
+        reportendtime=`date +%s`
+        echo "report time on rank 0: $((reportendtime-reportstarttime)) seconds"
+      fi
       err=$? ; [ $err -eq 0 ] || echo "PTTS($node): report returned non-zero error code $err."
       if [ ! -f "$reportfile" ]; then
         echo "PTTS($node): Report file was not produced."
@@ -970,7 +1002,14 @@ else
       fi
       # Generate report. view-static must be run in $pttsprefix
       cd "$pttsprefix"
+      if [ "$node" -eq 0 ] ; then
+        staticstarttime=`date +%s`
+      fi
       view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
+      if [ "$node" -eq 0 ] ; then
+        staticendtime=`date +%s`
+        echo "view-static time on rank 0: $((staticendtime-staticstarttime)) seconds"
+      fi
       err=$? ; [ $err -eq 0 ] || echo "PTTS($node): view-static returned non-zero error code $err."
       cd "$OLDPWD"
       if [ ! -d "$pttsprefix/$viewdir" ]; then
