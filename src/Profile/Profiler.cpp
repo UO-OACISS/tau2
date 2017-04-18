@@ -1666,7 +1666,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           perror(errormsg);
           return 0;
 		}
-        TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
+        TAU_VERBOSE("[pid=%d], TAU: Writing A profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
       } else {
         int flags = O_CREAT | O_EXCL | O_WRONLY;
 #ifdef TAU_DISABLE_SIGUSR
@@ -1700,12 +1700,18 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           }
 
         } else {
+#ifdef TAU_MPI
+        if (Tau_get_usesMPI()) {
+#endif /* TAU_MPI */
           if ((fp = fopen(dumpfile, "w+")) == NULL) {
             char errormsg[1024];
             sprintf(errormsg, "Error: Could not create %s", dumpfile);
             perror(errormsg);
             return 0;
           }
+#ifdef TAU_MPI
+        }
+#endif /* TAU_MPI */
           char cwd[1024];
           char *tst = getcwd(cwd, 1024);
 		  if (tst == NULL) {
@@ -1714,10 +1720,17 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
             perror(errormsg);
             return 0;
 		  }
-          TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
+          TAU_VERBOSE("[pid=%d], TAU: Writing B profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
         }
       }
-      writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#ifdef TAU_MPI
+      if (Tau_get_usesMPI()) {
+#endif /* TAU_MPI */
+        TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
+        writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#ifdef TAU_MPI
+      }
+#endif /* TAU_MPI */
     }
   }
 
