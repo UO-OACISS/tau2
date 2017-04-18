@@ -52,6 +52,7 @@ usage()
   echo "        -armci        Track ARMCI events via PARMCI"
   echo "        -shmem        Track SHMEM events"
   echo "        -ptts         Run with ParaTools ThreadSpotter"
+  echo "        -ptts-post    Skip application sampling and post-process existing PTTS sample files"
   echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
   echo "        -ptts-sample-flags=<flags> Flags to pass to PTTS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
   echo "        -ptts-report-flags=<flags> Flags to pass to PTTS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
@@ -236,10 +237,11 @@ mpi_barrier()
   touch "$pttsprefix/$node"
   i=0
   while [ $i -lt $nodecount ] ; do
+    sync
     if [ -f "$pttsprefix/$i" ] ; then
       ((i++))
     else
-      sleep 1
+      sleep 10
     fi
   done
 }
@@ -287,6 +289,7 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
+ptts_post=false
 ptts_N=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
@@ -380,6 +383,11 @@ for arg in "$@" ; do
         ;;
       -ptts)
         use_ptts=true
+        shift
+        ;;
+      -ptts-post)
+        use_ptts=true
+        ptts_post=true
         shift
         ;;
       -ptts-num=*)
@@ -943,23 +951,36 @@ else
       export LD_AUDIT=$ORIG_AUDIT_AUDIT
       export LD_PRELOAD=$ORIG_LD_PRELOAD
     fi
-    rm -rf "$pttsprefix/sample*.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog" "$pttsprefix/$node"
-    if [ "$node" -eq 0 ] ; then
-      echo "PTTS($node): Sampling \"$@\""
-      samplingstarttime=`date +%s`
-    fi
-    sample_ts $ptts_sample_flags -o "$samplefile" -r $@
-    retval=$?
-    if [ "$node" -eq 0 ] ; then
-      samplingendtime=`date +%s`
-      echo "PTTS($node): sample_ts time: $((samplingendtime-samplingstarttime)) seconds"
-    fi
+    rm -f "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/$node"
+
+    if ! $ptts_post ; then
+      rm -rf "$pttsprefix/sample*.smp" "$reportfile" "$pttsprefix/$viewdir"
+      if [ "$node" -eq 0 ] ; then
+        echo "PTTS($node): Sampling \"$@\""
+        samplingstarttime=`date +%s`
+      fi
+      sample_ts $ptts_sample_flags -o "$samplefile" -r $@
+      retval=$?
+      if [ "$node" -eq 0 ] ; then
+        samplingendtime=`date +%s`
+        echo "PTTS($node): sample_ts time: $((samplingendtime-samplingstarttime)) seconds"
+      fi
+    fi 
+
+    # Write the index first.  Even if some nodes fail later the index will help
+    # navigate the rest of the report.
 
     # All sample files must be written before generating a report from any sample file.
-    # Must barrier before checking for sample files since sample.$node.smp may have been
+    # Barrier before checking for sample files since sample.$node.smp may have been
     # written by another MPI rank. After the barrier each rank can "own" sample.$node.smp
     mpi_barrier
     samplefile="$pttsprefix/sample.${node}.smp"
+
+    # Shared filesystems must be in sync before proceeding
+    echo "PTTS($node): Synchronizing filesystems..."
+    sleep 5 ; sync
+    sleep 5 ; sync
+    sleep 5 ; sync
 
     # sample_ts may return nonzero without an error so only abort if sample_ts didn't write *.smp.
     # Check after the barrier so we can post-process even if some ranks fail
@@ -1017,13 +1038,13 @@ else
     fi
     cd "$OLDPWD"
 
-    # Clean up and package the report
-    rm -f "$samplefile" "$reportfile" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
+    # Clean up
     if [ "$node" -eq 0 ] ; then
       write_ptts_index
     else
       compress_ptts_report
     fi
+    rm -f "$reportfile" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
 
   else
     $dryrun $@
