@@ -16,6 +16,12 @@ else
   default_tags="MPI"
 fi
 
+if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
+  on_craycnl=true
+else 
+  on_craycnl=false
+fi
+
 echoIfVerbose () {
   if [ $verbose = "true" ] ; then
     echo -e "$1"
@@ -47,8 +53,8 @@ usage()
   echo "        -shmem        Track SHMEM events"
   echo "        -ptts         Run with ParaTools ThreadSpotter"
   echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
-  echo "        -ptts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
-  echo "        -ptts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
+  echo "        -ptts-sample-flags=<flags> Flags to pass to PTTS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+  echo "        -ptts-report-flags=<flags> Flags to pass to PTTS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
   echo "        -ebs          Enable event-based sampling"
   echo "        -ebs_period=<count> Sampling period (default 1000)"
   echo "        -ebs_source=<counter> Counter (default itimer)"
@@ -126,12 +132,12 @@ set_node()
 set_nodecount()
 {
   if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-    if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
+    if $on_craycnl ; then
       if [ -z "$ptts_N" ]; then
-        echo "ERROR: Using aprun we need -ptts-num=<arg to -n>"
+        echo "ERROR: Please use -ptts-num=MPI_RANKS to indicate number of MPI ranks."
       else
         nodecount="$ptts_N"
-      fi	
+      fi
     else	
       for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS; do
         eval nodecount=\$$i
@@ -169,7 +175,6 @@ write_ptts_index()
 
 compress_ptts_report()
 {
-  [ "$node" -eq 0 ] && return
   shared=("bl.gif"
   "br.gif"
   "ch.png"
@@ -224,11 +229,28 @@ compress_ptts_report()
   cd "$OLDPWD"
 }
 
+mpi_barrier()
+{
+  # A stupid, brute force barrier that uses the file system to syncrhonize all MPI ranks
+  # before post-processing PTTS sample files.
+  touch "$pttsprefix/$node"
+  i=0
+  while [ $i -lt $nodecount ] ; do
+    if [ -f "$pttsprefix/$i" ] ; then
+      ((i++))
+    else
+      sleep 1
+    fi
+  done
+}
+
 if [ $# = 0 ] ; then
   usage
 fi
 
-
+# Unfortunately LD_PRELOAD items can be seperated by spaces or colons.
+# Change spaces to colons so we can reuse $LD_PRELOAD below.
+LD_PRELOAD=`echo "$LD_PRELOAD" | tr [:space:] ':' | tr -s ':'`
 
 dryrun=""
 processT=false
@@ -268,7 +290,6 @@ use_ptts=false
 ptts_N=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
-on_craycnl=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -777,9 +798,6 @@ fi
 
 # Prep ThreadSpotter before LD_PRELOAD get set
 if $use_ptts ; then
-  if [ -n "$dryrun" ] ; then
-    dryrun="$dryrun PTTS($node): "
-  fi
   if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then
     echo "ERROR: ParaTools ThreadSpotter not found on PATH"
     exit 1
@@ -905,17 +923,16 @@ else
       echo "ERROR: dryrun not implemented for ptts"
       exit 1
     fi
-    if [[ -z "${ALPS_APP_PE}" ]]; then
-      samplefile="$pttsprefix/sample.${node}.smp"
-    else
-      samplefile="$pttsprefix/sample%U.smp"
-    fi
+    # Can't use $node because the "-g" flag to sample_ts causes some ranks to write
+    # sample files on behalf of others.  "%U" uses the filesystem to get a (hopefully) unique number.
+    samplefile="$pttsprefix/sample%U.smp"
     reportfile="$pttsprefix/report.${node}.tsr"
     reportlog="$pttsprefix/report_ts.${node}.log"
     # view-static_ts paths should be relative to $pttsprefix
     # since view-static_ts must be run with PWD=$pttsprefix
     viewdir="node_${node}"
     viewlog="view-static_ts.${node}.log"
+
     # Restore environment and start sampling the child process
     if [ $apple = 1 ]; then
       export DYLD_LIBRARY_PATH=$ORIG_LIBRARY_PATH
@@ -926,103 +943,88 @@ else
       export LD_AUDIT=$ORIG_AUDIT_AUDIT
       export LD_PRELOAD=$ORIG_LD_PRELOAD
     fi
-    rm -rf "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog" "$pttsprefix/$node"
+    rm -rf "$pttsprefix/sample*.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog" "$pttsprefix/$node"
     if [ "$node" -eq 0 ] ; then
+      echo "PTTS($node): Sampling \"$@\""
       samplingstarttime=`date +%s`
     fi
     sample_ts $ptts_sample_flags -o "$samplefile" -r $@
+    retval=$?
     if [ "$node" -eq 0 ] ; then
       samplingendtime=`date +%s`
-      echo "sampling time on rank 0: $((samplingendtime-samplingstarttime)) seconds"
+      echo "PTTS($node): sample_ts time: $((samplingendtime-samplingstarttime)) seconds"
     fi
-    if [[ -z "${ALPS_APP_PE}" ]]; then
-      err=$? ; [ $err -eq 0 ] || exit $err
-      retval=$err
-      # Get the return code of the child process as the tau_exec return code
-      # Post-process samples
-      echo "PTTS($node): Postprocessing samples..."
-      if [ "$node" -eq 0 ] ; then
-        reportstarttime=`date +%s`
-      fi
-      report_ts $ptts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
-      if [ "$node" -eq 0 ] ; then
-        reportendtime=`date +%s`
-        echo "report time on rank 0: $((reportendtime-reportstarttime)) seconds"
-      fi
-      err=$? ; [ $err -eq 0 ] || exit $err
-      # Generate report. view-static must be run in $pttsprefix
-      cd "$pttsprefix"
-      if [ "$node" -eq 0 ] ; then
-        staticstarttime=`date +%s`
-      fi
-      view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
-      if [ "$node" -eq 0 ] ; then
-        staticendtime=`date +%s`
-        echo "view-static time on rank 0: $((staticendtime-staticstarttime)) seconds"
-      fi
-      err=$? ; [ $err -eq 0 ] || exit $err
-      cd "$OLDPWD"
-      # Clean up and package the report
-      rm -f "$samplefile" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
-      compress_ptts_report
-      if [ "$node" -eq 0 ] ; then
-        write_ptts_index
-      fi
-    else
-      if [ "$node" -eq 0 ] ; then
-        # Get the return code of the child process as the tau_exec return code
-        err=$? ; [ $err -eq 0 ] || exit $err
-        retval=$err
-        touch "$pttsprefix/0"
-	while [ ! -f "$pttsprefix/1" ] ; do
-          sleep 1
-        done
+
+    # All sample files must be written before generating a report from any sample file.
+    # Must barrier before checking for sample files since sample.$node.smp may have been
+    # written by another MPI rank. After the barrier each rank can "own" sample.$node.smp
+    mpi_barrier
+    samplefile="$pttsprefix/sample.${node}.smp"
+
+    # sample_ts may return nonzero without an error so only abort if sample_ts didn't write *.smp.
+    # Check after the barrier so we can post-process even if some ranks fail
+    if [ ! -f "$samplefile" ] ; then
+      echo "PTTS($node): Sample file \"$samplefile\" does not exist. sample_ts returned $retval."
+      if [ $retval -eq 0 ] ; then
+        exit 255
       else
-        neighbor=$((($node+1)%$nodecount))
-	while [ ! -f "$pttsprefix/$neighbor" ] ; do
-          sleep 1
-	done
-	touch "$pttsprefix/$node"
-        retval=0
+        exit $retval
       fi
-      # Post-process samples
+    fi 
+
+    # Post-process samples
+    if [ "$node" -eq 0 ] ; then
       echo "PTTS($node): Postprocessing samples..."
-      if [ "$node" -eq 0 ] ; then
-        reportstarttime=`date +%s`
-      fi
-      report_ts $ptts_report_flags -i "$pttsprefix/sample.${node}.smp" -o "$reportfile" >"$reportlog" 2>&1
-      if [ "$node" -eq 0 ] ; then
-        reportendtime=`date +%s`
-        echo "report time on rank 0: $((reportendtime-reportstarttime)) seconds"
-      fi
-      err=$? ; [ $err -eq 0 ] || echo "PTTS($node): report returned non-zero error code $err."
-      if [ ! -f "$reportfile" ]; then
-        echo "PTTS($node): Report file was not produced."
-        exit $err
-      fi
-      # Generate report. view-static must be run in $pttsprefix
-      cd "$pttsprefix"
-      if [ "$node" -eq 0 ] ; then
-        staticstarttime=`date +%s`
-      fi
-      view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
-      if [ "$node" -eq 0 ] ; then
-        staticendtime=`date +%s`
-        echo "view-static time on rank 0: $((staticendtime-staticstarttime)) seconds"
-      fi
-      err=$? ; [ $err -eq 0 ] || echo "PTTS($node): view-static returned non-zero error code $err."
-      cd "$OLDPWD"
-      if [ ! -d "$pttsprefix/$viewdir" ]; then
-        echo "PTTS($node): view-static failed."
-        exit $err
-      fi
-      # Clean up and package the report
-      rm -f "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
-      compress_ptts_report
-      if [ "$node" -eq 0 ] ; then
-        write_ptts_index
-      fi
+      reportstarttime=`date +%s`
     fi
+    report_ts $ptts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
+    retval=$?
+    if [ "$node" -eq 0 ] ; then
+      reportendtime=`date +%s`
+      echo "PTTS($node): report_ts time: $((reportendtime-reportstarttime)) seconds"
+    fi
+    # Abort if sample_ts returned nonzero or didn't write the sample file
+    if [ $retval -eq 0 ] ; then
+      if [ ! -f "$reportfile" ] ; then
+        echo "PTTS($node): report_ts returned 0 but report file \"$reportfile\" does not exist."
+        exit 255
+      fi 
+    else
+      echo "PTTS($node): report_ts returned error code $retval."
+      exit $retval
+    fi
+
+    # Generate report. view-static_ts must be run in $pttsprefix
+    cd "$pttsprefix"
+    if [ "$node" -eq 0 ] ; then
+      staticstarttime=`date +%s`
+    fi
+    view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
+    retval=$?
+    if [ "$node" -eq 0 ] ; then
+      staticendtime=`date +%s`
+      echo "PTTS($node): view-static_ts time: $((staticendtime-staticstarttime)) seconds"
+    fi
+    # Abort if view-static_ts returned nonzero or didn't write HTML files
+    if [ $retval -eq 0 ] ; then
+      if [ ! -f "$viewdir/front.html" ] ; then
+        echo "PTTS($node): view-static_ts returned 0 but report file \"$viewdir/front.html\" does not exist."
+        exit 255
+      fi 
+    else
+      echo "PTTS($node): view-static_ts returned error code $retval."
+      exit $retval
+    fi
+    cd "$OLDPWD"
+
+    # Clean up and package the report
+    rm -f "$samplefile" "$reportfile" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
+    if [ "$node" -eq 0 ] ; then
+      write_ptts_index
+    else
+      compress_ptts_report
+    fi
+
   else
     $dryrun $@
     retval=$?
