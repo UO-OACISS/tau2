@@ -4427,8 +4427,16 @@ then
 		    then
 		      mpiinc=$mpiinc_search
 		      echo "Using MPI include directory $mpiinc"
+                    else 
+		      mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include64
+                      if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+                      then
+                        mpiinc=$mpiinc_search
+                        echo "Using MPI include directory $mpiinc"
+                        echo "machine is $machine"
+                      fi
                     fi
-                 fi
+                fi 
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4726,9 +4734,14 @@ then
     esac
 fi
 
-if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "x" ]; then
-    echo "MPIINC and MPILIB are not set!"
+if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" ]; then
+    echo "MPIINC is not set!"
     mpiinc_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+    if [ ! -d $mpiinc_search ] ; then
+      # Try the ".../include64" directory instead of ".../include"
+      mpiinc_search=`which mpirun  | sed -e 's@//@/@g'| sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/include64
+    fi
+
     if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
     then
          mpiinc=$mpiinc_search
@@ -4763,6 +4776,7 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "x" ]; then
 	echo "Correction: Using MPI include directory $mpiinc instead"
     fi
 
+  if [ "x$mpilib" = "x" ] ; then
     mpilib=""
     mpilib_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
     if [ ! -d $mpilib_search ] ; then
@@ -4781,6 +4795,7 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "x" ]; then
         mpilib=""
       fi
     fi
+  fi
   
 
 fi
@@ -9823,6 +9838,7 @@ cp ${tauroot}/tools/src/tauex $BINTARGET
 cp ${tauroot}/tools/src/taucc $BINTARGET
 cp ${tauroot}/tools/src/taucxx $BINTARGET
 cp ${tauroot}/tools/src/tauupc $BINTARGET
+cp ${tauroot}/tools/src/taucaf $BINTARGET
 cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
@@ -9833,6 +9849,7 @@ cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_caf.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 # tau_exec works differently when it's named "tau_python"
 cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_python
