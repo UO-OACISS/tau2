@@ -16,9 +16,9 @@ CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU
 
 LDFLAGS = $(TAU_MPI_LIB)
 
-OBJS = libfree_unused_vbufs.so free_unused_vbufs.o
+OBJS = libfree_unused_vbufs.so librecommend_sharp_usage.so free_unused_vbufs.o recommend_sharp_usage.o
 
-SHAREDLIBS = libfree_unused_vbufs.so
+SHAREDLIBS = libfree_unused_vbufs.so librecommend_sharp_usage.so
 
 all: install
 	@echo
@@ -30,8 +30,14 @@ install: $(SHAREDLIBS)
 libfree_unused_vbufs.so: free_unused_vbufs.o
 	$(CC) $(LDFLAGS) -shared -o libfree_unused_vbufs.so free_unused_vbufs.o
 
+librecommend_sharp_usage.so: recommend_sharp_usage.o
+	$(CC) $(LDFLAGS) -shared -o librecommend_sharp_usage.so recommend_sharp_usage.o
+
 free_unused_vbufs.o:      free_unused_vbufs.c
 	$(CC) $(CFLAGS)  -c free_unused_vbufs.c
+
+recommend_sharp_usage.o:      recommend_sharp_usage.c
+	$(CC) $(CFLAGS)  -c recommend_sharp_usage.c
 
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)

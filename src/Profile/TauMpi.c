@@ -23,6 +23,7 @@
 #include <Profile/TauRequest.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauUtil.h>
+#include <Profile/TauPlugin.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -61,6 +62,10 @@
 #define TAU_OPENMPI3_CONST  
 #endif
 
+
+//Plugin related functions
+extern PluginManager* plugin_manager;
+extern void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
 
 void TauSyncClocks();
 void TauSyncFinalClocks();
@@ -1597,6 +1602,10 @@ int  MPI_Finalize(  )
 
   Tau_stop_top_level_timer_if_necessary();
   tau_mpi_finalized = 1;
+ 
+#if TAU_PLUGIN_ENABLED
+  Tau_util_apply_role_hook(plugin_manager, "MPIT_Recommend", 0, NULL);  
+#endif
 
   return returnVal;
 }
@@ -1645,10 +1654,6 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
-
-  fprintf(stdout, "Tau MPI init: load plugins..\n");
-  /* Load plugins */
-  Tau_util_load_plugins();
 
   if(Tau_get_usesMPI() == 0)
   {
