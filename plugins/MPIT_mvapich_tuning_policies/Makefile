@@ -31,13 +31,13 @@ libfree_unused_vbufs.so: free_unused_vbufs.o
 	$(CC) $(LDFLAGS) -shared -o libfree_unused_vbufs.so free_unused_vbufs.o
 
 librecommend_sharp_usage.so: recommend_sharp_usage.o
-	$(CC) $(LDFLAGS) -shared -o librecommend_sharp_usage.so recommend_sharp_usage.o
+	$(CXX) $(LDFLAGS) -shared -o librecommend_sharp_usage.so recommend_sharp_usage.o
 
 free_unused_vbufs.o:      free_unused_vbufs.c
 	$(CC) $(CFLAGS)  -c free_unused_vbufs.c
 
-recommend_sharp_usage.o:      recommend_sharp_usage.c
-	$(CC) $(CFLAGS)  -c recommend_sharp_usage.c
+recommend_sharp_usage.o:      recommend_sharp_usage.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS)  -c recommend_sharp_usage.cpp
 
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)

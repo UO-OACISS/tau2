@@ -10,6 +10,8 @@
 #define dprintf TAU_VERBOSE
 #define TAU_NAME_LENGTH 1024
 
+extern Tau_mpi_t_parse_and_write_cvars(const char * metric, const char * value);
+
 int Tau_mpi_t_mvapich_free_unused_vbufs(int argc, void** argv) {
   int return_val, i, namelen, verb, varclass, bind, threadsup;
   int index;
