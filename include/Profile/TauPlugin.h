@@ -36,6 +36,8 @@ typedef struct PluginManager {
 typedef int (*PluginInitFunc) (PluginManager*);
 
 PluginManager* Tau_PluginManager_new();
+PluginManager* Tau_get_PluginManager();
+
 int Tau_util_load_and_register_plugins(PluginManager* plugin_manager);
 void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* plugin_manager);
 void* Tau_util_register_plugin(const char *name, void* handle, PluginManager* plugin_manager);
