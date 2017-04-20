@@ -81,11 +81,9 @@ extern "C" int Tau_mpi_t_recommend_sharp_usage(int argc, void** argv) {
 
   RtsLayer::UnLockDB();
 
-  
-  //Get the exclusive time for MPI_AllReduce and entire application
- 
+  //Generate recommendation for the user
 
-   
+  TAU_METADATA("TAU_MPI_T_RECOMMEND_SHARP_USAGE", "You could see potential improvement in performance by configuring MVAPICH with --enable-sharp and enabling MV2_ENABLE_SHARP in MVAPICH version 2.3a and above");
   
   return 0;
 }
