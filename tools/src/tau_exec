@@ -458,6 +458,23 @@ for arg in "$@" ; do
         spark_wrapper=true
         shift
         ;;
+      -c)
+        if [ $python_wrapper = "true" ] ; then
+          break
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
+        ;;
+      -m)
+        if [ $python_wrapper = "true" ] ; then
+          shift
+          break
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
+        ;;
       --)
         shift
         break
@@ -921,9 +938,9 @@ else
 
   if $spark_wrapper ; then
     $dryrun export PYTHONPATH=$PYTHONPATH
-    $dryrun python -m tau_pyspark_wrapper $@
+    $dryrun python -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
-    $dryrun python -m tau_python_wrapper $@
+    $dryrun python -m tau_python_wrapper "$@"
     retval=$?
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
