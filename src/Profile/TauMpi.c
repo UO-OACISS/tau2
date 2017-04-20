@@ -1523,6 +1523,9 @@ int  MPI_Finalize(  )
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
 
+#if TAU_PLUGIN_ENABLED
+  Tau_util_apply_role_hook(plugin_manager, "MPIT_Recommend", 0, NULL);
+#endif
 
   if (Tau_get_node() < 0) {
     /* Grab the node id, we don't always wrap mpi_init */
@@ -1603,10 +1606,6 @@ int  MPI_Finalize(  )
   Tau_stop_top_level_timer_if_necessary();
   tau_mpi_finalized = 1;
  
-#if TAU_PLUGIN_ENABLED
-  Tau_util_apply_role_hook(plugin_manager, "MPIT_Recommend", 0, NULL);  
-#endif
-
   return returnVal;
 }
 
