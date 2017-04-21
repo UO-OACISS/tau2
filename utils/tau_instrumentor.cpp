@@ -3105,8 +3105,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   cout << "Processing " << file << " in instrumentFFile..." << endl;
 #endif
 
-  memset(previousline, INBUF_SIZE, 0); // reset to zero
-  memset(inbuf, INBUF_SIZE, 0); // reset to zero
+  if (INBUF_SIZE > 0) {
+    memset(previousline, 0, INBUF_SIZE); // reset to zero
+    memset(inbuf, 0, INBUF_SIZE); // reset to zero
+  }
   // initialize reference vector
   vector<itemRef *> itemvec;
   if (!use_spec)
@@ -3892,7 +3894,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #ifdef DEBUG
       printf("SAVING %s\n", previousline);
 #endif /* DEBUG */
-      memset(inbuf, INBUF_SIZE, 0); // reset to zero
+      if (INBUF_SIZE > 0) memset(inbuf, 0, INBUF_SIZE); // reset to zero
     } /* while */
   } /* while lit!= end */
   // For loop is over now flush out the remaining lines to the output file
