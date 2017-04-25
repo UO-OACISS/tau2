@@ -63,7 +63,7 @@
 
 void TauSyncClocks();
 void TauSyncFinalClocks();
-int Tau_mergeProfiles();
+int Tau_mergeProfiles_MPI();
 void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
@@ -1583,7 +1583,7 @@ int  MPI_Finalize(  )
     /* KAH - NO! this is the wrong time to do this. THis is also done in the
      * snapshot writer. If you do it twice, you get double values for main... */
     //TauProfiler_updateAllIntermediateStatistics();
-    Tau_mergeProfiles();
+    Tau_mergeProfiles_MPI();
   }
   
 #ifdef TAU_MONITORING
