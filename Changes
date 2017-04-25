@@ -32,6 +32,7 @@ Version 2.26 changes (from 2.25):
 19. Updated APEX with tau_exec. 
 20. Added support for Kokkos profiling interface. 
 21. Added tau_spark-submit wrapper for Spark profiling to propagate TAU environment variables. 
+22. Added support for Co-array Fortran (caflauncher, tau_caf.sh, taucaf).
 
 
 
