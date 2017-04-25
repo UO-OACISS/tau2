@@ -43,7 +43,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 /* external "C" definitions */
-int Tau_unify_unifyDefinitions();
+int Tau_unify_unifyDefinitions_MPI();
+int Tau_unify_unifyDefinitions_SHMEM();
 Tau_unify_object_t *Tau_unify_getFunctionUnifier();
 Tau_unify_object_t *Tau_unify_getAtomicUnifier();
 
@@ -117,7 +118,10 @@ class AtomicEventLister : public EventLister {
 
 
 /** Using MPI, unify events for a given EventLister */
-Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister);
+Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister);
+
+/** Using SHMEM, unify events for a given EventLister */
+Tau_unify_object_t *Tau_unify_unifyEvents_SHMEM(EventLister *eventLister);
 
 #endif /* __cplusplus */
 

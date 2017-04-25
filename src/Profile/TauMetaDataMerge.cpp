@@ -175,9 +175,6 @@ extern "C" int Tau_metadataMerge_mergeMetaData_SHMEM() {
     char tmpstr[256];
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU MetaData Merge Time", tmpstr);
-#ifdef TAU_MPI
-	Tau_util_destroyOutputDevice(out);
-#endif /* TAU_MPI */
 #ifdef TAU_SHMEM
 	Tau_util_destroyOutputDevice(out);
 #endif /* TAU_SHMEM */
