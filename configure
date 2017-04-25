@@ -1000,14 +1000,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', or 'oshfort' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', or 'caf' "
 		exit 1
 	    fi
 	    shift
@@ -3581,6 +3581,9 @@ then
             if [ "x$fortran_compiler" = "xxlflang" ]; then
                 fixmakeargs="$fixmakeargs XLFLANG"
             fi
+	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then 
+		fortran_compiler=caf
+            fi
 	else
             fortran_compiler=no
 	fi
@@ -4150,6 +4153,11 @@ case $fortran_compiler in
 	fi
 	;;
 
+    caf)
+	echo "Default Fortran compiler will be caf"
+        fixmakeargs="$fixmakeargs CAF"
+	;;
+
     gfortran4)
 	echo "Default Fortran compiler will be GNU gfortran4"
 	gfortran4=`which gfortran4 2>&1`
@@ -4427,8 +4435,16 @@ then
 		    then
 		      mpiinc=$mpiinc_search
 		      echo "Using MPI include directory $mpiinc"
+                    else 
+		      mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include64
+                      if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+                      then
+                        mpiinc=$mpiinc_search
+                        echo "Using MPI include directory $mpiinc"
+                        echo "machine is $machine"
+                      fi
                     fi
-                 fi
+                fi 
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4726,9 +4742,14 @@ then
     esac
 fi
 
-if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "x" ]; then
-    echo "MPIINC and MPILIB are not set!"
+if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" ]; then
+    echo "MPIINC is not set!"
     mpiinc_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+    if [ ! -d $mpiinc_search ] ; then
+      # Try the ".../include64" directory instead of ".../include"
+      mpiinc_search=`which mpirun  | sed -e 's@//@/@g'| sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/include64
+    fi
+
     if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
     then
          mpiinc=$mpiinc_search
@@ -4763,6 +4784,7 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "x" ]; then
 	echo "Correction: Using MPI include directory $mpiinc instead"
     fi
 
+  if [ "x$mpilib" = "x" ] ; then
     mpilib=""
     mpilib_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
     if [ ! -d $mpilib_search ] ; then
@@ -4781,6 +4803,7 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "x" ]; then
         mpilib=""
       fi
     fi
+  fi
   
 
 fi
@@ -9823,6 +9846,7 @@ cp ${tauroot}/tools/src/tauex $BINTARGET
 cp ${tauroot}/tools/src/taucc $BINTARGET
 cp ${tauroot}/tools/src/taucxx $BINTARGET
 cp ${tauroot}/tools/src/tauupc $BINTARGET
+cp ${tauroot}/tools/src/taucaf $BINTARGET
 cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
@@ -9833,6 +9857,7 @@ cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_caf.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 # tau_exec works differently when it's named "tau_python"
 cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_python

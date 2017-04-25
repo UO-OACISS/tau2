@@ -52,14 +52,20 @@ except ImportError:
 except:
   dieInFlames("Unknown exception while importing tau: %s" % sys.exc_info()[0])
 
-if os.path.exists(modname):
-  path = os.path.dirname(modname)
-  modname = os.path.basename(modname)
-  if modname[-3:].lower() != '.py':
-    dieInFlames("Sorry, I don't know how to instrument '%s'" % modname)
-  modname = modname[:-3]
-  sys.path.append(path)
-  sys.argv = sys.argv[1:]
-
-tau.runmodule(modname)
+if sys.argv[1] == '-c':
+  command = sys.argv[2]
+  del sys.argv[2]
+  del sys.argv[0]
+  tau.run(command)   
+else:
+  if os.path.exists(modname):
+    path = os.path.dirname(modname)
+    modname = os.path.basename(modname)
+    if modname[-3:].lower() != '.py':
+      dieInFlames("Sorry, I don't know how to instrument '%s'" % modname)
+    modname = modname[:-3]
+    sys.path.append(path)
+    sys.argv = sys.argv[1:]
+  
+  tau.runmodule(modname)
 
