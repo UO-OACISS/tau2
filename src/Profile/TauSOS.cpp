@@ -106,7 +106,7 @@ void TAU_SOS_make_pub() {
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
 /* Fixme! Replace these with values from TAU metadata. */
-        tau_sos_pub = SOS_pub_create(_runtime, pub_name, SOS_NATURE_DEFAULT);
+        SOS_pub_create(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
@@ -252,7 +252,8 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         init_lock();
         // if runtime returns null, wait a bit and try again. If 
         // we fail "too many" times, give an error and continue
-        _runtime = SOS_init(argc, argv, SOS_ROLE_CLIENT, SOS_LAYER_LIB);
+        _runtime = NULL;
+        SOS_init(argc, argv, &_runtime, SOS_ROLE_LISTENER, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
             TAU_SOS_fork_exec_sosd();
             shutdown_daemon = true;
@@ -260,7 +261,8 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         int repeat = 10;
         while(_runtime == NULL) {
             sleep(1);
-            _runtime = SOS_init(argc, argv, SOS_ROLE_CLIENT, SOS_LAYER_LIB);
+            _runtime = NULL;
+            SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
             if (--repeat < 0) { 
                 TAU_VERBOSE("Unable to connect to SOS daemon. Continuing...\n");
                 return;
