@@ -1,0 +1,9 @@
+Please use:
+#export PATH=/opt/paratools/tau2/x86_64/bin:$PATH
+#export TAU_MAKEFILE=/opt/paratools/tau2/x86_64/lib/Makefile.tau-mpi-pdt
+
+make clean
+make run
+make tau
+
+
