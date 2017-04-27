@@ -1482,18 +1482,18 @@ int TauProfiler_StoreData(int tid)
     if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
       Tau_metadataMerge_mergeMetaData();
       /* Create a merged profile if requested */
-      Tau_mergeProfiles();
+      Tau_mergeProfiles_MPI();
 	}
 #endif
 #endif
   }
 #endif /* PTHREADS */
 
-#ifdef TAU_SHMEM
+#if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     Tau_global_setLightsOut();
     Tau_metadataMerge_mergeMetaData_SHMEM();
-    Tau_mergeProfiles();
+    Tau_mergeProfiles_SHMEM();
     __real_shmem_finalize();
   }
 #endif /* TAU_SHMEM */
