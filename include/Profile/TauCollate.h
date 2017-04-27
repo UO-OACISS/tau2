@@ -85,11 +85,14 @@ void Tau_collate_freeUnitAtomicBuffer(double **atomicMin, double **atomicMax,
 				      double **atomicSum, double **atomicMean,
 				      double **atomicSumSqr);
 
-void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
+void Tau_collate_get_total_threads_MPI(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
+				   int **numEventThreads,
+				   int numItems, int *globalmap, bool isAtomic);
+void Tau_collate_get_total_threads_SHMEM(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
 				   int **numEventThreads,
 				   int numItems, int *globalmap, bool isAtomic);
 
-void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
+void Tau_collate_compute_atomicStatistics_MPI(Tau_unify_object_t *atomicUnifier,
 					  int *globalEventMap, int numItems,
 					  int globalNumThreads, int *numEventThreads,
 					  double ***gAtomicMin, double ***gAtomicMax,
@@ -98,7 +101,24 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 					  double ***sAtomicMin, double ***sAtomicMax,
 					  double ***sAtomicSum, double ***sAtomicMean,
 					  double ***sAtomicSumSqr);
-void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
+void Tau_collate_compute_atomicStatistics_SHMEM(Tau_unify_object_t *atomicUnifier,
+					  int *globalEventMap, int numItems,
+					  int globalNumThreads, int *numEventThreads,
+					  double ***gAtomicMin, double ***gAtomicMax,
+					  double ***gAtomicSum, double ***gAtomicMean,
+					  double ***gAtomicSumSqr,
+					  double ***sAtomicMin, double ***sAtomicMax,
+					  double ***sAtomicSum, double ***sAtomicMean,
+					  double ***sAtomicSumSqr);
+void Tau_collate_compute_statistics_MPI(Tau_unify_object_t *functionUnifier,
+				    int *globalmap, int numItems, 
+				    int globalNumThreads, 
+				    int *numEventThreads,
+				    double ****gExcl, double ****gIncl,
+				    double ***gNumCalls, double ***gNumSubr,
+				    double ****sExcl, double ****sIncl,
+				    double ***sNumCalls, double ***sNumSubr);
+void Tau_collate_compute_statistics_SHMEM(Tau_unify_object_t *functionUnifier,
 				    int *globalmap, int numItems, 
 				    int globalNumThreads, 
 				    int *numEventThreads,

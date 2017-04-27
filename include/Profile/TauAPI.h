@@ -139,7 +139,7 @@
 
 /* DB Access */
 #define TAU_DB_DUMP()                           Tau_dump();
-#define TAU_DB_MERGED_DUMP()                    Tau_mergeProfiles();
+#define TAU_DB_MERGED_DUMP()                    Tau_mergeProfiles_MPI();
 #define TAU_DB_DUMP_PREFIX(prefix)              Tau_dump_prefix(prefix);
 #define TAU_DB_DUMP_PREFIX_TASK(prefix, task)   Tau_dump_prefix_task(prefix, task);
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
@@ -508,7 +508,8 @@ void Tau_set_context(int context);
 void Tau_set_thread(int thread);
 void Tau_callstack(void);
 int Tau_dump(void);
-int Tau_mergeProfiles();
+int Tau_mergeProfiles_MPI();
+int Tau_mergeProfiles_SHMEM();
 int Tau_dump_incr(void);
 void Tau_purge(void);
 void Tau_theFunctionList(const char ***functionList, int *num);
