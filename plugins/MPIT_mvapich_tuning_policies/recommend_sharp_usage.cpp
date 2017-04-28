@@ -60,7 +60,7 @@ extern "C" int Tau_mpi_t_recommend_sharp_usage(int argc, void** argv) {
   }
 
   //Get the mean MPI_Allreduce message size  
-  std::vector<tau::TauUserEvent*, TauSignalSafeAllocator<tau::TauUserEvent*>>::iterator it2;
+  std::vector<tau::TauUserEvent*, TauSignalSafeAllocator<tau::TauUserEvent*> >::iterator it2;
   int numEvents;
   std::stringstream tmp_str;
   std::stringstream all_reduce_event_name("Message size for all-reduce");
@@ -77,14 +77,15 @@ extern "C" int Tau_mpi_t_recommend_sharp_usage(int argc, void** argv) {
     tmp_str.str(std::string());
   }
 
-  std::cout << "Total percentage of MPI_Allreduce() and mean message size are " << (exclusiveTimeAllReduce/inclusiveTimeApp) << "  " << meanAllReduceMessageSize << std::endl;
+  //std::cout << "Total percentage of MPI_Allreduce() and mean message size are " << (exclusiveTimeAllReduce/inclusiveTimeApp) << "  " << meanAllReduceMessageSize << std::endl;
 
   RtsLayer::UnLockDB();
 
-  //Generate recommendation for the user
+  //Generate recommendation for the user if appropriate conditions are met
+  if(((exclusiveTimeAllReduce/inclusiveTimeApp) > .30 ) && meanAllReduceMessageSize < 32.0) {
+    TAU_METADATA("TAU_MPI_T_RECOMMEND_SHARP_USAGE", "You could see potential improvement in performance by configuring MVAPICH with --enable-sharp and enabling MV2_ENABLE_SHARP in MVAPICH version 2.3a and above");
+  }
 
-  TAU_METADATA("TAU_MPI_T_RECOMMEND_SHARP_USAGE", "You could see potential improvement in performance by configuring MVAPICH with --enable-sharp and enabling MV2_ENABLE_SHARP in MVAPICH version 2.3a and above");
-  
   return 0;
 }
 
