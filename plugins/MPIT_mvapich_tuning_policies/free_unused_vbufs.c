@@ -23,7 +23,7 @@ int Tau_mpi_t_mvapich_free_unused_vbufs(int argc, void** argv) {
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
   static int firsttime = 1;
-  static unsigned long long int *reduced_value_array = NULL;
+  unsigned long long int reduced_value_array[5] = {0};
   static char reduced_value_cvar_string[TAU_NAME_LENGTH] = "";
   static char reduced_value_cvar_value_string[TAU_NAME_LENGTH] = "";
 
@@ -43,8 +43,6 @@ int Tau_mpi_t_mvapich_free_unused_vbufs(int argc, void** argv) {
   pvar_max_vbuf_usage_index = -1;
   pvar_vbuf_allocated_index = -1;
   has_threshold_been_breached_in_any_pool = 0;
-
-  printf("Number of PVARS %d\n", (*num_pvars));
 
  if(firsttime) {
   firsttime = 0;
@@ -75,11 +73,11 @@ int Tau_mpi_t_mvapich_free_unused_vbufs(int argc, void** argv) {
     printf("Unable to find the indexes of PVARs required for tuning\n");
     return 0;
   } else {
-    printf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
+    //printf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
   }
  }
  
-  reduced_value_array = calloc(tau_pvar_count[pvar_max_vbuf_usage_index], sizeof(unsigned long long int));
+  //reduced_value_array = calloc(tau_pvar_count[pvar_max_vbuf_usage_index], sizeof(unsigned long long int));
   //reduced_value_cvar_string = (char*)Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*1024);
   strcpy(reduced_value_cvar_string, "");
   //reduced_value_cvar_value_string = (char*)Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
@@ -126,6 +124,6 @@ int Tau_mpi_t_mvapich_free_unused_vbufs(int argc, void** argv) {
 
 int Tau_plugin_init_func(PluginManager* plugin_manager) {
   printf("Hi there! I free unused vbufs! My init func has been called\n");
-  Tau_util_plugin_manager_register_role_hook(plugin_manager, "MPIT", Tau_mpi_t_mvapich_free_unused_vbufs);
+  Tau_util_plugin_manager_register_role_hook(plugin_manager, "MPIT_Tuning", Tau_mpi_t_mvapich_free_unused_vbufs);
   return 0;
 }
