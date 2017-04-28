@@ -173,8 +173,8 @@ typedef struct node_s node_t;
 
 struct condition_s
 {
-  //char *stmt;
-  stmt_enum_t stmt;
+  string stmt;
+  //stmt_enum_t stmt;
 
   node_t *root; // Tree containing operands and operators
 
@@ -784,12 +784,12 @@ void innerop(Op op)
         int resVal = 0;
         condition_t *cond = op.cond; 
         resVal = evalExpr(cond->root); 
-        if(cond->stmt == IF) {
+        if(cond->stmt == "if") {
           IFSTMT(resVal) {
             node_t *res = op.result;
             evalExpr(res);
           }
-        } else if(cond->stmt == WHILE) {
+        } else if(cond->stmt == "while") {
           WHILESTMT(resVal) {
             node_t *res = op.result;
             evalExpr(res);
@@ -1081,14 +1081,16 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
  
   if(path == "rule.operation.condition.operator") {
     node_t *root;
-    operator_enum_t ope;
-    root->ope = ope;
+    operator_enum_t ope;  
+    root->data = value.asString().c_str();
+    //root->ope = ope;
     rules[rule_idx].op.cond->root = root;
   }
 
   if(path == "rule.operation.condition.stmt") {
-    stmt_enum_t stmt;
-    rules[rule_idx].op.cond->stmt = stmt;
+    //stmt_enum_t stmt;
+    //rules[rule_idx].op.cond->stmt = stmt;
+    rules[rule_idx].op.cond->stmt = value.asString().c_str();
   }
 
   if(path == "rule.operation.result") {
@@ -1113,7 +1115,9 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
 
   if(path == "rule.operation.result.operator") {
     operator_enum_t ope;
-    rules[rule_idx].op.result->ope = ope;
+    //root->data = value.asString().c_str();
+    //rules[rule_idx].op.result->ope = ope;
+    rules[rule_idx].op.result->data = value.asString().c_str();
   }
 
   if(path == "rule.operation.else.leftoperand") {
@@ -1128,7 +1132,8 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
 
   if(path == "rule.operation.else.operator") {
     operator_enum_t ope;
-    rules[rule_idx].op.elseresult->ope = ope;
+    //rules[rule_idx].op.elseresult->ope = ope;
+    rules[rule_idx].op.elseresult->data = value.asString().c_str();
   }
 
 }
