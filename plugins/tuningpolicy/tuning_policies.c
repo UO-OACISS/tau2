@@ -174,7 +174,7 @@ typedef struct node_s node_t;
 struct condition_s
 {
   //char *stmt;
-  enum stmt_enum_e stmt;
+  stmt_enum_t stmt;
 
   node_t *root; // Tree containing operands and operators
 
@@ -1063,6 +1063,32 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   if(path == "rule.operation.condition") {
     condition_t *cond;
     rules[rule_idx].op.cond = cond;
+  }
+ 
+  if(path == "rule.operation.condition.leftoperand") {
+    node_t *root;
+    node_t *loperand;
+    root->loperand = loperand;
+    rules[rule_idx].op.cond->root = root;
+  }
+
+  if(path == "rule.operation.condition.rightoperand") {
+    node_t *root;
+    node_t *roperand;
+    root->roperand = roperand;
+    rules[rule_idx].op.cond->root = root;
+  }
+ 
+  if(path == "rule.operation.condition.operator") {
+    node_t *root;
+    operator_enum_t ope;
+    root->ope = ope;
+    rules[rule_idx].op.cond->root = root;
+  }
+
+  if(path == "rule.operation.condition.stmt") {
+    stmt_enum_t stmt;
+    rules[rule_idx].op.cond->stmt = stmt;
   }
 
   if(path == "rule.operation.result") {
