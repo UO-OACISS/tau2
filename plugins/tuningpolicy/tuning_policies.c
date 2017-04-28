@@ -328,7 +328,6 @@ private:
 
 };
 
-
 Rule rules[MAX_NB_RULES];
 
 #define LEFTOPPLUS(leftop,rightop) \
@@ -1243,41 +1242,49 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.condition") {
-    condition_t cond;
+    condition_t *cond;
+    rules[rule_idx].op.cond = cond;
   }
 
   if(path == "rule.operation.result") {
-    res_t *res; 
+    node_t *res;
+    rules[rule_idx].op.result = res; 
   }
 
   if(path == "rule.operation.else") {
-
+    node_t *elseresult;
+    rules[rule_idx].op.elseresult = elseresult;
   }
 
   if(path == "rule.operation.result.leftoperand") {
-
+    node_t *loperand;
+    rules[rule_idx].op.result->loperand = loperand;  
   }
 
   if(path == "rule.operation.result.rightoperand") {
-
+    node_t *roperand;
+    rules[rule_idx].op.result->roperand = roperand;  
   }
 
   if(path == "rule.operation.result.operator") {
-
+    operator_enum_t ope;
+    rules[rule_idx].op.result->ope = ope;
   }
 
   if(path == "rule.operation.else.leftoperand") {
-
+    node_t *loperand;
+    rules[rule_idx].op.elseresult->loperand = loperand;  
   }
 
   if(path == "rule.operation.else.rightoperand") {
-
+    node_t *roperand;
+    rules[rule_idx].op.elseresult->roperand = roperand; 
   }
 
   if(path == "rule.operation.else.operator") {
-
+    operator_enum_t ope;
+    rules[rule_idx].op.elseresult->ope = ope;
   }
-
 
 }
 
