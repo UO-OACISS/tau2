@@ -956,7 +956,7 @@ int Tau_track_mpi_t_here(void) {
     argv[0] = (void *)num_pvars_heap;
     argv[1] = (void *)tau_pvar_count;
     argv[2] = (void **)pvar_value_buffer;
-    Tau_util_apply_role_hook(plugin_manager, "MPIT", argc, argv);
+    Tau_util_apply_role_hook(plugin_manager, "MPIT_Tuning", argc, argv);
 
 #else
     Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
