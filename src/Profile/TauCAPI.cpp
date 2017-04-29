@@ -2015,7 +2015,7 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
-void *Tau_pure_search_for_function(const char *name)
+extern "C" void *Tau_pure_search_for_function(const char *name)
 {
   FunctionInfo *fi = 0;
   RtsLayer::LockDB();
