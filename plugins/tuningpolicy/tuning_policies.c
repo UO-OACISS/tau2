@@ -1249,15 +1249,37 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   if(path == "rule.operation.condition.leftoperand") {
     node_t *root;
     node_t *loperand;
-    root->loperand = loperand;
-    rules[rule_idx].op.cond->root = root;
+   
+    if(value.type() == Json::stringValue) {
+      loperand->data = value.asString().c_str();
+      loperand->type = LEAF;
+      root->loperand = loperand;    
+      rules[rule_idx].op.cond->root = root;
+      
+    } else if (value.type() == Json::objectValue) {
+      loperand->data = "";
+      loperand->type = NODE;
+      root->loperand = loperand; 
+      rules[rule_idx].op.cond->root = root;
+    }
   }
 
   if(path == "rule.operation.condition.rightoperand") {
     node_t *root;
     node_t *roperand;
-    root->roperand = roperand;
-    rules[rule_idx].op.cond->root = root;
+
+    if(value.type() == Json::stringValue) {
+      roperand->data = value.asString().c_str();
+      roperand->type = LEAF;
+      root->roperand = roperand;    
+      rules[rule_idx].op.cond->root = root;
+      
+    } else if (value.type() == Json::objectValue) {
+      roperand->data = "";
+      roperand->type = NODE;
+      root->roperand = roperand; 
+      rules[rule_idx].op.cond->root = root;
+    }
   }
  
   if(path == "rule.operation.condition.operator") {
@@ -1286,11 +1308,34 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
 
   if(path == "rule.operation.result.leftoperand") {
     node_t *loperand;
-    rules[rule_idx].op.result->loperand = loperand;  
+
+    if(value.type() == Json::stringValue) {
+      loperand->data = value.asString().c_str();
+      loperand->type = LEAF;
+      rules[rule_idx].op.result->loperand = loperand;
+      
+    } else if (value.type() == Json::objectValue) {
+      loperand->data = "";
+      loperand->type = NODE;
+      rules[rule_idx].op.result->loperand = loperand;
+    }
+
   }
 
   if(path == "rule.operation.result.rightoperand") {
     node_t *roperand;
+ 
+    if(value.type() == Json::stringValue) {
+      roperand->data = value.asString().c_str();
+      roperand->type = LEAF;
+      rules[rule_idx].op.result->roperand = roperand;
+      
+    } else if (value.type() == Json::objectValue) {
+      roperand->data = "";
+      roperand->type = NODE;
+      rules[rule_idx].op.result->roperand = roperand;
+    }
+
     rules[rule_idx].op.result->roperand = roperand;  
   }
 
@@ -1303,12 +1348,34 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
 
   if(path == "rule.operation.else.leftoperand") {
     node_t *loperand;
-    rules[rule_idx].op.elseresult->loperand = loperand;  
+
+    if(value.type() == Json::stringValue) {
+      loperand->data = value.asString().c_str();
+      loperand->type = LEAF;
+      rules[rule_idx].op.elseresult->loperand = loperand;
+      
+    } else if (value.type() == Json::objectValue) {
+      loperand->data = "";
+      loperand->type = NODE;
+      rules[rule_idx].op.elseresult->loperand = loperand;
+    }
+
   }
 
   if(path == "rule.operation.else.rightoperand") {
     node_t *roperand;
-    rules[rule_idx].op.elseresult->roperand = roperand; 
+ 
+     if(value.type() == Json::stringValue) {
+      roperand->data = value.asString().c_str();
+      roperand->type = LEAF;
+      rules[rule_idx].op.elseresult->roperand = roperand;
+      
+    } else if (value.type() == Json::objectValue) {
+      roperand->data = "";
+      roperand->type = NODE;
+      rules[rule_idx].op.elseresult->roperand = roperand;
+    }
+
   }
 
   if(path == "rule.operation.else.operator") {
