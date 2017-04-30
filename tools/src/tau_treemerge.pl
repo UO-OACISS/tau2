@@ -4,7 +4,13 @@ use File::Basename;
 use Cwd qw(realpath);
 
 my $break = 250;
+my $workflow = 0; # by default we do not invoke tau_merge with the workflow (-w) argument to remap node numbers
 
+if (@ARGV >= 1 and $ARGV[0] eq "-w") {
+    #print "Using -w to merge workflow traces\n";
+    $workflow = 1;
+    shift(@ARGV);
+}
 if (@ARGV >= 1) {
     if ($ARGV[0] ne "-n" || @ARGV != 2) {
 	die "usage: $0 [-n <break amount> ]\n";
@@ -34,6 +40,11 @@ my $check_ex = realpath(dirname($0))."/$tau_merge";
 
 if(-x $check_ex) {
      $tau_merge = $check_ex;
+}
+
+if ($workflow == 1) {
+     $tau_merge = $tau_merge." -w ";
+     #print "Using tau_merge=$tau_merge\n";
 }
 
 system("/bin/rm -f intermediate.*");
