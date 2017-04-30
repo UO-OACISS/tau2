@@ -13,7 +13,7 @@ if (@ARGV >= 1 and $ARGV[0] eq "-w") {
 }
 if (@ARGV >= 1) {
     if ($ARGV[0] ne "-n" || @ARGV != 2) {
-	die "usage: $0 [-n <break amount> ]\n";
+	die "usage: $0 [-w] [-n <break amount> ]\n";
     }
 
     $break = $ARGV[1];
