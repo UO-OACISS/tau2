@@ -11,7 +11,7 @@ declare -i sum=0
 declare -i trial_max_node=0
 declare -i FALSE=-1
 declare -i TRUE=1
-declare -i isDebug=$TRUE
+declare -i isDebug=$FALSE
 declare -i found_traces=$FALSE
 declare -i found_profiles=$FALSE
 
