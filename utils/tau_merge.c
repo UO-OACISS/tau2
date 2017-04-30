@@ -807,7 +807,7 @@ int main(int argc, char *argv[])
       case 'w': /* -- adjust offset of node numbers (for workflows where we merge traces from multiple directories) -- */
                 workflow_offset = TRUE;
 #ifdef DEBUG
-		printf("WORFLOW_OFFSET = %d\n", workflow_offset);
+		printf("WORKFLOW_OFFSET = %d\n", workflow_offset);
 #endif /* DEBUG */
                 break;
 
@@ -948,8 +948,15 @@ int main(int argc, char *argv[])
             rank = event_GetNid(trcdes+numtrc, erec, 0);
 #ifdef DEBUG           
  	    printf("name = %s, val = %d, node id = %d\n", trcdes[numtrc].name, val, rank);
+	    printf("Comparing %s, tautrace\n", trcdes[numtrc].name); 
 #endif /* DEBUG */
-            trcdes[numtrc].add_offset_to_node = val - rank;
+	    if (strstr(trcdes[numtrc].name, "tautrace") != NULL) {
+#ifdef DEBUG
+	      printf("Adding offset of %d to processing of %s trace\n",
+		val - rank, trcdes[numtrc].name); 
+#endif /* DEBUG */
+              trcdes[numtrc].add_offset_to_node = val - rank;
+            }
           }
 	  if (!dynamic) { /* for dynamic trace, don't change this to INITM */
             /*erec->ev = TAU_EV_INITM;*/
