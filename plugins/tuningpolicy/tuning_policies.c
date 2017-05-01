@@ -1215,6 +1215,26 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
     rules[rule_idx].op.elseresult->data = value.asString().c_str();
   }
 
+  switch(value.type()) {
+  
+    case Json::objectValue: {
+     
+     Json::Value::Members members(value.getMemberNames());
+
+     std::sort(members.begin(), members.end());
+     JSONCPP_STRING suffix = *(path.end() - 1) == '.' ? "" : ".";
+     for (Json::Value::Members::iterator it = members.begin();
+         it != members.end();
+         ++it) {
+       const JSONCPP_STRING name = *it;
+       store_json_tree(value[name], path + suffix + name);
+     }
+ 
+    } 
+    break;
+  
+  }
+
 }
 
 /* Parse JSON tree */
@@ -1300,7 +1320,7 @@ void read_json_rules(const JSONCPP_STRING& path)
 
   FILE* fpolicy = fopen(path.c_str(), "r");
   
-  store_json_tree();
+  //store_json_tree();
   fclose(fpolicy);
 
 }
