@@ -977,7 +977,6 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
-<<<<<<< HEAD
 static JSONCPP_STRING readInputFile(const char* path) {
   FILE* file = fopen(path, "rb");
   if (!file)
@@ -1186,239 +1185,27 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
     } 
     break;
     case Json::nullValue:
+    break;
+ 
     case Json::intValue:
+    break;
+ 
     case Json::uintValue:
+    break;
+ 
     case Json::realValue:
+    break;
+
     case Json::stringValue:
+    break;
+
     case Json::booleanValue:
+    break;
+
     case Json::arrayValue:
     break;
 
   }
-}
-
-/* Parse JSON tree */
-void parse_json_tree(Json::Value& value, JSONCPP_STRING path = ".")
-{
-
-  switch(value.type()) {
-    case Json::nullValue:
-    case Json::intValue:
-    case Json::uintValue:
-    case Json::realValue:
-    case Json::stringValue:
-    case Json::booleanValue:
-    case Json::arrayValue:
-    case Json::objectValue: {
-      Json::Value::Members members(value.getMemberNames());
-      std::sort(members.begin(),members.end());
-      JSONCPP_STRING suffix = *(path.end() - 1) == '.' ? "": ".";
-      for(Json::Value::Members::iterator it = members.begin(); it != members.end(); ++it) {
-        const JSONCPP_STRING name = *it;
-        parse_json_tree(value[name], path + suffix + name);
-      }
-    } break;
-
-    default:
-    break;  
-  }
-
-}
-
-=======
->>>>>>> Policy Engine: Remove dead code
-static JSONCPP_STRING removeSuffix(const JSONCPP_STRING& path,
-                                const JSONCPP_STRING& extension) {
-  if (extension.length() >= path.length())
-    return JSONCPP_STRING("");
-  JSONCPP_STRING suffix = path.substr(path.length() - extension.length());
-  if (suffix != extension)
-    return JSONCPP_STRING("");
-  return path.substr(0, path.length() - extension.length());
-}
-
-/* Populate rule structure based on input json tree */
-void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
-{
-
-  if(path == ".rule") {
-    rule_idx++;
-  } 
-   
-  if(path == ".rule.num_pvars") {
-    rules[rule_idx].num_pvars = value.asLargestInt();
-  }
-
-  if(path == ".rule.operation") {
-    Op op;
-    rules[rule_idx].op = op; 
-    //op_t *op = (struct op_s)malloc(sizeof(struct op_s));
-    //rules[rule_idx].op = op; 
-  }
-
-  if(path == "rule.operation.condition") {
-    condition_t *cond = (struct condition_s *)malloc(sizeof(struct condition_s));
-    rules[rule_idx].op.cond = cond;
-  }
- 
-  if(path == "rule.operation.condition.leftoperand") {
-    node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
-    node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
-   
-    if(value.type() == Json::stringValue) {
-      loperand->data = value.asString().c_str();
-      loperand->type = LEAF;
-      root->loperand = loperand;    
-      rules[rule_idx].op.cond->root = root;
-      
-    } else if (value.type() == Json::objectValue) {
-      loperand->data = "";
-      loperand->type = NODE;
-      root->loperand = loperand; 
-      rules[rule_idx].op.cond->root = root;
-    }
-  }
-
-  if(path == "rule.operation.condition.rightoperand") {
-    node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
-    node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
- 
-    if(value.type() == Json::stringValue) {
-      roperand->data = value.asString().c_str();
-      roperand->type = LEAF;
-      root->roperand = roperand;    
-      rules[rule_idx].op.cond->root = root;
-      
-    } else if (value.type() == Json::objectValue) {
-      roperand->data = "";
-      roperand->type = NODE;
-      root->roperand = roperand; 
-      rules[rule_idx].op.cond->root = root;
-    }
-  }
- 
-  if(path == "rule.operation.condition.operator") {
-    node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
-    operator_enum_t ope;  
-    root->data = value.asString().c_str();
-    //root->ope = ope;
-    rules[rule_idx].op.cond->root = root;
-  }
-
-  if(path == "rule.operation.condition.stmt") {
-    //stmt_enum_t stmt;
-    //rules[rule_idx].op.cond->stmt = stmt;
-    rules[rule_idx].op.cond->stmt = value.asString().c_str();
-  }
-
-  if(path == "rule.operation.result") {
-    node_t *res = (struct node_s *)malloc(sizeof(struct node_s));
-    rules[rule_idx].op.result = res; 
-  }
-
-  if(path == "rule.operation.else") {
-    node_t *elseresult;
-    rules[rule_idx].op.elseresult = elseresult;
-  }
-
-  if(path == "rule.operation.result.leftoperand") {
-    node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
-
-    if(value.type() == Json::stringValue) {
-      loperand->data = value.asString().c_str();
-      loperand->type = LEAF;
-      rules[rule_idx].op.result->loperand = loperand;
-      
-    } else if (value.type() == Json::objectValue) {
-      loperand->data = "";
-      loperand->type = NODE;
-      rules[rule_idx].op.result->loperand = loperand;
-    }
-
-  }
-
-  if(path == "rule.operation.result.rightoperand") {
-    node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
- 
-    if(value.type() == Json::stringValue) {
-      roperand->data = value.asString().c_str();
-      roperand->type = LEAF;
-      rules[rule_idx].op.result->roperand = roperand;
-      
-    } else if (value.type() == Json::objectValue) {
-      roperand->data = "";
-      roperand->type = NODE;
-      rules[rule_idx].op.result->roperand = roperand;
-    }
-
-    rules[rule_idx].op.result->roperand = roperand;  
-  }
-
-  if(path == "rule.operation.result.operator") {
-    operator_enum_t ope;
-    //root->data = value.asString().c_str();
-    //rules[rule_idx].op.result->ope = ope;
-    rules[rule_idx].op.result->data = value.asString().c_str();
-  }
-
-  if(path == "rule.operation.else.leftoperand") {
-    node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
-
-    if(value.type() == Json::stringValue) {
-      loperand->data = value.asString().c_str();
-      loperand->type = LEAF;
-      rules[rule_idx].op.elseresult->loperand = loperand;
-      
-    } else if (value.type() == Json::objectValue) {
-      loperand->data = "";
-      loperand->type = NODE;
-      rules[rule_idx].op.elseresult->loperand = loperand;
-    }
-
-  }
-
-  if(path == "rule.operation.else.rightoperand") {
-    node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
- 
-     if(value.type() == Json::stringValue) {
-      roperand->data = value.asString().c_str();
-      roperand->type = LEAF;
-      rules[rule_idx].op.elseresult->roperand = roperand;
-      
-    } else if (value.type() == Json::objectValue) {
-      roperand->data = "";
-      roperand->type = NODE;
-      rules[rule_idx].op.elseresult->roperand = roperand;
-    }
-
-  }
-
-  if(path == "rule.operation.else.operator") {
-    operator_enum_t ope;
-    //rules[rule_idx].op.elseresult->ope = ope;
-    rules[rule_idx].op.elseresult->data = value.asString().c_str();
-  }
-
-  switch(value.type()) {
-  
-    case Json::objectValue: {
-     
-     Json::Value::Members members(value.getMemberNames());
-
-     std::sort(members.begin(), members.end());
-     JSONCPP_STRING suffix = *(path.end() - 1) == '.' ? "" : ".";
-     for (Json::Value::Members::iterator it = members.begin();
-         it != members.end();
-         ++it) {
-       const JSONCPP_STRING name = *it;
-       store_json_tree(value[name], path + suffix + name);
-     }
- 
-    } 
-    break;
-  
-  }
-
 }
 
 /* Parse JSON tree */
