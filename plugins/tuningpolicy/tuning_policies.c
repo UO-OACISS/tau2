@@ -268,6 +268,7 @@ static int rule_idx = 0;
 class Op
 {
 public:
+  Op(){}
   struct loop_s loop; 
   int is_pvar_array;
   int array_size;
@@ -283,6 +284,7 @@ private:
 class Rule
 {
 public:
+  Rule(){}
   int index;
   int num_pvars;  
   int is_array_pvar;
@@ -1041,6 +1043,16 @@ void json_parse(json_object * jobj)
 } 
 #endif
 
+static JSONCPP_STRING removeSuffix(const JSONCPP_STRING& path,
+                                const JSONCPP_STRING& extension) {
+  if (extension.length() >= path.length())
+    return JSONCPP_STRING("");
+  JSONCPP_STRING suffix = path.substr(path.length() - extension.length());
+  if (suffix != extension)
+    return JSONCPP_STRING("");
+  return path.substr(0, path.length() - extension.length());
+}
+
 /* Populate rule structure based on input json tree */
 void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
 {
@@ -1061,13 +1073,13 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.condition") {
-    condition_t *cond;
+    condition_t *cond = (struct condition_s *)malloc(sizeof(struct condition_s));
     rules[rule_idx].op.cond = cond;
   }
  
   if(path == "rule.operation.condition.leftoperand") {
-    node_t *root;
-    node_t *loperand;
+    node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
+    node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
    
     if(value.type() == Json::stringValue) {
       loperand->data = value.asString().c_str();
@@ -1084,9 +1096,9 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.condition.rightoperand") {
-    node_t *root;
-    node_t *roperand;
-
+    node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
+    node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
+ 
     if(value.type() == Json::stringValue) {
       roperand->data = value.asString().c_str();
       roperand->type = LEAF;
@@ -1102,7 +1114,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
  
   if(path == "rule.operation.condition.operator") {
-    node_t *root;
+    node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
     operator_enum_t ope;  
     root->data = value.asString().c_str();
     //root->ope = ope;
@@ -1116,7 +1128,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.result") {
-    node_t *res;
+    node_t *res = (struct node_s *)malloc(sizeof(struct node_s));
     rules[rule_idx].op.result = res; 
   }
 
@@ -1126,7 +1138,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.result.leftoperand") {
-    node_t *loperand;
+    node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
 
     if(value.type() == Json::stringValue) {
       loperand->data = value.asString().c_str();
@@ -1142,7 +1154,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.result.rightoperand") {
-    node_t *roperand;
+    node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
  
     if(value.type() == Json::stringValue) {
       roperand->data = value.asString().c_str();
@@ -1166,7 +1178,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.else.leftoperand") {
-    node_t *loperand;
+    node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
 
     if(value.type() == Json::stringValue) {
       loperand->data = value.asString().c_str();
@@ -1182,7 +1194,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
   }
 
   if(path == "rule.operation.else.rightoperand") {
-    node_t *roperand;
+    node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
  
      if(value.type() == Json::stringValue) {
       roperand->data = value.asString().c_str();
@@ -1280,6 +1292,14 @@ void read_json_rules()
            filename, json_util_get_last_err());
  }
  close(d);
+
+}
+
+void parse_rules()
+{
+
+  JSONCPP_STRING basePath = "policy.json";
+  JSONCPP_STRING path = removeSuffix(basePath, ".json"); 
 
 }
 
