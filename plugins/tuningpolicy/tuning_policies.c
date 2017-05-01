@@ -902,45 +902,6 @@ int detect_array(char *value, char *separator, mpit_var_t *var, int is_pvar)
   return is_array;
 }
 
-#if 0
-/* Analyze each element of leftoperand field */
-int analyze_leftoperand(char *leftoperand, leftop_t *op)
-{
-
-  if(strncmp(leftoperand, "+", 1) == 0 || strncmp(leftoperand, "-", 1) == 0 || strncmp(leftoperand, "*", 1) == 0) {
-   op->type = sign;
-  } else if(atol(leftoperand) != 0L) {
-   op->type = number;
-  } else {
-    op->type = pvar;
-  }
-
-  strcpy(op->value,leftoperand);
-  
-  return 1;
-}
-
-/* Parse list of values for each leftoperand list */
-int parse_list_leftop(char *value, char *separator, leftop_t *listleftops)
-{
-  int i = 0;
-  char *token = strtok(value, separator);
-
-  while(token != NULL)
-  {
-    leftop_t lop;
-    token = strtok(NULL, separator);
-
-    analyze_leftoperand(token, &lop);
-    strcpy(lop.value, token);
-    listleftops[i] = lop; 
-    i += 1;
-  }
-
-  return 1;
-}
-#endif
-
 /* Parse list of values for each field */
 int parse_list_values(char *value, char *separator, mpit_var_t *listvars, int is_pvar)
 {
@@ -980,68 +941,6 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
 
   return 1;
 }
-
-#if 0
-void json_parse_array( json_object *jobj, char *key) 
-{
-  void json_parse(json_object * jobj); /*Forward Declaration*/
-  enum json_type type;
-
-  json_object *jarray = jobj; /*Simply get the array*/
-
-  if(key) {
-    jarray = json_object_object_get(jobj, key); /*Getting the array if it is a key value pair*/
-  }
-
-  int arraylen = json_object_array_length(jarray); /*Getting the length of the array*/
-  printf("Array Length: %dn",arraylen);
-  int i;
-  json_object * jvalue;
-
-  for (i=0; i< arraylen; i++){
-    jvalue = json_object_array_get_idx(jarray, i); /*Getting the array element at position i*/
-    type = json_object_get_type(jvalue);
-    if (type == json_type_array) {
-      json_parse_array(jvalue, NULL);
-    }
-    else if (type != json_type_object) {
-      printf("value[%d]: ",i);
-      print_json_value(jvalue);
-    }
-    else {
-      json_parse(jvalue);
-    }
-  }
-}
-
-/*Parsing the json object*/
-void json_parse(json_object * jobj) 
-{
-
-  enum json_type type;
-
-  json_object_object_foreach(jobj, key, val) { /*Passing through every array element*/
-
-    printf("type: ",type);
-    type = json_object_get_type(val);
-
-    switch (type) {
-      case json_type_boolean: 
-      case json_type_double: 
-      case json_type_int: 
-      case json_type_string: print_json_value(val);
-                           break; 
-      case json_type_object: printf("json_type_objectn");
-                           jobj = json_object_object_get(jobj, key);
-                           json_parse(jobj); 
-                           break;
-      case json_type_array: printf("type: json_type_array, ");
-                          json_parse_array(jobj, key);
-                          break;
-    }
-  }
-} 
-#endif
 
 static JSONCPP_STRING removeSuffix(const JSONCPP_STRING& path,
                                 const JSONCPP_STRING& extension) {
@@ -1338,90 +1237,6 @@ void tuningpolicies_load_rules()
   read_json_rules(path);
  
 }
-
-#if 0
-/* Load policy rules from config file and populate dedicated structure */
-void load_policy_rules(int argc, void **args)
-{
- FILE *fp;
- char line[MAX_BUF];
- char fieldname[16];
- char fieldvalue[MAX_SIZE_FIELD_VALUE];
- mpit_var_t *pvars = NULL;
- mpit_var_t *cvars = NULL;
- leftop_t *listleftops = NULL;
- char *token;
- char *key = NULL;
- //char key[16];
- //char value[16];
- char *value = NULL;
- char separator[2] = ":";
- int irule = -1;
-
- fprintf(stdout, "Tuning policies DSO init.....\n");
-
- fp=fopen("policy.conf","r");
-
- if(fp != NULL) 
- {
-   // Read configuration file, parse lines, and populate rule structure
-   while(fgets(line, sizeof(line), fp) != NULL) 
-   {
-     if(strncmp(line,"RULE",4) == 0) {    
-       irule += 1; 
-     }
-     if(strncmp(line,"PVARS",5) == 0) {
-       parse_rule_field(line, separator, key, value);
-       parse_list_values(value, ",", pvars, 0);
-       rules[irule].pvars = pvars;
-       //strcpy(rules[irule].pvars,pvars);
-     } 
-     if(strncmp(line,"CVARS",5) == 0) {
-       parse_rule_field(line, separator, key, value);
-       parse_list_values(value, ",", cvars, 1);
-       rules[irule].cvars = cvars;
-       //strcpy(rules[irule].cvars,cvars);
-     }
-     if(strncmp(line,"STMT",4) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].condition,value);
-     } 
-     if(strncmp(line,"LEFTOPERAND",11) == 0) {
-       parse_rule_field(line, separator, key, value);  
-       parse_list_leftop(value, ",", listleftops);
-       strcpy(rules[irule].leftoperand,listleftops);
-     }
-     if(strncmp(line,"RIGHTOPERAND",12) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].rightoperand,value);
-     }
-     if(strncmp(line,"OPERATOR",8) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].operator,value);
-     }
-     if(strncmp(line,"LOGICOP",7) == 0) {
-       parse_rule_field(line, separator, key, value);
-     }
-     if(strncmp(line,"RESLEFTOPERAND",14) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].resleftoperand,value);
-     }
-     if(strncmp(line,"RESRIGHTOPERAND",15) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].resrightoperand,value);
-     }
-     if(strncmp(line,"RESOPERATOR",11) == 0) {
-       parse_rule_field(line, separator, key, value);
-       strcpy(rules[irule].resoperator,value);
-     }
-
-   } // End while 
- } // End if 
-
- fclose(fp);
-}
-#endif
-
 
 /* Generic function for tuning policies */
 int generic_tuning_policy(int argc, void **args)
