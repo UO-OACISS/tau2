@@ -1295,6 +1295,16 @@ void read_json_rules()
 
 }
 
+void read_json_rules(const JSONCPP_STRING& path)
+{
+
+  FILE* fpolicy = fopen(path.c_str(), "r");
+  
+  store_json_tree();
+  fclose(fpolicy);
+
+}
+
 void parse_rules()
 {
 
