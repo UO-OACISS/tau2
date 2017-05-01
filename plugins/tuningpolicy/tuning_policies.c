@@ -942,6 +942,24 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
+static JSONCPP_STRING readInputFile(const char* path) {
+  FILE* file = fopen(path, "rb");
+  if (!file)
+    return JSONCPP_STRING("");
+  fseek(file, 0, SEEK_END);
+  long const size = ftell(file);
+  unsigned long const usize = static_cast<unsigned long>(size);
+  fseek(file, 0, SEEK_SET);
+  JSONCPP_STRING text;
+  char* buffer = new char[size + 1];
+  buffer[size] = 0;
+  if (fread(buffer, 1, usize, file) == usize)
+    text = buffer;
+  fclose(file);
+  delete[] buffer;
+  return text;
+}
+
 static JSONCPP_STRING removeSuffix(const JSONCPP_STRING& path,
                                 const JSONCPP_STRING& extension) {
   if (extension.length() >= path.length())
@@ -1131,9 +1149,28 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
  
     } 
     break;
-  
-  }
+    case Json::nullValue:
+    break;
+ 
+    case Json::intValue:
+    break;
+ 
+    case Json::uintValue:
+    break;
+ 
+    case Json::realValue:
+    break;
 
+    case Json::stringValue:
+    break;
+
+    case Json::booleanValue:
+    break;
+
+    case Json::arrayValue:
+    break;
+
+  }
 }
 
 /* Parse JSON tree */
