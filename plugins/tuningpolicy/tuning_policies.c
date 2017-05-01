@@ -977,6 +977,7 @@ int parse_rule_field(char *line, char *separator, char *key, char *value)
   return 1;
 }
 
+<<<<<<< HEAD
 static JSONCPP_STRING readInputFile(const char* path) {
   FILE* file = fopen(path, "rb");
   if (!file)
@@ -1224,6 +1225,8 @@ void parse_json_tree(Json::Value& value, JSONCPP_STRING path = ".")
 
 }
 
+=======
+>>>>>>> Policy Engine: Remove dead code
 static JSONCPP_STRING removeSuffix(const JSONCPP_STRING& path,
                                 const JSONCPP_STRING& extension) {
   if (extension.length() >= path.length())
@@ -1523,38 +1526,6 @@ void tuningpolicies_load_rules()
   JSONCPP_STRING path = removeSuffix(basePath, ".json"); 
 
   read_json_rules(path);
- 
-}
-
-/*
- * Load JSON file and store into proper structures
- */
-int tuningpolicies_load_rules()
-{
-
-  JSONCPP_STRING path = "policy.json";
-
-  JSONCPP_STRING input = readInputFile(path.c_str());
-  if (input.empty()) {
-    printf("Failed to read input or empty input: %s\n", path.c_str());
-    return 3;
-  }
- 
-  JSONCPP_STRING basePath = removeSuffix(path, ".json"); 
-  Json::Features features = Json::Features::strictMode();
-  Json::Value root;
- 
-  Json::Reader reader(features);
-  bool parsingSuccessful = reader.parse(input.data(), input.data() + input.size(), root);
-  //bool parsingSuccessful = reader.parse(NULL, NULL, NULL);
-  if (!parsingSuccessful) {
-    printf("Failed to parse policy file: \n%s\n",
-           reader.getFormattedErrorMessages().c_str());
-    return 1;
-  }
-
-  store_json_tree(root, path);
-  //read_json_rules(basePath);
  
 }
 
