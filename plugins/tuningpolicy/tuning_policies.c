@@ -1507,14 +1507,6 @@ void read_json_rules(const JSONCPP_STRING& path)
 
 }
 
-void parse_rules()
-{
-
-  JSONCPP_STRING basePath = "policy.json";
-  JSONCPP_STRING path = removeSuffix(basePath, ".json"); 
-
-}
-
 /*
  * Load JSON file and store into proper structures
  */
@@ -1527,6 +1519,11 @@ void tuningpolicies_load_rules()
   store_json_tree(root, path);
   fclose(fpolicy);
 
+  JSONCPP_STRING basePath = "policy.json";
+  JSONCPP_STRING path = removeSuffix(basePath, ".json"); 
+
+  read_json_rules(path);
+ 
 }
 
 /*
