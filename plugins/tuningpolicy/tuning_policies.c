@@ -1300,7 +1300,7 @@ void read_json_rules(const JSONCPP_STRING& path)
 /*
  * Load JSON file and store into proper structures
  */
-void tuningpolicies_load_rules()
+int tuningpolicies_load_rules()
 {
   Json::Value root;
   //JSONCPP_STRING path = "";
@@ -1309,10 +1309,29 @@ void tuningpolicies_load_rules()
   store_json_tree(root, path);
   fclose(fpolicy);
 
-  JSONCPP_STRING basePath = "policy.json";
-  JSONCPP_STRING path = removeSuffix(basePath, ".json"); 
+  JSONCPP_STRING path = "policy.json";
 
-  read_json_rules(path);
+  JSONCPP_STRING input = readInputFile(path.c_str());
+  if (input.empty()) {
+    printf("Failed to read input or empty input: %s\n", path.c_str());
+    return 3;
+  }
+ 
+  JSONCPP_STRING basePath = removeSuffix(path, ".json"); 
+  Json::Features features = Json::Features::strictMode();
+  Json::Value root;
+ 
+  Json::Reader reader(features);
+  bool parsingSuccessful = reader.parse(input.data(), input.data() + input.size(), root);
+  //bool parsingSuccessful = reader.parse(NULL, NULL, NULL);
+  if (!parsingSuccessful) {
+    printf("Failed to parse policy file: \n%s\n",
+           reader.getFormattedErrorMessages().c_str());
+    return 1;
+  }
+
+  store_json_tree(root, path);
+  //read_json_rules(basePath);
  
 }
 
