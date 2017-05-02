@@ -1185,23 +1185,11 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path)
     } 
     break;
     case Json::nullValue:
-    break;
- 
     case Json::intValue:
-    break;
- 
     case Json::uintValue:
-    break;
- 
     case Json::realValue:
-    break;
-
     case Json::stringValue:
-    break;
-
     case Json::booleanValue:
-    break;
-
     case Json::arrayValue:
     break;
 
@@ -1214,26 +1202,12 @@ void parse_json_tree(Json::Value& value, JSONCPP_STRING path = ".")
 
   switch(value.type()) {
     case Json::nullValue:
-    break;
- 
     case Json::intValue:
-    break;
- 
     case Json::uintValue:
-    break;
- 
     case Json::realValue:
-    break;
-
     case Json::stringValue:
-    break;
-
     case Json::booleanValue:
-    break;
-
     case Json::arrayValue:
-    break;
-
     case Json::objectValue: {
       Json::Value::Members members(value.getMemberNames());
       std::sort(members.begin(),members.end());
