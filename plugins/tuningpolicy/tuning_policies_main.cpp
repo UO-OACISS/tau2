@@ -782,7 +782,7 @@ int result(node_t *root)
 }
 
 //void innerop(struct op_s *op)
-void innerop(Op op)
+void innerop(Op op, unsigned long long int **pvar_value_buffer)
 {
         int resVal = 0;
         condition_t *cond = op.cond; 
@@ -806,7 +806,7 @@ void innerop(Op op)
 }
 
 //void outerop(struct op_s *op)
-void outerop(Op op, int *pvar_count)
+void outerop(Op op, unsigned long long int **pvar_value_buffer, int *pvar_count)
 {
   char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH]; 
   //int *tau_pvar_count = NULL;
@@ -819,7 +819,7 @@ void outerop(Op op, int *pvar_count)
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_value_string,""); 
     for(i=0; i<op.array_size; i++) {
-      innerop(op); 
+      innerop(op, pvar_value_buffer); 
       for(j=0; j<pvar_count[op.num_pvars]; j++) { 
         if(i == (pvar_count[j])) { 
           sprintf(metric_string, "%s[%d]", op.result, i); 
@@ -835,7 +835,7 @@ void outerop(Op op, int *pvar_count)
     strcpy(value_cvar_string,""); 
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_value_string,""); 
-    innerop(op); 
+    innerop(op, pvar_value_buffer); 
     for(j=0; j<pvar_count[op.num_pvars]; j++) { 
       if(i == (pvar_count[j]))  { 
         sprintf(metric_string,"%s", op.result); 
@@ -1343,13 +1343,19 @@ int generic_tuning_policy(int argc, void **args)
   const int num_pvars 				= 3;
   //int *tau_pvar_count 				= (int *)			(args[1]);
   int *tau_pvar_count                           = (int*)malloc(sizeof(int) * (num_pvars + 1));
-  //unsigned long long int **pvar_value_buffer 	= (unsigned long long int **)	(args[2]);
+  unsigned long long int **pvar_value_buffer 	= (unsigned long long int**)malloc(sizeof(unsigned long long int*) * (num_pvars + 1));
 
   memset(tau_pvar_count, 0, sizeof(int) * (num_pvars + 1));
 
   /* Populating tau_pvar_count array with dummy values */
   for(i=0; i<num_pvars; i++) {
     tau_pvar_count[i] = i;
+  }
+
+  for(i=0; i<num_pvars; i++) {
+    for(j=0; j<tau_pvar_count[i]; j++) {
+      pvar_value_buffer[i][j] = 0;
+    }
   }
  
   int pvar_index[num_pvars];
@@ -1400,7 +1406,7 @@ int generic_tuning_policy(int argc, void **args)
   //logic_t logic = rules[rule_id].logic;
 
  // Call logic 
-  outerop(op, tau_pvar_count);
+  outerop(op, pvar_value_buffer, tau_pvar_count);
   //INNERLOGIC(op);
 
 #if 0
@@ -1455,7 +1461,7 @@ int plugin_tuning_policy(int argc, void **args) {
   
   fprintf(stdout, "plugin tuning policy ...\n");
 
-  assert(argc=3);
+  //assert(argc=3);
 
   const int num_pvars 				= 3;
   //int *tau_pvar_count 
