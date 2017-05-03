@@ -49,6 +49,7 @@ enum node_enum_e
 
 using namespace std;
 
+#if 0
 enum node_content_e
 {
   OPEQUALS 	= 0,
@@ -64,6 +65,7 @@ enum node_content_e
 };
 
 typedef enum node_content_e node_content_t;
+#endif
 
 enum node_type_e
 {
@@ -73,13 +75,17 @@ enum node_type_e
 
 typedef enum node_type_e nodeType;
 
-enum operand_enum_e
+enum node_content_e
 {
-  pvar,
-  number
+  PVAR 		= 0,
+  CVAR 		= 1,
+  OPERATOR 	= 2,
+  VALUE 	= 3
 };
 
-typedef enum operand_enum_e operand_enum_t;
+typedef enum node_content_e nodeContent;
+
+//typedef enum operand_enum_e operand_enum_t;
 
 enum stmt_enum_e
 {
@@ -137,6 +143,7 @@ struct mpit_var_s
 
 typedef struct mpit_var_s mpit_var_t;
 
+#if 0
 struct operand_s
 {
   //char *value;
@@ -155,10 +162,12 @@ struct groupoperand_s
 };
 
 typedef struct groupoperand_s groupoperand_t;
+#endif
 
 struct node_s
 {
  nodeType type;
+ nodeContent content;
  
  struct node_s *loperand;
  struct node_s *roperand;
