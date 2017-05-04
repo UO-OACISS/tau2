@@ -1032,6 +1032,14 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     }
   }
 
+  if(path == ".rule.operation.condition.leftoperand.type") {
+    fprintf(stdout, ".rule.operation.condition.leftoperand.type pattern detected..\t\t");
+  }
+ 
+  if(path == ".rule.operation.condition.leftoperand.content") {
+    fprintf(stdout, ".rule.operation.condition.leftoperand.content pattern detected..\t\t");
+  }
+  
   if(path == ".rule.operation.condition.rightoperand") {
     fprintf(stdout, ".rule.operation.condition.rightoperand pattern detected..\t\t");
     node_t *root = new node_t{};
@@ -1053,6 +1061,16 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       root->roperand = roperand; 
       rules[rule_idx].op.cond->root = root;
     }
+  }
+
+  if(path == ".rule.operation.condition.rightoperand.type") {
+    fprintf(stdout, ".rule.operation.condition.rightoperand.type pattern detected..\t\t");
+    
+  }
+ 
+  if(path == ".rule.operation.condition.rightoperand.content") {
+    fprintf(stdout, ".rule.operation.condition.rightoperand.type pattern detected..\t\t");
+    
   }
  
   if(path == ".rule.operation.condition.operator") {
@@ -1105,6 +1123,14 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
 
   }
 
+  if(path == ".rule.operation.result.leftoperand.type") {
+    fprintf(stdout, ".rule.operation.condition.leftoperand.type pattern detected..\t\t");
+  }
+ 
+  if(path == ".rule.operation.result.leftoperand.content") {
+    fprintf(stdout, ".rule.operation.condition.leftoperand.content pattern detected..\t\t");
+  }
+
   if(path == ".rule.operation.result.rightoperand") {
     fprintf(stdout, ".rule.operation.result.rightoperand pattern detected..\t\t");
     node_t *roperand = new node_t{};
@@ -1124,6 +1150,14 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     }
 
     rules[rule_idx].op.result->roperand = roperand;  
+  }
+
+  if(path == ".rule.operation.result.rightoperand.type") {
+    fprintf(stdout, ".rule.operation.result.leftoperand.type pattern detected..\t\t");
+  }
+ 
+  if(path == ".rule.operation.result.rightoperand.content") {
+    fprintf(stdout, ".rule.operation.result.leftoperand.content pattern detected..\t\t");
   }
 
   if(path == ".rule.operation.result.operator") {
@@ -1154,6 +1188,15 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
 
   }
 
+  if(path == ".rule.operation.else.leftoperand.type") {
+    fprintf(stdout, ".rule.operation.else.leftoperand.type pattern detected..\t\t");
+  }
+ 
+  if(path == ".rule.operation.else.leftoperand.content") {
+    fprintf(stdout, ".rule.operation.else.leftoperand.content pattern detected..\t\t");
+  }
+
+
   if(path == ".rule.operation.else.rightoperand") {
     fprintf(stdout, ".rule.operation.else.rightoperand pattern detected..\t\t");
     node_t *roperand = new node_t{};
@@ -1172,6 +1215,14 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       rules[rule_idx].op.elseresult->roperand = roperand;
     }
 
+  }
+
+  if(path == ".rule.operation.else.rightoperand.type") {
+    fprintf(stdout, ".rule.operation.else.rightoperand.type pattern detected..\t\t");
+  }
+ 
+  if(path == ".rule.operation.else.rightoperand.content") {
+    fprintf(stdout, ".rule.operation.else.rightoperand.content pattern detected..\t\t");
   }
 
   if(path == ".rule.operation.else.operator") {
