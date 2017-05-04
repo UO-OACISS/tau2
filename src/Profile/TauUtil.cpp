@@ -23,6 +23,7 @@
 #include <dlfcn.h>
 
 #define TAU_NAME_LENGTH 1024
+#define TAU_VERBOSE printf
 
 /*********************************************************************
  * Abort execution with a message
@@ -171,15 +172,27 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
   return ptr;
 }
 
-/*Create and return a new plugin manager*/
-PluginManager* Tau_PluginManager_new() {
-  PluginManager* plugin_manager = (PluginManager *)malloc(sizeof(PluginManager));
-  plugin_manager->plugin_list = (PluginList *)malloc(sizeof(PluginList));
-  (plugin_manager->plugin_list)->head = NULL;
-  plugin_manager->role_hook_list = (PluginRoleHookList*)malloc(sizeof(PluginRoleHookList));
-  (plugin_manager->role_hook_list)->head = NULL;
+/*Create and return a new plugin manager if plugin system is un-initialized
+ * If it is already initialized, return a reference to the same plugin manager - Singleton Pattern*/
+PluginManager* Tau_util_get_plugin_manager() {
+  static PluginManager * plugin_manager = NULL;
+  static int is_plugin_system_initialized = 0;
+  
+  if(!is_plugin_system_initialized) {
+    plugin_manager = (PluginManager*)malloc(sizeof(PluginManager));
+    plugin_manager->plugin_list = (PluginList *)malloc(sizeof(PluginList));
+    (plugin_manager->plugin_list)->head = NULL;
+    plugin_manager->role_hook_list = (PluginRoleHookList*)malloc(sizeof(PluginRoleHookList));
+    (plugin_manager->role_hook_list)->head = NULL;
+    is_plugin_system_initialized = 1;
+  }
 
   return plugin_manager;
+}
+
+/*Initializes the plugin system by loading all and registering plugins*/
+int Tau_initialize_plugin_system() {
+  return(Tau_util_load_and_register_plugins(Tau_util_get_plugin_manager()));
 }
 
 /* 
@@ -196,8 +209,6 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   char *pluginname = NULL;
   char *initFuncName = NULL;
 
-  printf("TAU: Entered plugin load and register function Tau_util_load_and_register_plugins\n");
-
   pluginpath = getenv(TAU_PLUGIN_PATH);
   listpluginsnames = getenv(TAU_PLUGINS);
 
@@ -207,17 +218,17 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   }
 
   token = strtok(listpluginsnames,":"); 
-  printf("TAU: Trying to load plugin with name %s\n", token);
+  TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
 
   fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
 
   while(token != NULL)
   {
-    printf("TAU: Loading plugin: %s\n", token);
+    TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
     strcpy(fullpath, "");
     strcpy(fullpath,pluginpath);
     strcat(fullpath,token);
-    printf("TAU: Full path for the current plugin: %s\n", fullpath);
+    TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
    
     void* handle = Tau_util_load_plugin(token, fullpath, plugin_manager);
 
@@ -225,7 +236,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       handle = Tau_util_register_plugin(token, handle, plugin_manager);
       if(!handle) //Plugin registration failed. Bail.
         return -1;
-      printf("TAU: Successfully called the init func of plugin: %s\n", token);
+      TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
     } else {
       /*Plugin loading failed for some reason*/
       return -1;
@@ -267,7 +278,7 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
     plugin->next = (plugin_manager->plugin_list)->head;
     (plugin_manager->plugin_list)->head = plugin;
 
-    printf("TAU: Successfully loaded plugin: %s\n", name);
+    TAU_VERBOSE("TAU: Successfully loaded plugin: %s\n", name);
 
     return handle;    
   } else {

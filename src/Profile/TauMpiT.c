@@ -47,10 +47,6 @@ extern void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count);
 extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
 
-//Plugin related functions
-extern PluginManager* plugin_manager;
-extern void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
-
 #define dprintf TAU_VERBOSE
 
 //////////////////////////////////////////////////////////////////////
@@ -956,7 +952,7 @@ int Tau_track_mpi_t_here(void) {
     argv[0] = (void *)num_pvars_heap;
     argv[1] = (void *)tau_pvar_count;
     argv[2] = (void **)pvar_value_buffer;
-    Tau_util_apply_role_hook(plugin_manager, "MPIT_Tuning", argc, argv);
+    Tau_util_apply_role_hook(Tau_util_get_plugin_manager(), "MPIT_Tuning", argc, argv);
 
 #else
     Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);

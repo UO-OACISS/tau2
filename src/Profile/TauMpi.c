@@ -63,10 +63,6 @@
 #endif
 
 
-//Plugin related functions
-extern PluginManager* plugin_manager;
-extern void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void** argv);
-
 void TauSyncClocks();
 void TauSyncFinalClocks();
 int Tau_mergeProfiles();
@@ -1524,7 +1520,7 @@ int  MPI_Finalize(  )
   TAU_METADATA("MPI Processor Name", procname);
 
 #if TAU_PLUGIN_ENABLED
-  Tau_util_apply_role_hook(plugin_manager, "MPIT_Recommend", 0, NULL);
+  Tau_util_apply_role_hook(Tau_util_get_plugin_manager(), "MPIT_Recommend", 0, NULL);
 #endif
 
   if (Tau_get_node() < 0) {
