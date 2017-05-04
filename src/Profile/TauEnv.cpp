@@ -222,6 +222,7 @@ static int env_track_memory_heap = 0;
 static int env_track_power = 0;
 static int env_track_memory_footprint = 0;
 static int env_show_memory_functions = 0;
+static int env_track_load = 0;
 static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
@@ -788,6 +789,10 @@ int TauEnv_get_show_memory_functions() {
   return env_show_memory_functions;
 }
 
+int TauEnv_get_track_load() {
+  return env_track_load;
+}
+
 int TauEnv_get_track_memory_leaks() {
   return env_track_memory_leaks;
 }
@@ -1124,6 +1129,13 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Power tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
+    } 
+
+    tmp = getconf("TAU_TRACK_LOAD");
+    if (parse_bool(tmp, env_track_load)) {
+      TAU_VERBOSE("TAU: system load tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_LOAD", "on");
+      TAU_TRACK_LOAD();
     } 
 
 #ifdef TAU_MPI_T
