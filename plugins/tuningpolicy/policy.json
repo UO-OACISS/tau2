@@ -9,24 +9,48 @@
                	 "condition": {
 			"stmt":"if",
                 	"leftoperand": {
-				"leftoperand":"pvar_vbuf_allocated_index",
-              		     	"rightoperand":"pvar_max_vbuf_usage_index",
+				"leftoperand": {
+                                	"content": "pvar_vbuf_allocated_index",
+     					"type": "pvar"
+                                },
+              		     	"rightoperand": {
+                                	"content": "pvar_max_vbuf_usage_index",
+ 					"type": "pvar"
+                                },
  			     	"operator":"-"	
 			},
- 			"rightoperand":"PVAR_VBUF_WASTED_THRESHOLD",
+ 			"rightoperand": { 
+                        	"content": "PVAR_VBUF_WASTED_THRESHOLD",
+ 				"type": "value"
+			},
  			"operator":">"
         	},
 		"result": {
-			"leftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
-			"rightoperand":"pvar_max_vbuf_usage_index",
+			"leftoperand": {
+				"content": "CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+				"type": "value"
+			},
+			"rightoperand": {
+				"content": "pvar_max_vbuf_usage_index",
+				"type": "pvar"
+			},
 			"operator":"="
 		},
                 "else": {
-                	"leftoperand":"CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+                	"leftoperand": {
+				"content": "CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+				"type": "value"
+			},
   		       	"operator":"=",
                        	"rightoperand": {
-                       		"leftoperand":"pvar_max_vbuf_allocated_index",
-				"rightoperand":10,
+                       		"leftoperand": {
+					"content": "pvar_max_vbuf_allocated_index",
+					"type": "pvar"
+				},
+				"rightoperand": {
+					"content": 10,
+					"type": "value"
+				},
  				"operator":"+"
                        	}	
                	}
