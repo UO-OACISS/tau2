@@ -70,10 +70,9 @@
 
 #endif
 
-/* TAU_PLUGIN: I think we may be need conditional compilation here */
+//#ifdef TAU_PLUGIN
 #include <Profile/TauPlugin.h>
-/* end TAU_PLUGIN */
-
+//#endif
 using namespace std;
 
 #ifndef TAU_WINDOWS
@@ -112,9 +111,6 @@ int dl_initialized = 0;
 #else
 int dl_initialized = 1;
 #endif
-
-//Globally visible plugin manager
-PluginManager* plugin_manager = NULL;
 
 #ifndef TAU_DISABLE_SIGUSR
 
@@ -510,6 +506,15 @@ extern "C" int Tau_init_initializeTAU()
   Tau_initialize_collector_api();
 #endif
 
+//#ifdef TAU_PLUGIN
+  printf("TAU INIT: Initializing plugin system...\n");
+  if(!Tau_initialize_plugin_system()) {
+    printf("TAU INIT: Successfully Initialized the plugin system.\n");
+  } else {
+    printf("TAU INIT: Error initializing the plugin system\n");
+  }
+//#endif
+
   // Mark initialization complete so calls below can start timers
   tau_initialized = 1;
 
@@ -522,19 +527,6 @@ extern "C" int Tau_init_initializeTAU()
   Tau_create_top_level_timer_if_necessary();
 
   Tau_memory_wrapper_enable();
-
-/* TAU_PLUGIN: I think we may need conditional compilation here */  
-  printf("TAU INIT: Trying to load plugins..\n");
-  plugin_manager = Tau_PluginManager_new();
-
-  /* Load plugins */
-  if (!Tau_util_load_and_register_plugins(plugin_manager)) {
-    printf("TAU INIT: Successfully loaded all plugins!\n");
-  }
-/* end TAU_PLUGIN */
-
-/*  if(!Tau_util_cleanup_all_plugins(plugin_manager))
-    printf("TAU: Successfully cleaned up all plugins\n");*/
 
 #ifdef TAU_ANDROID
   pthread_t thr;
