@@ -733,7 +733,10 @@ int evalCond(node_t *node)
 }
 
 /* Recursive evaluation of a tree based expression */
-int evalExpr(node_t *root, unsigned long long int**pvar_value_buffer, int is_array, int index)
+int evalExpr(node_t *root, 
+             unsigned long long int **pvar_value_buffer,
+	     int is_array, 
+	     int index)
 {
   int resVal = 0;
 
@@ -747,7 +750,8 @@ int evalExpr(node_t *root, unsigned long long int**pvar_value_buffer, int is_arr
       if(index != -1) {
         return pvar_value_buffer[toInt(root->data)][index];    
       } else {
-        //return pvar_value_buffer[toInt(root->data)];    
+        //TODO: If we don't deal with array PVARS, we return index 0 of pvar_value_buffer array: to be enhanced 
+        return pvar_value_buffer[toInt(root->data)][0];    
       }
     } else {
       return toInt(root->data);    
@@ -812,7 +816,10 @@ int result(node_t *root)
 #endif
 
 //void innerop(struct op_s *op)
-void innerop(Op op, unsigned long long int **pvar_value_buffer, int is_array, int index)
+void innerop(Op op, 
+             unsigned long long int **pvar_value_buffer,
+	     int is_array, 
+	     int index)
 {
         int resVal = 0;
         condition_t *cond = op.cond; 
@@ -837,7 +844,9 @@ void innerop(Op op, unsigned long long int **pvar_value_buffer, int is_array, in
 }
 
 //void outerop(struct op_s *op)
-void outerop(Op op, unsigned long long int **pvar_value_buffer, int *pvar_count)
+void outerop(Op op, 
+	     unsigned long long int **pvar_value_buffer, 
+	     int *pvar_count)
 {
   char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH]; 
   //int *tau_pvar_count = NULL;
@@ -1472,8 +1481,8 @@ int generic_tuning_policy(int argc, void **args)
   assert(argc=3);
 
   const int num_pvars 				= 3;
-  //int *tau_pvar_count 				= (int *)			(args[1]);
-  int *tau_pvar_count                           = (int*)malloc(sizeof(int) * (num_pvars + 1));
+  //int *tau_pvar_count 			= (int *)			(args[1]);
+  int *tau_pvar_count                          	= (int*)malloc(sizeof(int) * (num_pvars + 1));
   unsigned long long int **pvar_value_buffer 	= (unsigned long long int**)malloc(sizeof(unsigned long long int*) * (num_pvars + 1));
 
   memset(tau_pvar_count, 0, sizeof(int) * (num_pvars + 1));
@@ -1484,6 +1493,7 @@ int generic_tuning_policy(int argc, void **args)
   }
 
   for(i=0; i<num_pvars; i++) {
+    
     for(j=0; j<tau_pvar_count[i]; j++) {
       pvar_value_buffer[i][j] = 0;
     }
