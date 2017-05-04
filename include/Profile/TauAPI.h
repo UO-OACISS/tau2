@@ -205,6 +205,11 @@
 #define TAU_ENABLE_TRACKING_POWER()		Tau_enable_tracking_power()
 #define TAU_DISABLE_TRACKING_POWER()		Tau_disable_tracking_power()
 
+#define TAU_TRACK_LOAD()		        Tau_track_load()
+#define TAU_TRACK_LOAD_HERE()	        	Tau_track_load_here()
+#define TAU_ENABLE_TRACKING_LOAD()		Tau_enable_tracking_load()
+#define TAU_DISABLE_TRACKING_LOAD()		Tau_disable_tracking_load()
+
 #define TAU_TRACK_MPI_T()		        Tau_track_mpi_t()
 #define TAU_TRACK_MPI_T_HERE()		        Tau_track_mpi_t_here()
 #define TAU_ENABLE_TRACKING_MPI_T()		Tau_enable_tracking_mpi_t()
@@ -562,10 +567,14 @@ void Tau_track_memory_here(void);
 void Tau_track_memory_headroom(void);
 void Tau_track_power(void);
 void Tau_track_power_here(void);
+void Tau_track_load(void);
+void Tau_track_load_here(void);
 void Tau_track_memory_rss_and_hwm(void);
 void Tau_track_memory_rss_and_hwm_here(void);
 void Tau_enable_tracking_power();
 void Tau_disable_tracking_power();
+void Tau_enable_tracking_load();
+void Tau_disable_tracking_load();
 void Tau_track_memory_headroom_here(void);
 void Tau_profile_param1l(long data, const char *dataname);
 
