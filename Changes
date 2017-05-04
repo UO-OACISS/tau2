@@ -34,6 +34,7 @@ Version 2.26 changes (from 2.25):
 21. Added tau_spark-submit wrapper for Spark profiling to propagate TAU environment variables. 
 22. Added support for Co-array Fortran (caflauncher, tau_caf.sh, taucaf).
 23. Added tau_coalesce, a tool to merge profiles and traces from multiple workflow directories in the current directory.
+24. Added support for TAU_TRACK_LOAD=1 for periodically tracking system load.
 
 
 
