@@ -1423,11 +1423,25 @@ extern "C" int Tau_profiler_initialization()
   return 0;
 }
 
+extern "C" int Tau_print_metadata_for_traces(int tid) {
+
+  MetaDataRepo *localRepo = NULL;
+    localRepo = &(Tau_metadata_getMetaData(tid));
+  
+   for (MetaDataRepo::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
+      string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval)); 
+      TAU_TRIGGER_EVENT(metadata_str.c_str(), 1.0); 
+  }
+}
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+
+  if (TauEnv_get_tracing() && (tid == 0) ) {
+    Tau_print_metadata_for_traces(tid);
+  }
 
 #ifdef TAU_SCOREP
   Tau_write_metadata_records_in_scorep(tid);
