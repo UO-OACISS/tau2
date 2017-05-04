@@ -744,9 +744,14 @@ int evalExpr(node_t *root, unsigned long long int**pvar_value_buffer, int is_arr
   // leaf node, value
   if(!(root->loperand) && !(root->roperand)) {
     if(root->type == LEAFPVAR) {
-      return pvar_value_buffer[toInt(root->data)][index];    
+      if(index != -1) {
+        return pvar_value_buffer[toInt(root->data)][index];    
+      } else {
+        //return pvar_value_buffer[toInt(root->data)];    
+      }
+    } else {
+      return toInt(root->data);    
     }
-    return toInt(root->data);    
   }
 
   int l_val = evalExpr(root->loperand, pvar_value_buffer, is_array, index); // Evaluate left operand
