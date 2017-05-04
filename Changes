@@ -35,7 +35,7 @@ Version 2.26 changes (from 2.25):
 22. Added support for Co-array Fortran (caflauncher, tau_caf.sh, taucaf).
 23. Added tau_coalesce, a tool to merge profiles and traces from multiple workflow directories in the current directory.
 24. Added support for TAU_TRACK_LOAD=1 for periodically tracking system load.
-
+25. TAU traces now have metadata at the end. User event triggered with 1.
 
 
 Version 2.25 changes (from 2.24):
