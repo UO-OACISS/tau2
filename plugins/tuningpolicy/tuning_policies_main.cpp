@@ -733,7 +733,7 @@ int evalCond(node_t *node)
 }
 
 /* Recursive evaluation of a tree based expression */
-int evalExpr(node_t *root, unsigned long long int**pvar_value_buffer)
+int evalExpr(node_t *root, unsigned long long int**pvar_value_buffer, int is_array, int index)
 {
   int resVal = 0;
 
@@ -743,11 +743,14 @@ int evalExpr(node_t *root, unsigned long long int**pvar_value_buffer)
 
   // leaf node, value
   if(!(root->loperand) && !(root->roperand)) {
+    if(root->type == LEAFPVAR) {
+      return pvar_value_buffer[toInt(root->data)][index];    
+    }
     return toInt(root->data);    
   }
 
-  int l_val = evalExpr(root->loperand, pvar_value_buffer); // Evaluate left operand
-  int r_val = evalExpr(root->roperand, pvar_value_buffer); // Evaluate right operand
+  int l_val = evalExpr(root->loperand, pvar_value_buffer, is_array, index); // Evaluate left operand
+  int r_val = evalExpr(root->roperand, pvar_value_buffer, is_array, index); // Evaluate right operand
 
   if(root->data == "+") {
     return l_val + r_val;
@@ -804,27 +807,27 @@ int result(node_t *root)
 #endif
 
 //void innerop(struct op_s *op)
-void innerop(Op op, unsigned long long int **pvar_value_buffer)
+void innerop(Op op, unsigned long long int **pvar_value_buffer, int is_array, int index)
 {
         int resVal = 0;
         condition_t *cond = op.cond; 
-        resVal = evalExpr(cond->root, pvar_value_buffer); 
+        resVal = evalExpr(cond->root, pvar_value_buffer, is_array, index); 
 
         if(cond->stmt == "if") {
           IFSTMT(resVal) {
             node_t *res = op.result;
-            evalExpr(res, pvar_value_buffer);
+            evalExpr(res, pvar_value_buffer, is_array, index);
           }
         } else if(cond->stmt == "while") {
           WHILESTMT(resVal) {
             node_t *res = op.result;
-            evalExpr(res, pvar_value_buffer);
+            evalExpr(res, pvar_value_buffer, is_array, index);
           }
         }
         
         if(op.elseresult != NULL) { 
           node_t *elseres = op.elseresult; 
-          evalExpr(elseres, pvar_value_buffer); 
+          evalExpr(elseres, pvar_value_buffer, is_array, index); 
  	} 
 }
 
@@ -842,7 +845,8 @@ void outerop(Op op, unsigned long long int **pvar_value_buffer, int *pvar_count)
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_value_string,""); 
     for(i=0; i<op.array_size; i++) {
-      innerop(op, pvar_value_buffer); 
+      /* Call inner operation */
+      innerop(op, pvar_value_buffer, 1, i); 
       for(j=0; j<pvar_count[op.num_pvars]; j++) { 
         if(i == (pvar_count[j])) { 
           sprintf(metric_string, "%s[%d]", op.result, i); 
@@ -858,7 +862,8 @@ void outerop(Op op, unsigned long long int **pvar_value_buffer, int *pvar_count)
     strcpy(value_cvar_string,""); 
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_value_string,""); 
-    innerop(op, pvar_value_buffer); 
+    /* Call inner operation */
+    innerop(op, pvar_value_buffer, 0, -1); 
     for(j=0; j<pvar_count[op.num_pvars]; j++) { 
       if(i == (pvar_count[j]))  { 
         sprintf(metric_string,"%s", op.result); 
