@@ -69,12 +69,15 @@ typedef enum node_content_e node_content_t;
 
 enum node_type_e
 {
-  NODE  = 0,
-  LEAF  = 1
+  NODE  	= 0,
+  LEAFPVAR  	= 1,
+  LEAFCVAR	= 2,
+  LEAFVALUE	= 3
 };
 
 typedef enum node_type_e nodeType;
 
+#if 0
 enum node_content_e
 {
   PVAR 		= 0,
@@ -84,6 +87,17 @@ enum node_content_e
 };
 
 typedef enum node_content_e nodeContent;
+#endif
+
+enum leaf_type_e
+{
+  NONE 		= 0,
+  PVAR 		= 1,
+  CVAR 		= 2,
+  VALUE 	= 3
+};
+
+typedef enum leaf_type_e leafType;
 
 //typedef enum operand_enum_e operand_enum_t;
 
@@ -167,7 +181,7 @@ typedef struct groupoperand_s groupoperand_t;
 struct node_s
 {
  nodeType type;
- nodeContent content;
+ //nodeContent content;
  
  struct node_s *loperand;
  struct node_s *roperand;
@@ -180,6 +194,16 @@ struct node_s
 };
 
 typedef struct node_s node_t;
+
+struct operand_s
+{
+  leafType type;
+  string value;
+  
+  //operand_enum_t type;
+};
+
+typedef struct operand_s operand_t;
 
 struct condition_s
 {
@@ -629,6 +653,7 @@ int toInt(string s)
     return num;
 }
 
+#if 0
 int printInOrder(node_t *node)
 {
   if(node->type == LEAF)
@@ -640,6 +665,7 @@ int printInOrder(node_t *node)
 
   return 1;
 }
+#endif
 
 /* Recursive evaluation of a tree based expression */
 int evalRes(node_t *root)
@@ -666,20 +692,6 @@ int evalRes(node_t *root)
     return l_val / r_val;
   }
   
-  return 1;
-}
-
-int pop_tree(node_t *node)
-{
-
- if (node->type == NODE) { 
-   pop_tree(node->loperand);
-   pop_tree(node->roperand);
-   
- } else if(node->type == LEAF) {
-
- }
-
   return 1;
 }
 
@@ -721,7 +733,7 @@ int evalCond(node_t *node)
 }
 
 /* Recursive evaluation of a tree based expression */
-int evalExpr(node_t *root)
+int evalExpr(node_t *root, unsigned long long int**pvar_value_buffer)
 {
   int resVal = 0;
 
@@ -734,8 +746,8 @@ int evalExpr(node_t *root)
     return toInt(root->data);    
   }
 
-  int l_val = evalExpr(root->loperand); // Evaluate left operand
-  int r_val = evalExpr(root->roperand); // Evaluate right operand
+  int l_val = evalExpr(root->loperand, pvar_value_buffer); // Evaluate left operand
+  int r_val = evalExpr(root->roperand, pvar_value_buffer); // Evaluate right operand
 
   if(root->data == "+") {
     return l_val + r_val;
@@ -752,7 +764,6 @@ int evalExpr(node_t *root)
   
   return -1;
 }
-
 
 /*
 int pop_tree(node_t *node)
@@ -776,6 +787,7 @@ int eval_condition(stmt_enum_t *stmt, node_t *root)
  return 1;
 }
 
+#if 0
 int result(node_t *root)
 {
   if((root->loperand->type == LEAF) && (root->roperand->type == LEAF)) { 
@@ -789,28 +801,30 @@ int result(node_t *root)
 
   return 1;
 }
+#endif
 
 //void innerop(struct op_s *op)
 void innerop(Op op, unsigned long long int **pvar_value_buffer)
 {
         int resVal = 0;
         condition_t *cond = op.cond; 
-        resVal = evalExpr(cond->root); 
+        resVal = evalExpr(cond->root, pvar_value_buffer); 
+
         if(cond->stmt == "if") {
           IFSTMT(resVal) {
             node_t *res = op.result;
-            evalExpr(res);
+            evalExpr(res, pvar_value_buffer);
           }
         } else if(cond->stmt == "while") {
           WHILESTMT(resVal) {
             node_t *res = op.result;
-            evalExpr(res);
+            evalExpr(res, pvar_value_buffer);
           }
         }
         
         if(op.elseresult != NULL) { 
           node_t *elseres = op.elseresult; 
-          evalExpr(elseres); 
+          evalExpr(elseres, pvar_value_buffer); 
  	} 
 }
 
@@ -1013,9 +1027,13 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.condition.leftoperand pattern detected..\t\t");
     node_t *root = new node_t{};
     node_t *loperand = new node_t{};
+    root->loperand = loperand;    
+    rules[rule_idx].op.cond->root = root;
+ 
     //node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
     //node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
-   
+  
+#if 0 
     if(value.type() == Json::stringValue) {
       fprintf(stdout, "%s\n", value.asString().c_str());
       loperand->data = value.asString().c_str();
@@ -1030,10 +1048,15 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       root->loperand = loperand; 
       rules[rule_idx].op.cond->root = root;
     }
+#endif
   }
 
   if(path == ".rule.operation.condition.leftoperand.type") {
     fprintf(stdout, ".rule.operation.condition.leftoperand.type pattern detected..\t\t");
+   
+    if(value.asString().c_str() == "pvar") {
+      rules[rule_idx].op.cond->root->loperand->type = LEAFPVAR; 
+    } 
   }
  
   if(path == ".rule.operation.condition.leftoperand.content") {
@@ -1044,9 +1067,13 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.condition.rightoperand pattern detected..\t\t");
     node_t *root = new node_t{};
     node_t *roperand = new node_t{};
+    root->roperand = roperand;    
+    rules[rule_idx].op.cond->root = root;
+
     //node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
     //node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
  
+#if 0
     if(value.type() == Json::stringValue) {
       fprintf(stdout, "%s\n", value.asString().c_str());
       roperand->data = value.asString().c_str();
@@ -1061,11 +1088,15 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       root->roperand = roperand; 
       rules[rule_idx].op.cond->root = root;
     }
+#endif
   }
 
   if(path == ".rule.operation.condition.rightoperand.type") {
     fprintf(stdout, ".rule.operation.condition.rightoperand.type pattern detected..\t\t");
     
+     if(value.asString().c_str() == "pvar") {
+      rules[rule_idx].op.cond->root->roperand->type = LEAFPVAR; 
+    }
   }
  
   if(path == ".rule.operation.condition.rightoperand.content") {
@@ -1106,8 +1137,11 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
   if(path == ".rule.operation.result.leftoperand") {
     fprintf(stdout, ".rule.operation.result.leftoperand pattern detected..\t\t");
     node_t *loperand = new node_t{};
+    rules[rule_idx].op.result->loperand = loperand;
+
     ///node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
 
+#if 0
     if(value.type() == Json::stringValue) {
       fprintf(stdout, "%s\n", value.asString().c_str());
       loperand->data = value.asString().c_str();
@@ -1120,11 +1154,16 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       loperand->type = NODE;
       rules[rule_idx].op.result->loperand = loperand;
     }
+#endif
 
   }
 
   if(path == ".rule.operation.result.leftoperand.type") {
     fprintf(stdout, ".rule.operation.condition.leftoperand.type pattern detected..\t\t");
+
+     if(value.asString().c_str() == "pvar") {
+      rules[rule_idx].op.result->loperand->type = LEAFPVAR; 
+    }
   }
  
   if(path == ".rule.operation.result.leftoperand.content") {
@@ -1134,8 +1173,12 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
   if(path == ".rule.operation.result.rightoperand") {
     fprintf(stdout, ".rule.operation.result.rightoperand pattern detected..\t\t");
     node_t *roperand = new node_t{};
+    rules[rule_idx].op.result->roperand = roperand;
+
+
     //node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
  
+#if 0
     if(value.type() == Json::stringValue) {
       fprintf(stdout, "%s\n", value.asString().c_str());
       roperand->data = value.asString().c_str();
@@ -1148,12 +1191,16 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       roperand->type = NODE;
       rules[rule_idx].op.result->roperand = roperand;
     }
-
+#endif
     rules[rule_idx].op.result->roperand = roperand;  
   }
 
   if(path == ".rule.operation.result.rightoperand.type") {
     fprintf(stdout, ".rule.operation.result.leftoperand.type pattern detected..\t\t");
+
+     if(value.asString().c_str() == "pvar") {
+      rules[rule_idx].op.result->roperand->type = LEAFPVAR; 
+    }
   }
  
   if(path == ".rule.operation.result.rightoperand.content") {
@@ -1171,8 +1218,10 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
   if(path == ".rule.operation.else.leftoperand") {
     fprintf(stdout, ".rule.operation.else.leftoperand pattern detected..\t\t");
     node_t *loperand = new node_t{};
+    rules[rule_idx].op.elseresult->loperand = loperand;
     //node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
 
+#if 0
     if(value.type() == Json::stringValue) {
       fprintf(stdout, "%s\n", value.asString().c_str());
       loperand->data = value.asString().c_str();
@@ -1185,11 +1234,15 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       loperand->type = NODE;
       rules[rule_idx].op.elseresult->loperand = loperand;
     }
-
+#endif
   }
 
   if(path == ".rule.operation.else.leftoperand.type") {
     fprintf(stdout, ".rule.operation.else.leftoperand.type pattern detected..\t\t");
+
+     if(value.asString().c_str() == "pvar") {
+      rules[rule_idx].op.result->loperand->type = LEAFPVAR; 
+    }
   }
  
   if(path == ".rule.operation.else.leftoperand.content") {
@@ -1200,8 +1253,10 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
   if(path == ".rule.operation.else.rightoperand") {
     fprintf(stdout, ".rule.operation.else.rightoperand pattern detected..\t\t");
     node_t *roperand = new node_t{};
+    rules[rule_idx].op.elseresult->roperand = roperand;
     //node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
- 
+
+#if 0 
      if(value.type() == Json::stringValue) {
       fprintf(stdout, "%s\n", value.asString().c_str());
       roperand->data = value.asString().c_str();
@@ -1214,11 +1269,17 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       roperand->type = NODE;
       rules[rule_idx].op.elseresult->roperand = roperand;
     }
+#endif
 
   }
 
   if(path == ".rule.operation.else.rightoperand.type") {
     fprintf(stdout, ".rule.operation.else.rightoperand.type pattern detected..\t\t");
+
+     if(value.asString().c_str() == "pvar") {
+      rules[rule_idx].op.elseresult->roperand->type = LEAFPVAR; 
+    }
+
   }
  
   if(path == ".rule.operation.else.rightoperand.content") {
