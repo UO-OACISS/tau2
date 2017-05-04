@@ -1859,6 +1859,11 @@ extern "C" void Tau_track_power(void) {
   TauTrackPower();
 }
 
+extern "C" void Tau_track_load(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackLoad();
+}
+
 extern "C" void Tau_track_memory_rss_and_hwm(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackMemoryFootPrint();
@@ -1873,6 +1878,11 @@ extern "C" void Tau_track_memory_rss_and_hwm_here(void) {
 extern "C" void Tau_track_power_here(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackPowerHere();
+}
+
+extern "C" void Tau_track_load_here(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackLoadHere();
 }
 
 extern "C" void Tau_track_memory_headroom(void) {
@@ -1904,6 +1914,13 @@ extern "C" void Tau_enable_tracking_power(void) {
   TauEnableTrackingPower();
 }
 
+extern "C" void Tau_disable_tracking_load(void) {
+  TauDisableTrackingLoad();
+}
+
+extern "C" void Tau_enable_tracking_load(void) {
+  TauEnableTrackingLoad();
+}
 
 extern "C" void Tau_enable_tracking_memory_headroom(void) {
   TauEnableTrackingMemoryHeadroom();

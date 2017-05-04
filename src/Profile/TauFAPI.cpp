@@ -1277,6 +1277,94 @@ void tau_enable_tracking_power__(void)
   Tau_enable_tracking_power();
 } 
 
+
+//////////////////////////////////////////////////////
+// LOAD API
+//////////////////////////////////////////////////////
+void TAU_TRACK_LOAD(void)
+{
+  Tau_track_load();
+} 
+
+void TAU_TRACK_LOAD_HERE(void)
+{
+  Tau_track_load_here();
+} 
+
+void TAU_DISABLE_TRACKING_LOAD(void)
+{
+  Tau_disable_tracking_load();
+} 
+
+void TAU_ENABLE_TRACKING_LOAD(void)
+{
+  Tau_enable_tracking_load();
+} 
+
+//////////////////////////////////////////////////////
+void tau_track_load(void)
+{
+  Tau_track_load();
+} 
+
+void tau_track_load_here(void)
+{
+  Tau_track_load_here();
+} 
+
+void tau_disable_tracking_load(void)
+{
+  Tau_disable_tracking_load();
+} 
+
+void tau_enable_tracking_load(void)
+{
+  Tau_enable_tracking_load();
+} 
+
+//////////////////////////////////////////////////////
+void tau_track_load_(void)
+{
+  Tau_track_load();
+} 
+
+void tau_track_load_here_(void)
+{
+  Tau_track_load_here();
+} 
+
+void tau_disable_tracking_load_(void)
+{
+  Tau_disable_tracking_load();
+} 
+
+void tau_enable_tracking_load_(void)
+{
+  Tau_enable_tracking_load();
+} 
+
+//////////////////////////////////////////////////////
+void tau_track_load__(void)
+{
+  Tau_track_load();
+} 
+
+void tau_track_load_here__(void)
+{
+  Tau_track_load_here();
+} 
+
+void tau_disable_tracking_load__(void)
+{
+  Tau_disable_tracking_load();
+} 
+
+void tau_enable_tracking_load__(void)
+{
+  Tau_enable_tracking_load();
+} 
+
+//////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 
 
