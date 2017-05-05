@@ -323,7 +323,7 @@ public:
   int num_pvars;  
   int is_array_pvar;
   struct mpit_var_s *pvars;
-  Op op;
+  Op *op;
 
 private:
 
@@ -816,35 +816,35 @@ int result(node_t *root)
 #endif
 
 //void innerop(struct op_s *op)
-void innerop(Op op, 
+void innerop(Op *op, 
              unsigned long long int **pvar_value_buffer,
 	     int is_array, 
 	     int index)
 {
         int resVal = 0;
-        condition_t *cond = op.cond; 
+        condition_t *cond = op->cond; 
         resVal = evalExpr(cond->root, pvar_value_buffer, is_array, index); 
 
         if(cond->stmt == "if") {
           IFSTMT(resVal) {
-            node_t *res = op.result;
+            node_t *res = op->result;
             evalExpr(res, pvar_value_buffer, is_array, index);
           }
         } else if(cond->stmt == "while") {
           WHILESTMT(resVal) {
-            node_t *res = op.result;
+            node_t *res = op->result;
             evalExpr(res, pvar_value_buffer, is_array, index);
           }
         }
         
-        if(op.elseresult != NULL) { 
-          node_t *elseres = op.elseresult; 
+        if(op->elseresult != NULL) { 
+          node_t *elseres = op->elseresult; 
           evalExpr(elseres, pvar_value_buffer, is_array, index); 
  	} 
 }
 
 //void outerop(struct op_s *op)
-void outerop(Op op, 
+void outerop(Op *op, 
 	     unsigned long long int **pvar_value_buffer, 
 	     int *pvar_count)
 {
@@ -852,18 +852,18 @@ void outerop(Op op,
   //int *tau_pvar_count = NULL;
   int i=0, j=0;
 
-  if(op.is_pvar_array == 1) { 
-    unsigned long long int *value_array = (unsigned long long int *)calloc(pvar_count[op.array_size],sizeof(unsigned long long int)); 
+  if(op->is_pvar_array == 1) { 
+    unsigned long long int *value_array = (unsigned long long int *)calloc(pvar_count[op->array_size],sizeof(unsigned long long int)); 
     char *value_cvar_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_string,""); 
     char *value_cvar_value_string = (char *)malloc(sizeof(char)*TAU_NAME_LENGTH); 
     strcpy(value_cvar_value_string,""); 
-    for(i=0; i<op.array_size; i++) {
+    for(i=0; i<op->array_size; i++) {
       /* Call inner operation */
       innerop(op, pvar_value_buffer, 1, i); 
-      for(j=0; j<pvar_count[op.num_pvars]; j++) { 
+      for(j=0; j<pvar_count[op->num_pvars]; j++) { 
         if(i == (pvar_count[j])) { 
-          sprintf(metric_string, "%s[%d]", op.result, i); 
+          sprintf(metric_string, "%s[%d]", op->result, i); 
           sprintf(value_string, "%llu", value_array[i]); 
         } 
       } 
@@ -878,9 +878,9 @@ void outerop(Op op,
     strcpy(value_cvar_value_string,""); 
     /* Call inner operation */
     innerop(op, pvar_value_buffer, 0, -1); 
-    for(j=0; j<pvar_count[op.num_pvars]; j++) { 
+    for(j=0; j<pvar_count[op->num_pvars]; j++) { 
       if(i == (pvar_count[j]))  { 
-        sprintf(metric_string,"%s", op.result); 
+        sprintf(metric_string,"%s", op->result); 
         sprintf(value_string, "%llu", value); 
       } 
    } 
@@ -1029,7 +1029,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
 
   if(path == ".rule.operation") {
     fprintf(stdout, ".rule.operation pattern detected..\n");
-    Op op;
+    Op *op = new Op();
     rules[rule_idx].op = op; 
     //op_t *op = (struct op_s)malloc(sizeof(struct op_s));
     //rules[rule_idx].op = op; 
@@ -1039,7 +1039,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.condition pattern detected..\n");
     //condition_t *cond = (struct condition_s *)malloc(sizeof(struct condition_s));
     condition_t *cond = new condition_t{};
-    rules[rule_idx].op.cond = cond;
+    rules[rule_idx].op->cond = cond;
   }
  
   if(path == ".rule.operation.condition.leftoperand") {
@@ -1047,7 +1047,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     node_t *root = new node_t{};
     node_t *loperand = new node_t{};
     root->loperand = loperand;    
-    rules[rule_idx].op.cond->root = root;
+    rules[rule_idx].op->cond->root = root;
  
     //node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
     //node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
@@ -1074,14 +1074,14 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.condition.leftoperand.type pattern detected..\t\t");
    
     if(value.asString().c_str() == "pvar") {
-      rules[rule_idx].op.cond->root->loperand->type = LEAFPVAR; 
+      rules[rule_idx].op->cond->root->loperand->type = LEAFPVAR; 
     } 
   }
  
   if(path == ".rule.operation.condition.leftoperand.content") {
     fprintf(stdout, ".rule.operation.condition.leftoperand.content pattern detected..\t\t");
     
-    rules[rule_idx].op.cond->root->loperand->data = value.asString().c_str(); 
+    rules[rule_idx].op->cond->root->loperand->data = value.asString().c_str(); 
   }
   
   if(path == ".rule.operation.condition.rightoperand") {
@@ -1089,7 +1089,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     node_t *root = new node_t{};
     node_t *roperand = new node_t{};
     root->roperand = roperand;    
-    rules[rule_idx].op.cond->root = root;
+    rules[rule_idx].op->cond->root = root;
 
     //node_t *root = (struct node_s *)malloc(sizeof(struct node_s));
     //node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
@@ -1116,9 +1116,9 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.condition.rightoperand.type pattern detected..\t\t");
     
      if(value.asString().c_str() == "pvar") {
-      rules[rule_idx].op.cond->root->roperand->type = LEAFPVAR; 
+      rules[rule_idx].op->cond->root->roperand->type = LEAFPVAR; 
     } else if(value.asString().c_str() == "value") {
-      rules[rule_idx].op.cond->root->roperand->type = LEAFVALUE; 
+      rules[rule_idx].op->cond->root->roperand->type = LEAFVALUE; 
     }
 
   }
@@ -1126,7 +1126,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
   if(path == ".rule.operation.condition.rightoperand.content") {
     fprintf(stdout, ".rule.operation.condition.rightoperand.type pattern detected..\t\t");
     
-    rules[rule_idx].op.cond->root->roperand->data = value.asString().c_str(); 
+    rules[rule_idx].op->cond->root->roperand->data = value.asString().c_str(); 
   }
  
   if(path == ".rule.operation.condition.operator") {
@@ -1136,33 +1136,33 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     operator_enum_t ope;  
     root->data = value.asString().c_str();
     //root->ope = ope;
-    rules[rule_idx].op.cond->root = root;
+    rules[rule_idx].op->cond->root = root;
   }
 
   if(path == ".rule.operation.condition.stmt") {
     //stmt_enum_t stmt;
     //rules[rule_idx].op.cond->stmt = stmt;
     fprintf(stdout, ".rule.operation.condition.stmt pattern detected.. %s\n", value.asString().c_str());
-    rules[rule_idx].op.cond->stmt = value.asString().c_str();
+    rules[rule_idx].op->cond->stmt = value.asString().c_str();
   }
 
   if(path == ".rule.operation.result") {
     fprintf(stdout, ".rule.operation.result pattern detected..\n");
     node_t *res = new node_t{};
     //node_t *res = (struct node_s *)malloc(sizeof(struct node_s));
-    rules[rule_idx].op.result = res; 
+    rules[rule_idx].op->result = res; 
   }
 
   if(path == ".rule.operation.else") {
     fprintf(stdout, ".rule.operation.else pattern detected..\n");
     node_t *elseresult = new node_t{};
-    rules[rule_idx].op.elseresult = elseresult;
+    rules[rule_idx].op->elseresult = elseresult;
   }
 
   if(path == ".rule.operation.result.leftoperand") {
     fprintf(stdout, ".rule.operation.result.leftoperand pattern detected..\t\t");
     node_t *loperand = new node_t{};
-    rules[rule_idx].op.result->loperand = loperand;
+    rules[rule_idx].op->result->loperand = loperand;
 
     ///node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
 
@@ -1187,21 +1187,21 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.condition.leftoperand.type pattern detected..\t\t");
 
      if(value.asString().c_str() == "pvar") {
-      rules[rule_idx].op.result->loperand->type = LEAFPVAR; 
+      rules[rule_idx].op->result->loperand->type = LEAFPVAR; 
     } else if(value.asString().c_str() == "value") {
-      rules[rule_idx].op.result->loperand->type = LEAFVALUE; 
+      rules[rule_idx].op->result->loperand->type = LEAFVALUE; 
     }
   }
  
   if(path == ".rule.operation.result.leftoperand.content") {
     fprintf(stdout, ".rule.operation.condition.leftoperand.content pattern detected..\t\t");
-    rules[rule_idx].op.result->loperand->data = value.asString().c_str(); 
+    rules[rule_idx].op->result->loperand->data = value.asString().c_str(); 
   }
 
   if(path == ".rule.operation.result.rightoperand") {
     fprintf(stdout, ".rule.operation.result.rightoperand pattern detected..\t\t");
     node_t *roperand = new node_t{};
-    rules[rule_idx].op.result->roperand = roperand;
+    rules[rule_idx].op->result->roperand = roperand;
 
 
     //node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
@@ -1220,23 +1220,23 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
       rules[rule_idx].op.result->roperand = roperand;
     }
 #endif
-    rules[rule_idx].op.result->roperand = roperand;  
+    rules[rule_idx].op->result->roperand = roperand;  
   }
 
   if(path == ".rule.operation.result.rightoperand.type") {
     fprintf(stdout, ".rule.operation.result.leftoperand.type pattern detected..\t\t");
 
      if(value.asString().c_str() == "pvar") {
-      rules[rule_idx].op.result->roperand->type = LEAFPVAR; 
+      rules[rule_idx].op->result->roperand->type = LEAFPVAR; 
     } else if(value.asString().c_str() == "value") {
-      rules[rule_idx].op.result->roperand->type = LEAFVALUE; 
+      rules[rule_idx].op->result->roperand->type = LEAFVALUE; 
     }
 
   }
  
   if(path == ".rule.operation.result.rightoperand.content") {
     fprintf(stdout, ".rule.operation.result.leftoperand.content pattern detected..\t\t");
-    rules[rule_idx].op.result->roperand->data = value.asString().c_str(); 
+    rules[rule_idx].op->result->roperand->data = value.asString().c_str(); 
   }
 
   if(path == ".rule.operation.result.operator") {
@@ -1244,13 +1244,13 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     operator_enum_t ope;
     //root->data = value.asString().c_str();
     //rules[rule_idx].op.result->ope = ope;
-    rules[rule_idx].op.result->data = value.asString().c_str();
+    rules[rule_idx].op->result->data = value.asString().c_str();
   }
 
   if(path == ".rule.operation.else.leftoperand") {
     fprintf(stdout, ".rule.operation.else.leftoperand pattern detected..\t\t");
     node_t *loperand = new node_t{};
-    rules[rule_idx].op.elseresult->loperand = loperand;
+    rules[rule_idx].op->elseresult->loperand = loperand;
     //node_t *loperand = (struct node_s *)malloc(sizeof(struct node_s));
 
 #if 0
@@ -1273,22 +1273,22 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.else.leftoperand.type pattern detected..\t\t");
 
      if(value.asString().c_str() == "pvar") {
-      rules[rule_idx].op.elseresult->loperand->type = LEAFPVAR; 
+      rules[rule_idx].op->elseresult->loperand->type = LEAFPVAR; 
     } else if(value.asString().c_str() == "value") {
-      rules[rule_idx].op.elseresult->loperand->type = LEAFVALUE; 
+      rules[rule_idx].op->elseresult->loperand->type = LEAFVALUE; 
     }
 
   }
  
   if(path == ".rule.operation.else.leftoperand.content") {
     fprintf(stdout, ".rule.operation.else.leftoperand.content pattern detected..\t\t");
-    rules[rule_idx].op.elseresult->roperand->data = value.asString().c_str(); 
+    rules[rule_idx].op->elseresult->loperand->data = value.asString().c_str(); 
   }
 
   if(path == ".rule.operation.else.rightoperand") {
     fprintf(stdout, ".rule.operation.else.rightoperand pattern detected..\t\t");
     node_t *roperand = new node_t{};
-    rules[rule_idx].op.elseresult->roperand = roperand;
+    rules[rule_idx].op->elseresult->roperand = roperand;
     //node_t *roperand = (struct node_s *)malloc(sizeof(struct node_s));
 
 #if 0 
@@ -1312,23 +1312,23 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.else.rightoperand.type pattern detected..\t\t");
 
      if(value.asString().c_str() == "pvar") {
-      rules[rule_idx].op.elseresult->roperand->type = LEAFPVAR; 
+      rules[rule_idx].op->elseresult->roperand->type = LEAFPVAR; 
     } else if(value.asString().c_str() == "value") {
-      rules[rule_idx].op.elseresult->roperand->type = LEAFVALUE; 
+      rules[rule_idx].op->elseresult->roperand->type = LEAFVALUE; 
     }
 
   }
  
   if(path == ".rule.operation.else.rightoperand.content") {
     fprintf(stdout, ".rule.operation.else.rightoperand.content pattern detected..\t\t");
-    rules[rule_idx].op.elseresult->roperand->data = value.asString().c_str(); 
+    rules[rule_idx].op->elseresult->roperand->data = value.asString().c_str(); 
   }
 
   if(path == ".rule.operation.else.operator") {
     operator_enum_t ope;
     //rules[rule_idx].op.elseresult->ope = ope;
     fprintf(stdout, ".rule.operation.else.operator pattern detected.. %s\n", value.asString().c_str());
-    rules[rule_idx].op.elseresult->data = value.asString().c_str();
+    rules[rule_idx].op->elseresult->data = value.asString().c_str();
   }
 
   switch(value.type()) {
@@ -1562,13 +1562,10 @@ int generic_tuning_policy()
   }
 
   /* Call the inner logic */  
-  //op_t *op = rules[rule_id].op;
-  Op op = rules[rule_id].op;
-  //logic_t logic = rules[rule_id].logic;
+  Op *op = rules[rule_id].op;
 
  // Call logic 
   outerop(op, pvar_value_buffer, tau_pvar_count);
-  //INNERLOGIC(op);
 
 #if 0
   if(rules[rule_id].is_array_pvar == 1) {
@@ -1732,6 +1729,9 @@ int main(int argc, char **argv)
 {
   fprintf(stdout, "Tuning policies: load rules...\n");
   tuningpolicies_load_rules();
+
+  fprintf(stdout, "Tuning policies: apply logic...\n");
+  generic_tuning_policy();
 
   return 0;
 }

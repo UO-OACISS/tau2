@@ -48,7 +48,7 @@
 					"type": "pvar"
 				},
 				"rightoperand": {
-					"content": 10,
+					"content": "10",
 					"type": "value"
 				},
  				"operator":"+"
