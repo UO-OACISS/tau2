@@ -224,7 +224,7 @@ int Tau_read_load_event(int fd, double *value)  {
     return bytesread;
   }
   ret = sscanf(buf, "%lf", value);
-  TAU_VERBOSE("LOAD: buf = %s Value = %g\n", buf, *value);
+  //TAU_VERBOSE("LOAD: buf = %s Value = %g\n", buf, *value);
   return ret;
 }
 
@@ -278,8 +278,18 @@ void TauTriggerLoadEvent(void) {
   static int fd = Tau_open_system_file("/proc/loadavg");
   if (fd) {
     Tau_read_load_event(fd, &value);
-    TAU_TRIGGER_EVENT("System load", value);
-    TAU_VERBOSE("Triggered System load with %g value \n", value);
+    
+    //Do not bother with recording the load if TAU is uninitialized. 
+    if (Tau_init_check_initialized() && TheSafeToDumpData()) {
+      if (TauEnv_get_tracing()) {
+        TAU_TRIGGER_EVENT("System load (x100)", value*100);
+        TAU_VERBOSE("Triggered System load (x100) with %g value \n", value*100);
+      }
+      else  {
+        TAU_TRIGGER_EVENT("System load", value);
+        TAU_VERBOSE("Triggered System load with %g value \n", value);
+      }
+    }
   }
 }
 
