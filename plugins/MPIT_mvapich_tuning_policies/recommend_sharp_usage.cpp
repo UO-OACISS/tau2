@@ -102,7 +102,6 @@ extern "C" int Tau_plugin_init_func(PluginManager* plugin_manager) {
 
   printf("Hi there! I recommend the user to enable SHArP or not! My init func has been called\n");
 
-  Tau_util_plugin_manager_register_role_hook(plugin_manager, "MPIT_Recommend", Tau_mpi_t_recommend_sharp_usage);
   return 0;
 }
 
