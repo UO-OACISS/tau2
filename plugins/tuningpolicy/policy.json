@@ -1,7 +1,7 @@
 {
  "rule": {
         "id":1,
-        "num_pvars":2,
+        "num_pvars":"2",
  	"pvars":["pvar_max_vbuf_usage_index","pvar_vbuf_allocated_index"],
  	"cvars":["cvar1","cvar2[10]"],
 	"operation": {
