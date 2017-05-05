@@ -180,10 +180,10 @@ PluginManager* Tau_util_get_plugin_manager() {
   
   if(!is_plugin_system_initialized) {
     plugin_manager = (PluginManager*)malloc(sizeof(PluginManager));
-    plugin_manager->plugin_list = (PluginList *)malloc(sizeof(PluginList));
+    plugin_manager->plugin_list = (Tau_plugin_list *)malloc(sizeof(Tau_plugin_list));
     (plugin_manager->plugin_list)->head = NULL;
-    plugin_manager->role_hook_list = (PluginRoleHookList*)malloc(sizeof(PluginRoleHookList));
-    (plugin_manager->role_hook_list)->head = NULL;
+    plugin_manager->callback_list = (Tau_plugin_callback_list*)malloc(sizeof(Tau_plugin_callback_list));
+    (plugin_manager->callback_list)->head = NULL;
     is_plugin_system_initialized = 1;
   }
 
@@ -272,7 +272,7 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
   void* handle = dlopen(path, RTLD_NOW);
   
   if (handle) {
-    Plugin* plugin = (Plugin *)malloc(sizeof(Plugin));
+    Tau_plugin * plugin = (Tau_plugin *)malloc(sizeof(Tau_plugin));
     strcpy(plugin->plugin_name, name);
     plugin->handle = handle;
     plugin->next = (plugin_manager->plugin_list)->head;
@@ -287,65 +287,52 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
   }
 }
 
-/*Add role hook to the list of role_name:role_hook registered*/
-extern "C" void Tau_util_plugin_manager_register_role_hook(PluginManager* plugin_manager, const char* role_name, PluginRoleHook role_hook) {
-  PluginRoleHookNode* node = (PluginRoleHookNode*)malloc(sizeof(PluginRoleHookNode));
-  strcpy(node->role_name, role_name);
-  node->role_hook = role_hook;
-  node->next = (plugin_manager->role_hook_list)->head;
-  (plugin_manager->role_hook_list)->head = node;
-}
-
-/*Apply all role hooks for a given role_name - There may be more than one*/
-extern "C" void Tau_util_apply_role_hook(PluginManager* plugin_manager, const char* role_name, int argc, void **argv) {
-  int returnVal;
-
-  PluginRoleHookNode* role_plugin = (plugin_manager->role_hook_list)->head;
-  Plugin* plugin = (plugin_manager->plugin_list)->head;
-
-  while(role_plugin) {
-    if(strcmp(role_name, role_plugin->role_name) == 0) {
-      returnVal = role_plugin->role_hook(argc, argv);
-      if(returnVal)
-        printf("TAU: Failure encountered when invoking role function of plugin: %s\n", plugin->plugin_name);
-    }
-    role_plugin = role_plugin->next;
-    plugin = plugin->next;
-  }
-}
-
-/*Initialize Tau_plugin_callbacks structure with default values. Only this function changes when more events are added*/
+/*Initialize Tau_plugin_callbacks structure with default values*/
 extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->FunctionRegistrationComplete = 0;
-  cb->FunctionInvocation = 0;
-  cb->FunctionExit = 0;
-  cb->AtomicEventRegistration = 0;
   cb->AtomicEventTrigger = 0;
   cb->EndOfExecution = 0;
 }
 
+/*Helper function that makes a copy of all callbacks for events*/
+void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbacks * src) {
+  dest->FunctionRegistrationComplete = src->FunctionRegistrationComplete;
+  dest->AtomicEventTrigger = src->AtomicEventTrigger;
+  dest->EndOfExecution = src->EndOfExecution;
+}
+
 /* Register callbacks associated with well defined events defined in struct Tau_plugin_callbacks*/
-extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks cb) {
+extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
-  
-  
+  Tau_plugin_callback_ * callback = (Tau_plugin_callback_ *)malloc(sizeof(Tau_plugin_callback_));
+  Tau_util_make_callback_copy(&(callback->cb), cb);
+  callback->next = (plugin_manager->callback_list)->head;
+  (plugin_manager->callback_list)->head = callback;
+}
+
+
+void Tau_util_invoke_callbacks_(int * x) {
+
+}
+
+void Tau_util_invoke_callbacks_(float * y) {
+
+}
+
+extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * data) {
+  if(event == TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION) {
+    Tau_util_invoke_callbacks_((int*)data);
+  } else {
+    Tau_util_invoke_callbacks_((float*)data);
+  }
 }
 
 /*Clean up all plugins and free associated structures*/ 
 int Tau_util_cleanup_all_plugins(PluginManager* plugin_manager) {
-  PluginRoleHookNode* temp_role_plugin;
-  Plugin* temp_plugin;
+  Tau_plugin * temp_plugin;
 
-  PluginRoleHookNode* role_plugin = (plugin_manager->role_hook_list)->head;
-  Plugin* plugin = (plugin_manager->plugin_list)->head;
-  
-  while(role_plugin) {
-    temp_role_plugin = role_plugin;
-    role_plugin = temp_role_plugin->next;
-    temp_role_plugin->next = NULL;
-    free(temp_role_plugin);
-  }   
-  
+  Tau_plugin * plugin = (plugin_manager->plugin_list)->head;
+ 
   while(plugin) {
     temp_plugin = plugin;
     plugin = temp_plugin->next;

@@ -124,6 +124,5 @@ int Tau_mpi_t_mvapich_free_unused_vbufs(int argc, void** argv) {
 
 int Tau_plugin_init_func(PluginManager* plugin_manager) {
   printf("Hi there! I free unused vbufs! My init func has been called\n");
-  Tau_util_plugin_manager_register_role_hook(plugin_manager, "MPIT_Tuning", Tau_mpi_t_mvapich_free_unused_vbufs);
   return 0;
 }
