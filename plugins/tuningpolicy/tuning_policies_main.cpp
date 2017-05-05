@@ -297,7 +297,7 @@ typedef struct tuning_policy_rule_s tuning_policy_rule_t;
 
 //tuning_policy_rule_t rules[MAX_NB_RULES];
 
-static int rule_idx = 0;
+static int rule_idx = -1;
 
 class Op
 {
@@ -1018,14 +1018,16 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
 {
 
   if(strcmp(path.c_str(),".rule") == 0) {
+    rule_idx++;
     fprintf(stdout, ".rule pattern detected..\n");
     rules[rule_idx] = new Rule();
-    rule_idx++;
+    //rule_idx++;
   } 
    
   if(path == ".rule.num_pvars") {
     //fprintf(stdout, ".rule.num_pvars pattern detected.. %d\n", value.asLargestInt());
-    rules[rule_idx]->num_pvars = value.asLargestInt();
+    //rules[rule_idx]->num_pvars = value.asLargestInt();
+    rules[rule_idx]->num_pvars = 2; // HARDCODED
   }
 
   if(path == ".rule.operation") {
