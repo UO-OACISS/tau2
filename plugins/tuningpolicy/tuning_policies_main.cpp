@@ -1475,7 +1475,8 @@ int tuningpolicies_load_rules()
 }
 
 /* Generic function for tuning policies */
-int generic_tuning_policy(int argc, void **args)
+//int generic_tuning_policy(int argc, void **args)
+int generic_tuning_policy()
 {
   int i, j, namelen, verb, varclass, bind;
   int return_val;
@@ -1497,7 +1498,7 @@ int generic_tuning_policy(int argc, void **args)
   //static char *cvar_string = NULL;
   //static char *cvar_value_string = NULL;
  
-  assert(argc=3);
+  //assert(argc=3);
 
   const int num_pvars 				= 3;
   //int *tau_pvar_count 			= (int *)			(args[1]);
@@ -1512,7 +1513,7 @@ int generic_tuning_policy(int argc, void **args)
   }
 
   for(i=0; i<num_pvars; i++) {
-    
+    pvar_value_buffer[i] = (unsigned long long int *)malloc(sizeof(unsigned long long int)  * (tau_pvar_count[i]));
     for(j=0; j<tau_pvar_count[i]; j++) {
       pvar_value_buffer[i][j] = 0;
     }
