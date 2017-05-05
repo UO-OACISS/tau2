@@ -37,7 +37,7 @@ free_unused_vbufs.o:      free_unused_vbufs.c
 	$(CC) $(CFLAGS)  -c free_unused_vbufs.c
 
 recommend_sharp_usage.o:      recommend_sharp_usage.cpp
-	$(CXX) $(CFLAGS) $(CXXFLAGS)  -c recommend_sharp_usage.cpp
+	$(CXX) $(CFLAGS) -c recommend_sharp_usage.cpp
 
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)

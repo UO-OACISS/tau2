@@ -314,6 +314,23 @@ extern "C" void Tau_util_apply_role_hook(PluginManager* plugin_manager, const ch
   }
 }
 
+/*Initialize Tau_plugin_callbacks structure with default values. Only this function changes when more events are added*/
+extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
+  cb->FunctionRegistrationComplete = 0;
+  cb->FunctionInvocation = 0;
+  cb->FunctionExit = 0;
+  cb->AtomicEventRegistration = 0;
+  cb->AtomicEventTrigger = 0;
+  cb->EndOfExecution = 0;
+}
+
+/* Register callbacks associated with well defined events defined in struct Tau_plugin_callbacks*/
+extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks cb) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  
+  
+}
+
 /*Clean up all plugins and free associated structures*/ 
 int Tau_util_cleanup_all_plugins(PluginManager* plugin_manager) {
   PluginRoleHookNode* temp_role_plugin;

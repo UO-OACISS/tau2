@@ -1,25 +1,30 @@
-#include <Profile/Profiler.h>
-#include <Profile/UserEvent.h>
-#include <Profile/TauMetrics.h>
-
-#include <Profile/TauEnv.h>
-#include <Profile/TauMpiTTypes.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <Profile/TauPlugin.h>
-#include <Profile/TauAPI.h>
-
 #include <sstream>
 #include <string>
 #include <vector>
 #include <iostream>
 #include <iterator>
 
+#include <Profile/Profiler.h>
+#include <Profile/UserEvent.h>
+#include <Profile/TauMetrics.h>
+#include <Profile/TauPlugin.h>
+
+#include <Profile/TauEnv.h>
+#include <Profile/TauMpiTTypes.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#include <Profile/TauAPI.h>
+
 #define dprintf TAU_VERBOSE
 #define TAU_NAME_LENGTH 1024
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
+
+extern "C" int someRandomFunction(void) {
+  printf("Hello. I do nothing useful. Goodbye! \n");
+}
 
 extern "C" int Tau_mpi_t_recommend_sharp_usage(int argc, void** argv) {
   double exclusiveTimeAllReduce, inclusiveTimeApp = 0.0;
@@ -90,7 +95,13 @@ extern "C" int Tau_mpi_t_recommend_sharp_usage(int argc, void** argv) {
 }
 
 extern "C" int Tau_plugin_init_func(PluginManager* plugin_manager) {
+  Tau_plugin_callbacks * cb;
+
+  cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
+  Tau_util_init_tau_plugin_callbacks(cb);
+
   printf("Hi there! I recommend the user to enable SHArP or not! My init func has been called\n");
+
   Tau_util_plugin_manager_register_role_hook(plugin_manager, "MPIT_Recommend", Tau_mpi_t_recommend_sharp_usage);
   return 0;
 }
