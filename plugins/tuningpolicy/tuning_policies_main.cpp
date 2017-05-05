@@ -1080,6 +1080,8 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
  
   if(path == ".rule.operation.condition.leftoperand.content") {
     fprintf(stdout, ".rule.operation.condition.leftoperand.content pattern detected..\t\t");
+    
+    rules[rule_idx].op.cond->root->loperand->data = value.asString().c_str(); 
   }
   
   if(path == ".rule.operation.condition.rightoperand") {
@@ -1121,6 +1123,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
   if(path == ".rule.operation.condition.rightoperand.content") {
     fprintf(stdout, ".rule.operation.condition.rightoperand.type pattern detected..\t\t");
     
+    rules[rule_idx].op.cond->root->roperand->data = value.asString().c_str(); 
   }
  
   if(path == ".rule.operation.condition.operator") {
@@ -1187,6 +1190,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
  
   if(path == ".rule.operation.result.leftoperand.content") {
     fprintf(stdout, ".rule.operation.condition.leftoperand.content pattern detected..\t\t");
+    rules[rule_idx].op.result->loperand->data = value.asString().c_str(); 
   }
 
   if(path == ".rule.operation.result.rightoperand") {
@@ -1224,6 +1228,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
  
   if(path == ".rule.operation.result.rightoperand.content") {
     fprintf(stdout, ".rule.operation.result.leftoperand.content pattern detected..\t\t");
+    rules[rule_idx].op.result->roperand->data = value.asString().c_str(); 
   }
 
   if(path == ".rule.operation.result.operator") {
@@ -1266,8 +1271,8 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
  
   if(path == ".rule.operation.else.leftoperand.content") {
     fprintf(stdout, ".rule.operation.else.leftoperand.content pattern detected..\t\t");
+    rules[rule_idx].op.elseresult->roperand->data = value.asString().c_str(); 
   }
-
 
   if(path == ".rule.operation.else.rightoperand") {
     fprintf(stdout, ".rule.operation.else.rightoperand pattern detected..\t\t");
@@ -1303,6 +1308,7 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
  
   if(path == ".rule.operation.else.rightoperand.content") {
     fprintf(stdout, ".rule.operation.else.rightoperand.content pattern detected..\t\t");
+    rules[rule_idx].op.elseresult->roperand->data = value.asString().c_str(); 
   }
 
   if(path == ".rule.operation.else.operator") {
