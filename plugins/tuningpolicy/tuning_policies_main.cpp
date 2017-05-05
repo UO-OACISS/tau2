@@ -1117,7 +1117,10 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     
      if(value.asString().c_str() == "pvar") {
       rules[rule_idx].op.cond->root->roperand->type = LEAFPVAR; 
+    } else if(value.asString().c_str() == "value") {
+      rules[rule_idx].op.cond->root->roperand->type = LEAFVALUE; 
     }
+
   }
  
   if(path == ".rule.operation.condition.rightoperand.content") {
@@ -1185,6 +1188,8 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
 
      if(value.asString().c_str() == "pvar") {
       rules[rule_idx].op.result->loperand->type = LEAFPVAR; 
+    } else if(value.asString().c_str() == "value") {
+      rules[rule_idx].op.result->loperand->type = LEAFVALUE; 
     }
   }
  
@@ -1223,7 +1228,10 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
 
      if(value.asString().c_str() == "pvar") {
       rules[rule_idx].op.result->roperand->type = LEAFPVAR; 
+    } else if(value.asString().c_str() == "value") {
+      rules[rule_idx].op.result->roperand->type = LEAFVALUE; 
     }
+
   }
  
   if(path == ".rule.operation.result.rightoperand.content") {
@@ -1265,8 +1273,11 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
     fprintf(stdout, ".rule.operation.else.leftoperand.type pattern detected..\t\t");
 
      if(value.asString().c_str() == "pvar") {
-      rules[rule_idx].op.result->loperand->type = LEAFPVAR; 
+      rules[rule_idx].op.elseresult->loperand->type = LEAFPVAR; 
+    } else if(value.asString().c_str() == "value") {
+      rules[rule_idx].op.elseresult->loperand->type = LEAFVALUE; 
     }
+
   }
  
   if(path == ".rule.operation.else.leftoperand.content") {
@@ -1302,6 +1313,8 @@ void store_json_tree(Json::Value& value, const JSONCPP_STRING& path = ".")
 
      if(value.asString().c_str() == "pvar") {
       rules[rule_idx].op.elseresult->roperand->type = LEAFPVAR; 
+    } else if(value.asString().c_str() == "value") {
+      rules[rule_idx].op.elseresult->roperand->type = LEAFVALUE; 
     }
 
   }
