@@ -17,6 +17,7 @@
 
 #include <TauUtil.h>
 #include <TauPlugin.h>
+#include <TauPluginInternals.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -311,20 +312,52 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
 }
 
 
-void Tau_util_invoke_callbacks_(int * x) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
 
+  while(callback != NULL) {
+   if(callback->cb.FunctionRegistrationComplete != 0) {
+     callback->cb.FunctionRegistrationComplete(data);
+   }
+  }
 }
 
-void Tau_util_invoke_callbacks_(float * y) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.AtomicEventTrigger != 0) {
+     callback->cb.AtomicEventTrigger(data);
+   }
+  }
+}
+
+void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.EndOfExecution != 0) {
+     callback->cb.EndOfExecution(data);
+   }
+  }
+
 
 }
 
 extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * data) {
   if(event == TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION) {
-    Tau_util_invoke_callbacks_((int*)data);
-  } else {
-    Tau_util_invoke_callbacks_((float*)data);
-  }
+    Tau_util_invoke_callbacks_(*(Tau_plugin_event_function_registration_data*)data);
+  } else if (event == TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER) {
+    Tau_util_invoke_callbacks_(*(Tau_plugin_event_atomic_event_trigger_data*)data);
+  } else if (event == TAU_PLUGIN_EVENT_END_OF_EXECUTION) {
+    Tau_util_invoke_callbacks_(*(Tau_plugin_event_end_of_execution_data*)data);
+  } 
 }
 
 /*Clean up all plugins and free associated structures*/ 
