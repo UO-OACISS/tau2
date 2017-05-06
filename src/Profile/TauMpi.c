@@ -23,7 +23,6 @@
 #include <Profile/TauRequest.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauUtil.h>
-#include <Profile/TauPlugin.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -1518,10 +1517,6 @@ int  MPI_Finalize(  )
 
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
-
-#if TAU_PLUGIN_ENABLED
-  Tau_util_apply_role_hook(Tau_util_get_plugin_manager(), "MPIT_Recommend", 0, NULL);
-#endif
 
   if (Tau_get_node() < 0) {
     /* Grab the node id, we don't always wrap mpi_init */

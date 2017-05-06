@@ -20,7 +20,6 @@
 #include <Profile/Profiler.h> 
 #include <Profile/TauEnv.h> 
 #include <Profile/TauMpiTTypes.h>
-#include <Profile/TauPlugin.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -941,22 +940,6 @@ int Tau_track_mpi_t_here(void) {
   /*Implement user based CVAR tuning policy if TAU_MPI_T_ENABLE_USER_TUNING_POLICY is set*/
   if(mpi_t_enable_user_tuning_policy) {
     dprintf("RANK:%d: User based tuning policy enabled \n", rank);
-
-#if TAU_PLUGIN_ENABLED 
-    char *plugin_name;
-    const char *plugin_path;
-    int argc = 3;
-    void **argv = Tau_MemMgr_malloc(Tau_get_thread(), argc*sizeof(void*));
-    int* num_pvars_heap = Tau_MemMgr_malloc(Tau_get_thread(), argc*sizeof(int));
-    (*num_pvars_heap) = tau_initial_pvar_count;
-    argv[0] = (void *)num_pvars_heap;
-    argv[1] = (void *)tau_pvar_count;
-    argv[2] = (void **)pvar_value_buffer;
-    Tau_util_apply_role_hook(Tau_util_get_plugin_manager(), "MPIT_Tuning", argc, argv);
-
-#else
-    Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
-#endif /* TAU_PLUGIN_ENABLED */
   }
   
   dprintf("Finished!!\n");
