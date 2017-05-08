@@ -59,7 +59,7 @@ void init_lock(void) {
     }
 }
 
-void * Tau_sos_thread_function(void* data) {
+extern "C" void * Tau_sos_thread_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
@@ -76,14 +76,13 @@ void * Tau_sos_thread_function(void* data) {
             TAU_SOS_send_data();
             TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
-            printf("Invalid timeout!\n"); fflush(stdout);
+            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
         } else if (rc == EPERM) {
-            printf("Mutex not locked!\n"); fflush(stdout);
+            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
         }
     }
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
-    TAU_VERBOSE("TAU SOS thread exiting.\n"); fflush(stderr);
     pthread_exit((void*)0L);
 }
 
@@ -192,7 +191,7 @@ void TAU_SOS_send_shutdown_message(void) {
         offset = 0;
         SOS_buffer_pack(buffer, &offset, "i", header.msg_size);
 
-        std::cout << "Sending SOS_MSG_TYPE_SHUTDOWN ..." << std::endl;
+        //std::cout << "Sending SOS_MSG_TYPE_SHUTDOWN ..." << std::endl;
 
         SOS_send_to_daemon(buffer, buffer);
 
@@ -211,50 +210,60 @@ void TAU_SOS_fork_exec_sosd(void) {
     const int hostlength = 128;
     char hostname[hostlength] = {0};
     gethostname(hostname, sizeof(char)*hostlength);
-    std::cout << hostname << std::endl;
+    //std::cout << hostname << std::endl;
     // make array for all hostnames
     char * allhostnames = (char*)calloc(hostlength*size, sizeof(char));
+    // copy my name into the big array
+    char * host_index = allhostnames + (hostlength * rank);
+    strncpy(host_index, hostname, hostlength);
     // get all hostnames
     PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames, 
-                   hostlength*size, MPI_CHAR, MPI_COMM_WORLD);
+                   hostlength, MPI_CHAR, MPI_COMM_WORLD);
     daemon_rank = 0;
+    // point to the head of the array
+    host_index = allhostnames;
     // find the lowest rank with my hostname
     for (i = 0 ; i < size ; i++) {
-        if (strncmp(hostname, &(allhostnames[i*128]), hostlength) == 0) {
+        //printf("%d:%d comparing '%s' to '%s'\n", rank, size, hostname, host_index);
+        if (strncmp(hostname, host_index, hostlength) == 0) {
             daemon_rank = i;
         }
+        host_index = host_index + hostlength;
     }
     // fork the daemon
     if (rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
             char* forkCommand = NULL;
-			char* ranks_per_node = NULL;
-			char* offset = NULL;
+            char* ranks_per_node = NULL;
+            char* offset = NULL;
             forkCommand = getenv ("SOS_FORK_COMMAND");
-            ranks_per_node = getenv ("SOS_RANKS_PER_NODE");
+            //std::cout << "forkCommand " << forkCommand << std::endl;
+            ranks_per_node = getenv ("SOS_APP_RANKS_PER_NODE");
+            //std::cout << "ranks_per_node " << ranks_per_node << std::endl;
             offset = getenv ("SOS_LISTENER_RANK_OFFSET");
+            //std::cout << "offset " << offset << std::endl;
             if (forkCommand) {
-				std::string custom_command(forkCommand);
-				size_t index = 0;
-				index = custom_command.find("@LISTENER_RANK@", index);
-				if (index != std::string::npos) {
-					if (ranks_per_node) {
-						int rpn = atoi(ranks_per_node);
-						int listener_rank = rank / rpn;
-						if(offset) {
-							int off = atoi(offset);
-							listener_rank = listener_rank + off;
-						}
-						std::stringstream ss;
-						ss << listener_rank;
-						custom_command.replace(index,15,ss.str());
-					}
-				}
-                std::cout << "Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
+                std::string custom_command(forkCommand);
+                size_t index = 0;
+                index = custom_command.find("@LISTENER_RANK@", index);
+                if (index != std::string::npos) {
+                    if (ranks_per_node) {
+                        int rpn = atoi(ranks_per_node);
+                        int listener_rank = rank / rpn;
+                        if(offset) {
+                            int off = atoi(offset);
+                            listener_rank = listener_rank + off;
+                        }
+                        std::stringstream ss;
+                        ss << listener_rank;
+                        custom_command.replace(index,15,ss.str());
+                    }
+                }
+                //std::cout << "Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
                 TAU_SOS_do_fork(custom_command);
             } else {
-                std::cout << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
+                std::cerr << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
             }
         }
     }
@@ -286,12 +295,12 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         while(_runtime == NULL) {
             sleep(2);
             _runtime = NULL;
-        	TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
+            TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
             SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
-			if (_runtime != NULL) {
+            if (_runtime != NULL) {
                 TAU_VERBOSE("Connected to SOS daemon. Continuing...\n");
-				break;
-			} else if (--repeat < 0) { 
+                break;
+            } else if (--repeat < 0) { 
                 TAU_VERBOSE("Unable to connect to SOS daemon. Failing...\n");
                 return;
             }
@@ -412,7 +421,7 @@ extern "C" void TAU_SOS_send_data(void) {
     TauProfiler_updateAllIntermediateStatistics();
 
     // get the FunctionInfo database, and iterate over it
-    std::vector<FunctionInfo*>::iterator it;
+    std::vector<FunctionInfo*>::const_iterator it;
   const char **counterNames;
   int numCounters;
   TauMetrics_getCounterList(&counterNames, &numCounters);
@@ -464,7 +473,8 @@ extern "C" void TAU_SOS_send_data(void) {
     fi_count = TheFunctionDB().size();
   }
   // do the same with counters.
-  std::vector<tau::TauUserEvent*>::iterator it2;
+  //std::vector<tau::TauUserEvent*>::const_iterator it2;
+  tau::AtomicEventDB::iterator it2;
   int numEvents;
   double max, min, mean, sumsqr;
   std::stringstream tmp_str;
