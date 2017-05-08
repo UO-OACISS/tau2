@@ -11,6 +11,8 @@
  * for tools, or ADIOST.
  */
 
+#define ADIOST_WEAK
+
 #include "Profile/TauSOS.h"
 #include "Profile/Profiler.h"
 #include "Profile/UserEvent.h"
