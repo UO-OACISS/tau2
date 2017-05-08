@@ -91,7 +91,7 @@ void TAU_SOS_make_pub() {
         char pub_name[SOS_DEFAULT_STRING_LEN] = {0};
         char app_version[SOS_DEFAULT_STRING_LEN] = {0};
 
-        TAU_VERBOSE("[TAU_SOS_init]: Creating new pub...\n");
+        TAU_VERBOSE("[TAU_SOS_make_pub]: Creating new pub...\n");
 
 #ifdef TAU_MPI
         int rank;
@@ -115,12 +115,12 @@ void TAU_SOS_make_pub() {
         // tau_sos_pub->meta.scope_hint    = SOS_SCOPE_SELF;
         // tau_sos_pub->meta.retain_hint   = SOS_RETAIN_SESSION;
 
-        TAU_VERBOSE("[TAU_SOS_init]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
-        TAU_VERBOSE("[TAU_SOS_send_data]: Announcing the pub...\n");
+        TAU_VERBOSE("[TAU_SOS_make_pub]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
+        TAU_VERBOSE("[TAU_SOS_make_pub]: Announcing the pub...\n");
         SOS_announce(tau_sos_pub);
 }
 
-void TAU_SOS_do_fork(char *forkCommand) {
+void TAU_SOS_do_fork(std::string forkCommand) {
     std::istringstream iss(forkCommand);
     std::vector<std::string> tokens;
     copy(std::istream_iterator<std::string>(iss),
@@ -151,7 +151,8 @@ void TAU_SOS_fork_exec_sosd_shutdown(void) {
             forkCommand = getenv ("SOS_FORK_SHUTDOWN");
             if (forkCommand) {
                 std::cout << "Rank " << rank << " stopping SOS daemon(s): " << forkCommand << std::endl;
-                TAU_SOS_do_fork(forkCommand);
+                std::string foo(forkCommand);
+                TAU_SOS_do_fork(foo);
             } else {
                 std::cout << "Please set the SOS_FORK_SHUTDOWN environment variable to stop SOS in the background." << std::endl;
             }
@@ -227,11 +228,31 @@ void TAU_SOS_fork_exec_sosd(void) {
     if (rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
-            char* forkCommand;
+            char* forkCommand = NULL;
+			char* ranks_per_node = NULL;
+			char* offset = NULL;
             forkCommand = getenv ("SOS_FORK_COMMAND");
+            ranks_per_node = getenv ("SOS_RANKS_PER_NODE");
+            offset = getenv ("SOS_LISTENER_RANK_OFFSET");
             if (forkCommand) {
-                std::cout << "Rank " << rank << " spawning SOS daemon(s): " << forkCommand << std::endl;
-                TAU_SOS_do_fork(forkCommand);
+				std::string custom_command(forkCommand);
+				size_t index = 0;
+				index = custom_command.find("@LISTENER_RANK@", index);
+				if (index != std::string::npos) {
+					if (ranks_per_node) {
+						int rpn = atoi(ranks_per_node);
+						int listener_rank = rank / rpn;
+						if(offset) {
+							int off = atoi(offset);
+							listener_rank = listener_rank + off;
+						}
+						std::stringstream ss;
+						ss << listener_rank;
+						custom_command.replace(index,15,ss.str());
+					}
+				}
+                std::cout << "Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
+                TAU_SOS_do_fork(custom_command);
             } else {
                 std::cout << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
             }
@@ -246,6 +267,7 @@ void TAU_SOS_fork_exec_sosd(void) {
 
 extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     static bool initialized = false;
+    TAU_VERBOSE("TAU_SOS_init()...\n");
     if (!TauEnv_get_sos_enabled()) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;
@@ -253,18 +275,24 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         // if runtime returns null, wait a bit and try again. If 
         // we fail "too many" times, give an error and continue
         _runtime = NULL;
-        SOS_init(argc, argv, &_runtime, SOS_ROLE_LISTENER, SOS_RECEIVES_NO_FEEDBACK, NULL);
+        TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
+        SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
+            TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
             TAU_SOS_fork_exec_sosd();
             shutdown_daemon = true;
         }
         int repeat = 10;
         while(_runtime == NULL) {
-            sleep(1);
+            sleep(2);
             _runtime = NULL;
+        	TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
             SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
-            if (--repeat < 0) { 
-                TAU_VERBOSE("Unable to connect to SOS daemon. Continuing...\n");
+			if (_runtime != NULL) {
+                TAU_VERBOSE("Connected to SOS daemon. Continuing...\n");
+				break;
+			} else if (--repeat < 0) { 
+                TAU_VERBOSE("Unable to connect to SOS daemon. Failing...\n");
                 return;
             }
         }
