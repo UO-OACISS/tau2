@@ -321,6 +321,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data data
    if(callback->cb.FunctionRegistrationComplete != 0) {
      callback->cb.FunctionRegistrationComplete(data);
    }
+   callback = callback->next;
   }
 }
 
@@ -333,6 +334,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data data)
    if(callback->cb.AtomicEventTrigger != 0) {
      callback->cb.AtomicEventTrigger(data);
    }
+   callback = callback->next;
   }
 }
 
@@ -345,6 +347,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data data) {
    if(callback->cb.EndOfExecution != 0) {
      callback->cb.EndOfExecution(data);
    }
+   callback = callback->next;
   }
 
 

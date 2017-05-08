@@ -26,7 +26,8 @@ enum Tau_plugin_event {
 };
 
 struct Tau_plugin_event_function_registration_data {
-   int data;
+   char function_name[1024];
+   int tid;
 };
 
 struct Tau_plugin_event_atomic_event_trigger_data {
@@ -55,8 +56,8 @@ typedef struct Tau_plugin_list {
 
 typedef struct Tau_plugin_callback_ {
    Tau_plugin_callbacks cb;
-   Tau_plugin_callback_ * next;
-};
+   struct Tau_plugin_callback_ * next;
+} Tau_plugin_callback_;
 
 typedef struct Tau_plugin_callback_list {
     Tau_plugin_callback_ * head;

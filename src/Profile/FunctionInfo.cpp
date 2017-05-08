@@ -1,5 +1,5 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
+e*			TAU Portable Profiling Package			   **
 **			http://www.cs.uoregon.edu/research/tau	           **
 *****************************************************************************
 **    Copyright 1997  						   	   **
@@ -53,6 +53,8 @@ using namespace std;
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauUtil.h>
+
+#include <Profile/TauPluginInternals.h>
 
 //////////////////////////////////////////////////////////////////////
 // The purpose of this subclass of vector is to give us a chance to execute
@@ -292,6 +294,13 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
     }
   }
 #endif //RENCI_STFF
+
+//#ifdef TAU_PLUGIN
+  Tau_plugin_event_function_registration_data data;
+  strcpy(data.function_name, GetName()); //Testing 
+  data.tid = tid; 
+  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, &data);
+//endif
 
   TauTraceSetFlushEvents(1);
   RtsLayer::UnLockDB();
