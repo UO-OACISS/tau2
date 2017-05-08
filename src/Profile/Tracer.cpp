@@ -42,6 +42,7 @@ using namespace tau;
 /* Trace buffer settings */
 #define TAU_BUFFER_SIZE sizeof(TAU_EV)*TAU_MAX_RECORDS
 
+extern "C" int Tau_get_usesMPI(void);
 static unsigned long long TauMaxTraceRecords = 0; 
 static int TauBufferSize = 0; 
 
@@ -174,6 +175,7 @@ static int checkTraceFileInitialized(int tid) {
 }
 
 /* Flush the trace buffer */
+extern "C" void finalizeCallSites_if_necessary();
 void TauTraceFlushBuffer(int tid)
 {
   // Protect TAU from itself
@@ -192,6 +194,14 @@ void TauTraceFlushBuffer(int tid)
     }
   }
 
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+#endif /* TAU_WINDOWS */
+#endif /* _AIX */
+
   if (TauTraceGetFlushEvents()) {
     /* Dump the EDF file before writing trace data */
     TauTraceDumpEDF(tid);
@@ -201,6 +211,10 @@ void TauTraceFlushBuffer(int tid)
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TauTraceFlush()"<<endl;);
   if (numEventsToBeFlushed != 0) {
+#ifdef TAU_MPI
+   if (Tau_get_usesMPI())  {
+#endif /* TAU_MPI */
+
     ret = write(TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
@@ -208,6 +222,12 @@ void TauTraceFlushBuffer(int tid)
       TAU_VERBOSE("Write Error in TauTraceFlush()");
 #endif
     }
+#ifdef TAU_MPI
+   } else {
+     // do nothing.
+     return;
+   }
+#endif /* TAU_MPI */
   }
   TauCurrentEvent[tid] = 0;
 }
@@ -453,7 +473,7 @@ TauTraceOffsetInfo *TheTauTraceOffsetInfo() {
 /* Write event definition file (EDF) */
 int TauTraceDumpEDF(int tid) {
   vector<FunctionInfo*>::iterator it;
-  vector<TauUserEvent*>::iterator uit;
+  AtomicEventDB::iterator uit;
   char filename[1024], errormsg[1024];
   const char *dirname;
   FILE* fp;
@@ -470,13 +490,22 @@ int TauTraceDumpEDF(int tid) {
 
   dirname = TauEnv_get_tracedir();
   
-  sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
-  if ((fp = fopen (filename, "w+")) == NULL) {
-    sprintf(errormsg,"Error: Could not create %s",filename);
-    perror(errormsg);
+#ifdef TAU_MPI
+  if (Tau_get_usesMPI()) {
+#endif /* TAU_MPI */
+    sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
+    if ((fp = fopen (filename, "w+")) == NULL) {
+      sprintf(errormsg,"Error: Could not create %s",filename);
+      perror(errormsg);
+      RtsLayer::UnLockDB();
+      return -1;
+    }
+#ifdef TAU_MPI
+  } else {
     RtsLayer::UnLockDB();
     return -1;
   }
+#endif /* TAU_MPI */
   
   // Data Format 
   // <no.> events

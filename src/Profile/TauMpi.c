@@ -72,7 +72,7 @@
 
 void TauSyncClocks();
 void TauSyncFinalClocks();
-int Tau_mergeProfiles();
+int Tau_mergeProfiles_MPI();
 void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
@@ -80,6 +80,8 @@ extern int Tau_signal_initialization();
 extern int Tau_mpi_t_initialize();
 extern int Tau_mpi_t_cvar_initialize();
 extern int Tau_track_mpi_t_here();
+extern void Tau_track_mpi_t();
+extern int Tau_mpi_t_cleanup();
 
 #ifdef TAU_BEACON
 extern int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*handler)(BEACON_receive_topic_t*));
@@ -1494,6 +1496,15 @@ int  MPI_Finalize(  )
   
 #ifdef TAU_MPI_T
   Tau_track_mpi_t_here();
+
+  /*Clean up and finalize the MPI_T interface*/
+  Tau_mpi_t_cleanup();
+
+  returnVal = PMPI_T_finalize();
+  if (returnVal != MPI_SUCCESS) {
+    printf("TAU: Call to MPI_T_finalize failed\n");
+  }
+
 #endif /* TAU_MPI_T */
   writeMetaDataAfterMPI_Init(); 
 
@@ -1539,6 +1550,8 @@ int  MPI_Finalize(  )
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
+  Tau_MemMgr_finalizeIfNecessary();
+
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
@@ -1568,7 +1581,7 @@ int  MPI_Finalize(  )
     /* KAH - NO! this is the wrong time to do this. THis is also done in the
      * snapshot writer. If you do it twice, you get double values for main... */
     //TauProfiler_updateAllIntermediateStatistics();
-    Tau_mergeProfiles();
+    Tau_mergeProfiles_MPI();
   }
   
 #ifdef TAU_MONITORING
@@ -1646,6 +1659,7 @@ char *** argv;
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
   Tau_MPI_T_initialization();
+  Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
 
 #ifdef TAU_SOS

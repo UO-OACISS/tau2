@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -11,6 +12,7 @@ import java.util.StringTokenizer;
 import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 public class ExternalController {
@@ -29,6 +31,9 @@ public class ExternalController {
                 if (input.startsWith("control ")) {
                     processCommand(input.substring(8));
                 }
+                else{
+                	System.out.println("Valid control statements start with the string 'control'");
+                }
                 input = stdin.readLine();
             }
 
@@ -43,6 +48,31 @@ public class ExternalController {
         System.exit(0);
 
     }
+    
+    private static List<String> getControlArgs(String baseCommand, String userCommand){
+    	String args="";
+    	List<String> argList=new ArrayList<String>();
+    	int bcl=baseCommand.length();
+    	
+    	if(userCommand.length()>bcl){
+    		args=userCommand.substring(bcl+1).trim();
+    	}
+    	
+    	StringTokenizer tokenizer = new StringTokenizer(args, " ");
+    	
+    	while(tokenizer.hasMoreTokens()){
+    		argList.add(tokenizer.nextToken());
+    	}
+    	
+    	return argList;
+    }
+    
+    public static final String LISTAPPLICATIONS="list applications";
+    public static final String LISTEXPERIMENTS="list experiments";
+    public static final String LISTTRIALS="list trials";
+    public static final String LOAD = "load";
+    public static final String UPLOAD = "upload";
+    public static final String EXPORT = "export";
 
     static public void processCommand(String command) throws Exception {
         System.out.println("processing command: " + command);
@@ -50,25 +80,105 @@ public class ExternalController {
             ParaProf.paraProfManagerWindow.setVisible(true);
         } else if (command.equals("list databases")) {
             listDatabases();
-        } else if (command.startsWith("list applications")) {
-            listApplications(command.substring("list applications".length() + 1));
-        } else if (command.startsWith("list experiments")) {
-            listExperiments(command.substring("list experiments".length() + 1));
-        } else if (command.startsWith("list trials")) {
-            listTrials(command.substring("list trials".length() + 1));
-        } else if (command.startsWith("load")) {
-            loadDBTrial(command.substring("load".length() + 1));
-        } else if (command.startsWith("upload")) {
-            uploadTauTrial(command.substring("upload".length() + 1));
-        } else if (command.equals("exit")) {
+        } else if (command.startsWith(LISTAPPLICATIONS)) {
+            listApplications(getControlArgs(LISTAPPLICATIONS,command));
+        } else if (command.startsWith(LISTEXPERIMENTS)) {
+            listExperiments(getControlArgs(LISTEXPERIMENTS,command));
+        } else if (command.startsWith(LISTTRIALS)) {
+            listTrials(getControlArgs(LISTTRIALS, command));
+        } else if (command.startsWith(LOAD)) {
+            loadDBTrial(getControlArgs(LOAD,command));
+        } else if (command.startsWith(UPLOAD)) {
+            uploadTauTrial(getControlArgs(UPLOAD,command));
+        } 
+        else if (command.startsWith(EXPORT)){
+        	exportTrialsToPPK(getControlArgs(EXPORT,command));
+        }else if (command.equals("exit")) {
             exitController();
+        }
+        else{
+        	System.out.println("Valid control statements are:\n"
+        			+ "open manager\n"
+        			+ "list databases\n"
+        			+ "list applications <database id>\n"
+        			+ "list experiments\n"
+        			+ "list trials\n"
+        			+ "load\n"
+        			+ "upload\n"
+        			+ "export\n"
+        			+ "exit");
         }
     }
 
-    static public void loadDBTrial(String command) throws Exception {
-        StringTokenizer tokenizer = new StringTokenizer(command, " ");
-        int dbID = Integer.parseInt(tokenizer.nextToken());
-        int trialID = Integer.parseInt(tokenizer.nextToken());
+    static public void exportTrialsToPPK(List<String> args) throws Exception{
+    	if(args.size()<=3){
+    		System.out.println("Invalid input. Requires writable output directory, numeric database id and one more more numeric trial ids");
+    		return;
+    	}
+    	
+    	String ppkPath=args.get(0);
+    	int dbID = Integer.parseInt(args.get(1));
+    	File targetDir=new File(ppkPath);
+    	
+    	if(!targetDir.isDirectory()||!targetDir.canWrite()){
+    		System.out.println("Invalid input. ppk output location must be a writable directory.");
+    		return;
+    	}
+    	
+    	for(int i=2;i<args.size();i++)
+        {
+    		int trialID = Integer.parseInt(args.get(i));
+    		exportTrialToPPK(targetDir,dbID,trialID);
+        }
+        
+       
+    }
+    
+    private static void  exportTrialToPPK(File targetDir,int dbID,int trialID) throws Exception{
+    	 DatabaseAPI databaseAPI = new DatabaseAPI();
+         Database selectedDB=Database.getDatabases().get(dbID);
+         databaseAPI.initialize(selectedDB);
+ 		if (databaseAPI.db().getSchemaVersion() > 0) {
+ 			// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+ 			databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+ 		}
+ 		
+ 		Trial trial = databaseAPI.setTrial(trialID, true);
+         DBDataSource dbDataSource = new DBDataSource(databaseAPI);
+         dbDataSource.load();
+         
+          //= databaseAPI.setTrial(trialID, true);//new Trial();
+         trial.setDataSource(dbDataSource);
+         trial.setID(trialID);
+     	
+
+ 		
+ 		databaseAPI.initialize(selectedDB);
+         
+         DB dbOb = databaseAPI.db();
+ 		trial.loadXMLMetadata(dbOb);
+ 		dbDataSource.setMetaData(trial.getMetaData());
+ 		
+ 		String newPPKString = targetDir.getCanonicalPath() + File.separator + trial.getName() + "-"
+				+ trial.getID() + ".ppk";
+ 		File newPPKFile = new File(newPPKString);
+
+ 		DataSourceExport.writePacked(dbDataSource, newPPKFile);
+ 		System.out.println("Wrote "+newPPKFile.getCanonicalPath());
+    }
+    
+    static public void loadDBTrial(List<String> ids) throws Exception {
+        //StringTokenizer tokenizer = new StringTokenizer(command, " ");
+        
+        if(ids.size()!=2){
+    		System.out.println("Invalid input. Requires numeric database id and numeric trial id");
+    		//outputCommand("return "+0+" default");
+    		//outputCommand("endreturn");
+    		return;
+    	}
+
+        int dbID = Integer.parseInt(ids.get(0));
+        int trialID = Integer.parseInt(ids.get(1));
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(Database.getDatabases().get(dbID));
@@ -91,14 +201,21 @@ public class ExternalController {
         ppTrial.showMainWindow();
     }
 
-    static public void uploadTauTrial(String command) throws Exception {
-        StringTokenizer tokenizer = new StringTokenizer(command, " ");
+    static public void uploadTauTrial(List<String> ids) throws Exception {
+        //StringTokenizer tokenizer = new StringTokenizer(command, " ");
+        
+        if(ids.size()!=5){
+    		System.out.println("Invalid input. Requires path to profile location, numeric database id, application name, experiment name and trial name");
+    		outputCommand("return "+-1);
+    		outputCommand("endreturn");
+    		return;
+    	}
 
-        String location = tokenizer.nextToken();
-        int dbID = Integer.parseInt(tokenizer.nextToken());
-        String appName = tokenizer.nextToken();
-        String expName = tokenizer.nextToken();
-        String trialName = tokenizer.nextToken();
+        String location = ids.get(0);// tokenizer.nextToken();
+        int dbID = Integer.parseInt(ids.get(1));
+        String appName = ids.get(2);//tokenizer.nextToken();
+        String expName = ids.get(3);//tokenizer.nextToken();
+        String trialName = ids.get(4);///tokenizer.nextToken();
 
         File file = new File(location);
         File[] files = new File[1];
@@ -134,8 +251,16 @@ public class ExternalController {
 
     }
 
-    static public void listApplications(String databaseID) throws SQLException {
-        int id = Integer.parseInt(databaseID);
+    static public void listApplications(List<String> databaseID) throws SQLException {
+    	
+    	if(databaseID.size()!=1){
+    		System.out.println("Invalid input. Requires numeric database id");
+    		outputCommand("return "+0+" default");
+    		outputCommand("endreturn");
+    		return;
+    	}
+    	
+        int id = Integer.parseInt(databaseID.get(0));
         List<Database> databases = Database.getDatabases();
         
 
@@ -155,12 +280,19 @@ public class ExternalController {
         outputCommand("endreturn");
     }
 
-    static public void listExperiments(String ids) throws SQLException {
+    static public void listExperiments(List<String> ids) throws SQLException {
 
-        StringTokenizer tokenizer = new StringTokenizer(ids, " ");
+       // StringTokenizer tokenizer = new StringTokenizer(ids, " ");
+    	
+    	if(ids.size()!=2){
+    		System.out.println("Invalid input. Requires numeric database id and numeric application id");
+    		outputCommand("return "+0+" default");
+    		outputCommand("endreturn");
+    		return;
+    	}
 
-        int dbID = Integer.parseInt(tokenizer.nextToken());
-        int appID = Integer.parseInt(tokenizer.nextToken());
+        int dbID = Integer.parseInt(ids.get(0));
+        int appID = Integer.parseInt(ids.get(1));
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(Database.getDatabases().get(dbID));
@@ -178,16 +310,41 @@ public class ExternalController {
         outputCommand("endreturn");
     }
 
-    static public void listTrials(String ids) throws SQLException {
+    static public void listTrials(List<String> ids) throws SQLException {
 
-        StringTokenizer tokenizer = new StringTokenizer(ids, " ");
+        //StringTokenizer tokenizer = new StringTokenizer(ids, " ");
+    	
+    	if(ids.size()<1){
+    		System.out.println("Invalid input. Requires numeric database id and, for older databases, experiment id");
+    		outputCommand("return "+-1+" default");
+    		outputCommand("endreturn");
+    		return;
+    	}
 
-        int dbID = Integer.parseInt(tokenizer.nextToken());
-        int expID = Integer.parseInt(tokenizer.nextToken());
-
+        int dbID = Integer.parseInt(ids.get(0));
+        
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(Database.getDatabases().get(dbID));
-		if (databaseAPI.db().getSchemaVersion() > 0) {
+        int schemav = databaseAPI.db().getSchemaVersion();
+        int expID=-1;
+        if(!(schemav>0)){
+        	if(ids.size()!=2){
+        
+        	System.out.println("Invalid input. Requires numeric database id and, for older databases, experiment id");
+        	outputCommand("return "+-1+" default");
+    		outputCommand("endreturn");
+    		return;
+        	}
+        	else{
+        		expID = Integer.parseInt(ids.get(1));
+        	}
+        }
+        
+        
+
+        //DatabaseAPI databaseAPI = new DatabaseAPI();
+        //databaseAPI.initialize(Database.getDatabases().get(dbID));
+		if (schemav > 0) {
 			// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
 			databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
 		}else{

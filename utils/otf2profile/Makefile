@@ -15,7 +15,7 @@ HANDLERS=handlers.o handlers.*.~*
 READTRACE=readTrace.o readTrace.*.~*
 MAKEFILE=Makefile.~*
 
-CXXFLAGS = $(USER_OPT) -w
+CXXFLAGS = $(USER_OPT) 
 OTF2FLAGS = -DNOCROSS_BUILD -D__STDC_FORMAT_MACROS -DFRONTEND_BUILD  $(TAU_OTF2_1_1_FLAGS)
 
 OTFLIBS=-L$(OTFDIR)/lib -lotf2 -lrt

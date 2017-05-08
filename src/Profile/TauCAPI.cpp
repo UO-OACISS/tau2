@@ -78,6 +78,9 @@ extern "C" void Tau_shutdown(void);
 extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
+//Static variables with file scope
+static TauUserEvent *** pvarEvents = NULL;
+
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
 
@@ -347,6 +350,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
   // Don't start throttled timers
   if (fi && fi->IsThrottled()) return;
+  //if (Tau_global_getLightsOut()) return;
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -513,6 +517,7 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
   FunctionInfo *fi = (FunctionInfo *)functionInfo;
   // Don't start throttled timers
   if (fi->IsThrottled()) return;
+  if (Tau_global_getLightsOut()) return;
 
   if (TauEnv_get_lite_enabled()) {
     // Protect TAU from itself
@@ -586,6 +591,7 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 
   // Don't stop throttled timers
   if (fi->IsThrottled()) return;
+  //if (Tau_global_getLightsOut()) return;
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -732,6 +738,7 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
   FunctionInfo *fi = (FunctionInfo *)function_info;
   // Don't stop throttled timers
   if (fi->IsThrottled()) return;
+  if (Tau_global_getLightsOut()) return;
 
   if (TauEnv_get_lite_enabled()) {
     // Protect TAU from itself
@@ -1292,7 +1299,11 @@ TauContextUserEvent & TheMsgVolRecvContextEvent(int tid) {
 
 ///////////////////////////////////////////////////////////////////////////
 #ifdef TAU_SHMEM 
-extern "C" int shmem_n_pes(void); 
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+extern "C" int __real__num_pes(void);
+#else
+extern "C" int __real_shmem_n_pes(void); 
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #endif /* TAU_SHMEM */
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1311,7 +1322,11 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
 #ifdef TAU_SHMEM
-      tau_totalnodes(1,shmem_n_pes());
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+      tau_totalnodes(1,__real__num_pes());
+#else
+      tau_totalnodes(1,__real_shmem_n_pes());
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #else /* TAU_SHMEM */
       fprintf(stderr, 
           "TAU Error: Comm Matrix destination %d exceeds node count %d. "
@@ -1381,7 +1396,11 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
     if (TauEnv_get_comm_matrix()) {
       if (destination >= tau_totalnodes(0,0)) {
 #ifdef TAU_SHMEM
-        tau_totalnodes(1,shmem_n_pes());
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+        tau_totalnodes(1,__real__num_pes());
+#else
+        tau_totalnodes(1,__real_shmem_n_pes());
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #else /* TAU_SHMEM */
         fprintf(stderr, 
             "TAU Error: Comm Matrix destination %d exceeds node count %d. "
@@ -1465,7 +1484,20 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 extern "C" void * Tau_get_userevent(char const * name) {
   TauInternalFunctionGuard protects_this_function;
   TauUserEvent *ue;
-  ue = new TauUserEvent(std::string(name));
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
+    ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+  new(ue) TauUserEvent(name);
+#else
+  ue = new TauUserEvent(name);
+#endif
   return (void *) ue;
 }
 
@@ -1507,7 +1539,32 @@ extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
   }
 }
 
-typedef TAU_HASH_MAP<string, TauContextUserEvent *> pure_atomic_map_t;
+struct cmp_str
+{
+   bool operator()(char const *a, char const *b)
+   {
+      return std::strcmp(a, b) < 0;
+   }
+};
+
+struct StrCompare : public std::binary_function<const char*, const char*, bool> {
+public:
+    bool operator() (const char* str1, const char* str2) const
+        { return std::strcmp(str1, str2) < 0; }
+};
+
+typedef bool(*_my_compare_const_char_func)(const char *, const char *);
+bool _my_compare_const_char(const char * lhs, const char * rhs) {
+   return (strcmp(lhs, rhs) < 0);
+}
+
+struct StrCompare2 {
+public:
+    bool operator() (const TauSafeString& lhs, const TauSafeString& rhs) const
+        { return std::strcmp(lhs.c_str(), rhs.c_str()) < 0; }
+};
+
+typedef std::map<TauSafeString, TauContextUserEvent *, std::less<TauSafeString>, TauSignalSafeAllocator<std::pair<const TauSafeString, TauContextUserEvent *> > > pure_atomic_map_t;
 pure_atomic_map_t & ThePureAtomicMap() {
   static pure_atomic_map_t pureAtomicMap;
   return pureAtomicMap;
@@ -1524,11 +1581,30 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *ue = 0;
   RtsLayer::LockEnv();
-  pure_atomic_map_t::iterator it = ThePureAtomicMap().find(string(name));
+  TauSafeString tmp(name);
+  pure_atomic_map_t::iterator it = ThePureAtomicMap().find(tmp);
   if (it == ThePureAtomicMap().end()) {
+    //printf("Adding %s to the map.\n", name); fflush(stdout);
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
+    ue = (TauContextUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauContextUserEvent));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(ue) TauContextUserEvent(name);
+    //ThePureAtomicMap().insert(std::pair<const TauSafeString, TauContextUserEvent *>(ue->GetName(), ue));
+    TauSafeString tmp = ue->GetName();
+    ThePureAtomicMap()[tmp] = ue;
+#else
     ue = new TauContextUserEvent(name); 
-    ThePureAtomicMap()[string(name)] = ue;
+    ThePureAtomicMap()[ue->GetName()] = ue;
+#endif
   } else {
+    //printf("Found %s in the map.\n", name); fflush(stdout);
     ue = (*it).second;
   }
   RtsLayer::UnLockEnv();
@@ -1825,6 +1901,11 @@ extern "C" void Tau_track_power(void) {
   TauTrackPower();
 }
 
+extern "C" void Tau_track_load(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackLoad();
+}
+
 extern "C" void Tau_track_memory_rss_and_hwm(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackMemoryFootPrint();
@@ -1839,6 +1920,11 @@ extern "C" void Tau_track_memory_rss_and_hwm_here(void) {
 extern "C" void Tau_track_power_here(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackPowerHere();
+}
+
+extern "C" void Tau_track_load_here(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackLoadHere();
 }
 
 extern "C" void Tau_track_memory_headroom(void) {
@@ -1870,6 +1956,13 @@ extern "C" void Tau_enable_tracking_power(void) {
   TauEnableTrackingPower();
 }
 
+extern "C" void Tau_disable_tracking_load(void) {
+  TauDisableTrackingLoad();
+}
+
+extern "C" void Tau_enable_tracking_load(void) {
+  TauEnableTrackingLoad();
+}
 
 extern "C" void Tau_enable_tracking_memory_headroom(void) {
   TauEnableTrackingMemoryHeadroom();
@@ -2110,12 +2203,12 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
   if (exists > 0) {
-    PureMap::iterator it = pure.find(name);
+    PureMap::const_iterator it = pure.find(name);
     fi = it->second;
   }
   if (fi == NULL) {
     RtsLayer::LockEnv();
-    PureMap::iterator it = pure.find(name);
+    PureMap::const_iterator it = pure.find(name);
     if (it == pure.end()) {
       tauCreateFI((void**)&fi, name, type, TAU_USER, "OpenMP");
       pure[name] = fi;
@@ -2669,18 +2762,23 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
 }
  
 TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
-    static TauUserEvent *** pvarEvents = NULL;
+    /*All this routine does is to return the event at the current PVAR index and subindex*/
+    
+    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
+}
+
+/*Allocate events to track PVARs*/
+extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count) {
     static int tau_previous_pvar_count = 0;
     int i,j;
-
 
     /* If this function is being invoked for the first time, allocate event buffers using malloc.
      * If the number of pvars changes during runtime, reallocate event buffers accordingly*/
     if(!pvarEvents) {
         pvarEvents = (TauUserEvent***)calloc(num_pvars, sizeof(TauUserEvent**));
-        for(i=0; i < num_pvars; i++) { 
+        for(i=0; i < num_pvars; i++) {
           pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
-	  Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
+          Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
     } else if ((tau_previous_pvar_count > 0) && (num_pvars > tau_previous_pvar_count) ) {
         pvarEvents = (TauUserEvent***)realloc(pvarEvents, sizeof(TauUserEvent**)*num_pvars);
@@ -2692,10 +2790,9 @@ TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current
           pvarEvents[i] = (TauUserEvent**)calloc(tau_pvar_count[i], sizeof(TauUserEvent*));
           Tau_fill_mpi_t_pvar_events(&(pvarEvents[i]), i, tau_pvar_count[i]);
         }
-    }  
-  
+    }
+
     tau_previous_pvar_count = num_pvars;
-    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {

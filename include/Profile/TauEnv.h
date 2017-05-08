@@ -33,6 +33,8 @@
 #define TAU_ACTION_DUMP_CALLPATHS 2
 #define TAU_ACTION_DUMP_BACKTRACES 3
 
+#define TAU_PLUGIN_ENABLED 0
+
 #ifndef TAU_EVENT_THRESHOLD
 #define TAU_EVENT_THRESHOLD_DEFAULT .5
 #endif /* TAU_EVENT_THRESHOLD */
@@ -56,7 +58,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_callpath();
   int  TAUDECL TauEnv_get_callpath_depth();
   int  TAUDECL TauEnv_get_callsite();
-  int  TAUDECL TauEnv_get_callsite_limit();
+  int  TAUDECL TauEnv_get_callsite_depth();
   int  TAUDECL TauEnv_get_depth_limit();
   void TAUDECL TauEnv_set_depth_limit(int value);
   int  TAUDECL TauEnv_get_comm_matrix();
@@ -143,6 +145,10 @@ extern "C" {
   int TAUDECL TauEnv_get_alfred_port();
   int TAUDECL TauEnv_get_papi_multiplexing();
   int TauEnv_get_show_memory_functions();
+#ifdef __cplusplus
+  void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
+                          const std::string& replace);
+#endif /* __cplusplus */
 
 #ifdef __cplusplus
 }

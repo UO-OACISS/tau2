@@ -1,0 +1,37 @@
+#!/bin/bash 
+
+if [ "x$SPARK_HOME" = "x" ] ; then
+    echo "ERROR: SPARK_HOME not set. Please set SPARK_HOME to the root of your Spark installation."
+    exit 1
+fi
+
+if [ "x$SPARK_CONF_DIR" = "x" ] ; then
+    SOURCE_CONF_DIR="$SPARK_HOME/conf"
+else
+    SOURCE_CONF_DIR=$SPARK_CONF_DIR
+fi
+
+export SPARK_CONF_DIR=$(mktemp -d)
+
+if [ "$(ls -A $SOURCE_CONF_DIR)" ]; then 
+    cp -r $SOURCE_CONF_DIR/* $SPARK_CONF_DIR
+    if [ $? != 0 ] ; then
+        echo "ERROR: Unable to copy config files from $SOURCE_CONF_DIR to $SPARK_CONF_DIR"
+        exit 1
+    fi
+fi
+
+TAU_EXPORTS="$(tau_spark_python -s | grep export)"
+echo "$TAU_EXPORTS" >> $SPARK_CONF_DIR/spark-env.sh
+
+export PYSPARK_DRIVER_PYTHON=tau_spark_python
+
+scriptname=`basename $0`
+if [ "$scriptname" == "tau_spark-submit" ] ; then
+    $SPARK_HOME/bin/spark-submit $@
+elif [ "$scriptname" == "tau_pyspark" ] ; then
+    $SPARK_HOME/bin/pyspark $@
+else
+    echo "ERROR: This script should be named either tau_spark-submit or tau_pyspark"
+fi
+

@@ -63,7 +63,7 @@ using namespace std;
 using namespace tau;
 
 #ifdef PGI
-template void vector<TauUserEvent *>::insert_aux(vector<TauUserEvent *>::iterator, TauUserEvent *const &);
+template void AtomicEventDB::insert_aux(AtomicEventDB::iterator, TauUserEvent *const &);
 template TauUserEvent** copy_backward(TauUserEvent**,TauUserEvent**,TauUserEvent**);
 template TauUserEvent** uninitialized_copy(TauUserEvent**,TauUserEvent**,TauUserEvent**);
 #endif // PGI
@@ -77,17 +77,15 @@ struct ContextEventMapCompare
 {
   bool operator()(long const * l1, long const * l2) const
   {
-    int i;
-    long const len = l1[0];
-    if (len != l2[0]) return len < l2[0];
-    for (i=0; i<len; ++i) {
+    int i = 0;
+    for (i=0; i<=l1[0]; ++i) {
       if (l1[i] != l2[i]) return l1[i] < l2[i];
     }
-    return (l1[i] < l2[i]);
+    return false;
   }
 };
 
-struct ContextEventMap : public std::map<long *, TauUserEvent *, ContextEventMapCompare>
+struct ContextEventMap : public std::map<long *, TauUserEvent *, ContextEventMapCompare, TauSignalSafeAllocator<std::pair<long*, TauUserEvent *> > >
 {
   ~ContextEventMap() {
     Tau_destructor_trigger();
@@ -271,7 +269,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 void TauUserEvent::ReportStatistics(bool ForEachThread)
 {
   TAU_EVENT_DATATYPE TotalNumEvents, TotalSumValue, Minima, Maxima;
-  vector<TauUserEvent*>::iterator it;
+  AtomicEventDB::iterator it;
 
   Maxima = Minima = 0;
   cout << "TAU Runtime Statistics" << endl;
@@ -347,14 +345,11 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 // Formulate Context Comparison Array, an array of addresses with size depth+2.
 // The callpath depth is the 0th index, the user event goes is the last index
 //////////////////////////////////////////////////////////////////////
-long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current)
+long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
 {
   int depth = TauEnv_get_callpath_depth();
-
-  //long * ary = new long[depth+2];
-  long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(long)*(depth+2));
-  memset(ary, 0, (depth+2)*sizeof(long));
-
+  *size = sizeof(long)*(depth+2);
+  long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), *size);
   int i=1;
   // start writing to index 1, we fill in the depth after
   for(; current && depth; ++i) {
@@ -371,15 +366,16 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current)
 ////////////////////////////////////////////////////////////////////////////
 // Formulate Context Callpath name string
 ////////////////////////////////////////////////////////////////////////////
-string TauContextUserEvent::FormulateContextNameString(Profiler * current)
+TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current)
 {
   if (current) {
-    ostringstream buff;
+    std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
     buff << userEvent->GetName();
 
     int depth = TauEnv_get_callpath_depth();
     if (depth) {
-      Profiler ** path = new Profiler*[depth];
+      //Profiler ** path = new Profiler*[depth];
+      Profiler * path[200];
 
       // Reverse the callpath to avoid string copies
       int i=depth-1;
@@ -402,12 +398,12 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
 
-      delete[] path;
+      //delete[] path;
     }
 
     // Return a new string object.
     // A smart STL implementation will not allocate a new buffer.
-    return buff.str();
+    return buff.str().c_str();
   } else {
     return "";
   }
@@ -427,33 +423,37 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
     if (contextEnabled) {
       Profiler * current = TauInternal_CurrentProfiler(tid);
       if (current) {
-        long * comparison = FormulateContextComparisonArray(current);
+        //printf("**** Looking for : %s\n", FormulateContextNameString(current).c_str()); fflush(stdout);
+        size_t size;
+        long * comparison = FormulateContextComparisonArray(current, &size);
 
         RtsLayer::LockDB();
-        ContextEventMap::iterator it = contextMap.find(comparison);
+        ContextEventMap::const_iterator it = contextMap.find(comparison);
         if (it == contextMap.end()) {
-  /* KAH - Whoops!! We can't call "new" here, because malloc is not
-   * safe in signal handling. therefore, use the special memory
-   * allocation routines */
-#ifndef TAU_WINDOWS
-          contextEvent = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
-  /*  now, use the pacement new function to create a object in
-   *  pre-allocated memory. NOTE - this memory needs to be explicitly
-   *  deallocated by explicitly calling the destructor. 
-   *  I think the best place for that is in the destructor for
-   *  the hash table. */
+          //printf("****  NEW  **** \n"); fflush(stdout);
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
+    contextEvent = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
           new(contextEvent) TauUserEvent(
-              FormulateContextNameString(current),
+              FormulateContextNameString(current).c_str(),
               userEvent->IsMonotonicallyIncreasing());
 #else
           contextEvent = new TauUserEvent(
-              FormulateContextNameString(current),
+              FormulateContextNameString(current).c_str(),
               userEvent->IsMonotonicallyIncreasing());
 #endif
           contextMap[comparison] = contextEvent;
         } else {
+          //printf("**** FOUND **** \n"); fflush(stdout);
           contextEvent = it->second;
-          //delete[] comparison;
+          Tau_MemMgr_free(tid, (void*)comparison, size);
         }
         RtsLayer::UnLockDB();
         contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
@@ -461,6 +461,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         // do nothing - there is no context.
       }
     }
+    // regardless of the context, trigger the UserEvent.
     userEvent->TriggerEvent(data, tid, timestamp, use_ts);
   }
 }

@@ -19,6 +19,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+#ifndef TAU_WINDOWS
+#include <dlfcn.h>
+#endif /* TAU_WINDOWS */
 
 
 /*********************************************************************
@@ -167,4 +170,92 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
   }
   return ptr;
 }
+
+/*
+ * Load a plugin with its given name and path
+ */
+int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
+{
+  char *fullname;
+  char *fullpath;
+  char *initFuncName;
+  
+  strcat(path, name);
+
+  sprintf(fullpath, "%s.so", path);
+
+  if(pds == NULL)
+    pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
+
+#ifndef TAU_WINDOWS
+  void *handle = dlopen(fullpath, RTLD_NOW);
+#else
+  void *handle = NULL;
+#endif /* TAU_WINDOWS */
+  //dstring_free(slashedpath);
+  
+  if (handle) {
+    //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
+    PluginHandleList* handle_node = (PluginHandleList *)malloc(sizeof(PluginHandleList));
+    handle_node->handle = handle;
+    handle_node->next = pds->handle_list;
+    pds->handle_list = handle_node;
+  } else {
+#ifndef TAU_WINDOWS 
+    printf("Error loading DSO: %s\n", dlerror());
+#endif /* TAU_WINDOWS */
+    return -1;
+  } 
+
+  sprintf(initFuncName, "plugin_%s", name);  
+
+  /* Get symbol of plugin entry point */
+#ifndef TAU_WINDOWS
+  void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(handle, initFuncName);
+
+  if(!fn) {
+    fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
+    dlclose(handle);
+    return -1;
+  }
+
+  /* Call plugin function  */
+  fn(num_args, args);
+#endif /* TAU_WINDOWS */
+
+  return 1;
+}
+
+int Tau_util_close_plugin()
+{
+
+  return 1;
+}
+
+/*
+ * Clean up all plugins and free associated structures
+ */
+int Tau_util_cleanup_plugins()
+{
+
+  if(pds == NULL) {
+    fprintf(stdout, "No plugin to clean\n");
+    return -1;
+  }
+
+  //PluginDiscoveryState* pds = (PluginDiscoveryState*)vpds;
+  PluginHandleList* node = pds->handle_list;
+
+  while (node) {
+    PluginHandleList* next = node->next;
+#ifndef TAU_WINDOWS 
+    dlclose(node->handle);
+#endif /* TAU_WINDOWS */
+    free(node);
+    node = next;
+  }
+  
+  free(pds);
+}
+
 

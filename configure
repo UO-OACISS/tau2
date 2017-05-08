@@ -1004,14 +1004,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', or 'oshfort' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', or 'caf' "
 		exit 1
 	    fi
 	    shift
@@ -1941,6 +1941,17 @@ for arg in "$@"; do
 
 	-shmemlibrary=*)
 	    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/#/ /g'`
+	    shmem=yes
+	    shift
+	    ;;
+
+    -shmemmpiinc=*)
+	    shmemmpiinc=`echo $arg | sed -e 's/-shmemmpiinc=//' -e 's/#/ /g'`
+	    if [ ! -d $shmemmpiinc ]
+	    then
+		echo "Error: Cannot access SHMEM include directory $shmeminc"
+		exit 1
+	    fi
 	    shmem=yes
 	    shift
 	    ;;
@@ -3242,6 +3253,7 @@ if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ ]; then
     fixmakeargs="$fixmakeargs CLANG"
 fi
 
+
 if [ "$machine" = "apple" ] ; then
     mkdir -p apple/lib
     cp tools/src/common/resources/tau-medium.png apple/lib/
@@ -3584,9 +3596,18 @@ if [ $cxx_compiler = mpicxx ] ; then
 	    if [ $f90loaded = 1 ] ; then
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then
-		        fortran_compiler=intel
-	        fi
-	    else
+		fortran_compiler=intel
+	    fi
+            if [ "x$fortran_compiler" = "xxlf_r" ]; then
+                fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
+	    fi
+            if [ "x$fortran_compiler" = "xxlflang" ]; then
+                fixmakeargs="$fixmakeargs XLFLANG"
+            fi
+	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then 
+		fortran_compiler=caf
+            fi
+	else
             fortran_compiler=no
 	    fi
 
@@ -3608,8 +3629,15 @@ if [ $cxx_compiler = mpicxx ] ; then
 		cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
-            if [ "x$mpilibrary" = "xno" ]; then
-		mpilibrary=`mpicxx -show | tail -n 1 | cut -d' ' -f2- | sed -e 's@ @#@g'`
+            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+
+		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
+		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	        mpilibargs_added_to_fixmakeargs=yes
+
             fi
             full_cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1; }'`
             full_cc_compiler=`mpicc -show | tail -n 1 | awk '{ print $1; }'`
@@ -3668,9 +3696,15 @@ case $cxx_compiler in
     *llvm*|*clang*)
 	echo "Using CLANG Compilers"
         fixmakeargs="$fixmakeargs CLANG"
+        tauoptions="${tauoptions}-clang"
 	if [ $machine = apple ]; then
-	    # MPI on Apple OS X has issues with shared objects
-            fixmakeargs="$fixmakeargs NOSHARED APPLECXX"
+	    gnu=yes
+            fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
+            fixmakeargs="$fixmakeargs APPLECXX"
+
+        fi
+        if [ $openmp = yes ]; then 
+          fixmakeargs="$fixmakeargs CLANG_OPENMP"
         fi
         ;;
 
@@ -4142,6 +4176,11 @@ case $fortran_compiler in
 	fi
 	;;
 
+    caf)
+	echo "Default Fortran compiler will be caf"
+        fixmakeargs="$fixmakeargs CAF"
+	;;
+
     gfortran4)
 	echo "Default Fortran compiler will be GNU gfortran4"
 	gfortran4=`which gfortran4 2>&1`
@@ -4194,7 +4233,7 @@ case $fortran_compiler in
 	fi
 	;;
 
-    pgi)
+    pgi|pgf90)
 	echo "Default Fortran compiler will be PGI pgf90"
 	extradir=`which pgcc | sed s/pgcc/../`
 	fixmakeargs="$fixmakeargs PGI_FORTRAN"
@@ -4406,6 +4445,29 @@ then
 		fi
 		additional_mpiincs="$additional_mpiincs $mpiincf90dir"
             fi
+	
+            mpiinc_search=`which mpirun  | sed -e 's@//@/@g'| sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+		if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+		then
+		    mpiinc=$mpiinc_search
+		    echo "Using MPI include directory $mpiinc"
+		    echo "machine is $machine"
+		else
+		    mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include
+		    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+		    then
+		      mpiinc=$mpiinc_search
+		      echo "Using MPI include directory $mpiinc"
+                    else 
+		      mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include64
+                      if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+                      then
+                        mpiinc=$mpiinc_search
+                        echo "Using MPI include directory $mpiinc"
+                        echo "machine is $machine"
+                      fi
+                    fi
+                fi 
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4703,16 +4765,21 @@ then
     esac
 fi
 
-if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
-    echo "MPIINC and MPILIB are not set!"
+if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" ]; then
+    echo "MPIINC is not set!"
     mpiinc_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+    if [ ! -d $mpiinc_search ] ; then
+      # Try the ".../include64" directory instead of ".../include"
+      mpiinc_search=`which mpirun  | sed -e 's@//@/@g'| sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/include64
+    fi
+
     if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
     then
          mpiinc=$mpiinc_search
 	 echo "Using MPI include directory $mpiinc"
 	 echo "machine is $machine"
     else
-         mpiinc_search=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+         mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include
 	 if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 	 then
 	   mpiinc=$mpiinc_search
@@ -4740,6 +4807,7 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
 	echo "Correction: Using MPI include directory $mpiinc instead"
     fi
 
+  if [ "x$mpilib" = "x" ] ; then
     mpilib=""
     mpilib_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
     if [ ! -d $mpilib_search ] ; then
@@ -4750,8 +4818,15 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
       mpilib=$mpilib_search
       echo "Using MPI lib directory $mpilib"
     else
-      mpilib=""
+      mpilib_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/lib
+      if [ -d $mpilib_search -a "x$mpilib" = "x" ] ; then
+        mpilib=$mpilib_search
+        echo "Using MPI lib directory $mpilib"
+      else
+        mpilib=""
+      fi
     fi
+  fi
   
 
 fi
@@ -5216,6 +5291,15 @@ then
 	    fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
 	    fi
 	fi
+	if [ -r $openshmem_lib_dir/libshmem.so -o -r $openshmem_lib_dir/libshmem.a ]
+	then
+	    shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
+	    then
+		shmemlibrary=-lshmem
+	    #fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	    fi
+	fi
     fi
 
     if [ "x$shmemlib" != "x" ]
@@ -5270,11 +5354,15 @@ then
 	fi
     fi
 
+    if [ "x$shmemmpiinc" != "x" ] ; then
+	    shmemmpiincargs="-I$shmemmpiinc"
+    fi
+
     shmemlibargs="$shmemlibargs $shmemlibrary"
     shmemlibargs=`echo $shmemlibargs | sed  -e 's/ /#/g'`
     fixmakeargs="$fixmakeargs SHMEM"
     tauoptions="${tauoptions}-shmem"
-    fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs shmemdirargs=$shmemdir"
+    fixmakeargs="$fixmakeargs shmemlibargs=$shmemlibargs shmemincargs=$shmemincargs shmemdirargs=$shmemdir shmemmpiincargs=$shmemmpiincargs"
 fi
 
 gcclibdir=unknown
@@ -5358,7 +5446,9 @@ rm -f get_stdinc.C find_stdinc.awk
 ######################################################################
 # Checking gcc 4.6+ version. It needs -lmpi to be added after -ltau
 cat << EOF > gcc46test.C
-#if ((__GNUC__ >= 4 ) && (__GNUC_MINOR__ >= 6))
+#if (__GNUC__ > 4 )
+#error "Using GCC 4.6+"
+#elif ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))
 #error "Using GCC 4.6+"
 #endif
 EOF
@@ -6386,6 +6476,10 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
     then
         mpiwarnings="-qhalt=w"
     fi
+    if [ $c_compiler = "clang" ]
+    then
+        mpiwarnings="-Werror"
+    fi
  
     cat <<EOF > mpi_thread_test.$msuf
   #include <mpi.h>
@@ -6968,7 +7062,7 @@ if [ $mpi = yes ] ; then
 	wrapperlib="-L$\(PERFLIBDIR) \$(PERFLIBRARY)"
     fi
 
-    mpilibargs=$wrapperlib
+    mpilibargs="$wrapperlib $mpilibargs"
     wrapperC=$wrapperlib
 
     if [ "x$mpilib" != "x" ] ; then
@@ -7359,7 +7453,6 @@ if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
 	else
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
 	fi
-	mpiflibargs=$mpilibargs
 	fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
     else
 	mpilibargs=""
@@ -7611,6 +7704,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         mkdir -p "$tempdir"
         cd "$tempdir"
         download "$binutilsurl" "$binutilstgz"
+	if [ $? != 0 -a "x$execheck" != "x" ]; then 
+	  echo "Couldn't write to /dev/shm. Trying local directory."
+	  cd $prebfddir
+          tempdir="`pwd`/.tmp_bfdbuild_$$"
+	  mkdir -p "$tempdir"
+	  cd "$tempdir"
+          download "$binutilsurl" "$binutilstgz"
+        fi
+           
         if [ ! -f "$binutilstgz" ] ; then
           echo "$binutilstgz did not download.  Please download it manually from: "
           echo "$binutilsurl"
@@ -7730,11 +7832,20 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
             err=$?	 
         else
-          ./configure \
-            CFLAGS=-fPIC CXXFLAGS=-fPIC \
-            --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
-            err=$?
+	  if [ "$c_compiler" = pgcc ]
+	  then
+            ./configure \
+              CFLAGS="-fPIC -noswitcherror" CXX=pgc++ CXXFLAGS=-fPIC \
+              --prefix=$bfddir \
+              --disable-nls --disable-werror > tau_configure.log 2>&1
+              err=$?
+          else 
+            ./configure \
+              CFLAGS=-fPIC CXXFLAGS=-fPIC \
+              --prefix=$bfddir \
+              --disable-nls --disable-werror > tau_configure.log 2>&1
+              err=$?
+          fi 
         fi
         ;;
       esac
@@ -7745,7 +7856,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         exit 1
       else
         echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
-        make > tau_build.log 2>&1
+        make -j8 > tau_build.log 2>&1
         err=$?
         if [ $err -ne 0 ] ; then
           echo "Error: BFD build failed. Cannot proceed with -bfd=download"
@@ -7899,6 +8010,10 @@ else
 	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
         else
+	  BFDLIBS="-lbfd -liberty -lz -ldl" # Next, check with -lz -ldl.
+	  if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	    bfd_worked="yes"
+          else
 	    BFDLIBS="-lbfd -liberty -lintl"
 	    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	        bfd_worked="yes"
@@ -7906,8 +8021,14 @@ else
 	        BFDLIBS="-lbfd -liberty -lintl -lz"
 	        if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	            bfd_worked="yes"
+                else
+	          BFDLIBS="-lbfd -liberty -lintl -lz -ldl"
+	          if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	            bfd_worked="yes"
+                  fi
                 fi
             fi
+          fi
 	fi
     fi
 fi
@@ -7920,7 +8041,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
-if [ $bfd_worked = "no" ] ; then
+if [ $bfd_worked = "no" -a "$machine" != "apple" ] ; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
@@ -8899,7 +9020,7 @@ if [ "x$download_scorep" = xyes ] ; then
     rm $tauscoreptgz
   # Now we build Score-P
     cd scorep-*; mkdir -p build; cd build
-    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-otf2 --without-opari2 --without-cube --without-gui "
+    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-otf2 --without-opari2 --without-cube --without-gui ${TAU_SCOREP_CONFIGURATION_OPTIONS}"
     if [ $papi = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-papi=$papidir --with-papi-header=$papidir/include --with-papi-lib=$papidir/$papisubdir"
     fi
@@ -9751,6 +9872,7 @@ else
 fi
 
 cp ${tauroot}/tools/src/tau_treemerge.pl $BINTARGET
+cp ${tauroot}/tools/src/tau_coalesce $BINTARGET
 cp ${tauroot}/tools/src/tau_javamax.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_header_replace.pl $BINTARGET
 cp ${tauroot}/tools/src/tau_exec $BINTARGET
@@ -9758,6 +9880,7 @@ cp ${tauroot}/tools/src/tauex $BINTARGET
 cp ${tauroot}/tools/src/taucc $BINTARGET
 cp ${tauroot}/tools/src/taucxx $BINTARGET
 cp ${tauroot}/tools/src/tauupc $BINTARGET
+cp ${tauroot}/tools/src/taucaf $BINTARGET
 cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
@@ -9768,9 +9891,13 @@ cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_caf.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 # tau_exec works differently when it's named "tau_python"
 cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_python
+cp ${tauroot}/tools/src/tau_spark_python $BINTARGET/tau_spark_python
+cp ${tauroot}/tools/src/tau_spark-submit $BINTARGET/tau_spark-submit
+cp ${tauroot}/tools/src/tau_spark-submit $BINTARGET/tau_pyspark
 
 if [ $pdtarchdir != unknown ]
 then
@@ -10129,7 +10256,7 @@ echo '   Type "make install" to begin compilation'
 
 if [ -d /usr/linux-k1om-*  -a $machine = x86_64 ]
 then
-   echo "NOTE: This system supports Intel MIC. You may configure with -arch=mic_linux to enable this option."
+   echo "NOTE: This system supports Intel MIC (KNC). You may configure with -arch=mic_linux for the older KNC to enable this option."
 fi
 
 if [ "x$PE_ENV" != "x" -a $machine = x86_64 ]

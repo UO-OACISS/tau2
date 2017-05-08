@@ -76,7 +76,7 @@ using namespace std;
 #endif
 
 #define TAU_CALLSITE_DEFAULT 0
-#define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
+#define TAU_CALLSITE_DEPTH_DEFAULT 1 /* default to be local */
 
 /* If we are using OpenMP and the collector API or OMPT */
 #define TAU_OPENMP_RUNTIME_DEFAULT 1
@@ -212,7 +212,7 @@ static int env_disable_instrumentation = 0;
 static double env_max_records = 0;
 static int env_callpath = 0;
 static int env_callsite = 0;
-static int env_callsite_limit = 0;
+static int env_callsite_depth = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
 static int env_tracing = 0;
@@ -224,6 +224,7 @@ static int env_track_memory_heap = 0;
 static int env_track_power = 0;
 static int env_track_memory_footprint = 0;
 static int env_show_memory_functions = 0;
+static int env_track_load = 0;
 static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
@@ -232,6 +233,7 @@ static int env_track_signals = TAU_TRACK_SIGNALS_DEFAULT;
 static int env_signals_gdb = TAU_SIGNALS_GDB_DEFAULT;
 static int env_echo_backtrace = TAU_ECHO_BACKTRACE_DEFAULT;
 static int env_track_mpi_t_pvars = 0;
+static int env_mpi_t_enable_user_tuning_policy = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
 /* This is a malleable default */
@@ -450,6 +452,18 @@ static char * Tau_get_cwd_of_exe()
   }
   return retval;
 }
+
+/*********************************************************************
+ * Replace part of a string with another. similar to <algorithm> replace.
+ ********************************************************************/
+void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
+                          const std::string& replace) {
+    size_t pos = 0; 
+    while ((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }           
+}               
 
 /*********************************************************************
  * Parse a boolean value
@@ -720,8 +734,8 @@ int TauEnv_get_callsite() {
   return env_callsite;
 }
 
-int TauEnv_get_callsite_limit() {
-  return env_callsite_limit;
+int TauEnv_get_callsite_depth() {
+  return env_callsite_depth;
 }
 
 int TauEnv_get_compensate() {
@@ -734,6 +748,10 @@ int TauEnv_get_comm_matrix() {
 
 int TauEnv_get_track_mpi_t_pvars() {
   return env_track_mpi_t_pvars;
+}
+
+int TauEnv_get_mpi_t_enable_user_tuning_policy() {
+  return env_mpi_t_enable_user_tuning_policy;
 }
 
 int TauEnv_set_track_mpi_t_pvars(int value) {
@@ -772,6 +790,10 @@ int TauEnv_get_track_memory_footprint() {
 
 int TauEnv_get_show_memory_functions() {
   return env_show_memory_functions;
+}
+
+int TauEnv_get_track_load() {
+  return env_track_load;
 }
 
 int TauEnv_get_track_memory_leaks() {
@@ -1116,6 +1138,13 @@ void TauEnv_initialize()
       TAU_TRACK_POWER();
     } 
 
+    tmp = getconf("TAU_TRACK_LOAD");
+    if (parse_bool(tmp, env_track_load)) {
+      TAU_VERBOSE("TAU: system load tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_LOAD", "on");
+      TAU_TRACK_LOAD();
+    } 
+
 #ifdef TAU_MPI_T
     tmp = getconf("TAU_TRACK_MPI_T_PVARS");
     if (parse_bool(tmp, env_track_mpi_t_pvars)) {
@@ -1126,6 +1155,17 @@ void TauEnv_initialize()
     } else {
       TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "off");
     }
+
+    tmp = getconf("TAU_MPI_T_ENABLE_USER_TUNING_POLICY");
+    if (parse_bool(tmp, env_mpi_t_enable_user_tuning_policy)) {
+      env_mpi_t_enable_user_tuning_policy = 1;
+      TAU_VERBOSE("TAU: MPI_T enable user tuning policy enabled\n");
+      TAU_METADATA("TAU_MPI_T_ENABLE_USER_TUNING_POLICY", "on");
+      TAU_VERBOSE("TAU: Enabling user CVAR tuning policy\n");
+    } else {
+      TAU_METADATA("TAU_MPI_T_ENABLE_USER_TUNING_POLICY", "off");
+    }
+
 #endif /* TAU_MPI_T */
 
     tmp = getconf("TAU_TRACK_HEAP");
@@ -1161,9 +1201,14 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_HEADROOM");
     if (parse_bool(tmp, env_track_memory_headroom)) {
+    /*
       TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEADROOM", "on");
       env_track_memory_headroom = 1;
+      */
+      TAU_VERBOSE("NOTE: Entry/Exit Headroom tracking is permanently disabled!\n");
+      TAU_METADATA("TAU_TRACK_HEADROOM", "off");
+      env_track_memory_headroom = 0;
     } else {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;
@@ -1421,6 +1466,9 @@ void TauEnv_initialize()
       profiling_default = 0;
       TAU_VERBOSE("TAU: Tracing Enabled\n");
       TAU_METADATA("TAU_TRACE", "on");
+      if (TauEnv_get_callsite_depth() > 1) {
+        printf("WARNING: TAU_CALLSITE_DEPTH > 1 is not supported with tracing.\n");
+      }
     } else {
       env_tracing = 0;
       env_track_message = TAU_TRACK_MESSAGE_DEFAULT;
@@ -1473,17 +1521,17 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_CALLSITE", "on");
     } 
 
-    const char *callsiteLimit = getconf("TAU_CALLSITE_LIMIT");
-    env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
-    if (callsiteLimit) {
-      env_callsite_limit = atoi(callsiteLimit);
-      if (env_callsite_limit < 0) {
-        env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
+    const char *callsiteDepth = getconf("TAU_CALLSITE_DEPTH");
+    env_callsite_depth = TAU_CALLSITE_DEPTH_DEFAULT;
+    if (callsiteDepth) {
+      env_callsite_depth = atoi(callsiteDepth);
+      if (env_callsite_depth < 0) {
+        env_callsite_depth = TAU_CALLSITE_DEPTH_DEFAULT;
       }
     }
-    TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_limit);
-    sprintf(tmpstr, "%d", env_callsite_limit);
-    TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
+    TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_depth);
+    sprintf(tmpstr, "%d", env_callsite_depth);
+    TAU_METADATA("TAU_CALLSITE_DEPTH", tmpstr);
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI))
     /* track comm (opposite of old -nocomm option) */

@@ -71,6 +71,7 @@ declare -i optShared=$FALSE
 declare -i optCompInst=$FALSE
 declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
+declare -i useNVCC=$FALSE
 declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
@@ -384,6 +385,12 @@ for arg in "$@" ; do
 
         	   -optTrackPthread)
         		trackPthread=$TRUE
+        		echoIfDebug "NOTE: turning TrackPthread on"
+        		# use the wrapper link_options.tau during linking
+        		;;
+
+        	   -optNoTrackPthread)
+        		trackPthread=$FALSE
         		echoIfDebug "NOTE: turning TrackPthread on"
         		# use the wrapper link_options.tau during linking
         		;;
@@ -892,6 +899,21 @@ for arg in "$@" ; do
         	    pdtParserType=cxxparse
                     groupType=$group_C
         	fi
+        	;;
+
+            *.cu) 
+		CMD="nvcc -Xcompiler -finstrument-functions"
+		useNVCC=$TRUE;
+        	fileName=$arg
+        	arrFileName[$numFiles]=$arg
+        	arrFileNameDirectory[$numFiles]=`dirname $arg`
+        	numFiles=numFiles+1
+                groupType=$group_C
+
+        	linkOnly=$TRUE
+        	echoIfDebug "NOTE: turning linkOnly on"
+        	disablePdtStep=$TRUE
+        	disableCompInst=$TRUE
         	;;
 
             *.c|*.s)
@@ -1452,6 +1474,12 @@ if [ $upc == "berkeley" ]; then
     echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
+if [ $useNVCC == $TRUE ]; then
+    # Make any number of "-Wl," into exactly -Xlinker "-Wl,"
+    optLinking=`echo $optLinking | sed -e 's@-Wl,@-Xlinker -Wl,@g'`
+    echoIfDebug "optLinking modified to accomodate -Xlinker -Wl for nvcc optLinking=$optLinking"
+fi
+
 if [ $optMICOffload == $TRUE ]; then
         #optMICLinking=`echo $optLinking | sed -e 's@x86_64/lib@mic_linux/lib@g'`
         #if [ $optMICLinking == ""]; then
@@ -1604,6 +1632,10 @@ if [ $numFiles == 0 ]; then
 		optLinking="$optLinking `cat $link_options_file` $optLinking"
 	else
                 optLinking="$optLinking @$link_options_file $optLinking"
+                if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
+                  echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                  optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
+                fi
 	fi
     fi
 
@@ -2305,6 +2337,10 @@ else
 		      optLinking="`cat $link_options_file` $optLinking `cat $link_options_file`"
               else
 		      optLinking="@$link_options_file $optLinking @$link_options_file"
+                if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
+                  echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                  optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
+                fi
 	      fi
           fi
           newCmd="$newCmd $optLinking -o $passedOutputFile"
