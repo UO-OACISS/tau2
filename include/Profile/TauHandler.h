@@ -33,6 +33,10 @@ void TauTrackMemoryFootPrint(void);
 void TauTrackMemoryFootPrintHere(void);
 int TauEnableTrackingPower(void);
 int TauDisableTrackingPower(void);
+void TauTrackLoad(void);
+void TauTrackLoadHere(void);
+int TauEnableTrackingLoad(void);
+int TauDisableTrackingLoad(void);
 
 int TauEnableTrackingMemoryHeadroom(void);
 int TauDisableTrackingMemoryHeadroom(void);

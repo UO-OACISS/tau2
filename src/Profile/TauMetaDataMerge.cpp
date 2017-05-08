@@ -25,10 +25,18 @@ extern "C" void  __real_shmem_int_put(int * a1, const int * a2, size_t a3, int a
 extern "C" void  __real_shmem_int_get(int * a1, const int * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_putmem(void * a1, const void * a2, size_t a3, int a4) ;
 extern "C" void  __real_shmem_getmem(void * a1, const void * a2, size_t a3, int a4) ;
+extern "C" void  __real_shmem_barrier_all() ;
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+extern "C" int   __real__num_pes() ;
+extern "C" int   __real__my_pe() ;
+extern "C" void* __real_shmalloc(size_t a1) ;
+extern "C" void  __real_shfree(void * a1) ;
+#else
 extern "C" int   __real_shmem_n_pes() ;
 extern "C" int   __real_shmem_my_pe() ;
+extern "C" void* __real_shmem_malloc(size_t a1) ;
 extern "C" void  __real_shmem_free(void * a1) ;
-extern "C" void  __real_shmem_barrier_all() ;
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
 #endif /* TAU_SHMEM */
 #include <TAU.h>
 #include <TauMetaData.h>
@@ -52,9 +60,9 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   merged = 1;
 
   int rank = 0;
+  int numRanks = 1;
 
 #ifdef TAU_MPI
-  int numRanks;
   if (TAU_MPI_Finalized()) {
     return 0;
   }
@@ -62,14 +70,6 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
-#ifdef TAU_SHMEM
-  int numRanks = __real_shmem_n_pes();
-  rank = __real_shmem_my_pe();
-  static int shBufferSize;
-  int i, defBufSize;
-  char *defBuf;
-  Tau_util_outputDevice *out;
-#endif /* TAU_SHMEM */
 
   x_uint64 start, end;
 
@@ -86,26 +86,6 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
     PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
 #endif /* TAU_MPI */
-#ifdef TAU_SHMEM
-    out = Tau_metadata_generateMergeBuffer();
-    defBuf = Tau_util_getOutputBuffer(out);
-    defBufSize = Tau_util_getOutputBufferLength(out) * sizeof(char);
-
-    for(i=0; i<numRanks; i++)
-      __real_shmem_int_put(&shBufferSize, &defBufSize, 1, i);
-  }
-  char *shBuffer = (char*)shmem_malloc((shBufferSize));
-  char *Buffer = (char*)TAU_UTIL_MALLOC(shBufferSize);
-  if(rank == 0) {
-    for(i=0; i<shBufferSize; i++)
-      shBuffer[i] = defBuf[i];
-  }
-  __real_shmem_barrier_all();
-
-  __real_shmem_getmem(Buffer, shBuffer, shBufferSize, 0);
-  
-  if (rank == 0) {
-#endif /* TAU_SHMEM */
 
     end = TauMetrics_getTimeOfDay();
     TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
@@ -115,9 +95,6 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
 #ifdef TAU_MPI
 	Tau_util_destroyOutputDevice(out);
 #endif /* TAU_MPI */
-#ifdef TAU_SHMEM
-	Tau_util_destroyOutputDevice(out);
-#endif /* TAU_SHMEM */
 
   } else {
 #ifdef TAU_MPI
@@ -129,13 +106,92 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
 	free(Buffer);
 #endif /* TAU_MPI */
   }
+  return 0;
+}
+
+extern "C" int Tau_metadataMerge_mergeMetaData_SHMEM() {
+
+  Tau_metadata_fillMetaData();
+
+  static int merged = 0;
+  if (merged == 1) {
+    return 0;
+  }
+  merged = 1;
+
+  int rank = 0;
+  int numRanks = 1;
+
+#ifdef TAU_SHMEM
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  int *shBufferSize = (int*)__real_shmalloc(sizeof(int));
+  numRanks = __real__num_pes();
+  rank = __real__my_pe();
+#else
+  int *shBufferSize = (int*)__real_shmem_malloc(sizeof(int));
+  numRanks = __real_shmem_n_pes();
+  rank = __real_shmem_my_pe();
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
+  int i, defBufSize;
+  char *defBuf;
+  Tau_util_outputDevice *out;
+#endif /* TAU_SHMEM */
+
+  x_uint64 start, end;
+
+  if (rank == 0) {
+
+    TAU_VERBOSE("TAU: Merging MetaData...\n");
+    start = TauMetrics_getTimeOfDay();
+
+#ifdef TAU_SHMEM
+    out = Tau_metadata_generateMergeBuffer();
+    defBuf = Tau_util_getOutputBuffer(out);
+    defBufSize = Tau_util_getOutputBufferLength(out) * sizeof(char);
+
+    for(i=0; i<numRanks; i++)
+      __real_shmem_int_put(shBufferSize, &defBufSize, 1, i);
+  }
+  __real_shmem_barrier_all();
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  char *shBuffer = (char*)__real_shmalloc((*shBufferSize));
+#else
+  char *shBuffer = (char*)__real_shmem_malloc((*shBufferSize));
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
+  char *Buffer = (char*)TAU_UTIL_MALLOC(*shBufferSize);
+  if(rank == 0) {
+    for(i=0; i<*shBufferSize; i++)
+      shBuffer[i] = defBuf[i];
+  }
+  __real_shmem_barrier_all();
+
+  __real_shmem_getmem(Buffer, shBuffer, *shBufferSize, 0);
+  
+  if (rank == 0) {
+#endif /* TAU_SHMEM */
+
+    end = TauMetrics_getTimeOfDay();
+    TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
+    char tmpstr[256];
+    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    TAU_METADATA("TAU MetaData Merge Time", tmpstr);
+#ifdef TAU_SHMEM
+	Tau_util_destroyOutputDevice(out);
+#endif /* TAU_SHMEM */
+
+  }
 #ifdef TAU_SHMEM
   __real_shmem_barrier_all();
   if(rank != 0)
-    Tau_metadata_removeDuplicates(Buffer, shBufferSize);
+    Tau_metadata_removeDuplicates(Buffer, *shBufferSize);
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+  __real_shfree(shBuffer);
+  __real_shfree(shBufferSize);
+#else
   __real_shmem_free(shBuffer);
+  __real_shmem_free(shBufferSize);
+#endif
   free(Buffer);
 #endif /* TAU_SHMEM */
   return 0;
 }
-

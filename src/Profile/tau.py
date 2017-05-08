@@ -80,8 +80,8 @@ def exitAllThreads():
 
 # Backwards compatibility.
 def help():
-    print "Documentation for the profile/cProfile modules can be found "
-    print "in the Python Library Reference, section 'The Python Profiler'."
+    print("Documentation for the profile/cProfile modules can be found ")
+    print("in the Python Library Reference, section 'The Python Profiler'.")
 
 # ____________________________________________________________
 
@@ -162,7 +162,7 @@ class Profile(ctau_impl.Profiler):
             import pytau
             x = pytau.profileTimer(cmd)
             pytau.start(x)
-            exec cmd in globals, locals
+            exec(cmd, globals, locals)
             pytau.stop(x)
         finally:
             self.disable()
@@ -180,7 +180,7 @@ class Profile(ctau_impl.Profiler):
             code = compile(fileobj.read(), path, 'exec')
             module = new_module(newname)
             sys.modules[newname] = module
-            exec code in module.__dict__
+            exec(code, module.__dict__)
         finally:
             if replaced:
                 sys.modules[newname] = replaced
@@ -194,6 +194,37 @@ class Profile(ctau_impl.Profiler):
             return func(*args, **kw)
         finally:
             self.disable()
+
+    def runcall_with_node(self, node, func, *args, **kw):
+        self.enable()
+        try:
+            import pytau
+            pytau.setNode(node)
+            return func(*args, **kw)
+        finally:
+            self.disable()
+
+try:
+    from pyspark import BasicProfiler
+    try:
+        from pyspark import TaskContext
+    except Exception:
+        print("WARNING: Your version of Spark does not expose TaskContext to Python. " \
+              "PySpark tasks will not be profiled.")
+    from pyspark import TaskContext
+    class TauSparkProfiler(BasicProfiler):
+        
+        def __init__(self, ctx):
+            BasicProfiler.__init__(self, ctx)
+
+        def profile(self, func):
+            myId = TaskContext._getOrCreate()._taskAttemptId + 1 # Leave 0 for the driver
+            prof = Profile()
+            prof.runcall_with_node(myId, func)
+            writeProfiles()
+except Exception:
+    # Do nothing if Spark isn't available
+    pass
 
 # ____________________________________________________________
 

@@ -205,6 +205,7 @@ static x_uint64 getTimeStamp()
 }
 #endif /* TAU_PERFSUITE */
 
+
 //////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class Profiler
 //////////////////////////////////////////////////////////////////////
@@ -277,17 +278,17 @@ void Profiler::Start(int tid)
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
 
-  if (TauEnv_get_callpath()) {
-    CallPathStart(tid);
-  }
-
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_callsite() == 1) {
-    CallSiteStart(tid);
+    CallSiteStart(tid, TimeStamp);
   }
 #endif /* _AIX */
 #endif
+
+  if (TauEnv_get_callpath()) {
+    CallPathStart(tid);
+  }
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -499,6 +500,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 }
 #endif /* TAU_MPITRACE */
 
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_callsite()) {
+    CallSiteStop(TotalTime, tid, TimeStamp);
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
@@ -506,14 +515,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
-
-#ifndef TAU_WINDOWS
-#ifndef _AIX
-  if (TauEnv_get_callsite()) {
-    CallSiteStop(TotalTime, tid);
-  }
-#endif /* _AIX */
-#endif /* TAU_WINDOWS */
 
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
@@ -749,7 +750,7 @@ void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents)
 
   *numUserEvents = 0;
 
-  vector<TauUserEvent*>::iterator eit;
+  AtomicEventDB::iterator eit;
 
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
     (*numUserEvents)++;
@@ -778,7 +779,7 @@ void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents
   RtsLayer::LockDB();
 
   int idx = 0;
-  vector<TauUserEvent*>::iterator eit;
+  AtomicEventDB::iterator eit;
 
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
     for (int i = 0; i < numUserEvents; i++) {
@@ -903,7 +904,7 @@ void TauProfiler_PurgeData(int tid)
   TauInternalFunctionGuard protects_this_function;
 
   vector<FunctionInfo*>::iterator it;
-  vector<TauUserEvent*>::iterator eit;
+  AtomicEventDB::iterator eit;
   Profiler *curr;
 
   DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
@@ -1004,7 +1005,7 @@ void Profiler::SetPhase(bool flag) {
 // writes user events to the file
 static int writeUserEvents(FILE *fp, int tid)
 {
-  vector<TauUserEvent*>::iterator it;
+  AtomicEventDB::iterator it;
 
   fprintf(fp, "0 aggregates\n");    // For now there are no aggregates
 
@@ -1198,7 +1199,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
         bool found_one = false;
         char const * const atomic_metric = TauMetrics_getMetricAtomic(metric);
         if (atomic_metric) {
-            for (vector<TauUserEvent*>::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+            for (AtomicEventDB::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
                 TauUserEvent *ue = *it2;
 
                 char const * str = ue->GetName().c_str();
@@ -1262,7 +1263,9 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
                 // Get the device name to be used in the event name below
                 cudaGetDeviceProperties(&deviceProps, dev);
                 std::string device_name = deviceProps.name;
-                std::replace(device_name.begin(), device_name.end(), ' ', '_');
+                //std::replace(device_name.begin(), device_name.end(), ' ', '_');
+                // PGI compiler has some issues with c++11. 
+                Tau_util_replaceStringInPlace(device_name, " ", "_"); 
                 if (tau_cuda_device_name && strcmp(tau_cuda_device_name, device_name.c_str())) {
                     continue;
                 }
@@ -1288,7 +1291,7 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
                     int eventIndex = TauMetrics_getEventIndex(metricEvents[i]);
                     char const * const event_name = TauMetrics_getMetricName(eventIndex);
 
-                    for (vector<TauUserEvent*>::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
+                    for (AtomicEventDB::iterator it2 = TheEventDB().begin(); it2 != TheEventDB().end(); ++it2) {
                         TauUserEvent *ue = *it2;
 
                         const char *str = ue->GetName().c_str();
@@ -1348,7 +1351,7 @@ static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int nu
 {
   int trueCount = count;
 
-  vector<TauUserEvent*>::iterator it2;
+  AtomicEventDB::iterator it2;
   const char *metricName = TauMetrics_getMetricAtomic(metric);
 
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
@@ -1421,19 +1424,25 @@ extern "C" int Tau_profiler_initialization()
   return 0;
 }
 
+extern "C" int Tau_print_metadata_for_traces(int tid) {
+
+  MetaDataRepo *localRepo = NULL;
+    localRepo = &(Tau_metadata_getMetaData(tid));
+  
+   for (MetaDataRepo::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
+      string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval)); 
+      TAU_TRIGGER_EVENT(metadata_str.c_str(), 1.0); 
+  }
+}
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
 
-#ifdef TAU_SHMEM
-  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-    Tau_metadataMerge_mergeMetaData();
-    Tau_mergeProfiles();
-    __real_shmem_finalize();
+  if (TauEnv_get_tracing() && (tid == 0) ) {
+    Tau_print_metadata_for_traces(tid);
   }
-#endif /* TAU_SHMEM */
 
 #ifdef TAU_SCOREP
   Tau_write_metadata_records_in_scorep(tid);
@@ -1453,6 +1462,8 @@ int TauProfiler_StoreData(int tid)
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
+
+  Tau_MemMgr_finalizeIfNecessary();
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -1486,7 +1497,7 @@ int TauProfiler_StoreData(int tid)
     if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
       Tau_metadataMerge_mergeMetaData();
       /* Create a merged profile if requested */
-      Tau_mergeProfiles();
+      Tau_mergeProfiles_MPI();
 	}
 #endif
 #endif
@@ -1497,25 +1508,15 @@ int TauProfiler_StoreData(int tid)
   }
 #endif /* PTHREADS */
 
-// this doesn't work... apparently "getTotalThreads() lies to us.
-// Is there a reliable way to get the number of threads seen by
-// OpenMP???
-#if 0
-#ifndef TAU_SCOREP
-#if defined(TAU_OPENMP)
-  fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
-  if (RtsLayer::getTotalThreads() == 1) {
-    // issue a warning, because this is a multithreaded config,
-    // and we saw no threads other than 0!
-    fprintf(stderr,
-        "\nTAU: WARNING! TAU did not detect more than one thread.\n"
-        "If running an OpenMP application with tau_exec and you expected\n"
-        "more than one thread, try using the '-T pthread' configuration,\n"
-        "or instrument your code with TAU.\n\n");
+#if defined(TAU_SHMEM) && !defined(TAU_MPI)
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    Tau_global_setLightsOut();
+    Tau_metadataMerge_mergeMetaData_SHMEM();
+    Tau_mergeProfiles_SHMEM();
+    __real_shmem_finalize();
   }
-#endif /* OPENMP */
-#endif /* SCOREP */
-#endif
+#endif /* TAU_SHMEM */
+
   return 1;
 }
 
@@ -1536,9 +1537,13 @@ static int getProfileLocation(int metric, char *str)
     if (Tau_Global_numCounters <= 1) {
         sprintf(str, "%s", profiledir);
     } else {
+#ifdef DEBUGPROF
         cout << "metric: " << metric << endl;
+#endif /* DEBUGPROF */
         string metricStr = string(TauMetrics_getMetricName(metric));
+#ifdef DEBUGPROF
         cout << "metricStr: " << metricStr << endl;
+#endif /* DEBUGPROF */
 
         //sanitize metricName before creating a directory name from it.
         string illegalChars("/\\?%*:|\"<> ");
@@ -1680,7 +1685,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           perror(errormsg);
           return 0;
 		}
-        TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
+        TAU_VERBOSE("[pid=%d], TAU: Writing A profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
       } else {
         int flags = O_CREAT | O_EXCL | O_WRONLY;
 #ifdef TAU_DISABLE_SIGUSR
@@ -1714,12 +1719,18 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           }
 
         } else {
+#ifdef TAU_MPI
+        if (Tau_get_usesMPI()) {
+#endif /* TAU_MPI */
           if ((fp = fopen(dumpfile, "w+")) == NULL) {
             char errormsg[1024];
             sprintf(errormsg, "Error: Could not create %s", dumpfile);
             perror(errormsg);
             return 0;
           }
+#ifdef TAU_MPI
+        }
+#endif /* TAU_MPI */
           char cwd[1024];
           char *tst = getcwd(cwd, 1024);
 		  if (tst == NULL) {
@@ -1728,10 +1739,17 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
             perror(errormsg);
             return 0;
 		  }
-          TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
+          TAU_VERBOSE("[pid=%d], TAU: Writing B profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
         }
       }
-      writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#ifdef TAU_MPI
+      if (Tau_get_usesMPI()) {
+#endif /* TAU_MPI */
+        TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
+        writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#ifdef TAU_MPI
+      }
+#endif /* TAU_MPI */
     }
   }
 

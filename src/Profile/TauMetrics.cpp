@@ -189,7 +189,9 @@ static void metricv_add(const char *name)
         // Get the device name to be used in the event name below
         cudaGetDeviceProperties(&deviceProps, dev);
         std::string device_name = deviceProps.name;
-        std::replace(device_name.begin(), device_name.end(), ' ', '_');
+        //std::replace(device_name.begin(), device_name.end(), ' ', '_');
+        // PGI compiler has problems with -c++11
+        Tau_util_replaceStringInPlace(device_name, " ", "_"); 
         if (tau_cuda_device_name && strcmp(tau_cuda_device_name, device_name.c_str())) {
             continue;
         }

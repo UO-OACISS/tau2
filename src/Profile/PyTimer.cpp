@@ -200,7 +200,7 @@ static PyObject * createUserEvent(PyObject * self, PyObject * args) {
   } else {
     tauid = nameMap.size() - 1;
     nameMap[name] = tauid;
-    tau::TauUserEvent * ue = new tau::TauUserEvent(std::string(name));
+    tau::TauUserEvent * ue = new tau::TauUserEvent(name);
     TheUserEventDB()[tauid] = ue;
   }
 

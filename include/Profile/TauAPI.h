@@ -139,7 +139,7 @@
 
 /* DB Access */
 #define TAU_DB_DUMP()                           Tau_dump();
-#define TAU_DB_MERGED_DUMP()                    Tau_mergeProfiles();
+#define TAU_DB_MERGED_DUMP()                    Tau_mergeProfiles_MPI();
 #define TAU_DB_DUMP_PREFIX(prefix)              Tau_dump_prefix(prefix);
 #define TAU_DB_DUMP_PREFIX_TASK(prefix, task)   Tau_dump_prefix_task(prefix, task);
 #define TAU_DB_DUMP_INCR()                      Tau_dump_incr();
@@ -204,6 +204,11 @@
 #define TAU_TRACK_POWER_HERE()	        	Tau_track_power_here()
 #define TAU_ENABLE_TRACKING_POWER()		Tau_enable_tracking_power()
 #define TAU_DISABLE_TRACKING_POWER()		Tau_disable_tracking_power()
+
+#define TAU_TRACK_LOAD()		        Tau_track_load()
+#define TAU_TRACK_LOAD_HERE()	        	Tau_track_load_here()
+#define TAU_ENABLE_TRACKING_LOAD()		Tau_enable_tracking_load()
+#define TAU_DISABLE_TRACKING_LOAD()		Tau_disable_tracking_load()
 
 #define TAU_TRACK_MPI_T()		        Tau_track_mpi_t()
 #define TAU_TRACK_MPI_T_HERE()		        Tau_track_mpi_t_here()
@@ -508,7 +513,8 @@ void Tau_set_context(int context);
 void Tau_set_thread(int thread);
 void Tau_callstack(void);
 int Tau_dump(void);
-int Tau_mergeProfiles();
+int Tau_mergeProfiles_MPI();
+int Tau_mergeProfiles_SHMEM();
 int Tau_dump_incr(void);
 void Tau_purge(void);
 void Tau_theFunctionList(const char ***functionList, int *num);
@@ -561,10 +567,14 @@ void Tau_track_memory_here(void);
 void Tau_track_memory_headroom(void);
 void Tau_track_power(void);
 void Tau_track_power_here(void);
+void Tau_track_load(void);
+void Tau_track_load_here(void);
 void Tau_track_memory_rss_and_hwm(void);
 void Tau_track_memory_rss_and_hwm_here(void);
 void Tau_enable_tracking_power();
 void Tau_disable_tracking_power();
+void Tau_enable_tracking_load();
+void Tau_disable_tracking_load();
 void Tau_track_memory_headroom_here(void);
 void Tau_profile_param1l(long data, const char *dataname);
 

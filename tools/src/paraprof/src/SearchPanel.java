@@ -36,8 +36,16 @@ public class SearchPanel extends JPanel {
 	private static final long serialVersionUID = 8136473488409647519L;
 	//private Searchable searchable;
     private JTextField searchField;
+    
+    public SearchPanel(final SearchableOwner owner, final Searchable searchable, boolean showHighlight, boolean showPrevious){
+    	createSearchPanel(owner, searchable, showHighlight, showPrevious);
+    }
+    
+    public SearchPanel(final SearchableOwner owner, final Searchable searchable){
+    	createSearchPanel(owner, searchable, true, true);
+    }
 
-    public SearchPanel(final SearchableOwner owner, final Searchable searchable) {
+    private void createSearchPanel(final SearchableOwner owner, final Searchable searchable, boolean showHighlight, boolean showPrevious) {
         //this.searchable = searchable;
 
         searchable.setSearchHighlight(false);
@@ -101,21 +109,27 @@ public class SearchPanel extends JPanel {
                 searchable.searchNext();
             }
         });
-
+        JButton tmpPrevious=null;
+        if(showPrevious){
         final JButton prevButton = new JButton("Previous");
         prevButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 searchable.searchPrevious();
             }
         });
-
+        tmpPrevious=prevButton;
+        }
+        JCheckBox tmpHighlight=null;
+        if(showHighlight){
         final JCheckBox highlightBox = new JCheckBox("Highlight");
         highlightBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 searchable.setSearchHighlight(highlightBox.isSelected());
             }
         });
-
+        tmpHighlight=highlightBox;
+        }
+        
         final JCheckBox matchCaseBox = new JCheckBox("Match Case");
         matchCaseBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -142,9 +156,17 @@ public class SearchPanel extends JPanel {
         gbc.weightx = 0;
         gbc.weighty = 0;
         Utility.addCompItem(this, nextButton, gbc, 3, 0, 1, 1);
-        Utility.addCompItem(this, prevButton, gbc, 4, 0, 1, 1);
-        Utility.addCompItem(this, highlightBox, gbc, 5, 0, 1, 1);
-        Utility.addCompItem(this, matchCaseBox, gbc, 6, 0, 1, 1);
+        int xDex=4;
+        if(showPrevious)
+        {
+        	Utility.addCompItem(this, tmpPrevious, gbc, xDex, 0, 1, 1);
+        	xDex++;
+        }
+        if(showHighlight){
+        	Utility.addCompItem(this, tmpHighlight, gbc, xDex, 0, 1, 1);
+        	xDex++;
+        }
+        Utility.addCompItem(this, matchCaseBox, gbc, xDex, 0, 1, 1);
 
         searchField.requestFocus();
     }

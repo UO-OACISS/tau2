@@ -474,8 +474,13 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 
   if ((rname.find("shmem_init") != string::npos) ||
       (rname.find("start_pes") != string::npos)) {
+#if defined(SHMEM_1_1) || defined(SHMEM_1_2)
+      impl << "  tau_totalnodes(1,__real__num_pes());"<<endl;
+      impl << "  TAU_PROFILE_SET_NODE(__real__my_pe());"<<endl;
+#else
       impl << "  tau_totalnodes(1,__real_shmem_n_pes());"<<endl;
       impl << "  TAU_PROFILE_SET_NODE(__real_shmem_my_pe());"<<endl;
+#endif /* SHMEM_1_1 || SHMEM_1_2 */
   }
 
   if (is_it_a_get || is_it_a_fetchop ) { /* Get */
@@ -1112,7 +1117,7 @@ void generateMakefile(string const & package, string const & outFileName,
         makefile << "include ${TAU_MAKEFILE}\n"
                  << "CC=" << compiler_name << " \n"
                  << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. $(TAU_SHMEM_INC) -fPIC\n"
-                 << "EXTRA_FLAGS=\n"
+                 << "EXTRA_FLAGS=$(TAU_CRAY_SHMEM_EXTRA_DEFS)\n"
                  << "\n"
                  << "AR=$(TAU_AR)\n"
                  << "ARFLAGS=rcv \n"

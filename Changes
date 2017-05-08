@@ -21,6 +21,22 @@ Version 2.26 changes (from 2.25):
 8. Added support for OpenACC (PGI 16.5) and CUDA (8.0). 
 9. Updated OTF2 support. 
 10. Updated ParaProf. 
+11. Added support for TAU_CALLSITE=1 with profiling and tracing. Tested with OpenSHMEM.
+12. Added support for TAU_PROFILE_FORMAT=merged for unifying performance data for OpenSHMEM.
+13. Added support for Python 3.x. Need to specify -pythoninc=<dir> -pythonlib=<dir> while configuring. 
+14. Added support for PySpark. See examples/pyspark. 
+15. Added support for PGI compilers with CUDA. 
+16. Added support for compiler-based instrumentation with CUDA. Simply compile .cu files with tau_cc.sh. 
+17. Updated MPI-T support for MVAPICH2, MPICH, and OpenMPI.
+18. Updated support for resolving symbols using an updated BFD package (2.27). ./configure -bfd=download
+19. Updated APEX with tau_exec. 
+20. Added support for Kokkos profiling interface. 
+21. Added tau_spark-submit wrapper for Spark profiling to propagate TAU environment variables. 
+22. Added support for Co-array Fortran (caflauncher, tau_caf.sh, taucaf).
+23. Added tau_coalesce, a tool to merge profiles and traces from multiple workflow directories in the current directory.
+24. Added support for TAU_TRACK_LOAD=1 for periodically tracking system load.
+25. TAU traces now have metadata at the end. User event triggered with 1.
+
 
 Version 2.25 changes (from 2.24):
 1. Support for new PDT parsers cxxparse4101, cparse4101, and gfparse48

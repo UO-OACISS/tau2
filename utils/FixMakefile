@@ -485,7 +485,7 @@ case $1 in
             _checkpath="${pythonlib}/${subdir}/libpython*.${ext}"
             echo "Checking ${_checkpath}"
   	    pythonso=`ls ${_checkpath} 2>/dev/null | head -1`
-            if [ "x$pythonso" == "x" ] ; then
+            if [ "x$pythonso" = "x" ] ; then
               continue
             fi
             pythonlib=`dirname $pythonso`
@@ -886,6 +886,11 @@ case $1 in
         #echo "SHMEMLIB=$shmemlib" 
         ;;
 
+     shmemmpiincargs=*)
+        shmemmpiinc=`echo $1 | sed -e 's/^shmemmpiincargs=//' -e 's/#/ /g'`
+	echo "s@^TAU_SHMEMMPI_INC=\(.*\)@TAU_SHMEMMPI_INC=$shmemmpiinc@g" >> $sedout
+        ;;
+
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
@@ -1170,6 +1175,10 @@ case $1 in
 	;;
      CLANG)
 	echo NOTE: Using CLANG C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CLANG_OPENMP)
+	echo NOTE: Using CLANG C++ compiler with OpenMP 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      BGCLANG)
@@ -2039,6 +2048,10 @@ case $1 in
 	echo "NOTE: GNU gfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     CAF)
+	echo "NOTE: CAF Fortran compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      GNU_GFORTRAN4)
 	echo "NOTE: GNU gfortran4 compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2073,6 +2086,10 @@ case $1 in
         ;;
      IBM64LINUX_XLF)
         echo "NOTE: IBM 64 bit xlf90 compiler for Linux options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     XLFLANG)
+        echo "NOTE: IBM xlflang compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      MPIIFORT)

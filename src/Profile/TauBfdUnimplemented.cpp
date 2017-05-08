@@ -31,10 +31,12 @@ static void Tau_bfd_internal_issueBfdWarningIfNecessary()
 {
   static bool warningIssued = false;
   if (!warningIssued) {
+#ifndef __APPLE__
     fprintf(stderr, "TAU Warning: BFD is not available in at least one part "
         "of this TAU-instrumented application! Please check to see if "
         "BFD is not shared or not present. Expect some missing BFD "
         "functionality.\n");
+#endif
     warningIssued = true;
   }
 }
