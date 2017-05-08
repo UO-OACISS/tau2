@@ -374,12 +374,12 @@ void metric_read_cupti(int tid, int idx, double values[])
 
 
 extern int  Tau_read_cray_power_events(int fd, long long int *value); 
-extern int  Tau_open_cray_file(const char *filename); 
+extern int  Tau_open_system_file(const char *filename); 
 void metric_read_cpuenergy(int tid, int idx, double values[]) 
 {
 
 #ifdef TAU_CRAYCNL  
-  static int energy_fd = Tau_open_cray_file("/sys/cray/pm_counters/energy");
+  static int energy_fd = Tau_open_system_file("/sys/cray/pm_counters/energy");
   long long int energy;  
   if (energy_fd > 0) {
     Tau_read_cray_power_events(energy_fd, &energy); 
@@ -395,7 +395,7 @@ void metric_read_cpuenergy(int tid, int idx, double values[])
 void metric_read_accelenergy(int tid, int idx, double values[]) 
 {
 #ifdef TAU_CRAYCNL
-  static int accel_energy_fd = Tau_open_cray_file("/sys/cray/pm_counters/accel_energy");
+  static int accel_energy_fd = Tau_open_system_file("/sys/cray/pm_counters/accel_energy");
   long long int accel_energy;  
   if (accel_energy_fd > 0) {
     Tau_read_cray_power_events(accel_energy_fd, &accel_energy); 
