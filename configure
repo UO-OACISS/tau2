@@ -1,4 +1,5 @@
 #!/bin/sh
+useropts
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -1923,7 +1924,7 @@ for arg in "$@"; do
 	    shmemmpiinc=`echo $arg | sed -e 's/-shmemmpiinc=//' -e 's/#/ /g'`
 	    if [ ! -d $shmemmpiinc ]
 	    then
-		echo "Error: Cannot access SHMEM include directory $shmeminc"
+		echo "Error: Cannot access SHMEM include directory $shmemmpiinc"
 		exit 1
 	    fi
 	    shmem=yes
@@ -5101,6 +5102,7 @@ then
     then
 	if [ -d $shmeminc ]
 	then
+            shmem_h="$shmeminc/shmem.h"
             shmemdir="$shmeminc/.."
 	    #echo "Include dir found. adding -I$mpiinc to INC"
 	    shmemincargs="-I$shmeminc"
@@ -5142,7 +5144,8 @@ then
     else
 	openshmem=no
 	oshcc_var=`which oshcc 2>/dev/null`
-	if [ "x$oshcc_var" != "x" -a $? = 0 ]
+  retval=$?
+	if [ "x$oshcc_var" != "x" -a $retval = 0 ]
 	then
 	    openshmem_include_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@include@g'`
 	    shmemdir="$openshmem_include_dir/.."
@@ -5170,6 +5173,7 @@ then
                     fi
 		fi
 	    fi
+            shmem_h="$openshmem_include_dir/shmem.h"
 	fi
 	if [ $catamount = yes ]
 	then
@@ -5185,16 +5189,20 @@ then
 		then
 		    shmemincargs="-I$CRAY_SHMEM_DIR/include/mpp/#-I$CRAY_SHMEM_DIR/include"
 		fi
+                shmem_h="$CRAY_SHMEM_DIR/include/mpp/shmem.h"
 	    else
                 shmemdir="$MPT_DIR/sma"
 		if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
 		then
 		    shmemincargs="-I$MPT_DIR/sma/include/mpp/#-I$MPT_DIR/sma/include/"
+                    shmem_h="$MPT_DIR/sma/include/mpp/shmem.h"
 		else
 		    if [ -r $CRAY_MPICH2_BASEDIR/sma64/include/shmem.h ] ; then
 		      shmemincargs="-I$CRAY_MPICH2_BASEDIR/sma64/include/mpp#-I$CRAY_MPICH2_BASEDIR/sma64/include"
+                      shmem_h="$CRAY_MPICH2_BASEDIR/sma64/include/mpp/shmem.h"
                     else
 		      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
+                      shmem_h="/opt/mpt/default/xt/sma64/include/mpp/shmem.h"
                     fi
 		    # old options
 		fi
@@ -5209,6 +5217,7 @@ then
 		libsmafile=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib/libsma.so@g'`
 		shmeminclude=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@include@g'`
                 shmemdir="$shmeminclude/.."
+                shmem_h="$shmeminclude/shmem.h"
 		if [ -r $libsmafile -a -d $shmeminclude -a "x$shmeminclude" != "x" ]
 		then
 		    shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
@@ -5337,6 +5346,16 @@ then
     if [ "x$shmemmpiinc" != "x" ] ; then
 	    shmemmpiincargs="-I$shmemmpiinc"
     fi
+
+    if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
+      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | awk '{print $3}'`
+      if [ "$shmem_minor_version" -le 2 ] ; then
+        orig_useropt="$orig_useropt -DSHMEM_1_2"
+        useropt="$useropt#-DSHMEM_1_2"
+        echo "Detected OpenSHMEM version 1.2 or earlier."
+      fi 
+    fi
+
 
     shmemlibargs="$shmemlibargs $shmemlibrary"
     shmemlibargs=`echo $shmemlibargs | sed  -e 's/ /#/g'`
