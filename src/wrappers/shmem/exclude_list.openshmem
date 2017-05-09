@@ -25,4 +25,6 @@ BEGIN_EXCLUDE_LIST
 "# shmem_inc(#"
 "# shmem_iput8(#"
 "# shmem_iput16(#"
+"# shmem_global_exit(#"
+"# #_nbi(#"
 END_EXCLUDE_LIST
