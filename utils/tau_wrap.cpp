@@ -634,13 +634,13 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 
     argtypenamefort = argtypename;
     if(shmem_wrapper) {
-      if(argtypenamefort.compare(0, 4, "int ") == 0) {
-        argtypenamefort.erase(0, 4);
-        argtypenamefort.insert(0, "SHMEM_FINT ");
+      if(argtypenamefort.compare(0, 3, "int") == 0) {
+        argtypenamefort.erase(0, 3);
+        argtypenamefort.insert(0, "SHMEM_FINT");
       }
-      if(argtypenamefort.compare(0, 7, "size_t ") == 0) {
-        argtypenamefort.erase(0, 7);
-        argtypenamefort.insert(0, "SHMEM_FINT ");
+      if(argtypenamefort.compare(0, 6, "size_t") == 0) {
+        argtypenamefort.erase(0, 6);
+        argtypenamefort.insert(0, "SHMEM_FINT");
       }
     }
     int pos3 = argtypenamefort.find("*");
