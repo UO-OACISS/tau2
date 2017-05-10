@@ -201,14 +201,14 @@ ADIOST_EXTERN void tau_adiost_finalize(void) {
 
 // This function is for checking that the function registration worked.
 #define CHECK(EVENT,FUNCTION,NAME) \
-    printf("TAU: Registering ADIOST callback %s...",NAME); \
+    /*printf("TAU: Registering ADIOST callback %s...",NAME);*/ \
     fflush(stderr); \
     if (adiost_fn_set_callback(EVENT, (adiost_callback_t)(FUNCTION)) != \
                     adiost_set_result_registration_success) { \
         printf("\n\tFailed to register ADIOST callback %s!\n",NAME); \
         fflush(stderr); \
     } else { \
-        printf("success.\n"); \
+        /*printf("success.\n");*/ \
     } \
 
 ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_lookup,
