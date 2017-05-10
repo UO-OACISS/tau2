@@ -60,6 +60,8 @@ using namespace std;
 #include <Profile/UserEvent.h>
 #include <tau_internal.h>
 
+#include <Profile/TauPluginInternals.h>
+
 using namespace tau;
 
 #ifdef PGI
@@ -109,6 +111,12 @@ void TauUserEvent::AddEventToDB()
   DEBUGPROFMSG("Successfully registered event " << GetName() << endl;);
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
 
+//#ifdef TAU_PLUGIN
+  Tau_plugin_event_atomic_event_registration_data data;
+  data.user_event_ptr = this;
+  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, &data);
+//endif
+
   /* Set user event id */
   eventId = RtsLayer::GenerateUniqueId();
 #ifdef TAU_VAMPIRTRACE
@@ -128,6 +136,12 @@ void TauUserEvent::AddEventToDB()
   eventId=handle;
 #endif
   RtsLayer::UnLockDB();
+
+//#ifdef TAU_PLUGIN
+//  Tau_plugin_event_atomic_event_registration_data data;
+//  data.user_event_ptr = this;
+//  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, &data);
+//endif
 }
 
 ///////////////////////////////////////////////////////////
