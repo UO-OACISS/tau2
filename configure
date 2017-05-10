@@ -5348,7 +5348,7 @@ then
     fi
 
     if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
-      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | awk '{print $3}'`
+      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | awk '{print $3}'`
       if [ "$shmem_minor_version" -le 2 ] ; then
         orig_useropt="$orig_useropt -DSHMEM_1_2"
         useropt="$useropt#-DSHMEM_1_2"
