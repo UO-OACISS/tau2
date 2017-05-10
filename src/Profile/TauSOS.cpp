@@ -40,6 +40,7 @@ pthread_t worker_thread;
 bool _threaded = false;
 int daemon_rank = 0;
 bool shutdown_daemon = false;
+int period_seconds = 2;
 
 void init_lock(void) {
     if (!_threaded) return;
@@ -67,7 +68,7 @@ extern "C" void * Tau_sos_thread_function(void* data) {
     while (!done) {
         // wait 2 seconds for the next batch.
         gettimeofday(&tp, NULL);
-        ts.tv_sec  = (tp.tv_sec + 2);
+        ts.tv_sec  = (tp.tv_sec + period_seconds);
         ts.tv_nsec = (1000 * tp.tv_usec);
         pthread_mutex_lock(&_my_mutex);
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
@@ -307,6 +308,10 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         }
 
         if (_threaded) {
+            char * tau_sos_update_period = getenv ("TAU_SOS_UPDATE_PERIOD");
+			if (tau_sos_update_period) {
+				period_seconds = atoi(tau_sos_update_period);
+			}
             TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
@@ -425,6 +430,7 @@ extern "C" void TAU_SOS_send_data(void) {
   const char **counterNames;
   int numCounters;
   TauMetrics_getCounterList(&counterNames, &numCounters);
+  printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
   RtsLayer::LockDB();
   bool keys_added = false;
 
