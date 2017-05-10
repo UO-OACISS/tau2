@@ -40,6 +40,7 @@ TAU_CXX_FE=$(CONFIG_CXX)
 
 TAU_CUDA_CXX=g++
 #PGI#TAU_CUDA_CXX=$(CONFIG_CXX)  #ENDIF#
+#USE_IBMXLC#TAU_CUDA_CXX=$(CONFIG_CXX)  #ENDIF#
 
 
 # Name prefix for cross compiler. E.g. `arm-linux-gnueabi-'.
