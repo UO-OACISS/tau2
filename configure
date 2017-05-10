@@ -1,5 +1,4 @@
 #!/bin/sh
-useropts
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -5238,7 +5237,7 @@ then
 	fi
     fi
 
-    if [ $shmemlibrary = no ]
+    if [ "x$shmemlibrary" != "x" -a "$shmemlibrary" = "no" ]
     then
 	shmemlibrary=-lsma
 	if [ $gpshmem = yes ]
@@ -5349,6 +5348,7 @@ then
 
     if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
       shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | awk '{print $3}'`
+      echo "OpenSHMEM minor version: $shmem_minor_version"
       if [ "$shmem_minor_version" -le 2 ] ; then
         orig_useropt="$orig_useropt -DSHMEM_1_2"
         useropt="$useropt#-DSHMEM_1_2"
