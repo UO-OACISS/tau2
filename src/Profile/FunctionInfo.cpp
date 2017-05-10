@@ -297,8 +297,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 
 //#ifdef TAU_PLUGIN
   Tau_plugin_event_function_registration_data data;
-  strcpy(data.function_name, GetName()); //Testing 
-  data.tid = tid; 
+  data.function_info_ptr = this;
+  data.tid = tid;
   Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, &data);
 //endif
 

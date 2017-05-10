@@ -26,7 +26,7 @@ enum Tau_plugin_event {
 };
 
 struct Tau_plugin_event_function_registration_data {
-   char function_name[1024];
+   void * function_info_ptr;
    int tid;
 };
 
