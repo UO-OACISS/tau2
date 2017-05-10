@@ -1662,6 +1662,13 @@ char *** argv;
   Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
 
+#ifdef TAU_ADIOS
+  // this is only here to force the linker to resolve the adiost_tool symbol
+  // before the weak one in the ADIOS static library gets pulled in, and prevents
+  // TAU from replacing it.
+  adiost_tool();
+#endif
+
 #ifdef TAU_SOS
   int provided = 0;
   returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
