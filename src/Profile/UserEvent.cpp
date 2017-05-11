@@ -277,6 +277,13 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
     }
 #endif /* PROFILING_ON */
   } // Tau_global_getLightsOut
+
+//#ifdef TAU_PLUGIN
+  Tau_plugin_event_atomic_event_trigger_data user_event_data;
+  user_event_data.user_event_ptr = this;
+  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, &user_event_data);
+//endif
+//
 }
 
 
