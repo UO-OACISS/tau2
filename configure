@@ -4621,7 +4621,8 @@ then
 		mpilibrary="-lmpi_ibm $additional_mpilibs"
             fi
             ;;
-	ibm64linux)
+	ibm64linux_deprecated)
+# This logic no longer applies - use `which mpirun` to find mpilib directory.
 	    mpilib=no
             if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi64/libmpi_ibm.so ]
             then
