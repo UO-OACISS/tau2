@@ -17,7 +17,7 @@ include ../../Makefile
 # We use TAU_COMPILER (defined in the above stub Makefile) for instrumenting
 # the source code. We can pass it optional arguments. See tau_compiler.sh -help
 
-F90=$(TAUROOTDIR)/$(TAU_ARCH)/bin/tau_f90.sh
+F90=$(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/tau_f90.sh
 LIBS= 
 INCLUDE=
 OBJS= ring.o
