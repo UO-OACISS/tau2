@@ -16,9 +16,9 @@ CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU
 
 LDFLAGS = $(TAU_MPI_LIB)
 
-OBJS = libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so tau_plugin_function_registration_complete.o tau_plugin_atomic_event_trigger.o tau_plugin_atomic_event_registration_complete.o
+OBJS = libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so libtau_plugin_end_of_execution.so tau_plugin_function_registration_complete.o tau_plugin_atomic_event_trigger.o tau_plugin_atomic_event_registration_complete.o tau_plugin_end_of_execution.o
 
-SHAREDLIBS = libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so
+SHAREDLIBS = libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so libtau_plugin_end_of_execution.so
 
 all: install
 	@echo
@@ -44,6 +44,12 @@ libtau_plugin_atomic_event_registration_complete.so: tau_plugin_atomic_event_reg
 
 tau_plugin_atomic_event_registration_complete.o: Tau_plugin_atomic_event_registration_complete.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_atomic_event_registration_complete.cpp -o tau_plugin_atomic_event_registration_complete.o
+
+libtau_plugin_end_of_execution.so: tau_plugin_end_of_execution.o
+	$(CXX) $(LDFLAGS) -shared -o libtau_plugin_end_of_execution.so tau_plugin_end_of_execution.o
+
+tau_plugin_end_of_execution.o: Tau_plugin_end_of_execution.cpp
+	$(CXX) $(CFLAGS) -c Tau_plugin_end_of_execution.cpp -o tau_plugin_end_of_execution.o
 
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)

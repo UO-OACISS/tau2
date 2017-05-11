@@ -296,10 +296,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 #endif //RENCI_STFF
 
 //#ifdef TAU_PLUGIN
-  Tau_plugin_event_function_registration_data data;
-  data.function_info_ptr = this;
-  data.tid = tid;
-  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, &data);
+  Tau_plugin_event_function_registration_data plugin_data;
+  plugin_data.function_info_ptr = this;
+  plugin_data.tid = tid;
+  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, &plugin_data);
 //endif
 
   TauTraceSetFlushEvents(1);
