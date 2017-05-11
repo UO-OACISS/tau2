@@ -186,13 +186,13 @@ struct Tau_thread_status_flags {
  * otherwise. */
 #if defined(__INTEL_COMPILER)
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#else
-#ifdef __GNUC__
+#elif defined(__PGIC__)
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS];
+#elif defined(__GNUC__) 
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
-#else
+#else  /* __GNUC__ */
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#endif
-#endif
+#endif /* __INTEL_COMPILER */
 
 #if defined (TAU_USE_TLS)
 __thread int _Tau_global_insideTAU = 0;
