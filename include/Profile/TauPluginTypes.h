@@ -43,7 +43,7 @@ struct Tau_plugin_event_atomic_event_trigger_data {
 };
 
 struct Tau_plugin_event_end_of_execution_data {
-   int data;
+   int tid;
 };
 
 typedef struct Tau_plugin_event_function_registration_data Tau_plugin_event_function_registration_data;

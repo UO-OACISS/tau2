@@ -90,6 +90,8 @@ double TauWindowsUsecD(void);
 extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
 
+#include <Profile/TauPluginInternals.h>
+
 using namespace std;
 using namespace tau;
 
@@ -1495,6 +1497,11 @@ int TauProfiler_StoreData(int tid)
   }
 #endif /* TAU_SHMEM */
 
+//#ifdef TAU_PLUGIN
+  Tau_plugin_event_end_of_execution_data plugin_data;
+  plugin_data.tid = tid;
+  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+//endif
   return 1;
 }
 
