@@ -39,7 +39,7 @@ struct Tau_plugin_event_atomic_event_registration_data {
 };
 
 struct Tau_plugin_event_atomic_event_trigger_data {
-   int data;
+   void * user_event_ptr;
 };
 
 struct Tau_plugin_event_end_of_execution_data {
