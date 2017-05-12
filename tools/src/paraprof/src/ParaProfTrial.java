@@ -27,6 +27,7 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
@@ -778,17 +779,28 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return getDataSource().getAllThreads();
     }
 
+    private static final String TAU_APPLICATION_NAME="TAU_APPLICATION_NAME";
     public List<String> getThreadNames() {
         List<String> threadNames = new ArrayList<String>();
 
         for (Iterator<Thread> it = getDataSource().getAllThreads().iterator(); it.hasNext();) {
             Thread thread = it.next();
+            
+            
+            
+
+            	MetaDataMap mdm = thread.getMetaData();
+            	String tan="";
+            	if(ParaProf.preferences.getAppNameLabels()==1&&mdm.containsKey(TAU_APPLICATION_NAME)){
+            		tan = ":"+mdm.get(TAU_APPLICATION_NAME);
+            	}
+            
             if (getDataSource().getExecutionType() == DataSource.EXEC_TYPE_MPI) {
-                threadNames.add(Integer.toString(thread.getNodeID()));
+                threadNames.add(Integer.toString(thread.getNodeID())+tan);
             } else if (getDataSource().getExecutionType() == DataSource.EXEC_TYPE_HYBRID) {
-                threadNames.add(thread.getNodeID() + ":" + thread.getThreadID());
+                threadNames.add(thread.getNodeID() + ":" + thread.getThreadID()+tan);
             } else {
-                threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID());
+                threadNames.add(thread.getNodeID() + ":" + thread.getContextID() + ":" + thread.getThreadID()+tan);
             }
         }
         return threadNames;
