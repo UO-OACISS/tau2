@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -10,8 +11,7 @@
 
 int Tau_plugin_test_event_function_registration_complete(Tau_plugin_event_function_registration_data data) {
   printf("TAU PLUGIN: Function %s has been registered for tid: %d\n", Tau_profile_get_name(data.function_info_ptr), data.tid);
-  printf("TAU PLUGIN: Function %s belongs to group %s\n", Tau_profile_get_name(data.function_info_ptr), Tau_profile_get_group_name(data.function_info_ptr));
-
+  
   return 0;
 }
 
