@@ -2152,12 +2152,14 @@ void TauEnv_initialize()
 
 #ifndef TAU_WINDOWS 
     // export TAU_METADATA="<key1=val1:key2=val2:key3=val3>" 
-    key = strtok_r(metadata, "<=,>", &saveptr);
-    while (key != (char *) NULL) {
-      val = strtok_r(NULL, ":>", &saveptr);
-      TAU_VERBOSE("TAU_METADATA %s = %s \n", key, val);
-      TAU_METADATA(key, val); 
-      key = strtok_r(NULL, "=", &saveptr); // get the next pair
+    if (metadata) {
+      key = strtok_r(metadata, "<=,>", &saveptr);
+      while (key != (char *) NULL) {
+        val = strtok_r(NULL, ":>", &saveptr);
+        TAU_VERBOSE("TAU_METADATA %s = %s \n", key, val);
+        TAU_METADATA(key, val); 
+        key = strtok_r(NULL, "=", &saveptr); // get the next pair
+      }
     }
 #endif /* TAU_WINDOWS - use strtok under Windows */
   }
