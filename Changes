@@ -36,6 +36,10 @@ Version 2.26 changes (from 2.25):
 23. Added tau_coalesce, a tool to merge profiles and traces from multiple workflow directories in the current directory.
 24. Added support for TAU_TRACK_LOAD=1 for periodically tracking system load.
 25. TAU traces now have metadata at the end. User event triggered with 1.
+26. Added tau_trace2json and tau_prof_to_json.py tools for JSON ouput. 
+27. Added support for TAU_METADATA env. var. (export TAU_METADATA="<Var1=Val1:Var2:Val2:Var3=Val3>")
+28. Added support for PGI 17 compilers under Power 8 Linux. 
+29. Added initial support for compiler-based instrumentation for Clang/LLVM under Power 8 Linux. 
 
 
 Version 2.25 changes (from 2.24):
