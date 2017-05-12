@@ -68,7 +68,6 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private int fontStyle = Font.PLAIN;
     private int fontSize = 12;
     private Font font;
-
     private JComboBox unitsBox;
     private JCheckBox autoLabelsBox = new JCheckBox("Auto label node/context/threads");
     private JCheckBox appNameLabelsBox = new JCheckBox("Include application name in node/context/thread");
@@ -108,7 +107,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
         reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
         autoLabelsBox.setSelected(preferences.getAutoLabels());
-        appNameLabelsBox.setSelected(preferences.getAppNameLabels());
+        appNameLabelsBox.setSelected(preferences.getAppNameLabels()!=-1);
         meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
         generateIntermediateCallPathDataBox.setSelected(preferences.getGenerateIntermediateCallPathData());
         showSourceLocationsBox.setSelected(preferences.getShowSourceLocation());
@@ -382,7 +381,12 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setShowPathTitleInReverse(showPathTitleInReverseBox.isSelected());
         ParaProf.preferences.setReversedCallPaths(reverseCallPathsBox.isSelected());
         ParaProf.preferences.setAutoLabels(autoLabelsBox.isSelected());
-        ParaProf.preferences.setAppNameLabels(appNameLabelsBox.isSelected());
+       
+        int appNameLabels=-1;
+        if(appNameLabelsBox.isSelected()){
+        	appNameLabels=1;
+        }
+        ParaProf.preferences.setAppNameLabels(appNameLabels);
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
         ParaProf.preferences.setGenerateIntermediateCallPathData(generateIntermediateCallPathDataBox.isSelected());
         ParaProf.preferences.setShowSourceLocation(showSourceLocationsBox.isSelected());
@@ -565,7 +569,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
             //needDataEvent = true;
         }
         
-        if (appNameLabelsBox.isSelected() != ParaProf.preferences.getAppNameLabels()) {
+        if (appNameLabelsBox.isSelected() != (ParaProf.preferences.getAppNameLabels()==1)) {
             //needDataEvent = true;
         }
 

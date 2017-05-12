@@ -44,7 +44,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -1666,7 +1665,7 @@ public class ParaProfUtils {
 
     	MetaDataMap mdm = thread.getMetaData();
     	String tan="";
-    	if(ParaProf.preferences.getAppNameLabels()&&mdm.containsKey(TAU_APPLICATION_NAME)){
+    	if(ParaProf.preferences.getAppNameLabels()==1&&mdm.containsKey(TAU_APPLICATION_NAME)){
     		tan = mdm.get(TAU_APPLICATION_NAME)+": ";
     	}
     	
