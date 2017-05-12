@@ -48,6 +48,7 @@ public class Preferences implements Serializable {
     private ArrayList<Object> sourceLocations;
     private boolean showSourceLocation = true;
     private boolean autoLabels = true;
+    private boolean appNameLabels = true;
     
     private Font font = null;
     
@@ -232,8 +233,16 @@ public class Preferences implements Serializable {
         return autoLabels;
     }
 
+    public boolean getAppNameLabels() {
+        return appNameLabels;
+    }
+    
     public void setAutoLabels(boolean autoLabels) {
         this.autoLabels = autoLabels;
+    }
+    
+    public void setAppNameLabels(boolean appNameLabels) {
+        this.appNameLabels = appNameLabels;
     }
     
     public void setFont(Font f){
