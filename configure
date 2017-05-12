@@ -3569,7 +3569,7 @@ then
 	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	f90loaded=`which mpif90 2>/dev/null | wc -l`
-	if [ $f90loaded = 1 ]
+	if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
 	then
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then
@@ -3585,7 +3585,9 @@ then
 		fortran_compiler=caf
             fi
 	else
-            fortran_compiler=no
+            if [ "x$orig_fortran_compiler" = "xdefault" ]; then 
+              fortran_compiler=no
+            fi
 	fi
 
 	echo "NOTE: Found mpicxx in the path"
@@ -5535,7 +5537,7 @@ fi
 
 if [ $pgi = yes ]; then
   if [ -d $extradir/lib -a ! -r $extradir/lib/libstd.a ]; then
-    echo "NOTE: PGI 16+ compiler does not provide libstd.* files"
+    echo "NOTE: PGI 16+ compiler does not provide libstd.* files in $extradir/lib"
     fixmakeargs="$fixmakeargs PGI_NO_LIBSTD"
   fi
 fi
