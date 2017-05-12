@@ -12,14 +12,14 @@ MAKEFILE      = Makefile
 OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
 		tau_instrumentor.o tau_instrument.o user_event_data.o \
 		function_data.o pprof_elem.o tau_run.o \
-		tau_timecorrect.o tau_wrap.o
+		tau_timecorrect.o tau_wrap.o tau_trace2json.o
 
 PRINT	      = pr
 
 EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
 		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TRACE2PROFILE) \
 		$(TAU_TIMECORRECT) $(TAU2VTF) $(VTF2PROFILE) $(TAU2OTF) $(TAU2ELG) \
-		$(TAUOMPCHECK) $(PERF2TAU) $(WRAP) $(HEADERLIST)
+		$(TAUOMPCHECK) $(PERF2TAU) $(WRAP) $(HEADERLIST) $(TAU_TRACE2JSON)
 
 all:		$(EXECUTABLES)
 
@@ -116,6 +116,12 @@ tau_run: 	tau_run.o tau_selective_dyn.o  tau_instrument.dyn.o
 
 tau_run.o: 	tau_run.cpp
 		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp $(TAU_BOOSTINC)
+
+tau_trace2json: tau_trace2json.o 
+		$(CXX) $(CFLAGS) tau_trace2json.o -o $@ -lm $(TAU_TRACE_INPUT_LIB) 
+
+tau_trace2json.o: tau_trace2json.cpp
+		$(CXX) $(CFLAGS) $< -c 
 
 tau_wrap: tau_wrap.o tau_selective.o tau_instrument.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_wrap.o tau_selective.o tau_instrument.o -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) 
@@ -238,6 +244,12 @@ $(INSTALLDEST)/tau_wrap: tau_wrap
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 
+$(INSTALLDEST)/tau_trace2json: tau_trace2json
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+
 $(INSTALLDEST)/tau_ompcheck: tau_ompcheck
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -322,7 +334,7 @@ install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce \
 $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari  $(INSTALLOPARI2) \
 $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) \
 $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) \
-$(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) \
+$(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) $(INSTALLTRACE2JSON) \
 $(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS) $(INSTALLOPARI2CONFIG) $(INSTALLOPARI2AWK)
 
 program:        $(PROGRAM)
