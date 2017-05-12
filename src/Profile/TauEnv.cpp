@@ -213,7 +213,7 @@ static int env_callsite = 0;
 static int env_callsite_depth = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
-static int env_tracing = 0;
+static int env_tracing = 0; 
 static int env_callpath_depth = 0;
 static int env_depth_limit = 0;
 static int env_track_message = 0;
@@ -1090,6 +1090,9 @@ void TauEnv_initialize()
 
   if (!initialized) {
     const char *tmp;
+    char *saveptr;
+    const char *key; 
+    const char *val;
 
     /* Read the configuration file */
     TauConf_read();
@@ -2143,6 +2146,20 @@ void TauEnv_initialize()
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
+
+/* Add metadata in the form of "<key1=val1:key2=val2:key3=val3>" */
+    char *metadata = (char *) getconf("TAU_METADATA");
+
+#ifndef TAU_WINDOWS 
+    // export TAU_METADATA="<key1=val1:key2=val2:key3=val3>" 
+    key = strtok_r(metadata, "<=,>", &saveptr);
+    while (key != (char *) NULL) {
+      val = strtok_r(NULL, ":>", &saveptr);
+      TAU_VERBOSE("TAU_METADATA %s = %s \n", key, val);
+      TAU_METADATA(key, val); 
+      key = strtok_r(NULL, "=", &saveptr); // get the next pair
+    }
+#endif /* TAU_WINDOWS - use strtok under Windows */
   }
 
 }
