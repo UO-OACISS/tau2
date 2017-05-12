@@ -3,6 +3,7 @@
 ###############################################################################
 
 include ../../include/Makefile
+include ../../utils/include/Makefile
 
 PLUGININSTALLDIR = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/plugins
 
@@ -30,7 +31,7 @@ install: $(SHAREDLIBS)
 libtau_plugin_function_registration_complete.so: tau_plugin_function_registration_complete.o
 	$(CXX) $(LDFLAGS) -shared -o libtau_plugin_function_registration_complete.so tau_plugin_function_registration_complete.o
 
-tau_plugin_function_registration_complete.o:      Tau_plugin_function_registration_complete.cpp
+tau_plugin_function_registration_complete.o: Tau_plugin_function_registration_complete.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_function_registration_complete.cpp -o tau_plugin_function_registration_complete.o
 
 libtau_plugin_atomic_event_trigger.so: tau_plugin_atomic_event_trigger.o
