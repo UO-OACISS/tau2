@@ -12,6 +12,7 @@ declare -i trial_max_node=0
 declare -i FALSE=-1
 declare -i TRUE=1
 declare -i isDebug=$FALSE
+#declare -i isDebug=$TRUE
 declare -i found_traces=$FALSE
 declare -i found_profiles=$FALSE
 
@@ -94,37 +95,49 @@ sum=0
 offset=0
 trial_max_node=0
 
-for arg in "$@"
-do
-  echoIfDebug "Arg = $arg"
-  trial_max_node=0;
-  if [ -r $arg/profile.0.0.0 -a ! -L $arg/profile.0.0.0 ]; then
-    echoIfDebug "$arg has a profile file"
-    found_profiles=$TRUE
-# iterate through the list of profile files in the arg directory
-    for i in $arg/profile.*
+# For MULTI__* metric directories
+for d in $1/MULTI__*  $1
+do 
+  if [ -r $d/profile.0.0.0 -a ! -L $d/profile.0.0.0 ]; then 
+    echoIfDebug "d is $d"
+    metric_dir=`echo $d | sed -e 's/\(.*\)MULTI__\(.\)/MULTI__\2/g'`
+    if [ "x$metric_dir" = "x$d" ]; then
+      metric_dir="."
+    fi
+    echoIfDebug "metric_dir is $metric_dir" 
+    mkdir -p $metric_dir
+    trial_max_node=0;
+    offset=0
+    for arg in "$@"
     do 
-      node=`echo $i |  sed -e 's/profile\./ /' | sed -e 's/\.0\./ /' | awk '{ print $2; }' `
-      rest=`echo $i |  sed -e 's/profile\./ /' | sed -e 's/\.0\./ /' | awk '{ print $3; }' `
-      echoIfDebug "Profiles: node = $node, rest = $rest"
-      sum=$node+$offset
-      if [ -r profile.${sum}.0.${rest} -a ! -L profile.${sum}.0.${rest} ]; then 
-        echo "Error: $0: profile.${sum}.0.${rest}: A real profile, as opposed to a symlink was found in the current directory. Please delete manually and rerun $0"
-        exit 1; 
-      else
-	/bin/rm -f profile.${sum}.0.${rest}
-	echoIfDebug "ln -s $i profile.${sum}.0.${rest}"
-        ln -s $i profile.${sum}.0.${rest}
-      fi
+      srcdir=$arg
+      if [ -r $srcdir/$metric_dir/profile.0.0.0 -a ! -L $srcdir/$metric_dir/profile.0.0.0 ]; then
+        echoIfDebug "$srcdir has a profile file"
+        found_profiles=$TRUE
+# iterate through the list of profile files in the srcdir directory
+        for i in $srcdir/$metric_dir/profile.*
+        do
+          node=`echo $i |  sed -e 's/profile\./ /' | sed -e 's/\.0\./ /' | awk '{ print $2; }' `
+          rest=`echo $i |  sed -e 's/profile\./ /' | sed -e 's/\.0\./ /' | awk '{ print $3; }' `
+          echoIfDebug "Profiles: node = $node, rest = $rest"
+          sum=$node+$offset
+          if [ -r $metric_dir/profile.${sum}.0.${rest} -a ! -L $metric_dir/profile.${sum}.0.${rest} ]; then
+            echo "Error: $0: $metric_dir/profile.${sum}.0.${rest}: A real profile, as opposed to a symlink was found in the current directory. Please delete manually and rerun $0"
+            exit 1;
+          else
+            /bin/rm -f $metric_dir/profile.${sum}.0.${rest}
+            echoIfDebug "ln -s `readlink -f $i` $metric_dir/profile.${sum}.0.${rest}"
+            ln -s `readlink -f $i` $metric_dir/profile.${sum}.0.${rest}
+          fi
 # calculate the trial_max_node for the next directory
-      if [ $node -gt $trial_max_node ]; then
-        trial_max_node=$node 
-        echoIfDebug "trial_max_node = $trial_max_node "
+          if [ $node -gt $trial_max_node ]; then
+            trial_max_node=$node
+            echoIfDebug "trial_max_node = $trial_max_node "
+          fi
+        done
+# offset is the previous offset plus max node (nodes begin from 0 so we add 1)
+        offset=$offset+$trial_max_node+1
       fi
     done
-# offset is the previous offset plus max node (nodes begin from 0 so we add 1)
-    offset=$offset+$trial_max_node+1
   fi
 done
-
-
