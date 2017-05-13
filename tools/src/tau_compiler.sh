@@ -2105,14 +2105,19 @@ else
           	if [ "$useCompInst" = yes ]; then
                      if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
-                       optExcludeFuncs=-finstrument-functions-exclude-function-list=`sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g' -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' -e 's/,/ /g' | sed -e 's/"//g' | sed -e 's/ /,/g'`
-                       optCompInstOption="$optExcludeFuncs $optCompInstOption"
-                       echoIfDebug "$optCompInstOption=$optCompInstOption"
+                       optExcludeFuncsList=`sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g' -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' -e 's/,/ /g' | sed -e 's/"//g' | sed -e 's/ /,/g'`
+                       if [ "x$optExcludeFuncsList" != "x" ]; then 
+                         optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
+                         optCompInstOption="$optExcludeFuncs $optCompInstOption"
+                         echoIfDebug "$optCompInstOption=$optCompInstOption"
+                       fi
                      fi
           	     extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
-          	     extraopt=$optCompInstFortranOption
-          	     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+# If we need to tweak the Fortran options, we should do it here 
+# For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude. 
+          	       extraopt="$optExcludeFuncs $optCompInstFortranOption"
+          	       echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
                      fi
           	fi
               fi
