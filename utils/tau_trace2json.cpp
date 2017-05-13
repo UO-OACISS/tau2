@@ -19,7 +19,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
+#include <string>
 #include <map>
 #include <set>
 #include <fstream>
@@ -110,7 +110,10 @@ int LeaveState(void *userData, double time, unsigned int nodeid, unsigned int ti
 int ClockPeriod( void*  userData, double clkPeriod )
 {
   dprintf("Clock period %g\n", clkPeriod);
-  my_metadata["clock-period"] = std::to_string(clkPeriod);
+  char buf[1024]; 
+  sprintf(buf, "%g", clkPeriod);  
+  //my_metadata["clock-period"] = std::to_string(clkPeriod); 
+  my_metadata["clock-period"] = string(buf); 
   my_metadata["clock-units"] = "seconds";
   return 0;
 }
