@@ -21,11 +21,56 @@
 #include <unistd.h>
 #include <string.h>
 #include <map>
+#include <set>
+#include <fstream>
+
 using namespace std;
 int debugPrint = 0;
 int jsonPrint = 1;
 #define dprintf if (debugPrint) printf
-#define json_printf if (jsonPrint) printf
+
+ofstream json_event_out;
+ofstream json_index_out;
+
+/* map of metadata */
+map<string,string> my_metadata;
+
+/* map of user events */
+struct my_user_event {
+  int _id;
+  string _name;
+  bool _mi;
+  my_user_event(int id, string name, bool mi) : _id(id), _name(name), _mi(mi) {};
+};
+map<int,my_user_event*> my_user_event_set;
+
+/* map of groups */
+struct my_group {
+  int _id;
+  string _name;
+  my_group(int id, string name) : _id(id), _name(name) {};
+};
+map<int,my_group*> my_group_set;
+
+/* map of states */
+struct my_state {
+  int _event_id;
+  int _group_id;
+  string _name;
+  my_state(int event_id, int group_id, string name) : _event_id(event_id),
+        _group_id(group_id), _name(name) {};
+};
+map<int,my_state*> my_state_set;
+
+/* map of threads */
+struct my_thread {
+  int _node_id;
+  int _thread_id;
+  string _name;
+  my_thread(int node_id, int thread_id, string name) : _node_id(node_id),
+        _thread_id(thread_id), _name(name) {};
+};
+set<my_thread*> my_thread_set;
 
 /* implementation of callback routines */
 map< pair<int,int>, int, less< pair<int,int> > > EOF_Trace;
@@ -36,26 +81,28 @@ int EnterState(void *userData, double time,
 {
   dprintf("Entered state %d time %g nid %d tid %d\n", 
 		  stateid, time, nodeid, tid);
-  json_printf("  {\n"); 
-  json_printf("    \"state\": \"entry\",\n"); 
-  json_printf("    \"event-id\": \"%d\",\n", stateid); 
-  json_printf("    \"time\": \"%g\",\n", time); 
-  json_printf("    \"node-id\": \"%d\",\n", nodeid); 
-  json_printf("    \"thread-id\": \"%d\"\n", tid); 
-  json_printf("  },\n"); 
+  json_event_out << "{"; 
+  json_event_out << "\"event-type\": \"entry\", "; 
+  //json_event_out << "\t\t\t\"event-id\": \"" << stateid << "\",\n";
+  json_event_out << "\"event-name\": " << my_state_set[stateid]->_name << ", ";
+  json_event_out << "\"time\": \"" << time << "\", ";
+  json_event_out << "\"node-id\": \"" << nodeid << "\", ";
+  json_event_out << "\"thread-id\": \"" << tid << "\" ";
+  json_event_out << "},\n"; 
   return 0;
 }
 
 int LeaveState(void *userData, double time, unsigned int nodeid, unsigned int tid, unsigned int stateid)
 {
   dprintf("Leaving state %d time %g nid %d tid %d\n", stateid, time, nodeid, tid);
-  json_printf("  {\n"); 
-  json_printf("    \"state\": \"exit\",\n"); 
-  json_printf("    \"event-id\": \"%d\",\n", stateid); 
-  json_printf("    \"time\": \"%g\",\n", time); 
-  json_printf("    \"node-id\": \"%d\",\n", nodeid); 
-  json_printf("    \"thread-id\": \"%d\"\n", tid); 
-  json_printf("  },\n"); 
+  json_event_out << "{ "; 
+  json_event_out << "\"event-type\": \"exit\", "; 
+  //json_event_out << "\"event-id\": \"" << stateid << "\", ";
+  json_event_out << "\"event-name\": " << my_state_set[stateid]->_name << ", ";
+  json_event_out << "\"time\": \"" << time << "\", ";
+  json_event_out << "\"node-id\": \"" << nodeid << "\", ";
+  json_event_out << "\"thread-id\": \"" << tid << "\" ";
+  json_event_out << "},\n"; 
   return 0;
 }
 
@@ -63,9 +110,8 @@ int LeaveState(void *userData, double time, unsigned int nodeid, unsigned int ti
 int ClockPeriod( void*  userData, double clkPeriod )
 {
   dprintf("Clock period %g\n", clkPeriod);
-  json_printf("  {\n"); 
-  json_printf("    \"clock-period\": \"%g\"\n", clkPeriod); 
-  json_printf("  },\n"); 
+  my_metadata["clock-period"] = std::to_string(clkPeriod);
+  my_metadata["clock-units"] = "seconds";
   return 0;
 }
 
@@ -74,23 +120,15 @@ const char *threadName )
 {
   dprintf("DefThread nid %d tid %d, thread name %s\n", 
 		  nodeToken, threadToken, threadName);
-  json_printf("  {\n"); 
-  json_printf("    \"thread-name\": \"%s\",\n", threadName); 
-  json_printf("    \"node-id\": \"%d\",\n", nodeToken); 
-  json_printf("    \"thread-id\": \"%d\"\n", threadToken); 
-  json_printf("  },\n"); 
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 0; /* initialize it */
+  my_thread *g = new my_thread(nodeToken, threadToken, threadName);
+  my_thread_set.insert(g);
   return 0;
 }
 
 int EndTrace( void *userData, unsigned int nodeToken, unsigned int threadToken)
 {
   dprintf("EndTrace nid %d tid %d\n", nodeToken, threadToken);
-  json_printf("  {\n"); 
-  json_printf("    \"state-of-trace\": \"end\",\n");
-  json_printf("    \"node-id\": \"%d\",\n", nodeToken); 
-  json_printf("    \"thread-id\": \"%d\"\n", threadToken); 
-  json_printf("  },\n"); 
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 1; /* flag it as over */
   /* yes, it is over */
   map < pair<int, int>, int, less< pair<int,int> > >::iterator it;
@@ -111,11 +149,8 @@ int DefStateGroup( void *userData, unsigned int stateGroupToken,
 {
   dprintf("StateGroup groupid %d, group name %s\n", stateGroupToken, 
 		  stateGroupName);
-  json_printf("  {\n"); 
-  json_printf("    \"group\": \"definition\",\n"); 
-  json_printf("    \"group-id\": \"%d\",\n",stateGroupToken);
-  json_printf("    \"group-name\": \"%s\"\n", stateGroupName); 
-  json_printf("  },\n"); 
+  my_group *g = new my_group(stateGroupToken, stateGroupName);
+  my_group_set[stateGroupToken] = g;
   return 0;
 }
 
@@ -124,27 +159,18 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 {
   dprintf("DefState stateid %d stateName %s stategroup id %d\n",
 		  stateToken, stateName, stateGroupToken);
-  json_printf("  {\n"); 
-  json_printf("    \"state\": \"definition\",\n"); 
-  json_printf("    \"event-id\": \"%d\",\n", stateToken); 
-  json_printf("    \"group-id\": \"%d\",\n", stateGroupToken); 
-  json_printf("    \"event-name\": %s\n", stateName); 
-  json_printf("  },\n"); 
+  my_state *s = new my_state(stateToken, stateGroupToken, stateName);
+  my_state_set[stateToken] = s;
   return 0;
 }
 
 int DefUserEvent( void *userData, unsigned int userEventToken,
 		const char *userEventName, int monotonicallyIncreasing )
 {
-
   dprintf("DefUserEvent event id %d user event name %s, monotonically increasing = %d\n", userEventToken,
 		  userEventName, monotonicallyIncreasing);
-  json_printf("  {\n"); 
-  json_printf("    \"user-event\": \"definition\",\n"); 
-  json_printf("    \"user-event-id\": \"%d\",\n", userEventToken); 
-  json_printf("    \"monotonically-increasing\": \"%d\",\n", monotonicallyIncreasing); 
-  json_printf("    \"user-event-name\": %s\n", userEventName); 
-  json_printf("  },\n"); 
+  my_user_event *ue = new my_user_event(userEventToken, userEventName, monotonicallyIncreasing);
+  my_user_event_set[userEventToken] = ue;
   return 0;
 }
 
@@ -155,14 +181,14 @@ int EventTrigger( void *userData, double time,
 		long long userEventValue)
 {
   dprintf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %lld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
-  json_printf("  {\n"); 
-  json_printf("    \"user-event\": \"trigger\",\n"); 
-  json_printf("    \"timestamp\": \"%g\",\n", time); 
-  json_printf("    \"user-event-id\": \"%d\",\n", userEventToken); 
-  json_printf("    \"node-id\": \"%d\",\n", nodeToken); 
-  json_printf("    \"thread-id\": \"%d\",\n", threadToken); 
-  json_printf("    \"triggered-value\": \"%lld\"\n", userEventValue); 
-  json_printf("  },\n"); 
+  json_event_out << "{ "; 
+  json_event_out << "\"event-type\": \"counter\", "; 
+  json_event_out << "\"time\": \"" << time << "\", ";
+  json_event_out << "\"event-id\": \"" << userEventToken << "\", ";
+  json_event_out << "\"node-id\": \"" << nodeToken << "\", ";
+  json_event_out << "\"thread-id\": \"" << threadToken << "\", ";
+  json_event_out << "\"value\": \"" << userEventValue << "\" ";
+  json_event_out << "},\n"; 
   return 0;
 }
 
@@ -180,16 +206,16 @@ int SendMessage( void *userData, double time,
 		  sourceNodeToken, sourceThreadToken,
 		  destinationNodeToken, destinationThreadToken,
 		  messageSize, messageTag);
-  json_printf("  {\n"); 
-  json_printf("    \"message-event\": \"send\",\n"); 
-  json_printf("    \"timestamp\": \"%g\",\n", time); 
-  json_printf("    \"source-node-id\": \"%d\",\n", sourceNodeToken); 
-  json_printf("    \"source-thread-id\": \"%d\",\n", sourceThreadToken); 
-  json_printf("    \"destination-node-id\": \"%d\",\n", destinationNodeToken); 
-  json_printf("    \"destination-thread-id\": \"%d\",\n", destinationThreadToken); 
-  json_printf("    \"message-size\": \"%d\",\n", messageSize); 
-  json_printf("    \"message-tag\": \"%lld\"\n", messageTag); 
-  json_printf("  },\n"); 
+  json_event_out << "{ "; 
+  json_event_out << "\"event-type\": \"send\", "; 
+  json_event_out << "\"timestamp\": \"" << time << "\", ";
+  json_event_out << "\"source-node-id\": \"" << sourceNodeToken << "\", ";
+  json_event_out << "\"source-thread-id\": \"" << sourceThreadToken << "\", ";
+  json_event_out << "\"destination-node-id\": \"" << destinationNodeToken << "\", ";
+  json_event_out << "\"destination-thread-id\": \"" << destinationThreadToken << "\", ";
+  json_event_out << "\"message-size\": \"" << messageSize << "\", ";
+  json_event_out << "\"message-tag\": \"" << messageTag << "\" ";
+  json_event_out << "},\n"; 
   return 0;
 }
 
@@ -207,17 +233,97 @@ int RecvMessage( void *userData, double time,
 		  sourceNodeToken, sourceThreadToken,
 		  destinationNodeToken, destinationThreadToken,
 		  messageSize, messageTag);
-  json_printf("  {\n"); 
-  json_printf("    \"message-event\": \"receive\",\n"); 
-  json_printf("    \"timestamp\": \"%g\",\n", time); 
-  json_printf("    \"source-node-id\": \"%d\",\n", sourceNodeToken); 
-  json_printf("    \"source-thread-id\": \"%d\",\n", sourceThreadToken); 
-  json_printf("    \"destination-node-id\": \"%d\",\n", destinationNodeToken); 
-  json_printf("    \"destination-thread-id\": \"%d\",\n", destinationThreadToken); 
-  json_printf("    \"message-size\": \"%d\",\n", messageSize); 
-  json_printf("    \"message-tag\": \"%lld\"\n", messageTag); 
-  json_printf("  },\n"); 
+  json_event_out << "{ "; 
+  json_event_out << "\"event-type\": \"receive\", "; 
+  json_event_out << "\"timestamp\": \"" << time << "\", ";
+  json_event_out << "\"source-node-id\": \"" << sourceNodeToken << "\", ";
+  json_event_out << "\"source-thread-id\": \"" << sourceThreadToken << "\", ";
+  json_event_out << "\"destination-node-id\": \"" << destinationNodeToken << "\", ";
+  json_event_out << "\"destination-thread-id\": \"" << destinationThreadToken << "\", ";
+  json_event_out << "\"message-size\": \"" << messageSize << "\", ";
+  json_event_out << "\"message-tag\": \"" << messageTag << "\" ";
+  json_event_out << "},\n"; 
   return 0;
+}
+
+void write_definitions(void) {
+  /* user events */
+  json_index_out << "\t\"counters\": [";
+  map<int,my_user_event*>::iterator ue_it;
+  bool first = true;
+  for (ue_it = my_user_event_set.begin(); ue_it != my_user_event_set.end(); ue_it++) {
+    if (first) { first = false; } else { json_index_out << ","; }
+    json_index_out << "\n\t\t{\n";
+    json_index_out << "\t\t\t\"id\": \"" << (*ue_it).second->_id << "\",\n"; 
+    json_index_out << "\t\t\t\"monotonically-increasing\": ";
+    if ((*ue_it).second->_mi == 0) {
+        json_index_out << "false,\n";
+    } else {
+        json_index_out << "true,\n";
+    }
+    json_index_out << "\t\t\t\"name\": " << (*ue_it).second->_name; 
+    json_index_out << "\n\t\t}";
+  }
+  json_index_out << "\n\t],\n";
+  /* groups */
+  json_index_out << "\t\"groups\": [";
+  map<int,my_group*>::iterator gr_it;
+  first = true;
+  for (gr_it = my_group_set.begin(); gr_it != my_group_set.end(); gr_it++) {
+    if (first) { first = false; } else { json_index_out << ","; }
+    json_index_out << "\n\t\t{\n";
+    json_index_out << "\t\t\t\"id\": \"" << (*gr_it).second->_id << "\",\n"; 
+    json_index_out << "\t\t\t\"name\": \"" << (*gr_it).second->_name << "\""; 
+    json_index_out << "\n\t\t}";
+  }
+  json_index_out << "\n\t],\n";
+  /* states */
+  json_index_out << "\t\"states\": [";
+  map<int,my_state*>::iterator st_it;
+  first = true;
+  for (st_it = my_state_set.begin(); st_it != my_state_set.end(); st_it++) {
+    if (first) { first = false; } else { json_index_out << ","; }
+    json_index_out << "\n\t\t{\n";
+    json_index_out << "\t\t\t\"event-id\": \"" << (*st_it).second->_event_id << "\",\n"; 
+    json_index_out << "\t\t\t\"group-id\": \"" << (*st_it).second->_group_id << "\",\n"; 
+    json_index_out << "\t\t\t\"name\": " << (*st_it).second->_name; 
+    json_index_out << "\n\t\t}";
+  }
+  json_index_out << "\n\t],\n";
+  /* threads */
+  json_index_out << "\t\"threads\": [";
+  set<my_thread*>::iterator thr_it;
+  first = true;
+  for (thr_it = my_thread_set.begin(); thr_it != my_thread_set.end(); thr_it++) {
+    if (first) { first = false; } else { json_index_out << ","; }
+    json_index_out << "\n\t\t{\n";
+    json_index_out << "\t\t\t\"node-id\": \"" << (*thr_it)->_node_id << "\",\n"; 
+    json_index_out << "\t\t\t\"thread-id\": \"" << (*thr_it)->_thread_id << "\",\n"; 
+    json_index_out << "\t\t\t\"name\": \"" << (*thr_it)->_name << "\""; 
+    json_index_out << "\n\t\t}";
+  }
+  json_index_out << "\n\t],\n";
+}
+
+void write_metadata(void) {
+  json_index_out << "{\n";
+  json_index_out << "\t\"metadata\": {";
+  /* user events */
+  map<string,string>::iterator it;
+  bool first = true;
+  for (it = my_metadata.begin(); it != my_metadata.end(); it++) {
+    if (first) { first = false; } else { json_index_out << ","; }
+    json_index_out << "\n\t\t\"" << (*it).first << "\": \"" << (*it).second << "\""; 
+  }
+  json_index_out << "\n\t},\n";
+  write_definitions();
+  ifstream json_trace_in;
+  json_trace_in.open("events.json");
+  std::string line;
+  while(std::getline(json_trace_in, line)) json_index_out << line << '\n' ;
+  json_trace_in.close();
+  remove("events.json");
+  json_index_out << "\n}\n"; 
 }
 
 int main(int argc, char **argv)
@@ -265,13 +371,18 @@ int main(int argc, char **argv)
     }
   }
 
-  fh = Ttf_OpenFileForInput( argv[1], argv[2]);
+  fh = Ttf_OpenFileForInput(trace_file, edf_file);
 
   if (!fh)
   {
     printf("ERROR:Ttf_OpenFileForInput fails");
     return 1;
   }
+
+  /* open the output files */
+  json_event_out.open("events.json", ios::out | ios::trunc);
+  json_index_out.open("trace.json", ios::out | ios::trunc);
+  json_event_out << "\t\"trace events\": [\n";
 
   Ttf_CallbacksT cb;
   /* Fill the callback struct */
@@ -308,7 +419,6 @@ int main(int argc, char **argv)
     cb.RecvMessage = RecvMessage;
   }
 
-  json_printf("{\n");
   /* Go through each record until the end of the trace file */
   do {
     recs_read = Ttf_ReadNumEvents(fh,cb, 1024);
@@ -321,11 +431,14 @@ int main(int argc, char **argv)
    * the final "}" record in json - so we create a dummy end-of-output record, 
    * to get our commas in order */
 
-  json_printf("  { \n");
-  json_printf("    \"end-of-output\": \"1\" \n");
-  json_printf("  } \n");
-  json_printf("}\n");
+  json_event_out << "{ ";
+  json_event_out << "\"event-type\": \"trace end\" ";
+  json_event_out << "}\n";
+  json_event_out << "]\n";
   Ttf_CloseFile(fh);
+  json_event_out.close();
+  write_metadata();
+  json_index_out.close();
   return 0;
 }
 
