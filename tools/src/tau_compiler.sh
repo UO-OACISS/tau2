@@ -2103,7 +2103,13 @@ else
           	    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
           	fi
           	if [ "$useCompInst" = yes ]; then
-          	    extraopt=$optCompInstOption
+                     if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
+                       echoIfDebug "Has GNU CompInst option"
+                       optExcludeFuncs=-finstrument-functions-exclude-function-list=`sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g' -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' -e 's/,/ /g' | sed -e 's/"//g' | sed -e 's/ /,/g'`
+                       optCompInstOption="$optExcludeFuncs $optCompInstOption"
+                       echoIfDebug "$optCompInstOption=$optCompInstOption"
+                     fi
+          	     extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
           	     extraopt=$optCompInstFortranOption
           	     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
