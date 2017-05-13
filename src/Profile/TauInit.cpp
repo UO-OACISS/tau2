@@ -508,9 +508,9 @@ extern "C" int Tau_init_initializeTAU()
 #endif
 
 //#ifdef TAU_PLUGIN
-  printf("TAU INIT: Initializing plugin system...\n");
+  TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
   if(!Tau_initialize_plugin_system()) {
-    printf("TAU INIT: Successfully Initialized the plugin system.\n");
+    TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
   } else {
     printf("TAU INIT: Error initializing the plugin system\n");
   }
