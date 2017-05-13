@@ -1,9 +1,26 @@
+/****************************************************************************
+ * **                      TAU Portable Profiling Package                     **
+ * **                      http://www.cs.uoregon.edu/research/tau             **
+ * *****************************************************************************
+ * **    Copyright 1997-2017                                                  **
+ * **    Department of Computer and Information Science, University of Oregon **
+ * **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ * ****************************************************************************/
+/***************************************************************************
+ * **      File            : TauPluginTypes.h                                 **
+ * **      Description     : Type definitions for the TAU Plugin System       **
+ * **      Contact         : sramesh@cs.uoregon.edu                           **
+ * **      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
+ * ***************************************************************************/
+
 #ifndef _TAU_PLUGIN_TYPES_H_
 #define _TAU_PLUGIN_TYPES_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+
+//Forward declarations
 struct Tau_plugin_event_function_registration_data;
 struct Tau_plugin_event_atomic_event_trigger_data;
 struct Tau_plugin_event_atomic_event_registration_data;
@@ -15,6 +32,7 @@ typedef int (*Tau_plugin_atomic_event_registration_complete)(struct Tau_plugin_e
 typedef int (*Tau_plugin_atomic_event_trigger)(struct Tau_plugin_event_atomic_event_trigger_data);
 typedef int (*Tau_plugin_end_of_execution)(struct Tau_plugin_event_end_of_execution_data);
 
+/*Define the callback structure*/
 struct Tau_plugin_callbacks {
    Tau_plugin_function_registration_complete FunctionRegistrationComplete;
    Tau_plugin_atomic_event_registration_complete AtomicEventRegistrationComplete;
@@ -22,6 +40,7 @@ struct Tau_plugin_callbacks {
    Tau_plugin_end_of_execution EndOfExecution;
 };
 
+/*Define all the events currently supported*/
 enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION,
    TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION,
@@ -29,6 +48,7 @@ enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_END_OF_EXECUTION
 };
 
+/*Define data structures that define how TAU and the plugin exchange information*/
 struct Tau_plugin_event_function_registration_data {
    void * function_info_ptr;
    int tid;
@@ -53,6 +73,8 @@ typedef struct Tau_plugin_event_end_of_execution_data Tau_plugin_event_end_of_ex
 
 typedef struct Tau_plugin_callbacks Tau_plugin_callbacks;
 
+/*Define data structures to hold information about currently loaded plugins. 
+ * Only relevant for TAU internals - not a concern to plugins themselves*/
 typedef struct Tau_plugin {
    char plugin_name[1024];
    void* handle;
