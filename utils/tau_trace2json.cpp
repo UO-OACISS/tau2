@@ -380,9 +380,11 @@ int main(int argc, char **argv)
   }
 
   /* open the output files */
-  json_event_out.open("events.json", ios::out | ios::trunc);
-  json_index_out.open("trace.json", ios::out | ios::trunc);
-  json_event_out << "\t\"trace events\": [\n";
+  if (jsonPrint) {
+    json_event_out.open("events.json", ios::out | ios::trunc);
+    json_index_out.open("trace.json", ios::out | ios::trunc);
+    json_event_out << "\t\"trace events\": [\n";
+  }
 
   Ttf_CallbacksT cb;
   /* Fill the callback struct */
@@ -427,18 +429,17 @@ int main(int argc, char **argv)
   }
   while ((recs_read >=0) && (!EndOfTrace));
 
-  /* We need to close the trace so there is no dangling comma "," before 
-   * the final "}" record in json - so we create a dummy end-of-output record, 
-   * to get our commas in order */
-
-  json_event_out << "{ ";
-  json_event_out << "\"event-type\": \"trace end\" ";
-  json_event_out << "}\n";
-  json_event_out << "]\n";
   Ttf_CloseFile(fh);
-  json_event_out.close();
-  write_metadata();
-  json_index_out.close();
+
+  if (jsonPrint) {
+    json_event_out << "{ ";
+    json_event_out << "\"event-type\": \"trace end\" ";
+    json_event_out << "}\n";
+    json_event_out << "]\n";
+    json_event_out.close();
+    write_metadata();
+    json_index_out.close();
+  }
   return 0;
 }
 
