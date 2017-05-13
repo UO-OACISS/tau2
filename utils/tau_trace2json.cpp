@@ -30,7 +30,8 @@ int jsonPrint = 1;
 #define dprintf if (debugPrint) printf
 
 ofstream json_event_out;
-ofstream json_index_out;
+//ofstream json_index_out;
+#define json_index_out cout
 
 /* map of metadata */
 map<string,string> my_metadata;
@@ -327,7 +328,7 @@ void write_metadata(void) {
   while(std::getline(json_trace_in, line)) json_index_out << line << '\n' ;
   json_trace_in.close();
   remove("events.json");
-  json_index_out << "\n}\n"; 
+  json_index_out << "}\n"; 
 }
 
 int main(int argc, char **argv)
@@ -386,7 +387,7 @@ int main(int argc, char **argv)
   /* open the output files */
   if (jsonPrint) {
     json_event_out.open("events.json", ios::out | ios::trunc);
-    json_index_out.open("trace.json", ios::out | ios::trunc);
+    //json_index_out.open("trace.json", ios::out | ios::trunc);
     json_event_out << "\t\"trace events\": [\n";
   }
 
@@ -442,7 +443,7 @@ int main(int argc, char **argv)
     json_event_out << "]\n";
     json_event_out.close();
     write_metadata();
-    json_index_out.close();
+    //json_index_out.close();
   }
   return 0;
 }
