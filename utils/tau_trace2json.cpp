@@ -84,7 +84,7 @@ int EnterState(void *userData, double time,
   json_event_out << "{"; 
   json_event_out << "\"event-type\": \"entry\", "; 
   //json_event_out << "\t\t\t\"event-id\": \"" << stateid << "\",\n";
-  json_event_out << "\"event-name\": " << my_state_set[stateid]->_name << ", ";
+  json_event_out << "\"name\": " << my_state_set[stateid]->_name << ", ";
   json_event_out << "\"time\": \"" << time << "\", ";
   json_event_out << "\"node-id\": \"" << nodeid << "\", ";
   json_event_out << "\"thread-id\": \"" << tid << "\" ";
@@ -98,7 +98,7 @@ int LeaveState(void *userData, double time, unsigned int nodeid, unsigned int ti
   json_event_out << "{ "; 
   json_event_out << "\"event-type\": \"exit\", "; 
   //json_event_out << "\"event-id\": \"" << stateid << "\", ";
-  json_event_out << "\"event-name\": " << my_state_set[stateid]->_name << ", ";
+  json_event_out << "\"name\": " << my_state_set[stateid]->_name << ", ";
   json_event_out << "\"time\": \"" << time << "\", ";
   json_event_out << "\"node-id\": \"" << nodeid << "\", ";
   json_event_out << "\"thread-id\": \"" << tid << "\" ";
@@ -184,7 +184,8 @@ int EventTrigger( void *userData, double time,
   json_event_out << "{ "; 
   json_event_out << "\"event-type\": \"counter\", "; 
   json_event_out << "\"time\": \"" << time << "\", ";
-  json_event_out << "\"event-id\": \"" << userEventToken << "\", ";
+  //json_event_out << "\"event-id\": \"" << userEventToken << "\", ";
+  json_event_out << "\"name\": " << my_user_event_set[userEventToken]->_name << ", ";
   json_event_out << "\"node-id\": \"" << nodeToken << "\", ";
   json_event_out << "\"thread-id\": \"" << threadToken << "\", ";
   json_event_out << "\"value\": \"" << userEventValue << "\" ";
