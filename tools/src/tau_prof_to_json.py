@@ -59,6 +59,7 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
     # Function looks like:
     # "".TAU application" 1 0 8626018 8626018 0 GROUP="TAU_USER""
     if num_functions > 0:
+        """
         if "Timers" not in data:
             data["Timers"] = OrderedDict()
         if "Timer Measurement Columns" not in data:
@@ -71,19 +72,23 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
             data["Timer Measurement Columns"].append("Subroutines")
             data["Timer Measurement Columns"].append("Exclusive TIME")
             data["Timer Measurement Columns"].append("Inclusive TIME")
-        if "Timer Measurements" not in data:
-            data["Timer Measurements"] = list()
+        """
+        if "Timers" not in data:
+            data["Timers"] = list()
         for i in range(0,num_functions):
             line = infile.readline()
             tokens = line.split("\"",2)
             function_name = tokens[1].strip()
             stats = tokens[2]
+            """
             if function_name not in function_map:
                 #data["Timers"][function_name] = len(data["Timers"])
                 function_map[function_name] = len(data["Timers"])
                 data["Timers"][len(data["Timers"])] = function_name
+            """
             # split the stats
             tokens = stats.strip().split(" ", 6)
+            """
             timer = list()
             timer.append(int(node))
             #timer.append(int(context))
@@ -101,6 +106,16 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
             # Profile Calls
             #timer.append(long(tokens[4]))
             data["Timer Measurements"].append(timer)
+            """
+            timer = OrderedDict()
+            timer["process index"] = int(node)
+            timer["thread index"] = int(thread)
+            timer["Function"] = function_name
+            timer["Calls"] = long(tokens[0])
+            timer["Subroutines"] = long(tokens[1])
+            timer["Exclusive Time"] = long(tokens[2])
+            timer["Inclusive Time"] = long(tokens[3])
+            data["Timers"].append(timer)
     
 def parse_aggregates(node, context, thread, infile, data):
     aggregates = infile.readline()
@@ -119,6 +134,7 @@ def parse_counters(node, context, thread, infile, data, counter_map):
     # ignore the header line
     line = infile.readline()
     for i in range(1,num_userevents):
+        """
         if "Counters" not in data:
             data["Counters"] = OrderedDict()
         if "Counter Measurement Columns" not in data:
@@ -132,8 +148,9 @@ def parse_counters(node, context, thread, infile, data, counter_map):
             data["Counter Measurement Columns"].append("Minimum")
             data["Counter Measurement Columns"].append("Mean")
             data["Counter Measurement Columns"].append("SumSqr")
-        if "Counter Measurements" not in data:
-            data["Counter Measurements"] = list()
+        """
+        if "Counters" not in data:
+            data["Counters"] = list()
         for i in range(0,num_userevents):
             line = infile.readline()
             line = line.strip()
@@ -144,12 +161,15 @@ def parse_counters(node, context, thread, infile, data, counter_map):
             stats = tokens[2]
             if counter_name == "(null)":
                 continue
+            """
             if counter_name not in counter_map:
                 #data["Counters"][counter_name] = len(data["Counters"])
                 counter_map[counter_name] = len(data["Counters"])
                 data["Counters"][len(data["Counters"])] = counter_name
+            """
             # split the stats
             tokens = stats.strip().split(" ", 5)
+            """
             counter = list()
             counter.append(int(node))
             counter.append(int(context))
@@ -167,6 +187,17 @@ def parse_counters(node, context, thread, infile, data, counter_map):
             # sumsqr
             counter.append(float(tokens[4]))
             data["Counter Measurements"].append(counter)
+            """
+            counter = OrderedDict()
+            counter["process index"] = int(node)
+            counter["thread index"] = int(thread)
+            counter["Counter"] = counter_name
+            counter["Num Events"] = long(tokens[0])
+            counter["Max Value"] = float(tokens[1])
+            counter["Min Value"] = float(tokens[2])
+            counter["Mean Value"] = float(tokens[3])
+            counter["SumSqr Value"] = float(tokens[4])
+            data["Counters"].append(counter)
 
 def parse_profile(indir, profile, data, function_map, counter_map):
     # FIrst, split the name of the profile to get the node, context, thread
