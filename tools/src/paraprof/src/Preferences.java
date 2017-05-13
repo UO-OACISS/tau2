@@ -9,17 +9,12 @@
 package edu.uoregon.tau.paraprof;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Point;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Vector;
-
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableCellRenderer;
 
 public class Preferences implements Serializable {
 
@@ -48,7 +43,10 @@ public class Preferences implements Serializable {
     private ArrayList<Object> sourceLocations;
     private boolean showSourceLocation = true;
     private boolean autoLabels = true;
-    private boolean appNameLabels = true;
+    /*
+     * This an int instead of a boolean so we can make both 0 (the default for an undefined preferences file) and -1 'false'.
+     */
+    private int appNameLabels = 1;
     
     private Font font = null;
     
@@ -233,7 +231,10 @@ public class Preferences implements Serializable {
         return autoLabels;
     }
 
-    public boolean getAppNameLabels() {
+    public int getAppNameLabels() {
+    	if(appNameLabels!=-1){
+    		appNameLabels=1;
+    	}
         return appNameLabels;
     }
     
@@ -241,7 +242,8 @@ public class Preferences implements Serializable {
         this.autoLabels = autoLabels;
     }
     
-    public void setAppNameLabels(boolean appNameLabels) {
+    public void setAppNameLabels(int appNameLabels) {
+    	//System.out.println("set to "+appNameLabels);
         this.appNameLabels = appNameLabels;
     }
     
