@@ -7668,8 +7668,12 @@ PINURL_x86_64=http://software.intel.com/sites/landingpage/pintool/downloads/pin-
 if [ "x$pindir" = "xdownload" ]; then
   if [ $machine = craycnl -o $machine = x86_64 -o $machine = i386_linux ]; then 
     currdir=${PWD}
-    cd $targetdir/$machine; wget $PINURL_x86_64; 
-    tar zxf pin-*.tar.gz; /bin/rm -f pin-*.tar.gz; ln -s pin-* pin; pindir=`readlink -f pin`; cd $currdir; 
+    cd $targetdir/$machine; 
+    if [ ! -L $targetdir/$machine/pin ] ; then 
+# symlink does not exist, download PIN
+      wget $PINURL_x86_64; tar zxf pin-*.tar.gz; /bin/rm -f pin-*.tar.gz; ln -s pin-* pin; 
+    fi
+    pindir=`readlink -f pin`; cd $currdir; 
   fi
 fi
 
