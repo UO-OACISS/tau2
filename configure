@@ -7667,8 +7667,9 @@ fi
 PINURL_x86_64=http://software.intel.com/sites/landingpage/pintool/downloads/pin-3.2-81205-gcc-linux.tar.gz
 if [ "x$pindir" = "xdownload" ]; then
   if [ $machine = craycnl -o $machine = x86_64 -o $machine = i386_linux ]; then 
-    pushd $targetdir/$machine; wget $PINURL_x86_64; 
-    tar zxf pin-*.tar.gz; rm -f pin-*.tar.gz; ln -s pin-* pin; pindir=`readlink -f pin`; popd; 
+    currdir=${PWD}
+    cd $targetdir/$machine; wget $PINURL_x86_64; 
+    tar zxf pin-*.tar.gz; /bin/rm -f pin-*.tar.gz; ln -s pin-* pin; pindir=`readlink -f pin`; cd $currdir; 
   fi
 fi
 
