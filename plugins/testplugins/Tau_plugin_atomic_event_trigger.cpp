@@ -27,9 +27,9 @@ int Tau_plugin_test_event_atomic_event_trigger(Tau_plugin_event_atomic_event_tri
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(PluginManager* plugin_manager) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
-  Tau_util_init_tau_plugin_callbacks(cb);
+  TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->AtomicEventTrigger = Tau_plugin_test_event_atomic_event_trigger;
-  Tau_util_plugin_register_callbacks(cb);
+  TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
 
   return 0;
 }
