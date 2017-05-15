@@ -962,7 +962,7 @@ for arg in "$@"; do
 
 	-c++=*)
 	    myarg=`echo $arg | sed 's/-c++=//'`
-	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ ]
+	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx ]
 	    then
 		cxx_compiler=$myarg
                 if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  ]
@@ -976,7 +976,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'clang++', 'bgclang++', 'mpicxx', 'mcxx', 'oshCC', or 'oshc++' "
+		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'clang++', 'bgclang++', 'mpicxx', 'mcxx', 'oshCC', oshcxx, or 'oshc++' "
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -1000,14 +1000,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', or 'oshfort' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', or 'caf' "
 		exit 1
 	    fi
 	    shift
@@ -1923,7 +1923,7 @@ for arg in "$@"; do
 	    shmemmpiinc=`echo $arg | sed -e 's/-shmemmpiinc=//' -e 's/#/ /g'`
 	    if [ ! -d $shmemmpiinc ]
 	    then
-		echo "Error: Cannot access SHMEM include directory $shmeminc"
+		echo "Error: Cannot access SHMEM include directory $shmemmpiinc"
 		exit 1
 	    fi
 	    shmem=yes
@@ -3227,6 +3227,7 @@ if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ ]; then
     fixmakeargs="$fixmakeargs CLANG"
 fi
 
+
 if [ "$machine" = "apple" ] ; then
     mkdir -p apple/lib
     cp tools/src/common/resources/tau-medium.png apple/lib/
@@ -3568,14 +3569,25 @@ then
 	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
 	f90loaded=`which mpif90 2>/dev/null | wc -l`
-	if [ $f90loaded = 1 ]
+	if [ $f90loaded = 1 -a "x$orig_fortran_compiler" = "xmpif90" ]
 	then
             fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
 	    fi
+            if [ "x$fortran_compiler" = "xxlf_r" ]; then
+                fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
+	    fi
+            if [ "x$fortran_compiler" = "xxlflang" ]; then
+                fixmakeargs="$fixmakeargs XLFLANG"
+            fi
+	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then 
+		fortran_compiler=caf
+            fi
 	else
-            fortran_compiler=no
+            if [ "x$orig_fortran_compiler" = "xdefault" ]; then 
+              fortran_compiler=no
+            fi
 	fi
 
 	echo "NOTE: Found mpicxx in the path"
@@ -3596,8 +3608,15 @@ then
 		cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
 		fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
             fi
-            if [ "x$mpilibrary" = "xno" ]; then
-		mpilibrary=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+            if [ "x$mpilibrary" = "xno" -a "x$scorep" = "xno" ]; then
+		mpilibargs=`mpicxx -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+		mpiflibargs=`mpif90 -show | cut -d' ' -f2- | sed -e 's@ @#@g' -e 's@-qthreaded@@g'`
+
+		mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpilibargs"
+		mpiflibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#$mpiflibargs"
+	        fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
+	        mpilibargs_added_to_fixmakeargs=yes
+
             fi
             full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
             full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
@@ -3656,9 +3675,15 @@ case $cxx_compiler in
     *llvm*|*clang*)
 	echo "Using CLANG Compilers"
         fixmakeargs="$fixmakeargs CLANG"
+        tauoptions="${tauoptions}-clang"
 	if [ $machine = apple ]; then
-	    # MPI on Apple OS X has issues with shared objects
-            fixmakeargs="$fixmakeargs NOSHARED APPLECXX"
+	    gnu=yes
+            fixmakeargs="$fixmakeargs taugcclibdir=/usr/lib taugccstdcxxlibdir=/usr/lib"
+            fixmakeargs="$fixmakeargs APPLECXX"
+
+        fi
+        if [ $openmp = yes ]; then 
+          fixmakeargs="$fixmakeargs CLANG_OPENMP"
         fi
         ;;
 
@@ -4045,7 +4070,7 @@ case $cxx_compiler in
         fi
         ;;
 
-    oshc++ | oshCC )
+    oshc++ | oshCC | oshcxx )
 	echo "Using OpenSHMEM C++ compiler"
 	fixmakeargs="$fixmakeargs GNU COMPINST_GNU GNU46PLUS"
 	fixmakeargs="$fixmakeargs OPENSHMEM"
@@ -4130,6 +4155,11 @@ case $fortran_compiler in
 	fi
 	;;
 
+    caf)
+	echo "Default Fortran compiler will be caf"
+        fixmakeargs="$fixmakeargs CAF"
+	;;
+
     gfortran4)
 	echo "Default Fortran compiler will be GNU gfortran4"
 	gfortran4=`which gfortran4 2>&1`
@@ -4182,7 +4212,7 @@ case $fortran_compiler in
 	fi
 	;;
 
-    pgi)
+    pgi|pgf90)
 	echo "Default Fortran compiler will be PGI pgf90"
 	extradir=`which pgcc | sed s/pgcc/../`
 	fixmakeargs="$fixmakeargs PGI_FORTRAN"
@@ -4314,6 +4344,9 @@ then
 	full_cxx_compiler=`which oshCC`
 	if [ $? = 1 ]; then
 	  full_cxx_compiler=`which oshc++`
+	  if [ $? = 1 ]; then
+	    full_cxx_compiler=`which oshcxx`
+          fi
         fi
 	full_cc_compiler=`which oshcc`
         gcclibdir=`oshcc  -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
@@ -4394,6 +4427,29 @@ then
 		fi
 		additional_mpiincs="$additional_mpiincs $mpiincf90dir"
             fi
+	
+            mpiinc_search=`which mpirun  | sed -e 's@//@/@g'| sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+		if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+		then
+		    mpiinc=$mpiinc_search
+		    echo "Using MPI include directory $mpiinc"
+		    echo "machine is $machine"
+		else
+		    mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include
+		    if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+		    then
+		      mpiinc=$mpiinc_search
+		      echo "Using MPI include directory $mpiinc"
+                    else 
+		      mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include64
+                      if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
+                      then
+                        mpiinc=$mpiinc_search
+                        echo "Using MPI include directory $mpiinc"
+                        echo "machine is $machine"
+                      fi
+                    fi
+                fi 
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4567,7 +4623,8 @@ then
 		mpilibrary="-lmpi_ibm $additional_mpilibs"
             fi
             ;;
-	ibm64linux)
+	ibm64linux_deprecated)
+# This logic no longer applies - use `which mpirun` to find mpilib directory.
 	    mpilib=no
             if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi64/libmpi_ibm.so ]
             then
@@ -4691,16 +4748,21 @@ then
     esac
 fi
 
-if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
-    echo "MPIINC and MPILIB are not set!"
+if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" ]; then
+    echo "MPIINC is not set!"
     mpiinc_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+    if [ ! -d $mpiinc_search ] ; then
+      # Try the ".../include64" directory instead of ".../include"
+      mpiinc_search=`which mpirun  | sed -e 's@//@/@g'| sed -e 's@intel64/bin/mpirun$@mic@' -e 's@bin/mpirun$@@' -e 's@bin64/mpirun$@@g'`/include64
+    fi
+
     if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
     then
          mpiinc=$mpiinc_search
 	 echo "Using MPI include directory $mpiinc"
 	 echo "machine is $machine"
     else
-         mpiinc_search=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+         mpiinc_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/include
 	 if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h -a "x$mpiinc" = "x" ]
 	 then
 	   mpiinc=$mpiinc_search
@@ -4728,6 +4790,7 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
 	echo "Correction: Using MPI include directory $mpiinc instead"
     fi
 
+  if [ "x$mpilib" = "x" ] ; then
     mpilib=""
     mpilib_search=`which mpirun | sed -e 's@//@/@g' | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
     if [ ! -d $mpilib_search ] ; then
@@ -4738,8 +4801,15 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" -a  "x$mpilib" = "xno" ]; then
       mpilib=$mpilib_search
       echo "Using MPI lib directory $mpilib"
     else
-      mpilib=""
+      mpilib_search=`which mpicc | sed -e 's/\/bin\/mpicc$//' -e 's/\/bin64\/mpicc$//'`/lib
+      if [ -d $mpilib_search -a "x$mpilib" = "x" ] ; then
+        mpilib=$mpilib_search
+        echo "Using MPI lib directory $mpilib"
+      else
+        mpilib=""
+      fi
     fi
+  fi
   
 
 fi
@@ -5034,6 +5104,7 @@ then
     then
 	if [ -d $shmeminc ]
 	then
+            shmem_h="$shmeminc/shmem.h"
             shmemdir="$shmeminc/.."
 	    #echo "Include dir found. adding -I$mpiinc to INC"
 	    shmemincargs="-I$shmeminc"
@@ -5065,7 +5136,7 @@ then
 	    fi
 	    if [ -r $shmembindir/mpiexec_mpt ]
 	    then
-		if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+		if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] && [ $pshmem = yes ] ; then
 		  fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
                 else
 		  fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
@@ -5075,14 +5146,15 @@ then
     else
 	openshmem=no
 	oshcc_var=`which oshcc 2>/dev/null`
-	if [ "x$oshcc_var" != "x" -a $? = 0 ]
+  retval=$?
+	if [ "x$oshcc_var" != "x" -a $retval = 0 ]
 	then
 	    openshmem_include_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@include@g'`
 	    shmemdir="$openshmem_include_dir/.."
 	    if [ -r $openshmem_include_dir/mpp/shmem.h -a -r $openshmem_include_dir/../bin/mpiexec_mpt ]
 	    then
 		shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
-		if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+		if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] && [ $pshmem = yes ] ; then
 		  fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
                 else
 		  fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
@@ -5103,6 +5175,7 @@ then
                     fi
 		fi
 	    fi
+            shmem_h="$openshmem_include_dir/shmem.h"
 	fi
 	if [ $catamount = yes ]
 	then
@@ -5118,16 +5191,20 @@ then
 		then
 		    shmemincargs="-I$CRAY_SHMEM_DIR/include/mpp/#-I$CRAY_SHMEM_DIR/include"
 		fi
+                shmem_h="$CRAY_SHMEM_DIR/include/mpp/shmem.h"
 	    else
                 shmemdir="$MPT_DIR/sma"
 		if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
 		then
 		    shmemincargs="-I$MPT_DIR/sma/include/mpp/#-I$MPT_DIR/sma/include/"
+                    shmem_h="$MPT_DIR/sma/include/mpp/shmem.h"
 		else
 		    if [ -r $CRAY_MPICH2_BASEDIR/sma64/include/shmem.h ] ; then
 		      shmemincargs="-I$CRAY_MPICH2_BASEDIR/sma64/include/mpp#-I$CRAY_MPICH2_BASEDIR/sma64/include"
+                      shmem_h="$CRAY_MPICH2_BASEDIR/sma64/include/mpp/shmem.h"
                     else
 		      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
+                      shmem_h="/opt/mpt/default/xt/sma64/include/mpp/shmem.h"
                     fi
 		    # old options
 		fi
@@ -5142,11 +5219,12 @@ then
 		libsmafile=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib/libsma.so@g'`
 		shmeminclude=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@include@g'`
                 shmemdir="$shmeminclude/.."
+                shmem_h="$shmeminclude/shmem.h"
 		if [ -r $libsmafile -a -d $shmeminclude -a "x$shmeminclude" != "x" ]
 		then
 		    shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
 		    echo "Detected SGI MPT: Using $shmeminclude as include dir and $shmemlibdir as SHMEM lib dir"
-		    if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+		    if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] && [ $pshmem = yes ] ; then
 		      fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
                     else
 		      fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
@@ -5162,7 +5240,7 @@ then
 	fi
     fi
 
-    if [ $shmemlibrary = no ]
+    if [ "x$shmemlibrary" != "x" -a "$shmemlibrary" = "no" ]
     then
 	shmemlibrary=-lsma
 	if [ $gpshmem = yes ]
@@ -5235,7 +5313,7 @@ then
 	fi
 	if [ -r $shmembindir/mpiexec_mpt ]
 	then
-            if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] ; then
+            if [  `nm -A $MPI_ROOT/lib/libsma.so | grep pshmem | wc -l` != 0 ] && [ $pshmem = yes ] ; then
 	      fixmakeargs="$fixmakeargs SGI_MPT_PSHMEM"
             else
 	      fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
@@ -5270,6 +5348,17 @@ then
     if [ "x$shmemmpiinc" != "x" ] ; then
 	    shmemmpiincargs="-I$shmemmpiinc"
     fi
+
+    if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
+      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | awk '{print $3}'`
+      echo "OpenSHMEM minor version: $shmem_minor_version"
+      if [ "$shmem_minor_version" -le 2 ] ; then
+        orig_useropt="$orig_useropt -DSHMEM_1_2"
+        useropt="$useropt#-DSHMEM_1_2"
+        echo "Detected OpenSHMEM version 1.2 or earlier."
+      fi 
+    fi
+
 
     shmemlibargs="$shmemlibargs $shmemlibrary"
     shmemlibargs=`echo $shmemlibargs | sed  -e 's/ /#/g'`
@@ -5359,7 +5448,9 @@ rm -f get_stdinc.C find_stdinc.awk
 ######################################################################
 # Checking gcc 4.6+ version. It needs -lmpi to be added after -ltau
 cat << EOF > gcc46test.C
-#if ((__GNUC__ >= 4 ) && (__GNUC_MINOR__ >= 6))
+#if (__GNUC__ > 4 )
+#error "Using GCC 4.6+"
+#elif ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 6))
 #error "Using GCC 4.6+"
 #endif
 EOF
@@ -5446,7 +5537,7 @@ fi
 
 if [ $pgi = yes ]; then
   if [ -d $extradir/lib -a ! -r $extradir/lib/libstd.a ]; then
-    echo "NOTE: PGI 16+ compiler does not provide libstd.* files"
+    echo "NOTE: PGI 16+ compiler does not provide libstd.* files in $extradir/lib"
     fixmakeargs="$fixmakeargs PGI_NO_LIBSTD"
   fi
 fi
@@ -6387,6 +6478,10 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
     then
         mpiwarnings="-qhalt=w"
     fi
+    if [ $c_compiler = "clang" ]
+    then
+        mpiwarnings="-Werror"
+    fi
  
     cat <<EOF > mpi_thread_test.$msuf
   #include <mpi.h>
@@ -6969,7 +7064,7 @@ if [ $mpi = yes ] ; then
 	wrapperlib="-L$\(PERFLIBDIR) \$(PERFLIBRARY)"
     fi
 
-    mpilibargs=$wrapperlib
+    mpilibargs="$wrapperlib $mpilibargs"
     wrapperC=$wrapperlib
 
     if [ "x$mpilib" != "x" ] ; then
@@ -7360,7 +7455,6 @@ if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
 	else
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)"
 	fi
-	mpiflibargs=$mpilibargs
 	fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
     else
 	mpilibargs=""
@@ -7612,6 +7706,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         mkdir -p "$tempdir"
         cd "$tempdir"
         download "$binutilsurl" "$binutilstgz"
+	if [ $? != 0 -a "x$execheck" != "x" ]; then 
+	  echo "Couldn't write to /dev/shm. Trying local directory."
+	  cd $prebfddir
+          tempdir="`pwd`/.tmp_bfdbuild_$$"
+	  mkdir -p "$tempdir"
+	  cd "$tempdir"
+          download "$binutilsurl" "$binutilstgz"
+        fi
+           
         if [ ! -f "$binutilstgz" ] ; then
           echo "$binutilstgz did not download.  Please download it manually from: "
           echo "$binutilsurl"
@@ -7731,11 +7834,20 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
             err=$?	 
         else
-          ./configure \
-            CFLAGS=-fPIC CXXFLAGS=-fPIC \
-            --prefix=$bfddir \
-            --disable-nls --disable-werror > tau_configure.log 2>&1
-            err=$?
+	  if [ "$c_compiler" = pgcc ]
+	  then
+            ./configure \
+              CFLAGS="-fPIC -noswitcherror" CXX=pgc++ CXXFLAGS=-fPIC \
+              --prefix=$bfddir \
+              --disable-nls --disable-werror > tau_configure.log 2>&1
+              err=$?
+          else 
+            ./configure \
+              CFLAGS=-fPIC CXXFLAGS=-fPIC \
+              --prefix=$bfddir \
+              --disable-nls --disable-werror > tau_configure.log 2>&1
+              err=$?
+          fi 
         fi
         ;;
       esac
@@ -7746,7 +7858,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         exit 1
       else
         echo "Building (see $tempdir/$binutils/tau_build.log for details)..."
-        make > tau_build.log 2>&1
+        make -j8 > tau_build.log 2>&1
         err=$?
         if [ $err -ne 0 ] ; then
           echo "Error: BFD build failed. Cannot proceed with -bfd=download"
@@ -7931,7 +8043,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
-if [ $bfd_worked = "no" ] ; then
+if [ $bfd_worked = "no" -a "$machine" != "apple" ] ; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
@@ -8910,7 +9022,7 @@ if [ "x$download_scorep" = xyes ] ; then
     rm $tauscoreptgz
   # Now we build Score-P
     cd scorep-*; mkdir -p build; cd build
-    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-otf2 --without-opari2 --without-cube --without-gui "
+    tau_scorep_config_options="../configure --prefix=${scorepdir} --enable-shared --without-otf2 --without-opari2 --without-cube --without-gui ${TAU_SCOREP_CONFIGURATION_OPTIONS}"
     if [ $papi = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-papi=$papidir --with-papi-header=$papidir/include --with-papi-lib=$papidir/$papisubdir"
     fi
@@ -9752,6 +9864,7 @@ else
 fi
 
 cp ${tauroot}/tools/src/tau_treemerge.pl $BINTARGET
+cp ${tauroot}/tools/src/tau_coalesce $BINTARGET
 cp ${tauroot}/tools/src/tau_javamax.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_header_replace.pl $BINTARGET
 cp ${tauroot}/tools/src/tau_exec $BINTARGET
@@ -9759,6 +9872,7 @@ cp ${tauroot}/tools/src/tauex $BINTARGET
 cp ${tauroot}/tools/src/taucc $BINTARGET
 cp ${tauroot}/tools/src/taucxx $BINTARGET
 cp ${tauroot}/tools/src/tauupc $BINTARGET
+cp ${tauroot}/tools/src/taucaf $BINTARGET
 cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
@@ -9769,9 +9883,13 @@ cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_caf.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 # tau_exec works differently when it's named "tau_python"
 cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_python
+cp ${tauroot}/tools/src/tau_spark_python $BINTARGET/tau_spark_python
+cp ${tauroot}/tools/src/tau_spark-submit $BINTARGET/tau_spark-submit
+cp ${tauroot}/tools/src/tau_spark-submit $BINTARGET/tau_pyspark
 
 if [ $pdtarchdir != unknown ]
 then
@@ -10130,7 +10248,7 @@ echo '   Type "make install" to begin compilation'
 
 if [ -d /usr/linux-k1om-*  -a $machine = x86_64 ]
 then
-   echo "NOTE: This system supports Intel MIC. You may configure with -arch=mic_linux to enable this option."
+   echo "NOTE: This system supports Intel MIC (KNC). You may configure with -arch=mic_linux for the older KNC to enable this option."
 fi
 
 if [ "x$PE_ENV" != "x" -a $machine = x86_64 ]

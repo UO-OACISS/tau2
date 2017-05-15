@@ -22,7 +22,9 @@
 #include <stdarg.h>
 #include <string.h>
 
+#ifndef TAU_WINDOWS
 #include <dlfcn.h>
+#endif /* TAU_WINDOWS */
 
 #define TAU_NAME_LENGTH 1024
 
@@ -193,6 +195,7 @@ PluginManager* Tau_util_get_plugin_manager() {
     is_plugin_system_initialized = 1;
   }
 
+<<<<<<< HEAD
   return plugin_manager;
 }
 
@@ -300,7 +303,6 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
     (plugin_manager->plugin_list)->head = plugin;
 
     TAU_VERBOSE("TAU: Successfully loaded plugin: %s\n", name);
-
     return handle;    
   } else {
     printf("TAU: Failed loading %s plugin with error: %s\n", name, dlerror());
@@ -319,7 +321,6 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->EndOfExecution = 0;
   cb->InterruptTrigger = 0;
 }
-
 
 /**************************************************************************************************************************
  * Helper function that makes a copy of all callbacks for events
@@ -428,6 +429,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data data) {
   }
 
 
+<<<<<<< HEAD
 }
 
 /*****************************************************************************************************************************

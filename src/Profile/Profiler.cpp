@@ -206,6 +206,7 @@ static x_uint64 getTimeStamp()
 }
 #endif /* TAU_PERFSUITE */
 
+
 //////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class Profiler
 //////////////////////////////////////////////////////////////////////
@@ -1263,7 +1264,9 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
                 // Get the device name to be used in the event name below
                 cudaGetDeviceProperties(&deviceProps, dev);
                 std::string device_name = deviceProps.name;
-                std::replace(device_name.begin(), device_name.end(), ' ', '_');
+                //std::replace(device_name.begin(), device_name.end(), ' ', '_');
+                // PGI compiler has some issues with c++11. 
+                Tau_util_replaceStringInPlace(device_name, " ", "_"); 
                 if (tau_cuda_device_name && strcmp(tau_cuda_device_name, device_name.c_str())) {
                     continue;
                 }
@@ -1422,11 +1425,25 @@ extern "C" int Tau_profiler_initialization()
   return 0;
 }
 
+extern "C" int Tau_print_metadata_for_traces(int tid) {
+
+  MetaDataRepo *localRepo = NULL;
+    localRepo = &(Tau_metadata_getMetaData(tid));
+  
+   for (MetaDataRepo::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
+      string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval)); 
+      TAU_TRIGGER_EVENT(metadata_str.c_str(), 1.0); 
+  }
+}
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+
+  if (TauEnv_get_tracing() && (tid == 0) ) {
+    Tau_print_metadata_for_traces(tid);
+  }
 
 #ifdef TAU_SCOREP
   Tau_write_metadata_records_in_scorep(tid);
@@ -1481,18 +1498,18 @@ int TauProfiler_StoreData(int tid)
     if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
       Tau_metadataMerge_mergeMetaData();
       /* Create a merged profile if requested */
-      Tau_mergeProfiles();
+      Tau_mergeProfiles_MPI();
 	}
 #endif
 #endif
   }
 #endif /* PTHREADS */
 
-#ifdef TAU_SHMEM
+#if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     Tau_global_setLightsOut();
-    Tau_metadataMerge_mergeMetaData();
-    Tau_mergeProfiles();
+    Tau_metadataMerge_mergeMetaData_SHMEM();
+    Tau_mergeProfiles_SHMEM();
     __real_shmem_finalize();
   }
 #endif /* TAU_SHMEM */
@@ -1671,7 +1688,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           perror(errormsg);
           return 0;
 		}
-        TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
+        TAU_VERBOSE("[pid=%d], TAU: Writing A profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
       } else {
         int flags = O_CREAT | O_EXCL | O_WRONLY;
 #ifdef TAU_DISABLE_SIGUSR
@@ -1705,12 +1722,18 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           }
 
         } else {
+#ifdef TAU_MPI
+        if (Tau_get_usesMPI()) {
+#endif /* TAU_MPI */
           if ((fp = fopen(dumpfile, "w+")) == NULL) {
             char errormsg[1024];
             sprintf(errormsg, "Error: Could not create %s", dumpfile);
             perror(errormsg);
             return 0;
           }
+#ifdef TAU_MPI
+        }
+#endif /* TAU_MPI */
           char cwd[1024];
           char *tst = getcwd(cwd, 1024);
 		  if (tst == NULL) {
@@ -1719,10 +1742,17 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
             perror(errormsg);
             return 0;
 		  }
-          TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
+          TAU_VERBOSE("[pid=%d], TAU: Writing B profile %s, cwd = %s\n", RtsLayer::getPid(), dumpfile, cwd);
         }
       }
-      writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#ifdef TAU_MPI
+      if (Tau_get_usesMPI()) {
+#endif /* TAU_MPI */
+        TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
+        writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#ifdef TAU_MPI
+      }
+#endif /* TAU_MPI */
     }
   }
 

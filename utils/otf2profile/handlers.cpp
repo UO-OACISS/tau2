@@ -13,7 +13,7 @@ int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int pro
 {
 	Thread &local = *(new Thread());
 	//cout << nodeToken << " Process " << &local << endl;
-	local.nodeToken=nodeToken;
+	local.nodeToken=processToken;//nodeToken; Are there situations when nodeToken will be correct here?
 	local.threadToken=threadToken;
 	Converter::threadnames[processToken] = new string(threadName);//local.threadName=threadName;
 	local.lastState=-1;

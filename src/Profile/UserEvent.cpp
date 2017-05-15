@@ -446,7 +446,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         long * comparison = FormulateContextComparisonArray(current, &size);
 
         RtsLayer::LockDB();
-        ContextEventMap::iterator it = contextMap.find(comparison);
+        ContextEventMap::const_iterator it = contextMap.find(comparison);
         if (it == contextMap.end()) {
           //printf("****  NEW  **** \n"); fflush(stdout);
     /* KAH - Whoops!! We can't call "new" here, because malloc is not

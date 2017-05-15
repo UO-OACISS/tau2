@@ -54,6 +54,7 @@ src/Profile/TauUtil.cpp \
 src/Profile/TauXML.cpp \
 src/Profile/Tracer.cpp \
 src/Profile/UserEvent.cpp \
+src/Profile/TauMmapMemMgr.cpp \
 src/Profile/WindowsThreadLayer.cpp
 
 #TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\TauMetaData.cpp src\profile\TauMetrics.cpp src\profile\TauReadMetrics.cpp src\profile\Tracer.cpp src\profile\TauCompensate.cpp

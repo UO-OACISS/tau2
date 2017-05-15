@@ -1,0 +1,40 @@
+Profiling PySpark applications with TAU
+
+1. Install Spark 2.2 or later.
+  
+   As of the writing of these instructions, the latest version of
+   Spark is 2.1, which does not provide the necessary calls to access
+   task attempt IDs, so it will be necessary to install a development
+   version of Spark. Once Spark 2.2 is released, the release version
+   should work.
+
+   You will need an existing installation of Python 2.7 or later
+   with the numpy package installed.  
+
+   To install the latest development version of Spark:
+
+       git clone git://github.com/apache/spark.git
+       cd spark
+       ./build/mvn -Pyarn -Phadoop-2.6 -Dhadoop.version=2.6.0 -DskipTests clean package
+
+2. Build TAU with Python support.
+
+   Configure TAU with -pythoninc and -pythonlib set to the include and
+   library directories for the version of Python you intend to use with Spark;
+   for example,
+
+       ./configure -bfd=download -unwind=download -pythoninc=/usr/local/include/python3.5m -pythonlib=/usr/local/lib/python3.5
+       make install
+
+3. Run a PySpark application by setting SPARK_HOME to the location of your
+   Spark installation and then replacing spark-submit in the normal
+   invocation of your Spark application with tau_spark-submit.
+   To set options to tau_spark_python, set TAU_SPARK_PYTHON_ARGS.
+
+       export TAU_SPARK_PYTHON_ARGS="-T serial,python"
+       tau_spark-submit --master local[4] ./als.py
+
+   This will produce one profile file per task executed within the PySpark
+   application.
+
+

@@ -150,6 +150,7 @@ public class ParaProf implements ActionListener {
 		+ "  -x, --suppressmetrics           Exclude child calls and exclusive time from --dumpmpisummary\n"		
 		+ "  -s, --summary                   Print only summary statistics\n"
 		+ "                                    (only applies to OSS output)\n" 
+		+ "  -y, --control                   Enter command line control mode for exploring/loading/exporting database trials\n"
 		+ "\n" + "Notes:\n"
 		+ "  For the TAU profiles type, you can specify either a specific set of profile\n"
 		+ "files on the commandline, or you can specify a directory (by default the current\n"

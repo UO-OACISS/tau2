@@ -95,6 +95,7 @@ struct trcdescr
   long    numrec;          /* -- number of event records already processed -- */
   x_uint64 lasttime;  /* -- timestamp of previous event record        -- */
   x_uint64 offset;    /* -- offset of timestamp                       -- */
+  int     add_offset_to_node;       /* -- for workflows, we need to add offset to node -- */
 
 /*   TAU_EV  *buffer;    /\* -- input buffer                              -- *\/ */
 /*   TAU_EV  *erec;      /\* -- current event record                      -- *\/ */
@@ -760,6 +761,7 @@ extern char *optarg;
 extern int   optind;
 char **edfnames; /* if they're specified */
 int edfspecified; /* tau_events also needs this */
+int workflow_offset = FALSE;
 
 int main(int argc, char *argv[])
 {
@@ -768,6 +770,7 @@ int main(int argc, char *argv[])
   int numedfprocessed;
   int startedfindex, edfcount;
   x_uint64 min_time, first_time;
+  long val;
   long numrec;
   char *trcfile;
   void *erec;
@@ -790,14 +793,22 @@ int main(int argc, char *argv[])
   edfspecified = FALSE; /* by default edf files are not specified on cmdline */
   numedfprocessed = 0; /* only used with -e events.*.edf files are specified */
   first_time = 0L;
+  workflow_offset = FALSE;
   mergededffile = strdup("tau.edf"); /* initialize it */
 
-  while ( (i = getopt (argc, argv, "arne:m:")) != EOF )
+  while ( (i = getopt (argc, argv, "awrne:m:")) != EOF )
   {
     switch ( i )
     {
       case 'a': /* -- adjust first time to zero -- */
                 adjust = TRUE;
+                break;
+
+      case 'w': /* -- adjust offset of node numbers (for workflows where we merge traces from multiple directories) -- */
+                workflow_offset = TRUE;
+#ifdef DEBUG
+		printf("WORKFLOW_OFFSET = %d\n", workflow_offset);
+#endif /* DEBUG */
                 break;
 
       case 'r': /* -- do not reassemble long events -- */
@@ -888,6 +899,7 @@ int main(int argc, char *argv[])
       trcdes[numtrc].next      = NULL;
       trcdes[numtrc].last      = NULL;
       trcdes[numtrc].overflows = 0;
+      trcdes[numtrc].add_offset_to_node = 0;
 
 
       /* -- read first event record ----------------------------------------- */
@@ -919,6 +931,33 @@ int main(int argc, char *argv[])
 
         trcdes[numtrc].numrec = 1L;
         if ( event_GetEv(trcdes+numtrc, erec, 0) == TAU_EV_INIT ) {
+          if (workflow_offset == TRUE) {
+            int trcid, rank; 
+            char *p = trcdes[numtrc].name;
+	    while (*p) {
+              if (isdigit(*p)) { 
+                val = strtol(p,&p, 10); // read the number  
+#ifdef DEBUG
+                printf("workflow val = %ld\n", val); 
+#endif /* DEBUG */
+		break;
+              } else  {
+                p++;
+              }  
+            }
+            rank = event_GetNid(trcdes+numtrc, erec, 0);
+#ifdef DEBUG           
+ 	    printf("name = %s, val = %d, node id = %d\n", trcdes[numtrc].name, val, rank);
+	    printf("Comparing %s, tautrace\n", trcdes[numtrc].name); 
+#endif /* DEBUG */
+	    if (strstr(trcdes[numtrc].name, "tautrace") != NULL) {
+#ifdef DEBUG
+	      printf("Adding offset of %d to processing of %s trace\n",
+		val - rank, trcdes[numtrc].name); 
+#endif /* DEBUG */
+              trcdes[numtrc].add_offset_to_node = val - rank;
+            }
+          }
 	  if (!dynamic) { /* for dynamic trace, don't change this to INITM */
             /*erec->ev = TAU_EV_INITM;*/
 	    event_SetEv(trcdes+numtrc, erec, 0, TAU_EV_INITM);
@@ -1218,7 +1257,7 @@ int main(int argc, char *argv[])
     /*    output (outfd, (char *) trcdes[source].erec, sizeof(TAU_EV));*/
 
     nativeEvent.ev = event_GetEv(trcdes+source,trcdes[source].erec,0);
-    nativeEvent.nid = event_GetNid(trcdes+source,trcdes[source].erec,0);
+    nativeEvent.nid = event_GetNid(trcdes+source,trcdes[source].erec,0)+trcdes[source].add_offset_to_node;
     nativeEvent.tid = event_GetTid(trcdes+source,trcdes[source].erec,0);
     nativeEvent.par = event_GetPar(trcdes+source,trcdes[source].erec,0);
     nativeEvent.ti = event_GetTi(trcdes+source,trcdes[source].erec,0);

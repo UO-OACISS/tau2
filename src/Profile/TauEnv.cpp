@@ -213,7 +213,7 @@ static int env_callsite = 0;
 static int env_callsite_depth = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
-static int env_tracing = 0;
+static int env_tracing = 0; 
 static int env_callpath_depth = 0;
 static int env_depth_limit = 0;
 static int env_track_message = 0;
@@ -222,6 +222,7 @@ static int env_track_memory_heap = 0;
 static int env_track_power = 0;
 static int env_track_memory_footprint = 0;
 static int env_show_memory_functions = 0;
+static int env_track_load = 0;
 static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
@@ -450,6 +451,18 @@ static char * Tau_get_cwd_of_exe()
   }
   return retval;
 }
+
+/*********************************************************************
+ * Replace part of a string with another. similar to <algorithm> replace.
+ ********************************************************************/
+void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
+                          const std::string& replace) {
+    size_t pos = 0; 
+    while ((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }           
+}               
 
 /*********************************************************************
  * Parse a boolean value
@@ -788,6 +801,10 @@ int TauEnv_get_show_memory_functions() {
   return env_show_memory_functions;
 }
 
+int TauEnv_get_track_load() {
+  return env_track_load;
+}
+
 int TauEnv_get_track_memory_leaks() {
   return env_track_memory_leaks;
 }
@@ -1085,6 +1102,9 @@ void TauEnv_initialize()
 
   if (!initialized) {
     const char *tmp;
+    char *saveptr;
+    const char *key; 
+    const char *val;
 
     /* Read the configuration file */
     TauConf_read();
@@ -1124,6 +1144,13 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Power tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
+    } 
+
+    tmp = getconf("TAU_TRACK_LOAD");
+    if (parse_bool(tmp, env_track_load)) {
+      TAU_VERBOSE("TAU: system load tracking Enabled\n");
+      TAU_METADATA("TAU_TRACK_LOAD", "on");
+      TAU_TRACK_LOAD();
     } 
 
 #ifdef TAU_MPI_T
@@ -1447,6 +1474,9 @@ void TauEnv_initialize()
       profiling_default = 0;
       TAU_VERBOSE("TAU: Tracing Enabled\n");
       TAU_METADATA("TAU_TRACE", "on");
+      if (TauEnv_get_callsite_depth() > 1) {
+        printf("WARNING: TAU_CALLSITE_DEPTH > 1 is not supported with tracing.\n");
+      }
     } else {
       env_tracing = 0;
       env_track_message = TAU_TRACK_MESSAGE_DEFAULT;
@@ -2142,6 +2172,22 @@ void TauEnv_initialize()
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
+
+/* Add metadata in the form of "<key1=val1:key2=val2:key3=val3>" */
+    char *metadata = (char *) getconf("TAU_METADATA");
+
+#ifndef TAU_WINDOWS 
+    // export TAU_METADATA="<key1=val1:key2=val2:key3=val3>" 
+    if (metadata) {
+      key = strtok_r(metadata, "<=,>", &saveptr);
+      while (key != (char *) NULL) {
+        val = strtok_r(NULL, ":>", &saveptr);
+        TAU_VERBOSE("TAU_METADATA %s = %s \n", key, val);
+        TAU_METADATA(key, val); 
+        key = strtok_r(NULL, "=", &saveptr); // get the next pair
+      }
+    }
+#endif /* TAU_WINDOWS - use strtok under Windows */
   }
 
 }

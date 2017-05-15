@@ -44,7 +44,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 
@@ -1661,8 +1660,15 @@ public class ParaProfUtils {
         return removeSource(name);
     }
 
+    private static final String TAU_APPLICATION_NAME="TAU_APPLICATION_NAME";
     public static String getThreadLabel(Thread thread) {
 
+    	MetaDataMap mdm = thread.getMetaData();
+    	String tan="";
+    	if(ParaProf.preferences.getAppNameLabels()==1&&mdm.containsKey(TAU_APPLICATION_NAME)){
+    		tan = mdm.get(TAU_APPLICATION_NAME)+": ";
+    	}
+    	
         if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             return "Mean";
         } else if (thread.getNodeID() == -2) {
@@ -1679,13 +1685,13 @@ public class ParaProfUtils {
             if (ParaProf.preferences.getAutoLabels()) {
                 DataSource dataSource = thread.getDataSource();
                 if (dataSource.getHasContexts() == false && dataSource.getHasThreads() == false) {
-                    return "node " + thread.getNodeID();
+                    return tan+"node " + thread.getNodeID();
                 }
                 if (dataSource.getHasContexts() == false) {
-                    return "node " + thread.getNodeID() + ", thread " + thread.getThreadID();
+                    return tan+"node " + thread.getNodeID() + ", thread " + thread.getThreadID();
                 }
             }
-            return "n,c,t " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID();
+            return tan+"n,c,t " + thread.getNodeID() + "," + thread.getContextID() + "," + thread.getThreadID();
         }
 
     }

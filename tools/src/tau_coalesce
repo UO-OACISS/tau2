@@ -1,0 +1,143 @@
+#!/bin/bash
+# Author: Sameer Shende (sameer@cs.uoregon.edu)
+# This tool is used for workflows. You may specify a list of directories as command line args and it will 
+# create a merged trace or profile files in the current directory from the workflow directories. 
+# Usage: tau_coalesce ../dir1 ../dir2 ../dir3 
+# creates tau.trc and tau_edf for traces in the current directory by taking workflow traces from the 
+# three directories.
+
+declare -i offset=0
+declare -i sum=0
+declare -i trial_max_node=0
+declare -i FALSE=-1
+declare -i TRUE=1
+declare -i isDebug=$FALSE
+#declare -i isDebug=$TRUE
+declare -i found_traces=$FALSE
+declare -i found_profiles=$FALSE
+
+#Assumption: pass only one argument. Concatenate them if there are multiple
+echoIfDebug () {
+    if [ $isDebug == $TRUE ]; then
+        echo -e $1
+    fi
+}
+
+# main program
+if [ $# == 0 ]; then
+  echo "Usage: $0: [dir1] [dir2] ... "
+  echo "$0 merges profiles and traces found in multiple directories and writes the merged profile in the current directory"
+  exit 1;
+fi
+
+sum=0
+for arg in "$@"
+do
+  echoIfDebug "Arg = $arg"
+  trial_max_node=0;
+  if [ -r $arg/tautrace.0.0.0.trc -a ! -L $arg/tautrace.0.0.0.trc -a $arg/events.0.edf -a ! -L $arg/events.0.edf ]; then
+    echoIfDebug "$arg has a trace and an event file "
+    found_traces=$TRUE
+
+# iterate through list of traces in arg directory and calculate the max node count. 
+    for i in $arg/tautrace.*
+    do 
+      node=`echo $i | sed -e 's/tautrace\./ /'| sed  -e 's/\.0\./ /' | awk '{ print $2; }'` 
+      rest=`echo $i | sed -e 's/tautrace\./ /'| sed  -e 's/\.0\./ /' | awk '{ print $3; }'` 
+      echoIfDebug "node = $node, rest = $rest"
+      sum=$node+$offset
+      if [ -r tautrace.${sum}.0.${rest} -a ! -L tautrace.${sum}.0.${rest} ]; then
+        echo "Error: $0: tautrace.${sum}.0.${rest}: A real trace, as opposed to a symlink was found in the current directory. Please delete manually and rerun $0"
+	exit 1;
+      else
+	/bin/rm -f tautrace.${sum}.0.${rest}
+        echoIfDebug "ln -s $i tautrace.${sum}.0.${rest}"
+        ln -s $i tautrace.${sum}.0.${rest}
+        if [ -r events.${sum}.edf -a ! -L events.${sum}.edf ]; then
+          echo "Error: $0: events.$node.edf: A real event definition file, as opposed to a symlink was found in the current directory. Please delete manually and rerun $0"
+          exit 1;
+        else 
+          if [ -L events.${sum}.edf ]; then 
+# delete symlink from a previous execution or a multi-threaded execution and make it again in the right place. 
+            echoIfDebug "/bin/rm -f events.${sum}.edf"
+            /bin/rm -f events.${sum}.edf 
+          fi
+          echoIfDebug "ln -s $arg/events.${node}.edf events.${sum}.edf"
+          ln -s $arg/events.${node}.edf events.${sum}.edf
+        fi
+      fi
+# calculate the trial_max_node for the next directory
+      if [ $node -gt $trial_max_node ]; then
+        trial_max_node=$node 
+        echoIfDebug "trial_max_node = $trial_max_node "
+      fi
+    done
+
+# offset is the previous offset plus max node (nodes begin from 0 so we add 1)
+    offset=$offset+$trial_max_node+1
+  fi
+done
+echoIfDebug "sum =$sum, offset=$offset, trial_max_node= $trial_max_node "
+  
+taudir=`dirname $0`
+if [ $found_traces == $TRUE ]; then
+#Invoke tau_treemerge.pl with the -w workflow option:
+  if [ -x ${taudir}/tau_treemerge.pl ]; then 
+    echoIfDebug "Invoking ${taudir}/tau_treemerge.pl -w"
+    ${taudir}/tau_treemerge.pl -w 
+  else 
+    tau_treemerge.pl -w
+  fi
+fi
+  
+#Now, do the same thing for profiles
+sum=0
+offset=0
+trial_max_node=0
+
+# For MULTI__* metric directories
+for d in $1/MULTI__*  $1
+do 
+  if [ -r $d/profile.0.0.0 -a ! -L $d/profile.0.0.0 ]; then 
+    echoIfDebug "d is $d"
+    metric_dir=`echo $d | sed -e 's/\(.*\)MULTI__\(.\)/MULTI__\2/g'`
+    if [ "x$metric_dir" = "x$d" ]; then
+      metric_dir="."
+    fi
+    echoIfDebug "metric_dir is $metric_dir" 
+    mkdir -p $metric_dir
+    trial_max_node=0;
+    offset=0
+    for arg in "$@"
+    do 
+      srcdir=$arg
+      if [ -r $srcdir/$metric_dir/profile.0.0.0 -a ! -L $srcdir/$metric_dir/profile.0.0.0 ]; then
+        echoIfDebug "$srcdir has a profile file"
+        found_profiles=$TRUE
+# iterate through the list of profile files in the srcdir directory
+        for i in $srcdir/$metric_dir/profile.*
+        do
+          node=`echo $i |  sed -e 's/profile\./ /' | sed -e 's/\.0\./ /' | awk '{ print $2; }' `
+          rest=`echo $i |  sed -e 's/profile\./ /' | sed -e 's/\.0\./ /' | awk '{ print $3; }' `
+          echoIfDebug "Profiles: node = $node, rest = $rest"
+          sum=$node+$offset
+          if [ -r $metric_dir/profile.${sum}.0.${rest} -a ! -L $metric_dir/profile.${sum}.0.${rest} ]; then
+            echo "Error: $0: $metric_dir/profile.${sum}.0.${rest}: A real profile, as opposed to a symlink was found in the current directory. Please delete manually and rerun $0"
+            exit 1;
+          else
+            /bin/rm -f $metric_dir/profile.${sum}.0.${rest}
+            echoIfDebug "ln -s `readlink -f $i` $metric_dir/profile.${sum}.0.${rest}"
+            ln -s `readlink -f $i` $metric_dir/profile.${sum}.0.${rest}
+          fi
+# calculate the trial_max_node for the next directory
+          if [ $node -gt $trial_max_node ]; then
+            trial_max_node=$node
+            echoIfDebug "trial_max_node = $trial_max_node "
+          fi
+        done
+# offset is the previous offset plus max node (nodes begin from 0 so we add 1)
+        offset=$offset+$trial_max_node+1
+      fi
+    done
+  fi
+done

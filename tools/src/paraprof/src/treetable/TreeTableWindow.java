@@ -8,9 +8,12 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -41,6 +44,7 @@ import javax.swing.event.TreeExpansionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.common.ImageExport;
@@ -48,10 +52,14 @@ import edu.uoregon.tau.common.treetable.AbstractTreeTableModel;
 import edu.uoregon.tau.common.treetable.JTreeTable;
 import edu.uoregon.tau.paraprof.ColorBar;
 import edu.uoregon.tau.paraprof.ParaProf;
+import edu.uoregon.tau.paraprof.ParaProfException;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
+import edu.uoregon.tau.paraprof.SearchPanel;
 import edu.uoregon.tau.paraprof.WindowPlacer;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
+import edu.uoregon.tau.paraprof.interfaces.Searchable;
+import edu.uoregon.tau.paraprof.interfaces.SearchableOwner;
 import edu.uoregon.tau.paraprof.interfaces.UnitListener;
 import edu.uoregon.tau.paraprof.treetable.ColumnChooser.CheckBoxListItem;
 import edu.uoregon.tau.paraprof.treetable.TreeTableColumn.ExclusiveColumn;
@@ -80,7 +88,7 @@ import edu.uoregon.tau.perfdmf.Thread;
  * @version $Revision: 1.18 $
  */
 public class TreeTableWindow extends JFrame implements TreeExpansionListener, Observer, ParaProfWindow, Printable, UnitListener,
-        ImageExport {
+        ImageExport, SearchableOwner, ActionListener, KeyListener, Searchable {
 
     /**
 	 * 
@@ -98,6 +106,9 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
     private List<TreeTableColumn> columns;
     private ColumnChooser columnChooser;
+    
+    private JCheckBoxMenuItem showFindPanelBox= new JCheckBoxMenuItem("Show Find Panel", false);
+    private SearchPanel searchPanel;
 
     private final JMenuItem showAsTreeMenuItem = new JCheckBoxMenuItem("Show as Call Tree");
     private final JMenuItem reverseTreeMenuItem = new JCheckBoxMenuItem("Reverse Call Tree", false);
@@ -291,7 +302,7 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
         gbc.anchor = GridBagConstraints.SOUTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        addCompItem(scrollPane, gbc, 0, 1, GridBagConstraints.REMAINDER, GridBagConstraints.REMAINDER);
+        addCompItem(scrollPane, gbc, 0, 1, GridBagConstraints.REMAINDER,1);
 
         validate();
     }
@@ -371,6 +382,10 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         JMenuBar mainMenu = new JMenuBar();
         JMenu optionsMenu = new JMenu("Options");
+        
+        
+        showFindPanelBox.addActionListener(this);
+        optionsMenu.add(showFindPanelBox);
 
         ActionListener actionListener = new ActionListener() {
 
@@ -380,13 +395,16 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
                     if (EventSrc instanceof JMenuItem) {
                         String arg = evt.getActionCommand();
                         if (arg.equals("Show as Call Tree")) {
+                        	showSearchPanel(false);
                             if (showAsTreeMenuItem.isSelected()) {
                                 showInclExclMenuItem.setSelected(false);
                             }
                             setupData();
                         } else if (arg.equals("Reverse Call Tree")) {
+                        	showSearchPanel(false);
                             setupData();
                         } else if (arg.equals("Show Inclusive/Exclusive")) {
+                        	showSearchPanel(false);
                             setupData();
                         }
                     }
@@ -631,16 +649,28 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     }
     
     public void select(final Function function){
-    	//System.out.println(function.getName());
     	String[] chunks = function.getName().split("=>");
-    	//model.getRoot();
-    	//int modelChildren=model.getChildCount(model.getRoot());
+    	selectStrings(chunks);
+    	
+    }
+
+    public void collapseTree(){
+    	JTree jTree=treeTable.getTree();
+    	for (int i = 0; i < jTree.getRowCount(); i++) {
+    	         jTree.collapseRow(i);
+    	}
+    	
+    	
+    }
+    
+    public boolean selectStrings(String[] chunks){
     	JTree tree = treeTable.getTree();
     	TreeModel treeModel=tree.getModel();
     	TreeTableNode treeRoot =(TreeTableNode) treeModel.getRoot();
     	int treeChildren = treeModel.getChildCount(treeRoot);
     	//System.out.println(treeRoot.getClass());
     	int row=0;
+    	collapseTree();
     	for(int i=0;i<chunks.length;i++)
     	{
     		for(int j=0;j<treeChildren;j++){
@@ -650,17 +680,302 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     				treeRoot=ttn;
     				treeChildren=treeModel.getChildCount(treeRoot);
     				row+=j;
+    				//System.out.println("expanding "+ttn.toString().trim()+" at row: "+row);
+    				TreePath tp = tree.getPathForRow(row);
+    				if(!tp.getLastPathComponent().toString().equals(ttn.toString())){
+    					//System.out.println("Pathing error?");
+    					while(!tree.getPathForRow(row).getLastPathComponent().toString().equals(ttn.toString()))
+    					{
+    						
+    						row++;
+    						if(row>=tree.getRowCount()){
+    							System.out.println("Tree Search Pathing Error.");
+    							return false;
+    						}
+    					}
+    				}
+    				//System.out.println(tree.getPathForRow(row)+"\n");
     				tree.expandRow(row);
+    				//lastExpanded.add(row);
     				row++;
     				break;
     			}
     		}
     	}
     	if(row>0)
+    	{
     		row--;
+    	}
+    	else{
+    		return false;
+    	}
     	tree.setSelectionRow(row);
     	int oneRow = treeTable.getRowHeight()+treeTable.getRowMargin();
-    	treeTable.scrollRectToVisible(new Rectangle(0,oneRow*row,5,5));
-    	
+    	treeTable.scrollRectToVisible(new Rectangle(0,oneRow*row,5,50));
+    	validate();
+    	return true;
     }
+    
+    boolean searchMatchCase=true;
+    
+    private class SearchNode{
+    	private int searchRow=0;
+    	private TreeTableNode ttn=null;
+    	public SearchNode()
+		{searchRow=0;
+    	ttn=null;}
+    	public SearchNode(int searchRow, TreeTableNode ttn) {
+			super();
+			this.searchRow = searchRow;
+			this.ttn = ttn;
+		}
+		public int getSearchRow() {
+			return searchRow;
+		}
+		public void setSearchRow(int searchRow) {
+			this.searchRow = searchRow;
+		}
+		public TreeTableNode getTtn() {
+			return ttn;
+		}
+		public void setTtn(TreeTableNode ttn) {
+			this.ttn = ttn;
+		}
+		 List<Object> nodes = new ArrayList<Object>();
+		 public void addNode(TreeNode node){
+			 nodes.add(0,node);
+		 }
+//		 public TreePath getPath(){
+//			 return new TreePath(nodes.toArray());
+//		 }
+		 public String[] getPathStrings(){
+			 String[] nodeStrings = new String[nodes.size()];
+			 for(int i=0;i<nodes.size();i++){
+				 nodeStrings[i]=nodes.get(i).toString();
+			 }
+			 return nodeStrings;
+		 }
+    }
+    
+    SearchNode sn = new SearchNode();
+    //Keeps track of the last node we found in case we want to skip it on a 'next' search
+    TreeTableNode lastNode=null;
+    //If we've hit next we don't want to clear or list of previous searches
+    boolean nexting=false;
+    //Keeps track of every item we've found with 'next' so far.
+    List<TreeTableNode> prevNodes=new ArrayList<TreeTableNode>();
+    
+    public SearchNode recSearch(String find, int row, TreeTableNode root, TreeModel tm){
+    	int treeChildren = tm.getChildCount(root);
+
+    		for(int j=0;j<treeChildren;j++){
+    			TreeTableNode ttn = (TreeTableNode) tm.getChild(root, j);
+    			String subject=ttn.toString().trim();
+    			if(!searchMatchCase){
+    				subject=subject.toUpperCase();
+    			}
+    			if(subject.contains(find)&&!prevNodes.contains(ttn)){
+    				SearchNode goodNode = new SearchNode(row+j,ttn);
+    				goodNode.addNode(ttn);
+    				lastNode=ttn;
+    				return  goodNode;
+
+    			}
+    			SearchNode tmpNode = recSearch(find,j+row,ttn,tm);
+    			if(tmpNode!=null){
+    				tmpNode.addNode(ttn);
+    				return tmpNode;
+    			}
+    			
+    		}
+    	return null;
+    }
+    
+    
+    public static TreePath getPath(TreeNode treeNode) {
+        List<Object> nodes = new ArrayList<Object>();
+        if (treeNode != null) {
+          nodes.add(treeNode);
+          treeNode = treeNode.getParent();
+          while (treeNode != null) {
+            nodes.add(0, treeNode);
+            treeNode = treeNode.getParent();
+          }
+        }
+
+        return nodes.isEmpty() ? null : new TreePath(nodes.toArray());
+      }
+    
+    public boolean search(String find){
+    	boolean found=false;
+    	JTree tree = treeTable.getTree();
+    	TreeModel treeModel=tree.getModel();
+    	
+    	find=find.trim();
+    	
+    	TreeTableNode treeRoot = sn.getTtn();
+    	if(treeRoot==null){
+    		treeRoot=(TreeTableNode) treeModel.getRoot();
+    	}
+    	
+    	SearchNode recBack = recSearch(find,0,treeRoot,treeModel);
+    	if(recBack==null)
+    	{
+    		if(!prevNodes.isEmpty())
+    		{
+    			lastNode=null;
+        		prevNodes.clear();
+    			return search(find);
+    		}
+    		lastNode=null;
+    		prevNodes.clear();
+    		return false;
+    	}
+    	String[] nodeStrings=recBack.getPathStrings();
+
+    	found=selectStrings(nodeStrings);
+
+    	return found;
+    }
+
+	
+	public void showSearchPanel(boolean show) {
+		if (show) {
+            if (searchPanel == null) {
+                searchPanel = new SearchPanel(this, this,false,false);
+                GridBagConstraints gbc = new GridBagConstraints();
+                gbc.insets = new Insets(5, 5, 5, 5);
+                gbc.fill = GridBagConstraints.HORIZONTAL;
+                gbc.anchor = GridBagConstraints.CENTER;
+                gbc.weightx = 0.10;
+                gbc.weighty = 0.01;
+                addCompItem(searchPanel, gbc, 0, 2, 2, 1);
+                searchPanel.setFocus();
+            }
+        } else {
+        	if(searchPanel!=null)
+            {
+        		getContentPane().remove(searchPanel);
+            }
+            searchPanel = null;
+        }
+
+        showFindPanelBox.setSelected(show);
+        validate();
+		
+	}
+
+	
+	public void actionPerformed(ActionEvent evt) {
+		 try {
+	            Object EventSrc = evt.getSource();
+
+	            if (EventSrc instanceof JMenuItem) {
+	                String arg = evt.getActionCommand();
+	                if (arg.equals("Show Find Panel")) {
+	                    if (showFindPanelBox.isSelected()) {
+	                        showSearchPanel(true);
+	                    } else {
+	                        showSearchPanel(false);
+	                    }
+	                } else {
+	                    throw new ParaProfException("Menu system not implemented properly: " + arg);
+	                }
+	            }
+	        } catch (Exception e) {
+	            ParaProfUtils.handleException(e);
+	        }
+		
+	}
+
+	
+	public void keyTyped(KeyEvent e) {
+	}
+
+	
+	public void keyPressed(KeyEvent e) {
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_F) {
+            showSearchPanel(true);
+        }
+    }
+
+	
+	public void keyReleased(KeyEvent e) {
+	}
+
+	
+	String searchString="";
+	
+	public boolean setSearchString(String searchString) {
+		if(!nexting){
+			prevNodes.clear();
+		}
+		else{
+			nexting=false;
+		}
+		this.searchString = searchString;
+
+        if (searchString.length() == 0) { // reset
+        	sn.setSearchRow(0);
+        	sn.setTtn(null);
+            repaint();
+            return true;
+        }
+
+        if (!searchMatchCase) { // not matching case, so convert everything to uppercase for comparison
+            searchString = searchString.toUpperCase();
+        }
+
+        boolean found = false;
+
+//        if (searchUp) {
+//        //TODO: Implement 'last' previous navigation here
+//        } else 
+        {
+
+        			found=search(searchString);
+
+        }
+
+        if (!found) {
+            repaint();
+            return false;
+        }
+
+//        checkSearchStringVisibility();
+
+        repaint();
+        return true;
+	}
+
+	
+	public void setSearchHighlight(boolean highlight) {
+	
+	}
+
+	
+	public void setSearchMatchCase(boolean matchCase) {
+		searchMatchCase = matchCase;
+        repaint();
+		
+	}
+
+	
+	public boolean searchNext() {
+		nexting=true;
+		if(lastNode!=null)
+		{
+			prevNodes.add(lastNode);
+		}
+		int sr = sn.getSearchRow();
+		sn.setSearchRow(sr++);
+        setSearchString(searchString);
+        return false;
+	}
+
+	
+	public boolean searchPrevious() {
+		// TODO Implement previous navigation in search
+		return false;
+	}
 }

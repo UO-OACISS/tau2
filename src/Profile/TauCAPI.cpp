@@ -186,13 +186,13 @@ struct Tau_thread_status_flags {
  * otherwise. */
 #if defined(__INTEL_COMPILER)
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#else
-#ifdef __GNUC__
+#elif defined(__PGIC__)
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS];
+#elif defined(__GNUC__) 
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
-#else
+#else  /* __GNUC__ */
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
-#endif
-#endif
+#endif /* __INTEL_COMPILER */
 
 #if defined (TAU_USE_TLS)
 __thread int _Tau_global_insideTAU = 0;
@@ -1859,6 +1859,11 @@ extern "C" void Tau_track_power(void) {
   TauTrackPower();
 }
 
+extern "C" void Tau_track_load(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackLoad();
+}
+
 extern "C" void Tau_track_memory_rss_and_hwm(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackMemoryFootPrint();
@@ -1873,6 +1878,11 @@ extern "C" void Tau_track_memory_rss_and_hwm_here(void) {
 extern "C" void Tau_track_power_here(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackPowerHere();
+}
+
+extern "C" void Tau_track_load_here(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauTrackLoadHere();
 }
 
 extern "C" void Tau_track_memory_headroom(void) {
@@ -1904,6 +1914,13 @@ extern "C" void Tau_enable_tracking_power(void) {
   TauEnableTrackingPower();
 }
 
+extern "C" void Tau_disable_tracking_load(void) {
+  TauDisableTrackingLoad();
+}
+
+extern "C" void Tau_enable_tracking_load(void) {
+  TauEnableTrackingLoad();
+}
 
 extern "C" void Tau_enable_tracking_memory_headroom(void) {
   TauEnableTrackingMemoryHeadroom();
@@ -2144,12 +2161,12 @@ extern FunctionInfo* Tau_make_openmp_timer(const char * n, const char * t)
   PureMap & pure = ThePureMap();
   int exists = pure.count(name);
   if (exists > 0) {
-    PureMap::iterator it = pure.find(name);
+    PureMap::const_iterator it = pure.find(name);
     fi = it->second;
   }
   if (fi == NULL) {
     RtsLayer::LockEnv();
-    PureMap::iterator it = pure.find(name);
+    PureMap::const_iterator it = pure.find(name);
     if (it == pure.end()) {
       tauCreateFI((void**)&fi, name, type, TAU_USER, "OpenMP");
       pure[name] = fi;
