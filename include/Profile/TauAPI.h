@@ -364,6 +364,11 @@
 
 #endif /* TAU_ENABLED */
 
+/* TAU_PLUGIN API */
+#define TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS Tau_util_init_tau_plugin_callbacks
+#define TAU_UTIL_PLUGIN_REGISTER_CALLBACKS Tau_util_plugin_register_callbacks
+/* TAU_PLUGIN_API */
+
 
 /******************************************************************************
 * Function prototypes
