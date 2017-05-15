@@ -195,7 +195,6 @@ PluginManager* Tau_util_get_plugin_manager() {
     is_plugin_system_initialized = 1;
   }
 
-<<<<<<< HEAD
   return plugin_manager;
 }
 
@@ -427,9 +426,6 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data data) {
    }
    callback = callback->next;
   }
-
-
-<<<<<<< HEAD
 }
 
 /*****************************************************************************************************************************
