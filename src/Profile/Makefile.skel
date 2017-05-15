@@ -396,33 +396,33 @@ $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) 
 $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
 	$(CXX) -M $(CXXFLAGS) -I$(TAU_OPENCL_INC) -c TauGpuAdapterOpenCL.cpp > $@
 
-$(TAU_NULL)$(TAU_OPENCL_LIB): $(TAU_OPENCL_OBJS) $(TAU_DSO) $(TAU_OPENCL_DEP)
+$(TAU_NULL)$(TAU_OPENCL_LIB): $(TAU_OPENCL_OBJS) $(TAU_DSO) $(TAU_OPENCL_DEP) $(TAU_LIB_DIR)/$(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(CXX) $(TAU_ARFLAGS) $(TAU_OPENCL_LIB) $(TAU_OPENCL_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) $(if $(shell grep pthread $(TAU_OPENCL_DEP)), -lpthread,)
+		-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT) $(if $(shell grep pthread $(TAU_OPENCL_DEP)), -lpthread,)
 #		$(TAU_RANLIB) $(TAU_OPENCL_LIB)
 
-$(TAU_NULL)$(TAU_CUDA_LIB): $(TAU_CUDA_OBJS) $(TAU_DSO)
+$(TAU_NULL)$(TAU_CUDA_LIB): $(TAU_CUDA_OBJS) $(TAU_DSO) $(TAU_LIB_DIR)/$(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(CXX) $(TAU_ARFLAGS) $(TAU_CUDA_LIB) $(TAU_CUDA_OBJS) \
-		-L$(TAU_LIB_DIR) -L. $(TAU_DSO) $(TAU_SHARED_LINK)
+		-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT)
 		$(TAU_RANLIB) $(TAU_CUDA_LIB)
 
-$(TAU_NULL)$(TAU_PYCUDA_LIB): $(TAU_PYCUDA_OBJS) $(TAU_CUDA_LIB) $(TAU_DSO)
+$(TAU_NULL)$(TAU_PYCUDA_LIB): $(TAU_PYCUDA_OBJS) $(TAU_CUDA_LIB) $(TAU_DSO) $(TAU_LIB_DIR)/$(TAU_DSO)
 	$(PRELINK_PHASE)
 	$(CXX) $(TAU_ARFLAGS) $(TAU_PYCUDA_LIB) $(TAU_CUDA_LIB) $(TAU_PYCUDA_OBJS) $(BOOST_LIB)
 	$(TAU_RANLIB) $(TAU_PYCUDA_LIB)	
 
-$(TAU_NULL)$(TAU_CUPTI_LIB): $(TAU_CUPTI_OBJS) $(TAU_DSO)
+$(TAU_NULL)$(TAU_CUPTI_LIB): $(TAU_CUPTI_OBJS) $(TAU_DSO) $(TAU_LIB_DIR)/$(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_LIB) $(TAU_CUPTI_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) 
+		-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT)
 		$(TAU_RANLIB) $(TAU_CUPTI_LIB)
 
-$(TAU_NULL)$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_OBJS) $(TAU_DSO)
+$(TAU_NULL)$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_OBJS) $(TAU_DSO) $(TAU_LIB_DIR)/$(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(TAU_CUDA_CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_ACTIVITY_LIB) $(TAU_CUPTI_ACTIVITY_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) 
+		-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT)
 		$(TAU_RANLIB) $(TAU_CUPTI_ACTIVITY_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
@@ -541,6 +541,7 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
 		$(TAU_INSTALL) tau_python_wrapper.py $(INSTALLDEST)
+		$(TAU_INSTALL) tau_pyspark_wrapper.py $(INSTALLDEST)
 		$(RM) $(INSTALLDEST)/$(PYTAU) $(INSTALLDEST)/$(CTAU_IMPL)
 		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(PYTAU)
 		cd $(INSTALLDEST) && $(LN) $(TAU_SHLIB) $(CTAU_IMPL)
@@ -550,6 +551,7 @@ $(PYTAU_INSTALL): $(TAU_SHLIB)
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(PYTAU) 
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) $(CTAU_IMPL)
 		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_python_wrapper.py .
+		cd $(TAU_SHAREDDIR) && $(LN) ../tau.py ../ltau.py ../tau_pyspark_wrapper.py .
 		cd $(TAU_SHAREDDIR) && $(RM) libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) && $(LN) ../$(TAU_SHLIB) TAU.dll
@@ -715,7 +717,7 @@ TauKokkos.o 	: TauKokkos.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
@@ -881,7 +883,7 @@ TauBeacon.o   : TauBeacon.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 $(TAU_PYCUDA_OBJS): TauGpuAdapterPyCuda.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUDA_INCLUDE) -I$(PYTHON_INCDIR) -c $<
@@ -893,10 +895,10 @@ TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauG
 	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) $(TAU_PERMISSIVE_FLAG) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiActivity.o : CuptiActivity.cpp $(HDRS) ../../include/Profile/CuptiActivity.h
-	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUPTI_ACTIVITY_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CudaSass.o : CudaSass.cpp $(HDRS) ../../include/Profile/CudaSass.h
 	$(TAU_CUDA_CXX) $(SERIAL_CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)

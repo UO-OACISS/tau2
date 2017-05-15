@@ -802,7 +802,7 @@ void Tau_enable_user_cvar_tuning_policy(const int num_pvars, int *tau_pvar_count
       } else if (strcmp(event_name, PVAR_VBUF_ALLOCATED) == 0) {
         pvar_vbuf_allocated_index = i;
       }
-      reduced_value_array = (unsigned long long int *)calloc(sizeof(unsigned long long int), tau_pvar_count[pvar_max_vbuf_usage_index]);
+      reduced_value_array = Tau_MemMgr_malloc(Tau_get_thread(), tau_pvar_count[pvar_max_vbuf_usage_index]*sizeof(unsigned long long int));
       reduced_value_cvar_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
       strcpy(reduced_value_cvar_string, "");
       reduced_value_cvar_value_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);

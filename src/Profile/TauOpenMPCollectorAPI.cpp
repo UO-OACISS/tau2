@@ -2,6 +2,10 @@
 #define _GNU_SOURCE
 #endif
 
+#ifdef __APPLE__
+#include <dlfcn.h>
+#endif
+
 // set some macros, so we get implementation-dependent differences.
 // Right now, there are 3 different interpretations of the OMPT "standard"
 
@@ -349,7 +353,21 @@ char * get_proxy_name(unsigned long ip) {
         char * routine = NULL;
         if (TauEnv_get_bfd_lookup()) {
             TAU_OPENMP_SET_LOCK;
+#if defined(__APPLE__)
+      Dl_info info;
+      int rc = dladdr((const void *)addr, &info);
+      if (rc == 0) {
+        node->resolved = false;
+      } else {
+        node->resolved = true;
+        node->info.probeAddr = addr;
+        node->info.filename = strdup(info.dli_fname);
+        node->info.funcname = strdup(info.dli_sname);
+        node->info.lineno = 0; // Apple doesn't give us line numbers.
+      }
+#else
             Tau_bfd_resolveBfdInfo(OmpbfdUnitHandle, ip, node->info);
+#endif
             TAU_OPENMP_UNSET_LOCK;
             // Build routine name for TAU function info
             unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;

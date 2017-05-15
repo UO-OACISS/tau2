@@ -13,8 +13,8 @@
 #define TAU_MEMMGR_MAP_CREATION_FAILED -1
 #define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
 
-#define USE_RECYCLER
-// #define DEBUG_ME  /* <-- use this to debug for memory leaks */
+//#define USE_RECYCLER /* <-- This is causing memory corruption. Need to investigate! */
+//#define DEBUG_ME  /* <-- use this to debug for memory leaks */
 
 struct TauMemMgrSummary
 {
@@ -84,12 +84,14 @@ void Tau_MemMgr_initIfNecessary()
 
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
   if (!finalized) {
+    Tau_global_incr_insideTAU();
     RtsLayer::LockEnv();
     // check again, someone else might already have initialized by now.
     if (!finalized) {
       finalized = true;
     }
     RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
   }
 }
 
@@ -171,28 +173,32 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
     // does the map for this thread exist?
     // get the vector for this size
     __custom_vector_t * queue;
-    __custom_map_t::iterator it = free_chunks[tid].find(size);
+    RtsLayer::LockEnv();
+    __custom_map_t::const_iterator it = free_chunks[tid].find(size);
 
     // is this a new size that we haven't freed yet?
     if (it == free_chunks[tid].end()) {
+        RtsLayer::UnLockEnv();
         return NULL;
     } else {
         queue = (*it).second;
     }
     // Does this vector have a chunk for us to use?
     if (queue->empty()) {
+        RtsLayer::UnLockEnv();
         return NULL;
     }
     // there is a chunk! Recycle it!
     void * tmp = queue->back();
     queue->pop_back();
+    RtsLayer::UnLockEnv();
     return tmp;
 }
 #endif
 
 void * Tau_MemMgr_malloc(int tid, size_t size)
 {
-  //printf("Allocating %d\n", size); fflush(stdout);
+  //printf("%d Allocating %d\n", tid, size); fflush(stdout);
   // Always ensure the system is ready for a malloc
   Tau_MemMgr_initIfNecessary();
 
@@ -201,12 +207,15 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
   void * recycled = Tau_MemMgr_recycle(tid, size);
   if (recycled != NULL) { 
     //printf("Recycling block of size %d at address %p\n", size, recycled);
+    memset(recycled, 0, size);
     return recycled; 
   }
 #endif
 
 #ifdef DEBUG_ME
-    return malloc(size);
+    void * ptr = malloc(size);
+    memset(ptr, 0, size);
+    return ptr;
 #endif
 
   // Find (and attempt to create) a suitably sized memory block
@@ -235,19 +244,21 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
   TAU_ASSERT(addr != NULL, "Tau_MemMgr_malloc unexpectedly returning NULL!");
 
   //printf("Using new block of size %d at address %p\n", size, addr);
+  memset(addr, 0, size);
   return addr;
 }
 
 void Tau_MemMgr_free(int tid, void *addr, size_t size)
 {
+    //printf("%d Freeing %p, size %d\n", tid, addr, size); fflush(stdout);
     // If we are shutting down, don't bother recycling - we are going
     // to have to free all this memory anyway, so keeping track of the
     // freed memory just allocates more memory...
-    if (finalized) return;
+    if (finalized || size == 0) return;
 #ifdef USE_RECYCLER
-    //printf("Freeing %p, size %d\n", addr, size); fflush(stdout);
+    RtsLayer::LockEnv();
     // get the vector for this size
-    __custom_map_t::iterator it = free_chunks[tid].find(size);
+    __custom_map_t::const_iterator it = free_chunks[tid].find(size);
     __custom_vector_t * queue;
 
     // is this a new size that we haven't freed yet?
@@ -263,8 +274,21 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
     }
     // Add this address to the end of the vector
     queue->push_back(addr);
+    RtsLayer::UnLockEnv();
 #endif
     return;
 }
 
+#else /* TAU_WINDOWS */
+#include <stdlib.h>
+extern "C" void Tau_MemMgr_initIfNecessary(void) {
+}
+extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
+}
+extern "C" void * Tau_MemMgr_malloc(int tid, size_t size) {
+  return malloc(size);
+}
+extern "C" void Tau_MemMgr_free(int tid, void *addr, size_t size) {
+  free(addr);
+}
 #endif

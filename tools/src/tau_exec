@@ -8,10 +8,18 @@ eval `tau-config`
 scriptname=`basename $0`
 if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
+  spark_wrapper=false
   default_tags="python,MPI"
 else
   python_wrapper=false
+  spark_wrapper=false
   default_tags="MPI"
+fi
+
+if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
+  on_craycnl=true
+else 
+  on_craycnl=false
 fi
 
 echoIfVerbose () {
@@ -44,9 +52,10 @@ usage()
   echo "        -armci        Track ARMCI events via PARMCI"
   echo "        -shmem        Track SHMEM events"
   echo "        -ptts         Run with ParaTools ThreadSpotter"
-  echo "        -aprun-num=<N>  Number of ranks used by aprun"    
-  echo "        -ts-sample-flags=<flags> Flags to pass to PT TS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
-  echo "        -ts-report-flags=<flags> Flags to pass to PT TS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
+  echo "        -ptts-post    Skip application sampling and post-process existing PTTS sample files"
+  echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
+  echo "        -ptts-sample-flags=<flags> Flags to pass to PTTS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+  echo "        -ptts-report-flags=<flags> Flags to pass to PTTS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
   echo "        -ebs          Enable event-based sampling"
   echo "        -ebs_period=<count> Sampling period (default 1000)"
   echo "        -ebs_source=<counter> Counter (default itimer)"
@@ -107,6 +116,7 @@ set_node()
     "MP_CHILD"
     "MP_RANK"
     "MPIRUN_RANK"
+    "MPT_MPI_RANK"
     "ALPS_APP_PE")
     for i in ${rank_env_vars[@]}; do
       eval node=\$$i
@@ -123,12 +133,12 @@ set_node()
 set_nodecount()
 {
   if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-    if tau-config | grep -q 'TAUARCH=craycnl' 2>/dev/null ; then
-      if [ -z "$aprun_N" ]; then
-        echo "ERROR: Using aprun we need -aprun-num=<arg to -n>"
+    if $on_craycnl ; then
+      if [ -z "$ptts_N" ]; then
+        echo "ERROR: Please use -ptts-num=MPI_RANKS to indicate number of MPI ranks."
       else
-        nodecount="$aprun_N"
-      fi	
+        nodecount="$ptts_N"
+      fi
     else	
       for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS; do
         eval nodecount=\$$i
@@ -136,6 +146,9 @@ set_nodecount()
           break
         fi
       done
+      if [ -z "$nodecount" ] && [ ! -z "$ptts_N" ] ; then
+        nodecount="$ptts_N"
+      fi
     fi
   elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
     echo "ERROR: ptts support for SHMEM not implemented yet"
@@ -163,7 +176,6 @@ write_ptts_index()
 
 compress_ptts_report()
 {
-  [ "$node" -eq 0 ] && return
   shared=("bl.gif"
   "br.gif"
   "ch.png"
@@ -218,11 +230,29 @@ compress_ptts_report()
   cd "$OLDPWD"
 }
 
+mpi_barrier()
+{
+  # A stupid, brute force barrier that uses the file system to syncrhonize all MPI ranks
+  # before post-processing PTTS sample files.
+  touch "$pttsprefix/$node"
+  i=0
+  while [ $i -lt $nodecount ] ; do
+    sync
+    if [ -f "$pttsprefix/$i" ] ; then
+      ((i++))
+    else
+      sleep 10
+    fi
+  done
+}
+
 if [ $# = 0 ] ; then
   usage
 fi
 
-
+# Unfortunately LD_PRELOAD items can be seperated by spaces or colons.
+# Change spaces to colons so we can reuse $LD_PRELOAD below.
+LD_PRELOAD=`echo "$LD_PRELOAD" | tr [:space:] ':' | tr -s ':'`
 
 dryrun=""
 processT=false
@@ -259,10 +289,10 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
-aprun_N=""
-ts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
-ts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
-on_craycnl=false
+ptts_post=false
+ptts_N=""
+ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
+ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -355,17 +385,22 @@ for arg in "$@" ; do
         use_ptts=true
         shift
         ;;
-      -aprun-num=*)
-        myarg=`echo $arg | sed 's/-aprun-num=//'`
-        aprun_N="$myarg"
+      -ptts-post)
+        use_ptts=true
+        ptts_post=true
         shift
         ;;
-      -ts-sample-flags=*)
-        ts_sample_flags="${arg/#-ts-sample-flags=/}" # bash parameter expansion, bash 3 and up
+      -ptts-num=*)
+        myarg=`echo $arg | sed 's/-ptts-num=//'`
+        ptts_N="$myarg"
         shift
         ;;
-      -ts-report-flags=*)
-        ts_report_flags="${arg/#-ts-report-flags=/}" # Also propper quoting must be used when multiple passed
+      -ptts-sample-flags=*)
+        ptts_sample_flags="${arg/#-ptts-sample-flags=/}" # bash parameter expansion, bash 3 and up
+        shift
+        ;;
+      -ptts-report-flags=*)
+        ptts_report_flags="${arg/#-ptts-report-flags=/}" # Also propper quoting must be used when multiple passed
         shift
         ;;
       -ebs)
@@ -419,6 +454,27 @@ for arg in "$@" ; do
         binding_specified="shared-$myarg"
         shift
         ;;
+      -spark-python)
+        spark_wrapper=true
+        shift
+        ;;
+      -c)
+        if [ $python_wrapper = "true" ] ; then
+          break
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
+        ;;
+      -m)
+        if [ $python_wrapper = "true" ] ; then
+          shift
+          break
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
+        ;;
       --)
         shift
         break
@@ -457,7 +513,7 @@ if [ "x$binding_specified" = "x" ] ; then
     # Add MPI by default
     if ! echo "$binding_options" | grep -q "serial" >/dev/null 2>&1 ; then
       # add mpi if shmem is not specified
-      if echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
+      if ! echo "$binding_options" | grep -q "shmem" >/dev/null 2>&1 ; then
         binding_options="$binding_options mpi"
       fi
     fi
@@ -746,6 +802,10 @@ fi
 
 
 if [ $verbose = "true" ] ; then
+  DY=""
+  if [ $apple = 1 ]; then
+    DY="DY"
+  fi
   echo "Matching bindings:"
   tau-config --list-matching $binding_options
   echo ""
@@ -754,18 +814,15 @@ if [ $verbose = "true" ] ; then
   echo ""
   echo "Configuration:"
   echo ""
-  echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
-  echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
-  echo "Setting LD_AUDIT to $TAUEX_LD_AUDITOR"
+  echo "Setting ${DY}LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
+  echo "Setting ${DY}LD_PRELOAD to $TAUEX_LD_PRELOAD"
+  echo "Setting ${DY}LD_AUDIT to $TAUEX_LD_AUDITOR"
   echo "Setting PYTHONPATH to $PYTHONPATH"
   echo ""
 fi
 
 # Prep ThreadSpotter before LD_PRELOAD get set
 if $use_ptts ; then
-  if [ -n "$dryrun" ] ; then
-    dryrun="$dryrun PTTS($node): "
-  fi
   if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then
     echo "ERROR: ParaTools ThreadSpotter not found on PATH"
     exit 1
@@ -833,20 +890,28 @@ else
       echo "set env LD_BIND_NOW=1" >> .gdb_commands 
     fi
     if [ $apple = 1 ]; then
-      echo "set env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
-      echo "set env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
-      echo "set env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
+      echo "_regexp-env DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands 
+      echo "_regexp-env DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD" >> .gdb_commands    
+      echo "_regexp-env DYLD_LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands    
+      echo "_regexp-env DYLD_FORCE_FLAT_NAMESPACE=1" >> .gdb_commands  
+      if [ $# -gt 1 ] ; then
+        echo "settings set target.run-args ${*:2}" >> .gdb_commands
+      fi
     else
       echo "set env LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH" >> .gdb_commands  
       echo "set env LD_AUDIT=$TAUEX_LD_AUDITOR" >> .gdb_commands  
       echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
+      if [ $memory_debug = "true" ] ; then
+        echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
+        echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
+      fi
+      echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
     fi
-    if [ $memory_debug = "true" ] ; then
-      echo "set env TAU_TRACK_MEMORY_LEAKS=1" >> .gdb_commands 
-      echo "set env TAU_MEMDBG_PROTECT_ABOVE=1">> .gdb_commands 
+    if [ $apple = 1 ]; then
+        lldb -s .gdb_commands "$1"
+    else
+        gdb -x .gdb_commands "$1"
     fi
-    echo "set arg ${*:2}" >> .gdb_commands
-    gdb -x .gdb_commands "$1"
     rm -f ./.gdb_commands
     exit 0;
   fi
@@ -871,8 +936,11 @@ else
     $dryrun export TAU_MEMDBG_PROTECT_ABOVE=1
   fi
 
-  if $python_wrapper ; then
-    $dryrun python -m tau_python_wrapper $@
+  if $spark_wrapper ; then
+    $dryrun export PYTHONPATH=$PYTHONPATH
+    $dryrun python -m tau_pyspark_wrapper "$@"
+  elif $python_wrapper ; then
+    $dryrun python -m tau_python_wrapper "$@"
     retval=$?
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile
@@ -880,17 +948,16 @@ else
       echo "ERROR: dryrun not implemented for ptts"
       exit 1
     fi
-    if [[ -z "${ALPS_APP_PE}" ]]; then
-      samplefile="$pttsprefix/sample.${node}.smp"
-    else
-      samplefile="$pttsprefix/sample%U.smp"
-    fi
+    # Can't use $node because the "-g" flag to sample_ts causes some ranks to write
+    # sample files on behalf of others.  "%U" uses the filesystem to get a (hopefully) unique number.
+    samplefile="$pttsprefix/sample%U.smp"
     reportfile="$pttsprefix/report.${node}.tsr"
     reportlog="$pttsprefix/report_ts.${node}.log"
     # view-static_ts paths should be relative to $pttsprefix
     # since view-static_ts must be run with PWD=$pttsprefix
     viewdir="node_${node}"
     viewlog="view-static_ts.${node}.log"
+
     # Restore environment and start sampling the child process
     if [ $apple = 1 ]; then
       export DYLD_LIBRARY_PATH=$ORIG_LIBRARY_PATH
@@ -901,68 +968,101 @@ else
       export LD_AUDIT=$ORIG_AUDIT_AUDIT
       export LD_PRELOAD=$ORIG_LD_PRELOAD
     fi
-    rm -rf "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewdir" "$pttsprefix/$viewlog" "$pttsprefix/$node"
-    sample_ts $ts_sample_flags -o "$samplefile" -r $@
-    if [[ -z "${ALPS_APP_PE}" ]]; then
-      err=$? ; [ $err -eq 0 ] || exit $err
-      retval=$err
-      # Get the return code of the child process as the tau_exec return code
-      # Post-process samples
-      echo "PTTS($node): Postprocessing samples..."
-      report_ts $ts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
-      err=$? ; [ $err -eq 0 ] || exit $err
-      # Generate report. view-static must be run in $pttsprefix
-      cd "$pttsprefix"
-      view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
-      err=$? ; [ $err -eq 0 ] || exit $err
-      cd "$OLDPWD"
-      # Clean up and package the report
-      rm -f "$samplefile" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html"
-      compress_ptts_report
+    rm -f "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/$node"
+
+    if ! $ptts_post ; then
+      rm -rf "$pttsprefix/sample*.smp" "$reportfile" "$pttsprefix/$viewdir"
       if [ "$node" -eq 0 ] ; then
-        write_ptts_index
+        echo "PTTS($node): Sampling \"$@\""
+        samplingstarttime=`date +%s`
       fi
-    else
+      sample_ts $ptts_sample_flags -o "$samplefile" -r $@
+      retval=$?
       if [ "$node" -eq 0 ] ; then
-        # Get the return code of the child process as the tau_exec return code
-        err=$? ; [ $err -eq 0 ] || exit $err
-        retval=$err
-        touch "$pttsprefix/0"
-	while [ ! -f "$pttsprefix/1" ] ; do
-          sleep 1
-        done
+        samplingendtime=`date +%s`
+        echo "PTTS($node): sample_ts time: $((samplingendtime-samplingstarttime)) seconds"
+      fi
+    fi 
+
+    # Write the index first.  Even if some nodes fail later the index will help
+    # navigate the rest of the report.
+
+    # All sample files must be written before generating a report from any sample file.
+    # Barrier before checking for sample files since sample.$node.smp may have been
+    # written by another MPI rank. After the barrier each rank can "own" sample.$node.smp
+    mpi_barrier
+    samplefile="$pttsprefix/sample.${node}.smp"
+
+    # Shared filesystems must be in sync before proceeding
+    echo "PTTS($node): Synchronizing filesystems..."
+    sleep 5 ; sync
+    sleep 5 ; sync
+    sleep 5 ; sync
+
+    # sample_ts may return nonzero without an error so only abort if sample_ts didn't write *.smp.
+    # Check after the barrier so we can post-process even if some ranks fail
+    if [ ! -f "$samplefile" ] ; then
+      echo "PTTS($node): Sample file \"$samplefile\" does not exist. sample_ts returned $retval."
+      if [ $retval -eq 0 ] ; then
+        exit 255
       else
-        neighbor=$((($node+1)%$nodecount))
-	while [ ! -f "$pttsprefix/$neighbor" ] ; do
-          sleep 1
-	done
-	touch "$pttsprefix/$node"
-        retval=0
+        exit $retval
       fi
-      # Post-process samples
+    fi 
+
+    # Post-process samples
+    if [ "$node" -eq 0 ] ; then
       echo "PTTS($node): Postprocessing samples..."
-      report_ts $ts_report_flags -i "$pttsprefix/sample.${node}.smp" -o "$reportfile" >"$reportlog" 2>&1
-      err=$? ; [ $err -eq 0 ] || echo "PTTS($node): report returned non-zero error code $err."
-      if [ ! -f "$reportfile" ]; then
-        echo "PTTS($node): Report file was not produced."
-        exit $err
-      fi
-      # Generate report. view-static must be run in $pttsprefix
-      cd "$pttsprefix"
-      view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
-      err=$? ; [ $err -eq 0 ] || echo "PTTS($node): view-static returned non-zero error code $err."
-      cd "$OLDPWD"
-      if [ ! -d "$pttsprefix/$viewdir" ]; then
-        echo "PTTS($node): view-static failed."
-        exit $err
-      fi
-      # Clean up and package the report
-      rm -f "$pttsprefix/sample.${node}.smp" "$reportfile" "$reportlog" "$pttsprefix/$viewlog" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
-      compress_ptts_report
-      if [ "$node" -eq 0 ] ; then
-        write_ptts_index
-      fi
+      reportstarttime=`date +%s`
     fi
+    report_ts $ptts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
+    retval=$?
+    if [ "$node" -eq 0 ] ; then
+      reportendtime=`date +%s`
+      echo "PTTS($node): report_ts time: $((reportendtime-reportstarttime)) seconds"
+    fi
+    # Abort if sample_ts returned nonzero or didn't write the sample file
+    if [ $retval -eq 0 ] ; then
+      if [ ! -f "$reportfile" ] ; then
+        echo "PTTS($node): report_ts returned 0 but report file \"$reportfile\" does not exist."
+        exit 255
+      fi 
+    else
+      echo "PTTS($node): report_ts returned error code $retval."
+      exit $retval
+    fi
+
+    # Generate report. view-static_ts must be run in $pttsprefix
+    cd "$pttsprefix"
+    if [ "$node" -eq 0 ] ; then
+      staticstarttime=`date +%s`
+    fi
+    view-static_ts  -i "`basename $reportfile`" -o "$viewdir" >$viewlog 2>&1
+    retval=$?
+    if [ "$node" -eq 0 ] ; then
+      staticendtime=`date +%s`
+      echo "PTTS($node): view-static_ts time: $((staticendtime-staticstarttime)) seconds"
+    fi
+    # Abort if view-static_ts returned nonzero or didn't write HTML files
+    if [ $retval -eq 0 ] ; then
+      if [ ! -f "$viewdir/front.html" ] ; then
+        echo "PTTS($node): view-static_ts returned 0 but report file \"$viewdir/front.html\" does not exist."
+        exit 255
+      fi 
+    else
+      echo "PTTS($node): view-static_ts returned error code $retval."
+      exit $retval
+    fi
+    cd "$OLDPWD"
+
+    # Clean up
+    if [ "$node" -eq 0 ] ; then
+      write_ptts_index
+    else
+      compress_ptts_report
+    fi
+    rm -f "$reportfile" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
+
   else
     $dryrun $@
     retval=$?

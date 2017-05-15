@@ -59,6 +59,7 @@
  ****************************************************************************/
 
 #ifdef __APPLE__
+#include <dlfcn.h>
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #endif /* __APPLE__ */
 
@@ -392,7 +393,9 @@ unsigned long get_pc(void *p)
 /* APPLE SUPPORT */
 
 #elif __APPLE__
+/*
   issueUnavailableWarning("Warning, TAU Sampling works on Apple, but symbol lookup using BFD might not.\n");
+  */
   ucontext_t *uct = (ucontext_t *)p;
   //printf("%p\n", uct->uc_mcontext->__ss.__rip);
   //Careful here, we need to support ppc macs as well.
@@ -734,11 +737,25 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     node = callSiteCache[addr];
     if (!node) {
       node = new CallSiteCacheNode;
+#if defined(__APPLE__)
+      Dl_info info;
+      int rc = dladdr((const void *)addr, &info);
+      if (rc == 0) {
+        node->resolved = false;
+      } else {
+        node->resolved = true;
+        node->info.probeAddr = addr;
+        node->info.filename = strdup(info.dli_fname);
+        node->info.funcname = strdup(info.dli_sname);
+        node->info.lineno = 0; // Apple doesn't give us line numbers.
+      }
+#else
       if (TauEnv_get_bfd_lookup()) {
         node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
       } else {
         node->resolved = false;
       }
+#endif
       callSiteCache[addr] = node;
     }
     RtsLayer::UnLockDB();

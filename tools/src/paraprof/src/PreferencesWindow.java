@@ -68,9 +68,9 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
     private int fontStyle = Font.PLAIN;
     private int fontSize = 12;
     private Font font;
-
     private JComboBox unitsBox;
     private JCheckBox autoLabelsBox = new JCheckBox("Auto label node/context/threads");
+    private JCheckBox appNameLabelsBox = new JCheckBox("Include application name in node/context/thread");
     private JCheckBox showValuesAsPercentBox = new JCheckBox("Show Values as Percent");
     private JCheckBox showPathTitleInReverseBox = new JCheckBox("Show Path Title in Reverse");
     private JCheckBox reverseCallPathsBox = new JCheckBox("Reverse Call Paths");
@@ -95,7 +95,9 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         reverseCallPathsBox.setToolTipText("<html>If this option is enabled, call path names will be shown in reverse<br>(e.g. \"C &lt;= B &lt;= A\" vs. \"A =&gt; B =&gt; C\")");
         generateIntermediateCallPathDataBox.setToolTipText("<html>If this option is enabled, then the reverse calltree will be available.<br>However, it requires additional memory and should be disabled if the JVM<br>runs out of memory on large callpath datasets.</html>");
         autoLabelsBox.setToolTipText("<html>If this option is enabled, execution thread labels \"n,c,t 0,0,0\" will be shortened based on the execution type (MPI, threaded, hybrid)</html>");
+        appNameLabelsBox.setToolTipText("<html>If this option is enabled, execution thread labels will include the thread's TAU_APPLICATION_NAME value if it is present</html>");
 
+        
         // Set preferences based on saved values.
         fontName = preferences.getFontName();
         fontStyle = preferences.getFontStyle();
@@ -105,6 +107,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         showPathTitleInReverseBox.setSelected(preferences.getShowPathTitleInReverse());
         reverseCallPathsBox.setSelected(preferences.getReversedCallPaths());
         autoLabelsBox.setSelected(preferences.getAutoLabels());
+        appNameLabelsBox.setSelected(preferences.getAppNameLabels()!=-1);
         meanIncludeNullBox.setSelected(!preferences.getComputeMeanWithoutNulls());
         generateIntermediateCallPathDataBox.setSelected(preferences.getGenerateIntermediateCallPathData());
         showSourceLocationsBox.setSelected(preferences.getShowSourceLocation());
@@ -226,6 +229,8 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         Utility.addCompItem(settingsPanel, generateIntermediateCallPathDataBox, gbc, 0, 5, 2, 1);
         Utility.addCompItem(settingsPanel, showSourceLocationsBox, gbc, 0, 6, 2, 1);
         Utility.addCompItem(settingsPanel, autoLabelsBox, gbc, 0, 7, 2, 1);
+        Utility.addCompItem(settingsPanel, appNameLabelsBox, gbc, 0, 8, 2, 1);
+        
 
         gbc.fill = GridBagConstraints.BOTH;
 
@@ -376,6 +381,12 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         ParaProf.preferences.setShowPathTitleInReverse(showPathTitleInReverseBox.isSelected());
         ParaProf.preferences.setReversedCallPaths(reverseCallPathsBox.isSelected());
         ParaProf.preferences.setAutoLabels(autoLabelsBox.isSelected());
+       
+        int appNameLabels=-1;
+        if(appNameLabelsBox.isSelected()){
+        	appNameLabels=1;
+        }
+        ParaProf.preferences.setAppNameLabels(appNameLabels);
         ParaProf.preferences.setComputeMeanWithoutNulls(!meanIncludeNullBox.isSelected());
         ParaProf.preferences.setGenerateIntermediateCallPathData(generateIntermediateCallPathDataBox.isSelected());
         ParaProf.preferences.setShowSourceLocation(showSourceLocationsBox.isSelected());
@@ -534,6 +545,7 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
                     reverseCallPathsBox.setSelected(false);
                     meanIncludeNullBox.setSelected(true);
                     autoLabelsBox.setSelected(true);
+                    appNameLabelsBox.setSelected(true);
                     generateIntermediateCallPathDataBox.setSelected(false);
                     showSourceLocationsBox.setSelected(true);
                     setControls();
@@ -554,6 +566,10 @@ public class PreferencesWindow extends JFrame implements ActionListener, Observe
         }
 
         if (autoLabelsBox.isSelected() != ParaProf.preferences.getAutoLabels()) {
+            //needDataEvent = true;
+        }
+        
+        if (appNameLabelsBox.isSelected() != (ParaProf.preferences.getAppNameLabels()==1)) {
             //needDataEvent = true;
         }
 

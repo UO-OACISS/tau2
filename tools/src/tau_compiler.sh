@@ -71,6 +71,7 @@ declare -i optShared=$FALSE
 declare -i optCompInst=$FALSE
 declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
+declare -i useNVCC=$FALSE
 declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
@@ -384,6 +385,12 @@ for arg in "$@" ; do
 
         	   -optTrackPthread)
         		trackPthread=$TRUE
+        		echoIfDebug "NOTE: turning TrackPthread on"
+        		# use the wrapper link_options.tau during linking
+        		;;
+
+        	   -optNoTrackPthread)
+        		trackPthread=$FALSE
         		echoIfDebug "NOTE: turning TrackPthread on"
         		# use the wrapper link_options.tau during linking
         		;;
@@ -892,6 +899,21 @@ for arg in "$@" ; do
         	    pdtParserType=cxxparse
                     groupType=$group_C
         	fi
+        	;;
+
+            *.cu) 
+		CMD="nvcc -Xcompiler -finstrument-functions"
+		useNVCC=$TRUE;
+        	fileName=$arg
+        	arrFileName[$numFiles]=$arg
+        	arrFileNameDirectory[$numFiles]=`dirname $arg`
+        	numFiles=numFiles+1
+                groupType=$group_C
+
+        	linkOnly=$TRUE
+        	echoIfDebug "NOTE: turning linkOnly on"
+        	disablePdtStep=$TRUE
+        	disableCompInst=$TRUE
         	;;
 
             *.c|*.s)
@@ -1452,6 +1474,12 @@ if [ $upc == "berkeley" ]; then
     echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
+if [ $useNVCC == $TRUE ]; then
+    # Make any number of "-Wl," into exactly -Xlinker "-Wl,"
+    optLinking=`echo $optLinking | sed -e 's@-Wl,@-Xlinker -Wl,@g'`
+    echoIfDebug "optLinking modified to accomodate -Xlinker -Wl for nvcc optLinking=$optLinking"
+fi
+
 if [ $optMICOffload == $TRUE ]; then
         #optMICLinking=`echo $optLinking | sed -e 's@x86_64/lib@mic_linux/lib@g'`
         #if [ $optMICLinking == ""]; then
@@ -1604,6 +1632,10 @@ if [ $numFiles == 0 ]; then
 		optLinking="$optLinking `cat $link_options_file` $optLinking"
 	else
                 optLinking="$optLinking @$link_options_file $optLinking"
+                if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
+                  echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                  optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
+                fi
 	fi
     fi
 
@@ -2071,10 +2103,21 @@ else
           	    useCompInst=`$selectfile $tauSelectFile $tempTauFileName`
           	fi
           	if [ "$useCompInst" = yes ]; then
-          	    extraopt=$optCompInstOption
+                     if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
+                       echoIfDebug "Has GNU CompInst option"
+                       optExcludeFuncsList=`sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g' -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' -e 's/,/ /g' | sed -e 's/"//g' | sed -e 's/ /,/g'`
+                       if [ "x$optExcludeFuncsList" != "x" ]; then 
+                         optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
+                         optCompInstOption="$optExcludeFuncs $optCompInstOption"
+                         echoIfDebug "$optCompInstOption=$optCompInstOption"
+                       fi
+                     fi
+          	     extraopt=$optCompInstOption
                      if [ $groupType == $group_f_F ]; then
-          	     extraopt=$optCompInstFortranOption
-          	     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+# If we need to tweak the Fortran options, we should do it here 
+# For e.g., if Nagware needs a -Wc,<opt>, or if we want to remove file-exclude. 
+          	       extraopt="$optExcludeFuncs $optCompInstFortranOption"
+          	       echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
                      fi
           	fi
               fi
@@ -2305,6 +2348,10 @@ else
 		      optLinking="`cat $link_options_file` $optLinking `cat $link_options_file`"
               else
 		      optLinking="@$link_options_file $optLinking @$link_options_file"
+                if [ $link_options_file == "$optWrappersDir/pthread_wrapper/link_options.tau" ] ; then
+                  echoIfDebug "=>USING PTHREAD_WRAPPER!!! "
+                  optLinking=`echo $optLinking | sed -e 's/-lgcc_s.1//g' | sed -e 's/-lgcc_s//g'`
+                fi
 	      fi
           fi
           newCmd="$newCmd $optLinking -o $passedOutputFile"

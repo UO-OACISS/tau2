@@ -1,4 +1,5 @@
 #ifdef __APPLE__
+#include <dlfcn.h>
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #endif /* __APPLE__ */
 
@@ -6,6 +7,7 @@
 #include <ctype.h>
 #include <map>
 #include <vector>
+#include <cxxabi.h>
 
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
@@ -224,7 +226,22 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 
   // Use BFD to look up the callsite info
   TauBfdInfo resolvedInfo;
+#if defined(__APPLE__)
+  bool resolved;
+      Dl_info info;
+      int rc = dladdr((const void *)addr, &info);
+      if (rc == 0) {
+        resolved = false;
+      } else {
+        resolved = true;
+        resolvedInfo.probeAddr = addr;
+        resolvedInfo.filename = strdup(info.dli_fname);
+        resolvedInfo.funcname = strdup(info.dli_sname);
+        resolvedInfo.lineno = 0; // Apple doesn't give us line numbers.
+      }
+#else
   bool resolved = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, resolvedInfo);
+#endif
 
   // Prepare and return the callsite string
   char * resolvedBuffer = NULL;
@@ -233,8 +250,14 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
     // this should be enough...
     length = strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 100;
     resolvedBuffer = (char*)malloc(length * sizeof(char));
-    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
-        resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    int status;
+    char *demangled_funcname = abi::__cxa_demangle(resolvedInfo.funcname, 0, 0, &status);
+    if (status == 0)
+      sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+          demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    else
+      sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+          resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
   } else {
     // this should be enough...
     length = strlen(mapName) + 32;
@@ -484,9 +507,14 @@ bool determineCallSiteViaString(unsigned long *addresses)
           // This is not an MPI chain. We assume it is a function event. Skip one level.
           //   The callsite into a function probe is not the same as the callsite into
           //   the function itself.
+          hasSHMEM = hasSHMEM || nameInSHMEM(name);
           free(name);
           // No idea why this works, or why the magical "2" is required below.
+#ifdef __PGI
+          int offset = hasSHMEM ? 1 : 6;
+#else /* __PGI */
           int offset = hasSHMEM ? 1 : 2;
+#endif /* __PGI */
           if (i + offset < length) {
             callsite = addresses[i + offset];
             name = Tau_callsite_resolveCallSite(addresses[i + offset]);
