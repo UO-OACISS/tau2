@@ -17,6 +17,7 @@
 
 #include <TauUtil.h>
 #include <TauPlugin.h>
+#include <TauEnv.h>
 #include <TauPluginInternals.h>
 #include <stdarg.h>
 #include <string.h>
@@ -24,7 +25,6 @@
 #include <dlfcn.h>
 
 #define TAU_NAME_LENGTH 1024
-#define TAU_VERBOSE printf
 
 /*********************************************************************
  * Abort execution with a message
