@@ -17,9 +17,9 @@ CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU
 
 LDFLAGS = $(TAU_MPI_LIB)
 
-OBJS = libtau_plugin_example_disable_instrumentation_runtime.so tau_selective.o tau_instrument.o tau_instrumentor.o tau_plugin_example_disable_instrumentation_runtime.o
+OBJS = libtau_plugin_example_disable_instrumentation_runtime.so libtau_plugin_example_mpit_recommend_sharp_usage.so tau_selective.o tau_instrument.o tau_instrumentor.o tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o
 
-SHAREDLIBS = libtau_plugin_example_disable_instrumentation_runtime.so
+SHAREDLIBS = libtau_plugin_example_disable_instrumentation_runtime.so libtau_plugin_example_mpit_recommend_sharp_usage.so
 
 all: install
 	@echo
@@ -43,5 +43,10 @@ tau_instrumentor.o: $(TAUROOT)/utils/tau_instrumentor.cpp $(PDTDIR)/$(PDTARCHDIR
 tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable_instrumentation_runtime.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_disable_instrumentation_runtime.cpp -o tau_plugin_example_disable_instrumentation_runtime.o
 
+libtau_plugin_example_mpit_recommend_sharp_usage.so: tau_plugin_example_mpit_recommend_sharp_usage.o
+	 $(CXX) $(LDFLAGS) -shared -o libtau_plugin_example_mpit_recommend_sharp_usage.so tau_plugin_example_mpit_recommend_sharp_usage.o
+
+tau_plugin_example_mpit_recommend_sharp_usage.o: Tau_plugin_example_mpit_recommend_sharp_usage.cpp
+	$(CXX) $(CFLAGS) -c Tau_plugin_example_mpit_recommend_sharp_usage.cpp -o tau_plugin_example_mpit_recommend_sharp_usage.o
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)
