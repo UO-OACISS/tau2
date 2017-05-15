@@ -210,19 +210,19 @@ int Tau_initialize_plugin_system() {
 ********************************************************************* */
 int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 {
-  char *pluginpath = NULL;
-  char *listpluginsnames = NULL;
+  char pluginpath[1024];
+  char listpluginsnames[1024];
   char *fullpath = NULL;
   char *token = NULL;
   char *pluginname = NULL;
   char *initFuncName = NULL;
   char *save_ptr;
 
-  pluginpath = getenv(TAU_PLUGIN_PATH);
-  listpluginsnames = getenv(TAU_PLUGINS);
+  strcpy(pluginpath, TauEnv_get_plugin_path());
+  strcpy(listpluginsnames, TauEnv_get_plugins());
 
-  if(pluginpath == NULL|| listpluginsnames == NULL) {
-    printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS_NAMES: %s are empty\n", pluginpath, listpluginsnames); 
+  if((strcmp(pluginpath, "") == 0) || (strcmp(listpluginsnames, "") == 0)) {
+    printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS: %s are empty\n", pluginpath, listpluginsnames); 
     return -1;
   }
 
