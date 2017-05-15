@@ -13,6 +13,7 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
+#include <Profile/TauEnv.h>
 #include <Profile/TauPlugin.h>
 
 //externs
@@ -28,6 +29,8 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
   const char * pch = strchr(((FunctionInfo *)data.function_info_ptr)->GetName(), ')');
   processInstrumentationRequests("select.tau");
   int position = (pch - ((FunctionInfo *)data.function_info_ptr)->GetName()) + 1;
+
+  TAU_VERBOSE("TAU PLUGIN: Gathering list of functions to disable by looking at the selective instrumentation file\n");
 
   /*Check if function is .TAU application. If not, proceed to check if function needs to be instrumented*/
   if(strcmp(((FunctionInfo *)data.function_info_ptr)->GetName(), ".TAU application") != 0) {
@@ -48,9 +51,9 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(PluginManager* plugin_manager) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
-  Tau_util_init_tau_plugin_callbacks(cb);
+  TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->FunctionRegistrationComplete = Tau_plugin_example_check_and_set_disable_group;
-  Tau_util_plugin_register_callbacks(cb);
+  TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
 
   return 0;
 }
