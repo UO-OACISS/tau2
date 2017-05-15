@@ -259,6 +259,8 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cvar_metrics = NULL;
 static const char *env_cvar_values = NULL;
+static const char *env_plugin_path = NULL;
+static const char *env_plugins = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
@@ -667,6 +669,16 @@ const char *TauEnv_get_metrics() {
 extern "C" const char *TauEnv_get_cvar_metrics() {
   if (env_cvar_metrics == NULL) TauEnv_initialize();
   return env_cvar_metrics;
+}
+
+extern "C" const char *TauEnv_get_plugin_path() {
+  if (env_plugin_path == NULL) TauEnv_initialize();
+  return env_plugin_path;
+}
+
+extern "C" const char *TauEnv_get_plugins() {
+  if (env_plugins == NULL) TauEnv_initialize();
+  return env_plugins;
 }
 
 extern "C" const char *TauEnv_get_cvar_values() {
@@ -1715,6 +1727,20 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is not set\n", env_cvar_values);
     } else {
       TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is \"%s\"\n", env_cvar_values);
+    }
+
+    if ((env_plugin_path = getconf("TAU_PLUGIN_PATH")) == NULL) {
+      env_plugin_path = "";   /* default to 'time' */
+      TAU_VERBOSE("TAU: PLUGIN_PATH is not set\n", env_plugin_path);
+    } else {
+      TAU_VERBOSE("TAU: PLUGIN_PATH is \"%s\"\n", env_plugin_path);
+    }
+
+    if ((env_plugins = getconf("TAU_PLUGINS")) == NULL) {
+      env_plugins = "";   /* default to 'time' */
+      TAU_VERBOSE("TAU: PLUGINS is not set\n", env_plugins);
+    } else {
+      TAU_VERBOSE("TAU: PLUGINS is \"%s\"\n", env_plugins);
     }
 
     tmp = getconf("TAU_OPENMP_RUNTIME");

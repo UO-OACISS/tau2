@@ -22,8 +22,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-#define TAU_PLUGIN_PATH "TAU_PLUGIN_PATH"
-#define TAU_PLUGINS "TAU_PLUGINS"
 #define TAU_PLUGIN_INIT_FUNC "Tau_plugin_init_func"
 
 int Tau_initialize_plugin_system();
