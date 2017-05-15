@@ -30,6 +30,8 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
 
+#include <Profile/TauPluginInternals.h>
+
 extern "C" int Tau_track_mpi_t_here(void); 
 //////////////////////////////////////////////////////////////////////
 // Routines
@@ -250,7 +252,12 @@ void TauAlarmHandler(int signum) {
   /* Set alarm for the next interrupt */
 #ifndef TAU_WINDOWS
   alarm(TheTauInterruptInterval());
-#endif   
+#endif
+//#ifdef TAU_PLUGIN
+  Tau_plugin_event_interrupt_trigger_data plugin_data;
+  plugin_data.signum = signum;
+  Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, &plugin_data);
+//endif
 }
 
 //////////////////////////////////////////////////////////////////////

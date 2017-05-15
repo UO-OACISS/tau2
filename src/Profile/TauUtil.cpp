@@ -317,6 +317,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->AtomicEventRegistrationComplete = 0;
   cb->AtomicEventTrigger = 0;
   cb->EndOfExecution = 0;
+  cb->InterruptTrigger = 0;
 }
 
 
@@ -328,6 +329,7 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->AtomicEventTrigger = src->AtomicEventTrigger;
   dest->AtomicEventRegistrationComplete = src->AtomicEventRegistrationComplete;
   dest->EndOfExecution = src->EndOfExecution;
+  dest->InterruptTrigger = src->InterruptTrigger;
 }
 
 
@@ -410,6 +412,24 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data data) {
 
 }
 
+/**************************************************************************************************************************
+ *  Overloaded function that invokes all registered callbacks for interrupt trigger event
+ *******************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.InterruptTrigger != 0) {
+     callback->cb.InterruptTrigger(data);
+   }
+   callback = callback->next;
+  }
+
+
+}
+
 /*****************************************************************************************************************************
  * Wrapper function that calls the actual callback invocation function based on the event type
  ******************************************************************************************************************************/
@@ -433,6 +453,10 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
       Tau_util_invoke_callbacks_(*(Tau_plugin_event_end_of_execution_data*)data);
       break;
     } 
+    case TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_interrupt_trigger_data*)data);
+      break;
+    }
   }
 }
 
