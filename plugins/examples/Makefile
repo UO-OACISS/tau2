@@ -17,7 +17,7 @@ CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU
 
 LDFLAGS = $(TAU_MPI_LIB)
 
-OBJS = libtau_plugin_example_disable_instrumentation_runtime.so libtau_plugin_example_mpit_recommend_sharp_usage.so tau_selective.o tau_instrument.o tau_instrumentor.o tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o
+OBJS = libtau_plugin_example_disable_instrumentation_runtime.so libtau_plugin_example_mpit_recommend_sharp_usage.so tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o
 
 SHAREDLIBS = libtau_plugin_example_disable_instrumentation_runtime.so libtau_plugin_example_mpit_recommend_sharp_usage.so
 
@@ -28,17 +28,8 @@ install: $(SHAREDLIBS)
 	@mkdir -p $(PLUGININSTALLDIR)
 	$(TAU_INSTALL) $^ $(PLUGININSTALLDIR)
 
-libtau_plugin_example_disable_instrumentation_runtime.so: tau_plugin_example_disable_instrumentation_runtime.o tau_selective.o tau_instrument.o tau_instrumentor.o
-	$(CXX) $(LDFLAGS) -shared -o libtau_plugin_example_disable_instrumentation_runtime.so tau_plugin_example_disable_instrumentation_runtime.o tau_selective.o tau_instrument.o tau_instrumentor.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a
-
-tau_selective.o: $(TAUROOT)/utils/tau_selective.cpp
-	 $(PDT_CXX_COMP) $(PDT_CFLAGS) $(CFLAGS) -I$(PDTDIR)/include -c $(TAUROOT)/utils/tau_selective.cpp -o $(shell pwd)/tau_selective.o
-
-tau_instrument.o: $(TAUROOT)/utils/tau_instrument.cpp
-	$(PDT_CXX_COMP) $(PDT_CFLAGS) $(CFLAGS) -I$(PDTDIR)/include -c $(TAUROOT)/utils/tau_instrument.cpp -o $(shell pwd)/tau_instrument.o
-
-tau_instrumentor.o: $(TAUROOT)/utils/tau_instrumentor.cpp $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a
-	$(PDT_CXX_COMP) $(PDT_CFLAGS) $(CFLAGS) -I$(PDTDIR)/include -c $(TAUROOT)/utils/tau_instrumentor.cpp -o $(shell pwd)/tau_instrumentor.o $(PDTOPTS) -lm $(LEXTRAUTIL)
+libtau_plugin_example_disable_instrumentation_runtime.so: tau_plugin_example_disable_instrumentation_runtime.o 
+	$(CXX) $(LDFLAGS) -shared -o libtau_plugin_example_disable_instrumentation_runtime.so tau_plugin_example_disable_instrumentation_runtime.o 
 
 tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable_instrumentation_runtime.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_disable_instrumentation_runtime.cpp -o tau_plugin_example_disable_instrumentation_runtime.o
