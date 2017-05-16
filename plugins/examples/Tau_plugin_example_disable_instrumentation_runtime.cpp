@@ -451,14 +451,13 @@ bool processFileForInstrumentation(const string& file_name)
  * and is so, sets the function group to TAU_DISABLE, effectively disabling function from getting instrumented*/
 int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_registration_data data) {
   
-  const char * pch = strchr(((FunctionInfo *)data.function_info_ptr)->GetName(), ')');
-  processInstrumentationRequests("select.tau");
-  int position = (pch - ((FunctionInfo *)data.function_info_ptr)->GetName()) + 1;
+  const char * pch = strchr(((FunctionInfo *)data.function_info_ptr)->GetName(), '[');
+  int position = (pch - ((FunctionInfo *)data.function_info_ptr)->GetName()) ;
+  if (position < 0) position = 0;
 
   TAU_VERBOSE("TAU PLUGIN: Gathering list of functions to disable by looking at the selective instrumentation file\n");
 
   /*Check if function is .TAU application. If not, proceed to check if function needs to be instrumented*/
-  if(strcmp(((FunctionInfo *)data.function_info_ptr)->GetName(), ".TAU application") != 0) {
     /*If function should not instrumented, set profile group to TAU_DISABLE*/
     if(!instrumentEntity(std::string(((FunctionInfo *)data.function_info_ptr)->GetName(), position))) {
       RtsLayer::LockDB();
@@ -466,7 +465,6 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
       ((FunctionInfo *)data.function_info_ptr)->SetPrimaryGroupName("TAU_DISABLE");
       RtsLayer::UnLockDB();
     }
-  }
 
   return 0;
 }
@@ -476,6 +474,7 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(PluginManager* plugin_manager) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
+  processInstrumentationRequests("select.tau");
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->FunctionRegistrationComplete = Tau_plugin_example_check_and_set_disable_group;
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
