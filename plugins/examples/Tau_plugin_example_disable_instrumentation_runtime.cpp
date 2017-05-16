@@ -452,7 +452,7 @@ bool processFileForInstrumentation(const string& file_name)
 int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_registration_data data) {
   
   const char * pch = strchr(((FunctionInfo *)data.function_info_ptr)->GetName(), '[');
-  int position = (pch - ((FunctionInfo *)data.function_info_ptr)->GetName()) ;
+  int position = (pch - ((FunctionInfo *)data.function_info_ptr)->GetName()) - 3;
   if (position < 0) position = 0;
 
   TAU_VERBOSE("TAU PLUGIN: Gathering list of functions to disable by looking at the selective instrumentation file\n");
@@ -464,6 +464,8 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
       Tau_profile_set_group(data.function_info_ptr, TAU_DISABLE);
       ((FunctionInfo *)data.function_info_ptr)->SetPrimaryGroupName("TAU_DISABLE");
       RtsLayer::UnLockDB();
+    } else {
+      std::cout << "Got this : " << std::string(((FunctionInfo *)data.function_info_ptr)->GetName(), position) << std::endl;
     }
 
   return 0;
