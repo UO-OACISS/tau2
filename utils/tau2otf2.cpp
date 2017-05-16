@@ -43,7 +43,7 @@ uint32_t string_id = 0;
 #define TAU_GLOBAL_STREAM_ID 0
 
 /* Convert each time stamp to 1000 times its value and pass it as uint64_t */
-#define TAU_MULT 1000
+#define TAU_MULT 10000
 
 
 
@@ -397,7 +397,7 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
 
   /* we can write stateid = 0 if we don't need stack integrity checking */
   OTF2_EvtWriter_Leave(evt_writer, attributes, TauGetClockTicksInGHz(time), statetoken);
-  lastt=time;
+  lastt=TauGetClockTicksInGHz(time);
   return 0;
 }
 
@@ -540,8 +540,9 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   maxTauStringId=localmax(maxTauStringId,stateToken);
   status = OTF2_GlobalDefWriter_WriteRegion( glob_def_writer,
                                              stateToken,
-                                             shortnameid,
+
                                              rawnameid,
+											 shortnameid,
                                              STRING_EMPTY,
                                              OTF2_REGION_ROLE_UNKNOWN,
                                              OTF2_PARADIGM_UNKNOWN,
@@ -1147,7 +1148,13 @@ string_id++;
 
       for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
       {
-          sprintf( name_buffer, "Thread %d.%d" , (int)rank, (int)thread );
+    	  if(thread==0){
+    		  sprintf( name_buffer, "Master thread");
+    	  }
+    	  else{
+          sprintf( name_buffer, "Thread %d" ,(int)thread );
+    	  }
+
           status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                      string_id,
                                                      name_buffer );
