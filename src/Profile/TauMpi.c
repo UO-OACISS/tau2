@@ -1625,7 +1625,7 @@ int Tau_MPI_T_initialization(void) {
   if (TauEnv_get_track_mpi_t_pvars()) {
     Tau_mpi_t_initialize();
   }
-  
+ 
   returnVal = Tau_mpi_t_cvar_initialize();
 
   #ifdef TAU_BEACON
