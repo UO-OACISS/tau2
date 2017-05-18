@@ -36,6 +36,7 @@ static MPI_Datatype *tau_mpi_datatype;
 static int *tau_pvar_count;
 static int *tau_cvar_num_vals;
 static int tau_initial_pvar_count = 0;
+static int tau_mpi_t_is_initialized = 0;
 int num_cvars = 0; //For now, we don't support case where number of CVARS changes dynamically at runtime
 
 //////////////////////////////////////////////////////////////////////
@@ -47,6 +48,37 @@ extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
 
 #define dprintf TAU_VERBOSE
+
+/*Helper functions that ensure that we initialize the MPI_T interface only once from TAU
+ * As of the time being, we do not want multiple performance tracking sessions in flight.*/
+int Tau_mpi_t_is_initialized() {
+  return tau_mpi_t_is_initialized;
+}
+
+void Tau_mpi_t_set_initialized() {
+  tau_mpi_t_is_initialized = 1;
+}
+
+/*Returns the count associated with a PVAR specified by an index.
+ * MPI_T doesn't yet support such operations directly, so we have no option but to
+ * store and return this information from within TAU */
+int Tau_mpi_t_get_pvar_count(int pvarindex) {
+  if(!Tau_mpi_t_is_initialized()) Tau_mpi_t_initialize();
+  if(pvarindex > tau_initial_pvar_count || pvarindex < 0) return -1;
+  return tau_pvar_count[pvarindex];
+}
+
+/*Returns a pointer to the global PVAR session*/
+MPI_T_pvar_session * Tau_mpi_t_get_pvar_session() {
+   if(!Tau_mpi_t_is_initialized()) Tau_mpi_t_initialize();
+   return &tau_pvar_session;
+}
+
+/*Returns a pointer to the global PVAR handles*/
+MPI_T_pvar_handle * Tau_mpi_t_get_pvar_handles() {
+  if(!Tau_mpi_t_is_initialized()) Tau_mpi_t_initialize();
+  return tau_pvar_handles;
+}
 
 //////////////////////////////////////////////////////////////////////
 int Tau_mpi_t_initialize(void) {
@@ -65,6 +97,11 @@ int Tau_mpi_t_initialize(void) {
   if (TauEnv_get_track_mpi_t_pvars() == 0) {
     return MPI_SUCCESS; 
   } 
+
+  /*Return without doing anything if MPI_T is already initialized*/
+   if(Tau_mpi_t_is_initialized()) {
+    return MPI_SUCCESS;
+  }
 
   /* Initialize MPI_T */
   return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
@@ -144,6 +181,7 @@ int Tau_mpi_t_initialize(void) {
   Tau_allocate_pvar_event(num_pvars, tau_pvar_count);
 
   tau_initial_pvar_count = num_pvars;
+  Tau_mpi_t_set_initialized();
 
   return return_val;
 }
@@ -871,7 +909,13 @@ int Tau_track_mpi_t_here(void) {
 
   if(TauEnv_get_mpi_t_enable_user_tuning_policy() == 1) {
     mpi_t_enable_user_tuning_policy = 1;
+
   }
+ 
+  /*Double check to ensure that the MPI_T interface is initialized*/
+  return_val = Tau_mpi_t_initialize();
+  if(return_val != MPI_SUCCESS) 
+    return return_val;
 
   /* get number of pvars from MPI_T */
   return_val = MPI_T_pvar_get_num(&num_pvars);
