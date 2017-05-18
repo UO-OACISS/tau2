@@ -25,7 +25,7 @@ int Tau_plugin_test_event_interrupt_trigger(Tau_plugin_event_interrupt_trigger_d
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
-extern "C" int Tau_plugin_init_func(PluginManager* plugin_manager) {
+extern "C" int Tau_plugin_init_func(char **argv, int argc) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->InterruptTrigger = Tau_plugin_test_event_interrupt_trigger;

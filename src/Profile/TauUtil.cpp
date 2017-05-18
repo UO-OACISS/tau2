@@ -205,6 +205,56 @@ int Tau_initialize_plugin_system() {
   return(Tau_util_load_and_register_plugins(Tau_util_get_plugin_manager()));
 }
 
+/*********************************************************************
+ * Internal function that helps parse a token for the plugin name
+ ********************************************************************/
+int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plugin_args, int * plugin_num_args) {
+  int length_of_arg_string = -1;
+  char * save_ptr;
+  char * arg_string;
+  char * arg_token;
+  char *pos_left = NULL;
+  char *pos_right = NULL;
+  
+
+  *plugin_num_args = 0;
+  *plugin_name = (char*)malloc(1024*sizeof(char));
+  pos_left = strchr(token, '(');
+  pos_right = strchr(token, ')');
+
+  if(pos_left == NULL && pos_right == NULL) {
+    strcpy(*plugin_name, token);
+    return 0;
+  } else if (pos_left == NULL || pos_right == NULL) {
+    return -1; //Bad plugin name
+  }
+
+  *plugin_args = (char**)malloc(10*sizeof(char*)); //Maximum of 10 args supported for now
+  arg_string = (char*)malloc(1024*sizeof(char));
+
+  length_of_arg_string = (pos_right - pos_left) - 1;
+
+  strncpy(arg_string, pos_left+1, length_of_arg_string);
+  strncpy(*plugin_name, token, (pos_left-token));
+
+  arg_token = strtok_r(arg_string, ",", &save_ptr);
+
+  int i = 0;
+  /*Grab and pack, and count all the arguments to the plugin*/
+  while(arg_token != NULL) {
+    (*plugin_num_args)++;
+    (*plugin_args)[i] = (char*)malloc(1024*sizeof(char));
+    strcpy((*plugin_args)[i], arg_token);
+    arg_token = strtok_r(NULL, ",", &save_ptr);
+    i++;
+  }
+
+  TAU_VERBOSE("TAU PLUGIN: Arg string and count for token %s are %s and %d\n", token, arg_string, *plugin_num_args);
+
+  return 0;
+}
+
+
 /********************************************************************* 
  * Load a list of plugins at TAU init, given following environment variables:
  *  - TAU_PLUGINS_NAMES
@@ -216,9 +266,11 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   char listpluginsnames[1024];
   char *fullpath = NULL;
   char *token = NULL;
-  char *pluginname = NULL;
+  char *plugin_name = NULL;
   char *initFuncName = NULL;
+  char **plugin_args;
   char *save_ptr;
+  int plugin_num_args;
 
   strcpy(pluginpath, TauEnv_get_plugin_path());
   strcpy(listpluginsnames, TauEnv_get_plugins());
@@ -239,19 +291,23 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
     TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
     strcpy(fullpath, "");
     strcpy(fullpath,pluginpath);
-    strcat(fullpath,token);
+    if (Tau_util_parse_plugin_token(token, &plugin_name, &plugin_args, &plugin_num_args)) {
+      printf("TAU: Plugin name specification does not match form <plugin_name1>(<plugin_arg1>,<plugin_arg2>):<plugin_name2>(<plugin_arg1>,<plugin_arg2>) for: %s\n",token);
+      return -1;
+    }
+
+    strcat(fullpath, plugin_name);
     TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
    
     /*Return a handle to the loaded dynamic object*/
-    void* handle = Tau_util_load_plugin(token, fullpath, plugin_manager);
+    void* handle = Tau_util_load_plugin(plugin_name, fullpath, plugin_manager);
 
     if (handle) {
       /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
-      handle = Tau_util_register_plugin(token, handle, plugin_manager);
-
+      handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager);
+     
       /*Plugin registration failed. Bail*/
       if(!handle) return -1;
-
       TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
 
     } else {
@@ -270,7 +326,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
  * Use dlsym to find a function : TAU_PLUGIN_INIT_FUNC that the plugin MUST implement in order to register itself.
  * If plugin registration succeeds, then the callbacks for that plugin have been added to the plugin manager's callback list
  * ************************************************************************************************************************/
-void* Tau_util_register_plugin(const char *name, void* handle, PluginManager* plugin_manager) {
+void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager* plugin_manager) {
   PluginInitFunc init_func = (PluginInitFunc) dlsym(handle, TAU_PLUGIN_INIT_FUNC);
 
   if(!init_func) {
@@ -279,7 +335,7 @@ void* Tau_util_register_plugin(const char *name, void* handle, PluginManager* pl
     return NULL;
   }
 
-  int return_val = init_func(plugin_manager);
+  int return_val = init_func(args, num_args);
   if(return_val < 0) {
     printf("TAU: Call to init func for plugin %s returned failure error code %d\n", name, return_val);
     dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();
