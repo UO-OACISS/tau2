@@ -1760,14 +1760,14 @@ void TauEnv_initialize()
     }
 
     if ((env_plugin_path = getconf("TAU_PLUGINS_PATH")) == NULL) {
-      env_plugin_path = "";   /* default to 'time' */
+      env_plugin_path = NULL;  
       TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is not set\n", env_plugin_path);
     } else {
       TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is \"%s\"\n", env_plugin_path);
     }
 
     if ((env_plugins = getconf("TAU_PLUGINS")) == NULL) {
-      env_plugins = "";   /* default to 'time' */
+      env_plugins = NULL;   
       TAU_VERBOSE("TAU: TAU_PLUGINS is not set\n", env_plugins);
     } else {
       TAU_VERBOSE("TAU: TAU_PLUGINS is \"%s\"\n", env_plugins);
