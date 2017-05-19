@@ -105,7 +105,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cvar_metrics();
   const char* TAUDECL TauEnv_get_cvar_values();
-  const char* TAUDECL TauEnv_get_plugin_path();
+  const char* TAUDECL TauEnv_get_plugins_path();
   const char* TAUDECL TauEnv_get_plugins();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_device_name();
