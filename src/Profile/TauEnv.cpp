@@ -260,7 +260,7 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cvar_metrics = NULL;
 static const char *env_cvar_values = NULL;
-static const char *env_plugin_path = NULL;
+static const char *env_plugins_path = NULL;
 static const char *env_plugins = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
@@ -684,9 +684,9 @@ extern "C" const char *TauEnv_get_cvar_metrics() {
   return env_cvar_metrics;
 }
 
-extern "C" const char *TauEnv_get_plugin_path() {
-  if (env_plugin_path == NULL) TauEnv_initialize();
-  return env_plugin_path;
+extern "C" const char *TauEnv_get_plugins_path() {
+  if (env_plugins_path == NULL) TauEnv_initialize();
+  return env_plugins_path;
 }
 
 extern "C" const char *TauEnv_get_plugins() {
@@ -1759,11 +1759,11 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is \"%s\"\n", env_cvar_values);
     }
 
-    if ((env_plugin_path = getconf("TAU_PLUGINS_PATH")) == NULL) {
-      env_plugin_path = NULL;  
-      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is not set\n", env_plugin_path);
+    if ((env_plugins_path = getconf("TAU_PLUGINS_PATH")) == NULL) {
+      env_plugins_path = NULL;  
+      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is not set\n", env_plugins_path);
     } else {
-      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is \"%s\"\n", env_plugin_path);
+      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is \"%s\"\n", env_plugins_path);
     }
 
     if ((env_plugins = getconf("TAU_PLUGINS")) == NULL) {
