@@ -1759,18 +1759,18 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is \"%s\"\n", env_cvar_values);
     }
 
-    if ((env_plugin_path = getconf("TAU_PLUGIN_PATH")) == NULL) {
+    if ((env_plugin_path = getconf("TAU_PLUGINS_PATH")) == NULL) {
       env_plugin_path = "";   /* default to 'time' */
-      TAU_VERBOSE("TAU: PLUGIN_PATH is not set\n", env_plugin_path);
+      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is not set\n", env_plugin_path);
     } else {
-      TAU_VERBOSE("TAU: PLUGIN_PATH is \"%s\"\n", env_plugin_path);
+      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is \"%s\"\n", env_plugin_path);
     }
 
     if ((env_plugins = getconf("TAU_PLUGINS")) == NULL) {
       env_plugins = "";   /* default to 'time' */
-      TAU_VERBOSE("TAU: PLUGINS is not set\n", env_plugins);
+      TAU_VERBOSE("TAU: TAU_PLUGINS is not set\n", env_plugins);
     } else {
-      TAU_VERBOSE("TAU: PLUGINS is \"%s\"\n", env_plugins);
+      TAU_VERBOSE("TAU: TAU_PLUGINS is \"%s\"\n", env_plugins);
     }
 
     tmp = getconf("TAU_OPENMP_RUNTIME");
