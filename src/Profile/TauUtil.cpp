@@ -272,12 +272,12 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   char *save_ptr;
   int plugin_num_args;
 
-  if((TauEnv_get_plugin_path() == NULL) || (TauEnv_get_plugins() == NULL)) {
-    printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS: %s are empty\n", TauEnv_get_plugin_path(), TauEnv_get_plugins());
+  if((TauEnv_get_plugins_path() == NULL) || (TauEnv_get_plugins() == NULL)) {
+    printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS: %s are empty\n", TauEnv_get_plugins_path(), TauEnv_get_plugins());
     return -1;
   }
   
-  strcpy(pluginpath, TauEnv_get_plugin_path());
+  strcpy(pluginpath, TauEnv_get_plugins_path());
   strcpy(listpluginsnames, TauEnv_get_plugins());
 
   /*Individual plugin names are separated by a ":"*/
