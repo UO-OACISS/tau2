@@ -1443,11 +1443,11 @@ int TauProfiler_StoreData(int tid)
 
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  //if((strcmp(TauEnv_get_plugin_path(), "") != 0) && (strcmp(TauEnv_get_plugins(), "") != 0)) {
+  if(TauEnv_get_plugin_path() && TauEnv_get_plugins()) {
     Tau_plugin_event_end_of_execution_data plugin_data;
     plugin_data.tid = tid;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
-  //}
+  }
 
   if (TauEnv_get_tracing() && (tid == 0) ) {
     Tau_print_metadata_for_traces(tid);

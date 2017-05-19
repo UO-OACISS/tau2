@@ -508,14 +508,14 @@ extern "C" int Tau_init_initializeTAU()
 #endif
 
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
-//  if((strcmp(TauEnv_get_plugin_path(), "") != 0) && (strcmp(TauEnv_get_plugins(), "") != 0)) {
+  if(TauEnv_get_plugin_path() && TauEnv_get_plugins()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
     if(!Tau_initialize_plugin_system()) {
       TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
     } else {
       printf("TAU INIT: Error initializing the plugin system\n");
     }
-//  }
+  }
 
   // Mark initialization complete so calls below can start timers
   tau_initialized = 1;
