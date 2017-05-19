@@ -12,6 +12,7 @@ a.out
 .cproject
 .gitignore
 .ptp-sync
+.ptp-sync-folder
 .pydevproject
 x86_64
 bgl
