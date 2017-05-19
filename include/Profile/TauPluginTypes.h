@@ -108,7 +108,7 @@ typedef struct PluginManager {
    Tau_plugin_callback_list * callback_list;
 } PluginManager;
 
-typedef int (*PluginInitFunc) (char **argv, int argc);
+typedef int (*PluginInitFunc) (int argc, char **argv);
 
 
 #ifdef __cplusplus

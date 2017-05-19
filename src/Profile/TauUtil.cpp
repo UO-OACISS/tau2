@@ -335,7 +335,7 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
     return NULL;
   }
 
-  int return_val = init_func(args, num_args);
+  int return_val = init_func(num_args, args);
   if(return_val < 0) {
     printf("TAU: Call to init func for plugin %s returned failure error code %d\n", name, return_val);
     dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();

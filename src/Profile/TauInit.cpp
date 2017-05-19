@@ -70,10 +70,9 @@
 
 #endif
 
-//#ifdef TAU_PLUGIN
 #include <Profile/TauPlugin.h>
 #include <Profile/TauPluginInternals.h>
-//#endif
+
 using namespace std;
 
 #ifndef TAU_WINDOWS
