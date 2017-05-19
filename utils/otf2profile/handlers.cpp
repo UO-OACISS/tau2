@@ -3,17 +3,25 @@
 #include <string.h>
 using namespace std;
 
+
+double TAU_UNIT_CORRECT=1;
+
+double tau_unit_correct(double otf_unit){
+	//double TAU_DIVIDE=1000;
+	return otf_unit/TAU_UNIT_CORRECT;
+}
+
 /* implementation of callback routines */
 /***************************************************************************
  * Description: DefThread is called when a new nodeid/threadid is encountered.
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int processToken, const char *threadName )
+int ThreadDef(unsigned int nodeToken, unsigned int threadToken, uint64_t processToken, const char *threadName )
 {
 	Thread &local = *(new Thread());
-	//cout << nodeToken << " Process " << &local << endl;
-	local.nodeToken=processToken;//nodeToken; Are there situations when nodeToken will be correct here?
+	//cout << "Node: " << nodeToken << " Thread: " << threadToken << " Process: " << processToken << " Name: " << threadName << " ThreadObject:" << &local << endl;
+	local.nodeToken=processToken;//nodeToken; TODO: Are there situations when nodeToken will be correct here? Why does converting the process token to an unsigned int provide a vaid node id?
 	local.threadToken=threadToken;
 	Converter::threadnames[processToken] = new string(threadName);//local.threadName=threadName;
 	local.lastState=-1;
@@ -61,6 +69,9 @@ int ThreadDef(unsigned int nodeToken, unsigned int threadToken, unsigned int pro
  ***************************************************************************/
 int StateDef(unsigned int stateToken, const char *stateName, unsigned int stateGroupToken )
 {
+
+	//cout << "StateToken: " << stateToken << ", StateName: " << stateName << ", StateGroupToken: " << stateGroupToken << endl;
+
 	State &local = *(new State());
 	local.calls=0;
 	local.subroutines=0;
@@ -151,6 +162,7 @@ int UserEventDef(unsigned int userEventToken,const char *userEventName , int mon
  ***************************************************************************/
 int ClockPeriodDef(double clkPeriod )
 {
+	TAU_UNIT_CORRECT=clkPeriod/1000000;
 	return 0;
 }
 
@@ -159,12 +171,12 @@ int ClockPeriodDef(double clkPeriod )
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int EndTraceDef(unsigned int processToken)//unsigned int nodeToken, unsigned int threadToken, 
+int EndTraceDef(uint64_t processToken)//unsigned int nodeToken, unsigned int threadToken,
 {
 	//(EOF_Trace[pair<int,int> (nodeToken,threadToken) ]).first = 1; /* flag it as over */
 	(Converter::ThreadMap[processToken])->finished=true;
 	/* yes, it is over */
-	map <unsigned  int,Thread*>::iterator it;//pair<int, int>, pair<int,Thread>, less< pair<int,int> > 
+	map <uint64_t,Thread*>::iterator it;//pair<int, int>, pair<int,Thread>, less< pair<int,int> >
 	Converter::EndOfTrace = 1; /* Lets assume that it is over */
 	for (it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)
 	{/* cycle through all <nid,tid> pairs to see if it really over */
@@ -174,6 +186,7 @@ int EndTraceDef(unsigned int processToken)//unsigned int nodeToken, unsigned int
 			/* If there's any processor that is not over, then the trace is not over */
 		}
 	}
+	//cout << "End Trace On: " << processToken << endl;
 	return 0;
 }
 
@@ -187,6 +200,9 @@ int EventTriggerDef(double time,
 		unsigned int userEventToken,
 		long long userEventValue)//unsigned int nid,unsigned int tid,
 { 
+
+	time = tau_unit_correct(time);
+
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;//Converter::ThreadID[pair<int,int>(nid,tid)];
 	
@@ -278,8 +294,9 @@ int EventTriggerDef(double time,
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned int nid, unsigned int tid, 
+int EnterStateDef(double time, uint64_t pid, unsigned int stateid)//unsigned int nid, unsigned int tid,
 {
+	time = tau_unit_correct(time);
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;
 	Thread &threadin=*(Converter::ThreadMap[pid]);
@@ -309,7 +326,8 @@ int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned
 	}
 	
 	//ThreadMap[curid]=
-	
+	cout.precision(17);
+	//cout << "Entering state: " << stateid << ", on thread: " << pid << ", at time: " << time << endl;
 	StateEnter(time,threadin,thisState);
 	
 	return 0;
@@ -322,8 +340,9 @@ int EnterStateDef(double time, unsigned int pid, unsigned int stateid)//unsigned
  * 		This is a callback routine which must be registered by the 
  * 		trace converter. 
  ***************************************************************************/
-int LeaveStateDef(double time,unsigned int pid)//, unsigned int stateid unsigned int nid, unsigned int tid, 
+int LeaveStateDef(double time,uint64_t pid)//, unsigned int stateid unsigned int nid, unsigned int tid,
 {
+	time = tau_unit_correct(time);
 	if(time>Converter::lastTime)Converter::lastTime=time;
 	//unsigned int curid=pid;//Converter::ThreadID[pair<int,int>(nid,tid)];
 	Thread &threadin=*(Converter::ThreadMap[pid]);
@@ -351,6 +370,8 @@ int LeaveStateDef(double time,unsigned int pid)//, unsigned int stateid unsigned
 	}
 	
 	//ThreadMap[curid]=
+	cout.precision(17);
+	//cout << "Leaving state: " << stateid << ", on thread: " << pid << ", at time: " << time << endl;
 	StateLeave(time,threadin,thisState);
 
 	return 0;
