@@ -100,7 +100,7 @@ int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_interrupt_tri
  * that the plugin is interested in listening to.
  * In addition, this init function stores the index of the PVARs it is interested in for future use inside the tuning routine*/
 
-int Tau_plugin_init_func(char **argv, int argc) {
+int Tau_plugin_init_func(int argc, char **argv) {
 
   int return_val = Tau_mpi_t_initialize();
 
