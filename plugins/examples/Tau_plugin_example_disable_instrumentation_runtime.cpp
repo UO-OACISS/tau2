@@ -453,8 +453,13 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
 
   const char * name = ((FunctionInfo *)data.function_info_ptr)->GetName();  
   const char * pch = strchr(name, '[');
-  int position = ((pch - 3) - name);
-  if (position < 0) position = 0;
+  int position; 
+  if (pch) { 
+    position = (pch -1) - name; 
+  }
+  else {
+    position = strlen(name);
+  }
 
   TAU_VERBOSE("TAU PLUGIN: Gathering list of functions to disable by looking at the selective instrumentation file\n");
 
