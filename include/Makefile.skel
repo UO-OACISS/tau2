@@ -49,6 +49,7 @@ CROSS_PREFIX=#FixMakefile#
 TAU_BUILD_CC=
 TAU_BUILD_CXX=
 TAU_SPECIAL_CC=gcc
+#PIN#TAU_SPECIAL_CC=g++ #ENDIF#
 # LinuxTimers.c is compiled with TAU_SPECIAL_CC
 # For CRAY_TARGET_KNC it is cc in the path from
 # the craype-intel-knc module
@@ -617,6 +618,8 @@ JDKBINDIR = $(JDKDIR)/bin
 #VAMPIRTRACE_5_12_API#PROFILEOPT78 = -DTAU_VAMPIRTRACE_5_12_API #ENDIF#
 
 #TAU_TR1_HASH_MAP#PROFILEOPT79 = -DHAVE_TR1_HASH_MAP #ENDIF#
+#PinCRT does not support TR1_HASH_MAP
+#PIN#PROFILEOPT79 = #ENDIF#
 #DARSHAN#PROFILEOPT80 = -DTAU_DARSHAN #ENDIF#
 #MMIC#PROFILEOPT87 = -DTAU_MIC_LINUX -mmic #ENDIF#
 #CRAY_MIC#PROFILEOPT87 = -DTAU_MIC_LINUX -DTAU_CRAY_MIC #ENDIF#
@@ -1084,6 +1087,7 @@ TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
 
 #TAU_LINKS_RT#TAU_LINKER_OPT16= -lrt#ENDIF#
+#PIN#TAU_LINKER_OPT16= #ENDIF#
 
 ##############################################
 # Various Sampling Support Options
@@ -1151,6 +1155,7 @@ EBS_CLOCK_RES=
 #MPI_T#PROFILEOPT103  = -DTAU_MPI_T   #ENDIF#
 #MPI_T#TAU_MPIT  = TauMpiT.o #ENDIF#
 #BEACON#BEACON_O       	       = TauBeacon.o 	       #ENDIF#
+#PIN#PROFILEOPT104  = -Wall -Wno-unknown-pragmas -D__PIN__=1 -DPIN_CRT=1 -DTARGET_IA32E -DTARGET_LINUX -DHOST_IA32E -fno-exceptions -funwind-tables  -fasynchronous-unwind-tables -fabi-version=2 -fno-rtti -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing -isystem $(PIN_ROOT)/source/include/pin -isystem $(PIN_ROOT)/source/include/pin/gen -isystem $(PIN_ROOT)/extras/stlport/include -isystem $(PIN_ROOT)/extras/libstdc++/include -isystem $(PIN_ROOT)/extras/crt/include -isystem $(PIN_ROOT)/extras/crt/include/arch-x86_64 -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi/asm-x86  -isystem $(PIN_ROOT)/extras/components/include -isystem $(PIN_ROOT)/extras/xed-intel64/include/xed #ENDIF#
 
 
 
@@ -1179,7 +1184,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT89) $(PROFILEOPT90) $(PROFILEOPT91) $(PROFILEOPT92) \
               $(PROFILEOPT93) $(PROFILEOPT94) $(PROFILEOPT95) $(PROFILEOPT96) \
               $(PROFILEOPT97) $(PROFILEOPT98) $(PROFILEOPT99) $(PROFILEOPT100) \
-	      $(PROFILEOPT101) $(PROFILEOPT102) $(PROFILEOPT103) $(TRACEOPT)
+	      $(PROFILEOPT101) $(PROFILEOPT102) $(PROFILEOPT103) \
+              $(PROFILEOPT104) $(TRACEOPT)
 
 
 ##############################################
@@ -1227,6 +1233,7 @@ TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1) $(TAU_INTERNAL_FLAG2)
 #ANDROID#TAU_ANDROID_LINKER_OPTS=-llog #ENDIF#
 #BEACON#TAU_BEACON_LINKER_OPTS=-L$(BEACONDIR)/lib -lbeacon -lpthread -Wl,-rpath,$(BEACONDIR)/lib #ENDIF#
 
+#PIN#TAU_PIN_LINKER_OPTS= -Wl,--hash-style=sysv $(PIN_ROOT)/intel64/runtime/pincrt/crtbeginS.o -Wl,-Bsymbolic -Wl,--version-script=$(PIN_ROOT)/source/include/pin/pintool.ver -fabi-version=2 -L$(PIN_ROOT)/intel64/runtime/pincrt -L$(PIN_ROOT)/intel64/lib -L$(PIN_ROOT)/intel64/lib-ext -L$(PIN_ROOT)/extras/xed-intel64/lib -lpin -lxed $(PIN_ROOT)/intel64/runtime/pincrt/crtendS.o -lpin3dwarf  -ldl-dynamic -nostdlib -lstlport-dynamic -lm-dynamic -lc-dynamic -lunwind-dynamic #ENDIF#
 ##############################################
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
@@ -1238,7 +1245,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
                   $(TAU_LINKER_OPT20) $(TAU_LINKER_OPT21) $(TAU_LINKER_OPT22) \
                   $(TAU_CUDA_LINKER_OPTS) $(TAU_PYTHON_LINKER_OPTS)  \
-                  $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS)
+                  $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS) \
+                  $(TAU_PIN_LINKER_OPTS) 
 
 ##############################################
 

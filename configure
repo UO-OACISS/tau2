@@ -9812,7 +9812,7 @@ apple)
     ;;
 esac
 
-if [ "$enable_export_dynamic" = "yes" ] ; then
+if [ "$enable_export_dynamic" = "yes" -a "$pin" = "no" ] ; then
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 fi
 
