@@ -40,6 +40,8 @@ Version 2.26 changes (from 2.25):
 27. Added support for TAU_METADATA env. var. (export TAU_METADATA="<Var1=Val1:Var2:Val2:Var3=Val3>")
 28. Added support for PGI 17 compilers under Power 8 Linux. 
 29. Added initial support for compiler-based instrumentation for Clang/LLVM under Power 8 Linux. 
+30. Added support for excluding functions in selective instrumentation file with -optCompInst for GNU/Clang. 
+31. Added initial support for Intel PIN in JIT mode for GNU compilers. 
 
 
 Version 2.25 changes (from 2.24):
