@@ -31,6 +31,7 @@ using namespace std;
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauTrace.h>
+#include <ctype.h>
 
 #if (!defined(TAU_WINDOWS))
 /* Needed for fork */
@@ -71,6 +72,9 @@ void esd_exit (elg_ui4 rid);
 #if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
 #include <execinfo.h>
 #endif
+
+#include <Profile/TauPin.h>
+
 
 using namespace tau;
 
