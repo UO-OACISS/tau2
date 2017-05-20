@@ -34,7 +34,7 @@ double Converter::segmentInterval=-1;
 double Converter::lastTime=0;
 int Converter::trigCount=1;
 
-map<unsigned int,Thread*> Converter::ThreadMap;
+map<uint64_t,Thread*> Converter::ThreadMap;
 //map<pair<int,int>,int> Converter::ThreadID;//NID/TID
 map<unsigned int,State*> Converter::allstate;
 vector<MonIncEvent*> Converter::allmoninc;
@@ -345,7 +345,7 @@ void SnapshotThreadPrint(unsigned int curid,unsigned int nodeToken,unsigned int 
 
 void ProcessDefs(){
 	/*For every thread in the trace*/
-	for (map<unsigned int, Thread*>:: iterator it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)
+	for (map<uint64_t, Thread*>:: iterator it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)
 	{
 		//(*it).second->allstate=Converter::allstate;
 		/*Create a new state pointer map using pointers to copies of the global states*/
@@ -690,7 +690,8 @@ void PrintProfiles()
 	//Thread finalizer = ThreadMap[threadToken];
 	//printshot=1;
 	//Converter::ThreadMap.
-	for(map<unsigned int,Thread*>:: iterator it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)//, (map<pair<int,int>,int>:: iterator it = Converter::ThreadID.begin(); it != Converter::ThreadID.end(); it++)
+	//cout << Converter::ThreadMap.size() << " things in the map." << endl;
+	for(map<uint64_t,Thread*>:: iterator it = Converter::ThreadMap.begin(); it != Converter::ThreadMap.end(); it++)//, (map<pair<int,int>,int>:: iterator it = Converter::ThreadID.begin(); it != Converter::ThreadID.end(); it++)
 	{
 		//cout << "Final Pointer: "<< (*it).second << ": " <<  (*it).second->processToken <<endl;
 
@@ -754,13 +755,13 @@ void SnapshotControl(double time, int stateToken, Thread& threadin)
  ***************************************************************************/
 void Usage()
 {
-	cout << "You must specify a valid .trc and .edf file for conversion."<<endl;
-	cout << "These may be followed by any of the arguments:\n "<<endl;
-	cout << "-d <directory>:  Output profile files to the directory "
-		 << "specified rather than the current directory.\n"<< endl;
+	cout << "You must specify a valid .otf2 file for conversion."<<endl;
+	//cout << "These may be followed by any of the arguments:\n "<<endl;
+	//cout << "-d <directory>:  Output profile files to the directory "
+		// << "specified rather than the current directory.\n"<< endl;
 	//cout << "-s <interger n>: Output a profile snapshot of the trace every n "
 		// << "time units.\n" << endl;
-	cout << "e.g. $trace2profile tau.trc tau.edf" << endl; // -s 25000"  << endl;
+	cout << "e.g. $otf2profile traces.otf2" << endl; // -s 25000"  << endl;
 }
 
 /***************************************************************************

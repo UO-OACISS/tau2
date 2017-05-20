@@ -7,6 +7,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include <inttypes.h>
 
 using namespace std;
 /*
@@ -251,7 +252,7 @@ class Thread {
 class Converter{
 public:
 /*Each thread in the trace is held here, mapped to the process id*/
-static map<unsigned int,Thread*> ThreadMap;
+static map<uint64_t,Thread*> ThreadMap;
 /*Each state in the trace is held here, mapped to its event id.  
  * This is copied into each thread once it is initialized*/
 static map<unsigned int,State*> allstate;
