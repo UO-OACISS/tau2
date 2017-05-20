@@ -48,6 +48,8 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <mpi-ext.h>
 #endif /* TAU_FUJITSU && TAU_MPI */
 
+#include <Profile/TauPin.h>
+
 #ifdef TAU_CRAYCNL
 #include <iostream>
 #include <fstream>

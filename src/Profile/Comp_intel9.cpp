@@ -43,6 +43,9 @@
 #  include <omp.h>
 #endif
 
+#include <Profile/TauPin.h>
+
+
 #ifdef __ia64__
 #define COMP_INST_KEY "_2$ITC$0"
 #else

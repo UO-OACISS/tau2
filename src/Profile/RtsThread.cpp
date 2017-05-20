@@ -62,6 +62,9 @@
 using namespace std;
 using namespace tau;
 
+#include <Profile/TauPin.h>
+
+
 int RtsLayer::lockDBCount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 

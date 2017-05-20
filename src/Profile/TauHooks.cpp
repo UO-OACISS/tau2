@@ -23,12 +23,16 @@
 
 #include <vector>
 #include <string>
+#include <ctype.h>
 
 #include <Profile/Profiler.h>
+#include <Profile/TauPin.h>
 
+#ifndef __PIN__
 #ifdef __GNUC__
 #include <cxxabi.h>
 #endif
+#endif /* __PIN__ */
 
 using namespace std;
 using namespace tau;
@@ -534,6 +538,7 @@ void tau_dyninst_cleanup()
 
 /* PEBIL */
 char * tau_demangle_name(char **funcname) {
+#ifndef __PIN__
 #ifdef __GNUC__
   std::size_t len=1024;
   int stat;
@@ -547,6 +552,9 @@ char * tau_demangle_name(char **funcname) {
   return *funcname; 
   /* return the original name pass it through c++filt <name> */
 #endif /* __GNUC__ */
+#else  /* __PIN__ */
+  return *funcname;
+#endif /* __PIN__ */
   
 }
 
@@ -629,6 +637,18 @@ void  tau_register_loop(char **func, char** file, int* lineno,
 
 
 } /* extern "C" */
+
+#ifdef __PIN__
+/*
+#include <iostream>
+extern "C" int bar(int x) {
+  printf("Inside bar: x = %d\n", x);
+  string s("bar:");
+  std::cout <<s<<"Returning "<<x+1<<endl;
+  return x+1;
+}
+*/
+#endif /* __PIN__ */
   
 
 // EOF TauHooks.cpp

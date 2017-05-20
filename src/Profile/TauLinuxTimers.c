@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __cplusplus {
+extern "C" { 
+#endif /* __cplusplus */
+
 #ifdef __ia64__
 unsigned long long getLinuxHighResolutionTscCounter(void) {
   unsigned long long tmp;
@@ -105,3 +109,7 @@ double TauGetMHz(void) {
   }
   return ratings;
 }
+
+#ifdef __cplusplus {
+}
+#endif /* __cplusplus */
