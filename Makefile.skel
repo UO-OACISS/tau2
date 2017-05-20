@@ -84,6 +84,7 @@ TRACE2PROFILE=utils/trace2profile
 #ARMCI#ARMCIWRAPPER=src/wrappers/armci#ENDIF#
 
 TAUPRELOAD=src/wrappers/taupreload
+#PIN#TAUPRELOAD= #ENDIF#
 #CUDA#TAUCUDA=src/wrappers/cuda #ENDIF#
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 #SHMEM#TAU_CUPTI_AVAIL= #ENDIF#
@@ -126,15 +127,13 @@ MEMORYWRAPPER=src/wrappers/memory
 #SHMEM#SHMEM_WRAPPER=src/wrappers/shmem #ENDIF#
 #PGI_OPENACC#TAU_CUPTI_AVAIL= #ENDIF#
 
-#PIN#TAU_PIN=utils/taupin #ENDIF#
-
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ANDROID_TOOLS) $(ELGCONVERTER) $(IOWRAPPER) $(TAUPRELOAD) \
 	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAU_ENV) $(TAUOPENCL) \
 	  $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
 	  $(PTHREAD_WRAPPER) $(GOMP_WRAPPER) $(OTF2PROFILE) $(MPC_MPI_WRAPPER) $(APEX) \
-          $(SHMEM_WRAPPER) $(TAU_PIN)
+          $(SHMEM_WRAPPER) 
 
 
 CONFIGQUERY=`utils/ConfigQuery -arch`
