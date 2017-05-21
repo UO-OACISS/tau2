@@ -154,7 +154,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
     Tau_init_initializeTAU();
 #ifdef __PIN__ 
 #if (!(defined (TAU_MPI) || defined(TAU_SHMEM)))
-  TAU_PROFILE_SET_NODE(0);
+  if (RtsLayer::myNode() == -1) {
+    TAU_PROFILE_SET_NODE(getpid());
+  }
 #endif /* MPI | SHMEM */
 #endif /* __PIN__ */
   }
