@@ -100,18 +100,11 @@ VOID Routine(RTN rtn, VOID *v)
     if (line == 0) return; 
     if (path.empty()) return; 
     module = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
-    if (module.find("mpi") != std::string::npos) {
+    if (module.find(".so.") != std::string::npos) {
 #ifdef DEBUG_PROF
-      cout <<"Found "<<module<< " with MPI"<<endl;
+      cout <<" image = "<<module<< " has a .so. in its name"<<endl;
 #endif /* DEBUG_PROF */
-      mpi_lib = true;
-    } else {
-      if (module.find(".so.") != std::string::npos) {
-#ifdef DEBUG_PROF
-        cout <<" image = "<<module<< " has a .so. in its name"<<endl;
-#endif /* DEBUG_PROF */
-        return;
-      }
+      return;
     }
 
     TAU_ROUTINE * rc = new TAU_ROUTINE;
@@ -125,9 +118,6 @@ VOID Routine(RTN rtn, VOID *v)
     rc->_image = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
     //rc->fi = new FunctionInfo(rc->_name.c_str(), " ", TAU_USER, "TAU_USER", true, 0); 
 
-    if (mpi_lib) { 
-      cout <<"MPI: "<<module << " " <<rc->_name<<endl; 
-    } 
     // Add to list of routines
     rc->_next = RtnList;
     RtnList = rc;
