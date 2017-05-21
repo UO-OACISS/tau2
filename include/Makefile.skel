@@ -1155,7 +1155,7 @@ EBS_CLOCK_RES=
 #MPI_T#PROFILEOPT103  = -DTAU_MPI_T   #ENDIF#
 #MPI_T#TAU_MPIT  = TauMpiT.o #ENDIF#
 #BEACON#BEACON_O       	       = TauBeacon.o 	       #ENDIF#
-#PIN#PROFILEOPT104  = -Wall -Wno-unknown-pragmas -D__PIN__=1 -DPIN_CRT=1 -DTARGET_IA32E -DTARGET_LINUX -DHOST_IA32E -fno-exceptions -funwind-tables  -fasynchronous-unwind-tables -fabi-version=2 -fno-rtti -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing -isystem $(PIN_ROOT)/source/include/pin -isystem $(PIN_ROOT)/source/include/pin/gen -isystem $(PIN_ROOT)/extras/stlport/include -isystem $(PIN_ROOT)/extras/libstdc++/include -isystem $(PIN_ROOT)/extras/crt/include -isystem $(PIN_ROOT)/extras/crt/include/arch-x86_64 -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi/asm-x86  -isystem $(PIN_ROOT)/extras/components/include -isystem $(PIN_ROOT)/extras/xed-intel64/include/xed #ENDIF#
+#PIN#PROFILEOPT104  = -D__PIN__=1 -DPIN_CRT=1 -DTARGET_IA32E -DTARGET_LINUX -DHOST_IA32E -fno-exceptions -funwind-tables  -fasynchronous-unwind-tables -fabi-version=2 -fno-rtti -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing -isystem $(PIN_ROOT)/source/include/pin -isystem $(PIN_ROOT)/source/include/pin/gen -isystem $(PIN_ROOT)/extras/stlport/include -isystem $(PIN_ROOT)/extras/libstdc++/include -isystem $(PIN_ROOT)/extras/crt/include -isystem $(PIN_ROOT)/extras/crt/include/arch-x86_64 -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi/asm-x86  -isystem $(PIN_ROOT)/extras/components/include -isystem $(PIN_ROOT)/extras/xed-intel64/include/xed #ENDIF#
 
 
 
