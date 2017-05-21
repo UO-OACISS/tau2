@@ -9,6 +9,7 @@
 #include "pin.H"
 #include <math.h>
 #include <dlfcn.h>
+#include <ctype.h>
 
 extern "C" {
   void Tau_sampling_finalize_if_necessary(int tid) { return ; }
@@ -56,6 +57,8 @@ extern "C" void Tau_start(const char *);
 extern "C" void Tau_stop(const char *); 
 
 void FunctionEntry(TAU_ROUTINE *rc) {
+  const char *name = rc->_name.c_str(); 
+  TAU_VERBOSE("ENTER: %s\n", name);
 #ifdef DEBUG_PROF
   cout <<"ENTER: "<<rc->_name<<endl;
 #endif /* DEBUG_PROF */
@@ -66,17 +69,19 @@ void FunctionEntry(TAU_ROUTINE *rc) {
   TAU_PROFILER_CREATE(rc->func_handle, rc->_name.c_str(), " ", TAU_USER); 
   TAU_PROFILER_START(rc->func_handle);
 */
-  TAU_START(rc->_name.c_str()); 
+  TAU_START(name);
   
 
 }
 
 void FunctionExit(TAU_ROUTINE *rc) {
+  const char *name = rc->_name.c_str(); 
+  TAU_VERBOSE("EXIT : %s\n", name);
 #ifdef DEBUG_PROF
   cout <<"EXIT : "<<rc->_name<<endl;
 #endif /* DEBUG_PROF */
   /* TAU_PROFILER_STOP(rc->func_handle); */
-  TAU_STOP(rc->_name.c_str()); 
+  TAU_STOP(name);
 }
 
 const char * StripPath(const char * path)
@@ -93,18 +98,28 @@ VOID Routine(RTN rtn, VOID *v)
 {
     
     // Allocate a counter for this routine
-    string path, module;
+    string path, module, name;
     INT32 line;
     bool mpi_lib = false;
     PIN_GetSourceLocation(RTN_Address(rtn), NULL, &line, &path);
-    if (line == 0) return; 
-    if (path.empty()) return; 
+    name = RTN_Name(rtn);
+    const char *func  = name.data(); 
     module = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
-    if (module.find(".so.") != std::string::npos) {
-#ifdef DEBUG_PROF
-      cout <<" image = "<<module<< " has a .so. in its name"<<endl;
-#endif /* DEBUG_PROF */
-      return;
+    //if (name.find("MPI_") == std::string::npos) {
+    if (!((toupper(func[0]) == 'M') && (toupper(func[1]) == 'P') && 
+         (toupper(func[2]) == 'I') && (func[3] == '_'))) {
+	/* Not an MPI routine */
+      if ((line == 0) || path.empty() || 
+          (module.find(".so.") != std::string::npos)) {
+         TAU_VERBOSE("Not instrumenting: %s\n", func); 
+         return;
+      }
+    } else {
+      if ((func[0] == 'm') && (name.find("@plt") != std::string::npos)) { 
+        TAU_VERBOSE("Not instrumenting plt: %s\n", func); 
+        return; /* do not instrument plts for MPI */
+      }
+      TAU_VERBOSE("Instrumenting: %s\n", func);
     }
 
     TAU_ROUTINE * rc = new TAU_ROUTINE;
@@ -113,7 +128,7 @@ VOID Routine(RTN rtn, VOID *v)
 
     char buf[1024]; 
     sprintf(buf, "%d", line);
-    rc->_name = RTN_Name(rtn) +string(" [{") + path + string("}{")+buf+string("}]");
+    rc->_name = name +string(" [{") + path + string("}{")+buf+string("}]");
     
     rc->_image = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
     //rc->fi = new FunctionInfo(rc->_name.c_str(), " ", TAU_USER, "TAU_USER", true, 0); 
@@ -135,8 +150,10 @@ VOID Routine(RTN rtn, VOID *v)
     RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)FunctionEntry, IARG_PTR, rc, IARG_END);
     RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)FunctionExit, IARG_PTR, rc, IARG_END);
 #else
-    RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)FunctionEntry, IARG_PTR, rc, IARG_END);
-    RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)FunctionExit, IARG_PTR, rc, IARG_END);
+    if (RTN_IsSafeForProbedInsertion(rtn)) { 
+      RTN_InsertCallProbed(rtn, IPOINT_BEFORE, (AFUNPTR)FunctionEntry, IARG_PTR, rc, IARG_END);
+      RTN_InsertCallProbed(rtn, IPOINT_AFTER, (AFUNPTR)FunctionExit, IARG_PTR, rc, IARG_END);
+    }
     
 #endif /* TAU_PIN_JIT_MODE */
     RTN_Close(rtn);
@@ -151,7 +168,8 @@ VOID Routine(RTN rtn, VOID *v)
 
 INT32 Usage()
 {
-    cerr << "This tool calls TAU"<<endl;
+    cerr << "mpirun -np <n> pin -t <taudir>/<arch>/lib/shared-pin/libTAU.so ./app"<<endl;
+    cerr << "This tool instruments the application using TAU"<<endl;
     return -1;
 }
 
