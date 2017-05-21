@@ -46,34 +46,37 @@ typedef struct RtnCount
     string _image;
     void *func_handle; 
     struct RtnCount * _next;
-} RTN_COUNT;
+} TAU_ROUTINE;
 
 // Linked list of instruction counts for each routine
-RTN_COUNT * RtnList = 0;
-RTN_COUNT * FirstEvent = 0; 
+TAU_ROUTINE * RtnList = 0;
+TAU_ROUTINE * FirstEvent = 0; 
 
 extern "C" void Tau_start(const char *); 
 extern "C" void Tau_stop(const char *); 
 
-void FunctionEntry(RTN_COUNT *rc) {
+void FunctionEntry(TAU_ROUTINE *rc) {
 #ifdef DEBUG_PROF
   cout <<"ENTER: "<<rc->_name<<endl;
 #endif /* DEBUG_PROF */
   //Tau_start(rc->_name.c_str());
   //rc->fi = new FunctionInfo(rc->_name, " "); 
   
+/*
   TAU_PROFILER_CREATE(rc->func_handle, rc->_name.c_str(), " ", TAU_USER); 
   TAU_PROFILER_START(rc->func_handle);
-
+*/
+  TAU_START(rc->_name.c_str()); 
   
 
 }
 
-void FunctionExit(RTN_COUNT *rc) {
+void FunctionExit(TAU_ROUTINE *rc) {
 #ifdef DEBUG_PROF
   cout <<"EXIT : "<<rc->_name<<endl;
 #endif /* DEBUG_PROF */
-  TAU_PROFILER_STOP(rc->func_handle);
+  /* TAU_PROFILER_STOP(rc->func_handle); */
+  TAU_STOP(rc->_name.c_str()); 
 }
 
 const char * StripPath(const char * path)
@@ -92,16 +95,27 @@ VOID Routine(RTN rtn, VOID *v)
     // Allocate a counter for this routine
     string path, module;
     INT32 line;
+    bool mpi_lib = false;
     PIN_GetSourceLocation(RTN_Address(rtn), NULL, &line, &path);
     if (line == 0) return; 
     if (path.empty()) return; 
     module = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
-    if (module.find(".so.") != std::string::npos) {
-      cout <<" image = "<<module<< " has a .so. in its name"<<endl;
-      return;
+    if (module.find("mpi") != std::string::npos) {
+#ifdef DEBUG_PROF
+      cout <<"Found "<<module<< " with MPI"<<endl;
+#endif /* DEBUG_PROF */
+      mpi_lib = true;
+    } else {
+      if (module.find(".so.") != std::string::npos) {
+#ifdef DEBUG_PROF
+        cout <<" image = "<<module<< " has a .so. in its name"<<endl;
+#endif /* DEBUG_PROF */
+        return;
+      }
     }
 
-    RTN_COUNT * rc = new RTN_COUNT;
+    TAU_ROUTINE * rc = new TAU_ROUTINE;
+
    
 
     char buf[1024]; 
@@ -111,11 +125,14 @@ VOID Routine(RTN rtn, VOID *v)
     rc->_image = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
     //rc->fi = new FunctionInfo(rc->_name.c_str(), " ", TAU_USER, "TAU_USER", true, 0); 
 
+    if (mpi_lib) { 
+      cout <<"MPI: "<<module << " " <<rc->_name<<endl; 
+    } 
     // Add to list of routines
     rc->_next = RtnList;
     RtnList = rc;
 
-    if (FirstEvent == (RTN_COUNT *) 0) { 
+    if (FirstEvent == (TAU_ROUTINE *) 0) { 
       FirstEvent = rc; 
     }
             
