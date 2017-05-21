@@ -692,7 +692,15 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
       Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
       profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
     } else {
+#ifdef __PIN__ /* PIN can't resolve exits very well - it is not guaranteed */
+      TAU_VERBOSE("[%d:%d] PIN: Stopping %s instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName()); 
+      printf("[%d:%d] PIN: Stopping %s instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName()); 
+      profiler->Stop(); 
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+#else 
       reportOverlap(profiler->ThisFunction, fi);
+#endif 
     }
   }
 
