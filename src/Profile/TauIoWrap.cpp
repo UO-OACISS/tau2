@@ -18,11 +18,14 @@
 #include <TAU.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauIoWrap.h>
+#include <Profile/TauPin.h>
 #include <stdio.h>
 #include <vector>
 
 using namespace std;
 using namespace tau;
+
+
 
 #define dprintf TAU_VERBOSE
 

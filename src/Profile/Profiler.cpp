@@ -22,6 +22,8 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetaDataMerge.h>
 
+#define DEBUG_PROF 1 
+
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 #include <stack>

@@ -3065,9 +3065,14 @@ print_enter( OTF2_LocationRef    location,
     }
     otf2_print_attribute_list( data, attributes );
 
+    //cout << "Entering at time: " << time << endl;
+
     //printf(":%d --- %d\n", location, region);
 
     EnterStateDef(time,location,region);
+
+    //double ctime = (double)time;
+    //cout << "OTIME: " << time << ", CTIME: " << ctime << ", DTIME: " << time-ctime << endl;
 
     return OTF2_CALLBACK_SUCCESS;
 }
@@ -3099,7 +3104,7 @@ print_leave( OTF2_LocationRef    location,
             "\n" );
        }
     otf2_print_attribute_list( data, attributes );
-
+    //cout << "Leaving at time: " << time << endl;
     LeaveStateDef(time,location);
 
     return OTF2_CALLBACK_SUCCESS;
@@ -5274,6 +5279,7 @@ print_global_def_clock_properties( void*    userData,
                                      timerResolution,
                                      globalOffset,
                                      traceLength );
+    ClockPeriodDef(timerResolution);
 
     /* Print definition if selected. */
     if ( !otf2_GLOBDEFS )
@@ -5292,6 +5298,7 @@ print_global_def_clock_properties( void*    userData,
             globalOffset,
             traceLength,
             "\n" );
+
 
     return OTF2_CALLBACK_SUCCESS;
 }
@@ -5632,8 +5639,9 @@ print_global_def_location( void*                 userData,
 
     int node = atoi(nodeC);
     int thread = atoi(threadC);
-
-    ThreadDef(node,thread,self,myname);
+    //unsigned int convSelf = (unsigned int)self;
+    //cout << "Thread Def: "<< (char*)otf2_print_get_def_name( defs->strings, name ) <<", Node: " << node << ", Thread: " << thread <<", Self: " <<self << endl;//", ConvSelf: " <<convSelf <<", trunkname: " << myname<<endl;
+    ThreadDef(node,thread,self,myname);//TODO: Self is the only node?
 
     //printf("%s --- %d\n",myname,self);
 

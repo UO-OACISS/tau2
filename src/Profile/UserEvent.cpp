@@ -62,6 +62,7 @@ using namespace std;
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauPluginInternals.h>
+#include <Profile/TauPin.h>
 
 using namespace tau;
 
