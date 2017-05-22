@@ -316,6 +316,8 @@ void TAU_STATIC_TIMER_STOP(char *fname, int flen)
   tau_static_timer_stop_(fname, flen);
 }
 
+#include <vector>
+using namespace std; 
 /* C API */
 void Tau_start(const char *name)
 {

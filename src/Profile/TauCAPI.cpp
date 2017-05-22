@@ -31,6 +31,7 @@ using namespace std;
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauTrace.h>
+#include <ctype.h>
 
 #if (!defined(TAU_WINDOWS))
 /* Needed for fork */
@@ -71,6 +72,9 @@ void esd_exit (elg_ui4 rid);
 #if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
 #include <execinfo.h>
 #endif
+
+#include <Profile/TauPin.h>
+
 
 using namespace tau;
 
@@ -688,7 +692,16 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
       Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
       profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
     } else {
+#ifdef __PIN__ /* PIN can't resolve exits very well - it is not guaranteed */
+      TAU_VERBOSE("[%d:%d] PIN: Stopping %s instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName()); 
+      TAU_VERBOSE("[%d:%d] PIN: %s return not found by PIN, stopping it instead of %s\n", RtsLayer::myNode(), RtsLayer::myThread(), profiler->ThisFunction->GetName(), fi->GetName()); 
+      profiler->ThisFunction->SetType("[IGNORE - Return not found by PIN]"); 
+      profiler->Stop(); 
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+#else 
       reportOverlap(profiler->ThisFunction, fi);
+#endif 
     }
   }
 

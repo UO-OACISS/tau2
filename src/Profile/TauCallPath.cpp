@@ -38,6 +38,8 @@
 using namespace std;
 using namespace tau;
 
+#include <Profile/TauPin.h>
+
 
 #define TAU_CALLPATH_DEPTH_MIN 2
 

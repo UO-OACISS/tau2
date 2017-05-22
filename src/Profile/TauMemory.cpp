@@ -35,6 +35,11 @@
 #include <malloc.h>
 #endif
 #include <errno.h>
+#ifdef __PIN__
+void *pvalloc(size_t size) { 
+   return malloc(size); 
+}
+#endif /* __PIN__ */
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -78,6 +83,8 @@ using namespace tau;
 #if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
+
+#include <Profile/TauPin.h>
 
 bool wrapper_registered = false;
 wrapper_enable_handle_t wrapper_enable_handle = NULL;

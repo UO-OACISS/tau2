@@ -53,6 +53,8 @@ using namespace std;
 #include <Profile/TauTrace.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauUtil.h>
+#include <Profile/TauPin.h>
+
 
 #include <Profile/TauPluginInternals.h>
 
@@ -152,7 +154,15 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   if (flag) {
     flag = false;
     Tau_init_initializeTAU();
+#ifdef __PIN__ 
+#if (!(defined (TAU_MPI) || defined(TAU_SHMEM)))
+  if (RtsLayer::myNode() == -1) {
+    TAU_PROFILE_SET_NODE(getpid());
   }
+#endif /* MPI | SHMEM */
+#endif /* __PIN__ */
+  }
+
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -312,9 +322,10 @@ FunctionInfo::FunctionInfo(const char *name, const char *type, TauGroup_t Profil
     const char *ProfileGroupName, bool InitData, int tid)
 {
   DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
-  Name = strdup(name);
-  Type = strdup(type);
-  FullName = NULL;
+  Name = strdup(name); 
+  Type = strdup(type); 
+  FullName = NULL; 
+  DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
@@ -519,7 +530,7 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
-#if (!(defined (TAU_WINDOWS) || defined(_AIX)))
+#if (!(defined (TAU_WINDOWS) || defined(_AIX) || defined(__PIN__)))
     *ptr = Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(FunctionInfo));
     /*  now, use the pacement new function to create a object in
      *  pre-allocated memory. NOTE - this memory needs to be explicitly

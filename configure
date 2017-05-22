@@ -358,6 +358,7 @@ for arg in "$@"; do
 	    echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
 	    echo "    Note: 'download' will download and build the library automatically."
 	    echo ""
+	    echo "-pin=<dir> ..... Specify location of Intel PIN instrumentation toolkit."
 	    echo "MPI Options:"
 	    echo "-mpi .......................... Specify use of TAU MPI wrapper library."
 	    echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
@@ -519,6 +520,7 @@ for arg in "$@"; do
         echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
         echo "-beacon=<dir> ............... Specify location of BEACON."
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
+	echo "-pin=<dir> ..... Specify location of Intel PIN instrumentation toolkit."
         echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
         echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
         echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
@@ -828,6 +830,7 @@ tautoplevel=
 tauoptions=
 pdt_root_dir="."
 pdt=no
+pin=no
 armci=no
 vtf=no
 otf=no
@@ -1549,6 +1552,16 @@ for arg in "$@"; do
 	    pdtdir=`echo $arg | sed -e 's/-pdt=//'`
 	    if [ ! -d $pdtdir ] ; then
 		echo "Error: Cannot access PDT directory $pdtdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-pin=*)
+	    pin=yes
+	    pindir=`echo $arg | sed -e 's/-pin=//'`
+	    if [ $pindir != "download" -a ! -d $pindir ] ; then
+		echo "Error: Cannot access Intel PIN directory $pindir"
 		exit 1
 	    fi
 	    shift
@@ -3405,7 +3418,6 @@ if [ $stff = yes ] ; then
         echo "Error: Must specify -sddf=/path/to/sddflib along with -stff=/path/to/stfflib!"
     fi
 fi
-
 
 
 if [ $trace = yes ] ; then
@@ -7649,6 +7661,26 @@ if [ "x$machine" = "xarm_android" ]; then
 	rm -rf "$tmpdir"
     fi
 fi
+######################################################################
+# Install PIN if requested
+######################################################################
+PINURL_x86_64=http://software.intel.com/sites/landingpage/pintool/downloads/pin-3.2-81205-gcc-linux.tar.gz
+if [ "x$pindir" = "xdownload" ]; then
+  if [ $machine = craycnl -o $machine = x86_64 -o $machine = i386_linux ]; then 
+    currdir=${PWD}
+    cd $targetdir/$machine; 
+    if [ ! -L $targetdir/$machine/pin ] ; then 
+# symlink does not exist, download PIN
+      wget $PINURL_x86_64; tar zxf pin-*.tar.gz; /bin/rm -f pin-*.tar.gz; ln -s pin-* pin; 
+    fi
+    pindir=`readlink -f pin`; cd $currdir; 
+  fi
+fi
+
+if [ $pin = yes -a "x$pindir" != "x" ]; then
+    fixmakeargs="$fixmakeargs PIN pindir=$pindir"
+    tauoptions="${tauoptions}-pin"
+fi 
 
 ######################################################################
 # Install BFD if requested
@@ -9780,7 +9812,7 @@ apple)
     ;;
 esac
 
-if [ "$enable_export_dynamic" = "yes" ] ; then
+if [ "$enable_export_dynamic" = "yes" -a "$pin" = "no" ] ; then
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 fi
 
@@ -9884,6 +9916,7 @@ cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_caf.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_prof2json.py $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 # tau_exec works differently when it's named "tau_python"
 cp ${tauroot}/tools/src/tau_exec $BINTARGET/tau_python
