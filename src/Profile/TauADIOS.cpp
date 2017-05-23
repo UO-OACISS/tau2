@@ -97,21 +97,12 @@ ADIOST_EXTERN void tau_adiost_transform( int64_t file_descriptor,
     }
 } 
 
-ADIOST_EXTERN void tau_adiost_fp_send_open_msg(int64_t file_descriptor,
+ADIOST_EXTERN void tau_adiost_fp_send_read_msg(int64_t file_descriptor,
         adiost_event_type_t type) { 
     if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath send open msg", Tau_get_thread());
+        Tau_pure_start_task("ADIOS flexpath send read msg", Tau_get_thread());
     } else {
-        Tau_pure_stop_task("ADIOS flexpath send open msg", Tau_get_thread());
-    }
-} 
-
-ADIOST_EXTERN void tau_adiost_fp_send_close_msg(int64_t file_descriptor,
-        adiost_event_type_t type) { 
-    if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath send close msg", Tau_get_thread());
-    } else {
-        Tau_pure_stop_task("ADIOS flexpath send close msg", Tau_get_thread());
+        Tau_pure_stop_task("ADIOS flexpath send read msg", Tau_get_thread());
     }
 } 
 
@@ -124,66 +115,12 @@ ADIOST_EXTERN void tau_adiost_fp_send_finalize_msg(int64_t file_descriptor,
     }
 } 
 
-ADIOST_EXTERN void tau_adiost_fp_send_flush_msg(int64_t file_descriptor,
+ADIOST_EXTERN void tau_adiost_fp_add_var_to_read_msg(int64_t file_descriptor,
         adiost_event_type_t type) { 
     if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath send flush msg", Tau_get_thread());
+        Tau_pure_start_task("ADIOS flexpath add var to read msg", Tau_get_thread());
     } else {
-        Tau_pure_stop_task("ADIOS flexpath send flush msg", Tau_get_thread());
-    }
-} 
-
-ADIOST_EXTERN void tau_adiost_fp_send_var_msg(int64_t file_descriptor,
-        adiost_event_type_t type) { 
-    if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath send var msg", Tau_get_thread());
-    } else {
-        Tau_pure_stop_task("ADIOS flexpath send var msg", Tau_get_thread());
-    }
-} 
-
-ADIOST_EXTERN void tau_adiost_fp_process_open_msg(int64_t file_descriptor,
-        adiost_event_type_t type) { 
-    if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath process open msg", Tau_get_thread());
-    } else {
-        Tau_pure_stop_task("ADIOS flexpath process open msg", Tau_get_thread());
-    }
-} 
-
-ADIOST_EXTERN void tau_adiost_fp_process_close_msg(int64_t file_descriptor,
-        adiost_event_type_t type) { 
-    if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath process close msg", Tau_get_thread());
-    } else {
-        Tau_pure_stop_task("ADIOS flexpath process close msg", Tau_get_thread());
-    }
-} 
-
-ADIOST_EXTERN void tau_adiost_fp_process_finalize_msg(int64_t file_descriptor,
-        adiost_event_type_t type) { 
-    if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath process finalize msg", Tau_get_thread());
-    } else {
-        Tau_pure_stop_task("ADIOS flexpath process finalize msg", Tau_get_thread());
-    }
-} 
-
-ADIOST_EXTERN void tau_adiost_fp_process_flush_msg(int64_t file_descriptor,
-        adiost_event_type_t type) { 
-    if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath process flush msg", Tau_get_thread());
-    } else {
-        Tau_pure_stop_task("ADIOS flexpath process flush msg", Tau_get_thread());
-    }
-} 
-
-ADIOST_EXTERN void tau_adiost_fp_process_var_msg(int64_t file_descriptor,
-        adiost_event_type_t type) { 
-    if (type == adiost_event_enter) {
-        Tau_pure_start_task("ADIOS flexpath process var msg", Tau_get_thread());
-    } else {
-        Tau_pure_stop_task("ADIOS flexpath process var msg", Tau_get_thread());
+        Tau_pure_stop_task("ADIOS flexpath add var to read msg", Tau_get_thread());
     }
 } 
 
@@ -226,12 +163,19 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
     CHECK(adiost_event_advance_step, tau_adiost_advance_step,  "adios_advance_step");
     CHECK(adiost_event_group_size,   tau_adiost_group_size,    "adios_group_size");
     CHECK(adiost_event_transform,    tau_adiost_transform,     "adios_transform");
+/*
     CHECK(adiost_event_fp_send_open_msg, 
         tau_adiost_fp_send_open_msg, "adios_fp_send_open_msg");
     CHECK(adiost_event_fp_send_close_msg, 
         tau_adiost_fp_send_close_msg, "adios_fp_send_close_msg");
+*/
+    CHECK(adiost_event_fp_send_read_msg, 
+        tau_adiost_fp_send_read_msg, "adios_fp_send_read_msg");
     CHECK(adiost_event_fp_send_finalize_msg, 
         tau_adiost_fp_send_finalize_msg, "adios_fp_send_finalize_msg");
+    CHECK(adiost_event_fp_add_var_to_read_msg, 
+        tau_adiost_fp_add_var_to_read_msg, "adios_fp_add_var_to_read_msg");
+/*
     CHECK(adiost_event_fp_send_flush_msg, 
         tau_adiost_fp_send_flush_msg, "adios_fp_send_flush_msg");
     CHECK(adiost_event_fp_send_var_msg, 
@@ -246,6 +190,7 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
         tau_adiost_fp_process_flush_msg, "adios_fp_process_flush_msg");
     CHECK(adiost_event_fp_process_var_msg, 
         tau_adiost_fp_process_var_msg, "adios_fp_process_var_msg");
+*/
     CHECK(adiost_event_fp_copy_buffer, 
         tau_adiost_fp_copy_buffer, "adios_fp_copy_buffer");
     CHECK(adiost_event_library_shutdown, tau_adiost_finalize, "adios_finalize");
