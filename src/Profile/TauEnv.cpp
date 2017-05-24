@@ -86,6 +86,8 @@ using namespace std;
 #define TAU_OPENMP_RUNTIME_CONTEXT_REGION "region"
 #define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
 
+#define TAU_SOS_DEFAULT 1
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_DEFAULT_TAU 0
@@ -244,6 +246,7 @@ static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
+static int env_sos_enabled = 1;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -880,6 +883,10 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_sos_enabled() {
+  return env_sos_enabled;
 }
 
 int TauEnv_get_ebs_enabled_tau() {
@@ -1853,6 +1860,17 @@ void TauEnv_initialize()
     TAU_METADATA("OMP_MAX_ACTIVE_LEVELS", tmpstr);
 #endif
 #endif
+
+    tmp = getconf("TAU_SOS");
+    if (parse_bool(tmp, TAU_SOS_DEFAULT)) {
+      env_sos_enabled = 1;
+      TAU_VERBOSE("TAU: SOS Enabled\n");
+      TAU_METADATA("TAU_SOS", "on");
+    } else {
+      env_sos_enabled = 0;
+      TAU_VERBOSE("TAU: SOS Disabled\n");
+      TAU_METADATA("TAU_SOS", "off");
+    }
 
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {

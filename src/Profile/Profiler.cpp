@@ -21,6 +21,7 @@
 #include <Profile/TauMetaData.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetaDataMerge.h>
+#include <Profile/TauSOS.h>
 
 #define DEBUG_PROF 1 
 
@@ -1501,6 +1502,10 @@ int TauProfiler_StoreData(int tid)
       Tau_mergeProfiles_MPI();
 	}
 #endif
+#endif
+
+#ifdef TAU_SOS
+    //TAU_SOS_finalize();
 #endif
   }
 #endif /* PTHREADS */

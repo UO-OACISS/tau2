@@ -413,7 +413,7 @@ case $1 in
 	echo "s@^TAU_BUILD_CXX=.*@TAU_BUILD_CXX=$tau_build_cxx@g" >> $sedout
 	;;
 
-     boostdir=*)
+    boostdir=*)
         boostdir=`echo $1 | sed -e 's/^boostdir=//'`
 	echo "s,^BOOSTDIR=.*$,BOOSTDIR=$boostdir,g" >> $sedout
 	;;
@@ -425,6 +425,17 @@ case $1 in
         boostlib=`echo $1 | sed -e 's/^boostlib=//' -e 's/#/ /g'`
 	echo "s&^TAU_BOOSTLIB=.*$&TAU_BOOSTLIB=$boostlib&g" >> $sedout
 	;;
+
+    sosdir=*)
+        sosdir=`echo $1 | sed -e 's/^sosdir=//'`
+	echo "s,^SOSDIR=.*$,SOSDIR=$sosdir,g" >> $sedout
+	;;
+
+    adiosdir=*)
+        adiosdir=`echo $1 | sed -e 's/^adiosdir=//'`
+	echo "s,^ADIOSDIR=.*$,ADIOSDIR=$adiosdir,g" >> $sedout
+	;;
+
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
@@ -1564,6 +1575,14 @@ case $1 in
 	;;
      JVMTI)
 	echo "NOTE: Using Java Virtual Machine Tool Interface (JVMTI) Instrumentation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SOS)
+	echo "NOTE: Using SOS ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ADIOS)
+	echo "NOTE: Using ADIOS ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPENMP)

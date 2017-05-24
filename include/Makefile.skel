@@ -105,6 +105,8 @@ DYNINSTDIR=
 BOOSTDIR=
 TAU_BOOSTINC=
 TAU_BOOSTLIB=
+SOSDIR=
+ADIOSDIR=
 JDKDIR=
 ANDROID_SDK=
 ANDROID_VERSION=
@@ -290,6 +292,22 @@ MPI_FORTRAN_INIT = TauFInit.o
 #NOFORTRAN#MPI_FORTRAN_INIT = #ENDIF#
 #SP1#MPI_FORTRAN_INIT = #ENDIF#
 
+
+#############################################
+# SOS OBJECTS and libs
+#############################################
+#SOS#SOS_O = TauSOS.o #ENDIF#
+#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include -I$(SOSDIR) -DTAU_SOS #ENDIF#
+#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos -pthread -fPIC #ENDIF#
+#SOS#TAU_SOS_LINKER_OPTS=$(TAU_SOS_LIBS) #ENDIF#
+
+#############################################
+# ADIOS OBJECTS and libs
+#############################################
+#ADIOS#ADIOS_O = TauADIOS.o #ENDIF#
+#ADIOS#TAU_ADIOS_INCLUDE_OPTS=-I$(ADIOSDIR)/include -I$(ADIOSDIR) -DTAU_ADIOS #ENDIF#
+#ADIOS#TAU_ADIOS_LIBS=-L$(ADIOSDIR)/lib -Wl,-rpath,$(ADIOSDIR)/lib -lsos -pthread -fPIC #ENDIF#
+#ADIOS#TAU_ADIOS_LINKER_OPTS=$(TAU_ADIOS_LIBS) #ENDIF#
 
 #############################################
 # OpenMP OBJECTS
@@ -1185,8 +1203,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT93) $(PROFILEOPT94) $(PROFILEOPT95) $(PROFILEOPT96) \
               $(PROFILEOPT97) $(PROFILEOPT98) $(PROFILEOPT99) $(PROFILEOPT100) \
 	      $(PROFILEOPT101) $(PROFILEOPT102) $(PROFILEOPT103) \
-              $(PROFILEOPT104) $(TRACEOPT)
-
+              $(PROFILEOPT104) $(TRACEOPT) \
+		  $(TAU_SOS_INCLUDE_OPTS) $(TAU_ADIOS_INCLUDE_OPTS)
 
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
@@ -1246,7 +1264,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT20) $(TAU_LINKER_OPT21) $(TAU_LINKER_OPT22) \
                   $(TAU_CUDA_LINKER_OPTS) $(TAU_PYTHON_LINKER_OPTS)  \
                   $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS) \
-                  $(TAU_PIN_LINKER_OPTS) 
+                  $(TAU_PIN_LINKER_OPTS) \
+				  $(TAU_SOS_LINKER_OPTS) $(TAU_ADIOS_LINKER_OPTS)
 
 ##############################################
 
