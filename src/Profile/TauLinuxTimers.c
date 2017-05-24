@@ -110,6 +110,6 @@ double TauGetMHz(void) {
   return ratings;
 }
 
-#ifdef __cplusplus {
+#ifdef __cplusplus
 }
 #endif /* __cplusplus */
