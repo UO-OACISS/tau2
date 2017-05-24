@@ -17,10 +17,12 @@
 
 #include <TauUtil.h>
 #include <TauPlugin.h>
+#include <string>
 #include <TauEnv.h>
 #include <TauPluginInternals.h>
 #include <stdarg.h>
 #include <string.h>
+
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
