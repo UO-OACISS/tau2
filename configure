@@ -878,6 +878,10 @@ forceshared=no
 opari_region=no
 opari_construct=no
 boost=no
+sos=no
+sosdir=
+adios=no
+adiosdir=
 apex=no
 dyninst=no
 dyninstinc=no
@@ -1645,6 +1649,28 @@ for arg in "$@"; do
 	    if [ ! -d $boostdir ]
 	    then
 		echo "Error: Cannot access BOOST directory $boostdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-sos=*)
+	    sos=yes
+	    sosdir=`echo $arg | sed -e 's/-sos=//'`
+	    if [ ! -d $sosdir ]
+	    then
+		echo "Error: Cannot access SOS directory $sosdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-adios=*)
+	    adios=yes
+	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
+	    if [ ! -d $adiosdir ]
+	    then
+		echo "Error: Cannot access ADIOS directory $adiosdir"
 		exit 1
 	    fi
 	    shift
@@ -3508,7 +3534,7 @@ fi
 
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
-    orig_useropt="-mmic -O2 "
+    orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
 if [ $machine = apple ] ; then
@@ -3572,8 +3598,7 @@ orig_c_compiler=$c_compiler
 orig_cxx_compiler=$cxx_compiler
 orig_fortran_compiler=$fortran_compiler
 # mpicxx may change it.
-if [ $cxx_compiler = mpicxx ]
-then
+if [ $cxx_compiler = mpicxx ] ; then
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
@@ -3630,8 +3655,8 @@ then
 	        mpilibargs_added_to_fixmakeargs=yes
 
             fi
-            full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
-            full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
+            full_cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`mpicc -show | tail -n 1 | awk '{ print $1; }'`
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
 	fi
@@ -7842,7 +7867,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
           k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
           export PATH=$k1om_bin:$PATH
           ./configure \
-            CFLAGS='-mmic -fPIC' CXXFLAGS='-mmic -fPIC' \
+            CFLAGS='-xMIC-AVX512 -fPIC' CXXFLAGS='-xMIC-AVX512 -fPIC' \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
@@ -8848,8 +8873,8 @@ if [ $apex = yes ] ; then
 		fi
 	fi
 	if [ ${architecture} = "mic_linux" ] ; then
-		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-mmic' >> ${apex_include_file}
-		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-mmic -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
+		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-xMIC-AVX512' >> ${apex_include_file}
+		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
 	fi
 	if [ ! "x${omptlib}" = "x" ] ; then
 		if [ "${download_ompt}" = "yes" ] ; then
@@ -9388,6 +9413,16 @@ if [ $boost = yes ] ; then
     if [ "x$boostdir" != "x" -a -d $boostdir -a -d $boostdir/lib ]; then
       fixmakeargs="$fixmakeargs boostlib=-L$boostdir/lib#-Wl,-rpath,$boostdir/lib"
     fi
+fi
+
+if [ $sos = yes ] ; then
+    fixmakeargs="$fixmakeargs SOS "
+    fixmakeargs="$fixmakeargs sosdir=$sosdir"
+fi
+
+if [ $adios = yes ] ; then
+    fixmakeargs="$fixmakeargs ADIOS "
+    fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
 fi
 
 if [ $dyninst = yes ] ; then
