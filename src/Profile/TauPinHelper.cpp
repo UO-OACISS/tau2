@@ -105,6 +105,11 @@ VOID Routine(RTN rtn, VOID *v)
     name = RTN_Name(rtn);
     const char *func  = name.data(); 
     module = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
+    const string secname= SEC_Name(RTN_Sec(rtn)); 
+    if (secname.find(".plt") != std::string::npos) {
+      return; // no need to instrument plt stubs.
+      //cout <<"func = "<<func<<" secname = "<<secname<<endl;
+    }
     //if (name.find("MPI_") == std::string::npos) {
     if (!((toupper(func[0]) == 'M') && (toupper(func[1]) == 'P') && 
          (toupper(func[2]) == 'I') && (func[3] == '_'))) {
