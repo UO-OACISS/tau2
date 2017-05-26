@@ -181,7 +181,7 @@ VOID Routine(RTN rtn, VOID *v)
 
 INT32 Usage()
 {
-    cerr << "mpirun -np <n> pin -t <taudir>/<arch>/lib/shared-pin/libTAU.so ./app"<<endl;
+    cerr << "mpirun -np <n> tau_exec -pin ./app"<<endl;
     cerr << "This tool instruments the application using TAU"<<endl;
     return -1;
 }
