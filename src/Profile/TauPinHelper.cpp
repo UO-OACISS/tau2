@@ -171,8 +171,6 @@ VOID Routine(RTN rtn, VOID *v)
 #endif /* TAU_PIN_JIT_MODE */
     RTN_Close(rtn);
     
-
-    
 }
 
 /* ===================================================================== */
@@ -191,6 +189,33 @@ VOID TauPinFinish(INT32 code, VOID *v)
   Tau_profile_exit_all_threads(); 
 }
 
+typedef int (*CommRankT) (int, int *); 
+/* ===================================================================== */
+/* TauNewWrapperCommRank                                                 */
+/* ===================================================================== */
+int NewTauWrapperCommRank(CommRankT orgFuncptr, UINT32 arg0, int *arg1, ADDRINT returnIp) {
+  int ret; 
+  ret = orgFuncptr(arg0, arg1); 
+  int r = *arg1; 
+  TAU_VERBOSE("NewTauWrapperCommRank returns %d\n", r); 
+  TAU_PROFILE_SET_NODE(r); 
+}
+
+/* ===================================================================== */
+/* ImageLoad                                                             */
+/* ===================================================================== */
+VOID ImageLoad( IMG img, VOID *v) {
+    // Check if MPI_Comm_rank is present 
+    RTN rtn = RTN_FindByName(img, "MPI_Comm_rank"); 
+    if (RTN_Valid(rtn)) {
+      cout <<"Replacing MPI_Comm_rank with our stub in "<<IMG_Name(img)<<endl; 
+      PROTO proto_comm_rank = PROTO_Allocate(PIN_PARG(int), CALLINGSTD_DEFAULT, 
+		"MPI_Comm_rank", PIN_PARG(int), PIN_PARG(int *), PIN_PARG_END());
+      RTN_ReplaceSignatureProbed(rtn, AFUNPTR(NewTauWrapperCommRank), 
+	IARG_PROTOTYPE, proto_comm_rank, IARG_ORIG_FUNCPTR, 
+        IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_RETURN_IP, IARG_END);
+    }
+}
 
 /* ===================================================================== */
 /* Main                                                                  */
@@ -213,6 +238,7 @@ int main(int argc, char * argv[])
 #ifdef TAU_PIN_JIT_MODE 
     PIN_StartProgram();
 #else 
+    IMG_AddInstrumentFunction(ImageLoad, 0); 
     PIN_StartProgramProbed();
 #endif /* TAU_PIN_JIT_MODE */
     
