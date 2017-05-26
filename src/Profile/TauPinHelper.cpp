@@ -42,13 +42,13 @@ extern "C" void Tau_profile_exit_all_threads(void);
 #include <Profile/TauPin.h>
 #include <TAU.h> 
 
-typedef struct RtnCount
+typedef struct TauRtnStruct
 {
 #ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
     string _name;
     string _image;
 #endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
-    struct RtnCount * _next;
+    struct TauRtnStruct * _next;
     void *fi; 
 } TAU_ROUTINE;
 
