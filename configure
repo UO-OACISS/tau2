@@ -8075,7 +8075,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
-if [ $bfd_worked = "no" -a "$machine" != "apple" ] ; then
+if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
