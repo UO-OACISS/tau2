@@ -37,16 +37,19 @@ extern "C" void Tau_profile_exit_all_threads(void);
 
 
 #define TAU_PIN_JIT_MODE 1
+//#define TAU_USE_FUNC_NAMES_FOR_START_STOP 1 
 
 #include <Profile/TauPin.h>
 #include <TAU.h> 
 
 typedef struct RtnCount
 {
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
     string _name;
     string _image;
-    void *func_handle; 
+#endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
     struct RtnCount * _next;
+    void *fi; 
 } TAU_ROUTINE;
 
 // Linked list of instruction counts for each routine
@@ -57,31 +60,28 @@ extern "C" void Tau_start(const char *);
 extern "C" void Tau_stop(const char *); 
 
 void FunctionEntry(TAU_ROUTINE *rc) {
+
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
   const char *name = rc->_name.c_str(); 
   TAU_VERBOSE("ENTER: %s\n", name);
-#ifdef DEBUG_PROF
-  cout <<"ENTER: "<<rc->_name<<endl;
-#endif /* DEBUG_PROF */
-  //Tau_start(rc->_name.c_str());
-  //rc->fi = new FunctionInfo(rc->_name, " "); 
-  
-/*
-  TAU_PROFILER_CREATE(rc->func_handle, rc->_name.c_str(), " ", TAU_USER); 
-  TAU_PROFILER_START(rc->func_handle);
-*/
   TAU_START(name);
+#else
+  FunctionInfo *f = (FunctionInfo *) rc->fi; 
+  TAU_PROFILER_START(f); 
+#endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
   
 
 }
 
 void FunctionExit(TAU_ROUTINE *rc) {
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
   const char *name = rc->_name.c_str(); 
   TAU_VERBOSE("EXIT : %s\n", name);
-#ifdef DEBUG_PROF
-  cout <<"EXIT : "<<rc->_name<<endl;
-#endif /* DEBUG_PROF */
-  /* TAU_PROFILER_STOP(rc->func_handle); */
   TAU_STOP(name);
+#else
+  FunctionInfo *f = (FunctionInfo *) rc->fi; 
+  TAU_PROFILER_STOP(f); 
+#endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
 }
 
 const char * StripPath(const char * path)
@@ -132,13 +132,21 @@ VOID Routine(RTN rtn, VOID *v)
    
 
     char buf[1024]; 
-    sprintf(buf, "%d", line);
-    rc->_name = name +string(" [{") + path + string("}{")+buf+string("}]");
+    string func_name; 
+    if (line && !path.empty()) {
+      sprintf(buf, "%d", line);
+      func_name = name +string(" [{") + path + string("}{")+buf+string("}]");
+    } else {
+      func_name = name; 
+    }
     
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
+    rc->_name  = func_name;
     rc->_image = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
-    //rc->fi = new FunctionInfo(rc->_name.c_str(), " ", TAU_USER, "TAU_USER", true, 0); 
+#else
+    TAU_PROFILER_CREATE(rc->fi, func_name.c_str(), " ", TAU_USER);
+#endif 
 
-    // Add to list of routines
     rc->_next = RtnList;
     RtnList = rc;
 
@@ -148,7 +156,7 @@ VOID Routine(RTN rtn, VOID *v)
             
     RTN_Open(rtn);
             
-    // Insert a call at the entry point of a routine to increment the call count
+    // Insert a call at the entry and exit points of the routine.
 
 #ifdef TAU_PIN_JIT_MODE
     
