@@ -5160,6 +5160,10 @@ then
 		    gpshmem=yes
                 fi
 	    fi
+	    if [ -r $shmeminc/shmemx.h ]
+	    then
+                fixmakeargs="$fixmakeargs SHMEMX_H"
+	    fi
 	    shmembindir=`echo $shmeminc | sed -e 's@include@bin@g'`
 	    if [ -r $shmembindir/oshcc ]
 	    then
@@ -5213,6 +5217,10 @@ then
 		fi
 	    fi
             shmem_h="$openshmem_include_dir/shmem.h"
+	    if [ -r $openshmem_include_dir/shmemx.h ]
+	    then
+                fixmakeargs="$fixmakeargs SHMEMX_H"
+	    fi
 	fi
 	if [ $catamount = yes ]
 	then
@@ -5257,6 +5265,10 @@ then
 		shmeminclude=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@include@g'`
                 shmemdir="$shmeminclude/.."
                 shmem_h="$shmeminclude/shmem.h"
+	        if [ -r $shmeminclude/shmemx.h ]
+	        then
+                    fixmakeargs="$fixmakeargs SHMEMX_H"
+	        fi
 		if [ -r $libsmafile -a -d $shmeminclude -a "x$shmeminclude" != "x" ]
 		then
 		    shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
@@ -8100,7 +8112,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
-if [ $bfd_worked = "no" -a "$machine" != "apple" ] ; then
+if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
