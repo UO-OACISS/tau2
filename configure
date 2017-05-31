@@ -7985,9 +7985,11 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     echo "Error: Cannot access BFD directory $bfddir"
     exit 1
   fi
-  bfdinclude="-I$bfddir/include"
-  fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-  bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+  if [ "$pin" = "no" ]; then
+    bfdinclude="-I$bfddir/include"
+    fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+  fi 
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?
   if [ "x$machine" = "xapple" ] ; then
@@ -7996,7 +7998,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     bfdlink="$bfdlink -L/opt/local/lib"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
   else
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
+    if [ "$pin" = "no" ]; then
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
+    fi
   fi
 else
   fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
@@ -8034,8 +8038,10 @@ if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; t
 	# stdio.h and libiberty.h
 	echo "no"
     else
-	fixmakeargs="$fixmakeargs TAU_BFD"
-	echo "yes"
+	if [ "$pin" = "no" ]; then
+	  fixmakeargs="$fixmakeargs TAU_BFD"
+	  echo "yes"
+        fi
     fi
 else
     echo "no"
@@ -8102,6 +8108,9 @@ else
           fi
 	fi
     fi
+fi
+if [ "$pin" = "yes" ]; then
+   BFDLIBS=""
 fi
 if [ $bfd_worked = "yes" -a $machine = bgq ] ; then
     BFDLIBS=`echo $BFDLIBS | sed -e 's@-liberty@${TAU_BFD_DIR}/lib/libiberty.a@g'`
@@ -8204,8 +8213,10 @@ fi
 bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
 if [ "$turnbfdoff" = 'no' ]; then
     if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
-	fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
-	echo "yes"
+	if [ "$pin" = "no" ]; then
+	  fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+	  echo "yes"
+        fi
     else
 	echo "no"
     fi
