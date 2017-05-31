@@ -37,16 +37,19 @@ extern "C" void Tau_profile_exit_all_threads(void);
 
 
 #define TAU_PIN_JIT_MODE 1
+//#define TAU_USE_FUNC_NAMES_FOR_START_STOP 1 
 
 #include <Profile/TauPin.h>
 #include <TAU.h> 
 
-typedef struct RtnCount
+typedef struct TauRtnStruct
 {
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
     string _name;
     string _image;
-    void *func_handle; 
-    struct RtnCount * _next;
+#endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
+    struct TauRtnStruct * _next;
+    void *fi; 
 } TAU_ROUTINE;
 
 // Linked list of instruction counts for each routine
@@ -57,31 +60,28 @@ extern "C" void Tau_start(const char *);
 extern "C" void Tau_stop(const char *); 
 
 void FunctionEntry(TAU_ROUTINE *rc) {
+
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
   const char *name = rc->_name.c_str(); 
   TAU_VERBOSE("ENTER: %s\n", name);
-#ifdef DEBUG_PROF
-  cout <<"ENTER: "<<rc->_name<<endl;
-#endif /* DEBUG_PROF */
-  //Tau_start(rc->_name.c_str());
-  //rc->fi = new FunctionInfo(rc->_name, " "); 
-  
-/*
-  TAU_PROFILER_CREATE(rc->func_handle, rc->_name.c_str(), " ", TAU_USER); 
-  TAU_PROFILER_START(rc->func_handle);
-*/
   TAU_START(name);
+#else
+  FunctionInfo *f = (FunctionInfo *) rc->fi; 
+  TAU_PROFILER_START(f); 
+#endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
   
 
 }
 
 void FunctionExit(TAU_ROUTINE *rc) {
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
   const char *name = rc->_name.c_str(); 
   TAU_VERBOSE("EXIT : %s\n", name);
-#ifdef DEBUG_PROF
-  cout <<"EXIT : "<<rc->_name<<endl;
-#endif /* DEBUG_PROF */
-  /* TAU_PROFILER_STOP(rc->func_handle); */
   TAU_STOP(name);
+#else
+  FunctionInfo *f = (FunctionInfo *) rc->fi; 
+  TAU_PROFILER_STOP(f); 
+#endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
 }
 
 const char * StripPath(const char * path)
@@ -105,6 +105,11 @@ VOID Routine(RTN rtn, VOID *v)
     name = RTN_Name(rtn);
     const char *func  = name.data(); 
     module = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
+    const string secname= SEC_Name(RTN_Sec(rtn)); 
+    if (secname.find(".plt") != std::string::npos) {
+      return; // no need to instrument plt stubs.
+      //cout <<"func = "<<func<<" secname = "<<secname<<endl;
+    }
     //if (name.find("MPI_") == std::string::npos) {
     if (!((toupper(func[0]) == 'M') && (toupper(func[1]) == 'P') && 
          (toupper(func[2]) == 'I') && (func[3] == '_'))) {
@@ -127,13 +132,21 @@ VOID Routine(RTN rtn, VOID *v)
    
 
     char buf[1024]; 
-    sprintf(buf, "%d", line);
-    rc->_name = name +string(" [{") + path + string("}{")+buf+string("}]");
+    string func_name; 
+    if (line && !path.empty()) {
+      sprintf(buf, "%d", line);
+      func_name = name +string(" [{") + path + string("}{")+buf+string("}]");
+    } else {
+      func_name = name; 
+    }
     
+#ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
+    rc->_name  = func_name;
     rc->_image = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
-    //rc->fi = new FunctionInfo(rc->_name.c_str(), " ", TAU_USER, "TAU_USER", true, 0); 
+#else
+    TAU_PROFILER_CREATE(rc->fi, func_name.c_str(), " ", TAU_USER);
+#endif 
 
-    // Add to list of routines
     rc->_next = RtnList;
     RtnList = rc;
 
@@ -143,7 +156,7 @@ VOID Routine(RTN rtn, VOID *v)
             
     RTN_Open(rtn);
             
-    // Insert a call at the entry point of a routine to increment the call count
+    // Insert a call at the entry and exit points of the routine.
 
 #ifdef TAU_PIN_JIT_MODE
     
@@ -158,8 +171,6 @@ VOID Routine(RTN rtn, VOID *v)
 #endif /* TAU_PIN_JIT_MODE */
     RTN_Close(rtn);
     
-
-    
 }
 
 /* ===================================================================== */
@@ -168,7 +179,7 @@ VOID Routine(RTN rtn, VOID *v)
 
 INT32 Usage()
 {
-    cerr << "mpirun -np <n> pin -t <taudir>/<arch>/lib/shared-pin/libTAU.so ./app"<<endl;
+    cerr << "mpirun -np <n> tau_exec -pin ./app"<<endl;
     cerr << "This tool instruments the application using TAU"<<endl;
     return -1;
 }
@@ -178,6 +189,33 @@ VOID TauPinFinish(INT32 code, VOID *v)
   Tau_profile_exit_all_threads(); 
 }
 
+typedef int (*CommRankT) (int, int *); 
+/* ===================================================================== */
+/* TauNewWrapperCommRank                                                 */
+/* ===================================================================== */
+int NewTauWrapperCommRank(CommRankT orgFuncptr, UINT32 arg0, int *arg1, ADDRINT returnIp) {
+  int ret; 
+  ret = orgFuncptr(arg0, arg1); 
+  int r = *arg1; 
+  TAU_VERBOSE("NewTauWrapperCommRank returns %d\n", r); 
+  TAU_PROFILE_SET_NODE(r); 
+}
+
+/* ===================================================================== */
+/* ImageLoad                                                             */
+/* ===================================================================== */
+VOID ImageLoad( IMG img, VOID *v) {
+    // Check if MPI_Comm_rank is present 
+    RTN rtn = RTN_FindByName(img, "MPI_Comm_rank"); 
+    if (RTN_Valid(rtn)) {
+      cout <<"Replacing MPI_Comm_rank with our stub in "<<IMG_Name(img)<<endl; 
+      PROTO proto_comm_rank = PROTO_Allocate(PIN_PARG(int), CALLINGSTD_DEFAULT, 
+		"MPI_Comm_rank", PIN_PARG(int), PIN_PARG(int *), PIN_PARG_END());
+      RTN_ReplaceSignatureProbed(rtn, AFUNPTR(NewTauWrapperCommRank), 
+	IARG_PROTOTYPE, proto_comm_rank, IARG_ORIG_FUNCPTR, 
+        IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_RETURN_IP, IARG_END);
+    }
+}
 
 /* ===================================================================== */
 /* Main                                                                  */
@@ -200,6 +238,7 @@ int main(int argc, char * argv[])
 #ifdef TAU_PIN_JIT_MODE 
     PIN_StartProgram();
 #else 
+    IMG_AddInstrumentFunction(ImageLoad, 0); 
     PIN_StartProgramProbed();
 #endif /* TAU_PIN_JIT_MODE */
     
