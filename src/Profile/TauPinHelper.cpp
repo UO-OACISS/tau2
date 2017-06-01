@@ -37,7 +37,7 @@ extern "C" void Tau_profile_exit_all_threads(void);
 
 
 #define TAU_PIN_JIT_MODE 1
-#define TAU_USE_FUNC_NAMES_FOR_START_STOP 1 
+//#define TAU_USE_FUNC_NAMES_FOR_START_STOP 1 
 
 #include <Profile/TauPin.h>
 #include <TAU.h> 
@@ -161,7 +161,7 @@ VOID Routine(RTN rtn, VOID *v)
 
 #ifdef TAU_PIN_JIT_MODE
     RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)FunctionEntry, IARG_PTR, rc, IARG_END);
-    if (rc->_name.find("MPI_Comm_rank") !=  std::string::npos) { 
+    if (func_name.find("MPI_Comm_rank") !=  std::string::npos) { 
       TAU_VERBOSE("Found MPI_Comm_rank\n"); 
       
       RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)CommRankExit, IARG_PTR, rc, IARG_FUNCARG_ENTRYPOINT_VALUE, 1, IARG_END);
@@ -210,19 +210,6 @@ int NewTauWrapperCommRank(CommRankT orgFuncptr, UINT32 arg0, int *arg1, ADDRINT 
 /* ===================================================================== */
 /* ImageLoad                                                             */
 /* ===================================================================== */
-VOID MPIImageLoad( IMG img, VOID *v) {
-    // Check if MPI_Comm_rank is present 
-    RTN rtn = RTN_FindByName(img, "MPI_Comm_rank"); 
-    if (RTN_Valid(rtn)) {
-      cout <<"Replacing MPI_Comm_rank with our stub in "<<IMG_Name(img)<<endl; 
-      PROTO proto_comm_rank = PROTO_Allocate(PIN_PARG(int), CALLINGSTD_DEFAULT, 
-		"MPI_Comm_rank", PIN_PARG(int), PIN_PARG(int *), PIN_PARG_END());
-      RTN_ReplaceSignatureProbed(rtn, AFUNPTR(NewTauWrapperCommRank), 
-	IARG_PROTOTYPE, proto_comm_rank, IARG_ORIG_FUNCPTR, 
-        IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_RETURN_IP, IARG_END);
-    }
-}
-
 VOID ImageLoad(IMG img, VOID *v) {
 
     TAU_VERBOSE("Image loaded: %s\n", IMG_Name(img).c_str());
@@ -262,7 +249,6 @@ int main(int argc, char * argv[])
 #ifdef TAU_PIN_JIT_MODE 
     PIN_StartProgram();
 #else 
-    IMG_AddInstrumentFunction(MPIImageLoad, 0); 
     PIN_StartProgramProbed();
 #endif /* TAU_PIN_JIT_MODE */
     
