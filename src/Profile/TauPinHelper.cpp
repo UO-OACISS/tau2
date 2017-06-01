@@ -73,7 +73,6 @@ void FunctionEntry(TAU_ROUTINE *rc) {
   
 
 }
-
 void FunctionExit(TAU_ROUTINE *rc) {
 #ifdef TAU_USE_FUNC_NAMES_FOR_START_STOP
   const char *name = rc->_name.c_str(); 
@@ -84,6 +83,12 @@ void FunctionExit(TAU_ROUTINE *rc) {
   TAU_PROFILER_STOP(f); 
   //cout <<"Exit:  "<<f<<" "<<f->GetName()<<endl;
 #endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
+}
+
+void CommRankExit(TAU_ROUTINE *rc, int* rank) { 
+  TAU_VERBOSE("Return value from MPI_Comm_rank is %d\n", *rank); 
+  TAU_PROFILE_SET_NODE(*rank); 
+  FunctionExit(rc); 
 }
 
 const char * StripPath(const char * path)
@@ -155,9 +160,14 @@ VOID Routine(RTN rtn, VOID *v)
     // Insert a call at the entry and exit points of the routine.
 
 #ifdef TAU_PIN_JIT_MODE
-    
     RTN_InsertCall(rtn, IPOINT_BEFORE, (AFUNPTR)FunctionEntry, IARG_PTR, rc, IARG_END);
-    RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)FunctionExit, IARG_PTR, rc, IARG_END);
+    if (rc->_name.find("MPI_Comm_rank") !=  std::string::npos) { 
+      TAU_VERBOSE("Found MPI_Comm_rank\n"); 
+      
+      RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)CommRankExit, IARG_PTR, rc, IARG_FUNCARG_ENTRYPOINT_VALUE, 1, IARG_END);
+    } else {
+      RTN_InsertCall(rtn, IPOINT_AFTER, (AFUNPTR)FunctionExit, IARG_PTR, rc, IARG_END);
+    }
 #else
     if (RTN_IsSafeForProbedInsertion(rtn)) { 
       RTN_InsertCallProbed(rtn, IPOINT_BEFORE, (AFUNPTR)FunctionEntry, IARG_PTR, rc, IARG_END);
