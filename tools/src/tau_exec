@@ -512,7 +512,7 @@ fi
 binding_options="$new_binding_options"
 
 
-if [ "x$binding_specified" = "x" -a ! $use_pin ] ; then
+if [ "x$binding_specified" = "x" ] && ! $use_pin ; then
   if [ "x$binding_options" = "x" ]; then
     binding_options=`echo "$default_tags" | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
   else
