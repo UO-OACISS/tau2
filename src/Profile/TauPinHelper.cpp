@@ -37,7 +37,7 @@ extern "C" void Tau_profile_exit_all_threads(void);
 
 
 #define TAU_PIN_JIT_MODE 1
-//#define TAU_USE_FUNC_NAMES_FOR_START_STOP 1 
+#define TAU_USE_FUNC_NAMES_FOR_START_STOP 1 
 
 #include <Profile/TauPin.h>
 #include <TAU.h> 
@@ -68,6 +68,7 @@ void FunctionEntry(TAU_ROUTINE *rc) {
 #else
   FunctionInfo *f = (FunctionInfo *) rc->fi; 
   TAU_PROFILER_START(f); 
+  //cout <<"Enter: " << f<<" " <<f->GetName()<<endl;
 #endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
   
 
@@ -81,6 +82,7 @@ void FunctionExit(TAU_ROUTINE *rc) {
 #else
   FunctionInfo *f = (FunctionInfo *) rc->fi; 
   TAU_PROFILER_STOP(f); 
+  //cout <<"Exit:  "<<f<<" "<<f->GetName()<<endl;
 #endif /* TAU_USE_FUNC_NAMES_FOR_START_STOP */
 }
 
@@ -110,21 +112,14 @@ VOID Routine(RTN rtn, VOID *v)
       return; // no need to instrument plt stubs.
       //cout <<"func = "<<func<<" secname = "<<secname<<endl;
     }
-    //if (name.find("MPI_") == std::string::npos) {
-    if (!((toupper(func[0]) == 'M') && (toupper(func[1]) == 'P') && 
-         (toupper(func[2]) == 'I') && (func[3] == '_'))) {
-	/* Not an MPI routine */
+    if((name.find("PMPI_") == std::string::npos) && 
+       (name.find("MPI_") == std::string::npos)) { 
+       /* it doesn't have MPI and PMPI in its name */
       if ((line == 0) || path.empty() || 
           (module.find(".so.") != std::string::npos)) {
          TAU_VERBOSE("Not instrumenting: %s\n", func); 
          return;
       }
-    } else {
-      if ((func[0] == 'm') && (name.find("@plt") != std::string::npos)) { 
-        TAU_VERBOSE("Not instrumenting plt: %s\n", func); 
-        return; /* do not instrument plts for MPI */
-      }
-      TAU_VERBOSE("Instrumenting: %s\n", func);
     }
 
     TAU_ROUTINE * rc = new TAU_ROUTINE;
@@ -145,6 +140,7 @@ VOID Routine(RTN rtn, VOID *v)
     rc->_image = StripPath(IMG_Name(SEC_Img(RTN_Sec(rtn))).c_str());
 #else
     TAU_PROFILER_CREATE(rc->fi, func_name.c_str(), " ", TAU_USER);
+    //cout <<"Creating profiler for "<<func_name<<" " <<rc->fi<<endl; 
 #endif 
 
     rc->_next = RtnList;
@@ -204,7 +200,7 @@ int NewTauWrapperCommRank(CommRankT orgFuncptr, UINT32 arg0, int *arg1, ADDRINT 
 /* ===================================================================== */
 /* ImageLoad                                                             */
 /* ===================================================================== */
-VOID ImageLoad( IMG img, VOID *v) {
+VOID MPIImageLoad( IMG img, VOID *v) {
     // Check if MPI_Comm_rank is present 
     RTN rtn = RTN_FindByName(img, "MPI_Comm_rank"); 
     if (RTN_Valid(rtn)) {
@@ -216,6 +212,20 @@ VOID ImageLoad( IMG img, VOID *v) {
         IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_RETURN_IP, IARG_END);
     }
 }
+
+VOID ImageLoad(IMG img, VOID *v) {
+
+    TAU_VERBOSE("Image loaded: %s\n", IMG_Name(img).c_str());
+
+
+}
+
+
+VOID ImageUnload(IMG img, void *v) {
+    TAU_VERBOSE("Image unloaded: %s\n", IMG_Name(img).c_str());
+
+}
+
 
 /* ===================================================================== */
 /* Main                                                                  */
@@ -229,6 +239,10 @@ int main(int argc, char * argv[])
     // Initialize pin
     if (PIN_Init(argc, argv)) return Usage();
 
+
+    IMG_AddInstrumentFunction(ImageLoad, 0);
+    IMG_AddUnloadFunction(ImageUnload, 0);
+
     // Register Routine to be called to instrument rtn
     RTN_AddInstrumentFunction(Routine, 0);
 
@@ -238,7 +252,7 @@ int main(int argc, char * argv[])
 #ifdef TAU_PIN_JIT_MODE 
     PIN_StartProgram();
 #else 
-    IMG_AddInstrumentFunction(ImageLoad, 0); 
+    IMG_AddInstrumentFunction(MPIImageLoad, 0); 
     PIN_StartProgramProbed();
 #endif /* TAU_PIN_JIT_MODE */
     
