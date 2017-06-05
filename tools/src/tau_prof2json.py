@@ -128,6 +128,8 @@ def parse_aggregates(node, context, thread, infile, data):
 
 def parse_counters(node, context, thread, infile, data, counter_map):
     userevents = infile.readline()
+    if (userevents == None or userevents == ""):
+        return
     tokens = userevents.split()
     num_userevents = int(tokens[0])
     # data["Num Counters"] = tokens[0]
@@ -243,7 +245,7 @@ def parse_directory(indir, index, data):
     data[indir] = application
     
     # get the list of profile files
-    profiles = [f for f in os.listdir(indir) if os.path.isfile(os.path.join (indir, f))]
+    profiles = [f for f in os.listdir(indir) if (os.path.isfile(os.path.join (indir, f)) and f.startswith("profile."))]
     #application["num profiles"] = len(profiles)
 
     application["metadata"] = OrderedDict()
