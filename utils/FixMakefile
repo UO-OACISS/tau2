@@ -2229,6 +2229,10 @@ case $1 in
 	echo "NOTE: Disabling building of shared objects"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DISABLE_MEM_MANAGER)
+	echo "NOTE: Disabling building of shared objects"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      LD_AUDITOR_AVAILABLE)
 	echo "NOTE: Using LD AUDITOR"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

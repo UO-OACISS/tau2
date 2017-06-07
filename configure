@@ -458,6 +458,8 @@ for arg in "$@"; do
         echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
         echo "-noex .................. Use no exceptions while compiling the library."
         echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+        echo "                       (Note: also disables sampling, marker tracking)."
         echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
         echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
         echo "-help ...................................... display this help message."
@@ -622,6 +624,8 @@ for arg in "$@"; do
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
 	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+        echo "                       (Note: also disables sampling, marker tracking)."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
@@ -926,6 +930,7 @@ cupti=no
 strsignal_ok=no
 android_version=4.4
 android_platform=19
+disable_memory_manager=no
 
 restore_perfdmf_and_paraprof
 
@@ -2171,6 +2176,12 @@ for arg in "$@"; do
 	-DISABLESHARED)
 	    # Disable shared library creation
 	    disableshared=yes
+	    shift
+	    ;;
+
+	-DISABLE_MEMORY_MANAGER)
+	    # Disable heap management for sampling, signal handling
+	    disable_memory_manager=yes
 	    shift
 	    ;;
 
@@ -9784,6 +9795,10 @@ fi
 
 if [ $disableshared = yes ] ; then
     fixmakeargs="$fixmakeargs NOSHARED"
+fi
+
+if [ $disable_memory_manager = yes ] ; then
+    fixmakeargs="$fixmakeargs DISABLE_MEM_MANAGER"
 fi
 
 if [ $disableshared = yes -a $python = yes ] ; then
