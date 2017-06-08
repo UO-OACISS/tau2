@@ -95,6 +95,10 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #define TAU_MAX_COUNTERS 25
 #endif
 
+#ifndef TAU_MAX_CALLPATH_DEPTH
+#define TAU_MAX_CALLPATH_DEPTH 200
+#endif
+
 #if (defined(PTHREADS) || defined(TAU_MPC) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
 
 
