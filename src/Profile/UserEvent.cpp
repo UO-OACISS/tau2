@@ -377,8 +377,11 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
 
     int depth = TauEnv_get_callpath_depth();
     if (depth) {
-      //Profiler ** path = new Profiler*[depth];
+#ifdef TAU_DISABLE_MEM_MANAGER
+      Profiler ** path = new Profiler*[depth];
+#else
       Profiler * path[200];
+#endif
 
       // Reverse the callpath to avoid string copies
       int i=depth-1;
