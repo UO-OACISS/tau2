@@ -351,10 +351,15 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
 {
   int depth = TauEnv_get_callpath_depth();
+  static bool first_time_flag = false; 
 
   if (depth > TAU_MAX_CALLPATH_DEPTH) {
-    printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", depth, TAU_MAX_CALLPATH_DEPTH);
-    printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
+    if (first_time_flag == false) {
+      int max = TAU_MAX_CALLPATH_DEPTH;
+      printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", max);
+      printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
+      first_time_flag = true;
+    }
     depth = TAU_MAX_CALLPATH_DEPTH;
   }
 
@@ -378,14 +383,19 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, 
 ////////////////////////////////////////////////////////////////////////////
 TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current)
 {
+  static bool first_time_flag = false; 
   if (current) {
     std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
     buff << userEvent->GetName();
 
     int depth = TauEnv_get_callpath_depth();
     if (depth > TAU_MAX_CALLPATH_DEPTH) {
-      printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", TAU_MAX_CALLPATH_DEPTH); 
-      printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
+      if (first_time_flag == false) {
+        int max = TAU_MAX_CALLPATH_DEPTH; 
+        printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", max); 
+        printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
+        first_time_flag = true; 
+      }
       depth = TAU_MAX_CALLPATH_DEPTH; 
     }
     if (depth) {
