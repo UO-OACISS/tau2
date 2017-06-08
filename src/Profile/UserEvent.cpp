@@ -404,7 +404,9 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
 
-      //delete[] path;
+#ifdef TAU_DISABLE_MEM_MANAGER
+      delete[] path;
+#endif
     }
 
     // Return a new string object.
