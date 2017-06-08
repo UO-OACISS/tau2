@@ -22,6 +22,7 @@
 #include <Profile/Profiler.h>
 #include <Profile/PthreadLayer.h>
 #include <Profile/TauInit.h>
+#include <Profile/TauSOS.h>
 
 #include <stdlib.h>
 
@@ -271,7 +272,11 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   }
 
   int retval;
+#ifdef TAU_SOS
+  if(*wrapped || start_routine == &Tau_sos_thread_function) {
+#else
   if(*wrapped) {
+#endif
     // Another wrapper has already intercepted the call so just pass through
     retval = pthread_create_call(threadp, attr, start_routine, arg);
   } else {

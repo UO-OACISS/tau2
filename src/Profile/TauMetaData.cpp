@@ -1135,3 +1135,17 @@ int Tau_write_metadata_records_in_scorep(int tid) {
   return 0;
 }
 
+char * Tau_metadata_get(const char * name, int tid) {
+    char * returnval;
+    Tau_metadata_key key;
+    key.name = strdup(name);
+    MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).find(key); 
+    if (it != Tau_metadata_getMetaData(tid).end()) {
+	  if (it->second->type == TAU_METADATA_TYPE_STRING) {
+        const char *my_value = it->second->data.cval;
+        returnval = strdup(my_value);
+	  }
+    }
+    free(key.name);
+    return returnval;
+}

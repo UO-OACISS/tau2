@@ -17,7 +17,7 @@ TAU_MAKEFILE ?=../../include/Makefile
 include $(TAU_MAKEFILE)
 
 #CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles -optNoCompInst -optLinkOnly
-CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
 #CC		= opencc -fopenmp
 #CC		= icc -pthread -DPTHREADS
 #CC      = $(TAU_CC) -fopenmp
@@ -28,9 +28,10 @@ RM 	      	= /bin/rm -rf
 
 TARGET	      	= matmult
 
+MPI_OPTS = $(shell mpicc -show | awk '{$$1 = ""; print $$0}')
 OBJS     	= matmult.o matmult_initialize.o
-CFLAGS=-g -O0 $(TAU_OPENMP_OPTION)
-LDFLAGS=-g $(TAU_OPENMP_OPTION)
+CFLAGS=-g -O0 $(TAU_OPENMP_OPTION) -DSOS_MPI $(MPI_OPTS) -I../../include
+LDFLAGS=-dynamic -g $(TAU_OPENMP_OPTION)
 
 ##############################################
 
@@ -38,13 +39,13 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(OBJS) 
+$(TARGET):	$(OBJS) $(TAU_LIB_DIR)/libTAU.so Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
-matmult.o: matmult.c
+matmult.o: matmult.c Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
-matmult_initialize.o: matmult_initialize.c matmult_initialize.h
+matmult_initialize.o: matmult_initialize.c matmult_initialize.h Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean: 	
