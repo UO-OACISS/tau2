@@ -351,6 +351,13 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
 {
   int depth = TauEnv_get_callpath_depth();
+
+  if (depth > TAU_MAX_CALLPATH_DEPTH) {
+    printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", depth, TAU_MAX_CALLPATH_DEPTH);
+    printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
+    depth = TAU_MAX_CALLPATH_DEPTH;
+  }
+
   *size = sizeof(long)*(depth+2);
   long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), *size);
   int i=1;
@@ -376,9 +383,14 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
     buff << userEvent->GetName();
 
     int depth = TauEnv_get_callpath_depth();
+    if (depth > TAU_MAX_CALLPATH_DEPTH) {
+      printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", TAU_MAX_CALLPATH_DEPTH); 
+      printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
+      depth = TAU_MAX_CALLPATH_DEPTH; 
+    }
     if (depth) {
       //Profiler ** path = new Profiler*[depth];
-      Profiler * path[200];
+      Profiler * path[TAU_MAX_CALLPATH_DEPTH];
 
       // Reverse the callpath to avoid string copies
       int i=depth-1;
