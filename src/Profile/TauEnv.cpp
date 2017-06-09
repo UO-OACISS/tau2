@@ -43,6 +43,7 @@
 #include <Profile/TauEnv.h>
 #include <TAU.h>
 #include <tauroot.h>
+#include <tauarch.h>
 #include <fcntl.h>
 #include <string>
 
@@ -265,6 +266,7 @@ static const char *env_cvar_metrics = NULL;
 static const char *env_cvar_values = NULL;
 static const char *env_plugins_path = NULL;
 static const char *env_plugins = NULL;
+static const char *env_select_file = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
@@ -1813,6 +1815,24 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: TAU_PLUGINS is not set\n", env_plugins);
     } else {
       TAU_VERBOSE("TAU: TAU_PLUGINS is \"%s\"\n", env_plugins);
+    }
+
+    if((env_select_file = getconf("TAU_SELECT_FILE")) == NULL) {
+      env_select_file = NULL; 
+    } else {
+      if ((env_plugins == NULL) && (env_plugins_path == NULL)) {
+        TAU_VERBOSE("TAU: TAU_SELECT_FILE is set to %s when TAU plugins are not initialized\n", env_select_file);
+          env_plugins_path=strdup(TAU_LIB_DIR); 
+          TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is now %s\n", env_plugins_path);
+          //sprintf(env_plugins,"libTAU-filter-plugin.so(%s)", env_select_file); 
+          char *plugins = (char *) malloc(1024); 
+	  char *filename = strdup(env_select_file);
+          sprintf(plugins, "libTAU-filter-plugin.so(%s)", filename); 
+          env_plugins = plugins; 
+          TAU_VERBOSE("TAU: TAU plugin is now %s\n", env_plugins);
+      } else {
+        TAU_VERBOSE("TAU: Ignoring TAU_SELECT_FILE because TAU_PLUGINS and/or TAU_PLUGINS_PATH is set.\nPlease use export TAU_PLUGINS_PATH=%s and export TAU_PLUGINS=\"libTAU-filter-plugin.so(%s)\"\n", strdup(TAU_LIB_DIR), strdup(env_select_file)); 
+      }
     }
 
     tmp = getconf("TAU_OPENMP_RUNTIME");
