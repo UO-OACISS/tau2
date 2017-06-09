@@ -350,7 +350,9 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 //////////////////////////////////////////////////////////////////////
 long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
 {
-  int depth = TauEnv_get_callpath_depth();
+  int tid = RtsLayer::myThread();
+  int depth = Tau_get_current_stack_depth(tid);
+
   *size = sizeof(long)*(depth+2);
   long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), *size);
   int i=1;
@@ -371,14 +373,13 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, 
 ////////////////////////////////////////////////////////////////////////////
 TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current)
 {
+  int tid = RtsLayer::myThread();
   if (current) {
-    std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
-    buff << userEvent->GetName();
+      std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
+      buff << userEvent->GetName();
 
-    int depth = TauEnv_get_callpath_depth();
-    if (depth) {
-      //Profiler ** path = new Profiler*[depth];
-      Profiler * path[200];
+      int depth = Tau_get_current_stack_depth(tid);
+      Profiler ** path = new Profiler*[depth];
 
       // Reverse the callpath to avoid string copies
       int i=depth-1;
@@ -401,14 +402,12 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
 
-      //delete[] path;
-    }
-
+      delete[] path;
     // Return a new string object.
     // A smart STL implementation will not allocate a new buffer.
-    return buff.str().c_str();
+      return buff.str().c_str();
   } else {
-    return "";
+      return "";
   }
 }
 

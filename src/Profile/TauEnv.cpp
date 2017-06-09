@@ -86,6 +86,8 @@ using namespace std;
 #define TAU_OPENMP_RUNTIME_CONTEXT_REGION "region"
 #define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
 
+#define TAU_SOS_DEFAULT 1
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_DEFAULT_TAU 0
@@ -244,6 +246,7 @@ static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
+static int env_sos_enabled = 1;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -882,6 +885,10 @@ int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
 }
 
+int TauEnv_get_sos_enabled() {
+  return env_sos_enabled;
+}
+
 int TauEnv_get_ebs_enabled_tau() {
   return env_ebs_enabled_tau;
 }
@@ -1129,25 +1136,40 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_POWER");
     if (parse_bool(tmp, env_track_power)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Power tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_POWER", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: Power tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
+#endif
     } 
 
     tmp = getconf("TAU_TRACK_LOAD");
     if (parse_bool(tmp, env_track_load)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: system load tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_LOAD", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: system load tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_LOAD", "on");
       TAU_TRACK_LOAD();
+#endif
     } 
 
 #ifdef TAU_MPI_T
     tmp = getconf("TAU_TRACK_MPI_T_PVARS");
     if (parse_bool(tmp, env_track_mpi_t_pvars)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: MPI_T PVARS tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "disabled (disabled memory management)");
+#else
       env_track_mpi_t_pvars = 1;
       TAU_VERBOSE("TAU: MPI_T PVARS tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "on");
       TAU_VERBOSE("TAU: Checking for performance variables from MPI_T\n");
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "off");
     }
@@ -1166,9 +1188,14 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Entry/Exit Memory tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_HEAP", "disabled (memory management disabled)");
+#else
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEAP", "on");
       env_track_memory_heap = 1;
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_HEAP", "off");
       env_track_memory_heap = 0;
@@ -1186,10 +1213,15 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_MEMORY_FOOTPRINT");
     if (parse_bool(tmp, env_track_memory_footprint)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: TAU_TRACK_MEMORY_FOOTPRINT VmRSS and VmHWM tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: TAU_TRACK_MEMORY_FOOTPRINT VmRSS and VmHWM tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "on");
       TAU_TRACK_MEMORY_FOOTPRINT();
       env_track_memory_footprint = 1;
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "off");
       env_track_memory_footprint = 0;
@@ -1212,9 +1244,14 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
     if (parse_bool(tmp, env_track_memory_leaks)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Memory tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: Memory tracking enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
       env_track_memory_leaks = 1;
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
@@ -1366,6 +1403,10 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_SIGNALS");
     if (parse_bool(tmp, env_track_signals)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Tracking SIGNALS disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_SIGNALS", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
       TAU_METADATA("TAU_TRACK_SIGNALS", "on");
       env_track_signals = 1;
@@ -1387,6 +1428,7 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_ECHO_BACKTRACE", "off");
         env_echo_backtrace = 0;
       }
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_SIGNALS", "off");
       TAU_METADATA("TAU_SIGNALS_GDB", "off");
@@ -1854,6 +1896,17 @@ void TauEnv_initialize()
 #endif
 #endif
 
+    tmp = getconf("TAU_SOS");
+    if (parse_bool(tmp, TAU_SOS_DEFAULT)) {
+      env_sos_enabled = 1;
+      TAU_VERBOSE("TAU: SOS Enabled\n");
+      TAU_METADATA("TAU_SOS", "on");
+    } else {
+      env_sos_enabled = 0;
+      TAU_VERBOSE("TAU: SOS Disabled\n");
+      TAU_METADATA("TAU_SOS", "off");
+    }
+
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
       env_ebs_enabled = 1; // enable samping too?
@@ -1869,9 +1922,15 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_SAMPLING");
     if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      env_ebs_enabled = 0;
+      TAU_VERBOSE("TAU: Sampling Disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_SAMPLING", "disabled (memory management disabled)");
+#else
       env_ebs_enabled = 1;
       TAU_VERBOSE("TAU: Sampling Enabled\n");
       TAU_METADATA("TAU_SAMPLING", "on");
+#endif
     } else {
       env_ebs_enabled = 0;
       TAU_VERBOSE("TAU: Sampling Disabled\n");

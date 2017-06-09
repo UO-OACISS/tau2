@@ -51,6 +51,7 @@ usage()
   echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
   echo "        -armci        Track ARMCI events via PARMCI"
   echo "        -shmem        Track SHMEM events"
+  echo "        -pin          Use Intel PIN for instrumentation"
   echo "        -ptts         Run with ParaTools ThreadSpotter"
   echo "        -ptts-post    Skip application sampling and post-process existing PTTS sample files"
   echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
@@ -289,6 +290,7 @@ use_gdb=false
 track_numa=false
 track_shmem=false
 use_ptts=false
+use_pin=false
 ptts_post=false
 ptts_N=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
@@ -379,6 +381,10 @@ for arg in "$@" ; do
         ;;
       -shmem)
         track_shmem=true
+        shift
+        ;;
+      -pin)
+        use_pin=true
         shift
         ;;
       -ptts)
@@ -506,7 +512,7 @@ fi
 binding_options="$new_binding_options"
 
 
-if [ "x$binding_specified" = "x" ] ; then
+if [ "x$binding_specified" = "x" ] && ! $use_pin ; then
   if [ "x$binding_options" = "x" ]; then
     binding_options=`echo "$default_tags" | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
   else
@@ -821,6 +827,27 @@ if [ $verbose = "true" ] ; then
   echo ""
 fi
 
+if $use_pin ; then
+  if [ -n "$dryrun" ] ; then
+    echo "ERROR: dryrun not implemented for pin"
+    exit 1
+  fi
+
+  mk_options=`echo $theBinding | sed -e 's/shared/tau/g'`
+  if ! echo "$mk_options" | grep -q "pin" >/dev/null 2>&1 ; then
+    mk_options=tau-pin
+    theBinding=shared-pin
+  fi 
+  mk=$BASEDIR/lib/Makefile.$mk_options
+  if [ -r $mk ]; then
+    PIN_ROOT=`grep "^PIN_ROOT=" $mk | sed -e 's@^PIN_ROOT=@@g' ` 
+    #echo "PIN_ROOT=$PIN_ROOT"
+    $PIN_ROOT/pin -t $BASEDIR/lib/$theBinding/libTAU.so -- $@
+    exit $?
+  else 
+    echo "$0: PIN configuration not found. Please use ./configure -pin=download; make install;  and retry"
+  fi
+fi
 # Prep ThreadSpotter before LD_PRELOAD get set
 if $use_ptts ; then
   if ! which sample_ts report_ts view-static_ts >/dev/null 2>&1 ; then

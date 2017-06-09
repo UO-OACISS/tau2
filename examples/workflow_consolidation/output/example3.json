@@ -1,0 +1,932 @@
+{
+  "Workflow metadata": {
+    "Workflow Instance": [
+      {
+        "id": 1, 
+        "name": "ImpactTv1betaAdios", 
+        "location-id": 1, 
+        "version": "0.1", 
+        "event-type": "", 
+        "timestamp": "2017-05-04T11:24:43-04:00"
+      }
+    ], 
+    "Workflow Component": [
+      {
+        "id": 1, 
+        "name": "xmain", 
+        "location-id": 1, 
+        "application-id": 1, 
+        "event-type": "", 
+        "timestamp": "2017-05-04T11:24:43-04:00"
+      }, 
+      {
+        "id": 2, 
+        "name": "reader2", 
+        "location-id": 1, 
+        "application-id": 2, 
+        "event-type": "", 
+        "timestamp": "2017-05-04T11:24:43-04:00"
+      }
+    ], 
+    "Workflow Component-input": [
+      {
+        "id": 1, 
+        "name": "ImpactT.in", 
+        "component-id": 1, 
+        "uri": ""
+      }
+    ], 
+    "Workflow Component-output": [
+      {
+        "id": 1, 
+        "name": "fort.18", 
+        "component-id": 1, 
+        "uri": ""
+      }, 
+      {
+        "id": 2, 
+        "name": "fort.24", 
+        "component-id": 1, 
+        "uri": ""
+      }
+    ], 
+    "Application-instance": [
+      {
+        "id": 1, 
+        "process-id": 30473, 
+        "location-id": 1, 
+        "application-id": 1, 
+        "event-type": "", 
+        "timestamp": "2017-05-04T11:24:43-04:00"
+      }, 
+      {
+        "id": 2, 
+        "process-id": 30593, 
+        "location-id": 2, 
+        "application-id": 1, 
+        "event-type": "", 
+        "timestamp": "2017-05-04T11:24:43-04:00"
+      }
+    ], 
+    "Application": [
+      {
+        "id": 1, 
+        "location-id": 1, 
+        "name": "xmain", 
+        "version": "0.1", 
+        "uri": ""
+      }, 
+      {
+        "id": 2, 
+        "location-id": 2, 
+        "name": "reader2", 
+        "version": "0.1", 
+        "uri": ""
+      }
+    ], 
+    "CodeRegion": [
+      {
+        "id": "0", 
+        "location-id": 1, 
+        "name": ".TAU application", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "1", 
+        "location-id": 1, 
+        "name": "MPI_Init()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "2", 
+        "location-id": 1, 
+        "name": "MPI_Comm_rank()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "3", 
+        "location-id": 1, 
+        "name": "MPI_Comm_size()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "4", 
+        "location-id": 1, 
+        "name": "MPI_Barrier()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "5", 
+        "location-id": 1, 
+        "name": "MPI_Bcast()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "6", 
+        "location-id": 1, 
+        "name": "MPI_Cart_coords()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "7", 
+        "location-id": 1, 
+        "name": "MPI_Cart_sub()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "8", 
+        "location-id": 1, 
+        "name": "MPI_Allreduce()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "9", 
+        "location-id": 1, 
+        "name": "MPI_Reduce()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "10", 
+        "location-id": 1, 
+        "name": "pthread_create", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "11", 
+        "location-id": 1, 
+        "name": "MPI_Comm_dup()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "12", 
+        "location-id": 1, 
+        "name": "MPI_Gather()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "13", 
+        "location-id": 1, 
+        "name": "MPI_Allgather()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "14", 
+        "location-id": 1, 
+        "name": "MPI_Comm_free()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "15", 
+        "location-id": 1, 
+        "name": "MPI_Finalize()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "16", 
+        "location-id": 2, 
+        "name": ".TAU application", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "17", 
+        "location-id": 2, 
+        "name": "MPI_Init()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "18", 
+        "location-id": 2, 
+        "name": "MPI_Comm_rank()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "19", 
+        "location-id": 2, 
+        "name": "MPI_Comm_size()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "20", 
+        "location-id": 2, 
+        "name": "pthread_create", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "21", 
+        "location-id": 2, 
+        "name": "MPI_Gather()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "22", 
+        "location-id": 2, 
+        "name": "MPI_Barrier()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "23", 
+        "location-id": 2, 
+        "name": "MPI_Reduce()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "24", 
+        "location-id": 2, 
+        "name": "MPI_Allreduce()", 
+        "event-type": "", 
+        "timestamp": ""
+      }, 
+      {
+        "id": "25", 
+        "location-id": 2, 
+        "name": "MPI_Finalize()", 
+        "event-type": "", 
+        "timestamp": ""
+      }
+    ], 
+    "Metric": [
+      {
+        "id": "1", 
+        "location-id": 1, 
+        "measurement": "Time", 
+        "units": "microseconds", 
+        "datetime": ""
+      }
+    ], 
+    "Location": [
+      {
+        "id": 1, 
+        "parent-location-id": "", 
+        "type": "Titan"
+      }
+    ]
+  }, 
+  "profiles_xmain": {
+    "metadata": {
+      "Rank 0, Thread 0": {
+        "CPU Cores": "8", 
+        "CPU MHz": "2200.000", 
+        "CPU Type": "AMD Opteron(TM) Processor 6274 ", 
+        "CPU Vendor": "AuthenticAMD", 
+        "CWD": "/lustre/atlas2/csc103/proj-shared/khuck/junmin", 
+        "Cache Size": "2048 KB", 
+        "Command Line": "./xmain", 
+        "Executable": "/lustre/atlas2/csc103/proj-shared/khuck/junmin/xmain", 
+        "Hostname": "nid09198", 
+        "Local Time": "2017-05-04T11:24:43-04:00", 
+        "MPI Processor Name": "nid09198", 
+        "Memory Size": "33083764 kB", 
+        "Node Name": "nid09198", 
+        "OS Machine": "x86_64", 
+        "OS Name": "Linux", 
+        "OS Release": "3.0.101-0.46.1_1.0502.8871-cray_gem_c", 
+        "OS Version": "#1 SMP Sat Oct 22 15:26:43 UTC 2016", 
+        "Starting Timestamp": "1493911483031846", 
+        "TAU Architecture": "default", 
+        "TAU Config": " -prefix=/lustre/atlas/proj-shared/csc103/khuck/tau2 -mpi -arch=craycnl -sos=/ccs/home/khuck/src/sos_flow/build-titan -pthread -adios=/ccs/home/khuck/src/chaos/adios/ADIOS-gcc -bfd=download -useropt=-g#-Og", 
+        "TAU Makefile": "/lustre/atlas/proj-shared/csc103/khuck/tau2/craycnl/lib/Makefile.tau-gnu-mpi-pthread", 
+        "TAU MetaData Merge Time": "9.4E-05 seconds", 
+        "TAU Version": "2.25.1-git", 
+        "TAU_BFD_LOOKUP": "on", 
+        "TAU_CALLPATH": "off", 
+        "TAU_CALLPATH_DEPTH": "2", 
+        "TAU_CALLSITE_LIMIT": "1", 
+        "TAU_COMM_MATRIX": "off", 
+        "TAU_COMPENSATE": "off", 
+        "TAU_CUDA_BINARY_EXE": "", 
+        "TAU_CUPTI_API": "runtime", 
+        "TAU_EBS_KEEP_UNRESOLVED_ADDR": "off", 
+        "TAU_IBM_BG_HWP_COUNTERS": "off", 
+        "TAU_MAX_THREADS": "128", 
+        "TAU_MEASURE_TAU": "off", 
+        "TAU_MEMDBG_PROTECT_ABOVE": "off", 
+        "TAU_MEMDBG_PROTECT_BELOW": "off", 
+        "TAU_MEMDBG_PROTECT_FREE": "off", 
+        "TAU_OPENMP_RUNTIME": "on", 
+        "TAU_OPENMP_RUNTIME_EVENTS": "on", 
+        "TAU_OPENMP_RUNTIME_STATES": "off", 
+        "TAU_OUTPUT_CUDA_CSV": "off", 
+        "TAU_PAPI_MULTIPLEXING": "off", 
+        "TAU_PROFILE": "on", 
+        "TAU_PROFILE_FORMAT": "profile", 
+        "TAU_SAMPLING": "off", 
+        "TAU_SHOW_MEMORY_FUNCTIONS": "off", 
+        "TAU_SIGNALS_GDB": "off", 
+        "TAU_SOS": "off", 
+        "TAU_THROTTLE": "on", 
+        "TAU_THROTTLE_NUMCALLS": "100000", 
+        "TAU_THROTTLE_PERCALL": "10", 
+        "TAU_TRACE": "off", 
+        "TAU_TRACK_CUDA_CDP": "off", 
+        "TAU_TRACK_CUDA_INSTRUCTIONS": "", 
+        "TAU_TRACK_CUDA_SASS": "off", 
+        "TAU_TRACK_HEADROOM": "off", 
+        "TAU_TRACK_HEAP": "off", 
+        "TAU_TRACK_IO_PARAMS": "off", 
+        "TAU_TRACK_MEMORY_FOOTPRINT": "off", 
+        "TAU_TRACK_MEMORY_LEAKS": "off", 
+        "TAU_TRACK_MESSAGE": "off", 
+        "TAU_TRACK_SIGNALS": "off", 
+        "TAU_TRACK_UNIFIED_MEMORY": "off", 
+        "TAU_VERBOSE": "on", 
+        "Timestamp": "1493911483033017", 
+        "UTC Time": "2017-05-04T15:24:43Z", 
+        "pid": "30473", 
+        "tid": "30473", 
+        "username": "khuck"
+      }, 
+      "Rank 0, Thread 1": {}, 
+      "Rank 0, Thread 2": {}
+    }, 
+    "Timers": [
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": ".TAU application", 
+        "Calls": 1, 
+        "Subroutines": 424, 
+        "Exclusive Time": 11157335, 
+        "Inclusive Time": 11162993
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Init()", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 2854, 
+        "Inclusive Time": 2854
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Comm_rank()", 
+        "Calls": 69, 
+        "Subroutines": 0, 
+        "Exclusive Time": 73, 
+        "Inclusive Time": 73
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Comm_size()", 
+        "Calls": 14, 
+        "Subroutines": 0, 
+        "Exclusive Time": 10, 
+        "Inclusive Time": 10
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Barrier()", 
+        "Calls": 89, 
+        "Subroutines": 0, 
+        "Exclusive Time": 235, 
+        "Inclusive Time": 235
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Bcast()", 
+        "Calls": 61, 
+        "Subroutines": 0, 
+        "Exclusive Time": 240, 
+        "Inclusive Time": 240
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Cart_coords()", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 8, 
+        "Inclusive Time": 8
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Cart_sub()", 
+        "Calls": 2, 
+        "Subroutines": 0, 
+        "Exclusive Time": 22, 
+        "Inclusive Time": 22
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Allreduce()", 
+        "Calls": 83, 
+        "Subroutines": 0, 
+        "Exclusive Time": 451, 
+        "Inclusive Time": 451
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Reduce()", 
+        "Calls": 55, 
+        "Subroutines": 0, 
+        "Exclusive Time": 299, 
+        "Inclusive Time": 299
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "pthread_create", 
+        "Calls": 2, 
+        "Subroutines": 0, 
+        "Exclusive Time": 103, 
+        "Inclusive Time": 103
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Comm_dup()", 
+        "Calls": 12, 
+        "Subroutines": 0, 
+        "Exclusive Time": 227, 
+        "Inclusive Time": 227
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Gather()", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 29, 
+        "Inclusive Time": 29
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Allgather()", 
+        "Calls": 22, 
+        "Subroutines": 0, 
+        "Exclusive Time": 228, 
+        "Inclusive Time": 228
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Comm_free()", 
+        "Calls": 11, 
+        "Subroutines": 0, 
+        "Exclusive Time": 101, 
+        "Inclusive Time": 101
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Finalize()", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 778, 
+        "Inclusive Time": 778
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 1, 
+        "Function": ".TAU application", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 8626018, 
+        "Inclusive Time": 8626018
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 2, 
+        "Function": ".TAU application", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 8548438, 
+        "Inclusive Time": 8548438
+      }
+    ], 
+    "Counters": [
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for broadcast", 
+        "Num Events": 61, 
+        "Max Value": 168.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 9.180327868852459, 
+        "SumSqr Value": 31008.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for broadcast", 
+        "Num Events": 2, 
+        "Max Value": 168.0, 
+        "Min Value": 8.0, 
+        "Mean Value": 88.0, 
+        "SumSqr Value": 28288.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for broadcast : .TAU application => MPI_Bcast()", 
+        "Num Events": 2, 
+        "Max Value": 168.0, 
+        "Min Value": 8.0, 
+        "Mean Value": 88.0, 
+        "SumSqr Value": 28288.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for all-reduce", 
+        "Num Events": 83, 
+        "Max Value": 48.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 19.18072289156627, 
+        "SumSqr Value": 47168.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for reduce", 
+        "Num Events": 55, 
+        "Max Value": 232.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 12.65454545454545, 
+        "SumSqr Value": 59424.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MIN_MARKER] Message size for reduce", 
+        "Num Events": 3, 
+        "Max Value": 48.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 20.0, 
+        "SumSqr Value": 2384.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MIN_MARKER] Message size for reduce : .TAU application => MPI_Reduce()", 
+        "Num Events": 3, 
+        "Max Value": 48.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 20.0, 
+        "SumSqr Value": 2384.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MIN_MARKER] Message size for all-reduce", 
+        "Num Events": 1, 
+        "Max Value": 4.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 4.0, 
+        "SumSqr Value": 16.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MIN_MARKER] Message size for all-reduce : .TAU application => MPI_Allreduce()", 
+        "Num Events": 1, 
+        "Max Value": 4.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 4.0, 
+        "SumSqr Value": 16.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for gather", 
+        "Num Events": 1, 
+        "Max Value": 1024.0, 
+        "Min Value": 1024.0, 
+        "Mean Value": 1024.0, 
+        "SumSqr Value": 1048576.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for all-gather", 
+        "Num Events": 22, 
+        "Max Value": 32.0, 
+        "Min Value": 4.0, 
+        "Mean Value": 18.0, 
+        "SumSqr Value": 11440.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for all-gather", 
+        "Num Events": 1, 
+        "Max Value": 32.0, 
+        "Min Value": 32.0, 
+        "Mean Value": 32.0, 
+        "SumSqr Value": 1024.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for all-gather : .TAU application => MPI_Allgather()", 
+        "Num Events": 1, 
+        "Max Value": 32.0, 
+        "Min Value": 32.0, 
+        "Mean Value": 32.0, 
+        "SumSqr Value": 1024.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for all-reduce", 
+        "Num Events": 1, 
+        "Max Value": 48.0, 
+        "Min Value": 48.0, 
+        "Mean Value": 48.0, 
+        "SumSqr Value": 2304.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for all-reduce : .TAU application => MPI_Allreduce()", 
+        "Num Events": 1, 
+        "Max Value": 48.0, 
+        "Min Value": 48.0, 
+        "Mean Value": 48.0, 
+        "SumSqr Value": 2304.0
+      }
+    ]
+  }, 
+  "profiles_reader2": {
+    "metadata": {
+      "Rank 0, Thread 0": {
+        "CPU Cores": "8", 
+        "CPU MHz": "2200.000", 
+        "CPU Type": "AMD Opteron(TM) Processor 6274 ", 
+        "CPU Vendor": "AuthenticAMD", 
+        "CWD": "/lustre/atlas2/csc103/proj-shared/khuck/junmin", 
+        "Cache Size": "2048 KB", 
+        "Command Line": "./reader2 5 x z", 
+        "Executable": "/lustre/atlas2/csc103/proj-shared/khuck/junmin/reader2", 
+        "Hostname": "nid09137", 
+        "Local Time": "2017-05-04T11:24:43-04:00", 
+        "MPI Processor Name": "nid09137", 
+        "Memory Size": "33083764 kB", 
+        "Node Name": "nid09137", 
+        "OS Machine": "x86_64", 
+        "OS Name": "Linux", 
+        "OS Release": "3.0.101-0.46.1_1.0502.8871-cray_gem_c", 
+        "OS Version": "#1 SMP Sat Oct 22 15:26:43 UTC 2016", 
+        "Starting Timestamp": "1493911483020041", 
+        "TAU Architecture": "default", 
+        "TAU Config": " -prefix=/lustre/atlas/proj-shared/csc103/khuck/tau2 -mpi -arch=craycnl -sos=/ccs/home/khuck/src/sos_flow/build-titan -pthread -adios=/ccs/home/khuck/src/chaos/adios/ADIOS-gcc -bfd=download -useropt=-g#-Og", 
+        "TAU Makefile": "/lustre/atlas/proj-shared/csc103/khuck/tau2/craycnl/lib/Makefile.tau-gnu-mpi-pthread", 
+        "TAU MetaData Merge Time": "0.0001 seconds", 
+        "TAU Version": "2.25.1-git", 
+        "TAU_BFD_LOOKUP": "on", 
+        "TAU_CALLPATH": "off", 
+        "TAU_CALLPATH_DEPTH": "2", 
+        "TAU_CALLSITE_LIMIT": "1", 
+        "TAU_COMM_MATRIX": "off", 
+        "TAU_COMPENSATE": "off", 
+        "TAU_CUDA_BINARY_EXE": "", 
+        "TAU_CUPTI_API": "runtime", 
+        "TAU_EBS_KEEP_UNRESOLVED_ADDR": "off", 
+        "TAU_IBM_BG_HWP_COUNTERS": "off", 
+        "TAU_MAX_THREADS": "128", 
+        "TAU_MEASURE_TAU": "off", 
+        "TAU_MEMDBG_PROTECT_ABOVE": "off", 
+        "TAU_MEMDBG_PROTECT_BELOW": "off", 
+        "TAU_MEMDBG_PROTECT_FREE": "off", 
+        "TAU_OPENMP_RUNTIME": "on", 
+        "TAU_OPENMP_RUNTIME_EVENTS": "on", 
+        "TAU_OPENMP_RUNTIME_STATES": "off", 
+        "TAU_OUTPUT_CUDA_CSV": "off", 
+        "TAU_PAPI_MULTIPLEXING": "off", 
+        "TAU_PROFILE": "on", 
+        "TAU_PROFILE_FORMAT": "profile", 
+        "TAU_SAMPLING": "off", 
+        "TAU_SHOW_MEMORY_FUNCTIONS": "off", 
+        "TAU_SIGNALS_GDB": "off", 
+        "TAU_SOS": "off", 
+        "TAU_THROTTLE": "on", 
+        "TAU_THROTTLE_NUMCALLS": "100000", 
+        "TAU_THROTTLE_PERCALL": "10", 
+        "TAU_TRACE": "off", 
+        "TAU_TRACK_CUDA_CDP": "off", 
+        "TAU_TRACK_CUDA_INSTRUCTIONS": "", 
+        "TAU_TRACK_CUDA_SASS": "off", 
+        "TAU_TRACK_HEADROOM": "off", 
+        "TAU_TRACK_HEAP": "off", 
+        "TAU_TRACK_IO_PARAMS": "off", 
+        "TAU_TRACK_MEMORY_FOOTPRINT": "off", 
+        "TAU_TRACK_MEMORY_LEAKS": "off", 
+        "TAU_TRACK_MESSAGE": "off", 
+        "TAU_TRACK_SIGNALS": "off", 
+        "TAU_TRACK_UNIFIED_MEMORY": "off", 
+        "TAU_VERBOSE": "on", 
+        "Timestamp": "1493911483021303", 
+        "UTC Time": "2017-05-04T15:24:43Z", 
+        "pid": "30593", 
+        "tid": "30593", 
+        "username": "khuck"
+      }, 
+      "Rank 0, Thread 1": {}
+    }, 
+    "Timers": [
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": ".TAU application", 
+        "Calls": 1, 
+        "Subroutines": 177, 
+        "Exclusive Time": 10872115, 
+        "Inclusive Time": 10877010
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Init()", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 3003, 
+        "Inclusive Time": 3003
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Comm_rank()", 
+        "Calls": 3, 
+        "Subroutines": 0, 
+        "Exclusive Time": 4, 
+        "Inclusive Time": 4
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Comm_size()", 
+        "Calls": 3, 
+        "Subroutines": 0, 
+        "Exclusive Time": 4, 
+        "Inclusive Time": 4
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "pthread_create", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 59, 
+        "Inclusive Time": 59
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Gather()", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 111, 
+        "Inclusive Time": 111
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Barrier()", 
+        "Calls": 46, 
+        "Subroutines": 0, 
+        "Exclusive Time": 165, 
+        "Inclusive Time": 165
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Reduce()", 
+        "Calls": 88, 
+        "Subroutines": 0, 
+        "Exclusive Time": 408, 
+        "Inclusive Time": 408
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Allreduce()", 
+        "Calls": 33, 
+        "Subroutines": 0, 
+        "Exclusive Time": 314, 
+        "Inclusive Time": 314
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Function": "MPI_Finalize()", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 827, 
+        "Inclusive Time": 827
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 1, 
+        "Function": ".TAU application", 
+        "Calls": 1, 
+        "Subroutines": 0, 
+        "Exclusive Time": 10839747, 
+        "Inclusive Time": 10839747
+      }
+    ], 
+    "Counters": [
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for gather", 
+        "Num Events": 1, 
+        "Max Value": 1024.0, 
+        "Min Value": 1024.0, 
+        "Mean Value": 1024.0, 
+        "SumSqr Value": 1048576.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for reduce", 
+        "Num Events": 88, 
+        "Max Value": 24.0, 
+        "Min Value": 8.0, 
+        "Mean Value": 12.0, 
+        "SumSqr Value": 16896.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "Message size for all-reduce", 
+        "Num Events": 33, 
+        "Max Value": 224.0, 
+        "Min Value": 8.0, 
+        "Mean Value": 93.33333333333333, 
+        "SumSqr Value": 577984.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MIN_MARKER] Message size for all-reduce", 
+        "Num Events": 1, 
+        "Max Value": 8.0, 
+        "Min Value": 8.0, 
+        "Mean Value": 8.0, 
+        "SumSqr Value": 64.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MIN_MARKER] Message size for all-reduce : .TAU application => MPI_Allreduce()", 
+        "Num Events": 1, 
+        "Max Value": 8.0, 
+        "Min Value": 8.0, 
+        "Mean Value": 8.0, 
+        "SumSqr Value": 64.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for reduce", 
+        "Num Events": 1, 
+        "Max Value": 24.0, 
+        "Min Value": 24.0, 
+        "Mean Value": 24.0, 
+        "SumSqr Value": 576.0
+      }, 
+      {
+        "process index": 0, 
+        "thread index": 0, 
+        "Counter": "[GROUP=MAX_MARKER] Message size for reduce : .TAU application => MPI_Reduce()", 
+        "Num Events": 1, 
+        "Max Value": 24.0, 
+        "Min Value": 24.0, 
+        "Mean Value": 24.0, 
+        "SumSqr Value": 576.0
+      }
+    ]
+  }
+}
