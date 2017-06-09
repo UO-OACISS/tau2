@@ -350,18 +350,8 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 //////////////////////////////////////////////////////////////////////
 long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
 {
-  int depth = TauEnv_get_callpath_depth();
-  static bool first_time_flag = false; 
-
-  if (depth > TAU_MAX_CALLPATH_DEPTH) {
-    if (first_time_flag == false) {
-      int max = TAU_MAX_CALLPATH_DEPTH;
-      printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", max);
-      printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
-      first_time_flag = true;
-    }
-    depth = TAU_MAX_CALLPATH_DEPTH;
-  }
+  int tid = RtsLayer::myThread();
+  int depth = Tau_get_current_stack_depth(tid);
 
   *size = sizeof(long)*(depth+2);
   long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), *size);
@@ -383,27 +373,13 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, 
 ////////////////////////////////////////////////////////////////////////////
 TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current)
 {
-  static bool first_time_flag = false; 
+  int tid = RtsLayer::myThread();
   if (current) {
-    std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
-    buff << userEvent->GetName();
+      std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
+      buff << userEvent->GetName();
 
-    int depth = TauEnv_get_callpath_depth();
-    if (depth > TAU_MAX_CALLPATH_DEPTH) {
-      if (first_time_flag == false) {
-        int max = TAU_MAX_CALLPATH_DEPTH; 
-        printf("Error: TAU_CALLPATH_DEPTH (%d) higher than TAU_MAX_CALLPATH_DEPTH=%d\n", max); 
-        printf("Please reconfigure TAU with -useropt=-DTAU_MAX_CALLPATH_DEPTH=<value> and retry. Running with TAU_CALLPATH_DEPTH set to %d\n", depth);
-        first_time_flag = true; 
-      }
-      depth = TAU_MAX_CALLPATH_DEPTH; 
-    }
-    if (depth) {
-#ifdef TAU_DISABLE_MEM_MANAGER
+      int depth = Tau_get_current_stack_depth(tid);
       Profiler ** path = new Profiler*[depth];
-#else
-      Profiler * path[TAU_MAX_CALLPATH_DEPTH];
-#endif
 
       // Reverse the callpath to avoid string copies
       int i=depth-1;
@@ -426,16 +402,12 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
 
-#ifdef TAU_DISABLE_MEM_MANAGER
       delete[] path;
-#endif
-    }
-
     // Return a new string object.
     // A smart STL implementation will not allocate a new buffer.
-    return buff.str().c_str();
+      return buff.str().c_str();
   } else {
-    return "";
+      return "";
   }
 }
 
