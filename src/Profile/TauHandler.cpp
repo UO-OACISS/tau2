@@ -248,17 +248,18 @@ void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
 }
 
 void TauTriggerCrayPowerEvents(void) {
-  static int power_fd=Tau_open_system_file("/sys/cray/pm_counters/power");
-  static int accel_power_fd=Tau_open_system_file("/sys/cray/pm_counters/accel_power");
-  //static int accel_energy_fd=Tau_open_system_file("/sys/cray/pm_counters/accel_energy");
-  //static int energy_fd=Tau_open_system_file("/sys/cray/pm_counters/energy");
+/*
+  static int power_fd=Tau_open_cray_file("/sys/cray/pm_counters/power");
+  static int accel_power_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_power");
+  static int accel_energy_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_energy");
+  static int energy_fd=Tau_open_cray_file("/sys/cray/pm_counters/energy");
 
   // this does not take into account the freshness file
   TauTriggerCrayPowerEvent(power_fd, "Node Power (in Watts)");
   TauTriggerCrayPowerEvent(accel_power_fd, "Accelerator Device Power (in Watts)");
-  //TauTriggerCrayPowerEvent(energy_fd, "Node Energy (in Joules)");
-  //TauTriggerCrayPowerEvent(accel_energy_fd, "Accel Energy (in Joules)");
-
+  TauTriggerCrayPowerEvent(energy_fd, "Node Energy (in Joules)");
+  TauTriggerCrayPowerEvent(accel_energy_fd, "Accel Energy (in Joules)");
+*/
 }
 
 void TauTriggerPowerEvent(void) {
