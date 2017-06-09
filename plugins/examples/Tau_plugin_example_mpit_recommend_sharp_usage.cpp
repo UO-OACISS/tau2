@@ -92,7 +92,7 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
 
   //Generate recommendation for the user if appropriate conditions are met
   if(((exclusiveTimeAllReduce/inclusiveTimeApp) > .30 ) && meanAllReduceMessageSize < 32.0) {
-    TAU_METADATA("TAU_MPI_T_RECOMMEND_SHARP_USAGE", "You could see potential improvement in performance by configuring MVAPICH with --enable-sharp and enabling MV2_ENABLE_SHARP in MVAPICH version 2.3a and above");
+    TAU_METADATA("TAU_RECOMMENDATION", "MPI_T_RECOMMEND_SHARP_USAGE: You could see potential improvement in performance by configuring MVAPICH with --enable-sharp and enabling MV2_ENABLE_SHARP in MVAPICH version 2.3a and above");
   }
 
   return 0;
