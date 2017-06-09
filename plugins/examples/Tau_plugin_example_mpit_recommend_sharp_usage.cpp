@@ -1,3 +1,6 @@
+#ifdef TAU_MPI
+#ifdef TAU_MPI_T
+
 #include <sstream>
 #include <string>
 #include <vector>
@@ -106,3 +109,5 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
 
   return 0;
 }
+#endif /* TAU_MPI_T */
+#endif /* TAU_MPI */

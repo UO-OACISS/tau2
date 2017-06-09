@@ -1,3 +1,6 @@
+#ifdef TAU_MPI
+#ifdef TAU_MPI_T
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -163,3 +166,6 @@ int Tau_plugin_init_func(int argc, char **argv) {
 
   return 0;
 }
+
+#endif /* TAU_MPI_T */
+#endif /* TAU_MPI */
