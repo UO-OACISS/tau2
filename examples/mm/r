@@ -1,0 +1,16 @@
+#!/bin/bash
+#source ~/.bashrc
+
+ulimit unlimited -s
+
+export TAU=/home/users/sramesh/TEMP/tau2/x86_64
+export PATH=`pwd`:$TAU/bin:$PATH
+export LD_LIBRARY_PATH=$TAU/lib:$LD_LIBRARY_PATH
+
+export TAU_VERBOSE=1
+export TAU_PLUGINS_PATH=$TAU/lib/shared-mpi-pdt
+export TAU_PLUGINS=libTAU-filter-plugin.so\("select.tau"\)
+export TAU_TRACK_SIGNALS=1
+
+time mpirun -np 4 ./matmult
+
