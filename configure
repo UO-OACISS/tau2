@@ -457,6 +457,7 @@ for arg in "$@"; do
         echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
         echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
         echo "-noex .................. Use no exceptions while compiling the library."
+	echo "-noplugins ...................... Do not build support for TAU plugins."
         echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
         echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
         echo "                       (Note: also disables sampling, marker tracking)."
@@ -623,6 +624,7 @@ for arg in "$@"; do
 	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
+	    echo "-noplugins ...................... Do not build support for TAU plugins."
 	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
         echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
         echo "                       (Note: also disables sampling, marker tracking)."
@@ -762,6 +764,7 @@ charm=no
 comm=yes
 sproc=no
 noex=no
+plugins=yes
 disableshared=no
 setnode0=no
 compensate=no
@@ -2173,6 +2176,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-noplugins)
+	    # Do not build plugins
+	    plugins=no
+	    shift
+	    ;;
+
 	-DISABLESHARED)
 	    # Disable shared library creation
 	    disableshared=yes
@@ -2520,6 +2529,7 @@ configure_perfexplorer () {
 	echo "#define TAU_BIN_DIR \"default\"" >> include/tauarch.h
     else
 	echo "#define TAU_BIN_DIR \"$BINTARGET\"" >> include/tauarch.h
+	echo "#define TAU_LIB_DIR \"$targetdir/$machine/lib/shared$tauoptions\"" >> include/tauarch.h
     fi
 
     cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
@@ -9814,6 +9824,10 @@ if [ $noex = yes ] ; then
 	# OTHER COMPILERS NO EXCEPTIONS... SGICC needs this
         fixmakeargs="$fixmakeargs SGICCNOEX"
     fi
+fi
+
+if [ $plugins = no ] ; then
+    fixmakeargs="$fixmakeargs NOPLUGINS"
 fi
 
 
