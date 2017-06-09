@@ -507,7 +507,6 @@ extern "C" int Tau_init_initializeTAU()
   Tau_initialize_collector_api();
 #endif
 
-<<<<<<< HEAD
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
   if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
@@ -517,7 +516,6 @@ extern "C" int Tau_init_initializeTAU()
       printf("TAU INIT: Error initializing the plugin system\n");
     }
   }
-=======
 #if defined(TAU_SOS) && !defined(TAU_MPI)
   bool threads = false;
 #if defined(PTHREADS) || defined(TAU_OPENMP)
@@ -549,7 +547,6 @@ extern "C" int Tau_init_initializeTAU()
     TAU_SOS_init(&argc, &argv, threads);
   }
 #endif
->>>>>>> master
 
   // Mark initialization complete so calls below can start timers
   tau_initialized = 1;
