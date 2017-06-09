@@ -129,6 +129,7 @@ MEMORYWRAPPER=src/wrappers/memory
 
 # Plugin directory
 PLUGINS=plugins
+#NOPLUGINS#PLUGINS= #ENDIF#
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \

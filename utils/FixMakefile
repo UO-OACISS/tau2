@@ -1075,6 +1075,10 @@ case $1 in
 	echo NOTE: Using the TAU MPC options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     NOPLUGINS)
+	echo NOTE: Disabling TAU plugins in this build
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      MPCINTEL)
 	echo NOTE: Using the TAU MPC options for the Intel compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
