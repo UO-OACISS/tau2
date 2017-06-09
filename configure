@@ -458,6 +458,8 @@ for arg in "$@"; do
         echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
         echo "-noex .................. Use no exceptions while compiling the library."
         echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+        echo "                       (Note: also disables sampling, marker tracking)."
         echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
         echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
         echo "-help ...................................... display this help message."
@@ -622,6 +624,8 @@ for arg in "$@"; do
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
 	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+        echo "                       (Note: also disables sampling, marker tracking)."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
@@ -878,6 +882,10 @@ forceshared=no
 opari_region=no
 opari_construct=no
 boost=no
+sos=no
+sosdir=
+adios=no
+adiosdir=
 apex=no
 dyninst=no
 dyninstinc=no
@@ -922,6 +930,7 @@ cupti=no
 strsignal_ok=no
 android_version=4.4
 android_platform=19
+disable_memory_manager=no
 
 restore_perfdmf_and_paraprof
 
@@ -1650,6 +1659,28 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-sos=*)
+	    sos=yes
+	    sosdir=`echo $arg | sed -e 's/-sos=//'`
+	    if [ ! -d $sosdir ]
+	    then
+		echo "Error: Cannot access SOS directory $sosdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-adios=*)
+	    adios=yes
+	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
+	    if [ ! -d $adiosdir ]
+	    then
+		echo "Error: Cannot access ADIOS directory $adiosdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
 	-dyninst=*)
 	    dyninst=yes
 	    dyninstdir=`echo $arg | sed -e 's/-dyninst=//'`
@@ -2145,6 +2176,12 @@ for arg in "$@"; do
 	-DISABLESHARED)
 	    # Disable shared library creation
 	    disableshared=yes
+	    shift
+	    ;;
+
+	-DISABLE_MEMORY_MANAGER)
+	    # Disable heap management for sampling, signal handling
+	    disable_memory_manager=yes
 	    shift
 	    ;;
 
@@ -3508,7 +3545,7 @@ fi
 
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
-    orig_useropt="-mmic -O2 "
+    orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
 if [ $machine = apple ] ; then
@@ -3572,8 +3609,7 @@ orig_c_compiler=$c_compiler
 orig_cxx_compiler=$cxx_compiler
 orig_fortran_compiler=$fortran_compiler
 # mpicxx may change it.
-if [ $cxx_compiler = mpicxx ]
-then
+if [ $cxx_compiler = mpicxx ] ; then
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
@@ -3630,8 +3666,8 @@ then
 	        mpilibargs_added_to_fixmakeargs=yes
 
             fi
-            full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
-            full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
+            full_cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`mpicc -show | tail -n 1 | awk '{ print $1; }'`
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
 	fi
@@ -5135,6 +5171,10 @@ then
 		    gpshmem=yes
                 fi
 	    fi
+	    if [ -r $shmeminc/shmemx.h ]
+	    then
+                fixmakeargs="$fixmakeargs SHMEMX_H"
+	    fi
 	    shmembindir=`echo $shmeminc | sed -e 's@include@bin@g'`
 	    if [ -r $shmembindir/oshcc ]
 	    then
@@ -5188,6 +5228,10 @@ then
 		fi
 	    fi
             shmem_h="$openshmem_include_dir/shmem.h"
+	    if [ -r $openshmem_include_dir/shmemx.h ]
+	    then
+                fixmakeargs="$fixmakeargs SHMEMX_H"
+	    fi
 	fi
 	if [ $catamount = yes ]
 	then
@@ -5232,6 +5276,10 @@ then
 		shmeminclude=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@include@g'`
                 shmemdir="$shmeminclude/.."
                 shmem_h="$shmeminclude/shmem.h"
+	        if [ -r $shmeminclude/shmemx.h ]
+	        then
+                    fixmakeargs="$fixmakeargs SHMEMX_H"
+	        fi
 		if [ -r $libsmafile -a -d $shmeminclude -a "x$shmeminclude" != "x" ]
 		then
 		    shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
@@ -7842,7 +7890,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
           k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
           export PATH=$k1om_bin:$PATH
           ./configure \
-            CFLAGS='-mmic -fPIC' CXXFLAGS='-mmic -fPIC' \
+            CFLAGS='-xMIC-AVX512 -fPIC' CXXFLAGS='-xMIC-AVX512 -fPIC' \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
@@ -7948,9 +7996,11 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     echo "Error: Cannot access BFD directory $bfddir"
     exit 1
   fi
-  bfdinclude="-I$bfddir/include"
-  fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-  bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+  if [ "$pin" = "no" ]; then
+    bfdinclude="-I$bfddir/include"
+    fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+  fi 
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?
   if [ "x$machine" = "xapple" ] ; then
@@ -7959,7 +8009,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     bfdlink="$bfdlink -L/opt/local/lib"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
   else
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
+    if [ "$pin" = "no" ]; then
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
+    fi
   fi
 else
   fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
@@ -7997,8 +8049,10 @@ if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; t
 	# stdio.h and libiberty.h
 	echo "no"
     else
-	fixmakeargs="$fixmakeargs TAU_BFD"
-	echo "yes"
+	if [ "$pin" = "no" ]; then
+	  fixmakeargs="$fixmakeargs TAU_BFD"
+	  echo "yes"
+        fi
     fi
 else
     echo "no"
@@ -8066,6 +8120,9 @@ else
 	fi
     fi
 fi
+if [ "$pin" = "yes" ]; then
+   BFDLIBS=""
+fi
 if [ $bfd_worked = "yes" -a $machine = bgq ] ; then
     BFDLIBS=`echo $BFDLIBS | sed -e 's@-liberty@${TAU_BFD_DIR}/lib/libiberty.a@g'`
     fixmakeargs="$fixmakeargs bfddir=$bfddir"
@@ -8075,7 +8132,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
-if [ $bfd_worked = "no" -a "$machine" != "apple" ] ; then
+if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
@@ -8167,8 +8224,10 @@ fi
 bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
 if [ "$turnbfdoff" = 'no' ]; then
     if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
-	fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
-	echo "yes"
+	if [ "$pin" = "no" ]; then
+	  fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+	  echo "yes"
+        fi
     else
 	echo "no"
     fi
@@ -8848,8 +8907,8 @@ if [ $apex = yes ] ; then
 		fi
 	fi
 	if [ ${architecture} = "mic_linux" ] ; then
-		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-mmic' >> ${apex_include_file}
-		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-mmic -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
+		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-xMIC-AVX512' >> ${apex_include_file}
+		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
 	fi
 	if [ ! "x${omptlib}" = "x" ] ; then
 		if [ "${download_ompt}" = "yes" ] ; then
@@ -9390,6 +9449,16 @@ if [ $boost = yes ] ; then
     fi
 fi
 
+if [ $sos = yes ] ; then
+    fixmakeargs="$fixmakeargs SOS "
+    fixmakeargs="$fixmakeargs sosdir=$sosdir"
+fi
+
+if [ $adios = yes ] ; then
+    fixmakeargs="$fixmakeargs ADIOS "
+    fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
+fi
+
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST "
     if [ "x$dyninstdir" != "x" ]; then
@@ -9726,6 +9795,10 @@ fi
 
 if [ $disableshared = yes ] ; then
     fixmakeargs="$fixmakeargs NOSHARED"
+fi
+
+if [ $disable_memory_manager = yes ] ; then
+    fixmakeargs="$fixmakeargs DISABLE_MEM_MANAGER"
 fi
 
 if [ $disableshared = yes -a $python = yes ] ; then

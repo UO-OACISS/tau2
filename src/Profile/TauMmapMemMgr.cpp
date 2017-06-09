@@ -16,6 +16,10 @@
 //#define USE_RECYCLER /* <-- This is causing memory corruption. Need to investigate! */
 //#define DEBUG_ME  /* <-- use this to debug for memory leaks */
 
+#ifdef TAU_DISABLE_MEM_MANAGER
+#warning "WARNING! Disabling memory management will break sampling and signal handling."
+#endif
+
 struct TauMemMgrSummary
 {
   int numBlocks;
@@ -198,6 +202,14 @@ void * Tau_MemMgr_recycle(int tid, size_t size)
 
 void * Tau_MemMgr_malloc(int tid, size_t size)
 {
+/* In some cases, when not using sampling or signal handling, we 
+   want to disable the memory management altogether. */
+#ifdef TAU_DISABLE_MEM_MANAGER
+    void * ptr = malloc(size);
+    memset(ptr, 0, size);
+    return ptr;
+#endif
+
   //printf("%d Allocating %d\n", tid, size); fflush(stdout);
   // Always ensure the system is ready for a malloc
   Tau_MemMgr_initIfNecessary();
@@ -210,12 +222,6 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
     memset(recycled, 0, size);
     return recycled; 
   }
-#endif
-
-#ifdef DEBUG_ME
-    void * ptr = malloc(size);
-    memset(ptr, 0, size);
-    return ptr;
 #endif
 
   // Find (and attempt to create) a suitably sized memory block
@@ -250,6 +256,13 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
 
 void Tau_MemMgr_free(int tid, void *addr, size_t size)
 {
+/* In some cases, when not using sampling or signal handling, we 
+   want to disable the memory management altogether. */
+#ifdef TAU_DISABLE_MEM_MANAGER
+    free(addr);
+    return;
+#endif
+
     //printf("%d Freeing %p, size %d\n", tid, addr, size); fflush(stdout);
     // If we are shutting down, don't bother recycling - we are going
     // to have to free all this memory anyway, so keeping track of the

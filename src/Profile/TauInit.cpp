@@ -44,6 +44,7 @@
 #include <Profile/TauMemory.h>
 #include <Profile/TauBacktrace.h>
 #include <Profile/TauUtil.h>
+#include "Profile/TauSOS.h"
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -506,6 +507,7 @@ extern "C" int Tau_init_initializeTAU()
   Tau_initialize_collector_api();
 #endif
 
+<<<<<<< HEAD
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
   if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
@@ -515,6 +517,39 @@ extern "C" int Tau_init_initializeTAU()
       printf("TAU INIT: Error initializing the plugin system\n");
     }
   }
+=======
+#if defined(TAU_SOS) && !defined(TAU_MPI)
+  bool threads = false;
+#if defined(PTHREADS) || defined(TAU_OPENMP)
+  threads = true; 
+#endif
+  if (TauEnv_get_sos_enabled()) {
+/* Fixme! Replace these with values from TAU metadata. */
+    int argc = 0;
+    char **argv;
+    char * execname = Tau_metadata_get("Executable", 0);
+    argv = (char **)(malloc(sizeof(char*)));
+    if (execname != NULL) {
+        argv[0] = execname;
+    } else {
+        argv[0] = (char *)(calloc(100, sizeof(char)));
+        sprintf(argv[0], "%s", "TAU");
+    }
+  /*
+        FILE *cmdline = fopen("/proc/self/cmdline", "rb");
+        size_t size = 0;
+        char * arg;
+        while (getdelim(&arg, &size, 0, cmdline) != -1) {
+            argv = (char**)realloc(argv, (sizeof(char*)) * (argc+1));
+            argv[argc] = arg;
+            argc++;
+        }
+        fclose(cmdline);
+  */
+    TAU_SOS_init(&argc, &argv, threads);
+  }
+#endif
+>>>>>>> master
 
   // Mark initialization complete so calls below can start timers
   tau_initialized = 1;
