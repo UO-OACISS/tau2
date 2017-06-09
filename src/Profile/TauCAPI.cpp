@@ -1003,6 +1003,10 @@ extern "C" int Tau_dump_prefix(const char *prefix) {
 extern x_uint64 TauTraceGetTimeStamp(int tid);
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_get_current_stack_depth(int tid) {
+  return Tau_thread_flags[tid].Tau_global_stackpos; 
+}
+///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_callpaths() {
   TauInternalFunctionGuard protects_this_function;
 
