@@ -1,5 +1,5 @@
 BEGIN_EXCLUDE_LIST
-void initialize(double **, int, int) 
+void initialize(double **, int, int) C 
 void compute_interchange(double **, double **, double **, int, int, int) C
 END_EXCLUDE_LIST
 #BEGIN_FILE_EXCLUDE_LIST

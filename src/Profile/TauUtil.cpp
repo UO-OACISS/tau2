@@ -298,7 +298,12 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       return -1;
     }
 
-    strcat(fullpath, plugin_name);
+#ifndef TAU_WINDOWS
+    sprintf(fullpath, "%s/%s", pluginpath, plugin_name);
+#else
+    sprintf(fullpath, "%s\%s", pluginpath, plugin_name);
+#endif
+
     TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
    
     /*Return a handle to the loaded dynamic object*/
