@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <string.h>
 #include <ctype.h>
 
 #include <Profile/Profiler.h>
@@ -439,13 +440,23 @@ bool processFileForInstrumentation(const string& file_name)
 
 }
 
-/***************************************************************************
- * $RCSfile: tau_selective.cpp,v $   $Author: amorris $
- * $Revision: 1.19 $   $Date: 2009/07/24 22:19:27 $
- * VERSION_ID: $Id: tau_selective.cpp,v 1.19 2009/07/24 22:19:27 amorris Exp $
- ***************************************************************************/
-
 /* tau_selective.cpp */
+
+/* This function extracts the file name from the name of the routine */
+char *extractFile(const char *name) {
+  char *save_ptr = NULL; 
+  char *routine_name = strdup(name); 
+  char *tmp = strtok_r(routine_name, "{}",&save_ptr); 
+  if (tmp) {
+    tmp = strtok_r(NULL, "}", &save_ptr);
+    if (tmp) {
+      TAU_VERBOSE("Extracted filename = %s\n", tmp); 
+    }
+  } 
+  return tmp;
+}
+
+
 
 /*This function gets invoked at function registration.
  * It checks if the function getting registrtion is present in the exclude list specified by the instrumentation file
@@ -466,7 +477,13 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
 
   /*Check if function is .TAU application. If not, proceed to check if function needs to be instrumented*/
     /*If function should not instrumented, set profile group to TAU_DISABLE*/
-    if(!instrumentEntity(std::string(name, position))) {
+    char *filename = extractFile(name); 
+    bool instrument_file = false; // processFileForInstrumentation(filename); 
+    if (filename) { 
+      instrument_file = processFileForInstrumentation(filename); 
+    }
+    TAU_VERBOSE("processFileForInstrumentation(%s) returns %d\n", filename, instrument_file);
+    if(!instrumentEntity(std::string(name, position)) || (instrument_file == false)) {
       RtsLayer::LockDB();
       Tau_profile_set_group(data.function_info_ptr, TAU_DISABLE);
       RtsLayer::UnLockDB();
