@@ -200,6 +200,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
+#PYTHON#EXTRA_LIBS += $(MPI_WRAPPER) #ENDIF#
 
 ##############################################
 # For building TauLinuxTimers with gcc
