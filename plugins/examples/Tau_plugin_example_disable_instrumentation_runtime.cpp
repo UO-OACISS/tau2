@@ -453,6 +453,7 @@ char *extractFile(const char *name) {
       TAU_VERBOSE("Extracted filename = %s\n", tmp); 
     }
   } 
+  free(routine_name);
   return tmp;
 }
 
@@ -481,8 +482,8 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
     bool instrument_file = false; // processFileForInstrumentation(filename); 
     if (filename) { 
       instrument_file = processFileForInstrumentation(filename); 
+      TAU_VERBOSE("processFileForInstrumentation(%s) returns %d\n", filename, instrument_file);
     }
-    TAU_VERBOSE("processFileForInstrumentation(%s) returns %d\n", filename, instrument_file);
     if(!instrumentEntity(std::string(name, position)) || (instrument_file == false)) {
       RtsLayer::LockDB();
       Tau_profile_set_group(data.function_info_ptr, TAU_DISABLE);
