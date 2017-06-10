@@ -79,11 +79,13 @@ ADIOST_EXTERN void tau_adiost_advance_step( int64_t file_descriptor,
 
 ADIOST_EXTERN void tau_adiost_group_size(int64_t file_descriptor, 
     adiost_event_type_t type, uint64_t data_size, uint64_t total_size) {
+    TAU_REGISTER_CONTEXT_EVENT(c1, "ADIOS data size");
+    TAU_REGISTER_CONTEXT_EVENT(c2, "ADIOS total size");
     if (type == adiost_event_enter) {
         Tau_pure_start_task("ADIOS group size", Tau_get_thread());
     } else {
-        Tau_trigger_context_event("ADIOS data size", (double)data_size);
-        Tau_trigger_context_event("ADIOS total size", (double)total_size);
+        TAU_CONTEXT_EVENT(c1, (double)data_size);
+        TAU_CONTEXT_EVENT(c2, (double)total_size);
         Tau_pure_stop_task("ADIOS group size", Tau_get_thread());
     }
 } 
