@@ -1474,7 +1474,8 @@ void TauEnv_initialize()
 
 #ifdef TAU_SCOREP
     TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", RtsLayer::getPid());
-    return;
+    //return; 
+    //if we return here, the other TAU variables such as TAU_SELECT_FILE are not read!
 #endif
 
     if ((env_profile_prefix = getconf("TAU_PROFILE_PREFIX")) == NULL) {
