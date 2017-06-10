@@ -3,6 +3,7 @@
 #include "Profile/Profiler.h"
 #include "Profile/UserEvent.h"
 #include "Profile/TauMetrics.h"
+#include <TauUtil.h>
 
 #include <iostream>
 #include <string>
@@ -275,8 +276,70 @@ void TAU_SOS_fork_exec_sosd(void) {
 #endif
 }
 
+char *program_path()
+{
+    char *path = (char*)malloc(4098);
+    if (path != NULL) {
+        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
+            free(path);
+            path = NULL;
+        }
+    }
+    return path;
+}
+
+char ** fix_arguments(int *argc) {
+#if 1
+  char ** argv = NULL;
+  argv = (char**)(malloc(sizeof(char**)));
+  argv[0] = strdup(program_path());
+  *argc = 1; 
+#else
+  char ** argv = NULL;
+  FILE *f = fopen("/proc/self/cmdline", "r");
+  if (f) {
+    char line[4096];
+
+    std::string os;
+    while (Tau_util_readFullLine(line, f)) {
+      if (os.length() != 0) {
+        os.append(" ");
+      }
+      os.append(line);
+    }
+    fclose(f);
+
+    //how many tokens?
+    char * token = strtok (const_cast<char*>(os.c_str())," ");
+    while (token != NULL)
+    {
+      *argc = *argc + 1;
+      token = strtok (NULL, " ");
+    }
+
+    if (argv == NULL) {
+      // allocate a list of strings
+      argv = (char**)(malloc(sizeof(char**) * (*argc)));
+    }
+
+    //get the tokens
+    token = strtok (const_cast<char*>(os.c_str())," ");
+    int i = 0;
+    while (token != NULL)
+    {
+      argv[i] = strdup(token);
+      token = strtok (NULL, " ");
+    }
+
+  }
+#endif
+  return argv;
+}
+
 extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     static bool initialized = false;
+    int my_argc = 0;
+    char ** my_argv = NULL;
     TAU_VERBOSE("TAU_SOS_init()...\n");
     if (!TauEnv_get_sos_enabled()) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
@@ -286,7 +349,18 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         // we fail "too many" times, give an error and continue
         _runtime = NULL;
         TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
-        SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+        if (argc == NULL || argv == NULL || *argc == 0) {
+          printf("Fixing argument: %p\n", argc); fflush(stdout);
+          printf("Fixing argument: %p\n", argv); fflush(stdout);
+          my_argv = fix_arguments(&my_argc);
+          printf("Fixed argument: %d\n", my_argc); fflush(stdout);
+          printf("Fixed argument: %s\n", my_argv[0]); fflush(stdout);
+        } else {
+          my_argc = *argc;
+          my_argv = *argv;
+        }
+        SOS_init(&my_argc, &my_argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+        //SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
             TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
             TAU_SOS_fork_exec_sosd();
@@ -297,7 +371,8 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             sleep(2);
             _runtime = NULL;
             TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
-            SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+            SOS_init(&my_argc, &my_argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+            //SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
             if (_runtime != NULL) {
                 TAU_VERBOSE("Connected to SOS daemon. Continuing...\n");
                 break;
