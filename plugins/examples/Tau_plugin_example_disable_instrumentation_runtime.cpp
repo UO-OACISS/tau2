@@ -443,7 +443,7 @@ bool processFileForInstrumentation(const string& file_name)
 /* tau_selective.cpp */
 
 /* This function extracts the file name from the name of the routine */
-char *extractFile(const char *name) {
+char *Tau_extract_filename_from_routine(const char *name) {
   char *save_ptr = NULL; 
   char *routine_name = strdup(name); 
   char *tmp = strtok_r(routine_name, "{}",&save_ptr); 
@@ -478,7 +478,7 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
 
   /*Check if function is .TAU application. If not, proceed to check if function needs to be instrumented*/
     /*If function should not instrumented, set profile group to TAU_DISABLE*/
-    char *filename = extractFile(name); 
+    char *filename = Tau_extract_filename_from_routine(name); 
     bool instrument_file = false; // processFileForInstrumentation(filename); 
     if (filename) { 
       instrument_file = processFileForInstrumentation(filename); 
