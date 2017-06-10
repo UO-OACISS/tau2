@@ -1830,6 +1830,7 @@ void TauEnv_initialize()
           sprintf(plugins, "libTAU-filter-plugin.so(%s)", filename); 
           env_plugins = plugins; 
           TAU_VERBOSE("TAU: TAU plugin is now %s\n", env_plugins);
+	  TAU_METADATA("TAU_SELECT_FILE", filename);
       } else {
         TAU_VERBOSE("TAU: Ignoring TAU_SELECT_FILE because TAU_PLUGINS and/or TAU_PLUGINS_PATH is set.\nPlease use export TAU_PLUGINS_PATH=%s and export TAU_PLUGINS=\"libTAU-filter-plugin.so(%s)\"\n", strdup(TAU_LIB_DIR), strdup(env_select_file)); 
       }
