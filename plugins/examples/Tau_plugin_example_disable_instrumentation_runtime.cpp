@@ -479,7 +479,7 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
   /*Check if function is .TAU application. If not, proceed to check if function needs to be instrumented*/
     /*If function should not instrumented, set profile group to TAU_DISABLE*/
     char *filename = Tau_extract_filename_from_routine(name); 
-    bool instrument_file = false; // processFileForInstrumentation(filename); 
+    bool instrument_file = true; // processFileForInstrumentation(filename); 
     if (filename) { 
       instrument_file = processFileForInstrumentation(filename); 
       TAU_VERBOSE("processFileForInstrumentation(%s) returns %d\n", filename, instrument_file);
