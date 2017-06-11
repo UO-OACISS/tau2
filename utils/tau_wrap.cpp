@@ -634,8 +634,8 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 
     argtypenamefort = argtypename;
     if(shmem_wrapper) {
-      if((argtypenamefort.compare(0, 3, "int") == 0) && (argtypenamefort.compare(4,7, "16_t") != 0)
-        && (argtypenamefort.compare(4,7, "32_t") != 0) && (argtypenamefort.compare(4,7, "64_t") != 0)) {
+      if((argtypenamefort.compare(0, 3, "int") == 0) &&
+	((argtypenamefort.length() >= 7) && (argtypenamefort.compare(3,4, "16_t") != 0) && (argtypenamefort.compare(3,4, "32_t") != 0) && (argtypenamefort.compare(3,4, "64_t") != 0))) {
         argtypenamefort.erase(0, 3);
         argtypenamefort.insert(0, "SHMEM_FINT");
       }
