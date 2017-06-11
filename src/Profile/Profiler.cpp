@@ -1437,6 +1437,7 @@ extern "C" int Tau_print_metadata_for_traces(int tid) {
       string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval)); 
       TAU_TRIGGER_EVENT(metadata_str.c_str(), 1.0); 
   }
+  return 0;
 }
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
