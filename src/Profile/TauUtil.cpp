@@ -26,6 +26,8 @@
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
+#else
+#define strtok_r(a,b,c) strtok(a,b)
 #endif /* TAU_WINDOWS */
 
 #define TAU_NAME_LENGTH 1024
@@ -301,7 +303,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 #ifndef TAU_WINDOWS
     sprintf(fullpath, "%s/%s", pluginpath, plugin_name);
 #else
-    sprintf(fullpath, "%s\%s", pluginpath, plugin_name);
+    sprintf(fullpath, "%s\\%s", pluginpath, plugin_name);
 #endif
 
     TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
@@ -334,18 +336,26 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
  * If plugin registration succeeds, then the callbacks for that plugin have been added to the plugin manager's callback list
  * ************************************************************************************************************************/
 void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager* plugin_manager) {
+#ifndef TAU_WINDOWS
   PluginInitFunc init_func = (PluginInitFunc) dlsym(handle, TAU_PLUGIN_INIT_FUNC);
+#else
+  PluginInitFunc init_func = (PluginInitFunc) NULL;
+#endif /* TAU_WINDOWS */
 
   if(!init_func) {
+#ifndef TAU_WINDOWS
     printf("TAU: Failed to retrieve TAU_PLUGIN_INIT_FUNC from plugin %s with error:%s\n", name, dlerror());
     dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();
+#endif /* TAU_WINDOWS */
     return NULL;
   }
 
   int return_val = init_func(num_args, args);
   if(return_val < 0) {
     printf("TAU: Call to init func for plugin %s returned failure error code %d\n", name, return_val);
+#ifndef TAU_WINDOWS
     dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();
+#endif /* TAU_WINDOWS */
     return NULL;
   } 
   return handle;
@@ -355,7 +365,11 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
  * Given a plugin name and fullpath, load a plugin and return a handle to the opened DSO
  * ************************************************************************************************************************/
 void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* plugin_manager) {
+#ifndef TAU_WINDOWS
   void* handle = dlopen(path, RTLD_NOW);
+#else
+  void* handle = NULL;
+#endif /* TAU_WINDOWS */
   
   if (handle) {
     Tau_plugin * plugin = (Tau_plugin *)malloc(sizeof(Tau_plugin));
@@ -367,7 +381,9 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
     TAU_VERBOSE("TAU: Successfully loaded plugin: %s\n", name);
     return handle;    
   } else {
+#ifndef TAU_WINDOWS
     printf("TAU: Failed loading %s plugin with error: %s\n", name, dlerror());
+#endif /* TAU_WINDOWS */
     return NULL;
   }
 }
@@ -541,8 +557,10 @@ int Tau_util_cleanup_all_plugins() {
     plugin = temp_plugin->next;
 
     /*Close the dynamic library*/
+#ifndef TAU_WINDOWS 
     if(temp_plugin->handle)
       dlclose(temp_plugin->handle);
+#endif /* TAU_WINDOWS */
 
     temp_plugin->next = NULL;
 
