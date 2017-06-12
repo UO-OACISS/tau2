@@ -20,7 +20,8 @@
         "application-id": 1, 
         "event-type": "", 
         "description": "This is a component of the workflow. This names the directory of profiles to be parsed for one execution of one application.", 
-        "timestamp": "1497063437427601", 
+        "start-timestamp": "1497063437427601", 
+        "end-timestamp": "1497063499911350", 
         "Local-Time": "2017-06-09T19:57:17-07:00"
       }, 
       {
@@ -30,7 +31,8 @@
         "application-id": 2, 
         "event-type": "", 
         "description": "This is a component of the workflow. This names the directory of profiles to be parsed for one execution of one application.", 
-        "timestamp": "1497063437148776", 
+        "start-timestamp": "1497063437148776", 
+        "end-timestamp": "1497063499553285", 
         "Local-Time": "2017-06-09T19:57:17-07:00"
       }
     ], 

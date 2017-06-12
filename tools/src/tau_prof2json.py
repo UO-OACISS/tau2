@@ -71,7 +71,8 @@ def extract_workflow_metadata(component_name, thread_name, max_inclusive):
     if time_stamp != None:
         for wc in workflow_dict["Workflow Component"]:
             if wc["name"] == component_name:
-                wc["timestamp"] = time_stamp
+                wc["start-timestamp"] = time_stamp
+                wc["end-timestamp"] = str(long(time_stamp) + max_inclusive)
                 wc["Local-Time"] = local_time
         for wc in workflow_dict["Workflow Instance"]:
             if "timestamp" not in wc or wc["timestamp"] > time_stamp:
