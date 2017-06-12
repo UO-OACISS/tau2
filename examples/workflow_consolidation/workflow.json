@@ -6,25 +6,25 @@
       "location-id": 1,
       "version": "0.1",
       "event-type": "",
-      "timestamp": "2017-05-04T11:24:43-04:00"
+      "description": "This is a sample workflow. The driver application is xmain, and the downstream analysis application is reader2."
     }
   ],
   "Workflow Component": [
     {
       "id": 1,
-      "name": "xmain",
+      "name": "xmain_0",
       "location-id": 1,
       "application-id": 1,
       "event-type": "",
-      "timestamp": "2017-05-04T11:24:43-04:00"
+      "description": "This is a component of the workflow. This names the directory of profiles to be parsed for one execution of one application."
     },
     {
       "id": 2,
-      "name": "reader2",
+      "name": "reader2_0",
       "location-id": 1,
       "application-id": 2,
       "event-type": "",
-      "timestamp": "2017-05-04T11:24:43-04:00"
+      "description": "This is a component of the workflow. This names the directory of profiles to be parsed for one execution of one application."
     }
   ],
   "Workflow Component-input": [
@@ -32,239 +32,24 @@
       "id": 1,
       "name": "ImpactT.in",
       "component-id": 1,
-      "uri": ""
+      "uri": "",
+      "desctiption": "This is the input to the main driver application."
+    },
+    {
+      "id": 2,
+      "name": "start00001.bp",
+      "component-id": 2,
+      "uri": "",
+      "description": "This is the ADIOS input to the analysis application."
     }
   ],
   "Workflow Component-output": [
     {
       "id": 1,
-      "name": "fort.18",
+      "name": "start00001.bp",
       "component-id": 1,
-      "uri": ""
-    },
-    {
-      "id": 2,
-      "name": "fort.24",
-      "component-id": 1,
-      "uri": ""
-    }
-  ],
-  "Application-instance": [
-    {
-      "id": 1,
-      "process-id": 30473,
-      "location-id": 1,
-      "application-id": 1,
-      "event-type": "",
-      "timestamp": "2017-05-04T11:24:43-04:00"
-    },
-    {
-      "id": 2,
-      "process-id": 30593,
-      "location-id": 2,
-      "application-id": 1,
-      "event-type": "",
-      "timestamp": "2017-05-04T11:24:43-04:00"
-    }
-  ],
-  "Application": [
-    {
-      "id": 1,
-      "location-id": 1,
-      "name": "xmain",
-      "version": "0.1",
-      "uri": ""
-    },
-    {
-      "id": 2,
-      "location-id": 2,
-      "name": "reader2",
-      "version": "0.1",
-      "uri": ""
-    }
-  ],
-  "CodeRegion": [
-    { 
-      "id": "0",
-      "location-id": 1,
-      "name": ".TAU application",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "1",
-      "location-id": 1,
-      "name": "MPI_Init()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "2",
-      "location-id": 1,
-      "name": "MPI_Comm_rank()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "3",
-      "location-id": 1,
-      "name": "MPI_Comm_size()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "4",
-      "location-id": 1,
-      "name": "MPI_Barrier()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "5",
-      "location-id": 1,
-      "name": "MPI_Bcast()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "6",
-      "location-id": 1,
-      "name": "MPI_Cart_coords()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "7",
-      "location-id": 1,
-      "name": "MPI_Cart_sub()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "8",
-      "location-id": 1,
-      "name": "MPI_Allreduce()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "9",
-      "location-id": 1,
-      "name": "MPI_Reduce()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "10",
-      "location-id": 1,
-      "name": "pthread_create",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "11",
-      "location-id": 1,
-      "name": "MPI_Comm_dup()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "12",
-      "location-id": 1,
-      "name": "MPI_Gather()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "13",
-      "location-id": 1,
-      "name": "MPI_Allgather()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "14",
-      "location-id": 1,
-      "name": "MPI_Comm_free()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "15",
-      "location-id": 1,
-      "name": "MPI_Finalize()",
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "16",
-      "location-id": 2,
-      "name": ".TAU application", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "17",
-      "location-id": 2,
-      "name": "MPI_Init()", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "18",
-      "location-id": 2,
-      "name": "MPI_Comm_rank()", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "19",
-      "location-id": 2,
-      "name": "MPI_Comm_size()", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "20",
-      "location-id": 2,
-      "name": "pthread_create", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "21",
-      "location-id": 2,
-      "name": "MPI_Gather()", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "22",
-      "location-id": 2,
-      "name": "MPI_Barrier()", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "23",
-      "location-id": 2,
-      "name": "MPI_Reduce()", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "24",
-      "location-id": 2,
-      "name": "MPI_Allreduce()", 
-      "event-type": "",
-      "timestamp": ""
-    },
-    {
-      "id": "25",
-      "location-id": 2,
-      "name": "MPI_Finalize()",
-      "event-type": "",
-      "timestamp": ""
+      "uri": "",
+      "desctiption": "This is the ADIOS output from the main driver application."
     }
   ],
   "Metric": [
@@ -273,14 +58,21 @@
       "location-id": 1,
       "measurement": "Time",
       "units": "microseconds",
-      "datetime": ""
+      "datetime": "",
+      "description": "This is a metric used to measure the applications."
     }
   ],
   "Location": [
     {
       "id": 1,
       "parent-location-id": "",
-      "type": "Titan"
+      "type": "hpc1.uoregon.edu",
+      "description": "This is where the application was executed."
     }
-  ]
+  ],
+  "Dependency Graph": {
+    "xmain_0": [],
+    "reader2_0": ["xmain_0"]
+  },
+  "Dependency Graph description": "This is the workflow dependency graph. Each workflow component has a list of workflow components that it depends on. In this case, xmain_0 has no dependencies, and reader2_0 has a dependency on xmain_0."
 }
