@@ -1,6 +1,6 @@
 This example shows how to consolidate profiles from multiple TAU measurements
 into one JSON file containing a workflow.  The required input file for this
-functionality is a workflow.json file.  That file will some day be automatically
+functionality is a workflow_in.json file.  That file will some day be automatically
 collected, but for now it is manually generated.  It contains 
  - Workflow Instance : a description of the workflow 
  - Workflow Component : one or more components in the workflow
@@ -19,4 +19,6 @@ profile directories.
 
 To run the example, call it with the following arguments:
 
-./tau_prof2json.py -w workflow.json xmain_0 reader2_0 -o foo.json
+../../tools/src/tau_prof2json.py -w workflow_in.json xmain_0 reader2_0 -o merged_workflow.json
+
+...or call it from your TAU bin installation directory.
