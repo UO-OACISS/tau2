@@ -10,6 +10,10 @@ import argparse
 import json
 from collections import OrderedDict
 
+workflow_metadata_str = "Workflow metadata"
+metadata_str = "metadata"
+global_data = None
+
 """
     Parse the "invalid" TAU XML
 """
@@ -42,6 +46,8 @@ def parse_tau_xml(instring):
 This method will parse the arguments.
 """
 def parse_args(arguments):
+    global workflow_metadata_str
+    global metadata_str
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -55,7 +61,51 @@ def parse_args(arguments):
     # print(args)
     return args
 
+def extract_workflow_metadata(component_name, thread_name, max_inclusive):
+    global global_data
+    # This is the root rank/thread for an application, so extract some key info
+    workflow_dict = global_data[workflow_metadata_str]
+    app_dict = global_data[component_name][metadata_str][thread_name]
+    time_stamp = app_dict["Timestamp"]
+    local_time = app_dict["Local Time"]
+    if time_stamp != None:
+        for wc in workflow_dict["Workflow Component"]:
+            if wc["name"] == component_name:
+                wc["timestamp"] = time_stamp
+                wc["Local-Time"] = local_time
+        for wc in workflow_dict["Workflow Instance"]:
+            if "timestamp" not in wc or wc["timestamp"] > time_stamp:
+                wc["timestamp"] = time_stamp
+                wc["Local-Time"] = local_time
+    app_name = app_dict["Executable"]
+    found = False
+    app_id = 0
+    for app in workflow_dict["Application"]:
+        if app["name"] in component_name or app["name"] == app_name:
+            Found = True
+            app_id = app["id"]
+            break
+    if not found:
+        app = OrderedDict()
+        app_id = len(workflow_dict["Application"]) + 1
+        app["id"] = app_id
+        app["location-id"] = 1
+        app["name"] = app_name
+        app["version"] = "0.1"
+        app["uri"] = ""
+    	workflow_dict["Application"].append(app)
+    app_instance = OrderedDict()
+    app_instance["id"] = len(workflow_dict["Application-instance"]) + 1
+    app_instance["process-id"] = app_dict["pid"]
+    app_instance["application-id"] = app_id
+    app_instance["event-type"] = ""
+    app_instance["start-timestamp"] = time_stamp
+    app_instance["end-timestamp"] = str(long(time_stamp) + max_inclusive)
+    app_instance["Local-Time"] = local_time
+    workflow_dict["Application-instance"].append(app_instance)
+
 def parse_functions(node, context, thread, infile, data, num_functions, function_map):
+    max_inclusive = 0
     # Function looks like:
     # "".TAU application" 1 0 8626018 8626018 0 GROUP="TAU_USER""
     if num_functions > 0:
@@ -116,6 +166,9 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
             timer["Exclusive Time"] = long(tokens[2])
             timer["Inclusive Time"] = long(tokens[3])
             data["Timers"].append(timer)
+            if max_inclusive < long(tokens[3]):
+                max_inclusive = long(tokens[3])
+    return max_inclusive
     
 def parse_aggregates(node, context, thread, infile, data):
     aggregates = infile.readline()
@@ -201,7 +254,9 @@ def parse_counters(node, context, thread, infile, data, counter_map):
             counter["SumSqr Value"] = float(tokens[4])
             data["Counters"].append(counter)
 
-def parse_profile(indir, profile, data, function_map, counter_map):
+def parse_profile(indir, profile, application_metadata, function_map, counter_map):
+    global metadata_str
+    global global_data
     # FIrst, split the name of the profile to get the node, context, thread
     tokens = profile.split(".")
     node = tokens[1]
@@ -214,69 +269,82 @@ def parse_profile(indir, profile, data, function_map, counter_map):
     # "16 templated_functions_MULTI_TIME"
     tokens = functions.split()
     num_functions = int(tokens[0])
-    # data["Metric"] = tokens[1]
+    # application_metadata["Metric"] = tokens[1]
     # The header for the functions looks like this:
     # "# Name Calls Subrs Excl Incl ProfileCalls # <metadata>...</metadata>"
     header = infile.readline()
     tokens = header.split("#",2)
     # Parse the metadata
     thread_name = "Rank " + str(node) + ", Thread " + str(thread)
-    data["metadata"][thread_name] = parse_tau_xml(str.strip(tokens[2]))
+    application_metadata[metadata_str][thread_name] = parse_tau_xml(str.strip(tokens[2]))
     # Parse the functions
-    parse_functions(node, context, thread, infile, data, num_functions, function_map)
+    max_inclusive = parse_functions(node, context, thread, infile, application_metadata, num_functions, function_map)
+    if node == "0" and thread == "0":
+        extract_workflow_metadata(indir, thread_name, max_inclusive)
     # Parse the aggregates
-    parse_aggregates(node, context, thread, infile, data)
+    parse_aggregates(node, context, thread, infile, application_metadata)
     # Parse the counters
-    parse_counters(node, context, thread, infile, data, counter_map)
+    parse_counters(node, context, thread, infile, application_metadata, counter_map)
 
 """
 This method will parse a directory of TAU profiles
 """
-def parse_directory(indir, index, data):
+def parse_directory(indir, index):
+    global metadata_str
+    global global_data
     # assume just 1 metric for now...
 
     # create a dictionary for this application
-    application = OrderedDict()
+    application_metadata = OrderedDict()
     #application["source directory"] = indir
 
     # add the application to the master dictionary
     # tmp = "Application " + str(index)
     #data[tmp] = application
-    data[indir] = application
+    global_data[indir] = application_metadata
     
     # get the list of profile files
     profiles = [f for f in os.listdir(indir) if (os.path.isfile(os.path.join (indir, f)) and f.startswith("profile."))]
     #application["num profiles"] = len(profiles)
 
-    application["metadata"] = OrderedDict()
+    # sort the profiles alphanumerically
+    profiles.sort()
+
+    application_metadata[metadata_str] = OrderedDict()
     function_map = {}
     counter_map = {}
     for p in profiles:
-        parse_profile(indir, p, application, function_map, counter_map)
+        parse_profile(indir, p, application_metadata, function_map, counter_map)
 
 """
 Main method
 """
 def main(arguments):
+    global workflow_metadata_str
+    global global_data
     # parse the arguments
     args = parse_args(arguments)
-    data = OrderedDict()
+    global_data = OrderedDict()
     if args.workflow != None:
-        data["Workflow metadata"] = json.load(open(args.workflow), object_pairs_hook=OrderedDict)
+        global_data[workflow_metadata_str] = json.load(open(args.workflow), object_pairs_hook=OrderedDict)
+    else:
+        global_data[workflow_metadata_str] = OrderedDict()
+    global_data[workflow_metadata_str]["Application"] = []
+    global_data[workflow_metadata_str]["Application-instance"] = []
 
     index = 1
     for indir in args.indir:
         print ("Processing:", indir)
-        parse_directory(indir, index, data)
+        parse_directory(indir, index)
         index = index + 1
 
     # write the JSON output
     if args.outfile == None:
-        # json.dump(data, args.outfile)
-        json.dumps(data, indent=2)
+        # json.dump(global_data, args.outfile)
+        json.dumps(global_data, indent=2)
     else:
-        # json.dump(data, args.outfile)
-        args.outfile.write(json.dumps(data, indent=2))
+        # json.dump(global_data, args.outfile)
+        args.outfile.write(json.dumps(global_data, indent=2))
 
 """
 Call the main function if not called from another python file
