@@ -413,7 +413,11 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
           buff << " " << fi->GetType();
         buff << " => ";
       }
-      fi = path[i]->ThisFunction;
+      if (depth == 0) {
+        fi = current->ThisFunction;
+      } else {
+        fi = path[i]->ThisFunction;
+      }
       buff << fi->GetName();
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
