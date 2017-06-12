@@ -180,14 +180,14 @@ void TAU_SOS_send_shutdown_message(void) {
         header.msg_size = -1;
         header.msg_type = SOS_MSG_TYPE_SHUTDOWN;
         header.msg_from = _runtime->my_guid;
-        header.pub_guid = 0;
+        header.ref_guid = 0;
 
         offset = 0;
         SOS_buffer_pack(buffer, &offset, "iigg",
                 header.msg_size,
                 header.msg_type,
                 header.msg_from,
-                header.pub_guid);
+                header.ref_guid);
 
         header.msg_size = offset;
         offset = 0;
