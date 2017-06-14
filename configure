@@ -4516,6 +4516,19 @@ then
                       fi
                     fi
                 fi 
+                if [ "x$mpiinc" = "x" -a "x$mpilib" = "x" ]; then
+                  mpiinc_search=`$orig_c_compiler -show | sed -e 's@ @\n@g' | grep "^-I" | sed -e 's@-I@@'`
+                  mpilib_search=`$orig_c_compiler -show | sed -e 's@ @\n@g' | grep "^-L" | sed -e 's@-L@@'`
+                  if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h ];
+                  then
+		    mpiinc=$mpiinc_search
+		    echo "Using MPI include directory $mpiinc"
+                  fi
+                  if [ -d $mpilib_search -a -r $mpilib_search/mpi.mod ]; then
+		    mpilib=$mpilib_search
+		    echo "Using MPI lib directory $mpilib"
+                  fi 
+                fi
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4876,7 +4889,6 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" ]; then
       fi
     fi
   fi
-  
 
 fi
 # echo "MPI include and libs checks done"
