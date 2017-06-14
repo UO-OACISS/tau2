@@ -3633,7 +3633,7 @@ if [ $cxx_compiler = mpicxx ] ; then
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
 	    fi
-            if [ "x$fortran_compiler" = "xxlf_r" ]; then
+            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  ]; then
                 fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
 	    fi
             if [ "x$fortran_compiler" = "xxlflang" ]; then
@@ -3834,7 +3834,15 @@ case $cxx_compiler in
             compilerLocation=`grep bgxlc++ /usr/local/tools/check_compile_line/bgxlc++ | awk '{ print $3;}'`
 	fi
 
+
 	extradircxx=`echo $compilerLocation | sed s/$ibm_compiler/../`
+
+        if [ "$machine" = ibm64linux ] ; then
+           if [ ! -r $extradircxx/lib/libibmc++.a ]; then
+              cxxpath=`find $extradircxx -name libibmc++.a -print `
+              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' `
+           fi
+        fi
 
 	extradir=`which xlf90 | sed s/xlf90/../`
 	if [ $fortran_compiler = no ]
