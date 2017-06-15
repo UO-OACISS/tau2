@@ -3633,7 +3633,7 @@ if [ $cxx_compiler = mpicxx ] ; then
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
 	    fi
-            if [ "x$fortran_compiler" = "xxlf_r" ]; then
+            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  ]; then
                 fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
 	    fi
             if [ "x$fortran_compiler" = "xxlflang" ]; then
@@ -3834,7 +3834,15 @@ case $cxx_compiler in
             compilerLocation=`grep bgxlc++ /usr/local/tools/check_compile_line/bgxlc++ | awk '{ print $3;}'`
 	fi
 
+
 	extradircxx=`echo $compilerLocation | sed s/$ibm_compiler/../`
+
+        if [ "$machine" = ibm64linux ] ; then
+           if [ ! -r $extradircxx/lib/libibmc++.a ]; then
+              cxxpath=`find $extradircxx -name libibmc++.a -print `
+              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' `
+           fi
+        fi
 
 	extradir=`which xlf90 | sed s/xlf90/../`
 	if [ $fortran_compiler = no ]
@@ -4508,6 +4516,19 @@ then
                       fi
                     fi
                 fi 
+                if [ "x$mpiinc" = "x" -a "x$mpilib" = "x" ]; then
+                  mpiinc_search=`$orig_c_compiler -show | sed -e 's@ @\n@g' | grep "^-I" | sed -e 's@-I@@'`
+                  mpilib_search=`$orig_c_compiler -show | sed -e 's@ @\n@g' | grep "^-L" | sed -e 's@-L@@'`
+                  if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h ];
+                  then
+		    mpiinc=$mpiinc_search
+		    echo "Using MPI include directory $mpiinc"
+                  fi
+                  if [ -d $mpilib_search -a -r $mpilib_search/mpi.mod ]; then
+		    mpilib=$mpilib_search
+		    echo "Using MPI lib directory $mpilib"
+                  fi 
+                fi
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4868,7 +4889,6 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" ]; then
       fi
     fi
   fi
-  
 
 fi
 # echo "MPI include and libs checks done"
