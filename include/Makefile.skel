@@ -306,7 +306,7 @@ MPI_FORTRAN_INIT = TauFInit.o
 #############################################
 #ADIOS#ADIOS_O = TauADIOS.o #ENDIF#
 #ADIOS#TAU_ADIOS_INCLUDE_OPTS=-I$(ADIOSDIR)/include -I$(ADIOSDIR) -DTAU_ADIOS #ENDIF#
-#ADIOS#TAU_ADIOS_LIBS=-L$(ADIOSDIR)/lib -Wl,-rpath,$(ADIOSDIR)/lib -lsos -pthread -fPIC #ENDIF#
+#ADIOS#TAU_ADIOS_LIBS=-L$(ADIOSDIR)/lib -Wl,-rpath,$(ADIOSDIR)/lib -pthread -fPIC #ENDIF#
 #ADIOS#TAU_ADIOS_LINKER_OPTS=$(TAU_ADIOS_LIBS) #ENDIF#
 
 #############################################
