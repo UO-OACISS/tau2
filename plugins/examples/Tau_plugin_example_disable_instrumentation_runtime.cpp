@@ -499,6 +499,11 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
 
+  if(argc == 0) {
+    printf("TAU PLUGIN: Please provide a selective instrumentation by setting TAU_SELECT_FILE=<select_file>\n");
+    return -1;
+  }
+
   processInstrumentationRequests(argv[0]);
 
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
