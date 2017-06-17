@@ -1233,8 +1233,14 @@ void TauEnv_initialize()
 #else
       TAU_VERBOSE("TAU: TAU_TRACK_MEMORY_FOOTPRINT VmRSS and VmHWM tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "on");
-      TAU_TRACK_MEMORY_FOOTPRINT();
-      env_track_memory_footprint = 1;
+
+      /*Adding a check to prevent signal handler from being invoked over and over.
+ 	Set env_track_memory_footprint BEFORE invoking the signal handler. If not, a segfault is coming your way.*/
+      if(env_track_memory_footprint == 0) {
+
+	env_track_memory_footprint = 1;
+        TAU_TRACK_MEMORY_FOOTPRINT();
+      }
 #endif
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "off");
