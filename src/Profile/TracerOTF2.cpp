@@ -306,19 +306,7 @@ void TauTraceOTF2Event(long int ev, x_int64 par, int tid, x_uint64 ts, int use_t
   TauTraceOTF2EventWithNodeId(ev, par, tid, ts, use_ts, RtsLayer::myNode(), kind);
 }
 
-/* Close the trace */
-void TauTraceOTF2Close(int tid) {
-    std::cerr << "TauTraceOTF2Close " << tid << std::endl;
-    if(tid != 0 || otf2_finished || !otf2_initialized) {
-        return;
-    }
-
-    otf2_finished = true;
-    otf2_initialized = false;
-    end_time = TauTraceGetTimeStamp(0);
-
-    // Write definitions file
-    
+static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_GlobalDefWriter * global_def_writer = OTF2_Archive_GetGlobalDefWriter(otf2_archive);
     if(global_def_writer == NULL) {
         fprintf(stderr, "TAU: Error: Couldn't get global def writer.\n");
@@ -338,6 +326,7 @@ void TauTraceOTF2Close(int tid) {
         for(int node = 0; node < nodes; ++node) {
             // System Tree Node
             char namebuf[256];
+            // TODO hostname
             snprintf(namebuf, 256, "node %d", node);                                  
             int nodeName = nextString++;
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, nodeName, namebuf));
@@ -350,9 +339,10 @@ void TauTraceOTF2Close(int tid) {
             OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
 
             // TODO Need to get actual number of locations from each node
+            // TODO offsets for multi-node
             const int locs = nodes * RtsLayer::getTotalThreads();
             for(int loc = 0; loc < locs; ++loc) {
-                snprintf(namebuf, 256, "location %d", loc);
+                snprintf(namebuf, 256, "thread %d", loc);
                 int locName = nextString++;
                 OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
                 uint64_t num_events = 0;
@@ -371,11 +361,46 @@ void TauTraceOTF2Close(int tid) {
             OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, fi->GetFunctionId(), thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
         }
 
+        OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
     }
 
 
+}
+
+static void TauTraceOTF2WriteLocalDefinitions() {
+    // TODO global unification
+    OTF2_IdMap * region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
+    for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+        FunctionInfo * fi = *it;
+        OTF2_EC(OTF2_IdMap_AddIdPair(region_map, fi->GetFunctionId(), fi->GetFunctionId())); // FIXME identity map
+    }
+    const int nodes = tau_totalnodes(0, 0);
+    const int locs = nodes * RtsLayer::getTotalThreads(); // FIXME actual node numbers for multi-node
+    for(int loc = 0; loc < locs; ++loc) {
+        OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+        OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, region_map));
+        OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
+    }
+    OTF2_IdMap_Free(region_map);
+
+}
+
+/* Close the trace */
+void TauTraceOTF2Close(int tid) {
+    std::cerr << "TauTraceOTF2Close " << tid << std::endl;
+    if(tid != 0 || otf2_finished || !otf2_initialized) {
+        return;
+    }
+
+    otf2_finished = true;
+    otf2_initialized = false;
+    end_time = TauTraceGetTimeStamp(0);
+
+    // Write definitions file
+    TauTraceOTF2WriteGlobalDefinitions();
+    TauTraceOTF2WriteLocalDefinitions();
     
-    OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
+    
     OTF2_EC(OTF2_Archive_CloseEvtFiles(otf2_archive));
     OTF2_EC(OTF2_Archive_Close(otf2_archive));
 
