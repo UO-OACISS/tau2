@@ -13,6 +13,7 @@ from collections import OrderedDict
 workflow_metadata_str = "Workflow metadata"
 metadata_str = "metadata"
 global_data = None
+have_workflow = False
 
 """
     Parse the "invalid" TAU XML
@@ -63,12 +64,13 @@ def parse_args(arguments):
 
 def extract_workflow_metadata(component_name, thread_name, max_inclusive):
     global global_data
+    global have_workflow
     # This is the root rank/thread for an application, so extract some key info
     workflow_dict = global_data[workflow_metadata_str]
     app_dict = global_data[component_name][metadata_str][thread_name]
     time_stamp = app_dict["Timestamp"]
     local_time = app_dict["Local Time"]
-    if time_stamp != None:
+    if time_stamp != None and have_workflow:
         for wc in workflow_dict["Workflow Component"]:
             if wc["name"] == component_name:
                 wc["start-timestamp"] = time_stamp
@@ -323,11 +325,13 @@ Main method
 def main(arguments):
     global workflow_metadata_str
     global global_data
+    global have_workflow
     # parse the arguments
     args = parse_args(arguments)
     global_data = OrderedDict()
     if args.workflow != None:
         global_data[workflow_metadata_str] = json.load(open(args.workflow), object_pairs_hook=OrderedDict)
+        have_workflow = True
     else:
         global_data[workflow_metadata_str] = OrderedDict()
     global_data[workflow_metadata_str]["Application"] = []
