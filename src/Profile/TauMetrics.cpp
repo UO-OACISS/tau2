@@ -843,7 +843,7 @@ void TauMetrics_triggerAtomicEvents(unsigned long long timestamp, double *values
   int i;
 #ifndef TAU_EPILOG
   for (i = 1; i < nmetrics; i++) {
-    TauTraceEvent(traceCounterEvents[i]->GetId(), (long long)values[i], tid, timestamp, 1);
+    TauTraceEvent(traceCounterEvents[i]->GetId(), (long long)values[i], tid, timestamp, 1, TAU_TRACE_EVENT_KIND_USEREVENT);
     // 1 in the last parameter is for use timestamp
   }
 #endif /* TAU_EPILOG */

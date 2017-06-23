@@ -202,7 +202,7 @@ void TauSyncFinalClocks() {
   if (userevent == 0) { /* register the user event */
     userevent = Tau_get_userevent("TauTraceClockOffsetEnd");
   }
-  TauTraceEventSimple(TauUserEvent_GetEventId(userevent), (x_int64) offset ,0);
+  TauTraceEventSimple(TauUserEvent_GetEventId(userevent), (x_int64) offset ,0, TAU_TRACE_EVENT_KIND_USEREVENT);
 }
 
 /* The MPI_Init wrapper calls this routine */
@@ -232,7 +232,7 @@ void TauSyncClocks() {
     userevent = Tau_get_userevent("TauTraceClockOffsetStart");
   }
 /*   TAU_VERBOSE ("TAU: Clock Synchonization offset for node %d : %.16G\n", rank, offset); */
-  TauTraceEventSimple(TauUserEvent_GetEventId(userevent), (x_int64) offset, 0);
+  TauTraceEventSimple(TauUserEvent_GetEventId(userevent), (x_int64) offset, 0, TAU_TRACE_EVENT_KIND_USEREVENT);
 
   PMPI_Barrier(MPI_COMM_WORLD);
 }

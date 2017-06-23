@@ -188,9 +188,19 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
     if (TauEnv_get_tracing()) {
-      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
-      TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts);
-      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
+#ifdef TAU_OTF2
+      if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+      TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      } else {
+        TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+        TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+        TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      }
+#else
+      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+#endif
     }
 #endif /* TAU_EPILOG */
     /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */

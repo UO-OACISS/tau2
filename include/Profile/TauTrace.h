@@ -46,6 +46,11 @@
 #define TAU_ONESIDED_MESSAGE_ID_1 70002
 #define TAU_ONESIDED_MESSAGE_ID_2 70003
 
+/* Event kinds */
+#define TAU_TRACE_EVENT_KIND_FUNC      1
+#define TAU_TRACE_EVENT_KIND_USEREVENT 2
+#define TAU_TRACE_EVENT_KIND_COMM      3
+
 /* event record description */
 typedef struct {
   x_int32  ev;    /* event id                    */
@@ -72,8 +77,8 @@ extern "C" {
   void TAUDECL TauTraceReinitialize(int oldid, int newid, int tid);
   void TAUDECL TauTraceEventOnly(long int ev, x_int64 par, int tid);
   void TAUDECL TauTraceFlushBuffer(int tid);
-  void TAUDECL TauTraceEventSimple(long int ev, x_int64 par, int tid);
-  void TAUDECL TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts);
+  void TAUDECL TauTraceEventSimple(long int ev, x_int64 par, int tid, int kind);
+  void TAUDECL TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int kind);
   void TAUDECL TauTraceClose(int tid);
   void TAUDECL TauTraceSetFlushEvents(int value);
   int  TAUDECL TauTraceGetFlushEvents();

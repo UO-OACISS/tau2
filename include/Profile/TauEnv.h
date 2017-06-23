@@ -43,6 +43,9 @@
 #define TAU_INTERRUPT_INTERVAL_DEFAULT 10.0
 #endif /* TAU_EVENT_THRESHOLD */
 
+#define TAU_TRACE_FORMAT_TAU 0
+#define TAU_TRACE_FORMAT_OTF2 1
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -55,6 +58,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_throttle();
   int  TAUDECL TauEnv_get_profiling();
   int  TAUDECL TauEnv_get_tracing();
+  int  TAUDECL TauEnv_get_trace_format();
   int  TAUDECL TauEnv_get_callpath();
   int  TAUDECL TauEnv_get_callpath_depth();
   int  TAUDECL TauEnv_get_callsite();
