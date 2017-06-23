@@ -80,7 +80,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/PyBindings.h   $(INCDIR)/PyTimer.h          \
 		$(INCDIR)/RenciSTFF.h    $(INCDIR)/PapiThreadLayer.h  \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
-		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
+		$(INCDIR)/TauTrace.h     $(INCDIR)/TauTraceOTF2.h $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
@@ -128,6 +128,11 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF#
 #CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o CudaSass.o #ENDIF#
 
+#############################################
+# OTF2 OBJECTS
+#############################################
+#OTF2#OTF2_O = TracerOTF2.o
+
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
@@ -141,7 +146,8 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
-		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(SOS_O) $(ADIOS_O)
+		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(SOS_O) $(ADIOS_O) \
+		$(OTF2_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -752,6 +758,9 @@ ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Tracer.o   	: Tracer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
+
+TracerOTF2.o : TracerOTF2.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)

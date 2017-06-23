@@ -752,7 +752,7 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
 
     if (TraceTimeStamp && TauEnv_get_tracing()) {
       // Tweak time stamp to preserve event order in trace
-      TauTraceEvent(CallSiteFunction->GetFunctionId(), 1 /* entry */, tid, TraceTimeStamp-1, 1);
+      TauTraceEvent(CallSiteFunction->GetFunctionId(), 1 /* entry */, tid, TraceTimeStamp-1, 1, TAU_TRACE_EVENT_KIND_FUNC);
     }
 
     // Set up metrics. Increment number of calls and subrs
@@ -782,7 +782,7 @@ void Profiler::CallSiteStop(double *TotalTime, int tid, x_uint64 TraceTimeStamp)
     CallSiteFunction->AddExclTime(TotalTime, tid);
     if (TraceTimeStamp && TauEnv_get_tracing()) {
       // Tweak time stamp to preserve event order in trace
-      TauTraceEvent(CallSiteFunction->GetFunctionId(), -1 /* exit */, tid, TraceTimeStamp+1, 1);
+      TauTraceEvent(CallSiteFunction->GetFunctionId(), -1 /* exit */, tid, TraceTimeStamp+1, 1, TAU_TRACE_EVENT_KIND_FUNC);
     }
   }
   if (ParentProfiler != NULL) {

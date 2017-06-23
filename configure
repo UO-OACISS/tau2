@@ -8753,6 +8753,11 @@ if [ $otf = yes ] ; then
 		otfinc="$otfdir/include/open-trace-format"
 	    fi
 	fi
+    if [ "$otfinc" = "" ] ; then
+        if [ -r $otfdir/include/otf2/otf2.h ]; then
+            otfinc="$otfdir/include"
+        fi
+    fi
 	echo "OTF Header directory implicitly set to $otfinc"
     fi
     if [ ! -d $otflib ]

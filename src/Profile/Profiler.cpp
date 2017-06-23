@@ -187,7 +187,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler * current)
       TauProfiler_EnableAllEventsOnCallStack(tid, current->ParentProfiler);
       /* process the current event */
       DEBUGPROFMSG(RtsLayer::myNode() << " Processing EVENT " << current->ThisFunction->GetName() << endl);
-      TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64)current->StartTime[0], 1);
+      TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64)current->StartTime[0], 1, TAU_TRACE_EVENT_KIND_FUNC);
       TauMetrics_triggerAtomicEvents((x_uint64)current->StartTime[0], current->StartTime, tid);
     }
   }
@@ -309,7 +309,7 @@ void Profiler::Start(int tid)
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
   if (TauEnv_get_tracing()) {
-    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */);
+    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
     TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
   }
 #ifdef TAU_MPITRACE
@@ -497,7 +497,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
   if (TauEnv_get_tracing()) {
-    TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */);
+    TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
     TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
   }
 #ifdef TAU_MPITRACE

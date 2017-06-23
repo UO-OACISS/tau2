@@ -129,6 +129,8 @@ using namespace std;
 # define TAU_TRACING_DEFAULT 0
 #endif
 
+#define TAU_TRACE_FORMAT_DEFAULT TAU_TRACE_FORMAT_TAU
+
 #ifdef PROFILING_ON
 # define TAU_PROFILING_DEFAULT 1
 #else
@@ -217,6 +219,7 @@ static int env_callsite_depth = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
 static int env_tracing = 0; 
+static int env_trace_format = TAU_TRACE_FORMAT_DEFAULT;
 static int env_callpath_depth = 0;
 static int env_depth_limit = 0;
 static int env_track_message = 0;
@@ -308,6 +311,7 @@ static int env_papi_multiplexing = 0;
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
 #endif
+
 } // extern "C"
 
 /*********************************************************************
@@ -840,6 +844,10 @@ int TauEnv_get_profiling() {
 
 int TauEnv_get_tracing() {
   return env_tracing;
+}
+
+int TauEnv_get_trace_format() {
+  return env_trace_format;
 }
 
 int TauEnv_get_callpath_depth() {
@@ -1533,6 +1541,28 @@ void TauEnv_initialize()
       env_track_message = TAU_TRACK_MESSAGE_DEFAULT;
       TAU_VERBOSE("TAU: Tracing Disabled\n");
       TAU_METADATA("TAU_TRACE", "off");
+    }
+    /* trace format */
+    tmp = getconf("TAU_TRACE_FORMAT");
+    if(tmp != NULL) {
+      if(strcasecmp(tmp, "otf2") == 0) {
+#ifdef TAU_OTF2
+        env_trace_format = TAU_TRACE_FORMAT_OTF2;
+#else
+        fprintf(stderr, "TAU: Warning: requested OTF2 trace but TAU built without OTF2, using default instead.\n");
+#endif
+      } else if(strcasecmp(tmp, "tau") == 0) {
+        env_trace_format = TAU_TRACE_FORMAT_TAU;
+      } else {
+        fprintf(stderr, "TAU: Warning: unrecognized trace format %s, using default instead.\n", tmp);
+      }
+    }
+    if(env_trace_format == TAU_TRACE_FORMAT_TAU) {
+      TAU_VERBOSE("TAU: Trace format is tau\n");
+      TAU_METADATA("TAU_TRACE_FORMAT", "tau")
+    } else if(env_trace_format == TAU_TRACE_FORMAT_OTF2) {
+      TAU_VERBOSE("TAU: Trace format is otf2\n");
+      TAU_METADATA("TAU_TRACE_FORMAT", "otf2")
     }
 
     /* profiling */
