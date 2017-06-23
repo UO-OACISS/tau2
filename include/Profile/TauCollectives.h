@@ -133,7 +133,7 @@ int TauCollectives_Scatter(TauCollectives_Group* group, const void* sendbuf, voi
                    TauCollectives_Datatype datatype, int root);
 int TauCollectives_Scatterv(TauCollectives_Group* group, const void* sendbuf, const int* sendcounts,
                     void* recvbuf, int recvcount, TauCollectives_Datatype datatype, int root);
-TauCollectives_Group TauCollectives_Get_World();
+TauCollectives_Group * TauCollectives_Get_World();
 
 #endif /* TAUCOLLECTIVES_H */
 

@@ -278,8 +278,11 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   }
 
   OTF2_EC(OTF2_Archive_SetFlushCallbacks(otf2_archive, get_tau_flush_callbacks(), NULL));
+  int mpi_init = 0;
+  MPI_Initialized(&mpi_init);
+  std::cerr << "mpi init: " << mpi_init << std::endl;
   TauCollectives_Init();
-  OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, &tau_otf2_collectives, NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World, NULL));
+  OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, &tau_otf2_collectives, NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World(), NULL));
   OTF2_EC(OTF2_Archive_SetCreator(otf2_archive, "TAU"));
 #if defined(TAU_OPENMP)
   OTF2_EC(OTF2_OpenMP_Archive_SetLockingCallbacks(otf2_archive));
@@ -466,7 +469,8 @@ void TauTraceOTF2Close(int tid) {
     OTF2_EC(OTF2_Archive_CloseEvtFiles(otf2_archive));
     OTF2_EC(OTF2_Archive_Close(otf2_archive));
 
-    TauCollectives_Finalize();
+    //TODO Need to do this BEFORE MPI_Finalize
+    //TauCollectives_Finalize();
 
 }
 
