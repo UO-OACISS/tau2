@@ -120,6 +120,8 @@ TauCollectives_Init(void) {
 
 #ifdef TAU_MPI
   PMPI_Comm_dup( MPI_COMM_WORLD, &tau_group_world.comm );
+  std::cerr << "tau_group world is at " << &tau_group_world << std::endl;
+  std::cerr << "the communicator is " << tau_group_world.comm << std::endl;
 #define TAUCOLLECTIVES_MPI_BYTE          MPI_BYTE
 #define TAUCOLLECTIVES_MPI_CHAR          MPI_CHAR
 #define TAUCOLLECTIVES_MPI_UNSIGNED_CHAR MPI_UNSIGNED_CHAR
@@ -266,6 +268,7 @@ int TauCollectives_Bcast(TauCollectives_Group*   group,
                          int                     root)
 {
 #ifdef TAU_MPI
+  std::cerr << "buf = " << buf << " count = " << count << " datatype = " << datatype << " root = " << root << " comm: " << group->comm << std::endl;
   return PMPI_Bcast(buf, count, get_mpi_datatype(datatype), root, group->comm);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
@@ -1288,7 +1291,7 @@ int TauCollectives_Scatterv(TauCollectives_Group*   group,
   return 0;
 }
 
-TauCollectives_Group TauCollectives_Get_World()
+TauCollectives_Group * TauCollectives_Get_World()
 {
-  return tau_group_world;
+  return &tau_group_world;
 }
