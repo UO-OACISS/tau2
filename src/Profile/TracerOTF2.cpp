@@ -32,6 +32,8 @@
 #include <Profile/TauTrace.h>
 #include <Profile/TauTraceOTF2.h>
 #include <Profile/TauMetrics.h>
+#include <Profile/TauCollectives.h>
+
 
 #include <iostream>
 
@@ -42,6 +44,13 @@
 #ifdef TAU_OPENMP
 #include <otf2/OTF2_OpenMP_Locks.h>
 #endif
+
+#ifdef TAU_INCLUDE_MPI_H_HEADER
+#ifdef TAU_MPI
+#include <mpi.h>
+#endif 
+#endif /* TAU_INCLUDE_MPI_H_HEADER */
+
 
 #define OTF2_EC(call) { \
     OTF2_ErrorCode ec = call; \
@@ -66,104 +75,144 @@ extern "C" int tau_totalnodes(int set_or_get, int value);
 // Collective Callbacks -- GetSize and GetRank are mandatory
 // others are only needed when using SION substrate
 
-static OTF2_CallbackCode tau_OTF2GetSize(void * userData, 
-        OTF2_CollectiveContext * commContext, uint32_t * size) {
-    *size = tau_totalnodes(0, 0);
+static OTF2_CallbackCode tau_collectives_get_size(void*                   userData,
+                                                  OTF2_CollectiveContext* commContext,
+                                                  uint32_t*               size )
+{
+  *size = TauCollectives_get_size((TauCollectives_Group*) commContext);
+  return OTF2_CALLBACK_SUCCESS;
+}
+
+static OTF2_CallbackCode tau_collectives_get_rank(void*                   userData,
+                                                  OTF2_CollectiveContext* commContext,
+                                                  uint32_t*               rank )
+{
+  *rank = RtsLayer::myNode();
+  return OTF2_CALLBACK_SUCCESS;
+}
+
+static OTF2_CallbackCode
+tau_collectives_barrier( void*                   userData,
+                              OTF2_CollectiveContext* commContext )
+{
+    TauCollectives_Barrier((TauCollectives_Group*) commContext );
+
     return OTF2_CALLBACK_SUCCESS;
 }
 
-static OTF2_CallbackCode tau_OTF2GetRank (void * userData, 
-        OTF2_CollectiveContext *commContext, uint32_t * rank) {
-    int myNode = RtsLayer::myNode();
-    *rank = myNode == -1 ? 0 : myNode;
+static OTF2_CallbackCode
+tau_collectives_bcast( void*                   userData,
+                            OTF2_CollectiveContext* commContext,
+                            void*                   data,
+                            uint32_t                numberElements,
+                            OTF2_Type               type,
+                            uint32_t                root )
+{
+    TauCollectives_Bcast( ( TauCollectives_Group* )commContext,
+                           data,
+                           numberElements,
+                           TauCollectives_get_type( type ),
+                           root );
+
     return OTF2_CALLBACK_SUCCESS;
 }
 
-// Stubs for optional collective callbacks
-static OTF2_CallbackCode tau_OTF2CreateLocalComm (void *userData,
-        OTF2_CollectiveContext **localCommContext, OTF2_CollectiveContext
-        *globalCommContext, uint32_t globalRank, uint32_t globalSize, uint32_t
-        localRank, uint32_t localSize, uint32_t fileNumber, uint32_t numberOfFiles) {
-    /* Create a new disjoint partitioning of the the globalCommContext
-        communication context. numberOfFiles denotes the number of the partitions.
-        fileNumber denotes in which of the partitions this OTF2_Archive should belong.
-        localSize is the size of this partition and localRank the rank of this
-        OTF2_Archive in the partition. */
+static OTF2_CallbackCode
+tau_collectives_gather( void*                   userData,
+                             OTF2_CollectiveContext* commContext,
+                             const void*             inData,
+                             void*                   outData,
+                             uint32_t                numberElements,
+                             OTF2_Type               type,
+                             uint32_t                root )
+{
+    TauCollectives_Gather( ( TauCollectives_Group* )commContext,
+                            inData,
+                            outData,
+                            numberElements,
+                            TauCollectives_get_type( type ),
+                            root );
+
     return OTF2_CALLBACK_SUCCESS;
 }
 
-static OTF2_CallbackCode tau_OTF2FreeLocalComm (void *userData,
-        OTF2_CollectiveContext *localCommContext) {
-    /* Destroys the communication context previous created by the
-        OTF2CreateLocalComm callback. */
+static OTF2_CallbackCode
+tau_collectives_gatherv( void*                   userData,
+                              OTF2_CollectiveContext* commContext,
+                              const void*             inData,
+                              uint32_t                inElements,
+                              void*                   outData,
+                              const uint32_t*         outElements,
+                              OTF2_Type               type,
+                                         uint32_t                root )
+{
+    TauCollectives_Gatherv( ( TauCollectives_Group* )commContext,
+                             inData,
+                             inElements,
+                             outData,
+                             ( const int* )outElements,
+                             TauCollectives_get_type( type ),
+                             root );
+
     return OTF2_CALLBACK_SUCCESS;
 }
 
-static OTF2_CallbackCode tau_OTF2Barrier (void *userData,
-        OTF2_CollectiveContext *commContext) {
-    /* Performs a barrier collective on the given communication context. */
+static OTF2_CallbackCode
+tau_collectives_scatter( void*                   userData,
+                              OTF2_CollectiveContext* commContext,
+                              const void*             inData,
+                              void*                   outData,
+                              uint32_t                numberElements,
+                              OTF2_Type               type,
+                              uint32_t                root )
+{
+    TauCollectives_Scatter( ( TauCollectives_Group* )commContext,
+                             inData,
+                             outData,
+                             numberElements,
+                             TauCollectives_get_type( type ),
+                             root );
+
     return OTF2_CALLBACK_SUCCESS;
 }
 
-static OTF2_CallbackCode tau_OTF2Bcast (void *userData,
-        OTF2_CollectiveContext *commContext, void *data, uint32_t numberElements,
-        OTF2_Type type, uint32_t root) {
-    /* Performs a broadcast collective on the given communication context. */
+static OTF2_CallbackCode
+tau_collectives_scatterv( void*                   userData,
+                               OTF2_CollectiveContext* commContext,
+                               const void*             inData,
+                               const uint32_t*         inElements,
+                               void*                   outData,
+                               uint32_t                outElements,
+                               OTF2_Type               type,
+                               uint32_t                root )
+{
+    TauCollectives_Scatterv( ( TauCollectives_Group* )commContext,
+                              inData,
+                              ( const int* )inElements,
+                              outData,
+                              outElements,
+                              TauCollectives_get_type( type ),
+                              root );
+
     return OTF2_CALLBACK_SUCCESS;
 }
 
-static OTF2_CallbackCode tau_OTF2Gather (void *userData,
-        OTF2_CollectiveContext *commContext, const void *inData, void *outData,
-        uint32_t numberElements, OTF2_Type type, uint32_t root) {
-    /* Performs a gather collective on the given communication context where
-        each ranks contribute the same number of elements. outData is only valid at
-        rank root. */
-    return OTF2_CALLBACK_SUCCESS;
-}
+static const OTF2_CollectiveCallbacks tau_otf2_collectives =
+{
+    .otf2_release           = NULL,
+    .otf2_get_size          = tau_collectives_get_size,
+    .otf2_get_rank          = tau_collectives_get_rank,
+    .otf2_create_local_comm = NULL,
+    .otf2_free_local_comm   = NULL,
+    .otf2_barrier           = tau_collectives_barrier,
+    .otf2_bcast             = tau_collectives_bcast,
+    .otf2_gather            = tau_collectives_gather,
+    .otf2_gatherv           = tau_collectives_gatherv,
+    .otf2_scatter           = tau_collectives_scatter,
+    .otf2_scatterv          = tau_collectives_scatterv
+};
 
-static OTF2_CallbackCode tau_OTF2Gatherv (void *userData,
-        OTF2_CollectiveContext *commContext, const void *inData, uint32_t inElements,
-        void *outData, const uint32_t *outElements, OTF2_Type type, uint32_t root) {
-    /* Performs a gather collective on the given communication context where
-        each ranks contribute different number of elements. outData and outElements are
-        only valid at rank root. */
-    return OTF2_CALLBACK_SUCCESS;
-}
 
-static OTF2_CallbackCode tau_OTF2Scatter (void *userData,
-        OTF2_CollectiveContext *commContext, const void *inData, void *outData,
-        uint32_t numberElements, OTF2_Type type, uint32_t root) {
-    /* Performs a scatter collective on the given communication context where
-        each ranks contribute the same number of elements. inData is only valid at rank
-        root. */
-    return OTF2_CALLBACK_SUCCESS;
-}
-
-static OTF2_CallbackCode tau_OTF2Scatterv (void *userData,
-        OTF2_CollectiveContext *commContext, const void *inData, const uint32_t
-        *inElements, void *outData, uint32_t outElements, OTF2_Type type, uint32_t
-        root) {
-    /* Performs a scatter collective on the given communication context where
-        each ranks contribute different number of elements. inData and inElements are
-        only valid at rank root. */
-    return OTF2_CALLBACK_SUCCESS;
-}
-
-static OTF2_CollectiveCallbacks * get_tau_collective_callbacks() {
-    static OTF2_CollectiveCallbacks cb;
-    cb.otf2_release = NULL;
-    cb.otf2_get_size = tau_OTF2GetSize;
-    cb.otf2_get_rank = tau_OTF2GetRank;
-    cb.otf2_create_local_comm = NULL;
-    cb.otf2_free_local_comm = NULL;
-    cb.otf2_barrier = tau_OTF2Barrier;
-    cb.otf2_bcast = tau_OTF2Bcast;
-    cb.otf2_gather = tau_OTF2Gather;
-    cb.otf2_gatherv = tau_OTF2Gatherv;
-    cb.otf2_scatter = tau_OTF2Scatter;
-    cb.otf2_scatterv = tau_OTF2Scatterv;
-    return &cb;                                                 
-}
 
 // Flush Callbacks -- both mandatory
 
@@ -229,9 +278,8 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   }
 
   OTF2_EC(OTF2_Archive_SetFlushCallbacks(otf2_archive, get_tau_flush_callbacks(), NULL));
-  OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, get_tau_collective_callbacks(), NULL, NULL, NULL));
-  uint32_t size = 40;
-  tau_OTF2GetRank(NULL, NULL, &size);
+  TauCollectives_Init();
+  OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, &tau_otf2_collectives, NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World, NULL));
   OTF2_EC(OTF2_Archive_SetCreator(otf2_archive, "TAU"));
 #if defined(TAU_OPENMP)
   OTF2_EC(OTF2_OpenMP_Archive_SetLockingCallbacks(otf2_archive));
@@ -253,6 +301,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 /* This routine is typically invoked when multiple SET_NODE calls are 
    encountered for a multi-threaded program */ 
 void TauTraceOTF2Reinitialize(int oldid, int newid, int tid) {
+  // TODO find tid's location and call OTF2_EvtWriter_SetLocationID
   std::cerr << "TauTraceOTF2Reinitialize " << tid << std::endl;
   return ;
 }
@@ -276,17 +325,27 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   TauInternalFunctionGuard protects_this_function;
   std::cerr << "TauTraceOTF2WithNodeId(" << ev << ", " << par << ", " << tid << ", " << ts << ", " << use_ts << ", " << node_id << ", " << kind << ")" << std::endl;
   if(!otf2_initialized) {
+#ifdef TAU_MPI
+    // If we're using MPI, we can't initialize tracing until MPI_Init gets called,
+    // which will in turn init tracing for us, so we can't do it here.
+    // This is because when we call OTF2_Archive_Open and set the collective callbacks,
+    // we must know our rank, because at that time rank 0 alone must create the trace
+    // directory.
+    return;
+#else
     if(use_ts) {
         TauTraceOTF2InitTS(tid, ts); 
     } else {
         TauTraceOTF2Init(tid);
     }
+#endif
   }
   if(otf2_finished) {
     return;
   }
   if(kind == TAU_TRACE_EVENT_KIND_FUNC) {
     int loc = my_location();
+    std::cerr << "Recording event for loc " << loc << std::endl;
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     if(par == 1) { // Enter
       OTF2_EvtWriter_Enter(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev);
@@ -321,48 +380,47 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     const int emptyString = 0;
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, 0, "" ));
 
-    if(RtsLayer::myNode() < 1) { // If master or only node
-        const int nodes = tau_totalnodes(0, 0);
-        for(int node = 0; node < nodes; ++node) {
-            // System Tree Node
-            char namebuf[256];
-            // TODO hostname
-            snprintf(namebuf, 256, "node %d", node);                                  
-            int nodeName = nextString++;
-            OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, nodeName, namebuf));
-            OTF2_EC(OTF2_GlobalDefWriter_WriteSystemTreeNode(global_def_writer, node, nodeName, emptyString, OTF2_UNDEFINED_SYSTEM_TREE_NODE));        
+    const int nodes = tau_totalnodes(0, 0);
+    for(int node = 0; node < nodes; ++node) {
+        // System Tree Node
+        char namebuf[256];
+        // TODO hostname
+        snprintf(namebuf, 256, "node %d", node);                                  
+        int nodeName = nextString++;
+        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, nodeName, namebuf));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteSystemTreeNode(global_def_writer, node, nodeName, emptyString, OTF2_UNDEFINED_SYSTEM_TREE_NODE));        
 
-            // Location Group
-            snprintf(namebuf, 256, "group %d", node);
-            int groupName = nextString++;
-            OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
-            OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
+        // Location Group
+        snprintf(namebuf, 256, "group %d", node);
+        int groupName = nextString++;
+        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
 
-            // TODO Need to get actual number of locations from each node
-            // TODO offsets for multi-node
-            const int locs = nodes * RtsLayer::getTotalThreads();
-            for(int loc = 0; loc < locs; ++loc) {
-                snprintf(namebuf, 256, "thread %d", loc);
-                int locName = nextString++;
-                OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
-                uint64_t num_events = 0;
-                OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, &num_events));
-                OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
-                OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, OTF2_LOCATION_TYPE_CPU_THREAD, num_events, node));
-            }
-
+        // TODO Need to get actual number of locations from each node
+        const int start_loc = my_location();
+        const int end_loc = start_loc + RtsLayer::getTotalThreads();
+        int thread_num = 0;
+        for(int loc = start_loc; loc < end_loc; ++loc) {
+            snprintf(namebuf, 256, "thread %d", thread_num++);
+            int locName = nextString++;
+            OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
+            uint64_t num_events = 0;
+            OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, &num_events));
+            OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
+            OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, OTF2_LOCATION_TYPE_CPU_THREAD, num_events, node));
         }
 
-        // Write all the functions out as Regions
-        for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-            FunctionInfo *fi = *it;
-            int thisFuncName = nextString++;
-            OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, fi->GetName()));
-            OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, fi->GetFunctionId(), thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
-        }
-
-        OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
     }
+
+    // Write all the functions out as Regions
+    for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+        FunctionInfo *fi = *it;
+        int thisFuncName = nextString++;
+        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, fi->GetName()));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, fi->GetFunctionId(), thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
+    }
+
+    OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
 
 
 }
@@ -374,9 +432,9 @@ static void TauTraceOTF2WriteLocalDefinitions() {
         FunctionInfo * fi = *it;
         OTF2_EC(OTF2_IdMap_AddIdPair(region_map, fi->GetFunctionId(), fi->GetFunctionId())); // FIXME identity map
     }
-    const int nodes = tau_totalnodes(0, 0);
-    const int locs = nodes * RtsLayer::getTotalThreads(); // FIXME actual node numbers for multi-node
-    for(int loc = 0; loc < locs; ++loc) {
+    const int start_loc = my_location();
+    const int end_loc = start_loc + RtsLayer::getTotalThreads();
+    for(int loc = start_loc; loc < end_loc; ++loc) {
         OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
         OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, region_map));
         OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
@@ -392,17 +450,23 @@ void TauTraceOTF2Close(int tid) {
         return;
     }
 
+    
+
     otf2_finished = true;
     otf2_initialized = false;
     end_time = TauTraceGetTimeStamp(0);
 
     // Write definitions file
-    TauTraceOTF2WriteGlobalDefinitions();
+    if(RtsLayer::myNode() < 1) {
+        TauTraceOTF2WriteGlobalDefinitions();
+    }
     TauTraceOTF2WriteLocalDefinitions();
     
     
     OTF2_EC(OTF2_Archive_CloseEvtFiles(otf2_archive));
     OTF2_EC(OTF2_Archive_Close(otf2_archive));
+
+    TauCollectives_Finalize();
 
 }
 
