@@ -5369,7 +5369,9 @@ then
 	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
 	    then
 		shmemlibrary=-loshmem
-	    fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+		if [ $pshmem = yes ] ; then
+	            fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	        fi
 	    fi
 	fi
 	if [ -r $openshmem_lib_dir/libshmem.so -o -r $openshmem_lib_dir/libshmem.a ]
@@ -5378,7 +5380,9 @@ then
 	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
 	    then
 		shmemlibrary=-lshmem
-	    #fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+		if [ $pshmem = yes ] ; then
+	            fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	        fi
 	    fi
 	fi
     fi
