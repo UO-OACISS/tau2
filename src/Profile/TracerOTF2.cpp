@@ -69,6 +69,9 @@ static OTF2_Archive * otf2_archive = NULL;
 static x_uint64 start_time = 0;
 static x_uint64 end_time = 0;
 
+static int * num_locations = NULL;
+static uint64_t * num_events_written = NULL;
+
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
 
@@ -236,9 +239,14 @@ static OTF2_FlushCallbacks * get_tau_flush_callbacks() {
 
 // Helper functions
 
-static inline int my_location() {
-    const int myNode = RtsLayer::myNode();
-    const int myThread = RtsLayer::myThread();
+static inline OTF2_LocationRef my_location_offset() {
+    const int64_t myNode = RtsLayer::myNode();
+    return myNode == -1 ? 0 : (myNode * TAU_MAX_THREADS);
+}
+
+static inline OTF2_LocationRef my_location() {
+    const int64_t myNode = RtsLayer::myNode();
+    const int64_t myThread = RtsLayer::myThread();
     return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
 }
 
@@ -278,9 +286,6 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   }
 
   OTF2_EC(OTF2_Archive_SetFlushCallbacks(otf2_archive, get_tau_flush_callbacks(), NULL));
-  int mpi_init = 0;
-  MPI_Initialized(&mpi_init);
-  std::cerr << "mpi init: " << mpi_init << std::endl;
   TauCollectives_Init();
   OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, &tau_otf2_collectives, NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World(), NULL));
   OTF2_EC(OTF2_Archive_SetCreator(otf2_archive, "TAU"));
@@ -326,6 +331,9 @@ void TauTraceOTF2EventSimple(long int ev, x_int64 par, int tid, int kind) {
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(otf2_finished) {
+    return;
+  }
   std::cerr << "TauTraceOTF2WithNodeId(" << ev << ", " << par << ", " << tid << ", " << ts << ", " << use_ts << ", " << node_id << ", " << kind << ")" << std::endl;
   if(!otf2_initialized) {
 #ifdef TAU_MPI
@@ -342,9 +350,6 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
         TauTraceOTF2Init(tid);
     }
 #endif
-  }
-  if(otf2_finished) {
-    return;
   }
   if(kind == TAU_TRACE_EVENT_KIND_FUNC) {
     int loc = my_location();
@@ -419,6 +424,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo *fi = *it;
         int thisFuncName = nextString++;
+        std::cerr << "func: " << fi->GetFunctionId() << " -> " << fi->GetName() << std::endl; 
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, fi->GetName()));
         OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, fi->GetFunctionId(), thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
@@ -446,6 +452,66 @@ static void TauTraceOTF2WriteLocalDefinitions() {
 
 }
 
+static void TauTraceOTF2ExchangeLocations() {
+    const int nodes = tau_totalnodes(0, 0);
+    const int myRtsNode = RtsLayer::myNode();
+    const uint32_t my_node = myRtsNode == -1 ? 0 : myRtsNode;
+    const uint32_t my_num_threads = RtsLayer::getTotalThreads();
+    if(my_node == 0) {
+        num_locations = new int[nodes];
+    }
+    TauCollectives_Gather(TauCollectives_Get_World(), &my_num_threads, num_locations, 1, TAUCOLLECTIVES_UINT32_T, 0);
+}
+
+static void TauTraceOTF2ExchangeEventsWritten() {
+    const int nodes = tau_totalnodes(0, 0);
+    const int myRtsNode = RtsLayer::myNode();
+    const uint32_t my_node = myRtsNode == -1 ? 0 : myRtsNode;
+    int total_locs = 0;
+    if(my_node == 0) {
+        for(int i = 0; i < nodes; ++i) {
+            total_locs += num_locations[i];    
+        }
+        num_events_written = new uint64_t[total_locs];
+    }
+    const uint32_t my_num_threads = RtsLayer::getTotalThreads();
+    uint64_t my_num_events[my_num_threads];
+    const int offset = my_location_offset();
+    for(OTF2_LocationRef i = 0; i < my_num_threads; ++i) {
+        OTF2_EvtWriter * evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, offset + i);
+        OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, my_num_events + i));
+    }
+
+    TauCollectives_Gatherv(TauCollectives_Get_World(), &my_num_events, my_num_threads, num_events_written, num_locations, TAUCOLLECTIVES_UINT64_T, 0);
+
+    if(my_node == 0) {
+        for(int i = 0; i < total_locs; ++i) {
+            std::cerr << num_events_written[i] << " ";    
+        }
+        std::cerr << std::endl;
+    }
+}
+
+void TauTraceOTF2ShutdownComms(int tid) {
+    if(!otf2_initialized || otf2_finished) {
+        return;
+    }
+
+    const int nodes = tau_totalnodes(0, 0);
+    if(nodes < 2) {
+        // Single node; no unification needed
+        return;
+    }
+
+    TauCollectives_Barrier(TauCollectives_Get_World());
+    // Now everyone is at the beginning of MPI_Finalize()
+    TauTraceOTF2ExchangeLocations();
+    TauTraceOTF2ExchangeEventsWritten();
+
+
+    TauCollectives_Finalize();
+}
+
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
     std::cerr << "TauTraceOTF2Close " << tid << std::endl;
@@ -468,6 +534,9 @@ void TauTraceOTF2Close(int tid) {
     
     OTF2_EC(OTF2_Archive_CloseEvtFiles(otf2_archive));
     OTF2_EC(OTF2_Archive_Close(otf2_archive));
+
+    delete[] num_locations;
+    delete[] num_events_written;
 
     //TODO Need to do this BEFORE MPI_Finalize
     //TauCollectives_Finalize();
