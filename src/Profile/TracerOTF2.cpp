@@ -36,6 +36,8 @@
 
 
 #include <iostream>
+#include <sstream>
+#include <map>
 
 #include <otf2/otf2.h>
 #ifdef PTHREADS
@@ -71,6 +73,18 @@ static x_uint64 end_time = 0;
 
 static int * num_locations = NULL;
 static uint64_t * num_events_written = NULL;
+static int * num_regions = NULL;
+static int * region_db_sizes = NULL; 
+static uint64_t * region_ids;
+static char * region_names;
+
+typedef map<uint64_t,uint64_t> location_to_id_map_t;
+typedef map<string,location_to_id_map_t> region_map_t;
+typedef map<uint64_t,string> id_map_t;
+
+static region_map_t region_map;
+static id_map_t master_id_map;
+
 
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
@@ -257,7 +271,6 @@ void TauTraceOTF2FlushBuffer(int tid)
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-  std::cerr << "TauTraceOTF2FlushBuffer " << tid << std::endl;
 }
 
 /* Initialize tracing. */
@@ -272,7 +285,6 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   }
   start_time = ts;
   TauInternalFunctionGuard protects_this_function;     
-  std::cerr << "TauTraceOTF2Init " << tid << std::endl;
   otf2_archive = OTF2_Archive_Open(TauEnv_get_tracedir() /* path */,
                              "trace" /* filename */,
                              OTF2_FILEMODE_WRITE,
@@ -280,7 +292,6 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
                              OTF2_CHUNK_SIZE_DEFINITIONS_DEFAULT,
                              OTF2_SUBSTRATE_POSIX,
                              OTF2_COMPRESSION_NONE);
-  fprintf(stderr, "opened archive\n");
   if(otf2_archive == NULL) {
     std::cerr << "TAU: Error: Unable to create OTF2 archive at " << TauEnv_get_tracedir() << "/trace" << std::endl;    abort();
   }
@@ -310,7 +321,6 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
    encountered for a multi-threaded program */ 
 void TauTraceOTF2Reinitialize(int oldid, int newid, int tid) {
   // TODO find tid's location and call OTF2_EvtWriter_SetLocationID
-  std::cerr << "TauTraceOTF2Reinitialize " << tid << std::endl;
   return ;
 }
 
@@ -318,7 +328,6 @@ void TauTraceOTF2Reinitialize(int oldid, int newid, int tid) {
 void TauTraceOTF2UnInitialize(int tid) {
   /* to set the trace as uninitialized and clear the current buffers (for forked
      child process, trying to clear its parent records) */
-  std::cerr << "TauTraceOTF2UnInitialize " << tid << std::endl;
 }
 
 
@@ -334,7 +343,6 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   if(otf2_finished) {
     return;
   }
-  std::cerr << "TauTraceOTF2WithNodeId(" << ev << ", " << par << ", " << tid << ", " << ts << ", " << use_ts << ", " << node_id << ", " << kind << ")" << std::endl;
   if(!otf2_initialized) {
 #ifdef TAU_MPI
     // If we're using MPI, we can't initialize tracing until MPI_Init gets called,
@@ -353,7 +361,6 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   }
   if(kind == TAU_TRACE_EVENT_KIND_FUNC) {
     int loc = my_location();
-    std::cerr << "Recording event for loc " << loc << std::endl;
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     if(par == 1) { // Enter
       OTF2_EvtWriter_Enter(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev);
@@ -365,7 +372,6 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 
 extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
-  std::cerr << "TauTraceOTF2Msg( " << send_or_recv << ", " << type << ", " << other_id << ", " << length << ", " << ts << ", " << use_ts << ", " << node_id << ")" << std::endl;
 }
 
 /* Write event to buffer */
@@ -424,7 +430,6 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo *fi = *it;
         int thisFuncName = nextString++;
-        std::cerr << "func: " << fi->GetFunctionId() << " -> " << fi->GetName() << std::endl; 
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, fi->GetName()));
         OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, fi->GetFunctionId(), thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
@@ -484,12 +489,84 @@ static void TauTraceOTF2ExchangeEventsWritten() {
 
     TauCollectives_Gatherv(TauCollectives_Get_World(), &my_num_events, my_num_threads, num_events_written, num_locations, TAUCOLLECTIVES_UINT64_T, 0);
 
-    if(my_node == 0) {
-        for(int i = 0; i < total_locs; ++i) {
-            std::cerr << num_events_written[i] << " ";    
-        }
-        std::cerr << std::endl;
+}
+
+static void TauTraceOTF2ExchangeRegions() {
+    // Collect local function IDs and names
+    const int nodes = tau_totalnodes(0, 0);
+    const int myRtsNode = RtsLayer::myNode();
+    const uint32_t my_node = myRtsNode == -1 ? 0 : myRtsNode;
+    vector<uint64_t> function_ids;
+    function_ids.reserve(TheFunctionDB().size());
+    stringstream ss;
+    for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+        FunctionInfo *fi = *it;
+        function_ids.push_back(fi->GetFunctionId());
+        ss << fi->GetName();
+        ss.put('\0');
     }
+    string function_names_str = ss.str();
+    const char * function_names = function_names_str.c_str();
+
+    // Gather the sizes on master
+    int my_num_regions = function_ids.size();
+    if(my_node == 0) {
+        num_regions = new int[nodes];
+    }
+    TauCollectives_Gather(TauCollectives_Get_World(), &my_num_regions, num_regions, 1, TAUCOLLECTIVES_INT, 0);
+    
+    int my_region_db_size = function_names_str.size();
+    if(my_node == 0) {
+        region_db_sizes = new int[nodes];
+    }
+    TauCollectives_Gather(TauCollectives_Get_World(), &my_region_db_size, region_db_sizes, 1, TAUCOLLECTIVES_INT, 0);
+
+    // Exchange IDs
+    int total_ids = 0;
+    if(my_node == 0) {
+        for(int i = 0; i < nodes; ++i) {
+            total_ids += num_regions[i];
+        }                
+        region_ids = new uint64_t[total_ids];
+    }
+    uint64_t * my_region_ids = &function_ids[0];
+    TauCollectives_Gatherv(TauCollectives_Get_World(), my_region_ids, my_num_regions, region_ids, num_regions, TAUCOLLECTIVES_UINT64_T, 0);
+
+    // Exchange names
+    int total_name_chars = 0;
+    if(my_node == 0) {
+        for(int i = 0; i < nodes; ++i) {
+            total_name_chars += region_db_sizes[i];
+        }                
+        region_names = new char[total_name_chars];
+    
+    }
+    TauCollectives_Gatherv(TauCollectives_Get_World(), function_names, my_region_db_size, region_names, region_db_sizes, TAUCOLLECTIVES_CHAR, 0);
+
+    // Construct name->id map on master
+    if(my_node == 0) {
+        int id_offset = 0;
+        int name_offset = 0;
+        for(int node = 0; node < nodes; ++node) {
+            const int node_num_regions = num_regions[node];
+            for(int region = 0; region < node_num_regions; ++region) {
+                string name = string(region_names+name_offset);    
+                name_offset += name.length() + 1;
+                uint64_t id = region_ids[id_offset++];
+                region_map[name][node] = id;
+            }
+        }
+
+        // Construct master id->name map (unique ID for every name on master)
+        int next_global_id = 0;
+        for(region_map_t::const_iterator it = region_map.begin(); it != region_map.end(); ++it) {
+            master_id_map[next_global_id++] = it->first;        
+        }
+
+
+    }
+
+
 }
 
 void TauTraceOTF2ShutdownComms(int tid) {
@@ -507,14 +584,13 @@ void TauTraceOTF2ShutdownComms(int tid) {
     // Now everyone is at the beginning of MPI_Finalize()
     TauTraceOTF2ExchangeLocations();
     TauTraceOTF2ExchangeEventsWritten();
-
+    TauTraceOTF2ExchangeRegions();
 
     TauCollectives_Finalize();
 }
 
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
-    std::cerr << "TauTraceOTF2Close " << tid << std::endl;
     if(tid != 0 || otf2_finished || !otf2_initialized) {
         return;
     }
