@@ -38,6 +38,7 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <set>
 
 #include <otf2/otf2.h>
 #ifdef PTHREADS
@@ -75,16 +76,10 @@ static int * num_locations = NULL;
 static uint64_t * num_events_written = NULL;
 static int * num_regions = NULL;
 static int * region_db_sizes = NULL; 
-static uint64_t * region_ids;
-static char * region_names;
+static char * region_names = NULL;
 
-typedef map<uint64_t,uint64_t> location_to_id_map_t;
-typedef map<string,location_to_id_map_t> region_map_t;
-typedef map<uint64_t,string> id_map_t;
-
-static region_map_t region_map;
-static id_map_t master_id_map;
-
+typedef map<string,uint64_t> region_map_t;
+static region_map_t global_region_map;
 
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
@@ -427,11 +422,10 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     }
 
     // Write all the functions out as Regions
-    for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-        FunctionInfo *fi = *it;
+    for (region_map_t::const_iterator it = global_region_map.begin(); it != global_region_map.end(); it++) {
         int thisFuncName = nextString++;
-        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, fi->GetName()));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, fi->GetFunctionId(), thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, it->first.c_str()));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
 
     OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
@@ -440,11 +434,16 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 }
 
 static void TauTraceOTF2WriteLocalDefinitions() {
-    // TODO global unification
     OTF2_IdMap * region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo * fi = *it;
-        OTF2_EC(OTF2_IdMap_AddIdPair(region_map, fi->GetFunctionId(), fi->GetFunctionId())); // FIXME identity map
+        if(tau_totalnodes(0,0) < 2) {
+            OTF2_EC(OTF2_IdMap_AddIdPair(region_map, fi->GetFunctionId(), fi->GetFunctionId())); // identity map
+        } else {
+            const uint64_t local_id  = fi->GetFunctionId();
+            const uint64_t global_id = global_region_map[string(fi->GetName())];
+            OTF2_EC(OTF2_IdMap_AddIdPair(region_map, local_id, global_id));
+        }
     }
     const int start_loc = my_location();
     const int end_loc = start_loc + RtsLayer::getTotalThreads();
@@ -521,17 +520,6 @@ static void TauTraceOTF2ExchangeRegions() {
     }
     TauCollectives_Gather(TauCollectives_Get_World(), &my_region_db_size, region_db_sizes, 1, TAUCOLLECTIVES_INT, 0);
 
-    // Exchange IDs
-    int total_ids = 0;
-    if(my_node == 0) {
-        for(int i = 0; i < nodes; ++i) {
-            total_ids += num_regions[i];
-        }                
-        region_ids = new uint64_t[total_ids];
-    }
-    uint64_t * my_region_ids = &function_ids[0];
-    TauCollectives_Gatherv(TauCollectives_Get_World(), my_region_ids, my_num_regions, region_ids, num_regions, TAUCOLLECTIVES_UINT64_T, 0);
-
     // Exchange names
     int total_name_chars = 0;
     if(my_node == 0) {
@@ -543,28 +531,54 @@ static void TauTraceOTF2ExchangeRegions() {
     }
     TauCollectives_Gatherv(TauCollectives_Get_World(), function_names, my_region_db_size, region_names, region_db_sizes, TAUCOLLECTIVES_CHAR, 0);
 
-    // Construct name->id map on master
+    // Create and distribute a map of all region names to global id
+    char * global_regions = NULL;
+    int global_regions_size = 0;
     if(my_node == 0) {
-        int id_offset = 0;
         int name_offset = 0;
+        set<string> unique_names;
         for(int node = 0; node < nodes; ++node) {
             const int node_num_regions = num_regions[node];
             for(int region = 0; region < node_num_regions; ++region) {
                 string name = string(region_names+name_offset);    
                 name_offset += name.length() + 1;
-                uint64_t id = region_ids[id_offset++];
-                region_map[name][node] = id;
+                unique_names.insert(name);
             }
         }
 
-        // Construct master id->name map (unique ID for every name on master)
-        int next_global_id = 0;
-        for(region_map_t::const_iterator it = region_map.begin(); it != region_map.end(); ++it) {
-            master_id_map[next_global_id++] = it->first;        
+        int next_id = 0;
+        for(set<string>::const_iterator it = unique_names.begin(); it != unique_names.end(); it++) {
+            global_region_map[*it] = next_id++;
         }
-
-
+        stringstream ss;
+        for(region_map_t::const_iterator it = global_region_map.begin(); it != global_region_map.end(); it++) {
+            ss << it->first;
+            ss.put('\0');
+        }
+        string global_regions_str = ss.str();
+        global_regions_size = global_regions_str.length();
+        global_regions = (char *) malloc(global_regions_size * sizeof(char));
+        global_regions = (char *) memcpy(global_regions, global_regions_str.c_str(), global_regions_size);    
     }
+
+    TauCollectives_Bcast(TauCollectives_Get_World(), &global_regions_size, 1, TAUCOLLECTIVES_INT, 0);
+    if(my_node != 0) {
+        global_regions = (char *)malloc(global_regions_size * sizeof(char));
+    }
+
+    TauCollectives_Bcast(TauCollectives_Get_World(), global_regions, global_regions_size, TAUCOLLECTIVES_CHAR, 0);
+
+    if(my_node != 0) {
+        int region_offset = 0;
+        int next_id = 0;
+        while(region_offset < global_regions_size) {
+            string name = string(global_regions+region_offset);
+            region_offset += name.length() + 1;
+            global_region_map[name] = next_id++;
+        }
+    }
+
+    free(global_regions);
 
 
 }
@@ -613,6 +627,9 @@ void TauTraceOTF2Close(int tid) {
 
     delete[] num_locations;
     delete[] num_events_written;
+    delete[] num_regions;
+    delete[] region_db_sizes;
+    delete[] region_names;
 
     //TODO Need to do this BEFORE MPI_Finalize
     //TauCollectives_Finalize();
