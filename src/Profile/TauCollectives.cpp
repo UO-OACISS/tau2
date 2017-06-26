@@ -266,7 +266,6 @@ int TauCollectives_Bcast(TauCollectives_Group*   group,
                          int                     root)
 {
 #ifdef TAU_MPI
-  std::cerr << "buf = " << buf << " count = " << count << " datatype = " << datatype << " root = " << root << " comm: " << group->comm << std::endl;
   return PMPI_Bcast(buf, count, get_mpi_datatype(datatype), root, group->comm);
 #endif /* TAU_MPI */
 #ifdef TAU_SHMEM
