@@ -120,8 +120,6 @@ TauCollectives_Init(void) {
 
 #ifdef TAU_MPI
   PMPI_Comm_dup( MPI_COMM_WORLD, &tau_group_world.comm );
-  std::cerr << "tau_group world is at " << &tau_group_world << std::endl;
-  std::cerr << "the communicator is " << tau_group_world.comm << std::endl;
 #define TAUCOLLECTIVES_MPI_BYTE          MPI_BYTE
 #define TAUCOLLECTIVES_MPI_CHAR          MPI_CHAR
 #define TAUCOLLECTIVES_MPI_UNSIGNED_CHAR MPI_UNSIGNED_CHAR

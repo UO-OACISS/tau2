@@ -22,6 +22,7 @@
 #include <Profile/TauMon.h>
 #include <Profile/TauRequest.h>
 #include <Profile/TauSampling.h>
+#include <Profile/TauTraceOTF2.h>
 #include <Profile/TauUtil.h>
 
 #include <stdio.h>
@@ -1592,6 +1593,12 @@ int  MPI_Finalize(  )
   if (TauEnv_get_sos_enabled()) {
     TAU_SOS_finalize();
   }
+#endif
+
+#ifdef TAU_OTF2
+   if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+     TauTraceOTF2ShutdownComms(Tau_get_local_tid());
+   }
 #endif
 
   returnVal = PMPI_Finalize();
