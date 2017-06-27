@@ -287,9 +287,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
                              OTF2_CHUNK_SIZE_DEFINITIONS_DEFAULT,
                              OTF2_SUBSTRATE_POSIX,
                              OTF2_COMPRESSION_NONE);
-  if(otf2_archive == NULL) {
-    std::cerr << "TAU: Error: Unable to create OTF2 archive at " << TauEnv_get_tracedir() << "/trace" << std::endl;    abort();
-  }
+  TAU_ASSERT(otf2_archive != NULL, "Unable to create new OTF2 archive");
 
   OTF2_EC(OTF2_Archive_SetFlushCallbacks(otf2_archive, get_tau_flush_callbacks(), NULL));
   TauCollectives_Init();
@@ -307,6 +305,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   OTF2_EC(OTF2_Archive_OpenDefFiles(otf2_archive));
 
   OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_location());
+  TAU_ASSERT(evt_writer != NULL, "Failed to open new event writer");
 
   otf2_initialized = true;
   return 0; 
@@ -357,10 +356,11 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   if(kind == TAU_TRACE_EVENT_KIND_FUNC) {
     int loc = my_location();
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
+    TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
     if(par == 1) { // Enter
-      OTF2_EvtWriter_Enter(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev);
+      OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev));
     } else if(par == -1) { // Exit
-      OTF2_EvtWriter_Leave(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev);
+      OTF2_EC(OTF2_EvtWriter_Leave(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev));
     }
   }
 }
@@ -376,10 +376,7 @@ void TauTraceOTF2Event(long int ev, x_int64 par, int tid, x_uint64 ts, int use_t
 
 static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_GlobalDefWriter * global_def_writer = OTF2_Archive_GetGlobalDefWriter(otf2_archive);
-    if(global_def_writer == NULL) {
-        fprintf(stderr, "TAU: Error: Couldn't get global def writer.\n");
-        abort();
-    }
+    TAU_ASSERT(global_def_writer != NULL, "Failed to get global def writer");
 
     OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, 1000000, start_time, end_time - start_time);
 
@@ -411,8 +408,6 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         for(int loc = start_loc; loc < end_loc; ++loc) {
             snprintf(namebuf, 256, "thread %d", thread_num++);
             int locName = nextString++;
-            OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
-            std::cerr << "Will write location entry for loc " << loc << std::endl;
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
             OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, OTF2_LOCATION_TYPE_CPU_THREAD, num_events_written[node], node));
         }
@@ -446,7 +441,6 @@ static void TauTraceOTF2WriteLocalDefinitions() {
     const int start_loc = my_location();
     const int end_loc = start_loc + RtsLayer::getTotalThreads();
     for(int loc = start_loc; loc < end_loc; ++loc) {
-        std::cerr << "Writing mapping table for loc " << loc << std::endl;
         OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
         OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, region_map));
         OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
@@ -482,6 +476,7 @@ static void TauTraceOTF2ExchangeEventsWritten() {
     const int offset = my_location_offset();
     for(OTF2_LocationRef i = 0; i < my_num_threads; ++i) {
         OTF2_EvtWriter * evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, offset + i);
+        TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
         OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, my_num_events + i));
     }
 
@@ -631,9 +626,6 @@ void TauTraceOTF2Close(int tid) {
     delete[] num_regions;
     delete[] region_db_sizes;
     delete[] region_names;
-
-    //TODO Need to do this BEFORE MPI_Finalize
-    //TauCollectives_Finalize();
 
 }
 
