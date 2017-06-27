@@ -54,6 +54,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <iostream>
 #include <fstream>
 #include <string>
+#ifdef TAU_MPI
+#include <mpi.h>
+#include <pmi.h>
+#endif
 #endif//TAU_CRAYCNL
 
 using namespace std;
@@ -844,6 +848,53 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
   Tau_metadata_register("FUJITSU Dimension", fbuffer);
 
 #endif /* TAU_FUJITSU && TAU_MPI */
+
+#if (defined(TAU_CRAYCNL) && defined(TAU_MPI))
+#ifdef TAU_MPI
+    FILE* procfile = fopen("/proc/self/stat", "r");
+    long to_read = 8192;
+    char buffer[to_read];
+    int read = fread(buffer, sizeof(char), to_read, procfile);
+    int i;
+    fclose(procfile);
+     int my_id=RtsLayer::myNode();     /* MPI rank */
+  int nid = -1;
+  int rank = 0;  /* PMI rank */
+  pmi_mesh_coord_t xyz;
+  char cname[20];
+  FILE *cfile;
+
+    // Field with index 38 (zero-based counting) is the one we want
+    char* line = strtok(buffer, " ");
+    for (i = 1; i < 38; i++)
+    {
+        line = strtok(NULL, " ");
+    }
+
+    line = strtok(NULL, " ");
+    Tau_metadata_register("CRAY_CORE_ID", line);
+
+
+  
+
+  cfile = fopen("/proc/cray_xt/cname", "r");
+  fscanf(cfile, "%s", cname);
+  fclose(cfile);
+
+  PMI_Get_rank(&rank);
+  PMI_Get_nid(rank, &nid);
+  PMI_Get_meshcoord((pmi_nid_t) nid, &xyz);
+
+  
+  Tau_metadata_register("CRAY_NODENAME", cname);
+  Tau_metadata_register("CRAY_PMI_NODEID", nid);
+  Tau_metadata_register("CRAY_PMI_RANK", rank);
+  Tau_metadata_register("CRAY_PMI_X", xyz.mesh_x);
+  Tau_metadata_register("CRAY_PMI_Y", xyz.mesh_y);
+  Tau_metadata_register("CRAY_PMI_Z", xyz.mesh_z);
+
+#endif
+#endif
   return 0;
 }
 
