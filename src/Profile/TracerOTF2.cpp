@@ -66,6 +66,9 @@
 using namespace std;
 using namespace tau;
 
+static const int TAU_OTF2_COMM_WORLD = 0;
+static const int TAU_OTF2_GROUP_WORLD = 0;
+
 static bool otf2_initialized = false;
 static bool otf2_finished = false;
 static OTF2_Archive * otf2_archive = NULL;
@@ -373,7 +376,14 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 
 extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
-
+    if(node_id != my_node()) {
+        std::cerr << "TAU: Warning: OTF2 can't write an event for one node from a different node" << std::endl;
+        return;
+    }
+    x_uint64 time = use_ts ? ts : TauTraceGetTimeStamp(0);
+    if(send_or_recv == TAU_MESSAGE_RECV) {
+        
+    }
 }
 
 /* Write event to buffer */
@@ -429,9 +439,18 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
 
+    // Write global communicator
+    // TODO this is MPI specfic; fix for openshmem
+    const int commName = nextString++;
+    OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, commName, "MPI_COMM_WORLD"));
+    uint64_t nodes_list[nodes];
+    for(int i = 0; i < nodes; ++i) {
+        nodes_list[i] = i * TAU_MAX_THREADS;
+    }
+    OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, commName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
+    OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM));
+    
     OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
-
-
 }
 
 static void TauTraceOTF2WriteLocalDefinitions() {
