@@ -413,10 +413,8 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             int locName = nextString++;
             OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
             std::cerr << "Will write location entry for loc " << loc << std::endl;
-            uint64_t num_events = 0;
-            OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, &num_events));
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
-            OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, OTF2_LOCATION_TYPE_CPU_THREAD, num_events, node));
+            OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, OTF2_LOCATION_TYPE_CPU_THREAD, num_events_written[node], node));
         }
 
     }
