@@ -464,7 +464,11 @@ static void TauTraceOTF2ExchangeLocations() {
         num_locations = new int[tau_totalnodes(0,0)];
     }
     const uint32_t my_num_threads = RtsLayer::getTotalThreads();
-    TauCollectives_Gather(TauCollectives_Get_World(), &my_num_threads, num_locations, 1, TAUCOLLECTIVES_UINT32_T, 0);
+    if(tau_totalnodes(0,0) == 1) {
+        num_locations[0] = my_num_threads;
+    } else {
+        TauCollectives_Gather(TauCollectives_Get_World(), &my_num_threads, num_locations, 1, TAUCOLLECTIVES_UINT32_T, 0);
+    }
 }
 
 static void TauTraceOTF2ExchangeEventsWritten() {
@@ -486,7 +490,11 @@ static void TauTraceOTF2ExchangeEventsWritten() {
         OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, my_num_events + i));
     }
 
-    TauCollectives_Gatherv(TauCollectives_Get_World(), &my_num_events, my_num_threads, num_events_written, num_locations, TAUCOLLECTIVES_UINT64_T, 0);
+    if(nodes == 1) {
+        memcpy(num_events_written, my_num_events, my_num_threads);
+    } else {
+        TauCollectives_Gatherv(TauCollectives_Get_World(), &my_num_events, my_num_threads, num_events_written, num_locations, TAUCOLLECTIVES_UINT64_T, 0);
+    }
 
 }
 
@@ -579,7 +587,6 @@ static void TauTraceOTF2ExchangeRegions() {
 
     free(global_regions);
 
-
 }
 
 void TauTraceOTF2ShutdownComms(int tid) {
@@ -588,13 +595,8 @@ void TauTraceOTF2ShutdownComms(int tid) {
         return;
     }
 
-    std::cerr << "Shutdown comms on " << my_node() << " with tid " << tid <<std::endl;
 
     const int nodes = tau_totalnodes(0, 0);
-    //if(nodes < 2) {
-    //    // Single node; no unification needed
-    //    return;
-    //}
 
     TauCollectives_Barrier(TauCollectives_Get_World());
     // Now everyone is at the beginning of MPI_Finalize()
@@ -613,9 +615,6 @@ void TauTraceOTF2Close(int tid) {
     if(tid != 0 || otf2_finished || !otf2_initialized) {
         return;
     }
-
-    
-    std::cerr << "Close Trace on" << my_node() << std::endl;
 
     otf2_finished = true;
     otf2_initialized = false;
