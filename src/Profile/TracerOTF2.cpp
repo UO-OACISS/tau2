@@ -390,6 +390,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, 0, "" ));
 
     const int nodes = tau_totalnodes(0, 0);
+    int thread_num = 0;
     for(int node = 0; node < nodes; ++node) {
         // System Tree Node
         char namebuf[256];
@@ -405,14 +406,13 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, groupName, namebuf));
         OTF2_EC(OTF2_GlobalDefWriter_WriteLocationGroup(global_def_writer, node, groupName, OTF2_LOCATION_GROUP_TYPE_PROCESS, node));
 
-        // TODO Need to get actual number of locations from each node
-        const int start_loc = my_location();
-        const int end_loc = start_loc + RtsLayer::getTotalThreads();
-        int thread_num = 0;
+        const int start_loc = node * TAU_MAX_THREADS;
+        const int end_loc = start_loc + num_locations[node];
         for(int loc = start_loc; loc < end_loc; ++loc) {
             snprintf(namebuf, 256, "thread %d", thread_num++);
             int locName = nextString++;
             OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
+            std::cerr << "Will write location entry for loc " << loc << std::endl;
             uint64_t num_events = 0;
             OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, &num_events));
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
@@ -448,6 +448,7 @@ static void TauTraceOTF2WriteLocalDefinitions() {
     const int start_loc = my_location();
     const int end_loc = start_loc + RtsLayer::getTotalThreads();
     for(int loc = start_loc; loc < end_loc; ++loc) {
+        std::cerr << "Writing mapping table for loc " << loc << std::endl;
         OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
         OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, region_map));
         OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
@@ -601,6 +602,8 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauTraceOTF2ExchangeRegions();
 
     TauCollectives_Finalize();
+
+    TauTraceOTF2Close(tid);
 }
 
 /* Close the trace */
