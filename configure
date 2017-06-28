@@ -5444,9 +5444,9 @@ then
     fi
 
     if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
-      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
-      shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
-      #echo "OpenSHMEM minor version: $shmem_minor_version major version: $shmem_major_version"
+      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      echo "OpenSHMEM minor version: $shmem_minor_version major version: $shmem_major_version"
       if [ "$shmem_major_version" -lt 2 -a "$shmem_minor_version" -le 2 ] ; then
         orig_useropt="$orig_useropt -DSHMEM_1_2"
         useropt="$useropt#-DSHMEM_1_2"
