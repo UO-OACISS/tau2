@@ -4426,7 +4426,6 @@ fi
 
 
 # PGI sanity check for -latomic
-echo "pgi = $pgi extradir = $extradir"
 if [ $pgi = yes -a -d $extradir -a -r $extradir/libatomic.a ]; then 
    fixmakeargs="$fixmakeargs PGI_ATOMIC"
 fi
