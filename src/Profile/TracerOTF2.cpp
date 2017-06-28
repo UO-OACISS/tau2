@@ -67,7 +67,8 @@ using namespace std;
 using namespace tau;
 
 static const int TAU_OTF2_COMM_WORLD = 0;
-static const int TAU_OTF2_GROUP_WORLD = 0;
+static const int TAU_OTF2_GROUP_LOCS = 0;
+static const int TAU_OTF2_GROUP_WORLD = 1;
 
 static bool otf2_initialized = false;
 static bool otf2_finished = false;
@@ -376,13 +377,18 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 
 extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
+    TauInternalFunctionGuard protects_this_function;
     if(node_id != my_node()) {
         std::cerr << "TAU: Warning: OTF2 can't write an event for one node from a different node" << std::endl;
         return;
     }
     x_uint64 time = use_ts ? ts : TauTraceGetTimeStamp(0);
-    if(send_or_recv == TAU_MESSAGE_RECV) {
-        
+    const int loc = my_location();
+    OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
+    if(send_or_recv == TAU_MESSAGE_SEND) {
+        OTF2_EC(OTF2_EvtWriter_MpiSend(evt_writer, NULL, time, other_id, TAU_OTF2_COMM_WORLD, type, length));       
+    } else if(send_or_recv == TAU_MESSAGE_RECV) {
+        OTF2_EC(OTF2_EvtWriter_MpiRecv(evt_writer, NULL, time, other_id, TAU_OTF2_COMM_WORLD, type, length));
     }
 }
 
@@ -441,13 +447,20 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 
     // Write global communicator
     // TODO this is MPI specfic; fix for openshmem
+    const int locsGroupName = nextString++;
+    OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locsGroupName, "GROUP_MPI_COMM_LOCS"));
+    const int worldGroupName = nextString++;
+    OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, worldGroupName, "GROUP_MPI_COMM_WORLD"));
     const int commName = nextString++;
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, commName, "MPI_COMM_WORLD"));
     uint64_t nodes_list[nodes];
+    uint64_t ranks_list[nodes];
     for(int i = 0; i < nodes; ++i) {
         nodes_list[i] = i * TAU_MAX_THREADS;
+        ranks_list[i] = i;
     }
-    OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, commName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
+    OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_LOCS, locsGroupName, OTF2_GROUP_TYPE_COMM_LOCATIONS, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, nodes_list));
+    OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, worldGroupName, OTF2_GROUP_TYPE_COMM_GROUP, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, ranks_list));
     OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM));
     
     OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
