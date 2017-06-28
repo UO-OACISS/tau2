@@ -4280,12 +4280,14 @@ case $fortran_compiler in
 
     pgi|pgf90)
 	echo "Default Fortran compiler will be PGI pgf90"
+	pgi=yes
 	extradir=`which pgcc | sed s/pgcc/../`
 	fixmakeargs="$fixmakeargs PGI_FORTRAN"
 	;;
 
     pgfortran)
 	echo "Default Fortran compiler will be PGI pgfortran"
+	pgi=yes
 	extradir=`which pgcc | sed s/pgcc/../`
 	fixmakeargs="$fixmakeargs PGI_FORTRAN_OTHER"
 	;;
@@ -4422,6 +4424,12 @@ then
     fi
 fi
 
+
+# PGI sanity check for -latomic
+echo "pgi = $pgi extradir = $extradir"
+if [ $pgi = yes -a -d $extradir -a -r $extradir/libatomic.a ]; then 
+   fixmakeargs="$fixmakeargs PGI_ATOMIC"
+fi
 
 if [ $scorep = yes ]; then
   swap_full_cxx_compiler=$full_cxx_compiler
