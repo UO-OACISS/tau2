@@ -4426,8 +4426,13 @@ fi
 
 
 # PGI sanity check for -latomic
-if [ $pgi = yes -a -d $extradir -a -r $extradir/libatomic.a ]; then 
+if [ $pgi = yes -a -d "$extradir" -a -r "$extradir/libatomic.a" ]; then 
    fixmakeargs="$fixmakeargs PGI_ATOMIC"
+fi
+
+# PGI sanity check for -lC
+if [ $pgi = yes -a -d "$extradir" -a -r "$extradir/libC.a" ]; then
+   fixmakeargs="$fixmakeargs PGI_C"
 fi
 
 if [ $scorep = yes ]; then
