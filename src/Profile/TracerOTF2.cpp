@@ -39,6 +39,8 @@
 #include <sstream>
 #include <map>
 #include <set>
+#include <vector>
+#include <utility>
 
 #include <otf2/otf2.h>
 #ifdef PTHREADS
@@ -66,22 +68,49 @@
 using namespace std;
 using namespace tau;
 
+static const uint64_t TAU_OTF2_CLOCK_RES = 1000000;
+
+// ID numbers for global OTF2 definition records
 static const int TAU_OTF2_COMM_WORLD = 0;
 static const int TAU_OTF2_GROUP_LOCS = 0;
 static const int TAU_OTF2_GROUP_WORLD = 1;
 
 static bool otf2_initialized = false;
+static bool otf2_comms_shutdown = false;
 static bool otf2_finished = false;
 static OTF2_Archive * otf2_archive = NULL;
-static x_uint64 start_time = 0;
-static x_uint64 end_time = 0;
 
+// Time of first event recorded
+static uint64_t start_time = 0;
+// Time of last event recorded
+static uint64_t end_time = 0;
+
+static uint64_t global_start_time = 0;
+
+struct temp_buffer_entry {
+    long int ev;   // Function ID
+    x_uint64 ts;   // Timestamp
+    x_int64 par;  // Parameter value (1=Enter, -1=Leave)
+    int kind;
+
+    temp_buffer_entry(x_uint64 ev, x_uint64 ts, x_uint64 par, int kind)
+        : ev(ev), ts(ts), par(par), kind(kind) {};
+};
+
+// Temporary buffer for events prior to initialization
+// pair.first = FunctionId
+// pair.second = timestamp
+static vector<temp_buffer_entry> * temp_buffers[TAU_MAX_THREADS] = {0};
+static bool buffers_written[TAU_MAX_THREADS] = {0};
+
+// For unification data
 static int * num_locations = NULL;
 static uint64_t * num_events_written = NULL;
 static int * num_regions = NULL;
 static int * region_db_sizes = NULL; 
 static char * region_names = NULL;
 
+// Unification sets the global_region_map on every rank
 typedef map<string,uint64_t> region_map_t;
 static region_map_t global_region_map;
 
@@ -289,7 +318,6 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   if(otf2_initialized || otf2_finished) {
       return 0;
   }
-  start_time = ts;
   otf2_archive = OTF2_Archive_Open(TauEnv_get_tracedir() /* path */,
                              "trace" /* filename */,
                              OTF2_FILEMODE_WRITE,
@@ -340,6 +368,15 @@ void TauTraceOTF2EventSimple(long int ev, x_int64 par, int tid, int kind) {
   TauTraceOTF2Event(ev, par, tid, 0, 0, kind);
 }
 
+void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
+    TauInternalFunctionGuard protects_this_function;
+    buffers_written[tid] = true;
+    for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
+      TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, it->kind);
+    }
+    delete temp_buffers[tid];
+}
+
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
 {
@@ -348,12 +385,20 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     return;
   }
   if(!otf2_initialized) {
+    if(start_time == 0) {
+      start_time = TauTraceGetTimeStamp(tid) - 1000;   
+    }
 #ifdef TAU_MPI
     // If we're using MPI, we can't initialize tracing until MPI_Init gets called,
     // which will in turn init tracing for us, so we can't do it here.
     // This is because when we call OTF2_Archive_Open and set the collective callbacks,
     // we must know our rank, because at that time rank 0 alone must create the trace
-    // directory.
+    // directory. Instead we save into a temporary buffer which we write out as events
+    // once initialization happens.
+    if(temp_buffers[tid] == NULL) {
+        temp_buffers[tid] = new vector<temp_buffer_entry>();
+    }
+    temp_buffers[tid]->push_back(temp_buffer_entry(ev, use_ts ? ts : TauTraceGetTimeStamp(tid), par, kind));
     return;
 #else
     if(use_ts) {
@@ -363,6 +408,14 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     }
 #endif
   }
+#ifdef TAU_MPI
+  // The event file for a thread needs to be written by that thread, so we write
+  // the temporary buffers the first time we get an event from that thread after
+  // intialization has completed.
+  if(!buffers_written[tid]) {
+    TauTraceOTF2WriteTempBuffer(tid, node_id);
+  }
+#endif
   if(kind == TAU_TRACE_EVENT_KIND_FUNC) {
     int loc = my_location();
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
@@ -378,6 +431,9 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
     TauInternalFunctionGuard protects_this_function;
+    if(!otf2_initialized) {
+        return;
+    }
     if(node_id != my_node()) {
         std::cerr << "TAU: Warning: OTF2 can't write an event for one node from a different node" << std::endl;
         return;
@@ -402,7 +458,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_GlobalDefWriter * global_def_writer = OTF2_Archive_GetGlobalDefWriter(otf2_archive);
     TAU_ASSERT(global_def_writer != NULL, "Failed to get global def writer");
 
-    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, 1000000, start_time, end_time - start_time);
+    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, end_time - global_start_time);
 
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
         
@@ -490,6 +546,11 @@ static void TauTraceOTF2WriteLocalDefinitions() {
 
 }
 
+static void TauTraceOTF2ExchangeStartTime() {
+    TauInternalFunctionGuard protects_this_function;
+    TauCollectives_Reduce(TauCollectives_Get_World(), &start_time, &global_start_time, 1, TAUCOLLECTIVES_UINT64_T, TAUCOLLECTIVES_MIN, 0);
+}
+
 static void TauTraceOTF2ExchangeLocations() {
     TauInternalFunctionGuard protects_this_function;
     if(my_node() == 0) {
@@ -532,6 +593,7 @@ static void TauTraceOTF2ExchangeEventsWritten() {
 
 static void TauTraceOTF2ExchangeRegions() {
     TauInternalFunctionGuard protects_this_function;
+
     // Collect local function IDs and names
     const int nodes = tau_totalnodes(0, 0);
     vector<uint64_t> function_ids;
@@ -623,22 +685,23 @@ static void TauTraceOTF2ExchangeRegions() {
 
 void TauTraceOTF2ShutdownComms(int tid) {
     TauInternalFunctionGuard protects_this_function;
-    if(!otf2_initialized || otf2_finished) {
+    if(!otf2_initialized || otf2_finished || otf2_comms_shutdown) {
         return;
     }
-
 
     const int nodes = tau_totalnodes(0, 0);
 
     TauCollectives_Barrier(TauCollectives_Get_World());
     // Now everyone is at the beginning of MPI_Finalize()
+    TauTraceOTF2ExchangeStartTime();
     TauTraceOTF2ExchangeLocations();
     TauTraceOTF2ExchangeEventsWritten();
     TauTraceOTF2ExchangeRegions();
 
     TauCollectives_Finalize();
 
-    TauTraceOTF2Close(tid);
+    otf2_comms_shutdown = true;
+    //TauTraceOTF2Close(tid);
 }
 
 /* Close the trace */
