@@ -31,7 +31,12 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdint.h>
+#ifdef TAU_OTF2
 #include <otf2/otf2.h>
+#else
+typedef uint8_t OTF2_Type;
+#endif
 
 #include <Profile/Profiler.h>
 #include <Profile/PapiLayer.h>

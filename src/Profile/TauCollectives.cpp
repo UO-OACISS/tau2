@@ -60,11 +60,34 @@ static size_t  current_pwork_size;
 #ifdef TAU_MPI
 static MPI_Datatype mpi_datatypes[ TAUCOLLECTIVES_NUMBER_OF_DATATYPES ];
 #endif /* TAU_MPI */
+#ifdef TAU_SHMEM
+static size_t sizeof_ipc_datatypes[ TAUCOLLECTIVES_NUMBER_OF_DATATYPES ];
+#endif
 TauCollectives_Group tau_group_world;
 
 #define CEIL( a, b )       ( ( ( a ) / ( b ) ) + ( ( ( a ) % ( b ) ) > 0 ? 1 : 0 ) )
 #define ROUNDUPTO( a, b )  ( CEIL( a, b ) * b )
 #define MIN( a, b )        ( a > b ? a : b )
+
+#define INVALID_TRANSFER_STATE     -1
+#define TRANSFER_START              1
+#define TRANSFER_SENDER_COMPLETE    2
+#define TRANSFER_RECEIVER_COMPLETE  3
+#define BUFFER_SIZE                 ( 1024 * 1024 )
+
+#ifdef TAU_SHMEM
+void * get_pwork( size_t size, int    count ) {
+    size_t nreduce_size = ( ( count / 2 ) + 1 ) * size;
+    if ( nreduce_size < current_pwork_size )
+    {
+        pwork = (double *) shmem_realloc(pwork, nreduce_size );
+        TAU_ASSERT(pwork, "Cannot allocate symmetric work array\n");
+        current_pwork_size = nreduce_size;
+    }
+
+    return pwork;
+}
+#endif
 
 void
 TauCollectives_Init(void) {
@@ -88,32 +111,32 @@ TauCollectives_Init(void) {
   transfer_counter = ( int* ) shmem_malloc ( shmem_n_pes()* sizeof( int ) );
   memset( transfer_counter, 0, shmem_n_pes() * sizeof( int ) );
 
-  barrier_psync = shmem_malloc ( _SHMEM_BARRIER_SYNC_SIZE * sizeof( long ) );
+  barrier_psync = (long *) shmem_malloc ( _SHMEM_BARRIER_SYNC_SIZE * sizeof( long ) );
   for ( uint32_t i = 0; i < _SHMEM_BARRIER_SYNC_SIZE; i++ )
   {
     barrier_psync[ i ] = _SHMEM_SYNC_VALUE;
   }
 
-  bcast_psync = shmem_malloc ( _SHMEM_BCAST_SYNC_SIZE * sizeof( long ) );
+  bcast_psync = (long *) shmem_malloc ( _SHMEM_BCAST_SYNC_SIZE * sizeof( long ) );
   for ( uint32_t i = 0; i < _SHMEM_BCAST_SYNC_SIZE; i++ )
   {
     bcast_psync[ i ] = _SHMEM_SYNC_VALUE;
   }
 
-  collect_psync = shmem_malloc ( _SHMEM_COLLECT_SYNC_SIZE * sizeof( long ) );
+  collect_psync = (long *) shmem_malloc ( _SHMEM_COLLECT_SYNC_SIZE * sizeof( long ) );
   for ( uint32_t i = 0; i < _SHMEM_COLLECT_SYNC_SIZE; i++ )
   {
     collect_psync[ i ] = _SHMEM_SYNC_VALUE;
   }
 
-  reduce_psync = shmem_malloc ( _SHMEM_REDUCE_SYNC_SIZE * sizeof( long ) );
+  reduce_psync = (long *) shmem_malloc ( _SHMEM_REDUCE_SYNC_SIZE * sizeof( long ) );
   for ( uint32_t i = 0; i < _SHMEM_REDUCE_SYNC_SIZE; i++ )
   {
     reduce_psync[ i ] = _SHMEM_SYNC_VALUE;
   }
 
   current_pwork_size = _SHMEM_REDUCE_MIN_WRKDATA_SIZE * sizeof( double );
-  pwork              =  shmem_malloc ( current_pwork_size );
+  pwork              =  (double *) shmem_malloc ( current_pwork_size );
 
   shmem_barrier_all ();
 #endif /* TAU_SHMEM */
@@ -136,13 +159,49 @@ TauCollectives_Init(void) {
       TAUCOLLECTIVES_DATATYPES
 #undef TAUCOLLECTIVES_DATATYPE
 
+#undef TAUCOLLECTIVES_MPI_BYTE            
+#undef TAUCOLLECTIVES_MPI_CHAR            
+#undef TAUCOLLECTIVES_MPI_UNSIGNED_CHAR   
+#undef TAUCOLLECTIVES_MPI_INT             
+#undef TAUCOLLECTIVES_MPI_UNSIGNED        
+#undef TAUCOLLECTIVES_MPI_DOUBLE          
+#undef TAUCOLLECTIVES_MPI_INT32_T         
+#undef TAUCOLLECTIVES_MPI_UINT32_T        
+#undef TAUCOLLECTIVES_MPI_INT64_T         
+#undef TAUCOLLECTIVES_MPI_UINT64_T        
+#endif /* TAU_MPI */
+
+#ifdef TAU_SHMEM
+
+#define TAUCOLLECTIVES_SIZEOF_BYTE           sizeof(unsigned char)
+#define TAUCOLLECTIVES_SIZEOF_CHAR           sizeof(char)         
+#define TAUCOLLECTIVES_SIZEOF_UNSIGNED_CHAR  sizeof(unsigned char)
+#define TAUCOLLECTIVES_SIZEOF_INT            sizeof(int)          
+#define TAUCOLLECTIVES_SIZEOF_UNSIGNED       sizeof(unsigned)     
+#define TAUCOLLECTIVES_SIZEOF_DOUBLE         sizeof(double)       
+#define TAUCOLLECTIVES_SIZEOF_INT32_T        sizeof(int32_t)      
+#define TAUCOLLECTIVES_SIZEOF_UINT32_T       sizeof(uint32_t)     
+#define TAUCOLLECTIVES_SIZEOF_INT64_T        sizeof(int64_t)      
+#define TAUCOLLECTIVES_SIZEOF_UINT64_T       sizeof(uint64_t)     
+
+#define TAUCOLLECTIVES_DATATYPE( datatype ) \
+      sizeof_ipc_datatypes[ TAUCOLLECTIVES_ ## datatype ] = TAUCOLLECTIVES_SIZEOF_ ## datatype;
+      TAUCOLLECTIVES_DATATYPES
+#undef TAUCOLLECTIVES_DATATYPE
+
 #undef TAUCOLLECTIVES_MPI_BYTE
 #undef TAUCOLLECTIVES_MPI_CHAR
 #undef TAUCOLLECTIVES_MPI_UNSIGNED_CHAR
 #undef TAUCOLLECTIVES_MPI_INT
 #undef TAUCOLLECTIVES_MPI_UNSIGNED
 #undef TAUCOLLECTIVES_MPI_DOUBLE
-#endif /* TAU_MPI */
+#undef TAUCOLLECTIVES_MPI_INT32_T
+#undef TAUCOLLECTIVES_MPI_UINT32_T
+#undef TAUCOLLECTIVES_MPI_INT64_T
+#undef TAUCOLLECTIVES_MPI_UINT64_T
+
+#endif
+          
 }
 
 void
@@ -253,7 +312,8 @@ int TauCollectives_Barrier(TauCollectives_Group *group) {
 #ifdef TAU_MPI
   return PMPI_Barrier(group->comm);
 #elif TAU_SHMEM
-  return shmem_barrier(group->pe_start, group->log_pe_stride, group->pe_size, barrier_psync);
+  shmem_barrier(group->pe_start, group->log_pe_stride, group->pe_size, barrier_psync);
+  return 0;
 #else
   return 0;
 #endif
@@ -390,7 +450,7 @@ int TauCollectives_Gather(TauCollectives_Group*   group,
       case TAUCOLLECTIVES_UNSIGNED:
       case TAUCOLLECTIVES_INT32_T:
       case TAUCOLLECTIVES_UINT32_T:
-        CALL_SHMEM( shmem_fcollect32 )( symmetric_buffer_b,
+        shmem_fcollect32( symmetric_buffer_b,
                                         symmetric_buffer_a,
                                         count,
                                         start, stride, size,
@@ -400,7 +460,7 @@ int TauCollectives_Gather(TauCollectives_Group*   group,
       case TAUCOLLECTIVES_INT64_T:
       case TAUCOLLECTIVES_UINT64_T:
       case TAUCOLLECTIVES_DOUBLE:
-        CALL_SHMEM( shmem_fcollect64 )( symmetric_buffer_b,
+        shmem_fcollect64( symmetric_buffer_b,
                                         symmetric_buffer_a,
                                         count,
                                         start, stride, size,
@@ -487,7 +547,7 @@ int TauCollectives_Gatherv(TauCollectives_Group*   group,
 
 
   int sendcount_extra = 0;
-#if HAVE( BROKEN_SHMEM_COLLECT )
+#if HAVE_BROKEN_SHMEM_COLLECT
   sendcount_extra = 1;
 #endif
 
@@ -504,7 +564,7 @@ int TauCollectives_Gatherv(TauCollectives_Group*   group,
 
     if ( rank == root )
     {
-      for ( int i = 0; i < TauCollectives_get_size(); i++ )
+      for ( int i = 0; i < TauCollectives_get_size(group); i++ )
       {
         int num_recv_elements = ROUNDUPTO( recvcnts[ i ] + sendcount_extra, 4 );
         total_number_of_recv_elements += num_recv_elements;
@@ -515,7 +575,7 @@ int TauCollectives_Gatherv(TauCollectives_Group*   group,
   {
     if ( rank == root )
     {
-      for ( int i = 0; i < TauCollectives_get_size(); i++ )
+      for ( int i = 0; i < TauCollectives_get_size(group); i++ )
       {
         total_number_of_recv_elements += recvcnts[i] + sendcount_extra;
       }
@@ -685,7 +745,8 @@ int TauCollectives_Allgather(TauCollectives_Group*   group,
         break;
 
       default:
-        UTILS_BUG( "Allgather: Invalid datatype: %d", datatype );
+        fprintf(stderr, "TAU: Allgather: Invalid datatype: %d", datatype );
+        abort();
   }
 
   shmem_barrier(start, stride, size, barrier_psync);
@@ -764,43 +825,43 @@ int TauCollectives_Reduce(TauCollectives_Group*    group,
     switch ( operation )
     {
       case TAUCOLLECTIVES_BAND:
-        shmem_short_and_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_and_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork( sizeof( short ), nreduce ),
+                               (short*)get_pwork( sizeof( short ), nreduce ),
                                reduce_psync );
         break;
       case TAUCOLLECTIVES_BOR:
-        shmem_short_or_to_all(symmetric_buffer_b,
-                              symmetric_buffer_a,
+        shmem_short_or_to_all((short*)symmetric_buffer_b,
+                              (short*)symmetric_buffer_a,
                               nreduce,
                               start, stride, size,
-                              get_pwork( sizeof( short ), nreduce ),
+                              (short*)get_pwork( sizeof( short ), nreduce ),
                               reduce_psync );
         break;
       case TAUCOLLECTIVES_MIN:
-        shmem_short_min_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_min_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork( sizeof( short ), nreduce ),
+                               (short*)get_pwork( sizeof( short ), nreduce ),
                                reduce_psync );
         break;
       case TAUCOLLECTIVES_MAX:
-        shmem_short_max_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_max_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork( sizeof( short ), nreduce ),
+                               (short*)get_pwork( sizeof( short ), nreduce ),
                                reduce_psync );
         break;
       case TAUCOLLECTIVES_SUM:
-        shmem_short_sum_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_sum_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork( sizeof( short ), nreduce ),
+                               (short*)get_pwork( sizeof( short ), nreduce ),
                                reduce_psync );
         break;
       default:
@@ -815,43 +876,43 @@ int TauCollectives_Reduce(TauCollectives_Group*    group,
     switch ( operation )
     {
         case TAUCOLLECTIVES_BAND:
-            shmem_int_and_to_all(symmetric_buffer_b,
-                                 symmetric_buffer_a,
+            shmem_int_and_to_all((int*)symmetric_buffer_b,
+                                 (int*)symmetric_buffer_a,
                                  count,
                                  start, stride, size,
-                                 get_pwork(sizeof(int), count),
+                                 (int*)get_pwork(sizeof(int), count),
                                  reduce_psync);
             break;
         case TAUCOLLECTIVES_BOR:
-            shmem_int_or_to_all(symmetric_buffer_b,
-                                symmetric_buffer_a,
+            shmem_int_or_to_all((int*)symmetric_buffer_b,
+                                (int*)symmetric_buffer_a,
                                 count,
                                 start, stride, size,
-                                get_pwork(sizeof(int), count),
+                                (int*)get_pwork(sizeof(int), count),
                                 reduce_psync);
             break;
         case TAUCOLLECTIVES_MIN:
-            shmem_int_min_to_all(symmetric_buffer_b,
-                                 symmetric_buffer_a,
+            shmem_int_min_to_all((int*)symmetric_buffer_b,
+                                 (int*)symmetric_buffer_a,
                                  count,
                                  start, stride, size,
-                                 get_pwork(sizeof(int), count),
+                                 (int*)get_pwork(sizeof(int), count),
                                  reduce_psync);
             break;
         case TAUCOLLECTIVES_MAX:
-            shmem_int_max_to_all(symmetric_buffer_b,
-                                 symmetric_buffer_a,
+            shmem_int_max_to_all((int*)symmetric_buffer_b,
+                                 (int*)symmetric_buffer_a,
                                  count,
                                  start, stride, size,
-                                 get_pwork(sizeof(int), count),
+                                 (int*)get_pwork(sizeof(int), count),
                                  reduce_psync);
             break;
         case TAUCOLLECTIVES_SUM:
-            shmem_int_sum_to_all(symmetric_buffer_b,
-                                 symmetric_buffer_a,
+            shmem_int_sum_to_all((int*)symmetric_buffer_b,
+                                 (int*)symmetric_buffer_a,
                                  count,
                                  start, stride, size,
-                                 get_pwork(sizeof(int), count),
+                                 (int*)get_pwork(sizeof(int), count),
                                  reduce_psync);
             break;
         default:
@@ -865,40 +926,40 @@ int TauCollectives_Reduce(TauCollectives_Group*    group,
     switch ( operation )
     {
         case TAUCOLLECTIVES_BAND:
-            shmem_longlong_and_to_all(symmetric_buffer_b,
-                                      symmetric_buffer_a,
+            shmem_longlong_and_to_all((long long*)symmetric_buffer_b,
+                                      (long long*)symmetric_buffer_a,
                                       count,
                                       start, stride, size,
                                       (long long*)pwork,
                                       reduce_psync);
             break;
         case TAUCOLLECTIVES_BOR:
-            shmem_longlong_or_to_all(symmetric_buffer_b,
-                                     symmetric_buffer_a,
+            shmem_longlong_or_to_all((long long*)symmetric_buffer_b,
+                                     (long long*)symmetric_buffer_a,
                                      count,
                                      start, stride, size,
                                      (long long*)pwork,
                                      reduce_psync);
             break;
         case TAUCOLLECTIVES_MIN:
-            shmem_longlong_min_to_all(symmetric_buffer_b,
-                                      symmetric_buffer_a,
+            shmem_longlong_min_to_all((long long*)symmetric_buffer_b,
+                                      (long long*)symmetric_buffer_a,
                                       count,
                                       start, stride, size,
                                       (long long*)pwork,
                                       reduce_psync);
             break;
         case TAUCOLLECTIVES_MAX:
-            shmem_longlong_max_to_all(symmetric_buffer_b,
-                                      symmetric_buffer_a,
+            shmem_longlong_max_to_all((long long*)symmetric_buffer_b,
+                                      (long long*)symmetric_buffer_a,
                                       count,
                                       start, stride, size,
                                       (long long*)pwork,
                                       reduce_psync);
             break;
         case TAUCOLLECTIVES_SUM:
-            shmem_longlong_sum_to_all(symmetric_buffer_b,
-                                      symmetric_buffer_a,
+            shmem_longlong_sum_to_all((long long*)symmetric_buffer_b,
+                                      (long long*)symmetric_buffer_a,
                                       count,
                                       start, stride, size,
                                       (long long*)pwork,
@@ -968,43 +1029,43 @@ int TauCollectives_Allreduce(TauCollectives_Group*    group,
     switch ( operation )
     {
       case TAUCOLLECTIVES_BAND:
-        shmem_short_and_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_and_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork(sizeof( short ), nreduce),
+                               (short*)get_pwork(sizeof( short ), nreduce),
                                reduce_psync );
         break;
       case TAUCOLLECTIVES_BOR:
-        shmem_short_or_to_all(symmetric_buffer_b,
-                              symmetric_buffer_a,
+        shmem_short_or_to_all((short*)symmetric_buffer_b,
+                              (short*)symmetric_buffer_a,
                               nreduce,
                               start, stride, size,
-                              get_pwork(sizeof( short ), nreduce),
+                              (short*)get_pwork(sizeof( short ), nreduce),
                               reduce_psync);
         break;
       case TAUCOLLECTIVES_MIN:
-        shmem_short_min_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_min_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork(sizeof(short), nreduce),
+                               (short*)get_pwork(sizeof(short), nreduce),
                                reduce_psync);
         break;
       case TAUCOLLECTIVES_MAX:
-        shmem_short_max_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_max_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork(sizeof(short), nreduce),
+                               (short*)get_pwork(sizeof(short), nreduce),
                                reduce_psync);
         break;
       case TAUCOLLECTIVES_SUM:
-        shmem_short_sum_to_all(symmetric_buffer_b,
-                               symmetric_buffer_a,
+        shmem_short_sum_to_all((short*)symmetric_buffer_b,
+                               (short*)symmetric_buffer_a,
                                nreduce,
                                start, stride, size,
-                               get_pwork(sizeof( short ), nreduce),
+                               (short*)get_pwork(sizeof( short ), nreduce),
                                reduce_psync);
         break;
       default:
@@ -1019,43 +1080,43 @@ int TauCollectives_Allreduce(TauCollectives_Group*    group,
     switch ( operation )
     {
       case TAUCOLLECTIVES_BAND:
-        shmem_int_and_to_all(symmetric_buffer_b,
-                             symmetric_buffer_a,
+        shmem_int_and_to_all((int*)symmetric_buffer_b,
+                             (int*)symmetric_buffer_a,
                              count,
                              start, stride, size,
-                             get_pwork( sizeof( int ), count ),
+                             (int*)get_pwork( sizeof( int ), count ),
                              reduce_psync);
         break;
       case TAUCOLLECTIVES_BOR:
-        shmem_int_or_to_all(symmetric_buffer_b,
-                            symmetric_buffer_a,
+        shmem_int_or_to_all((int*)symmetric_buffer_b,
+                            (int*)symmetric_buffer_a,
                             count,
                             start, stride, size,
-                            get_pwork(sizeof(int), count),
+                            (int*)get_pwork(sizeof(int), count),
                             reduce_psync );
         break;
       case TAUCOLLECTIVES_MIN:
-        shmem_int_min_to_all(symmetric_buffer_b,
-                             symmetric_buffer_a,
+        shmem_int_min_to_all((int*)symmetric_buffer_b,
+                             (int*)symmetric_buffer_a,
                              count,
                              start, stride, size,
-                             get_pwork(sizeof(int), count),
+                             (int*)get_pwork(sizeof(int), count),
                              reduce_psync);
         break;
       case TAUCOLLECTIVES_MAX:
-        shmem_int_max_to_all(symmetric_buffer_b,
-                             symmetric_buffer_a,
+        shmem_int_max_to_all((int*)symmetric_buffer_b,
+                             (int*)symmetric_buffer_a,
                              count,
                              start, stride, size,
-                             get_pwork(sizeof(int), count),
+                             (int*)get_pwork(sizeof(int), count),
                              reduce_psync);
         break;
       case TAUCOLLECTIVES_SUM:
-        shmem_int_sum_to_all(symmetric_buffer_b,
-                             symmetric_buffer_a,
+        shmem_int_sum_to_all((int*)symmetric_buffer_b,
+                             (int*)symmetric_buffer_a,
                              count,
                              start, stride, size,
-                             get_pwork(sizeof(int), count),
+                             (int*)get_pwork(sizeof(int), count),
                              reduce_psync);
         break;
       default:
@@ -1069,40 +1130,40 @@ int TauCollectives_Allreduce(TauCollectives_Group*    group,
     switch ( operation )
     {
       case TAUCOLLECTIVES_BAND:
-        shmem_longlong_and_to_all(symmetric_buffer_b,
-                                  symmetric_buffer_a,
+        shmem_longlong_and_to_all((long long*)symmetric_buffer_b,
+                                  (long long*)symmetric_buffer_a,
                                   count,
                                   start, stride, size,
                                   ( long long* )pwork,
                                   reduce_psync );
         break;
       case TAUCOLLECTIVES_BOR:
-        shmem_longlong_or_to_all(symmetric_buffer_b,
-                                 symmetric_buffer_a,
+        shmem_longlong_or_to_all((long long*)symmetric_buffer_b,
+                                 (long long*)symmetric_buffer_a,
                                  count,
                                  start, stride, size,
                                  ( long long* )pwork,
                                  reduce_psync );
         break;
       case TAUCOLLECTIVES_MIN:
-        shmem_longlong_min_to_all(symmetric_buffer_b,
-                                  symmetric_buffer_a,
+        shmem_longlong_min_to_all((long long*)symmetric_buffer_b,
+                                  (long long*)symmetric_buffer_a,
                                   count,
                                   start, stride, size,
                                   ( long long* )pwork,
                                   reduce_psync );
         break;
       case TAUCOLLECTIVES_MAX:
-        shmem_longlong_max_to_all(symmetric_buffer_b,
-                                  symmetric_buffer_a,
+        shmem_longlong_max_to_all((long long*)symmetric_buffer_b,
+                                  (long long*)symmetric_buffer_a,
                                   count,
                                   start, stride, size,
                                   ( long long* )pwork,
                                   reduce_psync );
         break;
       case TAUCOLLECTIVES_SUM:
-        shmem_longlong_sum_to_all(symmetric_buffer_b,
-                                  symmetric_buffer_a,
+        shmem_longlong_sum_to_all((long long*)symmetric_buffer_b,
+                                  (long long*)symmetric_buffer_a,
                                   count,
                                   start, stride, size,
                                   ( long long* )pwork,
@@ -1244,7 +1305,7 @@ int TauCollectives_Scatterv(TauCollectives_Group*   group,
     int size = TauCollectives_get_size( group );
 
     /* Please note: at the moment SHMEM IPC groups consist of consecutive processing elements */
-    CALL_SHMEM( shmem_quiet )();
+    shmem_quiet();
     int total    = 0;
     int receiver = start;
     for ( int i = 0; i < size; i++ )
