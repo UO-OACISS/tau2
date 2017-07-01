@@ -11,9 +11,7 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
@@ -43,10 +41,7 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
-import org.apache.batik.ext.swing.GridBagConstants;
-
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
-import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -454,7 +449,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
         
-        Object[] profDataTypes={"Timer","Atomic","Metadata"};
+        String[] profDataTypes={"Timer","Atomic","Metadata"};
         
         final JComboBox atomic = new JComboBox(profDataTypes);
         atomic.setToolTipText("Select type of values to use for this axis");
@@ -745,7 +740,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
     
     private boolean checkDisableTopoWidgets(String topo){
-    	boolean b = (topo.equals("Custom")||topo.equals("BGQ")||topo.equals("Map")||topo.startsWith("Topo"));
+    	boolean b = (topo.equals(CUSTOM)||topo.equals("BGQ")||topo.equals(MAP)||topo.startsWith("Topo"));
     	return !b;
     	
     }
@@ -771,6 +766,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
     
     private static final String CUSTOM="Custom";
+    private static final String MAP="Map";
     private JPanel createTopoSelectionPanel(String name) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -795,7 +791,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         //String[] a = new String[topos.size()];
         topos.add(CUSTOM);
         customTopoDex=topos.size()-1;
-        topos.add("Map");
+        topos.add(MAP);
 		//return topos;//topos.toArray(a);
         
         topoComboBox = new SteppedComboBox(topos);
@@ -843,10 +839,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     window.redraw();
                     resetTopoAxisSliders(true);
                     
-                    for(int i=0;i<customAxisSpinners.length;i++)
+                    //Loop through axis spinners (3 of each) and activate or deactivate as needed.
+                    for(int i=0;i<3;i++)
                     {
                     	if(customAxisSpinners[i]!=null)
-                    		customAxisSpinners[i].setEnabled(settings.getTopoCart().equals("Custom"));
+                    		customAxisSpinners[i].setEnabled(settings.getTopoCart().equals(CUSTOM));
+//                    	if(customCoreAxisSpinners[i]!=null)
+//                    		customCoreAxisSpinners[i].setEnabled(settings.getTopoCart().equals(MAP));
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -886,7 +885,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         topoFileButton.addActionListener(topoFileSelector);
 
         
-JButton mapFileButton = new JButton("map");
+        JButton mapFileButton = new JButton(MAP);
         
         ActionListener mapFileSelector = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -899,6 +898,7 @@ JButton mapFileButton = new JButton("map");
 //                		}
 //                	}
                 	//tsDialog.setVisible(true);
+                	tsDialog.setCurrentDirectory(new File(System.getProperty("user.dir")));
                     tsDialog.showOpenDialog(window);
                     File dFile = tsDialog.getSelectedFile();
                     if(dFile!=null&&dFile.exists()&&dFile.canRead()){
@@ -941,13 +941,23 @@ JButton mapFileButton = new JButton("map");
         gbc.weighty = 0;
         gbc.weightx = 0;
         addCompItem(panel, customAxisLabels [0]=new JLabel("X Axis"), gbc, 0, 3, 1, 1);
-        addCompItem(panel, createTopoCustomSliderPanel(0), gbc, 1, 3, 1, 1);
+        addCompItem(panel, createTopoCustomAxisSpinnerPanel(0, this.customAxisSpinners), gbc, 1, 3, 1, 1);
         gbc.weightx = 0;
         addCompItem(panel, customAxisLabels [1]=new JLabel("Y Axis"), gbc, 0, 4, 1, 1);
-        addCompItem(panel, createTopoCustomSliderPanel(1), gbc, 1, 4, 1, 1);
+        addCompItem(panel, createTopoCustomAxisSpinnerPanel(1, this.customAxisSpinners), gbc, 1, 4, 1, 1);
         gbc.weightx = 0;
         addCompItem(panel, customAxisLabels [2]=new JLabel("Z Axis"), gbc, 0, 5, 1, 1);
-        addCompItem(panel, createTopoCustomSliderPanel(2), gbc, 1, 5, 1, 1);
+        addCompItem(panel, createTopoCustomAxisSpinnerPanel(2, this.customAxisSpinners), gbc, 1, 5, 1, 1);
+        
+        
+//        addCompItem(panel, customCoreAxisLabels [0]=new JLabel("Core X Axis"), gbc, 0, 6, 1, 1);
+//        addCompItem(panel, createTopoCustomCoreAxisSpinnerPanel(0, this.customCoreAxisSpinners), gbc, 1, 6, 1, 1);
+//        gbc.weightx = 0;
+//        addCompItem(panel, customCoreAxisLabels [1]=new JLabel("Core Y Axis"), gbc, 0, 7, 1, 1);
+//        addCompItem(panel, createTopoCustomCoreAxisSpinnerPanel(1, this.customCoreAxisSpinners), gbc, 1, 7, 1, 1);
+//        gbc.weightx = 0;
+//        addCompItem(panel, customCoreAxisLabels [2]=new JLabel("Core Z Axis"), gbc, 0, 8, 1, 1);
+//        addCompItem(panel, createTopoCustomCoreAxisSpinnerPanel(2, this.customCoreAxisSpinners), gbc, 1, 8, 1, 1);
 
         return panel;
     }
@@ -1103,6 +1113,10 @@ JButton mapFileButton = new JButton("map");
     JLabel[] customAxisLabels = new JLabel[3];
     JSpinner[] customAxisSpinners = new JSpinner[3]; 
     
+    //For setting the dimensions of the core subsets in a mapped topology. Probably not needed.
+//    JLabel[] customCoreAxisLabels = new JLabel[3];
+//    JSpinner[] customCoreAxisSpinners = new JSpinner[3];
+    
     JLabel[] selectAxisLabels = new JLabel[3];
     JSlider[] selectAxisSliders = new JSlider[3];
     private static final String[] topoLabelStrings = {"X Axis", "Y Axis", "Z Axis"};
@@ -1167,7 +1181,7 @@ JButton mapFileButton = new JButton("map");
     }
     
     
-    private JPanel createTopoCustomSliderPanel(int dex){
+    private JPanel createTopoCustomAxisSpinnerPanel(int dex, final JSpinner[] spinners){
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -1177,27 +1191,27 @@ JButton mapFileButton = new JButton("map");
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
         
-        customAxisSpinners[dex] = new JSpinner();
+        spinners[dex] = new JSpinner();
         SpinnerModel model = new SpinnerNumberModel(20, //initial value
                                    0, //min
                                    1000, //max
                                    1);                //step
-        customAxisSpinners[dex].setModel(model);
-        customAxisSpinners[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
+        spinners[dex].setModel(model);
+        spinners[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals(CUSTOM));
 
         final int idex = dex;
         int v = settings.getCustomTopoAxis(dex);
         if(v>0)
-        	customAxisSpinners[dex].setValue(settings.getCustomTopoAxis(dex));
+        	spinners[dex].setValue(settings.getCustomTopoAxis(dex));
         else{
-        	settings.setCustomTopoAxis(50, dex);
+        	settings.setCustomTopoAxis(20, dex);
         }
         ChangeListener topoSelector = new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 
 				 try {
 					 //if(!firstSet){
-						 int val = (Integer) customAxisSpinners[idex].getModel().getValue();
+						 int val = (Integer) spinners[idex].getModel().getValue();
 						 settings.setCustomTopoAxis(val,idex);
 						 resetTopoAxisSliders(true);
 	                    window.redraw();
@@ -1222,17 +1236,77 @@ JButton mapFileButton = new JButton("map");
 			}
         };
         
-        customAxisSpinners[dex].addChangeListener(topoSelector);
+        spinners[dex].addChangeListener(topoSelector);
 
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        addCompItem(panel, customAxisSpinners[dex], gbc, 0, 0, 1, 1);
+        addCompItem(panel, spinners[dex], gbc, 0, 0, 1, 1);
 
         return panel;
     }
+    
+    
+    /**
+     * Creates custom core axis spinner panel. Probably not needed.
+     * @return
+     */
+//    private JPanel createTopoCustomCoreAxisSpinnerPanel(int dex, JSpinner[] spinners){
+//        JPanel panel = new JPanel();
+//        panel.setLayout(new GridBagLayout());
+//        GridBagConstraints gbc = new GridBagConstraints();
+//
+//        gbc.fill = GridBagConstraints.NONE;
+//        gbc.anchor = GridBagConstraints.WEST;
+//        gbc.weightx = 0.1;
+//        gbc.weighty = 0.1;
+//        
+//        spinners[dex] = new JSpinner();
+//        SpinnerModel model = new SpinnerNumberModel(ThreeDeeSettings.customTopoCoreAxesDefaults[dex], //initial value
+//                                   0, //min
+//                                   1000, //max
+//                                   1);                //step
+//        spinners[dex].setModel(model);
+//        spinners[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals(MAP));
+//
+//        final int idex = dex;
+//        int v = settings.getCustomTopoCoreAxis(dex);
+//        if(v>0)
+//        	spinners[dex].setValue(settings.getCustomTopoCoreAxis(dex));
+//        else{
+//        	settings.setCustomTopoAxis(ThreeDeeSettings.customTopoCoreAxesDefaults[dex], dex);
+//        }
+//        ChangeListener topoSelector = new ChangeListener() {
+//			public void stateChanged(ChangeEvent e) {
+//
+//				 try {
+//					 
+//						 int val = (Integer) spinners[idex].getModel().getValue();
+//						 settings.setCustomTopoCoreAxis(val,idex);
+//						 resetTopoAxisSliders(true);
+//	                    window.redraw();
+//						 resetTopoAxisSliders(true);
+//	                } catch (Exception evt) {
+//	                    ParaProfUtils.handleException(evt);
+//	                }
+//			}
+//        };
+//        
+//        spinners[dex].addChangeListener(topoSelector);
+//
+//        gbc.insets = new Insets(1, 1, 1, 1);
+//
+//        gbc.weightx = 1.0;
+//        gbc.weighty = 1.0;
+//        gbc.fill = GridBagConstraints.HORIZONTAL;
+//        addCompItem(panel, spinners[dex], gbc, 0, 0, 1, 1);
+//
+//        return panel;
+//    }
+    
+    
     
     private JPanel createCallGraphPanel() {
         JPanel panel = new JPanel();

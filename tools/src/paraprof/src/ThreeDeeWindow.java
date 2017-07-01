@@ -35,6 +35,7 @@ import com.graphbuilder.math.VarMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CoordMap;
+import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CrayTopology;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -476,6 +477,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	int[] tsizes = { 0, 0, 0 };
 	boolean restrict = false;
 	Thread[][][] threadTopo=null;
+	private int[][] coords = null;
 
 	private float[][] defaultTopology(int numThreads) {
 		float[][] values = new float[numThreads][4];
@@ -543,14 +545,100 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		} 
 		
-		else if (prefix.equals("Map")) {
-			String fileLoc = settings.getTopoMapFile();
-			if (fileLoc == null)
-				return null;
-			CoordMap map = ThreeDeeGeneralPlotUtils.parseMapFile(fileLoc);
+		else if (prefix.equals("Map")||prefix.equals("CRAY_PMI")) {
+			
+			CoordMap map = null;
+			
+			if(prefix.equals("CRAY_PMI"))
+			{
+					CrayTopology[] ctopo = new CrayTopology[ppTrial.getDataSource().getNumThreads()];
+					int i=0;
+					
+					//This metadata only shows up where it changes from the previous rank, so we need to check for it and use the previous value if it is absent.
+					
+					int coreid=0;
+					String nodename="";
+					int nodeid=0;
+					int x=0;
+					int y=0; 
+					int z=0;
+					
+					for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
+							.iterator(); it.hasNext();) {
+						Thread thread = it.next();
 
+						int mpirank = thread.getNodeID();
+						
+						String coreidS = thread.getMetaData().get("CRAY_CORE_ID");
+						if(coreidS!=null)
+						{
+							coreid = Integer.parseInt(coreidS);
+						}
+						else{
+							coreid=0;
+						}
+						if(thread.getMetaData().containsKey("CRAY_NODENAME"));
+						{
+							String tempnodename = thread.getMetaData().get("CRAY_NODENAME");
+							if(tempnodename!=null){
+								nodename=tempnodename;
+							}
+						}
+						String nodeids = thread.getMetaData().get("CRAY_PMI_NODEID");
+						if(nodeids!=null)
+						{
+							nodeid = Integer.parseInt(nodeids);
+						}
+						String xs = thread.getMetaData().get("CRAY_PMI_X");
+						if(xs!=null){
+							x = Integer.parseInt(xs);
+						}
+						String ys = thread.getMetaData().get("CRAY_PMI_Y");
+						if(ys!=null){
+							y = Integer.parseInt(ys);
+						}
+						String zs = thread.getMetaData().get("CRAY_PMI_Z");
+						if(zs!=null){
+							z = Integer.parseInt(zs);
+						}
+						
+						
+						//System.out.println(mpirank);
+						CrayTopology ct = new CrayTopology(mpirank,nodename,nodeid,x,y,z,coreid);
+						//System.out.println(ct.toString());
+						ctopo[i]=ct;
+						i++;
+					}
+					map = ThreeDeeGeneralPlotUtils.processCrayCoordinates(ctopo);
+					
+				
+			}
+			else{
+			String fileLoc = settings.getTopoMapFile();
+//			if(fileLoc.toLowerCase().endsWith(".json")){
+//				map=ThreeDeeGeneralPlotUtils.parseJsonMapFile(fileLoc);
+//			}
+//			else
+			{
+			if(settings.checkNewMapFile()||coords==null)
+			{
+				
+				if (fileLoc == null)
+					return null;
+				System.out.println("Reading map file");
+				coords = ThreeDeeGeneralPlotUtils.parseMapFile(fileLoc);
+			}
+			
+			if(coords==null){
+				return null;
+			}
+			System.out.println("Calculating map coords");
+			map = ThreeDeeGeneralPlotUtils.calculateCoreCoordinates(coords, settings.getCustomTopoCoreAxes());
+			}
+			}
 			for (int i = 0; i < 3; i++) {
-				maxScatterValues[i] = tsizes[i] = map.max[i];
+				maxScatterValues[i] = (int)map.max[i];
+				tsizes[i]=(int)map.max[i]-(int)map.min[i];
 				minScatterValues[i] = map.min[i];
 			}
 			// scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
@@ -842,7 +930,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		} 
 
-			else {
+
+			else{
 				
 			String coord_key = prefix + " Coords";
 			String size_key = prefix + " Size";
