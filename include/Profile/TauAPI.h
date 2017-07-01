@@ -369,6 +369,11 @@
 
 #endif /* TAU_ENABLED */
 
+/* TAU_PLUGIN API */
+#define TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS Tau_util_init_tau_plugin_callbacks
+#define TAU_UTIL_PLUGIN_REGISTER_CALLBACKS Tau_util_plugin_register_callbacks
+/* TAU_PLUGIN_API */
+
 
 /******************************************************************************
 * Function prototypes
@@ -387,6 +392,7 @@ void Tau_enable_group(TauGroup_t group);
 
 void Tau_start(const char *name);
 void Tau_stop(const char *name);
+void *Tau_pure_search_for_function(const char *name);
 void Tau_pure_start_task(const char *name, int tid);
 void Tau_pure_stop_task(const char *name, int tid);
 void Tau_stop_current_timer();
@@ -409,6 +415,8 @@ void Tau_set_inclusive_values(void *handle, double* values, int tid);
 void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
+
+int TAUDECL Tau_get_current_stack_depth(int tid); 
 
 int TAUDECL Tau_get_local_tid(void);
 int TAUDECL Tau_get_thread(void);

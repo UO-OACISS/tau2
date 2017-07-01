@@ -36,6 +36,7 @@ static MPI_Datatype *tau_mpi_datatype;
 static int *tau_pvar_count;
 static int *tau_cvar_num_vals;
 static int tau_initial_pvar_count = 0;
+static int tau_mpi_t_is_initialized = 0;
 int num_cvars = 0; //For now, we don't support case where number of CVARS changes dynamically at runtime
 
 //////////////////////////////////////////////////////////////////////
@@ -47,6 +48,37 @@ extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
 
 #define dprintf TAU_VERBOSE
+
+/*Helper functions that ensure that we initialize the MPI_T interface only once from TAU
+ * As of the time being, we do not want multiple performance tracking sessions in flight.*/
+int Tau_mpi_t_is_initialized() {
+  return tau_mpi_t_is_initialized;
+}
+
+void Tau_mpi_t_set_initialized() {
+  tau_mpi_t_is_initialized = 1;
+}
+
+/*Returns the count associated with a PVAR specified by an index.
+ * MPI_T doesn't yet support such operations directly, so we have no option but to
+ * store and return this information from within TAU */
+int Tau_mpi_t_get_pvar_count(int pvarindex) {
+  if(!Tau_mpi_t_is_initialized()) Tau_mpi_t_initialize();
+  if(pvarindex > tau_initial_pvar_count || pvarindex < 0) return -1;
+  return tau_pvar_count[pvarindex];
+}
+
+/*Returns a pointer to the global PVAR session*/
+MPI_T_pvar_session * Tau_mpi_t_get_pvar_session() {
+   if(!Tau_mpi_t_is_initialized()) Tau_mpi_t_initialize();
+   return &tau_pvar_session;
+}
+
+/*Returns a pointer to the global PVAR handles*/
+MPI_T_pvar_handle * Tau_mpi_t_get_pvar_handles() {
+  if(!Tau_mpi_t_is_initialized()) Tau_mpi_t_initialize();
+  return tau_pvar_handles;
+}
 
 //////////////////////////////////////////////////////////////////////
 int Tau_mpi_t_initialize(void) {
@@ -65,6 +97,11 @@ int Tau_mpi_t_initialize(void) {
   if (TauEnv_get_track_mpi_t_pvars() == 0) {
     return MPI_SUCCESS; 
   } 
+
+  /*Return without doing anything if MPI_T is already initialized*/
+   if(Tau_mpi_t_is_initialized()) {
+    return MPI_SUCCESS;
+  }
 
   /* Initialize MPI_T */
   return_val = MPI_T_init_thread(MPI_THREAD_SINGLE, &thread_provided);
@@ -144,6 +181,7 @@ int Tau_mpi_t_initialize(void) {
   Tau_allocate_pvar_event(num_pvars, tau_pvar_count);
 
   tau_initial_pvar_count = num_pvars;
+  Tau_mpi_t_set_initialized();
 
   return return_val;
 }
@@ -749,112 +787,6 @@ int Tau_mpi_t_cvar_initialize(void) {
   return return_val; 
 }
 
-/*Implement user based CVAR tuning policy based on a policy file (?)
- * TODO: This tuning logic should be in a separate module/file. Currently implementing hard-coded policies for MVAPICH meant only for experimentation purposes*/
-void Tau_enable_user_cvar_tuning_policy(const int num_pvars, int *tau_pvar_count, unsigned long long int **pvar_value_buffer) {
-  int return_val, i, namelen, verb, varclass, bind, threadsup;
-  int index;
-  int readonly, continuous, atomic;
-  char event_name[TAU_NAME_LENGTH + 1] = "";
-  char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH];
-  int desc_len;
-  char description[TAU_NAME_LENGTH + 1] = "";
-  MPI_Datatype datatype;
-  MPI_T_enum enumtype;
-  static int firsttime = 1;
-  static unsigned long long int *reduced_value_array = NULL;
-  static char *reduced_value_cvar_string = NULL;
-  static char *reduced_value_cvar_value_string = NULL;
-
-  /*MVAPICH specific thresholds and names*/
-  char PVAR_MAX_VBUF_USAGE[TAU_NAME_LENGTH] = "mv2_vbuf_max_use_array";
-  char PVAR_VBUF_ALLOCATED[TAU_NAME_LENGTH] = "mv2_vbuf_allocated_array";
-  int PVAR_VBUF_WASTED_THRESHOLD = 10; //This is the threshold above which we will be free from the pool
-
-  char CVAR_ENABLING_POOL_CONTROL[TAU_NAME_LENGTH] = "MPIR_CVAR_VBUF_POOL_CONTROL";
-  char CVAR_SPECIFYING_REDUCED_POOL_SIZE[TAU_NAME_LENGTH] = "MPIR_CVAR_VBUF_POOL_REDUCED_VALUE";
-
-  int pvar_max_vbuf_usage_index, pvar_vbuf_allocated_index, has_threshold_been_breached_in_any_pool;
-  pvar_max_vbuf_usage_index = -1;
-  pvar_vbuf_allocated_index = -1;
-  has_threshold_been_breached_in_any_pool = 0;
-
- if(firsttime) {
-  firsttime = 0;
-  for(i = 0; i < num_pvars; i++){
-      namelen = desc_len = TAU_NAME_LENGTH;
-      return_val = MPI_T_pvar_get_info(i/*IN*/,
-      event_name /*OUT*/,
-      &namelen /*INOUT*/,
-      &verb /*OUT*/,
-      &varclass /*OUT*/,
-      &datatype /*OUT*/,
-      &enumtype /*OUT*/,
-      description /*description: OUT*/,
-      &desc_len /*desc_len: INOUT*/,
-      &bind /*OUT*/,
-      &readonly /*OUT*/,
-      &continuous /*OUT*/,
-      &atomic/*OUT*/);
-
-      if(strcmp(event_name, PVAR_MAX_VBUF_USAGE) == 0) {
-        pvar_max_vbuf_usage_index = i;
-      } else if (strcmp(event_name, PVAR_VBUF_ALLOCATED) == 0) {
-        pvar_vbuf_allocated_index = i;
-      }
-      reduced_value_array = Tau_MemMgr_malloc(Tau_get_thread(), tau_pvar_count[pvar_max_vbuf_usage_index]*sizeof(unsigned long long int));
-      reduced_value_cvar_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
-      strcpy(reduced_value_cvar_string, "");
-      reduced_value_cvar_value_string = Tau_MemMgr_malloc(Tau_get_thread(), sizeof(char)*TAU_NAME_LENGTH);
-      strcpy(reduced_value_cvar_value_string, "");
-  }
-
-  if((pvar_max_vbuf_usage_index == -1) || (pvar_vbuf_allocated_index == -1)) {
-    printf("Unable to find the indexes of PVARs required for tuning\n");
-    return;
-  } else {
-    dprintf("Index of %s is %d and index of %s is %d\n", PVAR_MAX_VBUF_USAGE, pvar_max_vbuf_usage_index, PVAR_VBUF_ALLOCATED, pvar_vbuf_allocated_index);
-  }
- }
-  /*Tuning logic: If the difference between allocated vbufs and max use vbufs in a given
-  * vbuf pool is higher than a set threshhold, then we will free from that pool.*/
-  for(i = 0 ; i < tau_pvar_count[pvar_max_vbuf_usage_index]; i++) {
-    if(pvar_value_buffer[pvar_max_vbuf_usage_index][i] > 1000) pvar_value_buffer[pvar_max_vbuf_usage_index][i] = 0; /*HACK - we are getting garbage values for pool2. Doesn't seem to be an issue in TAU*/
-
-    if((pvar_value_buffer[pvar_vbuf_allocated_index][i] - pvar_value_buffer[pvar_max_vbuf_usage_index][i]) > PVAR_VBUF_WASTED_THRESHOLD) {
-      has_threshold_been_breached_in_any_pool = 1;
-      reduced_value_array[i] = pvar_value_buffer[pvar_max_vbuf_usage_index][i];
-      dprintf("Threshold breached: Max usage for %d pool is %llu but vbufs allocated are %llu\n", i, pvar_value_buffer[pvar_max_vbuf_usage_index][i], pvar_value_buffer[pvar_vbuf_allocated_index][i]);
-    } else {
-      reduced_value_array[i] = pvar_value_buffer[pvar_vbuf_allocated_index][i] + 10; //Some value higher than current allocated
-    }
-
-    if(i == (tau_pvar_count[pvar_max_vbuf_usage_index])) {
-      sprintf(metric_string,"%s[%d]", CVAR_SPECIFYING_REDUCED_POOL_SIZE, i);
-      sprintf(value_string,"%llu", reduced_value_array[i]);
-    } else {
-      sprintf(metric_string,"%s[%d],", CVAR_SPECIFYING_REDUCED_POOL_SIZE, i);
-      sprintf(value_string,"%llu,", reduced_value_array[i]);
-    }
-    
-    strcat(reduced_value_cvar_string, metric_string);
-    strcat(reduced_value_cvar_value_string, value_string);
-
-  }
-
-  if(has_threshold_been_breached_in_any_pool) {
-    sprintf(metric_string,"%s,%s", CVAR_ENABLING_POOL_CONTROL, reduced_value_cvar_string);
-    sprintf(value_string,"%d,%s", 1, reduced_value_cvar_value_string);
-    dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
-  } else {
-    sprintf(metric_string,"%s", CVAR_ENABLING_POOL_CONTROL);
-    sprintf(value_string,"%d", 0);
-    dprintf("Metric string is %s and value string is %s\n", metric_string, value_string);
-    Tau_mpi_t_parse_and_write_cvars(metric_string, value_string);
-  }
-}
-
 //////////////////////////////////////////////////////////////////////
 int Tau_track_mpi_t_here(void) {
   int return_val, num_pvars, i;
@@ -871,7 +803,13 @@ int Tau_track_mpi_t_here(void) {
 
   if(TauEnv_get_mpi_t_enable_user_tuning_policy() == 1) {
     mpi_t_enable_user_tuning_policy = 1;
+
   }
+ 
+  /*Double check to ensure that the MPI_T interface is initialized*/
+  return_val = Tau_mpi_t_initialize();
+  if(return_val != MPI_SUCCESS) 
+    return return_val;
 
   /* get number of pvars from MPI_T */
   return_val = MPI_T_pvar_get_num(&num_pvars);
@@ -940,25 +878,6 @@ int Tau_track_mpi_t_here(void) {
   /*Implement user based CVAR tuning policy if TAU_MPI_T_ENABLE_USER_TUNING_POLICY is set*/
   if(mpi_t_enable_user_tuning_policy) {
     dprintf("RANK:%d: User based tuning policy enabled \n", rank);
-
-#if TAU_PLUGIN_ENABLED 
-    char *plugin_name;
-    const char *plugin_path;
-    int num_args = 3;
-    void **args = Tau_MemMgr_malloc(Tau_get_thread(), num_args*sizeof(void*));
-    args[0] = (void *)num_pvars;
-    args[1] = (void *)tau_pvar_count;
-    args[2] = (void *)pvar_value_buffer;
-
-    strcpy(plugin_name, "tuning_policies");
-    plugin_path = getenv("PLUGIN_PATH");
-    //strcpy(plugin_path, "/home/users/aurelem/tau/tau2_beacon/plugins/"); 
-
-    /* Load Tuning policy plugin */
-    Tau_util_load_plugin(plugin_name, plugin_path, num_args, args);
-#else
-    Tau_enable_user_cvar_tuning_policy(num_pvars, tau_pvar_count, pvar_value_buffer);
-#endif /* TAU_PLUGIN_ENABLED */
   }
   
   dprintf("Finished!!\n");

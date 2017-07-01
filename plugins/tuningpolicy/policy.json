@@ -1,0 +1,59 @@
+{
+ "rule": {
+        "id":1,
+        "num_pvars":"2",
+ 	"pvars":["pvar_max_vbuf_usage_index","pvar_vbuf_allocated_index"],
+ 	"cvars":["cvar1","cvar2[10]"],
+	"operation": {
+        	 "array": "pvar_max_vbuf_usage_index",
+               	 "condition": {
+			"stmt":"if",
+                	"leftoperand": {
+				"leftoperand": {
+                                	"content": "pvar_vbuf_allocated_index",
+     					"type": "pvar"
+                                },
+              		     	"rightoperand": {
+                                	"content": "pvar_max_vbuf_usage_index",
+ 					"type": "pvar"
+                                },
+ 			     	"operator":"-"	
+			},
+ 			"rightoperand": { 
+                        	"content": "PVAR_VBUF_WASTED_THRESHOLD",
+ 				"type": "value"
+			},
+ 			"operator":">"
+        	},
+		"result": {
+			"leftoperand": {
+				"content": "CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+				"type": "value"
+			},
+			"rightoperand": {
+				"content": "pvar_max_vbuf_usage_index",
+				"type": "pvar"
+			},
+			"operator":"="
+		},
+                "else": {
+                	"leftoperand": {
+				"content": "CVAR_SPECIFYING_REDUCED_POOL_SIZE",
+				"type": "value"
+			},
+  		       	"operator":"=",
+                       	"rightoperand": {
+                       		"leftoperand": {
+					"content": "pvar_max_vbuf_allocated_index",
+					"type": "pvar"
+				},
+				"rightoperand": {
+					"content": "10",
+					"type": "value"
+				},
+ 				"operator":"+"
+                       	}	
+               	}
+       	}
+  }
+}

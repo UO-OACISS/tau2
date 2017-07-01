@@ -793,6 +793,11 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
   }
 }
 
+extern "C" Profiler * Tau_get_current_profiler(void) {
+    int tid = RtsLayer::myThread();
+    return &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_stop_current_timer_task(int tid)
 {
@@ -997,6 +1002,10 @@ extern "C" int Tau_dump_prefix(const char *prefix) {
 
 extern x_uint64 TauTraceGetTimeStamp(int tid);
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_get_current_stack_depth(int tid) {
+  return Tau_thread_flags[tid].Tau_global_stackpos; 
+}
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_callpaths() {
   TauInternalFunctionGuard protects_this_function;
@@ -1635,6 +1644,43 @@ extern "C" void Tau_pure_userevent(void **ptr, const char* name)
   *ptr = (void *) ue;
 }
 
+extern "C" void Tau_pure_userevent_signal_safe(void **ptr, const char* name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  TauUserEvent *ue = 0;
+  RtsLayer::LockEnv();
+  /* KAH - Whoops!! We can't call "new" here, because malloc is not
+   * safe in signal handling. therefore, use the special memory
+   * allocation routines */
+#ifndef TAU_WINDOWS
+  //string *tmp = (string*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(string));
+  /*  now, use the pacement new function to create a object in
+   *  pre-allocated memory. NOTE - this memory needs to be explicitly
+   *  deallocated by explicitly calling the destructor. 
+   *  I think the best place for that is in the destructor for
+   *  the hash table. */
+  //new(tmp) string(name);
+  static string tmp = string(4096,0);
+  tmp.assign(name);
+#else
+  string tmp(name);
+#endif
+  pure_userevent_atomic_map_t::const_iterator it = ThePureUserEventAtomicMap().find(tmp);
+  if (it == ThePureUserEventAtomicMap().end()) {
+#ifndef TAU_WINDOWS
+    ue = (TauUserEvent*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(TauUserEvent));
+    new(ue) TauUserEvent(name); 
+#else
+    ue = new TauUserEvent(name); 
+#endif
+    ThePureUserEventAtomicMap()[string(name)] = ue;
+  } else {
+    ue = (*it).second;
+  }
+  RtsLayer::UnLockEnv();
+  *ptr = (void *) ue;
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1665,7 +1711,7 @@ extern "C" void Tau_trigger_context_event(const char *name, double data) {
 extern "C" void Tau_trigger_userevent(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
-  Tau_pure_userevent(&ue, name);
+  Tau_pure_userevent_signal_safe(&ue, name);
   Tau_userevent(ue, data);
 }
 
@@ -2045,7 +2091,7 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
-void *Tau_pure_search_for_function(const char *name)
+extern "C" void *Tau_pure_search_for_function(const char *name)
 {
   FunctionInfo *fi = 0;
   RtsLayer::LockDB();

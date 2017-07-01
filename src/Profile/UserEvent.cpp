@@ -60,8 +60,9 @@ using namespace std;
 #include <Profile/UserEvent.h>
 #include <tau_internal.h>
 
+#include <Profile/TauEnv.h>
+#include <Profile/TauPluginInternals.h>
 #include <Profile/TauPin.h>
-
 
 using namespace tau;
 
@@ -112,6 +113,13 @@ void TauUserEvent::AddEventToDB()
   DEBUGPROFMSG("Successfully registered event " << GetName() << endl;);
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
 
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_atomic_event_registration_data plugin_data;
+    plugin_data.user_event_ptr = this;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, &plugin_data);
+  }
+
   /* Set user event id */
   eventId = RtsLayer::GenerateUniqueId();
 #ifdef TAU_VAMPIRTRACE
@@ -131,6 +139,7 @@ void TauUserEvent::AddEventToDB()
   eventId=handle;
 #endif
   RtsLayer::UnLockDB();
+
 }
 
 ///////////////////////////////////////////////////////////
@@ -265,7 +274,14 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
       d.sumSqrVal += data * data;
     }
 #endif /* PROFILING_ON */
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+    if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+      Tau_plugin_event_atomic_event_trigger_data plugin_data;
+      plugin_data.user_event_ptr = this;
+      Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, &plugin_data);
+    }
   } // Tau_global_getLightsOut
+
 }
 
 
@@ -350,7 +366,9 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 //////////////////////////////////////////////////////////////////////
 long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
 {
-  int depth = TauEnv_get_callpath_depth();
+  int tid = RtsLayer::myThread();
+  int depth = Tau_get_current_stack_depth(tid);
+
   *size = sizeof(long)*(depth+2);
   long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), *size);
   int i=1;
@@ -371,14 +389,13 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, 
 ////////////////////////////////////////////////////////////////////////////
 TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current)
 {
+  int tid = RtsLayer::myThread();
   if (current) {
-    std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
-    buff << userEvent->GetName();
+      std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
+      buff << userEvent->GetName();
 
-    int depth = TauEnv_get_callpath_depth();
-    if (depth) {
-      //Profiler ** path = new Profiler*[depth];
-      Profiler * path[200];
+      int depth = Tau_get_current_stack_depth(tid);
+      Profiler ** path = new Profiler*[depth];
 
       // Reverse the callpath to avoid string copies
       int i=depth-1;
@@ -396,19 +413,21 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
           buff << " " << fi->GetType();
         buff << " => ";
       }
-      fi = path[i]->ThisFunction;
+      if (depth == 0) {
+        fi = current->ThisFunction;
+      } else {
+        fi = path[i]->ThisFunction;
+      }
       buff << fi->GetName();
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
 
-      //delete[] path;
-    }
-
+      delete[] path;
     // Return a new string object.
     // A smart STL implementation will not allocate a new buffer.
-    return buff.str().c_str();
+      return buff.str().c_str();
   } else {
-    return "";
+      return "";
   }
 }
 

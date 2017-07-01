@@ -1,0 +1,58 @@
+27 templated_functions_MULTI_TIME
+# Name Calls Subrs Excl Incl ProfileCalls # <metadata><attribute><name>Metric Name</name><value>TIME</value></attribute><attribute><name>Starting Timestamp</name><value>1497063437425657</value></attribute><attribute><name>Timestamp</name><value>1497063437425790</value></attribute><attribute><name>pid</name><value>94769</value></attribute><attribute><name>tid</name><value>94769</value></attribute></metadata>
+".TAU application" 1 11667 47162952 62485339 0 GROUP="TAU_USER" 
+"MPI_Init()  " 1 0 53445 53445 0 GROUP="MPI" 
+"MPI_Comm_rank()  " 340 0 263 263 0 GROUP="MPI" 
+"MPI_Comm_size()  " 104 0 76 76 0 GROUP="MPI" 
+"MPI_Barrier()  " 1755 0 4070481 4070481 0 GROUP="MPI" 
+"MPI_Bcast()  " 64 0 48669 48669 0 GROUP="MPI" 
+"MPI_Cart_create()  " 1 0 406 406 0 GROUP="MPI" 
+"MPI_Cart_coords()  " 1 0 13 13 0 GROUP="MPI" 
+"MPI_Cart_sub()  " 2 0 480 480 0 GROUP="MPI" 
+"MPI_Allreduce()  " 1016 0 1179637 1179637 0 GROUP="MPI" 
+"MPI_Reduce()  " 235 0 1531 1531 0 GROUP="MPI" 
+"ADIOS open" 101 109 1747 99556 0 GROUP="TAU_USER" 
+"MPI_Comm_dup()  " 102 0 46034 46034 0 GROUP="MPI" 
+"MPI_Gather()  " 1 0 15 15 0 GROUP="MPI" 
+"MPI_Allgather()  " 202 1 460686 460688 0 GROUP="MPI" 
+"ADIOS group size" 101 0 935 935 0 GROUP="TAU_USER" 
+"ADIOS write" 808 0 5080580 5080580 0 GROUP="TAU_USER" 
+"ADIOS close" 101 303 4302582 4766189 0 GROUP="TAU_USER" 
+"ADIOS flexpath copy buffer" 101 0 166 166 0 GROUP="TAU_USER" 
+"MPI_Comm_free()  " 101 0 3875 3875 0 GROUP="MPI" 
+"MPI_Irecv()  " 2288 0 5768 5768 0 GROUP="MPI" 
+"MPI_Isend()  " 444 0 504 504 0 GROUP="MPI" 
+"MPI_Waitall()  " 222 0 12535 12535 0 GROUP="MPI" 
+"MPI_Send()  " 1844 0 25698 25698 0 GROUP="MPI" 
+"MPI_Wait()  " 1844 0 19357 19357 0 GROUP="MPI" 
+"MPI_Alltoallv()  " 300 0 4974 4974 0 GROUP="MPI" 
+"MPI_Finalize()  " 1 0 1930 1930 0 GROUP="MPI" 
+0 aggregates
+26 userevents
+# eventname numevents max min mean sumsqr
+"Message size for broadcast" 64 4096 4 72.875 16808256
+"[GROUP=MAX_MARKER] Message size for broadcast" 3 4096 8 1424 16805504
+"[GROUP=MAX_MARKER] Message size for broadcast : MPI_Bcast()  " 2 168 8 88 28288
+"Message size for all-reduce" 1016 48 4 16.2244094488189 469616
+"Message size for reduce" 235 232 4 9.089361702127659 70944
+"[GROUP=MIN_MARKER] Message size for reduce" 3 48 4 20 2384
+"[GROUP=MIN_MARKER] Message size for reduce : MPI_Reduce()  " 3 48 4 20 2384
+"[GROUP=MIN_MARKER] Message size for all-reduce" 1 4 4 4 16
+"[GROUP=MIN_MARKER] Message size for all-reduce : MPI_Allreduce()  " 1 4 4 4 16
+"[GROUP=MAX_MARKER] Message size for broadcast : ADIOS open => MPI_Bcast()  " 1 4096 4096 4096 16777216
+"Message size for all-gather" 202 32 4 18 105040
+"ADIOS data size" 101 39458408 24000200 39148898.77227723 1.552646093350506E+17
+"ADIOS total size" 101 0 0 0 0
+"ADIOS data size : ADIOS group size" 101 39458408 24000200 39148898.77227723 1.552646093350506E+17
+"ADIOS total size : ADIOS group size" 101 0 0 0 0
+"[GROUP=MAX_MARKER] Message size for all-gather" 1 32 32 32 1024
+"[GROUP=MAX_MARKER] Message size for all-gather : ADIOS close => MPI_Allgather()  " 1 32 32 32 1024
+"[GROUP=MAX_MARKER] Message size for all-reduce" 1 48 48 48 2304
+"[GROUP=MAX_MARKER] Message size for all-reduce : MPI_Allreduce()  " 1 48 48 48 2304
+"Message size for all-to-all" 300 30 18 22 154800
+"[GROUP=MAX_MARKER] Message size for all-to-all" 1 30 30 30 900
+"[GROUP=MAX_MARKER] Message size for all-to-all : MPI_Alltoallv()  " 1 30 30 30 900
+"[GROUP=MAX_MARKER] ADIOS data size : ADIOS group size" 1 39128936 39128936 39128936 1531073632492096
+"[GROUP=MAX_MARKER] ADIOS data size : ADIOS group size : ADIOS group size" 1 39128936 39128936 39128936 1531073632492096
+"[GROUP=MAX_MARKER] ADIOS data size" 1 39128936 39128936 39128936 1531073632492096
+"[GROUP=MAX_MARKER] ADIOS data size : ADIOS group size" 1 39128936 39128936 39128936 1531073632492096

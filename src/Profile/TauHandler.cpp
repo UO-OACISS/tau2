@@ -30,6 +30,8 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
 
+#include <Profile/TauPluginInternals.h>
+
 extern "C" int Tau_track_mpi_t_here(void); 
 //////////////////////////////////////////////////////////////////////
 // Routines
@@ -246,17 +248,18 @@ void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
 }
 
 void TauTriggerCrayPowerEvents(void) {
-  static int power_fd=Tau_open_system_file("/sys/cray/pm_counters/power");
-  static int accel_power_fd=Tau_open_system_file("/sys/cray/pm_counters/accel_power");
-  //static int accel_energy_fd=Tau_open_system_file("/sys/cray/pm_counters/accel_energy");
-  //static int energy_fd=Tau_open_system_file("/sys/cray/pm_counters/energy");
+/*
+  static int power_fd=Tau_open_cray_file("/sys/cray/pm_counters/power");
+  static int accel_power_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_power");
+  static int accel_energy_fd=Tau_open_cray_file("/sys/cray/pm_counters/accel_energy");
+  static int energy_fd=Tau_open_cray_file("/sys/cray/pm_counters/energy");
 
   // this does not take into account the freshness file
   TauTriggerCrayPowerEvent(power_fd, "Node Power (in Watts)");
   TauTriggerCrayPowerEvent(accel_power_fd, "Accelerator Device Power (in Watts)");
-  //TauTriggerCrayPowerEvent(energy_fd, "Node Energy (in Joules)");
-  //TauTriggerCrayPowerEvent(accel_energy_fd, "Accel Energy (in Joules)");
-
+  TauTriggerCrayPowerEvent(energy_fd, "Node Energy (in Joules)");
+  TauTriggerCrayPowerEvent(accel_energy_fd, "Accel Energy (in Joules)");
+*/
 }
 
 void TauTriggerPowerEvent(void) {
@@ -328,7 +331,13 @@ void TauAlarmHandler(int signum) {
   /* Set alarm for the next interrupt */
 #ifndef TAU_WINDOWS
   alarm(TheTauInterruptInterval());
-#endif   
+#endif
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_interrupt_trigger_data plugin_data;
+    plugin_data.signum = signum;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, &plugin_data);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////

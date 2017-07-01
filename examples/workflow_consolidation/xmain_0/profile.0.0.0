@@ -1,0 +1,57 @@
+27 templated_functions_MULTI_TIME
+# Name Calls Subrs Excl Incl ProfileCalls # <metadata><attribute><name>Metric Name</name><value>TIME</value></attribute><attribute><name>CPU Cores</name><value>14</value></attribute><attribute><name>CPU MHz</name><value>1200.062</value></attribute><attribute><name>CPU Type</name><value>Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz</value></attribute><attribute><name>CPU Vendor</name><value>GenuineIntel</value></attribute><attribute><name>CWD</name><value>/gpfs/home/khuck/src/sos_flow_experiments/Junmin/testdir</value></attribute><attribute><name>Cache Size</name><value>35840 KB</value></attribute><attribute><name>Command Line</name><value>/gpfs/home/khuck/src/sos_flow_experiments/Junmin/testdir/./xmain</value></attribute><attribute><name>Executable</name><value>/gpfs/home/khuck/src/sos_flow_experiments/Junmin/testdir/xmain</value></attribute><attribute><name>Hostname</name><value>n076</value></attribute><attribute><name>Local Time</name><value>2017-06-09T19:57:17-07:00</value></attribute><attribute><name>MPI Processor Name</name><value>n076</value></attribute><attribute><name>Memory Size</name><value>131918604 kB</value></attribute><attribute><name>Node Name</name><value>n076</value></attribute><attribute><name>OS Machine</name><value>x86_64</value></attribute><attribute><name>OS Name</name><value>Linux</value></attribute><attribute><name>OS Release</name><value>3.10.0-327.36.3.el7.x86_64</value></attribute><attribute><name>OS Version</name><value>#1 SMP Thu Oct 20 04:56:07 EDT 2016</value></attribute><attribute><name>Starting Timestamp</name><value>1497063437427470</value></attribute><attribute><name>TAU Architecture</name><value>default</value></attribute><attribute><name>TAU Config</name><value> -adios=/home/khuck/src/chaos/adios/ADIOS-gcc -sos=/home/khuck/src/sos_flow/build-linux -pdt=/usr/local/packages/pdt/3.23 -mpi -pthread -useropt=-Og#-g -DISABLE_MEMORY_MANAGER</value></attribute><attribute><name>TAU Makefile</name><value>/home/khuck/src/tau2/x86_64/lib/Makefile.tau-mpi-pthread-pdt</value></attribute><attribute><name>TAU MetaData Merge Time</name><value>0.000141 seconds</value></attribute><attribute><name>TAU Version</name><value>2.26.1-git</value></attribute><attribute><name>TAU_BFD_LOOKUP</name><value>on</value></attribute><attribute><name>TAU_CALLPATH</name><value>off</value></attribute><attribute><name>TAU_CALLPATH_DEPTH</name><value>2</value></attribute><attribute><name>TAU_CALLSITE_DEPTH</name><value>1</value></attribute><attribute><name>TAU_COMM_MATRIX</name><value>off</value></attribute><attribute><name>TAU_COMPENSATE</name><value>off</value></attribute><attribute><name>TAU_CUDA_BINARY_EXE</name><value></value></attribute><attribute><name>TAU_CUPTI_API</name><value>runtime</value></attribute><attribute><name>TAU_EBS_KEEP_UNRESOLVED_ADDR</name><value>off</value></attribute><attribute><name>TAU_IBM_BG_HWP_COUNTERS</name><value>off</value></attribute><attribute><name>TAU_MAX_THREADS</name><value>128</value></attribute><attribute><name>TAU_MEASURE_TAU</name><value>off</value></attribute><attribute><name>TAU_MEMDBG_PROTECT_ABOVE</name><value>off</value></attribute><attribute><name>TAU_MEMDBG_PROTECT_BELOW</name><value>off</value></attribute><attribute><name>TAU_MEMDBG_PROTECT_FREE</name><value>off</value></attribute><attribute><name>TAU_OPENMP_RUNTIME</name><value>on</value></attribute><attribute><name>TAU_OPENMP_RUNTIME_EVENTS</name><value>on</value></attribute><attribute><name>TAU_OPENMP_RUNTIME_STATES</name><value>off</value></attribute><attribute><name>TAU_OUTPUT_CUDA_CSV</name><value>off</value></attribute><attribute><name>TAU_PAPI_MULTIPLEXING</name><value>off</value></attribute><attribute><name>TAU_PROFILE</name><value>on</value></attribute><attribute><name>TAU_PROFILE_FORMAT</name><value>profile</value></attribute><attribute><name>TAU_SAMPLING</name><value>off</value></attribute><attribute><name>TAU_SHOW_MEMORY_FUNCTIONS</name><value>off</value></attribute><attribute><name>TAU_SIGNALS_GDB</name><value>off</value></attribute><attribute><name>TAU_SOS</name><value>off</value></attribute><attribute><name>TAU_THROTTLE</name><value>on</value></attribute><attribute><name>TAU_THROTTLE_NUMCALLS</name><value>100000</value></attribute><attribute><name>TAU_THROTTLE_PERCALL</name><value>10</value></attribute><attribute><name>TAU_TRACE</name><value>off</value></attribute><attribute><name>TAU_TRACK_CUDA_CDP</name><value>off</value></attribute><attribute><name>TAU_TRACK_CUDA_INSTRUCTIONS</name><value></value></attribute><attribute><name>TAU_TRACK_CUDA_SASS</name><value>off</value></attribute><attribute><name>TAU_TRACK_HEADROOM</name><value>off</value></attribute><attribute><name>TAU_TRACK_HEAP</name><value>off</value></attribute><attribute><name>TAU_TRACK_IO_PARAMS</name><value>off</value></attribute><attribute><name>TAU_TRACK_MEMORY_FOOTPRINT</name><value>off</value></attribute><attribute><name>TAU_TRACK_MEMORY_LEAKS</name><value>off</value></attribute><attribute><name>TAU_TRACK_MESSAGE</name><value>off</value></attribute><attribute><name>TAU_TRACK_SIGNALS</name><value>off</value></attribute><attribute><name>TAU_TRACK_UNIFIED_MEMORY</name><value>off</value></attribute><attribute><name>Timestamp</name><value>1497063437427601</value></attribute><attribute><name>UTC Time</name><value>2017-06-10T02:57:17Z</value></attribute><attribute><name>pid</name><value>94763</value></attribute><attribute><name>tid</name><value>94763</value></attribute><attribute><name>username</name><value>khuck</value></attribute></metadata>
+".TAU application" 1 11367 33815669 62483749 0 GROUP="TAU_USER" 
+"MPI_Init()  " 1 0 51687 51687 0 GROUP="MPI" 
+"MPI_Comm_rank()  " 340 0 152 152 0 GROUP="MPI" 
+"MPI_Comm_size()  " 104 0 39 39 0 GROUP="MPI" 
+"MPI_Barrier()  " 1755 0 10931037 10931037 0 GROUP="MPI" 
+"MPI_Bcast()  " 64 0 410 410 0 GROUP="MPI" 
+"MPI_Cart_create()  " 1 0 578 578 0 GROUP="MPI" 
+"MPI_Cart_coords()  " 1 0 9 9 0 GROUP="MPI" 
+"MPI_Cart_sub()  " 2 0 538 538 0 GROUP="MPI" 
+"MPI_Allreduce()  " 1016 0 11858110 11858110 0 GROUP="MPI" 
+"MPI_Reduce()  " 235 0 19418 19418 0 GROUP="MPI" 
+"ADIOS open" 101 109 53131 76893 0 GROUP="TAU_USER" 
+"MPI_Comm_dup()  " 102 0 23658 23658 0 GROUP="MPI" 
+"MPI_Gather()  " 1 0 55 55 0 GROUP="MPI" 
+"MPI_Allgather()  " 202 1 4752606 4752609 0 GROUP="MPI" 
+"ADIOS group size" 101 0 836 836 0 GROUP="TAU_USER" 
+"ADIOS write" 808 0 789245 789245 0 GROUP="TAU_USER" 
+"ADIOS close" 101 303 89734 4843556 0 GROUP="TAU_USER" 
+"ADIOS flexpath copy buffer" 101 0 201 201 0 GROUP="TAU_USER" 
+"MPI_Comm_free()  " 101 0 2365 2365 0 GROUP="MPI" 
+"MPI_Irecv()  " 2188 0 796 796 0 GROUP="MPI" 
+"MPI_Isend()  " 444 0 365 365 0 GROUP="MPI" 
+"MPI_Waitall()  " 222 0 30671 30671 0 GROUP="MPI" 
+"MPI_Send()  " 1744 0 19740 19740 0 GROUP="MPI" 
+"MPI_Wait()  " 1744 0 37817 37817 0 GROUP="MPI" 
+"MPI_Alltoallv()  " 300 0 2822 2822 0 GROUP="MPI" 
+"MPI_Finalize()  " 1 0 2060 2060 0 GROUP="MPI" 
+0 aggregates
+25 userevents
+# eventname numevents max min mean sumsqr
+"Message size for broadcast" 64 4096 4 72.875 16808256
+"[GROUP=MAX_MARKER] Message size for broadcast" 3 4096 8 1424 16805504
+"[GROUP=MAX_MARKER] Message size for broadcast : MPI_Bcast()  " 2 168 8 88 28288
+"Message size for all-reduce" 1016 48 4 16.2244094488189 469616
+"Message size for reduce" 235 232 4 9.089361702127659 70944
+"[GROUP=MIN_MARKER] Message size for reduce" 3 48 4 20 2384
+"[GROUP=MIN_MARKER] Message size for reduce : MPI_Reduce()  " 3 48 4 20 2384
+"[GROUP=MIN_MARKER] Message size for all-reduce" 1 4 4 4 16
+"[GROUP=MIN_MARKER] Message size for all-reduce : MPI_Allreduce()  " 1 4 4 4 16
+"Message size for gather" 1 1024 1024 1024 1048576
+"[GROUP=MAX_MARKER] Message size for broadcast : ADIOS open => MPI_Bcast()  " 1 4096 4096 4096 16777216
+"Message size for all-gather" 202 32 4 18 105040
+"ADIOS data size" 101 24000200 8457272 8765971.405940594 8234616726517568
+"ADIOS total size" 101 0 0 0 0
+"ADIOS data size : ADIOS group size" 101 24000200 8457272 8765971.405940594 8234616726517568
+"ADIOS total size : ADIOS group size" 101 0 0 0 0
+"[GROUP=MAX_MARKER] Message size for all-gather" 1 32 32 32 1024
+"[GROUP=MAX_MARKER] Message size for all-gather : ADIOS close => MPI_Allgather()  " 1 32 32 32 1024
+"[GROUP=MAX_MARKER] Message size for all-reduce" 1 48 48 48 2304
+"[GROUP=MAX_MARKER] Message size for all-reduce : MPI_Allreduce()  " 1 48 48 48 2304
+"Message size for all-to-all" 300 30 26 27.33333333333333 225200
+"[GROUP=MIN_MARKER] ADIOS data size : ADIOS group size" 1 8550056 8550056 8550056 73103457603136
+"[GROUP=MIN_MARKER] ADIOS data size : ADIOS group size : ADIOS group size" 1 8550056 8550056 8550056 73103457603136
+"[GROUP=MIN_MARKER] ADIOS data size" 1 8550056 8550056 8550056 73103457603136
+"[GROUP=MIN_MARKER] ADIOS data size : ADIOS group size" 1 8550056 8550056 8550056 73103457603136

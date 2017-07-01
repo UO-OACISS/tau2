@@ -159,10 +159,14 @@ double do_work(void) {
 #endif
 #endif
 #ifdef TAU_MPI
-  if (provided == MPI_THREAD_MULTIPLE) { 
-    printf("provided is MPI_THREAD_MULTIPLE\n");
-  } else if (provided == MPI_THREAD_FUNNELED) { 
-    printf("provided is MPI_THREAD_FUNNELED\n");
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0) {
+      if (provided == MPI_THREAD_MULTIPLE) { 
+        printf("provided is MPI_THREAD_MULTIPLE\n");
+      } else if (provided == MPI_THREAD_FUNNELED) { 
+        printf("provided is MPI_THREAD_FUNNELED\n");
+      }
   }
 #endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
@@ -234,12 +238,19 @@ int main (int argc, char *argv[])
 
 #ifdef TAU_MPI
   int rc = MPI_SUCCESS;
+  int rank = 0;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-  printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0) {
+    printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
+  }
 #elif defined(TAU_OPENMP)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
-  printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  if (rank == 0) {
+    printf("MPI_Init_thread: provided = %d, MPI_THREAD_FUNNELED=%d\n", provided, MPI_THREAD_FUNNELED);
+  }
 #else
   rc = MPI_Init(&argc, &argv); 
 #endif /* THREADS */
@@ -277,7 +288,7 @@ int main (int argc, char *argv[])
   int i;
   do_work();
 
-#ifdef PTHREADS 
+#ifdef PTHREADS
   ret = pthread_join(tid1, NULL);
   if (ret) {
     printf("Error: pthread_join (1) fails ret = %d\n", ret);

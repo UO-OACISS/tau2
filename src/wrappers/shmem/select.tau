@@ -1,0 +1,22 @@
+BEGIN_INCLUDE_LIST
+"# shmem_#"
+"# shmemx_#"
+"# _my_pe#"
+"# _num_pes#"
+"# shmalloc#"
+"# shfree#"
+"# shrealloc#"
+"# shmemalign#"
+"# start_pes#"
+"# shmem_put#"
+"# SHMEM_PUT#"
+"# shmem_cache#"
+"# SHMEM_CACHE#"
+END_INCLUDE_LIST
+
+BEGIN_EXCLUDE_LIST
+"# shmem_info_get_version#"
+"# shmem_info_get_name#"
+"# shmemx_complexd_put_nb#"
+"# shmemx_complexd_get_nb#"
+END_EXCLUDE_LIST
