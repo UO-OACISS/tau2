@@ -36,6 +36,7 @@
 	} \
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
+#define ACTIVITY_ENTRY_LIMIT 1024
 // #define ACTIVITY_BUFFER_SIZE (8192*1024)
 /* Some API calls deprecated in 5.5
  */
@@ -202,6 +203,8 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 extern "C" x_uint64 TauTraceGetTimeStamp();
 
 void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
+
+void Tau_cupti_activity_flush_all();
 
 void Tau_cupti_register_buffer_creation(uint8_t** buffer, size_t* size, size_t* maxNumRecords);
 

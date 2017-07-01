@@ -55,14 +55,14 @@ INSTALLDEST   = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
-CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SOS_INCLUDE_OPTS) $(TAU_SHMEM_INCLUDE)
 
 SERIAL_CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
 
 TAU_UPC_FPIC= -Wc,-fPIC
 UPCFLAGS      = $(TAUINC) $(subst -fPIC,$(TAU_UPC_FPIC), $(PROFILEOPTS) )
 
-CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(OPARI2_INCLUDE) $(TAU_SOS_INCLUDE_OPTS) $(TAU_SHMEM_INCLUDE)
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
@@ -141,7 +141,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
-		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O)
+		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(SOS_O) $(ADIOS_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -200,6 +200,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
+#PYTHON#EXTRA_LIBS += $(MPI_WRAPPER) #ENDIF#
 
 ##############################################
 # For building TauLinuxTimers with gcc
@@ -644,6 +645,12 @@ TauOpenShmemOpenMPIC.o: TauOpenShmemOpenMPIC.c $(HDRS)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC)  -c $(@:.o=.cpp)
+
+TauSOS.o  : TauSOS.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -pthread -c $(@:.o=.cpp)
+
+TauADIOS.o  : TauADIOS.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

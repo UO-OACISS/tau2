@@ -1,5 +1,7 @@
 #include <Profile/CuptiActivity.h>
 #include <iostream>
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
 using namespace std;
 
 #if CUPTI_API_VERSION >= 2
@@ -50,6 +52,8 @@ static int current_device_id = 0;
 static int current_context_id = 0;
 static int device_count_total = 1;
 static double recentTimestamp = 0;
+
+static uint32_t buffers_queued = 0;
 
 /* CUPTI API callbacks are called from CUPTI's signal handlers and thus cannot
  * allocate/deallocate memory. So all the counters values need to be allocated
@@ -616,6 +620,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	{
 #endif //TAU_ASYNC_ACTIVITY_API
 		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
+
+        // BEGIN handling memcpy
 		if (function_is_memcpy(id, domain))
 		{
 #ifdef TAU_DEBUG_CUPTI
@@ -675,7 +681,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           }
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-          cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+          Tau_cupti_activity_flush_all();
+          //cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
           //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
 #else
 					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
@@ -683,8 +690,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           
 				}
 			}
-		}
-		else
+		} // END handling memcpy
+		else // This is something other than memcpy
 		{
 			if (cbInfo->callbackSite == CUPTI_API_ENTER)
 			{
@@ -702,7 +709,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
                 }
 				Tau_gpu_enter_event(cbInfo->functionName);
 				if (function_is_launch(id))
-				{
+				{ // ENTRY to a launch function
           Tau_CuptiLayer_init();
 
 #ifdef TAU_DEBUG_CUPTI
@@ -720,7 +727,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			}
 			else if (cbInfo->callbackSite == CUPTI_API_EXIT)
 			{
-				if (function_is_launch(id))
+				if (function_is_launch(id)) // EXIT FROM a launch function
 				{
 				  record_gpu_launch(cbInfo->correlationId, cbInfo->functionName);
 				}
@@ -755,7 +762,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           }
 
 #ifdef TAU_ASYNC_ACTIVITY_API
-          cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+          Tau_cupti_activity_flush_all();
+          //cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
           //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
 #else
 					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
@@ -770,6 +778,13 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		return;
 	}
 
+}
+
+void CUPTIAPI Tau_cupti_activity_flush_all() {      
+    if(buffers_queued++ > ACTIVITY_ENTRY_LIMIT) {
+        buffers_queued = 0;
+        cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+    }
 }
 
 void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
@@ -812,6 +827,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 #endif
 	//printf("err: %d.\n", err);
 
+    uint64_t num_buffers = 0;
 	if (err == CUPTI_SUCCESS)
 	{
 		//printf("succesfully dequeue'd buffer.\n");
@@ -825,6 +841,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 			if (status == CUPTI_SUCCESS) {
         //TAU_PROFILE_START(r);
 				Tau_cupti_record_activity(record);
+                ++num_buffers;
         //TAU_PROFILE_STOP(r);
 			}
 			else if (status == CUPTI_ERROR_MAX_LIMIT_REACHED) {
@@ -871,9 +888,9 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
         clear_counters(i);
         last_recorded_kernel_name = NULL;
       } else if (kernels_recorded[i] > kernels_encountered[i]) {
-        printf("TAU: Recorded more kernels than were launched, exiting.\n");
-        abort();
-        exit(1);
+        //printf("TAU: Recorded more kernels than were launched, exiting.\n");
+        //abort();
+        //exit(1);
       }
     }
   } else if (err != CUPTI_ERROR_QUEUE_EMPTY) {

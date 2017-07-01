@@ -21,6 +21,7 @@
 #include <Profile/TauMetaData.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetaDataMerge.h>
+#include <Profile/TauSOS.h>
 
 //#define DEBUG_PROF 1 
 
@@ -91,6 +92,8 @@ double TauWindowsUsecD(void);
 #include "shmem.h"
 extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
+
+#include <Profile/TauPluginInternals.h>
 
 using namespace std;
 using namespace tau;
@@ -1434,12 +1437,21 @@ extern "C" int Tau_print_metadata_for_traces(int tid) {
       string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval)); 
       TAU_TRIGGER_EVENT(metadata_str.c_str(), 1.0); 
   }
+  return 0;
 }
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+
+  /*Invoke plugins only if both plugin path and plugins are specified
+   *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_end_of_execution_data plugin_data;
+    plugin_data.tid = tid;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+  }
 
   if (TauEnv_get_tracing() && (tid == 0) ) {
     Tau_print_metadata_for_traces(tid);
@@ -1501,6 +1513,10 @@ int TauProfiler_StoreData(int tid)
       Tau_mergeProfiles_MPI();
 	}
 #endif
+#endif
+
+#ifdef TAU_SOS
+    //TAU_SOS_finalize();
 #endif
   }
 #endif /* PTHREADS */

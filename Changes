@@ -41,7 +41,11 @@ Version 2.26 changes (from 2.25):
 28. Added support for PGI 17 compilers under Power 8 Linux. 
 29. Added initial support for compiler-based instrumentation for Clang/LLVM under Power 8 Linux. 
 30. Added support for excluding functions in selective instrumentation file with -optCompInst for GNU/Clang. 
-31. Added initial support for Intel PIN in JIT mode for GNU compilers. 
+31. Added initial support for Intel PIN in JIT mode for GNU compilers (./configure -pin=download; tau_exec -pin ./a.out)
+32. Reduced memory footprint and cost of callpath profiling.
+33. Added support for SOSflow. 
+34. Added support for runtime selective instrumentation (TAU_SELECT_FILE) with exclude/include list of routines and files. 
+35. Added support for ADIOS profiling interface. 
 
 
 Version 2.25 changes (from 2.24):

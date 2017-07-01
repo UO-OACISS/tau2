@@ -33,7 +33,7 @@
 #define TAU_ACTION_DUMP_CALLPATHS 2
 #define TAU_ACTION_DUMP_BACKTRACES 3
 
-#define TAU_PLUGIN_ENABLED 0
+#define TAU_PLUGIN_ENABLED 1
 
 #ifndef TAU_EVENT_THRESHOLD
 #define TAU_EVENT_THRESHOLD_DEFAULT .5
@@ -78,6 +78,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_openmp_runtime_context();
   int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
   int  TAUDECL TauEnv_get_openmp_runtime_events_enabled();
+  int  TAUDECL TauEnv_get_sos_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled_tau();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
@@ -105,6 +106,8 @@ extern "C" {
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cvar_metrics();
   const char* TAUDECL TauEnv_get_cvar_values();
+  const char* TAUDECL TauEnv_get_plugins_path();
+  const char* TAUDECL TauEnv_get_plugins();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_device_name();
   const char* TAUDECL TauEnv_get_cuda_instructions();

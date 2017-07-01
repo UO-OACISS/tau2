@@ -1,7 +1,11 @@
-BEGIN_FILE_EXCLUDE_LIST
-"*initialize.c"
-END_FILE_EXCLUDE_LIST
+BEGIN_EXCLUDE_LIST
+void initialize(double **, int, int) C 
+void compute_interchange(double **, double **, double **, int, int, int) C
+END_EXCLUDE_LIST
+#BEGIN_FILE_EXCLUDE_LIST
+#"*initialize.c"
+#END_FILE_EXCLUDE_LIST
 
-BEGIN_FILE_INCLUDE_LIST
-"nothing.foo"
-END_FILE_INCLUDE_LIST
+#BEGIN_FILE_INCLUDE_LIST
+#"nothing.foo"
+#END_FILE_INCLUDE_LIST
