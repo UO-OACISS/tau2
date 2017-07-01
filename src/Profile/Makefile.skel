@@ -132,13 +132,13 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 # OTF2 OBJECTS
 #############################################
-#OTF2#OTF2_O = TracerOTF2.o
+#OTF2#OTF2_O = TracerOTF2.o TauCollectives.o
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o Comp_gnu.o \
-		TauCallPath.o TauBackTrace.o TauCollectives.o \
+		TauCallPath.o TauBackTrace.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o TauCallSite.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
