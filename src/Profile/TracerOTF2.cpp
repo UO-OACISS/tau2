@@ -18,6 +18,9 @@
 **                                                                         **
 ****************************************************************************/
 
+#define TAU_OTF2_DEBUG
+
+#define __STDC_FORMAT_MACROS
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,6 +28,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <time.h>
+#include <inttypes.h>
 
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
@@ -315,6 +319,9 @@ int TauTraceOTF2Init(int tid) {
 int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 {
   TauInternalFunctionGuard protects_this_function;     
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2InitTS(%d, %" PRIu64 ")\n", tid, ts);
+#endif
   if(otf2_initialized || otf2_finished) {
       return 0;
   }
@@ -369,6 +376,9 @@ void TauTraceOTF2EventSimple(long int ev, x_int64 par, int tid, int kind) {
 }
 
 void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2WriteTempBuffer(%d, %d)\n", tid, node_id);
+#endif
     TauInternalFunctionGuard protects_this_function;
     buffers_written[tid] = true;
     for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
@@ -380,6 +390,9 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
 {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceEventWithNodeId(%ld, %" PRId64 ", %d, %" PRIu64 ", %d, %d, %d)\n", ev, par, tid, ts, use_ts, node_id, kind);
+#endif
   TauInternalFunctionGuard protects_this_function;
   if(otf2_finished) {
     return;
@@ -388,7 +401,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     if(start_time == 0) {
       start_time = TauTraceGetTimeStamp(tid) - 1000;   
     }
-#ifdef TAU_MPI
+#if defined(TAU_MPI) || defined(TAU_SHMEM)
     // If we're using MPI, we can't initialize tracing until MPI_Init gets called,
     // which will in turn init tracing for us, so we can't do it here.
     // This is because when we call OTF2_Archive_Open and set the collective callbacks,
@@ -408,7 +421,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     }
 #endif
   }
-#ifdef TAU_MPI
+#if defined(TAU_MPI) || defined(TAU_SHMEM)
   // The event file for a thread needs to be written by that thread, so we write
   // the temporary buffers the first time we get an event from that thread after
   // intialization has completed.
@@ -430,6 +443,9 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 
 extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2Msg(%d, %d, %d, %d, %" PRIu64 ", %d, %d)\n", send_or_recv, type, other_id, length, ts, use_ts, node_id);
+#endif
     TauInternalFunctionGuard protects_this_function;
     if(!otf2_initialized) {
         return;
@@ -454,6 +470,9 @@ void TauTraceOTF2Event(long int ev, x_int64 par, int tid, x_uint64 ts, int use_t
 }
 
 static void TauTraceOTF2WriteGlobalDefinitions() {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2WriteGlobalDefinitions()\n");
+#endif
     TauInternalFunctionGuard protects_this_function;
     OTF2_GlobalDefWriter * global_def_writer = OTF2_Archive_GetGlobalDefWriter(otf2_archive);
     TAU_ASSERT(global_def_writer != NULL, "Failed to get global def writer");
@@ -523,6 +542,9 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 }
 
 static void TauTraceOTF2WriteLocalDefinitions() {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2WriteLocalDefinitions()\n");
+#endif
     TauInternalFunctionGuard protects_this_function;
     OTF2_IdMap * region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
@@ -547,11 +569,17 @@ static void TauTraceOTF2WriteLocalDefinitions() {
 }
 
 static void TauTraceOTF2ExchangeStartTime() {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2ExchangeStartTime()\n");
+#endif
     TauInternalFunctionGuard protects_this_function;
     TauCollectives_Reduce(TauCollectives_Get_World(), &start_time, &global_start_time, 1, TAUCOLLECTIVES_UINT64_T, TAUCOLLECTIVES_MIN, 0);
 }
 
 static void TauTraceOTF2ExchangeLocations() {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2ExchangeLocations()\n");
+#endif
     TauInternalFunctionGuard protects_this_function;
     if(my_node() == 0) {
         num_locations = new int[tau_totalnodes(0,0)];
@@ -565,6 +593,9 @@ static void TauTraceOTF2ExchangeLocations() {
 }
 
 static void TauTraceOTF2ExchangeEventsWritten() {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2ExchangeEventsWritten()\n");
+#endif
     TauInternalFunctionGuard protects_this_function;
     const int nodes = tau_totalnodes(0, 0);
     int total_locs = 0;
@@ -592,6 +623,9 @@ static void TauTraceOTF2ExchangeEventsWritten() {
 }
 
 static void TauTraceOTF2ExchangeRegions() {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2ExchangeRegions()\n");
+#endif
     TauInternalFunctionGuard protects_this_function;
 
     // Collect local function IDs and names
@@ -684,6 +718,9 @@ static void TauTraceOTF2ExchangeRegions() {
 }
 
 void TauTraceOTF2ShutdownComms(int tid) {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2ShutdownComms(%d)\n", tid);
+#endif
     TauInternalFunctionGuard protects_this_function;
     if(!otf2_initialized || otf2_finished || otf2_comms_shutdown) {
         return;
@@ -706,6 +743,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
 
 /* Close the trace */
 void TauTraceOTF2Close(int tid) {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2Close(%d)\n", tid);
+#endif
     TauInternalFunctionGuard protects_this_function;
     if(tid != 0 || otf2_finished || !otf2_initialized) {
         return;
