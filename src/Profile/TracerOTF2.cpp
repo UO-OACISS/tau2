@@ -78,11 +78,13 @@ static const uint64_t TAU_OTF2_CLOCK_RES = 1000000;
 static const int TAU_OTF2_COMM_WORLD = 0;
 static const int TAU_OTF2_GROUP_LOCS = 0;
 static const int TAU_OTF2_GROUP_WORLD = 1;
+static const int TAU_OTF2_COMM_WIN = 0;
 
 static bool otf2_initialized = false;
 static bool otf2_comms_shutdown = false;
 static bool otf2_finished = false;
 static bool otf2_disable = false;
+static bool otf2_win_created = false;
 static OTF2_Archive * otf2_archive = NULL;
 
 // Time of first event recorded
@@ -350,7 +352,6 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   OTF2_EC(OTF2_Archive_OpenEvtFiles(otf2_archive));
   OTF2_EC(OTF2_Archive_OpenDefFiles(otf2_archive));
 
-  OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_location());
   TAU_ASSERT(evt_writer != NULL, "Failed to open new event writer");
 
   otf2_initialized = true;
@@ -382,9 +383,13 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 #endif
     TauInternalFunctionGuard protects_this_function;
     buffers_written[tid] = true;
+    x_uint64 last_ts = 0;
     for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
       TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, it->kind);
+      last_ts = it->ts;
     }
+    OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_location());
+    OTF2_EvtWriter_RmaWinCreate(evt_writer, NULL, last_ts+1, TAU_OTF2_COMM_WIN);
     delete temp_buffers[tid];
 }
 
@@ -450,24 +455,42 @@ extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int le
     if(otf2_disable) {
         return;
     }
-#ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "TauTraceOTF2Msg(%d, %d, %d, %d, %" PRIu64 ", %d, %d)\n", send_or_recv, type, other_id, length, ts, use_ts, node_id);
+#ifdef TAU_OTF2_DEBUG                                                                        
+  fprintf(stderr, "%d: TauTraceOTF2Msg(%d, %d, %d, %d, %" PRIu64 ", %d, %d)\n", my_node(), send_or_recv, type, other_id, length, ts, use_ts, node_id);
 #endif
     TauInternalFunctionGuard protects_this_function;
     if(!otf2_initialized) {
         return;
     }
-    if(node_id != my_node()) {
-        return;
-    }
     x_uint64 time = use_ts ? ts : TauTraceGetTimeStamp(0);
     const int loc = my_location();
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
+#ifdef TAU_SHMEM
+    const bool remote = (my_node() != node_id);
+    if(remote) {
+        if(send_or_recv == TAU_MESSAGE_SEND) {
+            // A remote send represents the entry to a Get 
+            OTF2_EC(OTF2_EvtWriter_RmaGet(evt_writer, NULL, time, TAU_OTF2_COMM_WIN, other_id, length, type));
+        } else if(send_or_recv == TAU_MESSAGE_RECV) {
+            // A remote recv represents the local completion of a Put
+            OTF2_EC(OTF2_EvtWriter_RmaOpCompleteBlocking(evt_writer, NULL, time, TAU_OTF2_COMM_WIN, type));
+        }
+    } else {
+        if(send_or_recv == TAU_MESSAGE_SEND) {
+            // A local send represents the entry to a Put
+            OTF2_EC(OTF2_EvtWriter_RmaPut(evt_writer, NULL, time, TAU_OTF2_COMM_WIN, other_id, length, type));
+        } else if(send_or_recv == TAU_MESSAGE_RECV) {
+            // A local recv represents the local completion of a Get
+            OTF2_EC(OTF2_EvtWriter_RmaOpCompleteBlocking(evt_writer, NULL, time, TAU_OTF2_COMM_WIN, type));
+        }
+    }
+#else
     if(send_or_recv == TAU_MESSAGE_SEND) {
         OTF2_EC(OTF2_EvtWriter_MpiSend(evt_writer, NULL, time, other_id, TAU_OTF2_COMM_WORLD, type, length));       
     } else if(send_or_recv == TAU_MESSAGE_RECV) {
         OTF2_EC(OTF2_EvtWriter_MpiRecv(evt_writer, NULL, time, other_id, TAU_OTF2_COMM_WORLD, type, length));
     }
+#endif
 }
 
 /* Write event to buffer */
@@ -527,7 +550,6 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     }
 
     // Write global communicator
-    // TODO this is MPI specfic; fix for openshmem
     const int locsGroupName = nextString++;
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locsGroupName, "GROUP_MPI_COMM_LOCS"));
     const int worldGroupName = nextString++;
@@ -544,6 +566,11 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_EC(OTF2_GlobalDefWriter_WriteGroup(global_def_writer, TAU_OTF2_GROUP_WORLD, worldGroupName, OTF2_GROUP_TYPE_COMM_GROUP, OTF2_PARADIGM_MPI, OTF2_GROUP_FLAG_NONE, nodes, ranks_list));
     OTF2_EC(OTF2_GlobalDefWriter_WriteComm(global_def_writer, TAU_OTF2_COMM_WORLD, commName, TAU_OTF2_GROUP_WORLD, OTF2_UNDEFINED_COMM));
     
+    // Write global RMA window
+    const int commWinName = nextString++;
+    OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, commWinName, "RMA_WIN_WORLD"));
+    OTF2_EC(OTF2_GlobalDefWriter_WriteRmaWin(global_def_writer, TAU_OTF2_COMM_WIN, commWinName, TAU_OTF2_COMM_WORLD));
+
     OTF2_EC(OTF2_Archive_CloseGlobalDefWriter(otf2_archive, global_def_writer));
 }
 

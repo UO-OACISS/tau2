@@ -46,6 +46,7 @@ using namespace std;
 #ifdef TAU_SHMEM
 static void*   symmetric_buffer_a;
 static void*   symmetric_buffer_b;
+static size_t  cur_buffer_size;
 static int*    transfer_counter;
 static int*    transfer_status;
 static int*    current_ready_pe;
@@ -142,6 +143,8 @@ TauCollectives_Init(void) {
   symmetric_buffer_a = __real_shmem_malloc ( BUFFER_SIZE );
 
   symmetric_buffer_b =  __real_shmem_malloc ( BUFFER_SIZE );
+
+  cur_buffer_size = BUFFER_SIZE;
 
   transfer_status = ( int* ) __real_shmem_malloc ( sizeof( int ) );
   *transfer_status = -1;
@@ -387,6 +390,13 @@ int TauCollectives_Bcast(TauCollectives_Group*   group,
     num_elements = ROUNDUPTO( count, 4 );
   }
 
+  const int req_size = count * sizeof_ipc_datatypes[ datatype ];
+  if (req_size > cur_buffer_size) {
+    symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+    symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+    cur_buffer_size = 2 * req_size;
+  }
+
   /* Copy buffer to symmetric memory block */
   if ( root == rank )
   {
@@ -472,6 +482,13 @@ int TauCollectives_Gather(TauCollectives_Group*   group,
   }
 
   /* Copy buffer to symmetric memory block */
+  const int req_size = size * num_elements  * sizeof_ipc_datatypes[ datatype ];
+  if (req_size > cur_buffer_size) {
+    symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+    symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+    cur_buffer_size = 2 * req_size;
+  }
+
   memcpy( symmetric_buffer_a, sendbuf, count * sizeof_ipc_datatypes[ datatype ] );
 
   __real_shmem_barrier(start, stride, size, barrier_psync);
@@ -606,6 +623,13 @@ int TauCollectives_Gatherv(TauCollectives_Group*   group,
       datatype == TAUCOLLECTIVES_UNSIGNED_CHAR)
   {
     int num_send_elements = ROUNDUPTO( sendcount + sendcount_extra, 4 );
+    /* Copy buffer to symmetric memory block */
+    const int req_size = num_send_elements  * sizeof_ipc_datatypes[ datatype ];
+    if (req_size > cur_buffer_size) {
+      symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+      symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+      cur_buffer_size = 2 * req_size;
+    }
 
     if ( rank == root )
     {
@@ -625,6 +649,13 @@ int TauCollectives_Gatherv(TauCollectives_Group*   group,
         total_number_of_recv_elements += recvcnts[i] + sendcount_extra;
       }
     }
+  }
+
+  const int req_size = total_number_of_recv_elements  * sizeof_ipc_datatypes[ datatype ];
+  if (req_size > cur_buffer_size) {
+      symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+      symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+      cur_buffer_size = 2 * req_size;
   }
 
   /* Copy buffer to symmetric memory block */
@@ -856,6 +887,13 @@ int TauCollectives_Reduce(TauCollectives_Group*    group,
     num_elements = ROUNDUPTO( count, 2 );
   }
 
+  const int req_size = num_elements  * sizeof_ipc_datatypes[ datatype ];
+  if (req_size > cur_buffer_size) {
+      symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+      symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+      cur_buffer_size = 2 * req_size;
+  }
+
   /* Copy buffer to symmetric memory block */
   memcpy(symmetric_buffer_a, sendbuf, count * sizeof_ipc_datatypes[datatype]);
 
@@ -1060,6 +1098,13 @@ int TauCollectives_Allreduce(TauCollectives_Group*    group,
     num_elements = ROUNDUPTO( count, 2 );
   }
 
+  const int req_size = num_elements  * sizeof_ipc_datatypes[ datatype ];
+  if (req_size > cur_buffer_size) {
+      symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+      symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+      cur_buffer_size = 2 * req_size;
+  }
+
   /* Copy buffer to symmetric memory block */
   memcpy( symmetric_buffer_a, sendbuf, count * sizeof_ipc_datatypes[ datatype ] );
 
@@ -1256,6 +1301,13 @@ int TauCollectives_Scatter(TauCollectives_Group*   group,
   int stride       = group->log_pe_stride;
   int size         = group->pe_size;
 
+  const int req_size = count  * sizeof_ipc_datatypes[ datatype ];
+  if (req_size > cur_buffer_size) {
+      symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+      symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+      cur_buffer_size = 2 * req_size;
+  }
+
   if ( rank == root )
   {
     /* root is the only sender */
@@ -1342,6 +1394,13 @@ int TauCollectives_Scatterv(TauCollectives_Group*   group,
   int start        = group->pe_start;
   int stride       = group->log_pe_stride;
   int size         = group->pe_size;
+
+  const int req_size = recvcount  * sizeof_ipc_datatypes[ datatype ];
+  if (req_size > cur_buffer_size) {
+      symmetric_buffer_a = shmem_realloc( symmetric_buffer_a, 2 * req_size);
+      symmetric_buffer_b = shmem_realloc( symmetric_buffer_b, 2 * req_size);
+      cur_buffer_size = 2 * req_size;
+  }
 
   if ( rank == root )
   {
