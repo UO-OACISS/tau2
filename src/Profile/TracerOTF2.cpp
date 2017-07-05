@@ -18,7 +18,7 @@
 **                                                                         **
 ****************************************************************************/
 
-#define TAU_OTF2_DEBUG
+//#define TAU_OTF2_DEBUG
 
 #define __STDC_FORMAT_MACROS
 #include <stdio.h>
@@ -82,6 +82,7 @@ static const int TAU_OTF2_GROUP_WORLD = 1;
 static bool otf2_initialized = false;
 static bool otf2_comms_shutdown = false;
 static bool otf2_finished = false;
+static bool otf2_disable = false;
 static OTF2_Archive * otf2_archive = NULL;
 
 // Time of first event recorded
@@ -390,6 +391,9 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
 {
+  if(otf2_disable) {
+    return;
+  }
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "TauTraceEventWithNodeId(%ld, %" PRId64 ", %d, %" PRIu64 ", %d, %d, %d)\n", ev, par, tid, ts, use_ts, node_id, kind);
 #endif
@@ -443,6 +447,9 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 
 extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
+    if(otf2_disable) {
+        return;
+    }
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "TauTraceOTF2Msg(%d, %d, %d, %d, %" PRIu64 ", %d, %d)\n", send_or_recv, type, other_id, length, ts, use_ts, node_id);
 #endif
@@ -451,7 +458,6 @@ extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int le
         return;
     }
     if(node_id != my_node()) {
-        std::cerr << "TAU: Warning: OTF2 can't write an event for one node from a different node" << std::endl;
         return;
     }
     x_uint64 time = use_ts ? ts : TauTraceGetTimeStamp(0);
@@ -573,7 +579,16 @@ static void TauTraceOTF2ExchangeStartTime() {
   fprintf(stderr, "TauTraceOTF2ExchangeStartTime()\n");
 #endif
     TauInternalFunctionGuard protects_this_function;
-    TauCollectives_Reduce(TauCollectives_Get_World(), &start_time, &global_start_time, 1, TAUCOLLECTIVES_UINT64_T, TAUCOLLECTIVES_MIN, 0);
+    if(tau_totalnodes(0, 0) == 1) {
+        global_start_time = start_time;
+    } else {
+        TauCollectives_Reduce(TauCollectives_Get_World(), &start_time, &global_start_time, 1, TAUCOLLECTIVES_UINT64_T, TAUCOLLECTIVES_MIN, 0);
+    }
+#ifdef TAU_OTF2_DEBUG
+    if(my_node() == 0) {
+        fprintf(stderr, "Global start time is: %" PRIu64 "\n", global_start_time);
+    }
+#endif
 }
 
 static void TauTraceOTF2ExchangeLocations() {
@@ -647,13 +662,21 @@ static void TauTraceOTF2ExchangeRegions() {
     if(my_node() == 0) {
         num_regions = new int[nodes];
     }
-    TauCollectives_Gather(TauCollectives_Get_World(), &my_num_regions, num_regions, 1, TAUCOLLECTIVES_INT, 0);
+    if(nodes == 1) {
+        num_regions[0] = my_num_regions;
+    } else {
+        TauCollectives_Gather(TauCollectives_Get_World(), &my_num_regions, num_regions, 1, TAUCOLLECTIVES_INT, 0);
+    }
     
     int my_region_db_size = function_names_str.size();
     if(my_node() == 0) {
         region_db_sizes = new int[nodes];
     }
-    TauCollectives_Gather(TauCollectives_Get_World(), &my_region_db_size, region_db_sizes, 1, TAUCOLLECTIVES_INT, 0);
+    if(nodes == 1) {
+        region_db_sizes[0] = my_region_db_size;
+    } else {
+        TauCollectives_Gather(TauCollectives_Get_World(), &my_region_db_size, region_db_sizes, 1, TAUCOLLECTIVES_INT, 0);
+    }
 
     // Exchange names
     int total_name_chars = 0;
@@ -664,7 +687,11 @@ static void TauTraceOTF2ExchangeRegions() {
         region_names = new char[total_name_chars];
     
     }
-    TauCollectives_Gatherv(TauCollectives_Get_World(), function_names, my_region_db_size, region_names, region_db_sizes, TAUCOLLECTIVES_CHAR, 0);
+    if(nodes == 1) {
+        memcpy(region_names, function_names, my_region_db_size);
+    } else {
+        TauCollectives_Gatherv(TauCollectives_Get_World(), function_names, my_region_db_size, region_names, region_db_sizes, TAUCOLLECTIVES_CHAR, 0);
+    }
 
     // Create and distribute a map of all region names to global id
     char * global_regions = NULL;
@@ -696,12 +723,16 @@ static void TauTraceOTF2ExchangeRegions() {
         global_regions = (char *) memcpy(global_regions, global_regions_str.c_str(), global_regions_size);    
     }
 
-    TauCollectives_Bcast(TauCollectives_Get_World(), &global_regions_size, 1, TAUCOLLECTIVES_INT, 0);
+    if(nodes > 1) {
+        TauCollectives_Bcast(TauCollectives_Get_World(), &global_regions_size, 1, TAUCOLLECTIVES_INT, 0);
+    }
     if(my_node() != 0) {
         global_regions = (char *)malloc(global_regions_size * sizeof(char));
     }
 
-    TauCollectives_Bcast(TauCollectives_Get_World(), global_regions, global_regions_size, TAUCOLLECTIVES_CHAR, 0);
+    if(nodes > 1) {
+        TauCollectives_Bcast(TauCollectives_Get_World(), global_regions, global_regions_size, TAUCOLLECTIVES_CHAR, 0);
+    }
 
     if(my_node() != 0) {
         int region_offset = 0;
@@ -729,6 +760,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
     const int nodes = tau_totalnodes(0, 0);
 
     TauCollectives_Barrier(TauCollectives_Get_World());
+    otf2_disable = true;
     // Now everyone is at the beginning of MPI_Finalize()
     TauTraceOTF2ExchangeStartTime();
     TauTraceOTF2ExchangeLocations();
@@ -738,6 +770,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauCollectives_Finalize();
 
     otf2_comms_shutdown = true;
+    otf2_disable = false;
     //TauTraceOTF2Close(tid);
 }
 
@@ -749,6 +782,10 @@ void TauTraceOTF2Close(int tid) {
     TauInternalFunctionGuard protects_this_function;
     if(tid != 0 || otf2_finished || !otf2_initialized) {
         return;
+    }
+
+    if(!otf2_comms_shutdown) {
+        TauTraceOTF2ShutdownComms(tid);
     }
 
     otf2_finished = true;

@@ -376,6 +376,10 @@ int TauCollectives_Bcast(TauCollectives_Group*   group,
   int size         = group->pe_size;
   int num_elements = count;
 
+  if(size == 1) {
+    return 0; // Only 1 node; nothing to do
+  }
+
   if ( datatype == TAUCOLLECTIVES_BYTE ||
        datatype == TAUCOLLECTIVES_CHAR ||
        datatype == TAUCOLLECTIVES_UNSIGNED_CHAR )
