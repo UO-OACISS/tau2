@@ -45,6 +45,7 @@
 #include <set>
 #include <vector>
 #include <utility>
+#include <algorithm>
 
 #include <otf2/otf2.h>
 #ifdef PTHREADS
@@ -142,6 +143,14 @@ static inline uint32_t my_node() {
     const uint32_t my_node = myRtsNode == -1 ? 0 : myRtsNode;
     return my_node;
 }
+
+template<class TContainer>
+static bool begins_with(const TContainer& input, const TContainer& match)
+{
+    return input.size() >= match.size()
+        && equal(match.begin(), match.end(), input.begin());
+}
+
 
 // Collective Callbacks -- GetSize and GetRank are mandatory
 // others are only needed when using SION substrate
@@ -314,7 +323,7 @@ void TauTraceOTF2FlushBuffer(int tid)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 }
-
+    
 /* Initialize tracing. */
 int TauTraceOTF2Init(int tid) {
   return TauTraceOTF2InitTS(tid, TauTraceGetTimeStamp(tid));
@@ -384,6 +393,9 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 #endif
     TauInternalFunctionGuard protects_this_function;
     buffers_written[tid] = true;
+    if(temp_buffers[tid] == NULL) {
+        return; // Nothing was saved for this thread 
+    }
     x_uint64 last_ts = 0;
     for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
       TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, it->kind);
@@ -546,8 +558,20 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     // Write all the functions out as Regions
     for (region_map_t::const_iterator it = global_region_map.begin(); it != global_region_map.end(); it++) {
         int thisFuncName = nextString++;
-        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, it->first.c_str()));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_USER, OTF2_REGION_FLAG_NONE, 0, 0, 0));
+        const std::string & region_name = it->first;
+        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, region_name.c_str()));
+        OTF2_Paradigm paradigm = OTF2_PARADIGM_USER;
+        if(strstr(region_name.c_str(), ".TAU")) {
+            paradigm = OTF2_PARADIGM_MEASUREMENT_SYSTEM;        
+        } else if(strstr(region_name.c_str(), "shmem_")) {
+            paradigm = OTF2_PARADIGM_SHMEM;
+        } else if(strstr(region_name.c_str(), "MPI_")) {
+            paradigm = OTF2_PARADIGM_MPI;
+        } else if(strstr(region_name.c_str(), "pthread_")) {
+            paradigm = OTF2_PARADIGM_PTHREAD;
+        }
+        
+        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, paradigm, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
 
     // Write global communicator
@@ -581,10 +605,11 @@ static void TauTraceOTF2WriteLocalDefinitions() {
 #endif
     TauInternalFunctionGuard protects_this_function;
     OTF2_IdMap * region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
+    const region_map_t & global_region_map_ref = global_region_map; 
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo * fi = *it;
         const uint64_t local_id  = fi->GetFunctionId();
-        const uint64_t global_id = global_region_map[string(fi->GetName())];
+        const uint64_t global_id = global_region_map_ref.find(string(fi->GetName()))->second;
         OTF2_EC(OTF2_IdMap_AddIdPair(region_map, local_id, global_id));
     }
     const int start_loc = my_location();
