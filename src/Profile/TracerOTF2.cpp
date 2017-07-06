@@ -583,13 +583,9 @@ static void TauTraceOTF2WriteLocalDefinitions() {
     OTF2_IdMap * region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo * fi = *it;
-        if(tau_totalnodes(0,0) < 2) {
-            OTF2_EC(OTF2_IdMap_AddIdPair(region_map, fi->GetFunctionId(), fi->GetFunctionId())); // identity map
-        } else {
-            const uint64_t local_id  = fi->GetFunctionId();
-            const uint64_t global_id = global_region_map[string(fi->GetName())];
-            OTF2_EC(OTF2_IdMap_AddIdPair(region_map, local_id, global_id));
-        }
+        const uint64_t local_id  = fi->GetFunctionId();
+        const uint64_t global_id = global_region_map[string(fi->GetName())];
+        OTF2_EC(OTF2_IdMap_AddIdPair(region_map, local_id, global_id));
     }
     const int start_loc = my_location();
     const int end_loc = start_loc + RtsLayer::getTotalThreads();
