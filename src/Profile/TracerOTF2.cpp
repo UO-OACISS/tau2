@@ -124,6 +124,25 @@ static region_map_t global_region_map;
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
 
+// Helper functions
+
+static inline OTF2_LocationRef my_location_offset() {
+    const int64_t myNode = RtsLayer::myNode();
+    return myNode == -1 ? 0 : (myNode * TAU_MAX_THREADS);
+}
+
+static inline OTF2_LocationRef my_location() {
+    const int64_t myNode = RtsLayer::myNode();
+    const int64_t myThread = RtsLayer::myThread();
+    return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
+}
+
+static inline uint32_t my_node() {
+    const int myRtsNode = RtsLayer::myNode();
+    const uint32_t my_node = myRtsNode == -1 ? 0 : myRtsNode;
+    return my_node;
+}
+
 // Collective Callbacks -- GetSize and GetRank are mandatory
 // others are only needed when using SION substrate
 
@@ -139,7 +158,7 @@ static OTF2_CallbackCode tau_collectives_get_rank(void*                   userDa
                                                   OTF2_CollectiveContext* commContext,
                                                   uint32_t*               rank )
 {
-  *rank = RtsLayer::myNode();
+  *rank = my_node();
   return OTF2_CALLBACK_SUCCESS;
 }
 
@@ -286,24 +305,6 @@ static OTF2_FlushCallbacks * get_tau_flush_callbacks() {
 }
 
 
-// Helper functions
-
-static inline OTF2_LocationRef my_location_offset() {
-    const int64_t myNode = RtsLayer::myNode();
-    return myNode == -1 ? 0 : (myNode * TAU_MAX_THREADS);
-}
-
-static inline OTF2_LocationRef my_location() {
-    const int64_t myNode = RtsLayer::myNode();
-    const int64_t myThread = RtsLayer::myThread();
-    return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
-}
-
-static inline uint32_t my_node() {
-    const int myRtsNode = RtsLayer::myNode();
-    const uint32_t my_node = myRtsNode == -1 ? 0 : myRtsNode;
-    return my_node;
-}
 
 // Tau Tracing API calls for OTF2
 
