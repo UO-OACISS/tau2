@@ -29,6 +29,8 @@
 #include <signal.h>
 #include <time.h>
 #include <inttypes.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
@@ -329,6 +331,35 @@ int TauTraceOTF2Init(int tid) {
   return TauTraceOTF2InitTS(tid, TauTraceGetTimeStamp(tid));
 }
 
+void remove_path(const char *pathname) {
+    struct dirent *entry = NULL;
+    DIR *dir = NULL;
+	struct stat sb;
+	if (stat(pathname, &sb) == 0 && S_ISDIR(sb.st_mode)) {
+    	dir = opendir(pathname);
+    	while((entry = readdir(dir)) != NULL) {
+        	DIR *sub_dir = NULL;
+        	FILE *file = NULL;
+        	char abs_path[100] = {0};
+        	if(*(entry->d_name) != '.') {
+            	sprintf(abs_path, "%s/%s", pathname, entry->d_name);
+            	sub_dir = opendir(abs_path);
+            	if(sub_dir != NULL) {
+                	closedir(sub_dir);
+                	remove_path(abs_path);
+            	} else {
+                	file = fopen(abs_path, "r");
+                	if(file != NULL) {
+                    	fclose(file);
+                    	remove(abs_path);
+                	}
+            	}
+        	}
+    	}
+    	remove(pathname);
+	}
+}
+
 int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 {
   TauInternalFunctionGuard protects_this_function;     
@@ -337,6 +368,16 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 #endif
   if(otf2_initialized || otf2_finished) {
       return 0;
+  }
+
+  if(my_node() == 0) {
+    const string trace_dir = TauEnv_get_tracedir();
+    const string trace_locs_dir = trace_dir + "/trace";
+    const string trace_defs = trace_dir + "/trace.def";
+    const string trace_anchor = trace_dir + "/trace.otf2";
+    remove_path(trace_locs_dir.c_str());
+    remove(trace_defs.c_str());
+    remove(trace_anchor.c_str());
   }
   otf2_archive = OTF2_Archive_Open(TauEnv_get_tracedir() /* path */,
                              "trace" /* filename */,
