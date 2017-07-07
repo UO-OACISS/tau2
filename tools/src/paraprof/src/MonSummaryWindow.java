@@ -51,7 +51,11 @@ import edu.uoregon.tau.perfdmf.Thread;
 
 public class MonSummaryWindow extends JFrame {
 
-    private ParaProfTrial ppTrial;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private ParaProfTrial ppTrial;
     private DataSource dataSource;
     private Function function;
     private Thread thread;
@@ -165,7 +169,11 @@ public class MonSummaryWindow extends JFrame {
 
     // *CWL* Should this be a module?
     public static class ScrollFlowLayout extends FlowLayout {
-        public final static int LEFT_TO_RIGHT = 0;
+        /**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+		public final static int LEFT_TO_RIGHT = 0;
         public final static int RIGHT_TO_LEFT = 1;
         public final static int TOP_TO_BOTTOM = 2;
 
@@ -347,6 +355,9 @@ public class MonSummaryWindow extends JFrame {
                 }
             }
         }
+        
+        br.close();
+        
         if (!found) {
             System.err.println("Warning, Function \"" + function.getName() + 
 			       "\" not found in histogram");
@@ -354,7 +365,8 @@ public class MonSummaryWindow extends JFrame {
 
     }
 
-    private JFreeChart createChart() {
+    @SuppressWarnings("deprecation")
+	private JFreeChart createChart() {
         dataset = new XYSeriesCollection();
         updateDataset();
         JFreeChart chart = ChartFactory.createXYLineChart("TauMon: " + canonicalName, 
@@ -377,7 +389,8 @@ public class MonSummaryWindow extends JFrame {
         }
     }
     
-    private MonSummaryWindow(ParaProfTrial ppTrial, 
+    @SuppressWarnings("deprecation")
+	private MonSummaryWindow(ParaProfTrial ppTrial, 
 			     Component invoker) 
 	throws Exception {
         this.ppTrial = ppTrial;

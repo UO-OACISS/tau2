@@ -852,6 +852,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 				topos.add(key.split(" ")[0]);
 				foundTopo=true;
 			}
+			
 		}
 		
 		if(!foundTopo){
@@ -886,6 +887,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 			if(base==null){
 				return topos;
 			}
+			boolean foundCray=false;
 			keys = base.getMetaData().keySet();
 			for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
 				String key = it.next().name;
@@ -893,6 +895,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 				{
 					topos.add(key.split(" ")[0]);
 					foundTopo=true;
+				}
+				if(!foundCray&&key.startsWith("CRAY_PMI")){
+					topos.add("CRAY_PMI");
+					foundTopo=true;
+					foundCray=true;
 				}
 			}
 		}
