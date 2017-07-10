@@ -279,22 +279,21 @@ tau_collectives_scatterv( void*                   userData,
     return OTF2_CALLBACK_SUCCESS;
 }
 
-static const OTF2_CollectiveCallbacks tau_otf2_collectives =
-{
-    .otf2_release           = NULL,
-    .otf2_get_size          = tau_collectives_get_size,
-    .otf2_get_rank          = tau_collectives_get_rank,
-    .otf2_create_local_comm = NULL,
-    .otf2_free_local_comm   = NULL,
-    .otf2_barrier           = tau_collectives_barrier,
-    .otf2_bcast             = tau_collectives_bcast,
-    .otf2_gather            = tau_collectives_gather,
-    .otf2_gatherv           = tau_collectives_gatherv,
-    .otf2_scatter           = tau_collectives_scatter,
-    .otf2_scatterv          = tau_collectives_scatterv
-};
-
-
+static OTF2_CollectiveCallbacks * get_tau_collective_callbacks() {
+    static OTF2_CollectiveCallbacks cb;
+    cb.otf2_release           = NULL;
+    cb.otf2_get_size          = tau_collectives_get_size;
+    cb.otf2_get_rank          = tau_collectives_get_rank;
+    cb.otf2_create_local_comm = NULL;
+    cb.otf2_free_local_comm   = NULL;
+    cb.otf2_barrier           = tau_collectives_barrier;
+    cb.otf2_bcast             = tau_collectives_bcast;
+    cb.otf2_gather            = tau_collectives_gather;
+    cb.otf2_gatherv           = tau_collectives_gatherv;
+    cb.otf2_scatter           = tau_collectives_scatter;
+    cb.otf2_scatterv          = tau_collectives_scatterv;
+    return &cb;
+}
 
 // Flush Callbacks -- both mandatory
 
@@ -390,7 +389,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 
   OTF2_EC(OTF2_Archive_SetFlushCallbacks(otf2_archive, get_tau_flush_callbacks(), NULL));
   TauCollectives_Init();
-  OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, &tau_otf2_collectives, NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World(), NULL));
+  OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, get_tau_collective_callbacks(), NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World(), NULL));
   OTF2_EC(OTF2_Archive_SetCreator(otf2_archive, "TAU"));
 #if defined(TAU_OPENMP)
   OTF2_EC(OTF2_OpenMP_Archive_SetLockingCallbacks(otf2_archive));
