@@ -372,15 +372,15 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 
   if(my_node() == 0) {
     const string trace_dir = TauEnv_get_tracedir();
-    const string trace_locs_dir = trace_dir + "/trace";
-    const string trace_defs = trace_dir + "/trace.def";
-    const string trace_anchor = trace_dir + "/trace.otf2";
+    const string trace_locs_dir = trace_dir + "/traces";
+    const string trace_defs = trace_dir + "/traces.def";
+    const string trace_anchor = trace_dir + "/traces.otf2";
     remove_path(trace_locs_dir.c_str());
     remove(trace_defs.c_str());
     remove(trace_anchor.c_str());
   }
   otf2_archive = OTF2_Archive_Open(TauEnv_get_tracedir() /* path */,
-                             "trace" /* filename */,
+                             "traces" /* filename */,
                              OTF2_FILEMODE_WRITE,
                              OTF2_CHUNK_SIZE_EVENTS_DEFAULT,
                              OTF2_CHUNK_SIZE_DEFINITIONS_DEFAULT,
@@ -666,7 +666,7 @@ static void TauTraceOTF2WriteLocalDefinitions() {
 
 static void TauTraceOTF2ExchangeStartTime() {
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "TauTraceOTF2ExchangeStartTime()\n");
+  fprintf(stderr, "%u: TauTraceOTF2ExchangeStartTime()\n", my_node());
 #endif
     TauInternalFunctionGuard protects_this_function;
     if(tau_totalnodes(0, 0) == 1) {
@@ -683,7 +683,7 @@ static void TauTraceOTF2ExchangeStartTime() {
 
 static void TauTraceOTF2ExchangeLocations() {
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "TauTraceOTF2ExchangeLocations()\n");
+  fprintf(stderr, "%u: TauTraceOTF2ExchangeLocations()\n", my_node());
 #endif
     TauInternalFunctionGuard protects_this_function;
     if(my_node() == 0) {
@@ -699,7 +699,7 @@ static void TauTraceOTF2ExchangeLocations() {
 
 static void TauTraceOTF2ExchangeEventsWritten() {
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "TauTraceOTF2ExchangeEventsWritten()\n");
+  fprintf(stderr, "%u: TauTraceOTF2ExchangeEventsWritten()\n", my_node());
 #endif
     TauInternalFunctionGuard protects_this_function;
     const int nodes = tau_totalnodes(0, 0);
@@ -717,19 +717,28 @@ static void TauTraceOTF2ExchangeEventsWritten() {
         OTF2_EvtWriter * evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, offset + i);
         TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
         OTF2_EC(OTF2_EvtWriter_GetNumberOfEvents(evt_writer, my_num_events + i));
+#ifdef TAU_OTF2_DEBUG
+        fprintf(stderr, "%u: loc %d has written %u events.\n", my_node(), i, my_num_events[i]);
+#endif
     }
 
     if(nodes == 1) {
         memcpy(num_events_written, my_num_events, my_num_threads);
     } else {
+#ifdef TAU_OTF2_DEBUG
+        fprintf(stderr, "%u: Calling TauCollectives_Gatherv\n", my_node());
+#endif
         TauCollectives_Gatherv(TauCollectives_Get_World(), &my_num_events, my_num_threads, num_events_written, num_locations, TAUCOLLECTIVES_UINT64_T, 0);
+#ifdef TAU_OTF2_DEBUG
+        fprintf(stderr, "%u: Back from TauCollectives_Gatherv\n", my_node());
+#endif
     }
 
 }
 
 static void TauTraceOTF2ExchangeRegions() {
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "TauTraceOTF2ExchangeRegions()\n");
+  fprintf(stderr, "%u: TauTraceOTF2ExchangeRegions()\n", my_node());
 #endif
     TauInternalFunctionGuard protects_this_function;
 
@@ -840,7 +849,7 @@ static void TauTraceOTF2ExchangeRegions() {
 
 void TauTraceOTF2ShutdownComms(int tid) {
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "TauTraceOTF2ShutdownComms(%d)\n", tid);
+  fprintf(stderr, "%u: TauTraceOTF2ShutdownComms(%d)\n", my_node(), tid);
 #endif
     TauInternalFunctionGuard protects_this_function;
     if(!otf2_initialized || otf2_finished || otf2_comms_shutdown) {
