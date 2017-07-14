@@ -8752,50 +8752,6 @@ if [ $ebs2otf = yes ] ; then
 	echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
     fi
 fi
-if [ $otf = yes ] ; then
-    if [ "$otflib" = "" ] ; then
-	if [ -d $otfdir/lib ]; then
-	    otflib="$otfdir/lib"
-	else
-	    otflib="$otfdir/${architecture}/lib"
-	fi
-	echo "OTF Library implicitly set to $otflib"
-    fi
-    if [ "$otfinc" = "" ] ; then
-	if [ -r $otfdir/include/otf.h ]; then
-	    otfinc="$otfdir/include"
-	else
-	    if [ -r $otfdir/include/open-trace-format/otf.h ]; then
-		otfinc="$otfdir/include/open-trace-format"
-	    fi
-	fi
-    if [ "$otfinc" = "" ] ; then
-        if [ -r $otfdir/include/otf2/otf2.h ]; then
-            otfinc="$otfdir/include"
-        fi
-    fi
-	echo "OTF Header directory implicitly set to $otfinc"
-    fi
-    if [ ! -d $otflib ]
-    then
-	echo "Error: No available OTF support. Library not found at $otflib."
-	exit 1
-    fi
-    if [ ! -d $otfinc ]
-    then
-	echo "Error: No available OTF support. Headers not found at $otfinc."
-	exit 1
-    fi
-    if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
-	echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
-	exit 1
-	# *CWL* Need version control code here. Still trying to decide the
-	#    best way about it. The above conditional will at least trim away
-	#    ancient versions of OTF.
-    fi
-
-    fixmakeargs="$fixmakeargs otflib=$otflib otfinc=$otfinc"
-fi
 
 if [ $ebs_has_rt = yes ] ; then
     fixmakeargs="$fixmakeargs EBS_HAS_RT ebs_clock_res=$ebs_clock_res"
@@ -9417,6 +9373,52 @@ if [ $scorep = yes ] ; then
     fi
 
 fi
+
+if [ $otf = yes ] ; then
+    if [ "$otflib" = "" ] ; then
+	if [ -d $otfdir/lib ]; then
+	    otflib="$otfdir/lib"
+	else
+	    otflib="$otfdir/${architecture}/lib"
+	fi
+	echo "OTF Library implicitly set to $otflib"
+    fi
+    if [ "$otfinc" = "" ] ; then
+	if [ -r $otfdir/include/otf.h ]; then
+	    otfinc="$otfdir/include"
+	else
+	    if [ -r $otfdir/include/open-trace-format/otf.h ]; then
+		otfinc="$otfdir/include/open-trace-format"
+	    fi
+	fi
+    if [ "$otfinc" = "" ] ; then
+        if [ -r $otfdir/include/otf2/otf2.h ]; then
+            otfinc="$otfdir/include"
+        fi
+    fi
+	echo "OTF Header directory implicitly set to $otfinc"
+    fi
+    if [ ! -d $otflib ]
+    then
+	echo "Error: No available OTF support. Library not found at $otflib."
+	exit 1
+    fi
+    if [ ! -d $otfinc ]
+    then
+	echo "Error: No available OTF support. Headers not found at $otfinc."
+	exit 1
+    fi
+    if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
+	echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
+	exit 1
+	# *CWL* Need version control code here. Still trying to decide the
+	#    best way about it. The above conditional will at least trim away
+	#    ancient versions of OTF.
+    fi
+
+    fixmakeargs="$fixmakeargs otflib=$otflib otfinc=$otfinc"
+fi
+
 if [ $epilog = yes ] ; then
 
     if [ -f $epiloglibdir/libcubew3.a ] ; then
