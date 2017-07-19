@@ -27,6 +27,15 @@
 # TAUINC.
 #######################################################################
 
+#######################################################################
+# Just in case the user didn't set the TAU_MAKEFILE environment variable...
+TAU_MAKEFILE:=$(realpath $(lastword $(MAKEFILE_LIST)))
+# # set it now!
+export TAU_MAKEFILE
+# # optionally, echo it.
+# $(info $$TAU_MAKEFILE is ${TAU_MAKEFILE})
+#######################################################################
+
 # See this file for a record of the configuration environment
 CONF_ENV_FILE=
 
