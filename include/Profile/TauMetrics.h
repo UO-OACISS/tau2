@@ -43,6 +43,7 @@ enum TauMetricCuptiFlag {
 };
 
 int TauMetrics_init();
+int TauMetrics_finalize();
 
 void TauMetrics_getMetrics(int tid, double values[]);
 
@@ -85,6 +86,7 @@ double TauMetrics_getTraceMetricValue(int tid);
 
 
 x_uint64 TauMetrics_getInitialTimeStamp();
+x_uint64 TauMetrics_getFinalTimeStamp();
 
 x_uint64 TauMetrics_getTimeOfDay();
 

@@ -267,7 +267,11 @@ void Tau_metadata_register(const char *name, const char *value) {
   Tau_metadata(name, value);
 }
 
-
+#ifdef TAU_WINDOWS
+const char *Tau_metadata_timeFormat = "%I64d";
+#else
+const char *Tau_metadata_timeFormat = "%lld";
+#endif // TAU_WINDOWS
 
 int Tau_metadata_fillMetaData() 
 {
@@ -280,15 +284,8 @@ int Tau_metadata_fillMetaData()
   filled = 1;
 
 
-#ifdef TAU_WINDOWS
-  const char *timeFormat = "%I64d";
-#else
-  const char *timeFormat = "%lld";
-#endif // TAU_WINDOWS
-
-
   char tmpstr[4096];
-  sprintf (tmpstr, timeFormat, TauMetrics_getInitialTimeStamp());
+  sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getInitialTimeStamp());
   Tau_metadata_register("Starting Timestamp", tmpstr);
 
 
@@ -316,7 +313,7 @@ int Tau_metadata_fillMetaData()
   Tau_metadata_register("Local Time", tmpstr);
 
   // write out the timestamp (number of microseconds since epoch (unsigned long long)
-  sprintf (tmpstr, timeFormat, TauMetrics_getTimeOfDay());
+  sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getTimeOfDay());
   Tau_metadata_register("Timestamp", tmpstr);
 
 
@@ -899,6 +896,10 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
 }
 
 static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
+  char tmpstr[4096];
+  sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getFinalTimeStamp());
+  Tau_metadata_register("Ending Timestamp", tmpstr);
+
   const char *endl = "";
   //newline = true;
   if (newline) {
