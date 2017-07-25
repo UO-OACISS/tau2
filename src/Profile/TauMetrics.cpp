@@ -115,7 +115,9 @@ static int traceMetric = 0;
 static function functionArray[TAU_MAX_METRICS];
 
 /* gtod based initial timestamp, used for snapshots and other stuff */
-static x_uint64 initialTimeStamp;
+static x_uint64 initialTimeStamp = 0L;
+/* gtod based final timestamp, so all threads agree when we exited */
+static x_uint64 finalTimeStamp = 0L;
 
 /* flags for atomic metrics */
 char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = {NULL};
@@ -764,6 +766,10 @@ extern "C" x_uint64 TauMetrics_getInitialTimeStamp() {
   return initialTimeStamp;
 }
 
+extern "C" x_uint64 TauMetrics_getFinalTimeStamp() {
+  return finalTimeStamp;
+}
+
 
 extern "C" x_uint64 TauMetrics_getTimeOfDay() {
   x_uint64 timestamp;
@@ -836,6 +842,15 @@ int TauMetrics_init() {
   return 0;
 }
 
+/*********************************************************************
+ * Finalize the metrics module
+ ********************************************************************/
+int TauMetrics_finalize() {
+  if (finalTimeStamp == 0L) {
+    finalTimeStamp = TauMetrics_getTimeOfDay();
+  }
+}
+ 
 /*********************************************************************
  * Trigger atomic events for each metric
  ********************************************************************/
