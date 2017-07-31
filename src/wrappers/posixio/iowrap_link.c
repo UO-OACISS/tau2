@@ -16,6 +16,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <Profile/TauIoWrap.h>
+#include <iowrap_metadata.h>
 
 // We should forward declare the TauEnv functions, but TAU_ASSERT is defined
 // in tau_internal.h, and variadic macros are not supported by pgcc.
@@ -99,7 +100,11 @@ int __wrap_open(const char *pathname, int flags, ...)
       return __real_open(pathname, flags, mode); 
   }
   Tau_global_incr_insideTAU();
- Tau_iowrap_checkInit();
+  Tau_iowrap_checkInit();
+
+  /* get the name of the current timer, current thread and get a timestamp */
+  TAU_IOWRAPPER_METADATA_SETUP
+
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -111,7 +116,7 @@ int __wrap_open(const char *pathname, int flags, ...)
   if (ret != -1) {
     Tau_iowrap_registerEvents(ret, pathname);
   }
-
+  
   if (TauEnv_get_track_io_params()) {
     TAU_REGISTER_EVENT(open_fd, "OPEN flags");
     TAU_REGISTER_EVENT(open_ret, "OPEN ret");
@@ -119,6 +124,9 @@ int __wrap_open(const char *pathname, int flags, ...)
     TAU_EVENT(open_ret, ret);
   }
   TAU_PROFILE_STOP(t);
+
+  TAU_IOWRAPPER_WRITE_FILE_METADATA(flags, pathname)
+
   Tau_global_decr_insideTAU();
 
   TAU_VERBOSE("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
@@ -151,7 +159,11 @@ int __wrap_open64(const char *pathname, int flags, ...)
       return __real_open64(pathname, flags, mode);
   }
   Tau_global_incr_insideTAU();
-Tau_iowrap_checkInit();
+  Tau_iowrap_checkInit();
+
+  /* get the name of the current timer, current thread and get a timestamp */
+  TAU_IOWRAPPER_METADATA_SETUP
+
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -171,6 +183,9 @@ Tau_iowrap_checkInit();
     TAU_EVENT(open64_ret, ret);
   }
   TAU_PROFILE_STOP(t);
+
+  TAU_IOWRAPPER_WRITE_FILE_METADATA(flags, pathname)
+
   Tau_global_decr_insideTAU();
 
   TAU_VERBOSE("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
@@ -192,6 +207,10 @@ int __wrap_creat(const char *pathname, mode_t mode)
   }
   Tau_global_incr_insideTAU();
 Tau_iowrap_checkInit();
+
+  /* get the name of the current timer, current thread and get a timestamp */
+  TAU_IOWRAPPER_METADATA_SETUP
+
   TAU_PROFILE_TIMER(t, "creat()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -208,6 +227,9 @@ Tau_iowrap_checkInit();
     TAU_EVENT(creat_ret, ret);
   }
   TAU_PROFILE_STOP(t);
+
+  TAU_IOWRAPPER_WRITE_FILE_METADATA(O_WRONLY, pathname)
+
   Tau_global_decr_insideTAU();
 
   TAU_VERBOSE("creat called on pathname %s with mode %d: ret %d\n", pathname, mode, ret);
@@ -229,6 +251,10 @@ int __wrap_creat64(const char *pathname, mode_t mode)
   }
   Tau_global_incr_insideTAU();
   Tau_iowrap_checkInit();
+
+  /* get the name of the current timer, current thread and get a timestamp */
+  TAU_IOWRAPPER_METADATA_SETUP
+
   TAU_PROFILE_TIMER(t, "creat64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -245,6 +271,9 @@ int __wrap_creat64(const char *pathname, mode_t mode)
     TAU_EVENT(creat64_ret, ret);
   }
   TAU_PROFILE_STOP(t);
+
+  TAU_IOWRAPPER_WRITE_FILE_METADATA(O_WRONLY, pathname)
+
   Tau_global_decr_insideTAU();
 
   TAU_VERBOSE("creat called on pathname %s with mode %d: ret %d\n", pathname, mode, ret);
@@ -266,6 +295,10 @@ FILE * __wrap_fopen(const char *pathname, const char * mode)
   }
   Tau_global_incr_insideTAU();
     Tau_iowrap_checkInit();
+
+  /* get the name of the current timer, current thread and get a timestamp */
+  TAU_IOWRAPPER_METADATA_SETUP
+
   TAU_PROFILE_TIMER(t, "fopen()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -282,6 +315,9 @@ FILE * __wrap_fopen(const char *pathname, const char * mode)
 */
 
   TAU_PROFILE_STOP(t);
+
+  TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, pathname)
+
   Tau_global_decr_insideTAU();
 
   TAU_VERBOSE("fopen called with pathname=%s, mode=%d\n", pathname, mode);
@@ -303,6 +339,10 @@ FILE * __wrap_fopen64(const char *pathname, const char * mode)
   }
   Tau_global_incr_insideTAU();
   Tau_iowrap_checkInit();
+
+  /* get the name of the current timer, current thread and get a timestamp */
+  TAU_IOWRAPPER_METADATA_SETUP
+
   TAU_PROFILE_TIMER(t, "fopen64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -320,6 +360,9 @@ FILE * __wrap_fopen64(const char *pathname, const char * mode)
 */
 
   TAU_PROFILE_STOP(t);
+
+  TAU_IOWRAPPER_WRITE_FILE_METADATA_FOPEN(mode, pathname)
+
   Tau_global_decr_insideTAU();
 
   TAU_VERBOSE("fopen64 called with pathname=%s, mode=%d\n", pathname, mode);

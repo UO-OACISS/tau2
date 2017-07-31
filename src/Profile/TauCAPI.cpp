@@ -1885,6 +1885,10 @@ extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid)
   }
 }
 
+extern "C" const char * Tau_get_current_timer_name(int tid) {
+   return TauInternal_CurrentProfiler(tid)->ThisFunction->GetName();
+}
+
 extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
    Tau_stop_top_level_timer_if_necessary_task(Tau_get_thread());
 }

@@ -498,6 +498,7 @@ void TAUDECL Tau_create_top_level_timer_if_necessary_task(int task);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
 
 // metadata functions
+const char * TAUDECL Tau_get_current_timer_name(int tid);
 void TAUDECL Tau_metadata(const char *name, const char *value);
 void TAUDECL Tau_phase_metadata(const char *name, const char *value);
 void TAUDECL Tau_context_metadata(const char *name, const char *value);
