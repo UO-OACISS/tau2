@@ -1,0 +1,19 @@
+To run this example, make sure that you have configured TAU with the -iowrapper
+option.
+
+For example:
+
+./configure -pdt=/usr/local/pdtoolkit/3.24 -iowrapper
+
+build the example in this directory using 'make'.  Then run the 'go.sh' script.
+
+Notes:
+ - The reader and writer programs will use the TAU linker to wrap IO calls.
+ - The reader2 and writer2 programs will require tau_exec to replace the IO
+   calls with the wrappers in the LD_PRELOAD library from TAU.
+ - See the go.sh script for more details.
+
+Then, to merge the profiles, use the tau_prof2json.py script:
+
+tau_prof2json.py -o linker.json ./writer_profiles ./reader_profiles
+tau_prof2json.py -o wrapper.json ./writer2_profiles ./reader2_profiles

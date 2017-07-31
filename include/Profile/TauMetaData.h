@@ -20,8 +20,8 @@
 #ifndef _TAU_METADATA_H_
 #define _TAU_METADATA_H_
 
-#include <TauMetaDataTypes.h>
-#include <TauUtil.h>
+#include <Profile/TauMetaDataTypes.h>
+#include <Profile/TauUtil.h>
 #include <map>
 #include <string.h>
 #include <sstream>
