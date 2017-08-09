@@ -199,6 +199,8 @@ using namespace std;
 // pthread stack size default
 #define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
 
+#define TAU_MERGE_METADATA 1
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -304,6 +306,7 @@ static size_t env_memdbg_overhead_value = 0;
 static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
+static int env_merge_metadata = 1;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
 static int env_papi_multiplexing = 0;
@@ -1097,6 +1100,10 @@ int TauEnv_get_memdbg_attempt_continue() {
 
 int TauEnv_get_pthread_stack_size() {
   return env_pthread_stack_size;
+}
+
+int TauEnv_get_merge_metadata(){
+  return env_merge_metadata;
 }
 
 #ifdef TAU_ANDROID
@@ -2271,6 +2278,15 @@ void TauEnv_initialize()
       env_bfd_lookup = 0;
       TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
       TAU_METADATA("TAU_BFD_LOOKUP", "off");
+    }
+
+    tmp = getconf("TAU_MERGE_METADATA");
+    if (parse_bool(tmp, TAU_MERGE_METADATA)) {
+      env_merge_metadata = 1;
+      TAU_VERBOSE("TAU: Metadata Merging Enabled\n");
+    } else {
+      env_merge_metadata = 0;
+      TAU_VERBOSE("TAU: Metadata Merging Disabled\n");
     }
 
 #if defined(TAU_TBB_SUPPORT) && defined(TAU_MPI)
