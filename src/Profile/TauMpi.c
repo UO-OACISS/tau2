@@ -1571,7 +1571,9 @@ int  MPI_Finalize(  )
   */
 
   // merge TAU metadata
-  Tau_metadataMerge_mergeMetaData();
+  if (TauEnv_get_merge_metadata()) {
+    Tau_metadataMerge_mergeMetaData();
+  }
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {

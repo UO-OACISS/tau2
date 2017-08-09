@@ -1509,7 +1509,9 @@ int TauProfiler_StoreData(int tid)
 #ifndef TAU_SHMEM
 	/* Only thread 0 should create a merged profile. */
     if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-      Tau_metadataMerge_mergeMetaData();
+      if(TauEnv_get_merge_metadata()) {
+        Tau_metadataMerge_mergeMetaData();
+      }
       /* Create a merged profile if requested */
       Tau_mergeProfiles_MPI();
 	}
@@ -1525,7 +1527,9 @@ int TauProfiler_StoreData(int tid)
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     Tau_global_setLightsOut();
-    Tau_metadataMerge_mergeMetaData_SHMEM();
+    if(TauEnv_get_merge_metadata()) {
+      Tau_metadataMerge_mergeMetaData_SHMEM();
+    }
     Tau_mergeProfiles_SHMEM();
     __real_shmem_finalize();
   }
