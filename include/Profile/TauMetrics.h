@@ -43,7 +43,7 @@ enum TauMetricCuptiFlag {
 };
 
 int TauMetrics_init();
-int TauMetrics_finalize();
+void TauMetrics_finalize();
 
 void TauMetrics_getMetrics(int tid, double values[]);
 
