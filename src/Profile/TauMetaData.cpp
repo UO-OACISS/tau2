@@ -798,6 +798,14 @@ vector<string> result;
   if (rc == 0) {
     Tau_metadata_register("Executable", buffer);
   }
+
+  char *answer = getcwd(buffer, size);
+  string s_cwd;
+  if (answer)
+  {
+    Tau_metadata_register("CWD", answer);
+  }
+
 #endif /* __linux__ */
 
   char *user = getenv("USER");
