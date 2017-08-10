@@ -845,7 +845,7 @@ int TauMetrics_init() {
 /*********************************************************************
  * Finalize the metrics module
  ********************************************************************/
-int TauMetrics_finalize() {
+void TauMetrics_finalize() {
   if (finalTimeStamp == 0L) {
     finalTimeStamp = TauMetrics_getTimeOfDay();
   }

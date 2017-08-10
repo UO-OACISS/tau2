@@ -60,6 +60,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #endif
 #endif//TAU_CRAYCNL
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 using namespace std;
 using namespace tau;
 
@@ -760,6 +764,7 @@ vector<string> result;
   if (rc != -1) {
     Tau_metadata_register("Executable", buffer);
   }
+
   bzero(buffer, 4096);
   rc = readlink("/proc/self/cwd", buffer, 4096);
   if (rc != -1) {
@@ -781,6 +786,17 @@ vector<string> result;
     }    
     Tau_metadata_register("Command Line", os.c_str());
     fclose(f);
+  }
+
+#elif defined(__APPLE__)
+
+  char buffer[4096];
+  bzero(buffer, 4096);
+  uint32_t size = sizeof(buffer);
+  int rc = _NSGetExecutablePath(buffer, &size);
+  printf("%s\n",buffer);
+  if (rc == 0) {
+    Tau_metadata_register("Executable", buffer);
   }
 #endif /* __linux__ */
 
