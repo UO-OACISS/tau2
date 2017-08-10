@@ -13,7 +13,7 @@ from collections import OrderedDict
 workflow_metadata_str = "Workflow metadata"
 metadata_str = "metadata"
 global_data = None
-have_workflow = False
+have_workflow_file = False
 
 """
     Parse the "invalid" TAU XML
@@ -64,21 +64,26 @@ def parse_args(arguments):
 
 def extract_workflow_metadata(component_name, thread_name, max_inclusive):
     global global_data
-    global have_workflow
+    global have_workflow_file
+    global workflow_metadata_str
     # This is the root rank/thread for an application, so extract some key info
     workflow_dict = global_data[workflow_metadata_str]
     app_dict = global_data[component_name][metadata_str][thread_name]
-    time_stamp = app_dict["Timestamp"]
+    start_time_stamp = app_dict["Starting Timestamp"]
+    end_time_stamp = app_dict["Ending Timestamp"]
+    if end_time_stamp == None:
+        end_time_stamp = str(long(start_time_stamp) + max_inclusive)
     local_time = app_dict["Local Time"]
-    if time_stamp != None and have_workflow:
+    if start_time_stamp != None and have_workflow_file:
         for wc in workflow_dict["Workflow Component"]:
             if wc["name"] == component_name:
-                wc["start-timestamp"] = time_stamp
-                wc["end-timestamp"] = str(long(time_stamp) + max_inclusive)
+                wc["start-timestamp"] = start_time_stamp
+                wc["end-timestamp"] = end_time_stamp
                 wc["Local-Time"] = local_time
         for wc in workflow_dict["Workflow Instance"]:
-            if "timestamp" not in wc or wc["timestamp"] > time_stamp:
-                wc["timestamp"] = time_stamp
+            if "timestamp" not in wc or wc["start-timestamp"] > start_time_stamp:
+                wc["start-timestamp"] = start_time_stamp
+                wc["end-timestamp"] = end_time_stamp
                 wc["Local-Time"] = local_time
     app_name = app_dict["Executable"]
     found = False
@@ -102,10 +107,30 @@ def extract_workflow_metadata(component_name, thread_name, max_inclusive):
     app_instance["process-id"] = app_dict["pid"]
     app_instance["application-id"] = app_id
     app_instance["event-type"] = ""
-    app_instance["start-timestamp"] = time_stamp
-    app_instance["end-timestamp"] = str(long(time_stamp) + max_inclusive)
+    app_instance["start-timestamp"] = start_time_stamp
+    app_instance["end-timestamp"] = end_time_stamp
     app_instance["Local-Time"] = local_time
     workflow_dict["Application-instance"].append(app_instance)
+    index = 0
+    while True:
+        name = "posix open[" + str(index) + "]"
+        if name in app_dict:
+            json_str = app_dict[name]
+        else:
+            break
+        index = index + 1
+    # add workflow instance data to the global metadata section
+    if not have_workflow_file:
+        workflow_component = OrderedDict()
+        workflow_component["id"] = app_id
+        workflow_component["name"] = app_name
+        workflow_component["location-id"] = 1
+        workflow_component["application-id"] = app_id
+        workflow_component["start-timestamp"] = start_time_stamp
+        workflow_component["end-timestamp"] = end_time_stamp
+        workflow_component["Local-Time"] = local_time
+        workflow_dict["Workflow Component"].append(workflow_component)
+
 
 def parse_functions(node, context, thread, infile, data, num_functions, function_map):
     max_inclusive = 0
@@ -319,21 +344,31 @@ def parse_directory(indir, index):
     for p in profiles:
         parse_profile(indir, p, application_metadata, function_map, counter_map)
 
+def make_workflow_instance():
+    instance = OrderedDict()
+    instance["id"] = 1
+    instance["name"] = "Workflow Instance"
+    instance["location-id"] = 1
+    instance["version"] = ""
+    return instance
+
 """
 Main method
 """
 def main(arguments):
     global workflow_metadata_str
     global global_data
-    global have_workflow
+    global have_workflow_file
     # parse the arguments
     args = parse_args(arguments)
     global_data = OrderedDict()
     if args.workflow != None:
         global_data[workflow_metadata_str] = json.load(open(args.workflow), object_pairs_hook=OrderedDict)
-        have_workflow = True
+        have_workflow_file = True
     else:
         global_data[workflow_metadata_str] = OrderedDict()
+        global_data[workflow_metadata_str]["Workflow Instance"] = make_workflow_instance()
+        global_data[workflow_metadata_str]["Workflow Component"] = []
     global_data[workflow_metadata_str]["Application"] = []
     global_data[workflow_metadata_str]["Application-instance"] = []
 
