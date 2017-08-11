@@ -14,6 +14,9 @@ workflow_metadata_str = "Workflow metadata"
 metadata_str = "metadata"
 global_data = None
 have_workflow_file = False
+group_totals = None
+workflow_start = 0
+workflow_end = 0
 
 """
     Parse the "invalid" TAU XML
@@ -66,6 +69,8 @@ def extract_workflow_metadata(component_name, thread_name, max_inclusive):
     global global_data
     global have_workflow_file
     global workflow_metadata_str
+    global workflow_start
+    global workflow_end
     # This is the root rank/thread for an application, so extract some key info
     workflow_dict = global_data[workflow_metadata_str]
     app_dict = global_data[component_name][metadata_str][thread_name]
@@ -73,6 +78,10 @@ def extract_workflow_metadata(component_name, thread_name, max_inclusive):
     end_time_stamp = app_dict["Ending Timestamp"]
     if end_time_stamp == None:
         end_time_stamp = str(long(start_time_stamp) + max_inclusive)
+    if workflow_start == 0 or workflow_start > long(start_time_stamp):
+        workflow_start = long(start_time_stamp)
+    if workflow_end == 0 or workflow_end < long(end_time_stamp):
+        workflow_end = long(end_time_stamp)
     local_time = app_dict["Local Time"]
     if start_time_stamp != None and have_workflow_file:
         for wc in workflow_dict["Workflow Component"]:
@@ -130,9 +139,10 @@ def extract_workflow_metadata(component_name, thread_name, max_inclusive):
         workflow_component["end-timestamp"] = end_time_stamp
         workflow_component["Local-Time"] = local_time
         workflow_dict["Workflow Component"].append(workflow_component)
-
+    return workflow_component
 
 def parse_functions(node, context, thread, infile, data, num_functions, function_map):
+    global group_totals
     max_inclusive = 0
     # Function looks like:
     # "".TAU application" 1 0 8626018 8626018 0 GROUP="TAU_USER""
@@ -193,11 +203,41 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
             timer["Subroutines"] = long(tokens[1])
             timer["Exclusive Time"] = long(tokens[2])
             timer["Inclusive Time"] = long(tokens[3])
+            group = tokens[5]
+            if group not in group_totals:
+                group_totals[group] = long(tokens[2])
+            else:
+                group_totals[group] = group_totals[group] + long(tokens[2])
             data["Timers"].append(timer)
             if max_inclusive < long(tokens[3]):
                 max_inclusive = long(tokens[3])
     return max_inclusive
-    
+
+def extract_group_totals():
+    global group_totals
+    global global_data
+    tmp = global_data["Workflow metadata"]["Workflow Component"]
+    application_metadata = tmp[len(tmp) - 1]
+    threads = group_totals["threads"]
+    application_metadata["Processes"] = threads
+    comm_time = 0
+    io_time = 0
+    user_time = 0
+    for key in group_totals:
+        if key.find("MPI") != -1:
+            comm_time = comm_time + group_totals[key]
+        if key.find("TAU_IO") != -1:
+            io_time = io_time + group_totals[key]
+        if key.find("TAU_USER") != -1:
+            user_time = user_time + group_totals[key]
+    if comm_time > 0:
+        application_metadata["aggr_communication_time"] = comm_time/threads
+    if io_time > 0:
+        application_metadata["aggr_io_time"] = io_time/threads
+    if user_time > 0:
+        application_metadata["aggr_execution_time"] = user_time/threads
+    application_metadata["total_time"] = long(application_metadata["end-timestamp"]) - long(application_metadata["start-timestamp"])
+
 def parse_aggregates(node, context, thread, infile, data):
     aggregates = infile.readline()
     tokens = aggregates.split()
@@ -285,6 +325,7 @@ def parse_counters(node, context, thread, infile, data, counter_map):
 def parse_profile(indir, profile, application_metadata, function_map, counter_map):
     global metadata_str
     global global_data
+    group_totals["threads"] = group_totals["threads"] + 1
     # FIrst, split the name of the profile to get the node, context, thread
     tokens = profile.split(".")
     node = tokens[1]
@@ -320,6 +361,7 @@ This method will parse a directory of TAU profiles
 def parse_directory(indir, index):
     global metadata_str
     global global_data
+    global group_totals
     # assume just 1 metric for now...
 
     # create a dictionary for this application
@@ -341,8 +383,11 @@ def parse_directory(indir, index):
     application_metadata[metadata_str] = OrderedDict()
     function_map = {}
     counter_map = {}
+    group_totals = OrderedDict()
+    group_totals["threads"] = 0
     for p in profiles:
         parse_profile(indir, p, application_metadata, function_map, counter_map)
+    extract_group_totals()
 
 def make_workflow_instance():
     instance = OrderedDict()
@@ -352,6 +397,19 @@ def make_workflow_instance():
     instance["version"] = ""
     return instance
 
+def write_metrics():
+    global global_data
+    # assuming 1 metric for now
+    metrics = []
+    metric = OrderedDict()
+    metric["id"] = 1
+    metric["location-id"] = 1
+    metric["measurement"] = "Time"
+    metric["units"] = "microseconds"
+    metric["description"] = "This is a metric used to measure the applications."
+    metrics.append(metric)
+    global_data["Workflow metadata"]["Metrics"] = metrics
+
 """
 Main method
 """
@@ -359,6 +417,8 @@ def main(arguments):
     global workflow_metadata_str
     global global_data
     global have_workflow_file
+    global workflow_start
+    global workflow_end
     # parse the arguments
     args = parse_args(arguments)
     global_data = OrderedDict()
@@ -377,6 +437,10 @@ def main(arguments):
         print ("Processing:", indir)
         parse_directory(indir, index)
         index = index + 1
+
+    # write the main workflow instance metadata
+    global_data[workflow_metadata_str]["Workflow Instance"]["execution_time"] = workflow_end - workflow_start
+    write_metrics()
 
     # write the JSON output
     if args.outfile == None:
