@@ -132,6 +132,7 @@ static group_map_t global_group_map;
 
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
+extern "C" void finalizeCallSites_if_necessary();
 
 // Helper functions
 
@@ -444,7 +445,7 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
     }
     x_uint64 last_ts = 0;
     for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
-      TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, it->kind);
+      TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, TAU_TRACE_EVENT_KIND_TEMP);
       last_ts = it->ts;
     }
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_location());
@@ -462,6 +463,11 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   fprintf(stderr, "TauTraceEventWithNodeId(%ld, %" PRId64 ", %d, %" PRIu64 ", %d, %d, %d)\n", ev, par, tid, ts, use_ts, node_id, kind);
 #endif
   TauInternalFunctionGuard protects_this_function;
+  if(kind == TAU_TRACE_EVENT_KIND_TEMP) {
+    kind = TAU_TRACE_EVENT_KIND_FUNC;  
+  } else {
+    use_ts = false;
+  }
   if(otf2_finished) {
     return;
   }
@@ -479,7 +485,8 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     if(temp_buffers[tid] == NULL) {
         temp_buffers[tid] = new vector<temp_buffer_entry>();
     }
-    temp_buffers[tid]->push_back(temp_buffer_entry(ev, use_ts ? ts : TauTraceGetTimeStamp(tid), par, kind));
+    x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
+    temp_buffers[tid]->push_back(temp_buffer_entry(ev, my_ts, par, kind));
     return;
 #else
     if(use_ts) {
@@ -497,14 +504,15 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     TauTraceOTF2WriteTempBuffer(tid, node_id);
   }
 #endif
-  if(kind == TAU_TRACE_EVENT_KIND_FUNC) {
+  if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
     int loc = my_location();
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
+    x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
     if(par == 1) { // Enter
-      OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev));
+      OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
     } else if(par == -1) { // Exit
-      OTF2_EC(OTF2_EvtWriter_Leave(evt_writer, NULL, use_ts ? ts : TauTraceGetTimeStamp(tid), ev));
+      OTF2_EC(OTF2_EvtWriter_Leave(evt_writer, NULL, my_ts, ev));
     }
   }
 }
@@ -564,7 +572,10 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     TauInternalFunctionGuard protects_this_function;
     OTF2_GlobalDefWriter * global_def_writer = OTF2_Archive_GetGlobalDefWriter(otf2_archive);
     TAU_ASSERT(global_def_writer != NULL, "Failed to get global def writer");
-
+    
+    global_start_time -= 0.1*TAU_OTF2_CLOCK_RES;
+    x_uint64 trace_len = end_time - global_start_time;
+    trace_len *= 1.1;
     OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, end_time - global_start_time);
 
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
@@ -908,6 +919,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauCollectives_Barrier(TauCollectives_Get_World());
     otf2_disable = true;
     // Now everyone is at the beginning of MPI_Finalize()
+    finalizeCallSites_if_necessary();
     TauTraceOTF2ExchangeStartTime();
     TauTraceOTF2ExchangeLocations();
     TauTraceOTF2ExchangeEventsWritten();

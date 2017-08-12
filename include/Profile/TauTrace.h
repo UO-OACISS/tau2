@@ -50,6 +50,8 @@
 #define TAU_TRACE_EVENT_KIND_FUNC      1
 #define TAU_TRACE_EVENT_KIND_USEREVENT 2
 #define TAU_TRACE_EVENT_KIND_COMM      3
+#define TAU_TRACE_EVENT_KIND_CALLSITE  4
+#define TAU_TRACE_EVENT_KIND_TEMP      5
 
 /* event record description */
 typedef struct {
