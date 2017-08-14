@@ -75,9 +75,11 @@ def extract_workflow_metadata(component_name, thread_name, max_inclusive):
     workflow_dict = global_data[workflow_metadata_str]
     app_dict = global_data[component_name][metadata_str][thread_name]
     start_time_stamp = app_dict["Starting Timestamp"]
-    end_time_stamp = app_dict["Ending Timestamp"]
-    if end_time_stamp == None:
+    end_time_stamp = None
+    if "Ending Timestamp" not in app_dict:
         end_time_stamp = str(long(start_time_stamp) + max_inclusive)
+    else:
+        end_time_stamp = app_dict["Ending Timestamp"]
     if workflow_start == 0 or workflow_start > long(start_time_stamp):
         workflow_start = long(start_time_stamp)
     if workflow_end == 0 or workflow_end < long(end_time_stamp):
