@@ -8,8 +8,7 @@
 #include <stdio.h>
 
 // Note that this is per-thread and is not capped at 1MB blocks.
-//#define TAU_MEMMGR_MAX_MEMBLOCKS 64
-#define TAU_MEMMGR_MAX_MEMBLOCKS 4
+#define TAU_MEMMGR_MAX_MEMBLOCKS 64
 #define TAU_MEMMGR_DEFAULT_BLOCKSIZE 1048576 /* 1024x1024 In bytes */
 
 #define TAU_MEMMGR_ALIGN sizeof(long) /* In bytes */
