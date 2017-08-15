@@ -177,7 +177,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   // Necessary for signal-reentrancy to ensure the mmap memory manager
   //   is ready at this point.
 #ifndef _AIX
-  Tau_MemMgr_initIfNecessary();
+  static bool mm_initialized = Tau_MemMgr_initIfNecessary();
 #endif /* _AIX */
 #endif  
 

@@ -18,7 +18,7 @@ extern "C" {
   void Tau_MemMgr_free(int tid, void *addr, size_t size) { return ; }
   void * Tau_MemMgr_malloc(int tid, size_t size) { return NULL; }
   void Tau_sampling_resume(int tid) { return ; }
-  void Tau_MemMgr_initIfNecessary(void) { return; } 
+  bool Tau_MemMgr_initIfNecessary(void) { return false; } 
   void Tau_sampling_init_if_necessary(void) { return; }
   void Tau_MemMgr_finalizeIfNecessary(void) { return; }
   char *cuserid(char *string) { return NULL;} 

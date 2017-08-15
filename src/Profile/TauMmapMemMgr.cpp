@@ -54,10 +54,9 @@ __custom_map_t free_chunks[TAU_MAX_THREADS];
 #endif
 bool finalized = false;
 
-void Tau_MemMgr_initIfNecessary()
+bool Tau_MemMgr_initIfNecessary(void)
 {
   static bool initialized = false;
-  static bool thrInitialized[TAU_MAX_THREADS];
   // The double-check is to allow the race-condition on initialized
   //   without compromising performance and correctness.
   // This works for thread-safety. However, if signal-safety is
@@ -70,20 +69,14 @@ void Tau_MemMgr_initIfNecessary()
     // check again, someone else might already have initialized by now.
     if (!initialized) {
       for (int i = 0; i < TAU_MAX_THREADS; i++) {
-        thrInitialized[i] = false;
+        memSummary[i].numBlocks = 0;
+        memSummary[i].totalAllocatedMemory = 0;
       }
       initialized = true;
     }
     RtsLayer::UnLockEnv();
   }
-
-  int myTid = RtsLayer::myThread();
-
-  if (!thrInitialized[myTid]) {
-    memSummary[myTid].numBlocks = 0;
-    memSummary[myTid].totalAllocatedMemory = 0;
-    thrInitialized[myTid] = true;
-  }
+  return true;
 }
 
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
@@ -105,7 +98,7 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
   void *addr;
 
   // Always ensure the system is ready for the mmap call
-  Tau_MemMgr_initIfNecessary();
+  static bool initialized = Tau_MemMgr_initIfNecessary();
 
   prot = PROT_READ | PROT_WRITE;
   fd = -1;
@@ -212,7 +205,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
 
   //printf("%d Allocating %d\n", tid, size); fflush(stdout);
   // Always ensure the system is ready for a malloc
-  Tau_MemMgr_initIfNecessary();
+  static bool initialized = Tau_MemMgr_initIfNecessary();
 
 #ifdef USE_RECYCLER
   // can we recycle an old block?
@@ -294,7 +287,7 @@ void Tau_MemMgr_free(int tid, void *addr, size_t size)
 
 #else /* TAU_WINDOWS */
 #include <stdlib.h>
-extern "C" void Tau_MemMgr_initIfNecessary(void) {
+extern "C" bool Tau_MemMgr_initIfNecessary(void) {
 }
 extern "C" void Tau_MemMgr_finalizeIfNecessary(void) {
 }
