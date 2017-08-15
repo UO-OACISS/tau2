@@ -374,24 +374,26 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 // Formulate Context Comparison Array, an array of addresses with size depth+2.
 // The callpath depth is the 0th index, the user event goes is the last index
 //////////////////////////////////////////////////////////////////////
-long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
+void TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, long * comparison)
 {
   int tid = RtsLayer::myThread();
   int depth = Tau_get_current_stack_depth(tid);
+  if (depth > TAU_MAX_CALLPATH_DEPTH) {
+      // oh, no...  super-deep callpath.  Warn the user and abort.  Bummer.
+      fprintf(stderr, "ERROR! The callstack depth has exceeded a hard-coded limit in TAU.  Please reconfigure TAU with the option '-useropt=TAU_MAX_CALLPATH_DEPTH=X' where X is greater than %d\n", TAU_MAX_CALLPATH_DEPTH);
+  }
 
-  *size = sizeof(long)*(depth+2);
-  long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), *size);
   int i=1;
   // start writing to index 1, we fill in the depth after
   for(; current && depth; ++i) {
-    ary[i] = Tau_convert_ptr_to_long(current->ThisFunction);
+    comparison[i] = Tau_convert_ptr_to_long(current->ThisFunction);
     current = current->ParentProfiler;
     --depth;
   }
-  ary[i] = Tau_convert_ptr_to_long(userEvent);
-  ary[0] = i; // set the depth
+  comparison[i] = Tau_convert_ptr_to_long(userEvent);
+  comparison[0] = i; // set the depth
 
-  return ary;
+  return;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -401,7 +403,8 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
 {
   int tid = RtsLayer::myThread();
   if (current) {
-      std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
+      //std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
+      std::stringstream buff;
       buff << userEvent->GetName();
 
       int depth = Tau_get_current_stack_depth(tid);
@@ -456,8 +459,8 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
       Profiler * current = TauInternal_CurrentProfiler(tid);
       if (current) {
         //printf("**** Looking for : %s\n", FormulateContextNameString(current).c_str()); fflush(stdout);
-        size_t size;
-        long * comparison = FormulateContextComparisonArray(current, &size);
+        long comparison[TAU_MAX_CALLPATH_DEPTH];
+        FormulateContextComparisonArray(current, comparison);
 
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
@@ -485,7 +488,6 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
         } else {
           //printf("**** FOUND **** \n"); fflush(stdout);
           contextEvent = it->second;
-          Tau_MemMgr_free(tid, (void*)comparison, size);
         }
         RtsLayer::UnLockDB();
         contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
