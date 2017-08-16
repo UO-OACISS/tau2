@@ -82,9 +82,20 @@ struct ContextEventMapCompare
   bool operator()(long const * l1, long const * l2) const
   {
     int i = 0;
-    for (i=0; i<=l1[0]; ++i) {
-      if (l1[i] != l2[i]) return l1[i] < l2[i];
+    for (i=0; (i<=l1[0] && i<=l2[0]) ; i++) {
+        //printf("%d: %ld, %ld\t", i, l1[i], l2[i]);
+      if (l1[i] != l2[i]) {
+          /*
+          if (l1[i] < l2[i]) {
+              printf("\nleft <  right\n");
+          } else {
+              printf("\nleft >= right\n");
+          }
+          */
+          return l1[i] < l2[i];
+      }
     }
+    //printf("\nEqual!\n"); fflush(stdout);
     return false;
   }
 };
@@ -459,7 +470,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
       Profiler * current = TauInternal_CurrentProfiler(tid);
       if (current) {
         //printf("**** Looking for : %s\n", FormulateContextNameString(current).c_str()); fflush(stdout);
-        long comparison[TAU_MAX_CALLPATH_DEPTH];
+        long comparison[TAU_MAX_CALLPATH_DEPTH] = {0};
         FormulateContextComparisonArray(current, comparison);
 
         RtsLayer::LockDB();
@@ -484,10 +495,19 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
               FormulateContextNameString(current).c_str(),
               userEvent->IsMonotonicallyIncreasing());
 #endif
-          contextMap[comparison] = contextEvent;
+          // need to make a heap copy of our comparison array. Otherwise it gets
+          // corrupted, because right now this is a stack variable.
+          int depth = comparison[0];
+          int size = sizeof(long)*(depth+2);
+          long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), size);
+          int i;
+          for (i = 0 ; i <= depth ; i++) {
+              ary[i] = comparison[i];
+          }
+          contextMap[ary] = contextEvent;
         } else {
-          //printf("**** FOUND **** \n"); fflush(stdout);
           contextEvent = it->second;
+          //printf("**** FOUND **** %s \n", contextEvent->GetName().c_str()); fflush(stdout);
         }
         RtsLayer::UnLockDB();
         contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
