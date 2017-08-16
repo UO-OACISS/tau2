@@ -497,6 +497,8 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 #endif
           // need to make a heap copy of our comparison array. Otherwise it gets
           // corrupted, because right now this is a stack variable.
+          // It needs to be a stack variable so that searching each time we have
+          // a counter doesn't eat up the whole memory map.
           int depth = comparison[0];
           int size = sizeof(long)*(depth+2);
           long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), size);
