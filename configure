@@ -9870,6 +9870,13 @@ if [ $noex = yes ] ; then
     fi
 fi
 
+# Disable plugins on Apple because rdynamic flag has no effect on OS X 
+case "$machine" in
+    apple)
+     plugins="no"
+    ;;
+esac
+
 if [ $plugins = no ] ; then
     fixmakeargs="$fixmakeargs NOPLUGINS"
 fi
