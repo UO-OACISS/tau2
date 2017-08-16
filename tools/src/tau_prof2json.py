@@ -225,6 +225,10 @@ def extract_group_totals():
     comm_time = 0
     io_time = 0
     user_time = 0
+    send_bytes = 0
+    recv_bytes = 0
+    read_bytes = 0
+    write_bytes = 0
     for key in group_totals:
         if key.find("MPI") != -1:
             comm_time = comm_time + group_totals[key]
@@ -232,12 +236,28 @@ def extract_group_totals():
             io_time = io_time + group_totals[key]
         if key.find("TAU_USER") != -1:
             user_time = user_time + group_totals[key]
+        if key.find("Send_Bytes") != -1:
+            send_bytes = send_bytes + group_totals[key]
+        if key.find("Recv_Bytes") != -1:
+            recv_bytes = recv_bytes + group_totals[key]
+        if key.find("Read_Bytes") != -1:
+            read_bytes = read_bytes + group_totals[key]
+        if key.find("Write_Bytes") != -1:
+            write_bytes = write_bytes + group_totals[key]
     if comm_time > 0:
         application_metadata["aggr_communication_time"] = comm_time/threads
     if io_time > 0:
         application_metadata["aggr_io_time"] = io_time/threads
     if user_time > 0:
         application_metadata["aggr_execution_time"] = user_time/threads
+    if send_bytes > 0:
+        application_metadata["aggr_communication_sent_bytes"] = send_bytes
+    if recv_bytes > 0:
+        application_metadata["aggr_communication_recv_bytes"] = send_bytes
+    if read_bytes > 0:
+        application_metadata["aggr_io_read_bytes"] = read_bytes
+    if write_bytes > 0:
+        application_metadata["aggr_io_write_bytes"] = write_bytes
     application_metadata["total_time"] = long(application_metadata["end-timestamp"]) - long(application_metadata["start-timestamp"])
 
 def parse_aggregates(node, context, thread, infile, data):
@@ -250,6 +270,7 @@ def parse_aggregates(node, context, thread, infile, data):
         line = infile.readline()
 
 def parse_counters(node, context, thread, infile, data, counter_map):
+    global group_totals
     userevents = infile.readline()
     if (userevents == None or userevents == ""):
         return
@@ -322,6 +343,34 @@ def parse_counters(node, context, thread, infile, data, counter_map):
             counter["Min Value"] = float(tokens[2])
             counter["Mean Value"] = float(tokens[3])
             counter["SumSqr Value"] = float(tokens[4])
+            if counter_name == "Message size sent to all nodes":
+                value = long(tokens[0]) * float(tokens[3])
+                c_name = "Send_Bytes"
+                if c_name not in group_totals:
+                    group_totals[c_name] = value
+                else:
+                    group_totals[c_name] = group_totals[c_name] + value
+            if counter_name == "Message size received from all nodes":
+                value = long(tokens[0]) * float(tokens[3])
+                c_name = "Recv_Bytes"
+                if c_name not in group_totals:
+                    group_totals[c_name] = value
+                else:
+                    group_totals[c_name] = group_totals[c_name] + value
+            if counter_name == "Bytes Read":
+                value = long(tokens[0]) * float(tokens[3])
+                c_name = "Read_Bytes"
+                if c_name not in group_totals:
+                    group_totals[c_name] = value
+                else:
+                    group_totals[c_name] = group_totals[c_name] + value
+            if counter_name == "Bytes Written":
+                value = long(tokens[0]) * float(tokens[3])
+                c_name = "Write_Bytes"
+                if c_name not in group_totals:
+                    group_totals[c_name] = value
+                else:
+                    group_totals[c_name] = group_totals[c_name] + value
             data["Counters"].append(counter)
 
 def parse_profile(indir, profile, application_metadata, function_map, counter_map):
