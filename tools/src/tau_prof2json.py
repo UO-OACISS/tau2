@@ -15,6 +15,7 @@ metadata_str = "metadata"
 global_data = None
 have_workflow_file = False
 group_totals = None
+group_counts = None
 workflow_start = 0
 workflow_end = 0
 
@@ -145,6 +146,7 @@ def extract_workflow_metadata(component_name, thread_name, max_inclusive):
 
 def parse_functions(node, context, thread, infile, data, num_functions, function_map):
     global group_totals
+    global group_counts
     max_inclusive = 0
     # Function looks like:
     # "".TAU application" 1 0 8626018 8626018 0 GROUP="TAU_USER""
@@ -208,8 +210,10 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
             group = tokens[5]
             if group not in group_totals:
                 group_totals[group] = long(tokens[2])
+                group_counts[group] = long(tokens[0])
             else:
                 group_totals[group] = group_totals[group] + long(tokens[2])
+                group_counts[group] = group_counts[group] + long(tokens[0])
             data["Timers"].append(timer)
             if max_inclusive < long(tokens[3]):
                 max_inclusive = long(tokens[3])
@@ -217,11 +221,13 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
 
 def extract_group_totals():
     global group_totals
+    global group_counts
     global global_data
     tmp = global_data["Workflow metadata"]["Workflow Component"]
     application_metadata = tmp[len(tmp) - 1]
     threads = group_totals["threads"]
     application_metadata["Processes"] = threads
+    comm_calls = 0
     comm_time = 0
     io_time = 0
     user_time = 0
@@ -229,6 +235,9 @@ def extract_group_totals():
     recv_bytes = 0
     read_bytes = 0
     write_bytes = 0
+    for key in group_counts:
+        if key.find("MPI") != -1:
+            comm_calls = comm_calls + group_counts[key]
     for key in group_totals:
         if key.find("MPI") != -1:
             comm_time = comm_time + group_totals[key]
@@ -244,6 +253,8 @@ def extract_group_totals():
             read_bytes = read_bytes + group_totals[key]
         if key.find("Write_Bytes") != -1:
             write_bytes = write_bytes + group_totals[key]
+    if comm_calls > 0:
+        application_metadata["aggr_communication_calls"] = comm_calls
     if comm_time > 0:
         application_metadata["aggr_communication_time"] = comm_time/threads
     if io_time > 0:
@@ -413,6 +424,7 @@ def parse_directory(indir, index):
     global metadata_str
     global global_data
     global group_totals
+    global group_counts
     # assume just 1 metric for now...
 
     # create a dictionary for this application
@@ -435,6 +447,7 @@ def parse_directory(indir, index):
     function_map = {}
     counter_map = {}
     group_totals = OrderedDict()
+    group_counts = OrderedDict()
     group_totals["threads"] = 0
     for p in profiles:
         parse_profile(indir, p, application_metadata, function_map, counter_map)
