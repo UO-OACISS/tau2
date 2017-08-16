@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <mpi.h>
+#include "common.h"
 
 #define SIZE 10
 int main(int argc, char **argv)
@@ -17,6 +18,9 @@ int main(int argc, char **argv)
    MPI_Init (&argc, &argv);
    MPI_Comm_size (MPI_COMM_WORLD, &proc);
    MPI_Comm_rank (MPI_COMM_WORLD, &me);
+
+   check_args(me, proc);
+   exchange_data(me, proc);
 
    /* OPEN */
 
@@ -40,6 +44,7 @@ int main(int argc, char **argv)
    close(fd);
 
    MPI_Barrier(MPI_COMM_WORLD);
+   exchange_data(me, proc);
 
    /* FOPEN */
 
@@ -52,6 +57,7 @@ int main(int argc, char **argv)
    }
 
    MPI_Barrier(MPI_COMM_WORLD);
+   exchange_data(me, proc);
 
    /* CREAT */
 
@@ -67,5 +73,7 @@ int main(int argc, char **argv)
    }
    close(fd);
    
+   MPI_Barrier(MPI_COMM_WORLD);
+   exchange_data(me, proc);
    MPI_Finalize ();
 }
