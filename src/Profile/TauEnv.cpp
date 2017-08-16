@@ -687,27 +687,22 @@ void TAU_VERBOSE(const char *format, ...)
 }
 
 const char *TauEnv_get_metrics() {
-  if (env_metrics == NULL) TauEnv_initialize();
   return env_metrics;
 }
 
 extern "C" const char *TauEnv_get_cvar_metrics() {
-  if (env_cvar_metrics == NULL) TauEnv_initialize();
   return env_cvar_metrics;
 }
 
 extern "C" const char *TauEnv_get_plugins_path() {
-  if (env_plugins_path == NULL) TauEnv_initialize();
   return env_plugins_path;
 }
 
 extern "C" const char *TauEnv_get_plugins() {
-  if (env_plugins == NULL) TauEnv_initialize();
   return env_plugins;
 }
 
 extern "C" const char *TauEnv_get_cvar_values() {
-  if (env_cvar_values == NULL) TauEnv_initialize();
   return env_cvar_values;
 }
 
@@ -1183,7 +1178,8 @@ void TauEnv_initialize()
 #else
       TAU_VERBOSE("TAU: system load tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_LOAD", "on");
-      TAU_TRACK_LOAD();
+      // Don't do this now! It will cause infinite recurison...
+      //TAU_TRACK_LOAD();
 #endif
     } 
 
