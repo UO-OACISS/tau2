@@ -35,7 +35,6 @@
 #ifdef TAU_OTF2
 #include <otf2/otf2.h>
 #else
-#warning OTF2 NOT ENABLED
 typedef uint8_t OTF2_Type;
 #endif
 
