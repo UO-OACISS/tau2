@@ -39,6 +39,7 @@
 #include <Profile/TauTraceOTF2.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauCollectives.h>
+#include <Profile/UserEvent.h>
 
 #include <iostream>
 #include <sstream>
@@ -122,6 +123,9 @@ static int * region_db_sizes = NULL;
 static char * region_names = NULL;
 static int * group_db_sizes = NULL;
 static char * global_group_names = NULL;
+static int * num_metrics = NULL;
+static int * metric_db_sizes = NULL;
+static char * metric_names = NULL;
 
 // Unification sets the global_region_map on every rank
 typedef map<string,uint64_t> region_map_t;
@@ -129,6 +133,12 @@ static region_map_t global_region_map;
 
 typedef map<string,set<string> > group_map_t;
 static group_map_t global_group_map;
+
+typedef map<string,uint64_t> metric_map_t;
+static metric_map_t global_metric_map;
+
+typedef map<string,uint32_t> metric_param_map_t;
+static metric_param_map_t global_metric_param_map;
 
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
@@ -346,7 +356,7 @@ void remove_path(const char *pathname) {
     	while((entry = readdir(dir)) != NULL) {
         	DIR *sub_dir = NULL;
         	FILE *file = NULL;
-        	char abs_path[100] = {0};
+        	char abs_path[4096] = {0};
         	if(*(entry->d_name) != '.') {
             	sprintf(abs_path, "%s/%s", pathname, entry->d_name);
             	sub_dir = opendir(abs_path);
@@ -573,9 +583,10 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_GlobalDefWriter * global_def_writer = OTF2_Archive_GetGlobalDefWriter(otf2_archive);
     TAU_ASSERT(global_def_writer != NULL, "Failed to get global def writer");
     
-    global_start_time -= 0.1*TAU_OTF2_CLOCK_RES;
     x_uint64 trace_len = end_time - global_start_time;
-    trace_len *= 1.1;
+    global_start_time -= trace_len * 0.02;
+    trace_len = end_time - global_start_time;
+    trace_len *= 1.02;
     OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, end_time - global_start_time);
 
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
@@ -620,6 +631,15 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_UNKNOWN, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
 
+    // Write all the user events out as Metrics
+    for (metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
+        int thisMetricName = nextString++;
+        const std::string & metric_name = it->first;
+        OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisMetricName, metric_name.c_str()));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteMetricMember(global_def_writer, it->second, thisMetricName, emptyString, OTF2_METRIC_TYPE_USER, OTF2_METRIC_ABSOLUTE_POINT, OTF2_TYPE_UINT64, OTF2_BASE_DECIMAL, 0, emptyString));
+        OTF2_MetricMemberRef members[1] = {it->second};
+        OTF2_EC(OTF2_GlobalDefWriter_WriteMetricClass(global_def_writer, it->second, 1, members, OTF2_METRIC_SYNCHRONOUS, OTF2_RECORDER_KIND_CPU));
+    }
 
     // Write global communicator
     const int locsGroupName = nextString++;
@@ -757,9 +777,124 @@ static void TauTraceOTF2ExchangeEventsWritten() {
 
 }
 
+static void TauTraceOTF2ExchangeMetrics() {
+#ifdef TAU_OTF2_DEBUG
+    fprintf(stderr, "%u: TauTraceOTF2ExchangeMetrics()\n", my_node());
+#endif
+    TauInternalFunctionGuard protects_this_function;
+
+    // Collect local function IDs and names
+    const int nodes = tau_totalnodes(0, 0);
+    vector<uint64_t> metric_ids;
+    stringstream metrics_ss;
+    for (AtomicEventDB::iterator uit = TheEventDB().begin(); uit != TheEventDB().end(); uit++) {
+        metric_ids.push_back((*uit)->GetId());
+        metrics_ss << (*uit)->GetName();
+        if((*uit)->IsMonotonicallyIncreasing()) {
+            metrics_ss.put('M');
+        } else {
+            metrics_ss.put('N');
+        }
+        metrics_ss.put('\0');
+    }
+    string metric_names_str = metrics_ss.str();
+    const char * my_metric_names = metric_names_str.c_str();
+
+    // Gather the number of metrics for each rank on master
+    int my_num_metrics = metric_ids.size();
+    if(my_node() == 0) {
+        num_metrics = new int[nodes];
+    }
+    if(nodes == 1) {
+        num_metrics[0] = my_num_metrics;
+    } else {
+        TauCollectives_Gather(TauCollectives_Get_World(), &my_num_metrics, num_metrics, 1, TAUCOLLECTIVES_INT, 0);
+    }
+
+    // Gather the sizes of the metric name databases on master
+    int my_metric_db_size = metric_names_str.size();
+    if(my_node() == 0) {
+        metric_db_sizes = new int[nodes];
+    }
+    if(nodes == 1) {
+        metric_db_sizes[0] = my_metric_db_size;
+    } else {
+        TauCollectives_Gather(TauCollectives_Get_World(), &my_metric_db_size, metric_db_sizes, 1, TAUCOLLECTIVES_INT, 0);
+    }
+
+    // Exchange metric names
+    int total_name_chars = 0;
+    if(my_node() == 0) {
+        for(int i = 0; i < nodes; ++i) {
+            total_name_chars += metric_db_sizes[i];
+        }                
+        metric_names = new char[total_name_chars];
+    
+    }
+    if(nodes == 1) {
+        memcpy(metric_names, my_metric_names, my_metric_db_size);
+    } else {
+        TauCollectives_Gatherv(TauCollectives_Get_World(), metric_names, my_metric_db_size, metric_names, metric_db_sizes, TAUCOLLECTIVES_CHAR, 0);
+    }
+
+    // Create and distribute a map of all metric names to global id
+    char * global_metrics = NULL;
+    int global_metrics_size = 0;
+    if(my_node() == 0) {
+        int name_offset = 0;
+        set<string> unique_names;
+        for(int node = 0; node < nodes; ++node) {
+            const int node_num_metrics = num_metrics[node];
+            for(int metric = 0; metric < node_num_metrics; ++metric) {
+                string name = string(metric_names+name_offset);    
+                name_offset += name.length() + 1;
+                unique_names.insert(name);
+            }
+        }
+
+        int next_id = 0;
+        for(set<string>::const_iterator it = unique_names.begin(); it != unique_names.end(); it++) {
+            global_metric_map[*it] = next_id++;
+        }
+        stringstream ss;
+        for(metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
+            ss << it->first;
+            ss.put('\0');
+        }
+        string global_metrics_str = ss.str();
+        global_metrics_size = global_metrics_str.length();
+        global_metrics = (char *) malloc(global_metrics_size * sizeof(char));
+        global_metrics = (char *) memcpy(global_metrics, global_metrics_str.c_str(), global_metrics_size);    
+    }
+
+    if(nodes > 1) {
+        TauCollectives_Bcast(TauCollectives_Get_World(), &global_metrics_size, 1, TAUCOLLECTIVES_INT, 0);
+    }
+    if(my_node() != 0) {
+        global_metrics = (char *)malloc(global_metrics_size * sizeof(char));
+    }
+
+    if(nodes > 1) {
+        TauCollectives_Bcast(TauCollectives_Get_World(), global_metrics, global_metrics_size, TAUCOLLECTIVES_CHAR, 0);
+    }
+
+    if(my_node() != 0) {
+        int metric_offset = 0;
+        int next_id = 0;
+        while(metric_offset < global_metrics_size) {
+            string name = string(global_metrics+metric_offset);
+            metric_offset += name.length() + 1;
+            global_metric_map[name] = next_id++;
+        }
+    }
+
+    free(global_metrics);
+        
+}
+
 static void TauTraceOTF2ExchangeRegions() {
 #ifdef TAU_OTF2_DEBUG
-  fprintf(stderr, "%u: TauTraceOTF2ExchangeRegions()\n", my_node());
+    fprintf(stderr, "%u: TauTraceOTF2ExchangeRegions()\n", my_node());
 #endif
     TauInternalFunctionGuard protects_this_function;
 
@@ -777,6 +912,7 @@ static void TauTraceOTF2ExchangeRegions() {
         groups_ss << fi->GetPrimaryGroup();
         groups_ss.put('\0');
     }
+
     string function_names_str = names_ss.str();
     const char * function_names = function_names_str.c_str();
     string group_names_str = groups_ss.str();
@@ -819,7 +955,7 @@ static void TauTraceOTF2ExchangeRegions() {
         TauCollectives_Gatherv(TauCollectives_Get_World(), function_names, my_region_db_size, region_names, region_db_sizes, TAUCOLLECTIVES_CHAR, 0);
     }
 
-    // Gather sizes of region names
+    // Gather sizes of group names
     int my_group_db_size = group_names_str.size();
     if(my_node() == 0) {
         group_db_sizes = new int[nodes];
@@ -924,6 +1060,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauTraceOTF2ExchangeLocations();
     TauTraceOTF2ExchangeEventsWritten();
     TauTraceOTF2ExchangeRegions();
+    TauTraceOTF2ExchangeMetrics();
 
     TauCollectives_Finalize();
 
