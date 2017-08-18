@@ -2588,8 +2588,9 @@ configure_perfexplorer () {
     # install the perl scripts for ebs post-processing in the bin dir
     cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
     cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
-    cp -r ${tauroot}/tools/src/pycoolr $BINTARGET
-    chmod a+rx ${BINTARGET}/pycoolr/runpycoolr.sh
+    cp ${tauroot}/tools/src/pycoolr/bin/pycoolr $BINTARGET
+    chmod a+rx $BINTARGET/pycoolr
+    cp -r ${tauroot}/tools/src/pycoolr/src/pycoolrgui $BINTARGET
 
     # install post-mortem address translation tool
     cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
