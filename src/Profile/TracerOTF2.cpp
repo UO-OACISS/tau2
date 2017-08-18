@@ -389,6 +389,18 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
       return 0;
   }
 
+#if defined(TAU_MPI)
+  // taupreload sets node to 0 when loaded, which results in attempted
+  // initialization of the tracing infrastructure. 
+  // If MPI_Init hasn't been called, delay OTF2 initialization until it has
+  // (at which point we'll be called again)
+  int mpi_initialized;
+  MPI_Initialized(&mpi_initialized);
+  if(!mpi_initialized) {
+    return 1;
+  }
+#endif
+
   if(my_node() == 0) {
     const string trace_dir = TauEnv_get_tracedir();
     const string trace_locs_dir = trace_dir + "/traces";
