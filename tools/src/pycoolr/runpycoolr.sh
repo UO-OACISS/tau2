@@ -3,6 +3,8 @@
 currdir=${PWD}
 echo ${PWD}
 
+PYCOOLR_PLATFORM="cerberus.nic.uoregon.edu"
+
 export BEACON_TOPOLOGY_SERVER_ADDR=128.223.202.147
 export BEACON_ROOT_FS=/dev/shm/aurelem
 export LD_LIBRARY_PATH=/home/users/aurelem/beacon/mix/BEACON_inst/lib:$LD_LIBRARY_PATH
@@ -16,4 +18,21 @@ beacon_topology_setup_server > ./setup_server.log 2>&1 &
 sleep 1
 global_beacon > ./global_beacon.log 2>&1 &
 
+if [[ $PYCOOLR_PLATFORM = "cerberus.nic.uoregon.edu" ]];
+then
+echo "platform: cerberus.nic.uoregon.edu"
 ./src/pycoolr/pycoolr-plot/coolr.py src/pycoolr/pycoolr-plot/configs/beaconcerberus.cfg
+
+elif [[ $PYCOOLR_PLATFORM = "godzilla.nic.uoregon.edu" ]];
+then
+echo "platform: godzilla.nic.uoregon.edu"
+./src/pycoolr/pycoolr-plot/coolr.py src/pycoolr/pycoolr-plot/configs/beacongodzilla.cfg
+
+elif [[ $PYCOOLR_PLATFORM = "delphi.nic.uoregon.edu" ]];
+then
+echo "platform: delphi.nic.uoregon.edu"
+./src/pycoolr/pycoolr-plot/coolr.py src/pycoolr/pycoolr-plot/configs/beacondelphi.cfg
+
+fi
+
+
