@@ -1476,6 +1476,10 @@ int TauProfiler_StoreData(int tid)
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
+#if defined(TAU_SHMEM) && !defined(TAU_MPI)
+  __real_shmem_finalize();
+#endif
+
 
   Tau_MemMgr_finalizeIfNecessary();
 

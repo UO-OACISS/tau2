@@ -47,9 +47,12 @@
 #define TAU_ONESIDED_MESSAGE_ID_2 70003
 
 /* Event kinds */
-#define TAU_TRACE_EVENT_KIND_FUNC      1
-#define TAU_TRACE_EVENT_KIND_USEREVENT 2
-#define TAU_TRACE_EVENT_KIND_COMM      3
+#define TAU_TRACE_EVENT_KIND_FUNC           1
+#define TAU_TRACE_EVENT_KIND_USEREVENT      2
+#define TAU_TRACE_EVENT_KIND_COMM           3
+#define TAU_TRACE_EVENT_KIND_CALLSITE       4
+#define TAU_TRACE_EVENT_KIND_TEMP_FUNC      5
+#define TAU_TRACE_EVENT_KIND_TEMP_USEREVENT 6
 
 /* event record description */
 typedef struct {
