@@ -140,6 +140,9 @@ static metric_map_t global_metric_map;
 typedef map<string,uint32_t> metric_param_map_t;
 static metric_param_map_t global_metric_param_map;
 
+typedef set<uint64_t> metrics_seen_t;
+static metrics_seen_t metrics_seen;
+
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
 extern "C" void finalizeCallSites_if_necessary();
@@ -455,7 +458,8 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
     }
     x_uint64 last_ts = 0;
     for(vector<temp_buffer_entry>::const_iterator it = temp_buffers[tid]->begin(); it != temp_buffers[tid]->end(); ++it) {
-      TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, TAU_TRACE_EVENT_KIND_TEMP);
+      int kind = it->kind == TAU_TRACE_EVENT_KIND_USEREVENT ? TAU_TRACE_EVENT_KIND_TEMP_USEREVENT : TAU_TRACE_EVENT_KIND_TEMP_FUNC;
+      TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, kind);
       last_ts = it->ts;
     }
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_location());
@@ -473,8 +477,10 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   fprintf(stderr, "TauTraceEventWithNodeId(%ld, %" PRId64 ", %d, %" PRIu64 ", %d, %d, %d)\n", ev, par, tid, ts, use_ts, node_id, kind);
 #endif
   TauInternalFunctionGuard protects_this_function;
-  if(kind == TAU_TRACE_EVENT_KIND_TEMP) {
+  if(kind == TAU_TRACE_EVENT_KIND_TEMP_FUNC) {
     kind = TAU_TRACE_EVENT_KIND_FUNC;  
+  } else if(kind == TAU_TRACE_EVENT_KIND_TEMP_USEREVENT) {
+    kind = TAU_TRACE_EVENT_KIND_USEREVENT;
   } else {
     use_ts = false;
   }
@@ -514,16 +520,26 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     TauTraceOTF2WriteTempBuffer(tid, node_id);
   }
 #endif
+  int loc = my_location();
+  OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
+  TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
+  x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
-    int loc = my_location();
-    OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
-    TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
-    x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
     if(par == 1) { // Enter
       OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
     } else if(par == -1) { // Exit
       OTF2_EC(OTF2_EvtWriter_Leave(evt_writer, NULL, my_ts, ev));
     }
+  } else if(kind == TAU_TRACE_EVENT_KIND_USEREVENT) {
+    if(otf2_comms_shutdown && metrics_seen.find(ev) == metrics_seen.end()) {
+        // If we've shutdown comms, skip any UserEvents we didn't see before unification
+        // (e.g., the fake UserEvents representing metadata)
+        return;
+    }    
+    OTF2_Type types[1] = {OTF2_TYPE_UINT64};
+    OTF2_MetricValue values[1];
+    values[0].unsigned_int = par;
+    OTF2_EC(OTF2_EvtWriter_Metric(evt_writer, NULL, my_ts, ev, 1, types, values))
   }
 }
 
@@ -634,9 +650,14 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     // Write all the user events out as Metrics
     for (metric_map_t::const_iterator it = global_metric_map.begin(); it != global_metric_map.end(); it++) {
         int thisMetricName = nextString++;
-        const std::string & metric_name = it->first;
+        std::string metric_name = it->first;
+        const bool monotonic = metric_name[metric_name.length()-1] == 'M';
+        metric_name.erase(metric_name.length()-1);
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisMetricName, metric_name.c_str()));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteMetricMember(global_def_writer, it->second, thisMetricName, emptyString, OTF2_METRIC_TYPE_USER, OTF2_METRIC_ABSOLUTE_POINT, OTF2_TYPE_UINT64, OTF2_BASE_DECIMAL, 0, emptyString));
+        const OTF2_MetricMode mode = monotonic ? OTF2_METRIC_ACCUMULATED_START : OTF2_METRIC_ABSOLUTE_POINT;
+        const bool papi = metric_name.find("PAPI") != std::string::npos;
+        const OTF2_MetricType type = papi ? OTF2_METRIC_TYPE_PAPI : OTF2_METRIC_TYPE_OTHER;
+        OTF2_EC(OTF2_GlobalDefWriter_WriteMetricMember(global_def_writer, it->second, thisMetricName, emptyString, type, mode, OTF2_TYPE_UINT64, OTF2_BASE_DECIMAL, 0, emptyString));
         OTF2_MetricMemberRef members[1] = {it->second};
         OTF2_EC(OTF2_GlobalDefWriter_WriteMetricClass(global_def_writer, it->second, 1, members, OTF2_METRIC_SYNCHRONOUS, OTF2_RECORDER_KIND_CPU));
     }
@@ -686,22 +707,47 @@ static void TauTraceOTF2WriteLocalDefinitions() {
   fprintf(stderr, "TauTraceOTF2WriteLocalDefinitions()\n");
 #endif
     TauInternalFunctionGuard protects_this_function;
-    OTF2_IdMap * region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
-    const region_map_t & global_region_map_ref = global_region_map; 
-    for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-        FunctionInfo * fi = *it;
-        const uint64_t local_id  = fi->GetFunctionId();
-        const uint64_t global_id = global_region_map_ref.find(string(fi->GetName()))->second;
-        OTF2_EC(OTF2_IdMap_AddIdPair(region_map, local_id, global_id));
+    {
+        OTF2_IdMap * loc_region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
+        const region_map_t & global_region_map_ref = global_region_map; 
+        for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+            FunctionInfo * fi = *it;
+            const uint64_t local_id  = fi->GetFunctionId();
+            const uint64_t global_id = global_region_map_ref.find(string(fi->GetName()))->second;
+            OTF2_EC(OTF2_IdMap_AddIdPair(loc_region_map, local_id, global_id));
+        }
+        const int start_loc = my_location();
+        const int end_loc = start_loc + RtsLayer::getTotalThreads();
+        for(int loc = start_loc; loc < end_loc; ++loc) {
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, loc_region_map));
+        }
+        OTF2_IdMap_Free(loc_region_map);
     }
-    const int start_loc = my_location();
-    const int end_loc = start_loc + RtsLayer::getTotalThreads();
-    for(int loc = start_loc; loc < end_loc; ++loc) {
-        OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
-        OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_REGION, region_map));
-        OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
+
+    {
+        OTF2_IdMap * loc_metric_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheEventDB().size());
+        const metric_map_t & global_metric_map_ref = global_metric_map; 
+        for (AtomicEventDB::iterator it = TheEventDB().begin(); it != TheEventDB().end(); it++) {
+            const uint64_t local_id  = (*it)->GetId();
+            bool monotonic = (*it)->IsMonotonicallyIncreasing();
+            std::string name = string(((*it)->GetName() + (monotonic ? "M" : "N")).c_str());
+            metric_map_t::const_iterator global_id_iter = global_metric_map_ref.find(name);
+            if(global_id_iter == global_metric_map_ref.end()) {
+                continue;
+            }
+            const uint64_t global_id = global_id_iter->second;
+            OTF2_EC(OTF2_IdMap_AddIdPair(loc_metric_map, local_id, global_id));
+        }
+        const int start_loc = my_location();
+        const int end_loc = start_loc + RtsLayer::getTotalThreads();
+        for(int loc = start_loc; loc < end_loc; ++loc) {
+            OTF2_DefWriter* def_writer = OTF2_Archive_GetDefWriter(otf2_archive, loc);
+            OTF2_EC(OTF2_DefWriter_WriteMappingTable(def_writer, OTF2_MAPPING_METRIC, loc_metric_map));
+            OTF2_EC(OTF2_Archive_CloseDefWriter(otf2_archive, def_writer));
+        }
+        OTF2_IdMap_Free(loc_metric_map);
     }
-    OTF2_IdMap_Free(region_map);
 
 }
 
@@ -789,6 +835,7 @@ static void TauTraceOTF2ExchangeMetrics() {
     stringstream metrics_ss;
     for (AtomicEventDB::iterator uit = TheEventDB().begin(); uit != TheEventDB().end(); uit++) {
         metric_ids.push_back((*uit)->GetId());
+        metrics_seen.insert((*uit)->GetId());
         metrics_ss << (*uit)->GetName();
         if((*uit)->IsMonotonicallyIncreasing()) {
             metrics_ss.put('M');
@@ -834,7 +881,7 @@ static void TauTraceOTF2ExchangeMetrics() {
     if(nodes == 1) {
         memcpy(metric_names, my_metric_names, my_metric_db_size);
     } else {
-        TauCollectives_Gatherv(TauCollectives_Get_World(), metric_names, my_metric_db_size, metric_names, metric_db_sizes, TAUCOLLECTIVES_CHAR, 0);
+        TauCollectives_Gatherv(TauCollectives_Get_World(), my_metric_names, my_metric_db_size, metric_names, metric_db_sizes, TAUCOLLECTIVES_CHAR, 0);
     }
 
     // Create and distribute a map of all metric names to global id
