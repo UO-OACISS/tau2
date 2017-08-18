@@ -2589,6 +2589,7 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
     cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
     cp -r ${tauroot}/tools/src/pycoolr $BINTARGET
+    chmod a+rx ${BINTARGET}/pycoolr/runpycoolr.sh
 
     # install post-mortem address translation tool
     cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
