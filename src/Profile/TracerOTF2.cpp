@@ -612,7 +612,6 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, 0, "" ));
 
     const int nodes = tau_totalnodes(0, 0);
-    int thread_num = 0;
     for(int node = 0; node < nodes; ++node) {
         // System Tree Node
         char namebuf[256];
@@ -630,6 +629,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
 
         const int start_loc = node * TAU_MAX_THREADS;
         const int end_loc = start_loc + num_locations[node];
+        int thread_num = 0;
         for(int loc = start_loc; loc < end_loc; ++loc) {
             snprintf(namebuf, 256, "thread %d", thread_num++);
             int locName = nextString++;
@@ -734,6 +734,8 @@ static void TauTraceOTF2WriteLocalDefinitions() {
             std::string name = string(((*it)->GetName() + (monotonic ? "M" : "N")).c_str());
             metric_map_t::const_iterator global_id_iter = global_metric_map_ref.find(name);
             if(global_id_iter == global_metric_map_ref.end()) {
+                // If this node has metrics that came into existence after comms shutdown,
+                // we have nothing to map them to.
                 continue;
             }
             const uint64_t global_id = global_id_iter->second;
@@ -1113,6 +1115,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
 
     otf2_comms_shutdown = true;
     otf2_disable = false;
+
+    // Don't close the trace here -- events can still come in after comms shutdown
+    // (in particular, exit from main and exit from .TAU application)
     //TauTraceOTF2Close(tid);
 }
 
@@ -1149,6 +1154,11 @@ void TauTraceOTF2Close(int tid) {
     delete[] num_regions;
     delete[] region_db_sizes;
     delete[] region_names;
+    delete[] group_db_sizes;
+    delete[] global_group_names;
+    delete[] num_metrics;
+    delete[] metric_db_sizes;
+    delete[] metric_names;
 
 }
 
