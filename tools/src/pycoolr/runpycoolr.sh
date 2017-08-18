@@ -4,7 +4,8 @@ currdir=${PWD}
 echo ${PWD}
 
 PYCOOLR_PLATFORM="cerberus.nic.uoregon.edu"
-PYCOOLR_TOOL="beacon"
+PYCOOLR_TOOL="sos"
+NUM_RUNS=2
 
 export BEACON_TOPOLOGY_SERVER_ADDR=128.223.202.147
 export BEACON_ROOT_FS=/dev/shm/aurelem
