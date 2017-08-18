@@ -1,0 +1,29 @@
+{
+	"infocmd":"gitwork/coolr-hpc/pycoolr/coolrs.py --info"
+	"samplecmd":"gitwork/coolr-hpc/pycoolr/coolrs.py --sample"
+
+	"rabbitmq":{"server":"knight.mcs.anl.gov"}
+
+	"nodequery":{
+		"duteros":"ssh",
+		"protos":"ssh"
+	}
+
+	"wait":{
+		"wait":0.5,
+		"draw":0.5
+	}
+
+	"draw":{
+		"rapldram":"yes",
+		"wt310":"no",
+		"acpipwr":"no"
+	}
+
+	"minmax":{
+		"temp":[30,80],
+		"freq":[1.2,3.3],
+		"raplpwr":[10,130]
+	}
+	"freqnorm":2.6,
+}
