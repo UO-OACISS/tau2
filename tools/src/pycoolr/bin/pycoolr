@@ -3,9 +3,40 @@
 currdir=${PWD}
 echo ${PWD}
 
-PYCOOLR_PLATFORM="cerberus.nic.uoregon.edu"
-PYCOOLR_TOOL="beacon"
-NUM_RUNS=2
+tool=
+platform=
+
+usage()
+{
+ echo "Usage: $0 [-tool <beacon|sos>] [-platform <cerberus|godzilla>]" 1>&2;
+ exit 1;
+}
+
+for arg in "$@"; do
+  echo $arg
+  case $arg in
+    -tool=*)
+       echo "got tool option"
+       tool=`echo $arg | sed -e 's/-tool=//'`
+       echo "selected tool: "
+       echo $tool
+       ;;
+    -platform=*) 
+       echo "got platform option"
+       platform=`echo $arg | sed -e 's/-platform=//'`
+       echo "selected platorm: "
+       echo $platform
+       ;;
+    *)
+        usage
+        ;;
+  esac
+done
+
+#PYCOOLR_PLATFORM="cerberus.nic.uoregon.edu"
+PYCOOLR_PLATFORM=platform
+#PYCOOLR_TOOL="beacon"
+PYCOOLR_TOOL=tool
 
 export BEACON_TOPOLOGY_SERVER_ADDR=128.223.202.147
 export BEACON_ROOT_FS=/dev/shm/aurelem
