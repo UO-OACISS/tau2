@@ -1,0 +1,18 @@
+PyCOOLR is a GUI able to plot generic events coming from tools. These events can be filtered to be plotted via metrics the user has to select.
+PyCOOLR supports tools such as BEACON (Backplane for Event Control and Notification) and SOS (Scalable Observation System).
+
+Usage:
+
+./pycoolr -tool=<beacon|sos> -platform=<cerberus.nic.uregon.edu|...>
+
+Once the GUI is started, the user can:
+- Select the menu "Preferences"
+- Select the sub menu "Metrics"
+
+Then the user can see the selected events to be plotted. 
+
+BEACON:
+
+
+SOS: 
+
