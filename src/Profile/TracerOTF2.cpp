@@ -90,6 +90,7 @@ static bool otf2_comms_shutdown = false;
 static bool otf2_finished = false;
 static bool otf2_disable = false;
 static bool otf2_win_created = false;
+static bool otf2_shmem_init = false;
 static OTF2_Archive * otf2_archive = NULL;
 
 // Time of first event recorded
@@ -344,6 +345,13 @@ void TauTraceOTF2FlushBuffer(int tid)
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 }
+
+void TauTraceOTF2InitShmem() {
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "TauTraceOTF2InitShmem())\n");
+#endif
+  otf2_shmem_init = true;    
+}
     
 /* Initialize tracing. */
 int TauTraceOTF2Init(int tid) {
@@ -401,6 +409,11 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   }
 #endif
 
+#if defined(TAU_SHMEM)
+  if(!otf2_shmem_init) {
+    return 1;
+  }
+#endif
   if(my_node() == 0) {
     const string trace_dir = TauEnv_get_tracedir();
     const string trace_locs_dir = trace_dir + "/traces";
@@ -615,7 +628,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     global_start_time -= trace_len * 0.02;
     trace_len = end_time - global_start_time;
     trace_len *= 1.02;
-    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, end_time - global_start_time);
+    OTF2_GlobalDefWriter_WriteClockProperties(global_def_writer, TAU_OTF2_CLOCK_RES, global_start_time, trace_len);
 
     // Write a Location for each thread within each Node (which has a LocationGroup and SystemTreeNode)
         
@@ -1127,6 +1140,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
 
     otf2_comms_shutdown = true;
     otf2_disable = false;
+    end_time = TauTraceGetTimeStamp(0) ;
 
     // Don't close the trace here -- events can still come in after comms shutdown
     // (in particular, exit from main and exit from .TAU application)
@@ -1149,7 +1163,6 @@ void TauTraceOTF2Close(int tid) {
 
     otf2_finished = true;
     otf2_initialized = false;
-    end_time = TauTraceGetTimeStamp(0);
 
     // Write definitions file
     if(my_node() < 1) {

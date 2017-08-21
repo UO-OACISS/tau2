@@ -31,6 +31,7 @@ extern "C" {
   
   
   int  TAUDECL TauTraceOTF2Init(int tid);
+  void TAUDECL TauTraceOTF2InitShmem();
   int  TAUDECL TauTraceOTF2InitTS(int tid, x_uint64 ts);
   void TAUDECL TauTraceOTF2UnInitialize(int tid);
   void TAUDECL TauTraceOTF2Reinitialize(int oldid, int newid, int tid);

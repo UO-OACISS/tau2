@@ -474,6 +474,9 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 
   if ((rname.find("shmem_init") != string::npos) ||
       (rname.find("start_pes") != string::npos)) {
+      impl<<"#ifdef TAU_OTF2"<<endl;
+      impl<<"    TauTraceOTF2InitShmem();"<<endl;
+      impl<<"#endif"<<endl;
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
       impl << "  tau_totalnodes(1,__real__num_pes());"<<endl;
       impl << "  TAU_PROFILE_SET_NODE(__real__my_pe());"<<endl;
