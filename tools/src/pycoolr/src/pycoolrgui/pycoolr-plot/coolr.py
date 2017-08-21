@@ -245,6 +245,17 @@ class Coolrsub:
           self.ranks2 = params['cfg']['ranks2']
           self.sosdbfile = params['cfg']['dbfile']
 
+        if self.tool == "beacon":
+          self.nbcvars = params['cfg']['nbcvars']
+          self.listcvars = params['cfg']['cvars']
+          self.listcvarsvalues = []
+          self.listcfgcvarsarray = params['cfg']['cvarsarray']
+          self.listlabelcvarsmetric = []
+          self.listcvarsentry = []
+          self.listlabelcvarsarrayindex = []
+          self.listcvarsarrayindexentry = []
+          self.btncvarsupdate = None
+
         self.metrics = params['cfg']['metrics']
         #self.ranks = params['cfg']['ranks']
         self.ranks = [None] * self.nbsamples
@@ -1501,6 +1512,74 @@ class Coolrsub:
      #    self.canvas.draw()
      #  except Exception as errDraw:
      #    print 'Error drawing canvas: ', type(errDraw), errDraw
+
+  def btncvarsupdatefn(self):
+        print "Update CVARS"
+
+        cvars_comm_mode = os.environ["CVARS_COMM_MODE"]
+
+        strcvarsmetrics = ""
+        strcvarsvalues = ""
+
+        for i in range(self.numselectedcvars):
+
+          if self.selectedcvarsmetrics[i] == self.listcfgcvarsarray[0]:
+            self.listcvarsarrayindex[i] = self.listcvarsarrayindexentry[i].get()
+            strcvarsmetrics += self.selectedcvarsmetrics[i]
+            strcvarsmetrics += "["
+            strcvarsmetrics += self.listcvarsarrayindex[i]
+            strcvarsmetrics += "]"
+
+            self.selectedcvarsvalues[i] =  self.listcvarsentry[i].get()
+            strcvarsvalues += self.selectedcvarsvalues[i]
+            print 'numselectedcvars=%d, index=%d' % (self.numselectedcvars, i)
+            if i+1 < self.numselectedcvars:
+              strcvarsmetrics += ","
+              strcvarsvalues += ","
+
+          else:
+            self.selectedcvarsvalues[i] =  self.listcvarsentry[i].get()
+            strcvarsmetrics += self.selectedcvarsmetrics[i]
+            strcvarsvalues += self.selectedcvarsvalues[i]
+            #self.strcvars += self.selectedcvarsmetrics[i]
+            #self.strcvars += "=" 
+            #self.strcvars += self.selectedcvarsvalues[i]
+            #strcvars += ","
+            print 'numselectedcvars=%d, index=%d' % (self.numselectedcvars, i)
+            if i+1 < self.numselectedcvars:
+              strcvarsmetrics += ","
+              strcvarsvalues += ","
+              #self.strcvars += "," 
+
+        self.strcvars = strcvarsmetrics
+        self.strcvars += ";"
+        #self.strcvars += ":"
+        self.strcvars += strcvarsvalues
+
+        print "strcvarsmetrics: ", strcvarsmetrics
+        print "strcvarsvalues: ", strcvarsvalues
+        print "strcvars: ", self.strcvars
+
+        # Test if we have to communicate MPI_T CVARS in a Publish/Subscribe mode       
+        if cvars_comm_mode == "pub":
+
+          print "Publishing CVARS"
+
+          pycoolr_inst_path=os.environ['PYCOOLR_INST_PATH']
+          os.system("python "+pycoolr_inst_path+"/gui/pycoolr-plot/coolr-pub-cvars.py "+str(strcvarsmetrics)+" "+str(strcvarsvalues))
+
+        # We communicate MPI_T CVARS using the Filesystem
+        elif cvars_comm_mode == "fs":
+
+          cvars_file = ""
+          cvars_file = os.environ['MPIT_CVARS_PATH']
+        #print "TAU CVARS file: ", cvars_file
+
+          fcvars = open(cvars_file, "w")
+
+          fcvars.write(self.strcvars+"\n")
+        #fcvars.write(strcvarsvalues)
+
 
   def onselectcvars(self,evt):
         w = evt.widget
