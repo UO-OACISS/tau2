@@ -14,7 +14,7 @@ The GUI contains 6 graphs which can be allocated to the selected metrics.
 For each graph:
 - the name of the metric is displayed on the top, as well as the name of the platform the GUI executes on (into brackets)
 - X axis represents the time in seconds as units
-- Y axis: Number of counts (for BEACON)
+- Y axis: specific to each metric
 - On top left: the power of 10 (for BEACON)
 
 The user also can modify the font size of the GUI:
