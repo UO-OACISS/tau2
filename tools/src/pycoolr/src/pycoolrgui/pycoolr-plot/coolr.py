@@ -381,6 +381,10 @@ class Coolrsub:
         menubar.add_cascade(label="Preferences", menu=filemenu)
 
         filemenu.add_command(label="Metrics", command=self.metricsmenu)
+  
+        if self.tool == "beacon":
+          filemenu.add_command(label="CVARS", command=self.cvarsmenu)
+
         filemenu.add_command(label="Fonts", command=self.fontmenu)
         filemenu.add_command(label="Exit", command=self.exitPycoolr)
 
@@ -580,6 +584,42 @@ class Coolrsub:
 	self.l1.pack(side = Tk.LEFT, fill = Tk.Y) 
 	s1.pack(side = Tk.RIGHT, fill = Tk.Y) 
 	self.f1.pack()
+
+  def cvarsmenu(self):
+        # this is the child window
+        self.cvarswin = Tk.Tk()
+        self.cvarswin.title("CVARS")
+
+        self.cvarsmetricvar=Tk.StringVar()
+        self.cvarsmetricvar.set('CVAR METRIC')
+
+        self.cvarsindexrow = 3
+
+        RWidth = self.cvarswin.winfo_screenwidth()
+        RHeight = self.cvarswin.winfo_screenheight()
+
+        self.f2 = Tk.Frame(self.cvarswin)
+        self.f2.grid(row=0,column=0, sticky="n")
+
+        s2 = Tk.Scrollbar(self.f2)
+        self.l2 = Tk.Listbox(self.f2, selectmode='multiple',width=40,height=20)
+        for i in range(self.nbcvars): self.l2.insert(i, self.listcvars[i])
+        self.l2.grid(row=0,column=0,rowspan=4,sticky="nwe")
+        s2.config(command = self.l2.yview)
+        self.l2.config(yscrollcommand = s2.set)
+        self.l2.bind('<<ListboxSelect>>', self.onselectcvars)
+
+        self.stepCvarsUpdate = Tk.LabelFrame(self.cvarswin, text="CVARS Update")
+        self.stepCvarsUpdate.grid(row=0,column=1,rowspan=5,columnspan=4, sticky='NS')
+        #self.option=Tk.OptionMenu(f2, stvar, "one", "two", "three")
+        #self.labelcvars=Tk.Label(self.f2, text="TAU_MPI_T_CVAR_METRICS:").grid(row=0,column=2, sticky="nw")
+        #self.labelcvarscontent=Tk.Label(self.f2, text="").grid(row=0,column=5, sticky="ne")
+        #self.labelcvarscontent=Tk.Label(self.stepCvarsUpdate, textvariable=self.cvarsmetricvar)
+        self.labelcvarsmetric=Tk.Label(self.stepCvarsUpdate, text="CVAR METRIC")
+        self.labelcvarsmetric.grid(row=2,column=3,sticky='NS')
+        #self.option.grid(row=0,column=1,sticky="nwe")
+        #self.option.grid(row=0,column=1,sticky="nwe")
+
 
   def exitPycoolr(self):
        os.kill(self.subpid, signal.SIGTERM)
@@ -1461,6 +1501,93 @@ class Coolrsub:
      #    self.canvas.draw()
      #  except Exception as errDraw:
      #    print 'Error drawing canvas: ', type(errDraw), errDraw
+
+  def onselectcvars(self,evt):
+        w = evt.widget
+        selection = w.curselection()
+        self.selectedcvar = w.get(selection[0])
+        #print "selection:", selection, ": '%s'" % self.selectedcvar
+        self.cvarsindexrow = 0
+
+        self.numselectedcvars = len(selection)
+        self.selectedcvarsmetrics = [None] * self.numselectedcvars
+        self.selectedcvarsvalues = [None] * self.numselectedcvars
+
+        for i in range(len(selection)):
+          value = w.get(selection[i])
+          print "selection:", selection, ": '%s'" % value
+          self.selectedcvarsmetrics[i] = value
+
+        if self.listlabelcvarsmetric:
+          for i in range(len(self.listlabelcvarsmetric)):
+            self.listlabelcvarsmetric[i].grid_forget()
+
+        if self.listcvarsentry:
+          for i in range(len(self.listcvarsentry)):
+            self.listcvarsentry[i].grid_forget()
+
+        if self.btncvarsupdate:
+          self.btncvarsupdate.grid_forget()
+
+        listintselection = [int (i) for i in selection]
+
+        self.listlabelcvarsmetric = [None] * len(selection)
+        self.listcvarsentry = [None] * len(selection)
+        self.listlabelcvarsarrayindex = [None] * len(selection)
+        self.listcvarsarrayindexentry = [None] * len(selection)
+        self.listcvarsarrayindex = [None] * len(selection)
+
+        print 'selection: ', selection
+        print 'range selection: ', range(len(selection))
+
+        for cvaritem, cvarindex in zip(selection, range(len(selection))):
+
+          value = w.get(selection[cvarindex])
+          print 'len selection: ', len(selection)
+          print 'value of item %d: %s ' % (cvarindex, value)
+          print 'cvaritem: ', cvaritem
+          print 'cvarindex= ', cvarindex
+          print 'cvarsindexrow= ', self.cvarsindexrow
+
+          print 'cfg cvars array:', self.listcfgcvarsarray[0]
+          if value == self.listcfgcvarsarray[0]:
+
+            self.listlabelcvarsmetric[cvarindex]=Tk.Label(self.stepCvarsUpdate,  text=value)
+            self.listlabelcvarsmetric[cvarindex].grid(row=self.cvarsindexrow,column=3,sticky='NS')
+
+            self.listcvarsentry[cvarindex] = Tk.Entry(self.stepCvarsUpdate)
+            self.listcvarsentry[cvarindex].grid(row=self.cvarsindexrow+1, column=3, sticky = Tk.E+ Tk.W)
+
+            self.listlabelcvarsarrayindex[cvarindex]=Tk.Label(self.stepCvarsUpdate,  text="CVAR Array index")
+            self.listlabelcvarsarrayindex[cvarindex].grid(row=self.cvarsindexrow+2,column=3,sticky='NS')
+
+            self.listcvarsarrayindexentry[cvarindex] = Tk.Entry(self.stepCvarsUpdate)
+            self.listcvarsarrayindexentry[cvarindex].grid(row=self.cvarsindexrow+3, column=3, sticky = Tk.E+ Tk.W)
+
+            self.cvarsindexrow += 4
+
+          else:
+
+            self.listlabelcvarsmetric[cvarindex]=Tk.Label(self.stepCvarsUpdate, text=value)
+            self.listlabelcvarsmetric[cvarindex].grid(row=self.cvarsindexrow,column=3,sticky='NS')
+
+            self.listcvarsentry[cvarindex] = Tk.Entry(self.stepCvarsUpdate)
+            self.listcvarsentry[cvarindex].grid(row=self.cvarsindexrow+1, column=3, sticky = Tk.E+ Tk.W)
+
+            self.cvarsindexrow += 2
+
+        self.btncvarsupdate = Tk.Button(self.stepCvarsUpdate,text="Update",command=self.btncvarsupdatefn)
+        self.btncvarsupdate.grid(row=self.cvarsindexrow, column=3, sticky="we")
+
+        #self.labelcvarscontent=Tk.Label(self.f2, text=self.selectedcvar).grid(row=0,column=2, sticky="nw")
+        #self.labelcvarscontent=Tk.Label(self.stepCvarsUpdate, text=self.selectedcvar)
+        #self.labelcvarscontent.config(text=self.selectedcvar)
+
+        self.cvarsmetricvar.set(self.selectedcvar)
+        #self.cvarsentry.delete(0,Tk.END)
+        #self.cvarsentry.insert(0,str(self.dictcvars[self.selectedcvar]))
+
+        #self.cvarswin.after(1000, self.onselectcvars)
 
   def onselectmetrics(self,evt):
         w = evt.widget
