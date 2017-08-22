@@ -844,6 +844,7 @@ otf=no
 otfdir=
 otfinc=
 otflib=
+download_otf=no
 cubedir=own
 ebs2otf=no
 ebs_has_rt=no
@@ -1320,16 +1321,16 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-        -unwind=download*)
-            echo "Downloading libunwind..."
-            # So that the user doesn't have to specify the unwinder,
-            # use libunwind as the default.
-            unwinder="libunwind"
-            unwind_flag="-DTAU_USE_LIBUNWIND"
-            unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
-            download_unwind=yes
-            shift
-            ;;
+    -unwind=download*)
+        echo "Downloading libunwind..."
+        # So that the user doesn't have to specify the unwinder,
+        # use libunwind as the default.
+        unwinder="libunwind"
+        unwind_flag="-DTAU_USE_LIBUNWIND"
+        unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
+        download_unwind=yes
+        shift
+        ;;
 
 	-unwind=*)
 	    unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
@@ -1605,6 +1606,13 @@ for arg in "$@"; do
 	    cubedir=`echo $arg | sed -e 's/-cube=//'`
 	    shift
 	    ;;
+
+    -otf=download*)
+        echo "Downloading libotf2..."
+        otf=yes
+        download_otf=yes
+        shift
+        ;;
 
 	-otf=*)
 	    otf=yes
@@ -9372,6 +9380,114 @@ if [ $scorep = yes ] ; then
 	echo "********scorep and phase are on"
     fi
 
+fi
+
+
+######################################################################
+# Install libotf2 if requested
+######################################################################
+libotf2=otf2
+libotf2_dirname=otf2-2.1
+libotf2tgz=$libotf2.tgz
+libotf2url=http://www.cs.uoregon.edu/research/tau/$libotf2tgz
+
+if [ "x$otfdir" = "x" ]; then
+    libotf2dir=${targetdir}/${architecture}
+else
+    libotf2dir==$otfdir
+fi
+
+libotf2_name=otf2
+if [ "x$otfdir" != "x" -a -d "$otfdir" ] ; then
+    if [ -r $otfdir/$libotf2tgz ]; then
+        echo "NOTE: Copying $otfdir/$libotf2tgz "
+        cp $otfdir/$libotf2tgz .
+        download_otf=yes
+    fi
+fi
+
+
+if [ "x$download_otf" = xyes ] ; then
+    if [ $machine = craycnl ] ; then
+        otfdir=${libotf2dir}/${libotf2}-${c_compiler}-${PE_ENV}
+    else
+        otfdir=${libotf2dir}/${libotf2}-${c_compiler}
+    fi
+    preotfdir=`pwd`
+
+
+    if [ -r "$otfdir/lib/lib${libotf2_name}.so" -o \
+        -r "$otfdir/lib/lib${libotf2_name}.a" -o \
+        -r "$otfdir/lib/lib${libotf2_name}.dylib" -o \
+        -r "$otfdir/lib64/lib${libotf2_name}.so" -o \
+        -r "$otfdir/lib64/lib${libotf2_name}.a" -o \
+        -r "$otfdir/lib64/lib${libotf2_name}.dylib" ] ; then
+        echo "Found: lib${libotf2_name}"
+        echo "libotf2 download already found, skipping"
+    else
+        echo "Not found in ${otfdir}: lib${libotf2_name}"
+        # get the tar file
+        if [ ! -f $libotf2tgz ] ; then
+            download "$libotf2url" "$libotf2tgz"
+        fi
+
+        # check the tar file
+        if [ ! -f $libotf2tgz ] ; then
+            echo "$libotf2tgz did not download.  Please download it manually from: "
+            echo "$libotf2url"
+            echo "Please enter the directory containing the tarball: ${nnl}"
+            read RESPONSE
+            cp $RESPONSE/$libotf2tgz .
+        else
+            echo "expanding $libotf2tgz..."
+            tar -xzf $libotf2tgz
+            echo "removing $libotf2tgz..."
+            rm $libotf2tgz
+            if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+            then
+                otf2_c_compiler=gcc
+                otf2_cxx_compiler=g++
+            else
+                otf2_c_compiler=${c_compiler}
+                otf2_cxx_compiler=${cxx_compiler}
+            fi
+
+            configresult=0
+            makeresult=0
+            libotf2_log=configure.log
+            cd $libotf2_dirname
+            echo "configuring $libotf2... (see `pwd`/${libotf2_log} for log)..."
+            ./configure --prefix=${otfdir} CC=${otf2_c_compiler} CXX=${otf2_cxx_compiler} > ${libotf2_log} 2>&1
+            configresult=$?
+            if [ $configresult -eq 0 ] ; then
+                libotf2_log=build.log
+                echo "building ${libotf2}... (see `pwd`/${libotf2_log} for log)..."
+                make -i > $libotf2_log  2>&1
+                makeresult=$?
+                if [ $makeresult -eq 0 ] ; then
+                    libotf2_log=install.log
+                    echo "installing ${libotf2} to ${otfdir}... (see `pwd`/${libotf2_log} for log)..."
+                    make -i install > $libotf2_log  2>&1
+                    makeresult=$?
+                fi
+            fi
+            if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+                # Some systems install to lib64 instead of lib
+                if [ -d "$otfdir/lib64" -a ! -d "$otfdir/lib" ] ; then
+                    tdir=$otfdir
+                    pwddir=${PWD}
+                    cd $tdir
+                    ln -s lib64 lib
+                    cd $pwddir
+                fi
+                echo "...Success."
+            else
+                echo "ERROR BUILDING $libotf2!"
+                echo "Please check `pwd`/config.log or `pwd`/${libotf2_log}"
+            fi
+        fi
+    fi
+    cd $preotfdir
 fi
 
 if [ $otf = yes ] ; then
