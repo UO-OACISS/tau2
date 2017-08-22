@@ -42,3 +42,32 @@ PyCOOLR reads configuration file where it picks some necessary information such 
 - BEACON: The configuration file associated to BEACON includes a field named "cvars" containing a list a CVARs to be read by the GUI.
 - SOS: The configuration file associated to SOS includes a field named "dbfile" containing the path to the database file to be read by PyCOOLR 
 
+--------------------------------------
+
+Use case with BEACON: runtime introspection with MPI-T
+
+We consider here a use case where we can perform runtime introspection of an MPI library. 
+- MPI library: MVAPICH2 with MPI-T support
+- Application: NAS Parallel Benchmark Suite
+- Performance tool: TAU
+
+MPI-T has been shortly supported in MVAPICH2 MPI library. We instrument the NPB benchmark LU with the TAU Performance tool. 
+TAU is able to collect the MPI-T PVARs from MVAPICH2 using the MPI-T API, and forward PVARs to BEACON.
+PyCOOLR uses BEACON API to subscribe to these PVARs and plot them.
+
+So we proceed this way:
+
+a) After properly set the environment variables (PATH and LD_LIBRARY_PATH), we start the BEACON daemons (server and node agent):
+$ beacon_topology_setup_server
+$ global_beacon
+
+b) We set the environment variable to track MPI-T PVARs:
+$ export TAU_TRACK_MPI_T_PVARS=1
+
+c) We start the NPB LU benchmarks with TAU instrumentation:
+$ mpirun -np 4 tau_exec -T mvapich2,beacon,mpi,mpit ./lu.C.4
+
+TAU then starts to collect PVARs and make publish them using BEACON API.
+
+d) We then launch PyCOOLR which subscribes to the PVARs
+
