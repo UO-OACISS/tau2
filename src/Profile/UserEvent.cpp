@@ -235,7 +235,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
     // Compute relevant statistics for the data
     if (minEnabled && data < d.minVal) {
 #ifdef TAU_USE_EVENT_THRESHOLDS
-      if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
+      if ((TauEnv_get_evt_threshold() > 0.0) && (d.nEvents > 1) && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
         if (name[0] != '[') { //re-entrant
 #ifndef TAU_WINDOWS
           char ename[20 + name.length()];
@@ -262,7 +262,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 
     if (maxEnabled && data > d.maxVal) {
 #ifdef TAU_USE_EVENT_THRESHOLDS
-      if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
+      if ((TauEnv_get_evt_threshold() > 0.0) && (d.nEvents > 1) && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
         if (name[0] != '[') { //re-entrant
 #ifndef TAU_WINDOWS
           char ename[20 + name.length()];
