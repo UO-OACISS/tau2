@@ -1454,7 +1454,7 @@ int TauProfiler_StoreData(int tid)
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
   }
 
-  if (TauEnv_get_tracing() && (tid == 0) ) {
+  if (TauEnv_get_tracing() && (tid == 0) && (TauEnv_get_trace_format() != TAU_TRACE_FORMAT_OTF2)) {
     Tau_print_metadata_for_traces(tid);
   }
 
