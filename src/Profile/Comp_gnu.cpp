@@ -358,7 +358,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         if (TauEnv_get_bfd_lookup()) {
 	const char *dem_name;
 
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
         TAU_INTERNAL_DEMANGLE_NAME(node->info.funcname, dem_name);
 #else
         dem_name = node->info.funcname;
