@@ -222,7 +222,10 @@ void TauTraceFlushBuffer(int tid)
   DEBUGPROFMSG("Tid "<<tid<<": TauTraceFlush()"<<endl;);
   if (numEventsToBeFlushed != 0) {
 #ifdef TAU_MPI
-   if (Tau_get_usesMPI())  {
+#ifndef TAU_SHMEM 
+   if (Tau_get_usesMPI())  
+#endif /* TAU_SHMEM */
+   {
 #endif /* TAU_MPI */
 
     ret = write(TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
@@ -233,10 +236,13 @@ void TauTraceFlushBuffer(int tid)
 #endif
     }
 #ifdef TAU_MPI
-   } else {
+   } 
+#ifndef TAU_SHMEM 
+   else {
      // do nothing.
      return;
    }
+#endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
   }
   TauCurrentEvent[tid] = 0;
@@ -529,7 +535,10 @@ int TauTraceDumpEDF(int tid) {
   dirname = TauEnv_get_tracedir();
   
 #ifdef TAU_MPI
-  if (Tau_get_usesMPI()) {
+#ifndef TAU_SHMEM
+  if (Tau_get_usesMPI()) 
+#endif /* TAU_SHMEM */
+  {
 #endif /* TAU_MPI */
     sprintf(filename,"%s/events.%d.edf",dirname, RtsLayer::myNode());
     if ((fp = fopen (filename, "w+")) == NULL) {
@@ -539,10 +548,13 @@ int TauTraceDumpEDF(int tid) {
       return -1;
     }
 #ifdef TAU_MPI
-  } else {
+  }
+#ifndef TAU_SHMEM 
+  else {
     RtsLayer::UnLockDB();
     return -1;
   }
+#endif /* TAU_SHMEM */
 #endif /* TAU_MPI */
   
   // Data Format 
