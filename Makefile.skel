@@ -181,6 +181,8 @@ install: .clean
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?; done
+	@echo " "
+	@echo "Built $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/lib/Makefile.tau$(TAU_CONFIG)"
 	@echo "***************** DONE ************************"
 
 javadoc:
