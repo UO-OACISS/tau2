@@ -370,7 +370,7 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
 //         Also look for "tau*/include/" where * has no "/".
 bool nameInTau(const char *name)
 {
-  if (strstr("UNRESOLVED ADDR", name) == NULL)
+  if (strstr(name, "UNRESOLVED ADDR") != NULL)
     return false;
   name = strchr(name, '{') + 1;
   static char const * libprefix[] = {"libtau", "libTAU", NULL};
@@ -511,12 +511,10 @@ bool determineCallSiteViaString(unsigned long *addresses)
           //   the function itself.
           hasSHMEM = hasSHMEM || nameInSHMEM(name);
           free(name);
-          // No idea why this works, or why the magical "2" is required below.
-#ifdef __PGI
-          int offset = hasSHMEM ? 1 : 6;
-#else /* __PGI */
-          int offset = hasSHMEM ? 1 : 2;
-#endif /* __PGI */
+          // No idea why this works, or why the magical "2" (or 6 for __PGI) is required below.
+
+          int offset = hasSHMEM ? 1 : TauEnv_get_callsite_offset();
+
           if (i + offset < length) {
             callsite = addresses[i + offset];
             name = Tau_callsite_resolveCallSite(addresses[i + offset]);
