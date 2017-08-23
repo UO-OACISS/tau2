@@ -1741,8 +1741,11 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           }
 
         } else {
-#ifdef TAU_MPI
-        if (Tau_get_usesMPI()) {
+#ifdef TAU_MPI 
+#ifndef TAU_SHMEM 
+        if (Tau_get_usesMPI()) 
+#endif /* TAU_SHMEM */
+        {
 #endif /* TAU_MPI */
           if ((fp = fopen(dumpfile, "w+")) == NULL) {
             char errormsg[1024];
@@ -1770,6 +1773,13 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
         TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
         writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
 #ifdef TAU_MPI
+      } else {
+#ifdef TAU_SHMEM
+        writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#else /* TAU_SHMEM */
+        printf("TAU: WARNING! An MPI configuration was used in TAU, but MPI_Init was not called. No data will be written.\n"); 
+	printf("Node = %d\n", RtsLayer::myNode());
+#endif /* TAU_SHMEM */
       }
 #endif /* TAU_MPI */
     }
