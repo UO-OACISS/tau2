@@ -63,6 +63,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_callpath_depth();
   int  TAUDECL TauEnv_get_callsite();
   int  TAUDECL TauEnv_get_callsite_depth();
+  int  TAUDECL TauEnv_get_callsite_offset();
   int  TAUDECL TauEnv_get_depth_limit();
   void TAUDECL TauEnv_set_depth_limit(int value);
   int  TAUDECL TauEnv_get_comm_matrix();
