@@ -1777,8 +1777,8 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 #ifdef TAU_SHMEM
         writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
 #else /* TAU_SHMEM */
-        printf("TAU: WARNING! An MPI configuration was used in TAU, but MPI_Init was not called. No data will be written.\n"); 
-	printf("Node = %d\n", RtsLayer::myNode());
+        printf("TAU: WARNING! An MPI configuration was used in TAU, but MPI_Init was not called. No data will be written for pid=%d.\n", getpid()); 
+	//printf("Node = %d\n", RtsLayer::myNode());
 #endif /* TAU_SHMEM */
       }
 #endif /* TAU_MPI */
