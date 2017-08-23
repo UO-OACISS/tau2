@@ -370,7 +370,7 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
 //         Also look for "tau*/include/" where * has no "/".
 bool nameInTau(const char *name)
 {
-  if (strstr("UNRESOLVED ADDR", name) == NULL)
+  if (strstr(name, "UNRESOLVED ADDR") != NULL)
     return false;
   name = strchr(name, '{') + 1;
   static char const * libprefix[] = {"libtau", "libTAU", NULL};
