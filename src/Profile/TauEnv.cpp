@@ -1643,10 +1643,10 @@ void TauEnv_initialize()
       if (env_callsite_offset < 0) {
         env_callsite_offset = TAU_CALLSITE_OFFSET_DEFAULT;
       }
+      sprintf(tmpstr, "%d", env_callsite_offset);
+      TAU_METADATA("TAU_CALLSITE_OFFSET", tmpstr);
+      TAU_VERBOSE("TAU: Callsite Offset = %d\n", env_callsite_offset);
     }
-    TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_depth);
-    sprintf(tmpstr, "%d", env_callsite_depth);
-    TAU_METADATA("TAU_CALLSITE_DEPTH", tmpstr);
 
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI))
