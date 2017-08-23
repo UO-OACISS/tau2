@@ -96,7 +96,7 @@ extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const
 
 
         const char *dem_name = 0;
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#if defined(TAU_BFD) && defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	TAU_INTERNAL_DEMANGLE_NAME(name, dem_name);
 #else
 	dem_name = name; 
