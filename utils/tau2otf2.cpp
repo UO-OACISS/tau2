@@ -126,7 +126,7 @@ uint64_t* locations;//[ locations ];
 
 uint64_t TauGetClockTicksInGHz(double time)
 {
-  return (uint64_t) (time * TAU_MULT); 
+  return (uint64_t) (time * TAU_MULT);
 }
 
 /* any unique id */
@@ -198,9 +198,9 @@ struct {
 
 /* Global data */
 int sampgroupid = 1;
-int sampclassid = 2; 
+int sampclassid = 2;
 vector<stack <unsigned int> > callstack;
-int *offset = 0; 
+int *offset = 0;
 
 
 struct group {
@@ -327,7 +327,7 @@ int GlobalId(int localnodeid, int localthreadid)
       printf("Error: offset vector is NULL in GlobalId()\n");
       return localnodeid;
     }
-    
+
     /* for multithreaded programs, modify this routine */
     return offset[localnodeid]+localthreadid;  /* for single node program */
   }
@@ -341,26 +341,26 @@ int GlobalId(int localnodeid, int localthreadid)
 /* implementation of callback routines */
 /***************************************************************************
  * Description: EnterState is called at routine entry by trace input library
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int EnterState(void *userData, double time, 
+int EnterState(void *userData, double time,
 		unsigned int nid, unsigned int tid, unsigned int stateid)
 {
   int cpuid = GlobalId(nid, tid);
-  dprintf("Entered state %d time %g cpuid %d\n", 
+  dprintf("Entered state %d time %g cpuid %d\n",
 		  stateid, time, cpuid);
 
-  if (cpuid >= (int) callstack.size()+1) 
+  if (cpuid >= (int) callstack.size()+1)
   {
     fprintf(stderr, "ERROR: tau2otf: EnterState() cpuid %d exceeds callstack size %d\n", cpuid, (int)callstack.size());
     exit(1);
 
   }
-	
+
   callstack[cpuid].push(stateid);
 
-/* OLD : 
+/* OLD :
   OTF_Writer_writeDownto((OTF_Writer*)userData, TauGetClockTicksInGHz(time), stateid, cpuid, TAU_SCL_NONE);
 */
   //OTF2_EvtWriter_Enter((OTF2_EvtWriter*)userData, TauGetClockTicksInGHz(time), stateid, cpuid, TAU_SCL_NONE);
@@ -376,8 +376,8 @@ double lastt=0;
 
 /***************************************************************************
  * Description: EnterState is called at routine exit by trace input library
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, unsigned int statetoken)
 {
@@ -386,8 +386,8 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
   callstack[cpuid].pop();
 
   dprintf("Leaving state %d time %g cpuid %d \n", stateid, time, cpuid);
-  
-/* OLD: 
+
+/* OLD:
   OTF_Writer_writeUpfrom((OTF_Writer*)userData, TauGetClockTicksInGHz(time), stateid, cpuid, TAU_SCL_NONE);
 */
 
@@ -402,13 +402,13 @@ int LeaveState(void *userData, double time, unsigned int nid, unsigned int tid, 
 }
 
 /***************************************************************************
- * Description: ClockPeriod (in microseconds) is specified here. 
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * Description: ClockPeriod (in microseconds) is specified here.
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int ClockPeriod( void*  userData, double clkPeriod )
 {
-  
+
   dprintf("Clock period %g\n", clkPeriod);
   //OTF2_EvtWriter_writeDefTimerResolution((OTF2_EvtWriter*)userData, TAU_GLOBAL_STREAM_ID, TauGetClockTicksInGHz(1/clkPeriod));
 
@@ -417,17 +417,17 @@ int ClockPeriod( void*  userData, double clkPeriod )
 
 /***************************************************************************
  * Description: DefThread is called when a new nodeid/threadid is encountered.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int DefThread(void *userData, unsigned int nodeToken, unsigned int threadToken,
 const char *threadName )
 {
-  dprintf("DefThread nid %d tid %d, thread name %s\n", 
+  dprintf("DefThread nid %d tid %d, thread name %s\n",
 		  nodeToken, threadToken, threadName);
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 0; /* initialize it */
-  numthreads[nodeToken] = numthreads[nodeToken] + 1; 
-  if (threadToken > 0) multiThreaded = true; 
+  numthreads[nodeToken] = numthreads[nodeToken] + 1;
+  if (threadToken > 0) multiThreaded = true;
 
   location_count++;
   return 0;
@@ -435,8 +435,8 @@ const char *threadName )
 
 /***************************************************************************
  * Description: EndTrace is called when an EOF is encountered in a tracefile.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int EndTrace( void *userData, unsigned int nodeToken, unsigned int threadToken)
 {
@@ -458,14 +458,14 @@ int EndTrace( void *userData, unsigned int nodeToken, unsigned int threadToken)
 
 /***************************************************************************
  * Description: DefStateGroup registers a profile group name with its id.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int DefStateGroup( void *userData, unsigned int stateGroupToken, 
+int DefStateGroup( void *userData, unsigned int stateGroupToken,
 		const char *stateGroupName )
 {
-  
-  dprintf("StateGroup groupid %d, group name %s\n", stateGroupToken, 
+
+  dprintf("StateGroup groupid %d, group name %s\n", stateGroupToken,
 		  stateGroupName);
 
   groups[stateGroupToken]=group();
@@ -489,14 +489,14 @@ check_status
 }
 /***************************************************************************
  * Description: DefState is called to define a new symbol (event). It uses
- *		the token used to define the group identifier. 
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ *		the token used to define the group identifier.
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int DefState( void *userData, unsigned int stateToken, const char *stateName, 
+int DefState( void *userData, unsigned int stateToken, const char *stateName,
 		unsigned int stateGroupToken )
 {
-  
+
   dprintf("DefState stateid %d stateName %s stategroup id %d\n",
 		  stateToken, stateName, stateGroupToken);
 
@@ -568,8 +568,8 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 /***************************************************************************
  * Description: DefUserEvent is called to register the name and a token of the
  *  		user defined event (or a sample event in Vampir terminology).
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int DefUserEvent( void *userData, unsigned int userEventToken,
 		const char *userEventName , int monotonicallyIncreasing)
@@ -632,7 +632,7 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
 #endif /* TAU_OTF2_1_1 */
 
     /* NOTE: WE DO NOT HAVE THE DO DIFFERENTIATION PARAMETER YET IN OTF */
-  } 
+  }
 
   /*
   //TODO: Check this out
@@ -651,10 +651,10 @@ NUM_OF_CLASSES+=1;
 
 /***************************************************************************
  * Description: EventTrigger is called when a user defined event is triggered.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int EventTrigger( void *userData, double time, 
+int EventTrigger( void *userData, double time,
 		unsigned int nid,
 		unsigned int tid,
 	       	unsigned int userEventToken,
@@ -689,16 +689,16 @@ int EventTrigger( void *userData, double time,
 
 /***************************************************************************
  * Description: SendMessage is called when a message is sent by a process.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
-int SendMessage( void *userData, double time, 
+int SendMessage( void *userData, double time,
 		unsigned int sourceNodeToken,
-		unsigned int sourceThreadToken, 
+		unsigned int sourceThreadToken,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
-		unsigned int messageTag, 
+		unsigned int messageTag,
 		unsigned int messageComm)
 {
 
@@ -711,9 +711,9 @@ int SendMessage( void *userData, double time,
   int source = GlobalId(sourceNodeToken, sourceThreadToken);
   int dest   = GlobalId(destinationNodeToken, destinationThreadToken);
 
-  dprintf("SendMessage: time %g, source cpuid %d , destination cpuid %d, size %d, tag %d\n", 
-		  time, 
-		  source, dest, 
+  dprintf("SendMessage: time %g, source cpuid %d , destination cpuid %d, size %d, tag %d\n",
+		  time,
+		  source, dest,
 		  messageSize, messageTag);
 
   //OTF2_EvtWriter_writeSendMsg((OTF2_EvtWriter*)userData, TauGetClockTicksInGHz(time), source, dest, TAU_DEFAULT_COMMUNICATOR, messageTag, messageSize, TAU_SCL_NONE);
@@ -731,12 +731,12 @@ int SendMessage( void *userData, double time,
 
 /***************************************************************************
  * Description: RecvMessage is called when a message is received by a process.
- * 		This is a callback routine which must be registered by the 
- * 		trace converter. 
+ * 		This is a callback routine which must be registered by the
+ * 		trace converter.
  ***************************************************************************/
 int RecvMessage( void *userData, double time,
 		unsigned int sourceNodeToken,
-		unsigned int sourceThreadToken, 
+		unsigned int sourceThreadToken,
 		unsigned int destinationNodeToken,
 		unsigned int destinationThreadToken,
 		unsigned int messageSize,
@@ -753,9 +753,9 @@ int RecvMessage( void *userData, double time,
   int source = GlobalId(sourceNodeToken, sourceThreadToken);
   int dest   = GlobalId(destinationNodeToken, destinationThreadToken);
 
-  dprintf("RecvMessage: time %g, source cpuid %d, destination cpuid %d, size %d, tag %d\n", 
-		  time, 
-		  source, dest, 
+  dprintf("RecvMessage: time %g, source cpuid %d, destination cpuid %d, size %d, tag %d\n",
+		  time,
+		  source, dest,
 		  messageSize, messageTag);
 
   //OTF2_EvtWriter_writeRecvMsg((OTF2_EvtWriter*)userData, TauGetClockTicksInGHz(time), dest, source, TAU_DEFAULT_COMMUNICATOR, messageTag, messageSize, TAU_SCL_NONE);
@@ -777,9 +777,9 @@ int RecvMessage( void *userData, double time,
 int ResetEOFTrace(void)
 {
   /* mark all entries of EOF_Trace to be false */
-  for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it = 
+  for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it =
 		  EOF_Trace.begin(); it != EOF_Trace.end(); it++)
-  { /* Explicilty mark end of trace to be not over */ 
+  { /* Explicilty mark end of trace to be not over */
     (*it).second = 0;
   }
 
@@ -826,7 +826,7 @@ get_time
 }
 
 /***************************************************************************
- * Description: The main entrypoint. 
+ * Description: The main entrypoint.
  ***************************************************************************/
 int main(int argc, char **argv)
 {
@@ -838,15 +838,15 @@ int main(int argc, char **argv)
   int recs_read;
   char *trace_file;
   char *edf_file;
-  char *out_file = NULL; 
+  char *out_file = NULL;
   int no_message_flag=0;
   OTF2_Compression compress_flag = OTF2_COMPRESSION_NONE; /* by default do not compress traces */
   //OTF_FileCompression compression = OTF_FILECOMPRESSION_UNCOMPRESSED;
-  int i; 
+  int i;
   /* main program: Usage app <trc> <edf> [-a] [-nomessage] */
   if (argc < 4)
   {
-    printf("Usage: %s <TAU trace> <edf file> <out file> [-n streams] [-nomessage]  [-z] [-v]\n", 
+    printf("Usage: %s <TAU trace> <edf file> <out file> [-n streams] [-nomessage]  [-z] [-v]\n",
 		    argv[0]);
 //    printf(" -n <streams> : Specifies the number of output streams (default 1)\n");
     printf(" -nomessage : Suppress printing of message information in the trace\n");
@@ -858,7 +858,7 @@ int main(int argc, char **argv)
     printf(" %s merged.trc tau.edf app\n", argv[0]);
     exit(1);
   }
-  
+
 
 /***************************************************************************
  ***************************************************************************/
@@ -871,19 +871,19 @@ int main(int argc, char **argv)
       case 1:
 	edf_file = argv[2];
 	break;
-      case 2: 
-	out_file = argv[3]; 
-	break; 
+      case 2:
+	out_file = argv[3];
+	break;
       default:
 	if (strcmp(argv[i], "-n")==0)
         {
-	  num_streams = atoi(argv[i+1]); 
-	  i++; 
+	  num_streams = atoi(argv[i+1]);
+	  i++;
         }
 	if (strcmp(argv[i], "-s")==0)
         {
-	  num_nodes = atoi(argv[i+1]); 
-	  i++; 
+	  num_nodes = atoi(argv[i+1]);
+	  i++;
         }
 	if (strcmp(argv[i], "-nomessage")==0)
 	{
@@ -976,8 +976,8 @@ int main(int argc, char **argv)
   }*/
 
   /* Write the trace file header
- 
-  
+
+
   OTF2_EvtWriter_writeDefCreator((OTF2_EvtWriter *)fcb, TAU_GLOBAL_STREAM_ID, "");
   OTF2_EvtWriter_writeDefCounterGroup((OTF2_EvtWriter *)fcb, TAU_GLOBAL_STREAM_ID, sampclassid, "TAU counter data");
 */
@@ -1001,8 +1001,8 @@ int main(int argc, char **argv)
 
   if (num_nodes == -1) {
     /* in the first pass, we determine the no. of cpus and other group related
-     * information. In the second pass, we look at the function entry/exits */ 
-    
+     * information. In the second pass, we look at the function entry/exits */
+
     Ttf_CallbacksT firstpass;
     /* In the first pass, we just look for node/thread ids and def records */
     firstpass.UserData = glob_def_writer;
@@ -1017,30 +1017,30 @@ int main(int argc, char **argv)
     firstpass.EventTrigger = 0; /* these events are ignored in the first pass */
     firstpass.EnterState = 0;   /* these events are ignored in the first pass */
     firstpass.LeaveState = 0;   /* these events are ignored in the first pass */
-    
+
 
     /* Go through all trace records */
     do {
       recs_read = Ttf_ReadNumEvents(fh,firstpass, 1024);
-#ifdef DEBUG 
+#ifdef DEBUG
       if (recs_read != 0)
 	cout <<"Read "<<recs_read<<" records"<<endl;
-#endif 
+#endif
     }
     while ((recs_read >0) && (!EndOfTrace));
-    
+
 
     /* reset the position of the trace to the first record */
-    for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it = 
+    for (map< pair<int,int>, int, less< pair<int,int> > >:: iterator it =
 	   EOF_Trace.begin(); it != EOF_Trace.end(); it++)
-      { /* Explicilty mark end of trace to be not over */ 
+      { /* Explicilty mark end of trace to be not over */
 	(*it).second = 0;
       }
-    totalnidtids = EOF_Trace.size(); 
+    totalnidtids = EOF_Trace.size();
   } else {
     totalnidtids = num_nodes;
     for (i=0; i<num_nodes; i++) {
-      numthreads[i] = 1; 
+      numthreads[i] = 1;
     }
   }
 
@@ -1055,13 +1055,13 @@ int main(int argc, char **argv)
   //unsigned int groupid = 1;
   //int tid = 0;
   int nodes = numthreads.size(); /* total no. of nodes */
-  int *threadnumarray = new int[nodes]; 
+  int *threadnumarray = new int[nodes];
   offset = new int[nodes+1];
   offset[0] = 0; /* no offset for node 0 */
   for (i=0; i < nodes; i++)
   { /* one for each node */
-    threadnumarray[i] = numthreads[i]; 
-    offset[i+1] = offset[i] + numthreads[i]; 
+    threadnumarray[i] = numthreads[i];
+    offset[i+1] = offset[i] + numthreads[i];
   }
 
 
@@ -1069,7 +1069,7 @@ int main(int argc, char **argv)
   unsigned int *cpuidarray = new unsigned int[totalnidtids]; // max
   // next, we write the cpu name and a group name for node/threads
   for (i=0; i < nodes; i++)
-  { 
+  {
     char name[32];
     for (tid = 0; tid < threadnumarray[i]; tid++)
     {
@@ -1079,12 +1079,12 @@ int main(int argc, char **argv)
       dprintf("Calling OTF2_EvtWriter_writeDefProcess cpuid %d name %s\n", cpuid, name);
       OTF2_EvtWriter_writeDefProcess((OTF2_EvtWriter *)fcb, TAU_GLOBAL_STREAM_ID, cpuid, name, TAU_NO_PARENT);
     }
-    if (multiThreaded) 
+    if (multiThreaded)
     { // define a group for these cpus only if it is a multi-threaded trace
       sprintf(name, "Node %d", i);
       groupid ++; // let flat group for samples take the first one
       // Define a group: threadnumarray[i] represents no. of threads in node
-    
+
       OTF2_EvtWriter_writeDefProcessGroup((OTF2_EvtWriter *)fcb, TAU_GLOBAL_STREAM_ID, groupid, name, threadnumarray[i],
 	(uint32_t*) cpuidarray);
     }
@@ -1149,7 +1149,13 @@ string_id++;
       for ( uint64_t thread = 0; thread < (uint64_t)numthreads[rank]; thread++ )
       {
     	  if(thread==0){
-    		  sprintf( name_buffer, "Master thread");
+					if(nodes<=1)
+    		  {
+						sprintf( name_buffer, "Master thread");
+					}
+					else{
+						sprintf( name_buffer, "Rank");
+					}
     	  }
     	  else{
           sprintf( name_buffer, "Thread %d" ,(int)thread );
@@ -1189,10 +1195,10 @@ string_id++;
   { /* assign i to each entry */
     idarray[i] = i+1;
   }
-  
+
   /* create a callstack on each thread/process id */
   dprintf("totalnidtids  = %d\n", totalnidtids);
-  //callstack = new stack<unsigned int> [totalnidtids](); 
+  //callstack = new stack<unsigned int> [totalnidtids]();
   callstack.resize(totalnidtids+1);
 
   /**Set up the state groups*/
@@ -1230,7 +1236,7 @@ string_id++;
   //OTF2_EvtWriter_writeDefProcessGroup((OTF2_EvtWriter *)fcb, TAU_GLOBAL_STREAM_ID, sampgroupid, name, totalnidtids, idarray);
 
   EndOfTrace = 0;
-  /* now reset the position of the trace to the first record */ 
+  /* now reset the position of the trace to the first record */
   Ttf_CloseFile(fh);
   /* Re-open it for input */
   fh = Ttf_OpenFileForInput( argv[1], argv[2]);
@@ -1242,7 +1248,7 @@ string_id++;
   }
 
   dprintf("Re-analyzing the trace file \n");
- 
+
 
   Ttf_CallbacksT cb;
   /* Fill the callback struct */
@@ -1275,7 +1281,7 @@ string_id++;
     cb.SendMessage = SendMessage;
     cb.RecvMessage = RecvMessage;
   }
-  
+
   /* Go through each record until the end of the trace file */
 
 
@@ -1285,7 +1291,7 @@ string_id++;
 
   do {
     recs_read = Ttf_ReadNumEvents(fh,cb, 1024);
-#ifdef DEBUG  
+#ifdef DEBUG
     if (recs_read != 0)
       cout <<"Read "<<recs_read<<" records"<<endl;
 #endif /* DEBUG */
@@ -1389,7 +1395,7 @@ check_status( status, "Write communicator." );
 #else
                         OTF2_MAPPING_COMM,
 #endif /* TAU_OTF2_1_1 */
-                		  
+
                                                              mpi_comm_map );
                   check_status( status, "Write MPI Comm mapping." );
               //}
@@ -1426,5 +1432,3 @@ check_status( status, "Write communicator." );
  * $Revision: 1.5 $   $Date: 2008/05/28 21:21:27 $
  * VERSION_ID: $Id: tau2otf.cpp,v 1.5 2008/05/28 21:21:27 amorris Exp $
  ***************************************************************************/
-
-
