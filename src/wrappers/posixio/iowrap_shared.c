@@ -1224,6 +1224,7 @@ int bind(int socket, const struct sockaddr *address, socklen_t address_len) {
  * accept
  ********************************************************************/
 #ifndef _AIX
+#ifdef TAU_ENABLE_ACCEPT_WRAPPER
 int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   static int (*_accept) (int socket, struct sockaddr *address, socklen_t* address_len) = NULL;
   int current;
@@ -1250,6 +1251,7 @@ int accept(int socket, struct sockaddr *address, socklen_t* address_len) {
   }
   return current;
 }
+#endif /* TAU_ENABLE_ACCEPT_WRAPPER */
 #endif /* _AIX */
 
 /*********************************************************************
