@@ -56,7 +56,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <string>
 #ifdef TAU_MPI
 #include <mpi.h>
+#if (defined(TAU_CRAYCNL_PMI) || defined(TAU_CRAYCNL_PMI_FOUND))
+#define TAU_ENABLE_PMI 1 
 #include <pmi.h>
+#endif /* TAU_CRAYCNL_PMI || TAU_CRAYCNL_PMI_FOUND */
 #endif
 #endif//TAU_CRAYCNL
 
@@ -870,8 +873,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
 
 #endif /* TAU_FUJITSU && TAU_MPI */
 
-#if (defined(TAU_CRAYCNL) && defined(TAU_MPI))
-#ifdef TAU_MPI
+#ifdef TAU_ENABLE_PMI
     FILE* procfile = fopen("/proc/self/stat", "r");
     long to_read = 8192;
     char buffer[to_read];
@@ -914,7 +916,6 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
   Tau_metadata_register("CRAY_PMI_Y", xyz.mesh_y);
   Tau_metadata_register("CRAY_PMI_Z", xyz.mesh_z);
 
-#endif
 #endif
   return 0;
 }

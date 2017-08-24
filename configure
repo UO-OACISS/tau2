@@ -462,6 +462,7 @@ for arg in "$@"; do
         echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
         echo "                       (Note: also disables sampling, marker tracking)."
         echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+        echo "-PMI ...................... Enable Cray PMI for tracking topology info."
         echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
         echo "-help ...................................... display this help message."
         echo "-fullhelp .............................. display the full help message."
@@ -626,9 +627,10 @@ for arg in "$@"; do
 	    echo "-noex .................. Use no exceptions while compiling the library."
 	    echo "-noplugins ...................... Do not build support for TAU plugins."
 	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
-        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
-        echo "                       (Note: also disables sampling, marker tracking)."
+            echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+            echo "                       (Note: also disables sampling, marker tracking)."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+            echo "-PMI ...................... Enable Cray PMI for tracking topology info."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
 	    echo "                              See http://www-unix.mcs.anl.gov/zeptoos/."
@@ -766,6 +768,7 @@ sproc=no
 noex=no
 plugins=yes
 disableshared=no
+pmi=no
 setnode0=no
 compensate=no
 smarts=no
@@ -2199,6 +2202,12 @@ for arg in "$@"; do
 	-DISABLE_MEMORY_MANAGER)
 	    # Disable heap management for sampling, signal handling
 	    disable_memory_manager=yes
+	    shift
+	    ;;
+
+	-PMI)
+	    # Enable tracking Cray topology information using PMI 
+	    pmi=yes
 	    shift
 	    ;;
 
@@ -5654,6 +5663,21 @@ if [ $pgi = yes ]; then
   if [ -d $extradir/lib -a ! -r $extradir/lib/libstd.a ]; then
     echo "NOTE: PGI 16+ compiler does not provide libstd.* files in $extradir/lib"
     fixmakeargs="$fixmakeargs PGI_NO_LIBSTD"
+  fi
+fi
+
+if [ $machine = craycnl -a $pmi = no ]; then
+  echo "Testing for <pmi.h> header..."
+cat <<EOF > pmitest.c
+#include <pmi.h>
+EOF
+  if $cxx_compiler -c pmitest.c 1> /dev/null 2>&1 
+  then
+    echo "yes"
+    fixmakeargs="$fixmakeargs CRAYCNL_PMI_FOUND"
+  else
+    echo "no. WARNING! You may need to reconfigure TAU with -PMI if there are missing references during linking."
+    echo "============="
   fi
 fi
 
@@ -9969,6 +9993,10 @@ fi
 
 if [ $disable_memory_manager = yes ] ; then
     fixmakeargs="$fixmakeargs DISABLE_MEM_MANAGER"
+fi
+
+if [ $pmi = yes ] ; then
+    fixmakeargs="$fixmakeargs CRAYCNL_PMI"
 fi
 
 if [ $disableshared = yes -a $python = yes ] ; then

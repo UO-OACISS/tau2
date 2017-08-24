@@ -46,7 +46,13 @@ Version 2.26 changes (from 2.25):
 33. Added support for SOSflow. 
 34. Added support for runtime selective instrumentation (TAU_SELECT_FILE) with exclude/include list of routines and files. 
 35. Added support for ADIOS profiling interface. 
-
+36. Turned off TAU_EVENT_THRESHOLD (max and min marker events) by default. Specifying a non-zero value enables these.
+37. Added support for specifying unwind offset for TAU_CALLSITE=1 using the env. var. TAU_CALLSITE_OFFSET. 
+38. Added support for native OTF2 traces. Use configure -otf=download and then TAU_TRACE=1, TAU_TRACE_FORMAT=otf2 while running.
+39. Added support for both OpenSHMEM and MPI simultaneously. With MPI, serial programs now emit a warning. 
+40. Added Pycoolr based GUI for online monitoring. 
+41. Added -DISABLE_MEMORY_MANAGER configuration option. 
+42. Added support for Cray PMI (Process Management Interface) to track topology info for paraprof (configure -PMI). 
 
 Version 2.25 changes (from 2.24):
 1. Support for new PDT parsers cxxparse4101, cparse4101, and gfparse48
