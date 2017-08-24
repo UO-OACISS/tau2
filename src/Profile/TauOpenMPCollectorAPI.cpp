@@ -109,9 +109,9 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = 
 #endif
 
 // this is map of region names, indexed by region id.
-static std::map<unsigned long, char*> region_names;
-static std::map<unsigned long, char*> task_names;
-static std::set<unsigned long> region_trash_heap; // for slightly delayed string cleanup
+static std::map<unsigned long, char*> * region_names = NULL;
+static std::map<unsigned long, char*> * task_names = NULL;
+static std::set<unsigned long> * region_trash_heap = NULL; // for slightly delayed string cleanup
 
 #if defined(TAU_MPC) || defined(GOMP_USING_INTEL_RUNTIME)
 //static sctk_thread_mutex_t writelock = SCTK_THREAD_MUTEX_INITIALIZER;
@@ -216,21 +216,21 @@ void region_name_cleanup(unsigned long parallel_id) {
   static const unsigned int max_size = omp_get_max_threads();
   TAU_OPENMP_SET_LOCK;
   // clean the heap if necessary
-  if (region_trash_heap.size() > max_size) {
+  if (region_trash_heap->size() > max_size) {
     std::set<unsigned long>::iterator it;
-    for (it = region_trash_heap.begin(); it != region_trash_heap.end(); ++it)
+    for (it = region_trash_heap->begin(); it != region_trash_heap->end(); ++it)
     {
         unsigned long r = *it;
-        char * tmpStr = region_names[r];
+        char * tmpStr = (*region_names)[r];
         //printf("done with Region %d, name %s\n", r, tmpStr); fflush(stdout);
         free(tmpStr);
-        region_names.erase(r);
+        region_names->erase(r);
     }
-    region_trash_heap.clear();
+    region_trash_heap->clear();
   }
   // put this region id on the trash heap.
   if (parallel_id > 0) {
-    region_trash_heap.insert(parallel_id);
+    region_trash_heap->insert(parallel_id);
   }
   TAU_OPENMP_UNSET_LOCK;
 }
@@ -538,12 +538,12 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
     if (task) {
         //TAU_VERBOSE("Task %lu has name %s\n", Tau_collector_flags[tid].taskid, tmpStr);
         TAU_OPENMP_SET_LOCK;
-        task_names[Tau_collector_flags[tid].taskid] = strdup(tmpStr);
+        (*task_names)[Tau_collector_flags[tid].taskid] = strdup(tmpStr);
         TAU_OPENMP_UNSET_LOCK;
     } else {
         //TAU_VERBOSE("Region %lu has name %s\n", Tau_collector_flags[tid].regionid, tmpStr);
         TAU_OPENMP_SET_LOCK;
-        region_names[Tau_collector_flags[tid].regionid] = strdup(tmpStr);
+        (*region_names)[Tau_collector_flags[tid].regionid] = strdup(tmpStr);
         TAU_OPENMP_UNSET_LOCK;
     }
     free (tmpStr);
@@ -566,15 +566,15 @@ defined (__GNUC_PATCHLEVEL__))
 #else // not GOMP...
     if (task) {
         TAU_OPENMP_SET_LOCK;
-        tmpStr = task_names[Tau_collector_flags[tid].taskid];
+        tmpStr = (*task_names)[Tau_collector_flags[tid].taskid];
         TAU_OPENMP_UNSET_LOCK;
         //TAU_VERBOSE("Thread %d, Task %lu has name %s\n", tid, Tau_collector_flags[tid].taskid, tmpStr);
     } else {
         TAU_OPENMP_SET_LOCK;
 #if defined (TAU_IBM_OMPT) // IBM OMPT switches things up...
-        tmpStr = region_names[Tau_collector_flags[tid].taskid];
+        tmpStr = (*region_names)[Tau_collector_flags[tid].taskid];
 #else // not IBM OMPT
-        tmpStr = region_names[Tau_collector_flags[tid].regionid];
+        tmpStr = (*region_names)[Tau_collector_flags[tid].regionid];
 #endif // TAU_IBM_OMPT
         TAU_OPENMP_UNSET_LOCK;
         //TAU_VERBOSE("Thread %d, Region %lu has name %s\n", tid, Tau_collector_flags[tid].regionid, tmpStr);
@@ -850,6 +850,7 @@ extern "C" void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 static bool initializing = false;
 static bool initialized = false;
 static bool ora_success = false;
+static bool finalized = false;
 #if defined (TAU_USE_TLS)
 __thread bool is_master = false;
 #elif defined (TAU_USE_DTLS)
@@ -879,6 +880,11 @@ extern "C" int Tau_initialize_collector_api(void) {
     initializing = true;
 
     TAU_OPENMP_INIT_LOCK;
+
+
+    region_names = new std::map<unsigned long, char*>();
+    task_names = new std::map<unsigned long, char*>();
+    region_trash_heap = new std::set<unsigned long>();
 
 #if TAU_DISABLE_SHARED
     Tau_collector_api = &__omp_collector_api;
@@ -1045,24 +1051,29 @@ extern "C" void Tau_finalize_collector_api(void) {
 #endif
     if (!initialized) return;
     if (!ora_success) return;
+    if (finalized) return;
     Tau_global_incr_insideTAU();
     TAU_OPENMP_SET_LOCK;
-    std::map<unsigned long, char*>::iterator it = region_names.begin();
-    while (it != region_names.end()) {
+    std::map<unsigned long, char*>::iterator it = region_names->begin();
+    while (it != region_names->end()) {
       std::map<unsigned long, char*>::iterator eraseme = it;
       ++it;
       free(eraseme->second);
-      region_names.erase(eraseme);
+      region_names->erase(eraseme);
     }
-    region_names.clear();
-    it = task_names.begin();
-    while (it != task_names.end()) {
+    region_names->clear();
+    it = task_names->begin();
+    while (it != task_names->end()) {
       std::map<unsigned long, char*>::iterator eraseme = it;
       ++it;
       free(eraseme->second);
-      task_names.erase(eraseme);
+      task_names->erase(eraseme);
     }
-    task_names.clear();
+    task_names->clear();
+    delete region_names;
+    delete task_names;
+    delete region_trash_heap;
+    finalized = true;
     TAU_OPENMP_UNSET_LOCK;
     Tau_global_decr_insideTAU();
     return;
@@ -1248,7 +1259,7 @@ extern "C" void my_task_end (
   Tau_omp_stop_timer("OpenMP_TASK", tid, 1, true);
 #endif
   TAU_OPENMP_SET_LOCK;
-  char * tmpStr = task_names[Tau_collector_flags[tid].taskid];
+  char * tmpStr = (*task_names)[Tau_collector_flags[tid].taskid];
   free(tmpStr); 
   //task_names.erase(Tau_collector_flags[tid].taskid);
   TAU_OPENMP_UNSET_LOCK;
