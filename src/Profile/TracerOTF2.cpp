@@ -437,8 +437,14 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, get_tau_collective_callbacks(), NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World(), NULL));
   OTF2_EC(OTF2_Archive_SetCreator(otf2_archive, "TAU"));
 #if defined(TAU_OPENMP)
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "Using OpenMP Locking Callbacks\n");
+#endif
   OTF2_EC(OTF2_OpenMP_Archive_SetLockingCallbacks(otf2_archive));
 #elif defined(PTHREADS)
+#ifdef TAU_OTF2_DEBUG
+  fprintf(stderr, "Using Pthread Locking Callbacks\n");
+#endif
   OTF2_EC(OTF2_Pthread_Archive_SetLockingCallbacks(otf2_archive, NULL));
 #endif
   // If going to use a threading model other than OpenMP or Pthreads,
@@ -739,8 +745,13 @@ static void TauTraceOTF2WriteLocalDefinitions() {
   fprintf(stderr, "TauTraceOTF2WriteLocalDefinitions()\n");
 #endif
     TauInternalFunctionGuard protects_this_function;
-    {
+
+    if(TheFunctionDB().size() > 0) {
         OTF2_IdMap * loc_region_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheFunctionDB().size());
+        if(loc_region_map == NULL) {
+            fprintf(stderr, "Unable to create OTF2_IdMap for regions of size %zu\n", TheFunctionDB().size());
+            abort();
+        }
         const region_map_t & global_region_map_ref = global_region_map; 
         for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
             FunctionInfo * fi = *it;
@@ -757,8 +768,12 @@ static void TauTraceOTF2WriteLocalDefinitions() {
         OTF2_IdMap_Free(loc_region_map);
     }
 
-    {
+    if(TheEventDB().size() > 0) {
         OTF2_IdMap * loc_metric_map = OTF2_IdMap_Create(OTF2_ID_MAP_SPARSE, TheEventDB().size());
+        if(loc_metric_map == NULL) {
+            fprintf(stderr, "Unable to create OTF2_IdMap for metrics of size %zu\n", TheEventDB().size());
+            abort();
+        }
         const metric_map_t & global_metric_map_ref = global_metric_map; 
         for (AtomicEventDB::iterator it = TheEventDB().begin(); it != TheEventDB().end(); it++) {
             const uint64_t local_id  = (*it)->GetId();
@@ -926,6 +941,9 @@ static void TauTraceOTF2ExchangeMetrics() {
         set<string> unique_names;
         for(int node = 0; node < nodes; ++node) {
             const int node_num_metrics = num_metrics[node];
+#ifdef TAU_OTF2_DEBUG
+            fprintf(stderr, "Node %d had %d metric types\n", node, node_num_metrics);
+#endif
             for(int metric = 0; metric < node_num_metrics; ++metric) {
                 string name = string(metric_names+name_offset);    
                 name_offset += name.length() + 1;
@@ -1170,6 +1188,7 @@ void TauTraceOTF2Close(int tid) {
 
     otf2_finished = true;
     otf2_initialized = false;
+    end_time = TauTraceGetTimeStamp(0);
 
     // Write definitions file
     if(my_node() < 1) {
