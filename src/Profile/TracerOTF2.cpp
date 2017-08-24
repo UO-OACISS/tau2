@@ -656,7 +656,14 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
         for(int loc = start_loc; loc < end_loc; ++loc) {
-            snprintf(namebuf, 256, "thread %d", thread_num++);
+            if(nodes < 2) {
+                snprintf(namebuf, 256, "Master thread");
+            } else if(thread_num == 0) {
+                snprintf(namebuf, 256, "Rank");
+            } else {
+                snprintf(namebuf, 256, "Thread %d", thread_num);
+            }
+            ++thread_num;
             int locName = nextString++;
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
             OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, OTF2_LOCATION_TYPE_CPU_THREAD, num_events_written[node], node));
