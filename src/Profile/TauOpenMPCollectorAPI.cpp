@@ -1586,6 +1586,10 @@ int __ompt_initialize() {
 #endif
   TAU_OPENMP_INIT_LOCK;
 
+  region_names = new std::map<unsigned long, char*>();
+  task_names = new std::map<unsigned long, char*>();
+  region_trash_heap = new std::set<unsigned long>();
+
   /* required events */
 #if OMPT_VERSION < 2
   CHECK(ompt_event_parallel_create, my_parallel_region_begin, "parallel_begin");
