@@ -53,6 +53,7 @@ Version 2.26 changes (from 2.25):
 40. Added Pycoolr based GUI for online monitoring. 
 41. Added -DISABLE_MEMORY_MANAGER configuration option. 
 42. Added support for Cray PMI (Process Management Interface) to track topology info for paraprof (configure -PMI). 
+43. Added support for Clang/LLVM under -arch=craycnl (PrgEnv-llvm at ALCF).
 
 Version 2.25 changes (from 2.24):
 1. Support for new PDT parsers cxxparse4101, cparse4101, and gfparse48
