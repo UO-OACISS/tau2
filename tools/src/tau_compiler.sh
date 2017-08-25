@@ -1228,6 +1228,10 @@ for arg in "$@" ; do
     fi
 done
 
+if [ $useNVCC == $TRUE ]; then
+  optLinking=`echo "$optLinking" | sed -e 's/-fopenmp/-Xcompiler -fopenmp/g' -e 's/-qsmp=omp/-Xcompiler -qsmp=omp/g' -e 's/-qopenmp/-Xcompiler -qopenmp/g' `
+  echoIfDebug "Modified (after -Xcompiler substitution) optLinking = $optLinking"
+fi
 
 tempCounter=0
 while [ $tempCounter -lt $numFiles ]; do

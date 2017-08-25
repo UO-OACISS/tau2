@@ -523,7 +523,7 @@ void Tau_CuptiLayer_Initialize_callbacks()
 {
     // Simply loading this shared library will trigger Tau_cupti_onload()
     if (!dlmopen(LM_ID_BASE, "libTAU-CUact.so", RTLD_NOW)) {
-        fprintf(stderr, "Failed to load libTAU-CUact.so\n");
+        fprintf(stderr, "Failed to load libTAU-CUact.so %s\n", dlerror());
         //exit(1);
     }
 }
