@@ -3170,6 +3170,11 @@ case $machine in
 	    pgi=yes
 	    default_fortran=pgi
 	    fixmakeargs="$fixmakeargs PGI COMPINST_PGI"
+        elif [ "x$PE_ENV" = xGNU -a "x$CLANG_HOME" != "x" ]; then 
+            llvm=yes
+	    tauoptions="${tauoptions}-llvm"
+	    default_fortran=gfortran
+	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
@@ -5667,7 +5672,7 @@ if [ $pgi = yes ]; then
 fi
 
 if [ $machine = craycnl -a $pmi = no ]; then
-  echo "Testing for <pmi.h> header..."
+  echo "Testing for <pmi.h> header... ${nnl}"
 cat <<EOF > pmitest.c
 #include <pmi.h>
 EOF
@@ -5676,7 +5681,8 @@ EOF
     echo "yes"
     fixmakeargs="$fixmakeargs CRAYCNL_PMI_FOUND"
   else
-    echo "no. WARNING! You may need to reconfigure TAU with -PMI if there are missing references during linking."
+    echo "no."
+    echo "WARNING! You may need to reconfigure TAU with -PMI if there are missing references during linking."
     echo "============="
   fi
 fi
@@ -6613,6 +6619,27 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
         mpiwarnings="-Werror"
 	msuf=c
     fi
+    if [ "x$llvm" = "xyes" ]
+    then
+	mpicompiler=$c_compiler
+        mpiwarnings="-Werror"
+	msuf=c
+    fi
+    if [ $c_compiler = "xlc" -o $c_compiler = "xlc_r" ]
+    then
+        mpiwarnings="-qhalt=w"
+    fi
+    if [ $c_compiler = "clang" ]
+    then
+        mpiwarnings="-Werror"
+    fi
+ 
+    cat <<EOF > mpi_thread_test.$msuf
+  #include <mpi.h>
+
+  int main(int argc, char **argv)
+  {
+    int ret, req, provided;
     if [ $c_compiler = "xlc" -o $c_compiler = "xlc_r" ]
     then
         mpiwarnings="-qhalt=w"
