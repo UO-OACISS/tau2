@@ -662,7 +662,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
         for(int loc = start_loc; loc < end_loc; ++loc) {
-            if(nodes < 2) {
+            if(nodes < 2 && thread_num == 0) {
                 snprintf(namebuf, 256, "Master thread");
             } else if(thread_num == 0) {
                 snprintf(namebuf, 256, "Rank");

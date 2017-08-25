@@ -224,7 +224,7 @@ void Tau_cupti_subscribe()
 #endif
 	CUptiResult err;
 
-	TAU_VERBOSE("TAU: Subcribing to CUPTI.\n");
+	TAU_VERBOSE("TAU: Subscribing to CUPTI.\n");
 	err = cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)Tau_cupti_callback_dispatch, NULL);
     CUPTI_CHECK_ERROR(err, "cuptiSubscribe");
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_DEVICE);
