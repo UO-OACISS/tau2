@@ -55,7 +55,7 @@ MPI-T has been shortly supported in MVAPICH2 MPI library. We instrument the NPB 
 TAU is able to collect the MPI-T PVARs from MVAPICH2 using the MPI-T API, and forward PVARs to BEACON.
 PyCOOLR uses BEACON API to subscribe to these PVARs and plot them.
 
-So we proceed this way:
+So we proceed this way (done on cerberus.nic.uoregon.edu platform):
 
 1) MVAPICH2 with MPI-T support is installed with the following configure line:
 
