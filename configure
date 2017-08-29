@@ -6640,21 +6640,6 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
   int main(int argc, char **argv)
   {
     int ret, req, provided;
-    if [ $c_compiler = "xlc" -o $c_compiler = "xlc_r" ]
-    then
-        mpiwarnings="-qhalt=w"
-    fi
-    if [ $c_compiler = "clang" ]
-    then
-        mpiwarnings="-Werror"
-    fi
- 
-    cat <<EOF > mpi_thread_test.$msuf
-  #include <mpi.h>
-
-  int main(int argc, char **argv)
-  {
-    int ret, req, provided;
     req = 0;
     ret = PMPI_Init_thread(&argc, &argv, req, &provided);
     return ret;
