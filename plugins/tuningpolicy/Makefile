@@ -36,7 +36,7 @@ tuning_policies_main: tuning_policies_main.o
 	$(CXX) $(CFLAGS) -o tuning_policies_main tuning_policies_main.o $(LDFLAGS)
  
 tuning_policies.so: tuning_policies.o
-	$(CXX) -shared -o tuning_policies.so tuning_policies.o
+	$(CXX) $(TAU_SHFLAGS) tuning_policies.so tuning_policies.o
 
 #tuning_policies.o: 
 tuning_policies.o:      tuning_policies.c
