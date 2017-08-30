@@ -29,19 +29,19 @@ install: $(SHAREDLIBS)
 	$(TAU_INSTALL) $^ $(PLUGININSTALLDIR)
 
 libTAU-filter-plugin.so: tau_plugin_example_disable_instrumentation_runtime.o 
-	$(CXX) $(LDFLAGS) -shared -o libTAU-filter-plugin.so tau_plugin_example_disable_instrumentation_runtime.o 
+	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin.so tau_plugin_example_disable_instrumentation_runtime.o 
 
 tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable_instrumentation_runtime.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_disable_instrumentation_runtime.cpp -o tau_plugin_example_disable_instrumentation_runtime.o
 
 libTAU-mpit-recommend-sharp-usage-plugin.so : tau_plugin_example_mpit_recommend_sharp_usage.o
-	 $(CXX) $(LDFLAGS) -shared -o libTAU-mpit-recommend-sharp-usage-plugin.so  tau_plugin_example_mpit_recommend_sharp_usage.o
+	 $(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-recommend-sharp-usage-plugin.so  tau_plugin_example_mpit_recommend_sharp_usage.o
 
 tau_plugin_example_mpit_recommend_sharp_usage.o: Tau_plugin_example_mpit_recommend_sharp_usage.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_mpit_recommend_sharp_usage.cpp -o tau_plugin_example_mpit_recommend_sharp_usage.o
 
 libTAU-mpit-mvapich-free_unused_vbufs.so: tau_plugin_example_free_unused_vbufs.o
-	$(CC) $(LDFLAGS) -shared -o libTAU-mpit-mvapich-free_unused_vbufs.so tau_plugin_example_free_unused_vbufs.o
+	$(CC) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-mvapich-free_unused_vbufs.so tau_plugin_example_free_unused_vbufs.o
 
 tau_plugin_example_free_unused_vbufs.o: Tau_plugin_example_mpit_mvapich_free_unused_vbufs.c
 	$(CC) $(CFLAGS) -c Tau_plugin_example_mpit_mvapich_free_unused_vbufs.c -o tau_plugin_example_free_unused_vbufs.o
