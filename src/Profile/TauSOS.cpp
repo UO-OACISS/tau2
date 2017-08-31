@@ -350,11 +350,11 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         _runtime = NULL;
         TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
         if (argc == NULL || argv == NULL || *argc == 0) {
-          printf("Fixing argument: %p\n", argc); fflush(stdout);
-          printf("Fixing argument: %p\n", argv); fflush(stdout);
+          //printf("Fixing argument: %d\n", argc); fflush(stdout);
+          //printf("Fixing argument: %p\n", argv); fflush(stdout);
           my_argv = fix_arguments(&my_argc);
-          printf("Fixed argument: %d\n", my_argc); fflush(stdout);
-          printf("Fixed argument: %s\n", my_argv[0]); fflush(stdout);
+          //printf("Fixed argument: %d\n", my_argc); fflush(stdout);
+          //printf("Fixed argument: %s\n", my_argv[0]); fflush(stdout);
         } else {
           my_argc = *argc;
           my_argv = *argv;
@@ -456,7 +456,7 @@ extern "C" void TAU_SOS_finalize(void) {
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 extern "C" Profiler * Tau_get_current_profiler(void);
 
-extern "C" void Tau_SOS_pack_double(const char * event_name) {
+extern "C" void Tau_SOS_pack_current_timer(const char * event_name) {
     if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
@@ -505,7 +505,7 @@ extern "C" void TAU_SOS_send_data(void) {
   const char **counterNames;
   int numCounters;
   TauMetrics_getCounterList(&counterNames, &numCounters);
-  printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
+  //printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
   RtsLayer::LockDB();
   bool keys_added = false;
 

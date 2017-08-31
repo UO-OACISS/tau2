@@ -13,7 +13,7 @@ void TAU_SOS_init(int * argc, char *** argv, bool threaded);
 void TAU_SOS_stop_worker(void);
 void TAU_SOS_finalize(void);
 void TAU_SOS_send_data(void);
-void Tau_SOS_pack_double(const char * event_name);
+void Tau_SOS_current_timer(const char * event_name);
 void * Tau_sos_thread_function(void* data);
 #ifdef __cplusplus
 }
