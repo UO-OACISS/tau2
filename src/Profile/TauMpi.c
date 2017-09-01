@@ -43,18 +43,18 @@
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
     char __tmp[128]; \
     sprintf(__tmp, "MPI collective synchronize %s 0x%08x", __desc, __comm); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
     char __tmp[128]; \
     sprintf(__tmp, "MPI collective exchange %s (%d) 0x%08x", __desc, __size, __comm); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
     char __tmp[128]; \
     sprintf(__tmp, "MPI collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
         __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
     char __tmp[256]; \
@@ -62,22 +62,22 @@
         "MPI collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
         __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
         __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
     char __tmp[128]; \
     sprintf(__tmp, "MPI_Comm_split (%p, %d, %d) 0x%08x", __comm,__color,__key,__comm_out); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out) \
     char __tmp[128]; \
     sprintf(__tmp, "MPI_Comm_dup (%p) 0x%08x", __comm, __comm_out); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out) \
     char __tmp[128]; \
     sprintf(__tmp, "MPI_Comm_create (%p) 0x%08x", __comm, __comm_out); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 // this is used between cart_create and cart_sub calls... may not be safe, but...
 static int __cart_dims = 1;
@@ -95,7 +95,7 @@ static int __cart_dims = 1;
         sprintf(__tmp, "%s%d,", __tmp, __periods[_x_]); \
     } \
     sprintf(__tmp, "%s%d], %d) 0x%08x", __tmp, __periods[__ndims-1], __reorder, __comm_out); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
     char __tmp[256]; \
@@ -105,7 +105,7 @@ static int __cart_dims = 1;
         sprintf(__tmp, "%s%d,", __tmp, __remains[_x_]); \
     } \
     sprintf(__tmp, "%s%d]) 0x%08x", __tmp, __remains[__cart_dims-1], __comm_out); \
-    Tau_SOS_current_timer(__tmp);
+    Tau_SOS_pack_current_timer(__tmp);
 
 #else
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm)
