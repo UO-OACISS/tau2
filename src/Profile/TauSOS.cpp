@@ -41,7 +41,7 @@ pthread_t worker_thread;
 bool _threaded = false;
 int daemon_rank = 0;
 bool shutdown_daemon = false;
-int period_seconds = 2;
+int period_microseconds = 2000000;
 
 void init_lock(void) {
     if (!_threaded) return;
@@ -67,10 +67,18 @@ extern "C" void * Tau_sos_thread_function(void* data) {
     struct timeval  tp;
 
     while (!done) {
-        // wait 2 seconds for the next batch.
+        // wait x microseconds for the next batch.
         gettimeofday(&tp, NULL);
-        ts.tv_sec  = (tp.tv_sec + period_seconds);
-        ts.tv_nsec = (1000 * tp.tv_usec);
+        const int one_second = 1000000;
+        // first, add the period to the current microseconds
+        int tmp_usec = tp.tv_usec + period_microseconds;
+        int flow_sec = 0;
+        if (tmp_usec > one_second) { // did we overflow?
+            flow_sec = tmp_usec / one_second; // how many seconds?
+            tmp_usec = tmp_usec % one_second; // get the remainder
+        }
+        ts.tv_sec  = (tp.tv_sec + flow_sec);
+        ts.tv_nsec = (1000 * tmp_usec);
         pthread_mutex_lock(&_my_mutex);
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
@@ -382,11 +390,8 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             }
         }
 
-        if (_threaded) {
-            char * tau_sos_update_period = getenv ("TAU_SOS_UPDATE_PERIOD");
-			if (tau_sos_update_period) {
-				period_seconds = atoi(tau_sos_update_period);
-			}
+        if (_threaded && TauEnv_get_sos_periodic()) {
+			period_microseconds = TauEnv_get_sos_period();
             TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
@@ -406,7 +411,7 @@ extern "C" void TAU_SOS_stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    if (_threaded) {
+    if (_threaded && TauEnv_get_sos_periodic()) {
         TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
         pthread_cond_signal(&_my_cond);
         int ret = pthread_join(worker_thread, NULL);

@@ -32,7 +32,7 @@
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT(__name,__detail) \
     std::stringstream __ss; \
     __ss << __name << " " << __detail; \
-    Tau_SOS_current_timer(__ss.str().c_str());
+    Tau_SOS_pack_current_timer(__ss.str().c_str());
 
 void TAU_SOS_collective_ADIOS_write_event(const char * name, 
     const char * detail, const char * var_name, enum ADIOS_DATATYPES data_type, 
@@ -104,7 +104,7 @@ void TAU_SOS_collective_ADIOS_write_event(const char * name,
         }
     }
     ss << ")";
-    Tau_SOS_current_timer(ss.str().c_str());
+    Tau_SOS_pack_current_timer(ss.str().c_str());
 }
 #define TAU_SOS_COLLECTIVE_ADIOS_WRITE_EVENT(__name,__detail,__var_name,__data_type,__ndims,__dims,__value) \
 TAU_SOS_collective_ADIOS_write_event(__name,__detail,__var_name,__data_type,__ndims,__dims,__value);
