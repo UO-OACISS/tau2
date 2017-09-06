@@ -5419,6 +5419,10 @@ then
 	        fi
 	    fi
 	fi
+    if [ -r $openshmem_lib_dir/libsma.so -o -r $openshmem_lib_dir/libsma.a ]
+    then
+        shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+    fi
     fi
 
     if [ "x$shmemlib" != "x" ]
