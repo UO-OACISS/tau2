@@ -9656,11 +9656,13 @@ if [ $boost = yes ] ; then
 fi
 
 if [ $sos = yes ] ; then
+    tauoptions="${tauoptions}-sos"
     fixmakeargs="$fixmakeargs SOS "
     fixmakeargs="$fixmakeargs sosdir=$sosdir"
 fi
 
 if [ $adios = yes ] ; then
+    tauoptions="${tauoptions}-adios"
     fixmakeargs="$fixmakeargs ADIOS "
     fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
 fi
