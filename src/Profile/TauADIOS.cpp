@@ -30,13 +30,16 @@
 #include "Profile/TauSOS.h"
 
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT(__name,__detail) \
-    std::stringstream __ss; \
-    __ss << __name << " " << __detail; \
-    Tau_SOS_pack_current_timer(__ss.str().c_str());
+    if (TauEnv_get_sos_trace_events()) { \
+        std::stringstream __ss; \
+        __ss << __name << " " << __detail; \
+        Tau_SOS_pack_current_timer(__ss.str().c_str()); \
+    }
 
 void TAU_SOS_collective_ADIOS_write_event(const char * name, 
     const char * detail, const char * var_name, enum ADIOS_DATATYPES data_type, 
     const int ndims, const char * dims, const void * value) {
+    if (!TauEnv_get_sos_trace_events()) { return; }
     std::stringstream ss;
     ss << name << " " << detail << "(" << var_name << ",";
     switch(data_type) {
