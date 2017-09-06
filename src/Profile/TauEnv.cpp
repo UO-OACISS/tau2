@@ -94,6 +94,7 @@ using namespace std;
 #define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
 
 #define TAU_SOS_DEFAULT 0
+#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
 #define TAU_SOS_PERIODIC_DEFAULT 0
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
 
@@ -262,6 +263,7 @@ static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
 static int env_sos_enabled = TAU_SOS_DEFAULT;
+static int env_sos_trace_events = TAU_SOS_TRACE_EVENTS_DEFAULT;
 static int env_sos_periodic = TAU_SOS_PERIODIC_DEFAULT;
 static int env_sos_period = TAU_SOS_PERIOD_DEFAULT;
 static const char *env_ebs_source = "itimer";
@@ -936,6 +938,10 @@ int TauEnv_get_ebs_enabled() {
 
 int TauEnv_get_sos_enabled() {
   return env_sos_enabled;
+}
+
+int TauEnv_get_sos_trace_events() {
+  return env_sos_trace_events;
 }
 
 int TauEnv_get_sos_periodic() {
@@ -2033,6 +2039,7 @@ void TauEnv_initialize()
 #endif
 #endif
 
+#if defined(TAU_SOS)
     tmp = getconf("TAU_SOS");
     if (parse_bool(tmp, TAU_SOS_DEFAULT)) {
       env_sos_enabled = 1;
@@ -2042,6 +2049,17 @@ void TauEnv_initialize()
       env_sos_enabled = 0;
       TAU_VERBOSE("TAU: SOS Disabled\n");
       TAU_METADATA("TAU_SOS", "off");
+    }
+
+    tmp = getconf("TAU_SOS_TRACE_EVENTS");
+    if (parse_bool(tmp, TAU_SOS_TRACE_EVENTS_DEFAULT)) {
+      env_sos_trace_events = 1;
+      TAU_VERBOSE("TAU: SOS Trace Events Enabled (MPI, ADIOS)\n");
+      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "on");
+    } else {
+      env_sos_trace_events = 0;
+      TAU_VERBOSE("TAU: SOS_TRACE_EVENTS Disabled\n");
+      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "off");
     }
 
     tmp = getconf("TAU_SOS_PERIODIC");
@@ -2059,6 +2077,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: SOS Periodic Transmission Disabled\n");
       TAU_METADATA("TAU_SOS_PERIODIC", "off");
     }
+#endif
 
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
