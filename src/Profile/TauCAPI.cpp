@@ -2499,6 +2499,15 @@ extern "C" int Tau_get_usesMPI() {
   return Tau_usesMPI;
 }
 
+static int Tau_usesSHMEM = 0;
+extern "C" void Tau_set_usesSHMEM(int value) {
+  Tau_usesSHMEM = value;
+}
+
+extern "C" int Tau_get_usesSHMEM() {
+  return Tau_usesSHMEM;
+}
+
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_get_calls(void *handle, long *values, int tid) {
   FunctionInfo *ptr = (FunctionInfo *)handle;
