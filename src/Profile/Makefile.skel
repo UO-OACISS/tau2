@@ -677,6 +677,12 @@ TauIoWrap.o 	: TauIoWrap.cpp $(HDRS)
 TauSnapshot.o 	: TauSnapshot.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauProfileMerge.o 	: TauProfileMerge.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TauMetaDataMerge.o 	: TauMetaDataMerge.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
 TauUnify.o 	: TauUnify.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
