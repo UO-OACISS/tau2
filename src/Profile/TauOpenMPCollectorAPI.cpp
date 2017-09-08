@@ -265,7 +265,8 @@ void Tau_get_task_id(int tid) {
     return;
 }
 
-#if !defined (TAU_OPEN64ORC) && \
+#if !defined (TAU_PGI_OPENACC) && \
+!defined (TAU_OPEN64ORC) && \
 !defined (TAU_MPC) && \
 (defined (__GNUC__) && \
 defined (__GNUC_MINOR__) && \
@@ -504,7 +505,8 @@ char * show_backtrace (int tid, int offset) {
 extern "C" void Tau_get_current_region_context(int tid, unsigned long ip, bool task) {
     char * tmpStr = NULL;
     /* OpenUH can use OMPT. */
-#if (!defined (TAU_OPEN64ORC) || defined(TAU_USE_OMPT)) && \
+#if !defined (TAU_PGI_OPENACC) && \
+(!defined (TAU_OPEN64ORC) || defined(TAU_USE_OMPT)) && \
 (defined (__GNUC__) && \
 defined (__GNUC_MINOR__) && \
 defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwinding
@@ -553,7 +555,8 @@ defined (__GNUC_PATCHLEVEL__)) // IBM OMPT and Generic ORA support requires unwi
 /* Using the region or task ID, get our event context */
 extern "C" char * Tau_get_my_region_context(int tid, int forking, bool task) {
     char * tmpStr = NULL;
-#if !defined (TAU_USE_OMPT) && \
+#if !defined (TAU_PGI_OPENACC) && \
+!defined (TAU_USE_OMPT) && \
     !defined (TAU_MPC)  && \
     (!defined (TAU_OPEN64ORC) || defined(TAU_USE_OMPT)) && \
 (defined (__GNUC__) && \
@@ -1832,7 +1835,5 @@ extern __attribute__ ((weak))
   int __omp_collector_api(void *message) { TAU_VERBOSE ("Error linking GOMP wrapper. Try using tau_exec with the -gomp option.\n"); return -1; };
 #endif
 #endif
-
 extern "C" __attribute__ ((weak))
 void * Tau_get_gomp_proxy_address(void);
-
