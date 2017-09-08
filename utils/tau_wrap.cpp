@@ -885,9 +885,9 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
       impl<<"  "<<sig.rcalledfunc<<";"<<endl;
     } else if(runtime == WRAPPER_INTERCEPT) {
       if(rname.find("shmem_finalize") != string::npos) {
-        impl<<"TauTraceOTF2ShutdownComms_if_necessary(0);"<<endl;
+        impl<<"  TauTraceOTF2ShutdownComms_if_necessary(0);"<<endl;
       }
-      if(rname.find("shmem_finalize") != string::npos) impl<< "  if(TauEnv_get_profile_format() != TAU_FORMAT_MERGED)"<<endl<<"  ";
+      if(rname.find("shmem_finalize") != string::npos) impl<< "  if(TauEnv_get_profile_format() != TAU_FORMAT_MERGED && TauEnv_get_trace_format() != TAU_TRACE_FORMAT_OTF2)"<<endl<<"  ";
       impl<<"  __real_"<<sig.func<<";"<<endl;
     } else {
       if (pshmem_use_underscore_instead_of_p) {
