@@ -2578,7 +2578,6 @@ configure_perfexplorer () {
     chmod a+rx $BINTARGET/tau_java
 
 
-
     cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
     cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
     cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
@@ -2594,6 +2593,10 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
+    #Used for jogl2
+    cp ${tauroot}/tools/src/contrib/jogl/jogl-all.jar $JARTARGET
+    cp ${tauroot}/tools/src/contrib/jogl/gluegen-rt.jar $JARTARGET
+
     cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/h2.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
@@ -2615,6 +2618,9 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
+	    cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+	    cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
 	    ;;
 
 	i386_linux)
@@ -2622,6 +2628,8 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	    cp tools/src/contrib/jogl/i386_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/i386_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 
 	    ;;
 
@@ -2673,6 +2681,8 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+            cp tools/src/contrib/jogl/x86_64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/x86_64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 	    ;;
 
         mic_linux)
