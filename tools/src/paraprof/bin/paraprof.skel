@@ -13,6 +13,20 @@ CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 
+    for arg in "$@"; do
+        case $arg in
+            -64)
+                JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
+                ;;
+
+        esac
+    done
+
+
+ARGS=()
+for var in $*; do
+  [ "$var" != '-64' ] && ARGS+=("$var")
+done
 
 # If 3D window has problems, please uncomment
 #if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
@@ -163,4 +177,4 @@ fi
 $BINDIR/tau_user_setup.sh
 
 # Launch!
-java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
+java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR ARGS	
