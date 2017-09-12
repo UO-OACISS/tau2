@@ -208,12 +208,21 @@ def parse_functions(node, context, thread, infile, data, num_functions, function
             timer["Exclusive Time"] = long(tokens[2])
             timer["Inclusive Time"] = long(tokens[3])
             group = tokens[5]
-            if group not in group_totals:
-                group_totals[group] = long(tokens[2])
-                group_counts[group] = long(tokens[0])
+            # handle the ADIOS special case
+            if "ADIOS" in function_name:
+                if "ADIOS" not in group_totals:
+                    group_totals["ADIOS"] = long(tokens[2])
+                    group_counts["ADIOS"] = long(tokens[0])
+                else:
+                    group_totals["ADIOS"] = group_totals["ADIOS"] + long(tokens[2])
+                    group_counts["ADIOS"] = group_counts["ADIOS"] + long(tokens[0])
             else:
-                group_totals[group] = group_totals[group] + long(tokens[2])
-                group_counts[group] = group_counts[group] + long(tokens[0])
+                if group not in group_totals:
+                    group_totals[group] = long(tokens[2])
+                    group_counts[group] = long(tokens[0])
+                else:
+                    group_totals[group] = group_totals[group] + long(tokens[2])
+                    group_counts[group] = group_counts[group] + long(tokens[0])
             data["Timers"].append(timer)
             if max_inclusive < long(tokens[3]):
                 max_inclusive = long(tokens[3])
@@ -230,11 +239,13 @@ def extract_group_totals():
     comm_calls = 0
     comm_time = 0
     io_time = 0
+    adios_time = 0
     user_time = 0
     send_bytes = 0
     recv_bytes = 0
     read_bytes = 0
     write_bytes = 0
+    adios_bytes = 0
     for key in group_counts:
         if key.find("MPI") != -1:
             comm_calls = comm_calls + group_counts[key]
@@ -243,7 +254,13 @@ def extract_group_totals():
             comm_time = comm_time + group_totals[key]
         if key.find("TAU_IO") != -1:
             io_time = io_time + group_totals[key]
-        if key.find("TAU_USER") != -1:
+        # ADIOS is a special case, because it doesn't have a group - yet
+        # It is also in the TAU_DEFAULT and/or TAU_USER group.
+        if key.find("ADIOS") != -1:
+            adios_time = adios_time + group_totals[key]
+        elif key.find("TAU_USER") != -1:
+            user_time = user_time + group_totals[key]
+        elif key.find("TAU_DEFAULT") != -1:
             user_time = user_time + group_totals[key]
         if key.find("Send_Bytes") != -1:
             send_bytes = send_bytes + group_totals[key]
@@ -253,10 +270,14 @@ def extract_group_totals():
             read_bytes = read_bytes + group_totals[key]
         if key.find("Write_Bytes") != -1:
             write_bytes = write_bytes + group_totals[key]
+        if key.find("ADIOS_data_size") != -1:
+            adios_bytes = adios_bytes + group_totals[key]
     if comm_calls > 0:
         application_metadata["aggr_communication_calls"] = comm_calls
     if comm_time > 0:
         application_metadata["aggr_communication_time"] = comm_time/threads
+    if adios_time > 0:
+        application_metadata["aggr_adios_time"] = adios_time/threads
     if io_time > 0:
         application_metadata["aggr_io_time"] = io_time/threads
     if user_time > 0:
@@ -265,6 +286,8 @@ def extract_group_totals():
         application_metadata["aggr_communication_sent_bytes"] = send_bytes
     if recv_bytes > 0:
         application_metadata["aggr_communication_recv_bytes"] = send_bytes
+    if adios_bytes > 0:
+        application_metadata["aggr_adios_bytes"] = adios_bytes
     if read_bytes > 0:
         application_metadata["aggr_io_read_bytes"] = read_bytes
     if write_bytes > 0:
@@ -378,6 +401,13 @@ def parse_counters(node, context, thread, infile, data, counter_map):
             if counter_name == "Bytes Written":
                 value = long(tokens[0]) * float(tokens[3])
                 c_name = "Write_Bytes"
+                if c_name not in group_totals:
+                    group_totals[c_name] = value
+                else:
+                    group_totals[c_name] = group_totals[c_name] + value
+            if counter_name == "ADIOS data size":
+                value = long(tokens[0]) * float(tokens[3])
+                c_name = "ADIOS_data_size"
                 if c_name not in group_totals:
                     group_totals[c_name] = value
                 else:
