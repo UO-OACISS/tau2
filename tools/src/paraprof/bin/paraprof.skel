@@ -10,14 +10,36 @@ JARDIR=${TAUROOT}/${MACHINE}/lib
 
 CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
+#paraprof does not accept -64/-32/-jogl2/-jogl1. Set the flags and remove them from the parameter list before passing to paraprof. -32 (which makes no difference on non-apple platforms) and -jogl1 are the defaults on all platforms except apple.
+for arg 
+do
+  shift
+  [ "$arg" = "-64" ] && FLAG64=1 && continue
+  [ "$arg" = "-32" ] && FLAG32=1 && continue
+  [ "$arg" = "-jogl1" ] && FLAGJOGL1=1 && continue
+  [ "$arg" = "-jogl2" ] && FLAGJOGL2=1 && continue
+  set -- "$@" "$arg"
+done
+
+if [ "$MACHINE" = "apple" ]; then
+	if [ "$FLAG32" != "1" ]; then
+		FLAG64=1
+	fi
+fi
+
+if [ "$MACHINE" = "apple" ]; then
+	if [ "$FLAGJOGL1" != "1" ]; then
+		FLAGJOGL2=1
+	fi
+fi
+
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 
-if [ "$1" = "-64" ]; then
-	FLAG64=1
-	JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
-	shift
 
+
+if [ "$FLAGJOGL2" = "1" ]; then
+	JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 fi
 
 # If 3D window has problems, please uncomment
