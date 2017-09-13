@@ -241,6 +241,7 @@ def extract_group_totals():
     io_time = 0
     adios_time = 0
     user_time = 0
+    collective_bytes = 0
     send_bytes = 0
     recv_bytes = 0
     read_bytes = 0
@@ -262,6 +263,8 @@ def extract_group_totals():
             user_time = user_time + group_totals[key]
         elif key.find("TAU_DEFAULT") != -1:
             user_time = user_time + group_totals[key]
+        if key.find("Collective_Bytes") != -1:
+            collective_bytes = collective_bytes + group_totals[key]
         if key.find("Send_Bytes") != -1:
             send_bytes = send_bytes + group_totals[key]
         if key.find("Recv_Bytes") != -1:
@@ -282,6 +285,8 @@ def extract_group_totals():
         application_metadata["aggr_io_time"] = io_time/threads
     if user_time > 0:
         application_metadata["aggr_execution_time"] = user_time/threads
+    if collective_bytes > 0:
+        application_metadata["aggr_communication_collective_bytes"] = collective_bytes
     if send_bytes > 0:
         application_metadata["aggr_communication_sent_bytes"] = send_bytes
     if recv_bytes > 0:
@@ -377,6 +382,13 @@ def parse_counters(node, context, thread, infile, data, counter_map):
             counter["Min Value"] = float(tokens[2])
             counter["Mean Value"] = float(tokens[3])
             counter["SumSqr Value"] = float(tokens[4])
+            if "Message size for " in counter_name:
+                value = long(tokens[0]) * float(tokens[3])
+                c_name = "Collective_Bytes"
+                if c_name not in group_totals:
+                    group_totals[c_name] = value
+                else:
+                    group_totals[c_name] = group_totals[c_name] + value
             if counter_name == "Message size sent to all nodes":
                 value = long(tokens[0]) * float(tokens[3])
                 c_name = "Send_Bytes"
