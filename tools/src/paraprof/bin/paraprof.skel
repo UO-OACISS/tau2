@@ -27,7 +27,7 @@ if [ "$MACHINE" = "apple" ]; then
 	fi
 fi
 
-if [ "$MACHINE" = "apple" ]; then
+if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ]; then
 	if [ "$FLAGJOGL1" != "1" ]; then
 		FLAGJOGL2=1
 	fi
