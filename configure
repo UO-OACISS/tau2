@@ -2638,6 +2638,10 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+
+	    cp tools/src/contrib/jogl/arm_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/arm_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
             if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
               gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
             fi
