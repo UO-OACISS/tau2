@@ -2634,7 +2634,7 @@ configure_perfexplorer () {
 
 	    ;;
 
-	arm_linux)
+	arm_linux|arm64_linux)
 	    gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
