@@ -29,11 +29,8 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
 #include <Profile/TauTrace.h>
-#include <Profile/TauMetrics.h>
-
-#ifdef TAU_OTF2
 #include <Profile/TauTraceOTF2.h>
-#endif
+#include <Profile/TauMetrics.h>
 
 #include <iostream>
 
@@ -807,3 +804,14 @@ void TauTraceSendMsgRemote(int type, int destination, int length, int remote_id)
   /* 0, 0 is for ts and use_ts so TAU generates the timestamp */
 }
 
+void TauTraceOTF2InitShmem_if_necessary() {
+#ifdef TAU_OTF2
+    TauTraceOTF2InitShmem();
+#endif
+}
+
+void TauTraceOTF2ShutdownComms_if_necessary(int tid) {
+#ifdef TAU_OTF2
+    TauTraceOTF2ShutdownComms(tid);
+#endif
+}

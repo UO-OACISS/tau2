@@ -2578,13 +2578,13 @@ configure_perfexplorer () {
     chmod a+rx $BINTARGET/tau_java
 
 
-
     cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
     cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
     cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
     cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
     cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
     cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
+    cp ${tauroot}/tools/src/vis-jogl2/bin/vis-jogl2.jar $JARTARGET
     cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/google-gson-2.1/gson-2.1.jar $JARTARGET
@@ -2594,6 +2594,10 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
+    #Used for jogl2
+    cp ${tauroot}/tools/src/contrib/jogl/jogl-all.jar $JARTARGET
+    cp ${tauroot}/tools/src/contrib/jogl/gluegen-rt.jar $JARTARGET
+
     cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/h2.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
@@ -2615,6 +2619,9 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
+	    cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+	    cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
 	    ;;
 
 	i386_linux)
@@ -2622,13 +2629,19 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	    cp tools/src/contrib/jogl/i386_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/i386_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 
 	    ;;
 
-	arm_linux)
+	arm_linux|arm64_linux)
 	    gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+
+	    cp tools/src/contrib/jogl/arm_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/arm_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
             if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
               gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
             fi
@@ -2673,6 +2686,8 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+            cp tools/src/contrib/jogl/x86_64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/x86_64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 	    ;;
 
         mic_linux)
@@ -5419,6 +5434,10 @@ then
 	        fi
 	    fi
 	fi
+    if [ -r $openshmem_lib_dir/libsma.so -o -r $openshmem_lib_dir/libsma.a ]
+    then
+        shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+    fi
     fi
 
     if [ "x$shmemlib" != "x" ]
@@ -5479,7 +5498,13 @@ then
 
     if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
       shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      if [ "x$shmem_minor_version" = "x" ]; then
+        shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
+      fi
       shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      if [ "x$shmem_major_version" = "x" ]; then
+        shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
+      fi
       echo "OpenSHMEM minor version: $shmem_minor_version major version: $shmem_major_version"
       if [ "$shmem_major_version" -lt 2 -a "$shmem_minor_version" -le 2 ] ; then
         orig_useropt="$orig_useropt -DSHMEM_1_2"
@@ -7339,6 +7364,10 @@ if [ $mpi = yes ] ; then
 		    fi
 
 		    if [ -r $mpilib/libopen-pal.a -a ! -r $mpilib/libmpi_cxx.so ]; then
+			if [ -r $mpilib/libmpi_cxx.a ]; then
+				LIBMPICXX='-lmpi_cxx'	
+			fi
+
 			echo "NOTE: OpenMPI configured with --disable_shared"
 			if [ -r $mpilib/libmpi_cxx.a ]; then
 			  mpilibrary='-lmpi_cxx -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil'
@@ -9660,11 +9689,13 @@ if [ $boost = yes ] ; then
 fi
 
 if [ $sos = yes ] ; then
+    tauoptions="${tauoptions}-sos"
     fixmakeargs="$fixmakeargs SOS "
     fixmakeargs="$fixmakeargs sosdir=$sosdir"
 fi
 
 if [ $adios = yes ] ; then
+    tauoptions="${tauoptions}-adios"
     fixmakeargs="$fixmakeargs ADIOS "
     fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
 fi
