@@ -105,6 +105,9 @@ struct TauCollectives_Group
   int log_pe_stride;
   int pe_size;
   int is_group_set;
+#ifdef TAU_MPI
+  MPI_Comm comm;
+#endif
 };
 #elif TAU_MPI
 struct TauCollectives_Group
