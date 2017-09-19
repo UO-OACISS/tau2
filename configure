@@ -7369,11 +7369,7 @@ if [ $mpi = yes ] ; then
 			fi
 
 			echo "NOTE: OpenMPI configured with --disable_shared"
-			if [ -r $mpilib/libmpi_cxx.a ]; then
-			  mpilibrary='-lmpi_cxx -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil'
-			else
-			  mpilibrary='-lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil'
-			fi
+			mpilibrary="$LIBMPICXX -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil"
 			# check for -libverbs, sometimes necessary with OpenMPI
 			if [ $machine != bgq -a $machine != craycnl ] ; then
 			    if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then
