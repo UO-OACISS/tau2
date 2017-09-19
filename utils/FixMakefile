@@ -81,6 +81,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     likwiddir=*)
+        likwiddir=`echo $1 | sed -e 's/^likwiddir=//'`
+	echo "s,^LIKWIDDIR=.*$,LIKWIDDIR=$likwiddir,g" >> $sedout
+	;;
+
      beacondir=*)
         beacondir=`echo $1 | sed -e 's/^beacondir=//'`
 	echo "s,^BEACONDIR=.*$,BEACONDIR=$beacondir,g" >> $sedout
@@ -615,6 +620,10 @@ case $1 in
         ;;
      TAU_BFD)
         echo NOTE: Using BFD support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_LIKWID)
+        echo NOTE: Using LIKWID support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_UNWIND)
