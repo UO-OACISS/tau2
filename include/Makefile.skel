@@ -476,6 +476,7 @@ TAU_F77 = $(TAU_F90)
 #PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src -I$(PAPIDIR)/include #ENDIF#
 #PAPINOINC#PROFILEOPT3              = -DTAU_PAPI #ENDIF#
 #PAPI#PAPI_O       	       = PapiLayer.o 	       #ENDIF#
+#TAU_LIKWID#LIKWID_O           = LikwidLayer.o         #ENDIF#
 #PROFILEOPT4
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS       #ENDIF#
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF          #ENDIF#
