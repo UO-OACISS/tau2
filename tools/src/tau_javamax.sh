@@ -21,14 +21,17 @@ if [ $(uname) != "Linux" ]; then
 	fi
 fi
 
-# first, check that this is sun java
+# first, check that this is sun java. Why does this have to be sun java?
 ver=`java -version 2>&1 | tail -1 | awk '{print $1 $2}'`
 
 if [ "x$ver" != "xJavaHotSpot(TM)" ] ; then
     GCJ=`java -showversion 2>&1 | grep -i OpenJDK` 
     if [ "x$GCJ" = "x" ] ; then
-       echo "failed"
-       exit
+      GCJ=`java -showversion 2>&1 | grep -i IBM`
+      if [ "x$GCJ" = "x" ] ; then
+         echo "failed"
+         exit
+      fi
     fi
 fi
 
