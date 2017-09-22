@@ -400,6 +400,7 @@ for arg in "$@"; do
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-likwid=<dir> ............................. Specify location of LIKWID."
 	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
@@ -522,6 +523,7 @@ for arg in "$@"; do
         echo "    Note: 'download' will download and build the library automatically."
         echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
         echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	echo "-likwid=<dir> ............................. Specify location of LIKWID."
         echo "-beacon=<dir> ............... Specify location of BEACON."
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	echo "-pin=<dir> ..... Specify location of Intel PIN instrumentation toolkit."
@@ -773,6 +775,7 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+likwid=no
 beacon=no
 beacondir="/"
 darshan=no
@@ -848,6 +851,7 @@ otfdir=
 otfinc=
 otflib=
 download_otf=no
+download_likwid=no
 cubedir=own
 ebs2otf=no
 ebs_has_rt=no
@@ -1239,15 +1243,15 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    -beacon=*)
-        beacon=yes
+        -beacon=*)
+            beacon=yes
 	    beacondir=`echo $arg | sed -e 's/-beacon=//'`
 	    if [ ! -d $beacondir ] ; then
 		echo "Error: Cannot access BEACON directory $beacondir"
 		exit 1
 	    fi
-        shift
-        ;;
+            shift
+            ;;
 	-papi=*)
 	    papi=yes
 	    papidir=`echo $arg | sed -e 's/-papi=//'`
@@ -1255,15 +1259,32 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
-        if [ $papidir = "/usr" ]; then
+            if [ $papidir = "/usr" ]; then
 		  fixmakeargs="$fixmakeargs PAPINOINC"
-        fi
+            fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
 		  fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
             fi
 
 	    shift
 	    ;;
+
+        -likwid=download*)
+            echo "Downloading LIKWID..."
+            likwid=yes
+            download_likwid=yes
+            shift
+            ;;
+
+         -likwid=*)
+            likwid=yes
+	    likwiddir=`echo $arg | sed -e 's/-likwid=//'`
+	    if [ ! -d $likwiddir ] ; then
+		echo "Error: Cannot access LIKWID directory $likwiddir"
+		exit 1
+	    fi
+            shift
+            ;;
 
 	-gpi=*)
 	    gpi=yes
@@ -1610,12 +1631,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    -otf=download*)
-        echo "Downloading libotf2..."
-        otf=yes
-        download_otf=yes
-        shift
-        ;;
+        -otf=download*)
+            echo "Downloading libotf2..."
+            otf=yes
+            download_otf=yes
+            shift
+            ;;
 
 	-otf=*)
 	    otf=yes
@@ -9448,6 +9469,67 @@ if [ $scorep = yes ] ; then
 fi
 
 
+
+######################################################################
+# Install likwid if requested
+######################################################################
+liblikwid=likwid
+liblikwidtgz=$liblikwid.tgz
+liblikwidurl=http://www.cs.uoregon.edu/research/tau/$liblikwidtgz
+
+if [ "x$likwid" = "xyes" ]; then 
+    if [ "x$likwiddir" = "x" ]; then
+        liblikwiddir=${targetdir}/${architecture}/likwid
+    else
+        liblikwiddir=$likwiddir
+    fi
+    echo "liblikwiddir = $liblikwiddir"
+
+    if [ "x$likwiddir" != "x" -a -d "$likwiddir" ]; then 
+        if [ -r $likwiddir/$liblikwidtgz ]; then
+            echo "NOTE: Copying $likwiddir/$liblikwidtgz "
+            cp $likwiddir/$liblikwidtgz . 
+            download_likwid=yes 
+        fi    
+    fi
+
+    if [ $download_likwid = yes ]; then
+        echo "Downloading likwid"
+        if [ -r "$liblikwiddir/lib/liblikwid.so" ]; then 
+            echo "Found: liblikwid.so"
+            echo "liblikwid download already found, skipping"
+        else 
+            echo "Not found in ${likwiddir}: liblikwid.so"
+            if [ ! -f $liblikwidtgz ]; then 
+                download "$liblikwidurl" "$liblikwidtgz"
+            fi
+
+            # check the tar file
+            if [ ! -f $liblikwidtgz ]; then
+                echo "$liblikwidtgz did not download. Please download it manually from:"
+                echo "$liblikwidurl"
+                echo "Please enter the directory containing the tarball: ${nnl}"
+                read RESPONSE
+                cp $RESPONSE/$liblikwidtgz .
+            fi
+            echo "expanding $liblikwidtgz..."
+            tar -zxf  $liblikwidtgz
+            echo "removing $liblikwidtgz..."
+            /bin/rm -f $liblikwidtgz 
+            cd likwid*; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272 install  ; cd ..
+
+        fi
+        
+    fi
+
+    if [ -r $liblikwiddir/lib/liblikwid.so ]; then
+        echo "Success..."
+        fixmakeargs="$fixmakeargs TAU_LIKWID likwiddir=$liblikwiddir"
+    fi
+fi
+
+
+
 ######################################################################
 # Install libotf2 if requested
 ######################################################################
@@ -9459,7 +9541,7 @@ libotf2url=http://www.cs.uoregon.edu/research/tau/$libotf2tgz
 if [ "x$otfdir" = "x" ]; then
     libotf2dir=${targetdir}/${architecture}
 else
-    libotf2dir==$otfdir
+    libotf2dir=$otfdir
 fi
 
 libotf2_name=otf2

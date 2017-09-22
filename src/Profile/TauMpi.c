@@ -38,8 +38,8 @@
 
 #ifdef TAU_SOS
 #include "Profile/TauSOS.h"
-#define TAU_SOS_COLLECTIVE_SYNC_EVENT Tau_SOS_pack_double("MPI collective synchronize");
-#define TAU_SOS_COLLECTIVE_EXCH_EVENT Tau_SOS_pack_double("MPI collective exchange");
+#define TAU_SOS_COLLECTIVE_SYNC_EVENT Tau_SOS_current_timer("MPI collective synchronize");
+#define TAU_SOS_COLLECTIVE_EXCH_EVENT Tau_SOS_current_timer("MPI collective exchange");
 #else
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT // do nuthin.
 #define TAU_SOS_COLLECTIVE_EXCH_EVENT // do nuthin.
