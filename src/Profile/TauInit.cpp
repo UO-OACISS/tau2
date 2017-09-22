@@ -93,7 +93,7 @@ extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
 extern "C" void Tau_profile_exit_all_threads();
 extern "C" int Tau_dump_callpaths();
-extern "C" int Tau_initialize_collector_api(void);
+//extern "C" int Tau_initialize_collector_api(void);
 
 extern "C" int Tau_show_profiles();
 
@@ -514,7 +514,7 @@ extern "C" int Tau_init_initializeTAU()
 #endif
 
 #ifdef TAU_OPENMP
-  Tau_initialize_collector_api();
+  //Tau_initialize_collector_api();
 #endif
 
 #if defined(TAU_SOS) && !defined(TAU_MPI)
