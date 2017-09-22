@@ -2295,6 +2295,11 @@ extern "C" void Tau_pure_start(const char *name)
   Tau_pure_start_task(name, Tau_get_thread());
 }
 
+extern "C" void tau_print_entry(const char *name) {
+  TAU_VERBOSE("TAU ENTRY: %s\n", name);
+  Tau_pure_start(name); 
+}
+
 extern "C" void Tau_pure_stop_task(char const * n, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -2330,6 +2335,11 @@ extern "C" void Tau_pure_stop_task(char const * n, int tid)
 extern "C" void Tau_pure_stop(const char *name)
 {
   Tau_pure_stop_task(name, Tau_get_thread());
+}
+
+extern "C" void tau_print_exit(const char *name) {
+  TAU_VERBOSE("TAU EXIT: %s\n", name);
+  Tau_pure_stop(name);
 }
 
 extern "C" void Tau_static_phase_start(char const * name)
