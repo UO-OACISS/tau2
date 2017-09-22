@@ -74,6 +74,10 @@ using namespace tau;
 #include <scorep/SCOREP_Tau.h>
 #endif /* TAU_SCOREP_METADATA */
 
+#ifdef TAU_SOS
+#include "TauSOS.h"
+#endif /* TAU_SOS */
+
 
 #ifdef TAU_BGL
 #include <rts.h>
@@ -257,6 +261,9 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   Tau_metadata_getMetaData(tid)[key] = tmv;
   //RtsLayer::UnLockEnv();
   //printf("%s : %s\n", key.name, tmv->data.cval);
+#ifdef TAU_SOS
+  Tau_SOS_pack_string(name, value);
+#endif
 #endif
 }
 

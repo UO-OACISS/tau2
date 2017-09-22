@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <cassert>
 #include "stdio.h"
-#include "error.h"
+//#include "error.h"
 #include "errno.h"
 #include <pthread.h>
 #include <unistd.h>
@@ -24,6 +24,11 @@
 
 #ifdef TAU_MPI
 #include <mpi.h>
+#endif
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#include <dlfcn.h>
 #endif
 
 #include "sos.h"
@@ -279,12 +284,19 @@ void TAU_SOS_fork_exec_sosd(void) {
 char *program_path()
 {
     char *path = (char*)malloc(4098);
+#ifdef __APPLE__
+    uint32_t size = 4098;
+    if (_NSGetExecutablePath(path, &size) != 0) {
+        strcpy(path,"");
+    }
+#else
     if (path != NULL) {
         if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
             free(path);
             path = NULL;
         }
     }
+#endif
     return path;
 }
 
@@ -456,7 +468,7 @@ extern "C" void TAU_SOS_finalize(void) {
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 extern "C" Profiler * Tau_get_current_profiler(void);
 
-extern "C" void Tau_SOS_pack_double(const char * event_name) {
+extern "C" void Tau_SOS_pack_current_timer(const char * event_name) {
     if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
@@ -479,6 +491,25 @@ extern "C" void Tau_SOS_pack_double(const char * event_name) {
     double value = (current - p->StartTime[0]) * CONVERT_TO_USEC;
     RtsLayer::LockDB();
     SOS_pack(tau_sos_pub, event_name, SOS_VAL_TYPE_DOUBLE, &value);
+    RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_SOS_pack_string(const char * name, const char * value) {
+    if (_runtime == NULL) { return; }
+    if (done) { return; }
+    // first time?
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        // protect against race conditions
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    std::stringstream ss;
+    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
+    RtsLayer::LockDB();
+    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_STRING, &value);
     RtsLayer::UnLockDB();
 }
 
