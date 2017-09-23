@@ -100,7 +100,7 @@ struct ContextEventMapCompare
   }
 };
 
-struct ContextEventMap : public std::map<long *, TauUserEvent *, ContextEventMapCompare, TauSignalSafeAllocator<std::pair<long*, TauUserEvent *> > >
+struct ContextEventMap : public std::map<long *, TauUserEvent *, ContextEventMapCompare, TauSignalSafeAllocator<std::pair<long* const, TauUserEvent *> > >
 {
   ~ContextEventMap() {
     Tau_destructor_trigger();

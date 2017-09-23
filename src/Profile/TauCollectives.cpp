@@ -133,7 +133,65 @@ extern "C" void  __real_shmem_longlong_sum_to_all(long long * a1, long long * a2
 
 void
 TauCollectives_Init(void) {
-#ifdef TAU_SHMEM
+
+#ifdef TAU_MPI
+  PMPI_Comm_dup( MPI_COMM_WORLD, &tau_group_world.comm );
+#define TAUCOLLECTIVES_MPI_BYTE          MPI_BYTE
+#define TAUCOLLECTIVES_MPI_CHAR          MPI_CHAR
+#define TAUCOLLECTIVES_MPI_UNSIGNED_CHAR MPI_UNSIGNED_CHAR
+#define TAUCOLLECTIVES_MPI_INT           MPI_INT
+#define TAUCOLLECTIVES_MPI_UNSIGNED      MPI_UNSIGNED
+#define TAUCOLLECTIVES_MPI_DOUBLE        MPI_DOUBLE
+#define TAUCOLLECTIVES_MPI_INT32_T       MPI_INT32_T
+#define TAUCOLLECTIVES_MPI_UINT32_T      MPI_UINT32_T
+#define TAUCOLLECTIVES_MPI_INT64_T       MPI_INT64_T
+#define TAUCOLLECTIVES_MPI_UINT64_T      MPI_UINT64_T
+
+#define TAUCOLLECTIVES_DATATYPE( datatype ) \
+      mpi_datatypes[ TAUCOLLECTIVES_ ## datatype ] = TAUCOLLECTIVES_MPI_ ## datatype;
+      TAUCOLLECTIVES_DATATYPES
+#undef TAUCOLLECTIVES_DATATYPE
+
+#undef TAUCOLLECTIVES_MPI_BYTE            
+#undef TAUCOLLECTIVES_MPI_CHAR            
+#undef TAUCOLLECTIVES_MPI_UNSIGNED_CHAR   
+#undef TAUCOLLECTIVES_MPI_INT             
+#undef TAUCOLLECTIVES_MPI_UNSIGNED        
+#undef TAUCOLLECTIVES_MPI_DOUBLE          
+#undef TAUCOLLECTIVES_MPI_INT32_T         
+#undef TAUCOLLECTIVES_MPI_UINT32_T        
+#undef TAUCOLLECTIVES_MPI_INT64_T         
+#undef TAUCOLLECTIVES_MPI_UINT64_T        
+
+#elif defined(TAU_SHMEM)
+
+#define TAUCOLLECTIVES_SIZEOF_BYTE           sizeof(unsigned char)
+#define TAUCOLLECTIVES_SIZEOF_CHAR           sizeof(char)         
+#define TAUCOLLECTIVES_SIZEOF_UNSIGNED_CHAR  sizeof(unsigned char)
+#define TAUCOLLECTIVES_SIZEOF_INT            sizeof(int)          
+#define TAUCOLLECTIVES_SIZEOF_UNSIGNED       sizeof(unsigned)     
+#define TAUCOLLECTIVES_SIZEOF_DOUBLE         sizeof(double)       
+#define TAUCOLLECTIVES_SIZEOF_INT32_T        sizeof(int32_t)      
+#define TAUCOLLECTIVES_SIZEOF_UINT32_T       sizeof(uint32_t)     
+#define TAUCOLLECTIVES_SIZEOF_INT64_T        sizeof(int64_t)      
+#define TAUCOLLECTIVES_SIZEOF_UINT64_T       sizeof(uint64_t)     
+
+#define TAUCOLLECTIVES_DATATYPE( datatype ) \
+      sizeof_ipc_datatypes[ TAUCOLLECTIVES_ ## datatype ] = TAUCOLLECTIVES_SIZEOF_ ## datatype;
+      TAUCOLLECTIVES_DATATYPES
+#undef TAUCOLLECTIVES_DATATYPE
+
+#undef TAUCOLLECTIVES_MPI_BYTE
+#undef TAUCOLLECTIVES_MPI_CHAR
+#undef TAUCOLLECTIVES_MPI_UNSIGNED_CHAR
+#undef TAUCOLLECTIVES_MPI_INT
+#undef TAUCOLLECTIVES_MPI_UNSIGNED
+#undef TAUCOLLECTIVES_MPI_DOUBLE
+#undef TAUCOLLECTIVES_MPI_INT32_T
+#undef TAUCOLLECTIVES_MPI_UINT32_T
+#undef TAUCOLLECTIVES_MPI_INT64_T
+#undef TAUCOLLECTIVES_MPI_UINT64_T
+
   tau_group_world.pe_start      = 0;
   tau_group_world.log_pe_stride = 0;
   tau_group_world.pe_size       = __real_shmem_n_pes();
@@ -183,66 +241,6 @@ TauCollectives_Init(void) {
   pwork              =  (double *) __real_shmem_malloc ( current_pwork_size );
 
   __real_shmem_barrier_all ();
-#endif /* TAU_SHMEM */
-
-#ifdef TAU_MPI
-  PMPI_Comm_dup( MPI_COMM_WORLD, &tau_group_world.comm );
-#define TAUCOLLECTIVES_MPI_BYTE          MPI_BYTE
-#define TAUCOLLECTIVES_MPI_CHAR          MPI_CHAR
-#define TAUCOLLECTIVES_MPI_UNSIGNED_CHAR MPI_UNSIGNED_CHAR
-#define TAUCOLLECTIVES_MPI_INT           MPI_INT
-#define TAUCOLLECTIVES_MPI_UNSIGNED      MPI_UNSIGNED
-#define TAUCOLLECTIVES_MPI_DOUBLE        MPI_DOUBLE
-#define TAUCOLLECTIVES_MPI_INT32_T       MPI_INT32_T
-#define TAUCOLLECTIVES_MPI_UINT32_T      MPI_UINT32_T
-#define TAUCOLLECTIVES_MPI_INT64_T       MPI_INT64_T
-#define TAUCOLLECTIVES_MPI_UINT64_T      MPI_UINT64_T
-
-#define TAUCOLLECTIVES_DATATYPE( datatype ) \
-      mpi_datatypes[ TAUCOLLECTIVES_ ## datatype ] = TAUCOLLECTIVES_MPI_ ## datatype;
-      TAUCOLLECTIVES_DATATYPES
-#undef TAUCOLLECTIVES_DATATYPE
-
-#undef TAUCOLLECTIVES_MPI_BYTE            
-#undef TAUCOLLECTIVES_MPI_CHAR            
-#undef TAUCOLLECTIVES_MPI_UNSIGNED_CHAR   
-#undef TAUCOLLECTIVES_MPI_INT             
-#undef TAUCOLLECTIVES_MPI_UNSIGNED        
-#undef TAUCOLLECTIVES_MPI_DOUBLE          
-#undef TAUCOLLECTIVES_MPI_INT32_T         
-#undef TAUCOLLECTIVES_MPI_UINT32_T        
-#undef TAUCOLLECTIVES_MPI_INT64_T         
-#undef TAUCOLLECTIVES_MPI_UINT64_T        
-#endif /* TAU_MPI */
-
-#ifdef TAU_SHMEM
-
-#define TAUCOLLECTIVES_SIZEOF_BYTE           sizeof(unsigned char)
-#define TAUCOLLECTIVES_SIZEOF_CHAR           sizeof(char)         
-#define TAUCOLLECTIVES_SIZEOF_UNSIGNED_CHAR  sizeof(unsigned char)
-#define TAUCOLLECTIVES_SIZEOF_INT            sizeof(int)          
-#define TAUCOLLECTIVES_SIZEOF_UNSIGNED       sizeof(unsigned)     
-#define TAUCOLLECTIVES_SIZEOF_DOUBLE         sizeof(double)       
-#define TAUCOLLECTIVES_SIZEOF_INT32_T        sizeof(int32_t)      
-#define TAUCOLLECTIVES_SIZEOF_UINT32_T       sizeof(uint32_t)     
-#define TAUCOLLECTIVES_SIZEOF_INT64_T        sizeof(int64_t)      
-#define TAUCOLLECTIVES_SIZEOF_UINT64_T       sizeof(uint64_t)     
-
-#define TAUCOLLECTIVES_DATATYPE( datatype ) \
-      sizeof_ipc_datatypes[ TAUCOLLECTIVES_ ## datatype ] = TAUCOLLECTIVES_SIZEOF_ ## datatype;
-      TAUCOLLECTIVES_DATATYPES
-#undef TAUCOLLECTIVES_DATATYPE
-
-#undef TAUCOLLECTIVES_MPI_BYTE
-#undef TAUCOLLECTIVES_MPI_CHAR
-#undef TAUCOLLECTIVES_MPI_UNSIGNED_CHAR
-#undef TAUCOLLECTIVES_MPI_INT
-#undef TAUCOLLECTIVES_MPI_UNSIGNED
-#undef TAUCOLLECTIVES_MPI_DOUBLE
-#undef TAUCOLLECTIVES_MPI_INT32_T
-#undef TAUCOLLECTIVES_MPI_UINT32_T
-#undef TAUCOLLECTIVES_MPI_INT64_T
-#undef TAUCOLLECTIVES_MPI_UINT64_T
 
 #endif
           
@@ -251,7 +249,9 @@ TauCollectives_Init(void) {
 void
 TauCollectives_Finalize( void )
 {
-#ifdef TAU_SHMEM
+#ifdef TAU_MPI
+    PMPI_Comm_free( &tau_group_world.comm );
+#elif defined(TAU_SHMEM)
     __real_shmem_free ( symmetric_buffer_a );
     symmetric_buffer_a = NULL;
 
@@ -284,9 +284,6 @@ TauCollectives_Finalize( void )
 
     __real_shmem_barrier_all ();
 #endif /* TAU_SHMEM */
-#ifdef TAU_MPI
-    PMPI_Comm_free( &tau_group_world.comm );
-#endif /* TAU_MPI */
 }
 
 TauCollectives_Datatype
@@ -345,8 +342,7 @@ int TauCollectives_get_size(TauCollectives_Group *group) {
   int size = 1;
 #ifdef TAU_MPI
   PMPI_Comm_size(group->comm, &size);
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   size = group->pe_size;
 #endif /* TAU_SHMEM */
   return size;
@@ -355,7 +351,7 @@ int TauCollectives_get_size(TauCollectives_Group *group) {
 int TauCollectives_Barrier(TauCollectives_Group *group) {
 #ifdef TAU_MPI
   return PMPI_Barrier(group->comm);
-#elif TAU_SHMEM
+#elif defined(TAU_SHMEM)
   __real_shmem_barrier(group->pe_start, group->log_pe_stride, group->pe_size, barrier_psync);
   return 0;
 #else
@@ -371,8 +367,7 @@ int TauCollectives_Bcast(TauCollectives_Group*   group,
 {
 #ifdef TAU_MPI
   return PMPI_Bcast(buf, count, get_mpi_datatype(datatype), root, group->comm);
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   int rank         = RtsLayer::myNode();
   int start        = group->pe_start;
   int stride       = group->log_pe_stride;
@@ -466,8 +461,7 @@ int TauCollectives_Gather(TauCollectives_Group*   group,
 #ifdef TAU_MPI
   return PMPI_Gather((void*) sendbuf, count, get_mpi_datatype(datatype),
                      recvbuf, count, get_mpi_datatype(datatype), root, group->comm);
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   int rank         = RtsLayer::myNode();
   int start        = group->pe_start;
   int stride       = group->log_pe_stride;
@@ -600,8 +594,7 @@ int TauCollectives_Gatherv(TauCollectives_Group*   group,
   free(displs);
 
   return ret;
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   int rank         = RtsLayer::myNode();
   int start        = group->pe_start;
   int stride       = group->log_pe_stride;
@@ -760,8 +753,7 @@ int TauCollectives_Allgather(TauCollectives_Group*   group,
                         get_mpi_datatype( datatype ),
                         group->comm);
 
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   if ( count <= 0 )
   {
       return 0;
@@ -867,8 +859,7 @@ int TauCollectives_Reduce(TauCollectives_Group*    group,
                      get_mpi_operation(operation),
                      root,
                      group->comm);
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   if ( count <= 0 )
   {
     return 0;
@@ -1084,8 +1075,7 @@ int TauCollectives_Allreduce(TauCollectives_Group*    group,
                         get_mpi_datatype( datatype ),
                         get_mpi_operation( operation ),
                         group->comm);
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_MPI) /* TAU_MPI */
   int start        = group->pe_start;
   int stride       = group->log_pe_stride;
   int size         = group->pe_size;
@@ -1294,8 +1284,7 @@ int TauCollectives_Scatter(TauCollectives_Group*   group,
                       get_mpi_datatype( datatype ),
                       root,
                       group->comm);
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   int rank         = RtsLayer::myNode();
   int start        = group->pe_start;
   int stride       = group->log_pe_stride;
@@ -1388,8 +1377,7 @@ int TauCollectives_Scatterv(TauCollectives_Group*   group,
   free(displs);
 
   return ret;
-#endif /* TAU_MPI */
-#ifdef TAU_SHMEM
+#elif defined(TAU_SHMEM)
   int rank         = RtsLayer::myNode();
   int start        = group->pe_start;
   int stride       = group->log_pe_stride;

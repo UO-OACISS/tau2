@@ -474,9 +474,8 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 
   if ((rname.find("shmem_init") != string::npos) ||
       (rname.find("start_pes") != string::npos)) {
-      impl<<"#ifdef TAU_OTF2"<<endl;
-      impl<<"    TauTraceOTF2InitShmem();"<<endl;
-      impl<<"#endif"<<endl;
+      impl<<"Tau_set_usesSHMEM(1);"<<endl;
+      impl<<"TauTraceOTF2InitShmem_if_necessary();"<<endl;
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
       impl << "  tau_totalnodes(1,__real__num_pes());"<<endl;
       impl << "  TAU_PROFILE_SET_NODE(__real__my_pe());"<<endl;
@@ -886,11 +885,9 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
       impl<<"  "<<sig.rcalledfunc<<";"<<endl;
     } else if(runtime == WRAPPER_INTERCEPT) {
       if(rname.find("shmem_finalize") != string::npos) {
-        impl<<"#ifdef TAU_OTF2"<<endl;
-        impl<<"  TauTraceOTF2ShutdownComms(0);"<<endl;
-        impl<<"#endif"<<endl;
+        impl<<"  TauTraceOTF2ShutdownComms_if_necessary(0);"<<endl;
       }
-      if(rname.find("shmem_finalize") != string::npos) impl<< "  if(TauEnv_get_profile_format() != TAU_FORMAT_MERGED)"<<endl<<"  ";
+      if(rname.find("shmem_finalize") != string::npos) impl<< "  if(TauEnv_get_profile_format() != TAU_FORMAT_MERGED && TauEnv_get_trace_format() != TAU_TRACE_FORMAT_OTF2)"<<endl<<"  ";
       impl<<"  __real_"<<sig.func<<";"<<endl;
     } else {
       if (pshmem_use_underscore_instead_of_p) {

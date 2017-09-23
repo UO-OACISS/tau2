@@ -92,6 +92,7 @@ double TauWindowsUsecD(void);
 #include "shmem.h"
 extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
+extern "C" int Tau_get_usesSHMEM();
 
 #include <Profile/TauPluginInternals.h>
 
@@ -1476,8 +1477,15 @@ int TauProfiler_StoreData(int tid)
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
-#if defined(TAU_SHMEM) && !defined(TAU_MPI)
-  __real_shmem_finalize();
+#if defined(TAU_SHMEM)
+  // If we are using SHMEM, we have to delay finalization until TAU has finalized traces,
+  // as OTF2 must communicate over SHMEM in order to write the global definitions file,
+  // so the wrapper's version of shmem_finalize skips finalization and we do it here instead.
+  // We first check the Tau_get_usesSHMEM() flag, which is set in the wrapper's shmem_init,
+  // to avoid calling __real_shmem_finalize twice if the wrapper was not used.
+  if(Tau_get_usesSHMEM() && !(TauEnv_get_profile_format() == TAU_FORMAT_MERGED)) {
+    __real_shmem_finalize();
+  }
 #endif
 
 
@@ -1521,12 +1529,12 @@ int TauProfiler_StoreData(int tid)
 	}
 #endif
 #endif
-
-#ifdef TAU_SOS
-    //TAU_SOS_finalize();
-#endif
   }
 #endif /* PTHREADS */
+
+#ifdef TAU_SOS
+  TAU_SOS_finalize();
+#endif
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
