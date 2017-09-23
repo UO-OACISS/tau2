@@ -19,6 +19,7 @@
 #include "Profile/TauMetrics.h"
 
 #include "adiost_callback_api.h"
+#include "adios_types.h"
 #include <stdint.h>
 #include <sstream>
 #define ADIOST_EXTERN extern "C"
