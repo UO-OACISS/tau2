@@ -1529,12 +1529,12 @@ int TauProfiler_StoreData(int tid)
 	}
 #endif
 #endif
-
-#ifdef TAU_SOS
-    //TAU_SOS_finalize();
-#endif
   }
 #endif /* PTHREADS */
+
+#ifdef TAU_SOS
+  TAU_SOS_finalize();
+#endif
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {

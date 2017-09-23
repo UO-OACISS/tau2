@@ -3,6 +3,7 @@
 #include "Profile/Profiler.h"
 #include "Profile/UserEvent.h"
 #include "Profile/TauMetrics.h"
+#include "Profile/TauMetaData.h"
 #include <TauUtil.h>
 
 #include <iostream>
@@ -281,30 +282,27 @@ void TAU_SOS_fork_exec_sosd(void) {
 #endif
 }
 
-char *program_path()
+void program_path(char* exe_name)
 {
-    char *path = (char*)malloc(4098);
 #ifdef __APPLE__
     uint32_t size = 4098;
-    if (_NSGetExecutablePath(path, &size) != 0) {
-        strcpy(path,"");
+    if (_NSGetExecutablePath(exe_name, &size) != 0) {
+        strcpy(exe_name,"");
     }
 #else
-    if (path != NULL) {
-        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
-            free(path);
-            path = NULL;
-        }
+    if (readlink("/proc/self/exe", exe_name, PATH_MAX) == -1) {
+        strcpy(exe_name,"");
     }
 #endif
-    return path;
 }
 
 char ** fix_arguments(int *argc) {
 #if 1
   char ** argv = NULL;
   argv = (char**)(malloc(sizeof(char**)));
-  argv[0] = strdup(program_path());
+  char exe_name[2048] = {0};
+  program_path(exe_name);
+  argv[0] = strdup(exe_name);
   *argc = 1; 
 #else
   char ** argv = NULL;
@@ -410,6 +408,19 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         initialized = true;
         /* Fixme! Insert all the data that was collected into Metadata */
     }
+    Tau_metadata_push_to_sos();
+    //SOS_announce(tau_sos_pub);
+    SOS_publish(tau_sos_pub);
+}
+
+extern "C" void TAU_SOS_init_simple(void) {
+    bool threads = false;
+#if defined(PTHREADS) || defined(TAU_OPENMP)
+    //threads = true;
+#endif
+    int argc = 0;
+    char **argv = NULL;
+    TAU_SOS_init(&argc, &argv, threads);
 }
 
 extern "C" void TAU_SOS_stop_worker(void) {
@@ -494,7 +505,7 @@ extern "C" void Tau_SOS_pack_current_timer(const char * event_name) {
     RtsLayer::UnLockDB();
 }
 
-extern "C" void Tau_SOS_pack_string(const char * name, const char * value) {
+extern "C" void Tau_SOS_pack_string(const char * name, char * value) {
     if (_runtime == NULL) { return; }
     if (done) { return; }
     // first time?
@@ -509,7 +520,47 @@ extern "C" void Tau_SOS_pack_string(const char * name, const char * value) {
     std::stringstream ss;
     ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
     RtsLayer::LockDB();
-    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_STRING, &value);
+    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_STRING, value);
+    RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_SOS_pack_double(const char * name, double value) {
+    if (_runtime == NULL) { return; }
+    if (done) { return; }
+    // first time?
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        // protect against race conditions
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    std::stringstream ss;
+    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
+    // TAU_VERBOSE("SOS: %s = '%s'\n", name, value);
+    RtsLayer::LockDB();
+    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_DOUBLE, &value);
+    RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_SOS_pack_integer(const char * name, int value) {
+    if (_runtime == NULL) { return; }
+    if (done) { return; }
+    // first time?
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        // protect against race conditions
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    std::stringstream ss;
+    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
+    // TAU_VERBOSE("SOS: %s = '%s'\n", name, value);
+    RtsLayer::LockDB();
+    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_INT, &value);
     RtsLayer::UnLockDB();
 }
 
@@ -525,7 +576,6 @@ extern "C" void TAU_SOS_send_data(void) {
         RtsLayer::UnLockDB();
     }
     assert(tau_sos_pub);
-    if (done) { return; }
     //TauTrackPowerHere(); // get a power measurement
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
@@ -558,6 +608,7 @@ extern "C" void TAU_SOS_send_data(void) {
         calls_str << "TAU::" << tid << "::calls::" << fi->GetName();
         const std::string& tmpcalls = calls_str.str();
 
+        //TAU_VERBOSE("SOS: %s = '%d'\n", tmpcalls.c_str(), calls);
         SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
 
         // todo - subroutines
@@ -575,7 +626,9 @@ extern "C" void TAU_SOS_send_data(void) {
             inclusive = fi->getDumpInclusiveValues(tid)[m];
             exclusive = fi->getDumpExclusiveValues(tid)[m];
             
+            //TAU_VERBOSE("SOS: %s = '%f'\n", tmpincl.c_str(), inclusive);
             SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, &inclusive);
+            //TAU_VERBOSE("SOS: %s = '%f'\n", tmpexcl.c_str(), exclusive);
             SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, &exclusive);
         }
     }

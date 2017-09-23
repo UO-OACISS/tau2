@@ -262,8 +262,44 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   //RtsLayer::UnLockEnv();
   //printf("%s : %s\n", key.name, tmv->data.cval);
 #ifdef TAU_SOS
-  Tau_SOS_pack_string(name, value);
+  Tau_SOS_pack_string(name, const_cast<char*>(value));
 #endif
+#endif
+}
+
+/* OK, the problem is that SOS isn't initialized when TauEnv is setting up
+ * TAU, and in the process registering a bunch of metadata name/value pairs.
+ * So, once SOS is set up, provide a method for SOS to get all the 
+ * metadata registered on thread 0 up to this point. */
+void Tau_metadata_push_to_sos(void) {
+#ifdef TAU_SOS
+    int tid = RtsLayer::myThread();
+    for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); 
+         it != Tau_metadata_getMetaData(tid).end(); it++) {
+        char tmp[128] = {0};
+        switch(it->second->type) {
+            case TAU_METADATA_TYPE_STRING:
+                Tau_SOS_pack_string(it->first.name, it->second->data.cval);
+                break;
+            case TAU_METADATA_TYPE_INTEGER:
+                Tau_SOS_pack_integer(it->first.name, it->second->data.ival);
+                break;
+            case TAU_METADATA_TYPE_DOUBLE:
+                Tau_SOS_pack_double(it->first.name, it->second->data.dval);
+                break;
+            case TAU_METADATA_TYPE_TRUE:
+                Tau_SOS_pack_string(it->first.name, const_cast<char*>("true"));
+                break;
+            case TAU_METADATA_TYPE_FALSE:
+                Tau_SOS_pack_string(it->first.name, const_cast<char*>("false"));
+                break;
+            case TAU_METADATA_TYPE_NULL:
+                Tau_SOS_pack_string(it->first.name, const_cast<char*>("(null)"));
+                break;
+            default:
+                break;
+        }
+	}
 #endif
 }
 
