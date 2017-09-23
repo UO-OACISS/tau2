@@ -409,7 +409,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   }
 #endif
 
-#if defined(TAU_SHMEM)
+#if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if(!otf2_shmem_init) {
     return 1;
   }
@@ -589,7 +589,7 @@ extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int le
     x_uint64 time = use_ts ? ts : TauTraceGetTimeStamp(0);
     const int loc = my_location();
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
-#ifdef TAU_SHMEM
+#if defined(TAU_SHMEM) && !defined(TAU_MPI)
     const bool remote = (my_node() != node_id);
     if(remote) {
         if(send_or_recv == TAU_MESSAGE_SEND) {

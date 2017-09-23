@@ -400,6 +400,7 @@ for arg in "$@"; do
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-likwid=<dir> ............................. Specify location of LIKWID."
 	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
@@ -522,6 +523,7 @@ for arg in "$@"; do
         echo "    Note: 'download' will download and build the library automatically."
         echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
         echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	echo "-likwid=<dir> ............................. Specify location of LIKWID."
         echo "-beacon=<dir> ............... Specify location of BEACON."
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	echo "-pin=<dir> ..... Specify location of Intel PIN instrumentation toolkit."
@@ -773,6 +775,7 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+likwid=no
 beacon=no
 beacondir="/"
 darshan=no
@@ -848,6 +851,7 @@ otfdir=
 otfinc=
 otflib=
 download_otf=no
+download_likwid=no
 cubedir=own
 ebs2otf=no
 ebs_has_rt=no
@@ -1239,15 +1243,15 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    -beacon=*)
-        beacon=yes
+        -beacon=*)
+            beacon=yes
 	    beacondir=`echo $arg | sed -e 's/-beacon=//'`
 	    if [ ! -d $beacondir ] ; then
 		echo "Error: Cannot access BEACON directory $beacondir"
 		exit 1
 	    fi
-        shift
-        ;;
+            shift
+            ;;
 	-papi=*)
 	    papi=yes
 	    papidir=`echo $arg | sed -e 's/-papi=//'`
@@ -1255,15 +1259,32 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
-        if [ $papidir = "/usr" ]; then
+            if [ $papidir = "/usr" ]; then
 		  fixmakeargs="$fixmakeargs PAPINOINC"
-        fi
+            fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
 		  fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
             fi
 
 	    shift
 	    ;;
+
+        -likwid=download*)
+            echo "Downloading LIKWID..."
+            likwid=yes
+            download_likwid=yes
+            shift
+            ;;
+
+         -likwid=*)
+            likwid=yes
+	    likwiddir=`echo $arg | sed -e 's/-likwid=//'`
+	    if [ ! -d $likwiddir ] ; then
+		echo "Error: Cannot access LIKWID directory $likwiddir"
+		exit 1
+	    fi
+            shift
+            ;;
 
 	-gpi=*)
 	    gpi=yes
@@ -1610,12 +1631,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    -otf=download*)
-        echo "Downloading libotf2..."
-        otf=yes
-        download_otf=yes
-        shift
-        ;;
+        -otf=download*)
+            echo "Downloading libotf2..."
+            otf=yes
+            download_otf=yes
+            shift
+            ;;
 
 	-otf=*)
 	    otf=yes
@@ -2578,13 +2599,13 @@ configure_perfexplorer () {
     chmod a+rx $BINTARGET/tau_java
 
 
-
     cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
     cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
     cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
     cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
     cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
     cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
+    cp ${tauroot}/tools/src/vis-jogl2/bin/vis-jogl2.jar $JARTARGET
     cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/google-gson-2.1/gson-2.1.jar $JARTARGET
@@ -2594,6 +2615,10 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
+    #Used for jogl2
+    cp ${tauroot}/tools/src/contrib/jogl/jogl-all.jar $JARTARGET
+    cp ${tauroot}/tools/src/contrib/jogl/gluegen-rt.jar $JARTARGET
+
     cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/h2.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
@@ -2615,6 +2640,9 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
+	    cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+	    cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
 	    ;;
 
 	i386_linux)
@@ -2622,13 +2650,19 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	    cp tools/src/contrib/jogl/i386_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/i386_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 
 	    ;;
 
-	arm_linux)
+	arm_linux|arm64_linux)
 	    gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+
+	    cp tools/src/contrib/jogl/arm_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/arm_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
             if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
               gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
             fi
@@ -2673,6 +2707,8 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+            cp tools/src/contrib/jogl/x86_64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/x86_64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 	    ;;
 
         mic_linux)
@@ -5419,6 +5455,10 @@ then
 	        fi
 	    fi
 	fi
+    if [ -r $openshmem_lib_dir/libsma.so -o -r $openshmem_lib_dir/libsma.a ]
+    then
+        shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+    fi
     fi
 
     if [ "x$shmemlib" != "x" ]
@@ -5479,7 +5519,13 @@ then
 
     if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
       shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      if [ "x$shmem_minor_version" = "x" ]; then
+        shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
+      fi
       shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      if [ "x$shmem_major_version" = "x" ]; then
+        shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
+      fi
       echo "OpenSHMEM minor version: $shmem_minor_version major version: $shmem_major_version"
       if [ "$shmem_major_version" -lt 2 -a "$shmem_minor_version" -le 2 ] ; then
         orig_useropt="$orig_useropt -DSHMEM_1_2"
@@ -9423,6 +9469,67 @@ if [ $scorep = yes ] ; then
 fi
 
 
+
+######################################################################
+# Install likwid if requested
+######################################################################
+liblikwid=likwid
+liblikwidtgz=$liblikwid.tgz
+liblikwidurl=http://www.cs.uoregon.edu/research/tau/$liblikwidtgz
+
+if [ "x$likwid" = "xyes" ]; then 
+    if [ "x$likwiddir" = "x" ]; then
+        liblikwiddir=${targetdir}/${architecture}/likwid
+    else
+        liblikwiddir=$likwiddir
+    fi
+    echo "liblikwiddir = $liblikwiddir"
+
+    if [ "x$likwiddir" != "x" -a -d "$likwiddir" ]; then 
+        if [ -r $likwiddir/$liblikwidtgz ]; then
+            echo "NOTE: Copying $likwiddir/$liblikwidtgz "
+            cp $likwiddir/$liblikwidtgz . 
+            download_likwid=yes 
+        fi    
+    fi
+
+    if [ $download_likwid = yes ]; then
+        echo "Downloading likwid"
+        if [ -r "$liblikwiddir/lib/liblikwid.so" ]; then 
+            echo "Found: liblikwid.so"
+            echo "liblikwid download already found, skipping"
+        else 
+            echo "Not found in ${likwiddir}: liblikwid.so"
+            if [ ! -f $liblikwidtgz ]; then 
+                download "$liblikwidurl" "$liblikwidtgz"
+            fi
+
+            # check the tar file
+            if [ ! -f $liblikwidtgz ]; then
+                echo "$liblikwidtgz did not download. Please download it manually from:"
+                echo "$liblikwidurl"
+                echo "Please enter the directory containing the tarball: ${nnl}"
+                read RESPONSE
+                cp $RESPONSE/$liblikwidtgz .
+            fi
+            echo "expanding $liblikwidtgz..."
+            tar -zxf  $liblikwidtgz
+            echo "removing $liblikwidtgz..."
+            /bin/rm -f $liblikwidtgz 
+            cd likwid*; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272 install  ; cd ..
+
+        fi
+        
+    fi
+
+    if [ -r $liblikwiddir/lib/liblikwid.so ]; then
+        echo "Success..."
+        fixmakeargs="$fixmakeargs TAU_LIKWID likwiddir=$liblikwiddir"
+    fi
+fi
+
+
+
 ######################################################################
 # Install libotf2 if requested
 ######################################################################
@@ -9434,7 +9541,7 @@ libotf2url=http://www.cs.uoregon.edu/research/tau/$libotf2tgz
 if [ "x$otfdir" = "x" ]; then
     libotf2dir=${targetdir}/${architecture}
 else
-    libotf2dir==$otfdir
+    libotf2dir=$otfdir
 fi
 
 libotf2_name=otf2

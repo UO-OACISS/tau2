@@ -98,6 +98,8 @@ extern "C" {
 #endif // TAU_GPU
   /* Returns a pointer to the (singleton) offset info struct */
   TauTraceOffsetInfo* TAUDECL TheTauTraceOffsetInfo();
+  void TAUDECL TauTraceOTF2InitShmem_if_necessary();
+  void TAUDECL TauTraceOTF2ShutdownComms_if_necessary(int tid);
 
 #ifdef __cplusplus
 }

@@ -153,6 +153,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #include <Profile/FunctionInfo.h>
 #include <Profile/UserEvent.h>
 #include <Profile/PapiLayer.h>
+#include <Profile/LikwidLayer.h>
 #include <Profile/WindowsThreadLayer.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauScalasca.h>
