@@ -208,7 +208,7 @@ using namespace std;
 // pthread stack size default
 #define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
 
-#define TAU_MERGE_METADATA 1
+#define TAU_MERGE_METADATA_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -2362,7 +2362,7 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_MERGE_METADATA");
-    if (parse_bool(tmp, TAU_MERGE_METADATA)) {
+    if (parse_bool(tmp, TAU_MERGE_METADATA_DEFAULT)) {
       env_merge_metadata = 1;
       TAU_VERBOSE("TAU: Metadata Merging Enabled\n");
     } else {
