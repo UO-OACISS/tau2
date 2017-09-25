@@ -153,13 +153,11 @@ ADIOST_EXTERN void tau_adiost_close(int64_t file_descriptor, adiost_event_type_t
     }
 }
 
-/* This will eventually be supported! But not in 1.12, unfortunately. */
-//ADIOST_EXTERN void tau_adiost_write( int64_t file_descriptor, adiost_event_type_t type, const char * name, enum ADIOS_DATATYPES data_type, const int ndims, const char * dims, const void * value) {
-ADIOST_EXTERN void tau_adiost_write( int64_t file_descriptor, adiost_event_type_t type) {
+ADIOST_EXTERN void tau_adiost_write( int64_t file_descriptor, adiost_event_type_t type, const char * name, enum ADIOS_DATATYPES data_type, const int ndims, const char * dims, const void * value) {
     if (type == adiost_event_enter) {
         Tau_pure_start_task("ADIOS write", Tau_get_thread());
     } else {
-        //TAU_SOS_COLLECTIVE_ADIOS_WRITE_EVENT("ADIOS", "write", name, data_type, ndims, dims, value)
+        TAU_SOS_COLLECTIVE_ADIOS_WRITE_EVENT("ADIOS", "write", name, data_type, ndims, dims, value)
         Tau_pure_stop_task("ADIOS write", Tau_get_thread());
     }
 } 
