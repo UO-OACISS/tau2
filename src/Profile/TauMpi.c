@@ -246,11 +246,14 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
   PMPI_Comm_rank(comm, &commRank);
   PMPI_Comm_size(comm, &commSize);
   PMPI_Type_size(type, &typesize );
-  vals[0] = (double)commSize; //count
-  vals[1] = (double)counts[0]; //sum
-  vals[2] = (double)counts[0]; //min
-  vals[3] = (double)counts[0]; //max
-  vals[4] = (double)counts[0] * (double)counts[0]; //sumsqr
+  // check to make sure we have values!
+  if (commSize > 0 && counts != NULL) {
+    vals[0] = (double)commSize; //count
+    vals[1] = (double)counts[0]; //sum
+    vals[2] = (double)counts[0]; //min
+    vals[3] = (double)counts[0]; //max
+    vals[4] = (double)counts[0] * (double)counts[0]; //sumsqr
+  }
   
   for (i = 1; i<commSize; i++) {
     vals[1] += (double)counts[i]; // sum
@@ -500,7 +503,7 @@ MPI_Comm comm;
 
   track_allvector(TAU_ALLGATHER_DATA, recvcounts, typesize);
 
-  double tmp_array[5];
+  double tmp_array[5] = {0.0};
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Allgatherv",array_stats(recvcounts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
@@ -584,8 +587,8 @@ MPI_Comm comm;
 
   TAU_ALLTOALL_DATA(tracksize);
 
-  double tmp_array1[5];
-  double tmp_array2[5];
+  double tmp_array1[5] = {0.0};
+  double tmp_array2[5] = {0.0};
   TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
   TAU_PROFILE_STOP(tautimer);
 
@@ -718,7 +721,7 @@ MPI_Comm comm;
 
   track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
 
-  double tmp_array[5];
+  double tmp_array[5] = {0.0};
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Gatherv",array_stats(recvcnts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
@@ -881,7 +884,7 @@ MPI_Comm comm;
 
   track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
 
-  double tmp_array[5];
+  double tmp_array[5] = {0.0};
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Scatterv",array_stats(sendcnts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
