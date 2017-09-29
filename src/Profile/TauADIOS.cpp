@@ -33,7 +33,7 @@
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT(__name,__detail) \
     if (TauEnv_get_sos_trace_events()) { \
         std::stringstream __ss; \
-        __ss << __name << " " << __detail; \
+        __ss << __name << " " << __detail << "()"; \
         Tau_SOS_pack_current_timer(__ss.str().c_str()); \
     }
 
