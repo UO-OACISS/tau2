@@ -272,7 +272,11 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
     int typesize, commSize, commRank, sendcount = 0, i; \
     PMPI_Comm_rank(comm, &commRank); \
     PMPI_Comm_size(comm, &commSize); \
-    PMPI_Type_size( sendtype, &typesize ); \
+    if(sendtype != MPI_DATATYPE_NULL) { \
+        PMPI_Type_size( sendtype, &typesize ); \
+    } else { \
+        PMPI_Type_size( recvtype, &typesize ); \
+    } \
     for (i = 0; i<commSize; i++) { \
       sendcount += counts[i]; \
     } \
