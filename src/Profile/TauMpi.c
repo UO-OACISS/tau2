@@ -253,18 +253,18 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
     vals[2] = (double)counts[0]; //min
     vals[3] = (double)counts[0]; //max
     vals[4] = (double)counts[0] * (double)counts[0]; //sumsqr
-  }
   
-  for (i = 1; i<commSize; i++) {
-    vals[1] += (double)counts[i]; // sum
-    vals[2] = (double)counts[i] < vals[2] ? (double)counts[i] : vals[2]; // min
-    vals[3] = (double)counts[i] > vals[3] ? (double)counts[i] : vals[3]; // max
-    vals[4] += ((double)counts[i] * (double)counts[i]); // sumsqr
-  } 
-  for (i = 1; i<5; i++) {
-    vals[i] = vals[i] * (double)typesize;
+    for (i = 1; i<commSize; i++) {
+      vals[1] += (double)counts[i]; // sum
+      vals[2] = (double)counts[i] < vals[2] ? (double)counts[i] : vals[2]; // min
+      vals[3] = (double)counts[i] > vals[3] ? (double)counts[i] : vals[3]; // max
+      vals[4] += ((double)counts[i] * (double)counts[i]); // sumsqr
+    } 
+    for (i = 1; i<5; i++) {
+      vals[i] = vals[i] * (double)typesize;
+    }
+    vals[1] = vals[1] / (double)commSize;
   }
-  vals[1] = vals[1] / (double)commSize;
   return vals;
 }
 
@@ -272,7 +272,11 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
     int typesize, commSize, commRank, sendcount = 0, i; \
     PMPI_Comm_rank(comm, &commRank); \
     PMPI_Comm_size(comm, &commSize); \
-    PMPI_Type_size( sendtype, &typesize ); \
+    if(sendtype != MPI_DATATYPE_NULL) { \
+        PMPI_Type_size( sendtype, &typesize ); \
+    } else { \
+        PMPI_Type_size( recvtype, &typesize ); \
+    } \
     for (i = 0; i<commSize; i++) { \
       sendcount += counts[i]; \
     } \
@@ -1616,10 +1620,6 @@ int  MPI_Finalize(  )
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
-#ifdef TAU_SOS
-  TAU_SOS_stop_worker();
-#endif
-
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
@@ -1635,7 +1635,10 @@ int  MPI_Finalize(  )
   }
 
 #endif /* TAU_MPI_T */
-  writeMetaDataAfterMPI_Init(); 
+
+#ifdef TAU_SOS
+  //TAU_SOS_stop_worker();
+#endif
 
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncFinalClocks();
@@ -1860,6 +1863,7 @@ char *** argv;
     returnVal = 0;
   }
 
+  writeMetaDataAfterMPI_Init(); 
 
   return returnVal;
 }
@@ -1929,6 +1933,8 @@ int *provided;
     //TauSyncClocks takes no arguments.
     //TauSyncClocks(procid_0, size);
   }
+
+  writeMetaDataAfterMPI_Init(); 
 
   return returnVal;
 }
