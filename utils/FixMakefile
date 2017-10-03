@@ -441,6 +441,11 @@ case $1 in
 	echo "s,^ADIOSDIR=.*$,ADIOSDIR=$adiosdir,g" >> $sedout
 	;;
 
+    caliperdir=*)
+        caliperdir=`echo $1 | sed -e 's/^caliperdir=//'`
+	echo "s,^CALIPERDIR=.*$,CALIPERDIR=$caliperdir,g" >> $sedout
+	;;
+
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
@@ -1601,6 +1606,10 @@ case $1 in
 	;;
      ADIOS)
 	echo "NOTE: Using ADIOS ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CALIPER)
+	echo "NOTE: Using CALIPER ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPENMP)

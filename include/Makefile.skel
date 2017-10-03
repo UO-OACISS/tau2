@@ -320,6 +320,12 @@ MPI_FORTRAN_INIT = TauFInit.o
 #ADIOS#TAU_ADIOS_LINKER_OPTS=$(TAU_ADIOS_LIBS) #ENDIF#
 
 #############################################
+# CALIPER OBJECTS and libs
+#############################################
+#CALIPER#CALIPER_O = TauCaliper.o #ENDIF#
+#CALIPER#TAU_CALIPER_INCLUDE_OPTS=-I$(CALIPERDIR)/include -DTAU_CALIPER #ENDIF#
+
+#############################################
 # OpenMP OBJECTS
 #############################################
 #OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o #ENDIF#
