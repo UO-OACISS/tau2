@@ -149,7 +149,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(SOS_O) $(ADIOS_O) \
-		$(OTF2_O)
+		$(OTF2_O) $(CALIPER_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -659,6 +659,9 @@ TauSOS.o  : TauSOS.cpp $(HDRS)
 
 TauADIOS.o  : TauADIOS.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TauCaliper.o 	: TauCaliper.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
