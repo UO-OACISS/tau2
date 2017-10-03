@@ -17,36 +17,40 @@ extern "C" int Tau_init_initializeTAU();
   * initialized.
   * It can also be used to avoid high initialization costs in the first
   * Caliper API call.
- */
+  * TAU Wrapper: Calls TAU initialize
+  */
+
 extern "C" void cali_init() {
 
-  printf("TAU: CALIPER init invoked.\n");
+  TAU_VERBOSE("TAU: CALIPER init invoked.\n");
 
   if(Tau_init_initializeTAU()) {
-    printf("TAU: Initialization from within Caliper wrapper failed\n");
+    fprintf(stderr, "TAU: Initialization from within Caliper wrapper failed\n");
   }
 
 }
 
 /**
- *  * Put attribute with name \a attr_name on the blackboard.
+ * Put attribute with name \a attr_name on the blackboard.
+ * TAU Wrapper: Begins a timer with the same name
  *   */
 
 extern "C" cali_err cali_begin_byname(const char* attr_name) {
 
-  printf("TAU: CALIPER begin an attribute by name: %s \n", attr_name);
-  Tau_start(attr_name);
+  TAU_VERBOSE("TAU: CALIPER begin an attribute by name: %s \n", attr_name);
+  TAU_START(attr_name);
 
 }
 
 /**
- *  * Remove innermost value for attribute \a attr from the blackboard.
- *   */
+ * Remove innermost value for attribute \a attr from the blackboard.
+ * TAU Wrapper: Ends a timer with a given name
+ */
 
 extern "C" cali_err cali_end_byname(const char* attr_name) {
 
-  printf("TAU: CALIPER end an attribute by name: %s \n", attr_name);
-  Tau_stop(attr_name);
+  TAU_VERBOSE("TAU: CALIPER end an attribute by name: %s \n", attr_name);
+  TAU_STOP(attr_name);
 
 }
 
