@@ -117,6 +117,7 @@ TAU_BOOSTINC=
 TAU_BOOSTLIB=
 SOSDIR=
 ADIOSDIR=
+CALIPERDIR=
 JDKDIR=
 ANDROID_SDK=
 ANDROID_VERSION=
@@ -318,6 +319,12 @@ MPI_FORTRAN_INIT = TauFInit.o
 #ADIOS#TAU_ADIOS_INCLUDE_OPTS=-I$(ADIOSDIR)/include -DTAU_ADIOS #ENDIF#
 #ADIOS#TAU_ADIOS_LIBS=-L$(ADIOSDIR)/lib -Wl,-rpath,$(ADIOSDIR)/lib -pthread -fPIC #ENDIF#
 #ADIOS#TAU_ADIOS_LINKER_OPTS=$(TAU_ADIOS_LIBS) #ENDIF#
+
+#############################################
+# CALIPER OBJECTS and libs
+#############################################
+#CALIPER#CALIPER_O = TauCaliper.o #ENDIF#
+#CALIPER#TAU_CALIPER_INCLUDE_OPTS=-I$(CALIPERDIR)/include -DTAU_CALIPER #ENDIF#
 
 #############################################
 # OpenMP OBJECTS
@@ -1227,7 +1234,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT104) $(PROFILEOPT106) $(PROFILEOPT107) \
               $(PROFILEOPT108) $(TRACEOPT) \
 		  $(TAU_SOS_INCLUDE_OPTS) $(TAU_ADIOS_INCLUDE_OPTS) \
-		  $(TAU_OTF2_INCLUDE_OPTS)
+		  $(TAU_OTF2_INCLUDE_OPTS) $(TAU_CALIPER_INCLUDE_OPTS)
 
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
