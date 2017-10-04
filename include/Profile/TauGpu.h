@@ -9,6 +9,7 @@
 
 enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
 enum Unifmem { BytesHtoD = 0, BytesDtoH = 1, CPUPageFault = 2, UnifmemUnknown = 3 };
+enum Instrmix { FlPtOps = 0, MemOps = 1, CtrlOps = 2 };
 
 #define TAU_GPU_UNKNOWN_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""

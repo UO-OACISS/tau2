@@ -8,6 +8,7 @@ using namespace std;
 #include <dlfcn.h>
 
 static int subscribed = 0;
+static int currentContextId = -1;
 
 // From CuptiActivity.h
 uint8_t *activityBuffer;
@@ -73,7 +74,7 @@ const char *last_recorded_kernel_name;
 
 // #define TAU_DEBUG_CUPTI 1
 // #define TAU_DEBUG_CUPTI_SAMPLE
-// #define TAU_DEBUG_CUPTI_COUNTERS
+#define TAU_DEBUG_SASS_PROF 1
 
 /* BEGIN: unified memory */
 #define CUPTI_CALL(call)                                                    \
@@ -950,6 +951,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       //        getComputeApiKindString((CUpti_ActivityComputeApiKind) context->computeApiKind),
       //        (int) context->nullStreamId);
       contextMap[context->contextId] = *context;
+      currentContextId = context->contextId;
       break;
     }
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
@@ -1335,6 +1337,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #else
       record_gpu_counters(deviceId, name, id, &eventMap);
 #endif
+      if (TauEnv_get_cuda_track_sass()) { 
+	record_imix_counters(name, deviceId, streamId, id);
+      }
 			if (gpu_occupancy_available(deviceId))
 			{
         record_gpu_occupancy(blockX, 
@@ -1768,6 +1773,82 @@ int gpu_source_locations_available()
   //always available. 
   return 1;
 }
+
+void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t id) {
+   // check if data available
+  bool update = false;
+  for (std::map<uint32_t, FuncSampling>::iterator iter = functionMap.begin(); iter != functionMap.end(); iter++) {
+    uint32_t fid = iter->second.fid;
+    const char* name2 = demangleName(iter->second.name);
+    cout << "Name, " << name << ", name2 " << name2 << endl;
+    if (strcmp(name, name2) == 0) {
+      // check if fid exists
+
+      std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
+      ImixStats is_runtime = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
+      cout << "[CuptiActivity]:  Name: " << name << 
+	", FLOPS_raw: " << is_runtime.flops_raw << ", MEMOPS_raw: " << is_runtime.memops_raw <<
+	", CTRLOPS_raw: " << is_runtime.ctrlops_raw << ", TOTOPS_raw: " << is_runtime.totops_raw << ".\n";
+      // Each time imix counters recorded, erase instructionMap.
+      // be sure to only clear ones evaluated, leave last one?
+      std::map<uint32_t, std::list<InstrSampling> >::iterator it_temp = instructionMap.find(fid);
+      instructionMap.erase(it_temp);
+
+//       for(std::map<string, ImixStats>::iterator it2= map_imix_static.begin();
+// 	  it2 != map_imix_static.end(); it2++) {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	cout << "it2->second.flops_pct: " << it2->second.flops_pct << ".\n";
+// #endif
+//       }
+//       if (map_imix_static.find(name) != map_imix_static.end()) {
+// 	ImixStats is_static = map_imix_static.find(name)->second;
+// #ifdef TAU_DEBUG_SASS_PROF
+// 	cout << "[CuptiActivity]:  kernel: " << name2 
+// 	     << ", flops_pct static: " << is_static.flops_pct 
+// 	     << "%, ctrlops_pct static: " << is_static.ctrlops_pct 
+// 	     << "%, memops_pct static: " << is_static.memops_pct
+// 	     << ", flops_pct rt: " << is_runtime.flops_pct 
+// 	     << "%, ctrlops_pct rt: " << is_runtime.ctrlops_pct 
+// 	     << "%, memops_pct rt: " << is_runtime.memops_pct << "%\n";
+// #endif
+// 	// fprintf(fp_imix_out[k],"Kernel:  %s\n",demangleName(name.c_str()));
+// 	// fprintf(fp_imix_out[k], "STATIC:\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n", 
+// 	// 	is_static.flops_raw, is_static.memops_raw, 
+// 	// 	is_static.ctrlops_raw, is_static.totops_raw, 
+// 	// 	is_static.flops_pct, is_static.memops_pct, is_static.ctrlops_pct);	    
+// 	// fprintf(fp_imix_out[k], "DYNAMIC:\n  FLOPS: %i, MEMOPS: %i, CTRLOPS: %i, TOTOPS: %i\n  FLOPS_pct: %.3g%, MEMOPS_pct: %.3g%, CTRLOPS_pct: %.3g%\n\n", 
+// 	// 	is_runtime.flops_raw, is_runtime.memops_raw, 
+// 	// 	is_runtime.ctrlops_raw, is_runtime.totops_raw, 
+// 	// 	is_runtime.flops_pct, is_runtime.memops_pct, is_runtime.ctrlops_pct);
+	
+// 	update = true;
+// 	printf("[CuptiActivity] record_imix_counters, add imix here\n");
+// 	static TauContextUserEvent* fp_ops;
+// 	static TauContextUserEvent* mem_ops;
+// 	static TauContextUserEvent* ctrl_ops;
+	
+// 	Tau_get_context_userevent((void **) &fp_ops, "Floating Point Operations");
+// 	Tau_get_context_userevent((void **) &mem_ops, "Memory Operations");
+// 	Tau_get_context_userevent((void **) &ctrl_ops, "Control Operations");
+	
+// 	// std::vector<uint32_t> v_flops = environmentMap.find(contextId)->second.power;
+// 	// std::vector<uint32_t> v_memops = environmentMap.find(contextId)->second.smClock;
+// 	// std::vector<uint32_t> v_ctrlops = environmentMap.find(contextId)->second.memoryClock;
+	
+// 	// transport_imix_counters(v_flops, FlPtOps, name, deviceId, streamId, contextId, id, end, fp_ops);
+// 	// transport_imix_counters(v_memops, MemOps, name, deviceId, streamId, contextId, id, end, mem_ops);
+// 	// transport_imix_counters(v_ctrlops, CtrlOps, name, deviceId, streamId, contextId, id, end, ctrl_ops);
+	
+// 	// eventMap.erase(eventMap.begin(), eventMap.end());
+//       }
+      
+    }
+  }
+  if(!update) {
+    TAU_VERBOSE("TAU Warning:  Did not record instruction operations.\n");
+  }
+}
+  
 
 void record_gpu_launch(int correlationId, const char *name)
 {
