@@ -40,6 +40,10 @@ static TauContextUserEvent *UnifiedMemoryEventHtoD;
 static TauContextUserEvent *UnifiedMemoryEventDtoH;
 static TauContextUserEvent *UnifiedMemoryEventPageFault;
 
+static TauContextUserEvent *FloatingPointOps;
+static TauContextUserEvent *MemoryOps;
+static TauContextUserEvent *ControlOps;
+
 static uint32_t recentKernelId = -1;
 static uint32_t recentCorrelationId = -1;
 static int curr_device_id = 0;
@@ -707,6 +711,65 @@ void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
   }
 }
 
+
+void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
+{
+  int task = get_task(event);
+  //task = contextId;
+  
+  printf("IMIX type is %d, contextId: %i.\n", dataType, task);
+  const char* functionName = event->getName();
+  if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
+    {
+      if (dataType == FlPtOps) {
+	functionName = "Floating Point Operations";
+      }
+      else if (dataType == MemOps)
+	{
+	  functionName = "Memory Operations";
+	}
+      else if (dataType == CtrlOps)
+	{
+	  functionName = "Control Operations";
+	}
+      printf("using default name: %s.\n", functionName);
+    }
+#ifdef DEBUG_PROF
+  TAU_VERBOSE("recording instruction mix event.\n");
+  TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
+  TAU_VERBOSE("kind is: %d.\n", dataType);
+  TAU_VERBOSE("id is: %s.\n", event->gpuIdentifier());
+#endif
+  printf("Time: start: %f, end: %f, event->syncOffset(): %f\n", startTime, endTime, event->syncOffset());
+  printf(" kind: %d, id: %s\n", dataType, event->gpuIdentifier());
+
+  if (dataType == FlPtOps) {
+    // stage_gpu_event(functionName, task,
+    //              startTime + event->syncOffset(), event->getCallingSite());
+    TAU_CONTEXT_EVENT(FloatingPointOps, transferSize);
+    // TAU_CONTEXT_EVENT_THREAD(SMClockEvent, transferSize, task);
+    // break_gpu_event(functionName, task,
+    //              endTime + event->syncOffset(), event->getCallingSite());
+  }
+  else if (dataType == MemOps) {
+    // stage_gpu_event(functionName, task,
+    //              startTime + event->syncOffset(), event->getCallingSite());
+    TAU_CONTEXT_EVENT(MemoryOps, transferSize);
+    // TAU_CONTEXT_EVENT_THREAD(MemoryClockEvent, transferSize, task);
+    // break_gpu_event(functionName, task,
+    //              endTime + event->syncOffset(), event->getCallingSite());
+  }
+  else if (dataType == CtrlOps) {
+    // stage_gpu_event(functionName, task,
+    //              startTime + event->syncOffset(), event->getCallingSite);
+    TAU_CONTEXT_EVENT(ControlOps, transferSize);
+    // TAU_CONTEXT_EVENT_THREAD(PowerUtilizationEvent, transferSize, task);
+    // break_gpu_event(functionName, task,
+    //              endTime + event->syncOffset(), event->getCallingSite);
+  }
+}
+
+
 // // Make samples based on function/file/line:
 // // 1) Read each instruction_event sample
 // // 2) Check if existing source entry / line no (sid) in srcLocMap available. 
@@ -816,6 +879,11 @@ void Tau_gpu_init(void)
   Tau_get_context_userevent((void **)&UnifiedMemoryEventHtoD, "Unified Memory Bytes copied from Host to Device");
   Tau_get_context_userevent((void **)&UnifiedMemoryEventDtoH, "Unified Memory Bytes copied from Device to Host");
   Tau_get_context_userevent((void **)&UnifiedMemoryEventPageFault, "Unified Memory CPU Page Faults");
+  Tau_get_context_userevent((void **) &FloatingPointOps, "Floating Point Operations");
+  Tau_get_context_userevent((void **) &MemoryOps, "Memory Operations");
+  Tau_get_context_userevent((void **) &ControlOps, "Control Operations");
+
+  
 }
 
 /*
