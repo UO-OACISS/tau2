@@ -457,24 +457,65 @@ char *Tau_extract_filename_from_routine(const char *name) {
   return tmp;
 }
 
+/*The string returned by FunctionInfo can contain unecessary contextual information 
+ * when -ebs is used to sample with/without instrumentation
+ * This function preprocesses the FunctionInfo returned string to return the actual name that 
+ * then be used to compare against the string in the selective instrumentation file
+ * Based on the following assumptions/rationale:
+ * 1. The actual function name that we are interested in is last in sequence of a string created during sampling: [CONTEXT] func1 => [SAMPLE] func2 ..... => [SAMPLE] our_func
+ * 2. There is exactly one space between every entity in the FunctionInfo name. This is used to skip characters in the logic below
+ * TODO: Use an already existing function inside TAU utils to ensure that property(2) is satisfied */
+char *Tau_preprocess_function_info_name(const char *name) {
+  char *last_position = strdup(name); 
+  char *current_position = NULL;
+  const char *arrows = "=>";
 
+  current_position = strstr(last_position, arrows);
+
+  /*Iterate to find the section of the name that contains the actual name*/
+  while(current_position) {
+    /*Skip the arrow length plus one space*/
+    current_position += 3;
+    last_position = current_position;
+    current_position = strstr(current_position, arrows);
+  }
+  
+  if(last_position[0] == '[') {
+    /*Find the actual name by removing any instances of [SAMPLE], or [CONTEXT] or [SUMMARY] prepended to the name*/
+    last_position = strchr(last_position, ']') + 2;
+  }
+
+  return last_position;
+}
 
 /*This function gets invoked at function registration.
  * It checks if the function getting registrtion is present in the exclude list specified by the instrumentation file
  * and is so, sets the function group to TAU_DISABLE, effectively disabling function from getting instrumented*/
 int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_registration_data data) {
 
-  const char * name = ((FunctionInfo *)data.function_info_ptr)->GetName();  
+  const char * name = ((FunctionInfo *)data.function_info_ptr)->GetName(); 
+  const char * preprocessed_name = Tau_preprocess_function_info_name(name);
+
   const char * pch = strchr(name, '[');
-  int position; 
+  int position;
+
+  printf("Name and Preprocessed name: %s WWWWWWW %s\n", name, preprocessed_name);
+
   if (pch) { 
     position = (pch -1) - name; 
+
+    /*Handle case where name could be "[CONTEXT] .TAU application" which happens when ebs is turned on*/
+    if(position < 0) 
+      position = strlen(name);
   }
   else {
     position = strlen(name);
   }
 
   TAU_VERBOSE("TAU PLUGIN: Gathering list of functions to disable by looking at the selective instrumentation file\n");
+  TAU_VERBOSE("TAU PLUGIN: Trying to disable instrumentation for function: %s\n", name);
+  TAU_VERBOSE("TAU PLUGIN: Position of left square bracket in function name: %d\n", position);
+
 
   /*Check if function is .TAU application. If not, proceed to check if function needs to be instrumented*/
     /*If function should not instrumented, set profile group to TAU_DISABLE*/
