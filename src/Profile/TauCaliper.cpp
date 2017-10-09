@@ -20,7 +20,6 @@ struct StackValue {
 
 std::map<std::string, cali_id_t> _attribute_name_map_;
 std::map<cali_id_t, std::string> _attribute_id_map_;
-std::mutex mtx;
 
 cali_id_t current_id;
 std::map<std::string, std::stack<StackValue> > attribute_stack;
@@ -51,6 +50,7 @@ extern "C" void cali_init() {
 
 
   if(Tau_init_initializeTAU()) {
+
     fprintf(stderr, "TAU: Initialization from within Caliper wrapper failed\n");
   }
   cali_tau_initialized = 1;
@@ -58,8 +58,34 @@ extern "C" void cali_init() {
 
 /**
  * Put attribute with name \a attr_name on the blackboard.
- * TAU Wrapper: Begins a timer with the same name
- *   */
+ * TAU Wrapper:
+ *  1. For strings: Begins a timer with the same name, and add string name to stack
+ *  2. For int, double: Create a user event, and add the int/double value to stack
+ */
+
+cali_err cali_begin_double_byname(const char* attr_name, double val) {
+  TAU_VERBOSE("TAU: CALIPER begin a attribute with value %f\n", val);
+  TAU_REGISTER_EVENT(ev, attr_name);
+  TAU_EVENT(ev, val);
+
+  StackValue value;
+  value.type = DOUBLE;
+  value.data.as_double = val;
+  attribute_stack[std::string(attr_name)].push(value);
+  //It doesn't make sense to start a timer here
+}
+
+cali_err cali_begin_int_byname(const char* attr_name, int val) {
+  TAU_VERBOSE("TAU: CALIPER begin a attribute with value %d\n", val);
+  TAU_REGISTER_EVENT(ev, attr_name);
+  TAU_EVENT(ev, val);
+
+  StackValue value;
+  value.type = INTEGER;
+  value.data.as_double = val;
+  attribute_stack[std::string(attr_name)].push(value);
+  //It doesn't make sense to start a timer here
+}
 
 extern "C" cali_err cali_begin_byname(const char* attr_name) {
   if(!cali_tau_initialized)
@@ -84,6 +110,7 @@ cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
   attribute_stack[std::string(attr_name)].push(value);
   TAU_START(val);
 } 
+
 
 /**
  * \brief Remove \a value for the attribute with the name \a attr_name to the 
