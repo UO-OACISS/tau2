@@ -26,6 +26,7 @@ std::map<std::string, std::stack<StackValue> > attribute_stack;
 
 //Externs
 extern "C" int Tau_init_initializeTAU();
+extern "C" void Tau_trigger_userevent(const char *name, double data);
 
 /**
   * \brief Initialize Caliper.
@@ -64,9 +65,14 @@ extern "C" void cali_init() {
  */
 
 cali_err cali_begin_double_byname(const char* attr_name, double val) {
-  TAU_VERBOSE("TAU: CALIPER begin a attribute with value %f\n", val);
-  TAU_REGISTER_EVENT(ev, attr_name);
-  TAU_EVENT(ev, val);
+
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    printf("TAU: CALIPER operation not supported! TAU UserEvent has already been created for %s. Use cali_set_double_byname instead to update the value.\n", attr_name);
+    return CALI_SUCCESS;
+  }
+
+  TAU_VERBOSE("TAU: CALIPER begin an attribute with value %f\n", val);
+  Tau_trigger_userevent(attr_name, val);
 
   StackValue value;
   value.type = DOUBLE;
@@ -76,13 +82,17 @@ cali_err cali_begin_double_byname(const char* attr_name, double val) {
 }
 
 cali_err cali_begin_int_byname(const char* attr_name, int val) {
-  TAU_VERBOSE("TAU: CALIPER begin a attribute with value %d\n", val);
-  TAU_REGISTER_EVENT(ev, attr_name);
-  TAU_EVENT(ev, val);
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    printf("TAU: CALIPER operation not supported! TAU UserEvent has already been created for %s. Use cali_set_int_byname instead to update the value.\n", attr_name);
+    return CALI_SUCCESS;
+  }
+
+  TAU_VERBOSE("TAU: CALIPER begin an attribute with value %d\n", val);
+  Tau_trigger_userevent(attr_name, val);
 
   StackValue value;
   value.type = INTEGER;
-  value.data.as_double = val;
+  value.data.as_integer = val;
   attribute_stack[std::string(attr_name)].push(value);
   //It doesn't make sense to start a timer here
 }
@@ -95,10 +105,6 @@ extern "C" cali_err cali_begin_byname(const char* attr_name) {
   TAU_START(attr_name);
 }
 
-/**
- * \brief Add \a value for the attribute with the name \a attr_name to the 
- * blackboard.
- */
 cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
   if(!cali_tau_initialized)
     cali_init();
@@ -111,6 +117,47 @@ cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
   TAU_START(val);
 } 
 
+/* TAU Wrapper: 
+ * 1. Replace value at the top of the stack.
+ * 2. Trigger a TAU UserEvent for int/double types.
+ * 3. Reset a timer for string types
+ */
+cali_err cali_set_double_byname(const char* attr_name, double val) {
+  if(!cali_tau_initialized)
+    cali_init();
+
+  TAU_VERBOSE("TAU: CALIPER set attribute with name: %s to value %f\n", attr_name, val);
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    attribute_stack[std::string(attr_name)].pop();
+  }
+
+  Tau_trigger_userevent(attr_name, val);
+  StackValue value;
+  value.type = DOUBLE;
+  value.data.as_double = val;
+  attribute_stack[std::string(attr_name)].push(value);
+}
+
+cali_err cali_set_int_byname(const char* attr_name, int val) {
+  if(!cali_tau_initialized)
+    cali_init();
+
+  TAU_VERBOSE("TAU: CALIPER set attribute with name: %s to value %d\n", attr_name, val);
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    attribute_stack[std::string(attr_name)].pop();
+  }
+
+  Tau_trigger_userevent(attr_name, val);
+  StackValue value;
+  value.type = INTEGER;
+  value.data.as_integer = val;
+  attribute_stack[std::string(attr_name)].push(value);
+}
+
+cali_err cali_set_string_byname(const char* attr_name, const char* val) {
+  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", val);
+  return CALI_EINV;
+}
 
 /**
  * \brief Remove \a value for the attribute with the name \a attr_name to the 
