@@ -44,7 +44,7 @@ fi
 
 # If 3D window has problems, please uncomment
 #if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
-export LIBGL_ALWAYS_INDIRECT=1
+#export LIBGL_ALWAYS_INDIRECT=1
 #fi
 
 APPLE_OPTIONS=""

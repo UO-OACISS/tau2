@@ -2767,7 +2767,14 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            cp tools/src/contrib/jogl/ppc64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/ppc64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 	    ;;
+
+	ibm64linux)
+            cp tools/src/contrib/jogl/ppc64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/ppc64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+            ;;
 
 	bgp)
 	    gunzip -c tools/src/contrib/jogl/ppc64/jogl.jar.gz > $JARTARGET/jogl.jar
