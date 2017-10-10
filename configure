@@ -1698,6 +1698,7 @@ for arg in "$@"; do
 
 	-sos=*)
 	    sos=yes
+        pthread=yes
 	    sosdir=`echo $arg | sed -e 's/-sos=//'`
 	    if [ ! -d $sosdir ]
 	    then
@@ -1709,6 +1710,7 @@ for arg in "$@"; do
 
 	-adios=*)
 	    adios=yes
+        pthread=yes
 	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
 	    if [ ! -d $adiosdir ]
 	    then

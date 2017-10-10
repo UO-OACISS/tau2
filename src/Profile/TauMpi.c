@@ -39,26 +39,27 @@
 /* These macros are for creating MPI "events" in the SOS stream. */
 
 #ifdef TAU_SOS
+#define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
 #include "Profile/TauSOS.h"
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[128]; \
-        sprintf(__tmp, "MPI collective synchronize %s 0x%08x", __desc, __comm); \
+        sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
         Tau_SOS_pack_current_timer(__tmp); \
     }
 
 #define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[128]; \
-        sprintf(__tmp, "MPI collective exchange %s (%d) 0x%08x", __desc, __size, __comm); \
+        sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
         Tau_SOS_pack_current_timer(__tmp); \
     }
 
 #define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[128]; \
-        sprintf(__tmp, "MPI collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
-            __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
+        sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
+            EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
         Tau_SOS_pack_current_timer(__tmp); \
     }
 
@@ -66,8 +67,8 @@
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[256]; \
         sprintf(__tmp, \
-            "MPI collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
-            __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
+            "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
+            EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
             __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
         Tau_SOS_pack_current_timer(__tmp); \
     }
@@ -75,21 +76,21 @@
 #define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[128]; \
-        sprintf(__tmp, "MPI_Comm_split (%p, %d, %d) 0x%08x", __comm,__color,__key,__comm_out); \
+        sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
         Tau_SOS_pack_current_timer(__tmp); \
     }
 
 #define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[128]; \
-        sprintf(__tmp, "MPI_Comm_dup (%p) 0x%08x", __comm, __comm_out); \
+        sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
         Tau_SOS_pack_current_timer(__tmp); \
     }
 
 #define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[128]; \
-        sprintf(__tmp, "MPI_Comm_create (%p) 0x%08x", __comm, __comm_out); \
+        sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
         Tau_SOS_pack_current_timer(__tmp); \
     }
 
@@ -99,7 +100,7 @@ static int __cart_dims = 1;
 #define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[256]; \
-        sprintf(__tmp, "MPI_Cart_create (%p, %d, [", __comm,__ndims); \
+        sprintf(__tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, __comm,__ndims); \
         int _x_; \
         __cart_dims = __ndims; \
         for (_x_ = 0 ; _x_ < __ndims-1 ; _x_++ ) { \
@@ -116,7 +117,7 @@ static int __cart_dims = 1;
 #define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
     if (TauEnv_get_sos_trace_events()) { \
         char __tmp[256]; \
-        sprintf(__tmp, "MPI_Cart_sub (%p, [", __comm); \
+        sprintf(__tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, __comm); \
         int _x_; \
         for (_x_ = 0 ; _x_ < __cart_dims-1 ; _x_++ ) { \
             sprintf(__tmp, "%s%d,", __tmp, __remains[_x_]); \

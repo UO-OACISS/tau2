@@ -309,7 +309,7 @@ MPI_FORTRAN_INIT = TauFInit.o
 #############################################
 #SOS#SOS_O = TauSOS.o #ENDIF#
 #SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include -I$(SOSDIR) -DTAU_SOS #ENDIF#
-#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos -pthread -fPIC #ENDIF#
+#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos -fPIC #ENDIF#
 #SOS#TAU_SOS_LINKER_OPTS=$(TAU_SOS_LIBS) #ENDIF#
 
 #############################################
@@ -317,7 +317,7 @@ MPI_FORTRAN_INIT = TauFInit.o
 #############################################
 #ADIOS#ADIOS_O = TauADIOS.o #ENDIF#
 #ADIOS#TAU_ADIOS_INCLUDE_OPTS=-I$(ADIOSDIR)/include -DTAU_ADIOS #ENDIF#
-#ADIOS#TAU_ADIOS_LIBS=-L$(ADIOSDIR)/lib -Wl,-rpath,$(ADIOSDIR)/lib -pthread -fPIC #ENDIF#
+#ADIOS#TAU_ADIOS_LIBS=-L$(ADIOSDIR)/lib -Wl,-rpath,$(ADIOSDIR)/lib -fPIC #ENDIF#
 #ADIOS#TAU_ADIOS_LINKER_OPTS=$(TAU_ADIOS_LIBS) #ENDIF#
 
 #############################################
