@@ -11,7 +11,7 @@ CC = $(TAU_CC)
 
 CFLAGS = $(TAU_INCLUDE) $(TAU_CALIPER_INCLUDE_OPTS) $(TAU_MPI_INCLUDE) $(TAU_DEFS) -fopenmp
 
-LDFLAGS = $(TAU_MPI_LIBS) $(TAU_LIBS) -L$(CALIPERDIR)/lib64 -lcaliper -fopenmp 
+LDFLAGS = $(TAU_MPI_LIBS) $(TAU_LIBS) -L$(CALIPERDIR)/lib64 -L$(CALIPERDIR)/lib -lcaliper -fopenmp
 
 OBJS = cali-example.o
 
