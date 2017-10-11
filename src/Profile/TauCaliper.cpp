@@ -1,3 +1,17 @@
+/****************************************************************************
+ * **                      TAU Portable Profiling Package                     **
+ * **                      http://www.cs.uoregon.edu/research/tau             **
+ * *****************************************************************************
+ * **    Copyright 1997-2017                                                  **
+ * **    Department of Computer and Information Science, University of Oregon **
+ * ****************************************************************************/
+/***************************************************************************
+ * **      File            : TauCaliper.cpp                                   **
+ * **      Description     : Wrapper library for CALIPER calls                **
+ * **      Contact         : sramesh@cs.uoregon.edu                           **
+ * **      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
+ * ***************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <map>
@@ -63,7 +77,7 @@ extern "C" void cali_init() {
 
 cali_err cali_begin_double_byname(const char* attr_name, double val) {
 
-  /*We do not supporting "stacking" semantics for UserEvents*/
+  /*We do not support "stacking" semantics for UserEvents*/
   RtsLayer::LockEnv();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
