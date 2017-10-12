@@ -95,6 +95,11 @@ cali_err cali_begin_double_byname(const char* attr_name, double val) {
   RtsLayer::UnLockEnv();
   cali_create_attribute(attr_name, CALI_TYPE_DOUBLE, CALI_ATTR_DEFAULT);
 
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_DOUBLE) {
+    return CALI_ETYPE;
+  }
+
   RtsLayer::LockEnv();
 
 
@@ -127,6 +132,11 @@ cali_err cali_begin_int_byname(const char* attr_name, int val) {
   RtsLayer::UnLockEnv();
   cali_create_attribute(attr_name, CALI_TYPE_INT, CALI_ATTR_DEFAULT);
 
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_INT) {
+    return CALI_ETYPE;
+  }
+
   RtsLayer::LockEnv();
 
   TAU_VERBOSE("TAU: CALIPER create a TAU UserEvent named %s\n of integer type\n", attr_name);
@@ -149,6 +159,12 @@ extern "C" cali_err cali_begin_byname(const char* attr_name) {
   cali_create_attribute(attr_name, CALI_TYPE_STRING, CALI_ATTR_DEFAULT);
 
   RtsLayer::LockEnv();
+  
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_STRING) {
+    return CALI_ETYPE;
+  }
+
 
   if(!cali_tau_initialized)
     cali_init();
@@ -167,6 +183,11 @@ cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
   //Create the attribute if it hasn't already been created explicitly
   cali_create_attribute(attr_name, CALI_TYPE_STRING, CALI_ATTR_DEFAULT);
   
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_STRING) {
+    return CALI_ETYPE;
+  }
+
   RtsLayer::LockEnv();
 
   if(!cali_tau_initialized)
@@ -202,6 +223,11 @@ cali_err cali_set_double_byname(const char* attr_name, double val) {
   //Create the attribute if it hasn't already been created explicitly
   cali_create_attribute(attr_name, CALI_TYPE_DOUBLE, CALI_ATTR_DEFAULT);
 
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_DOUBLE) {
+    return CALI_ETYPE;
+  }
+
   RtsLayer::LockEnv();
 
   if(!cali_tau_initialized)
@@ -227,6 +253,11 @@ cali_err cali_set_double_byname(const char* attr_name, double val) {
 cali_err cali_set_int_byname(const char* attr_name, int val) {
   //Create the attribute if it hasn't already been created explicitly
   cali_create_attribute(attr_name, CALI_TYPE_INT, CALI_ATTR_DEFAULT);
+
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_INT) {
+    return CALI_ETYPE;
+  }
 
   RtsLayer::LockEnv();
  
