@@ -22,7 +22,10 @@
 
 #include <Profile/TauCaliperTypes.h>
 
+//Global data structures
 std::map<std::string, cali_id_t> _attribute_name_map_;
+std::map<std::string, cali_attr_type> _attribute_type_map_name_key;
+std::map<cali_id_t, cali_attr_type> _attribute_type_map_id_key;
 std::map<cali_id_t, std::string> _attribute_id_map_;
 
 cali_id_t current_id;
@@ -77,7 +80,7 @@ extern "C" void cali_init() {
 
 cali_err cali_begin_double_byname(const char* attr_name, double val) {
 
-  /*We do not support "stacking" semantics for UserEvents*/
+  /*We do not support "stacking" semantics for UserEvents of double and integer types*/
   RtsLayer::LockEnv();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
@@ -87,6 +90,13 @@ cali_err cali_begin_double_byname(const char* attr_name, double val) {
 
     return CALI_EINV;
   }
+
+  //Create the attribute if it hasn't already been created explicitly
+  RtsLayer::UnLockEnv();
+  cali_create_attribute(attr_name, CALI_TYPE_DOUBLE, CALI_ATTR_DEFAULT);
+
+  RtsLayer::LockEnv();
+
 
   TAU_VERBOSE("TAU: CALIPER create a TAU UserEvent named %s\n of double type\n", attr_name);
   Tau_trigger_userevent(attr_name, val);
@@ -113,6 +123,12 @@ cali_err cali_begin_int_byname(const char* attr_name, int val) {
     return CALI_EINV;
   }
 
+  //Create the attribute if it hasn't already been created explicitly
+  RtsLayer::UnLockEnv();
+  cali_create_attribute(attr_name, CALI_TYPE_INT, CALI_ATTR_DEFAULT);
+
+  RtsLayer::LockEnv();
+
   TAU_VERBOSE("TAU: CALIPER create a TAU UserEvent named %s\n of integer type\n", attr_name);
   Tau_trigger_userevent(attr_name, val);
 
@@ -128,6 +144,9 @@ cali_err cali_begin_int_byname(const char* attr_name, int val) {
 
 /* TAU Wrapper: Create and start a timer with a given name*/
 extern "C" cali_err cali_begin_byname(const char* attr_name) {
+  
+  //Create the attribute if it hasn't already been created explicitly
+  cali_create_attribute(attr_name, CALI_TYPE_STRING, CALI_ATTR_DEFAULT);
 
   RtsLayer::LockEnv();
 
@@ -144,6 +163,10 @@ extern "C" cali_err cali_begin_byname(const char* attr_name) {
 
 /* TAU Wrapper: Start a nested timer with \a val name*/
 cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
+
+  //Create the attribute if it hasn't already been created explicitly
+  cali_create_attribute(attr_name, CALI_TYPE_STRING, CALI_ATTR_DEFAULT);
+  
   RtsLayer::LockEnv();
 
   if(!cali_tau_initialized)
@@ -175,6 +198,10 @@ cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
  * 3. String types: Operation currently not supported
  */
 cali_err cali_set_double_byname(const char* attr_name, double val) {
+
+  //Create the attribute if it hasn't already been created explicitly
+  cali_create_attribute(attr_name, CALI_TYPE_DOUBLE, CALI_ATTR_DEFAULT);
+
   RtsLayer::LockEnv();
 
   if(!cali_tau_initialized)
@@ -198,6 +225,9 @@ cali_err cali_set_double_byname(const char* attr_name, double val) {
 }
 
 cali_err cali_set_int_byname(const char* attr_name, int val) {
+  //Create the attribute if it hasn't already been created explicitly
+  cali_create_attribute(attr_name, CALI_TYPE_INT, CALI_ATTR_DEFAULT);
+
   RtsLayer::LockEnv();
  
   if(!cali_tau_initialized)
@@ -273,11 +303,11 @@ cali_err cali_end_byname(const char* attr_name) {
  * \param type Type of the attribute
  * \param properties Attribute properties
  * \return Attribute id
- * TAU Wrapper: Maintain a local key:value mapping of name:id and id:name
+ * TAU Wrapper: Maintain a local key:value mapping of name:id and id:name and name:type mapping
  * 		We generate our own ID (dumb counter), but we don't pass through
  * 		any calls to CALIPER.
  * 		As of the moment, we do not support properties while creating the caliper attributes.
- * 		We may support some basic ones involving process / thread scope.
+ * 		We may support add more support in the future.
  */
 
 cali_id_t cali_create_attribute(const char*     name,
@@ -288,10 +318,24 @@ cali_id_t cali_create_attribute(const char*     name,
     cali_init();
 
   RtsLayer::LockEnv(); 
+
+  auto it = _attribute_name_map_.find(name);
+  if(it != _attribute_name_map_.end()) {
+    auto ID = _attribute_name_map_[name];
+    TAU_VERBOSE("TAU: CALIPER attribute with the name %s already exists. Returning the already created ID: %d\n", name, ID);
+    RtsLayer::UnLockEnv();
+    return ID;
+  }
+
   //Critical section
   ++current_id;
+  //Maintain a map of name <=> id for "fast" lookups
   _attribute_name_map_[name] = current_id;
   _attribute_id_map_[current_id] = name;
+
+   //Also maintain a map of name:type and id:type to ensure user doesn't invoke wrong functionality for attributes defined with a certain type
+  _attribute_type_map_name_key[name] = type;
+  _attribute_type_map_id_key[current_id] = type;
   RtsLayer::UnLockEnv();
 
   if(properties != CALI_ATTR_DEFAULT) {
