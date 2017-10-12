@@ -132,6 +132,11 @@ do
     shift
     ;;
 
+   --jogl1)
+     FLAGJOGL1=1
+    shift
+    ;;
+
   '')
     #echo "NULL switch!"
     # Required for HP/Compaq Tru64 machines.
@@ -143,6 +148,13 @@ do
     ;;
   esac
 done
+
+
+if [ "$CONFIG_ARCH" = "apple" ] || [ "$CONFIG_ARCH" = "arm64_linux" ] || [ "$CONFIG_ARCH" = "ibm64linux" ]; then
+	if [ "$FLAGJOGL1" != "1" ]; then
+		FLAGJOGL2=1
+	fi
+fi
 
 
 if [ "$FLAGJOGL2" = "1" ]; then
