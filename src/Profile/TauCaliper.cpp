@@ -375,4 +375,79 @@ cali_id_t cali_create_attribute(const char*     name,
 
   return current_id;
 }  
- 
+
+/**
+ * \brief Create an attribute with additional metadata. 
+ *
+ * Metadata is provided via (meta-attribute id, pointer-to-data, size) in
+ * the \a meta_attr_list, \a meta_val_list, and \a meta_size_list.
+ * \param name Name of the attribute
+ * \param type Type of the attribute
+ * \param properties Attribute properties
+ * \param n Number of metadata entries
+ * \param meta_attr_list Attribute IDs of the metadata entries
+ * \param meta_val_list  Pointers to values of the metadata entries
+ * \param meta_size_list Sizes (in bytes) of the metadata values
+ * \return Attribute id
+ * \sa cali_create_attribute
+ * TAU Wrapper: We do not support this version of create_attribute yet.
+ * 		Call cali_create_attribute and print appropriate warning message
+ */
+
+cali_id_t cali_create_attribute_with_metadata(const char*     name,
+                                    cali_attr_type  type,
+                                    int             properties,
+                                    int             n,
+                                    const cali_id_t meta_attr_list[],
+                                    const void*     meta_val_list[],
+                                    const size_t    meta_size_list[]) {
+
+  printf("TAU: CALIPER creating attribute with metadata is currently not supported. Using default create_attribute method\n");
+  return cali_create_attribute(name, type, properties);
+}
+  
+/**
+ * \brief Find attribute by name 
+ * \param name Name of attribute
+ * \return Attribute ID, or CALI_INV_ID if attribute was not found
+ * TAU Wrapper: Do exactly as caliper does.
+ */
+
+cali_id_t cali_find_attribute(const char* name) {
+  auto it = _attribute_name_map_.find(name);
+
+  if(it == _attribute_name_map_.end()) {
+    return CALI_INV_ID;
+  }
+  
+  return it->second;
+}
+/**
+ * \brief  Return name of attribute with given ID
+ * \param  attr_id Attribute id
+ * \return Attribute name, or NULL if `attr_id` is not a valid attribute ID
+ * TAU Wrapper: Do exactly as caliper does.
+ */
+const char* cali_attribute_name(cali_id_t attr_id) {
+  auto it = _attribute_id_map_.find(attr_id);
+
+  if(it == _attribute_id_map_.end()) {
+    return NULL;
+  }
+   
+  return it->second;
+}
+/**
+ * \brief Return the type of the attribute with given ID
+ * \param attr_id Attribute id
+ * \return Attribute type, or CALI_TYPE_INV if `attr_id` is not a valid attribute ID
+ */
+cali_attr_type cali_attribute_type(cali_id_t attr_id) {
+  auto it = _attribute_type_map_id_key.find(attr_id);
+
+  if(it == _attribute_type_map_id_key.end()) {
+    return CALI_TYPE_INV;
+  }
+   
+  return it->second;
+}
