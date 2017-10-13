@@ -456,7 +456,7 @@ public class TopoPlot extends ScatterPlot {
             return;
         
         GL2 gl = glDrawable.getGL().getGL2();
-        GLU glu = new GLU();
+        GLU glu = GLU.createGLU(glDrawable.getGL());// new GLU();
 
         gl.glShadeModel(GL2.GL_SMOOTH);
 

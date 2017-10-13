@@ -220,7 +220,7 @@ public class VisRenderer implements GLEventListener, MouseListener, MouseMotionL
      */
     public void init(GLAutoDrawable drawable) {
         gl = drawable.getGL().getGL2();
-        glu = new GLU();
+        glu = GLU.createGLU(drawable.getGL());// new GLU();
         this.glDrawable = drawable;
 
         VisTools.verr(this, "Initializing OpenGL (JOGL)");
