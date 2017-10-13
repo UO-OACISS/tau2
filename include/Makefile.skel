@@ -323,7 +323,7 @@ MPI_FORTRAN_INIT = TauFInit.o
 #############################################
 # CALIPER OBJECTS and libs
 #############################################
-#CALIPER#CALIPER_O = TauCaliper.o #ENDIF#
+CALIPER_O = TauCaliper.o #ENDIF#
 #CALIPER#TAU_CALIPER_INCLUDE_OPTS=-I$(CALIPERDIR)/include -DTAU_CALIPER #ENDIF#
 
 #############################################
