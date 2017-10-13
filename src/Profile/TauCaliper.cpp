@@ -435,7 +435,7 @@ const char* cali_attribute_name(cali_id_t attr_id) {
     return NULL;
   }
    
-  return it->second;
+  return (it->second).c_str();
 }
 /**
  * \brief Return the type of the attribute with given ID
@@ -451,3 +451,144 @@ cali_attr_type cali_attribute_type(cali_id_t attr_id) {
    
   return it->second;
 }
+
+/*
+ * --- Snapshot ---------------------------------------------------------
+ */
+
+/**
+ * \name Taking snapshots
+ * \{
+ */
+
+/**
+ * \brief Take a snapshot and push it into the processing queue.
+ * \param scope Indicates which scopes (process, thread, or task) the 
+ *   snapshot should span
+ * \param n Number of event info entries
+ * \param trigger_info_attr_list Attribute IDs of event info entries
+ * \param trigger_info_val_list  Pointers to values of event info entries
+ * \param trigger_info_size_list Sizes (in bytes) of event info entries
+ */
+void cali_push_snapshot(int scope, int n,
+                   const cali_id_t trigger_info_attr_list[],
+                   const void*     trigger_info_val_list[],
+                   const size_t    trigger_info_size_list[]) {
+  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_set_string_byname);
+}
+
+/**
+ * \brief Take a snapshot and write it into the user-provided buffer.
+ *
+ * This function can be safely called from a signal handler. However,
+ * it is not guaranteed to succeed. Specifically, the function will
+ * fail if the signal handler interrupts already running Caliper
+ * code.
+ * 
+ * The snapshot representation returned in \a buf is valid only on the
+ * local process, while Caliper is active (which is up until Caliper's 
+ * `finish_evt` callback is invoked).
+ * It can be parsed with cali_unpack_snapshot().
+ *
+ * \param scope Indicates which scopes (process, thread, or task) the
+ *   snapshot should span
+ * \param len   Length of the provided snapshot buffer.
+ * \param buf   User-provided snapshot storage buffer.
+ * \return Actual size of the snapshot representation. 
+ *   If this is larger than `len`, the provided buffer was too small and 
+ *   not all of the snapshot was returned.
+ *   If this is zero, no snapshot was taken.
+ */
+size_t cali_pull_snapshot(int scope, size_t len, unsigned char* buf) {
+
+  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_pull_snapshot);
+  return 0;
+}
+
+/**
+ * \}
+ * \name Processing snapshot contents
+ * \{
+ */
+
+/**
+ * \brief Unpack a snapshot buffer.
+ *
+ * Unpack a snapshot that was previously obtained on the same process
+ * and examine its attribute:value entries with the given \a proc_fn 
+ * callback function.
+ *
+ * The function will invoke \a proc_fn repeatedly, once for each
+ * unpacked entry. \a proc_fn should return a non-zero value if it
+ * wants to continue processing, otherwise processing will stop. Note
+ * that snapshot processing cannot be re-started from a partially read
+ * snapshot buffer position: the buffer has to be read again from the
+ * beginning.
+ *
+ * Hierarchical values will be given to \a proc_fn in top-down order.
+ *
+ * \note This function is async-signal safe if \a proc_fn is
+ *   async-signal safe.
+ *
+ * \param buf Snapshot buffer
+ * \param bytes_read Number of bytes read from the buffer
+ *   (i.e., length of the snapshot)
+ * \param proc_fn Callback function to process individidual entries
+ * \param user_arg User-defined parameter passed through to \a proc_fn
+ *
+ * \sa cali_pull_snapshot, cali_entry_proc_fn
+ */    
+void cali_unpack_snapshot(const unsigned char* buf,
+                     size_t*              bytes_read,
+                     cali_entry_proc_fn   proc_fn,
+                     void*                user_arg) {
+
+  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_unpack_snapshot);
+}
+
+/**
+ * Return top-most value for attribute ID \a attr_id from snapshot \a buf.
+ * The snapshot must have previously been obtained on the same process with
+ * cali_pull_snapshot().
+ *
+ * \note This function is async-signal safe
+ *
+ * \param buf Snapshot buffer
+ * \param attr_id Attribute id
+ * \param bytes_read Number of bytes read from the buffer
+ *   (i.e., length of the snapshot)
+ * \return The top-most stacked value for the given attribute ID, or an empty
+ *   variant if none was found
+ */    
+
+cali_variant_t cali_find_first_in_snapshot(const unsigned char* buf,
+                            cali_id_t            attr_id,
+                            size_t*              bytes_read) {
+
+  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_find_first_in_snapshot);
+  return cali_make_variant_from_int(0);
+}
+
+/*
+ * --- Blackboard access API ---------------------------------
+ */
+
+/**
+ * \name Blackboard access
+ * \{
+ */
+
+/**
+ * \brief Return top-most value for attribute \a attr_id from the blackboard.
+ *
+ * \note This function is async-signal safe.
+ *
+ * \param attr_id Attribute ID to find
+ * \return The top-most stacked value on the blackboard for the given
+ *    attribute ID, or an empty variant if it was not found
+ */
+cali_variant_t cali_get(cali_id_t attr_id) {
+  //TODO
+}
+
+  
