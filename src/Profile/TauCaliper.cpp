@@ -16,11 +16,10 @@
 #include <stdlib.h>
 #include <map>
 #include <stack>
-#include <caliper/cali.h>
 #include <TAU.h>
 
-
 #include <Profile/TauCaliperTypes.h>
+#include <Profile/TAU_CALIPER.h>
 
 //Global data structures
 std::map<std::string, cali_id_t> _attribute_name_map_;
