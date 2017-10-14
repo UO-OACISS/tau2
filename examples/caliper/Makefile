@@ -1,19 +1,17 @@
 ###############################################################################
 ## Makefile for caliper test example #
 ###############################################################################
-#TAU_MAKEFILE ?=../../include/Makefile
+TAU_MAKEFILE ?=../../include/Makefile
 
-#include $(TAU_MAKEFILE)
+include $(TAU_MAKEFILE)
 
 MAKE = make
 
-CC = mpicc
+CC = $(TAU_CC)
 
-CALIPERDIR = /home/users/sramesh/CALIPER_TAU_INTEGRATION/CALIPER
+CFLAGS = $(TAU_INCLUDE) $(TAU_CALIPER_INCLUDE_OPTS) $(TAU_MPI_INCLUDE) $(TAU_DEFS) -fopenmp
 
-CFLAGS = -I$(CALIPERDIR)/include -fopenmp
-
-LDFLAGS = -L$(CALIPERDIR)/lib -L$(CALIPERDIR)/lib64 -lcaliper -fopenmp
+LDFLAGS = $(TAU_MPI_LIBS) $(TAU_LIBS) -L$(CALIPERDIR)/lib64 -L$(CALIPERDIR)/lib -lcaliper -fopenmp
 
 OBJS = cali-example.o
 

@@ -897,8 +897,8 @@ sos=no
 sosdir=
 adios=no
 adiosdir=
-#caliper=no
-#caliperdir=
+caliper=no
+caliperdir=
 apex=no
 dyninst=no
 dyninstinc=no
@@ -1718,16 +1718,16 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-#	-caliper=*)
-#	    caliper=yes
-#	    caliperdir=`echo $arg | sed -e 's/-caliper=//'`
-#	    if [ ! -d $caliperdir ]
-#	    then
-#		echo "Error: Cannot access CALIPER directory $caliperdir"
-#		exit 1
-#	    fi
-#	    shift
-#	    ;;
+	-caliper=*)
+	    caliper=yes
+	    caliperdir=`echo $arg | sed -e 's/-caliper=//'`
+	    if [ ! -d $caliperdir ]
+	    then
+		echo "Error: Cannot access CALIPER directory $caliperdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
 
 	-dyninst=*)
 	    dyninst=yes
@@ -9803,11 +9803,11 @@ if [ $adios = yes ] ; then
     fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
 fi
 
-#if [ $caliper = yes ] ; then
-#    tauoptions="${tauoptions}-caliper"
-#    fixmakeargs="$fixmakeargs CALIPER "
-#    fixmakeargs="$fixmakeargs caliperdir=$caliperdir"
-#fi
+if [ $caliper = yes ] ; then
+    tauoptions="${tauoptions}-caliper"
+    fixmakeargs="$fixmakeargs CALIPER "
+    fixmakeargs="$fixmakeargs caliperdir=$caliperdir"
+fi
 
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST "
