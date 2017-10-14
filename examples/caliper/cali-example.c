@@ -15,7 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef TAU_MPI
 #include <mpi.h>
+#endif /* TAU_MPI */
 
 #include <omp.h>
 #include <unistd.h>
@@ -24,6 +26,7 @@
 
 void init_dummy_function() {
   cali_begin_byname("init_dummy_function");
+  sleep(1);
   cali_end_byname("init_dummy_function");
 
   cali_set_int_byname("randomval", 20);
@@ -35,7 +38,9 @@ int main(int argc, char **argv) {
   char stringified[10];
   /*Initialize CALIPER*/
 
+#ifdef TAU_MPI
   MPI_Init(&argc, &argv);
+#endif /* TAU_MPI */
 
   cali_init();
 
@@ -46,7 +51,9 @@ int main(int argc, char **argv) {
   init_dummy_function();
   cali_end_byname("testing initialization");
 
+#ifdef TAU_MPI
   MPI_Finalize();
+#endif /* TAU_MPI */
 
   return 0;
 }
