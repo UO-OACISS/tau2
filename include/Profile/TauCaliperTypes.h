@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-typedef uint64_t cali_id_t;
+typedef unsigned long long int cali_id_t;
 
 #define CALI_INV_ID 0xFFFFFFFFFFFFFFFF
 
@@ -133,7 +133,7 @@ typedef struct {
     /** Least significant bytes encode the type.
      *  Remaining bytes encode the size of variable-length types (strings and blobs (usr)).
      */
-    uint64_t type_and_size;
+    unsigned long long int type_and_size;
     
     /** Value in various type representations
      */
@@ -141,7 +141,7 @@ typedef struct {
         bool           v_bool;
         double         v_double;
         int            v_int;
-        uint64_t       v_uint;
+        unsigned long long int       v_uint;
         cali_attr_type v_type;
         const void*    unmanaged_ptr;
     }        value;
@@ -152,7 +152,10 @@ typedef struct {
 inline cali_variant_t
 cali_make_empty_variant()
 {
-    cali_variant_t v = { 0, { .v_uint = 0 } };
+    cali_variant_t v;
+    v.type_and_size = 0;
+    v.value.v_uint = 0;
+
     return v;
 }
     
@@ -188,38 +191,48 @@ cali_make_variant(cali_attr_type type, const void* ptr, size_t size);
 inline cali_variant_t
 cali_make_variant_from_bool(bool value)
 {
-    cali_variant_t v = { CALI_TYPE_BOOL, { .v_uint = 0 } };  /* set to zero */
-    v.value.v_bool = value;    
+    cali_variant_t v;
+    v.type_and_size = CALI_TYPE_BOOL;
+    v.value.v_bool = value;
+
     return v;
 }
     
 inline cali_variant_t
 cali_make_variant_from_int(int value)
 {
-    cali_variant_t v = { CALI_TYPE_INT, { .v_uint = 0 } };  /* set to zero */
+    cali_variant_t v;
+    v.type_and_size = CALI_TYPE_INT;
     v.value.v_int = value;    
     return v;
 }
 
 inline cali_variant_t
-cali_make_variant_from_uint(uint64_t value)
+cali_make_variant_from_uint(unsigned long long int value)
 {
-    cali_variant_t v = { CALI_TYPE_UINT, { .v_uint = value } };
+    cali_variant_t v;
+    v.type_and_size = CALI_TYPE_UINT;
+    v.value.v_uint = value;
+
     return v;
 }
 
 inline cali_variant_t
 cali_make_variant_from_double(double value)
 {
-    cali_variant_t v = { CALI_TYPE_DOUBLE, { .v_double = value } };
+    cali_variant_t v;
+    v.type_and_size = CALI_TYPE_DOUBLE;
+    v.value.v_double = value;
     return v;
 }
 
 inline cali_variant_t
 cali_make_variant_from_type(cali_attr_type value)
 {
-    cali_variant_t v = { CALI_TYPE_TYPE, { .v_uint = 0 } }; /* set to zero */
+    cali_variant_t v;
+    v.type_and_size = CALI_TYPE_TYPE;
     v.value.v_type = value;
+
     return v;
 }
 

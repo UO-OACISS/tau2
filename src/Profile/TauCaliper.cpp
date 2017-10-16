@@ -349,9 +349,9 @@ cali_id_t cali_create_attribute(const char*     name,
 
   RtsLayer::LockEnv(); 
 
-  auto it = _attribute_name_map_.find(name);
+  std::map<std::string, cali_id_t>::iterator it = _attribute_name_map_.find(name);
   if(it != _attribute_name_map_.end()) {
-    auto ID = _attribute_name_map_[name];
+    cali_id_t ID = _attribute_name_map_[name];
     TAU_VERBOSE("TAU: CALIPER attribute with the name %s already exists. Returning the already created ID: %d\n", name, ID);
     RtsLayer::UnLockEnv();
     return ID;
@@ -413,7 +413,7 @@ cali_id_t cali_create_attribute_with_metadata(const char*     name,
  */
 
 cali_id_t cali_find_attribute(const char* name) {
-  auto it = _attribute_name_map_.find(name);
+  std::map<std::string, cali_id_t>::iterator it = _attribute_name_map_.find(name);
 
   if(it == _attribute_name_map_.end()) {
     return CALI_INV_ID;
@@ -428,7 +428,7 @@ cali_id_t cali_find_attribute(const char* name) {
  * TAU Wrapper: Do exactly as caliper does.
  */
 const char* cali_attribute_name(cali_id_t attr_id) {
-  auto it = _attribute_id_map_.find(attr_id);
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr_id);
 
   if(it == _attribute_id_map_.end()) {
     return NULL;
@@ -442,7 +442,7 @@ const char* cali_attribute_name(cali_id_t attr_id) {
  * \return Attribute type, or CALI_TYPE_INV if `attr_id` is not a valid attribute ID
  */
 cali_attr_type cali_attribute_type(cali_id_t attr_id) {
-  auto it = _attribute_type_map_id_key.find(attr_id);
+  std::map<cali_id_t, cali_attr_type>::iterator it = _attribute_type_map_id_key.find(attr_id);
 
   if(it == _attribute_type_map_id_key.end()) {
     return CALI_TYPE_INV;
