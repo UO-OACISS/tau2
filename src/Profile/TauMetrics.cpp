@@ -806,11 +806,17 @@ int TauMetrics_getEventIndex(int eventid) {
  * Read the metrics
  ********************************************************************/
 extern "C" bool TauCompensateInitialized(void);
-void TauMetrics_getMetrics(int tid, double values[]) {
+void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 	if (Tau_init_check_initialized()) {
-		for (int i = 0; i < nfunctions; i++) {
-			functionArray[i](tid, i, values);
-		}
+	    if (reversed) {
+            for (int i=nfunctions-1; i >= 0; --i) {
+                functionArray[i](tid, i, values);
+            }
+	    } else {
+            for (int i=0; i < nfunctions; i++) {
+                functionArray[i](tid, i, values);
+            }
+	    }
 	} else {
 		// *CWL* - Safe only if Compensation is safely initialized. Otherwise
 		//         we would be in the middle of re-entrant behavior and

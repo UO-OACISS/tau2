@@ -262,7 +262,8 @@ void Profiler::Start(int tid)
 
   /* Get the current metric values */
   x_uint64 TimeStamp;
-  RtsLayer::getUSecD(tid, StartTime);
+  // Record metrics in reverse order so wall clock metrics are recorded after PAPI, etc.
+  RtsLayer::getUSecD(tid, StartTime, 1);
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
 
   /********************************************************************************/
