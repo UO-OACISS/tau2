@@ -48,6 +48,7 @@ bool _threaded = false;
 int daemon_rank = 0;
 bool shutdown_daemon = false;
 int period_microseconds = 2000000;
+unsigned long int instance_guid = 0UL;
 
 void init_lock(void) {
     if (!_threaded) return;
@@ -133,6 +134,16 @@ void TAU_SOS_make_pub() {
         TAU_VERBOSE("[TAU_SOS_make_pub]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
         TAU_VERBOSE("[TAU_SOS_make_pub]: Announcing the pub...\n");
         SOS_announce(tau_sos_pub);
+	// all processes in this MPI execution should agree on the session.
+#ifdef TAU_MPI
+	if (rank == 0) {
+        instance_guid = tau_sos_pub->guid;
+	}
+	PMPI_Bcast( &instance_guid, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD );
+#else
+    instance_guid = tau_sos_pub->guid;
+#endif
+    SOS_pack(tau_sos_pub, "TAU::MPI::INSTANCE_ID", SOS_VAL_TYPE_LONG, &instance_guid);
 }
 
 void TAU_SOS_do_fork(std::string forkCommand) {
@@ -147,7 +158,7 @@ void TAU_SOS_do_fork(std::string forkCommand) {
     }
     int rc = execvp(args[0],const_cast<char* const*>(args));
     if (rc < 0) {
-        perror("\nError in execvp");
+        perror("\nError in execvp! Failed to spawn SOS client.  Things are gonna go sideways...");
     }
     // exit the daemon spawn!
     //std::cout << "Daemon exited!" << std::endl;
@@ -188,6 +199,8 @@ void TAU_SOS_send_shutdown_message(void) {
     SOS_msg_header  header;
     int offset;
     if (rank == daemon_rank) {
+        printf("Waiting for SOS to flush...\n"); fflush(stdout);
+		sleep(1);
 
         SOS_buffer_init(_runtime, &buffer);
 
@@ -207,7 +220,7 @@ void TAU_SOS_send_shutdown_message(void) {
         offset = 0;
         SOS_buffer_pack(buffer, &offset, "i", header.msg_size);
 
-        //std::cout << "Sending SOS_MSG_TYPE_SHUTDOWN ..." << std::endl;
+        printf("Sending SOS_MSG_TYPE_SHUTDOWN ...\n"); fflush(stdout);
 
         SOS_send_to_daemon(buffer, buffer);
 
@@ -276,7 +289,7 @@ void TAU_SOS_fork_exec_sosd(void) {
                         custom_command.replace(index,15,ss.str());
                     }
                 }
-                //std::cout << "Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
+                std::cout << "SOS Listener not found, Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
                 TAU_SOS_do_fork(custom_command);
             } else {
                 std::cerr << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
@@ -380,7 +393,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             TAU_SOS_fork_exec_sosd();
             shutdown_daemon = true;
         }
-        int repeat = 10;
+        int repeat = 3;
         while(_runtime == NULL) {
             sleep(2);
             _runtime = NULL;
@@ -467,6 +480,12 @@ extern "C" void TAU_SOS_finalize(void) {
     }
     // flush any outstanding packs
     TAU_SOS_send_data();
+#ifdef TAU_MPI
+	// wait for ALL RANKS to get to this point.  They should be done
+	// sending all data to the listener.
+    printf("Waiting for SOS clients to rendez-vous...\n"); fflush(stdout);
+	PMPI_Barrier(MPI_COMM_WORLD);
+#endif
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
         TAU_SOS_send_shutdown_message();
