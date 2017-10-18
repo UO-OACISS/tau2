@@ -20,6 +20,7 @@
 
 #include "adiost_callback_api.h"
 #include "adios_types.h"
+#include "mpi.h"
 #include <stdint.h>
 #include <sstream>
 #define ADIOST_EXTERN extern "C"
@@ -74,9 +75,7 @@ int TAU_decrement_stack_height() {
 void Tau_SOS_conditionally_pack_current_timer(const char * name) {
     // if we aren't processing trace events, return.
     if (!TauEnv_get_sos_trace_events()) { return; }
-
     int foo = TAU_decrement_stack_height();
-	printf("%d : %s\n", foo, name); fflush(stdout);
     if (foo == 0) {
         Tau_SOS_pack_current_timer(name);
 	}
@@ -159,7 +158,7 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
         }
     }
     ss << ")";
-	printf("%s\n", ss.str().c_str());
+	//printf("%s\n", ss.str().c_str());
     Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
 }
 #else
@@ -179,9 +178,33 @@ ADIOST_EXTERN void tau_adiost_thread ( adiost_event_type_t type,
     }
 }
 
+ADIOST_EXTERN void tau_adiost_init ( adiost_event_type_t type, 
+	const char * xml_fname, MPI_Comm comm) {
+	const char * function_name = "adios_init";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	} else if (type == adiost_event_exit) {
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+}
+
+ADIOST_EXTERN void tau_adiost_finalize(adiost_event_type_t type, int proc_id) {
+	const char * function_name = "adios_finalize";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+        TAU_PROFILE_START(tautimer);
+    } else if (type == adiost_event_exit) {
+        TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+}
+
 ADIOST_EXTERN void tau_adiost_open ( adiost_event_type_t type, 
 		int64_t file_descriptor,
-    const char * group_name, const char * file_name, const char * mode) {
+    const char * group_name, const char * file_name, const char * mode,
+	MPI_Comm comm) {
 	const char * function_name = "adios_open";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
     if (type == adiost_event_enter) {
@@ -228,8 +251,24 @@ ADIOST_EXTERN void tau_adiost_write( adiost_event_type_t type,
     }
 } 
 
+ADIOST_EXTERN void tau_adiost_write_byid( adiost_event_type_t type, 
+		int64_t file_descriptor, const char * name, 
+		enum ADIOS_DATATYPES data_type, const int ndims, 
+		const char * dims, const void * value) {
+	const char * function_name = "adios_write_byid";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_collective_ADIOS_write_event(function_name, name, data_type, ndims, dims, value);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
 ADIOST_EXTERN void tau_adiost_read( adiost_event_type_t type, 
-		int64_t file_descriptor) {
+		int64_t file_descriptor, const char * name, const void * buffer, uint64_t buffer_size) {
 	const char * function_name = "adios_read";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
     if (type == adiost_event_enter) {
@@ -320,6 +359,390 @@ ADIOST_EXTERN void tau_adiost_fp_add_var_to_read_msg(adiost_event_type_t type,
 ADIOST_EXTERN void tau_adiost_fp_copy_buffer(adiost_event_type_t type, 
 		int64_t file_descriptor) { 
 	const char * function_name = "adios_fp_copy_buffer";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+/*
+ * ------------------ Special events for No-XML Write API -------------------- *
+ */
+
+ADIOST_EXTERN void tau_adiost_init_noxml(adiost_event_type_t type, 
+		MPI_Comm comm) { 
+	const char * function_name = "adios_init_noxml";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_set_max_buffer_size(adiost_event_type_t type, 
+		uint64_t buffer_size) { 
+	const char * function_name = "adios_set_max_buffer_size";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_declare_group(adiost_event_type_t type, 
+		const int64_t * id, const char * name, const char * time_index,
+		enum ADIOS_STATISTICS_FLAG stats) { 
+	const char * function_name = "adios_declare_group";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_var(adiost_event_type_t type, 
+		int64_t group_id, const char * name, const char * path,
+		enum ADIOS_DATATYPES data_type, const char * dimensions,
+		const char * global_dimensions, const char * local_offsets) {
+	const char * function_name = "adios_define_var";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_set_transform(adiost_event_type_t type, 
+    int64_t var_id, const char * transform_type_str) {
+	const char * function_name = "adios_set_transform";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_attribute(adiost_event_type_t type, 
+    int64_t group, const char * name, const char * path,
+    enum ADIOS_DATATYPES data_type, const char * value, const char * var) {
+	const char * function_name = "adios_define_attribute";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_attribute_byvalue(adiost_event_type_t type, 
+    int64_t group, const char * name, const char * path,
+    enum ADIOS_DATATYPES data_type, int nelems, const char * value) {
+	const char * function_name = "adios_define_attribute_byvalue";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_select_method(adiost_event_type_t type, 
+    int64_t group, const char * method,
+    const char * parameters, const char * base_path){
+	const char * function_name = "adios_select_method";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_expected_var_size(adiost_event_type_t type, 
+    int64_t var_id) {
+	const char * function_name = "adios_expected_var_size";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+/*
+ * ------------- Special events for no-XML write for viz --------------- *
+ */
+
+ADIOST_EXTERN void tau_adiost_define_schema_version(adiost_event_type_t type, 
+    int64_t group_id, const char * schema_version) {
+	const char * function_name = "adios_define_schema_version";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_var_mesh(adiost_event_type_t type, 
+    int64_t group_id, const char * varname, const char * meshname) {
+	const char * function_name = "adios_define_var_mesh";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_var_centering(adiost_event_type_t type, 
+    int64_t group_id, const char * varname, const char * centering) {
+	const char * function_name = "adios_define_var_centering";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_var_timesteps(adiost_event_type_t type, 
+    const char * timesteps, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_var_timesteps";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_var_timescale(adiost_event_type_t type, 
+    const char * timescale, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_var_timescale";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_var_timeseriesformat(adiost_event_type_t type, 
+    const char * timeseries, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_var_timeseriesformat";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_var_hyperslab(adiost_event_type_t type, 
+    const char * hyperslab, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_var_hyperslab";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_timevarying(adiost_event_type_t type, 
+    const char * timevarying, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_timevarying";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_timesteps(adiost_event_type_t type, 
+    const char * timesteps, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_timesteps";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_timescale(adiost_event_type_t type, 
+    const char * timescale, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_timescale";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_timeseriesformat(adiost_event_type_t type, 
+    const char * timeseries, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_timeseriesformat";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_group(adiost_event_type_t type, 
+    const char * group, int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_group";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_file(adiost_event_type_t type, 
+    int64_t group_id, const char * name, const char * file) {
+	const char * function_name = "adios_define_mesh_file";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_uniform(adiost_event_type_t type, 
+    const char * dimensions, const char * origin, const char * spacing,
+	const char * maximum, const char * nspace,
+    int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_uniform";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_rectilinear(adiost_event_type_t type, 
+    const char * dimensions, const char * coordinates, const char * nspace,
+    int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_rectilinear";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_structured(adiost_event_type_t type, 
+    const char * dimensions, const char * points, const char * nspace,
+    int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_structured";
+    TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
+    if (type == adiost_event_enter) {
+	    TAU_PROFILE_START(tautimer);
+	    Tau_increment_stack_height();
+	} else if (type == adiost_event_exit) {
+        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+	    TAU_PROFILE_STOP(tautimer);
+    } else {
+    }
+} 
+
+ADIOST_EXTERN void tau_adiost_define_mesh_unstructured(adiost_event_type_t type, 
+    const char * points, const char * data, const char * count,
+    const char * cell_type, const char * npoints, const char * nspace,
+    int64_t group_id, const char * name) {
+	const char * function_name = "adios_define_mesh_unstructured";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
@@ -913,7 +1336,7 @@ ADIOST_EXTERN void tau_adiost_inq_var_meshinfo(
  * ------------------ Special events for Read API -------------------- *
  */
 
-ADIOST_EXTERN void tau_adiost_finalize(void) {
+ADIOST_EXTERN void tau_adiost_library_shutdown(void) {
 }
 
 // This function is for checking that the function registration worked.
@@ -940,13 +1363,19 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
         (adiost_set_callback_t)adiost_fn_lookup("adiost_set_callback");
 
     fprintf(stderr,"Registering ADIOS tool events...\n"); fflush(stderr);
+	/* Special events */
     CHECK(adiost_event_thread,       tau_adiost_thread,        "adios_thread");
+    CHECK(adiost_event_library_shutdown, tau_adiost_library_shutdown, "adios_library_shutdown");
+	/* ADIOS Write API */
+    CHECK(adiost_event_init,         tau_adiost_init,          "adios_init");
     CHECK(adiost_event_open,         tau_adiost_open,          "adios_open");
-    CHECK(adiost_event_close,        tau_adiost_close,         "adios_close");
+    CHECK(adiost_event_group_size,   tau_adiost_group_size,    "adios_group_size");
     CHECK(adiost_event_write,        tau_adiost_write,         "adios_write");
     CHECK(adiost_event_read,         tau_adiost_read,          "adios_read");
+    CHECK(adiost_event_close,        tau_adiost_close,         "adios_close");
+    CHECK(adiost_event_finalize,        tau_adiost_finalize,         "adios_finalize");
+	/* ADIOS Flexpath (internal) events */
     CHECK(adiost_event_advance_step, tau_adiost_advance_step,  "adios_advance_step");
-    CHECK(adiost_event_group_size,   tau_adiost_group_size,    "adios_group_size");
     CHECK(adiost_event_transform,    tau_adiost_transform,     "adios_transform");
     CHECK(adiost_event_fp_send_read_msg, 
         tau_adiost_fp_send_read_msg, "adios_fp_send_read_msg");
@@ -956,41 +1385,64 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
         tau_adiost_fp_add_var_to_read_msg, "adios_fp_add_var_to_read_msg");
     CHECK(adiost_event_fp_copy_buffer, 
         tau_adiost_fp_copy_buffer, "adios_fp_copy_buffer");
-    CHECK(adiost_event_library_shutdown, tau_adiost_finalize, "adios_finalize");
-	/* These events are in the Read API, and every single call creates
-	   a record in the SOS database. Not to be done too frequently! */
-    //if (TauEnv_get_sos_trace_events()) { 
-    	CHECK(adiost_event_read_init_method, tau_adiost_read_init_method, "adios_read_init_method");
-    	CHECK(adiost_event_read_finalize_method, tau_adiost_read_finalize_method, "adios_read_finalize_method");
-    	CHECK(adiost_event_read_open, tau_adiost_read_open, "adios_read_open");
-    	CHECK(adiost_event_read_open_file, tau_adiost_read_open_file, "adios_read_open_file");
-    	//CHECK(adiost_event_release_step, tau_adiost_release_step, "adios_release_step");
-    	CHECK(adiost_event_inq_var, tau_adiost_inq_var, "adios_inq_var");
-    	CHECK(adiost_event_inq_var_byid, tau_adiost_inq_var_byid, "adios_inq_var_byid");
-    	CHECK(adiost_event_free_varinfo, tau_adiost_free_varinfo, "adios_free_varinfo");
-    	CHECK(adiost_event_inq_var_stat, tau_adiost_inq_var_stat, "adios_inq_var_stat");
-    	CHECK(adiost_event_inq_var_blockinfo, tau_adiost_inq_var_blockinfo, "adios_inq_var_blockinfo");
-    	CHECK(adiost_event_selection_boundingbox, tau_adiost_selection_boundingbox, "adios_selection_boundingbox");
-    	CHECK(adiost_event_selection_points, tau_adiost_selection_points, "adios_selection_points");
-    	CHECK(adiost_event_selection_writeblock, tau_adiost_selection_writeblock, "adios_selection_writeblock");
-    	CHECK(adiost_event_selection_auto, tau_adiost_selection_auto, "adios_selection_auto");
-    	CHECK(adiost_event_selection_delete, tau_adiost_selection_delete, "adios_selection_delete");
-    	CHECK(adiost_event_schedule_read, tau_adiost_schedule_read, "adios_schedule_read");
-    	CHECK(adiost_event_schedule_read_byid, tau_adiost_schedule_read_byid, "adios_schedule_read_byid");
-    	CHECK(adiost_event_perform_reads, tau_adiost_perform_reads, "adios_perform_reads");
-    	CHECK(adiost_event_check_reads, tau_adiost_check_reads, "adios_check_reads");
-    	CHECK(adiost_event_free_chunk, tau_adiost_free_chunk, "adios_free_chunk");
-    	CHECK(adiost_event_get_attr, tau_adiost_get_attr, "adios_get_attr");
-    	CHECK(adiost_event_get_attr_byid, tau_adiost_get_attr_byid, "adios_get_attr_byid");
-    	CHECK(adiost_event_type_to_string, tau_adiost_type_to_string, "adios_type_to_string");
-    	CHECK(adiost_event_type_size, tau_adiost_type_size, "adios_type_size");
-    	CHECK(adiost_event_get_grouplist, tau_adiost_get_grouplist, "adios_get_grouplist");
-    	CHECK(adiost_event_group_view, tau_adiost_group_view, "adios_group_view");
-    	CHECK(adiost_event_stat_cov, tau_adiost_stat_cov, "adios_stat_cov");
-    	CHECK(adiost_event_inq_mesh_byid, tau_adiost_inq_mesh_byid, "adios_inq_mesh_byid");
-    	CHECK(adiost_event_free_meshinfo, tau_adiost_free_meshinfo, "adios_free_meshinfo");
-    	CHECK(adiost_event_inq_var_meshinfo, tau_adiost_inq_var_meshinfo, "adios_inq_var_meshinfo");
-	//}
+	/* ADIOS No-XML Write API events */
+    CHECK(adiost_event_init_noxml, tau_adiost_init_noxml, "adios_init_noxml");
+    CHECK(adiost_event_set_max_buffer_size, tau_adiost_set_max_buffer_size, "adios_set_max_buffer_size");
+    CHECK(adiost_event_declare_group, tau_adiost_declare_group, "adios_declare_group");
+    CHECK(adiost_event_define_var, tau_adiost_define_var, "adios_define_var");
+    CHECK(adiost_event_define_attribute, tau_adiost_define_attribute, "adios_define_attribute");
+    CHECK(adiost_event_define_attribute_byvalue, tau_adiost_define_attribute_byvalue, "adios_define_attribute_byvalue");
+    CHECK(adiost_event_write_byid, tau_adiost_write_byid, "adios_write_byid");
+    CHECK(adiost_event_select_method, tau_adiost_select_method, "adios_select_method");
+    CHECK(adiost_event_expected_var_size, tau_adiost_expected_var_size, "adios_expected_var_size");
+	/* No-XML Write API for visualization schema Description */
+    CHECK(adiost_event_define_schema_version, tau_adiost_define_schema_version, "adios_define_schema_version");
+    CHECK(adiost_event_define_var_mesh, tau_adiost_define_var_mesh, "adios_define_var_mesh");
+    CHECK(adiost_event_define_var_centering, tau_adiost_define_var_centering, "adios_define_var_centering");
+    CHECK(adiost_event_define_var_timesteps, tau_adiost_define_var_timesteps, "adios_define_var_timesteps");
+    CHECK(adiost_event_define_var_timescale, tau_adiost_define_var_timescale, "adios_define_var_timescale");
+    CHECK(adiost_event_define_var_timeseriesformat, tau_adiost_define_var_timeseriesformat, "adios_define_var_timeseriesformat");
+    CHECK(adiost_event_define_var_hyperslab, tau_adiost_define_var_hyperslab, "adios_define_var_hyperslab");
+    CHECK(adiost_event_define_mesh_timevarying, tau_adiost_define_mesh_timevarying, "adios_define_mesh_timevarying");
+    CHECK(adiost_event_define_mesh_timesteps, tau_adiost_define_mesh_timesteps, "adios_define_mesh_timesteps");
+    CHECK(adiost_event_define_mesh_timescale, tau_adiost_define_mesh_timescale, "adios_define_mesh_timescale");
+    CHECK(adiost_event_define_mesh_timeseriesformat, tau_adiost_define_mesh_timeseriesformat, "adios_define_mesh_timeseriesformat");
+    CHECK(adiost_event_define_mesh_group, tau_adiost_define_mesh_group, "adios_define_mesh_group");
+    CHECK(adiost_event_define_mesh_file, tau_adiost_define_mesh_file, "adios_define_mesh_file");
+    CHECK(adiost_event_define_mesh_uniform, tau_adiost_define_mesh_uniform, "adios_define_mesh_uniform");
+    CHECK(adiost_event_define_mesh_rectilinear, tau_adiost_define_mesh_rectilinear, "adios_define_mesh_rectilinear");
+    CHECK(adiost_event_define_mesh_structured, tau_adiost_define_mesh_structured, "adios_define_mesh_structured");
+    CHECK(adiost_event_define_mesh_unstructured, tau_adiost_define_mesh_unstructured, "adios_define_mesh_unstructured");
+	/* ADIOS Read API events */
+	CHECK(adiost_event_read_init_method, tau_adiost_read_init_method, "adios_read_init_method");
+   	CHECK(adiost_event_read_finalize_method, tau_adiost_read_finalize_method, "adios_read_finalize_method");
+   	CHECK(adiost_event_read_open, tau_adiost_read_open, "adios_read_open");
+   	CHECK(adiost_event_read_open_file, tau_adiost_read_open_file, "adios_read_open_file");
+   	CHECK(adiost_event_inq_var, tau_adiost_inq_var, "adios_inq_var");
+   	CHECK(adiost_event_inq_var_byid, tau_adiost_inq_var_byid, "adios_inq_var_byid");
+   	CHECK(adiost_event_free_varinfo, tau_adiost_free_varinfo, "adios_free_varinfo");
+   	CHECK(adiost_event_inq_var_stat, tau_adiost_inq_var_stat, "adios_inq_var_stat");
+   	CHECK(adiost_event_inq_var_blockinfo, tau_adiost_inq_var_blockinfo, "adios_inq_var_blockinfo");
+   	CHECK(adiost_event_selection_boundingbox, tau_adiost_selection_boundingbox, "adios_selection_boundingbox");
+   	CHECK(adiost_event_selection_points, tau_adiost_selection_points, "adios_selection_points");
+   	CHECK(adiost_event_selection_writeblock, tau_adiost_selection_writeblock, "adios_selection_writeblock");
+   	CHECK(adiost_event_selection_auto, tau_adiost_selection_auto, "adios_selection_auto");
+   	CHECK(adiost_event_selection_delete, tau_adiost_selection_delete, "adios_selection_delete");
+   	CHECK(adiost_event_schedule_read, tau_adiost_schedule_read, "adios_schedule_read");
+   	CHECK(adiost_event_schedule_read_byid, tau_adiost_schedule_read_byid, "adios_schedule_read_byid");
+   	CHECK(adiost_event_perform_reads, tau_adiost_perform_reads, "adios_perform_reads");
+   	CHECK(adiost_event_check_reads, tau_adiost_check_reads, "adios_check_reads");
+   	CHECK(adiost_event_free_chunk, tau_adiost_free_chunk, "adios_free_chunk");
+   	CHECK(adiost_event_get_attr, tau_adiost_get_attr, "adios_get_attr");
+   	CHECK(adiost_event_get_attr_byid, tau_adiost_get_attr_byid, "adios_get_attr_byid");
+   	CHECK(adiost_event_type_to_string, tau_adiost_type_to_string, "adios_type_to_string");
+   	CHECK(adiost_event_type_size, tau_adiost_type_size, "adios_type_size");
+   	CHECK(adiost_event_get_grouplist, tau_adiost_get_grouplist, "adios_get_grouplist");
+   	CHECK(adiost_event_group_view, tau_adiost_group_view, "adios_group_view");
+   	CHECK(adiost_event_stat_cov, tau_adiost_stat_cov, "adios_stat_cov");
+   	CHECK(adiost_event_inq_mesh_byid, tau_adiost_inq_mesh_byid, "adios_inq_mesh_byid");
+   	CHECK(adiost_event_free_meshinfo, tau_adiost_free_meshinfo, "adios_free_meshinfo");
+   	CHECK(adiost_event_inq_var_meshinfo, tau_adiost_inq_var_meshinfo, "adios_inq_var_meshinfo");
 }
 
 ADIOST_EXTERN adiost_initialize_t adiost_tool() { return TAU_adiost_initialize; }
