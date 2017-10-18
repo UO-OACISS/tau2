@@ -547,7 +547,8 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
       Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
     }
     Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-    RtsLayer::getUSecD(tid, p->StartTime);
+    // Record metrics in reverse order so wall clock metrics are recorded after PAPI, etc.
+    RtsLayer::getUSecD(tid, p->StartTime, 1);
 
     p->MyProfileGroup_ = fi->GetProfileGroup();
     p->ThisFunction = fi;

@@ -88,7 +88,7 @@ public:
   static int 	SetEventCounter(void);
   static double GetEventCounter(void);
 
-  static void   getUSecD(int tid, double *values);
+  static void   getUSecD(int tid, double *values, int reversed=0);
 
   static void getCurrentValues(int tid, double *values);
 

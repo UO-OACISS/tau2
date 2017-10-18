@@ -413,11 +413,11 @@ double TauWindowsUsecD(void) {
 
 
 
-void RtsLayer::getUSecD (int tid, double *values) {
+void RtsLayer::getUSecD (int tid, double *values, int reversed) {
 #if ((defined(TAU_EPILOG) && !defined(PROFILING_ON)) || (defined(TAU_VAMPIRTRACE) && !defined(PROFILING_ON)))
   return;
 #endif /* TAU_EPILOG/VAMPIRTRACE, PROFILING_ON */
-  TauMetrics_getMetrics(tid, values);
+  TauMetrics_getMetrics(tid, values, reversed);
 }
 
 
