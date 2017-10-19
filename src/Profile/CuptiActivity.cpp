@@ -284,10 +284,10 @@ void Tau_cupti_onload()
 
     	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
-	
+if(!TauEnv_get_cuda_track_sass()) {
     	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
-	
+ }	
 #if CUDA_VERSION >= 5050
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
@@ -1648,7 +1648,7 @@ void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uin
     if (strcmp(name, name2) == 0) {
       // check if fid exists
       if (instructionMap.find(fid) == instructionMap.end()) {
-	cout << "[CuptiActivity] warning:  Instruction mix counters not recorded\n";
+	TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded\n");
       }
       else {
 	std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
