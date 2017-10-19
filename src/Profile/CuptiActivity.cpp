@@ -1169,8 +1169,14 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #else
       record_gpu_counters(deviceId, name, id, &eventMap);
 #endif
-      if (TauEnv_get_cuda_track_sass()) { 
-	record_imix_counters(name, deviceId, streamId, contextId, id, end);
+      if (TauEnv_get_cuda_track_sass()) {
+	if (!functionMap.empty() && !instructionMap.empty()) {
+	  TAU_VERBOSE("About to record imix counters\n");
+	  record_imix_counters(name, deviceId, streamId, contextId, id, end);
+	}
+	else {
+	  TAU_VERBOSE("Instruction execution data not available\n");
+	}
       }
 			if (gpu_occupancy_available(deviceId))
 			{
@@ -1634,50 +1640,55 @@ void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uin
  void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
    // check if data available
   bool update = false;
+
   for (std::map<uint32_t, FuncSampling>::iterator iter = functionMap.begin(); iter != functionMap.end(); iter++) {
     uint32_t fid = iter->second.fid;
     const char* name2 = demangleName(iter->second.name);
 
     if (strcmp(name, name2) == 0) {
       // check if fid exists
+      if (instructionMap.find(fid) == instructionMap.end()) {
+	cout << "[CuptiActivity] warning:  Instruction mix counters not recorded\n";
+      }
+      else {
+	std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
 
-      std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
-      ImixStats is_runtime = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
-      #ifdef TAU_DEBUG_CUPTI
-      cout << "[CuptiActivity]:  Name: " << name << 
-	", FLOPS_raw: " << is_runtime.flops_raw << ", MEMOPS_raw: " << is_runtime.memops_raw <<
-	", CTRLOPS_raw: " << is_runtime.ctrlops_raw << ", TOTOPS_raw: " << is_runtime.totops_raw << ".\n";
+	ImixStats is_runtime = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
+#ifdef TAU_DEBUG_CUPTI
+	cout << "[CuptiActivity]:  Name: " << name << 
+	  ", FLOPS_raw: " << is_runtime.flops_raw << ", MEMOPS_raw: " << is_runtime.memops_raw <<
+	  ", CTRLOPS_raw: " << is_runtime.ctrlops_raw << ", TOTOPS_raw: " << is_runtime.totops_raw << ".\n";
       #endif
-
-      update = true;
-
-      static TauContextUserEvent* fp_ops;
-      static TauContextUserEvent* mem_ops;
-      static TauContextUserEvent* ctrl_ops;
-      
-      Tau_get_context_userevent((void **) &fp_ops, "Floating Point Operations");
-      Tau_get_context_userevent((void **) &mem_ops, "Memory Operations");
-      Tau_get_context_userevent((void **) &ctrl_ops, "Control Operations");
+	update = true;
+	static TauContextUserEvent* fp_ops;
+	static TauContextUserEvent* mem_ops;
+	static TauContextUserEvent* ctrl_ops;
 	
-      uint32_t  v_flops = is_runtime.flops_raw;
-      uint32_t v_memops = is_runtime.memops_raw;
-      uint32_t v_ctrlops = is_runtime.totops_raw;
-
+	Tau_get_context_userevent((void **) &fp_ops, "Floating Point Operations");
+	Tau_get_context_userevent((void **) &mem_ops, "Memory Operations");
+	Tau_get_context_userevent((void **) &ctrl_ops, "Control Operations");
 	
-      transport_imix_counters(v_flops, FlPtOps, name, deviceId, streamId, contextId, id, end, fp_ops);
-      transport_imix_counters(v_memops, MemOps, name, deviceId, streamId, contextId, id, end, mem_ops);
-      transport_imix_counters(v_ctrlops, CtrlOps, name, deviceId, streamId, contextId, id, end, ctrl_ops);
-
-      // Each time imix counters recorded, erase instructionMap.
-      std::map<uint32_t, std::list<InstrSampling> >::iterator it_temp = instructionMap.find(fid);
-      instructionMap.erase(it_temp);
-      eventMap.erase(eventMap.begin(), eventMap.end());
+	uint32_t  v_flops = is_runtime.flops_raw;
+	uint32_t v_memops = is_runtime.memops_raw;
+	uint32_t v_ctrlops = is_runtime.totops_raw;
+	
+	
+	transport_imix_counters(v_flops, FlPtOps, name, deviceId, streamId, contextId, id, end, fp_ops);
+	transport_imix_counters(v_memops, MemOps, name, deviceId, streamId, contextId, id, end, mem_ops);
+	transport_imix_counters(v_ctrlops, CtrlOps, name, deviceId, streamId, contextId, id, end, ctrl_ops);
+	
+	// Each time imix counters recorded, erase instructionMap.
+	std::map<uint32_t, std::list<InstrSampling> >::iterator it_temp = instructionMap.find(fid);
+	instructionMap.erase(it_temp);
+	eventMap.erase(eventMap.begin(), eventMap.end());
+      }
       
     }
   }
   if(!update) {
     TAU_VERBOSE("TAU Warning:  Did not record instruction operations.\n");
   }
+
 }
 
   
