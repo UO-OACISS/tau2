@@ -9,7 +9,7 @@
 
 using namespace std;
 
-// #define TAU_DEBUG_SASS
+//#define TAU_DEBUG_SASS 1
 
 /* BEGIN: Disassem helpers */
 std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
@@ -565,6 +565,11 @@ void printFuncMap(std::map<uint32_t, FuncSampling> funcMap)
 
 ImixStats write_runtime_imix(uint32_t functionId, std::list<InstrSampling> instrSamp_list, std::map<std::pair<int, int>, CudaOps> map_disassem, std::map<uint32_t, SourceSampling> srcLocMap, std::string kernel)
 {
+
+#ifdef TAU_DEBUG_SASS
+  cout << "[CudaSass]: write_runtime_imix begin\n";
+#endif
+
   // look up from map_imix_static
   ImixStats imix_stats;
   string current_kernel = "";
