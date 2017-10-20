@@ -673,7 +673,7 @@ void Tau_sampling_handle_sampleTrace(void *pc, ucontext_t *context, int tid)
   theRecord.deltaStop = 0;
 
   double values[TAU_MAX_COUNTERS];
-  TauMetrics_getMetrics(tid, values);
+  TauMetrics_getMetrics(tid, values, 0);
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     theRecord.counters[i] = values[i];
     startTime = profiler->StartTime[i];
@@ -1261,7 +1261,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
   /* Get the current metric values */
   double values[TAU_MAX_COUNTERS] = { 0.0 };
   double deltaValues[TAU_MAX_COUNTERS] = { 0.0 };
-  TauMetrics_getMetrics(tid, values);
+  TauMetrics_getMetrics(tid, values, 0);
   //printf("tid = %d, values[0] = %f\n", tid, values[0]); fflush(stdout);
 
   int ebsSourceMetricIndex = TauMetrics_getMetricIndexFromName(TauEnv_get_ebs_source());
@@ -1381,7 +1381,7 @@ void Tau_sampling_event_start(int tid, void **addresses)
     //         TAU_EBS_PERIOD.
 
     double values[TAU_MAX_COUNTERS] = { 0.0 };
-    TauMetrics_getMetrics(tid, values);
+    TauMetrics_getMetrics(tid, values, 0);
     for (int i = 0; i < Tau_Global_numCounters; i++) {
       tau_sampling_flags()->previousTimestamp[i] = values[i];
       printf("tid = %d, event previousTimestamp = %llu\n", tid, tau_sampling_flags()->previousTimestamp[i]); fflush(stdout);
@@ -1758,7 +1758,7 @@ int Tau_sampling_init(int tid)
   // set up the base timers
   double values[TAU_MAX_COUNTERS] = { 0 };
   /* Get the current metric values */
-  //    TauMetrics_getMetrics(tid, values);
+  //    TauMetrics_getMetrics(tid, values, 0);
   // *CWL* - sampling_init can happen within the TAU init in the non-MPI case.
   //         So, we invoke a call that insists that TAU Metrics are available
   //         and ready to use. This requires that sampling init happens after

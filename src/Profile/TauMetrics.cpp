@@ -960,7 +960,7 @@ double TauMetrics_getTraceMetricIndex() {
  ********************************************************************/
 double TauMetrics_getTraceMetricValue(int tid) {
 	double values[TAU_MAX_COUNTERS];
-	TauMetrics_getMetrics(tid, values);
+	TauMetrics_getMetrics(tid, values, 0);
 	return values[traceMetric];
 }
 
