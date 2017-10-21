@@ -777,7 +777,9 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
 	    Tau_increment_stack_height();
     } else {
 	    // not conditional! no start/stop.
-		Tau_SOS_pack_current_timer(ss.str().c_str());
+        if (TauEnv_get_sos_trace_events()) { 
+		    Tau_SOS_pack_current_timer(ss.str().c_str());
+		}
     }
 }
 
@@ -796,7 +798,9 @@ ADIOST_EXTERN void tau_adiost_read_finalize_method(
 	    Tau_increment_stack_height();
     } else {
 	    // not conditional! no start/stop.
-		Tau_SOS_pack_current_timer(ss.str().c_str());
+        if (TauEnv_get_sos_trace_events()) { 
+		    Tau_SOS_pack_current_timer(ss.str().c_str());
+		}
     }
 }
 
@@ -1362,7 +1366,7 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
     adiost_set_callback_t adiost_fn_set_callback = 
         (adiost_set_callback_t)adiost_fn_lookup("adiost_set_callback");
 
-    fprintf(stderr,"Registering ADIOS tool events...\n"); fflush(stderr);
+    TAU_VERBOSE("Registering ADIOS tool events...\n");
 	/* Special events */
     CHECK(adiost_event_thread,       tau_adiost_thread,        "adios_thread");
     CHECK(adiost_event_library_shutdown, tau_adiost_library_shutdown, "adios_library_shutdown");
