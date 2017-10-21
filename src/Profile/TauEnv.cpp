@@ -97,6 +97,7 @@ using namespace std;
 #define TAU_SOS_TRACE_EVENTS_DEFAULT 0
 #define TAU_SOS_PERIODIC_DEFAULT 0
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
+#define TAU_SOS_HIGH_RESOLUTION_DEFAULT 0 // group, timer
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
@@ -266,6 +267,7 @@ static int env_sos_enabled = TAU_SOS_DEFAULT;
 static int env_sos_trace_events = TAU_SOS_TRACE_EVENTS_DEFAULT;
 static int env_sos_periodic = TAU_SOS_PERIODIC_DEFAULT;
 static int env_sos_period = TAU_SOS_PERIOD_DEFAULT;
+static int env_sos_high_resolution = TAU_SOS_HIGH_RESOLUTION_DEFAULT;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -938,6 +940,10 @@ int TauEnv_get_ebs_enabled() {
 
 int TauEnv_get_sos_enabled() {
   return env_sos_enabled;
+}
+
+int TauEnv_get_sos_high_resolution() {
+  return env_sos_high_resolution;
 }
 
 int TauEnv_get_sos_trace_events() {
@@ -2049,6 +2055,17 @@ void TauEnv_initialize()
       env_sos_enabled = 0;
       TAU_VERBOSE("TAU: SOS Disabled\n");
       TAU_METADATA("TAU_SOS", "off");
+    }
+
+    tmp = getconf("TAU_SOS_HIGH_RESOLUTION");
+    if (parse_bool(tmp, TAU_SOS_HIGH_RESOLUTION_DEFAULT)) {
+      env_sos_high_resolution = 1;
+      TAU_VERBOSE("TAU: SOS High Resolution\n");
+      TAU_METADATA("TAU_SOS_HIGH_RESOLUTION", "on");
+    } else {
+      env_sos_high_resolution = 0;
+      TAU_VERBOSE("TAU: SOS High Resolution\n");
+      TAU_METADATA("TAU_SOS_HIGH_RESOLUTION", "off");
     }
 
     tmp = getconf("TAU_SOS_TRACE_EVENTS");
