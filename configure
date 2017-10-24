@@ -7975,6 +7975,8 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     #if we do not have an install already at this location but we do have a valid tar file, build with the tar file here
     bfdtar="yes"
   fi
+
+  if [ "x$bfddir" = xdownload ] || [ "x$bfdtar" = xyes ] ; then
     if [ "x$bfddir" = xdownload ]; then
       #only change the bfddir if we are downloading
       bfddir="$targetdir/$architecture/$binutils"
