@@ -53,6 +53,13 @@ download()
   fi
 }
 
+clone()
+{
+  src="$1"
+  echo "git clone $src"
+  git clone "$src"
+}
+
 fix_tilde_at_the_start_of_cube_path()
 {
     cubedir=`echo $cubedir | sed -e "s,^~,$HOME,"g`
@@ -7895,6 +7902,13 @@ if [ $pin = yes -a "x$pindir" != "x" ]; then
     fixmakeargs="$fixmakeargs PIN pindir=$pindir"
     tauoptions="${tauoptions}-pin"
 fi 
+
+######################################################################
+# Install SOS if requested
+######################################################################
+sosurl=https://github.com/cdwdirect/sos_flow.git
+
+
 
 ######################################################################
 # Install BFD if requested
