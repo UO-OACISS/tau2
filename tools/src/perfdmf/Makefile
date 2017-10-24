@@ -5,7 +5,7 @@ include $(TAU_MAKEFILE)
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.
 CLASSPATH=./classes
-CUBE_JAVA_READER=../contrib/CubeReader.jar
+CUBE_JAVA_READER=@CUBECLASSPATH@
 JSON_CLASSPATH=../contrib/google-gson-2.1/gson-2.1.jar
 POSTGRESQL_CLASSPATH=../contrib/postgresql.jar
 LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER):$(JSON_CLASSPATH):$(POSTGRESQL_CLASSPATH)

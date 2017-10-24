@@ -63,6 +63,7 @@ clone()
 
 installsos()
 {
+ echo "Install SOS"
  $installdir = "$1"
  cd $installdir
  source hosts/linux/setenv.sh
@@ -7941,10 +7942,12 @@ fi
 sosurl=https://github.com/cdwdirect/sos_flow.git
 sosrepos=sos
 
-p=`pwd`
-cd $targetdir/$architecture/; clone "$sosurl" "sos"
-
-
+if [ $machine = arm64_linux ] ; then
+  if [ "x$download_sos" = xyes ] ; then
+    p=`pwd`
+    cd $targetdir/$architecture/; clone "$sosurl" "$sosrepos"; installsos "$sosrepos"
+  fi
+fi
 
 ######################################################################
 # Install BFD if requested
