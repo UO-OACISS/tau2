@@ -56,8 +56,19 @@ download()
 clone()
 {
   src="$1"
+  dst="$2"
   echo "git clone $src"
-  git clone "$src"
+  git clone "$src" "$dst"
+}
+
+installsos()
+{
+ $installdir = "$1"
+ cd $installdir
+ source hosts/linux/setenv.sh
+ ./scripts/configure.sh -c linux
+ cd build_linux
+ make  
 }
 
 fix_tilde_at_the_start_of_cube_path()
@@ -902,6 +913,8 @@ opari_construct=no
 boost=no
 sos=no
 sosdir=
+download_sos=no
+install_sos=no
 adios=no
 adiosdir=
 #caliper=no
@@ -1333,6 +1346,12 @@ for arg in "$@"; do
 	-bfd=*)
 	    bfd=yes
 	    bfddir=`echo $arg | sed -e 's/-bfd=//'`
+	    shift
+	    ;;
+
+	-sos=*)
+	    sos=yes
+	    sosdir=`echo $arg | sed -e 's/-bfd=//'`
 	    shift
 	    ;;
 
@@ -1821,6 +1840,11 @@ for arg in "$@"; do
 	    download_ompt=yes
 	    shift
 	    ;;
+
+        -sos=download*)
+            download_sos=yes
+            shift
+            ;;
 
 	-ompt=*)
 	    openmp=yes
@@ -6473,6 +6497,14 @@ fi #unwind=download
 
 
 ######################################################################
+# Install Scalable Observation System (SOS) if requested
+######################################################################
+
+if [ "x$download_ompt" = xyes ] ; then
+  echo "SOS (Scalable Observation System) installation requested"
+fi
+
+######################################################################
 # Install Clang/LLVM OpenMP runtime with OMPT if requested
 ######################################################################
 
@@ -7907,6 +7939,10 @@ fi
 # Install SOS if requested
 ######################################################################
 sosurl=https://github.com/cdwdirect/sos_flow.git
+sosrepos=sos
+
+p=`pwd`
+cd $targetdir/$architecture/; clone "$sosurl" "sos"
 
 
 
@@ -7936,8 +7972,6 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     #if we do not have an install already at this location but we do have a valid tar file, build with the tar file here
     bfdtar="yes"
   fi
-
-  if [ "x$bfddir" = xdownload ] || [ "x$bfdtar" = xyes ] ; then
     if [ "x$bfddir" = xdownload ]; then
       #only change the bfddir if we are downloading
       bfddir="$targetdir/$architecture/$binutils"
