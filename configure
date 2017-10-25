@@ -64,7 +64,7 @@ clone()
 installsos()
 {
  echo "Install SOS"
- $installdir = "$1"
+ $installdir="$1"
  cd $installdir
  source hosts/linux/setenv.sh
  ./scripts/configure.sh -c linux
@@ -1350,12 +1350,6 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-	-sos=*)
-	    sos=yes
-	    sosdir=`echo $arg | sed -e 's/-bfd=//'`
-	    shift
-	    ;;
-
 	-unwinder=*)
 	    unwinder=`echo $arg | sed -e 's/-unwinder=//'`
 	    if [ "x$unwinder" = "xlibunwind" ] ; then
@@ -1725,12 +1719,8 @@ for arg in "$@"; do
 
 	-sos=*)
 	    sos=yes
+            echo "-sos="
 	    sosdir=`echo $arg | sed -e 's/-sos=//'`
-	    if [ ! -d $sosdir ]
-	    then
-		echo "Error: Cannot access SOS directory $sosdir"
-		exit 1
-	    fi
 	    shift
 	    ;;
 
@@ -1836,16 +1826,12 @@ for arg in "$@"; do
 	    ;;
 
 	-ompt=download*)
+            echo "ompt=download"
 	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
 	    shift
 	    ;;
-
-        -sos=download*)
-            download_sos=yes
-            shift
-            ;;
 
 	-ompt=*)
 	    openmp=yes
@@ -7942,11 +7928,10 @@ fi
 sosurl=https://github.com/cdwdirect/sos_flow.git
 sosrepos=sos
 
-if [ $machine = arm64_linux ] ; then
-  if [ "x$download_sos" = xyes ] ; then
+if [ "x$sos" = "xyes" ] ; then
+    echo "Install SOS"
     p=`pwd`
     cd $targetdir/$architecture/; clone "$sosurl" "$sosrepos"; installsos "$sosrepos"
-  fi
 fi
 
 ######################################################################
