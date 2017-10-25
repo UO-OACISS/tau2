@@ -8,7 +8,7 @@ BINDIR=${TAUROOT}/${MACHINE}/bin
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 JARDIR=${TAUROOT}/${MACHINE}/lib
 
-CUBE_JAVA_READER=@CUBECLASSPATH@
+CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
 #paraprof does not accept -64/-32/-jogl2/-jogl1. Set the flags and remove them from the parameter list before passing to paraprof. -32 (which makes no difference on non-apple platforms) and -jogl1 are the defaults on all platforms except apple.
 for arg 
