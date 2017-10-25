@@ -63,13 +63,26 @@ clone()
 
 installsos()
 {
- echo "Install SOS"
  installdir="$1"
  cd $installdir
+ P=`pwd`
+ echo "Install SOS - EVPath"
+ wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+ CHAOS_PATH=`pwd`
+ FLEXPATH_DIR=$CHAOS_PATH/inst
+ perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR
+ perl ./chaos_build.pl
+ # set path to Flexpath/EVPath (see above)
+ PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig 
+ 
+ echo "Install SOS: $P"
  source hosts/linux/setenv.sh
+ mkdir build-linux
  ./scripts/configure.sh -c linux
  cd build-linux
- make  
+ export sosdir=$P/inst
+ cmake  
+ make ; make install 
 }
 
 fix_tilde_at_the_start_of_cube_path()
