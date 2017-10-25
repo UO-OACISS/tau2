@@ -7941,10 +7941,14 @@ fi
 sosurl=https://github.com/cdwdirect/sos_flow.git
 sosrepos=sos
 
-if [ "x$sos" = "xyes" ] ; then
+echo "$sosdir"
+if [ "x$sos" = "xyes" ] && [ "x$sosdir" = xdownload ] ; then
     echo "Install SOS"
     p=`pwd`
     cd $targetdir/$architecture/; clone "$sosurl" "$sosrepos"; installsos "$sosrepos"
+else
+    echo "Error: Cannot access SOS directory $sosdir"
+    exit 1   
 fi
 
 ######################################################################
