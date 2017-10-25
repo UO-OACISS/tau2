@@ -57,18 +57,18 @@ clone()
 {
   src="$1"
   dst="$2"
-  echo "git clone $src"
+  echo "git clone $src" "$dst"
   git clone "$src" "$dst"
 }
 
 installsos()
 {
  echo "Install SOS"
- $installdir="$1"
+ installdir="$1"
  cd $installdir
  source hosts/linux/setenv.sh
  ./scripts/configure.sh -c linux
- cd build_linux
+ cd build-linux
  make  
 }
 
