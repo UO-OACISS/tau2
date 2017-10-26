@@ -370,6 +370,8 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
 //         Also look for "tau*/include/" where * has no "/".
 bool nameInTau(const char *name)
 {
+  if (strstr(name, "UNRESOLVED ADDR") != NULL)
+    return false;
   name = strchr(name, '{') + 1;
   static char const * libprefix[] = {"libtau", "libTAU", NULL};
   static char const * libsuffix[] = {".a", ".so", ".dylib", NULL};
@@ -509,12 +511,10 @@ bool determineCallSiteViaString(unsigned long *addresses)
           //   the function itself.
           hasSHMEM = hasSHMEM || nameInSHMEM(name);
           free(name);
-          // No idea why this works, or why the magical "2" is required below.
-#ifdef __PGI
-          int offset = hasSHMEM ? 1 : 6;
-#else /* __PGI */
-          int offset = hasSHMEM ? 1 : 2;
-#endif /* __PGI */
+          // No idea why this works, or why the magical "2" (or 6 for __PGI) is required below.
+
+          int offset = hasSHMEM ? 1 : TauEnv_get_callsite_offset();
+
           if (i + offset < length) {
             callsite = addresses[i + offset];
             name = Tau_callsite_resolveCallSite(addresses[i + offset]);
@@ -752,7 +752,7 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
 
     if (TraceTimeStamp && TauEnv_get_tracing()) {
       // Tweak time stamp to preserve event order in trace
-      TauTraceEvent(CallSiteFunction->GetFunctionId(), 1 /* entry */, tid, TraceTimeStamp-1, 1);
+      TauTraceEvent(CallSiteFunction->GetFunctionId(), 1 /* entry */, tid, TraceTimeStamp-1, 1, TAU_TRACE_EVENT_KIND_CALLSITE);
     }
 
     // Set up metrics. Increment number of calls and subrs
@@ -782,7 +782,7 @@ void Profiler::CallSiteStop(double *TotalTime, int tid, x_uint64 TraceTimeStamp)
     CallSiteFunction->AddExclTime(TotalTime, tid);
     if (TraceTimeStamp && TauEnv_get_tracing()) {
       // Tweak time stamp to preserve event order in trace
-      TauTraceEvent(CallSiteFunction->GetFunctionId(), -1 /* exit */, tid, TraceTimeStamp+1, 1);
+      TauTraceEvent(CallSiteFunction->GetFunctionId(), -1 /* exit */, tid, TraceTimeStamp+1, 1, TAU_TRACE_EVENT_KIND_CALLSITE);
     }
   }
   if (ParentProfiler != NULL) {

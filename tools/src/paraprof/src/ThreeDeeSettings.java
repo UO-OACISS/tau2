@@ -73,6 +73,21 @@ public class ThreeDeeSettings implements Cloneable {
     	return customTopoAxes;
     }
     
+    
+    public static final int[] customTopoCoreAxesDefaults={4,3,2};
+    private int[] customTopoCoreAxes={4,3,2};
+    public int getCustomTopoCoreAxis(int dex){
+    	return customTopoCoreAxes[dex];
+    }
+    public void setCustomTopoCoreAxis(int axis,int dex){
+    	customTopoCoreAxes[dex]=axis;
+    }
+    
+    public int[] getCustomTopoCoreAxes(){
+    	return customTopoCoreAxes;
+    }
+    
+    
     /**Index of selected atomic event data type**/
     public int[] atomicETDex={0,0,0,0};
     
@@ -119,13 +134,19 @@ public class ThreeDeeSettings implements Cloneable {
 	}
 	
 	
+	private boolean isNewMapFile=true;
+	public boolean checkNewMapFile(){
+		return isNewMapFile;
+	}
 	private String topoMapFile=null;
 
 	public String getTopoMapFile() {
+		isNewMapFile=false;
 		return topoMapFile;
 	}
 	public void setTopoMapFile(String topoMapFile) {
 		this.topoMapFile = topoMapFile;
+		isNewMapFile=true;
 	}
 	
 	private boolean customTopo=false;

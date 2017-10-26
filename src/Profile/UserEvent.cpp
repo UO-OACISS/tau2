@@ -60,8 +60,9 @@ using namespace std;
 #include <Profile/UserEvent.h>
 #include <tau_internal.h>
 
+#include <Profile/TauEnv.h>
+#include <Profile/TauPluginInternals.h>
 #include <Profile/TauPin.h>
-
 
 using namespace tau;
 
@@ -81,14 +82,25 @@ struct ContextEventMapCompare
   bool operator()(long const * l1, long const * l2) const
   {
     int i = 0;
-    for (i=0; i<=l1[0]; ++i) {
-      if (l1[i] != l2[i]) return l1[i] < l2[i];
+    for (i=0; (i<=l1[0] && i<=l2[0]) ; i++) {
+        //printf("%d: %ld, %ld\t", i, l1[i], l2[i]);
+      if (l1[i] != l2[i]) {
+          /*
+          if (l1[i] < l2[i]) {
+              printf("\nleft <  right\n");
+          } else {
+              printf("\nleft >= right\n");
+          }
+          */
+          return l1[i] < l2[i];
+      }
     }
+    //printf("\nEqual!\n"); fflush(stdout);
     return false;
   }
 };
 
-struct ContextEventMap : public std::map<long *, TauUserEvent *, ContextEventMapCompare, TauSignalSafeAllocator<std::pair<long*, TauUserEvent *> > >
+struct ContextEventMap : public std::map<long *, TauUserEvent *, ContextEventMapCompare, TauSignalSafeAllocator<std::pair<long* const, TauUserEvent *> > >
 {
   ~ContextEventMap() {
     Tau_destructor_trigger();
@@ -112,6 +124,13 @@ void TauUserEvent::AddEventToDB()
   DEBUGPROFMSG("Successfully registered event " << GetName() << endl;);
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
 
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_atomic_event_registration_data plugin_data;
+    plugin_data.user_event_ptr = this;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, &plugin_data);
+  }
+
   /* Set user event id */
   eventId = RtsLayer::GenerateUniqueId();
 #ifdef TAU_VAMPIRTRACE
@@ -131,6 +150,7 @@ void TauUserEvent::AddEventToDB()
   eventId=handle;
 #endif
   RtsLayer::UnLockDB();
+
 }
 
 ///////////////////////////////////////////////////////////
@@ -179,9 +199,19 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
     if (TauEnv_get_tracing()) {
-      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
-      TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts);
-      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts);
+#ifdef TAU_OTF2
+      if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+        TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      } else {
+        TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+        TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+        TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      }
+#else
+      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      TauTraceEvent(eventId, (x_uint64)data, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+      TauTraceEvent(eventId, (x_uint64)0, tid, (x_uint64)timestamp, use_ts, TAU_TRACE_EVENT_KIND_USEREVENT);
+#endif /* TAU_OTF2 */
     }
 #endif /* TAU_EPILOG */
     /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
@@ -205,7 +235,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
     // Compute relevant statistics for the data
     if (minEnabled && data < d.minVal) {
 #ifdef TAU_USE_EVENT_THRESHOLDS
-      if (d.nEvents > 1 && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
+      if ((TauEnv_get_evt_threshold() > 0.0) && (d.nEvents > 1) && data <= (1.0 - TauEnv_get_evt_threshold()) * d.minVal) {
         if (name[0] != '[') { //re-entrant
 #ifndef TAU_WINDOWS
           char ename[20 + name.length()];
@@ -232,7 +262,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 
     if (maxEnabled && data > d.maxVal) {
 #ifdef TAU_USE_EVENT_THRESHOLDS
-      if (d.nEvents > 1 && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
+      if ((TauEnv_get_evt_threshold() > 0.0) && (d.nEvents > 1) && data >= (1.0 + TauEnv_get_evt_threshold()) * d.maxVal) {
         if (name[0] != '[') { //re-entrant
 #ifndef TAU_WINDOWS
           char ename[20 + name.length()];
@@ -265,7 +295,14 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
       d.sumSqrVal += data * data;
     }
 #endif /* PROFILING_ON */
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+    if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+      Tau_plugin_event_atomic_event_trigger_data plugin_data;
+      plugin_data.user_event_ptr = this;
+      Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, &plugin_data);
+    }
   } // Tau_global_getLightsOut
+
 }
 
 
@@ -348,22 +385,26 @@ void TauUserEvent::ReportStatistics(bool ForEachThread)
 // Formulate Context Comparison Array, an array of addresses with size depth+2.
 // The callpath depth is the 0th index, the user event goes is the last index
 //////////////////////////////////////////////////////////////////////
-long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, size_t * size)
+void TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, long * comparison)
 {
-  int depth = TauEnv_get_callpath_depth();
-  *size = sizeof(long)*(depth+2);
-  long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), *size);
+  int tid = RtsLayer::myThread();
+  int depth = Tau_get_current_stack_depth(tid);
+  if (depth > TAU_MAX_CALLPATH_DEPTH) {
+      // oh, no...  super-deep callpath.  Warn the user and abort.  Bummer.
+      fprintf(stderr, "ERROR! The callstack depth has exceeded a hard-coded limit in TAU.  Please reconfigure TAU with the option '-useropt=TAU_MAX_CALLPATH_DEPTH=X' where X is greater than %d\n", TAU_MAX_CALLPATH_DEPTH);
+  }
+
   int i=1;
   // start writing to index 1, we fill in the depth after
   for(; current && depth; ++i) {
-    ary[i] = Tau_convert_ptr_to_long(current->ThisFunction);
+    comparison[i] = Tau_convert_ptr_to_long(current->ThisFunction);
     current = current->ParentProfiler;
     --depth;
   }
-  ary[i] = Tau_convert_ptr_to_long(userEvent);
-  ary[0] = i; // set the depth
+  comparison[i] = Tau_convert_ptr_to_long(userEvent);
+  comparison[0] = i; // set the depth
 
-  return ary;
+  return;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -371,14 +412,14 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, 
 ////////////////////////////////////////////////////////////////////////////
 TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current)
 {
+  int tid = RtsLayer::myThread();
   if (current) {
-    std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
-    buff << userEvent->GetName();
+      //std::basic_stringstream<char, std::char_traits<char>, TauSignalSafeAllocator<char> > buff;
+      std::stringstream buff;
+      buff << userEvent->GetName();
 
-    int depth = TauEnv_get_callpath_depth();
-    if (depth) {
-      //Profiler ** path = new Profiler*[depth];
-      Profiler * path[200];
+      int depth = Tau_get_current_stack_depth(tid);
+      Profiler ** path = new Profiler*[depth];
 
       // Reverse the callpath to avoid string copies
       int i=depth-1;
@@ -396,19 +437,21 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
           buff << " " << fi->GetType();
         buff << " => ";
       }
-      fi = path[i]->ThisFunction;
+      if (depth == 0) {
+        fi = current->ThisFunction;
+      } else {
+        fi = path[i]->ThisFunction;
+      }
       buff << fi->GetName();
       if (strlen(fi->GetType()) > 0)
         buff << " " << fi->GetType();
 
-      //delete[] path;
-    }
-
+      delete[] path;
     // Return a new string object.
     // A smart STL implementation will not allocate a new buffer.
-    return buff.str().c_str();
+      return buff.str().c_str();
   } else {
-    return "";
+      return "";
   }
 }
 
@@ -427,8 +470,8 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
       Profiler * current = TauInternal_CurrentProfiler(tid);
       if (current) {
         //printf("**** Looking for : %s\n", FormulateContextNameString(current).c_str()); fflush(stdout);
-        size_t size;
-        long * comparison = FormulateContextComparisonArray(current, &size);
+        long comparison[TAU_MAX_CALLPATH_DEPTH] = {0};
+        FormulateContextComparisonArray(current, comparison);
 
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
@@ -452,11 +495,21 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
               FormulateContextNameString(current).c_str(),
               userEvent->IsMonotonicallyIncreasing());
 #endif
-          contextMap[comparison] = contextEvent;
+          // need to make a heap copy of our comparison array. Otherwise it gets
+          // corrupted, because right now this is a stack variable.
+          // It needs to be a stack variable so that searching each time we have
+          // a counter doesn't eat up the whole memory map.
+          int depth = comparison[0];
+          int size = sizeof(long)*(depth+2);
+          long * ary = (long*)Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), size);
+          int i;
+          for (i = 0 ; i <= depth ; i++) {
+              ary[i] = comparison[i];
+          }
+          contextMap[ary] = contextEvent;
         } else {
-          //printf("**** FOUND **** \n"); fflush(stdout);
           contextEvent = it->second;
-          Tau_MemMgr_free(tid, (void*)comparison, size);
+          //printf("**** FOUND **** %s \n", contextEvent->GetName().c_str()); fflush(stdout);
         }
         RtsLayer::UnLockDB();
         contextEvent->TriggerEvent(data, tid, timestamp, use_ts);

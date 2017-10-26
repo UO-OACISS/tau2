@@ -27,6 +27,15 @@
 # TAUINC.
 #######################################################################
 
+#######################################################################
+# Just in case the user didn't set the TAU_MAKEFILE environment variable...
+TAU_MAKEFILE:=$(realpath $(lastword $(MAKEFILE_LIST)))
+# # set it now!
+export TAU_MAKEFILE
+# # optionally, echo it.
+# $(info $$TAU_MAKEFILE is ${TAU_MAKEFILE})
+#######################################################################
+
 # See this file for a record of the configuration environment
 CONF_ENV_FILE=
 
@@ -78,8 +87,8 @@ TAU_SPECIAL_CC=gcc
 ##SC_PATHSCALE#TAU_CC_FE=gcc #ENDIF#
 ##SC_PATHSCALE#TAU_CXX_FE=g++ #ENDIF#
 
-#ARCH_WIDTH_32#TAU_LIBEX=lib #ENDIF#
-#ARCH_WIDTH_64#TAU_LIBEX=lib64 #ENDIF#
+#ARCH_WIDTH_32#TAU_LIBEX=lib#ENDIF#
+#ARCH_WIDTH_64#TAU_LIBEX=lib64#ENDIF#
 
 
 USER_OPT=-g
@@ -95,6 +104,7 @@ IFORTLIBDIR=
 PERFSUITELINK=
 TAUGFORTRANLIBDIR=
 PAPIDIR=
+LIKWIDDIR=
 BEACONDIR=
 GPIDIR=
 PAPISUBDIR=
@@ -105,6 +115,9 @@ DYNINSTDIR=
 BOOSTDIR=
 TAU_BOOSTINC=
 TAU_BOOSTLIB=
+SOSDIR=
+ADIOSDIR=
+CALIPERDIR=
 JDKDIR=
 ANDROID_SDK=
 ANDROID_VERSION=
@@ -292,6 +305,28 @@ MPI_FORTRAN_INIT = TauFInit.o
 
 
 #############################################
+# SOS OBJECTS and libs
+#############################################
+#SOS#SOS_O = TauSOS.o #ENDIF#
+#SOS#TAU_SOS_INCLUDE_OPTS=-I$(SOSDIR)/include -I$(SOSDIR) -DTAU_SOS #ENDIF#
+#SOS#TAU_SOS_LIBS=-L$(SOSDIR)/lib -Wl,-rpath,$(SOSDIR)/lib -lsos -pthread -fPIC #ENDIF#
+#SOS#TAU_SOS_LINKER_OPTS=$(TAU_SOS_LIBS) #ENDIF#
+
+#############################################
+# ADIOS OBJECTS and libs
+#############################################
+#ADIOS#ADIOS_O = TauADIOS.o #ENDIF#
+#ADIOS#TAU_ADIOS_INCLUDE_OPTS=-I$(ADIOSDIR)/include -DTAU_ADIOS #ENDIF#
+#ADIOS#TAU_ADIOS_LIBS=-L$(ADIOSDIR)/lib -Wl,-rpath,$(ADIOSDIR)/lib -pthread -fPIC #ENDIF#
+#ADIOS#TAU_ADIOS_LINKER_OPTS=$(TAU_ADIOS_LIBS) #ENDIF#
+
+#############################################
+# CALIPER OBJECTS and libs
+#############################################
+CALIPER_O = TauCaliper.o #ENDIF#
+#CALIPER#TAU_CALIPER_INCLUDE_OPTS=-I$(CALIPERDIR)/include -DTAU_CALIPER #ENDIF#
+
+#############################################
 # OpenMP OBJECTS
 #############################################
 #OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o #ENDIF#
@@ -448,6 +483,7 @@ TAU_F77 = $(TAU_F90)
 #PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src -I$(PAPIDIR)/include #ENDIF#
 #PAPINOINC#PROFILEOPT3              = -DTAU_PAPI #ENDIF#
 #PAPI#PAPI_O       	       = PapiLayer.o 	       #ENDIF#
+#TAU_LIKWID#LIKWID_O           = LikwidLayer.o         #ENDIF#
 #PROFILEOPT4
 #PROFILESTATS#PROFILEOPT5      = -DPROFILE_STATS       #ENDIF#
 #DEBUGPROF#PROFILEOPT6         = -DDEBUG_PROF          #ENDIF#
@@ -591,10 +627,11 @@ JDKBINDIR = $(JDKDIR)/bin
 #BGQ#PROFILEOPT60           = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE #ENDIF#
 # Omit the -D_LARGETFILE64_SOURCE till we can check the IBM crash
 #SHMEM#PROFILEOPT61           = -DTAU_SHMEM -DTAU_UNIFY  #ENDIF#
-#OPENSHMEM#PROFILEOPT61           = $(TAU_SHMEM_INC) -DTAU_OPENSHMEM -DTAU_SHMEM -DHAVE_SHMEMX_H -DTAU_UNIFY #ENDIF#
+#OPENSHMEM#PROFILEOPT61           = $(TAU_SHMEM_INC) -DTAU_OPENSHMEM -DTAU_SHMEM -DTAU_UNIFY #ENDIF#
 #OPENSHMEM_PSHMEM#PROFILEOPT61           = $(TAU_SHMEM_INC) -DTAU_OPENSHMEM -DTAU_SHMEM #ENDIF#
 #SGI_MPT_SHMEM#PROFILEOPT61           = -DTAU_SHMEM -DTAU_SGI_MPT_SHMEM #ENDIF#
 #SGI_MPT_PSHMEM#PROFILEOPT61           = -DTAU_SHMEM -DTAU_PSHMEM_SGI_MPT #ENDIF#
+#SHMEMX_H#PROFILEOPT105  = -DHAVE_SHMEMX_H #ENDIF#
 #KTAU#PROFILEOPT62  = -DTAUKTAU -DKTAU_USER_SRC_COMPILE -I$(KTAU_INCDIR) -I$(KTAU_INCUSERDIR) -DKTAU_INCUSERDIR=\"$(KTAU_INCUSERDIR)\" -DKTAU_KALLSYMS_PATH=\"$(KTAU_KALLSYMS_PATH)\" #ENDIF#
 #KTAU_MERGE#PROFILEOPT63  = -DTAUKTAU_MERGE -DKTAU_USER_SRC_COMPILE -I$(KTAU_INCDIR) -DKTAU_INCUSERDIR=\"$(KTAU_INCUSERDIR)\" -DKTAU_KALLSYMS_PATH=\"$(KTAU_KALLSYMS_PATH)\" #ENDIF#
 #FREEBSD#PROFILEOPT64  = -DTAU_FREEBSD #ENDIF#
@@ -623,6 +660,11 @@ JDKBINDIR = $(JDKDIR)/bin
 #DARSHAN#PROFILEOPT80 = -DTAU_DARSHAN #ENDIF#
 #MMIC#PROFILEOPT87 = -DTAU_MIC_LINUX -mmic #ENDIF#
 #CRAY_MIC#PROFILEOPT87 = -DTAU_MIC_LINUX -DTAU_CRAY_MIC #ENDIF#
+
+#DISABLE_MEM_MANAGER#PROFILEOPT106 = -DTAU_DISABLE_MEM_MANAGER #ENDIF#
+#CRAYCNL_PMI#PROFILEOPT107  = -DTAU_CRAYCNL_PMI $(CRAY_PMI_INCLUDE_OPTS) #ENDIF#
+#CRAYCNL_PMI_FOUND#PROFILEOPT107  = -DTAU_CRAYCNL_PMI_FOUND #ENDIF#
+#TAU_LIKWID#PROFILEOPT108  = -DTAU_LIKWID -I$(LIKWIDDIR)/include #ENDIF#
 
 MRNET_ROOT=
 MRNET_LW_OPTS=
@@ -815,13 +857,15 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #NAGWARE_FORTRAN#TAU_CXXLIBS		= $(TAUGCCSTDCXXLIBDIR)/libstdc++.a #ENDIF#
 #CLANG#TAU_CXXLIBS		= -lstdc++ -ldl #ENDIF#
 #BGCLANG#TAU_CXXLIBS		= -lstdc++ -ldl -lc -lnss_files -lnss_dns -lresolv -lm #ENDIF#
-#PGI#TAU_PGI_STD_LIB = -lstd -lC #ENDIF#
+#PGI_C#TAU_PGI_C = -lC #ENDIF#
+#PGI#TAU_PGI_STD_LIB = -lstd $(TAU_PGI_C) #ENDIF#
 #PGI_NO_LIBSTD#TAU_PGI_STD_LIB = #ENDIF#
-#MPI#TAU_PGI_STD_LIB = -lstdc++ -latomic #ENDIF#
+#PGI_ATOMIC#TAU_PGI_ATOMIC = -latomic #ENDIF#
+#MPI#TAU_PGI_STD_LIB = -lstdc++ $(TAU_PGI_ATOMIC) #ENDIF#
 #PGI#TAU_CXXLIBS        	= $(TAU_PGI_STD_LIB)        #ENDIF#
 #APPLEPGI#TAU_CXXLIBS        	=  -lstd -lcpp       #ENDIF#
-#PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib $(TAU_PGI_STD_LIB) -lC -lstdc++     #ENDIF#
-#PGI_FORTRAN#TAU_CXXLIBS       	= -L$(EXTRADIR)/lib $(TAU_PGI_STD_LIB) -lstdc++ -latomic     #ENDIF#
+#PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib $(TAU_PGI_STD_LIB) $(TAU_PGI_C) -lstdc++     #ENDIF#
+#PGI_FORTRAN#TAU_CXXLIBS       	= -L$(EXTRADIR)/lib $(TAU_PGI_STD_LIB) -lstdc++ $(TAU_PGI_ATOMIC) #ENDIF#
 #PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
 #GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL      	= -L$(EXTRADIR)/lib -lstdc++ -lgcc_eh    #ENDIF#
 #INTELIFORT#TAU_CXXLIBS_INTEL_CNL      	= -lstdc++   #ENDIF#
@@ -1156,6 +1200,8 @@ EBS_CLOCK_RES=
 #MPI_T#TAU_MPIT  = TauMpiT.o #ENDIF#
 #BEACON#BEACON_O       	       = TauBeacon.o 	       #ENDIF#
 #PIN#PROFILEOPT104  = -D__PIN__=1 -DPIN_CRT=1 -DTARGET_IA32E -DTARGET_LINUX -DHOST_IA32E -fno-exceptions -funwind-tables  -fasynchronous-unwind-tables -fabi-version=2 -fno-rtti -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing -isystem $(PIN_ROOT)/source/include/pin -isystem $(PIN_ROOT)/source/include/pin/gen -isystem $(PIN_ROOT)/extras/stlport/include -isystem $(PIN_ROOT)/extras/libstdc++/include -isystem $(PIN_ROOT)/extras/crt/include -isystem $(PIN_ROOT)/extras/crt/include/arch-x86_64 -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi/asm-x86  -isystem $(PIN_ROOT)/extras/components/include -isystem $(PIN_ROOT)/extras/xed-intel64/include/xed #ENDIF#
+OTFINC=
+#OTF2#TAU_OTF2_INCLUDE_OPTS = -I$(OTFINC) -DTAU_OTF2 #ENDIF#
 
 
 
@@ -1185,8 +1231,10 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT93) $(PROFILEOPT94) $(PROFILEOPT95) $(PROFILEOPT96) \
               $(PROFILEOPT97) $(PROFILEOPT98) $(PROFILEOPT99) $(PROFILEOPT100) \
 	      $(PROFILEOPT101) $(PROFILEOPT102) $(PROFILEOPT103) \
-              $(PROFILEOPT104) $(TRACEOPT)
-
+              $(PROFILEOPT104) $(PROFILEOPT106) $(PROFILEOPT107) \
+              $(PROFILEOPT108) $(TRACEOPT) \
+		  $(TAU_SOS_INCLUDE_OPTS) $(TAU_ADIOS_INCLUDE_OPTS) \
+		  $(TAU_OTF2_INCLUDE_OPTS) $(TAU_CALIPER_INCLUDE_OPTS)
 
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
@@ -1218,7 +1266,9 @@ TAU_CUPTI_INC=
 #APPLECXX#TAU_OPENCL_INCLUDE=#ENDIF#
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
-#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti  -lcuda -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
+
+#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)/stubs -lcuda -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
+
 #CUPTI_NOCUDA#TAU_CUDA_LINKER_OPTS=-L$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUPTI_INC))/$(TAU_LIBEX) -lcupti  -L$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)  $(UPCC_LINK_PREFIX)-Wl,-rpath,$(subst include,,$(TAU_CUDA_INC))/$(TAU_LIBEX)#ENDIF#
 TAU_CUDA_LIBRARY=
 #CUDA#TAU_CUDA_STATIC_LIBS=-lcudart_static -lpthread #ENDIF#
@@ -1234,6 +1284,10 @@ TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1) $(TAU_INTERNAL_FLAG2)
 #BEACON#TAU_BEACON_LINKER_OPTS=-L$(BEACONDIR)/lib -lbeacon -lpthread -Wl,-rpath,$(BEACONDIR)/lib #ENDIF#
 
 #PIN#TAU_PIN_LINKER_OPTS= -Wl,--hash-style=sysv $(PIN_ROOT)/intel64/runtime/pincrt/crtbeginS.o -Wl,-Bsymbolic -Wl,--version-script=$(PIN_ROOT)/source/include/pin/pintool.ver -fabi-version=2 -L$(PIN_ROOT)/intel64/runtime/pincrt -L$(PIN_ROOT)/intel64/lib -L$(PIN_ROOT)/intel64/lib-ext -L$(PIN_ROOT)/extras/xed-intel64/lib -lpin -lxed $(PIN_ROOT)/intel64/runtime/pincrt/crtendS.o -lpin3dwarf  -ldl-dynamic -nostdlib -lstlport-dynamic -lm-dynamic -lc-dynamic -lunwind-dynamic #ENDIF#
+OTFLIB=
+#OTF2#TAU_OTF2_LINKER_OPTS = -L$(OTFLIB) -lotf2 -Wl,-rpath,$(OTFLIB) #ENDIF#
+#CRAYCNL_PMI#TAU_LINKER_OPT23=$(CRAY_PMI_POST_LINK_OPTS) -lpmi $(CRAY_XPMEM_POST_LINK_OPTS) -lxpmem -L/opt/cray/ugni/default/lib64 -lugni $(CRAY_UDREG_POST_LINK_OPTS) -ludreg $(CRAY_ALPS_POST_LINK_OPTS) -lalpslli -L/opt/cray/wlm_detect/default/lib64 -lwlm_detect -lalpsutil -lugni #ENDIF#
+#TAU_LIKWID#TAU_LINKER_OPT24=-L$(LIKWIDDIR)/lib -Wl,-rpath,$(LIKWIDDIR)/lib -llikwid #ENDIF#
 ##############################################
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
@@ -1244,9 +1298,12 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
                   $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
                   $(TAU_LINKER_OPT20) $(TAU_LINKER_OPT21) $(TAU_LINKER_OPT22) \
+                  $(TAU_LINKER_OPT23) $(TAU_LINKER_OPT24)  \
                   $(TAU_CUDA_LINKER_OPTS) $(TAU_PYTHON_LINKER_OPTS)  \
                   $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS) \
-                  $(TAU_PIN_LINKER_OPTS) 
+                  $(TAU_PIN_LINKER_OPTS) \
+				  $(TAU_SOS_LINKER_OPTS) $(TAU_ADIOS_LINKER_OPTS) \
+				  $(TAU_OTF2_LINKER_OPTS)
 
 ##############################################
 
@@ -1297,7 +1354,7 @@ TAU_COMPILER_SUITE_USED=gnu
 #SHMEM#TAU_CRAY_SHMEM_EXTRA_DEFS=-D__float128=float #ENDIF#
 #SHMEM#TAU_CRAY_SHMEM_EXTRA_OPTS=-optPdtCOpts=-D__float128=float  -optPdtCxxOpts=-D__float128=float #ENDIF#
 #CRAYCNL#TAU_COMPILER_EXTRA_OPTIONS4=$(TAU_CRAY_SHMEM_EXTRA_OPTS) #ENDIF#
-TAU_COMPILER_EXTRA_OPTIONS=$(TAU_COMPILER_EXTRA_OPTIONS1) $(TAU_COMPILER_EXTRA_OPTIONS2) $(TAU_COMPILER_EXTRA_OPTIONS3) $(TAU_COMPILER_EXTRA_OPTIONS4)
+TAU_COMPILER_EXTRA_OPTIONS=$(TAU_COMPILER_EXTRA_OPTIONS1) $(TAU_COMPILER_EXTRA_OPTIONS2) $(TAU_COMPILER_EXTRA_OPTIONS3) $(TAU_COMPILER_EXTRA_OPTIONS4) $(TAU_COMPILER_EXTRA_OPTIONS5)
 
 TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/TauMemory
 

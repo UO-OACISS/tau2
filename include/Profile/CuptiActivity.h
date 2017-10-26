@@ -36,6 +36,7 @@
 	} \
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
+#define ACTIVITY_ENTRY_LIMIT 1024
 // #define ACTIVITY_BUFFER_SIZE (8192*1024)
 /* Some API calls deprecated in 5.5
  */
@@ -203,6 +204,8 @@ extern "C" x_uint64 TauTraceGetTimeStamp();
 
 void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream, uint8_t* buffer, size_t size, size_t validSize);
 
+void Tau_cupti_activity_flush_all();
+
 void Tau_cupti_register_buffer_creation(uint8_t** buffer, size_t* size, size_t* maxNumRecords);
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params);
@@ -247,6 +250,9 @@ void record_gpu_occupancy(int32_t blockX,
 
 void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
+void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
+void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
+
 
 int get_device_count();
 int get_device_id();

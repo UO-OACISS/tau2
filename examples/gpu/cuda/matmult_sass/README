@@ -3,7 +3,7 @@
 ==================================================
 This example shows how to run the CUDA SASS sampling support in TAU.
 
-1)  Compile your binary with the "-g -lineinfo" flags:
+1)  Compile your CUDA application with the "-g -lineinfo" flags:
 
       nvcc -g -lineinfo matmult.cu -o matmult.o
       nvcc -o matmult matmult.o
@@ -16,11 +16,10 @@ This example shows how to run the CUDA SASS sampling support in TAU.
     post-processed with a script:
 
     sass_func_i.csv
-    sass_imix_stats_i.txt
     sass_instr_i.csv
     sass_source_i.csv  
 
-Information about each of the files:
+Attributes associated with each file:
 
     sass_func_i.csv
     - timestamp - ns
@@ -31,9 +30,6 @@ Information about each of the files:
     - moduleId - (not used) 
     - name - kernel name
     - demangled - kernel name (demangled)
-
-    sass_imix_stats_i.txt
-    - reports instruction mix statistics for static and dynamic collection methods  
 
     sass_instr_i.csv
     - timestamp - ns

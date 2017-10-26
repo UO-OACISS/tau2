@@ -1,21 +1,21 @@
 /****************************************************************************
-**                      TAU Portable Profiling Package                     **
-**                      http://www.cs.uoregon.edu/research/tau             **
-*****************************************************************************
-**    Copyright 2009                                                       **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-**    Forschungszentrum Juelich                                            **
-****************************************************************************/
+ **                      TAU Portable Profiling Package                     **
+ **                      http://www.cs.uoregon.edu/research/tau             **
+ *****************************************************************************
+ **    Copyright 2009                                                       **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ **    Forschungszentrum Juelich                                            **
+ ****************************************************************************/
 /****************************************************************************
-**      File            : TauMetrics.cpp                                   **
-**      Description     : TAU Profiling Package                            **
-**      Contact         : tau-bugs@cs.uoregon.edu                          **
-**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
-**                                                                         **
-**      Description     : Handles Metrics                                  **
-**                                                                         **
-****************************************************************************/
+ **      File            : TauMetrics.cpp                                   **
+ **      Description     : TAU Profiling Package                            **
+ **      Contact         : tau-bugs@cs.uoregon.edu                          **
+ **      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
+ **                                                                         **
+ **      Description     : Handles Metrics                                  **
+ **                                                                         **
+ ****************************************************************************/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,18 +41,20 @@ using namespace tau;
 
 // This would be more useful in a utility header somewhere, but the way people slap 'extern "C"'
 // on everything means we'll probably wind up with an C-linked template at some point...
-template < typename T >
+template<typename T>
 struct ScopedArray {
-    ScopedArray(size_t count) :
-        size(count*sizeof(T)), ptr(new T[count]) {}
-    ~ScopedArray() {
-        if(ptr) delete[] ptr;
-    }
-    operator T*() const {
-        return ptr;
-    }
-    size_t size;
-    T * const ptr;
+	ScopedArray(size_t count) :
+			size(count * sizeof(T)), ptr(new T[count]) {
+	}
+	~ScopedArray() {
+		if (ptr)
+			delete[] ptr;
+	}
+	operator T*() const {
+		return ptr;
+	}
+	size_t size;
+	T * const ptr;
 };
 
 void metric_read_nullClock(int tid, int idx, double values[]);
@@ -71,19 +73,18 @@ void metric_read_messagesize(int tid, int idx, double values[]);
 void metric_read_papivirtual(int tid, int idx, double values[]);
 void metric_read_papiwallclock(int tid, int idx, double values[]);
 void metric_read_papi(int tid, int idx, double values[]);
+void metric_read_likwid(int tid, int idx, double values[]);
 void metric_read_ktau(int tid, int idx, double values[]);
 void metric_read_cudatime(int tid, int idx, double values[]);
 void metric_read_cupti(int tid, int idx, double values[]);
 void metric_read_memory(int tid, int idx, double values[]);
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-
 int TauMetrics_init();
-int Tau_init_check_initialized(void); 
+int Tau_init_check_initialized(void);
 
 static void metricv_add(const char *name);
 static void read_env_vars();
@@ -105,7 +106,7 @@ static TauMetricCuptiFlag cumetric[TAU_MAX_METRICS];
 static int eventsv[TAU_MAX_METRICS];
 
 /* nfunctions can be different from nmetrics because
-   a single call to PAPI can provide several metrics */
+ a single call to PAPI can provide several metrics */
 static int nfunctions = 0;
 
 /* traceMetric in the index used for the trace metric (might not be zero) */
@@ -115,194 +116,195 @@ static int traceMetric = 0;
 static function functionArray[TAU_MAX_METRICS];
 
 /* gtod based initial timestamp, used for snapshots and other stuff */
-static x_uint64 initialTimeStamp;
+static x_uint64 initialTimeStamp = 0L;
+/* gtod based final timestamp, so all threads agree when we exited */
+static x_uint64 finalTimeStamp = 0L;
 
 /* flags for atomic metrics */
-char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = {NULL};
+char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = { NULL };
 
-static int cuda_device_count()
-{
+static int cuda_device_count() {
 #ifdef CUPTI
-    int deviceCount;
-    CUresult result = cuDeviceGetCount(&deviceCount);
-    if (result == CUDA_ERROR_NOT_INITIALIZED) {
-        cuInit(0);
-        result = cuDeviceGetCount(&deviceCount);
-    }
-    if (result != CUDA_SUCCESS) {
-        char const * err_str;
-        cuGetErrorString(result, &err_str);
-        fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
-        exit(result);
-    }
-    return deviceCount;
+	int deviceCount;
+	CUresult result = cuDeviceGetCount(&deviceCount);
+	if (result == CUDA_ERROR_NOT_INITIALIZED) {
+		cuInit(0);
+		result = cuDeviceGetCount(&deviceCount);
+	}
+	if (result != CUDA_SUCCESS) {
+		char const * err_str;
+		cuGetErrorString(result, &err_str);
+		fprintf(stderr, "cuDeviceGetCount failed: %s\n", err_str);
+		exit(result);
+	}
+	return deviceCount;
 #else
-    return 0;
+	return 0;
 #endif
 }
 
-static void check_max_metrics()
-{
-    if (nmetrics >= TAU_MAX_METRICS) {
-        fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), "
-                "please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n",
-                TAU_MAX_METRICS);
-        exit(EXIT_FAILURE);
-    }
+static void check_max_metrics() {
+	if (nmetrics >= TAU_MAX_METRICS) {
+		fprintf(stderr,
+				"Number of counters exceeds TAU_MAX_METRICS (%d), "
+						"please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n",
+				TAU_MAX_METRICS);
+		exit (EXIT_FAILURE);
+	}
 }
 
 /*********************************************************************
  * Add a metric to the metrics vector
  ********************************************************************/
-static void metricv_add(const char *name)
-{
-    int cupti_metric = 0;
+static void metricv_add(const char *name) {
+	int cupti_metric = 0;
 
-    char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
+	char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
 
-    // Don't add metrics twice
-    for (int i=0; i<nmetrics; ++i) {
-        if (strcasecmp(metricv[i], name) == 0) {
-            return;
-        }
-    }
+	// Don't add metrics twice
+	for (int i = 0; i < nmetrics; ++i) {
+		if (strcasecmp(metricv[i], name) == 0) {
+			return;
+		}
+	}
 
-    check_max_metrics();
+	check_max_metrics();
 
 #ifdef CUPTI
-    // Get events required to compute CUPTI metric
-    for(int dev=0; dev<cuda_device_count(); ++dev) {
-        CUptiResult result;
-        CUdevice device;
-        cudaDeviceProp deviceProps;
-        if (cuDeviceGet(&device, dev) != CUDA_SUCCESS) {
-            fprintf(stderr, "Could not get device %d.\n", dev);
-            continue;
-        }
+	// Get events required to compute CUPTI metric
+	for(int dev=0; dev<cuda_device_count(); ++dev) {
+		CUptiResult result;
+		CUdevice device;
+		cudaDeviceProp deviceProps;
+		if (cuDeviceGet(&device, dev) != CUDA_SUCCESS) {
+			fprintf(stderr, "Could not get device %d.\n", dev);
+			continue;
+		}
 
-        // Check if metric is a CUPTI metric we can calculate on this device
-        CUpti_MetricID metricID;
-        result = cuptiMetricGetIdFromName(device, name, &metricID);
-        cupti_metric = (result == CUPTI_SUCCESS);
-        if (!cupti_metric) continue;
+		// Check if metric is a CUPTI metric we can calculate on this device
+		CUpti_MetricID metricID;
+		result = cuptiMetricGetIdFromName(device, name, &metricID);
+		cupti_metric = (result == CUPTI_SUCCESS);
+		if (!cupti_metric) continue;
 
-        // Get the device name to be used in the event name below
-        cudaGetDeviceProperties(&deviceProps, dev);
-        std::string device_name = deviceProps.name;
-        //std::replace(device_name.begin(), device_name.end(), ' ', '_');
-        // PGI compiler has problems with -c++11
-        Tau_util_replaceStringInPlace(device_name, " ", "_"); 
-        if (tau_cuda_device_name && strcmp(tau_cuda_device_name, device_name.c_str())) {
-            continue;
-        }
+		// Get the device name to be used in the event name below
+		cudaGetDeviceProperties(&deviceProps, dev);
+		std::string device_name = deviceProps.name;
+		//std::replace(device_name.begin(), device_name.end(), ' ', '_');
+		// PGI compiler has problems with -c++11
+		Tau_util_replaceStringInPlace(device_name, " ", "_");
+		if (tau_cuda_device_name && strcmp(tau_cuda_device_name, device_name.c_str())) {
+			continue;
+		}
 
-        // Get the list of events required to calculate this metric on this device
-        uint32_t numMetricEvents;
-        result = cuptiMetricGetNumEvents(metricID, &numMetricEvents);
-        if (result != CUPTI_SUCCESS) {
-            fprintf(stderr, "cuptiMetricGetNumEvents failed on device %d\n", dev);
-            continue;
-        }
-        ScopedArray<CUpti_EventID> metricEvents(numMetricEvents);
-        result = cuptiMetricEnumEvents(metricID, &metricEvents.size, metricEvents);
-        if (result != CUPTI_SUCCESS) {
-            fprintf(stderr, "cuptiMetricEnumEvents failed on device %d\n", dev);
-            continue;
-        }
+		// Get the list of events required to calculate this metric on this device
+		uint32_t numMetricEvents;
+		result = cuptiMetricGetNumEvents(metricID, &numMetricEvents);
+		if (result != CUPTI_SUCCESS) {
+			fprintf(stderr, "cuptiMetricGetNumEvents failed on device %d\n", dev);
+			continue;
+		}
+		ScopedArray<CUpti_EventID> metricEvents(numMetricEvents);
+		result = cuptiMetricEnumEvents(metricID, &metricEvents.size, metricEvents);
+		if (result != CUPTI_SUCCESS) {
+			fprintf(stderr, "cuptiMetricEnumEvents failed on device %d\n", dev);
+			continue;
+		}
 
-        // Get the list of domains on device so we can search for the required events
-        uint32_t numDomains;
-        if(cuptiDeviceGetNumEventDomains(device, &numDomains) != CUPTI_SUCCESS) {
-            fprintf(stderr, "cuptiDeviceGetNumEventDomains failed on device %d\n", dev);
-            continue;
-        }
-        if (!numDomains) {
-            fprintf(stderr, "No domain is exposed by device %d\n", device);
-            continue;
-        }
-        ScopedArray<CUpti_EventDomainID> domains(numDomains);
-        result = cuptiDeviceEnumEventDomains(device, &domains.size, domains);
-        if (result != CUPTI_SUCCESS) {
-            fprintf(stderr, "cuptiDeviceEnumEventDomains failed on device %d\n", dev);
-            continue;
-        }
+		// Get the list of domains on device so we can search for the required events
+		uint32_t numDomains;
+		if(cuptiDeviceGetNumEventDomains(device, &numDomains) != CUPTI_SUCCESS) {
+			fprintf(stderr, "cuptiDeviceGetNumEventDomains failed on device %d\n", dev);
+			continue;
+		}
+		if (!numDomains) {
+			fprintf(stderr, "No domain is exposed by device %d\n", device);
+			continue;
+		}
+		ScopedArray<CUpti_EventDomainID> domains(numDomains);
+		result = cuptiDeviceEnumEventDomains(device, &domains.size, domains);
+		if (result != CUPTI_SUCCESS) {
+			fprintf(stderr, "cuptiDeviceEnumEventDomains failed on device %d\n", dev);
+			continue;
+		}
 
-        // Search domains for required events and add events to TAU_METRICS
-        for (int dom=0; dom<numDomains; ++dom) {
-            CUpti_EventDomainID domain = domains[dom];
-            uint32_t numDomainEvents;
-            result = cuptiEventDomainGetNumEvents(domain, &numDomainEvents);
-            if (result != CUPTI_SUCCESS) {
-                fprintf(stderr, "cuptiEventDomainGetNumEvents failed for domain %d on device %d\n", dom, dev);
-                continue;
-            }
-            ScopedArray<CUpti_EventID> domainEvents(numDomainEvents);
-            result = cuptiEventDomainEnumEvents(domain, &domainEvents.size, domainEvents);
-            if (result != CUPTI_SUCCESS) {
-                fprintf(stderr, "cuptiEventDomainEnumEvents failed for domain %d on device %d\n", dom, dev);
-                continue;
-            }
+		// Search domains for required events and add events to TAU_METRICS
+		for (int dom=0; dom<numDomains; ++dom) {
+			CUpti_EventDomainID domain = domains[dom];
+			uint32_t numDomainEvents;
+			result = cuptiEventDomainGetNumEvents(domain, &numDomainEvents);
+			if (result != CUPTI_SUCCESS) {
+				fprintf(stderr, "cuptiEventDomainGetNumEvents failed for domain %d on device %d\n", dom, dev);
+				continue;
+			}
+			ScopedArray<CUpti_EventID> domainEvents(numDomainEvents);
+			result = cuptiEventDomainEnumEvents(domain, &domainEvents.size, domainEvents);
+			if (result != CUPTI_SUCCESS) {
+				fprintf(stderr, "cuptiEventDomainEnumEvents failed for domain %d on device %d\n", dom, dev);
+				continue;
+			}
 
-            // Compare metric event list to list of events in this domain
-            for (int i=0; i<numMetricEvents; ++i) {
-                CUpti_EventID event = metricEvents[i];
-                for (int j=0; j<numDomainEvents; ++j) {
-                    if (event == domainEvents[j]) {
-                        // Found an event that we'll need to measure, build the event name
-                        char buff[TAU_CUPTI_MAX_NAME];
-                        size_t buff_size = sizeof(buff);
-                        result = cuptiEventDomainGetAttribute(domain, CUPTI_EVENT_DOMAIN_ATTR_NAME, &buff_size, buff);
-                        if (result != CUPTI_SUCCESS) {
-                            fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
-                            continue;
-                        }
-                        if (buff_size == sizeof(buff)) {
-                            fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for domain name!\n", TAU_CUPTI_MAX_NAME);
-                            exit(EXIT_FAILURE);
-                        }
-                        std::string domain_name = buff;
-                        buff_size = sizeof(buff); // reset buff_size before reusing buff
-                        result = cuptiEventGetAttribute(event, CUPTI_EVENT_ATTR_NAME, &buff_size, buff);
-                        if (result != CUPTI_SUCCESS) {
-                            fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
-                            continue;
-                        }
-                        if (buff_size == sizeof(buff)) {
-                            fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for event name!\n", TAU_CUPTI_MAX_NAME);
-                            exit(EXIT_FAILURE);
-                        }
-                        std::string event_name = "CUDA." + device_name + '.' + domain_name + '.' + std::string(buff);
-                        TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
+			// Compare metric event list to list of events in this domain
+			for (int i=0; i<numMetricEvents; ++i) {
+				CUpti_EventID event = metricEvents[i];
+				for (int j=0; j<numDomainEvents; ++j) {
+					if (event == domainEvents[j]) {
+						// Found an event that we'll need to measure, build the event name
+						char buff[TAU_CUPTI_MAX_NAME];
+						size_t buff_size = sizeof(buff);
+						result = cuptiEventDomainGetAttribute(domain, CUPTI_EVENT_DOMAIN_ATTR_NAME, &buff_size, buff);
+						if (result != CUPTI_SUCCESS) {
+							fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
+							continue;
+						}
+						if (buff_size == sizeof(buff)) {
+							fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for domain name!\n", TAU_CUPTI_MAX_NAME);
+							exit(EXIT_FAILURE);
+						}
+						std::string domain_name = buff;
+						buff_size = sizeof(buff); // reset buff_size before reusing buff
+						result = cuptiEventGetAttribute(event, CUPTI_EVENT_ATTR_NAME, &buff_size, buff);
+						if (result != CUPTI_SUCCESS) {
+							fprintf(stderr, "cuptiEventDomainGetAttribute failed for domain %d on device %d\n", dom, dev);
+							continue;
+						}
+						if (buff_size == sizeof(buff)) {
+							fprintf(stderr, "TAU_CUPTI_MAX_NAME=%d is too small for event name!\n", TAU_CUPTI_MAX_NAME);
+							exit(EXIT_FAILURE);
+						}
+						std::string event_name = "CUDA." + device_name + '.' + domain_name + '.' + std::string(buff);
+						TAU_VERBOSE("%s: %s\n", name, event_name.c_str());
 
-                        // Add event to metricv if it's not already on the list.
-                        bool found = false;
-                        for (int k=0; k<nmetrics; ++k) {
-                            if (strcasecmp(metricv[k], event_name.c_str()) == 0) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) {
-                            check_max_metrics();
-                            metricv[nmetrics] = strdup(event_name.c_str());
-                            eventsv[nmetrics] = event;  // This looks weird... is this right?
-                            cumetric[nmetrics] = TAU_METRIC_CUPTI_EVENT;
-                            nmetrics++;
-                        }
-                        // Go to the next event needed for this metric
-                        break;
-                    } // if (event)
-                } // for (j)
-            } // for (i)
-        } // for (dom)
-    } // for (dev)
+						// Add event to metricv if it's not already on the list.
+						bool found = false;
+						for (int k=0; k<nmetrics; ++k) {
+							if (strcasecmp(metricv[k], event_name.c_str()) == 0) {
+								found = true;
+								break;
+							}
+						}
+						if (!found) {
+							check_max_metrics();
+							metricv[nmetrics] = strdup(event_name.c_str());
+							eventsv[nmetrics] = event; // This looks weird... is this right?
+							cumetric[nmetrics] = TAU_METRIC_CUPTI_EVENT;
+							nmetrics++;
+						}
+						// Go to the next event needed for this metric
+						break;
+					} // if (event)
+				} // for (j)
+			} // for (i)
+		} // for (dom)
+	} // for (dev)
 #endif //CUPTI
 
-    check_max_metrics();
-    metricv[nmetrics] = strdup(name);
-    eventsv[nmetrics] = 0;
-    cumetric[nmetrics] = cupti_metric ? TAU_METRIC_CUPTI_METRIC : TAU_METRIC_NOT_CUPTI;
-    nmetrics++;
+	check_max_metrics();
+	metricv[nmetrics] = strdup(name);
+	eventsv[nmetrics] = 0;
+	cumetric[nmetrics] =
+			cupti_metric ? TAU_METRIC_CUPTI_METRIC : TAU_METRIC_NOT_CUPTI;
+	nmetrics++;
 }
 
 /*********************************************************************
@@ -310,115 +312,115 @@ static void metricv_add(const char *name)
  * Note: traceMetric must already be set
  ********************************************************************/
 static void reorder_metrics(const char *match) {
-  char *newMetricV[TAU_MAX_METRICS];
-  int idx = 0;
-  int newTraceMetric = 0;
+	char *newMetricV[TAU_MAX_METRICS];
+	int idx = 0;
+	int newTraceMetric = 0;
 
-  for (int i = 0; i < nmetrics; i++) {
-    if (strncmp(match, metricv[i], strlen(match)) != 0) {
-      newMetricV[idx++] = metricv[i];
-    }
-  }
+	for (int i = 0; i < nmetrics; i++) {
+		if (strncmp(match, metricv[i], strlen(match)) != 0) {
+			newMetricV[idx++] = metricv[i];
+		}
+	}
 
-  for (int i = 0; i < nmetrics; i++) {
-    if (strncmp(match, metricv[i], strlen(match)) == 0) {
-      newMetricV[idx++] = metricv[i];
-    }
-  }
+	for (int i = 0; i < nmetrics; i++) {
+		if (strncmp(match, metricv[i], strlen(match)) == 0) {
+			newMetricV[idx++] = metricv[i];
+		}
+	}
 
-  for (int i = 0; i < nmetrics; i++) {
-    if (strcasecmp(newMetricV[i], metricv[traceMetric]) == 0) {
-      newTraceMetric = i;
-    }
-  }
+	for (int i = 0; i < nmetrics; i++) {
+		if (strcasecmp(newMetricV[i], metricv[traceMetric]) == 0) {
+			newTraceMetric = i;
+		}
+	}
 
-  for (int i = 0; i < nmetrics; i++) {
-    metricv[i] = newMetricV[i];
-  }
+	for (int i = 0; i < nmetrics; i++) {
+		metricv[i] = newMetricV[i];
+	}
 
-  traceMetric = newTraceMetric;
+	traceMetric = newTraceMetric;
 }
 
 /*********************************************************************
  * Read the configuration entries into the metric vector
  ********************************************************************/
 static void read_env_vars() {
-  const char *token;
-  const char *taumetrics = TauEnv_get_metrics();
-  char *ptr, *ptr2;
-  int len = strlen(taumetrics);
-  int i;
-  bool alt_delimiter_found = false;
+	const char *token;
+	const char *taumetrics = TauEnv_get_metrics();
+	char *ptr, *ptr2;
+	int len = strlen(taumetrics);
+	int i;
+	bool alt_delimiter_found = false;
 
-  if (taumetrics && len == 0) {
-    taumetrics = NULL;
-  }
+	if (taumetrics && len == 0) {
+		taumetrics = NULL;
+	}
 
-  if (taumetrics) {
-    char *metrics = strdup(taumetrics);
-    for(i=0; i < len;i++) {
-      if ((taumetrics[i] == ',') || (taumetrics[i] == '|')) {
-        alt_delimiter_found = true;
-        //printf("ALT delimiter found: taumetrics[%d] = %c\n", i, taumetrics[i]);
-        break;
-      }
-    }
-    for (ptr = metrics; *ptr; ptr++) {
-      if (*ptr == '\\') {
-        /* escaped, skip over */
-        for (ptr2 = ptr; *(ptr2); ptr2++) {
-          *ptr2 = *(ptr2 + 1);
-        }
-        ptr++;
-      } else {
-        if (alt_delimiter_found) {
-          //printf("Alt_delimiter = %d, ptr = %c\n", alt_delimiter_found, *ptr);
-          if ((*ptr == '|') || (*ptr == ',')) {
-	  // printf("Checking for | or , in %s\n", metrics);
-            *ptr = '^';
-          } 
-        } else { 
-           // printf("Alt_delimiter = %d, ptr = %c\n", alt_delimiter_found, *ptr);
-            if (*ptr == ':') {
-	     // printf("Checking for : in %s\n", metrics);
-              *ptr = '^';
-            }
-        }
-      }
-    }
-    //printf("METRICS is %s\n", metrics);
+	if (taumetrics) {
+		char *metrics = strdup(taumetrics);
+		for (i = 0; i < len; i++) {
+			if ((taumetrics[i] == ',') || (taumetrics[i] == '|')) {
+				alt_delimiter_found = true;
+				//printf("ALT delimiter found: taumetrics[%d] = %c\n", i, taumetrics[i]);
+				break;
+			}
+		}
+		for (ptr = metrics; *ptr; ptr++) {
+			if (*ptr == '\\') {
+				/* escaped, skip over */
+				for (ptr2 = ptr; *(ptr2); ptr2++) {
+					*ptr2 = *(ptr2 + 1);
+				}
+				ptr++;
+			} else {
+				if (alt_delimiter_found) {
+					//printf("Alt_delimiter = %d, ptr = %c\n", alt_delimiter_found, *ptr);
+					if ((*ptr == '|') || (*ptr == ',')) {
+						// printf("Checking for | or , in %s\n", metrics);
+						*ptr = '^';
+					}
+				} else {
+					// printf("Alt_delimiter = %d, ptr = %c\n", alt_delimiter_found, *ptr);
+					if (*ptr == ':') {
+						// printf("Checking for : in %s\n", metrics);
+						*ptr = '^';
+					}
+				}
+			}
+		}
+		//printf("METRICS is %s\n", metrics);
 
-    token = strtok(metrics, "^");
-    while (token) {
-      metricv_add(token);
-      token = strtok(NULL, "^");
-    }
-  } else {
-    char counterName[256];
-    for (int i = 1; i < 26; i++) {
-      sprintf(counterName, "COUNTER%d", i);
-      char *metric = getenv(counterName);
-      if (metric && strlen(metric) == 0) {
-        metric = NULL;
-      }
-      if (metric) {
-        metricv_add(metric);
-      }
-    }
+		token = strtok(metrics, "^");
+		while (token) {
+			metricv_add(token);
+			token = strtok(NULL, "^");
+		}
+	} else {
+		char counterName[256];
+		for (int i = 1; i < 26; i++) {
+			sprintf(counterName, "COUNTER%d", i);
+			char *metric = getenv(counterName);
+			if (metric && strlen(metric) == 0) {
+				metric = NULL;
+			}
+			if (metric) {
+				metricv_add(metric);
+			}
+		}
 
-    if (nmetrics == 0) {
+		if (nmetrics == 0) {
 #if defined(BGL_TIMERS)
-      metricv_add("BGL_TIMERS");
+			metricv_add("BGL_TIMERS");
 #elif defined(BGP_TIMERS)
-      metricv_add("BGP_TIMERS");
+			metricv_add("BGP_TIMERS");
 #elif defined(BGQ_TIMERS)
-      metricv_add("BGQ_TIMERS");
+			metricv_add("BGQ_TIMERS");
 #else
-      // NOTE: Probably need more #elif defined() for other platforms...
-      metricv_add("TIME");
+			// NOTE: Probably need more #elif defined() for other platforms...
+			metricv_add("TIME");
 #endif
-    }
-  }
+		}
+	}
 }
 
 /*********************************************************************
@@ -426,21 +428,21 @@ static void read_env_vars() {
  ********************************************************************/
 #ifdef TAUKTAU_SHCTR
 static void TauMetrics_initializeKTAU() {
-  for (int i = 0; i < nmetrics; i++) {
-    int cType = 0;
-    if (strncmp("KTAU", metricv[i], 4) == 0) {
-      if (strstr(metricv[i], "KTAU_INCL_") != NULL) {
-        cType = KTAU_SHCTR_TYPE_INCL;
-      } else if (strstr(metricv[i], "KTAU_NUM_") != NULL) {
-        cType = KTAU_SHCTR_TYPE_NUM;
-      } else {
-        cType = KTAU_SHCTR_TYPE_EXCL;
-      }
-      char *metric = strdup(metricv[i]);
-      metric = metric + 5; /* strip "KTAU_" */
-      KtauCounters::addCounter(metric, cType);
-    }
-  }
+	for (int i = 0; i < nmetrics; i++) {
+		int cType = 0;
+		if (strncmp("KTAU", metricv[i], 4) == 0) {
+			if (strstr(metricv[i], "KTAU_INCL_") != NULL) {
+				cType = KTAU_SHCTR_TYPE_INCL;
+			} else if (strstr(metricv[i], "KTAU_NUM_") != NULL) {
+				cType = KTAU_SHCTR_TYPE_NUM;
+			} else {
+				cType = KTAU_SHCTR_TYPE_EXCL;
+			}
+			char *metric = strdup(metricv[i]);
+			metric = metric + 5; /* strip "KTAU_" */
+			KtauCounters::addCounter(metric, cType);
+		}
+	}
 }
 #endif
 
@@ -448,13 +450,25 @@ static void TauMetrics_initializeKTAU() {
  * Query if a string is a PAPI metric
  ********************************************************************/
 static int is_papi_metric(char *str) {
-  if (strncmp("PAPI", str, 4) == 0) {
-    if (strcasecmp(str, "PAPI_TIME") != 0
-        && strcasecmp(str, "PAPI_VIRTUAL_TIME") != 0) {
-      return 1;
-    }
-  }
-  return 0;
+	if (strncmp("PAPI", str, 4) == 0) {
+		if (strcasecmp(str, "PAPI_TIME") != 0
+				&& strcasecmp(str, "PAPI_VIRTUAL_TIME") != 0) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
+/*********************************************************************
+ * Query if a string is a LIKWID metric
+ ********************************************************************/
+static int is_likwid_metric(char *str) {
+	if (strncmp("LIKWID", str, 6) == 0) {
+
+		return 1;
+
+	}
+	return 0;
 }
 
 #ifdef CUPTI
@@ -463,10 +477,10 @@ static int is_papi_metric(char *str) {
  ********************************************************************/
 static int is_cupti_event(char const * str)
 {
-    if (strncmp("CUDA", str, 4) == 0 && Tau_CuptiLayer_is_cupti_counter(str)) {
-        return 1;
-    }
-    return 0;
+	if (strncmp("CUDA", str, 4) == 0 && Tau_CuptiLayer_is_cupti_counter(str)) {
+		return 1;
+	}
+	return 0;
 }
 
 /*********************************************************************
@@ -474,17 +488,17 @@ static int is_cupti_event(char const * str)
  ********************************************************************/
 static int is_cupti_metric(char const * const str)
 {
-    CUpti_MetricID metricid;
-    CUdevice device;
+	CUpti_MetricID metricid;
+	CUdevice device;
 
-    for (int dev=0; dev<cuda_device_count(); ++dev) {
-        if (cuDeviceGet(&device, dev) != CUDA_SUCCESS) {
-            fprintf(stderr, "Could not get device %d.\n", dev);
-            return 0;
-        }
-        return (cuptiMetricGetIdFromName(device, str, &metricid) == CUPTI_SUCCESS);
-    }
-    return 0;
+	for (int dev=0; dev<cuda_device_count(); ++dev) {
+		if (cuDeviceGet(&device, dev) != CUDA_SUCCESS) {
+			fprintf(stderr, "Could not get device %d.\n", dev);
+			return 0;
+		}
+		return (cuptiMetricGetIdFromName(device, str, &metricid) == CUPTI_SUCCESS);
+	}
+	return 0;
 }
 
 #endif //CUPTI
@@ -492,360 +506,433 @@ static int is_cupti_metric(char const * const str)
 /*********************************************************************
  * Initialize the function array
  ********************************************************************/
-static void initialize_functionArray() 
-{
-  int pos = 0;
-  int found = 0;
-  int ktau = 0;
+static void initialize_functionArray() {
+	int pos = 0;
+	int found = 0;
+	int ktau = 0;
 #ifdef TAUKTAU_SHCTR
-  ktau = 1;
+	ktau = 1;
 #endif
 
-  int papi_available = 0;
+	int papi_available = 0;
 #ifdef TAU_PAPI
-  int usingPAPI = 0;
-  papi_available = 1;
+	int usingPAPI = 0;
+	papi_available = 1;
 #endif
 
-  for (int i = 0; i < nmetrics; i++) {
-    found = 1;
-    if (strcasecmp(metricv[i], "LOGICAL_CLOCK") == 0) {
-      functionArray[pos++] = metric_read_logicalClock;
-    } else if (strcasecmp(metricv[i], "USER_CLOCK") == 0) {
-      functionArray[pos++] = metric_read_userClock;
-    } else if (strcasecmp(metricv[i], "GET_TIME_OF_DAY") == 0) {
-      functionArray[pos++] = metric_read_gettimeofday;
-    } else if (strcasecmp(metricv[i], "CLOCK_GET_TIME") == 0) {
-      functionArray[pos++] = metric_read_clock_gettime;
-    } else if (strcasecmp(metricv[i], "TIME") == 0) {
-      functionArray[pos++] = metric_read_gettimeofday;
-    } else if (strcasecmp(metricv[i], "CPU_TIME") == 0) {
-      functionArray[pos++] = metric_read_cputime;
-    } else if (strcasecmp(metricv[i], "ENERGY") == 0) {
-      functionArray[pos++] = metric_read_cpuenergy;
-    } else if (strcasecmp(metricv[i], "ACCEL_ENERGY") == 0) {
-      functionArray[pos++] = metric_read_accelenergy;
-#ifdef TAU_LINUX_TIMERS
-    } else if (strcasecmp(metricv[i], "LINUX_TIMERS") == 0) {
-      functionArray[pos++] = metric_read_linuxtimers;
+	int likwid_available = 0;
+#ifdef TAU_LIKWID
+	int usingLIKWID = 0;
+	likwid_available = 1;
 #endif
-    } else if (strcasecmp(metricv[i], "BGL_TIMERS") == 0) {
-      functionArray[pos++] = metric_read_bgtimers;
-    } else if (strcasecmp(metricv[i], "BGP_TIMERS") == 0) {
-      functionArray[pos++] = metric_read_bgtimers;
-    } else if (strcasecmp(metricv[i], "BGQ_TIMERS") == 0) {
-      functionArray[pos++] = metric_read_bgtimers;
-    } else if (strcasecmp(metricv[i], "CRAY_TIMERS") == 0) {
-      functionArray[pos++] = metric_read_craytimers;
-    } else if (strcasecmp(metricv[i], "TAU_MPI_MESSAGE_SIZE") == 0) {
-      functionArray[pos++] = metric_read_messagesize;
+
+	for (int i = 0; i < nmetrics; i++) {
+		found = 1;
+		if (strcasecmp(metricv[i], "LOGICAL_CLOCK") == 0) {
+			functionArray[pos++] = metric_read_logicalClock;
+		} else if (strcasecmp(metricv[i], "USER_CLOCK") == 0) {
+			functionArray[pos++] = metric_read_userClock;
+		} else if (strcasecmp(metricv[i], "GET_TIME_OF_DAY") == 0) {
+			functionArray[pos++] = metric_read_gettimeofday;
+		} else if (strcasecmp(metricv[i], "CLOCK_GET_TIME") == 0) {
+			functionArray[pos++] = metric_read_clock_gettime;
+		} else if (strcasecmp(metricv[i], "TIME") == 0) {
+			functionArray[pos++] = metric_read_gettimeofday;
+		} else if (strcasecmp(metricv[i], "CPU_TIME") == 0) {
+			functionArray[pos++] = metric_read_cputime;
+		} else if (strcasecmp(metricv[i], "ENERGY") == 0) {
+			functionArray[pos++] = metric_read_cpuenergy;
+		} else if (strcasecmp(metricv[i], "ACCEL_ENERGY") == 0) {
+			functionArray[pos++] = metric_read_accelenergy;
+#ifdef TAU_LINUX_TIMERS
+		} else if (strcasecmp(metricv[i], "LINUX_TIMERS") == 0) {
+			functionArray[pos++] = metric_read_linuxtimers;
+#endif
+		} else if (strcasecmp(metricv[i], "BGL_TIMERS") == 0) {
+			functionArray[pos++] = metric_read_bgtimers;
+		} else if (strcasecmp(metricv[i], "BGP_TIMERS") == 0) {
+			functionArray[pos++] = metric_read_bgtimers;
+		} else if (strcasecmp(metricv[i], "BGQ_TIMERS") == 0) {
+			functionArray[pos++] = metric_read_bgtimers;
+		} else if (strcasecmp(metricv[i], "CRAY_TIMERS") == 0) {
+			functionArray[pos++] = metric_read_craytimers;
+		} else if (strcasecmp(metricv[i], "TAU_MPI_MESSAGE_SIZE") == 0) {
+			functionArray[pos++] = metric_read_messagesize;
 #ifdef CUPTI
 		} else if (is_cupti_event(metricv[i])) {
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			//functionArray[pos++] = metric_read_cupti;
 			Tau_CuptiLayer_register_string(metricv[i], pos);
-      TauMetrics_atomicMetrics[pos] = metricv[i];
-      functionArray[pos++] = metric_read_cupti;
-      } else if(is_cupti_metric(metricv[i])) {
-        /* Cupti metrics handled separately */
+			TauMetrics_atomicMetrics[pos] = metricv[i];
+			functionArray[pos++] = metric_read_cupti;
+		} else if(is_cupti_metric(metricv[i])) {
+			/* Cupti metrics handled separately */
 #endif //CUPTI
 #ifdef TAU_PAPI
-    } else if (strcasecmp(metricv[i], "P_WALL_CLOCK_TIME") == 0) {
-      usingPAPI = 1;
-      functionArray[pos++] = metric_read_papiwallclock;
-    } else if (strcasecmp(metricv[i], "PAPI_TIME") == 0) {
-      usingPAPI = 1;
-      functionArray[pos++] = metric_read_papiwallclock;
-    } else if (strcasecmp(metricv[i], "P_VIRTUAL_TIME") == 0) {
-      usingPAPI = 1;
-      functionArray[pos++] = metric_read_papivirtual;
-    } else if (strcasecmp(metricv[i], "PAPI_VIRTUAL_TIME") == 0) {
-      usingPAPI = 1;
-      functionArray[pos++] = metric_read_papivirtual;
+		} else if (strcasecmp(metricv[i], "P_WALL_CLOCK_TIME") == 0) {
+			usingPAPI = 1;
+			functionArray[pos++] = metric_read_papiwallclock;
+		} else if (strcasecmp(metricv[i], "PAPI_TIME") == 0) {
+			usingPAPI = 1;
+			functionArray[pos++] = metric_read_papiwallclock;
+		} else if (strcasecmp(metricv[i], "P_VIRTUAL_TIME") == 0) {
+			usingPAPI = 1;
+			functionArray[pos++] = metric_read_papivirtual;
+		} else if (strcasecmp(metricv[i], "PAPI_VIRTUAL_TIME") == 0) {
+			usingPAPI = 1;
+			functionArray[pos++] = metric_read_papivirtual;
 #endif /* TAU_PAPI */
-    } else if (strcasecmp(metricv[i], "TAUGPU_TIME") == 0) {
-      functionArray[pos++] = metric_read_cudatime;
-    } else if (strcasecmp(metricv[i], "MEMORY_DELTA") == 0) {
-      functionArray[pos++] = metric_read_memory;
-    } else {
-      if (papi_available && is_papi_metric(metricv[i])) {
-        /* PAPI handled separately */
-      } else if (ktau && strncmp("KTAU", metricv[i], 4) == 0) {
-        /* KTAU handled separately */
-      } else {
-        fprintf(stderr, "TAU: Error: Unknown metric: %s\n", metricv[i]);
+		} else if (strcasecmp(metricv[i], "TAUGPU_TIME") == 0) {
+			functionArray[pos++] = metric_read_cudatime;
+		} else if (strcasecmp(metricv[i], "MEMORY_DELTA") == 0) {
+			functionArray[pos++] = metric_read_memory;
+		} else {
+			if (papi_available && is_papi_metric(metricv[i])) {
+				/* PAPI handled separately */
+			} else if (likwid_available && is_likwid_metric(metricv[i])) {
+				/* LIKWID handled separately */
+			} else if (ktau && strncmp("KTAU", metricv[i], 4) == 0) {
+				/* KTAU handled separately */
+			} else {
+				fprintf(stderr, "TAU: Error: Unknown metric: %s\n", metricv[i]);
 
-        /* Delete the metric */
-        for (int j = i; j < nmetrics - 1; j++) {
-          metricv[j] = metricv[j + 1];
-        }
-        nmetrics--;
-        i--;
-        found = 0;
+				/* Delete the metric */
+				for (int j = i; j < nmetrics - 1; j++) {
+					metricv[j] = metricv[j + 1];
+				}
+				nmetrics--;
+				i--;
+				found = 0;
 
-        /* old: null clock
-           functionArray[pos++] = metric_read_nullClock;
-         */
-      }
-    }
-    if (found) {
-      TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
-    }
-  }
-
-  /* check if we are using PAPI */
-  for (int i = 0; i < nmetrics; i++) {
-    if (is_papi_metric(metricv[i])) {
-      functionArray[pos++] = metric_read_papi;
-#ifdef TAU_PAPI
-      usingPAPI = 1;
-#endif /* TAU_PAPI */
-      break;
-    }
+				/* old: null clock
+				 functionArray[pos++] = metric_read_nullClock;
+				 */
+			}
+		}
+		if (found) {
+			TAU_VERBOSE("TAU: Using metric: %s\n", metricv[i]);
+		}
 	}
 
+	/* check if we are using PAPI */
+	for (int i = 0; i < nmetrics; i++) {
+		if (is_papi_metric(metricv[i])) {
+			functionArray[pos++] = metric_read_papi;
+#ifdef TAU_PAPI
+			usingPAPI = 1;
+#endif /* TAU_PAPI */
+			break;
+		}
+	}
+		/* check if we are using LIKWID */
+		for (int i = 0; i < nmetrics; i++) {
+			if (is_likwid_metric(metricv[i])) {
+				functionArray[pos++] = metric_read_likwid;
+				//printf("Added Likwid to functionArray\n");
+#ifdef TAU_LIKWID
+				usingLIKWID = 1;
+#endif /* TAU_LIKWID */
+				break;
+			}
+		}
+
 #ifdef TAUKTAU_SHCTR
-  for (int i = 0; i < nmetrics; i++) {
-    if (strncmp("KTAU", metricv[i], 4) == 0) {
-      functionArray[pos++] = metric_read_ktau;
-      break;
-    }
-  }
-  TauMetrics_initializeKTAU();
+		for (int i = 0; i < nmetrics; i++) {
+			if (strncmp("KTAU", metricv[i], 4) == 0) {
+				functionArray[pos++] = metric_read_ktau;
+				break;
+			}
+		}
+		TauMetrics_initializeKTAU();
 #endif
 
 #ifdef TAU_PAPI
-  if (usingPAPI) {
-    PapiLayer::initializePapiLayer();
-  }
+		if (usingPAPI) {
+			PapiLayer::initializePapiLayer();
+		}
 #endif
-	
 
-  for (int i = 0; i < nmetrics; i++) {
-    if (is_papi_metric(metricv[i])) {
-      if (strstr(metricv[i], "PAPI") != NULL) {
-        char *metricString = strdup(metricv[i]);
+#ifdef TAU_LIKWID
+		if (usingLIKWID) {
+			LikwidLayer::initializeLikwidLayer();
+		}
+#endif
+		//printf("adding %d metrics\n", nmetrics);
+		bool firstLikwidString=true;
+		int numLikwidEvents=0;
+		std::string likwidEventString;
+		for (int i = 0; i < nmetrics; i++) {
 
-        if (strstr(metricString, "NATIVE") != NULL) {
-          /* Fix the name for a native event */
-          int idx = 0;
-          while (metricString[12 + idx] != '\0') {
-            metricString[idx] = metricString[12 + idx];
-            idx++;
-          }
-          metricString[idx] = '\0';
-        }
+			if (is_likwid_metric(metricv[i])) {
+				//printf("IS LIKWID METRIC: %s\n", metricv[i]);
+				if (strstr(metricv[i], "LIKWID") != NULL) {
+					char *metricString = strdup(metricv[i]);
+					int idx = 0;
+					while (metricString[7 + idx] != '\0') {
+						metricString[idx] = metricString[7 + idx];
+						idx++;
+					}
+					metricString[idx] = '\0';
+#ifdef TAU_LIKWID
+					if (usingLIKWID)
+					{
+						//printf("adding metric string: %s\n",metricString);
+						if(firstLikwidString){
+						    likwidEventString = std::string(metricString);
+						    firstLikwidString=false;
+						  }
+						else{
+							likwidEventString=likwidEventString+","+std::string(metricString);
+						}
+						numLikwidEvents++;
+					}
+#endif
+					free(metricString);
+				}
+			} else if (is_papi_metric(metricv[i])) {
+				if (strstr(metricv[i], "PAPI") != NULL) {
+					char *metricString = strdup(metricv[i]);
+
+					if (strstr(metricString, "NATIVE") != NULL) {
+						/* Fix the name for a native event */
+						int idx = 0;
+						while (metricString[12 + idx] != '\0') {
+							metricString[idx] = metricString[12 + idx];
+							idx++;
+						}
+						metricString[idx] = '\0';
+					}
 
 #ifdef TAU_PAPI
-        int counterID = PapiLayer::addCounter(metricString);
-        if (counterID == -1) {
-          /* Delete the metric */
-          for (int j = i; j < nmetrics - 1; j++) {
-            metricv[j] = metricv[j + 1];
-          }
-          nmetrics--;
-        }
+					int counterID = PapiLayer::addCounter(metricString);
+					if (counterID == -1) {
+						/* Delete the metric */
+						for (int j = i; j < nmetrics - 1; j++) {
+							metricv[j] = metricv[j + 1];
+						}
+						nmetrics--;
+					}
 #endif
-        free(metricString);
-      }
-    }
-  }
+					free(metricString);
+				}
+			}
+		}
 
-  nfunctions = pos;
+#ifdef TAU_LIKWID
+					if (usingLIKWID)
+					{
+						LikwidLayer::addEvents(likwidEventString.c_str()); //"L2_LINES_IN_ALL:PMC0,L2_TRANS_L2_WB:PMC1");    LIKWID_L1D_REPLACEMENT:PMC0
+					}
+#endif
+
+	nfunctions = pos;
 }
 
 /*********************************************************************
  * Returns metric name for an index
  ********************************************************************/
-extern "C" const char *TauMetrics_getMetricName(int metric)
-{
-    char const * metric_name = metricv[metric];
+extern "C" const char *TauMetrics_getMetricName(int metric) {
+	char const * metric_name = metricv[metric];
 #ifdef CUPTI
-    int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
-    if (Tau_CuptiLayer_is_cupti_counter(metric_name) && event_id < Tau_CuptiLayer_get_num_events()) {
-        return Tau_CuptiLayer_get_event_name(event_id);
-    }
+	int event_id = Tau_CuptiLayer_get_cupti_event_id(metric);
+	if (Tau_CuptiLayer_is_cupti_counter(metric_name) && event_id < Tau_CuptiLayer_get_num_events()) {
+		return Tau_CuptiLayer_get_event_name(event_id);
+	}
 #endif
-    return metric_name;
+	return metric_name;
 }
 
 /*********************************************************************
  * Query if a metric is used
  ********************************************************************/
 int TauMetrics_getMetricUsed(int metric) {
-  if (metric < nmetrics) {
-    return 1;
-  } else {
-    return 0;
-  }
+	if (metric < nmetrics) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 /*********************************************************************
  * Query if a metric is Cupti metric or event
  ********************************************************************/
 int TauMetrics_getIsCuptiMetric(int metric) {
-    return cumetric[metric];
+	return cumetric[metric];
 }
 
 /*********************************************************************
  * Query if a metric is atomic
  ********************************************************************/
 const char* TauMetrics_getMetricAtomic(int metric) {
-  return TauMetrics_atomicMetrics[metric];
+	return TauMetrics_atomicMetrics[metric];
 }
 
 /*********************************************************************
  * Get id of time metric
  ********************************************************************/
-int TauMetrics_getTimeMetric()
-{
+int TauMetrics_getTimeMetric() {
 #ifdef CUPTI
-    char const * const time = "TAUGPU_TIME";
+	char const * const time = "TAUGPU_TIME";
 #else
-    char const * const time = "TIME";
+	char const * const time = "TIME";
 #endif
-    for (int i = 0; i < nmetrics; i++) {
-        if (strcasecmp(metricv[i], time) == 0)
-            return i;
-    }
-    return -1;
+	for (int i = 0; i < nmetrics; i++) {
+		if (strcasecmp(metricv[i], time) == 0)
+			return i;
+	}
+	return -1;
 }
 
 /*********************************************************************
  * Get event id
  ********************************************************************/
-int TauMetrics_getEventId(int metric)
-{
-    return eventsv[metric];
+int TauMetrics_getEventId(int metric) {
+	return eventsv[metric];
 }
 
 /*********************************************************************
  * Get event index from event id
  ********************************************************************/
-int TauMetrics_getEventIndex(int eventid)
-{
-    for (int i = 0; i < nmetrics; i++) {
-        if (eventid == eventsv[i])
-            return i;
-    }
-    return -1;
+int TauMetrics_getEventIndex(int eventid) {
+	for (int i = 0; i < nmetrics; i++) {
+		if (eventid == eventsv[i])
+			return i;
+	}
+	return -1;
 }
-
 
 /*********************************************************************
  * Read the metrics
  ********************************************************************/
-extern "C"  bool TauCompensateInitialized(void);
-void TauMetrics_getMetrics(int tid, double values[]) 
-{
-  if (Tau_init_check_initialized()) {
-      for (int i = 0; i < nfunctions; i++) {
-        functionArray[i](tid, i, values);
-      }
-  } else {
-    // *CWL* - Safe only if Compensation is safely initialized. Otherwise
-    //         we would be in the middle of re-entrant behavior and
-    //         would be re-initializing metrics each time.
-    if (TauCompensateInitialized()) {
-      TauMetrics_init();
-    }
-  }
+extern "C" bool TauCompensateInitialized(void);
+void TauMetrics_getMetrics(int tid, double values[], int reversed) {
+	if (Tau_init_check_initialized()) {
+	    if (reversed) {
+            for (int i=nfunctions-1; i >= 0; --i) {
+                functionArray[i](tid, i, values);
+            }
+	    } else {
+            for (int i=0; i < nfunctions; i++) {
+                functionArray[i](tid, i, values);
+            }
+	    }
+	} else {
+		// *CWL* - Safe only if Compensation is safely initialized. Otherwise
+		//         we would be in the middle of re-entrant behavior and
+		//         would be re-initializing metrics each time.
+		if (TauCompensateInitialized()) {
+			TauMetrics_init();
+		}
+	}
 }
 
-extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]) {
-  for (int i = 0; i < nfunctions; i++) {
-    functionArray[i](tid, i, values);
-  }
+extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid,
+		double values[]) {
+	for (int i = 0; i < nfunctions; i++) {
+		functionArray[i](tid, i, values);
+	}
 }
-
 
 extern "C" x_uint64 TauMetrics_getInitialTimeStamp() {
-  return initialTimeStamp;
+	return initialTimeStamp;
 }
 
+extern "C" x_uint64 TauMetrics_getFinalTimeStamp() {
+	return finalTimeStamp;
+}
 
 extern "C" x_uint64 TauMetrics_getTimeOfDay() {
-  x_uint64 timestamp;
+	x_uint64 timestamp;
 #ifdef TAU_WINDOWS
-  timestamp = TauWindowsUsecD();
+	timestamp = TauWindowsUsecD();
 #else
-  struct timeval tp;
-  gettimeofday (&tp, 0);
-  timestamp = (x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec;
+	struct timeval tp;
+	gettimeofday(&tp, 0);
+	timestamp = (x_uint64) tp.tv_sec * (x_uint64) 1e6 + (x_uint64) tp.tv_usec;
 #endif
-  return timestamp;
+	return timestamp;
 }
 
 /*********************************************************************
  * Initialize the metrics module
  ********************************************************************/
 int TauMetrics_init() {
-  int i;
+	int i;
 
-  initialTimeStamp = TauMetrics_getTimeOfDay();
+	initialTimeStamp = TauMetrics_getTimeOfDay();
 
-  if (TauEnv_get_ebs_enabled()) {
-    // *CWL* - keep an eye on this. *must* we do this? Or can we
-    //         keep PAPI overflow signal triggers separate from
-    //         user-selected metrics to be measured.
-    if (strcasecmp(TauEnv_get_ebs_source(),"itimer")!=0) {
-      metricv_add(TauEnv_get_ebs_source());
-    }
-  }
+	if (TauEnv_get_ebs_enabled()) {
+		// *CWL* - keep an eye on this. *must* we do this? Or can we
+		//         keep PAPI overflow signal triggers separate from
+		//         user-selected metrics to be measured.
+		if (strcasecmp(TauEnv_get_ebs_source(), "itimer") != 0) {
+			metricv_add (TauEnv_get_ebs_source());}
+		}
 
-  /* Set the user clock values to 0 */
-  for (i = 0; i < TAU_MAX_THREADS; i++) {
-    metric_write_userClock(i, 0);
-  }
+		/* Set the user clock values to 0 */
+	for (i = 0; i < TAU_MAX_THREADS; i++) {
+		metric_write_userClock(i, 0);
+	}
 
-  read_env_vars();
-//for(i = 0; i < nmetrics; i++)
-//  printf("metricv[%d] = %s\n", i, metricv[i]);
+	read_env_vars();
+	//for(i = 0; i < nmetrics; i++)
+	//  printf("metricv[%d] = %s\n", i, metricv[i]);
 
-  traceMetric = 0;
-  reorder_metrics("PAPI\0");
-  reorder_metrics("KTAU\0");
+	traceMetric = 0;
+	reorder_metrics("PAPI\0");
+	reorder_metrics("KTAU\0");
 
-  initialize_functionArray();
+	initialize_functionArray();
 
-  Tau_Global_numCounters = nmetrics;
+	Tau_Global_numCounters = nmetrics;
 
-  /* Create atomic events for tracing */
-  if (TauEnv_get_tracing()) {
-    traceCounterEvents = new TauUserEvent *[nmetrics];
-    /* We obtain the timestamp from COUNTER1, so we only need to trigger
-       COUNTER2-N or i=1 through no. of active functions not through 0 */
-    std::string illegalChars("/\\?%*:|\"<> ");
-    for (i = 1; i < nmetrics; i++) {
-      //sanitize metricName before using it to create a name
-      std::string metricStr = std::string(metricv[i]);
-      size_t found;
-      found = metricStr.find_first_of(illegalChars, 0);
-      while (found != std::string::npos) {
-        metricStr[found] = '_';
-        found = metricStr.find_first_of(illegalChars, found + 1);
-      }
+	/* Create atomic events for tracing */
+	if (TauEnv_get_tracing()) {
+		traceCounterEvents = new TauUserEvent *[nmetrics];
+		/* We obtain the timestamp from COUNTER1, so we only need to trigger
+		 COUNTER2-N or i=1 through no. of active functions not through 0 */
+		std::string illegalChars("/\\?%*:|\"<> ");
+		for (i = 1; i < nmetrics; i++) {
+			//sanitize metricName before using it to create a name
+			std::string metricStr = std::string(metricv[i]);
+			size_t found;
+			found = metricStr.find_first_of(illegalChars, 0);
+			while (found != std::string::npos) {
+				metricStr[found] = '_';
+				found = metricStr.find_first_of(illegalChars, found + 1);
+			}
 
-      //traceCounterEvents[i] = new TauUserEvent(metricv[i], true);
-      traceCounterEvents[i] = new TauUserEvent(metricStr.c_str(), true);
-      /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/
-    }
-  }
+			//traceCounterEvents[i] = new TauUserEvent(metricv[i], true);
+			traceCounterEvents[i] = new TauUserEvent(metricStr.c_str(), true);
+			/* the second arg is MonotonicallyIncreasing which is true (HW counters)*/
+		}
+	}
 
-  return 0;
+	return 0;
+}
+
+/*********************************************************************
+ * Finalize the metrics module
+ ********************************************************************/
+void TauMetrics_finalize() {
+	if (finalTimeStamp == 0L) {
+		finalTimeStamp = TauMetrics_getTimeOfDay();
+	}
 }
 
 /*********************************************************************
  * Trigger atomic events for each metric
  ********************************************************************/
-void TauMetrics_triggerAtomicEvents(unsigned long long timestamp, double *values, int tid) {
-  int i;
+void TauMetrics_triggerAtomicEvents(unsigned long long timestamp,
+		double *values, int tid) {
+	int i;
 #ifndef TAU_EPILOG
-  for (i = 1; i < nmetrics; i++) {
-    TauTraceEvent(traceCounterEvents[i]->GetId(), (long long)values[i], tid, timestamp, 1);
-    // 1 in the last parameter is for use timestamp
-  }
+	for (i = 1; i < nmetrics; i++) {
+		TauTraceEvent(traceCounterEvents[i]->GetId(), (long long) values[i],
+				tid, timestamp, 1, TAU_TRACE_EVENT_KIND_USEREVENT);
+		// 1 in the last parameter is for use timestamp
+	}
 #endif /* TAU_EPILOG */
 }
 
@@ -854,27 +941,27 @@ void TauMetrics_triggerAtomicEvents(unsigned long long timestamp, double *values
  * of counters in numCounters
  ********************************************************************/
 void TauMetrics_getCounterList(const char ***counterNames, int *numCounters) {
-  *numCounters = nmetrics;
-  *counterNames = (char const **)malloc(sizeof(char *) * nmetrics);
-  for (int i = 0; i < nmetrics; i++) {
-    (*counterNames)[i] = strdup(TauMetrics_getMetricName(i));
-  }
+	*numCounters = nmetrics;
+	*counterNames = (char const **) malloc(sizeof(char *) * nmetrics);
+	for (int i = 0; i < nmetrics; i++) {
+		(*counterNames)[i] = strdup(TauMetrics_getMetricName(i));
+	}
 }
 
 /*********************************************************************
  * Returns the index of the trace metric
  ********************************************************************/
 double TauMetrics_getTraceMetricIndex() {
-  return traceMetric;
+	return traceMetric;
 }
 
 /*********************************************************************
  * Returns the value of the trace metric
  ********************************************************************/
 double TauMetrics_getTraceMetricValue(int tid) {
-  double values[TAU_MAX_COUNTERS];
-  TauMetrics_getMetrics(tid, values);
-  return values[traceMetric];
+	double values[TAU_MAX_COUNTERS];
+	TauMetrics_getMetrics(tid, values, 0);
+	return values[traceMetric];
 }
 
 /**********************************************************************
@@ -890,27 +977,27 @@ double TauMetrics_getTraceMetricValue(int tid) {
  *    metric vector.
  **********************************************************************/
 int TauMetrics_getMetricIndexFromName(const char *metricString) {
-  for (int i=0; i<nmetrics; i++) {
-    if (strcasecmp(metricv[i], metricString) == 0) {
-      return i;
-    }
-  }
-  /* EBS ONLY:
-     Try again assuming TIME. The reason we loop again is because in the
-     general case, TIME isn't necessarily in position 0. */
-  if (TauEnv_get_ebs_enabled()) {
-    for (int i=0; i<nmetrics; i++) {
-      if (strcasecmp(metricv[i], "TIME") == 0) {
-	return i;
-      }
-    }
-  }
-  /* This is a bad failure value. EBS cannot handle this. Other features
-     might. */
-  return -1;
+	for (int i = 0; i < nmetrics; i++) {
+		if (strcasecmp(metricv[i], metricString) == 0) {
+			return i;
+		}
+	}
+	/* EBS ONLY:
+	 Try again assuming TIME. The reason we loop again is because in the
+	 general case, TIME isn't necessarily in position 0. */
+	if (TauEnv_get_ebs_enabled()) {
+		for (int i = 0; i < nmetrics; i++) {
+			if (strcasecmp(metricv[i], "TIME") == 0) {
+				return i;
+			}
+		}
+	}
+	/* This is a bad failure value. EBS cannot handle this. Other features
+	 might. */
+	return -1;
 }
-
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+

@@ -4,6 +4,7 @@
 #include <TAU.h>
 #include <string.h>
 #include <stdlib.h>
+#include <iowrap_metadata.h>
 
 // We should forward declare the TauEnv functions, but TAU_ASSERT is defined
 // in tau_internal.h, and variadic macros are not supported by pgcc.
@@ -40,6 +41,9 @@ int TauWrapperFsync( int fd)
 int TauWrapperOpen(const char *pathname, int flags)
 {
   int ret;
+  /* get the name of the current timer, current thread and get a timestamp */
+  TAU_IOWRAPPER_METADATA_SETUP
+
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -53,6 +57,7 @@ int TauWrapperOpen(const char *pathname, int flags)
   }
 
   TAU_PROFILE_STOP(t);
+  TAU_IOWRAPPER_WRITE_FILE_METADATA(flags, pathname)
 
   TAU_VERBOSE("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
 

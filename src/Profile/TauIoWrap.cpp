@@ -105,7 +105,7 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
     void *event = 0;
     char ename[4096];
     sprintf(ename,"%s <file=%s>", iowrap_event_names[i], pathname);
-    Tau_get_context_userevent(&event, ename);
+    Tau_pure_context_userevent(&event, ename);
     iowrap_events[i][fid] = (TauUserEvent*)event;
   }
   dprintf("Registering %d with %s\n", fid - 1, pathname);

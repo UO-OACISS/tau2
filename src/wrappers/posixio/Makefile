@@ -28,13 +28,13 @@ libTauIOWrapper.a: iowrapper.o
 	$(TAU_AR) $(ARFLAGS) libTauIOWrapper.a iowrapper.o
 
 iowrapper.o: iowrapper.c
-	$(CC) $(CFLAGS) -c iowrapper.c
+	$(CC) $(CFLAGS) -c iowrapper.c -I.
 
 iowrap_link.o: iowrap_link.c
-	$(CC) $(CFLAGS) -c iowrap_link.c
+	$(CC) $(CFLAGS) -c iowrap_link.c -I.
 
 iowrap_shared.o: iowrap_shared.c
-	$(CC) $(CFLAGS) -c iowrap_shared.c
+	$(CC) $(CFLAGS) -c iowrap_shared.c -I.
 
 libTAU-iowrap$(TAU_SHLIBX): iowrap_shared.o
 	$(CC) $(TAU_SHFLAGS) libTAU-iowrap$(TAU_SHLIBX) iowrap_shared.o $(TAU_SHAREDLIBS) -ldl

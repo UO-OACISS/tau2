@@ -16,13 +16,21 @@
 ****************************************************************************/
 
 #include <TauUtil.h>
+#include <TauPlugin.h>
+#include <string>
+#include <TauEnv.h>
+#include <TauPluginInternals.h>
 #include <stdarg.h>
 #include <string.h>
 
+
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
+#else
+#define strtok_r(a,b,c) strtok(a,b)
 #endif /* TAU_WINDOWS */
 
+#define TAU_NAME_LENGTH 1024
 
 /*********************************************************************
  * Abort execution with a message
@@ -171,91 +179,403 @@ void *Tau_util_calloc(size_t size, const char *file, int line) {
   return ptr;
 }
 
-/*
- * Load a plugin with its given name and path
- */
-int Tau_util_load_plugin(char *name, char *path, int num_args, void **args)
-{
-  char *fullname;
-  char *fullpath;
-  char *initFuncName;
+/*********************************************************************
+ * Create and return a new plugin manager if plugin system is un-initialized.
+ * If it is already initialized, return a reference to the same plugin manager - Singleton Pattern
+ ********************************************************************/
+PluginManager* Tau_util_get_plugin_manager() {
+  static PluginManager * plugin_manager = NULL;
+  static int is_plugin_system_initialized = 0;
   
-  strcat(path, name);
+  /*Allocate memory for the plugin list and callback list*/
+  if(!is_plugin_system_initialized) {
 
-  sprintf(fullpath, "%s.so", path);
+    plugin_manager = (PluginManager*)malloc(sizeof(PluginManager));
+    plugin_manager->plugin_list = (Tau_plugin_list *)malloc(sizeof(Tau_plugin_list));
+    (plugin_manager->plugin_list)->head = NULL;
 
-  if(pds == NULL)
-    pds  = (PluginDiscoveryState *)malloc(sizeof(PluginDiscoveryState)); 
+    plugin_manager->callback_list = (Tau_plugin_callback_list*)malloc(sizeof(Tau_plugin_callback_list));
+    (plugin_manager->callback_list)->head = NULL;
+    is_plugin_system_initialized = 1;
+  }
+
+  return plugin_manager;
+}
+
+/*********************************************************************
+ * Initializes the plugin system by loading and registering all plugins
+ ********************************************************************/
+int Tau_initialize_plugin_system() {
+  return(Tau_util_load_and_register_plugins(Tau_util_get_plugin_manager()));
+}
+
+/*********************************************************************
+ * Internal function that helps parse a token for the plugin name
+ ********************************************************************/
+int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plugin_args, int * plugin_num_args) {
+  int length_of_arg_string = -1;
+  char * save_ptr;
+  char * arg_string;
+  char * arg_token;
+  char *pos_left = NULL;
+  char *pos_right = NULL;
+  
+
+  *plugin_num_args = 0;
+  *plugin_name = (char*)malloc(1024*sizeof(char));
+  pos_left = strchr(token, '(');
+  pos_right = strchr(token, ')');
+
+  if(pos_left == NULL && pos_right == NULL) {
+    strcpy(*plugin_name, token);
+    return 0;
+  } else if (pos_left == NULL || pos_right == NULL) {
+    return -1; //Bad plugin name
+  }
+
+  *plugin_args = (char**)malloc(10*sizeof(char*)); //Maximum of 10 args supported for now
+  arg_string = (char*)malloc(1024*sizeof(char));
+
+  length_of_arg_string = (pos_right - pos_left) - 1;
+
+  strncpy(arg_string, pos_left+1, length_of_arg_string);
+  strncpy(*plugin_name, token, (pos_left-token));
+
+  arg_token = strtok_r(arg_string, ",", &save_ptr);
+
+  int i = 0;
+  /*Grab and pack, and count all the arguments to the plugin*/
+  while(arg_token != NULL) {
+    (*plugin_num_args)++;
+    (*plugin_args)[i] = (char*)malloc(1024*sizeof(char));
+    strcpy((*plugin_args)[i], arg_token);
+    arg_token = strtok_r(NULL, ",", &save_ptr);
+    i++;
+  }
+
+  TAU_VERBOSE("TAU PLUGIN: Arg string and count for token %s are %s and %d\n", token, arg_string, *plugin_num_args);
+
+  return 0;
+}
+
+
+/********************************************************************* 
+ * Load a list of plugins at TAU init, given following environment variables:
+ *  - TAU_PLUGINS_NAMES
+ *  - TAU_PLUGINS_PATH
+********************************************************************* */
+int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
+{
+  char pluginpath[1024];
+  char listpluginsnames[1024];
+  char *fullpath = NULL;
+  char *token = NULL;
+  char *plugin_name = NULL;
+  char *initFuncName = NULL;
+  char **plugin_args;
+  char *save_ptr;
+  int plugin_num_args;
+
+  if((TauEnv_get_plugins_path() == NULL) || (TauEnv_get_plugins() == NULL)) {
+    printf("TAU: One or more of the environment variable(s) TAU_PLUGINS_PATH: %s, TAU_PLUGINS: %s are empty\n", TauEnv_get_plugins_path(), TauEnv_get_plugins());
+    return -1;
+  }
+  
+  strcpy(pluginpath, TauEnv_get_plugins_path());
+  strcpy(listpluginsnames, TauEnv_get_plugins());
+
+  /*Individual plugin names are separated by a ":"*/
+  token = strtok_r(listpluginsnames,":", &save_ptr); 
+  TAU_VERBOSE("TAU: Trying to load plugin with name %s\n", token);
+
+  fullpath = (char*)calloc(TAU_NAME_LENGTH, sizeof(char));
+
+  while(token != NULL)
+  {
+    TAU_VERBOSE("TAU: Loading plugin: %s\n", token);
+    strcpy(fullpath, "");
+    strcpy(fullpath,pluginpath);
+    if (Tau_util_parse_plugin_token(token, &plugin_name, &plugin_args, &plugin_num_args)) {
+      printf("TAU: Plugin name specification does not match form <plugin_name1>(<plugin_arg1>,<plugin_arg2>):<plugin_name2>(<plugin_arg1>,<plugin_arg2>) for: %s\n",token);
+      return -1;
+    }
 
 #ifndef TAU_WINDOWS
-  void *handle = dlopen(fullpath, RTLD_NOW);
+    sprintf(fullpath, "%s/%s", pluginpath, plugin_name);
 #else
-  void *handle = NULL;
+    sprintf(fullpath, "%s\\%s", pluginpath, plugin_name);
+#endif
+
+    TAU_VERBOSE("TAU: Full path for the current plugin: %s\n", fullpath);
+   
+    /*Return a handle to the loaded dynamic object*/
+    void* handle = Tau_util_load_plugin(plugin_name, fullpath, plugin_manager);
+
+    if (handle) {
+      /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
+      handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager);
+     
+      /*Plugin registration failed. Bail*/
+      if(!handle) return -1;
+      TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
+
+    } else {
+      /*Plugin loading failed for some reason*/
+      return -1;
+    }
+
+    token = strtok_r(NULL, ":", &save_ptr);
+  }
+
+  free(fullpath);
+  return 0;
+}
+
+/**************************************************************************************************************************
+ * Use dlsym to find a function : TAU_PLUGIN_INIT_FUNC that the plugin MUST implement in order to register itself.
+ * If plugin registration succeeds, then the callbacks for that plugin have been added to the plugin manager's callback list
+ * ************************************************************************************************************************/
+void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager* plugin_manager) {
+#ifndef TAU_WINDOWS
+  PluginInitFunc init_func = (PluginInitFunc) dlsym(handle, TAU_PLUGIN_INIT_FUNC);
+#else
+  PluginInitFunc init_func = (PluginInitFunc) NULL;
 #endif /* TAU_WINDOWS */
-  //dstring_free(slashedpath);
+
+  if(!init_func) {
+#ifndef TAU_WINDOWS
+    printf("TAU: Failed to retrieve TAU_PLUGIN_INIT_FUNC from plugin %s with error:%s\n", name, dlerror());
+    dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();
+#endif /* TAU_WINDOWS */
+    return NULL;
+  }
+
+  int return_val = init_func(num_args, args);
+  if(return_val < 0) {
+    printf("TAU: Call to init func for plugin %s returned failure error code %d\n", name, return_val);
+#ifndef TAU_WINDOWS
+    dlclose(handle); //TODO : Replace with Tau_plugin_cleanup();
+#endif /* TAU_WINDOWS */
+    return NULL;
+  } 
+  return handle;
+}
+
+/**************************************************************************************************************************
+ * Given a plugin name and fullpath, load a plugin and return a handle to the opened DSO
+ * ************************************************************************************************************************/
+void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* plugin_manager) {
+#ifndef TAU_WINDOWS
+  void* handle = dlopen(path, RTLD_NOW);
+#else
+  void* handle = NULL;
+#endif /* TAU_WINDOWS */
   
   if (handle) {
-    //PluginHandleList* handle_node = mem_alloc(sizeof(*handle_node));
-    PluginHandleList* handle_node = (PluginHandleList *)malloc(sizeof(PluginHandleList));
-    handle_node->handle = handle;
-    handle_node->next = pds->handle_list;
-    pds->handle_list = handle_node;
+    Tau_plugin * plugin = (Tau_plugin *)malloc(sizeof(Tau_plugin));
+    strcpy(plugin->plugin_name, name);
+    plugin->handle = handle;
+    plugin->next = (plugin_manager->plugin_list)->head;
+    (plugin_manager->plugin_list)->head = plugin;
+
+    TAU_VERBOSE("TAU: Successfully loaded plugin: %s\n", name);
+    return handle;    
   } else {
-#ifndef TAU_WINDOWS 
-    printf("Error loading DSO: %s\n", dlerror());
-#endif /* TAU_WINDOWS */
-    return -1;
-  } 
-
-  sprintf(initFuncName, "plugin_%s", name);  
-
-  /* Get symbol of plugin entry point */
 #ifndef TAU_WINDOWS
-  void (*fn)(int num_args, void **args) = (void (*)(int num_args, void **))dlsym(handle, initFuncName);
-
-  if(!fn) {
-    fprintf(stdout, "Error loading plugin function: %s\n", dlerror());
-    dlclose(handle);
-    return -1;
-  }
-
-  /* Call plugin function  */
-  fn(num_args, args);
+    printf("TAU: Failed loading %s plugin with error: %s\n", name, dlerror());
 #endif /* TAU_WINDOWS */
-
-  return 1;
+    return NULL;
+  }
 }
 
-int Tau_util_close_plugin()
-{
-
-  return 1;
+/**************************************************************************************************************************
+ * Initialize Tau_plugin_callbacks structure with default values
+ * This is necessary in order to prevent future event additions to affect older plugins
+ * ************************************************************************************************************************/
+extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
+  cb->FunctionRegistrationComplete = 0;
+  cb->AtomicEventRegistrationComplete = 0;
+  cb->AtomicEventTrigger = 0;
+  cb->EndOfExecution = 0;
+  cb->InterruptTrigger = 0;
 }
 
-/*
- * Clean up all plugins and free associated structures
- */
-int Tau_util_cleanup_plugins()
-{
+/**************************************************************************************************************************
+ * Helper function that makes a copy of all callbacks for events
+ ***************************************************************************************************************************/
+void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbacks * src) {
+  dest->FunctionRegistrationComplete = src->FunctionRegistrationComplete;
+  dest->AtomicEventTrigger = src->AtomicEventTrigger;
+  dest->AtomicEventRegistrationComplete = src->AtomicEventRegistrationComplete;
+  dest->EndOfExecution = src->EndOfExecution;
+  dest->InterruptTrigger = src->InterruptTrigger;
+}
 
-  if(pds == NULL) {
-    fprintf(stdout, "No plugin to clean\n");
-    return -1;
+
+/**************************************************************************************************************************
+ * Register callbacks associated with well defined events defined in struct Tau_plugin_callbacks
+ **************************************************************************************************************************/
+extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+
+  Tau_plugin_callback_ * callback = (Tau_plugin_callback_ *)malloc(sizeof(Tau_plugin_callback_));
+  Tau_util_make_callback_copy(&(callback->cb), cb);
+  callback->next = (plugin_manager->callback_list)->head;
+  (plugin_manager->callback_list)->head = callback;
+}
+
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the function registration event
+ ***************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.FunctionRegistrationComplete != 0) {
+     callback->cb.FunctionRegistrationComplete(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the atomic event registration event
+ ****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.AtomicEventRegistrationComplete != 0) {
+     callback->cb.AtomicEventRegistrationComplete(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the atomic event trigger event
+ *****************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.AtomicEventTrigger != 0) {
+     callback->cb.AtomicEventTrigger(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the end of execution event
+ ******************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.EndOfExecution != 0) {
+     callback->cb.EndOfExecution(data);
+   }
+   callback = callback->next;
   }
 
-  //PluginDiscoveryState* pds = (PluginDiscoveryState*)vpds;
-  PluginHandleList* node = pds->handle_list;
 
-  while (node) {
-    PluginHandleList* next = node->next;
-#ifndef TAU_WINDOWS 
-    dlclose(node->handle);
-#endif /* TAU_WINDOWS */
-    free(node);
-    node = next;
+}
+
+/**************************************************************************************************************************
+ *  Overloaded function that invokes all registered callbacks for interrupt trigger event
+ *******************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.InterruptTrigger != 0) {
+     callback->cb.InterruptTrigger(data);
+   }
+   callback = callback->next;
   }
+}
+
+/*****************************************************************************************************************************
+ * Wrapper function that calls the actual callback invocation function based on the event type
+ ******************************************************************************************************************************/
+extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * data) {
+
+  switch(event) {
+    case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_function_registration_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_atomic_event_registration_data*)data);
+      break;
+    } 
+
+    case TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_atomic_event_trigger_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_END_OF_EXECUTION: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_end_of_execution_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_interrupt_trigger_data*)data);
+      break;
+    }
+  }
+}
+
+/*****************************************************************************************************************************
+ * Clean up all plugins by closing all opened dynamic libraries and free associated structures
+ *******************************************************************************************************************************/
+int Tau_util_cleanup_all_plugins() {
+
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   
-  free(pds);
+  Tau_plugin * temp_plugin;
+  Tau_plugin_callback_ * temp_callback;
+
+  Tau_plugin * plugin = (plugin_manager->plugin_list)->head;
+  Tau_plugin_callback_ * callback = (plugin_manager->callback_list)->head;
+
+  /*Two separate while loops to handle the weird case that a plugin is loaded but doesn't register anything*/ 
+  while(plugin) {
+    temp_plugin = plugin;
+
+    plugin = temp_plugin->next;
+
+    /*Close the dynamic library*/
+#ifndef TAU_WINDOWS 
+    if(temp_plugin->handle)
+      dlclose(temp_plugin->handle);
+#endif /* TAU_WINDOWS */
+
+    temp_plugin->next = NULL;
+
+    free(temp_plugin);
+  }   
+
+  while(callback) {
+    temp_callback = callback;
+    callback = temp_callback->next;
+    temp_callback->next = NULL;
+
+    free(temp_callback);
+  }
+
+  return 0;
 }
 
 

@@ -33,15 +33,18 @@
 #define TAU_ACTION_DUMP_CALLPATHS 2
 #define TAU_ACTION_DUMP_BACKTRACES 3
 
-#define TAU_PLUGIN_ENABLED 0
+#define TAU_PLUGIN_ENABLED 1
 
 #ifndef TAU_EVENT_THRESHOLD
-#define TAU_EVENT_THRESHOLD_DEFAULT .5
+#define TAU_EVENT_THRESHOLD_DEFAULT -0.5
 #endif /* TAU_EVENT_THRESHOLD */
 
 #ifndef TAU_INTERRUPT_INTERVAL
 #define TAU_INTERRUPT_INTERVAL_DEFAULT 10.0
 #endif /* TAU_EVENT_THRESHOLD */
+
+#define TAU_TRACE_FORMAT_TAU 0
+#define TAU_TRACE_FORMAT_OTF2 1
 
 #ifdef __cplusplus
 extern "C" {
@@ -55,10 +58,12 @@ extern "C" {
   int  TAUDECL TauEnv_get_throttle();
   int  TAUDECL TauEnv_get_profiling();
   int  TAUDECL TauEnv_get_tracing();
+  int  TAUDECL TauEnv_get_trace_format();
   int  TAUDECL TauEnv_get_callpath();
   int  TAUDECL TauEnv_get_callpath_depth();
   int  TAUDECL TauEnv_get_callsite();
   int  TAUDECL TauEnv_get_callsite_depth();
+  int  TAUDECL TauEnv_get_callsite_offset();
   int  TAUDECL TauEnv_get_depth_limit();
   void TAUDECL TauEnv_set_depth_limit(int value);
   int  TAUDECL TauEnv_get_comm_matrix();
@@ -78,6 +83,10 @@ extern "C" {
   int  TAUDECL TauEnv_get_openmp_runtime_context();
   int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
   int  TAUDECL TauEnv_get_openmp_runtime_events_enabled();
+  int  TAUDECL TauEnv_get_sos_enabled();
+  int  TAUDECL TauEnv_get_sos_trace_events();
+  int  TAUDECL TauEnv_get_sos_periodic();
+  int  TAUDECL TauEnv_get_sos_period();
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled_tau();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
@@ -105,6 +114,8 @@ extern "C" {
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cvar_metrics();
   const char* TAUDECL TauEnv_get_cvar_values();
+  const char* TAUDECL TauEnv_get_plugins_path();
+  const char* TAUDECL TauEnv_get_plugins();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_device_name();
   const char* TAUDECL TauEnv_get_cuda_instructions();
@@ -119,6 +130,7 @@ extern "C" {
 
   const char*  TAUDECL TauEnv_get_profile_prefix();
   int  TAUDECL TauEnv_get_profile_format();
+  int  TAUDECL TauEnv_get_merge_metadata();
   int  TAUDECL TauEnv_get_sigusr1_action();
   
   int TAUDECL TauEnv_get_memdbg();

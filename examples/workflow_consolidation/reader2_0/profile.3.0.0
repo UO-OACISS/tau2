@@ -1,0 +1,31 @@
+17 templated_functions_MULTI_TIME
+# Name Calls Subrs Excl Incl ProfileCalls # <metadata><attribute><name>Metric Name</name><value>TIME</value></attribute><attribute><name>Starting Timestamp</name><value>1497063437148665</value></attribute><attribute><name>Timestamp</name><value>1497063437148803</value></attribute><attribute><name>pid</name><value>94782</value></attribute><attribute><name>tid</name><value>94782</value></attribute></metadata>
+".TAU application" 1 1724 17307049 62403209 0 GROUP="TAU_USER" 
+"MPI_Init()  " 1 0 36821 36821 0 GROUP="MPI" 
+"MPI_Comm_rank()  " 3 0 3 3 0 GROUP="MPI" 
+"MPI_Comm_size()  " 3 0 3 3 0 GROUP="MPI" 
+"ADIOS open" 1 6 65084 1710940 0 GROUP="TAU_USER" 
+"MPI_Gather()  " 1 0 35 35 0 GROUP="MPI" 
+"MPI_Bcast()  " 2 0 1560458 1560458 0 GROUP="MPI" 
+"MPI_Barrier()  " 205 0 18065730 18065730 0 GROUP="MPI" 
+"ADIOS flexpath add var to read msg" 301 0 527 527 0 GROUP="TAU_USER" 
+"ADIOS read" 101 301 18792087 18883648 0 GROUP="TAU_USER" 
+"ADIOS flexpath send read msg" 301 0 91561 91561 0 GROUP="TAU_USER" 
+"MPI_Reduce()  " 808 0 6328 6328 0 GROUP="MPI" 
+"MPI_Allreduce()  " 303 0 6471119 6471119 0 GROUP="MPI" 
+"ADIOS advance step" 101 101 2193 4974712 0 GROUP="TAU_USER" 
+"ADIOS close" 1 2 2499 2648 0 GROUP="TAU_USER" 
+"ADIOS flexpath send finalize msg" 1 0 113 113 0 GROUP="TAU_USER" 
+"MPI_Finalize()  " 1 0 1599 1599 0 GROUP="MPI" 
+0 aggregates
+9 userevents
+# eventname numevents max min mean sumsqr
+"Message size for broadcast" 2 8192 4 4098 67108880
+"[GROUP=MAX_MARKER] Message size for broadcast" 1 8192 8192 8192 67108864
+"[GROUP=MAX_MARKER] Message size for broadcast : ADIOS open => MPI_Bcast()  " 1 8192 8192 8192 67108864
+"Message size for reduce" 808 24 8 12 155136
+"Message size for all-reduce" 303 224 8 93.33333333333333 5306944
+"[GROUP=MIN_MARKER] Message size for all-reduce" 1 8 8 8 64
+"[GROUP=MIN_MARKER] Message size for all-reduce : MPI_Allreduce()  " 1 8 8 8 64
+"[GROUP=MAX_MARKER] Message size for reduce" 1 24 24 24 576
+"[GROUP=MAX_MARKER] Message size for reduce : MPI_Reduce()  " 1 24 24 24 576

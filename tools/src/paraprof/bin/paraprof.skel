@@ -10,20 +10,50 @@ JARDIR=${TAUROOT}/${MACHINE}/lib
 
 CUBE_JAVA_READER=@CUBECLASSPATH@
 
+#paraprof does not accept -64/-32/-jogl2/-jogl1. Set the flags and remove them from the parameter list before passing to paraprof. -32 (which makes no difference on non-apple platforms) and -jogl1 are the defaults on all platforms except apple.
+for arg 
+do
+  shift
+  [ "$arg" = "-64" ] && FLAG64=1 && continue
+  [ "$arg" = "-32" ] && FLAG32=1 && continue
+  [ "$arg" = "-jogl1" ] && FLAGJOGL1=1 && continue
+  [ "$arg" = "-jogl2" ] && FLAGJOGL2=1 && continue
+  set -- "$@" "$arg"
+done
+
+if [ "$MACHINE" = "apple" ]; then
+	if [ "$FLAG32" != "1" ]; then
+		FLAG64=1
+	fi
+fi
+
+if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ]; then
+	if [ "$FLAGJOGL1" != "1" ]; then
+		FLAGJOGL2=1
+	fi
+fi
+
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
 
 
+
+if [ "$FLAGJOGL2" = "1" ]; then
+	JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis-jogl2.jar:${JARDIR}/jogl-all.jar:${JARDIR}/gluegen-rt.jar:${JARDIR}/jogl-all-natives.jar:${JARDIR}/gluegen-rt-natives.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar:${JARDIR}/postgresql.jar
+fi
+
 # If 3D window has problems, please uncomment
 #if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
-export LIBGL_ALWAYS_INDIRECT=1
+#export LIBGL_ALWAYS_INDIRECT=1
 #fi
 
 APPLE_OPTIONS=""
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
 if [ "$MACHINE" = "apple" ]; then
     IS_JAVA_64BIT=`java -version 2>&1 | tail -1 | grep 64 | wc -l`
-    OSX_BITS="-d32"
+    if [ "$FLAG64" != "1" ]; then
+    	OSX_BITS="-d32"
+    fi
     if which sw_vers >/dev/null 2>&1 ; then
         OSX_VERSION=`sw_vers -productVersion 2>/dev/null | sed -e 's,\.,,g'`
         if [ $OSX_VERSION -ge 107 ] ; then
@@ -33,7 +63,9 @@ if [ "$MACHINE" = "apple" ]; then
 	if [ $OSX_VERSION -ge 107 -a $IS_JAVA_64BIT -ge 1 ]; then
           if [ -d /System/Library/Frameworks/JavaVM.framework/Versions/1.6 ]; then
 	    export JAVA_VERSION=1.6
-	    OSX_BITS="-d32"
+	    if [ "$FLAG64" != "1" ]; then
+	    	OSX_BITS="-d32"
+	    fi
 	  fi
         fi
     fi
@@ -112,6 +144,10 @@ fi
 if [ "x$platform" = "xDarwin" ] ; then 
    if [ $testmax -gt 819200 -a $testmax -lt 819200000 ] ; then
       MEMORY="-Xmx2000m"
+    if [ "$FLAG64" = "1" ]; then
+	testmax=$(($testmax/1024))
+        MEMORY="-Xmx"$testmax"m"
+    fi
    fi
 fi
 

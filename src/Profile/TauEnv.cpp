@@ -43,6 +43,7 @@
 #include <Profile/TauEnv.h>
 #include <TAU.h>
 #include <tauroot.h>
+#include <tauarch.h>
 #include <fcntl.h>
 #include <string>
 
@@ -78,6 +79,12 @@ using namespace std;
 #define TAU_CALLSITE_DEFAULT 0
 #define TAU_CALLSITE_DEPTH_DEFAULT 1 /* default to be local */
 
+#ifdef __PGI 
+#define TAU_CALLSITE_OFFSET_DEFAULT 6 /* PGI needs 6 */
+#else /* __PGI */
+#define TAU_CALLSITE_OFFSET_DEFAULT 2 /* otherwise 2 */
+#endif /* __PGI */
+
 /* If we are using OpenMP and the collector API or OMPT */
 #define TAU_OPENMP_RUNTIME_DEFAULT 1
 #define TAU_OPENMP_RUNTIME_STATES_DEFAULT 0
@@ -85,6 +92,11 @@ using namespace std;
 #define TAU_OPENMP_RUNTIME_CONTEXT_TIMER "timer"
 #define TAU_OPENMP_RUNTIME_CONTEXT_REGION "region"
 #define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
+
+#define TAU_SOS_DEFAULT 0
+#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
+#define TAU_SOS_PERIODIC_DEFAULT 0
+#define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
@@ -125,6 +137,8 @@ using namespace std;
 #else
 # define TAU_TRACING_DEFAULT 0
 #endif
+
+#define TAU_TRACE_FORMAT_DEFAULT TAU_TRACE_FORMAT_TAU
 
 #ifdef PROFILING_ON
 # define TAU_PROFILING_DEFAULT 1
@@ -194,6 +208,8 @@ using namespace std;
 // pthread stack size default
 #define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
 
+#define TAU_MERGE_METADATA_DEFAULT 0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -211,9 +227,11 @@ static double env_max_records = 0;
 static int env_callpath = 0;
 static int env_callsite = 0;
 static int env_callsite_depth = 0;
+static int env_callsite_offset = TAU_CALLSITE_OFFSET_DEFAULT;
 static int env_compensate = 0;
 static int env_profiling = 0;
 static int env_tracing = 0; 
+static int env_trace_format = TAU_TRACE_FORMAT_DEFAULT;
 static int env_callpath_depth = 0;
 static int env_depth_limit = 0;
 static int env_track_message = 0;
@@ -244,6 +262,10 @@ static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
+static int env_sos_enabled = TAU_SOS_DEFAULT;
+static int env_sos_trace_events = TAU_SOS_TRACE_EVENTS_DEFAULT;
+static int env_sos_periodic = TAU_SOS_PERIODIC_DEFAULT;
+static int env_sos_period = TAU_SOS_PERIOD_DEFAULT;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -260,6 +282,9 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cvar_metrics = NULL;
 static const char *env_cvar_values = NULL;
+static const char *env_plugins_path = NULL;
+static const char *env_plugins = NULL;
+static const char *env_select_file = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
@@ -294,6 +319,7 @@ static size_t env_memdbg_overhead_value = 0;
 static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
+static int env_merge_metadata = 1;
 
 static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
 static int env_papi_multiplexing = 0;
@@ -301,6 +327,7 @@ static int env_papi_multiplexing = 0;
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
 #endif
+
 } // extern "C"
 
 /*********************************************************************
@@ -484,6 +511,20 @@ static int parse_bool(const char *str, int default_value = 0) {
   } else {
     return 0;
   }
+}
+
+/*********************************************************************
+ * Parse an integer value
+ ********************************************************************/
+static int parse_int(const char *str, int default_value = 0) {
+  if (str == NULL) {
+    return default_value;
+  }
+  int tmp = atoi(str);
+  if (tmp < 0) { 
+    return default_value; 
+  }
+  return tmp;
 }
 
 /*********************************************************************
@@ -673,17 +714,22 @@ void TAU_VERBOSE(const char *format, ...)
 }
 
 const char *TauEnv_get_metrics() {
-  if (env_metrics == NULL) TauEnv_initialize();
   return env_metrics;
 }
 
 extern "C" const char *TauEnv_get_cvar_metrics() {
-  if (env_cvar_metrics == NULL) TauEnv_initialize();
   return env_cvar_metrics;
 }
 
+extern "C" const char *TauEnv_get_plugins_path() {
+  return env_plugins_path;
+}
+
+extern "C" const char *TauEnv_get_plugins() {
+  return env_plugins;
+}
+
 extern "C" const char *TauEnv_get_cvar_values() {
-  if (env_cvar_values == NULL) TauEnv_initialize();
   return env_cvar_values;
 }
 
@@ -733,6 +779,10 @@ int TauEnv_get_callsite() {
 
 int TauEnv_get_callsite_depth() {
   return env_callsite_depth;
+}
+
+int TauEnv_get_callsite_offset() {
+  return env_callsite_offset;
 }
 
 int TauEnv_get_compensate() {
@@ -825,6 +875,10 @@ int TauEnv_get_tracing() {
   return env_tracing;
 }
 
+int TauEnv_get_trace_format() {
+  return env_trace_format;
+}
+
 int TauEnv_get_callpath_depth() {
   return env_callpath_depth;
 }
@@ -880,6 +934,22 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_sos_enabled() {
+  return env_sos_enabled;
+}
+
+int TauEnv_get_sos_trace_events() {
+  return env_sos_trace_events;
+}
+
+int TauEnv_get_sos_periodic() {
+  return env_sos_periodic;
+}
+
+int TauEnv_get_sos_period() {
+  return env_sos_period;
 }
 
 int TauEnv_get_ebs_enabled_tau() {
@@ -1070,6 +1140,10 @@ int TauEnv_get_pthread_stack_size() {
   return env_pthread_stack_size;
 }
 
+int TauEnv_get_merge_metadata(){
+  return env_merge_metadata;
+}
+
 #ifdef TAU_ANDROID
 int TauEnv_get_alfred_port() {
   return env_alfred_port;
@@ -1129,25 +1203,41 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_POWER");
     if (parse_bool(tmp, env_track_power)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Power tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_POWER", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: Power tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_POWER", "on");
       TAU_TRACK_POWER();
+#endif
     } 
 
     tmp = getconf("TAU_TRACK_LOAD");
     if (parse_bool(tmp, env_track_load)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: system load tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_LOAD", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: system load tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_LOAD", "on");
-      TAU_TRACK_LOAD();
+      // Don't do this now! It will cause infinite recurison...
+      //TAU_TRACK_LOAD();
+#endif
     } 
 
 #ifdef TAU_MPI_T
     tmp = getconf("TAU_TRACK_MPI_T_PVARS");
     if (parse_bool(tmp, env_track_mpi_t_pvars)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: MPI_T PVARS tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "disabled (disabled memory management)");
+#else
       env_track_mpi_t_pvars = 1;
       TAU_VERBOSE("TAU: MPI_T PVARS tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "on");
       TAU_VERBOSE("TAU: Checking for performance variables from MPI_T\n");
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_MPI_T_PVARS", "off");
     }
@@ -1166,9 +1256,14 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Entry/Exit Memory tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_HEAP", "disabled (memory management disabled)");
+#else
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEAP", "on");
       env_track_memory_heap = 1;
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_HEAP", "off");
       env_track_memory_heap = 0;
@@ -1186,10 +1281,21 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_MEMORY_FOOTPRINT");
     if (parse_bool(tmp, env_track_memory_footprint)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: TAU_TRACK_MEMORY_FOOTPRINT VmRSS and VmHWM tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: TAU_TRACK_MEMORY_FOOTPRINT VmRSS and VmHWM tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "on");
-      TAU_TRACK_MEMORY_FOOTPRINT();
-      env_track_memory_footprint = 1;
+
+      /*Adding a check to prevent signal handler from being invoked over and over.
+ 	Set env_track_memory_footprint BEFORE invoking the signal handler. If not, a segfault is coming your way.*/
+      if(env_track_memory_footprint == 0) {
+
+	env_track_memory_footprint = 1;
+        TAU_TRACK_MEMORY_FOOTPRINT();
+      }
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_FOOTPRINT", "off");
       env_track_memory_footprint = 0;
@@ -1212,9 +1318,14 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
     if (parse_bool(tmp, env_track_memory_leaks)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Memory tracking disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: Memory tracking enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
       env_track_memory_leaks = 1;
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
@@ -1366,6 +1477,10 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_SIGNALS");
     if (parse_bool(tmp, env_track_signals)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: Tracking SIGNALS disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_TRACK_SIGNALS", "disabled (disabled memory management)");
+#else
       TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
       TAU_METADATA("TAU_TRACK_SIGNALS", "on");
       env_track_signals = 1;
@@ -1387,6 +1502,7 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_ECHO_BACKTRACE", "off");
         env_echo_backtrace = 0;
       }
+#endif
     } else {
       TAU_METADATA("TAU_TRACK_SIGNALS", "off");
       TAU_METADATA("TAU_SIGNALS_GDB", "off");
@@ -1418,7 +1534,8 @@ void TauEnv_initialize()
 
 #ifdef TAU_SCOREP
     TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", RtsLayer::getPid());
-    return;
+    //return; 
+    //if we return here, the other TAU variables such as TAU_SELECT_FILE are not read!
 #endif
 
     if ((env_profile_prefix = getconf("TAU_PROFILE_PREFIX")) == NULL) {
@@ -1470,6 +1587,28 @@ void TauEnv_initialize()
       env_track_message = TAU_TRACK_MESSAGE_DEFAULT;
       TAU_VERBOSE("TAU: Tracing Disabled\n");
       TAU_METADATA("TAU_TRACE", "off");
+    }
+    /* trace format */
+    tmp = getconf("TAU_TRACE_FORMAT");
+    if(tmp != NULL) {
+      if(strcasecmp(tmp, "otf2") == 0) {
+#ifdef TAU_OTF2
+        env_trace_format = TAU_TRACE_FORMAT_OTF2;
+#else
+        fprintf(stderr, "TAU: Warning: requested OTF2 trace but TAU built without OTF2, using default instead.\n");
+#endif
+      } else if(strcasecmp(tmp, "tau") == 0) {
+        env_trace_format = TAU_TRACE_FORMAT_TAU;
+      } else {
+        fprintf(stderr, "TAU: Warning: unrecognized trace format %s, using default instead.\n", tmp);
+      }
+    }
+    if(env_trace_format == TAU_TRACE_FORMAT_TAU) {
+      TAU_VERBOSE("TAU: Trace format is tau\n");
+      TAU_METADATA("TAU_TRACE_FORMAT", "tau")
+    } else if(env_trace_format == TAU_TRACE_FORMAT_OTF2) {
+      TAU_VERBOSE("TAU: Trace format is otf2\n");
+      TAU_METADATA("TAU_TRACE_FORMAT", "otf2")
     }
 
     /* profiling */
@@ -1528,6 +1667,19 @@ void TauEnv_initialize()
     TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_depth);
     sprintf(tmpstr, "%d", env_callsite_depth);
     TAU_METADATA("TAU_CALLSITE_DEPTH", tmpstr);
+
+    const char *callsiteOffset = getconf("TAU_CALLSITE_OFFSET");
+    env_callsite_offset = TAU_CALLSITE_OFFSET_DEFAULT;
+    if (callsiteOffset) {
+      env_callsite_offset = atoi(callsiteOffset);
+      if (env_callsite_offset < 0) {
+        env_callsite_offset = TAU_CALLSITE_OFFSET_DEFAULT;
+      }
+      sprintf(tmpstr, "%d", env_callsite_offset);
+      TAU_METADATA("TAU_CALLSITE_OFFSET", tmpstr);
+      TAU_VERBOSE("TAU: Callsite Offset = %d\n", env_callsite_offset);
+    }
+
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI))
     /* track comm (opposite of old -nocomm option) */
@@ -1747,6 +1899,39 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: MPI_T_CVAR_VALUES is \"%s\"\n", env_cvar_values);
     }
 
+    if ((env_plugins_path = getconf("TAU_PLUGINS_PATH")) == NULL) {
+      env_plugins_path = NULL;  
+      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is not set\n", env_plugins_path);
+    } else {
+      TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is \"%s\"\n", env_plugins_path);
+    }
+
+    if ((env_plugins = getconf("TAU_PLUGINS")) == NULL) {
+      env_plugins = NULL;   
+      TAU_VERBOSE("TAU: TAU_PLUGINS is not set\n", env_plugins);
+    } else {
+      TAU_VERBOSE("TAU: TAU_PLUGINS is \"%s\"\n", env_plugins);
+    }
+
+    if((env_select_file = getconf("TAU_SELECT_FILE")) == NULL) {
+      env_select_file = NULL; 
+    } else {
+      if ((env_plugins == NULL) && (env_plugins_path == NULL)) {
+        TAU_VERBOSE("TAU: TAU_SELECT_FILE is set to %s when TAU plugins are not initialized\n", env_select_file);
+          env_plugins_path=strdup(TAU_LIB_DIR); 
+          TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is now %s\n", env_plugins_path);
+          //sprintf(env_plugins,"libTAU-filter-plugin.so(%s)", env_select_file); 
+          char *plugins = (char *) malloc(1024); 
+	  char *filename = strdup(env_select_file);
+          sprintf(plugins, "libTAU-filter-plugin.so(%s)", filename); 
+          env_plugins = plugins; 
+          TAU_VERBOSE("TAU: TAU plugin is now %s\n", env_plugins);
+	  TAU_METADATA("TAU_SELECT_FILE", filename);
+      } else {
+        TAU_VERBOSE("TAU: Ignoring TAU_SELECT_FILE because TAU_PLUGINS and/or TAU_PLUGINS_PATH is set.\nPlease use export TAU_PLUGINS_PATH=%s and export TAU_PLUGINS=\"libTAU-filter-plugin.so(%s)\"\n", strdup(TAU_LIB_DIR), strdup(env_select_file)); 
+      }
+    }
+
     tmp = getconf("TAU_OPENMP_RUNTIME");
     if (parse_bool(tmp, TAU_OPENMP_RUNTIME_DEFAULT)) {
       env_openmp_runtime_enabled = 1;
@@ -1854,6 +2039,46 @@ void TauEnv_initialize()
 #endif
 #endif
 
+#if defined(TAU_SOS)
+    tmp = getconf("TAU_SOS");
+    if (parse_bool(tmp, TAU_SOS_DEFAULT)) {
+      env_sos_enabled = 1;
+      TAU_VERBOSE("TAU: SOS Enabled\n");
+      TAU_METADATA("TAU_SOS", "on");
+    } else {
+      env_sos_enabled = 0;
+      TAU_VERBOSE("TAU: SOS Disabled\n");
+      TAU_METADATA("TAU_SOS", "off");
+    }
+
+    tmp = getconf("TAU_SOS_TRACE_EVENTS");
+    if (parse_bool(tmp, TAU_SOS_TRACE_EVENTS_DEFAULT)) {
+      env_sos_trace_events = 1;
+      TAU_VERBOSE("TAU: SOS Trace Events Enabled (MPI, ADIOS)\n");
+      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "on");
+    } else {
+      env_sos_trace_events = 0;
+      TAU_VERBOSE("TAU: SOS_TRACE_EVENTS Disabled\n");
+      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "off");
+    }
+
+    tmp = getconf("TAU_SOS_PERIODIC");
+    if (parse_bool(tmp, TAU_SOS_PERIODIC_DEFAULT)) {
+      env_sos_periodic = 1;
+      TAU_VERBOSE("TAU: SOS Periodic Transmission Enabled\n");
+      TAU_METADATA("TAU_SOS_PERIODIC", "on");
+      tmp = getconf("TAU_SOS_PERIOD");
+      env_sos_period = parse_int(tmp, TAU_SOS_PERIOD_DEFAULT);
+      TAU_VERBOSE("TAU: SOS Transmission Period: %d\n", env_sos_period);
+      sprintf(tmpstr, "%d", env_sos_period);
+      TAU_METADATA("TAU_SOS_PERIOD", tmpstr);
+    } else {
+      env_sos_periodic = 0;
+      TAU_VERBOSE("TAU: SOS Periodic Transmission Disabled\n");
+      TAU_METADATA("TAU_SOS_PERIODIC", "off");
+    }
+#endif
+
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
       env_ebs_enabled = 1; // enable samping too?
@@ -1869,9 +2094,15 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_SAMPLING");
     if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      env_ebs_enabled = 0;
+      TAU_VERBOSE("TAU: Sampling Disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_SAMPLING", "disabled (memory management disabled)");
+#else
       env_ebs_enabled = 1;
       TAU_VERBOSE("TAU: Sampling Enabled\n");
       TAU_METADATA("TAU_SAMPLING", "on");
+#endif
     } else {
       env_ebs_enabled = 0;
       TAU_VERBOSE("TAU: Sampling Disabled\n");
@@ -2128,6 +2359,15 @@ void TauEnv_initialize()
       env_bfd_lookup = 0;
       TAU_VERBOSE("TAU: BFD Lookup Disabled\n");
       TAU_METADATA("TAU_BFD_LOOKUP", "off");
+    }
+
+    tmp = getconf("TAU_MERGE_METADATA");
+    if (parse_bool(tmp, TAU_MERGE_METADATA_DEFAULT)) {
+      env_merge_metadata = 1;
+      TAU_VERBOSE("TAU: Metadata Merging Enabled\n");
+    } else {
+      env_merge_metadata = 0;
+      TAU_VERBOSE("TAU: Metadata Merging Disabled\n");
     }
 
 #if defined(TAU_TBB_SUPPORT) && defined(TAU_MPI)

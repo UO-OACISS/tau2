@@ -43,6 +43,8 @@
 #include <Profile/TauInit.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauBacktrace.h>
+#include <Profile/TauUtil.h>
+#include "Profile/TauSOS.h"
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -68,6 +70,9 @@
 #define LOGV(...) //__android_log_print(ANDROID_LOG_VERBOSE, "TAU", __VA_ARGS__)
 
 #endif
+
+#include <Profile/TauPlugin.h>
+#include <Profile/TauPluginInternals.h>
 
 using namespace std;
 
@@ -107,7 +112,6 @@ int dl_initialized = 0;
 #else
 int dl_initialized = 1;
 #endif
-
 
 #ifndef TAU_DISABLE_SIGUSR
 
@@ -419,6 +423,7 @@ alfred(void *arg)
 
 extern "C" int Tau_init_initializeTAU()
 {
+
   //protect against reentrancy
   if (initializing) return 0;
   initializing = 1;
@@ -437,6 +442,16 @@ extern "C" int Tau_init_initializeTAU()
 
   /* initialize environment variables */
   TauEnv_initialize();
+
+  /*Initialize the plugin system only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
+    if(!Tau_initialize_plugin_system()) {
+      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
+    } else {
+      printf("TAU INIT: Error initializing the plugin system\n");
+    }
+  }
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
@@ -509,6 +524,10 @@ extern "C" int Tau_init_initializeTAU()
   if (TauEnv_get_mic_offload()) {
     TAU_PROFILE_SET_NODE(0);
   }
+#endif
+
+#if defined(TAU_SOS) && !defined(TAU_MPI)
+  TAU_SOS_init_simple();
 #endif
 
   Tau_create_top_level_timer_if_necessary();
