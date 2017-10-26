@@ -1,0 +1,96 @@
+// File:        samr.input 
+// Description: Input file for SAMARC
+
+// global parameters
+GP { 
+   nsteps         = 600
+   dt             = 0.0625 
+   nsave          = 10 // how often to write soln
+   nregrid        = 0// how often to regrid
+   nstats         = 0 // how often to write stats
+
+   fringe         = 3  // number of fringe cells
+   jk2d           = FALSE // 2D problem in JK plane (L=1)
+
+   verbose        = 5  // level of verbosity (1-10)
+}
+
+// mesh data inputs
+MeshData {
+   use_iblank = TRUE 
+   use_xyz    = TRUE 
+   use_q      = TRUE 
+   use_err    = TRUE 
+}
+
+// IO parameters
+IO {
+   file_output_type = "fv"  // options are "overgrid", "fv", "visit"
+   output_fringe = FALSE
+   show_cfbdry   = TRUE   // setting false shows gaps at coarse-fine bdr
+}
+
+// adaptive meshing inputs
+AdaptiveMeshing {
+   coarse_domain = 140 , 28  , 28  // #cells on coarsest level
+
+
+   xlo           = 0.75 , 0.75 , 0.75  // lower far-field domain extents
+   xhi           = 35.75 , 7.75 ,  7.75  // upper far-field domain extents
+
+   periodic      = FALSE, FALSE, FALSE
+
+   max_levels       = 1
+   refine_ratio     = 2,2,2   // refine ratio between levels [max_levels] 
+
+   // The following are used to control block size and "crispness" of
+   // refinement.  In particular,
+   //   - cluster_eff, combine_eff tightened (i.e. set closer to 1.0)
+   //     produces many small blocks with tight refinement around features.
+   //   - cluster_eff, combine_eff loosened (i.e. set closer to 0.0)
+   //     produces fewer large blocks around features.
+   //   - smallest block size should be set small to produce many smaller
+   //     patches, large to produce fewer larger patches.
+   // The settings must be used in unison.  The largest/smallest block
+   // size always takes precedence over the cluster efficiencies.
+
+   largest_block = 500 // largest allowed domain block (i.e. N in NxNxN blk)
+   smallest_block = 7 // smallest   "      "      "
+   cluster_eff = 0.70  // clustering stopped when
+                       // (#tagged cells/total cells) > cluster efficiency
+   combine_eff = 0.85  // blocks merged if
+                       // (non-unioned #cells/unioned #cells) > combine eff
+   tag_buffer  = 2
+   iblank_strategy = 1 // 1=standard overset (holes+igbps in overlap)
+                       // 2=composite grid (holes only in overlap)
+
+   // This controls refinement - "refine_criteria" can be any combination of
+   // "GEOMETRY","SOLUTION", and/or "FIXED".
+   // if tagging_criteria = "GEOMETRY" the "igbp_filename" and
+   //                                  "igbp_lowmem_option" should be included
+   // if tagging_criteria = "SOLUTION" the "soln_threshold" should be included
+   // if tagging_criteria = "FIXED" the "RefineBoxes" DB should be included
+   //refine_criteria = "SOLUTION"
+   //soln_threshold = 0.70
+   refine_criteria = "FIXED"
+
+   RefineBoxes {
+      Level0 {
+         boxes_0 = [ (8,8,8) , (19,19,19) ]
+      }
+      Level1 {
+         boxes_0 = [ (24,24,24) , (31,31,31) ]
+      }
+   }
+}
+
+ 
+
+// SAMRAI timers
+TimerManager {
+   print_exclusive      = TRUE   // output exclusive time
+//   print_threshold      = -0.01   // don't output any that use < 0.01% total time
+   timer_list = "apps::SAMAdaptiveMeshing::*",
+                "apps::SAMTimeIntegration::*"
+}
+

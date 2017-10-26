@@ -1,0 +1,44 @@
+#######################################################################
+Created by Andy Wissink 8/07
+Updated for mpi4py by John Linford <jlinford@paratools.com> 3 May 2013
+Updated again by John Linford <jlinford@paratools.com> 26 Oct 2017
+#######################################################################
+
+Vanilla run:
+mpirun -np 4 python ./samarcrun.py
+
+With tau_python:
+export PATH=/path/to/tau-VERSION/x86_64/bin:$PATH
+mpirun -np 4 tau_python ./samarcrun.py
+pprof
+paraprof 
+
+With tau_exec and TAU compilers:
+export PATH=/path/to/tau-VERSION/x86_64/bin:$PATH
+export TAU_MAKEFILE=/path/to/tau-VERSION/x86_64/lib/Makefile.tau-*icpc-mpi-python-pdt
+make clean
+make TAU=1
+mpirun -np 4 tau_python ./samarcrun.py
+pprof
+paraprof 
+
+Compile:
+^^^^^^^^
+   1. edit Makefile to set CXX, CC, F90 compilers and PY_INCL location
+   2. cd swig; edit Makefile to set SWIG_LIB location; cd ..
+   3. make - generates _samint.so
+   4. to test: 
+         python
+         >>> import _samint
+         (should give no errors)
+
+Running Example:
+^^^^^^^^^^^^^^^^
+   1. cd example
+   2. edit samarcrun.py 
+      line 10: set the sys.path to your location of 'mpi4py-c++-f90'
+               (where to look for samarc.py)
+      line 16: set the input file 
+               (currently 'coarse.input', the one thats already in there)
+      line 20-: set run parameters 
+   3. python samarcrun.py
