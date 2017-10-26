@@ -53,6 +53,38 @@ download()
   fi
 }
 
+clone()
+{
+  src="$1"
+  dst="$2"
+  echo "git clone $src" "$dst"
+  git clone "$src" "$dst"
+}
+
+installsos()
+{
+ installdir="$1"
+ cd $installdir
+ P=`pwd`
+ echo "Install SOS - EVPath"
+ wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+ CHAOS_PATH=`pwd`
+ FLEXPATH_DIR=$CHAOS_PATH/inst
+ perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR
+ perl ./chaos_build.pl
+ # set path to Flexpath/EVPath (see above)
+ PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig 
+ 
+ echo "Install SOS: $P"
+ source hosts/linux/setenv.sh
+ mkdir build-linux
+ ./scripts/configure.sh -c linux
+ cd build-linux
+ export sosdir=$P/inst
+ cmake  
+ make ; make install 
+}
+
 fix_tilde_at_the_start_of_cube_path()
 {
     cubedir=`echo $cubedir | sed -e "s,^~,$HOME,"g`
@@ -895,6 +927,8 @@ opari_construct=no
 boost=no
 sos=no
 sosdir=
+download_sos=no
+install_sos=no
 adios=no
 adiosdir=
 #caliper=no
@@ -1698,12 +1732,8 @@ for arg in "$@"; do
 
 	-sos=*)
 	    sos=yes
+            echo "-sos="
 	    sosdir=`echo $arg | sed -e 's/-sos=//'`
-	    if [ ! -d $sosdir ]
-	    then
-		echo "Error: Cannot access SOS directory $sosdir"
-		exit 1
-	    fi
 	    shift
 	    ;;
 
@@ -1809,6 +1839,7 @@ for arg in "$@"; do
 	    ;;
 
 	-ompt=download*)
+            echo "ompt=download"
 	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
@@ -6469,6 +6500,14 @@ fi #unwind=download
 
 
 ######################################################################
+# Install Scalable Observation System (SOS) if requested
+######################################################################
+
+if [ "x$download_ompt" = xyes ] ; then
+  echo "SOS (Scalable Observation System) installation requested"
+fi
+
+######################################################################
 # Install Clang/LLVM OpenMP runtime with OMPT if requested
 ######################################################################
 
@@ -7898,6 +7937,24 @@ if [ $pin = yes -a "x$pindir" != "x" ]; then
     fixmakeargs="$fixmakeargs PIN pindir=$pindir"
     tauoptions="${tauoptions}-pin"
 fi 
+
+######################################################################
+# Install SOS if requested
+######################################################################
+sosurl=https://github.com/cdwdirect/sos_flow.git
+sosrepos=sos
+
+echo "$sosdir"
+if [ "x$sos" = "xyes" ] ; then
+  if [ "x$sosdir" = xdownload ] ; then
+    echo "Install SOS"
+    p=`pwd`
+    cd $targetdir/$architecture/; clone "$sosurl" "$sosrepos"; installsos "$sosrepos"
+  else
+    echo "Error: Cannot access SOS directory $sosdir"
+    exit 1   
+  fi
+fi
 
 ######################################################################
 # Install BFD if requested
