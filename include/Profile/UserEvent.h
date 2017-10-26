@@ -371,7 +371,7 @@ public:
 
 private:
 
-  long * FormulateContextComparisonArray(Profiler * current, std::size_t * size);
+  void FormulateContextComparisonArray(Profiler * current, long * comparison);
   TauSafeString FormulateContextNameString(Profiler * current);
 
   bool contextEnabled;

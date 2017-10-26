@@ -852,6 +852,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 				topos.add(key.split(" ")[0]);
 				foundTopo=true;
 			}
+			
 		}
 		
 		if(!foundTopo){
@@ -861,18 +862,32 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 				 * If we don't have 0,0,0 get a list of all the threads. If any thread has more metadata than the first we assume that's the one with the core metadata. If any has less than the first we assume the first has the core metadata.
 				 */
 				List<Thread> threads = getDataSource().getThreads();
-				int num=threads.get(0).getMetaData().keySet().size();
-				for(int i=1;i<threads.size();i++){
-					int tmp =threads.get(i).getMetaData().keySet().size();
+				
+				Iterator<Thread> threadIt = threads.iterator();
+				if(!threadIt.hasNext()){
+					return topos;
+				}
+				Thread currentThread=threadIt.next();
+				base = currentThread;
+				int num=currentThread.getMetaData().keySet().size();
+				while(threadIt.hasNext()){
+					
+					currentThread=threadIt.next();
+					
+					int tmp =currentThread.getMetaData().keySet().size();
 					if(tmp>num){
-						base=threads.get(i);
+						base=currentThread;
 						break;
 					}else if(tmp<num){
-						base=threads.get(0);
+						
 						break;
 					}
 				}
 			}
+			if(base==null){
+				return topos;
+			}
+			boolean foundCray=false;
 			keys = base.getMetaData().keySet();
 			for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
 				String key = it.next().name;
@@ -880,6 +895,11 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 				{
 					topos.add(key.split(" ")[0]);
 					foundTopo=true;
+				}
+				if(!foundCray&&key.startsWith("CRAY_PMI")){
+					topos.add("CRAY_PMI");
+					foundTopo=true;
+					foundCray=true;
 				}
 			}
 		}

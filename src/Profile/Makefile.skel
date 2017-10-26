@@ -55,14 +55,14 @@ INSTALLDEST   = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
-CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(OPENMPOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SOS_INCLUDE_OPTS) $(TAU_SHMEM_INCLUDE)
 
 SERIAL_CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
 
 TAU_UPC_FPIC= -Wc,-fPIC
 UPCFLAGS      = $(TAUINC) $(subst -fPIC,$(TAU_UPC_FPIC), $(PROFILEOPTS) )
 
-CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(OPARI2_INCLUDE) $(TAU_SHMEM_INCLUDE)
+CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(OPARI2_INCLUDE) $(TAU_SOS_INCLUDE_OPTS) $(TAU_SHMEM_INCLUDE)
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
@@ -80,16 +80,18 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/PyBindings.h   $(INCDIR)/PyTimer.h          \
 		$(INCDIR)/RenciSTFF.h    $(INCDIR)/PapiThreadLayer.h  \
 		$(INCDIR)/TauEnv.h	 $(INCDIR)/TauInit.h          \
-		$(INCDIR)/TauTrace.h     $(INCDIR)/TauSilc.h          \
+		$(INCDIR)/TauTrace.h     $(INCDIR)/TauTraceOTF2.h $(INCDIR)/TauSilc.h          \
 		$(TAUROOT)/include/tau_internal.h $(INCDIR)/TauSampling.h $(INCDIR)/TauMetaData.h \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
 		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
 		$(INCDIR)/TauMemory.h $(INCDIR)/TauIoWrap.h		\
 		$(INCDIR)/TauBfd.h \
+		$(INCDIR)/TauCollectives.h \
 		$(INCDIR)/TauMmapMemMgr.h $(INCDIR)/TauPathHash.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
 		$(INCDIR)/adb.h         $(INCDIR)/jdwp.h          \
+		$(INCDIR)/LikwidLayer.h
 
 LDFLAGS	      =
 
@@ -128,6 +130,11 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF#
 #CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o CudaSass.o #ENDIF#
 
+#############################################
+# OTF2 OBJECTS
+#############################################
+#OTF2#OTF2_O = TracerOTF2.o TauCollectives.o
+
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
@@ -136,12 +143,13 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o TauCallSite.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
-		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPENMP_PGS_O) $(OPARI_O) \
+		$(PAPI_O) $(LIKWID_O)  $(TAU_JAVA_O) $(OPENMP_O) $(OPENMP_PGS_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
-		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O)
+		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(SOS_O) $(ADIOS_O) \
+		$(OTF2_O) $(CALIPER_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -200,6 +208,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
+#PYTHON#EXTRA_LIBS += $(MPI_WRAPPER) #ENDIF#
 
 ##############################################
 # For building TauLinuxTimers with gcc
@@ -420,9 +429,9 @@ $(TAU_NULL)$(TAU_CUPTI_LIB): $(TAU_CUPTI_OBJS) $(TAU_DSO) $(TAU_LIB_DIR)/$(TAU_D
 		-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT)
 		$(TAU_RANLIB) $(TAU_CUPTI_LIB)
 
-$(TAU_NULL)$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_OBJS) $(TAU_DSO) $(TAU_LIB_DIR)/$(TAU_DSO)
+$(TAU_NULL)$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_OBJS) $(TAU_CUPTI_OBJS) $(TAU_DSO) $(TAU_LIB_DIR)/$(TAU_DSO)
 		$(PRELINK_PHASE)
-		$(TAU_CUDA_CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_ACTIVITY_LIB) $(TAU_CUPTI_ACTIVITY_OBJS) \
+		$(TAU_CUDA_CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_ACTIVITY_LIB) $(TAU_CUPTI_ACTIVITY_OBJS) $(TAU_CUPTI_OBJS) \
 		-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(TAU_LINKER_RPATH_OPT)
 		$(TAU_RANLIB) $(TAU_CUPTI_ACTIVITY_LIB)
 
@@ -645,6 +654,15 @@ TauOpenShmemOpenMPIC.o: TauOpenShmemOpenMPIC.c $(HDRS)
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC)  -c $(@:.o=.cpp)
 
+TauSOS.o  : TauSOS.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -pthread -c $(@:.o=.cpp)
+
+TauADIOS.o  : TauADIOS.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TauCaliper.o 	: TauCaliper.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -662,6 +680,12 @@ TauIoWrap.o 	: TauIoWrap.cpp $(HDRS)
 
 TauSnapshot.o 	: TauSnapshot.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauProfileMerge.o 	: TauProfileMerge.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TauMetaDataMerge.o 	: TauMetaDataMerge.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauUnify.o 	: TauUnify.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
@@ -747,6 +771,12 @@ ProfileParam.o   : ProfileParam.cpp $(HDRS)
 Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
+TracerOTF2.o : TracerOTF2.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TauCollectives.o : TauCollectives.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS)  $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
@@ -790,6 +820,9 @@ TauJava.o :	TauJava.cpp
 	$(CXX) $(CXXFLAGS) -c TauJava.cpp
 
 PapiLayer.o 	: PapiLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+LikwidLayer.o 	: LikwidLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 MultipleCounters.o : MultipleCounters.cpp $(HDRS)

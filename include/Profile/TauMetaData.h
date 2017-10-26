@@ -20,8 +20,8 @@
 #ifndef _TAU_METADATA_H_
 #define _TAU_METADATA_H_
 
-#include <TauMetaDataTypes.h>
-#include <TauUtil.h>
+#include <Profile/TauMetaDataTypes.h>
+#include <Profile/TauUtil.h>
 #include <map>
 #include <string.h>
 #include <sstream>
@@ -129,6 +129,8 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen);
 void Tau_metadata_register(const char *name, int value);
 int Tau_metadata_mergeMetaData();
 int Tau_write_metadata_records_in_scorep(int tid);
+char* Tau_metadata_get(const char *name, int tid);
 
+void Tau_metadata_push_to_sos(void);
 
 #endif /* _TAU_METADATA_H_ */

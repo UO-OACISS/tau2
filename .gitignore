@@ -76,4 +76,4 @@ utils/tau_reduce
 utils/tau_selectfile
 utils/tau_wrap
 utils/trace2profile/trace2profile
-
+core

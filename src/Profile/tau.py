@@ -179,6 +179,8 @@ class Profile(ctau_impl.Profiler):
                 raise ImportError('No source file found for module %s' % modname)
             code = compile(fileobj.read(), path, 'exec')
             module = new_module(newname)
+            if '__file__' not in module.__dict__:
+                module.__dict__['__file__'] = path
             sys.modules[newname] = module
             exec(code, module.__dict__)
         finally:

@@ -1615,7 +1615,9 @@ public class ParaProfUtils {
     	if(dex>=0){
     		str = str.substring(0,dex);
     	}
-    	
+    	else if((dex=str.indexOf(" [THROTTLED]"))>=0){
+    		str = str.substring(0,dex);
+    		}
     	return str;
     }
 

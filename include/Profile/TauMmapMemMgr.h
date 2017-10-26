@@ -13,11 +13,11 @@
 
 #define TAU_MEMMGR_ALIGN sizeof(long) /* In bytes */
 
-extern "C" void Tau_MemMgr_initIfNecessary();
+extern "C" bool Tau_MemMgr_initIfNecessary(void);
 extern "C" void *Tau_MemMgr_mmap(int tid, std::size_t size);
 extern "C" void *Tau_MemMgr_malloc(int tid, std::size_t size);
 extern "C" void Tau_MemMgr_free(int tid, void *addr, std::size_t size);
-extern "C" void Tau_MemMgr_finalizeIfNecessary();
+extern "C" void Tau_MemMgr_finalizeIfNecessary(void);
 
 template <typename T> 
 class TauSignalSafeAllocator {

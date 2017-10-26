@@ -53,6 +53,38 @@ download()
   fi
 }
 
+clone()
+{
+  src="$1"
+  dst="$2"
+  echo "git clone $src" "$dst"
+  git clone "$src" "$dst"
+}
+
+installsos()
+{
+ installdir="$1"
+ cd $installdir
+ P=`pwd`
+ echo "Install SOS - EVPath"
+ wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+ CHAOS_PATH=`pwd`
+ FLEXPATH_DIR=$CHAOS_PATH/inst
+ perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR
+ perl ./chaos_build.pl
+ # set path to Flexpath/EVPath (see above)
+ PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig 
+ 
+ echo "Install SOS: $P"
+ source hosts/linux/setenv.sh
+ mkdir build-linux
+ ./scripts/configure.sh -c linux
+ cd build-linux
+ export sosdir=$P/inst
+ cmake  
+ make ; make install 
+}
+
 fix_tilde_at_the_start_of_cube_path()
 {
     cubedir=`echo $cubedir | sed -e "s,^~,$HOME,"g`
@@ -400,6 +432,7 @@ for arg in "$@"; do
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-likwid=<dir> ............................. Specify location of LIKWID."
 	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
@@ -457,8 +490,12 @@ for arg in "$@"; do
         echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
         echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
         echo "-noex .................. Use no exceptions while compiling the library."
+	echo "-noplugins ...................... Do not build support for TAU plugins."
         echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+        echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+        echo "                       (Note: also disables sampling, marker tracking)."
         echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+        echo "-PMI ...................... Enable Cray PMI for tracking topology info."
         echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
         echo "-help ...................................... display this help message."
         echo "-fullhelp .............................. display the full help message."
@@ -518,6 +555,7 @@ for arg in "$@"; do
         echo "    Note: 'download' will download and build the library automatically."
         echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
         echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	echo "-likwid=<dir> ............................. Specify location of LIKWID."
         echo "-beacon=<dir> ............... Specify location of BEACON."
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	echo "-pin=<dir> ..... Specify location of Intel PIN instrumentation toolkit."
@@ -621,8 +659,12 @@ for arg in "$@"; do
 	    echo "-PAPIVIRTUAL   .......... Use PAPI for virtual (user) time calculation."
 	    echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
 	    echo "-noex .................. Use no exceptions while compiling the library."
+	    echo "-noplugins ...................... Do not build support for TAU plugins."
 	    echo "-nolm ................. On Ubuntu, do not add -lm while linking in TAU."
+            echo "-DISABLE_MEMORY_MANAGER ..................... Disable TAU heap manager."
+            echo "                       (Note: also disables sampling, marker tracking)."
 	    echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+            echo "-PMI ...................... Enable Cray PMI for tracking topology info."
 	    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
 	    echo "-zeptodir=<dir> ............................. ZeptoOS install location."
 	    echo "                              See http://www-unix.mcs.anl.gov/zeptoos/."
@@ -758,11 +800,14 @@ charm=no
 comm=yes
 sproc=no
 noex=no
+plugins=yes
 disableshared=no
+pmi=no
 setnode0=no
 compensate=no
 smarts=no
 papi=no
+likwid=no
 beacon=no
 beacondir="/"
 darshan=no
@@ -837,6 +882,8 @@ otf=no
 otfdir=
 otfinc=
 otflib=
+download_otf=no
+download_likwid=no
 cubedir=own
 ebs2otf=no
 ebs_has_rt=no
@@ -878,6 +925,14 @@ forceshared=no
 opari_region=no
 opari_construct=no
 boost=no
+sos=no
+sosdir=
+download_sos=no
+install_sos=no
+adios=no
+adiosdir=
+#caliper=no
+#caliperdir=
 apex=no
 dyninst=no
 dyninstinc=no
@@ -922,6 +977,7 @@ cupti=no
 strsignal_ok=no
 android_version=4.4
 android_platform=19
+disable_memory_manager=no
 
 restore_perfdmf_and_paraprof
 
@@ -1223,15 +1279,15 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    -beacon=*)
-        beacon=yes
+        -beacon=*)
+            beacon=yes
 	    beacondir=`echo $arg | sed -e 's/-beacon=//'`
 	    if [ ! -d $beacondir ] ; then
 		echo "Error: Cannot access BEACON directory $beacondir"
 		exit 1
 	    fi
-        shift
-        ;;
+            shift
+            ;;
 	-papi=*)
 	    papi=yes
 	    papidir=`echo $arg | sed -e 's/-papi=//'`
@@ -1239,15 +1295,32 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
-        if [ $papidir = "/usr" ]; then
+            if [ $papidir = "/usr" ]; then
 		  fixmakeargs="$fixmakeargs PAPINOINC"
-        fi
+            fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
 		  fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
             fi
 
 	    shift
 	    ;;
+
+        -likwid=download*)
+            echo "Downloading LIKWID..."
+            likwid=yes
+            download_likwid=yes
+            shift
+            ;;
+
+         -likwid=*)
+            likwid=yes
+	    likwiddir=`echo $arg | sed -e 's/-likwid=//'`
+	    if [ ! -d $likwiddir ] ; then
+		echo "Error: Cannot access LIKWID directory $likwiddir"
+		exit 1
+	    fi
+            shift
+            ;;
 
 	-gpi=*)
 	    gpi=yes
@@ -1308,16 +1381,16 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-        -unwind=download*)
-            echo "Downloading libunwind..."
-            # So that the user doesn't have to specify the unwinder,
-            # use libunwind as the default.
-            unwinder="libunwind"
-            unwind_flag="-DTAU_USE_LIBUNWIND"
-            unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
-            download_unwind=yes
-            shift
-            ;;
+    -unwind=download*)
+        echo "Downloading libunwind..."
+        # So that the user doesn't have to specify the unwinder,
+        # use libunwind as the default.
+        unwinder="libunwind"
+        unwind_flag="-DTAU_USE_LIBUNWIND"
+        unwind_lib_flag="-lunwind#-Wl,-rpath,\$(UNWIND_LIB)"
+        download_unwind=yes
+        shift
+        ;;
 
 	-unwind=*)
 	    unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
@@ -1594,6 +1667,13 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+        -otf=download*)
+            echo "Downloading libotf2..."
+            otf=yes
+            download_otf=yes
+            shift
+            ;;
+
 	-otf=*)
 	    otf=yes
 	    # don't set this! it will enable tracing by default. Just because
@@ -1649,6 +1729,35 @@ for arg in "$@"; do
 	    fi
 	    shift
 	    ;;
+
+	-sos=*)
+	    sos=yes
+            echo "-sos="
+	    sosdir=`echo $arg | sed -e 's/-sos=//'`
+	    shift
+	    ;;
+
+	-adios=*)
+	    adios=yes
+	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
+	    if [ ! -d $adiosdir ]
+	    then
+		echo "Error: Cannot access ADIOS directory $adiosdir"
+		exit 1
+	    fi
+	    shift
+	    ;;
+
+#	-caliper=*)
+#	    caliper=yes
+#	    caliperdir=`echo $arg | sed -e 's/-caliper=//'`
+#	    if [ ! -d $caliperdir ]
+#	    then
+#		echo "Error: Cannot access CALIPER directory $caliperdir"
+#		exit 1
+#	    fi
+#	    shift
+#	    ;;
 
 	-dyninst=*)
 	    dyninst=yes
@@ -1730,6 +1839,7 @@ for arg in "$@"; do
 	    ;;
 
 	-ompt=download*)
+            echo "ompt=download"
 	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
@@ -2142,9 +2252,27 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-noplugins)
+	    # Do not build plugins
+	    plugins=no
+	    shift
+	    ;;
+
 	-DISABLESHARED)
 	    # Disable shared library creation
 	    disableshared=yes
+	    shift
+	    ;;
+
+	-DISABLE_MEMORY_MANAGER)
+	    # Disable heap management for sampling, signal handling
+	    disable_memory_manager=yes
+	    shift
+	    ;;
+
+	-PMI)
+	    # Enable tracking Cray topology information using PMI 
+	    pmi=yes
 	    shift
 	    ;;
 
@@ -2483,6 +2611,7 @@ configure_perfexplorer () {
 	echo "#define TAU_BIN_DIR \"default\"" >> include/tauarch.h
     else
 	echo "#define TAU_BIN_DIR \"$BINTARGET\"" >> include/tauarch.h
+	echo "#define TAU_LIB_DIR \"$targetdir/$machine/lib/shared$tauoptions\"" >> include/tauarch.h
     fi
 
     cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
@@ -2514,13 +2643,13 @@ configure_perfexplorer () {
     chmod a+rx $BINTARGET/tau_java
 
 
-
     cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
     cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
     cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
     cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
     cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
     cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
+    cp ${tauroot}/tools/src/vis-jogl2/bin/vis-jogl2.jar $JARTARGET
     cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/google-gson-2.1/gson-2.1.jar $JARTARGET
@@ -2530,6 +2659,10 @@ configure_perfexplorer () {
     cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
+    #Used for jogl2
+    cp ${tauroot}/tools/src/contrib/jogl/jogl-all.jar $JARTARGET
+    cp ${tauroot}/tools/src/contrib/jogl/gluegen-rt.jar $JARTARGET
+
     cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/h2.jar $JARTARGET
     cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
@@ -2541,9 +2674,17 @@ configure_perfexplorer () {
     # install the perl scripts for ebs post-processing in the bin dir
     cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
     cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
+    cp ${tauroot}/tools/src/pycoolr/bin/pycoolr $BINTARGET
+    chmod a+rx $BINTARGET/pycoolr
+    cp -r ${tauroot}/tools/src/pycoolr/src/pycoolrgui $BINTARGET
 
     # install post-mortem address translation tool
     cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
+    chmod +x $BINTARGET/tau_resolve_addresses.py
+
+    # install tau_baseline toool
+    cp ${tauroot}/tools/src/tau_baseline $BINTARGET
+    chmod +x $BINTARGET/tau_baseline
 
     case $machine in
 
@@ -2551,6 +2692,9 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl.jnilib.gz > $JARTARGET/libjogl.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_awt.jnilib.gz > $JARTARGET/libjogl_awt.jnilib
 	    gunzip -c tools/src/contrib/jogl/apple/libjogl_cg.jnilib.gz > $JARTARGET/libjogl_cg.jnilib
+	    cp tools/src/contrib/jogl/apple/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+	    cp tools/src/contrib/jogl/apple/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
 	    ;;
 
 	i386_linux)
@@ -2558,13 +2702,19 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	    gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	    cp tools/src/contrib/jogl/i386_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/i386_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 
 	    ;;
 
-	arm_linux)
+	arm_linux|arm64_linux)
 	    gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+
+	    cp tools/src/contrib/jogl/arm_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/arm_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
             if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
               gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
             fi
@@ -2609,6 +2759,8 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+            cp tools/src/contrib/jogl/x86_64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/x86_64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 	    ;;
 
         mic_linux)
@@ -2654,7 +2806,14 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            cp tools/src/contrib/jogl/ppc64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/ppc64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 	    ;;
+
+	ibm64linux)
+            cp tools/src/contrib/jogl/ppc64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/ppc64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+            ;;
 
 	bgp)
 	    gunzip -c tools/src/contrib/jogl/ppc64/jogl.jar.gz > $JARTARGET/jogl.jar
@@ -3106,6 +3265,11 @@ case $machine in
 	    pgi=yes
 	    default_fortran=pgi
 	    fixmakeargs="$fixmakeargs PGI COMPINST_PGI"
+        elif [ "x$PE_ENV" = xGNU -a "x$CLANG_HOME" != "x" ]; then 
+            llvm=yes
+	    tauoptions="${tauoptions}-llvm"
+	    default_fortran=gfortran
+	    fixmakeargs="$fixmakeargs COMPINST_GNU"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
@@ -3508,7 +3672,7 @@ fi
 
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
-    orig_useropt="-mmic -O2 "
+    orig_useropt="-xMIC-AVX512 -O2 "
 fi
 
 if [ $machine = apple ] ; then
@@ -3572,8 +3736,7 @@ orig_c_compiler=$c_compiler
 orig_cxx_compiler=$cxx_compiler
 orig_fortran_compiler=$fortran_compiler
 # mpicxx may change it.
-if [ $cxx_compiler = mpicxx ]
-then
+if [ $cxx_compiler = mpicxx ] ; then
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
     mpi=yes
     if [ $cxxloaded = 1 ]
@@ -3587,7 +3750,7 @@ then
             if [ "x$fortran_compiler" = "xifort" ]; then
 		fortran_compiler=intel
 	    fi
-            if [ "x$fortran_compiler" = "xxlf_r" ]; then
+            if [ "x$fortran_compiler" = "xxlf_r" -o "x$fortran_compiler" = "xxlf90_r"  ]; then
                 fixmakeargs="$fixmakeargs IBM64LINUX_XLF"
 	    fi
             if [ "x$fortran_compiler" = "xxlflang" ]; then
@@ -3630,8 +3793,8 @@ then
 	        mpilibargs_added_to_fixmakeargs=yes
 
             fi
-            full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
-            full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
+            full_cxx_compiler=`mpicxx -show | tail -n 1 | awk '{ print $1; }'`
+            full_cc_compiler=`mpicc -show | tail -n 1 | awk '{ print $1; }'`
             fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
             mpi=yes
 	fi
@@ -3788,7 +3951,15 @@ case $cxx_compiler in
             compilerLocation=`grep bgxlc++ /usr/local/tools/check_compile_line/bgxlc++ | awk '{ print $3;}'`
 	fi
 
+
 	extradircxx=`echo $compilerLocation | sed s/$ibm_compiler/../`
+
+        if [ "$machine" = ibm64linux ] ; then
+           if [ ! -r $extradircxx/lib/libibmc++.a ]; then
+              cxxpath=`find $extradircxx -name libibmc++.a -print `
+              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' `
+           fi
+        fi
 
 	extradir=`which xlf90 | sed s/xlf90/../`
 	if [ $fortran_compiler = no ]
@@ -4226,12 +4397,14 @@ case $fortran_compiler in
 
     pgi|pgf90)
 	echo "Default Fortran compiler will be PGI pgf90"
+	pgi=yes
 	extradir=`which pgcc | sed s/pgcc/../`
 	fixmakeargs="$fixmakeargs PGI_FORTRAN"
 	;;
 
     pgfortran)
 	echo "Default Fortran compiler will be PGI pgfortran"
+	pgi=yes
 	extradir=`which pgcc | sed s/pgcc/../`
 	fixmakeargs="$fixmakeargs PGI_FORTRAN_OTHER"
 	;;
@@ -4369,6 +4542,16 @@ then
 fi
 
 
+# PGI sanity check for -latomic
+if [ $pgi = yes -a -d "$extradir" -a -r "$extradir/libatomic.a" ]; then 
+   fixmakeargs="$fixmakeargs PGI_ATOMIC"
+fi
+
+# PGI sanity check for -lC
+if [ $pgi = yes -a -d "$extradir" -a -r "$extradir/libC.a" ]; then
+   fixmakeargs="$fixmakeargs PGI_C"
+fi
+
 if [ $scorep = yes ]; then
   swap_full_cxx_compiler=$full_cxx_compiler
   full_cxx_compiler=`which $orig_cxx_compiler`
@@ -4462,6 +4645,19 @@ then
                       fi
                     fi
                 fi 
+                if [ "x$mpiinc" = "x" -a "x$mpilib" = "x" ]; then
+                  mpiinc_search=`$orig_c_compiler -show | sed -e 's@ @\n@g' | grep "^-I" | sed -e 's@-I@@'`
+                  mpilib_search=`$orig_c_compiler -show | sed -e 's@ @\n@g' | grep "^-L" | sed -e 's@-L@@'`
+                  if [ -d $mpiinc_search -a -r $mpiinc_search/mpi.h ];
+                  then
+		    mpiinc=$mpiinc_search
+		    echo "Using MPI include directory $mpiinc"
+                  fi
+                  if [ -d $mpilib_search -a -r $mpilib_search/mpi.mod ]; then
+		    mpilib=$mpilib_search
+		    echo "Using MPI lib directory $mpilib"
+                  fi 
+                fi
             ;;
 	rs6000|ibm64)
 	    mpiinc=/usr/lpp/ppe.poe/include
@@ -4822,7 +5018,6 @@ if [ "x$mpi" = "xyes" -a "x$mpiinc" = "x" ]; then
       fi
     fi
   fi
-  
 
 fi
 # echo "MPI include and libs checks done"
@@ -5135,6 +5330,10 @@ then
 		    gpshmem=yes
                 fi
 	    fi
+	    if [ -r $shmeminc/shmemx.h ]
+	    then
+                fixmakeargs="$fixmakeargs SHMEMX_H"
+	    fi
 	    shmembindir=`echo $shmeminc | sed -e 's@include@bin@g'`
 	    if [ -r $shmembindir/oshcc ]
 	    then
@@ -5188,6 +5387,10 @@ then
 		fi
 	    fi
             shmem_h="$openshmem_include_dir/shmem.h"
+	    if [ -r $openshmem_include_dir/shmemx.h ]
+	    then
+                fixmakeargs="$fixmakeargs SHMEMX_H"
+	    fi
 	fi
 	if [ $catamount = yes ]
 	then
@@ -5232,6 +5435,10 @@ then
 		shmeminclude=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@include@g'`
                 shmemdir="$shmeminclude/.."
                 shmem_h="$shmeminclude/shmem.h"
+	        if [ -r $shmeminclude/shmemx.h ]
+	        then
+                    fixmakeargs="$fixmakeargs SHMEMX_H"
+	        fi
 		if [ -r $libsmafile -a -d $shmeminclude -a "x$shmeminclude" != "x" ]
 		then
 		    shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
@@ -5291,7 +5498,9 @@ then
 	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
 	    then
 		shmemlibrary=-loshmem
-	    fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+		if [ $pshmem = yes ] ; then
+	            fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	        fi
 	    fi
 	fi
 	if [ -r $openshmem_lib_dir/libshmem.so -o -r $openshmem_lib_dir/libshmem.a ]
@@ -5300,9 +5509,15 @@ then
 	    if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
 	    then
 		shmemlibrary=-lshmem
-	    #fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+		if [ $pshmem = yes ] ; then
+	            fixmakeargs="$fixmakeargs OPENMPI_SHMEM"
+	        fi
 	    fi
 	fi
+    if [ -r $openshmem_lib_dir/libsma.so -o -r $openshmem_lib_dir/libsma.a ]
+    then
+        shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+    fi
     fi
 
     if [ "x$shmemlib" != "x" ]
@@ -5362,9 +5577,16 @@ then
     fi
 
     if [ "x$shmem_h" != "x" -a -r "$shmem_h" ] ; then
-      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | awk '{print $3}'`
-      echo "OpenSHMEM minor version: $shmem_minor_version"
-      if [ "$shmem_minor_version" -le 2 ] ; then
+      shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      if [ "x$shmem_minor_version" = "x" ]; then
+        shmem_minor_version=`grep SHMEM_MINOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
+      fi
+      shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | grep -v _SHMEM | awk '{print $3}'`
+      if [ "x$shmem_major_version" = "x" ]; then
+        shmem_major_version=`grep SHMEM_MAJOR_VERSION "$shmem_h" | grep -v CRAY | grep -v OSHMEM | awk '{print $3}'`
+      fi
+      echo "OpenSHMEM minor version: $shmem_minor_version major version: $shmem_major_version"
+      if [ "$shmem_major_version" -lt 2 -a "$shmem_minor_version" -le 2 ] ; then
         orig_useropt="$orig_useropt -DSHMEM_1_2"
         useropt="$useropt#-DSHMEM_1_2"
         echo "Detected OpenSHMEM version 1.2 or earlier."
@@ -5551,6 +5773,22 @@ if [ $pgi = yes ]; then
   if [ -d $extradir/lib -a ! -r $extradir/lib/libstd.a ]; then
     echo "NOTE: PGI 16+ compiler does not provide libstd.* files in $extradir/lib"
     fixmakeargs="$fixmakeargs PGI_NO_LIBSTD"
+  fi
+fi
+
+if [ $machine = craycnl -a $pmi = no ]; then
+  echo "Testing for <pmi.h> header... ${nnl}"
+cat <<EOF > pmitest.c
+#include <pmi.h>
+EOF
+  if $cxx_compiler -c pmitest.c 1> /dev/null 2>&1 
+  then
+    echo "yes"
+    fixmakeargs="$fixmakeargs CRAYCNL_PMI_FOUND"
+  else
+    echo "no."
+    echo "WARNING! You may need to reconfigure TAU with -PMI if there are missing references during linking."
+    echo "============="
   fi
 fi
 
@@ -6262,6 +6500,14 @@ fi #unwind=download
 
 
 ######################################################################
+# Install Scalable Observation System (SOS) if requested
+######################################################################
+
+if [ "x$download_ompt" = xyes ] ; then
+  echo "SOS (Scalable Observation System) installation requested"
+fi
+
+######################################################################
 # Install Clang/LLVM OpenMP runtime with OMPT if requested
 ######################################################################
 
@@ -6481,6 +6727,12 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
     # The Intel compiler doesn't give an error, but a warning
     # if [ "$machine" = "craycnl" -a "$intel" == "yes" ]
     if [ "$intel" = "yes" ]
+    then
+	mpicompiler=$c_compiler
+        mpiwarnings="-Werror"
+	msuf=c
+    fi
+    if [ "x$llvm" = "xyes" ]
     then
 	mpicompiler=$c_compiler
         mpiwarnings="-Werror"
@@ -7200,8 +7452,12 @@ if [ $mpi = yes ] ; then
 		    fi
 
 		    if [ -r $mpilib/libopen-pal.a -a ! -r $mpilib/libmpi_cxx.so ]; then
+			if [ -r $mpilib/libmpi_cxx.a ]; then
+				LIBMPICXX='-lmpi_cxx'	
+			fi
+
 			echo "NOTE: OpenMPI configured with --disable_shared"
-			mpilibrary='-lmpi_cxx -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil'
+			mpilibrary="$LIBMPICXX -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil"
 			# check for -libverbs, sometimes necessary with OpenMPI
 			if [ $machine != bgq -a $machine != craycnl ] ; then
 			    if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then
@@ -7683,6 +7939,24 @@ if [ $pin = yes -a "x$pindir" != "x" ]; then
 fi 
 
 ######################################################################
+# Install SOS if requested
+######################################################################
+sosurl=https://github.com/cdwdirect/sos_flow.git
+sosrepos=sos
+
+echo "$sosdir"
+if [ "x$sos" = "xyes" ] ; then
+  if [ "x$sosdir" = xdownload ] ; then
+    echo "Install SOS"
+    p=`pwd`
+    cd $targetdir/$architecture/; clone "$sosurl" "$sosrepos"; installsos "$sosrepos"
+  else
+    echo "Error: Cannot access SOS directory $sosdir"
+    exit 1   
+  fi
+fi
+
+######################################################################
 # Install BFD if requested
 ######################################################################
 binutils=binutils-2.23.2
@@ -7842,7 +8116,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
           k1om_bin="`ls -1d /usr/linux-k1om-* | sort -r | head -1`/bin"
           export PATH=$k1om_bin:$PATH
           ./configure \
-            CFLAGS='-mmic -fPIC' CXXFLAGS='-mmic -fPIC' \
+            CFLAGS='-xMIC-AVX512 -fPIC' CXXFLAGS='-xMIC-AVX512 -fPIC' \
             --host=x86_64-k1om-linux \
             --prefix=$bfddir \
             --disable-nls --disable-werror > tau_configure.log 2>&1
@@ -7948,9 +8222,11 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     echo "Error: Cannot access BFD directory $bfddir"
     exit 1
   fi
-  bfdinclude="-I$bfddir/include"
-  fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-  bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+  if [ "$pin" = "no" ]; then
+    bfdinclude="-I$bfddir/include"
+    fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
+  fi 
 
   # The libintl.dylib library is in /opt/local/lib... is that everywhere?
   if [ "x$machine" = "xapple" ] ; then
@@ -7959,7 +8235,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     bfdlink="$bfdlink -L/opt/local/lib"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
   else
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
+    if [ "$pin" = "no" ]; then
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-Wl\,-rpath\,$bfddir/lib#-Wl\,-rpath\,$bfddir/lib64"
+    fi
   fi
 else
   fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
@@ -7997,8 +8275,10 @@ if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; t
 	# stdio.h and libiberty.h
 	echo "no"
     else
-	fixmakeargs="$fixmakeargs TAU_BFD"
-	echo "yes"
+	if [ "$pin" = "no" ]; then
+	  fixmakeargs="$fixmakeargs TAU_BFD"
+	  echo "yes"
+        fi
     fi
 else
     echo "no"
@@ -8066,6 +8346,9 @@ else
 	fi
     fi
 fi
+if [ "$pin" = "yes" ]; then
+   BFDLIBS=""
+fi
 if [ $bfd_worked = "yes" -a $machine = bgq ] ; then
     BFDLIBS=`echo $BFDLIBS | sed -e 's@-liberty@${TAU_BFD_DIR}/lib/libiberty.a@g'`
     fixmakeargs="$fixmakeargs bfddir=$bfddir"
@@ -8075,7 +8358,7 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
     BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
-if [ $bfd_worked = "no" -a "$machine" != "apple" ] ; then
+if [ $bfd_worked = "no" -a "$machine" != "apple" -a $pin = no ] ; then
     echo "failed. Using -lbfd -liberty -lz."
     echo ""
     echo ""
@@ -8167,8 +8450,10 @@ fi
 bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
 if [ "$turnbfdoff" = 'no' ]; then
     if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
-	fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
-	echo "yes"
+	if [ "$pin" = "no" ]; then
+	  fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+	  echo "yes"
+        fi
     else
 	echo "no"
     fi
@@ -8646,45 +8931,6 @@ if [ $ebs2otf = yes ] ; then
 	echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
     fi
 fi
-if [ $otf = yes ] ; then
-    if [ "$otflib" = "" ] ; then
-	if [ -d $otfdir/lib ]; then
-	    otflib="$otfdir/lib"
-	else
-	    otflib="$otfdir/${architecture}/lib"
-	fi
-	echo "OTF Library implicitly set to $otflib"
-    fi
-    if [ "$otfinc" = "" ] ; then
-	if [ -r $otfdir/include/otf.h ]; then
-	    otfinc="$otfdir/include"
-	else
-	    if [ -r $otfdir/include/open-trace-format/otf.h ]; then
-		otfinc="$otfdir/include/open-trace-format"
-	    fi
-	fi
-	echo "OTF Header directory implicitly set to $otfinc"
-    fi
-    if [ ! -d $otflib ]
-    then
-	echo "Error: No available OTF support. Library not found at $otflib."
-	exit 1
-    fi
-    if [ ! -d $otfinc ]
-    then
-	echo "Error: No available OTF support. Headers not found at $otfinc."
-	exit 1
-    fi
-    if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
-	echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
-	exit 1
-	# *CWL* Need version control code here. Still trying to decide the
-	#    best way about it. The above conditional will at least trim away
-	#    ancient versions of OTF.
-    fi
-
-    fixmakeargs="$fixmakeargs otflib=$otflib otfinc=$otfinc"
-fi
 
 if [ $ebs_has_rt = yes ] ; then
     fixmakeargs="$fixmakeargs EBS_HAS_RT ebs_clock_res=$ebs_clock_res"
@@ -8848,8 +9094,8 @@ if [ $apex = yes ] ; then
 		fi
 	fi
 	if [ ${architecture} = "mic_linux" ] ; then
-		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-mmic' >> ${apex_include_file}
-		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-mmic -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
+		echo 'TAUCFLAGS=-DCMAKE_C_FLAGS=-xMIC-AVX512' >> ${apex_include_file}
+		echo 'TAUCXXFLAGS=-DCMAKE_CXX_FLAGS="-xMIC-AVX512 -DBOOST_NO_CXX11_ALLOCATOR"' >> ${apex_include_file}
 	fi
 	if [ ! "x${omptlib}" = "x" ] ; then
 		if [ "${download_ompt}" = "yes" ] ; then
@@ -9306,6 +9552,221 @@ if [ $scorep = yes ] ; then
     fi
 
 fi
+
+
+
+######################################################################
+# Install likwid if requested
+######################################################################
+liblikwid=likwid
+liblikwidtgz=$liblikwid.tgz
+liblikwidurl=http://www.cs.uoregon.edu/research/tau/$liblikwidtgz
+
+if [ "x$likwid" = "xyes" ]; then 
+    if [ "x$likwiddir" = "x" ]; then
+        liblikwiddir=${targetdir}/${architecture}/likwid
+    else
+        liblikwiddir=$likwiddir
+    fi
+    echo "liblikwiddir = $liblikwiddir"
+
+    if [ "x$likwiddir" != "x" -a -d "$likwiddir" ]; then 
+        if [ -r $likwiddir/$liblikwidtgz ]; then
+            echo "NOTE: Copying $likwiddir/$liblikwidtgz "
+            cp $likwiddir/$liblikwidtgz . 
+            download_likwid=yes 
+        fi    
+    fi
+
+    if [ $download_likwid = yes ]; then
+        echo "Downloading likwid"
+        if [ -r "$liblikwiddir/lib/liblikwid.so" ]; then 
+            echo "Found: liblikwid.so"
+            echo "liblikwid download already found, skipping"
+        else 
+            echo "Not found in ${likwiddir}: liblikwid.so"
+            if [ ! -f $liblikwidtgz ]; then 
+                download "$liblikwidurl" "$liblikwidtgz"
+            fi
+
+            # check the tar file
+            if [ ! -f $liblikwidtgz ]; then
+                echo "$liblikwidtgz did not download. Please download it manually from:"
+                echo "$liblikwidurl"
+                echo "Please enter the directory containing the tarball: ${nnl}"
+                read RESPONSE
+                cp $RESPONSE/$liblikwidtgz .
+            fi
+            echo "expanding $liblikwidtgz..."
+            tar -zxf  $liblikwidtgz
+            echo "removing $liblikwidtgz..."
+            /bin/rm -f $liblikwidtgz 
+            cd likwid*; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272 install  ; cd ..
+
+        fi
+        
+    fi
+
+    if [ -r $liblikwiddir/lib/liblikwid.so ]; then
+        echo "Success..."
+        fixmakeargs="$fixmakeargs TAU_LIKWID likwiddir=$liblikwiddir"
+    fi
+fi
+
+
+
+######################################################################
+# Install libotf2 if requested
+######################################################################
+libotf2=otf2
+libotf2_dirname=otf2-2.1
+libotf2tgz=$libotf2.tgz
+libotf2url=http://www.cs.uoregon.edu/research/tau/$libotf2tgz
+
+if [ "x$otfdir" = "x" ]; then
+    libotf2dir=${targetdir}/${architecture}
+else
+    libotf2dir=$otfdir
+fi
+
+libotf2_name=otf2
+if [ "x$otfdir" != "x" -a -d "$otfdir" ] ; then
+    if [ -r $otfdir/$libotf2tgz ]; then
+        echo "NOTE: Copying $otfdir/$libotf2tgz "
+        cp $otfdir/$libotf2tgz .
+        download_otf=yes
+    fi
+fi
+
+
+if [ "x$download_otf" = xyes ] ; then
+    if [ $machine = craycnl ] ; then
+        otfdir=${libotf2dir}/${libotf2}-${c_compiler}-${PE_ENV}
+    else
+        otfdir=${libotf2dir}/${libotf2}-${c_compiler}
+    fi
+    preotfdir=`pwd`
+
+
+    if [ -r "$otfdir/lib/lib${libotf2_name}.so" -o \
+        -r "$otfdir/lib/lib${libotf2_name}.a" -o \
+        -r "$otfdir/lib/lib${libotf2_name}.dylib" -o \
+        -r "$otfdir/lib64/lib${libotf2_name}.so" -o \
+        -r "$otfdir/lib64/lib${libotf2_name}.a" -o \
+        -r "$otfdir/lib64/lib${libotf2_name}.dylib" ] ; then
+        echo "Found: lib${libotf2_name}"
+        echo "libotf2 download already found, skipping"
+    else
+        echo "Not found in ${otfdir}: lib${libotf2_name}"
+        # get the tar file
+        if [ ! -f $libotf2tgz ] ; then
+            download "$libotf2url" "$libotf2tgz"
+        fi
+
+        # check the tar file
+        if [ ! -f $libotf2tgz ] ; then
+            echo "$libotf2tgz did not download.  Please download it manually from: "
+            echo "$libotf2url"
+            echo "Please enter the directory containing the tarball: ${nnl}"
+            read RESPONSE
+            cp $RESPONSE/$libotf2tgz .
+        else
+            echo "expanding $libotf2tgz..."
+            tar -xzf $libotf2tgz
+            echo "removing $libotf2tgz..."
+            rm $libotf2tgz
+            if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+            then
+                otf2_c_compiler=gcc
+                otf2_cxx_compiler=g++
+            else
+                otf2_c_compiler=${c_compiler}
+                otf2_cxx_compiler=${cxx_compiler}
+            fi
+
+            configresult=0
+            makeresult=0
+            libotf2_log=configure.log
+            cd $libotf2_dirname
+            echo "configuring $libotf2... (see `pwd`/${libotf2_log} for log)..."
+            ./configure --prefix=${otfdir} CC=${otf2_c_compiler} CXX=${otf2_cxx_compiler} > ${libotf2_log} 2>&1
+            configresult=$?
+            if [ $configresult -eq 0 ] ; then
+                libotf2_log=build.log
+                echo "building ${libotf2}... (see `pwd`/${libotf2_log} for log)..."
+                make -i > $libotf2_log  2>&1
+                makeresult=$?
+                if [ $makeresult -eq 0 ] ; then
+                    libotf2_log=install.log
+                    echo "installing ${libotf2} to ${otfdir}... (see `pwd`/${libotf2_log} for log)..."
+                    make -i install > $libotf2_log  2>&1
+                    makeresult=$?
+                fi
+            fi
+            if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+                # Some systems install to lib64 instead of lib
+                if [ -d "$otfdir/lib64" -a ! -d "$otfdir/lib" ] ; then
+                    tdir=$otfdir
+                    pwddir=${PWD}
+                    cd $tdir
+                    ln -s lib64 lib
+                    cd $pwddir
+                fi
+                echo "...Success."
+            else
+                echo "ERROR BUILDING $libotf2!"
+                echo "Please check `pwd`/config.log or `pwd`/${libotf2_log}"
+            fi
+        fi
+    fi
+    cd $preotfdir
+fi
+
+if [ $otf = yes ] ; then
+    if [ "$otflib" = "" ] ; then
+	if [ -d $otfdir/lib ]; then
+	    otflib="$otfdir/lib"
+	else
+	    otflib="$otfdir/${architecture}/lib"
+	fi
+	echo "OTF Library implicitly set to $otflib"
+    fi
+    if [ "$otfinc" = "" ] ; then
+	if [ -r $otfdir/include/otf.h ]; then
+	    otfinc="$otfdir/include"
+	else
+	    if [ -r $otfdir/include/open-trace-format/otf.h ]; then
+		otfinc="$otfdir/include/open-trace-format"
+	    fi
+	fi
+    if [ "$otfinc" = "" ] ; then
+        if [ -r $otfdir/include/otf2/otf2.h ]; then
+            otfinc="$otfdir/include"
+        fi
+    fi
+	echo "OTF Header directory implicitly set to $otfinc"
+    fi
+    if [ ! -d $otflib ]
+    then
+	echo "Error: No available OTF support. Library not found at $otflib."
+	exit 1
+    fi
+    if [ ! -d $otfinc ]
+    then
+	echo "Error: No available OTF support. Headers not found at $otfinc."
+	exit 1
+    fi
+    if [ $ebs2otf = yes -a ! -f $otfinc/OTF_Version.h ] ; then
+	echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
+	exit 1
+	# *CWL* Need version control code here. Still trying to decide the
+	#    best way about it. The above conditional will at least trim away
+	#    ancient versions of OTF.
+    fi
+
+    fixmakeargs="$fixmakeargs otflib=$otflib otfinc=$otfinc"
+fi
+
 if [ $epilog = yes ] ; then
 
     if [ -f $epiloglibdir/libcubew3.a ] ; then
@@ -9389,6 +9850,24 @@ if [ $boost = yes ] ; then
       fixmakeargs="$fixmakeargs boostlib=-L$boostdir/lib#-Wl,-rpath,$boostdir/lib"
     fi
 fi
+
+if [ $sos = yes ] ; then
+    tauoptions="${tauoptions}-sos"
+    fixmakeargs="$fixmakeargs SOS "
+    fixmakeargs="$fixmakeargs sosdir=$sosdir"
+fi
+
+if [ $adios = yes ] ; then
+    tauoptions="${tauoptions}-adios"
+    fixmakeargs="$fixmakeargs ADIOS "
+    fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
+fi
+
+#if [ $caliper = yes ] ; then
+#    tauoptions="${tauoptions}-caliper"
+#    fixmakeargs="$fixmakeargs CALIPER "
+#    fixmakeargs="$fixmakeargs caliperdir=$caliperdir"
+#fi
 
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST "
@@ -9728,6 +10207,14 @@ if [ $disableshared = yes ] ; then
     fixmakeargs="$fixmakeargs NOSHARED"
 fi
 
+if [ $disable_memory_manager = yes ] ; then
+    fixmakeargs="$fixmakeargs DISABLE_MEM_MANAGER"
+fi
+
+if [ $pmi = yes ] ; then
+    fixmakeargs="$fixmakeargs CRAYCNL_PMI"
+fi
+
 if [ $disableshared = yes -a $python = yes ] ; then
     echo "ERROR: Shared libraries are disabled, but Python is specified"
     exit 1
@@ -9741,6 +10228,17 @@ if [ $noex = yes ] ; then
 	# OTHER COMPILERS NO EXCEPTIONS... SGICC needs this
         fixmakeargs="$fixmakeargs SGICCNOEX"
     fi
+fi
+
+# Disable plugins on Apple because rdynamic flag has no effect on OS X 
+case "$machine" in
+    apple)
+     plugins="no"
+    ;;
+esac
+
+if [ $plugins = no ] ; then
+    fixmakeargs="$fixmakeargs NOPLUGINS"
 fi
 
 

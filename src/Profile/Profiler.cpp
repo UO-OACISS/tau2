@@ -21,8 +21,9 @@
 #include <Profile/TauMetaData.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetaDataMerge.h>
+#include <Profile/TauSOS.h>
 
-#define DEBUG_PROF 1 
+//#define DEBUG_PROF 1 
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -91,6 +92,9 @@ double TauWindowsUsecD(void);
 #include "shmem.h"
 extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
+extern "C" int Tau_get_usesSHMEM();
+
+#include <Profile/TauPluginInternals.h>
 
 using namespace std;
 using namespace tau;
@@ -184,7 +188,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler * current)
       TauProfiler_EnableAllEventsOnCallStack(tid, current->ParentProfiler);
       /* process the current event */
       DEBUGPROFMSG(RtsLayer::myNode() << " Processing EVENT " << current->ThisFunction->GetName() << endl);
-      TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64)current->StartTime[0], 1);
+      TauTraceEvent(current->ThisFunction->GetFunctionId(), 1, tid, (x_uint64)current->StartTime[0], 1, TAU_TRACE_EVENT_KIND_FUNC);
       TauMetrics_triggerAtomicEvents((x_uint64)current->StartTime[0], current->StartTime, tid);
     }
   }
@@ -258,7 +262,8 @@ void Profiler::Start(int tid)
 
   /* Get the current metric values */
   x_uint64 TimeStamp;
-  RtsLayer::getUSecD(tid, StartTime);
+  // Record metrics in reverse order so wall clock metrics are recorded after PAPI, etc.
+  RtsLayer::getUSecD(tid, StartTime, 1);
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
 
   /********************************************************************************/
@@ -306,7 +311,7 @@ void Profiler::Start(int tid)
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
   if (TauEnv_get_tracing()) {
-    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */);
+    TauTraceEvent(ThisFunction->GetFunctionId(), 1 /* entry */, tid, TimeStamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
     TauMetrics_triggerAtomicEvents(TimeStamp, StartTime, tid);
   }
 #ifdef TAU_MPITRACE
@@ -494,7 +499,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
   if (TauEnv_get_tracing()) {
-    TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */);
+    TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
     TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
   }
 #ifdef TAU_MPITRACE
@@ -1434,14 +1439,24 @@ extern "C" int Tau_print_metadata_for_traces(int tid) {
       string metadata_str(it->first.name + string(" | ") + string(it->second->data.cval)); 
       TAU_TRIGGER_EVENT(metadata_str.c_str(), 1.0); 
   }
+  return 0;
 }
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+  TauMetrics_finalize();
 
-  if (TauEnv_get_tracing() && (tid == 0) ) {
+  /*Invoke plugins only if both plugin path and plugins are specified
+   *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_end_of_execution_data plugin_data;
+    plugin_data.tid = tid;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+  }
+
+  if (TauEnv_get_tracing() && (tid == 0) && (TauEnv_get_trace_format() != TAU_TRACE_FORMAT_OTF2)) {
     Tau_print_metadata_for_traces(tid);
   }
 
@@ -1463,6 +1478,17 @@ int TauProfiler_StoreData(int tid)
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
+#if defined(TAU_SHMEM)
+  // If we are using SHMEM, we have to delay finalization until TAU has finalized traces,
+  // as OTF2 must communicate over SHMEM in order to write the global definitions file,
+  // so the wrapper's version of shmem_finalize skips finalization and we do it here instead.
+  // We first check the Tau_get_usesSHMEM() flag, which is set in the wrapper's shmem_init,
+  // to avoid calling __real_shmem_finalize twice if the wrapper was not used.
+  if(Tau_get_usesSHMEM() && !(TauEnv_get_profile_format() == TAU_FORMAT_MERGED)) {
+    __real_shmem_finalize();
+  }
+#endif
+
 
   Tau_MemMgr_finalizeIfNecessary();
 
@@ -1496,7 +1522,9 @@ int TauProfiler_StoreData(int tid)
 #ifndef TAU_SHMEM
 	/* Only thread 0 should create a merged profile. */
     if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-      Tau_metadataMerge_mergeMetaData();
+      if(TauEnv_get_merge_metadata()) {
+        Tau_metadataMerge_mergeMetaData();
+      }
       /* Create a merged profile if requested */
       Tau_mergeProfiles_MPI();
 	}
@@ -1505,10 +1533,16 @@ int TauProfiler_StoreData(int tid)
   }
 #endif /* PTHREADS */
 
+#ifdef TAU_SOS
+  TAU_SOS_finalize();
+#endif
+
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
     Tau_global_setLightsOut();
-    Tau_metadataMerge_mergeMetaData_SHMEM();
+    if(TauEnv_get_merge_metadata()) {
+      Tau_metadataMerge_mergeMetaData_SHMEM();
+    }
     Tau_mergeProfiles_SHMEM();
     __real_shmem_finalize();
   }
@@ -1716,8 +1750,11 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
           }
 
         } else {
-#ifdef TAU_MPI
-        if (Tau_get_usesMPI()) {
+#ifdef TAU_MPI 
+#ifndef TAU_SHMEM 
+        if (Tau_get_usesMPI()) 
+#endif /* TAU_SHMEM */
+        {
 #endif /* TAU_MPI */
           if ((fp = fopen(dumpfile, "w+")) == NULL) {
             char errormsg[1024];
@@ -1745,6 +1782,13 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
         TAU_VERBOSE("[pid=%d], TAU: Uses MPI Rank=%d\n", RtsLayer::getPid(), RtsLayer::myNode());
         writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
 #ifdef TAU_MPI
+      } else {
+#ifdef TAU_SHMEM
+        writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
+#else /* TAU_SHMEM */
+        printf("TAU: WARNING! An MPI configuration was used in TAU, but MPI_Init was not called. No data will be written for pid=%d.\n", getpid()); 
+	//printf("Node = %d\n", RtsLayer::myNode());
+#endif /* TAU_SHMEM */
       }
 #endif /* TAU_MPI */
     }

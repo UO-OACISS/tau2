@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +16,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+//import com.google.gson.Gson;
+//import com.google.gson.stream.JsonReader;
 import com.graphbuilder.math.Expression;
 import com.graphbuilder.math.ExpressionTree;
 import com.graphbuilder.math.FuncMap;
@@ -295,10 +298,8 @@ public class ThreeDeeGeneralPlotUtils {
 			br.close();
 
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -306,39 +307,51 @@ public class ThreeDeeGeneralPlotUtils {
 	}
 
 	static class CoordMap {
-		public CoordMap(int[] min, int[] max, int[][] coords) {
+		public CoordMap(float[] min, float[] max, float[][] coords) {
 			this.min = min;
 			this.max = max;
 			this.coords = coords;
 		}
 
-		public int[] getMin() {
+		public float[] getMin() {
 			return min;
 		}
 
-		public void setMin(int[] min) {
+		public void setMin(float[] min) {
 			this.min = min;
 		}
 
-		public int[] getMax() {
+		public float[] getMax() {
 			return max;
 		}
 
-		public void setMax(int[] max) {
+		public void setMax(float[] max) {
 			this.max = max;
 		}
 
-		public int[][] getCoords() {
+		public float[][] getCoords() {
 			return coords;
 		}
 
-		public void setCoords(int[][] coords) {
+		public void setCoords(float[][] coords) {
 			this.coords = coords;
 		}
+		
+		public String toString(){
+			String all="";
+			for(int i =0;i<coords.length;i++){
+			
+			all+=i + ": " + coords[i][0] + "," + coords[i][1] + ","
+					+ coords[i][2]+"\n";
+		}
+		all+="min: " + min[0] + "," + min[1] + "," + min[2]+"\n";
+		all+="max: " + max[0] + "," + max[1] + "," + max[2]+"\n";
+		return all;
+		}
 
-		int[] min;
-		int[] max;
-		int[][] coords;
+		float[] min;
+		float[] max;
+		float[][] coords;
 	}
 	
 	public static int[] parseCrayNodeID(String nodename){
@@ -440,7 +453,7 @@ public class ThreeDeeGeneralPlotUtils {
 			int slotHeight=1;
 			int slotWidth=1;
 			int cageHeight=maxHC.cage-minHC.cage+1;
-			int nodeWidth=1;
+			//int nodeWidth=1;
 			int nodeDepth=1;
 			
                         this.x = rackWidth*rackX + slotWidth*(slot%2);
@@ -479,7 +492,286 @@ public class ThreeDeeGeneralPlotUtils {
 //		return hc;
 //	}
 
-	public static CoordMap parseMapFile(String fileLoc) {
+	
+	public static class CrayTopology implements Comparable<CrayTopology>{
+		public CrayTopology(int mpirank, String cname, int nid, int x, int y, int z, int cpu) {
+			super();
+			this.mpirank = mpirank;
+			this.cname = cname;
+			this.nid = nid;
+			this.x = x;
+			this.y = y;
+			this.z = z;
+			this.cpu = cpu;
+			//calculateNodeIndex();
+		}
+
+		
+		public CrayTopology(){
+			
+		}
+		
+		public int mpirank;
+		public String cname;
+		public int nid;
+		public int x;
+		public int y;
+		public int z;
+		public int cpu;
+		int nodeIndex=-1;
+		
+		public int compareTo(CrayTopology o) {
+			if(mpirank < o.mpirank){
+				return -1;
+			}
+			if(mpirank > o.mpirank){
+				return 1;
+			}
+			return 0;
+		}
+		
+		private void calculateNodeIndex(int nodesPerCoord){
+			int ndex=cname.indexOf("n");
+			String nname = cname.substring(ndex+1);
+			int nnum=Integer.parseInt(nname);
+			//System.out.println("NNum: "+nnum+" NPC: "+nodesPerCoord);
+			nodeIndex=nnum%nodesPerCoord;
+//			if(nnum%2==0){
+//				nodeIndex=0;
+//			}
+//			else{
+//				nodeIndex=1;
+//			}
+		}
+		
+		/**
+		 * It seems that nodes 0 and 1 (as listed on node names) are a 'pair' under a router as are 2 and 3. We will assume even nodes (0 and 2) are the 'first' nodes and odd (1 and 3) are the 'second' nodes for purposes of node placement. This may not be universal.
+		 * @return
+		 */
+		public int getNodeIndex(int nodesPerCoord){
+			if(nodeIndex==-1){
+				calculateNodeIndex(nodesPerCoord);
+			}
+			return nodeIndex;
+		}
+		
+		public String toString(){
+			return "{ \"mpirank\":"+mpirank+", \"cname\":\""+cname+"\", \"nid\":"+nid+", \"x\":"+x+", \"y\":"+y+", \"z\":"+z+", \"cpu\":"+cpu+" }";
+		}
+		
+	}
+	
+	/**
+	 * Returns a 3x3 array. The first 1x3 is the min xyz coordinates. The second is the max. The third contains is the max cpuid and highest mpi rank in the 0 and 1 elements and the number of nodes per unique xyz.
+	 * @param ctopo
+	 * @return
+	 */
+	private static float[][] getCTMinMax(CrayTopology[] ctopo){
+		CrayTopology extremity = new CrayTopology();
+		float[][]ctminmax = new float[3][3];
+		boolean first = true;
+		int minx=0;
+		int miny=0;
+		int minz=0;
+		/*
+		 * We need to know the maximum number of nodes that can be on a single xyz coordinate. So for each xyz name we have a set to keep track of the unique node ids associated with it.
+		 */
+		Map<String,Set<Integer>> nodesPerCoord=new HashMap<String,Set<Integer>>();
+		/*
+		 * First find the minimum and maximum values
+		 */
+		for(CrayTopology ct:ctopo){
+			String cts=ct.x+"_"+ct.y+"_"+ct.z;
+			if(!nodesPerCoord.containsKey(cts)){
+				nodesPerCoord.put(cts, new HashSet<Integer>());
+			}
+			nodesPerCoord.get(cts).add(ct.nid);
+			if(first){
+				extremity.cpu=ct.cpu;
+				extremity.x=ct.x;
+				extremity.y=ct.y;
+				extremity.z=ct.z;
+				extremity.mpirank=ct.mpirank;
+				minx=ct.x;
+				miny=ct.y;
+				minz=ct.z;
+				first=false;
+			}
+			else{
+				extremity.mpirank=Math.max(extremity.mpirank, ct.mpirank);
+				extremity.cpu=Math.max(extremity.cpu, ct.cpu);
+				extremity.x=Math.max(extremity.x, ct.x);
+				extremity.y=Math.max(extremity.y, ct.y);
+				extremity.z=Math.max(extremity.z, ct.z);
+				minx=Math.min(minx, ct.x);
+				miny=Math.min(miny, ct.y);
+				minz=Math.min(minz, ct.z);
+			}
+		}
+//		extremity.x=extremity.x-minx;
+//		extremity.y=extremity.y-miny;
+//		extremity.z=extremity.z-minz;
+		/*
+		 * Then subtract the minimums so we index from 0 in the topology chart.  Correction: This is not necessary.
+		 
+		for(CrayTopology ct:ctopo){
+			ct.x=ct.x-minx;
+			ct.y=ct.y-miny;
+			ct.z=ct.z-minz;
+		}*/
+		
+//		System.out.println("Minx: "+minx+" Maxx: "+extremity.x);
+//		System.out.println("Miny: "+miny+" Maxy: "+extremity.y);
+//		System.out.println("Minz: "+minz+" Maxz: "+extremity.z);
+		ctminmax[0][0]=minx;
+		ctminmax[0][1]=miny;
+		ctminmax[0][2]=minz;
+		ctminmax[1][0]=extremity.x;
+		ctminmax[1][1]=extremity.y;
+		ctminmax[1][2]=extremity.z;
+		ctminmax[2][0]=extremity.cpu;
+		ctminmax[2][1]=extremity.mpirank;
+		
+		int maxNodesPerCoord=0;
+		for(Set<Integer> iset:nodesPerCoord.values()){
+			maxNodesPerCoord=Math.max(maxNodesPerCoord, iset.size());
+		}
+		
+		ctminmax[2][2]=maxNodesPerCoord;
+		return ctminmax;
+	}
+	
+	/**
+	 * Multiplies the x coordinates by the number of nodes per coordinate and reindexes them so we end up with the effective coordines for each node instead of each router.
+	 * @param ctopo
+	 * @param extremity
+	 */
+	private static void routerCoordsToNodeCoords(CrayTopology[] ctopo, int nodesPerCoord){
+		for(CrayTopology ct:ctopo){
+			
+//			//The 'first' node retains the even position, but the number of x coordinates is doubling.
+//			if(ct.getNodeIndex(nodesPerCoord)==0){
+//				ct.x=ct.x*2;
+//			}//The 'second' node is in between so add one.
+//			else if(ct.getNodeIndex(nodesPerCoord)==1){
+//				ct.x=(ct.x*2)+1;
+//			}
+//			
+			//The 0th node retains its initial position, subsequent nodes get bumped up by their place in nodes-per-coord to fill the new space. 
+			ct.x=ct.x*nodesPerCoord+ct.getNodeIndex(nodesPerCoord)%nodesPerCoord;
+		}
+	}
+	
+	/**
+	 * Reindex the xyz coordinates for each rank to allow space for maxcores, arranged in an xcores by zcores configuration. Calculate xcores and zcores to get the closet possible rectangle to a perfect square.
+	 * @param ctopo
+	 * @param maxcores
+	 * @param xcores
+	 * @param zcores
+	 */
+	private static void nodeCoordsToCoreCoords(CrayTopology[] ctopo, int maxcores){
+		maxcores++;
+		/*
+		 * Multiply the x and z coordinates by the number of cores in each dimension, so we have one point for each 
+		 */
+		int xcores=1;
+		int zcores=maxcores;
+		
+		
+		int divcores = (int)Math.ceil(Math.sqrt(maxcores));
+		while(divcores>1)
+		{
+			if(maxcores%divcores==0){
+				xcores=divcores;
+				zcores=maxcores/divcores;
+				break;
+			}
+			divcores--;
+		}
+		//System.out.println("maxcores: "+maxcores+". xcores: "+xcores+". zcores: "+zcores);
+		
+		for(CrayTopology ct:ctopo){
+			
+			ct.x=ct.x*xcores;
+			ct.z=ct.z*zcores;
+			/*
+			 * Increment the x and z coordinates to position this core
+			 */
+			ct.x=ct.x+ct.cpu%xcores;
+			ct.z=ct.z+ct.cpu/xcores;
+			
+			//System.out.println(ct);
+		}
+	}
+	
+	private static void validateCoords(CrayTopology[] ctopo){
+		for(int i = 0;i<ctopo.length;i++){
+			CrayTopology ct=ctopo[i];
+			for(int j=i+1;j<ctopo.length;j++){
+				CrayTopology bt = ctopo[j];
+				if(ct.mpirank==bt.mpirank){
+					continue;
+				}
+				String cts=ct.x+"_"+ct.y+"_"+ct.z;
+				String bts=bt.x+"_"+bt.y+"_"+bt.z;
+				
+				if(cts.equals(bts)){
+					System.out.println("ERROR:\n"+ct.toString()+"\n overlaps\n"+bt.toString());
+				}
+			}
+		}
+	}
+	
+//	public static CoordMap parseJsonMapFile(String fileLoc){
+//		JsonReader r=null;
+//		try {
+//			r = new JsonReader(new FileReader(fileLoc));
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		Gson gson = new Gson();
+//		CrayTopology[] ctopo = gson.fromJson(r, CrayTopology[].class);
+//		return processCrayCoordinates(ctopo);
+//		
+//	}
+	
+	public static CoordMap processCrayCoordinates(CrayTopology[] ctopo){
+		Arrays.sort(ctopo);
+		//This can be used to normalize the processes.
+		
+		float[][] ctminmax=getCTMinMax(ctopo);
+		
+		int nodesPerCoord=(int)ctminmax[2][2];
+		routerCoordsToNodeCoords(ctopo,nodesPerCoord);
+		
+		
+		int cpumax=(int)ctminmax[2][0];
+		nodeCoordsToCoreCoords(ctopo,cpumax);
+		
+		validateCoords(ctopo);
+		
+		float[][] done = new float[ctopo.length][3];
+		for(CrayTopology ct:ctopo){
+			done[ct.mpirank][0]=ct.x;
+			done[ct.mpirank][1]=ct.y;
+			done[ct.mpirank][2]=ct.z;
+		}
+		
+		//CrayTopology extremity=processRanks(ctopo);
+		
+		//int[] min = {0,0,0};
+		//int[] max={extremity.x,extremity.y,extremity.z};
+		 ctminmax=getCTMinMax(ctopo);
+		CoordMap cm =  new CoordMap(ctminmax[0], ctminmax[1], done);
+		//System.out.println(cm);
+		return cm;
+	}
+	
+	
+	//The Old Way
+	
+	public static int[][] parseMapFile(String fileLoc) {
+		
 		BufferedReader br;
 		int[][] coords = null;
 		List<String> mapLines=new ArrayList<String>();
@@ -514,10 +806,8 @@ public class ThreeDeeGeneralPlotUtils {
 			}
 			br.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 			
@@ -532,6 +822,7 @@ public class ThreeDeeGeneralPlotUtils {
 					ranks++;
 				}
 			}
+			//Slot 0=, 1=, 2=, 3=core
 			coords=new int[ranks][4];
 			
 			Map<String,Integer> coreCount=new HashMap<String,Integer>();
@@ -540,6 +831,9 @@ public class ThreeDeeGeneralPlotUtils {
 			HostCoords maxHC = null;//new HostCoords();
 			
 			for(String s:mapLines){
+				if(s.length()==0){
+					continue;
+				}
 				if (s.indexOf('[') != -1) {
 					int start = s.indexOf('_') + 1;
 					int end = s.indexOf(']');
@@ -623,20 +917,28 @@ public class ThreeDeeGeneralPlotUtils {
 
 
 		// System.out.println(coords);
+			return coords;
 
-		int[] min = new int[3];
-		int[] max = new int[3];
-		int[] coremax = { 4, 3, 2 };
+	}
+	
+	//Core Dims determines the dimensions of the clusters of cores on an individual rack
+	public static CoordMap calculateCoreCoordinates(int[][] coords, int[] coremax){
+
+		int ranks = coords.length;
+		float[] min = new float[3];
+		float[] max = new float[3];
+		
+		//int[] coremax = { 4, 3, 2 };
 		int space = 1;
-		int[][] done = new int[ranks][3];
+		float[][] done = new float[ranks][3];
 		for (int i = 0; i < ranks; i++) {
 			int node = coords[i][3];
 			for (int j = 0; j < 3; j++) {
-				int sub = 6;
+				int sub = coremax[0]+2;
 				if (j == 1)
-					sub = 2;
+					sub = coremax[1]-1;
 				if (j == 2)
-					sub = 1;
+					sub = coremax[2]-1;
 				int cc = (node / sub) % coremax[j];
 				// int cy=node%cymax;
 				// int cz=node%czmax;

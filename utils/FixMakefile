@@ -81,6 +81,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     likwiddir=*)
+        likwiddir=`echo $1 | sed -e 's/^likwiddir=//'`
+	echo "s,^LIKWIDDIR=.*$,LIKWIDDIR=$likwiddir,g" >> $sedout
+	;;
+
      beacondir=*)
         beacondir=`echo $1 | sed -e 's/^beacondir=//'`
 	echo "s,^BEACONDIR=.*$,BEACONDIR=$beacondir,g" >> $sedout
@@ -413,7 +418,7 @@ case $1 in
 	echo "s@^TAU_BUILD_CXX=.*@TAU_BUILD_CXX=$tau_build_cxx@g" >> $sedout
 	;;
 
-     boostdir=*)
+    boostdir=*)
         boostdir=`echo $1 | sed -e 's/^boostdir=//'`
 	echo "s,^BOOSTDIR=.*$,BOOSTDIR=$boostdir,g" >> $sedout
 	;;
@@ -425,6 +430,22 @@ case $1 in
         boostlib=`echo $1 | sed -e 's/^boostlib=//' -e 's/#/ /g'`
 	echo "s&^TAU_BOOSTLIB=.*$&TAU_BOOSTLIB=$boostlib&g" >> $sedout
 	;;
+
+    sosdir=*)
+        sosdir=`echo $1 | sed -e 's/^sosdir=//'`
+	echo "s,^SOSDIR=.*$,SOSDIR=$sosdir,g" >> $sedout
+	;;
+
+    adiosdir=*)
+        adiosdir=`echo $1 | sed -e 's/^adiosdir=//'`
+	echo "s,^ADIOSDIR=.*$,ADIOSDIR=$adiosdir,g" >> $sedout
+	;;
+
+#    caliperdir=*)
+#        caliperdir=`echo $1 | sed -e 's/^caliperdir=//'`
+#	echo "s,^CALIPERDIR=.*$,CALIPERDIR=$caliperdir,g" >> $sedout
+#	;;
+
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
@@ -604,6 +625,10 @@ case $1 in
         ;;
      TAU_BFD)
         echo NOTE: Using BFD support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_LIKWID)
+        echo NOTE: Using LIKWID support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_UNWIND)
@@ -857,6 +882,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     SHMEMX_H)
+        echo NOTE: shmemx.h is available
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      GPSHMEM)
         echo NOTE: Using the TAU GPSHMEM/PGPSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1057,6 +1087,10 @@ case $1 in
 	;;
      MPC)
 	echo NOTE: Using the TAU MPC options
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NOPLUGINS)
+	echo NOTE: Disabling TAU plugins in this build
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      MPCINTEL)
@@ -1566,6 +1600,18 @@ case $1 in
 	echo "NOTE: Using Java Virtual Machine Tool Interface (JVMTI) Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SOS)
+	echo "NOTE: Using SOS ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ADIOS)
+	echo "NOTE: Using ADIOS ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+#     CALIPER)
+#	echo "NOTE: Using CALIPER ***"
+#        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+#	;;
      OPENMP)
 	echo "NOTE: Using OpenMP Threads ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1822,6 +1868,14 @@ case $1 in
 	;;
      CRAYCNL)
 	echo "NOTE: Using Cray Compute Node Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAYCNL_PMI)
+	echo "NOTE: Using CrayCNL PMI (Process Management Interface) to track topology info" 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAYCNL_PMI_FOUND)
+	echo "NOTE: Found CrayCNL PMI (Process Management Interface) to track topology info" 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_CCE)
@@ -2114,6 +2168,14 @@ case $1 in
 	echo "NOTE: PGI pgfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PGI_ATOMIC)
+	echo "NOTE: Using -latomic with PGI"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGI_C)
+        echo "NOTE: Using -lC with PGI"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      PGI_CATAMOUNT)
 	echo "NOTE: Catamount PGI pgf90 compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2202,6 +2264,10 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NOSHARED)
+	echo "NOTE: Disabling building of shared objects"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DISABLE_MEM_MANAGER)
 	echo "NOTE: Disabling building of shared objects"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
