@@ -7952,8 +7952,10 @@ if [ "x$sos" = "xyes" ] ; then
     p=`pwd`
     cd $targetdir/$architecture/; clone "$sosurl" "$sosrepos"; installsos "$sosrepos"
   else
-    echo "Error: Cannot access SOS directory $sosdir"
-    exit 1   
+    if [ ! -d "$sosdir" ] ; then
+      echo "Error: Cannot access SOS directory $sosdir"
+      exit 1   
+	fi
   fi
 fi
 
