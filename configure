@@ -1732,13 +1732,14 @@ for arg in "$@"; do
 
 	-sos=*)
 	    sos=yes
-            echo "-sos="
+        pthread=yes
 	    sosdir=`echo $arg | sed -e 's/-sos=//'`
 	    shift
 	    ;;
 
 	-adios=*)
 	    adios=yes
+        pthread=yes
 	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
 	    if [ ! -d $adiosdir ]
 	    then

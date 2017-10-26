@@ -117,6 +117,8 @@ public :
   }
 };
 
+extern "C" void Tau_metadata_writeEndingTimeStamp(void);
+
 MetaDataRepo &Tau_metadata_getMetaData(int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
 int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid);

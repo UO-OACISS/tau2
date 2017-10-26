@@ -84,6 +84,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_openmp_runtime_states_enabled();
   int  TAUDECL TauEnv_get_openmp_runtime_events_enabled();
   int  TAUDECL TauEnv_get_sos_enabled();
+  int  TAUDECL TauEnv_get_sos_high_resolution();
   int  TAUDECL TauEnv_get_sos_trace_events();
   int  TAUDECL TauEnv_get_sos_periodic();
   int  TAUDECL TauEnv_get_sos_period();
