@@ -655,7 +655,7 @@ TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC)  -c $(@:.o=.cpp)
 
 TauSOS.o  : TauSOS.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -pthread -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauADIOS.o  : TauADIOS.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
