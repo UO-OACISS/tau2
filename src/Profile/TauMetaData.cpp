@@ -262,7 +262,12 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   //RtsLayer::UnLockEnv();
   //printf("%s : %s\n", key.name, tmv->data.cval);
 #ifdef TAU_SOS
-  Tau_SOS_pack_string(name, const_cast<char*>(value));
+  if((strncmp(name, "TAU", 3) != 0) ||
+     (strncmp(name, "TAU_SOS", 7) == 0)){
+      // SOS users don't care about TAU options.
+      // SOS users do care about TAU_SOS options.
+      Tau_SOS_pack_string(name, const_cast<char*>(value));
+  }
 #endif
 #endif
 }
@@ -277,6 +282,12 @@ void Tau_metadata_push_to_sos(void) {
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); 
          it != Tau_metadata_getMetaData(tid).end(); it++) {
         char tmp[128] = {0};
+        if((strncmp(it->first.name, "TAU", 3) == 0) && 
+		   (strncmp(it->first.name, "TAU_SOS", 7) != 0)){
+          // SOS users don't care about TAU options.
+          // SOS users do care about TAU_SOS options.
+          continue;
+        }
         switch(it->second->type) {
             case TAU_METADATA_TYPE_STRING:
                 Tau_SOS_pack_string(it->first.name, it->second->data.cval);
@@ -876,10 +887,15 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
   return 0;
 }
 
-static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
+extern "C" void Tau_metadata_writeEndingTimeStamp(void) {
   char tmpstr[4096];
+  TauMetrics_finalize(); // make sure there's a valid final timestamp
   sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getFinalTimeStamp());
   Tau_metadata_register("Ending Timestamp", tmpstr);
+}
+
+static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
+  Tau_metadata_writeEndingTimeStamp();
 
   const char *endl = "";
   //newline = true;
