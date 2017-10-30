@@ -325,7 +325,7 @@
 #define TAU_TRACE_RECVMSG_REMOTE(type, source, length, remoteid) \
         Tau_trace_recvmsg_remote(type, source, length, remoteid);
 
-#define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
+#define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_function_info(name, type, group, #group);
 #define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0, Tau_get_thread());
 #define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle, Tau_get_thread());
 #define TAU_PROFILER_GET_INCLUSIVE_VALUES(handle, data) Tau_get_inclusive_values(handle, (double *) data, Tau_get_thread());
@@ -405,6 +405,7 @@ void Tau_static_phase_start(char const * name);
 void Tau_static_phase_stop(char const * name);
 
 void* Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
+void* Tau_get_function_info(const char *name, const char *type, TauGroup_t group, const char *gr_name);
 
 void Tau_get_calls(void *handle, long* values, int tid);
 void Tau_set_calls(void *handle, long values, int tid);
