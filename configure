@@ -61,28 +61,48 @@ clone()
   git clone "$src" "$dst"
 }
 
-installsos()
+# Install SOS dependencies such as EVPath
+installsosdeps()
 {
  installdir="$1"
+ mkdir $installdir
  cd $installdir
  P=`pwd`
- echo "Install SOS - EVPath"
+
+ echo "Install SOS deps"
+ mkdir chaos
+ cd chaos
+ currdir=`pwd`
  wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
- CHAOS_PATH=`pwd`
- FLEXPATH_DIR=$CHAOS_PATH/inst
- perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR
+ export FLEXPATH_DIR=$currdir/inst
+ perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR 
  perl ./chaos_build.pl
- # set path to Flexpath/EVPath (see above)
- PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig 
  
- echo "Install SOS: $P"
- source hosts/linux/setenv.sh
+ # set path to Flexpath/EVPath (see above)
+ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+ cd ..
+}
+
+# Install SOS 
+installsos()
+{
+ echo "installsos - current dir: `pwd`"
+ src="$1"
+ dst="$2"
+ #cd $dst
+ currdir=`pwd`
+ 
+ echo "Install SOS: $src $dst $currdir"
+ git clone "$src" 
+ cd $dst
+ git checkout master
  mkdir build-linux
- ./scripts/configure.sh -c linux
  cd build-linux
- export sosdir=$P/inst
- cmake  
- make ; make install 
+
+ export sosdir=$currdir/$dst/inst
+
+ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   .. 
+ make ; make install
 }
 
 fix_tilde_at_the_start_of_cube_path()
@@ -7939,14 +7959,15 @@ fi
 # Install SOS if requested
 ######################################################################
 sosurl=https://github.com/cdwdirect/sos_flow.git
-sosrepos=sos
+sosmaindir=sos
+sosrepo=sos_flow
 
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
   if [ "x$sosdir" = xdownload ] ; then
     echo "Install SOS"
     p=`pwd`
-    cd $targetdir/$architecture/; clone "$sosurl" "$sosrepos"; installsos "$sosrepos"
+    cd $targetdir/$architecture/; installsosdeps "$sosmaindir"; installsos "$sosurl" "$sosrepo"
   else
     echo "Error: Cannot access SOS directory $sosdir"
     exit 1   
