@@ -80,6 +80,16 @@ installsosdeps()
  
  # set path to Flexpath/EVPath (see above)
  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+ 
+ echo "Install libfabric"
+ git clone https://github.com/ofiwg/libfabric.git
+ cd libfabric
+ ./autogen.sh
+ currdir=`pwd`
+ ./configure --prefix=$currdir/inst
+ make install
+ cd inst/lib
+ cp libfabric.* ../../../inst/lib
  cd ..
 }
 
@@ -95,7 +105,7 @@ installsos()
  echo "Install SOS: $src $dst $currdir"
  git clone "$src" 
  cd $dst
- git checkout master
+ git checkout aurele_dev
  mkdir build-linux
  cd build-linux
 
