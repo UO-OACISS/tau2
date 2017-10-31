@@ -1762,13 +1762,14 @@ for arg in "$@"; do
 
 	-sos=*)
 	    sos=yes
-            echo "-sos="
+        pthread=yes
 	    sosdir=`echo $arg | sed -e 's/-sos=//'`
 	    shift
 	    ;;
 
 	-adios=*)
 	    adios=yes
+        pthread=yes
 	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
 	    if [ ! -d $adiosdir ]
 	    then
@@ -2704,6 +2705,9 @@ configure_perfexplorer () {
     # install the perl scripts for ebs post-processing in the bin dir
     cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
     cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
+    cp ${tauroot}/tools/src/pycoolr/bin/pycoolr $BINTARGET
+    chmod a+rx $BINTARGET/pycoolr
+    cp -r ${tauroot}/tools/src/pycoolr/src/pycoolrgui $BINTARGET
 
     # install post-mortem address translation tool
     cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
@@ -7979,8 +7983,10 @@ if [ "x$sos" = "xyes" ] ; then
     p=`pwd`
     cd $targetdir/$architecture/; installsosdeps "$sosmaindir"; installsos "$sosurl" "$sosrepo"
   else
-    echo "Error: Cannot access SOS directory $sosdir"
-    exit 1   
+    if [ ! -d "$sosdir" ] ; then
+      echo "Error: Cannot access SOS directory $sosdir"
+      exit 1   
+	fi
   fi
 fi
 

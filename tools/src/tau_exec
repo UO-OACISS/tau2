@@ -141,7 +141,7 @@ set_nodecount()
         nodecount="$ptts_N"
       fi
     else	
-      for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS; do
+      for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS BC_MPI_TASKS_ALLOC; do
         eval nodecount=\$$i
         if [ -n "$nodecount" ] ; then
           break

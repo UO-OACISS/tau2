@@ -2363,6 +2363,24 @@ extern "C" void Tau_static_phase_start(char const * name)
   Tau_start_timer(fi, 1, Tau_get_thread());
 }
 
+extern "C" void * Tau_get_function_info(const char *fname, const char *type, TauGroup_t group, const char *gr_name)  {
+  TauInternalFunctionGuard protects_this_function;
+  FunctionInfo *fi = 0;
+  string n = fname;
+
+  RtsLayer::LockDB();
+  PureMap & pure = ThePureMap();
+  PureMap::iterator it = pure.find(n);
+  if (it == pure.end()) {
+    tauCreateFI((void**)&fi, n, type, group, gr_name);
+    pure[n] = fi;
+  } else {
+    fi = it->second;
+  }
+  RtsLayer::UnLockDB(); 
+  return (void *) fi;
+}
+
 extern "C" void Tau_static_phase_stop(char const * name)
 {
   TauInternalFunctionGuard protects_this_function;
