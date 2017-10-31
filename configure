@@ -90,7 +90,7 @@ installsosdeps()
  make install
  cd inst/lib
  cp libfabric.* ../../../inst/lib
- cd ..
+ cd ../../../..
 }
 
 # Install SOS 
