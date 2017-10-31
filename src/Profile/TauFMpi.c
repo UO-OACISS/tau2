@@ -6475,11 +6475,6 @@ MPI_Fint *ierr;
   mpi_cart_coords_( comm, rank, maxdims, coords, ierr );
 }
 
-#ifdef TAU_MPI_CART_CREATE
-/******************************************************/
-/******************************************************/
-
-#ifdef TAU_MPI_CART_CREATE
 void   mpi_cart_create_( comm_old, ndims, dims, periods, reorder, comm_cart, ierr )
 MPI_Fint *comm_old;
 MPI_Fint *ndims;
@@ -6543,11 +6538,6 @@ MPI_Fint *ierr;
 {
   mpi_cart_create_( comm_old, ndims, dims, periods, reorder, comm_cart, ierr );
 }
-#endif /* TAU_MPI_CART_CREATE */
-
-#endif /* TAU_MPI_CART_CREATE */
-/******************************************************/
-/******************************************************/
 
 void   mpi_cart_get_( comm, maxdims, dims, periods, coords, ierr )
 MPI_Fint *comm;
