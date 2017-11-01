@@ -1186,7 +1186,7 @@ class Coolrsub:
     min_timestamp = ts[0]
     print("min timestamp: ", min_timestamp)
 
-  def req_sql(self, c, ranks, ranks2, group_column, metric):
+  def req_sql2(self, c, ranks, ranks2, group_column, metric):
     print 'req_sql entering'
     for r in ranks:
         sql_statement = ("SELECT distinct tbldata.name, tblvals.val, tblvals.time_pack, tblpubs.comm_rank FROM tblvals INNER JOIN tbldata ON tblvals.guid = tbldata.guid INNER JOIN tblpubs ON tblpubs.guid = tbldata.pub_guid WHERE tblvals.guid IN (SELECT guid FROM tbldata WHERE tbldata.name LIKE '" + metric + "') AND tblpubs." + group_column)
@@ -1212,7 +1212,10 @@ class Coolrsub:
         #    print("Error: query returned no rows.",)
         #    print(sql_statement, params)
 
-
+  def req_sql(self, c, metric):
+    sql_statement = ("SELECT * from viewCombined WHERE value_name LIKE '" + metric)
+    self.try_execute(c, sql_statement)
+    
   def opendb(self):
     global min_timestamp
     # name of the sqlite database file
@@ -1278,7 +1281,9 @@ class Coolrsub:
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
            group_column = self.groupcolumns[j]
- 	   metric = self.metrics[j]                  
+ 	   metric = self.metrics[j]                   
+ 
+           
 
            if metric == "Iteration": 
              self.req_sql(self.conn, self.ranks, [], group_column, metric)
