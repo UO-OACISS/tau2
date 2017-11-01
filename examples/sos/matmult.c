@@ -34,7 +34,7 @@ pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 64
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -215,10 +215,12 @@ int main (int argc, char *argv[])
     if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
     TAU_CONTEXT_EVENT(event, i);
     do_work();
-    //if (provided < MPI_THREAD_MULTIPLE) {
-    //    if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
-    //    TAU_SOS_send_data();
-    //}
+    /*
+    if (provided < MPI_THREAD_MULTIPLE) {
+        if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
+        TAU_SOS_send_data();
+    }
+    */
     if (rank == 0) { printf("Iteration %d of %d done.\n", i, maxi); fflush(stdout); }
   }
 
