@@ -40,6 +40,23 @@
 // #define ACTIVITY_BUFFER_SIZE (8192*1024)
 /* Some API calls deprecated in 5.5
  */
+
+#if CUDA_VERSION >= 9000
+
+#define CUpti_ActivityKernel CUpti_ActivityKernel4
+#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling3
+#define CUpti_ActivityNvLink CUpti_ActivityNvLink2
+#define runtimeCorrelationId correlationId
+
+#endif
+
+#if CUDA_VERSION >= 8000
+
+#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling2
+#define runtimeCorrelationId correlationId
+
+#endif
+
 #if CUDA_VERSION >= 7000
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel3
