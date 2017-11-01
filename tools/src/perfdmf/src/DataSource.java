@@ -923,7 +923,7 @@ public abstract class DataSource {
         	//Summarize max
         	
         		FunctionProfile tmp=thread.getFunctionProfile(sumF);
-        		if(tmp==null){
+        		if(tmp==null || maxFP==null){ //TODO: It isn't clear why maxFP would ever be null but the case was found with the use of a specific .ParaProf directory
         			continue;
         		}
         		
