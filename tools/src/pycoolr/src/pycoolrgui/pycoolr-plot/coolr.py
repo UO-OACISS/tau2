@@ -244,6 +244,8 @@ class Coolrsub:
           self.groupcolumns = params['cfg']['groupcolumns']
           self.ranks2 = params['cfg']['ranks2']
           self.sosdbfile = params['cfg']['dbfile']
+          self.sos_bin_path = ""
+          self.res_sql = ""
 
         if self.tool == "beacon":
           self.nbcvars = params['cfg']['nbcvars']
@@ -1134,7 +1136,7 @@ class Coolrsub:
     ranks = np.array([x[0] for x in all_rows])
     procs = np.array([x[1] for x in all_rows])
     ranklen = len(ranks)
-    if ranklen > 10:
+    #if ranklen > 10:
         smallranks = [0]
         for i in range(1,4):
             candidate = random.randrange(1, ranklen-1)
@@ -1212,9 +1214,15 @@ class Coolrsub:
         #    print("Error: query returned no rows.",)
         #    print(sql_statement, params)
 
-  def req_sql(self, c, metric):
-    sql_statement = ("SELECT * from viewCombined WHERE value_name LIKE '" + metric)
-    self.try_execute(c, sql_statement)
+  def req_sql(self, metric):
+    sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric)
+    
+    #self.try_execute(c, sql_statement)
+    os.environ['SOS_SQL'] = sql_statement
+    os.system('demo_app --sql SOS_SQL')
+
+    # Redirect stdout of passed command into a string
+    self.res_sql = sys.out
     
   def opendb(self):
     global min_timestamp
@@ -1258,9 +1266,60 @@ class Coolrsub:
     # Closing the connection to the database file
     conn.close()
     #pl.tight_layout()
-     
 
+  def exec_sos_app(self):
+    
+    print 'SOS: Execute demo app'
+    sos_path = os.environ.get('SOS_BUILD_DIR') 
+    self.sos_bin_path = sos_path+"/bin"
+    print 'SOS BIN PATH: ', self.sos_bin_path
+    os.system("cd "+ self.sos_bin_path) 
+
+ 
   def readsosmetrics(self):
+
+    print 'readsosmetrics'
+    profile_t1 = time.time()
+   
+    while True:  
+ 
+       #print 'loop iteration ...'
+       for i in range(self.ngraphs):
+         #for i in range(self.nbsamples):
+         if self.listRecordSample[i] != -1:
+           j = self.listRecordSample[i]
+     
+           print 'readsosmetrics: i=%d, j=%d' %(i,j)
+           
+           #rank = self.ranks[j]
+           #rank2 = self.ranks2[j]
+           group_column = self.groupcolumns[j]
+ 	   metric = self.metrics[j]                   
+          
+           #print("Fetching rows.")
+           #self.rows[j] = self.conn.fetchall()
+           self.rows[j] = self.res_sql(metric)
+
+           #print 'rows: ', self.rows[j]
+           if len(self.rows[j]) <= 0:
+             print("Error: query returned no rows.",)
+           else:
+             goodrecord = 1
+         
+           countsamples = 0
+           for sample in self.rows[j]:
+             params['ts'] = 0
+             #self.req_sql(self.conn, self.ranks, self.rows)
+             profile_t2 = time.time()
+             self.lock.acquire()
+             self.updateguisos(params,i,j,sample)
+             self.lock.release()
+             countsamples += 1
+
+     self.closedb()
+
+ 
+  def readsosmetrics2(self):
 
      print 'readsosmetrics'
      profile_t1 = time.time()
@@ -1282,9 +1341,7 @@ class Coolrsub:
            #rank2 = self.ranks2[j]
            group_column = self.groupcolumns[j]
  	   metric = self.metrics[j]                   
- 
            
-
            if metric == "Iteration": 
              self.req_sql(self.conn, self.ranks, [], group_column, metric)
            elif (metric == "CPU System%") or (metric == "CPU User%") or (metric == "Package-0 Energy"):
