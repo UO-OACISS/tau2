@@ -472,7 +472,6 @@ extern "C" void TAU_SOS_stop_worker(void) {
 extern "C" void TAU_SOS_finalize(void) {
     static bool finalized = false;
     // only thread 0 should finalize
-    printf("Thread %d is in %s\n", RtsLayer::myThread(), __func__);
     if (RtsLayer::myThread() > 0) { return; }
     // no runtime? quit.
     if (_runtime == NULL) { return; }

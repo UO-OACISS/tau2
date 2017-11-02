@@ -23,9 +23,6 @@ int provided = MPI_THREAD_SINGLE;
 This is not a parallel implementation */
 
 #ifdef PTHREADS
-#undef PTHREADS
-#endif
-#ifdef PTHREADS
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>

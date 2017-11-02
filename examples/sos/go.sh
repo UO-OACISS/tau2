@@ -38,8 +38,7 @@ stop_sos_daemon()
 stop_sos_daemon
 rm -rf sosd.00000.*
 start_sos_daemon
-mpirun -np 1 ./matmult
-#valgrind ./matmult
+mpirun -np 4 ./matmult
 stop_sos_daemon
 showdb
 
