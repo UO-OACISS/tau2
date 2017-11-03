@@ -9,7 +9,9 @@ fi
 export SOS_CMD_PORT=22500
 export SOS_WORK=${DIR}
 export SOS_EVPATH_MEETUP=${DIR}
-export TAU_SOS_PERIODIC=1
+# to use periodic, enable this variable, and comment out the
+# TAU_SOS_send_data() call in matmult.c.
+# export TAU_SOS_PERIODIC=1
 export TAU_SOS_HIGH_RESOLUTION=1
 export TAU_SOS=1
 
@@ -36,7 +38,7 @@ stop_sos_daemon()
 stop_sos_daemon
 rm -rf sosd.00000.*
 start_sos_daemon
-mpirun -np 1 ./matmult
+mpirun -np 4 ./matmult
 stop_sos_daemon
 showdb
 
