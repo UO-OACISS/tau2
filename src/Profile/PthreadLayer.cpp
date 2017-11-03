@@ -219,7 +219,6 @@ struct tau_pthread_pack
 extern "C"
 void * tau_pthread_function(void *arg)
 {
-  if (Tau_global_getLightsOut()) return;
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
 
   TAU_REGISTER_THREAD();
