@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys, os, re, thread, signal
+from cStringIO import StringIO
 import multiprocessing
 import json
 import sqlite3
@@ -1136,7 +1137,7 @@ class Coolrsub:
     ranks = np.array([x[0] for x in all_rows])
     procs = np.array([x[1] for x in all_rows])
     ranklen = len(ranks)
-    #if ranklen > 10:
+    if ranklen > 10:
         smallranks = [0]
         for i in range(1,4):
             candidate = random.randrange(1, ranklen-1)
@@ -1219,17 +1220,29 @@ class Coolrsub:
   def req_sql(self, metric):
 
     self.res_sql = ""
-    sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric)
+    sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
    
     print "sql statement: ", sql_statement 
     #self.try_execute(c, sql_statement)
     os.environ['SOS_SQL'] = sql_statement
-    os.system('demo_app --sql SOS_SQL')
-
+    sos_bin_path = os.environ.get('SOS_BIN_DIR')
+    print 'SOS BIN path: ', sos_bin_path
+    os.system('cd '+ sos_bin_path)  
+    print 'current dir: ', os.getcwd() 
     # Redirect stdout of passed command into a string
+   
+    old_stdout = sys.stdout
+    resultstdout = StringIO()
+     
+    sys.stdout = resultstdout
+
+    os.system(sos_bin_path+ '/demo_app --sql SOS_SQL')
+    
+    sys.stdout = old_stdout
+
     print 'stdout of SOS demo: ', sys.stdout
-    self.res_sql = sys.stdout
-      
+    self.res_sql = resultstdout.getvalue()
+    print 'res_sql: ', self.res_sql   
  
   def opendb(self):
     global min_timestamp
@@ -1324,14 +1337,15 @@ class Coolrsub:
              self.lock.release()
              countsamples += 1
 
-     self.closedb()
+     #self.closedb()
 
  
   def readsosmetrics2(self):
 
      print 'readsosmetrics'
      profile_t1 = time.time()
-     self.opendb()
+     # Comment the method just for debugging purpose
+     #self.opendb() 
     
      print 'after opening db, read db and plot ....'
  
