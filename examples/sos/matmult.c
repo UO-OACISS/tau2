@@ -215,12 +215,10 @@ int main (int argc, char *argv[])
     if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
     TAU_CONTEXT_EVENT(event, i);
     do_work();
-    /*
     if (provided < MPI_THREAD_MULTIPLE) {
         if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
         TAU_SOS_send_data();
     }
-    */
     if (rank == 0) { printf("Iteration %d of %d done.\n", i, maxi); fflush(stdout); }
   }
 
