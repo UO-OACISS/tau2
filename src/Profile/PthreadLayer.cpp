@@ -219,6 +219,7 @@ struct tau_pthread_pack
 extern "C"
 void * tau_pthread_function(void *arg)
 {
+  if (Tau_global_getLightsOut()) return;
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
 
   TAU_REGISTER_THREAD();
@@ -275,7 +276,7 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
 #ifdef TAU_SOS
   if(*wrapped || start_routine == &Tau_sos_thread_function) {
 #else
-  if(*wrapped) {
+  if(*wrapped || Tau_global_getLightsOut()) {
 #endif
     // Another wrapper has already intercepted the call so just pass through
     retval = pthread_create_call(threadp, attr, start_routine, arg);
@@ -311,7 +312,7 @@ int tau_pthread_join_wrapper(pthread_join_p pthread_join_call,
   }
 
   int ret;
-  if(*wrapped) {
+  if(*wrapped || Tau_global_getLightsOut()) {
     // Another wrapper has already intercepted the call so just pass through
     ret = pthread_join_call(thread, retval);
   } else {
@@ -337,7 +338,7 @@ void tau_pthread_exit_wrapper(pthread_exit_p pthread_exit_call, void * value_ptr
     *wrapped = false;
   }
 
-  if(*wrapped) {
+  if(*wrapped || Tau_global_getLightsOut()) {
     // Another wrapper has already intercepted the call so just pass through
     pthread_exit_call(value_ptr);
   } else {
@@ -363,7 +364,7 @@ int tau_pthread_barrier_wait_wrapper(pthread_barrier_wait_p pthread_barrier_wait
   }
 
   int retval;
-  if(*wrapped) {
+  if(*wrapped || Tau_global_getLightsOut()) {
     // Another wrapper has already intercepted the call so just pass through
     retval = pthread_barrier_wait_call(barrier);
   } else {
