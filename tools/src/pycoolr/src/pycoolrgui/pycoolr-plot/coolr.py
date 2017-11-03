@@ -1214,16 +1214,23 @@ class Coolrsub:
         #    print("Error: query returned no rows.",)
         #    print(sql_statement, params)
 
+
+  # Call demo with SQL statement given as argument and store standard output
   def req_sql(self, metric):
+
+    self.res_sql = ""
     sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric)
-    
+   
+    print "sql statement: ", sql_statement 
     #self.try_execute(c, sql_statement)
     os.environ['SOS_SQL'] = sql_statement
     os.system('demo_app --sql SOS_SQL')
 
     # Redirect stdout of passed command into a string
-    self.res_sql = sys.out
-    
+    print 'stdout of SOS demo: ', sys.stdout
+    self.res_sql = sys.stdout
+      
+ 
   def opendb(self):
     global min_timestamp
     # name of the sqlite database file
@@ -1275,7 +1282,7 @@ class Coolrsub:
     print 'SOS BIN PATH: ', self.sos_bin_path
     os.system("cd "+ self.sos_bin_path) 
 
- 
+  # Read and plot selected metrics coming from SOS 
   def readsosmetrics(self):
 
     print 'readsosmetrics'
@@ -1298,7 +1305,8 @@ class Coolrsub:
           
            #print("Fetching rows.")
            #self.rows[j] = self.conn.fetchall()
-           self.rows[j] = self.res_sql(metric)
+           self.req_sql(metric)
+           self.rows[j] = self.res_sql
 
            #print 'rows: ', self.rows[j]
            if len(self.rows[j]) <= 0:
