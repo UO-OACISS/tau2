@@ -2,6 +2,7 @@
 
 import sys, os, re, thread, signal
 from cStringIO import StringIO
+import subprocess
 import multiprocessing
 import json
 import sqlite3
@@ -870,7 +871,7 @@ class Coolrsub:
         graphs = [None, None, None, None, None, None]
         axises = [None, None, None, None, None, None]
 
-	#print '[PYCOOLR] Starting update gui'
+	print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
         #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
             #
             # data handling
@@ -1231,17 +1232,21 @@ class Coolrsub:
     print 'current dir: ', os.getcwd() 
     # Redirect stdout of passed command into a string
    
-    old_stdout = sys.stdout
-    resultstdout = StringIO()
+    #old_stdout = sys.stdout
+    #resultstdout = StringIO()
      
-    sys.stdout = resultstdout
+    #sys.stdout = resultstdout
 
-    os.system(sos_bin_path+ '/demo_app --sql SOS_SQL')
-    
-    sys.stdout = old_stdout
+    #os.system(sos_bin_path+ '/demo_app --sql SOS_SQL')
+    soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
+    print 'soscmd: ', soscmd
+    #self.res_sql = os.popen(soscmd).read()  
+    self.res_sql = subprocess.check_output(soscmd, shell=True)
 
-    print 'stdout of SOS demo: ', sys.stdout
-    self.res_sql = resultstdout.getvalue()
+    #sys.stdout = old_stdout
+
+    #print 'stdout of SOS demo: ', sys.stdout
+    #self.res_sql = resultstdout.getvalue()
     print 'res_sql: ', self.res_sql   
  
   def opendb(self):
@@ -1330,6 +1335,7 @@ class Coolrsub:
            countsamples = 0
            for sample in self.rows[j]:
              params['ts'] = 0
+             #print 'sample: ', sample
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
