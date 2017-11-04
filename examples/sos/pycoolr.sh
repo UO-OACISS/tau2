@@ -19,7 +19,7 @@ cd scripts
 sleep 2
 cd ../inst/bin
 export SOS_BIN_DIR=`pwd`
-demo_app -i 1 -p 100 -m 20000
+demo_app_silent -i 1 -p 100 -m 20000
 
 #source hosts/linux/setenv.sh 
 #cp sosd.00000.db /dev/shm
