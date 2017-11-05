@@ -1300,6 +1300,10 @@ case $1 in
 	echo NOTE: Apple c++ compiler will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     APPLE_MACH_PORT_BUG)
+	echo NOTE: Using -DTAU_APPLE_MACH_PORT_BUG compiler option 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      NOFORTRAN)
 	echo "NOTE: TAU's Fortran library bindings will not be compiled. "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2090,6 +2094,10 @@ case $1 in
 	;;
      GNU_GFORTRAN)
 	echo "NOTE: GNU gfortran compiler specific options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     APPLE_GFORTRAN)
+	echo "NOTE: Not using -lgfortranbegin for Apple GNU gfortran "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CAF)
