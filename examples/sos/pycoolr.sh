@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 #echo "${TAUROOT}"
 TAUROOT=../..
@@ -14,6 +14,7 @@ cd sos/sos_flow
 echo `pwd`
 source hosts/linux/setenv.sh
 cd scripts 
+rm -rf sosd.0000*
 ./evp.start.2 &
 
 sleep 2
