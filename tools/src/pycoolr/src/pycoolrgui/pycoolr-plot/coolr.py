@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import sys, os, re, thread, signal
+from cStringIO import StringIO
+import subprocess
 import multiprocessing
 import json
 import sqlite3
@@ -244,6 +246,8 @@ class Coolrsub:
           self.groupcolumns = params['cfg']['groupcolumns']
           self.ranks2 = params['cfg']['ranks2']
           self.sosdbfile = params['cfg']['dbfile']
+          self.sos_bin_path = ""
+          self.res_sql = ""
 
         if self.tool == "beacon":
           self.nbcvars = params['cfg']['nbcvars']
@@ -862,7 +866,7 @@ class Coolrsub:
         graphs = [None, None, None, None, None, None]
         axises = [None, None, None, None, None, None]
 
-	#print '[PYCOOLR] Starting update gui'
+	print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
         #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
             #
             # data handling
@@ -1181,7 +1185,7 @@ class Coolrsub:
     min_timestamp = ts[0]
     print("min timestamp: ", min_timestamp)
 
-  def req_sql(self, c, ranks, ranks2, group_column, metric):
+  def req_sql2(self, c, ranks, ranks2, group_column, metric):
     print 'req_sql entering'
     for r in ranks:
         sql_statement = ("SELECT distinct tbldata.name, tblvals.val, tblvals.time_pack, tblpubs.comm_rank FROM tblvals INNER JOIN tbldata ON tblvals.guid = tbldata.guid INNER JOIN tblpubs ON tblpubs.guid = tbldata.pub_guid WHERE tblvals.guid IN (SELECT guid FROM tbldata WHERE tbldata.name LIKE '" + metric + "') AND tblpubs." + group_column)
@@ -1208,6 +1212,38 @@ class Coolrsub:
         #    print(sql_statement, params)
 
 
+  # Call demo with SQL statement given as argument and store standard output
+  def req_sql(self, metric):
+
+    self.res_sql = ""
+    sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+   
+    print "sql statement: ", sql_statement 
+    #self.try_execute(c, sql_statement)
+    os.environ['SOS_SQL'] = sql_statement
+    sos_bin_path = os.environ.get('SOS_BIN_DIR')
+    print 'SOS BIN path: ', sos_bin_path
+    os.system('cd '+ sos_bin_path)  
+    print 'current dir: ', os.getcwd() 
+    # Redirect stdout of passed command into a string
+   
+    #old_stdout = sys.stdout
+    #resultstdout = StringIO()
+     
+    #sys.stdout = resultstdout
+
+    #os.system(sos_bin_path+ '/demo_app --sql SOS_SQL')
+    soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
+    print 'soscmd: ', soscmd
+    #self.res_sql = os.popen(soscmd).read()  
+    self.res_sql = subprocess.check_output(soscmd, shell=True)
+
+    #sys.stdout = old_stdout
+
+    #print 'stdout of SOS demo: ', sys.stdout
+    #self.res_sql = resultstdout.getvalue()
+    print 'res_sql: ', self.res_sql   
+ 
   def opendb(self):
     global min_timestamp
     # name of the sqlite database file
@@ -1250,13 +1286,67 @@ class Coolrsub:
     # Closing the connection to the database file
     conn.close()
     #pl.tight_layout()
-     
 
+  def exec_sos_app(self):
+    
+    print 'SOS: Execute demo app'
+    sos_path = os.environ.get('SOS_BUILD_DIR') 
+    self.sos_bin_path = sos_path+"/bin"
+    print 'SOS BIN PATH: ', self.sos_bin_path
+    os.system("cd "+ self.sos_bin_path) 
+
+  # Read and plot selected metrics coming from SOS 
   def readsosmetrics(self):
+
+    print 'readsosmetrics'
+    profile_t1 = time.time()
+   
+    while True:  
+ 
+       #print 'loop iteration ...'
+       for i in range(self.ngraphs):
+         #for i in range(self.nbsamples):
+         if self.listRecordSample[i] != -1:
+           j = self.listRecordSample[i]
+     
+           print 'readsosmetrics: i=%d, j=%d' %(i,j)
+           
+           #rank = self.ranks[j]
+           #rank2 = self.ranks2[j]
+           group_column = self.groupcolumns[j]
+ 	   metric = self.metrics[j]                   
+          
+           #print("Fetching rows.")
+           #self.rows[j] = self.conn.fetchall()
+           self.req_sql(metric)
+           self.rows[j] = self.res_sql
+
+           #print 'rows: ', self.rows[j]
+           if len(self.rows[j]) <= 0:
+             print("Error: query returned no rows.",)
+           else:
+             goodrecord = 1
+         
+           countsamples = 0
+           for sample in self.rows[j]:
+             params['ts'] = 0
+             #print 'sample: ', sample
+             #self.req_sql(self.conn, self.ranks, self.rows)
+             profile_t2 = time.time()
+             self.lock.acquire()
+             self.updateguisos(params,i,j,sample)
+             self.lock.release()
+             countsamples += 1
+
+     #self.closedb()
+
+ 
+  def readsosmetrics2(self):
 
      print 'readsosmetrics'
      profile_t1 = time.time()
-     self.opendb()
+     # Comment the method just for debugging purpose
+     #self.opendb() 
     
      print 'after opening db, read db and plot ....'
  
@@ -1273,8 +1363,8 @@ class Coolrsub:
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
            group_column = self.groupcolumns[j]
- 	   metric = self.metrics[j]                  
-
+ 	   metric = self.metrics[j]                   
+           
            if metric == "Iteration": 
              self.req_sql(self.conn, self.ranks, [], group_column, metric)
            elif (metric == "CPU System%") or (metric == "CPU User%") or (metric == "Package-0 Energy"):

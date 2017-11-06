@@ -470,11 +470,17 @@ extern "C" void TAU_SOS_stop_worker(void) {
 }
 
 extern "C" void TAU_SOS_finalize(void) {
-    if (_runtime == NULL) { return; }
     static bool finalized = false;
+    // only thread 0 should finalize
+    if (RtsLayer::myThread() > 0) { return; }
+    // no runtime? quit.
+    if (_runtime == NULL) { return; }
+    // no SOS enabled? quit.
     if (!TauEnv_get_sos_enabled()) { return; }
     //printf("%s\n", __func__); fflush(stdout);
+    // Already finalized? quit.
     if (finalized) return;
+    finalized = true;
     if (!done) {
         TAU_SOS_stop_worker();
     }
@@ -493,7 +499,6 @@ extern "C" void TAU_SOS_finalize(void) {
         //TAU_SOS_fork_exec_sosd_shutdown();
     }
     SOS_finalize(_runtime);
-    finalized = true;
 }
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);

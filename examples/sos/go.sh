@@ -1,38 +1,44 @@
 #!/bin/bash -x
 
 DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ -f ../../x86_64/sos/sos_flow/build-linux/bin/sosd ] ; then
+    PATH=$PATH:$DIR/../../x86_64/sos/sos_flow/build-linux/bin/
+fi
+
 export SOS_CMD_PORT=22500
-export SOS_DB_PORT=22503
-export SOS_ROOT=/home3/khuck/src/sos_flow
-export SOS_WORK=${DIR}/sos_flow_working
-rm -rf ${SOS_WORK}
-mkdir -p ${SOS_WORK}
+export SOS_WORK=${DIR}
+export SOS_EVPATH_MEETUP=${DIR}
+# to use periodic, enable this variable, and comment out the
+# TAU_SOS_send_data() call in matmult.c.
+# export TAU_SOS_PERIODIC=1
+export TAU_SOS_HIGH_RESOLUTION=1
+export TAU_SOS=1
 
 start_sos_daemon()
 {
     # start the SOS daemon
 
-    if [ -z $1 ]; then echo "   >>> BATCH MODE!"; fi;
-    if [ -z $1 ]; then echo "   >>> Starting the sosd daemons..."; fi;
-    ${SOS_ROOT}/src/mpi.cleanall
-    if [ -z $1 ]; then echo "   >>> Launching the sosd daemons..."; fi;
-    daemon0="-np 1 ${SOS_ROOT}/bin/sosd --role SOS_ROLE_DAEMON --port ${SOS_CMD_PORT} --buffer_len 8388608 --listen_backlog 10 --work_dir ${SOS_WORK}"
-    daemon1="-np 1 ${SOS_ROOT}/bin/sosd --role SOS_ROLE_DB     --port ${SOS_DB_PORT} --buffer_len 8388608 --listen_backlog 10 --work_dir ${SOS_WORK}"
-    echo ${daemon0}
-    echo ${daemon1}
-    mpirun ${daemon0} : ${daemon1} &
+    daemon="sosd -l 0 -a 1 -k 0 -r aggregator -w ${SOS_WORK}"
+    echo ${daemon}
+    ${daemon} &
     sleep 3
 }
 
 stop_sos_daemon()
 {
     # shut down the daemon.
-    ${SOS_ROOT}/bin/sosd_stop
+    if pgrep -x "sosd" > /dev/null; then
+        sosd_stop
+    fi
     sleep 1
 }
 
+# start clean
+stop_sos_daemon
+rm -rf sosd.00000.*
 start_sos_daemon
-mpirun -np 1 ./matmult
+mpirun -np 4 ./matmult
 stop_sos_daemon
 showdb
 
