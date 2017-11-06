@@ -17,23 +17,23 @@
 # writing.
 
 # set this to your TBB library location
-TBB_HOME=/usr/local/packages/intel/14.0/tbb
+TBB_HOME=/usr/local/tbb2018_20170919oss
 INTEL_ARCH=intel64
-CXXFLAGS=-I$(TBB_HOME)/include -L$(TBB_HOME)/lib/$(INTEL_ARCH)/gcc4.4 -Wl,-rpath,$(TBB_HOME)/lib/$(INTEL_ARCH)/gcc4.4 -g
+CXXFLAGS=-I$(TBB_HOME)/include -L$(TBB_HOME)/lib/$(INTEL_ARCH)/gcc4.7 -Wl,-rpath,$(TBB_HOME)/lib/$(INTEL_ARCH)/gcc4.7 -g -fpermissive
 
 # GNU Makefile that builds and runs example.
 # Unwound profile
 # run_cmd=TAU_EBS_UNWIND=1 TAU_EBS_KEEP_UNRESOLVED_ADDR=1 tau_exec -T tbb,icpc,serial -ebs
 # Flat profile only
-run_cmd=TAU_EBS_KEEP_UNRESOLVED_ADDR=1 tau_exec -v -T tbb,icpc,serial -ebs
+run_cmd=TAU_EBS_KEEP_UNRESOLVED_ADDR=1 tau_exec -v -T tbb,serial
 PROG=tree_sum
 ARGS=auto 100000000 silent
 PERF_RUN_ARGS=auto 100000000 silent
 
 # The C++ compiler
 ifneq (,$(shell which icc 2>/dev/null))
-CXX=icc
 endif # icc
+CXX=tau_cxx.sh -optCompInst
 
 ifeq ($(shell uname), Linux)
 ifeq ($(target), android)
