@@ -611,7 +611,34 @@ cali_find_all_in_snapshot(const unsigned char* buf,
  *    attribute ID, or an empty variant if it was not found
  */
 cali_variant_t cali_get(cali_id_t attr_id) {
-  //TODO
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr_id);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Attribute with id: %d doesn't exist\n", attr_id);
+    return cali_make_empty_variant();
+  }
+
+  if(attribute_stack[it->second].empty()) {
+    fprintf(stderr, "TAU: CALIPER: Attribute with id: %d doesn't have any values on the blackboard\n", attr_id);
+    return cali_make_empty_variant();
+  }
+
+  StackValue value = attribute_stack[it->second].top();
+
+  switch(value.type) {
+    case STRING:
+      return cali_make_variant_from_string(value.data.str);
+      break;
+    case INTEGER:
+      return cali_make_variant_from_int(value.data.as_integer);
+      break;
+    case DOUBLE:
+      return cali_make_variant_from_double(value.data.as_double);
+      break;
+    default:
+      return cali_make_empty_variant();
+  }
+
 }
 
   
