@@ -1842,7 +1842,7 @@ for arg in "$@"; do
 		echo "Error: Cannot access libdwarf directory $dwarfdir"
 		exit 1
 	    fi
-	    fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir"
+	    fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir#-Wl\,-rpath\,$dwarfdir"
 	    dwarfdir=""
 	    shift
 	    ;;
@@ -10010,7 +10010,7 @@ if [ $dwarf = yes ] ; then
     if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
 	echo "ERROR: $dwarfdir/lib/libdwarf.a not found"
     else
-	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib"
+	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
     fi
 fi
 
