@@ -95,7 +95,7 @@ cali_err cali_begin(cali_id_t  attr) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generated ID to %s.\n", cali_begin);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generated ID to %s.\n", "cali_begin");
     return CALI_EINV;
   }
 
@@ -131,7 +131,7 @@ cali_err cali_begin_double(cali_id_t attr, double val) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generated ID to %s.\n", cali_begin_double);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generated ID to %s.\n", "cali_begin_double");
     return CALI_EINV;
   }
 
@@ -140,7 +140,7 @@ cali_err cali_begin_double(cali_id_t attr, double val) {
   const char* attr_name = it->second.c_str();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
-    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_double instead to update the value\n", cali_begin_double, attr_name);
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_double instead to update the value\n", "cali_begin_double", attr_name);
 
     RtsLayer::UnLockEnv();
     return CALI_EINV;
@@ -175,7 +175,7 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generated ID to %s.\n", cali_begin_int);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generated ID to %s.\n", "cali_begin_int");
     return CALI_EINV;
   }
 
@@ -183,7 +183,7 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
   const char* attr_name = it->second.c_str();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
-    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int instead to update the value.\n", cali_begin_int, attr_name);
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int instead to update the value.\n", "cali_begin_int", attr_name);
 
     RtsLayer::UnLockEnv();
     return CALI_EINV;
@@ -217,7 +217,7 @@ cali_err cali_begin_string(cali_id_t attr, const char* val) {
  
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generated ID to %s.\n", cali_begin_string);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generated ID to %s.\n", "cali_begin_string");
     return CALI_EINV;
   }
 
@@ -361,7 +361,7 @@ cali_err cali_set  (cali_id_t   attr,
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute, and then pass the generated ID to %s.\n", cali_set);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute, and then pass the generated ID to %s.\n", "cali_set");
     return CALI_EINV;
   }
 
@@ -387,7 +387,7 @@ cali_err cali_set_double(cali_id_t attr, double val) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generated ID to %s.\n", cali_set_double);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generated ID to %s.\n", "cali_set_double");
     return CALI_EINV;
   }
 
@@ -424,7 +424,7 @@ cali_err cali_set_int(cali_id_t attr, int val) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generated ID to %s.\n", cali_set_int);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generated ID to %s.\n", "cali_set_int");
     return CALI_EINV;
   }
 
@@ -455,7 +455,7 @@ cali_err cali_set_int(cali_id_t attr, int val) {
 }
 
 cali_err cali_set_string(cali_id_t attr, const char* val) {
-  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_set_string);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", "cali_set_string");
   return CALI_EINV;
 }
 
@@ -473,7 +473,7 @@ cali_err cali_begin_double_byname(const char* attr_name, double val) {
 
   /*We do not support "stacking" semantics for UserEvents of double and integer types*/
   if(!attribute_stack[std::string(attr_name)].empty()) {
-    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_double_byname instead to update the value\n", cali_begin_double_byname, attr_name);
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_double_byname instead to update the value\n", "cali_begin_double_byname", attr_name);
 
     return CALI_EINV;
   }
@@ -507,7 +507,7 @@ cali_err cali_begin_int_byname(const char* attr_name, int val) {
     cali_init();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
-    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int_byname instead to update the value.\n", cali_begin_int_byname, attr_name);
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int_byname instead to update the value.\n", "cali_begin_int_byname", attr_name);
 
     return CALI_EINV;
   }
@@ -667,7 +667,7 @@ cali_err cali_set_int_byname(const char* attr_name, int val) {
 
 /* Interesting question: What do we do here?*/
 cali_err cali_set_string_byname(const char* attr_name, const char* val) {
-  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_set_string_byname);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", "cali_set_string_byname");
   return CALI_EINV;
 }
 
@@ -876,7 +876,7 @@ void cali_push_snapshot(int scope, int n,
                    const cali_id_t trigger_info_attr_list[],
                    const void*     trigger_info_val_list[],
                    const size_t    trigger_info_size_list[]) {
-  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_set_string_byname);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", "cali_set_string_byname");
 }
 
 /**
@@ -903,7 +903,7 @@ void cali_push_snapshot(int scope, int n,
  */
 size_t cali_pull_snapshot(int scope, size_t len, unsigned char* buf) {
 
-  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_pull_snapshot);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", "cali_pull_snapshot");
   return 0;
 }
 
@@ -945,7 +945,7 @@ void cali_unpack_snapshot(const unsigned char* buf,
                      cali_entry_proc_fn   proc_fn,
                      void*                user_arg) {
 
-  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_unpack_snapshot);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", "cali_unpack_snapshot");
 }
 
 /**
@@ -967,7 +967,7 @@ cali_variant_t cali_find_first_in_snapshot(const unsigned char* buf,
                             cali_id_t            attr_id,
                             size_t*              bytes_read) {
 
-  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_find_first_in_snapshot);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", "cali_find_first_in_snapshot");
   return cali_make_variant_from_int(0);
 }
 
@@ -992,7 +992,7 @@ cali_find_all_in_snapshot(const unsigned char* buf,
                           cali_entry_proc_fn   proc_fn,
                           void*                userdata) {
 
-  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_find_all_in_snapshot);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", "cali_find_all_in_snapshot");
 }
 
 /*
