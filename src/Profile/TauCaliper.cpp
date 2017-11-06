@@ -83,7 +83,7 @@ cali_err cali_begin_double_byname(const char* attr_name, double val) {
   RtsLayer::LockEnv();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
-    printf("TAU: CALIPER operation not supported! TAU UserEvent has already been created for %s. Use cali_set_double_byname instead to update the value\n", attr_name);
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_double_byname instead to update the value\n", cali_begin_double_byname, attr_name);
 
     RtsLayer::UnLockEnv();
 
@@ -120,7 +120,7 @@ cali_err cali_begin_int_byname(const char* attr_name, int val) {
   RtsLayer::LockEnv();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
-    printf("TAU: CALIPER operation not supported! TAU UserEvent has already been created for %s. Use cali_set_int_byname instead to update the value.\n", attr_name);
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int_byname instead to update the value.\n", cali_begin_int_byname, attr_name);
 
     RtsLayer::UnLockEnv();
 
@@ -282,7 +282,7 @@ cali_err cali_set_int_byname(const char* attr_name, int val) {
 
 /* Interesting question: What do we do here?*/
 cali_err cali_set_string_byname(const char* attr_name, const char* val) {
-  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_set_string_byname);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_set_string_byname);
   return CALI_EINV;
 }
 
@@ -369,7 +369,7 @@ cali_id_t cali_create_attribute(const char*     name,
   RtsLayer::UnLockEnv();
 
   if(properties != CALI_ATTR_DEFAULT) {
-    fprintf(stdout, "TAU: CALIPER Warning: Property combination for attribute not supported. CALI_ATTR_SCOPE_PROCESS is assumed as default\n");
+    fprintf(stderr, "TAU: CALIPER: Property combination for attribute not supported. CALI_ATTR_SCOPE_PROCESS is assumed as default\n");
   }
 
   return current_id;
@@ -401,7 +401,7 @@ cali_id_t cali_create_attribute_with_metadata(const char*     name,
                                     const void*     meta_val_list[],
                                     const size_t    meta_size_list[]) {
 
-  printf("TAU: CALIPER creating attribute with metadata is currently not supported. Using default create_attribute method\n");
+  fprintf(stderr, "TAU: CALIPER: creating attribute with metadata is currently not supported. Using default create_attribute method\n");
   return cali_create_attribute(name, type, properties);
 }
   
@@ -473,7 +473,7 @@ void cali_push_snapshot(int scope, int n,
                    const cali_id_t trigger_info_attr_list[],
                    const void*     trigger_info_val_list[],
                    const size_t    trigger_info_size_list[]) {
-  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_set_string_byname);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_set_string_byname);
 }
 
 /**
@@ -500,7 +500,7 @@ void cali_push_snapshot(int scope, int n,
  */
 size_t cali_pull_snapshot(int scope, size_t len, unsigned char* buf) {
 
-  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_pull_snapshot);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_pull_snapshot);
   return 0;
 }
 
@@ -542,7 +542,7 @@ void cali_unpack_snapshot(const unsigned char* buf,
                      cali_entry_proc_fn   proc_fn,
                      void*                user_arg) {
 
-  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_unpack_snapshot);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_unpack_snapshot);
 }
 
 /**
@@ -564,8 +564,32 @@ cali_variant_t cali_find_first_in_snapshot(const unsigned char* buf,
                             cali_id_t            attr_id,
                             size_t*              bytes_read) {
 
-  TAU_VERBOSE("TAU: CALIPER operation: %s is not supported\n", cali_find_first_in_snapshot);
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_find_first_in_snapshot);
   return cali_make_variant_from_int(0);
+}
+
+/**
+ * Run all entries with attribute `attr_id` in a snapshot that was previously 
+ * obtained on the same process through the given `proc_fn` callback function.
+ *
+ * \note This function is async-signal safe if `proc_fn` is async-signal safe.
+ *
+ * \param buf Snapshot buffer
+ * \param attr_id Attribute to read from snapshot
+ * \param bytes_read Number of bytes read from the buffer
+ *   (i.e., length of the snapshot)
+ * \param proc_fn Callback function to process individidual entries
+ * \param userdata User-defined parameter passed to `proc_fn`  
+ */    
+
+void
+cali_find_all_in_snapshot(const unsigned char* buf,
+                          cali_id_t            attr_id,
+                          size_t*              bytes_read,
+                          cali_entry_proc_fn   proc_fn,
+                          void*                userdata) {
+
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_find_all_in_snapshot);
 }
 
 /*
