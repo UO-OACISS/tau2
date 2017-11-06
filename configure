@@ -10340,6 +10340,12 @@ fi
 #    ;;
 #esac
 
+if [ $machine = apple ]; then
+    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework/CoreSymbolication ]; then
+        fixmakeargs="$fixmakeargs CORESYMBOLICATION"
+    fi
+fi
+
 if [ $plugins = no ] ; then
     fixmakeargs="$fixmakeargs NOPLUGINS"
 fi

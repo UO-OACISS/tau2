@@ -1204,6 +1204,7 @@ EBS_CLOCK_RES=
 #PIN#PROFILEOPT104  = -D__PIN__=1 -DPIN_CRT=1 -DTARGET_IA32E -DTARGET_LINUX -DHOST_IA32E -fno-exceptions -funwind-tables  -fasynchronous-unwind-tables -fabi-version=2 -fno-rtti -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing -isystem $(PIN_ROOT)/source/include/pin -isystem $(PIN_ROOT)/source/include/pin/gen -isystem $(PIN_ROOT)/extras/stlport/include -isystem $(PIN_ROOT)/extras/libstdc++/include -isystem $(PIN_ROOT)/extras/crt/include -isystem $(PIN_ROOT)/extras/crt/include/arch-x86_64 -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi/asm-x86  -isystem $(PIN_ROOT)/extras/components/include -isystem $(PIN_ROOT)/extras/xed-intel64/include/xed #ENDIF#
 OTFINC=
 #OTF2#TAU_OTF2_INCLUDE_OPTS = -I$(OTFINC) -DTAU_OTF2 #ENDIF#
+#CORESYMBOLICATION#TAU_CORESYMBOLICATION_INCLUDE_OPTS = -DTAU_HAVE_CORESYMBOLICATION #ENDIF#
 
 
 
@@ -1236,7 +1237,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT104) $(PROFILEOPT106) $(PROFILEOPT107) \
               $(PROFILEOPT108) $(PROFILEOPT109) $(TRACEOPT) \
 		  $(TAU_SOS_INCLUDE_OPTS) $(TAU_ADIOS_INCLUDE_OPTS) \
-		  $(TAU_OTF2_INCLUDE_OPTS) $(TAU_CALIPER_INCLUDE_OPTS)
+		  $(TAU_OTF2_INCLUDE_OPTS) $(TAU_CALIPER_INCLUDE_OPTS) \
+                  $(TAU_CORESYMBOLICATION_INCLUDE_OPTS)
 
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
@@ -1291,6 +1293,7 @@ OTFLIB=
 #CRAYCNL_PMI#TAU_LINKER_OPT23=$(CRAY_PMI_POST_LINK_OPTS) -lpmi $(CRAY_XPMEM_POST_LINK_OPTS) -lxpmem -L/opt/cray/ugni/default/lib64 -lugni $(CRAY_UDREG_POST_LINK_OPTS) -ludreg $(CRAY_ALPS_POST_LINK_OPTS) -lalpslli -L/opt/cray/wlm_detect/default/lib64 -lwlm_detect -lalpsutil -lugni #ENDIF#
 #CRAYCNL_PMI_FOUND#TAU_LINKER_OPT23=$(CRAY_PMI_POST_LINK_OPTS) -lpmi $(CRAY_XPMEM_POST_LINK_OPTS) -lxpmem -L/opt/cray/ugni/default/lib64 -lugni $(CRAY_UDREG_POST_LINK_OPTS) -ludreg $(CRAY_ALPS_POST_LINK_OPTS) -lalpslli -L/opt/cray/wlm_detect/default/lib64 -lwlm_detect -lalpsutil -lugni #ENDIF#
 #TAU_LIKWID#TAU_LINKER_OPT24=-L$(LIKWIDDIR)/lib -Wl,-rpath,$(LIKWIDDIR)/lib -llikwid #ENDIF#
+#CORESYMBOLICATION#TAU_CORESYMBOLICATION_LINKER_OPT=-F/System/Library/PrivateFrameworks -framework CoreSymbolication #ENDIF#
 ##############################################
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
@@ -1306,7 +1309,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS) \
                   $(TAU_PIN_LINKER_OPTS) \
 				  $(TAU_SOS_LINKER_OPTS) $(TAU_ADIOS_LINKER_OPTS) \
-				  $(TAU_OTF2_LINKER_OPTS)
+				  $(TAU_OTF2_LINKER_OPTS) $(TAU_CORESYMBOLICATION_LINKER_OPT)
 
 ##############################################
 
