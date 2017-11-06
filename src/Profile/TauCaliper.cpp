@@ -253,7 +253,41 @@ cali_err cali_begin_string(cali_id_t attr, const char* val) {
  * Remove innermost value for attribute `attr` from the blackboard.
  */
 
-cali_err cali_end  (cali_id_t   attr);
+cali_err cali_end  (cali_id_t   attr) {
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Nothing to do.\n");
+    return CALI_EINV;
+  }
+
+  RtsLayer::LockEnv();
+  const char* attr_name = it->second.c_str();
+
+  if(!cali_tau_initialized)
+    cali_init();
+
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+
+    StackValue value = attribute_stack[std::string(attr_name)].top();
+    attribute_stack[std::string(attr_name)].pop();
+   
+
+    if(value.type == STRING) {
+      TAU_VERBOSE("TAU: CALIPER stop timer with name: %s\n", attr_name);
+      TAU_STOP(value.data.str);
+    } else {
+       //Nothing to do for integer, double types
+    }
+  } else {
+    TAU_VERBOSE("TAU: CALIPER stop top level timer with name %s\n", attr_name);
+    TAU_STOP(attr_name);
+  }
+  
+  RtsLayer::UnLockEnv(); 
+  return CALI_SUCCESS;
+}
+
 
 /**
  * \brief Remove innermost value for attribute \a attr from the blackboard.
@@ -265,8 +299,48 @@ cali_err cali_end  (cali_id_t   attr);
  * \param val  Expected value
  */
 
-cali_err
-cali_safe_end_string(cali_id_t attr, const char* val);
+cali_err cali_safe_end_string(cali_id_t attr, const char* val) {
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Nothing to do.\n");
+    return CALI_EINV;
+  }
+
+  RtsLayer::LockEnv();
+  const char* attr_name = it->second.c_str();
+
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_STRING) {
+    fprintf(stderr, "TAU: CALIPER: cali_safe_end_string has been invoked for an attribute that is not of type CALI_TYPE_STRING. Operation not supported.\n");
+    return CALI_ETYPE;
+  }
+
+  if(!cali_tau_initialized)
+    cali_init();
+
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+
+    StackValue value = attribute_stack[std::string(attr_name)].top();
+    attribute_stack[std::string(attr_name)].pop();
+   
+
+    if(value.type == STRING) {
+
+      if(strcmp(val, value.data.str)) {
+        fprintf(stderr, "TAU: CALIPER: Given value: %s does not match the innermost value: %s for the attribute %d\n", val, value.data.str, attr);
+        return CALI_EINV;
+      } 
+    
+      TAU_VERBOSE("TAU: CALIPER stop timer with name: %s\n", attr_name);
+      TAU_STOP(value.data.str);
+    }
+  }
+  
+  RtsLayer::UnLockEnv(); 
+  return CALI_SUCCESS;
+}
+
 
 /**
  * \brief Change current innermost value on the blackboard for attribute \a attr 
