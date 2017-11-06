@@ -94,7 +94,7 @@ cali_err cali_begin(cali_id_t  attr) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generate ID to %s.\n", cali_begin);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generated ID to %s.\n", cali_begin);
     return CALI_EINV;
   }
 
@@ -129,7 +129,7 @@ cali_err cali_begin_double(cali_id_t attr, double val) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generate ID to %s.\n", cali_begin_double);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generated ID to %s.\n", cali_begin_double);
     return CALI_EINV;
   }
 
@@ -176,7 +176,7 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generate ID to %s.\n", cali_begin_int);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generated ID to %s.\n", cali_begin_int);
     return CALI_EINV;
   }
 
@@ -221,7 +221,7 @@ cali_err cali_begin_string(cali_id_t attr, const char* val) {
  
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generate ID to %s.\n", cali_begin_string);
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generated ID to %s.\n", cali_begin_string);
     return CALI_EINV;
   }
 
@@ -352,17 +352,112 @@ cali_err cali_safe_end_string(cali_id_t attr, const char* val) {
  * to value taken from \a value with size \a size
  */
 
-cali_err  
-cali_set  (cali_id_t   attr, 
+cali_err cali_set  (cali_id_t   attr, 
            const void* value,
-           size_t      size);
+           size_t      size) {
 
-cali_err  
-cali_set_double(cali_id_t attr, double val);
-cali_err  
-cali_set_int(cali_id_t attr, int val);
-cali_err  
-cali_set_string(cali_id_t attr, const char* val);
+  if(!cali_tau_initialized)
+    cali_init();
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute, and then pass the generated ID to %s.\n", cali_set);
+    return CALI_EINV;
+  }
+
+  switch(_attribute_type_map_id_key[attr]) {
+    case CALI_TYPE_DOUBLE:
+      return cali_set_double(attr, *(double*)value);
+      break;
+    case CALI_TYPE_INT:
+      return cali_set_int(attr, *(int*)value);
+      break;
+    case CALI_TYPE_STRING:
+      return cali_set_string(attr, (char*)value);
+      break;
+    default:
+      return CALI_EINV;
+  }
+}
+
+cali_err cali_set_double(cali_id_t attr, double val) {
+
+  if(!cali_tau_initialized)
+    cali_init();
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generated ID to %s.\n", cali_set_double);
+    return CALI_EINV;
+  }
+
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_id_key[attr] != CALI_TYPE_DOUBLE) {
+    return CALI_ETYPE;
+  }
+
+  RtsLayer::LockEnv();
+  const char* attr_name = it->second.c_str();
+
+  TAU_VERBOSE("TAU: CALIPER trigger TAU UserEvent with name: %s with value %f\n", attr_name, val);
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    attribute_stack[std::string(attr_name)].pop();
+  }
+
+  Tau_trigger_userevent(attr_name, val);
+  StackValue value;
+  value.type = DOUBLE;
+  value.data.as_double = val;
+
+  attribute_stack[std::string(attr_name)].push(value);
+
+  RtsLayer::UnLockEnv();
+
+  return CALI_SUCCESS;
+
+}
+
+cali_err cali_set_int(cali_id_t attr, int val) {
+
+  if(!cali_tau_initialized)
+    cali_init();
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generated ID to %s.\n", cali_set_int);
+    return CALI_EINV;
+  }
+
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_id_key[attr] != CALI_TYPE_INT) {
+    return CALI_ETYPE;
+  }
+
+  RtsLayer::LockEnv();
+  const char* attr_name = it->second.c_str();
+ 
+  TAU_VERBOSE("TAU: CALIPER trigger TAU UserEvent with name: %s with value %d\n", attr_name, val);
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    attribute_stack[std::string(attr_name)].pop();
+  }
+
+  Tau_trigger_userevent(attr_name, val);
+  StackValue value;
+  value.type = INTEGER;
+  value.data.as_integer = val;
+
+  attribute_stack[std::string(attr_name)].push(value);
+
+  RtsLayer::UnLockEnv();
+
+  return CALI_SUCCESS;
+
+}
+
+cali_err cali_set_string(cali_id_t attr, const char* val) {
+  fprintf(stderr, "TAU: CALIPER operation: %s is not supported\n", cali_set_string);
+  return CALI_EINV;
+}
 
 /**
  * Put attribute with name \a attr_name on the blackboard.
