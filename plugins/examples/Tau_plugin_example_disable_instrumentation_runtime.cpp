@@ -22,6 +22,7 @@
 extern void printExcludeList(void);
 extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const std::string& function_name);
+extern "C" void Tau_profile_set_group(void *ptr, TauGroup_t group);
 
 /* tau_selective.cpp */
 

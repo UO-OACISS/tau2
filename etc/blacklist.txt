@@ -1,6 +1,8 @@
 MPI.*
 __do_global_ctors_aux
 __do_global_dtors_aux
+malloc
+free
 frame_dummy
 _GLOBAL__sub_I_main
 _init
