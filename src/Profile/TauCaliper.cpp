@@ -70,6 +70,185 @@ extern "C" void cali_init() {
   RtsLayer::UnLockEnv();
 }
 
+/*
+ * --- Instrumentation API -----------------------------------
+ */
+
+/**
+ * \addtogroup AnnotationAPI
+ * \{
+ * \name Low-level source-code annotation API
+ * \{
+ */
+
+/**
+ * \brief Put attribute attr on the blackboard. 
+ * Parameters:
+ * \param attr An attribute of type CALI_TYPE_BOOL
+ */
+/* TAU Wrapper: Create and start a timer provided  that the attribute with the given ID exists*/
+cali_err cali_begin(cali_id_t  attr) {
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generate ID to %s.\n", cali_begin);
+    return CALI_EINV;
+  }
+
+  RtsLayer::LockEnv();
+  
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_id_key[attr] != CALI_TYPE_STRING) {
+    return CALI_ETYPE;
+  }
+
+  if(!cali_tau_initialized)
+    cali_init();
+
+  const char *name = it->second.c_str();
+
+  TAU_VERBOSE("TAU: CALIPER create and start a TAU static timer with name: %s\n", name);
+  TAU_START(name);
+
+  RtsLayer::UnLockEnv();
+
+  return CALI_SUCCESS;
+
+}
+
+
+/**
+ * Add \a val for attribute \a attr to the blackboard.
+ * The new value is nested under the current value of \a attr. 
+ */
+
+cali_err cali_begin_double(cali_id_t attr, double val) {
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type DOUBLE, and then pass the generate ID to %s.\n", cali_begin_double);
+    return CALI_EINV;
+  }
+
+  /*We do not support "stacking" semantics for UserEvents of double and integer types*/
+  RtsLayer::LockEnv();
+  const char* attr_name = it->second.c_str();
+
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_double instead to update the value\n", cali_begin_double, attr_name);
+
+    RtsLayer::UnLockEnv();
+
+    return CALI_EINV;
+  }
+
+  //Create the attribute if it hasn't already been created explicitly
+  RtsLayer::UnLockEnv();
+
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_DOUBLE) {
+    return CALI_ETYPE;
+  }
+
+  RtsLayer::LockEnv();
+
+
+  TAU_VERBOSE("TAU: CALIPER create a TAU UserEvent named %s\n of double type\n", attr_name);
+  Tau_trigger_userevent(attr_name, val);
+
+  StackValue value;
+  value.type = DOUBLE;
+  value.data.as_double = val;
+  attribute_stack[std::string(attr_name)].push(value);
+
+  RtsLayer::UnLockEnv();
+
+  return CALI_SUCCESS;
+}
+
+cali_err cali_begin_int(cali_id_t attr, int val) {
+
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generate ID to %s.\n", cali_begin_int);
+    return CALI_EINV;
+  }
+
+  RtsLayer::LockEnv();
+
+  if(!attribute_stack[std::string(attr_name)].empty()) {
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int_byname instead to update the value.\n", cali_begin_int_byname, attr_name);
+
+    RtsLayer::UnLockEnv();
+
+    return CALI_EINV;
+  }
+
+  //Create the attribute if it hasn't already been created explicitly
+  RtsLayer::UnLockEnv();
+  cali_create_attribute(attr_name, CALI_TYPE_INT, CALI_ATTR_DEFAULT);
+
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_INT) {
+    return CALI_ETYPE;
+  }
+
+  RtsLayer::LockEnv();
+
+  TAU_VERBOSE("TAU: CALIPER create a TAU UserEvent named %s\n of integer type\n", attr_name);
+  Tau_trigger_userevent(attr_name, val);
+
+  StackValue value;
+  value.type = INTEGER;
+  value.data.as_integer = val;
+  attribute_stack[std::string(attr_name)].push(value);
+
+  RtsLayer::UnLockEnv();
+
+  return CALI_SUCCESS;
+}
+
+cali_err cali_begin_string(cali_id_t attr, const char* val) {
+
+}
+
+/**
+ * Remove innermost value for attribute `attr` from the blackboard.
+ */
+
+cali_err
+cali_end  (cali_id_t   attr);
+
+/**
+ * \brief Remove innermost value for attribute \a attr from the blackboard.
+ *
+ * Creates a mismatch warning if the current value does not match \a val.
+ * This function is primarily used by the high-level annotation API.
+ *
+ * \param attr Attribute ID
+ * \param val  Expected value
+ */
+
+cali_err
+cali_safe_end_string(cali_id_t attr, const char* val);
+
+/**
+ * \brief Change current innermost value on the blackboard for attribute \a attr 
+ * to value taken from \a value with size \a size
+ */
+
+cali_err  
+cali_set  (cali_id_t   attr, 
+           const void* value,
+           size_t      size);
+
+cali_err  
+cali_set_double(cali_id_t attr, double val);
+cali_err  
+cali_set_int(cali_id_t attr, int val);
+cali_err  
+cali_set_string(cali_id_t attr, const char* val);
+
 /**
  * Put attribute with name \a attr_name on the blackboard.
  * TAU Wrapper:
