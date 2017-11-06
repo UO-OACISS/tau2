@@ -175,9 +175,10 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
   }
 
   RtsLayer::LockEnv();
+  const char* attr_name = it->second.c_str();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
-    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int_byname instead to update the value.\n", cali_begin_int_byname, attr_name);
+    fprintf(stderr, "TAU: CALIPER operation: %s not supported for this attribute type. TAU UserEvent has already been created for %s. Use cali_set_int instead to update the value.\n", cali_begin_int, attr_name);
 
     RtsLayer::UnLockEnv();
 
@@ -186,7 +187,6 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
 
   //Create the attribute if it hasn't already been created explicitly
   RtsLayer::UnLockEnv();
-  cali_create_attribute(attr_name, CALI_TYPE_INT, CALI_ATTR_DEFAULT);
 
   //Sanity check for the type of the attribute
   if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_INT) {
@@ -210,14 +210,50 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
 
 cali_err cali_begin_string(cali_id_t attr, const char* val) {
 
+  
+  std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
+  if(it == _attribute_id_map_.end()) {
+    fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generate ID to %s.\n", cali_begin_string);
+    return CALI_EINV;
+  }
+
+  const char* attr_name = it->second.c_str();
+
+  //Sanity check for the type of the attribute
+  if(_attribute_type_map_name_key[attr_name] != CALI_TYPE_STRING) {
+    return CALI_ETYPE;
+  }
+
+  RtsLayer::LockEnv();
+
+  if(!cali_tau_initialized)
+    cali_init();
+  
+  StackValue value;
+  value.type = STRING;
+  strcpy(value.data.str, val);
+  TAU_VERBOSE("TAU: CALIPER create and start nested timers with names: %s %s\n", val, attr_name);
+
+  /* Start the top level timer with name \a attr_name if it hasn't already been started*/
+  if(attribute_stack[std::string(attr_name)].empty()) {
+    TAU_START(attr_name);
+  }
+
+  attribute_stack[std::string(attr_name)].push(value);
+
+  //Start timer with name \a val
+  TAU_START(val);
+
+  RtsLayer::UnLockEnv(); 
+
+  return CALI_SUCCESS;
 }
 
 /**
  * Remove innermost value for attribute `attr` from the blackboard.
  */
 
-cali_err
-cali_end  (cali_id_t   attr);
+cali_err cali_end  (cali_id_t   attr);
 
 /**
  * \brief Remove innermost value for attribute \a attr from the blackboard.
