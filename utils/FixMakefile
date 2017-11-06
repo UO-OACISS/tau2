@@ -462,7 +462,7 @@ case $1 in
 	;;
 
      dwarfopts=*)
-        dwarfopts=`echo $1 | sed -e 's/^dwarfopts=//'`
+        dwarfopts=`echo $1 | sed -e 's/^dwarfopts=//'  -e 's/#/ /g'`
 	echo "s,^DWARFOPTS=.*$,DWARFOPTS=$dwarfopts,g" >> $sedout
 	;;
 
