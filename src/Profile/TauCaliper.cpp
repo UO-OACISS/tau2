@@ -89,6 +89,9 @@ extern "C" void cali_init() {
 /* TAU Wrapper: Create and start a timer provided  that the attribute with the given ID exists*/
 cali_err cali_begin(cali_id_t  attr) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
     fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generate ID to %s.\n", cali_begin);
@@ -101,9 +104,6 @@ cali_err cali_begin(cali_id_t  attr) {
   if(_attribute_type_map_id_key[attr] != CALI_TYPE_STRING) {
     return CALI_ETYPE;
   }
-
-  if(!cali_tau_initialized)
-    cali_init();
 
   const char *name = it->second.c_str();
 
@@ -123,6 +123,9 @@ cali_err cali_begin(cali_id_t  attr) {
  */
 
 cali_err cali_begin_double(cali_id_t attr, double val) {
+
+  if(!cali_tau_initialized)
+    cali_init();
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
@@ -168,6 +171,9 @@ cali_err cali_begin_double(cali_id_t attr, double val) {
 
 cali_err cali_begin_int(cali_id_t attr, int val) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
     fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type INTEGER, and then pass the generate ID to %s.\n", cali_begin_int);
@@ -210,7 +216,9 @@ cali_err cali_begin_int(cali_id_t attr, int val) {
 
 cali_err cali_begin_string(cali_id_t attr, const char* val) {
 
-  
+  if(!cali_tau_initialized)
+    cali_init();
+ 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
     fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Please use cali_create_attribute to generate an attribute of type STRING, and then pass the generate ID to %s.\n", cali_begin_string);
@@ -226,9 +234,6 @@ cali_err cali_begin_string(cali_id_t attr, const char* val) {
 
   RtsLayer::LockEnv();
 
-  if(!cali_tau_initialized)
-    cali_init();
-  
   StackValue value;
   value.type = STRING;
   strcpy(value.data.str, val);
@@ -255,6 +260,9 @@ cali_err cali_begin_string(cali_id_t attr, const char* val) {
 
 cali_err cali_end  (cali_id_t   attr) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
     fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Nothing to do.\n");
@@ -263,9 +271,6 @@ cali_err cali_end  (cali_id_t   attr) {
 
   RtsLayer::LockEnv();
   const char* attr_name = it->second.c_str();
-
-  if(!cali_tau_initialized)
-    cali_init();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
 
@@ -301,6 +306,9 @@ cali_err cali_end  (cali_id_t   attr) {
 
 cali_err cali_safe_end_string(cali_id_t attr, const char* val) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr);
   if(it == _attribute_id_map_.end()) {
     fprintf(stderr, "TAU: CALIPER: Not a valid attribute ID. Nothing to do.\n");
@@ -315,9 +323,6 @@ cali_err cali_safe_end_string(cali_id_t attr, const char* val) {
     fprintf(stderr, "TAU: CALIPER: cali_safe_end_string has been invoked for an attribute that is not of type CALI_TYPE_STRING. Operation not supported.\n");
     return CALI_ETYPE;
   }
-
-  if(!cali_tau_initialized)
-    cali_init();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
 
@@ -368,6 +373,9 @@ cali_set_string(cali_id_t attr, const char* val);
 
 cali_err cali_begin_double_byname(const char* attr_name, double val) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   /*We do not support "stacking" semantics for UserEvents of double and integer types*/
   RtsLayer::LockEnv();
 
@@ -406,6 +414,9 @@ cali_err cali_begin_double_byname(const char* attr_name, double val) {
 
 cali_err cali_begin_int_byname(const char* attr_name, int val) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   RtsLayer::LockEnv();
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
@@ -442,6 +453,9 @@ cali_err cali_begin_int_byname(const char* attr_name, int val) {
 
 /* TAU Wrapper: Create and start a timer with a given name*/
 extern "C" cali_err cali_begin_byname(const char* attr_name) {
+
+  if(!cali_tau_initialized)
+    cali_init();
   
   //Create the attribute if it hasn't already been created explicitly
   cali_create_attribute(attr_name, CALI_TYPE_STRING, CALI_ATTR_DEFAULT);
@@ -453,9 +467,6 @@ extern "C" cali_err cali_begin_byname(const char* attr_name) {
     return CALI_ETYPE;
   }
 
-
-  if(!cali_tau_initialized)
-    cali_init();
 
   TAU_VERBOSE("TAU: CALIPER create and start a TAU static timer with name: %s\n", attr_name);
   TAU_START(attr_name);
@@ -468,6 +479,9 @@ extern "C" cali_err cali_begin_byname(const char* attr_name) {
 /* TAU Wrapper: Start a nested timer with \a val name*/
 cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   //Create the attribute if it hasn't already been created explicitly
   cali_create_attribute(attr_name, CALI_TYPE_STRING, CALI_ATTR_DEFAULT);
   
@@ -478,9 +492,6 @@ cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
 
   RtsLayer::LockEnv();
 
-  if(!cali_tau_initialized)
-    cali_init();
-  
   StackValue value;
   value.type = STRING;
   strcpy(value.data.str, val);
@@ -508,6 +519,9 @@ cali_err cali_begin_string_byname(const char* attr_name, const char* val) {
  */
 cali_err cali_set_double_byname(const char* attr_name, double val) {
 
+  if(!cali_tau_initialized)
+    cali_init();
+
   //Create the attribute if it hasn't already been created explicitly
   cali_create_attribute(attr_name, CALI_TYPE_DOUBLE, CALI_ATTR_DEFAULT);
 
@@ -517,9 +531,6 @@ cali_err cali_set_double_byname(const char* attr_name, double val) {
   }
 
   RtsLayer::LockEnv();
-
-  if(!cali_tau_initialized)
-    cali_init();
 
   TAU_VERBOSE("TAU: CALIPER trigger TAU UserEvent with name: %s with value %f\n", attr_name, val);
   if(!attribute_stack[std::string(attr_name)].empty()) {
@@ -539,6 +550,10 @@ cali_err cali_set_double_byname(const char* attr_name, double val) {
 }
 
 cali_err cali_set_int_byname(const char* attr_name, int val) {
+
+  if(!cali_tau_initialized)
+    cali_init();
+
   //Create the attribute if it hasn't already been created explicitly
   cali_create_attribute(attr_name, CALI_TYPE_INT, CALI_ATTR_DEFAULT);
 
@@ -549,9 +564,6 @@ cali_err cali_set_int_byname(const char* attr_name, int val) {
 
   RtsLayer::LockEnv();
  
-  if(!cali_tau_initialized)
-    cali_init();
-
   TAU_VERBOSE("TAU: CALIPER trigger TAU UserEvent with name: %s with value %d\n", attr_name, val);
   if(!attribute_stack[std::string(attr_name)].empty()) {
     attribute_stack[std::string(attr_name)].pop();
@@ -582,10 +594,11 @@ cali_err cali_set_string_byname(const char* attr_name, const char* val) {
  *              If stack is empty, stop the top level timer with name \a attr_name
  */
 cali_err cali_end_byname(const char* attr_name) {
-  RtsLayer::LockEnv(); 
 
   if(!cali_tau_initialized)
     cali_init();
+
+  RtsLayer::LockEnv(); 
 
   if(!attribute_stack[std::string(attr_name)].empty()) {
 
@@ -702,6 +715,10 @@ cali_id_t cali_create_attribute_with_metadata(const char*     name,
  */
 
 cali_id_t cali_find_attribute(const char* name) {
+
+  if(!cali_tau_initialized)
+    cali_init();
+
   std::map<std::string, cali_id_t>::iterator it = _attribute_name_map_.find(name);
 
   if(it == _attribute_name_map_.end()) {
@@ -717,6 +734,10 @@ cali_id_t cali_find_attribute(const char* name) {
  * TAU Wrapper: Do exactly as caliper does.
  */
 const char* cali_attribute_name(cali_id_t attr_id) {
+
+  if(!cali_tau_initialized)
+    cali_init();
+
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr_id);
 
   if(it == _attribute_id_map_.end()) {
@@ -731,6 +752,10 @@ const char* cali_attribute_name(cali_id_t attr_id) {
  * \return Attribute type, or CALI_TYPE_INV if `attr_id` is not a valid attribute ID
  */
 cali_attr_type cali_attribute_type(cali_id_t attr_id) {
+
+  if(!cali_tau_initialized)
+    cali_init();
+
   std::map<cali_id_t, cali_attr_type>::iterator it = _attribute_type_map_id_key.find(attr_id);
 
   if(it == _attribute_type_map_id_key.end()) {
@@ -900,6 +925,9 @@ cali_find_all_in_snapshot(const unsigned char* buf,
  *    attribute ID, or an empty variant if it was not found
  */
 cali_variant_t cali_get(cali_id_t attr_id) {
+
+  if(!cali_tau_initialized)
+    cali_init();
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr_id);
   if(it == _attribute_id_map_.end()) {
