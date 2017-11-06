@@ -123,7 +123,7 @@ typedef struct sCSNotificationData {
  * External symbols
  */
 
-const char* kCSRegionMachHeaderName;
+extern const char* kCSRegionMachHeaderName;
 
 
 /*
