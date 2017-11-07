@@ -1926,8 +1926,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         }else topoValLabel.setText(ACV);
         }
     }
-    private static final String CV = "Color Value: ";
-    private static final String ACV ="Avg Color Value: ";
+    private static final String CV = "Color Value (Event 3): ";
+    private static final String ACV ="Avg Color Value (Event 3): ";
     private boolean allAxesOn(){
     	int numdis=0;
     	int numSet=0;
