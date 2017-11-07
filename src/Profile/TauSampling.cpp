@@ -754,7 +754,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
           node->info.funcname = strdup(CSSymbolGetName(symbol));
           node->info.lineno = CSSourceInfoGetLineNumber(source_info);
       }
-      CSRelease(source_info);
+      //CSRelease(source_info);
 #else
       Dl_info info;
       int rc = dladdr((const void *)addr, &info);
