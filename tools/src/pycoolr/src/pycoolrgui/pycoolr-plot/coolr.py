@@ -1221,7 +1221,7 @@ class Coolrsub:
   def req_sql(self, metric):
 
     self.res_sql = ""
-    sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+    sql_statement = ("SELECT value_name, value FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
    
     print "sql statement: ", sql_statement 
     #self.try_execute(c, sql_statement)

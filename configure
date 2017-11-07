@@ -99,6 +99,7 @@ installsos()
  echo "installsos - current dir: `pwd`"
  src="$1"
  dst="$2"
+ #cd ../..
  #cd $dst
  currdir=`pwd`
  
@@ -8032,6 +8033,7 @@ fi
 # Install SOS if requested
 ######################################################################
 sosurl=https://github.com/cdwdirect/sos_flow.git
+#sosmaindir=sos
 sosmaindir=sos
 sosrepo=sos_flow
 
