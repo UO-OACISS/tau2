@@ -61,6 +61,9 @@
 #ifdef __APPLE__
 #include <dlfcn.h>
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
+#ifdef TAU_HAVE_CORESYMBOLICATION
+#include "CoreSymbolication.h"
+#endif
 #endif /* __APPLE__ */
 
 #ifndef TAU_WINDOWS
@@ -737,7 +740,22 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     node = callSiteCache[addr];
     if (!node) {
       node = new CallSiteCacheNode;
-#if defined(__APPLE__)
+#if defined(__APPLE__) 
+#if defined(TAU_HAVE_CORESYMBOLICATION)
+      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid()); 
+      CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
+      if(CSIsNull(source_info)) {
+          node->resolved = false;
+      } else {
+          CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
+          node->resolved = true;
+          node->info.probeAddr = addr;
+          node->info.filename = strdup(CSSourceInfoGetPath(source_info));
+          node->info.funcname = strdup(CSSymbolGetName(symbol));
+          node->info.lineno = CSSourceInfoGetLineNumber(source_info);
+      }
+      //CSRelease(source_info);
+#else
       Dl_info info;
       int rc = dladdr((const void *)addr, &info);
       if (rc == 0) {
@@ -749,6 +767,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
         node->info.funcname = strdup(info.dli_sname);
         node->info.lineno = 0; // Apple doesn't give us line numbers.
       }
+#endif
 #else
       if (TauEnv_get_bfd_lookup()) {
         node->resolved = Tau_bfd_resolveBfdInfo(TheBfdUnitHandle(), addr, node->info);
