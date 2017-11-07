@@ -9,7 +9,7 @@ MAKE = make
 
 CC = mpicc
 
-CALIPERDIR = /home/users/sramesh/CALIPER_TAU_INTEGRATION/CALIPER
+CALIPERDIR = 
 
 CFLAGS = -I$(CALIPERDIR)/include -fopenmp
 

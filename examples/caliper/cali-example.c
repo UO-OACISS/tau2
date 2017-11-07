@@ -24,9 +24,27 @@
 
 void init_dummy_function() {
   cali_begin_byname("init_dummy_function");
+
+  cali_set_int_byname("randomint", 20);
+  cali_id_t id = cali_find_attribute("randomint");
+  printf("TAU: Attribute randomint has ID %d\n", id);
+  cali_set_int(id, 55);
+
+  cali_set_double_byname("randomdouble", 20.5);
+  cali_id_t id_d = cali_find_attribute("randomdouble");
+  printf("TAU: Attribute randomdouble has ID %d\n", id_d);
+  cali_set_double(id_d, 55.0);
+
+  //One should expect a warning here
+  cali_begin_double_byname("randomdouble", 4.5);
+
+  //Should not be a warning here
+  cali_begin_double_byname("anotherrandomdouble", 4.5);
+
+  //Dummy sleep
+  sleep(1);
   cali_end_byname("init_dummy_function");
 
-  cali_set_int_byname("randomval", 20);
 }
 
 int main(int argc, char **argv) {
