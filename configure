@@ -7212,6 +7212,7 @@ if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/n
 	useropt="$useropt#-DTAU_MPI_F_STATUSES_IGNORE_ABSENT"
 	fixmakeargs="$fixmakeargs MPI2 useropt=$useropt"
 	echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
+	fixmakeargs="$fixmakeargs SGI_MPT_MPI"
     elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] ; then
         # Scali does not use MPI2 PMPI interface properly.
 	echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"

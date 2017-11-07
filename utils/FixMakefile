@@ -877,6 +877,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     SGI_MPT_MPI)
+        echo NOTE: Using the TAU SGI MPI Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      SGI_MPT_PSHMEM)
         echo NOTE: Using the TAU SGI MPT PSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
