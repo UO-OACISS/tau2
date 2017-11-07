@@ -1210,11 +1210,11 @@ class Coolrsub:
     print 'soscmd: ', soscmd
     tmp_res_min_ts_sql = subprocess.check_output(soscmd, shell=True)
 
-    self.res_min_ts_sql = tmp_res_sql.splitlines()
+    self.res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
     # Remove first element of SQL result 
     self.res_min_ts_sql.pop(0)
      
-    for item_sql in self.res_sql:
+    for item_sql in self.res_min_ts_sql:
       print 'res sql: ', item_sql 
  
     ts = np.array([x[0] for x in self.res_min_ts_sql])
@@ -1337,7 +1337,9 @@ class Coolrsub:
 
     print 'readsosmetrics'
     profile_t1 = time.time()
-   
+  
+    self.get_min_timestamp()  
+ 
     while True:  
  
        #print 'loop iteration ...'
