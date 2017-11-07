@@ -22,6 +22,7 @@ Version 2.27 changes (from 2.26):
 9. Updated pthread wrapper support in TAU for use with OpenMP. 
 10. Added support for LIKWID (configure -likwid=download; export TAU_METRICS=TIME,LIKWID_<event>).
 11. Added preliminary support for CUDA 9.0 and NVLink. 
+12. Updated support for SGI MPT MPI wrapper. 
 
 Version 2.26 changes (from 2.25):
 1. Upgraded OMPT to LLVM-0.2 and introduced TAU_OPENMP_RUNTIME_EVENTS=0. 
