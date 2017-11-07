@@ -248,6 +248,7 @@ class Coolrsub:
           self.sosdbfile = params['cfg']['dbfile']
           self.sos_bin_path = ""
           self.res_sql = [None]
+          self.res_min_ts_sql = [None]
 
         if self.tool == "beacon":
           self.nbcvars = params['cfg']['nbcvars']
@@ -1180,7 +1181,7 @@ class Coolrsub:
     else:
         return nodes,ranks
 
-  def get_min_timestamp(self,c):
+  def get_min_timestamp2(self,c):
     global min_timestamp
     sql_statement = ("select min(time_pack) from tblvals;")
     print("get_min_timestamp Executing query")
@@ -1189,6 +1190,37 @@ class Coolrsub:
     ts = np.array([x[0] for x in all_rows])
     min_timestamp = ts[0]
     print("min timestamp: ", min_timestamp)
+
+
+  def get_min_timestamp(self):
+    global min_timestamp
+    sql_statement = ("SELECT min(time_pack) FROM viewCombined;")
+    print("get_min_timestamp Executing query")
+ 
+    print "sql statement: ", sql_statement
+    #self.try_execute(c, sql_statement)
+    os.environ['SOS_SQL'] = sql_statement
+    sos_bin_path = os.environ.get('SOS_BIN_DIR')
+    print 'SOS BIN path: ', sos_bin_path
+    os.system('cd '+ sos_bin_path)
+    print 'current dir: ', os.getcwd()
+    # Redirect stdout of passed command into a string
+
+    soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
+    print 'soscmd: ', soscmd
+    tmp_res_min_ts_sql = subprocess.check_output(soscmd, shell=True)
+
+    self.res_min_ts_sql = tmp_res_sql.splitlines()
+    # Remove first element of SQL result 
+    self.res_min_ts_sql.pop(0)
+     
+    for item_sql in self.res_sql:
+      print 'res sql: ', item_sql 
+ 
+    ts = np.array([x[0] for x in self.res_min_ts_sql])
+    min_timestamp = ts[0]
+    print("min timestamp: ", min_timestamp)
+
 
   def req_sql2(self, c, ranks, ranks2, group_column, metric):
     print 'req_sql entering'
@@ -1233,19 +1265,9 @@ class Coolrsub:
     print 'current dir: ', os.getcwd() 
     # Redirect stdout of passed command into a string
    
-    #old_stdout = sys.stdout
-    #resultstdout = StringIO()
-     
-    #sys.stdout = resultstdout
-
-    #os.system(sos_bin_path+ '/demo_app --sql SOS_SQL')
     soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
     print 'soscmd: ', soscmd
-    #self.res_sql = os.popen(soscmd).read()  
-    #self.res_sql = subprocess.check_output(soscmd, shell=True)
     tmp_res_sql = subprocess.check_output(soscmd, shell=True)
-
-    #sys.stdout = old_stdout
 
     #print 'stdout of SOS demo: ', sys.stdout
     #self.res_sql = resultstdout.getvalue()
