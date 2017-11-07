@@ -247,7 +247,7 @@ class Coolrsub:
           self.ranks2 = params['cfg']['ranks2']
           self.sosdbfile = params['cfg']['dbfile']
           self.sos_bin_path = ""
-          self.res_sql = ""
+          self.res_sql = [None]
 
         if self.tool == "beacon":
           self.nbcvars = params['cfg']['nbcvars']
@@ -1221,7 +1221,8 @@ class Coolrsub:
   def req_sql(self, metric):
 
     self.res_sql = ""
-    sql_statement = ("SELECT value_name, value FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+    sql_statement = ("SELECT value_name, value, time_pack FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+    #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
    
     print "sql statement: ", sql_statement 
     #self.try_execute(c, sql_statement)
@@ -1241,13 +1242,22 @@ class Coolrsub:
     soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
     print 'soscmd: ', soscmd
     #self.res_sql = os.popen(soscmd).read()  
-    self.res_sql = subprocess.check_output(soscmd, shell=True)
+    #self.res_sql = subprocess.check_output(soscmd, shell=True)
+    tmp_res_sql = subprocess.check_output(soscmd, shell=True)
 
     #sys.stdout = old_stdout
 
     #print 'stdout of SOS demo: ', sys.stdout
     #self.res_sql = resultstdout.getvalue()
-    print 'res_sql: ', self.res_sql   
+    print 'tmp res_sql: ', tmp_res_sql   
+    
+    self.res_sql = tmp_res_sql.splitlines()
+    # REmove first element of SQL result 
+    self.res_sql.pop(0)
+
+    for item_sql in self.res_sql:
+      print 'res sql: ', item_sql 
+      
  
   def opendb(self):
     global min_timestamp
@@ -1335,7 +1345,7 @@ class Coolrsub:
            countsamples = 0
            for sample in self.rows[j]:
              params['ts'] = 0
-             #print 'sample: ', sample
+             print 'sample: ', sample
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
