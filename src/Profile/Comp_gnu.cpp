@@ -57,6 +57,9 @@
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #include <dlfcn.h>
+#ifdef TAU_HAVE_CORESYMBOLICATION
+#include "CoreSymbolication.h"
+#endif
 #endif /* __APPLE__ */
 
 using namespace std;
@@ -336,6 +339,17 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         // Resolve function info if it hasn't already been retrieved
         if (!node->info.probeAddr) {
 #if defined(__APPLE__)
+#if defined(TAU_HAVE_CORESYMBOLICATION)
+         static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid()); 
+         CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
+         if(!CSIsNull(source_info)) {
+             CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
+             node->info.probeAddr = addr;
+             node->info.filename = strdup(CSSourceInfoGetPath(source_info));
+             node->info.funcname = strdup(CSSymbolGetName(symbol));
+             node->info.lineno = CSSourceInfoGetLineNumber(source_info);
+         }
+#else
           Dl_info info;
           int rc = dladdr((const void *)addr, &info);
           if (rc != 0) {
@@ -344,6 +358,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
             node->info.funcname = strdup(info.dli_sname);
             node->info.lineno = 0; // Apple doesn't give us line numbers.
           }
+#endif
 #else
           Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
 #endif
