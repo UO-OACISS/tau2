@@ -861,6 +861,116 @@ class Coolrsub:
             #    self.ax[i].set_title('%s: %s (%s)' % (params['cfg']['appname'], self.titles[i], params['targetnode']) )
 	#print 'ending update'
 
+  def updateguisos_db(self, params, graphidx, recordidx, sample):
+        if self.ngraphs == 0:
+            return
+
+        mean_val  = 0
+        total_val = 0
+        num_vals  = 0
+        newplot = True
+        graphs = [None, None, None, None, None, None]
+        axises = [None, None, None, None, None, None]
+
+	#print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
+        #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
+            #
+            # data handling
+            #
+            #t = sample['time'] - params['ts']
+            #
+            # graph handling
+            #
+        gxsec = params['gxsec']
+            #
+            #
+        #for i in len(sample):
+        # sample[i].replace('"', '')
+
+        #print 'parse graphs'
+        #print "before sample: metric=%s, value=%s, ts=%s" %(repr(sample[1]),repr(sample[2]),repr(sample[3]))
+        sample_1 = sample[1].replace('\"', '')
+        sample_2 = sample[2].replace('\"', '')
+        sample_3 = sample[3].replace('\"', '')
+
+        sample_value = float(sample_2)
+        #sample_value = float("0.00000000000000000000")
+        metric_value = max(sample_value,0)
+        #numeric = re.search(r'\d+', metric_value)
+        #metric_value_num = numeric.group()
+        #metric_value_float = float(metric_value_num)
+        #metric_value_int = int(metric_value_float)
+        time_stamp = float(sample_3)
+        #time_stamp = float("1510105643.06971")
+        pack_time = time_stamp - min_timestamp
+
+        #print 'metric_value: ', metric_value
+        #print 'metric_value_float: ', metric_value_float
+        #print 'metric_value_int: ', metric_value_int
+        #print 'pack_time ', pack_time
+        #print 'graphidx: %d, recordidx: %d' %(graphidx,recordidx)
+        #print("Making numpy array of: metric_values"
+
+        #self.data_lr[recordidx].add(pack_time,metric_value_int)
+        self.data_lr[recordidx].add(pack_time,metric_value)
+        #self.lock.acquire()
+        #self.avail_refresh = 0
+        ax = self.ax[graphidx]
+        #pdata = self.data_lr[i]
+        pdata = self.data_lr[recordidx]
+        #label = params['cfg']['appsamples'][i]
+        #label = params['cfg']['units'][i]
+        label = params['cfg']['units'][recordidx]
+        try:
+           ax.cla()
+        except Exception as errCla:
+          print 'update_gui: Error cla(): ', type(errCla), errCla
+
+        ax.set_xlim([pack_time-gxsec, pack_time])
+        #print 'get x and y'
+        x = pdata.getlistx()
+        y = pdata.getlisty()
+
+        #print 'get ymax and ymin'
+        ymax = pdata.getmaxy()
+        ymin = pdata.getminy()
+
+        #self.avail_refresh = 1
+        #if ymax > self.ytop[i]:
+        if ymax > self.ytop[recordidx]:
+          self.ytop[recordidx] = ymax * 1.1
+          #self.ytop[i] = ymax * 1.1
+
+	#if self.ybot[i] == 1 or ymin < self.ybot[i]:
+	if self.ybot[recordidx] == 1 or ymin < self.ybot[recordidx]:
+          self.ybot[recordidx] = ymin*.9
+		    #self.ybot[i] = ymin*.9
+
+        #ax.set_ylim([self.ybot[i], self.ytop[i])
+        ax.set_ylim([self.ybot[recordidx], self.ytop[recordidx]])
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(1,0))
+
+        #print 'ax plot'
+        #ax.plot(x, y, label='', color=self.colors[i], lw=1.2)
+        #print 'begin plot'
+        ax.plot(x, y, 'rs', lw=1)
+        #print 'end plot'
+        #ax.bar(x, y, width = .6, edgecolor='none', color='#77bb88' )
+        #ax.plot(x,y, 'ro', scaley=True, label='')
+
+        #print 'ax set x y label'
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel(label)
+
+        #ax.set_title('%s: %s' % (params['cfg']['metrics'], self.metrics[recordidx]))
+        ax.set_title('%s: %s (%s)' % (params['cfg']['appname'], self.metrics[recordidx], params['targetnode']) )
+
+            #for i in range(self.ngraphs):
+            #    self.ax[i].set_xlim([t-gxsec, t])
+            #    self.ax[i].set_title('%s: %s (%s)' % (params['cfg']['appname'], self.titles[i], params['targetnode']) )
+	#print 'ending update'
+
+
   def updateguisos(self, params, graphidx, recordidx, sample):
         if self.ngraphs == 0:
             return
