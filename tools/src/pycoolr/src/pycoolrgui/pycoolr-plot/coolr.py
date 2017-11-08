@@ -884,14 +884,33 @@ class Coolrsub:
         gxsec = params['gxsec']
             #
             #
+        #for i in len(sample):
+        # sample[i].replace('"', '')
 
+        #sample[1].replace('"', '')
+        #sample[2].replace('"', '')
+        #sample[3].replace('"', '')
+        #print 'sample: ', sample
         #print 'parse graphs'
-        metric_value = max(sample[1],0)
-        numeric = re.search(r'\d+', metric_value)
-        metric_value_num = numeric.group()
-        metric_value_float = float(metric_value_num)
-        metric_value_int = int(metric_value_float)
-        pack_time = sample[2] - min_timestamp
+        print "before sample: metric=%s, value=%s, ts=%s" %(repr(sample[1]),repr(sample[2]),repr(sample[3]))
+        new_sample_1 = sample[1].replace('\"', '')
+        new_sample_2 = sample[2].replace('\"', '')
+        new_sample_3 = sample[3].replace('\"', '')
+        print "after sample: metric=%s, value=%s, ts=%s" %(repr(new_sample_1),repr(new_sample_2),repr(new_sample_3))
+        #print "after sample: metric=%s, value=%s, ts=%s" %(sample[1],sample[2],sample[3])
+      
+        #sample[2] = '0.0000000'
+
+        sample_value = float(new_sample_2)
+        #sample_value = float("0.00000000000000000000")
+        metric_value = max(sample_value,0)
+        #numeric = re.search(r'\d+', metric_value)
+        #metric_value_num = numeric.group()
+        #metric_value_float = float(metric_value_num)
+        #metric_value_int = int(metric_value_float)
+        time_stamp = float(new_sample_3)
+        #time_stamp = float("1510105643.06971")
+        pack_time = time_stamp - min_timestamp
 
         #print 'metric_value: ', metric_value
         #print 'metric_value_float: ', metric_value_float
@@ -900,7 +919,8 @@ class Coolrsub:
         #print 'graphidx: %d, recordidx: %d' %(graphidx,recordidx)
         #print("Making numpy array of: metric_values"
 
-        self.data_lr[recordidx].add(pack_time,metric_value_int)
+        #self.data_lr[recordidx].add(pack_time,metric_value_int)
+        self.data_lr[recordidx].add(pack_time,metric_value)
         #self.lock.acquire()
         #self.avail_refresh = 0
         ax = self.ax[graphidx]
@@ -1210,16 +1230,21 @@ class Coolrsub:
     print 'soscmd: ', soscmd
     tmp_res_min_ts_sql = subprocess.check_output(soscmd, shell=True)
 
-    self.res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
+    #self.res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
+    print 'get min ts: tmp res sql=', tmp_res_min_ts_sql
+    self.res_min_ts_sql = tmp_res_min_ts_sql.split(",")
     # Remove first element of SQL result 
-    self.res_min_ts_sql.pop(0)
+    #self.res_min_ts_sql.pop(0)
      
     for item_sql in self.res_min_ts_sql:
       print 'res sql: ', item_sql 
  
     ts = np.array([x[0] for x in self.res_min_ts_sql])
-    min_timestamp = ts[0]
-    print("min timestamp: ", min_timestamp)
+    str_min_timestamp = ts[0]
+    #print 'str min ts:', str_min_timestamp
+    #min_timestamp = float(str_min_timestamp)
+    min_timestamp = 0.0 # HARDCODED
+    #print("str min_timestamp=%s, min timestamp=%f: ", str_min_timestamp, min_timestamp)
 
 
   def req_sql2(self, c, ranks, ranks2, group_column, metric):
@@ -1332,6 +1357,7 @@ class Coolrsub:
     print 'SOS BIN PATH: ', self.sos_bin_path
     os.system("cd "+ self.sos_bin_path) 
 
+
   # Read and plot selected metrics coming from SOS 
   def readsosmetrics(self):
 
@@ -1373,7 +1399,8 @@ class Coolrsub:
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
-             self.updateguisos(params,i,j,sample)
+             listsample = sample.split(',')
+             self.updateguisos(params,i,j,listsample)
              self.lock.release()
              countsamples += 1
 
