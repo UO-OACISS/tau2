@@ -99,6 +99,7 @@ installsos()
  echo "installsos - current dir: `pwd`"
  src="$1"
  dst="$2"
+ #cd ../..
  #cd $dst
  currdir=`pwd`
  
@@ -6778,13 +6779,13 @@ cat <<EOF > apple_mach_port.cpp
 #include <Profile/Profiler.h>
 #include <Profile/TauMetaData.h>
 EOF
-  echo "Checking: Mac OS X mach_port bug.. ${nnl}"
+  echo "Checking: Mac OS X mach_port bug. Is it ok?... ${nnl}"
 if $cxx_compiler -DTAU_DOT_H_LESS_HEADERS -DPROFILING_ON -I./include -c apple_mach_port.cpp  1> /dev/null 2>&1 ; then
     echo "yes"
   else
     echo "no ${nnl}"
     if $cxx_compiler -DTAU_DOT_H_LESS_HEADERS -DPROFILING_ON -DTAU_APPLE_MACH_PORT_BUG -I./include -c apple_mach_port.cpp   1> /dev/null 2>&1; then
-      echo " fixed by APPLE_MACH_PORT_BUG" 
+      echo " - it is fixed by APPLE_MACH_PORT_BUG" 
       fixmakeargs="$fixmakeargs APPLE_MACH_PORT_BUG"
     else
       echo " can't be fixed. TAU may not build."
@@ -7212,6 +7213,7 @@ if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/n
 	useropt="$useropt#-DTAU_MPI_F_STATUSES_IGNORE_ABSENT"
 	fixmakeargs="$fixmakeargs MPI2 useropt=$useropt"
 	echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
+	fixmakeargs="$fixmakeargs SGI_MPT_MPI"
     elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] ; then
         # Scali does not use MPI2 PMPI interface properly.
 	echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"
@@ -8032,6 +8034,7 @@ fi
 # Install SOS if requested
 ######################################################################
 sosurl=https://github.com/cdwdirect/sos_flow.git
+#sosmaindir=sos
 sosmaindir=sos
 sosrepo=sos_flow
 
@@ -10339,6 +10342,23 @@ fi
 #     echo plugins="no"
 #    ;;
 #esac
+
+if [ $machine = apple ]; then
+    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework/CoreSymbolication ]; then
+# Let us test if this works with the current compiler.
+cat <<EOF > tau_apple_symbol.cpp
+#include "CoreSymbolication.h"
+EOF
+        echo "Checking for Apple CoreSymbolication... ${nnl}"
+        if $cxx_compiler -c tau_apple_symbol.cpp -Iinclude/Profile 1> /dev/null 2>&1 ; then
+          echo "yes"
+          fixmakeargs="$fixmakeargs CORESYMBOLICATION"
+        else 
+          echo "no"
+        fi
+        /bin/rm -f tau_apple_symbol.o 
+    fi
+fi
 
 if [ $plugins = no ] ; then
     fixmakeargs="$fixmakeargs NOPLUGINS"
