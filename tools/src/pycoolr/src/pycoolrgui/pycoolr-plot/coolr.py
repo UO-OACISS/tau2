@@ -1193,7 +1193,7 @@ class Coolrsub:
     else:
         return nodes,ranks
 
-  def get_min_timestamp2(self,c):
+  def get_min_timestamp_db(self,c):
     global min_timestamp
     sql_statement = ("select min(time_pack) from tblvals;")
     print("get_min_timestamp Executing query")
@@ -1235,7 +1235,7 @@ class Coolrsub:
     #print("str min_timestamp=%s, min timestamp=%f: ", str_min_timestamp, min_timestamp)
 
 
-  def req_sql2(self, c, ranks, ranks2, group_column, metric):
+  def req_sql_db(self, c, ranks, ranks2, group_column, metric):
     print 'req_sql entering'
     for r in ranks:
         sql_statement = ("SELECT distinct tbldata.name, tblvals.val, tblvals.time_pack, tblpubs.comm_rank FROM tblvals INNER JOIN tbldata ON tblvals.guid = tbldata.guid INNER JOIN tblpubs ON tblpubs.guid = tbldata.pub_guid WHERE tblvals.guid IN (SELECT guid FROM tbldata WHERE tbldata.name LIKE '" + metric + "') AND tblpubs." + group_column)
@@ -1317,7 +1317,7 @@ class Coolrsub:
         nodes,self.noderanks = self.get_nodes(self.conn)
     print ("nodes: ", self.nodes)
 
-    self.get_min_timestamp(self.conn)
+    self.get_min_timestamp_db(self.conn)
     #resize the figure
     # Get current size
     #fig_size = pl.rcParams["figure.figsize"]
@@ -1395,12 +1395,12 @@ class Coolrsub:
      #self.closedb()
 
  
-  def readsosmetrics2(self):
+  def readsosmetrics_db(self):
 
      print 'readsosmetrics'
      profile_t1 = time.time()
      # Comment the method just for debugging purpose
-     #self.opendb() 
+     self.opendb() 
     
      print 'after opening db, read db and plot ....'
  
@@ -1420,11 +1420,11 @@ class Coolrsub:
  	   metric = self.metrics[j]                   
            
            if metric == "Iteration": 
-             self.req_sql(self.conn, self.ranks, [], group_column, metric)
+             self.req_sql_db(self.conn, self.ranks, [], group_column, metric)
            elif (metric == "CPU System%") or (metric == "CPU User%") or (metric == "Package-0 Energy"):
-             self.req_sql(self.conn, self.nodes, self.noderanks, group_column, metric)
+             self.req_sql_db(self.conn, self.nodes, self.noderanks, group_column, metric)
            elif (metric == "Matrix Size") or (metric == "status:VmHWM"):
-             self.req_sql(self.conn, self.procs, [], group_column, metric)
+             self.req_sql_db(self.conn, self.procs, [], group_column, metric)
           
            #print("Fetching rows.")
            self.rows[j] = self.conn.fetchall()
