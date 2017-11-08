@@ -872,7 +872,7 @@ class Coolrsub:
         graphs = [None, None, None, None, None, None]
         axises = [None, None, None, None, None, None]
 
-	#print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
+        #print '[PYCOOLR] Starting update gui'
         #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
             #
             # data handling
@@ -884,25 +884,14 @@ class Coolrsub:
         gxsec = params['gxsec']
             #
             #
-        #for i in len(sample):
-        # sample[i].replace('"', '')
 
         #print 'parse graphs'
-        #print "before sample: metric=%s, value=%s, ts=%s" %(repr(sample[1]),repr(sample[2]),repr(sample[3]))
-        sample_1 = sample[1].replace('\"', '')
-        sample_2 = sample[2].replace('\"', '')
-        sample_3 = sample[3].replace('\"', '')
-
-        sample_value = float(sample_2)
-        #sample_value = float("0.00000000000000000000")
-        metric_value = max(sample_value,0)
-        #numeric = re.search(r'\d+', metric_value)
-        #metric_value_num = numeric.group()
-        #metric_value_float = float(metric_value_num)
-        #metric_value_int = int(metric_value_float)
-        time_stamp = float(sample_3)
-        #time_stamp = float("1510105643.06971")
-        pack_time = time_stamp - min_timestamp
+        metric_value = max(sample[1],0)
+        numeric = re.search(r'\d+', metric_value)
+        metric_value_num = numeric.group()
+        metric_value_float = float(metric_value_num)
+        metric_value_int = int(metric_value_float)
+        pack_time = sample[2] - min_timestamp
 
         #print 'metric_value: ', metric_value
         #print 'metric_value_float: ', metric_value_float
@@ -911,8 +900,7 @@ class Coolrsub:
         #print 'graphidx: %d, recordidx: %d' %(graphidx,recordidx)
         #print("Making numpy array of: metric_values"
 
-        #self.data_lr[recordidx].add(pack_time,metric_value_int)
-        self.data_lr[recordidx].add(pack_time,metric_value)
+        self.data_lr[recordidx].add(pack_time,metric_value_int)
         #self.lock.acquire()
         #self.avail_refresh = 0
         ax = self.ax[graphidx]
@@ -941,10 +929,10 @@ class Coolrsub:
           self.ytop[recordidx] = ymax * 1.1
           #self.ytop[i] = ymax * 1.1
 
-	#if self.ybot[i] == 1 or ymin < self.ybot[i]:
-	if self.ybot[recordidx] == 1 or ymin < self.ybot[recordidx]:
+        #if self.ybot[i] == 1 or ymin < self.ybot[i]:
+        if self.ybot[recordidx] == 1 or ymin < self.ybot[recordidx]:
           self.ybot[recordidx] = ymin*.9
-		    #self.ybot[i] = ymin*.9
+                    #self.ybot[i] = ymin*.9
 
         #ax.set_ylim([self.ybot[i], self.ytop[i])
         ax.set_ylim([self.ybot[recordidx], self.ytop[recordidx]])
@@ -968,7 +956,7 @@ class Coolrsub:
             #for i in range(self.ngraphs):
             #    self.ax[i].set_xlim([t-gxsec, t])
             #    self.ax[i].set_title('%s: %s (%s)' % (params['cfg']['appname'], self.titles[i], params['targetnode']) )
-	#print 'ending update'
+        #print 'ending update'
 
 
   def updateguisos(self, params, graphidx, recordidx, sample):
