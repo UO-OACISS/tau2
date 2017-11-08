@@ -872,7 +872,7 @@ class Coolrsub:
         graphs = [None, None, None, None, None, None]
         axises = [None, None, None, None, None, None]
 
-	print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
+	#print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
         #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
             #
             # data handling
@@ -887,28 +887,20 @@ class Coolrsub:
         #for i in len(sample):
         # sample[i].replace('"', '')
 
-        #sample[1].replace('"', '')
-        #sample[2].replace('"', '')
-        #sample[3].replace('"', '')
-        #print 'sample: ', sample
         #print 'parse graphs'
-        print "before sample: metric=%s, value=%s, ts=%s" %(repr(sample[1]),repr(sample[2]),repr(sample[3]))
-        new_sample_1 = sample[1].replace('\"', '')
-        new_sample_2 = sample[2].replace('\"', '')
-        new_sample_3 = sample[3].replace('\"', '')
-        print "after sample: metric=%s, value=%s, ts=%s" %(repr(new_sample_1),repr(new_sample_2),repr(new_sample_3))
-        #print "after sample: metric=%s, value=%s, ts=%s" %(sample[1],sample[2],sample[3])
-      
-        #sample[2] = '0.0000000'
+        #print "before sample: metric=%s, value=%s, ts=%s" %(repr(sample[1]),repr(sample[2]),repr(sample[3]))
+        sample_1 = sample[1].replace('\"', '')
+        sample_2 = sample[2].replace('\"', '')
+        sample_3 = sample[3].replace('\"', '')
 
-        sample_value = float(new_sample_2)
+        sample_value = float(sample_2)
         #sample_value = float("0.00000000000000000000")
         metric_value = max(sample_value,0)
         #numeric = re.search(r'\d+', metric_value)
         #metric_value_num = numeric.group()
         #metric_value_float = float(metric_value_num)
         #metric_value_int = int(metric_value_float)
-        time_stamp = float(new_sample_3)
+        time_stamp = float(sample_3)
         #time_stamp = float("1510105643.06971")
         pack_time = time_stamp - min_timestamp
 
@@ -1232,18 +1224,14 @@ class Coolrsub:
 
     #self.res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
     print 'get min ts: tmp res sql=', tmp_res_min_ts_sql
-    self.res_min_ts_sql = tmp_res_min_ts_sql.split(",")
+    res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
+    print "List of result SQL MIN TS: ", res_min_ts_sql
+    min_ts_rows = res_min_ts_sql[1].split(",")
+    print "List of result SQL MIN TS values: ", min_ts_rows
     # Remove first element of SQL result 
-    #self.res_min_ts_sql.pop(0)
-     
-    for item_sql in self.res_min_ts_sql:
-      print 'res sql: ', item_sql 
- 
-    ts = np.array([x[0] for x in self.res_min_ts_sql])
-    str_min_timestamp = ts[0]
-    #print 'str min ts:', str_min_timestamp
-    #min_timestamp = float(str_min_timestamp)
-    min_timestamp = 0.0 # HARDCODED
+    #ts = np.array([x[0] for x in min_ts_rows])
+    str_min_timestamp = min_ts_rows[0].replace('\"', '')
+    min_timestamp = float(str_min_timestamp)
     #print("str min_timestamp=%s, min timestamp=%f: ", str_min_timestamp, min_timestamp)
 
 
@@ -1395,7 +1383,7 @@ class Coolrsub:
            countsamples = 0
            for sample in self.rows[j]:
              params['ts'] = 0
-             print 'sample: ', sample
+             #print 'sample: ', sample
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
