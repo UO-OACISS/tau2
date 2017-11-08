@@ -236,6 +236,17 @@ cali_make_variant_from_type(cali_attr_type value)
     return v;
 }
 
+inline cali_variant_t
+cali_make_variant_from_string(char* ptr)
+{
+    unsigned int size = (strlen(ptr)+1);
+    cali_variant_t v;
+    v.type_and_size  = (size << 8) | (CALI_TYPE_STRING & CALI_VARIANT_TYPE_MASK);
+    v.value.unmanaged_ptr = ptr;
+
+    return v;
+}
+
 /********** End CALIPER Type Definitions****************/
 
 enum Type {INTEGER, DOUBLE, STRING};
