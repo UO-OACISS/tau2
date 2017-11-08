@@ -1733,7 +1733,8 @@ class Coolrsub:
      elif self.tool == "sos":
        try:
          #thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
-         thread.start_new_thread(self.readsosmetrics,())
+         #thread.start_new_thread(self.readsosmetrics,())
+         thread.start_new_thread(self.readsosmetrics_db,())
       
        except Exception as errThread:
          print 'Error: unable to start thread: ', errThread
