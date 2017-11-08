@@ -1464,7 +1464,7 @@ class Coolrsub:
            
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
-           group_column = self.groupcolumns[j]
+           #group_column = self.groupcolumns[j]
  	   metric = self.metrics[j]                   
           
            #print("Fetching rows.")
