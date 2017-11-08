@@ -568,6 +568,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						Thread thread = it.next();
 
 						int mpirank = thread.getNodeID();
+						int threadID = thread.getThreadID();
+						//System.out.println("mpirank:"+mpirank+" threadid:"+threadID);
 						
 						String coreidS = thread.getMetaData().get("CRAY_CORE_ID");
 						if(coreidS!=null)
@@ -583,21 +585,43 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 							if(tempnodename!=null){
 								nodename=tempnodename;
 							}
+							else {
+								//In some cases, where these values are the same for all threads, thread metadata won't return them. They need to be acquired from top level metadata.
+								tempnodename = ppTrial.getDataSource().getMetaData().get("CRAY_NODENAME");
+								if(tempnodename!=null){
+									nodename=tempnodename;
+								}
+							}
 						}
 						String nodeids = thread.getMetaData().get("CRAY_PMI_NODEID");
+						if(nodeids==null) {
+							nodeids = ppTrial.getDataSource().getMetaData().get("CRAY_PMI_NODEID");
+						}
 						if(nodeids!=null)
 						{
 							nodeid = Integer.parseInt(nodeids);
 						}
+							
 						String xs = thread.getMetaData().get("CRAY_PMI_X");
+						if(xs==null) {
+							xs = ppTrial.getDataSource().getMetaData().get("CRAY_PMI_X");
+						}
 						if(xs!=null){
 							x = Integer.parseInt(xs);
 						}
+						
 						String ys = thread.getMetaData().get("CRAY_PMI_Y");
+						if(ys==null) {
+							ys = ppTrial.getDataSource().getMetaData().get("CRAY_PMI_Y");
+						}
 						if(ys!=null){
 							y = Integer.parseInt(ys);
 						}
+						
 						String zs = thread.getMetaData().get("CRAY_PMI_Z");
+						if(zs==null) {
+							zs = ppTrial.getDataSource().getMetaData().get("CRAY_PMI_Z");
+						}
 						if(zs!=null){
 							z = Integer.parseInt(zs);
 						}
