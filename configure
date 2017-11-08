@@ -6780,6 +6780,7 @@ cat <<EOF > apple_mach_port.cpp
 #include <Profile/TauMetaData.h>
 EOF
   echo "Checking: Mac OS X mach_port bug. Is it ok?... ${nnl}"
+  cp ./include/TAU.h.default ./include/TAU.h
 if $cxx_compiler -DTAU_DOT_H_LESS_HEADERS -DPROFILING_ON -I./include -c apple_mach_port.cpp  1> /dev/null 2>&1 ; then
     echo "yes"
   else
@@ -6791,7 +6792,7 @@ if $cxx_compiler -DTAU_DOT_H_LESS_HEADERS -DPROFILING_ON -I./include -c apple_ma
       echo " can't be fixed. TAU may not build."
     fi
   fi
-  /bin/rm -f apple_mach_port.cpp apple_mach_port.o
+  /bin/rm -f apple_mach_port.cpp apple_mach_port.o ./include/TAU.h 
 fi
 
 #####################################################################
