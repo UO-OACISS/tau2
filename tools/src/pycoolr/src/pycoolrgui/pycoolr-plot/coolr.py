@@ -247,7 +247,8 @@ class Coolrsub:
           self.ranks2 = params['cfg']['ranks2']
           self.sosdbfile = params['cfg']['dbfile']
           self.sos_bin_path = ""
-          self.res_sql = ""
+          self.res_sql = [None]
+          self.res_min_ts_sql = [None]
 
         if self.tool == "beacon":
           self.nbcvars = params['cfg']['nbcvars']
@@ -855,7 +856,7 @@ class Coolrsub:
             #    self.ax[i].set_title('%s: %s (%s)' % (params['cfg']['appname'], self.titles[i], params['targetnode']) )
 	#print 'ending update'
 
-  def updateguisos(self, params, graphidx, recordidx, sample):
+  def updateguisos_db(self, params, graphidx, recordidx, sample):
         if self.ngraphs == 0:
             return
 
@@ -866,7 +867,7 @@ class Coolrsub:
         graphs = [None, None, None, None, None, None]
         axises = [None, None, None, None, None, None]
 
-	print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
+        #print '[PYCOOLR] Starting update gui'
         #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
             #
             # data handling
@@ -895,6 +896,116 @@ class Coolrsub:
         #print("Making numpy array of: metric_values"
 
         self.data_lr[recordidx].add(pack_time,metric_value_int)
+        #self.lock.acquire()
+        #self.avail_refresh = 0
+        ax = self.ax[graphidx]
+        #pdata = self.data_lr[i]
+        pdata = self.data_lr[recordidx]
+        #label = params['cfg']['appsamples'][i]
+        #label = params['cfg']['units'][i]
+        label = params['cfg']['units'][recordidx]
+        try:
+           ax.cla()
+        except Exception as errCla:
+          print 'update_gui: Error cla(): ', type(errCla), errCla
+
+        ax.set_xlim([pack_time-gxsec, pack_time])
+        #print 'get x and y'
+        x = pdata.getlistx()
+        y = pdata.getlisty()
+
+        #print 'get ymax and ymin'
+        ymax = pdata.getmaxy()
+        ymin = pdata.getminy()
+
+        #self.avail_refresh = 1
+        #if ymax > self.ytop[i]:
+        if ymax > self.ytop[recordidx]:
+          self.ytop[recordidx] = ymax * 1.1
+          #self.ytop[i] = ymax * 1.1
+
+        #if self.ybot[i] == 1 or ymin < self.ybot[i]:
+        if self.ybot[recordidx] == 1 or ymin < self.ybot[recordidx]:
+          self.ybot[recordidx] = ymin*.9
+                    #self.ybot[i] = ymin*.9
+
+        #ax.set_ylim([self.ybot[i], self.ytop[i])
+        ax.set_ylim([self.ybot[recordidx], self.ytop[recordidx]])
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(1,0))
+
+        #print 'ax plot'
+        #ax.plot(x, y, label='', color=self.colors[i], lw=1.2)
+        #print 'begin plot'
+        ax.plot(x, y, 'rs', lw=1)
+        #print 'end plot'
+        #ax.bar(x, y, width = .6, edgecolor='none', color='#77bb88' )
+        #ax.plot(x,y, 'ro', scaley=True, label='')
+
+        #print 'ax set x y label'
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel(label)
+
+        #ax.set_title('%s: %s' % (params['cfg']['metrics'], self.metrics[recordidx]))
+        ax.set_title('%s: %s (%s)' % (params['cfg']['appname'], self.metrics[recordidx], params['targetnode']) )
+
+            #for i in range(self.ngraphs):
+            #    self.ax[i].set_xlim([t-gxsec, t])
+            #    self.ax[i].set_title('%s: %s (%s)' % (params['cfg']['appname'], self.titles[i], params['targetnode']) )
+        #print 'ending update'
+
+
+  def updateguisos(self, params, graphidx, recordidx, sample):
+        if self.ngraphs == 0:
+            return
+
+        mean_val  = 0
+        total_val = 0
+        num_vals  = 0
+        newplot = True
+        graphs = [None, None, None, None, None, None]
+        axises = [None, None, None, None, None, None]
+
+	#print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
+        #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
+            #
+            # data handling
+            #
+            #t = sample['time'] - params['ts']
+            #
+            # graph handling
+            #
+        gxsec = params['gxsec']
+            #
+            #
+        #for i in len(sample):
+        # sample[i].replace('"', '')
+
+        #print 'parse graphs'
+        #print "before sample: metric=%s, value=%s, ts=%s" %(repr(sample[1]),repr(sample[2]),repr(sample[3]))
+        sample_1 = sample[1].replace('\"', '')
+        sample_2 = sample[2].replace('\"', '')
+        sample_3 = sample[3].replace('\"', '')
+
+        sample_value = float(sample_2)
+        #sample_value = float("0.00000000000000000000")
+        metric_value = max(sample_value,0)
+        #numeric = re.search(r'\d+', metric_value)
+        #metric_value_num = numeric.group()
+        #metric_value_float = float(metric_value_num)
+        #metric_value_int = int(metric_value_float)
+        time_stamp = float(sample_3)
+        #time_stamp = float("1510105643.06971")
+        pack_time = time_stamp - min_timestamp
+
+        #print 'metric_value: ', metric_value
+        #print 'metric_value_float: ', metric_value_float
+        #print 'metric_value_int: ', metric_value_int
+        #print 'pack_time ', pack_time
+        #print 'graphidx: %d, recordidx: %d' %(graphidx,recordidx)
+        #print("Making numpy array of: metric_values"
+
+        #self.data_lr[recordidx].add(pack_time,metric_value_int)
+        self.data_lr[recordidx].add(pack_time,metric_value)
         #self.lock.acquire()
         #self.avail_refresh = 0
         ax = self.ax[graphidx]
@@ -1175,7 +1286,7 @@ class Coolrsub:
     else:
         return nodes,ranks
 
-  def get_min_timestamp(self,c):
+  def get_min_timestamp_db(self,c):
     global min_timestamp
     sql_statement = ("select min(time_pack) from tblvals;")
     print("get_min_timestamp Executing query")
@@ -1185,7 +1296,39 @@ class Coolrsub:
     min_timestamp = ts[0]
     print("min timestamp: ", min_timestamp)
 
-  def req_sql2(self, c, ranks, ranks2, group_column, metric):
+
+  def get_min_timestamp(self):
+    global min_timestamp
+    sql_statement = ("SELECT min(time_pack) FROM viewCombined;")
+    print("get_min_timestamp Executing query")
+ 
+    print "sql statement: ", sql_statement
+    #self.try_execute(c, sql_statement)
+    os.environ['SOS_SQL'] = sql_statement
+    sos_bin_path = os.environ.get('SOS_BIN_DIR')
+    print 'SOS BIN path: ', sos_bin_path
+    os.system('cd '+ sos_bin_path)
+    print 'current dir: ', os.getcwd()
+    # Redirect stdout of passed command into a string
+
+    soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
+    print 'soscmd: ', soscmd
+    tmp_res_min_ts_sql = subprocess.check_output(soscmd, shell=True)
+
+    #self.res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
+    print 'get min ts: tmp res sql=', tmp_res_min_ts_sql
+    res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
+    print "List of result SQL MIN TS: ", res_min_ts_sql
+    min_ts_rows = res_min_ts_sql[1].split(",")
+    print "List of result SQL MIN TS values: ", min_ts_rows
+    # Remove first element of SQL result 
+    #ts = np.array([x[0] for x in min_ts_rows])
+    str_min_timestamp = min_ts_rows[0].replace('\"', '')
+    min_timestamp = float(str_min_timestamp)
+    #print("str min_timestamp=%s, min timestamp=%f: ", str_min_timestamp, min_timestamp)
+
+
+  def req_sql_db(self, c, ranks, ranks2, group_column, metric):
     print 'req_sql entering'
     for r in ranks:
         sql_statement = ("SELECT distinct tbldata.name, tblvals.val, tblvals.time_pack, tblpubs.comm_rank FROM tblvals INNER JOIN tbldata ON tblvals.guid = tbldata.guid INNER JOIN tblpubs ON tblpubs.guid = tbldata.pub_guid WHERE tblvals.guid IN (SELECT guid FROM tbldata WHERE tbldata.name LIKE '" + metric + "') AND tblpubs." + group_column)
@@ -1216,7 +1359,8 @@ class Coolrsub:
   def req_sql(self, metric):
 
     self.res_sql = ""
-    sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+    sql_statement = ("SELECT value_name, value, time_pack FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+    #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
    
     print "sql statement: ", sql_statement 
     #self.try_execute(c, sql_statement)
@@ -1227,22 +1371,21 @@ class Coolrsub:
     print 'current dir: ', os.getcwd() 
     # Redirect stdout of passed command into a string
    
-    #old_stdout = sys.stdout
-    #resultstdout = StringIO()
-     
-    #sys.stdout = resultstdout
-
-    #os.system(sos_bin_path+ '/demo_app --sql SOS_SQL')
     soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
     print 'soscmd: ', soscmd
-    #self.res_sql = os.popen(soscmd).read()  
-    self.res_sql = subprocess.check_output(soscmd, shell=True)
-
-    #sys.stdout = old_stdout
+    tmp_res_sql = subprocess.check_output(soscmd, shell=True)
 
     #print 'stdout of SOS demo: ', sys.stdout
     #self.res_sql = resultstdout.getvalue()
-    print 'res_sql: ', self.res_sql   
+    print 'tmp res_sql: ', tmp_res_sql   
+    
+    self.res_sql = tmp_res_sql.splitlines()
+    # REmove first element of SQL result 
+    self.res_sql.pop(0)
+
+    for item_sql in self.res_sql:
+      print 'res sql: ', item_sql 
+      
  
   def opendb(self):
     global min_timestamp
@@ -1267,7 +1410,7 @@ class Coolrsub:
         nodes,self.noderanks = self.get_nodes(self.conn)
     print ("nodes: ", self.nodes)
 
-    self.get_min_timestamp(self.conn)
+    self.get_min_timestamp_db(self.conn)
     #resize the figure
     # Get current size
     #fig_size = pl.rcParams["figure.figsize"]
@@ -1295,12 +1438,15 @@ class Coolrsub:
     print 'SOS BIN PATH: ', self.sos_bin_path
     os.system("cd "+ self.sos_bin_path) 
 
+
   # Read and plot selected metrics coming from SOS 
   def readsosmetrics(self):
 
     print 'readsosmetrics'
     profile_t1 = time.time()
-   
+  
+    self.get_min_timestamp()  
+ 
     while True:  
  
        #print 'loop iteration ...'
@@ -1334,19 +1480,20 @@ class Coolrsub:
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
-             self.updateguisos(params,i,j,sample)
+             listsample = sample.split(',')
+             self.updateguisos(params,i,j,listsample)
              self.lock.release()
              countsamples += 1
 
      #self.closedb()
 
  
-  def readsosmetrics2(self):
+  def readsosmetrics_db(self):
 
      print 'readsosmetrics'
      profile_t1 = time.time()
      # Comment the method just for debugging purpose
-     #self.opendb() 
+     self.opendb() 
     
      print 'after opening db, read db and plot ....'
  
@@ -1366,11 +1513,11 @@ class Coolrsub:
  	   metric = self.metrics[j]                   
            
            if metric == "Iteration": 
-             self.req_sql(self.conn, self.ranks, [], group_column, metric)
+             self.req_sql_db(self.conn, self.ranks, [], group_column, metric)
            elif (metric == "CPU System%") or (metric == "CPU User%") or (metric == "Package-0 Energy"):
-             self.req_sql(self.conn, self.nodes, self.noderanks, group_column, metric)
+             self.req_sql_db(self.conn, self.nodes, self.noderanks, group_column, metric)
            elif (metric == "Matrix Size") or (metric == "status:VmHWM"):
-             self.req_sql(self.conn, self.procs, [], group_column, metric)
+             self.req_sql_db(self.conn, self.procs, [], group_column, metric)
           
            #print("Fetching rows.")
            self.rows[j] = self.conn.fetchall()
