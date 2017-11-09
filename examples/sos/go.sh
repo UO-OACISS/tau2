@@ -37,6 +37,9 @@ stop_sos_daemon()
 }
 
 # start clean
+pkill -9 sosd
+pkill -9 pycoolr
+pkill -9 python
 stop_sos_daemon
 rm -rf sosd.00000.*
 start_sos_daemon
