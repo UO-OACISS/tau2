@@ -106,8 +106,8 @@ installsos()
  echo "Install SOS: $src $dst $currdir"
  git clone "$src" 
  cd $dst
- #git checkout master
- git checkout aurele_dev
+ git checkout master
+ #git checkout aurele_dev
  mkdir build-linux
  cd build-linux
 

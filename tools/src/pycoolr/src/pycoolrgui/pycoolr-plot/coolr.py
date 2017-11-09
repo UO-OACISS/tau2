@@ -323,15 +323,15 @@ class Coolrsub:
         for idx in range(params['cfg']['nbgraphs']):
          self.listUsedGraphs.append(-1)
 
-        for idx in range(params['cfg']['nbsamples']):
+        #for idx in range(params['cfg']['nbsamples']):
           #self.listSamplesClicked.append(0)
           #for key in listKeys:
             #self.dictSingleSample[key] = "0"
             #self.dictSingleSample['nameSample'] = params['cfg']['appsamples'][idx]
 
           #self.dictCheckSamples.update({params['cfg']['appsamples'][idx]:self.dictSingleSample}) 
-          self.dictCheckSamples.update({params['cfg']['metrics'][idx]:self.dictSingleSample}) 
-          self.listSamples.append(self.dictSingleSample)
+          #self.dictCheckSamples.update({params['cfg']['metrics'][idx]:self.dictSingleSample}) 
+          #self.listSamples.append(self.dictSingleSample)
 
          #for y in (self.dictCheckSamples[x]):
          #  print 'values: ', 
@@ -1356,7 +1356,7 @@ class Coolrsub:
 
 
   # Call demo with SQL statement given as argument and store standard output
-  def req_sql(self, metric):
+  def req_sql2(self, c, metric):
 
     self.res_sql = ""
     sql_statement = ("SELECT value_name, value, time_pack FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
@@ -1375,6 +1375,8 @@ class Coolrsub:
     print 'soscmd: ', soscmd
     tmp_res_sql = subprocess.check_output(soscmd, shell=True)
 
+    self.try_execute(c, sql_statement)
+
     #print 'stdout of SOS demo: ', sys.stdout
     #self.res_sql = resultstdout.getvalue()
     print 'tmp res_sql: ', tmp_res_sql   
@@ -1387,6 +1389,19 @@ class Coolrsub:
       print 'res sql: ', item_sql 
       
  
+  # Call demo with SQL statement given as argument and store standard output
+  def req_sql(self, c, metric):
+
+    self.res_sql = ""
+    sql_statement = ("SELECT value_name, value, time_pack, max(frame) FROM viewCombined WHERE value_name LIKE '" + metric+ "' group by value_name;")
+    #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+   
+    print "sql statement: ", sql_statement 
+    #self.try_execute(c, sql_statement)
+
+    self.try_execute(c, sql_statement)
+
+    
   def opendb(self):
     global min_timestamp
     # name of the sqlite database file
@@ -1444,11 +1459,15 @@ class Coolrsub:
 
     print 'readsosmetrics'
     profile_t1 = time.time()
-  
-    self.get_min_timestamp()  
+
+    self.opendb()
+
+    print "metrics: ", self.metrics
+    #self.get_min_timestamp()  
  
     while True:  
  
+       time.sleep(0.5)
        #print 'loop iteration ...'
        for i in range(self.ngraphs):
          #for i in range(self.nbsamples):
@@ -1459,33 +1478,36 @@ class Coolrsub:
            
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
-           group_column = self.groupcolumns[j]
+           #group_column = self.groupcolumns[j]
  	   metric = self.metrics[j]                   
-          
+           #print 'selected metric: ', metric 
            #print("Fetching rows.")
            #self.rows[j] = self.conn.fetchall()
-           self.req_sql(metric)
-           self.rows[j] = self.res_sql
+           self.req_sql(self.conn,metric)
+           #self.rows[j] = self.res_sql
+           self.rows[j] = self.conn.fetchall()
 
-           #print 'rows: ', self.rows[j]
+           print 'rows: ', self.rows[j]
            if len(self.rows[j]) <= 0:
-             print("Error: query returned no rows.",)
+             dummyvar  = 1
+             #print("Error: query returned no rows.",)
            else:
              goodrecord = 1
          
            countsamples = 0
            for sample in self.rows[j]:
              params['ts'] = 0
-             #print 'sample: ', sample
+             print 'sample: ', sample
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
-             listsample = sample.split(',')
-             self.updateguisos(params,i,j,listsample)
+             #listsample = sample.split(',')
+             #self.updateguisos(params,i,j,listsample)
+             self.updateguisos_db(params,i,j,sample)
              self.lock.release()
              countsamples += 1
 
-     #self.closedb()
+    self.closedb()
 
  
   def readsosmetrics_db(self):
@@ -1533,7 +1555,7 @@ class Coolrsub:
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
-             self.updateguisos(params,i,j,sample)
+             self.updateguisos_db(params,i,j,sample)
              self.lock.release()
              countsamples += 1
 
@@ -1729,6 +1751,7 @@ class Coolrsub:
        try:
          #thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
          thread.start_new_thread(self.readsosmetrics,())
+         #thread.start_new_thread(self.readsosmetrics_db,())
       
        except Exception as errThread:
          print 'Error: unable to start thread: ', errThread
