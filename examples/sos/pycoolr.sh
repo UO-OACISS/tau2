@@ -21,6 +21,9 @@ sleep 2
 cd ../inst/bin
 export SOS_BIN_DIR=`pwd`
 demo_app_silent -i 1 -p 100 -m 20000
+export SOS_SQL="SELECT * FROM viewCombined;"
+demo_app_silent --sql SOS_SQL
+
 
 #source hosts/linux/setenv.sh 
 #cp sosd.00000.db /dev/shm
