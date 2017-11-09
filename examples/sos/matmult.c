@@ -207,7 +207,7 @@ int main (int argc, char *argv[])
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int i;
-  int maxi = 20;
+  int maxi = 60;
   TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
