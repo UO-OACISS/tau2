@@ -1472,7 +1472,7 @@ class Coolrsub:
  
     while True:  
  
-       time.sleep(0.1)
+       time.sleep(0.5)
        #print 'loop iteration ...'
        for i in range(self.ngraphs):
          #for i in range(self.nbsamples):
