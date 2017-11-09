@@ -42,6 +42,7 @@ rm -rf sosd.00000.*
 start_sos_daemon
 mpirun -np 4 ./matmult &
 #mpirun -np 4 ./matmult 
+sleep 4
 echo "Launch PyCOOLR"
 cd ../../x86_64/bin
 ./pycoolr -tool=sos -platform=$PLATFORM
