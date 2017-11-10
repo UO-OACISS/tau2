@@ -9366,14 +9366,16 @@ if [ "x$download_scorep" = xyes ] ; then
     scorepdir=${tauscorepdir}/${tauscorep}-${c_compiler}
   fi
 
+  if [ $tag = yes ] ; then
+    scorepdir=${scorepdir}-$tautag
+  fi
+
   if [ "x$otf" != xyes ] ; then
     otf=yes
     otfdir=${scorepdir}
   fi
 
-  if [ $tag = yes ] ; then
-    scorepdir=${scorepdir}-$tautag
-  fi
+
   prescorepdir=`pwd`
 
   if [ -r "$scorepdir/bin/scorep" ]; then
