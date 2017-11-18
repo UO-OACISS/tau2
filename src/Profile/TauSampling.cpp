@@ -420,7 +420,7 @@ unsigned long get_pc(void *p)
 /* EVERYTHING ELSE SUPPORT */
 
 #else
-  struct ucontext *uc = (struct ucontext *)p;
+  ucontext_t *uc = (ucontext_t *)p;
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
 #ifdef TAU_BGP
