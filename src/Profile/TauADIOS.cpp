@@ -163,6 +163,11 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
 }
 #else
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT // do nuthin.
+#define Tau_increment_stack_height()
+#define TAU_decrement_stack_height()
+#define EVENT_TRACE_PREFIX ""
+#define Tau_SOS_conditionally_pack_current_timer(...)
+#define TAU_SOS_collective_ADIOS_write_event(...)
 #endif
 
 ADIOST_EXTERN void tau_adiost_thread ( adiost_event_type_t type, 
