@@ -1,0 +1,160 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2017, ParaTools, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# (1) Redistributions of source code must retain the above copyright notice,
+#     this list of conditions and the following disclaimer.
+# (2) Redistributions in binary form must reproduce the above copyright notice,
+#     this list of conditions and the following disclaimer in the documentation
+#     and/or other materials provided with the distribution.
+# (3) Neither the name of ParaTools, Inc. nor the names of its contributors may
+#     be used to endorse or promote products derived from this software without
+#     specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+"""Generate a baseline profile for an uninstrumented executable.
+
+Runs a command, measures wallclock time, and writes profile.0.0.0 with only the
+".TAU Application" timer showing wallclock time.
+"""
+import os
+import sys
+import time
+import getpass
+import platform
+import subprocess
+from datetime import datetime
+
+
+def get_cpuinfo():
+    cpuinfo = []
+    core = {}
+    try:
+        with open("/proc/cpuinfo") as fin:
+            for line in fin:
+                if line.startswith('processor'):
+                    core = {}
+                    continue
+                elif core and not len(line.strip()):
+                    cpuinfo.append(core)
+                else:
+                    key, val = line.split(':')
+                    core[key.strip()] = val.strip()
+        return cpuinfo
+    except IOError:
+        return [{}]
+
+
+def get_meminfo():
+    try:
+        meminfo = {}
+        with open("/proc/meminfo") as fin:
+            for line in fin:
+                key, val = line.split(':')
+                meminfo[key.strip()] = val.strip()
+        return meminfo
+    except IOError:
+        return {}
+
+
+def get_profile_metadata(cmd, pid, tid, start_time, end_time):
+    meminfo = get_meminfo()
+    cpuinfo = get_cpuinfo()
+    cpu0 = cpuinfo[0]
+    start_stamp = str(start_time).replace('.', '')
+    end_stamp = str(end_time).replace('.', '')
+    meta_fields = {'Metric Name': 'TIME',
+                   'Hostname': platform.node(),
+                   'CWD': os.getcwd(),
+                   'CPU Cores': cpu0.get('cpu cores', '0'),
+                   'CPU MHz': cpu0.get('cpu MHz', '0'),
+                   'CPU Type': cpu0.get('model name', 'N/A'),
+                   'CPU Vendor': cpu0.get('vendor_id', 'N/A'),
+                   'Cache Size': cpu0.get('cache size', '0'),
+                   'Command Line': ' '.join(cmd),
+                   'Executable': os.path.realpath(os.path.abspath(os.path.expanduser(cmd[0]))),
+                   'Local Time': str(datetime.utcnow()),
+                   'Memory Size': meminfo.get('MemTotal', '0'),
+                   'Node Name': platform.node(),
+                   'OS Machine': platform.machine(),
+                   'OS Name': platform.system(),
+                   'OS Release': platform.release(),
+                   'OS Version': platform.version(),
+                   'Timestamp': start_stamp,
+                   'Starting Timestamp': start_stamp,
+                   'Ending Timestamp': end_stamp,
+                   'TAU Architecture': 'default',
+                   'TAU Config': ' ',
+                   'TAU Makefile': '',
+                   'TAU Version': '',
+                   'TAU_MAX_THREADS': '1',
+                   'TAU_PROFILE': 'on',
+                   'TAU_PROFILE_FORMAT': 'profile',
+                   'TAU_TRACE': 'off',
+                   'TAU_TRACE_FORMAT': 'tau',
+                   'UTC Time': str(datetime.utcnow()),
+                   'pid': pid,
+                   'tid': tid,
+                   'username': getpass.getuser()}
+    parts = ['<metadata>']
+    for key, val in meta_fields.iteritems():
+        if val is None:
+            val = '0'
+        parts.append('<attribute><name>%s</name><value>%s</value></attribute>' % (key, val))
+    parts.append('</metadata>')
+    return ''.join(parts)
+
+
+def write_profile(cmd, pid, tid, start_time, end_time):
+    profile_template = ('1 templated_functions_MULTI_TIME\n'
+                        '# Name Calls Subrs Excl Incl ProfileCalls # %(metadata)s\n'
+                        '".TAU application" 1 0 %(excl)s %(incl)s 0 GROUP="TAU_USER"\n'
+                        '0 aggregates\n')
+    metadata = get_profile_metadata(cmd, pid, tid, start_time, end_time)
+    elapsed = int(1e6 * (end_time - start_time))
+    profile_dir = os.environ.get('PROFILEDIR', os.getcwd())
+    if not os.path.exists(profile_dir):
+        os.makedirs(profile_dir)
+    profile_file = os.path.join(profile_dir, 'profile.0.0.0')
+    with open(profile_file, 'w') as fout:
+        fout.write(profile_template % {'metadata': metadata, 'excl': elapsed, 'incl': elapsed})
+
+
+def run_command(cmd):
+    start_time = time.time()
+    proc = subprocess.Popen(cmd)
+    proc.wait()
+    end_time = time.time()
+    return proc.returncode, proc.pid, start_time, end_time
+
+
+def main():
+    if len(sys.argv) == 1:
+        sys.stderr.write("Usage: %s command\n" % sys.argv[0])
+        return 100
+    cmd = sys.argv[1:]
+    try:
+        retval, pid, start_time, end_time = run_command(cmd)
+    except OSError:
+        sys.stderr.write("Invalid command: %s\n" % cmd)
+        return -100
+    write_profile(cmd, pid, pid, start_time, end_time)
+    return retval
+
+
+if __name__ == "__main__":
+    sys.exit(main())

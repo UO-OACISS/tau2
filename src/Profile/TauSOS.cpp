@@ -3,6 +3,7 @@
 #include "Profile/Profiler.h"
 #include "Profile/UserEvent.h"
 #include "Profile/TauMetrics.h"
+#include "Profile/TauMetaData.h"
 #include <TauUtil.h>
 
 #include <iostream>
@@ -13,7 +14,7 @@
 #include <stdexcept>
 #include <cassert>
 #include "stdio.h"
-#include "error.h"
+//#include "error.h"
 #include "errno.h"
 #include <pthread.h>
 #include <unistd.h>
@@ -24,6 +25,11 @@
 
 #ifdef TAU_MPI
 #include <mpi.h>
+#endif
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#include <dlfcn.h>
 #endif
 
 #include "sos.h"
@@ -41,7 +47,8 @@ pthread_t worker_thread;
 bool _threaded = false;
 int daemon_rank = 0;
 bool shutdown_daemon = false;
-int period_seconds = 2;
+int period_microseconds = 2000000;
+unsigned long int instance_guid = 0UL;
 
 void init_lock(void) {
     if (!_threaded) return;
@@ -67,10 +74,18 @@ extern "C" void * Tau_sos_thread_function(void* data) {
     struct timeval  tp;
 
     while (!done) {
-        // wait 2 seconds for the next batch.
+        // wait x microseconds for the next batch.
         gettimeofday(&tp, NULL);
-        ts.tv_sec  = (tp.tv_sec + period_seconds);
-        ts.tv_nsec = (1000 * tp.tv_usec);
+        const int one_second = 1000000;
+        // first, add the period to the current microseconds
+        int tmp_usec = tp.tv_usec + period_microseconds;
+        int flow_sec = 0;
+        if (tmp_usec > one_second) { // did we overflow?
+            flow_sec = tmp_usec / one_second; // how many seconds?
+            tmp_usec = tmp_usec % one_second; // get the remainder
+        }
+        ts.tv_sec  = (tp.tv_sec + flow_sec);
+        ts.tv_nsec = (1000 * tmp_usec);
         pthread_mutex_lock(&_my_mutex);
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
@@ -119,6 +134,16 @@ void TAU_SOS_make_pub() {
         TAU_VERBOSE("[TAU_SOS_make_pub]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
         TAU_VERBOSE("[TAU_SOS_make_pub]: Announcing the pub...\n");
         SOS_announce(tau_sos_pub);
+	// all processes in this MPI execution should agree on the session.
+#ifdef TAU_MPI
+	if (rank == 0) {
+        instance_guid = tau_sos_pub->guid;
+	}
+	PMPI_Bcast( &instance_guid, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD );
+#else
+    instance_guid = tau_sos_pub->guid;
+#endif
+    SOS_pack(tau_sos_pub, "TAU::MPI::INSTANCE_ID", SOS_VAL_TYPE_LONG, &instance_guid);
 }
 
 void TAU_SOS_do_fork(std::string forkCommand) {
@@ -133,7 +158,7 @@ void TAU_SOS_do_fork(std::string forkCommand) {
     }
     int rc = execvp(args[0],const_cast<char* const*>(args));
     if (rc < 0) {
-        perror("\nError in execvp");
+        perror("\nError in execvp! Failed to spawn SOS client.  Things are gonna go sideways...");
     }
     // exit the daemon spawn!
     //std::cout << "Daemon exited!" << std::endl;
@@ -174,6 +199,8 @@ void TAU_SOS_send_shutdown_message(void) {
     SOS_msg_header  header;
     int offset;
     if (rank == daemon_rank) {
+        TAU_VERBOSE("Waiting for SOS to flush...\n");
+		sleep(1);
 
         SOS_buffer_init(_runtime, &buffer);
 
@@ -193,7 +220,7 @@ void TAU_SOS_send_shutdown_message(void) {
         offset = 0;
         SOS_buffer_pack(buffer, &offset, "i", header.msg_size);
 
-        //std::cout << "Sending SOS_MSG_TYPE_SHUTDOWN ..." << std::endl;
+        TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
 
         SOS_send_to_daemon(buffer, buffer);
 
@@ -262,7 +289,7 @@ void TAU_SOS_fork_exec_sosd(void) {
                         custom_command.replace(index,15,ss.str());
                     }
                 }
-                //std::cout << "Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
+                std::cout << "SOS Listener not found, Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
                 TAU_SOS_do_fork(custom_command);
             } else {
                 std::cerr << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
@@ -276,23 +303,27 @@ void TAU_SOS_fork_exec_sosd(void) {
 #endif
 }
 
-char *program_path()
+void program_path(char* exe_name)
 {
-    char *path = (char*)malloc(4098);
-    if (path != NULL) {
-        if (readlink("/proc/self/exe", path, PATH_MAX) == -1) {
-            free(path);
-            path = NULL;
-        }
+#ifdef __APPLE__
+    uint32_t size = 4098;
+    if (_NSGetExecutablePath(exe_name, &size) != 0) {
+        strcpy(exe_name,"");
     }
-    return path;
+#else
+    if (readlink("/proc/self/exe", exe_name, PATH_MAX) == -1) {
+        strcpy(exe_name,"");
+    }
+#endif
 }
 
 char ** fix_arguments(int *argc) {
 #if 1
   char ** argv = NULL;
   argv = (char**)(malloc(sizeof(char**)));
-  argv[0] = strdup(program_path());
+  char exe_name[2048] = {0};
+  program_path(exe_name);
+  argv[0] = strdup(exe_name);
   *argc = 1; 
 #else
   char ** argv = NULL;
@@ -350,11 +381,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         _runtime = NULL;
         TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
         if (argc == NULL || argv == NULL || *argc == 0) {
-          //printf("Fixing argument: %p\n", argc); fflush(stdout);
-          //printf("Fixing argument: %p\n", argv); fflush(stdout);
           my_argv = fix_arguments(&my_argc);
-          //printf("Fixed argument: %d\n", my_argc); fflush(stdout);
-          //printf("Fixed argument: %s\n", my_argv[0]); fflush(stdout);
         } else {
           my_argc = *argc;
           my_argv = *argv;
@@ -366,7 +393,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             TAU_SOS_fork_exec_sosd();
             shutdown_daemon = true;
         }
-        int repeat = 10;
+        int repeat = 3;
         while(_runtime == NULL) {
             sleep(2);
             _runtime = NULL;
@@ -382,11 +409,8 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             }
         }
 
-        if (_threaded) {
-            char * tau_sos_update_period = getenv ("TAU_SOS_UPDATE_PERIOD");
-			if (tau_sos_update_period) {
-				period_seconds = atoi(tau_sos_update_period);
-			}
+        if (_threaded && TauEnv_get_sos_periodic()) {
+			period_microseconds = TauEnv_get_sos_period();
             TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
@@ -398,6 +422,19 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         initialized = true;
         /* Fixme! Insert all the data that was collected into Metadata */
     }
+    Tau_metadata_push_to_sos();
+    //SOS_announce(tau_sos_pub);
+    SOS_publish(tau_sos_pub);
+}
+
+extern "C" void TAU_SOS_init_simple(void) {
+    bool threads = false;
+#if defined(PTHREADS) || defined(TAU_OPENMP)
+    //threads = true;
+#endif
+    int argc = 0;
+    char **argv = NULL;
+    TAU_SOS_init(&argc, &argv, threads);
 }
 
 extern "C" void TAU_SOS_stop_worker(void) {
@@ -406,7 +443,7 @@ extern "C" void TAU_SOS_stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    if (_threaded) {
+    if (_threaded && TauEnv_get_sos_periodic()) {
         TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
         pthread_cond_signal(&_my_cond);
         int ret = pthread_join(worker_thread, NULL);
@@ -433,16 +470,28 @@ extern "C" void TAU_SOS_stop_worker(void) {
 }
 
 extern "C" void TAU_SOS_finalize(void) {
-    if (_runtime == NULL) { return; }
     static bool finalized = false;
+    // only thread 0 should finalize
+    if (RtsLayer::myThread() > 0) { return; }
+    // no runtime? quit.
+    if (_runtime == NULL) { return; }
+    // no SOS enabled? quit.
     if (!TauEnv_get_sos_enabled()) { return; }
     //printf("%s\n", __func__); fflush(stdout);
+    // Already finalized? quit.
     if (finalized) return;
+    finalized = true;
     if (!done) {
         TAU_SOS_stop_worker();
     }
     // flush any outstanding packs
     TAU_SOS_send_data();
+#ifdef TAU_MPI
+	// wait for ALL RANKS to get to this point.  They should be done
+	// sending all data to the listener.
+    TAU_VERBOSE("Waiting for SOS clients to rendez-vous...\n");
+	PMPI_Barrier(MPI_COMM_WORLD);
+#endif
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
         TAU_SOS_send_shutdown_message();
@@ -450,13 +499,12 @@ extern "C" void TAU_SOS_finalize(void) {
         //TAU_SOS_fork_exec_sosd_shutdown();
     }
     SOS_finalize(_runtime);
-    finalized = true;
 }
 
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 extern "C" Profiler * Tau_get_current_profiler(void);
 
-extern "C" void Tau_SOS_pack_double(const char * event_name) {
+extern "C" void Tau_SOS_pack_current_timer(const char * event_name) {
     if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
@@ -482,6 +530,110 @@ extern "C" void Tau_SOS_pack_double(const char * event_name) {
     RtsLayer::UnLockDB();
 }
 
+extern "C" void Tau_SOS_pack_string(const char * name, char * value) {
+    if (_runtime == NULL) { return; }
+    if (done) { return; }
+    // first time?
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        // protect against race conditions
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    std::stringstream ss;
+    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
+    RtsLayer::LockDB();
+    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_STRING, value);
+    RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_SOS_pack_double(const char * name, double value) {
+    if (_runtime == NULL) { return; }
+    if (done) { return; }
+    // first time?
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        // protect against race conditions
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    std::stringstream ss;
+    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
+    // TAU_VERBOSE("SOS: %s = '%s'\n", name, value);
+    RtsLayer::LockDB();
+    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_DOUBLE, &value);
+    RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_SOS_pack_integer(const char * name, int value) {
+    if (_runtime == NULL) { return; }
+    if (done) { return; }
+    // first time?
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        // protect against race conditions
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    std::stringstream ss;
+    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
+    // TAU_VERBOSE("SOS: %s = '%s'\n", name, value);
+    RtsLayer::LockDB();
+    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_INT, &value);
+    RtsLayer::UnLockDB();
+}
+
+bool get_low_res_counter_name(const char *name, std::string &out_name) {
+	// eliminate context counters
+	if (strstr(name," : ") != NULL) {
+		return false;
+	}
+	if (strstr(name," => ") != NULL) {
+		return false;
+	}
+    if (strstr(name,"Message size for ") != NULL) {
+		out_name.assign("Collective Bytes Sent");
+		return true;
+	}
+    if (strstr(name,"Message size received from all nodes") != NULL) {
+		out_name.assign("MPI Receive Bytes");
+		return true;
+	}
+	/*
+    if (strstr(name,"Message size received in wait") != NULL) {
+		out_name.assign("MPI Receive Bytes");
+		return true;
+	}
+	*/
+    if (strstr(name,"Message size sent to all nodes") != NULL) {
+		out_name.assign("MPI Send Bytes");
+		return true;
+	}
+    if (strstr(name,"Message size sent to node ") != NULL) {
+		return false;
+	}
+    if (strstr(name,"Bytes Read") != NULL) {
+		out_name.assign("IO Bytes Read");
+		return true;
+	}
+    if (strstr(name,"Bytes Written") != NULL) {
+		out_name.assign("IO Bytes Written");
+		return true;
+	}
+    if (strstr(name,"ADIOS data size") != NULL) {
+		out_name.assign("ADIOS data size");
+		return true;
+	}
+    out_name.assign(name);
+	return true;
+}
+
 extern "C" void TAU_SOS_send_data(void) {
     if (_runtime == NULL) { return; }
     // first time?
@@ -494,7 +646,6 @@ extern "C" void TAU_SOS_send_data(void) {
         RtsLayer::UnLockDB();
     }
     assert(tau_sos_pub);
-    if (done) { return; }
     //TauTrackPowerHere(); // get a power measurement
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
@@ -507,7 +658,9 @@ extern "C" void TAU_SOS_send_data(void) {
   TauMetrics_getCounterList(&counterNames, &numCounters);
   //printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
   RtsLayer::LockDB();
-  bool keys_added = false;
+
+  std::map<std::string, std::vector<double>* > low_res_timer_map;
+  std::map<std::string, std::vector<double>* >::iterator timer_map_it;
 
   //foreach: TIMER
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
@@ -520,39 +673,90 @@ extern "C" void TAU_SOS_send_data(void) {
     inclusive = 0.0;
     exclusive = 0.0;
 
+	std::vector<double> *tmp_vec = NULL;
+    if (TauEnv_get_sos_high_resolution() == 0) {
+	  std::string group_name(fi->GetAllGroups());
+      timer_map_it = low_res_timer_map.find(group_name);
+	  if (timer_map_it == low_res_timer_map.end()) {
+	    // create a vector with space for count and inclusive/exclusive for each metric
+	    tmp_vec = new std::vector<double>((Tau_Global_numCounters*2) + 1, 0.0);
+	    // add it to the map
+	    low_res_timer_map.insert(std::pair<std::string, std::vector<double>* >(group_name, tmp_vec));
+	  } else {
+	    tmp_vec = timer_map_it->second;
+	  }
+	}
+
     //foreach: THREAD
     for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
         calls = fi->GetCalls(tid);
-        std::stringstream calls_str;
-        calls_str << "TAU::" << tid << "::calls::" << fi->GetName();
-        const std::string& tmpcalls = calls_str.str();
+		int vec_index = 0;
 
-        SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
+        if (TauEnv_get_sos_high_resolution()) {
+          std::stringstream calls_str;
+          calls_str << "TAU::" << tid << "::calls::" << fi->GetAllGroups() << "::" << fi->GetName();
+          const std::string& tmpcalls = calls_str.str();
+          SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
+		} else {
+		  (*tmp_vec)[vec_index++] += (double)calls;
+		}
 
         // todo - subroutines
         // iterate over metrics 
         std::stringstream incl_str;
         std::stringstream excl_str;
         for (int m = 0; m < Tau_Global_numCounters; m++) {
-            incl_str.str(std::string());
-            incl_str << "TAU::" << tid << "::inclusive_" << counterNames[m] << "::" << fi->GetName();
-            const std::string& tmpincl = incl_str.str();
-            excl_str.str(std::string());
-            excl_str << "TAU::" << tid << "::exclusive_" << counterNames[m] << "::" << fi->GetName();
-            const std::string& tmpexcl = excl_str.str();
-
             inclusive = fi->getDumpInclusiveValues(tid)[m];
             exclusive = fi->getDumpExclusiveValues(tid)[m];
-            
-            SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, &inclusive);
-            SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, &exclusive);
+            if (TauEnv_get_sos_high_resolution()) {
+                incl_str.str(std::string());
+                incl_str << "TAU::" << tid << "::inclusive_" << counterNames[m] << "::" << fi->GetName();
+                const std::string& tmpincl = incl_str.str();
+                excl_str.str(std::string());
+                excl_str << "TAU::" << tid << "::exclusive_" << counterNames[m] << "::" << fi->GetName();
+                const std::string& tmpexcl = excl_str.str();
+                SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, &inclusive);
+                SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, &exclusive);
+			} else {
+		        (*tmp_vec)[vec_index++] += inclusive;
+		        (*tmp_vec)[vec_index++] += exclusive;
+			}
         }
     }
   }
-  if (TheFunctionDB().size() > fi_count) {
-    keys_added = true;
-    fi_count = TheFunctionDB().size();
+
+  if (TauEnv_get_sos_high_resolution() == 0) {
+    for (timer_map_it = low_res_timer_map.begin() ; timer_map_it != low_res_timer_map.end() ; timer_map_it++) {
+	  int vec_index = 0;
+	  std::string group_name = timer_map_it->first;
+	  std::vector<double> * values = timer_map_it->second;
+      std::stringstream tmp_ss;
+      tmp_ss << "TAU::0::calls::" << group_name;
+      std::string tmp_name = tmp_ss.str();
+	  double tmp_val = (*values)[vec_index++] / RtsLayer::getTotalThreads();
+      SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &tmp_val);
+      for (int m = 0; m < Tau_Global_numCounters; m++) {
+        tmp_ss.str("");
+        tmp_ss.clear();
+        tmp_ss << "TAU::0::inclusive_" << counterNames[m] << "::" << group_name;
+        tmp_name = tmp_ss.str();
+	    tmp_val = (*values)[vec_index++] / RtsLayer::getTotalThreads();
+        SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &tmp_val);
+        tmp_ss.str("");
+        tmp_ss.clear();
+        tmp_ss << "TAU::0::exclusive_" << counterNames[m] << "::" << group_name;
+        tmp_name = tmp_ss.str();
+	    tmp_val = (*values)[vec_index++] / RtsLayer::getTotalThreads();
+        SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &tmp_val);
+	  }
+	  delete values;
+	}
+	low_res_timer_map.clear();
   }
+
+  std::map<std::string, double> low_res_counter_map;
+  std::map<std::string, double>::iterator counter_map_it;
+
   // do the same with counters.
   //std::vector<tau::TauUserEvent*>::const_iterator it2;
   tau::AtomicEventDB::iterator it2;
@@ -561,45 +765,72 @@ extern "C" void TAU_SOS_send_data(void) {
   std::stringstream tmp_str;
   for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
     tau::TauUserEvent *ue = (*it2);
+	double tmp_accum = 0.0;
+	std::string counter_name;
+
+    if (TauEnv_get_sos_high_resolution() == 0) {
+	  // if not a counter we want to keep, continue
+	  if (!get_low_res_counter_name(ue->GetName().c_str(), counter_name)) {
+	    continue;
+	  }
+      counter_map_it = low_res_counter_map.find(counter_name);
+	  if (counter_map_it == low_res_counter_map.end()) {
+	    // add it to the map
+	    low_res_counter_map.insert(std::pair<std::string, double>(counter_name, tmp_accum));
+	  } else {
+	    tmp_accum = counter_map_it->second;
+	  }
+	}
+
     int tid = 0;
     for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
       if (ue && ue->GetNumEvents(tid) == 0) continue;
       //if (ue && ue->GetWriteAsMetric()) continue;
       numEvents = ue->GetNumEvents(tid);
-      tmp_str << "TAU::" << tid << "::NumEvents::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, &numEvents);
-      tmp_str.str(std::string());
-      max = ue->GetMax(tid);
-      tmp_str << "TAU::" << tid << "::Max::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &max);
-      tmp_str.str(std::string());
-      min = ue->GetMin(tid);
-      tmp_str << "TAU::" << tid << "::Min::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &min);
-      tmp_str.str(std::string());
       mean = ue->GetMean(tid);
-      tmp_str << "TAU::" << tid << "::Mean::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &mean);
-      tmp_str.str(std::string());
-      sumsqr = ue->GetSumSqr(tid);
-      tmp_str << "TAU::" << tid << "::SumSqr::" << ue->GetName();
-      SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &sumsqr);
-      tmp_str.str(std::string());
+      if (TauEnv_get_sos_high_resolution()) {
+        max = ue->GetMax(tid);
+        min = ue->GetMin(tid);
+        sumsqr = ue->GetSumSqr(tid);
+        tmp_str << "TAU::" << tid << "::NumEvents::" << ue->GetName();
+        SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, &numEvents);
+        tmp_str.str(std::string());
+        tmp_str << "TAU::" << tid << "::Max::" << ue->GetName();
+        SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &max);
+        tmp_str.str(std::string());
+        tmp_str << "TAU::" << tid << "::Min::" << ue->GetName();
+        SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &min);
+        tmp_str.str(std::string());
+        tmp_str << "TAU::" << tid << "::Mean::" << ue->GetName();
+        SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &mean);
+        tmp_str.str(std::string());
+        tmp_str << "TAU::" << tid << "::SumSqr::" << ue->GetName();
+        SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &sumsqr);
+        tmp_str.str(std::string());
+      } else {
+	    tmp_accum += mean * numEvents;
+	    low_res_counter_map[counter_name] = tmp_accum;
+	  }
     }
   }
-  if (tau::TheEventDB().size() > ue_count) {
-    keys_added = true;
-    ue_count = tau::TheEventDB().size();
+  if (TauEnv_get_sos_high_resolution() == 0) {
+    for (counter_map_it = low_res_counter_map.begin() ; counter_map_it != low_res_counter_map.end() ; counter_map_it++) {
+	  std::string counter_name = counter_map_it->first;
+	  double value = counter_map_it->second;
+      std::stringstream tmp_ss;
+	  // this is "total", because we take the product of count * mean
+      tmp_ss << "TAU::0::Total::" << counter_name;
+      std::string tmp_name = tmp_ss.str();
+	  value = value / RtsLayer::getTotalThreads();
+      SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &value);
+	}
+	low_res_counter_map.clear();
   }
+
   if ((ue_count + fi_count) > SOS_DEFAULT_ELEM_MAX) {
       TAU_VERBOSE("DANGER, WILL ROBINSON! EXCEEDING MAX ELEMENTS IN SOS. Bad things might happen?\n");
   }
   RtsLayer::UnLockDB();
-  if (keys_added) {
-      TAU_VERBOSE("[TAU_SOS_send_data]: Announcing the pub...\n");
-      //SOS_announce(tau_sos_pub);
-      TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
-  }
   TAU_VERBOSE("[TAU_SOS_send_data]: Publishing the values...\n");
   TAU_VERBOSE("MY RANK IS: %d/%d\n", _runtime->config.comm_rank, _runtime->config.comm_size);
   SOS_publish(tau_sos_pub);

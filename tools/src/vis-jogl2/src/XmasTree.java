@@ -265,7 +265,7 @@ public class XmasTree implements Plot {
 
         gl.glShadeModel(GL2.GL_SMOOTH);
 
-        GLU glu = new GLU();
+        GLU glu = GLU.createGLU(glDrawable.getGL());// new GLU();
         gl.glEnable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_DEPTH_TEST);
         gl.glFrontFace(GL2.GL_CCW);

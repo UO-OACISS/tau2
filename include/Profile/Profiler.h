@@ -153,6 +153,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #include <Profile/FunctionInfo.h>
 #include <Profile/UserEvent.h>
 #include <Profile/PapiLayer.h>
+#include <Profile/LikwidLayer.h>
 #include <Profile/WindowsThreadLayer.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauScalasca.h>
@@ -312,6 +313,13 @@ void TauProfiler_AddProfileParamData(long key, const char *keyname);
 #endif /* TAU_ENABLED */
 /* included after class Profiler is defined. */
 #endif /* __cplusplus && ! TAU_USE_C_API */
+
+#ifdef TAU_APPLE_MACH_PORT_BUG
+#include <sys/types.h>
+typedef __darwin_mach_port_t mach_port_t;
+mach_port_t pthread_mach_thread_np(pthread_t);
+/* Ref: https://github.com/apache/arrow/pull/1139 */
+#endif /* TAU_APPLE_MACH_PORT_BUG */
 
 
 #endif /* PROFILER_H */
