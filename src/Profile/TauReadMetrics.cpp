@@ -293,6 +293,22 @@ void metric_read_papi(int tid, int idx, double values[]) {
 #endif /* TAU_PAPI */
 }
 
+/* LIKWID metrics */
+void metric_read_likwid(int tid, int idx, double values[]) {
+#ifdef TAU_LIKWID
+  int numLikwidValues;
+  long long *likwidValues = LikwidLayer::getAllCounters(tid, &numLikwidValues);
+  //printf("Got Likwid Counters!\n");
+  if (likwidValues) {
+  //printf("Likwid Counters Not Null!\n");
+    for (int i = 0; i < numLikwidValues; i++) {
+      values[idx + i] = likwidValues[i];
+      //printf("%lld\n",likwidValues[i]);
+    }
+  }
+#endif /* TAU_LIKWID */
+}
+
 void metric_read_memory(int tid, int idx, double values[]) {
   double rss = Tau_max_RSS();
   values[idx] = rss;

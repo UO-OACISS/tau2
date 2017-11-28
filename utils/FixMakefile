@@ -81,6 +81,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     likwiddir=*)
+        likwiddir=`echo $1 | sed -e 's/^likwiddir=//'`
+	echo "s,^LIKWIDDIR=.*$,LIKWIDDIR=$likwiddir,g" >> $sedout
+	;;
+
      beacondir=*)
         beacondir=`echo $1 | sed -e 's/^beacondir=//'`
 	echo "s,^BEACONDIR=.*$,BEACONDIR=$beacondir,g" >> $sedout
@@ -436,6 +441,11 @@ case $1 in
 	echo "s,^ADIOSDIR=.*$,ADIOSDIR=$adiosdir,g" >> $sedout
 	;;
 
+#    caliperdir=*)
+#        caliperdir=`echo $1 | sed -e 's/^caliperdir=//'`
+#	echo "s,^CALIPERDIR=.*$,CALIPERDIR=$caliperdir,g" >> $sedout
+#	;;
+
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
 	echo "s,^DYNINSTDIR=.*$,DYNINSTDIR=$dyninstdir,g" >> $sedout
@@ -452,7 +462,7 @@ case $1 in
 	;;
 
      dwarfopts=*)
-        dwarfopts=`echo $1 | sed -e 's/^dwarfopts=//'`
+        dwarfopts=`echo $1 | sed -e 's/^dwarfopts=//'  -e 's/#/ /g'`
 	echo "s,^DWARFOPTS=.*$,DWARFOPTS=$dwarfopts,g" >> $sedout
 	;;
 
@@ -615,6 +625,10 @@ case $1 in
         ;;
      TAU_BFD)
         echo NOTE: Using BFD support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_LIKWID)
+        echo NOTE: Using LIKWID support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_UNWIND)
@@ -860,6 +874,11 @@ case $1 in
 
      SGI_MPT_SHMEM)
         echo NOTE: Using the TAU SGI MPT SHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     SGI_MPT_MPI)
+        echo NOTE: Using the TAU SGI MPI Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -1286,6 +1305,10 @@ case $1 in
 	echo NOTE: Apple c++ compiler will be used
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     APPLE_MACH_PORT_BUG)
+	echo NOTE: Using -DTAU_APPLE_MACH_PORT_BUG compiler option 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      NOFORTRAN)
 	echo "NOTE: TAU's Fortran library bindings will not be compiled. "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1594,6 +1617,10 @@ case $1 in
 	echo "NOTE: Using ADIOS ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+#     CALIPER)
+#	echo "NOTE: Using CALIPER ***"
+#        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+#	;;
      OPENMP)
 	echo "NOTE: Using OpenMP Threads ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2074,6 +2101,10 @@ case $1 in
 	echo "NOTE: GNU gfortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     APPLE_GFORTRAN)
+	echo "NOTE: Not using -lgfortranbegin for Apple GNU gfortran "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      CAF)
 	echo "NOTE: CAF Fortran compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -2261,6 +2292,10 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      SGI_MPT_MPI)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     CORESYMBOLICATION)
+        echo "NOTE: Using CoreSymbolication for address to line translation."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      *)

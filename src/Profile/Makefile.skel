@@ -91,6 +91,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauMmapMemMgr.h $(INCDIR)/TauPathHash.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
 		$(INCDIR)/adb.h         $(INCDIR)/jdwp.h          \
+		$(INCDIR)/LikwidLayer.h
 
 LDFLAGS	      =
 
@@ -142,13 +143,13 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o TauCallSite.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
-		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPENMP_PGS_O) $(OPARI_O) \
+		$(PAPI_O) $(LIKWID_O)  $(TAU_JAVA_O) $(OPENMP_O) $(OPENMP_PGS_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(SOS_O) $(ADIOS_O) \
-		$(OTF2_O)
+		$(OTF2_O) $(CALIPER_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -654,10 +655,13 @@ TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INC)  -c $(@:.o=.cpp)
 
 TauSOS.o  : TauSOS.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -pthread -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauADIOS.o  : TauADIOS.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TauCaliper.o 	: TauCaliper.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -816,6 +820,9 @@ TauJava.o :	TauJava.cpp
 	$(CXX) $(CXXFLAGS) -c TauJava.cpp
 
 PapiLayer.o 	: PapiLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+LikwidLayer.o 	: LikwidLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 MultipleCounters.o : MultipleCounters.cpp $(HDRS)

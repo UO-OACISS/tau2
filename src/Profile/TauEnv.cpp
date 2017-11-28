@@ -93,7 +93,11 @@ using namespace std;
 #define TAU_OPENMP_RUNTIME_CONTEXT_REGION "region"
 #define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
 
-#define TAU_SOS_DEFAULT 1
+#define TAU_SOS_DEFAULT 0
+#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
+#define TAU_SOS_PERIODIC_DEFAULT 0
+#define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
+#define TAU_SOS_HIGH_RESOLUTION_DEFAULT 0 // group, timer
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
@@ -205,7 +209,7 @@ using namespace std;
 // pthread stack size default
 #define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
 
-#define TAU_MERGE_METADATA 1
+#define TAU_MERGE_METADATA_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -259,7 +263,11 @@ static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
-static int env_sos_enabled = 1;
+static int env_sos_enabled = TAU_SOS_DEFAULT;
+static int env_sos_trace_events = TAU_SOS_TRACE_EVENTS_DEFAULT;
+static int env_sos_periodic = TAU_SOS_PERIODIC_DEFAULT;
+static int env_sos_period = TAU_SOS_PERIOD_DEFAULT;
+static int env_sos_high_resolution = TAU_SOS_HIGH_RESOLUTION_DEFAULT;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -505,6 +513,20 @@ static int parse_bool(const char *str, int default_value = 0) {
   } else {
     return 0;
   }
+}
+
+/*********************************************************************
+ * Parse an integer value
+ ********************************************************************/
+static int parse_int(const char *str, int default_value = 0) {
+  if (str == NULL) {
+    return default_value;
+  }
+  int tmp = atoi(str);
+  if (tmp < 0) { 
+    return default_value; 
+  }
+  return tmp;
 }
 
 /*********************************************************************
@@ -918,6 +940,22 @@ int TauEnv_get_ebs_enabled() {
 
 int TauEnv_get_sos_enabled() {
   return env_sos_enabled;
+}
+
+int TauEnv_get_sos_high_resolution() {
+  return env_sos_high_resolution;
+}
+
+int TauEnv_get_sos_trace_events() {
+  return env_sos_trace_events;
+}
+
+int TauEnv_get_sos_periodic() {
+  return env_sos_periodic;
+}
+
+int TauEnv_get_sos_period() {
+  return env_sos_period;
 }
 
 int TauEnv_get_ebs_enabled_tau() {
@@ -2007,6 +2045,7 @@ void TauEnv_initialize()
 #endif
 #endif
 
+#if defined(TAU_SOS)
     tmp = getconf("TAU_SOS");
     if (parse_bool(tmp, TAU_SOS_DEFAULT)) {
       env_sos_enabled = 1;
@@ -2017,6 +2056,45 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: SOS Disabled\n");
       TAU_METADATA("TAU_SOS", "off");
     }
+
+    tmp = getconf("TAU_SOS_HIGH_RESOLUTION");
+    if (parse_bool(tmp, TAU_SOS_HIGH_RESOLUTION_DEFAULT)) {
+      env_sos_high_resolution = 1;
+      TAU_VERBOSE("TAU: SOS High Resolution\n");
+      TAU_METADATA("TAU_SOS_HIGH_RESOLUTION", "on");
+    } else {
+      env_sos_high_resolution = 0;
+      TAU_VERBOSE("TAU: SOS High Resolution\n");
+      TAU_METADATA("TAU_SOS_HIGH_RESOLUTION", "off");
+    }
+
+    tmp = getconf("TAU_SOS_TRACE_EVENTS");
+    if (parse_bool(tmp, TAU_SOS_TRACE_EVENTS_DEFAULT)) {
+      env_sos_trace_events = 1;
+      TAU_VERBOSE("TAU: SOS Trace Events Enabled (MPI, ADIOS)\n");
+      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "on");
+    } else {
+      env_sos_trace_events = 0;
+      TAU_VERBOSE("TAU: SOS_TRACE_EVENTS Disabled\n");
+      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "off");
+    }
+
+    tmp = getconf("TAU_SOS_PERIODIC");
+    if (parse_bool(tmp, TAU_SOS_PERIODIC_DEFAULT)) {
+      env_sos_periodic = 1;
+      TAU_VERBOSE("TAU: SOS Periodic Transmission Enabled\n");
+      TAU_METADATA("TAU_SOS_PERIODIC", "on");
+      tmp = getconf("TAU_SOS_PERIOD");
+      env_sos_period = parse_int(tmp, TAU_SOS_PERIOD_DEFAULT);
+      TAU_VERBOSE("TAU: SOS Transmission Period: %d\n", env_sos_period);
+      sprintf(tmpstr, "%d", env_sos_period);
+      TAU_METADATA("TAU_SOS_PERIOD", tmpstr);
+    } else {
+      env_sos_periodic = 0;
+      TAU_VERBOSE("TAU: SOS Periodic Transmission Disabled\n");
+      TAU_METADATA("TAU_SOS_PERIODIC", "off");
+    }
+#endif
 
     tmp = getconf("TAU_MEASURE_TAU");
     if (parse_bool(tmp, TAU_EBS_DEFAULT_TAU)) {
@@ -2301,7 +2379,7 @@ void TauEnv_initialize()
     }
 
     tmp = getconf("TAU_MERGE_METADATA");
-    if (parse_bool(tmp, TAU_MERGE_METADATA)) {
+    if (parse_bool(tmp, TAU_MERGE_METADATA_DEFAULT)) {
       env_merge_metadata = 1;
       TAU_VERBOSE("TAU: Metadata Merging Enabled\n");
     } else {

@@ -27,7 +27,7 @@ if [ "$MACHINE" = "apple" ]; then
 	fi
 fi
 
-if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ]; then
+if [ "$MACHINE" = "apple" ] || [ "$MACHINE" = "arm64_linux" ] || [ "$MACHINE" = "ibm64linux" ]; then
 	if [ "$FLAGJOGL1" != "1" ]; then
 		FLAGJOGL2=1
 	fi
@@ -44,7 +44,7 @@ fi
 
 # If 3D window has problems, please uncomment
 #if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
-export LIBGL_ALWAYS_INDIRECT=1
+#export LIBGL_ALWAYS_INDIRECT=1
 #fi
 
 APPLE_OPTIONS=""

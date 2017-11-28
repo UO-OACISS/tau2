@@ -36,15 +36,6 @@
 #include <beacon.h>
 #endif /* TAU_BEACON */
 
-#ifdef TAU_SOS
-#include "Profile/TauSOS.h"
-#define TAU_SOS_COLLECTIVE_SYNC_EVENT Tau_SOS_pack_double("MPI collective synchronize");
-#define TAU_SOS_COLLECTIVE_EXCH_EVENT Tau_SOS_pack_double("MPI collective exchange");
-#else
-#define TAU_SOS_COLLECTIVE_SYNC_EVENT // do nuthin.
-#define TAU_SOS_COLLECTIVE_EXCH_EVENT // do nuthin.
-#endif
-
 #define TAU_MAX_REQUESTS  4096
 #ifndef TAU_MAX_MPI_RANKS
 #define TAU_MAX_MPI_RANKS 8
@@ -69,6 +60,133 @@
 #define TAU_OPENMPI3_CONST  const
 #else
 #define TAU_OPENMPI3_CONST  
+#endif
+
+/* These macros are for creating MPI "events" in the SOS stream. */
+
+#ifdef TAU_SOS
+#define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
+#include "Profile/TauSOS.h"
+#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
+    if (TauEnv_get_sos_trace_events()) { \
+        char __tmp[128]; \
+        sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
+        Tau_SOS_pack_current_timer(__tmp); \
+    }
+
+#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
+    if (TauEnv_get_sos_trace_events()) { \
+        char __tmp[128]; \
+        sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
+        Tau_SOS_pack_current_timer(__tmp); \
+    }
+
+#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
+    if (TauEnv_get_sos_trace_events()) { \
+        char __tmp[128]; \
+        sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
+            EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
+        Tau_SOS_pack_current_timer(__tmp); \
+    }
+
+#define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
+    if (TauEnv_get_sos_trace_events()) { \
+        char __tmp[256]; \
+        sprintf(__tmp, \
+            "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
+            EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
+            __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
+        Tau_SOS_pack_current_timer(__tmp); \
+    }
+
+#define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
+    if (TauEnv_get_sos_trace_events()) { \
+        char __tmp[128]; \
+        sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
+        Tau_SOS_pack_current_timer(__tmp); \
+    }
+
+#define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out) \
+    if (TauEnv_get_sos_trace_events()) { \
+        char __tmp[128]; \
+        sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+        Tau_SOS_pack_current_timer(__tmp); \
+    }
+
+#define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out) \
+    if (TauEnv_get_sos_trace_events()) { \
+        char __tmp[128]; \
+        sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+        Tau_SOS_pack_current_timer(__tmp); \
+    }
+
+// this is used between cart_create and cart_sub calls... may not be safe, but...
+static int __cart_dims = 1;
+
+void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * dims, TAU_MPICH3_CONST int * periods, int reorder, MPI_Comm comm_out) {
+    if (TauEnv_get_sos_trace_events()) {
+        char tmp[256];
+        sprintf(tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, comm,ndims);
+        int x;
+        __cart_dims = ndims;
+        for (x = 0 ; x < ndims-1 ; x++ ) {
+            sprintf(tmp, "%s%d,", tmp, dims[x]);
+        }
+        sprintf(tmp, "%s%d], [", tmp, dims[ndims-1]);
+        for (x = 0 ; x < ndims-1 ; x++ ) {
+            sprintf(tmp, "%s%d,", tmp, periods[x]);
+        }
+        sprintf(tmp, "%s%d], %d) 0x%08x", tmp, periods[ndims-1], reorder, comm_out);
+        Tau_SOS_pack_current_timer(tmp);
+    }
+}
+
+#define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
+   Tau_sos_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out);
+
+void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
+    if (TauEnv_get_sos_trace_events()) {
+        char tmp[256];
+        sprintf(tmp, "%s_Cart_coords (%p, %d, %d, [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
+        int x;
+        for (x = 0 ; x < maxdims-1 ; x++ ) {
+            sprintf(tmp, "%s%d,", tmp, coords[x]);
+        }
+        sprintf(tmp, "%s%d]) 0x0", tmp, coords[maxdims-1]);
+        Tau_SOS_pack_current_timer(tmp);
+    }
+}
+
+#define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords) \
+    Tau_sos_cart_coords_event(__comm,__rank,__maxdims,__coords);
+
+void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
+    if (TauEnv_get_sos_trace_events()) {
+        char tmp[256];
+        sprintf(tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, comm);
+        int x;
+        for (x = 0 ; x < __cart_dims-1 ; x++ ) {
+            sprintf(tmp, "%s%d,", tmp, remains[x]);
+        }
+        sprintf(tmp, "%s%d]) 0x%08x", tmp, remains[__cart_dims-1], comm_out);
+        Tau_SOS_pack_current_timer(tmp);
+    }
+}
+
+#define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
+    Tau_sos_cart_sub_event(__comm,__remains,__comm_out);
+
+#else
+#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm)
+#define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm)
+#define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm)
+#define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm)
+#define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out)
+#define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out)
+#define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out)
+#define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out)
+#define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords)
+#define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out)
 #endif
 
 
@@ -134,7 +252,6 @@ static int procid_0;
     } \
   } 
 
-
 static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm) {
 
   int typesize, commSize, commRank, i;
@@ -144,16 +261,48 @@ static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm 
   PMPI_Type_size(type, &typesize );
   
   for (i = 0; i<commSize; i++) {
-    total += counts[i];
+    total += counts[i]; // sum
   } 
-  return total;
+  return total * typesize;
+}
+
+static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm, double vals[5]) {
+
+  int typesize, commSize, commRank, i;
+  PMPI_Comm_rank(comm, &commRank);
+  PMPI_Comm_size(comm, &commSize);
+  PMPI_Type_size(type, &typesize );
+  // check to make sure we have values!
+  if (commSize > 0 && counts != NULL) {
+    vals[0] = (double)commSize; //count
+    vals[1] = (double)counts[0]; //sum
+    vals[2] = (double)counts[0]; //min
+    vals[3] = (double)counts[0]; //max
+    vals[4] = (double)counts[0] * (double)counts[0]; //sumsqr
+  
+    for (i = 1; i<commSize; i++) {
+      vals[1] += (double)counts[i]; // sum
+      vals[2] = (double)counts[i] < vals[2] ? (double)counts[i] : vals[2]; // min
+      vals[3] = (double)counts[i] > vals[3] ? (double)counts[i] : vals[3]; // max
+      vals[4] += ((double)counts[i] * (double)counts[i]); // sumsqr
+    } 
+    for (i = 1; i<5; i++) {
+      vals[i] = vals[i] * (double)typesize;
+    }
+    vals[1] = vals[1] / (double)commSize;
+  }
+  return vals;
 }
 
 #define track_allvector( call, counts, typesize ) { \
     int typesize, commSize, commRank, sendcount = 0, i; \
     PMPI_Comm_rank(comm, &commRank); \
     PMPI_Comm_size(comm, &commSize); \
-    PMPI_Type_size( sendtype, &typesize ); \
+    if(sendtype != MPI_DATATYPE_NULL) { \
+        PMPI_Type_size( sendtype, &typesize ); \
+    } else { \
+        PMPI_Type_size( recvtype, &typesize ); \
+    } \
     for (i = 0; i<commSize; i++) { \
       sendcount += counts[i]; \
     } \
@@ -356,7 +505,7 @@ MPI_Comm comm;
   PMPI_Type_size( recvtype, &typesize );
   TAU_ALLGATHER_DATA(typesize*recvcount);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Allgather",typesize*recvcount,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -384,7 +533,8 @@ MPI_Comm comm;
 
   track_allvector(TAU_ALLGATHER_DATA, recvcounts, typesize);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  double tmp_array[5] = {0.0};
+  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Allgatherv",array_stats(recvcounts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -409,7 +559,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_ALLREDUCE_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Allreduce",typesize*count,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -436,7 +586,7 @@ MPI_Comm comm;
   PMPI_Type_size( sendtype, &typesize );
   TAU_ALLTOALL_DATA(typesize*sendcount);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Alltoall",typesize*sendcount,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -467,7 +617,9 @@ MPI_Comm comm;
 
   TAU_ALLTOALL_DATA(tracksize);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  double tmp_array1[5] = {0.0};
+  double tmp_array2[5] = {0.0};
+  TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -484,7 +636,7 @@ MPI_Comm comm;
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Barrier( comm );
 
-  TAU_SOS_COLLECTIVE_SYNC_EVENT
+  TAU_SOS_COLLECTIVE_SYNC_EVENT("Barrier",comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -539,7 +691,7 @@ MPI_Comm comm;
 
   TAU_BCAST_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Bcast",typesize*count,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -572,7 +724,7 @@ MPI_Comm comm;
   }
 
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Gather",typesize*recvcount,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -599,7 +751,8 @@ MPI_Comm comm;
 
   track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  double tmp_array[5] = {0.0};
+  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Gatherv",array_stats(recvcnts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -656,7 +809,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCESCATTER_DATA(typesize*(*recvcnts));
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Reduce_scatter",typesize*(*recvcnts),comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -682,7 +835,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCE_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Reduce",typesize*count,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -707,7 +860,7 @@ MPI_Comm comm;
   PMPI_Type_size( datatype, &typesize );
   TAU_SCAN_DATA(typesize*count);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Scan",typesize*count,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -734,7 +887,7 @@ MPI_Comm comm;
   PMPI_Type_size( sendtype, &typesize );
   TAU_SCATTER_DATA(typesize*sendcnt);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  TAU_SOS_COLLECTIVE_EXCH_EVENT("Scatter",typesize*sendcnt,comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -761,7 +914,8 @@ MPI_Comm comm;
 
   track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
 
-  TAU_SOS_COLLECTIVE_EXCH_EVENT
+  double tmp_array[5] = {0.0};
+  TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Scatterv",array_stats(sendcnts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -855,6 +1009,7 @@ MPI_Comm * comm_out;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_create( comm, group, comm_out );
+  TAU_SOS_COMM_CREATE_EVENT(comm, *comm_out);
 
   Tau_setupCommunicatorInfo(comm_out);
   TAU_PROFILE_STOP(tautimer);
@@ -873,6 +1028,7 @@ MPI_Comm * comm_out;
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_dup( comm, comm_out );
+  TAU_SOS_COMM_DUP_EVENT(comm, *comm_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1042,6 +1198,7 @@ MPI_Comm * comm_out;
   
   MPI_Comm newcomm = comm;
   returnVal = PMPI_Comm_split( newcomm, color, key, comm_out );
+  TAU_SOS_COMM_SPLIT_EVENT(comm,color,key,*comm_out);
 
 #ifdef TAU_EXP_TRACK_COMM
   tau_exp_track_comm_split(newcomm, *comm_out);
@@ -1489,10 +1646,6 @@ int  MPI_Finalize(  )
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
-#ifdef TAU_SOS
-  TAU_SOS_stop_worker();
-#endif
-
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
@@ -1508,11 +1661,15 @@ int  MPI_Finalize(  )
   }
 
 #endif /* TAU_MPI_T */
-  writeMetaDataAfterMPI_Init(); 
+
+#ifdef TAU_SOS
+  //TAU_SOS_stop_worker();
+#endif
 
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncFinalClocks();
   }
+  Tau_metadata_writeEndingTimeStamp();
 
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
@@ -1733,6 +1890,7 @@ char *** argv;
     returnVal = 0;
   }
 
+  writeMetaDataAfterMPI_Init(); 
 
   return returnVal;
 }
@@ -1802,6 +1960,8 @@ int *provided;
     //TauSyncClocks takes no arguments.
     //TauSyncClocks(procid_0, size);
   }
+
+  writeMetaDataAfterMPI_Init(); 
 
   return returnVal;
 }
@@ -1878,7 +2038,11 @@ int MPI_Get_version( int *version, int *subversion )
 
 
 int  MPI_Address( location, address )
+#ifdef TAU_SGI_MPT_MPI
+void * location;
+#else 
 TAU_OPENMPI3_CONST void * location;
+#endif /* TAU_SGI_MPT_MPI */
 MPI_Aint * address;
 {
   int  returnVal;
@@ -3218,10 +3382,11 @@ int * coords;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_coords()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
   TAU_TRACK_COMM(comm);
+  
   returnVal = PMPI_Cart_coords( comm, rank, maxdims, coords );
 
+  //TAU_SOS_CART_COORDS_EVENT( comm, rank, maxdims, coords );
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3242,6 +3407,7 @@ MPI_Comm * comm_cart;
   
   returnVal = PMPI_Cart_create( comm_old, ndims, dims, periods, reorder, comm_cart );
 
+  TAU_SOS_CART_CREATE_EVENT(comm_old, ndims, dims, periods, reorder, *comm_cart);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -3332,10 +3498,11 @@ MPI_Comm * comm_new;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_sub()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
   TAU_TRACK_COMM(comm);
+  
   returnVal = PMPI_Cart_sub( comm, remain_dims, comm_new );
 
+  TAU_SOS_CART_SUB_EVENT(comm,remain_dims,*comm_new);
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;

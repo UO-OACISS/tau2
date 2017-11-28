@@ -40,6 +40,23 @@
 // #define ACTIVITY_BUFFER_SIZE (8192*1024)
 /* Some API calls deprecated in 5.5
  */
+
+#if CUDA_VERSION >= 9000
+
+#define CUpti_ActivityKernel CUpti_ActivityKernel4
+#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling3
+#define CUpti_ActivityNvLink CUpti_ActivityNvLink2
+#define runtimeCorrelationId correlationId
+
+#endif
+
+#if CUDA_VERSION >= 8000
+
+#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling2
+#define runtimeCorrelationId correlationId
+
+#endif
+
 #if CUDA_VERSION >= 7000
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel3
@@ -250,6 +267,9 @@ void record_gpu_occupancy(int32_t blockX,
 
 void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
+void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
+void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
+
 
 int get_device_count();
 int get_device_id();

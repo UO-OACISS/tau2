@@ -53,6 +53,70 @@ download()
   fi
 }
 
+clone()
+{
+  src="$1"
+  dst="$2"
+  echo "git clone $src" "$dst"
+  git clone "$src" "$dst"
+}
+
+# Install SOS dependencies such as EVPath
+installsosdeps()
+{
+ installdir="$1"
+ mkdir $installdir
+ cd $installdir
+ P=`pwd`
+
+ echo "Install SOS deps"
+ mkdir chaos
+ cd chaos
+ currdir=`pwd`
+ wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+ export FLEXPATH_DIR=$currdir/inst
+ perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR 
+ perl ./chaos_build.pl
+ 
+ # set path to Flexpath/EVPath (see above)
+ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+ 
+ echo "Install libfabric"
+ git clone https://github.com/ofiwg/libfabric.git
+ cd libfabric
+ ./autogen.sh
+ currdir=`pwd`
+ ./configure --prefix=$currdir/inst
+ make install
+ cd inst/lib
+ cp libfabric.* ../../../inst/lib
+ cd ../../../..
+}
+
+# Install SOS 
+installsos()
+{
+ echo "installsos - current dir: `pwd`"
+ src="$1"
+ dst="$2"
+ #cd ../..
+ #cd $dst
+ currdir=`pwd`
+ 
+ echo "Install SOS: $src $dst $currdir"
+ git clone "$src" 
+ cd $dst
+ git checkout master
+ #git checkout aurele_dev
+ mkdir build-linux
+ cd build-linux
+
+ export sosdir=$currdir/$dst/inst
+
+ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   .. 
+ make ; make install
+}
+
 fix_tilde_at_the_start_of_cube_path()
 {
     cubedir=`echo $cubedir | sed -e "s,^~,$HOME,"g`
@@ -328,13 +392,13 @@ for arg in "$@"; do
 	    echo "Compiler Options:"
 	    echo "-c++=<compiler>  ............................ specify the C++ compiler."
 	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-	    echo "               clang++|bgclang++|g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
+	    echo "               clang++|bgclang++|g++4|g++-*|icpc|scgcc|scpathCC|pathCC|orCC]."
 	    echo "-cc=<compiler> ................................ specify the C compiler."
 	    echo "     options [cc|gcc|clang|bgclang|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
 	    echo "-fortran=<compiler> ..................... specify the Fortran compiler."
 	    echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
 	    echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
-	    echo "       gfortran|gfortran4]"
+	    echo "       gfortran|gfortran-*|gfortran4]"
 	    echo "-upc=<compiler> ............................. specify the UPC compiler."
 	    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
 	    echo "-host=<host-type> ................ the type of system on which TAU runs"
@@ -343,7 +407,7 @@ for arg in "$@"; do
 	    echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	    echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
 	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-	    echo "                                          g++4|icpc|scgcc|pathCC|orCC]."
+	    echo "                                     g++-*|g++4|icpc|scgcc|pathCC|orCC]."
 	    echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
 	    echo ""
 	    echo "Installation Options:"
@@ -400,6 +464,7 @@ for arg in "$@"; do
 	    echo "-pthread .................................. Use pthread thread package."
 	    echo "-papithread .................................. Use PAPI thread package."
 	    echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	    echo "-likwid=<dir> ............................. Specify location of LIKWID."
 	    echo "-beacon=<dir> ............... Specify location of BEACON."
 	    echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
 	    echo "-android_sdk=<dir> ................ Android SDK used for APK injection."
@@ -484,7 +549,7 @@ for arg in "$@"; do
         echo "-fortran=<compiler> ..................... specify the Fortran compiler."
         echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
         echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
-        echo "       gfortran|gfortran4]"
+        echo "       gfortran|gfortran-*|gfortran4]"
         echo "-upc=<compiler> ............................. specify the UPC compiler."
         echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
         echo "-host=<host-type> ................ the type of system on which TAU runs"
@@ -522,6 +587,7 @@ for arg in "$@"; do
         echo "    Note: 'download' will download and build the library automatically."
         echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
         echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
+	echo "-likwid=<dir> ............................. Specify location of LIKWID."
         echo "-beacon=<dir> ............... Specify location of BEACON."
         echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
 	echo "-pin=<dir> ..... Specify location of Intel PIN instrumentation toolkit."
@@ -773,6 +839,7 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+likwid=no
 beacon=no
 beacondir="/"
 darshan=no
@@ -848,6 +915,7 @@ otfdir=
 otfinc=
 otflib=
 download_otf=no
+download_likwid=no
 cubedir=own
 ebs2otf=no
 ebs_has_rt=no
@@ -891,8 +959,12 @@ opari_construct=no
 boost=no
 sos=no
 sosdir=
+download_sos=no
+install_sos=no
 adios=no
 adiosdir=
+#caliper=no
+#caliperdir=
 apex=no
 dyninst=no
 dyninstinc=no
@@ -952,7 +1024,7 @@ for arg in "$@"; do
 
 	-cc=*)
 	    myarg=`echo $arg | sed 's/-cc=//'`
-	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc ]
+	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc ]
 	    then
 		c_compiler=$myarg
 
@@ -965,7 +1037,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'bgclang', 'mpicc', 'mcc', or 'oshcc'"
+		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'bgclang', 'mpicc', 'mcc', or 'oshcc'"
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -981,7 +1053,7 @@ for arg in "$@"; do
 
 	-c++=*)
 	    myarg=`echo $arg | sed 's/-c++=//'`
-	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx ]
+	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx ]
 	    then
 		cxx_compiler=$myarg
                 if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  ]
@@ -1019,14 +1091,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', or 'caf' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', or 'caf' "
 		exit 1
 	    fi
 	    shift
@@ -1239,15 +1311,15 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    -beacon=*)
-        beacon=yes
+        -beacon=*)
+            beacon=yes
 	    beacondir=`echo $arg | sed -e 's/-beacon=//'`
 	    if [ ! -d $beacondir ] ; then
 		echo "Error: Cannot access BEACON directory $beacondir"
 		exit 1
 	    fi
-        shift
-        ;;
+            shift
+            ;;
 	-papi=*)
 	    papi=yes
 	    papidir=`echo $arg | sed -e 's/-papi=//'`
@@ -1255,15 +1327,32 @@ for arg in "$@"; do
 		echo "Error: Cannot access PAPI directory $papidir"
 		exit 1
 	    fi
-        if [ $papidir = "/usr" ]; then
+            if [ $papidir = "/usr" ]; then
 		  fixmakeargs="$fixmakeargs PAPINOINC"
-        fi
+            fi
             if [ -r /sys/devices/power/events/energy-pkg.scale ] ; then
 		  fixmakeargs="$fixmakeargs PAPI_PERF_RAPL"
             fi
 
 	    shift
 	    ;;
+
+        -likwid=download*)
+            echo "Downloading LIKWID..."
+            likwid=yes
+            download_likwid=yes
+            shift
+            ;;
+
+         -likwid=*)
+            likwid=yes
+	    likwiddir=`echo $arg | sed -e 's/-likwid=//'`
+	    if [ ! -d $likwiddir ] ; then
+		echo "Error: Cannot access LIKWID directory $likwiddir"
+		exit 1
+	    fi
+            shift
+            ;;
 
 	-gpi=*)
 	    gpi=yes
@@ -1610,12 +1699,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    -otf=download*)
-        echo "Downloading libotf2..."
-        otf=yes
-        download_otf=yes
-        shift
-        ;;
+        -otf=download*)
+            echo "Downloading libotf2..."
+            otf=yes
+            download_otf=yes
+            shift
+            ;;
 
 	-otf=*)
 	    otf=yes
@@ -1675,17 +1764,14 @@ for arg in "$@"; do
 
 	-sos=*)
 	    sos=yes
+        pthread=yes
 	    sosdir=`echo $arg | sed -e 's/-sos=//'`
-	    if [ ! -d $sosdir ]
-	    then
-		echo "Error: Cannot access SOS directory $sosdir"
-		exit 1
-	    fi
 	    shift
 	    ;;
 
 	-adios=*)
 	    adios=yes
+        pthread=yes
 	    adiosdir=`echo $arg | sed -e 's/-adios=//'`
 	    if [ ! -d $adiosdir ]
 	    then
@@ -1694,6 +1780,17 @@ for arg in "$@"; do
 	    fi
 	    shift
 	    ;;
+
+#	-caliper=*)
+#	    caliper=yes
+#	    caliperdir=`echo $arg | sed -e 's/-caliper=//'`
+#	    if [ ! -d $caliperdir ]
+#	    then
+#		echo "Error: Cannot access CALIPER directory $caliperdir"
+#		exit 1
+#	    fi
+#	    shift
+#	    ;;
 
 	-dyninst=*)
 	    dyninst=yes
@@ -1746,7 +1843,7 @@ for arg in "$@"; do
 		echo "Error: Cannot access libdwarf directory $dwarfdir"
 		exit 1
 	    fi
-	    fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir"
+	    fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir#-Wl\,-rpath\,$dwarfdir"
 	    dwarfdir=""
 	    shift
 	    ;;
@@ -1775,6 +1872,7 @@ for arg in "$@"; do
 	    ;;
 
 	-ompt=download*)
+            echo "ompt=download"
 	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
@@ -2609,9 +2707,17 @@ configure_perfexplorer () {
     # install the perl scripts for ebs post-processing in the bin dir
     cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
     cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
+    cp ${tauroot}/tools/src/pycoolr/bin/pycoolr $BINTARGET
+    chmod a+rx $BINTARGET/pycoolr
+    cp -r ${tauroot}/tools/src/pycoolr/src/pycoolrgui $BINTARGET
 
     # install post-mortem address translation tool
     cp ${tauroot}/tools/src/tau_resolve_addresses.py $BINTARGET
+    chmod +x $BINTARGET/tau_resolve_addresses.py
+
+    # install tau_baseline toool
+    cp ${tauroot}/tools/src/tau_baseline $BINTARGET
+    chmod +x $BINTARGET/tau_baseline
 
     case $machine in
 
@@ -2733,7 +2839,14 @@ configure_perfexplorer () {
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl.so.gz > $JARTARGET/libjogl.so
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	    gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+            cp tools/src/contrib/jogl/ppc64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/ppc64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
 	    ;;
+
+	ibm64linux)
+            cp tools/src/contrib/jogl/ppc64/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+            cp tools/src/contrib/jogl/ppc64/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+            ;;
 
 	bgp)
 	    gunzip -c tools/src/contrib/jogl/ppc64/jogl.jar.gz > $JARTARGET/jogl.jar
@@ -3596,7 +3709,7 @@ if [ $machine = mic_linux ] ; then
 fi
 
 if [ $machine = apple ] ; then
-    if [ $cxx_compiler = g++ -o $cxx_compiler = c++  -o $cxx_compiler = icpc ] ; then
+    if [ $cxx_compiler = g++ -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = c++  -o $cxx_compiler = icpc ] ; then
 	fixmakeargs="$fixmakeargs APPLECXX"
     fi
     if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] ; then
@@ -3789,6 +3902,39 @@ case $cxx_compiler in
 	# No fixmakeargs needed because it is the default
 	;;
 
+    g++-5)
+	echo "Default C++ compiler will be " \
+            `gcc-5 -v 2>&1 | tail -1 | sed 's/gcc-5/g++-5/g'`
+	gnu=yes
+	fixmakeargs="$fixmakeargs c_compiler=gcc-5 cxx_compiler=g++-5 GNU"
+	# No fixmakeargs needed because it is the default
+	;;
+
+
+    g++-6)
+	echo "Default C++ compiler will be " \
+            `gcc-6 -v 2>&1 | tail -1 | sed 's/gcc-6/g++-6/g'`
+	gnu=yes
+	fixmakeargs="$fixmakeargs c_compiler=gcc-6 cxx_compiler=g++-6 GNU"
+	# No fixmakeargs needed because it is the default
+	;;
+
+    g++-7)
+	echo "Default C++ compiler will be " \
+            `gcc-7 -v 2>&1 | tail -1 | sed 's/gcc-7/g++-7/g'`
+	gnu=yes
+	fixmakeargs="$fixmakeargs c_compiler=gcc-7 cxx_compiler=g++-7 GNU"
+	# No fixmakeargs needed because it is the default
+	;;
+
+    g++-8)
+	echo "Default C++ compiler will be " \
+            `gcc-8 -v 2>&1 | tail -1 | sed 's/gcc-8/g++-8/g'`
+	gnu=yes
+	fixmakeargs="$fixmakeargs c_compiler=gcc-8 cxx_compiler=g++-8 GNU"
+	# No fixmakeargs needed because it is the default
+	;;
+
     *-g++|g++-*)
 	echo "Default C++ compiler will be " \
             `$cxx_compiler -v 2>&1 | tail -1 | sed 's/gcc/g++/g'`
@@ -3803,6 +3949,7 @@ case $cxx_compiler in
 	gnu=yes
 	# No fixmakeargs needed because it is the default
 	;;
+
 
     egcs)
 	echo "Default C++ compiler will be " \
@@ -4240,22 +4387,25 @@ case $fortran_compiler in
 	fixmakeargs="$fixmakeargs GNU_FORTRAN"
 	;;
 
-    gfortran)
+    gfortran|gfortran-*)
 	echo "Default Fortran compiler will be GNU gfortran"
 	if [ $cxx_compiler = scg++ ] ; then
             fixmakeargs="$fixmakeargs SC_GFORTRAN"
 	else
-	    gfortran=`which gfortran 2>&1`
+	    gfortran=`which $fortran_compiler 2>&1`
             retval=$?
 	    # when gfortran is not found, it returns a value of 1, otherwise it returns 0.
 	    if [ "x$gfortran" != "x" -a "x$retval" != "x1" ] ; then
 		if [ -x $gfortran ] ; then
-		    taugfortranlibdir=`gfortran -print-libgcc-file-name | sed s/libgcc.a//`
+		    taugfortranlibdir=`$fortran_compiler -print-libgcc-file-name | sed s/libgcc.a//`
 		fi
 		fixmakeargs="$fixmakeargs taugfortranlibdir=$taugfortranlibdir"
 		fixmakeargs="$fixmakeargs GNU_GFORTRAN"
 	    fi
 	fi
+        if [ $machine = apple ]; then 
+	    fixmakeargs="$fixmakeargs APPLE_GFORTRAN"
+        fi
 	;;
 
     caf)
@@ -5523,7 +5673,7 @@ fi
 
 gcclibdir=unknown
 case $c_compiler in
-  gcc|gcc4)
+  gcc|gcc4|gcc-5)
     echo "Default C compiler will be " `$c_compiler -v 2>&1 | tail -1`
     # I must set the gcclibdir in the Makefiles if we combine gcc, cc, and CC
     gcclibdir=`$c_compiler -v 2>&1 | awk '{print $4;}' | \
@@ -5763,7 +5913,7 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ -o $cxx_compiler = x86_64-w64-mingw32-g++ -o $cxx_compiler = powerpc64-bgq-linux-g++ ]
+if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = g++-5 -o $cxx_compiler = g++-6 -o $cxx_compiler = g++-7 -o $cxx_compiler = g++-8 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ -o $cxx_compiler = x86_64-w64-mingw32-g++ -o $cxx_compiler = powerpc64-bgq-linux-g++ ]
 then
     if [ $machine != crayxmt ]
     then
@@ -5812,9 +5962,11 @@ fi
 
 ######################################################################
 # Do we need -lm Ubuntu does!
-if [ -f /etc/issue -a "x$tau_uselm" != "xno" -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then
-  tau_uselm=yes
-  fixmakeargs="$fixmakeargs TAU_USELM"
+if [ $machine != apple ]; then 
+  if [ -f /etc/issue -a "x$tau_uselm" != "xno" -a `grep Ubuntu /etc/issue | wc -l ` = 1 ]; then
+    tau_uselm=yes
+    fixmakeargs="$fixmakeargs TAU_USELM"
+  fi
 fi
 
 ######################################################################
@@ -6420,6 +6572,14 @@ fi #unwind=download
 
 
 ######################################################################
+# Install Scalable Observation System (SOS) if requested
+######################################################################
+
+if [ "x$download_ompt" = xyes ] ; then
+  echo "SOS (Scalable Observation System) installation requested"
+fi
+
+######################################################################
 # Install Clang/LLVM OpenMP runtime with OMPT if requested
 ######################################################################
 
@@ -6614,6 +6774,26 @@ echo "***********************************************************************"
 # Compile/Link/Run checks
 #####################################################################
 
+if [ $machine = apple ] ; then 
+cat <<EOF > apple_mach_port.cpp
+#include <Profile/Profiler.h>
+#include <Profile/TauMetaData.h>
+EOF
+  echo "Checking: Mac OS X mach_port bug. Is it ok?... ${nnl}"
+  cp ./include/TAU.h.default ./include/TAU.h
+if $cxx_compiler -DTAU_DOT_H_LESS_HEADERS -DPROFILING_ON -I./include -c apple_mach_port.cpp  1> /dev/null 2>&1 ; then
+    echo "yes"
+  else
+    echo "no ${nnl}"
+    if $cxx_compiler -DTAU_DOT_H_LESS_HEADERS -DPROFILING_ON -DTAU_APPLE_MACH_PORT_BUG -I./include -c apple_mach_port.cpp   1> /dev/null 2>&1; then
+      echo " - it is fixed by APPLE_MACH_PORT_BUG" 
+      fixmakeargs="$fixmakeargs APPLE_MACH_PORT_BUG"
+    else
+      echo " can't be fixed. TAU may not build."
+    fi
+  fi
+  /bin/rm -f apple_mach_port.cpp apple_mach_port.o ./include/TAU.h 
+fi
 
 #####################################################################
 # MPI Checks
@@ -7034,6 +7214,7 @@ if $mpicompiler $mpiwarnings $orig_useropt $mpi_include -c mpi2.$msuf  1> /dev/n
 	useropt="$useropt#-DTAU_MPI_F_STATUSES_IGNORE_ABSENT"
 	fixmakeargs="$fixmakeargs MPI2 useropt=$useropt"
 	echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
+	fixmakeargs="$fixmakeargs SGI_MPT_MPI"
     elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] ; then
         # Scali does not use MPI2 PMPI interface properly.
 	echo "Scali MPI detected. Disabling MPI2 wrappers for Scali MPI"
@@ -7851,6 +8032,28 @@ if [ $pin = yes -a "x$pindir" != "x" ]; then
 fi 
 
 ######################################################################
+# Install SOS if requested
+######################################################################
+sosurl=https://github.com/cdwdirect/sos_flow.git
+#sosmaindir=sos
+sosmaindir=sos
+sosrepo=sos_flow
+
+echo "$sosdir"
+if [ "x$sos" = "xyes" ] ; then
+  if [ "x$sosdir" = xdownload ] ; then
+    echo "Install SOS"
+    p=`pwd`
+    cd $targetdir/$architecture/; installsosdeps "$sosmaindir"; installsos "$sosurl" "$sosrepo"
+  else
+    if [ ! -d "$sosdir" ] ; then
+      echo "Error: Cannot access SOS directory $sosdir"
+      exit 1   
+	fi
+  fi
+fi
+
+######################################################################
 # Install BFD if requested
 ######################################################################
 binutils=binutils-2.23.2
@@ -8205,6 +8408,9 @@ BFDLIBS="-lbfd"
 if [ $c_compiler = mpiicc ]; then
   BFDLIBS="-lbfd -liberty -ldl -lz"
 fi
+if [ $machine = apple ]; then 
+  BFDLIBS="-lbfd -liberty -lintl -ldl -lz"
+fi
 
 bfd_worked="no"
 if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
@@ -8233,6 +8439,12 @@ else
 	          BFDLIBS="-lbfd -liberty -lintl -lz -ldl"
 	          if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	            bfd_worked="yes"
+                  else 
+	            BFDLIBS="-lbfd -lz"
+# Mac BFD
+	            if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	              bfd_worked="yes"
+                    fi
                   fi
                 fi
             fi
@@ -9072,7 +9284,7 @@ if [ $opari = yes ] ; then
 	if [ "x$fortran_compiler" = "xpgi" ] ; then
 	    oparicomp="$fortran_compiler"
 	fi
-	if [ "x$fortran_compiler" = "xgfortran" ] ; then
+	if [ "x$fortran_compiler" = "xgfortran" -o x$fortran_compiler" = "xgfortran-5" -o x$fortran_compiler" = "xgfortran-6" -o x$fortran_compiler" = "xgfortran-7" -o x$fortran_compiler" = "xgfortran-8" ] ; then
 	    oparicomp="gcc"
 	fi
     fi
@@ -9154,14 +9366,16 @@ if [ "x$download_scorep" = xyes ] ; then
     scorepdir=${tauscorepdir}/${tauscorep}-${c_compiler}
   fi
 
+  if [ $tag = yes ] ; then
+    scorepdir=${scorepdir}-$tautag
+  fi
+
   if [ "x$otf" != xyes ] ; then
     otf=yes
     otfdir=${scorepdir}
   fi
 
-  if [ $tag = yes ] ; then
-    scorepdir=${scorepdir}-$tautag
-  fi
+
   prescorepdir=`pwd`
 
   if [ -r "$scorepdir/bin/scorep" ]; then
@@ -9448,6 +9662,67 @@ if [ $scorep = yes ] ; then
 fi
 
 
+
+######################################################################
+# Install likwid if requested
+######################################################################
+liblikwid=likwid
+liblikwidtgz=$liblikwid.tgz
+liblikwidurl=http://www.cs.uoregon.edu/research/tau/$liblikwidtgz
+
+if [ "x$likwid" = "xyes" ]; then 
+    if [ "x$likwiddir" = "x" ]; then
+        liblikwiddir=${targetdir}/${architecture}/likwid
+    else
+        liblikwiddir=$likwiddir
+    fi
+    echo "liblikwiddir = $liblikwiddir"
+
+    if [ "x$likwiddir" != "x" -a -d "$likwiddir" ]; then 
+        if [ -r $likwiddir/$liblikwidtgz ]; then
+            echo "NOTE: Copying $likwiddir/$liblikwidtgz "
+            cp $likwiddir/$liblikwidtgz . 
+            download_likwid=yes 
+        fi    
+    fi
+
+    if [ $download_likwid = yes ]; then
+        echo "Downloading likwid"
+        if [ -r "$liblikwiddir/lib/liblikwid.so" ]; then 
+            echo "Found: liblikwid.so"
+            echo "liblikwid download already found, skipping"
+        else 
+            echo "Not found in ${likwiddir}: liblikwid.so"
+            if [ ! -f $liblikwidtgz ]; then 
+                download "$liblikwidurl" "$liblikwidtgz"
+            fi
+
+            # check the tar file
+            if [ ! -f $liblikwidtgz ]; then
+                echo "$liblikwidtgz did not download. Please download it manually from:"
+                echo "$liblikwidurl"
+                echo "Please enter the directory containing the tarball: ${nnl}"
+                read RESPONSE
+                cp $RESPONSE/$liblikwidtgz .
+            fi
+            echo "expanding $liblikwidtgz..."
+            tar -zxf  $liblikwidtgz
+            echo "removing $liblikwidtgz..."
+            /bin/rm -f $liblikwidtgz 
+            cd likwid*; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272 install  ; cd ..
+
+        fi
+        
+    fi
+
+    if [ -r $liblikwiddir/lib/liblikwid.so ]; then
+        echo "Success..."
+        fixmakeargs="$fixmakeargs TAU_LIKWID likwiddir=$liblikwiddir"
+    fi
+fi
+
+
+
 ######################################################################
 # Install libotf2 if requested
 ######################################################################
@@ -9459,7 +9734,7 @@ libotf2url=http://www.cs.uoregon.edu/research/tau/$libotf2tgz
 if [ "x$otfdir" = "x" ]; then
     libotf2dir=${targetdir}/${architecture}
 else
-    libotf2dir==$otfdir
+    libotf2dir=$otfdir
 fi
 
 libotf2_name=otf2
@@ -9696,6 +9971,12 @@ if [ $adios = yes ] ; then
     fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
 fi
 
+#if [ $caliper = yes ] ; then
+#    tauoptions="${tauoptions}-caliper"
+#    fixmakeargs="$fixmakeargs CALIPER "
+#    fixmakeargs="$fixmakeargs caliperdir=$caliperdir"
+#fi
+
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST "
     if [ "x$dyninstdir" != "x" ]; then
@@ -9735,7 +10016,7 @@ if [ $dwarf = yes ] ; then
     if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
 	echo "ERROR: $dwarfdir/lib/libdwarf.a not found"
     else
-	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib"
+	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
     fi
 fi
 
@@ -10058,11 +10339,29 @@ if [ $noex = yes ] ; then
 fi
 
 # Disable plugins on Apple because rdynamic flag has no effect on OS X 
-case "$machine" in
-    apple)
-     plugins="no"
-    ;;
-esac
+# Removed. We use -dynamiclib and it works
+#case "$machine" in
+#    apple)
+#     echo plugins="no"
+#    ;;
+#esac
+
+if [ $machine = apple ]; then
+    if [ -e /System/Library/PrivateFrameworks/CoreSymbolication.framework/CoreSymbolication ]; then
+# Let us test if this works with the current compiler.
+cat <<EOF > tau_apple_symbol.cpp
+#include "CoreSymbolication.h"
+EOF
+        echo "Checking for Apple CoreSymbolication... ${nnl}"
+        if $cxx_compiler -c tau_apple_symbol.cpp -Iinclude/Profile 1> /dev/null 2>&1 ; then
+          echo "yes"
+          fixmakeargs="$fixmakeargs CORESYMBOLICATION"
+        else 
+          echo "no"
+        fi
+        /bin/rm -f tau_apple_symbol.o 
+    fi
+fi
 
 if [ $plugins = no ] ; then
     fixmakeargs="$fixmakeargs NOPLUGINS"

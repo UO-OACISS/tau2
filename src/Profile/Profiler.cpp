@@ -262,7 +262,8 @@ void Profiler::Start(int tid)
 
   /* Get the current metric values */
   x_uint64 TimeStamp;
-  RtsLayer::getUSecD(tid, StartTime);
+  // Record metrics in reverse order so wall clock metrics are recorded after PAPI, etc.
+  RtsLayer::getUSecD(tid, StartTime, 1);
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
 
   /********************************************************************************/
@@ -1529,12 +1530,12 @@ int TauProfiler_StoreData(int tid)
 	}
 #endif
 #endif
-
-#ifdef TAU_SOS
-    //TAU_SOS_finalize();
-#endif
   }
 #endif /* PTHREADS */
+
+#ifdef TAU_SOS
+  TAU_SOS_finalize();
+#endif
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {

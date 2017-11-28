@@ -1,0 +1,94 @@
+#!/bin/bash
+
+currdir=${PWD}
+echo ${PWD}
+
+tool=
+platform=
+
+usage()
+{
+ echo "Usage: $0 [-tool <beacon|sos>] [-platform <cerberus|godzilla>]" 1>&2;
+ exit 1;
+}
+
+if [ $# -eq 0 ]
+  then
+    echo "No arguments supplied"
+    usage
+fi
+
+for arg in "$@"; do
+  echo $arg
+  case $arg in
+    -tool=*)
+       echo "got tool option"
+       tool=`echo $arg | sed -e 's/-tool=//'`
+       echo "selected tool: "
+       echo $tool
+       ;;
+    -platform=*) 
+       echo "got platform option"
+       platform=`echo $arg | sed -e 's/-platform=//'`
+       echo "selected platorm: "
+       echo $platform
+       ;;
+    *)
+       echo "usage"
+       usage
+       ;;
+  esac
+done
+
+PYCOOLR_PLATFORM=$platform
+PYCOOLR_TOOL=$tool
+
+export BEACON_TOPOLOGY_SERVER_ADDR=128.223.202.147
+export BEACON_ROOT_FS=/dev/shm/aurelem
+export LD_LIBRARY_PATH=/home/users/aurelem/beacon/mix/BEACON_inst/lib:$LD_LIBRARY_PATH
+export PATH=/home/users/aurelem/beacon/mix/BEACON_inst/bin:/home/users/aurelem/beacon/mix/BEACON_inst/sbin:$PATH
+export PYCOOLR_NODE=cerberus.nic.uoregon.edu
+export PYCOOLR_INST_PATH=/home/users/aurelem/beacon/mix/BEACON_inst
+export PYCOOLR_LIBPATH=/home/users/aurelem/beacon/mix/BEACON_inst/lib
+export MPIT_CVARS_PATH=/dev/shm/cvars/tau_mpit_cvars.conf
+export CVARS_COMM_MODE="pub"
+
+if [[ $PYCOOLR_TOOL = "beacon" ]];
+then
+
+  if [[ $PYCOOLR_PLATFORM = "cerberus.nic.uoregon.edu" ]];
+  then
+  echo "tool: beacon, platform: cerberus.nic.uoregon.edu"
+  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/beaconcerberus.cfg
+
+  elif [[ $PYCOOLR_PLATFORM = "godzilla.nic.uoregon.edu" ]];
+  then
+  echo "tool: beacon, platform: godzilla.nic.uoregon.edu"
+  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/beacongodzilla.cfg
+
+  elif [[ $PYCOOLR_PLATFORM = "delphi.nic.uoregon.edu" ]];
+  then
+  echo "tool: beacon, platform: delphi.nic.uoregon.edu"
+  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/beacondelphi.cfg
+
+  fi
+
+elif [[ $PYCOOLR_TOOL = "sos" ]];
+  then
+  if [[ $PYCOOLR_PLATFORM = "cerberus.nic.uoregon.edu" ]];
+  then
+  echo "tool: sos, platform: cerberus.nic.uoregon.edu"
+  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/soscerberusmatmult.cfg
+
+  elif [[ $PYCOOLR_PLATFORM = "godzilla.nic.uoregon.edu" ]];
+  then
+  echo "tool: sos, platform: godzilla.nic.uoregon.edu"
+  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/sosgodzilla.cfg
+
+  elif [[ $PYCOOLR_PLATFORM = "delphi.nic.uoregon.edu" ]];
+  then
+  echo "tool: sos, platform: delphi.nic.uoregon.edu"
+  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/sosdelphi.cfg
+
+  fi
+fi

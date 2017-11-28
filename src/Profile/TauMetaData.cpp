@@ -74,6 +74,10 @@ using namespace tau;
 #include <scorep/SCOREP_Tau.h>
 #endif /* TAU_SCOREP_METADATA */
 
+#ifdef TAU_SOS
+#include "TauSOS.h"
+#endif /* TAU_SOS */
+
 
 #ifdef TAU_BGL
 #include <rts.h>
@@ -257,6 +261,56 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   Tau_metadata_getMetaData(tid)[key] = tmv;
   //RtsLayer::UnLockEnv();
   //printf("%s : %s\n", key.name, tmv->data.cval);
+#ifdef TAU_SOS
+  if((strncmp(name, "TAU", 3) != 0) ||
+     (strncmp(name, "TAU_SOS", 7) == 0)){
+      // SOS users don't care about TAU options.
+      // SOS users do care about TAU_SOS options.
+      Tau_SOS_pack_string(name, const_cast<char*>(value));
+  }
+#endif
+#endif
+}
+
+/* OK, the problem is that SOS isn't initialized when TauEnv is setting up
+ * TAU, and in the process registering a bunch of metadata name/value pairs.
+ * So, once SOS is set up, provide a method for SOS to get all the 
+ * metadata registered on thread 0 up to this point. */
+void Tau_metadata_push_to_sos(void) {
+#ifdef TAU_SOS
+    int tid = RtsLayer::myThread();
+    for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); 
+         it != Tau_metadata_getMetaData(tid).end(); it++) {
+        char tmp[128] = {0};
+        if((strncmp(it->first.name, "TAU", 3) == 0) && 
+		   (strncmp(it->first.name, "TAU_SOS", 7) != 0)){
+          // SOS users don't care about TAU options.
+          // SOS users do care about TAU_SOS options.
+          continue;
+        }
+        switch(it->second->type) {
+            case TAU_METADATA_TYPE_STRING:
+                Tau_SOS_pack_string(it->first.name, it->second->data.cval);
+                break;
+            case TAU_METADATA_TYPE_INTEGER:
+                Tau_SOS_pack_integer(it->first.name, it->second->data.ival);
+                break;
+            case TAU_METADATA_TYPE_DOUBLE:
+                Tau_SOS_pack_double(it->first.name, it->second->data.dval);
+                break;
+            case TAU_METADATA_TYPE_TRUE:
+                Tau_SOS_pack_string(it->first.name, const_cast<char*>("true"));
+                break;
+            case TAU_METADATA_TYPE_FALSE:
+                Tau_SOS_pack_string(it->first.name, const_cast<char*>("false"));
+                break;
+            case TAU_METADATA_TYPE_NULL:
+                Tau_SOS_pack_string(it->first.name, const_cast<char*>("(null)"));
+                break;
+            default:
+                break;
+        }
+	}
 #endif
 }
 
@@ -578,111 +632,6 @@ int Tau_metadata_fillMetaData()
 
 #endif /* TAU_BGQ */
 
-#ifdef TAU_CRAYCNL
-//FILE *fp1 = popen("/bin/hostname", "r");
-
-//char buffer1[128];
-//while (fgets(buffer1, sizeof(buffer1), fp1))
-//{
-//
-//}
-//Tau_metadata_register("Hostname", buffer1);
-
-//pclose(fp1);
-
-string host(hostname);
-
-if(host.find("nid")==0)
-{
-host=host.substr(3);
-while (host.find(' ') == 0)
-    host.erase(0, 1);
-
-while (host.find('0') == 0)
-    host.erase(0, 1);
-
-//string command("topolcoords -n "+host);
-//printf(command.c_str());
-//FILE *fp = popen(command.c_str(), "r");
-
-//char buffer[1024];
-//while (fgets(buffer, sizeof(buffer), fp))
-//{
-//}
-
-//pclose(fp);
-
-
-
-
-string topo;
-//printf(host.c_str());//PRINT
-//printf(" is the host\n");
-int found = 0;
-ifstream infile;
-infile.open ("topolist.txt");
-if(infile.good()){
-while(!infile.eof()) 
-{
-  getline(infile,topo);
-  //printf(topo.c_str());
-  //printf(" is the current topo\n");
-  if(topo.find(host+" ")!=std::string::npos)
-  {
-    found=1;
-     //printf(topo.c_str());
-     //printf(" was found matching");
-    break;
-  }
-}
-infile.close();
-
-if(found==1){
-
-size_t current;
-size_t next = -1;
-vector<string> result;
-  do
-  {
-      next = topo.find_first_not_of( " ", next + 1 );
-      if (next == string::npos) break;
-      next -= 1;
-    current = next + 1;
-    next = topo.find_first_of( " ", current );
-    result.push_back( topo.substr( current, next - current ) );
-  }
-  while (next != string::npos);
-
-  if(result.size()==10){
-  	  Tau_metadata_register("CABX", result[2].c_str());
-  	  Tau_metadata_register("CABY", result[3].c_str());
-  	  Tau_metadata_register("CAGE", result[4].c_str());
-  	  Tau_metadata_register("SLOT", result[5].c_str());
-  	  Tau_metadata_register("NODE", result[6].c_str());
-  	  Tau_metadata_register("CRAY_X", result[7].c_str());
-  	  Tau_metadata_register("CRAY_Y", result[8].c_str());
-  	  Tau_metadata_register("CRAY_Z", result[9].c_str());
-  	  string phyTopo ("(");
-  	  phyTopo=phyTopo+result[2]+","+result[3]+","+result[4]+","+result[5]+","+result[6]+")";
-  	  Tau_metadata_register("Cray_Physical Coords", phyTopo.c_str());
-  	  Tau_metadata_register("Cray_Physical Size","(16,3,2,7,1,24)");
-          Tau_metadata_register("Cray_Physical Dimension","6");
-
-  	  
-  	  
-  	  string torTopo ("(");
-  	  torTopo=torTopo+result[7]+","+result[8]+","+result[9]+")";
-  	  
-  	   Tau_metadata_register("Cray_Torus Coords", torTopo.c_str());
-  	   Tau_metadata_register("Cray_Torus Size", "(16,8,24,24)");
-           Tau_metadata_register("Cray_Torus Dimension", "4");
-  	  
-  }
- }//found hostname in list
- }//topolist file good
- } 
-#endif // TAU_CRAYCNL
-
 #ifdef __linux__
   // doesn't work on ia64 for some reason
   //Tau_util_output (out, "\t<linux_tid>%d</linux_tid>\n", gettid());
@@ -873,22 +822,18 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
 
 #endif /* TAU_FUJITSU && TAU_MPI */
 
-#ifdef TAU_ENABLE_PMI
-    FILE* procfile = fopen("/proc/self/stat", "r");
-    long to_read = 8192;
-    char buffer[to_read];
+/****** CRAY RELATED DATA *********/
+
+  FILE* procfile = fopen("/proc/self/stat", "r");
+  long to_read = 8192;
+  char buffer[to_read];
+  if (procfile != NULL) {
     int read = fread(buffer, sizeof(char), to_read, procfile);
-    int i;
     fclose(procfile);
-     int my_id=RtsLayer::myNode();     /* MPI rank */
-  int nid = -1;
-  int rank = 0;  /* PMI rank */
-  pmi_mesh_coord_t xyz;
-  char cname[20];
-  FILE *cfile;
 
     // Field with index 38 (zero-based counting) is the one we want
     char* line = strtok(buffer, " ");
+    int i;
     for (i = 1; i < 38; i++)
     {
         line = strtok(NULL, " ");
@@ -896,34 +841,61 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
 
     line = strtok(NULL, " ");
     Tau_metadata_register("CRAY_CORE_ID", line);
+  }
 
-
-  
-
-  cfile = fopen("/proc/cray_xt/cname", "r");
-  fscanf(cfile, "%s", cname);
-  fclose(cfile);
-
+#ifdef TAU_ENABLE_PMI
+  int rank = 0;  /* PMI rank */
+  int nid = -1;
+  pmi_mesh_coord_t xyz;
   PMI_Get_rank(&rank);
   PMI_Get_nid(rank, &nid);
   PMI_Get_meshcoord((pmi_nid_t) nid, &xyz);
-
-  
-  Tau_metadata_register("CRAY_NODENAME", cname);
   Tau_metadata_register("CRAY_PMI_NODEID", nid);
   Tau_metadata_register("CRAY_PMI_RANK", rank);
   Tau_metadata_register("CRAY_PMI_X", xyz.mesh_x);
   Tau_metadata_register("CRAY_PMI_Y", xyz.mesh_y);
   Tau_metadata_register("CRAY_PMI_Z", xyz.mesh_z);
-
 #endif
+
+  char cname[20];
+  FILE *cfile;
+  cfile = fopen("/proc/cray_xt/cname", "r");
+  if (cfile != NULL) {
+    fscanf(cfile, "%s", cname);
+    fclose(cfile);
+    Tau_metadata_register("CRAY_NODENAME", cname);
+
+    /* The nodename has info encoded as: c12-5c2s7n1, which means the
+    column 12, row 5, cage 2, slot 7 (blade), node 1. */
+    unsigned int column = 0;
+    unsigned int row = 0;
+    unsigned int cage = 0;
+    unsigned int slot = 0;
+    unsigned int node = 0;
+    char a, b, c, d;
+    sscanf(cname, "%c%u-%u%c%u%c%u%c%u", &a, &column, &row, &b, &cage, &c, &slot, &d, &node);
+  
+    Tau_metadata_register("CRAY_TOPO_COLUMN_ID", column);
+    Tau_metadata_register("CRAY_TOPO_ROW_ID", row);
+    Tau_metadata_register("CRAY_TOPO_CAGE_ID", cage);
+    Tau_metadata_register("CRAY_TOPO_SLOT_ID", slot);
+    Tau_metadata_register("CRAY_TOPO_NODE_ID", node);
+  }
+
+/****** END CRAY RELATED DATA *********/
+
   return 0;
 }
 
-static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
+extern "C" void Tau_metadata_writeEndingTimeStamp(void) {
   char tmpstr[4096];
+  TauMetrics_finalize(); // make sure there's a valid final timestamp
   sprintf (tmpstr, Tau_metadata_timeFormat, TauMetrics_getFinalTimeStamp());
   Tau_metadata_register("Ending Timestamp", tmpstr);
+}
+
+static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
+  Tau_metadata_writeEndingTimeStamp();
 
   const char *endl = "";
   //newline = true;
