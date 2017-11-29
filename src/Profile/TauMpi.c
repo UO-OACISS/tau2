@@ -1636,6 +1636,7 @@ MPI_Errhandler errhandler;
 
 int tau_mpi_finalized = 0;
 int TAU_MPI_Finalized() {
+  fprintf(stdout, "In TAU_MPI_Finalized(): tau_mpi_finalized=%d\n", tau_mpi_finalized);
   return tau_mpi_finalized;
 }
 
@@ -1645,6 +1646,8 @@ int  MPI_Finalize(  )
   int  returnVal;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  TAU_VERBOSE("TAU: Call MPI_Finalize()\n");
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -1761,6 +1764,8 @@ int  MPI_Finalize(  )
 #endif
 
   returnVal = PMPI_Finalize();
+
+  fprintf(stdout, "PMPI_Finalize() return=%d\n", returnVal);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1907,6 +1912,8 @@ int *provided;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  fprintf(stdout, "call TAU MPI_Init_thread()\n");
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
