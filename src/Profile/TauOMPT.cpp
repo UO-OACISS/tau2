@@ -14,6 +14,7 @@
 
 static bool initializing = false;
 static bool initialized = false;
+static bool tau_initialized = false;
 #if defined (TAU_USE_TLS)
 __thread bool is_master = false;
 #elif defined (TAU_USE_DTLS)
@@ -33,6 +34,8 @@ int get_ompt_tid(void) {
 #endif
   return Tau_get_thread();
 }
+
+int Tau_set_tau_initialized() { tau_initialized = true; };
 
 extern "C" void Tau_pure_start_openmp_task(const char * n, int tid);
 extern "C" void Tau_pure_stop_openmp_task(const char * n, int tid);
@@ -85,39 +88,11 @@ static void print_ids(int level)
   int exists_task = ompt_get_task_info(level, NULL, &task_data, &frame, &parallel_data, NULL);
   if (frame)
   {
-    printf("%" PRIu64 ": task level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data()->value, level, exists_task ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame->exit_runtime_frame, frame->reenter_runtime_frame);
-//    printf("%" PRIu64 ": parallel level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data()->value, level, exists_parallel ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame->exit_runtime_frame, frame->reenter_runtime_frame);
+    printf("%" PRIu64 ": task level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", exit_frame=%p, reenter_frame=%p\n", ompt_get_thread_data()->value, level, exists_task ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame->exit_frame, frame->enter_frame);
   }
   else
     printf("%" PRIu64 ": task level %d: parallel_id=%" PRIu64 ", task_id=%" PRIu64 ", frame=%p\n", ompt_get_thread_data()->value, level, exists_task ? parallel_data->value : 0, exists_task ? task_data->value : 0, frame);
-  //if (__kmp_threads[__kmp_gtid].th.ompt_thread_info.kmp_return_address != NULL)
-  //  printf( "1: return address not reset\n");
-
 }
-
-/*
-#define print_frame(level)\
-do {\
-  unw_cursor_t cursor;\
-  unw_context_t uc;\
-  unw_word_t fp;\
-  unw_getcontext(&uc);\
-  unw_init_local(&cursor, &uc);\
-  int tmp_level = level;\
-  unw_get_reg(&cursor, UNW_REG_SP, &fp);\
-  printf("callback %p\n", (void*)fp);\
-  while (tmp_level > 0 && unw_step(&cursor) > 0)\
-  {\
-    unw_get_reg(&cursor, UNW_REG_SP, &fp);\
-    printf("callback %p\n", (void*)fp);\
-    tmp_level--;\
-  }\
-  if(tmp_level == 0)\
-    printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data()->value, level, (void*)fp);\
-  else\
-    printf("%" PRIu64 ": __builtin_frame_address(%d)=%p\n", ompt_get_thread_data()->value, level, NULL);\
-} while(0)
-*/
 
 #define print_frame(level)\
 do {\
@@ -139,23 +114,6 @@ ompt_label_##id:\
     printf("%" PRIu64 ": fuzzy_address=0x%lx or 0x%lx\n", ompt_get_thread_data()->value, ((uint64_t)(char*)(&& ompt_label_##id))/256-1, ((uint64_t)(char*)(&& ompt_label_##id))/256) 
     /* "&& label" returns the address of the label (GNU extension); works with gcc, clang, icc */
     /* for void-type runtime function, the label is after the nop (-1), for functions with return value, there is a mov instruction before the label (-4) */
-
-/*
-static void print_current_address()
-{
-    int real_level = 2;
-    void *array[real_level];
-    size_t size;
-    void *address;
-  
-    size = backtrace (array, real_level);
-    if(size == real_level)
-      address = ((char*)array[real_level-1])-5;
-    else
-      address = NULL;
-  printf("%" PRIu64 ": current_address=%p\n", ompt_get_thread_data()->value, address);
-}
-*/
 
 static void format_task_type(int type, char* buffer)
 {
@@ -603,7 +561,7 @@ on_ompt_callback_parallel_begin(
   if(parallel_data->ptr)
     printf("%s\n", "0: parallel_data initially not null");
   parallel_data->value = ompt_get_unique_id();
-  printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", codeptr_ra=%p, invoker=%d\n", ompt_get_thread_data()->value, parent_task_data->value, parent_task_frame->exit_runtime_frame, parent_task_frame->reenter_runtime_frame, parallel_data->value, requested_team_size, codeptr_ra, invoker);
+  printf("%" PRIu64 ": ompt_event_parallel_begin: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, parallel_id=%" PRIu64 ", requested_team_size=%" PRIu32 ", codeptr_ra=%p, invoker=%d\n", ompt_get_thread_data()->value, parent_task_data->value, parent_task_frame->exit_frame, parent_task_frame->enter_frame, parallel_data->value, requested_team_size, codeptr_ra, invoker);
 }
 
 static void
@@ -627,6 +585,7 @@ on_ompt_callback_task_create(
     int has_dependences,
     const void *codeptr_ra)               /* pointer to outlined function */
 {
+  //if (!tau_initialized) { return; }
   TauInternalFunctionGuard protects_this_function;
   Tau_pure_start_openmp_task("OPENMP task create", get_ompt_tid());
   if(new_task_data->ptr)
@@ -647,7 +606,7 @@ on_ompt_callback_task_create(
     parallel_data->value = ompt_get_unique_id();
   }
 
-  printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", codeptr_ra=%p, task_type=%s=%d, has_dependences=%s\n", ompt_get_thread_data()->value, parent_task_data ? parent_task_data->value : 0, parent_frame ? parent_frame->exit_runtime_frame : NULL, parent_frame ? parent_frame->reenter_runtime_frame : NULL, new_task_data->value, codeptr_ra, buffer, type, has_dependences ? "yes" : "no");
+  printf("%" PRIu64 ": ompt_event_task_create: parent_task_id=%" PRIu64 ", parent_task_frame.exit=%p, parent_task_frame.reenter=%p, new_task_id=%" PRIu64 ", codeptr_ra=%p, task_type=%s=%d, has_dependences=%s\n", ompt_get_thread_data()->value, parent_task_data ? parent_task_data->value : 0, parent_frame ? parent_frame->exit_frame : NULL, parent_frame ? parent_frame->enter_frame : NULL, new_task_data->value, codeptr_ra, buffer, type, has_dependences ? "yes" : "no");
 }
 
 static void
@@ -697,7 +656,6 @@ on_ompt_callback_thread_begin(
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
-  /*
 #if defined (TAU_USE_TLS)
   if (is_master) return; // master thread can't be a new worker.
 #elif defined (TAU_USE_DTLS)
@@ -705,7 +663,6 @@ on_ompt_callback_thread_begin(
 #elif defined (TAU_USE_PGS)
   if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
 #endif
-*/
   Tau_pure_start_openmp_task("OPENMP thread", get_ompt_tid());
   if(thread_data->ptr)
     printf("%s\n", "0: thread_data initially not null");
@@ -718,7 +675,6 @@ on_ompt_callback_thread_end(
   ompt_data_t *thread_data)
 {
   TauInternalFunctionGuard protects_this_function;
-  /*
 #if defined (TAU_USE_TLS)
   if (is_master) return; // master thread can't be a new worker.
 #elif defined (TAU_USE_DTLS)
@@ -726,10 +682,8 @@ on_ompt_callback_thread_end(
 #elif defined (TAU_USE_PGS)
   if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
 #endif
-*/
   Tau_pure_stop_openmp_task("OPENMP thread", get_ompt_tid());
   printf("%" PRIu64 ": ompt_event_thread_end: thread_id=%" PRIu64 "\n", ompt_get_thread_data()->value, thread_data->value);
-  //printf("%" PRIu64 ": ompt_event_thread_end: thread_type=%s=%d, thread_id=%" PRIu64 "\n", ompt_get_thread_data()->value, ompt_thread_type_t_values[thread_type], thread_type, thread_data->value);
 }
 
 static int
@@ -742,7 +696,7 @@ on_ompt_callback_control_tool(
   TauInternalFunctionGuard protects_this_function;
   ompt_frame_t* omptTaskFrame;
   ompt_get_task_info(0, NULL, (ompt_data_t**) NULL, &omptTaskFrame, NULL, NULL);
-  printf("%" PRIu64 ": ompt_event_control_tool: command=%" PRIu64 ", modifier=%" PRIu64 ", arg=%p, codeptr_ra=%p, current_task_frame.exit=%p, current_task_frame.reenter=%p \n", ompt_get_thread_data()->value, command, modifier, arg, codeptr_ra, omptTaskFrame->exit_runtime_frame, omptTaskFrame->reenter_runtime_frame);
+  printf("%" PRIu64 ": ompt_event_control_tool: command=%" PRIu64 ", modifier=%" PRIu64 ", arg=%p, codeptr_ra=%p, current_task_frame.exit=%p, current_task_frame.reenter=%p \n", ompt_get_thread_data()->value, command, modifier, arg, codeptr_ra, omptTaskFrame->exit_frame, omptTaskFrame->enter_frame);
   return 0; //success
 }
 
@@ -758,7 +712,7 @@ do{                                                           \
 
 extern "C" int ompt_initialize(
   ompt_function_lookup_t lookup,
-  ompt_fns_t* fns)
+  ompt_data_t* tool_data)
 {
   Tau_init_initializeTAU();
   if (initialized || initializing) return 0;
@@ -819,15 +773,19 @@ extern "C" int ompt_initialize(
   return 1; //success
 }
 
-extern "C" void ompt_finalize(ompt_fns_t* fns)
+extern "C" void ompt_finalize(ompt_data_t* tool_data)
 {
   printf("0: ompt_event_runtime_shutdown\n");
 }
 
-extern "C" ompt_fns_t* ompt_start_tool(
+extern "C" ompt_start_tool_result_t * ompt_start_tool(
   unsigned int omp_version,
   const char *runtime_version)
 {
-  static ompt_fns_t ompt_fns = {&ompt_initialize,&ompt_finalize};
-  return &ompt_fns;
+  static ompt_start_tool_result_t result;
+  result.initialize = &ompt_initialize;
+  result.finalize = &ompt_finalize;
+  result.tool_data.value = 0L;
+  result.tool_data.ptr = nullptr;
+  return &result;
 }
