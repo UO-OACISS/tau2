@@ -100,7 +100,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for schedule(dynamic) nowait
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
@@ -121,7 +121,7 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for schedule(dynamic) nowait
     for (i=0; i<rows_a; i++) {
       for (k=0; k<cols_a; k++) {
         for(j=0; j<cols_b; j++) {
@@ -316,7 +316,9 @@ int main (int argc, char *argv[])
 #endif /* PTHREADS */
 
 #ifdef TAU_MPI
+  fprintf(stdout, "mm: call before MPI_Finalize()\n");
   MPI_Finalize();
+  fprintf(stdout, "mm: call after MPI_Finalize()\n");
 #endif /* TAU_MPI */
   printf ("Done.\n");
 
