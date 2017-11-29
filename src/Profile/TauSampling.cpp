@@ -1320,8 +1320,8 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     // get the thread state, too!
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
     // OMPT returns a character array
-    std::string* state_name = nullptr; //Tau_get_thread_ompt_state(tid);
-    if (state_name != nullptr) {
+    std::string* state_name = NULL; //Tau_get_thread_ompt_state(tid);
+    if (state_name != NULL) {
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during
       // the OpenMP Collector API initialization.
