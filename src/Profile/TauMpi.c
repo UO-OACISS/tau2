@@ -1820,6 +1820,8 @@ char *** argv;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
+  fprintf(stdout, "TAU: MPI_Init() MPC after wrapping\n");
+
   if(Tau_get_usesMPI() == 0)
   {
 
