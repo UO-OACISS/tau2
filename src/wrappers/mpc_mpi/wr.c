@@ -2342,9 +2342,9 @@ int genProfile()
 #endif
 
 
-//int tau_mpi_finalized = 0;
+int tau_mpi_finalized = 0;
 
-#if 0
+#if 1
 int TAU_MPI_Finalized() {
   fprintf(stdout, "In TAU_MPI_Finalized(): tau_mpi_finalized=%d\n", tau_mpi_finalized);
   return tau_mpi_finalized;
@@ -2487,11 +2487,9 @@ int   __wrap_MPI_Finalize()  {
   TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
-  //tau_mpi_finalized = 1;
+  tau_mpi_finalized = 1;
  
   return returnVal;
-
-
 }
 
 #if 0
