@@ -70,6 +70,9 @@ public class SnapshotDataSource extends DataSource {
                 }
 
                 SnapshotXMLHandler handler = new SnapshotXMLHandler(this);
+                if(this.getSelectedRank()>=0) {
+                	handler.setSelectedRank(this.getSelectedRank());
+                }
                 xmlreader.setContentHandler(handler);
                 xmlreader.setErrorHandler(handler);
                 xmlreader.parse(new InputSource(new XMLRootWrapInputStream(new XMLCleanWrapInputStream(new BufferedInputStream(input)))));
