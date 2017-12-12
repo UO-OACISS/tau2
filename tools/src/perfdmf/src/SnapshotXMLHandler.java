@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.xml.sax.Attributes;
@@ -45,7 +46,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private boolean unified;
     private ThreadData unifiedDefinitions;
     
-    private int selectedRank=-1;
+    private Set<Integer> selectedRanks=null;
 
     private static class ThreadData {
         public Thread thread;
@@ -58,8 +59,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
         this.dataSource = source;
     }
     
-    public void setSelectedRank(int rank) {
-    	selectedRank=rank;
+    public void setSelectedRanks(Set<Integer> ranks) {
+    	selectedRanks=ranks;
     }
 
     public void warning(SAXParseException e) throws SAXException {}
@@ -108,7 +109,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
         String threadName = attributes.getValue(ID);
         int nodeID = Integer.parseInt(attributes.getValue("node"));
         //We need to load rank 0 every time because it contains some global metadata
-        if(this.selectedRank>=0&&nodeID!=selectedRank&&nodeID!=0) {
+        if(this.selectedRanks!=null&&!selectedRanks.contains(nodeID)&&nodeID!=0) {
         	this.bypassRanksFlag=true;
         	return;
         }
