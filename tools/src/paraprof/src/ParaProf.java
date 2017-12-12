@@ -436,6 +436,7 @@ public class ParaProf implements ActionListener {
 	CmdLineParser.Option suppressOpt = parser.addBooleanOption('x', "suppressmetrics");
 	CmdLineParser.Option controlOpt = parser.addBooleanOption('y', "control");
 	CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
+	CmdLineParser.Option writeCommOpt = parser.addStringOption('a', "writecomm");
 	
 	
 
@@ -454,6 +455,7 @@ public class ParaProf implements ActionListener {
 	String merge = (String) parser.getOptionValue(mergeOpt);
 	String pack = (String) parser.getOptionValue(packOpt);
 	String text = (String) parser.getOptionValue(textOpt);
+	String writeComm = (String) parser.getOptionValue(writeCommOpt);
 	Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
 	Boolean unpackSumm = (Boolean) parser.getOptionValue(unpackSummOpt);
 	
@@ -672,6 +674,19 @@ public class ParaProf implements ActionListener {
 	    }
 	    System.exit(0);
 	}
+	
+	if(writeComm!=null) {
+		try {
+			DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+			System.out.println("Loading data...");
+			dataSource.load();
+			System.out.println("Writing data...");
+			CommunicationMatrixWindow.writeCommCSV(dataSource, new FileOutputStream(new File(writeComm)),-1);
+		}catch (Exception e) {
+		e.printStackTrace();
+	    }
+		System.exit(0);
+	}
 
 	if (text != null) {
 	    try {
@@ -702,11 +717,18 @@ public class ParaProf implements ActionListener {
 		}
 
 		DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+		int rank=-1;
 		System.out.println("Loading data...");
-		dataSource.load();
+		if (unpackrank != null) {
+		    rank = Integer.parseInt(unpackrank);
+		   dataSource.setSelectedRank(rank);
+		}
+		
+			dataSource.load();
+		
 		System.out.println("Creating TAU Profile data...");
 		if (unpackrank != null) {
-		    int rank = Integer.parseInt(unpackrank);
+		    //int rank = Integer.parseInt(unpackrank);
 		    Node node = dataSource.getNode(rank);
 		    DataSourceExport.writeProfiles(dataSource, new File("."), node.getThreads());
 		}else if(unpackSumm !=null){

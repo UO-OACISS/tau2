@@ -137,6 +137,15 @@ public abstract class DataSource {
 
 	private int conextsPerNode = -1;
 
+	private int selectRank = -1;
+	
+	public void setSelectedRank(int rank) {
+		selectRank=rank;
+	}
+	public int getSelectedRank() {
+		return selectRank;
+	}
+	
     public boolean isDerivedProvided() {
 		return derivedProvided;
 	}
