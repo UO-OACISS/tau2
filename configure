@@ -3302,7 +3302,7 @@ case $machine in
             llvm=yes
 	    tauoptions="${tauoptions}-llvm"
 	    default_fortran=gfortran
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+	    fixmakeargs="$fixmakeargs COMPINST_LLVM"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
