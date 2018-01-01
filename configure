@@ -3882,7 +3882,7 @@ case $cxx_compiler in
 	;;
     *llvm*|*clang*)
 	echo "Using CLANG Compilers"
-        fixmakeargs="$fixmakeargs CLANG"
+        fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
         tauoptions="${tauoptions}-clang"
 	if [ $machine = apple ]; then
 	    gnu=yes
