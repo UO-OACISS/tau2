@@ -3302,7 +3302,7 @@ case $machine in
             llvm=yes
 	    tauoptions="${tauoptions}-llvm"
 	    default_fortran=gfortran
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+	    fixmakeargs="$fixmakeargs COMPINST_LLVM"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
@@ -3882,7 +3882,7 @@ case $cxx_compiler in
 	;;
     *llvm*|*clang*)
 	echo "Using CLANG Compilers"
-        fixmakeargs="$fixmakeargs CLANG"
+        fixmakeargs="$fixmakeargs CLANG COMPINST_LLVM"
         tauoptions="${tauoptions}-clang"
 	if [ $machine = apple ]; then
 	    gnu=yes
