@@ -152,12 +152,20 @@ public class Metric implements Serializable {
 
     public boolean isTimeMetric() {
         String metricName = name.toUpperCase();
-        if (metricName.indexOf("_COUNT") != -1) {
+        if (metricName.indexOf("_COUNT") != -1 && metricName.indexOf("TIME")==-1) {
+        	//If count appears in the name and time does not we have a count.
             return false;
         }
-        if (metricName.indexOf("TIME") == -1) {
+        if (metricName.indexOf("TIME") == -1) 
+        {
+        	//If time does not appear at all, we have a count.
             return false;
-        } else {
+        }
+        else if(isTimeDenominator()) {
+        	//If time is a denominator we have a count.
+        	return false;
+        }
+        else {
             return true;
         }
     }

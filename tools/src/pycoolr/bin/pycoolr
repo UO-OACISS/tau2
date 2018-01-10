@@ -78,7 +78,7 @@ elif [[ $PYCOOLR_TOOL = "sos" ]];
   if [[ $PYCOOLR_PLATFORM = "cerberus.nic.uoregon.edu" ]];
   then
   echo "tool: sos, platform: cerberus.nic.uoregon.edu"
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/soscerberus.cfg
+  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/soscerberusmatmult.cfg
 
   elif [[ $PYCOOLR_PLATFORM = "godzilla.nic.uoregon.edu" ]];
   then
