@@ -15,6 +15,8 @@ export SOS_EVPATH_MEETUP=${DIR}
 export TAU_SOS_HIGH_RESOLUTION=1
 export TAU_SOS=1
 
+PLATFORM=cerberus.nic.uoregon.edu
+
 start_sos_daemon()
 {
     # start the SOS daemon
@@ -35,10 +37,18 @@ stop_sos_daemon()
 }
 
 # start clean
+pkill -9 sosd
+pkill -9 pycoolr
+pkill -9 python
 stop_sos_daemon
 rm -rf sosd.00000.*
 start_sos_daemon
-mpirun -np 4 ./matmult
+mpirun -np 4 ./matmult &
+#mpirun -np 4 ./matmult 
+sleep 4
+echo "Launch PyCOOLR"
+cd ../../x86_64/bin
+./pycoolr -tool=sos -platform=$PLATFORM
 stop_sos_daemon
 showdb
 

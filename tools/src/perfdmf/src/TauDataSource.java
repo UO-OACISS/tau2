@@ -340,8 +340,10 @@ public class TauDataSource extends DataSource {
 
                                         inputString = br.readLine();
                                         if (inputString == null) {
-                                            throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2)
-                                                    + " of " + numUserEvents + " User Event Lines");
+                                            //throw new CorruptFileException("Unexpected end of file: Only found " + (j - 2)
+                                              //      + " of " + numUserEvents + " User Event Lines");
+						System.out.println("WARNING: Unexpected end of file: Only found " + (j - 2)+ " of " + numUserEvents + " User Event Lines");
+						break;
                                         }
 
                                         this.processUserEventLine(inputString, thread);

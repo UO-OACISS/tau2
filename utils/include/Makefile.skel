@@ -113,7 +113,8 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib64 -L$(OTFLIB) -lotf -Wl,-rpath,$(OTFLIB) $(TAU_TRACE_INPUT_LIB) -lz #ENDIF#
 #OTFLIB_LONGNAME#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib64 -L$(OTFLIB) -lopen-trace-format -Wl,-rpath,$(OTFLIB) $(TAU_TRACE_INPUT_LIB) -lz #ENDIF#
 #OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf $(TAU_TRACE_INPUT_LIB) -Wl,-rpath,$(OTFDIR)/lib -lz #ENDIF#
-#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf2 $(TAU_TRACE_INPUT_LIB) -Wl,-rpath,$(OTFDIR)/lib -L$(OTFDIR)/src -lrt  -lz#ENDIF#
+#-lrt can only be used when TAU detects it. Provided by TAU_LINKER_OPT16
+#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf2 $(TAU_TRACE_INPUT_LIB) -Wl,-rpath,$(OTFDIR)/lib -L$(OTFDIR)/src $(TAU_LINKER_OPT16)  -lz#ENDIF#
 #EBS2OTF#INSTALL_EBS2OTF = $(INSTALLLIBDEST)/ebs2otf.so #ENDIF#
 #TAU2EPILOG#TAU2ELG = elgconverter/tau2elg #ENDIF#
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
