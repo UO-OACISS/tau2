@@ -24,6 +24,9 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauTraceOTF2.h>
 #include <Profile/TauUtil.h>
+#ifdef TAU_ADIOS
+#include "adiost_callback_api.h"
+#endif
 
 #include <stdio.h>
 #include <mpi.h>
