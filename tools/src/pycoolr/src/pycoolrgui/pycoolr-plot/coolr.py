@@ -1070,8 +1070,8 @@ class Coolrsub:
 
      listargs = ['MEMORY','NODE_POWER_WATTS','MPI_T_PVAR']
 
-     #libarbjsonbeep.subscribe(2, "MPI_T_PVAR")
-     libarbjsonbeep.subscribe(4, "MEMORY", "NODE_POWER_WATTS","MPI_T_PVAR")
+     libarbjsonbeep.subscribe(2, "MPI_T_PVAR")
+     #libarbjsonbeep.subscribe(4, "MEMORY", "NODE_POWER_WATTS","MPI_T_PVAR")
 
   def publish(self,libarbpubcvars):
 
@@ -1632,7 +1632,7 @@ class Coolrsub:
 
 
            payload.strip()
-           #print 'payload =',payload
+           print 'payload =',payload
            try:
              j = json.loads(payload)
            except ValueError as e:
@@ -1675,7 +1675,7 @@ class Coolrsub:
              continue
 
          #print 'set timestamp'
-         #print 'event element', e
+         print 'event element', e
          #print 'event time', e['time']
          if params['ts'] == 0:
                params['ts'] = int(e['time'])
@@ -1740,6 +1740,7 @@ class Coolrsub:
      #self.readDB()
 
      if self.tool == "beacon":
+       print 'Selected tool: beacon' 
        try:
          thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
          thread.start_new_thread(self.readEvents,(libarbjsonbeep,))
