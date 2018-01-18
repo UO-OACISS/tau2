@@ -185,7 +185,10 @@ void runOnExit()
   for ( TAU_HASH_MAP<unsigned long, HashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
   	HashNode * node = it->second;
     if (node->fi) {
-		//delete node->fi;
+#ifndef TAU_TBB_SUPPORT
+// At the end of a TBB program, it crashes here. 
+		delete node->fi;
+#endif /* TAU_TBB_SUPPORT */
 	}
     delete node;
   }
@@ -367,7 +370,8 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         //Do not profile this routine, causes crashes with the intel compilers.
         node->excluded = isExcluded(node->info.funcname);
 
-	// HACK
+	// TBB: sometimes we get a null filename and function name. In that case
+	// exclude that routine. 
 	if(!node->info.filename || !node->info.funcname) {
 		node->excluded = 1;
 		RtsLayer::UnLockDB();
