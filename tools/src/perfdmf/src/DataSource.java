@@ -137,6 +137,15 @@ public abstract class DataSource {
 
 	private int conextsPerNode = -1;
 
+	private Set<Integer> selectRanks = null;
+	
+	public void setSelectedRank(Set<Integer> ranks) {
+		selectRanks=ranks;
+	}
+	public Set<Integer> getSelectedRanks() {
+		return selectRanks;
+	}
+	
     public boolean isDerivedProvided() {
 		return derivedProvided;
 	}
@@ -300,7 +309,7 @@ public abstract class DataSource {
     
     public Iterator<Function> getFunctionIteratorCopy() {
     	// copy this set, so we can add to it!
-    	Set tmpValues = new HashSet(functions.values());
+    	Set<Function> tmpValues = new HashSet<Function>(functions.values());
         return tmpValues.iterator();
     }
     
@@ -1487,7 +1496,7 @@ public abstract class DataSource {
     				}
 					// We were having trouble with divison by zero, plus it's
 					// faster to divide once and then multiply.
-    				int allDivider = numThreads;
+    				//int allDivider = numThreads;
     				int noNullDivider = numEvents;
 					double allRecip = 0;
 					if (numThreads != 0) {

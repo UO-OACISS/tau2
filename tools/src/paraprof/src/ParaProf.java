@@ -16,8 +16,10 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
@@ -142,6 +144,8 @@ public class ParaProf implements ActionListener {
 		+ "  --text <file>                   Dump the data into text (.csv) format\n"
 		+ "  --dump                          Dump profile data to TAU profile format\n"
 		+ "  --dumprank <rank>               Dump profile data for <rank> to TAU profile format\n"
+		+ "                                  Specify multiple ranks in with a comma separated list. Use\n"
+		+ "                                  a dash between values for a range. Do not use spaces. E.g. 0,4,8-10,16\n"
 		+ "  -v, --dumpsummary               Dump derived statistical data to TAU profile format\n"
 		+ "  --overwrite                     Allow overwriting of profiles\n"
 		+ "  -o, --oss                       Print profile data in OSS style text output\n"
@@ -436,6 +440,7 @@ public class ParaProf implements ActionListener {
 	CmdLineParser.Option suppressOpt = parser.addBooleanOption('x', "suppressmetrics");
 	CmdLineParser.Option controlOpt = parser.addBooleanOption('y', "control");
 	CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
+	CmdLineParser.Option writeCommOpt = parser.addStringOption('a', "writecomm");
 	
 	
 
@@ -454,6 +459,7 @@ public class ParaProf implements ActionListener {
 	String merge = (String) parser.getOptionValue(mergeOpt);
 	String pack = (String) parser.getOptionValue(packOpt);
 	String text = (String) parser.getOptionValue(textOpt);
+	String writeComm = (String) parser.getOptionValue(writeCommOpt);
 	Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
 	Boolean unpackSumm = (Boolean) parser.getOptionValue(unpackSummOpt);
 	
@@ -672,6 +678,19 @@ public class ParaProf implements ActionListener {
 	    }
 	    System.exit(0);
 	}
+	
+	if(writeComm!=null) {
+		try {
+			DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+			System.out.println("Loading data...");
+			dataSource.load();
+			System.out.println("Writing data...");
+			CommunicationMatrixWindow.writeCommCSV(dataSource, new FileOutputStream(new File(writeComm)),-1);
+		}catch (Exception e) {
+		e.printStackTrace();
+	    }
+		System.exit(0);
+	}
 
 	if (text != null) {
 	    try {
@@ -702,13 +721,28 @@ public class ParaProf implements ActionListener {
 		}
 
 		DataSource dataSource = UtilFncs.initializeDataSource(sourceFiles, fileType, ParaProf.fixNames);
+		Set<Integer> ranks = null;
 		System.out.println("Loading data...");
-		dataSource.load();
+		if (unpackrank != null) {
+		    ranks= getRankList(unpackrank);// = Integer.parseInt(unpackrank);
+		   dataSource.setSelectedRank(ranks);
+		}
+		
+			dataSource.load();
+		
 		System.out.println("Creating TAU Profile data...");
 		if (unpackrank != null) {
-		    int rank = Integer.parseInt(unpackrank);
-		    Node node = dataSource.getNode(rank);
-		    DataSourceExport.writeProfiles(dataSource, new File("."), node.getThreads());
+		    //int rank = Integer.parseInt(unpackrank);
+			for(Integer i:ranks) {
+				 Node node = dataSource.getNode(i);
+				 if(node==null) {
+					 System.out.println("No profile for rank "+i);
+				 }
+				 else{
+					 DataSourceExport.writeProfiles(dataSource, new File("."), node.getThreads());
+				 }
+			}
+		   
 		}else if(unpackSumm !=null){
 			DataSourceExport.writeAggProfiles(dataSource, new File("."));
 		}else if(unpackMPISumm !=null||metadump!=null){
@@ -756,6 +790,38 @@ public class ParaProf implements ActionListener {
 		}
 	    });
 	}
+    }
+    
+    private static Set<Integer> getRankList(String ranks) {
+    	
+    	ranks=ranks.trim();
+    	String[] rankstrings = ranks.split(",");
+    	Set<Integer> rankSet=new LinkedHashSet<Integer>();
+    	for(String s:rankstrings) {
+    		s=s.trim();
+    		if(s.contains("-")) {
+    			String[] range = s.split("-");
+    			if(range.length!=2) {
+    				System.out.println("Invalid range specification: "+s);
+    				return null;
+    			}
+    			int from = Integer.parseInt(range[0]);
+    			int to = Integer.parseInt(range[1]);
+    			if(from>to) {
+    				int tmp=from;
+    				from=to;
+    				to=tmp;
+    			}
+    			for(int i=from;i<=to;i++) {
+    				rankSet.add(i);
+    			}
+    		}else {
+    			rankSet.add(Integer.parseInt(s));
+    		}
+    			
+    	}
+    	
+    	return rankSet;
     }
     
     private static void setUIFont(javax.swing.plaf.FontUIResource f)
