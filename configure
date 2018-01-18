@@ -64,33 +64,47 @@ clone()
 # Install SOS dependencies such as EVPath
 installsosdeps()
 {
- installdir="$1"
- mkdir $installdir
- cd $installdir
- P=`pwd`
+  installdir="$1"
+  mkdir $installdir
+  cd $installdir
+  P=`pwd`
 
- echo "Install SOS deps"
- mkdir chaos
- cd chaos
- currdir=`pwd`
- wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
- export FLEXPATH_DIR=$currdir/inst
- perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR 
- perl ./chaos_build.pl
+  set -x
+  #check Cmake exists
+  cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
+  cmake_which=`which cmake`
  
- # set path to Flexpath/EVPath (see above)
- export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+  echo "CMAKE VERSION: $cmake_major_version"
+  echo "WHICH CMAKE: $cmake_which"
+
+  if [ "x$cmake_which" = "x" ] || [ $cmake_major_version -lt 3 ] ; then
+    echo 'ERROR: cmake version 3 or higher required to build SOS dependencies, exiting.'
+    exit 1;
+  fi
+  set +x
+
+  echo "Install SOS deps"
+  mkdir chaos
+  cd chaos
+  currdir=`pwd`
+  wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
+  export FLEXPATH_DIR=$currdir/inst
+  perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR 
+  perl ./chaos_build.pl
  
- echo "Install libfabric"
- git clone https://github.com/ofiwg/libfabric.git
- cd libfabric
- ./autogen.sh
- currdir=`pwd`
+  # set path to Flexpath/EVPath (see above)
+  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+ 
+  echo "Install libfabric"
+  git clone https://github.com/ofiwg/libfabric.git
+  cd libfabric
+  ./autogen.sh
+  currdir=`pwd`
  ./configure --prefix=$currdir/inst
- make install
- cd inst/lib
- cp libfabric.* ../../../inst/lib
- cd ../../../..
+  make install
+  cd inst/lib
+  cp libfabric.* ../../../inst/lib
+  cd ../../../..
 }
 
 # Install SOS 
