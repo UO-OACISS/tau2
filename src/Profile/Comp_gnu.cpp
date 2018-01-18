@@ -185,7 +185,7 @@ void runOnExit()
   for ( TAU_HASH_MAP<unsigned long, HashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
   	HashNode * node = it->second;
     if (node->fi) {
-		delete node->fi;
+		//delete node->fi;
 	}
     delete node;
   }
@@ -366,6 +366,13 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
         //Do not profile this routine, causes crashes with the intel compilers.
         node->excluded = isExcluded(node->info.funcname);
+
+	// HACK
+	if(!node->info.filename || !node->info.funcname) {
+		node->excluded = 1;
+		RtsLayer::UnLockDB();
+		return;
+	}
 
         // Build routine name for TAU function info
         unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;
