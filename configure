@@ -70,7 +70,7 @@ installsosdeps()
   P=`pwd`
 
   #set -x
-  #check Cmake exists
+  #check if CMake exists
   cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
   cmake_cmd=`which cmake`
  
@@ -79,6 +79,14 @@ installsosdeps()
 
   if [ "x$cmake_cmd" = "x" ] || [ $cmake_major_version -lt 3 ] ; then
     echo 'ERROR: cmake version 3 or higher required to build SOS dependencies, exiting.'
+    exit 1;
+  fi
+
+  # Check if Valgrind is available 
+  valgrind_cmd=`which valgrind`
+ 
+  if [ "x$valgrind_cmd" = "x" ] ; then
+    echo 'ERROR: Valgrind required to build SOS, exiting.'
     exit 1;
   fi
 
@@ -120,7 +128,7 @@ installsos()
  sqlite3_cmd=`which sqlite3`
  
  if [ "x$sqlite3_cmd" = "x" ] ; then
-   echo 'ERROR: SQLITE3 or higher required to build SOS, exiting.'
+   echo 'ERROR: SQLITE3 required to build SOS, exiting.'
    exit 1;
  fi
 
