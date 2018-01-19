@@ -69,19 +69,18 @@ installsosdeps()
   cd $installdir
   P=`pwd`
 
-  set -x
+  #set -x
   #check Cmake exists
   cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
-  cmake_which=`which cmake`
+  cmake_cmd=`which cmake`
  
-  echo "CMAKE VERSION: $cmake_major_version"
-  echo "WHICH CMAKE: $cmake_which"
+  #echo "CMAKE VERSION: $cmake_major_version"
+  #echo "WHICH CMAKE: $cmake_which"
 
-  if [ "x$cmake_which" = "x" ] || [ $cmake_major_version -lt 3 ] ; then
+  if [ "x$cmake_cmd" = "x" ] || [ $cmake_major_version -lt 3 ] ; then
     echo 'ERROR: cmake version 3 or higher required to build SOS dependencies, exiting.'
     exit 1;
   fi
-  set +x
 
   echo "Install SOS deps"
   mkdir chaos
@@ -116,7 +115,15 @@ installsos()
  #cd ../..
  #cd $dst
  currdir=`pwd`
+
+ # Check if SQLITE3 is available 
+ sqlite3_cmd=`which sqlite3`
  
+ if [ "x$sqlite3_cmd" = "x" ] ; then
+   echo 'ERROR: SQLITE3 or higher required to build SOS, exiting.'
+   exit 1;
+ fi
+
  echo "Install SOS: $src $dst $currdir"
  git clone "$src" 
  cd $dst
