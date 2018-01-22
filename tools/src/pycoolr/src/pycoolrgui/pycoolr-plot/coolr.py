@@ -412,9 +412,6 @@ class Coolrsub:
         #self.winPvars()
         #self.winCvars()
   
-        #HARD CODED DB file
-        #sos_db_file = "/home/users/aurelem/pycoolr-sos/pycoolr-plot/sosd.00000.db"
-        #self.opendb(sos_db_file)
         self.subSpawn()
 
   def try_execute(self, c, statement, parameters=None):
@@ -430,14 +427,13 @@ class Coolrsub:
     global conn
     # check for file to exist
     #print ("Checking for file: ", sqlite_file)
-    print ("Checking for file: ", "sosd.00000.db")
-    #while not os.path.exists("sosd.00000.db"):
+    print "Checking for file: ", self.sosdbfile
     while not os.path.exists(self.sosdbfile):
-        print ("Waiting on file: ", sqlite_file)
+        print "Waiting on file: ", sqlite_file
         time.sleep(1)
 
     #print("Connecting to: ", sqlite_file)
-    print("Connecting to: ", "sosd.00000.db")
+    print "Connecting to: ", self.sosdbfile
     # Connecting to the database file
     #conn = sqlite3.connect(sqlite_file)
     #fd = os.open(sqlite_file, os.O_RDONLY)
@@ -446,7 +442,6 @@ class Coolrsub:
     #url = 'file:' + sqlite_file
     #conn = sqlite3.connect(url, uri=True)
     #conn = sqlite3.connect(sqlite_file)
-    #conn = sqlite3.connect("sosd.00000.db")
     conn = sqlite3.connect(self.sosdbfile)
     conn.isolation_level=None
     c = conn.cursor()
