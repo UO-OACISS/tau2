@@ -11,8 +11,6 @@
  * for tools, or ADIOST.
  */
 
-#define ADIOST_WEAK
-
 #ifdef TAU_SOS
 #include "Profile/TauSOS.h"
 #endif
@@ -1469,5 +1467,5 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
 }
 
 // Strong definition of ADIOS tool method
-ADIOST_EXTERN adiost_initialize_t adiost_tool() { return TAU_adiost_initialize; }
+ADIOST_EXTERN ADIOST_EXPORT adiost_initialize_t adiost_tool() { return TAU_adiost_initialize; }
 
