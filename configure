@@ -94,6 +94,16 @@ installsosdeps()
   mkdir chaos
   cd chaos
   currdir=`pwd`
+
+  echo "Install Sqlite3"
+  mkdir sqlite3
+  wget https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz
+  tar -xvzf sqlite-autoconf-3210000.tar.gz
+  cd sqlite-autoconf-3210000
+  ./configure --prefix=$currdir/sqlite3
+  make
+  make install 
+
   wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
   export FLEXPATH_DIR=$currdir/inst
   perl ./chaos_bootstrap.pl adios-1.13 $FLEXPATH_DIR 
