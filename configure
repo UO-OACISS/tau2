@@ -83,12 +83,12 @@ installsosdeps()
   fi
 
   # Check if Valgrind is available 
-  valgrind_cmd=`which valgrind`
+  #valgrind_cmd=`which valgrind`
  
-  if [ "x$valgrind_cmd" = "x" ] ; then
-    echo 'ERROR: Valgrind required to build SOS, exiting.'
-    exit 1;
-  fi
+  #if [ "x$valgrind_cmd" = "x" ] ; then
+  #  echo 'ERROR: Valgrind required to build SOS, exiting.'
+  #  exit 1;
+  #fi
 
   echo "Install SOS deps"
   mkdir chaos
@@ -96,7 +96,7 @@ installsosdeps()
   currdir=`pwd`
   wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
   export FLEXPATH_DIR=$currdir/inst
-  perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR 
+  perl ./chaos_bootstrap.pl adios-1.13 $FLEXPATH_DIR 
   perl ./chaos_build.pl
  
   # set path to Flexpath/EVPath (see above)
