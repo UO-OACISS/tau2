@@ -103,6 +103,7 @@ installsosdeps()
   ./configure --prefix=$currdir/sqlite3
   make
   make install 
+  cd ..
 
   wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
   export FLEXPATH_DIR=$currdir/inst
@@ -152,7 +153,9 @@ installsos()
 
  export sosdir=$currdir/$dst/inst
 
- cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   .. 
+ #cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   .. 
+ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -SQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE .. 
+
  make ; make install
 }
 
@@ -8075,8 +8078,11 @@ fi
 ######################################################################
 sosurl=https://github.com/cdwdirect/sos_flow.git
 #sosmaindir=sos
+#sosfullpath=$targetdir/$architecture/
 sosmaindir=sos
 sosrepo=sos_flow
+sossqlite3dir=chaos/sqlite3
+sosevpathdir=chaos/inst
 
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
@@ -8088,7 +8094,7 @@ if [ "x$sos" = "xyes" ] ; then
     if [ ! -d "$sosdir" ] ; then
       echo "Error: Cannot access SOS directory $sosdir"
       exit 1   
-	fi
+    fi
   fi
 fi
 
