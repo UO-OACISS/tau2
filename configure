@@ -106,23 +106,22 @@ installsosdeps()
   cd ..
 
   wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
-  export FLEXPATH_DIR=$currdir/inst
-  perl ./chaos_bootstrap.pl adios-1.13 $FLEXPATH_DIR 
+  perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
   perl ./chaos_build.pl
  
   # set path to Flexpath/EVPath (see above)
   export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
  
-  echo "Install libfabric"
-  git clone https://github.com/ofiwg/libfabric.git
-  cd libfabric
-  ./autogen.sh
-  currdir=`pwd`
- ./configure --prefix=$currdir/inst
-  make install
-  cd inst/lib
-  cp libfabric.* ../../../inst/lib
-  cd ../../../..
+  #echo "Install libfabric"
+  #git clone https://github.com/ofiwg/libfabric.git
+  #cd libfabric
+  #./autogen.sh
+  #currdir=`pwd`
+  #./configure --prefix=$currdir/inst
+  #make install
+  #cd inst/lib
+  #cp libfabric.* ../../../inst/lib
+  #cd ../../../..
 }
 
 # Install SOS 
@@ -156,7 +155,7 @@ installsos()
  #cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   .. 
  cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -SQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE .. 
 
- make ; make install
+ make -j4 ; make install
 }
 
 fix_tilde_at_the_start_of_cube_path()
