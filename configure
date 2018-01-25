@@ -8037,11 +8037,8 @@ fi
 ######################################################################
 sosurl=https://github.com/cdwdirect/sos_flow.git
 #sosmaindir=sos
-#sosfullpath=$targetdir/$architecture/
 sosmaindir=sos
 sosrepo=sos_flow
-sossqlite3dir=chaos/sqlite3
-sosevpathdir=chaos/inst
 
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
@@ -8052,8 +8049,8 @@ if [ "x$sos" = "xyes" ] ; then
   else
     if [ ! -d "$sosdir" ] ; then
       echo "Error: Cannot access SOS directory $sosdir"
-      exit 1   
-    fi
+      exit 1
+        fi
   fi
 fi
 
