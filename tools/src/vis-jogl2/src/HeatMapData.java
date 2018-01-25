@@ -5,6 +5,7 @@ package edu.uoregon.tau.vis;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -21,7 +22,7 @@ public class HeatMapData implements Iterator<NextValue> {
      * receivers: Map of references to Map of functions
      * functions: Map of Strings to double[]
      */
-    private  Map<Integer, Map<String,double[]>>[] senders = null;
+    private  Map<CoordPair, Map<String,double[]>> sendRecv = new TreeMap<CoordPair, Map<String,double[]>>();
     private int size = 0;
     private Map<String, double[]>maxs = new TreeMap<String, double[]>();
     private Map<String, double[]>mins = new TreeMap<String, double[]>();
@@ -34,29 +35,31 @@ public class HeatMapData implements Iterator<NextValue> {
     private static final int VOLUME = 5;
 
     // for iterating over the values
-    private int senderIndex = -1;
-    private Iterator<Integer> receiverIndex = null;
+    //private int senderIndex = -1;
+    //private Iterator<Integer> receiverIndex = null;
+    private Iterator<Map.Entry<HeatMapData.CoordPair,Map<String,double[]>>> mapIterator = null;
 
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
 	public HeatMapData(int size) {
         this.size = size;
-        this.senders = new Map[this.size];
+        //this.senders = new Map[this.size];
     }
 
     public void put(int sender, int receiver, String function, double[] values) {
         // index into the array of senders to get the map of receivers
-        Map<Integer, Map<String,double[]>> receivers = senders[sender];
+        //Map<Integer, Map<String,double[]>> receivers = senders[sender];
         // if the map doesn't exist yet, create it
-        if (receivers == null) {
-            receivers = new TreeMap<Integer, Map<String,double[]>>();
-            senders[sender] = receivers;
-        }
+//        if (sendRecv == null) {
+//            sendRecv = new HashMap<CoordPair, Map<String,double[]>>();
+////            senders[sender] = receivers;
+//        }
+        CoordPair cp=new CoordPair(sender,receiver);
         // get the map of functions for this receiver
-        Map<String, double[]> functions = (receivers.get(new Integer(receiver)));
+        Map<String, double[]> functions = (sendRecv.get(cp));
         // if the map doesn't exist yet, create it
         if (functions == null) {
             functions = new TreeMap<String, double[]>();
-            receivers.put(new Integer(receiver), functions);
+            sendRecv.put(cp, functions);
         }
         // put the values in the map. 
         functions.put(function, values);
@@ -64,15 +67,20 @@ public class HeatMapData implements Iterator<NextValue> {
     }
 
     public double[] get(int sender, int receiver, String function) {
-        double[] data = null;
-        Map<Integer, Map<String,double[]>> receivers = senders[sender];
-        if (receivers != null) {
-            Map<String,double[]> functions = receivers.get(new Integer(receiver));
+        //double[] data = null;
+//        if(sendRecv==null){
+//        	return null;
+//        }
+        CoordPair cp=new CoordPair(sender,receiver);
+        //Map<Integer, Map<String,double[]>> receivers = senders[sender];
+        //if (receivers != null) {
+        
+            Map<String,double[]> functions = sendRecv.get(cp);
             if (functions != null) {
                 return functions.get(function);
             }
-        }
-        return data;
+        //}
+        return null;
     }
 
     public double get(int sender, int receiver, String function, int index) {
@@ -85,42 +93,53 @@ public class HeatMapData implements Iterator<NextValue> {
     }
 
     public boolean hasNext() {
-        int tmpIndex = senderIndex;
-        Iterator<Integer> tmpIter = receiverIndex;
-        while (true) {
-            // does the current receiver iterator still have data?
-            if (tmpIter != null && tmpIter.hasNext()) {
-                return true;
-            }
-            tmpIndex++;
-            if (tmpIndex >= size) {
-                return false;
-            }
-            Map<Integer, Map<String,double[]>> tmpMap = senders[tmpIndex];
-            if (tmpMap != null) {
-                tmpIter = tmpMap.keySet().iterator();
-            }
-        }
+    	
+    	if(mapIterator==null) {
+    		mapIterator=sendRecv.entrySet().iterator();
+    	}
+    	return mapIterator.hasNext();
+    	
+//        int tmpIndex = senderIndex;
+//        Iterator<Integer> tmpIter = receiverIndex;
+//        while (true) {
+//            // does the current receiver iterator still have data?
+//            if (tmpIter != null && tmpIter.hasNext()) {
+//                return true;
+//            }
+//            tmpIndex++;
+//            if (tmpIndex >= size) {
+//                return false;
+//            }
+//            Map<Integer, Map<String,double[]>> tmpMap = senders[tmpIndex];
+//            if (tmpMap != null) {
+//                tmpIter = tmpMap.keySet().iterator();
+//            }
+//        }
     }
 
     public NextValue next() {
-        while (true) {
-            // does the current receiver iterator still have data?
-            if (receiverIndex != null && receiverIndex.hasNext())
-                break;
-            senderIndex++;
-            if (senderIndex >= size)
-                return null;
-            Map<Integer, Map<String,double[]>> tmpMap = senders[senderIndex];
-            if (tmpMap != null) {
-                receiverIndex = tmpMap.keySet().iterator();
-            }
-        }
+//        while (true) {
+//            // does the current receiver iterator still have data?
+//            if (receiverIndex != null && receiverIndex.hasNext())
+//                break;
+//            senderIndex++;
+//            if (senderIndex >= size)
+//                return null;
+//            Map<Integer, Map<String,double[]>> tmpMap = senders[senderIndex];
+//            if (tmpMap != null) {
+//                receiverIndex = tmpMap.keySet().iterator();
+//            }
+//        }
+    	if(!mapIterator.hasNext()) {
+    		return null;
+    	}
+    	Entry<CoordPair, Map<String, double[]>> mapEntry = mapIterator.next();
+    	
         NextValue next = new NextValue();
-        next.sender = senderIndex;
-        Integer tmp = receiverIndex.next();
-        next.data = (Map<String, double[]>) senders[senderIndex].get(tmp);
-        next.receiver = tmp.intValue();
+        next.sender = mapEntry.getKey().sender;
+        //Integer tmp = receiverIndex.next();
+        next.data = mapEntry.getValue();//(Map<String, double[]>) senders[senderIndex].get(tmp);
+        next.receiver = mapEntry.getKey().receiver;
         return next;
     }
 
@@ -142,6 +161,47 @@ public class HeatMapData implements Iterator<NextValue> {
             }
         }
     }
+    
+    public class CoordPair implements Comparable<HeatMapData.CoordPair> {
+
+    	  public final int sender;
+    	  public final int receiver;
+    	  public final int hashCode;
+    
+
+    	  public CoordPair(final int sender, final int receiver) {
+    	    this.sender = sender;
+    	    this.receiver = receiver;
+    	    hashCode=(sender << 16) + receiver;
+    	  }
+
+    	  public boolean equals (final Object O) {
+    	    if (!(O instanceof CoordPair)) return false;
+    	    if (((CoordPair) O).sender != sender) return false;
+    	    if (((CoordPair) O).receiver != receiver) return false;
+    	    return true;
+    	  }
+
+    	  public int hashCode() {
+    	    return hashCode; //(sender << 16) + receiver;  (More efficient to calculate or to save?)
+    	  }
+
+		public int compareTo(CoordPair o) {
+			
+//			if(!(o instanceof CoordPair)) {
+//				return 1;
+//			}
+			return compare(this.hashCode(), ((CoordPair)o).hashCode());
+			
+			
+		}
+
+    	}
+    
+    
+    public static int compare(int x, int y) {
+          return (x < y) ? -1 : ((x == y) ? 0 : 1);
+      }
 
     public static void main(String[] args) {
         double[] dummy = { 1, 2, 3, 4, 5, 6 };
@@ -193,6 +253,8 @@ public class HeatMapData implements Iterator<NextValue> {
                 double[] data = { 0, 0, 0, 0, 0, 0 };
                 if (next.data.containsKey(key)) {
                     data = next.data.get(key);
+                }else {
+                	next.data.put(key, data);
                 }
                 double[] max = { 0, 0, 0, 0, 0, 0 };
                 if (maxs.keySet().contains(key)) {
@@ -233,14 +295,15 @@ public class HeatMapData implements Iterator<NextValue> {
                 }
                 maxs.put(key, max);
                 mins.put(key, min);
-                next.data.put(key, data);
+                
             }
         }
     }
 
     public void reset() {
-        this.senderIndex = -1;
-        this.receiverIndex = null;
+    	mapIterator=sendRecv.entrySet().iterator();
+//        this.senderIndex = -1;
+//        this.receiverIndex = null;
     }
 
     public int getSize() {
