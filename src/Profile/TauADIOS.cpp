@@ -11,9 +11,9 @@
  * for tools, or ADIOST.
  */
 
-#define ADIOST_WEAK
-
+#ifdef TAU_SOS
 #include "Profile/TauSOS.h"
+#endif
 #include "Profile/Profiler.h"
 #include "Profile/UserEvent.h"
 #include "Profile/TauMetrics.h"
@@ -1466,5 +1466,6 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
    	CHECK(adiost_event_inq_var_meshinfo, tau_adiost_inq_var_meshinfo, "adios_inq_var_meshinfo");
 }
 
-ADIOST_EXTERN adiost_initialize_t adiost_tool() { return TAU_adiost_initialize; }
+// Strong definition of ADIOS tool method
+ADIOST_EXTERN ADIOST_EXPORT adiost_initialize_t adiost_tool() { return TAU_adiost_initialize; }
 
