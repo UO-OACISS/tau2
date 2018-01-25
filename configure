@@ -83,35 +83,45 @@ installsosdeps()
   fi
 
   # Check if Valgrind is available 
-  valgrind_cmd=`which valgrind`
+  #valgrind_cmd=`which valgrind`
  
-  if [ "x$valgrind_cmd" = "x" ] ; then
-    echo 'ERROR: Valgrind required to build SOS, exiting.'
-    exit 1;
-  fi
+  #if [ "x$valgrind_cmd" = "x" ] ; then
+  #  echo 'ERROR: Valgrind required to build SOS, exiting.'
+  #  exit 1;
+  #fi
 
   echo "Install SOS deps"
   mkdir chaos
   cd chaos
   currdir=`pwd`
+
+  echo "Install Sqlite3"
+  mkdir sqlite3
+  wget https://www.sqlite.org/2017/sqlite-autoconf-3210000.tar.gz
+  tar -xvzf sqlite-autoconf-3210000.tar.gz
+  cd sqlite-autoconf-3210000
+  ./configure --prefix=$currdir/sqlite3
+  make
+  make install 
+  cd ..
+
   wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
-  export FLEXPATH_DIR=$currdir/inst
-  perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR 
+  perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
   perl ./chaos_build.pl
  
   # set path to Flexpath/EVPath (see above)
   export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
  
-  echo "Install libfabric"
-  git clone https://github.com/ofiwg/libfabric.git
-  cd libfabric
-  ./autogen.sh
-  currdir=`pwd`
- ./configure --prefix=$currdir/inst
-  make install
-  cd inst/lib
-  cp libfabric.* ../../../inst/lib
-  cd ../../../..
+  #echo "Install libfabric"
+  #git clone https://github.com/ofiwg/libfabric.git
+  #cd libfabric
+  #./autogen.sh
+  #currdir=`pwd`
+  #./configure --prefix=$currdir/inst
+  #make install
+  #cd inst/lib
+  #cp libfabric.* ../../../inst/lib
+  #cd ../../../..
 }
 
 # Install SOS 
@@ -142,8 +152,10 @@ installsos()
 
  export sosdir=$currdir/$dst/inst
 
- cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   .. 
- make ; make install
+ #cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   .. 
+ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -SQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE .. 
+
+ make -j4 ; make install
 }
 
 fix_tilde_at_the_start_of_cube_path()
@@ -8065,8 +8077,11 @@ fi
 ######################################################################
 sosurl=https://github.com/cdwdirect/sos_flow.git
 #sosmaindir=sos
+#sosfullpath=$targetdir/$architecture/
 sosmaindir=sos
 sosrepo=sos_flow
+sossqlite3dir=chaos/sqlite3
+sosevpathdir=chaos/inst
 
 echo "$sosdir"
 if [ "x$sos" = "xyes" ] ; then
@@ -8078,7 +8093,7 @@ if [ "x$sos" = "xyes" ] ; then
     if [ ! -d "$sosdir" ] ; then
       echo "Error: Cannot access SOS directory $sosdir"
       exit 1   
-	fi
+    fi
   fi
 fi
 
