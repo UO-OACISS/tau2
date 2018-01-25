@@ -8035,7 +8035,8 @@ fi
 ######################################################################
 # Install SOS if requested
 ######################################################################
-sosurl=https://github.com/cdwdirect/sos_flow.git
+#sosurl=https://github.com/cdwdirect/sos_flow.git
+sosurl=git.nic.uoregon.edu:/gitroot/sos_flow
 #sosmaindir=sos
 sosmaindir=sos
 sosrepo=sos_flow
