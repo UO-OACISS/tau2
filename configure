@@ -107,6 +107,8 @@ installsos()
  git clone "$src"
  cd $dst
  git checkout master
+ # Checkout Release version of SOS for SC'17
+ git checkout tags/release_sc17 
  #git checkout aurele_dev
  mkdir build-linux
  cd build-linux
