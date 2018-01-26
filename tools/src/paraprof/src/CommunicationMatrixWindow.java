@@ -161,6 +161,10 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
                              String tmp = null;
                              while (st2.hasMoreTokens()) {
                                  tmp = st2.nextToken().trim();
+                                 if(tmp.equals(".TAU application")) {
+                                	 //This is the same as the non-path event for this node.
+                                	 continue;
+                                 }
                                  extractData(uep, threadID, event, first, tmp,size,snapshot,tmpMapData);
                              }
                          }
@@ -226,6 +230,7 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
         		readInt =st.nextInt();
         	}
         }
+        st.close();
         if(readInt ==-1) return false;
 if(readInt>=size)
 {
@@ -252,6 +257,7 @@ if(readInt>=size)
     	 double[] pointData = mapData.get(sender, receiver, function);
          if (pointData == null) {
              pointData = empty;
+             mapData.put(sender, receiver, function, pointData);
          }
 
          numEvents = uep.getNumSamples(snapshot);
@@ -277,7 +283,7 @@ if(readInt>=size)
 
          volume = numEvents * eventMean;
          pointData[VOLUME] += volume;
-         mapData.put(sender, receiver, function, pointData);
+         //mapData.put(sender, receiver, function, pointData);
     }
 
     public JFrame getWindow() {
