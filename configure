@@ -69,6 +69,18 @@ installsosdeps()
  cd $installdir
  P=`pwd`
 
+ #check if CMake exists
+ cmake_major_version=`cmake --version | head -1 |  sed "s/[^0-9.]*\([0-9.]*\).*/\1/" | cut -d. -f1`
+ cmake_cmd=`which cmake`
+
+ #echo "CMAKE VERSION: $cmake_major_version"
+ #echo "WHICH CMAKE: $cmake_which"
+
+ if [ "x$cmake_cmd" = "x" ] || [ $cmake_major_version -lt 3 ] ; then
+   echo 'ERROR: cmake version 3 or higher required to build SOS dependencies, exiting.'
+   exit 1;
+ fi
+
  echo "Install SOS deps"
  mkdir chaos
  cd chaos
