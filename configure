@@ -97,19 +97,14 @@ installsosdeps()
 installsos()
 {
  echo "installsos - current dir: `pwd`"
- src="$1"
- dst="$2"
+ #src="$1"
+ dst="$1"
  #cd ../..
  #cd $dst
  currdir=`pwd`
 
- echo "Install SOS: $src $dst $currdir"
- git clone "$src"
  cd $dst
- git checkout master
- # Checkout Release version of SOS for SC'17
- git checkout tags/release_sc17 
- #git checkout aurele_dev
+ #git checkout master
  mkdir build-linux
  cd build-linux
 
@@ -8049,7 +8044,7 @@ if [ "x$sos" = "xyes" ] ; then
   if [ "x$sosdir" = xdownload ] ; then
     echo "Install SOS"
     p=`pwd`
-    cd $targetdir/$architecture/; installsosdeps "$sosmaindir"; installsos "$sosurl" "$sosrepo"
+    cd $targetdir/$architecture/; installsosdeps "$sosmaindir"; download "$sosurl" "$sostgz" ; tar zxf "$sostgz"; rm -f "$sostgz" ; installsos "$sosrepo"
   else
     if [ ! -d "$sosdir" ] ; then
       echo "Error: Cannot access SOS directory $sosdir"
