@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2016						   **
+**    Copyright 1997-2018						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,21 @@
 
 Change log:
 ------------
+Version 2.27 changes (from 2.26):
+1. Updated JOGL in ParaProf to JOGL2 to support 64 bit 3D window displays.
+2. Added support for Mac OS X with PDT, EBS, MPI, and Compiler based instrumentation.
+3. Updated PEBIL support in TAU in tau_pebil_rewrite with PDT 3.25. 
+4. Added a pycoolr based GUI for online performance evaluation using BEACON and SOS Flow. 
+5. Fixed MPI bugs for collective operations. 
+6. Updated PMI support in TAU for topology displays for Cray. 
+7. Added support for the Caliper API in TAU. 
+8. Updated support for DyninstAPI 9.3.2 in TAU. 
+9. Updated pthread wrapper support in TAU for use with OpenMP. 
+10. Added support for LIKWID (configure -likwid=download; export TAU_METRICS=TIME,LIKWID_<event>).
+11. Added preliminary support for CUDA 9.0 and NVLink. 
+12. Updated support for SGI MPT MPI wrapper. 
+13. Added support for compiler-based instrumentation for LLVM compilers and tested on IBM Power 8 Linux and Cray XC40 with KNL platforms.
+
 Version 2.26 changes (from 2.25):
 1. Upgraded OMPT to LLVM-0.2 and introduced TAU_OPENMP_RUNTIME_EVENTS=0. 
 2. Updated tau_exec -ptts for ThreadSpotter. 

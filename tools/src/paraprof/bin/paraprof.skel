@@ -199,4 +199,4 @@ fi
 $BINDIR/tau_user_setup.sh
 
 # Launch!
-java $MEMORY -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
+java $MEMORY  -Dsun.java2d.opengl=true  -Dderby.system.home=${HOME}/.ParaProf -Dpython.home=$JAR_HOME/jython -Dpython.verbose=error -Djava.library.path=${LIBDIR}:${javaLocation} -cp ${JARS} ${APPLE_OPTIONS} edu/uoregon/tau/paraprof/ParaProf -j $JARDIR -c $SCHEMADIR $*	
