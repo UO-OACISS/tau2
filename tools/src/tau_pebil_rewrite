@@ -292,9 +292,24 @@ for arg in "$@" ; do
 done
 
 echoIfShortVerbose "infile=$infile"
-if [ "x$selectopt" != "x" ] 
+
+if [ -r $TAUROOT/etc/blacklist.txt ]; then 
+  tmpdirname=/tmp/tempdir.pebil.$$
+  (umask 077 && mkdir $tmpdirname) || exit 1
+  echo "BEGIN_EXCLUDE_LIST" > $tmpdirname/select.tau
+  cat $TAUROOT/etc/blacklist.txt >> $tmpdirname/select.tau
+  echo "END_EXCLUDE_LIST" >> $tmpdirname/select.tau
+  echoIfShortVerbose "Created $tmpdirname/select.tau"
+fi 
+
+if [ "x$selectopt" != "x" -a -r $TAUROOT/etc/blacklist.txt ] 
 then
   echoIfShortVerbose "selectfile=$selectfile"
+  cat $selectfile >> $tmpdirname/select.tau 
+fi
+
+if [ -r $tmpdirname/select.tau ]; then 
+  selectopt="--inp $tmpdirname/select.tau"
 fi
 
 if [ "x$outfile" = "x" ] 
@@ -325,4 +340,8 @@ else
     cat tau_instr.log
   fi
 
+fi
+if [ -r $tmpdirname/select.tau ]; then 
+  /bin/rm -rf $tmpdirname 
+  echoIfShortVerbose "deleting directory $tmpdirname"
 fi

@@ -219,6 +219,7 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 
   // Get the address map name
   char const * mapName = "UNKNOWN";
+  RtsLayer::LockDB();
   TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(bfdUnitHandle, addr);
   if (addressMap) {
     mapName = addressMap->name;
@@ -242,6 +243,7 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
 #else
   bool resolved = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, resolvedInfo);
 #endif
+  RtsLayer::UnLockDB();
 
   // Prepare and return the callsite string
   char * resolvedBuffer = NULL;
@@ -823,9 +825,11 @@ extern "C" void finalizeCallSites_if_necessary()
 
   // First pass: Identify and resolve callsites into name strings.
 #ifdef TAU_BFD
+  RtsLayer::LockDB();
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
     bfdUnitHandle = Tau_bfd_registerUnit();
   }
+  RtsLayer::UnLockDB();
 #endif /* TAU_BFD */
 
   string delimiter = string(" --> ");
@@ -883,9 +887,8 @@ extern "C" void finalizeCallSites_if_necessary()
   vector<FunctionInfo *> *candidates = new vector<FunctionInfo *>();
   // For multi-threaded applications. 
   RtsLayer::LockDB();
-  for (vector<FunctionInfo *>::iterator fI_iter = TheFunctionDB().begin(); fI_iter != TheFunctionDB().end();
-      fI_iter++) {
-    FunctionInfo *theFunction = *fI_iter;
+  for (map<TAU_CALLSITE_PATH_MAP_TYPE>::iterator fI_iter = TheCallSitePathMap().begin(); fI_iter != TheCallSitePathMap().end(); fI_iter++) {
+    FunctionInfo *theFunction = (*fI_iter).second;
     if (theFunction->isCallSite) {
       candidates->push_back(theFunction);
     }

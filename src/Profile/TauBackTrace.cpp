@@ -19,6 +19,9 @@ using namespace std;
 
 #ifdef __APPLE__
 #include <dlfcn.h>
+#ifdef TAU_HAVE_CORESYMBOLICATION
+#include "CoreSymbolication.h"
+#endif
 #endif /* __APPLE__ */
 
 extern "C" void finalizeCallSites_if_necessary();
@@ -58,6 +61,16 @@ static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
       // Get source information from BFD
       TauBfdInfo info;
 #if defined(__APPLE__)
+#if defined(TAU_HAVE_CORESYMBOLICATION)
+      static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid()); 
+      CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
+      if(!CSIsNull(source_info)) {
+          CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
+          info.filename = strdup(CSSourceInfoGetPath(source_info));
+          info.funcname = strdup(CSSymbolGetName(symbol));
+          info.lineno = CSSourceInfoGetLineNumber(source_info);
+      }
+#else
       Dl_info dlinfo;
       int rc = dladdr((const void *)addr, &dlinfo);
       if (rc != 0) {
@@ -65,6 +78,7 @@ static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
         info.funcname = strdup(dlinfo.dli_sname);
         info.lineno = 0; // Apple doesn't give us line numbers.
       }
+#endif
 #else
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, info);
 

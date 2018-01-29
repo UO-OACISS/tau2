@@ -57,6 +57,9 @@
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
 #include <dlfcn.h>
+#ifdef TAU_HAVE_CORESYMBOLICATION
+#include "CoreSymbolication.h"
+#endif
 #endif /* __APPLE__ */
 
 using namespace std;
@@ -182,7 +185,10 @@ void runOnExit()
   for ( TAU_HASH_MAP<unsigned long, HashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
   	HashNode * node = it->second;
     if (node->fi) {
+#ifndef TAU_TBB_SUPPORT
+// At the end of a TBB program, it crashes here. 
 		delete node->fi;
+#endif /* TAU_TBB_SUPPORT */
 	}
     delete node;
   }
@@ -336,6 +342,17 @@ void __cyg_profile_func_enter(void* func, void* callsite)
         // Resolve function info if it hasn't already been retrieved
         if (!node->info.probeAddr) {
 #if defined(__APPLE__)
+#if defined(TAU_HAVE_CORESYMBOLICATION)
+         static CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid()); 
+         CSSourceInfoRef source_info = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator, (vm_address_t)addr, kCSNow);
+         if(!CSIsNull(source_info)) {
+             CSSymbolRef symbol = CSSourceInfoGetSymbol(source_info);
+             node->info.probeAddr = addr;
+             node->info.filename = strdup(CSSourceInfoGetPath(source_info));
+             node->info.funcname = strdup(CSSymbolGetName(symbol));
+             node->info.lineno = CSSourceInfoGetLineNumber(source_info);
+         }
+#else
           Dl_info info;
           int rc = dladdr((const void *)addr, &info);
           if (rc != 0) {
@@ -344,6 +361,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
             node->info.funcname = strdup(info.dli_sname);
             node->info.lineno = 0; // Apple doesn't give us line numbers.
           }
+#endif
 #else
           Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
 #endif
@@ -351,6 +369,14 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
         //Do not profile this routine, causes crashes with the intel compilers.
         node->excluded = isExcluded(node->info.funcname);
+
+	// TBB: sometimes we get a null filename and function name. In that case
+	// exclude that routine. 
+	if(!node->info.filename || !node->info.funcname) {
+		node->excluded = 1;
+		RtsLayer::UnLockDB();
+		return;
+	}
 
         // Build routine name for TAU function info
         unsigned int size = strlen(node->info.funcname) + strlen(node->info.filename) + 128;

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import sys, os, re, thread, signal
+from cStringIO import StringIO
+import subprocess
 import multiprocessing
 import json
 import sqlite3
@@ -244,6 +246,9 @@ class Coolrsub:
           self.groupcolumns = params['cfg']['groupcolumns']
           self.ranks2 = params['cfg']['ranks2']
           self.sosdbfile = params['cfg']['dbfile']
+          self.sos_bin_path = ""
+          self.res_sql = [None]
+          self.res_min_ts_sql = [None]
 
         if self.tool == "beacon":
           self.nbcvars = params['cfg']['nbcvars']
@@ -318,15 +323,15 @@ class Coolrsub:
         for idx in range(params['cfg']['nbgraphs']):
          self.listUsedGraphs.append(-1)
 
-        for idx in range(params['cfg']['nbsamples']):
+        #for idx in range(params['cfg']['nbsamples']):
           #self.listSamplesClicked.append(0)
           #for key in listKeys:
             #self.dictSingleSample[key] = "0"
             #self.dictSingleSample['nameSample'] = params['cfg']['appsamples'][idx]
 
           #self.dictCheckSamples.update({params['cfg']['appsamples'][idx]:self.dictSingleSample}) 
-          self.dictCheckSamples.update({params['cfg']['metrics'][idx]:self.dictSingleSample}) 
-          self.listSamples.append(self.dictSingleSample)
+          #self.dictCheckSamples.update({params['cfg']['metrics'][idx]:self.dictSingleSample}) 
+          #self.listSamples.append(self.dictSingleSample)
 
          #for y in (self.dictCheckSamples[x]):
          #  print 'values: ', 
@@ -407,9 +412,6 @@ class Coolrsub:
         #self.winPvars()
         #self.winCvars()
   
-        #HARD CODED DB file
-        #sos_db_file = "/home/users/aurelem/pycoolr-sos/pycoolr-plot/sosd.00000.db"
-        #self.opendb(sos_db_file)
         self.subSpawn()
 
   def try_execute(self, c, statement, parameters=None):
@@ -425,14 +427,13 @@ class Coolrsub:
     global conn
     # check for file to exist
     #print ("Checking for file: ", sqlite_file)
-    print ("Checking for file: ", "sosd.00000.db")
-    #while not os.path.exists("sosd.00000.db"):
+    print "Checking for file: ", self.sosdbfile
     while not os.path.exists(self.sosdbfile):
-        print ("Waiting on file: ", sqlite_file)
+        print "Waiting on file: ", sqlite_file
         time.sleep(1)
 
     #print("Connecting to: ", sqlite_file)
-    print("Connecting to: ", "sosd.00000.db")
+    print "Connecting to: ", self.sosdbfile
     # Connecting to the database file
     #conn = sqlite3.connect(sqlite_file)
     #fd = os.open(sqlite_file, os.O_RDONLY)
@@ -441,7 +442,6 @@ class Coolrsub:
     #url = 'file:' + sqlite_file
     #conn = sqlite3.connect(url, uri=True)
     #conn = sqlite3.connect(sqlite_file)
-    #conn = sqlite3.connect("sosd.00000.db")
     conn = sqlite3.connect(self.sosdbfile)
     conn.isolation_level=None
     c = conn.cursor()
@@ -856,7 +856,7 @@ class Coolrsub:
             #    self.ax[i].set_title('%s: %s (%s)' % (params['cfg']['appname'], self.titles[i], params['targetnode']) )
 	#print 'ending update'
 
-  def updateguisos(self, params, graphidx, recordidx, sample):
+  def updateguisos_db(self, params, graphidx, recordidx, sample):
         if self.ngraphs == 0:
             return
 
@@ -867,7 +867,7 @@ class Coolrsub:
         graphs = [None, None, None, None, None, None]
         axises = [None, None, None, None, None, None]
 
-	#print '[PYCOOLR] Starting update gui'
+        #print '[PYCOOLR] Starting update gui'
         #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
             #
             # data handling
@@ -896,6 +896,116 @@ class Coolrsub:
         #print("Making numpy array of: metric_values"
 
         self.data_lr[recordidx].add(pack_time,metric_value_int)
+        #self.lock.acquire()
+        #self.avail_refresh = 0
+        ax = self.ax[graphidx]
+        #pdata = self.data_lr[i]
+        pdata = self.data_lr[recordidx]
+        #label = params['cfg']['appsamples'][i]
+        #label = params['cfg']['units'][i]
+        label = params['cfg']['units'][recordidx]
+        try:
+           ax.cla()
+        except Exception as errCla:
+          print 'update_gui: Error cla(): ', type(errCla), errCla
+
+        ax.set_xlim([pack_time-gxsec, pack_time])
+        #print 'get x and y'
+        x = pdata.getlistx()
+        y = pdata.getlisty()
+
+        #print 'get ymax and ymin'
+        ymax = pdata.getmaxy()
+        ymin = pdata.getminy()
+
+        #self.avail_refresh = 1
+        #if ymax > self.ytop[i]:
+        if ymax > self.ytop[recordidx]:
+          self.ytop[recordidx] = ymax * 1.1
+          #self.ytop[i] = ymax * 1.1
+
+        #if self.ybot[i] == 1 or ymin < self.ybot[i]:
+        if self.ybot[recordidx] == 1 or ymin < self.ybot[recordidx]:
+          self.ybot[recordidx] = ymin*.9
+                    #self.ybot[i] = ymin*.9
+
+        #ax.set_ylim([self.ybot[i], self.ytop[i])
+        ax.set_ylim([self.ybot[recordidx], self.ytop[recordidx]])
+        ax.ticklabel_format(axis='y', style='sci', scilimits=(1,0))
+
+        #print 'ax plot'
+        #ax.plot(x, y, label='', color=self.colors[i], lw=1.2)
+        #print 'begin plot'
+        ax.plot(x, y, 'rs', lw=1)
+        #print 'end plot'
+        #ax.bar(x, y, width = .6, edgecolor='none', color='#77bb88' )
+        #ax.plot(x,y, 'ro', scaley=True, label='')
+
+        #print 'ax set x y label'
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel(label)
+
+        #ax.set_title('%s: %s' % (params['cfg']['metrics'], self.metrics[recordidx]))
+        ax.set_title('%s: %s (%s)' % (params['cfg']['appname'], self.metrics[recordidx], params['targetnode']) )
+
+            #for i in range(self.ngraphs):
+            #    self.ax[i].set_xlim([t-gxsec, t])
+            #    self.ax[i].set_title('%s: %s (%s)' % (params['cfg']['appname'], self.titles[i], params['targetnode']) )
+        #print 'ending update'
+
+
+  def updateguisos(self, params, graphidx, recordidx, sample):
+        if self.ngraphs == 0:
+            return
+
+        mean_val  = 0
+        total_val = 0
+        num_vals  = 0
+        newplot = True
+        graphs = [None, None, None, None, None, None]
+        axises = [None, None, None, None, None, None]
+
+	#print '[PyCOOLR - SOS] Starting update gui: sample= ', sample
+        #if sample['node'] == params['targetnode'] and sample['sample'] == 'tau':
+            #
+            # data handling
+            #
+            #t = sample['time'] - params['ts']
+            #
+            # graph handling
+            #
+        gxsec = params['gxsec']
+            #
+            #
+        #for i in len(sample):
+        # sample[i].replace('"', '')
+
+        #print 'parse graphs'
+        #print "before sample: metric=%s, value=%s, ts=%s" %(repr(sample[1]),repr(sample[2]),repr(sample[3]))
+        sample_1 = sample[1].replace('\"', '')
+        sample_2 = sample[2].replace('\"', '')
+        sample_3 = sample[3].replace('\"', '')
+
+        sample_value = float(sample_2)
+        #sample_value = float("0.00000000000000000000")
+        metric_value = max(sample_value,0)
+        #numeric = re.search(r'\d+', metric_value)
+        #metric_value_num = numeric.group()
+        #metric_value_float = float(metric_value_num)
+        #metric_value_int = int(metric_value_float)
+        time_stamp = float(sample_3)
+        #time_stamp = float("1510105643.06971")
+        pack_time = time_stamp - min_timestamp
+
+        #print 'metric_value: ', metric_value
+        #print 'metric_value_float: ', metric_value_float
+        #print 'metric_value_int: ', metric_value_int
+        #print 'pack_time ', pack_time
+        #print 'graphidx: %d, recordidx: %d' %(graphidx,recordidx)
+        #print("Making numpy array of: metric_values"
+
+        #self.data_lr[recordidx].add(pack_time,metric_value_int)
+        self.data_lr[recordidx].add(pack_time,metric_value)
         #self.lock.acquire()
         #self.avail_refresh = 0
         ax = self.ax[graphidx]
@@ -960,8 +1070,8 @@ class Coolrsub:
 
      listargs = ['MEMORY','NODE_POWER_WATTS','MPI_T_PVAR']
 
-     #libarbjsonbeep.subscribe(2, "MPI_T_PVAR")
-     libarbjsonbeep.subscribe(4, "MEMORY", "NODE_POWER_WATTS","MPI_T_PVAR")
+     libarbjsonbeep.subscribe(2, "MPI_T_PVAR")
+     #libarbjsonbeep.subscribe(4, "MEMORY", "NODE_POWER_WATTS","MPI_T_PVAR")
 
   def publish(self,libarbpubcvars):
 
@@ -1176,7 +1286,7 @@ class Coolrsub:
     else:
         return nodes,ranks
 
-  def get_min_timestamp(self,c):
+  def get_min_timestamp_db(self,c):
     global min_timestamp
     sql_statement = ("select min(time_pack) from tblvals;")
     print("get_min_timestamp Executing query")
@@ -1186,7 +1296,39 @@ class Coolrsub:
     min_timestamp = ts[0]
     print("min timestamp: ", min_timestamp)
 
-  def req_sql(self, c, ranks, ranks2, group_column, metric):
+
+  def get_min_timestamp(self):
+    global min_timestamp
+    sql_statement = ("SELECT min(time_pack) FROM viewCombined;")
+    print("get_min_timestamp Executing query")
+ 
+    print "sql statement: ", sql_statement
+    #self.try_execute(c, sql_statement)
+    os.environ['SOS_SQL'] = sql_statement
+    sos_bin_path = os.environ.get('SOS_BIN_DIR')
+    print 'SOS BIN path: ', sos_bin_path
+    os.system('cd '+ sos_bin_path)
+    print 'current dir: ', os.getcwd()
+    # Redirect stdout of passed command into a string
+
+    soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
+    print 'soscmd: ', soscmd
+    tmp_res_min_ts_sql = subprocess.check_output(soscmd, shell=True)
+
+    #self.res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
+    print 'get min ts: tmp res sql=', tmp_res_min_ts_sql
+    res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
+    print "List of result SQL MIN TS: ", res_min_ts_sql
+    min_ts_rows = res_min_ts_sql[1].split(",")
+    print "List of result SQL MIN TS values: ", min_ts_rows
+    # Remove first element of SQL result 
+    #ts = np.array([x[0] for x in min_ts_rows])
+    str_min_timestamp = min_ts_rows[0].replace('\"', '')
+    min_timestamp = float(str_min_timestamp)
+    #print("str min_timestamp=%s, min timestamp=%f: ", str_min_timestamp, min_timestamp)
+
+
+  def req_sql_db(self, c, ranks, ranks2, group_column, metric):
     print 'req_sql entering'
     for r in ranks:
         sql_statement = ("SELECT distinct tbldata.name, tblvals.val, tblvals.time_pack, tblpubs.comm_rank FROM tblvals INNER JOIN tbldata ON tblvals.guid = tbldata.guid INNER JOIN tblpubs ON tblpubs.guid = tbldata.pub_guid WHERE tblvals.guid IN (SELECT guid FROM tbldata WHERE tbldata.name LIKE '" + metric + "') AND tblpubs." + group_column)
@@ -1213,6 +1355,53 @@ class Coolrsub:
         #    print(sql_statement, params)
 
 
+  # Call demo with SQL statement given as argument and store standard output
+  def req_sql2(self, c, metric):
+
+    self.res_sql = ""
+    sql_statement = ("SELECT value_name, value, time_pack FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+    #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+   
+    print "sql statement: ", sql_statement 
+    #self.try_execute(c, sql_statement)
+    os.environ['SOS_SQL'] = sql_statement
+    sos_bin_path = os.environ.get('SOS_BIN_DIR')
+    print 'SOS BIN path: ', sos_bin_path
+    os.system('cd '+ sos_bin_path)  
+    print 'current dir: ', os.getcwd() 
+    # Redirect stdout of passed command into a string
+   
+    soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
+    print 'soscmd: ', soscmd
+    tmp_res_sql = subprocess.check_output(soscmd, shell=True)
+
+    self.try_execute(c, sql_statement)
+
+    #print 'stdout of SOS demo: ', sys.stdout
+    #self.res_sql = resultstdout.getvalue()
+    print 'tmp res_sql: ', tmp_res_sql   
+    
+    self.res_sql = tmp_res_sql.splitlines()
+    # REmove first element of SQL result 
+    self.res_sql.pop(0)
+
+    for item_sql in self.res_sql:
+      print 'res sql: ', item_sql 
+      
+ 
+  # Call demo with SQL statement given as argument and store standard output
+  def req_sql(self, c, metric):
+
+    self.res_sql = ""
+    sql_statement = ("SELECT value_name, value, time_pack, max(frame) FROM viewCombined WHERE value_name LIKE '" + metric+ "' group by value_name;")
+    #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
+   
+    print "sql statement: ", sql_statement 
+    #self.try_execute(c, sql_statement)
+
+    self.try_execute(c, sql_statement)
+
+    
   def opendb(self):
     global min_timestamp
     # name of the sqlite database file
@@ -1236,7 +1425,7 @@ class Coolrsub:
         nodes,self.noderanks = self.get_nodes(self.conn)
     print ("nodes: ", self.nodes)
 
-    self.get_min_timestamp(self.conn)
+    self.get_min_timestamp_db(self.conn)
     #resize the figure
     # Get current size
     #fig_size = pl.rcParams["figure.figsize"]
@@ -1255,13 +1444,78 @@ class Coolrsub:
     # Closing the connection to the database file
     conn.close()
     #pl.tight_layout()
-     
 
+  def exec_sos_app(self):
+    
+    print 'SOS: Execute demo app'
+    sos_path = os.environ.get('SOS_BUILD_DIR') 
+    self.sos_bin_path = sos_path+"/bin"
+    print 'SOS BIN PATH: ', self.sos_bin_path
+    os.system("cd "+ self.sos_bin_path) 
+
+
+  # Read and plot selected metrics coming from SOS 
   def readsosmetrics(self):
+
+    print 'readsosmetrics'
+    profile_t1 = time.time()
+
+    self.opendb()
+
+    print "metrics: ", self.metrics
+    #self.get_min_timestamp()  
+ 
+    while True:  
+ 
+       time.sleep(0.1)
+       #print 'loop iteration ...'
+       for i in range(self.ngraphs):
+         #for i in range(self.nbsamples):
+         if self.listRecordSample[i] != -1:
+           j = self.listRecordSample[i]
+     
+           print 'readsosmetrics: i=%d, j=%d' %(i,j)
+           
+           #rank = self.ranks[j]
+           #rank2 = self.ranks2[j]
+           #group_column = self.groupcolumns[j]
+ 	   metric = self.metrics[j]                   
+           #print 'selected metric: ', metric 
+           #print("Fetching rows.")
+           #self.rows[j] = self.conn.fetchall()
+           self.req_sql(self.conn,metric)
+           #self.rows[j] = self.res_sql
+           self.rows[j] = self.conn.fetchall()
+
+           print 'rows: ', self.rows[j]
+           if len(self.rows[j]) <= 0:
+             dummyvar  = 1
+             #print("Error: query returned no rows.",)
+           else:
+             goodrecord = 1
+         
+           countsamples = 0
+           for sample in self.rows[j]:
+             params['ts'] = 0
+             print 'sample: ', sample
+             #self.req_sql(self.conn, self.ranks, self.rows)
+             profile_t2 = time.time()
+             self.lock.acquire()
+             #listsample = sample.split(',')
+             #self.updateguisos(params,i,j,listsample)
+             self.updateguisos_db(params,i,j,sample)
+             self.lock.release()
+             countsamples += 1
+
+    self.closedb()
+
+ 
+  def readsosmetrics_db(self):
 
      print 'readsosmetrics'
      profile_t1 = time.time()
-     self.opendb()
+     # Comment the method just for debugging purpose
+     self.opendb() 
     
      print 'after opening db, read db and plot ....'
  
@@ -1278,14 +1532,14 @@ class Coolrsub:
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
            group_column = self.groupcolumns[j]
- 	   metric = self.metrics[j]                  
-
+ 	   metric = self.metrics[j]                   
+           
            if metric == "Iteration": 
-             self.req_sql(self.conn, self.ranks, [], group_column, metric)
+             self.req_sql_db(self.conn, self.ranks, [], group_column, metric)
            elif (metric == "CPU System%") or (metric == "CPU User%") or (metric == "Package-0 Energy"):
-             self.req_sql(self.conn, self.nodes, self.noderanks, group_column, metric)
+             self.req_sql_db(self.conn, self.nodes, self.noderanks, group_column, metric)
            elif (metric == "Matrix Size") or (metric == "status:VmHWM"):
-             self.req_sql(self.conn, self.procs, [], group_column, metric)
+             self.req_sql_db(self.conn, self.procs, [], group_column, metric)
           
            #print("Fetching rows.")
            self.rows[j] = self.conn.fetchall()
@@ -1301,7 +1555,7 @@ class Coolrsub:
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
-             self.updateguisos(params,i,j,sample)
+             self.updateguisos_db(params,i,j,sample)
              self.lock.release()
              countsamples += 1
 
@@ -1378,7 +1632,7 @@ class Coolrsub:
 
 
            payload.strip()
-           #print 'payload =',payload
+           print 'payload =',payload
            try:
              j = json.loads(payload)
            except ValueError as e:
@@ -1421,7 +1675,7 @@ class Coolrsub:
              continue
 
          #print 'set timestamp'
-         #print 'event element', e
+         print 'event element', e
          #print 'event time', e['time']
          if params['ts'] == 0:
                params['ts'] = int(e['time'])
@@ -1486,6 +1740,7 @@ class Coolrsub:
      #self.readDB()
 
      if self.tool == "beacon":
+       print 'Selected tool: beacon' 
        try:
          thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
          thread.start_new_thread(self.readEvents,(libarbjsonbeep,))
@@ -1497,6 +1752,7 @@ class Coolrsub:
        try:
          #thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
          thread.start_new_thread(self.readsosmetrics,())
+         #thread.start_new_thread(self.readsosmetrics_db,())
       
        except Exception as errThread:
          print 'Error: unable to start thread: ', errThread

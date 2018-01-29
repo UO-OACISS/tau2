@@ -194,7 +194,10 @@ void * threaded_func(void *data)
   int rc;
   int sum = 0;
   // compute
+  int i;
+  for (i = 0 ; i < 1 ; i++) {
   do_work();
+  }
 
 #ifdef APP_DO_LOCK_TEST
   // test locking - sampling should catch this
@@ -286,7 +289,9 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
+  for (i = 0 ; i < 1 ; i++) {
   do_work();
+  }
 
 #ifdef PTHREADS
   ret = pthread_join(tid1, NULL);

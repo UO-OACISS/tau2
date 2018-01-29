@@ -665,6 +665,8 @@ JDKBINDIR = $(JDKDIR)/bin
 #CRAYCNL_PMI#PROFILEOPT107  = -DTAU_CRAYCNL_PMI $(CRAY_PMI_INCLUDE_OPTS) #ENDIF#
 #CRAYCNL_PMI_FOUND#PROFILEOPT107  = -DTAU_CRAYCNL_PMI_FOUND #ENDIF#
 #TAU_LIKWID#PROFILEOPT108  = -DTAU_LIKWID -I$(LIKWIDDIR)/include #ENDIF#
+#APPLE_MACH_PORT_BUG#PROFILEOPT109         = -DTAU_APPLE_MACH_PORT_BUG #ENDIF#
+#SGI_MPT_MPI#PROFILEOPT110         = -DTAU_SGI_MPT_MPI #ENDIF#
 
 MRNET_ROOT=
 MRNET_LW_OPTS=
@@ -773,6 +775,7 @@ TAU_GCCLIB	= -lgcc_s
 #G95_FORTRAN#TAU_FORTRANLIBS	       = -L$(EXTRADIR) -lf95 #ENDIF#
 #GNU_FORTRAN#TAU_FORTRANLIBS	       = -lg2c       #ENDIF#
 #GNU_GFORTRAN#TAU_FORTRANLIBS	       = -L$(TAUGFORTRANLIBDIR) -lgfortran -lgfortranbegin       #ENDIF#
+#APPLE_GFORTRAN#TAU_FORTRANLIBS	       = -L$(TAUGFORTRANLIBDIR) -lgfortran #ENDIF#
 #SC_GFORTRAN#TAU_FORTRANLIBS	       = -lgfortran -lgfortranbegin       #ENDIF#
 #SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
 #USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
@@ -1109,6 +1112,7 @@ BFDINCLUDE=
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions -finstrument-functions-exclude-file-list=/usr/include #ENDIF#
+#COMPINST_LLVM#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #APPLECXX#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #OPEN64ORC#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #CLANG#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
@@ -1202,6 +1206,7 @@ EBS_CLOCK_RES=
 #PIN#PROFILEOPT104  = -D__PIN__=1 -DPIN_CRT=1 -DTARGET_IA32E -DTARGET_LINUX -DHOST_IA32E -fno-exceptions -funwind-tables  -fasynchronous-unwind-tables -fabi-version=2 -fno-rtti -fno-stack-protector -fomit-frame-pointer -fno-strict-aliasing -isystem $(PIN_ROOT)/source/include/pin -isystem $(PIN_ROOT)/source/include/pin/gen -isystem $(PIN_ROOT)/extras/stlport/include -isystem $(PIN_ROOT)/extras/libstdc++/include -isystem $(PIN_ROOT)/extras/crt/include -isystem $(PIN_ROOT)/extras/crt/include/arch-x86_64 -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi -isystem $(PIN_ROOT)/extras/crt/include/kernel/uapi/asm-x86  -isystem $(PIN_ROOT)/extras/components/include -isystem $(PIN_ROOT)/extras/xed-intel64/include/xed #ENDIF#
 OTFINC=
 #OTF2#TAU_OTF2_INCLUDE_OPTS = -I$(OTFINC) -DTAU_OTF2 #ENDIF#
+#CORESYMBOLICATION#TAU_CORESYMBOLICATION_INCLUDE_OPTS = -DTAU_HAVE_CORESYMBOLICATION #ENDIF#
 
 
 
@@ -1232,9 +1237,10 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT97) $(PROFILEOPT98) $(PROFILEOPT99) $(PROFILEOPT100) \
 	      $(PROFILEOPT101) $(PROFILEOPT102) $(PROFILEOPT103) \
               $(PROFILEOPT104) $(PROFILEOPT106) $(PROFILEOPT107) \
-              $(PROFILEOPT108) $(TRACEOPT) \
+              $(PROFILEOPT108) $(PROFILEOPT109) $(PROFILEOPT110) $(TRACEOPT) \
 		  $(TAU_SOS_INCLUDE_OPTS) $(TAU_ADIOS_INCLUDE_OPTS) \
-		  $(TAU_OTF2_INCLUDE_OPTS) $(TAU_CALIPER_INCLUDE_OPTS)
+		  $(TAU_OTF2_INCLUDE_OPTS) $(TAU_CALIPER_INCLUDE_OPTS) \
+                  $(TAU_CORESYMBOLICATION_INCLUDE_OPTS)
 
 ##############################################
 # These flags will only be used for the TAU library, not the users's code
@@ -1287,7 +1293,9 @@ TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1) $(TAU_INTERNAL_FLAG2)
 OTFLIB=
 #OTF2#TAU_OTF2_LINKER_OPTS = -L$(OTFLIB) -lotf2 -Wl,-rpath,$(OTFLIB) #ENDIF#
 #CRAYCNL_PMI#TAU_LINKER_OPT23=$(CRAY_PMI_POST_LINK_OPTS) -lpmi $(CRAY_XPMEM_POST_LINK_OPTS) -lxpmem -L/opt/cray/ugni/default/lib64 -lugni $(CRAY_UDREG_POST_LINK_OPTS) -ludreg $(CRAY_ALPS_POST_LINK_OPTS) -lalpslli -L/opt/cray/wlm_detect/default/lib64 -lwlm_detect -lalpsutil -lugni #ENDIF#
+#CRAYCNL_PMI_FOUND#TAU_LINKER_OPT23=$(CRAY_PMI_POST_LINK_OPTS) -lpmi $(CRAY_XPMEM_POST_LINK_OPTS) -lxpmem -L/opt/cray/ugni/default/lib64 -lugni $(CRAY_UDREG_POST_LINK_OPTS) -ludreg $(CRAY_ALPS_POST_LINK_OPTS) -lalpslli -L/opt/cray/wlm_detect/default/lib64 -lwlm_detect -lalpsutil -lugni #ENDIF#
 #TAU_LIKWID#TAU_LINKER_OPT24=-L$(LIKWIDDIR)/lib -Wl,-rpath,$(LIKWIDDIR)/lib -llikwid #ENDIF#
+#CORESYMBOLICATION#TAU_CORESYMBOLICATION_LINKER_OPT=-F/System/Library/PrivateFrameworks -framework CoreSymbolication #ENDIF#
 ##############################################
 
 TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
@@ -1303,7 +1311,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_ANDROID_LINKER_OPTS) $(TAU_BEACON_LINKER_OPTS) \
                   $(TAU_PIN_LINKER_OPTS) \
 				  $(TAU_SOS_LINKER_OPTS) $(TAU_ADIOS_LINKER_OPTS) \
-				  $(TAU_OTF2_LINKER_OPTS)
+				  $(TAU_OTF2_LINKER_OPTS) $(TAU_CORESYMBOLICATION_LINKER_OPT)
 
 ##############################################
 
@@ -1484,7 +1492,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optTauIncludes="$(OPARIINCDIR) $(TAU_INCLUDE) $(TAU_MPI_COMPILE_INCLUDE) $(TAU_SHMEM_INCLUDE) " \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
         -optLinking="$(TAU_SCOREP_EXTRA_FLAGS) $(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LDFLAGS) $(TAU_CUDA_STATIC_LIBS) "\
-        -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_CXXLIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LINKER_RPATH_OPT) \
+        -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) -lTAU $(UPCC_LINK_PREFIX)-Wl,-rpath,$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_CXXLIBS) $(TAU_STATIC_WRAPPERS) $(TAU_LINKER_RPATH_OPT) $(TAU_PMI_SHLIBS) \
 				 $(TAU_LDFLAGS)"\
 				-optMICOffloadLinking="$(MIC_OFFLOAD_LINKING)"\
 	$(TAUCOMPILER_OMP_OPTS)			-optMICOffloadSharedLinking="$(MIC_OFFLOAD_SHARED_LINKING)"\
