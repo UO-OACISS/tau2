@@ -108,17 +108,17 @@ set_node()
     # ThreadSpotter's sample_ts uses the same method to determine MPI rank,
     # see get_rank() in library/exe_path/path_substitute.cc 
     rank_env_vars=("PMI_RANK"
-    "OMPI_COMM_WORLD_RANK"
-    "OMPI_MCA_ns_nds_vpid"
-    "PMI_ID"
-    "SLURM_PROCID"
-    "LAMRANK"
-    "MPI_RANKID"
-    "MP_CHILD"
-    "MP_RANK"
-    "MPIRUN_RANK"
-    "MPT_MPI_RANK"
-    "ALPS_APP_PE")
+                   "OMPI_COMM_WORLD_RANK"
+                   "OMPI_MCA_ns_nds_vpid"
+                   "PMI_ID"
+                   "SLURM_PROCID"
+                   "LAMRANK"
+                   "MPI_RANKID"
+                   "MP_CHILD"
+                   "MP_RANK"
+                   "MPIRUN_RANK"
+                   "MPT_MPI_RANK"
+                   "ALPS_APP_PE")
     for i in ${rank_env_vars[@]}; do
       eval node=\$$i
       if [ -n "$node" ] ; then
@@ -129,30 +129,35 @@ set_node()
     echo "ERROR: ptts support for SHMEM not implemented yet"
     exit 1
   fi
+  if [ -z "$node" ] ; then
+    echo "ERROR: Cannot determine node"
+    exit 1
+  fi
 }
 
 set_nodecount()
 {
   if echo "$binding_options" | grep -iq mpi 2>/dev/null ; then
-    if $on_craycnl ; then
-      if [ -z "$ptts_N" ]; then
+    if [ -n "$ptts_num" ]; then
+      nodecount="$ptts_num"
+    else
+      if $on_craycnl ; then
         echo "ERROR: Please use -ptts-num=MPI_RANKS to indicate number of MPI ranks."
-      else
-        nodecount="$ptts_N"
+        exit 1
       fi
-    else	
       for i in PMI_SIZE OMPI_COMM_WORLD_SIZE SLURM_NPROCS BC_MPI_TASKS_ALLOC; do
         eval nodecount=\$$i
         if [ -n "$nodecount" ] ; then
           break
         fi
       done
-      if [ -z "$nodecount" ] && [ ! -z "$ptts_N" ] ; then
-        nodecount="$ptts_N"
-      fi
     fi
   elif echo "$binding_options" | grep -iq shmem 2>/dev/null ; then
     echo "ERROR: ptts support for SHMEM not implemented yet"
+    exit 1
+  fi
+  if [ -z "$nodecount" ] ; then
+    echo "ERROR: Cannot determine node count (if using MPT then set MPI_SHEPHERD=true)"
     exit 1
   fi
 }
@@ -292,7 +297,7 @@ track_shmem=false
 use_ptts=false
 use_pin=false
 ptts_post=false
-ptts_N=""
+ptts_num=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 
@@ -398,7 +403,7 @@ for arg in "$@" ; do
         ;;
       -ptts-num=*)
         myarg=`echo $arg | sed 's/-ptts-num=//'`
-        ptts_N="$myarg"
+        ptts_num="$myarg"
         shift
         ;;
       -ptts-sample-flags=*)
@@ -842,15 +847,7 @@ if $use_ptts ; then
     exit 1
   fi
   set_node
-  if [ -z "$node" ] ; then
-    echo "ERROR: Cannot determine node"
-    exit 1
-  fi
   set_nodecount
-  if [ -z "$nodecount" ] ; then
-    echo "ERROR: Cannot determine node count"
-    exit 1
-  fi
   pttsprefix="${PROFILEDIR:-.}/ptts"
   mkdir -p "$pttsprefix"
 fi
@@ -987,14 +984,14 @@ else
     if ! $ptts_post ; then
       rm -rf "$pttsprefix/sample*.smp" "$reportfile" "$pttsprefix/$viewdir"
       if [ "$node" -eq 0 ] ; then
-        echo "PTTS($node): Sampling \"$@\""
+        echo "PTTS($node/$nodecount): Sampling \"$@\""
         samplingstarttime=`date +%s`
       fi
       sample_ts $ptts_sample_flags -o "$samplefile" -r $@
       retval=$?
       if [ "$node" -eq 0 ] ; then
         samplingendtime=`date +%s`
-        echo "PTTS($node): sample_ts time: $((samplingendtime-samplingstarttime)) seconds"
+        echo "PTTS($node/$nodecount): sample_ts time: $((samplingendtime-samplingstarttime)) seconds"
       fi
     fi 
 
@@ -1008,7 +1005,7 @@ else
     samplefile="$pttsprefix/sample.${node}.smp"
 
     # Shared filesystems must be in sync before proceeding
-    echo "PTTS($node): Synchronizing filesystems..."
+    echo "PTTS($node/$nodecount): Synchronizing filesystems..."
     sleep 5 ; sync
     sleep 5 ; sync
     sleep 5 ; sync
@@ -1016,7 +1013,7 @@ else
     # sample_ts may return nonzero without an error so only abort if sample_ts didn't write *.smp.
     # Check after the barrier so we can post-process even if some ranks fail
     if [ ! -f "$samplefile" ] ; then
-      echo "PTTS($node): Sample file \"$samplefile\" does not exist. sample_ts returned $retval."
+      echo "PTTS($node/$nodecount): Sample file \"$samplefile\" does not exist. sample_ts returned $retval."
       if [ $retval -eq 0 ] ; then
         exit 255
       else
@@ -1026,23 +1023,23 @@ else
 
     # Post-process samples
     if [ "$node" -eq 0 ] ; then
-      echo "PTTS($node): Postprocessing samples..."
+      echo "PTTS($node/$nodecount): Postprocessing samples..."
       reportstarttime=`date +%s`
     fi
     report_ts $ptts_report_flags -i "$samplefile" -o "$reportfile" >$reportlog 2>&1
     retval=$?
     if [ "$node" -eq 0 ] ; then
       reportendtime=`date +%s`
-      echo "PTTS($node): report_ts time: $((reportendtime-reportstarttime)) seconds"
+      echo "PTTS($node/$nodecount): report_ts time: $((reportendtime-reportstarttime)) seconds"
     fi
     # Abort if sample_ts returned nonzero or didn't write the sample file
     if [ $retval -eq 0 ] ; then
       if [ ! -f "$reportfile" ] ; then
-        echo "PTTS($node): report_ts returned 0 but report file \"$reportfile\" does not exist."
+        echo "PTTS($node/$nodecount): report_ts returned 0 but report file \"$reportfile\" does not exist."
         exit 255
       fi 
     else
-      echo "PTTS($node): report_ts returned error code $retval."
+      echo "PTTS($node/$nodecount): report_ts returned error code $retval."
       exit $retval
     fi
 
@@ -1055,16 +1052,16 @@ else
     retval=$?
     if [ "$node" -eq 0 ] ; then
       staticendtime=`date +%s`
-      echo "PTTS($node): view-static_ts time: $((staticendtime-staticstarttime)) seconds"
+      echo "PTTS($node/$nodecount): view-static_ts time: $((staticendtime-staticstarttime)) seconds"
     fi
     # Abort if view-static_ts returned nonzero or didn't write HTML files
     if [ $retval -eq 0 ] ; then
       if [ ! -f "$viewdir/front.html" ] ; then
-        echo "PTTS($node): view-static_ts returned 0 but report file \"$viewdir/front.html\" does not exist."
+        echo "PTTS($node/$nodecount): view-static_ts returned 0 but report file \"$viewdir/front.html\" does not exist."
         exit 255
       fi 
     else
-      echo "PTTS($node): view-static_ts returned error code $retval."
+      echo "PTTS($node/$nodecount): view-static_ts returned error code $retval."
       exit $retval
     fi
     cd "$OLDPWD"
