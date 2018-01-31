@@ -622,6 +622,7 @@ MPI_Comm comm;
 
   double tmp_array1[5] = {0.0};
   double tmp_array2[5] = {0.0};
+#ifdef TAU_SOS
   //TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
   if (TauEnv_get_sos_trace_events()) {
 	  int commsize = 0;
@@ -653,6 +654,7 @@ MPI_Comm comm;
       Tau_SOS_pack_current_timer(buffer);
 	  free(buffer);
   }
+#endif // TAU_SOS
 
   TAU_PROFILE_STOP(tautimer);
 
