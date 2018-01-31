@@ -2,8 +2,12 @@
 
 DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -f ../../x86_64/sos/sos_flow/build-linux/bin/sosd ] ; then
-    PATH=$PATH:$DIR/../../x86_64/sos/sos_flow/build-linux/bin/
+#if [ -f ../../x86_64/sos/sos_flow/build-linux/bin/sosd ] ; then
+#    PATH=$PATH:$DIR/../../x86_64/sos/sos_flow/build-linux/bin/
+#fi
+
+if [ -f ../../x86_64/sos/sos_flow/inst/bin/sosd ] ; then
+    PATH=$PATH:$DIR/../../x86_64/sos/sos_flow/inst/bin/
 fi
 
 export SOS_CMD_PORT=22500
