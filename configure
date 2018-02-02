@@ -97,8 +97,8 @@ installsosdeps()
  cd ..
 
  wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
- export FLEXPATH_DIR=$currdir/inst
- perl ./chaos_bootstrap.pl adios-1.12 $FLEXPATH_DIR
+ #export FLEXPATH_DIR=$currdir/inst
+ perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
  perl ./chaos_build.pl
 
  # set path to Flexpath/EVPath (see above)
