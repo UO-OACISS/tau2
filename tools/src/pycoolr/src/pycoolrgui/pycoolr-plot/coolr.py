@@ -1396,7 +1396,7 @@ class Coolrsub:
     sql_statement = ("SELECT value_name, value, time_pack, max(frame) FROM viewCombined WHERE value_name LIKE '" + metric+ "' group by value_name;")
     #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
    
-    print "sql statement: ", sql_statement 
+    #print "sql statement: ", sql_statement 
     #self.try_execute(c, sql_statement)
 
     self.try_execute(c, sql_statement)
@@ -1467,14 +1467,15 @@ class Coolrsub:
  
     while True:  
  
-       time.sleep(0.1)
+       #time.sleep(0.1)
+       time.sleep(0.02)
        #print 'loop iteration ...'
        for i in range(self.ngraphs):
          #for i in range(self.nbsamples):
          if self.listRecordSample[i] != -1:
            j = self.listRecordSample[i]
      
-           print 'readsosmetrics: i=%d, j=%d' %(i,j)
+           #print 'readsosmetrics: i=%d, j=%d' %(i,j)
            
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
@@ -1487,7 +1488,7 @@ class Coolrsub:
            #self.rows[j] = self.res_sql
            self.rows[j] = self.conn.fetchall()
 
-           print 'rows: ', self.rows[j]
+           #print 'rows: ', self.rows[j]
            if len(self.rows[j]) <= 0:
              dummyvar  = 1
              #print("Error: query returned no rows.",)
@@ -1497,7 +1498,7 @@ class Coolrsub:
            countsamples = 0
            for sample in self.rows[j]:
              params['ts'] = 0
-             print 'sample: ', sample
+             #print 'sample: ', sample
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()
