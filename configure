@@ -141,7 +141,8 @@ installsos()
 
  export sosdir=$currdir/$dst/inst
 
- cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DSOS_EVPATH_EXTRA_LIBS="-lffs -ldill -lcercs_env -latl -levpath" -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst  -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE   ..
+ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -SQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE ..
+ 
  make ; make install
 }
 
