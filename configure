@@ -99,10 +99,50 @@ installsosdeps()
  wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
  #export FLEXPATH_DIR=$currdir/inst
  perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
- perl ./chaos_build.pl
+ #perl ./chaos_build.pl
+ mkdir build_area
+ cd build_area 
+
+ echo "Download SOS dependencies: $2 $3"
+ download "$2" "$3" 
+ echo "Extract SOS dependencies: $3"
+ tar -xvf "$3"
+ rm -f "$3"
+
+ #Install dill
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/dill
+ make all install
+
+ #Install cercs_env
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/cercs_env
+ make all install
+
+ #Install atl
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/atl
+ make all install
+
+ #Install ffs
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/ffs
+ make all install
+
+ #Install enet
+ $currdir/build_area/enet/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
+ make install
+
+ #Install evpath
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/evpath
+ make all install
+
+
 
  # set path to Flexpath/EVPath (see above)
  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
+
+ # Copy EVPath cmake file to its inst directory
+ cd inst/lib/cmake/EVPath
+ cp EVPathConfig.cmake ../../../
+ cp EVPathTargets.cmake ../../../
+ cd ../../../.. 
 
  echo "Install libfabric"
  git clone https://github.com/ofiwg/libfabric.git
@@ -140,8 +180,9 @@ installsos()
  cd build-linux
 
  export sosdir=$currdir/$dst/inst
+ echo "EVPath Inst dir: $targetdir/$architecture/sos/chaos/inst"
 
- cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -SQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOSD_CLOUD_SYNC_WITH_EVPATH=TRUE ..
+ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -SQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
  
  make ; make install
 }
@@ -8064,9 +8105,12 @@ fi
 ######################################################################
 # Install SOS if requested
 ######################################################################
-#sosurl=https://github.com/cdwdirect/sos_flow.git
 sostgz=sos.tgz
-sosurl=http://tau.uoregon.edu/$sostgz
+sosdepstgz=sosdeps.tgz
+#sosdepsurl=http://tau.uoregon.edu/$sosdepstgz
+sosdepsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$sosdepstgz
+#sosurl=http://tau.uoregon.edu/$sostgz
+sosurl=https://github.com/cdwdirect/sos_flow.git
 #sosmaindir=sos
 sosmaindir=sos
 sosrepo=sos_flow
@@ -8076,12 +8120,13 @@ if [ "x$sos" = "xyes" ] ; then
   if [ "x$sosdir" = xdownload ] ; then
     echo "Install SOS"
     p=`pwd`
-    cd $targetdir/$architecture/; installsosdeps "$sosmaindir"; download "$sosurl" "$sostgz" ; tar zxf "$sostgz"; rm -f "$sostgz" ; installsos "$sosrepo"
+    #cd $targetdir/$architecture/; installsosdeps "$sosmaindir"; download "$sosurl" "$sostgz" ; tar zxf "$sostgz"; rm -f "$sostgz" ; installsos "$sosrepo"
+    cd $targetdir/$architecture/; installsosdeps "$sosmaindir" "$sosdepsurl" "$sosdepstgz"; clone "$sosurl" "$sosrepo"; installsos "$sosrepo"
   else
     if [ ! -d "$sosdir" ] ; then
       echo "Error: Cannot access SOS directory $sosdir"
       exit 1
-        fi
+    fi
   fi
 fi
 
