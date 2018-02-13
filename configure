@@ -109,37 +109,49 @@ installsosdeps()
  tar -xvf "$3"
  rm -f "$3"
 
+ set -x
  #Install dill
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/dill
+ cd dill
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill
  make all install
+ cd ..
 
  #Install cercs_env
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/cercs_env
+ cd cercs_env
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env
  make all install
+ cd ..
 
  #Install atl
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/atl
+ cd atl
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl
  make all install
+ cd ..
 
  #Install ffs
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/ffs
+ cd ffs
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs
  make all install
+ cd ..
 
  #Install enet
+ cd enet
  $currdir/build_area/enet/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
  make install
+ cd ..
 
  #Install evpath
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/chaos/inst $currdir/build_area/evpath
+ cd evpath
+ cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath
  make all install
-
-
+ cd ..
+ cd ..
 
  # set path to Flexpath/EVPath (see above)
  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
 
  # Copy EVPath cmake file to its inst directory
- cd inst/lib/cmake/EVPath
+ cd inst/lib/CMake/EVPath
  cp EVPathConfig.cmake ../../../
  cp EVPathTargets.cmake ../../../
  cd ../../../.. 
@@ -154,6 +166,9 @@ installsosdeps()
  cd inst/lib
  cp libfabric.* ../../../inst/lib
  cd ../../../..
+
+ set +x
+
 }
 
 # Install SOS 
