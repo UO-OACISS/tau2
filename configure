@@ -150,7 +150,6 @@ installsosdeps()
  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
 
  # Copy EVPath cmake file to its inst directory
- cd inst/lib/CMake/EVPath
  cd inst/lib/cmake/EVPath
  cp EVPathConfig.cmake ../../../
  cp EVPathTargets.cmake ../../../
