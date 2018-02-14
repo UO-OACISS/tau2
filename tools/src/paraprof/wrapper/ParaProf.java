@@ -60,7 +60,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Thu Jan 25 11:29:31 PST 2018";
+    private final static String VERSION = "Fri Feb  2 11:47:32 PST 2018";
 
     public static int defaultNumberPrecision = 6;
 
@@ -155,6 +155,7 @@ public class ParaProf implements ActionListener {
 		+ "  -s, --summary                   Print only summary statistics\n"
 		+ "                                    (only applies to OSS output)\n" 
 		+ "  -y, --control                   Enter command line control mode for exploring/loading/exporting database trials\n"
+		+ "  --writecomm <file.csv>          Write communication matrix data (if any) to the specified csv file.\n"
 		+ "\n" + "Notes:\n"
 		+ "  For the TAU profiles type, you can specify either a specific set of profile\n"
 		+ "files on the commandline, or you can specify a directory (by default the current\n"
