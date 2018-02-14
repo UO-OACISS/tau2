@@ -17,6 +17,17 @@ paraview.simple._DisableFirstRenderCameraReset()
 
 csvSource = GetActiveSource()
 
+if(('FileName' in dir(csvSource) and csvSource.FileName[0].lower().endswith(".csv")) is False):
+	raise TypeError, "This macro requires a .csv file to be selected in the pipeline browser."
+
+data = servermanager.Fetch(csvSource,0)
+col0 = data.GetColumn(0)
+maxrank = col0.GetValueRange()[1]
+
+firstScalarName = data.GetColumnName(3)
+firstScalarMaxValue = data.GetColumn(3).GetValueRange()[1]
+
+zScaleFactor= maxrank*1.0/firstScalarMaxValue
 
 
 csvSource.AddTabFieldDelimiter = 1
@@ -45,9 +56,9 @@ csvSource.AddTabFieldDelimiter = 1
 
 # create a new 'Table To Points'
 tableToPoints1 = TableToPoints(Input=csvSource)
-tableToPoints1.XColumn = ' All Paths CALLS'
-tableToPoints1.YColumn = ' All Paths CALLS'
-tableToPoints1.ZColumn = ' All Paths CALLS'
+#tableToPoints1.XColumn = ' All Paths CALLS'
+#tableToPoints1.YColumn = ' All Paths CALLS'
+#tableToPoints1.ZColumn = ' All Paths CALLS'
 
 # Properties modified on tableToPoints1
 tableToPoints1.XColumn = 'x cord'
@@ -66,7 +77,7 @@ tableToPoints1.a2DPoints = 1
 
 # create a new 'Warp By Scalar'
 warpByScalar1 = WarpByScalar(Input=tableToPoints1)
-warpByScalar1.Scalars = ['POINTS', ' All Paths CALLS']
+warpByScalar1.Scalars = ['POINTS', firstScalarName]
 
 # show data in view
 warpByScalar1Display = Show(warpByScalar1)#, spreadSheetView1)
@@ -94,19 +105,19 @@ warpByScalar1Display_1 = Show(warpByScalar1, renderView1)
 # trace defaults for the display properties.
 #warpByScalar1Display_1.Representation = 'Surface'
 warpByScalar1Display_1.ColorArrayName = [None, '']
-warpByScalar1Display_1.OSPRayScaleArray = ' All Paths CALLS'
+warpByScalar1Display_1.OSPRayScaleArray = firstScalarName
 warpByScalar1Display_1.OSPRayScaleFunction = 'PiecewiseFunction'
-warpByScalar1Display_1.SelectOrientationVectors = ' All Paths CALLS'
+warpByScalar1Display_1.SelectOrientationVectors = firstScalarName
 warpByScalar1Display_1.ScaleFactor = 106.7
-warpByScalar1Display_1.SelectScaleArray = ' All Paths CALLS'
+warpByScalar1Display_1.SelectScaleArray = firstScalarName
 warpByScalar1Display_1.GlyphType = 'Box'
-warpByScalar1Display_1.GlyphTableIndexArray = ' All Paths CALLS'
+warpByScalar1Display_1.GlyphTableIndexArray = firstScalarName
 warpByScalar1Display_1.DataAxesGrid = 'GridAxesRepresentation'
 warpByScalar1Display_1.PolarAxes = 'PolarAxesRepresentation'
 warpByScalar1Display_1.GaussianRadius = 53.35
-warpByScalar1Display_1.SetScaleArray = ['POINTS', ' All Paths CALLS']
+warpByScalar1Display_1.SetScaleArray = ['POINTS', firstScalarName]
 warpByScalar1Display_1.ScaleTransferFunction = 'PiecewiseFunction'
-warpByScalar1Display_1.OpacityArray = ['POINTS', ' All Paths CALLS']
+warpByScalar1Display_1.OpacityArray = ['POINTS', firstScalarName]
 warpByScalar1Display_1.OpacityTransferFunction = 'PiecewiseFunction'
 
 # init the 'PiecewiseFunction' selected for 'ScaleTransferFunction'
@@ -119,7 +130,7 @@ warpByScalar1Display_1.OpacityTransferFunction.Points = [33.0, 0.0, 0.5, 0.0, 11
 renderView1.ResetCamera()
 
 # set scalar coloring
-ColorBy(warpByScalar1Display_1, ('POINTS', ' All Paths CALLS'))
+ColorBy(warpByScalar1Display_1, ('POINTS', firstScalarName))
 
 # rescale color and/or opacity maps used to include current data range
 warpByScalar1Display_1.RescaleTransferFunctionToDataRange(True, False)
@@ -127,8 +138,8 @@ warpByScalar1Display_1.RescaleTransferFunctionToDataRange(True, False)
 # show color bar/color legend
 warpByScalar1Display_1.SetScalarBarVisibility(renderView1, True)
 
-# get color transfer function/color map for 'AllPathsCALLS'
-allPathsCALLSLUT = GetColorTransferFunction('AllPathsCALLS')
+# get color transfer function/color map for firstScalarName
+firstScalarNameLUT = GetColorTransferFunction(firstScalarName)
 
 # update the view to ensure updated data information
 renderView1.Update()
@@ -143,7 +154,7 @@ renderView1.ResetCamera()
 renderView1.ResetCamera(0.0, 15.0, 0.0, 15.0, 3.29999995232, 110.0)
 
 # Properties modified on warpByScalar1
-warpByScalar1.ScaleFactor = 0.01
+warpByScalar1.ScaleFactor = zScaleFactor
 
 # update the view to ensure updated data information
 renderView1.Update()
@@ -154,17 +165,20 @@ renderView1.Update()
 # reset view to fit data
 renderView1.ResetCamera()
 
+if(maxrank < 100):
 # change representation type
-warpByScalar1Display_1.SetRepresentationType('3D Glyphs')
-
+	warpByScalar1Display_1.SetRepresentationType('3D Glyphs')
 # Properties modified on warpByScalar1Display_1
-warpByScalar1Display_1.GlyphType = 'Box'
+	warpByScalar1Display_1.GlyphType = 'Box'
+else:
+	warpByScalar1Display_1.SetRepresentationType('Points')
+	warpByScalar1Display_1.PointSize = 5.0
 
 # Properties modified on renderView1.AxesGrid
 renderView1.AxesGrid.XTitle = 'Sender'
 renderView1.AxesGrid.YTitle = 'Receiver'
-renderView1.AxesGrid.ZTitle = 'Scalar'
-renderView1.AxesGrid.DataScale = [1.0, 1.0, 0.01]
+renderView1.AxesGrid.ZTitle = firstScalarName #'Scalar'
+renderView1.AxesGrid.DataScale = [1.0, 1.0, zScaleFactor]
 renderView1.AxesGrid.DataBoundsInflateFactor = 0.0
 
 # Properties modified on renderView1.AxesGrid
