@@ -801,11 +801,6 @@ int Tau_track_mpi_t_here(void) {
     return MPI_SUCCESS; 
   } 
 
-  if(TauEnv_get_mpi_t_enable_user_tuning_policy() == 1) {
-    mpi_t_enable_user_tuning_policy = 1;
-
-  }
- 
   /*Double check to ensure that the MPI_T interface is initialized*/
   return_val = Tau_mpi_t_initialize();
   if(return_val != MPI_SUCCESS) 
@@ -832,21 +827,28 @@ int Tau_track_mpi_t_here(void) {
   int rank = Tau_get_node(); 
   int size, j; 
 
+  
   for(i = 0; i < tau_initial_pvar_count; i++) {
     // get data from event
-    //printf("Reading data for PVAR %d\n",i);
     MPI_T_pvar_read(tau_pvar_session, tau_pvar_handles[i], read_value_buffer);
-    MPI_Type_size(tau_mpi_datatype[i], &size); 
+
+    /*This statement causes a deadlock with MVAPICH2 when using large process counts.
+      Issue is within MVAPICH2 - they are using some SIGNAL unsafe routines which cause a hang
+      when we are sampling*/
+    //MPI_Type_size(tau_mpi_datatype[i], &size); 
 
     for(j = 0; j < tau_pvar_count[i]; j++) {
       pvar_value_buffer[i][j] = 0;
     }
-    //memcpy(pvar_value_buffer[i], read_value_buffer, size*tau_pvar_count[i]);
-    memcpy(pvar_value_buffer[i], read_value_buffer, sizeof(unsigned long long int)*tau_pvar_count[i]);
+     
+    //Please do not memcpy inside this routine! It is NOT signal safe and will
+    //cause you unending pain through deadlocks...
+    for(j = 0; j < tau_pvar_count[i]; j++)
+     pvar_value_buffer[i][j] = ((unsigned long long int*)read_value_buffer)[j];
 
     for(j = 0; j < tau_pvar_count[i]; j++){
-      /* unsigned long long int to double conversion can result in an error. 
-       * We first convert it to a long long int. */
+      // unsigned long long int to double conversion can result in an error. 
+      // We first convert it to a long long int.
       long long int mydata = (long long int) pvar_value_buffer[i][j]; 
       int is_double = 0; 
       if (tau_mpi_datatype[i] == MPI_DOUBLE) is_double=1; 
@@ -856,7 +858,7 @@ int Tau_track_mpi_t_here(void) {
         //double double_data = ((double)(pvar_value_buffer[i][j]));
         double double_data = ((double)(mydata));
 
-        dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, double_data=%g, size = %d, is_double=%d\n",rank,i,j,mydata, double_data, size, is_double);
+        dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, double_data=%g, is_double=%d\n",rank,i,j,mydata, double_data, is_double);
 	if (double_data > 1e-14 )  {
       
         // Double values are really large for timers. Please check 1E18?? 
@@ -864,8 +866,8 @@ int Tau_track_mpi_t_here(void) {
           dprintf("Not tracking anything for now \n");
         } 
       } else {
-        dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, size = %d, is_double=%d\n",rank,i,j,mydata, size, is_double);
-        /* Trigger the TAU event if it is non-zero */
+        dprintf("RANK:%d: pvar_value_buffer[%d][%d]=%lld, is_double=%d\n",rank,i,j,mydata, is_double);
+        // Trigger the TAU event if it is non-zero
 	if (mydata > 0L) {
           Tau_track_pvar_event(i, j, tau_pvar_count, tau_initial_pvar_count, mydata);
         
@@ -875,11 +877,7 @@ int Tau_track_mpi_t_here(void) {
 
   }
 
-  /*Implement user based CVAR tuning policy if TAU_MPI_T_ENABLE_USER_TUNING_POLICY is set*/
-  if(mpi_t_enable_user_tuning_policy) {
-    dprintf("RANK:%d: User based tuning policy enabled \n", rank);
-  }
-  
+
   dprintf("Finished!!\n");
 }
 

@@ -647,7 +647,7 @@ if [ $track_cuda = "true" ] ; then
   cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti$TAU_SHLIBX -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP$TAU_SHLIBX`
   if [ $? == 0 ] ; then
     #tell the user cupti is available.
-    echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' insteed of '-cuda' to get the latest available features."
+    echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' instead of '-cuda' to get the latest available features."
   fi
   # Add the CUDA wrapper library to the LD_PRELOAD list
   #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA$TAU_SHLIBX:$TAUEX_LD_PRELOAD
