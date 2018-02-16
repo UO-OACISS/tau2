@@ -99,9 +99,9 @@ installsosdeps()
  wget http://www.cc.gatech.edu/systems/projects/EVPath/chaos_bootstrap.pl
  #export FLEXPATH_DIR=$currdir/inst
  perl ./chaos_bootstrap.pl adios-1.13 $currdir/inst
- #perl ./chaos_build.pl
- mkdir build_area
- cd build_area 
+ perl ./chaos_build.pl
+ #mkdir build_area
+ #cd build_area 
 
  echo "Download SOS dependencies: $2 $3"
  download "$2" "$3" 
@@ -111,40 +111,40 @@ installsosdeps()
 
  set -x
  #Install dill
- cd dill/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
- make all install
- cd ../..
+ #cd dill/source
+ #cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/dill/source
+ #make all install
+ #cd ../..
 
  #Install cercs_env
- cd cercs_env/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
- make all install
- cd ../..
+ #cd cercs_env/source
+ #cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/cercs_env/source
+ #make all install
+ #cd ../..
 
  #Install atl
- cd atl/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
- make all install
- cd ../..
+ #cd atl/source
+ #cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/atl/source
+ #make all install
+ #cd ../..
 
  #Install ffs
- cd ffs/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
- make all install
- cd ../..
+ #cd ffs/source
+ #cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/ffs/source
+ #make all install
+ #cd ../..
 
  #Install enet
- cd enet/source
- $currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
- make install
- cd ../..
+ #cd enet/source
+ #$currdir/build_area/enet/source/configure  CFLAGS='-g -O0' CPPFLAGS='-g -O0' --prefix=$currdir/inst
+ #make install
+ #cd ../..
 
  #Install evpath
- cd evpath/source
- cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
- make all install
- cd ../../..
+ #cd evpath/source
+ #cmake  -DENABLE_TESTING=0 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$currdir/inst $currdir/build_area/evpath/source
+ #make all install
+ #cd ../../..
 
  # set path to Flexpath/EVPath (see above)
  export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:${FLEXPATH_DIR}/lib/pkgconfig
@@ -196,7 +196,7 @@ installsos()
  export sosdir=$currdir/$dst/inst
  echo "EVPath Inst dir: $targetdir/$architecture/sos/chaos/inst"
 
- cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -SQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
+ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$currdir/$dst/inst -DEVPath_DIR=$targetdir/$architecture/sos/chaos/inst -DSQLite3_DIR=$targetdir/$architecture/sos/chaos/sqlite3 -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DSOS_CLOUD_SYNC_WITH_EVPATH=TRUE ..
  
  make ; make install
 }
