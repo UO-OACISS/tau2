@@ -44,20 +44,26 @@ int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_interrupt_tri
   static char reduced_value_cvar_value_string[TAU_NAME_LENGTH] = "";
   int i;
 
+
   int has_threshold_been_breached_in_any_pool = 0;
 
   if((pvar_max_vbuf_usage_index == -1) || (pvar_vbuf_allocated_index == -1)) {
     TAU_VERBOSE("TAU PLUGIN: Unable to find the indexes of PVARs required for tuning. Returning without doing any tuning\n");
     return 0;
   }
- 
-  memset(reduced_value_array, 0, num_vbuf_pools);
+
+  if(tau_pvar_session == NULL || tau_pvar_handles == NULL || tau_pvar_handles[pvar_max_vbuf_usage_index] == NULL || tau_pvar_handles[pvar_vbuf_allocated_index] == NULL) return 0; 
+
+  for(i = 0; i < num_vbuf_pools; i++) reduced_value_array[i] = 0;
+
+  //memset(reduced_value_array, 0, num_vbuf_pools);
   strcpy(reduced_value_cvar_string, "");
   strcpy(reduced_value_cvar_value_string, "");
 
   MPI_T_pvar_read(*tau_pvar_session, tau_pvar_handles[pvar_max_vbuf_usage_index], (void*)pvar_max_vbuf_usage);
   MPI_T_pvar_read(*tau_pvar_session, tau_pvar_handles[pvar_vbuf_allocated_index], (void*)pvar_vbuf_allocated);
 
+  
   /*Tuning logic: If the difference between allocated vbufs and max use vbufs in a given
  *   * vbuf pool is higher than a set threshhold, then we will free from that pool.*/
   for(i = 0 ; i < num_vbuf_pools; i++) {
@@ -160,6 +166,7 @@ int Tau_plugin_init_func(int argc, char **argv) {
   tau_pvar_session = Tau_mpi_t_get_pvar_session();
   tau_pvar_handles = Tau_mpi_t_get_pvar_handles();
   num_vbuf_pools = Tau_mpi_t_get_pvar_count(pvar_max_vbuf_usage_index);
+  num_vbuf_pools = 4;
   reduced_value_array = (unsigned long long int *)malloc(sizeof(unsigned long long int)*num_vbuf_pools);
   pvar_max_vbuf_usage = (unsigned long long int *)malloc(sizeof(unsigned long long int)*num_vbuf_pools);
   pvar_vbuf_allocated = (unsigned long long int *)malloc(sizeof(unsigned long long int)*num_vbuf_pools);
