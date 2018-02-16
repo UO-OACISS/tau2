@@ -301,6 +301,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(void);
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
 void TauAlarmHandler(int signum) {
+
    /* Check and see if we're tracking memory events */
   if (TheIsTauTrackingMemory()) {
     TauAllocation::TriggerHeapMemoryUsageEvent();
