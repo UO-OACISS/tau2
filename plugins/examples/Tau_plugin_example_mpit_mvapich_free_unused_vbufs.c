@@ -56,7 +56,6 @@ int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_interrupt_tri
 
   for(i = 0; i < num_vbuf_pools; i++) reduced_value_array[i] = 0;
 
-  //memset(reduced_value_array, 0, num_vbuf_pools);
   strcpy(reduced_value_cvar_string, "");
   strcpy(reduced_value_cvar_value_string, "");
 
@@ -166,7 +165,6 @@ int Tau_plugin_init_func(int argc, char **argv) {
   tau_pvar_session = Tau_mpi_t_get_pvar_session();
   tau_pvar_handles = Tau_mpi_t_get_pvar_handles();
   num_vbuf_pools = Tau_mpi_t_get_pvar_count(pvar_max_vbuf_usage_index);
-  num_vbuf_pools = 4;
   reduced_value_array = (unsigned long long int *)malloc(sizeof(unsigned long long int)*num_vbuf_pools);
   pvar_max_vbuf_usage = (unsigned long long int *)malloc(sizeof(unsigned long long int)*num_vbuf_pools);
   pvar_vbuf_allocated = (unsigned long long int *)malloc(sizeof(unsigned long long int)*num_vbuf_pools);
