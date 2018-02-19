@@ -43,11 +43,11 @@ done
 PYCOOLR_PLATFORM=$platform
 PYCOOLR_TOOL=$tool
 
-export BEACON_TOPOLOGY_SERVER_ADDR=128.223.202.147
+export BEACON_TOPOLOGY_SERVER_ADDR=dig +short $platform
 export BEACON_ROOT_FS=/dev/shm/aurelem
 export LD_LIBRARY_PATH=/home/users/aurelem/beacon/mix/BEACON_inst/lib:$LD_LIBRARY_PATH
 export PATH=/home/users/aurelem/beacon/mix/BEACON_inst/bin:/home/users/aurelem/beacon/mix/BEACON_inst/sbin:$PATH
-export PYCOOLR_NODE=cerberus.nic.uoregon.edu
+export PYCOOLR_NODE=$platorm
 export PYCOOLR_INST_PATH=/home/users/aurelem/beacon/mix/BEACON_inst
 export PYCOOLR_LIBPATH=/home/users/aurelem/beacon/mix/BEACON_inst/lib
 export MPIT_CVARS_PATH=/dev/shm/cvars/tau_mpit_cvars.conf
