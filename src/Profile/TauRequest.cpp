@@ -2,6 +2,7 @@
 #include <map>
 #include <cstdlib>
 #include <Profile/TauRequest.h>
+#include <Profile/Profiler.h>
 
 using namespace std;
 
@@ -18,6 +19,7 @@ request_data * TauAddRequestData(int status, int count, MPI_Datatype datatype,
         int other, int tag, MPI_Comm comm, MPI_Request * request, int returnVal,
         int persistent)
 {
+    RtsLayer::LockDB();
 	int typesize;
 	request_map & requests = GetRequestMap();
 	request_data * rq = (request_data*)(void*)0;
@@ -37,6 +39,7 @@ request_data * TauAddRequestData(int status, int count, MPI_Datatype datatype,
 		rq->is_persistent = persistent;
 		requests[*request] = rq;
 	}
+    RtsLayer::UnLockDB();
 
 	return rq;
 }
@@ -45,11 +48,14 @@ request_data * TauAddRequestData(int status, int count, MPI_Datatype datatype,
 extern "C"
 request_data * TauGetRequestData(MPI_Request * request)
 {
+    RtsLayer::LockDB();
 	request_map & requests = GetRequestMap();
 	request_map::iterator it = requests.find(*request);
 	if(it != requests.end()) {
+        RtsLayer::UnLockDB();
 		return it->second;
 	} else {
+        RtsLayer::UnLockDB();
 		return NULL;
 	}
 }
@@ -58,11 +64,13 @@ request_data * TauGetRequestData(MPI_Request * request)
 extern "C"
 void TauDeleteRequestData(MPI_Request * request)
 {
+    RtsLayer::LockDB();
 	request_map & requests = GetRequestMap();
 	request_map::iterator it = requests.find(*request);
 	if(it != requests.end()) {
 		delete it->second;
-		requests.erase(*request);
+		requests.erase(it);
 	}
+    RtsLayer::UnLockDB();
 }
 
