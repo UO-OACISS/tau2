@@ -19,7 +19,7 @@ export SOS_EVPATH_MEETUP=${DIR}
 export TAU_SOS_HIGH_RESOLUTION=1
 export TAU_SOS=1
 
-PLATFORM=cerberus.nic.uoregon.edu
+PLATFORM=delphi.nic.uoregon.edu
 
 start_sos_daemon()
 {
