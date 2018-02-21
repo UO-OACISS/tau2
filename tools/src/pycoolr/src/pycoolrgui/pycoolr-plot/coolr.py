@@ -76,8 +76,8 @@ longopt = ['output=','node=', 'enclave=', 'enclaves=', 'width=', 'height=', 'lis
 try:
     opts, args = getopt.getopt(sys.argv[1:],
                                shortopt, longopt)
-except getopt.GetoptError, err:
-    print err
+except getopt.GetoptError as err:
+    print(err)
     usage()
     sys.exit(1)
 
@@ -103,22 +103,22 @@ for o, a in opts:
     elif o in ("--ncols"):
         ocfg["ncols"]=int(a)
     elif o in ("--list"):
-        print ''
-        print '[available graph modules]'
-        print ''
+        print('')
+        print('[available graph modules]')
+        print('')
         for i in cfg["modnames"]:
-            print i
-        print ''
-        print ''
+            print(i)
+        print('')
+        print('')
         sys.exit(0)
     elif o in ("--mods"):
         ocfg["modnames"] = a.split(",")
 
 
 if len(args) < 1:
-    print ''
-    print 'No config file is specified.  Enabled the fake mode.'
-    print ''
+    print('')
+    print('No config file is specified.  Enabled the fake mode.')
+    print('')
     cfg["masternode"] = "frontend"
     cfg["drawexternal"] = "no"
     cfg["drawacpipwr"] = "no"
@@ -157,8 +157,8 @@ if len(enclaves) == 0:
         enclaves = cfg['enclaves']
 
 #print 'masternode:', cfg['masternode']
-print 'targetnode:', targetnode
-print 'enclaves:', enclaves
+print('targetnode:', targetnode)
+print('enclaves:', enclaves)
 
 if len(appcfgfn) > 0:
     with open(appcfgfn) as f:
@@ -167,7 +167,7 @@ if len(appcfgfn) > 0:
         cfg[k] = appcfg[k]
 
     if not (cfg.has_key('appname') and cfg.has_key('appsamples')):
-        print "Please double check %s: appname or appsamples tags" % appcfgfn
+        print("Please double check %s: appname or appsamples tags" % appcfgfn)
         sys.exit(1)
 
 
@@ -183,7 +183,7 @@ if fakemode:
 try:
     logf = open(cfg["outputfn"], 'w', 0) # unbuffered write
 except:
-    print 'unable to open', cfg["outputfn"]
+    print('unable to open', cfg["outputfn"])
 
 
 #if not fakemode:
@@ -407,7 +407,7 @@ class Coolrsub:
         try:       
           root.config(menu=menubar)
         except AttributeError as attErr:
-          print 'menu Exception: ', type(attErr), attErr 
+          print('menu Exception: ', type(attErr), attErr)
 
         #self.winPvars()
         #self.winCvars()
@@ -427,13 +427,13 @@ class Coolrsub:
     global conn
     # check for file to exist
     #print ("Checking for file: ", sqlite_file)
-    print "Checking for file: ", self.sosdbfile
+    print("Checking for file: ", self.sosdbfile)
     while not os.path.exists(self.sosdbfile):
-        print "Waiting on file: ", sqlite_file
+        print("Waiting on file: ", self.sosdbfile)
         time.sleep(1)
 
     #print("Connecting to: ", sqlite_file)
-    print "Connecting to: ", self.sosdbfile
+    print("Connecting to: ", self.sosdbfile)
     # Connecting to the database file
     #conn = sqlite3.connect(sqlite_file)
     #fd = os.open(sqlite_file, os.O_RDONLY)
@@ -453,7 +453,7 @@ class Coolrsub:
     return c
 
   def btnfontsupdate(self):
-       print 'Update font'
+       print('Update font')
        if self.selectedFontPolicy or self.selectedFontSize or self.selectedFontWeight:
          matplotlib.rcParams.update({'font.size': self.selectedFontSize, 'font.family': self.selectedFontPolicy})
          #self.customFont.configure(family=self.selectedFontPolicy)
@@ -462,16 +462,16 @@ class Coolrsub:
          matplotlib.rc('font', **font)
 
   def ckbtnFontBold(self):
-        print 'Bold selected'
+        print('Bold selected')
 
   def ckbtnFontItalic(self):
-        print 'Italic selected'
+        print('Italic selected')
 
   def ckbtnFontUnderline(self):
-        print 'Underline selected'
+        print('Underline selected')
       
   def browsefontpolicy(self):
-        print 'browsefontpolicy'
+        print('browsefontpolicy')
         fontpolicydiag = tkFileDialog.askopenfilename(filetypes=[("Text files","*.fft")])
 
   def onselectFontPolicy(self,evt):
@@ -479,23 +479,23 @@ class Coolrsub:
         selection = w.curselection()
         value = w.get(selection[0])
         self.selectedFontPolicy = value
-        print 'select font: ', value
+        print('select font: ', value)
 
   def onselectFontSize(self, evt):
-       print 'select font size'  
+       print('select font size')
        w = evt.widget
        selection = w.curselection()
        value = w.get(selection[0])
        self.selectedFontSize = value
-       print 'select font: ', value
+       print('select font: ', value)
 
   def onselectFontWeight(self, evt):
-       print 'select font weight'  
+       print('select font weight')
        w = evt.widget
        selection = w.curselection()
        value = w.get(selection[0])
        self.selectedFontWeight = value
-       print 'select font: ', value
+       print('select font: ', value)
 
   def loadFontPolicy(self):
         fontpolicydiag = askopenfilename(filetypes=(("*.fft"))) 
@@ -505,7 +505,7 @@ class Coolrsub:
   #def cvarsmenu(self):
 
   def fontmenu(self):
-        print 'nothing'
+        print('nothing')
 
         self.paramswin = Tk.Tk()
         self.paramswin.title("Fonts: family, size and weight")
@@ -649,7 +649,7 @@ class Coolrsub:
 
   def clearplot(self,idxGraph):
 
-       print 'clearplot: idxGraph=', idxGraph
+       print('clearplot: idxGraph=', idxGraph)
        ax = self.ax[idxGraph]
        ax.cla()    
        #ax.clf()
@@ -723,13 +723,13 @@ class Coolrsub:
                         total_val=total_val+ref4
                         num_vals=num_vals+1
                         mean_val=total_val/num_vals
-                        print 'display record ref4='+str(ref4)
+                        print('display record ref4='+str(ref4))
                         self.data_lr[i].add(t,ref4)
                         #self.data_lr[i].add(t,mean_val)
                         goodrecord=1
 
         if goodrecord==0:
-                print 'bad record'
+                print('bad record')
                 return        
 
   def updateguibeacon(self, params, sample):
@@ -798,7 +798,7 @@ class Coolrsub:
                 try:
                   ax.cla()
                 except Exception as errCla:
-                  print 'update_gui: Error cla(): ', type(errCla), errCla
+                  print('update_gui: Error cla(): ', type(errCla), errCla)
 
                 ax.set_xlim([t-gxsec, t])
                 #print 'get x and y'
@@ -907,7 +907,7 @@ class Coolrsub:
         try:
            ax.cla()
         except Exception as errCla:
-          print 'update_gui: Error cla(): ', type(errCla), errCla
+          print('update_gui: Error cla(): ', type(errCla), errCla)
 
         ax.set_xlim([pack_time-gxsec, pack_time])
         #print 'get x and y'
@@ -1017,7 +1017,7 @@ class Coolrsub:
         try:
            ax.cla()
         except Exception as errCla:
-          print 'update_gui: Error cla(): ', type(errCla), errCla
+          print('update_gui: Error cla(): ', type(errCla), errCla)
 
         ax.set_xlim([pack_time-gxsec, pack_time])
         #print 'get x and y'
@@ -1066,7 +1066,7 @@ class Coolrsub:
  
   def subscribe(self,libarbjsonbeep):
 
-     print 'start thread with Subscribe'
+     print('start thread with Subscribe')
 
      listargs = ['MEMORY','NODE_POWER_WATTS','MPI_T_PVAR']
 
@@ -1075,7 +1075,7 @@ class Coolrsub:
 
   def publish(self,libarbpubcvars):
 
-     print 'start thread with Publish'
+     print('start thread with Publish')
 
      #listargs = ['MEMORY','NODE_POWER_WATTS','MPI_T_PVAR']
 
@@ -1141,11 +1141,11 @@ class Coolrsub:
              payload += resultPayload[j]
 
            payload.strip()
-           print 'payload =',payload
+           print('payload =',payload)
            try:
              j = json.loads(payload)
            except ValueError as e:
-             print 'Failed to load json data: %s' %e
+             print('Failed to load json data: %s' %e)
              continue
              #return False
 
@@ -1180,7 +1180,7 @@ class Coolrsub:
          if 'node' not in e and\
             'sample' not in e and\
             'time' not in e:
-             print 'Ignore this invalid sample:', json.dumps(e)
+             print('Ignore this invalid sample:', json.dumps(e))
              continue
 
          #print 'set timestamp'
@@ -1208,11 +1208,11 @@ class Coolrsub:
        #print 'finished parsing listEvents'
        #draw to refresh plotting
        #layout.canvas.draw()
-       print 'draw canvas'
+       print('draw canvas')
        try:
          self.canvas.draw()
        except Exception as errDraw:
-         print 'Error drawing canvas: ', type(errDraw), errDraw
+         print('Error drawing canvas: ', type(errDraw), errDraw)
        #plt.draw()
 
        profile_t7 = time.time()
@@ -1302,25 +1302,25 @@ class Coolrsub:
     sql_statement = ("SELECT min(time_pack) FROM viewCombined;")
     print("get_min_timestamp Executing query")
  
-    print "sql statement: ", sql_statement
+    print("sql statement: ", sql_statement)
     #self.try_execute(c, sql_statement)
     os.environ['SOS_SQL'] = sql_statement
     sos_bin_path = os.environ.get('SOS_BIN_DIR')
-    print 'SOS BIN path: ', sos_bin_path
+    print('SOS BIN path: ', sos_bin_path)
     os.system('cd '+ sos_bin_path)
-    print 'current dir: ', os.getcwd()
+    print('current dir: ', os.getcwd())
     # Redirect stdout of passed command into a string
 
     soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
-    print 'soscmd: ', soscmd
+    print('soscmd: ', soscmd)
     tmp_res_min_ts_sql = subprocess.check_output(soscmd, shell=True)
 
     #self.res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
-    print 'get min ts: tmp res sql=', tmp_res_min_ts_sql
+    print('get min ts: tmp res sql=', tmp_res_min_ts_sql)
     res_min_ts_sql = tmp_res_min_ts_sql.splitlines()
-    print "List of result SQL MIN TS: ", res_min_ts_sql
+    print("List of result SQL MIN TS: ", res_min_ts_sql)
     min_ts_rows = res_min_ts_sql[1].split(",")
-    print "List of result SQL MIN TS values: ", min_ts_rows
+    print("List of result SQL MIN TS values: ", min_ts_rows)
     # Remove first element of SQL result 
     #ts = np.array([x[0] for x in min_ts_rows])
     str_min_timestamp = min_ts_rows[0].replace('\"', '')
@@ -1329,7 +1329,7 @@ class Coolrsub:
 
 
   def req_sql_db(self, c, ranks, ranks2, group_column, metric):
-    print 'req_sql entering'
+    print('req_sql entering')
     for r in ranks:
         sql_statement = ("SELECT distinct tbldata.name, tblvals.val, tblvals.time_pack, tblpubs.comm_rank FROM tblvals INNER JOIN tbldata ON tblvals.guid = tbldata.guid INNER JOIN tblpubs ON tblpubs.guid = tbldata.pub_guid WHERE tblvals.guid IN (SELECT guid FROM tbldata WHERE tbldata.name LIKE '" + metric + "') AND tblpubs." + group_column)
         """
@@ -1362,31 +1362,31 @@ class Coolrsub:
     sql_statement = ("SELECT value_name, value, time_pack FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
     #sql_statement = ("SELECT * FROM viewCombined WHERE value_name LIKE '" + metric+ "'")
    
-    print "sql statement: ", sql_statement 
+    print("sql statement: ", sql_statement )
     #self.try_execute(c, sql_statement)
     os.environ['SOS_SQL'] = sql_statement
     sos_bin_path = os.environ.get('SOS_BIN_DIR')
-    print 'SOS BIN path: ', sos_bin_path
+    print('SOS BIN path: ', sos_bin_path)
     os.system('cd '+ sos_bin_path)  
-    print 'current dir: ', os.getcwd() 
+    print('current dir: ', os.getcwd()) 
     # Redirect stdout of passed command into a string
    
     soscmd = sos_bin_path + "/demo_app_silent --sql SOS_SQL"
-    print 'soscmd: ', soscmd
+    print('soscmd: ', soscmd)
     tmp_res_sql = subprocess.check_output(soscmd, shell=True)
 
     self.try_execute(c, sql_statement)
 
     #print 'stdout of SOS demo: ', sys.stdout
     #self.res_sql = resultstdout.getvalue()
-    print 'tmp res_sql: ', tmp_res_sql   
+    print('tmp res_sql: ', tmp_res_sql)
     
     self.res_sql = tmp_res_sql.splitlines()
     # REmove first element of SQL result 
     self.res_sql.pop(0)
 
     for item_sql in self.res_sql:
-      print 'res sql: ', item_sql 
+      print('res sql: ', item_sql) 
       
  
   # Call demo with SQL statement given as argument and store standard output
@@ -1447,22 +1447,22 @@ class Coolrsub:
 
   def exec_sos_app(self):
     
-    print 'SOS: Execute demo app'
+    print('SOS: Execute demo app')
     sos_path = os.environ.get('SOS_BUILD_DIR') 
     self.sos_bin_path = sos_path+"/bin"
-    print 'SOS BIN PATH: ', self.sos_bin_path
+    print('SOS BIN PATH: ', self.sos_bin_path)
     os.system("cd "+ self.sos_bin_path) 
 
 
   # Read and plot selected metrics coming from SOS 
   def readsosmetrics(self):
 
-    print 'readsosmetrics'
+    print('readsosmetrics')
     profile_t1 = time.time()
 
     self.opendb()
 
-    print "metrics: ", self.metrics
+    print("metrics: ", self.metrics)
     #self.get_min_timestamp()  
  
     while True:  
@@ -1513,12 +1513,12 @@ class Coolrsub:
  
   def readsosmetrics_db(self):
 
-     print 'readsosmetrics'
+     print('readsosmetrics')
      profile_t1 = time.time()
      # Comment the method just for debugging purpose
      self.opendb() 
     
-     print 'after opening db, read db and plot ....'
+     print('after opening db, read db and plot ....')
  
      while True:
 
@@ -1528,7 +1528,7 @@ class Coolrsub:
          if self.listRecordSample[i] != -1:
            j = self.listRecordSample[i]
      
-           print 'readsosmetrics: i=%d, j=%d' %(i,j)
+           print('readsosmetrics: i=%d, j=%d' %(i,j))
            
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
@@ -1565,7 +1565,7 @@ class Coolrsub:
 
   def readEvents(self,libarbjsonbeep):
 
-    print 'start thread: readEvents'
+    print('start thread: readEvents')
 
     low_index = 0
     high_index = 0
@@ -1633,11 +1633,11 @@ class Coolrsub:
 
 
            payload.strip()
-           print 'payload =',payload
+           print('payload =',payload)
            try:
              j = json.loads(payload)
            except ValueError as e:
-             print 'Failed to load json data: %s' %e
+             print('Failed to load json data: %s' %e)
              continue
              #return False
 
@@ -1672,11 +1672,11 @@ class Coolrsub:
          if 'node' not in e and\
             'sample' not in e and\
             'time' not in e:
-             print 'Ignore this invalid sample:', json.dumps(e)
+             print('Ignore this invalid sample:', json.dumps(e))
              continue
 
          #print 'set timestamp'
-         print 'event element', e
+         print('event element', e)
          #print 'event time', e['time']
          if params['ts'] == 0:
                params['ts'] = int(e['time'])
@@ -1729,7 +1729,7 @@ class Coolrsub:
 
   def subSpawn(self):
 
-     print 'subSpawn: load beacon subscriber library'
+     print('subSpawn: load beacon subscriber library')
      envlibpath = os.environ['PYCOOLR_LIBPATH']
      libarbjsonbeep = cdll.LoadLibrary(envlibpath+'/libarbitraryjsonbeepmulsub.so')
 
@@ -1741,13 +1741,13 @@ class Coolrsub:
      #self.readDB()
 
      if self.tool == "beacon":
-       print 'Selected tool: beacon' 
+       print('Selected tool: beacon') 
        try:
          thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
          thread.start_new_thread(self.readEvents,(libarbjsonbeep,))
          #thread.start_new_thread(self.readEvents,(libarbjsonbeep,))
        except Exception as errThread:
-         print "Error: unable to start thread: ", errThread
+         print("Error: unable to start thread: ", errThread)
 
      elif self.tool == "sos":
        try:
@@ -1756,7 +1756,7 @@ class Coolrsub:
          #thread.start_new_thread(self.readsosmetrics_db,())
       
        except Exception as errThread:
-         print 'Error: unable to start thread: ', errThread
+         print('Error: unable to start thread: ', errThread)
 
 
      self.refresh_plot()
@@ -1771,7 +1771,7 @@ class Coolrsub:
      #    print 'Error drawing canvas: ', type(errDraw), errDraw
 
   def btncvarsupdatefn(self):
-        print "Update CVARS"
+        print("Update CVARS")
 
         cvars_comm_mode = os.environ["CVARS_COMM_MODE"]
 
@@ -1789,7 +1789,7 @@ class Coolrsub:
 
             self.selectedcvarsvalues[i] =  self.listcvarsentry[i].get()
             strcvarsvalues += self.selectedcvarsvalues[i]
-            print 'numselectedcvars=%d, index=%d' % (self.numselectedcvars, i)
+            print('numselectedcvars=%d, index=%d' % (self.numselectedcvars, i))
             if i+1 < self.numselectedcvars:
               strcvarsmetrics += ","
               strcvarsvalues += ","
@@ -1802,7 +1802,7 @@ class Coolrsub:
             #self.strcvars += "=" 
             #self.strcvars += self.selectedcvarsvalues[i]
             #strcvars += ","
-            print 'numselectedcvars=%d, index=%d' % (self.numselectedcvars, i)
+            print('numselectedcvars=%d, index=%d' % (self.numselectedcvars, i))
             if i+1 < self.numselectedcvars:
               strcvarsmetrics += ","
               strcvarsvalues += ","
@@ -1813,14 +1813,14 @@ class Coolrsub:
         #self.strcvars += ":"
         self.strcvars += strcvarsvalues
 
-        print "strcvarsmetrics: ", strcvarsmetrics
-        print "strcvarsvalues: ", strcvarsvalues
-        print "strcvars: ", self.strcvars
+        print("strcvarsmetrics: ", strcvarsmetrics)
+        print("strcvarsvalues: ", strcvarsvalues)
+        print("strcvars: ", self.strcvars)
 
         # Test if we have to communicate MPI_T CVARS in a Publish/Subscribe mode       
         if cvars_comm_mode == "pub":
 
-          print "Publishing CVARS"
+          print("Publishing CVARS")
 
           pycoolr_inst_path=os.environ['PYCOOLR_INST_PATH']
           os.system("python "+pycoolr_inst_path+"/gui/pycoolr-plot/coolr-pub-cvars.py "+str(strcvarsmetrics)+" "+str(strcvarsvalues))
@@ -1851,7 +1851,7 @@ class Coolrsub:
 
         for i in range(len(selection)):
           value = w.get(selection[i])
-          print "selection:", selection, ": '%s'" % value
+          print("selection:", selection, ": '%s'" % value)
           self.selectedcvarsmetrics[i] = value
 
         if self.listlabelcvarsmetric:
@@ -1873,19 +1873,19 @@ class Coolrsub:
         self.listcvarsarrayindexentry = [None] * len(selection)
         self.listcvarsarrayindex = [None] * len(selection)
 
-        print 'selection: ', selection
-        print 'range selection: ', range(len(selection))
+        print('selection: ', selection)
+        print('range selection: ', range(len(selection)))
 
         for cvaritem, cvarindex in zip(selection, range(len(selection))):
 
           value = w.get(selection[cvarindex])
-          print 'len selection: ', len(selection)
-          print 'value of item %d: %s ' % (cvarindex, value)
-          print 'cvaritem: ', cvaritem
-          print 'cvarindex= ', cvarindex
-          print 'cvarsindexrow= ', self.cvarsindexrow
+          print('len selection: ', len(selection))
+          print('value of item %d: %s ' % (cvarindex, value))
+          print('cvaritem: ', cvaritem)
+          print('cvarindex= ', cvarindex)
+          print('cvarsindexrow= ', self.cvarsindexrow)
 
-          print 'cfg cvars array:', self.listcfgcvarsarray[0]
+          print('cfg cvars array:', self.listcfgcvarsarray[0])
           if value == self.listcfgcvarsarray[0]:
 
             self.listlabelcvarsmetric[cvarindex]=Tk.Label(self.stepCvarsUpdate,  text=value)
@@ -1933,7 +1933,7 @@ class Coolrsub:
           #print "selection:", selection, ": '%s'" % value
          
         listintselection = [int (i) for i in selection]
-        print 'listintselection: ', listintselection
+        print('listintselection: ', listintselection)
 
         for i in range(self.nbsamples):
           if (self.listSamplesAllocated[i] > -1) and (i not in listintselection):
@@ -1948,7 +1948,7 @@ class Coolrsub:
               if self.listSamplesAllocated[j] == -1:    
                 #index = int(j)
                 self.listUsedGraphs[i] = j
-                print 'graph %d allocated to sample %d' % (i, j)
+                print('graph %d allocated to sample %d' % (i, j))
                 self.listRecordSample[i] = j
                 self.listSamplesAllocated[j] = i
                 break
@@ -1974,7 +1974,7 @@ class Coolrsub:
                 # Mark current graph as used
                 self.listUsedGraphs[j] = 1           
                 # Record the current graph as plotting the current sample
-                print 'Record Sample %d for graph %d' %(index,j)
+                print('Record Sample %d for graph %d' %(index,j))
                 self.listRecordSample[j] = index
 
                 # Mark current sample as allocated to the current graph
@@ -2075,21 +2075,21 @@ class Coolrsub:
          self.canvas.draw()
          #self.frame.update()
        except Exception as errDraw:
-         print 'refresh_plot: Error drawing canvas: ', type(errDraw), errDraw
+         print('refresh_plot: Error drawing canvas: ', type(errDraw), errDraw)
        self.lock.release()
 
        self.root.after(1000,self.refresh_plot)      
 
   def updatebtn(self):
-       print 'update buttonupdate button'
+       print('update buttonupdate button')
        try:
          self.canvas.draw()
        except Exception as errDraw:
-         print 'Error drawing canvas: ', type(errDraw), errDraw
+         print('Error drawing canvas: ', type(errDraw), errDraw)
 
   def checkfn(self, idx, text): 
-       print 'checkfn'
-       print 'Check index=%d text=%s' % (idx,text)
+       print('checkfn')
+       print('Check index=%d text=%s' % (idx,text))
        #print 'Size of listbtnchecked[]= ', len(self.listbtnchecked)
        #self.listbtnchecked[idx] = 1
 
