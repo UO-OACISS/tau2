@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, os, re, thread, signal
+import sys, os, re, _thread, signal
 from cStringIO import StringIO
 import subprocess
 import multiprocessing
