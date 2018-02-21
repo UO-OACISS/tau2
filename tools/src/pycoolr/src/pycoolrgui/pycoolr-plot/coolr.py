@@ -381,7 +381,7 @@ class Coolrsub:
 
         #self.subSpawn()
 
-  	self.root = master
+        self.root = master
 
         self.canvas = FigureCanvasTkAgg(fig,master=master)
         self.canvas.show()
@@ -580,21 +580,21 @@ class Coolrsub:
         y = (RHeight - h)/2
 
         self.f1 = Tk.Frame(self.pvarswin, width=200, height=100) 
-	self.l1 = Tk.Listbox(self.f1,selectmode='multiple',width=100,height=40)
+        self.l1 = Tk.Listbox(self.f1,selectmode='multiple',width=100,height=40)
 
         #self.pvarswin.geometry("%dx%d" % (RWidth,RHeight))
         #pvarswin.geometry('%dx%d+%d+%d' % (w,h,x,y)) 
         #f1 = Tk.Frame(pvarswin) 
         #f1 = Tk.Frame(pvarswin,width=150,height=100) 
-	s1 = Tk.Scrollbar(self.f1) 
+        s1 = Tk.Scrollbar(self.f1) 
 	#l1 = Tk.Listbox(f1,selectmode='multiple',width=80,height=40)
-	for i in range(self.nbsamples): self.l1.insert(i, self.listmetrics[i]) 
-	s1.config(command = self.l1.yview) 
-	self.l1.config(yscrollcommand = s1.set) 
+        for i in range(self.nbsamples): self.l1.insert(i, self.listmetrics[i]) 
+        s1.config(command = self.l1.yview) 
+        self.l1.config(yscrollcommand = s1.set) 
         self.l1.bind('<<ListboxSelect>>', self.onselectmetrics)
-	self.l1.pack(side = Tk.LEFT, fill = Tk.Y) 
-	s1.pack(side = Tk.RIGHT, fill = Tk.Y) 
-	self.f1.pack()
+        self.l1.pack(side = Tk.LEFT, fill = Tk.Y) 
+        s1.pack(side = Tk.RIGHT, fill = Tk.Y) 
+        self.f1.pack()
 
   def cvarsmenu(self):
         # this is the child window
@@ -746,34 +746,34 @@ class Coolrsub:
             # data handling
             #
             t = sample['time'] - params['ts']
-	    goodrecord=0
+            goodrecord=0
             for i in range(self.ngraphs):
             #for i in range(self.nbsamples):
                 if self.listRecordSample[i] != -1:
                   j = self.listRecordSample[i]
-	          ref1=params['cfg']
-  		  ref2=ref1['metrics']
+                  ref1=params['cfg']
+                  ref2=ref1['metrics']
                   #print 'ref - appsamples:'+str(ref2)
 		  #ref3=ref2[i]
-		  ref3=ref2[j]
+                  ref3=ref2[j]
                   #print 'ref3 : '+str(ref3)
                   #print 'sample list:'+str(sample)
                   #print 'check if ref in sample'
-		  if ref3 in sample:
-			ref4=sample[ref3]
+                  if ref3 in sample:
+                        ref4=sample[ref3]
 
                         #total_val=total_val+ref4
                         #num_vals=num_vals+1
                         #mean_val=total_val/num_vals
                         #print 'display record ref4='+str(ref4)
                 	#self.data_lr[i].add(t,ref4)
-                	self.data_lr[j].add(t,ref4)
+                        self.data_lr[j].add(t,ref4)
                 	#self.data_lr[i].add(t,mean_val)
-			goodrecord=1
+                        goodrecord=1
 
-	    if goodrecord==0:
+            if goodrecord==0:
 		#print 'bad record'
-		return
+                return
 
             #
             # graph handling
@@ -816,8 +816,8 @@ class Coolrsub:
                     #self.ytop[i] = ymax * 1.1
 
 		#if self.ybot[i] == 1 or ymin < self.ybot[i]:
-		if self.ybot[j] == 1 or ymin < self.ybot[j]:
-		    self.ybot[j] = ymin*.9
+                if self.ybot[j] == 1 or ymin < self.ybot[j]:
+                    self.ybot[j] = ymin*.9
 		    #self.ybot[i] = ymin*.9
 
                 #ax.set_ylim([self.ybot[i], self.ytop[i])
@@ -1035,7 +1035,7 @@ class Coolrsub:
           #self.ytop[i] = ymax * 1.1
 
 	#if self.ybot[i] == 1 or ymin < self.ybot[i]:
-	if self.ybot[recordidx] == 1 or ymin < self.ybot[recordidx]:
+        if self.ybot[recordidx] == 1 or ymin < self.ybot[recordidx]:
           self.ybot[recordidx] = ymin*.9
 		    #self.ybot[i] = ymin*.9
 
@@ -1480,7 +1480,7 @@ class Coolrsub:
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
            #group_column = self.groupcolumns[j]
- 	   metric = self.metrics[j]                   
+           metric = self.metrics[j]                   
            #print 'selected metric: ', metric 
            #print("Fetching rows.")
            #self.rows[j] = self.conn.fetchall()
@@ -1533,7 +1533,7 @@ class Coolrsub:
            #rank = self.ranks[j]
            #rank2 = self.ranks2[j]
            group_column = self.groupcolumns[j]
- 	   metric = self.metrics[j]                   
+           metric = self.metrics[j]                   
            
            if metric == "Iteration": 
              self.req_sql_db(self.conn, self.ranks, [], group_column, metric)
@@ -1956,7 +1956,7 @@ class Coolrsub:
   def onselectpvars2(self,evt):
 	# Note here that Tkinter passes an event object to onselect()
         #print 'selected item of list: ', self.l1.get(self.l1.curselection()) 
-    	w = evt.widget
+        w = evt.widget
         selection = w.curselection()
         for i in range(len(selection)):
           value = w.get(selection[i])
