@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, os, re, _thread, signal
-from cStringIO import StringIO
+#from cStringIO import StringIO
+from io import StringIO
 import subprocess
 import multiprocessing
 import json
@@ -14,9 +15,11 @@ import itertools
 from ctypes import cdll
 from ctypes.util import find_library
 import random
-import pylab as pl
 import matplotlib
 import matplotlib.pyplot as plt
+#import pylab as pl
+from matplotlib import pylab
+from pylab import *
 import re
 #import matplotlib.animation as manimation
 #from clr_matplot_graphs import *
