@@ -1591,7 +1591,16 @@ static int getProfileLocation(int metric, char *str)
 int TauProfiler_DumpData(bool increment, int tid, const char *prefix)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_DumpData\n", RtsLayer::myNode(), tid);
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_function_dump_data plugin_data;
+    plugin_data.tid = tid;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_DUMP, &plugin_data);
+  }
+
   return TauProfiler_writeData(tid, prefix, increment);
+
 }
 
 void getMetricHeader(int i, char *header)
