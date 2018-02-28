@@ -990,6 +990,7 @@ extern "C" int Tau_get_thread(void) {
 extern "C" int Tau_dump(void) {
   TauInternalFunctionGuard protects_this_function;
   TauProfiler_DumpData();
+
   return 0;
 }
 
