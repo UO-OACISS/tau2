@@ -15,10 +15,13 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
+#include <Profile/TauSOS.h>
 
 int Tau_plugin_dump(Tau_plugin_event_function_dump_data data) {
   printf("TAU PLUGIN: Function tid: %d\n", data.tid);
-  
+ 
+  TAU_SOS_send_data();
+ 
   return 0;
 }
 
