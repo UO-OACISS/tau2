@@ -917,6 +917,14 @@ extern "C" void Tau_exit(const char * msg) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  /*Invoke plugins only if both plugin path and plugins are specified
+  *    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_function_finalize_data plugin_data;
+    plugin_data.junk = -1;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, &plugin_data);
+  }
+
 #if defined(TAU_OPENMP)
   Tau_profile_exit_most_threads();
 #elif defined(TAU_CUDA)
