@@ -74,7 +74,7 @@ void esd_exit (elg_ui4 rid);
 #endif
 
 #include <Profile/TauPin.h>
-
+#include <Profile/TauPluginInternals.h>
 
 using namespace tau;
 
