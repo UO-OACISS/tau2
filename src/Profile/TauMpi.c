@@ -1876,7 +1876,7 @@ char *** argv;
   int provided = 0;
   returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
   if (TauEnv_get_sos_enabled()) {
-    TAU_SOS_init(argc, argv, true);
+    //TAU_SOS_init(argc, argv, true);
   }
 #else
   returnVal = PMPI_Init( argc, argv );

@@ -15,7 +15,6 @@
 // #define PROFILING_ON
 #include "TAU.h"
 #include "matmult_initialize.h"
-#include "Profile/TauSOS.h"
 
 #include <mpi.h>
 int provided = MPI_THREAD_SINGLE;
@@ -207,7 +206,7 @@ int main (int argc, char *argv[])
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int i;
-  int maxi = 60;
+  int maxi = 10;
   TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
@@ -217,7 +216,7 @@ int main (int argc, char *argv[])
     do_work();
     if (provided < MPI_THREAD_MULTIPLE) {
         if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
-        TAU_SOS_send_data();
+        Tau_dump();
     }
     if (rank == 0) { printf("Iteration %d of %d done.\n", i, maxi); fflush(stdout); }
   }

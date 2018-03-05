@@ -18,7 +18,7 @@
 #include <TauSOS.h>
 
 int Tau_plugin_dump(Tau_plugin_event_function_dump_data data) {
-  printf("TAU PLUGIN: Function tid: %d\n", data.tid);
+  printf("TAU PLUGIN SOS: dump\n");
  
   TAU_SOS_send_data();
  
@@ -26,6 +26,8 @@ int Tau_plugin_dump(Tau_plugin_event_function_dump_data data) {
 }
 
 int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data data) {
+
+  fprintf(stdout, "TAU PLUGIN SOS Finalize\n");
 
   TAU_SOS_finalize();
 
@@ -64,6 +66,7 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
 
+  fprintf(stdout, "TAU PLUGIN SOS Init\n");
   TAU_SOS_init_simple();
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->FunctionDump = Tau_plugin_dump;

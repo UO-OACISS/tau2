@@ -17,7 +17,7 @@ export SOS_EVPATH_MEETUP=${DIR}
 # TAU_SOS_send_data() call in matmult.c.
 # export TAU_SOS_PERIODIC=1
 export TAU_SOS_HIGH_RESOLUTION=1
-export TAU_SOS=1
+#export TAU_SOS=1
 
 PLATFORM=godzilla.nic.uoregon.edu
 
@@ -47,8 +47,8 @@ pkill -9 python
 stop_sos_daemon
 rm -rf sosd.00000.*
 start_sos_daemon
-mpirun -np 4 ./matmult &
-#mpirun -np 4 ./matmult 
+#mpirun -np 4 ./matmult &
+mpirun -np 4 ./matmult 
 sleep 4
 echo "Launch PyCOOLR"
 cd ../../x86_64/bin
