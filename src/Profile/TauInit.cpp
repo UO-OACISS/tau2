@@ -44,7 +44,6 @@
 #include <Profile/TauMemory.h>
 #include <Profile/TauBacktrace.h>
 #include <Profile/TauUtil.h>
-#include "Profile/TauSOS.h"
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -524,10 +523,6 @@ extern "C" int Tau_init_initializeTAU()
   if (TauEnv_get_mic_offload()) {
     TAU_PROFILE_SET_NODE(0);
   }
-#endif
-
-#if defined(TAU_SOS) && !defined(TAU_MPI)
-  TAU_SOS_init_simple();
 #endif
 
   Tau_create_top_level_timer_if_necessary();

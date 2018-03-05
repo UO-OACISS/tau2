@@ -22,7 +22,7 @@
 #include <TauPluginInternals.h>
 #include <stdarg.h>
 #include <string.h>
-
+#include <TauMetaData.h>
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
@@ -326,6 +326,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 
     token = strtok_r(NULL, ":", &save_ptr);
   }
+  Tau_metadata_push_to_plugins();
 
   free(fullpath);
   return 0;
@@ -442,6 +443,22 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data data
 }
 
 /**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the metadata registration event
+ ***************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.MetadataRegistrationComplete != 0) {
+     callback->cb.MetadataRegistrationComplete(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the atomic event registration event
  ****************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data data) {
@@ -515,6 +532,10 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
   switch(event) {
     case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
       Tau_util_invoke_callbacks_(*(Tau_plugin_event_function_registration_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_METADATA_REGISTRATION: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_metadata_registration_data*)data);
       break;
     } 
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION: {
