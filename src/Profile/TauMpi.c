@@ -1930,6 +1930,8 @@ char *** argv;
 
   writeMetaDataAfterMPI_Init(); 
 
+  Tau_post_init(); 
+
   return returnVal;
 }
 
@@ -2007,6 +2009,8 @@ int *provided;
   }
 
   writeMetaDataAfterMPI_Init(); 
+
+  Tau_post_init(); 
 
   return returnVal;
 }

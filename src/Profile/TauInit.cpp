@@ -536,5 +536,9 @@ extern "C" int Tau_init_initializeTAU()
   pthread_create(&thr, NULL, alfred, NULL);
 #endif
 
+#ifndef TAU_MPI
+  Tau_post_init();
+#endif // TAU_MPI
+
   return 0;
 }

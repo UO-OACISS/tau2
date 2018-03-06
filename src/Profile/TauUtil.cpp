@@ -396,6 +396,7 @@ void* Tau_util_load_plugin(const char *name, const char *path, PluginManager* pl
 extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->FunctionRegistrationComplete = 0;
   cb->MetadataRegistrationComplete = 0;
+  cb->PostInit = 0;
   cb->FunctionDump = 0;
   cb->AtomicEventRegistrationComplete = 0;
   cb->AtomicEventTrigger = 0;
@@ -409,6 +410,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
 void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbacks * src) {
   dest->FunctionRegistrationComplete = src->FunctionRegistrationComplete;
   dest->MetadataRegistrationComplete = src->MetadataRegistrationComplete;
+  dest->PostInit = src->PostInit;
   dest->FunctionDump = src->FunctionDump;
   dest->AtomicEventTrigger = src->AtomicEventTrigger;
   dest->AtomicEventRegistrationComplete = src->AtomicEventRegistrationComplete;
@@ -447,7 +449,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data data
 }
 
 /**************************************************************************************************************************
- * Overloaded function that invokes all registered callbacks for the metadata registration event
+ * Overloaded function that invokes all registered callbacks for the dump event
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_dump_data data) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
@@ -473,6 +475,22 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data data
   while(callback != NULL) {
    if(callback->cb.MetadataRegistrationComplete != 0) {
      callback->cb.MetadataRegistrationComplete(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the post init event
+ ***************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.PostInit != 0) {
+     callback->cb.PostInit(data);
    }
    callback = callback->next;
   }
@@ -556,6 +574,10 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
     } 
     case TAU_PLUGIN_EVENT_METADATA_REGISTRATION: {
       Tau_util_invoke_callbacks_(*(Tau_plugin_event_metadata_registration_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_POST_INIT: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_post_init_data*)data);
       break;
     } 
     case TAU_PLUGIN_EVENT_FUNCTION_DUMP: {
