@@ -67,7 +67,7 @@
 
 /* These macros are for creating MPI "events" in the SOS stream. */
 
-#ifdef TAU_SOS
+#ifdef TAU_SOS_disabled
 #define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
 #include "Profile/TauSOS.h"
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
@@ -622,7 +622,7 @@ MPI_Comm comm;
 
   double tmp_array1[5] = {0.0};
   double tmp_array2[5] = {0.0};
-#ifdef TAU_SOS
+#ifdef TAU_SOS_disabled
   //TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
   if (TauEnv_get_sos_trace_events()) {
 	  int commsize = 0;
@@ -1784,7 +1784,7 @@ int  MPI_Finalize(  )
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
 
-#ifdef TAU_SOS
+#ifdef TAU_SOS_disabled
   if (TauEnv_get_sos_enabled()) {
     TAU_SOS_finalize();
   }
@@ -1872,15 +1872,17 @@ char *** argv;
   adiost_tool();
 #endif
 
-#ifdef TAU_SOS
-  int provided = 0;
-  returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
-  if (TauEnv_get_sos_enabled()) {
-    //TAU_SOS_init(argc, argv, true);
-  }
-#else
   returnVal = PMPI_Init( argc, argv );
-#endif
+
+  /*Initialize the plugin system only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
+    if(!Tau_initialize_plugin_system()) {
+      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
+    } else {
+      printf("TAU INIT: Error initializing the plugin system\n");
+    }
+  }
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX 
@@ -1954,9 +1956,16 @@ int *provided;
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
-#ifdef TAU_SOS
-  TAU_SOS_init(argc, argv, true);
-#endif
+
+  /*Initialize the plugin system only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
+    if(!Tau_initialize_plugin_system()) {
+      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
+    } else {
+      printf("TAU INIT: Error initializing the plugin system\n");
+    }
+  }
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX

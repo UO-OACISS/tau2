@@ -999,6 +999,13 @@ extern "C" int Tau_dump(void) {
   TauInternalFunctionGuard protects_this_function;
   TauProfiler_DumpData();
 
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_function_dump_data plugin_data;
+    plugin_data.tid = RtsLayer::myThread();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_DUMP, &plugin_data);
+  }
+
   return 0;
 }
 
