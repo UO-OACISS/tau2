@@ -955,6 +955,15 @@ extern "C" void Tau_init(int argc, char **argv) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_post_init(void) {
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_post_init_data plugin_data;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, &plugin_data);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_node(int node) {
   TauInternalFunctionGuard protects_this_function;
   if (node >= 0) TheSafeToDumpData()=1;
