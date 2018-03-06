@@ -29,7 +29,7 @@ install: $(SHAREDLIBS)
 	$(TAU_INSTALL) $^ $(PLUGININSTALLDIR)
 
 libTAU-sos-plugin.so: tau_plugin_sos.o TauSOS.o
-	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-sos-plugin.so tau_plugin_sos.o TauSOS.o
+	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-sos-plugin.so tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS)
 
 libTAU-filter-plugin.so: tau_plugin_example_disable_instrumentation_runtime.o 
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin.so tau_plugin_example_disable_instrumentation_runtime.o 

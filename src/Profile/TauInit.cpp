@@ -442,6 +442,7 @@ extern "C" int Tau_init_initializeTAU()
   /* initialize environment variables */
   TauEnv_initialize();
 
+#ifndef TAU_MPI
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
   if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
@@ -451,6 +452,7 @@ extern "C" int Tau_init_initializeTAU()
       printf("TAU INIT: Error initializing the plugin system\n");
     }
   }
+#endif // TAU_MPI
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */

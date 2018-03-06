@@ -443,6 +443,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     int my_argc = 0;
     char ** my_argv = NULL;
     TAU_VERBOSE("TAU_SOS_init()...\n");
+    TAU_SOS_parse_environment_variables();
     if (!env_sos_enabled) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
         _threaded = threaded > 0 ? true : false;
@@ -494,7 +495,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
         /* Fixme! Insert all the data that was collected into Metadata */
     }
     //SOS_announce(tau_sos_pub);
-    SOS_publish(tau_sos_pub);
+    //SOS_publish(tau_sos_pub);
 }
 
 extern "C" void TAU_SOS_init_simple(void) {
@@ -726,7 +727,7 @@ extern "C" void TAU_SOS_send_data(void) {
   const char **counterNames;
   int numCounters;
   TauMetrics_getCounterList(&counterNames, &numCounters);
-  //printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
+  printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
   RtsLayer::LockDB();
 
   std::map<std::string, std::vector<double>* > low_res_timer_map;

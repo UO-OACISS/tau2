@@ -21,6 +21,7 @@
 #include <Profile/TauMetaData.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetaDataMerge.h>
+#include <Profile/TauPluginInternals.h>
 
 //#define DEBUG_PROF 1 
 
@@ -92,8 +93,6 @@ double TauWindowsUsecD(void);
 extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
 extern "C" int Tau_get_usesSHMEM();
-
-#include <Profile/TauPluginInternals.h>
 
 using namespace std;
 using namespace tau;
@@ -1587,15 +1586,9 @@ int TauProfiler_DumpData(bool increment, int tid, const char *prefix)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_DumpData\n", RtsLayer::myNode(), tid);
 
-  /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
-    Tau_plugin_event_function_dump_data plugin_data;
-    plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_DUMP, &plugin_data);
-  }
+  int rc = TauProfiler_writeData(tid, prefix, increment);
 
-  return TauProfiler_writeData(tid, prefix, increment);
-
+  return rc;
 }
 
 void getMetricHeader(int i, char *header)
