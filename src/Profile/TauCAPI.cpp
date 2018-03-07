@@ -2886,8 +2886,26 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
 
-extern "C" void TAU_TRACK_ALLOCATION(const char * name, size_t size) {
-  TAU_TRIGGER_EVENT(name, (double)size);
+extern "C" void Tau_track_mem_event(const char * name, const char * prefix, size_t size) {
+  if(!TauEnv_get_mem_class_present(name)) {
+    return;
+  }
+  const size_t event_len = strlen(name) + strlen(prefix) + 2;
+  char event_name[event_len];
+  sprintf(event_name, "%s %s", prefix, name);
+  if(TauEnv_get_mem_callpath()) {
+    TAU_TRIGGER_CONTEXT_EVENT(event_name, (double)size);
+  } else {
+    TAU_TRIGGER_EVENT(event_name, (double)size);
+  }
+}
+
+extern "C" void Tau_track_class_allocation(const char * name, size_t size) {
+  Tau_track_mem_event(name, "alloc", size);
+}
+
+extern "C" void Tau_track_class_deallocation(const char * name, size_t size) {
+  Tau_track_mem_event(name, "free", size);
 }
                     
 
