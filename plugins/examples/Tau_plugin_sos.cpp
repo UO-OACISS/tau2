@@ -67,7 +67,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
 
   fprintf(stdout, "TAU PLUGIN SOS Init\n");
-  TAU_SOS_init_simple();
+  TAU_SOS_init();
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->FunctionDump = Tau_plugin_dump;
   cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
