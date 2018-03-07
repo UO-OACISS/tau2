@@ -134,7 +134,7 @@ void TAU_SOS_make_pub() {
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
 /* Fixme! Replace these with values from TAU metadata. */
-        SOS_pub_create(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
+        SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
@@ -329,56 +329,6 @@ void program_path(char* exe_name)
 #endif
 }
 
-char ** fix_arguments(int *argc) {
-#if 1
-  char ** argv = NULL;
-  argv = (char**)(malloc(sizeof(char**)));
-  char exe_name[2048] = {0};
-  program_path(exe_name);
-  argv[0] = strdup(exe_name);
-  *argc = 1; 
-#else
-  char ** argv = NULL;
-  FILE *f = fopen("/proc/self/cmdline", "r");
-  if (f) {
-    char line[4096];
-
-    std::string os;
-    while (Tau_util_readFullLine(line, f)) {
-      if (os.length() != 0) {
-        os.append(" ");
-      }
-      os.append(line);
-    }
-    fclose(f);
-
-    //how many tokens?
-    char * token = strtok (const_cast<char*>(os.c_str())," ");
-    while (token != NULL)
-    {
-      *argc = *argc + 1;
-      token = strtok (NULL, " ");
-    }
-
-    if (argv == NULL) {
-      // allocate a list of strings
-      argv = (char**)(malloc(sizeof(char**) * (*argc)));
-    }
-
-    //get the tokens
-    token = strtok (const_cast<char*>(os.c_str())," ");
-    int i = 0;
-    while (token != NULL)
-    {
-      argv[i] = strdup(token);
-      token = strtok (NULL, " ");
-    }
-
-  }
-#endif
-  return argv;
-}
-
 /*********************************************************************
  * Parse a boolean value
  ********************************************************************/
@@ -438,28 +388,23 @@ void TAU_SOS_parse_environment_variables(void) {
     }
 }
 
-extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
+extern "C" void TAU_SOS_init() {
     static bool initialized = false;
-    int my_argc = 0;
-    char ** my_argv = NULL;
     TAU_VERBOSE("TAU_SOS_init()...\n");
     TAU_SOS_parse_environment_variables();
     if (!env_sos_enabled) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
-        _threaded = threaded > 0 ? true : false;
+        if (env_sos_periodic) {
+            _threaded = false;
+        } else {
+            _threaded = true;
+        }
         init_lock();
         // if runtime returns null, wait a bit and try again. If 
         // we fail "too many" times, give an error and continue
         _runtime = NULL;
         TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
-        if (argc == NULL || argv == NULL || *argc == 0) {
-          my_argv = fix_arguments(&my_argc);
-        } else {
-          my_argc = *argc;
-          my_argv = *argv;
-        }
-        SOS_init(&my_argc, &my_argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
-        //SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+        SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
             TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
             TAU_SOS_fork_exec_sosd();
@@ -470,8 +415,7 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             sleep(2);
             _runtime = NULL;
             TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
-            SOS_init(&my_argc, &my_argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
-            //SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+            SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
             if (_runtime != NULL) {
                 TAU_VERBOSE("Connected to SOS daemon. Continuing...\n");
                 break;
@@ -496,16 +440,6 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
     }
     //SOS_announce(tau_sos_pub);
     //SOS_publish(tau_sos_pub);
-}
-
-extern "C" void TAU_SOS_init_simple(void) {
-    bool threads = false;
-#if defined(PTHREADS) || defined(TAU_OPENMP)
-    //threads = true;
-#endif
-    int argc = 0;
-    char **argv = NULL;
-    TAU_SOS_init(&argc, &argv, threads);
 }
 
 extern "C" void TAU_SOS_stop_worker(void) {
