@@ -15,9 +15,10 @@ fi
 export SOS_CMD_PORT=22500
 export SOS_WORK=${DIR}
 export SOS_EVPATH_MEETUP=${DIR}
+#export SOS_IN_MEMORY_DATABASE=1
 # to use periodic, enable this variable, and comment out the
 # TAU_SOS_send_data() call in matmult.c.
-# export TAU_SOS_PERIODIC=1
+#export TAU_SOS_PERIODIC=1
 export TAU_SOS_HIGH_RESOLUTION=1
 export TAU_SOS=1
 
@@ -34,7 +35,7 @@ start_sos_daemon()
     daemon="sosd -l 0 -a 1 -k 0 -r aggregator -w ${SOS_WORK}"
     echo ${daemon}
     ${daemon} &
-    sleep 3
+    sleep 1
 }
 
 stop_sos_daemon()
@@ -54,7 +55,8 @@ stop_sos_daemon
 rm -rf sosd.00000.* profile.* dump.*
 start_sos_daemon
 #mpirun -np 4 ./matmult &
-mpirun -np 1 gdb ./matmult 
+#mpirun -np 1 ./matmult 
+./matmult 
 sleep 1
 echo "Launch PyCOOLR"
 cd ../../x86_64/bin

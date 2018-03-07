@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include <sstream>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauSampling.h>
@@ -17,8 +18,8 @@
 #include <Profile/TauPlugin.h>
 #include <TauSOS.h>
 
-int Tau_plugin_dump(Tau_plugin_event_function_dump_data data) {
-  printf("TAU PLUGIN SOS: dump\n");
+int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
+  //printf("TAU PLUGIN SOS: dump\n");
  
   TAU_SOS_send_data();
  
@@ -34,25 +35,61 @@ int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data data) {
   return 0;
 }
 
+int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
+
+  fprintf(stdout, "TAU PLUGIN SOS Post Init\n");
+
+  TAU_SOS_send_data();
+
+  return 0;
+}
+
+int Tau_plugin_sos_function_entry(Tau_plugin_event_function_entry_data data) {
+    /*
+  fprintf(stdout, "TAU PLUGIN SOS Function Entry: %d, %s, %s\n",
+          data.tid, data.timer_group, data.timer_name); fflush(stdout);
+          */
+  /* todo: filter on group, timer name */
+  std::stringstream ss;
+  ss << "TAU_ENTRY_EVENT::" << data.tid << "::" << data.timer_name;
+  Tau_SOS_pack_double(ss.str().c_str(), 0);
+  return 0;
+}
+
+int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
+    /*
+  fprintf(stdout, "TAU PLUGIN SOS Function Exit: %d, %s, %s\n",
+          data.tid, data.timer_group, data.timer_name); fflush(stdout);
+          */
+  /* todo: filter on group, timer name */
+  std::stringstream ss;
+  ss << "TAU_EXIT_EVENT::" << data.tid << "::" << data.timer_name;
+  Tau_SOS_pack_current_timer(ss.str().c_str());
+  return 0;
+}
+
 int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_registration_data data) {
+  // fprintf(stdout, "TAU Metadata registration\n");
+    std::stringstream ss;
+    ss << "TAU::" << 0 << "::Metadata::" << data.name;
     switch(data.value->type) {
         case TAU_METADATA_TYPE_STRING:
-            Tau_SOS_pack_string(data.name, data.value->data.cval);
+            Tau_SOS_pack_string(ss.str().c_str(), data.value->data.cval);
             break;
         case TAU_METADATA_TYPE_INTEGER:
-            Tau_SOS_pack_integer(data.name, data.value->data.ival);
+            Tau_SOS_pack_integer(ss.str().c_str(), data.value->data.ival);
             break;
         case TAU_METADATA_TYPE_DOUBLE:
-            Tau_SOS_pack_double(data.name, data.value->data.dval);
+            Tau_SOS_pack_double(ss.str().c_str(), data.value->data.dval);
             break;
         case TAU_METADATA_TYPE_TRUE:
-            Tau_SOS_pack_string(data.name, const_cast<char*>("true"));
+            Tau_SOS_pack_string(ss.str().c_str(), const_cast<char*>("true"));
             break;
         case TAU_METADATA_TYPE_FALSE:
-            Tau_SOS_pack_string(data.name, const_cast<char*>("false"));
+            Tau_SOS_pack_string(ss.str().c_str(), const_cast<char*>("false"));
             break;
         case TAU_METADATA_TYPE_NULL:
-            Tau_SOS_pack_string(data.name, const_cast<char*>("(null)"));
+            Tau_SOS_pack_string(ss.str().c_str(), const_cast<char*>("(null)"));
             break;
         default:
             break;
@@ -69,7 +106,10 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
   fprintf(stdout, "TAU PLUGIN SOS Init\n");
   TAU_SOS_init();
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
-  cb->FunctionDump = Tau_plugin_dump;
+  cb->Dump = Tau_plugin_sos_dump;
+  cb->PostInit = Tau_plugin_sos_post_init;
+  cb->FunctionEntry = Tau_plugin_sos_function_entry;
+  cb->FunctionExit = Tau_plugin_sos_function_exit;
   cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
   cb->FunctionFinalize = Tau_plugin_finalize;
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);

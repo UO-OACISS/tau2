@@ -27,6 +27,7 @@ This is not a parallel implementation */
 #include <errno.h>
 /*** NOTE THE ATTR INITIALIZER HERE! ***/
 pthread_mutex_t mutexsum;
+static pthread_barrier_t barrier;
 #ifndef PTHREAD_MUTEX_ERRORCHECK
 #define PTHREAD_MUTEX_ERRORCHECK 0
 #endif
@@ -134,7 +135,13 @@ double do_work(void) {
 
 void * threaded_func(void *data)
 {
-  do_work();
+    int * maxi = (int *)(data);
+  for (int i = 0 ; i < *maxi ; i++) {
+#ifdef PTHREADS
+    int s = pthread_barrier_wait(&barrier);
+#endif
+    do_work();
+  }
 #ifdef PTHREADS
   pthread_exit(NULL);
 #endif
@@ -143,19 +150,6 @@ void * threaded_func(void *data)
 
 int main (int argc, char *argv[]) 
 {
-
-#ifdef PTHREADS
-  int ret;
-  pthread_attr_t  attr;
-  pthread_t       tid1, tid2, tid3;
-  pthread_mutexattr_t Attr;
-  pthread_mutexattr_init(&Attr);
-  pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
-  if (pthread_mutex_init(&mutexsum, &Attr)) {
-   printf("Error while using pthread_mutex_init\n");
-  }
-#endif /* PTHREADS */
-
 #if 1
   int rc = MPI_SUCCESS;
 #if defined(PTHREADS)
@@ -181,40 +175,59 @@ int main (int argc, char *argv[])
   }
 #endif
 
-#ifdef PTHREADS
-  if (ret = pthread_create(&tid1, NULL, threaded_func, NULL) )
-  {
-    printf("Error: pthread_create (1) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  if (ret = pthread_create(&tid2, NULL, threaded_func, NULL) )
-  {
-    printf("Error: pthread_create (2) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  if (ret = pthread_create(&tid3, NULL, threaded_func, NULL) )
-  {
-    printf("Error: pthread_create (3) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-#endif /* PTHREADS */
-
-/* On thread 0: */
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  int comm_size = 0;
+  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    // get the number of cores
+    unsigned int ncores = sysconf(_SC_NPROCESSORS_ONLN);
+    unsigned int nthreads = (ncores / comm_size) -1;
+    // for debugging, use just one thread
+    nthreads = 1;
+    if (rank == 0) { printf("Running with %d processes, %d cores, %d threads per core\n", comm_size, ncores, nthreads+1); }
+
+#ifdef PTHREADS
+  int ret;
+  pthread_attr_t  attr;
+  //pthread_t       tid1, tid2, tid3;
+  pthread_t * tid = (pthread_t*)(malloc(sizeof(pthread_t) * nthreads));
+  pthread_mutexattr_t Attr;
+  pthread_mutexattr_init(&Attr);
+  int s = pthread_barrier_init(&barrier, NULL, nthreads+1);
+  pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
+  if (pthread_mutex_init(&mutexsum, &Attr)) {
+   printf("Error while using pthread_mutex_init\n");
+  }
+#endif /* PTHREADS */
+
+  int maxi = 10;
+
+#ifdef PTHREADS
+  for (int i = 0 ; i < nthreads ; i++) {
+    if (ret = pthread_create(&(tid[i]), NULL, threaded_func, &maxi) ) {
+      printf("Error: pthread_create (1) fails ret = %d\n", ret);
+      exit(1);
+    }   
+  }   
+#endif /* PTHREADS */
+
+  char * periodic_str = getenv("TAU_SOS_PERIODIC");
+  int do_dump = 1;
+  if (periodic_str != NULL) {
+    do_dump = 0;
+  }
+
+/* On thread 0: */
   int i;
-  int maxi = 100;
   TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
     MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
     TAU_CONTEXT_EVENT(event, i);
+    int s = pthread_barrier_wait(&barrier);
     do_work();
-    if (provided < MPI_THREAD_MULTIPLE) {
+    if (do_dump) {
         if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
         Tau_dump();
     }
@@ -222,24 +235,13 @@ int main (int argc, char *argv[])
   }
 
 #ifdef PTHREADS 
-  if (ret = pthread_join(tid1, NULL) )
-  {
-    printf("Error: pthread_join (1) fails ret = %d\n", ret);
-    exit(1);
+  for (int i = 0 ; i < nthreads ; i++) {
+    if (ret = pthread_join(tid[i], NULL) )
+    {
+        printf("Error: pthread_join (1) fails ret = %d\n", ret);
+        exit(1);
+    }   
   }   
-
-  if (ret = pthread_join(tid2, NULL) )
-  {
-    printf("Error: pthread_join (2) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  if (ret = pthread_join(tid3, NULL) )
-  {
-    printf("Error: pthread_join (3) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
   pthread_mutex_destroy(&mutexsum);
 #endif /* PTHREADS */
 
