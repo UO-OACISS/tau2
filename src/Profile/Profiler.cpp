@@ -361,6 +361,15 @@ void Profiler::Start(int tid)
   ThisKtauProfiler = KtauProfiler::GetKtauProfiler();
   ThisKtauProfiler->Start(this);
 #endif /* TAUKTAU */
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_function_entry_data plugin_data;
+    plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.timer_group = ThisFunction->GetAllGroups();
+    plugin_data.tid = tid;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, &plugin_data);
+  }
 }
 
 void Profiler::Stop(int tid, bool useLastTimeStamp)
@@ -688,6 +697,15 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #if defined(PROFILING_ON) && defined(TAUKTAU)
   KtauProfiler::PutKtauProfiler();
 #endif /* TAUKTAU */
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_function_exit_data plugin_data;
+    plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.timer_group = ThisFunction->GetAllGroups();
+    plugin_data.tid = tid;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_EXIT, &plugin_data);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////

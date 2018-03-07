@@ -26,7 +26,9 @@ extern "C" {
 struct Tau_plugin_event_function_registration_data;
 struct Tau_plugin_event_metadata_registration_data;
 struct Tau_plugin_event_post_init_data;
-struct Tau_plugin_event_function_dump;
+struct Tau_plugin_event_dump;
+struct Tau_plugin_event_function_entry;
+struct Tau_plugin_event_function_exit;
 struct Tau_plugin_event_atomic_event_trigger_data;
 struct Tau_plugin_event_atomic_event_registration_data;
 struct Tau_plugin_event_end_of_execution_data;
@@ -37,7 +39,9 @@ struct Tau_plugin_event_interrupt_trigger_data;
 typedef int (*Tau_plugin_function_registration_complete)(struct Tau_plugin_event_function_registration_data);
 typedef int (*Tau_plugin_metadata_registration_complete)(struct Tau_plugin_event_metadata_registration_data);
 typedef int (*Tau_plugin_post_init)(struct Tau_plugin_event_post_init_data);
-typedef int (*Tau_plugin_function_dump)(struct Tau_plugin_event_function_dump_data);
+typedef int (*Tau_plugin_dump)(struct Tau_plugin_event_dump_data);
+typedef int (*Tau_plugin_function_entry)(struct Tau_plugin_event_function_entry_data);
+typedef int (*Tau_plugin_function_exit)(struct Tau_plugin_event_function_exit_data);
 typedef int (*Tau_plugin_atomic_event_registration_complete)(struct Tau_plugin_event_atomic_event_registration_data);
 typedef int (*Tau_plugin_atomic_event_trigger)(struct Tau_plugin_event_atomic_event_trigger_data);
 typedef int (*Tau_plugin_end_of_execution)(struct Tau_plugin_event_end_of_execution_data);
@@ -49,7 +53,9 @@ struct Tau_plugin_callbacks {
    Tau_plugin_function_registration_complete FunctionRegistrationComplete;
    Tau_plugin_metadata_registration_complete MetadataRegistrationComplete;
    Tau_plugin_post_init PostInit;
-   Tau_plugin_function_dump FunctionDump;
+   Tau_plugin_dump Dump;
+   Tau_plugin_function_entry FunctionEntry;
+   Tau_plugin_function_exit FunctionExit;
    Tau_plugin_atomic_event_registration_complete AtomicEventRegistrationComplete;
    Tau_plugin_atomic_event_trigger AtomicEventTrigger;
    Tau_plugin_end_of_execution EndOfExecution;
@@ -62,7 +68,9 @@ enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION,
    TAU_PLUGIN_EVENT_METADATA_REGISTRATION,
    TAU_PLUGIN_EVENT_POST_INIT,
-   TAU_PLUGIN_EVENT_FUNCTION_DUMP,
+   TAU_PLUGIN_EVENT_DUMP,
+   TAU_PLUGIN_EVENT_FUNCTION_ENTRY,
+   TAU_PLUGIN_EVENT_FUNCTION_EXIT,
    TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION,
    TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER,
    TAU_PLUGIN_EVENT_END_OF_EXECUTION,
@@ -85,7 +93,19 @@ struct Tau_plugin_event_post_init_data {
    int dummy;
 };
 
-struct Tau_plugin_event_function_dump_data {
+struct Tau_plugin_event_dump_data {
+   int tid;
+};
+
+struct Tau_plugin_event_function_entry_data {
+   const char * timer_name;
+   const char * timer_group;
+   int tid;
+};
+
+struct Tau_plugin_event_function_exit_data {
+   const char * timer_name;
+   const char * timer_group;
    int tid;
 };
 
@@ -112,7 +132,9 @@ struct Tau_plugin_event_interrupt_trigger_data {
 typedef struct Tau_plugin_event_function_registration_data Tau_plugin_event_function_registration_data;
 typedef struct Tau_plugin_event_metadata_registration_data Tau_plugin_event_metadata_registration_data;
 typedef struct Tau_plugin_event_post_init_data Tau_plugin_event_post_init_data;
-typedef struct Tau_plugin_event_function_dump_data Tau_plugin_event_function_dump_data;
+typedef struct Tau_plugin_event_dump_data Tau_plugin_event_dump_data;
+typedef struct Tau_plugin_event_function_entry_data Tau_plugin_event_function_entry_data;
+typedef struct Tau_plugin_event_function_exit_data Tau_plugin_event_function_exit_data;
 typedef struct Tau_plugin_event_atomic_event_registration_data Tau_plugin_event_atomic_event_registration_data;
 typedef struct Tau_plugin_event_atomic_event_trigger_data Tau_plugin_event_atomic_event_trigger_data;
 typedef struct Tau_plugin_event_end_of_execution_data Tau_plugin_event_end_of_execution_data;

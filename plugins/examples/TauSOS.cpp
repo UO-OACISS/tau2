@@ -395,9 +395,9 @@ extern "C" void TAU_SOS_init() {
     if (!env_sos_enabled) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
         if (env_sos_periodic) {
-            _threaded = false;
-        } else {
             _threaded = true;
+        } else {
+            _threaded = false;
         }
         init_lock();
         // if runtime returns null, wait a bit and try again. If 
@@ -530,9 +530,7 @@ extern "C" void Tau_SOS_pack_current_timer(const char * event_name) {
     // assume time is the first counter!
     // also assume it is in microseconds!
     double value = (current - p->StartTime[0]) * CONVERT_TO_USEC;
-    RtsLayer::LockDB();
     SOS_pack(tau_sos_pub, event_name, SOS_VAL_TYPE_DOUBLE, &value);
-    RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_SOS_pack_string(const char * name, char * value) {
@@ -547,11 +545,7 @@ extern "C" void Tau_SOS_pack_string(const char * name, char * value) {
         }
         RtsLayer::UnLockDB();
     }
-    std::stringstream ss;
-    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
-    RtsLayer::LockDB();
-    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_STRING, value);
-    RtsLayer::UnLockDB();
+    SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_STRING, value);
 }
 
 extern "C" void Tau_SOS_pack_double(const char * name, double value) {
@@ -566,12 +560,7 @@ extern "C" void Tau_SOS_pack_double(const char * name, double value) {
         }
         RtsLayer::UnLockDB();
     }
-    std::stringstream ss;
-    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
-    // TAU_VERBOSE("SOS: %s = '%s'\n", name, value);
-    RtsLayer::LockDB();
-    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_DOUBLE, &value);
-    RtsLayer::UnLockDB();
+    SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
 extern "C" void Tau_SOS_pack_integer(const char * name, int value) {
@@ -586,12 +575,7 @@ extern "C" void Tau_SOS_pack_integer(const char * name, int value) {
         }
         RtsLayer::UnLockDB();
     }
-    std::stringstream ss;
-    ss << "TAU::" << RtsLayer::myThread() << "::Metadata::" << name;
-    // TAU_VERBOSE("SOS: %s = '%s'\n", name, value);
-    RtsLayer::LockDB();
-    SOS_pack(tau_sos_pub, ss.str().c_str(), SOS_VAL_TYPE_INT, &value);
-    RtsLayer::UnLockDB();
+    SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_INT, &value);
 }
 
 bool get_low_res_counter_name(const char *name, std::string &out_name) {
@@ -661,7 +645,7 @@ extern "C" void TAU_SOS_send_data(void) {
   const char **counterNames;
   int numCounters;
   TauMetrics_getCounterList(&counterNames, &numCounters);
-  printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
+  //printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
   RtsLayer::LockDB();
 
   std::map<std::string, std::vector<double>* > low_res_timer_map;
