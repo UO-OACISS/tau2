@@ -591,6 +591,10 @@ void Tau_profile_param1l(long data, const char *dataname);
 void Tau_mark_group_as_phase(void *ptr);
 char const * Tau_append_iteration_to_name(int iteration, char const * name, int slen);
 
+void Tau_track_mem_event(const char * name, const char * prefix, size_t size);
+void Tau_track_class_allocation(const char * name, size_t size);
+void Tau_track_class_deallocation(const char * name, size_t size);
+
 #ifdef __cplusplus
 /* Include the C++ API header */
 #include <Profile/TauCppAPI.h>
