@@ -400,6 +400,8 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->Dump = 0;
   cb->FunctionEntry = 0;
   cb->FunctionExit = 0;
+  cb->Send = 0;
+  cb->Recv = 0;
   cb->AtomicEventRegistrationComplete = 0;
   cb->AtomicEventTrigger = 0;
   cb->EndOfExecution = 0;
@@ -416,6 +418,8 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->Dump = src->Dump;
   dest->FunctionEntry = src->FunctionEntry;
   dest->FunctionExit = src->FunctionExit;
+  dest->Send = src->Send;
+  dest->Recv = src->Recv;
   dest->AtomicEventTrigger = src->AtomicEventTrigger;
   dest->AtomicEventRegistrationComplete = src->AtomicEventRegistrationComplete;
   dest->EndOfExecution = src->EndOfExecution;
@@ -495,6 +499,38 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data data) {
   while(callback != NULL) {
    if(callback->cb.FunctionExit != 0) {
      callback->cb.FunctionExit(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the send event
+ ***************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.Send != 0) {
+     callback->cb.Send(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the recv event
+ ***************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.Recv != 0) {
+     callback->cb.Recv(data);
    }
    callback = callback->next;
   }
@@ -626,6 +662,14 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
     } 
     case TAU_PLUGIN_EVENT_FUNCTION_EXIT: {
       Tau_util_invoke_callbacks_(*(Tau_plugin_event_function_exit_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_SEND: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_send_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_RECV: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_recv_data*)data);
       break;
     } 
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION: {

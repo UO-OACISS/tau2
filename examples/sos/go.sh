@@ -21,9 +21,11 @@ export SOS_EVPATH_MEETUP=${DIR}
 #export TAU_SOS_PERIODIC=1
 export TAU_SOS_HIGH_RESOLUTION=1
 export TAU_SOS=1
+export TAU_METRICS=TIME:PAPI_FP_OPS
+export TAU_TRACK_MEMORY_FOOTPRINT=1
 
 export TAU_PLUGINS=libTAU-sos-plugin.so
-export TAU_PLUGINS_PATH=/home/khuck/src/tau2/x86_64/lib/shared-mpi-pthread-sos
+export TAU_PLUGINS_PATH=/home/khuck/src/tau2/x86_64/lib/shared-papi-mpi-pthread-sos
 #export TAU_VERBOSE=1
 
 PLATFORM=godzilla.nic.uoregon.edu
@@ -58,9 +60,9 @@ start_sos_daemon
 #mpirun -np 1 ./matmult 
 ./matmult 
 sleep 1
-echo "Launch PyCOOLR"
-cd ../../x86_64/bin
-./pycoolr -tool=sos -platform=$PLATFORM
-stop_sos_daemon
-showdb
+# echo "Launch PyCOOLR"
+# cd ../../x86_64/bin
+# ./pycoolr -tool=sos -platform=$PLATFORM
+# stop_sos_daemon
+# showdb
 
