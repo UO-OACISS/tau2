@@ -34,7 +34,7 @@ static pthread_barrier_t barrier;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 256
+#define MATRIX_SIZE 512
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -200,7 +200,7 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
-  int maxi = 10;
+  int maxi = 5;
 
 #ifdef PTHREADS
   for (int i = 0 ; i < nthreads ; i++) {

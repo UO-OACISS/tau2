@@ -17,6 +17,7 @@ void Tau_SOS_pack_current_timer(const char * event_name);
 void Tau_SOS_pack_string(const char * name, char * value);
 void Tau_SOS_pack_double(const char * name, double value);
 void Tau_SOS_pack_integer(const char * name, int value);
+void Tau_SOS_pack_long(const char * name, long int value);
 void * Tau_sos_thread_function(void* data);
 #ifdef __cplusplus
 }

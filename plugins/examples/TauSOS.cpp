@@ -155,7 +155,7 @@ void TAU_SOS_make_pub() {
 #else
     instance_guid = tau_sos_pub->guid;
 #endif
-    SOS_pack(tau_sos_pub, "TAU::MPI::INSTANCE_ID", SOS_VAL_TYPE_LONG, &instance_guid);
+    SOS_pack(tau_sos_pub, "TAU:MPI:INSTANCE_ID", SOS_VAL_TYPE_LONG, &instance_guid);
 }
 
 void TAU_SOS_do_fork(std::string forkCommand) {
@@ -578,6 +578,21 @@ extern "C" void Tau_SOS_pack_integer(const char * name, int value) {
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_INT, &value);
 }
 
+extern "C" void Tau_SOS_pack_long(const char * name, long int value) {
+    if (_runtime == NULL) { return; }
+    if (done) { return; }
+    // first time?
+    if (tau_sos_pub == NULL) {
+        RtsLayer::LockDB();
+        // protect against race conditions
+        if (tau_sos_pub == NULL) {
+            TAU_SOS_make_pub();
+        }
+        RtsLayer::UnLockDB();
+    }
+    SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_LONG, &value);
+}
+
 bool get_low_res_counter_name(const char *name, std::string &out_name) {
 	// eliminate context counters
 	if (strstr(name," : ") != NULL) {
@@ -683,7 +698,7 @@ extern "C" void TAU_SOS_send_data(void) {
 
         if (env_sos_high_resolution) {
           std::stringstream calls_str;
-          calls_str << "TAU::" << tid << "::calls::" << fi->GetAllGroups() << "::" << fi->GetName();
+          calls_str << "TAU_TIMER:" << tid << ":calls:" << fi->GetAllGroups() << ":" << fi->GetName();
           const std::string& tmpcalls = calls_str.str();
           SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
 		} else {
@@ -699,10 +714,10 @@ extern "C" void TAU_SOS_send_data(void) {
             exclusive = fi->getDumpExclusiveValues(tid)[m];
             if (env_sos_high_resolution) {
                 incl_str.str(std::string());
-                incl_str << "TAU::" << tid << "::inclusive_" << counterNames[m] << "::" << fi->GetName();
+                incl_str << "TAU_TIMER:" << tid << ":inclusive_" << counterNames[m] << ":" << fi->GetAllGroups() << ":" << fi->GetName();
                 const std::string& tmpincl = incl_str.str();
                 excl_str.str(std::string());
-                excl_str << "TAU::" << tid << "::exclusive_" << counterNames[m] << "::" << fi->GetName();
+                excl_str << "TAU_TIMER:" << tid << ":exclusive_" << counterNames[m] << ":" << fi->GetAllGroups() << ":" << fi->GetName();
                 const std::string& tmpexcl = excl_str.str();
                 SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, &inclusive);
                 SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, &exclusive);
@@ -720,20 +735,20 @@ extern "C" void TAU_SOS_send_data(void) {
 	  std::string group_name = timer_map_it->first;
 	  std::vector<double> * values = timer_map_it->second;
       std::stringstream tmp_ss;
-      tmp_ss << "TAU::0::calls::" << group_name;
+      tmp_ss << "TAU_TIMER:0:calls:" << group_name;
       std::string tmp_name = tmp_ss.str();
 	  double tmp_val = (*values)[vec_index++] / RtsLayer::getTotalThreads();
       SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &tmp_val);
       for (int m = 0; m < Tau_Global_numCounters; m++) {
         tmp_ss.str("");
         tmp_ss.clear();
-        tmp_ss << "TAU::0::inclusive_" << counterNames[m] << "::" << group_name;
+        tmp_ss << "TAU_TIMER:0:inclusive_" << counterNames[m] << ":" << group_name;
         tmp_name = tmp_ss.str();
 	    tmp_val = (*values)[vec_index++] / RtsLayer::getTotalThreads();
         SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &tmp_val);
         tmp_ss.str("");
         tmp_ss.clear();
-        tmp_ss << "TAU::0::exclusive_" << counterNames[m] << "::" << group_name;
+        tmp_ss << "TAU_TIMER:0:exclusive_" << counterNames[m] << ":" << group_name;
         tmp_name = tmp_ss.str();
 	    tmp_val = (*values)[vec_index++] / RtsLayer::getTotalThreads();
         SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &tmp_val);
@@ -781,19 +796,19 @@ extern "C" void TAU_SOS_send_data(void) {
         max = ue->GetMax(tid);
         min = ue->GetMin(tid);
         sumsqr = ue->GetSumSqr(tid);
-        tmp_str << "TAU::" << tid << "::NumEvents::" << ue->GetName();
+        tmp_str << "TAU_COUNTER:" << tid << ":NumEvents:" << ue->GetName();
         SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, &numEvents);
         tmp_str.str(std::string());
-        tmp_str << "TAU::" << tid << "::Max::" << ue->GetName();
+        tmp_str << "TAU_COUNTER:" << tid << ":Max:" << ue->GetName();
         SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &max);
         tmp_str.str(std::string());
-        tmp_str << "TAU::" << tid << "::Min::" << ue->GetName();
+        tmp_str << "TAU_COUNTER:" << tid << ":Min:" << ue->GetName();
         SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &min);
         tmp_str.str(std::string());
-        tmp_str << "TAU::" << tid << "::Mean::" << ue->GetName();
+        tmp_str << "TAU_COUNTER:" << tid << ":Mean:" << ue->GetName();
         SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &mean);
         tmp_str.str(std::string());
-        tmp_str << "TAU::" << tid << "::SumSqr::" << ue->GetName();
+        tmp_str << "TAU_COUNTER:" << tid << ":SumSqr:" << ue->GetName();
         SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &sumsqr);
         tmp_str.str(std::string());
       } else {
@@ -808,7 +823,7 @@ extern "C" void TAU_SOS_send_data(void) {
 	  double value = counter_map_it->second;
       std::stringstream tmp_ss;
 	  // this is "total", because we take the product of count * mean
-      tmp_ss << "TAU::0::Total::" << counter_name;
+      tmp_ss << "TAU_COUNTER:0:Total:" << counter_name;
       std::string tmp_name = tmp_ss.str();
 	  value = value / RtsLayer::getTotalThreads();
       SOS_pack(tau_sos_pub, tmp_name.c_str(), SOS_VAL_TYPE_DOUBLE, &value);

@@ -45,33 +45,47 @@ int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
 }
 
 int Tau_plugin_sos_function_entry(Tau_plugin_event_function_entry_data data) {
-    /*
-  fprintf(stdout, "TAU PLUGIN SOS Function Entry: %d, %s, %s\n",
-          data.tid, data.timer_group, data.timer_name); fflush(stdout);
-          */
   /* todo: filter on group, timer name */
   std::stringstream ss;
-  ss << "TAU_ENTRY_EVENT::" << data.tid << "::" << data.timer_name;
-  Tau_SOS_pack_double(ss.str().c_str(), 0);
+  ss << "TAU_EVENT_ENTRY:" << data.tid << ":" << data.timer_name;
+  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
   return 0;
 }
 
 int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
-    /*
-  fprintf(stdout, "TAU PLUGIN SOS Function Exit: %d, %s, %s\n",
-          data.tid, data.timer_group, data.timer_name); fflush(stdout);
-          */
   /* todo: filter on group, timer name */
   std::stringstream ss;
-  ss << "TAU_EXIT_EVENT::" << data.tid << "::" << data.timer_name;
-  Tau_SOS_pack_current_timer(ss.str().c_str());
+  ss << "TAU_EVENT_EXIT:" << data.tid << ":" << data.timer_name;
+  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
+  return 0;
+}
+
+int Tau_plugin_sos_send(Tau_plugin_event_send_data data) {
+  /* todo: filter on group, timer name */
+  std::stringstream ss;
+  ss << "TAU_EVENT_SEND:" << data.tid 
+      << ":" << data.message_tag 
+      << ":" << data.destination 
+      << ":" << data.bytes_sent;
+  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
+  return 0;
+}
+
+int Tau_plugin_sos_recv(Tau_plugin_event_recv_data data) {
+  /* todo: filter on group, timer name */
+  std::stringstream ss;
+  ss << "TAU_EVENT_RECV:" << data.tid 
+      << ":" << data.message_tag 
+      << ":" << data.source 
+      << ":" << data.bytes_received;
+  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
   return 0;
 }
 
 int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_registration_data data) {
   // fprintf(stdout, "TAU Metadata registration\n");
     std::stringstream ss;
-    ss << "TAU::" << 0 << "::Metadata::" << data.name;
+    ss << "TAU_Metadata:" << 0 << ":" << data.name;
     switch(data.value->type) {
         case TAU_METADATA_TYPE_STRING:
             Tau_SOS_pack_string(ss.str().c_str(), data.value->data.cval);

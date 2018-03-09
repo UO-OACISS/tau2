@@ -368,6 +368,7 @@ void Profiler::Start(int tid)
     plugin_data.timer_name = ThisFunction->GetName();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
+    plugin_data.timestamp = TimeStamp;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, &plugin_data);
   }
 }
@@ -704,6 +705,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
     plugin_data.timer_name = ThisFunction->GetName();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
+    plugin_data.timestamp = TimeStamp;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_EXIT, &plugin_data);
   }
 }
