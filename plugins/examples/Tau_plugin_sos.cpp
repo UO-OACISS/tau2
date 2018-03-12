@@ -28,16 +28,26 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
 
 int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data data) {
 
-  fprintf(stdout, "TAU PLUGIN SOS Finalize\n");
+  fprintf(stdout, "TAU PLUGIN SOS Send Data\n");
 
+  TAU_SOS_send_data();
   TAU_SOS_finalize();
+
+  return 0;
+}
+
+int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data) {
+
+  //fprintf(stdout, "TAU PLUGIN SOS Finalize\n");
+
+  //TAU_SOS_finalize();
 
   return 0;
 }
 
 int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
 
-  fprintf(stdout, "TAU PLUGIN SOS Post Init\n");
+  //fprintf(stdout, "TAU PLUGIN SOS Post Init\n");
 
   TAU_SOS_send_data();
 
@@ -67,6 +77,7 @@ int Tau_plugin_sos_send(Tau_plugin_event_send_data data) {
       << ":" << data.message_tag 
       << ":" << data.destination 
       << ":" << data.bytes_sent;
+  std::cout << ss.str() << std::endl;
   Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
   return 0;
 }
@@ -78,6 +89,7 @@ int Tau_plugin_sos_recv(Tau_plugin_event_recv_data data) {
       << ":" << data.message_tag 
       << ":" << data.source 
       << ":" << data.bytes_received;
+  std::cout << ss.str() << std::endl;
   Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
   return 0;
 }
@@ -117,15 +129,18 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
 
-  fprintf(stdout, "TAU PLUGIN SOS Init\n");
+  //fprintf(stdout, "TAU PLUGIN SOS Init\n");
   TAU_SOS_init();
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->Dump = Tau_plugin_sos_dump;
+  cb->Send = Tau_plugin_sos_send;
+  cb->Recv = Tau_plugin_sos_recv;
   cb->PostInit = Tau_plugin_sos_post_init;
   cb->FunctionEntry = Tau_plugin_sos_function_entry;
   cb->FunctionExit = Tau_plugin_sos_function_exit;
   cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
   cb->FunctionFinalize = Tau_plugin_finalize;
+  cb->EndOfExecution = Tau_plugin_sos_end_of_execution;
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
 
   return 0;

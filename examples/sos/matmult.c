@@ -34,7 +34,7 @@ static pthread_barrier_t barrier;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 256
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -150,7 +150,6 @@ void * threaded_func(void *data)
 
 int main (int argc, char *argv[]) 
 {
-#if 1
   int rc = MPI_SUCCESS;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
@@ -173,7 +172,6 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
-#endif
 
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -185,6 +183,21 @@ int main (int argc, char *argv[])
     // for debugging, use just one thread
     nthreads = 1;
     if (rank == 0) { printf("Running with %d processes, %d cores, %d threads per core\n", comm_size, ncores, nthreads+1); }
+
+    int number, count, tag;
+    count = 1;
+    tag = 1984;
+    if (comm_size > 1 && comm_size % 2 == 0) {
+    	if (rank % 2 == 0) {
+        	number = -1;
+        	MPI_Send(&number, count, MPI_INT, rank+1, tag, MPI_COMM_WORLD);
+        	printf("Process %d sent number     %d to process   %d\n", rank, number, rank+1);
+    	} else {
+        	MPI_Recv(&number, count, MPI_INT, rank-1, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        	printf("Process %d received number %d from process %d\n", rank, number, rank-1);
+    	}
+    }
+
 
 #ifdef PTHREADS
   int ret;
@@ -200,7 +213,7 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
-  int maxi = 5;
+  int maxi = 10;
 
 #ifdef PTHREADS
   for (int i = 0 ; i < nthreads ; i++) {
@@ -233,6 +246,21 @@ int main (int argc, char *argv[])
     }
     if (rank == 0) { printf("Iteration %d of %d done.\n", i, maxi); fflush(stdout); }
   }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    count = 1;
+    tag = 1984;
+    if (comm_size > 1 && comm_size % 2 == 0) {
+    	if (rank % 2 == 0) {
+        	number = -1;
+        	MPI_Send(&number, count, MPI_INT, rank+1, tag, MPI_COMM_WORLD);
+        	printf("Process %d sent number     %d to process   %d\n", rank, number, rank+1);
+    	} else {
+        	MPI_Recv(&number, count, MPI_INT, rank-1, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        	printf("Process %d received number %d from process %d\n", rank, number, rank-1);
+    	}
+    }
+
 
 #ifdef PTHREADS 
   for (int i = 0 ; i < nthreads ; i++) {
