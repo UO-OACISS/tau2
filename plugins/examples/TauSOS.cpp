@@ -58,6 +58,8 @@ pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
 bool _threaded = false;
 int daemon_rank = 0;
+int my_rank = 0;
+int comm_size = 1;
 bool shutdown_daemon = false;
 int period_microseconds = 2000000;
 unsigned long int instance_guid = 0UL;
@@ -122,12 +124,8 @@ void TAU_SOS_make_pub() {
         TAU_VERBOSE("[TAU_SOS_make_pub]: Creating new pub...\n");
 
 #ifdef TAU_MPI
-        int rank;
-        int commsize;
-        PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        PMPI_Comm_size(MPI_COMM_WORLD, &commsize);
-        _runtime->config.comm_rank = rank;
-        _runtime->config.comm_size = commsize;
+        _runtime->config.comm_rank = my_rank;
+        _runtime->config.comm_size = comm_size;
 #endif
 
 /* Fixme! Replace these with values from TAU metadata. */
@@ -148,7 +146,7 @@ void TAU_SOS_make_pub() {
         SOS_announce(tau_sos_pub);
 	// all processes in this MPI execution should agree on the session.
 #ifdef TAU_MPI
-	if (rank == 0) {
+	if (my_rank == 0) {
         instance_guid = tau_sos_pub->guid;
 	}
 	PMPI_Bcast( &instance_guid, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD );
@@ -180,15 +178,14 @@ void TAU_SOS_do_fork(std::string forkCommand) {
 void TAU_SOS_fork_exec_sosd_shutdown(void) {
 #ifdef TAU_MPI
     // first, figure out who should fork a daemon on this node
-    int i, rank;
-    PMPI_Comm_rank(MPI_COMM_WORLD,&rank);
-    if (rank == daemon_rank) {
+    int i;
+    if (my_rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
             char* forkCommand;
             forkCommand = getenv ("SOS_FORK_SHUTDOWN");
             if (forkCommand) {
-                std::cout << "Rank " << rank << " stopping SOS daemon(s): " << forkCommand << std::endl;
+                std::cout << "Rank " << my_rank << " stopping SOS daemon(s): " << forkCommand << std::endl;
                 std::string foo(forkCommand);
                 TAU_SOS_do_fork(foo);
             } else {
@@ -205,12 +202,11 @@ void TAU_SOS_fork_exec_sosd_shutdown(void) {
 
 void TAU_SOS_send_shutdown_message(void) {
 #ifdef TAU_MPI
-    int i, rank;
-    PMPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    int i;
     SOS_buffer     *buffer;
     SOS_msg_header  header;
     int offset;
-    if (rank == daemon_rank) {
+    if (my_rank == daemon_rank) {
         TAU_VERBOSE("Waiting for SOS to flush...\n");
 		sleep(1);
 
@@ -244,18 +240,16 @@ void TAU_SOS_send_shutdown_message(void) {
 void TAU_SOS_fork_exec_sosd(void) {
 #ifdef TAU_MPI
     // first, figure out who should fork a daemon on this node
-    int i, rank, size;
-    PMPI_Comm_rank(MPI_COMM_WORLD,&rank);
-    PMPI_Comm_size(MPI_COMM_WORLD,&size);
+    int i;
     // get my hostname
     const int hostlength = 128;
     char hostname[hostlength] = {0};
     gethostname(hostname, sizeof(char)*hostlength);
     //std::cout << hostname << std::endl;
     // make array for all hostnames
-    char * allhostnames = (char*)calloc(hostlength*size, sizeof(char));
+    char * allhostnames = (char*)calloc(hostlength * comm_size, sizeof(char));
     // copy my name into the big array
-    char * host_index = allhostnames + (hostlength * rank);
+    char * host_index = allhostnames + (hostlength * my_rank);
     strncpy(host_index, hostname, hostlength);
     // get all hostnames
     PMPI_Allgather(hostname, hostlength, MPI_CHAR, allhostnames, 
@@ -264,7 +258,7 @@ void TAU_SOS_fork_exec_sosd(void) {
     // point to the head of the array
     host_index = allhostnames;
     // find the lowest rank with my hostname
-    for (i = 0 ; i < size ; i++) {
+    for (i = 0 ; i < comm_size ; i++) {
         //printf("%d:%d comparing '%s' to '%s'\n", rank, size, hostname, host_index);
         if (strncmp(hostname, host_index, hostlength) == 0) {
             daemon_rank = i;
@@ -272,7 +266,7 @@ void TAU_SOS_fork_exec_sosd(void) {
         host_index = host_index + hostlength;
     }
     // fork the daemon
-    if (rank == daemon_rank) {
+    if (my_rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
             char* forkCommand = NULL;
@@ -291,7 +285,7 @@ void TAU_SOS_fork_exec_sosd(void) {
                 if (index != std::string::npos) {
                     if (ranks_per_node) {
                         int rpn = atoi(ranks_per_node);
-                        int listener_rank = rank / rpn;
+                        int listener_rank = my_rank / rpn;
                         if(offset) {
                             int off = atoi(offset);
                             listener_rank = listener_rank + off;
@@ -301,7 +295,7 @@ void TAU_SOS_fork_exec_sosd(void) {
                         custom_command.replace(index,15,ss.str());
                     }
                 }
-                std::cout << "SOS Listener not found, Rank " << rank << " spawning SOS daemon(s): " << custom_command << std::endl;
+                std::cout << "SOS Listener not found, Rank " << my_rank << " spawning SOS daemon(s): " << custom_command << std::endl;
                 TAU_SOS_do_fork(custom_command);
             } else {
                 std::cerr << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
@@ -394,6 +388,10 @@ extern "C" void TAU_SOS_init() {
     TAU_SOS_parse_environment_variables();
     if (!env_sos_enabled) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
+#ifdef TAU_MPI
+        PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+        PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+#endif
         if (env_sos_periodic) {
             _threaded = true;
         } else {
@@ -491,14 +489,14 @@ extern "C" void TAU_SOS_finalize(void) {
     }
     // flush any outstanding packs
     TAU_SOS_send_data();
-#ifdef TAU_MPI
-	// wait for ALL RANKS to get to this point.  They should be done
-	// sending all data to the listener.
-    TAU_VERBOSE("Waiting for SOS clients to rendez-vous...\n");
-	PMPI_Barrier(MPI_COMM_WORLD);
-#endif
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
+#ifdef TAU_MPI
+	    // wait for ALL RANKS to get to this point.  They should be done
+	    // sending all data to the listener.
+        TAU_VERBOSE("Waiting for SOS clients to rendez-vous...\n");
+	    PMPI_Barrier(MPI_COMM_WORLD);
+#endif
         TAU_SOS_send_shutdown_message();
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
         //TAU_SOS_fork_exec_sosd_shutdown();

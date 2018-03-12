@@ -23,6 +23,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <TauMetaData.h>
+#include <Profiler.h>
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
@@ -733,4 +734,38 @@ int Tau_util_cleanup_all_plugins() {
   return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////
+// Plugin Send/Recv Events
+///////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_plugin_sendmsg(int type, int destination, int length, int remoteid) {
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_send_data plugin_data;
+    plugin_data.message_tag = type;
+    plugin_data.destination = destination;
+    plugin_data.bytes_sent = length;
+    plugin_data.tid = RtsLayer::myThread();
+    double timeStamp[TAU_MAX_COUNTERS] = { 0 };
+    RtsLayer::getUSecD(plugin_data.tid, timeStamp);
+    plugin_data.timestamp = (unsigned long)(timeStamp[0]);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_SEND, &plugin_data);
+  }
+}
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_plugin_recvmsg(int type, int source, int length, int remoteid) {
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_recv_data plugin_data;
+    plugin_data.message_tag = type;
+    plugin_data.source = source;
+    plugin_data.bytes_received = length;
+    plugin_data.tid = RtsLayer::myThread();
+    double timeStamp[TAU_MAX_COUNTERS] = { 0 };
+    RtsLayer::getUSecD(plugin_data.tid, timeStamp);
+    plugin_data.timestamp = (unsigned long)(timeStamp[0]);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_RECV, &plugin_data);
+  }
+}
 

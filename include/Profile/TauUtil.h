@@ -50,6 +50,20 @@ void *Tau_util_malloc(size_t size, const char *file, int line);
 void *Tau_util_calloc(size_t size, const char *file, int line);
 #define TAU_UTIL_CALLOC(size) Tau_util_calloc(size, __FILE__, __LINE__);
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+void Tau_plugin_sendmsg(int type, int destination, int length, int remoteid);
+void Tau_plugin_recvmsg(int type, int source, int length, int remoteid);
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+// Use a macro so we can compile it out if too much overhead.
+
+#define TAU_PLUGIN_SENDMSG(t, d, l, r) Tau_plugin_sendmsg(t, d, l, r)
+#define TAU_PLUGIN_RECVMSG(t, s, l, r) Tau_plugin_recvmsg(t, s, l, r)
+
 /* The following macros help create a local array and assign to elements of 
    the local C array, values from Fortran array after conversion using f2c 
    MPI macros. Need to optimize the implementation. Use static array instead
