@@ -122,7 +122,10 @@ void TAU_SOS_make_pub() {
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
 /* Fixme! Replace these with values from TAU metadata. */
+        // old API:
         SOS_pub_create(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
+        // new API:
+        // SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
@@ -386,8 +389,10 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
           my_argc = *argc;
           my_argv = *argv;
         }
+        // Old API:
         SOS_init(&my_argc, &my_argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
-        //SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+        // New API:
+        //SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
             TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
             TAU_SOS_fork_exec_sosd();
@@ -398,8 +403,10 @@ extern "C" void TAU_SOS_init(int * argc, char *** argv, bool threaded) {
             sleep(2);
             _runtime = NULL;
             TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
+            // Old API:
             SOS_init(&my_argc, &my_argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
-            //SOS_init(argc, argv, &_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+            // New API:
+            //SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
             if (_runtime != NULL) {
                 TAU_VERBOSE("Connected to SOS daemon. Continuing...\n");
                 break;
