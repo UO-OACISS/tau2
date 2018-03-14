@@ -70,6 +70,11 @@ int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
   return 0;
 }
 
+int Tau_plugin_sos_current_timer_exit(Tau_plugin_event_current_timer_exit_data data) {
+  Tau_SOS_pack_current_timer(data.name_prefix);
+  return 0;
+}
+
 int Tau_plugin_sos_send(Tau_plugin_event_send_data data) {
   /* todo: filter on group, timer name */
   std::stringstream ss;
@@ -138,6 +143,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
   cb->PostInit = Tau_plugin_sos_post_init;
   cb->FunctionEntry = Tau_plugin_sos_function_entry;
   cb->FunctionExit = Tau_plugin_sos_function_exit;
+  cb->CurrentTimerExit = Tau_plugin_sos_current_timer_exit;
   cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
   cb->FunctionFinalize = Tau_plugin_finalize;
   cb->EndOfExecution = Tau_plugin_sos_end_of_execution;

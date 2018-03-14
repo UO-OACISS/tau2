@@ -506,6 +506,22 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data data) {
 }
 
 /**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the "current timer" exit event
+ ***************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_ * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.CurrentTimerExit != 0) {
+     callback->cb.CurrentTimerExit(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the send event
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data data) {
@@ -663,6 +679,10 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
     } 
     case TAU_PLUGIN_EVENT_FUNCTION_EXIT: {
       Tau_util_invoke_callbacks_(*(Tau_plugin_event_function_exit_data*)data);
+      break;
+    } 
+    case TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT: {
+      Tau_util_invoke_callbacks_(*(Tau_plugin_event_current_timer_exit_data*)data);
       break;
     } 
     case TAU_PLUGIN_EVENT_SEND: {
