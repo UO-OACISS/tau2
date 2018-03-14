@@ -29,6 +29,7 @@ struct Tau_plugin_event_post_init_data;
 struct Tau_plugin_event_dump;
 struct Tau_plugin_event_function_entry;
 struct Tau_plugin_event_function_exit;
+struct Tau_plugin_event_current_timer_exit;
 struct Tau_plugin_event_send;
 struct Tau_plugin_event_recv;
 struct Tau_plugin_event_atomic_event_trigger_data;
@@ -44,6 +45,7 @@ typedef int (*Tau_plugin_post_init)(struct Tau_plugin_event_post_init_data);
 typedef int (*Tau_plugin_dump)(struct Tau_plugin_event_dump_data);
 typedef int (*Tau_plugin_function_entry)(struct Tau_plugin_event_function_entry_data);
 typedef int (*Tau_plugin_function_exit)(struct Tau_plugin_event_function_exit_data);
+typedef int (*Tau_plugin_current_timer_exit)(struct Tau_plugin_event_current_timer_exit_data);
 typedef int (*Tau_plugin_send)(struct Tau_plugin_event_send_data);
 typedef int (*Tau_plugin_recv)(struct Tau_plugin_event_recv_data);
 typedef int (*Tau_plugin_atomic_event_registration_complete)(struct Tau_plugin_event_atomic_event_registration_data);
@@ -60,6 +62,7 @@ struct Tau_plugin_callbacks {
    Tau_plugin_dump Dump;
    Tau_plugin_function_entry FunctionEntry;
    Tau_plugin_function_exit FunctionExit;
+   Tau_plugin_current_timer_exit CurrentTimerExit;
    Tau_plugin_send Send;
    Tau_plugin_recv Recv;
    Tau_plugin_atomic_event_registration_complete AtomicEventRegistrationComplete;
@@ -77,6 +80,7 @@ enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_DUMP,
    TAU_PLUGIN_EVENT_FUNCTION_ENTRY,
    TAU_PLUGIN_EVENT_FUNCTION_EXIT,
+   TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT,
    TAU_PLUGIN_EVENT_SEND,
    TAU_PLUGIN_EVENT_RECV,
    TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION,
@@ -117,6 +121,10 @@ struct Tau_plugin_event_function_exit_data {
    const char * timer_group;
    int tid;
    long unsigned int timestamp;
+};
+
+struct Tau_plugin_event_current_timer_exit_data {
+   const char * name_prefix;
 };
 
 struct Tau_plugin_event_send_data {
@@ -161,6 +169,7 @@ typedef struct Tau_plugin_event_post_init_data Tau_plugin_event_post_init_data;
 typedef struct Tau_plugin_event_dump_data Tau_plugin_event_dump_data;
 typedef struct Tau_plugin_event_function_entry_data Tau_plugin_event_function_entry_data;
 typedef struct Tau_plugin_event_function_exit_data Tau_plugin_event_function_exit_data;
+typedef struct Tau_plugin_event_current_timer_exit_data Tau_plugin_event_current_timer_exit_data;
 typedef struct Tau_plugin_event_send_data Tau_plugin_event_send_data;
 typedef struct Tau_plugin_event_recv_data Tau_plugin_event_recv_data;
 typedef struct Tau_plugin_event_atomic_event_registration_data Tau_plugin_event_atomic_event_registration_data;
