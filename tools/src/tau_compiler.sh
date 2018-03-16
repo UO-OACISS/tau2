@@ -416,7 +416,7 @@ for arg in "$@" ; do
                         preprocessor=${arg#"-optCPP="}
         		f90preprocessor=$preprocessor
         		preprocess=$TRUE
-        		tauPreProcessor=$FALSE
+        		#tauPreProcessor=$FALSE
         		echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
         		;;
 
@@ -432,7 +432,7 @@ for arg in "$@" ; do
                     -optFPP=*)
                         f90preprocessor=${arg#"-optFPP="}
                         preprocess=$TRUE
-                        tauPreProcessor=$FALSE
+                        #tauPreProcessor=$FALSE
                         echo "\tFortran preprocessing $preprocess. preprocessor used is $f90preprocessor with options $f90preprocessorOpts"
                         ;;
         	    -optFPPOpts=*)
