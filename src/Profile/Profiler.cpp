@@ -1466,14 +1466,17 @@ int TauProfiler_StoreData(int tid)
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
   TauMetrics_finalize();
 
+#ifndef TAU_MPI
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
   if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
-    Tau_plugin_event_end_of_execution_data plugin_data;
+    Tau_plugin_event_pre_end_of_execution_data plugin_data;
     plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
   }
+#endif
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 1\n", RtsLayer::myNode(), tid);
   if (TauEnv_get_tracing() && (tid == 0) && (TauEnv_get_trace_format() != TAU_TRACE_FORMAT_OTF2)) {
     Tau_print_metadata_for_traces(tid);
   }
@@ -1484,6 +1487,7 @@ int TauProfiler_StoreData(int tid)
   profileWriteCount[tid]++;
   if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
   if (profileWriteCount[tid] == 10) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
@@ -1507,6 +1511,7 @@ int TauProfiler_StoreData(int tid)
   }
 #endif
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 3\n", RtsLayer::myNode(), tid);
 
   Tau_MemMgr_finalizeIfNecessary();
 
@@ -1550,6 +1555,7 @@ int TauProfiler_StoreData(int tid)
 #endif
   }
 #endif /* PTHREADS */
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 4\n", RtsLayer::myNode(), tid);
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
@@ -1562,6 +1568,15 @@ int TauProfiler_StoreData(int tid)
   }
 #endif /* TAU_SHMEM */
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 5\n", RtsLayer::myNode(), tid);
+  /*Invoke plugins only if both plugin path and plugins are specified
+   *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_end_of_execution_data plugin_data;
+    plugin_data.tid = tid;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+  }
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
   return 1;
 }
 

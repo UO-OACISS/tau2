@@ -34,6 +34,7 @@ struct Tau_plugin_event_send;
 struct Tau_plugin_event_recv;
 struct Tau_plugin_event_atomic_event_trigger_data;
 struct Tau_plugin_event_atomic_event_registration_data;
+struct Tau_plugin_event_pre_end_of_execution_data;
 struct Tau_plugin_event_end_of_execution_data;
 struct Tau_plugin_event_function_finalize_data;
 struct Tau_plugin_event_interrupt_trigger_data;
@@ -50,6 +51,7 @@ typedef int (*Tau_plugin_send)(struct Tau_plugin_event_send_data);
 typedef int (*Tau_plugin_recv)(struct Tau_plugin_event_recv_data);
 typedef int (*Tau_plugin_atomic_event_registration_complete)(struct Tau_plugin_event_atomic_event_registration_data);
 typedef int (*Tau_plugin_atomic_event_trigger)(struct Tau_plugin_event_atomic_event_trigger_data);
+typedef int (*Tau_plugin_pre_end_of_execution)(struct Tau_plugin_event_pre_end_of_execution_data);
 typedef int (*Tau_plugin_end_of_execution)(struct Tau_plugin_event_end_of_execution_data);
 typedef int (*Tau_plugin_function_finalize)(struct Tau_plugin_event_function_finalize_data);
 typedef int (*Tau_plugin_interrupt_trigger)(struct Tau_plugin_event_interrupt_trigger_data);
@@ -67,13 +69,14 @@ struct Tau_plugin_callbacks {
    Tau_plugin_recv Recv;
    Tau_plugin_atomic_event_registration_complete AtomicEventRegistrationComplete;
    Tau_plugin_atomic_event_trigger AtomicEventTrigger;
+   Tau_plugin_pre_end_of_execution PreEndOfExecution;
    Tau_plugin_end_of_execution EndOfExecution;
    Tau_plugin_function_finalize FunctionFinalize;
    Tau_plugin_interrupt_trigger InterruptTrigger;
 };
 
 /*Define all the events currently supported*/
-enum Tau_plugin_event {
+typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION,
    TAU_PLUGIN_EVENT_METADATA_REGISTRATION,
    TAU_PLUGIN_EVENT_POST_INIT,
@@ -85,10 +88,11 @@ enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_RECV,
    TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION,
    TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER,
+   TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION,
    TAU_PLUGIN_EVENT_END_OF_EXECUTION,
    TAU_PLUGIN_EVENT_FUNCTION_FINALIZE,
    TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER
-};
+} Tau_plugin_event_t;
 
 /*Define data structures that define how TAU and the plugin exchange information*/
 struct Tau_plugin_event_function_registration_data {
@@ -128,18 +132,18 @@ struct Tau_plugin_event_current_timer_exit_data {
 };
 
 struct Tau_plugin_event_send_data {
-   int message_tag;
-   int destination;
-   int bytes_sent;
-   int tid;
+   long unsigned int message_tag;
+   long unsigned int destination;
+   long unsigned int bytes_sent;
+   long unsigned int tid;
    long unsigned int timestamp;
 };
 
 struct Tau_plugin_event_recv_data {
-   int message_tag;
-   int source;
-   int bytes_received;
-   int tid;
+   long unsigned int message_tag;
+   long unsigned int source;
+   long unsigned int bytes_received;
+   long unsigned int tid;
    long unsigned int timestamp;
 };
 
@@ -149,6 +153,10 @@ struct Tau_plugin_event_atomic_event_registration_data {
 
 struct Tau_plugin_event_atomic_event_trigger_data {
    void * user_event_ptr;
+};
+
+struct Tau_plugin_event_pre_end_of_execution_data {
+   int tid;
 };
 
 struct Tau_plugin_event_end_of_execution_data {
@@ -174,6 +182,7 @@ typedef struct Tau_plugin_event_send_data Tau_plugin_event_send_data;
 typedef struct Tau_plugin_event_recv_data Tau_plugin_event_recv_data;
 typedef struct Tau_plugin_event_atomic_event_registration_data Tau_plugin_event_atomic_event_registration_data;
 typedef struct Tau_plugin_event_atomic_event_trigger_data Tau_plugin_event_atomic_event_trigger_data;
+typedef struct Tau_plugin_event_pre_end_of_execution_data Tau_plugin_event_pre_end_of_execution_data;
 typedef struct Tau_plugin_event_end_of_execution_data Tau_plugin_event_end_of_execution_data;
 typedef struct Tau_plugin_event_function_finalize_data Tau_plugin_event_function_finalize_data;
 typedef struct Tau_plugin_event_interrupt_trigger_data Tau_plugin_event_interrupt_trigger_data;

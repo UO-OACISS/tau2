@@ -32,7 +32,7 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
 int Tau_util_cleanup_all_plugins();
 
 PluginManager* Tau_util_get_plugin_manager();
-void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * data);
+void Tau_util_invoke_callbacks(Tau_plugin_event_t event, const void * data);
 
 #ifdef __cplusplus
 }

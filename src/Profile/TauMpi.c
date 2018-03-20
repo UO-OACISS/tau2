@@ -24,6 +24,8 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauTraceOTF2.h>
 #include <Profile/TauUtil.h>
+#include <Profile/TauPlugin.h>
+#include <Profile/TauPluginInternals.h>
 #ifdef TAU_ADIOS
 #include "adiost_callback_api.h"
 #endif
@@ -1786,11 +1788,13 @@ int  MPI_Finalize(  )
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
 
-#ifdef TAU_SOS_disabled
-  if (TauEnv_get_sos_enabled()) {
-    TAU_SOS_finalize();
+  /*Invoke plugins only if both plugin path and plugins are specified
+   *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_pre_end_of_execution_data plugin_data;
+    plugin_data.tid = Tau_get_local_tid();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
   }
-#endif
 
 #ifdef TAU_OTF2
    if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {

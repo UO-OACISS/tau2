@@ -2509,6 +2509,14 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
   }
   RtsLayer::UnLockDB();
   Tau_stop_timer(fi, Tau_get_thread());
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_dump_data plugin_data;
+    plugin_data.tid = RtsLayer::myThread();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
+  }
+
 }
 
 

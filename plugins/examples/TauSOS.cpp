@@ -34,20 +34,6 @@
 
 #include "sos.h"
 
-#define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
-
-#define TAU_SOS_DEFAULT 0
-#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
-#define TAU_SOS_PERIODIC_DEFAULT 0
-#define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
-#define TAU_SOS_HIGH_RESOLUTION_DEFAULT 0 // group, timer
-
-static int env_sos_enabled = TAU_SOS_DEFAULT;
-static int env_sos_trace_events = TAU_SOS_TRACE_EVENTS_DEFAULT;
-static int env_sos_periodic = TAU_SOS_PERIODIC_DEFAULT;
-static int env_sos_period = TAU_SOS_PERIOD_DEFAULT;
-static int env_sos_high_resolution = TAU_SOS_HIGH_RESOLUTION_DEFAULT;
-
 SOS_pub *tau_sos_pub = NULL;
 unsigned long fi_count = 0;
 unsigned long ue_count = 0;
@@ -82,7 +68,7 @@ void init_lock(void) {
     }
 }
 
-extern "C" void * Tau_sos_thread_function(void* data) {
+void * Tau_sos_thread_function(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
@@ -218,7 +204,7 @@ void TAU_SOS_send_shutdown_message(void) {
         header.ref_guid = 0;
 
         offset = 0;
-        SOS_buffer_pack(buffer, &offset, "iigg",
+        SOS_buffer_pack(buffer, &offset, (char*)"iigg",
                 header.msg_size,
                 header.msg_type,
                 header.msg_from,
@@ -226,7 +212,7 @@ void TAU_SOS_send_shutdown_message(void) {
 
         header.msg_size = offset;
         offset = 0;
-        SOS_buffer_pack(buffer, &offset, "i", header.msg_size);
+        SOS_buffer_pack(buffer, &offset, (char*)"i", header.msg_size);
 
         TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
 
@@ -362,37 +348,39 @@ static int parse_int(const char *str, int default_value = 0) {
 }
 
 void TAU_SOS_parse_environment_variables(void) {
-    char * tmp = getenv("TAU_SOS");
+    char * tmp = NULL;
+    tmp = getenv("TAU_SOS");
     if (parse_bool(tmp, TAU_SOS_DEFAULT)) {
-        env_sos_enabled = 1;
+        thePluginOptions().env_sos_enabled = 1;
     }
     tmp = getenv("TAU_SOS_HIGH_RESOLUTION");
     if (parse_bool(tmp, TAU_SOS_HIGH_RESOLUTION_DEFAULT)) {
-      env_sos_high_resolution = 1;
+      thePluginOptions().env_sos_high_resolution = 1;
     }
     tmp = getenv("TAU_SOS_TRACE_EVENTS");
     if (parse_bool(tmp, TAU_SOS_TRACE_EVENTS_DEFAULT)) {
-      env_sos_trace_events = 1;
+      thePluginOptions().env_sos_trace_events = 1;
     }
     tmp = getenv("TAU_SOS_PERIODIC");
     if (parse_bool(tmp, TAU_SOS_PERIODIC_DEFAULT)) {
-      env_sos_periodic = 1;
+      thePluginOptions().env_sos_periodic = 1;
       tmp = getenv("TAU_SOS_PERIOD");
-      env_sos_period = parse_int(tmp, TAU_SOS_PERIOD_DEFAULT);
+      thePluginOptions().env_sos_period = parse_int(tmp, TAU_SOS_PERIOD_DEFAULT);
     }
+    // also needed:
+    // - whitelist/blacklist file
+    // - disable profile output (trace only)
 }
 
-extern "C" void TAU_SOS_init() {
+void TAU_SOS_init() {
     static bool initialized = false;
     TAU_VERBOSE("TAU_SOS_init()...\n");
-    TAU_SOS_parse_environment_variables();
-    if (!env_sos_enabled) { TAU_VERBOSE("*** SOS NOT ENABLED! ***\n"); return; }
     if (!initialized) {
 #ifdef TAU_MPI
         PMPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
         PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 #endif
-        if (env_sos_periodic) {
+        if (thePluginOptions().env_sos_periodic) {
             _threaded = true;
         } else {
             _threaded = false;
@@ -423,9 +411,10 @@ extern "C" void TAU_SOS_init() {
             }
         }
 
-        if (_threaded && env_sos_periodic) {
-			period_microseconds = env_sos_period;
+        if (_threaded && thePluginOptions().env_sos_periodic) {
+			period_microseconds = thePluginOptions().env_sos_period;
             TAU_VERBOSE("Spawning thread for SOS.\n");
+            printf("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
                 errno = ret;
@@ -436,17 +425,15 @@ extern "C" void TAU_SOS_init() {
         initialized = true;
         /* Fixme! Insert all the data that was collected into Metadata */
     }
-    //SOS_announce(tau_sos_pub);
-    //SOS_publish(tau_sos_pub);
 }
 
-extern "C" void TAU_SOS_stop_worker(void) {
+void TAU_SOS_stop_worker(void) {
     if (_runtime == NULL) { return; }
     //printf("%s\n", __func__); fflush(stdout);
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    if (_threaded && env_sos_periodic) {
+    if (_threaded && thePluginOptions().env_sos_periodic) {
         TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
         pthread_cond_signal(&_my_cond);
         int ret = pthread_join(worker_thread, NULL);
@@ -472,14 +459,14 @@ extern "C" void TAU_SOS_stop_worker(void) {
     }
 }
 
-extern "C" void TAU_SOS_finalize(void) {
+void TAU_SOS_finalize(void) {
     static bool finalized = false;
     // only thread 0 should finalize
     if (RtsLayer::myThread() > 0) { return; }
     // no runtime? quit.
     if (_runtime == NULL) { return; }
     // no SOS enabled? quit.
-    if (!env_sos_enabled) { return; }
+    if (!thePluginOptions().env_sos_enabled) { return; }
     //printf("%s\n", __func__); fflush(stdout);
     // Already finalized? quit.
     if (finalized) return;
@@ -507,7 +494,7 @@ extern "C" void TAU_SOS_finalize(void) {
 extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
 extern "C" tau::Profiler * Tau_get_current_profiler(void);
 
-extern "C" void Tau_SOS_pack_current_timer(const char * event_name) {
+void Tau_SOS_pack_current_timer(const char * event_name) {
     if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
@@ -531,7 +518,7 @@ extern "C" void Tau_SOS_pack_current_timer(const char * event_name) {
     SOS_pack(tau_sos_pub, event_name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
-extern "C" void Tau_SOS_pack_string(const char * name, char * value) {
+void Tau_SOS_pack_string(const char * name, char * value) {
     if (_runtime == NULL) { return; }
     if (done) { return; }
     // first time?
@@ -546,7 +533,7 @@ extern "C" void Tau_SOS_pack_string(const char * name, char * value) {
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_STRING, value);
 }
 
-extern "C" void Tau_SOS_pack_double(const char * name, double value) {
+void Tau_SOS_pack_double(const char * name, double value) {
     if (_runtime == NULL) { return; }
     if (done) { return; }
     // first time?
@@ -561,7 +548,7 @@ extern "C" void Tau_SOS_pack_double(const char * name, double value) {
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
-extern "C" void Tau_SOS_pack_integer(const char * name, int value) {
+void Tau_SOS_pack_integer(const char * name, int value) {
     if (_runtime == NULL) { return; }
     if (done) { return; }
     // first time?
@@ -576,7 +563,7 @@ extern "C" void Tau_SOS_pack_integer(const char * name, int value) {
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_INT, &value);
 }
 
-extern "C" void Tau_SOS_pack_long(const char * name, long int value) {
+void Tau_SOS_pack_long(const char * name, long int value) {
     if (_runtime == NULL) { return; }
     if (done) { return; }
     // first time?
@@ -636,7 +623,7 @@ bool get_low_res_counter_name(const char *name, std::string &out_name) {
 	return true;
 }
 
-extern "C" void TAU_SOS_send_data(void) {
+void TAU_SOS_send_data(void) {
     if (_runtime == NULL) { return; }
     // first time?
     if (tau_sos_pub == NULL) {
@@ -676,7 +663,7 @@ extern "C" void TAU_SOS_send_data(void) {
     exclusive = 0.0;
 
 	std::vector<double> *tmp_vec = NULL;
-    if (env_sos_high_resolution == 0) {
+    if (thePluginOptions().env_sos_high_resolution == 0) {
 	  std::string group_name(fi->GetAllGroups());
       timer_map_it = low_res_timer_map.find(group_name);
 	  if (timer_map_it == low_res_timer_map.end()) {
@@ -694,7 +681,7 @@ extern "C" void TAU_SOS_send_data(void) {
         calls = fi->GetCalls(tid);
 		int vec_index = 0;
 
-        if (env_sos_high_resolution) {
+        if (thePluginOptions().env_sos_high_resolution) {
           std::stringstream calls_str;
           calls_str << "TAU_TIMER:" << tid << ":calls:" << fi->GetAllGroups() << ":" << fi->GetName();
           const std::string& tmpcalls = calls_str.str();
@@ -710,7 +697,7 @@ extern "C" void TAU_SOS_send_data(void) {
         for (int m = 0; m < Tau_Global_numCounters; m++) {
             inclusive = fi->getDumpInclusiveValues(tid)[m];
             exclusive = fi->getDumpExclusiveValues(tid)[m];
-            if (env_sos_high_resolution) {
+            if (thePluginOptions().env_sos_high_resolution) {
                 incl_str.str(std::string());
                 incl_str << "TAU_TIMER:" << tid << ":inclusive_" << counterNames[m] << ":" << fi->GetAllGroups() << ":" << fi->GetName();
                 const std::string& tmpincl = incl_str.str();
@@ -727,7 +714,7 @@ extern "C" void TAU_SOS_send_data(void) {
     }
   }
 
-  if (env_sos_high_resolution == 0) {
+  if (thePluginOptions().env_sos_high_resolution == 0) {
     for (timer_map_it = low_res_timer_map.begin() ; timer_map_it != low_res_timer_map.end() ; timer_map_it++) {
 	  int vec_index = 0;
 	  std::string group_name = timer_map_it->first;
@@ -770,7 +757,7 @@ extern "C" void TAU_SOS_send_data(void) {
 	double tmp_accum = 0.0;
 	std::string counter_name;
 
-    if (env_sos_high_resolution == 0) {
+    if (thePluginOptions().env_sos_high_resolution == 0) {
 	  // if not a counter we want to keep, continue
 	  if (!get_low_res_counter_name(ue->GetName().c_str(), counter_name)) {
 	    continue;
@@ -790,7 +777,7 @@ extern "C" void TAU_SOS_send_data(void) {
       //if (ue && ue->GetWriteAsMetric()) continue;
       numEvents = ue->GetNumEvents(tid);
       mean = ue->GetMean(tid);
-      if (env_sos_high_resolution) {
+      if (thePluginOptions().env_sos_high_resolution) {
         max = ue->GetMax(tid);
         min = ue->GetMin(tid);
         sumsqr = ue->GetSumSqr(tid);
@@ -815,7 +802,7 @@ extern "C" void TAU_SOS_send_data(void) {
 	  }
     }
   }
-  if (env_sos_high_resolution == 0) {
+  if (thePluginOptions().env_sos_high_resolution == 0) {
     for (counter_map_it = low_res_counter_map.begin() ; counter_map_it != low_res_counter_map.end() ; counter_map_it++) {
 	  std::string counter_name = counter_map_it->first;
 	  double value = counter_map_it->second;
@@ -835,6 +822,7 @@ extern "C" void TAU_SOS_send_data(void) {
   RtsLayer::UnLockDB();
   TAU_VERBOSE("[TAU_SOS_send_data]: Publishing the values...\n");
   TAU_VERBOSE("MY RANK IS: %d/%d\n", _runtime->config.comm_rank, _runtime->config.comm_size);
+  SOS_announce(tau_sos_pub);
   SOS_publish(tau_sos_pub);
   TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
   Tau_global_decr_insideTAU();

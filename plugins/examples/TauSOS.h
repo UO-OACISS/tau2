@@ -2,12 +2,40 @@
 #define TAU_SOS_H
 
 #define TAU_SOS_INTERRUPT_PERIOD 2 // two seconds
+#define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
+#define TAU_SOS_DEFAULT 0
+#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
+#define TAU_SOS_PERIODIC_DEFAULT 0
+#define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
+#define TAU_SOS_HIGH_RESOLUTION_DEFAULT 1 // group, timer
 
-#ifdef __cplusplus
-extern "C" {  // export a C interface for C++ codes
-#else
-#include <stdbool.h> // import bool support for C codes
-#endif
+
+class SOS_plugin_options {
+    private:
+        SOS_plugin_options(void) :
+            env_sos_enabled(TAU_SOS_DEFAULT),
+            env_sos_trace_events(TAU_SOS_TRACE_EVENTS_DEFAULT),
+            env_sos_periodic(TAU_SOS_PERIODIC_DEFAULT),
+            env_sos_period(TAU_SOS_PERIOD_DEFAULT),
+            env_sos_high_resolution(TAU_SOS_HIGH_RESOLUTION_DEFAULT) {};
+    public:
+        int env_sos_enabled;
+        int env_sos_trace_events;
+        int env_sos_periodic;
+        int env_sos_period;
+        int env_sos_high_resolution;
+        static SOS_plugin_options& thePluginOptions() {
+            static SOS_plugin_options tpo;
+            return tpo;
+        }
+};
+
+inline SOS_plugin_options& thePluginOptions() { 
+    return SOS_plugin_options::thePluginOptions(); 
+}
+
+void TAU_SOS_parse_environment_variables(void);
+
 void TAU_SOS_send_data(void);
 void TAU_SOS_init(void);
 void TAU_SOS_stop_worker(void);
@@ -19,8 +47,5 @@ void Tau_SOS_pack_double(const char * name, double value);
 void Tau_SOS_pack_integer(const char * name, int value);
 void Tau_SOS_pack_long(const char * name, long int value);
 void * Tau_sos_thread_function(void* data);
-#ifdef __cplusplus
-}
-#endif
 
 #endif // TAU_SOS_H
