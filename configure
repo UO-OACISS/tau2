@@ -6515,7 +6515,7 @@ fi
 ######################################################################
 # Install libunwind if requested
 ######################################################################
-libunwind=libunwind-1.1
+libunwind=libunwind-1.2.1
 libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 if [ "x$unwind_dir" = "x" ]; then
@@ -6532,7 +6532,7 @@ if [ $machine = mic_linux -o $craymic = yes ] ; then
 fi
 
 if [ $machine = arm64_linux ] ; then
-  libunwind=libunwind-arm64-1.1
+  libunwind=libunwind-1.2.1
   libunwindtgz=$libunwind.tgz
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
