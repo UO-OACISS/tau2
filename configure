@@ -6533,7 +6533,7 @@ fi
 
 if [ $machine = arm64_linux ] ; then
   libunwind=libunwind-1.2.1
-  libunwindtgz=$libunwind.tgz
+  libunwindtgz=$libunwind.tar.gz
   libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 fi
 
