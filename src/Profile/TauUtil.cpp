@@ -405,6 +405,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->Recv = 0;
   cb->AtomicEventRegistrationComplete = 0;
   cb->AtomicEventTrigger = 0;
+  cb->PreEndOfExecution = 0;
   cb->EndOfExecution = 0;
   cb->InterruptTrigger = 0;
 }
@@ -423,6 +424,7 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->Recv = src->Recv;
   dest->AtomicEventTrigger = src->AtomicEventTrigger;
   dest->AtomicEventRegistrationComplete = src->AtomicEventRegistrationComplete;
+  dest->PreEndOfExecution = src->PreEndOfExecution;
   dest->EndOfExecution = src->EndOfExecution;
   dest->InterruptTrigger = src->InterruptTrigger;
 }
