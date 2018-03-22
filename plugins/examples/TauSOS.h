@@ -3,27 +3,27 @@
 
 #define TAU_SOS_INTERRUPT_PERIOD 2 // two seconds
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
-#define TAU_SOS_DEFAULT 0
-#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
+#define TAU_SOS_DEFAULT 1 // if the plugin is loaded, use it!
+#define TAU_SOS_TRACING_DEFAULT 0
+#define TAU_SOS_TRACE_ADIOS_DEFAULT 0
 #define TAU_SOS_PERIODIC_DEFAULT 0
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
-#define TAU_SOS_HIGH_RESOLUTION_DEFAULT 1 // group, timer
 
 
 class SOS_plugin_options {
     private:
         SOS_plugin_options(void) :
             env_sos_enabled(TAU_SOS_DEFAULT),
-            env_sos_trace_events(TAU_SOS_TRACE_EVENTS_DEFAULT),
+            env_sos_tracing(TAU_SOS_TRACING_DEFAULT),
+            env_sos_trace_adios(TAU_SOS_TRACE_ADIOS_DEFAULT),
             env_sos_periodic(TAU_SOS_PERIODIC_DEFAULT),
-            env_sos_period(TAU_SOS_PERIOD_DEFAULT),
-            env_sos_high_resolution(TAU_SOS_HIGH_RESOLUTION_DEFAULT) {};
+            env_sos_period(TAU_SOS_PERIOD_DEFAULT) {}
     public:
         int env_sos_enabled;
-        int env_sos_trace_events;
+        int env_sos_tracing;
+        int env_sos_trace_adios;
         int env_sos_periodic;
         int env_sos_period;
-        int env_sos_high_resolution;
         static SOS_plugin_options& thePluginOptions() {
             static SOS_plugin_options tpo;
             return tpo;

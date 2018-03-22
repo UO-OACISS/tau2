@@ -18,84 +18,98 @@
 #include <Profile/TauPlugin.h>
 #include <TauSOS.h>
 
+/* Only dump data to SOS if we aren't doing periodic dumps */
 int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
-  printf("TAU PLUGIN SOS: dump\n");
-  if (thePluginOptions().env_sos_periodic == 1) { return 0; }
-  TAU_SOS_send_data();
-  return 0;
+    printf("TAU PLUGIN SOS: dump\n");
+    if (thePluginOptions().env_sos_periodic != 1) { 
+        TAU_SOS_send_data();
+    }
+    return 0;
 }
 
+/* This is a weird event, not sure what for */
 int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data data) {
-  //fprintf(stdout, "TAU PLUGIN SOS Send Data\n"); fflush(stdout);
-  TAU_SOS_finalize();
-  return 0;
+    return 0;
 }
 
+/* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data data) {
-  fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
-  TAU_SOS_send_data();
-  return 0;
+    fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
+    // OK to do it from any thread, because it came from MPI_Finalize
+    TAU_SOS_send_data();
+    return 0;
 }
 
+/* This happens from Profiler.cpp, when data is written out. */
 int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data) {
-  fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
-  TAU_SOS_finalize();
-  return 0;
+    fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
+    if (data.tid == 0) {
+        TAU_SOS_finalize();
+    }
+    return 0;
 }
 
+/* This happens after MPI_Init, and after all TAU metadata variables have been
+ * read */
 int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
-  fprintf(stdout, "TAU PLUGIN SOS Post Init\n"); fflush(stdout);
-  TAU_SOS_send_data();
-  return 0;
+    fprintf(stdout, "TAU PLUGIN SOS Post Init\n"); fflush(stdout);
+    TAU_SOS_send_data();
+    return 0;
 }
 
+/* This happens on Tau_start() */
 int Tau_plugin_sos_function_entry(Tau_plugin_event_function_entry_data data) {
-  /* todo: filter on group, timer name */
-  std::stringstream ss;
-  ss << "TAU_EVENT_ENTRY:" << data.tid << ":" << data.timer_name;
-  //std::cout << ss.str() << std::endl;
-  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
-  return 0;
+    /* todo: filter on group, timer name */
+    std::stringstream ss;
+    ss << "TAU_EVENT_ENTRY:" << data.tid << ":" << data.timer_name;
+    //std::cout << ss.str() << std::endl;
+    Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
+    return 0;
 }
 
+/* This happens on Tau_stop() */
 int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
-  /* todo: filter on group, timer name */
-  std::stringstream ss;
-  ss << "TAU_EVENT_EXIT:" << data.tid << ":" << data.timer_name;
-  //std::cout << ss.str() << std::endl;
-  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
-  return 0;
+    /* todo: filter on group, timer name */
+    std::stringstream ss;
+    ss << "TAU_EVENT_EXIT:" << data.tid << ":" << data.timer_name;
+    //std::cout << ss.str() << std::endl;
+    Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
+    return 0;
 }
 
+/* This happens for special events from ADIOS, MPI */
 int Tau_plugin_sos_current_timer_exit(Tau_plugin_event_current_timer_exit_data data) {
-  Tau_SOS_pack_current_timer(data.name_prefix);
-  return 0;
+    Tau_SOS_pack_current_timer(data.name_prefix);
+    return 0;
 }
 
+/* This happens on MPI_Send events (and similar) */
 int Tau_plugin_sos_send(Tau_plugin_event_send_data data) {
-  /* todo: filter on group, timer name */
-  std::stringstream ss;
-  ss << "TAU_EVENT_SEND:" << data.tid 
-      << ":" << data.message_tag 
-      << ":" << data.destination 
-      << ":" << data.bytes_sent;
-  //std::cout << ss.str() << std::endl;
-  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
-  return 0;
+    /* todo: filter on group, timer name */
+    std::stringstream ss;
+    ss << "TAU_EVENT_SEND:" << data.tid 
+        << ":" << data.message_tag 
+        << ":" << data.destination 
+        << ":" << data.bytes_sent;
+    //std::cout << ss.str() << std::endl;
+    Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
+    return 0;
 }
 
+/* This happens on MPI_Recv events (and similar) */
 int Tau_plugin_sos_recv(Tau_plugin_event_recv_data data) {
-  /* todo: filter on group, timer name */
-  std::stringstream ss;
-  ss << "TAU_EVENT_RECV:" << data.tid 
-      << ":" << data.message_tag 
-      << ":" << data.source 
-      << ":" << data.bytes_received;
-  //std::cout << ss.str() << std::endl;
-  Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
-  return 0;
+    /* todo: filter on group, timer name */
+    std::stringstream ss;
+    ss << "TAU_EVENT_RECV:" << data.tid 
+        << ":" << data.message_tag 
+        << ":" << data.source 
+        << ":" << data.bytes_received;
+    //std::cout << ss.str() << std::endl;
+    Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
+    return 0;
 }
 
+/* This happens when a Metadata field is saved. */
 int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_registration_data data) {
     //fprintf(stdout, "TAU Metadata registration\n"); fflush(stdout);
     std::stringstream ss;
@@ -131,28 +145,39 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
     fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
+    // Parse our settings
     TAU_SOS_parse_environment_variables();
+    // Check the value of TAU_SOS
     if (!thePluginOptions().env_sos_enabled) 
     { 
         printf("*** SOS NOT ENABLED! ***\n"); 
         return 0; 
     }
     TAU_SOS_init();
-    if (thePluginOptions().env_sos_enabled != 1) { return 0; }
+    /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
+    /* Required event support */
     cb->Dump = Tau_plugin_sos_dump;
-    //cb->Send = Tau_plugin_sos_send;
-    //cb->Recv = Tau_plugin_sos_recv;
-    cb->PostInit = Tau_plugin_sos_post_init;
-    //cb->FunctionEntry = Tau_plugin_sos_function_entry;
-    //cb->FunctionExit = Tau_plugin_sos_function_exit;
-    //cb->CurrentTimerExit = Tau_plugin_sos_current_timer_exit;
     cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
-    cb->FunctionFinalize = Tau_plugin_finalize;
+    cb->PostInit = Tau_plugin_sos_post_init;
     cb->PreEndOfExecution = Tau_plugin_sos_pre_end_of_execution;
     cb->EndOfExecution = Tau_plugin_sos_end_of_execution;
-    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+    /* Event tracing support */
+    if (thePluginOptions().env_sos_tracing) {
+        cb->Send = Tau_plugin_sos_send;
+        cb->Recv = Tau_plugin_sos_recv;
+        cb->FunctionEntry = Tau_plugin_sos_function_entry;
+        cb->FunctionExit = Tau_plugin_sos_function_exit;
+    }
+    /* Specialized support for ADIOS, MPI events (ADIOS Skel/Pooky support) */
+    if (thePluginOptions().env_sos_trace_adios) {
+        cb->CurrentTimerExit = Tau_plugin_sos_current_timer_exit;
+    }
+    /* Not sure what this thing does */
+    //cb->FunctionFinalize = Tau_plugin_finalize;
 
+    /* Register the callback object */
+    TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
     return 0;
 }
 

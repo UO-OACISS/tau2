@@ -751,7 +751,16 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
 {
   FunctionInfo *fi = (FunctionInfo *)function_info;
   // Don't stop throttled timers
-  if (fi->IsThrottled()) return;
+  if (fi->IsThrottled()) {
+      //...unless it is already on the stack.
+      Profiler *profiler;
+      int tid = RtsLayer::myThread();
+      profiler = (Profiler *)&(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+      // if this timer isn't on the top of the stack, stop it.
+      if (profiler && profiler->ThisFunction != fi) {
+          return;
+      }
+  }
   if (Tau_global_getLightsOut()) return;
 
   if (TauEnv_get_lite_enabled()) {
@@ -907,8 +916,11 @@ extern "C" void Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-  Tau_stop_all_timers(RtsLayer::myThread());
-  Tau_shutdown();
+  int tid = RtsLayer::myThread();
+  Tau_stop_all_timers(tid);
+  if (tid == 0) {
+    Tau_shutdown();
+  }
 }
 
 
