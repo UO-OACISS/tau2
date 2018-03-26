@@ -1598,9 +1598,9 @@ int gpu_occupancy_available(int deviceId)
 
 	if ((device.computeCapabilityMajor > 7) ||
 		device.computeCapabilityMajor == 7 &&
-		device.computeCapabilityMinor > 0)
+		device.computeCapabilityMinor > 1)
 	{
-		TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 7.0.");
+		TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 7.1.");
 		return 0;
 	}
 	//gpu occupancy available.
