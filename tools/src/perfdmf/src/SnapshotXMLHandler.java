@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import org.xml.sax.Attributes;
@@ -44,6 +45,8 @@ public class SnapshotXMLHandler extends DefaultHandler {
     
     private boolean unified;
     private ThreadData unifiedDefinitions;
+    
+    private Set<Integer> selectedRanks=null;
 
     private static class ThreadData {
         public Thread thread;
@@ -54,6 +57,10 @@ public class SnapshotXMLHandler extends DefaultHandler {
 
     public SnapshotXMLHandler(SnapshotDataSource source) {
         this.dataSource = source;
+    }
+    
+    public void setSelectedRanks(Set<Integer> ranks) {
+    	selectedRanks=ranks;
     }
 
     public void warning(SAXParseException e) throws SAXException {}
@@ -101,8 +108,13 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleThread(Attributes attributes) {
         String threadName = attributes.getValue(ID);
         int nodeID = Integer.parseInt(attributes.getValue("node"));
+        //We need to load rank 0 every time because it contains some global metadata
+        if(this.selectedRanks!=null&&!selectedRanks.contains(nodeID)&&nodeID!=0) {
+        	this.bypassRanksFlag=true;
+        	return;
+        }
         int contextID = Integer.parseInt(attributes.getValue("context"));
-        int threadID = Integer.parseInt(attributes.getValue("thread"));
+        int threadID = Integer.parseInt(attributes.getValue(THREAD));
 
         ThreadData data = new ThreadData();
         if (unified) {
@@ -228,7 +240,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     
     
     private void handleDefinitions(Attributes attributes) {
-        String threadID = attributes.getValue("thread");
+        String threadID = attributes.getValue(THREAD);
         if (threadID.equals("*")) {
 	    //            System.out.println("Unified format found!");
             unified = true;
@@ -240,7 +252,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     }
 
     private void handleProfile(Attributes attributes) {
-        String threadID = attributes.getValue("thread");
+        String threadID = attributes.getValue(THREAD);
         currentThread = threadMap.get(threadID);
         currentSnapshot = currentThread.thread.addSnapshot("");
     }
@@ -346,10 +358,21 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private static final String DERIVEDENTITY="derivedentity";
     private static final String DERIVEDPROFILE="derivedprofile";
 
+    //When true we are not viewing ranks we are intersted in so we disable recording activity.
+    private boolean bypassRanksFlag=false;
+    //private String bypassRanksName=null;
+    
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
     	if(unknownDerivedProfile){
         	return;
         }
+    	
+    	if(bypassRanksFlag)
+    	{
+    		//System.out.println("Bypassing a "+localName);
+    		return;
+    	}
+    	//System.out.println("Processing a "+localName);
     	
         //System.out.println("startElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
 
@@ -398,6 +421,17 @@ public class SnapshotXMLHandler extends DefaultHandler {
         	return;
         }
     	
+        //We aren't processing any ranks when this flag has been tripped
+        if(bypassRanksFlag) {
+        	
+        	if(localName.equals("profile_xml")) {
+            	bypassRanksFlag=false;
+            	//System.out.println("resetting bypass");
+            }
+        	
+        	return;
+        }
+        
         //System.out.println("endElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
         if (localName.equals("thread_definition")) {
             currentThread = null;

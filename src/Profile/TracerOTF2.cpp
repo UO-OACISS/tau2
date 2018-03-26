@@ -50,11 +50,12 @@
 #include <algorithm>
 
 #include <otf2/otf2.h>
+#ifdef TAU_OPENMP
+#include <otf2/OTF2_OpenMP_Locks.h>
+#else
 #ifdef PTHREADS
 #include <otf2/OTF2_Pthread_Locks.h>
 #endif
-#ifdef TAU_OPENMP
-#include <otf2/OTF2_OpenMP_Locks.h>
 #endif
 
 #ifdef TAU_INCLUDE_MPI_H_HEADER

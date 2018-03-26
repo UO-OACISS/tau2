@@ -2,8 +2,12 @@
 
 DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -f ../../x86_64/sos/sos_flow/build-linux/bin/sosd ] ; then
-    PATH=$PATH:$DIR/../../x86_64/sos/sos_flow/build-linux/bin/
+#if [ -f ../../x86_64/sos/sos_flow/build-linux/bin/sosd ] ; then
+#    PATH=$PATH:$DIR/../../x86_64/sos/sos_flow/build-linux/bin/
+#fi
+
+if [ -f ../../x86_64/sos/sos_flow/inst/bin/sosd ] ; then
+    PATH=$PATH:$DIR/../../x86_64/sos/sos_flow/inst/bin/
 fi
 
 export SOS_CMD_PORT=22500
@@ -15,7 +19,7 @@ export SOS_EVPATH_MEETUP=${DIR}
 export TAU_SOS_HIGH_RESOLUTION=1
 export TAU_SOS=1
 
-PLATFORM=cerberus.nic.uoregon.edu
+PLATFORM=godzilla.nic.uoregon.edu
 
 start_sos_daemon()
 {

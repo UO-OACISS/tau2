@@ -24,6 +24,9 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauTraceOTF2.h>
 #include <Profile/TauUtil.h>
+#ifdef TAU_ADIOS
+#include "adiost_callback_api.h"
+#endif
 
 #include <stdio.h>
 #include <mpi.h>
@@ -619,7 +622,40 @@ MPI_Comm comm;
 
   double tmp_array1[5] = {0.0};
   double tmp_array2[5] = {0.0};
-  TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
+#ifdef TAU_SOS
+  //TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
+  if (TauEnv_get_sos_trace_events()) {
+	  int commsize = 0;
+      PMPI_Comm_size(comm, &commsize);
+	  // allocate enough space. each count can be 10 digits, then add spaces
+	  // and commas, and 256 for text.
+	  int buffersize = (commsize * 11) + (commsize * 11) + 256;
+      char * buffer = (char*)(calloc(buffersize, sizeof(char)));
+      sprintf(buffer, "%s collective exchangev %s (", EVENT_TRACE_PREFIX, "Alltoallv");
+	  int sendtypesize = 0;
+	  int recvtypesize = 0;
+	  PMPI_Type_size(sendtype, &sendtypesize);
+	  PMPI_Type_size(recvtype, &recvtypesize);
+	  /* loop over sendcnts */
+      sprintf(buffer, "%s[%d", buffer, sendcnts[0]);
+	  int i = 1;
+	  for (i = 1 ; i < commsize ; i++) {
+          sprintf(buffer, "%s,%d", buffer, sendcnts[i]);
+	  }
+      sprintf(buffer, "%s],%d", buffer, sendtypesize);
+      sprintf(buffer, "%s,[%d", buffer, recvcnts[0]);
+	  /* loop over recvcnts */
+	  for (i = 1 ; i < commsize ; i++) {
+          sprintf(buffer, "%s,%d", buffer, recvcnts[i]);
+	  }
+      sprintf(buffer, "%s],%d", buffer, recvtypesize);
+
+	  sprintf(buffer, "%s) 0x%08x", buffer, comm);
+      Tau_SOS_pack_current_timer(buffer);
+	  free(buffer);
+  }
+#endif // TAU_SOS
+
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;

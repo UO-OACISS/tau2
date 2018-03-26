@@ -416,7 +416,7 @@ for arg in "$@" ; do
                         preprocessor=${arg#"-optCPP="}
         		f90preprocessor=$preprocessor
         		preprocess=$TRUE
-        		tauPreProcessor=$FALSE
+        		#tauPreProcessor=$FALSE
         		echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
         		;;
 
@@ -432,7 +432,7 @@ for arg in "$@" ; do
                     -optFPP=*)
                         f90preprocessor=${arg#"-optFPP="}
                         preprocess=$TRUE
-                        tauPreProcessor=$FALSE
+                        #tauPreProcessor=$FALSE
                         echo "\tFortran preprocessing $preprocess. preprocessor used is $f90preprocessor with options $f90preprocessorOpts"
                         ;;
         	    -optFPPOpts=*)
@@ -1672,6 +1672,14 @@ if [ $numFiles == 0 ]; then
         else
           OPARI_AWK_DIR=${TAU_BIN_DIR}
         fi
+        if [ ! -d "$OPARI_AWK_DIR" ]; then
+            printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
+            exit $errorStatus
+        fi
+        if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
+            printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
+            exit $errorStatus
+        fi
         cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
@@ -2110,8 +2118,14 @@ else
                      if [ `echo $optCompInstOption | grep finstrument-functions | wc -l ` != 0 ]; then
                        echoIfDebug "Has GNU CompInst option"
 		     if [ "x$tauSelectFile" != "x" ] ; then
-                       optExcludeFuncsList=`sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g' -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | sed -n '1h;2,$H;${g;s/\n/,/g;p}' | sed -e 's/"",//g' -e 's/,""//g' -e 's/,/ /g' | sed -e 's/"//g' | sed -e 's/ /,/g'`
-		     fi
+                       optExcludeFuncsList=$(sed -e 's/^#.*//g' -e '/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/{/BEGIN_EXCLUDE_LIST/{h;d};H;/END_EXCLUDE_LIST/{x;/BEGIN_EXCLUDE_LIST/,/END_EXCLUDE_LIST/p}};d' $tauSelectFile | \
+                                             sed -e 's/BEGIN_EXCLUDE_LIST//' -e 's/END_EXCLUDE_LIST//' -e 's/#/\.\*/g' -e 's/"//g' -e 's/^/"/' -e 's/$/"/' | \
+                                             sed -n '1h;2,$H;${g;s/\n/,/g;p}' | \
+                                             sed -e 's/"",//g' -e 's/,""//g' -e 's/,/ /g' | \
+                                             sed -e 's/"//g' | \
+                                             sed -e 's/  */,/g' | \
+                                             sed -e 's/^,*//' -e 's/,*$//')
+                     fi
                        if [ "x$optExcludeFuncsList" != "x" ]; then 
                          optExcludeFuncs=-finstrument-functions-exclude-function-list=$optExcludeFuncsList
                          optCompInstOption="$optExcludeFuncs $optCompInstOption"
@@ -2257,13 +2271,25 @@ else
       fi
           if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
               evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-
-  cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${optOpariLibExecDir}/pomp2-parse-init-regions.awk > pompregions.c"
-          evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
-          cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
-          evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
-          linkCmd="$linkCmd pompregions.o"
-             objectFilesForLinking="pompregions.o $objectFilesForLinking"
+              if [ -r ${optOpari2Dir}/libexec/pomp2-parse-init-regions.awk ]; then
+                  OPARI_AWK_DIR=${optOpari2Dir}/libexec
+              else
+                  OPARI_AWK_DIR=${TAU_BIN_DIR}
+              fi
+              if [ ! -d "$OPARI_AWK_DIR" ]; then
+                  printError "$CMD" "OPARI_AWK_DIR ($OPARI_AWK_DIR) does not exist"
+                  exit $errorStatus
+              fi
+              if [ ! -r "$OPARI_AWK_DIR/pomp2-parse-init-regions.awk" ]; then
+                  printError "$CMD" "could not find pomp2-parse-init-regions.awk in OPARI_AWK_DIR ($OPARI_AWK_DIR)"
+                  exit $errorStatus
+              fi
+              cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${OPARI_AWK_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+              evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
+              cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
+              evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+              linkCmd="$linkCmd pompregions.o"
+              objectFilesForLinking="pompregions.o $objectFilesForLinking"
           fi
 
           newCmd="$CMD $listOfObjectFiles $argsRemaining $objectFilesForLinking $OUTPUTARGSFORTAU"
@@ -2508,5 +2534,5 @@ else
 break;
 done # passCount loop
 
-echo -e ""
+echoIfVerbose ""
 exit $errorStatus

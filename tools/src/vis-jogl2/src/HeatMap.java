@@ -3,9 +3,13 @@ package edu.uoregon.tau.vis;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.io.File;
@@ -51,7 +55,13 @@ public class HeatMap extends JPanel implements ImageObserver {
         int height = size;
 
         if (img == null) {
-            img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        	 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        	 int transparency = Transparency.OPAQUE;
+            ///img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            GraphicsDevice gs = ge.getDefaultScreenDevice();
+            GraphicsConfiguration gc = gs.getDefaultConfiguration();
+            img = gc.createCompatibleImage(
+               width,height, transparency);
         }
         mapData.reset();
         while (mapData.hasNext()) {
@@ -135,7 +145,12 @@ public class HeatMap extends JPanel implements ImageObserver {
                     RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         }
 
+        
+//        System.out.println(d.width+" "+d.height);
+//        System.out.println(i.left+" "+i.top+" "+i.right+" "+i.bottom);
+        
         g.drawImage(img, i.left, i.top, d.width - i.left - i.right, d.height - i.top - i.bottom, this);
+        g.dispose();
     }
 
     /**

@@ -5389,7 +5389,9 @@ MPI_Fint *ierr;
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *incount, MPI_Request_f2c);
   TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *incount, MPI_Status_f2c);
   *ierr = MPI_Testsome( *incount, local_requests, outcount, array_of_indices, local_statuses );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *outcount, TAU_MPI_Request_c2f);
+  // The count for the below is incount rather than outcount because we have to translate
+  // ALL of the requests back into Fortran types
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *incount, TAU_MPI_Request_c2f);
   TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *outcount, MPI_Status_c2f);
   TAU_FREE_LOCAL(local_requests);
   TAU_FREE_LOCAL(local_statuses);
@@ -6360,7 +6362,9 @@ MPI_Fint *ierr;
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *incount, MPI_Request_f2c);
   TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *incount, MPI_Status_f2c);
   *ierr = MPI_Waitsome( *incount, local_requests, outcount, array_of_indices, local_statuses );
-  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *outcount, TAU_MPI_Request_c2f);
+  // The count for the below is incount rather than outcount because we have to translate
+  // ALL of the requests back into Fortran types
+  TAU_ASSIGN_VALUES(array_of_requests, local_requests, *incount, TAU_MPI_Request_c2f);
   TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *outcount, MPI_Status_c2f);
   TAU_FREE_LOCAL(local_requests);
   TAU_FREE_LOCAL(local_statuses);
