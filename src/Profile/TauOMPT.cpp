@@ -730,15 +730,13 @@ on_ompt_callback_control_tool(
   return 0; //success
 }
 
-#define register_callback_t(name, type)                       \
-do{                                                           \
-  type f_##name = &on_##name;                                 \
-  if (ompt_set_callback(name, (ompt_callback_t)f_##name) ==   \
-      ompt_set_never)                                         \
-    myprintf("0: Could not register callback '" #name "'\n");   \
-}while(0)
-
-#define register_callback(name) register_callback_t(name, name##_t)
+#define c_(name) &on##_name
+inline static void register_callback(ompt_callbacks_t name)
+{
+  ompt_callback_t c = c_(name);                                 
+  if (ompt_set_callback(name, c) == ompt_set_never)
+    myprintf("0: Could not register callback '" #name "'\n");
+}
 
 extern "C" int ompt_initialize(
   ompt_function_lookup_t lookup,
