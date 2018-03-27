@@ -20,7 +20,7 @@
 
 /* Only dump data to SOS if we aren't doing periodic dumps */
 int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
-    printf("TAU PLUGIN SOS: dump\n");
+    //printf("TAU PLUGIN SOS: dump\n");
     if (thePluginOptions().env_sos_periodic != 1) { 
         TAU_SOS_send_data();
     }
@@ -34,7 +34,7 @@ int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data data) {
 
 /* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data data) {
-    fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
+    //fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
     // OK to do it from any thread, because it came from MPI_Finalize
     TAU_SOS_send_data();
     return 0;
@@ -42,7 +42,7 @@ int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_da
 
 /* This happens from Profiler.cpp, when data is written out. */
 int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data) {
-    fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
+    //fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
     if (data.tid == 0) {
         TAU_SOS_finalize();
     }
@@ -52,7 +52,7 @@ int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data)
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
 int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
-    fprintf(stdout, "TAU PLUGIN SOS Post Init\n"); fflush(stdout);
+    //fprintf(stdout, "TAU PLUGIN SOS Post Init\n"); fflush(stdout);
     TAU_SOS_send_data();
     return 0;
 }
@@ -144,7 +144,7 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
-    fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
+    //fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
     // Parse our settings
     TAU_SOS_parse_environment_variables();
     // Check the value of TAU_SOS
