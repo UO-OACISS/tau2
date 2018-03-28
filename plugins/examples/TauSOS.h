@@ -45,6 +45,8 @@ inline SOS_plugin_options& thePluginOptions() {
 
 void TAU_SOS_parse_environment_variables(void);
 void Tau_SOS_parse_selection_file(const char * filename);
+const bool Tau_SOS_contains(std::unordered_set<std::string>& myset, 
+        const char * key, bool if_empty);
 
 void TAU_SOS_send_data(void);
 void TAU_SOS_init(void);
