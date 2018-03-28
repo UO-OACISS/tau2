@@ -67,115 +67,105 @@
 #define TAU_OPENMPI3_CONST  
 #endif
 
-/* These macros are for creating MPI "events" in the SOS stream. */
+/* These functions and macros are for creating MPI "events" in the SOS stream. */
 
-#ifdef TAU_SOS_disabled
-#define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
-#include "Profile/TauSOS.h"
-#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
+#ifdef TAU_SOS
+
+inline void Tau_plugin_trace_current_timer(const char * name) {
+    /*Invoke plugins only if both plugin path and plugins are specified*/
+    if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+        Tau_plugin_event_current_timer_exit_data plugin_data;
+        plugin_data.name_prefix = name;
+        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
     }
+}
+
+#define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
+
+#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
+char __tmp[128]; \
+sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
-            EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
+    EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[256]; \
-        sprintf(__tmp, \
-            "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
-            EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
-            __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[256]; \
+sprintf(__tmp, \
+    "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
+    EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
+    __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+Tau_plugin_trace_current_timer(__tmp);
 
 // this is used between cart_create and cart_sub calls... may not be safe, but...
 static int __cart_dims = 1;
 
 void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * dims, TAU_MPICH3_CONST int * periods, int reorder, MPI_Comm comm_out) {
-    if (TauEnv_get_sos_trace_events()) {
-        char tmp[256];
-        sprintf(tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, comm,ndims);
-        int x;
-        __cart_dims = ndims;
-        for (x = 0 ; x < ndims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, dims[x]);
-        }
-        sprintf(tmp, "%s%d], [", tmp, dims[ndims-1]);
-        for (x = 0 ; x < ndims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, periods[x]);
-        }
-        sprintf(tmp, "%s%d], %d) 0x%08x", tmp, periods[ndims-1], reorder, comm_out);
-        Tau_SOS_pack_current_timer(tmp);
+    char tmp[256];
+    sprintf(tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, comm,ndims);
+    int x;
+    __cart_dims = ndims;
+    for (x = 0 ; x < ndims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, dims[x]);
     }
+    sprintf(tmp, "%s%d], [", tmp, dims[ndims-1]);
+    for (x = 0 ; x < ndims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, periods[x]);
+    }
+    sprintf(tmp, "%s%d], %d) 0x%08x", tmp, periods[ndims-1], reorder, comm_out);
+    Tau_plugin_trace_current_timer(tmp);
 }
 
 #define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
    Tau_sos_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out);
 
 void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
-    if (TauEnv_get_sos_trace_events()) {
-        char tmp[256];
-        sprintf(tmp, "%s_Cart_coords (%p, %d, %d, [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
-        int x;
-        for (x = 0 ; x < maxdims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, coords[x]);
-        }
-        sprintf(tmp, "%s%d]) 0x0", tmp, coords[maxdims-1]);
-        Tau_SOS_pack_current_timer(tmp);
+    char tmp[256];
+    sprintf(tmp, "%s_Cart_coords (%p, %d, %d, [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
+    int x;
+    for (x = 0 ; x < maxdims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, coords[x]);
     }
+    sprintf(tmp, "%s%d]) 0x0", tmp, coords[maxdims-1]);
+    Tau_plugin_trace_current_timer(tmp);
 }
 
 #define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords) \
     Tau_sos_cart_coords_event(__comm,__rank,__maxdims,__coords);
 
 void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
-    if (TauEnv_get_sos_trace_events()) {
-        char tmp[256];
-        sprintf(tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, comm);
-        int x;
-        for (x = 0 ; x < __cart_dims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, remains[x]);
-        }
-        sprintf(tmp, "%s%d]) 0x%08x", tmp, remains[__cart_dims-1], comm_out);
-        Tau_SOS_pack_current_timer(tmp);
+    char tmp[256];
+    sprintf(tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, comm);
+    int x;
+    for (x = 0 ; x < __cart_dims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, remains[x]);
     }
+    sprintf(tmp, "%s%d]) 0x%08x", tmp, remains[__cart_dims-1], comm_out);
+    Tau_plugin_trace_current_timer(tmp);
 }
 
 #define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
@@ -655,7 +645,7 @@ MPI_Comm comm;
       sprintf(buffer, "%s],%d", buffer, recvtypesize);
 
 	  sprintf(buffer, "%s) 0x%08x", buffer, comm);
-      Tau_SOS_pack_current_timer(buffer);
+      Tau_plugin_trace_current_timer(buffer);
 	  free(buffer);
   }
 #endif // TAU_SOS
