@@ -123,8 +123,8 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
             ss << "adios_string" ; break;
     }
     ss << "," << ndims << ",";
-    ss << "[" << dims << "],";
     if (ndims == 0) {
+        ss << "[" << dims << "],";
         switch(data_type) {
             case adios_byte:
                 ss << *(char*)(value) ; break;
@@ -155,6 +155,8 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
                 ss << "0";
                 break;
         }
+    } else {
+        ss << "[" << dims << "]";
     }
     ss << ")";
 	//printf("%s\n", ss.str().c_str());
