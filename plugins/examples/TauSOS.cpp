@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <set>
 #include <stdexcept>
@@ -356,6 +357,65 @@ void TAU_SOS_parse_environment_variables(void) {
     // also needed:
     // - whitelist/blacklist file
     // - disable profile output (trace only)
+    tmp = getenv("TAU_SOS_SELECTION_FILE");
+    if (tmp != NULL) {
+      Tau_SOS_parse_selection_file(tmp);
+    }
+}
+
+void Tau_SOS_parse_selection_file(const char * filename) {
+    std::ifstream file(filename);
+    std::string str;
+    bool including_timers = false;
+    bool excluding_timers = false;
+    bool including_counters = false;
+    bool excluding_counters = false;
+    thePluginOptions().env_sos_use_selection = 1;
+    while (std::getline(file, str)) {
+        // trim right whitespace
+        str.erase(str.find_last_not_of(" \n\r\t")+1);
+        // trim left whitespace
+        str.erase(0, str.find_first_not_of(" \n\r\t"));
+        // skip blank lines
+        if (str.size() == 0) {
+            continue;
+        }
+        // skip comments
+        if (str.find("#", 0) == 0) {
+            continue;
+        }
+        if (str.compare("BEGIN_INCLUDE_TIMERS") == 0) {
+            including_timers = true;
+        } else if (str.compare("END_INCLUDE_TIMERS") == 0) {
+            including_timers = false;
+        } else if (str.compare("BEGIN_EXCLUDE_TIMERS") == 0) {
+            excluding_timers = true;
+        } else if (str.compare("END_EXCLUDE_TIMERS") == 0) {
+            excluding_timers = false;
+        } else if (str.compare("BEGIN_INCLUDE_COUNTERS") == 0) {
+            including_counters = true;
+        } else if (str.compare("END_INCLUDE_COUNTERS") == 0) {
+            including_counters = false;
+        } else if (str.compare("BEGIN_EXCLUDE_COUNTERS") == 0) {
+            excluding_counters = true;
+        } else if (str.compare("END_EXCLUDE_COUNTERS") == 0) {
+            excluding_counters = false;
+        } else {
+            if (including_timers) {
+                thePluginOptions().included_timers.insert(str);
+                std::cout << "including: " << str << std::endl;
+            } else if (excluding_timers) {
+                thePluginOptions().excluded_timers.insert(str);
+            } else if (including_counters) {
+                thePluginOptions().included_counters.insert(str);
+            } else if (excluding_counters) {
+                thePluginOptions().excluded_counters.insert(str);
+            } else {
+                std::cerr << "Warning, selection outside of include/exclude section: "
+                    << str << std::endl;
+            }
+        }
+    }
 }
 
 void TAU_SOS_init() {
@@ -494,12 +554,12 @@ void Tau_SOS_pack_current_timer(const char * event_name) {
     // get the current profiler
     tau::Profiler * p = Tau_get_current_profiler();
     // get the current time
-    double current;
+    double current[TAU_MAX_THREADS];
     int tid = RtsLayer::myThread();
-    RtsLayer::getUSecD(tid, &current);
+    RtsLayer::getUSecD(tid, current);
     // assume time is the first counter!
-    // also assume it is in microseconds!
-    double value = (current - p->StartTime[0]) * CONVERT_TO_USEC;
+    // also convert it to microseconds
+    double value = (current[0] - p->StartTime[0]) * CONVERT_TO_USEC;
     SOS_pack(tau_sos_pub, event_name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
@@ -563,8 +623,27 @@ void Tau_SOS_pack_long(const char * name, long int value) {
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_LONG, &value);
 }
 
+/* Necessary to use const char * because UserEvents use TauSafeString objects, 
+ * not std::string. We use the "if_empty" parameter to tell us how to treat
+ * an empty set.  For exclude lists, it's false, for include lists, it's true */
+inline const bool contains(std::unordered_set<std::string>& myset, 
+        const char * key, bool if_empty) {
+    // if the set has contents, and we are in the set, then return true.
+    std::string _key(key);
+    if (myset.size() == 0) {
+        return if_empty;
+    } else if (myset.find(_key) == myset.end()) {
+        return false;
+    }
+    // otherwise, return false.
+    return true;
+}
+
 void TAU_SOS_pack_profile() {
-    //TauTrackPowerHere(); // get a power measurement
+    TAU_TRACK_MEMORY_HERE();
+    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
+    TAU_TRACK_POWER_HERE();
+    TAU_TRACK_LOAD_HERE();
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
@@ -583,6 +662,13 @@ void TAU_SOS_pack_profile() {
     //foreach: TIMER
     for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo *fi = *it;
+        /* First, check to see if we are including/excluding this timer */
+        if (thePluginOptions().env_sos_use_selection == 1) {
+            if (contains(thePluginOptions().excluded_timers, fi->GetName(), false) ||
+                !contains(thePluginOptions().included_timers, fi->GetName(), true)) {
+                continue;
+            }
+        }
         // get the number of calls
         int tid = 0; // todo: get ALL thread data.
         int calls;
@@ -631,6 +717,13 @@ void TAU_SOS_pack_profile() {
     std::stringstream tmp_str;
     for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
         tau::TauUserEvent *ue = (*it2);
+        /* First, check to see if we are including/excluding this counter */
+        if (thePluginOptions().env_sos_use_selection == 1) {
+            if (contains(thePluginOptions().excluded_counters, ue->GetName().c_str(), false) ||
+                !contains(thePluginOptions().included_counters, ue->GetName().c_str(), true)) {
+                continue;
+            }
+        }
 	    double tmp_accum = 0.0;
 	    std::string counter_name;
 
