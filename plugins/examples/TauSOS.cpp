@@ -626,7 +626,7 @@ void Tau_SOS_pack_long(const char * name, long int value) {
 /* Necessary to use const char * because UserEvents use TauSafeString objects, 
  * not std::string. We use the "if_empty" parameter to tell us how to treat
  * an empty set.  For exclude lists, it's false, for include lists, it's true */
-inline const bool contains(std::unordered_set<std::string>& myset, 
+const bool Tau_SOS_contains(std::unordered_set<std::string>& myset, 
         const char * key, bool if_empty) {
     // if the set has contents, and we are in the set, then return true.
     std::string _key(key);
@@ -642,7 +642,7 @@ inline const bool contains(std::unordered_set<std::string>& myset,
 void TAU_SOS_pack_profile() {
     TAU_TRACK_MEMORY_HERE();
     TAU_TRACK_MEMORY_FOOTPRINT_HERE();
-    TAU_TRACK_POWER_HERE();
+    //TAU_TRACK_POWER_HERE();
     TAU_TRACK_LOAD_HERE();
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
@@ -664,8 +664,8 @@ void TAU_SOS_pack_profile() {
         FunctionInfo *fi = *it;
         /* First, check to see if we are including/excluding this timer */
         if (thePluginOptions().env_sos_use_selection == 1) {
-            if (contains(thePluginOptions().excluded_timers, fi->GetName(), false) ||
-                !contains(thePluginOptions().included_timers, fi->GetName(), true)) {
+            if (Tau_SOS_contains(thePluginOptions().excluded_timers, fi->GetName(), false) ||
+                !Tau_SOS_contains(thePluginOptions().included_timers, fi->GetName(), true)) {
                 continue;
             }
         }
@@ -719,8 +719,8 @@ void TAU_SOS_pack_profile() {
         tau::TauUserEvent *ue = (*it2);
         /* First, check to see if we are including/excluding this counter */
         if (thePluginOptions().env_sos_use_selection == 1) {
-            if (contains(thePluginOptions().excluded_counters, ue->GetName().c_str(), false) ||
-                !contains(thePluginOptions().included_counters, ue->GetName().c_str(), true)) {
+            if (Tau_SOS_contains(thePluginOptions().excluded_counters, ue->GetName().c_str(), false) ||
+                !Tau_SOS_contains(thePluginOptions().included_counters, ue->GetName().c_str(), true)) {
                 continue;
             }
         }

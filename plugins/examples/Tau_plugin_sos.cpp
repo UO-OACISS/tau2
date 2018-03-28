@@ -59,6 +59,15 @@ int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
 
 /* This happens on Tau_start() */
 int Tau_plugin_sos_function_entry(Tau_plugin_event_function_entry_data data) {
+    /* First, check to see if we are including/excluding this timer */
+    /*
+    if (thePluginOptions().env_sos_use_selection == 1) {
+        if (Tau_SOS_contains(thePluginOptions().excluded_timers, data.timer_name, false) ||
+            !Tau_SOS_contains(thePluginOptions().included_timers, data.timer_name, true)) {
+            return 0;
+        }
+    }
+    */
     /* todo: filter on group, timer name */
     std::stringstream ss;
     ss << "TAU_EVENT_ENTRY:" << data.tid << ":" << data.timer_name;
@@ -69,6 +78,15 @@ int Tau_plugin_sos_function_entry(Tau_plugin_event_function_entry_data data) {
 
 /* This happens on Tau_stop() */
 int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
+    /* First, check to see if we are including/excluding this timer */
+    /*
+    if (thePluginOptions().env_sos_use_selection == 1) {
+        if (Tau_SOS_contains(thePluginOptions().excluded_timers, data.timer_name, false) ||
+            !Tau_SOS_contains(thePluginOptions().included_timers, data.timer_name, true)) {
+            return 0;
+        }
+    }
+    */
     /* todo: filter on group, timer name */
     std::stringstream ss;
     ss << "TAU_EVENT_EXIT:" << data.tid << ":" << data.timer_name;
