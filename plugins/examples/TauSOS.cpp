@@ -403,7 +403,6 @@ void Tau_SOS_parse_selection_file(const char * filename) {
         } else {
             if (including_timers) {
                 thePluginOptions().included_timers.insert(str);
-                std::cout << "including: " << str << std::endl;
             } else if (excluding_timers) {
                 thePluginOptions().excluded_timers.insert(str);
             } else if (including_counters) {
