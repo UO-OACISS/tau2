@@ -626,7 +626,7 @@ void Tau_SOS_pack_long(const char * name, long int value) {
 /* Necessary to use const char * because UserEvents use TauSafeString objects, 
  * not std::string. We use the "if_empty" parameter to tell us how to treat
  * an empty set.  For exclude lists, it's false, for include lists, it's true */
-const bool Tau_SOS_contains(std::unordered_set<std::string>& myset, 
+const bool Tau_SOS_contains(std::set<std::string>& myset, 
         const char * key, bool if_empty) {
     // if the set has contents, and we are in the set, then return true.
     std::string _key(key);

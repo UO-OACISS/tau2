@@ -2,7 +2,7 @@
 #define TAU_SOS_H
 
 #include <string>
-#include <unordered_set>
+#include <set>
 
 #define TAU_SOS_INTERRUPT_PERIOD 2 // two seconds
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
@@ -29,10 +29,10 @@ class SOS_plugin_options {
         int env_sos_periodic;
         int env_sos_period;
         int env_sos_use_selection;
-        std::unordered_set<std::string> included_timers;
-        std::unordered_set<std::string> excluded_timers;
-        std::unordered_set<std::string> included_counters;
-        std::unordered_set<std::string> excluded_counters;
+        std::set<std::string> included_timers;
+        std::set<std::string> excluded_timers;
+        std::set<std::string> included_counters;
+        std::set<std::string> excluded_counters;
         static SOS_plugin_options& thePluginOptions() {
             static SOS_plugin_options tpo;
             return tpo;
@@ -45,7 +45,7 @@ inline SOS_plugin_options& thePluginOptions() {
 
 void TAU_SOS_parse_environment_variables(void);
 void Tau_SOS_parse_selection_file(const char * filename);
-const bool Tau_SOS_contains(std::unordered_set<std::string>& myset, 
+const bool Tau_SOS_contains(std::set<std::string>& myset, 
         const char * key, bool if_empty);
 
 void TAU_SOS_send_data(void);
