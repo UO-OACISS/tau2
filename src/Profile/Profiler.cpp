@@ -21,7 +21,7 @@
 #include <Profile/TauMetaData.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauMetaDataMerge.h>
-#include <Profile/TauSOS.h>
+#include <Profile/TauPluginInternals.h>
 
 //#define DEBUG_PROF 1 
 
@@ -93,8 +93,6 @@ double TauWindowsUsecD(void);
 extern "C" void  __real_shmem_finalize() ;
 #endif /* TAU_SHMEM */
 extern "C" int Tau_get_usesSHMEM();
-
-#include <Profile/TauPluginInternals.h>
 
 using namespace std;
 using namespace tau;
@@ -363,6 +361,16 @@ void Profiler::Start(int tid)
   ThisKtauProfiler = KtauProfiler::GetKtauProfiler();
   ThisKtauProfiler->Start(this);
 #endif /* TAUKTAU */
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_function_entry_data plugin_data;
+    plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.timer_group = ThisFunction->GetAllGroups();
+    plugin_data.tid = tid;
+    plugin_data.timestamp = TimeStamp;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, &plugin_data);
+  }
 }
 
 void Profiler::Stop(int tid, bool useLastTimeStamp)
@@ -690,6 +698,16 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #if defined(PROFILING_ON) && defined(TAUKTAU)
   KtauProfiler::PutKtauProfiler();
 #endif /* TAUKTAU */
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_function_exit_data plugin_data;
+    plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.timer_group = ThisFunction->GetAllGroups();
+    plugin_data.tid = tid;
+    plugin_data.timestamp = TimeStamp;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_EXIT, &plugin_data);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1448,14 +1466,17 @@ int TauProfiler_StoreData(int tid)
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
   TauMetrics_finalize();
 
+#ifndef TAU_MPI
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
   if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
-    Tau_plugin_event_end_of_execution_data plugin_data;
+    Tau_plugin_event_pre_end_of_execution_data plugin_data;
     plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
   }
+#endif
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 1\n", RtsLayer::myNode(), tid);
   if (TauEnv_get_tracing() && (tid == 0) && (TauEnv_get_trace_format() != TAU_TRACE_FORMAT_OTF2)) {
     Tau_print_metadata_for_traces(tid);
   }
@@ -1466,6 +1487,7 @@ int TauProfiler_StoreData(int tid)
   profileWriteCount[tid]++;
   if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
   if (profileWriteCount[tid] == 10) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
@@ -1489,6 +1511,7 @@ int TauProfiler_StoreData(int tid)
   }
 #endif
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 3\n", RtsLayer::myNode(), tid);
 
   Tau_MemMgr_finalizeIfNecessary();
 
@@ -1532,10 +1555,7 @@ int TauProfiler_StoreData(int tid)
 #endif
   }
 #endif /* PTHREADS */
-
-#ifdef TAU_SOS
-  TAU_SOS_finalize();
-#endif
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 4\n", RtsLayer::myNode(), tid);
 
 #if defined(TAU_SHMEM) && !defined(TAU_MPI)
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
@@ -1548,6 +1568,15 @@ int TauProfiler_StoreData(int tid)
   }
 #endif /* TAU_SHMEM */
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 5\n", RtsLayer::myNode(), tid);
+  /*Invoke plugins only if both plugin path and plugins are specified
+   *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    Tau_plugin_event_end_of_execution_data plugin_data;
+    plugin_data.tid = tid;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
+  }
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
   return 1;
 }
 
@@ -1591,7 +1620,10 @@ static int getProfileLocation(int metric, char *str)
 int TauProfiler_DumpData(bool increment, int tid, const char *prefix)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_DumpData\n", RtsLayer::myNode(), tid);
-  return TauProfiler_writeData(tid, prefix, increment);
+
+  int rc = TauProfiler_writeData(tid, prefix, increment);
+
+  return rc;
 }
 
 void getMetricHeader(int i, char *header)

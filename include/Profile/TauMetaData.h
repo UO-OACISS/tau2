@@ -133,6 +133,6 @@ int Tau_metadata_mergeMetaData();
 int Tau_write_metadata_records_in_scorep(int tid);
 char* Tau_metadata_get(const char *name, int tid);
 
-void Tau_metadata_push_to_sos(void);
+void Tau_metadata_push_to_plugins(void);
 
 #endif /* _TAU_METADATA_H_ */

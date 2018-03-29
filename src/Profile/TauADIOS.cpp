@@ -12,7 +12,7 @@
  */
 
 #ifdef TAU_SOS
-#include "Profile/TauSOS.h"
+#include "Profile/TauPluginInternals.h"
 #endif
 #include "Profile/Profiler.h"
 #include "Profile/UserEvent.h"
@@ -39,8 +39,6 @@ pthread_key_t thr_id_key;
 /* These macros are so we can compile out the SOS support */
 
 #ifdef TAU_SOS
-
-#include "Profile/TauSOS.h"
 
 #define EVENT_TRACE_PREFIX "TAU_EVENT::"
 
@@ -73,20 +71,21 @@ int TAU_decrement_stack_height() {
    output a trace event if we aren't currently timing another ADIOS call. */
 
 void Tau_SOS_conditionally_pack_current_timer(const char * name) {
-    // if we aren't processing trace events, return.
-    if (!TauEnv_get_sos_trace_events()) { return; }
     int foo = TAU_decrement_stack_height();
     if (foo == 0) {
-        Tau_SOS_pack_current_timer(name);
+        /*Invoke plugins only if both plugin path and plugins are specified*/
+        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+            Tau_plugin_event_current_timer_exit_data plugin_data;
+            plugin_data.name_prefix = name;
+            Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
+        }
 	}
 }
 
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT(__detail) \
-    if (TauEnv_get_sos_trace_events()) { \
         std::stringstream __ss; \
         __ss << EVENT_TRACE_PREFIX << __detail << "()"; \
-        Tau_SOS_conditionally_pack_current_timer(__ss.str().c_str()); \
-    }
+        Tau_SOS_conditionally_pack_current_timer(__ss.str().c_str());
 
 void TAU_SOS_collective_ADIOS_write_event(const char * detail, 
     const char * var_name, enum ADIOS_DATATYPES data_type, 
@@ -124,8 +123,8 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
             ss << "adios_string" ; break;
     }
     ss << "," << ndims << ",";
-    ss << "[" << dims << "],";
     if (ndims == 0) {
+        ss << "[" << dims << "],";
         switch(data_type) {
             case adios_byte:
                 ss << *(char*)(value) ; break;
@@ -156,6 +155,8 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
                 ss << "0";
                 break;
         }
+    } else {
+        ss << "[" << dims << "]";
     }
     ss << ")";
 	//printf("%s\n", ss.str().c_str());
@@ -232,12 +233,6 @@ ADIOST_EXTERN void tau_adiost_close(adiost_event_type_t type,
 	} else if (type == adiost_event_exit) {
         TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
 	    TAU_PROFILE_STOP(tautimer);
-#if defined(TAU_SOS)
-        // at the end of an application time step, push SOS data.
-        if (TauEnv_get_sos_enabled()) {
-            TAU_SOS_send_data();
-        }
-#endif
     } else {
     }
 }
@@ -787,12 +782,13 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
 	    TAU_PROFILE_STOP(tautimer);
 	    Tau_increment_stack_height();
     } else {
-	    // not conditional! no start/stop.
-        if (TauEnv_get_sos_trace_events()) { 
-#if defined(TAU_SOS)
-		    Tau_SOS_pack_current_timer(ss.str().c_str());
-#endif
-		}
+	    // not conditional! neither start nor stop.
+        /*Invoke plugins only if both plugin path and plugins are specified*/
+        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+            Tau_plugin_event_current_timer_exit_data plugin_data;
+            plugin_data.name_prefix = ss.str().c_str();
+            Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
+        }
     }
 }
 
@@ -810,12 +806,12 @@ ADIOST_EXTERN void tau_adiost_read_finalize_method(
 	    TAU_PROFILE_STOP(tautimer);
 	    Tau_increment_stack_height();
     } else {
-	    // not conditional! no start/stop.
-        if (TauEnv_get_sos_trace_events()) { 
-#if defined(TAU_SOS)
-		    Tau_SOS_pack_current_timer(ss.str().c_str());
-#endif
-		}
+        /*Invoke plugins only if both plugin path and plugins are specified*/
+        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+            Tau_plugin_event_current_timer_exit_data plugin_data;
+            plugin_data.name_prefix = ss.str().c_str();
+            Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
+        }
     }
 }
 
@@ -887,12 +883,6 @@ ADIOST_EXTERN void tau_adiost_advance_step(
     } else if (type == adiost_event_exit) {
 	    TAU_PROFILE_STOP(tautimer);
 		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
-#if defined(TAU_SOS)
-        // at the end of an application time step, push SOS data.
-        if (TauEnv_get_sos_enabled()) {
-            TAU_SOS_send_data();
-        }
-#endif
     } else {
     }
 }

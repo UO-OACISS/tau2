@@ -13,10 +13,10 @@
  * **      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
  * ***************************************************************************/
 
-#include <Profile/TauPluginTypes.h>
-
 #ifndef _TAU_PLUGIN_INTERNALS_H_
 #define _TAU_PLUGIN_INTERNALS_H_
+
+#include <Profile/TauPluginTypes.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,8 +32,7 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
 int Tau_util_cleanup_all_plugins();
 
 PluginManager* Tau_util_get_plugin_manager();
-void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * data);
-
+void Tau_util_invoke_callbacks(Tau_plugin_event_t event, const void * data);
 
 #ifdef __cplusplus
 }
