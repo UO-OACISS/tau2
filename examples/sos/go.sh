@@ -19,12 +19,9 @@ export SOS_EVPATH_MEETUP=${DIR}
 # to use periodic, enable this variable, and comment out the
 # TAU_SOS_send_data() call in matmult.c.
 #export TAU_SOS_PERIODIC=1
-export TAU_SOS_HIGH_RESOLUTION=1
-export TAU_SOS=1
 
 export TAU_PLUGINS=libTAU-sos-plugin.so
-export TAU_PLUGINS_PATH=/home/khuck/src/tau2/x86_64/lib/shared-papi-mpi-pthread-sos
-#export TAU_VERBOSE=1
+export TAU_PLUGINS_PATH=/home/khuck/src/tau2/x86_64/lib/shared-papi-mpi-pthread-pdt-sos-adios
 
 PLATFORM=godzilla.nic.uoregon.edu
 
@@ -55,7 +52,6 @@ stop_sos_daemon
 rm -rf sosd.00000.* profile.* dump.*
 start_sos_daemon
 export TAU_METRICS=TIME:PAPI_FP_OPS
-export TAU_TRACK_MEMORY_FOOTPRINT=1
 #mpirun -np 4 ./matmult &
 mpirun -np 2 ./matmult 
 #./matmult 
