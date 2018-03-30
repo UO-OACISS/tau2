@@ -46,45 +46,6 @@ int get_ompt_tid(void) {
   return Tau_get_thread();
 }
 
-struct HashNode
-{
-  HashNode() : fi(NULL), excluded(false)
-  { }
-
-  TauBfdInfo info;		///< Filename, line number, etc.
-  FunctionInfo * fi;		///< Function profile information
-  bool excluded;			///< Is function excluded from profiling?
-};
-
-struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
-{
-  HashTable() {
-    Tau_init_initializeTAU();
-  }
-  virtual ~HashTable() {
-    Tau_destructor_trigger();
-  }
-};
-
-static HashTable & TheHashTable()
-{
-  static HashTable htab;
-  return htab;
-}
-
-static tau_bfd_handle_t & TheBfdUnitHandle()
-{
-  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    RtsLayer::LockEnv();
-    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-      bfdUnitHandle = Tau_bfd_registerUnit();
-    }
-    RtsLayer::UnLockEnv();
-  }
-  return bfdUnitHandle;
-}
-
 int Tau_set_tau_initialized() { tau_initialized = true; };
 
 static void* openmp_parallel = NULL;
@@ -140,30 +101,11 @@ on_ompt_callback_parallel_begin(
   const void *codeptr_ra)
 {
   char timerName[100];
-  HashNode * node;
   TauInternalFunctionGuard protects_this_function; 	
   if(codeptr_ra) {
-      void * codeptr_ra_copy = (void*)codeptr_ra;
+      void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-      /*tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-
-      RtsLayer::LockDB();
-      node = TheHashTable()[addr];
-      if (!node) {
-        node = new HashNode;
-        node->fi = NULL;
-        node->excluded = false;
-        TheHashTable()[addr] = node;
-      }
-      Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
-      RtsLayer::UnLockDB();
-
-      if(node && node->info.funcname && node->info.lineno) {
-        sprintf(timerName, "OpenMP %s [%d] ADDR: %lx", node->info.funcname, node->info.lineno, addr);
-      } */
-      //else {
-        sprintf(timerName, "OpenMP Parallel Region ADDR: %lx", addr);
-      //}
+      sprintf(timerName, "ADDR <%lx>", addr);
       void *handle = NULL;
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       parallel_data->ptr = (void*)handle;
@@ -178,10 +120,11 @@ on_ompt_callback_parallel_end(
   ompt_invoker_t invoker,
   const void *codeptr_ra)
 {
-  char timerName[100];
   TauInternalFunctionGuard protects_this_function;
 
   if(codeptr_ra) {
+    void * codeptr_ra_copy = (void*) codeptr_ra;
+    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
     TAU_PROFILER_STOP(parallel_data->ptr);
   }
 }
@@ -241,7 +184,6 @@ extern "C" int ompt_initialize(
   ompt_enumerate_states = (ompt_enumerate_states_t) lookup("ompt_enumerate_states");
   ompt_enumerate_mutex_impls = (ompt_enumerate_mutex_impls_t) lookup("ompt_enumerate_mutex_impls");
 
-  Tau_profile_c_timer(&openmp_parallel, "OpenMP parallel",  " ", TAU_OPENMP, "TAU_OPENMP");
   Tau_profile_c_timer(&openmp_task, "OpenMP task",  " ", TAU_OPENMP, "TAU_OPENMP");
   Tau_profile_c_timer(&openmp_thread, "OpenMP thread",  " ", TAU_OPENMP, "TAU_OPENMP");
 
@@ -257,6 +199,7 @@ extern "C" int ompt_initialize(
 
 extern "C" void ompt_finalize(ompt_data_t* tool_data)
 {
+  TAU_VERBOSE("OpenMP runtime is shutting down...\n");
 }
 
 extern "C" ompt_start_tool_result_t * ompt_start_tool(
