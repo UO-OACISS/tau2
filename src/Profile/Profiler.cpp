@@ -96,6 +96,8 @@ extern "C" int Tau_get_usesSHMEM();
 
 #include <Profile/TauPluginInternals.h>
 
+//Srinivasan
+#include <Profile/TauBfd.h>
 using namespace std;
 using namespace tau;
 
@@ -1192,6 +1194,69 @@ static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs)
   return -1;
 }
 
+
+//Srinivasan: TEMPORARY
+struct HashNode
+{
+  HashNode() : fi(NULL), excluded(false)
+  { }
+
+  TauBfdInfo info;		///< Filename, line number, etc.
+  FunctionInfo * fi;		///< Function profile information
+  bool excluded;			///< Is function excluded from profiling?
+};
+
+struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
+{
+  HashTable() {
+    Tau_init_initializeTAU();
+  }
+  virtual ~HashTable() {
+    Tau_destructor_trigger();
+  }
+};
+
+static HashTable & TheHashTable()
+{
+  static HashTable htab;
+  return htab;
+}
+
+static tau_bfd_handle_t & TheBfdUnitHandle()
+{
+  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    RtsLayer::LockEnv();
+    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+      bfdUnitHandle = Tau_bfd_registerUnit();
+    }
+    RtsLayer::UnLockEnv();
+  }
+  return bfdUnitHandle;
+}
+
+void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
+ 
+      HashNode * node;
+      unsigned long addr = 0;
+      sscanf(fi.GetName(), "ADDR <%lx>", &addr);
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+     
+
+      node = TheHashTable()[addr];
+      if (!node) {
+        node = new HashNode;
+        node->fi = NULL;
+        node->excluded = false;
+        TheHashTable()[addr] = node;
+      }
+      Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+
+      if(node && node->info.funcname && node->info.lineno) {
+        fprintf(fp, "\\OpenMP Parallel Region %s [%d]", node->info.funcname, node->info.lineno);
+      }
+}
+
 // Writes function event data
 static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs, int numFuncs)
 {
@@ -1336,7 +1401,12 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
 #endif // CUPTI
             double incltime = fi.getDumpInclusiveValues(tid)[metric];
             double excltime = fi.getDumpExclusiveValues(tid)[metric];
-            fprintf(fp, "\"%s", fi.GetName());
+
+            if(strcmp(fi.GetPrimaryGroup(), "TAU_OPENMP") == 0) {
+              Tau_ompt_resolve_callsite(fp, fi);
+            } else { 
+              fprintf(fp, "\"%s", fi.GetName());
+            }
             if (strlen(fi.GetType()) > 0)
                 fprintf(fp, " %s", fi.GetType());
             fprintf(fp, "\" %ld %ld %.16G %.16G ", fi.GetCalls(tid), fi.GetSubrs(tid), excltime, incltime);
