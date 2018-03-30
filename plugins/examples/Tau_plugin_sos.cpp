@@ -4,6 +4,7 @@
  * *
  * *********************************************************************************************/
 
+#if defined(TAU_SOS)
 
 #include <iostream>
 #include <stdio.h>
@@ -200,3 +201,5 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
 }
 
 
+
+#endif // TAU_SOS

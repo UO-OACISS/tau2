@@ -1,3 +1,4 @@
+#if defined(TAU_SOS)
 
 #include "TauSOS.h"
 #include "Profile/Profiler.h"
@@ -788,3 +789,5 @@ void TAU_SOS_send_data(void) {
     TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
     Tau_global_decr_insideTAU();
 }
+
+#endif // TAU_SOS
