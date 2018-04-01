@@ -95,9 +95,8 @@ extern "C" void  __real_shmem_finalize() ;
 extern "C" int Tau_get_usesSHMEM();
 
 #include <Profile/TauPluginInternals.h>
+//#include <Profile/TauUtil.h>
 
-//Srinivasan
-#include <Profile/TauBfd.h>
 using namespace std;
 using namespace tau;
 
@@ -134,6 +133,7 @@ extern "C" int Tau_get_usesMPI();
 extern "C" void Tau_shutdown(void);
 extern "C" void Tau_profile_exit_most_threads();
 extern "C" int TauCompensateInitialized(void);
+extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi);
 
 x_uint64 Tau_get_firstTimeStamp();
 
@@ -1194,68 +1194,6 @@ static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs)
   return -1;
 }
 
-
-//Srinivasan: TEMPORARY
-struct HashNode
-{
-  HashNode() : fi(NULL), excluded(false)
-  { }
-
-  TauBfdInfo info;		///< Filename, line number, etc.
-  FunctionInfo * fi;		///< Function profile information
-  bool excluded;			///< Is function excluded from profiling?
-};
-
-struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
-{
-  HashTable() {
-    Tau_init_initializeTAU();
-  }
-  virtual ~HashTable() {
-    Tau_destructor_trigger();
-  }
-};
-
-static HashTable & TheHashTable()
-{
-  static HashTable htab;
-  return htab;
-}
-
-static tau_bfd_handle_t & TheBfdUnitHandle()
-{
-  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    RtsLayer::LockEnv();
-    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-      bfdUnitHandle = Tau_bfd_registerUnit();
-    }
-    RtsLayer::UnLockEnv();
-  }
-  return bfdUnitHandle;
-}
-
-void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
- 
-      HashNode * node;
-      unsigned long addr = 0;
-      sscanf(fi.GetName(), "ADDR <%lx>", &addr);
-      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-     
-
-      node = TheHashTable()[addr];
-      if (!node) {
-        node = new HashNode;
-        node->fi = NULL;
-        node->excluded = false;
-        TheHashTable()[addr] = node;
-      }
-      Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
-
-      if(node && node->info.funcname && node->info.lineno) {
-        fprintf(fp, "\\OpenMP Parallel Region %s [%d]", node->info.funcname, node->info.lineno);
-      }
-}
 
 // Writes function event data
 static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs, int numFuncs)
