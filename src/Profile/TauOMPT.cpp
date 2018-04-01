@@ -105,7 +105,7 @@ on_ompt_callback_parallel_begin(
   if(codeptr_ra) {
       void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-      sprintf(timerName, "ADDR <%lx>", addr);
+      sprintf(timerName, "OpenMP_Parallel_Region ADDR <%lx>", addr);
       void *handle = NULL;
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       parallel_data->ptr = (void*)handle;

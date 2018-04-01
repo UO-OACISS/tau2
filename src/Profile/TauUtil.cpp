@@ -22,7 +22,7 @@
 #include <TauPluginInternals.h>
 #include <stdarg.h>
 #include <string.h>
-
+#include <Profile/Profiler.h>
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
@@ -31,6 +31,81 @@
 #endif /* TAU_WINDOWS */
 
 #define TAU_NAME_LENGTH 1024
+
+#ifdef TAU_BFD
+#include <Profile/TauBfd.h>
+#endif
+
+/*Data structures to return function context info*/
+struct HashNode
+{
+  HashNode() : fi(NULL), excluded(false)
+  { }
+
+  TauBfdInfo info;		///< Filename, line number, etc.
+  FunctionInfo * fi;		///< Function profile information
+  bool excluded;			///< Is function excluded from profiling?
+};
+
+struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
+{
+  HashTable() {
+    Tau_init_initializeTAU();
+  }
+  virtual ~HashTable() {
+    Tau_destructor_trigger();
+  }
+};
+
+static HashTable & TheHashTable()
+{
+  static HashTable htab;
+  return htab;
+}
+
+#ifdef TAU_BFD
+static tau_bfd_handle_t & TheBfdUnitHandle()
+{
+  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    RtsLayer::LockEnv();
+    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+      bfdUnitHandle = Tau_bfd_registerUnit();
+    }
+    RtsLayer::UnLockEnv();
+  }
+  return bfdUnitHandle;
+}
+#endif /* TAU_BFD */
+
+extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
+ 
+      HashNode * node;
+      unsigned long addr = 0;
+      char region_type[100];
+      sscanf(fi.GetName(), "%s ADDR <%lx>", region_type, &addr);
+      #ifdef TAU_BFD
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+      #endif
+     
+      node = TheHashTable()[addr];
+      if (!node) {
+        node = new HashNode;
+        node->fi = NULL;
+        node->excluded = false;
+        
+        TheHashTable()[addr] = node;
+      }
+      #ifdef TAU_BFD
+      Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+      #endif
+
+      if(node && node->info.filename && node->info.funcname && node->info.lineno) {
+        fprintf(fp, "\\%s %s [{%s} {%d, 0}]", region_type, node->info.funcname, node->info.filename, node->info.lineno);
+      } else {
+        fprintf(fp, "\\OpenMP __UNKNOWN__");
+      }
+}
 
 /*********************************************************************
  * Abort execution with a message
