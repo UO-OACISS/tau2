@@ -536,9 +536,6 @@ void TAU_SOS_finalize(void) {
     SOS_finalize(_runtime);
 }
 
-extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
-extern "C" tau::Profiler * Tau_get_current_profiler(void);
-
 void Tau_SOS_pack_current_timer(const char * event_name) {
     if (_runtime == NULL) { return; }
     // first time?
