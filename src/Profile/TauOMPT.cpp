@@ -48,10 +48,6 @@ int get_ompt_tid(void) {
 
 int Tau_set_tau_initialized() { tau_initialized = true; };
 
-static void* openmp_parallel = NULL;
-static void* openmp_task = NULL;
-static void* openmp_thread = NULL;
-
 static const char* ompt_thread_type_t_values[] = {
   NULL,
   "ompt_thread_initial",
@@ -75,6 +71,20 @@ static const char* ompt_cancel_flag_t_values[] = {
   "ompt_cancel_detected",
   "ompt_cancel_discarded_task"
 };
+
+static void format_task_type(int type, char* buffer)
+{
+  char* progress = buffer;
+  if(type & ompt_task_initial) progress += sprintf(progress, "ompt_task_initial");
+  if(type & ompt_task_implicit) progress += sprintf(progress, "ompt_task_implicit");
+  if(type & ompt_task_explicit) progress += sprintf(progress, "ompt_task_explicit");
+  if(type & ompt_task_target) progress += sprintf(progress, "ompt_task_target");
+  if(type & ompt_task_undeferred) progress += sprintf(progress, "|ompt_task_undeferred");
+  if(type & ompt_task_untied) progress += sprintf(progress, "|ompt_task_untied");
+  if(type & ompt_task_final) progress += sprintf(progress, "|ompt_task_final");
+  if(type & ompt_task_mergeable) progress += sprintf(progress, "|ompt_task_mergeable");
+  if(type & ompt_task_merged) progress += sprintf(progress, "|ompt_task_merged");
+}
 
 /* Function pointers.  These are all queried from the runtime during
  * ompt_initialize() */
@@ -123,9 +133,90 @@ on_ompt_callback_parallel_end(
   TauInternalFunctionGuard protects_this_function;
 
   if(codeptr_ra) {
-    void * codeptr_ra_copy = (void*) codeptr_ra;
-    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
     TAU_PROFILER_STOP(parallel_data->ptr);
+  }
+}
+
+static void
+on_ompt_callback_task_create(
+    ompt_data_t *parent_task_data,     /* id of parent task            */
+    const ompt_frame_t *parent_frame,  /* frame data for parent task   */
+    ompt_data_t* new_task_data,        /* id of created task           */
+    int type,
+    int has_dependences,
+    const void *codeptr_ra)               /* pointer to outlined function */
+{
+  char contextEventName[2058];
+  char buffer[2048];
+  TauInternalFunctionGuard protects_this_function; 	
+  if(codeptr_ra) {
+      void * codeptr_ra_copy = (void*) codeptr_ra;
+      unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+      format_task_type(type, buffer);
+
+      sprintf(contextEventName, "OpenMP_Task_Create %s ADDR <%lx> ", buffer, addr);
+
+      TAU_REGISTER_CONTEXT_EVENT(event, contextEventName);
+      TAU_EVENT_DISABLE_MAX(event);
+      TAU_EVENT_DISABLE_MIN(event);
+      TAU_EVENT_DISABLE_MEAN(event);
+      TAU_EVENT_DISABLE_STDDEV(event);
+      TAU_CONTEXT_EVENT(event, type);
+  }
+}
+
+static void
+on_ompt_callback_work(
+  ompt_work_type_t wstype,
+  ompt_scope_endpoint_t endpoint,
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
+  uint64_t count,
+  const void *codeptr_ra)
+{
+  TauInternalFunctionGuard protects_this_function;
+  void *handle = NULL;
+  char timerName[100];
+  if(codeptr_ra) {
+    
+   void * codeptr_ra_copy = (void*) codeptr_ra;
+   unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+    switch(endpoint)
+    {
+      case ompt_scope_begin:
+        switch(wstype)
+        {
+          case ompt_work_loop:
+    	    sprintf(timerName, "OpenMP_Work_Loop ADDR <%lx>", addr);
+            break;
+          case ompt_work_sections:
+            sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
+            break;
+          case ompt_work_single_executor:
+            sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
+            break;
+          case ompt_work_single_other:
+            sprintf(timerName, "OpenMP_Work_Single_Other ADDR <%lx>", addr);
+            break;
+          case ompt_work_workshare:
+            sprintf(timerName, "OpenMP_Work_Workshare ADDR <%lx>", addr);
+            break;
+          case ompt_work_distribute:
+            sprintf(timerName, "OpenMP_Work_Distribute ADDR <%lx>", addr);
+            break;
+          case ompt_work_taskloop:
+            sprintf(timerName, "OpenMP_Work_Taskloop ADDR <%lx>", addr);
+            break;
+
+        }
+        TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
+        TAU_PROFILER_START(handle);
+        parallel_data->ptr = (void*)handle;
+        break;
+      case ompt_scope_end:
+    	TAU_PROFILER_STOP(parallel_data->ptr);
+        break;
+    }
   }
 }
 
@@ -184,13 +275,12 @@ extern "C" int ompt_initialize(
   ompt_enumerate_states = (ompt_enumerate_states_t) lookup("ompt_enumerate_states");
   ompt_enumerate_mutex_impls = (ompt_enumerate_mutex_impls_t) lookup("ompt_enumerate_mutex_impls");
 
-  Tau_profile_c_timer(&openmp_task, "OpenMP task",  " ", TAU_OPENMP, "TAU_OPENMP");
-  Tau_profile_c_timer(&openmp_thread, "OpenMP thread",  " ", TAU_OPENMP, "TAU_OPENMP");
-
 /* Required events */
 
   register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
   register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
+  register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
+  register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
 
   initialized = true;
   initializing = false;
