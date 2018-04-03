@@ -783,7 +783,7 @@ int Tau_util_cleanup_all_plugins() {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_plugin_sendmsg(long unsigned int type, long unsigned int destination, long unsigned int length, long unsigned int remoteid) {
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     Tau_plugin_event_send_data plugin_data;
     plugin_data.message_tag = type;
     plugin_data.destination = destination;
@@ -798,7 +798,7 @@ extern "C" void Tau_plugin_sendmsg(long unsigned int type, long unsigned int des
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_plugin_recvmsg(long unsigned int type, long unsigned int source, long unsigned int length, long unsigned int remoteid) {
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     Tau_plugin_event_recv_data plugin_data;
     plugin_data.message_tag = type;
     plugin_data.source = source;

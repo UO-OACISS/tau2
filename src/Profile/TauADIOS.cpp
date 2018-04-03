@@ -74,7 +74,7 @@ void Tau_SOS_conditionally_pack_current_timer(const char * name) {
     int foo = TAU_decrement_stack_height();
     if (foo == 0) {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+        if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_current_timer_exit_data plugin_data;
             plugin_data.name_prefix = name;
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
@@ -784,7 +784,7 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
     } else {
 	    // not conditional! neither start nor stop.
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+        if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_current_timer_exit_data plugin_data;
             plugin_data.name_prefix = ss.str().c_str();
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
@@ -807,7 +807,7 @@ ADIOST_EXTERN void tau_adiost_read_finalize_method(
 	    Tau_increment_stack_height();
     } else {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+        if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_current_timer_exit_data plugin_data;
             plugin_data.name_prefix = ss.str().c_str();
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);

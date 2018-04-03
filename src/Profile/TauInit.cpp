@@ -444,7 +444,7 @@ extern "C" int Tau_init_initializeTAU()
 
 #ifndef TAU_MPI
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
     if(!Tau_initialize_plugin_system()) {
       TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
