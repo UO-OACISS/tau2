@@ -73,7 +73,7 @@
 
 inline void Tau_plugin_trace_current_timer(const char * name) {
     /*Invoke plugins only if both plugin path and plugins are specified*/
-    if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+    if(TauEnv_get_plugins_enabled()) {
         Tau_plugin_event_current_timer_exit_data plugin_data;
         plugin_data.name_prefix = name;
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
@@ -1780,7 +1780,7 @@ int  MPI_Finalize(  )
 
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     Tau_plugin_event_pre_end_of_execution_data plugin_data;
     plugin_data.tid = Tau_get_local_tid();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
@@ -1871,7 +1871,7 @@ char *** argv;
   returnVal = PMPI_Init( argc, argv );
 
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
     if(!Tau_initialize_plugin_system()) {
       TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
@@ -1956,7 +1956,7 @@ int *provided;
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
     if(!Tau_initialize_plugin_system()) {
       TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");

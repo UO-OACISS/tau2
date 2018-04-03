@@ -306,7 +306,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 #endif //RENCI_STFF
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     Tau_plugin_event_function_registration_data plugin_data;
     plugin_data.function_info_ptr = this;
     plugin_data.tid = tid;

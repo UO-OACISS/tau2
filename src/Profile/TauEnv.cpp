@@ -275,6 +275,7 @@ static const char *env_cvar_metrics = NULL;
 static const char *env_cvar_values = NULL;
 static const char *env_plugins_path = NULL;
 static const char *env_plugins = NULL;
+static int env_plugins_enabled = 0;
 static const char *env_select_file = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
@@ -718,6 +719,10 @@ extern "C" const char *TauEnv_get_plugins_path() {
 
 extern "C" const char *TauEnv_get_plugins() {
   return env_plugins;
+}
+
+extern "C" int TauEnv_get_plugins_enabled() {
+  return env_plugins_enabled;
 }
 
 extern "C" const char *TauEnv_get_cvar_values() {
@@ -1886,6 +1891,9 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: TAU_PLUGINS is not set\n", env_plugins);
     } else {
       TAU_VERBOSE("TAU: TAU_PLUGINS is \"%s\"\n", env_plugins);
+    }
+    if (env_plugins_path != NULL && env_plugins != NULL) {
+        env_plugins_enabled = 1;
     }
 
     if((env_select_file = getconf("TAU_SELECT_FILE")) == NULL) {
