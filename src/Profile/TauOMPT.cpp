@@ -154,6 +154,15 @@ on_ompt_callback_task_create(
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
       format_task_type(type, buffer);
 
+      /*TODO: Srinivasan: This does not really fit in as a context event. Just keeping this here 
+       * for the time being. It makes no sense to calculate any statistics for such events. 
+       * Nick's advice: The ThreadTaskCreate/ThreadTaskSwitch/ThreadTaskComplete events are used in OTF2 to indicate creation of a task, 
+       * execution of a task, or completion of a task. The events are identified solely by a location and a uint64_t taskID. 
+       * There’s no region associated with it, so there’s no way within that event type, as I can tell, to specify that the task 
+       * corresponds to a particular region of code. 
+       * Based on this paper about the task support in OTF2 <http://apps.fz-juelich.de/jsc-pubsystem/aigaion/attachments/schmidl_iwomp2012.pdf-5d909613b453c6fdbf34af237b8d5e52.pdf> 
+       * it appears that these are supposed to be used in conjunction with Enter and Leave to assign code regions to the task. See Figure 1 in that paper.
+       * I would recommend that you use Score-P to generate a trace using those event types and then look at the trace using otf2_print to figure out how it’s using the events.*/
       sprintf(contextEventName, "OpenMP_Task_Create %s ADDR <%lx> ", buffer, addr);
 
       TAU_REGISTER_CONTEXT_EVENT(event, contextEventName);
@@ -194,7 +203,7 @@ on_ompt_callback_work(
             break;
           case ompt_work_single_executor:
             sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
-            break;
+            break; /* WARNING: LLVM BUG ALERT - The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
           case ompt_work_single_other:
             sprintf(timerName, "OpenMP_Work_Single_Other ADDR <%lx>", addr);
             break;
@@ -213,9 +222,13 @@ on_ompt_callback_work(
         TAU_PROFILER_START(handle);
         parallel_data->ptr = (void*)handle;
         break;
+#ifndef __GNUG__  /*There is a known bug with the use of GNU compilers that results in the single executor callback never being invoked for ompt_scope_end while using the LLVM OpenMP runtime
+		   *TODO: Remove this preprocessor check once this bug has been resolved.*/
       case ompt_scope_end:
-    	TAU_PROFILER_STOP(parallel_data->ptr);
-        break;
+	TAU_PROFILER_STOP(handle);
+	fprintf(stderr, "I am here\n");
+	break;
+#endif
     }
   }
 }
