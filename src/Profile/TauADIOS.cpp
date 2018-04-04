@@ -23,6 +23,8 @@
 #include "mpi.h"
 #include <stdint.h>
 #include <sstream>
+#include <iostream>
+#include <algorithm>
 #define ADIOST_EXTERN extern "C"
 
 /* We need a thread-local static stack of ADIOS API calls 
@@ -775,7 +777,13 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
 	ss << EVENT_TRACE_PREFIX << function_name << "(";
 	ss << " method: " << method << ",";
 	ss << " comm: " << std::hex << "0x" << comm << ",";
-	ss << " parameters: '" << parameters << "')";
+	// The parameters has newlines in it - strip them out.
+	std::string s(parameters);
+	std::replace(s.begin(), s.end(), '\n', ' ');
+	std::replace(s.begin(), s.end(), '\r', ' ');
+	//std::replace(s.begin(), s.end(), ';', ',');
+	ss << " parameters: [" << s.c_str() << "]";
+	ss << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
     } else if (type == adiost_event_exit) {
@@ -851,7 +859,7 @@ ADIOST_EXTERN void tau_adiost_read_open_file(
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
    	std::stringstream ss;
 	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fname: " << fname << "',";
+	ss << " fname: '" << fname << "',";
 	ss << " method: " << method << ",";
 	ss << " comm: " << std::hex << "0x" << comm << ",";
 	ss << " file_descriptor: " << std::hex << file_descriptor << ")";
@@ -1099,7 +1107,11 @@ ADIOST_EXTERN void tau_adiost_schedule_read(
 	ss << " from_steps: " << from_steps << ",";
 	ss << " nsteps: " << nsteps << ", param: '";
 	if (param != NULL) {
-		ss << param;
+		std::string s(param);
+		std::replace(s.begin(), s.end(), '\n', ' ');
+		std::replace(s.begin(), s.end(), '\r', ' ');
+		std::replace(s.begin(), s.end(), ';', ',');
+		ss << s.c_str();
 	}
 	ss << "',";
 	ss << " data: " << std::hex << data << ")";
@@ -1132,7 +1144,11 @@ ADIOST_EXTERN void tau_adiost_schedule_read_byid(
 	ss << " from_steps: " << from_steps << ",";
 	ss << " nsteps: " << nsteps << ", param: '";
 	if (param != NULL) {
-		ss << param;
+		std::string s(param);
+		std::replace(s.begin(), s.end(), '\n', ' ');
+		std::replace(s.begin(), s.end(), '\r', ' ');
+		std::replace(s.begin(), s.end(), ';', ',');
+		ss << s.c_str();
 	}
 	ss << "',";
 	ss << " data: " << std::hex << data << ")";
