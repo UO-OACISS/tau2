@@ -211,16 +211,17 @@ on_ompt_callback_work(
             break;
 
         }
+#ifndef __GNUG__ /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
         TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
         TAU_PROFILER_START(handle);
         parallel_data->ptr = (void*)handle;
-        break;
-#ifndef __GNUG__  /*There is a known bug with the use of GNU compilers that results in the single executor callback never being invoked for ompt_scope_end while using the LLVM OpenMP runtime
-		   *TODO: Remove this preprocessor check once this bug has been resolved.*/
-      case ompt_scope_end:
-	TAU_PROFILER_STOP(handle);
-	break;
 #endif
+        break;
+      case ompt_scope_end: 
+#ifndef __GNUG__  /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
+	TAU_PROFILER_STOP(handle);
+#endif
+	break;
     }
   }
 }
@@ -259,6 +260,30 @@ on_ompt_callback_thread_end(
 #endif
   TauInternalFunctionGuard protects_this_function;
   TAU_PROFILER_STOP(thread_data->ptr);
+}
+
+static void
+on_ompt_callback_implicit_task(
+    ompt_scope_endpoint_t endpoint,
+    ompt_data_t *parallel_data,
+    ompt_data_t *task_data,
+    unsigned int team_size,
+    unsigned int thread_num)
+{
+  TauInternalFunctionGuard protects_this_function;
+  const char *timerName= "OpenMP_Implicit_Task";
+
+  TAU_PROFILE_TIMER(handle, timerName, "", TAU_DEFAULT);
+
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      TAU_PROFILE_START(handle);
+      break;
+    case ompt_scope_end:
+      TAU_PROFILE_STOP(handle);
+      break;
+  }
 }
 
 inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
@@ -324,6 +349,11 @@ extern "C" int ompt_initialize(
   register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
   register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
+
+  #ifdef TAU_OMPT_ENABLE_FULL  //We should have different modes for OMPT support. The default mode should NOT enable high overhead callbacks.
+    register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); /*Enabling this callback is a source of HUGE overheads */
+  #endif
+  
 
   initialized = true;
   initializing = false;
