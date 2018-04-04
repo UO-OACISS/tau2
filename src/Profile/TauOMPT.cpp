@@ -16,13 +16,6 @@
 // #include "ompt-signal.h"
 #include <Profile/Profiler.h>
 
-//#define DEBUG_OUTPUT
-#if defined(DEBUG_OUTPUT)
-#define myprintf(...) printf(__VA_ARGS__)
-#else
-#define myprintf(...) 0
-#endif
-
 static bool initializing = false;
 static bool initialized = false;
 static bool tau_initialized = false;
@@ -232,6 +225,42 @@ on_ompt_callback_work(
   }
 }
 
+static void
+on_ompt_callback_thread_begin(
+  ompt_thread_type_t thread_type,
+  ompt_data_t *thread_data)
+{
+  TauInternalFunctionGuard protects_this_function;
+#if defined (TAU_USE_TLS)
+  if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_DTLS)
+  if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_PGS)
+  if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
+#endif
+  void *handle = NULL;
+  char timerName[100];
+  sprintf(timerName, "OpenMP_Thread_Type_%s", ompt_thread_type_t_values[thread_type]);
+  TAU_PROFILER_CREATE(handle, timerName, "", TAU_DEFAULT);
+  thread_data->ptr = (void*)handle;
+  TAU_PROFILER_START(handle); 
+}
+
+static void
+on_ompt_callback_thread_end(
+  ompt_data_t *thread_data)
+{
+#if defined (TAU_USE_TLS)
+  if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_DTLS)
+  if (is_master) return; // master thread can't be a new worker.
+#elif defined (TAU_USE_PGS)
+  if (pthread_getspecific(thr_id_key) != NULL) return; // master thread can't be a new worker.
+#endif
+  TauInternalFunctionGuard protects_this_function;
+  TAU_PROFILER_STOP(thread_data->ptr);
+}
+
 inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
   int ret = ompt_set_callback(name, cb);
 
@@ -293,6 +322,8 @@ extern "C" int ompt_initialize(
   register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
   register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
   register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+  register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
+  register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
 
   initialized = true;
   initializing = false;
