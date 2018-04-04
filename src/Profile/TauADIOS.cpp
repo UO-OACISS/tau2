@@ -781,8 +781,8 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
 	std::string s(parameters);
 	std::replace(s.begin(), s.end(), '\n', ' ');
 	std::replace(s.begin(), s.end(), '\r', ' ');
-	//std::replace(s.begin(), s.end(), ';', ',');
-	ss << " parameters: [" << s.c_str() << "]";
+	// The parameters are corrupting the SQL insert later, disabled for now
+	//ss << " parameters: [" << s.c_str() << "]";
 	ss << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
