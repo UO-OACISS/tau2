@@ -226,7 +226,6 @@ on_ompt_callback_work(
 		   *TODO: Remove this preprocessor check once this bug has been resolved.*/
       case ompt_scope_end:
 	TAU_PROFILER_STOP(handle);
-	fprintf(stderr, "I am here\n");
 	break;
 #endif
     }
