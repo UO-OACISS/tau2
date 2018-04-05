@@ -168,6 +168,37 @@ on_ompt_callback_task_create(
 }
 
 static void
+on_ompt_callback_master(
+  ompt_scope_endpoint_t endpoint,
+  ompt_data_t *parallel_data,
+  ompt_data_t *task_data,
+  const void *codeptr_ra)
+{
+  TauInternalFunctionGuard protects_this_function;
+  char timerName[100];
+  void * codeptr_ra_copy;
+  unsigned long addr;
+  void *handle = NULL;
+
+  if(codeptr_ra) {
+    switch(endpoint)
+    {
+      case ompt_scope_begin:
+        codeptr_ra_copy = (void*) codeptr_ra;
+        addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+        sprintf(timerName, "OpenMP_Master ADDR <%lx>", addr);
+        TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
+        parallel_data->ptr = (void*)handle;
+        TAU_PROFILER_START(handle); 
+        break;
+      case ompt_scope_end:
+        TAU_PROFILER_STOP(parallel_data->ptr);
+        break;
+    }
+  }
+}
+
+static void
 on_ompt_callback_work(
   ompt_work_type_t wstype,
   ompt_scope_endpoint_t endpoint,
@@ -326,6 +357,8 @@ extern "C" int ompt_initialize(
   pthread_setspecific(thr_id_key, 1);
 #endif
 
+
+/* Gather the required function pointers using the lookup tool */
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
   ompt_set_callback = (ompt_set_callback_t) lookup("ompt_set_callback");
   ompt_get_task_info = (ompt_get_task_info_t) lookup("ompt_get_task_info");
@@ -346,14 +379,16 @@ extern "C" int ompt_initialize(
   register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
   register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
   register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
-  register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
-  register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
-  register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
-
   #ifdef TAU_OMPT_ENABLE_FULL  //We should have different modes for OMPT support. The default mode should NOT enable high overhead callbacks.
     register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); /*Enabling this callback is a source of HUGE overheads */
   #endif
-  
+  register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
+  register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
+
+/* Optional events */
+
+  register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+  register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
 
   initialized = true;
   initializing = false;
