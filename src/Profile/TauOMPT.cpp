@@ -250,7 +250,7 @@ on_ompt_callback_work(
         break;
       case ompt_scope_end: 
 #ifndef __GNUG__  /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
-	TAU_PROFILER_STOP(handle);
+	TAU_PROFILER_STOP(parallel_data->ptr);
 #endif
 	break;
     }
