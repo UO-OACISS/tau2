@@ -107,7 +107,7 @@ extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
       } else if(node && node->info.funcname) {
         fprintf(fp, "\\%s %s", region_type, node->info.funcname);
       } else {
-        fprintf(fp, "\\OpenMP __UNKNOWN__");
+        fprintf(fp, "\\OpenMP %s __UNKNOWN__", region_type);
       }
 }
 
