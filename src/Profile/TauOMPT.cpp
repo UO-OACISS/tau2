@@ -250,7 +250,7 @@ on_ompt_callback_work(
         break;
       case ompt_scope_end: 
 #ifndef __GNUG__  /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
-	TAU_PROFILER_STOP(handle);
+        TAU_PROFILER_STOP(parallel->ptr);
 #endif
 	break;
     }
@@ -316,6 +316,73 @@ on_ompt_callback_implicit_task(
       break;
   }
 }
+
+static void
+on_ompt_callback_sync_region(
+    ompt_sync_region_kind_t kind,
+    ompt_scope_endpoint_t endpoint,
+    ompt_data_t *parallel_data,
+    ompt_data_t *task_data,
+    const void *codeptr_ra)
+{
+  TauInternalFunctionGuard protects_this_function;
+  void *handle = NULL;
+  char timerName[100];
+
+  if(codeptr_ra) {
+    void * codeptr_ra_copy = (void*) codeptr_ra;
+    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+
+    switch(endpoint)
+    {
+      case ompt_scope_begin:
+        switch(kind)
+        {
+          case ompt_sync_region_barrier:
+            sprintf(timerName, "OpenMP_Sync_Region_Barrier ADDR <%lx>", addr);
+            break;
+          case ompt_sync_region_taskwait:
+            sprintf(timerName, "OpenMP_Sync_Region_Taskwait ADDR <%lx>", addr);
+            break;
+          case ompt_sync_region_taskgroup:
+            sprintf(timerName, "OpenMP_Sync_Region_Taskgroup ADDR <%lx>", addr);
+            break;
+        }
+
+        TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
+        TAU_PROFILER_START(handle);
+        parallel_data->ptr = (void*)handle;
+        break;
+      case ompt_scope_end:
+        TAU_PROFILE_STOP(parallel_data->ptr);
+        break;
+    }
+
+  }
+}
+
+static void
+on_ompt_callback_idle(
+    ompt_scope_endpoint_t endpoint)
+{
+  TauInternalFunctionGuard protects_this_function;
+  const char *timerName= "OpenMP_Idle";
+
+  TAU_PROFILE_TIMER(handle, timerName, "", TAU_DEFAULT);
+
+  switch(endpoint)
+  {
+    case ompt_scope_begin:
+      TAU_PROFILE_START(handle);
+      break;
+    case ompt_scope_end:
+      TAU_PROFILE_STOP(handle);
+      break;
+  }
+
+  return;
+}
+
 
 inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
   int ret = ompt_set_callback(name, cb);
@@ -389,6 +456,10 @@ extern "C" int ompt_initialize(
 
   register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
   register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
+
+  // [JL]
+  register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
+  register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle)); // low overhead
 
   initialized = true;
   initializing = false;
