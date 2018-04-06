@@ -250,7 +250,7 @@ on_ompt_callback_work(
         break;
       case ompt_scope_end: 
 #ifndef __GNUG__  /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
-        TAU_PROFILER_STOP(parallel->ptr);
+	TAU_PROFILER_STOP(parallel_data->ptr);
 #endif
 	break;
     }
@@ -354,7 +354,7 @@ on_ompt_callback_sync_region(
         parallel_data->ptr = (void*)handle;
         break;
       case ompt_scope_end:
-        TAU_PROFILE_STOP(parallel_data->ptr);
+        TAU_PROFILER_STOP(parallel_data->ptr);
         break;
     }
 
@@ -458,7 +458,9 @@ extern "C" int ompt_initialize(
   register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
 
   // [JL]
-  register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
+
+  // Overlapping Timers with this callback
+  //register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
   register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle)); // low overhead
 
   initialized = true;
