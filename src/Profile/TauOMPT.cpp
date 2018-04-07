@@ -351,10 +351,10 @@ on_ompt_callback_sync_region(
 
         TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
         TAU_PROFILER_START(handle);
-        parallel_data->ptr = (void*)handle;
+        task_data->ptr = (void*)handle;
         break;
       case ompt_scope_end:
-        TAU_PROFILER_STOP(parallel_data->ptr);
+        TAU_PROFILER_STOP(task_data->ptr);
         break;
     }
 
@@ -459,8 +459,9 @@ extern "C" int ompt_initialize(
 
   // [JL]
 
-  // Overlapping Timers with this callback
-  //register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
+  #ifdef TAU_OMPT_ENABLE_FULL /*High overhead*/
+    register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
+  #endif
   register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle)); // low overhead
 
   initialized = true;
