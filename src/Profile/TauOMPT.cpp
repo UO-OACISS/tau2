@@ -13,7 +13,7 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 #endif
-// #include "ompt-signal.h"
+
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
 
@@ -514,28 +514,27 @@ extern "C" int ompt_initialize(
   ompt_enumerate_mutex_impls = (ompt_enumerate_mutex_impls_t) lookup("ompt_enumerate_mutex_impls");
 
 /* Required events */
-
   register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
   register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
   register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
-  #ifdef TAU_OMPT_ENABLE_FULL  //We should have different modes for OMPT support. The default mode should NOT enable high overhead callbacks.
-    register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); /*Enabling this callback is a source of HUGE overheads */
-  #endif
+  if(TauEnv_get_ompt_support_level() == 2) { /* Only support this when "full" is enabled. This is a high overhead call - we should fix this with priority */
+    register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); 
+  }
   register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
 
 /* Optional events */
 
-  register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
-  register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
+  if(TauEnv_get_ompt_support_level() == 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
+    register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
+    register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
+    register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle));
+  }
 
-  // [JL]
-
-  #ifdef TAU_OMPT_ENABLE_FULL /*High overhead*/
+  if(TauEnv_get_ompt_support_level() == 2) { /* Only support this when "full" is enabled. This is a high overhead call */
     register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
-  #endif
-  register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle)); // low overhead
-
+  }
+  
   initialized = true;
   initializing = false;
   return 1; //success
