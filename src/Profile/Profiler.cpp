@@ -1341,7 +1341,10 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
             double excltime = fi.getDumpExclusiveValues(tid)[metric];
 
             if(strcmp(fi.GetPrimaryGroup(), "TAU_OPENMP") == 0) {
-              Tau_ompt_resolve_callsite(fp, fi);
+              /*Do not resolve addresses if they have already been resolved eagerly*/
+	      if(!TauEnv_get_ompt_resolve_address_eagerly()) {
+                Tau_ompt_resolve_callsite(fp, fi);
+              }
             } else { 
               fprintf(fp, "\"%s", fi.GetName());
             }

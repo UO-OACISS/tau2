@@ -15,6 +15,7 @@
 #endif
 // #include "ompt-signal.h"
 #include <Profile/Profiler.h>
+#include <Profile/TauEnv.h>
 
 static bool initializing = false;
 static bool initialized = false;
@@ -94,6 +95,9 @@ static ompt_get_proc_id_t ompt_get_proc_id;
 static ompt_enumerate_states_t ompt_enumerate_states;
 static ompt_enumerate_mutex_impls_t ompt_enumerate_mutex_impls;
 
+/*Externs*/
+extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
+
 static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *parent_task_data,
@@ -103,12 +107,25 @@ on_ompt_callback_parallel_begin(
   ompt_invoker_t invoker,
   const void *codeptr_ra)
 {
-  char timerName[100];
+  char timerName[1024];
+  char resolved_address[1024];
+
   TauInternalFunctionGuard protects_this_function; 	
   if(codeptr_ra) {
       void * codeptr_ra_copy = (void*) codeptr_ra;
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-      sprintf(timerName, "OpenMP_Parallel_Region ADDR <%lx>", addr);
+
+      /*Resolve addresses at runtime in case the user really wants to pay the price of doing so.
+       *Enabling eager resolving of addresses is only useful in situations where 
+       *OpenMP routines are instrumented in shared libraries that get unloaded
+       *before TAU has a chance to resolve addresses*/
+      if (TauEnv_get_ompt_resolve_address_eagerly()) {
+        Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+        sprintf(timerName, "OpenMP_Parallel_Region %s", resolved_address);
+      } else {
+        sprintf(timerName, "OpenMP_Parallel_Region ADDR <%lx>", addr);
+      }
+
       void *handle = NULL;
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       parallel_data->ptr = (void*)handle;
@@ -175,7 +192,8 @@ on_ompt_callback_master(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[100];
+  char timerName[1024];
+  char resolved_address[1024];
   void * codeptr_ra_copy;
   unsigned long addr;
   void *handle = NULL;
@@ -186,7 +204,16 @@ on_ompt_callback_master(
       case ompt_scope_begin:
         codeptr_ra_copy = (void*) codeptr_ra;
         addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-        sprintf(timerName, "OpenMP_Master ADDR <%lx>", addr);
+        /*Resolve addresses at runtime in case the user really wants to pay the price of doing so.
+         *Enabling eager resolving of addresses is only useful in situations where 
+         *OpenMP routines are instrumented in shared libraries that get unloaded
+         *before TAU has a chance to resolve addresses*/
+        if (TauEnv_get_ompt_resolve_address_eagerly()) {
+          Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+          sprintf(timerName, "OpenMP_Parallel_Region %s", resolved_address);
+        } else {
+          sprintf(timerName, "OpenMP_Parallel_Region ADDR <%lx>", addr);
+        }
         TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
         parallel_data->ptr = (void*)handle;
         TAU_PROFILER_START(handle); 
@@ -209,7 +236,8 @@ on_ompt_callback_work(
 {
   TauInternalFunctionGuard protects_this_function;
   void *handle = NULL;
-  char timerName[100];
+  char timerName[1024];
+  char resolved_address[1024];
   if(codeptr_ra) {
     
    void * codeptr_ra_copy = (void*) codeptr_ra;
@@ -217,30 +245,58 @@ on_ompt_callback_work(
     switch(endpoint)
     {
       case ompt_scope_begin:
-        switch(wstype)
-        {
-          case ompt_work_loop:
-    	    sprintf(timerName, "OpenMP_Work_Loop ADDR <%lx>", addr);
-            break;
-          case ompt_work_sections:
-            sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
-            break;
-          case ompt_work_single_executor:
-            sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
-            break; /* WARNING: LLVM BUG ALERT - The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
-          case ompt_work_single_other:
-            sprintf(timerName, "OpenMP_Work_Single_Other ADDR <%lx>", addr);
-            break;
-          case ompt_work_workshare:
-            sprintf(timerName, "OpenMP_Work_Workshare ADDR <%lx>", addr);
-            break;
-          case ompt_work_distribute:
-            sprintf(timerName, "OpenMP_Work_Distribute ADDR <%lx>", addr);
-            break;
-          case ompt_work_taskloop:
-            sprintf(timerName, "OpenMP_Work_Taskloop ADDR <%lx>", addr);
-            break;
+        if(TauEnv_get_ompt_resolve_address_eagerly()) {
+          Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+          switch(wstype)
+          {
+            case ompt_work_loop:
+    	      sprintf(timerName, "OpenMP_Work_Loop %s", resolved_address);
+              break;
+            case ompt_work_sections:
+              sprintf(timerName, "OpenMP_Work_Sections %s", resolved_address);
+              break;
+            case ompt_work_single_executor:
+              sprintf(timerName, "OpenMP_Work_Single_Executor %s", resolved_address);
+              break; /* WARNING: LLVM BUG ALERT - The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
+            case ompt_work_single_other:
+              sprintf(timerName, "OpenMP_Work_Single_Other %s", resolved_address);
+              break;
+            case ompt_work_workshare:
+              sprintf(timerName, "OpenMP_Work_Workshare %s", resolved_address);
+              break;
+            case ompt_work_distribute:
+              sprintf(timerName, "OpenMP_Work_Distribute %s", resolved_address);
+              break;
+            case ompt_work_taskloop:
+              sprintf(timerName, "OpenMP_Work_Taskloop %s", resolved_address);
+              break;
+          }
+        } else {
+          switch(wstype)
+          {
+            case ompt_work_loop:
+    	      sprintf(timerName, "OpenMP_Work_Loop ADDR <%lx>", addr);
+              break;
+            case ompt_work_sections:
+              sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
+              break;
+            case ompt_work_single_executor:
+              sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
+              break; /* WARNING: LLVM BUG ALERT - The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
+            case ompt_work_single_other:
+              sprintf(timerName, "OpenMP_Work_Single_Other ADDR <%lx>", addr);
+              break;
+            case ompt_work_workshare:
+              sprintf(timerName, "OpenMP_Work_Workshare ADDR <%lx>", addr);
+              break;
+            case ompt_work_distribute:
+              sprintf(timerName, "OpenMP_Work_Distribute ADDR <%lx>", addr);
+              break;
+            case ompt_work_taskloop:
+              sprintf(timerName, "OpenMP_Work_Taskloop ADDR <%lx>", addr);
+              break;
 
+          }
         }
 #ifndef __GNUG__ /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
         TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
@@ -327,7 +383,8 @@ on_ompt_callback_sync_region(
 {
   TauInternalFunctionGuard protects_this_function;
   void *handle = NULL;
-  char timerName[100];
+  char timerName[1024];
+  char resolved_address[1024];
 
   if(codeptr_ra) {
     void * codeptr_ra_copy = (void*) codeptr_ra;
@@ -336,19 +393,34 @@ on_ompt_callback_sync_region(
     switch(endpoint)
     {
       case ompt_scope_begin:
-        switch(kind)
-        {
-          case ompt_sync_region_barrier:
-            sprintf(timerName, "OpenMP_Sync_Region_Barrier ADDR <%lx>", addr);
-            break;
-          case ompt_sync_region_taskwait:
-            sprintf(timerName, "OpenMP_Sync_Region_Taskwait ADDR <%lx>", addr);
-            break;
-          case ompt_sync_region_taskgroup:
-            sprintf(timerName, "OpenMP_Sync_Region_Taskgroup ADDR <%lx>", addr);
-            break;
+        if(TauEnv_get_ompt_resolve_address_eagerly()) {
+          Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+          switch(kind)
+          {
+            case ompt_sync_region_barrier:
+              sprintf(timerName, "OpenMP_Sync_Region_Barrier %s", resolved_address);
+              break;
+            case ompt_sync_region_taskwait:
+              sprintf(timerName, "OpenMP_Sync_Region_Taskwait %s", resolved_address);
+              break;
+            case ompt_sync_region_taskgroup:
+              sprintf(timerName, "OpenMP_Sync_Region_Taskgroup %s", resolved_address);
+              break;
+          }
+        } else {
+          switch(kind)
+          {
+            case ompt_sync_region_barrier:
+              sprintf(timerName, "OpenMP_Sync_Region_Barrier ADDR <%lx>", addr);
+              break;
+            case ompt_sync_region_taskwait:
+              sprintf(timerName, "OpenMP_Sync_Region_Taskwait ADDR <%lx>", addr);
+              break;
+            case ompt_sync_region_taskgroup:
+              sprintf(timerName, "OpenMP_Sync_Region_Taskgroup ADDR <%lx>", addr);
+              break;
+          }
         }
-
         TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
         TAU_PROFILER_START(handle);
         task_data->ptr = (void*)handle;

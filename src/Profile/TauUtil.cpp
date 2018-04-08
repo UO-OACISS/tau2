@@ -111,6 +111,41 @@ extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
       }
 }
 
+
+extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
+ 
+      HashNode * node;
+           
+      #ifdef TAU_BFD
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+      #endif
+     
+      node = TheHashTable()[addr];
+      if (!node) {
+        RtsLayer::LockDB();  
+        node = new HashNode;
+        node->fi = NULL;
+        node->excluded = false;
+        
+        TheHashTable()[addr] = node;
+
+        #ifdef TAU_BFD
+        Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+        #endif
+        RtsLayer::UnLockDB(); 
+      }
+
+      if(node && node->info.filename && node->info.funcname && node->info.lineno) {
+        sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
+      } else if(node && node->info.filename && node->info.funcname) {
+        sprintf(resolved_address, "%s [{%s}]", node->info.funcname, node->info.filename);
+      } else if(node && node->info.funcname) {
+        sprintf(resolved_address, "%s", node->info.funcname);
+      } else {
+        sprintf(resolved_address, "__UNKNOWN__");
+      }
+}
+
 /*********************************************************************
  * Abort execution with a message
  ********************************************************************/
