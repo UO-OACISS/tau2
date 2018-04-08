@@ -257,6 +257,7 @@ static int env_ibm_bg_hwp_counters = 0;
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
+static int env_ompt_resolve_address_eagerly = 0;
 static int env_openmp_runtime_enabled = 1;
 static int env_openmp_runtime_states_enabled = 0;
 static int env_openmp_runtime_events_enabled = 1;
@@ -795,6 +796,10 @@ int TauEnv_get_comm_matrix() {
   return env_comm_matrix;
 }
 
+int TauEnv_get_ompt_resolve_address_eagerly() {
+  return env_ompt_resolve_address_eagerly;
+}
+
 int TauEnv_get_track_mpi_t_pvars() {
   return env_track_mpi_t_pvars;
 }
@@ -808,6 +813,10 @@ int TauEnv_set_track_mpi_t_pvars(int value) {
   return env_track_mpi_t_pvars; 
 }
 
+int TauEnv_set_ompt_resolve_address_eagerly(int value) {
+  env_ompt_resolve_address_eagerly = value;
+  return env_ompt_resolve_address_eagerly; 
+}
 
 int TauEnv_get_track_signals() {
   return env_track_signals;
@@ -1259,6 +1268,23 @@ void TauEnv_initialize()
     }
 
 #endif /* TAU_MPI_T */
+
+//#ifdef TAU_OMPT
+    tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
+    if (parse_bool(tmp, env_ompt_resolve_address_eagerly)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: OMPT resolving addresses eagerly disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "disabled (disabled memory management)");
+#else
+      env_ompt_resolve_address_eagerly = 1;
+      TAU_VERBOSE("TAU: OMPT resolving addresses eagerly Enabled\n");
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
+      TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
+#endif
+    } else {
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
+    } 
+//#endif/* TAU_OMPT */
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
