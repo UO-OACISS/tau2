@@ -38,6 +38,9 @@ int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_da
     //fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
     // OK to do it from any thread, because it came from MPI_Finalize
     TAU_SOS_send_data();
+    if (data.tid == 0) {
+        TAU_SOS_finalize();
+    }
     return 0;
 }
 

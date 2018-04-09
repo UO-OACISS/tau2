@@ -196,7 +196,7 @@ void TAU_SOS_send_shutdown_message(void) {
     int offset;
     if (my_rank == daemon_rank) {
         TAU_VERBOSE("Waiting for SOS to flush...\n");
-		sleep(1);
+		sleep(5);
 
         SOS_buffer_init(_runtime, &buffer);
 
