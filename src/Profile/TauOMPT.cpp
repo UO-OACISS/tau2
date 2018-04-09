@@ -98,6 +98,13 @@ static ompt_enumerate_mutex_impls_t ompt_enumerate_mutex_impls;
 /*Externs*/
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address);
 
+/*Parallel begin/end callbacks. We need context information (function name, filename, lineno) for these.
+ * For context information the user has one of two options:
+ *  a. Embed the address in the timername, and resolve the address when profile files are being written - cheapest and best way to do this
+ *  b. Alternatively, resolve the address ONCE during the timer creation. This is useful for situations where TAU is 
+ *  instrumenting OMPT routines inside shared libraries that are unloaded before profile files get written. 
+ *  WARNING: Only use option (b) when absolutely necessary. We use shared data structures that need locking/unlocking for storing resolved addresses. This will lead
+ *  to overheads that are best avoided. */
 static void
 on_ompt_callback_parallel_begin(
   ompt_data_t *parent_task_data,
@@ -147,6 +154,8 @@ on_ompt_callback_parallel_end(
   }
 }
 
+/* Callback for task creation. Ideally, this should be traced and NOT profiled as there is no begin/end concept for task creation.
+ * TODO: Implement the tracing logic. For now, we are storing this as a context event*/
 static void
 on_ompt_callback_task_create(
     ompt_data_t *parent_task_data,     /* id of parent task            */
@@ -184,6 +193,13 @@ on_ompt_callback_task_create(
   }
 }
 
+/*Master thread begin/end callbacks. We need context information for these.
+ * For context information the user has one of two options:
+ *  a. Embed the address in the timername, and resolve the address when profile files are being written - cheapest and best way to do this
+ *  b. Alternatively, resolve the address ONCE during the timer creation. This is useful for situations where TAU is 
+ *  instrumenting OMPT routines inside shared libraries that are unloaded before profile files get written. 
+ *  WARNING: Only use option (b) when absolutely necessary. We use shared data structures that need locking/unlocking for storing resolved addresses. This will lead
+ *  to overheads that are best avoided. */
 static void
 on_ompt_callback_master(
   ompt_scope_endpoint_t endpoint,
@@ -225,6 +241,17 @@ on_ompt_callback_master(
   }
 }
 
+
+/*Work section begin/end callbacks. We need context information for these.
+ * For context information the user has one of two options:
+ *  a. Embed the address in the timername, and resolve the address when profile files are being written - cheapest and best way to do this
+ *  b. Alternatively, resolve the address ONCE during the timer creation. This is useful for situations where TAU is 
+ *  instrumenting OMPT routines inside shared libraries that are unloaded before profile files get written. 
+ *  WARNING: Only use option (b) when absolutely necessary. We use shared data structures that need locking/unlocking for storing resolved addresses. This will lead
+ *  to overheads that are best avoided.
+ *  NOTE: Building this tool with GNU (all versions) has a bug that leads to the single_executor callback not being invoked. LLVM folks
+ *  are also aware of this issue. Remove the ifdef's once this bug is resolved.
+ *        Tested with Intel/17 compilers. Works OK.*/
 static void
 on_ompt_callback_work(
   ompt_work_type_t wstype,
@@ -313,6 +340,9 @@ on_ompt_callback_work(
   }
 }
 
+/*Thread begin/end callbacks. We do NOT need context information for these. If the user wants more context, 
+ * he/she can use TAU_CALLPATH=1 to get callpath weights. In our experiments, this leads to additional 10-20% 
+ * runtime overheads. Use with care. */
 static void
 on_ompt_callback_thread_begin(
   ompt_thread_type_t thread_type,
@@ -349,6 +379,11 @@ on_ompt_callback_thread_end(
   TAU_PROFILER_STOP(thread_data->ptr);
 }
 
+/*Implicit task creation. This is a required event, but we do NOT need context.
+ * TODO: This is an EXTREMELY high overhead call. The lines causing this overhead are the TAU_PROFILE_START/STOP calls. 
+ * We have verified that this is not due to any OpenMP runtime overheads, but inside TAU.
+ * At the moment, this call is enabled only when using TAU_OMPT support in "full" mode. 
+ * Since this is a required event, we need to fix this overhead issue with high priority*/
 static void
 on_ompt_callback_implicit_task(
     ompt_scope_endpoint_t endpoint,
@@ -373,6 +408,11 @@ on_ompt_callback_implicit_task(
   }
 }
 
+/*Synchronization callbacks (barriers, etc). This is not a required event, but we need context.
+ * TODO: This is an EXTREMELY high overhead call. The lines causing this overhead are the TAU_PROFILE_START/STOP calls. 
+ * We have verified that this is not due to any OpenMP runtime overheads, but inside TAU.
+ * At the moment, this call is enabled only when using TAU_OMPT support in "full" mode. 
+ * Fixing this overhead is relatively low priority, because this is an optional event. */
 static void
 on_ompt_callback_sync_region(
     ompt_sync_region_kind_t kind,
@@ -433,6 +473,7 @@ on_ompt_callback_sync_region(
   }
 }
 
+/* Idle event - optional event that has low overhead and does not need context) */
 static void
 on_ompt_callback_idle(
     ompt_scope_endpoint_t endpoint)
@@ -456,6 +497,8 @@ on_ompt_callback_idle(
 }
 
 
+/* Register callbacks. This function is invoked only from the ompt_start_tool routine.
+ * Callbacks that only have "ompt_set_always" are the required events that we HAVE to support */
 inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) {
   int ret = ompt_set_callback(name, cb);
 
@@ -476,6 +519,8 @@ inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) 
 }
 
 #define cb_t(name) (ompt_callback_t)&name
+
+/* Register callbacks for all events that we are interested in / have to support */
 extern "C" int ompt_initialize(
   ompt_function_lookup_t lookup,
   ompt_data_t* tool_data)
