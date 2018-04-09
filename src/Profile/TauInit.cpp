@@ -44,7 +44,6 @@
 #include <Profile/TauMemory.h>
 #include <Profile/TauBacktrace.h>
 #include <Profile/TauUtil.h>
-#include "Profile/TauSOS.h"
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -443,8 +442,9 @@ extern "C" int Tau_init_initializeTAU()
   /* initialize environment variables */
   TauEnv_initialize();
 
+#ifndef TAU_MPI
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+  if(TauEnv_get_plugins_enabled()) {
     TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
     if(!Tau_initialize_plugin_system()) {
       TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
@@ -452,6 +452,7 @@ extern "C" int Tau_init_initializeTAU()
       printf("TAU INIT: Error initializing the plugin system\n");
     }
   }
+#endif // TAU_MPI
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
@@ -526,10 +527,6 @@ extern "C" int Tau_init_initializeTAU()
   }
 #endif
 
-#if defined(TAU_SOS) && !defined(TAU_MPI)
-  TAU_SOS_init_simple();
-#endif
-
   Tau_create_top_level_timer_if_necessary();
 
   Tau_memory_wrapper_enable();
@@ -538,6 +535,10 @@ extern "C" int Tau_init_initializeTAU()
   pthread_t thr;
   pthread_create(&thr, NULL, alfred, NULL);
 #endif
+
+#ifndef TAU_MPI
+  Tau_post_init();
+#endif // TAU_MPI
 
   return 0;
 }

@@ -270,11 +270,6 @@ static int env_openmp_runtime_events_enabled = 1;
 static int env_openmp_runtime_context = 1;
 static int env_ebs_enabled = 0;
 static int env_ebs_enabled_tau = 0;
-static int env_sos_enabled = TAU_SOS_DEFAULT;
-static int env_sos_trace_events = TAU_SOS_TRACE_EVENTS_DEFAULT;
-static int env_sos_periodic = TAU_SOS_PERIODIC_DEFAULT;
-static int env_sos_period = TAU_SOS_PERIOD_DEFAULT;
-static int env_sos_high_resolution = TAU_SOS_HIGH_RESOLUTION_DEFAULT;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
@@ -293,6 +288,7 @@ static const char *env_cvar_metrics = NULL;
 static const char *env_cvar_values = NULL;
 static const char *env_plugins_path = NULL;
 static const char *env_plugins = NULL;
+static int env_plugins_enabled = 0;
 static const char *env_select_file = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
@@ -738,6 +734,10 @@ extern "C" const char *TauEnv_get_plugins() {
   return env_plugins;
 }
 
+extern "C" int TauEnv_get_plugins_enabled() {
+  return env_plugins_enabled;
+}
+
 extern "C" const char *TauEnv_get_cvar_values() {
   return env_cvar_values;
 }
@@ -960,26 +960,6 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
-}
-
-int TauEnv_get_sos_enabled() {
-  return env_sos_enabled;
-}
-
-int TauEnv_get_sos_high_resolution() {
-  return env_sos_high_resolution;
-}
-
-int TauEnv_get_sos_trace_events() {
-  return env_sos_trace_events;
-}
-
-int TauEnv_get_sos_periodic() {
-  return env_sos_periodic;
-}
-
-int TauEnv_get_sos_period() {
-  return env_sos_period;
 }
 
 int TauEnv_get_ebs_enabled_tau() {
@@ -1975,6 +1955,9 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: TAU_PLUGINS is \"%s\"\n", env_plugins);
     }
+    if (env_plugins_path != NULL && env_plugins != NULL) {
+        env_plugins_enabled = 1;
+    }
 
     if((env_select_file = getconf("TAU_SELECT_FILE")) == NULL) {
       env_select_file = NULL; 
@@ -2100,57 +2083,6 @@ void TauEnv_initialize()
     sprintf(tmpstr,"%d",value);
     TAU_METADATA("OMP_MAX_ACTIVE_LEVELS", tmpstr);
 #endif
-#endif
-
-#if defined(TAU_SOS)
-    tmp = getconf("TAU_SOS");
-    if (parse_bool(tmp, TAU_SOS_DEFAULT)) {
-      env_sos_enabled = 1;
-      TAU_VERBOSE("TAU: SOS Enabled\n");
-      TAU_METADATA("TAU_SOS", "on");
-    } else {
-      env_sos_enabled = 0;
-      TAU_VERBOSE("TAU: SOS Disabled\n");
-      TAU_METADATA("TAU_SOS", "off");
-    }
-
-    tmp = getconf("TAU_SOS_HIGH_RESOLUTION");
-    if (parse_bool(tmp, TAU_SOS_HIGH_RESOLUTION_DEFAULT)) {
-      env_sos_high_resolution = 1;
-      TAU_VERBOSE("TAU: SOS High Resolution\n");
-      TAU_METADATA("TAU_SOS_HIGH_RESOLUTION", "on");
-    } else {
-      env_sos_high_resolution = 0;
-      TAU_VERBOSE("TAU: SOS High Resolution\n");
-      TAU_METADATA("TAU_SOS_HIGH_RESOLUTION", "off");
-    }
-
-    tmp = getconf("TAU_SOS_TRACE_EVENTS");
-    if (parse_bool(tmp, TAU_SOS_TRACE_EVENTS_DEFAULT)) {
-      env_sos_trace_events = 1;
-      TAU_VERBOSE("TAU: SOS Trace Events Enabled (MPI, ADIOS)\n");
-      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "on");
-    } else {
-      env_sos_trace_events = 0;
-      TAU_VERBOSE("TAU: SOS_TRACE_EVENTS Disabled\n");
-      TAU_METADATA("TAU_SOS_TRACE_EVENTS", "off");
-    }
-
-    tmp = getconf("TAU_SOS_PERIODIC");
-    if (parse_bool(tmp, TAU_SOS_PERIODIC_DEFAULT)) {
-      env_sos_periodic = 1;
-      TAU_VERBOSE("TAU: SOS Periodic Transmission Enabled\n");
-      TAU_METADATA("TAU_SOS_PERIODIC", "on");
-      tmp = getconf("TAU_SOS_PERIOD");
-      env_sos_period = parse_int(tmp, TAU_SOS_PERIOD_DEFAULT);
-      TAU_VERBOSE("TAU: SOS Transmission Period: %d\n", env_sos_period);
-      sprintf(tmpstr, "%d", env_sos_period);
-      TAU_METADATA("TAU_SOS_PERIOD", tmpstr);
-    } else {
-      env_sos_periodic = 0;
-      TAU_VERBOSE("TAU: SOS Periodic Transmission Disabled\n");
-      TAU_METADATA("TAU_SOS_PERIODIC", "off");
-    }
 #endif
 
     tmp = getconf("TAU_MEASURE_TAU");

@@ -518,6 +518,7 @@ void Tau_set_user_clock(double value);
 void Tau_set_user_clock_thread(double value, int tid);
 
 void Tau_init(int argc, char **argv);
+void Tau_post_init();
 void Tau_init_ref(int* argc, char ***argv);
 void Tau_set_context(int context);
 void Tau_set_thread(int thread);

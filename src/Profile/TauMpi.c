@@ -24,6 +24,8 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauTraceOTF2.h>
 #include <Profile/TauUtil.h>
+#include <Profile/TauPlugin.h>
+#include <Profile/TauPluginInternals.h>
 #ifdef TAU_ADIOS
 #include "adiost_callback_api.h"
 #endif
@@ -65,115 +67,105 @@
 #define TAU_OPENMPI3_CONST  
 #endif
 
-/* These macros are for creating MPI "events" in the SOS stream. */
+/* These functions and macros are for creating MPI "events" in the SOS stream. */
 
 #ifdef TAU_SOS
-#define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
-#include "Profile/TauSOS.h"
-#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
+
+inline void Tau_plugin_trace_current_timer(const char * name) {
+    /*Invoke plugins only if both plugin path and plugins are specified*/
+    if(TauEnv_get_plugins_enabled()) {
+        Tau_plugin_event_current_timer_exit_data plugin_data;
+        plugin_data.name_prefix = name;
+        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
     }
+}
+
+#define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
+
+#define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
+char __tmp[128]; \
+sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
-            EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
+    EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[256]; \
-        sprintf(__tmp, \
-            "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
-            EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
-            __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[256]; \
+sprintf(__tmp, \
+    "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
+    EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
+    __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out) \
-    if (TauEnv_get_sos_trace_events()) { \
-        char __tmp[128]; \
-        sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
-        Tau_SOS_pack_current_timer(__tmp); \
-    }
+char __tmp[128]; \
+sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+Tau_plugin_trace_current_timer(__tmp);
 
 // this is used between cart_create and cart_sub calls... may not be safe, but...
 static int __cart_dims = 1;
 
 void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * dims, TAU_MPICH3_CONST int * periods, int reorder, MPI_Comm comm_out) {
-    if (TauEnv_get_sos_trace_events()) {
-        char tmp[256];
-        sprintf(tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, comm,ndims);
-        int x;
-        __cart_dims = ndims;
-        for (x = 0 ; x < ndims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, dims[x]);
-        }
-        sprintf(tmp, "%s%d], [", tmp, dims[ndims-1]);
-        for (x = 0 ; x < ndims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, periods[x]);
-        }
-        sprintf(tmp, "%s%d], %d) 0x%08x", tmp, periods[ndims-1], reorder, comm_out);
-        Tau_SOS_pack_current_timer(tmp);
+    char tmp[256];
+    sprintf(tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, comm,ndims);
+    int x;
+    __cart_dims = ndims;
+    for (x = 0 ; x < ndims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, dims[x]);
     }
+    sprintf(tmp, "%s%d], [", tmp, dims[ndims-1]);
+    for (x = 0 ; x < ndims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, periods[x]);
+    }
+    sprintf(tmp, "%s%d], %d) 0x%08x", tmp, periods[ndims-1], reorder, comm_out);
+    Tau_plugin_trace_current_timer(tmp);
 }
 
 #define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
    Tau_sos_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out);
 
 void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
-    if (TauEnv_get_sos_trace_events()) {
-        char tmp[256];
-        sprintf(tmp, "%s_Cart_coords (%p, %d, %d, [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
-        int x;
-        for (x = 0 ; x < maxdims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, coords[x]);
-        }
-        sprintf(tmp, "%s%d]) 0x0", tmp, coords[maxdims-1]);
-        Tau_SOS_pack_current_timer(tmp);
+    char tmp[256];
+    sprintf(tmp, "%s_Cart_coords (%p, %d, %d, [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
+    int x;
+    for (x = 0 ; x < maxdims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, coords[x]);
     }
+    sprintf(tmp, "%s%d]) 0x0", tmp, coords[maxdims-1]);
+    Tau_plugin_trace_current_timer(tmp);
 }
 
 #define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords) \
     Tau_sos_cart_coords_event(__comm,__rank,__maxdims,__coords);
 
 void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
-    if (TauEnv_get_sos_trace_events()) {
-        char tmp[256];
-        sprintf(tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, comm);
-        int x;
-        for (x = 0 ; x < __cart_dims-1 ; x++ ) {
-            sprintf(tmp, "%s%d,", tmp, remains[x]);
-        }
-        sprintf(tmp, "%s%d]) 0x%08x", tmp, remains[__cart_dims-1], comm_out);
-        Tau_SOS_pack_current_timer(tmp);
+    char tmp[256];
+    sprintf(tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, comm);
+    int x;
+    for (x = 0 ; x < __cart_dims-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, remains[x]);
     }
+    sprintf(tmp, "%s%d]) 0x%08x", tmp, remains[__cart_dims-1], comm_out);
+    Tau_plugin_trace_current_timer(tmp);
 }
 
 #define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
@@ -418,6 +410,7 @@ char *note;
     othertag = status->MPI_TAG;
     /* post the receive message */
     TAU_TRACE_RECVMSG(othertag, TauTranslateRankToWorld(rq->comm, otherid), rq->size);
+    TAU_PLUGIN_RECVMSG(othertag, TauTranslateRankToWorld(rq->comm, otherid), rq->size, 0);
     TAU_WAIT_DATA(rq->size);
   }
 
@@ -466,6 +459,7 @@ char *note;
     othertag = rq->tag;
     /* post the send message */
     TAU_TRACE_SENDMSG(othertag, otherid, rq->size);
+    TAU_PLUGIN_SENDMSG(othertag, otherid, rq->size, 0);
   }
 
   return; 
@@ -622,7 +616,7 @@ MPI_Comm comm;
 
   double tmp_array1[5] = {0.0};
   double tmp_array2[5] = {0.0};
-#ifdef TAU_SOS
+#ifdef TAU_SOS_disabled
   //TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
   if (TauEnv_get_sos_trace_events()) {
 	  int commsize = 0;
@@ -651,7 +645,7 @@ MPI_Comm comm;
       sprintf(buffer, "%s],%d", buffer, recvtypesize);
 
 	  sprintf(buffer, "%s) 0x%08x", buffer, comm);
-      Tau_SOS_pack_current_timer(buffer);
+      Tau_plugin_trace_current_timer(buffer);
 	  free(buffer);
   }
 #endif // TAU_SOS
@@ -1784,11 +1778,13 @@ int  MPI_Finalize(  )
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
 
-#ifdef TAU_SOS
-  if (TauEnv_get_sos_enabled()) {
-    TAU_SOS_finalize();
+  /*Invoke plugins only if both plugin path and plugins are specified
+   *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_enabled()) {
+    Tau_plugin_event_pre_end_of_execution_data plugin_data;
+    plugin_data.tid = Tau_get_local_tid();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
   }
-#endif
 
 #ifdef TAU_OTF2
    if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
@@ -1872,15 +1868,17 @@ char *** argv;
   adiost_tool();
 #endif
 
-#ifdef TAU_SOS
-  int provided = 0;
-  returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_FUNNELED, &provided );
-  if (TauEnv_get_sos_enabled()) {
-    TAU_SOS_init(argc, argv, true);
-  }
-#else
   returnVal = PMPI_Init( argc, argv );
-#endif
+
+  /*Initialize the plugin system only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_enabled()) {
+    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
+    if(!Tau_initialize_plugin_system()) {
+      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
+    } else {
+      printf("TAU INIT: Error initializing the plugin system\n");
+    }
+  }
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX 
@@ -1928,6 +1926,8 @@ char *** argv;
 
   writeMetaDataAfterMPI_Init(); 
 
+  Tau_post_init(); 
+
   return returnVal;
 }
 
@@ -1954,9 +1954,16 @@ int *provided;
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
-#ifdef TAU_SOS
-  TAU_SOS_init(argc, argv, true);
-#endif
+
+  /*Initialize the plugin system only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_enabled()) {
+    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
+    if(!Tau_initialize_plugin_system()) {
+      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
+    } else {
+      printf("TAU INIT: Error initializing the plugin system\n");
+    }
+  }
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -1998,6 +2005,8 @@ int *provided;
   }
 
   writeMetaDataAfterMPI_Init(); 
+
+  Tau_post_init(); 
 
   return returnVal;
 }
@@ -2108,12 +2117,13 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Bsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
+  PMPI_Type_size( datatype, &typesize );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize );
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
   TAU_TRACK_COMM(comm);
   
   returnVal = PMPI_Bsend( buf, count, datatype, dest, tag, comm );
@@ -2326,12 +2336,13 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Ibsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  PMPI_Type_size( datatype, &typesize );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize );
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize);
     }
   }
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize, 0);
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
@@ -2412,12 +2423,13 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Irsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
-if (TauEnv_get_track_message()) {
-  if (dest != MPI_PROC_NULL) {
-    PMPI_Type_size( datatype, &typesize3 );
-    TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
+  PMPI_Type_size( datatype, &typesize3 );
+  if (TauEnv_get_track_message()) {
+    if (dest != MPI_PROC_NULL) {
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
+    }
   }
-}
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Irsend( buf, count, datatype, dest, tag, comm, request );
@@ -2443,12 +2455,13 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Isend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
+  PMPI_Type_size( datatype, &typesize3 );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize3 );
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
     }
   }
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
@@ -2471,12 +2484,13 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Issend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  PMPI_Type_size( datatype, &typesize3 );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize3 );
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
     }
   }
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
@@ -2570,11 +2584,18 @@ MPI_Status * status;
 
   returnVal = PMPI_Recv( buf, count, datatype, source, tag, comm, status );
 
-  if (TauEnv_get_track_message()) {
-    if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+  if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+    /* note that status->MPI_COMM must == comm */
+    if (TauEnv_get_track_message()) {
       PMPI_Get_count( status, MPI_BYTE, &size );
-      /* note that status->MPI_COMM must == comm */
       TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), size);
+    }
+    int typesize = 0;
+    PMPI_Type_size( datatype, &typesize );
+    if (status == NULL) {
+        TAU_PLUGIN_RECVMSG(tag, TauTranslateRankToWorld(comm, source), count*typesize, 0);
+    } else {
+        TAU_PLUGIN_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count*typesize, 0);
     }
   }
   TAU_PROFILE_STOP(tautimer);
@@ -2596,12 +2617,13 @@ MPI_Comm comm;
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Rsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  PMPI_Type_size( datatype, &typesize );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize );
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Rsend( buf, count, datatype, dest, tag, comm );
@@ -2651,12 +2673,13 @@ MPI_Comm comm;
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Send()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  PMPI_Type_size( datatype, &typesize );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize );
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Send( buf, count, datatype, dest, tag, comm );
@@ -2686,9 +2709,9 @@ MPI_Status * status;
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  PMPI_Type_size( sendtype, &typesize1 );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( sendtype, &typesize1 );
       TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount);
     }
     
@@ -2696,15 +2719,22 @@ MPI_Status * status;
       status = &local_status;
     }
   }
-  
+  TAU_PLUGIN_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount, 0);
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status );
 
-  if (TauEnv_get_track_message()) {
-    if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+  if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+    if (TauEnv_get_track_message()) {
       PMPI_Get_count( status, MPI_BYTE, &count );
       TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count);
+    }
+    int typesize = 0;
+    PMPI_Type_size( recvtype, &typesize );
+    if (status == NULL) {
+        TAU_PLUGIN_RECVMSG(recvtag, TauTranslateRankToWorld(comm, source), count*typesize, 0);
+    } else {
+        TAU_PLUGIN_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count*typesize, 0);
     }
   }
   TAU_PROFILE_STOP(tautimer);
@@ -2731,9 +2761,9 @@ MPI_Status * status;
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv_replace()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  PMPI_Type_size( datatype, &typesize2 );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize2 );
       TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count);
     }
     
@@ -2741,14 +2771,22 @@ MPI_Status * status;
       status = &local_status;
     }
   }
+  TAU_PLUGIN_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count, 0);
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Sendrecv_replace( buf, count, datatype, dest, sendtag, source, recvtag, comm, status );
   
-  if (TauEnv_get_track_message()) {
-    if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+  if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+    if (TauEnv_get_track_message()) {
       PMPI_Get_count( status, MPI_BYTE, &size1 );
       TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), size1);
+    }
+    int typesize = 0;
+    PMPI_Type_size( datatype, &typesize );
+    if (status == NULL) {
+        TAU_PLUGIN_RECVMSG(recvtag, TauTranslateRankToWorld(comm, source), count*typesize, 0);
+    } else {
+        TAU_PLUGIN_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count*typesize, 0);
     }
   }
   TAU_PROFILE_STOP(tautimer);
@@ -2769,12 +2807,13 @@ MPI_Comm comm;
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Ssend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+  PMPI_Type_size( datatype, &typesize );
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
-      PMPI_Type_size( datatype, &typesize );
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
+  TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ssend( buf, count, datatype, dest, tag, comm );
