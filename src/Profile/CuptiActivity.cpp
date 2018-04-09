@@ -1596,11 +1596,11 @@ int gpu_occupancy_available(int deviceId)
 
 	CUpti_ActivityDevice device = __deviceMap()[deviceId];
 
-	if ((device.computeCapabilityMajor > 6) ||
-		device.computeCapabilityMajor == 6 &&
-		device.computeCapabilityMinor > 2)
+	if ((device.computeCapabilityMajor > 7) ||
+		device.computeCapabilityMajor == 7 &&
+		device.computeCapabilityMinor > 1)
 	{
-		TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 6.2.");
+		TAU_VERBOSE("TAU Warning: GPU occupancy calculator is not implemented for devices of compute capability > 7.1.");
 		return 0;
 	}
 	//gpu occupancy available.
@@ -1813,7 +1813,7 @@ void record_gpu_occupancy(int32_t blockX,
 	{
 		case 1: sharedMemoryUnit = 512; break;
 		case 2: sharedMemoryUnit = 128; break;
-	        case 3: case 5: case 6: sharedMemoryUnit = 256; break;
+	case 3: case 5: case 6: case 7: sharedMemoryUnit = 256; break;
 	}
 	int mySharedMemoryPerBlock = ceil(
 		staticSharedMemory,
@@ -1836,7 +1836,7 @@ void record_gpu_occupancy(int32_t blockX,
 
 	int occupancy = myWarpsPerBlock * allocatable_blocks;
 
-//#define RESULTS_TO_STDOUT 1
+// #define RESULTS_TO_STDOUT 1
 #ifdef RESULTS_TO_STDOUT
 	printf("[%s] occupancy calculator:\n", name);
 

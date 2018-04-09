@@ -49,6 +49,7 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #endif /* TAU_FUJITSU && TAU_MPI */
 
 #include <Profile/TauPin.h>
+#include <Profile/TauPluginInternals.h>
 
 #ifdef TAU_CRAYCNL
 #include <iostream>
@@ -73,11 +74,6 @@ using namespace tau;
 #ifdef TAU_SCOREP_METADATA
 #include <scorep/SCOREP_Tau.h>
 #endif /* TAU_SCOREP_METADATA */
-
-#ifdef TAU_SOS
-#include "TauSOS.h"
-#endif /* TAU_SOS */
-
 
 #ifdef TAU_BGL
 #include <rts.h>
@@ -261,57 +257,35 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   Tau_metadata_getMetaData(tid)[key] = tmv;
   //RtsLayer::UnLockEnv();
   //printf("%s : %s\n", key.name, tmv->data.cval);
-#ifdef TAU_SOS
-  if((strncmp(name, "TAU", 3) != 0) ||
-     (strncmp(name, "TAU_SOS", 7) == 0)){
-      // SOS users don't care about TAU options.
-      // SOS users do care about TAU_SOS options.
-      Tau_SOS_pack_string(name, const_cast<char*>(value));
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_enabled()) {
+    Tau_plugin_event_metadata_registration_data plugin_data;
+    plugin_data.name = name;
+    plugin_data.value = tmv;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
   }
-#endif
 #endif
 }
 
-/* OK, the problem is that SOS isn't initialized when TauEnv is setting up
+/* OK, the problem is that plugins aren't initialized when TauEnv is setting up
  * TAU, and in the process registering a bunch of metadata name/value pairs.
- * So, once SOS is set up, provide a method for SOS to get all the 
+ * So, once the plugin is set up, provide a method for the plugin to get all the 
  * metadata registered on thread 0 up to this point. */
-void Tau_metadata_push_to_sos(void) {
-#ifdef TAU_SOS
+void Tau_metadata_push_to_plugins(void) {
     int tid = RtsLayer::myThread();
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); 
          it != Tau_metadata_getMetaData(tid).end(); it++) {
         char tmp[128] = {0};
-        if((strncmp(it->first.name, "TAU", 3) == 0) && 
-		   (strncmp(it->first.name, "TAU_SOS", 7) != 0)){
-          // SOS users don't care about TAU options.
-          // SOS users do care about TAU_SOS options.
-          continue;
-        }
-        switch(it->second->type) {
-            case TAU_METADATA_TYPE_STRING:
-                Tau_SOS_pack_string(it->first.name, it->second->data.cval);
-                break;
-            case TAU_METADATA_TYPE_INTEGER:
-                Tau_SOS_pack_integer(it->first.name, it->second->data.ival);
-                break;
-            case TAU_METADATA_TYPE_DOUBLE:
-                Tau_SOS_pack_double(it->first.name, it->second->data.dval);
-                break;
-            case TAU_METADATA_TYPE_TRUE:
-                Tau_SOS_pack_string(it->first.name, const_cast<char*>("true"));
-                break;
-            case TAU_METADATA_TYPE_FALSE:
-                Tau_SOS_pack_string(it->first.name, const_cast<char*>("false"));
-                break;
-            case TAU_METADATA_TYPE_NULL:
-                Tau_SOS_pack_string(it->first.name, const_cast<char*>("(null)"));
-                break;
-            default:
-                break;
+
+        /*Invoke plugins only if both plugin path and plugins are specified*/
+        if(TauEnv_get_plugins_enabled()) {
+          Tau_plugin_event_metadata_registration_data plugin_data;
+          plugin_data.name = it->first.name;
+          plugin_data.value = it->second;
+          Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
         }
 	}
-#endif
 }
 
 extern "C" void Tau_metadata(const char *name, const char *value) {

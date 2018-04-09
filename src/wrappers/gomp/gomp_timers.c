@@ -13,7 +13,7 @@
 #include "gomp_wrapper_types.h"
 #include "omp.h"
 
-#define TAU_GOMP_INLINE inline
+#define TAU_GOMP_INLINE inline extern
 
 #if 0
 #define DEBUGPRINT(format, args...) \

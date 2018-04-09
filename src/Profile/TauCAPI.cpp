@@ -74,7 +74,7 @@ void esd_exit (elg_ui4 rid);
 #endif
 
 #include <Profile/TauPin.h>
-
+#include <Profile/TauPluginInternals.h>
 
 using namespace tau;
 
@@ -751,7 +751,16 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
 {
   FunctionInfo *fi = (FunctionInfo *)function_info;
   // Don't stop throttled timers
-  if (fi->IsThrottled()) return;
+  if (fi->IsThrottled()) {
+      //...unless it is already on the stack.
+      Profiler *profiler;
+      int tid = RtsLayer::myThread();
+      profiler = (Profiler *)&(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+      // if this timer isn't on the top of the stack, stop it.
+      if (profiler && profiler->ThisFunction != fi) {
+          return;
+      }
+  }
   if (Tau_global_getLightsOut()) return;
 
   if (TauEnv_get_lite_enabled()) {
@@ -907,8 +916,11 @@ extern "C" void Tau_profile_exit()
 {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-  Tau_stop_all_timers(RtsLayer::myThread());
-  Tau_shutdown();
+  int tid = RtsLayer::myThread();
+  Tau_stop_all_timers(tid);
+  if (tid == 0) {
+    Tau_shutdown();
+  }
 }
 
 
@@ -916,6 +928,14 @@ extern "C" void Tau_profile_exit()
 extern "C" void Tau_exit(const char * msg) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
+
+  /*Invoke plugins only if both plugin path and plugins are specified
+  *    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
+  if(TauEnv_get_plugins_enabled()) {
+    Tau_plugin_event_function_finalize_data plugin_data;
+    plugin_data.junk = -1;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, &plugin_data);
+  }
 
 #if defined(TAU_OPENMP)
   Tau_profile_exit_most_threads();
@@ -944,6 +964,15 @@ extern "C" void Tau_init_ref(int* argc, char ***argv) {
 extern "C" void Tau_init(int argc, char **argv) {
   TauInternalFunctionGuard protects_this_function;
   RtsLayer::ProfileInit(argc, argv);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_post_init(void) {
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_enabled()) {
+    Tau_plugin_event_post_init_data plugin_data;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, &plugin_data);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -990,6 +1019,14 @@ extern "C" int Tau_get_thread(void) {
 extern "C" int Tau_dump(void) {
   TauInternalFunctionGuard protects_this_function;
   TauProfiler_DumpData();
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_enabled()) {
+    Tau_plugin_event_dump_data plugin_data;
+    plugin_data.tid = RtsLayer::myThread();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
+  }
+
   return 0;
 }
 
@@ -2484,6 +2521,14 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
   }
   RtsLayer::UnLockDB();
   Tau_stop_timer(fi, Tau_get_thread());
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(TauEnv_get_plugins_enabled()) {
+    Tau_plugin_event_dump_data plugin_data;
+    plugin_data.tid = RtsLayer::myThread();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
+  }
+
 }
 
 
