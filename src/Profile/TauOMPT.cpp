@@ -518,6 +518,32 @@ inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) 
   }
 }
 
+
+/* HACK ALERT: This function is only there to ensure that OMPT environment variables are initialized before the ompt_start_tool is invoked 
+ * We need this because we would need to register callbacks depending on the level of support that the user desires
+ * Not sure how we else we can ensure initialization of OMPT environment variables. */
+void Tau_force_ompt_env_initialization() {
+
+//#ifdef TAU_OMPT
+    
+    TauEnv_set_ompt_support_level(0); // Basic OMPT support is the default
+    const char *omptSupportLevel = getenv("TAU_OMPT_SUPPORT_LEVEL");
+    if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, "basic")) {
+      TauEnv_set_ompt_support_level(0);
+      TAU_VERBOSE("TAU: OMPT support will be basic - only required events supported\n");
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "basic");
+    } else if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, "lowoverhead")) {
+      TauEnv_set_ompt_support_level(1);
+      TAU_VERBOSE("TAU: OMPT support will be for all required events along with optional low overhead events\n");
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "lowoverhead");
+    } else if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, "full")) {
+      TauEnv_set_ompt_support_level(2);
+      TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
+    }
+//#endif/* TAU_OMPT */
+} 
+
 #define cb_t(name) (ompt_callback_t)&name
 
 /* Register callbacks for all events that we are interested in / have to support */
@@ -541,6 +567,9 @@ extern "C" int ompt_initialize(
   pthread_setspecific(thr_id_key, 1);
 #endif
 
+  /* Srinivasan here: This is BAD idea. But we NEED to ensure that the OMPT env 
+   * variables are initialized correctly before registering callbacks */
+  Tau_force_ompt_env_initialization();
 
 /* Gather the required function pointers using the lookup tool */
   TAU_VERBOSE("Registering OMPT events...\n"); fflush(stderr);
