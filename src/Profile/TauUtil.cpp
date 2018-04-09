@@ -78,6 +78,11 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
 }
 #endif /* TAU_BFD */
 
+/* Given the profile file handle and function info object, resolve the address 
+ * that has been embedded in the function name using a pre-fixed token sequence.
+ * Only invoked from Profiler.cpp inside the writeFunctionData routine 
+ * NOTE: We do NOT need to lock the HashTable data structure as the thread has already 
+ * acquired the lock from the writeFunctionData routine */
 extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
  
       HashNode * node;
@@ -111,7 +116,10 @@ extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
       }
 }
 
-
+/* Given the unsigned long address, and a pointer to the string, fill the string with the BFD resolved address.
+ * NOTE: We need to lock the HashTable data structure, as this function is invoked from the OMPT callbacks themselves, 
+ * when the user wants to resolve the function name eagerly. 
+ * For this feature to be active, TAU_OMPT_RESOLVE_ADDRESS_EAGERLY must be set.*/
 extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
  
       HashNode * node;
