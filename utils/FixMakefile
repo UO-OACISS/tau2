@@ -627,6 +627,10 @@ case $1 in
         echo NOTE: Using BFD support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     TAU_ELF_BFD)
+        echo NOTE: Using ELF support in BFD
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU_LIKWID)
         echo NOTE: Using LIKWID support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
