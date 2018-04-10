@@ -496,6 +496,219 @@ on_ompt_callback_idle(
   return;
 }
 
+/* Mutex event - optional event with context */ 
+void *mutex_handle;
+
+static void
+on_ompt_callback_mutex_acquire(
+    ompt_mutex_kind_t kind,
+    unsigned int hint,
+    unsigned int impl,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra) 
+{
+  TauInternalFunctionGuard protects_this_function;
+  char timerName[1024];
+  char resolved_address[1024];
+
+  if(codeptr_ra) {
+    void * codeptr_ra_copy = (void*) codeptr_ra;
+    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+
+    if(TauEnv_get_ompt_resolve_address_eagerly()) {
+      Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+      switch(kind)
+      {
+        case ompt_mutex:
+          sprintf(timerName, "OpenMP_Mutex %s", resolved_address);
+          break;
+        case ompt_mutex_lock:
+          sprintf(timerName, "OpenMP_Mutex_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Nest_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_critical:
+          sprintf(timerName, "OpenMP_Mutex_Critical %s", resolved_address);
+          break;
+        case ompt_mutex_atomic:
+          sprintf(timerName, "OpenMP_Mutex_Atomic %s", resolved_address);
+          break;
+        case ompt_mutex_ordered:
+          sprintf(timerName, "OpenMP_Mutex_Ordered %s", resolved_address);
+          break;
+      }
+    } else {
+      switch(kind)
+      {
+        case ompt_mutex:
+          sprintf(timerName, "OpenMP_Mutex ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_lock:
+          sprintf(timerName, "OpenMP_Mutex_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Nest_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_critical:
+          sprintf(timerName, "OpenMP_Mutex_Critical ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_atomic:
+          sprintf(timerName, "OpenMP_Mutex_Atomic ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_ordered:
+          sprintf(timerName, "OpenMP_Mutex_Ordered ADDR <%lx>", addr);
+          break;
+      }
+    } 
+
+    // Start lock-wait timer
+    TAU_PROFILER_CREATE(mutex_handle, timerName, " ", TAU_OPENMP);
+    TAU_PROFILER_START(mutex_handle);
+  }
+}
+
+static void
+on_ompt_callback_mutex_acquired(
+    ompt_mutex_kind_t kind,
+    unsigned int hint,
+    unsigned int impl,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra)
+{
+  TauInternalFunctionGuard protects_this_function;
+  char timerName[1024];
+  char resolved_address[1024];
+
+  if(codeptr_ra) {
+    void * codeptr_ra_copy = (void*) codeptr_ra;
+    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+
+    if(TauEnv_get_ompt_resolve_address_eagerly()) {
+      Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+      switch(kind)
+      {
+        case ompt_mutex:
+          sprintf(timerName, "OpenMP_Mutex %s", resolved_address);
+          break;
+        case ompt_mutex_lock:
+          sprintf(timerName, "OpenMP_Mutex_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Nest_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_critical:
+          sprintf(timerName, "OpenMP_Mutex_Critical %s", resolved_address);
+          break;
+        case ompt_mutex_atomic:
+          sprintf(timerName, "OpenMP_Mutex_Atomic %s", resolved_address);
+          break;
+        case ompt_mutex_ordered:
+          sprintf(timerName, "OpenMP_Mutex_Ordered %s", resolved_address);
+          break;
+      }
+    } else {
+      switch(kind)
+      {
+        case ompt_mutex:
+          sprintf(timerName, "OpenMP_Mutex ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_lock:
+          sprintf(timerName, "OpenMP_Mutex_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Nest_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_critical:
+          sprintf(timerName, "OpenMP_Mutex_Critical ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_atomic:
+          sprintf(timerName, "OpenMP_Mutex_Atomic ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_ordered:
+          sprintf(timerName, "OpenMP_Mutex_Ordered ADDR <%lx>", addr);
+          break;
+      }
+    }
+    // Stop lock-wait timer
+    TAU_PROFILER_STOP(mutex_handle);
+
+    // Start lock timer
+    TAU_PROFILER_CREATE(mutex_handle, timerName, " ", TAU_OPENMP);
+    TAU_PROFILER_START(mutex_handle);
+  }
+
+}
+
+static void
+on_ompt_callback_mutex_released(
+    ompt_mutex_kind_t kind,
+    unsigned int hint,
+    unsigned int impl,
+    ompt_wait_id_t wait_id,
+    const void *codeptr_ra)
+{
+  TauInternalFunctionGuard protects_this_function;
+  char timerName[1024];
+  char resolved_address[1024];
+
+  if(codeptr_ra) {
+    void * codeptr_ra_copy = (void*) codeptr_ra;
+    unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
+
+    if(TauEnv_get_ompt_resolve_address_eagerly()) {
+      Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+      switch(kind)
+      {
+        case ompt_mutex:
+          sprintf(timerName, "OpenMP_Mutex %s", resolved_address);
+          break;
+        case ompt_mutex_lock:
+          sprintf(timerName, "OpenMP_Mutex_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Nest_Lock %s", resolved_address);
+          break;
+        case ompt_mutex_critical:
+          sprintf(timerName, "OpenMP_Mutex_Critical %s", resolved_address);
+          break;
+        case ompt_mutex_atomic:
+          sprintf(timerName, "OpenMP_Mutex_Atomic %s", resolved_address);
+          break;
+        case ompt_mutex_ordered:
+          sprintf(timerName, "OpenMP_Mutex_Ordered %s", resolved_address);
+          break;
+      }
+    } else {
+      switch(kind)
+      {
+        case ompt_mutex:
+          sprintf(timerName, "OpenMP_Mutex ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_lock:
+          sprintf(timerName, "OpenMP_Mutex_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_nest_lock:
+          sprintf(timerName, "OpenMP_Mutex_Nest_Lock ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_critical:
+          sprintf(timerName, "OpenMP_Mutex_Critical ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_atomic:
+          sprintf(timerName, "OpenMP_Mutex_Atomic ADDR <%lx>", addr);
+          break;
+        case ompt_mutex_ordered:
+          sprintf(timerName, "OpenMP_Mutex_Ordered ADDR <%lx>", addr);
+          break;
+      }
+    }
+
+    // Stop lock timer
+    TAU_PROFILER_STOP(mutex_handle);
+  }
+
+}
+
 
 /* Register callbacks. This function is invoked only from the ompt_start_tool routine.
  * Callbacks that only have "ompt_set_always" are the required events that we HAVE to support */
@@ -608,6 +821,10 @@ extern "C" int ompt_initialize(
   if(TauEnv_get_ompt_support_level() == 2) { /* Only support this when "full" is enabled. This is a high overhead call */
     register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
   }
+
+  //register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
+  //register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
+  //register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));
   
   initialized = true;
   initializing = false;
