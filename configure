@@ -1063,6 +1063,7 @@ omptlib=
 omptlibrary=-lomp
 omptenabled=no
 download_ompt=no
+download_legacy_ompt=no
 install_ompt=no
 xlsmp=no
 ibmxlc=no
@@ -1961,6 +1962,13 @@ for arg in "$@"; do
 	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
+	    shift
+	    ;;
+	-ompt=legacy*)
+            echo "ompt=legacy"
+	    openmp=yes
+	    ompt=yes
+	    download_legacy_ompt=yes
 	    shift
 	    ;;
 
@@ -6660,7 +6668,7 @@ fi #unwind=download
 # Install Scalable Observation System (SOS) if requested
 ######################################################################
 
-if [ "x$download_ompt" = xyes ] ; then
+if [ "x$download_ompt" = xyes -o "x$download_legacy_ompt" = xyes ] ; then
   echo "SOS (Scalable Observation System) installation requested"
 fi
 
@@ -6675,11 +6683,19 @@ if [ $ompt = yes ]; then
   fi
 fi
 
-libomp_oss=LLVM-openmp-0.2
-libomp_osstgz=${libomp_oss}.tar.gz
-#libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.2.tar.gz
-libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
-libomp_oss_name=iomp5
+if ["x$download_legacy_ompt" = "xyes" ] ; then
+  libomp_oss=LLVM-openmp-0.2
+  libomp_osstgz=${libomp_oss}.tar.gz
+  #libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.2.tar.gz
+  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
+elif ["x$download_ompt" = "xyes" ] ; then 
+  libomp_oss=LLVM-openmp-0.2
+  libomp_osstgz=${libomp_oss}.tar.gz
+  #libomp_ossurl=https://github.com/khuck/LLVM-openmp/archive/v0.2.tar.gz
+  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
+fi
+
+  libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then
     libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
     libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable
@@ -6704,7 +6720,9 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then
     echo "NOTE: Copying $ompt_dir/$libomp_osstgz"
     cp $ompt_dir/$libomp_osstgz .
-    download_ompt=yes
+    if [ ! "x$download_ompt" = xyes ] ; then 
+      download_legacy_ompt=yes
+    fi
   fi
 fi
 
@@ -6723,7 +6741,7 @@ fi
       fi
     fi
 
-if [ "x$download_ompt" = xyes ] ; then
+if [ "x$download_ompt" = xyes -o "x$download_legacy_ompt" = "xyes" ] ; then
   install_ompt=yes
   if [ ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -o ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ]; then
     preomptdir=`pwd`
