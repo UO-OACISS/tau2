@@ -283,8 +283,12 @@ on_ompt_callback_work(
               sprintf(timerName, "OpenMP_Work_Sections %s", resolved_address);
               break;
             case ompt_work_single_executor:
+#ifndef __GNUG__ /*TODO: Remove this preprocessor check once a fix on our end has been identified.*/
               sprintf(timerName, "OpenMP_Work_Single_Executor %s", resolved_address);
-              break; /* WARNING: LLVM BUG ALERT - The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
+              break; /* WARNING: The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
+#else
+	      return;
+#endif
             case ompt_work_single_other:
               sprintf(timerName, "OpenMP_Work_Single_Other %s", resolved_address);
               break;
@@ -307,9 +311,13 @@ on_ompt_callback_work(
             case ompt_work_sections:
               sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
               break;
+#ifndef __GNUG__ /*TODO: Remove this preprocessor check once a fix on our end has been identified.*/
             case ompt_work_single_executor:
               sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
-              break; /* WARNING: LLVM BUG ALERT - The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
+              break; /* The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
+#else
+	      return;
+#endif
             case ompt_work_single_other:
               sprintf(timerName, "OpenMP_Work_Single_Other ADDR <%lx>", addr);
               break;
@@ -325,16 +333,13 @@ on_ompt_callback_work(
 
           }
         }
-#ifndef __GNUG__ /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
+
         TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
         TAU_PROFILER_START(handle);
-        parallel_data->ptr = (void*)handle;
-#endif
+        task_data->ptr = (void*)handle;
         break;
       case ompt_scope_end: 
-#ifndef __GNUG__  /*TODO: Remove this preprocessor check once the above bug with LLVM-GNU has been resolved.*/
-	TAU_PROFILER_STOP(parallel_data->ptr);
-#endif
+	TAU_PROFILER_STOP(task_data->ptr);
 	break;
     }
   }
@@ -804,15 +809,13 @@ extern "C" int ompt_initialize(
   register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
   register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
   register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
-  if(TauEnv_get_ompt_support_level() == 2) { /* Only support this when "full" is enabled. This is a high overhead call - we should fix this with priority */
-    register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); 
-  }
+  register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event 
   register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
 
 /* Optional events */
 
-  if(TauEnv_get_ompt_support_level() == 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
+  if(TauEnv_get_ompt_support_level() >= 1) { /* Only support this when "lowoverhead" mode is enabled. Turns on all required events + other low overhead */
     register_callback(ompt_callback_work, cb_t(on_ompt_callback_work));
     register_callback(ompt_callback_master, cb_t(on_ompt_callback_master));
     register_callback(ompt_callback_idle, cb_t(on_ompt_callback_idle));
