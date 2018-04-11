@@ -311,8 +311,8 @@ on_ompt_callback_work(
             case ompt_work_sections:
               sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
               break;
-#ifndef __GNUG__ /*TODO: Remove this preprocessor check once a fix on our end has been identified.*/
             case ompt_work_single_executor:
+#ifndef __GNUG__ /*TODO: Remove this preprocessor check once a fix on our end has been identified.*/
               sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
               break; /* The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
 #else
