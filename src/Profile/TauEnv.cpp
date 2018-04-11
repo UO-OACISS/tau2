@@ -1264,7 +1264,7 @@ void TauEnv_initialize()
 
 #endif /* TAU_MPI_T */
 
-//#ifdef TAU_OMPT
+#ifdef TAU_OMPT_NEW
     tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
     if (parse_bool(tmp, env_ompt_resolve_address_eagerly)) {
 #ifdef TAU_DISABLE_MEM_MANAGER
@@ -1295,7 +1295,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
       TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
     }
-//#endif/* TAU_OMPT */
+#endif/* TAU_OMPT_NEW */
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
