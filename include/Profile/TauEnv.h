@@ -156,6 +156,7 @@ extern "C" {
   int TAUDECL TauEnv_get_pthread_stack_size();
   int TAUDECL TauEnv_get_alfred_port();
   int TAUDECL TauEnv_get_papi_multiplexing();
+  int TAUDECL TauEnv_get_region_addresses();
   int TauEnv_get_show_memory_functions();
   int TAUDECL TauEnv_get_mem_callpath();
   const char * TAUDECL TauEnv_get_mem_classes();

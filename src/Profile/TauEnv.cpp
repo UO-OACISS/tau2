@@ -218,6 +218,7 @@ using namespace std;
 #define TAU_MERGE_METADATA_DEFAULT 0
 
 #define TAU_MEM_CALLPATH_DEFAULT 0
+#define TAU_REGION_ADDRESSES_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -340,7 +341,7 @@ static int env_mem_callpath = 0;
 static int env_mem_all = 0;
 static const char *env_mem_classes = NULL;
 static std::set<std::string> * env_mem_classes_set = NULL;
-
+static int env_region_addresses = TAU_REGION_ADDRESSES_DEFAULT;
 
 } // extern "C"
 
@@ -890,6 +891,10 @@ int TauEnv_get_papi_multiplexing() {
   return env_papi_multiplexing;
 }
 
+int TauEnv_get_region_addresses() {
+  return env_region_addresses;
+}
+
 int TauEnv_get_track_io_params() {
   return env_track_io_params;
 }
@@ -1410,6 +1415,16 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_PAPI_MULTIPLEXING", "off");
       env_papi_multiplexing = 0;
     }
+
+    tmp = getconf("TAU_REGION_ADDRESSES");
+    if (parse_bool(tmp, env_region_addresses)) {
+      TAU_VERBOSE("TAU: Region addresses Enabled\n");
+      TAU_METADATA("TAU_REGION_ADDRESSES", "on");
+      env_region_addresses = 1;
+    } else {
+      TAU_METADATA("TAU_REGION_ADDRESSES", "off");
+      env_region_addresses = 0;
+    }                                     
 
     // Setting TAU_MEMDBG_PROTECT_{ABOVE,BELOW,FREE} enables memory debugging.
 
