@@ -6689,14 +6689,14 @@ fi
 
 if [ "x$download_ompt_tr6" = "xyes" ] ; then
   libomp_oss=LLVM-openmp-master
-  libomp_osstgz=master.zip
-  libomp_ossurl=https://github.com/OpenMPToolsInterface/LLVM-openmp/archive/${libomp_osstgz}
+  libomp_osstgz=LLVM-openmp-ompt-tr6.tar.gz
+  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 fi
 
 if [ "x$download_ompt" = "xyes" ] ; then 
   libomp_oss=LLVM-openmp-0.2
   libomp_osstgz=${libomp_oss}.tar.gz
-  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz} #Update link for this to work
+  libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
 fi
 
   libomp_oss_name=iomp5
@@ -6778,13 +6778,9 @@ if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
       cp $RESPONSE/$libomp_osstgz .
     else
       echo "expanding $libomp_osstgz..."
-      if [ $download_ompt_tr6 = yes ] ; then
-        unzip $libomp_osstgz
-      else 
-        tar -xzf $libomp_osstgz
-        echo "removing $libomp_osstgz..."
-        rm $libomp_osstgz
-      fi
+      tar -xzf $libomp_osstgz
+      echo "removing $libomp_osstgz..."
+      rm $libomp_osstgz
       cd $libomp_oss
       libomp_oss_log=build.log
       specialflags="-DCMAKE_C_FLAGS=-fPIC -DCMAKE_CXX_FLAGS=-fPIC"
