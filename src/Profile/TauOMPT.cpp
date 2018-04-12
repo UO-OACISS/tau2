@@ -1,6 +1,6 @@
 #define _BSD_SOURCE
 
-#ifdef TAU_USE_OMPT_NEW
+#ifdef TAU_USE_OMPT_TR6
 
 #include <stdio.h>
 #include <sstream>
@@ -853,4 +853,4 @@ extern "C" ompt_start_tool_result_t * ompt_start_tool(
   result.tool_data.ptr = NULL;
   return &result;
 }
-#endif /* TAU_USE_OMPT_NEW */
+#endif /* TAU_USE_OMPT_TR6 */
