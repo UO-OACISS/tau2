@@ -6870,7 +6870,12 @@ else # intel OMPT support
     if [ $ompt = yes ]; then
 	omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
 	fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-    fi
+        if [ "x$download_ompt_tr6" = "xyes" ] ; then
+	  fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+        else
+          fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+        fi  
+    fi 
 
 fi
 
@@ -10779,7 +10784,11 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
     fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
-
+    if [ "x$download_ompt_tr6" = "xyes" ] ; then 
+      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+    else
+      fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
+    fi 
     # also put them in the "disable" directory for later builds - but only do it once
     ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
     if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then

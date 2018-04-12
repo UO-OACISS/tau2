@@ -1070,6 +1070,10 @@ case $1 in
 	echo NOTE: Using OMPT OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU_OMPT_TR6)
+	echo NOTE: Using OMPT OpenMP options for OMPT TR6 specification
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      IBMOMPT)
 	echo NOTE: Using IBM OMPT OpenMP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
