@@ -68,6 +68,17 @@ int TAU_decrement_stack_height() {
 #endif
 }
 
+extern "C" int TAU_inside_ADIOS(void) {
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+#else
+	int function_stack = pthread_getspecific(thr_id_key);
+#endif
+    if (function_stack > 0) {
+	    return 1;
+	}
+    return 0;
+}
+
 /* Because we are collecting an API trace, we don't want to trace the 
    internal ADIOS calls.  So keep track of the ADIOS stack depth, and only
    output a trace event if we aren't currently timing another ADIOS call. */
@@ -1384,6 +1395,8 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
 #if defined (TAU_USE_PGS)
     pthread_key_create(&thr_id_key, NULL);
     pthread_setspecific(thr_id_key, 0);
+#else
+	function_stack = 0;
 #endif
 
     adiost_set_callback_t adiost_fn_set_callback = 

@@ -71,9 +71,11 @@
 
 #ifdef TAU_SOS
 
+int TAU_inside_ADIOS(void);
+
 inline void Tau_plugin_trace_current_timer(const char * name) {
     /*Invoke plugins only if both plugin path and plugins are specified*/
-    if(TauEnv_get_plugins_enabled()) {
+    if(TauEnv_get_plugins_enabled() && TAU_inside_ADIOS() == 0) {
         Tau_plugin_event_current_timer_exit_data plugin_data;
         plugin_data.name_prefix = name;
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
