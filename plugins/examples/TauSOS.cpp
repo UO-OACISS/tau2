@@ -196,7 +196,7 @@ void TAU_SOS_send_shutdown_message(void) {
     int offset;
     if (my_rank == daemon_rank) {
         TAU_VERBOSE("Waiting for SOS to flush...\n");
-		sleep(5);
+		sleep(thePluginOptions().env_sos_shutdown_delay);
 
         SOS_buffer_init(_runtime, &buffer);
 
@@ -355,13 +355,14 @@ void TAU_SOS_parse_environment_variables(void) {
       tmp = getenv("TAU_SOS_PERIOD");
       thePluginOptions().env_sos_period = parse_int(tmp, TAU_SOS_PERIOD_DEFAULT);
     }
-    // also needed:
-    // - whitelist/blacklist file
-    // - disable profile output (trace only)
+    tmp = getenv("TAU_SOS_SHUTDOWN_DELAY_SECONDS");
+    thePluginOptions().env_sos_shutdown_delay = parse_int(tmp, TAU_SOS_SHUTDOWN_DELAY_DEFAULT);
     tmp = getenv("TAU_SOS_SELECTION_FILE");
     if (tmp != NULL) {
       Tau_SOS_parse_selection_file(tmp);
     }
+    // also needed:
+    // - disable profile output (trace only)
 }
 
 void Tau_SOS_parse_selection_file(const char * filename) {
