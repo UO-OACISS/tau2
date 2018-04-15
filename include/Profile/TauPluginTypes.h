@@ -152,7 +152,10 @@ struct Tau_plugin_event_atomic_event_registration_data {
 };
 
 struct Tau_plugin_event_atomic_event_trigger_data {
-   void * user_event_ptr;
+   const char * counter_name;
+   int tid;
+   long unsigned int value;
+   long unsigned int timestamp;
 };
 
 struct Tau_plugin_event_pre_end_of_execution_data {
