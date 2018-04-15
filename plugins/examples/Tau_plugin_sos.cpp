@@ -38,9 +38,13 @@ int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_da
     //fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
     // OK to do it from any thread, because it came from MPI_Finalize
     TAU_SOS_send_data();
+    /* We used to finalize now, but we no longer use MPI in the finalization
+     * so it's ok to wait until all timers are done */
+    /*
     if (data.tid == 0) {
         TAU_SOS_finalize();
     }
+    */
     return 0;
 }
 
@@ -96,6 +100,24 @@ int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
     ss << "TAU_EVENT_EXIT:" << data.tid << ":" << data.timer_name;
     //std::cout << ss.str() << std::endl;
     Tau_SOS_pack_long(ss.str().c_str(), data.timestamp);
+    return 0;
+}
+
+/* This happens on Tau_userevent() */
+int Tau_plugin_sos_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data data) {
+    /* First, check to see if we are including/excluding this counter */
+    /*
+    if (thePluginOptions().env_sos_use_selection == 1) {
+        if (Tau_SOS_contains(thePluginOptions().excluded_counters, data.counter_name, false) ||
+            !Tau_SOS_contains(thePluginOptions().included_counters, data.counter_name, true)) {
+            return 0;
+        }
+    }
+    */
+    std::stringstream ss;
+    ss << "TAU_EVENT_COUNTER:" << data.tid << ":" << data.counter_name;
+    std::cout << ss.str() << " = " << data.value << std::endl;
+    Tau_SOS_pack_long(ss.str().c_str(), data.value);
     return 0;
 }
 
@@ -190,6 +212,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
         cb->Recv = Tau_plugin_sos_recv;
         cb->FunctionEntry = Tau_plugin_sos_function_entry;
         cb->FunctionExit = Tau_plugin_sos_function_exit;
+        cb->AtomicEventTrigger = Tau_plugin_sos_atomic_trigger;
     }
     /* Specialized support for ADIOS, MPI events (ADIOS Skel/Pooky support) */
     if (thePluginOptions().env_sos_trace_adios) {

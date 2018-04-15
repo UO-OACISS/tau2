@@ -194,34 +194,26 @@ void TAU_SOS_send_shutdown_message(void) {
     SOS_buffer     *buffer;
     SOS_msg_header  header;
     int offset;
-    if (my_rank == daemon_rank) {
-        TAU_VERBOSE("Waiting for SOS to flush...\n");
-		sleep(thePluginOptions().env_sos_shutdown_delay);
+    SOS_buffer_init(_runtime, &buffer);
 
-        SOS_buffer_init(_runtime, &buffer);
+    header.msg_size = -1;
+    header.msg_type = SOS_MSG_TYPE_SHUTDOWN;
+    header.msg_from = _runtime->my_guid;
+    header.ref_guid = 0;
 
-        header.msg_size = -1;
-        header.msg_type = SOS_MSG_TYPE_SHUTDOWN;
-        header.msg_from = _runtime->my_guid;
-        header.ref_guid = 0;
+    offset = 0;
+    SOS_buffer_pack(buffer, &offset, (char*)"iigg",
+            header.msg_size,
+            header.msg_type,
+            header.msg_from,
+            header.ref_guid);
 
-        offset = 0;
-        SOS_buffer_pack(buffer, &offset, (char*)"iigg",
-                header.msg_size,
-                header.msg_type,
-                header.msg_from,
-                header.ref_guid);
-
-        header.msg_size = offset;
-        offset = 0;
-        SOS_buffer_pack(buffer, &offset, (char*)"i", header.msg_size);
-
-        TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
-
-        SOS_send_to_daemon(buffer, buffer);
-
-        SOS_buffer_destroy(buffer);
-    }
+    header.msg_size = offset;
+    offset = 0;
+    SOS_buffer_pack(buffer, &offset, (char*)"i", header.msg_size);
+    TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
+    SOS_send_to_daemon(buffer, buffer);
+    SOS_buffer_destroy(buffer);
 #endif
 }
 
@@ -524,13 +516,11 @@ void TAU_SOS_finalize(void) {
     TAU_SOS_send_data();
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
-#ifdef TAU_MPI
-	    // wait for ALL RANKS to get to this point.  They should be done
-	    // sending all data to the listener.
-        TAU_VERBOSE("Waiting for SOS clients to rendez-vous...\n");
-	    PMPI_Barrier(MPI_COMM_WORLD);
-#endif
-        TAU_SOS_send_shutdown_message();
+        if (my_rank == daemon_rank) {
+            TAU_VERBOSE("Waiting for SOS to flush...\n");
+		    sleep(thePluginOptions().env_sos_shutdown_delay);
+            TAU_SOS_send_shutdown_message();
+        }
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
         //TAU_SOS_fork_exec_sosd_shutdown();
     }

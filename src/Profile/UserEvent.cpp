@@ -298,7 +298,10 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   /*Invoke plugins only if both plugin path and plugins are specified*/
     if(TauEnv_get_plugins_enabled()) {
       Tau_plugin_event_atomic_event_trigger_data plugin_data;
-      plugin_data.user_event_ptr = this;
+      plugin_data.counter_name = GetName().c_str();
+      plugin_data.tid = tid;
+      plugin_data.timestamp = timestamp;
+      plugin_data.value = (uint64_t)data;
       Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, &plugin_data);
     }
   } // Tau_global_getLightsOut

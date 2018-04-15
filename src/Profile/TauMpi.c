@@ -123,6 +123,100 @@ char __tmp[128]; \
 sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
 Tau_plugin_trace_current_timer(__tmp);
 
+#define TAU_SOS_COMM_GROUP_EVENT(__comm,__group_addr) \
+char __tmp[128]; \
+sprintf(__tmp, "%s_Comm_group (%p) 0x%p", EVENT_TRACE_PREFIX, __comm, __group_addr); \
+Tau_plugin_trace_current_timer(__tmp);
+
+void Tau_sos_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
+    char tmp[256];
+    sprintf(tmp, "%s_Group_incl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    int x;
+    for (x = 0 ; x < count-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, ranks[x]);
+    }
+    sprintf(tmp, "%s%d]) %p", tmp, ranks[count-1], new_group);
+    Tau_plugin_trace_current_timer(tmp);
+}
+
+#define TAU_SOS_GROUP_INCL_EVENT(__group,__count,__ranks,__group_addr) \
+    Tau_sos_group_incl_event(__group, __count, __ranks, __group_addr);
+
+void Tau_sos_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
+    char tmp[256];
+    sprintf(tmp, "%s_Group_excl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    int x;
+    for (x = 0 ; x < count-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, ranks[x]);
+    }
+    sprintf(tmp, "%s%d]) %p", tmp, ranks[count-1], new_group);
+    Tau_plugin_trace_current_timer(tmp);
+}
+
+#define TAU_SOS_GROUP_EXCL_EVENT(__group,__count,__ranks,__group_addr) \
+    Tau_sos_group_excl_event(__group, __count, __ranks, __group_addr);
+
+void Tau_sos_group_range_incl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
+    char tmp[256];
+    sprintf(tmp, "%s_Group_range_incl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    int x;
+    for (x = 0 ; x < count-1 ; x++ ) {
+        sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
+    }
+    sprintf(tmp, "%s[%d,%d,%d]]) 0x%p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    Tau_plugin_trace_current_timer(tmp);
+}
+
+#define TAU_SOS_GROUP_RANGE_INCL_EVENT(__group,__count,__ranges,__newgroup) \
+    Tau_sos_group_range_incl_event(__group, __count, __ranges, __newgroup);
+
+void Tau_sos_group_range_excl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
+    char tmp[256];
+    sprintf(tmp, "%s_Group_range_excl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
+    int x;
+    for (x = 0 ; x < count-1 ; x++ ) {
+        sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
+    }
+    sprintf(tmp, "%s[%d,%d,%d]]) 0x%p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    Tau_plugin_trace_current_timer(tmp);
+}
+
+#define TAU_SOS_GROUP_RANGE_EXCL_EVENT(__group,__count,__ranges,__newgroup) \
+    Tau_sos_group_range_excl_event(__group, __count, __ranges, __newgroup);
+
+void Tau_sos_group_translate_ranks_event(MPI_Group group1, int count, int *ranks1, MPI_Group group2, int *ranks2) {
+    char tmp[256];
+    sprintf(tmp, "%s_Group_translate_ranks (%p, %d, [", EVENT_TRACE_PREFIX, group1, count);
+    int x;
+    for (x = 0 ; x < count-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, ranks1[x]);
+    }
+    sprintf(tmp, "%s%d],[", tmp, ranks1[count-1]);
+    for (x = 0 ; x < count-1 ; x++ ) {
+        sprintf(tmp, "%s%d,", tmp, ranks2[x]);
+    }
+    sprintf(tmp, "%s%d]) %p", tmp, ranks2[count-1], group2);
+    Tau_plugin_trace_current_timer(tmp);
+}
+
+#define TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(__group,__count,__ranks1,__group2,__ranks2) \
+    Tau_sos_group_translate_ranks_event(__group, __count, __ranks1, __group2, __ranks2);
+
+#define TAU_SOS_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup) \
+char __tmp[128]; \
+sprintf(__tmp, "%s_Group_difference (%p,%p) 0x%p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+Tau_plugin_trace_current_timer(__tmp);
+
+#define TAU_SOS_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup) \
+char __tmp[128]; \
+sprintf(__tmp, "%s_Group_intersection (%p,%p) 0x%p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+Tau_plugin_trace_current_timer(__tmp);
+
+#define TAU_SOS_GROUP_UNION_EVENT(__group1,__group2,__newgroup) \
+char __tmp[128]; \
+sprintf(__tmp, "%s_Group_union (%p,%p) 0x%p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+Tau_plugin_trace_current_timer(__tmp);
+
 // this is used between cart_create and cart_sub calls... may not be safe, but...
 static int __cart_dims = 1;
 
@@ -138,7 +232,7 @@ void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * 
     for (x = 0 ; x < ndims-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, periods[x]);
     }
-    sprintf(tmp, "%s%d], %d) 0x%08x", tmp, periods[ndims-1], reorder, comm_out);
+    sprintf(tmp, "%s%d], %d) %p", tmp, periods[ndims-1], reorder, comm_out);
     Tau_plugin_trace_current_timer(tmp);
 }
 
@@ -1094,6 +1188,7 @@ MPI_Group * group;
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_group( comm, group );
+  TAU_SOS_COMM_GROUP_EVENT(comm,group);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1286,6 +1381,7 @@ MPI_Group * group_out;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_difference( group1, group2, group_out );
+  TAU_SOS_GROUP_DIFFERENCE_EVENT(group1, group2, *group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1304,6 +1400,7 @@ MPI_Group * newgroup;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_excl( group, n, ranks, newgroup );
+  TAU_SOS_GROUP_EXCL_EVENT(group,n,ranks,*newgroup);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1337,6 +1434,7 @@ MPI_Group * group_out;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_incl( group, n, ranks, group_out );
+  TAU_SOS_GROUP_INCL_EVENT(group,n,ranks,*group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1354,6 +1452,7 @@ MPI_Group * group_out;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_intersection( group1, group2, group_out );
+  TAU_SOS_GROUP_INTERSECTION_EVENT(group1, group2, *group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1388,6 +1487,7 @@ MPI_Group * newgroup;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_range_excl( group, n, ranges, newgroup );
+  TAU_SOS_GROUP_RANGE_EXCL_EVENT(group, n, ranges, *newgroup);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1407,6 +1507,7 @@ MPI_Group * newgroup;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_range_incl( group, n, ranges, newgroup );
+  TAU_SOS_GROUP_RANGE_INCL_EVENT(group, n, ranges, *newgroup);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1443,6 +1544,7 @@ int * ranks_b;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_translate_ranks( group_a, n, ranks_a, group_b, ranks_b );
+  TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(group_a, n, ranks_a, group_b, ranks_b);
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1460,6 +1562,7 @@ MPI_Group * group_out;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Group_union( group1, group2, group_out );
+  TAU_SOS_GROUP_UNION_EVENT(group1, group2, *group_out);
 
   TAU_PROFILE_STOP(tautimer);
 
