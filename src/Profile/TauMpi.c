@@ -290,10 +290,19 @@ void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_C
 #define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm)
 #define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out)
 #define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out)
-#define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out)
+#define TAU_SOS_COMM_CREATE_EVENT(__comm,__group,__comm_out)
 #define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out)
 #define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords)
 #define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out)
+#define TAU_SOS_COMM_GROUP_EVENT(__comm,__group_addr)
+#define TAU_SOS_GROUP_INCL_EVENT(__group,__count,__ranks,__group_addr)
+#define TAU_SOS_GROUP_EXCL_EVENT(__group,__count,__ranks,__group_addr)
+#define TAU_SOS_GROUP_RANGE_INCL_EVENT(__group,__count,__ranges,__newgroup)
+#define TAU_SOS_GROUP_RANGE_EXCL_EVENT(__group,__count,__ranges,__newgroup)
+#define TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(__group,__count,__ranks1,__group2,__ranks2)
+#define TAU_SOS_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup)
+#define TAU_SOS_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup)
+#define TAU_SOS_GROUP_UNION_EVENT(__group1,__group2,__newgroup)
 #endif
 
 
