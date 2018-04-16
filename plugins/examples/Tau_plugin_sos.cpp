@@ -116,7 +116,7 @@ int Tau_plugin_sos_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data dat
     */
     std::stringstream ss;
     ss << "TAU_EVENT_COUNTER:" << data.tid << ":" << data.counter_name;
-    std::cout << ss.str() << " = " << data.value << std::endl;
+    //std::cout << ss.str() << " = " << data.value << std::endl;
     Tau_SOS_pack_long(ss.str().c_str(), data.value);
     return 0;
 }
