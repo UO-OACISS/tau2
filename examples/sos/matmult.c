@@ -198,6 +198,24 @@ int main (int argc, char *argv[])
     	}
     }
 
+    // create a communicator
+    MPI_Group group_world, odd_group, even_group;;
+    int i, Neven, Nodd, members[8], ierr;
+
+    MPI_Comm_group(MPI_COMM_WORLD, &group_world);
+
+    Neven = (comm_size+1)/2;    /* processes of MPI_COMM_WORLD are divided */
+    Nodd = comm_size - Neven;   /* into odd- and even-numbered groups */
+    for (i=0; i < Neven; i++) {   /* "members" determines members of even_group */
+      members[i] = 2*i;
+    };
+
+    MPI_Group_incl(group_world, Neven, members, &even_group);
+    MPI_Group_excl(group_world, Neven, members, &odd_group);
+    MPI_Comm even_comm;
+    MPI_Comm odd_comm;
+    MPI_Comm_create(MPI_COMM_WORLD, even_group, new_comm);
+    MPI_Comm_create(MPI_COMM_WORLD, odd_group, new_comm);
 
 #ifdef PTHREADS
   int ret;

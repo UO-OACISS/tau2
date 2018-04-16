@@ -628,10 +628,6 @@ const bool Tau_SOS_contains(std::set<std::string>& myset,
 }
 
 void TAU_SOS_pack_profile() {
-    TAU_TRACK_MEMORY_HERE();
-    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
-    //TAU_TRACK_POWER_HERE();
-    TAU_TRACK_LOAD_HERE();
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
@@ -765,6 +761,10 @@ void TAU_SOS_send_data(void) {
     }
     // Make sure we have a pub handle */
     assert(tau_sos_pub);
+    // Update these now, WITHOUT a signal. Signals are TROUBLE.
+    TAU_TRACK_MEMORY_HERE();
+    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
+    TAU_TRACK_LOAD_HERE();
     /* Only send a profile update if we aren't tracing */
     if (!thePluginOptions().env_sos_tracing) {
         TAU_SOS_pack_profile();
