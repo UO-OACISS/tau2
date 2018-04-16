@@ -118,18 +118,19 @@ char __tmp[128]; \
 sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
 Tau_plugin_trace_current_timer(__tmp);
 
-#define TAU_SOS_COMM_CREATE_EVENT(__comm,__comm_out) \
+#define TAU_SOS_COMM_CREATE_EVENT(__comm,__group,__comm_out) \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Comm_create (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
+sprintf(__tmp, "%s_Comm_create (%p, %p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __group, __comm_out); \
 Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_COMM_GROUP_EVENT(__comm,__group_addr) \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Comm_group (%p) 0x%p", EVENT_TRACE_PREFIX, __comm, __group_addr); \
+sprintf(__tmp, "%s_Comm_group (%p) %p", EVENT_TRACE_PREFIX, __comm, __group_addr); \
 Tau_plugin_trace_current_timer(__tmp);
 
 void Tau_sos_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
     sprintf(tmp, "%s_Group_incl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
@@ -137,13 +138,15 @@ void Tau_sos_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group
     }
     sprintf(tmp, "%s%d]) %p", tmp, ranks[count-1], new_group);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_GROUP_INCL_EVENT(__group,__count,__ranks,__group_addr) \
     Tau_sos_group_incl_event(__group, __count, __ranks, __group_addr);
 
 void Tau_sos_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
     sprintf(tmp, "%s_Group_excl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
@@ -151,52 +154,59 @@ void Tau_sos_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group
     }
     sprintf(tmp, "%s%d]) %p", tmp, ranks[count-1], new_group);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_GROUP_EXCL_EVENT(__group,__count,__ranks,__group_addr) \
     Tau_sos_group_excl_event(__group, __count, __ranks, __group_addr);
 
 void Tau_sos_group_range_incl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(count*33), sizeof(char)));
     sprintf(tmp, "%s_Group_range_incl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
     }
-    sprintf(tmp, "%s[%d,%d,%d]]) 0x%p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    sprintf(tmp, "%s[%d,%d,%d]]) %p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_GROUP_RANGE_INCL_EVENT(__group,__count,__ranges,__newgroup) \
     Tau_sos_group_range_incl_event(__group, __count, __ranges, __newgroup);
 
 void Tau_sos_group_range_excl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(count*33), sizeof(char)));
     sprintf(tmp, "%s_Group_range_excl (%p, %d, [", EVENT_TRACE_PREFIX, group,count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s[%d,%d,%d],", tmp, ranges[x][0], ranges[x][1], ranges[x][2]);
     }
-    sprintf(tmp, "%s[%d,%d,%d]]) 0x%p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
+    sprintf(tmp, "%s[%d,%d,%d]]) %p", tmp, ranges[count-1][0], ranges[count-1][1], ranges[count-1][2], new_group);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_GROUP_RANGE_EXCL_EVENT(__group,__count,__ranges,__newgroup) \
     Tau_sos_group_range_excl_event(__group, __count, __ranges, __newgroup);
 
 void Tau_sos_group_translate_ranks_event(MPI_Group group1, int count, int *ranks1, MPI_Group group2, int *ranks2) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(count*11), sizeof(char)));
     sprintf(tmp, "%s_Group_translate_ranks (%p, %d, [", EVENT_TRACE_PREFIX, group1, count);
     int x;
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks1[x]);
     }
-    sprintf(tmp, "%s%d],[", tmp, ranks1[count-1]);
+    sprintf(tmp, "%s%d], [", tmp, ranks1[count-1]);
     for (x = 0 ; x < count-1 ; x++ ) {
         sprintf(tmp, "%s%d,", tmp, ranks2[x]);
     }
     sprintf(tmp, "%s%d]) %p", tmp, ranks2[count-1], group2);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(__group,__count,__ranks1,__group2,__ranks2) \
@@ -204,24 +214,25 @@ void Tau_sos_group_translate_ranks_event(MPI_Group group1, int count, int *ranks
 
 #define TAU_SOS_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup) \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Group_difference (%p,%p) 0x%p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s_Group_difference (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup) \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Group_intersection (%p,%p) 0x%p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s_Group_intersection (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp);
 
 #define TAU_SOS_GROUP_UNION_EVENT(__group1,__group2,__newgroup) \
 char __tmp[128]; \
-sprintf(__tmp, "%s_Group_union (%p,%p) 0x%p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
+sprintf(__tmp, "%s_Group_union (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
 Tau_plugin_trace_current_timer(__tmp);
 
 // this is used between cart_create and cart_sub calls... may not be safe, but...
 static int __cart_dims = 1;
 
 void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * dims, TAU_MPICH3_CONST int * periods, int reorder, MPI_Comm comm_out) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(ndims*22), sizeof(char)));
     sprintf(tmp, "%s_Cart_create (%p, %d, [", EVENT_TRACE_PREFIX, comm,ndims);
     int x;
     __cart_dims = ndims;
@@ -234,13 +245,15 @@ void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * 
     }
     sprintf(tmp, "%s%d], %d) %p", tmp, periods[ndims-1], reorder, comm_out);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
    Tau_sos_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out);
 
 void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(maxdims*11), sizeof(char)));
     sprintf(tmp, "%s_Cart_coords (%p, %d, %d, [", EVENT_TRACE_PREFIX, comm,rank,maxdims);
     int x;
     for (x = 0 ; x < maxdims-1 ; x++ ) {
@@ -248,13 +261,15 @@ void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coord
     }
     sprintf(tmp, "%s%d]) 0x0", tmp, coords[maxdims-1]);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords) \
     Tau_sos_cart_coords_event(__comm,__rank,__maxdims,__coords);
 
 void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
-    char tmp[256];
+    // assume 128 for letters, and 10 digits for each rank (plus a comma)
+    char * tmp = (char*)(calloc(128+(__cart_dims*11), sizeof(char)));
     sprintf(tmp, "%s_Cart_sub (%p, [", EVENT_TRACE_PREFIX, comm);
     int x;
     for (x = 0 ; x < __cart_dims-1 ; x++ ) {
@@ -262,6 +277,7 @@ void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_C
     }
     sprintf(tmp, "%s%d]) 0x%08x", tmp, remains[__cart_dims-1], comm_out);
     Tau_plugin_trace_current_timer(tmp);
+    free(tmp);
 }
 
 #define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
@@ -1135,7 +1151,7 @@ MPI_Comm * comm_out;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_create( comm, group, comm_out );
-  TAU_SOS_COMM_CREATE_EVENT(comm, *comm_out);
+  TAU_SOS_COMM_CREATE_EVENT(comm, group, *comm_out);
 
   Tau_setupCommunicatorInfo(comm_out);
   TAU_PROFILE_STOP(tautimer);
@@ -1188,7 +1204,7 @@ MPI_Group * group;
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_group( comm, group );
-  TAU_SOS_COMM_GROUP_EVENT(comm,group);
+  TAU_SOS_COMM_GROUP_EVENT(comm,*group);
 
   TAU_PROFILE_STOP(tautimer);
 
