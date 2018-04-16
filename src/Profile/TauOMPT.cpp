@@ -418,6 +418,7 @@ on_ompt_callback_implicit_task(
  * We have verified that this is not due to any OpenMP runtime overheads, but inside TAU.
  * At the moment, this call is enabled only when using TAU_OMPT support in "full" mode. 
  * Fixing this overhead is relatively low priority, because this is an optional event. */
+
 static void
 on_ompt_callback_sync_region(
     ompt_sync_region_kind_t kind,
@@ -502,7 +503,25 @@ on_ompt_callback_idle(
 }
 
 /* Mutex event - optional event with context */ 
-void *mutex_handle;
+/* Currently with the LLVM-openmp implementation it seems these mutex events
+  are only triggered when using the OpenMP API calls:
+     omp_lock_t
+     omp_init_lock
+     omp_set_lock
+     omp_unset_lock
+ 
+   We ideally would also create timers for #pragma based mutexes, once LLVM-openmp
+   implements callbacks for these directives.
+ 
+   We create the following timers:
+ 
+     OpenMP_Mutex_Waiting_... - represents time between lock request and acquisition
+      entering locked region
+     OpenMP_Mutex_Acquired_... - represents time between lock acquisition and release 
+*/
+
+__thread void *mutex_waiting_handle;
+__thread void *mutex_acquired_handle;
 
 static void
 on_ompt_callback_mutex_acquire(
@@ -517,6 +536,7 @@ on_ompt_callback_mutex_acquire(
   char resolved_address[1024];
 
   if(codeptr_ra) {
+
     void * codeptr_ra_copy = (void*) codeptr_ra;
     unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
 
@@ -525,59 +545,59 @@ on_ompt_callback_mutex_acquire(
       switch(kind)
       {
         case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Waiting %s", resolved_address);
           break;
         case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Lock %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Lock %s", resolved_address);
           break;
         case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Nest_Lock %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock %s", resolved_address);
           break;
         case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Critical %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Critical %s", resolved_address);
           break;
         case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Atomic %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Atomic %s", resolved_address);
           break;
         case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Ordered %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Ordered %s", resolved_address);
           break;
       }
     } else {
       switch(kind)
       {
         case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Waiting ADDR <%lx>", addr);
           break;
         case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Lock ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Lock ADDR <%lx>", addr);
           break;
         case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Nest_Lock ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Nest_Lock ADDR <%lx>", addr);
           break;
         case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Critical ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Critical ADDR <%lx>", addr);
           break;
         case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Atomic ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Atomic ADDR <%lx>", addr);
           break;
         case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Ordered ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Waiting_Ordered ADDR <%lx>", addr);
           break;
       }
     } 
 
+    //printf("Mutex requested <%lx>\n", addr);
+
     // Start lock-wait timer
-    TAU_PROFILER_CREATE(mutex_handle, timerName, " ", TAU_OPENMP);
-    TAU_PROFILER_START(mutex_handle);
+    TAU_PROFILER_CREATE(mutex_waiting_handle, timerName, " ", TAU_OPENMP);
+    TAU_PROFILER_START(mutex_waiting_handle);
   }
 }
 
 static void
 on_ompt_callback_mutex_acquired(
     ompt_mutex_kind_t kind,
-    unsigned int hint,
-    unsigned int impl,
     ompt_wait_id_t wait_id,
     const void *codeptr_ra)
 {
@@ -594,53 +614,55 @@ on_ompt_callback_mutex_acquired(
       switch(kind)
       {
         case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Acquired %s", resolved_address);
           break;
         case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Lock %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Lock %s", resolved_address);
           break;
         case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Nest_Lock %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Nest_Lock %s", resolved_address);
           break;
         case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Critical %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Critical %s", resolved_address);
           break;
         case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Atomic %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Atomic %s", resolved_address);
           break;
         case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Ordered %s", resolved_address);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Ordered %s", resolved_address);
           break;
       }
     } else {
       switch(kind)
       {
         case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Acquired ADDR <%lx>", addr);
           break;
         case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Lock ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Lock ADDR <%lx>", addr);
           break;
         case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Nest_Lock ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Nest_Lock ADDR <%lx>", addr);
           break;
         case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Critical ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Critical ADDR <%lx>", addr);
           break;
         case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Atomic ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Atomic ADDR <%lx>", addr);
           break;
         case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Ordered ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Mutex_Acquired_Ordered ADDR <%lx>", addr);
           break;
       }
     }
+    //printf("Mutex acquired <%lx>\n", addr);
+
     // Stop lock-wait timer
-    TAU_PROFILER_STOP(mutex_handle);
+    TAU_PROFILER_STOP(mutex_waiting_handle);
 
     // Start lock timer
-    TAU_PROFILER_CREATE(mutex_handle, timerName, " ", TAU_OPENMP);
-    TAU_PROFILER_START(mutex_handle);
+    TAU_PROFILER_CREATE(mutex_acquired_handle, timerName, " ", TAU_OPENMP);
+    TAU_PROFILER_START(mutex_acquired_handle);
   }
 
 }
@@ -648,8 +670,6 @@ on_ompt_callback_mutex_acquired(
 static void
 on_ompt_callback_mutex_released(
     ompt_mutex_kind_t kind,
-    unsigned int hint,
-    unsigned int impl,
     ompt_wait_id_t wait_id,
     const void *codeptr_ra)
 {
@@ -660,60 +680,13 @@ on_ompt_callback_mutex_released(
   if(codeptr_ra) {
     void * codeptr_ra_copy = (void*) codeptr_ra;
     unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
-
-    if(TauEnv_get_ompt_resolve_address_eagerly()) {
-      Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
-      switch(kind)
-      {
-        case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex %s", resolved_address);
-          break;
-        case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Lock %s", resolved_address);
-          break;
-        case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Nest_Lock %s", resolved_address);
-          break;
-        case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Critical %s", resolved_address);
-          break;
-        case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Atomic %s", resolved_address);
-          break;
-        case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Ordered %s", resolved_address);
-          break;
-      }
-    } else {
-      switch(kind)
-      {
-        case ompt_mutex:
-          sprintf(timerName, "OpenMP_Mutex ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_lock:
-          sprintf(timerName, "OpenMP_Mutex_Lock ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_nest_lock:
-          sprintf(timerName, "OpenMP_Mutex_Nest_Lock ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_critical:
-          sprintf(timerName, "OpenMP_Mutex_Critical ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_atomic:
-          sprintf(timerName, "OpenMP_Mutex_Atomic ADDR <%lx>", addr);
-          break;
-        case ompt_mutex_ordered:
-          sprintf(timerName, "OpenMP_Mutex_Ordered ADDR <%lx>", addr);
-          break;
-      }
-    }
+    //printf("Mutex released <%lx>\n", addr);
 
     // Stop lock timer
-    TAU_PROFILER_STOP(mutex_handle);
+    TAU_PROFILER_STOP(mutex_acquired_handle);
   }
 
 }
-
 
 /* Register callbacks. This function is invoked only from the ompt_start_tool routine.
  * Callbacks that only have "ompt_set_always" are the required events that we HAVE to support */
@@ -825,9 +798,10 @@ extern "C" int ompt_initialize(
     register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
   }
 
-  //register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
-  //register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
-  //register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));
+  // Overheads unclear currently
+  register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
+  register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
+  register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));
   
   initialized = true;
   initializing = false;
