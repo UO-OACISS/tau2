@@ -8474,6 +8474,42 @@ else
     echo "no"
 fi
 /bin/rm -f conftest_bfd.o conftest_bfd.c
+
+
+######################################################################
+
+######################################################################
+# Check for ELF-BFD
+######################################################################
+cat <<EOF > conftest_elf_bfd.c
+#define PACKAGE TAU
+#define PACKAGE_VERSION 2.25
+#include <stddef.h>
+#include <bfd.h>
+#include <elf-bfd.h>
+
+void foo() {
+    elf_symbol_type * symbol_type = NULL;
+    (void)symbol_type;
+    return;
+}
+EOF
+$echo "Checking for elf-bfd.h... ${nnl}"
+if $c_compiler $orig_useropt -c conftest_elf_bfd.c $bfdinclude 1> /dev/null 2>&1 ; then
+    if [ "$turnbfdoff" = "yes" ] ; then
+	echo "no"
+    else
+	if [ "$pin" = "no" ]; then
+	  fixmakeargs="$fixmakeargs TAU_ELF_BFD"
+	  echo "yes"
+        fi
+    fi
+else
+    echo "no"
+fi
+/bin/rm -f conftest_elf_bfd.o conftest_elf_bfd.c
+
+
 ######################################################################
 
 

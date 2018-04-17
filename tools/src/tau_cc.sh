@@ -39,7 +39,8 @@ usage()
     echo "   -tau:show            Do not invoke, just show what would be done"
     echo "   -tau:showcompiler    Show underlying compiler"
     echo "   -tau:showincludes    Show header file options used by the compiler"
-    echo "   -tau:libs    	  Show libraries used by the compiler"
+    echo "   -tau:showlibs    	  Show libraries used by the compiler (static TAU library)"
+    echo "   -tau:showsharedlibs  Show libraries used by the compiler (shared TAU library)"
     echo ""
     echo "TAU_OPTIONS (passed to tau_compiler.sh):"
     echo ""
@@ -105,6 +106,12 @@ for arg in "$@" ; do
 	      invoke_with_tau=no
 	      NON_TAUARGS="$NON_TAUARGS $modarg"
               SHOW=showlibs
+	      ;;
+	  -tau:showsharedlibs)
+	      invoke_without_tau=yes
+	      invoke_with_tau=no
+	      NON_TAUARGS="$NON_TAUARGS $modarg"
+              SHOW=showsharedlibs
 	      ;;
 	  -tau:showcompiler)
 	      invoke_without_tau=yes
@@ -199,6 +206,8 @@ showincludes:
 	@echo \$(TAU_INCLUDE) \$(TAU_MPI_INCLUDE) 
 showlibs:
 	@echo \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)
+showsharedlibs:
+	@echo -L\$(TAU_LIB_DIR)/shared\$(TAU_CONFIG) -Wl,-rpath,\$(TAU_LIB_DIR) -lTAUsh\$(TAU_CONFIG) \$(TAU_MPI_FLIBS)  \$(TAU_SHMEM_LIBS) \$(TAU_EXLIBS) \$(TAU_LDFLAGS) \$(TAU_LINKER_RPATH_OPT) \$(TAU_CUDA_LIBRARY)
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ $SHOW
 retval=$?

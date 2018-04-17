@@ -1,3 +1,4 @@
+#if defined(TAU_SOS)
 
 #include "TauSOS.h"
 #include "Profile/Profiler.h"
@@ -193,34 +194,26 @@ void TAU_SOS_send_shutdown_message(void) {
     SOS_buffer     *buffer;
     SOS_msg_header  header;
     int offset;
-    if (my_rank == daemon_rank) {
-        TAU_VERBOSE("Waiting for SOS to flush...\n");
-		sleep(1);
+    SOS_buffer_init(_runtime, &buffer);
 
-        SOS_buffer_init(_runtime, &buffer);
+    header.msg_size = -1;
+    header.msg_type = SOS_MSG_TYPE_SHUTDOWN;
+    header.msg_from = _runtime->my_guid;
+    header.ref_guid = 0;
 
-        header.msg_size = -1;
-        header.msg_type = SOS_MSG_TYPE_SHUTDOWN;
-        header.msg_from = _runtime->my_guid;
-        header.ref_guid = 0;
+    offset = 0;
+    SOS_buffer_pack(buffer, &offset, (char*)"iigg",
+            header.msg_size,
+            header.msg_type,
+            header.msg_from,
+            header.ref_guid);
 
-        offset = 0;
-        SOS_buffer_pack(buffer, &offset, (char*)"iigg",
-                header.msg_size,
-                header.msg_type,
-                header.msg_from,
-                header.ref_guid);
-
-        header.msg_size = offset;
-        offset = 0;
-        SOS_buffer_pack(buffer, &offset, (char*)"i", header.msg_size);
-
-        TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
-
-        SOS_send_to_daemon(buffer, buffer);
-
-        SOS_buffer_destroy(buffer);
-    }
+    header.msg_size = offset;
+    offset = 0;
+    SOS_buffer_pack(buffer, &offset, (char*)"i", header.msg_size);
+    TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
+    SOS_send_to_daemon(buffer, buffer);
+    SOS_buffer_destroy(buffer);
 #endif
 }
 
@@ -354,13 +347,14 @@ void TAU_SOS_parse_environment_variables(void) {
       tmp = getenv("TAU_SOS_PERIOD");
       thePluginOptions().env_sos_period = parse_int(tmp, TAU_SOS_PERIOD_DEFAULT);
     }
-    // also needed:
-    // - whitelist/blacklist file
-    // - disable profile output (trace only)
+    tmp = getenv("TAU_SOS_SHUTDOWN_DELAY_SECONDS");
+    thePluginOptions().env_sos_shutdown_delay = parse_int(tmp, TAU_SOS_SHUTDOWN_DELAY_DEFAULT);
     tmp = getenv("TAU_SOS_SELECTION_FILE");
     if (tmp != NULL) {
       Tau_SOS_parse_selection_file(tmp);
     }
+    // also needed:
+    // - disable profile output (trace only)
 }
 
 void Tau_SOS_parse_selection_file(const char * filename) {
@@ -522,21 +516,16 @@ void TAU_SOS_finalize(void) {
     TAU_SOS_send_data();
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
-#ifdef TAU_MPI
-	    // wait for ALL RANKS to get to this point.  They should be done
-	    // sending all data to the listener.
-        TAU_VERBOSE("Waiting for SOS clients to rendez-vous...\n");
-	    PMPI_Barrier(MPI_COMM_WORLD);
-#endif
-        TAU_SOS_send_shutdown_message();
+        if (my_rank == daemon_rank) {
+            TAU_VERBOSE("Waiting for SOS to flush...\n");
+		    sleep(thePluginOptions().env_sos_shutdown_delay);
+            TAU_SOS_send_shutdown_message();
+        }
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
         //TAU_SOS_fork_exec_sosd_shutdown();
     }
     SOS_finalize(_runtime);
 }
-
-extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
-extern "C" tau::Profiler * Tau_get_current_profiler(void);
 
 void Tau_SOS_pack_current_timer(const char * event_name) {
     if (_runtime == NULL) { return; }
@@ -639,10 +628,6 @@ const bool Tau_SOS_contains(std::set<std::string>& myset,
 }
 
 void TAU_SOS_pack_profile() {
-    TAU_TRACK_MEMORY_HERE();
-    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
-    //TAU_TRACK_POWER_HERE();
-    TAU_TRACK_LOAD_HERE();
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
@@ -776,6 +761,10 @@ void TAU_SOS_send_data(void) {
     }
     // Make sure we have a pub handle */
     assert(tau_sos_pub);
+    // Update these now, WITHOUT a signal. Signals are TROUBLE.
+    TAU_TRACK_MEMORY_HERE();
+    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
+    TAU_TRACK_LOAD_HERE();
     /* Only send a profile update if we aren't tracing */
     if (!thePluginOptions().env_sos_tracing) {
         TAU_SOS_pack_profile();
@@ -788,3 +777,5 @@ void TAU_SOS_send_data(void) {
     TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
     Tau_global_decr_insideTAU();
 }
+
+#endif // TAU_SOS
