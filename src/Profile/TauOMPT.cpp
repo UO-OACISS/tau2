@@ -799,12 +799,13 @@ extern "C" int ompt_initialize(
 
   if(TauEnv_get_ompt_support_level() == 2) { /* Only support this when "full" is enabled. This is a high overhead call */
     register_callback(ompt_callback_sync_region, cb_t(on_ompt_callback_sync_region)); 
+    // TODO: Overheads unclear currently. Also, causing a hang with TAU mm example
+    /* register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
+    register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
+    register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released)); */
   }
 
   // Overheads unclear currently
-  register_callback(ompt_callback_mutex_acquire, cb_t(on_ompt_callback_mutex_acquire));
-  register_callback(ompt_callback_mutex_acquired, cb_t(on_ompt_callback_mutex_acquired));
-  register_callback(ompt_callback_mutex_released, cb_t(on_ompt_callback_mutex_released));
   
   initialized = true;
   initializing = false;
