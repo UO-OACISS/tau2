@@ -22,6 +22,7 @@
 #include <TauPluginInternals.h>
 #include <stdarg.h>
 #include <string.h>
+#include <Profile/Profiler.h>
 #include <TauMetaData.h>
 #include <Profiler.h>
 
@@ -32,6 +33,128 @@
 #endif /* TAU_WINDOWS */
 
 #define TAU_NAME_LENGTH 1024
+
+#ifdef TAU_BFD
+#include <Profile/TauBfd.h>
+#endif
+
+/*Data structures to return function context info*/
+struct HashNode
+{
+  HashNode() : fi(NULL), excluded(false)
+  { }
+
+  TauBfdInfo info;		///< Filename, line number, etc.
+  FunctionInfo * fi;		///< Function profile information
+  bool excluded;			///< Is function excluded from profiling?
+};
+
+struct HashTable : public TAU_HASH_MAP<unsigned long, HashNode*>
+{
+  HashTable() {
+    Tau_init_initializeTAU();
+  }
+  virtual ~HashTable() {
+    Tau_destructor_trigger();
+  }
+};
+
+static HashTable & TheHashTable()
+{
+  static HashTable htab;
+  return htab;
+}
+
+#ifdef TAU_BFD
+static tau_bfd_handle_t & TheBfdUnitHandle()
+{
+  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    RtsLayer::LockEnv();
+    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+      bfdUnitHandle = Tau_bfd_registerUnit();
+    }
+    RtsLayer::UnLockEnv();
+  }
+  return bfdUnitHandle;
+}
+#endif /* TAU_BFD */
+
+/* Given the profile file handle and function info object, resolve the address 
+ * that has been embedded in the function name using a pre-fixed token sequence.
+ * Only invoked from Profiler.cpp inside the writeFunctionData routine 
+ * NOTE: We do NOT need to lock the HashTable data structure as the thread has already 
+ * acquired the lock from the writeFunctionData routine */
+extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
+ 
+      HashNode * node;
+      unsigned long addr = 0;
+      char region_type[100];
+      sscanf(fi.GetName(), "%s ADDR <%lx>", region_type, &addr);
+      #ifdef TAU_BFD
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+      #endif
+     
+      node = TheHashTable()[addr];
+      if (!node) {
+        node = new HashNode;
+        node->fi = NULL;
+        node->excluded = false;
+        
+        TheHashTable()[addr] = node;
+      }
+      #ifdef TAU_BFD
+      Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+      #endif
+
+      if(node && node->info.filename && node->info.funcname && node->info.lineno) {
+        fprintf(fp, "\\%s %s [{%s} {%d, 0}]", region_type, node->info.funcname, node->info.filename, node->info.lineno);
+      } else if(node && node->info.filename && node->info.funcname) {
+        fprintf(fp, "\\%s %s [{%s}]", region_type, node->info.funcname, node->info.filename);
+      } else if(node && node->info.funcname) {
+        fprintf(fp, "\\%s %s", region_type, node->info.funcname);
+      } else {
+        fprintf(fp, "\\OpenMP %s __UNKNOWN__", region_type);
+      }
+}
+
+/* Given the unsigned long address, and a pointer to the string, fill the string with the BFD resolved address.
+ * NOTE: We need to lock the HashTable data structure, as this function is invoked from the OMPT callbacks themselves, 
+ * when the user wants to resolve the function name eagerly. 
+ * For this feature to be active, TAU_OMPT_RESOLVE_ADDRESS_EAGERLY must be set.*/
+extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
+ 
+      HashNode * node;
+           
+      #ifdef TAU_BFD
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+      #endif
+     
+      node = TheHashTable()[addr];
+      if (!node) {
+        RtsLayer::LockDB();  
+        node = new HashNode;
+        node->fi = NULL;
+        node->excluded = false;
+        
+        TheHashTable()[addr] = node;
+
+        #ifdef TAU_BFD
+        Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
+        #endif
+        RtsLayer::UnLockDB(); 
+      }
+
+      if(node && node->info.filename && node->info.funcname && node->info.lineno) {
+        sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
+      } else if(node && node->info.filename && node->info.funcname) {
+        sprintf(resolved_address, "%s [{%s}]", node->info.funcname, node->info.filename);
+      } else if(node && node->info.funcname) {
+        sprintf(resolved_address, "%s", node->info.funcname);
+      } else {
+        sprintf(resolved_address, "__UNKNOWN__");
+      }
+}
 
 /*********************************************************************
  * Abort execution with a message

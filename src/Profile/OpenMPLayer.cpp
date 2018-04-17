@@ -56,6 +56,8 @@ OpenMPMap & TheOMPMap()
   return omp_map;
 }
 
+static bool initialized = false;
+
 /* This is Thread Local Storage (TLS) for the thread ID.
  * Using this is MUCH faster than computing it every time we need it.
  * HOWEVER, it might not be supported everywhere. */
@@ -105,7 +107,7 @@ int OpenMPLayer::GetTauThreadId(void)
   if (_tau_thread_id == -1) {
     Tau_global_incr_insideTAU();
     Initialize();
-    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
     if (_thread_count > 0) {
       /* Process is already locked, call the unsafe thread creation routine. */
       _tau_thread_id = RtsLayer::_createThread();
@@ -113,7 +115,7 @@ int OpenMPLayer::GetTauThreadId(void)
       _tau_thread_id = 0;
     }
     _thread_count = _thread_count + 1;
-    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     Tau_global_decr_insideTAU();
 	// TAU may not be done initializing yet! So don't start the timer for thread 0
 	if (_tau_thread_id > 0) 
@@ -126,7 +128,7 @@ int OpenMPLayer::GetTauThreadId(void)
   if (tmp->threadID == -1) {
     Tau_global_incr_insideTAU();
     Initialize();
-    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
     if (_thread_count > 0) {
       /* Process is already locked, call the unsafe thread creation routine. */
       tmp->threadID = RtsLayer::_createThread();
@@ -134,7 +136,7 @@ int OpenMPLayer::GetTauThreadId(void)
       tmp->threadID = 0;
     }
     _thread_count = _thread_count + 1;
-    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     Tau_global_decr_insideTAU();
 	// TAU may not be done initializing yet! So don't start the timer for thread 0
 	if (tmp->threadID > 0)
@@ -165,7 +167,7 @@ int OpenMPLayer::GetTauThreadId(void)
     tau_thread_id = omp_thread_id;
   } else {
     Initialize();
-    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (initialized) omp_set_lock(&OpenMPLayer::tauRegistermutex);
     OpenMPMap & ompMap = TheOMPMap();
     OpenMPMap::iterator it = ompMap.find(omp_thread_id);
     if (it == ompMap.end()) {
@@ -175,7 +177,7 @@ int OpenMPLayer::GetTauThreadId(void)
     } else {
       tau_thread_id = it->second;
     }
-    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    if (initialized) omp_unset_lock(&OpenMPLayer::tauRegistermutex);
 
     Tau_create_top_level_timer_if_necessary_task(tau_thread_id);
   }
@@ -262,12 +264,16 @@ int OpenMPLayer::InitializeThreadData(void)
 
 void OpenMPLayer::Initialize(void)
 {
+  static int initializing_or_initialized = false;
+  if (initializing_or_initialized) { return; }
+  initializing_or_initialized = true;
   // ONLY INITIALIZE THE LOCK ONCE!
   static int registerInitFlag = InitializeRegisterMutexData();
   static int dbInitFlag = InitializeDBMutexData();
   static int envInitFlag = InitializeEnvMutexData();
   // use the flags so that the compiler doesn't complain
   if (registerInitFlag && dbInitFlag && envInitFlag) {};
+  initialized = true;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -296,7 +302,7 @@ int OpenMPLayer::InitializeRegisterMutexData(void)
 int OpenMPLayer::LockDB(void)
 {
   Initialize();
-  omp_set_lock(&OpenMPLayer::tauDBmutex);
+  if (initialized) omp_set_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }
 
@@ -305,7 +311,7 @@ int OpenMPLayer::LockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::UnLockDB(void)
 {
-  omp_unset_lock(&OpenMPLayer::tauDBmutex);
+  if (initialized) omp_unset_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }
 
@@ -327,7 +333,7 @@ int OpenMPLayer::InitializeEnvMutexData(void)
 int OpenMPLayer::LockEnv(void)
 {
   Initialize();
-  omp_set_lock(&OpenMPLayer::tauEnvmutex);
+  if (initialized) omp_set_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }
 
@@ -336,7 +342,7 @@ int OpenMPLayer::LockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::UnLockEnv(void)
 {
-  omp_unset_lock(&OpenMPLayer::tauEnvmutex);
+  if (initialized) omp_unset_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }
 

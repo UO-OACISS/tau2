@@ -93,6 +93,17 @@ using namespace std;
 #define TAU_OPENMP_RUNTIME_CONTEXT_REGION "region"
 #define TAU_OPENMP_RUNTIME_CONTEXT_NONE "none"
 
+/* OMPT magic strings */
+#define TAU_OMPT_SUPPORT_LEVEL_BASIC "basic"
+#define TAU_OMPT_SUPPORT_LEVEL_LOWOVERHEAD "lowoverhead"
+#define TAU_OMPT_SUPPORT_LEVEL_FULL "full"
+
+#define TAU_SOS_DEFAULT 0
+#define TAU_SOS_TRACE_EVENTS_DEFAULT 0
+#define TAU_SOS_PERIODIC_DEFAULT 0
+#define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
+#define TAU_SOS_HIGH_RESOLUTION_DEFAULT 0 // group, timer
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_DEFAULT_TAU 0
@@ -251,6 +262,8 @@ static int env_ibm_bg_hwp_counters = 0;
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
+static int env_ompt_resolve_address_eagerly = 0;
+static int env_ompt_support_level = 0;
 static int env_openmp_runtime_enabled = 1;
 static int env_openmp_runtime_states_enabled = 0;
 static int env_openmp_runtime_events_enabled = 1;
@@ -789,6 +802,14 @@ int TauEnv_get_comm_matrix() {
   return env_comm_matrix;
 }
 
+int TauEnv_get_ompt_resolve_address_eagerly() {
+  return env_ompt_resolve_address_eagerly;
+}
+
+int TauEnv_get_ompt_support_level() {
+  return env_ompt_support_level;
+}
+
 int TauEnv_get_track_mpi_t_pvars() {
   return env_track_mpi_t_pvars;
 }
@@ -802,6 +823,15 @@ int TauEnv_set_track_mpi_t_pvars(int value) {
   return env_track_mpi_t_pvars; 
 }
 
+int TauEnv_set_ompt_resolve_address_eagerly(int value) {
+  env_ompt_resolve_address_eagerly = value;
+  return env_ompt_resolve_address_eagerly; 
+}
+
+int TauEnv_set_ompt_support_level(int value) {
+  env_ompt_support_level = value;
+  return env_ompt_support_level; 
+}
 
 int TauEnv_get_track_signals() {
   return env_track_signals;
@@ -1233,6 +1263,39 @@ void TauEnv_initialize()
     }
 
 #endif /* TAU_MPI_T */
+
+#ifdef TAU_OMPT_TR6
+    tmp = getconf("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
+    if (parse_bool(tmp, env_ompt_resolve_address_eagerly)) {
+#ifdef TAU_DISABLE_MEM_MANAGER
+      TAU_VERBOSE("TAU: OMPT resolving addresses eagerly disabled - memory management was disabled at configuration!\n");
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "disabled (disabled memory management)");
+#else
+      env_ompt_resolve_address_eagerly = 1;
+      TAU_VERBOSE("TAU: OMPT resolving addresses eagerly Enabled\n");
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
+      TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
+#endif
+    } else {
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
+    } 
+    
+    env_ompt_support_level = 0; // Basic OMPT support is the default
+    const char *omptSupportLevel = getconf("TAU_OMPT_SUPPORT_LEVEL");
+    if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, TAU_OMPT_SUPPORT_LEVEL_BASIC)) {
+      env_ompt_support_level = 0;
+      TAU_VERBOSE("TAU: OMPT support will be basic - only required events supported\n");
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "basic");
+    } else if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, TAU_OMPT_SUPPORT_LEVEL_LOWOVERHEAD)) {
+      env_ompt_support_level = 1;
+      TAU_VERBOSE("TAU: OMPT support will be for all required events along with optional low overhead events\n");
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "lowoverhead");
+    } else if (omptSupportLevel != NULL && 0 == strcasecmp(omptSupportLevel, TAU_OMPT_SUPPORT_LEVEL_FULL)) {
+      env_ompt_support_level = 2;
+      TAU_VERBOSE("TAU: OMPT support will be full - all events will be supported\n");
+      TAU_METADATA("TAU_OMPT_SUPPORT_LEVEL", "full");
+    }
+#endif/* TAU_OMPT_TR6 */
 
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
@@ -1963,7 +2026,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: OpenMP Runtime Support Context none\n");
       TAU_METADATA("TAU_OPENMP_RUNTIME_CONTEXT", "none");
     }
-
+    
 // MPC wht OpenMP isn't initialized before TAU is, so these function calls will hang.
 #if TAU_OPENMP && !defined(TAU_MPC) 
     const char* schedule;

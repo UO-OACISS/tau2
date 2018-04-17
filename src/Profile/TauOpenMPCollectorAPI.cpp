@@ -274,7 +274,7 @@ defined (__GNUC_PATCHLEVEL__))
 extern "C" void * Tau_get_gomp_proxy_address(void);
 #endif
 
-#ifdef TAU_BFD
+#if defined(TAU_BFD) || defined(__APPLE__)
 
 /*
  *-----------------------------------------------------------------------------
@@ -288,6 +288,7 @@ struct OmpHashNode
 
   TauBfdInfo info;        ///< Filename, line number, etc.
   char * location;
+  bool resolved;
 };
 
 extern void Tau_delete_hash_table(void);
@@ -312,7 +313,9 @@ static tau_bfd_handle_t & OmpTheBfdUnitHandle()
   if (OmpbfdUnitHandle == TAU_BFD_NULL_HANDLE) {
     RtsLayer::LockEnv();
     if (OmpbfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+#if defined(TAU_BFD)
       OmpbfdUnitHandle = Tau_bfd_registerUnit();
+#endif
     }
     RtsLayer::UnLockEnv();
   }
@@ -356,12 +359,12 @@ char * get_proxy_name(unsigned long ip) {
             TAU_OPENMP_SET_LOCK;
 #if defined(__APPLE__)
       Dl_info info;
-      int rc = dladdr((const void *)addr, &info);
+      int rc = dladdr((const void *)ip, &info);
       if (rc == 0) {
         node->resolved = false;
       } else {
         node->resolved = true;
-        node->info.probeAddr = addr;
+        node->info.probeAddr = ip;
         node->info.filename = strdup(info.dli_fname);
         node->info.funcname = strdup(info.dli_sname);
         node->info.lineno = 0; // Apple doesn't give us line numbers.
