@@ -525,7 +525,7 @@ for arg in "$@"; do
 	    echo "-opari_construct .. Only report performance data for OpenMP constructs."
 	    echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
 	    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
-	    echo "-ompt=<dir | download> ...... Specify a libiomp5 directory or download."
+	    echo "-ompt=<dir | download | download-tr4 (default) | download-tr6 > ...... Specify a libiomp5 directory or download."
 	    echo "    Note: 'download' will download and build the library automatically."
 	    echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
 	    echo ""
@@ -668,7 +668,7 @@ for arg in "$@"; do
         echo "-opari_construct .. Only report performance data for OpenMP constructs."
         echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
         echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
-        echo "-ompt=<dir | download> ...... Specify a libiomp5 directory or download."
+        echo "-ompt=<dir | download | download-tr4 (default) | download-tr6 > ...... Specify a libiomp5 directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "    Note: 'download' only supports the LLVM/Intel OpenMP runtime."
         echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
@@ -1959,6 +1959,13 @@ for arg in "$@"; do
 
 	-ompt=download)
             echo "ompt=download"
+	    openmp=yes
+	    ompt=yes
+	    download_ompt=yes
+	    shift
+	    ;;
+	-ompt=download-tr4)
+            echo "ompt=download-tr4"
 	    openmp=yes
 	    ompt=yes
 	    download_ompt=yes
