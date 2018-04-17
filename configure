@@ -1964,8 +1964,8 @@ for arg in "$@"; do
 	    download_ompt=yes
 	    shift
 	    ;;
-	-ompt=download_tr6)
-            echo "ompt=download_tr6"
+	-ompt=download-tr6)
+            echo "ompt=download-tr6"
 	    openmp=yes
 	    ompt=yes
 	    download_ompt_tr6=yes
