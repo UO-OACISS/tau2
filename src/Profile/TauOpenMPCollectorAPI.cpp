@@ -6,10 +6,16 @@
 #include <dlfcn.h>
 #endif
 
+//All encompassing macro. If tr6 is being built, we build this object file anyway, 
+//but we do not want issues with symbol re-definitions, etc during linking. So we keep
+//a dummy object file to save ourselves the headache.
+
+#if !defined(TAU_USE_OMPT_TR6)
+ 
 // set some macros, so we get implementation-dependent differences.
 // Right now, there are 3 different interpretations of the OMPT "standard"
 
-#if defined(TAU_USE_OMPT) 
+#if defined(TAU_USE_OMPT)
  // oldest implementation
  #if defined(TAU_IBM_OMPT)
   #define OMPT_VERSION 1
@@ -1840,3 +1846,5 @@ extern __attribute__ ((weak))
 #endif
 extern "C" __attribute__ ((weak))
 void * Tau_get_gomp_proxy_address(void);
+
+#endif /* !defined(TAU_USE_OMPT_TR6) */
