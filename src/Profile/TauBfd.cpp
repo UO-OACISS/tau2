@@ -57,6 +57,12 @@
 #include <psapi.h>
 #endif
 
+#ifdef TAU_ELF_BFD
+#include <elf-bfd.h>
+#endif
+
+
+
 using namespace std;
 
 static char const * Tau_bfd_internal_getExecutablePath();
@@ -65,7 +71,7 @@ struct TauBfdModule
 {
   TauBfdModule() :
       bfdImage(NULL), syms(NULL), nr_all_syms(0), dynamic(false), bfdOpen(false),
-      lastResolveFailed(false), processCode(TAU_BFD_SYMTAB_NOT_LOADED)
+      lastResolveFailed(false), processCode(TAU_BFD_SYMTAB_NOT_LOADED), textOffset(0)
   { }
 
   ~TauBfdModule() {
@@ -153,6 +159,32 @@ struct TauBfdModule
 
     TAU_VERBOSE("loadSymbolTable: %s contains %d canonical symbols\n", path, nr_all_syms);
 
+#ifdef TAU_ELF_BFD
+    // Get text offset
+    if (bfd_get_flavour(bfdImage) == bfd_target_elf_flavour) {
+      Elf_Internal_Phdr * elf_pheader = elf_tdata(bfdImage)->phdr;
+      if(elf_pheader != NULL) {
+        unsigned int num_segments = elf_elfheader(bfdImage)->e_phnum;  
+        for(unsigned int i = 0; i < num_segments; i++, elf_pheader++) {
+          if(elf_pheader->p_type != PT_LOAD) {
+            // Only care about LOAD segments
+            continue;
+          }
+          if((elf_pheader->p_flags & PF_R) == 0) {
+            // Only care about executable segments
+            continue;
+          }
+          if((elf_pheader->p_flags & PF_X) == 0) {
+            // Only care about executable segments
+            continue;
+          }
+          textOffset = elf_pheader->p_vaddr - elf_pheader->p_offset;
+          break;
+        }
+      }
+    }
+#endif
+
     return bfdOpen;
   }
 
@@ -167,6 +199,9 @@ struct TauBfdModule
 
   // Remember the result of the last process to avoid reprocessing
   int processCode;
+
+  // The virtual offset at which the text segment is loaded
+  bfd_vma textOffset;
 };
 
 struct TauBfdUnit
@@ -197,7 +232,6 @@ struct TauBfdUnit
   TauBfdModule * executableModule;
   vector<TauBfdAddrMap*> addressMaps;
   vector<TauBfdModule*> modules;
-
 };
 
 struct LocateAddressData
@@ -305,6 +339,7 @@ void Tau_bfd_register_objopen_counter(objopen_counter_t handle)
 // Main interface functions
 //
 
+
 void Tau_bfd_initializeBfd()
 {
   static bool bfdInitialized = false;
@@ -381,6 +416,7 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit)
     }
   }
   fclose(mapsfile);
+
 #endif /* TAU_BGP || TAU_BGQ || TAU_WINDOWS */
 }
 
@@ -607,6 +643,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
   TauBfdModule * module;
   unsigned long addr0;
   unsigned long addr1;
+  unsigned long addr2;
 
   if (unit->objopen_counter != get_objopen_counter()) {
     Tau_bfd_updateAddressMaps(handle);
@@ -628,9 +665,11 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
 #if defined(TAU_WINDOWS) && defined(TAU_MINGW)
     addr0 = probeAddr;
     addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
+    addr2 = addr1 + module->textOffset;
 #else
     addr0 = probeAddr;
     addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
+    addr2 = addr1 + module->textOffset;
 #endif
   } else {
     if (!Tau_bfd_internal_loadExecSymTab(unit)) {
@@ -642,7 +681,8 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     // Calculate search addresses for executable search
     // Only the first address is valid for the executable
     addr0 = probeAddr;
-    addr1 = 0;
+    addr1 = probeAddr + unit->executableModule->textOffset;
+    addr2 = 0;
   }
 
   // Search BFD sections for address
@@ -656,6 +696,11 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, Ta
     // Try the second address
     if (addr1 && addr0 != addr1) {
       info.probeAddr = getProbeAddr(module->bfdImage, addr1);
+      bfd_map_over_sections(module->bfdImage, Tau_bfd_internal_locateAddress, &data);
+    }
+    // Try the offset address
+    if (!data.found && addr2 && addr2 != addr1) {
+      info.probeAddr = getProbeAddr(module->bfdImage, addr2);
       bfd_map_over_sections(module->bfdImage, Tau_bfd_internal_locateAddress, &data);
     }
     // Try the executable
@@ -951,19 +996,29 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // NULL then we've got bigger problems elsewhere in the code
   LocateAddressData & data = *(LocateAddressData*)dataPtr;
 
+
   // Skip this section if we've already resolved the address data
-  if (data.found) return;
+  if (data.found) {
+    return;
+  }
 
   // Skip this section if it isn't a debug info section
-  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
+  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) {
+    return;
+  }
+
 
   // Skip this section if the address is before the section start
   bfd_vma vma = bfd_get_section_vma(bfdptr, section);
-  if (data.info.probeAddr < vma) return;
+  if (data.info.probeAddr < vma) {
+      return;
+  }
 
   // Skip this section if the address is after the section end
   bfd_size_type size = bfd_get_section_size(section);
-  if (data.info.probeAddr >= vma + size) return;
+  if (data.info.probeAddr >= vma + size) {
+    return;
+  }
 
   // The section contains this address, so try to resolve info
   // Note that data.info is a reference, so this call sets the

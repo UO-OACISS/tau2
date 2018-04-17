@@ -23,6 +23,8 @@
 #include "mpi.h"
 #include <stdint.h>
 #include <sstream>
+#include <iostream>
+#include <algorithm>
 #define ADIOST_EXTERN extern "C"
 
 /* We need a thread-local static stack of ADIOS API calls 
@@ -66,6 +68,17 @@ int TAU_decrement_stack_height() {
 #endif
 }
 
+extern "C" int TAU_inside_ADIOS(void) {
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+#else
+	int function_stack = pthread_getspecific(thr_id_key);
+#endif
+    if (function_stack > 0) {
+	    return 1;
+	}
+    return 0;
+}
+
 /* Because we are collecting an API trace, we don't want to trace the 
    internal ADIOS calls.  So keep track of the ADIOS stack depth, and only
    output a trace event if we aren't currently timing another ADIOS call. */
@@ -74,7 +87,7 @@ void Tau_SOS_conditionally_pack_current_timer(const char * name) {
     int foo = TAU_decrement_stack_height();
     if (foo == 0) {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+        if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_current_timer_exit_data plugin_data;
             plugin_data.name_prefix = name;
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
@@ -775,7 +788,13 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
 	ss << EVENT_TRACE_PREFIX << function_name << "(";
 	ss << " method: " << method << ",";
 	ss << " comm: " << std::hex << "0x" << comm << ",";
-	ss << " parameters: '" << parameters << "')";
+	// The parameters has newlines in it - strip them out.
+	std::string s(parameters);
+	std::replace(s.begin(), s.end(), '\n', ' ');
+	std::replace(s.begin(), s.end(), '\r', ' ');
+	// The parameters are corrupting the SQL insert later, disabled for now
+	//ss << " parameters: [" << s.c_str() << "]";
+	ss << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
     } else if (type == adiost_event_exit) {
@@ -784,7 +803,7 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
     } else {
 	    // not conditional! neither start nor stop.
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+        if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_current_timer_exit_data plugin_data;
             plugin_data.name_prefix = ss.str().c_str();
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
@@ -807,7 +826,7 @@ ADIOST_EXTERN void tau_adiost_read_finalize_method(
 	    Tau_increment_stack_height();
     } else {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_path() && TauEnv_get_plugins()) {
+        if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_current_timer_exit_data plugin_data;
             plugin_data.name_prefix = ss.str().c_str();
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
@@ -851,7 +870,7 @@ ADIOST_EXTERN void tau_adiost_read_open_file(
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
    	std::stringstream ss;
 	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fname: " << fname << "',";
+	ss << " fname: '" << fname << "',";
 	ss << " method: " << method << ",";
 	ss << " comm: " << std::hex << "0x" << comm << ",";
 	ss << " file_descriptor: " << std::hex << file_descriptor << ")";
@@ -1099,7 +1118,11 @@ ADIOST_EXTERN void tau_adiost_schedule_read(
 	ss << " from_steps: " << from_steps << ",";
 	ss << " nsteps: " << nsteps << ", param: '";
 	if (param != NULL) {
-		ss << param;
+		std::string s(param);
+		std::replace(s.begin(), s.end(), '\n', ' ');
+		std::replace(s.begin(), s.end(), '\r', ' ');
+		std::replace(s.begin(), s.end(), ';', ',');
+		ss << s.c_str();
 	}
 	ss << "',";
 	ss << " data: " << std::hex << data << ")";
@@ -1132,7 +1155,11 @@ ADIOST_EXTERN void tau_adiost_schedule_read_byid(
 	ss << " from_steps: " << from_steps << ",";
 	ss << " nsteps: " << nsteps << ", param: '";
 	if (param != NULL) {
-		ss << param;
+		std::string s(param);
+		std::replace(s.begin(), s.end(), '\n', ' ');
+		std::replace(s.begin(), s.end(), '\r', ' ');
+		std::replace(s.begin(), s.end(), ';', ',');
+		ss << s.c_str();
 	}
 	ss << "',";
 	ss << " data: " << std::hex << data << ")";
@@ -1368,6 +1395,8 @@ ADIOST_EXTERN void TAU_adiost_initialize (adiost_function_lookup_t adiost_fn_loo
 #if defined (TAU_USE_PGS)
     pthread_key_create(&thr_id_key, NULL);
     pthread_setspecific(thr_id_key, 0);
+#else
+	function_stack = 0;
 #endif
 
     adiost_set_callback_t adiost_fn_set_callback = 

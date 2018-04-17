@@ -30,7 +30,7 @@ pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 512
+#define MATRIX_SIZE 64
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -160,7 +160,9 @@ double do_work(void) {
 #endif
 #ifdef TAU_MPI
   int rank = 0;
+  int comm_size = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
   if (rank == 0) {
       if (provided == MPI_THREAD_MULTIPLE) { 
         printf("provided is MPI_THREAD_MULTIPLE\n");
@@ -242,6 +244,7 @@ int main (int argc, char *argv[])
 #ifdef TAU_MPI
   int rc = MPI_SUCCESS;
   int rank = 0;
+  int comm_size = 0;
 #if defined(PTHREADS)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -264,6 +267,7 @@ int main (int argc, char *argv[])
     printf("Error: MPI_Init failed, rc = %d\n%s\n", rc, errorstring);
     exit(1);
   }
+  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 #endif /* TAU_MPI */
 
 #ifdef PTHREADS
@@ -286,6 +290,37 @@ int main (int argc, char *argv[])
   }   
 
 #endif /* PTHREADS */
+
+    // create a communicator
+    MPI_Group group_world, odd_group, even_group, diff_group, 
+              union_group, inter_group, re_group, ri_group;
+    int j, Neven, Nodd, members[8], ierr;
+
+    MPI_Comm_group(MPI_COMM_WORLD, &group_world);
+    MPI_Comm world_comm;
+    MPI_Comm_create(MPI_COMM_WORLD, group_world, &world_comm);
+
+    Neven = (comm_size+1)/2;    /* processes of MPI_COMM_WORLD are divided */
+    Nodd = comm_size - Neven;   /* into odd- and even-numbered groups */
+    for (j=0; j < Neven; j++) {   /* "members" determines members of even_group */
+      members[j] = 2*j;
+    };
+
+    MPI_Group_incl(group_world, Neven, members, &even_group);
+    MPI_Group_excl(group_world, Neven, members, &odd_group);
+    MPI_Comm even_comm;
+    MPI_Comm odd_comm;
+    MPI_Comm_create(MPI_COMM_WORLD, even_group, &even_comm);
+    MPI_Comm_create(MPI_COMM_WORLD, odd_group, &odd_comm);
+    MPI_Group_difference(group_world, even_group, &diff_group);
+    MPI_Group_intersection(group_world, odd_group, &inter_group);
+    MPI_Group_union(group_world, odd_group, &union_group);
+    int range[2][3] = {{0,1,1},{2,3,1}};
+    MPI_Group_range_excl(group_world, 2, range, &re_group);
+    MPI_Group_range_incl(group_world, 2, range, &ri_group);
+    int ranks[2] = {0,1};
+    int ranks_out[2] = {0};
+    MPI_Group_translate_ranks(group_world, 2, ranks, union_group, ranks_out);
 
 /* On thread 0: */
   int i;

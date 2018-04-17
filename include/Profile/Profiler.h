@@ -269,6 +269,8 @@ using tau::Profiler;
 
 extern "C" tau::Profiler *TauInternal_CurrentProfiler(int tid);
 extern "C" tau::Profiler *TauInternal_ParentProfiler(int tid);
+extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
+extern "C" tau::Profiler * Tau_get_current_profiler(void);
 
 int TauProfiler_updateIntermediateStatistics(int tid);
 bool TauProfiler_createDirectories();

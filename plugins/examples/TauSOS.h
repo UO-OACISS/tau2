@@ -11,6 +11,7 @@
 #define TAU_SOS_TRACE_ADIOS_DEFAULT 0
 #define TAU_SOS_PERIODIC_DEFAULT 0
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
+#define TAU_SOS_SHUTDOWN_DELAY_DEFAULT 10 // seconds
 #define TAU_SOS_USE_SELECTION_DEFAULT 0 // microseconds
 
 class SOS_plugin_options {
@@ -21,6 +22,7 @@ class SOS_plugin_options {
             env_sos_trace_adios(TAU_SOS_TRACE_ADIOS_DEFAULT),
             env_sos_periodic(TAU_SOS_PERIODIC_DEFAULT),
             env_sos_period(TAU_SOS_PERIOD_DEFAULT),
+            env_sos_shutdown_delay(TAU_SOS_SHUTDOWN_DELAY_DEFAULT),
             env_sos_use_selection(TAU_SOS_USE_SELECTION_DEFAULT) {}
     public:
         int env_sos_enabled;
@@ -28,6 +30,7 @@ class SOS_plugin_options {
         int env_sos_trace_adios;
         int env_sos_periodic;
         int env_sos_period;
+        int env_sos_shutdown_delay;
         int env_sos_use_selection;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
