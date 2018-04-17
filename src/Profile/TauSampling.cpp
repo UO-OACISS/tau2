@@ -121,7 +121,7 @@ using namespace tau;
 extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
-extern std::string * Tau_get_thread_ompt_state(int tid);
+//extern std::string * Tau_get_thread_ompt_state(int tid);
 
 #if defined(TAU_OPENMP) && !defined(TAU_USE_OMPT)
 static string _gTauOmpStatesArray[17] = {
@@ -1320,7 +1320,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     // get the thread state, too!
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
     // OMPT returns a character array
-    std::string* state_name = Tau_get_thread_ompt_state(tid);
+    std::string* state_name = NULL; //Tau_get_thread_ompt_state(tid);
     if (state_name != NULL) {
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during

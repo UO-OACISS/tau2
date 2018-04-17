@@ -79,7 +79,7 @@ void esd_exit (elg_ui4 rid);
 using namespace tau;
 
 extern "C" void Tau_shutdown(void);
-extern "C" void Tau_disable_collector_api();
+//extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
 //Static variables with file scope
@@ -882,7 +882,7 @@ inline void Tau_profile_exit_threads(int begin_index)
   // worker threads. When those threads try to exit, they will
   // try to stop timers that aren't running.
 #ifdef TAU_OPENMP
-  Tau_disable_collector_api();
+  //Tau_disable_collector_api();
 #endif
 
 #ifdef TAU_ANDROID
@@ -2644,14 +2644,14 @@ extern "C" int Tau_get_local_tid(void) {
 }
 
 #ifdef TAU_OPENMP
-extern "C" void Tau_finalize_collector_api(void);
+//extern "C" void Tau_finalize_collector_api(void);
 #endif
 
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
 #ifdef TAU_OPENMP
-  Tau_finalize_collector_api();
+  //Tau_finalize_collector_api();
 #endif
   Tau_memory_wrapper_disable();
 //#ifndef JAVA
