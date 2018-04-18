@@ -1365,6 +1365,9 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
             }
             if (strlen(fi.GetType()) > 0)
                 fprintf(fp, " %s", fi.GetType());
+            if(fi.StartAddr || fi.StopAddr) {
+                fprintf(fp, "[{%#lx}-{%#lx}]", fi.StartAddr, fi.StopAddr);
+            }
             fprintf(fp, "\" %ld %ld %.16G %.16G ", fi.GetCalls(tid), fi.GetSubrs(tid), excltime, incltime);
 #ifdef CUPTI
         }
