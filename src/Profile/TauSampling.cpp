@@ -120,10 +120,15 @@ using namespace tau;
 
 extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
+
+#if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
 extern "C" int Tau_get_thread_omp_state(int tid);
-extern std::string * Tau_get_thread_ompt_state(int tid);
+#endif
+
+//extern std::string * Tau_get_thread_ompt_state(int tid);
 
 #if defined(TAU_OPENMP) && !defined(TAU_USE_OMPT)
+extern "C" int Tau_get_thread_omp_state(int tid);
 static string _gTauOmpStatesArray[17] = {
   "OMP_UNKNOWN",
   "OMP_OVERHEAD",
@@ -1315,12 +1320,12 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     //printf("tid = %d, sampling previousTimestamp = %llu, period = %d\n", tid, tau_sampling_flags()->previousTimestamp[i], ebsPeriod); fflush(stdout);
   }
   //printf("tid = %d, Delta = %f, period = %d\n", tid, deltaValues[0], ebsPeriod); fflush(stdout);
-#ifdef TAU_OPENMP
+#if defined(TAU_OPENMP) && !defined(TAU_USE_OMPT_TR6)
   if (TauEnv_get_openmp_runtime_states_enabled() == 1) {
     // get the thread state, too!
 #if defined(TAU_USE_OMPT) || defined(TAU_IBM_OMPT)
     // OMPT returns a character array
-    std::string* state_name = Tau_get_thread_ompt_state(tid);
+    std::string* state_name = NULL; //Tau_get_thread_ompt_state(tid);
     if (state_name != NULL) {
       // FYI, this won't actually create the state. Because that wouldn't be signal-safe.
       // Instead, it will look it up and return the ones we created during

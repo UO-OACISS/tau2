@@ -105,7 +105,7 @@
 #if (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ +0 < 1060)) \
     || defined(TAU_XLC) || defined(TAU_WINDOWS)
 #undef HAVE_VALLOC
-#elif _BSD_SOURCE || (_XOPEN_SOURCE >= 500 || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) \
+#elif defined(_BSD_SOURCE) || (_XOPEN_SOURCE >= 500 || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) \
       && !(_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
 #define HAVE_VALLOC 1
 #endif

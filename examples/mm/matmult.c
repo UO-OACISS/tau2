@@ -291,6 +291,7 @@ int main (int argc, char *argv[])
 
 #endif /* PTHREADS */
 
+#ifdef TAU_MPI
     // create a communicator
     MPI_Group group_world, odd_group, even_group, diff_group, 
               union_group, inter_group, re_group, ri_group;
@@ -321,6 +322,8 @@ int main (int argc, char *argv[])
     int ranks[2] = {0,1};
     int ranks_out[2] = {0};
     MPI_Group_translate_ranks(group_world, 2, ranks, union_group, ranks_out);
+
+#endif /* TAU_MPI */
 
 /* On thread 0: */
   int i;
