@@ -28,10 +28,9 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
     return 0;
 }
 
-int Tau+plugin_sos_mpit(Tau_plugin_mpit_data data) {
+int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data data) {
 
-    Tau_SOS_send_data();
-
+    TAU_SOS_send_data();
     return 0;
 }
 
