@@ -46,6 +46,7 @@
 #include <tauarch.h>
 #include <fcntl.h>
 #include <string>
+#include <set>
 
 #if TAU_OPENMP // for querying OpenMP settings
 #include "omp.h"
@@ -216,6 +217,8 @@ using namespace std;
 
 #define TAU_MERGE_METADATA_DEFAULT 0
 
+#define TAU_MEM_CALLPATH_DEFAULT 0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -332,6 +335,12 @@ static int env_papi_multiplexing = 0;
 #ifdef TAU_ANDROID
 static int env_alfred_port = 6113;
 #endif
+
+static int env_mem_callpath = 0;
+static int env_mem_all = 0;
+static const char *env_mem_classes = NULL;
+static std::set<std::string> * env_mem_classes_set = NULL;
+
 
 } // extern "C"
 
@@ -1159,6 +1168,24 @@ int TauEnv_get_alfred_port() {
   return env_alfred_port;
 }
 #endif
+
+int TauEnv_get_mem_callpath() {
+  return env_mem_callpath;
+}
+
+const char *TauEnv_get_mem_classes() {
+  return env_mem_classes;
+}
+
+int TauEnv_get_mem_class_present(const char * name) {
+    if(env_mem_all) {
+        return 1;
+    }
+    if(env_mem_classes_set == NULL) {
+        return 0;
+    }
+    return env_mem_classes_set->count(name);
+}
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -2389,6 +2416,32 @@ void TauEnv_initialize()
     }
     TAU_VERBOSE("TAU: Alfred will listen on port %d\n", env_alfred_port);
 #endif
+
+    tmp = getconf("TAU_MEM_CONTEXT");
+    if (parse_bool(tmp, TAU_MEM_CALLPATH_DEFAULT)) {
+      env_mem_callpath = 1;
+      TAU_VERBOSE("TAU: Memory Class Tracking Callpath Enabled\n");
+    } else {
+      env_mem_callpath = 0;
+      TAU_VERBOSE("TAU: Memory Class Tracking Callpath Disabled\n");
+    }
+
+    if ((env_mem_classes = getconf("TAU_MEM_CLASSES")) == NULL) {
+      env_mem_classes = "";
+      TAU_VERBOSE("TAU: MEM_CLASSES is not set\n", env_metrics);
+    } else {
+      TAU_VERBOSE("TAU: MEM_CLASSES is \"%s\"\n", env_metrics);
+      if(strcmp(env_mem_classes, "all") == 0) {
+        env_mem_all = 1; 
+        TAU_VERBOSE("TAU: Tracking All Class Allocations\n");
+      }
+      env_mem_classes_set = new std::set<std::string>();
+      char * next_mem_class = strtok_r((char *)env_mem_classes, ":,", &saveptr);
+      while(next_mem_class != NULL) {
+        env_mem_classes_set->insert(next_mem_class);
+        next_mem_class = strtok_r(NULL, ":,", &saveptr);
+      }
+    }
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
