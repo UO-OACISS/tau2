@@ -2930,7 +2930,7 @@ extern "C" void Tau_enable_tracking_mpi_t(void) {
 extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
-                    
+
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
