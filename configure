@@ -6689,6 +6689,9 @@ fi
 
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
+  if [ "x$download_ompt_tr6" = "xyes" ]; then
+    tauoptions="${tauoptions}-tr6"
+  fi
   if [ "x$CRAY_CPU_TARGET" != "x" -a "x$PE_ENV" = "xINTEL" ] ; then
     fixmakeargs="$fixmakeargs INTEL_CRAY_MIC_KNL_OMPT"
   fi
