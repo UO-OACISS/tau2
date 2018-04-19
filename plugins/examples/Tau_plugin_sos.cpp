@@ -28,6 +28,7 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
     return 0;
 }
 
+/* This happens when reading MPI-T PVARs from the underlying MPI library */
 int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data data) {
 
     TAU_SOS_send_data();
