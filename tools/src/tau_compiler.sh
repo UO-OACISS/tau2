@@ -1823,9 +1823,22 @@ else
                           needToCleanPdbInstFiles=$TRUE;
                         fi
         		reuseFiles=$TRUE;
-        		evalWithDebugMessage "cp $origFileName $instFileName" "File excluded from instrumentation. Copying original file as instrumented file." 
-        		copyInsteadOfInstrument=$TRUE
-                      fi 
+                        # Run the parser on all Fortran files to generate needed .mod files
+                        case $origFileName in
+                            # Check all Fortran files TAU knows about
+                            *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR|*.cuf)
+                                # Only process files defining modules, fewer false positives if we look for 'end module'
+                                # See ISO/IEC DIS 1539-1:2017 (E) 14.2.1 R1406
+                                if grep -i -q '\(^\|;\)[[:blank:]]*end module' "$origFileName" > /dev/null 2>&1 ; then
+                                    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser to generate Fortran module file."
+                                    evalWithDebugMessage "rm -f $instFileName ${instFileName%.inst.*}.pdb" \
+                                                         "Removing $instFileName and ${instFileName%.inst.*}.pdb since $origFileName is in TAU's exclude list"
+                                fi
+                                ;;
+                        esac
+			evalWithDebugMessage "cp $origFileName $instFileName" "File excluded from instrumentation. Copying original file as instrumented file."
+                        copyInsteadOfInstrument=$TRUE
+                      fi
                     fi
                     if [ $reuseFiles == $TRUE  -a -r $instFileName ]; then
           	      if [ $instFileName -nt $origFileName ]; then
