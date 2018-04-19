@@ -1870,14 +1870,18 @@ typedef std::deque<alloc_entry_t> alloc_stack_t;
 
 #ifdef TAU_USE_TLS
 // thread local storage
-__thread alloc_stack_t alloc_stack_tls;
-static inline alloc_stack_t * tau_alloc_stack(void)
-{ return &alloc_stack_tls; }
+static alloc_stack_t * tau_alloc_stack(void)
+{ 
+  static __thread alloc_stack_t alloc_stack_tls;
+  return &alloc_stack_tls; 
+}
 #elif defined(TAU_USE_DTLS)
 // thread local storage
-__declspec(thread) alloc_stack_t alloc_stack_tls;
-static inline alloc_stack_t * tau_alloc_stack(void)
-{ return &alloc_stack_tls; }
+static alloc_stack_t * tau_alloc_stack(void)
+{ 
+  static __declspec(thread) alloc_stack_t alloc_stack_tls; 
+  return &alloc_stack_tls; 
+}
 #else
 // worst case - array of flags, one for each thread.
 alloc_stack_t alloc_stack_arr[TAU_MAX_THREADS];
