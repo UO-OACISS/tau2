@@ -1,0 +1,35 @@
+This example demonstrates the integration of the latest OMPT tr6 specification with TAU.
+It contains a "regular" OpenMP code with worksharing regions to demonstrate some of the events that TAU captures.
+
+Prerequisites:
+Please make sure that TAU is configured as follows: 
+./configure -ompt=download-tr6 -bfd=download -unwind=download ....<other options> 
+
+In order for this to work. This example does NOT contain MPI, so it runs on a single node.
+
+The environment variable TAU_OMPT_SUPPORT_LEVEL determines the events supported in TAU.
+
+Default value for the variable is "TAU_OMPT_SUPPORT_LEVEL=basic" which enables the following events:
+1. Implicit task creation
+2. Parallel regions with source code line number (requires -bfd=download and -unwind=download)
+3. Thread begin/end events
+4. Task creation
+
+To turn on full support, namely:
+1. Work sharing regions
+2. Synchronization regions
+3. Lock creation events (work in progress, TAU does not support this in 2.27.1 release. Additional support coming soon)
+Use TAU_OMPT_SUPPORT_LEVEL=full
+
+Please note that the tr6 support in TAU is a work in progress. We welcome any reports of bugs or feature requests. Kindly drop a mail to
+tau-bugs@cs.uoregon.edu
+
+Note: Worksharing events are not supported for the time being with GNU compilers. Use Intel compilers for 
+best support: ./configure -ompt=download-tr6 -bfd=download -unwind=download -cc=icc -c++=icpc .... <other options>
+Note: The example does not work correctly with GCC and TAU_OMPT_SUPPORT_LEVEL=full. This is a known issue we are looking into. If 
+using GCC to compile the code, kindly use TAU_OMPT_SUPPORT_LEVEL=basic, as GCC does not generate some of the optional events.
+
+To make and run the example:
+1. make
+2. make run (Example needs tau_exec in order to enable OMPT support)
+

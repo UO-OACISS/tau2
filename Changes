@@ -25,6 +25,10 @@ Version 2.27 changes (from 2.26):
 12. Updated support for SGI MPT MPI wrapper. 
 13. Added support for compiler-based instrumentation for LLVM compilers and tested on IBM Power 8 Linux and Cray XC40 with KNL platforms.
 14. Added support for flang compiler-based instrumentation. 
+15. Added support for IBM Power 9 MVAPICH2 compilers. 
+16. Added support for OMPT TR6 (configure -ompt=download-tr6 with export TAU_OMPT_SUPPORT_LEVEL=full). 
+17. Added support for LIKWID 4.3.2.
+18. Added Python args support. 
 
 Version 2.26 changes (from 2.25):
 1. Upgraded OMPT to LLVM-0.2 and introduced TAU_OPENMP_RUNTIME_EVENTS=0. 
