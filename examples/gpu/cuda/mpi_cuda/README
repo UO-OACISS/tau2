@@ -1,0 +1,76 @@
+This file shows how to build the MPI example that uses CUDA. We also show how to run it with TAU:
+
+make; 
+TAU:
+make run
+
+Uninstrumented:
+make uninst
+
+
+%make clean
+rm -rf add add.o libadd.so driver.o  profile* traces* MULT*
+%ls -lt
+total 20
+-rw------- 1 sameer sameer  235 Aug 29 15:20 README
+-rw------- 1 sameer sameer  527 Aug 29 15:18 Makefile
+-rw------- 1 sameer sameer 4856 Aug 29 14:30 add.cu
+-rw------- 1 sameer sameer  178 Aug 29 14:13 driver.c
+%pwd
+/g/g24/sameer/apps/samples/mpi_cuda_ompt
+%make run
+nvcc -g -c add.cu -o add.o -Xcompiler -fPIC 
+nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+nvcc -shared -o libadd.so add.o
+nvcc warning : The 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated, and may be removed in a future release (Use -Wno-deprecated-gpu-targets to suppress warning).
+mpicc -c driver.c -o driver.o 
+mpicc -o add driver.o -L. -ladd -Wl,-rpath,`pwd` 
+mpirun -np 2 tau_exec -T ompt,mpi,pdt,papi,cupti -cupti ./add
+Warning: Process to core binding is enabled and OMP_NUM_THREADS is set to non-zero (2) value
+If your program has OpenMP sections, this can cause over-subscription of cores and consequently poor performance
+To avoid this, please re-run your application after setting MV2_ENABLE_AFFINITY=0
+Use MV2_USE_THREAD_WARNING=0 to suppress this message
+number of host CPUs:    16
+number of CUDA devices: 2
+number of host CPUs:    16
+number of CUDA devices: 2
+   0: Tesla K40m
+   0: Tesla K40m
+   1: Tesla K40m
+---------------------------
+   1: Tesla K40m
+---------------------------
+CPU thread 0 (of 2) uses CUDA device 0
+CPU thread 1 (of 2) uses CUDA device 1
+CPU thread 0 (of 2) uses CUDA device 0
+CPU thread 1 (of 2) uses CUDA device 1
+---------------------------
+Test PASSED
+---------------------------
+Test PASSED
+%make run_uninst
+mpirun -np 2 ./add
+number of host CPUs:    1
+number of CUDA devices: 2
+number of host CPUs:    1
+number of CUDA devices: 2
+   0: Tesla K40m
+   0: Tesla K40m
+   1: Tesla K40m
+---------------------------
+   1: Tesla K40m
+---------------------------
+CPU thread 0 (of 2) uses CUDA device 0
+CPU thread 0 (of 2) uses CUDA device 0
+CPU thread 1 (of 2) uses CUDA device 1
+CPU thread 1 (of 2) uses CUDA device 1
+---------------------------
+Test PASSED
+---------------------------
+Test PASSED
+%
+
+For any questions, please contact Sameer Shende <sameer@cs.uoregon.edu>
+
+
+
