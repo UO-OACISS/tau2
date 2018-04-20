@@ -30,7 +30,7 @@ pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 64
+#define MATRIX_SIZE 512
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
