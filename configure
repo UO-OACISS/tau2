@@ -9835,7 +9835,7 @@ fi
 ######################################################################
 # Install likwid if requested
 ######################################################################
-liblikwid=likwid
+liblikwid=likwid-update
 liblikwidtgz=$liblikwid.tgz
 liblikwidurl=http://www.cs.uoregon.edu/research/tau/$liblikwidtgz
 
@@ -9878,7 +9878,7 @@ if [ "x$likwid" = "xyes" ]; then
             tar -zxf  $liblikwidtgz
             echo "removing $liblikwidtgz..."
             /bin/rm -f $liblikwidtgz 
-            cd likwid*; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272; make PREFIX=$liblikwiddir BUILDDAEMON=false BUILDFREQ=false USE_PERF_EVENT=true MAX_NUM_THREADS=272 install  ; cd ..
+            cd likwid*; make PREFIX=$liblikwiddir BUILDDAEMON=false ACCESSMODE=perf_event BUILDFREQ=false MAX_NUM_THREADS=288; make PREFIX=$liblikwiddir BUILDDAEMON=false ACCESSMODE=perf_event BUILDFREQ=false MAX_NUM_THREADS=288 install  ; cd ..
 
         fi
         
