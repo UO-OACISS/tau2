@@ -190,6 +190,7 @@ installsos()
 
  cd $dst
  #git checkout master
+ #git checkout merge_of_doom
  mkdir build-linux
  cd build-linux
 
@@ -8156,7 +8157,8 @@ fi
 # Install SOS if requested
 ######################################################################
 #sostgz=sos.tgz
-sostgz=sos_021318.tgz
+#sostgz=sos_021318.tgz
+sostgz=sos_041918.tgz
 sosdepstgz=sosdeps.tgz
 #sosdepsurl=http://tau.uoregon.edu/$sosdepstgz
 sosdepsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$sosdepstgz
