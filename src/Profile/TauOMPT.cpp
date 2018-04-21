@@ -229,16 +229,16 @@ on_ompt_callback_master(
          *before TAU has a chance to resolve addresses*/
         if (TauEnv_get_ompt_resolve_address_eagerly()) {
           Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
-          sprintf(timerName, "OpenMP_Parallel_Region %s", resolved_address);
+          sprintf(timerName, "OpenMP_Master %s", resolved_address);
         } else {
-          sprintf(timerName, "OpenMP_Parallel_Region ADDR <%lx>", addr);
+          sprintf(timerName, "OpenMP_Master ADDR <%lx>", addr);
         }
         TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
-        parallel_data->ptr = (void*)handle;
+        task_data->ptr = (void*)handle;
         TAU_PROFILER_START(handle); 
         break;
       case ompt_scope_end:
-        TAU_PROFILER_STOP(parallel_data->ptr);
+        TAU_PROFILER_STOP(task_data->ptr);
         break;
     }
   }
