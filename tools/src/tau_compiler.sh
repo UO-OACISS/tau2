@@ -449,14 +449,17 @@ for arg in "$@" ; do
         			#if by mistake NULL is passed, or even simply
         			#few blank spaces are parsed (I have assumed 3), then
         			#it would be equivalent to not being defined
-        			#at all. So the default f95parser would be invoked.
+                                #at all. So the default f95parser would be invoked.
         		if [ ${#pdtParserF} -gt 4 ]; then
-        		    if [ ! -x $pdtParserF -a "x$optPdtDir" != "x" ] ; then 
+                            if [ ! -x $pdtParserF -a "x$optPdtDir" != "x" ] ; then
         			if [ -x $optPdtDir/$pdtParserF ] ; then
         			  pdtParserF="$optPdtDir/$pdtParserF"
         			fi
         		    fi
         		    fortranParserDefined=$TRUE
+			    if [[ "${pdtParserF}" =~ 'gfparse$' ]] || [[ "${pdtParserF}" =~ 'gfparse48$' ]] ; then
+				pdtParserF="${pdtParserF} -no-f90-parser-fallback"
+			    fi
         		fi
         		;;
         	    -optPdtCParser*)
@@ -484,6 +487,7 @@ for arg in "$@" ; do
         		fortranParserDefined=$TRUE
         		pdtParserF="$optPdtDir""/gfparse"
         		gfparseUsed=$TRUE
+			pdtParserF="${pdtParserF} -no-f90-parser-fallback"
         		;;
 
         	    -optPdtCleanscapeParser*)
