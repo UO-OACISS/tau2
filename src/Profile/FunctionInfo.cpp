@@ -211,6 +211,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   TheFunctionDB().push_back(this);
   FunctionId = RtsLayer::GenerateUniqueId();
 
+  StartAddr = 0;
+  StopAddr = 0;
+
   // Initialize EBS structures. These will be created as and when necessary.
   //  pcHistogram = NULL;
   // *CWL* - this is an attempt to minimize the scenario where a sample

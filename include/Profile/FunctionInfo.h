@@ -156,6 +156,8 @@ public:
   char *AllGroups;
   char const * FullName;
   x_uint64 FunctionId;
+  unsigned long StartAddr;
+  unsigned long StopAddr;
 
   /* For EBS Sampling Profiles */
   // *CWL* - these need to be per-thread structures, just like the

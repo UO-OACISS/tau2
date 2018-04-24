@@ -44,9 +44,11 @@ void *pvalloc(size_t size) {
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 #include <map>
+#include <deque>
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #include <map.h>
+#include <deque.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
 #ifdef TAU_BGP
@@ -1828,6 +1830,99 @@ extern "C" int Tau_trigger_memory_rss_hwm(void) {
   return 1; // SUCCESS
 }
 
+//////////////////////////////////////////////////////////////////////
+// Handle the tracking of a class of memory event
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_mem_event_always(const char * name, const char * prefix, size_t size) {
+  const size_t event_len = strlen(name) + strlen(prefix) + 2;
+  char event_name[event_len];
+  sprintf(event_name, "%s %s", prefix, name);
+  if(TauEnv_get_mem_callpath()) {
+    TAU_TRIGGER_CONTEXT_EVENT(event_name, (double)size);
+  } else {
+    TAU_TRIGGER_EVENT(event_name, (double)size);
+  }
+}
+
+extern "C" void Tau_track_mem_event(const char * name, const char * prefix, size_t size) {
+  if(!TauEnv_get_mem_class_present(name)) {
+    return;
+  }
+  Tau_track_mem_event_always(name, prefix, size);
+}
+
+//////////////////////////////////////////////////////////////////////
+// One-shot tracking of class allocation
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_class_allocation(const char * name, size_t size) {
+  Tau_track_mem_event(name, "alloc", size);
+}
+
+//////////////////////////////////////////////////////////////////////
+// One-shot tracking of class deallocation
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_track_class_deallocation(const char * name, size_t size) {
+  Tau_track_mem_event(name, "free", size);
+}
+
+typedef std::pair<std::string, size_t> alloc_entry_t;
+typedef std::deque<alloc_entry_t> alloc_stack_t;
+
+#ifdef TAU_USE_TLS
+// thread local storage
+static alloc_stack_t * tau_alloc_stack(void)
+{ 
+  static __thread alloc_stack_t alloc_stack_tls;
+  return &alloc_stack_tls; 
+}
+#elif defined(TAU_USE_DTLS)
+// thread local storage
+static alloc_stack_t * tau_alloc_stack(void)
+{ 
+  static __declspec(thread) alloc_stack_t alloc_stack_tls; 
+  return &alloc_stack_tls; 
+}
+#else
+// worst case - array of flags, one for each thread.
+alloc_stack_t alloc_stack_arr[TAU_MAX_THREADS];
+static inline alloc_stack_t  * tau_alloc_stack(void)
+{ return &alloc_stack_arr[Tau_get_local_tid()]; }
+#endif
+
+
+//////////////////////////////////////////////////////////////////////
+// Start an object allocation region
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_start_class_allocation(const char * name, size_t size) {
+  alloc_stack_t * alloc_stack = tau_alloc_stack();
+  for(alloc_stack_t::iterator it = alloc_stack->begin(); it != alloc_stack->end(); it++) {
+    it->second = it->second + size;
+  }
+  alloc_stack->push_back(std::make_pair(std::string(name), size));
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// Stop an object allocation region
+//////////////////////////////////////////////////////////////////////
+extern "C" void Tau_stop_class_allocation(const char * name) {
+  alloc_stack_t * alloc_stack = tau_alloc_stack();
+  const alloc_entry_t p = alloc_stack->back();
+  std::string name_str(name);
+  if(name_str != p.first) {
+    std::cerr << "ERROR: Overlapping allocations. Found " << p.first << " but " << name << " expected." << std::endl;
+    abort();
+  }
+  Tau_track_mem_event_always(name, "alloc", p.second);
+  alloc_stack->pop_back();
+  if(alloc_stack->size() > 0) {
+    std::string path = name_str;
+    for(alloc_stack_t::iterator it = alloc_stack->begin(); it != alloc_stack->end(); it++) {
+      path += " <= " + it->first;
+    }
+    Tau_track_mem_event_always(path.c_str(), "alloc", p.second);
+  }
+}
 
 
 #if 0
