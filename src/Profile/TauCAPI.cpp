@@ -82,6 +82,10 @@ extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
+#ifdef TAU_UNWIND
+bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
+#endif
+
 //Static variables with file scope
 static TauUserEvent *** pvarEvents = NULL;
 
@@ -359,6 +363,18 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+#ifdef TAU_UNWIND
+  if(TauEnv_get_region_addresses()) {
+    unsigned long unwound_addresses[TAU_SAMP_NUM_ADDRESSES];
+    if(fi->StartAddr == 0) {
+      int unwind_ret = Tau_unwind_unwindTauContext(tid, unwound_addresses);
+      if(unwind_ret && unwound_addresses[0] >= 2) {
+          fi->StartAddr = unwound_addresses[2];
+      }
+    }
+  }
+#endif
+
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
@@ -600,6 +616,18 @@ extern "C" void Tau_stop_timer(void *function_info, int tid ) {
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
+
+#ifdef TAU_UNWIND
+  if(TauEnv_get_region_addresses()) {
+    unsigned long unwound_addresses[TAU_SAMP_NUM_ADDRESSES];
+    if(fi->StopAddr == 0) {
+      int unwind_ret = Tau_unwind_unwindTauContext(tid, unwound_addresses);
+      if(unwind_ret && unwound_addresses[0] >= 2) {
+          fi->StopAddr = unwound_addresses[2];
+      }
+    }
+  }
+#endif
 
   double currentHeap = 0.0;
   bool enableHeapTracking;
@@ -2930,7 +2958,7 @@ extern "C" void Tau_enable_tracking_mpi_t(void) {
 extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
-                    
+
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $

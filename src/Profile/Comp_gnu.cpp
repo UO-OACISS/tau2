@@ -415,6 +415,11 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       //application' timer. -SB
       Tau_create_top_level_timer_if_necessary();
       Tau_start_timer(node->fi, 0, RtsLayer::myThread());
+#ifdef TAU_UNWIND
+        if(TauEnv_get_region_addresses()) {
+          node->fi->StartAddr = addr;
+        }
+#endif
     }
 
     if (!(node->fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
@@ -459,6 +464,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   if (Tau_init_initializingTAU()) return;
 
   HashNode * hn;
+  unsigned long addr;
 
   // Quickly get the hash node and discover if this is an excluded function.
   // Sampling and the memory wrapper require us to protect this region,
@@ -473,7 +479,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 #ifdef __ia64__
     funcptr = *( void ** )func;
 #endif
-    unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
+    addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
     // Get the hash node
     hn = TheHashTable()[addr];
@@ -485,8 +491,14 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Don't profile TAU internals. This also prevents reentrancy.
   if (Tau_global_get_insideTAU() > 0) return;
 
+
   // Stop the timer.  This routine is protected so we don't need another guard.
   Tau_stop_timer(hn->fi, RtsLayer::myThread());
+#ifdef TAU_UNWIND
+  if(TauEnv_get_region_addresses()) {
+    hn->fi->StopAddr = addr;
+  }
+#endif
 }   
 
 
