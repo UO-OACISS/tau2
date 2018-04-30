@@ -68,6 +68,9 @@ usage()
   echo "        -loadlib=<file.so>   : Specify additional load library"
   echo "        -XrunTAUsh-<options> : Specify TAU library directly"
   echo "        -gdb          Run program in the gdb debugger"
+if [ $python_wrapper = "true" ] ; then
+  echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
+fi
   echo ""
   echo "Notes:"
   echo "    Defaults if unspecified: -T $default_tags"
@@ -298,6 +301,7 @@ use_ptts=false
 use_pin=false
 ptts_post=false
 ptts_num=""
+py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 
@@ -468,6 +472,16 @@ for arg in "$@" ; do
       -spark-python)
         spark_wrapper=true
         shift
+        ;;
+      -tau-python-args=*)
+        if [ $python_wrapper = "true" ] ; then
+          myarg=`echo $arg | sed 's/-tau-python-args=//'`
+          py_interp_args="$myarg"
+          shift
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
         ;;
       -c)
         if [ $python_wrapper = "true" ] ; then
@@ -949,9 +963,9 @@ else
 
   if $spark_wrapper ; then
     $dryrun export PYTHONPATH=$PYTHONPATH
-    $dryrun python -m tau_pyspark_wrapper "$@"
+    $dryrun python $py_interp_args -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
-    $dryrun python -m tau_python_wrapper "$@"
+    $dryrun python $py_interp_args -m tau_python_wrapper "$@"
     retval=$?
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile

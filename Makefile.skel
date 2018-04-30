@@ -88,6 +88,7 @@ TAUPRELOAD=src/wrappers/taupreload
 #CUDA#TAUCUDA=src/wrappers/cuda #ENDIF#
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 #SHMEM#TAU_CUPTI_AVAIL= #ENDIF#
+#IBM64LINUX_XLC#TAU_CUPTI_AVAIL= #ENDIF#
 #TAUENV#TAU_ENV=utils/tau_env #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
