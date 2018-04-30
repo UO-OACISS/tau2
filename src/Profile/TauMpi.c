@@ -2704,11 +2704,12 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Recv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
-  if (TauEnv_get_track_message()) {
+  // plugins need the status, too
+  //if (TauEnv_get_track_message()) {
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
     }
-  }
+  //}
 
   TAU_TRACK_COMM(comm);
 
@@ -2844,11 +2845,13 @@ MPI_Status * status;
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount);
     }
+  }
     
+    // plugins need the status, too
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
     }
-  }
+
   TAU_PLUGIN_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount, 0);
 
   TAU_TRACK_COMM(comm);
@@ -2896,11 +2899,12 @@ MPI_Status * status;
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count);
     }
+  }
     
+    // plugins need the status, too
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
     }
-  }
   TAU_PLUGIN_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count, 0);
   
   TAU_TRACK_COMM(comm);
