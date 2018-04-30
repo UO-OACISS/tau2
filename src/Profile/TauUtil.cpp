@@ -147,11 +147,11 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
       RtsLayer::UnLockDB(); 
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
-        sprintf(resolved_address, "Eager %s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
+        sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
       } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "Eager %s [{%s}]", node->info.funcname, node->info.filename);
+        sprintf(resolved_address, "%s [{%s}]", node->info.funcname, node->info.filename);
       } else if(node && node->info.funcname) {
-        sprintf(resolved_address, "Eager %s", node->info.funcname);
+        sprintf(resolved_address, "%s", node->info.funcname);
       } else {
         sprintf(resolved_address, "__UNKNOWN__");
       }
