@@ -80,12 +80,13 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
 }
 #endif /* TAU_BFD */
 
-/* Given the profile file handle and function info object, resolve the address 
+/* Given the function info object, resolve and return the address
  * that has been embedded in the function name using a pre-fixed token sequence.
- * Only invoked from Profiler.cpp inside the writeFunctionData routine 
+ * Currently, this is only invoked from TracerOTF2.cpp and Profiler.cpp while
+ * writing out the trace and profile files respectively.
  * NOTE: We do NOT need to lock the HashTable data structure as the thread has already 
- * acquired the lock from the writeFunctionData routine */
-extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
+ * acquired the lock from outside this routine */
+extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address) {
  
       HashNode * node;
       unsigned long addr = 0;
@@ -108,13 +109,13 @@ extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
       #endif
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
-        fprintf(fp, "\\%s %s [{%s} {%d, 0}]", region_type, node->info.funcname, node->info.filename, node->info.lineno);
+        sprintf(resolved_address, "%s %s [{%s} {%d, 0}]", region_type, node->info.funcname, node->info.filename, node->info.lineno);
       } else if(node && node->info.filename && node->info.funcname) {
-        fprintf(fp, "\\%s %s [{%s}]", region_type, node->info.funcname, node->info.filename);
+        sprintf(resolved_address, "%s %s [{%s}]", region_type, node->info.funcname, node->info.filename);
       } else if(node && node->info.funcname) {
-        fprintf(fp, "\\%s %s", region_type, node->info.funcname);
+        sprintf(resolved_address, "%s %s", region_type, node->info.funcname);
       } else {
-        fprintf(fp, "\\OpenMP %s __UNKNOWN__", region_type);
+        sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
       }
 }
 
@@ -122,7 +123,7 @@ extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi) {
  * NOTE: We need to lock the HashTable data structure, as this function is invoked from the OMPT callbacks themselves, 
  * when the user wants to resolve the function name eagerly. 
  * For this feature to be active, TAU_OMPT_RESOLVE_ADDRESS_EAGERLY must be set.*/
-extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
+extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
  
       HashNode * node;
            
@@ -130,9 +131,9 @@ extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * re
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
       #endif
      
+      RtsLayer::LockDB();  
       node = TheHashTable()[addr];
       if (!node) {
-        RtsLayer::LockDB();  
         node = new HashNode;
         node->fi = NULL;
         node->excluded = false;
@@ -142,15 +143,15 @@ extern "C" char* Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * re
         #ifdef TAU_BFD
         Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
         #endif
-        RtsLayer::UnLockDB(); 
       }
+      RtsLayer::UnLockDB(); 
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
-        sprintf(resolved_address, "%s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
+        sprintf(resolved_address, "Eager %s [{%s} {%d, 0}]", node->info.funcname, node->info.filename, node->info.lineno);
       } else if(node && node->info.filename && node->info.funcname) {
-        sprintf(resolved_address, "%s [{%s}]", node->info.funcname, node->info.filename);
+        sprintf(resolved_address, "Eager %s [{%s}]", node->info.funcname, node->info.filename);
       } else if(node && node->info.funcname) {
-        sprintf(resolved_address, "%s", node->info.funcname);
+        sprintf(resolved_address, "Eager %s", node->info.funcname);
       } else {
         sprintf(resolved_address, "__UNKNOWN__");
       }
