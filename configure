@@ -1881,6 +1881,13 @@ for arg in "$@"; do
 #	    shift
 #	    ;;
 
+	-dyninst=download)
+	    dyninst=yes
+        download_dyninst=yes
+        echo "Downloading Dyninst..."
+	    shift
+	    ;;
+
 	-dyninst=*)
 	    dyninst=yes
 	    dyninstdir=`echo $arg | sed -e 's/-dyninst=//'`
@@ -6673,6 +6680,143 @@ if [ "x$download_unwind" = xyes ] ; then
   cd $prebfddir
 fi #unwind=download
 
+######################################################################
+# Install Dyninst and its dependencies, if requested
+######################################################################
+libboost=boost_1_67_0
+libboosttgz=$libboost.tar.gz
+libboosturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libboosttgz
+
+libdyninst=dyninst-9.3.2-working
+libdyninsttgz=$libdyninst.tar.gz
+libdyninsturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdyninsttgz
+
+if [ "x$dyninstdir" = "x" ]; then
+  libdyninstdir=${targetdir}/${architecture}
+else
+  libdyninstdir=$dyninstdir
+fi
+
+libdyninst_name=dyninst
+
+## Check for boost (for making tau_run)
+#TODO: This should probably be moved to wherever the tau_run make args are set
+if [ "x$boostdir" != "x" -a -d "$boostdir" ] ; then
+  dyninstboostdir=${boostdir}
+else
+  dyninstboostdir=${libdyninstdir}/${libboost}
+fi
+if [ "x$dyninstboostdir" != "x" -a -d "$dyninstboostdir" ] ; then
+  fixmakeargs="$fixmakeargs boostinc=-I${dyninstboostdir}/include"
+fi
+
+if [ "x$dyninstdir" != "x" -a -d "$dyninstdir" ] ; then
+  if [ -r $dyninstdir/$libdyninsttgz ]; then
+    echo "NOTE: Copying $dyninstdir/$libdyninsttgz "
+    cp $dyninstdir/$libunwindtgz .
+    download_dyninst=yes
+  fi
+fi
+
+if [ "x$download_dyninst" = xyes ] ; then
+
+  dyninstdir=${libdyninstdir}/${libdyninst}
+  prebfddir=`pwd`
+
+  #check Cmake exists
+  cmake_cmd=`which cmake`
+  if [ "x$cmake_cmd" = "x" ] ; then
+      echo 'ERROR: cmake version 2.8.11 or higher required to build Dyninst.'
+      exit 1;
+  fi
+
+  ## Check for boost
+  if [ "x$boostdir" != "x" -a -d "$boostdir" ] ; then
+    dyninstboostdir=${boostdir}
+  else
+    dyninstboostdir=${libdyninstdir}/${libboost}
+  fi
+  if [ "x$dyninstboostdir" != "x" -a -d "$dyninstboostdir" ] ; then
+    echo "Dyninst dependency : boost : found : $dyninstboostdir"
+    fixmakeargs="$fixmakeargs boostinc=-I${dyninstboostdir}/include"
+  else  
+    echo "Dyninst dependency : boost : not found, downloading..."
+    download_boost=yes
+  fi
+  ## Download and install boost if necessary
+  if [ "x$download_boost" = xyes ] ; then
+    # get the tar file
+    if [ ! -f $libboosttgz ] ; then
+      download "$libboosturl" "$libboosttgz"
+    fi
+    # check the tar file
+    if [ ! -f $libboosttgz ] ; then
+      echo "$libboosttgz did not download.  Please download it manually from: "
+      echo "$libboosturl"
+      echo "Please enter the directory containing the tarball: ${nnl}"
+      read RESPONSE
+      cp $RESPONSE/$libboosttgz .
+    else
+      echo "expanding $libboosttgz..."
+      rm -rf $dyninstboostdir
+      mkdir $dyninstboostdir
+      tar -xzf $libboosttgz -C $dyninstboostdir --strip-components=1 
+      echo "removing $libboosttgz..."
+      rm $libboosttgz
+      cd $dyninstboostdir
+      ./bootstrap.sh --prefix=${dyninstboostdir} # dyninst wants boost to be built in its src dir
+      ./b2 install -j4
+      fixmakeargs="$fixmakeargs boostinc=-I${dyninstboostdir}/include"
+    fi
+  fi #end dowload_boost
+  cd $prebfddir
+
+  if [ -r "$dyninstdir/lib/libdyninstAPI.so" -o \
+       -r "$dyninstdir/lib/libdyninstAPI_RT.so" -o \
+       -r "$dyninstdir/lib/libdynElf.so" ] ; then
+    echo "Found: dyninst"
+    echo "dyninst download already found, skipping"
+  else
+    echo "Not found in ${dyninstdir}: ${libdyninst_name}"
+    # get the tar file
+    if [ ! -f $libdyninsttgz ] ; then
+      download "$libdyninsturl" "$libdyninsttgz"
+    fi
+
+    # check the tar file
+    if [ ! -f $libdyninsttgz ] ; then
+      echo "$libdyninsttgz did not download.  Please download it manually from: "
+      echo "$libdyninsturl"
+      echo "Please enter the directory containing the tarball: ${nnl}"
+      read RESPONSE
+      cp $RESPONSE/$libdyninsttgz .
+    else
+      echo "expanding $libdyninsttgz..."
+      rm -rf $libdyninst
+      mkdir $libdyninst
+      tar -xzf $libdyninsttgz -C $libdyninst --strip-components=1
+      echo "removing $libdyninsttgz..."
+      rm $libdyninsttgz
+      rm -rf $dyninstdir # remove and make the build dir
+      mkdir $dyninstdir
+      cd $dyninstdir     # go to the build dir
+      cmake ${prebfddir}/${libdyninst} -DBoost_INCLUDE_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir}
+      make -j8
+      make install
+      if [ -f ${dyninstdir}/elfutils/lib/libdw.so ]; then
+          cp ${dyninstdir}/elfutils/lib/libdw* ${dyninstdir}/lib
+          mv ${dyninstdir}/lib/libdw.so ${dyninstdir}/lib/libdwarf.so
+      fi
+      if [ -f ${dyninstdir}/elfutils/lib/libelf.so ]; then
+          cp ${dyninstdir}/elfutils/lib/libelf* ${dyninstdir}/lib
+      fi
+      if [ -f ${dyninstdir}/libiberty/libiberty.a ]; then
+          cp ${dyninstdir}/libiberty/libiberty.a ${dyninstdir}/lib
+      fi
+    fi
+  fi
+  cd $prebfddir
+fi #dyninst=download
 
 ######################################################################
 # Install Scalable Observation System (SOS) if requested
