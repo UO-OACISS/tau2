@@ -417,7 +417,7 @@ CREATE INDEX primary_metadata_index on primary_metadata (trial, name(256));
    contain unique data for each thread, and could be an array. */
 
 CREATE TABLE secondary_metadata (
- id       VARCHAR(20) NOT NULL PRIMARY KEY,
+ id       VARCHAR(128) NOT NULL PRIMARY KEY,
  /* trial this value belongs to */
  trial    BIGINT UNSIGNED NOT NULL,
  /* this metadata value could be associated with a thread */
@@ -427,7 +427,7 @@ CREATE TABLE secondary_metadata (
  /* which call to the context timer was this? */
  time_range    BIGINT UNSIGNED,
  /* this metadata value could be a nested structure */
- parent   VARCHAR(20),
+ parent   VARCHAR(128),
  /* the name of the metadata field */
  name     TEXT NOT NULL,
  /* the value of the metadata field */
