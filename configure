@@ -8756,6 +8756,10 @@ dynlibiberty=dynlibiberty
 dynlibibertytgz=${dynlibiberty}.tar.gz
 dynlibibertyurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynlibibertytgz
 
+dynelfutils=elfutils-0.168
+dynelfutilsbz=${dynelfutils}.tar.bz2
+dynelfutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynelfutilsbz
+
 if [ "x$dyninstdir" = "x" ]; then
   libdyninstdir=${targetdir}/${architecture}
 else
@@ -8765,7 +8769,6 @@ fi
 libdyninst_name=dyninst
 
 ## Check for boost (for making tau_run)
-#TODO: This should probably be moved to wherever the tau_run make args are set
 if [ "x$boostdir" != "x" -a -d "$boostdir" ] ; then
   dyninstboostdir=${boostdir}
 else
@@ -8876,8 +8879,18 @@ if [ "x$download_dyninst" = xyes ] ; then
       cp libiberty.a ${dyninstdir}/libiberty
       cd ../..
       rm -rf $dynlibiberty $dynlibibertytgz
+      ## Build shared elfutils
+      mkdir ${dyninstdir}/elfutils
+      download "$dynelfutilsurl" "$dynelfutilsbz"
+      tar -xf $dynelfutilsbz -C ${dyninstdir}/elfutils --strip-components=1
+      cd ${dyninstdir}/elfutils
+      ./configure --enable-shared --prefix=$PWD
+      make
+      make install
+      cd ..
+      rm -rf $dynelfutilsbz
       ## Now we can make Dyninst
-      cmake ${prebfddir}/${libdyninst} -DBoost_INCLUDE_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/libiberty.a
+      cmake ${prebfddir}/${libdyninst} -DBoost_INCLUDE_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/libiberty.a -DLIBDWARF_INCLUDE_DIR=${dyninstdir}/elfutils/include -DLIBDWARF_LIBRARIES=${dyninstdir}/elfutils/lib/libdw.so -DLIBELF_INCLUDE_DIR=${dyninstdir}/elfutils/include -DLIBELF_LIBRARIES=${dyninstdir}/elfutils/lib/libelf.so
       make -j8
       make install
       if [ -f ${dyninstdir}/elfutils/lib/libdw.so ]; then
