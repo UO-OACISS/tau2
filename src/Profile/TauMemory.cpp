@@ -1867,14 +1867,14 @@ extern "C" void Tau_track_class_deallocation(const char * name, size_t size) {
 typedef std::pair<std::string, size_t> alloc_entry_t;
 typedef std::deque<alloc_entry_t> alloc_stack_t;
 
-#ifdef TAU_USE_TLS
+#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
 { 
   static __thread alloc_stack_t alloc_stack_tls;
   return &alloc_stack_tls; 
 }
-#elif defined(TAU_USE_DTLS)
+#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
 { 
