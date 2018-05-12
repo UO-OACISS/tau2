@@ -36,7 +36,6 @@
 
 #ifdef TAU_BFD
 #include <Profile/TauBfd.h>
-#endif
 
 /*Data structures to return function context info*/
 struct HashNode
@@ -65,7 +64,6 @@ static HashTable & TheHashTable()
   return htab;
 }
 
-#ifdef TAU_BFD
 static tau_bfd_handle_t & TheBfdUnitHandle()
 {
   static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
@@ -88,13 +86,12 @@ static tau_bfd_handle_t & TheBfdUnitHandle()
  * acquired the lock from outside this routine */
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address) {
  
-      HashNode * node;
       unsigned long addr = 0;
       char region_type[100];
       sscanf(fi.GetName(), "%s ADDR <%lx>", region_type, &addr);
       #ifdef TAU_BFD
+      HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-      #endif
      
       node = TheHashTable()[addr];
       if (!node) {
@@ -104,9 +101,8 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
         
         TheHashTable()[addr] = node;
       }
-      #ifdef TAU_BFD
+      
       Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
-      #endif
 
       if(node && node->info.filename && node->info.funcname && node->info.lineno) {
         sprintf(resolved_address, "%s %s [{%s} {%d, 0}]", region_type, node->info.funcname, node->info.filename, node->info.lineno);
@@ -117,6 +113,9 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
       } else {
         sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
       }
+      #else 
+        sprintf(resolved_address, "OpenMP %s __UNKNOWN__", region_type);
+      #endif /*TAU_BFD*/
 }
 
 /* Given the unsigned long address, and a pointer to the string, fill the string with the BFD resolved address.
@@ -125,11 +124,9 @@ extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_addr
  * For this feature to be active, TAU_OMPT_RESOLVE_ADDRESS_EAGERLY must be set.*/
 extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * resolved_address) {
  
-      HashNode * node;
-           
       #ifdef TAU_BFD
+      HashNode * node;
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-      #endif
      
       RtsLayer::LockDB();  
       node = TheHashTable()[addr];
@@ -140,9 +137,7 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
         
         TheHashTable()[addr] = node;
 
-        #ifdef TAU_BFD
         Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, node->info);
-        #endif
       }
       RtsLayer::UnLockDB(); 
 
@@ -155,6 +150,9 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
       } else {
         sprintf(resolved_address, "__UNKNOWN__");
       }
+      #else
+        sprintf(resolved_address, "__UNKNOWN__");
+      #endif /*TAU_BFD*/
 }
 
 /*********************************************************************
