@@ -120,6 +120,7 @@ using namespace tau;
 
 extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
+extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 
 #if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
 extern "C" int Tau_get_thread_omp_state(int tid);
@@ -966,12 +967,6 @@ char *Tau_sampling_internal_stripCallPath(const char *callpath)
   return strdup(pointer);
 }
 
-
-
-
-
-
-
 void Tau_sampling_finalizeProfile(int tid)
 {
   TAU_VERBOSE("TAU: Finalizing sampling profiles on thread %d\n", tid);
@@ -996,12 +991,20 @@ void Tau_sampling_finalizeProfile(int tid)
   //       we iterate TheFunctionDB()! Hence the candidates!
   for (vector<FunctionInfo*>::iterator fI_iter = TheFunctionDB().begin(); fI_iter != TheFunctionDB().end(); fI_iter++) {
     FunctionInfo * parentTauContext = *fI_iter;
+    char resolved_address[1024] = "";  
+    /* If OMPT-TR6 is enabled, we need to resolve addresses that are embedded within the timer name, if they haven't already been
+     * resolved. */
+    if(strcmp(parentTauContext->GetPrimaryGroup(), "TAU_OPENMP") == 0 && !TauEnv_get_ompt_resolve_address_eagerly()) {
+          Tau_ompt_resolve_callsite(*parentTauContext, resolved_address);
+          string temp_ss(resolved_address);
+          parentTauContext->SetName(temp_ss);
+    }
+
     if ((parentTauContext->pathHistogram[tid] == NULL) || (parentTauContext->pathHistogram[tid]->size() == 0)) {
       // No samples encountered in this TAU context. Continue to next TAU context.
 //      DEBUGMSG("Tau Context %s has no samples", parentTauContext->GetName());
       continue;
     }
-
     parentTauContext->pathHistogram[tid]->resetIter();
     pair<unsigned long *, TauPathAccumulator> * item = parentTauContext->pathHistogram[tid]->nextIter();
     while (item) {
