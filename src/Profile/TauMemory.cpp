@@ -1886,9 +1886,14 @@ static alloc_stack_t * tau_alloc_stack(void)
 }
 #else
 // worst case - array of flags, one for each thread.
-alloc_stack_t alloc_stack_arr[TAU_MAX_THREADS];
 static inline alloc_stack_t  * tau_alloc_stack(void)
-{ return &alloc_stack_arr[Tau_get_local_tid()]; }
+{ 
+  static alloc_stack_t * alloc_stack_arr[TAU_MAX_THREADS] = {NULL};
+  if(alloc_stack_arr[Tau_get_local_tid()] == NULL) {
+    alloc_stack_arr[Tau_get_local_tid()] = new alloc_stack_t();
+  }
+  return alloc_stack_arr[Tau_get_local_tid()];
+}
 #endif
 
 
