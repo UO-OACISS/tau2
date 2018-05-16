@@ -2934,6 +2934,17 @@ extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int cur
 #endif /* TAU_BEACON */
 }
 
+/* Consider a situation where a user configures TAU with ONLY MPI/MPIT
+ * options, but is linking in TAU statically to an application 
+ * that does NOT use MPI. Meaning only libtau-* gets linked in.
+ * Such a situation would lead to a linking failure of undefined symbol: "Tau_track_mpi_t_here"
+ * inside TauHandler.o that does get built into libtau-*
+ * This is ugly code, but atleast it would help some users who are new to configuring and using TAU
+ * */
+extern "C" int __attribute__ ((weak)) Tau_track_mpi_t_here(void) {
+ return 0;
+}
+
 #ifdef TAU_SCOREP
 /* If SCOREP is defined, there is TauMpi wrapper that typically contains this routine */
 extern "C" int Tau_track_mpi_t_here(void) { 

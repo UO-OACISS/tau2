@@ -715,10 +715,45 @@ inline static void register_callback(ompt_callbacks_t name, ompt_callback_t cb) 
 
 /* HACK ALERT: This function is only there to ensure that OMPT environment variables are initialized before the ompt_start_tool is invoked 
  * We need this because we would need to register callbacks depending on the level of support that the user desires
- * Not sure how we else we can ensure initialization of OMPT environment variables. */
+ * Not sure how we else we can ensure initialization of OMPT environment variables. 
+ * TODO: Remove any function calls forcing initialization of OMPT variables by figuring out the root cause of the problem*/
+/*********************************************************************
+ * Parse a boolean value
+ ********************************************************************/
+static int parse_bool(const char *str, int default_value = 0) {
+
+  if (str == NULL) {
+    return default_value;
+  }
+  static char strbuf[128];
+  char *ptr = strbuf;
+  strncpy(strbuf, str, 128);
+  while (*ptr) {
+    *ptr = tolower(*ptr);
+    ptr++;
+  }
+  if (strcmp(strbuf, "yes") == 0  ||
+      strcmp(strbuf, "true") == 0 ||
+      strcmp(strbuf, "on") == 0 ||
+      strcmp(strbuf, "1") == 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 void Tau_force_ompt_env_initialization() {
 
-//#ifdef TAU_OMPT
+    const char* tmp = getenv("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY");
+
+    if (parse_bool(tmp, 0)) {
+      TauEnv_set_ompt_resolve_address_eagerly(1);
+      TAU_VERBOSE("TAU: OMPT resolving addresses eagerly Enabled\n");
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "on");
+      TAU_VERBOSE("TAU: Resolving OMPT addresses eagerly\n");
+    } else {
+      TAU_METADATA("TAU_OMPT_RESOLVE_ADDRESS_EAGERLY", "off");
+    } 
     
     TauEnv_set_ompt_support_level(0); // Basic OMPT support is the default
     const char *omptSupportLevel = getenv("TAU_OMPT_SUPPORT_LEVEL");

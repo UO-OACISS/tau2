@@ -148,6 +148,7 @@ static metrics_seen_t metrics_seen;
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
 extern "C" void finalizeCallSites_if_necessary();
+extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 
 // Helper functions
 
@@ -965,6 +966,7 @@ static void TauTraceOTF2ExchangeMetrics() {
         global_metrics_size = global_metrics_str.length();
         global_metrics = (char *) malloc(global_metrics_size * sizeof(char));
         global_metrics = (char *) memcpy(global_metrics, global_metrics_str.c_str(), global_metrics_size);    
+
     }
 
     if(nodes > 1) {
@@ -1005,10 +1007,20 @@ static void TauTraceOTF2ExchangeRegions() {
     stringstream names_ss;
     stringstream groups_ss;
     for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+        char resolved_address[1024] = "";
         FunctionInfo *fi = *it;
         function_ids.push_back(fi->GetFunctionId());
-        names_ss << fi->GetName();
+        
+        if(strcmp(fi->GetPrimaryGroup(), "TAU_OPENMP") == 0 && !TauEnv_get_ompt_resolve_address_eagerly()) {
+          Tau_ompt_resolve_callsite(*fi, resolved_address);
+          string temp_ss(resolved_address);
+          fi->SetName(temp_ss);
+          names_ss << fi->GetName();
+        } else {
+         names_ss << fi->GetName();
+        }
         names_ss.put('\0');
+
         groups_ss << fi->GetPrimaryGroup();
         groups_ss.put('\0');
     }
