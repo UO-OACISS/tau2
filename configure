@@ -6714,8 +6714,16 @@ fi
 
   libomp_oss_name=iomp5
 if [ "${omptlib}" = "" ] ; then
-    libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
-    libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable
+    # TODO: Please remove this check once TR6 (and newer) become the only supported OMPT version(s).
+    # If we do not have separate directories for OMPT (legacy) and OMPT-TR6, then there are issues
+    # in installing both together for comparison purposes.
+    if [ "x$download_ompt_tr6" = "xyes" ] ; then
+        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr6
+        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr6
+    else
+        libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable
+        libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable
+    fi
 else
     libomp_ossdir_shared=${omptlib}
     libomp_ossdir_static=${omptlib}
@@ -10839,7 +10847,13 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
       fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     fi 
     # also put them in the "disable" directory for later builds - but only do it once
-    ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+    
+    if [ "x$download_ompt_tr6" = "xyes" ] ; then
+       ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
+    else
+       ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
+    fi
+
     if [ ! ${libomp_ossdir_shared} = ${ompt_instdir} ] ; then
         mkdir -p ${ompt_instdir}
         cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
@@ -10865,7 +10879,12 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_static}/lib${libom
     echo "ompt_dir=$ompt_dir"
 
     # also put them in the "disable" directory for later builds - but only do it once
-    ompt_instdir=${targetdir}/${architecture}/lib/static-disable
+    if [ "x$download_ompt_tr6" = "xyes" ] ; then
+      ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr6
+    else 
+      ompt_instdir=${targetdir}/${architecture}/lib/static-disable
+    fi
+
     if [ ! ${libomp_ossdir_static} = ${ompt_instdir} ] ; then
         mkdir -p ${ompt_instdir}
         cp ${libomp_ossdir_static}/libomp.a ${ompt_instdir}/libomp.a ;

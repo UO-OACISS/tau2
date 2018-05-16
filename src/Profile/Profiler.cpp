@@ -130,7 +130,7 @@ extern "C" int Tau_get_usesMPI();
 extern "C" void Tau_shutdown(void);
 extern "C" void Tau_profile_exit_most_threads();
 extern "C" int TauCompensateInitialized(void);
-extern "C" void Tau_ompt_resolve_callsite(FILE *fp, FunctionInfo &fi);
+extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 
 x_uint64 Tau_get_firstTimeStamp();
 
@@ -1359,7 +1359,9 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
 
             /*Do not resolve addresses if they have already been resolved eagerly*/
             if(strcmp(fi.GetPrimaryGroup(), "TAU_OPENMP") == 0 && !TauEnv_get_ompt_resolve_address_eagerly()) {
-              Tau_ompt_resolve_callsite(fp, fi);
+              char resolved_address[1024] = "";
+              Tau_ompt_resolve_callsite(fi, resolved_address);
+              fprintf(fp, "\"%s", resolved_address);
             } else { 
               fprintf(fp, "\"%s", fi.GetName());
             }
