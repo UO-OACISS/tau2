@@ -4126,8 +4126,8 @@ case $cxx_compiler in
 
         if [ "$machine" = ibm64linux ] ; then
            if [ ! -r $extradircxx/lib/libibmc++.a ]; then
-              cxxpath=`find $extradircxx -name libibmc++.a -print `
-              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' `
+              cxxpath=`find $extradircxx -name libibmc++.a -print | tail -1`
+              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' -e 's@alllibs/libibmc++.a@@g'`
            fi
         fi
 
