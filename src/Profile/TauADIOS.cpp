@@ -106,7 +106,6 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
     const char * var_name, enum ADIOS_DATATYPES data_type, 
     const int ndims, const char * dims, const void * value) {
     std::stringstream ss;
-	printf("Write Dimensions: %s\n", dims); fflush(stdout);
     ss << EVENT_TRACE_PREFIX << detail << "(" << var_name << ",";
     switch(data_type) {
         case adios_byte:
