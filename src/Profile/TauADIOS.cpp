@@ -940,7 +940,6 @@ ADIOST_EXTERN void tau_adiost_advance_step(
 	    ss << " last: " << last << ",";
 	    ss << " timeout_sec: " << timeout_sec << ")";
 		char * tmp = strdup(ss.str().c_str());
-		printf("%s\n", tmp); fflush(stdout);
     	Tau_SOS_conditionally_pack_current_timer(tmp);
 		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
