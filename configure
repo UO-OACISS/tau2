@@ -4126,8 +4126,8 @@ case $cxx_compiler in
 
         if [ "$machine" = ibm64linux ] ; then
            if [ ! -r $extradircxx/lib/libibmc++.a ]; then
-              cxxpath=`find $extradircxx -name libibmc++.a -print `
-              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' `
+              cxxpath=`find $extradircxx -name libibmc++.a -print | tail -1`
+              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' -e 's@alllibs/libibmc++.a@@g'`
            fi
         fi
 
@@ -10396,10 +10396,13 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     version=`icpc -v 2>&1`
     t="Version 1"
     t1="icpc version 1"
+    t2="icpc.orig version 1"
     testarg=${version#$t}
     testarg1=${version#$t1}
+    testarg2=${version#$t2}
 
-    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" ] ; then
+
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" -o "y$testarg2" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU"
     else
