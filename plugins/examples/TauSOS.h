@@ -13,6 +13,7 @@
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
 #define TAU_SOS_SHUTDOWN_DELAY_DEFAULT 10 // seconds
 #define TAU_SOS_USE_SELECTION_DEFAULT 0 // microseconds
+#define TAU_SOS_CACHE_DEPTH_DEFAULT 10 // SOS frames
 
 class SOS_plugin_options {
     private:
@@ -23,7 +24,8 @@ class SOS_plugin_options {
             env_sos_periodic(TAU_SOS_PERIODIC_DEFAULT),
             env_sos_period(TAU_SOS_PERIOD_DEFAULT),
             env_sos_shutdown_delay(TAU_SOS_SHUTDOWN_DELAY_DEFAULT),
-            env_sos_use_selection(TAU_SOS_USE_SELECTION_DEFAULT) {}
+            env_sos_use_selection(TAU_SOS_USE_SELECTION_DEFAULT),
+            env_sos_cache_depth(TAU_SOS_CACHE_DEPTH_DEFAULT) {}
     public:
         int env_sos_enabled;
         int env_sos_tracing;
@@ -32,6 +34,7 @@ class SOS_plugin_options {
         int env_sos_period;
         int env_sos_shutdown_delay;
         int env_sos_use_selection;
+        int env_sos_cache_depth;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
         std::set<std::string> included_counters;

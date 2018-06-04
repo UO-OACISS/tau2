@@ -116,11 +116,10 @@ void TAU_SOS_make_pub() {
         _runtime->config.comm_size = comm_size;
 #endif
 
-/* Fixme! Replace these with values from TAU metadata. */
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
-/* Fixme! Replace these with values from TAU metadata. */
         SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
+        SOS_pub_config(tau_sos_pub, SOS_PUB_OPTION_CACHE, thePluginOptions().env_sos_cache_depth);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
@@ -341,6 +340,8 @@ void TAU_SOS_parse_environment_variables(void) {
     if (parse_bool(tmp, TAU_SOS_TRACING_DEFAULT)) {
       thePluginOptions().env_sos_tracing = 1;
     }
+    tmp = getenv("TAU_SOS_CACHE_DEPTH");
+    thePluginOptions().env_sos_cache_depth = parse_int(tmp, TAU_SOS_CACHE_DEPTH_DEFAULT);
     tmp = getenv("TAU_SOS_PERIODIC");
     if (parse_bool(tmp, TAU_SOS_PERIODIC_DEFAULT)) {
       thePluginOptions().env_sos_periodic = 1;
