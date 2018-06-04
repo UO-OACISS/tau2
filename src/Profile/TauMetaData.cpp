@@ -797,7 +797,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
 #endif /* TAU_FUJITSU && TAU_MPI */
 
 /****** CRAY RELATED DATA *********/
-
+#ifdef TAU_CRAYCNL
   FILE* procfile = fopen("/proc/self/stat", "r");
   long to_read = 8192;
   char buffer[to_read];
@@ -814,6 +814,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
     }
 
     line = strtok(NULL, " ");
+    printf("WEIRD CRAY LINE: %s", line);
     Tau_metadata_register("CRAY_CORE_ID", line);
   }
 
@@ -855,7 +856,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
     Tau_metadata_register("CRAY_TOPO_SLOT_ID", slot);
     Tau_metadata_register("CRAY_TOPO_NODE_ID", node);
   }
-
+#endif
 /****** END CRAY RELATED DATA *********/
 
   return 0;
