@@ -1928,8 +1928,6 @@ int  MPI_Finalize(  )
 
   returnVal = PMPI_Finalize();
 
-  fprintf(stdout, "PMPI_Finalize() return=%d\n", returnVal);
-
   TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
@@ -1982,8 +1980,6 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
-
-  fprintf(stdout, "TAU: MPI_Init() MPC after wrapping\n");
 
   if(Tau_get_usesMPI() == 0)
   {

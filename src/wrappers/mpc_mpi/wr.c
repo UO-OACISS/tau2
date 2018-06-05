@@ -2161,8 +2161,6 @@ int   __wrap_MPI_Init(int *  a1, char ***  a2)  {
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
-  fprintf(stdout, "TAU: MPI_Init() MPC after wrapping\n");
-
   if(Tau_get_usesMPI() == 0)
   {
 
@@ -2481,8 +2479,6 @@ int   __wrap_MPI_Finalize()  {
 #endif
 
   returnVal = __real_MPI_Finalize();
-
-  fprintf(stdout, "PMPI_Finalize() return=%d\n", returnVal);
 
   TAU_PROFILE_STOP(tautimer);
 
