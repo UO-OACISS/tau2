@@ -2,6 +2,17 @@
 #include <Profile/Profiler.h>
 #include <stdio.h>
 
+#include <Profile/TauEnv.h>
+
+#ifdef TAU_MPI
+#include <mpi.h>
+#endif /* TAU_MPI */
+//#include "gen_prof.h"
+//#include <TauMetaData.h>
+//#include <TauMetrics.h>
+
+
+static int procid_0;
 
 /**********************************************************
    MPI_Default_error
@@ -2135,32 +2146,465 @@ double   __wrap_MPI_Wtick()  {
 int   __real_MPI_Init(int *  a1, char ***  a2) ;
 int   __wrap_MPI_Init(int *  a1, char ***  a2)  {
 
+#if 0
   int  retval;
+  fprintf(stdout, "TAU wrap MPI_Init for MPC\n");
   TAU_PROFILE_TIMER(t,"int MPI_Init(int *, char ***)  C", "", TAU_USER);
   TAU_PROFILE_START(t);
   retval  =  __real_MPI_Init(a1, a2);
   TAU_PROFILE_STOP(t);
   return retval;
+#endif
+
+  int  returnVal;
+  int  size;
+  char procname[MPI_MAX_PROCESSOR_NAME];
+  int  procnamelength;
+
+  if(Tau_get_usesMPI() == 0)
+  {
+
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
+  Tau_create_top_level_timer_if_necessary();
+  TAU_PROFILE_START(tautimer);
+  
+  tau_mpi_init_predefined_constants();
+#ifdef TAU_MPI_T
+  Tau_MPI_T_initialization();
+  Tau_track_mpi_t();
+#endif /* TAU_MPI_T */
+
+#ifdef TAU_ADIOS
+  // this is only here to force the linker to resolve the adiost_tool symbol
+  // before the weak one in the ADIOS static library gets pulled in, and prevents
+  // TAU from replacing it.
+  adiost_tool();
+#endif
+
+#ifdef TAU_SOS
+  int provided = 0;
+  returnVal = PMPI_Init_thread( a1, a2, MPI_THREAD_FUNNELED, &provided );
+  if (TauEnv_get_sos_enabled()) {
+    TAU_SOS_init(argc, argv, true);
+  }
+#else
+  returnVal = PMPI_Init( a1, a2 );
+#endif
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX 
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
+  Tau_signal_initialization(); 
+
+#ifdef TAU_MONITORING
+  Tau_mon_connect();
+#endif /* TAU_MONITORING */
+
+#ifdef TAU_BGP
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
+    int upcErr; 
+    Tau_Bg_hwp_counters_start(&upcErr); 
+    if (upcErr != 0) {
+      printf("TAU ERROR: ** Error starting IBM BGP UPC hardware performance counters\n");
+    }
+    PMPI_Barrier(MPI_COMM_WORLD);
+  }
+#endif /* TAU_BGP */
+  TAU_PROFILE_STOP(tautimer); 
+
+  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+  TAU_PROFILE_SET_NODE(procid_0 ); 
+  Tau_set_usesMPI(1);
+
+  PMPI_Comm_size( MPI_COMM_WORLD, &size );
+  tau_totalnodes(1, size); /* Set the totalnodes */
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
+
+  if (TauEnv_get_synchronize_clocks()) {
+    TauSyncClocks();
+  }
+  }
+  else {
+    returnVal = 0;
+  }
+
+  writeMetaDataAfterMPI_Init(); 
+
+  return returnVal;
 
 }
 
+int genProfileFake()
+{
+  int rank = 0;
+  int numRanks;
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+
+  TAU_VERBOSE("TAU - genProfileFake C: rank=%d, numRanks=%d\n", rank, numRanks);
+
+ return 0;
+}
+
+#if 0
+int genProfile()
+{
+
+  //int numRanks;
+  //PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  //PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+
+  //TAU_VERBOSE("TAU - inside genProfile(): rank=%d, numRanks=%d\n", rank, numRanks);
+
+  Tau_metadata_fillMetaData();
+
+  static int merged = 0;
+  if (merged == 1) {
+    return 0;
+  }
+  merged = 1;
+
+  int rank = 0;
+
+#ifdef TAU_MPI
+  int numRanks;
+  //if (TAU_MPI_Finalized()) {
+  //  fprintf(stdout, "TAU_MPI_Finalized() called\n");
+  //  return 0;
+  //}
+
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+
+  TAU_VERBOSE("TAU: rank=%d, numRanks=%d\n", rank, numRanks);
+#endif /* TAU_MPI */
+
+  x_uint64 start, end;
+
+#if 1
+  if (rank == 0) {
+
+    TAU_VERBOSE("TAU: Merging MetaData...\n");
+    start = TauMetrics_getTimeOfDay();
+
+#if 1
+#ifdef TAU_MPI
+    Tau_util_outputDevice *out = Tau_metadata_generateMergeBuffer();
+    char *defBuf = Tau_util_getOutputBuffer(out);
+    int defBufSize = Tau_util_getOutputBufferLength(out);
+
+    PMPI_Bcast(&defBufSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    PMPI_Bcast(defBuf, defBufSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
+#endif
+
+    end = TauMetrics_getTimeOfDay();
+    TAU_VERBOSE("TAU: MetaData Merging Complete, duration = %.4G seconds\n", ((double)(end-start))/1000000.0f);
+    char tmpstr[256];
+    sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
+    TAU_METADATA("TAU MetaData Merge Time", tmpstr);
+
+#if 1
+#ifdef TAU_MPI
+        Tau_util_destroyOutputDevice(out);
+#endif /* TAU_MPI */
+#endif
+
+  } else {
+
+#if 1
+#ifdef TAU_MPI
+    TAU_VERBOSE("TAU: Metadata, rank different from 0\n");
+    int BufferSize;
+    PMPI_Bcast(&BufferSize, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    char *Buffer = (char*) TAU_UTIL_MALLOC(BufferSize);
+    PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, MPI_COMM_WORLD);
+    Tau_metadata_removeDuplicates(Buffer, BufferSize);
+        free(Buffer);
+#endif /* TAU_MPI */
+#endif
+  }
+#endif
+
+  return 0;
+}
+#endif
+
+
+int tau_mpi_finalized = 0;
+
+#if 1
+int TAU_MPI_Finalized() {
+  fprintf(stdout, "In TAU_MPI_Finalized(): tau_mpi_finalized=%d\n", tau_mpi_finalized);
+  return tau_mpi_finalized;
+}
+#endif
 
 /**********************************************************
    MPI_Finalize
  **********************************************************/
 
+
+int   __real_MPI_Finalize() ;
+int   __wrap_MPI_Finalize()  {
+
+
+ int  returnVal;
+  char procname[MPI_MAX_PROCESSOR_NAME];
+  int  procnamelength;
+
+  TAU_VERBOSE("TAU: Call MPI_Finalize()\n");
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+  
+#ifdef TAU_MPI_T
+  Tau_track_mpi_t_here();
+
+  /*Clean up and finalize the MPI_T interface*/
+  Tau_mpi_t_cleanup();
+
+  returnVal = PMPI_T_finalize();
+  if (returnVal != MPI_SUCCESS) {
+    printf("TAU: Call to MPI_T_finalize failed\n");
+  }
+
+#endif /* TAU_MPI_T */
+
+#ifdef TAU_SOS
+  //TAU_SOS_stop_worker();
+#endif
+
+  if (TauEnv_get_synchronize_clocks()) {
+    TauSyncFinalClocks();
+  }
+  Tau_metadata_writeEndingTimeStamp();
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
+
+  if (Tau_get_node() < 0) {
+    /* Grab the node id, we don't always wrap mpi_init */
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    TAU_PROFILE_SET_NODE(procid_0 ); 
+    Tau_set_usesMPI(1);
+  }
+
+#ifdef TAU_BGP
+  /* BGP counters */
+  int numCounters, mode, upcErr;
+  x_uint64 counterVals[1024];
+
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
+    PMPI_Barrier(MPI_COMM_WORLD); 
+    Tau_Bg_hwp_counters_stop(&numCounters, counterVals, &mode, &upcErr);
+    if (upcErr != 0) {
+      printf("  ** Error stopping UPC performance counters");
+    }
+
+    Tau_Bg_hwp_counters_output(&numCounters, counterVals, &mode, &upcErr);
+  }
+#endif /* TAU_BGP */
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  /* Shutdown EBS after Finalize to allow Profiles to be written out
+     correctly. Also allows profile merging (or unification) to be
+     done correctly. */
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
+  Tau_MemMgr_finalizeIfNecessary();
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_ebs_enabled()) {
+    //    Tau_sampling_finalizeNode();
+    
+    Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
+  /* *CWL* This might be generalized to perform a final monitoring dump.
+     For now, we should let merging handle the data.
+#ifdef TAU_MON_MPI
+    Tau_collate_writeProfile();
+#else
+  */
+
+  // merge TAU metadata
+  if (TauEnv_get_merge_metadata()) {
+    Tau_metadataMerge_mergeMetaData();
+  }
+
+  /* Create a merged profile if requested */
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    /* *CWL* - properly record intermediate values (the same way snapshots work).
+               Note that we do not want to shut down the timers as yet. There is
+	       still potentially life after MPI_Finalize where TAU is concerned.
+     */
+    /* KAH - NO! this is the wrong time to do this. THis is also done in the
+     * snapshot writer. If you do it twice, you get double values for main... */
+    //TauProfiler_updateAllIntermediateStatistics();
+    Tau_mergeProfiles_MPI();
+  }
+  
+#ifdef TAU_MONITORING
+  Tau_mon_disconnect();
+#endif /* TAU_MONITORING */
+
+#ifdef TAU_SOS
+  if (TauEnv_get_sos_enabled()) {
+    TAU_SOS_finalize();
+  }
+#endif
+
+#ifdef TAU_OTF2
+   if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+     TauTraceOTF2ShutdownComms(Tau_get_local_tid());
+   }
+#endif
+
+  returnVal = __real_MPI_Finalize();
+
+  TAU_PROFILE_STOP(tautimer);
+
+  Tau_stop_top_level_timer_if_necessary();
+  tau_mpi_finalized = 1;
+ 
+  return returnVal;
+}
+
+#if 0
 int   __real_MPI_Finalize() ;
 int   __wrap_MPI_Finalize()  {
 
   int  retval;
+  TAU_VERBOSE("Wrapper to MPI_Finalize() for MPC\n");
   TAU_PROFILE_TIMER(t,"int MPI_Finalize()  C", "", TAU_USER);
-  TAU_PROFILE_START(t);
+
+  char procname[MPI_MAX_PROCESSOR_NAME];
+  int  procnamelength;
+
+  TAU_VERBOSE("TAU: Call MPI_Finalize()\n");
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+  
+#ifdef TAU_MPI_T
+  Tau_track_mpi_t_here();
+#endif /* TAU_MPI_T */
+  writeMetaDataAfterMPI_Init(); 
+
+  if (TauEnv_get_synchronize_clocks()) {
+    TauSyncFinalClocks();
+  }
+
+  PMPI_Get_processor_name(procname, &procnamelength);
+  TAU_METADATA("MPI Processor Name", procname);
+
+  if (Tau_get_node() < 0) {
+    /* Grab the node id, we don't always wrap mpi_init */
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    TAU_PROFILE_SET_NODE(procid_0 ); 
+    Tau_set_usesMPI(1);
+  }
+
+#ifdef TAU_BGP
+  /* BGP counters */
+  int numCounters, mode, upcErr;
+  x_uint64 counterVals[1024];
+
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
+    PMPI_Barrier(MPI_COMM_WORLD); 
+    Tau_Bg_hwp_counters_stop(&numCounters, counterVals, &mode, &upcErr);
+    if (upcErr != 0) {
+      printf("  ** Error stopping UPC performance counters");
+    }
+
+    Tau_Bg_hwp_counters_output(&numCounters, counterVals, &mode, &upcErr);
+  }
+#endif /* TAU_BGP */
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  /* Shutdown EBS after Finalize to allow Profiles to be written out
+ *      correctly. Also allows profile merging (or unification) to be
+ *           done correctly. */
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_ebs_enabled()) {
+    //    Tau_sampling_finalizeNode();
+    //
+        Tau_sampling_finalize_if_necessary(Tau_get_local_tid());
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
+#if 1
+  int rank = 0;
+  int numRanks;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
+
+  TAU_VERBOSE("TAU - inside MPI_Finalize MPC wrapper: rank=%d, numRanks=%d\n", rank, numRanks);
+
+  //Tau_metadataMerge_mergeMetaData_bis();
+  Tau_metadataMerge_mergeMetaData();
+#endif
+
+  TAU_VERBOSE("Merge profile files if MERGED format specified\n");
+#if 1
+  /* Create a merged profile if requested */
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    /* *CWL* - properly record intermediate values (the same way snapshots work).
+ *                Note that we do not want to shut down the timers as yet. There is
+ *                               still potentially life after MPI_Finalize where TAU is concerned.
+ *                                    */
+    /* KAH - NO! this is the wrong time to do this. THis is also done in the
+ *      * snapshot writer. If you do it twice, you get double values for main... */
+    /* TauProfiler_updateAllIntermediateStatistics(); */
+    //fprintf(stdout, "Merge profiles\n");
+    Tau_mergeProfiles();
+  }
+#endif
+
+  TAU_VERBOSE("Call real MPI_Finalize\n");
+
+  //TAU_PROFILE_START(t);
   retval  =  __real_MPI_Finalize();
-  TAU_PROFILE_STOP(t);
+  TAU_PROFILE_STOP(tautimer);
+
+  TAU_VERBOSE("Stop timer\n");
+
+#if 1
+  Tau_stop_top_level_timer_if_necessary();
+  tau_mpi_finalized = 1;
+#endif
+
   return retval;
 
 }
-
+#endif
 
 /**********************************************************
    MPI_Initialized
