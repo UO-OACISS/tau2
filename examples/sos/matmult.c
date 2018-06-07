@@ -235,7 +235,7 @@ int main (int argc, char *argv[])
   int maxi = 10;
 
 #ifdef PTHREADS
-  for (int i = 0 ; i < nthreads ; i++) {
+  for (i = 0 ; i < nthreads ; i++) {
     if (ret = pthread_create(&(tid[i]), NULL, threaded_func, &maxi) ) {
       printf("Error: pthread_create (1) fails ret = %d\n", ret);
       exit(1);
