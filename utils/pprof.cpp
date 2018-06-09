@@ -439,6 +439,13 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
     perror("Error: fgets returns NULL in format string ");
     return 0;
   }//if
+  size_t line_len = strlen(line);
+  if(line[line_len] - 1 != '\n') {
+    // Header was too long to read
+    while(getc(fp) != '\n') {
+      // skip to next line
+    }
+  }
   if (line[0] == '#') { // new data format 
     sprintf(header,"# Name Calls Subrs Excl Incl ");
     hlen = strlen(header);
@@ -756,6 +763,13 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     perror("Error: fgets returns NULL in format string ");
     return 0;
   }//if
+  size_t line_len = strlen(line);
+  if(line[line_len] - 1 != '\n') {
+    // Header was too long to read
+    while(getc(fp) != '\n') {
+      // skip to next line
+    }
+  }
   //check to make sure first character is the #.  If not, then we 
   //are using the old data format, so note accordingly.
   if (line[0] != '#') { // Old data format without '#' 
