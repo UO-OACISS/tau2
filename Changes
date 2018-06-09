@@ -29,6 +29,7 @@ Version 2.27 changes (from 2.26):
 16. Added support for OMPT TR6 (configure -ompt=download-tr6 with export TAU_OMPT_SUPPORT_LEVEL=full). 
 17. Added support for LIKWID 4.3.2.
 18. Added Python args support. 
+19. Added support for armflang and armclang/armclang++ compilers. 
 
 Version 2.26 changes (from 2.25):
 1. Upgraded OMPT to LLVM-0.2 and introduced TAU_OPENMP_RUNTIME_EVENTS=0. 
