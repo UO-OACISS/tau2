@@ -18,9 +18,15 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 #include <TauSOS.h>
+#include <atomic>
+
+extern tau::Profiler* Tau_get_timer_at_stack_depth(int pos);
+
+static std::atomic<bool> enabled(false);
 
 /* Only dump data to SOS if we aren't doing periodic dumps */
 int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
+    if (!enabled) return 0;
     //printf("TAU PLUGIN SOS: dump\n");
     if (thePluginOptions().env_sos_periodic != 1) { 
         TAU_SOS_send_data();
@@ -35,6 +41,7 @@ int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data data) {
 
 /* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data data) {
+    if (!enabled) return 0;
     //fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
     // OK to do it from any thread, because it came from MPI_Finalize
     TAU_SOS_send_data();
@@ -48,18 +55,10 @@ int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_da
     return 0;
 }
 
-/* This happens from Profiler.cpp, when data is written out. */
-int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data) {
-    //fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
-    if (data.tid == 0) {
-        TAU_SOS_finalize();
-    }
-    return 0;
-}
-
 /* This happens after MPI_Init, and after all TAU metadata variables have been
  * read */
 int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
+    if (!enabled) return 0;
     //fprintf(stdout, "TAU PLUGIN SOS Post Init\n"); fflush(stdout);
     TAU_SOS_send_data();
     return 0;
@@ -67,15 +66,11 @@ int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data data) {
 
 /* This happens on Tau_start() */
 int Tau_plugin_sos_function_entry(Tau_plugin_event_function_entry_data data) {
+    if (!enabled) return 0;
     /* First, check to see if we are including/excluding this timer */
-    /*
-    if (thePluginOptions().env_sos_use_selection == 1) {
-        if (Tau_SOS_contains(thePluginOptions().excluded_timers, data.timer_name, false) ||
-            !Tau_SOS_contains(thePluginOptions().included_timers, data.timer_name, true)) {
-            return 0;
-        }
+    if (skip_timer(data.timer_name)) {
+        return 0;
     }
-    */
     /* todo: filter on group, timer name */
     std::stringstream ss;
     ss << "TAU_EVENT_ENTRY:" << data.tid << ":" << data.timer_name;
@@ -86,15 +81,11 @@ int Tau_plugin_sos_function_entry(Tau_plugin_event_function_entry_data data) {
 
 /* This happens on Tau_stop() */
 int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
+    if (!enabled) return 0;
     /* First, check to see if we are including/excluding this timer */
-    /*
-    if (thePluginOptions().env_sos_use_selection == 1) {
-        if (Tau_SOS_contains(thePluginOptions().excluded_timers, data.timer_name, false) ||
-            !Tau_SOS_contains(thePluginOptions().included_timers, data.timer_name, true)) {
-            return 0;
-        }
+    if (skip_timer(data.timer_name)) {
+        return 0;
     }
-    */
     /* todo: filter on group, timer name */
     std::stringstream ss;
     ss << "TAU_EVENT_EXIT:" << data.tid << ":" << data.timer_name;
@@ -105,15 +96,11 @@ int Tau_plugin_sos_function_exit(Tau_plugin_event_function_exit_data data) {
 
 /* This happens on Tau_userevent() */
 int Tau_plugin_sos_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data data) {
+    if (!enabled) return 0;
     /* First, check to see if we are including/excluding this counter */
-    /*
-    if (thePluginOptions().env_sos_use_selection == 1) {
-        if (Tau_SOS_contains(thePluginOptions().excluded_counters, data.counter_name, false) ||
-            !Tau_SOS_contains(thePluginOptions().included_counters, data.counter_name, true)) {
-            return 0;
-        }
+    if (skip_counter(data.counter_name)) {
+        return 0;
     }
-    */
     std::stringstream ss;
     ss << "TAU_EVENT_COUNTER:" << data.tid << ":" << data.counter_name;
     //std::cout << ss.str() << " = " << data.value << std::endl;
@@ -123,12 +110,14 @@ int Tau_plugin_sos_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data dat
 
 /* This happens for special events from ADIOS, MPI */
 int Tau_plugin_sos_current_timer_exit(Tau_plugin_event_current_timer_exit_data data) {
+    if (!enabled) return 0;
     Tau_SOS_pack_current_timer(data.name_prefix);
     return 0;
 }
 
 /* This happens on MPI_Send events (and similar) */
 int Tau_plugin_sos_send(Tau_plugin_event_send_data data) {
+    if (!enabled) return 0;
     /* todo: filter on group, timer name */
     std::stringstream ss;
     ss << "TAU_EVENT_SEND:" << data.tid 
@@ -142,6 +131,7 @@ int Tau_plugin_sos_send(Tau_plugin_event_send_data data) {
 
 /* This happens on MPI_Recv events (and similar) */
 int Tau_plugin_sos_recv(Tau_plugin_event_recv_data data) {
+    if (!enabled) return 0;
     /* todo: filter on group, timer name */
     std::stringstream ss;
     ss << "TAU_EVENT_RECV:" << data.tid 
@@ -155,6 +145,7 @@ int Tau_plugin_sos_recv(Tau_plugin_event_recv_data data) {
 
 /* This happens when a Metadata field is saved. */
 int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_registration_data data) {
+    if (!enabled) return 0;
     //fprintf(stdout, "TAU Metadata registration\n"); fflush(stdout);
     std::stringstream ss;
     ss << "TAU_Metadata:" << 0 << ":" << data.name;
@@ -182,6 +173,39 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
     }
     return 0;
 }
+
+/* This happens from Profiler.cpp, when data is written out. */
+int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data) {
+    if (!enabled) return 0;
+    /* If we are tracing, we need to "stop" all of the remaining timers on the stack */
+    if (thePluginOptions().env_sos_tracing) {
+        Tau_plugin_event_function_exit_data data;
+        // safe to assume 0?
+        // for (int t = 0 ; t < TAU_MAX_THREADS ; t++) {
+        int t = RtsLayer::myThread();
+            int depth = Tau_get_current_stack_depth(t);
+            for (int i = depth ; i > -1 ; i--) {
+                tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
+                if (profiler->ThisFunction->GetName() == NULL) {
+                    // small memory leak, but at shutdown.
+                    data.timer_name = strdup(".TAU application");
+                } else {
+                    data.timer_name = profiler->ThisFunction->GetName();
+                }
+                data.tid = t;
+                //printf("Stopping %s\n", data.timer_name);
+                Tau_plugin_sos_function_exit(data);
+            }
+        // }
+    }
+    enabled = false;
+    //fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
+    if (data.tid == 0) {
+        TAU_SOS_finalize();
+    }
+    return 0;
+}
+
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
  * Every plugin MUST implement this function to register callbacks for various events 
@@ -223,9 +247,22 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
 
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+    enabled = true;
+
+    /* If we are tracing, we need to "start" all of the timers on the stack */
+    if (thePluginOptions().env_sos_tracing) {
+        Tau_plugin_event_function_entry_data data;
+        // safe to assume 0?
+        int depth = Tau_get_current_stack_depth(RtsLayer::myThread());
+        for (int i = 0 ; i <= depth ; i++) {
+            tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
+            data.timer_name = profiler->ThisFunction->GetName();
+            data.tid = RtsLayer::myThread();
+            Tau_plugin_sos_function_entry(data);
+        }
+    }
     return 0;
 }
-
 
 
 #endif // TAU_SOS

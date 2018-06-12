@@ -12,7 +12,7 @@
 #define TAU_SOS_PERIODIC_DEFAULT 0
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
 #define TAU_SOS_SHUTDOWN_DELAY_DEFAULT 10 // seconds
-#define TAU_SOS_USE_SELECTION_DEFAULT 0 // microseconds
+#define TAU_SOS_USE_SELECTION_DEFAULT false // microseconds
 #define TAU_SOS_CACHE_DEPTH_DEFAULT 10 // SOS frames
 
 class SOS_plugin_options {
@@ -33,12 +33,16 @@ class SOS_plugin_options {
         int env_sos_periodic;
         int env_sos_period;
         int env_sos_shutdown_delay;
-        int env_sos_use_selection;
+        bool env_sos_use_selection;
         int env_sos_cache_depth;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
+        std::set<std::string> included_timers_with_wildcards;
+        std::set<std::string> excluded_timers_with_wildcards;
         std::set<std::string> included_counters;
         std::set<std::string> excluded_counters;
+        std::set<std::string> included_counters_with_wildcards;
+        std::set<std::string> excluded_counters_with_wildcards;
         static SOS_plugin_options& thePluginOptions() {
             static SOS_plugin_options tpo;
             return tpo;
@@ -65,5 +69,7 @@ void Tau_SOS_pack_double(const char * name, double value);
 void Tau_SOS_pack_integer(const char * name, int value);
 void Tau_SOS_pack_long(const char * name, long int value);
 void * Tau_sos_thread_function(void* data);
+bool skip_timer(const char * key);
+bool skip_counter(const char * key);
 
 #endif // TAU_SOS_H
