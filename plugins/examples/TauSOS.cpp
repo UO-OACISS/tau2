@@ -365,7 +365,7 @@ void Tau_SOS_parse_selection_file(const char * filename) {
     bool excluding_timers = false;
     bool including_counters = false;
     bool excluding_counters = false;
-    thePluginOptions().env_sos_use_selection = 1;
+    thePluginOptions().env_sos_use_selection = true;
     while (std::getline(file, str)) {
         // trim right whitespace
         str.erase(str.find_last_not_of(" \n\r\t")+1);
@@ -397,13 +397,29 @@ void Tau_SOS_parse_selection_file(const char * filename) {
             excluding_counters = false;
         } else {
             if (including_timers) {
-                thePluginOptions().included_timers.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().included_timers.insert(str);
+                } else {
+                    thePluginOptions().included_timers_with_wildcards.insert(str);
+                }
             } else if (excluding_timers) {
-                thePluginOptions().excluded_timers.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().excluded_timers.insert(str);
+                } else {
+                    thePluginOptions().excluded_timers_with_wildcards.insert(str);
+                }
             } else if (including_counters) {
-                thePluginOptions().included_counters.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().included_counters.insert(str);
+                } else {
+                    thePluginOptions().included_counters_with_wildcards.insert(str);
+                }
             } else if (excluding_counters) {
-                thePluginOptions().excluded_counters.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().excluded_counters.insert(str);
+                } else {
+                    thePluginOptions().excluded_counters_with_wildcards.insert(str);
+                }
             } else {
                 std::cerr << "Warning, selection outside of include/exclude section: "
                     << str << std::endl;
@@ -648,11 +664,8 @@ void TAU_SOS_pack_profile() {
     for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo *fi = *it;
         /* First, check to see if we are including/excluding this timer */
-        if (thePluginOptions().env_sos_use_selection == 1) {
-            if (Tau_SOS_contains(thePluginOptions().excluded_timers, fi->GetName(), false) ||
-                !Tau_SOS_contains(thePluginOptions().included_timers, fi->GetName(), true)) {
-                continue;
-            }
+        if (skip_timer(fi->GetName())) {
+            continue;
         }
         // get the number of calls
         int tid = 0; // todo: get ALL thread data.
@@ -703,11 +716,8 @@ void TAU_SOS_pack_profile() {
     for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
         tau::TauUserEvent *ue = (*it2);
         /* First, check to see if we are including/excluding this counter */
-        if (thePluginOptions().env_sos_use_selection == 1) {
-            if (Tau_SOS_contains(thePluginOptions().excluded_counters, ue->GetName().c_str(), false) ||
-                !Tau_SOS_contains(thePluginOptions().included_counters, ue->GetName().c_str(), true)) {
-                continue;
-            }
+        if (skip_counter(ue->GetName().c_str())) {
+            continue;
         }
 	    double tmp_accum = 0.0;
 	    std::string counter_name;
@@ -777,6 +787,149 @@ void TAU_SOS_send_data(void) {
     SOS_publish(tau_sos_pub);
     TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
     Tau_global_decr_insideTAU();
+}
+
+// C++ program to implement wildcard
+// pattern matching algorithm
+// from: https://www.geeksforgeeks.org/wildcard-pattern-matching/
+#include <bits/stdc++.h>
+using namespace std;
+ 
+// Function that matches input str with
+// given wildcard pattern
+bool strmatch(const char str[], const char pattern[],
+              int n, int m)
+{
+    // empty pattern can only match with
+    // empty string
+    if (m == 0)
+        return (n == 0);
+ 
+    // lookup table for storing results of
+    // subproblems
+    bool lookup[n + 1][m + 1] = {false};
+ 
+    // initailze lookup table to false
+    //memset(lookup, false, sizeof(lookup));
+ 
+    // empty pattern can match with empty string
+    lookup[0][0] = true;
+ 
+    // Only '#' can match with empty string
+    for (int j = 1; j <= m; j++)
+        if (pattern[j - 1] == '#')
+            lookup[0][j] = lookup[0][j - 1];
+ 
+    // fill the table in bottom-up fashion
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            // Two cases if we see a '#'
+            // a) We ignore ‘#’ character and move
+            //    to next  character in the pattern,
+            //     i.e., ‘#’ indicates an empty sequence.
+            // b) '#' character matches with ith
+            //     character in input
+            if (pattern[j - 1] == '#')
+                lookup[i][j] = lookup[i][j - 1] ||
+                               lookup[i - 1][j];
+ 
+            // Current characters are considered as
+            // matching in two cases
+            // (a) current character of pattern is '?'
+            // (b) characters actually match
+            else if (pattern[j - 1] == '?' ||
+                    str[i - 1] == pattern[j - 1])
+                lookup[i][j] = lookup[i - 1][j - 1];
+ 
+            // If characters don't match
+            else lookup[i][j] = false;
+        }
+    }
+ 
+    return lookup[n][m];
+}
+
+bool skip_timer(const char * key) {
+    // are we filtering at all?
+    if (!thePluginOptions().env_sos_use_selection) {
+        return false;
+    }
+    // check to see if this label is excluded
+    if (Tau_SOS_contains(thePluginOptions().excluded_timers, key, false)) {
+        return true;
+    // check to see if this label is included
+    } else if (Tau_SOS_contains(thePluginOptions().included_timers, key, false)) {
+        return false;
+    } else {
+        // check to see if it's in the excluded wildcards
+        for (auto it=thePluginOptions().excluded_timers_with_wildcards.begin(); 
+             it!=thePluginOptions().excluded_timers_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().excluded_timers.insert(key);
+                return true;
+            }
+        }
+        // check to see if it's in the included wildcards
+        for (auto it=thePluginOptions().included_timers_with_wildcards.begin(); 
+             it!=thePluginOptions().included_timers_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().included_timers.insert(key);
+                return false;
+            }
+        }
+    }
+    // neither included nor excluded? 
+    // do we have an inclusion list? If so, then skip (because we didn't match it).
+    if (!thePluginOptions().included_timers.empty() ||
+        !thePluginOptions().included_timers_with_wildcards.empty()) {
+        return true;
+    }
+    // by default, don't skip it.
+    return false;
+}
+
+bool skip_counter(const char * key) {
+    // are we filtering at all?
+    if (!thePluginOptions().env_sos_use_selection) {
+        return false;
+    }
+    // check to see if this label is excluded
+    if (Tau_SOS_contains(thePluginOptions().excluded_counters, key, false)) {
+        return true;
+    // check to see if this label is included
+    } else if (Tau_SOS_contains(thePluginOptions().included_counters, key, false)) {
+        return false;
+    } else {
+        // check to see if it's in the excluded wildcards
+        for (auto it=thePluginOptions().excluded_counters_with_wildcards.begin(); 
+             it!=thePluginOptions().excluded_counters_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().excluded_counters.insert(key);
+                return true;
+            }
+        }
+        // check to see if it's in the included wildcards
+        for (auto it=thePluginOptions().included_counters_with_wildcards.begin(); 
+             it!=thePluginOptions().included_counters_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().included_counters.insert(key);
+                return false;
+            }
+        }
+    }
+    // neither included nor excluded? 
+    // do we have an inclusion list? If so, then skip (because we didn't match it).
+    if (!thePluginOptions().included_counters.empty() ||
+        !thePluginOptions().included_counters_with_wildcards.empty()) {
+        return true;
+    }
+    return false;
 }
 
 #endif // TAU_SOS
