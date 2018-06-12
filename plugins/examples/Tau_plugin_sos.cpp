@@ -18,11 +18,10 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 #include <TauSOS.h>
-#include <atomic>
 
 extern tau::Profiler* Tau_get_timer_at_stack_depth(int pos);
 
-static std::atomic<bool> enabled(false);
+static bool enabled(false);
 
 /* Only dump data to SOS if we aren't doing periodic dumps */
 int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
