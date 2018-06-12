@@ -42,6 +42,8 @@ static Tau_util_outputDevice **Tau_snapshot_getFiles() {
       snapshotFiles[i] = NULL;
     }
   }
+ 
+  TAU_VERBOSE("Tau_snapshot_getFiles() end: out=%p\n", snapshotFiles); 
   return snapshotFiles;
 }
 
@@ -118,9 +120,13 @@ extern "C" int Tau_snapshot_writeIntermediate(const char *name) {
 
 extern "C" int Tau_snapshot_writeMetaDataBlock() {
   int tid = RtsLayer::myThread();
-  Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
+  int totalThreads = RtsLayer::getTotalThreads();
+  //Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
+  Tau_util_outputDevice *out = Tau_snapshot_getFiles()[0];
   char threadid[4096];
   sprintf(threadid, "%d.%d.%d.%d", RtsLayer::myNode(), RtsLayer::myContext(), tid, RtsLayer::getPid());
+
+  TAU_VERBOSE("tid=%d, totalThreads=%d\n", tid, totalThreads);
 
   // start of a profile block
   Tau_util_output (out, "<profile_xml>\n");

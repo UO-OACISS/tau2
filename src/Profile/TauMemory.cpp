@@ -1826,8 +1826,7 @@ extern "C" int Tau_trigger_memory_rss_hwm(void) {
   TauBeaconPublish((double) vmhwm, "KB", "MEMORY", "Peak Memory Usage (VmHWM - High Water Mark)");
 #endif /* TAU_BEACON */
   // TAU_VERBOSE("Tau_trigger_memory_rss_hwm: rss = %lld, hwm = %lld in KB\n", vmrss, vmhwm);
-
-  return 1; // SUCCESS
+return 1; // SUCCESS
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1868,14 +1867,17 @@ extern "C" void Tau_track_class_deallocation(const char * name, size_t size) {
 typedef std::pair<std::string, size_t> alloc_entry_t;
 typedef std::deque<alloc_entry_t> alloc_stack_t;
 
-#ifdef TAU_USE_TLS
+#if defined(TAU_USE_TLS) && !defined(__INTEL_COMPILER) // Intel compiler doesn't like __thread for non-POD object
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
 { 
-  static __thread alloc_stack_t alloc_stack_tls;
-  return &alloc_stack_tls; 
+  static __thread alloc_stack_t * alloc_stack_tls = NULL;
+  if(alloc_stack_tls == NULL) {
+    alloc_stack_tls = new alloc_stack_t();
+  }
+  return alloc_stack_tls; 
 }
-#elif defined(TAU_USE_DTLS)
+#elif defined(TAU_USE_DTLS) && !defined(__INTEL_COMPILER)
 // thread local storage
 static alloc_stack_t * tau_alloc_stack(void)
 { 
@@ -1884,19 +1886,26 @@ static alloc_stack_t * tau_alloc_stack(void)
 }
 #else
 // worst case - array of flags, one for each thread.
-alloc_stack_t alloc_stack_arr[TAU_MAX_THREADS];
 static inline alloc_stack_t  * tau_alloc_stack(void)
-{ return &alloc_stack_arr[Tau_get_local_tid()]; }
+{ 
+  static alloc_stack_t * alloc_stack_arr[TAU_MAX_THREADS] = {NULL};
+  if(alloc_stack_arr[Tau_get_local_tid()] == NULL) {
+    alloc_stack_arr[Tau_get_local_tid()] = new alloc_stack_t();
+  }
+  return alloc_stack_arr[Tau_get_local_tid()];
+}
 #endif
 
 
 //////////////////////////////////////////////////////////////////////
 // Start an object allocation region
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_start_class_allocation(const char * name, size_t size) {
+extern "C" void Tau_start_class_allocation(const char * name, size_t size, int include_in_parent) {
   alloc_stack_t * alloc_stack = tau_alloc_stack();
-  for(alloc_stack_t::iterator it = alloc_stack->begin(); it != alloc_stack->end(); it++) {
-    it->second = it->second + size;
+  if(include_in_parent) {
+    for(alloc_stack_t::iterator it = alloc_stack->begin(); it != alloc_stack->end(); it++) {
+        it->second = it->second + size;
+    }
   }
   alloc_stack->push_back(std::make_pair(std::string(name), size));
 }
@@ -1905,7 +1914,7 @@ extern "C" void Tau_start_class_allocation(const char * name, size_t size) {
 //////////////////////////////////////////////////////////////////////
 // Stop an object allocation region
 //////////////////////////////////////////////////////////////////////
-extern "C" void Tau_stop_class_allocation(const char * name) {
+extern "C" void Tau_stop_class_allocation(const char * name, int record) {
   alloc_stack_t * alloc_stack = tau_alloc_stack();
   const alloc_entry_t p = alloc_stack->back();
   std::string name_str(name);
@@ -1913,14 +1922,18 @@ extern "C" void Tau_stop_class_allocation(const char * name) {
     std::cerr << "ERROR: Overlapping allocations. Found " << p.first << " but " << name << " expected." << std::endl;
     abort();
   }
-  Tau_track_mem_event_always(name, "alloc", p.second);
+  if(record) {
+    Tau_track_mem_event_always(name, "alloc", p.second);
+  }
   alloc_stack->pop_back();
-  if(alloc_stack->size() > 0) {
-    std::string path = name_str;
-    for(alloc_stack_t::iterator it = alloc_stack->begin(); it != alloc_stack->end(); it++) {
-      path += " <= " + it->first;
+  if(record) {
+    if(alloc_stack->size() > 0) {
+      std::string path = name_str;
+      for(alloc_stack_t::iterator it = alloc_stack->begin(); it != alloc_stack->end(); it++) {
+        path += " <= " + it->first;
+      }
+      Tau_track_mem_event_always(path.c_str(), "alloc", p.second);
     }
-    Tau_track_mem_event_always(path.c_str(), "alloc", p.second);
   }
 }
 
