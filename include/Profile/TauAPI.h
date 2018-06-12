@@ -596,8 +596,8 @@ void Tau_track_mem_event(const char * name, const char * prefix, size_t size);
 void Tau_track_mem_event_always(const char * name, const char * prefix, size_t size);
 void Tau_track_class_allocation(const char * name, size_t size);
 void Tau_track_class_deallocation(const char * name, size_t size);
-void Tau_start_class_allocation(const char * name, size_t size);
-void Tau_stop_class_allocation(const char * name);
+void Tau_start_class_allocation(const char * name, size_t size, int include_in_parent);
+void Tau_stop_class_allocation(const char * name, int record);
 
 #ifdef __cplusplus
 /* Include the C++ API header */

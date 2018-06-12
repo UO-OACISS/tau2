@@ -214,6 +214,11 @@ void TAU_SOS_send_shutdown_message(void) {
     TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
     SOS_send_to_daemon(buffer, buffer);
     SOS_buffer_destroy(buffer);
+	char * exporting = getenv("SOS_EXPORT_DB_AT_EXIT");
+	if (exporting != NULL) {
+    	TAU_VERBOSE("Waiting %d seconds for SOS to write (if necessary)...\n", thePluginOptions().env_sos_shutdown_delay);
+		sleep(thePluginOptions().env_sos_shutdown_delay);
+	}
 #endif
 }
 
@@ -517,7 +522,7 @@ void TAU_SOS_finalize(void) {
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
         if (my_rank == daemon_rank) {
-            TAU_VERBOSE("Waiting for SOS to flush...\n");
+            TAU_VERBOSE("Waiting %d seconds for SOS to flush...\n", thePluginOptions().env_sos_shutdown_delay);
 		    sleep(thePluginOptions().env_sos_shutdown_delay);
             TAU_SOS_send_shutdown_message();
         }
