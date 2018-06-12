@@ -440,7 +440,7 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
     return 0;
   }//if
   size_t line_len = strlen(line);
-  if(line[line_len] - 1 != '\n') {
+  if(line[line_len-1] != '\n') {
     // Header was too long to read
     while(getc(fp) != '\n') {
       // skip to next line
@@ -764,7 +764,7 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
     return 0;
   }//if
   size_t line_len = strlen(line);
-  if(line[line_len] - 1 != '\n') {
+  if(line[line_len-1] != '\n') {
     // Header was too long to read
     while(getc(fp) != '\n') {
       // skip to next line
