@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
-import sys, os, re, _thread, signal
+#import sys, os, re, _thread, signal
+import sys, os, re, thread, signal
 #from cStringIO import StringIO
 from io import StringIO
 import subprocess
