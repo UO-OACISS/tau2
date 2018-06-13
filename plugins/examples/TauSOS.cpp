@@ -864,7 +864,8 @@ bool skip_timer(const char * key) {
         return false;
     } else {
         // check to see if it's in the excluded wildcards
-        for (auto it=thePluginOptions().excluded_timers_with_wildcards.begin(); 
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().excluded_timers_with_wildcards.begin(); 
              it!=thePluginOptions().excluded_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -873,7 +874,8 @@ bool skip_timer(const char * key) {
             }
         }
         // check to see if it's in the included wildcards
-        for (auto it=thePluginOptions().included_timers_with_wildcards.begin(); 
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().included_timers_with_wildcards.begin(); 
              it!=thePluginOptions().included_timers_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -905,7 +907,8 @@ bool skip_counter(const char * key) {
         return false;
     } else {
         // check to see if it's in the excluded wildcards
-        for (auto it=thePluginOptions().excluded_counters_with_wildcards.begin(); 
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().excluded_counters_with_wildcards.begin(); 
              it!=thePluginOptions().excluded_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
@@ -914,7 +917,8 @@ bool skip_counter(const char * key) {
             }
         }
         // check to see if it's in the included wildcards
-        for (auto it=thePluginOptions().included_counters_with_wildcards.begin(); 
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().included_counters_with_wildcards.begin(); 
              it!=thePluginOptions().included_counters_with_wildcards.end(); ++it) {
             if (strmatch(key, it->c_str(), strlen(key), it->length())) {
                 // make the lookup faster next time
