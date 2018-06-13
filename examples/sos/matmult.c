@@ -214,8 +214,9 @@ int main (int argc, char *argv[])
     MPI_Group_excl(group_world, Neven, members, &odd_group);
     MPI_Comm even_comm;
     MPI_Comm odd_comm;
-    MPI_Comm_create(MPI_COMM_WORLD, even_group, new_comm);
-    MPI_Comm_create(MPI_COMM_WORLD, odd_group, new_comm);
+    MPI_Comm new_comm;
+    MPI_Comm_create(MPI_COMM_WORLD, even_group, &new_comm);
+    MPI_Comm_create(MPI_COMM_WORLD, odd_group, &new_comm);
 
 #ifdef PTHREADS
   int ret;
@@ -249,7 +250,7 @@ int main (int argc, char *argv[])
   }
 
 /* On thread 0: */
-  int i;
+  //int i;
   TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
