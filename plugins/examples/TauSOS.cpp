@@ -467,8 +467,8 @@ void TAU_SOS_init() {
             }
         }
 
-        if (_threaded && thePluginOptions().env_sos_periodic) {
-			period_microseconds = thePluginOptions().env_sos_period;
+        if (thePluginOptions().env_sos_periodic) {
+            period_microseconds = thePluginOptions().env_sos_period;
             TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
@@ -488,7 +488,7 @@ void TAU_SOS_stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    if (_threaded && thePluginOptions().env_sos_periodic) {
+    if (thePluginOptions().env_sos_periodic) {
         TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
         pthread_cond_signal(&_my_cond);
         int ret = pthread_join(worker_thread, NULL);
@@ -535,7 +535,7 @@ void TAU_SOS_finalize(void) {
     if (shutdown_daemon) {
         if (my_rank == daemon_rank) {
             TAU_VERBOSE("Waiting for SOS to flush...\n");
-		    sleep(thePluginOptions().env_sos_shutdown_delay);
+            sleep(thePluginOptions().env_sos_shutdown_delay);
             TAU_SOS_send_shutdown_message();
         }
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
