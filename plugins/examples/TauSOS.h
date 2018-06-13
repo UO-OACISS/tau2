@@ -11,9 +11,9 @@
 #define TAU_SOS_TRACE_ADIOS_DEFAULT 0
 #define TAU_SOS_PERIODIC_DEFAULT 0
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
-#define TAU_SOS_SHUTDOWN_DELAY_DEFAULT 10 // seconds
+#define TAU_SOS_SHUTDOWN_DELAY_DEFAULT 1 // seconds
 #define TAU_SOS_USE_SELECTION_DEFAULT false // microseconds
-#define TAU_SOS_CACHE_DEPTH_DEFAULT 10 // SOS frames
+#define TAU_SOS_CACHE_DEPTH_DEFAULT 1 // SOS frames
 
 class SOS_plugin_options {
     private:
