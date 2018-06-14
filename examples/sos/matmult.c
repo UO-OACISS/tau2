@@ -136,7 +136,8 @@ double do_work(void) {
 void * threaded_func(void *data)
 {
     int * maxi = (int *)(data);
-  for (int i = 0 ; i < *maxi ; i++) {
+  int i;
+  for (i = 0 ; i < *maxi ; i++) {
 #ifdef PTHREADS
     int s = pthread_barrier_wait(&barrier);
 #endif
@@ -282,7 +283,7 @@ int main (int argc, char *argv[])
 
 
 #ifdef PTHREADS 
-  for (int i = 0 ; i < nthreads ; i++) {
+  for (i = 0 ; i < nthreads ; i++) {
     if (ret = pthread_join(tid[i], NULL) )
     {
         printf("Error: pthread_join (1) fails ret = %d\n", ret);
