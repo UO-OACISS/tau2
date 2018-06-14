@@ -20,6 +20,7 @@
 #include <Profile/Profiler.h> 
 #include <Profile/TauEnv.h> 
 #include <Profile/TauMpiTTypes.h>
+#include <Profile/TauPluginInternals.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
