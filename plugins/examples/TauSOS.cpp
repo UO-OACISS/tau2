@@ -103,6 +103,7 @@ void * Tau_sos_thread_function(void* data) {
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
     pthread_exit((void*)0L);
+	return(NULL);
 }
 
 void TAU_SOS_make_pub() {
@@ -165,7 +166,6 @@ void TAU_SOS_do_fork(std::string forkCommand) {
 void TAU_SOS_fork_exec_sosd_shutdown(void) {
 #ifdef TAU_MPI
     // first, figure out who should fork a daemon on this node
-    int i;
     if (my_rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
@@ -189,7 +189,6 @@ void TAU_SOS_fork_exec_sosd_shutdown(void) {
 
 void TAU_SOS_send_shutdown_message(void) {
 #ifdef TAU_MPI
-    int i;
     SOS_buffer     *buffer;
     SOS_msg_header  header;
     int offset;
@@ -631,7 +630,7 @@ void Tau_SOS_pack_long(const char * name, long int value) {
 /* Necessary to use const char * because UserEvents use TauSafeString objects, 
  * not std::string. We use the "if_empty" parameter to tell us how to treat
  * an empty set.  For exclude lists, it's false, for include lists, it's true */
-const bool Tau_SOS_contains(std::set<std::string>& myset, 
+bool Tau_SOS_contains(std::set<std::string>& myset, 
         const char * key, bool if_empty) {
     // if the set has contents, and we are in the set, then return true.
     std::string _key(key);
@@ -678,8 +677,6 @@ void TAU_SOS_pack_profile() {
         //foreach: THREAD
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
             calls = fi->GetCalls(tid);
-		    int vec_index = 0;
-
             std::stringstream calls_str;
             calls_str << "TAU_TIMER:" << tid << ":calls:" << fi->GetAllGroups() << ":" << fi->GetName();
             const std::string& tmpcalls = calls_str.str();
@@ -719,7 +716,6 @@ void TAU_SOS_pack_profile() {
         if (skip_counter(ue->GetName().c_str())) {
             continue;
         }
-	    double tmp_accum = 0.0;
 	    std::string counter_name;
 
         int tid = 0;
@@ -807,7 +803,13 @@ bool strmatch(const char str[], const char pattern[],
  
     // lookup table for storing results of
     // subproblems
-    bool lookup[n + 1][m + 1] = {false};
+    bool lookup[n + 1][m + 1]; // = {false};
+	// PGI compiler doesn't like initialization during declaration...
+    for (int i = 0; i <= n; i++) {
+        for (int j = 0; j <= m; j++) {
+            lookup[i][j] = false;
+		}
+	}
  
     // initailze lookup table to false
     //memset(lookup, false, sizeof(lookup));
