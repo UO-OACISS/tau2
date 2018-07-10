@@ -175,14 +175,15 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
 
 /* This happens from Profiler.cpp, when data is written out. */
 int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data) {
-    if (!enabled) return 0;
+    if (!enabled || data.tid != 0) return 0;
     /* If we are tracing, we need to "stop" all of the remaining timers on the stack */
     if (thePluginOptions().env_sos_tracing) {
         Tau_plugin_event_function_exit_data data;
         // safe to assume 0?
-        // for (int t = 0 ; t < TAU_MAX_THREADS ; t++) {
-        int t = RtsLayer::myThread();
-            int depth = Tau_get_current_stack_depth(t);
+        //int tid = data.tid;
+        RtsLayer::UnLockDB();
+        for (int tid = TAU_MAX_THREADS-1 ; tid >= 0 ; tid--) {
+            int depth = Tau_get_current_stack_depth(tid);
             for (int i = depth ; i > -1 ; i--) {
                 tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
                 if (profiler->ThisFunction->GetName() == NULL) {
@@ -190,18 +191,21 @@ int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data data)
                     data.timer_name = strdup(".TAU application");
                 } else {
                     data.timer_name = profiler->ThisFunction->GetName();
+                    data.timer_group = profiler->ThisFunction->GetAllGroups();
                 }
-                data.tid = t;
-                //printf("Stopping %s\n", data.timer_name);
+                data.tid = tid;
+                double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
+                RtsLayer::getUSecD(tid, CurrentTime);
+                data.timestamp = (x_uint64)CurrentTime[0];    // USE COUNTER1 for tracing
+                //printf("%d,%d Stopping %s\n", getpid(), tid, data.timer_name);
                 Tau_plugin_sos_function_exit(data);
             }
-        // }
+        }
+        RtsLayer::UnLockDB();
     }
     enabled = false;
     //fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
-    if (data.tid == 0) {
-        TAU_SOS_finalize();
-    }
+    TAU_SOS_finalize();
     return 0;
 }
 
@@ -250,15 +254,23 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
 
     /* If we are tracing, we need to "start" all of the timers on the stack */
     if (thePluginOptions().env_sos_tracing) {
-        Tau_plugin_event_function_entry_data data;
-        // safe to assume 0?
-        int depth = Tau_get_current_stack_depth(RtsLayer::myThread());
-        for (int i = 0 ; i <= depth ; i++) {
-            tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
-            data.timer_name = profiler->ThisFunction->GetName();
-            data.tid = RtsLayer::myThread();
-            Tau_plugin_sos_function_entry(data);
+        RtsLayer::LockDB();
+        //int tid = RtsLayer::myThread();
+        for (int tid = TAU_MAX_THREADS-1 ; tid >= 0 ; tid--) {
+            Tau_plugin_event_function_entry_data data;
+            // safe to assume 0?
+            int depth = Tau_get_current_stack_depth(tid);
+            for (int i = 0 ; i <= depth ; i++) {
+                tau::Profiler *profiler = Tau_get_timer_at_stack_depth(i);
+                data.timer_name = profiler->ThisFunction->GetName();
+                data.timer_group = profiler->ThisFunction->GetAllGroups();
+                data.tid = tid;
+                data.timestamp = (x_uint64)profiler->StartTime[0];
+                //printf("%d,%d Starting %s\n", getpid(), tid, data.timer_name);
+                Tau_plugin_sos_function_entry(data);
+            }
         }
+        RtsLayer::UnLockDB();
     }
     return 0;
 }

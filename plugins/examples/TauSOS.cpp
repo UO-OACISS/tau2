@@ -564,6 +564,7 @@ void Tau_SOS_pack_current_timer(const char * event_name) {
     // assume time is the first counter!
     // also convert it to microseconds
     double value = (current[0] - p->StartTime[0]) * CONVERT_TO_USEC;
+    if (strlen(event_name) > 256) { printf("long string, %d: '%s'\n", strlen(event_name), event_name); }
     SOS_pack(tau_sos_pub, event_name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
@@ -579,6 +580,7 @@ void Tau_SOS_pack_string(const char * name, char * value) {
         }
         RtsLayer::UnLockDB();
     }
+    if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_STRING, value);
 }
 
@@ -594,6 +596,7 @@ void Tau_SOS_pack_double(const char * name, double value) {
         }
         RtsLayer::UnLockDB();
     }
+    if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
@@ -609,6 +612,7 @@ void Tau_SOS_pack_integer(const char * name, int value) {
         }
         RtsLayer::UnLockDB();
     }
+    if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_INT, &value);
 }
 
@@ -624,6 +628,7 @@ void Tau_SOS_pack_long(const char * name, long int value) {
         }
         RtsLayer::UnLockDB();
     }
+    if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_LONG, &value);
 }
 
@@ -680,6 +685,7 @@ void TAU_SOS_pack_profile() {
             std::stringstream calls_str;
             calls_str << "TAU_TIMER:" << tid << ":calls:" << fi->GetAllGroups() << ":" << fi->GetName();
             const std::string& tmpcalls = calls_str.str();
+            if (strlen(tmpcalls.c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmpcalls.c_str()), tmpcalls.c_str()); }
             SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
     
             // todo - subroutines
@@ -695,6 +701,8 @@ void TAU_SOS_pack_profile() {
                 excl_str.str(std::string());
                 excl_str << "TAU_TIMER:" << tid << ":exclusive_" << counterNames[m] << ":" << fi->GetAllGroups() << ":" << fi->GetName();
                 const std::string& tmpexcl = excl_str.str();
+                if (strlen(tmpexcl.c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmpexcl.c_str()), tmpexcl.c_str()); }
+                if (strlen(tmpincl.c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmpincl.c_str()), tmpincl.c_str()); }
                 SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, &inclusive);
                 SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, &exclusive);
             }
@@ -728,18 +736,23 @@ void TAU_SOS_pack_profile() {
             min = ue->GetMin(tid);
             sumsqr = ue->GetSumSqr(tid);
             tmp_str << "TAU_COUNTER:" << tid << ":NumEvents:" << ue->GetName();
+            if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, &numEvents);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":Max:" << ue->GetName();
+            if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &max);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":Min:" << ue->GetName();
+            if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &min);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":Mean:" << ue->GetName();
+            if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &mean);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":SumSqr:" << ue->GetName();
+            if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &sumsqr);
             tmp_str.str(std::string());
         }
