@@ -188,7 +188,7 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
-    //fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
+    fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
     // Parse our settings
     TAU_SOS_parse_environment_variables();
     // Check the value of TAU_SOS
@@ -197,7 +197,10 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
         printf("*** SOS NOT ENABLED! ***\n"); 
         return 0; 
     }
+
     TAU_SOS_init();
+
+#if 1
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
     /* Required event support */
@@ -223,6 +226,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
 
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
+#endif
+
     return 0;
 }
 
