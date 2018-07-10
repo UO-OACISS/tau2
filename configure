@@ -6765,9 +6765,9 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then
     echo "NOTE: Copying $ompt_dir/$libomp_osstgz"
     cp $ompt_dir/$libomp_osstgz .
-    if [ "x$download_ompt" != "xyes" ] ; then 
-      download_ompt_tr6=yes
-    fi
+    #if [ "x$download_ompt" != "xyes" ] ; then 
+    #  download_ompt_tr6=yes
+    #fi
   fi
 fi
 
@@ -6788,7 +6788,7 @@ fi
 
 if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
   install_ompt=yes
-  if [ ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -o ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ]; then
+  if [ ! -f "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -o  "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -ot "${libomp_oss}"  ]; then
     preomptdir=`pwd`
 
     #check Cmake exists
