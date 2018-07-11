@@ -189,7 +189,6 @@ installsos()
  fi
 
  cd $dst
- git checkout master
  #git checkout merge_of_doom
  mkdir build-linux
  cd build-linux

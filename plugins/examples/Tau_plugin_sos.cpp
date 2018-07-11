@@ -28,6 +28,14 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
     return 0;
 }
 
+/* This happens when reading MPI-T PVARs from the underlying MPI library */
+int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data data) {
+
+    fprintf(stdout, "sos_mpit plugin: send data to SOS\n");
+    TAU_SOS_send_data();
+    return 0;
+}
+
 /* This is a weird event, not sure what for */
 int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data data) {
     return 0;
@@ -205,6 +213,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
     /* Required event support */
     cb->Dump = Tau_plugin_sos_dump;
+    cb->Mpit = Tau_plugin_sos_mpit;
     cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
     cb->PostInit = Tau_plugin_sos_post_init;
     cb->PreEndOfExecution = Tau_plugin_sos_pre_end_of_execution;
