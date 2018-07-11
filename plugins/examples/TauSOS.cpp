@@ -120,7 +120,7 @@ void TAU_SOS_make_pub() {
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
 /* Fixme! Replace these with values from TAU metadata. */
-        SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
+        //SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
@@ -434,7 +434,7 @@ void TAU_SOS_init() {
         // we fail "too many" times, give an error and continue
         _runtime = NULL;
         TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
-        SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+        //SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
             TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
             TAU_SOS_fork_exec_sosd();
@@ -445,7 +445,7 @@ void TAU_SOS_init() {
             sleep(2);
             _runtime = NULL;
             TAU_VERBOSE("TAU_SOS_init() trying to connect...\n");
-            SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
+            //SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
             if (_runtime != NULL) {
                 TAU_VERBOSE("Connected to SOS daemon. Continuing...\n");
                 break;
