@@ -1361,6 +1361,54 @@ MPI_Comm * comm_out;
   return returnVal;
 }
 
+void Tau_handle_comm_spawn(MPI_Comm comm, MPI_Comm intercomm) {
+    static int tau_comm_spawn_num = 0;
+    tau_comm_spawn_num++;
+    int comm_rank;
+    MPI_Comm_rank(comm, &comm_rank);
+    // Send the generation number to the spawned processes, which
+    // will join the Bcast in MPI_Init
+    if(comm_rank == 0) {
+        PMPI_Bcast(&tau_comm_spawn_num, 1, MPI_INT, MPI_ROOT, intercomm);
+    } else {
+        PMPI_Bcast(&tau_comm_spawn_num, 1, MPI_INT, MPI_PROC_NULL, intercomm);
+    }
+}
+
+int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs,
+    MPI_Info info, int root, MPI_Comm comm,
+    MPI_Comm *intercomm, int array_of_errcodes[]) {
+  int   returnVal;
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+  
+  returnVal = PMPI_Comm_spawn(command, argv, maxprocs, info, root, comm, intercomm, array_of_errcodes);
+  Tau_handle_comm_spawn(comm, *intercomm);
+
+  TAU_PROFILE_STOP(tautimer);
+
+  return returnVal;
+}
+
+int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
+    char **array_of_argv[], const int array_of_maxprocs[], const MPI_Info
+    array_of_info[], int root, MPI_Comm comm, MPI_Comm *intercomm,
+    int array_of_errcodes[]) {
+  int   returnVal;
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn_multiple()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+  
+  returnVal = PMPI_Comm_spawn_multiple(count, array_of_commands, array_of_argv, array_of_maxprocs, array_of_info, root, comm, intercomm, array_of_errcodes);
+  Tau_handle_comm_spawn(comm, intercomm);
+
+  TAU_PROFILE_STOP(tautimer);
+
+  return returnVal;
+}
+
+
 int   MPI_Comm_test_inter( comm, flag )
 MPI_Comm comm;
 int * flag;
@@ -1972,10 +2020,25 @@ int Tau_MPI_T_initialization(void) {
 #endif /* TAU_MPI_T */
 }
 
+void Tau_handle_spawned_init(MPI_Comm intercomm) {
+  int generation_num;
+  PMPI_Bcast(&generation_num, 1, MPI_INT, 0, intercomm);
+  const char * profiledir = TauEnv_get_profiledir();
+  const char * tracedir = TauEnv_get_profiledir();
+  char new_profiledir[4096];
+  char new_tracedir[4096];
+  snprintf(new_profiledir, 4096, "%s/%d", profiledir, generation_num);
+  snprintf(new_tracedir, 4096, "%s/%d", tracedir, generation_num);
+  TauEnv_set_profiledir(new_profiledir);
+  TauEnv_set_tracedir(new_tracedir);
+  TAU_VERBOSE("TAU_INIT: MPI_Comm_spawn generation %d\n", generation_num);
+}
+
 int  MPI_Init( argc, argv )
 int * argc;
 char *** argv;
 {
+  fprintf(stderr, "MPI INIT wrapper\n");
   int  returnVal;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
@@ -2003,6 +2066,13 @@ char *** argv;
 #endif
 
   returnVal = PMPI_Init( argc, argv );
+
+  MPI_Comm parent;
+  PMPI_Comm_get_parent(&parent);
+  if(parent != MPI_COMM_NULL) {
+    // This process was created through MPI_Comm_spawn
+    Tau_handle_spawned_init(parent);
+  }
 
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
   if(TauEnv_get_plugins_enabled()) {
@@ -2073,6 +2143,7 @@ char *** argv;
 int required;
 int *provided;
 {
+  fprintf(stderr, "MPI INIT THREAD WRAPPER\n");
   int  returnVal;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
@@ -2090,6 +2161,13 @@ int *provided;
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
+
+  MPI_Comm parent;
+  MPI_Comm_get_parent(&parent);
+  if(parent != MPI_COMM_NULL) {
+    // This process was created through MPI_Comm_spawn
+    Tau_handle_spawned_init(parent);
+  }
 
   /*Initialize the plugin system only if both plugin path and plugins are specified*/
   if(TauEnv_get_plugins_enabled()) {

@@ -760,6 +760,14 @@ extern "C" const char *TauEnv_get_tracedir() {
   return env_tracedir;
 }
 
+extern "C" void TauEnv_set_profiledir(const char * new_profiledir) {
+    env_profiledir = strdup(new_profiledir);
+}
+
+extern "C" void TauEnv_set_tracedir(const char * new_tracedir) {
+    env_tracedir = strdup(new_tracedir);
+}
+
 int TauEnv_get_synchronize_clocks() {
   return env_synchronize_clocks;
 }
