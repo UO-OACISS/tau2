@@ -121,6 +121,7 @@ using namespace tau;
 extern FunctionInfo * Tau_create_thread_state_if_necessary(const char* thread_state);
 extern FunctionInfo * Tau_create_thread_state_if_necessary_string(const string & thread_state);
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
+extern "C" int Tau_get_usesMPI();
 
 #if defined(TAU_OPENMP) && !defined (TAU_USE_OMPT_TR6) && (defined(TAU_USE_OMPT) || defined (TAU_IBM_OMPT))
 extern "C" int Tau_get_thread_omp_state(int tid);
@@ -1868,6 +1869,13 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 
   // sanity check - does the user want sampling at all?
   if (!TauEnv_get_ebs_enabled()) return;
+
+  // If this is an MPI configuration of TAU, don't initialize sampling
+  // if MPI_Init hasn't been called yet. This is necessary to prevent
+  // problems where the sampling signal interferes with MPI startup.
+#ifdef TAU_MPI
+  if(Tau_get_usesMPI() == 0) return;
+#endif
 
   int tid = RtsLayer::localThreadId();
   // have we initialized already?
