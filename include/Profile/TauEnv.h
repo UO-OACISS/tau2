@@ -111,6 +111,8 @@ extern "C" {
   double      TAUDECL TauEnv_get_throttle_percall();
   const char* TAUDECL TauEnv_get_profiledir();
   const char* TAUDECL TauEnv_get_tracedir();
+  void TAUDECL TauEnv_set_profiledir(const char * new_profiledir);
+  void TAUDECL TauEnv_set_tracedir(const char * new_tracedir);
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cvar_metrics();
   const char* TAUDECL TauEnv_get_cvar_values();
