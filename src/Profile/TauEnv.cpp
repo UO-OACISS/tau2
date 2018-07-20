@@ -343,6 +343,8 @@ static const char *env_mem_classes = NULL;
 static std::set<std::string> * env_mem_classes_set = NULL;
 static int env_region_addresses = TAU_REGION_ADDRESSES_DEFAULT;
 
+static const char *env_tau_exec_args = NULL;
+
 } // extern "C"
 
 /*********************************************************************
@@ -1200,11 +1202,17 @@ int TauEnv_get_mem_class_present(const char * name) {
     return env_mem_classes_set->count(name);
 }
 
+const char * TauEnv_get_tau_exec_args() {
+  return env_tau_exec_args;
+}
+
+
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
  ********************************************************************/
 void TauEnv_initialize() 
 {
+    fprintf(stderr, "TAUENV INITIALIZE\n");
   char tmpstr[512];
 
   /* unset LD_PRELOAD so that vt_unify and elg_unify work */
@@ -2451,9 +2459,9 @@ void TauEnv_initialize()
 
     if ((env_mem_classes = getconf("TAU_MEM_CLASSES")) == NULL) {
       env_mem_classes = "";
-      TAU_VERBOSE("TAU: MEM_CLASSES is not set\n", env_metrics);
+      TAU_VERBOSE("TAU: MEM_CLASSES is not set\n");
     } else {
-      TAU_VERBOSE("TAU: MEM_CLASSES is \"%s\"\n", env_metrics);
+      TAU_VERBOSE("TAU: MEM_CLASSES is \"%s\"\n", env_mem_classes);
       if(strcmp(env_mem_classes, "all") == 0) {
         env_mem_all = 1; 
         TAU_VERBOSE("TAU: Tracking All Class Allocations\n");
@@ -2464,6 +2472,13 @@ void TauEnv_initialize()
         env_mem_classes_set->insert(next_mem_class);
         next_mem_class = strtok_r(NULL, ":,", &saveptr);
       }
+    }
+
+    if ((env_tau_exec_args = getconf("TAU_EXEC_ARGS")) == NULL) {
+      env_tau_exec_args = "";
+      TAU_VERBOSE("TAU: TAU_EXEC_ARGS is not set\n");
+    } else {
+      TAU_VERBOSE("TAU: TAU_EXEC_ARGS is \"%s\"\n", env_tau_exec_args);
     }
 
     initialized = 1;
