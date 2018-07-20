@@ -164,6 +164,7 @@ extern "C" {
   const char * TAUDECL TauEnv_get_mem_classes();
   int TAUDECL TauEnv_get_mem_class_present(const char * name);
   const char * TAUDECL TauEnv_get_tau_exec_args();
+  const char * TAUDECL TauEnv_get_tau_exec_path();
 #ifdef __cplusplus
   void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
                           const std::string& replace);

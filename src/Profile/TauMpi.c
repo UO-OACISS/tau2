@@ -35,6 +35,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <wordexp.h>
 
 #include <string.h>
 #ifdef TAU_BEACON
@@ -1382,9 +1385,45 @@ int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs,
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
+
+  const char * tau_exec_args = TauEnv_get_tau_exec_args();
+  const char * tau_exec_path = TauEnv_get_tau_exec_path();
+  int allocated_argv = 0;
+  wordexp_t p;
+  if(tau_exec_args != NULL && tau_exec_args[0] != '\0') {
+    // This program was launched through tau_exec
+    const char * old_command = command;
+    char ** old_argv = argv;
+    size_t old_argc = 0;
+    if(old_argv != NULL) {
+        char * arg;
+        for(arg = old_argv[old_argc]; arg != NULL; arg = old_argv[++old_argc]);
+    }
+    wordexp(tau_exec_args, &p, WRDE_NOCMD);
+    argv = malloc((p.we_wordc + old_argc + 2) * sizeof(char*));
+    int offset;
+    for(offset = 0; offset < p.we_wordc; ++offset) {
+      argv[offset] = p.we_wordv[offset];
+    }
+    argv[offset++] = old_command;
+    int i;
+    for(i = 0; i < old_argc; ++i) {
+      argv[offset++] = old_argv[i];
+    }
+    argv[offset] = NULL;
+
+    command = tau_exec_path;
+    allocated_argv = 1;
+
+  }
   
   returnVal = PMPI_Comm_spawn(command, argv, maxprocs, info, root, comm, intercomm, array_of_errcodes);
   Tau_handle_comm_spawn(comm, *intercomm);
+
+  if(allocated_argv == 1) {
+    free(argv);
+    wordfree(&p);
+  }
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -2020,6 +2059,43 @@ int Tau_MPI_T_initialization(void) {
 #endif /* TAU_MPI_T */
 }
 
+int mkdirp(const char *path) {
+    const size_t len = strlen(path);
+    char _path[4096];
+    char *p; 
+
+    errno = 0;
+
+    /* Copy string so its mutable */
+    if (len > sizeof(_path)-1) {
+            errno = ENAMETOOLONG;
+            return -1; 
+        }   
+    strcpy(_path, path);
+
+    /* Iterate the string */
+    for (p = _path + 1; *p; p++) {
+            if (*p == '/') {
+                        /* Temporarily truncate */
+                        *p = '\0';
+            
+                        if (mkdir(_path, S_IRWXU) != 0) {
+                                        if (errno != EEXIST)
+                                            return -1; 
+                                    }
+            
+                        *p = '/';
+                    }
+        }   
+
+    if (mkdir(_path, S_IRWXU) != 0) {
+            if (errno != EEXIST)
+                return -1; 
+        }   
+
+    return 0;
+}
+
 void Tau_handle_spawned_init(MPI_Comm intercomm) {
   int generation_num;
   PMPI_Bcast(&generation_num, 1, MPI_INT, 0, intercomm);
@@ -2027,8 +2103,10 @@ void Tau_handle_spawned_init(MPI_Comm intercomm) {
   const char * tracedir = TauEnv_get_profiledir();
   char new_profiledir[4096];
   char new_tracedir[4096];
-  snprintf(new_profiledir, 4096, "%s/%d", profiledir, generation_num);
-  snprintf(new_tracedir, 4096, "%s/%d", tracedir, generation_num);
+  snprintf(new_profiledir, 4096, "%s/spawn-%d", profiledir, generation_num);
+  snprintf(new_tracedir, 4096, "%s/spawn-%d", tracedir, generation_num);
+  mkdirp(new_profiledir);
+  mkdirp(new_tracedir);
   TauEnv_set_profiledir(new_profiledir);
   TauEnv_set_tracedir(new_tracedir);
   TAU_VERBOSE("TAU_INIT: MPI_Comm_spawn generation %d\n", generation_num);
@@ -2038,7 +2116,6 @@ int  MPI_Init( argc, argv )
 int * argc;
 char *** argv;
 {
-  fprintf(stderr, "MPI INIT wrapper\n");
   int  returnVal;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
