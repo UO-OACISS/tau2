@@ -1401,7 +1401,7 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Comm_spawn_multiple(count, array_of_commands, array_of_argv, array_of_maxprocs, array_of_info, root, comm, intercomm, array_of_errcodes);
-  Tau_handle_comm_spawn(comm, intercomm);
+  Tau_handle_comm_spawn(comm, *intercomm);
 
   TAU_PROFILE_STOP(tautimer);
 
