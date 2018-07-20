@@ -21,18 +21,8 @@ int main( int argc, char *argv[], char ** envp )
   char message[BUFSIZE];
   MPI_Comm parentcomm, spawnedcomm, allcomm;
   
+  MPI_Init(&argc, &argv);
   pid_t pid = getpid();
-  /* the usual start-up for any process */
-  //fprintf(stderr, "\n");
-  //for (char **env = envp; *env != 0; env++) {
-  //  char *thisEnv = *env;
-  //  fprintf(stderr, "[%ld] %s\n", (long)pid, thisEnv);    
-  //}
-  fprintf(stderr, "\n");
-  fprintf(stderr, "[%ld] Going to call MPI_Init\n", (long)pid);
-  MPI_Init( &argc, &argv );
-  fprintf(stderr, "[%ld] Returning from MPI_Init\n", (long)pid);
-
   /* This function provides a convenient way to determine whether
   ** this process is part of the original communicator (has a null
   ** parent), or part of the newly spawned communicator */
@@ -43,19 +33,20 @@ int main( int argc, char *argv[], char ** envp )
     /* Create 2 more processes.
     ** Here we spawn 2 more instances of this program.
     ** argv[0] contains the name of the executable for this program. */
-    MPI_Comm_spawn( argv[0], MPI_ARGV_NULL, np, MPI_INFO_NULL, 0, 
+    char * spawn_args[] = {"-n", "1", NULL};
+    MPI_Comm_spawn( argv[0], spawn_args, np, MPI_INFO_NULL, 0, 
 		    MPI_COMM_WORLD, &spawnedcomm, MPI_ERRCODES_IGNORE );
     /* get the process rank, in this case within the parent communicator */
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD,&size);
-    printf("rank %d (of %d) in the parent intra-communicator.\n",rank,size);
+    printf("[%ld] rank %d (of %d) in the parent intra-communicator.\n", (long)pid, rank, size);
   }
   else {
     /* notice that the spawned processes have an intra-communicator
     ** called MPI_COMM_WORLD, too */
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD,&size);
-    printf("rank %d (of %d) in the spawned intra-communicator.\n",rank,size);
+    printf("[%ld] rank %d (of %d) in the spawned intra-communicator.\n", (long)pid, rank, size);
   }
 
   /* we can broadcast to all processes associated with an
@@ -77,7 +68,7 @@ int main( int argc, char *argv[], char ** envp )
   }
   else {
     MPI_Bcast(message,BUFSIZE,MPI_CHAR,MASTER,parentcomm);
-    printf("spawned rank %d (of %d).  Master broadcasts: %s\n",rank,size,message);
+    printf("[%ld] spawned rank %d (of %d).  Master broadcasts: %s\n", (long)pid, rank, size, message);
   }
   
   /* A simpler manoeuvre is to (collectively) merge 
@@ -93,7 +84,7 @@ int main( int argc, char *argv[], char ** envp )
   ** merged communicator */
   MPI_Comm_rank(allcomm,&rank);
   MPI_Comm_size(allcomm,&size);
-  printf("rank %d (of %d) in the merged intra-communicator.\n",rank,size);
+  printf("[%ld] rank %d (of %d) in the merged intra-communicator.\n", (long)pid, rank, size);
   
   /* free communicators when we've finished with them
   ** remembering the different names as seen from different

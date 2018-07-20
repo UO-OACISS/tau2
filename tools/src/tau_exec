@@ -564,6 +564,7 @@ for arg in "$@" ; do
     esac
   fi
 done
+export TAU_EXEC_PATH=${BASH_SOURCE[0]}
 
 
 # choose TAU library

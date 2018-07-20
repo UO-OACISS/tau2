@@ -344,6 +344,7 @@ static std::set<std::string> * env_mem_classes_set = NULL;
 static int env_region_addresses = TAU_REGION_ADDRESSES_DEFAULT;
 
 static const char *env_tau_exec_args = NULL;
+static const char *env_tau_exec_path = NULL;
 
 } // extern "C"
 
@@ -1206,13 +1207,16 @@ const char * TauEnv_get_tau_exec_args() {
   return env_tau_exec_args;
 }
 
+const char * TauEnv_get_tau_exec_path() {
+  return env_tau_exec_path;
+}
+
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
  ********************************************************************/
 void TauEnv_initialize() 
 {
-    fprintf(stderr, "TAUENV INITIALIZE\n");
   char tmpstr[512];
 
   /* unset LD_PRELOAD so that vt_unify and elg_unify work */
@@ -2479,6 +2483,13 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: TAU_EXEC_ARGS is not set\n");
     } else {
       TAU_VERBOSE("TAU: TAU_EXEC_ARGS is \"%s\"\n", env_tau_exec_args);
+    }
+
+    if ((env_tau_exec_path = getconf("TAU_EXEC_PATH")) == NULL) {
+      env_tau_exec_path = "";
+      TAU_VERBOSE("TAU: TAU_EXEC_PATH is not set\n");
+    } else {
+      TAU_VERBOSE("TAU: TAU_EXEC_PATH is \"%s\"\n", env_tau_exec_path);
     }
 
     initialized = 1;
