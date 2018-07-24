@@ -795,7 +795,7 @@ int Tau_track_mpi_t_here(void) {
   MPI_Datatype datatype;
   MPI_T_enum enumtype;
   int mpi_t_enable_user_tuning_policy = 0;
-  
+
   /* if TAU_TRACK_MPI_T_PVARS is not set to true, return with a success but do nothing 
    * to process MPI_T events */
   if (TauEnv_get_track_mpi_t_pvars() == 0) {
@@ -806,6 +806,8 @@ int Tau_track_mpi_t_here(void) {
   return_val = Tau_mpi_t_initialize();
   if(return_val != MPI_SUCCESS) 
     return return_val;
+
+  fprintf(stdout, "Track MPIT PVARs\n");
 
   /* get number of pvars from MPI_T */
   return_val = MPI_T_pvar_get_num(&num_pvars);
@@ -871,12 +873,13 @@ int Tau_track_mpi_t_here(void) {
         // Trigger the TAU event if it is non-zero
 	if (mydata > 0L) {
           Tau_track_pvar_event(i, j, tau_pvar_count, tau_initial_pvar_count, mydata);
-       
+      
           /*Invoke plugins only if both plugin path and plugins are specified*/
           if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_mpit_data plugin_data;
             plugin_data.pvar_index = j;
             plugin_data.pvar_value = mydata;
+            fprintf(stdout, "MPI-T invoke callback\n"); 
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, &plugin_data);
           }
  

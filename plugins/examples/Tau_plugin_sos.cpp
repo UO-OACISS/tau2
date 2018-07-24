@@ -21,7 +21,7 @@
 
 /* Only dump data to SOS if we aren't doing periodic dumps */
 int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
-    //printf("TAU PLUGIN SOS: dump\n");
+    printf("TAU PLUGIN SOS: dump\n");
     if (thePluginOptions().env_sos_periodic != 1) { 
         TAU_SOS_send_data();
     }
@@ -31,7 +31,11 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
 /* This happens when reading MPI-T PVARs from the underlying MPI library */
 int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data data) {
 
-    fprintf(stdout, "sos_mpit plugin: send data to SOS\n");
+    printf("TAU PLUGIN SOS: MPIT\n");
+
+    //fprintf(stdout, "pvar index: %d\n", data.pvar_index);
+    //fprintf(stdout, "pvar value: %llu\n", data.pvar_value); 
+
     TAU_SOS_send_data();
     return 0;
 }
@@ -208,6 +212,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
 
     TAU_SOS_init();
 
+    fprintf(stdout, "SOS plugin: SOS initalized\n");
 #if 1
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
