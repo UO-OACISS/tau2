@@ -873,7 +873,9 @@ int Tau_track_mpi_t_here(void) {
         // Trigger the TAU event if it is non-zero
 	if (mydata > 0L) {
           Tau_track_pvar_event(i, j, tau_pvar_count, tau_initial_pvar_count, mydata);
-      
+     
+          //TauInternalFunctionGuard protects_this_function; 
+
           /*Invoke plugins only if both plugin path and plugins are specified*/
           if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_mpit_data plugin_data;

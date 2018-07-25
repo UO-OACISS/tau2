@@ -521,6 +521,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->MetadataRegistrationComplete = 0;
   cb->PostInit = 0;
   cb->Dump = 0;
+  cb->Mpit = 0;
   cb->FunctionEntry = 0;
   cb->FunctionExit = 0;
   cb->Send = 0;
@@ -541,6 +542,7 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->MetadataRegistrationComplete = src->MetadataRegistrationComplete;
   dest->PostInit = src->PostInit;
   dest->Dump = src->Dump;
+  dest->Mpit = src->Mpit;
   dest->FunctionEntry = src->FunctionEntry;
   dest->FunctionExit = src->FunctionExit;
   dest->Send = src->Send;
@@ -593,7 +595,6 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data data) {
 
   while(callback != NULL) {
    if(callback->cb.Mpit != 0) {
-     fprintf(stdout, "Util: invoke MPIT callback\n");
      callback->cb.Mpit(data);
    }
    callback = callback->next;
