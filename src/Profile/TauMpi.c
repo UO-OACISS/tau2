@@ -70,6 +70,12 @@
 #define TAU_OPENMPI3_CONST  
 #endif
 
+#if defined(TAU_MPC)
+#define TAU_NONMPC_CONST  
+#else
+#define TAU_NONMPC_CONST const
+#endif
+
 /* These functions and macros are for creating MPI "events" in the SOS stream. */
 
 #ifdef TAU_SOS
@@ -1378,12 +1384,7 @@ void Tau_handle_comm_spawn(MPI_Comm comm, MPI_Comm intercomm) {
     }
 }
 
-#if defined(TAU_MPC)
-#define MPI_COMM_SPAWN_QUALIFIER 
-#else
-#define MPI_COMM_SPAWN_QUALIFIER const
-#endif
-int MPI_Comm_spawn(MPI_COMM_SPAWN_QUALIFIER char *command, char *argv[], int maxprocs,
+int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
     MPI_Info info, int root, MPI_Comm comm,
     MPI_Comm *intercomm, int array_of_errcodes[]) {
   int   returnVal;
@@ -1436,7 +1437,7 @@ int MPI_Comm_spawn(MPI_COMM_SPAWN_QUALIFIER char *command, char *argv[], int max
 }
 
 int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
-    char **array_of_argv[], MPI_COMM_SPAWN_QUALIFIER int array_of_maxprocs[], MPI_COMM_SPAWN_QUALIFIER MPI_Info
+    char **array_of_argv[], TAU_NONMPC_CONST int array_of_maxprocs[], TAU_NONMPC_CONST MPI_Info
     array_of_info[], int root, MPI_Comm comm, MPI_Comm *intercomm,
     int array_of_errcodes[]) {
   int   returnVal;
