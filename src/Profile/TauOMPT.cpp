@@ -275,6 +275,7 @@ on_ompt_callback_work(
     switch(endpoint)
     {
       case ompt_scope_begin:
+        task_data->ptr = NULL;
         if(TauEnv_get_ompt_resolve_address_eagerly()) {
           Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
           switch(wstype)
@@ -342,8 +343,10 @@ on_ompt_callback_work(
         task_data->ptr = (void*)handle;
         break;
       case ompt_scope_end: 
-	TAU_PROFILER_STOP(task_data->ptr);
-	break;
+        if(task_data->ptr != NULL) {
+	      TAU_PROFILER_STOP(task_data->ptr);
+        }
+	    break;
     }
   }
 }
