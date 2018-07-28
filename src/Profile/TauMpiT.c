@@ -875,10 +875,11 @@ int Tau_track_mpi_t_here(void) {
           Tau_track_pvar_event(i, j, tau_pvar_count, tau_initial_pvar_count, mydata);
      
           //TauInternalFunctionGuard protects_this_function; 
-
+          fprintf(stdout, "TAU track MPI-T: pvar initial count=%d, pvar count=%d, pvar index=%d, pvar sub index=%d, pvar value=%llu\n", tau_initial_pvar_count, tau_pvar_count[i], i, j, mydata);
           /*Invoke plugins only if both plugin path and plugins are specified*/
           if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_mpit_data plugin_data;
+            plugin_data.pvar_name = Tau_get_pvar_name(i,j);
             plugin_data.pvar_index = j;
             plugin_data.pvar_value = mydata;
             fprintf(stdout, "MPI-T invoke callback\n"); 

@@ -21,7 +21,7 @@
 
 /* Only dump data to SOS if we aren't doing periodic dumps */
 int Tau_plugin_sos_dump(Tau_plugin_event_dump_data data) {
-    printf("TAU PLUGIN SOS: dump\n");
+    //printf("TAU PLUGIN SOS: dump\n");
     if (thePluginOptions().env_sos_periodic != 1) { 
         TAU_SOS_send_data();
     }
@@ -33,8 +33,8 @@ int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data data) {
 
     printf("TAU PLUGIN SOS: MPIT\n");
 
-    //fprintf(stdout, "pvar index: %d\n", data.pvar_index);
-    //fprintf(stdout, "pvar value: %llu\n", data.pvar_value); 
+    fprintf(stdout, "TAU PLUGIN SOS: pvar name: %s\n", data.pvar_name);
+    fprintf(stdout, "TAU PLUGIN SOS: pvar value: %llu\n", data.pvar_value); 
 
     TAU_SOS_send_data();
     return 0;
