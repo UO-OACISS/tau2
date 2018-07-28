@@ -2898,6 +2898,12 @@ TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current
     
     return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
+ 
+TauUserEvent & PvarName(const int current_pvar_index, const int current_pvar_subindex) {
+    /*All this routine does is to return the event at the current PVAR index and subindex*/
+    
+    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
+}
 
 /*Allocate events to track PVARs*/
 extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count) {
@@ -2925,6 +2931,11 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
     }
 
     tau_previous_pvar_count = num_pvars;
+}
+
+extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
+
+  return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
