@@ -15,9 +15,9 @@
 #include <Profile/TauPlugin.h>
 
 
-int Tau_plugin_test_event_end_of_execution(Tau_plugin_event_end_of_execution_data data) {
+int Tau_plugin_test_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
   
-  std::cout << "TAU PLUGIN: End of execution reached for threadId: " << data.tid << std::endl;
+  std::cout << "TAU PLUGIN: End of execution reached for threadId: " << data->tid << std::endl;
 
   return 0;
 }

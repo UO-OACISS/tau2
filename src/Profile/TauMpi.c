@@ -74,12 +74,15 @@
 int TAU_inside_ADIOS(void);
 
 inline void Tau_plugin_trace_current_timer(const char * name) {
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+// This is protected by a macro to avoid unnecessary overhead.
     /*Invoke plugins only if both plugin path and plugins are specified*/
-    if(TauEnv_get_plugins_enabled() && TAU_inside_ADIOS() == 0) {
-        Tau_plugin_event_current_timer_exit_data plugin_data;
+    if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) {
+        Tau_plugin_event_current_timer_exit_data_t plugin_data;
         plugin_data.name_prefix = name;
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
     }
+#endif
 }
 
 #define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
@@ -529,9 +532,12 @@ char *note;
     otherid = status->MPI_SOURCE;
     /* if (rq->tag == MPI_ANY_TAG) */
     othertag = status->MPI_TAG;
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     /* post the receive message */
     TAU_TRACE_RECVMSG(othertag, TauTranslateRankToWorld(rq->comm, otherid), rq->size);
     TAU_PLUGIN_RECVMSG(othertag, TauTranslateRankToWorld(rq->comm, otherid), rq->size, 0);
+#endif
     TAU_WAIT_DATA(rq->size);
   }
 
@@ -578,9 +584,12 @@ char *note;
   { 
     otherid = TauTranslateRankToWorld(rq->comm, rq->otherParty);
     othertag = rq->tag;
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     /* post the send message */
     TAU_TRACE_SENDMSG(othertag, otherid, rq->size);
     TAU_PLUGIN_SENDMSG(othertag, otherid, rq->size, 0);
+#endif
   }
 
   return; 
@@ -1910,8 +1919,8 @@ int  MPI_Finalize(  )
 
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_pre_end_of_execution_data plugin_data;
+  if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.pre_end_of_execution) {
+    Tau_plugin_event_pre_end_of_execution_data_t plugin_data;
     plugin_data.tid = Tau_get_local_tid();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
   }
@@ -2248,12 +2257,15 @@ MPI_Comm comm;
   TAU_PROFILE_START(tautimer);
 
   PMPI_Type_size( datatype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
+#endif
   TAU_TRACK_COMM(comm);
   
   returnVal = PMPI_Bsend( buf, count, datatype, dest, tag, comm );
@@ -2408,9 +2420,12 @@ MPI_Request * request;
 
   /* we need to store the request and associate it with the size/tag so MPI_Start can 
      retrieve it and log the TAU_TRACE_SENDMSG */
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
 if (TauEnv_get_track_message()) {
   TauAddRequestData(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
 }
+#endif
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -2467,12 +2482,15 @@ MPI_Request * request;
   TAU_PROFILE_START(tautimer);
   
   PMPI_Type_size( datatype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize, 0);
+#endif
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
@@ -2554,12 +2572,15 @@ MPI_Request * request;
   TAU_PROFILE_START(tautimer);
   
   PMPI_Type_size( datatype, &typesize3 );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
+#endif
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Irsend( buf, count, datatype, dest, tag, comm, request );
@@ -2586,12 +2607,15 @@ MPI_Request * request;
   TAU_PROFILE_START(tautimer);
 
   PMPI_Type_size( datatype, &typesize3 );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
+#endif
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
@@ -2615,12 +2639,15 @@ MPI_Request * request;
   TAU_PROFILE_START(tautimer);
   
   PMPI_Type_size( datatype, &typesize3 );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3, 0);
+#endif
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
@@ -2716,17 +2743,23 @@ MPI_Status * status;
 
   if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
     /* note that status->MPI_COMM must == comm */
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     if (TauEnv_get_track_message()) {
       PMPI_Get_count( status, MPI_BYTE, &size );
       TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), size);
     }
+#endif
     int typesize = 0;
     PMPI_Type_size( datatype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     if (status == NULL) {
         TAU_PLUGIN_RECVMSG(tag, TauTranslateRankToWorld(comm, source), count*typesize, 0);
     } else {
         TAU_PLUGIN_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count*typesize, 0);
     }
+#endif
   }
   TAU_PROFILE_STOP(tautimer);
 
@@ -2748,12 +2781,15 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Rsend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
+#endif
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Rsend( buf, count, datatype, dest, tag, comm );
@@ -2804,12 +2840,15 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Send()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
+#endif
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Send( buf, count, datatype, dest, tag, comm );
@@ -2840,32 +2879,42 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( sendtype, &typesize1 );
-  if (TauEnv_get_track_message()) {
-    if (dest != MPI_PROC_NULL) {
-      TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount);
-    }
     
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
     }
+
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
+  if (TauEnv_get_track_message()) {
+    if (dest != MPI_PROC_NULL) {
+      TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount);
+    }
   }
   TAU_PLUGIN_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount, 0);
+#endif
 
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status );
 
   if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     if (TauEnv_get_track_message()) {
       PMPI_Get_count( status, MPI_BYTE, &count );
       TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count);
     }
+#endif
     int typesize = 0;
     PMPI_Type_size( recvtype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     if (status == NULL) {
         TAU_PLUGIN_RECVMSG(recvtag, TauTranslateRankToWorld(comm, source), count*typesize, 0);
     } else {
         TAU_PLUGIN_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count*typesize, 0);
     }
+#endif
   }
   TAU_PROFILE_STOP(tautimer);
   
@@ -2892,32 +2941,41 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Sendrecv_replace()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize2 );
-  if (TauEnv_get_track_message()) {
-    if (dest != MPI_PROC_NULL) {
-      TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count);
-    }
     
     if (status == MPI_STATUS_IGNORE) {
       status = &local_status;
     }
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
+  if (TauEnv_get_track_message()) {
+    if (dest != MPI_PROC_NULL) {
+      TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count);
+    }
   }
   TAU_PLUGIN_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count, 0);
+#endif
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Sendrecv_replace( buf, count, datatype, dest, sendtag, source, recvtag, comm, status );
   
   if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     if (TauEnv_get_track_message()) {
       PMPI_Get_count( status, MPI_BYTE, &size1 );
       TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), size1);
     }
+#endif
     int typesize = 0;
     PMPI_Type_size( datatype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
     if (status == NULL) {
         TAU_PLUGIN_RECVMSG(recvtag, TauTranslateRankToWorld(comm, source), count*typesize, 0);
     } else {
         TAU_PLUGIN_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count*typesize, 0);
     }
+#endif
   }
   TAU_PROFILE_STOP(tautimer);
   
@@ -2938,12 +2996,15 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Ssend()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   PMPI_Type_size( datatype, &typesize );
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+    // This is protected by a macro to avoid unnecessary overhead.
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   TAU_PLUGIN_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count, 0);
+#endif
   
   TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ssend( buf, count, datatype, dest, tag, comm );
