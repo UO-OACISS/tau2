@@ -15,9 +15,9 @@
 #include <Profile/TauPlugin.h>
 
 
-int Tau_plugin_test_event_atomic_event_trigger(Tau_plugin_event_atomic_event_trigger_data data) {
+int Tau_plugin_test_event_atomic_event_trigger(Tau_plugin_event_atomic_event_trigger_data_t*data) {
   
-  std::cout << "TAU PLUGIN: Event with name " << data.counter_name << " has been triggered with value " << data.value << std::endl;
+  std::cout << "TAU PLUGIN: Event with name " << data->counter_name << " has been triggered with value " << data->value << std::endl;
 
   return 0;
 }

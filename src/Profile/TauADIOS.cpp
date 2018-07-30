@@ -85,14 +85,17 @@ extern "C" int TAU_inside_ADIOS(void) {
 
 void Tau_SOS_conditionally_pack_current_timer(const char * name) {
     int foo = TAU_decrement_stack_height();
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+// This is protected by a macro to avoid unnecessary overhead.
     if (foo == 0) {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_current_timer_exit_data plugin_data;
+        if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.current_timer_exit) {
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
             plugin_data.name_prefix = name;
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
         }
 	}
+#endif
 }
 
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT(__detail) \
@@ -802,12 +805,15 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
 	    Tau_increment_stack_height();
     } else {
 	    // not conditional! neither start nor stop.
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+// This is protected by a macro to avoid unnecessary overhead.
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_current_timer_exit_data plugin_data;
+        if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.current_timer_exit) {
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
             plugin_data.name_prefix = ss.str().c_str();
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
         }
+#endif
     }
 }
 
@@ -825,12 +831,15 @@ ADIOST_EXTERN void tau_adiost_read_finalize_method(
 	    TAU_PROFILE_STOP(tautimer);
 	    Tau_increment_stack_height();
     } else {
+#if defined(TAU_PLUGIN_TRACE_SUPPORT)
+// This is protected by a macro to avoid unnecessary overhead.
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_current_timer_exit_data plugin_data;
+        if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.current_timer_exit) {
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
             plugin_data.name_prefix = ss.str().c_str();
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
         }
+#endif
     }
 }
 
