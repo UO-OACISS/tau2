@@ -31,7 +31,7 @@
 #define strtok_r(a,b,c) strtok(a,b)
 #endif /* TAU_WINDOWS */
 
-Tau_plugin_callbacks_active_t Tau_plugin_enabled;
+Tau_plugin_callbacks_active_t Tau_plugins_enabled;
 
 #define TAU_NAME_LENGTH 1024
 
@@ -199,7 +199,6 @@ PluginManager* Tau_util_get_plugin_manager() {
 
     plugin_manager->callback_list = (Tau_plugin_callback_list*)malloc(sizeof(Tau_plugin_callback_list));
     (plugin_manager->callback_list)->head = NULL;
-    memset(&Tau_plugin_enabled, 0, sizeof(Tau_plugin_callbacks_active_t));
     is_plugin_system_initialized = 1;
   }
 
@@ -210,7 +209,15 @@ PluginManager* Tau_util_get_plugin_manager() {
  * Initializes the plugin system by loading and registering all plugins
  ********************************************************************/
 int Tau_initialize_plugin_system() {
-  return(Tau_util_load_and_register_plugins(Tau_util_get_plugin_manager()));
+  memset(&Tau_plugins_enabled, 0, sizeof(Tau_plugin_callbacks_active_t));
+  if(TauEnv_get_plugins_enabled()) {
+    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
+    if(!Tau_util_load_and_register_plugins(Tau_util_get_plugin_manager())) {
+      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
+    } else {
+      printf("TAU INIT: Error initializing the plugin system\n");
+    }
+  }
 }
 
 /*********************************************************************
@@ -447,21 +454,21 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
   (plugin_manager->callback_list)->head = callback;
 
   /* Set some flags to make runtime conditional processing more efficient */
-  if (cb->FunctionRegistrationComplete != 0) { Tau_plugin_enabled.function_registration = 1; }
-  if (cb->MetadataRegistrationComplete != 0) { Tau_plugin_enabled.metadata_registration = 1; }
-  if (cb->PostInit != 0) { Tau_plugin_enabled.post_init = 1; }
-  if (cb->Dump != 0) { Tau_plugin_enabled.dump = 1; }
-  if (cb->FunctionEntry != 0) { Tau_plugin_enabled.function_entry = 1; }
-  if (cb->FunctionExit != 0) { Tau_plugin_enabled.function_exit = 1; }
-  if (cb->Send != 0) { Tau_plugin_enabled.send = 1; }
-  if (cb->Recv != 0) { Tau_plugin_enabled.recv = 1; }
-  if (cb->CurrentTimerExit != 0) { Tau_plugin_enabled.current_timer_exit = 1; }
-  if (cb->AtomicEventRegistrationComplete != 0) { Tau_plugin_enabled.atomic_event_registration = 1; }
-  if (cb->AtomicEventTrigger != 0) { Tau_plugin_enabled.atomic_event_trigger = 1; }
-  if (cb->PreEndOfExecution != 0) { Tau_plugin_enabled.pre_end_of_execution = 1; }
-  if (cb->EndOfExecution != 0) { Tau_plugin_enabled.end_of_execution = 1; }
-  if (cb->FunctionFinalize != 0) { Tau_plugin_enabled.function_finalize = 1; }
-  if (cb->InterruptTrigger != 0) { Tau_plugin_enabled.interrupt_trigger = 1; }
+  if (cb->FunctionRegistrationComplete != 0) { Tau_plugins_enabled.function_registration = 1; }
+  if (cb->MetadataRegistrationComplete != 0) { Tau_plugins_enabled.metadata_registration = 1; }
+  if (cb->PostInit != 0) { Tau_plugins_enabled.post_init = 1; }
+  if (cb->Dump != 0) { Tau_plugins_enabled.dump = 1; }
+  if (cb->FunctionEntry != 0) { Tau_plugins_enabled.function_entry = 1; }
+  if (cb->FunctionExit != 0) { Tau_plugins_enabled.function_exit = 1; }
+  if (cb->Send != 0) { Tau_plugins_enabled.send = 1; }
+  if (cb->Recv != 0) { Tau_plugins_enabled.recv = 1; }
+  if (cb->CurrentTimerExit != 0) { Tau_plugins_enabled.current_timer_exit = 1; }
+  if (cb->AtomicEventRegistrationComplete != 0) { Tau_plugins_enabled.atomic_event_registration = 1; }
+  if (cb->AtomicEventTrigger != 0) { Tau_plugins_enabled.atomic_event_trigger = 1; }
+  if (cb->PreEndOfExecution != 0) { Tau_plugins_enabled.pre_end_of_execution = 1; }
+  if (cb->EndOfExecution != 0) { Tau_plugins_enabled.end_of_execution = 1; }
+  if (cb->FunctionFinalize != 0) { Tau_plugins_enabled.function_finalize = 1; }
+  if (cb->InterruptTrigger != 0) { Tau_plugins_enabled.interrupt_trigger = 1; }
 }
 
 
@@ -801,8 +808,6 @@ int Tau_util_cleanup_all_plugins() {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_plugin_sendmsg(long unsigned int type, long unsigned int destination, long unsigned int length, long unsigned int remoteid) {
-  /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
     Tau_plugin_event_send_data plugin_data;
     plugin_data.message_tag = type;
     plugin_data.destination = destination;
@@ -812,12 +817,9 @@ extern "C" void Tau_plugin_sendmsg(long unsigned int type, long unsigned int des
     RtsLayer::getUSecD(plugin_data.tid, timeStamp);
     plugin_data.timestamp = (unsigned long)(timeStamp[0]);
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_SEND, &plugin_data);
-  }
 }
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_plugin_recvmsg(long unsigned int type, long unsigned int source, long unsigned int length, long unsigned int remoteid) {
-  /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
     Tau_plugin_event_recv_data plugin_data;
     plugin_data.message_tag = type;
     plugin_data.source = source;
@@ -827,6 +829,5 @@ extern "C" void Tau_plugin_recvmsg(long unsigned int type, long unsigned int sou
     RtsLayer::getUSecD(plugin_data.tid, timeStamp);
     plugin_data.timestamp = (unsigned long)(timeStamp[0]);
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_RECV, &plugin_data);
-  }
 }
 

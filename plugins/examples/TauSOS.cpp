@@ -337,19 +337,7 @@ void TAU_SOS_parse_environment_variables(void) {
     }
     tmp = getenv("TAU_SOS_TRACING");
     if (parse_bool(tmp, TAU_SOS_TRACING_DEFAULT)) {
-#if defined(TAU_PLUGIN_TRACE_SUPPORT)
-        // This is protected by a macro to avoid unnecessary overhead.
         thePluginOptions().env_sos_tracing = 1;
-#else
-        fprintf(stderr, "ERROR! TAU was configured without plugin trace support!\n");
-        fprintf(stderr, "Please reconfigure TAU with:\n");
-        fprintf(stderr, "'-useropt=-DTAU_PLUGIN_TRACE_SUPPORT#-O2#-g', recompile, and reinstall.\n");
-#ifdef TAU_MPI
-        MPI_Abort(MPI_COMM_WORLD, 999);
-#else
-        abort();
-#endif
-#endif
     }
     tmp = getenv("TAU_SOS_CACHE_DEPTH");
     thePluginOptions().env_sos_cache_depth = parse_int(tmp, TAU_SOS_CACHE_DEPTH_DEFAULT);

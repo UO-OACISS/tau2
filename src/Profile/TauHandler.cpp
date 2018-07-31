@@ -334,7 +334,7 @@ void TauAlarmHandler(int signum) {
   alarm(TheTauInterruptInterval());
 #endif
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.interrupt_trigger) {
+  if(Tau_plugins_enabled.interrupt_trigger) {
     Tau_plugin_event_interrupt_trigger_data_t plugin_data;
     plugin_data.signum = signum;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, &plugin_data);
