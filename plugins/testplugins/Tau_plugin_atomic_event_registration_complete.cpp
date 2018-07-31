@@ -15,9 +15,9 @@
 #include <Profile/TauPlugin.h>
 
 
-int Tau_plugin_test_event_atomic_event_registration_complete(Tau_plugin_event_atomic_event_registration_data data) {
+int Tau_plugin_test_event_atomic_event_registration_complete(Tau_plugin_event_atomic_event_registration_data_t *data) {
   
-  std::cout << "TAU PLUGIN: Event with name " << ((tau::TauUserEvent *)data.user_event_ptr)->GetName() << " has been registered" << std::endl;
+  std::cout << "TAU PLUGIN: Event with name " << ((tau::TauUserEvent *)data->user_event_ptr)->GetName() << " has been registered" << std::endl;
 
   return 0;
 }

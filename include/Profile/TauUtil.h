@@ -61,8 +61,8 @@ void Tau_plugin_recvmsg(long unsigned int type, long unsigned int source, long u
 
 // Use a macro so we can compile it out if too much overhead.
 
-#define TAU_PLUGIN_SENDMSG(t, d, l, r) Tau_plugin_sendmsg((long unsigned int)t, (long unsigned int)d, (long unsigned int)l, (long unsigned int)r)
-#define TAU_PLUGIN_RECVMSG(t, s, l, r) Tau_plugin_recvmsg((long unsigned int)t, (long unsigned int)s, (long unsigned int)l, (long unsigned int)r)
+#define TAU_PLUGIN_SENDMSG(t, d, l, r) if (Tau_plugins_enabled.send) { Tau_plugin_sendmsg((long unsigned int)t, (long unsigned int)d, (long unsigned int)l, (long unsigned int)r); }
+#define TAU_PLUGIN_RECVMSG(t, s, l, r) if (Tau_plugins_enabled.recv) { Tau_plugin_recvmsg((long unsigned int)t, (long unsigned int)s, (long unsigned int)l, (long unsigned int)r); }
 
 /* The following macros help create a local array and assign to elements of 
    the local C array, values from Fortran array after conversion using f2c 

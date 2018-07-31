@@ -21,8 +21,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb);
-void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb);
+void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks_t * cb);
+void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks_t * cb);
 
 #ifdef __cplusplus
 }
