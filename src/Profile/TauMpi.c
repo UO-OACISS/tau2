@@ -69,7 +69,7 @@
 
 /* These functions and macros are for creating MPI "events" in the SOS stream. */
 
-#if defined(TAU_SOS) && defined(TAU_PLUGIN_TRACE_SUPPORT)
+#if defined(TAU_SOS)
 
 int TAU_inside_ADIOS(void);
 

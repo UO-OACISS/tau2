@@ -296,7 +296,6 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
     }
 #endif /* PROFILING_ON */
   /*Invoke plugins only if both plugin path and plugins are specified*/
-#if defined(TAU_PLUGIN_TRACE_SUPPORT)
     /* and only output the counter if it's not a context counter */
     if(Tau_plugins_enabled.atomic_event_trigger) {
       if ((name[0] != '[') 
@@ -310,7 +309,6 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, &plugin_data);
       }
     }
-#endif
   } // Tau_global_getLightsOut
 
 }

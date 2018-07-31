@@ -238,21 +238,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     cb->EndOfExecution = Tau_plugin_sos_end_of_execution;
     /* Event tracing support */
     if (thePluginOptions().env_sos_tracing) {
-#if !defined(TAU_PLUGIN_TRACE_SUPPORT)
-#if TAU_MPI
-        int rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        if (rank == 0) {
-            std::cerr << "Error! Plugin trace support was not configured.\n";
-            std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
-        }
-        MPI_Abort(MPI_COMM_WORLD, 999);
-#else
-        std::cerr << "Error! Plugin trace support was not configured.\n";
-        std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
-        abort();
-#endif
-#endif
         cb->Send = Tau_plugin_sos_send;
         cb->Recv = Tau_plugin_sos_recv;
         cb->FunctionEntry = Tau_plugin_sos_function_entry;
@@ -261,21 +246,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     }
     /* Specialized support for ADIOS, MPI events (ADIOS Skel/Pooky support) */
     if (thePluginOptions().env_sos_trace_adios) {
-#if !defined(TAU_PLUGIN_TRACE_SUPPORT)
-#if TAU_MPI
-        int rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        if (rank == 0) {
-            std::cerr << "Error! Plugin trace support was not configured.\n";
-            std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
-        }
-        MPI_Abort(MPI_COMM_WORLD, 999);
-#else
-        std::cerr << "Error! Plugin trace support was not configured.\n";
-        std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
-        abort();
-#endif
-#endif
         cb->CurrentTimerExit = Tau_plugin_sos_current_timer_exit;
     }
     /* Not sure what this thing does */
