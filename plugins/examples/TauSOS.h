@@ -11,8 +11,9 @@
 #define TAU_SOS_TRACE_ADIOS_DEFAULT 0
 #define TAU_SOS_PERIODIC_DEFAULT 0
 #define TAU_SOS_PERIOD_DEFAULT 2000000 // microseconds
-#define TAU_SOS_SHUTDOWN_DELAY_DEFAULT 10 // seconds
-#define TAU_SOS_USE_SELECTION_DEFAULT 0 // microseconds
+#define TAU_SOS_SHUTDOWN_DELAY_DEFAULT 1 // seconds
+#define TAU_SOS_USE_SELECTION_DEFAULT false // microseconds
+#define TAU_SOS_CACHE_DEPTH_DEFAULT 1 // SOS frames
 
 class SOS_plugin_options {
     private:
@@ -23,7 +24,8 @@ class SOS_plugin_options {
             env_sos_periodic(TAU_SOS_PERIODIC_DEFAULT),
             env_sos_period(TAU_SOS_PERIOD_DEFAULT),
             env_sos_shutdown_delay(TAU_SOS_SHUTDOWN_DELAY_DEFAULT),
-            env_sos_use_selection(TAU_SOS_USE_SELECTION_DEFAULT) {}
+            env_sos_use_selection(TAU_SOS_USE_SELECTION_DEFAULT),
+            env_sos_cache_depth(TAU_SOS_CACHE_DEPTH_DEFAULT) {}
     public:
         int env_sos_enabled;
         int env_sos_tracing;
@@ -31,11 +33,16 @@ class SOS_plugin_options {
         int env_sos_periodic;
         int env_sos_period;
         int env_sos_shutdown_delay;
-        int env_sos_use_selection;
+        bool env_sos_use_selection;
+        int env_sos_cache_depth;
         std::set<std::string> included_timers;
         std::set<std::string> excluded_timers;
+        std::set<std::string> included_timers_with_wildcards;
+        std::set<std::string> excluded_timers_with_wildcards;
         std::set<std::string> included_counters;
         std::set<std::string> excluded_counters;
+        std::set<std::string> included_counters_with_wildcards;
+        std::set<std::string> excluded_counters_with_wildcards;
         static SOS_plugin_options& thePluginOptions() {
             static SOS_plugin_options tpo;
             return tpo;
@@ -48,7 +55,7 @@ inline SOS_plugin_options& thePluginOptions() {
 
 void TAU_SOS_parse_environment_variables(void);
 void Tau_SOS_parse_selection_file(const char * filename);
-const bool Tau_SOS_contains(std::set<std::string>& myset, 
+bool Tau_SOS_contains(std::set<std::string>& myset, 
         const char * key, bool if_empty);
 
 void TAU_SOS_send_data(void);
@@ -62,5 +69,7 @@ void Tau_SOS_pack_double(const char * name, double value);
 void Tau_SOS_pack_integer(const char * name, int value);
 void Tau_SOS_pack_long(const char * name, long int value);
 void * Tau_sos_thread_function(void* data);
+bool skip_timer(const char * key);
+bool skip_counter(const char * key);
 
 #endif // TAU_SOS_H

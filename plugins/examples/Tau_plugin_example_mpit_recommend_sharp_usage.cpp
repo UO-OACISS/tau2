@@ -28,7 +28,7 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics(void);
  * versus the total application execution time, along with the message size for MPI_Allreduce.
  * If the application spends a signigicant time in MPI_Allreduce, and if the message size involved in MPI_Allreduce
  * is low, then it recommends the user to enable SHArP through a message on TAU_METADATA*/
-extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_end_of_execution_data data) {
+extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_end_of_execution_data_t* data) {
   double exclusiveTimeAllReduce, inclusiveTimeApp = 0.0;
   double meanAllReduceMessageSize = 0;
 
@@ -102,7 +102,7 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
  *  * Every plugin MUST implement this function to register callbacks for various events 
  *   * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
-  Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
+  Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->EndOfExecution = Tau_plugin_example_mpit_recommend_sharp_usage;
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);

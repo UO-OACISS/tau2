@@ -259,8 +259,8 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   //printf("%s : %s\n", key.name, tmv->data.cval);
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_metadata_registration_data plugin_data;
+  if(Tau_plugins_enabled.metadata_registration) {
+    Tau_plugin_event_metadata_registration_data_t plugin_data;
     plugin_data.name = name;
     plugin_data.value = tmv;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
@@ -279,8 +279,8 @@ void Tau_metadata_push_to_plugins(void) {
         char tmp[128] = {0};
 
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-          Tau_plugin_event_metadata_registration_data plugin_data;
+        if(Tau_plugins_enabled.metadata_registration) {
+          Tau_plugin_event_metadata_registration_data_t plugin_data;
           plugin_data.name = it->first.name;
           plugin_data.value = it->second;
           Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, &plugin_data);
@@ -836,7 +836,8 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
   FILE *cfile;
   cfile = fopen("/proc/cray_xt/cname", "r");
   if (cfile != NULL) {
-    fscanf(cfile, "%s", cname);
+    int scanned = fscanf(cfile, "%s", cname);
+    if (scanned == EOF) { perror("Error scanning /proc/cray_xt/cname !\n"); return 0; }
     fclose(cfile);
     Tau_metadata_register("CRAY_NODENAME", cname);
 

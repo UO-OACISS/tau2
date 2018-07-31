@@ -492,9 +492,9 @@ char *Tau_preprocess_function_info_name(const char *name) {
 /*This function gets invoked at function registration.
  * It checks if the function getting registrtion is present in the exclude list specified by the instrumentation file
  * and is so, sets the function group to TAU_DISABLE, effectively disabling function from getting instrumented*/
-int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_registration_data data) {
+int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_registration_data* data) {
 
-  const char * before_preprocessing = ((FunctionInfo *)data.function_info_ptr)->GetName(); 
+  const char * before_preprocessing = ((FunctionInfo *)data->function_info_ptr)->GetName(); 
   const char * name = Tau_preprocess_function_info_name(before_preprocessing);
 
   const char * pch = strchr(name, '[');
@@ -528,7 +528,7 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
 
     if(!instrumentEntity(std::string(name, position)) || (instrument_file == false)) {
       RtsLayer::LockDB();
-      Tau_profile_set_group(data.function_info_ptr, TAU_DISABLE);
+      Tau_profile_set_group(data->function_info_ptr, TAU_DISABLE);
       RtsLayer::UnLockDB();
     }
 
@@ -539,7 +539,7 @@ int Tau_plugin_example_check_and_set_disable_group(Tau_plugin_event_function_reg
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
-  Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
+  Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks_t));
 
   if(argc == 0) {
     printf("TAU PLUGIN: Please provide a selective instrumentation by setting TAU_SELECT_FILE=<select_file>\n");

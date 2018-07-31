@@ -16,8 +16,8 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 
-int Tau_plugin_test_event_function_registration_complete(Tau_plugin_event_function_registration_data data) {
-  printf("TAU PLUGIN: Function %s has been registered for tid: %d\n", Tau_profile_get_name(data.function_info_ptr), data.tid);
+int Tau_plugin_test_event_function_registration_complete(Tau_plugin_event_function_registration_data_t* data) {
+  printf("TAU PLUGIN: Function %s has been registered for tid: %d\n", Tau_profile_get_name(data->function_info_ptr), data->tid);
   
   return 0;
 }

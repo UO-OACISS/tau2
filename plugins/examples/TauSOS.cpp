@@ -103,6 +103,7 @@ void * Tau_sos_thread_function(void* data) {
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
     pthread_exit((void*)0L);
+	return(NULL);
 }
 
 void TAU_SOS_make_pub() {
@@ -116,11 +117,10 @@ void TAU_SOS_make_pub() {
         _runtime->config.comm_size = comm_size;
 #endif
 
-/* Fixme! Replace these with values from TAU metadata. */
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
-/* Fixme! Replace these with values from TAU metadata. */
         SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
+        SOS_pub_config(tau_sos_pub, SOS_PUB_OPTION_CACHE, thePluginOptions().env_sos_cache_depth);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
@@ -166,7 +166,6 @@ void TAU_SOS_do_fork(std::string forkCommand) {
 void TAU_SOS_fork_exec_sosd_shutdown(void) {
 #ifdef TAU_MPI
     // first, figure out who should fork a daemon on this node
-    int i;
     if (my_rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
@@ -190,7 +189,6 @@ void TAU_SOS_fork_exec_sosd_shutdown(void) {
 
 void TAU_SOS_send_shutdown_message(void) {
 #ifdef TAU_MPI
-    int i;
     SOS_buffer     *buffer;
     SOS_msg_header  header;
     int offset;
@@ -344,8 +342,10 @@ void TAU_SOS_parse_environment_variables(void) {
     }
     tmp = getenv("TAU_SOS_TRACING");
     if (parse_bool(tmp, TAU_SOS_TRACING_DEFAULT)) {
-      thePluginOptions().env_sos_tracing = 1;
+        thePluginOptions().env_sos_tracing = 1;
     }
+    tmp = getenv("TAU_SOS_CACHE_DEPTH");
+    thePluginOptions().env_sos_cache_depth = parse_int(tmp, TAU_SOS_CACHE_DEPTH_DEFAULT);
     tmp = getenv("TAU_SOS_PERIODIC");
     if (parse_bool(tmp, TAU_SOS_PERIODIC_DEFAULT)) {
       thePluginOptions().env_sos_periodic = 1;
@@ -369,7 +369,7 @@ void Tau_SOS_parse_selection_file(const char * filename) {
     bool excluding_timers = false;
     bool including_counters = false;
     bool excluding_counters = false;
-    thePluginOptions().env_sos_use_selection = 1;
+    thePluginOptions().env_sos_use_selection = true;
     while (std::getline(file, str)) {
         // trim right whitespace
         str.erase(str.find_last_not_of(" \n\r\t")+1);
@@ -401,13 +401,29 @@ void Tau_SOS_parse_selection_file(const char * filename) {
             excluding_counters = false;
         } else {
             if (including_timers) {
-                thePluginOptions().included_timers.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().included_timers.insert(str);
+                } else {
+                    thePluginOptions().included_timers_with_wildcards.insert(str);
+                }
             } else if (excluding_timers) {
-                thePluginOptions().excluded_timers.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().excluded_timers.insert(str);
+                } else {
+                    thePluginOptions().excluded_timers_with_wildcards.insert(str);
+                }
             } else if (including_counters) {
-                thePluginOptions().included_counters.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().included_counters.insert(str);
+                } else {
+                    thePluginOptions().included_counters_with_wildcards.insert(str);
+                }
             } else if (excluding_counters) {
-                thePluginOptions().excluded_counters.insert(str);
+                if (str.find("#") == string::npos && str.find("?") == string::npos) {
+                    thePluginOptions().excluded_counters.insert(str);
+                } else {
+                    thePluginOptions().excluded_counters_with_wildcards.insert(str);
+                }
             } else {
                 std::cerr << "Warning, selection outside of include/exclude section: "
                     << str << std::endl;
@@ -455,8 +471,8 @@ void TAU_SOS_init() {
             }
         }
 
-        if (_threaded && thePluginOptions().env_sos_periodic) {
-			period_microseconds = thePluginOptions().env_sos_period;
+        if (thePluginOptions().env_sos_periodic) {
+            period_microseconds = thePluginOptions().env_sos_period;
             TAU_VERBOSE("Spawning thread for SOS.\n");
             int ret = pthread_create(&worker_thread, NULL, &Tau_sos_thread_function, NULL);
             if (ret != 0) {
@@ -476,7 +492,7 @@ void TAU_SOS_stop_worker(void) {
     pthread_mutex_lock(&_my_mutex);
     done = true;
     pthread_mutex_unlock(&_my_mutex);
-    if (_threaded && thePluginOptions().env_sos_periodic) {
+    if (thePluginOptions().env_sos_periodic) {
         TAU_VERBOSE("TAU SOS thread joining...\n"); fflush(stderr);
         pthread_cond_signal(&_my_cond);
         int ret = pthread_join(worker_thread, NULL);
@@ -529,6 +545,7 @@ void TAU_SOS_finalize(void) {
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
         //TAU_SOS_fork_exec_sosd_shutdown();
     }
+        printf("}\n");
     SOS_finalize(_runtime);
 }
 
@@ -553,6 +570,7 @@ void Tau_SOS_pack_current_timer(const char * event_name) {
     // assume time is the first counter!
     // also convert it to microseconds
     double value = (current[0] - p->StartTime[0]) * CONVERT_TO_USEC;
+    // if (strlen(event_name) > 256) { printf("long string, %d: '%s'\n", strlen(event_name), event_name); }
     SOS_pack(tau_sos_pub, event_name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
@@ -568,6 +586,7 @@ void Tau_SOS_pack_string(const char * name, char * value) {
         }
         RtsLayer::UnLockDB();
     }
+    // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_STRING, value);
 }
 
@@ -583,6 +602,7 @@ void Tau_SOS_pack_double(const char * name, double value) {
         }
         RtsLayer::UnLockDB();
     }
+    // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_DOUBLE, &value);
 }
 
@@ -598,6 +618,7 @@ void Tau_SOS_pack_integer(const char * name, int value) {
         }
         RtsLayer::UnLockDB();
     }
+    // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_INT, &value);
 }
 
@@ -613,13 +634,14 @@ void Tau_SOS_pack_long(const char * name, long int value) {
         }
         RtsLayer::UnLockDB();
     }
+    // if (strlen(name) > 256) { printf("long string, %d: '%s'\n", strlen(name), name); }
     SOS_pack(tau_sos_pub, name, SOS_VAL_TYPE_LONG, &value);
 }
 
 /* Necessary to use const char * because UserEvents use TauSafeString objects, 
  * not std::string. We use the "if_empty" parameter to tell us how to treat
  * an empty set.  For exclude lists, it's false, for include lists, it's true */
-const bool Tau_SOS_contains(std::set<std::string>& myset, 
+bool Tau_SOS_contains(std::set<std::string>& myset, 
         const char * key, bool if_empty) {
     // if the set has contents, and we are in the set, then return true.
     std::string _key(key);
@@ -652,11 +674,8 @@ void TAU_SOS_pack_profile() {
     for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo *fi = *it;
         /* First, check to see if we are including/excluding this timer */
-        if (thePluginOptions().env_sos_use_selection == 1) {
-            if (Tau_SOS_contains(thePluginOptions().excluded_timers, fi->GetName(), false) ||
-                !Tau_SOS_contains(thePluginOptions().included_timers, fi->GetName(), true)) {
-                continue;
-            }
+        if (skip_timer(fi->GetName())) {
+            continue;
         }
         // get the number of calls
         int tid = 0; // todo: get ALL thread data.
@@ -669,11 +688,10 @@ void TAU_SOS_pack_profile() {
         //foreach: THREAD
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
             calls = fi->GetCalls(tid);
-		    int vec_index = 0;
-
             std::stringstream calls_str;
             calls_str << "TAU_TIMER:" << tid << ":calls:" << fi->GetAllGroups() << ":" << fi->GetName();
             const std::string& tmpcalls = calls_str.str();
+            // if (strlen(tmpcalls.c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmpcalls.c_str()), tmpcalls.c_str()); }
             SOS_pack(tau_sos_pub, tmpcalls.c_str(), SOS_VAL_TYPE_INT, &calls);
     
             // todo - subroutines
@@ -689,6 +707,8 @@ void TAU_SOS_pack_profile() {
                 excl_str.str(std::string());
                 excl_str << "TAU_TIMER:" << tid << ":exclusive_" << counterNames[m] << ":" << fi->GetAllGroups() << ":" << fi->GetName();
                 const std::string& tmpexcl = excl_str.str();
+                // if (strlen(tmpexcl.c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmpexcl.c_str()), tmpexcl.c_str()); }
+                // if (strlen(tmpincl.c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmpincl.c_str()), tmpincl.c_str()); }
                 SOS_pack(tau_sos_pub, tmpincl.c_str(), SOS_VAL_TYPE_DOUBLE, &inclusive);
                 SOS_pack(tau_sos_pub, tmpexcl.c_str(), SOS_VAL_TYPE_DOUBLE, &exclusive);
             }
@@ -707,13 +727,9 @@ void TAU_SOS_pack_profile() {
     for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
         tau::TauUserEvent *ue = (*it2);
         /* First, check to see if we are including/excluding this counter */
-        if (thePluginOptions().env_sos_use_selection == 1) {
-            if (Tau_SOS_contains(thePluginOptions().excluded_counters, ue->GetName().c_str(), false) ||
-                !Tau_SOS_contains(thePluginOptions().included_counters, ue->GetName().c_str(), true)) {
-                continue;
-            }
+        if (skip_counter(ue->GetName().c_str())) {
+            continue;
         }
-	    double tmp_accum = 0.0;
 	    std::string counter_name;
 
         int tid = 0;
@@ -726,18 +742,23 @@ void TAU_SOS_pack_profile() {
             min = ue->GetMin(tid);
             sumsqr = ue->GetSumSqr(tid);
             tmp_str << "TAU_COUNTER:" << tid << ":NumEvents:" << ue->GetName();
+            // if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_INT, &numEvents);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":Max:" << ue->GetName();
+            // if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &max);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":Min:" << ue->GetName();
+            // if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &min);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":Mean:" << ue->GetName();
+            // if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &mean);
             tmp_str.str(std::string());
             tmp_str << "TAU_COUNTER:" << tid << ":SumSqr:" << ue->GetName();
+            // if (strlen(tmp_str.str().c_str()) > 256) { printf("long string, %d: '%s'\n", strlen(tmp_str.str().c_str()), tmp_str.str().c_str()); }
             SOS_pack(tau_sos_pub, tmp_str.str().c_str(), SOS_VAL_TYPE_DOUBLE, &sumsqr);
             tmp_str.str(std::string());
         }
@@ -781,6 +802,159 @@ void TAU_SOS_send_data(void) {
     SOS_publish(tau_sos_pub);
     TAU_VERBOSE("[TAU_SOS_send_data]:   ...done.\n");
     Tau_global_decr_insideTAU();
+}
+
+// C++ program to implement wildcard
+// pattern matching algorithm
+// from: https://www.geeksforgeeks.org/wildcard-pattern-matching/
+#include <bits/stdc++.h>
+using namespace std;
+ 
+// Function that matches input str with
+// given wildcard pattern
+bool strmatch(const char str[], const char pattern[],
+              int n, int m)
+{
+    // empty pattern can only match with
+    // empty string
+    if (m == 0)
+        return (n == 0);
+ 
+    // lookup table for storing results of
+    // subproblems
+    bool lookup[n + 1][m + 1]; // = {false};
+	// PGI compiler doesn't like initialization during declaration...
+    for (int i = 0; i <= n; i++) {
+        for (int j = 0; j <= m; j++) {
+            lookup[i][j] = false;
+		}
+	}
+ 
+    // initailze lookup table to false
+    //memset(lookup, false, sizeof(lookup));
+ 
+    // empty pattern can match with empty string
+    lookup[0][0] = true;
+ 
+    // Only '#' can match with empty string
+    for (int j = 1; j <= m; j++)
+        if (pattern[j - 1] == '#')
+            lookup[0][j] = lookup[0][j - 1];
+ 
+    // fill the table in bottom-up fashion
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= m; j++)
+        {
+            // Two cases if we see a '#'
+            // a) We ignore ‘#’ character and move
+            //    to next  character in the pattern,
+            //     i.e., ‘#’ indicates an empty sequence.
+            // b) '#' character matches with ith
+            //     character in input
+            if (pattern[j - 1] == '#')
+                lookup[i][j] = lookup[i][j - 1] ||
+                               lookup[i - 1][j];
+ 
+            // Current characters are considered as
+            // matching in two cases
+            // (a) current character of pattern is '?'
+            // (b) characters actually match
+            else if (pattern[j - 1] == '?' ||
+                    str[i - 1] == pattern[j - 1])
+                lookup[i][j] = lookup[i - 1][j - 1];
+ 
+            // If characters don't match
+            else lookup[i][j] = false;
+        }
+    }
+ 
+    return lookup[n][m];
+}
+
+bool skip_timer(const char * key) {
+    // are we filtering at all?
+    if (!thePluginOptions().env_sos_use_selection) {
+        return false;
+    }
+    // check to see if this label is excluded
+    if (Tau_SOS_contains(thePluginOptions().excluded_timers, key, false)) {
+        return true;
+    // check to see if this label is included
+    } else if (Tau_SOS_contains(thePluginOptions().included_timers, key, false)) {
+        return false;
+    } else {
+        // check to see if it's in the excluded wildcards
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().excluded_timers_with_wildcards.begin(); 
+             it!=thePluginOptions().excluded_timers_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().excluded_timers.insert(key);
+                return true;
+            }
+        }
+        // check to see if it's in the included wildcards
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().included_timers_with_wildcards.begin(); 
+             it!=thePluginOptions().included_timers_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().included_timers.insert(key);
+                return false;
+            }
+        }
+    }
+    // neither included nor excluded? 
+    // do we have an inclusion list? If so, then skip (because we didn't match it).
+    if (!thePluginOptions().included_timers.empty() ||
+        !thePluginOptions().included_timers_with_wildcards.empty()) {
+        return true;
+    }
+    // by default, don't skip it.
+    return false;
+}
+
+bool skip_counter(const char * key) {
+    // are we filtering at all?
+    if (!thePluginOptions().env_sos_use_selection) {
+        return false;
+    }
+    // check to see if this label is excluded
+    if (Tau_SOS_contains(thePluginOptions().excluded_counters, key, false)) {
+        return true;
+    // check to see if this label is included
+    } else if (Tau_SOS_contains(thePluginOptions().included_counters, key, false)) {
+        return false;
+    } else {
+        // check to see if it's in the excluded wildcards
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().excluded_counters_with_wildcards.begin(); 
+             it!=thePluginOptions().excluded_counters_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().excluded_counters.insert(key);
+                return true;
+            }
+        }
+        // check to see if it's in the included wildcards
+        for (std::set<std::string>::iterator
+                it=thePluginOptions().included_counters_with_wildcards.begin(); 
+             it!=thePluginOptions().included_counters_with_wildcards.end(); ++it) {
+            if (strmatch(key, it->c_str(), strlen(key), it->length())) {
+                // make the lookup faster next time
+                thePluginOptions().included_counters.insert(key);
+                return false;
+            }
+        }
+    }
+    // neither included nor excluded? 
+    // do we have an inclusion list? If so, then skip (because we didn't match it).
+    if (!thePluginOptions().included_counters.empty() ||
+        !thePluginOptions().included_counters_with_wildcards.empty()) {
+        return true;
+    }
+    return false;
 }
 
 #endif // TAU_SOS

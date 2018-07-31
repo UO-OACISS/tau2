@@ -780,15 +780,15 @@ int PapiLayer::initializePerfRAPL(int tid) {
 /* Check paranoid setting */
   FILE *para = fopen("/proc/sys/kernel/perf_event_paranoid", "r");
   int para_val;
-  fscanf(para, "%d", &para_val);
-  if (para_val != -1) {
+  int scanned = fscanf(para, "%d", &para_val);
+  if (para_val != -1 || scanned == EOF) {
     fprintf(stderr, "Error: To use TAU's PAPI Perf interface please ensure that /proc/sys/kernel/perf_event_paranoid has a -1 in it.\n");
     exit(1);
   }
   fclose(para);
 
   numCounters = 0;
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_CORES");
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_CORES");
   if (PAPI_OK != ret) {
 #ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_CORES) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
@@ -800,7 +800,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
     numCounters++; 
   }
 
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_PKG");
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_PKG");
   if (PAPI_OK != ret) {
 
 #ifdef DEBUG_PROF
@@ -816,7 +816,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
 #endif /* TAU_BEACON */
   }
 
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_GPU");
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_GPU");
   if (PAPI_OK != ret) {
 #ifdef DEBUG_PROF
     fprintf(stderr,"Error: PAPI_add_named_event(RAPL_ENERGY_GPU) because %s.\nPlease ensure that /proc/sys/kernel/perf_event_paranoid has a -1 and your system has /sys/devices/power/events/energy-pkg.scale.\n", PAPI_strerror(ret));
@@ -828,7 +828,7 @@ int PapiLayer::initializePerfRAPL(int tid) {
     numCounters++; 
   }
 
-  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], "rapl::RAPL_ENERGY_DRAM");
+  ret = PAPI_add_named_event(ThreadList[tid]->EventSet[rapl_cid], (char*)"rapl::RAPL_ENERGY_DRAM");
   if (PAPI_OK != ret) {
    // OK: this event is only available on servers 
   } else {
@@ -844,8 +844,8 @@ int PapiLayer::initializePerfRAPL(int tid) {
   }
 
   char line[100];
-  fgets( line,100,fp );
-  if( sscanf(line,"%lf",&scalingFactor) != 1 ) {
+  char *tmp = fgets( line,100,fp );
+  if( tmp == NULL || sscanf(line,"%lf",&scalingFactor) != 1 ) {
      printf("%s: /sys/devices/power/events/energy-pkg.scale doesn't contain a double", line);
      exit(1);
   }

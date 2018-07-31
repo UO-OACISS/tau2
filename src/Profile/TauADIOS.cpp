@@ -84,11 +84,10 @@ extern "C" int TAU_inside_ADIOS(void) {
    output a trace event if we aren't currently timing another ADIOS call. */
 
 void Tau_SOS_conditionally_pack_current_timer(const char * name) {
-    int foo = TAU_decrement_stack_height();
-    if (foo == 0) {
+    if (TAU_decrement_stack_height() == 0) {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_current_timer_exit_data plugin_data;
+        if(Tau_plugins_enabled.current_timer_exit) {
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
             plugin_data.name_prefix = name;
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
         }
@@ -816,7 +815,7 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
     } else {
 	    // not conditional! neither start nor stop.
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
+        if(Tau_plugins_enabled.current_timer_exit) {
 	        std::stringstream ss;
 	        ss << EVENT_TRACE_PREFIX << function_name << "(";
 	        ss << " method: " << method << ",";
@@ -828,7 +827,7 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
 	        // The parameters are corrupting the SQL insert later, disabled for now
 	        ss << " parameters: [" << s.c_str() << "]";
 	        ss << ")";
-            Tau_plugin_event_current_timer_exit_data plugin_data;
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
 			// need to make a copy of the temporary that comes
 			// out of this call
             char * tmp = strdup(ss.str().c_str());
@@ -853,11 +852,11 @@ ADIOST_EXTERN void tau_adiost_read_finalize_method(
 	    TAU_PROFILE_STOP(tautimer);
     } else {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
+        if(Tau_plugins_enabled.current_timer_exit) {
 	        std::stringstream ss;
 	        ss << EVENT_TRACE_PREFIX << function_name << "(";
 	        ss << " method: " << method << ")";
-            Tau_plugin_event_current_timer_exit_data plugin_data;
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
 			// need to make a copy of the temporary that comes
 			// out of this call
             char * tmp = strdup(ss.str().c_str());

@@ -885,6 +885,14 @@ extern "C" int Tau_show_profiles()
   return 0;
 }
 
+/* Used by SOS plugin to start all currently running timers
+ * because "tracing" is not enabled until after some timers
+ * are started. */
+extern Profiler * Tau_get_timer_at_stack_depth(int pos)
+{
+    return &(Tau_thread_flags[RtsLayer::myThread()].Tau_global_stack[pos]);
+}
+
 extern "C" void Tau_stop_all_timers(int tid)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -959,8 +967,8 @@ extern "C" void Tau_exit(const char * msg) {
 
   /*Invoke plugins only if both plugin path and plugins are specified
   *    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_function_finalize_data plugin_data;
+  if(Tau_plugins_enabled.function_finalize) {
+    Tau_plugin_event_function_finalize_data_t plugin_data;
     plugin_data.junk = -1;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, &plugin_data);
   }
@@ -997,8 +1005,8 @@ extern "C" void Tau_init(int argc, char **argv) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_post_init(void) {
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_post_init_data plugin_data;
+  if(Tau_plugins_enabled.post_init) {
+    Tau_plugin_event_post_init_data_t plugin_data;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, &plugin_data);
   }
 }
@@ -1049,8 +1057,8 @@ extern "C" int Tau_dump(void) {
   TauProfiler_DumpData();
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_dump_data plugin_data;
+  if(Tau_plugins_enabled.dump) {
+    Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
   }
@@ -2551,8 +2559,8 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
   Tau_stop_timer(fi, Tau_get_thread());
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_dump_data plugin_data;
+  if(Tau_plugins_enabled.dump) {
+    Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, &plugin_data);
   }
