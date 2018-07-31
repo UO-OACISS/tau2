@@ -363,9 +363,8 @@ void Profiler::Start(int tid)
 #endif /* TAUKTAU */
 
 #if defined(TAU_PLUGIN_TRACE_SUPPORT)
-  // This is protected by a macro to avoid unnecessary overhead.
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.function_entry) {
+  if(Tau_plugins_enabled.function_entry) {
     Tau_plugin_event_function_entry_data_t plugin_data;
     plugin_data.timer_name = ThisFunction->GetName();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
@@ -703,9 +702,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAUKTAU */
 
 #if defined(TAU_PLUGIN_TRACE_SUPPORT)
-  // This is protected by a macro to avoid unnecessary overhead.
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.function_exit) {
+  if(Tau_plugins_enabled.function_exit) {
     Tau_plugin_event_function_exit_data_t plugin_data;
     plugin_data.timer_name = ThisFunction->GetName();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
@@ -1475,7 +1473,7 @@ int TauProfiler_StoreData(int tid)
 #ifndef TAU_MPI
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.pre_end_of_execution) {
+  if(Tau_plugins_enabled.pre_end_of_execution) {
     Tau_plugin_event_pre_end_of_execution_data_t plugin_data;
     plugin_data.tid = tid;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
@@ -1577,7 +1575,7 @@ int TauProfiler_StoreData(int tid)
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 5\n", RtsLayer::myNode(), tid);
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.end_of_execution) {
+  if(Tau_plugins_enabled.end_of_execution) {
     Tau_plugin_event_end_of_execution_data_t plugin_data;
     plugin_data.tid = tid;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);

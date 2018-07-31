@@ -18,6 +18,9 @@
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
 #include <TauSOS.h>
+#if TAU_MPI
+#include "mpi.h"
+#endif
 
 extern tau::Profiler* Tau_get_timer_at_stack_depth(int pos);
 
@@ -176,8 +179,6 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
 /* This happens from Profiler.cpp, when data is written out. */
 int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
-#if defined(TAU_PLUGIN_TRACE_SUPPORT)
-    // This is protected by a macro to avoid unnecessary overhead.
     /* If we are tracing, we need to "stop" all of the remaining timers on the stack */
     if (thePluginOptions().env_sos_tracing) {
         Tau_plugin_event_function_exit_data_t exit_data;
@@ -205,7 +206,6 @@ int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data_t* da
         }
         RtsLayer::UnLockDB();
     }
-#endif
     enabled = false;
     //fprintf(stdout, "TAU PLUGIN SOS Finalize\n"); fflush(stdout);
     TAU_SOS_finalize();
@@ -236,19 +236,46 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     cb->PostInit = Tau_plugin_sos_post_init;
     cb->PreEndOfExecution = Tau_plugin_sos_pre_end_of_execution;
     cb->EndOfExecution = Tau_plugin_sos_end_of_execution;
-#if defined(TAU_PLUGIN_TRACE_SUPPORT)
-    // This is protected by a macro to avoid unnecessary overhead.
     /* Event tracing support */
     if (thePluginOptions().env_sos_tracing) {
+#if !defined(TAU_PLUGIN_TRACE_SUPPORT)
+#if TAU_MPI
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if (rank == 0) {
+            std::cerr << "Error! Plugin trace support was not configured.\n";
+            std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
+        }
+        MPI_Abort(MPI_COMM_WORLD, 999);
+#else
+        std::cerr << "Error! Plugin trace support was not configured.\n";
+        std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
+        abort();
+#endif
+#endif
         cb->Send = Tau_plugin_sos_send;
         cb->Recv = Tau_plugin_sos_recv;
         cb->FunctionEntry = Tau_plugin_sos_function_entry;
         cb->FunctionExit = Tau_plugin_sos_function_exit;
         cb->AtomicEventTrigger = Tau_plugin_sos_atomic_trigger;
     }
-#endif
     /* Specialized support for ADIOS, MPI events (ADIOS Skel/Pooky support) */
     if (thePluginOptions().env_sos_trace_adios) {
+#if !defined(TAU_PLUGIN_TRACE_SUPPORT)
+#if TAU_MPI
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        if (rank == 0) {
+            std::cerr << "Error! Plugin trace support was not configured.\n";
+            std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
+        }
+        MPI_Abort(MPI_COMM_WORLD, 999);
+#else
+        std::cerr << "Error! Plugin trace support was not configured.\n";
+        std::cerr << "Please reconfigure TAU with '-useropt=-DTAU_PLUGIN_TRACE_SUPPORT'.\n" << std::endl;
+        abort();
+#endif
+#endif
         cb->CurrentTimerExit = Tau_plugin_sos_current_timer_exit;
     }
     /* Not sure what this thing does */
@@ -258,8 +285,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
     enabled = true;
 
-#if defined(TAU_PLUGIN_TRACE_SUPPORT)
-    // This is protected by a macro to avoid unnecessary overhead.
     /* If we are tracing, we need to "start" all of the timers on the stack */
     if (thePluginOptions().env_sos_tracing) {
         RtsLayer::LockDB();
@@ -280,7 +305,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
         }
         RtsLayer::UnLockDB();
     }
-#endif
     return 0;
 }
 

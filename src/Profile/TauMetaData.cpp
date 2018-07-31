@@ -259,7 +259,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   //printf("%s : %s\n", key.name, tmv->data.cval);
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.metadata_registration) {
+  if(Tau_plugins_enabled.metadata_registration) {
     Tau_plugin_event_metadata_registration_data_t plugin_data;
     plugin_data.name = name;
     plugin_data.value = tmv;
@@ -279,7 +279,7 @@ void Tau_metadata_push_to_plugins(void) {
         char tmp[128] = {0};
 
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled() && Tau_plugins_enabled.metadata_registration) {
+        if(Tau_plugins_enabled.metadata_registration) {
           Tau_plugin_event_metadata_registration_data_t plugin_data;
           plugin_data.name = it->first.name;
           plugin_data.value = it->second;
