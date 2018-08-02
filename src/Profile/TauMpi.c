@@ -2254,13 +2254,12 @@ char *** argv;
 int required;
 int *provided;
 {
-  fprintf(stderr, "MPI INIT THREAD WRAPPER\n");
   int  returnVal;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
-  fprintf(stdout, "call TAU MPI_Init_thread()\n");
+  TAU_VERBOSE("call TAU MPI_Init_thread()\n");
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
