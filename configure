@@ -6776,13 +6776,13 @@ fi
     if [ $gnu = yes ] ; then
       ompt_c_compiler=gcc
       ompt_cxx_compiler=g++
-      libomp_oss_name=gomp
+      libomp_oss_name=omp
     fi
     if [ "${architecture}" = "craycnl" ] ; then
       if [ "${intel}" = "yes" ] ; then
         ompt_c_compiler=icc
         ompt_cxx_compiler=icpc
-        libomp_oss_name=iomp5
+        libomp_oss_name=omp
       fi
     fi
 
@@ -10392,7 +10392,7 @@ if [ $papi = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
-    if [ $pthread = yes -o $smarts = yes -o $java = yes ] ; then
+    if [ [[ $pthread = yes -a $openmp = no ]] -o $smarts = yes -o $java = yes ] ; then
 	echo "ERROR: -opari option requires OpenMP threads package."
 	echo "*****************************************************"
 	exit 1
@@ -11021,7 +11021,7 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     echo "BGQ ompt"
   else
     echo "TAU: Copying lib${libomp_oss_name}.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
-    ompt_instdir=${targetdir}/${architecture}/lib/shared${tauoptions}
+    ompt_instdir=${targetdir}/${architecture}/lib
     mkdir -p ${ompt_instdir}
     cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ;
     cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
