@@ -427,36 +427,44 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
       buff << userEvent->GetName();
 
       int depth = Tau_get_current_stack_depth(tid);
-      Profiler ** path = new Profiler*[depth];
-
-      // Reverse the callpath to avoid string copies
-      int i=depth-1;
-      for (; current && i >= 0; --i) {
-        path[i] = current;
-        current = current->ParentProfiler;
-      }
-      // Now we can construct the name string by appending rather than prepending
-      buff  << " : ";
       FunctionInfo * fi;
-      for (++i; i < depth-1; ++i) {
-        fi = path[i]->ThisFunction;
-        buff << fi->GetName();
-        if (strlen(fi->GetType()) > 0)
-          buff << " " << fi->GetType();
-        buff << " => ";
-      }
-      if (depth == 0) {
-        fi = current->ThisFunction;
-      } else {
-        fi = path[i]->ThisFunction;
-      }
-      buff << fi->GetName();
-      if (strlen(fi->GetType()) > 0)
-        buff << " " << fi->GetType();
+      if (depth > 0) {
+          Profiler ** path = new Profiler*[depth];
 
-      delete[] path;
-    // Return a new string object.
-    // A smart STL implementation will not allocate a new buffer.
+          // Reverse the callpath to avoid string copies
+          int i=depth-1;
+          for (; current && i >= 0; --i) {
+            path[i] = current;
+            current = current->ParentProfiler;
+          }
+          // Now we can construct the name string by appending rather than prepending
+          buff  << " : ";
+          for (++i; i < depth-1; ++i) {
+            fi = path[i]->ThisFunction;
+            buff << fi->GetName();
+            if (strlen(fi->GetType()) > 0)
+              buff << " " << fi->GetType();
+            buff << " => ";
+          }
+          if (depth == 0) {
+            fi = current->ThisFunction;
+          } else {
+            fi = path[i]->ThisFunction;
+          }
+          buff << fi->GetName();
+          if (strlen(fi->GetType()) > 0)
+            buff << " " << fi->GetType();
+
+          delete[] path;
+      } else {
+          fi = current->ThisFunction;
+          buff << " : " << fi->GetName();
+          if (strlen(fi->GetType()) > 0) {
+            buff << " " << fi->GetType();
+          }
+      }
+      // Return a new string object.
+      // A smart STL implementation will not allocate a new buffer.
       return buff.str().c_str();
   } else {
       return "";
