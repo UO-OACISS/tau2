@@ -56,6 +56,7 @@ usage()
   echo "        -ptts-post    Skip application sampling and post-process existing PTTS sample files"
   echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
   echo "        -ptts-sample-flags=<flags> Flags to pass to PTTS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+  echo "        -ptts-restart Enable restart support within PTTS, allowing application to continue running and be reinstrumented after stop."
   echo "        -ptts-start=<addr> Address at which to start a PTTS sampling region"
   echo "        -ptts-stop=<addr>  Address at which to stop a PTTS sampling region"
   echo "        -ptts-report-flags=<flags> Flags to pass to PTTS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
@@ -445,6 +446,11 @@ for arg in "$@" ; do
         ;;
       -ptts-sample-flags=*)
         ptts_sample_flags="${arg/#-ptts-sample-flags=/}" # bash parameter expansion, bash 3 and up
+        save_arg $arg
+        shift
+        ;;
+      -ptts-restart)
+        ptts_restart="true"
         save_arg $arg
         shift
         ;;
