@@ -56,6 +56,8 @@ usage()
   echo "        -ptts-post    Skip application sampling and post-process existing PTTS sample files"
   echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
   echo "        -ptts-sample-flags=<flags> Flags to pass to PTTS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+  echo "        -ptts-start=<addr> Address at which to start a PTTS sampling region"
+  echo "        -ptts-stop=<addr>  Address at which to stop a PTTS sampling region"
   echo "        -ptts-report-flags=<flags> Flags to pass to PTTS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
   echo "        -ebs          Enable event-based sampling"
   echo "        -ebs_period=<count> Sampling period (default 1000)"
@@ -446,6 +448,16 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -ptts-start=*)
+        ptts_start="${arg/#-ptts-start=/}" # bash parameter expansion, bash 3 and up
+        save_arg $arg
+        shift
+        ;;
+      -ptts-stop=*)
+        ptts_stop="${arg/#-ptts-stop=/}" # bash parameter expansion, bash 3 and up
+        save_arg $arg
+        shift
+        ;;
       -ptts-report-flags=*)
         ptts_report_flags="${arg/#-ptts-report-flags=/}" # Also propper quoting must be used when multiple passed
         save_arg $arg
@@ -566,6 +578,19 @@ for arg in "$@" ; do
 done
 export TAU_EXEC_PATH=${BASH_SOURCE[0]}
 
+if [ "x$ptts_start" != "x" ]; then
+    ptts_sample_flags="$ptts_sample_flags --start-at-address $ptts_start" 
+    ptts_restart=true
+fi
+
+if [ "x$ptts_stop" != "x" ]; then
+    ptts_sample_flags="$ptts_sample_flags --stop-at-address $ptts_stop" 
+    ptts_restart=true
+fi
+
+if [ "x$ptts_restart" != "x" ]; then
+    ptts_sample_flags="$ptts_sample_flags --sample-restart"
+fi
 
 # choose TAU library
 new_binding_options=""
