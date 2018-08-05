@@ -30,6 +30,12 @@ Version 2.27 changes (from 2.26):
 17. Added support for LIKWID 4.3.2.
 18. Added Python args support. 
 19. Added support for armflang and armclang/armclang++ compilers. 
+20. Added -dyninst=download option to simplify installation of DyninstAPI and use with TAU. 
+21. Updated support for TAU's OMPT TR6 (-download=ompt-tr6). 
+22. Updated TAU's ParaTools Threadspotter [www.threadspotter.com] support in tau_exec (-ptts). 
+23. Added support for IBM XL compilers with MVAPICH2 under IBM Power Linux Power 9 + GPU platform. 
+24. Updated MPC support in TAU. 
+
 
 Version 2.26 changes (from 2.25):
 1. Upgraded OMPT to LLVM-0.2 and introduced TAU_OPENMP_RUNTIME_EVENTS=0. 
