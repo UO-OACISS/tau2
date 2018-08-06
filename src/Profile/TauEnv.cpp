@@ -116,6 +116,12 @@ using namespace std;
 #define TAU_EBS_PERIOD_DEFAULT 50000 // Sameer made this bigger,
 #else 
 #define TAU_EBS_PERIOD_DEFAULT 10000 // Kevin made this bigger,
+
+#ifdef TAU_PYTHON
+#undef TAU_EBS_PERIOD_DEFAULT
+#define TAU_EBS_PERIOD_DEFAULT 30000 // Sameer made this bigger,
+#endif /* TAU_PYTHON */
+
 #endif /* CRAYCNL */
 #endif
 // because smaller causes problems sometimes.
