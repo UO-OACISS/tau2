@@ -357,9 +357,7 @@ int main (int argc, char *argv[])
 #endif /* PTHREADS */
 
 #ifdef TAU_MPI
-  fprintf(stdout, "mm: call before MPI_Finalize()\n");
   MPI_Finalize();
-  fprintf(stdout, "mm: call after MPI_Finalize()\n");
 #endif /* TAU_MPI */
   printf ("Done.\n");
 
