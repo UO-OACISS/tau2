@@ -814,7 +814,7 @@ extern "C" int writeMetaDataAfterMPI_Init(void) {
     }
 
     line = strtok(NULL, " ");
-    printf("WEIRD CRAY LINE: %s", line);
+    TAU_VERBOSE("WEIRD CRAY LINE: %s", line);
     Tau_metadata_register("CRAY_CORE_ID", line);
   }
 
