@@ -478,12 +478,13 @@ for arg in "$@"; do
 	    echo "Compiler Options:"
 	    echo "-c++=<compiler>  ............................ specify the C++ compiler."
 	    echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-	    echo "               clang++|bgclang++|g++4|g++-*|icpc|scgcc|scpathCC|pathCC|orCC]."
+	    echo "    armclang++|clang++|bgclang++|g++4|g++-*|icpc|scgcc|scpathCC|pathCC|orCC]."
 	    echo "-cc=<compiler> ................................ specify the C compiler."
-	    echo "     options [cc|gcc|clang|bgclang|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
+	    echo "     options [cc|gcc|clang|bgclang|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|"
+            echo "         armclang|pathcc|orcc]."
 	    echo "-fortran=<compiler> ..................... specify the Fortran compiler."
 	    echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-	    echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
+	    echo "   armflang|g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
 	    echo "       gfortran|gfortran-*|gfortran4]"
 	    echo "-upc=<compiler> ............................. specify the UPC compiler."
 	    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
@@ -630,13 +631,13 @@ for arg in "$@"; do
         echo "  where [OPTIONS] are:"
         echo "-c++=<compiler>  ............................ specify the C++ compiler."
         echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-        echo "               clang++|bgclang++|g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
+        echo "       armclang++|clang++|bgclang++|g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
         echo "-cc=<compiler> ................................ specify the C compiler."
-        echo "   options [cc|gcc|gcc4|scgcc|clang|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
+        echo "   options [cc|gcc|gcc4|scgcc|clang|pgcc|guidec|*xlc*|ecc|pathcc|orcc|armclang]."
         echo "-fortran=<compiler> ..................... specify the Fortran compiler."
         echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-        echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
-        echo "       gfortran|gfortran-*|gfortran4]"
+        echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"  
+        echo "   armflang|gfortran|gfortran-*|gfortran4]"
         echo "-upc=<compiler> ............................. specify the UPC compiler."
         echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
         echo "-host=<host-type> ................ the type of system on which TAU runs"
@@ -1113,7 +1114,7 @@ for arg in "$@"; do
 
 	-cc=*)
 	    myarg=`echo $arg | sed 's/-cc=//'`
-	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc ]
+	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang ]
 	    then
 		c_compiler=$myarg
 
@@ -1142,7 +1143,7 @@ for arg in "$@"; do
 
 	-c++=*)
 	    myarg=`echo $arg | sed 's/-c++=//'`
-	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx ]
+	    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = g++-5 -o $myarg = g++-6 -o $myarg = g++-7 -o $myarg = g++-8 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgc++ -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = mpc_icpc -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx -o $myarg = oshCC -o $myarg = oshc++ -o $myarg = oshcxx  -o $myarg = armclang++ ]
 	    then
 		cxx_compiler=$myarg
                 if [  $cxx_compiler = mpc_cxx -o $cxx_compiler = mpc_icpc  ]
@@ -1156,7 +1157,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'clang++', 'bgclang++', 'mpicxx', 'mcxx', 'oshCC', oshcxx, or 'oshc++' "
+		    echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx',  'mpc_icpc', 'clang++', 'bgclang++', 'mpicxx', 'mcxx', 'oshCC', oshcxx, 'oshc++', or 'armclang++' "
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -1180,14 +1181,14 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
 		    fortran_compiler=$myarg
 		fi
 	    else
-		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', or 'caf' "
+		echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'pgf90', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'ifort', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'gfortran-*', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', 'mpif90', 'mpc_f77', or 'mpc_ifort', 'mpc_gfortran', 'oshfort', 'caf', or 'armflang' "
 		exit 1
 	    fi
 	    shift
@@ -1840,6 +1841,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-boost=download)
+	    boost=yes
+        echo "Downloading Boost..."
+	    shift
+	    ;;
+
 	-boost=*)
 	    boost=yes
 	    boostdir=`echo $arg | sed -e 's/-boost=//'`
@@ -1880,6 +1887,14 @@ for arg in "$@"; do
 #	    fi
 #	    shift
 #	    ;;
+
+	-dyninst=download)
+	    dyninst=yes
+        boost=yes
+        download_dyninst=yes
+        echo "Downloading Dyninst..."
+	    shift
+	    ;;
 
 	-dyninst=*)
 	    dyninst=yes
@@ -3523,6 +3538,9 @@ case $machine in
 		fortran_compiler=gfortran
             fi
 	fi
+        if [ "x$fortran_compiler" = "xarmflang" ]; then
+           fixmakeargs="$fixmakeargs ARMFLANG"
+        fi
 
 	if [ $c_compiler = default ]
 	then
@@ -3892,6 +3910,9 @@ if [ $cxx_compiler = mpicxx ] ; then
             if [ "x$fortran_compiler" = "xxlflang" ]; then
                 fixmakeargs="$fixmakeargs XLFLANG"
             fi
+            if [ "x$fortran_compiler" = "xarmflang" ]; then
+                fixmakeargs="$fixmakeargs ARMFLANG"
+            fi
 	    if [ "x$orig_fortran_compiler" = "xcaf" ]; then 
 		fortran_compiler=caf
             fi
@@ -4126,8 +4147,8 @@ case $cxx_compiler in
 
         if [ "$machine" = ibm64linux ] ; then
            if [ ! -r $extradircxx/lib/libibmc++.a ]; then
-              cxxpath=`find $extradircxx -name libibmc++.a -print `
-              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' `
+              cxxpath=`find $extradircxx -name libibmc++.a -print | tail -1`
+              extradircxx=`echo $cxxpath | sed -e 's@lib/libibmc++.a@@g' -e 's@alllibs/libibmc++.a@@g'`
            fi
         fi
 
@@ -6673,7 +6694,6 @@ if [ "x$download_unwind" = xyes ] ; then
   cd $prebfddir
 fi #unwind=download
 
-
 ######################################################################
 # Install Scalable Observation System (SOS) if requested
 ######################################################################
@@ -6745,9 +6765,9 @@ if [ "x$ompt_dir" != "x" -a -d "$ompt_dir" ] ; then
   if [ -r $ompt_dir/$libomp_osstgz ]; then
     echo "NOTE: Copying $ompt_dir/$libomp_osstgz"
     cp $ompt_dir/$libomp_osstgz .
-    if [ "x$download_ompt" != "xyes" ] ; then 
-      download_ompt_tr6=yes
-    fi
+    #if [ "x$download_ompt" != "xyes" ] ; then 
+    #  download_ompt_tr6=yes
+    #fi
   fi
 fi
 
@@ -6756,19 +6776,19 @@ fi
     if [ $gnu = yes ] ; then
       ompt_c_compiler=gcc
       ompt_cxx_compiler=g++
-      libomp_oss_name=gomp
+      libomp_oss_name=omp
     fi
     if [ "${architecture}" = "craycnl" ] ; then
       if [ "${intel}" = "yes" ] ; then
         ompt_c_compiler=icc
         ompt_cxx_compiler=icpc
-        libomp_oss_name=iomp5
+        libomp_oss_name=omp
       fi
     fi
 
 if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
   install_ompt=yes
-  if [ ! -f ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -o ${libomp_ossdir_shared}/lib${libomp_oss_name}.so -ot ${libomp_oss} ]; then
+  if [ ! -f "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -o  "${libomp_ossdir_shared}/lib${libomp_oss_name}.so" -ot "${libomp_oss}"  ]; then
     preomptdir=`pwd`
 
     #check Cmake exists
@@ -6966,7 +6986,11 @@ if [ "x$mpiinc" != "x" -o "x$mpilib" != "x" -o $mpi = yes ] ; then
     then
         mpiwarnings="-qhalt=w"
     fi
-    if [ $c_compiler = "clang" ]
+    if [ $c_compiler = "clang" -o $c_compiler = "armclang" ]
+    then
+        mpiwarnings="-Werror"
+    fi  
+    if [ $c_compiler = "gcc" -a $machine = apple ]
     then
         mpiwarnings="-Werror"
     fi
@@ -8744,6 +8768,169 @@ fi
 ######################################################################
 
 ######################################################################
+# Install Dyninst and its dependencies, if requested
+######################################################################
+libboost=boost_1_67_0
+libboosttgz=$libboost.tar.gz
+libboosturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libboosttgz
+
+libdyninst=dyninst-9.3.2-working
+libdyninsttgz=$libdyninst.tar.gz
+libdyninsturl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdyninsttgz
+
+dynlibiberty=dynlibiberty
+dynlibibertytgz=${dynlibiberty}.tar.gz
+dynlibibertyurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynlibibertytgz
+
+dynelfutils=elfutils-0.168
+dynelfutilsbz=${dynelfutils}.tar.bz2
+dynelfutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$dynelfutilsbz
+
+if [ "x$dyninstdir" = "x" ]; then
+  libdyninstdir=${targetdir}/${architecture}
+else
+  libdyninstdir=$dyninstdir
+fi
+
+libdyninst_name=dyninst
+
+if [ "x$dyninstdir" != "x" -a -d "$dyninstdir" ] ; then
+  if [ -r $dyninstdir/$libdyninsttgz ]; then
+    echo "NOTE: Copying $dyninstdir/$libdyninsttgz "
+    cp $dyninstdir/$libunwindtgz .
+    download_dyninst=yes
+  fi
+fi
+
+## Check for boost
+if [ "x$boostdir" != "x" -a -d "$boostdir" ] ; then
+  dyninstboostdir=${boostdir}
+else
+  dyninstboostdir=${libdyninstdir}/${libboost}
+  boostdir=${dyninstboostdir}
+fi
+if [ "x$dyninstboostdir" != "x" -a -d "$dyninstboostdir" ] ; then
+  echo "Boost : found : $dyninstboostdir"
+  fixmakeargs="$fixmakeargs boostinc=-I${dyninstboostdir}/include"
+else  
+  if [ "x$boost" = xyes ] ; then
+    echo "Boost : not found, downloading..."
+    download_boost=yes
+  fi
+fi
+
+## Download and install boost if necessary
+if [ "x$download_boost" = xyes ] ; then
+  prebfddir=`pwd`
+  # get the tar file
+  if [ ! -f $libboosttgz ] ; then
+    download "$libboosturl" "$libboosttgz"
+  fi
+  # check the tar file
+  if [ ! -f $libboosttgz ] ; then
+    echo "$libboosttgz did not download.  Please download it manually from: "
+    echo "$libboosturl"
+    echo "Please enter the directory containing the tarball: ${nnl}"
+    read RESPONSE
+    cp $RESPONSE/$libboosttgz .
+  else
+    echo "expanding $libboosttgz..."
+    rm -rf $dyninstboostdir
+    mkdir $dyninstboostdir
+    tar -xzf $libboosttgz -C $dyninstboostdir --strip-components=1 
+    echo "removing $libboosttgz..."
+    rm $libboosttgz
+    cd $dyninstboostdir
+    ./bootstrap.sh --prefix=${dyninstboostdir} # dyninst wants boost to be built in its src dir
+    ./b2 install -j4
+    fixmakeargs="$fixmakeargs boostinc=-I${dyninstboostdir}/include"
+  fi
+  cd $prebfddir
+fi #end dowload_boost
+
+if [ "x$download_dyninst" = xyes ] ; then
+
+  dyninstdir=${libdyninstdir}/${libdyninst}
+  prebfddir=`pwd`
+
+  #check Cmake exists
+  cmake_cmd=`which cmake`
+  if [ "x$cmake_cmd" = "x" ] ; then
+      echo 'ERROR: cmake version 2.8.11 or higher required to build Dyninst.'
+      exit 1;
+  fi
+
+  if [ -r "$dyninstdir/lib/libdyninstAPI.so" -o \
+       -r "$dyninstdir/lib/libdyninstAPI_RT.so" -o \
+       -r "$dyninstdir/lib/libdynElf.so" ] ; then
+    echo "Found: dyninst"
+    echo "dyninst download already found, skipping"
+  else
+    echo "Not found in ${dyninstdir}: ${libdyninst_name}"
+    # get the tar file
+    if [ ! -f $libdyninsttgz ] ; then
+      download "$libdyninsturl" "$libdyninsttgz"
+    fi
+
+    # check the tar file
+    if [ ! -f $libdyninsttgz ] ; then
+      echo "$libdyninsttgz did not download.  Please download it manually from: "
+      echo "$libdyninsturl"
+      echo "Please enter the directory containing the tarball: ${nnl}"
+      read RESPONSE
+      cp $RESPONSE/$libdyninsttgz .
+    else
+      echo "expanding $libdyninsttgz..."
+      rm -rf $libdyninst
+      mkdir $libdyninst
+      tar -xzf $libdyninsttgz -C $libdyninst --strip-components=1
+      echo "removing $libdyninsttgz..."
+      rm $libdyninsttgz
+      rm -rf $dyninstdir # remove and make the build dir
+      mkdir $dyninstdir
+      cd $dyninstdir     # go to the build dir
+      ## Build shared libiberty
+      mkdir ${dyninstdir}/libiberty
+      download "$dynlibibertyurl" "$dynlibibertytgz"
+      tar -xzf $dynlibibertytgz
+      cd $dynlibiberty/libiberty
+      ./configure --enable-shared --prefix=$PWD
+      make
+      ar rcs libiberty.a pic/*.o
+      cp libiberty.a ${dyninstdir}/libiberty
+      cd ../..
+      rm -rf $dynlibiberty $dynlibibertytgz
+      ## Build shared elfutils
+      mkdir ${dyninstdir}/elfutils
+      download "$dynelfutilsurl" "$dynelfutilsbz"
+      tar -xf $dynelfutilsbz -C ${dyninstdir}/elfutils --strip-components=1
+      cd ${dyninstdir}/elfutils
+      ./configure --enable-shared --prefix=$PWD
+      make
+      make install
+      cd ..
+      rm -rf $dynelfutilsbz
+      ## Now we can make Dyninst
+      cmake ${prebfddir}/${libdyninst} -DBoost_INCLUDE_DIR=${dyninstboostdir} -DCMAKE_INSTALL_PREFIX=${dyninstdir} -DIBERTY_LIBRARIES=${dyninstdir}/libiberty/libiberty.a -DLIBDWARF_INCLUDE_DIR=${dyninstdir}/elfutils/include -DLIBDWARF_LIBRARIES=${dyninstdir}/elfutils/lib/libdw.so -DLIBELF_INCLUDE_DIR=${dyninstdir}/elfutils/include -DLIBELF_LIBRARIES=${dyninstdir}/elfutils/lib/libelf.so
+      make -j8
+      make install
+      if [ -f ${dyninstdir}/elfutils/lib/libdw.so ]; then
+          cp ${dyninstdir}/elfutils/lib/libdw* ${dyninstdir}/lib
+          mv ${dyninstdir}/lib/libdw.so ${dyninstdir}/lib/libdwarf.so
+      fi
+      if [ -f ${dyninstdir}/elfutils/lib/libelf.so ]; then
+          cp ${dyninstdir}/elfutils/lib/libelf* ${dyninstdir}/lib
+      fi
+      if [ -f ${dyninstdir}/libiberty/libiberty.a ]; then
+          cp ${dyninstdir}/libiberty/libiberty.a ${dyninstdir}/lib
+      fi
+    fi
+  fi
+  cd $prebfddir
+fi #dyninst=download
+
+
+######################################################################
 # Check that the Sampling allocator code is supported by compiler
 ######################################################################
 cat <<EOF > conftest_ss_alloc.cpp
@@ -10209,7 +10396,7 @@ if [ $papi = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
-    if [ $pthread = yes -o $smarts = yes -o $java = yes ] ; then
+    if [ [[ $pthread = yes -a $openmp = no ]] -o $smarts = yes -o $java = yes ] ; then
 	echo "ERROR: -opari option requires OpenMP threads package."
 	echo "*****************************************************"
 	exit 1
@@ -10396,10 +10583,13 @@ if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     version=`icpc -v 2>&1`
     t="Version 1"
     t1="icpc version 1"
+    t2="icpc.orig version 1"
     testarg=${version#$t}
     testarg1=${version#$t1}
+    testarg2=${version#$t2}
 
-    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" ] ; then
+
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" -o "y$testarg2" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU"
     else
@@ -10835,7 +11025,7 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
     echo "BGQ ompt"
   else
     echo "TAU: Copying lib${libomp_oss_name}.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
-    ompt_instdir=${targetdir}/${architecture}/lib/shared${tauoptions}
+    ompt_instdir=${targetdir}/${architecture}/lib
     mkdir -p ${ompt_instdir}
     cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ;
     cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;

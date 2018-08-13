@@ -37,7 +37,7 @@ unsigned long long int * pvar_vbuf_allocated = NULL;
 
 static int num_vbuf_pools = 0;
 
-int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_interrupt_trigger_data data) {
+int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_interrupt_trigger_data_t* data) {
   char metric_string[TAU_NAME_LENGTH], value_string[TAU_NAME_LENGTH];
   unsigned long long int reduced_value_array[5] = {0};
   static char reduced_value_cvar_string[TAU_NAME_LENGTH] = "";
@@ -117,7 +117,7 @@ int Tau_plugin_init_func(int argc, char **argv) {
     return -1;
   }
 
-  Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
+  Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->InterruptTrigger = Tau_plugin_example_mpit_recommend_sharp_usage;
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);

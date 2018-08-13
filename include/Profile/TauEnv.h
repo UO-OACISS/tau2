@@ -111,6 +111,8 @@ extern "C" {
   double      TAUDECL TauEnv_get_throttle_percall();
   const char* TAUDECL TauEnv_get_profiledir();
   const char* TAUDECL TauEnv_get_tracedir();
+  void TAUDECL TauEnv_set_profiledir(const char * new_profiledir);
+  void TAUDECL TauEnv_set_tracedir(const char * new_tracedir);
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cvar_metrics();
   const char* TAUDECL TauEnv_get_cvar_values();
@@ -161,6 +163,8 @@ extern "C" {
   int TAUDECL TauEnv_get_mem_callpath();
   const char * TAUDECL TauEnv_get_mem_classes();
   int TAUDECL TauEnv_get_mem_class_present(const char * name);
+  const char * TAUDECL TauEnv_get_tau_exec_args();
+  const char * TAUDECL TauEnv_get_tau_exec_path();
 #ifdef __cplusplus
   void Tau_util_replaceStringInPlace(std::string& subject, const std::string& search,
                           const std::string& replace);

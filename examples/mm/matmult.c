@@ -100,7 +100,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for schedule(dynamic) nowait
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
@@ -121,7 +121,7 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
-#pragma omp for nowait
+#pragma omp for schedule(dynamic) nowait
     for (i=0; i<rows_a; i++) {
       for (k=0; k<cols_a; k++) {
         for(j=0; j<cols_b; j++) {

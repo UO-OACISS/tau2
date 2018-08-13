@@ -35,6 +35,9 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <signal.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <wordexp.h>
 
 #include <string.h>
 #ifdef TAU_BEACON
@@ -67,66 +70,85 @@
 #define TAU_OPENMPI3_CONST  
 #endif
 
+#if defined(TAU_MPC)
+#define TAU_NONMPC_CONST  
+#else
+#define TAU_NONMPC_CONST const
+#endif
+
 /* These functions and macros are for creating MPI "events" in the SOS stream. */
 
-#ifdef TAU_SOS
+#if defined(TAU_SOS)
 
 int TAU_inside_ADIOS(void);
 
 inline void Tau_plugin_trace_current_timer(const char * name) {
-    /*Invoke plugins only if both plugin path and plugins are specified*/
-    if(TauEnv_get_plugins_enabled() && TAU_inside_ADIOS() == 0) {
-        Tau_plugin_event_current_timer_exit_data plugin_data;
-        plugin_data.name_prefix = name;
-        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
-    }
+    Tau_plugin_event_current_timer_exit_data_t plugin_data;
+    plugin_data.name_prefix = name;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
 }
 
 #define EVENT_TRACE_PREFIX "TAU_EVENT::MPI"
 
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s collective synchronize %s 0x%08x", EVENT_TRACE_PREFIX, __desc, __comm); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_COLLECTIVE_EXCH_EVENT(__desc,__size,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s collective exchange %s (%d) 0x%08x", EVENT_TRACE_PREFIX, __desc, __size, __comm); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_COLLECTIVE_EXCH_V_EVENT(__desc,__stats,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s collective exchangev %s ([%f,%f,%f,%f,%f]) 0x%08x", \
     EVENT_TRACE_PREFIX, __desc, __stats[0],__stats[1],__stats[2],__stats[3],__stats[4], __comm); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT(__desc,__stats1,__stats2,__comm) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[256]; \
 sprintf(__tmp, \
     "%s collective exchangev %s ([%f,%f,%f,%f,%f],[%f,%f,%f,%f,%f]) 0x%08x", \
     EVENT_TRACE_PREFIX, __desc, __stats1[0],__stats1[1],__stats1[2],__stats1[3],__stats1[4], \
     __stats2[0],__stats2[1],__stats2[2],__stats2[3],__stats2[4], __comm); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_COMM_SPLIT_EVENT(__comm,__color,__key,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s_Comm_split (%p, %d, %d) 0x%08x", EVENT_TRACE_PREFIX, __comm,__color,__key,__comm_out); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_COMM_DUP_EVENT(__comm,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s_Comm_dup (%p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __comm_out); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_COMM_CREATE_EVENT(__comm,__group,__comm_out) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s_Comm_create (%p, %p) 0x%08x", EVENT_TRACE_PREFIX, __comm, __group, __comm_out); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_COMM_GROUP_EVENT(__comm,__group_addr) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s_Comm_group (%p) %p", EVENT_TRACE_PREFIX, __comm, __group_addr); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 void Tau_sos_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
@@ -142,7 +164,9 @@ void Tau_sos_group_incl_event(MPI_Group group, int count, int ranks[], MPI_Group
 }
 
 #define TAU_SOS_GROUP_INCL_EVENT(__group,__count,__ranks,__group_addr) \
-    Tau_sos_group_incl_event(__group, __count, __ranks, __group_addr);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+    Tau_sos_group_incl_event(__group, __count, __ranks, __group_addr); \
+}
 
 void Tau_sos_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
@@ -158,7 +182,9 @@ void Tau_sos_group_excl_event(MPI_Group group, int count, int ranks[], MPI_Group
 }
 
 #define TAU_SOS_GROUP_EXCL_EVENT(__group,__count,__ranks,__group_addr) \
-    Tau_sos_group_excl_event(__group, __count, __ranks, __group_addr);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+    Tau_sos_group_excl_event(__group, __count, __ranks, __group_addr); \
+}
 
 void Tau_sos_group_range_incl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
@@ -174,7 +200,9 @@ void Tau_sos_group_range_incl_event(MPI_Group group, int count, int ranges[][3],
 }
 
 #define TAU_SOS_GROUP_RANGE_INCL_EVENT(__group,__count,__ranges,__newgroup) \
-    Tau_sos_group_range_incl_event(__group, __count, __ranges, __newgroup);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+    Tau_sos_group_range_incl_event(__group, __count, __ranges, __newgroup); \
+}
 
 void Tau_sos_group_range_excl_event(MPI_Group group, int count, int ranges[][3], MPI_Group new_group) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
@@ -190,7 +218,9 @@ void Tau_sos_group_range_excl_event(MPI_Group group, int count, int ranges[][3],
 }
 
 #define TAU_SOS_GROUP_RANGE_EXCL_EVENT(__group,__count,__ranges,__newgroup) \
-    Tau_sos_group_range_excl_event(__group, __count, __ranges, __newgroup);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+    Tau_sos_group_range_excl_event(__group, __count, __ranges, __newgroup); \
+}
 
 void Tau_sos_group_translate_ranks_event(MPI_Group group1, int count, int *ranks1, MPI_Group group2, int *ranks2) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
@@ -210,22 +240,30 @@ void Tau_sos_group_translate_ranks_event(MPI_Group group1, int count, int *ranks
 }
 
 #define TAU_SOS_GROUP_TRANSLATE_RANKS_EVENT(__group,__count,__ranks1,__group2,__ranks2) \
-    Tau_sos_group_translate_ranks_event(__group, __count, __ranks1, __group2, __ranks2);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+    Tau_sos_group_translate_ranks_event(__group, __count, __ranks1, __group2, __ranks2); \
+}
 
 #define TAU_SOS_GROUP_DIFFERENCE_EVENT(__group1,__group2,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s_Group_difference (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_GROUP_INTERSECTION_EVENT(__group1,__group2,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s_Group_intersection (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 #define TAU_SOS_GROUP_UNION_EVENT(__group1,__group2,__newgroup) \
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
 char __tmp[128]; \
 sprintf(__tmp, "%s_Group_union (%p,%p) %p", EVENT_TRACE_PREFIX, __group1, __group2, __newgroup); \
-Tau_plugin_trace_current_timer(__tmp);
+Tau_plugin_trace_current_timer(__tmp); \
+}
 
 // this is used between cart_create and cart_sub calls... may not be safe, but...
 static int __cart_dims = 1;
@@ -249,7 +287,9 @@ void Tau_sos_cart_create_event(MPI_Comm comm, int ndims, TAU_MPICH3_CONST int * 
 }
 
 #define TAU_SOS_CART_CREATE_EVENT(__comm,__ndims,__dims,__periods,__reorder,__comm_out) \
-   Tau_sos_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+   Tau_sos_cart_create_event(__comm,__ndims,__dims,__periods,__reorder,__comm_out); \
+}
 
 void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coords) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
@@ -265,7 +305,9 @@ void Tau_sos_cart_coords_event(MPI_Comm comm, int rank, int maxdims, int * coord
 }
 
 #define TAU_SOS_CART_COORDS_EVENT(__comm,__rank,__maxdims,__coords) \
-    Tau_sos_cart_coords_event(__comm,__rank,__maxdims,__coords);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+    Tau_sos_cart_coords_event(__comm,__rank,__maxdims,__coords); \
+}
 
 void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_Comm comm_out) {
     // assume 128 for letters, and 10 digits for each rank (plus a comma)
@@ -281,7 +323,9 @@ void Tau_sos_cart_sub_event(MPI_Comm comm, TAU_MPICH3_CONST int * remains, MPI_C
 }
 
 #define TAU_SOS_CART_SUB_EVENT(__comm,__remains,__comm_out) \
-    Tau_sos_cart_sub_event(__comm,__remains,__comm_out);
+if(Tau_plugins_enabled.current_timer_exit && TAU_inside_ADIOS() == 0) { \
+    Tau_sos_cart_sub_event(__comm,__remains,__comm_out); \
+}
 
 #else
 #define TAU_SOS_COLLECTIVE_SYNC_EVENT(__desc,__comm)
@@ -1361,6 +1405,90 @@ MPI_Comm * comm_out;
   return returnVal;
 }
 
+void Tau_handle_comm_spawn(MPI_Comm comm, MPI_Comm intercomm) {
+    static int tau_comm_spawn_num = 0;
+    tau_comm_spawn_num++;
+    int comm_rank;
+    MPI_Comm_rank(comm, &comm_rank);
+    // Send the generation number to the spawned processes, which
+    // will join the Bcast in MPI_Init
+    if(comm_rank == 0) {
+        PMPI_Bcast(&tau_comm_spawn_num, 1, MPI_INT, MPI_ROOT, intercomm);
+    } else {
+        PMPI_Bcast(&tau_comm_spawn_num, 1, MPI_INT, MPI_PROC_NULL, intercomm);
+    }
+}
+
+int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
+    MPI_Info info, int root, MPI_Comm comm,
+    MPI_Comm *intercomm, int array_of_errcodes[]) {
+  int   returnVal;
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+
+  const char * tau_exec_args = TauEnv_get_tau_exec_args();
+  const char * tau_exec_path = TauEnv_get_tau_exec_path();
+  int allocated_argv = 0;
+  wordexp_t p;
+  if(tau_exec_args != NULL && tau_exec_args[0] != '\0') {
+    // This program was launched through tau_exec
+    const char * old_command = command;
+    char ** old_argv = argv;
+    size_t old_argc = 0;
+    if(old_argv != NULL) {
+        char * arg;
+        for(arg = old_argv[old_argc]; arg != NULL; arg = old_argv[++old_argc]);
+    }
+    wordexp(tau_exec_args, &p, WRDE_NOCMD);
+    argv = malloc((p.we_wordc + old_argc + 2) * sizeof(char*));
+    int offset;
+    for(offset = 0; offset < p.we_wordc; ++offset) {
+      argv[offset] = p.we_wordv[offset];
+    }
+    argv[offset++] = old_command;
+    int i;
+    for(i = 0; i < old_argc; ++i) {
+      argv[offset++] = old_argv[i];
+    }
+    argv[offset] = NULL;
+
+    command = tau_exec_path;
+    allocated_argv = 1;
+
+  }
+  
+  returnVal = PMPI_Comm_spawn(command, argv, maxprocs, info, root, comm, intercomm, array_of_errcodes);
+  Tau_handle_comm_spawn(comm, *intercomm);
+
+  if(allocated_argv == 1) {
+    free(argv);
+    wordfree(&p);
+  }
+
+  TAU_PROFILE_STOP(tautimer);
+
+  return returnVal;
+}
+
+int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
+    char **array_of_argv[], TAU_NONMPC_CONST int array_of_maxprocs[], TAU_NONMPC_CONST MPI_Info
+    array_of_info[], int root, MPI_Comm comm, MPI_Comm *intercomm,
+    int array_of_errcodes[]) {
+  int   returnVal;
+
+  TAU_PROFILE_TIMER(tautimer, "MPI_Comm_spawn_multiple()",  " ", TAU_MESSAGE);
+  TAU_PROFILE_START(tautimer);
+  
+  returnVal = PMPI_Comm_spawn_multiple(count, array_of_commands, array_of_argv, array_of_maxprocs, array_of_info, root, comm, intercomm, array_of_errcodes);
+  Tau_handle_comm_spawn(comm, *intercomm);
+
+  TAU_PROFILE_STOP(tautimer);
+
+  return returnVal;
+}
+
+
 int   MPI_Comm_test_inter( comm, flag )
 MPI_Comm comm;
 int * flag;
@@ -1793,11 +1921,13 @@ MPI_Errhandler errhandler;
   return returnVal;
 }
 
-
+#if !defined(TAU_MPC)
 int tau_mpi_finalized = 0;
 int TAU_MPI_Finalized() {
+  //fprintf(stdout, "In TAU_MPI_Finalized(): tau_mpi_finalized=%d\n", tau_mpi_finalized);
   return tau_mpi_finalized;
 }
+#endif
 
 void finalizeCallSites_if_necessary();
 int  MPI_Finalize(  )
@@ -1805,6 +1935,8 @@ int  MPI_Finalize(  )
   int  returnVal;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  TAU_VERBOSE("TAU: Call MPI_Finalize()\n");
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -1910,8 +2042,8 @@ int  MPI_Finalize(  )
 
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_pre_end_of_execution_data plugin_data;
+  if(Tau_plugins_enabled.pre_end_of_execution) {
+    Tau_plugin_event_pre_end_of_execution_data_t plugin_data;
     plugin_data.tid = Tau_get_local_tid();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, &plugin_data);
   }
@@ -1927,7 +2059,7 @@ int  MPI_Finalize(  )
   TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
-  tau_mpi_finalized = 1;
+  //tau_mpi_finalized = 1;
  
   return returnVal;
 }
@@ -1968,6 +2100,59 @@ int Tau_MPI_T_initialization(void) {
 #endif /* TAU_MPI_T */
 }
 
+int mkdirp(const char *path) {
+    const size_t len = strlen(path);
+    char _path[4096];
+    char *p; 
+
+    errno = 0;
+
+    /* Copy string so its mutable */
+    if (len > sizeof(_path)-1) {
+            errno = ENAMETOOLONG;
+            return -1; 
+        }   
+    strcpy(_path, path);
+
+    /* Iterate the string */
+    for (p = _path + 1; *p; p++) {
+            if (*p == '/') {
+                        /* Temporarily truncate */
+                        *p = '\0';
+            
+                        if (mkdir(_path, S_IRWXU) != 0) {
+                                        if (errno != EEXIST)
+                                            return -1; 
+                                    }
+            
+                        *p = '/';
+                    }
+        }   
+
+    if (mkdir(_path, S_IRWXU) != 0) {
+            if (errno != EEXIST)
+                return -1; 
+        }   
+
+    return 0;
+}
+
+void Tau_handle_spawned_init(MPI_Comm intercomm) {
+  int generation_num;
+  PMPI_Bcast(&generation_num, 1, MPI_INT, 0, intercomm);
+  const char * profiledir = TauEnv_get_profiledir();
+  const char * tracedir = TauEnv_get_profiledir();
+  char new_profiledir[4096];
+  char new_tracedir[4096];
+  snprintf(new_profiledir, 4096, "%s/spawn-%d", profiledir, generation_num);
+  snprintf(new_tracedir, 4096, "%s/spawn-%d", tracedir, generation_num);
+  mkdirp(new_profiledir);
+  mkdirp(new_tracedir);
+  TauEnv_set_profiledir(new_profiledir);
+  TauEnv_set_tracedir(new_tracedir);
+  TAU_VERBOSE("TAU_INIT: MPI_Comm_spawn generation %d\n", generation_num);
+}
+
 int  MPI_Init( argc, argv )
 int * argc;
 char *** argv;
@@ -2000,15 +2185,15 @@ char *** argv;
 
   returnVal = PMPI_Init( argc, argv );
 
-  /*Initialize the plugin system only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
-    if(!Tau_initialize_plugin_system()) {
-      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
-    } else {
-      printf("TAU INIT: Error initializing the plugin system\n");
-    }
+  MPI_Comm parent;
+  PMPI_Comm_get_parent(&parent);
+  if(parent != MPI_COMM_NULL) {
+    // This process was created through MPI_Comm_spawn
+    Tau_handle_spawned_init(parent);
   }
+
+  /* Initialize the plugin system */
+  Tau_initialize_plugin_system();
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX 
@@ -2073,6 +2258,8 @@ int *provided;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  TAU_VERBOSE("call TAU MPI_Init_thread()\n");
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
@@ -2085,15 +2272,15 @@ int *provided;
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
 
-  /*Initialize the plugin system only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
-    if(!Tau_initialize_plugin_system()) {
-      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
-    } else {
-      printf("TAU INIT: Error initializing the plugin system\n");
-    }
+  MPI_Comm parent;
+  MPI_Comm_get_parent(&parent);
+  if(parent != MPI_COMM_NULL) {
+    // This process was created through MPI_Comm_spawn
+    Tau_handle_spawned_init(parent);
   }
+
+  /* Initialize the plugin system */
+  Tau_initialize_plugin_system();
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX

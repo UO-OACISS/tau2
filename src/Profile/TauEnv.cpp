@@ -116,6 +116,12 @@ using namespace std;
 #define TAU_EBS_PERIOD_DEFAULT 50000 // Sameer made this bigger,
 #else 
 #define TAU_EBS_PERIOD_DEFAULT 10000 // Kevin made this bigger,
+
+#ifdef TAU_PYTHON
+#undef TAU_EBS_PERIOD_DEFAULT
+#define TAU_EBS_PERIOD_DEFAULT 30000 // Sameer made this bigger,
+#endif /* TAU_PYTHON */
+
 #endif /* CRAYCNL */
 #endif
 // because smaller causes problems sometimes.
@@ -342,6 +348,9 @@ static int env_mem_all = 0;
 static const char *env_mem_classes = NULL;
 static std::set<std::string> * env_mem_classes_set = NULL;
 static int env_region_addresses = TAU_REGION_ADDRESSES_DEFAULT;
+
+static const char *env_tau_exec_args = NULL;
+static const char *env_tau_exec_path = NULL;
 
 } // extern "C"
 
@@ -758,6 +767,14 @@ extern "C" const char *TauEnv_get_profiledir() {
 
 extern "C" const char *TauEnv_get_tracedir() {
   return env_tracedir;
+}
+
+extern "C" void TauEnv_set_profiledir(const char * new_profiledir) {
+    env_profiledir = strdup(new_profiledir);
+}
+
+extern "C" void TauEnv_set_tracedir(const char * new_tracedir) {
+    env_tracedir = strdup(new_tracedir);
 }
 
 int TauEnv_get_synchronize_clocks() {
@@ -1191,6 +1208,15 @@ int TauEnv_get_mem_class_present(const char * name) {
     }
     return env_mem_classes_set->count(name);
 }
+
+const char * TauEnv_get_tau_exec_args() {
+  return env_tau_exec_args;
+}
+
+const char * TauEnv_get_tau_exec_path() {
+  return env_tau_exec_path;
+}
+
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -2006,7 +2032,8 @@ void TauEnv_initialize()
     } else {
       if ((env_plugins == NULL) && (env_plugins_path == NULL)) {
         TAU_VERBOSE("TAU: TAU_SELECT_FILE is set to %s when TAU plugins are not initialized\n", env_select_file);
-          env_plugins_path=strdup(TAU_LIB_DIR); 
+          //env_plugins_path=strdup(TAU_LIB_DIR); 
+          env_plugins_path=strdup("."); 
           TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is now %s\n", env_plugins_path);
           //sprintf(env_plugins,"libTAU-filter-plugin.so(%s)", env_select_file); 
           char *plugins = (char *) malloc(1024); 
@@ -2016,7 +2043,10 @@ void TauEnv_initialize()
           TAU_VERBOSE("TAU: TAU plugin is now %s\n", env_plugins);
 	  TAU_METADATA("TAU_SELECT_FILE", filename);
       } else {
-        TAU_VERBOSE("TAU: Ignoring TAU_SELECT_FILE because TAU_PLUGINS and/or TAU_PLUGINS_PATH is set.\nPlease use export TAU_PLUGINS_PATH=%s and export TAU_PLUGINS=\"libTAU-filter-plugin.so(%s)\"\n", strdup(TAU_LIB_DIR), strdup(env_select_file)); 
+        TAU_VERBOSE("TAU: Ignoring TAU_SELECT_FILE because TAU_PLUGINS and/or TAU_PLUGINS_PATH is set.\nPlease use export TAU_PLUGINS_PATH=%s and export TAU_PLUGINS=\"libTAU-filter-plugin.so(%s)\"\n", 
+			//strdup(TAU_LIB_DIR), 
+			strdup("."), 
+			strdup(env_select_file)); 
       }
     }
 
@@ -2443,9 +2473,9 @@ void TauEnv_initialize()
 
     if ((env_mem_classes = getconf("TAU_MEM_CLASSES")) == NULL) {
       env_mem_classes = "";
-      TAU_VERBOSE("TAU: MEM_CLASSES is not set\n", env_metrics);
+      TAU_VERBOSE("TAU: MEM_CLASSES is not set\n");
     } else {
-      TAU_VERBOSE("TAU: MEM_CLASSES is \"%s\"\n", env_metrics);
+      TAU_VERBOSE("TAU: MEM_CLASSES is \"%s\"\n", env_mem_classes);
       if(strcmp(env_mem_classes, "all") == 0) {
         env_mem_all = 1; 
         TAU_VERBOSE("TAU: Tracking All Class Allocations\n");
@@ -2456,6 +2486,20 @@ void TauEnv_initialize()
         env_mem_classes_set->insert(next_mem_class);
         next_mem_class = strtok_r(NULL, ":,", &saveptr);
       }
+    }
+
+    if ((env_tau_exec_args = getconf("TAU_EXEC_ARGS")) == NULL) {
+      env_tau_exec_args = "";
+      TAU_VERBOSE("TAU: TAU_EXEC_ARGS is not set\n");
+    } else {
+      TAU_VERBOSE("TAU: TAU_EXEC_ARGS is \"%s\"\n", env_tau_exec_args);
+    }
+
+    if ((env_tau_exec_path = getconf("TAU_EXEC_PATH")) == NULL) {
+      env_tau_exec_path = "";
+      TAU_VERBOSE("TAU: TAU_EXEC_PATH is not set\n");
+    } else {
+      TAU_VERBOSE("TAU: TAU_EXEC_PATH is \"%s\"\n", env_tau_exec_path);
     }
 
     initialized = 1;

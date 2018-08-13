@@ -15,9 +15,9 @@
 #include <Profile/TauPlugin.h>
 
 
-int Tau_plugin_test_event_interrupt_trigger(Tau_plugin_event_interrupt_trigger_data data) {
+int Tau_plugin_test_event_interrupt_trigger(Tau_plugin_event_interrupt_trigger_data_t *data) {
   
-  std::cout << "TAU PLUGIN: Interrupt has been triggered for signal: " << data.signum << std::endl;
+  std::cout << "TAU PLUGIN: Interrupt has been triggered for signal: " << data->signum << std::endl;
 
   return 0;
 }

@@ -56,6 +56,9 @@ usage()
   echo "        -ptts-post    Skip application sampling and post-process existing PTTS sample files"
   echo "        -ptts-num=<N>  Number of ranks used for ThreadSpotter"    
   echo "        -ptts-sample-flags=<flags> Flags to pass to PTTS sample_ts command. Overrides TAU_TS_SAMPLE_FLAGS env. var."
+  echo "        -ptts-restart Enable restart support within PTTS, allowing application to continue running and be reinstrumented after stop."
+  echo "        -ptts-start=<addr> Address at which to start a PTTS sampling region"
+  echo "        -ptts-stop=<addr>  Address at which to stop a PTTS sampling region"
   echo "        -ptts-report-flags=<flags> Flags to pass to PTTS report_ts command. Overrides TAU_TS_REPORT_FLAGS env. var."
   echo "        -ebs          Enable event-based sampling"
   echo "        -ebs_period=<count> Sampling period (default 1000)"
@@ -305,6 +308,14 @@ py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
 
+# This saves the args to tau_exec so they can be reused later.
+# This is used for MPI_Comm_spawn support, in which TAU spawns the child
+# through tau_exec, since the child doesn't inherit environment variables.
+save_arg()
+{
+  export TAU_EXEC_ARGS="${TAU_EXEC_ARGS} $@"
+}
+
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
   modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
@@ -316,167 +327,220 @@ for arg in "$@" ; do
     if [ "x$test_arg" != "x$arg" ]; then 
       scorep=true
     fi
+    save_arg $arg
     shift
   else
     case $arg in 
       -v|-d|-verbose|--verbose)
         verbose=true
+        save_arg $arg
         shift
         ;;
       -h|-help|--help)
         usage
+        save_arg $arg
         ;;
       -io)
         track_io=true
+        save_arg $arg
         shift
         ;;
       -numa)
         track_numa=true
+        save_arg $arg
         shift
         ;;
       -memory)
         track_memory=true
+        save_arg $arg
         shift
         ;;
       -memory_debug)
         memory_debug=true
+        save_arg $arg
         shift
         ;;
       -cuda)
         track_cuda=true
+        save_arg $arg
         shift
         ;;
       -ompt)
         track_ompt=true
+        save_arg $arg
         shift
         ;;
       -power)
         track_power=true
+        save_arg $arg
         shift
         ;;
       -cupti)
         track_cupti=true
+        save_arg $arg
         shift
         ;;
       -um | -uvm)
         unified_memory=true
+        save_arg $arg
         shift
         ;;
       -sass=*)
         track_sass=true
         myarg=`echo $arg | sed 's/-sass=//'`
         sass_type="$myarg"
+        save_arg $arg
         shift
         ;;
       -csv)
         csv_output=true
+        save_arg $arg
         shift
         ;;
       -opencl)
         track_opencl=true
+        save_arg $arg
         shift
         ;;
       -openacc)
         track_openacc=true
+        save_arg $arg
         shift
         ;;
       -gomp)
         track_gomp=true
+        save_arg $arg
         shift
         ;;
       -armci)
         track_armci=true
+        save_arg $arg
         shift
         ;;
       -shmem)
         track_shmem=true
+        save_arg $arg
         shift
         ;;
       -pin)
         use_pin=true
+        save_arg $arg
         shift
         ;;
       -ptts)
         use_ptts=true
+        save_arg $arg
         shift
         ;;
       -ptts-post)
         use_ptts=true
         ptts_post=true
+        save_arg $arg
         shift
         ;;
       -ptts-num=*)
         myarg=`echo $arg | sed 's/-ptts-num=//'`
         ptts_num="$myarg"
+        save_arg $arg
         shift
         ;;
       -ptts-sample-flags=*)
         ptts_sample_flags="${arg/#-ptts-sample-flags=/}" # bash parameter expansion, bash 3 and up
+        save_arg $arg
+        shift
+        ;;
+      -ptts-restart)
+        ptts_restart="true"
+        save_arg $arg
+        shift
+        ;;
+      -ptts-start=*)
+        ptts_start="${arg/#-ptts-start=/}" # bash parameter expansion, bash 3 and up
+        save_arg $arg
+        shift
+        ;;
+      -ptts-stop=*)
+        ptts_stop="${arg/#-ptts-stop=/}" # bash parameter expansion, bash 3 and up
+        save_arg $arg
         shift
         ;;
       -ptts-report-flags=*)
         ptts_report_flags="${arg/#-ptts-report-flags=/}" # Also propper quoting must be used when multiple passed
+        save_arg $arg
         shift
         ;;
       -ebs)
         tau_use_ebs=true
+        save_arg $arg
         shift
         ;;
       -ebs_period=*)
         tau_use_ebs=true
         myarg=`echo $arg | sed 's/-ebs_period=//'`
         tau_ebs_period="$myarg"
+        save_arg $arg
         shift
         ;;
       -ebs_source=*)
         tau_use_ebs=true
         myarg=`echo $arg | sed 's/-ebs_source=//'`
         tau_ebs_source="$myarg"
+        save_arg $arg
         shift
         ;;
       -qsub)
         qsub_mode=true
+        save_arg $arg
         shift
         ;;
       -s)
         dryrun=echo
+        save_arg $arg
         shift
         ;;
       -gdb)
         use_gdb=true
+        save_arg $arg
         shift
         ;;
       -T)
         processT=true
+        save_arg $arg
         shift
         ;;
       -tau:*)
         binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
+        save_arg $arg
         shift
         ;;
       -loadlib=*)
         myarg=`echo $arg | sed 's/-loadlib=//'`
         extraloadlibs="$extraloadlibs:$myarg"
+        save_arg $arg
         shift
         ;;
       -XrunTAU-*)
         myarg=`echo $arg | sed 's/-XrunTAU-//'`
         binding_specified="shared-$myarg"
+        save_arg $arg
         shift
         ;;
       -XrunTAUsh-*)
         myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
         binding_specified="shared-$myarg"
+        save_arg $arg
         shift
         ;;
       -spark-python)
         spark_wrapper=true
+        save_arg $arg
         shift
         ;;
       -tau-python-args=*)
         if [ $python_wrapper = "true" ] ; then
           myarg=`echo $arg | sed 's/-tau-python-args=//'`
           py_interp_args="$myarg"
+          save_arg $arg
           shift
         else
           echo "Unknown option: $arg" >&2
@@ -485,6 +549,7 @@ for arg in "$@" ; do
         ;;
       -c)
         if [ $python_wrapper = "true" ] ; then
+          save_arg $arg
           break
         else
           echo "Unknown option: $arg" >&2
@@ -493,6 +558,7 @@ for arg in "$@" ; do
         ;;
       -m)
         if [ $python_wrapper = "true" ] ; then
+          save_arg $arg
           shift
           break
         else
@@ -501,6 +567,7 @@ for arg in "$@" ; do
         fi
         ;;
       --)
+        save_arg $arg
         shift
         break
         ;;
@@ -515,7 +582,21 @@ for arg in "$@" ; do
     esac
   fi
 done
+export TAU_EXEC_PATH=${BASH_SOURCE[0]}
 
+if [ "x$ptts_start" != "x" ]; then
+    ptts_sample_flags="$ptts_sample_flags --start-at-address $ptts_start" 
+    ptts_restart=true
+fi
+
+if [ "x$ptts_stop" != "x" ]; then
+    ptts_sample_flags="$ptts_sample_flags --stop-at-address $ptts_stop" 
+    ptts_restart=true
+fi
+
+if [ "x$ptts_restart" != "x" ]; then
+    ptts_sample_flags="$ptts_sample_flags --sample-restart"
+fi
 
 # choose TAU library
 new_binding_options=""

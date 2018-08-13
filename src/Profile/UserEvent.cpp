@@ -125,8 +125,8 @@ void TauUserEvent::AddEventToDB()
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
 
   /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    Tau_plugin_event_atomic_event_registration_data plugin_data;
+  if(Tau_plugins_enabled.atomic_event_registration) {
+    Tau_plugin_event_atomic_event_registration_data_t plugin_data;
     plugin_data.user_event_ptr = this;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, &plugin_data);
   }
@@ -297,11 +297,11 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #endif /* PROFILING_ON */
   /*Invoke plugins only if both plugin path and plugins are specified*/
     /* and only output the counter if it's not a context counter */
-    if ((name[0] != '[') 
+    if(Tau_plugins_enabled.atomic_event_trigger) {
+      if ((name[0] != '[') 
             && (name.find(" : ") == std::string::npos) 
             && (name.find("=>") == std::string::npos)) {
-      if(TauEnv_get_plugins_enabled()) {
-        Tau_plugin_event_atomic_event_trigger_data plugin_data;
+        Tau_plugin_event_atomic_event_trigger_data_t plugin_data;
         plugin_data.counter_name = name.c_str();
         plugin_data.tid = tid;
         plugin_data.timestamp = timestamp;
@@ -427,36 +427,44 @@ TauSafeString TauContextUserEvent::FormulateContextNameString(Profiler * current
       buff << userEvent->GetName();
 
       int depth = Tau_get_current_stack_depth(tid);
-      Profiler ** path = new Profiler*[depth];
-
-      // Reverse the callpath to avoid string copies
-      int i=depth-1;
-      for (; current && i >= 0; --i) {
-        path[i] = current;
-        current = current->ParentProfiler;
-      }
-      // Now we can construct the name string by appending rather than prepending
-      buff  << " : ";
       FunctionInfo * fi;
-      for (++i; i < depth-1; ++i) {
-        fi = path[i]->ThisFunction;
-        buff << fi->GetName();
-        if (strlen(fi->GetType()) > 0)
-          buff << " " << fi->GetType();
-        buff << " => ";
-      }
-      if (depth == 0) {
-        fi = current->ThisFunction;
-      } else {
-        fi = path[i]->ThisFunction;
-      }
-      buff << fi->GetName();
-      if (strlen(fi->GetType()) > 0)
-        buff << " " << fi->GetType();
+      if (depth > 0) {
+          Profiler ** path = new Profiler*[depth];
 
-      delete[] path;
-    // Return a new string object.
-    // A smart STL implementation will not allocate a new buffer.
+          // Reverse the callpath to avoid string copies
+          int i=depth-1;
+          for (; current && i >= 0; --i) {
+            path[i] = current;
+            current = current->ParentProfiler;
+          }
+          // Now we can construct the name string by appending rather than prepending
+          buff  << " : ";
+          for (++i; i < depth-1; ++i) {
+            fi = path[i]->ThisFunction;
+            buff << fi->GetName();
+            if (strlen(fi->GetType()) > 0)
+              buff << " " << fi->GetType();
+            buff << " => ";
+          }
+          if (depth == 0) {
+            fi = current->ThisFunction;
+          } else {
+            fi = path[i]->ThisFunction;
+          }
+          buff << fi->GetName();
+          if (strlen(fi->GetType()) > 0)
+            buff << " " << fi->GetType();
+
+          delete[] path;
+      } else {
+          fi = current->ThisFunction;
+          buff << " : " << fi->GetName();
+          if (strlen(fi->GetType()) > 0) {
+            buff << " " << fi->GetType();
+          }
+      }
+      // Return a new string object.
+      // A smart STL implementation will not allocate a new buffer.
       return buff.str().c_str();
   } else {
       return "";

@@ -549,7 +549,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   // The event file for a thread needs to be written by that thread, so we write
   // the temporary buffers the first time we get an event from that thread after
   // intialization has completed.
-  if(!buffers_written[tid]) {
+  if(!buffers_written[tid] && !otf2_comms_shutdown) {
     TauTraceOTF2WriteTempBuffer(tid, node_id);
   }
 #endif

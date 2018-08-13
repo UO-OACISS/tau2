@@ -443,15 +443,8 @@ extern "C" int Tau_init_initializeTAU()
   TauEnv_initialize();
 
 #ifndef TAU_MPI
-  /*Initialize the plugin system only if both plugin path and plugins are specified*/
-  if(TauEnv_get_plugins_enabled()) {
-    TAU_VERBOSE("TAU INIT: Initializing plugin system...\n");
-    if(!Tau_initialize_plugin_system()) {
-      TAU_VERBOSE("TAU INIT: Successfully Initialized the plugin system.\n");
-    } else {
-      printf("TAU INIT: Error initializing the plugin system\n");
-    }
-  }
+  /* Initialize the plugin system */
+  Tau_initialize_plugin_system();
 #endif // TAU_MPI
 
 #ifdef TAU_EPILOG

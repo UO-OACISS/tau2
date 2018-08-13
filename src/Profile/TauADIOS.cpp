@@ -84,11 +84,10 @@ extern "C" int TAU_inside_ADIOS(void) {
    output a trace event if we aren't currently timing another ADIOS call. */
 
 void Tau_SOS_conditionally_pack_current_timer(const char * name) {
-    int foo = TAU_decrement_stack_height();
-    if (foo == 0) {
+    if (TAU_decrement_stack_height() == 0) {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_current_timer_exit_data plugin_data;
+        if(Tau_plugins_enabled.current_timer_exit) {
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
             plugin_data.name_prefix = name;
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
         }
@@ -98,7 +97,9 @@ void Tau_SOS_conditionally_pack_current_timer(const char * name) {
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT(__detail) \
         std::stringstream __ss; \
         __ss << EVENT_TRACE_PREFIX << __detail << "()"; \
-        Tau_SOS_conditionally_pack_current_timer(__ss.str().c_str());
+		char * _tmp = strdup(__ss.str().c_str()); \
+    	Tau_SOS_conditionally_pack_current_timer(_tmp); \
+		free(_tmp);
 
 void TAU_SOS_collective_ADIOS_write_event(const char * detail, 
     const char * var_name, enum ADIOS_DATATYPES data_type, 
@@ -172,8 +173,9 @@ void TAU_SOS_collective_ADIOS_write_event(const char * detail,
         ss << "[" << dims << "]";
     }
     ss << ")";
-	//printf("%s\n", ss.str().c_str());
-    Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+	char * tmp = strdup(ss.str().c_str());
+    Tau_SOS_conditionally_pack_current_timer(tmp);
+	free(tmp);
 }
 #else
 #define TAU_SOS_COLLECTIVE_ADIOS_EVENT // do nuthin.
@@ -230,7 +232,19 @@ ADIOST_EXTERN void tau_adiost_open ( adiost_event_type_t type,
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
 	} else if (type == adiost_event_exit) {
-        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+		std::stringstream ss;
+		ss << EVENT_TRACE_PREFIX << function_name << "(";
+		ss << " file_descriptor: " << std::hex << file_descriptor << ",";
+		ss << " group_name: '" << group_name << "',";
+		ss << " file_name: '" << file_name << "',";
+		ss << " mode: '" << mode << "',";
+		ss << " comm: " << std::hex << "0x" << comm << ") " << type;
+		// need to make a copy of the temporary that comes
+		// out of this call
+        char * tmp = strdup(ss.str().c_str());
+		Tau_SOS_conditionally_pack_current_timer(tmp);
+		// delete our copy
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -244,7 +258,15 @@ ADIOST_EXTERN void tau_adiost_close(adiost_event_type_t type,
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
 	} else if (type == adiost_event_exit) {
-        TAU_SOS_COLLECTIVE_ADIOS_EVENT(function_name);
+		std::stringstream ss;
+		ss << EVENT_TRACE_PREFIX << function_name << "(";
+		ss << " file_descriptor: " << std::hex << file_descriptor << ")";
+		// need to make a copy of the temporary that comes
+		// out of this call
+        char * tmp = strdup(ss.str().c_str());
+        Tau_SOS_conditionally_pack_current_timer(tmp);
+		// delete our copy
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -784,29 +806,35 @@ ADIOST_EXTERN void tau_adiost_read_init_method(
     const char * parameters) {
 	const char * function_name = "adios_read_init_method";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " method: " << method << ",";
-	ss << " comm: " << std::hex << "0x" << comm << ",";
-	// The parameters has newlines in it - strip them out.
-	std::string s(parameters);
-	std::replace(s.begin(), s.end(), '\n', ' ');
-	std::replace(s.begin(), s.end(), '\r', ' ');
-	// The parameters are corrupting the SQL insert later, disabled for now
-	//ss << " parameters: [" << s.c_str() << "]";
-	ss << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
-    } else if (type == adiost_event_exit) {
-	    TAU_PROFILE_STOP(tautimer);
 	    Tau_increment_stack_height();
+    } else if (type == adiost_event_exit) {
+	    TAU_decrement_stack_height();
+	    TAU_PROFILE_STOP(tautimer);
     } else {
 	    // not conditional! neither start nor stop.
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_current_timer_exit_data plugin_data;
-            plugin_data.name_prefix = ss.str().c_str();
+        if(Tau_plugins_enabled.current_timer_exit) {
+	        std::stringstream ss;
+	        ss << EVENT_TRACE_PREFIX << function_name << "(";
+	        ss << " method: " << method << ",";
+	        ss << " comm: " << std::hex << "0x" << comm << ",";
+	        // The parameters has newlines in it - strip them out.
+	        std::string s(parameters);
+	        std::replace(s.begin(), s.end(), '\n', ' ');
+	        std::replace(s.begin(), s.end(), '\r', ' ');
+	        // The parameters are corrupting the SQL insert later, disabled for now
+	        ss << " parameters: [" << s.c_str() << "]";
+	        ss << ")";
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
+			// need to make a copy of the temporary that comes
+			// out of this call
+            char * tmp = strdup(ss.str().c_str());
+            plugin_data.name_prefix = tmp;
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
+			// delete our copy
+			free(tmp);
         }
     }
 }
@@ -816,20 +844,26 @@ ADIOST_EXTERN void tau_adiost_read_finalize_method(
     enum ADIOS_READ_METHOD method ) {
 	const char * function_name = "adios_read_finalize_method";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " method: " << method << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
-    } else if (type == adiost_event_exit) {
-	    TAU_PROFILE_STOP(tautimer);
 	    Tau_increment_stack_height();
+    } else if (type == adiost_event_exit) {
+	    TAU_decrement_stack_height();
+	    TAU_PROFILE_STOP(tautimer);
     } else {
         /*Invoke plugins only if both plugin path and plugins are specified*/
-        if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_current_timer_exit_data plugin_data;
-            plugin_data.name_prefix = ss.str().c_str();
+        if(Tau_plugins_enabled.current_timer_exit) {
+	        std::stringstream ss;
+	        ss << EVENT_TRACE_PREFIX << function_name << "(";
+	        ss << " method: " << method << ")";
+            Tau_plugin_event_current_timer_exit_data_t plugin_data;
+			// need to make a copy of the temporary that comes
+			// out of this call
+            char * tmp = strdup(ss.str().c_str());
+            plugin_data.name_prefix = tmp;
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
+			// delete our copy
+			free(tmp);
         }
     }
 }
@@ -843,18 +877,20 @@ ADIOST_EXTERN void tau_adiost_read_open(
 	ADIOS_FILE * file_descriptor) {
 	const char * function_name = "adios_read_open";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " method: " << method << ",";
-	ss << " comm: " << std::hex << "0x" << comm << ",";
-	ss << " lock_mode: " << lock_mode << ",";
-	ss << " timeout_sec: " << timeout_sec << ",";
-	ss << " file_descriptor: " << std::hex << file_descriptor << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " method: " << method << ",";
+	    ss << " comm: " << std::hex << "0x" << comm << ",";
+	    ss << " lock_mode: " << lock_mode << ",";
+	    ss << " timeout_sec: " << timeout_sec << ",";
+	    ss << " file_descriptor: " << std::hex << file_descriptor << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -868,17 +904,19 @@ ADIOST_EXTERN void tau_adiost_read_open_file(
 	ADIOS_FILE * file_descriptor) {
 	const char * function_name = "adios_read_open_file";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-   	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fname: '" << fname << "',";
-	ss << " method: " << method << ",";
-	ss << " comm: " << std::hex << "0x" << comm << ",";
-	ss << " file_descriptor: " << std::hex << file_descriptor << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+   	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " fname: '" << fname << "',";
+	    ss << " method: " << method << ",";
+	    ss << " comm: " << std::hex << "0x" << comm << ",";
+	    ss << " file_descriptor: " << std::hex << file_descriptor << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -891,17 +929,19 @@ ADIOST_EXTERN void tau_adiost_advance_step(
     float timeout_sec) {
 	const char * function_name = "adios_advance_step";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fp: " << std::hex << fp << ",";
-	ss << " last: " << last << ",";
-	ss << " timeout_sec: " << timeout_sec << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
+	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " fp: " << std::hex << fp << ",";
+	    ss << " last: " << last << ",";
+	    ss << " timeout_sec: " << timeout_sec << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
     } else {
     }
 }
@@ -913,16 +953,18 @@ ADIOST_EXTERN void tau_adiost_inq_var(
 	ADIOS_VARINFO * varinfo) {
 	const char * function_name = "adios_inq_var";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fp: " << std::hex << fp << ",";
-	ss << " varname: '" << varname << "',";
-	ss << " varinfo: " << std::hex << varinfo << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " fp: " << std::hex << fp << ",";
+	    ss << " varname: '" << varname << "',";
+	    ss << " varinfo: " << std::hex << varinfo << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -935,16 +977,18 @@ ADIOST_EXTERN void tau_adiost_inq_var_byid(
 	ADIOS_VARINFO * varinfo) {
 	const char * function_name = "adios_inq_var_byid";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fp: " << std::hex << fp << ",";
-	ss << " varid: " << varid << ",";
-	ss << " varinfo: " << std::hex << varinfo << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " fp: " << std::hex << fp << ",";
+	    ss << " varid: " << varid << ",";
+	    ss << " varinfo: " << std::hex << varinfo << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -955,14 +999,16 @@ ADIOST_EXTERN void tau_adiost_free_varinfo(
 	ADIOS_VARINFO * varinfo) {
 	const char * function_name = "adios_free_varinfo";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " varinfo: " << std::hex << varinfo << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " varinfo: " << std::hex << varinfo << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -1006,30 +1052,32 @@ ADIOST_EXTERN void tau_adiost_selection_boundingbox(
 	ADIOS_SELECTION * selection) {
 	const char * function_name = "adios_selection_boundingbox";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-   	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " ndim: " << ndim << ", start: [";
-	int i;
-	if (ndim > 0) {
-		ss << start[0];
-	}
-	for (i = 1 ; i < ndim ; i++) {
-		ss << "," << start[i];
-    }
-	ss << "], end: [";
-	if (ndim > 0) {
-		ss << count[0];
-	}
-	for (i = 1 ; i < ndim ; i++) {
-		ss << "," << count[i];
-    }
-	ss << "],";
-	ss << " selection: " << std::hex << selection << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+   	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " ndim: " << ndim << ", start: [";
+	    int i;
+	    if (ndim > 0) {
+		    ss << start[0];
+	    }
+	    for (i = 1 ; i < ndim ; i++) {
+		    ss << "," << start[i];
+        }
+	    ss << "], end: [";
+	    if (ndim > 0) {
+		    ss << count[0];
+	    }
+	    for (i = 1 ; i < ndim ; i++) {
+		    ss << "," << count[i];
+        }
+	    ss << "],";
+	    ss << " selection: " << std::hex << selection << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -1086,14 +1134,16 @@ ADIOST_EXTERN void tau_adiost_selection_delete(
 	ADIOS_SELECTION * selection) {
 	const char * function_name = "adios_selection_delete";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-   	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " selection: " << std::hex << selection << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+   	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " selection: " << std::hex << selection << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -1110,27 +1160,29 @@ ADIOST_EXTERN void tau_adiost_schedule_read(
 	void * data) {
 	const char * function_name = "adios_schedule_read";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-   	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fp: " << std::hex << fp << ",";
-	ss << " selection: " << std::hex << selection << ",";
-	ss << " varname: '" << varname << "',";
-	ss << " from_steps: " << from_steps << ",";
-	ss << " nsteps: " << nsteps << ", param: '";
-	if (param != NULL) {
-		std::string s(param);
-		std::replace(s.begin(), s.end(), '\n', ' ');
-		std::replace(s.begin(), s.end(), '\r', ' ');
-		std::replace(s.begin(), s.end(), ';', ',');
-		ss << s.c_str();
-	}
-	ss << "',";
-	ss << " data: " << std::hex << data << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+   	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " fp: " << std::hex << fp << ",";
+	    ss << " selection: " << std::hex << selection << ",";
+	    ss << " varname: '" << varname << "',";
+	    ss << " from_steps: " << from_steps << ",";
+	    ss << " nsteps: " << nsteps << ", param: '";
+	    if (param != NULL) {
+		    std::string s(param);
+		    std::replace(s.begin(), s.end(), '\n', ' ');
+		    std::replace(s.begin(), s.end(), '\r', ' ');
+		    std::replace(s.begin(), s.end(), ';', ',');
+		    ss << s.c_str();
+	    }
+	    ss << "',";
+	    ss << " data: " << std::hex << data << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -1147,27 +1199,29 @@ ADIOST_EXTERN void tau_adiost_schedule_read_byid(
 	void * data) {
 	const char * function_name = "adios_schedule_read_byid";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-   	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fp: " << std::hex << fp << ",";
-	ss << " selection: " << std::hex << selection << ",";
-	ss << " varid: " << varid << ",";
-	ss << " from_steps: " << from_steps << ",";
-	ss << " nsteps: " << nsteps << ", param: '";
-	if (param != NULL) {
-		std::string s(param);
-		std::replace(s.begin(), s.end(), '\n', ' ');
-		std::replace(s.begin(), s.end(), '\r', ' ');
-		std::replace(s.begin(), s.end(), ';', ',');
-		ss << s.c_str();
-	}
-	ss << "',";
-	ss << " data: " << std::hex << data << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+   	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " fp: " << std::hex << fp << ",";
+	    ss << " selection: " << std::hex << selection << ",";
+	    ss << " varid: " << varid << ",";
+	    ss << " from_steps: " << from_steps << ",";
+	    ss << " nsteps: " << nsteps << ", param: '";
+	    if (param != NULL) {
+		    std::string s(param);
+		    std::replace(s.begin(), s.end(), '\n', ' ');
+		    std::replace(s.begin(), s.end(), '\r', ' ');
+		    std::replace(s.begin(), s.end(), ';', ',');
+		    ss << s.c_str();
+	    }
+	    ss << "',";
+	    ss << " data: " << std::hex << data << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
@@ -1179,15 +1233,17 @@ ADIOST_EXTERN void tau_adiost_perform_reads(
 	int blocking) {
 	const char * function_name = "adios_perform_reads";
     TAU_PROFILE_TIMER(tautimer, function_name,  " ", TAU_IO);
-	std::stringstream ss;
-	ss << EVENT_TRACE_PREFIX << function_name << "(";
-	ss << " fp: " << std::hex << fp << ",";
-	ss << " blocking: " << blocking << ")";
     if (type == adiost_event_enter) {
 	    TAU_PROFILE_START(tautimer);
 	    Tau_increment_stack_height();
     } else if (type == adiost_event_exit) {
-		Tau_SOS_conditionally_pack_current_timer(ss.str().c_str());
+	    std::stringstream ss;
+	    ss << EVENT_TRACE_PREFIX << function_name << "(";
+	    ss << " fp: " << std::hex << fp << ",";
+	    ss << " blocking: " << blocking << ")";
+		char * tmp = strdup(ss.str().c_str());
+    	Tau_SOS_conditionally_pack_current_timer(tmp);
+		free(tmp);
 	    TAU_PROFILE_STOP(tautimer);
     } else {
     }
