@@ -29,7 +29,7 @@ mycxx=`which g++`
 #   gnu,sgi,ibm,ibm64,hp,cray,pgi,absoft,fujitsu,sun,compaq,
 #   g95,open64,kai,nec,hitachi,intel,absoft,lahey,nagware,pathscale
 #   gfortran,gfortran-*,gfortran4
-myf90=gnu
+myf90=gfortran
 
 # Threads
 use_threads=true # will build openmp, pthreads, opencl (if cuda available)
@@ -39,14 +39,14 @@ use_mpi=true # make sure mpicxx/CC/whatever is in your path - the TAU configure
              # program *should* auto-detect the settings correctly.
 
 #Python
-use_python=true # make sure python-config is in your path, or set to false
+use_python=false # make sure python-config is in your path, or set to false
 
 # PAPI support
-use_papi=true # set "true" if not using PAPI HW counters, "false" otherwise
+use_papi=false # set "true" if not using PAPI HW counters, "false" otherwise
 path_to_papi=/usr/local/papi/5.5.0 
 
 # GPGPU support
-use_cuda=true
+use_cuda=false
 # this is the path to include/cuda.h
 path_to_cuda=/usr/local/cuda-8.0
 # this is the path to include/cupti.h
@@ -75,9 +75,13 @@ fi
 ncores=2
 maxload=2
 osname=`uname`
+bfd="-bfd=download"
+otf="-otf=download"
 if [ ${osname} == "Darwin" ]; then
     ncores=`sysctl -n hw.ncpu`
     let maxload=ncores/2
+    bfd=" "
+    otf=" "
 else
     ncores=`nproc --all`
     let maxload=ncores/2
@@ -96,7 +100,7 @@ prefix=${basedir}/bootstrap_install
 tau_arch=`${basedir}/utils/archfind`
 
 # Check for threads
-if [ ${use_threads} ] ; then
+if [ ${use_threads} = true ] ; then
     if [ ${mycc} == "gcc" ] || [ ${mycc} == "icc" ] || [ ${mycc} == "clang" ] ; then
         declare -a thread_opts=("-pthread" "-openmp -ompt=download")
     else
@@ -107,7 +111,7 @@ else
 fi
 
 # check for MPI
-if [ ${use_mpi} ] ; then
+if [ ${use_mpi} = true ] ; then
     declare -a mpi_opts=("-mpi" " ")
 else
     declare -a mpi_opts=(" ")
@@ -115,20 +119,24 @@ fi
 
 # check for python
 python_opts=" "
-if [ ${use_python} ] ; then
+if [ ${use_python} = true ] ; then
     python_opts="-python"
 fi
 
 # check for PAPI
 papi_opts=" "
-if [ ${path_to_papi}x != "x" ] ; then
-    papi_opts="-papi=${path_to_papi}"
+if [ ${use_papi} = true ] ; then
+    if [ ${path_to_papi}x != "x" ] ; then
+        papi_opts="-papi=${path_to_papi}"
+    fi
 fi
 
 # check for CUDA & CUPTI
 cuda_opts=" "
-if [ ${path_to_cuda}x != "x" ] ; then
-    cuda_opts="-cuda=${path_to_cuda} -cupti=${path_to_cupti}"
+if [ ${use_cuda} = true ] ; then
+    if [ ${path_to_cuda}x != "x" ] ; then
+        cuda_opts="-cuda=${path_to_cuda} -cupti=${path_to_cupti}"
+    fi
 fi
 
 # versions, locations of dependencies
@@ -166,20 +174,57 @@ build_pdt()
         fi
     fi
     echo "Configuring PDT..."
-    ./configure -GNU -prefix=${pdt_prefix} >& ${pdt_conf_log}
+    cmd="./configure -GNU -prefix=${pdt_prefix}"
+    echo ${cmd}
+    set +e
+    ${cmd} >& ${pdt_conf_log}
+    if [ $? -ne 0 ] ; then
+        tail -f ${pdt_conf_log}
+        echo "Error: Configuration failed.  Please see ${pdt_conf_log}"
+        kill -INT $$
+    fi
+    set -e
     echo "Building PDT..."
     mkdir -p ${pdt_prefix}/${tau_arch}/bin
+    set +e
     make ${pcomp} install >& ${pdt_make_log}
+    if [ $? -ne 0 ] ; then
+        tail -f ${pdt_make_log}
+        echo "Error: Building failed.  Please see ${pdt_make_log}"
+        kill -INT $$
+    fi
+    set -e
 }
 
 inner_build_tau()
 {
     echo "Configuring TAU with $* "
+    set +e
     ./configure $* >& ${tau_conf_log}
+    if [ $? -ne 0 ] ; then
+        tail -f ${tau_conf_log}
+        echo "Error: Configuration failed.  Please see ${tau_conf_log}"
+        kill -INT $$
+    fi
+    set -e
     echo "Building TAU..."
+    set +e
     make ${pcomp} >& ${tau_make_log}
+    if [ $? -ne 0 ] ; then
+        tail -f ${tau_make_log}
+        echo "Error: Configuration failed.  Please see ${tau_make_log}"
+        kill -INT $$
+    fi
+    set -e
     echo "Installing TAU..."
+    set +e
     make install >& ${tau_inst_log}
+    if [ $? -ne 0 ] ; then
+        tail -f ${tau_inst_log}
+        echo "Error: Configuration failed.  Please see ${tau_inst_log}"
+        kill -INT $$
+    fi
+    set -e
 }
 
 build_tau()
@@ -196,7 +241,7 @@ build_tau()
     cd ${basedir}
     for mpi in "${mpi_opts[@]}" ; do
         for threads in "${thread_opts[@]}" ; do
-            args="-pdt=${pdt_prefix} -prefix=${tau_prefix} -iowrapper -bfd=download -otf=download -unwind=download ${python_opts} ${papi_opts} ${cuda_opts} ${mpi} ${threads}"
+            args="-pdt=${pdt_prefix} -prefix=${tau_prefix} -iowrapper ${bfd} ${otf} -unwind=download ${python_opts} ${papi_opts} ${cuda_opts} ${mpi} ${threads}"
             inner_build_tau ${args}
         done
     done
