@@ -11026,9 +11026,17 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
   else
     echo "TAU: Copying lib${libomp_oss_name}.so to ${targetdir}/${architecture}/lib/shared${tauoptions} ..."
     ompt_instdir=${targetdir}/${architecture}/lib
+    # We also need to put the OpenMP runtime in the tauoptions directory, otherwise tau_exec doesn't find it when the application is not compiled using the TAU wrapper
+    ompt_instdir_=${targetdir}/${architecture}/lib/shared${tauoptions}
     mkdir -p ${ompt_instdir}
+    mkdir -p ${ompt_instdir_}
     cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir}/lib${libomp_oss_name}.so ;
     cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir}/libomp.so ;
+
+    # Copy the OpenMP runtime in the tauoptions directory as well
+    cp ${libomp_ossdir_shared}/lib${libomp_oss_name}.so ${ompt_instdir_}/lib${libomp_oss_name}.so ;
+    cp ${libomp_ossdir_shared}/libomp.so ${ompt_instdir_}/libomp.so ;
+
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
     if [ "x$download_ompt_tr6" = "xyes" ] ; then 
