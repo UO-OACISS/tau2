@@ -82,6 +82,8 @@ extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
+static char pvarnamearray[100];
+
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
@@ -2903,6 +2905,7 @@ TauUserEvent & PvarName(const int current_pvar_index, const int current_pvar_sub
     /*All this routine does is to return the event at the current PVAR index and subindex*/
     
     return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
+    //return 0;
 }
 
 /*Allocate events to track PVARs*/
@@ -2934,8 +2937,15 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
 }
 
 extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
+ 
+  std::cout << "PVAR name: " << PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str() << std::endl;
+  char * pvarnamechar = const_cast<char*>(PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
+  fprintf(stdout, "PVAR name (char *): %s\n", pvarnamechar);
 
-  return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
+  strcpy(pvarnamearray,pvarnamechar);
+  fprintf(stdout, "PVAR name after strcpy: %s\n", pvarnamearray);
+  //return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
+  return pvarnamearray;
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {

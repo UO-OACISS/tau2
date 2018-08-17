@@ -879,10 +879,16 @@ int Tau_track_mpi_t_here(void) {
           /*Invoke plugins only if both plugin path and plugins are specified*/
           if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_mpit_data plugin_data;
+ 
+            //fprintf(stdout, " Track MPI-T PVARs - get pvar name: %s\n", Tau_get_pvar_name(i,j));
+            //std::cout << "Track MPI-T PVARs - get pvar name: " << Tau_get_pvar_name(i,j) << std::endl;
+            char * pvar_name_char = Tau_get_pvar_name(i,j);
+            fprintf(stdout, " Track MPI-T PVARs - get pvar name: %s\n", pvar_name_char);
+            //dprintf("MPI-T invoke callback: pvar_name char: %s\n", pvar_name_str);
             plugin_data.pvar_name = Tau_get_pvar_name(i,j);
             plugin_data.pvar_index = j;
             plugin_data.pvar_value = mydata;
-            fprintf(stdout, "MPI-T invoke callback\n"); 
+            dprintf("MPI-T invoke callback\n"); 
             Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, &plugin_data);
           }
  
@@ -891,7 +897,6 @@ int Tau_track_mpi_t_here(void) {
     }
 
   }
-
 
   dprintf("Finished!!\n");
 }

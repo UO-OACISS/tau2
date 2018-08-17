@@ -34,6 +34,7 @@ int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data data) {
     printf("TAU PLUGIN SOS: MPIT\n");
 
     fprintf(stdout, "TAU PLUGIN SOS: pvar name: %s\n", data.pvar_name);
+    //std::cout << "TAU PLUGINS SOS: pvar name: " << data.pvar_name << std::endl;
     fprintf(stdout, "TAU PLUGIN SOS: pvar value: %llu\n", data.pvar_value); 
 
     TAU_SOS_send_data();

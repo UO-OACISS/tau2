@@ -119,7 +119,7 @@ struct Tau_plugin_event_dump_data {
 
 struct Tau_plugin_event_mpit_data {
    int pvar_index;
-   char *pvar_name;
+   char * pvar_name;
    long long int pvar_value;
 };
 
