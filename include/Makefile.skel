@@ -457,6 +457,7 @@ TAU_OPENMP_OPTION =
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_F90     = openf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#NEC_COMPILERS#TAU_F90         = mpinfort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -548,6 +549,7 @@ TAU_F77 = $(TAU_F90)
 #SGICC#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #USE_INTELCXX#PROFILEOPT19     = -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #USE_NECCXX#PROFILEOPT19     = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
+#NEC_COMPILERS#PROFILEOPT19     = -DTAU_NEC_SX -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #PGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #APPLEPGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   -DTAU_APPLE_PGI #ENDIF#
 #ACC#PROFILEOPT19  	       = -AA +z -DTAU_DOT_H_LESS_HEADERS -DTAU_HPUX #ENDIF#
@@ -785,6 +787,7 @@ TAU_GCCLIB	= -lgcc_s
 #GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #KAI#TAU_IBM_FORTRANLIBS	       =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #FX#TAU_FORTRANLIBS       = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
+#NEC_COMPILERS#TAU_FORTRANLIBS               = -lpmpi  -lnc++  -lmpi++ #ENDIF#
 #IBM_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM_FORTRANLIBS) #ENDIF#
 
 #USE_IBMXLC#TAU_IBM64_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
@@ -914,6 +917,8 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 # NOTE:  No -lmpi_cxx, -lmpi_f90, -lmpi_f77, and --linkfortran for Fujitsu
 # by default. See tau_compiler.sh $optFujitsu==true
 # Please add manually if needed
+#NEC_COMPILERS#TAU_CXXLIBS               = -lpmpi  -lnc++  -lmpi++ #ENDIF#
+
 
 #PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #IBM64LINUX_XLC#TAU_IBM64LINUX_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
@@ -1047,6 +1052,7 @@ TAU_BGQ_AR_SHFLAGS = -shared
 #USE_IBMXLC#TAU_BGQ_AR_SHFLAGS          = -qmkshrobj    #ENDIF#
 #BGQ#AR_SHFLAGS          = $(TAU_BGQ_AR_SHFLAGS)        #ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
+#NEC_COMPILERS#AR_SHFLAGS  	= -shared 		#ENDIF#
 #ACC#AR_SHFLAGS  		= -b 		        #ENDIF#
 #MERCURIUM#AR_SHFLAGS  = -shared #ENDIF#
 TAU_ARFLAGS			= $(AR_SHFLAGS) -o
@@ -1070,6 +1076,7 @@ TAU_AR                 = ar
 #FX#TAU_AR             = $(EXTRADIR)/util/bin/sparc64-unknown-linux-gnu-ar        #ENDIF#
 #PPC64#TAU_AR          = ar 		#ENDIF#
 #IBM64LINUX#TAU_AR     = ar             #ENDIF#
+#NEC_COMPILERS#TAU_AR  = nar             #ENDIF#
 
 
 ##############################################

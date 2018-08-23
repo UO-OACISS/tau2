@@ -2398,9 +2398,8 @@ int MPI_Get_version( int *version, int *subversion )
 }
 #endif
 
-
 int  MPI_Address( location, address )
-#ifdef TAU_SGI_MPT_MPI
+#if (defined(TAU_SGI_MPT_MPI) || defined(TAU_NEC_SX))
 void * location;
 #else 
 TAU_OPENMPI3_CONST void * location;

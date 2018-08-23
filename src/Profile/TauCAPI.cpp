@@ -69,7 +69,7 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX) && !defined(TAU_NEC_SX)
 #include <execinfo.h>
 #endif
 
@@ -196,6 +196,8 @@ struct Tau_thread_status_flags {
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #elif defined(__PGIC__)
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS];
+#elif defined(TAU_NEC_SX)
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #elif defined(__GNUC__) 
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
 #else  /* __GNUC__ */
@@ -592,7 +594,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d][%d:%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n",
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX) && !defined(TAU_NEC_SX)
      if(!TauEnv_get_ebs_enabled()) {
        void* callstack[128];
        int i, frames = backtrace(callstack, 128);

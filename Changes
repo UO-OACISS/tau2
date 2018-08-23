@@ -35,6 +35,7 @@ Version 2.27 changes (from 2.26):
 22. Updated TAU's ParaTools Threadspotter [www.threadspotter.com] support in tau_exec (-ptts). 
 23. Added support for IBM XL compilers with MVAPICH2 under IBM Power Linux Power 9 + GPU platform. 
 24. Updated MPC support in TAU. 
+25. Added preliminary support for NEC SX-Aurora TSUBASA (-arch=nec-sx-aurora -mpi). 
 
 
 Version 2.26 changes (from 2.25):
