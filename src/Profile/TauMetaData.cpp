@@ -36,6 +36,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 
 #include <sstream>
 
+#ifdef TAU_NEC_SX
+#include <strings.h>
+#endif /* TAU_NEC_SX */
+
 #include "tauarch.h"
 #include <Profile/Profiler.h>
 #include <Profile/tau_types.h>
