@@ -24,7 +24,7 @@
 #include <ucontext.h>
 #endif
 
-#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(TAU_NEC_SX)
 #include <execinfo.h>
 #define TAU_EXECINFO 1
 #endif /* _AIX */
@@ -253,7 +253,11 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
     length = strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 100;
     resolvedBuffer = (char*)malloc(length * sizeof(char));
     int status;
+#ifndef TAU_NEC_SX
     char *demangled_funcname = abi::__cxa_demangle(resolvedInfo.funcname, 0, 0, &status);
+#else
+    char *demangled_funcname = (char *) resolvedInfo.funcname;
+#endif 
     if (status == 0)
       sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
           demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);

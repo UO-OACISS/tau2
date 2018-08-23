@@ -113,7 +113,7 @@
 
 // Which platforms have pvalloc?
 #ifndef HAVE_PVALLOC
-#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS) || defined(TAU_ANDROID)
+#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS) || defined(TAU_ANDROID) || defined(TAU_NEC_SX)
 #undef HAVE_PVALLOC
 #else
 #define HAVE_PVALLOC 1
@@ -140,9 +140,9 @@
 
 // Which platforms have mallinfo?
 #ifndef HAVE_MALLINFO
-#if !( defined(TAU_CRAYXMT) || defined(TAU_CATAMOUNT) ) && \
+#if !( defined(TAU_CRAYXMT) || defined(TAU_CATAMOUNT) || defined(TAU_NEC_SX) ) && \
      ( defined (__linux__) || defined (_AIX) || defined(sgi) || \
-       defined (__alpha) || defined (CRAYCC) || defined(__blrts__) )
+       defined (__alpha) || defined (CRAYCC) || defined(__blrts__)) 
 #define HAVE_MALLINFO 1
 #endif
 #endif

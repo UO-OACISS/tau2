@@ -12,7 +12,7 @@ using namespace std;
 
 #define TAU_MAX_STACK 1024
 
-#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(TAU_NEC_SX)
 #include <execinfo.h>
 #define TAU_EXECINFO 1
 #endif

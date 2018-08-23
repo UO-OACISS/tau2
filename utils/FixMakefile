@@ -1030,6 +1030,10 @@ case $1 in
 	echo NOTE: Using the NEC C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     NEC_COMPILERS)
+	echo NOTE: Using the NEC suite of compilers
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      USE_INTELCXX)
 	echo NOTE: Using the Intel C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1869,6 +1873,10 @@ case $1 in
 	;;
      CRAYXMT)
 	echo "NOTE: Using Cray XMT options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     NEC_SX_AURORA)
+	echo "NOTE: Using NEC SX Aurora options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      MIC_LINUX)
