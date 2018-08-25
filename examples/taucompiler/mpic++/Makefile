@@ -11,8 +11,9 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-include ../../../include/Makefile 
+TAU_MAKEFILE ?=../../include/Makefile
 
+include $(TAU_MAKEFILE)
 
 
 CXX		= $(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/bin/tau_cxx.sh
