@@ -1590,6 +1590,11 @@ int TauProfiler_StoreData(int tid)
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
   }
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
+/* static dtors cause a crash. This could fix it */
+#ifdef TAU_SCOREP
+  TAU_VERBOSE("TAU<%d,%d>: Turning off the lights... \n", RtsLayer::myNode(), tid);
+  Tau_global_setLightsOut();
+#endif /* TAU_SCOREP */  
   return 1;
 }
 
