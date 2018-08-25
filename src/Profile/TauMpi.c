@@ -2243,6 +2243,14 @@ char *** argv;
 
   Tau_post_init(); 
 
+#ifndef TAU_WINDOWS
+#ifndef _AIX 
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
+
   return returnVal;
 }
 
@@ -2324,6 +2332,14 @@ int *provided;
   writeMetaDataAfterMPI_Init(); 
 
   Tau_post_init(); 
+
+#ifndef TAU_WINDOWS
+#ifndef _AIX
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
+#endif /* _AIX */
+#endif /* TAU_WINDOWS */
 
   return returnVal;
 }
