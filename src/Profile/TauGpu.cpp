@@ -488,11 +488,14 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
   GpuEventAttributes *attr;
   int number_of_attributes;
   id->getAttributes(attr, number_of_attributes);
+
+#ifdef TAU_ENABLE_GPU_EVENTS
   for (int i = 0; i < number_of_attributes; i++) {
     TauContextUserEvent* e = attr[i].userEvent;
     TAU_EVENT_DATATYPE event_data = attr[i].data;
     TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
   }
+#endif /* TAU_ENABLE_GPU_EVENTS */
   /*
    if (id.contextEventMap != NULL)
    {
