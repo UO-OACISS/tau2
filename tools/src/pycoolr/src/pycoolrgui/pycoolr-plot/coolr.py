@@ -1,6 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
-import sys, os, re, _thread, signal
+#import sys, os, re, _thread, signal
+import sys, os, re, thread, signal
 #from cStringIO import StringIO
 from io import StringIO
 import subprocess
@@ -1501,7 +1502,7 @@ class Coolrsub:
            countsamples = 0
            for sample in self.rows[j]:
              params['ts'] = 0
-             #print 'sample: ', sample
+             print 'PYCOOLR sample: ', sample
              #self.req_sql(self.conn, self.ranks, self.rows)
              profile_t2 = time.time()
              self.lock.acquire()

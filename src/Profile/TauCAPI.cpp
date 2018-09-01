@@ -82,6 +82,8 @@ extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
+static char pvarnamearray[100];
+
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
@@ -1068,6 +1070,20 @@ extern "C" int Tau_dump(void) {
   return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_mpit(void) {
+  TauInternalFunctionGuard protects_this_function;
+  TauProfiler_DumpData();
+
+  /*Invoke plugins only if both plugin path and plugins are specified*/
+  if(Tau_plugins_enabled.mpit) {
+    Tau_plugin_event_mpit_data_t plugin_data;
+    //plugin_data.tid = RtsLayer::myThread();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, &plugin_data);
+  }
+
+  return 0;
+}
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   TauInternalFunctionGuard protects_this_function;
@@ -2908,6 +2924,13 @@ TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current
     
     return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
+ 
+TauUserEvent & PvarName(const int current_pvar_index, const int current_pvar_subindex) {
+    /*All this routine does is to return the event at the current PVAR index and subindex*/
+    
+    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
+    //return 0;
+}
 
 /*Allocate events to track PVARs*/
 extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count) {
@@ -2935,6 +2958,18 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
     }
 
     tau_previous_pvar_count = num_pvars;
+}
+
+extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
+ 
+  std::cout << "PVAR name: " << PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str() << std::endl;
+  char * pvarnamechar = const_cast<char*>(PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
+  fprintf(stdout, "PVAR name (char *): %s\n", pvarnamechar);
+
+  strcpy(pvarnamearray,pvarnamechar);
+  fprintf(stdout, "PVAR name after strcpy: %s\n", pvarnamearray);
+  //return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
+  return pvarnamearray;
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
