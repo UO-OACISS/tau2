@@ -37,16 +37,16 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data_t* data) {
 }
 
 /* This happens when reading MPI-T PVARs from the underlying MPI library */
-int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data data) {
+int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data_t* data) {
 
     printf("TAU PLUGIN SOS: MPIT\n");
 
-    fprintf(stdout, "TAU PLUGIN SOS: pvar name: %s\n", data.pvar_name);
+    fprintf(stdout, "TAU PLUGIN SOS: pvar name: %s\n", data->pvar_name);
     //std::cout << "TAU PLUGINS SOS: pvar name: " << data.pvar_name << std::endl;
-    fprintf(stdout, "TAU PLUGIN SOS: pvar value: %llu\n", data.pvar_value); 
+    fprintf(stdout, "TAU PLUGIN SOS: pvar value: %llu\n", data->pvar_value); 
 
     //TAU_SOS_send_data();
-    Tau_SOS_pack_long(data.pvar_name, data.pvar_value);
+    Tau_SOS_pack_long(data->pvar_name, data->pvar_value);
     TAU_SOS_send_data();
     return 0;
 }

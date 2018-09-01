@@ -878,7 +878,7 @@ int Tau_track_mpi_t_here(void) {
           fprintf(stdout, "TAU track MPI-T: pvar initial count=%d, pvar count=%d, pvar index=%d, pvar sub index=%d, pvar value=%llu\n", tau_initial_pvar_count, tau_pvar_count[i], i, j, mydata);
           /*Invoke plugins only if both plugin path and plugins are specified*/
           if(TauEnv_get_plugins_enabled()) {
-            Tau_plugin_event_mpit_data plugin_data;
+            Tau_plugin_event_mpit_data_t plugin_data;
  
             //fprintf(stdout, " Track MPI-T PVARs - get pvar name: %s\n", Tau_get_pvar_name(i,j));
             //std::cout << "Track MPI-T PVARs - get pvar name: " << Tau_get_pvar_name(i,j) << std::endl;
