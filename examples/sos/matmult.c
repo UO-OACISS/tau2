@@ -136,7 +136,8 @@ double do_work(void) {
 void * threaded_func(void *data)
 {
     int * maxi = (int *)(data);
-  for (int i = 0 ; i < *maxi ; i++) {
+  int i;
+  for (i = 0 ; i < *maxi ; i++) {
 #ifdef PTHREADS
     int s = pthread_barrier_wait(&barrier);
 #endif
@@ -173,6 +174,7 @@ int main (int argc, char *argv[])
     exit(1);
   }
 
+#if 1
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   int comm_size = 0;
@@ -214,8 +216,9 @@ int main (int argc, char *argv[])
     MPI_Group_excl(group_world, Neven, members, &odd_group);
     MPI_Comm even_comm;
     MPI_Comm odd_comm;
-    MPI_Comm_create(MPI_COMM_WORLD, even_group, new_comm);
-    MPI_Comm_create(MPI_COMM_WORLD, odd_group, new_comm);
+    MPI_Comm new_comm;
+    MPI_Comm_create(MPI_COMM_WORLD, even_group, &new_comm);
+    MPI_Comm_create(MPI_COMM_WORLD, odd_group, &new_comm);
 
 #ifdef PTHREADS
   int ret;
@@ -231,10 +234,10 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
-  int maxi = 10;
+  int maxi = 20;
 
 #ifdef PTHREADS
-  for (int i = 0 ; i < nthreads ; i++) {
+  for (i = 0 ; i < nthreads ; i++) {
     if (ret = pthread_create(&(tid[i]), NULL, threaded_func, &maxi) ) {
       printf("Error: pthread_create (1) fails ret = %d\n", ret);
       exit(1);
@@ -249,7 +252,7 @@ int main (int argc, char *argv[])
   }
 
 /* On thread 0: */
-  int i;
+  //int i;
   TAU_REGISTER_CONTEXT_EVENT(event, "Iteration count");
   for (i = 0 ; i < maxi ; i++) {
     // for SOS testing purposes...
@@ -281,7 +284,7 @@ int main (int argc, char *argv[])
 
 
 #ifdef PTHREADS 
-  for (int i = 0 ; i < nthreads ; i++) {
+  for (i = 0 ; i < nthreads ; i++) {
     if (ret = pthread_join(tid[i], NULL) )
     {
         printf("Error: pthread_join (1) fails ret = %d\n", ret);
@@ -293,6 +296,8 @@ int main (int argc, char *argv[])
 
   MPI_Finalize();
   printf ("Done.\n");
+
+#endif
 
   return 0;
 }
