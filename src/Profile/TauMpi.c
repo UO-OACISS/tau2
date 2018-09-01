@@ -83,14 +83,17 @@
 int TAU_inside_ADIOS(void);
 
 inline void Tau_plugin_trace_current_timer(const char * name) {
+
+#if 0
     Tau_plugin_event_current_timer_exit_data_t plugin_data;
     plugin_data.name_prefix = name;
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
+#endif
 
-#if 0
+#if 1
     /*Invoke plugins only if both plugin path and plugins are specified*/
     if(TauEnv_get_plugins_enabled() && TAU_inside_ADIOS() == 0) {
-        Tau_plugin_event_current_timer_exit_data plugin_data;
+        Tau_plugin_event_current_timer_exit_data_t plugin_data;
         plugin_data.name_prefix = name;
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, &plugin_data);
     }
