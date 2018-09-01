@@ -80,7 +80,15 @@
 
 #if defined(TAU_SOS)
 
+#ifndef TAU_ADIOS
+int TAU_inside_ADIOS(void) {
+
+ return 0;
+
+}
+#else
 int TAU_inside_ADIOS(void);
+#endif /*  TAU_ADIOS */
 
 inline void Tau_plugin_trace_current_timer(const char * name) {
 
