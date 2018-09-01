@@ -1071,20 +1071,6 @@ extern "C" int Tau_dump(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_mpit(void) {
-  TauInternalFunctionGuard protects_this_function;
-  TauProfiler_DumpData();
-
-  /*Invoke plugins only if both plugin path and plugins are specified*/
-  if(Tau_plugins_enabled.mpit) {
-    Tau_plugin_event_mpit_data_t plugin_data;
-    //plugin_data.tid = RtsLayer::myThread();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_MPIT, &plugin_data);
-  }
-
-  return 0;
-}
-///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   TauInternalFunctionGuard protects_this_function;
   for (int i = 0 ; i < RtsLayer::getTotalThreads() ; i++)

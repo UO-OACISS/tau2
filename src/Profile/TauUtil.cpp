@@ -582,6 +582,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
   if (cb->MetadataRegistrationComplete != 0) { Tau_plugins_enabled.metadata_registration = 1; }
   if (cb->PostInit != 0) { Tau_plugins_enabled.post_init = 1; }
   if (cb->Dump != 0) { Tau_plugins_enabled.dump = 1; }
+  if (cb->Mpit != 0) { Tau_plugins_enabled.mpit = 1; }
   if (cb->FunctionEntry != 0) { Tau_plugins_enabled.function_entry = 1; }
   if (cb->FunctionExit != 0) { Tau_plugins_enabled.function_exit = 1; }
   if (cb->Send != 0) { Tau_plugins_enabled.send = 1; }
@@ -855,7 +856,7 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
       break;
     }  
     case TAU_PLUGIN_EVENT_MPIT: {
-      Tau_util_invoke_callbacks_(*(Tau_plugin_event_mpit_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_mpit_data_t*)data);
       break;
     } 
     case TAU_PLUGIN_EVENT_DUMP: {
