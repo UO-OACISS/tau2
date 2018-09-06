@@ -133,6 +133,10 @@ using namespace std;
 #define TAU_EBS_UNWIND_DEFAULT 0
 #define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
+#define TAU_EBS_RESOLUTION_STR_DEFAULT "line"
+#define TAU_EBS_RESOLUTION_STR_FILE "file"
+#define TAU_EBS_RESOLUTION_STR_FUNCTION "function"
+
 /* Experimental feature - pre-computation of statistics */
 //#if (defined(TAU_UNIFY) && defined(TAU_MPI))
 #if defined(TAU_UNIFY)
@@ -283,6 +287,7 @@ static int env_ebs_enabled_tau = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+static int env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
 
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
@@ -995,6 +1000,10 @@ int TauEnv_get_ebs_enabled() {
 
 int TauEnv_get_ebs_enabled_tau() {
   return env_ebs_enabled_tau;
+}
+
+int TauEnv_get_ebs_resolution() {
+  return env_ebs_resolution;
 }
 
 int TauEnv_get_openmp_runtime_enabled() {
@@ -2302,6 +2311,19 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_EBS_UNWIND_DEPTH", tmpstr);
       }
 #endif /* TAU_UNWIND */
+
+      const char *ebs_resolution = getconf("TAU_EBS_RESOLUTION");
+      if (ebs_resolution) {
+          if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_FILE) == 0) {
+              env_ebs_resolution = TAU_EBS_RESOLUTION_FILE;
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_FILE);
+          } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_FUNCTION) == 0) {
+              env_ebs_resolution = TAU_EBS_RESOLUTION_FUNCTION;
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_FUNCTION);
+          } else { // otherwise, it's the default - line.
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_DEFAULT);
+          }
+      }
 
       if (TauEnv_get_tracing()) {
         env_callpath = 1;
