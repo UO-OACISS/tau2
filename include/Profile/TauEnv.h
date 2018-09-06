@@ -46,6 +46,10 @@
 #define TAU_TRACE_FORMAT_TAU 0
 #define TAU_TRACE_FORMAT_OTF2 1
 
+#define TAU_EBS_RESOLUTION_FILE 0
+#define TAU_EBS_RESOLUTION_FUNCTION 1
+#define TAU_EBS_RESOLUTION_LINE 2
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -96,6 +100,7 @@ extern "C" {
   char *  TAUDECL Tau_check_dirname(const char *dirname);
   int  TAUDECL TauEnv_get_ebs_unwind();
   int  TAUDECL TauEnv_get_ebs_unwind_depth();
+  int  TAUDECL TauEnv_get_ebs_resolution();
   int  TAUDECL TauEnv_get_stat_precompute();
   int  TAUDECL TauEnv_get_child_forkdirs();
   int  TAUDECL TauEnv_get_summary_only();
