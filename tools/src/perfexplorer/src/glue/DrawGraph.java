@@ -379,7 +379,11 @@ public class DrawGraph extends AbstractPerformanceOperation {
 	                                break;
 	                        	case METADATA:
 	                                TrialMetadata meta = new TrialMetadata(input.getTrial());
-	                                seriesName = meta.getCommonAttributes().get(this.metadataField);
+	                                String smd = this.metadataField;
+	                                if(seriesMetadata!=null) {
+	                                	smd=seriesMetadata;
+	                                }
+	                                seriesName = meta.getCommonAttributes().get(smd);
 	                                break;
                         	}
                         
@@ -407,7 +411,11 @@ public class DrawGraph extends AbstractPerformanceOperation {
                                     break;
                         		case METADATA:
                                     TrialMetadata meta = new TrialMetadata(input.getTrial());
-                                    categoryName = meta.getCommonAttributes().get(this.metadataField);
+                                    String cmd=this.metadataField;
+                                    if(categoryMetadata!=null) {
+                                    	cmd=categoryMetadata;
+                                    }
+                                    categoryName = meta.getCommonAttributes().get(cmd);
                                     break;
                         	}
 
@@ -536,6 +544,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
     }
 
 	public JFreeChart getChart() {
+
 		return chart;
 	}
 
@@ -599,6 +608,24 @@ public class DrawGraph extends AbstractPerformanceOperation {
      */
     public void setSeriesType(int seriesType) {
         this.seriesType = seriesType;
+    }
+    
+    /**
+     * Define the series with metadata and use the string mdField exclusively for series metadata definition
+     */
+    String seriesMetadata=null;
+    public void setSeriesMetadata(String mdField) {
+        this.seriesType = METADATA;
+        seriesMetadata=mdField;
+        
+    }
+    /**
+     * Define the category with metadata and use the string mdField exclusively for category metadata definition
+     */
+    String categoryMetadata=null;
+    public void setCategoryMetadata(String mdField){
+    	this.categoryType = METADATA;
+        categoryMetadata=mdField;
     }
 
     /**
