@@ -269,8 +269,13 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 		if (noGUI.booleanValue()) {
 			//System.out.println("no gui");
 			//PerfExplorerNoGUI test = 
+			String noguiConfig="NONE";
+			if(config!=null) {
+				noguiConfig=config;
+			}
+			
 				new PerfExplorerNoGUI(
-				"NONE", quiet.booleanValue());
+				noguiConfig, quiet.booleanValue());
 			if (scriptName != null) {
 				//System.out.println("running script, no gui");
 				PythonInterpreterFactory.defaultfactory.getPythonInterpreter().execfile(scriptName);
