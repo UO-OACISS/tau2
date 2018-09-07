@@ -225,6 +225,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DatabaseAPI api = new DatabaseAPI();
 			String configName = tmpFile.replaceAll(prefix, "");
+			
+			//This isn't needed for the gui-enabled version. If the tmpFile is just the database name adding the config file prefix will make it a valid configuration file.
+			if(!new java.io.File(tmpFile).exists()) {
+				tmpFile=prefix+tmpFile;
+			}
+			
 			if (makeConnection) {
 				PerfExplorerOutput.print("Connecting...");
 				api.initialize(tmpFile, false);
