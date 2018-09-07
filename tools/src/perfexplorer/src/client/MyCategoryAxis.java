@@ -747,7 +747,7 @@ public class MyCategoryAxis extends CategoryAxis {
                     g2, (float) anchorPoint.getX(), (float) anchorPoint.getY(), position.getLabelAnchor(), 
                     (float) anchorPoint.getX(), (float) anchorPoint.getY(), position.getAngle()
                 );
-                if (plotState != null) {
+                if (plotState != null && plotState.getOwner()!=null) {
                     EntityCollection entities = plotState.getOwner().getEntityCollection();
                     if (entities != null) {
                         String tooltip = this.categoryLabelToolTips.get(
