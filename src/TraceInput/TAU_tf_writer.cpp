@@ -45,10 +45,22 @@ extern "C" {
 
   /* This function is used to assign character pointers to 
    * static constant strings. This prevents C++ compiler
-   * warnings */
-  static void assignStr(char* ptr, const char* instr) {
+   * warnings. 
+     Note: This doesn't work. A new pointer is created so 
+     the struct that issued ptr doesn't get the new value 
+     use getNewStringPointer instead*/
+/*  static void assignStr(char* ptr, const char* instr) {
     ptr = (char*)(calloc((strlen(instr)+1), sizeof(char)));
 	strcpy(ptr, instr);
+    printf("%s assigned to %s\n",instr,ptr);
+
+  }*/
+
+
+  static char* getNewStringPointer(const char* instr){
+     char* ptr= (char*)(calloc((strlen(instr)+1), sizeof(char)));
+     strcpy(ptr, instr);
+     return ptr;
   }
 
   static int flushEdf(Ttf_fileT *tFile) {
@@ -165,41 +177,42 @@ extern "C" {
     newEventDesc.Param = NULL;
 
     newEventDesc.Eid = TAU_EV_INIT;
-    assignStr(newEventDesc.Group, "TRACER");
-    assignStr(newEventDesc.EventName, "EV_INIT");
+    newEventDesc.Group=getNewStringPointer("TRACER");
+
+    newEventDesc.EventName=getNewStringPointer("EV_INIT");
     newEventDesc.Tag = 0;
-    assignStr(newEventDesc.Param, "none");
+    newEventDesc.Param=getNewStringPointer("none");
     (*tFile->EventIdMap)[TAU_EV_INIT] = newEventDesc;
 
     newEventDesc.Eid = TAU_EV_CLOSE;
-    assignStr(newEventDesc.Group, "TRACER");
-    assignStr(newEventDesc.EventName, "FLUSH_CLOSE");
+    newEventDesc.Group=getNewStringPointer("TRACER");
+    newEventDesc.EventName=getNewStringPointer("FLUSH_CLOSE");
     newEventDesc.Tag = 0;
-    assignStr(newEventDesc.Param, "none");
+    newEventDesc.Param=getNewStringPointer("none");
     (*tFile->EventIdMap)[TAU_EV_CLOSE] = newEventDesc;
 
 
     newEventDesc.Eid = TAU_EV_WALL_CLOCK;
-    assignStr(newEventDesc.Group, "TRACER");
-    assignStr(newEventDesc.EventName, "WALL_CLOCK");
+    newEventDesc.Group=getNewStringPointer("TRACER");
+    newEventDesc.EventName=getNewStringPointer("WALL_CLOCK");
     newEventDesc.Tag = 0;
-    assignStr(newEventDesc.Param, "none");
+    newEventDesc.Param=getNewStringPointer("none");
     (*tFile->EventIdMap)[TAU_EV_WALL_CLOCK] = newEventDesc;
 
 
     newEventDesc.Eid = TAU_MESSAGE_SEND;
-    assignStr(newEventDesc.Group, "TAU_MESSAGE");
-    assignStr(newEventDesc.EventName, "MESSAGE_SEND");
+    newEventDesc.Group=getNewStringPointer("TAU_MESSAGE");
+    newEventDesc.EventName=getNewStringPointer("MESSAGE_SEND");
     newEventDesc.Tag = -7;
-    assignStr(newEventDesc.Param, "par");
+    newEventDesc.Param=getNewStringPointer("par");
     (*tFile->EventIdMap)[TAU_MESSAGE_SEND] = newEventDesc;
 
 
     newEventDesc.Eid = TAU_MESSAGE_RECV;
-    assignStr(newEventDesc.Group, "TAU_MESSAGE");
-    assignStr(newEventDesc.EventName, "MESSAGE_RECV");
+    newEventDesc.Group=getNewStringPointer("TAU_MESSAGE");
+    newEventDesc.EventName=getNewStringPointer("MESSAGE_RECV");
     newEventDesc.Tag = -8;
-    assignStr(newEventDesc.Param, "par");
+    newEventDesc.Param=getNewStringPointer("par");
     (*tFile->EventIdMap)[TAU_MESSAGE_RECV] = newEventDesc;
 
     
@@ -279,7 +292,7 @@ extern "C" {
     newEventDesc.EventName = strdup(stateName);
     newEventDesc.Tag = 0;
     newEventDesc.Param = NULL;
-    assignStr(newEventDesc.Param, "EntryExit");
+    newEventDesc.Param=getNewStringPointer("EntryExit");
 
     (*tFile->EventIdMap)[stateToken] = newEventDesc;
 
@@ -471,10 +484,10 @@ extern "C" {
     newEventDesc.Param = NULL;
 
     newEventDesc.Eid = userEventToken;
-    assignStr(newEventDesc.Group, "TAUEVENT");
+    newEventDesc.Group=getNewStringPointer("TAUEVENT");
     newEventDesc.EventName = strdup(userEventName);
     newEventDesc.Tag = monotonicallyIncreasing;
-    assignStr(newEventDesc.Param, "TriggerValue");
+    newEventDesc.Param=getNewStringPointer("TriggerValue");
 
     (*tFile->EventIdMap)[userEventToken] = newEventDesc;
 
