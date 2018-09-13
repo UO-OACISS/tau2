@@ -105,9 +105,9 @@ public:
 
 /** Return a table represeting a sorted list of the events */
 int *Tau_unify_generateSortMap_MPI(EventLister *eventLister) {
+#ifdef TAU_MPI
   int rank = 0;
   int numRanks = 1;
-#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
