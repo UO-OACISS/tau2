@@ -439,7 +439,7 @@ static bool nameInSHMEM(const char *name)
   name = strchr(name, '[') + 1;
   char buff[6];
   if (strlen(name) < sizeof(buff)) return false;
-  for (int i=0; i<sizeof(buff); ++i) {
+  for (size_t i=0; i<sizeof(buff); ++i) {
     buff[i] = tolower(name[i]);
   }
   return !strncmp("shmem_", buff, 6);
@@ -450,7 +450,7 @@ bool nameInMPI(const char *name)
   name = strchr(name, '[') + 1;
   char buff[4];
   if (strlen(name) < sizeof(buff)) return false;
-  for (int i=0; i<sizeof(buff); ++i) {
+  for (size_t i=0; i<sizeof(buff); ++i) {
     buff[i] = tolower(name[i]);
   }
   return !strncmp("mpi_", buff, 4);
@@ -528,7 +528,7 @@ bool determineCallSiteViaString(unsigned long *addresses)
             name = Tau_callsite_resolveCallSite(addresses[i + offset]);
             if(strstr(name,"__wrap_") != NULL) {
               //if(i + 3 < length) {
-              for(int j=3; j<length-i; j++) {
+              for(size_t j=3; j<length-i; j++) {
                 unsigned long callsite_unwrapped = addresses[i + j];//3];
                 char *name_unwrapped = Tau_callsite_resolveCallSite(addresses[i + j]);//3]);
                 if (strstr(name_unwrapped,"UNRESOLVED ADDR") == NULL) {
@@ -629,11 +629,11 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
 
   // Make sure we don't walk off the top of the stack
   // First element of callsites is the number of callsites on the stack
-  int callsite_depth = TauEnv_get_callsite_depth();
+  size_t callsite_depth = TauEnv_get_callsite_depth();
   if (callsite_depth > callsites[0]) {
     callsite_depth = callsites[0];
   }
-  for (int depth=0; depth<callsite_depth; ++depth) {
+  for (size_t depth=0; depth<callsite_depth; ++depth) {
     unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1];
     memset(callsiteKey, 0, sizeof(callsiteKey));
     memcpy(callsiteKey+1, callsites+1+depth, sizeof(callsiteKey)-(depth+1)*sizeof(unsigned long));
