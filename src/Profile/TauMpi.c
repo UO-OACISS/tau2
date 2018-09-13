@@ -30,6 +30,12 @@
 #include "adiost_callback_api.h"
 #endif
 
+/* Can't include TauMmapMemMgr, becuase it's c++ header.  So declare the
+   functions here. */
+extern void Tau_MemMgr_finalizeIfNecessary(void);
+extern int Tau_get_usesMPI();
+extern void Tau_metadata_writeEndingTimeStamp(void);
+
 #include <stdio.h>
 #include <mpi.h>
 #include <stdlib.h>
@@ -391,6 +397,10 @@ extern void TauBeacon_MPI_T_CVAR_handler(BEACON_receive_topic_t * caught_topic);
 /* JCL: Optimized rank translation with cache */
 int TauTranslateRankToWorld(MPI_Comm comm, int rank);
 
+#ifndef _AIX
+extern void tau_mpi_fortran_init_predefined_constants_(void);
+#endif
+
 void tau_mpi_init_predefined_constants()
 {
 #ifdef TAU_NO_FORTRAN
@@ -446,6 +456,7 @@ static int sum_array (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm 
   return total * typesize;
 }
 
+#if defined(TAU_SOS)
 static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI_Comm comm, double vals[5]) {
 
   int typesize, commSize, commRank, i;
@@ -473,6 +484,7 @@ static double* array_stats (TAU_MPICH3_CONST int *counts, MPI_Datatype type, MPI
   }
   return vals;
 }
+#endif
 
 #define track_allvector( call, counts, typesize ) { \
     int typesize, commSize, commRank, sendcount = 0, i; \
@@ -715,7 +727,9 @@ MPI_Comm comm;
 
   track_allvector(TAU_ALLGATHER_DATA, recvcounts, typesize);
 
+#if defined(TAU_SOS)
   double tmp_array[5] = {0.0};
+#endif
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Allgatherv",array_stats(recvcounts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
@@ -799,8 +813,10 @@ MPI_Comm comm;
 
   TAU_ALLTOALL_DATA(tracksize);
 
+#if defined(TAU_SOS)
   double tmp_array1[5] = {0.0};
   double tmp_array2[5] = {0.0};
+#endif
 #ifdef TAU_SOS_disabled
   //TAU_SOS_COLLECTIVE_EXCH_AAV_EVENT("Alltoallv",array_stats(sendcnts,sendtype,comm,tmp_array1),array_stats(recvcnts,recvtype,comm,tmp_array2),comm);
   if (TauEnv_get_sos_trace_events()) {
@@ -966,7 +982,9 @@ MPI_Comm comm;
 
   track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
 
+#if defined(TAU_SOS)
   double tmp_array[5] = {0.0};
+#endif
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Gatherv",array_stats(recvcnts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
@@ -1129,7 +1147,9 @@ MPI_Comm comm;
 
   track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
 
+#if defined(TAU_SOS)
   double tmp_array[5] = {0.0};
+#endif
   TAU_SOS_COLLECTIVE_EXCH_V_EVENT("Scatterv",array_stats(sendcnts,recvtype,comm,tmp_array),comm);
   TAU_PROFILE_STOP(tautimer);
 
@@ -1466,7 +1486,7 @@ int MPI_Comm_spawn(TAU_NONMPC_CONST char *command, char *argv[], int maxprocs,
     for(offset = 0; offset < p.we_wordc; ++offset) {
       argv[offset] = p.we_wordv[offset];
     }
-    argv[offset++] = old_command;
+    argv[offset++] = (char*)old_command;
     int i;
     for(i = 0; i < old_argc; ++i) {
       argv[offset++] = old_argv[i];
@@ -2117,6 +2137,8 @@ int Tau_MPI_T_initialization(void) {
   #endif /* TAU_BEACON */
 
   return returnVal;
+#else
+  return 0;
 #endif /* TAU_MPI_T */
 }
 
