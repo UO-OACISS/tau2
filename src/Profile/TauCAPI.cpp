@@ -82,14 +82,9 @@ extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
-static char pvarnamearray[100];
-
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
-
-//Static variables with file scope
-static TauUserEvent *** pvarEvents = NULL;
 
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
@@ -2945,6 +2940,10 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
 
     tau_previous_pvar_count = num_pvars;
 }
+
+//Static variables with file scope
+static TauUserEvent *** pvarEvents = NULL;
+static char pvarnamearray[100];
 
 extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
  

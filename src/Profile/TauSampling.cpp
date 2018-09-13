@@ -815,7 +815,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [@] %s [{%s} {0}]",
                 tag, childName, resolvedInfo.funcname, 
-                resolvedInfo.lineno);
+                resolvedInfo.filename);
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + strlen(childName) + 
                     strlen(resolvedInfo.funcname) + 

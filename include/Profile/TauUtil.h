@@ -92,7 +92,6 @@ void Tau_plugin_recvmsg(long unsigned int type, long unsigned int source, long u
 #define TAU_FREE_LOCAL(l) free(l)
 #endif /* sgi || TAU_MPI_NEEDS_STATUS */
 
-
 /******************************************************/
 #if (defined(sgi) || defined(TAU_MPI_NEEDS_STATUS))
 #define MPI_Status_c2f(c,f) *(MPI_Status *)f=*(MPI_Status *)c 

@@ -183,7 +183,7 @@ void TauSetInterruptInterval(int interval) {
 
 int Tau_read_cray_power_events(int fd, long long int *value)  {
   char buf[2048]; 
-  int ret, i, bytesread;
+  int ret, bytesread;
   if (fd > 0) {
     ret = lseek(fd, 0, SEEK_SET); 
     if (ret < 0) {
@@ -207,7 +207,7 @@ int Tau_read_cray_power_events(int fd, long long int *value)  {
 
 int Tau_read_load_event(int fd, double *value)  {
   char buf[2048];
-  int ret, i, bytesread;
+  int ret, bytesread;
   if (fd > 0) {
     ret = lseek(fd, 0, SEEK_SET);
     if (ret < 0) {

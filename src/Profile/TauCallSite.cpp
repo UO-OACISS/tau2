@@ -165,12 +165,14 @@ struct callsiteFirstKeyMap_t : public map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>
   }
 };
 
+/* Not used?
 static callsiteFirstKeyMap_t& TheCallSiteFirstKeyMap(void)
 {
   static callsiteFirstKeyMap_t callsiteFirstKeyMap[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
   return callsiteFirstKeyMap[tid];
 }
+*/
 
 struct callsitePathMap_t : public map<TAU_CALLSITE_PATH_MAP_TYPE>
 {
@@ -595,14 +597,14 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
   //   not allow us to mitigate the effects of deep direct recursion, so expect some
   //   strange results in that department.
 #ifdef TAU_EXECINFO 
-  void *array[TAU_SAMP_NUM_ADDRESSES];
+  void* array[TAU_SAMP_NUM_ADDRESSES];
   size_t size;
   // get void*'s for all entries on the stack
   size = backtrace(array, TAU_SAMP_NUM_ADDRESSES);
   // *CWL* NOTE: backtrace_symbols() will work for __APPLE__. Since addr2line fails
   //       there, backup information using the "-->" format could be employed for
   //       Mac OS X instead of "unresolved".
-  if ((array != NULL) && (size > 0)) {
+  if (size > 0) {
     // construct the callsite structure from the buffer.
     callsites[0] = (unsigned long)size;
     for (unsigned int i = 0; i < size; i++) {
