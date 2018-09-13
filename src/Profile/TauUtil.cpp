@@ -340,6 +340,7 @@ int Tau_initialize_plugin_system() {
       printf("TAU INIT: Error initializing the plugin system\n");
     }
   }
+  return 0;
 }
 
 /*********************************************************************
