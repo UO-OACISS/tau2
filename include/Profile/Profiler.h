@@ -323,6 +323,10 @@ mach_port_t pthread_mach_thread_np(pthread_t);
 /* Ref: https://github.com/apache/arrow/pull/1139 */
 #endif /* TAU_APPLE_MACH_PORT_BUG */
 
+/* This macro is useful when a static local variable is used to capture the
+ * return value from an initialization function call, but isn't used.  This
+ * macro will ensure that the compiler won't complain. */
+#define TAU_UNUSED(expr) do { (void)(expr); } while (0)
 
 #endif /* PROFILER_H */
 /***************************************************************************

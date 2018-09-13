@@ -123,8 +123,8 @@ static x_uint64 finalTimeStamp = 0L;
 /* flags for atomic metrics */
 char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = { NULL };
 
-static int cuda_device_count() {
 #ifdef CUPTI
+static int cuda_device_count() {
 	int deviceCount;
 	CUresult result = cuDeviceGetCount(&deviceCount);
 	if (result == CUDA_ERROR_NOT_INITIALIZED) {
@@ -138,10 +138,8 @@ static int cuda_device_count() {
 		exit(result);
 	}
 	return deviceCount;
-#else
-	return 0;
-#endif
 }
+#endif
 
 static void check_max_metrics() {
 	if (nmetrics >= TAU_MAX_METRICS) {
@@ -159,8 +157,6 @@ static void check_max_metrics() {
 static void metricv_add(const char *name) {
 	int cupti_metric = 0;
 
-	char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
-
 	// Don't add metrics twice
 	for (int i = 0; i < nmetrics; ++i) {
 		if (strcasecmp(metricv[i], name) == 0) {
@@ -171,6 +167,8 @@ static void metricv_add(const char *name) {
 	check_max_metrics();
 
 #ifdef CUPTI
+	char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
+
 	// Get events required to compute CUPTI metric
 	for(int dev=0; dev<cuda_device_count(); ++dev) {
 		CUptiResult result;
@@ -659,8 +657,10 @@ static void initialize_functionArray() {
 		}
 #endif
 		//printf("adding %d metrics\n", nmetrics);
+#ifdef TAU_LIKWID
 		bool firstLikwidString=true;
 		int numLikwidEvents=0;
+#endif
 		std::string likwidEventString;
 		for (int i = 0; i < nmetrics; i++) {
 

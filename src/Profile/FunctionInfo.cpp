@@ -184,6 +184,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //   is ready at this point.
 #ifndef _AIX
   static bool mm_initialized = Tau_MemMgr_initIfNecessary();
+  TAU_UNUSED(mm_initialized);
 #endif /* _AIX */
 #endif  
 

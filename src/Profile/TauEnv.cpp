@@ -1513,7 +1513,7 @@ void TauEnv_initialize()
       tmp = getconf("TAU_MEMDBG_FILL_GAP");
       if (tmp) {
         env_memdbg_fill_gap = 1;
-        env_memdbg_fill_gap_value = (unsigned char)atoi(tmp);
+        env_memdbg_fill_gap_value = parse_int(tmp, env_memdbg_fill_gap_value);
         TAU_VERBOSE("TAU: Initializing memory gap to %d\n", tmp);
         TAU_METADATA("TAU_MEMDBG_FILL_GAP", tmp);
       }
@@ -1544,7 +1544,7 @@ void TauEnv_initialize()
 
       tmp = getconf("TAU_MEMDBG_ALIGNMENT");
       if (tmp) {
-        env_memdbg_alignment = (size_t)atoi(tmp);
+        env_memdbg_alignment = parse_int(tmp, env_memdbg_alignment);
       }
       if ((int)env_memdbg_alignment != ((int)env_memdbg_alignment & -(int)env_memdbg_alignment)) {
         TAU_VERBOSE("TAU: ERROR - Memory debugging alignment is not a power of two: %ld\n", env_memdbg_alignment);
@@ -2411,7 +2411,6 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_TRACK_CUDA_SASS", "on");
       // get arg of sass type
       const char *sass_type = getconf("TAU_SASS_TYPE");
-      const char *default_sass_type = TAU_SASS_TYPE_DEFAULT;
       if (sass_type) {
 	env_sass_type = sass_type; 
       }
