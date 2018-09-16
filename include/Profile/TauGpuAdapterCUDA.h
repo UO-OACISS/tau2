@@ -10,10 +10,10 @@ double sync_offset = 0;
 class CudaGpuEvent : public GpuEvent {
 public:
 	const char *name;
+	int taskId;
 	FunctionInfo *callingSite;
 	cudaEvent_t startEvent;
 	cudaEvent_t stopEvent;
-
 	CudaGpuEvent() {}
 	/*CudaGpuEvent *getCopy()
 	{
@@ -31,7 +31,7 @@ public:
 		stopEvent = other.stopEvent;
 	}*/
 	CudaGpuEvent(const char* name, FunctionInfo* fi) : 
-		name(name), callingSite(fi) {};
+	name(name), callingSite(fi), taskId(-1) {};
 	virtual cudaStream_t getStream() = 0;
 /*
 	cudaStream_t getStream()
@@ -101,6 +101,7 @@ int enqueue_stop_event()
 	virtual CUcontext getContext() = 0;
 
 	const char *getName() const { return name; }
+	int getTaskId() const { return taskId; }
 	FunctionInfo *getCallingSite() const { return callingSite; }
 	
 	// GPU attributes not implemented for CUDA.
@@ -246,7 +247,7 @@ void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType);
 void Tau_cuda_register_gpu_event(CudaGpuEvent* id, double start, double stop);
 
 void Tau_cuda_register_memcpy_event(const char *name, CudaGpuEvent* id, double start, double stop, int
-transferSize, int MemcpyType);
+				    transferSize, int MemcpyType);
 
 void Tau_cuda_enqueue_kernel_enter_event(CudaGpuEvent *id);
 
