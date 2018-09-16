@@ -299,7 +299,10 @@ int RtsLayer::RegisterThread()
 #ifdef TAU_MPC
   MPCThreadLayer::RegisterThread();
 #elif PTHREADS
-  PthreadLayer::RegisterThread();
+#if defined(TAU_GPU)
+  if (RtsLayer::myNode() != -1)
+    PthreadLayer::RegisterThread();
+#endif
 #elif TAU_SPROC
   SprocLayer::RegisterThread();
 #elif  TAU_WINDOWS

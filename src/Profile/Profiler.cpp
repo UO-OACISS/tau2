@@ -1498,8 +1498,14 @@ int TauProfiler_StoreData(int tid)
   Tau_write_metadata_records_in_scorep(tid);
 #endif /* TAU_SCOREP */
   profileWriteCount[tid]++;
-  if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
-
+  // if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
+#if !defined(PTHREADS)
+  // Rob:  Needed to evaluate for kernels to show in profiles (ignore dreaded #2 thread)!
+  if ((tid != 0) && (profileWriteCount[tid] > 1)) {
+    printf("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
+    return 0;
+  }
+#endif
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
   if (profileWriteCount[tid] == 10) {
     RtsLayer::LockDB();

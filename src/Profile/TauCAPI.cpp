@@ -1936,7 +1936,15 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 #endif
 }
 
+// struct GpuThread gThreads[TAU_MAX_THREADS];
+
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
+// #if defined(TAU_GPU) && defined(PTHREADS) 
+//   printf("[TauCAPI]:  About to call register_gpu_thread\n");
+//   // register_gpu_thread(RtsLayer::getTid(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
+//   register_gpu_thread(pthread_self(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
+//   // CudaThreadLayer::RegisterThread();
+// #endif
   return Tau_create_top_level_timer_if_necessary_task(Tau_get_thread());
 }
 
@@ -3000,6 +3008,46 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
 
+// extern "C" void register_gpu_thread(unsigned int sys_tid, int gpu_tid, unsigned int parent_tid, int nodeid) {
+//   printf("[TauCAPI]: Inside register_gpu_thread\n");
+//   // base case
+//   if (TauEnv_get_cudaTotalThreads() == 0) {
+//     GpuThread gt;
+//     gt.sys_tid = sys_tid;
+//     gt.gpu_tid = gpu_tid;
+//     gt.parent_tid = parent_tid;
+//     gt.node_id = nodeid;
+//     gThreads[TauEnv_get_cudaTotalThreads()] = gt;
+//     TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
+//     printf("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i nodeid %i\n", 
+// 	   sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
+//   }
+//   else {
+//     bool found = false;
+//     // loop through to see if entry exists
+//     for (int i=0; i<TauEnv_get_cudaTotalThreads(); i++) {
+//       GpuThread gt2 = gThreads[i];
+//       if (gt2.sys_tid == sys_tid) {
+// 	printf("[TauCAPI]: found duplicate entry, systid: %i\n", sys_tid);
+// 	found = true;
+//       }
+//     }
+//     if (!found) {
+//       GpuThread gt;
+//       gt.sys_tid = sys_tid;
+//       gt.gpu_tid = gpu_tid;
+//       gt.parent_tid = parent_tid;    
+//       gt.node_id = nodeid;
+//       gThreads[TauEnv_get_cudaTotalThreads()] = gt;
+//       TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
+//       printf("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i, nodeid %i\n",
+// 	     sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
+//     }
+//     else {
+//       printf("[TauCAPI]: systid %i already exists!\n", sys_tid);      
+//     }
+//   }
+// }
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
