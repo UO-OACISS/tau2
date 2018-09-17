@@ -471,6 +471,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	  // Register GPU thread count here
 	  unsigned int systid = cur_tid;
 	  unsigned int corrid = cbInfo->correlationId;
+	  RtsLayer::LockEnv();
 	  if (map_cudaThread.find(corrid) == map_cudaThread.end()) {
 	  // if (CudaThreadMap().find(corrid) == CudaThreadMap().end()) {
 	    unsigned int parenttid = parent_tid;
@@ -484,6 +485,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	    set_gpuThread.insert(cur_tid);
 	    TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);	    
 	  }
+	  RtsLayer::UnLockEnv();
 	  // else {
 	  //   printf("[CuptiActivity] Entry for corrid %u already exists!\n", corrid);
 	  // }
