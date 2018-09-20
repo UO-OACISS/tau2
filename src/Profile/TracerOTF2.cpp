@@ -503,7 +503,7 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
 {
-  use_ts = 0; // Force use of current timestamp to avoid out of order timestamps
+  use_ts = false; // Force use of current timestamp to avoid out of order timestamps
               // (OTF2 will abort if timestamps are written out of order)
   if(otf2_disable) {
     return;
@@ -514,7 +514,9 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   TauInternalFunctionGuard protects_this_function;
   if(kind == TAU_TRACE_EVENT_KIND_TEMP_FUNC) {
     kind = TAU_TRACE_EVENT_KIND_FUNC;  
+    use_ts = true;
   } else if(kind == TAU_TRACE_EVENT_KIND_TEMP_USEREVENT) {
+    use_ts = true;
     kind = TAU_TRACE_EVENT_KIND_USEREVENT;
   } else {
     use_ts = false;
@@ -580,6 +582,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 
 
 extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
+    use_ts = false;
     if(otf2_disable) {
         return;
     }
@@ -623,6 +626,7 @@ extern "C" void TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int le
 
 /* Write event to buffer */
 void TauTraceOTF2Event(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int kind) {
+  use_ts = false;
   TauTraceOTF2EventWithNodeId(ev, par, tid, ts, use_ts, my_node(), kind);
 }
 
