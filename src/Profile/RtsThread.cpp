@@ -302,6 +302,8 @@ int RtsLayer::RegisterThread()
 #if defined(TAU_GPU)
   if (RtsLayer::myNode() != -1)
     PthreadLayer::RegisterThread();
+#else
+  PthreadLayer::RegisterThread();
 #endif
 #elif TAU_SPROC
   SprocLayer::RegisterThread();
