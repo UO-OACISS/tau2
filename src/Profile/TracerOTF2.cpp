@@ -503,8 +503,6 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
 {
-  use_ts = 0; // Force use of current timestamp to avoid out of order timestamps
-              // (OTF2 will abort if timestamps are written out of order)
   if(otf2_disable) {
     return;
   }
