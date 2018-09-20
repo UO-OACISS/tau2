@@ -1883,7 +1883,7 @@ ImixStats write_runtime_imix(uint32_t functionId, std::map<std::pair<int, int>, 
       if ( srcLocMap.find(sid) != srcLocMap.end() ) {
 	lineno = srcLocMap.find(sid)->second.lineNumber;
 	// cout << "[CuptiActivity]:  lineno: " << lineno << endl;
-	std::pair<int, int> p1 = std::make_pair(lineno, is.pcOffset);
+	std::pair<int, int> p1 = std::make_pair(lineno, (unsigned int) is.pcOffset);
 
 	for (std::map<std::pair<int, int>,CudaOps>::iterator iter= map_disassem.begin();
 	     iter != map_disassem.end(); iter++) { 
