@@ -280,6 +280,7 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     pack->start_routine = start_routine;
     pack->arg = arg;
 
+    Tau_create_top_level_timer_if_necessary();
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
     TAU_PROFILE_START(timer);
     retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack);
