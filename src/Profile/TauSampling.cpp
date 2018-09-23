@@ -727,6 +727,14 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
   return NULL;
 }
 
+#ifdef TAU_BFD
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname);
+#else /* TAU_BFD */
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
+  return 10;
+}
+#endif /* TAU_BFD */
+
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
     char const * childName, char **newShortName, bool addAddress)
@@ -813,9 +821,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
             buff = (char*)malloc(strlen(tag) + strlen(childName) + 
                     strlen(resolvedInfo.funcname) + 
                     strlen(lineno) + 32);
-            sprintf(buff, "[%s] %s [@] %s [{%s} {0}]",
+            sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
                 tag, childName, resolvedInfo.funcname, 
-                resolvedInfo.filename);
+                resolvedInfo.filename, 
+		Tau_get_lineno_for_function(TheBfdUnitHandle(), 
+                                            resolvedInfo.funcname) );
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + strlen(childName) + 
                     strlen(resolvedInfo.funcname) + 
@@ -835,9 +845,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
             buff = (char*)malloc(strlen(tag) + 
                     strlen(resolvedInfo.funcname) + 
                     strlen(resolvedInfo.filename) + 32);
-            sprintf(buff, "[%s] %s [{%s} {0}]",
+            sprintf(buff, "[%s] %s [{%s} {%d}]",
                 tag, resolvedInfo.funcname, 
-                resolvedInfo.filename);
+                resolvedInfo.filename, 
+                Tau_get_lineno_for_function(TheBfdUnitHandle(), 
+                                            resolvedInfo.funcname));
         } else { // Line resolution
             buff = (char*)malloc(strlen(tag) + 
                     strlen(resolvedInfo.funcname) + 

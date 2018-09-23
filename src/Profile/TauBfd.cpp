@@ -1039,4 +1039,67 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   return;
 }
 
+// Given a function name, this routine iterates through the list of symbols and
+// returns the line number associated with the function name. It needs to 
+// cache this information - it is not efficient. 
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
+  if (TauEnv_get_lite_enabled()) return 0; 
+
+  TauBfdModule *module; 
+  TauBfdUnit * unit = ThebfdUnits()[bfd_handle];
+  bfd *bfdImage; 
+  if ((unit != NULL) && (unit->modules[0] != NULL) && 
+      (unit->modules[0]->bfdImage != NULL)) {
+    bfdImage = ((unit->modules)[0])->bfdImage;   
+  } else {
+    return 0;
+  }
+
+  /* we have a valid bfdImage pointer. Examine the symbol table. */
+  size_t sz = bfd_get_symtab_upper_bound(bfdImage);
+  asymbol **syms; 
+  bool dynamic;  
+  int nr_all_syms, i; 
+  if (!sz) {
+    TAU_VERBOSE("loadSymbolTable: Retrying with dynamic\n");
+    sz = bfd_get_dynamic_symtab_upper_bound(bfdImage);
+    dynamic = true;
+    if (!sz) {
+      TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size \n" );    
+      return 0;
+    } 
+  } 
+    
+  // allocate the symbol table. 
+  syms = (asymbol **)malloc(sz);
+  long addr; 
+  const char *filename = NULL;
+  const char *func; 
+  unsigned int lineno = 0; 
+
+  if (dynamic) {
+    nr_all_syms = bfd_canonicalize_dynamic_symtab(bfdImage, syms);
+  } else {
+    nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
+  }
+
+  if (nr_all_syms < 1) return 0; 
+
+  // iterate through all the symbols and see if we get a match. If we do, 
+  // return the line number associated with it. Previous invocations should 
+  // be cached. 
+  for (i = 0; i < nr_all_syms; i++) {
+    addr = syms[i]->section->vma + syms[i]->value; 
+    bfd_find_nearest_line(bfdImage, bfd_get_section(syms[i]), syms, 
+      syms[i]->value, &filename, &func, &lineno); 
+    func = syms[i]->name;
+    if (strcmp(func, funcname) == 0) {
+      printf("TAU_BFD: Match at iteration %d! Symbol name: %s, funcname=%s, line no = %d\n", i, func, funcname, lineno);
+      return lineno;
+    }
+  }
+  return 0; 
+  
+}
+
 #endif /* TAU_BFD */
