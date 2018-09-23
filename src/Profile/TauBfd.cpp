@@ -1045,6 +1045,40 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
 int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
   if (TauEnv_get_lite_enabled()) return 0; 
 
+  static bool first_time = true; 
+  static map<string, int> cached_symtab;
+  map<string, int>::iterator cit, fit;
+  static map<string, int> full_symtab;
+  int lno = 0;
+  
+  if (!first_time) {
+    // See if the funcname has appeared before
+    cit = cached_symtab.find(funcname);  
+    if (cit == cached_symtab.end()) {
+      TAU_VERBOSE("TAU_BFD: Didn't find %s in the cached_symtab\n", funcname); 
+      // Let us search for it in the full_symtab.
+      fit = full_symtab.find(funcname); 
+      if (fit == full_symtab.end()) {
+        TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab either!\n", funcname); 
+        return 0; /* didn't find it */
+      } else { // found it in the full_symtab!
+        // add it to the cached entry first! 
+        lno = fit->second; 
+        cached_symtab[funcname] = lno;
+        TAU_VERBOSE("TAU_BFD: Adding: cached_symtab[%s] = %d\n", funcname, lno);
+	return lno; // line number
+      }
+    } else {
+        // Found the function name in the cached_symtab!
+        lno = cit->second; 
+        TAU_VERBOSE("TAU_BFD: Found: cached_symtab[%s] = %d\n", funcname, lno);
+        return lno;
+    }
+  } 
+  // This is the first time 
+  // reset the flag. Acquire lock?  
+  first_time = false;  
+
   TauBfdModule *module; 
   TauBfdUnit * unit = ThebfdUnits()[bfd_handle];
   bfd *bfdImage; 
@@ -1093,11 +1127,18 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
     bfd_find_nearest_line(bfdImage, bfd_get_section(syms[i]), syms, 
       syms[i]->value, &filename, &func, &lineno); 
     func = syms[i]->name;
-    if (strcmp(func, funcname) == 0) {
-      printf("TAU_BFD: Match at iteration %d! Symbol name: %s, funcname=%s, line no = %d\n", i, func, funcname, lineno);
-      return lineno;
-    }
+    full_symtab[func] = lineno; // Add this entry to the full symbol table.
   }
+  fit = full_symtab.find(funcname); 
+  if (fit == full_symtab.end()) { // We didn't find it - return 0; 
+    return 0;
+  } else { // found it!
+    lineno = fit->second; 
+    TAU_VERBOSE("TAU_BFD: Found it - first time! %s line no = %d\n", funcname, lineno); 
+    cached_symtab[funcname] = lineno; 
+    return lineno;
+  }
+
   return 0; 
   
 }
