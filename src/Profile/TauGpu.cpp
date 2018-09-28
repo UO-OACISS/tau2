@@ -137,12 +137,16 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int 
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
   if (TauEnv_get_tracing()) {
+    int threadId = 0;
+#if defined(PTHREADS)
+    threadId = device->getTaskId();
+#endif
     if (memcpyType == MemcpyDtoH) {
-      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, threadId);
     } else if (memcpyType == MemcpyHtoD) {
-      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, threadId);
     } else {
-      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, threadId);
     }
   }
   if (memcpyType == MemcpyHtoD) {
@@ -191,12 +195,16 @@ void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, int
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
   if (TauEnv_get_tracing()) {
+    int threadId = 0;
+#if defined(PTHREADS)
+    threadId = device->getTaskId();
+#endif
     if (unifmemType == BytesDtoH) {
-      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, threadId);
     } else if (unifmemType == BytesHtoD) {
-      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, threadId);
     } else {
-      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, threadId);
     }
   }
   if (unifmemType == BytesHtoD) {
