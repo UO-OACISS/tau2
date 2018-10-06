@@ -23,7 +23,7 @@
 #include <Profile/TauMetaDataMerge.h>
 #include <Profile/TauPluginInternals.h>
 
-//#define DEBUG_PROF 1 
+#define DEBUG_PROF 1 
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -377,7 +377,7 @@ void Profiler::Start(int tid)
 void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
 #ifdef DEBUG_PROF
-  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction); fflush(stderr);
+  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
 #endif
 
 /* It is possible that when the event stack gets deep, and has to be

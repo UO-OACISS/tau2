@@ -263,6 +263,7 @@ bool cupti_api_driver();
 typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
 static std::set<uint32_t> set_gpuThread;
 static std::map<uint32_t, CudaThread> map_cudaThread;
+static std::map<uint32_t, uint32_t> map_cuptiThread;
 
 int gpu_occupancy_available(int deviceId);
 

@@ -54,7 +54,7 @@ struct CudaThread
   unsigned int sys_tid;     // pthread
   int parent_tid;
   int tau_vtid;    // virtual tid, write profiles
-  // callback info
+    // callback info
   const char* function_name;
   unsigned int context_id;
   unsigned int correlation_id;
