@@ -1199,6 +1199,7 @@ extern "C" void Tau_register_thread(void) {
   else {
     printf("[TauCAPI]: Tau_register_thread, do not register thread, mynode %i, tid %i, Tau_get_thread %i\n", RtsLayer::myNode(), RtsLayer::getTid(), Tau_get_thread());    
   }
+
 // #else
 //   RtsLayer::RegisterThread();
 // #endif
@@ -1976,7 +1977,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
 // #if defined(TAU_GPU) && defined(PTHREADS) 
-//   printf("[TauCAPI]:  About to call register_gpu_thread\n");
+//   TAU_VERBOSE("[TauCAPI]:  About to call register_gpu_thread\n");
 //   // register_gpu_thread(RtsLayer::getTid(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
 //   register_gpu_thread(pthread_self(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
 //   // CudaThreadLayer::RegisterThread();
@@ -2239,7 +2240,6 @@ extern "C" void *Tau_pure_search_for_function(const char *name)
 void Tau_pure_start_task_string(const string name, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
-  //printf("[TauCAPI] Tau_pure_start_task_string, name %s, tid %i\n", name, tid);
   FunctionInfo *fi = 0;
   RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
@@ -2277,7 +2277,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
       // 	int lineno = 99;
       // 	ss << name << " [{" << filename << "}{" << lineno << "}]";
       // 	tauCreateFI((void**)&fi, ss.str(), "", TAU_USER, "TAU_USER");
-      // 	printf("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
+      // 	TAU_VERBOSE("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
       // 	       name.c_str(), ss.str().c_str());
       // }
       // else {
@@ -3048,7 +3048,7 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
 }
 
 // extern "C" void register_gpu_thread(unsigned int sys_tid, int gpu_tid, unsigned int parent_tid, int nodeid) {
-//   printf("[TauCAPI]: Inside register_gpu_thread\n");
+//   TAU_VERBOSE("[TauCAPI]: Inside register_gpu_thread\n");
 //   // base case
 //   if (TauEnv_get_cudaTotalThreads() == 0) {
 //     GpuThread gt;
@@ -3058,7 +3058,7 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
 //     gt.node_id = nodeid;
 //     gThreads[TauEnv_get_cudaTotalThreads()] = gt;
 //     TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
-//     printf("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i nodeid %i\n", 
+//     TAU_VERBOSE("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i nodeid %i\n", 
 // 	   sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
 //   }
 //   else {
@@ -3067,7 +3067,7 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
 //     for (int i=0; i<TauEnv_get_cudaTotalThreads(); i++) {
 //       GpuThread gt2 = gThreads[i];
 //       if (gt2.sys_tid == sys_tid) {
-// 	printf("[TauCAPI]: found duplicate entry, systid: %i\n", sys_tid);
+// 	TAU_VERBOSE("[TauCAPI]: found duplicate entry, systid: %i\n", sys_tid);
 // 	found = true;
 //       }
 //     }
@@ -3079,11 +3079,11 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
 //       gt.node_id = nodeid;
 //       gThreads[TauEnv_get_cudaTotalThreads()] = gt;
 //       TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
-//       printf("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i, nodeid %i\n",
+//       TAU_VERBOSE("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i, nodeid %i\n",
 // 	     sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
 //     }
 //     else {
-//       printf("[TauCAPI]: systid %i already exists!\n", sys_tid);      
+//       TAU_VERBOSE("[TauCAPI]: systid %i already exists!\n", sys_tid);      
 //     }
 //   }
 // }
