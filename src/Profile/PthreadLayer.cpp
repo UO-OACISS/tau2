@@ -219,10 +219,9 @@ extern "C"
 void * tau_pthread_function(void *arg)
 {
   tau_pthread_pack * pack = (tau_pthread_pack*)arg;
-
   TAU_REGISTER_THREAD();
-
   Tau_create_top_level_timer_if_necessary();
+
   void * ret = pack->start_routine(pack->arg);
 #ifndef TAU_TBB_SUPPORT
   // Thread 0 in TBB will not wait for the other threads to finish
@@ -280,10 +279,9 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     pack->start_routine = start_routine;
     pack->arg = arg;
 
-    Tau_create_top_level_timer_if_necessary();
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
     TAU_PROFILE_START(timer);
-    retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack);
+    retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack); // 0
     TAU_PROFILE_STOP(timer);
     *wrapped = false;
 	if (destroy_attr) {
