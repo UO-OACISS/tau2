@@ -23,7 +23,7 @@
 #include <Profile/TauMetaDataMerge.h>
 #include <Profile/TauPluginInternals.h>
 
-//#define DEBUG_PROF 1 
+#define DEBUG_PROF 1 
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -377,7 +377,7 @@ void Profiler::Start(int tid)
 void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
 #ifdef DEBUG_PROF
-  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction); fflush(stderr);
+  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
 #endif
 
 /* It is possible that when the event stack gets deep, and has to be
@@ -1498,8 +1498,14 @@ int TauProfiler_StoreData(int tid)
   Tau_write_metadata_records_in_scorep(tid);
 #endif /* TAU_SCOREP */
   profileWriteCount[tid]++;
-  if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
-
+  // if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
+#if !defined(PTHREADS)
+  // Rob:  Needed to evaluate for kernels to show in profiles (ignore dreaded #2 thread)!
+  if ((tid != 0) && (profileWriteCount[tid] > 1)) {
+    printf("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
+    return 0;
+  }
+#endif
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
   if (profileWriteCount[tid] == 10) {
     RtsLayer::LockDB();

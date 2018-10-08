@@ -61,6 +61,9 @@ public:
 	//Name for this event.
 	virtual const char *getName() const = 0;
 
+	//Task id for this event.
+	virtual int getTaskId() const = 0;
+
 	//CPU event callsite for this event. Used to create a the GPU callsite event paths.
 	virtual FunctionInfo* getCallingSite() const = 0;
 

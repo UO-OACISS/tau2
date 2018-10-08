@@ -31,7 +31,7 @@ public:
 	uint32_t deviceId;
 	uint32_t correlationId;
   int64_t parentGridId;
-
+  uint32_t taskId;
   //CDP kernels can overlap with other kernels so each one needs to be in a
   //seperate 'thread' of execution.
   uint32_t cdpId;
@@ -53,15 +53,16 @@ public:
 		CuptiGpuEvent *c = new CuptiGpuEvent(*this);
 		return c; 
 	};
-	CuptiGpuEvent(const char* n, uint32_t device, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
+ CuptiGpuEvent(const char* n, uint32_t device, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
 		deviceContainer = true;
 		streamId = 0;
 		contextId = 0;
 		correlationId = -1;
     cdpId = 0;
     parentGridId = 0;
+    taskId = -1;
 	};
-	CuptiGpuEvent(const char* n, uint32_t device, uint32_t stream, uint32_t context, uint32_t correlation, int64_t pId, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), streamId(stream), contextId(context), correlationId(correlation), parentGridId(pId), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
+ CuptiGpuEvent(const char* n, uint32_t device, uint32_t stream, uint32_t context, uint32_t correlation, int64_t pId, GpuEventAttributes *m, int m_size, uint32_t task_id) : name(n), deviceId(device), streamId(stream), contextId(context), correlationId(correlation), parentGridId(pId), gpu_event_attributes(m), number_of_gpu_attributes(m_size), taskId(task_id) {
 		deviceContainer = false;
     cdpId = 0;
 	};
@@ -69,10 +70,11 @@ public:
   void setCdp() { cdpId = ++cdpCount; }
   
 	const char* getName() const { return name; }
+	int getTaskId() const { return taskId; }
 
 	const char* gpuIdentifier() const {
 		char *rtn = (char*) malloc(50*sizeof(char));
-		sprintf(rtn, "%d/%d/%d/%d", deviceId, streamId, contextId, correlationId);
+		sprintf(rtn, "%d/%d/%d/%d/%d", deviceId, streamId, contextId, correlationId, taskId);
 		return rtn;
 	};
 	x_uint64 id_p1() const {

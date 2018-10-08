@@ -316,6 +316,8 @@ static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
 static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
 static const char *env_binaryexe = NULL;
 
+static int env_cudatotalthreads = 0;
+static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
 
@@ -1090,6 +1092,20 @@ int TauEnv_get_cuda_csv_output(){
 
 const char* TauEnv_get_cuda_binary_exe(){
   return env_binaryexe;
+}
+
+void TauEnv_set_cudaTotalThreads(int nthreads) {
+    env_cudatotalthreads = nthreads;
+}
+int TauEnv_get_cudaTotalThreads() {
+    return env_cudatotalthreads;
+}
+
+void TauEnv_set_nodeNegOneSeen(int nthreads) {
+    env_nodenegoneseen = nthreads;
+}
+int TauEnv_get_nodeNegOneSeen() {
+    return env_nodenegoneseen;
 }
 
 int TauEnv_get_mic_offload(){
