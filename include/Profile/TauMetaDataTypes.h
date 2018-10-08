@@ -66,4 +66,13 @@ typedef struct tau_metadata_value {
   Tau_metadata_union_t data;
 } Tau_metadata_value_t;
 
+/* struct GpuThread */
+/* { */
+/*   // int device_id;     // gpu num */
+/*   unsigned int sys_tid;     // pthread */
+/*   int gpu_tid;     // size of map_cudathread at time of insert */
+/*   unsigned int parent_tid; */
+/*   int node_id; */
+/* }; */
+
 #endif /* _TAU_METADATA_TYPES_H_ */

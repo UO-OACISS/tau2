@@ -66,11 +66,12 @@ extern "C" void Tau_cupti_enter_memcpy_event(
 						uint32_t contextId,
 						uint32_t correlationId,
 						int bytes_copied,
-						int memcpy_type
+						int memcpy_type,
+						int taskId
 						) {
 							//Empty list of gpu attributes
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-								deviceId, streamId, contextId, 0, correlationId, NULL, 0);
+												deviceId, streamId, contextId, 0, correlationId, NULL, 0, taskId);
 							Tau_gpu_enter_memcpy_event(name, &gpu_event, bytes_copied, memcpy_type);
 						}
 
@@ -81,11 +82,12 @@ extern "C" void Tau_cupti_exit_memcpy_event(
 						uint32_t contextId,
 						uint32_t correlationId,
 						int bytes_copied,
-						int memcpy_type
+						int memcpy_type,
+						int taskId
 						) {
 							//Empty list of gpu attributes
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-								deviceId, streamId, contextId, 0, correlationId, NULL, 0);
+												deviceId, streamId, contextId, 0, correlationId, NULL, 0, taskId);
 							Tau_gpu_exit_memcpy_event(name, &gpu_event, memcpy_type);
 						}
 
@@ -99,14 +101,16 @@ extern "C" void Tau_cupti_register_memcpy_event(
 						double stop,
 						int bytes_copied,
 						int memcpy_type,
-            int direction
+						int direction, 
+						int taskId
 						) {
 							//Empty list of gpu attributes
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-								deviceId, streamId, contextId, 0, correlationId, NULL, 0);
+												deviceId, streamId, contextId, correlationId, correlationId, NULL, 0, taskId);
 							Tau_gpu_register_memcpy_event(&gpu_event, 
-								start, stop, bytes_copied, memcpy_type, direction);
+										      start, stop, bytes_copied, memcpy_type, direction);
 						}
+
 
 extern "C" void Tau_cupti_register_unifmem_event(
 						 const char *name,
@@ -117,36 +121,41 @@ extern "C" void Tau_cupti_register_unifmem_event(
 						 uint64_t end,
 						 uint64_t value,
 						 int unifmem_type,
-						 int direction
+						 int direction,
+						 int taskId
 						) {
 							//Empty list of gpu attributes
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-								deviceId, streamId, processId, 0, -1, NULL, 0);
+												deviceId, streamId, processId, 0, -1, NULL, 0, taskId);
 							// start/stop times set to timestamp
 							Tau_gpu_register_unifmem_event(&gpu_event, start, end, value, unifmem_type, direction);
 						}
 
 extern "C" void Tau_cupti_register_gpu_event(
-						const char *name,
-						uint32_t deviceId,
-						uint32_t streamId,
-						uint32_t contextId,
-						uint32_t correlationId,
-            int64_t parentGridId,
-            bool cdp,
-						GpuEventAttributes *gpu_attributes,
-						int number_of_attributes,
-						double start,
-						double stop
-						) {
-							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-								deviceId, streamId, contextId, correlationId, parentGridId, gpu_attributes, number_of_attributes);
-              if (cdp) {
-                //printf("setting CDP flag.\n");
-							  gpu_event.setCdp();
-              }
-							Tau_gpu_register_gpu_event(&gpu_event, start, stop);
-						}
+					     const char *name,
+					     uint32_t deviceId,
+					     uint32_t streamId,
+					     uint32_t contextId,
+					     uint32_t correlationId,
+					     int64_t parentGridId,
+					     bool cdp,
+					     GpuEventAttributes *gpu_attributes,
+					     int number_of_attributes,
+					     double start,
+					     double stop,
+					     int taskId) {
+  CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+					  deviceId,
+					  streamId, 
+					  contextId, 
+					  correlationId, 
+					  parentGridId, gpu_attributes, number_of_attributes, taskId);
+  if (cdp) {
+    //printf("setting CDP flag.\n");
+    gpu_event.setCdp();
+  }
+  Tau_gpu_register_gpu_event(&gpu_event, start, stop);
+}
 
 extern "C" void Tau_cupti_register_gpu_atomic_event(
 						const char *name,
@@ -155,12 +164,14 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						uint32_t contextId,
 						uint32_t correlationId,
 						GpuEventAttributes *gpu_attributes,
-						int number_of_attributes
+						int number_of_attributes,
+						int taskId
 						) {
-							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
-								deviceId, streamId, contextId, correlationId, 0, gpu_attributes, number_of_attributes);
-							Tau_gpu_register_gpu_atomic_event(&gpu_event);
-						}
+  CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+					  deviceId, streamId, contextId, correlationId, 0, gpu_attributes, 
+					  number_of_attributes, taskId);
+  Tau_gpu_register_gpu_atomic_event(&gpu_event);
+}
 
 // extern "C" void Tau_cupti_register_func_event(
 //                                               const char *name,
