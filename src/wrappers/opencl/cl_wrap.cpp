@@ -526,6 +526,7 @@ void * clEnqueueMapImage(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_flag
   return clEnqueueMapImage_h(a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10,  a11,  a12);
 }
 
+#ifdef TAU_ENABLE_OPENCL_ENQUEUE_UNMAP_MEM_OBJECT
 cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uint a4, const cl_event * a5, cl_event * a6)
 {
   HANDLE_AND_TIMER(cl_int, clEnqueueUnmapMemObject, cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *);
@@ -556,6 +557,7 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
   Tau_opencl_register_sync_event();
   return retval;
 }
+#endif /* TAU_ENABLE_OPENCL_ENQUEUE_UNMAP_MEM_OBJECT */
 
 cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, const size_t * a4, const size_t * a5, 
                               const size_t * a6, cl_uint a7, const cl_event * a8, cl_event * a9) 
