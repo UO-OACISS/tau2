@@ -36,6 +36,7 @@ Version 2.27 changes (from 2.26):
 23. Added support for IBM XL compilers with MVAPICH2 under IBM Power Linux Power 9 + GPU platform. 
 24. Updated MPC support in TAU. 
 25. Added preliminary support for NEC SX-Aurora TSUBASA (-arch=nec-sx-aurora -mpi). 
+26. Added support for TAU_EBS_RESOLUTION=function (disables line info) for tau_exec -ebs. TAU_LITE=1 produces line number of 0 for functions. 
 
 
 Version 2.26 changes (from 2.25):
