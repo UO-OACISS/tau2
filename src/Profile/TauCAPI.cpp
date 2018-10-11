@@ -2784,8 +2784,8 @@ extern "C" int Tau_create_task(void) {
   }
   taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
+  taskid++;
   Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
- 	//printf("create task with id: %d.\n", taskid); 
   return taskid;
 }
 
