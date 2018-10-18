@@ -170,6 +170,9 @@ on_ompt_callback_task_create(
 {
   char contextEventName[2058];
   char buffer[2048];
+  char timerName[1024];
+  char resolved_address[1024];
+
   TauInternalFunctionGuard protects_this_function; 	
   if(codeptr_ra) {
       void * codeptr_ra_copy = (void*) codeptr_ra;
@@ -185,6 +188,11 @@ on_ompt_callback_task_create(
        * Based on this paper about the task support in OTF2 <http://apps.fz-juelich.de/jsc-pubsystem/aigaion/attachments/schmidl_iwomp2012.pdf-5d909613b453c6fdbf34af237b8d5e52.pdf> 
        * it appears that these are supposed to be used in conjunction with Enter and Leave to assign code regions to the task. See Figure 1 in that paper.
        * I would recommend that you use Score-P to generate a trace using those event types and then look at the trace using otf2_print to figure out how it’s using the events.*/
+
+      /* Srinivasan: IMPT - We do NOT start a timer for the task here. We merely create the task. The specification leaves the option
+	 of (not) starting a task as soon as it is created upto the implementation. 
+	 The LLVM runtime does not start it when it is created. 
+	 We assume this behavior in our implementation of the tool support.*/
       sprintf(contextEventName, "OpenMP_Task_Create %s ADDR <%lx> ", buffer, addr);
 
       TAU_REGISTER_CONTEXT_EVENT(event, contextEventName);
@@ -193,6 +201,34 @@ on_ompt_callback_task_create(
       TAU_EVENT_DISABLE_MEAN(event);
       TAU_EVENT_DISABLE_STDDEV(event);
       TAU_CONTEXT_EVENT(event, type);
+
+      /*Create a timer for the task, and store handle in new_task_data*/
+      if (TauEnv_get_ompt_resolve_address_eagerly()) {
+        Tau_ompt_resolve_callsite_eagerly(addr, resolved_address);
+        sprintf(timerName, "OpenMP_Task %s", resolved_address);
+      } else {
+        sprintf(timerName, "OpenMP_Task ADDR <%lx>", addr);
+      }
+
+      void *handle = NULL;
+      TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
+      new_task_data->ptr = (void*)handle;
+  }
+}
+
+/* Callback for task schedule */
+static void 
+on_ompt_callback_task_schedule(
+    ompt_data_t *prior_task_data,
+    ompt_task_status_t prior_task_status,
+    ompt_data_t *next_task_data)
+{
+  if(prior_task_data->ptr) {
+    TAU_PROFILER_STOP(prior_task_data->ptr);
+  }
+
+  if(next_task_data->ptr) {
+    TAU_PROFILER_START(next_task_data->ptr);
   }
 }
 
@@ -233,6 +269,7 @@ on_ompt_callback_master(
         } else {
           sprintf(timerName, "OpenMP_Master ADDR <%lx>", addr);
         }
+
         TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
         task_data->ptr = (void*)handle;
         TAU_PROFILER_START(handle); 
@@ -254,7 +291,7 @@ on_ompt_callback_master(
  *  to overheads that are best avoided.
  *  NOTE: Building this tool with GNU (all versions) has a bug that leads to the single_executor callback not being invoked. LLVM folks
  *  are also aware of this issue. Remove the ifdef's once this bug is resolved.
- *        Tested with Intel/17 compilers. Works OK.*/
+ *  Tested with Intel/17 compilers. Works OK.*/
 static void
 on_ompt_callback_work(
   ompt_work_type_t wstype,
@@ -823,6 +860,7 @@ extern "C" int ompt_initialize(
   register_callback(ompt_callback_parallel_begin, cb_t(on_ompt_callback_parallel_begin));
   register_callback(ompt_callback_parallel_end, cb_t(on_ompt_callback_parallel_end));
   register_callback(ompt_callback_task_create, cb_t(on_ompt_callback_task_create));
+  register_callback(ompt_callback_task_schedule, cb_t(on_ompt_callback_task_schedule));
   register_callback(ompt_callback_implicit_task, cb_t(on_ompt_callback_implicit_task)); //Sometimes high-overhead, but unfortunately we cannot avoid this as it is a required event 
   register_callback(ompt_callback_thread_begin, cb_t(on_ompt_callback_thread_begin));
   register_callback(ompt_callback_thread_end, cb_t(on_ompt_callback_thread_end));
