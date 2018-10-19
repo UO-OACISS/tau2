@@ -179,9 +179,7 @@ on_ompt_callback_task_create(
       unsigned long addr = Tau_convert_ptr_to_unsigned_long(codeptr_ra_copy);
       format_task_type(type, buffer);
 
-      /*TODO: Srinivasan: This does not really fit in as a context event. Just keeping this here 
-       * for the time being. It makes no sense to calculate any statistics for such events. 
-       * Nick's advice: The ThreadTaskCreate/ThreadTaskSwitch/ThreadTaskComplete events are used in OTF2 to indicate creation of a task, 
+       /* TODO: Nick's advice: The ThreadTaskCreate/ThreadTaskSwitch/ThreadTaskComplete events are used in OTF2 to indicate creation of a task, 
        * execution of a task, or completion of a task. The events are identified solely by a location and a uint64_t taskID. 
        * There’s no region associated with it, so there’s no way within that event type, as I can tell, to specify that the task 
        * corresponds to a particular region of code. 
@@ -193,14 +191,6 @@ on_ompt_callback_task_create(
 	 of (not) starting a task as soon as it is created upto the implementation. 
 	 The LLVM runtime does not start it when it is created. 
 	 We assume this behavior in our implementation of the tool support.*/
-      sprintf(contextEventName, "OpenMP_Task_Create %s ADDR <%lx> ", buffer, addr);
-
-      TAU_REGISTER_CONTEXT_EVENT(event, contextEventName);
-      TAU_EVENT_DISABLE_MAX(event);
-      TAU_EVENT_DISABLE_MIN(event);
-      TAU_EVENT_DISABLE_MEAN(event);
-      TAU_EVENT_DISABLE_STDDEV(event);
-      TAU_CONTEXT_EVENT(event, type);
 
       /*Create a timer for the task, and store handle in new_task_data*/
       if (TauEnv_get_ompt_resolve_address_eagerly()) {
