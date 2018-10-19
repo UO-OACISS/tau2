@@ -206,7 +206,9 @@ on_ompt_callback_task_create(
   }
 }
 
-/* Callback for task schedule */
+/* Callback for task schedule.
+ * For now, we follow the simple logic of stopping the previous
+ * task, and starting the next task */
 static void 
 on_ompt_callback_task_schedule(
     ompt_data_t *prior_task_data,
