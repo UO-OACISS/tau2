@@ -104,6 +104,7 @@ static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
 static TauMetricCuptiFlag cumetric[TAU_MAX_METRICS];
 static int eventsv[TAU_MAX_METRICS];
+static double defaults[TAU_MAX_METRICS]; // used for values read before initialization
 
 /* nfunctions can be different from nmetrics because
  a single call to PAPI can provide several metrics */
@@ -386,7 +387,6 @@ static void read_env_vars() {
 				}
 			}
 		}
-		//printf("METRICS is %s\n", metrics);
 
 		token = strtok(metrics, "^");
 		while (token) {
@@ -827,6 +827,20 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 	}
 }
 
+void TauMetrics_getDefaults(int tid, double values[], int reversed) {
+	if (Tau_init_check_initialized()) {
+	    if (reversed) {
+            for (int i=nfunctions-1; i >= 0; --i) {
+                values[i] = defaults[i];
+            }
+	    } else {
+            for (int i=0; i < nfunctions; i++) {
+                values[i] = defaults[i];
+            }
+	    }
+	}
+}
+
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid,
 		double values[]) {
 	for (int i = 0; i < nfunctions; i++) {
@@ -868,7 +882,7 @@ int TauMetrics_init() {
 		//         user-selected metrics to be measured.
 		if (strcasecmp(TauEnv_get_ebs_source(), "itimer") != 0) {
 			metricv_add (TauEnv_get_ebs_source());}
-		}
+    }
 
 		/* Set the user clock values to 0 */
 	for (i = 0; i < TAU_MAX_THREADS; i++) {
@@ -884,6 +898,8 @@ int TauMetrics_init() {
 	reorder_metrics("KTAU\0");
 
 	initialize_functionArray();
+    // set the "default" values for timers started before we were ready
+    TauMetrics_getMetrics(Tau_get_thread(), defaults, 0);
 
 	Tau_Global_numCounters = nmetrics;
 

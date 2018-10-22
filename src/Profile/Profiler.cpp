@@ -264,9 +264,6 @@ void Profiler::Start(int tid)
   // Record metrics in reverse order so wall clock metrics are recorded after PAPI, etc.
   RtsLayer::getUSecD(tid, StartTime, 1);
 
-  // this happens during early initialization, before program load
-  if (StartTime[0] == 0.0) { StartTime[0] = TauMetrics_getTimeOfDay(); }
-
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
 
   /********************************************************************************/
@@ -474,7 +471,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /* TAUKTAU */
 
   // this happens during early initialization, before program load
-  if (CurrentTime[0] == 0.0) { CurrentTime[0] = TauMetrics_getTimeOfDay(); }
+  //if (CurrentTime[0] == 0.0) { CurrentTime[0] = TauMetrics_getTimeOfDay(); }
+
+  // It's ok if CurrentTime is 0, because that means StartTime is too.
+  // However, if CurrentTime is not 0, we need to fix a timer that was read
+  // before we were done initializing metrics.
+  if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
+    TauMetrics_getDefaults(tid, StartTime, 0);
+  }
 
   for (int k = 0; k < Tau_Global_numCounters; k++) {
     TotalTime[k] = CurrentTime[k] - StartTime[k];
