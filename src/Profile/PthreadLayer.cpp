@@ -283,6 +283,7 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     // sure that we have a top level timer so that when 
     // pthread_create exits, we don't write a profile!
     Tau_init_initializeTAU();
+    if (Tau_get_node() == -1) { Tau_set_node(0); }
     Tau_create_top_level_timer_if_necessary();
 
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
