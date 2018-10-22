@@ -13,7 +13,7 @@ all: $(TAU_CUPTI_AVAIL)
 install: $(INSTALLTAU_CUPTI_AVAIL)
 
 $(TAU_CUPTI_AVAIL): tau_cupti_avail.o $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libTAUsh$(TAU_CONFIG).so
-		$(CXX) -o $@ $< -L$(TAU_LIB_DIR) $(TAU_LINKER_RPATH_OPT) $(TAU_SHLIBS) $(TAU_OPENMP_OPTION) -lcuda
+		$(CXX) -o $@ $< -L$(TAU_LIB_DIR) $(TAU_LINKER_RPATH_OPT) $(TAU_SHLIBS) $(TAU_OPENMP_OPTION) -lcuda $(USER_OPT)
 
 tau_cupti_avail.o: tau_cupti_avail.cpp
 		$(TAU_CUDA_CXX) $(CFLAGS) -I$(TAU_CUDA_INC) -I$(TAU_CUPTI_INC) -I$(TAU_INC_DIR) -c $<
