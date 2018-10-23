@@ -624,6 +624,13 @@ void TauTraceOTF2Event(long int ev, x_int64 par, int tid, x_uint64 ts, int use_t
   TauTraceOTF2EventWithNodeId(ev, par, tid, ts, use_ts, my_node(), kind);
 }
 
+inline void convert_upper(const std::string& str, std::string& converted)
+{
+    for(size_t i = 0; i < str.size(); ++i) {
+        converted += toupper(str[i]);
+    }
+}
+
 static void TauTraceOTF2WriteGlobalDefinitions() {
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "TauTraceOTF2WriteGlobalDefinitions()\n");
@@ -683,8 +690,38 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     for (region_map_t::const_iterator it = global_region_map.begin(); it != global_region_map.end(); it++) {
         int thisFuncName = nextString++;
         const std::string & region_name = it->first;
+        /* OK, we need to set the paradigm, so that Vampir will auto-color for
+         * us correctly.  There is probably a better way to do this, but this
+         * will work for now.  The better solution would be to look up the
+         * function info object with this name, and get its group.  But not
+         * all of the groups below are suppored with equivalent groups in
+         * TAU.  So we'll do this for now. */
+        OTF2_Paradigm paradigm = OTF2_PARADIGM_USER;
+        string uppercase;
+        convert_upper(region_name, uppercase);
+        size_t found = uppercase.find(string("MPI"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_MPI; }
+        found = uppercase.find(string("PTHREAD"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_PTHREAD; }
+        found = uppercase.find(string("OPENMP"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENMP; }
+        // no paradigm for IO? That's odd.
+        found = uppercase.find(string("ADIOS"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        found = uppercase.find(string("HDF5"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        found = uppercase.find(string("NETCDF"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        found = uppercase.find(string("CUDA"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_CUDA; }
+        found = uppercase.find(string("OPENACC"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENACC; }
+        found = uppercase.find(string("OPENCL"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENCL; }
+        found = uppercase.find(string(".TAU APPLICATION"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_UNKNOWN; }
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, region_name.c_str()));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_UNKNOWN, OTF2_REGION_FLAG_NONE, 0, 0, 0));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, paradigm, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
 
     // Write all the user events out as Metrics

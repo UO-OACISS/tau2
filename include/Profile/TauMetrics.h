@@ -46,6 +46,7 @@ int TauMetrics_init();
 void TauMetrics_finalize();
 
 void TauMetrics_getMetrics(int tid, double values[], int reversed);
+void TauMetrics_getDefaults(int tid, double values[], int reversed);
 
 const char *TauMetrics_getMetricName(int metric);
 int TauMetrics_getMetricUsed(int metric);
