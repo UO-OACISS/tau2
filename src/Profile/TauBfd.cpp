@@ -898,6 +898,7 @@ static bool Tau_bfd_internal_loadSymTab(TauBfdUnit *unit, int moduleIndex)
   char const * name = unit->addressMaps[moduleIndex]->name;
   TauBfdModule * module = Tau_bfd_internal_getModuleFromIdx(unit, moduleIndex);
 
+  TAU_VERBOSE("TAU_BFD: Tau_bfd_internal_loadSymTab: name=%s, moduleIndex=%d\n", name, moduleIndex);
   return module->loadSymbolTable(name);
 }
 
@@ -1088,6 +1089,12 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
   } else {
     return 0;
   }
+/*
+  char const * module_name = unit->addressMaps[bfd_handle]->name;
+  printf("TAU_BFD ---> NAME of Module =%s \n", module_name);
+  module = Tau_bfd_internal_getModuleFromIdx(unit, bfd_handle);
+  bfdImage = module->bfdImage;
+*/
 
   /* we have a valid bfdImage pointer. Examine the symbol table. */
   size_t sz = bfd_get_symtab_upper_bound(bfdImage);
@@ -1097,7 +1104,7 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
   if (!sz) {
     TAU_VERBOSE("loadSymbolTable: Retrying with dynamic\n");
     sz = bfd_get_dynamic_symtab_upper_bound(bfdImage);
-    dynamic = true;
+    //dynamic = true;
     if (!sz) {
       TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size \n" );    
       return 0;
