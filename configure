@@ -9328,9 +9328,24 @@ EOF
 		    rm -f opencl.cpp opencl.o
 		fi
 		cudadir=`dirname $cudainclude`
-		if [ $cupti = no -a -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
+		cuda_version=$(cat "$cudadir"/include/cuda.h | grep "define CUDA_VERSION")
+		vers_arr=($cuda_version)
+		cupti_event_path=""
+		if [ ${vers_arr[2]} -ge 10000 ] ; then
+		    ## For now, checking if version greater than 10
+		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
+		else
+		    cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
+		fi
+		if [ $cupti = no -a -f $cupti_event_path ] ; then
 		    tauoptions="${tauoptions}-cupti"
-		    cupti="$cudadir/extras/CUPTI"
+		    cupti=""
+		    if [ ${vers_arr[2]} -ge 10000 ] ; then
+			## For now, checking if version greater than 10
+			cupti="$cudadir/extras/CUPTI.orig"
+		    else
+			cupti="$cudadir/extras/CUPTI"
+		    fi
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
 		    if [ $machine = craycnl ]; then
