@@ -1674,11 +1674,16 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
   RtsLayer::LockDB();
 
-  static bool createFlag = TauProfiler_createDirectories();
-  if (createFlag) {
-    TAU_VERBOSE ("Profile directories created\n");
-  }
+  //If we haven't created any directories yet go ahead and keep checking until we have. Otherwise we may give up before initializing metrics
+  static bool createdDirectories=false;
+  bool createFlag=false;
 
+  if(!createdDirectories){
+    createFlag = TauProfiler_createDirectories();
+      if (createFlag) {
+        createdDirectories=true;
+      }
+   }
 //#ifdef CUPTI
 //  CUdevice device;
 //  int retval;
@@ -1880,6 +1885,8 @@ int TauProfiler_dumpFunctionValues(const char **inFuncs, int numFuncs, bool incr
 bool TauProfiler_createDirectories()
 {
     char newdirname[1024];
+    int countDirs=0;
+    TAU_VERBOSE("Creating Directories\n");
 #ifdef KTAU_NG
     getProfileLocation(0, newdirname);
     mkdir(newdirname, S_IRWXU | S_IRGRP | S_IXGRP);
@@ -1887,6 +1894,7 @@ bool TauProfiler_createDirectories()
     for (int i = 0; i < Tau_Global_numCounters; i++) {
         if (TauMetrics_getMetricUsed(i)) {
             getProfileLocation(i, newdirname);
+	    countDirs++;
 #ifdef TAU_WINDOWS
             mkdir(newdirname);
 #else
@@ -1895,6 +1903,10 @@ bool TauProfiler_createDirectories()
         }
     }
 #endif
+    if(countDirs==0)
+    {   
+	return false;
+    }
     return true;
 }
 
