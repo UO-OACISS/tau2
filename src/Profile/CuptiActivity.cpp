@@ -2424,7 +2424,11 @@ bool function_is_exit(CUpti_CallbackId id)
 }
 bool function_is_launch(CUpti_CallbackId id) { 
 	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020 ||
-		     id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel;
+		     id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel || 
+             id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000 ||
+             id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_ptsz_v7000 || 
+             id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_ptsz_v7000;
+
 }
 
 bool function_is_memcpy(CUpti_CallbackId id, CUpti_CallbackDomain domain) {
