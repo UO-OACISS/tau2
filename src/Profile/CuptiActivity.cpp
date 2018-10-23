@@ -65,9 +65,11 @@ bool counters_averaged_warning_issued[TAU_MAX_THREADS] = {false};
 bool counters_bounded_warning_issued[TAU_MAX_THREADS] = {false};
 const char *last_recorded_kernel_name;
 
-// #define TAU_DEBUG_CUPTI 1
-// #define TAU_DEBUG_CUPTI_SASS 1
-// #define TAU_DEBUG_SASS_PROF 1
+//#define TAU_DEBUG_CUPTI 1
+//#define TAU_DEBUG_CUPTI_SASS 1
+//#define TAU_DEBUG_SASS_PROF 1
+//#define TAU_DEBUG_CUPTI_COUNTERS 1
+//#define TAU_CUPTI_DEBUG_COUNTERS 1
 
 /* BEGIN: unified memory */
 #define CUPTI_CALL(call)                                                    \
@@ -655,7 +657,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 
 #ifdef TAU_ASYNC_ACTIVITY_API
           Tau_cupti_activity_flush_all();
-          //cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+          cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
           //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
 #else
 					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
@@ -1415,6 +1417,12 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       int i = 0;
       for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++)
       {
+        /*if(it->first == NULL) {
+            std::cerr << "Event was null!" << std::endl;
+        } else {
+            std::cerr << "Event was not null: " << it->first << std::endl;
+        }*/
+        //std::cerr << "event name: " << it->first->GetUserEventName() << std::endl;
         map[i].userEvent = it->first;
         map[i].data = it->second;
         i++;
@@ -2423,11 +2431,14 @@ bool function_is_exit(CUpti_CallbackId id)
 	
 }
 bool function_is_launch(CUpti_CallbackId id) { 
-	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020 ||
-		     id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel || 
-             id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000 ||
-             id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_ptsz_v7000 || 
-             id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_ptsz_v7000;
+	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020
+		     || id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel
+#if CUDA_VERSION >= 7000
+             || id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000
+             || id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_ptsz_v7000 
+             || id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_ptsz_v7000
+#endif
+             ;
 
 }
 
