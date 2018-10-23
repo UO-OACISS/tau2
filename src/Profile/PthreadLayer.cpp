@@ -279,6 +279,13 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     pack->start_routine = start_routine;
     pack->arg = arg;
 
+    // CUDA or OpenMP could spawn a thread during startup, so make
+    // sure that we have a top level timer so that when 
+    // pthread_create exits, we don't write a profile!
+    Tau_init_initializeTAU();
+    if (Tau_get_node() == -1) { Tau_set_node(0); }
+    Tau_create_top_level_timer_if_necessary();
+
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
     TAU_PROFILE_START(timer);
     retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack); // 0

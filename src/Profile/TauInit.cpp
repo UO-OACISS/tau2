@@ -481,6 +481,9 @@ extern "C" int Tau_init_initializeTAU()
 
   Tau_profiler_initialization();
 
+  // Mark initialization complete so calls below can start timers
+  tau_initialized = 1;
+
   /* initialize the metrics we will be counting */
   TauMetrics_init();
 
@@ -510,9 +513,6 @@ extern "C" int Tau_init_initializeTAU()
 #ifdef TAU_OPENMP
   //Tau_initialize_collector_api();
 #endif
-
-  // Mark initialization complete so calls below can start timers
-  tau_initialized = 1;
 
 #ifdef __MIC__
   if (TauEnv_get_mic_offload()) {
