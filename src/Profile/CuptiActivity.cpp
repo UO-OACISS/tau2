@@ -451,28 +451,30 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	printf("in Tau_cupti_callback_dispatch\n");
 #endif
 #if defined(PTHREADS)
-	unsigned int cur_tid = pthread_self(); // needed for IBM P8
-	const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
-	unsigned int corrid = cbInfo->correlationId;
-	if (cur_tid != parent_tid) {
-	  // Register GPU thread count here
-	  unsigned int systid = cur_tid;
-	  RtsLayer::LockEnv();
-	  if (map_cudaThread.find(corrid) == map_cudaThread.end()) {
-	    unsigned int parenttid = parent_tid;
-	    int tauvtid = Tau_get_thread();
-	    unsigned int contextid = cbInfo->contextUid;
-	    const char* funcname = cbInfo->functionName;
-	    register_cuda_thread(systid, parenttid, tauvtid, corrid, contextid, funcname);
+	if (ud != NULL) {
+	  unsigned int cur_tid = pthread_self(); // needed for IBM P8
+	  const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
+	  unsigned int corrid = cbInfo->correlationId;
+	  if (cur_tid != parent_tid) {
+	    // Register GPU thread count here
+	    unsigned int systid = cur_tid;
+	    RtsLayer::LockEnv();
+	    if (map_cudaThread.find(corrid) == map_cudaThread.end()) {
+	      unsigned int parenttid = parent_tid;
+	      int tauvtid = Tau_get_thread();
+	      unsigned int contextid = cbInfo->contextUid;
+	      const char* funcname = cbInfo->functionName;
+	      register_cuda_thread(systid, parenttid, tauvtid, corrid, contextid, funcname);
+	    }
+	    // track unique threads seen
+	    if (set_gpuThread.find(cur_tid) == set_gpuThread.end()) {
+	      int threadid = Tau_get_thread() - TauEnv_get_nodeNegOneSeen();
+	      set_gpuThread.insert(cur_tid);
+	      TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
+	      map_cuptiThread[Tau_get_thread()] = threadid;
+	    }
+	    RtsLayer::UnLockEnv();
 	  }
-	  // track unique threads seen
-	  if (set_gpuThread.find(cur_tid) == set_gpuThread.end()) {
-	    int threadid = Tau_get_thread() - TauEnv_get_nodeNegOneSeen();
-	    set_gpuThread.insert(cur_tid);
-	    TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
-	    map_cuptiThread[Tau_get_thread()] = threadid;
-	  }
-	  RtsLayer::UnLockEnv();
 	}
 #endif
 	//Just in case we encounter a callback before TAU is intialized or finished.
