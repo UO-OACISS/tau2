@@ -659,7 +659,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 
 #ifdef TAU_ASYNC_ACTIVITY_API
           Tau_cupti_activity_flush_all();
-          cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
+          //cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
           //cuptiActivityFlush(cbInfo->context, 0, CUPTI_ACTIVITY_FLAG_NONE);
 #else
 					Tau_cupti_register_sync_event(cbInfo->context, 0, NULL, 0, 0);
@@ -769,7 +769,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 }
 
 void CUPTIAPI Tau_cupti_activity_flush_all() {      
-    if(buffers_queued++ > ACTIVITY_ENTRY_LIMIT) {
+    if((Tau_CuptiLayer_get_num_events() > 0) || (buffers_queued++ > ACTIVITY_ENTRY_LIMIT)) {
         buffers_queued = 0;
         cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
     }
