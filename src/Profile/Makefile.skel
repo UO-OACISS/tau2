@@ -138,7 +138,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 # ROCPROFILER OBJECTS
 #############################################
-#ROCPROFILER#ROCPROFILER_O = TauGpu.o TauRocProfiler.o hsa_rsrc_factory.o perf_timer.o #ENDIF#
+#ROCPROFILER#ROCPROFILER_O = TauGpu.o TauRocProfiler.o #ENDIF#
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
@@ -918,12 +918,6 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 
 TauRocProfiler.o : TauRocProfiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)
-
-hsa_rsrc_factory.o : $(TAU_ROCPROFILER)/test/util/hsa_rsrc_factory.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(TAU_ROCPROFILER)/test/util/hsa_rsrc_factory.cpp -o hsa_rsrc_factory.o $(ROCPROFILER_FLAGS)
-
-perf_timer.o : $(TAU_ROCPROFILER)/test/util/perf_timer.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(TAU_ROCPROFILER)/test/util/perf_timer.cpp -o perf_timer.o $(ROCPROFILER_FLAGS)
 
 TauBeacon.o   : TauBeacon.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
