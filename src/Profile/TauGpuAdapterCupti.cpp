@@ -26,7 +26,7 @@ extern "C" void Tau_cupti_register_metadata(
 							metadata_struct m; 
 							m.list = metadata;
 							m.length = metadata_size;
-							deviceInfoMap[deviceId] = m;
+							TheDeviceInfoMap()[deviceId] = m;
 						}
 extern "C" void Tau_cupti_register_host_calling_site(
 						uint32_t correlationId,
