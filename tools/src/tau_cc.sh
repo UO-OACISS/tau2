@@ -207,7 +207,7 @@ showincludes:
 showlibs:
 	@echo \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)
 showsharedlibs:
-	@echo -L\$(TAU_LIB_DIR)/shared\$(TAU_CONFIG) -Wl,-rpath,\$(TAU_LIB_DIR) -lTAUsh\$(TAU_CONFIG) \$(TAU_MPI_FLIBS)  \$(TAU_SHMEM_LIBS) \$(TAU_EXLIBS) \$(TAU_LDFLAGS) \$(TAU_LINKER_RPATH_OPT) \$(TAU_CUDA_LIBRARY)
+	@echo -L\$(TAU_LIB_DIR) -Wl,-rpath,\$(TAU_LIB_DIR) -lTAUsh\$(TAU_CONFIG) \$(TAU_MPI_FLIBS) \$(TAU_SHMEM_LIBS) \$(TAU_EXLIBS) \$(TAU_LDFLAGS) \$(TAU_LINKER_RPATH_OPT) \$(TAU_CUDA_LIBRARY)
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ $SHOW
 retval=$?

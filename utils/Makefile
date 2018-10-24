@@ -94,7 +94,7 @@ tau_header_list: tau_header_list.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include tau_header_list.cpp -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) 
 
 tau_selectfile: tau_selectfile.o tau_selective_dyn.o tau_instrument.dyn.o
-		$(PDT_CXX_COMP) tau_selectfile.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) 
+		$(PDT_CXX_COMP) tau_selectfile.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) $(USER_OPT)
 
 tau_selectfile.o: tau_selectfile.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selectfile.cpp 
