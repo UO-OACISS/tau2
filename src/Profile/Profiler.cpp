@@ -263,6 +263,7 @@ void Profiler::Start(int tid)
   x_uint64 TimeStamp;
   // Record metrics in reverse order so wall clock metrics are recorded after PAPI, etc.
   RtsLayer::getUSecD(tid, StartTime, 1);
+
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
 
   /********************************************************************************/
@@ -468,6 +469,16 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /*KTAU_DEBUGPROF*/
   ThisKtauProfiler->Stop(this, AddInclFlag);
 #endif /* TAUKTAU */
+
+  // this happens during early initialization, before program load
+  //if (CurrentTime[0] == 0.0) { CurrentTime[0] = TauMetrics_getTimeOfDay(); }
+
+  // It's ok if CurrentTime is 0, because that means StartTime is too.
+  // However, if CurrentTime is not 0, we need to fix a timer that was read
+  // before we were done initializing metrics.
+  if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
+    TauMetrics_getDefaults(tid, StartTime, 0);
+  }
 
   for (int k = 0; k < Tau_Global_numCounters; k++) {
     TotalTime[k] = CurrentTime[k] - StartTime[k];
@@ -1663,11 +1674,16 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
   RtsLayer::LockDB();
 
-  static bool createFlag = TauProfiler_createDirectories();
-  if (createFlag) {
-    TAU_VERBOSE ("Profile directories created\n");
-  }
+  //If we haven't created any directories yet go ahead and keep checking until we have. Otherwise we may give up before initializing metrics
+  static bool createdDirectories=false;
+  bool createFlag=false;
 
+  if(!createdDirectories){
+    createFlag = TauProfiler_createDirectories();
+      if (createFlag) {
+        createdDirectories=true;
+      }
+   }
 //#ifdef CUPTI
 //  CUdevice device;
 //  int retval;
@@ -1869,6 +1885,8 @@ int TauProfiler_dumpFunctionValues(const char **inFuncs, int numFuncs, bool incr
 bool TauProfiler_createDirectories()
 {
     char newdirname[1024];
+    int countDirs=0;
+    TAU_VERBOSE("Creating Directories\n");
 #ifdef KTAU_NG
     getProfileLocation(0, newdirname);
     mkdir(newdirname, S_IRWXU | S_IRGRP | S_IXGRP);
@@ -1876,6 +1894,7 @@ bool TauProfiler_createDirectories()
     for (int i = 0; i < Tau_Global_numCounters; i++) {
         if (TauMetrics_getMetricUsed(i)) {
             getProfileLocation(i, newdirname);
+	    countDirs++;
 #ifdef TAU_WINDOWS
             mkdir(newdirname);
 #else
@@ -1884,6 +1903,10 @@ bool TauProfiler_createDirectories()
         }
     }
 #endif
+    if(countDirs==0)
+    {   
+	return false;
+    }
     return true;
 }
 
