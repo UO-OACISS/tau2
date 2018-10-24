@@ -684,7 +684,7 @@ JDKBINDIR = $(JDKDIR)/bin
 #CUDA#PROFILEOPT114 = -DTAU_GPU #ENDIF# 
 #CUPTI#PROFILEOPT114 = -DTAU_GPU #ENDIF# 
 #OPENCL#PROFILEOPT114 = -DTAU_GPU #ENDIF# 
-#ROCPROFILER#ROCPROFILER_FLAGS = -I$(TAU_ROCM_DIR)/include/hsa -I$(TAU_ROCPROFILER_INC) -I$(TAU_ROCPROFILER)/test  -DAMD_INTERNAL_BUILD -DAQLPROF_NEW_API=1 -DDEBUG_TRACE=1 -DHSA_DEPRECATED="" -DHSA_LARGE_MODEL="" -DLINUX -DLITTLEENDIAN_CPU=1 -DUNIX_OS -D__AMD64__ -D__linux__ -D__x86_64__ -Dintercept_test_EXPORTS  -std=c++11 -Wall -Werror -Werror=return-type -fexceptions -fvisibility=hidden -fno-math-errno -fno-threadsafe-statics -fmerge-all-constants -fms-extensions -fmerge-all-constants -Werror=unused-result -fPIC -ggdb -m64  -msse -msse2 -g  #ENDIF#
+#ROCPROFILER#ROCPROFILER_FLAGS = -I$(TAU_ROCM_DIR)/include/hsa -I$(TAU_ROCPROFILER_INC) -I$(TAU_ROCPROFILER)/test  -DAMD_INTERNAL_BUILD -DAQLPROF_NEW_API=1 -DROCP_LD_AQLPROFILE=1 -DDEBUG_TRACE=1 -DHSA_DEPRECATED="" -DHSA_LARGE_MODEL="" -DLINUX -DLITTLEENDIAN_CPU=1 -DUNIX_OS -D__AMD64__ -D__linux__ -D__x86_64__ -Dintercept_test_EXPORTS  -std=c++11 -Wall -Werror -Werror=return-type -fexceptions -fvisibility=hidden -fno-math-errno -fno-threadsafe-statics -fmerge-all-constants -fms-extensions -fmerge-all-constants -Werror=unused-result -fPIC -ggdb -m64  -msse -msse2 -g  #ENDIF#
 
 MRNET_ROOT=
 MRNET_LW_OPTS=
