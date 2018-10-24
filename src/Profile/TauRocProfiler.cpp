@@ -279,6 +279,7 @@ extern "C" PUBLIC_API void OnLoadToolProp(rocprofiler_settings_t* settings)
 
   // Initialize profiling
   initialize();
+  HsaRsrcFactory::Instance().PrintGpuAgents("ROCm");
 }
 
 // Tool destructor
@@ -811,24 +812,69 @@ bool HsaRsrcFactory::LoadAndFinalize(const AgentInfo* agent_info, const char* br
 
 // Print the various fields of Hsa Gpu Agents
 bool HsaRsrcFactory::PrintGpuAgents(const std::string& header) {
-  std::clog << header << " :" << std::endl;
+  //std::clog << header << " :" << std::endl;
+
+  char key[1024], value[1024];
 
   const AgentInfo* agent_info;
   int size = uint32_t(gpu_list_.size());
   for (int idx = 0; idx < size; idx++) {
     agent_info = gpu_list_[idx];
 
-    std::clog << "> agent[" << idx << "] :" << std::endl;
-    std::clog << ">> Name : " << agent_info->name << std::endl;
-    std::clog << ">> APU : " << agent_info->is_apu << std::endl;
-    std::clog << ">> HSAIL profile : " << agent_info->profile << std::endl;
-    std::clog << ">> Max Wave Size : " << agent_info->max_wave_size << std::endl;
-    std::clog << ">> Max Queue Size : " << agent_info->max_queue_size << std::endl;
-    std::clog << ">> CU number : " << agent_info->cu_num << std::endl;
-    std::clog << ">> Waves per CU : " << agent_info->waves_per_cu << std::endl;
-    std::clog << ">> SIMDs per CU : " << agent_info->simds_per_cu << std::endl;
-    std::clog << ">> SE number : " << agent_info->se_num << std::endl;
-    std::clog << ">> Shader Arrays per SE : " << agent_info->shader_arrays_per_se << std::endl;
+    sprintf(key, "ROCM_AGENT_%d_NAME", idx);
+    sprintf(value, "%s", agent_info->name);
+    TAU_METADATA(key, value);
+//    std::clog << "> agent[" << idx << "] :" << std::endl;
+//    std::clog << ">> Name : " << agent_info->name << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_IS_APU", idx);
+    sprintf(value, "%d", agent_info->is_apu);
+    TAU_METADATA(key, value);
+
+//    std::clog << ">> APU : " << agent_info->is_apu << std::endl;
+    sprintf(key, "ROCM_AGENT_%d_HSA_PROFILE", idx);
+    sprintf(value, "%d", agent_info->profile);
+    TAU_METADATA(key, value);
+//    std::clog << ">> HSAIL profile : " << agent_info->profile << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_MAX_WAVE_SIZE", idx);
+    sprintf(value, "%d", agent_info->max_wave_size);
+    TAU_METADATA(key, value);
+
+//    std::clog << ">> Max Wave Size : " << agent_info->max_wave_size << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_MAX_QUEUE_SIZE", idx);
+    sprintf(value, "%d", agent_info->max_queue_size);
+    TAU_METADATA(key, value);
+
+//    std::clog << ">> Max Queue Size : " << agent_info->max_queue_size << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_CU_NUMBER", idx);
+    sprintf(value, "%d", agent_info->cu_num);
+    TAU_METADATA(key, value);
+//    std::clog << ">> CU number : " << agent_info->cu_num << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_WAVES_PER_CU", idx);
+    sprintf(value, "%d", agent_info->waves_per_cu);
+    TAU_METADATA(key, value);
+
+//    std::clog << ">> Waves per CU : " << agent_info->waves_per_cu << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_SIMDs_PER_CU", idx);
+    sprintf(value, "%d", agent_info->simds_per_cu);
+    TAU_METADATA(key, value);
+
+//    std::clog << ">> SIMDs per CU : " << agent_info->simds_per_cu << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_SE_NUMBER", idx);
+    sprintf(value, "%d", agent_info->se_num);
+    TAU_METADATA(key, value);
+//    std::clog << ">> SE number : " << agent_info->se_num << std::endl;
+
+    sprintf(key, "ROCM_AGENT_%d_SHADER_ARRAYS_PER_SE", idx);
+    sprintf(value, "%d", agent_info->shader_arrays_per_se);
+    TAU_METADATA(key, value);
+//    std::clog << ">> Shader Arrays per SE : " << agent_info->shader_arrays_per_se << std::endl;
   }
   return true;
 }
