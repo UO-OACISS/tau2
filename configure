@@ -544,6 +544,9 @@ for arg in "$@"; do
 	    echo "GPGPU Options:"
 	    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
 	    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
+            echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+            echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+            echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
 	    echo ""
 	    echo "Other Options:"
 	    echo "-iowrapper .................................... Build POSIX IO Wrapper."
@@ -722,6 +725,10 @@ for arg in "$@"; do
         echo "            locations to add when linking to the cuda driver libraries."
         echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
         echo "  Note: This option is needed when used with -cuda=<dir> option. "
+        echo "-rocm=<dir> ........ Specify alternate path to ROCm (/opt/rocm default)."
+        echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+        echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+        echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
         echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -1092,6 +1099,8 @@ dmapp=no
 zepto=no
 zeptodir=
 cuda=no
+rocm=no
+rocprofiler=no
 use_opencl=no
 use_openacc=no
 cupti=no
@@ -2504,6 +2513,49 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-rocm=*)
+	    rocmdir=`echo $arg | sed -e 's/-rocm=//' -e 's/ /#/g'`
+            if [ ! -d $rocmdir ]; then
+              echo  "Error: Cannot access ROCm directory $rocmdir"
+              exit 1
+	    else
+	      fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
+              rocm=yes
+            fi
+	    shift
+	    ;;
+
+	-rocprofiler=*)
+	    rocprofilerdir=`echo $arg | sed -e 's/-rocprofiler=//' -e 's/ /#/g'`
+            if [ ! -d $rocprofilerdir ]; then
+              echo  "Error: Cannot access rocprofiler directory $rocprofilerdir"
+              exit 1
+	    else
+	      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
+              rocprofiler=yes
+              tauoptions="${tauoptions}-rocm"
+	      pthread=yes
+            fi
+	    shift
+	    ;;
+
+	-rocprofilerlibrary=*)
+	    rocprofilerlibrary=`echo $arg | sed -e 's/-rocprofilerlibrary=//' -e 's/ /#/g'`
+	    fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
+	    shift
+	    ;;
+
+	-rocprofilerinc=*)
+	    rocprofilerinc=`echo $arg | sed -e 's/-rocprofilerinc=//' -e 's/ /#/g'`
+            if [ ! -d $rocprofilerinc ]; then
+              echo  "Error: Cannot access rocprofiler directory $rocprofilerinc"
+              exit 1
+	    else
+	      fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+            fi
+	    shift
+	    ;;
+
 	-DISABLE_OPENCL)
 	    opencl=disable
             use_opencl=no
@@ -2612,6 +2664,26 @@ else
 	#echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
 	mpi=yes
     fi
+fi
+
+# AMD ROCm rocprofiler directories
+if [ "$rocprofiler" = yes -a "$rocm" = "no" ]; then
+   if [ "x$rocmdir" = "x" -a -d /opt/rocm ]; then 
+     rocmdir=/opt/rocm
+     fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
+   fi
+fi
+
+if [ "$rocprofiler" = yes -a "x$rocprofilerinc" = "x" ]; then
+   if [ "x$rocprofilerlibrary" = "x" ]; 
+   then 
+     rocprofilerlibrary=librocprofiler64.so
+     fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
+   fi
+   if [ "x$rocprofilerinc" = "x" ]; then 
+     rocprofilerinc="$rocprofilerdir/inc"
+     fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+   fi
 fi
 
 # -- some functions
