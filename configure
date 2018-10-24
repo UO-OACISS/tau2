@@ -2513,6 +2513,16 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-rocm)
+            rocmdir=/opt/rocm
+	    fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
+            rocm=yes
+            rocprofiler=yes
+            tauoptions="${tauoptions}-rocm"
+	    pthread=yes
+            shift
+            ;;
+
 	-rocm=*)
 	    rocmdir=`echo $arg | sed -e 's/-rocm=//' -e 's/ /#/g'`
             if [ ! -d $rocmdir ]; then
@@ -2522,6 +2532,10 @@ for arg in "$@"; do
 	      fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
               rocm=yes
             fi
+	    fixmakeargs="$fixmakeargs ROCPROFILER"
+            rocprofiler=yes
+            tauoptions="${tauoptions}-rocm"
+	    pthread=yes
 	    shift
 	    ;;
 
