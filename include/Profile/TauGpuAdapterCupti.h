@@ -11,17 +11,67 @@ struct {
 	int length;
 	} typedef metadata_struct;
 
-static std::map<uint32_t, FunctionInfo*> host_map;
-std::map<uint32_t, FunctionInfo*>& functionInfoMap_hostLaunch() {
+struct HostMap : public std::map<uint32_t, FunctionInfo*> {
+    HostMap() {
+        Tau_init_initializeTAU();
+    }
+
+    ~HostMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+HostMap & functionInfoMap_hostLaunch() {
+  static HostMap host_map;
   return host_map;
 }
-static std::map<int64_t, FunctionInfo*> device_map;
-std::map<int64_t, FunctionInfo*>& functionInfoMap_deviceLaunch() {
+
+struct DeviceMap : public std::map<int64_t, FunctionInfo*> {
+    DeviceMap() {
+        Tau_init_initializeTAU();
+    }
+
+    ~DeviceMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+DeviceMap & functionInfoMap_deviceLaunch() {
+  static DeviceMap device_map;
   return device_map;
 }
 
-std::map<uint32_t, metadata_struct> deviceInfoMap;
-std::map<uint32_t, FunctionInfo *> kernelContextMap;
+struct DeviceInfoMap : public std::map<uint32_t, metadata_struct> {
+    DeviceInfoMap() {
+        Tau_init_initializeTAU();
+    }
+
+    ~DeviceInfoMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+DeviceInfoMap & TheDeviceInfoMap() {
+    static DeviceInfoMap device_info_map;
+    return device_info_map;
+}
+//std::map<uint32_t, metadata_struct> deviceInfoMap;
+
+struct KernelContextMap : public std::map<uint32_t, FunctionInfo *> {
+    KernelContextMap() {
+        Tau_init_initializeTAU();
+    }
+
+    ~KernelContextMap() {
+        Tau_destructor_trigger();
+    }
+};
+
+KernelContextMap & TheKernelContextMap() {
+    static KernelContextMap kernel_context_map;
+    return kernel_context_map;
+}
+//std::map<uint32_t, FunctionInfo *> kernelContextMap;
 
 class CuptiGpuEvent : public GpuEvent
 {
@@ -114,8 +164,8 @@ public:
 
 	void recordMetadata(int id) const
 	{
-		std::map<uint32_t, metadata_struct>::iterator it = deviceInfoMap.find(deviceId);
-		if (it != deviceInfoMap.end())
+		std::map<uint32_t, metadata_struct>::iterator it = TheDeviceInfoMap().find(deviceId);
+		if (it != TheDeviceInfoMap().end())
 		{
 			GpuMetadata *gpu_metadata = it->second.list;
 			int number_of_gpu_metadata = it->second.length;
