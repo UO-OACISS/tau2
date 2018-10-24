@@ -924,6 +924,26 @@ case $1 in
 	echo "s@^TAU_SHMEMMPI_INC=\(.*\)@TAU_SHMEMMPI_INC=$shmemmpiinc@g" >> $sedout
         ;;
 
+     rocmdir=*)
+        rocmdir=`echo $1 | sed -e 's/^rocmdir=//' -e 's/#/ /g'`
+	echo "s@^TAU_ROCM_DIR=\(.*\)@TAU_ROCM_DIR=$rocmdir@g" >> $sedout
+        ;;
+
+     rocprofilerdir=*)
+        rocprofilerdir=`echo $1 | sed -e 's/^rocprofilerdir=//' -e 's/#/ /g'`
+	echo "s@^TAU_ROCPROFILER=\(.*\)@TAU_ROCPROFILER=$rocprofilerdir@g" >> $sedout
+        ;;
+
+     rocprofilerinc=*)
+        rocprofilerinc=`echo $1 | sed -e 's/^rocprofilerinc=//' -e 's/#/ /g'`
+	echo "s@^TAU_ROCPROFILER_INC=\(.*\)@TAU_ROCPROFILER_INC=$rocprofilerinc@g" >> $sedout
+        ;;
+
+     rocprofilerlibrary=*)
+        rocprofilerlibrary=`echo $1 | sed -e 's/^rocprofilerlibrary=//' -e 's/#/ /g'`
+	echo "s@^TAU_ROCPROFILER_LIBRARY=\(.*\)@TAU_ROCPROFILER_LIBRARY=$rocprofilerlibrary@g" >> $sedout
+        ;;
+
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
@@ -950,7 +970,14 @@ case $1 in
         echo "NOTE: Using the TAU's CUPTI Activity API "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-
+     ROCPROFILER)
+        echo "NOTE: Using the TAU's ROCm ROCPROFILER Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ROCM)
+        echo "NOTE: Using the TAU's ROCm Options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 
      cudainclude=*)
         cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
