@@ -1049,7 +1049,9 @@ else
     #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
     if [ $track_rocm = "true" ] ; then
       if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-        export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then 
+          export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        fi
       else
         export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
       fi
