@@ -50,7 +50,7 @@ struct OpenCLGpuEvent : public GpuEvent
   }
 
   OpenCLGpuEvent(cl_device_id i, x_uint64 cId, double sync) :
-  id(i), commandId(cId), event(NULL), name(NULL), sync_offset(sync), taskId(-1)
+  id(i), commandId(cId), event(NULL), name(NULL), sync_offset(sync), taskId(-1), number_of_gpu_events(0)
   { }
 
   OpenCLGpuEvent *getCopy() const {
