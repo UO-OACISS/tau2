@@ -23,7 +23,7 @@
 #include <Profile/TauMetaDataMerge.h>
 #include <Profile/TauPluginInternals.h>
 
-#define DEBUG_PROF 1 
+#define DEBUG_PROF 0 
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
