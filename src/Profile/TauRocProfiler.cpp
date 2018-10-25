@@ -49,11 +49,12 @@ const char * pthread_orig_name = "libTAU-pthread.so";
 static void *pthread_dso_handle = NULL;
 static int tau_initialized_queues[TAU_MAX_ROCM_QUEUES] = { 0 };
 
+extern "C" x_uint64 TauTraceGetTimeStamp();
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
 static unsigned long long tau_last_timestamp_ns = 0L;
-
+static unsigned long long offset_timestamp = 0L;
 // Dispatch callbacks and context handlers synchronization
 pthread_mutex_t mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 // Tool is unloaded
@@ -66,6 +67,16 @@ void fatal(const std::string msg) {
   fflush(stderr);
   abort();
 }
+
+
+void metric_set_synchronized_gpu_timestamp(int tid, double value){
+	if (offset_timestamp == 0L)
+	{
+		offset_timestamp=TauTraceGetTimeStamp() - ((double)value);
+	}
+	metric_set_gpu_timestamp(tid, offset_timestamp+value);
+}
+
 
 // Check returned HSA API status
 void check_status(hsa_status_t status) {
@@ -112,17 +123,17 @@ void dump_context_entry(context_entry_t* entry) {
     tau_initialized_queues[queueid] = taskid;  
     timestamp = record->dispatch; 
     // Set the timestamp for TAUGPU_TIME:
-    metric_set_gpu_timestamp(taskid, ((double)timestamp/1e3));
+    metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3));
     Tau_create_top_level_timer_if_necessary_task(taskid); 
     Tau_add_metadata_for_task(taskid);
   }
   
   timestamp = record->begin;
-  metric_set_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
+  metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_START_TASK(kernel_name.c_str(), taskid);
 
   timestamp = record->end;
-  metric_set_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
+  metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_STOP_TASK(kernel_name.c_str(), taskid);
   tau_last_timestamp_ns = record->complete; 
   
@@ -302,7 +313,7 @@ extern "C" PUBLIC_API void OnUnloadTool() {
   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
     if (tau_initialized_queues[i] != -1) { 
       //std::cout <<"Closing "<<i<<" last timestamp = "<<tau_last_timestamp_ns<<std::endl;
-      metric_set_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
+      metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
       Tau_stop_top_level_timer_if_necessary_task(i);
     }
   }
@@ -875,6 +886,9 @@ bool HsaRsrcFactory::PrintGpuAgents(const std::string& header) {
     sprintf(value, "%d", agent_info->shader_arrays_per_se);
     TAU_METADATA(key, value);
 //    std::clog << ">> Shader Arrays per SE : " << agent_info->shader_arrays_per_se << std::endl;
+  
+
+  
   }
   return true;
 }
