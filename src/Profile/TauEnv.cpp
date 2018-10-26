@@ -320,6 +320,8 @@ static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
 static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
 static const char *env_binaryexe = NULL;
 
+static int env_node_set = -1;
+
 static int env_cudatotalthreads = 0;
 static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
@@ -766,6 +768,10 @@ extern "C" const char *TauEnv_get_plugins() {
 
 extern "C" int TauEnv_get_plugins_enabled() {
   return env_plugins_enabled;
+}
+
+extern "C" int TauEnv_get_set_node() {
+  return env_node_set;
 }
 
 extern "C" const char *TauEnv_get_cvar_values() {
@@ -1865,6 +1871,7 @@ void TauEnv_initialize()
     if (tmp) {
       int node_id = 0;
       sscanf(tmp,"%d",&node_id);
+      env_node_set=node_id;
       TAU_VERBOSE("TAU: Setting node value forcibly to (TAU_SET_NODE): %d\n", node_id); 
       TAU_PROFILE_SET_NODE(node_id);
       Tau_set_usesMPI(1);
