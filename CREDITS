@@ -1,7 +1,7 @@
 /******************************************************************* 
  *                                                                 *
  *       	Tuning and Analysis Utilities Credits  		   *
- *                           Version 2.19                          *
+ *                           Version 2.28                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -20,14 +20,15 @@
 TAU Portable Profiling:
 -----------------------
 Sameer Shende, University of Oregon
-Alan Morris, University of Oregon
 Wyatt Spear, University of Oregon
-Scott Biersdorff, University of Oregon
-Aroon Nataraj, University of Oregon
-Kevin Huck, Barcelona Supercomputing Center
+Kevin Huck, University of Oregon
+Nicholas Chaimov, ParaTools, Inc.
+Srinivasan Ramesh, University of Oregon
+Robert Lim, University of Oregon
+Izaak Beekman, ParaTools, Inc. 
 Peter Beckman, Argonne National Laboratory
 Bernd Mohr, Research Centre Jülich, ZAM, Germany
-Markus Geimer, Research Centre Jülich, ZAM, Germany
+
 
 
 Principal Investigators:
@@ -37,14 +38,22 @@ Prof. Allen Malony, University of Oregon
 Thanks to: 
 ----------
 Brian Miller
+Andrew Wissink
 Craig Rasmussen
 Bronis R. de Supinski
+Alan Morris
+Scott Biersdorff
+Aroon Nataraj
 Janice Cuny
 Matt Sottile
+Soren Rasmussen
 Jeff Brown
+Markus Geimer
 Rod Oldehoeft
 Todd Veldhuizen
 Suvas Vajracharya
+Aroon Nataraj
+Aurele Maheo
 Lars Hansen
 Kurt Windisch
 Darryl Brown
