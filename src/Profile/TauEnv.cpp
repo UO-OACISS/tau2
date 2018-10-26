@@ -1851,6 +1851,16 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
 
+
+    const char *max_records = getconf("TAU_MAX_RECORDS");
+    env_max_records = TAU_MAX_RECORDS;
+    if (max_records) {
+      env_max_records = strtod(max_records, 0);
+      TAU_VERBOSE("TAU: TAU_MAX_RECORDS = %g\n", env_max_records);
+    }
+
+
+
     tmp = getconf("TAU_SET_NODE");
     if (tmp) {
       int node_id = 0;
@@ -1958,13 +1968,7 @@ void TauEnv_initialize()
     if (numcalls) {
       env_throttle_numcalls = strtod(numcalls, 0);
     }
-    const char *max_records = getconf("TAU_MAX_RECORDS");
-    env_max_records = TAU_MAX_RECORDS;
-    if (max_records) {
-      env_max_records = strtod(max_records, 0);
-      TAU_VERBOSE("TAU: TAU_MAX_RECORDS = %g\n", env_max_records);
-    }
-
+    
     if (env_throttle) {
       TAU_VERBOSE("TAU: Throttle PerCall = %g\n", env_throttle_percall);
       TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
