@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
-#*    Copyright 1997-2009						   **
+#*    Copyright 1997-2019						   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #*    Research Center Juelich, ZAM Germany                                 **
