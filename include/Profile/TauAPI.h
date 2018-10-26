@@ -441,6 +441,8 @@ int Tau_global_decr_insideTAU();
 int Tau_global_getLightsOut();
 void Tau_global_setLightsOut();
 
+  // extern struct GpuThread gThreads[TAU_MAX_THREADS];
+
 long Tau_convert_ptr_to_long(void *ptr);
 unsigned long Tau_convert_ptr_to_unsigned_long(void *ptr);
 
@@ -598,6 +600,8 @@ void Tau_track_class_allocation(const char * name, size_t size);
 void Tau_track_class_deallocation(const char * name, size_t size);
 void Tau_start_class_allocation(const char * name, size_t size, int include_in_parent);
 void Tau_stop_class_allocation(const char * name, int record);
+
+  // void register_gpu_thread(unsigned int sys_tid, int gpu_tid, unsigned int parent_tid, int nodeid);
 
 #ifdef __cplusplus
 /* Include the C++ API header */

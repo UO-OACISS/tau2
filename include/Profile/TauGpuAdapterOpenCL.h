@@ -37,6 +37,7 @@ struct OpenCLGpuEvent : public GpuEvent
   int number_of_gpu_events;
   int memcpy_type;
   double sync_offset;
+  int taskId;
 
   ~OpenCLGpuEvent()
   {
@@ -49,7 +50,7 @@ struct OpenCLGpuEvent : public GpuEvent
   }
 
   OpenCLGpuEvent(cl_device_id i, x_uint64 cId, double sync) :
-    id(i), commandId(cId), event(NULL), name(NULL), sync_offset(sync)
+  id(i), commandId(cId), event(NULL), name(NULL), sync_offset(sync), taskId(-1), number_of_gpu_events(0)
   { }
 
   OpenCLGpuEvent *getCopy() const {
@@ -71,6 +72,7 @@ struct OpenCLGpuEvent : public GpuEvent
   }
 
   const char *getName() const { return name; }
+  int getTaskId() const { return taskId; }
 
   FunctionInfo *getCallingSite() const { 
 
