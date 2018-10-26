@@ -233,6 +233,10 @@ using namespace std;
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
+#ifdef TAU_MPI
+extern "C" void Tau_set_usesMPI(int value);
+#endif /* TAU_MPI */
+
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
 extern "C" {
@@ -1846,6 +1850,18 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
+
+    tmp = getconf("TAU_SET_NODE");
+    if (tmp) {
+      int node_id = 0;
+      sscanf(tmp,"%d",&node_id);
+      TAU_VERBOSE("TAU: Setting node value forcibly to (TAU_SET_NODE): %d\n", node_id); 
+      TAU_PROFILE_SET_NODE(node_id);
+      Tau_set_usesMPI(1);
+      TAU_METADATA("TAU_SET_NODE", tmp);
+    }
+
+    
 #endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC || TAU_GPI */
 
     /* clock synchronization */
