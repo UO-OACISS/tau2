@@ -46,6 +46,7 @@ usage()
   echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
   echo "        -opencl       Track GPU events via OpenCL"
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
+  echo "        -rocm         Track ROCm events via rocprofiler "
   echo "        -ompt         Track OpenMP events via OMPT interface"
   echo "        -power        Track power events via PAPI's perf RAPL interface"
   echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
@@ -286,6 +287,7 @@ sass_type=""
 csv_output=false
 binary_exe=""
 track_opencl=false
+track_rocm=false
 track_openacc=false
 track_armci=false
 tau_use_ebs=false
@@ -404,6 +406,11 @@ for arg in "$@" ; do
         ;;
       -openacc)
         track_openacc=true
+        save_arg $arg
+        shift
+        ;;
+      -rocm)
+        track_rocm=true
         save_arg $arg
         shift
         ;;
@@ -806,6 +813,10 @@ if [ $track_openacc = "true" ] ; then
   export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
   export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
 fi
+if [ $track_rocm = "true" ] ; then
+  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU.so
+  export HSA_TOOLS_LIB=librocprofiler64.so.1
+fi
 
 if [ $track_armci = "true" ] ; then
   # Add the ARMCI wrapper library to the LD_PRELOAD list
@@ -1035,7 +1046,18 @@ else
     ORIG_LD_PRELOAD=$LD_PRELOAD
     $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
+    #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
+    if [ $track_rocm = "true" ] ; then
+      if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then 
+          export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        fi
+      else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+      fi
+    fi
     $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
+  fi
   fi
   if [ $memory_debug = "true" ] ; then
     $dryrun export TAU_TRACK_MEMORY_LEAKS=1

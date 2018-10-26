@@ -233,6 +233,10 @@ using namespace std;
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
+#ifdef TAU_MPI
+extern "C" void Tau_set_usesMPI(int value);
+#endif /* TAU_MPI */
+
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
 extern "C" {
@@ -316,6 +320,8 @@ static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
 static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
 static const char *env_binaryexe = NULL;
 
+static int env_cudatotalthreads = 0;
+static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
 
@@ -1092,6 +1098,20 @@ const char* TauEnv_get_cuda_binary_exe(){
   return env_binaryexe;
 }
 
+void TauEnv_set_cudaTotalThreads(int nthreads) {
+    env_cudatotalthreads = nthreads;
+}
+int TauEnv_get_cudaTotalThreads() {
+    return env_cudatotalthreads;
+}
+
+void TauEnv_set_nodeNegOneSeen(int nthreads) {
+    env_nodenegoneseen = nthreads;
+}
+int TauEnv_get_nodeNegOneSeen() {
+    return env_nodenegoneseen;
+}
+
 int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
@@ -1830,6 +1850,18 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
+
+    tmp = getconf("TAU_SET_NODE");
+    if (tmp) {
+      int node_id = 0;
+      sscanf(tmp,"%d",&node_id);
+      TAU_VERBOSE("TAU: Setting node value forcibly to (TAU_SET_NODE): %d\n", node_id); 
+      TAU_PROFILE_SET_NODE(node_id);
+      Tau_set_usesMPI(1);
+      TAU_METADATA("TAU_SET_NODE", tmp);
+    }
+
+    
 #endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC || TAU_GPI */
 
     /* clock synchronization */

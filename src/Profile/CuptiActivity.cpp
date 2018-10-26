@@ -8,22 +8,23 @@ using namespace std;
 #include <dlfcn.h>
 
 static int subscribed = 0;
-static int currentContextId = -1;
+static unsigned int parent_tid = 0;
+static uint64_t timestamp;
 
 // From CuptiActivity.h
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
-int number_of_streams;
-std::vector<int> streamIds;
+int number_of_streams[TAU_MAX_THREADS] = {0};
+std::vector<int> streamIds[TAU_MAX_THREADS];
 
-std::vector<TauContextUserEvent *> counterEvents;
+std::vector<TauContextUserEvent *> counterEvents[TAU_MAX_THREADS];
 
 bool registered_sync = false;
-eventMap_t eventMap; 
+eventMap_t eventMap[TAU_MAX_THREADS]; 
 #if CUPTI_API_VERSION >= 3
 std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
-static std::map<uint32_t, SourceSampling> srcLocMap;
+static std::map<uint32_t, CUpti_ActivitySourceLocator> srcLocMap;
 #endif // CUPTI_API_VERSION >= 3
 
 device_map_t & __deviceMap()
@@ -31,26 +32,20 @@ device_map_t & __deviceMap()
   static device_map_t deviceMap;
   return deviceMap;
 }
-//std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
-std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
-std::map<uint32_t, CUpti_ActivityContext> contextMap;
-std::list<std::string> kernelList;
+std::map<uint32_t, CUpti_ActivityKernel> kernelMap[TAU_MAX_THREADS];
 
-static std::map<uint32_t, FuncSampling> functionMap;
-static std::map<uint32_t, std::list<InstrSampling> > instructionMap; // indexing by functionId 
+static std::map<uint32_t, CUpti_ActivityFunction> functionMap;
+static std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> > instructionMap; // indexing by functionId 
 static std::map<std::pair<int, int>, CudaOps> map_disassem;
 static std::map<std::string, ImixStats> map_imix_static;
-static std::map<std::string, ImixStats> map_imix_dynamic;
 
 // sass output
-FILE *fp_source[TAU_MAX_GPU_DEVICES];
-FILE *fp_instr[TAU_MAX_GPU_DEVICES];
-FILE *fp_func[TAU_MAX_GPU_DEVICES];
+FILE *fp_source[TAU_MAX_THREADS];
+FILE *fp_instr[TAU_MAX_THREADS];
+FILE *fp_func[TAU_MAX_THREADS];
 FILE *cubin;
 
 
-static int current_device_id = 0;
-static int current_context_id = 0;
 static int device_count_total = 1;
 static double recentTimestamp = 0;
 
@@ -60,21 +55,21 @@ static uint32_t buffers_queued = 0;
  * allocate/deallocate memory. So all the counters values need to be allocated
  * on the Stack. */
 
-uint64_t counters_at_last_launch[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {ULONG_MAX};
-uint64_t current_counters[TAU_MAX_GPU_DEVICES][TAU_MAX_COUNTERS] = {0};
+uint64_t counters_at_last_launch[TAU_MAX_THREADS][TAU_MAX_COUNTERS] = {ULONG_MAX};
+uint64_t current_counters[TAU_MAX_THREADS][TAU_MAX_COUNTERS] = {0};
 
-int kernels_encountered[TAU_MAX_GPU_DEVICES] = {0};
-int kernels_recorded[TAU_MAX_GPU_DEVICES] = {0};
+int kernels_encountered[TAU_MAX_THREADS] = {0};
+int kernels_recorded[TAU_MAX_THREADS] = {0};
 
-bool counters_averaged_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
-bool counters_bounded_warning_issued[TAU_MAX_GPU_DEVICES] = {false};
+bool counters_averaged_warning_issued[TAU_MAX_THREADS] = {false};
+bool counters_bounded_warning_issued[TAU_MAX_THREADS] = {false};
 const char *last_recorded_kernel_name;
 
-
-
-// #define TAU_DEBUG_CUPTI 1
-// #define TAU_DEBUG_CUPTI_SAMPLE
-// #define TAU_DEBUG_SASS_PROF 1
+//#define TAU_DEBUG_CUPTI 1
+//#define TAU_DEBUG_CUPTI_SASS 1
+//#define TAU_DEBUG_SASS_PROF 1
+//#define TAU_DEBUG_CUPTI_COUNTERS 1
+//#define TAU_CUPTI_DEBUG_COUNTERS 1
 
 /* BEGIN: unified memory */
 #define CUPTI_CALL(call)                                                    \
@@ -89,6 +84,13 @@ do {                                                                        \
     }                                                                       \
 } while (0)
 /* END: Unified Memory */
+
+// // CUDA Thread
+// map<uint32_t, CudaThread> & CudaThreadMap()
+// {
+//   static map<uint32_t, CudaThread> map_cudaThread;
+//   return map_cudaThread;
+// }
 
 /* BEGIN:  Dump cubin (sass) */
 // static std::map<std::string, ImixStats> map_imixStats;
@@ -186,7 +188,11 @@ CUresult cuInit(unsigned int a1)
 #ifdef TAU_DEBUG_CUPTI
     printf("in cuInit\n");
 #endif
-
+    if (parent_tid == 0) {
+      parent_tid = pthread_self();
+      // parent_tid = RtsLayer::getTid();
+      //printf("[CuptiActivity]:  Set parent_tid as: %u\n", parent_tid);
+    }
     typedef CUresult (*cuInit_p_h)(unsigned int);
     static void *libcuda_handle = (void *)dlopen("libcuda.so", RTLD_NOW);
     if (!libcuda_handle) {
@@ -277,13 +283,15 @@ void Tau_cupti_onload()
 	CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION)");
 	// err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE);
 	// CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");
-
   }
 #endif
  	/* END source line info */
-
-    	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
-    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
+    // 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
+    // CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
+    // 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_DRIVER);
+    // CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_DRIVER)");
+    // 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_RUNTIME);
+    // CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_RUNTIME)");
 if(!TauEnv_get_cuda_track_sass()) {
     	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY)");
@@ -292,13 +300,6 @@ if(!TauEnv_get_cuda_track_sass()) {
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_MEMCPY2)");
 #endif
-// #if CUDA_VERSION >= 5000
-//     	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
-//     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)");
-// #else
-// 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
-//     CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
-// #endif
 /*  SASS incompatible with KIND_CONCURRENT_KERNEL  */
 if(!TauEnv_get_cuda_track_sass()) {
 #if CUDA_VERSION >= 5000
@@ -313,6 +314,7 @@ if(!TauEnv_get_cuda_track_sass()) {
    err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
  }
+
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
   {
@@ -423,7 +425,7 @@ if(!TauEnv_get_cuda_track_sass()) {
 	}  
   CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
   
-  uint64_t timestamp;
+  //uint64_t timestamp;
   err = cuptiGetTimestamp(&timestamp);
   CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
   Tau_cupti_set_offset(TauTraceGetTimeStamp() - ((double)timestamp / 1e3));
@@ -447,6 +449,33 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 {
 #ifdef TAU_DEBUG_CUPTI
 	printf("in Tau_cupti_callback_dispatch\n");
+#endif
+#if defined(PTHREADS)
+	if (ud != NULL) {
+	  unsigned int cur_tid = pthread_self(); // needed for IBM P8
+	  const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
+	  unsigned int corrid = cbInfo->correlationId;
+	  if (cur_tid != parent_tid) {
+	    // Register GPU thread count here
+	    unsigned int systid = cur_tid;
+	    RtsLayer::LockEnv();
+	    if (map_cudaThread.find(corrid) == map_cudaThread.end()) {
+	      unsigned int parenttid = parent_tid;
+	      int tauvtid = Tau_get_thread();
+	      unsigned int contextid = cbInfo->contextUid;
+	      const char* funcname = cbInfo->functionName;
+	      register_cuda_thread(systid, parenttid, tauvtid, corrid, contextid, funcname);
+	    }
+	    // track unique threads seen
+	    if (set_gpuThread.find(cur_tid) == set_gpuThread.end()) {
+	      int threadid = Tau_get_thread() - TauEnv_get_nodeNegOneSeen();
+	      set_gpuThread.insert(cur_tid);
+	      TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
+	      map_cuptiThread[Tau_get_thread()] = threadid;
+	    }
+	    RtsLayer::UnLockEnv();
+	  }
+	}
 #endif
 	//Just in case we encounter a callback before TAU is intialized or finished.
   if (!Tau_init_check_initialized() || Tau_global_getLightsOut()) { 
@@ -495,8 +524,15 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 			err = cuptiActivityEnqueueBuffer(resource->context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in stream.\n");
-			streamIds.push_back(stream);
-			number_of_streams++;
+			int taskId = 0;
+#if defined(PTHREADS)
+			if (map_cudaThread.find(corrid) != map_cudaThread.end()) {
+			  int local_vtid = map_cudaThread[corrid].tau_vtid;
+			  taskId = map_cuptiThread[local_vtid];
+			}
+#endif
+			streamIds[taskId].push_back(stream);
+			number_of_streams[taskId]++;
 		}
 
 	}
@@ -509,8 +545,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		uint32_t stream;
 		CUptiResult err;
 		//Global Buffer
-    int device_count = get_device_count();
-    for (int i=0; i<device_count; i++) {
+#if defined(PTHREADS)
+    int count_iter = TauEnv_get_cudaTotalThreads();
+#else
+    int count_iter = get_device_count();
+#endif
+    for (int i=0; i<count_iter; i++) {
       record_gpu_counters_at_sync(i);
     }
 		Tau_cupti_register_sync_event(NULL, 0, NULL, 0, 0);
@@ -518,9 +558,16 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		err = cuptiGetStreamId(sync->context, sync->stream, &stream);
 		CUPTI_CHECK_ERROR(err, " cuptiGetStreamId");
 		Tau_cupti_register_sync_event(sync->context, stream, NULL, 0, 0);
-		for (int s=0; s<number_of_streams; s++)
+		int taskId = 0;
+#if defined(PTHREADS)
+		if (map_cudaThread.find(corrid) != map_cudaThread.end()) {
+		  int local_vtid = map_cudaThread[corrid].tau_vtid;
+		  taskId = map_cuptiThread[local_vtid];
+		}
+#endif
+		for (int s=0; s<number_of_streams[taskId]; s++)
 		{
-			Tau_cupti_register_sync_event(sync->context, streamIds.at(s), NULL, 0, 0);
+			Tau_cupti_register_sync_event(sync->context, streamIds[taskId].at(s), NULL, 0, 0);
 		}
 	}
 	else if (domain == CUPTI_CB_DOMAIN_DRIVER_API ||
@@ -544,9 +591,16 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			get_values_from_memcpy(cbInfo, id, domain, kind, count);
 			if (cbInfo->callbackSite == CUPTI_API_ENTER)
 			{
+			  int taskId = 0;  // gpu no?
+#if defined(PTHREADS)
+			  if (map_cudaThread.find(cbInfo->correlationId) != map_cudaThread.end()) {
+			    int local_vtid = map_cudaThread[cbInfo->correlationId].tau_vtid;
+			    taskId = map_cuptiThread[local_vtid];
+			  }
+#endif
 				Tau_cupti_enter_memcpy_event(
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
-					count, getMemcpyType(kind)
+					count, getMemcpyType(kind), taskId
 				);
 				Tau_cupti_register_host_calling_site(cbInfo->correlationId, cbInfo->functionName);
 				/*
@@ -564,9 +618,16 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 #ifdef TAU_DEBUG_CUPTI
 				cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
 #endif
+				int taskId = 0;
+#if defined(PTHREADS)
+				if (map_cudaThread.find(cbInfo->correlationId) != map_cudaThread.end()) {
+				  int local_vtid = map_cudaThread[cbInfo->correlationId].tau_vtid;
+				  taskId = map_cuptiThread[local_vtid];
+				}
+#endif
 				Tau_cupti_exit_memcpy_event(
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
-					count, getMemcpyType(kind)
+					count, getMemcpyType(kind), taskId
 				);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
@@ -587,8 +648,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					//cuCtxSynchronize();
 					cudaDeviceSynchronize();
 					//Tau_CuptiLayer_enable();
-          int device_count = get_device_count();
-          for (int i=0; i<device_count; i++) {
+#if defined(PTHREADS)
+	  int count_iter = TauEnv_get_cudaTotalThreads();
+#else
+          int count_iter = get_device_count();
+#endif
+          for (int i=0; i<count_iter; i++) {
             record_gpu_counters_at_sync(i);
           }
 
@@ -631,7 +696,14 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					CUdevice device;
 					cuCtxGetDevice(&device);
                                         Tau_cuda_Event_Synchonize();
-					record_gpu_counters_at_launch(device);
+					int taskId = 0;
+#if defined(PTHREADS)
+					if (map_cudaThread.find(cbInfo->correlationId) != map_cudaThread.end()) {
+					  int local_vtid = map_cudaThread[cbInfo->correlationId].tau_vtid;
+					  taskId = map_cuptiThread[local_vtid];
+					}
+#endif
+					record_gpu_counters_at_launch(taskId);
 				}
 #ifdef TAU_DEBUG_CUPTI
 				cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
@@ -668,8 +740,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					//cuCtxSynchronize();
 					cudaDeviceSynchronize();
 					//Tau_CuptiLayer_enable();
-          int device_count = get_device_count();
-          for (int i=0; i<device_count; i++) {
+#if defined(PTHREADS)
+	  int count_iter = TauEnv_get_cudaTotalThreads();
+#else
+          int count_iter = get_device_count();
+#endif
+          for (int i=0; i<count_iter; i++) {
             record_gpu_counters_at_sync(i);
           }
 
@@ -693,7 +769,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 }
 
 void CUPTIAPI Tau_cupti_activity_flush_all() {      
-    if(buffers_queued++ > ACTIVITY_ENTRY_LIMIT) {
+    if((Tau_CuptiLayer_get_num_events() > 0) || (buffers_queued++ > ACTIVITY_ENTRY_LIMIT)) {
         buffers_queued = 0;
         cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE);
     }
@@ -701,20 +777,23 @@ void CUPTIAPI Tau_cupti_activity_flush_all() {
 
 void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, uint8_t *activityBuffer, size_t size, size_t bufferSize)
 {
-  int device_count = get_device_count();
-  device_count_total = device_count;
-  if(TauEnv_get_cuda_track_sass()) {
-    if(TauEnv_get_cuda_csv_output()) {
-#ifdef TAU_DEBUG_CUPTI_SASS
-      printf("[CuptiActivity]:  About to call createFilePointerSass, device_count: %i\n", device_count);
-#endif
-      createFilePointerSass(device_count);
-    }
-  }
+//   if(TauEnv_get_cuda_track_sass()) {
+//     if(TauEnv_get_cuda_csv_output()) {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+//       printf("[CuptiActivity]:  About to call createFilePointerSass, device_count: %i\n", device_count);
+// #endif
+//       createFilePointerSass(device_count);
+//     }
+//   }
   //Since we do not control the synchronization points this is only place where
   //we can record the gpu counters.
 #ifdef TAU_ASYNC_ACTIVITY_API
-  for (int i=0; i<device_count; i++) {
+#if defined(PTHREADS)
+  int count_iter = TauEnv_get_cudaTotalThreads();
+#else
+  int count_iter = get_device_count();
+#endif
+  for (int i=0; i<count_iter; i++) {
     record_gpu_counters_at_sync(i);
   }
 #endif
@@ -726,10 +805,18 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 	//size_t bufferSize = 0;
   
   //start
-  if (device_count > TAU_MAX_GPU_DEVICES) {
+
+#if defined(PTHREADS)
+  if (count_iter > TAU_MAX_THREADS) {
+    printf("TAU ERROR: Maximum number of threads (%d) exceeded. Please reconfigure TAU with -useropt=-DTAU_MAX_THREADS=3200 or some higher number\n", TAU_MAX_THREADS);
+    exit(1);
+  }
+#else
+  if (count_iter > TAU_MAX_GPU_DEVICES) {
     printf("TAU ERROR: Maximum number of devices (%d) exceeded. Please reconfigure TAU with -useropt=-DTAU_MAX_GPU_DEVICES=32 or some higher number\n", TAU_MAX_GPU_DEVICES);
     exit(1);
   }
+#endif
 
 // for the ASYNC ACTIVITY API assume that the activityBuffer is vaild
 #ifdef TAU_ASYNC_ACTIVITY_API
@@ -790,7 +877,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
 		
 
-    for (int i=0; i < device_count; i++) {
+    for (int i=0; i < count_iter; i++) {
 #ifdef TAU_DEBUG_CUPTI_COUNTERS
       printf("Kernels encountered/recorded: %d/%d.\n", kernels_encountered[i], kernels_recorded[i]);
 #endif
@@ -805,6 +892,21 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
         //exit(1);
       }
     }
+//     for (int i=0; i < device_count; i++) {
+// #ifdef TAU_DEBUG_CUPTI_COUNTERS
+//       printf("Kernels encountered/recorded: %d/%d.\n", kernels_encountered[i], kernels_recorded[i]);
+// #endif
+
+//       if (kernels_recorded[i] == kernels_encountered[i])
+//       {
+//         clear_counters(i);
+//         last_recorded_kernel_name = NULL;
+//       } else if (kernels_recorded[i] > kernels_encountered[i]) {
+//         //printf("TAU: Recorded more kernels than were launched, exiting.\n");
+//         //abort();
+//         //exit(1);
+//       }
+//     }
   } else if (err != CUPTI_ERROR_QUEUE_EMPTY) {
 #ifdef TAU_DEBUG_CUPTI
 		printf("TAU: CUPTI Activity queue is empty.\n");
@@ -833,6 +935,18 @@ void CUPTIAPI Tau_cupti_register_buffer_creation(uint8_t **activityBuffer, size_
   *maxNumRecords = 0;
 }
 
+bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name) {
+  
+  CudaThread ct;
+  ct.sys_tid = sys_tid;
+  ct.parent_tid = parent_tid;
+  ct.tau_vtid = tau_vtid;
+  ct.correlation_id = corr_id;
+  ct.context_id = context_id;
+  ct.function_name = func_name;
+  map_cudaThread[corr_id] = ct;
+  return true;
+}
 
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
@@ -854,17 +968,43 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
   
   switch (record->kind) {
-  case CUPTI_ACTIVITY_KIND_CONTEXT:
-    {
-      CUpti_ActivityContext *context = (CUpti_ActivityContext *) record;
-      // printf("CONTEXT %u, device %u, compute API %s, NULL stream %d\n",
-      //        context->contextId, context->deviceId,
-      //        getComputeApiKindString((CUpti_ActivityComputeApiKind) context->computeApiKind),
-      //        (int) context->nullStreamId);
-      contextMap[context->contextId] = *context;
-      currentContextId = context->contextId;
-      break;
-    }
+  // case CUPTI_ACTIVITY_KIND_DRIVER:
+  //   {
+  //     CUpti_ActivityAPI *api = (CUpti_ActivityAPI *) record;
+  //     printf("DRIVER cbid=%u [ %llu - %llu ] process %u, thread %u, correlation %u\n",
+  //            api->cbid,
+  // 	     (unsigned long long) (api->start - timestamp),
+  // 	     (unsigned long long) (api->end - timestamp),
+  // 	     api->processId, api->threadId, api->correlationId);
+  //     break;
+  //   }
+  // case CUPTI_ACTIVITY_KIND_RUNTIME:
+  //   {
+  //     CUpti_ActivityAPI *api = (CUpti_ActivityAPI *) record;
+  //     printf("RUNTIME cbid=%u [ %llu - %llu ] process %u, thread %u, correlation %u\n",
+  //            api->cbid,
+  // 	     (unsigned long long) (api->start - timestamp),
+  // 	     (unsigned long long) (api->end - timestamp),
+  // 	     api->processId, api->threadId, api->correlationId);
+  //     if (map_cudaThread.find(api->correlationId) != map_cudaThread.end()) {
+  // 	printf("  map_cudaThread[%u]: %i\n", 
+  // 	       api->correlationId, map_cudaThread[api->correlationId].tau_vtid);
+  //     }
+  //     else {
+  // 	printf("  map_cudaThread[%u] does not exist\n", api->correlationId);
+  //     }
+  //     break;
+  //   }
+  // case CUPTI_ACTIVITY_KIND_CONTEXT:
+  //   {
+  //     CUpti_ActivityContext *context = (CUpti_ActivityContext *) record;
+  //     // printf("CONTEXT %u, device %u, compute API %s, NULL stream %d\n",
+  //     //        context->contextId, context->deviceId,
+  //     //        getComputeApiKindString((CUpti_ActivityComputeApiKind) context->computeApiKind),
+  //     //        (int) context->nullStreamId);
+  //     contextMap[context->contextId] = *context;
+  //     break;
+  //   }
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 #if CUDA_VERSION >= 5050
 	  case CUPTI_ACTIVITY_KIND_MEMCPY2:
@@ -896,6 +1036,14 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
 		cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
 #endif
+	// get Correlationid
+	int taskId = 0;
+#if defined(PTHREADS)
+	if (map_cudaThread.find(id) != map_cudaThread.end()) {
+	  int local_vtid = map_cudaThread[id].tau_vtid;
+	  taskId = map_cuptiThread[local_vtid];
+	}
+#endif
         Tau_cupti_register_memcpy_event(
           TAU_GPU_USE_DEFAULT_NAME,
           memcpy->srcDeviceId,
@@ -906,7 +1054,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
           end / 1e3,
           bytes,
           getMemcpyType(copyKind),
-          MESSAGE_RECIPROCAL_SEND
+          MESSAGE_RECIPROCAL_SEND, taskId
         );
         Tau_cupti_register_memcpy_event(
           TAU_GPU_USE_DEFAULT_NAME,
@@ -918,7 +1066,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
           end / 1e3,
           bytes,
           getMemcpyType(copyKind),
-          MESSAGE_RECIPROCAL_RECV
+          MESSAGE_RECIPROCAL_RECV, taskId
         );
 } else {
 #endif
@@ -952,6 +1100,13 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			//the CPU what type of copy we have so we need to register 
 			//the bytes copied here. Be careful we only want to record 
 			//the bytes copied once.
+		    int taskId = 0;
+#if defined(PTHREADS)
+		    if (map_cudaThread.find(id) != map_cudaThread.end()) {
+		      int local_vtid = map_cudaThread[id].tau_vtid;
+		      taskId = map_cuptiThread[local_vtid];
+		    }
+#endif
 			Tau_cupti_register_memcpy_event(
 				TAU_GPU_USE_DEFAULT_NAME,
 				deviceId,
@@ -962,7 +1117,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				end / 1e3,
 				bytes,
 				getMemcpyType(copyKind),
-        direction
+				direction, taskId
 			);
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->contextId, id, NULL, 0);
@@ -1040,6 +1195,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       //the CPU what type of copy we have so we need to register 
       //the bytes copied here. Be careful we only want to record 
       //the bytes copied once.
+      int taskId = 1; // need to get correlation id from CUpti_ActivityStream
       Tau_cupti_register_unifmem_event(
 				       TAU_GPU_USE_DEFAULT_NAME,
 				       deviceId,
@@ -1049,7 +1205,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				       end,
 				       value,
 				       getUnifmemType(counterKind),
-				       direction
+				       direction,
+				       taskId
 				       );
       
       break;
@@ -1134,7 +1291,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         localMemoryPerThread = kernel->localMemoryPerThread;
         registersPerThread = kernel->registersPerThread;
         //find FunctionInfo object from FunctionInfoMap
-        kernelMap[kernel->correlationId] = *kernel;
+        // kernelMap[kernel->correlationId] = *kernel;
+	int taskId = 0;
+#if defined(PTHREADS)
+	if (map_cudaThread.find(kernel->correlationId) != map_cudaThread.end()) {
+	  int local_vtid = map_cudaThread[kernel->correlationId].tau_vtid;
+	  taskId = map_cuptiThread[local_vtid];
+	}
+#endif
+        kernelMap[taskId][kernel->correlationId] = *kernel;
 #if CUDA_VERSION >= 5050
       }
 #endif
@@ -1145,34 +1310,69 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       }*/
 	  // cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
 #endif
-      
-      eventMap.erase(eventMap.begin(), eventMap.end());
+      uint32_t id;
+      if (cupti_api_runtime())
+      {
+	id = runtimeCorrelationId;
+      }
+      else
+      {
+	id = correlationId;
+      }
+      int taskId = 0;
+#if defined(PTHREADS)
+      if (map_cudaThread.find(id) != map_cudaThread.end()) {
+	int local_vtid = map_cudaThread[id].tau_vtid;
+	taskId = map_cuptiThread[local_vtid];
+      }
+#endif
+      // At this point store source locator and function maps accumulated, then clear maps
+      for (std::map<uint32_t, CUpti_ActivitySourceLocator>::iterator it = sourceLocatorMap.begin();
+	   it != sourceLocatorMap.end();
+	   it++) {
+	uint32_t srclocid = it->first;
+	CUpti_ActivitySourceLocator source = it->second;
+	cout << "[CuptiActivity] testing iter for source locator (id): " << source.id << ", " << source.fileName << ", " << source.lineNumber << ".\n" << endl;
+      }
+      eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
       const char* name_og = name;
       name = demangleName(name);
 
-			uint32_t id;
-			if (cupti_api_runtime())
-			{
-				id = runtimeCorrelationId;
-			}
-			else
-			{
-				id = correlationId;
-			}
       int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
       double metrics_start[number_of_metrics];
       double metrics_end[number_of_metrics];
 #if CUDA_VERSION >= 5050
       if (record->kind != CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
-        record_gpu_counters(deviceId, name, id, &eventMap);
+	int taskId = 0;
+#if defined(PTHREADS)
+	if (map_cudaThread.find(id) != map_cudaThread.end()) {
+	  int local_vtid = map_cudaThread[id].tau_vtid;
+	  taskId = map_cuptiThread[local_vtid];
+	}
+#endif
+	record_gpu_counters(taskId, name, id, &eventMap[taskId]);
       }
 #else
-      record_gpu_counters(deviceId, name, id, &eventMap);
+      int taskId = 0;
+#if defined(PTHREADS)
+      if (map_cudaThread.find(id) != map_cudaThread.end()) {
+	int local_vtid = map_cudaThread[id].tau_vtid;
+	taskId = map_cuptiThread[local_vtid];
+      }
+#endif
+      record_gpu_counters(taskId, name, id, &eventMap[taskId]);
 #endif
       if (TauEnv_get_cuda_track_sass()) {
 	if (!functionMap.empty() && !instructionMap.empty()) {
-	  TAU_VERBOSE("About to record imix counters\n");
-	  record_imix_counters(name, deviceId, streamId, contextId, id, end);
+	  // TODO:  Add source and function to maps here?
+	  printf("[CuptiActivity]:  sass detected, taskId %i\n", taskId);
+
+	  // TAU_VERBOSE("About to record imix counters\n");
+	  // record_imix_counters(name, taskId, streamId, contextId, id, end);
+	  // // if csv, dump here
+	  // if(TauEnv_get_cuda_csv_output()){
+	  //   dump_sass_to_csv();
+	  // }	  
 	}
 	else {
 	  TAU_VERBOSE("Instruction execution data not available\n");
@@ -1180,6 +1380,13 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       }
 			if (gpu_occupancy_available(deviceId))
 			{
+			  int taskId = 0;
+#if defined(PTHREADS)
+			  if (map_cudaThread.find(id) != map_cudaThread.end()) {
+			    int local_vtid = map_cudaThread[id].tau_vtid;
+			    taskId = map_cuptiThread[local_vtid];
+			  }
+#endif
         record_gpu_occupancy(blockX, 
                             blockY,
                             blockZ,
@@ -1187,8 +1394,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
                             staticSharedMemory,
                             deviceId,
                             name, 
-                            &eventMap);
-
+                            &eventMap[taskId]);
         static TauContextUserEvent* bs;
         static TauContextUserEvent* dm;
         static TauContextUserEvent* sm;
@@ -1200,19 +1406,25 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
         Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
 
-        eventMap[bs] = blockX * blockY * blockZ;
-        eventMap[dm] = dynamicSharedMemory;
-        eventMap[sm] = staticSharedMemory;
-        eventMap[lm] = localMemoryPerThread;
-        eventMap[lr] = registersPerThread;
+        eventMap[taskId][bs] = blockX * blockY * blockZ;
+        eventMap[taskId][dm] = dynamicSharedMemory;
+        eventMap[taskId][sm] = staticSharedMemory;
+        eventMap[taskId][lm] = localMemoryPerThread;
+        eventMap[taskId][lr] = registersPerThread;
 			}
       
       GpuEventAttributes *map;
-			int map_size = eventMap.size();
+			int map_size = eventMap[taskId].size();
 			map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
       int i = 0;
-      for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
+      for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++)
       {
+        /*if(it->first == NULL) {
+            std::cerr << "Event was null!" << std::endl;
+        } else {
+            std::cerr << "Event was not null: " << it->first << std::endl;
+        }*/
+        //std::cerr << "event name: " << it->first->GetUserEventName() << std::endl;
         map[i].userEvent = it->first;
         map[i].data = it->second;
         i++;
@@ -1221,15 +1433,30 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUDA_VERSION >= 5050
       if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
         if (TauEnv_get_cuda_track_cdp()) {
-          Tau_cupti_register_gpu_event(name, deviceId,
-            streamId, contextId, id, parentGridId, true, map, map_size,
-            start / 1e3, end / 1e3);
+	  int taskId = 0;
+#if defined(PTHREADS)
+	  if (map_cudaThread.find(id) != map_cudaThread.end()) {
+	    int local_vtid = map_cudaThread[id].tau_vtid;
+	    taskId = map_cuptiThread[local_vtid];
+	  }
+#endif
+	Tau_cupti_register_gpu_event(name, deviceId,
+				       streamId, contextId, id, parentGridId, 
+				       true, map, map_size,
+				     start / 1e3, end / 1e3, taskId);
         }
       } else {
 #endif
+	int taskId = 0;
+#if defined(PTHREADS)
+	if (map_cudaThread.find(id) != map_cudaThread.end()) {
+	  int local_vtid = map_cudaThread[id].tau_vtid;
+	  taskId = map_cuptiThread[local_vtid];
+	}
+#endif
         Tau_cupti_register_gpu_event(name, deviceId,
-          streamId, contextId, id, 0, false, map, map_size,
-          start / 1e3, end / 1e3);
+				     streamId, contextId, id, 0, false, map, map_size,
+				     start / 1e3, end / 1e3, taskId);
 #if CUDA_VERSION >= 5050
       }
 #endif
@@ -1291,21 +1518,16 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUPTI_API_VERSION >= 3
     case CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR:
     {
-			CUpti_ActivitySourceLocator *source = (CUpti_ActivitySourceLocator *)record;
-			sourceLocatorMap[source->id] = *source;
-			double tstamp;
-			uint32_t sourceId;
-			const char *fileName;
-			uint32_t lineNumber;
+      CUpti_ActivitySourceLocator *source = (CUpti_ActivitySourceLocator *)record;
+      sourceLocatorMap[source->id] = *source;
+      // double tstamp;
+      // uint32_t sourceId;
+      // const char *fileName;
+      // uint32_t lineNumber;
 #ifdef TAU_DEBUG_CUPTI
-			cerr << "source locator (id): " << source->id << ", " << source->fileName << ", " << source->lineNumber << ".\n" << endl;
+      cerr << "source locator (id): " << source->id << ", " << source->fileName << ", " << source->lineNumber << ".\n" << endl;
 #endif
-			SourceSampling ss1;
-			ss1.sid = source->id;
-			ss1.fileName = source->fileName;
-			ss1.lineNumber = source->lineNumber;
-			ss1.timestamp = d_currentTimestamp;
-			srcLocMap[ss1.sid] = ss1;
+      srcLocMap[source->id] = *source;
 
 #if CUDA_VERSION >= 5500
       if(TauEnv_get_cuda_track_sass()) {
@@ -1314,18 +1536,17 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  printf("SOURCE_LOCATOR SrcLctrId: %d, File: %s, Line: %d, Kind: %u\n", 
 	  	 source->id, source->fileName, source->lineNumber, source->kind);
 #endif
-    if(TauEnv_get_cuda_csv_output()){
-      // TAU stores time in microsec (1.0e-6), nanosec->microsec 1->0.001 ns/1000
-      // Source Locator same for all GPUs
-      if(fp_source != NULL) {
-      fprintf(fp_source[0], "%f,%d,%s,%d,%u\n",
-	      d_currentTimestamp,source->id, source->fileName, source->lineNumber, source->kind);
-      }
-      else{
-	printf("fp_source[0] is NULL\n");
-      }
+    // if(TauEnv_get_cuda_csv_output()){
+    //   // TAU stores time in microsec (1.0e-6), nanosec->microsec 1->0.001 ns/1000
+    //   // Source Locator same for all GPUs
+    //   int taskId = CudaThreadMap()[cbInfo->correlationId].tau_vtid;
+    //   // create file pointer here
+    //   FILE* fp_sour = createFileSourceSass(taskId - 1); // want 0,...,N-1, not 1,...,N!
+      
+    //   fprintf(fp_sour, "%f,%d,%s,%d,%u\n",
+    // 	      d_currentTimestamp,source->id, source->fileName, source->lineNumber, source->kind);
 
-    }
+    // }
       // char name[] = "SOURCE_LOCATOR";
       // Tau_cupti_register_source_event(name, 0, 0, 0, sourceId, d_currentTimestamp, fileName, lineNumber);
 
@@ -1337,52 +1558,50 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUDA_VERSION >= 5500
 	case CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION: {
     if(TauEnv_get_cuda_track_sass()) {
-	  CUpti_ActivityInstructionExecution *sourceRecord = (CUpti_ActivityInstructionExecution *)record;
+	  CUpti_ActivityInstructionExecution *instrRecord = (CUpti_ActivityInstructionExecution *)record;
 
-	  uint32_t correlationId;
-	  uint32_t executed;
-	  uint32_t functionId;
-	  uint32_t pcOffset;
-	  uint32_t sourceLocatorId;
-	  uint32_t threadsExecuted;
-	  CUpti_ActivityContext cResult = contextMap.find(current_context_id)->second;
+	  // uint32_t correlationId;
+	  // uint32_t executed;
+	  // uint32_t functionId;
+	  // uint32_t pcOffset;
+	  // uint32_t sourceLocatorId;
+	  // uint32_t threadsExecuted;
+	  // CUpti_ActivityContext cResult = contextMap.find(current_context_id)->second;
 	  
 #ifdef TAU_DEBUG_CUPTI_SASS
 
 	  printf("INSTRUCTION_EXECUTION corr: %u, executed: %u, flags: %u, functionId: %u, kind: %u, notPredOffThreadsExecuted: %u, pcOffset: %u, sourceLocatorId: %u, threadsExecuted: %u\n",
-	  	 sourceRecord->correlationId, sourceRecord->executed, 
-	  	 sourceRecord->flags, sourceRecord->functionId, 
-	  	 sourceRecord->kind, sourceRecord->notPredOffThreadsExecuted,
-	  	 sourceRecord->pcOffset, sourceRecord->sourceLocatorId, 
-	  	 sourceRecord->threadsExecuted);
+	  	 instrRecord->correlationId, instrRecord->executed, 
+	  	 instrRecord->flags, instrRecord->functionId, 
+	  	 instrRecord->kind, instrRecord->notPredOffThreadsExecuted,
+	  	 instrRecord->pcOffset, instrRecord->sourceLocatorId, 
+	  	 instrRecord->threadsExecuted);
 #endif
-  if(TauEnv_get_cuda_csv_output()){
-	  if(fp_instr != NULL) {
-    fprintf(fp_instr[current_device_id], "%f,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
-	    d_currentTimestamp,
-	    sourceRecord->correlationId, sourceRecord->executed, 
-	    sourceRecord->flags, sourceRecord->functionId, 
-	    sourceRecord->kind, sourceRecord->notPredOffThreadsExecuted,
-	    sourceRecord->pcOffset, sourceRecord->sourceLocatorId, 
-	    sourceRecord->threadsExecuted);
-	  }
-	  else {
-	    printf("fp_instr[%i] is null\n", current_device_id);
-	  }
-  }
+  // if(TauEnv_get_cuda_csv_output()){
+  //   int taskId = CudaThreadMap()[sourceRecord->correlationId].tau_vtid;
+  //   // create file pointer here
+  //   FILE* fp_inst = createFileInstrSass(taskId - 1); // want 0,...,N-1, not 1,...,N!
+  //   fprintf(fp_inst, "%f,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
+  // 	    d_currentTimestamp,
+  // 	    sourceRecord->correlationId, sourceRecord->executed, 
+  // 	    sourceRecord->flags, sourceRecord->functionId, 
+  // 	    sourceRecord->kind, sourceRecord->notPredOffThreadsExecuted,
+  // 	    sourceRecord->pcOffset, sourceRecord->sourceLocatorId, 
+  // 	    sourceRecord->threadsExecuted);
+  // }
+  // InstrSampling is;
+  // is.correlationId = sourceRecord->correlationId;
+  // is.executed = sourceRecord->executed;
+  // is.functionId = sourceRecord->functionId;
+  // is.pcOffset = sourceRecord->pcOffset;
+  // is.sourceLocatorId = sourceRecord->sourceLocatorId;
+  // is.threadsExecuted = sourceRecord->threadsExecuted;
+  // is.timestamp_delta = d_currentTimestamp-recentTimestamp;
+  // is.timestamp_current = d_currentTimestamp;
+  // instructionMap[is.functionId].push_back(is);
+	  instructionMap[instrRecord->functionId].push_back(*instrRecord);
+	  // TODO:  store sourceid -> correlationId pair
 
-	  // char name[] = "INSTRUCTION";
-  InstrSampling is;
-  is.correlationId = sourceRecord->correlationId;
-  is.executed = sourceRecord->executed;
-  is.functionId = sourceRecord->functionId;
-  is.pcOffset = sourceRecord->pcOffset;
-  is.sourceLocatorId = sourceRecord->sourceLocatorId;
-  is.threadsExecuted = sourceRecord->threadsExecuted;
-  is.timestamp_delta = d_currentTimestamp-recentTimestamp;
-  is.timestamp_current = d_currentTimestamp;
-  instructionMap[is.functionId].push_back(is);
-	  
 	  // // printf("d_currentTImestamp: %f, recentTimestamp: %f, tstamp_delta: %f\n", 
 	  // // 	 d_currentTimestamp, recentTimestamp, tstamp_delta);
 	  // Tau_cupti_register_instruction_event(name,cResult.deviceId,
@@ -1393,74 +1612,71 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  // 				       pcOffset,executed,
 	  // 				       threadsExecuted);
     }
-	  break;
-    }
+    break;
+	}
 #endif
 #if CUDA_VERSION >= 5500
 	case CUPTI_ACTIVITY_KIND_FUNCTION: {
 	  if(TauEnv_get_cuda_track_sass()) {
-	  CUpti_ActivityFunction *fResult = (CUpti_ActivityFunction *)record;
-
-	  uint32_t contextId;
-	  uint32_t functionIndex;
-	  uint32_t id;
-	  uint32_t moduleId;
-	  const char *kname;
-
+	    CUpti_ActivityFunction *fResult = (CUpti_ActivityFunction *)record;
+	    
+	    // uint32_t contextId;
+	    // uint32_t functionIndex;
+	    // uint32_t id;
+	    // uint32_t moduleId;
+	    // const char *kname;
+	    
 #ifdef TAU_DEBUG_CUPTI_SASS
-	  printf("FUCTION contextId: %u, functionIndex: %u, id %u, kind: %u, moduleId %u, name %s, device: %i\n",
-	  	 fResult->contextId,
-	  	 fResult->functionIndex,
-	  	 fResult->id,
-	  	 fResult->kind,
-	  	 fResult->moduleId,
-	  	 fResult->name);
+	    printf("FUCTION contextId: %u, functionIndex: %u, id %u, kind: %u, moduleId %u, name %s, device: %i\n",
+		   fResult->contextId,
+		   fResult->functionIndex,
+		   fResult->id,
+		   fResult->kind,
+		   fResult->moduleId,
+		   fResult->name);
 #endif
-	  char str_demangled[100];
-	  strcpy (str_demangled, demangleName(fResult->name));
-	  CUpti_ActivityContext cResult = contextMap.find(fResult->contextId)->second;
-#ifdef TAU_DEBUG_CUPTI_SASS
-	  printf("context->contextId: %u, device: %u\n", cResult.contextId, cResult.deviceId);
-#endif
-	  current_device_id = cResult.deviceId;
-	  current_context_id = cResult.contextId;
-
-	  FuncSampling fs;
-	  fs.fid = fResult->id;
-	  fs.contextId = fResult->contextId;
-	  fs.functionIndex = fResult->functionIndex;
-	  fs.moduleId = fResult->moduleId;
-	  fs.name = fResult->name;
-	  fs.demangled = str_demangled;
-	  fs.timestamp = d_currentTimestamp;
-	  fs.deviceId = cResult.deviceId;
-
-	  functionMap[fs.fid] = fs;
-
-	  if(TauEnv_get_cuda_csv_output()){
-	    if(fp_func != NULL) {
-#ifdef TAU_DEBUG_CUPTI_SASS
-	      printf("[CuptiActivity]:  About to write out to csv:\n  %f, %u, %u, %u, %u, %u, %s, %s\n",
-		     d_currentTimestamp, fResult->contextId,
-		     fResult->functionIndex,
-		     fResult->id,
-		     fResult->kind,
-		     fResult->moduleId,
-		     fResult->name, demangleName(fResult->name));
-#endif
-	    fprintf(fp_func[current_device_id], "%f;%u;%u;%u;%u;%u;%s;%s\n",
-		    d_currentTimestamp,
-		    fResult->contextId,
-		    fResult->functionIndex,
-		    fResult->id,
-		    fResult->kind,
-		    fResult->moduleId,
-		    fResult->name, demangleName(fResult->name));
-	  }
-	    else {
-	      printf("fp_func[%i] is NULL\n", current_device_id);
-	    }
-	  }
+	    // char str_demangled[100];
+	    // strcpy (str_demangled, demangleName(fResult->name));
+// 	    CUpti_ActivityContext cResult = contextMap.find(fResult->contextId)->second;
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	    printf("context->contextId: %u, device: %u\n", cResult.contextId, cResult.deviceId);
+// #endif
+// 	    // current_device_id = cResult.deviceId;
+// 	    current_context_id = cResult.contextId;
+	    
+	    // FuncSampling fs;
+	    // fs.fid = fResult->id;
+	    // fs.contextId = fResult->contextId;
+	    // fs.functionIndex = fResult->functionIndex;
+	    // fs.moduleId = fResult->moduleId;
+	    // fs.name = fResult->name;
+	    // fs.demangled = str_demangled;
+	    // fs.timestamp = d_currentTimestamp;
+	    // fs.deviceId = cResult.deviceId;
+	    
+	    // functionMap[fs.fid] = fs;
+	    functionMap[fResult->id] = *fResult;
+// 	    if(TauEnv_get_cuda_csv_output()){
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	      printf("[CuptiActivity]:  About to write out to csv:\n  %f, %u, %u, %u, %u, %u, %s, %s\n",
+// 		     d_currentTimestamp, fResult->contextId,
+// 		     fResult->functionIndex,
+// 		     fResult->id,
+// 		     fResult->kind,
+// 		     fResult->moduleId,
+// 		     fResult->name, demangleName(fResult->name));
+// #endif
+// 	      int taskId = CudaThreadMap()[cbInfo->correlationId].tau_vtid;
+// 	      FILE* fp_funct = createFileFuncSass(taskId-1);
+// 	      fprintf(fp_funct, "%f;%u;%u;%u;%u;%u;%s;%s\n",
+// 		      d_currentTimestamp,
+// 		      fResult->contextId,
+// 		      fResult->functionIndex,
+// 		      fResult->id,
+// 		      fResult->kind,
+// 		      fResult->moduleId,
+// 		      fResult->name, demangleName(fResult->name));
+// 	    }
 	  // char name[] = "FUNCTION_ACTIVITY";
 	  // char str_demangled[100];
 	  // strcpy (str_demangled, demangleName(fResult->name));
@@ -1486,24 +1702,37 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #ifdef TAU_DEBUG_CUPTI
 			cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
 #endif
-      //globalAccessMap[global_access->correlationId] = *global_access;
-     
-      CUpti_ActivityKernel *kernel = &kernelMap[global_access->correlationId];
+      // CUpti_ActivityKernel *kernel = &kernelMap[global_access->correlationId];
+      int taskId = 0;
+#if defined(PTHREADS)
+      if (map_cudaThread.find(global_access->correlationId) != map_cudaThread.end()) {
+	int local_vtid = map_cudaThread[global_access->correlationId].tau_vtid;
+	taskId = map_cuptiThread[local_vtid];
+      }
+#endif
+      CUpti_ActivityKernel *kernel = &kernelMap[taskId][global_access->correlationId];
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[global_access->sourceLocatorId];
 
       if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
       {
-        eventMap.erase(eventMap.begin(), eventMap.end());
+	int taskId = 0;
+#if defined(PTHREADS)
+	if (map_cudaThread.find(global_access->correlationId) != map_cudaThread.end()) {
+	  int local_vtid = map_cudaThread[global_access->correlationId].tau_vtid;
+	  taskId = map_cuptiThread[local_vtid];
+	}
+#endif
+        eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
 
         std::string name;
         form_context_event_name(kernel, source, "Accesses to Global Memory", &name);
         TauContextUserEvent* ga;
         Tau_cupti_find_context_event(&ga, name.c_str(), false);
-        eventMap[ga] = global_access->executed;
-        int map_size = eventMap.size();
+        eventMap[taskId][ga] = global_access->executed;
+        int map_size = eventMap[taskId].size();
         GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
         int i = 0;
-        for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
+        for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++)
         {
           map[i].userEvent = it->first;
           map[i].data = it->second;
@@ -1523,7 +1752,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
           id = kernel->correlationId;
         }
         Tau_cupti_register_gpu_atomic_event(demangleName(kernel->name), kernel->deviceId,
-          kernel->streamId, kernel->contextId, id, map, map_size);
+					    kernel->streamId, kernel->contextId, id, map, map_size, taskId);
       }
     }
     case CUPTI_ACTIVITY_KIND_BRANCH:
@@ -1533,29 +1762,44 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
 #endif
      
-      CUpti_ActivityKernel *kernel = &kernelMap[branch->correlationId];
+      // CUpti_ActivityKernel *kernel = &kernelMap[branch->correlationId];
+      int taskId = 0;
+#if defined(PTHREADS)
+      if (map_cudaThread.find(branch->correlationId) != map_cudaThread.end()) {
+	int local_vtid = map_cudaThread[branch->correlationId].tau_vtid;
+	taskId = map_cuptiThread[local_vtid];
+      }
+#endif
+      CUpti_ActivityKernel *kernel = &kernelMap[taskId][branch->correlationId];
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[branch->sourceLocatorId];
 
       if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
       {
-        eventMap.erase(eventMap.begin(), eventMap.end());
+	int taskId = 0;
+#if defined(PTHREADS)
+	if (map_cudaThread.find(branch->correlationId) != map_cudaThread.end()) {
+	  int local_vtid = map_cudaThread[branch->correlationId].tau_vtid;
+	  taskId = map_cuptiThread[local_vtid];
+	}
+#endif
+        eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
         
         std::string name;
         form_context_event_name(kernel, source, "Branches Executed", &name);
         TauContextUserEvent* be;
         Tau_cupti_find_context_event(&be, name.c_str(), false);
-        eventMap[be] = branch->executed;
+        eventMap[taskId][be] = branch->executed;
         
         form_context_event_name(kernel, source, "Branches Diverged", &name);
         TauContextUserEvent* de;
         Tau_cupti_find_context_event(&de, name.c_str(), false);
-        eventMap[de] = branch->diverged;
+        eventMap[taskId][de] = branch->diverged;
 
         GpuEventAttributes *map;
-        int map_size = eventMap.size();
+        int map_size = eventMap[taskId].size();
         map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
         int i = 0;
-        for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
+        for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++)
         {
           map[i].userEvent = it->first;
           map[i].data = it->second;
@@ -1571,7 +1815,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
           id = kernel->correlationId;
         }
         Tau_cupti_register_gpu_atomic_event(demangleName(kernel->name), kernel->deviceId,
-          kernel->streamId, kernel->contextId, id, map, map_size);
+					    kernel->streamId, kernel->contextId, id, map, map_size, taskId);
       }
     }
 #endif //CUPTI_API_VERSION >= 3
@@ -1612,18 +1856,105 @@ int gpu_source_locations_available()
   return 1;
 }
 
+// void dump_sass_to_csv(int task_id) {
+//   // instr
+  
+// //   // create file pointer here
+// //   fopen(fp_instr = createFileInstrSass(task_id - 1); // want 0,...,N-1, not 1,...,N!
+	
+// //   char str_int[5];
+// //   sprintf (str_int, "%d", (task_id + 1));
+// //   if ( fp_instr[task_id] == NULL ) {
+// // #ifdef TAU_DEBUG_CUPTI_SASS
+// //     printf("About to create file pointer for instr csv: %i\n", task_id);
+// // #endif
+// //     char str_instr[500];
+// //     strcpy (str_instr, TauEnv_get_profiledir());
+// //     strcat (str_instr,"/");
+// //     strcat (str_instr,"sass_instr_");
+// //     strcat (str_instr, str_int);
+// //     strcat (str_instr, ".csv");
+      
+// //     fp_instr[task_id] = fopen(str_instr, "w");
+// //     fprintf(fp_instr[task_id], "timestamp,correlationId,executed,flags,functionId,kind,\
+// // notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
+// //     if (fp_instr[task_id] == NULL) {
+// // #ifdef TAU_DEBUG_CUPTI_SASS
+// //       printf("fp_instr[%i] failed\n", task_id);
+// // #endif
+// //     }
+// //     else {
+// // #ifdef TAU_DEBUG_CUPTI_SASS
+// //       printf("fp_instr[%i] created successfully\n", task_id);
+// // #endif
+// //     }
+// //   }
+// //   else {
+// // #ifdef TAU_DEBUG_CUPTI_SASS
+// //     printf("fp_instr[%i] already exists!\n", task_id);
+// // #endif
+// //   }
+
+//   FILE* fp_inst = createFileInstrSass(task_id);
+//   for (std::map<uint32_t, InstrSampling>::iterator iter = instructionMap.begin(); 
+//        iter != instructionMap.end(); 
+//        iter++) {
+//     InstrSampling is = iter->second;
+//     // iterate map, clear
+//     fprintf(fp_inst, "%f,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
+// 	    is.timestamp_current,
+// 	    is.correlationId, is.executed, 
+// 	    sourceRecord->flags, is.functionId, 
+// 	    sourceRecord->kind, sourceRecord->notPredOffThreadsExecuted,
+// 	    is.pcOffset, is.sourceLocatorId, 
+// 	    is.threadsExecuted);
+//   }
+//   fclose(fp_inst);
+//   // source
+  
+//   // TAU stores time in microsec (1.0e-6), nanosec->microsec 1->0.001 ns/1000
+//   // create file pointer here
+//   FILE* fp_sour = createFileSourceSass(task_id - 1); // want 0,...,N-1, not 1,...,N!
+  
+//   fprintf(fp_sour, "%f,%d,%s,%d,%u\n",
+// 	  d_currentTimestamp,source->id, source->fileName, source->lineNumber, source->kind);
+  
+  
+//   // func
+//   FILE* fp_funct = createFileFuncSass(task_id - 1);
+//   for (std::map<uint32_t, FuncSampling>::iterator iter = functionMap.begin(); iter != functionMap.end(); iter++) {
+//     fprintf(fp_funct, "%f;%u;%u;%u;%u;%u;%s;%s\n",
+// 	    d_currentTimestamp,
+// 	    fResult->contextId,
+// 	    fResult->functionIndex,
+// 	    fResult->id,
+// 	    fResult->kind,
+// 	    fResult->moduleId,
+// 	    fResult->name, demangleName(fResult->name));
+//   }  
+//   // Each time imix counters recorded, erase instructionMap.
+//   std::map<uint32_t, std::list<InstrSampling> >::iterator it_temp = instructionMap.find(fid);
+//   instructionMap.erase(it_temp);
+  
+// }
 
 void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc)
  {
-
-   eventMap[tc] = vec;
+   int taskId = 0;
+#if defined(PTHREADS)
+   if (map_cudaThread.find(id) != map_cudaThread.end()) {
+     int local_vtid = map_cudaThread[id].tau_vtid;
+     taskId = map_cuptiThread[local_vtid];
+   }
+#endif
+   eventMap[taskId][tc] = vec;
    
    GpuEventAttributes *map;
-   int map_size = eventMap.size();
+   int map_size = eventMap[taskId].size();
    map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
    int i = 0;
    
-   for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++) {
+   for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++) {
      map[i].userEvent = it->first;
      map[i].data = it->second;
      i++;
@@ -1631,19 +1962,25 @@ void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uin
    // transport
    Tau_cupti_register_gpu_event(name, deviceId,
 				streamId, contextId, id, 0, false, map, map_size,
-				end / 1e3, end / 1e3);
-   
-   
+				end / 1e3, end / 1e3, taskId);
  }
 
-
- void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
+void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
    // check if data available
   bool update = false;
-
-  for (std::map<uint32_t, FuncSampling>::iterator iter = functionMap.begin(); iter != functionMap.end(); iter++) {
-    uint32_t fid = iter->second.fid;
-    const char* name2 = demangleName(iter->second.name);
+  int taskId = 0;
+#if (PTHREADS)
+  if (map_cudaThread.find(id) != map_cudaThread.end()) {
+    int local_vtid = map_cudaThread[id].tau_vtid;
+    taskId = map_cuptiThread[local_vtid];
+  }
+#endif
+  for (std::map<uint32_t, CUpti_ActivityFunction>::iterator iter = functionMap.begin(); 
+       iter != functionMap.end(); 
+       iter++) {
+    CUpti_ActivityFunction fResult = iter->second;
+    uint32_t fid = fResult.id;
+    const char* name2 = demangleName(fResult.name);
 
     if (strcmp(name, name2) == 0) {
       // check if fid exists
@@ -1651,9 +1988,9 @@ void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uin
 	TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded\n");
       }
       else {
-	std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
+	std::list<CUpti_ActivityInstructionExecution> instrSamp_list = instructionMap.find(fid)->second;
 
-	ImixStats is_runtime = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
+	ImixStats is_runtime = write_runtime_imix(fid, map_disassem, name);
 #ifdef TAU_DEBUG_CUPTI
 	cout << "[CuptiActivity]:  Name: " << name << 
 	  ", FLOPS_raw: " << is_runtime.flops_raw << ", MEMOPS_raw: " << is_runtime.memops_raw <<
@@ -1678,9 +2015,9 @@ void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uin
 	transport_imix_counters(v_ctrlops, CtrlOps, name, deviceId, streamId, contextId, id, end, ctrl_ops);
 	
 	// Each time imix counters recorded, erase instructionMap.
-	std::map<uint32_t, std::list<InstrSampling> >::iterator it_temp = instructionMap.find(fid);
+	std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> >::iterator it_temp = instructionMap.find(fid);
 	instructionMap.erase(it_temp);
-	eventMap.erase(eventMap.begin(), eventMap.end());
+	eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
       }
       
     }
@@ -1691,6 +2028,176 @@ void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uin
 
 }
 
+ImixStats write_runtime_imix(uint32_t functionId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel)
+{
+
+#ifdef TAU_DEBUG_SASS
+  cout << "[CudaSass]: write_runtime_imix begin\n";
+#endif
+
+  // look up from map_imix_static
+  ImixStats imix_stats;
+  string current_kernel = "";
+  int flops_raw = 0;
+  int ctrlops_raw = 0;
+  int memops_raw = 0;
+  int totops_raw = 0;
+  double flops_pct = 0;
+  double ctrlops_pct = 0;
+  double memops_pct = 0;
+  std::list<CUpti_ActivityInstructionExecution> instrSamp_list = instructionMap.find(functionId)->second;
+  // check if entries exist
+  if (!instrSamp_list.empty()) {
+    // cout << "[CuptiActivity]:  instrSamp_list not empty\n";
+    for (std::list<CUpti_ActivityInstructionExecution>::iterator iter=instrSamp_list.begin();
+	 iter != instrSamp_list.end(); 
+	 iter++) {
+      CUpti_ActivityInstructionExecution is = *iter;
+      
+      // TODO:  Get line info here...
+      int sid = is.sourceLocatorId;
+      // cout << "[CuptiActivity]:  is.sourceLocatorId: " << is.sourceLocatorId << endl;
+      int lineno = -1;
+      if ( srcLocMap.find(sid) != srcLocMap.end() ) {
+	lineno = srcLocMap.find(sid)->second.lineNumber;
+	// cout << "[CuptiActivity]:  lineno: " << lineno << endl;
+	std::pair<int, int> p1 = std::make_pair(lineno, (unsigned int) is.pcOffset);
+
+	for (std::map<std::pair<int, int>,CudaOps>::iterator iter= map_disassem.begin();
+	     iter != map_disassem.end(); iter++) { 
+	  CudaOps cuops = iter->second;
+	  // cout << "cuops pair(" << cuops.lineno << ", " << cuops.pcoffset << ")\n";
+	  if (map_disassem.find(p1) != map_disassem.end()) {
+	    CudaOps cuops = map_disassem.find(p1)->second;
+	    // cout << "[CuptiActivity]:  cuops.instruction: " << cuops.instruction << endl;
+	    // map to disassem
+	    int instr_type = get_instruction_mix_category(cuops.instruction);
+	    switch(instr_type) {
+	      // Might be non-existing ops, don't count those!
+	      case FloatingPoint: case Integer:
+	      case SIMD: case Conversion: {
+		flops_raw++;
+		totops_raw++;
+		break;
+	      }
+	      case LoadStore: case Texture:
+	      case Surface: {
+		memops_raw++;
+		totops_raw++;
+		break;
+	      }
+	      case Control: case Move:
+	      case Predicate: {
+		ctrlops_raw++;
+		totops_raw++;
+		break;
+	      }
+	      case Misc: {
+		totops_raw++;
+		break;
+	      }
+	    }
+	  }
+	  else {
+#if TAU_DEBUG_DISASM
+	    cout << "[CuptiActivity]:  map_disassem does not exist for pair(" 
+	    	 << lineno << "," << is->pcOffset << ")\n";
+#endif
+	  }
+	}
+      }
+      else {
+#if TAU_DEBUG_DISASM
+	cout << "[CuptiActivity]:  srcLocMap does not exist for sid: " << sid << endl;
+#endif
+      }
+    }
+  }
+  else {
+    cout << "[CuptiActivity]: instrSamp_list empty!\n";
+  }
+  
+  string kernel_iter = kernel;
+
+  flops_pct = ((float)flops_raw/totops_raw) * 100;
+  memops_pct = ((float)memops_raw/totops_raw) * 100;
+  ctrlops_pct = ((float)ctrlops_raw/totops_raw) * 100;
+  // push onto map
+  imix_stats.flops_raw = flops_raw;
+  imix_stats.ctrlops_raw = ctrlops_raw;
+  imix_stats.memops_raw = memops_raw;
+  imix_stats.totops_raw = totops_raw;
+  imix_stats.flops_pct = flops_pct;
+  imix_stats.ctrlops_pct = ctrlops_pct;
+  imix_stats.memops_pct = memops_pct;
+  imix_stats.kernel = kernel_iter;
+
+#ifdef TAU_DEBUG_DISASM
+  cout << "[CudaDisassembly]:  current_kernel: " << kernel_iter << endl;
+  cout << "  FLOPS: " << flops_raw << ", MEMOPS: " << memops_raw 
+       << ", CTRLOPS: " << ctrlops_raw << ", TOTOPS: " << totops_raw << "\n";
+  cout << setprecision(2) << "  FLOPS_pct: " << flops_pct << "%, MEMOPS_pct: " 
+       << memops_pct << "%, CTRLOPS_pct: " << ctrlops_pct << "%\n";
+#endif
+
+  return imix_stats;
+}
+
+
+//  void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end) {
+//    // check if data available
+//   bool update = false;
+
+//   for (std::map<uint32_t, FuncSampling>::iterator iter = functionMap.begin(); iter != functionMap.end(); iter++) {
+//     uint32_t fid = iter->second.fid;
+//     const char* name2 = demangleName(iter->second.name);
+
+//     if (strcmp(name, name2) == 0) {
+//       // check if fid exists
+//       if (instructionMap.find(fid) == instructionMap.end()) {
+// 	TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded\n");
+//       }
+//       else {
+// 	std::list<InstrSampling> instrSamp_list = instructionMap.find(fid)->second;
+
+// 	ImixStats is_runtime = write_runtime_imix(fid, instrSamp_list, map_disassem, srcLocMap, name);
+// #ifdef TAU_DEBUG_CUPTI
+// 	cout << "[CuptiActivity]:  Name: " << name << 
+// 	  ", FLOPS_raw: " << is_runtime.flops_raw << ", MEMOPS_raw: " << is_runtime.memops_raw <<
+// 	  ", CTRLOPS_raw: " << is_runtime.ctrlops_raw << ", TOTOPS_raw: " << is_runtime.totops_raw << ".\n";
+//       #endif
+// 	update = true;
+// 	static TauContextUserEvent* fp_ops;
+// 	static TauContextUserEvent* mem_ops;
+// 	static TauContextUserEvent* ctrl_ops;
+	
+// 	Tau_get_context_userevent((void **) &fp_ops, "Floating Point Operations");
+// 	Tau_get_context_userevent((void **) &mem_ops, "Memory Operations");
+// 	Tau_get_context_userevent((void **) &ctrl_ops, "Control Operations");
+	
+// 	uint32_t  v_flops = is_runtime.flops_raw;
+// 	uint32_t v_memops = is_runtime.memops_raw;
+// 	uint32_t v_ctrlops = is_runtime.totops_raw;
+	
+	
+// 	transport_imix_counters(v_flops, FlPtOps, name, deviceId, streamId, contextId, id, end, fp_ops);
+// 	transport_imix_counters(v_memops, MemOps, name, deviceId, streamId, contextId, id, end, mem_ops);
+// 	transport_imix_counters(v_ctrlops, CtrlOps, name, deviceId, streamId, contextId, id, end, ctrl_ops);
+	
+// 	// Each time imix counters recorded, erase instructionMap.
+// 	std::map<uint32_t, std::list<InstrSampling> >::iterator it_temp = instructionMap.find(fid);
+// 	instructionMap.erase(it_temp);
+// 	eventMap.erase(eventMap.begin(), eventMap.end());
+//       }
+      
+//     }
+//   }
+//   if(!update) {
+//     TAU_VERBOSE("TAU Warning:  Did not record instruction operations.\n");
+//   }
+
+// }
+
   
 void record_gpu_launch(int correlationId, const char *name)
 {
@@ -1699,8 +2206,16 @@ void record_gpu_launch(int correlationId, const char *name)
 #endif
   Tau_cupti_register_host_calling_site(correlationId, name);	
 }
+
 void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
 {
+  int taskId = 0;
+#if defined(PTHREADS)
+  if (map_cudaThread.find(correlationId) != map_cudaThread.end()) {
+    int local_vtid = map_cudaThread[correlationId].tau_vtid;
+    taskId = map_cuptiThread[local_vtid];
+  }
+#endif
   if (Tau_CuptiLayer_get_num_events() > 0 &&
       !counters_bounded_warning_issued[device_id] && 
       last_recorded_kernel_name != NULL && 
@@ -1724,19 +2239,19 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
 #endif
       TauContextUserEvent* c;
       const char *name = Tau_CuptiLayer_get_event_name(n);
-      if (n >= counterEvents.size()) {
+      if (n >= counterEvents[device_id].size()) {
         c = (TauContextUserEvent *) Tau_return_context_userevent(name);
-        counterEvents.push_back(c);
+        counterEvents[device_id].push_back(c);
       } else {
-        c = counterEvents[n];
+        c = counterEvents[device_id][n];
       }
       Tau_set_context_event_name(c, name);
       if (counters_averaged_warning_issued[device_id] == true)
       {
-        eventMap[c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]);
+        eventMap[taskId][c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]);
       }
       else {
-        eventMap[c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]) * kernels_encountered[device_id];
+        eventMap[taskId][c] = (current_counters[device_id][n] - counters_at_last_launch[device_id][n]) * kernels_encountered[device_id];
       }
       
     }
@@ -1918,8 +2433,15 @@ bool function_is_exit(CUpti_CallbackId id)
 	
 }
 bool function_is_launch(CUpti_CallbackId id) { 
-	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020 ||
-		     id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel;
+	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020
+		     || id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel
+#if CUDA_VERSION >= 7000
+             || id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_v7000
+             || id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_ptsz_v7000 
+             || id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunchKernel_ptsz_v7000
+#endif
+             ;
+
 }
 
 bool function_is_memcpy(CUpti_CallbackId id, CUpti_CallbackDomain domain) {
@@ -2128,105 +2650,214 @@ int get_device_id()
   return deviceId;
 }
 
-void createFilePointerSass(int device_count) 
+FILE* createFileSourceSass(int task_id) 
 {
+  char str_int[5];
+  sprintf (str_int, "%d", (task_id));
+  if ( fp_source[task_id] == NULL ) {
 #ifdef TAU_DEBUG_CUPTI_SASS
-  printf ("Inside sass/csv, about to create fp\n");
-  printf("device_count: %i\n", device_count);
+    printf("About to create file pointer for source csv: %i\n", task_id);
 #endif
-  if (device_count < 0) {
-    printf("Couldn't detect device inside fp creation, FAIL\n");
+    char str_source[500];
+    strcpy (str_source,TauEnv_get_profiledir());
+    strcat (str_source,"/");
+    strcat (str_source,"sass_source_");
+    strcat (str_source, str_int);
+    strcat (str_source, ".csv");
+      
+    fp_source[task_id] = fopen(str_source, "a");
+    fprintf(fp_source[task_id], "timestamp,id,fileName,lineNumber,kind\n");
+    if (fp_source[task_id] == NULL) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_source[%i] failed\n", task_id);
+#endif
+    }
+    else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_source[%i] created successfully\n", task_id);
+#endif
+    }
   }
-
-  for (int i = 0; i < device_count; i++) {
-    char str_int[5];
-    sprintf (str_int, "%d", (i+1));
-    if ( fp_source[i] == NULL ) {
+  else {
 #ifdef TAU_DEBUG_CUPTI_SASS
-      printf("About to create file pointer csv: %i\n", i);
+    printf("fp_source[%i] already exists!\n", task_id);
 #endif
-      char str_source[500];
-      strcpy (str_source,TauEnv_get_profiledir());
-      strcat (str_source,"/");
-      strcat (str_source,"sass_source_");
-      strcat (str_source, str_int);
-      strcat (str_source, ".csv");
-      
-      fp_source[i] = fopen(str_source, "w");
-      fprintf(fp_source[i], "timestamp,id,fileName,lineNumber,kind\n");
-      if (fp_source[i] == NULL) {
-#ifdef TAU_DEBUG_CUPTI_SASS
-	printf("fp_source[%i] failed\n", i);
-#endif
-      }
-      else {
-#ifdef TAU_DEBUG_CUPTI_SASS
-	printf("fp_source[%i] created successfully\n", i);
-#endif
-      }
-    }
-    else {
-#ifdef TAU_DEBUG_CUPTI_SASS
-      printf("fp_source[%i] already exists!\n", i);
-#endif
-    }
-    if (fp_instr[i] == NULL) {
-
-      char str_instr[500];
-      strcpy (str_instr,TauEnv_get_profiledir());
-      strcat (str_instr,"/");
-      strcat (str_instr,"sass_instr_");
-      strcat (str_instr, str_int);
-      strcat (str_instr, ".csv");
-      
-      fp_instr[i] = fopen(str_instr, "w");
-      fprintf(fp_instr[i], "timestamp,correlationId,executed,flags,functionId,kind,\
-notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
-      if (fp_instr[i] == NULL) {
-#ifdef TAU_DEBUG_CUPTI_SASS
-	printf("fp_instr[%i] failed\n", i);
-#endif
-      }
-      else {
-#ifdef TAU_DEBUG_CUPTI_SASS
-	printf("fp_instr[%i] created successfully\n", i);
-#endif
-      }
-    }
-    else {
-#ifdef TAU_DEBUG_CUPTI_SASS
-      printf("fp_instr[%i] already exists!\n", i);
-#endif
-    }
-    if(fp_func[i] == NULL) {
-      char str_func[500];
-      strcpy (str_func,TauEnv_get_profiledir());
-      strcat (str_func,"/");
-      strcat (str_func,"sass_func_");
-      strcat (str_func, str_int);
-      strcat (str_func, ".csv");
-      
-      fp_func[i] = fopen(str_func, "w");
-      fprintf(fp_func[i], "timestamp;contextId;functionIndex;id;kind;moduleId;name;demangled\n");
-      if (fp_func[i] == NULL) {
-#ifdef TAU_DEBUG_CUPTI_SASS
-	printf("fp_func[%i] failed\n", i);
-#endif
-      }
-      else {
-#ifdef TAU_DEBUG_CUPTI_SASS
-	printf("fp_func[%i] created successfully\n", i);
-#endif
-      }
-    }
-    else {
-#ifdef TAU_DEBUG_CUPTI_SASS
-      printf("fp_func[%i] already exists!\n", i);
-#endif
-    }
-
-  } // deviceCount
+  }
+  return fp_source[task_id];
 }
+
+FILE* createFileInstrSass(int task_id) 
+{
+  char str_int[5];
+  sprintf (str_int, "%d", (task_id));
+  if ( fp_instr[task_id] == NULL ) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+    printf("About to create file pointer for instr csv: %i\n", task_id);
+#endif
+    char str_instr[500];
+    strcpy (str_instr, TauEnv_get_profiledir());
+    strcat (str_instr,"/");
+    strcat (str_instr,"sass_instr_");
+    strcat (str_instr, str_int);
+    strcat (str_instr, ".csv");
+      
+    fp_instr[task_id] = fopen(str_instr, "a");
+    fprintf(fp_instr[task_id], "timestamp,correlationId,executed,flags,functionId,kind,\
+notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
+    if (fp_instr[task_id] == NULL) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_instr[%i] failed\n", task_id);
+#endif
+    }
+    else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_instr[%i] created successfully\n", task_id);
+#endif
+    }
+  }
+  else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+    printf("fp_instr[%i] already exists!\n", task_id);
+#endif
+  }
+  return fp_instr[task_id];
+}
+
+FILE* createFileFuncSass(int task_id) 
+{
+  char str_int[5];
+  sprintf (str_int, "%d", (task_id));
+  if ( fp_func[task_id] == NULL ) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+    printf("About to create file pointer for func csv: %i\n", task_id);
+#endif
+    char str_func[500];
+    strcpy (str_func, TauEnv_get_profiledir());
+    strcat (str_func,"/");
+    strcat (str_func,"sass_func_");
+    strcat (str_func, str_int);
+    strcat (str_func, ".csv");
+      
+    fp_func[task_id] = fopen(str_func, "a");
+    fprintf(fp_func[task_id], "timestamp;contextId;functionIndex;id;kind;moduleId;name;demangled\n");
+    if (fp_func[task_id] == NULL) {
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_func[%i] failed\n", task_id);
+#endif
+    }
+    else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+      printf("fp_func[%i] created successfully\n", task_id);
+#endif
+    }
+  }
+  else {
+#ifdef TAU_DEBUG_CUPTI_SASS
+    printf("fp_func[%i] already exists!\n", task_id);
+#endif
+  }
+  return fp_func[task_id];
+}
+
+// void createFilePointerSass(int device_count) 
+// {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+//   printf ("Inside sass/csv, about to create fp\n");
+//   printf("device_count: %i\n", device_count);
+// #endif
+//   if (device_count < 0) {
+//     printf("Couldn't detect device inside fp creation, FAIL\n");
+//   }
+
+//   for (int i = 0; i < device_count; i++) {
+//     char str_int[5];
+//     sprintf (str_int, "%d", (i+1));
+//     if ( fp_source[i] == NULL ) {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+//       printf("About to create file pointer csv: %i\n", i);
+// #endif
+//       char str_source[500];
+//       strcpy (str_source,TauEnv_get_profiledir());
+//       strcat (str_source,"/");
+//       strcat (str_source,"sass_source_");
+//       strcat (str_source, str_int);
+//       strcat (str_source, ".csv");
+      
+//       fp_source[i] = fopen(str_source, "w");
+//       fprintf(fp_source[i], "timestamp,id,fileName,lineNumber,kind\n");
+//       if (fp_source[i] == NULL) {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	printf("fp_source[%i] failed\n", i);
+// #endif
+//       }
+//       else {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	printf("fp_source[%i] created successfully\n", i);
+// #endif
+//       }
+//     }
+//     else {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+//       printf("fp_source[%i] already exists!\n", i);
+// #endif
+//     }
+//     if (fp_instr[i] == NULL) {
+
+//       char str_instr[500];
+//       strcpy (str_instr,TauEnv_get_profiledir());
+//       strcat (str_instr,"/");
+//       strcat (str_instr,"sass_instr_");
+//       strcat (str_instr, str_int);
+//       strcat (str_instr, ".csv");
+      
+//       fp_instr[i] = fopen(str_instr, "w");
+//       fprintf(fp_instr[i], "timestamp,correlationId,executed,flags,functionId,kind,\
+// notPredOffThreadsExecuted,pcOffset,sourceLocatorId,threadsExecuted\n");
+//       if (fp_instr[i] == NULL) {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	printf("fp_instr[%i] failed\n", i);
+// #endif
+//       }
+//       else {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	printf("fp_instr[%i] created successfully\n", i);
+// #endif
+//       }
+//     }
+//     else {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+//       printf("fp_instr[%i] already exists!\n", i);
+// #endif
+//     }
+//     if(fp_func[i] == NULL) {
+//       char str_func[500];
+//       strcpy (str_func,TauEnv_get_profiledir());
+//       strcat (str_func,"/");
+//       strcat (str_func,"sass_func_");
+//       strcat (str_func, str_int);
+//       strcat (str_func, ".csv");
+      
+//       fp_func[i] = fopen(str_func, "w");
+//       fprintf(fp_func[i], "timestamp;contextId;functionIndex;id;kind;moduleId;name;demangled\n");
+//       if (fp_func[i] == NULL) {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	printf("fp_func[%i] failed\n", i);
+// #endif
+//       }
+//       else {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+// 	printf("fp_func[%i] created successfully\n", i);
+// #endif
+//       }
+//     }
+//     else {
+// #ifdef TAU_DEBUG_CUPTI_SASS
+//       printf("fp_func[%i] already exists!\n", i);
+// #endif
+//     }
+
+//   } // deviceCount
+// }
 
 void record_gpu_counters_at_launch(int device)
 { 

@@ -374,6 +374,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
     values[idx] = gpu_timestamp[tid];
     //values[idx] = gpu_timestamp[tid][1];
   }
+  //printf("metric_read_cudatime: tid %d, values[%d] = %g\n", tid, idx, values[idx]); 
 }
 
 #ifdef CUPTI
