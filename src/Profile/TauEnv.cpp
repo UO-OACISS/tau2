@@ -1867,6 +1867,7 @@ void TauEnv_initialize()
 
 
 
+#ifdef TAU_MPI
     tmp = getconf("TAU_SET_NODE");
     if (tmp) {
       int node_id = 0;
@@ -1877,6 +1878,7 @@ void TauEnv_initialize()
       Tau_set_usesMPI(1);
       TAU_METADATA("TAU_SET_NODE", tmp);
     }
+#endif /* TAU_MPI */
 
     
 #endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC || TAU_GPI */
