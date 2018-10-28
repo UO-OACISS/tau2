@@ -291,7 +291,7 @@ static int env_ebs_enabled_tau = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
-static int env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
+static int env_ebs_resolution = TAU_EBS_RESOLUTION_FUNCTION;
 
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
