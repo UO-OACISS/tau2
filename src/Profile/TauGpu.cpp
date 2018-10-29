@@ -137,12 +137,16 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent *device, int 
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
   if (TauEnv_get_tracing()) {
+    int threadId = 0;
+#if defined(PTHREADS)
+    threadId = device->getTaskId();
+#endif
     if (memcpyType == MemcpyDtoH) {
-      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, threadId);
     } else if (memcpyType == MemcpyHtoD) {
-      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, threadId);
     } else {
-      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, threadId);
     }
   }
   if (memcpyType == MemcpyHtoD) {
@@ -191,12 +195,16 @@ void Tau_gpu_enter_unifmem_event(const char *functionName, GpuEvent *device, int
   //Inorder to capture the entire memcpy transaction time start the send/recived
   //at the start of the event
   if (TauEnv_get_tracing()) {
+    int threadId = 0;
+#if defined(PTHREADS)
+    threadId = device->getTaskId();
+#endif
     if (unifmemType == BytesDtoH) {
-      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+      TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, threadId);
     } else if (unifmemType == BytesHtoD) {
-      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, threadId);
     } else {
-      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, 0);
+      TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, threadId);
     }
   }
   if (unifmemType == BytesHtoD) {
@@ -476,26 +484,36 @@ int get_task(GpuEvent *new_task)
  return GpuEvent(name, device, callingSite, NULL);
  }
  */
+
+
 void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
-//  printf("Tau gpu name: %s.\n", id->getName());
-  int task = get_task(id);
-  // printf("[TauGpu]:  registering gpu event, name: %s. task: %d.\n", id->getName(), task);
+  // for (int i=0; i < TauEnv_get_cudaTotalThreads(); i++) {
+  //   GpuThread gTemp = gThreads[i];
+  //   printf("[TauGpu]: systid %u, gputid %i, parentid %u, nodeid %i\n",
+  // 	   gTemp.sys_tid, gTemp.gpu_tid, gTemp.parent_tid, gTemp.node_id);    
+  // }
 
-//  printf("in TauGpu.cpp, registering gpu event.\n");
+#if defined(PTHREADS) && defined(TAU_GPU)
+  int task = id->getTaskId(); 
+#else
+  int task = get_task(id);
+#endif
   stage_gpu_event(id->getName(), task, startTime + id->syncOffset(), id->getCallingSite());
-//  printf("registering context event with kernel = %d.\n", id->getName());
   GpuEventAttributes *attr;
   int number_of_attributes;
   id->getAttributes(attr, number_of_attributes);
-
-#ifdef TAU_ENABLE_GPU_EVENTS
+//#ifndef TAU_ENABLE_OPENCL
   for (int i = 0; i < number_of_attributes; i++) {
     TauContextUserEvent* e = attr[i].userEvent;
-    TAU_EVENT_DATATYPE event_data = attr[i].data;
-    TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
+    if (e) { 
+      TAU_EVENT_DATATYPE event_data = attr[i].data;
+      TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
+    } else {
+      break;
+    }
   }
-#endif /* TAU_ENABLE_GPU_EVENTS */
+//#endif /* TAU_ENABLE_OPENCL: OpenCL crashes here! */
   /*
    if (id.contextEventMap != NULL)
    {
@@ -513,11 +531,18 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 }
 
 void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTime, int transferSize, int memcpyType,
-    int direction)
+				   int direction)
 {
-  int task = get_task(id);
-  //printf("in Tau_gpu.\n");
-  //printf("Memcpy type is %d.\n", memcpyType);
+  // for (int i=0; i < TauEnv_get_cudaTotalThreads(); i++) {
+  //   GpuThread gTemp = gThreads[i];
+  //   printf("[TauGpu]: systid %u, gputid %i, parentid %u, nodeid %i\n",
+  // 	   gTemp.sys_tid, gTemp.gpu_tid, gTemp.parent_tid, gTemp.node_id);    
+  // }
+#if defined(PTHREADS) && defined(TAU_GPU)
+  int task = id->getTaskId();
+#else
+  int task = get_task(id);  
+#endif
   const char* functionName = id->getName();
   if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0) {
     if (memcpyType == MemcpyHtoD) {
@@ -873,7 +898,10 @@ void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTi
  */
 void Tau_gpu_init(void)
 {
+  // #if not defined(PTHREADS) && not defined(TAU_GPU)
+#if not defined(PTHREADS)
   Tau_create_top_level_timer_if_necessary();
+#endif
 
   //init context event.
   Tau_get_context_userevent((void **)&MemoryCopyEventHtoD, "Bytes copied from Host to Device");
@@ -898,11 +926,22 @@ void Tau_gpu_exit(void)
     cerr << "TAU: warning not all bytes tranfered between CPU and GPU were recorded, some data maybe be incorrect." << endl;
   }
   cerr << "stopping first gpu event.\n" << endl;
+  // #if not defined(PTHREADS) && not defined(TAU_GPU)
+#if not defined(PTHREADS)
   printf("stopping level %d tasks.\n", number_of_tasks);
   map<GpuEvent*, int>::iterator it;
   for (it = TheGpuEventMap().begin(); it != TheGpuEventMap().end(); it++) {
     Tau_stop_top_level_timer_if_necessary_task(it->second);
   }
+#else
+  printf("stopping level %d tasks.\n", TauEnv_get_cudaTotalThreads());
+  for (int i=0; i < TauEnv_get_cudaTotalThreads(); i++) {
+    // GpuThread gTemp = gThreads[i];
+    // printf("[TauGpu]: Tau_gpu_exit, calling Tau_stop_top_level_timer_if_necessary_task for %i\n", gTemp.gpu_tid);    
+    // Tau_stop_top_level_timer_if_necessary_task(gTemp.gpu_tid);
+    Tau_stop_top_level_timer_if_necessary_task(i);
+  }
+#endif
   TAU_VERBOSE("stopping level 1.\n");
 }
 

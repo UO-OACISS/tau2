@@ -56,8 +56,69 @@ public class TrialMeanResult extends AbstractResult {
 		buildTrialMeanResult(trial, metrics, events);
 	}
 	
+	public TrialMeanResult(Trial trial, List<String> metrics, List<String> events, List<String> threads, boolean callPath) {//, boolean treatAbsentAsZero
+		super();
+		this.trialID = trial.getID();
+		this.callPath = callPath;
+		this.trial = trial;
+		this.name = this.trial.getName();
+		TrialResult fullTrial = new TrialResult(trial,metrics,events,threads,callPath);
+		buildTrialMeanResult(fullTrial);
+	}
+	
+	public TrialMeanResult(PerformanceResult tr, boolean callPath) {//, boolean treatAbsentAsZero
+		super();
+		this.trial = tr.getTrial();
+		this.trialID = tr.getTrialID();
+		this.callPath = callPath;
+		
+		this.name = this.trial.getName();
+		buildTrialMeanResult(tr);
+	}
+	
+	private void buildTrialMeanResult(PerformanceResult tr) {//TODO: Enable: , boolean treatAbsentAsZero
+		this.setEventMap(tr.getEventMap());
+		boolean seenAMetric=false;
+		for (String metric : tr.getMetrics()) {
+			for (String event : tr.getEvents()) {
+				double ex=0.0;
+				double in=0.0;
+				double ca=0.0;
+				double su=0.0;
+				double div=tr.getThreads().size();
+				for (Integer thread : tr.getThreads()) {
+					
+					double tmpCa = tr.getCalls(thread, event);
+					if(tmpCa==0) {
+//						if(!treatAbsentAsZero) {
+//							div=div-1.0;
+//						}
+					}
+					else {
+						ex+=tr.getExclusive(thread, event, metric);
+						in+=tr.getInclusive(thread, event, metric);
+						//These show up independent of metrics so only count them the first time through.
+						if(!seenAMetric) {
+							ca+=tmpCa;
+							su+=tr.getSubroutines(thread, event);
+						}
+					}
+				}
+				this.putExclusive(0, event, metric,	ex/div);
+				this.putInclusive(0, event, metric,	in/div);
+				if(!seenAMetric)
+				{
+					this.putCalls(0, event, ca/div);
+					this.putSubroutines(0, event, su/div);
+				}
+				
+			}
+			seenAMetric=true;
+		}
+	}
+	
 	private void buildTrialMeanResult(Trial trial, List<String> metrics, List<String> events) {
-		// hit the databsae, and get the data for this trial
+		// hit the database, and get the data for this trial
 		DB db = PerfExplorerServer.getServer().getDB();
 		if (db.getSchemaVersion() > 0) {
 			buildTrialResultFromTAUdb(trial, metrics, events);
