@@ -1,0 +1,6 @@
+This example can be used on one or more cores using MPI, pthread, OpenMP or with a hybrid MPI+<thread> runtime. It features a selective instrumentation file that uses outer-loop level instrumentation in two routines. It also features the use of a DSO.
+
+To use compiler based instrumentation:
+setenv TAU_OPTIONS '-optCompInst -optVerbose'
+make
+
