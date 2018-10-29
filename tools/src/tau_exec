@@ -6,6 +6,7 @@ export LANG
 eval `tau-config`
 
 scriptname=`basename $0`
+python_interpreter=python
 if [ "$scriptname" == "tau_python" ] ; then
   python_wrapper=true
   spark_wrapper=false
@@ -46,6 +47,7 @@ usage()
   echo "        -cupti        Track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
   echo "        -opencl       Track GPU events via OpenCL"
   echo "        -openacc      Track GPU events via OpenACC (currently PGI only)"
+  echo "        -rocm         Track ROCm events via rocprofiler "
   echo "        -ompt         Track OpenMP events via OMPT interface"
   echo "        -power        Track power events via PAPI's perf RAPL interface"
   echo "        -numa         Track remote DRAM, total DRAM events (needs papi with recent perf support for x86_64)"
@@ -63,6 +65,7 @@ usage()
   echo "        -ebs          Enable event-based sampling"
   echo "        -ebs_period=<count> Sampling period (default 1000)"
   echo "        -ebs_source=<counter> Counter (default itimer)"
+  echo "        -ebs_resolution=<file|function|line> Choose sampling granularity."
   echo "        -um          Enable Unified Memory events via CUPTI"
   echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
   echo "        -csv          Outputs sass profile in CSV"
@@ -73,6 +76,7 @@ usage()
   echo "        -gdb          Run program in the gdb debugger"
 if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
+  echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
 fi
   echo ""
   echo "Notes:"
@@ -286,10 +290,12 @@ sass_type=""
 csv_output=false
 binary_exe=""
 track_opencl=false
+track_rocm=false
 track_openacc=false
 track_armci=false
 tau_use_ebs=false
 tau_ebs_period=""
+tau_ebs_resolution=""
 tau_ebs_source=""
 scorep=false
 qsub_mode=false
@@ -407,6 +413,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -rocm)
+        track_rocm=true
+        save_arg $arg
+        shift
+        ;;
       -gomp)
         track_gomp=true
         save_arg $arg
@@ -488,6 +499,14 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -ebs_resolution=*)
+        tau_use_ebs=true
+        myarg=`echo $arg | sed 's/-ebs_resolution=//'`
+        tau_ebs_resolution="$myarg"
+	export TAU_EBS_RESOLUTION=$tau_ebs_resolution
+        save_arg $arg
+        shift
+        ;;
       -qsub)
         qsub_mode=true
         save_arg $arg
@@ -540,6 +559,17 @@ for arg in "$@" ; do
         if [ $python_wrapper = "true" ] ; then
           myarg=`echo $arg | sed 's/-tau-python-args=//'`
           py_interp_args="$myarg"
+          save_arg $arg
+          shift
+        else
+          echo "Unknown option: $arg" >&2
+          exit 1
+        fi
+        ;;
+      -tau-python-interpreter=*)
+        if [ $python_wrapper = "true" ] ; then
+          myarg=`echo $arg | sed 's/-tau-python-interpreter=//'`
+          python_interpreter="$myarg"
           save_arg $arg
           shift
         else
@@ -806,6 +836,10 @@ if [ $track_openacc = "true" ] ; then
   export PGI_ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
   export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
 fi
+if [ $track_rocm = "true" ] ; then
+  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU.so
+  export HSA_TOOLS_LIB=librocprofiler64.so.1
+fi
 
 if [ $track_armci = "true" ] ; then
   # Add the ARMCI wrapper library to the LD_PRELOAD list
@@ -1035,7 +1069,18 @@ else
     ORIG_LD_PRELOAD=$LD_PRELOAD
     $dryrun export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
     $dryrun export LD_AUDIT=$TAUEX_LD_AUDITOR
+    #$dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
+    if [ $track_rocm = "true" ] ; then
+      if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+        if [ `echo $TAU_METICS | grep "TAUGPU_TIME" ` ]; then 
+          export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+        fi
+      else
+        export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+      fi
+    fi
     $dryrun export LD_PRELOAD=$TAUEX_LD_PRELOAD
+  fi
   fi
   if [ $memory_debug = "true" ] ; then
     $dryrun export TAU_TRACK_MEMORY_LEAKS=1
@@ -1044,9 +1089,9 @@ else
 
   if $spark_wrapper ; then
     $dryrun export PYTHONPATH=$PYTHONPATH
-    $dryrun python $py_interp_args -m tau_pyspark_wrapper "$@"
+    $dryrun $python_interpreter $py_interp_args -m tau_pyspark_wrapper "$@"
   elif $python_wrapper ; then
-    $dryrun python $py_interp_args -m tau_python_wrapper "$@"
+    $dryrun $python_interpreter $py_interp_args -m tau_python_wrapper "$@"
     retval=$?
   elif $use_ptts ; then
     # Can't dryrun because `$dryrun CMD >$logfile 2>&1` creates $logfile

@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
 #****************************************************************************
-#*    Copyright 1997-2009						   **
+#*    Copyright 1997-2019						   **
 #*    Department of Computer and Information Science, University of Oregon **
 #*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 #*    Research Center Juelich, ZAM Germany                                 **
@@ -544,6 +544,9 @@ for arg in "$@"; do
 	    echo "GPGPU Options:"
 	    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
 	    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
+            echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+            echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+            echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
 	    echo ""
 	    echo "Other Options:"
 	    echo "-iowrapper .................................... Build POSIX IO Wrapper."
@@ -722,6 +725,10 @@ for arg in "$@"; do
         echo "            locations to add when linking to the cuda driver libraries."
         echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
         echo "  Note: This option is needed when used with -cuda=<dir> option. "
+        echo "-rocm=<dir> ........ Specify alternate path to ROCm (/opt/rocm default)."
+        echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+        echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+        echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
         echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -1092,6 +1099,8 @@ dmapp=no
 zepto=no
 zeptodir=
 cuda=no
+rocm=no
+rocprofiler=no
 use_opencl=no
 use_openacc=no
 cupti=no
@@ -2504,6 +2513,63 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+	-rocm)
+            rocmdir=/opt/rocm
+	    fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
+            rocm=yes
+            rocprofiler=yes
+            tauoptions="${tauoptions}-rocm"
+	    pthread=yes
+            shift
+            ;;
+
+	-rocm=*)
+	    rocmdir=`echo $arg | sed -e 's/-rocm=//' -e 's/ /#/g'`
+            if [ ! -d $rocmdir ]; then
+              echo  "Error: Cannot access ROCm directory $rocmdir"
+              exit 1
+	    else
+	      fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
+              rocm=yes
+            fi
+	    fixmakeargs="$fixmakeargs ROCPROFILER"
+            rocprofiler=yes
+            tauoptions="${tauoptions}-rocm"
+	    pthread=yes
+	    shift
+	    ;;
+
+	-rocprofiler=*)
+	    rocprofilerdir=`echo $arg | sed -e 's/-rocprofiler=//' -e 's/ /#/g'`
+            if [ ! -d $rocprofilerdir ]; then
+              echo  "Error: Cannot access rocprofiler directory $rocprofilerdir"
+              exit 1
+	    else
+	      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
+              rocprofiler=yes
+              tauoptions="${tauoptions}-rocm"
+	      pthread=yes
+            fi
+	    shift
+	    ;;
+
+	-rocprofilerlibrary=*)
+	    rocprofilerlibrary=`echo $arg | sed -e 's/-rocprofilerlibrary=//' -e 's/ /#/g'`
+	    fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
+	    shift
+	    ;;
+
+	-rocprofilerinc=*)
+	    rocprofilerinc=`echo $arg | sed -e 's/-rocprofilerinc=//' -e 's/ /#/g'`
+            if [ ! -d $rocprofilerinc ]; then
+              echo  "Error: Cannot access rocprofiler directory $rocprofilerinc"
+              exit 1
+	    else
+	      fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+            fi
+	    shift
+	    ;;
+
 	-DISABLE_OPENCL)
 	    opencl=disable
             use_opencl=no
@@ -2612,6 +2678,26 @@ else
 	#echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
 	mpi=yes
     fi
+fi
+
+# AMD ROCm rocprofiler directories
+if [ "$rocprofiler" = yes -a "$rocm" = "no" ]; then
+   if [ "x$rocmdir" = "x" -a -d /opt/rocm ]; then 
+     rocmdir=/opt/rocm
+     fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
+   fi
+fi
+
+if [ "$rocprofiler" = yes -a "x$rocprofilerinc" = "x" ]; then
+   if [ "x$rocprofilerlibrary" = "x" ]; 
+   then 
+     rocprofilerlibrary=librocprofiler64.so
+     fixmakeargs="$fixmakeargs rocprofilerlibrary=$rocprofilerlibrary"
+   fi
+   if [ "x$rocprofilerinc" = "x" ]; then 
+     rocprofilerinc="$rocprofilerdir/inc"
+     fixmakeargs="$fixmakeargs rocprofilerinc=$rocprofilerinc"
+   fi
 fi
 
 # -- some functions
@@ -9328,9 +9414,24 @@ EOF
 		    rm -f opencl.cpp opencl.o
 		fi
 		cudadir=`dirname $cudainclude`
-		if [ $cupti = no -a -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
+		cuda_version=$(cat "$cudadir"/include/cuda.h | grep "define CUDA_VERSION")
+		vers_arr=($cuda_version)
+		cupti_event_path=""
+		if [ ${vers_arr[2]} -ge 10000 ] ; then
+		    ## For now, checking if version greater than 10
+		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
+		else
+		    cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
+		fi
+		if [ $cupti = no -a -f $cupti_event_path ] ; then
 		    tauoptions="${tauoptions}-cupti"
-		    cupti="$cudadir/extras/CUPTI"
+		    cupti=""
+		    if [ ${vers_arr[2]} -ge 10000 ] ; then
+			## For now, checking if version greater than 10
+			cupti="$cudadir/extras/CUPTI.orig"
+		    else
+			cupti="$cudadir/extras/CUPTI"
+		    fi
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
 		    if [ $machine = craycnl ]; then

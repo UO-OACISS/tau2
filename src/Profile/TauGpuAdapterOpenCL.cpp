@@ -194,12 +194,16 @@ void Tau_opencl_exit_memcpy_event(const char *name, OpenCLGpuEvent *id, int Memc
 
 void Tau_opencl_register_gpu_event(OpenCLGpuEvent *evId, double start, double stop)
 {
+#ifndef PTHREADS
   Tau_gpu_register_gpu_event(evId, start/1e3, stop/1e3);
+#endif /* PTHREADS */
 }
 
 void Tau_opencl_register_memcpy_event(OpenCLGpuEvent *evId, double start, double stop, int transferSize, int MemcpyType)
 {
+#ifndef PTHREADS
   Tau_gpu_register_memcpy_event(evId, start/1e3, stop/1e3, transferSize, MemcpyType, MESSAGE_UNKNOWN);
+#endif /* PTHREADS */
 }
  
 void Tau_opencl_enqueue_event(OpenCLGpuEvent * event)

@@ -133,7 +133,12 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #############################################
 # OTF2 OBJECTS
 #############################################
-#OTF2#OTF2_O = TracerOTF2.o TauCollectives.o
+#OTF2#OTF2_O = TracerOTF2.o TauCollectives.o #ENDIF#
+
+#############################################
+# ROCPROFILER OBJECTS
+#############################################
+#ROCPROFILER#ROCPROFILER_O = TauGpu.o TauRocProfiler.o #ENDIF#
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
@@ -149,7 +154,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(ADIOS_O) \
-		$(OTF2_O) $(CALIPER_O)
+		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -342,14 +347,12 @@ CRAY_PGI_HACK=
 
 #OPENCL#TAU_OPENCL_LIB=libTAU-OCLci$(TAU_SHLIBX) #ENDIF#
 #OPENCL#TAU_OPENCL_OBJS=TauGpuAdapterOpenCL.o TauGpu.o #ENDIF#
-#OPENCL#TAU_OPENCL_DEF=-DTAU_GPU #ENDIF#
 #OPENCL#TAU_OPENCL_DEP=TauGpuAdapterOpenCL.d #ENDIF#
 #OPENCL#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)  #ENDIF#
 
 
 #CUDA#TAU_CUDA_LIB=libTAU-CudaQP$(TAU_SHLIBX) #ENDIF#
 #CUDA#TAU_CUDA_OBJS=TauGpuAdapterCUDA.o TauGpu.o #ENDIF#
-#CUDA#TAU_CUDA_DEF=-DTAU_GPU #ENDIF#
 #CUDA#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)  #ENDIF#
 
 #PYCUDA#TAU_PYCUDA_OBJS = TauGpuAdapterPyCuda.o #ENDIF#
@@ -365,7 +368,6 @@ CRAY_PGI_HACK=
 #CUPTI_ACTIVITY#TAU_CUPTI_ACTIVITY_LIB=libTAU-CUact$(TAU_SHLIBX) #ENDIF#
 #CUPTI_ACTIVITY#TAU_CUPTI_ACTIVITY_OBJS=CuptiActivity.o #ENDIF#
 #CUPTI_ACTIVITY#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_ACTIVITY_LIB)  #ENDIF#
-#CUPTI#TAU_CUPTI_DEF=-DTAU_GPU #ENDIF#
 #CUPTI#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)  #ENDIF#
 
 CXXFLAGS+= $(TAU_CUDA_DEF) $(TAU_CUPTI_DEF) $(TAU_OPENCL_DEF)
@@ -913,6 +915,9 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 
 TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauRocProfiler.o : TauRocProfiler.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) $(ROCPROFILER_FLAGS)
 
 TauBeacon.o   : TauBeacon.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
