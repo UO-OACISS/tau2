@@ -140,6 +140,7 @@ on_ompt_callback_parallel_begin(
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       parallel_data->ptr = (void*)handle;
       TAU_PROFILER_START(handle); 
+      fprintf(stderr, "PARALLEL BEGIN\n");
   }
 }
 
@@ -153,6 +154,7 @@ on_ompt_callback_parallel_end(
   TauInternalFunctionGuard protects_this_function;
 
   if(codeptr_ra) {
+    fprintf(stderr, "PARALLEL END\n");
     TAU_PROFILER_STOP(parallel_data->ptr);
   }
 }
@@ -203,6 +205,8 @@ on_ompt_callback_task_create(
       void *handle = NULL;
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       new_task_data->ptr = (void*)handle;
+      fprintf(stderr, "TASK CREATE\n");
+      fprintf(stderr, "TASK CREATE: Task data pointer is %p\n", new_task_data->ptr);
   }
 }
 
@@ -217,10 +221,12 @@ on_ompt_callback_task_schedule(
 {
   if(prior_task_data->ptr) {
     TAU_PROFILER_STOP(prior_task_data->ptr);
+    fprintf(stderr, "OLD TASK STOP\n");
   }
 
   if(next_task_data->ptr) {
     TAU_PROFILER_START(next_task_data->ptr);
+    fprintf(stderr, "NEW TASK START\n");
   }
 }
 
@@ -265,9 +271,11 @@ on_ompt_callback_master(
         TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
         task_data->ptr = (void*)handle;
         TAU_PROFILER_START(handle); 
+        fprintf(stderr, "MASTER THREAD BEGIN\n");
         break;
       case ompt_scope_end:
         TAU_PROFILER_STOP(task_data->ptr);
+        fprintf(stderr, "MASTER THREAD END\n");
         break;
     }
   }
@@ -345,14 +353,16 @@ on_ompt_callback_work(
               sprintf(timerName, "OpenMP_Work_Sections ADDR <%lx>", addr);
               break;
             case ompt_work_single_executor:
-#ifndef __GNUG__ /*TODO: Remove this preprocessor check once a fix on our end has been identified.*/
+//#ifndef __GNUG__ /*TODO: Remove this preprocessor check once a fix on our end has been identified.*/
               sprintf(timerName, "OpenMP_Work_Single_Executor ADDR <%lx>", addr);
+              fprintf(stderr, "WORK SINGLE EXECUTOR BEGIN\n");
               break; /* The ompt_scope_begin for this work type is triggered, but the corresponding ompt_scope_end is not triggered when using GNU to compile the tool code*/ 
-#else
-	      return;
-#endif
+//#else
+//	      return;
+//#endif
             case ompt_work_single_other:
               sprintf(timerName, "OpenMP_Work_Single_Other ADDR <%lx>", addr);
+              fprintf(stderr, "WORK SINGLE OTHER BEGIN\n");
               break;
             case ompt_work_workshare:
               sprintf(timerName, "OpenMP_Work_Workshare ADDR <%lx>", addr);
@@ -374,6 +384,7 @@ on_ompt_callback_work(
       case ompt_scope_end: 
         if(task_data->ptr != NULL) {
 	      TAU_PROFILER_STOP(task_data->ptr);
+              fprintf(stderr, "WORK STOP\n");
         }
 	    break;
     }
@@ -402,6 +413,7 @@ on_ompt_callback_thread_begin(
   TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
   thread_data->ptr = (void*)handle;
   TAU_PROFILER_START(handle); 
+  fprintf(stderr, "THREAD BEGIN\n");
 }
 
 static void
@@ -417,6 +429,7 @@ on_ompt_callback_thread_end(
 #endif
   TauInternalFunctionGuard protects_this_function;
   TAU_PROFILER_STOP(thread_data->ptr);
+  fprintf(stderr, "THREAD END\n");
 }
 
 /*Implicit task creation. This is a required event, but we do NOT need context.
@@ -444,9 +457,11 @@ on_ompt_callback_implicit_task(
       TAU_PROFILER_CREATE(handle, timerName, "", TAU_OPENMP);
       TAU_PROFILER_START(handle); 
       task_data->ptr = (void*)handle;
+      fprintf(stderr, "IMPLICIT TASK START\n");
       break;
     case ompt_scope_end:
       if(task_data->ptr != NULL) {
+          fprintf(stderr, "IMPLICIT TASK STOP called with %p\n", task_data->ptr);
           TAU_PROFILER_STOP(task_data->ptr);
       }
       break;
@@ -498,21 +513,27 @@ on_ompt_callback_sync_region(
           {
             case ompt_sync_region_barrier:
               sprintf(timerName, "OpenMP_Sync_Region_Barrier ADDR <%lx>", addr);
+              fprintf(stderr, "SYNC BARRIER BEGIN\n");
               break;
             case ompt_sync_region_taskwait:
               sprintf(timerName, "OpenMP_Sync_Region_Taskwait ADDR <%lx>", addr);
+              fprintf(stderr, "SYNC TASKWAIT BEGIN\n");
               break;
             case ompt_sync_region_taskgroup:
               sprintf(timerName, "OpenMP_Sync_Region_Taskgroup ADDR <%lx>", addr);
+              fprintf(stderr, "SYNC TASKGROUP BEGIN\n");
               break;
           }
         }
-        TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
-        TAU_PROFILER_START(handle);
-        task_data->ptr = (void*)handle;
+        //TAU_PROFILER_CREATE(handle, timerName, " ", TAU_OPENMP);
+        //TAU_PROFILER_START(handle);
+        if(task_data->ptr) 
+           fprintf(stderr, "SYNC START: Task data pointer is %p\n", task_data->ptr);
+        //task_data->ptr = (void*)handle;
         break;
       case ompt_scope_end:
-        TAU_PROFILER_STOP(task_data->ptr);
+        //TAU_PROFILER_STOP(task_data->ptr);
+        fprintf(stderr, "SYNC END\n");
         break;
     }
 
@@ -533,9 +554,11 @@ on_ompt_callback_idle(
   {
     case ompt_scope_begin:
       TAU_PROFILE_START(handle);
+      fprintf(stderr, "IDLE BEGIN\n");
       break;
     case ompt_scope_end:
       TAU_PROFILE_STOP(handle);
+      fprintf(stderr, "IDLE END\n");
       break;
   }
 
