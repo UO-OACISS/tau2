@@ -157,6 +157,13 @@ static inline OTF2_LocationRef my_location_offset() {
     return myNode == -1 ? 0 : (myNode * TAU_MAX_THREADS);
 }
 
+static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThread ) {
+     //const int64_t myNode = RtsLayer::myNode();
+     //const int64_t myThread = RtsLayer::myThread();
+     return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
+ }
+
+
 static inline OTF2_LocationRef my_location() {
     const int64_t myNode = RtsLayer::myNode();
     const int64_t myThread = RtsLayer::myThread();
@@ -514,7 +521,7 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
       TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, kind);
       last_ts = it->ts;
     }
-    OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_location());
+    OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_real_location(node_id,tid));
     OTF2_EvtWriter_RmaWinCreate(evt_writer, NULL, last_ts+1, TAU_OTF2_COMM_WIN);
     delete temp_buffers[tid];
 }
@@ -534,7 +541,9 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   } else if(kind == TAU_TRACE_EVENT_KIND_TEMP_USEREVENT) {
     kind = TAU_TRACE_EVENT_KIND_USEREVENT;
   } else {
-    use_ts = false;
+    //#ifndef TAU_ENABLE_ROCM
+    //use_ts = false;
+    //#endif
   }
   if(otf2_finished) {
     return;
@@ -592,7 +601,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     }
   }
 #endif
-  int loc = my_location();
+  int loc = my_real_location(node_id,tid);
   OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
   TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
   x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);

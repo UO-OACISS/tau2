@@ -1674,7 +1674,7 @@ int Tau_sampling_init(int tid)
     //         really care what these timers do, if EBS_SOURCE=TIME, we
     //         just want to find ANY time-based metric to latch the
     //         data to.
-    const char *temp = nullptr;
+    const char *temp = NULL;
     checkVal = TauMetrics_getMetricIndexFromName("TAUGPU_TIME");
     if (checkVal != -1) {
       temp = "TAUGPU_TIME";
@@ -1709,7 +1709,7 @@ int Tau_sampling_init(int tid)
     //   The overriden value will eventually be used in the final EBS data resolution
     //   phase to latch the EBS data to the appropriate metric data (which uses the
     //   EBS_SOURCE string to figure out the metric index).
-    if (temp != nullptr) {
+    if (temp != NULL) {
       TauEnv_override_ebs_source(temp);
     } else {
       fprintf(stderr, "TAU Sampling Warning: No time-related metric found in TAU_METRICS. "
