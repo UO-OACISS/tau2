@@ -2784,10 +2784,12 @@ extern "C" int Tau_create_task(void) {
   if (TAU_MAX_THREADS == 1) {
     printf("TAU: ERROR: Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=100  and rebuild it to use the new TASK API\n");
   }
-  taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
+  taskid = Tau_RtsLayer_createThread();
+  // taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
-  taskid++;
-  Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
+  
+  Tau_set_thread_fake(taskid); 
+  // Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
   return taskid;
 }
 
