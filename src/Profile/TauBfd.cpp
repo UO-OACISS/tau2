@@ -1134,7 +1134,9 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
     bfd_find_nearest_line(bfdImage, bfd_get_section(syms[i]), syms, 
       syms[i]->value, &filename, &func, &lineno); 
     func = syms[i]->name;
-    full_symtab[func] = lineno; // Add this entry to the full symbol table.
+    if (lineno > 0) { // We only store non-zero entries now 
+      full_symtab[func] = lineno; // Add this entry to the full symbol table.
+    }
   }
   fit = full_symtab.find(funcname); 
   if (fit == full_symtab.end()) { // We didn't find it - return 0; 

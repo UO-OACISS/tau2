@@ -487,7 +487,7 @@ TAU_F77 = $(TAU_F90)
 
 ############# Profiling Options #############
 #PROFILE#PROFILEOPT1           = -DPROFILING_ON        #ENDIF#
-#PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/src -I$(PAPIDIR)/include #ENDIF#
+#PAPI#PROFILEOPT3              = -DTAU_PAPI -I$(PAPIDIR)/include #ENDIF#
 #PAPINOINC#PROFILEOPT3              = -DTAU_PAPI #ENDIF#
 #PAPI#PAPI_O       	       = PapiLayer.o 	       #ENDIF#
 #TAU_LIKWID#LIKWID_O           = LikwidLayer.o         #ENDIF#

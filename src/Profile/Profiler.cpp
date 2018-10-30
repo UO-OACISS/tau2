@@ -219,7 +219,7 @@ static x_uint64 getTimeStamp()
 void Profiler::Start(int tid)
 {
 #ifdef DEBUG_PROF
-  TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+  //TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
   ParentProfiler = TauInternal_ParentProfiler(tid);
 
@@ -378,7 +378,7 @@ void Profiler::Start(int tid)
 void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
 #ifdef DEBUG_PROF
-  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
+  //TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
 #endif
 
 /* It is possible that when the event stack gets deep, and has to be
