@@ -133,7 +133,7 @@ using namespace std;
 #define TAU_EBS_UNWIND_DEFAULT 0
 #define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
-#define TAU_EBS_RESOLUTION_STR_DEFAULT "line"
+#define TAU_EBS_RESOLUTION_STR_LINE "line"
 #define TAU_EBS_RESOLUTION_STR_FILE "file"
 #define TAU_EBS_RESOLUTION_STR_FUNCTION "function"
 
@@ -2365,8 +2365,9 @@ void TauEnv_initialize()
           } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_FUNCTION) == 0) {
               env_ebs_resolution = TAU_EBS_RESOLUTION_FUNCTION;
               TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_FUNCTION);
-          } else { // otherwise, it's the default - line.
-              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_DEFAULT);
+          } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_LINE) == 0) { // otherwise, it's the default - line.
+              env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_LINE);
           }
       }
 
