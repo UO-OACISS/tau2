@@ -377,7 +377,9 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init_if_necessary();
+    // OK, this gets called WAY too much, just to make sure that TAU is initialized
+    // before timers start
+    //Tau_sampling_init_if_necessary();
     Tau_sampling_suspend(tid);
   }
 #endif /* _AIX */
@@ -388,7 +390,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (tid != 0) {
     Tau_create_top_level_timer_if_necessary_task(tid);
   }
-#endif
+#endif // TAU_TRACK_IDLE_THREADS
 
 
 #ifdef TAU_EPILOG
@@ -401,7 +403,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
   return;
-#endif
+#endif // TAU_EPILOG
 
 #ifdef TAU_VAMPIRTRACE 
   uint64_t TimeStamp = vt_pform_wtime();
