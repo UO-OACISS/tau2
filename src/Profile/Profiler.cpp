@@ -1491,6 +1491,8 @@ int TauProfiler_StoreData(int tid)
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
   TauMetrics_finalize();
 
+  TAU_VERBOSE("finalizeCallSites_if_necessary: Total threads = %d\n", RtsLayer::getTotalThreads());
+
 #ifndef TAU_MPI
   /*Invoke plugins only if both plugin path and plugins are specified
    *Do this first, because the plugin can write TAU_METADATA as recommendations to the user*/
