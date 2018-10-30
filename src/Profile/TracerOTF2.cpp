@@ -541,9 +541,9 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   } else if(kind == TAU_TRACE_EVENT_KIND_TEMP_USEREVENT) {
     kind = TAU_TRACE_EVENT_KIND_USEREVENT;
   } else {
-    #ifndef TAU_ENABLE_ROCM
-    use_ts = false;
-    #endif
+    //#ifndef TAU_ENABLE_ROCM
+    //use_ts = false;
+    //#endif
   }
   if(otf2_finished) {
     return;
