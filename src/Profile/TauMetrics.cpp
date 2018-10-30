@@ -872,6 +872,11 @@ extern "C" x_uint64 TauMetrics_getTimeOfDay() {
  * Initialize the metrics module
  ********************************************************************/
 int TauMetrics_init() {
+    // Why lock?  Well, other threads can get spawned by this metric
+    // initialization process, so don't allow anyone to try to take
+    // measurements until after metrics are ready.
+    RtsLayer::LockDB();
+
 	int i;
 
 	initialTimeStamp = TauMetrics_getTimeOfDay();
@@ -925,6 +930,7 @@ int TauMetrics_init() {
 		}
 	}
 
+    RtsLayer::UnLockDB();
 	return 0;
 }
 
