@@ -1048,9 +1048,9 @@ else
       echo "set env LD_PRELOAD=$TAUEX_LD_PRELOAD" >> .gdb_commands   
     fi
     if [ $apple = 1 ]; then
-        lldb -s .gdb_commands -- "$*"
+        lldb -s .gdb_commands -- "$@"
     else
-        gdb -x .gdb_commands --args "$*"
+        gdb -x .gdb_commands --args "$@"
     fi
     rm -f ./.gdb_commands
     exit 0;
