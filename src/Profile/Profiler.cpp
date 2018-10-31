@@ -1516,7 +1516,7 @@ int TauProfiler_StoreData(int tid)
 #if !defined(PTHREADS)
   // Rob:  Needed to evaluate for kernels to show in profiles (ignore dreaded #2 thread)!
   if ((tid != 0) && (profileWriteCount[tid] > 1)) {
-    printf("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
+    TAU_VERBOSE("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
     return 0;
   }
 #endif
