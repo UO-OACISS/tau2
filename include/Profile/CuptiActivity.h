@@ -44,38 +44,51 @@
 #if CUDA_VERSION >= 9000
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel4
-#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling3
 #define CUpti_ActivityNvLink CUpti_ActivityNvLink2
+// >= 8000 carryover
+#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling2
+// >= 7000 carryover
+#define CUpti_ActivityDevice CUpti_ActivityDevice2
+#define CUpti_ActivityUnifiedMemoryCounter CUpti_ActivityUnifiedMemoryCounter2
+// >= 6050 carryover
+#define CUpti_ActivityBranch CUpti_ActivityBranch2
+#define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
 #define runtimeCorrelationId correlationId
 
-#endif
-
-#if CUDA_VERSION >= 8000
+#elif CUDA_VERSION >= 8000
 
 #define CUpti_ActivityPCSampling CUpti_ActivityPCSampling2
+// >= 7000 carryover
+#define CUpti_ActivityKernel CUpti_ActivityKernel3
+#define CUpti_ActivityDevice CUpti_ActivityDevice2
+#define CUpti_ActivityUnifiedMemoryCounter CUpti_ActivityUnifiedMemoryCounter2
+// >= 6050 carryover
+#define CUpti_ActivityBranch CUpti_ActivityBranch2
+#define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
 #define runtimeCorrelationId correlationId
 
-#endif
-
-#if CUDA_VERSION >= 7000
+#elif CUDA_VERSION >= 7000
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel3
 #define CUpti_ActivityDevice CUpti_ActivityDevice2
 #define CUpti_ActivityUnifiedMemoryCounter CUpti_ActivityUnifiedMemoryCounter2
-#define runtimeCorrelationId correlationId
-
-#endif
-
-#if CUDA_VERSION >= 6050
-
-//#define CUpti_ActivityKernel CUpti_ActivityKernel3
+// >= 6050 carryover
 #define CUpti_ActivityBranch CUpti_ActivityBranch2
 #define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
 #define runtimeCorrelationId correlationId
 
-#endif
+#elif CUDA_VERSION >= 6050
 
-#if CUDA_VERSION >= 5050 && CUDA_VERSION <= 6050
+#define CUpti_ActivityBranch CUpti_ActivityBranch2
+#define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
+#define CUpti_ActivityKernel CUpti_ActivityKernel2
+#define runtimeCorrelationId correlationId
+
+#elif CUDA_VERSION >= 5050 && CUDA_VERSION <= 6050
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel2
 #define runtimeCorrelationId correlationId
@@ -344,7 +357,7 @@ ImixStats write_runtime_imix(uint32_t functionId, std::map<std::pair<int, int>, 
 	int string_length_##n = strlen(str_##n.str().c_str()) + 1; \
 	char *stored_name_##n = (char*) malloc(sizeof(char)*string_length_##n); \
 	strcpy(stored_name_##n, str_##n.str().c_str()); \
-	metadata[id].name = "GPU " SX(n); \
+	metadata[id].name = (char*)("GPU " SX(n)); \
 	metadata[id].value = stored_name_##n; \
 	id++
 #endif
