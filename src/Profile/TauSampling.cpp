@@ -819,7 +819,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
                 tag, childName, resolvedInfo.filename);
         } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION) {
             buff = (char*)malloc(strlen(tag) + strlen(childName) + 
-                    strlen(resolvedInfo.funcname) + 
+                    strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 
                     strlen(lineno) + 32);
             sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
                 tag, childName, resolvedInfo.funcname, 
