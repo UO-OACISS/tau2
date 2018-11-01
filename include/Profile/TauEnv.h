@@ -136,6 +136,8 @@ extern "C" {
   const char* TAUDECL TauEnv_get_cuda_binary_exe();
   int  TAUDECL TauEnv_get_cudaTotalThreads();
   void  TAUDECL TauEnv_set_cudaTotalThreads(int value);
+  int TAUDECL TauEnv_get_tauCuptiAvail();
+  void TAUDECL TauEnv_set_tauCuptiAvail(int value);
   int  TAUDECL TauEnv_get_nodeNegOneSeen();
   void  TAUDECL TauEnv_set_nodeNegOneSeen(int value);
   int TAUDECL TauEnv_get_mic_offload();

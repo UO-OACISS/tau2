@@ -323,6 +323,7 @@ static const char *env_binaryexe = NULL;
 static int env_node_set = -1;
 
 static int env_cudatotalthreads = 0;
+static int env_taucuptiavail = 0;
 static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
@@ -1109,6 +1110,13 @@ void TauEnv_set_cudaTotalThreads(int nthreads) {
 }
 int TauEnv_get_cudaTotalThreads() {
     return env_cudatotalthreads;
+}
+
+void TauEnv_set_tauCuptiAvail(int off) {
+    env_taucuptiavail = off;
+}
+int TauEnv_get_tauCuptiAvail() {
+    return env_taucuptiavail;
 }
 
 void TauEnv_set_nodeNegOneSeen(int nthreads) {

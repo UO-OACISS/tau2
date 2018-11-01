@@ -449,13 +449,14 @@ void Tau_cupti_onunload() {
 
 }
 
+// Extra bool param that tells whether to run code
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
 #ifdef TAU_DEBUG_CUPTI
 	printf("in Tau_cupti_callback_dispatch\n");
 #endif
 #if defined(PTHREADS)
-	if (ud != NULL) {
+	if (!TauEnv_get_tauCuptiAvail()) {
 	  unsigned int cur_tid = pthread_self(); // needed for IBM P8
 	  const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 	  unsigned int corrid = cbInfo->correlationId;
