@@ -96,16 +96,28 @@ struct context_entry_t {
   rocprofiler_callback_data_t data;
 };
 
-void Tau_add_metadata_for_task(int taskid) {
+void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
   char buf[1024];
-  sprintf(buf, "%d", taskid);
-  Tau_metadata_task("ROCM Task ID", buf, taskid);
+  sprintf(buf, "%d", value);
+  Tau_metadata_task(key, buf, taskid);
+  TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
+}
+
+bool Tau_check_timestamps(unsigned long long last_timestamp, unsigned long long current_timestamp, const char *debug_str, int taskid) {
+  TAU_VERBOSE("Taskid<%d>: Tau_check_timestamps: Checking last_timestamp = %llu, current_timestamp = %llu at %s\n", taskid, last_timestamp, current_timestamp, debug_str);
+  if (last_timestamp > current_timestamp) {
+    TAU_VERBOSE("Taskid<%d>: Tau_check_timestamps: Timestamps are not monotonically increasing! last_timestamp = %llu, current_timestamp = %llu at %s\n", taskid, last_timestamp, current_timestamp, debug_str);
+    return false; 
+  }
+  else 
+    return true;
 }
 // Dump stored context entry
 void dump_context_entry(context_entry_t* entry) {
   TAU_VERBOSE("inside dump_context_entry\n");
   int taskid, queueid;
   unsigned long long timestamp = 0L;
+  static unsigned long long last_timestamp = tau_last_timestamp_ns;
   volatile std::atomic<bool>* valid = reinterpret_cast<std::atomic<bool>*>(&entry->valid);
   while (valid->load() == false) sched_yield();
 
@@ -122,17 +134,26 @@ void dump_context_entry(context_entry_t* entry) {
     TAU_VERBOSE("dump_context_entry: associating queueid %d with taskid %d\n", queueid, taskid);
     tau_initialized_queues[queueid] = taskid;  
     timestamp = record->dispatch; 
+    Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE", taskid);
+    last_timestamp = timestamp; 
     // Set the timestamp for TAUGPU_TIME:
     metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3));
     Tau_create_top_level_timer_if_necessary_task(taskid); 
-    Tau_add_metadata_for_task(taskid);
+    Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+    Tau_add_metadata_for_task("ROCM_GPU_ID", HsaRsrcFactory::Instance().GetAgentInfo(entry->agent)->dev_index, taskid);
+    Tau_add_metadata_for_task("ROCM_QUEUE_ID", entry->data.queue_id, taskid);
+    Tau_add_metadata_for_task("ROCM_THREAD_ID", entry->data.thread_id, taskid);
   }
   
   timestamp = record->begin;
+  Tau_check_timestamps(last_timestamp, timestamp,"KERNEL_BEGIN", taskid);
   metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_START_TASK(kernel_name.c_str(), taskid);
 
+  last_timestamp = timestamp; 
   timestamp = record->end;
+  Tau_check_timestamps(last_timestamp, timestamp, "KERNEL_END", taskid);
+  last_timestamp = timestamp; 
   metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_STOP_TASK(kernel_name.c_str(), taskid);
   tau_last_timestamp_ns = record->complete; 
