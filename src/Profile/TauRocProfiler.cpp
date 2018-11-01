@@ -96,10 +96,11 @@ struct context_entry_t {
   rocprofiler_callback_data_t data;
 };
 
-void Tau_add_metadata_for_task(int taskid) {
+void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
   char buf[1024];
-  sprintf(buf, "%d", taskid);
-  Tau_metadata_task("ROCM Task ID", buf, taskid);
+  sprintf(buf, "%d", value);
+  Tau_metadata_task(key, buf, taskid);
+  TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
 }
 // Dump stored context entry
 void dump_context_entry(context_entry_t* entry) {
@@ -125,7 +126,10 @@ void dump_context_entry(context_entry_t* entry) {
     // Set the timestamp for TAUGPU_TIME:
     metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3));
     Tau_create_top_level_timer_if_necessary_task(taskid); 
-    Tau_add_metadata_for_task(taskid);
+    Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
+    Tau_add_metadata_for_task("ROCM_GPU_ID", HsaRsrcFactory::Instance().GetAgentInfo(entry->agent)->dev_index, taskid);
+    Tau_add_metadata_for_task("ROCM_QUEUE_ID", entry->data.queue_id, taskid);
+    Tau_add_metadata_for_task("ROCM_THREAD_ID", entry->data.thread_id, taskid);
   }
   
   timestamp = record->begin;
