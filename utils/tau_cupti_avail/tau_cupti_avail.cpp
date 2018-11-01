@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     }
 
     if (listCounters) {
-        Tau_CuptiLayer_Initialize_Map();
+	Tau_CuptiLayer_Initialize_Map(1);
         CuptiCounterEvent::printHeader();
         for (counter_map_it it = Tau_CuptiLayer_Counter_Map().begin(); it != Tau_CuptiLayer_Counter_Map().end(); it++) {
             it->second->print();
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     }
 
     if (listMetrics) {
-        Tau_CuptiLayer_Initialize_Map();
+        Tau_CuptiLayer_Initialize_Map(1);
         CuptiMetric::printHeader();
         for (metric_map_it it = Tau_CuptiLayer_Metric_Map().begin(); it != Tau_CuptiLayer_Metric_Map().end(); it++) {
             it->second->print();
@@ -61,7 +61,7 @@ int main(int argc, char **argv)
     }
 
     if (checkCounters) {
-        Tau_CuptiLayer_Initialize_Map();
+	Tau_CuptiLayer_Initialize_Map(1);
         if (counter_list == NULL) {
             fprintf(stderr, "ERROR: counter list empty.\n");
             exit(1);

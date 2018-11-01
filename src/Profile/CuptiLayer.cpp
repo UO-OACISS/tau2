@@ -608,11 +608,12 @@ void Tau_CuptiLayer_Initialize_callbacks()
     }
 }
 
-void Tau_CuptiLayer_Initialize_Map()
+void Tau_CuptiLayer_Initialize_Map(int off)
 {
 #ifdef TAU_DEBUG_CUPTI
     printf("in Tau_CuptiLayer_Initialize_Map\n");
 #endif
+    TauEnv_set_tauCuptiAvail(off);
     Tau_CuptiLayer_Initialize_callbacks();
 
     CUdevice currDevice = -1;
@@ -711,7 +712,7 @@ void Tau_CuptiLayer_Initialize_Map()
 bool Tau_CuptiLayer_is_cupti_counter(char const * str)
 {
 	if (Tau_CuptiLayer_Counter_Map().empty()) {
-		Tau_CuptiLayer_Initialize_Map();
+	  Tau_CuptiLayer_Initialize_Map(0);
 	}
 	return Tau_CuptiLayer_Counter_Map().count(string(str)) > 0;
 }
