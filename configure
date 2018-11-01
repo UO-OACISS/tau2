@@ -8764,6 +8764,11 @@ else
 # Mac BFD
 	            if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	              bfd_worked="yes"
+		    else 
+	              BFDLIBS="-lbfd -lintl"
+	              if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	                bfd_worked="yes"
+                      fi
                     fi
                   fi
                 fi

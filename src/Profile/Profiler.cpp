@@ -23,7 +23,8 @@
 #include <Profile/TauMetaDataMerge.h>
 #include <Profile/TauPluginInternals.h>
 
-#define DEBUG_PROF 0 
+// Define DEBUG_PROF if you want to debug timers
+// #define DEBUG_PROF 1
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -219,7 +220,7 @@ static x_uint64 getTimeStamp()
 void Profiler::Start(int tid)
 {
 #ifdef DEBUG_PROF
-  //TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
+  TAU_VERBOSE( "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
   ParentProfiler = TauInternal_ParentProfiler(tid);
 
@@ -378,7 +379,7 @@ void Profiler::Start(int tid)
 void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
 #ifdef DEBUG_PROF
-  //TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
+  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
 #endif
 
 /* It is possible that when the event stack gets deep, and has to be
@@ -1515,7 +1516,7 @@ int TauProfiler_StoreData(int tid)
 #if !defined(PTHREADS)
   // Rob:  Needed to evaluate for kernels to show in profiles (ignore dreaded #2 thread)!
   if ((tid != 0) && (profileWriteCount[tid] > 1)) {
-    printf("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
+    TAU_VERBOSE("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
     return 0;
   }
 #endif

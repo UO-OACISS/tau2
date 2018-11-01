@@ -215,6 +215,7 @@ void Tau_cupti_subscribe()
     printf("in Tau_cupti_subscribe\n");
 #endif
 	CUptiResult err;
+	CUresult err2;
 
 	TAU_VERBOSE("TAU: Subscribing to CUPTI.\n");
 	err = cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)Tau_cupti_callback_dispatch, NULL);
@@ -250,6 +251,7 @@ void Tau_cupti_onload()
 	TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
 
 	CUptiResult err;
+	CUresult err2;
   
 	if (cupti_api_runtime())
 	{
@@ -274,7 +276,7 @@ void Tau_cupti_onload()
     CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_SYNCHRONIZE)");
     	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE); 
     CUPTI_CHECK_ERROR(err, "cuptiEnableDomain (CUPTI_CB_DOMAIN_RESOURCE)");	
-    	CUDA_CHECK_ERROR(err, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
+    	CUDA_CHECK_ERROR(err2, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
 	/* BEGIN source line info */
 	/* Need to check if device is pre-Fermi */
 #if CUDA_VERSION >= 5500
@@ -349,6 +351,7 @@ if(!TauEnv_get_cuda_track_sass()) {
   if(TauEnv_get_cuda_track_unified_memory()) {
 #if CUDA_VERSION >= 7000
     CUptiResult res;
+	CUresult err2;
     CUpti_ActivityUnifiedMemoryCounterConfig config[2];
     CUresult er;
     cuInit(0);
@@ -383,6 +386,7 @@ if(!TauEnv_get_cuda_track_sass()) {
 
 #elif CUDA_VERSION >= 6000 && CUDA_VERSION <= 6050
     CUptiResult res;
+	CUresult err2;
     CUpti_ActivityUnifiedMemoryCounterConfig config[3];
 
     cuInit(0);
@@ -421,13 +425,13 @@ if(!TauEnv_get_cuda_track_sass()) {
   }
 	}
 	else {
-	  CUDA_CHECK_ERROR(err, "CUDA Compute Capability 3.0 or higher required!\n");
+	  CUDA_CHECK_ERROR(err2, "CUDA Compute Capability 3.0 or higher required!\n");
 	}  
-  CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
+  CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer.\n");
   
   //uint64_t timestamp;
   err = cuptiGetTimestamp(&timestamp);
-  CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
+  CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
   Tau_cupti_set_offset(TauTraceGetTimeStamp() - ((double)timestamp / 1e3));
   //Tau_cupti_set_offset((-1) * timestamp / 1e3);
   //cerr << "begining timestamp: " << TauTraceGetTimeStamp() - ((double)timestamp/1e3) << "ms.\n" << endl;
@@ -475,7 +479,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	    }
 	    RtsLayer::UnLockEnv();
 	  }
-	}
+    }
 #endif
 	//Just in case we encounter a callback before TAU is intialized or finished.
   if (!Tau_init_check_initialized() || Tau_global_getLightsOut()) { 
@@ -501,6 +505,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		if (id == CUPTI_CBID_RESOURCE_CONTEXT_CREATED)
 		{
 			CUptiResult err;
+	        CUresult err2;
 			CUpti_ResourceData* resource = (CUpti_ResourceData*) params;
 #ifdef TAU_DEBUG_CUPTI
 			printf("TAU: Resource created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, 0);
@@ -508,11 +513,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 
 			err = cuptiActivityEnqueueBuffer(resource->context, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
-			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in context.\n");
+			CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer in context.\n");
 		}
 		else if (id == CUPTI_CBID_RESOURCE_STREAM_CREATED)
 		{
 			CUptiResult err;
+	        CUresult err2;
 			CUpti_ResourceData* resource = (CUpti_ResourceData*) params;
     		uint32_t stream;
 			err = cuptiGetStreamId(resource->context, resource->resourceHandle.stream, &stream);
@@ -523,7 +529,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 			err = cuptiActivityEnqueueBuffer(resource->context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
-			CUDA_CHECK_ERROR(err, "Cannot enqueue buffer in stream.\n");
+			CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer in stream.\n");
 			int taskId = 0;
 #if defined(PTHREADS)
 			if (map_cudaThread.find(corrid) != map_cudaThread.end()) {
@@ -544,6 +550,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		CUpti_SynchronizeData *sync = (CUpti_SynchronizeData *) params;
 		uint32_t stream;
 		CUptiResult err;
+	    CUresult err2;
 		//Global Buffer
 #if defined(PTHREADS)
     int count_iter = TauEnv_get_cudaTotalThreads();
@@ -801,6 +808,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 	//printf("in sync: context=%p stream=%d.\n", context, stream);
 	registered_sync = true;
   CUptiResult err, status;
+  CUresult err2;
   CUpti_Activity *record = NULL;
 	//size_t bufferSize = 0;
   
@@ -874,7 +882,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 		//Need to requeue buffer by context, stream.
 		err = cuptiActivityEnqueueBuffer(context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 #endif
-		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
+		CUDA_CHECK_ERROR(err2, "Cannot requeue buffer.\n");
 		
 
     for (int i=0; i < count_iter; i++) {
@@ -910,12 +918,12 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
   } else if (err != CUPTI_ERROR_QUEUE_EMPTY) {
 #ifdef TAU_DEBUG_CUPTI
 		printf("TAU: CUPTI Activity queue is empty.\n");
-		//CUDA_CHECK_ERROR(err, "Cannot dequeue buffer.\n");
+		//CUDA_CHECK_ERROR(err2, "Cannot dequeue buffer.\n");
 #endif
 	} else if (err != CUPTI_ERROR_INVALID_PARAMETER) {
 #ifdef TAU_DEBUG_CUPTI
         printf("TAU: CUPTI Invalid buffer");
-		//CUDA_CHECK_ERROR(err, "Cannot dequeue buffer, invalid buffer.\n");
+		//CUDA_CHECK_ERROR(err2, "Cannot dequeue buffer, invalid buffer.\n");
 #endif
 	} else {
 		printf("TAU: CUPTI Unknown error cannot read from buffer.\n");
@@ -955,6 +963,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   uint64_t currentTimestamp;
   double d_currentTimestamp;
   CUptiResult err;
+  CUresult err2;
   err = cuptiGetTimestamp(&currentTimestamp); // nanosec
   ///////
   // Within python,
@@ -965,7 +974,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   // d_currentTimestamp = (double)currentTimestamp/1e6; 
 
 
-  CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
+  CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
   
   switch (record->kind) {
   // case CUPTI_ACTIVITY_KIND_DRIVER:
@@ -1482,7 +1491,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			GpuMetadata *metadata = (GpuMetadata *) malloc(sizeof(GpuMetadata) * nMeta);
 			int id = 0;
 			//first the name.
-			metadata[id].name = "GPU Name";
+			metadata[id].name = (char*)("GPU Name");
 			metadata[id].value = device->name;
 			id++;
 
