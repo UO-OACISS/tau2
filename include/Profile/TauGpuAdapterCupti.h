@@ -190,19 +190,25 @@ public:
     FunctionInfo *funcInfo = NULL;
     if (cdpId != 0)
     {
+      // lock required to prevent multithreaded access to the tree
+      RtsLayer::LockDB();
       std::map<int64_t, FunctionInfo*>::iterator it = functionInfoMap_deviceLaunch().find(parentGridId);
       if (it != functionInfoMap_deviceLaunch().end())
       { 
         funcInfo = it->second;
         //printf("found device launch site: %s.\n", funcInfo->GetName());
       }
+      RtsLayer::UnLockDB();
     } else {
+      // lock required to prevent multithreaded access to the tree
+      RtsLayer::LockDB();
       std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch().find(correlationId);
       if (it != functionInfoMap_hostLaunch().end())
       {
         funcInfo = it->second;
         //printf("found host launch site: %s.\n", funcInfo->GetName());
       }
+      RtsLayer::UnLockDB();
     }
     if (funcInfo != NULL) {
       funcInfo->SetPrimaryGroupName("TAU_REMOTE");
