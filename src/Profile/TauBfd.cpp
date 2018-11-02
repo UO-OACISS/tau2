@@ -69,9 +69,9 @@ static char const * Tau_bfd_internal_getExecutablePath();
 
 struct TauBfdModule
 {
-  TauBfdModule() :
+  TauBfdModule(const std::string & n = "") :
       bfdImage(NULL), syms(NULL), nr_all_syms(0), dynamic(false), bfdOpen(false),
-      lastResolveFailed(false), processCode(TAU_BFD_SYMTAB_NOT_LOADED), textOffset(0)
+      lastResolveFailed(false), processCode(TAU_BFD_SYMTAB_NOT_LOADED), textOffset(0), name(n)
   { }
 
   ~TauBfdModule() {
@@ -202,6 +202,8 @@ struct TauBfdModule
 
   // The virtual offset at which the text segment is loaded
   bfd_vma textOffset;
+
+  std::string name;
 };
 
 struct TauBfdUnit
@@ -209,6 +211,7 @@ struct TauBfdUnit
   TauBfdUnit() : objopen_counter(-1) {
     executablePath = Tau_bfd_internal_getExecutablePath();
     executableModule = new TauBfdModule;
+    executableModule->name = std::string(Tau_bfd_internal_getExecutablePath());
   }
 
   void ClearMaps() {
@@ -412,7 +415,7 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit)
       TAU_VERBOSE("[%d] Module: %s, %p-%p (%d)\n",
           count++, module, start, end, offset);
       unit->addressMaps.push_back(new TauBfdAddrMap(start, end, offset, module));
-      unit->modules.push_back(new TauBfdModule);
+      unit->modules.push_back(new TauBfdModule(std::string(module)));
     }
   }
   fclose(mapsfile);
@@ -444,7 +447,7 @@ static int Tau_bfd_internal_BGP_dl_iter_callback(struct dl_phdr_info * info, siz
   TauBfdAddrMap * map = new TauBfdAddrMap(start, start + max_addr, 0, info->dlpi_name);
   TAU_VERBOSE("BG Module: %s, %p-%p (%d)\n", map->name, map->start, map->end, map->offset);
   unit->addressMaps.push_back(map);
-  unit->modules.push_back(new TauBfdModule);
+  unit->modules.push_back(new TauBfdModule(std::string(map->name)));
   return 0;
 }
 
@@ -520,7 +523,7 @@ static void Tau_bfd_internal_updateWindowsMaps(TauBfdUnit *unit)
     TAU_VERBOSE("[%d] Module: %s, %p-%p (%d)\n", count++, map->name, map->start, map->end, map->offset);
 
     unit->addressMaps.push_back(map);
-    unit->modules.push_back(new TauBfdModule);
+    unit->modules.push_back(new TauBfdModule(std::string(map->name)));
   }
 
   // Release the process handle
@@ -1079,76 +1082,93 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
   // This is the first time 
   // reset the flag. Acquire lock?  
   first_time = false;  
-
-  TauBfdModule *module; 
+      
   TauBfdUnit * unit = ThebfdUnits()[bfd_handle];
-  bfd *bfdImage; 
-  if ((unit != NULL) && (unit->modules[0] != NULL) && 
-      (unit->modules[0]->bfdImage != NULL)) {
-    bfdImage = ((unit->modules)[0])->bfdImage;   
-  } else {
-    return 0;
-  }
-/*
-  char const * module_name = unit->addressMaps[bfd_handle]->name;
-  printf("TAU_BFD ---> NAME of Module =%s \n", module_name);
-  module = Tau_bfd_internal_getModuleFromIdx(unit, bfd_handle);
-  bfdImage = module->bfdImage;
-*/
+  int result_line = 0;
+  if(unit != NULL) {
+    for(vector<TauBfdModule*>::iterator it = unit->modules.begin(); it != unit->modules.end(); ++it) {
+      TauBfdModule *module = *it; 
+      bfd * bfdImage;
+      if(module != NULL) {
+          bfdImage = module->bfdImage;   
+          if(bfdImage == NULL) {
+            TAU_VERBOSE("TAU_BFD: Forcing load of symbol table for %s\n", module->name.c_str());
+            module->loadSymbolTable(module->name.c_str());
+            bfdImage = module->bfdImage;
+            if(bfdImage == NULL) {
+              TAU_VERBOSE("TAU_BFD: Skipping %s because its symbol table couldn't be loaded.\n", module->name.c_str());
+              continue;
+            }
+          }
+      } else {
+          continue;
+      }
+      /*
+      char const * module_name = unit->addressMaps[bfd_handle]->name;
+      printf("TAU_BFD ---> NAME of Module =%s \n", module_name);
+      module = Tau_bfd_internal_getModuleFromIdx(unit, bfd_handle);
+      bfdImage = module->bfdImage;
+      */
 
-  /* we have a valid bfdImage pointer. Examine the symbol table. */
-  size_t sz = bfd_get_symtab_upper_bound(bfdImage);
-  asymbol **syms; 
-  bool dynamic;  
-  int nr_all_syms, i; 
-  if (!sz) {
-    TAU_VERBOSE("loadSymbolTable: Retrying with dynamic\n");
-    sz = bfd_get_dynamic_symtab_upper_bound(bfdImage);
-    //dynamic = true;
-    if (!sz) {
-      TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size \n" );    
-      return 0;
-    } 
-  } 
-    
-  // allocate the symbol table. 
-  syms = (asymbol **)malloc(sz);
-  long addr; 
-  const char *filename = NULL;
-  const char *func; 
-  unsigned int lineno = 0; 
+      /* we have a valid bfdImage pointer. Examine the symbol table. */
+      size_t sz = bfd_get_symtab_upper_bound(bfdImage);
+      asymbol **syms; 
+      bool dynamic;  
+      int nr_all_syms, i; 
+      if (!sz) {
+          TAU_VERBOSE("loadSymbolTable: Retrying with dynamic\n");
+          sz = bfd_get_dynamic_symtab_upper_bound(bfdImage);
+          //dynamic = true;
+          if (!sz) {
+          TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size \n" );    
+          continue;
+          } 
+      } 
+          
+      // allocate the symbol table. 
+      syms = (asymbol **)malloc(sz);
+      long addr; 
+      const char *filename = NULL;
+      const char *func; 
+      unsigned int lineno = 0; 
 
-  if (dynamic) {
-    nr_all_syms = bfd_canonicalize_dynamic_symtab(bfdImage, syms);
-  } else {
-    nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
-  }
+      if (dynamic) {
+          nr_all_syms = bfd_canonicalize_dynamic_symtab(bfdImage, syms);
+      } else {
+          nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
+      }
 
-  if (nr_all_syms < 1) return 0; 
+      if (nr_all_syms < 1) {
+          TAU_VERBOSE("TAU_BFD: Skipping %s because it has no symbols\n", module->name.c_str(), nr_all_syms);
+          continue; 
+      }
 
-  // iterate through all the symbols and see if we get a match. If we do, 
-  // return the line number associated with it. Previous invocations should 
-  // be cached. 
-  for (i = 0; i < nr_all_syms; i++) {
-    addr = syms[i]->section->vma + syms[i]->value; 
-    bfd_find_nearest_line(bfdImage, bfd_get_section(syms[i]), syms, 
-      syms[i]->value, &filename, &func, &lineno); 
-    func = syms[i]->name;
-    if (lineno > 0) { // We only store non-zero entries now 
-      full_symtab[func] = lineno; // Add this entry to the full symbol table.
+      // iterate through all the symbols and see if we get a match. If we do, 
+      // return the line number associated with it. Previous invocations should 
+      // be cached. 
+      for (i = 0; i < nr_all_syms; i++) {
+          addr = syms[i]->section->vma + syms[i]->value; 
+          bfd_find_nearest_line(bfdImage, bfd_get_section(syms[i]), syms, 
+          syms[i]->value, &filename, &func, &lineno); 
+          func = syms[i]->name;
+          if (lineno > 0) { // We only store non-zero entries now 
+            full_symtab[func] = lineno; // Add this entry to the full symbol table.
+          }
+      }
+      fit = full_symtab.find(funcname); 
+      if (fit == full_symtab.end()) { // We didn't find it - return 0; 
+          TAU_VERBOSE("TAU_BFD: Didn't find line number for %s\n", funcname);
+          continue;
+      } else { // found it!
+          lineno = fit->second; 
+          TAU_VERBOSE("TAU_BFD: Found it - first time! %s line no = %d\n", funcname, lineno); 
+          cached_symtab[funcname] = lineno; 
+          result_line = lineno;
+      }
     }
   }
-  fit = full_symtab.find(funcname); 
-  if (fit == full_symtab.end()) { // We didn't find it - return 0; 
-    return 0;
-  } else { // found it!
-    lineno = fit->second; 
-    TAU_VERBOSE("TAU_BFD: Found it - first time! %s line no = %d\n", funcname, lineno); 
-    cached_symtab[funcname] = lineno; 
-    return lineno;
-  }
 
-  return 0; 
+  return result_line; 
   
 }
 
