@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
