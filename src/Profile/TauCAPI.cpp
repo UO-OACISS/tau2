@@ -1195,11 +1195,11 @@ extern "C" void Tau_dump_function_values_incr(const char **functionList, int num
 extern "C" void Tau_register_thread(void) {
 //#if defined(PTHREADS)
   if (RtsLayer::myNode() != -1) {
-    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, mynode %i, tid %i, Tau_get_thread %i\n", RtsLayer::myNode(), RtsLayer::getTid(), Tau_get_thread());
+    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());
     RtsLayer::RegisterThread();
   }
   else {
-    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, do not register thread, mynode %i, tid %i, Tau_get_thread %i\n", RtsLayer::myNode(), RtsLayer::getTid(), Tau_get_thread());    
+    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, do not register thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());    
   }
 
 // #else
