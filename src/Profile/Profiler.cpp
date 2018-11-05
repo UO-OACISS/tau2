@@ -133,6 +133,10 @@ extern "C" void Tau_profile_exit_most_threads();
 extern "C" int TauCompensateInitialized(void);
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
 
+#ifdef TAU_ENABLE_ROCM
+extern void TauFlushRocmEventsIfNecessary(int thread_id);
+#endif /* TAU_ENABLE_ROCM */
+
 x_uint64 Tau_get_firstTimeStamp();
 
 //////////////////////////////////////////////////////////////////////
@@ -1489,6 +1493,9 @@ extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+#ifdef TAU_ENABLE_ROCM
+  TauFlushRocmEventsIfNecessary(tid); 
+#endif /* TAU_ENABLE_ROCM */
   TauMetrics_finalize();
 
   TAU_VERBOSE("finalizeCallSites_if_necessary: Total threads = %d\n", RtsLayer::getTotalThreads());
