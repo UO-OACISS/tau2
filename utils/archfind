@@ -75,7 +75,11 @@ else
     else
       TAU_W_FLAG=-w
     fi
-    ARCH=`$TAU_CCOM $TAU_W_FLAG -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+    if [ "x$TAU_CCOM" = "xmpicc" ]; then  # fix for PGI/18 mpicc 
+      ARCH=`$TAU_CCOM $TAU_W_FLAG -E $ARCHTESTFILE | grep ARCH | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+    else
+      ARCH=`$TAU_CCOM $TAU_W_FLAG -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+    fi
 
     if [ "$TAU_CCOM" = "mcc" ] ; then
       ARCH=`$TAU_CCOM $TAU_W_FLAG -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//' | tail -1` 
