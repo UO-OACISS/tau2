@@ -1895,7 +1895,7 @@ void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
     char const * localname;
     int locallen;
     getFortranName(&localname, &locallen, name, slen);
-    if (!Tau_memory_wrapper_is_registered()) {
+    if (Tau_memory_wrapper_is_registered()) {
       Tau_track_memory_allocation((void*)ptr, *size, localname, *line);
     }
     free((void*)localname);
@@ -1923,7 +1923,7 @@ void tau_dealloc_(void ** ptr, int* line, char *name, int slen)
     char const * localname;
     int locallen;
     getFortranName(&localname, &locallen, name, slen);
-    if (!Tau_memory_wrapper_is_registered()) {
+    if (Tau_memory_wrapper_is_registered()) {
       Tau_track_memory_deallocation((void*)ptr, localname, *line);
     }
     free((void*)localname);
