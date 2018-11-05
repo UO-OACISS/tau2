@@ -111,7 +111,7 @@ case $1 in
 	;;
 
      bfdinclude=*)
-        bfdinclude=`echo $1 | sed -e 's/^bfdinclude=//'`
+        bfdinclude=`echo $1 | sed -e 's/^bfdinclude=//' -e 's/#/ /g'`
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
 	;;
 
