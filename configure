@@ -544,9 +544,10 @@ for arg in "$@"; do
 	    echo "GPGPU Options:"
 	    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
 	    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
-            echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
-            echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
-            echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
+            echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
+           # echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+           # echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+           # echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
 	    echo ""
 	    echo "Other Options:"
 	    echo "-iowrapper .................................... Build POSIX IO Wrapper."
@@ -725,10 +726,10 @@ for arg in "$@"; do
         echo "            locations to add when linking to the cuda driver libraries."
         echo "-opencl=<dir> ................ Specify location of the top level OpenCL SDK"
         echo "  Note: This option is needed when used with -cuda=<dir> option. "
-        echo "-rocm=<dir> ........ Specify alternate path to ROCm (/opt/rocm default)."
-        echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
-        echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
-        echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
+        echo "-rocm[=<dir>] ...... Specify alternate path to ROCm (/opt/rocm default)."
+        #echo "-rocprofiler=<dir> .............. Specify location of ROCm rocprofiler."
+        #echo "-rocprofilerinc=<dir> .... Specify location of rocprofiler include dir."
+        #echo "-rocprofilerlibrary=<library> .... Specify name of rocprofiler library."
         echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
         echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
         echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -8604,8 +8605,9 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     exit 1
   fi
   if [ "$pin" = "no" ]; then
-    bfdinclude="-I$bfddir/include"
+    bfdinclude="-I$bfddir/include#-I$bfddir/include/extra"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
+    bfdinclude="-I$bfddir/include -I$bfddir/include/extra"
     bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl\,-rpath\,$bfddir/lib -Wl\,-rpath\,$bfddir/lib64"
   fi 
 
@@ -8633,7 +8635,7 @@ bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir
 ######################################################################
 cat <<EOF > conftest_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.25
+#define PACKAGE_VERSION 2.28
 #include <bfd.h>
 //#ifdef __APPLE__
 //#include <crt_externs.h>
@@ -8674,7 +8676,7 @@ fi
 ######################################################################
 cat <<EOF > conftest_elf_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.25
+#define PACKAGE_VERSION 2.28
 #include <stddef.h>
 #include <bfd.h>
 #include <elf-bfd.h>
@@ -8712,7 +8714,7 @@ cat <<EOF > conftest_bfd.c
 #include <mpc.h>
 #endif
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.25
+#define PACKAGE_VERSION 2.28
 #include <bfd.h>
 int main(int argc, char **argv) {
    bfd_init();
