@@ -46,6 +46,10 @@
 #define TAU_TRACE_FORMAT_TAU 0
 #define TAU_TRACE_FORMAT_OTF2 1
 
+#define TAU_EBS_RESOLUTION_FILE 0
+#define TAU_EBS_RESOLUTION_FUNCTION 1
+#define TAU_EBS_RESOLUTION_LINE 2
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -96,6 +100,7 @@ extern "C" {
   char *  TAUDECL Tau_check_dirname(const char *dirname);
   int  TAUDECL TauEnv_get_ebs_unwind();
   int  TAUDECL TauEnv_get_ebs_unwind_depth();
+  int  TAUDECL TauEnv_get_ebs_resolution();
   int  TAUDECL TauEnv_get_stat_precompute();
   int  TAUDECL TauEnv_get_child_forkdirs();
   int  TAUDECL TauEnv_get_summary_only();
@@ -119,6 +124,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_plugins_path();
   const char* TAUDECL TauEnv_get_plugins();
   int TAUDECL TauEnv_get_plugins_enabled();
+  int TAUDECL TauEnv_get_set_node();
   const char* TAUDECL TauEnv_get_cupti_api();
   const char* TAUDECL TauEnv_get_cuda_device_name();
   const char* TAUDECL TauEnv_get_cuda_instructions();
@@ -128,6 +134,12 @@ extern "C" {
   const char* TAUDECL TauEnv_get_cuda_sass_type();
   int TAUDECL TauEnv_get_cuda_csv_output();
   const char* TAUDECL TauEnv_get_cuda_binary_exe();
+  int  TAUDECL TauEnv_get_cudaTotalThreads();
+  void  TAUDECL TauEnv_set_cudaTotalThreads(int value);
+  int TAUDECL TauEnv_get_tauCuptiAvail();
+  void TAUDECL TauEnv_set_tauCuptiAvail(int value);
+  int  TAUDECL TauEnv_get_nodeNegOneSeen();
+  void  TAUDECL TauEnv_set_nodeNegOneSeen(int value);
   int TAUDECL TauEnv_get_mic_offload();
   int TAUDECL TauEnv_get_bfd_lookup();
 

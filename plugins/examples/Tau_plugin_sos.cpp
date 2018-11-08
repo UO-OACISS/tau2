@@ -36,6 +36,21 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data_t* data) {
     return 0;
 }
 
+/* This happens when reading MPI-T PVARs from the underlying MPI library */
+int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data_t* data) {
+
+    printf("TAU PLUGIN SOS: MPIT\n");
+
+    fprintf(stdout, "TAU PLUGIN SOS: pvar name: %s\n", data->pvar_name);
+    //std::cout << "TAU PLUGINS SOS: pvar name: " << data.pvar_name << std::endl;
+    fprintf(stdout, "TAU PLUGIN SOS: pvar value: %llu\n", data->pvar_value); 
+
+    //TAU_SOS_send_data();
+    Tau_SOS_pack_long(data->pvar_name, data->pvar_value);
+    TAU_SOS_send_data();
+    return 0;
+}
+
 /* This is a weird event, not sure what for */
 int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data_t* data) {
     return 0;
@@ -219,6 +234,8 @@ int Tau_plugin_sos_end_of_execution(Tau_plugin_event_end_of_execution_data_t* da
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
     //fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
+    //Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
+    fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
     // Parse our settings
     TAU_SOS_parse_environment_variables();
     // Check the value of TAU_SOS
@@ -227,11 +244,16 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
         printf("*** SOS NOT ENABLED! ***\n"); 
         return 0; 
     }
+
     TAU_SOS_init();
+
+    fprintf(stdout, "SOS plugin: SOS initalized\n");
+#if 1
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
     /* Required event support */
     cb->Dump = Tau_plugin_sos_dump;
+    cb->Mpit = Tau_plugin_sos_mpit;
     cb->MetadataRegistrationComplete = Tau_plugin_metadata_registration_complete_func;
     cb->PostInit = Tau_plugin_sos_post_init;
     cb->PreEndOfExecution = Tau_plugin_sos_pre_end_of_execution;
@@ -275,6 +297,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
         }
         RtsLayer::UnLockDB();
     }
+#endif
     return 0;
 }
 

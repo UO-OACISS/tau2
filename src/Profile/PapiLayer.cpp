@@ -726,9 +726,6 @@ int PapiLayer::initializeAndCheckRAPL(int tid) {
 int PapiLayer::initializePerfRAPL(int tid) {
 #if  (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 5) 
   int ret = 0; 
-  int set = PAPI_NULL;
-  int i; 
-  long long value; 
   PAPI_cpu_option_t opt;
 
   int rapl_cid  = 0; 

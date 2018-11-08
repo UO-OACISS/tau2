@@ -48,6 +48,17 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 extern "C" int Tau_init_initializeTAU();
 extern "C" void Tau_destructor_trigger();
 
+struct CudaThread
+{
+ public:
+  unsigned int sys_tid;     // pthread
+  int parent_tid;
+  int tau_vtid;    // virtual tid, write profiles
+    // callback info
+  const char* function_name;
+  unsigned int context_id;
+  unsigned int correlation_id;
+};
 
 struct CuptiCounterEvent
 {
@@ -102,6 +113,51 @@ struct CuptiCounterIdMap : public std::map<int, int>
 };
 typedef CuptiCounterIdMap counter_id_map_t;
 
+
+
+struct CuptiMetric
+{
+    static void printHeader();
+
+    CuptiMetric(int device_n, int metric_n);
+
+    CUdevice device;
+    CUpti_EventDomainID domain;
+    CUpti_MetricID metric;
+
+    std::string device_name;
+    std::string metric_name;
+    std::string metric_description;
+    std::string tag; // string presented to the user.
+
+    void print();
+};
+
+struct CuptiMetricMap: public std::map<std::string, CuptiMetric*>
+{
+    CuptiMetricMap() {
+        Tau_init_initializeTAU();
+    }
+    ~CuptiMetricMap() {
+        Tau_destructor_trigger();
+    }
+};
+typedef CuptiMetricMap metric_map_t;
+typedef CuptiMetricMap::iterator metric_map_it;
+
+struct CuptiMetricVector: public std::vector<CuptiMetric*>
+{
+    CuptiMetricVector() {
+        Tau_init_initializeTAU();
+    }
+    ~CuptiMetricVector() {
+        Tau_destructor_trigger();
+    }
+};
+typedef CuptiMetricVector metric_vec_t;
+
+
+
 #ifdef DISABLE_CUPTI
 
 extern int Tau_CuptiLayer_get_num_events() {}
@@ -147,9 +203,11 @@ extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
 
 extern void Tau_CuptiLayer_Initialize_callbacks();
 
-extern void Tau_CuptiLayer_Initialize_Map();
+extern void Tau_CuptiLayer_Initialize_Map(int off);
 
 extern counter_map_t& Tau_CuptiLayer_Counter_Map();
+
+extern metric_map_t& Tau_CuptiLayer_Metric_Map();
 
 extern counter_id_map_t interal_id_map();
 #endif

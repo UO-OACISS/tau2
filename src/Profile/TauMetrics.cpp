@@ -104,6 +104,7 @@ static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
 static TauMetricCuptiFlag cumetric[TAU_MAX_METRICS];
 static int eventsv[TAU_MAX_METRICS];
+static double defaults[TAU_MAX_METRICS]; // used for values read before initialization
 
 /* nfunctions can be different from nmetrics because
  a single call to PAPI can provide several metrics */
@@ -123,8 +124,8 @@ static x_uint64 finalTimeStamp = 0L;
 /* flags for atomic metrics */
 char *TauMetrics_atomicMetrics[TAU_MAX_METRICS] = { NULL };
 
-static int cuda_device_count() {
 #ifdef CUPTI
+static int cuda_device_count() {
 	int deviceCount;
 	CUresult result = cuDeviceGetCount(&deviceCount);
 	if (result == CUDA_ERROR_NOT_INITIALIZED) {
@@ -138,10 +139,8 @@ static int cuda_device_count() {
 		exit(result);
 	}
 	return deviceCount;
-#else
-	return 0;
-#endif
 }
+#endif
 
 static void check_max_metrics() {
 	if (nmetrics >= TAU_MAX_METRICS) {
@@ -159,8 +158,6 @@ static void check_max_metrics() {
 static void metricv_add(const char *name) {
 	int cupti_metric = 0;
 
-	char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
-
 	// Don't add metrics twice
 	for (int i = 0; i < nmetrics; ++i) {
 		if (strcasecmp(metricv[i], name) == 0) {
@@ -171,6 +168,8 @@ static void metricv_add(const char *name) {
 	check_max_metrics();
 
 #ifdef CUPTI
+	char const * const tau_cuda_device_name = TauEnv_get_cuda_device_name();
+
 	// Get events required to compute CUPTI metric
 	for(int dev=0; dev<cuda_device_count(); ++dev) {
 		CUptiResult result;
@@ -388,7 +387,6 @@ static void read_env_vars() {
 				}
 			}
 		}
-		//printf("METRICS is %s\n", metrics);
 
 		token = strtok(metrics, "^");
 		while (token) {
@@ -659,8 +657,10 @@ static void initialize_functionArray() {
 		}
 #endif
 		//printf("adding %d metrics\n", nmetrics);
+#ifdef TAU_LIKWID
 		bool firstLikwidString=true;
 		int numLikwidEvents=0;
+#endif
 		std::string likwidEventString;
 		for (int i = 0; i < nmetrics; i++) {
 
@@ -827,6 +827,20 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 	}
 }
 
+void TauMetrics_getDefaults(int tid, double values[], int reversed) {
+	if (Tau_init_check_initialized()) {
+	    if (reversed) {
+            for (int i=nfunctions-1; i >= 0; --i) {
+                values[i] = defaults[i];
+            }
+	    } else {
+            for (int i=0; i < nfunctions; i++) {
+                values[i] = defaults[i];
+            }
+	    }
+	}
+}
+
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid,
 		double values[]) {
 	for (int i = 0; i < nfunctions; i++) {
@@ -858,6 +872,11 @@ extern "C" x_uint64 TauMetrics_getTimeOfDay() {
  * Initialize the metrics module
  ********************************************************************/
 int TauMetrics_init() {
+    // Why lock?  Well, other threads can get spawned by this metric
+    // initialization process, so don't allow anyone to try to take
+    // measurements until after metrics are ready.
+    RtsLayer::LockDB();
+
 	int i;
 
 	initialTimeStamp = TauMetrics_getTimeOfDay();
@@ -868,7 +887,7 @@ int TauMetrics_init() {
 		//         user-selected metrics to be measured.
 		if (strcasecmp(TauEnv_get_ebs_source(), "itimer") != 0) {
 			metricv_add (TauEnv_get_ebs_source());}
-		}
+    }
 
 		/* Set the user clock values to 0 */
 	for (i = 0; i < TAU_MAX_THREADS; i++) {
@@ -884,6 +903,8 @@ int TauMetrics_init() {
 	reorder_metrics("KTAU\0");
 
 	initialize_functionArray();
+    // set the "default" values for timers started before we were ready
+    TauMetrics_getMetrics(Tau_get_thread(), defaults, 0);
 
 	Tau_Global_numCounters = nmetrics;
 
@@ -909,6 +930,7 @@ int TauMetrics_init() {
 		}
 	}
 
+    RtsLayer::UnLockDB();
 	return 0;
 }
 

@@ -162,6 +162,12 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 #endif /* MPI | SHMEM */
 #endif /* __PIN__ */
   }
+#ifdef TAU_SCOREP
+  if (Tau_global_getLightsOut()) { 
+    TAU_VERBOSE("TAU<%d,%d>: FunctionInfoInit: Lights out... \n",RtsLayer::myNode(), tid);
+    return; 
+  }
+#endif /* TAU_SCOREP */
 
 
   // Protect TAU from itself
@@ -178,6 +184,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //   is ready at this point.
 #ifndef _AIX
   static bool mm_initialized = Tau_MemMgr_initIfNecessary();
+  TAU_UNUSED(mm_initialized);
 #endif /* _AIX */
 #endif  
 

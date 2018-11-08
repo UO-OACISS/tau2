@@ -133,6 +133,10 @@ using namespace std;
 #define TAU_EBS_UNWIND_DEFAULT 0
 #define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
+#define TAU_EBS_RESOLUTION_STR_LINE "line"
+#define TAU_EBS_RESOLUTION_STR_FILE "file"
+#define TAU_EBS_RESOLUTION_STR_FUNCTION "function"
+
 /* Experimental feature - pre-computation of statistics */
 //#if (defined(TAU_UNIFY) && defined(TAU_MPI))
 #if defined(TAU_UNIFY)
@@ -229,6 +233,10 @@ using namespace std;
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
+#ifdef TAU_MPI
+extern "C" void Tau_set_usesMPI(int value);
+#endif /* TAU_MPI */
+
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
 extern "C" {
@@ -239,7 +247,7 @@ static int env_throttle = 0;
 static double env_evt_threshold = 0.0;
 static int env_interval = 0;
 static int env_disable_instrumentation = 0;
-static double env_max_records = 0;
+static double env_max_records = 64*1024;
 static int env_callpath = 0;
 static int env_callsite = 0;
 static int env_callsite_depth = 0;
@@ -283,6 +291,7 @@ static int env_ebs_enabled_tau = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
 static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+static int env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
 
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
@@ -311,6 +320,11 @@ static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
 static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
 static const char *env_binaryexe = NULL;
 
+static int env_node_set = -1;
+
+static int env_cudatotalthreads = 0;
+static int env_taucuptiavail = 0;
+static int env_nodenegoneseen = 0;
 static int env_mic_offload = 0;
 static int env_bfd_lookup = 0;
 
@@ -757,6 +771,10 @@ extern "C" int TauEnv_get_plugins_enabled() {
   return env_plugins_enabled;
 }
 
+extern "C" int TauEnv_get_set_node() {
+  return env_node_set;
+}
+
 extern "C" const char *TauEnv_get_cvar_values() {
   return env_cvar_values;
 }
@@ -997,6 +1015,10 @@ int TauEnv_get_ebs_enabled_tau() {
   return env_ebs_enabled_tau;
 }
 
+int TauEnv_get_ebs_resolution() {
+  return env_ebs_resolution;
+}
+
 int TauEnv_get_openmp_runtime_enabled() {
   return env_openmp_runtime_enabled;
 }
@@ -1081,6 +1103,27 @@ int TauEnv_get_cuda_csv_output(){
 
 const char* TauEnv_get_cuda_binary_exe(){
   return env_binaryexe;
+}
+
+void TauEnv_set_cudaTotalThreads(int nthreads) {
+    env_cudatotalthreads = nthreads;
+}
+int TauEnv_get_cudaTotalThreads() {
+    return env_cudatotalthreads;
+}
+
+void TauEnv_set_tauCuptiAvail(int off) {
+    env_taucuptiavail = off;
+}
+int TauEnv_get_tauCuptiAvail() {
+    return env_taucuptiavail;
+}
+
+void TauEnv_set_nodeNegOneSeen(int nthreads) {
+    env_nodenegoneseen = nthreads;
+}
+int TauEnv_get_nodeNegOneSeen() {
+    return env_nodenegoneseen;
 }
 
 int TauEnv_get_mic_offload(){
@@ -1504,7 +1547,7 @@ void TauEnv_initialize()
       tmp = getconf("TAU_MEMDBG_FILL_GAP");
       if (tmp) {
         env_memdbg_fill_gap = 1;
-        env_memdbg_fill_gap_value = (unsigned char)atoi(tmp);
+        env_memdbg_fill_gap_value = parse_int(tmp, env_memdbg_fill_gap_value);
         TAU_VERBOSE("TAU: Initializing memory gap to %d\n", tmp);
         TAU_METADATA("TAU_MEMDBG_FILL_GAP", tmp);
       }
@@ -1535,7 +1578,7 @@ void TauEnv_initialize()
 
       tmp = getconf("TAU_MEMDBG_ALIGNMENT");
       if (tmp) {
-        env_memdbg_alignment = (size_t)atoi(tmp);
+        env_memdbg_alignment = parse_int(tmp, env_memdbg_alignment);
       }
       if ((int)env_memdbg_alignment != ((int)env_memdbg_alignment & -(int)env_memdbg_alignment)) {
         TAU_VERBOSE("TAU: ERROR - Memory debugging alignment is not a power of two: %ld\n", env_memdbg_alignment);
@@ -1821,6 +1864,31 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
+
+
+    const char *max_records = getconf("TAU_MAX_RECORDS");
+    env_max_records = TAU_MAX_RECORDS;
+    if (max_records) {
+      env_max_records = strtod(max_records, 0);
+      TAU_VERBOSE("TAU: TAU_MAX_RECORDS = %g\n", env_max_records);
+    }
+
+
+
+#ifdef TAU_MPI
+    tmp = getconf("TAU_SET_NODE");
+    if (tmp) {
+      int node_id = 0;
+      sscanf(tmp,"%d",&node_id);
+      env_node_set=node_id;
+      TAU_VERBOSE("TAU: Setting node value forcibly to (TAU_SET_NODE): %d\n", node_id); 
+      TAU_PROFILE_SET_NODE(node_id);
+      Tau_set_usesMPI(1);
+      TAU_METADATA("TAU_SET_NODE", tmp);
+    }
+#endif /* TAU_MPI */
+
+    
 #endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC || TAU_GPI */
 
     /* clock synchronization */
@@ -1917,13 +1985,7 @@ void TauEnv_initialize()
     if (numcalls) {
       env_throttle_numcalls = strtod(numcalls, 0);
     }
-    const char *max_records = getconf("TAU_MAX_RECORDS");
-    env_max_records = TAU_MAX_RECORDS;
-    if (max_records) {
-      env_max_records = strtod(max_records, 0);
-      TAU_VERBOSE("TAU: TAU_MAX_RECORDS = %g\n", env_max_records);
-    }
-
+    
     if (env_throttle) {
       TAU_VERBOSE("TAU: Throttle PerCall = %g\n", env_throttle_percall);
       TAU_VERBOSE("TAU: Throttle NumCalls = %g\n", env_throttle_numcalls);
@@ -2303,6 +2365,20 @@ void TauEnv_initialize()
       }
 #endif /* TAU_UNWIND */
 
+      const char *ebs_resolution = getconf("TAU_EBS_RESOLUTION");
+      if (ebs_resolution) {
+          if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_FILE) == 0) {
+              env_ebs_resolution = TAU_EBS_RESOLUTION_FILE;
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_FILE);
+          } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_FUNCTION) == 0) {
+              env_ebs_resolution = TAU_EBS_RESOLUTION_FUNCTION;
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_FUNCTION);
+          } else if (strcmp(ebs_resolution, TAU_EBS_RESOLUTION_STR_LINE) == 0) { // otherwise, it's the default - line.
+              env_ebs_resolution = TAU_EBS_RESOLUTION_LINE;
+              TAU_METADATA("TAU_EBS_RESOLUTION", TAU_EBS_RESOLUTION_STR_LINE);
+          }
+      }
+
       if (TauEnv_get_tracing()) {
         env_callpath = 1;
         env_callpath_depth = 300;
@@ -2389,7 +2465,6 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_TRACK_CUDA_SASS", "on");
       // get arg of sass type
       const char *sass_type = getconf("TAU_SASS_TYPE");
-      const char *default_sass_type = TAU_SASS_TYPE_DEFAULT;
       if (sass_type) {
 	env_sass_type = sass_type; 
       }

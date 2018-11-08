@@ -99,6 +99,7 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
 
   // Always ensure the system is ready for the mmap call
   static bool initialized = Tau_MemMgr_initIfNecessary();
+  TAU_UNUSED(initialized);
 
   prot = PROT_READ | PROT_WRITE;
   fd = -1;
@@ -206,6 +207,7 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
   //printf("%d Allocating %d\n", tid, size); fflush(stdout);
   // Always ensure the system is ready for a malloc
   static bool initialized = Tau_MemMgr_initIfNecessary();
+  TAU_UNUSED(initialized);
 
 #ifdef USE_RECYCLER
   // can we recycle an old block?

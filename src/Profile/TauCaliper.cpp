@@ -332,7 +332,7 @@ cali_err cali_safe_end_string(cali_id_t attr, const char* val) {
     if(value.type == STRING) {
 
       if(strcmp(val, value.data.str)) {
-        fprintf(stderr, "TAU: CALIPER: Given value: %s does not match the innermost value: %s for the attribute %d\n", val, value.data.str, attr);
+        fprintf(stderr, "TAU: CALIPER: Given value: %s does not match the innermost value: %s for the attribute %llu\n", val, value.data.str, attr);
         RtsLayer::UnLockEnv();
         return CALI_EINV;
       } 
@@ -1020,12 +1020,12 @@ cali_variant_t cali_get(cali_id_t attr_id) {
 
   std::map<cali_id_t, std::string>::iterator it = _attribute_id_map_.find(attr_id);
   if(it == _attribute_id_map_.end()) {
-    fprintf(stderr, "TAU: CALIPER: Attribute with id: %d doesn't exist\n", attr_id);
+    fprintf(stderr, "TAU: CALIPER: Attribute with id: %llu doesn't exist\n", attr_id);
     return cali_make_empty_variant();
   }
 
   if(attribute_stack[it->second].empty()) {
-    fprintf(stderr, "TAU: CALIPER: Attribute with id: %d doesn't have any values on the blackboard\n", attr_id);
+    fprintf(stderr, "TAU: CALIPER: Attribute with id: %llu doesn't have any values on the blackboard\n", attr_id);
     return cali_make_empty_variant();
   }
 

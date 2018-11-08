@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -399,7 +400,7 @@ void TauContextUserEvent::FormulateContextComparisonArray(Profiler * current, lo
   int depth = Tau_get_current_stack_depth(tid);
   if (depth > TAU_MAX_CALLPATH_DEPTH) {
       // oh, no...  super-deep callpath.  Warn the user and abort.  Bummer.
-      fprintf(stderr, "ERROR! The callstack depth has exceeded a hard-coded limit in TAU.  Please reconfigure TAU with the option '-useropt=TAU_MAX_CALLPATH_DEPTH=X' where X is greater than %d\n", TAU_MAX_CALLPATH_DEPTH);
+      fprintf(stderr, "ERROR! The callstack depth has exceeded a hard-coded limit in TAU.  Please reconfigure TAU with the option '-useropt=-DTAU_MAX_CALLPATH_DEPTH=X' where X is greater than %d\n", TAU_MAX_CALLPATH_DEPTH);
   }
 
   int i=1;

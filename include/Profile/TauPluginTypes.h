@@ -41,6 +41,12 @@ typedef struct Tau_plugin_event_dump_data {
    int tid;
 } Tau_plugin_event_dump_data_t;
 
+typedef struct Tau_plugin_event_mpit_data {
+   int pvar_index;
+   char * pvar_name;
+   long long int pvar_value;
+} Tau_plugin_event_mpit_data_t;
+
 typedef struct Tau_plugin_event_function_entry_data {
    const char * timer_name;
    const char * timer_group;
@@ -107,6 +113,7 @@ typedef int (*Tau_plugin_function_registration_complete)(Tau_plugin_event_functi
 typedef int (*Tau_plugin_metadata_registration_complete)(Tau_plugin_event_metadata_registration_data_t*);
 typedef int (*Tau_plugin_post_init)(Tau_plugin_event_post_init_data_t*);
 typedef int (*Tau_plugin_dump)(Tau_plugin_event_dump_data_t*);
+typedef int (*Tau_plugin_mpit)(Tau_plugin_event_mpit_data_t*);
 typedef int (*Tau_plugin_function_entry)(Tau_plugin_event_function_entry_data_t*);
 typedef int (*Tau_plugin_function_exit)(Tau_plugin_event_function_exit_data_t*);
 typedef int (*Tau_plugin_current_timer_exit)(Tau_plugin_event_current_timer_exit_data_t*);
@@ -125,6 +132,7 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_metadata_registration_complete MetadataRegistrationComplete;
    Tau_plugin_post_init PostInit;
    Tau_plugin_dump Dump;
+   Tau_plugin_mpit Mpit;
    Tau_plugin_function_entry FunctionEntry;
    Tau_plugin_function_exit FunctionExit;
    Tau_plugin_current_timer_exit CurrentTimerExit;
@@ -144,6 +152,7 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_METADATA_REGISTRATION,
    TAU_PLUGIN_EVENT_POST_INIT,
    TAU_PLUGIN_EVENT_DUMP,
+   TAU_PLUGIN_EVENT_MPIT,
    TAU_PLUGIN_EVENT_FUNCTION_ENTRY,
    TAU_PLUGIN_EVENT_FUNCTION_EXIT,
    TAU_PLUGIN_EVENT_SEND,
@@ -163,6 +172,7 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int metadata_registration;
     unsigned int post_init;
     unsigned int dump;
+    unsigned int mpit;
     unsigned int function_entry;
     unsigned int function_exit;
     unsigned int send;

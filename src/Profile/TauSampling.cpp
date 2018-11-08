@@ -727,6 +727,14 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
   return NULL;
 }
 
+#ifdef TAU_BFD
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname);
+#else /* TAU_BFD */
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
+  return 10;
+}
+#endif /* TAU_BFD */
+
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
     char const * childName, char **newShortName, bool addAddress)
@@ -804,13 +812,53 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
     sprintf(lineno, "%d", resolvedInfo.lineno);
     // make sure we allocate enough space for the buffer!!!!
     if (childName) {
-      buff = (char*)malloc(strlen(tag) + strlen(childName) + strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + strlen(lineno) + 32);
-      sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
-          tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+        if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FILE) {
+            buff = (char*)malloc(strlen(tag) + strlen(childName) + 
+                    strlen(resolvedInfo.filename) + 32);
+            sprintf(buff, "[%s] %s [@] [{%s} {0}]",
+                tag, childName, resolvedInfo.filename);
+        } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION) {
+            buff = (char*)malloc(strlen(tag) + strlen(childName) + 
+                    strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 
+                    strlen(lineno) + 32);
+            sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+                tag, childName, resolvedInfo.funcname, 
+                resolvedInfo.filename, 
+		Tau_get_lineno_for_function(TheBfdUnitHandle(), 
+                                            resolvedInfo.funcname) );
+        } else { // Line resolution
+            buff = (char*)malloc(strlen(tag) + strlen(childName) + 
+                    strlen(resolvedInfo.funcname) + 
+                    strlen(resolvedInfo.filename) + 
+                    strlen(lineno) + 32);
+            sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+                tag, childName, resolvedInfo.funcname, 
+                resolvedInfo.filename, resolvedInfo.lineno);
+        }
     } else {
-      buff = (char*)malloc(strlen(tag) + strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + strlen(lineno) + 32);
-      sprintf(buff, "[%s] %s [{%s} {%d}]",
-          tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+        if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FILE) {
+            buff = (char*)malloc(strlen(tag) + 
+                    strlen(resolvedInfo.filename) + 32);
+            sprintf(buff, "[%s] [{%s} {0}]",
+                tag, resolvedInfo.filename);
+        } else if (TauEnv_get_ebs_resolution() == TAU_EBS_RESOLUTION_FUNCTION) {
+            buff = (char*)malloc(strlen(tag) + 
+                    strlen(resolvedInfo.funcname) + 
+                    strlen(resolvedInfo.filename) + 32);
+            sprintf(buff, "[%s] %s [{%s} {%d}]",
+                tag, resolvedInfo.funcname, 
+                resolvedInfo.filename, 
+                Tau_get_lineno_for_function(TheBfdUnitHandle(), 
+                                            resolvedInfo.funcname));
+        } else { // Line resolution
+            buff = (char*)malloc(strlen(tag) + 
+                    strlen(resolvedInfo.funcname) + 
+                    strlen(resolvedInfo.filename) + 
+                    strlen(lineno) + 32);
+            sprintf(buff, "[%s] %s [{%s} {%d}]",
+                tag, resolvedInfo.funcname, 
+                resolvedInfo.filename, resolvedInfo.lineno);
+        }
     }
     *newShortName = (char*)malloc(strlen(resolvedInfo.filename) + strlen(lineno) + 2);
     sprintf(*newShortName, "%s.%d", resolvedInfo.filename, resolvedInfo.lineno);
@@ -1661,7 +1709,7 @@ int Tau_sampling_init(int tid)
     //   The overriden value will eventually be used in the final EBS data resolution
     //   phase to latch the EBS data to the appropriate metric data (which uses the
     //   EBS_SOURCE string to figure out the metric index).
-    if (temp) {
+    if (temp != NULL) {
       TauEnv_override_ebs_source(temp);
     } else {
       fprintf(stderr, "TAU Sampling Warning: No time-related metric found in TAU_METRICS. "

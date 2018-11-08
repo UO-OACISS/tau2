@@ -24,7 +24,7 @@
 #include <ucontext.h>
 #endif
 
-#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID)
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(TAU_NEC_SX)
 #include <execinfo.h>
 #define TAU_EXECINFO 1
 #endif /* _AIX */
@@ -165,12 +165,14 @@ struct callsiteFirstKeyMap_t : public map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE>
   }
 };
 
+/* Not used?
 static callsiteFirstKeyMap_t& TheCallSiteFirstKeyMap(void)
 {
   static callsiteFirstKeyMap_t callsiteFirstKeyMap[TAU_MAX_THREADS];
   int tid = RtsLayer::myThread();
   return callsiteFirstKeyMap[tid];
 }
+*/
 
 struct callsitePathMap_t : public map<TAU_CALLSITE_PATH_MAP_TYPE>
 {
@@ -253,7 +255,11 @@ char * Tau_callsite_resolveCallSite(unsigned long addr)
     length = strlen(resolvedInfo.funcname) + strlen(resolvedInfo.filename) + 100;
     resolvedBuffer = (char*)malloc(length * sizeof(char));
     int status;
+#ifndef TAU_NEC_SX
     char *demangled_funcname = abi::__cxa_demangle(resolvedInfo.funcname, 0, 0, &status);
+#else
+    char *demangled_funcname = (char *) resolvedInfo.funcname;
+#endif 
     if (status == 0)
       sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
           demangled_funcname, resolvedInfo.filename, resolvedInfo.lineno);
@@ -433,7 +439,7 @@ static bool nameInSHMEM(const char *name)
   name = strchr(name, '[') + 1;
   char buff[6];
   if (strlen(name) < sizeof(buff)) return false;
-  for (int i=0; i<sizeof(buff); ++i) {
+  for (size_t i=0; i<sizeof(buff); ++i) {
     buff[i] = tolower(name[i]);
   }
   return !strncmp("shmem_", buff, 6);
@@ -444,7 +450,7 @@ bool nameInMPI(const char *name)
   name = strchr(name, '[') + 1;
   char buff[4];
   if (strlen(name) < sizeof(buff)) return false;
-  for (int i=0; i<sizeof(buff); ++i) {
+  for (size_t i=0; i<sizeof(buff); ++i) {
     buff[i] = tolower(name[i]);
   }
   return !strncmp("mpi_", buff, 4);
@@ -522,7 +528,7 @@ bool determineCallSiteViaString(unsigned long *addresses)
             name = Tau_callsite_resolveCallSite(addresses[i + offset]);
             if(strstr(name,"__wrap_") != NULL) {
               //if(i + 3 < length) {
-              for(int j=3; j<length-i; j++) {
+              for(size_t j=3; j<length-i; j++) {
                 unsigned long callsite_unwrapped = addresses[i + j];//3];
                 char *name_unwrapped = Tau_callsite_resolveCallSite(addresses[i + j]);//3]);
                 if (strstr(name_unwrapped,"UNRESOLVED ADDR") == NULL) {
@@ -591,14 +597,14 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
   //   not allow us to mitigate the effects of deep direct recursion, so expect some
   //   strange results in that department.
 #ifdef TAU_EXECINFO 
-  void *array[TAU_SAMP_NUM_ADDRESSES];
+  void* array[TAU_SAMP_NUM_ADDRESSES];
   size_t size;
   // get void*'s for all entries on the stack
   size = backtrace(array, TAU_SAMP_NUM_ADDRESSES);
   // *CWL* NOTE: backtrace_symbols() will work for __APPLE__. Since addr2line fails
   //       there, backup information using the "-->" format could be employed for
   //       Mac OS X instead of "unresolved".
-  if ((array != NULL) && (size > 0)) {
+  if (size > 0) {
     // construct the callsite structure from the buffer.
     callsites[0] = (unsigned long)size;
     for (unsigned int i = 0; i < size; i++) {
@@ -623,11 +629,11 @@ void Profiler::CallSiteStart(int tid, x_uint64 TraceTimeStamp)
 
   // Make sure we don't walk off the top of the stack
   // First element of callsites is the number of callsites on the stack
-  int callsite_depth = TauEnv_get_callsite_depth();
+  size_t callsite_depth = TauEnv_get_callsite_depth();
   if (callsite_depth > callsites[0]) {
     callsite_depth = callsites[0];
   }
-  for (int depth=0; depth<callsite_depth; ++depth) {
+  for (size_t depth=0; depth<callsite_depth; ++depth) {
     unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1];
     memset(callsiteKey, 0, sizeof(callsiteKey));
     memcpy(callsiteKey+1, callsites+1+depth, sizeof(callsiteKey)-(depth+1)*sizeof(unsigned long));

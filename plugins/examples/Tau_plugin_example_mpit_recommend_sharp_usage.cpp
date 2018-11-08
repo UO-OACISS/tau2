@@ -36,7 +36,7 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
   int numCounters;
   std::vector<FunctionInfo*>::iterator it;
 
-  TAU_VERBOSE("TAU PLUGIN: Sharp recommendation generated for tid: %d\n", data.tid);
+  TAU_VERBOSE("TAU PLUGIN: Sharp recommendation generated for tid: %d\n", data->tid);
 
   //Get the most up-to-date profile information
   TauProfiler_updateAllIntermediateStatistics();

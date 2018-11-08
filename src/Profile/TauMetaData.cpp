@@ -36,6 +36,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 
 #include <sstream>
 
+#ifdef TAU_NEC_SX
+#include <strings.h>
+#endif /* TAU_NEC_SX */
+
 #include "tauarch.h"
 #include <Profile/Profiler.h>
 #include <Profile/tau_types.h>
@@ -276,7 +280,6 @@ void Tau_metadata_push_to_plugins(void) {
     int tid = RtsLayer::myThread();
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin(); 
          it != Tau_metadata_getMetaData(tid).end(); it++) {
-        char tmp[128] = {0};
 
         /*Invoke plugins only if both plugin path and plugins are specified*/
         if(Tau_plugins_enabled.metadata_registration) {
@@ -1161,7 +1164,7 @@ int Tau_write_metadata_records_in_scorep(int tid) {
 }
 
 char * Tau_metadata_get(const char * name, int tid) {
-    char * returnval;
+    char * returnval = NULL;
     Tau_metadata_key key;
     key.name = strdup(name);
     MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).find(key); 

@@ -33,6 +33,11 @@ counter_map_t & Tau_CuptiLayer_Counter_Map() {
   return Counter_Map;
 }
 
+metric_map_t & Tau_CuptiLayer_Metric_Map() {
+  static metric_map_t Metric_Map;
+  return Metric_Map;
+}
+
 static bool * initialized = NULL;
 
 
@@ -43,6 +48,11 @@ int internal_id_map_backwards[TAU_MAX_COUNTERS] = {0};
 counter_vec_t & Tau_CuptiLayer_Added_counters() {
     static counter_vec_t added_counters;
     return added_counters;
+}
+
+metric_vec_t & Tau_CuptiLayer_Added_metrics() {
+    static metric_vec_t added_metrics;
+    return added_metrics;
 }
 
 char const * Tau_CuptiLayer_Added_strings[TAU_MAX_COUNTERS];
@@ -174,6 +184,76 @@ void CuptiCounterEvent::print()
 	//	endl << endl;
 	cout << setw(54) << tag << " " <<
 					setw(15) << event_description <<
+					endl << endl;
+}
+
+CuptiMetric::CuptiMetric(int device_n, int metric_n)
+{
+    CUresult cuErr;
+    CUptiResult cuptiErr;
+    size_t size;
+
+    char buff[TAU_CUPTI_MAX_NAME];
+    char metric_description_char[TAU_CUPTI_MAX_DESCRIPTION];
+
+    // Device
+    cuErr = cuDeviceGet(&device, device_n);
+    CHECK_CU_ERROR(cuErr, "cuDeviceGet");
+    cuErr = cuDeviceGetName(buff, sizeof(buff), device);
+    CHECK_CU_ERROR(cuErr, "cuDeviceGetName");
+    device_name = string(buff);
+    Tau_util_replaceStringInPlace(device_name, " ", "_"); 
+
+    //Event
+    uint32_t num_metrics;
+    cuptiErr = cuptiDeviceGetNumMetrics(device, &num_metrics);
+    CHECK_CUPTI_ERROR(cuptiErr, "cuptiDeviceGetNumMetrics");
+
+    size = sizeof(CUpti_MetricID) * num_metrics;
+    CUpti_MetricID * metric_p = (CUpti_EventID*)malloc(size);
+    cuptiErr = cuptiDeviceEnumMetrics(device, &size, metric_p);
+    CHECK_CUPTI_ERROR(cuptiErr, "cuptiDeviceEnumMetrics");
+    metric = metric_p[metric_n];
+    free(metric_p);
+
+    size = sizeof(buff);
+    cuptiErr = cuptiMetricGetAttribute(metric, CUPTI_METRIC_ATTR_NAME, &size, buff);
+    CHECK_CUPTI_ERROR(cuptiErr, "cuptiMetricGetAttribute, metric_name");
+    if (size == sizeof(buff)) {
+        fprintf(stderr, "%s:%d: TAU_CUPTI_MAX_NAME=%d is too small for event name!\n",
+                __FILE__, __LINE__, TAU_CUPTI_MAX_NAME);
+        exit(EXIT_FAILURE);
+    }
+    metric_name = string(buff);
+
+    size = TAU_CUPTI_MAX_DESCRIPTION;
+    cuptiErr = cuptiMetricGetAttribute(metric, CUPTI_METRIC_ATTR_SHORT_DESCRIPTION, &size, metric_description_char);
+    CHECK_CUPTI_ERROR(cuptiErr, "cuptiMetricGetAttribute, metric_short_desc");
+    if (size == sizeof(metric_description_char)) {
+        fprintf(stderr, "%s:%d: TAU_CUPTI_MAX_DESCRIPTION=%d is too small for event description!\n",
+                __FILE__, __LINE__, TAU_CUPTI_MAX_DESCRIPTION);
+        exit(EXIT_FAILURE);
+    }
+    metric_description = string(metric_description_char);
+
+    // Tag
+    tag = metric_name;
+}
+
+void CuptiMetric::printHeader()
+{
+	//header
+	cout << left;
+	cout << setw(55) << "CUDA.Device.Metric" << setw(15) << "Description" << endl << endl;
+}
+
+void CuptiMetric::print()
+{
+	//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
+	//		domain_name << setw(20) << event_name << setw(25) << event_description << 
+	//	endl << endl;
+	cout << setw(54) << tag << " " <<
+					setw(15) << metric_description <<
 					endl << endl;
 }
 
@@ -528,11 +608,12 @@ void Tau_CuptiLayer_Initialize_callbacks()
     }
 }
 
-void Tau_CuptiLayer_Initialize_Map()
+void Tau_CuptiLayer_Initialize_Map(int off)
 {
 #ifdef TAU_DEBUG_CUPTI
     printf("in Tau_CuptiLayer_Initialize_Map\n");
 #endif
+    TauEnv_set_tauCuptiAvail(off);
     Tau_CuptiLayer_Initialize_callbacks();
 
     CUdevice currDevice = -1;
@@ -545,6 +626,7 @@ void Tau_CuptiLayer_Initialize_Map()
     int deviceCount;
     uint32_t domainCount;
     uint32_t eventCount;
+    uint32_t metricCount;
     //CuptiCounterEvent::printHeader();
 
     er = cuDeviceGetCount(&deviceCount);
@@ -610,6 +692,16 @@ void Tau_CuptiLayer_Initialize_Map()
             err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount);
             CHECK_CUPTI_ERROR(err, "cuptiDeviceGetNumEventDomains");
         }
+
+        err = cuptiDeviceGetNumMetrics(currDevice, &metricCount);
+        CHECK_CUPTI_ERROR(err, "cuptiDeviceGetNumMetrics");
+        for( int k = 0; k < metricCount; k++) {
+            CuptiMetric* metric = new CuptiMetric(i, k);
+            Tau_CuptiLayer_Metric_Map().insert(std::make_pair(metric->tag, metric));
+#ifdef TAU_DEBUG_CUPTI
+            metric->print();
+#endif
+        }
         cuDeviceGetCount(&deviceCount);
     }
 #ifdef TAU_DEBUG_CUPTI
@@ -620,7 +712,7 @@ void Tau_CuptiLayer_Initialize_Map()
 bool Tau_CuptiLayer_is_cupti_counter(char const * str)
 {
 	if (Tau_CuptiLayer_Counter_Map().empty()) {
-		Tau_CuptiLayer_Initialize_Map();
+	  Tau_CuptiLayer_Initialize_Map(0);
 	}
 	return Tau_CuptiLayer_Counter_Map().count(string(str)) > 0;
 }

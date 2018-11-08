@@ -720,6 +720,10 @@ string RtsLayer::PrimaryGroup(const char *ProfileGroupName)
 
 
 
+#ifdef TAU_NEC_SX
+#define NO_RTTI 1
+#endif /* TAU_NEC_SX */
+
 #ifdef __GNUC__
 #ifndef NO_RTTI
 #include <cxxabi.h>

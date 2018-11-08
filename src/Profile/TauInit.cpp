@@ -433,6 +433,9 @@ extern "C" int Tau_init_initializeTAU()
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  static bool initialized = false;
+  if (initialized) return 0;
+
   /* initialize the memory debugger */
   Tau_memory_initialize();
 
@@ -450,6 +453,7 @@ extern "C" int Tau_init_initializeTAU()
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
   Tau_init_epilog();
+  initialized = true;
   return 0;
 #endif
 
@@ -457,12 +461,14 @@ extern "C" int Tau_init_initializeTAU()
   /* no more initialization necessary if using SCOREP */
   SCOREP_Tau_InitMeasurement();
   SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_scorep);
+  initialized = true;
   return 0;
 #endif
 
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
   Tau_init_vampirTrace();
+  initialized = true;
   return 0;
 #endif
 
@@ -480,6 +486,9 @@ extern "C" int Tau_init_initializeTAU()
 #endif
 
   Tau_profiler_initialization();
+
+  // Mark initialization complete so calls below can start timers
+  tau_initialized = 1;
 
   /* initialize the metrics we will be counting */
   TauMetrics_init();
@@ -511,9 +520,6 @@ extern "C" int Tau_init_initializeTAU()
   //Tau_initialize_collector_api();
 #endif
 
-  // Mark initialization complete so calls below can start timers
-  tau_initialized = 1;
-
 #ifdef __MIC__
   if (TauEnv_get_mic_offload()) {
     TAU_PROFILE_SET_NODE(0);
@@ -533,5 +539,6 @@ extern "C" int Tau_init_initializeTAU()
   Tau_post_init();
 #endif // TAU_MPI
 
+  initialized = true;
   return 0;
 }

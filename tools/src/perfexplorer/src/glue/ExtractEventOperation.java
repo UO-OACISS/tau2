@@ -5,6 +5,7 @@ package edu.uoregon.tau.perfexplorer.glue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import edu.uoregon.tau.perfdmf.Trial;
 
@@ -18,7 +19,12 @@ public class ExtractEventOperation extends AbstractPerformanceOperation {
 	 */
 	private static final long serialVersionUID = -786694241087019821L;
 	private List<String> events = null;
+	private boolean exclude = false;
 
+	public void setExclude(boolean exclude) {
+		this.exclude=exclude;
+	}
+	
 	/**
 	 * @param input
 	 */
@@ -60,6 +66,13 @@ public class ExtractEventOperation extends AbstractPerformanceOperation {
 		for (PerformanceResult input : inputs) {
 			PerformanceResult output = new DefaultResult(input, false);
 			outputs.add(output);
+			if(exclude) {
+				Set<String> tmpEvents = input.getEvents();
+				for(String event:events) {
+					tmpEvents.remove(event);
+				}
+				events=new ArrayList<String>(tmpEvents);
+			}
 			for (String event : events) {
 				for (String metric : input.getMetrics()) {
 					for (Integer threadIndex : input.getThreads()) {

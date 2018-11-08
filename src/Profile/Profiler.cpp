@@ -23,7 +23,8 @@
 #include <Profile/TauMetaDataMerge.h>
 #include <Profile/TauPluginInternals.h>
 
-//#define DEBUG_PROF 1 
+// Define DEBUG_PROF if you want to debug timers
+// #define DEBUG_PROF 1
 
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
@@ -131,6 +132,10 @@ extern "C" void Tau_shutdown(void);
 extern "C" void Tau_profile_exit_most_threads();
 extern "C" int TauCompensateInitialized(void);
 extern "C" void Tau_ompt_resolve_callsite(FunctionInfo &fi, char * resolved_address);
+
+#ifdef TAU_ENABLE_ROCM
+extern void TauFlushRocmEventsIfNecessary(int thread_id);
+#endif /* TAU_ENABLE_ROCM */
 
 x_uint64 Tau_get_firstTimeStamp();
 
@@ -263,6 +268,7 @@ void Profiler::Start(int tid)
   x_uint64 TimeStamp;
   // Record metrics in reverse order so wall clock metrics are recorded after PAPI, etc.
   RtsLayer::getUSecD(tid, StartTime, 1);
+
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
 
   /********************************************************************************/
@@ -377,7 +383,7 @@ void Profiler::Start(int tid)
 void Profiler::Stop(int tid, bool useLastTimeStamp)
 {
 #ifdef DEBUG_PROF
-  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction); fflush(stderr);
+  TAU_VERBOSE( "[%d:%d-%d] Profiler::Stop  for %s (%p), node %d\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction, RtsLayer::myNode()); fflush(stderr);
 #endif
 
 /* It is possible that when the event stack gets deep, and has to be
@@ -468,6 +474,16 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #endif /*KTAU_DEBUGPROF*/
   ThisKtauProfiler->Stop(this, AddInclFlag);
 #endif /* TAUKTAU */
+
+  // this happens during early initialization, before program load
+  //if (CurrentTime[0] == 0.0) { CurrentTime[0] = TauMetrics_getTimeOfDay(); }
+
+  // It's ok if CurrentTime is 0, because that means StartTime is too.
+  // However, if CurrentTime is not 0, we need to fix a timer that was read
+  // before we were done initializing metrics.
+  if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
+    TauMetrics_getDefaults(tid, StartTime, 0);
+  }
 
   for (int k = 0; k < Tau_Global_numCounters; k++) {
     TotalTime[k] = CurrentTime[k] - StartTime[k];
@@ -1477,7 +1493,12 @@ extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+#ifdef TAU_ENABLE_ROCM
+  TauFlushRocmEventsIfNecessary(tid); 
+#endif /* TAU_ENABLE_ROCM */
   TauMetrics_finalize();
+
+  TAU_VERBOSE("finalizeCallSites_if_necessary: Total threads = %d\n", RtsLayer::getTotalThreads());
 
 #ifndef TAU_MPI
   /*Invoke plugins only if both plugin path and plugins are specified
@@ -1498,8 +1519,14 @@ int TauProfiler_StoreData(int tid)
   Tau_write_metadata_records_in_scorep(tid);
 #endif /* TAU_SCOREP */
   profileWriteCount[tid]++;
-  if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
-
+  // if ((tid != 0) && (profileWriteCount[tid] > 1)) return 0;
+#if !defined(PTHREADS)
+  // Rob:  Needed to evaluate for kernels to show in profiles (ignore dreaded #2 thread)!
+  if ((tid != 0) && (profileWriteCount[tid] > 1)) {
+    TAU_VERBOSE("[Profiler]: TauProfiler_StoreData: returning, tid: %i, profileWriteCount[%i]: %i\n", tid, tid, profileWriteCount[tid]);
+    return 0;
+  }
+#endif
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 2\n", RtsLayer::myNode(), tid);
   if (profileWriteCount[tid] == 10) {
     RtsLayer::LockDB();
@@ -1590,6 +1617,11 @@ int TauProfiler_StoreData(int tid)
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, &plugin_data);
   }
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
+/* static dtors cause a crash. This could fix it */
+#ifdef TAU_SCOREP
+  TAU_VERBOSE("TAU<%d,%d>: Turning off the lights... \n", RtsLayer::myNode(), tid);
+  Tau_global_setLightsOut();
+#endif /* TAU_SCOREP */  
   return 1;
 }
 
@@ -1652,11 +1684,16 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
   RtsLayer::LockDB();
 
-  static bool createFlag = TauProfiler_createDirectories();
-  if (createFlag) {
-    TAU_VERBOSE ("Profile directories created\n");
-  }
+  //If we haven't created any directories yet go ahead and keep checking until we have. Otherwise we may give up before initializing metrics
+  static bool createdDirectories=false;
+  bool createFlag=false;
 
+  if(!createdDirectories){
+    createFlag = TauProfiler_createDirectories();
+      if (createFlag) {
+        createdDirectories=true;
+      }
+   }
 //#ifdef CUPTI
 //  CUdevice device;
 //  int retval;
@@ -1832,6 +1869,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
         writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
 #else /* TAU_SHMEM */
         printf("TAU: WARNING! An MPI configuration was used in TAU, but MPI_Init was not called. No data will be written for pid=%d.\n", getpid()); 
+	printf("TAU: You may set the environment variable TAU_SET_NODE=0 and re-run this application to generate TAU data.\n"); 
 	//printf("Node = %d\n", RtsLayer::myNode());
 #endif /* TAU_SHMEM */
       }
@@ -1858,6 +1896,8 @@ int TauProfiler_dumpFunctionValues(const char **inFuncs, int numFuncs, bool incr
 bool TauProfiler_createDirectories()
 {
     char newdirname[1024];
+    int countDirs=0;
+    TAU_VERBOSE("Creating Directories\n");
 #ifdef KTAU_NG
     getProfileLocation(0, newdirname);
     mkdir(newdirname, S_IRWXU | S_IRGRP | S_IXGRP);
@@ -1865,6 +1905,7 @@ bool TauProfiler_createDirectories()
     for (int i = 0; i < Tau_Global_numCounters; i++) {
         if (TauMetrics_getMetricUsed(i)) {
             getProfileLocation(i, newdirname);
+	    countDirs++;
 #ifdef TAU_WINDOWS
             mkdir(newdirname);
 #else
@@ -1873,6 +1914,10 @@ bool TauProfiler_createDirectories()
         }
     }
 #endif
+    if(countDirs==0)
+    {   
+	return false;
+    }
     return true;
 }
 

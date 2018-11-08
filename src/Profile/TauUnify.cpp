@@ -105,9 +105,9 @@ public:
 
 /** Return a table represeting a sorted list of the events */
 int *Tau_unify_generateSortMap_MPI(EventLister *eventLister) {
+#ifdef TAU_MPI
   int rank = 0;
   int numRanks = 1;
-#ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &numRanks);
 #endif /* TAU_MPI */
@@ -125,9 +125,9 @@ int *Tau_unify_generateSortMap_MPI(EventLister *eventLister) {
 }
 
 int *Tau_unify_generateSortMap_SHMEM(EventLister *eventLister) {
+#ifdef TAU_SHMEM
   int rank = 0;
   int numRanks = 1;
-#ifdef TAU_SHMEM
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   numRanks = __real__num_pes();
   rank = __real__my_pe();
@@ -487,10 +487,9 @@ Tau_unify_object_t *Tau_unify_unifyEvents_MPI(EventLister *eventLister) {
 
 /** Using SHMEM, unify events for a given EventLister */
 Tau_unify_object_t *Tau_unify_unifyEvents_SHMEM(EventLister *eventLister) {
-  int rank, numRanks;
-  rank = 0;
-  numRanks = 1;
+  int rank = 0;
 #ifdef TAU_SHMEM
+  int numRanks = 1;
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   rank = __real__my_pe();
   numRanks = __real__num_pes();
@@ -518,6 +517,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents_SHMEM(EventLister *eventLister) {
   Tau_util_outputDevice *out = Tau_unify_generateLocalDefinitionBuffer(sortMap, eventLister);
   char *defBuf = Tau_util_getOutputBuffer(out);
   int defBufSize = Tau_util_getOutputBufferLength(out);
+  TAU_UNUSED(defBufSize); // set again later, but fixing compiler warning
   unifyObjects->push_back(Tau_unify_processBuffer(defBuf, -1 /* no rank */));
 
 

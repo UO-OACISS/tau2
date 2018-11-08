@@ -69,7 +69,7 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX) && !defined(TAU_NEC_SX)
 #include <execinfo.h>
 #endif
 
@@ -85,9 +85,6 @@ extern int Tau_get_count_for_pvar(int index);
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
-
-//Static variables with file scope
-static TauUserEvent *** pvarEvents = NULL;
 
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
@@ -196,6 +193,8 @@ struct Tau_thread_status_flags {
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #elif defined(__PGIC__)
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS];
+#elif defined(TAU_NEC_SX)
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #elif defined(__GNUC__) 
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {{{0}}};
 #else  /* __GNUC__ */
@@ -378,7 +377,9 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
 #ifndef _AIX
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init_if_necessary();
+    // OK, this gets called WAY too much, just to make sure that TAU is initialized
+    // before timers start
+    //Tau_sampling_init_if_necessary();
     Tau_sampling_suspend(tid);
   }
 #endif /* _AIX */
@@ -389,7 +390,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (tid != 0) {
     Tau_create_top_level_timer_if_necessary_task(tid);
   }
-#endif
+#endif // TAU_TRACK_IDLE_THREADS
 
 
 #ifdef TAU_EPILOG
@@ -402,7 +403,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
   return;
-#endif
+#endif // TAU_EPILOG
 
 #ifdef TAU_VAMPIRTRACE 
   uint64_t TimeStamp = vt_pform_wtime();
@@ -592,7 +593,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d][%d:%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n",
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myNode(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
-#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX)
+#if !defined(TAU_WINDOWS) && !defined(TAU_ANDROID) && !defined(_AIX) && !defined(TAU_NEC_SX)
      if(!TauEnv_get_ebs_enabled()) {
        void* callstack[128];
        int i, frames = backtrace(callstack, 128);
@@ -1192,7 +1193,18 @@ extern "C" void Tau_dump_function_values_incr(const char **functionList, int num
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_register_thread(void) {
-  RtsLayer::RegisterThread();
+//#if defined(PTHREADS)
+  if (RtsLayer::myNode() != -1) {
+    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());
+    RtsLayer::RegisterThread();
+  }
+  else {
+    TAU_VERBOSE("[TauCAPI]: Tau_register_thread, do not register thread, mynode %i, tid %i\n", RtsLayer::myNode(), RtsLayer::getTid());    
+  }
+
+// #else
+//   RtsLayer::RegisterThread();
+// #endif
 }
 
 
@@ -1912,12 +1924,26 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
       // whichever thread got here first, has the lock and will create the
       // FunctionInfo object for the top level timer.
       if (!TauInternal_CurrentProfiler(tid)) {
-        initthread[tid] = true;
-        initializing[tid] = true;
-        Tau_pure_start_task_string(gTauApplication(), tid);
-        atexit(Tau_profile_exit_all_threads);
-        initializing[tid] = false;
-        initialized = true;
+#if defined(PTHREADS) && defined(TAU_GPU)
+	if (tid != 0 && RtsLayer::myNode() == -1) {
+	  TAU_VERBOSE("Found node=-1\n");
+	}
+	else {
+	  initthread[tid] = true;
+	  initializing[tid] = true;
+	  Tau_pure_start_task_string(gTauApplication(), tid);
+	  atexit(Tau_profile_exit_all_threads);
+	  initializing[tid] = false;
+	  initialized = true;
+	}
+#else
+	initthread[tid] = true;
+	initializing[tid] = true;
+	Tau_pure_start_task_string(gTauApplication(), tid);
+	atexit(Tau_profile_exit_all_threads);
+	initializing[tid] = false;
+	initialized = true;
+#endif
       }
     }
     RtsLayer::UnLockDB();
@@ -1927,17 +1953,40 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     // if there is no top-level timer, create one - But only create one FunctionInfo object.
     // that should be handled by the Tau_pure_start_task call.
     if (!TauInternal_CurrentProfiler(tid)) {
+#if defined(PTHREADS) && defined(TAU_GPU)
+      if (tid != 0 && RtsLayer::myNode() == -1) {
+      	TAU_VERBOSE("Found node=-1\n");
+      }
+      else {
+	initthread[tid] = true;
+	initializing[tid] = true;
+	Tau_pure_start_task_string(gTauApplication(), tid);
+	initializing[tid] = false;
+      }
+#else
       initthread[tid] = true;
       initializing[tid] = true;
       Tau_pure_start_task_string(gTauApplication(), tid);
       initializing[tid] = false;
+#endif
     }
   }
 
 #endif
 }
 
+// struct GpuThread gThreads[TAU_MAX_THREADS];
+
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
+// #if defined(TAU_GPU) && defined(PTHREADS) 
+//   TAU_VERBOSE("[TauCAPI]:  About to call register_gpu_thread\n");
+//   // register_gpu_thread(RtsLayer::getTid(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
+//   register_gpu_thread(pthread_self(), Tau_get_thread(), RtsLayer::getPid(), RtsLayer::myNode());
+//   // CudaThreadLayer::RegisterThread();
+// #endif
+  if ((RtsLayer::myNode() == -1) && (Tau_get_thread() != 0)) {
+    TauEnv_set_nodeNegOneSeen(TauEnv_get_nodeNegOneSeen()+1);
+  }
   return Tau_create_top_level_timer_if_necessary_task(Tau_get_thread());
 }
 
@@ -2193,7 +2242,6 @@ extern "C" void *Tau_pure_search_for_function(const char *name)
 void Tau_pure_start_task_string(const string name, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
-
   FunctionInfo *fi = 0;
   RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
@@ -2231,7 +2279,7 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
       // 	int lineno = 99;
       // 	ss << name << " [{" << filename << "}{" << lineno << "}]";
       // 	tauCreateFI((void**)&fi, ss.str(), "", TAU_USER, "TAU_USER");
-      // 	printf("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
+      // 	TAU_VERBOSE("[TauCAPI]:  just called tauCreateFI for %s,\n\tss.str(): %s\n", 
       // 	       name.c_str(), ss.str().c_str());
       // }
       // else {
@@ -2736,10 +2784,12 @@ extern "C" int Tau_create_task(void) {
   if (TAU_MAX_THREADS == 1) {
     printf("TAU: ERROR: Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=100  and rebuild it to use the new TASK API\n");
   }
-  taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
+  taskid = Tau_RtsLayer_createThread();
+  // taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
-  Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
- 	//printf("create task with id: %d.\n", taskid); 
+  
+  Tau_set_thread_fake(taskid); 
+  // Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
   return taskid;
 }
 
@@ -2906,6 +2956,13 @@ TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current
     
     return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
 }
+ 
+TauUserEvent & PvarName(const int current_pvar_index, const int current_pvar_subindex) {
+    /*All this routine does is to return the event at the current PVAR index and subindex*/
+    
+    return *(pvarEvents[current_pvar_index][current_pvar_subindex]);
+    //return 0;
+}
 
 /*Allocate events to track PVARs*/
 extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count) {
@@ -2933,6 +2990,22 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
     }
 
     tau_previous_pvar_count = num_pvars;
+}
+
+//Static variables with file scope
+static TauUserEvent *** pvarEvents = NULL;
+static char pvarnamearray[100];
+
+extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
+ 
+  std::cout << "PVAR name: " << PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str() << std::endl;
+  char * pvarnamechar = const_cast<char*>(PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
+  fprintf(stdout, "PVAR name (char *): %s\n", pvarnamechar);
+
+  strcpy(pvarnamearray,pvarnamechar);
+  fprintf(stdout, "PVAR name after strcpy: %s\n", pvarnamearray);
+  //return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
+  return pvarnamearray;
 }
 
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
@@ -2978,6 +3051,46 @@ extern "C" void Tau_disable_tracking_mpi_t(void) {
   TauEnv_set_track_mpi_t_pvars(0); 
 }
 
+// extern "C" void register_gpu_thread(unsigned int sys_tid, int gpu_tid, unsigned int parent_tid, int nodeid) {
+//   TAU_VERBOSE("[TauCAPI]: Inside register_gpu_thread\n");
+//   // base case
+//   if (TauEnv_get_cudaTotalThreads() == 0) {
+//     GpuThread gt;
+//     gt.sys_tid = sys_tid;
+//     gt.gpu_tid = gpu_tid;
+//     gt.parent_tid = parent_tid;
+//     gt.node_id = nodeid;
+//     gThreads[TauEnv_get_cudaTotalThreads()] = gt;
+//     TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
+//     TAU_VERBOSE("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i nodeid %i\n", 
+// 	   sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
+//   }
+//   else {
+//     bool found = false;
+//     // loop through to see if entry exists
+//     for (int i=0; i<TauEnv_get_cudaTotalThreads(); i++) {
+//       GpuThread gt2 = gThreads[i];
+//       if (gt2.sys_tid == sys_tid) {
+// 	TAU_VERBOSE("[TauCAPI]: found duplicate entry, systid: %i\n", sys_tid);
+// 	found = true;
+//       }
+//     }
+//     if (!found) {
+//       GpuThread gt;
+//       gt.sys_tid = sys_tid;
+//       gt.gpu_tid = gpu_tid;
+//       gt.parent_tid = parent_tid;    
+//       gt.node_id = nodeid;
+//       gThreads[TauEnv_get_cudaTotalThreads()] = gt;
+//       TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
+//       TAU_VERBOSE("[TauCAPI]: registered systid %u, gputid %i, parentid %u, total threads %i, nodeid %i\n",
+// 	     sys_tid, gpu_tid, parent_tid, TauEnv_get_cudaTotalThreads(), nodeid);
+//     }
+//     else {
+//       TAU_VERBOSE("[TauCAPI]: systid %i already exists!\n", sys_tid);      
+//     }
+//   }
+// }
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $

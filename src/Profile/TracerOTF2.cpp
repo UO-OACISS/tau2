@@ -157,6 +157,13 @@ static inline OTF2_LocationRef my_location_offset() {
     return myNode == -1 ? 0 : (myNode * TAU_MAX_THREADS);
 }
 
+static inline OTF2_LocationRef my_real_location( int64_t myNode, int64_t myThread ) {
+     //const int64_t myNode = RtsLayer::myNode();
+     //const int64_t myThread = RtsLayer::myThread();
+     return myNode == -1 ? myThread : (myNode * TAU_MAX_THREADS) + myThread;
+ }
+
+
 static inline OTF2_LocationRef my_location() {
     const int64_t myNode = RtsLayer::myNode();
     const int64_t myThread = RtsLayer::myThread();
@@ -184,6 +191,11 @@ static OTF2_CallbackCode tau_collectives_get_size(void*                   userDa
                                                   OTF2_CollectiveContext* commContext,
                                                   uint32_t*               size )
 {
+  if(TauEnv_get_set_node()>-1){
+    *size = 1;
+    return OTF2_CALLBACK_SUCCESS;
+  }
+
   *size = TauCollectives_get_size((TauCollectives_Group*) commContext);
   return OTF2_CALLBACK_SUCCESS;
 }
@@ -200,8 +212,10 @@ static OTF2_CallbackCode
 tau_collectives_barrier( void*                   userData,
                               OTF2_CollectiveContext* commContext )
 {
-    TauCollectives_Barrier((TauCollectives_Group*) commContext );
 
+    if(TauEnv_get_set_node()==-1){
+    TauCollectives_Barrier((TauCollectives_Group*) commContext );
+    }
     return OTF2_CALLBACK_SUCCESS;
 }
 
@@ -213,12 +227,13 @@ tau_collectives_bcast( void*                   userData,
                             OTF2_Type               type,
                             uint32_t                root )
 {
+    if(TauEnv_get_set_node()==-1){
     TauCollectives_Bcast( ( TauCollectives_Group* )commContext,
                            data,
                            numberElements,
                            TauCollectives_get_type( type ),
                            root );
-
+    }
     return OTF2_CALLBACK_SUCCESS;
 }
 
@@ -231,13 +246,14 @@ tau_collectives_gather( void*                   userData,
                              OTF2_Type               type,
                              uint32_t                root )
 {
+    if(TauEnv_get_set_node()==-1){
     TauCollectives_Gather( ( TauCollectives_Group* )commContext,
                             inData,
                             outData,
                             numberElements,
                             TauCollectives_get_type( type ),
                             root );
-
+    }
     return OTF2_CALLBACK_SUCCESS;
 }
 
@@ -251,6 +267,7 @@ tau_collectives_gatherv( void*                   userData,
                               OTF2_Type               type,
                                          uint32_t                root )
 {
+    if(TauEnv_get_set_node()==-1){
     TauCollectives_Gatherv( ( TauCollectives_Group* )commContext,
                              inData,
                              inElements,
@@ -258,7 +275,7 @@ tau_collectives_gatherv( void*                   userData,
                              ( const int* )outElements,
                              TauCollectives_get_type( type ),
                              root );
-
+    }
     return OTF2_CALLBACK_SUCCESS;
 }
 
@@ -271,13 +288,14 @@ tau_collectives_scatter( void*                   userData,
                               OTF2_Type               type,
                               uint32_t                root )
 {
+    if(TauEnv_get_set_node()==-1){
     TauCollectives_Scatter( ( TauCollectives_Group* )commContext,
                              inData,
                              outData,
                              numberElements,
                              TauCollectives_get_type( type ),
                              root );
-
+    }
     return OTF2_CALLBACK_SUCCESS;
 }
 
@@ -291,6 +309,8 @@ tau_collectives_scatterv( void*                   userData,
                                OTF2_Type               type,
                                uint32_t                root )
 {
+
+    if(TauEnv_get_set_node()==-1){
     TauCollectives_Scatterv( ( TauCollectives_Group* )commContext,
                               inData,
                               ( const int* )inElements,
@@ -298,7 +318,7 @@ tau_collectives_scatterv( void*                   userData,
                               outElements,
                               TauCollectives_get_type( type ),
                               root );
-
+    }
     return OTF2_CALLBACK_SUCCESS;
 }
 
@@ -406,7 +426,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
   // (at which point we'll be called again)
   int mpi_initialized;
   MPI_Initialized(&mpi_initialized);
-  if(!mpi_initialized) {
+  if(!mpi_initialized&&TauEnv_get_set_node()<=-1) {
     return 1;
   }
 #endif
@@ -433,11 +453,16 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
                              OTF2_SUBSTRATE_POSIX,
                              OTF2_COMPRESSION_NONE);
   TAU_ASSERT(otf2_archive != NULL, "Unable to create new OTF2 archive");
-
   OTF2_EC(OTF2_Archive_SetFlushCallbacks(otf2_archive, get_tau_flush_callbacks(), NULL));
-  TauCollectives_Init();
+
+  //If set_node has been changed from -1 we aren't really using MPI
+  if(TauEnv_get_set_node()==-1){
+    TauCollectives_Init();
+  }
+
   OTF2_EC(OTF2_Archive_SetCollectiveCallbacks(otf2_archive, get_tau_collective_callbacks(), NULL, ( OTF2_CollectiveContext* )TauCollectives_Get_World(), NULL));
   OTF2_EC(OTF2_Archive_SetCreator(otf2_archive, "TAU"));
+
 #if defined(TAU_OPENMP)
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "Using OpenMP Locking Callbacks\n");
@@ -449,6 +474,7 @@ int TauTraceOTF2InitTS(int tid, x_uint64 ts)
 #endif
   OTF2_EC(OTF2_Pthread_Archive_SetLockingCallbacks(otf2_archive, NULL));
 #endif
+
   // If going to use a threading model other than OpenMP or Pthreads,
   // a set of custom locking callbacks will need to be defined.
 
@@ -495,7 +521,7 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
       TauTraceOTF2EventWithNodeId(it->ev, it->par, tid, it->ts, true, node_id, kind);
       last_ts = it->ts;
     }
-    OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_location());
+    OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, my_real_location(node_id,tid));
     OTF2_EvtWriter_RmaWinCreate(evt_writer, NULL, last_ts+1, TAU_OTF2_COMM_WIN);
     delete temp_buffers[tid];
 }
@@ -515,12 +541,16 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   } else if(kind == TAU_TRACE_EVENT_KIND_TEMP_USEREVENT) {
     kind = TAU_TRACE_EVENT_KIND_USEREVENT;
   } else {
-    use_ts = false;
+    //#ifndef TAU_ENABLE_ROCM
+    //use_ts = false;
+    //#endif
   }
   if(otf2_finished) {
     return;
   }
-  if(!otf2_initialized) {
+
+  //If we are using TAU_SET_NODE the first initialization call for otf2 is too early, so go back to do it again if the time was set to 0.
+  if(!otf2_initialized||(TauEnv_get_set_node()>(-1)&&start_time==0)) {
     if(start_time == 0) {
       start_time = TauTraceGetTimeStamp(tid) - 1000;   
     }
@@ -531,12 +561,26 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     // we must know our rank, because at that time rank 0 alone must create the trace
     // directory. Instead we save into a temporary buffer which we write out as events
     // once initialization happens.
+    
+    //We may be using even if TAU_MPI is defined, we have to use the non-mpi approach if TAU_SET_NODE is in use.
+   if(TauEnv_get_set_node()>(-1))
+   {
+
+      if(use_ts) {
+        TauTraceOTF2InitTS(tid, ts); 
+      } else {
+        TauTraceOTF2Init(tid);
+      }
+   }
+   else
+   {
     if(temp_buffers[tid] == NULL) {
         temp_buffers[tid] = new vector<temp_buffer_entry>();
     }
     x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
     temp_buffers[tid]->push_back(temp_buffer_entry(ev, my_ts, par, kind));
     return;
+   }
 #else
     if(use_ts) {
         TauTraceOTF2InitTS(tid, ts); 
@@ -549,11 +593,15 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   // The event file for a thread needs to be written by that thread, so we write
   // the temporary buffers the first time we get an event from that thread after
   // intialization has completed.
-  if(!buffers_written[tid] && !otf2_comms_shutdown) {
-    TauTraceOTF2WriteTempBuffer(tid, node_id);
+
+
+  if(TauEnv_get_set_node()==-1){
+    if(!buffers_written[tid] && !otf2_comms_shutdown) {
+      TauTraceOTF2WriteTempBuffer(tid, node_id);
+    }
   }
 #endif
-  int loc = my_location();
+  int loc = my_real_location(node_id,tid);
   OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
   TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
   x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
@@ -624,6 +672,13 @@ void TauTraceOTF2Event(long int ev, x_int64 par, int tid, x_uint64 ts, int use_t
   TauTraceOTF2EventWithNodeId(ev, par, tid, ts, use_ts, my_node(), kind);
 }
 
+inline void convert_upper(const std::string& str, std::string& converted)
+{
+    for(size_t i = 0; i < str.size(); ++i) {
+        converted += toupper(str[i]);
+    }
+}
+
 static void TauTraceOTF2WriteGlobalDefinitions() {
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "TauTraceOTF2WriteGlobalDefinitions()\n");
@@ -683,8 +738,38 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     for (region_map_t::const_iterator it = global_region_map.begin(); it != global_region_map.end(); it++) {
         int thisFuncName = nextString++;
         const std::string & region_name = it->first;
+        /* OK, we need to set the paradigm, so that Vampir will auto-color for
+         * us correctly.  There is probably a better way to do this, but this
+         * will work for now.  The better solution would be to look up the
+         * function info object with this name, and get its group.  But not
+         * all of the groups below are suppored with equivalent groups in
+         * TAU.  So we'll do this for now. */
+        OTF2_Paradigm paradigm = OTF2_PARADIGM_USER;
+        string uppercase;
+        convert_upper(region_name, uppercase);
+        size_t found = uppercase.find(string("MPI"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_MPI; }
+        found = uppercase.find(string("PTHREAD"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_PTHREAD; }
+        found = uppercase.find(string("OPENMP"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENMP; }
+        // no paradigm for IO? That's odd.
+        found = uppercase.find(string("ADIOS"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        found = uppercase.find(string("HDF5"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        found = uppercase.find(string("NETCDF"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_NONE; }
+        found = uppercase.find(string("CUDA"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_CUDA; }
+        found = uppercase.find(string("OPENACC"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENACC; }
+        found = uppercase.find(string("OPENCL"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_OPENCL; }
+        found = uppercase.find(string(".TAU APPLICATION"));
+        if (found != std::string::npos) { paradigm = OTF2_PARADIGM_UNKNOWN; }
         OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, thisFuncName, region_name.c_str()));
-        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, OTF2_PARADIGM_UNKNOWN, OTF2_REGION_FLAG_NONE, 0, 0, 0));
+        OTF2_EC(OTF2_GlobalDefWriter_WriteRegion(global_def_writer, it->second, thisFuncName, thisFuncName, emptyString, OTF2_REGION_ROLE_FUNCTION, paradigm, OTF2_REGION_FLAG_NONE, 0, 0, 0));
     }
 
     // Write all the user events out as Metrics
@@ -1163,8 +1248,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
     }
 
     const int nodes = tau_totalnodes(0, 0);
-
-    TauCollectives_Barrier(TauCollectives_Get_World());
+    if(TauEnv_get_set_node()==-1){
+      TauCollectives_Barrier(TauCollectives_Get_World());
+    }
     otf2_disable = true;
     // Now everyone is at the beginning of MPI_Finalize()
     finalizeCallSites_if_necessary();
@@ -1173,9 +1259,9 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauTraceOTF2ExchangeEventsWritten();
     TauTraceOTF2ExchangeRegions();
     TauTraceOTF2ExchangeMetrics();
-
-    TauCollectives_Finalize();
-
+    if(TauEnv_get_set_node()==-1){
+      TauCollectives_Finalize();
+    }
     otf2_comms_shutdown = true;
     otf2_disable = false;
     end_time = TauTraceGetTimeStamp(0) ;

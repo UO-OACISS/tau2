@@ -142,7 +142,10 @@ int TauTraceGetFlushEvents() {
 
 /* Check that the trace file is initialized */
 static int checkTraceFileInitialized(int tid) {
-  if ( !(TraceFileInitialized[tid]) && (RtsLayer::myNode() > -1)) { 
+  if ( !(TraceFileInitialized[tid])){
+    if(RtsLayer::myNode() <= -1) {
+      fprintf (stderr,"ERROR: TAU is creating a trace file on a node less than 0.\n");
+    } 
     TraceFileInitialized[tid] = 1;
     const char *dirname;
     char tracefilename[1024];

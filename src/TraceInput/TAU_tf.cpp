@@ -761,9 +761,10 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
 #endif /* DEBUG */
 
   int i,j,k; 
-  char linebuf[LINEMAX], eventname[LINEMAX], traceflag[32]; 
+  char linebuf[LINEMAX], eventname[LINEMAX], traceflag[32] = {0}; 
   char group[512], param[512];
-  int numevents, dynamictrace, tag, groupid; 
+  int numevents = 0; 
+  int dynamictrace, tag, groupid; 
   long localEventId;
   EventIdMapT::iterator it;
 
@@ -784,7 +785,7 @@ int refreshTables(Ttf_fileT *tFile, Ttf_CallbacksT cb)
   str = fgets (linebuf, LINEMAX, edf);
   if (str != NULL) {
     sscanf (linebuf, "%d %s", &numevents, traceflag);
-    if ((traceflag != NULL) && (strcmp(traceflag, "dynamic_trace_events") == 0)) 
+    if (strcmp(traceflag, "dynamic_trace_events") == 0)
     { 
       dynamictrace = TRUE;
     }

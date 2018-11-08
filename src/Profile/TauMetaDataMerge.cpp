@@ -151,9 +151,9 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
 #endif
 
   int rank = 0;
-  int numRanks = 1;
 
 #ifdef TAU_MPI
+  int numRanks = 1;
   if (TAU_MPI_Finalized()) {
     fprintf(stdout, "TAU_MPI_Finalized() called\n");
     return 0;
@@ -226,9 +226,9 @@ extern "C" int Tau_metadataMerge_mergeMetaData_SHMEM() {
   merged = 1;
 
   int rank = 0;
-  int numRanks = 1;
 
 #ifdef TAU_SHMEM
+  int numRanks = 1;
 #if defined(SHMEM_1_1) || defined(SHMEM_1_2)
   int *shBufferSize = (int*)__real_shmalloc(sizeof(int));
   numRanks = __real__num_pes();

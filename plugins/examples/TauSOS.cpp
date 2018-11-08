@@ -120,7 +120,7 @@ void TAU_SOS_make_pub() {
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
         SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
-        SOS_pub_config(tau_sos_pub, SOS_PUB_OPTION_CACHE, thePluginOptions().env_sos_cache_depth);
+        //SOS_pub_config(tau_sos_pub, SOS_PUB_OPTION_CACHE, thePluginOptions().env_sos_cache_depth);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;

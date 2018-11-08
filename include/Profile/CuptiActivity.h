@@ -44,38 +44,51 @@
 #if CUDA_VERSION >= 9000
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel4
-#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling3
 #define CUpti_ActivityNvLink CUpti_ActivityNvLink2
+// >= 8000 carryover
+#define CUpti_ActivityPCSampling CUpti_ActivityPCSampling2
+// >= 7000 carryover
+#define CUpti_ActivityDevice CUpti_ActivityDevice2
+#define CUpti_ActivityUnifiedMemoryCounter CUpti_ActivityUnifiedMemoryCounter2
+// >= 6050 carryover
+#define CUpti_ActivityBranch CUpti_ActivityBranch2
+#define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
 #define runtimeCorrelationId correlationId
 
-#endif
-
-#if CUDA_VERSION >= 8000
+#elif CUDA_VERSION >= 8000
 
 #define CUpti_ActivityPCSampling CUpti_ActivityPCSampling2
+// >= 7000 carryover
+#define CUpti_ActivityKernel CUpti_ActivityKernel3
+#define CUpti_ActivityDevice CUpti_ActivityDevice2
+#define CUpti_ActivityUnifiedMemoryCounter CUpti_ActivityUnifiedMemoryCounter2
+// >= 6050 carryover
+#define CUpti_ActivityBranch CUpti_ActivityBranch2
+#define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
 #define runtimeCorrelationId correlationId
 
-#endif
-
-#if CUDA_VERSION >= 7000
+#elif CUDA_VERSION >= 7000
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel3
 #define CUpti_ActivityDevice CUpti_ActivityDevice2
 #define CUpti_ActivityUnifiedMemoryCounter CUpti_ActivityUnifiedMemoryCounter2
-#define runtimeCorrelationId correlationId
-
-#endif
-
-#if CUDA_VERSION >= 6050
-
-//#define CUpti_ActivityKernel CUpti_ActivityKernel3
+// >= 6050 carryover
 #define CUpti_ActivityBranch CUpti_ActivityBranch2
 #define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
 #define runtimeCorrelationId correlationId
 
-#endif
+#elif CUDA_VERSION >= 6050
 
-#if CUDA_VERSION >= 5050 && CUDA_VERSION <= 6050
+#define CUpti_ActivityBranch CUpti_ActivityBranch2
+#define CUpti_ActivityGlobalAccess CUpti_ActivityGlobalAccess2
+// >= 5050 carryover
+#define CUpti_ActivityKernel CUpti_ActivityKernel2
+#define runtimeCorrelationId correlationId
+
+#elif CUDA_VERSION >= 5050 && CUDA_VERSION <= 6050
 
 #define CUpti_ActivityKernel CUpti_ActivityKernel2
 #define runtimeCorrelationId correlationId
@@ -125,7 +138,8 @@ extern "C" void Tau_cupti_enter_memcpy_event(
 						uint32_t contextId,
 						uint32_t correlationId,
 						int bytes_copied,
-						int memcpy_type);
+						int memcpy_type,
+						int taskId);
 
 extern "C" void Tau_cupti_exit_memcpy_event(
 						const char *name,
@@ -134,7 +148,8 @@ extern "C" void Tau_cupti_exit_memcpy_event(
 						uint32_t contextId,
 						uint32_t correlationId,
 						int bytes_copied,
-						int memcpy_type);
+						int memcpy_type,
+						int taskId);
 
 extern "C" void Tau_cupti_register_memcpy_event(
 						const char *name,
@@ -146,7 +161,8 @@ extern "C" void Tau_cupti_register_memcpy_event(
 						double stop,
 						int bytes_copied,
 						int memcpy_type,
-            int direction);
+						int direction, 
+						int taskId);
 
 extern "C" void Tau_cupti_register_unifmem_event(
 						 const char *name,
@@ -157,7 +173,8 @@ extern "C" void Tau_cupti_register_unifmem_event(
 						 uint64_t end,
 						 uint64_t value,
 						 int unifmem_type,
-						 int direction);
+						 int direction,
+						 int taskId);
 
 extern "C" void Tau_cupti_register_gpu_event(
 						const char *name,
@@ -165,12 +182,13 @@ extern "C" void Tau_cupti_register_gpu_event(
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
-            int64_t parentGridId,
-            bool cdp,
+						int64_t parentGridId,
+						bool cdp,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes,
 						double start,
-						double stop);
+						double stop,
+						int taskId);
 
 extern "C" void Tau_cupti_register_gpu_atomic_event(
 						const char *name,
@@ -179,7 +197,10 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						uint32_t contextId,
 						uint32_t correlationId,
 						GpuEventAttributes *gpu_attributes,
-						int number_of_attributes);
+						int number_of_attributes,
+						int taskId);
+
+extern "C" bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau_vtid, unsigned int corr_id, unsigned int context_id, const char* func_name);
 
 /* extern "C" void Tau_cupti_register_func_event( */
 /*                                               const char *name, */
@@ -253,6 +274,9 @@ bool cupti_api_runtime();
 bool cupti_api_driver();
 
 typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
+static std::set<uint32_t> set_gpuThread;
+static std::map<uint32_t, CudaThread> map_cudaThread;
+static std::map<uint32_t, uint32_t> map_cuptiThread;
 
 int gpu_occupancy_available(int deviceId);
 
@@ -269,7 +293,7 @@ void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
 void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
 void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
-
+void dump_sass_to_csv(int task_id);
 
 int get_device_count();
 int get_device_id();
@@ -285,7 +309,10 @@ void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceL
 #define TAU_MAX_GPU_DEVICES 16
 #endif
 
-void createFilePointerSass(int device_count);
+// void createFilePointerSass(int device_count);
+FILE* createFileSourceSass(int task_id);
+FILE* createFileInstrSass(int task_id);
+FILE* createFileFuncSass(int task_id);
 
 #if CUDA_VERSION >= 6000
 static const char * getUvmCounterKindString(CUpti_ActivityUnifiedMemoryCounterKind kind);
@@ -313,6 +340,7 @@ void record_gpu_counters_at_sync(int device);
 
 void clear_counters(int device);
 
+ImixStats write_runtime_imix(uint32_t functionId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
@@ -329,7 +357,7 @@ void clear_counters(int device);
 	int string_length_##n = strlen(str_##n.str().c_str()) + 1; \
 	char *stored_name_##n = (char*) malloc(sizeof(char)*string_length_##n); \
 	strcpy(stored_name_##n, str_##n.str().c_str()); \
-	metadata[id].name = "GPU " SX(n); \
+	metadata[id].name = (char*)("GPU " SX(n)); \
 	metadata[id].value = stored_name_##n; \
 	id++
 #endif

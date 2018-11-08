@@ -21,9 +21,11 @@
 #define _TAU_TRACE_H_
 
 #include <tau_internal.h>
-#ifdef TAU_ENABLED
+#ifdef TAU_GPU
+#ifdef __cplusplus
 #include <Profile/TauGpu.h>
-#endif // TAU_ENABLED
+#endif //  __cplusplus
+#endif // TAU_GPU
 
 /* TAU tracer events */
 #define TAU_EV_INIT         60000
@@ -94,7 +96,9 @@ extern "C" {
   void TAUDECL TauTraceSendMsgRemote(int type, int destination, int length, int remoteid);
   void TAUDECL TauTraceRecvMsgRemote(int type, int source, int length, int remoteid);
 #if TAU_GPU
+#ifdef __cplusplus
   void TAUDECL TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
+#endif //  __cplusplus
 #endif // TAU_GPU
   /* Returns a pointer to the (singleton) offset info struct */
   TauTraceOffsetInfo* TAUDECL TheTauTraceOffsetInfo();

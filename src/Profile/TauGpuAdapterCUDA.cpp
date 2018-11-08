@@ -173,17 +173,17 @@ void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType)
 	Tau_gpu_exit_memcpy_event(name, &x, MemcpyType);
 }
 
-/*void Tau_cuda_register_gpu_event(KernelEvent k, double start,
-double stop)
-{
-	//printf("sync'ed \t start: %lf.\n \t \t \t stop: %lf.\n", start+sync_offset, stop+sync_offset);
-	//FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
-	//eventId c = Tau_gpu_create_gpu_event(name, id, p);
-	Tau_gpu_register_gpu_event(k, start + sync_offset, stop + sync_offset);
-}*/
+// void Tau_cuda_register_gpu_event(KernelEvent k, double start,
+// double stop)
+// {
+// 	//printf("sync'ed \t start: %lf.\n \t \t \t stop: %lf.\n", start+sync_offset, stop+sync_offset);
+// 	//FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+// 	//eventId c = Tau_gpu_create_gpu_event(name, id, p);
+// 	Tau_gpu_register_gpu_event(k, start + sync_offset, stop + sync_offset);
+// }
 
 void Tau_cuda_register_memcpy_event(const char *name, CudaGpuEvent* id, double start, double stop, int
-transferSize, int MemcpyType)
+				    transferSize, int MemcpyType)
 {
 	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myThread())->ThisFunction;
 	//eventId c = Tau_gpu_create_gpu_event(name, id, p, NULL);
@@ -191,7 +191,6 @@ transferSize, int MemcpyType)
 	id->callingSite = p;
 	Tau_gpu_register_memcpy_event(id, start/1e3, stop/1e3, transferSize, MemcpyType, MESSAGE_UNKNOWN);
 }
-
 
 //CudaGpuEvent *curKernel;
 //needed for pycuda for some reason.
@@ -318,9 +317,14 @@ void Tau_cuda_register_sync_event()
 		//f2 = s.find(')');
 		//if (f1 != string::npos && f2 != string::npos)	
 		{
-			Tau_gpu_register_gpu_event(kernel, 
-																 ((double) start_sec + lastEventTime)*1e3,
-																 ((double) stop_sec + lastEventTime)*1e3);
+			// Tau_gpu_register_gpu_event(kernel, 
+			// 													 ((double) start_sec + lastEventTime)*1e3,
+			// 													 ((double) stop_sec + lastEventTime)*1e3);
+		  int deviceid = 0;
+		  Tau_gpu_register_gpu_event(kernel, 
+					     ((double) start_sec + lastEventTime)*1e3,
+					     ((double) stop_sec + lastEventTime)*1e3);
+
 		}
 	  //printf("in tau_cuda_register_sync_event #2");
 		//Tau_cuda_register_gpu_event(kernel.name, kernel.id, 

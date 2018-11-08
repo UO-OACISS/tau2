@@ -340,6 +340,7 @@ int Tau_initialize_plugin_system() {
       printf("TAU INIT: Error initializing the plugin system\n");
     }
   }
+  return 0;
 }
 
 /*********************************************************************
@@ -404,7 +405,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   char *fullpath = NULL;
   char *token = NULL;
   char *plugin_name = NULL;
-  char *initFuncName = NULL;
+  //char *initFuncName = NULL;
   char **plugin_args;
   char *save_ptr;
   int plugin_num_args;
@@ -531,6 +532,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->MetadataRegistrationComplete = 0;
   cb->PostInit = 0;
   cb->Dump = 0;
+  cb->Mpit = 0;
   cb->FunctionEntry = 0;
   cb->FunctionExit = 0;
   cb->Send = 0;
@@ -551,6 +553,7 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->MetadataRegistrationComplete = src->MetadataRegistrationComplete;
   dest->PostInit = src->PostInit;
   dest->Dump = src->Dump;
+  dest->Mpit = src->Mpit;
   dest->FunctionEntry = src->FunctionEntry;
   dest->FunctionExit = src->FunctionExit;
   dest->Send = src->Send;
@@ -580,6 +583,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
   if (cb->MetadataRegistrationComplete != 0) { Tau_plugins_enabled.metadata_registration = 1; }
   if (cb->PostInit != 0) { Tau_plugins_enabled.post_init = 1; }
   if (cb->Dump != 0) { Tau_plugins_enabled.dump = 1; }
+  if (cb->Mpit != 0) { Tau_plugins_enabled.mpit = 1; }
   if (cb->FunctionEntry != 0) { Tau_plugins_enabled.function_entry = 1; }
   if (cb->FunctionExit != 0) { Tau_plugins_enabled.function_exit = 1; }
   if (cb->Send != 0) { Tau_plugins_enabled.send = 1; }
@@ -605,6 +609,22 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* d
   while(callback != NULL) {
    if(callback->cb.FunctionRegistrationComplete != 0) {
      callback->cb.FunctionRegistrationComplete(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ * Overloaded function that invokes all registered callbacks for the mpit event
+ ***************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_t * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.Mpit != 0) {
+     callback->cb.Mpit(data);
    }
    callback = callback->next;
   }
@@ -802,6 +822,23 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data) 
   }
 }
 
+/*****************************************************************************
+ * Overloaded function that invokes all registered callbacks for the 
+ * finalize event
+ *****************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_t * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.FunctionFinalize != 0) {
+     callback->cb.FunctionFinalize(data);
+   }
+   callback = callback->next;
+  }
+}
+
 /**************************************************************************************************************************
  *  Overloaded function that invokes all registered callbacks for interrupt trigger event
  *******************************************************************************************************************************/
@@ -835,6 +872,10 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
     case TAU_PLUGIN_EVENT_POST_INIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_post_init_data_t*)data);
       break;
+    }  
+    case TAU_PLUGIN_EVENT_MPIT: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_mpit_data_t*)data);
+      break;
     } 
     case TAU_PLUGIN_EVENT_DUMP: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_dump_data_t*)data);
@@ -852,7 +893,11 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
       Tau_util_invoke_callbacks_((Tau_plugin_event_current_timer_exit_data_t*)data);
       break;
     } 
-    case TAU_PLUGIN_EVENT_SEND: {
+    case TAU_PLUGIN_EVENT_FUNCTION_FINALIZE: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_function_finalize_data_t*)data);
+      break;
+    }
+     case TAU_PLUGIN_EVENT_SEND: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_send_data_t*)data);
       break;
     } 
@@ -879,6 +924,10 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
     case TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_interrupt_trigger_data_t*)data);
       break;
+    }
+   default: {
+      perror("Someone forgot to implement an event for plugins...\n");
+      abort();
     }
   }
 }

@@ -54,6 +54,8 @@
 #define __WRAP_MPI_FILE_WRITE_AT__
 
 
+#ifdef TAU_MPIFILE
+
 /**
  * Returns a copy of a string with leading and trailing spaces stripped.
  */   
@@ -68,8 +70,6 @@ static char const * trim_fortran_string(char const * fstr, size_t const fstrlen)
   return strndup(head, tail-head+1);
 }
 
-
-#ifdef TAU_MPIFILE
 typedef struct iotracker {
   
   struct timeval t1, t2;
