@@ -61,6 +61,16 @@
 #include <elf-bfd.h>
 #endif
 
+#ifdef TAU_DWARF
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <dwarf.h>
+#include <libdwarf.h>
+#endif
+
 
 
 using namespace std;
@@ -1043,6 +1053,217 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   return;
 }
 
+#ifdef TAU_DWARF
+
+static void
+simple_error_handler(Dwarf_Error error, Dwarf_Ptr errarg)
+{
+    (void)errarg; // intentionally unused
+    printf("\nTAU: libdwarf error detected: 0x%" DW_PR_DUx " %s\n",
+        dwarf_errno(error),dwarf_errmsg(error));
+    return;
+}
+
+
+static void Tau_get_dwarf_line_number(Dwarf_Debug dbg, Dwarf_Die die, map<string, int> & sym_map, bfd * bfdImage) {
+    // This retrieves the line numbers for each DIE that represents a subprogram (function/routine).
+    char * name = NULL;
+    Dwarf_Half tag = 0;
+    const char * tagname = NULL;
+    int noname = 0;
+    int res = 0;
+    Dwarf_Error * errp = NULL;
+
+    res = dwarf_tag(die, &tag, errp);
+    if(res != DW_DLV_OK) {
+        printf("Error in dwarf_tag\n");
+        return;
+    }
+    if(tag != DW_TAG_subprogram) {
+        return; // Only care about subprograms
+    }
+    res = dwarf_diename(die, &name,errp);
+    if(res == DW_DLV_ERROR) {
+        printf("Error in dwarf_diename\n");
+        return;
+    }
+    if(res == DW_DLV_NO_ENTRY) {
+        name = NULL;
+        noname = 1;
+    }
+    res = dwarf_get_TAG_name(tag, &tagname);
+    if(res != DW_DLV_OK) {
+        printf("Error in dwarf_get_TAG_name\n");
+        return;
+    }
+
+    Dwarf_Attribute linkage_name;
+    res = dwarf_attr(die, DW_AT_linkage_name, &linkage_name, errp); 
+    char * linkage_name_str = NULL;
+    if(res == DW_DLV_OK) {
+        res = dwarf_formstring(linkage_name, &linkage_name_str, errp);
+        if( res != DW_DLV_OK) {
+            fprintf(stderr, "Error getting linkage name string\n");
+        }
+    }
+
+    Dwarf_Attribute line_number;
+    res = dwarf_attr(die, DW_AT_decl_line, &line_number, errp);
+    Dwarf_Unsigned line_number_u = 0;
+    if(res == DW_DLV_OK) {
+        res = dwarf_formudata(line_number, &line_number_u, errp);
+        if(res != DW_DLV_OK) {
+            line_number_u = 0;
+        }
+    }
+
+#ifdef DEBUG_PROF
+    fprintf(stderr, "Name: %s, Linkage name: %s, line = %" DW_PR_DUu "\n", name, linkage_name_str, line_number_u);
+#endif
+
+    // Add linkage name to the map, if it exists.
+    if(linkage_name_str) {
+        sym_map[std::string(linkage_name_str)] = line_number_u;
+        const char * demangled_name_str = Tau_bfd_internal_tryDemangle(bfdImage, linkage_name_str);
+        if(demangled_name_str != NULL) {
+            sym_map[std::string(demangled_name_str)] = line_number_u;
+        }
+    } 
+    
+    // Add regular name to the map, if it exists.
+    if(!noname) {
+        sym_map[std::string(name)] = line_number_u;
+    }
+
+    if(!noname) {
+        dwarf_dealloc(dbg, name, DW_DLA_STRING);
+    }
+}
+
+static void Tau_process_debug_symbols(Dwarf_Debug dbg, Dwarf_Die in_die, int is_info, map<string, int> & sym_map, bfd * bfdImage) {
+    int res = DW_DLV_ERROR;
+    Dwarf_Die cur_die=in_die;
+    Dwarf_Die child = 0;
+    Dwarf_Error *errp = 0;
+
+    // Get any line numbers from the current DIE
+    Tau_get_dwarf_line_number(dbg, in_die, sym_map, bfdImage);
+
+    // This loop recursively processes all the children of this DIE, then the next sibling of this DIE
+    for(;;) {
+        Dwarf_Die sib_die = 0;
+        res = dwarf_child(cur_die, &child, errp);
+        if(res == DW_DLV_ERROR) {
+            printf("Error in dwarf_child\n");
+            return;
+        }
+        if(res == DW_DLV_OK) {
+            // Get line numbers from the child and its siblings
+            Tau_process_debug_symbols(dbg, child, is_info, sym_map, bfdImage);
+            dwarf_dealloc(dbg, child, DW_DLA_DIE);
+            child = 0;
+        }
+        res = dwarf_siblingof_b(dbg, cur_die, is_info, &sib_die, errp);
+        if(res == DW_DLV_ERROR) {
+            printf("Error in dwarf_siblingof_b\n");
+            return;
+        }
+        if(res == DW_DLV_NO_ENTRY) {
+            break;
+        }
+        if(cur_die != in_die) {
+            dwarf_dealloc(dbg, cur_die, DW_DLA_DIE);
+            cur_die = 0;
+        }
+        cur_die = sib_die;
+        // Get line numbers from the sibling DIE
+        Tau_get_dwarf_line_number(dbg, cur_die, sym_map, bfdImage);
+    }
+    return;
+}
+
+static void Tau_get_dwarf_symbols(const char * filename, map<string, int> & sym_map, bfd * bfdImage) {
+
+    Dwarf_Debug dbg = 0;
+    int fd = -1;
+    const char * filepath = filename;
+    int res = DW_DLV_ERROR;
+
+    Dwarf_Handler errhand = simple_error_handler;
+    Dwarf_Ptr errarg = (Dwarf_Ptr)1;
+    Dwarf_Error * errp = 0;
+
+    fd = open(filepath, O_RDONLY);
+    if(fd < 0) {
+        TAU_VERBOSE("TAU_BFD: Unable to open file %s\n", filepath);
+        return;
+    }
+
+    res = dwarf_init(fd, DW_DLC_READ, errhand, errarg, &dbg, errp);
+
+    if(res != DW_DLV_OK) {
+        fprintf(stderr, "Error opening DWARF session: %d\n", res);
+        return;
+    }
+
+    Dwarf_Unsigned cu_header_length = 0;
+    Dwarf_Unsigned abbrev_offset = 0;
+    Dwarf_Half     address_size = 0;
+    Dwarf_Half     version_stamp = 0;
+    Dwarf_Half     offset_size = 0;
+    Dwarf_Half     extension_size = 0;
+    Dwarf_Sig8     signature;
+    Dwarf_Unsigned typeoffset = 0;
+    Dwarf_Unsigned next_cu_header = 0;
+    Dwarf_Half     header_cu_type = DW_UT_compile;
+    Dwarf_Bool     is_info = 1;
+    int cu_number = 0;
+
+    // This loop iterates over all the Compilation Units
+    for(;;++cu_number) {
+        Dwarf_Die no_die = 0;
+        Dwarf_Die cu_die = 0;
+        memset(&signature,0, sizeof(signature));
+
+        res = dwarf_next_cu_header_d(dbg, is_info, &cu_header_length, &version_stamp, &abbrev_offset,
+                &address_size, &offset_size, &extension_size, &signature, &typeoffset, &next_cu_header, 
+                &header_cu_type, errp);
+        if(res == DW_DLV_ERROR) {
+            fprintf(stderr, "TAU: Error in dwarf_next_cu_header: %d\n", res);
+            return;
+        }
+        if(res == DW_DLV_NO_ENTRY) {
+            /* Done. */
+            break;
+        }
+        // Each CU has one sibling, a CU_DIE (Debugging Information Entity)
+        res = dwarf_siblingof_b(dbg, no_die, is_info, &cu_die, errp);
+        if(res == DW_DLV_ERROR) {
+            fprintf(stderr, "TAU: Error in dwarf_siblingof_b on CU die: %d\n", res);
+            return;
+        }
+
+        // Process the DIE of the CU
+        Tau_process_debug_symbols(dbg, cu_die, is_info, sym_map, bfdImage);
+
+        dwarf_dealloc(dbg, cu_die, DW_DLA_DIE);
+    }
+
+
+    res = dwarf_finish(dbg, errp);
+    if(res != DW_DLV_OK) {
+        fprintf(stderr, "TAU: Error closing DWARF session: %d\n", res);
+        return;
+    }
+
+    res = close(fd);
+    if(res != 0) {
+        fprintf(stderr, "TAU: Error closing dwarf file\n");
+    }
+}
+
+#endif // TAU_DWARF
+
 // Given a function name, this routine iterates through the list of symbols and
 // returns the line number associated with the function name. It needs to 
 // cache this information - it is not efficient. 
@@ -1085,6 +1306,40 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
       
   TauBfdUnit * unit = ThebfdUnits()[bfd_handle];
   int result_line = 0;
+#ifdef TAU_DWARF
+  // If we have libdwarf, use it; it is much faster than libbfd
+
+  if(unit != NULL) {
+    for(vector<TauBfdModule*>::iterator it = unit->modules.begin(); it != unit->modules.end(); ++it) {
+      TauBfdModule * module = *it;
+      if(module != NULL) {
+        bfd * bfdImage = module->bfdImage;   
+        if(bfdImage == NULL) {
+          TAU_VERBOSE("TAU_BFD: Forcing load of symbol table for %s\n", module->name.c_str());
+          module->loadSymbolTable(module->name.c_str());
+          bfdImage = module->bfdImage;
+          if(bfdImage == NULL) {
+            TAU_VERBOSE("TAU_BFD: Skipping %s because its symbol table couldn't be loaded.\n", module->name.c_str());
+            continue;
+          }
+        }
+        TAU_VERBOSE("TAU_BFD: Will process symbols in %s using libdwarf\n", module->name.c_str());
+        Tau_get_dwarf_symbols(module->name.c_str(), full_symtab, bfdImage);
+      }
+    }
+  }
+  fit = full_symtab.find(funcname);
+  if(fit == full_symtab.end()) {
+    TAU_VERBOSE("TAU_BFD: Didn't find %s in the full_symtab during first attempt!\n", funcname); 
+    return 0;
+  } else {
+    lno = fit->second;
+    result_line = lno;
+    TAU_VERBOSE("TAU_BFD: Adding: cached_symtab[%s] = %d\n", funcname, lno);
+    cached_symtab[funcname] = lno;
+  }
+
+#else // we don't have TAU_DWARF; do it the slow way with libbfd
   if(unit != NULL) {
     for(vector<TauBfdModule*>::iterator it = unit->modules.begin(); it != unit->modules.end(); ++it) {
       TauBfdModule *module = *it; 
@@ -1167,6 +1422,7 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
       }
     }
   }
+#endif // TAU_DWARF else clause
 
   return result_line; 
   
