@@ -47,6 +47,10 @@ extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subind
 extern void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count);
 extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
+extern char * Tau_get_pvar_name(int i, int j);
+
+
+int Tau_mpi_t_initialize();
 
 #define dprintf TAU_VERBOSE
 
