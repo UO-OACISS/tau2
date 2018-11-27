@@ -449,6 +449,8 @@ void Tau_cupti_onunload() {
 
 }
 
+/* This callback handles synchronous things */
+
 // Extra bool param that tells whether to run code
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
@@ -473,7 +475,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	    }
 	    // track unique threads seen
 	    if (set_gpuThread.find(cur_tid) == set_gpuThread.end()) {
-	      int threadid = Tau_get_thread() - TauEnv_get_nodeNegOneSeen();
+          // reserve a thread ID from TAU
+	      int threadid = Tau_create_task();
+          // Start a top level timer on that thread.
+          Tau_create_top_level_timer_if_necessary_task(threadid);
+          //printf("VIRTUAL THREAD: %d\n", threadid);
 	      set_gpuThread.insert(cur_tid);
 	      TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
 	      map_cuptiThread[Tau_get_thread()] = threadid;
@@ -956,6 +962,8 @@ bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau
   map_cudaThread[corr_id] = ct;
   return true;
 }
+
+/* This callback handles asynchronous activity */
 
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
