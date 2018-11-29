@@ -543,6 +543,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->PreEndOfExecution = 0;
   cb->EndOfExecution = 0;
   cb->InterruptTrigger = 0;
+  cb->FunctionFinalize = 0;
 }
 
 /**************************************************************************************************************************

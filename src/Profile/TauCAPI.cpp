@@ -2953,7 +2953,7 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
 
 //Static variables with file scope
 static TauUserEvent *** pvarEvents = NULL;
-static char pvarnamearray[100];
+static char pvarnamearray[300];
  
 TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
     /*All this routine does is to return the event at the current PVAR index and subindex*/
@@ -2998,12 +2998,9 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
 
 extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
  
-  std::cout << "PVAR name: " << PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str() << std::endl;
   char * pvarnamechar = const_cast<char*>(PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
-  fprintf(stdout, "PVAR name (char *): %s\n", pvarnamechar);
 
   strcpy(pvarnamearray,pvarnamechar);
-  fprintf(stdout, "PVAR name after strcpy: %s\n", pvarnamearray);
   //return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
   return pvarnamearray;
 }
