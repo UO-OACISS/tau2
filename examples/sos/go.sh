@@ -1,5 +1,7 @@
 #!/bin/bash -x
 
+DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 TAU=/home/users/sramesh/MPI_T/TAU_INSTALLATION # Update this as needed
 
 export PATH=$TAU/86_64/bin:$TAU/x86_64/sos/sos_flow/build-linux/bin:$PATH
@@ -55,7 +57,7 @@ mpirun -np 4 tau_exec -T mpi,mpit,sos ./matmult &
 sleep 1
 echo "Launch PyCOOLR"
 
-cd ../../x86_64/bin
+cd $TAU/x86_64/bin
 ./pycoolr -tool=sos -platform=$PLATFORM
-stop_sos_daemon
-showdb
+#stop_sos_daemon
+#showdb
