@@ -241,7 +241,7 @@ void TauTriggerCrayPowerEvent(int fd, const char *event_name)  {
   if (fd) {
     Tau_read_cray_power_events(fd, &value); 
     if (value > 0) {
-      TAU_TRIGGER_EVENT(event_name, (double) value);
+      Tau_trigger_context_event_thread(event_name, (double) value, 0);
       TAU_VERBOSE("Triggered %s with %lld\n", event_name, value);
     }
   }
@@ -285,11 +285,11 @@ void TauTriggerLoadEvent(void) {
     //Do not bother with recording the load if TAU is uninitialized. 
     if (Tau_init_check_initialized() && TheSafeToDumpData()) {
       if (TauEnv_get_tracing()) {
-        TAU_TRIGGER_EVENT("System load (x100)", value*100);
+        Tau_trigger_context_event_thread("System load (x100)", value*100, 0);
         TAU_VERBOSE("Triggered System load (x100) with %g value \n", value*100);
       }
       else  {
-        TAU_TRIGGER_EVENT("System load", value);
+        Tau_trigger_context_event_thread("System load", value, 0);
         TAU_VERBOSE("Triggered System load with %g value \n", value);
       }
     }

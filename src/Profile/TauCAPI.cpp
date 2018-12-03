@@ -1802,6 +1802,14 @@ extern "C" void Tau_trigger_userevent(const char *name, double data) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_userevent_thread(const char *name, double data, int tid) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_userevent_signal_safe(&ue, name);
+  Tau_userevent_thread(ue, data, tid);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
