@@ -234,7 +234,7 @@ int main (int argc, char *argv[])
   }
 #endif /* PTHREADS */
 
-  int maxi = 20;
+  int maxi = 200;
 
 #ifdef PTHREADS
   for (i = 0 ; i < nthreads ; i++) {
