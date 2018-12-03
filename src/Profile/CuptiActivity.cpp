@@ -214,8 +214,8 @@ void Tau_cupti_subscribe()
 #ifdef TAU_DEBUG_CUPTI
     printf("in Tau_cupti_subscribe\n");
 #endif
-	CUptiResult err;
-	CUresult err2;
+	CUptiResult err = CUPTI_SUCCESS;
+	CUresult err2 = CUDA_SUCCESS;
 
 	TAU_VERBOSE("TAU: Subscribing to CUPTI.\n");
 	err = cuptiSubscribe(&subscriber, (CUpti_CallbackFunc)Tau_cupti_callback_dispatch, NULL);
@@ -250,8 +250,8 @@ void Tau_cupti_onload()
 	}
 	TAU_VERBOSE("TAU: Enabling CUPTI callbacks.\n");
 
-	CUptiResult err;
-	CUresult err2;
+	CUptiResult err = CUPTI_SUCCESS;
+	CUresult err2 = CUDA_SUCCESS;
   
 	if (cupti_api_runtime())
 	{
@@ -350,8 +350,8 @@ if(!TauEnv_get_cuda_track_sass()) {
 	  
   if(TauEnv_get_cuda_track_unified_memory()) {
 #if CUDA_VERSION >= 7000
-    CUptiResult res;
-	CUresult err2;
+    CUptiResult res = CUPTI_SUCCESS;
+	CUresult err2 = CUDA_SUCCESS;
     CUpti_ActivityUnifiedMemoryCounterConfig config[2];
     CUresult er;
     cuInit(0);
@@ -385,8 +385,8 @@ if(!TauEnv_get_cuda_track_sass()) {
     CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_UNIFIED_MEMORY_COUNTER));
 
 #elif CUDA_VERSION >= 6000 && CUDA_VERSION <= 6050
-    CUptiResult res;
-	CUresult err2;
+    CUptiResult res = CUPTI_SUCCESS;
+	CUresult err2 = CUDA_SUCCESS;
     CUpti_ActivityUnifiedMemoryCounterConfig config[3];
 
     cuInit(0);
@@ -449,6 +449,8 @@ void Tau_cupti_onunload() {
 
 }
 
+/* This callback handles synchronous things */
+
 // Extra bool param that tells whether to run code
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
@@ -473,7 +475,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	    }
 	    // track unique threads seen
 	    if (set_gpuThread.find(cur_tid) == set_gpuThread.end()) {
-	      int threadid = Tau_get_thread() - TauEnv_get_nodeNegOneSeen();
+          // reserve a thread ID from TAU
+	      int threadid = Tau_create_task();
+          // Start a top level timer on that thread.
+          Tau_create_top_level_timer_if_necessary_task(threadid);
+          //printf("VIRTUAL THREAD: %d\n", threadid);
 	      set_gpuThread.insert(cur_tid);
 	      TauEnv_set_cudaTotalThreads(TauEnv_get_cudaTotalThreads() + 1);
 	      map_cuptiThread[Tau_get_thread()] = threadid;
@@ -505,8 +511,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		//that happen on that resource.
 		if (id == CUPTI_CBID_RESOURCE_CONTEXT_CREATED)
 		{
-			CUptiResult err;
-	        CUresult err2;
+			CUptiResult err = CUPTI_SUCCESS;
+	        CUresult err2 = CUDA_SUCCESS;
 			CUpti_ResourceData* resource = (CUpti_ResourceData*) params;
 #ifdef TAU_DEBUG_CUPTI
 			printf("TAU: Resource created: Enqueuing Buffer with context=%p stream=%d.\n", resource->context, 0);
@@ -518,8 +524,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		}
 		else if (id == CUPTI_CBID_RESOURCE_STREAM_CREATED)
 		{
-			CUptiResult err;
-	        CUresult err2;
+			CUptiResult err = CUPTI_SUCCESS;
+	        CUresult err2 = CUDA_SUCCESS;
 			CUpti_ResourceData* resource = (CUpti_ResourceData*) params;
     		uint32_t stream;
 			err = cuptiGetStreamId(resource->context, resource->resourceHandle.stream, &stream);
@@ -550,8 +556,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 #endif
 		CUpti_SynchronizeData *sync = (CUpti_SynchronizeData *) params;
 		uint32_t stream;
-		CUptiResult err;
-	    CUresult err2;
+		CUptiResult err = CUPTI_SUCCESS;
+	    CUresult err2 = CUDA_SUCCESS;
 		//Global Buffer
 #if defined(PTHREADS)
     int count_iter = TauEnv_get_cudaTotalThreads();
@@ -809,7 +815,7 @@ void CUPTIAPI Tau_cupti_register_sync_event(CUcontext context, uint32_t stream, 
 	//printf("in sync: context=%p stream=%d.\n", context, stream);
 	registered_sync = true;
   CUptiResult err, status;
-  CUresult err2;
+  CUresult err2 = CUDA_SUCCESS;
   CUpti_Activity *record = NULL;
 	//size_t bufferSize = 0;
   
@@ -957,14 +963,16 @@ bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau
   return true;
 }
 
+/* This callback handles asynchronous activity */
+
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
   // currentTimestamp
   uint64_t currentTimestamp;
   double d_currentTimestamp;
-  CUptiResult err;
-  CUresult err2;
+  CUptiResult err = CUPTI_SUCCESS;
+  CUresult err2 = CUDA_SUCCESS;
   err = cuptiGetTimestamp(&currentTimestamp); // nanosec
   ///////
   // Within python,
