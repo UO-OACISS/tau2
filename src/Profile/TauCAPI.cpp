@@ -2917,7 +2917,7 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 
 #include <mpi.h> 
 
-int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
+void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
   int return_val, namelen, verb, varclass, bind, threadsup, i;
   int readonly, continuous, atomic;
   char event_name[TAU_NAME_LENGTH + 1] = "";
