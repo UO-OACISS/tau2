@@ -1,10 +1,12 @@
 #!/bin/bash -x
 
+#In order to run this example, please change the lines below that say UPDATE
+
 DIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-TAU=/home/users/sramesh/MPI_T/TAU_INSTALLATION # Update this as needed
+TAU=/home/users/sramesh/MPI_T/TAU_INSTALLATION # UPDATE
 
-export PATH=$TAU/86_64/bin:$TAU/x86_64/sos/sos_flow/build-linux/bin:$PATH
+export PATH=$TAU/86_64/bin:$TAU/x86_64/sos/sos_flow/build-linux/bin:$PATH #UPDATE
 
 export SOS_CMD_PORT=22501
 export SOS_WORK=`pwd`
@@ -15,13 +17,13 @@ export SOS_EVPATH_MEETUP=${DIR}
 #export TAU_SOS_PERIODIC=1
 
 export TAU_PLUGINS=libTAU-sos-plugin.so
-export TAU_PLUGINS_PATH=$TAU/x86_64/lib/shared-mpi-pthread-sos-mpit # Change as needed, assumes SOS+MPI+MPIT support at the bare minimum
+export TAU_PLUGINS_PATH=$TAU/x86_64/lib/shared-mpi-pthread-sos-mpit # UPDATE
 
 export TAU_VERBOSE=0
 export TAU_PROFILE=1
 export TAU_TRACK_MPI_T_PVARS=1
 
-PLATFORM=`hostname`'.nic.uoregon.edu' # Defaults to *.nic.uoregon.edu, change as needed
+PLATFORM=`hostname`'.nic.uoregon.edu' # UPDATE
 
 start_sos_daemon()
 {
