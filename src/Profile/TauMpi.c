@@ -2318,6 +2318,7 @@ int *provided;
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
   returnVal = Tau_MPI_T_initialization();
+  Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );

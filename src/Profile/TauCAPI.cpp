@@ -1802,6 +1802,14 @@ extern "C" void Tau_trigger_userevent(const char *name, double data) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_userevent_thread(const char *name, double data, int tid) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_userevent_signal_safe(&ue, name);
+  Tau_userevent_thread(ue, data, tid);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
@@ -2909,7 +2917,7 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 
 #include <mpi.h> 
 
-int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
+void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
   int return_val, namelen, verb, varclass, bind, threadsup, i;
   int readonly, continuous, atomic;
   char event_name[TAU_NAME_LENGTH + 1] = "";
@@ -2950,6 +2958,10 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
   sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", pvar_index, event_name);
   TAU_METADATA(concat_event_name, description); 
 }
+
+//Static variables with file scope
+static TauUserEvent *** pvarEvents = NULL;
+static char pvarnamearray[300];
  
 TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
     /*All this routine does is to return the event at the current PVAR index and subindex*/
@@ -2992,18 +3004,11 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
     tau_previous_pvar_count = num_pvars;
 }
 
-//Static variables with file scope
-static TauUserEvent *** pvarEvents = NULL;
-static char pvarnamearray[100];
-
 extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
  
-  std::cout << "PVAR name: " << PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str() << std::endl;
   char * pvarnamechar = const_cast<char*>(PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
-  fprintf(stdout, "PVAR name (char *): %s\n", pvarnamechar);
 
   strcpy(pvarnamearray,pvarnamechar);
-  fprintf(stdout, "PVAR name after strcpy: %s\n", pvarnamearray);
   //return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
   return pvarnamearray;
 }

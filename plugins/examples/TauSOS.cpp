@@ -770,6 +770,9 @@ void TAU_SOS_pack_profile() {
     RtsLayer::UnLockDB();
 }
 
+extern "C" int Tau_open_status(void);
+extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm);
+
 void TAU_SOS_send_data(void) {
     // have we initialized?
     if (_runtime == NULL) { 
@@ -788,9 +791,17 @@ void TAU_SOS_send_data(void) {
     // Make sure we have a pub handle */
     assert(tau_sos_pub);
     // Update these now, WITHOUT a signal. Signals are TROUBLE.
-    TAU_TRACK_MEMORY_HERE();
-    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
-    TAU_TRACK_LOAD_HERE();
+    // However, that means we have to duplicate code, because we don't want
+    // the measurement on *this* thread, but on thread 0.
+    Tau_trigger_context_event_thread("Heap Memory Used (KB)", Tau_max_RSS(), 0);
+  	static int fd=Tau_open_status();
+    long long vmrss, vmhwm;
+    Tau_read_status(fd, &vmrss, &vmhwm);
+    if (vmrss > 0)
+    	Tau_trigger_context_event_thread("Memory Footprint (VmRSS) (KB)", (double)vmrss, 0);
+    if (vmhwm > 0)
+    	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
+    TauTrackLoadHere();
     /* Only send a profile update if we aren't tracing */
     if (!thePluginOptions().env_sos_tracing) {
         TAU_SOS_pack_profile();

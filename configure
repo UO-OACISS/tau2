@@ -1798,12 +1798,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-        -otf=download*)
-            echo "Downloading libotf2..."
-            otf=yes
-            download_otf=yes
-            shift
-            ;;
+     -otf=download*)
+        echo "Downloading libotf2..."
+        otf=yes
+        download_otf=yes
+        shift
+        ;;
 
 	-otf=*)
 	    otf=yes
@@ -1936,6 +1936,13 @@ for arg in "$@"; do
 		exit 1
 	    fi
 	    shift
+        ;;
+
+    -dwarf=download)
+        dwarf=yes
+        download_dwarf=yes
+        echo "Downloading libdwarf..."
+        shift
         ;;
 
 	-dwarf=*)
@@ -10527,11 +10534,122 @@ if [ $dyninst = yes ] ; then
 fi
 
 
+######################################################################
+# Install libdwarf if requested
+######################################################################
+libdwarf=libdwarf
+libdwarf_dirname=libdwarf-20181024
+libdwarftgz=$libdwarf_dirname.tar.gz
+libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
+
+if [ "x$dwarfdir" = "x" ]; then
+    libdwarfdir=${targetdir}/${architecture}
+else
+    libdwarfdir=$dwarfdir
+fi
+
+libdwarf_name=dwarf
+if [ "x$dwarfdir" != "x" -a -d "$dwarfdir" ] ; then
+    if [ -r $dwarfdir/$libdwarftgz ]; then
+        echo "NOTE: Copying $dwarfdir/$libdwarftgz "
+        cp $dwarfdir/$libdwardtgz .
+        download_dwarf=yes
+    fi
+fi
+
+
+if [ "x$download_dwarf" = xyes ] ; then
+    if [ $machine = craycnl ] ; then
+        dwarfdir=${libdwarfdir}/${libdwarf}-${c_compiler}-${PE_ENV}
+    else
+        dwarfdir=${libdwarfdir}/${libdwarf}-${c_compiler}
+    fi
+    predwarfdir=`pwd`
+
+
+    if [ -r "$dwarfdir/lib/lib${libdwarf_name}.so" -o \
+        -r "$dwarfdir/lib/lib${libdwarf_name}.a" -o \
+        -r "$dwarfdir/lib/lib${libdwarf_name}.dylib" -o \
+        -r "$dwarfdir/lib64/lib${libdwarf_name}.so" -o \
+        -r "$dwarfdir/lib64/lib${libdwarf_name}.a" -o \
+        -r "$dwarfdir/lib64/lib${libdwarf_name}.dylib" ] ; then
+        echo "Found: lib${libdwarf_name}"
+        echo "libdwarf download already found, skipping"
+    else
+        echo "Not found in ${dwarfdir}: lib${libdwarf_name}"
+        # get the tar file
+        if [ ! -f $libdwarftgz ] ; then
+            download "$libdwarfurl" "$libdwarftgz"
+        fi
+
+        # check the tar file
+        if [ ! -f $libdwarftgz ] ; then
+            echo "$libdwarftgz did not download.  Please download it manually from: "
+            echo "$libdwarfurl"
+            echo "Please enter the directory containing the tarball: ${nnl}"
+            read RESPONSE
+            cp $RESPONSE/$libdwarftgz .
+        else
+            echo "expanding $libdwarftgz..."
+            tar -xzf $libdwarftgz
+            echo "removing $libdwarftgz..."
+            rm $libdwarftgz
+            if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+            then
+                dwarf_c_compiler=gcc
+                dwarf_cxx_compiler=g++
+            else
+                dwarf_c_compiler=${c_compiler}
+                dwarf_cxx_compiler=${cxx_compiler}
+            fi
+
+            configresult=0
+            makeresult=0
+            libdwarf_log=configure.log
+            cd $libdwarf_dirname
+            echo "configuring $libdwarf... (see `pwd`/${libdwarf_log} for log)..."
+            ./configure --prefix=${dwarfdir} --enable-static --enable-shared CC=${dwarf_c_compiler} CXX=${dwarf_cxx_compiler} > ${libdwarf_log} 2>&1
+            configresult=$?
+            if [ $configresult -eq 0 ] ; then
+                libdwarf_log=build.log
+                echo "building ${libdwarf}... (see `pwd`/${libdwarf_log} for log)..."
+                make -i > $libdwarf_log  2>&1
+                makeresult=$?
+                if [ $makeresult -eq 0 ] ; then
+                    libdwarf_log=install.log
+                    echo "installing ${libdwarf} to ${dwarfdir}... (see `pwd`/${libdwarf_log} for log)..."
+                    make -i install > $libdwarf_log  2>&1
+                    makeresult=$?
+                fi
+            fi
+            if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+                # Some systems install to lib64 instead of lib
+                if [ -d "$dwarfdir/lib64" -a ! -d "$dwarfdir/lib" ] ; then
+                    tdir=$dwarfdir
+                    pwddir=${PWD}
+                    cd $tdir
+                    ln -s lib64 lib
+                    cd $pwddir
+                fi
+                echo "...Success."
+            else
+                echo "ERROR BUILDING $libdwarf!"
+                echo "Please check `pwd`/config.log or `pwd`/${libdwarf_log}"
+            fi
+        fi
+    fi
+    cd $predwarfdir
+fi
+
 if [ $dwarf = yes ] ; then
     if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
 	echo "ERROR: $dwarfdir/lib/libdwarf.a not found"
     else
+    echo "Using libdwarf at $dwarfdir"
 	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
+    fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
+    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf"
+    fixmakeargs="$fixmakeargs TAU_DWARF"
     fi
 fi
 

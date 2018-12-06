@@ -466,6 +466,16 @@ case $1 in
 	echo "s,^DWARFOPTS=.*$,DWARFOPTS=$dwarfopts,g" >> $sedout
 	;;
 
+     dwarfinc=*)
+        dwarfinc=`echo $1 | sed -e 's/^dwarfinc=//'  -e 's/#/ /g'`
+	echo "s,^DWARFINC=.*$,DWARFINC=$dwarfinc,g" >> $sedout
+	;;
+
+     dwarflib=*)
+        dwarflib=`echo $1 | sed -e 's/^dwarflib=//'  -e 's/#/ /g'`
+	echo "s,^DWARFLIB=.*$,DWARFLIB=$dwarflib,g" >> $sedout
+	;;
+
      jdkdir=*)
         jdkdir=`echo $1 | sed -e 's/^jdkdir=//'`
 	echo "s,^JDKDIR=.*$,JDKDIR=$jdkdir,g" >> $sedout
@@ -629,6 +639,10 @@ case $1 in
         ;;
      TAU_ELF_BFD)
         echo NOTE: Using ELF support in BFD
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_DWARF)
+        echo NOTE: Using DWARF support from libdwarf
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_LIKWID)
