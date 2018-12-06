@@ -126,7 +126,16 @@ static void tauSignalHandler(int sig)
     fprintf(stderr, "Caught SIGUSR1, dumping backtrace data\n");
   } else {
     fprintf(stderr, "Caught SIGUSR1, dumping TAU profile data\n");
-    TAU_DB_DUMP_PREFIX("profile");
+    //TAU_DB_DUMP_PREFIX("profile");
+    TauInternalFunctionGuard protects_this_function;
+    for (int i = 0 ; i < RtsLayer::getTotalThreads() ; i++){
+     if (TauEnv_get_ebs_enabled()) {
+          Tau_sampling_finalize_if_necessary(i);
+     } 
+
+    TauProfiler_DumpData(false, i, "profile");
+  }
+
   }
 }
 
