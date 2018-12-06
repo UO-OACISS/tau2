@@ -47,6 +47,10 @@ extern void Tau_track_pvar_event(int current_pvar_index, int current_pvar_subind
 extern void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count);
 extern void *Tau_MemMgr_malloc(int tid, size_t size);
 extern void Tau_MemMgr_free(int tid, void *addr, size_t size);
+extern char * Tau_get_pvar_name(int i, int j);
+
+
+int Tau_mpi_t_initialize();
 
 #define dprintf TAU_VERBOSE
 
@@ -807,8 +811,6 @@ int Tau_track_mpi_t_here(void) {
   if(return_val != MPI_SUCCESS) 
     return return_val;
 
-  fprintf(stdout, "Track MPIT PVARs\n");
-
   /* get number of pvars from MPI_T */
   return_val = MPI_T_pvar_get_num(&num_pvars);
   if (return_val != MPI_SUCCESS) {
@@ -875,16 +877,12 @@ int Tau_track_mpi_t_here(void) {
           Tau_track_pvar_event(i, j, tau_pvar_count, tau_initial_pvar_count, mydata);
      
           //TauInternalFunctionGuard protects_this_function; 
-          fprintf(stdout, "TAU track MPI-T: pvar initial count=%d, pvar count=%d, pvar index=%d, pvar sub index=%d, pvar value=%llu\n", tau_initial_pvar_count, tau_pvar_count[i], i, j, mydata);
+          dprintf("MPI_T: pvar initial count=%d, pvar count=%d, pvar index=%d, pvar sub index=%d, pvar value=%llu\n", tau_initial_pvar_count, tau_pvar_count[i], i, j, mydata);
           /*Invoke plugins only if both plugin path and plugins are specified*/
           if(TauEnv_get_plugins_enabled()) {
             Tau_plugin_event_mpit_data_t plugin_data;
  
-            //fprintf(stdout, " Track MPI-T PVARs - get pvar name: %s\n", Tau_get_pvar_name(i,j));
-            //std::cout << "Track MPI-T PVARs - get pvar name: " << Tau_get_pvar_name(i,j) << std::endl;
             char * pvar_name_char = Tau_get_pvar_name(i,j);
-            fprintf(stdout, " Track MPI-T PVARs - get pvar name: %s\n", pvar_name_char);
-            //dprintf("MPI-T invoke callback: pvar_name char: %s\n", pvar_name_str);
             plugin_data.pvar_name = Tau_get_pvar_name(i,j);
             plugin_data.pvar_index = j;
             plugin_data.pvar_value = mydata;
