@@ -249,7 +249,7 @@ class Coolrsub:
         if self.tool == "sos":
           self.groupcolumns = params['cfg']['groupcolumns']
           self.ranks2 = params['cfg']['ranks2']
-          self.sosdbfile = params['cfg']['dbfile']
+          self.sosdbfile = os.environ['SOS_WORK']+params['cfg']['dbfile']
           self.sos_bin_path = ""
           self.res_sql = [None]
           self.res_min_ts_sql = [None]
@@ -1733,10 +1733,6 @@ class Coolrsub:
 
   def subSpawn(self):
 
-     print('subSpawn: load beacon subscriber library')
-     envlibpath = os.environ['PYCOOLR_LIBPATH']
-     libarbjsonbeep = cdll.LoadLibrary(envlibpath+'/libarbitraryjsonbeepmulsub.so')
-
      #libarbjsonbeep.subscribe(4, "MEMORY", "NODE_POWER_WATTS","MPI_T_PVAR")
      # Spawn a process to launch a subscriber
      # procSubscribe = multiprocessing.Process(target=self.subscribe, args=(libarbjsonbeep,))
@@ -1747,6 +1743,9 @@ class Coolrsub:
      if self.tool == "beacon":
        print('Selected tool: beacon') 
        try:
+         print('subSpawn: load beacon subscriber library')
+         envlibpath = os.environ['PYCOOLR_LIBPATH']
+         libarbjsonbeep = cdll.LoadLibrary(envlibpath+'/libarbitraryjsonbeepmulsub.so')
          thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
          thread.start_new_thread(self.readEvents,(libarbjsonbeep,))
          #thread.start_new_thread(self.readEvents,(libarbjsonbeep,))

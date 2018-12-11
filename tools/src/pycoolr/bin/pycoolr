@@ -1,12 +1,12 @@
 #!/bin/bash
 
-currdir=${PWD}
-echo ${PWD}
-
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 tool=
+config=
+
 usage()
 {
- echo "Usage: $0 [-tool <beacon|sos>]" 1>&2;
+ echo "Usage: $0 [REQUIRED] [-tool <beacon|sos>] [OPTIONAL] [-config=full-path-to-config-file]" 1>&2;
  exit 1;
 }
 
@@ -20,10 +20,12 @@ for arg in "$@"; do
   echo $arg
   case $arg in
     -tool=*)
-       echo "got tool option"
        tool=`echo $arg | sed -e 's/-tool=//'`
-       echo "selected tool: "
-       echo $tool
+       echo "Selected tool: " $tool
+       ;;
+    -config=*)
+       config=`echo $arg | sed -e 's/-config=//'`
+       echo "User supplied config file: " $config
        ;;
     *)
        echo "usage"
@@ -33,18 +35,29 @@ for arg in "$@"; do
 done
 
 PYCOOLR_TOOL=$tool
+CONFIG_FILE=$config
 
-BEACON=/home/users/sramesh/MPI_T/BEACON_INSTALLATION # UPDATE
 export PYCOOLR_NODE=`hostname`
-export PYCOOLR_INST_PATH=$BEACON
-export PYCOOLR_LIBPATH=$BEACON/lib
-export CVARS_COMM_MODE="pub"
 
 if [[ $PYCOOLR_TOOL = "beacon" ]];
 then
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/demotaubeaconcerberus.cfg
+   export CVARS_COMM_MODE="pub"
+   BEACON=/home/users/sramesh/MPI_T/BEACON_INSTALLATION # UPDATE
+   export PYCOOLR_INST_PATH=$BEACON
+   export PYCOOLR_LIBPATH=$BEACON/lib
+   if [[ $CONFIG_FILE = "" ]];
+   then 
+     $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/beacon_mpit.cfg
+   else
+     $DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE
+   fi
 
 elif [[ $PYCOOLR_TOOL = "sos" ]];
   then
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/soscerberusmatmult.cfg
+   if [[ $CONFIG_FILE = "" ]];
+   then
+      $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/sos_mpit.cfg
+   else
+      $DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE
+   fi
 fi
