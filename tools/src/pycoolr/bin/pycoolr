@@ -42,7 +42,7 @@ export PYCOOLR_NODE=`hostname`
 if [[ $PYCOOLR_TOOL = "beacon" ]];
 then
    export CVARS_COMM_MODE="pub"
-   BEACON=/home/users/sramesh/MPI_T/BEACON_INSTALLATION # UPDATE
+   [ -z "$BEACON" ] && echo "Please set the BEACON environment variable to point to the beacon installation" && exit 1;
    export PYCOOLR_INST_PATH=$BEACON
    export PYCOOLR_LIBPATH=$BEACON/lib
    if [[ $CONFIG_FILE = "" ]];
@@ -54,6 +54,7 @@ then
 
 elif [[ $PYCOOLR_TOOL = "sos" ]];
   then
+   [ -z "$SOS_WORK" ] && echo "Please set the SOS_WORK environment variable" && exit 1;
    if [[ $CONFIG_FILE = "" ]];
    then
       $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/sos_mpit.cfg
