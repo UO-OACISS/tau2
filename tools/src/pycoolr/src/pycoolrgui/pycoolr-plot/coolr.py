@@ -250,7 +250,7 @@ class Coolrsub:
           self.groupcolumns = params['cfg']['groupcolumns']
           self.ranks2 = params['cfg']['ranks2']
           sos_work_path = os.environ['SOS_WORK']
-          self.sosdbfile = sos_work_path+params['cfg']['dbfile']
+          self.sosdbfile = sos_work_path+'/'+params['cfg']['dbfile']
           self.sos_bin_path = ""
           self.res_sql = [None]
           self.res_min_ts_sql = [None]
