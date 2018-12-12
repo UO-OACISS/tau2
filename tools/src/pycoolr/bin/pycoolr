@@ -1,14 +1,12 @@
 #!/bin/bash
 
-currdir=${PWD}
-echo ${PWD}
-
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 tool=
-platform=
+config=
 
 usage()
 {
- echo "Usage: $0 [-tool <beacon|sos>] [-platform <cerberus|godzilla>]" 1>&2;
+ echo "Usage: $0 [REQUIRED] [-tool <beacon|sos>] [OPTIONAL] [-config=full-path-to-config-file]" 1>&2;
  exit 1;
 }
 
@@ -22,16 +20,12 @@ for arg in "$@"; do
   echo $arg
   case $arg in
     -tool=*)
-       echo "got tool option"
        tool=`echo $arg | sed -e 's/-tool=//'`
-       echo "selected tool: "
-       echo $tool
+       echo "Selected tool: " $tool
        ;;
-    -platform=*) 
-       echo "got platform option"
-       platform=`echo $arg | sed -e 's/-platform=//'`
-       echo "selected platorm: "
-       echo $platform
+    -config=*)
+       config=`echo $arg | sed -e 's/-config=//'`
+       echo "User supplied config file: " $config
        ;;
     *)
        echo "usage"
@@ -40,55 +34,31 @@ for arg in "$@"; do
   esac
 done
 
-PYCOOLR_PLATFORM=$platform
 PYCOOLR_TOOL=$tool
+CONFIG_FILE=$config
 
-export BEACON_TOPOLOGY_SERVER_ADDR=dig +short $platform
-export BEACON_ROOT_FS=/dev/shm/aurelem
-export LD_LIBRARY_PATH=/home/users/aurelem/beacon/mix/BEACON_inst/lib:$LD_LIBRARY_PATH
-export PATH=/home/users/aurelem/beacon/mix/BEACON_inst/bin:/home/users/aurelem/beacon/mix/BEACON_inst/sbin:$PATH
-export PYCOOLR_NODE=$platorm
-export PYCOOLR_INST_PATH=/home/users/aurelem/beacon/mix/BEACON_inst
-export PYCOOLR_LIBPATH=/home/users/aurelem/beacon/mix/BEACON_inst/lib
-export MPIT_CVARS_PATH=/dev/shm/cvars/tau_mpit_cvars.conf
-export CVARS_COMM_MODE="pub"
+export PYCOOLR_NODE=`hostname`
 
 if [[ $PYCOOLR_TOOL = "beacon" ]];
 then
-
-  if [[ $PYCOOLR_PLATFORM = "cerberus.nic.uoregon.edu" ]];
-  then
-  echo "tool: beacon, platform: cerberus.nic.uoregon.edu"
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/beaconcerberus.cfg
-
-  elif [[ $PYCOOLR_PLATFORM = "godzilla.nic.uoregon.edu" ]];
-  then
-  echo "tool: beacon, platform: godzilla.nic.uoregon.edu"
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/beacongodzilla.cfg
-
-  elif [[ $PYCOOLR_PLATFORM = "delphi.nic.uoregon.edu" ]];
-  then
-  echo "tool: beacon, platform: delphi.nic.uoregon.edu"
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/beacondelphi.cfg
-
-  fi
+   export CVARS_COMM_MODE="pub"
+   [ -z "$BEACON" ] && echo "Please set the BEACON environment variable to point to the beacon installation" && exit 1;
+   export PYCOOLR_INST_PATH=$BEACON
+   export PYCOOLR_LIBPATH=$BEACON/lib
+   if [[ $CONFIG_FILE = "" ]];
+   then 
+     $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/beacon_mpit.cfg
+   else
+     $DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE
+   fi
 
 elif [[ $PYCOOLR_TOOL = "sos" ]];
   then
-  if [[ $PYCOOLR_PLATFORM = "cerberus.nic.uoregon.edu" ]];
-  then
-  echo "tool: sos, platform: cerberus.nic.uoregon.edu"
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/soscerberusmatmult.cfg
-
-  elif [[ $PYCOOLR_PLATFORM = "godzilla.nic.uoregon.edu" ]];
-  then
-  echo "tool: sos, platform: godzilla.nic.uoregon.edu"
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/sosgodzilla.cfg
-
-  elif [[ $PYCOOLR_PLATFORM = "delphi.nic.uoregon.edu" ]];
-  then
-  echo "tool: sos, platform: delphi.nic.uoregon.edu"
-  ./pycoolrgui/pycoolr-plot/coolr.py pycoolrgui/pycoolr-plot/configs/sosdelphi.cfg
-
-  fi
+   [ -z "$SOS_WORK" ] && echo "Please set the SOS_WORK environment variable" && exit 1;
+   if [[ $CONFIG_FILE = "" ]];
+   then
+      $DIR/pycoolrgui/pycoolr-plot/coolr.py $DIR/pycoolrgui/pycoolr-plot/configs/sos_mpit.cfg
+   else
+      $DIR/pycoolrgui/pycoolr-plot/coolr.py $CONFIG_FILE
+   fi
 fi

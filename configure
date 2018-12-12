@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -2555,7 +2555,7 @@ for arg in "$@"; do
 	    else
 	      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
               rocprofiler=yes
-              tauoptions="${tauoptions}-rocm"
+              #tauoptions="${tauoptions}-rocm"
 	      pthread=yes
             fi
 	    shift
@@ -3127,6 +3127,10 @@ esac
 
 if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
     TAU_CCOM="$c_compiler"          # for 'archfind'
+    if [ "$c_compiler" = pgcc ]
+    then
+       TAU_CCOM=""
+    fi
     if [ "$c_compiler" = mpc_cc ]
     then
       TAU_CCOM="$mpc_c_compiler"
