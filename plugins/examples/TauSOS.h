@@ -59,7 +59,7 @@ bool Tau_SOS_contains(std::set<std::string>& myset,
         const char * key, bool if_empty);
 
 void TAU_SOS_send_data(void);
-void TAU_SOS_init(void);
+bool TAU_SOS_init(void);
 void TAU_SOS_stop_worker(void);
 void TAU_SOS_finalize(void);
 void TAU_SOS_send_data(void);

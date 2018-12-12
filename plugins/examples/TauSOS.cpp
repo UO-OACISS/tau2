@@ -220,7 +220,7 @@ void TAU_SOS_send_shutdown_message(void) {
 #endif
 }
 
-void TAU_SOS_fork_exec_sosd(void) {
+bool TAU_SOS_fork_exec_sosd(void) {
 #ifdef TAU_MPI
     // first, figure out who should fork a daemon on this node
     int i;
@@ -248,19 +248,26 @@ void TAU_SOS_fork_exec_sosd(void) {
         }
         host_index = host_index + hostlength;
     }
+    char* forkCommand = NULL;
+    char* ranks_per_node = NULL;
+    char* offset = NULL;
+    forkCommand = getenv ("SOS_FORK_COMMAND");
+    //std::cout << "forkCommand " << forkCommand << std::endl;
+    ranks_per_node = getenv ("SOS_APP_RANKS_PER_NODE");
+    //std::cout << "ranks_per_node " << ranks_per_node << std::endl;
+    offset = getenv ("SOS_LISTENER_RANK_OFFSET");
+    //std::cout << "offset " << offset << std::endl;
+    if (!forkCommand || !ranks_per_node || !offset) {
+        if (my_rank == 0) {
+            std::cerr << "Please set the SOS_FORK_COMMAND, SOS_APP_RANKS_PER_NODE, and SOS_LISTENER_RANK_OFFSET environment variables to spawn SOS in the background." << std::endl;
+            std::cerr << "SOS Listener not found, SOS plugin not configured." << std::endl;
+        }
+        return false;
+    }
     // fork the daemon
     if (my_rank == daemon_rank) {
         int pid = vfork();
         if (pid == 0) {
-            char* forkCommand = NULL;
-            char* ranks_per_node = NULL;
-            char* offset = NULL;
-            forkCommand = getenv ("SOS_FORK_COMMAND");
-            //std::cout << "forkCommand " << forkCommand << std::endl;
-            ranks_per_node = getenv ("SOS_APP_RANKS_PER_NODE");
-            //std::cout << "ranks_per_node " << ranks_per_node << std::endl;
-            offset = getenv ("SOS_LISTENER_RANK_OFFSET");
-            //std::cout << "offset " << offset << std::endl;
             if (forkCommand) {
                 std::string custom_command(forkCommand);
                 size_t index = 0;
@@ -280,8 +287,6 @@ void TAU_SOS_fork_exec_sosd(void) {
                 }
                 std::cout << "SOS Listener not found, Rank " << my_rank << " spawning SOS daemon(s): " << custom_command << std::endl;
                 TAU_SOS_do_fork(custom_command);
-            } else {
-                std::cerr << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
             }
         }
     }
@@ -290,6 +295,7 @@ void TAU_SOS_fork_exec_sosd(void) {
     //
     //wait(2);
 #endif
+    return true;
 }
 
 /*********************************************************************
@@ -432,7 +438,7 @@ void Tau_SOS_parse_selection_file(const char * filename) {
     }
 }
 
-void TAU_SOS_init() {
+bool TAU_SOS_init() {
     static bool initialized = false;
     TAU_VERBOSE("TAU_SOS_init()...\n");
     if (!initialized) {
@@ -453,8 +459,12 @@ void TAU_SOS_init() {
         SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
             TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
-            TAU_SOS_fork_exec_sosd();
-            shutdown_daemon = true;
+            shutdown_daemon = TAU_SOS_fork_exec_sosd();
+            if (!shutdown_daemon) { 
+                // failed.  Don't claim initialized.
+                _runtime = NULL;
+                return false;
+            }
         }
         int repeat = 3;
         while(_runtime == NULL) {
@@ -467,7 +477,7 @@ void TAU_SOS_init() {
                 break;
             } else if (--repeat < 0) { 
                 TAU_VERBOSE("Unable to connect to SOS daemon. Failing...\n");
-                return;
+                return false;
             }
         }
 
@@ -484,6 +494,8 @@ void TAU_SOS_init() {
         initialized = true;
         /* Fixme! Insert all the data that was collected into Metadata */
     }
+    // if we have a runtime, all is good.
+    return (!(_runtime == NULL));
 }
 
 void TAU_SOS_stop_worker(void) {
@@ -545,7 +557,6 @@ void TAU_SOS_finalize(void) {
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
         //TAU_SOS_fork_exec_sosd_shutdown();
     }
-        printf("}\n");
     SOS_finalize(_runtime);
 }
 
