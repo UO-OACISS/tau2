@@ -249,7 +249,8 @@ class Coolrsub:
         if self.tool == "sos":
           self.groupcolumns = params['cfg']['groupcolumns']
           self.ranks2 = params['cfg']['ranks2']
-          self.sosdbfile = params['cfg']['dbfile']
+          sos_work_path = os.environ['SOS_WORK']
+          self.sosdbfile = sos_work_path+'/'+params['cfg']['dbfile']
           self.sos_bin_path = ""
           self.res_sql = [None]
           self.res_min_ts_sql = [None]
@@ -1074,7 +1075,7 @@ class Coolrsub:
 
      listargs = ['MEMORY','NODE_POWER_WATTS','MPI_T_PVAR']
 
-     libarbjsonbeep.subscribe(2, "MPI_T_PVAR")
+     libarbjsonbeep.subscribe(4, "MPI_T_PVAR", None, None)
      #libarbjsonbeep.subscribe(4, "MEMORY", "NODE_POWER_WATTS","MPI_T_PVAR")
 
   def publish(self,libarbpubcvars):
@@ -1145,7 +1146,7 @@ class Coolrsub:
              payload += resultPayload[j]
 
            payload.strip()
-           print('payload =',payload)
+           #print('payload =',payload)
            try:
              j = json.loads(payload)
            except ValueError as e:
@@ -1680,7 +1681,7 @@ class Coolrsub:
              continue
 
          #print 'set timestamp'
-         print('event element', e)
+         #print('event element', e)
          #print 'event time', e['time']
          if params['ts'] == 0:
                params['ts'] = int(e['time'])
@@ -1733,10 +1734,6 @@ class Coolrsub:
 
   def subSpawn(self):
 
-     print('subSpawn: load beacon subscriber library')
-     envlibpath = os.environ['PYCOOLR_LIBPATH']
-     libarbjsonbeep = cdll.LoadLibrary(envlibpath+'/libarbitraryjsonbeepmulsub.so')
-
      #libarbjsonbeep.subscribe(4, "MEMORY", "NODE_POWER_WATTS","MPI_T_PVAR")
      # Spawn a process to launch a subscriber
      # procSubscribe = multiprocessing.Process(target=self.subscribe, args=(libarbjsonbeep,))
@@ -1747,6 +1744,9 @@ class Coolrsub:
      if self.tool == "beacon":
        print('Selected tool: beacon') 
        try:
+         print('subSpawn: load beacon subscriber library')
+         envlibpath = os.environ['PYCOOLR_LIBPATH']
+         libarbjsonbeep = cdll.LoadLibrary(envlibpath+'/libarbitraryjsonbeepmulsub.so')
          thread.start_new_thread(self.subscribe,(libarbjsonbeep,))
          thread.start_new_thread(self.readEvents,(libarbjsonbeep,))
          #thread.start_new_thread(self.readEvents,(libarbjsonbeep,))

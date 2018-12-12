@@ -139,7 +139,7 @@ extern "C" int TauBeaconSubscribe(char *topic_name, char *topic_scope, void (*ha
 //////////////////////////////////////////////////////////////////////
 // Publish an event
 //////////////////////////////////////////////////////////////////////
-int TauBeaconPublish(double value, char *units, char *topic, char *additional_info) {
+int TauBeaconPublish(double value, const char* units, const char* topic, const char* additional_info) {
 
  static BEACON_beep_t binfo;
    static BEACON_beep_handle_t handle; 
