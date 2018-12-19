@@ -1068,6 +1068,32 @@ extern "C" int Tau_dump(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_invoke_plugin_phase_entry(const char *name) {
+  TauInternalFunctionGuard protects_this_function;
+  
+  if(Tau_plugins_enabled.phase_entry) {
+    Tau_plugin_event_phase_entry_data_t plugin_data;
+    plugin_data.phase_name = name;
+  }
+
+  return 0;
+  
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_invoke_plugin_phase_exit(const char *name) {
+  TauInternalFunctionGuard protects_this_function;
+  
+  if(Tau_plugins_enabled.phase_exit) {
+    Tau_plugin_event_phase_exit_data_t plugin_data;
+    plugin_data.phase_name = name;
+  }
+
+  return 0;
+
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   TauInternalFunctionGuard protects_this_function;
   for (int i = 0 ; i < RtsLayer::getTotalThreads() ; i++)
