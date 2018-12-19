@@ -544,6 +544,8 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->EndOfExecution = 0;
   cb->InterruptTrigger = 0;
   cb->FunctionFinalize = 0;
+  cb->PhaseEntry = 0;
+  cb->PhaseExit = 0;
 }
 
 /**************************************************************************************************************************
@@ -565,6 +567,9 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->PreEndOfExecution = src->PreEndOfExecution;
   dest->EndOfExecution = src->EndOfExecution;
   dest->InterruptTrigger = src->InterruptTrigger;
+  dest->FunctionFinalize = src->FunctionFinalize;
+  dest->PhaseEntry = src->PhaseEntry;
+  dest->PhaseExit = src->PhaseExit;
 }
 
 
