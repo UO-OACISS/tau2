@@ -33,7 +33,6 @@ int Tau_plugin_test_event_phase_exit(Tau_plugin_event_phase_exit_data_t* data) {
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv) {
-  std::cout << "PLUGIN GETS LOADED" << std::endl;
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->PhaseEntry = Tau_plugin_test_event_phase_entry;
