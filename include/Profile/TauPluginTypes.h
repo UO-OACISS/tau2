@@ -61,21 +61,13 @@ typedef struct Tau_plugin_event_function_exit_data {
    long unsigned int timestamp;
 } Tau_plugin_event_function_exit_data_t;
 
-typedef struct Tau_plugin_event_static_phase_entry_data {
+typedef struct Tau_plugin_event_phase_entry_data {
    const char * phase_name;
-} Tau_plugin_event_static_phase_entry_data_t;
+} Tau_plugin_event_phase_entry_data_t;
 
-typedef struct Tau_plugin_event_static_phase_exit_data {
+typedef struct Tau_plugin_event_phase_exit_data {
    const char * phase_name;
-} Tau_plugin_event_static_phase_exit_data_t;
-
-typedef struct Tau_plugin_event_dynamic_phase_entry_data {
-   const char * phase_name;
-} Tau_plugin_event_dynamic_phase_entry_data_t;
-
-typedef struct Tau_plugin_event_dynamic_phase_exit_data {
-   const char * phase_name;
-} Tau_plugin_event_dynamic_phase_exit_data_t;
+} Tau_plugin_event_phase_exit_data_t;
 
 typedef struct Tau_plugin_event_current_timer_exit_data {
    const char * name_prefix;
@@ -132,10 +124,8 @@ typedef int (*Tau_plugin_dump)(Tau_plugin_event_dump_data_t*);
 typedef int (*Tau_plugin_mpit)(Tau_plugin_event_mpit_data_t*);
 typedef int (*Tau_plugin_function_entry)(Tau_plugin_event_function_entry_data_t*);
 typedef int (*Tau_plugin_function_exit)(Tau_plugin_event_function_exit_data_t*);
-typedef int (*Tau_plugin_static_phase_entry)(Tau_plugin_event_static_phase_entry_data_t*);
-typedef int (*Tau_plugin_static_phase_exit)(Tau_plugin_event_static_phase_exit_data_t*);
-typedef int (*Tau_plugin_dynamic_phase_entry)(Tau_plugin_event_dynamic_phase_entry_data_t*);
-typedef int (*Tau_plugin_dynamic_phase_exit)(Tau_plugin_event_dynamic_phase_exit_data_t*);
+typedef int (*Tau_plugin_phase_entry)(Tau_plugin_event_phase_entry_data_t*);
+typedef int (*Tau_plugin_phase_exit)(Tau_plugin_event_phase_exit_data_t*);
 typedef int (*Tau_plugin_current_timer_exit)(Tau_plugin_event_current_timer_exit_data_t*);
 typedef int (*Tau_plugin_send)(Tau_plugin_event_send_data_t*);
 typedef int (*Tau_plugin_recv)(Tau_plugin_event_recv_data_t*);
@@ -155,10 +145,8 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_mpit Mpit;
    Tau_plugin_function_entry FunctionEntry;
    Tau_plugin_function_exit FunctionExit;
-   Tau_plugin_static_phase_entry StaticPhaseEntry;
-   Tau_plugin_static_phase_exit StaticPhaseExit;
-   Tau_plugin_dynamic_phase_entry DynamicPhaseEntry;
-   Tau_plugin_dynamic_phase_exit DynamicPhaseExit;
+   Tau_plugin_phase_entry PhaseEntry;
+   Tau_plugin_phase_exit PhaseExit;
    Tau_plugin_current_timer_exit CurrentTimerExit;
    Tau_plugin_send Send;
    Tau_plugin_recv Recv;
@@ -179,10 +167,8 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_MPIT,
    TAU_PLUGIN_EVENT_FUNCTION_ENTRY,
    TAU_PLUGIN_EVENT_FUNCTION_EXIT,
-   TAU_PLUGIN_EVENT_STATIC_PHASE_ENTRY,
-   TAU_PLUGIN_EVENT_STATIC_PHASE_EXIT,
-   TAU_PLUGIN_EVENT_DYNAMIC_PHASE_ENTRY,
-   TAU_PLUGIN_EVENT_DYNAMIC_PHASE_EXIT,
+   TAU_PLUGIN_EVENT_PHASE_ENTRY,
+   TAU_PLUGIN_EVENT_PHASE_EXIT,
    TAU_PLUGIN_EVENT_SEND,
    TAU_PLUGIN_EVENT_RECV,
    TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT,
@@ -203,10 +189,8 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int mpit;
     unsigned int function_entry;
     unsigned int function_exit;
-    unsigned int static_phase_entry;
-    unsigned int static_phase_exit;
-    unsigned int dynamic_phase_entry;
-    unsigned int dymamic_phase_exit;
+    unsigned int phase_entry;
+    unsigned int phase_exit;
     unsigned int send;
     unsigned int recv;
     unsigned int current_timer_exit;
