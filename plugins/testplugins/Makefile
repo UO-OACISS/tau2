@@ -17,9 +17,9 @@ CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU
 
 LDFLAGS = $(TAU_MPI_LIB)
 
-OBJS = libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so libtau_plugin_end_of_execution.so libtau_plugin_interrupt_trigger.so tau_plugin_function_registration_complete.o tau_plugin_atomic_event_trigger.o tau_plugin_atomic_event_registration_complete.o tau_plugin_end_of_execution.o tau_plugin_interrupt_trigger.o
+OBJS = libtau_plugin_phases.so libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so libtau_plugin_end_of_execution.so libtau_plugin_interrupt_trigger.so tau_plugin_function_registration_complete.o tau_plugin_phases.o tau_plugin_atomic_event_trigger.o tau_plugin_atomic_event_registration_complete.o tau_plugin_end_of_execution.o tau_plugin_interrupt_trigger.o
 
-SHAREDLIBS = libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so libtau_plugin_end_of_execution.so libtau_plugin_interrupt_trigger.so
+SHAREDLIBS = libtau_plugin_phases.so libtau_plugin_function_registration_complete.so libtau_plugin_atomic_event_trigger.so libtau_plugin_atomic_event_registration_complete.so libtau_plugin_end_of_execution.so libtau_plugin_interrupt_trigger.so
 
 all: install
 	@echo
@@ -30,6 +30,12 @@ install: $(SHAREDLIBS)
 
 libtau_plugin_function_registration_complete.so: tau_plugin_function_registration_complete.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libtau_plugin_function_registration_complete.so tau_plugin_function_registration_complete.o
+
+libtau_plugin_phases.so: tau_plugin_phases.o
+	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libtau_plugin_phases.so tau_plugin_phases.o
+
+tau_plugin_phases.o: Tau_plugin_phases.cpp
+	$(CXX) $(CFLAGS) -c Tau_plugin_phases.cpp -o tau_plugin_phases.o
 
 tau_plugin_function_registration_complete.o: Tau_plugin_function_registration_complete.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_function_registration_complete.cpp -o tau_plugin_function_registration_complete.o
