@@ -95,9 +95,8 @@
 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 
-#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_thread()); Tau_invoke_plugin_phase_entry(var##finfo); 
-#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_thread()); Tau_invoke_plugin_phase_exit(var##finfo);
-
+#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_thread()); Tau_invoke_plugin_phase_entry(var##finfo)
+#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_thread()); Tau_invoke_plugin_phase_exit(var##finfo)
 #define TAU_ENABLE_GROUP(group)			Tau_enable_group(group);
 #define TAU_DISABLE_GROUP(group)		Tau_disable_group(group);
 #define TAU_ENABLE_GROUP_NAME(group)            Tau_enable_group_name(group) 
@@ -486,6 +485,8 @@ void TAUDECL Tau_set_node(int node);
 
 void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
 void TAUDECL Tau_stop_timer(void *profiler, int tid);
+int TAUDECL Tau_invoke_plugin_phase_entry(void *profiler);
+int TAUDECL Tau_invoke_plugin_phase_exit(void *profiler);
 void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
 void TAUDECL Tau_lite_stop_timer(void *profiler);
 void TAUDECL Tau_pure_start(const char *name);

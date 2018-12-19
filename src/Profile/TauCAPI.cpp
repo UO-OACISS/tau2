@@ -1068,12 +1068,14 @@ extern "C" int Tau_dump(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_invoke_plugin_phase_entry(const char *name) {
+extern "C" int Tau_invoke_plugin_phase_entry(void *functionInfo) {
   TauInternalFunctionGuard protects_this_function;
+  FunctionInfo *fi = (FunctionInfo *) functionInfo;
   
   if(Tau_plugins_enabled.phase_entry) {
     Tau_plugin_event_phase_entry_data_t plugin_data;
-    plugin_data.phase_name = name;
+    plugin_data.phase_name = fi->GetName();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_ENTRY, &plugin_data);
   }
 
   return 0;
@@ -1081,12 +1083,14 @@ extern "C" int Tau_invoke_plugin_phase_entry(const char *name) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" int Tau_invoke_plugin_phase_exit(const char *name) {
+extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
   TauInternalFunctionGuard protects_this_function;
+  FunctionInfo *fi = (FunctionInfo *) functionInfo;
   
   if(Tau_plugins_enabled.phase_exit) {
     Tau_plugin_event_phase_exit_data_t plugin_data;
-    plugin_data.phase_name = name;
+    plugin_data.phase_name = fi->GetName();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_EXIT, &plugin_data);
   }
 
   return 0;
