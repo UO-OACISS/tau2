@@ -8862,6 +8862,8 @@ fi
 # Check if BFD can be linked into a shared library
 ######################################################################
 cat <<EOF > conftest_bfd.c
+#define PACKAGE TAU
+#define PACKAGE_VERSION 2.28
 #include <bfd.h>
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include <demangle.h>
