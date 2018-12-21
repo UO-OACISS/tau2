@@ -105,7 +105,7 @@ void * Tau_sos_thread_function(void* data) {
     // unlock after being signalled.
     pthread_mutex_unlock(&_my_mutex);
     pthread_exit((void*)0L);
-    return(NULL);
+	return(NULL);
 }
 
 void TAU_SOS_make_pub() {
@@ -134,12 +134,12 @@ void TAU_SOS_make_pub() {
         TAU_VERBOSE("[TAU_SOS_make_pub]:   ... done.  (pub->guid == %ld)\n", tau_sos_pub->guid);
         TAU_VERBOSE("[TAU_SOS_make_pub]: Announcing the pub...\n");
         SOS_announce(tau_sos_pub);
-    // all processes in this MPI execution should agree on the session.
+	// all processes in this MPI execution should agree on the session.
 #ifdef TAU_MPI
-    if (my_rank == 0) {
+	if (my_rank == 0) {
         instance_guid = tau_sos_pub->guid;
-    }
-    PMPI_Bcast( &instance_guid, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD );
+	}
+	PMPI_Bcast( &instance_guid, 1, MPI_UNSIGNED_LONG, 0, MPI_COMM_WORLD );
 #else
     instance_guid = tau_sos_pub->guid;
 #endif
@@ -214,11 +214,11 @@ void TAU_SOS_send_shutdown_message(void) {
     TAU_VERBOSE("Sending SOS_MSG_TYPE_SHUTDOWN ...\n");
     SOS_send_to_daemon(buffer, buffer);
     SOS_buffer_destroy(buffer);
-    char * exporting = getenv("SOS_EXPORT_DB_AT_EXIT");
-    if (exporting != NULL) {
-        TAU_VERBOSE("Waiting %d seconds for SOS to write (if necessary)...\n", thePluginOptions().env_sos_shutdown_delay);
-        sleep(thePluginOptions().env_sos_shutdown_delay);
-    }
+	char * exporting = getenv("SOS_EXPORT_DB_AT_EXIT");
+	if (exporting != NULL) {
+    	TAU_VERBOSE("Waiting %d seconds for SOS to write (if necessary)...\n", thePluginOptions().env_sos_shutdown_delay);
+		sleep(thePluginOptions().env_sos_shutdown_delay);
+	}
 #endif
 }
 
@@ -553,20 +553,20 @@ void TAU_SOS_finalize(void) {
     if (shutdown_daemon) {
         if (my_rank == daemon_rank) {
             TAU_VERBOSE("Waiting %d seconds for SOS to flush...\n", thePluginOptions().env_sos_shutdown_delay);
-            sleep(thePluginOptions().env_sos_shutdown_delay);
+		    sleep(thePluginOptions().env_sos_shutdown_delay);
             TAU_SOS_send_shutdown_message();
-            int returnStatus = 0;
-            pid_t retval = 0;
-            if (listener_pid != 0) {
-                // wait for zombie children, just in case.
-                retval = waitpid((pid_t) (-1), &returnStatus, 0);
-            } else {
-                retval = waitpid(listener_pid, &returnStatus, 0);
-            }
-            if (retval < 0) {
-                perror("waitpid error: ");
-                fprintf(stderr, "WARNING! SOS listener did not exit normally!\n");
-            }
+			int returnStatus = 0;
+			pid_t retval = 0;
+			if (listener_pid != 0) {
+				// wait for zombie children, just in case.
+			    retval = waitpid((pid_t) (-1), &returnStatus, 0);
+			} else {
+				retval = waitpid(listener_pid, &returnStatus, 0);
+			}
+			if (retval < 0) {
+				perror("waitpid error: ");
+        		fprintf(stderr, "WARNING! SOS listener did not exit normally!\n");
+			}
         }
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
         //TAU_SOS_fork_exec_sosd_shutdown();
@@ -755,7 +755,7 @@ void TAU_SOS_pack_profile() {
         if (skip_counter(ue->GetName().c_str())) {
             continue;
         }
-        std::string counter_name;
+	    std::string counter_name;
 
         int tid = 0;
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
@@ -819,13 +819,13 @@ void TAU_SOS_send_data(void) {
     // However, that means we have to duplicate code, because we don't want
     // the measurement on *this* thread, but on thread 0.
     Tau_trigger_context_event_thread("Heap Memory Used (KB)", Tau_max_RSS(), 0);
-      static int fd=Tau_open_status();
+  	static int fd=Tau_open_status();
     long long vmrss, vmhwm;
     Tau_read_status(fd, &vmrss, &vmhwm);
     if (vmrss > 0)
-        Tau_trigger_context_event_thread("Memory Footprint (VmRSS) (KB)", (double)vmrss, 0);
+    	Tau_trigger_context_event_thread("Memory Footprint (VmRSS) (KB)", (double)vmrss, 0);
     if (vmhwm > 0)
-        Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
+    	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
     TauTrackLoadHere();
     /* Only send a profile update if we aren't tracing */
     if (!thePluginOptions().env_sos_tracing) {
@@ -859,12 +859,12 @@ bool strmatch(const char str[], const char pattern[],
     // lookup table for storing results of
     // subproblems
     bool lookup[n + 1][m + 1]; // = {false};
-    // PGI compiler doesn't like initialization during declaration...
+	// PGI compiler doesn't like initialization during declaration...
     for (int i = 0; i <= n; i++) {
         for (int j = 0; j <= m; j++) {
             lookup[i][j] = false;
-        }
-    }
+		}
+	}
  
     // initailze lookup table to false
     //memset(lookup, false, sizeof(lookup));
