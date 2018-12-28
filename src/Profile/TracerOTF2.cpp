@@ -526,6 +526,9 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
     delete temp_buffers[tid];
 }
 
+// Needed in case we get an event before metrics are initialized
+void metric_read_gettimeofday(int tid, int idx, double values[]);
+
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
 {
@@ -552,7 +555,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   //If we are using TAU_SET_NODE the first initialization call for otf2 is too early, so go back to do it again if the time was set to 0.
   if(!otf2_initialized||(TauEnv_get_set_node()>(-1)&&start_time==0)) {
     if(start_time == 0) {
-      start_time = TauTraceGetTimeStamp(tid) - 1000;   
+      start_time = TauTraceGetTimeStamp(tid) - 1000;
     }
 #if defined(TAU_MPI) || defined(TAU_SHMEM)
     // If we're using MPI, we can't initialize tracing until MPI_Init gets called,
@@ -605,6 +608,17 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
   TAU_ASSERT(evt_writer != NULL, "Failed to get event writer");
   x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
+  // Validate that the timestamp is non-zero.  Can happen during startup, before
+  // the metrics are ready.
+  if (my_ts == 0ULL) {
+      double tmpTime[1];
+      metric_read_gettimeofday(tid, 0, tmpTime);
+      my_ts = (x_uint64)(tmpTime[0]);
+      // if so, the start time is possibly wrong, too.
+      if (start_time == 0) {
+        start_time = my_ts;
+      }
+  }
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
     if(par == 1) { // Enter
       OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
