@@ -80,10 +80,20 @@ extern "C" void Tau_set_thread_fake(int tid);
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid);
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
 
+extern "C" int Tau_is_thread_fake(int tid);
+
 #include<map>
 using namespace std;
 
 double cpu_start_time;
+
+static inline void record_context_event(TauContextUserEvent * e, TAU_EVENT_DATATYPE event_data, int task, double timestamp) {
+  if(Tau_is_thread_fake(task)) {  
+    TAU_CONTEXT_EVENT_THREAD_TS(e, event_data, task, timestamp);
+  } else {
+    TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
+  }
+}
 
 void check_gpu_event(int gpuTask)
 {
@@ -509,7 +519,7 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
     TauContextUserEvent* e = attr[i].userEvent;
     if (e) { 
       TAU_EVENT_DATATYPE event_data = attr[i].data;
-      TAU_CONTEXT_EVENT_THREAD_TS(e, event_data, task, syncStartTime + 1);
+      record_context_event(e, event_data, task, syncStartTime + 1);
     } else {
       break;
     }
@@ -569,7 +579,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_memcpys++;
       //since these copies are record on the host, start the parent timer here
-      TAU_CONTEXT_EVENT_THREAD_TS(MemoryCopyEventHtoD, transferSize, task, syncStartTime + 1);
+      record_context_event(MemoryCopyEventHtoD, transferSize, task, syncStartTime + 1);
       //TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
       //TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread());
 #ifdef DEBUG_PROF		
@@ -589,7 +599,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_memcpys++;
       //since these copies are record on the host, start the parent timer here
-      TAU_CONTEXT_EVENT_THREAD_TS(MemoryCopyEventDtoH, transferSize, task, syncStartTime + 1);
+      record_context_event(MemoryCopyEventDtoH, transferSize, task, syncStartTime + 1);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
@@ -612,7 +622,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
     }
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_memcpys++;
-      TAU_CONTEXT_EVENT_THREAD_TS(MemoryCopyEventDtoD, transferSize, task, syncStartTime + 1);
+      record_context_event(MemoryCopyEventDtoD, transferSize, task, syncStartTime + 1);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
@@ -661,7 +671,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_unifmems++;
       //since these copies are record on the host, start the parent timer here
-      TAU_CONTEXT_EVENT_THREAD_TS(UnifiedMemoryEventHtoD, transferSize, task, syncStartTime + 1);
+      record_context_event(UnifiedMemoryEventHtoD, transferSize, task, syncStartTime + 1);
       //TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
       //TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread());
 #ifdef DEBUG_PROF		
@@ -681,7 +691,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_unifmems++;
       //since these copies are record on the host, start the parent timer here
-      TAU_CONTEXT_EVENT_THREAD_TS(UnifiedMemoryEventDtoH, transferSize, task, syncStartTime + 1);
+      record_context_event(UnifiedMemoryEventDtoH, transferSize, task, syncStartTime + 1);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
@@ -704,7 +714,7 @@ void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTi
     }
     if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE) {
       counted_unifmems++;
-      TAU_CONTEXT_EVENT_THREAD_TS(UnifiedMemoryEventPageFault, transferSize, task, syncStartTime + 1);
+      record_context_event(UnifiedMemoryEventPageFault, transferSize, task, syncStartTime + 1);
       //TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
       TAU_VERBOSE("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
