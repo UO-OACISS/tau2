@@ -228,6 +228,9 @@ public:
   void TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
     TriggerEvent(data, tid, 0, 0);
   }
+  void TriggerEventTS(TAU_EVENT_DATATYPE data, int tid, double ts) {
+    TriggerEvent(data, tid, ts, 1);
+  }
   void TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts);
 
 private:
@@ -366,6 +369,9 @@ public:
   }
   void TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
     TriggerEvent(data, tid, 0, 0);
+  }
+  void TriggerEventTS(TAU_EVENT_DATATYPE data, int tid, double ts) {
+    TriggerEvent(data, tid, ts, 1);
   }
   void TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts);
 
