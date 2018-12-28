@@ -967,7 +967,8 @@ bool register_cuda_thread(unsigned int sys_tid, unsigned int parent_tid, int tau
 
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
-
+  // can't handle out-of-order events
+  // if (TauEnv_get_tracing()) { return; }
   // currentTimestamp
   uint64_t currentTimestamp;
   double d_currentTimestamp;
@@ -2283,14 +2284,14 @@ void record_gpu_occupancy(int32_t blockX,
 		                      int32_t staticSharedMemory,
                           uint32_t deviceId,
                           const char *name, 
-                          eventMap_t *map)
+                          eventMap_t *eventMap)
 {
 	CUpti_ActivityDevice device = __deviceMap()[deviceId];
 
 
-	int myWarpsPerBlock = ceil(
-				(blockX * blockY * blockZ)/
-				device.numThreadsPerWarp
+	int myWarpsPerBlock = (int)ceil(
+				(double)(blockX * blockY * blockZ)/
+				(double)(device.numThreadsPerWarp)
 			); 
 
 	int allocatable_warps = min(
@@ -2301,12 +2302,11 @@ void record_gpu_occupancy(int32_t blockX,
 		)
 	);
 
-
 	static TauContextUserEvent* alW;
 	Tau_get_context_userevent((void **) &alW, "Allocatable Blocks per SM given Thread count (Blocks)");
-	(*map)[alW] = allocatable_warps;
-  //map[5].userEvent = alW;
-	//map[5].data = allocatable_warps;
+	(*eventMap)[alW] = allocatable_warps;
+  //eventMap[5].userEvent = alW;
+	//eventMap[5].data = allocatable_warps;
 
 	int myRegistersPerBlock = device.computeCapabilityMajor < 2 ?
 		ceil(
@@ -2339,7 +2339,7 @@ void record_gpu_occupancy(int32_t blockX,
 
 	static TauContextUserEvent* alR;
 	Tau_get_context_userevent((void **) &alR, "Allocatable Blocks Per SM given Registers used (Blocks)");
-  (*map)[alR] = allocatable_registers;
+  (*eventMap)[alR] = allocatable_registers;
 
 	int sharedMemoryUnit;
 	switch(device.computeCapabilityMajor)
@@ -2363,7 +2363,7 @@ void record_gpu_occupancy(int32_t blockX,
 	
 	static TauContextUserEvent* alS;
 	Tau_get_context_userevent((void **) &alS, "Allocatable Blocks Per SM given Shared Memory usage (Blocks)");
-  (*map)[alS] = allocatable_shared_memory;
+  (*eventMap)[alS] = allocatable_shared_memory;
 
 	int allocatable_blocks = min(allocatable_warps, min(allocatable_registers, allocatable_shared_memory));
 
@@ -2386,7 +2386,7 @@ void record_gpu_occupancy(int32_t blockX,
 
 	static TauContextUserEvent* occ;
 	Tau_get_context_userevent((void **) &occ, "GPU Occupancy (Warps)");
-  (*map)[occ] = occupancy;
+  (*eventMap)[occ] = occupancy;
 
 }
 
