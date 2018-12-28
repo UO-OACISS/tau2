@@ -151,7 +151,7 @@ Tau_openacc_callback( acc_prof_info* prof_info, acc_event_info* event_info, acc_
     TAU_VERBOSE("Device=%d ", prof_info->device_number);
     TAU_VERBOSE("Thread=%d ", prof_info->thread_id);
     sprintf(srcinfo, " %s [{%s}", prof_info->func_name, prof_info->src_file);
-    if ((event_name[15] == 'd' && event_name[16] == 'a' && prof_info->line_no) || (event_name[17] == 'c' && event_name[18] == 'o' && prof_info->line_no) || (event_name[17] == 'l' && event_name[18] == 'a')){ 
+    if ((event_name[15] == 'd' && event_name[16] == 'a' && prof_info->line_no) || (event_name[17] == 'c' && event_name[18] == 'o' && prof_info->line_no)) {
 	TAU_VERBOSE("Do not extract line number info for %s\n", event_name); 
 	// PGI has messed up line numbers for entry and exit for construct 
 	// and data events 
