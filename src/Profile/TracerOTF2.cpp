@@ -186,6 +186,24 @@ static bool begins_with(const TContainer& input, const TContainer& match)
         && equal(match.begin(), match.end(), input.begin());
 }
 
+// Needed in case we get an event before metrics are initialized
+void metric_read_gettimeofday(int tid, int idx, double values[]);
+
+static inline x_uint64 fix_zero_timestamp(x_uint64 my_ts, int tid) {
+  // Validate that the timestamp is non-zero.  Can happen during startup, before
+  // the metrics are ready.
+  if (my_ts == 0ULL) {
+    double tmpTime[1];
+    metric_read_gettimeofday(tid, 0, tmpTime);
+    my_ts = (x_uint64)(tmpTime[0]);
+    // if so, the start time is possibly wrong, too.
+    if (start_time == 0) {
+      start_time = my_ts;
+    }
+  }
+  return my_ts;
+}
+
 
 // Collective Callbacks -- GetSize and GetRank are mandatory
 // others are only needed when using SION substrate
@@ -529,8 +547,6 @@ void TauTraceOTF2WriteTempBuffer(int tid, int node_id) {
     delete temp_buffers[tid];
 }
 
-// Needed in case we get an event before metrics are initialized
-void metric_read_gettimeofday(int tid, int idx, double values[]);
 
 /* Write event to buffer */
 void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind)
@@ -583,7 +599,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     if(temp_buffers[tid] == NULL) {
         temp_buffers[tid] = new vector<temp_buffer_entry>();
     }
-    x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
+    x_uint64 my_ts = fix_zero_timestamp(use_ts ? ts : TauTraceGetTimeStamp(tid), tid);
     temp_buffers[tid]->push_back(temp_buffer_entry(ev, my_ts, par, kind));
     return;
    }
@@ -613,15 +629,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   x_uint64 my_ts = use_ts ? ts : TauTraceGetTimeStamp(tid);
   // Validate that the timestamp is non-zero.  Can happen during startup, before
   // the metrics are ready.
-  if (my_ts == 0ULL) {
-      double tmpTime[1];
-      metric_read_gettimeofday(tid, 0, tmpTime);
-      my_ts = (x_uint64)(tmpTime[0]);
-      // if so, the start time is possibly wrong, too.
-      if (start_time == 0) {
-        start_time = my_ts;
-      }
-  }
+  my_ts = fix_zero_timestamp(my_ts, tid);
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
     if(par == 1) { // Enter
       OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
@@ -813,7 +821,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         const bool papi = metric_name.find("PAPI") != std::string::npos;
         const OTF2_MetricType type = papi ? OTF2_METRIC_TYPE_PAPI : OTF2_METRIC_TYPE_OTHER;
         OTF2_EC(OTF2_GlobalDefWriter_WriteMetricMember(global_def_writer, it->second, thisMetricName, emptyString, type, mode, OTF2_TYPE_UINT64, OTF2_BASE_DECIMAL, 0, emptyString));
-        OTF2_MetricMemberRef members[1] = {it->second};
+        OTF2_MetricMemberRef members[1] = {(OTF2_MetricMemberRef)it->second};
         OTF2_EC(OTF2_GlobalDefWriter_WriteMetricClass(global_def_writer, it->second, 1, members, OTF2_METRIC_SYNCHRONOUS, OTF2_RECORDER_KIND_CPU));
     }
 
