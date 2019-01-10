@@ -1,0 +1,17 @@
+This is an example illustrating the integration of SOS with 
+MPI_T via TAU's plugin architecture.
+The example can be run as is, or optionally, a python-based PYCOOLR
+GUI can be used to monitor MPI_T PVARs as they get written out to disk
+through the SOS framework.
+
+Steps to build the example and run it using PYCOOLR:
+1. One should have an MPI_T compliant MPI implementation in their path. 
+   For this example, we require using MVAPICH2 configured using: 
+   ./configure CC=gcc CXX=g++ F77=gfortran -L/lib -L/lib64 FC=gfortran --enable-mpit-pvars=all --disable-mcast
+2. TAU should be configured using the following minimum options: 
+   ./configure -bfd=download -unwind=download -mpit -mpi -sos=download -mpiinc=<> -mpilib=<>
+3. Within this directory, locate the "go.sh" script, and change the paths under the "Update" heading at the top of the script.
+4. Run "make"
+5. ./go.sh
+6. You should be able to see the PYCOOLR GUI popup on the screen. Select the MPI_T PVAR metric that you want:
+   "num_malloc_calls" is a PVAR that should have non-zero values for this example.
