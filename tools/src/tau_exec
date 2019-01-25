@@ -38,6 +38,7 @@ usage()
   echo "Options:"
 
   echo "        -v            Verbose mode"
+  echo "        -vv           Very Verbose mode (enables TAU_VERBOSE=1)"
   echo "        -s            Show what will be done but don't actually do anything (dryrun)"
   echo "        -qsub         Use qsub mode (BG/P only, see below)"
   echo "        -io           Track I/O"
