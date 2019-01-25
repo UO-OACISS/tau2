@@ -337,6 +337,12 @@ for arg in "$@" ; do
     shift
   else
     case $arg in 
+      -vv)
+        verbose=true
+        export TAU_VERBOSE=1
+        save_arg $arg
+        shift
+        ;;
       -v|-d|-verbose|--verbose)
         verbose=true
         save_arg $arg
