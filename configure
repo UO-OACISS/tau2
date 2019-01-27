@@ -9437,20 +9437,20 @@ EOF
 		cuda_version=$(cat "$cudadir"/include/cuda.h | grep "define CUDA_VERSION")
 		vers_arr=($cuda_version)
 		cupti_event_path=""
-		if [ ${vers_arr[2]} -ge 10000 ] ; then
-		    ## For now, checking if version greater than 10
-		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
-		else
+		if [ -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
+		    # check if usual path exists, otherwise use fallback
 		    cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
+		else
+		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
 		fi
 		if [ $cupti = no -a -f $cupti_event_path ] ; then
 		    tauoptions="${tauoptions}-cupti"
 		    cupti=""
-		    if [ ${vers_arr[2]} -ge 10000 ] ; then
-			## For now, checking if version greater than 10
-			cupti="$cudadir/extras/CUPTI.orig"
-		    else
+		    if [ -d "$cudadir/extras/CUPTI" ] ; then
+                        # check if usual path exists, otherwise use fallback
 			cupti="$cudadir/extras/CUPTI"
+		    else
+			cupti="$cudadir/extras/CUPTI.orig"
 		    fi
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
