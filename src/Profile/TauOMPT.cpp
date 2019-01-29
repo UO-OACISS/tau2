@@ -125,7 +125,7 @@ on_ompt_callback_parallel_begin(
   ompt_invoker_t invoker,
   const void *codeptr_ra)
 {
-  char timerName[1024];
+  char timerName[10240];
   char resolved_address[1024];
 
   TauInternalFunctionGuard protects_this_function; 	
@@ -179,7 +179,7 @@ on_ompt_callback_task_create(
 {
   char contextEventName[2058];
   char buffer[2048];
-  char timerName[1024];
+  char timerName[10240];
   char resolved_address[1024];
 
   TauInternalFunctionGuard protects_this_function; 	
@@ -249,7 +249,7 @@ on_ompt_callback_master(
   const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[1024];
+  char timerName[10240];
   char resolved_address[1024];
   void * codeptr_ra_copy;
   unsigned long addr;
@@ -306,7 +306,7 @@ on_ompt_callback_work(
 {
   TauInternalFunctionGuard protects_this_function;
   void *handle = NULL;
-  char timerName[1024];
+  char timerName[10240];
   char resolved_address[1024];
   if(codeptr_ra) {
     
@@ -470,7 +470,7 @@ on_ompt_callback_sync_region(
 {
   TauInternalFunctionGuard protects_this_function;
   void *handle = NULL;
-  char timerName[1024];
+  char timerName[10240];
   char resolved_address[1024];
 
   if(codeptr_ra) {
@@ -571,7 +571,7 @@ on_ompt_callback_mutex_acquire(
     const void *codeptr_ra) 
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[1024];
+  char timerName[10240];
   char resolved_address[1024];
   void* mutex_waiting_handle=NULL;
 
@@ -640,8 +640,8 @@ on_ompt_callback_mutex_acquired(
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  char acquiredtimerName[1024];
-  char waitingtimerName[1024];
+  char acquiredtimerName[10240];
+  char waitingtimerName[10240];
   char resolved_address[1024];
   void* mutex_acquired_handle=NULL;
 
@@ -713,7 +713,7 @@ on_ompt_callback_mutex_released(
     const void *codeptr_ra)
 {
   TauInternalFunctionGuard protects_this_function;
-  char timerName[1024];
+  char timerName[10240];
   char resolved_address[1024];
 
   if(codeptr_ra) {
