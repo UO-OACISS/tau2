@@ -24,6 +24,7 @@
 #include <inttypes.h>
 #include <vector>
 #include <string>
+#include <stack>
 #include <iostream>
 using namespace std; 
 #endif /* TAU_DOT_H_LESS_HEADERS */
@@ -162,16 +163,24 @@ extern "C" void kokkosp_end_parallel_reduce(const uint64_t kID) {
 }
 
 
+stack <string>  Tau_kokkos_stack;   
 ///////////////////////////////////////////////////////////
 //// push parallel region to the callstack
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_push_profile_region(char* regionName) {
+  Tau_kokkos_stack.push(regionName); 
+  TAU_VERBOSE("TAU: kokkosp_push_profile_region: %s\n", regionName);
+  TAU_STATIC_PHASE_START(regionName);
 }
 
 ///////////////////////////////////////////////////////////
 //// pop parallel region 
 ///////////////////////////////////////////////////////////
 extern "C" void kokkosp_pop_profile_region() {
+  TAU_STATIC_PHASE_STOP(Tau_kokkos_stack.top().c_str());
+  TAU_VERBOSE("TAU: kokkosp_pop_profile_region: %s\n", 
+	Tau_kokkos_stack.top().c_str());
+  Tau_kokkos_stack.pop();
 }
 /***************************************************************************
  * $RCSfile: TauKokkos.cpp,v $   $Author: sameer $
