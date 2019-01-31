@@ -788,7 +788,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
          	}
                 if (strlen(gpu_id) > 0) {
                   sprintf(namebuf, "queue<%s>/device<%s> [%s]", queue_id, gpu_id, tau_task_id);
-                  printf("name = %s\n", namebuf); 
+                  TAU_VERBOSE("name = %s\n", namebuf); 
                 }
 
 #endif /* TAU_ROCM */
