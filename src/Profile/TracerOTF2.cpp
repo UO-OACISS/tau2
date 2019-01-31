@@ -40,6 +40,7 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauCollectives.h>
 #include <Profile/UserEvent.h>
+#include <Profile/TauMetaData.h>
 
 #include <iostream>
 #include <sstream>
@@ -764,6 +765,33 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             } else {
                 snprintf(namebuf, 256, "Thread %d", thread_num);
             }
+#ifdef TAU_ENABLE_ROCM
+                //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
+                const char *name; 
+   		Tau_metadata_value_t * value;
+                char queue_id[256] = "";
+                char gpu_id[256] = "";
+                char tau_task_id[256] = "";
+                // We need to capture the thread name as "queue<2>/device<1> [31]".
+ 		for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(thread_num).begin(); it != Tau_metadata_getMetaData(thread_num).end(); it++) {
+		  name = it->first.name; 
+                  value = it->second; 
+		  if (strcmp(name, "ROCM_GPU_ID") == 0) {
+                    sprintf(gpu_id, "%s", value->data.cval);
+                  }
+		  if (strcmp(name, "ROCM_QUEUE_ID") == 0) {
+                    sprintf(queue_id, "%s", value->data.cval);
+                  }
+		  if (strcmp(name, "TAU_TASK_ID") == 0) {
+                    sprintf(tau_task_id, "%s", value->data.cval);
+                  }
+         	}
+                if (strlen(gpu_id) > 0) {
+                  sprintf(namebuf, "queue<%s>/device<%s> [%s]", queue_id, gpu_id, tau_task_id);
+                  printf("name = %s\n", namebuf); 
+                }
+
+#endif /* TAU_ROCM */
             ++thread_num;
             int locName = nextString++;
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
