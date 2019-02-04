@@ -34,7 +34,6 @@
 #endif /* TAU_WINDOWS */
 
 Tau_plugin_callbacks_active_t Tau_plugins_enabled;
-std::map<Tau_plugin_event_t, std::list<std::string> > named_specific_event_list;
 
 #define TAU_NAME_LENGTH 1024
 
