@@ -468,6 +468,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       if(!handle) return -1;
       TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
 
+      ////NPD
       Tau_plugin_new_t * plugin_; 
       plugin_ = (Tau_plugin_new_t *)sizeof(Tau_plugin_new_t);
 
@@ -476,6 +477,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       plugin_->handle = handle;
       plugin_map[plugin_id_counter] = plugin_;
       plugin_id_counter++;
+      ////
 
     } else {
       /*Plugin loading failed for some reason*/
