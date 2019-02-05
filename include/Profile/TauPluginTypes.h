@@ -253,7 +253,6 @@ typedef struct Tau_plugin_new {
    char plugin_name[1024];
    void* handle;
    unsigned int id;
-   Tau_plugin_callback_t cb;
 } Tau_plugin_new_t; 
 
 typedef int (*PluginInitFunc) (int argc, char **argv);

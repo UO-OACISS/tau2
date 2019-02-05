@@ -35,9 +35,13 @@
 #endif /* TAU_WINDOWS */
 
 Tau_plugin_callbacks_active_t Tau_plugins_enabled;
+
+////NPD
 std::map < PluginKey, std::list<unsigned int> > specific_event_list;
 std::map < unsigned int, Tau_plugin_new_t*> plugin_map;
+std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
 unsigned int plugin_id_counter = 0;
+////
 
 #define TAU_NAME_LENGTH 1024
 
@@ -458,7 +462,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 
     if (handle) {
       /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
-      handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager);
+      handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager, int plugin_id);
      
       /*Plugin registration failed. Bail*/
       if(!handle) return -1;
@@ -490,7 +494,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
  * Use dlsym to find a function : TAU_PLUGIN_INIT_FUNC that the plugin MUST implement in order to register itself.
  * If plugin registration succeeds, then the callbacks for that plugin have been added to the plugin manager's callback list
  * ************************************************************************************************************************/
-void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager* plugin_manager) {
+void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager* plugin_manager, int plugin_id) {
 #ifndef TAU_WINDOWS
   PluginInitFunc init_func = (PluginInitFunc) dlsym(handle, TAU_PLUGIN_INIT_FUNC);
 #else
@@ -505,7 +509,7 @@ void* Tau_util_register_plugin(const char *name, char **args, int num_args, void
     return NULL;
   }
 
-  int return_val = init_func(num_args, args);
+  int return_val = init_func(num_args, args, plugin_id);
   if(return_val < 0) {
     printf("TAU: Call to init func for plugin %s returned failure error code %d\n", name, return_val);
 #ifndef TAU_WINDOWS
@@ -596,13 +600,18 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
 /**************************************************************************************************************************
  * Register callbacks associated with well defined events defined in struct Tau_plugin_callbacks
  **************************************************************************************************************************/
-extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
+extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, int plugin_id) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
 
   Tau_plugin_callback_t * callback = (Tau_plugin_callback_t *)malloc(sizeof(Tau_plugin_callback_t));
   Tau_util_make_callback_copy(&(callback->cb), cb);
   callback->next = (plugin_manager->callback_list)->head;
   (plugin_manager->callback_list)->head = callback;
+
+  ////NPD
+  Tau_plugin_callbacks_t * cb_ = (Tau_plugin_callbacks_t *)sizeof(Tau_plugin_callbacks_t);
+  Tau_util_make_callback_copy(cb_, cb);
+  plugin_callback_map[plugin_id] = cb_;
 
   /* Set some flags to make runtime conditional processing more efficient */
   if (cb->FunctionRegistrationComplete != 0) { Tau_plugins_enabled.function_registration = 1; }
