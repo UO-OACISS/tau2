@@ -470,7 +470,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 
       ////NPD
       Tau_plugin_new_t * plugin_; 
-      plugin_ = (Tau_plugin_new_t *)sizeof(Tau_plugin_new_t);
+      plugin_ = (Tau_plugin_new_t *)malloc(sizeof(Tau_plugin_new_t));
 
       strcpy(plugin_->plugin_name, plugin_name);
       plugin_->id = plugin_id_counter;
@@ -611,9 +611,10 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, in
   (plugin_manager->callback_list)->head = callback;
 
   ////NPD
-  Tau_plugin_callbacks_t * cb_ = (Tau_plugin_callbacks_t *)sizeof(Tau_plugin_callbacks_t);
+  Tau_plugin_callbacks_t * cb_ = (Tau_plugin_callbacks_t *)malloc(sizeof(Tau_plugin_callbacks_t));
   Tau_util_make_callback_copy(cb_, cb);
   plugin_callback_map[plugin_id] = cb_;
+  ////
 
   /* Set some flags to make runtime conditional processing more efficient */
   if (cb->FunctionRegistrationComplete != 0) { Tau_plugins_enabled.function_registration = 1; }
