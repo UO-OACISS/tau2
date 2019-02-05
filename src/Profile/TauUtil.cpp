@@ -37,7 +37,7 @@
 Tau_plugin_callbacks_active_t Tau_plugins_enabled;
 
 ////NPD
-std::map < PluginKey, std::list<unsigned int> > specific_event_list;
+std::map < PluginKey, std::set<unsigned int> > plugins_for_named_specific_event;
 std::map < unsigned int, Tau_plugin_new_t*> plugin_map;
 std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
 unsigned int plugin_id_counter = 0;
@@ -496,7 +496,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
  * Use dlsym to find a function : TAU_PLUGIN_INIT_FUNC that the plugin MUST implement in order to register itself.
  * If plugin registration succeeds, then the callbacks for that plugin have been added to the plugin manager's callback list
  * ************************************************************************************************************************/
-void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager* plugin_manager, int plugin_id) {
+void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager* plugin_manager, unsigned int plugin_id) {
 #ifndef TAU_WINDOWS
   PluginInitFunc init_func = (PluginInitFunc) dlsym(handle, TAU_PLUGIN_INIT_FUNC);
 #else
@@ -602,7 +602,7 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
 /**************************************************************************************************************************
  * Register callbacks associated with well defined events defined in struct Tau_plugin_callbacks
  **************************************************************************************************************************/
-extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, int plugin_id) {
+extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, unsigned int plugin_id) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
 
   Tau_plugin_callback_t * callback = (Tau_plugin_callback_t *)malloc(sizeof(Tau_plugin_callback_t));

@@ -255,7 +255,7 @@ typedef struct Tau_plugin_new {
    unsigned int id;
 } Tau_plugin_new_t; 
 
-typedef int (*PluginInitFunc) (int argc, char **argv, int plugin_id);
+typedef int (*PluginInitFunc) (int argc, char **argv, unsigned int plugin_id);
 ////
 
 
