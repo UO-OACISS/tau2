@@ -31,7 +31,7 @@ extern "C" {
 int Tau_initialize_plugin_system();
 int Tau_util_load_and_register_plugins(PluginManager_t* plugin_manager);
 void* Tau_util_load_plugin(const char *name, const char *path, PluginManager_t* plugin_manager);
-void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager_t* plugin_manager);
+void* Tau_util_register_plugin(const char *name, char **args, int num_args, void* handle, PluginManager_t* plugin_manager, int plugin_id);
 
 int Tau_util_cleanup_all_plugins();
 

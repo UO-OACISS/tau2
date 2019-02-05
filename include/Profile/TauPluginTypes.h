@@ -247,7 +247,7 @@ typedef struct PluginManager {
    Tau_plugin_callback_list_t * callback_list;
 } PluginManager_t;
 
-////NEW plugin design
+////NPD
 
 typedef struct Tau_plugin_new {
    char plugin_name[1024];
@@ -255,7 +255,8 @@ typedef struct Tau_plugin_new {
    unsigned int id;
 } Tau_plugin_new_t; 
 
-typedef int (*PluginInitFunc) (int argc, char **argv);
+typedef int (*PluginInitFunc) (int argc, char **argv, int plugin_id);
+////
 
 
 #ifdef __cplusplus

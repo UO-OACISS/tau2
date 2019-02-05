@@ -462,7 +462,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 
     if (handle) {
       /*If handle is NOT NULL, register the plugin's handlers for various supported events*/
-      handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager, int plugin_id);
+      handle = Tau_util_register_plugin(plugin_name, plugin_args, plugin_num_args, handle, plugin_manager, plugin_id_counter);
      
       /*Plugin registration failed. Bail*/
       if(!handle) return -1;
