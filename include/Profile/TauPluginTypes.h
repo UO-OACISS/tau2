@@ -184,15 +184,15 @@ typedef enum Tau_plugin_event {
 class PluginKey {
    public:
    int plugin_event;
-   unsigned int specific_event_hash;
+   size_t specific_event_hash;
 
-   PluginKey(int _plugin_event, unsigned int _specific_event_hash) {
+   PluginKey(int _plugin_event, size_t _specific_event_hash) {
      plugin_event = _plugin_event;
      specific_event_hash = _specific_event_hash;
    }
    
    bool operator< (const PluginKey &rhs) const {
-     if(plugin_event != rhs.plugin_event)  return plugin_event < rhs.plugin_event;
+     if(plugin_event != rhs.plugin_event) return plugin_event < rhs.plugin_event;
      else return specific_event_hash < rhs.specific_event_hash;
    }
    
@@ -246,6 +246,15 @@ typedef struct PluginManager {
    Tau_plugin_list_t * plugin_list;
    Tau_plugin_callback_list_t * callback_list;
 } PluginManager_t;
+
+////NEW plugin design
+
+typedef struct Tau_plugin_new {
+   char plugin_name[1024];
+   void* handle;
+   unsigned int id;
+   Tau_plugin_callback_t cb;
+} Tau_plugin_new_t; 
 
 typedef int (*PluginInitFunc) (int argc, char **argv);
 

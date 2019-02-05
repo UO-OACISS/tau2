@@ -39,7 +39,7 @@ PluginManager_t* Tau_util_get_plugin_manager();
 void Tau_util_invoke_callbacks(Tau_plugin_event_t event, const void * data);
 
 extern Tau_plugin_callbacks_active_t Tau_plugins_enabled;
-extern std::map<Tau_plugin_event_t, std::list<std::string> > named_specific_event_list;
+extern std::map<PluginKey, std::list<unsigned int> > specific_event_list;
 
 #ifdef __cplusplus
 }

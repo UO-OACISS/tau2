@@ -26,6 +26,7 @@
 #include <TauMetaData.h>
 #include <Profiler.h>
 
+#include <tr1/functional>
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
@@ -34,6 +35,9 @@
 #endif /* TAU_WINDOWS */
 
 Tau_plugin_callbacks_active_t Tau_plugins_enabled;
+std::map < PluginKey, std::list<unsigned int> > specific_event_list;
+std::map < unsigned int, Tau_plugin_new_t*> plugin_map;
+unsigned int plugin_id_counter = 0;
 
 #define TAU_NAME_LENGTH 1024
 
@@ -156,6 +160,12 @@ extern "C" void Tau_ompt_resolve_callsite_eagerly(unsigned long addr, char * res
       #else
         sprintf(resolved_address, "__UNKNOWN__");
       #endif /*TAU_BFD*/
+}
+
+extern "C" size_t Tau_util_return_hash_of_string(const char * input) {
+  std::tr1::hash<std::string> hash_fn;
+  std::string s(input);
+  return hash_fn(s);
 }
 
 /*********************************************************************
@@ -453,6 +463,15 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
       /*Plugin registration failed. Bail*/
       if(!handle) return -1;
       TAU_VERBOSE("TAU: Successfully called the init func of plugin: %s\n", token);
+
+      Tau_plugin_new_t * plugin_; 
+      plugin_ = (Tau_plugin_new_t *)sizeof(Tau_plugin_new_t);
+
+      strcpy(plugin_->plugin_name, plugin_name);
+      plugin_->id = plugin_id_counter;
+      plugin_->handle = handle;
+      plugin_map[plugin_id_counter] = plugin_;
+      plugin_id_counter++;
 
     } else {
       /*Plugin loading failed for some reason*/
