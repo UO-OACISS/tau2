@@ -975,7 +975,7 @@ extern "C" void Tau_exit(const char * msg) {
   if(Tau_plugins_enabled.function_finalize) {
     Tau_plugin_event_function_finalize_data_t plugin_data;
     plugin_data.junk = -1;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, NULL, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*", &plugin_data);
   }
 
 #if defined(TAU_OPENMP)
@@ -1012,7 +1012,7 @@ extern "C" void Tau_post_init(void) {
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.post_init) {
     Tau_plugin_event_post_init_data_t plugin_data;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, NULL, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, "*", &plugin_data);
   }
 }
 
@@ -1065,7 +1065,7 @@ extern "C" int Tau_dump(void) {
   if(Tau_plugins_enabled.dump) {
     Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, NULL, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, "*", &plugin_data);
   }
 
   return 0;
@@ -2714,7 +2714,7 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
   if(Tau_plugins_enabled.dump) {
     Tau_plugin_event_dump_data_t plugin_data;
     plugin_data.tid = RtsLayer::myThread();
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, NULL, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, "*", &plugin_data);
   }
 
 }

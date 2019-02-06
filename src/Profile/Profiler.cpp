@@ -1546,7 +1546,7 @@ int TauProfiler_StoreData(int tid)
   if(Tau_plugins_enabled.pre_end_of_execution) {
     Tau_plugin_event_pre_end_of_execution_data_t plugin_data;
     plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, NULL, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, "*", &plugin_data);
   }
 #endif
 
@@ -1656,7 +1656,7 @@ int TauProfiler_StoreData(int tid)
   if(Tau_plugins_enabled.end_of_execution) {
     Tau_plugin_event_end_of_execution_data_t plugin_data;
     plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, NULL, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_END_OF_EXECUTION, "*", &plugin_data);
   }
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData 6\n", RtsLayer::myNode(), tid);
 /* static dtors cause a crash. This could fix it */
