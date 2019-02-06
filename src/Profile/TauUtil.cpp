@@ -639,11 +639,30 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 }
 
 
+////NPD
+extern "C" void Tau_util_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+{
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].insert(id);
+
+}
+ 
+extern "C" void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+{
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].erase(id);
+
+}
+
+////
+
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the function registration event
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* data, PluginKey key) {
-  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  /*PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
 
@@ -652,7 +671,13 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* d
      callback->cb.FunctionRegistrationComplete(data);
    }
    callback = callback->next;
+  }*/
+  
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->FunctionRegistrationComplete != 0)
+      plugin_callback_map[*it]->FunctionRegistrationComplete(data);
   }
+  
 }
 
 /**************************************************************************************************************************

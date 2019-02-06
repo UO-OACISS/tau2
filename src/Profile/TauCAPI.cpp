@@ -82,10 +82,6 @@ extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 
-
-////NPD
-extern size_t Tau_util_return_hash_of_string(const char *name);
-////
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
@@ -2716,23 +2712,6 @@ extern "C" void Tau_dynamic_stop(char const * name, int isPhase)
     plugin_data.tid = RtsLayer::myThread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_DUMP, "*", &plugin_data);
   }
-
-}
-
-////NPD
-extern "C" void Tau_util_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
-{
-  size_t hash = Tau_util_return_hash_of_string(name);
-  PluginKey key(ev, hash);
-  plugins_for_named_specific_event[key].insert(id);
-
-}
- 
-extern "C" void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
-{
-  size_t hash = Tau_util_return_hash_of_string(name);
-  PluginKey key(ev, hash);
-  plugins_for_named_specific_event[key].erase(id);
 
 }
 

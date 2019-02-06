@@ -24,6 +24,9 @@ extern "C" {
 void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks_t * cb);
 void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks_t * cb, unsigned int plugin_id);
 
+void Tau_util_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id);
+void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

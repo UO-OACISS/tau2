@@ -382,6 +382,8 @@
 /* TAU_PLUGIN API */
 #define TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS Tau_util_init_tau_plugin_callbacks
 #define TAU_UTIL_PLUGIN_REGISTER_CALLBACKS Tau_util_plugin_register_callbacks
+#define TAU_UTIL_ENABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_util_enable_plugin_for_specific_event
+#define TAU_UTIL_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_util_disable_plugin_for_specific_event
 /* TAU_PLUGIN_API */
 
 
