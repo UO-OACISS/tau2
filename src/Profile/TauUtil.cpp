@@ -931,7 +931,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data) {
 /*****************************************************************************************************************************
  * Wrapper function that calls the actual callback invocation function based on the event type
  ******************************************************************************************************************************/
-extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * data) {
+extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * specific_event_name, const void * data) {
 
   switch(event) {
     case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
@@ -1068,7 +1068,7 @@ extern "C" void Tau_plugin_sendmsg(long unsigned int type, long unsigned int des
     double timeStamp[TAU_MAX_COUNTERS] = { 0 };
     RtsLayer::getUSecD(plugin_data.tid, timeStamp);
     plugin_data.timestamp = (unsigned long)(timeStamp[0]);
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_SEND, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_SEND, NULL, &plugin_data);
 }
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_plugin_recvmsg(long unsigned int type, long unsigned int source, long unsigned int length, long unsigned int remoteid) {
@@ -1080,6 +1080,6 @@ extern "C" void Tau_plugin_recvmsg(long unsigned int type, long unsigned int sou
     double timeStamp[TAU_MAX_COUNTERS] = { 0 };
     RtsLayer::getUSecD(plugin_data.tid, timeStamp);
     plugin_data.timestamp = (unsigned long)(timeStamp[0]);
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_RECV, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_RECV, NULL, &plugin_data);
 }
 

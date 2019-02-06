@@ -129,7 +129,7 @@ void TauUserEvent::AddEventToDB()
   if(Tau_plugins_enabled.atomic_event_registration) {
     Tau_plugin_event_atomic_event_registration_data_t plugin_data;
     plugin_data.user_event_ptr = this;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, GetName().c_str(), &plugin_data);
   }
 
   /* Set user event id */
@@ -310,7 +310,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
         plugin_data.tid = tid;
         plugin_data.timestamp = (timestamp == 0 ? TauTraceGetTimeStamp(tid) : timestamp);
         plugin_data.value = (uint64_t)data;
-        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, &plugin_data);
+        Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, name.c_str(), &plugin_data);
       }
     }
   } // Tau_global_getLightsOut

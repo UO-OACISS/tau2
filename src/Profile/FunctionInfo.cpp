@@ -323,7 +323,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
     Tau_plugin_event_function_registration_data_t plugin_data;
     plugin_data.function_info_ptr = this;
     plugin_data.tid = tid;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, &plugin_data);
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, GetName(), &plugin_data);
   }
 
   TauTraceSetFlushEvents(1);
