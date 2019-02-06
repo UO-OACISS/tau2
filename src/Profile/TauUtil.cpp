@@ -933,6 +933,12 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data) {
  ******************************************************************************************************************************/
 extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * specific_event_name, const void * data) {
 
+
+  ////NPD
+  size_t hash = Tau_util_return_hash_of_string(specific_event_name);
+  PluginKey key(event, hash);
+  ////
+ 
   switch(event) {
     case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_registration_data_t*)data);
