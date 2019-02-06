@@ -642,7 +642,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the function registration event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -658,7 +658,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* d
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the mpit event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -674,7 +674,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data) {
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the dump event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_dump_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_dump_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -690,7 +690,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_dump_data_t* data) {
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the function entry event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_function_entry_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_function_entry_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -706,7 +706,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_entry_data_t* data) {
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the function exit event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -722,7 +722,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data_t* data) {
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the "current timer" exit event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -738,7 +738,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data_t* data
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the send event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -754,7 +754,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data_t* data) {
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the recv event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -770,7 +770,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data_t* data) {
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the metadata registration event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -786,7 +786,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data_t* d
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the post init event
  ***************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -802,7 +802,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data_t* data) {
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the atomic event registration event
  ****************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -818,7 +818,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data_
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the atomic event trigger event
  *****************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -834,7 +834,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* da
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the pre end of execution event
  ******************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -850,7 +850,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* da
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the end of execution event
  ******************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -867,7 +867,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data) 
  * Overloaded function that invokes all registered callbacks for the 
  * finalize event
  *****************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -883,7 +883,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data)
 /**************************************************************************************************************************
  *  Overloaded function that invokes all registered callbacks for interrupt trigger event
  *******************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -899,7 +899,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data)
 /**************************************************************************************************************************
  *  Overloaded function that invokes all registered callbacks for phase entry event
  *******************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -915,7 +915,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data) {
 /**************************************************************************************************************************
  *  Overloaded function that invokes all registered callbacks for phase exit event
  *******************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data) {
+void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data, PluginKey key) {
   PluginManager* plugin_manager = Tau_util_get_plugin_manager();
   Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
   Tau_plugin_callback_t * callback = callback_list->head;
@@ -941,75 +941,75 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
  
   switch(event) {
     case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_function_registration_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_function_registration_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_METADATA_REGISTRATION: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_metadata_registration_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_metadata_registration_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_POST_INIT: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_post_init_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_post_init_data_t*)data, key);
       break;
     }  
     case TAU_PLUGIN_EVENT_MPIT: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_mpit_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_mpit_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_DUMP: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_dump_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_dump_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_FUNCTION_ENTRY: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_function_entry_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_function_entry_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_FUNCTION_EXIT: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_function_exit_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_function_exit_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_current_timer_exit_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_current_timer_exit_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_FUNCTION_FINALIZE: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_function_finalize_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_function_finalize_data_t*)data, key);
       break;
     }
      case TAU_PLUGIN_EVENT_SEND: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_send_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_send_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_RECV: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_recv_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_recv_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_registration_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_registration_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_trigger_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_atomic_event_trigger_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_pre_end_of_execution_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_pre_end_of_execution_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_END_OF_EXECUTION: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_end_of_execution_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_end_of_execution_data_t*)data, key);
       break;
     } 
     case TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_interrupt_trigger_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_interrupt_trigger_data_t*)data, key);
       break;
     }
     case TAU_PLUGIN_EVENT_PHASE_ENTRY: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_phase_entry_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_phase_entry_data_t*)data, key);
       break;
     }
     case TAU_PLUGIN_EVENT_PHASE_EXIT: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_phase_exit_data_t*)data);
+      Tau_util_invoke_callbacks_((Tau_plugin_event_phase_exit_data_t*)data, key);
       break;
     }
    default: {
