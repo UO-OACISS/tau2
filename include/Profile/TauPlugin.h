@@ -26,6 +26,8 @@ void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks_t * cb, unsigned in
 
 void Tau_util_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id);
 void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id);
+void Tau_util_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name);
+void Tau_util_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name);
 
 #ifdef __cplusplus
 }
