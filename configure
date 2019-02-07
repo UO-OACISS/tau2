@@ -10662,7 +10662,7 @@ if [ $papi = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
-    if [ [[ $pthread = yes -a $openmp = no ]] -o $smarts = yes -o $java = yes ] ; then
+    if [ $pthread = yes -a $openmp = no -o $smarts = yes -o $java = yes ] ; then
 	echo "ERROR: -opari option requires OpenMP threads package."
 	echo "*****************************************************"
 	exit 1
