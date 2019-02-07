@@ -38,6 +38,7 @@ usage()
   echo "Options:"
 
   echo "        -v            Verbose mode"
+  echo "        -vv           Very Verbose mode (enables TAU_VERBOSE=1)"
   echo "        -s            Show what will be done but don't actually do anything (dryrun)"
   echo "        -qsub         Use qsub mode (BG/P only, see below)"
   echo "        -io           Track I/O"
@@ -337,6 +338,12 @@ for arg in "$@" ; do
     shift
   else
     case $arg in 
+      -vv)
+        verbose=true
+        export TAU_VERBOSE=1
+        save_arg $arg
+        shift
+        ;;
       -v|-d|-verbose|--verbose)
         verbose=true
         save_arg $arg
