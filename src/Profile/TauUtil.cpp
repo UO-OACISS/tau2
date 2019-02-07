@@ -407,6 +407,28 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   return 0;
 }
 
+void Tau_util_enable_plugins_for_all_events() {
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_POST_INIT, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_DUMP, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_MPIT, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_EXIT, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PHASE_ENTRY, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PHASE_EXIT, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_SEND, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_RECV, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_END_OF_EXECUTION, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*");
+  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*");
+
+}
+
 
 /********************************************************************* 
  * Load a list of plugins at TAU init, given following environment variables:
@@ -486,6 +508,9 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
 
     token = strtok_r(NULL, ":", &save_ptr);
   }
+
+  Tau_util_enable_plugins_for_all_events();
+  
   Tau_metadata_push_to_plugins();
 
   free(fullpath);
@@ -669,8 +694,9 @@ extern "C" void Tau_util_enable_all_plugins_for_specific_event(Tau_plugin_event_
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
 
-  for(unsigned int i = 0 ; i < plugin_id_counter; i++) 
+  for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     plugins_for_named_specific_event[key].insert(i);
+  }
 }
 
 ////
@@ -888,7 +914,7 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
   PluginKey key_(event, hash_);
 
   if(plugins_for_named_specific_event[key_].empty()) {
-     hash_ = Tau_util_return_hash_of_string("*");
+     hash = Tau_util_return_hash_of_string("*");
   } else {
      hash = hash_;
   }
