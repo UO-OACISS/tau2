@@ -41,6 +41,7 @@ std::map < PluginKey, std::set<unsigned int> > plugins_for_named_specific_event;
 std::map < unsigned int, Tau_plugin_new_t*> plugin_map;
 std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
 unsigned int plugin_id_counter = 0;
+size_t star_hash; 
 ////
 
 #define TAU_NAME_LENGTH 1024
@@ -510,6 +511,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
   }
 
   Tau_util_enable_plugins_for_all_events();
+  star_hash = Tau_util_return_hash_of_string("*");
   
   Tau_metadata_push_to_plugins();
 
@@ -914,7 +916,7 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
   PluginKey key_(event, hash_);
 
   if(plugins_for_named_specific_event[key_].empty()) {
-     hash = Tau_util_return_hash_of_string("*");
+     hash = star_hash;
   } else {
      hash = hash_;
   }
