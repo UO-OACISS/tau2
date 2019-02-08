@@ -30,6 +30,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->FunctionRegistrationComplete = Tau_plugin_test_event_function_registration_complete;
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
+  TAU_UTIL_ADD_REGEX("(compute)(.*)");
+  TAU_UTIL_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, "(compute)(.*)", id);
 
   return 0;
 }
