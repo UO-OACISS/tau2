@@ -1,0 +1,122 @@
+# This file is part of the Score-P software (http://www.score-p.org)
+
+# Copyright (c) 2009-2013,
+# RWTH Aachen University, Germany
+
+# Copyright (c) 2009-2013,
+# Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+
+# Copyright (c) 2009-2013,
+# Technische Universitaet Dresden, Germany
+
+# Copyright (c) 2009-2013,
+# University of Oregon, Eugene, USA
+
+# Copyright (c) 2009-2013, 2016,
+# Forschungszentrum Juelich GmbH, Germany
+
+# Copyright (c) 2009-2013,
+# German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+
+# Copyright (c) 2009-2013,
+# Technische Universitaet Muenchen, Germany
+
+# This software may be modified and distributed under the terms of
+# a BSD-style license. See the COPYING file in the package base
+# directory for details.
+
+######################################################
+#  Compiler                                          #
+######################################################
+CC=@CC@
+FORTRAN=@FC@
+OPENMP_C_FLAG=@OPENMP_CFLAGS@ @CFLAGS@
+OPENMP_F_FLAG=@OPENMP_FFLAGS@ @FFLAGS@
+
+######################################################
+#  OPARI & DUMMY LIBRARY                             #
+######################################################
+POMP_INC=-I@prefix@/include
+POMPLIBDIR=@prefix@/share/doc/opari2/example
+POMPLIB=-L${POMPLIBDIR} -lpomp 
+
+BINDIR=@BINDIR@
+OPARI=$(BINDIR)/opari2
+OPARI2_CONFIG=$(BINDIR)/opari2-config
+
+# We need to make sure that we use the right versions
+# of nm, awk and grep. opari2-config returns the right
+# commands with the necessary options.
+NM=`$(OPARI2_CONFIG) --nm`
+AWK_SCRIPT=`$(OPARI2_CONFIG) --region-initialization`
+
+all: c fortran
+
+######################################################
+#  C EXAMPLE                                         #
+######################################################
+
+c: example_c example_c_inst
+
+# Build without instrumentation
+example_c: example.c
+	$(CC) $(OPENMP_C_FLAG) $? -o $@
+
+# Linking step
+example_c_inst: example_c.mod.o pompregions_c.o
+	$(CC) $(OPENMP_C_FLAG) $? $(POMPLIB) -o $@
+
+pompregions_c.o : pompregions_c.c
+	$(CC)  $(POMP_INC) -c $? -o $@
+
+# Use nm to find the initialization functions in the 
+# object file of the instrumented user code. Then the 
+# awk script generates these functions.
+pompregions_c.c : example_c.mod.o
+	$(NM) example_c.mod.o | $(AWK_SCRIPT) > pompregions_c.c
+
+example_c.mod.o: example.mod.c
+	$(CC) $(OPENMP_C_FLAG)  $(POMP_INC) -c $? -o $@
+
+example.mod.c: example.c
+	$(OPARI) example.c
+
+######################################################
+#  FORTRAN EXAMPLE                                   #
+######################################################
+
+fortran: example_f example_f_inst
+
+# Build without instrumentation
+example_f: example.f90
+	$(FORTRAN) $(OPENMP_F_FLAG) $? -o $@
+
+# Linking step
+example_f_inst: example_f.mod.o pompregions_f.o
+	$(FORTRAN) $(OPENMP_F_FLAG) $? $(POMPLIB) -o $@
+
+pompregions_f.o : pompregions_f.c
+	$(CC)  $(POMP_INC) -c $? -o $@
+
+#  Use nm to find the initialization functions in the 
+# object file of the instrumented user code. Then the 
+# awk script generates these functions.
+pompregions_f.c : example_f.mod.o
+	$(NM) example_f.mod.o | $(AWK_SCRIPT) > pompregions_f.c
+
+example_f.mod.o : example.mod.F90
+	$(FORTRAN) $(OPENMP_F_FLAG) -c -o $@ $?
+
+example.mod.F90: example.f90
+	$(OPARI) example.f90
+
+######################################################
+
+clean:
+	rm -rf example_?
+	rm -rf example_?_inst
+	rm -rf example.mod.?
+	rm -rf example.?.opari.inc
+	rm -rf pompregions_?.c
+
+	rm -rf *.o

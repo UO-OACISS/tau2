@@ -1,0 +1,12 @@
+MPICC=mpixlc_r
+MPICXX=mpixlcxx_r
+MPIF77=mpixlf77_r
+MPIFC=mpixlf95_r
+
+#MPI_CPPFLAGS=
+MPI_CFLAGS=-O3 -qstrict
+MPI_CXXFLAGS=-O3 -qstrict -qminimaltoc
+MPI_FFLAGS=-O3 -qstrict -qsuppress=cmpmsg
+MPI_FCFLAGS=-O3 -qstrict -qfree=f90 -qsuppress=cmpmsg
+MPI_LDFLAGS=-O3 -qstrict
+#MPI_LIBS=

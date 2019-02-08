@@ -1,0 +1,48 @@
+      INTEGER*8 opari2_region_1
+      CHARACTER*999 opari2_ctc_1
+      PARAMETER (opari2_ctc_1=
+     &"62*regionType=parallel*sscl=test4.f:24:24*escl=test4.f:51:5"//
+     &"1**")
+
+      INTEGER*8 opari2_region_2
+      CHARACTER*999 opari2_ctc_2
+      PARAMETER (opari2_ctc_2=
+     &"56*regionType=do*sscl=test4.f:26:26*escl=test4.f:30:30**")
+
+      INTEGER*8 opari2_region_3
+      CHARACTER*999 opari2_ctc_3
+      PARAMETER (opari2_ctc_3=
+     &"76*regionType=sections*sscl=test4.f:32:32*escl=test4.f:37:3"//
+     &"7*numSections=2**")
+
+      INTEGER*8 opari2_region_4
+      CHARACTER*999 opari2_ctc_4
+      PARAMETER (opari2_ctc_4=
+     &"60*regionType=single*sscl=test4.f:39:39*escl=test4.f:41:41*"//
+     &"*")
+
+      INTEGER*8 opari2_region_5
+      CHARACTER*999 opari2_ctc_5
+      PARAMETER (opari2_ctc_5=
+     &"63*regionType=workshare*sscl=test4.f:43:43*escl=test4.f:45:"//
+     &"45**")
+
+      INTEGER*8 opari2_region_6
+      CHARACTER*999 opari2_ctc_6
+      PARAMETER (opari2_ctc_6=
+     &"70*regionType=task*sscl=test4.f:47:47*escl=test4.f:49:49*ha"//
+     &"sUntied=1**")
+
+      common /cb000/ opari2_region_1,
+     &          opari2_region_2,
+     &          opari2_region_3,
+     &          opari2_region_4,
+     &          opari2_region_5,
+     &          opari2_region_6
+
+      integer*4 pomp2_lib_get_max_threads
+      logical pomp2_test_lock
+      integer*4 pomp2_test_nest_lock
+      integer*8 pomp2_old_task, pomp2_new_task 
+      logical pomp2_if 
+      integer*4 pomp2_num_threads 

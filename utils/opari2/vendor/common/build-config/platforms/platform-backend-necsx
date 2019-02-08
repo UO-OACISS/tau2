@@ -1,0 +1,16 @@
+# It is necessary to set this because "sxmpic++ -E" always tries to
+# link and fails
+#CPP="sxcc -E"
+
+CC=sxcc
+CXX=sxc++
+F77=sxf90
+FC=sxf90
+
+#CPPFLAGS=
+#CFLAGS=
+#CXXFLAGS=
+#FFLAGS=
+#FCFLAGS=
+#LDFLAGS=
+#LIBS=

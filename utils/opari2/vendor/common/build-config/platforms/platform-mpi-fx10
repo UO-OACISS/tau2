@@ -1,0 +1,12 @@
+MPICC=mpifccpx
+MPICXX=mpiFCCpx
+MPIF77=mpifrtpx
+MPIFC=mpifrtpx
+
+#MPI_LDFLAGS=
+#MPI_LIBS=
+#MPI_CPPFLAGS=
+MPI_CFLAGS=-Xg -noansi -Ntl_notrt -mt
+MPI_CXXFLAGS=-Xg -Ntl_notrt -mt
+MPI_FFLAGS=-Ntl_notrt -mt
+MPI_FCFLAGS=-Ntl_notrt -mt

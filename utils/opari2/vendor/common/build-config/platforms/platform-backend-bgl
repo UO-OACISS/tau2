@@ -1,0 +1,12 @@
+CC=blrts_xlc
+CXX=blrts_xlC
+F77=blrts_xlf
+FC=blrts_xlf
+
+#CPPFLAGS=
+#CFLAGS=
+CXXFLAGS=-O3 -qarch=440 -qtune=440
+FFLAGS=-qsuppress=cmpmsg
+FCFLAGS=-qfree=f90 -qsuffix=f=f90
+LDFLAGS=-L/bgl/BlueLight/ppcfloor/bglsys/lib
+LIBS=-lmsglayer.rts -lrts.rts -ldevices.rts

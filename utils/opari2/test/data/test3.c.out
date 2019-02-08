@@ -1,0 +1,330 @@
+#include "test3.c.opari.inc"
+#line 1 "test3.c"
+/*
+ * This file is part of the Score-P software (http://www.score-p.org)
+ *
+ * Copyright (c) 2009-2011,
+ *    RWTH Aachen University, Germany
+ *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *    Technische Universitaet Dresden, Germany
+ *    University of Oregon, Eugene, USA
+ *    Forschungszentrum Juelich GmbH, Germany
+ *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *    Technische Universitaet Muenchen, Germany
+ *
+ * See the COPYING file in the package base directory for details.
+ *
+ * Testfile for automated testing of OPARI2
+ *
+ *
+ * @brief Special tests for code blocks and nested parallel regions/loops.
+
+ */
+
+#include <stdio.h>
+#ifdef _OPENMP
+#endif
+
+int main() {
+  int i, j;
+  int k = 0;
+ 
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_1, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_1 );
+#line 31 "test3.c"
+  #pragma omp parallel POMP2_DLIST_00001 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_1 );
+#line 32 "test3.c"
+ {
+{   POMP2_For_enter( &opari2_region_2, opari2_ctc_2  );
+#line 33 "test3.c"
+    #pragma omp for nowait
+   for (i=0; i<4; ++i)
+     {
+       k++;
+     }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_2, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_2, pomp2_old_task ); }
+  POMP2_For_exit( &opari2_region_2 );
+ }
+#line 38 "test3.c"
+ }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_1, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_1, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_1 ); }
+  POMP2_Parallel_join( &opari2_region_1, pomp2_old_task ); }
+#line 39 "test3.c"
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_3, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_3 );
+#line 40 "test3.c"
+  #pragma omp parallel POMP2_DLIST_00003 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_3 );
+#line 41 "test3.c"
+{   POMP2_For_enter( &opari2_region_4, opari2_ctc_4  );
+#line 41 "test3.c"
+    #pragma omp for nowait
+ for (i=0; i<4; ++i)
+   {
+     k++;
+   }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_4, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_4, pomp2_old_task ); }
+  POMP2_For_exit( &opari2_region_4 );
+ }
+#line 46 "test3.c"
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_3, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_3, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_3 ); }
+  POMP2_Parallel_join( &opari2_region_3, pomp2_old_task ); }
+#line 46 "test3.c"
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_5, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_5 );
+#line 47 "test3.c"
+  #pragma omp parallel POMP2_DLIST_00005 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_5 );
+#line 48 "test3.c"
+ {
+#line 49 "test3.c"
+    #pragma omp master
+{   POMP2_Master_begin( &opari2_region_6, opari2_ctc_6  );
+#line 50 "test3.c"
+   for (i=0; i<4; ++i)
+     k++;
+  POMP2_Master_end( &opari2_region_6 ); }
+#line 52 "test3.c"
+ }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_5, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_5, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_5 ); }
+  POMP2_Parallel_join( &opari2_region_5, pomp2_old_task ); }
+#line 53 "test3.c"
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_7, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_7 );
+#line 54 "test3.c"
+  #pragma omp parallel POMP2_DLIST_00007 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_7 );
+#line 55 "test3.c"
+ {
+{   POMP2_Single_enter( &opari2_region_8, opari2_ctc_8  );
+#line 56 "test3.c"
+    #pragma omp single nowait
+{   POMP2_Single_begin( &opari2_region_8 );
+#line 57 "test3.c"
+   for (i=0; i<4; ++i) k++;
+  POMP2_Single_end( &opari2_region_8 ); }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_8, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_8, pomp2_old_task ); }
+  POMP2_Single_exit( &opari2_region_8 );
+ }
+#line 58 "test3.c"
+ }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_7, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_7, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_7 ); }
+  POMP2_Parallel_join( &opari2_region_7, pomp2_old_task ); }
+#line 59 "test3.c"
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_9, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_9 );
+#line 60 "test3.c"
+  #pragma omp parallel POMP2_DLIST_00009 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_9 );
+#line 61 "test3.c"
+{   POMP2_Critical_enter( &opari2_region_10, opari2_ctc_10  );
+#line 61 "test3.c"
+    #pragma omp critical
+{   POMP2_Critical_begin( &opari2_region_10 );
+#line 62 "test3.c"
+ for (i=0; i<4; ++i) k++;
+  POMP2_Critical_end( &opari2_region_10 ); }
+  POMP2_Critical_exit( &opari2_region_10 );
+ }
+#line 63 "test3.c"
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_9, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_9, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_9 ); }
+  POMP2_Parallel_join( &opari2_region_9, pomp2_old_task ); }
+#line 63 "test3.c"
+
+ // *****************************************
+ // * Testing of nested parallelism         *
+ // *****************************************
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_11, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_11 );
+#line 68 "test3.c"
+#pragma omp parallel  POMP2_DLIST_00011 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_11 );
+#line 69 "test3.c"
+ {
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_12, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_12 );
+#line 70 "test3.c"
+#pragma omp parallel  POMP2_DLIST_00012 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_12 );
+#line 71 "test3.c"
+   {
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_13, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_13 );
+#line 72 "test3.c"
+#pragma omp parallel  POMP2_DLIST_00013 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_13 );
+#line 73 "test3.c"
+     {
+{   POMP2_For_enter( &opari2_region_14, opari2_ctc_14  );
+#line 74 "test3.c"
+#pragma omp for nowait
+       for (i=0; i<4; ++i) {
+	 printf("do %d\n", i);
+       }
+  POMP2_For_exit( &opari2_region_14 );
+ }
+#line 78 "test3.c"
+     }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_13, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_13, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_13 ); }
+  POMP2_Parallel_join( &opari2_region_13, pomp2_old_task ); }
+#line 79 "test3.c"
+   }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_12, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_12, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_12 ); }
+  POMP2_Parallel_join( &opari2_region_12, pomp2_old_task ); }
+#line 80 "test3.c"
+ }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_11, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_11, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_11 ); }
+  POMP2_Parallel_join( &opari2_region_11, pomp2_old_task ); }
+#line 81 "test3.c"
+
+ // *****************************************
+ // * Testing of nested for loops           *
+ // *****************************************
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_15, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_15 );
+#line 86 "test3.c"
+  #pragma omp parallel POMP2_DLIST_00015 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_15 );
+#line 87 "test3.c"
+ {
+{   POMP2_For_enter( &opari2_region_16, opari2_ctc_16  );
+#line 88 "test3.c"
+    #pragma omp for nowait
+   for (i=0; i<4; ++i) {
+     for (j=0; j<4; ++j) {
+       printf("do %d\n", i);
+     }
+   }
+  POMP2_For_exit( &opari2_region_16 );
+ }
+#line 94 "test3.c"
+
+{   POMP2_For_enter( &opari2_region_17, opari2_ctc_17  );
+#line 95 "test3.c"
+    #pragma omp for nowait
+   for (i=0; i<4; ++i) {
+     for (j=0; j<4; ++j) {
+       for (k=0; k<4; ++k) {
+	 printf("do %d\n", i);
+       }
+     }
+   }
+  POMP2_For_exit( &opari2_region_17 );
+ }
+#line 103 "test3.c"
+
+{   POMP2_For_enter( &opari2_region_18, opari2_ctc_18  );
+#line 104 "test3.c"
+    #pragma omp for nowait
+   for (i=0; i<4; ++i)
+     for (j=0; j<4; ++j)
+       printf("do %d\n", i);
+  POMP2_For_exit( &opari2_region_18 );
+ }
+#line 108 "test3.c"
+
+{   POMP2_For_enter( &opari2_region_19, opari2_ctc_19  );
+#line 109 "test3.c"
+    #pragma omp for nowait
+   for (i=0; i<4; ++i)
+     for (j=0; j<4; ++j)
+       for (k=0; k<4; ++k)
+	 printf("do %d\n", i);
+  POMP2_For_exit( &opari2_region_19 );
+ }
+#line 114 "test3.c"
+
+{   POMP2_For_enter( &opari2_region_20, opari2_ctc_20  );
+#line 115 "test3.c"
+    #pragma omp for nowait
+   for (i=0; i<4; ++i)
+     for (j=0; j<4; ++j) {
+       printf("do %d\n", i);
+     }
+  POMP2_For_exit( &opari2_region_20 );
+ }
+#line 120 "test3.c"
+ }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_15, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_15, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_15 ); }
+  POMP2_Parallel_join( &opari2_region_15, pomp2_old_task ); }
+#line 121 "test3.c"
+}

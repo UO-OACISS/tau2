@@ -1,0 +1,18 @@
+MPICC=mpicc
+#MPI_CFLAGS
+MPICXX=mpicxx
+#MPI_CXXFLAGS=
+MPIF77=mpif77
+#MPI_FFLAGS=
+MPIFC=mpif90
+#MPI_FCFLAGS=
+#MPI_CPPFLAGS=
+#MPI_LDFLAGS=
+#MPI_LIBS=
+
+# # Scalasca1 settings
+# MPILIB    = -lmpi
+# PMPILIB   =
+# FMPILIB   = -lmpi_f77
+# FMPIOBJ   =
+# MPIEXTRA  = -DHAS_MPI2_1SIDED

@@ -1,0 +1,140 @@
+## -*- mode: makefile -*-
+
+##
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2009-2011,
+## RWTH Aachen University, Germany
+##
+## Copyright (c) 2009-2011,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2014
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2011,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2014, 2017,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2011,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
+##
+
+## file       vendor/common/build-config/platforms.inc.am
+
+# Create platform entries for EXTRA_DIST using e.g.:
+# cd vendor/common/build-config/platforms
+# for i in *; do echo "              \$(srcdir)/vendor/common/build-config/platforms/$i \\"; done
+
+EXTRA_DIST += $(srcdir)/vendor/common/build-config/process_arguments.awk \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-gcc  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-ibm  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-intel  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-pgi  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-studio  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-bullxmpi \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-hp \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-ibmpoe \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-intel \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-intel2 \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-intel3 \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-intelpoe \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-lam \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-mpibull2 \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-mpich \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-mpich2 \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-mpich3 \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-openmpi \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-platform \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-scali \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-sgimpt \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-sgimptwrapper \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-sun \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-without \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-shmem-openmpi \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-shmem-openshmem \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-shmem-sgimpt \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-shmem-sgimptwrapper \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-shmem-without \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-gcc  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-ibm  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-intel  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-pgi  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-studio  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-altix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-arm  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-bgl  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-bgp  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-bgq  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayxt  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayxe  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayxk  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayxc  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-aix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-linux  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-mac  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-mic  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-mingw \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-necsx  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-solaris  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-k  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-fx10  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-fx100  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-user-provided  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-altix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-arm  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgl  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgp  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgq  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayxt  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayxe  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayxk  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayxc  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-aix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-linux  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-mac  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-mic  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-mingw \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-necsx  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-solaris  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-k  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-fx10  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-fx100  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-user-provided  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-altix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-arm  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgl  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgp  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgq  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayxt  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayxe  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayxk  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayxc  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-aix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-linux  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-mac  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-mic  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-necsx  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-solaris  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-shmem-crayxk  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-shmem-crayxe  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-shmem-crayxt  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-shmem-crayxc  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-shmem-user-provided  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-k  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-fx10  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-fx100  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-user-provided
+
+CLEANFILES += $(builddir)/user_provided_configure_args \
+              $(builddir)/mpi_compiler_suite           \
+              $(builddir)/mpi_compiler_suite_to_source

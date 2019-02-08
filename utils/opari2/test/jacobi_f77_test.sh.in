@@ -1,0 +1,83 @@
+#!/bin/sh
+set -e
+
+opari_dir=`pwd`
+test_dir="../test/tmp"
+mkdir -p ${test_dir}
+test_data_dir=@abs_srcdir@/data
+
+CC="@CC@"
+F77="@F77@"
+INCDIR=.
+OPARI2=@abs_builddir@/../build-frontend/opari2 
+OPARI2_CONFIG="@abs_builddir@/../build-frontend/opari2-config --build-check"
+LDFLAGS="-lm -L@abs_builddir@/../build-frontend/.libs -lpomp"
+FFLAGS="@FFLAGS@"
+OPENMP="@OPENMP_FFLAGS@"
+
+rm -rf $test_dir/jacobi/F77
+mkdir -p $test_dir/jacobi/F77
+cp -r $test_data_dir/jacobi/F77/jacobi.f $test_dir/jacobi/F77
+cp -r $test_data_dir/jacobi/F77/main.f $test_dir/jacobi/F77
+
+cd $test_dir/jacobi/F77
+#make instrument
+$OPARI2 main.f 
+$OPARI2 jacobi.f
+
+#make compile
+$F77 -I$INCDIR $OPENMP $FFLAGS -c jacobi.mod.F
+$F77 -I$INCDIR $OPENMP $FFLAGS -c main.mod.F
+
+#make build
+@NM@ jacobi.mod.o main.mod.o | `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
+$CC -I$INCDIR  -c pomp_init_file.c
+$F77 $OPENMP $FFLAGS pomp_init_file.o jacobi.mod.o main.mod.o $LDFLAGS -o jacobi$EXEEXT
+
+#make run
+OMP_NUM_THREADS=4 ./jacobi$EXEEXT 2>jacobi_test.out
+
+grep 0: jacobi_test.out > jacobi_test_0
+grep 1: jacobi_test.out > jacobi_test_1
+grep 2: jacobi_test.out > jacobi_test_2
+grep 3: jacobi_test.out > jacobi_test_3
+
+if diff $test_data_dir/jacobi/F77/jacobi_test_0.out jacobi_test_0 > /dev/null
+  then
+    true
+  else
+    echo "-------- ERROR: in program output --------"
+    diff $test_data_dir/jacobi/F77/jacobi_test_0.out jacobi_test_0
+    cd $opari_dir
+    exit
+fi
+if diff $test_data_dir/jacobi/F77/jacobi_test_1.out jacobi_test_1 > /dev/null
+  then
+    true
+  else
+    echo "-------- ERROR: in program output --------"
+    diff $test_data_dir/jacobi/F77/jacobi_test_1.out jacobi_test_1
+    cd $opari_dir
+    exit
+fi
+if diff $test_data_dir/jacobi/F77/jacobi_test_2.out jacobi_test_2 > /dev/null
+  then
+    true
+  else
+    echo "-------- ERROR: in program output --------"
+    diff $test_data_dir/jacobi/F77/jacobi_test_2.out jacobi_test_2
+    cd $opari_dir
+    exit
+fi
+if diff $test_data_dir/jacobi/F77/jacobi_test_3.out jacobi_test_3 > /dev/null
+  then
+    true
+  else
+    echo "-------- ERROR: in program output --------"
+    diff $test_data_dir/jacobi/F77/jacobi_test_3.out jacobi_test_3
+    cd $opari_dir
+    exit
+fi
+
+cd $opari_dir
+

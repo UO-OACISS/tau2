@@ -1,0 +1,12 @@
+CC=bgxlc_r
+CXX=bgxlC_r
+F77=bgxlf_r
+FC=bgxlf_r
+
+#CPPFLAGS=
+#CFLAGS=
+#CXXFLAGS=
+FFLAGS=-qsuppress=cmpmsg
+FCFLAGS=-qfree=f90 -qsuppress=cmpmsg
+#LDFLAGS=
+#LIBS=

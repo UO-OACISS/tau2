@@ -1,0 +1,145 @@
+## -*- mode: makefile -*-
+
+##
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2009-2011,
+## RWTH Aachen University, Germany
+##
+## Copyright (c) 2009-2011,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2011,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2011, 2015, 2017,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2011,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
+##
+
+## file       vendor/common/build-config/Makefile.inc.am
+
+EXTRA_DIST =
+BUILT_SOURCES =
+CLEANFILES =
+DISTCLEANFILES =
+
+# Testing framework
+EXTRA_DIST += $(srcdir)/vendor/common/build-config/generate-config-backend-for-frontend.sh \
+              $(srcdir)/vendor/common/build-config/generate-library-dependencies.sh \
+              $(srcdir)/vendor/common/build-config/generate-library-dependencies-la-object.hpp \
+              $(srcdir)/vendor/common/build-config/generate-library-version.sh \
+              $(srcdir)/vendor/common/build-config/generate-package-version.sh \
+              $(srcdir)/vendor/common/cutest/CuTest.c \
+              $(srcdir)/vendor/common/cutest/CuTest.h \
+              $(srcdir)/vendor/common/cutest/license.txt \
+              $(srcdir)/vendor/common/cutest/README.txt
+
+DISTCLEANFILES += $(builddir)/config.summary
+DISTCLEANFILES += $(builddir)/@PACKAGE@.summary
+
+CONFIG_STATUS_DEPENDENCIES = $(srcdir)/build-config/VERSION
+CONFIGURE_DEPENDENCIES = $(srcdir)/build-config/VERSION
+
+prohibit-svn-files-in-dist:
+	@find $(top_distdir) -type d | grep "\.svn"; \
+	if [ $$? -eq 0 ]; then \
+            echo "ERROR: subversion files found in distribution. This is usually caused by";  \
+            echo "referencing directories in EXTRA_DIST. Please specify the files that need"; \
+            echo "to go into the distribution explicitly."; \
+            exit 1; \
+        fi
+
+
+common-uninstall:
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE@
+
+
+SCOREP_RECURSIVE_TARGETS=
+
+
+###############################################################################
+## code beautification targets
+##
+if SVN_CONTROLLED
+if HAVE_UNCRUSTIFY
+
+beautify-sp:
+	@$(am__cd) $(srcdir) && ./vendor/common/beautifier/beautify
+beautify: beautify-recursive
+SCOREP_RECURSIVE_TARGETS += beautify-recursive
+
+beautify-clean:
+
+endif # HAVE_UNCRUSTIFY
+endif # SVN_CONTROLLED
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+
+###############################################################################
+## bitten targets, intended to be used from bitten only
+##
+
+bitten-copy-tarball-to-prefix: $(distdir).tar.gz
+	$(MKDIR_P) $(DESTDIR)$(prefix)
+	$(INSTALL_DATA) $(distdir).tar.gz $(DESTDIR)$(prefix)/$(PACKAGE)-latest.tar.gz
+
+bitten-print-environment:
+	env
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+
+###############################################################################
+## trigger build of check_* targets here and in subdirectories.
+##
+
+check-build-sp: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build: check-build-recursive
+SCOREP_RECURSIVE_TARGETS += check-build-recursive
+
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+$(SCOREP_RECURSIVE_TARGETS):
+## Using $failcom allows "-k" to keep its natural meaning when running a
+## recursive rule.
+	@fail= failcom='exit 1'; \
+	for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=* | --[!k]*);; \
+	    *k*) failcom='fail=yes';; \
+	  esac; \
+	done; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-sp"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-sp" || exit 1; \
+	fi; test -z "$$fail"

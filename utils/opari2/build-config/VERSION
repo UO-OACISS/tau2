@@ -1,0 +1,20 @@
+Specify package and library interface version here. The package version has
+merely marketing character and is the version encoded in the tarball. Much
+more important is the library interface version as it is crucial for dynamic
+(re)linking. Please CAREFULLY READ following documents before adjusting the
+library interface version:
+
+    https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
+    http://sourceware.org/autobook/autobook/autobook_91.html#SEC91
+
+package.major=2
+package.minor=0
+package.bugfix=4
+package.suffix=
+
+# In the POMP2 case library.revision makes no sense as opari2 just provides
+# the interface definition and no (installed) implementation. So, set
+# library.revision always to 0 and ignore it for version compatibility checks.
+library.current=3
+library.revision=0
+library.age=0

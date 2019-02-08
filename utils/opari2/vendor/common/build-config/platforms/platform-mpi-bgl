@@ -1,0 +1,12 @@
+MPICC=blrts_xlc
+MPICXX=blrts_xlC
+MPIF77=blrts_xlf
+MPIFC=blrts_xlf
+
+MPI_LDFLAGS=-L/bgl/BlueLight/ppcfloor/bglsys/lib
+MPI_LIBS=-lmpich.rts
+MPI_CPPFLAGS=-I/bgl/BlueLight/ppcfloor/bglsys/include
+#MPI_CFLAGS=
+MPI_CXXFLAGS=-O3 -qarch=440 -qtune=440
+MPI_FFLAGS=-qsuppress=cmpmsg
+MPI_FCFLAGS=-qfree=f90 -qsuffix=f=f90 -qsuppress=cmpmsg

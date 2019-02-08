@@ -1,0 +1,178 @@
+## -*- mode: makefile -*-
+
+##
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2009-2011,
+## RWTH Aachen University, Germany
+##
+## Copyright (c) 2009-2011,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2011,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2011, 2015,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2011,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
+##
+
+## file doc/doxygen-user/Makefile.inc.am
+
+
+###############################################################################
+## doxygen related targets
+##
+
+## In the following conditional we must distinguish if we are in "developer
+## mode", i.e. if we are working on a svn working copy, or if we are in "user
+## mode", i.e. we are working on a tarball.
+##
+## In developer mode we can create doxygen and pdf user documentation (make
+## doxygen-user) that will be (automatically) included in the distribution at
+## make dist. When creating a distribution, the developer should make sure
+## that she has doxygen and related tools e.g. pdflatex in PATH in order to
+## generate a complete documentation, see also
+## vendor/common/build-config/m4/ac_scorep_doxygen.m4.
+##
+## make install is ignorant of documentation issues in developer mode.
+##
+## The user gets ready to install documentation in the tarball, i.e. there is no
+## need to run doxygen and pdflatex in user mode. In user mode the provided
+## documentation is just copied to a subdirectory of $prefix.
+
+DOC_SRC_DIR = $(srcdir)/doc
+
+doxygen-uninstall:
+	rm -rf $(DESTDIR)$(docdir)
+
+if SVN_CONTROLLED #-----------------------------------------------------------
+
+USER_DOC_DIR = $(top_distdir)$(ac_scorep_doxygen_distdir)/doc
+
+doxygen-user-install:
+
+doxygen-user-generate: doxygen-user-pdf doxygen-user-html-compress copy-revision-file-to-dist
+
+update-revision:
+	echo `svnversion $(srcdir)` > "$(srcdir)/build-config/REVISION"
+
+copy-revision-file-to-dist:
+	$(MKDIR_P) "$(distdir)/build-config/"
+	for i in REVISION REVISION_COMMON; do                                                   \
+	    cp -p "$(srcdir)/build-config/$$i" "$(distdir)/build-config/";                      \
+	    if grep -E [A-Z] "$(srcdir)/build-config/$$i" ||                                    \
+                grep "-" "$(srcdir)/build-config/$$i"; then                                     \
+                echo "WARNING: distribution does not match a single, unmodified revision." >&2; \
+            fi                                                                                  \
+        done
+
+doxygen-user-html-compress:
+	if test -d "$(USER_DOC_DIR)/html"; then                               \
+	    cd "$(USER_DOC_DIR)"; tar czvf html.tar.gz html; rm -rf html/;    \
+	fi
+
+doxygen-project-number: update-revision
+	echo "PROJECT_NUMBER = \"@PACKAGE_VERSION@ (revision `cat $(srcdir)/build-config/REVISION`)\"" > doc/doxygen-project-number.cfg
+
+CLEANFILES += doc/doxygen-project-number.cfg
+
+doxygen-user-clean:
+	rm -rf $(USER_DOC_DIR)/*
+
+
+if HAVE_DOXYGEN #-----------------------------------------------------
+
+doxygen-user: doxygen-project-number doc/doxygen-user/main.dox doc/doxygen-user.cfg
+	$(MKDIR_P) "$(USER_DOC_DIR)/tags"
+	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
+	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE@.tag" >> doc/doxygen-user-at-make-time.cfg
+	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user.cfg > doc/doxygen-user-html.cfg
+	$(MKDIR_P) "$(USER_DOC_DIR)/html"
+	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
+	$(DOXYGEN) doc/doxygen-user-html.cfg
+
+CLEANFILES += doc/doxygen-user-html.cfg doc/doxygen-user-at-make-time.cfg doxygen.err
+
+else # i.e. ! HAVE_DOXYGEN -------------------------------------------
+
+doxygen-user:
+	echo "WARNING: doxygen not available. Cannot generate documentation." >&2
+
+endif # HAVE_DOXYGEN -------------------------------------------------
+
+if HAVE_DOXYGEN_LATEX #-----------------------------------------------
+
+doxygen-user-pdf: doxygen-user
+	cat doc/doxygen-user-html.cfg > doc/doxygen-user-pdf.cfg
+	echo "ENABLED_SECTIONS = LATEX" >> doc/doxygen-user-pdf.cfg
+	echo "GENERATE_HTML    = NO"    >> doc/doxygen-user-pdf.cfg
+	cp $(abs_srcdir)/doc/doxygen-user/opari2.sty $(USER_DOC_DIR)/pdf/
+	cp $(DOC_SRC_DIR)/license.tex $(USER_DOC_DIR)/pdf/
+	-cp $(DOC_SRC_DIR)/images/project_logo.pdf $(USER_DOC_DIR)/pdf/
+	$(DOXYGEN) doc/doxygen-user-pdf.cfg
+	cd "$(USER_DOC_DIR)/pdf" && \
+	make &&                     \
+	mv refman.pdf ../ &&        \
+	rm -f * &&                  \
+	mv ../refman.pdf @PACKAGE@.pdf
+
+else # i.e. ! HAVE_DOXYGEN_LATEX -------------------------------------
+
+doxygen-user-pdf: doxygen-user
+	echo "WARNING: pdflatex not available. Cannot generate doxygen pdf documentation." >&2
+	if test -d "$(USER_DOC_DIR)/pdf"; then rm -rf "$(USER_DOC_DIR)/pdf"; fi
+
+endif # HAVE_DOXYGEN_LATEX -------------------------------------------
+
+else # i.e. ! SVN_CONTROLLED -----------------------------------------
+
+doxygen-user-clean:
+
+doxygen-user-generate:
+
+doxygen-user-pdf:
+
+doxygen-user-install:
+	if test -f "$(DOC_SRC_DIR)/html.tar.gz"; then                                   \
+            $(MKDIR_P) $(DESTDIR)$(docdir);                                             \
+            $(INSTALL_DATA) $(DOC_SRC_DIR)/html.tar.gz $(DESTDIR)$(docdir)/html.tar.gz; \
+	    cd $(DESTDIR)$(docdir);                                                     \
+            tar xzvf html.tar.gz;                                                       \
+	    rm -f html.tar.gz;                                                          \
+	fi
+	if test -d "$(DOC_SRC_DIR)"; then                                                   \
+            cd $(DOC_SRC_DIR);                                                              \
+            dirs="pdf tags";                                                                \
+            cd -;                                                                           \
+            for i in $$dirs; do                                                             \
+                if test -d "$(DOC_SRC_DIR)/$$i"; then                                       \
+                    $(MKDIR_P) $(DESTDIR)$(docdir)/$$i;                                     \
+                    cd $(DOC_SRC_DIR)/$$i;                                                  \
+                    files=`find . -type f`;                                                 \
+                    cd -;                                                                   \
+                    for j in $$files; do                                                    \
+                        $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i/$$j $(DESTDIR)$(docdir)/$$i/$$j; \
+                    done;                                                                   \
+                fi;                                                                         \
+            done;                                                                           \
+        fi
+
+copy-revision-file-to-dist:
+
+endif # SVN_CONTROLLED
+                                                                             ##
+                                                                             ##
+###############################################################################

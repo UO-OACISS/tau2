@@ -1,0 +1,42 @@
+#include <opari2/pomp2_lib.h>
+
+#define POMP2_DLIST_00001 shared(opari2_region_1,opari2_region_2,opari2_region_3)
+static OPARI2_Region_handle opari2_region_1 = NULL;
+    #define opari2_ctc_1 "101*regionType=parallel*sscl=test8.c:35:35*escl=test8.c:54:54*hasIf=1*hasNum_threads=1*hasReduction=1**"
+static OPARI2_Region_handle opari2_region_2 = NULL;
+    #define opari2_ctc_2 "107*regionType=for*sscl=test8.c:39:39*escl=test8.c:44:44*hasCollapse=1*hasReduction=1*hasSchedule=dynamic,5**"
+static OPARI2_Region_handle opari2_region_3 = NULL;
+    #define opari2_ctc_3 "90*regionType=sections*sscl=test8.c:46:46*escl=test8.c:53:53*numSections=2*hasReduction=1**"
+#define POMP2_DLIST_00004 shared(opari2_region_4,opari2_region_5)
+static OPARI2_Region_handle opari2_region_4 = NULL;
+    #define opari2_ctc_4 "80*regionType=parallel*sscl=test8.c:56:56*escl=test8.c:62:62*hasDefault=private**"
+#define POMP2_DLIST_00005 shared(opari2_region_5)
+static OPARI2_Region_handle opari2_region_5 = NULL;
+    #define opari2_ctc_5 "77*regionType=task*sscl=test8.c:58:58*escl=test8.c:61:61*hasIf=1*hasUntied=1**"
+#define POMP2_DLIST_00006 shared(opari2_region_6)
+static OPARI2_Region_handle opari2_region_6 = NULL;
+    #define opari2_ctc_6 "73*regionType=parallel*sscl=test8.c:64:64*escl=test8.c:67:67*hasShared=1**"
+#define POMP2_DLIST_00007 shared(opari2_region_7,opari2_region_8)
+static OPARI2_Region_handle opari2_region_7 = NULL;
+    #define opari2_ctc_7 "174*regionType=parallelfor*sscl=test8.c:70:70*escl=test8.c:77:77*hasCollapse=1*hasDefault=none*hasIf=1*hasNum_threads=1*hasOrdered=1*hasReduction=1*hasSchedule=static,chunkif**"
+static OPARI2_Region_handle opari2_region_8 = NULL;
+    #define opari2_ctc_8 "60*regionType=ordered*sscl=test8.c:73:73*escl=test8.c:74:74**"
+#define POMP2_DLIST_00009 shared(opari2_region_9)
+static OPARI2_Region_handle opari2_region_9 = NULL;
+    #define opari2_ctc_9 "109*regionType=parallelsections*sscl=test8.c:79:79*escl=test8.c:86:86*hasIf=1*hasNum_threads=1*hasReduction=1**"
+
+#ifdef __cplusplus 
+ extern "C" 
+#endif
+void POMP2_Init_reg_000()
+{
+    POMP2_Assign_handle( &opari2_region_1, opari2_ctc_1 );
+    POMP2_Assign_handle( &opari2_region_2, opari2_ctc_2 );
+    POMP2_Assign_handle( &opari2_region_3, opari2_ctc_3 );
+    POMP2_Assign_handle( &opari2_region_4, opari2_ctc_4 );
+    POMP2_Assign_handle( &opari2_region_5, opari2_ctc_5 );
+    POMP2_Assign_handle( &opari2_region_6, opari2_ctc_6 );
+    POMP2_Assign_handle( &opari2_region_7, opari2_ctc_7 );
+    POMP2_Assign_handle( &opari2_region_8, opari2_ctc_8 );
+    POMP2_Assign_handle( &opari2_region_9, opari2_ctc_9 );
+}

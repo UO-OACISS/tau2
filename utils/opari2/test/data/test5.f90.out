@@ -1,0 +1,159 @@
+
+#line 1 "test5.f90"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! *
+! * @brief Test the splitting of combined parallel clauses.
+
+program test5
+      include 'test5.f90.opari.inc'
+#line 20 "test5.f90"
+  integer i,j,k,m
+  logical l
+  integer, dimension(10,10) :: AA, BB, CC
+  
+  integer, save :: t
+#line 25 "test5.f90"
+  !$omp threadprivate(t)
+  
+  
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_1,&
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      opari2_ctc_1 )
+#line 28 "test5.f90"
+  !$omp   parallel            &            
+  !$omp & private(i,j)                      &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_1)
+      call POMP2_Do_enter(opari2_region_1, &
+     opari2_ctc_1 )
+#line 28 "test5.f90"
+  !$omp   do                  &        
+  !$omp & lastprivate(k)      &           
+  !$omp & lastprivate         &
+  !$omp & (                   &
+  !$omp &   l                 &                           
+  !$omp & )  schedule(dynamic &
+  !$omp & )
+  do i=1,4
+     write(*,*) "parallel do ", i
+     k=k+i
+  end do
+#line 41 "test5.f90"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_1,&
+      pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_1, pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_1)
+      call POMP2_Parallel_end(opari2_region_1)
+#line 41 "test5.f90"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_1, pomp2_old_task)
+#line 42 "test5.f90"
+      
+  if(k .gt. 0) l = .true.
+      pomp2_num_threads = 2
+      pomp2_if = ( l )
+      call POMP2_Parallel_fork(opari2_region_2,&
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      opari2_ctc_2 )
+#line 44 "test5.f90"
+  !$omp  parallel                               default(shared)   &
+  !$omp &firstprivate(j)                copyin(t) reduction(+:l) &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp2_if) num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_2)
+      call POMP2_Sections_enter(opari2_region_2)
+#line 44 "test5.f90"
+  !$omp           sections                                        &
+  !$omp &                lastprivate(i)                         
+#line 46 "test5.f90"
+  !$omp  section
+      call POMP2_Section_begin(opari2_region_2, &
+     opari2_ctc_2 )
+#line 47 "test5.f90"
+  write(*,*) "section1"
+      call POMP2_Section_end(opari2_region_2)
+#line 48 "test5.f90"
+  !$omp  section
+      call POMP2_Section_begin(opari2_region_2, &
+     opari2_ctc_2 )
+#line 49 "test5.f90"
+  write(*,*) "section2"
+      call POMP2_Section_end(opari2_region_2)
+#line 50 "test5.f90"
+  !$omp  section
+      call POMP2_Section_begin(opari2_region_2, &
+     opari2_ctc_2 )
+#line 51 "test5.f90"
+  write(*,*) "section3"
+      call POMP2_Section_end(opari2_region_2)
+#line 52 "test5.f90"
+!$omp end sections nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_2,&
+      pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_2, pomp2_old_task)
+      call POMP2_Sections_exit(opari2_region_2)
+      call POMP2_Parallel_end(opari2_region_2)
+#line 52 "test5.f90"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_2, pomp2_old_task)
+#line 53 "test5.f90"
+
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_3,&
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      opari2_ctc_3 )
+#line 54 "test5.f90"
+  !$omp parallel           &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_3)
+      call POMP2_Workshare_enter(opari2_region_3, &
+     opari2_ctc_3 )
+#line 54 "test5.f90"
+  !$omp          workshare
+  AA = BB
+  BB = CC
+#line 57 "test5.f90"
+!$omp end workshare nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_3,&
+      pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_3, pomp2_old_task)
+      call POMP2_Workshare_exit(opari2_region_3)
+      call POMP2_Parallel_end(opari2_region_3)
+#line 57 "test5.f90"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_3, pomp2_old_task)
+#line 58 "test5.f90"
+end program test5
+
+      subroutine POMP2_Init_reg_000()
+         include 'test5.f90.opari.inc'
+         call POMP2_Assign_handle( opari2_region_1, &
+         opari2_ctc_1 )
+         call POMP2_Assign_handle( opari2_region_2, &
+         opari2_ctc_2 )
+         call POMP2_Assign_handle( opari2_region_3, &
+         opari2_ctc_3 )
+      end

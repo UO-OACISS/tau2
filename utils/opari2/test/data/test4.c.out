@@ -1,0 +1,110 @@
+#include "test4.c.opari.inc"
+#line 1 "test4.c"
+/*
+ * This file is part of the Score-P software (http://www.score-p.org)
+ *
+ * Copyright (c) 2009-2011,
+ *    RWTH Aachen University, Germany
+ *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *    Technische Universitaet Dresden, Germany
+ *    University of Oregon, Eugene, USA
+ *    Forschungszentrum Juelich GmbH, Germany
+ *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *    Technische Universitaet Muenchen, Germany
+ *
+ * See the COPYING file in the package base directory for details.
+ *
+ * Testfile for automated testing of OPARI2
+ *
+ *
+ * @brief Test the nowait and untied clauses
+ */
+
+#include <stdio.h>
+#ifdef _OPENMP
+#endif
+
+int main() {
+  int i;
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_1, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_1 );
+#line 29 "test4.c"
+ #pragma omp parallel POMP2_DLIST_00001 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_1 );
+#line 30 "test4.c"
+ {
+   printf("parallel\n");
+{   POMP2_For_enter( &opari2_region_2, opari2_ctc_2  );
+#line 32 "test4.c"
+   #pragma omp for nowait
+   for(i=0; i<4; ++i) {
+     printf("for nowait %d\n", i);
+   }
+  POMP2_For_exit( &opari2_region_2 );
+ }
+#line 36 "test4.c"
+
+{   POMP2_Sections_enter( &opari2_region_3, opari2_ctc_3  );
+#line 37 "test4.c"
+   #pragma omp sections nowait
+   {
+#line 39 "test4.c"
+     #pragma omp section
+{   POMP2_Section_begin( &opari2_region_3, opari2_ctc_3  );
+#line 40 "test4.c"
+     printf("section nowait 1\n");
+  POMP2_Section_end( &opari2_region_3 ); }
+#line 41 "test4.c"
+     #pragma omp section
+{   POMP2_Section_begin( &opari2_region_3, opari2_ctc_3  );
+#line 42 "test4.c"
+     { printf("section nowait 2\n"); }
+  POMP2_Section_end( &opari2_region_3 ); }
+#line 43 "test4.c"
+   }
+  POMP2_Sections_exit( &opari2_region_3 );
+ }
+#line 44 "test4.c"
+
+{   POMP2_Single_enter( &opari2_region_4, opari2_ctc_4  );
+#line 45 "test4.c"
+   #pragma omp single nowait
+{   POMP2_Single_begin( &opari2_region_4 );
+#line 46 "test4.c"
+   {
+     printf("single nowait\n");
+   }
+  POMP2_Single_end( &opari2_region_4 ); }
+  POMP2_Single_exit( &opari2_region_4 );
+ }
+#line 49 "test4.c"
+
+{
+  int pomp2_if = 1;
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Task_handle pomp2_new_task;
+if (pomp2_if)  POMP2_Untied_task_create_begin( &opari2_region_5, &pomp2_new_task, &pomp2_old_task, pomp2_if, opari2_ctc_5  );
+#line 50 "test4.c"
+   #pragma omp task untied POMP2_DLIST_00005 if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)
+{ if (pomp2_if)  POMP2_Untied_task_begin( &opari2_region_5, pomp2_new_task );
+#line 51 "test4.c"
+   {
+     printf("task untied\n");
+   }
+if (pomp2_if)  POMP2_Untied_task_end( &opari2_region_5 ); }
+if (pomp2_if)  POMP2_Untied_task_create_end( &opari2_region_5, pomp2_old_task ); }
+}
+#line 54 "test4.c"
+ }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_1, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_1, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_1 ); }
+  POMP2_Parallel_join( &opari2_region_1, pomp2_old_task ); }
+#line 55 "test4.c"
+}

@@ -1,0 +1,439 @@
+
+#line 1 "test3.f"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! *
+! * @brief Special tests for end pragma substitution and nested parallel regions/loops.
+
+      program test3
+      include 'test3.f.opari.inc'
+#line 20 "test3.f"
+      integer i, j, k
+      real end_level, dolic
+
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_1,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_1 )
+#line 23 "test3.f"
+c$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_1)
+#line 24 "test3.f"
+      call POMP2_Do_enter(opari2_region_2,
+     &opari2_ctc_2 )
+#line 24 "test3.f"
+c$omp do
+      do 12,i = 1,8
+         a=a+1
+ 12   continue
+#line 27 "test3.f"
+c$omp end do  nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_2,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_2,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_2)
+#line 28 "test3.f"
+      call POMP2_Implicit_barrier_enter(opari2_region_1,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_1,
+     &pomp2_old_task)
+      call POMP2_Parallel_end(opari2_region_1)
+#line 28 "test3.f"
+c$omp end parallel
+      call POMP2_Parallel_join(opari2_region_1,
+     &pomp2_old_task)
+#line 29 "test3.f"
+
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_3,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_3 )
+#line 30 "test3.f"
+c$omp parallel   
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_3)
+      call POMP2_Do_enter(opari2_region_3,
+     &opari2_ctc_3 )
+#line 30 "test3.f"
+c$omp          do
+      do 13,i = 1,8
+         a=a+1
+ 13   continue
+
+#line 34 "test3.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_3,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_3,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_3)
+      call POMP2_Parallel_end(opari2_region_3)
+#line 34 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_3,
+     &pomp2_old_task)
+#line 35 "test3.f"
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_4,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_4 )
+#line 35 "test3.f"
+c$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_4)
+#line 36 "test3.f"
+      call POMP2_Do_enter(opari2_region_5,
+     &opari2_ctc_5 )
+#line 36 "test3.f"
+c$omp do
+      do 14,i = 1,8
+         a=a+1
+ 14   continue
+#line 39 "test3.f"
+c$omp end do  nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_5,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_5,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_5)
+#line 40 "test3.f"
+      call POMP2_Atomic_enter(opari2_region_6,
+     &opari2_ctc_6 )
+#line 40 "test3.f"
+c$omp atomic
+      me = me + omp_get_thread_num()
+      call POMP2_Atomic_exit(opari2_region_6)
+#line 42 "test3.f"
+      call POMP2_Implicit_barrier_enter(opari2_region_4,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_4,
+     &pomp2_old_task)
+      call POMP2_Parallel_end(opari2_region_4)
+#line 42 "test3.f"
+c$omp end parallel
+      call POMP2_Parallel_join(opari2_region_4,
+     &pomp2_old_task)
+#line 43 "test3.f"
+
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_7,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_7 )
+#line 44 "test3.f"
+c$omp parallel   
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_7)
+      call POMP2_Do_enter(opari2_region_7,
+     &opari2_ctc_7 )
+#line 44 "test3.f"
+c$omp          do
+      do 15,i = 1,8
+ 15      a=a+1
+#line 46 "test3.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_7,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_7,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_7)
+      call POMP2_Parallel_end(opari2_region_7)
+#line 46 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_7,
+     &pomp2_old_task)
+#line 47 "test3.f"
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_8,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_8 )
+#line 47 "test3.f"
+c$omp parallel private(me,glob)
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_8)
+#line 48 "test3.f"
+      me = omp_get_thread_num()
+      call POMP2_Implicit_barrier_enter(opari2_region_8,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_8,
+     &pomp2_old_task)
+      call POMP2_Parallel_end(opari2_region_8)
+#line 49 "test3.f"
+c$omp end parallel
+      call POMP2_Parallel_join(opari2_region_8,
+     &pomp2_old_task)
+#line 50 "test3.f"
+
+! **********************
+! * nested parallelism *
+! **********************
+
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_9,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_9 )
+#line 55 "test3.f"
+!$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_9)
+#line 56 "test3.f"
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_10,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_10 )
+#line 56 "test3.f"
+!$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_10)
+#line 57 "test3.f"
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_11,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_11 )
+#line 57 "test3.f"
+!$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_11)
+#line 58 "test3.f"
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_12,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_12 )
+#line 58 "test3.f"
+!$omp parallel   
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_12)
+      call POMP2_Do_enter(opari2_region_12,
+     &opari2_ctc_12 )
+#line 58 "test3.f"
+!$omp          do
+      do i = 1,8
+         end_level = end_level + dolic/i
+         a=a+1
+      end do
+#line 63 "test3.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_12,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_12,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_12)
+      call POMP2_Parallel_end(opari2_region_12)
+#line 63 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_12,
+     &pomp2_old_task)
+#line 64 "test3.f"
+      call POMP2_Implicit_barrier_enter(opari2_region_11,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_11,
+     &pomp2_old_task)
+      call POMP2_Parallel_end(opari2_region_11)
+#line 64 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_11,
+     &pomp2_old_task)
+#line 65 "test3.f"
+      call POMP2_Implicit_barrier_enter(opari2_region_10,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_10,
+     &pomp2_old_task)
+      call POMP2_Parallel_end(opari2_region_10)
+#line 65 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_10,
+     &pomp2_old_task)
+#line 66 "test3.f"
+      call POMP2_Implicit_barrier_enter(opari2_region_9,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_9,
+     &pomp2_old_task)
+      call POMP2_Parallel_end(opari2_region_9)
+#line 66 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_9,
+     &pomp2_old_task)
+#line 67 "test3.f"
+
+! *******************************************
+! * end pragma substitution in nested loops *
+! *******************************************
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_13,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_13 )
+#line 71 "test3.f"
+c$omp parallel   
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_13)
+      call POMP2_Do_enter(opari2_region_13,
+     &opari2_ctc_13 )
+#line 71 "test3.f"
+c$omp          do
+      do 16, i = 1,8
+         do 16, j = 1,8
+            a=a+1
+ 16   continue
+
+#line 76 "test3.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_13,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_13,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_13)
+      call POMP2_Parallel_end(opari2_region_13)
+#line 76 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_13,
+     &pomp2_old_task)
+#line 77 "test3.f"
+      do 17,i = 1,8
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_14,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_14 )
+#line 78 "test3.f"
+c$omp parallel   
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_14)
+      call POMP2_Do_enter(opari2_region_14,
+     &opari2_ctc_14 )
+#line 78 "test3.f"
+c$omp          do
+         do 18, j = 1,8
+            a=a+1
+ 18      continue
+#line 81 "test3.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_14,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_14,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_14)
+      call POMP2_Parallel_end(opari2_region_14)
+#line 81 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_14,
+     &pomp2_old_task)
+#line 82 "test3.f"
+ 17   continue
+
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_15,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_15 )
+#line 84 "test3.f"
+c$omp parallel   
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_15)
+      call POMP2_Do_enter(opari2_region_15,
+     &opari2_ctc_15 )
+#line 84 "test3.f"
+c$omp          do
+      do
+         if (a .gt. 0) then
+            exit
+         endif
+      enddo
+#line 89 "test3.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_15,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_15,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_15)
+      call POMP2_Parallel_end(opari2_region_15)
+#line 89 "test3.f"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_15,
+     &pomp2_old_task)
+#line 90 "test3.f"
+      end program test3
+
+
+      subroutine POMP2_Init_reg_000()
+         include 'test3.f.opari.inc'
+         call POMP2_Assign_handle( opari2_region_1, 
+     &   opari2_ctc_1 )
+         call POMP2_Assign_handle( opari2_region_2, 
+     &   opari2_ctc_2 )
+         call POMP2_Assign_handle( opari2_region_3, 
+     &   opari2_ctc_3 )
+         call POMP2_Assign_handle( opari2_region_4, 
+     &   opari2_ctc_4 )
+         call POMP2_Assign_handle( opari2_region_5, 
+     &   opari2_ctc_5 )
+         call POMP2_Assign_handle( opari2_region_6, 
+     &   opari2_ctc_6 )
+         call POMP2_Assign_handle( opari2_region_7, 
+     &   opari2_ctc_7 )
+         call POMP2_Assign_handle( opari2_region_8, 
+     &   opari2_ctc_8 )
+         call POMP2_Assign_handle( opari2_region_9, 
+     &   opari2_ctc_9 )
+         call POMP2_Assign_handle( opari2_region_10, 
+     &   opari2_ctc_10 )
+         call POMP2_Assign_handle( opari2_region_11, 
+     &   opari2_ctc_11 )
+         call POMP2_Assign_handle( opari2_region_12, 
+     &   opari2_ctc_12 )
+         call POMP2_Assign_handle( opari2_region_13, 
+     &   opari2_ctc_13 )
+         call POMP2_Assign_handle( opari2_region_14, 
+     &   opari2_ctc_14 )
+         call POMP2_Assign_handle( opari2_region_15, 
+     &   opari2_ctc_15 )
+      end

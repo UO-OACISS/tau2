@@ -1,0 +1,33 @@
+# This file is part of the Score-P software (http://www.score-p.org)
+# 
+# Copyright (c) 2009-2011,
+#    *    RWTH Aachen University, Germany
+#    *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+#    *    Technische Universitaet Dresden, Germany
+#    *    University of Oregon, Eugene, USA
+#    *    Forschungszentrum Juelich GmbH, Germany
+#    *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+#    *    Technische Universitaet Muenchen, Germany
+#  
+# See the COPYING file in the package base directory for details.
+
+## -*- mode: makefile -*-
+
+#check_PROGRAMS += 
+
+TESTS += $(SRC_ROOT)test/c_test.sh
+TESTS += $(SRC_ROOT)test/f90_test.sh
+TESTS += $(SRC_ROOT)test/f77_test.sh
+TESTS += $(SRC_ROOT)test/awk_script_test.sh
+if HAVE_OPENMP_SUPPORT
+TESTS += $(SRC_ROOT)test/jacobi_c_test.sh
+TESTS += $(SRC_ROOT)test/jacobi_c++_test.sh
+if FORTRAN_SUPPORT_ALLOCATABLE
+if SCOREP_HAVE_FC
+TESTS += $(SRC_ROOT)test/jacobi_f90_test.sh
+endif
+if SCOREP_HAVE_F77
+TESTS += $(SRC_ROOT)test/jacobi_f77_test.sh
+endif
+endif
+endif

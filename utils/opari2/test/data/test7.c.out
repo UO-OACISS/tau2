@@ -1,0 +1,172 @@
+#include "test7.c.opari.inc"
+#line 1 "test7.c"
+/*
+ * This file is part of the Score-P software (http://www.score-p.org)
+ *
+ * Copyright (c) 2009-2011,
+ * RWTH Aachen University, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2011, 2014
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license. See the COPYING file in the package base
+ * directory for details.
+ *
+ * Testfile for automated testing of OPARI2
+ *
+ *
+ * @brief Tests user instrumentation directives and selective instrumentation.
+ */
+
+int main() {
+  int i;
+  int b = 1;
+
+POMP2_Init();
+#line 40 "test7.c"
+
+POMP2_Off();
+#line 42 "test7.c"
+
+POMP2_Begin(&opari2_region_1, opari2_ctc_1);
+#line 44 "test7.c"
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_2, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_2 );
+#line 45 "test7.c"
+#pragma omp parallel POMP2_DLIST_00002 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_2 );
+#line 46 "test7.c"
+  i = 1;
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_2, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_2, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_2 ); }
+  POMP2_Parallel_join( &opari2_region_2, pomp2_old_task ); }
+#line 47 "test7.c"
+
+POMP2_On();
+#line 49 "test7.c"
+
+#line 51 "test7.c"
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_3, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_3 );
+#line 51 "test7.c"
+#pragma omp parallel POMP2_DLIST_00003 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_3 );
+#line 52 "test7.c"
+#pragma omp for
+  for ( i = 0; i < 2; ++i)
+    b = b + i;
+  POMP2_Parallel_end( &opari2_region_3 ); }
+  POMP2_Parallel_join( &opari2_region_3, pomp2_old_task ); }
+#line 55 "test7.c"
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_4, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_4 );
+#line 56 "test7.c"
+#pragma omp parallel     POMP2_DLIST_00004 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_4 );
+#pragma omp          for                  
+  for ( i = 0; i < 2; ++i)
+    b = b + i;
+  POMP2_Parallel_end( &opari2_region_4 ); }
+  POMP2_Parallel_join( &opari2_region_4, pomp2_old_task ); }
+#line 59 "test7.c"
+#line 60 "test7.c"
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_5, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_5 );
+#line 61 "test7.c"
+#pragma omp parallel POMP2_DLIST_00005 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_5 );
+#line 62 "test7.c"
+  i = 3;
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_5, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_5, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_5 ); }
+  POMP2_Parallel_join( &opari2_region_5, pomp2_old_task ); }
+#line 63 "test7.c"
+
+  if (b) {
+POMP2_End(&opari2_region_1);
+#line 66 "test7.c"
+    return 0;
+  }
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_6, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_6 );
+#line 69 "test7.c"
+#pragma omp parallel POMP2_DLIST_00006 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_6 );
+#line 70 "test7.c"
+  {
+POMP2_Begin(&opari2_region_7, opari2_ctc_7);
+#line 72 "test7.c"
+    i = 4;
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Barrier_enter( &opari2_region_8, &pomp2_old_task, opari2_ctc_8  );
+#line 73 "test7.c"
+#pragma omp barrier
+  POMP2_Barrier_exit( &opari2_region_8, pomp2_old_task ); }
+#line 74 "test7.c"
+    i = 5;
+POMP2_End(&opari2_region_7);
+#line 76 "test7.c"
+  }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_6, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_6, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_6 ); }
+  POMP2_Parallel_join( &opari2_region_6, pomp2_old_task ); }
+#line 77 "test7.c"
+
+  if (b) {
+POMP2_End(&opari2_region_1);
+#line 80 "test7.c"
+    return 0;
+  }
+
+POMP2_End(&opari2_region_1);
+#line 84 "test7.c"
+
+POMP2_Finalize();
+#line 86 "test7.c"
+
+  return 0;
+}

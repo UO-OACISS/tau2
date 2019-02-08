@@ -1,0 +1,57 @@
+#include <opari2/pomp2_lib.h>
+
+#define POMP2_DLIST_00001 shared(opari2_region_1,opari2_region_2,opari2_region_3,opari2_region_4,opari2_region_5,opari2_region_6,opari2_region_7,opari2_region_8,opari2_region_9,opari2_region_10,opari2_region_11,opari2_region_12)
+static OPARI2_Region_handle opari2_region_1 = NULL;
+    #define opari2_ctc_1 "61*regionType=parallel*sscl=test2.c:33:33*escl=test2.c:88:88**"
+static OPARI2_Region_handle opari2_region_2 = NULL;
+    #define opari2_ctc_2 "56*regionType=for*sscl=test2.c:37:37*escl=test2.c:41:41**"
+static OPARI2_Region_handle opari2_region_3 = NULL;
+    #define opari2_ctc_3 "58*regionType=flush*sscl=test2.c:43:43*escl=test2.c:43:43**"
+static OPARI2_Region_handle opari2_region_4 = NULL;
+    #define opari2_ctc_4 "60*regionType=barrier*sscl=test2.c:45:45*escl=test2.c:45:45**"
+static OPARI2_Region_handle opari2_region_5 = NULL;
+    #define opari2_ctc_5 "69*regionType=for*sscl=test2.c:47:47*escl=test2.c:53:53*hasOrdered=1**"
+static OPARI2_Region_handle opari2_region_6 = NULL;
+    #define opari2_ctc_6 "60*regionType=ordered*sscl=test2.c:49:49*escl=test2.c:52:52**"
+static OPARI2_Region_handle opari2_region_7 = NULL;
+    #define opari2_ctc_7 "75*regionType=sections*sscl=test2.c:55:55*escl=test2.c:61:61*numSections=2**"
+static OPARI2_Region_handle opari2_region_8 = NULL;
+    #define opari2_ctc_8 "59*regionType=master*sscl=test2.c:63:63*escl=test2.c:66:66**"
+static OPARI2_Region_handle opari2_region_9 = NULL;
+    #define opari2_ctc_9 "61*regionType=critical*sscl=test2.c:68:68*escl=test2.c:71:71**"
+static OPARI2_Region_handle opari2_region_10 = NULL;
+    #define opari2_ctc_10 "81*regionType=critical*sscl=test2.c:73:73*escl=test2.c:76:76*criticalName=foobar**"
+static OPARI2_Region_handle opari2_region_11 = NULL;
+    #define opari2_ctc_11 "59*regionType=atomic*sscl=test2.c:78:78*escl=test2.c:81:81**"
+static OPARI2_Region_handle opari2_region_12 = NULL;
+    #define opari2_ctc_12 "59*regionType=single*sscl=test2.c:84:84*escl=test2.c:87:87**"
+#define POMP2_DLIST_00013 shared(opari2_region_13,opari2_region_14,opari2_region_15)
+static OPARI2_Region_handle opari2_region_13 = NULL;
+    #define opari2_ctc_13 "61*regionType=parallel*sscl=test2.c:90:90*escl=test2.c:98:98**"
+#define POMP2_DLIST_00014 shared(opari2_region_14)
+static OPARI2_Region_handle opari2_region_14 = NULL;
+    #define opari2_ctc_14 "57*regionType=task*sscl=test2.c:92:92*escl=test2.c:95:95**"
+static OPARI2_Region_handle opari2_region_15 = NULL;
+    #define opari2_ctc_15 "61*regionType=taskwait*sscl=test2.c:97:97*escl=test2.c:97:97**"
+
+#ifdef __cplusplus 
+ extern "C" 
+#endif
+void POMP2_Init_reg_000()
+{
+    POMP2_Assign_handle( &opari2_region_1, opari2_ctc_1 );
+    POMP2_Assign_handle( &opari2_region_2, opari2_ctc_2 );
+    POMP2_Assign_handle( &opari2_region_3, opari2_ctc_3 );
+    POMP2_Assign_handle( &opari2_region_4, opari2_ctc_4 );
+    POMP2_Assign_handle( &opari2_region_5, opari2_ctc_5 );
+    POMP2_Assign_handle( &opari2_region_6, opari2_ctc_6 );
+    POMP2_Assign_handle( &opari2_region_7, opari2_ctc_7 );
+    POMP2_Assign_handle( &opari2_region_8, opari2_ctc_8 );
+    POMP2_Assign_handle( &opari2_region_9, opari2_ctc_9 );
+    POMP2_Assign_handle( &opari2_region_10, opari2_ctc_10 );
+    POMP2_Assign_handle( &opari2_region_11, opari2_ctc_11 );
+    POMP2_Assign_handle( &opari2_region_12, opari2_ctc_12 );
+    POMP2_Assign_handle( &opari2_region_13, opari2_ctc_13 );
+    POMP2_Assign_handle( &opari2_region_14, opari2_ctc_14 );
+    POMP2_Assign_handle( &opari2_region_15, opari2_ctc_15 );
+}

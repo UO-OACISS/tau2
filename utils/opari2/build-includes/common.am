@@ -1,0 +1,28 @@
+# -*- mode: makefile -*-
+
+## 
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2009-2011, 
+##    RWTH Aachen, Germany
+##    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##    Technische Universitaet Dresden, Germany
+##    University of Oregon, Eugene, USA
+##    Forschungszentrum Juelich GmbH, Germany
+##    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##    Technische Universitaet Muenchen, Germany
+##
+## See the COPYING file in the package base directory for details.
+##
+
+## file  build-includes/common.am 
+##       Intended to be included by the components
+##       build-(front|back)end/Makefile.am. Defines "common" entities
+##       that all build-* Makefiles rely on.
+
+
+include ../vendor/common/build-config/common.am
+
+## Convenience variable for referencing public headers that will be
+## installed. Use e.g. with the primary nobase_include_HEADERS
+PUBLIC_INC_SRC = $(SRC_ROOT)include/opari2/

@@ -1,0 +1,67 @@
+      INTEGER( KIND=8 ) :: opari2_region_1
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_1 =&
+        "104*regionType=parallel*sscl=test8.f90:27:27*escl=test8.f90:44:44*hasIf=1*hasNum_threads=1*hasReduction=1**"
+
+      INTEGER( KIND=8 ) :: opari2_region_2
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_2 =&
+        "109*regionType=do*sscl=test8.f90:30:30*escl=test8.f90:35:35*hasCollapse=1*hasReduction=1*hasSchedule=dynamic,5**"
+
+      INTEGER( KIND=8 ) :: opari2_region_3
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_3 =&
+        "93*regionType=sections*sscl=test8.f90:37:37*escl=test8.f90:42:42*numSections=2*hasReduction=1**"
+
+      INTEGER( KIND=8 ) :: opari2_region_4
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_4 =&
+        "64*regionType=parallel*sscl=test8.f90:46:46*escl=test8.f90:50:50**"
+
+      INTEGER( KIND=8 ) :: opari2_region_5
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_5 =&
+        "72*regionType=task*sscl=test8.f90:47:47*escl=test8.f90:49:49*hasUntied=1**"
+
+      INTEGER( KIND=8 ) :: opari2_region_6
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_6 =&
+        "191*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:59:59*hasCollapse=1*hasDefault=private*hasIf=1*hasNum_threads=1*hasOrdered=1*hasReduction=1*hasSchedule=static,chunkif*hasShared=1**"
+
+      INTEGER( KIND=8 ) :: opari2_region_7
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_7 =&
+        "63*regionType=ordered*sscl=test8.f90:54:54*escl=test8.f90:56:56**"
+
+      INTEGER( KIND=8 ) :: opari2_region_8
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_8 =&
+        "128*regionType=parallelsections*sscl=test8.f90:61:61*escl=test8.f90:66:66*hasDefault=none*hasIf=1*hasNum_threads=1*hasReduction=1**"
+
+      INTEGER( KIND=8 ) :: opari2_region_9
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_9 =&
+        "113*regionType=parallelworkshare*sscl=test8.f90:68:68*escl=test8.f90:70:70*hasIf=1*hasNum_threads=1*hasReduction=1**"
+
+      INTEGER( KIND=8 ) :: opari2_region_10
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_10 =&
+        "76*regionType=parallel*sscl=test8.f90:72:72*escl=test8.f90:74:74*hasShared=1**"
+
+      common /cb000/ opari2_region_1,&
+              opari2_region_2,&
+              opari2_region_3,&
+              opari2_region_4,&
+              opari2_region_5,&
+              opari2_region_6,&
+              opari2_region_7,&
+              opari2_region_8,&
+              opari2_region_9,&
+              opari2_region_10
+
+      integer ( kind=4 ) :: pomp2_lib_get_max_threads
+      logical :: pomp2_test_lock
+      integer ( kind=4 ) :: pomp2_test_nest_lock
+      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task 
+      logical :: pomp2_if 
+      integer ( kind=4 ) :: pomp2_num_threads 

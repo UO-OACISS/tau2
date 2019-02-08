@@ -1,0 +1,12 @@
+CC=icc
+CXX=icpc
+F77=ifort
+FC=ifort
+
+#CPPFLAGS=
+#CFLAGS=
+#CXXFLAGS=
+#FFLAGS=
+#FCFLAGS=
+#LDFLAGS=
+#LIBS=

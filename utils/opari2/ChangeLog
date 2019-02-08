@@ -1,0 +1,312 @@
+------------------- Released version 2.0.4 ---------------------------
+
+- Fixed some bad string accesses, thanks to Orion Poplawski.
+
+------------------- Released version 2.0.3 ---------------------------
+
+- The instrumentation of OpenMP sections, more precisely the region
+  variable passed to POMP2_Section_end, was potentially
+  invalid. Invalid values were observed in case the environment
+  variable MALLOC_PERTURB_ was set to a non-zero value. Fixed.
+
+------------------- Released version 2.0.2 ---------------------------
+
+- Opari2 usually adds nowait and an explicit barrier after the single
+  construct to measure the implicit barrier overhead caused by the
+  single construct. If copyprivate is given, neither nowait nor the
+  explicit barrier must be instrumented. Opari2 complies for
+  C/C++. For Fortran it added nowait and the explicit barrier even if
+  copyprivate is present. This results in a compilation error. Fixed.
+
+- When creating the 'pomp2_init_regions.c' file, ignore symbols that
+  contain '.ITC.' but keep symbols of type 'D' (see below). These
+  symbols are created by Intel compilers and were considered as POMP2
+  region when the compilation flags '-ipo' or '-O3' were used. These
+  symbols caused linker errors during Score-P's link step.
+
+------------------- Released version 2.0.1 ---------------------------
+
+- Ignore symbols of type 'D' (symbols in the initialized data section)
+  when creating the 'pomp2_init_regions.c' file. These symbols caused
+  linker errors during Score-P's link step.
+
+- The option --disable=omp is supposed to only instrument parallel
+  regions; these are necessary for the thread management of tools
+  building upon OPARI2. But the implicit barrier at the end of
+  parallel regions was instrumented as well. This is fixed now.
+
+- Empty lines between continuation lines of directives (e.g., due to
+  conditional compilation) caused OPARI2 to fail. Fixed.
+
+------------------- Released version 2.0 -----------------------------
+
+- Opari2 was modularized. This means, all functionality directly
+  related to OpenMP was encapsulated, thus enabling the support of
+  new paradigms by adding the respective classes.
+
+- Parallel loop bodies consisting of if+else were incorrectly
+  instrumented with the "end-loop-instrumentation" inserted before the
+  (first) else. Fixed.
+
+- Compilation of instrumented code failed if 'default(none)' was
+  specified in the outmost parallel region and tasking and/or nesting
+  was used. Fixed.
+
+- The use of if- or num_threads-clauses with trailing comma caused the
+  compilation of instrumented code to fail. Fixed.
+
+- In Fortran one can expose only selected symbols of a used module,
+  e.g., 'use omp_lib, only: <symbol>'. If <symbol> is one of the
+  OpenMP lock API calls, OPARI2 would instrument it and compilation
+  would fail. Fixed.
+
+------------------- Released version 1.1.4 ---------------------------
+
+- For free form Fortran source files, atomic operations which are
+  written over multiple lines are now supported.
+
+- When an asterisk occurs in a schedule clause, this asterisk is
+  substituted in the CTC String by an @ to avoid collision with the
+  asterisk as CTC String delimiter. opari2_ctc_parser.c transforms
+  this back, when the CTC String is read.
+
+- Fix in handling of continuation lines in openmp directives in
+  Fortran.
+
+- Fixed detection of function keyword in Fortran.
+
+- Fixed handling of variables named num_threads, so that they are no
+  longer detected as a num_threads clause
+
+------------------- Released version 1.1.3 ---------------------------
+
+- Blank lines between continuation lines that can occur during
+  preprocessing caused OPARI2 to fail. Fixed.
+
+- Changes to support Fujitsu's K Computer and FX10/FX100 systems.
+
+- Fixed conditional jumps that depend on uninitialized values.
+
+- Fixed handling if inode numbers for very large numbers
+
+- Fixed generation of output file names for *.cuf and *.CUF files
+
+------------------- Released version 1.1.2 ---------------------------
+
+- If num_threads-clauses or if-clauses are the only clause in a
+  continuation line, OPARI2 instrumentation resulted in empty
+  continuation lines, which causes compilation errors. Fixed this by
+  removing empty continuation lines in OpenMP directives.
+
+- Install helper scripts that are not intended to be used directly in
+  <prefix>/libexec as opposed to <prefix>/bin.
+
+- Support the --includedir and --bindir configure options.
+
+- Prevent creation of empty '!$omp' lines during
+  instrumentation. These cause compilation errors at least for
+  gfortran.
+
+- Prevent insertion of a newline after the 'copyin(pomp_tpd)'
+  instrumentation.
+
+- OPARI2 erroneously complained about a 'missing continuation line' in
+  Fortran codes where '!$OMP PARALLEL' directive spans several lines
+  that use conditional compilation.
+
+- On some systems the compiled output of pomp2-parse-init-regions.awk
+  caused undefined symbol linker failures due to an ambiguous regular
+  expression in the AWK script. Fixed.
+
+------------------- Released version 1.1.1 ---------------------------
+
+- if-else-statements preceded by #pragma omp parallel were
+  instrumented erroneously. Fixed.
+
+- OpenMP regions are reported with incorrect source filenames, both in
+  the region name (e.g., "!$omp parallel @rhs.prep.f:28" or "!$omp
+  parallel @rhs.input.F:28" rather than "!$omp parallel @rhs.f:28")
+  and associated attributes. Although not all compilers seem to be
+  affected, this issue is seen with GNU, Intel and IBM XL
+  compilers. Fixed.
+
+- Blank lines (often the result of preprocessing) which occur within
+  Fortran directive continuation are ignored by compilers but treated
+  by Opari2 as missing continuation line errors. Fixed.
+
+- Do not instrument an if(true) clause if the user hasn't specified
+  one. Although the previously instrumented if(true) clauses usually
+  do no harm, they prevent the CRAY compiler from generating parallel
+  code. This compiler bug was reported to CRAY.
+
+- Instrumenting "parallel for" with "firstprivate(x) lastprivate(x)"
+  caused compilation errors. Fixed.
+
+------------------- Released version 1.1 -----------------------------
+
+- The '--preprocess' flag was added to opari2, which indicates that a file
+  has already been preprocessed. This helps to handle OpenMP constructs
+  in header files or constructs dependent on preprocessor defines. Using
+  this option requires that pomp2_lib.h is already included. Furthermore,
+  it requires the marker ___POMP2_INCLUDE___ immediately after the
+  included pomp2_lib.h file.
+
+- Fixed enddo detection in Fortran programs when multiple commands are placed
+  on one line separated by a semicolon.
+
+- The '--cflags' argument from opari2-config now allows to specify a compiler
+  '--cflags[=(gnu|intel|sun|pgi|ibm|cray)]'. Special compiler dependent options
+  to avoid warnings caused by the instrumentation are added if a compiler is
+  specified.
+
+- Added a ctc_string argument to the POMP2_Begin function. Note: This change
+  breaks compatibility to previous opari2 versions.
+
+- If Intel's Language Extensions for Offload are used to offload code to a
+  Xeon Phi coprocessor, opari2 no longer instruments OpenMP code in these
+  regions or functions marked for execution on the coprocessor. This allows
+  handling OpenMP code on the host, when the measurement system does not
+  support the offload model.
+
+
+------------------- Released version 1.0.7 ---------------------------
+
+- Fixed broken option --disable=atomic in Fortran and C/C++.
+
+- Improving options --free-form and --fix-form.
+
+ - Note that within the context of providing the new opari2-config
+   option '--region-initialization' introduced in 1.0.7-rc1, the
+   script pomp2-parse-init-regions.awk was changed into an executable
+   command. The old options '--awk-cmd', '--awk-script', and '--egrep'
+   are still available but deprecated.
+
+- Fixed problem parsing escaped characters in C source code which
+  caused opari2 to crash.
+
+- Provide POMP2_Init_regions functions with a unique suffix (formerly
+  used gettimeofday was not "unique enough") to prevent duplicate
+  definition linker failures.
+
+- Improved instrumentation for parallel regions that the default(none)
+  clause by replacing the pomp2_ctc_XX constant variable by
+  preprocessor defines.
+
+- Fixed bug in instrumenting comments in macros which caused "ERROR:
+  unbalanced pragma/directive nesting for $END$ directive".
+
+- Fix instrumentation by adding opari2 options --free-form and
+  --fix-form for cases where opari2's assumptions based on the file
+  extension (.f fixed-form) do not hold because the user specified
+  otherwise (e.g. by compiling with --ffree-form ).
+
+- Resurrect the hidden feature "manually prevent OpenMP directives
+  from being instrumented" by documenting it. Parallel regions still get
+  instrumented as this a prerequisite of measurement tools to get the
+  internal thread handling correct.
+
+- Improved parsing of the nm output in order to generate the region
+  initialization file in cases where the the POMP2_Init_reg routines
+  were generated with absolute addresses (e.g. using the Open64
+  compiler with inter-procedural analysis).
+
+- Do not add any POMP2 statements in Fortran pure
+  subroutines/functions as this leads to compile errors.
+
+- Simplify the generation the POMP2 init region file. Previously
+  opari2-config had to be called in a sequence (--egrep, --egrep,
+  --awk-cmd, --awk-script). This sequence is replaced by opari2-config
+  --region-initialization.
+
+- Comments in macros are now ignored when processing.
+
+------------------- Released version 1.0.6 ---------------------------
+
+- Changed opari-config option --pomp2-api-version to
+  --interface-version to make it consistent with otf2-config and
+  cube-config.
+
+------------------- Released version 1.0.5 ---------------------------
+
+- Fix invalid insertion of <file>.opari.inc in conjunction with
+  continued 'dimension' statements.
+
+- Improved Fortran 'end do' detection.
+
+- CTC-strings grew to long for Fortran77. Size reduced.
+
+- Use inode instead of gettimeofday as unique region identifier. In
+  very special circumstances gettimeofday resolution leads to
+  non-unique identifiers.
+
+- CTC-strings contained wrong line-number information.
+
+- Create temporary files in the directory of the output file.
+
+- Detection of conditional compilation in free form Fortran improved.
+
+------------------- Released version 1.0.4 ---------------------------
+
+- Provide correct region line numbers also for lazy initialization
+  during runtime. Previously the region end line was always 0 for lazy
+  initialization.
+
+- Improved region end line number handling in conjunction with omitted
+  Fortran '!$omp end do' or '!$omp end parallel do' directives.
+
+- Fix invalid insertion of <file>.opari.inc in Fortran77 codes with
+  arbitrary continuation line characters in column 6.
+
+- Fix invalid insertion of <file>.opari.inc in Fortran codes in
+  conjunction with subroutine calls that distribute their arguments
+  over several lines.
+
+------------------- Released version 1.0.3 ---------------------------
+
+- Prevent OPARI2 from instrumenting Fortran 'abstract interfaces'.
+
+- Fix invalid insertion of <file>.opari.inc in conjunction with
+  Fortran 'USE' statements that contain line continuations.
+
+- Fix invalid insertion of <file>.opari.inc in conjunction with
+  user-defined operators containing '=' in Fortran 'USE' statements.
+
+- Fix instrumentation of .c files that produce a linker/mangling error
+  when compiled with a C++ compiler.
+
+- Support for out-of-place a.k.a. VPATH builds. Generate
+  <file>.opari.inc in the directory of the output file.
+
+- Fix instrumentation bug (C++ files only) where IBM and PGI compilers
+  expect threadprivate variables in different locations.
+
+------------------- Released version 1.0.2 ---------------------------
+
+- Renaming of the configure related variable LD_FLAGS_FOR_BUILD to
+  LDFLAGS_FOR_BUILD for consistency.
+
+- Renaming of the installed script pomp2_parse_init_regions.awk to
+  pomp2-parse-init-regions.awk for consistency.
+
+- In Fortran, improved parsing of function and subroutine keywords.
+
+- In in-place builds, the [dist]clean targets accidentally removed
+  files.
+
+- Create task events only for tasks that actually get created.
+
+- In Fortran, added `integer ( kind=4 )' to all integer variables
+  instrumented by opari2.
+
+- In Fortran, continuation lines ending with comments were not
+  detected as continuation lines (Ticket 77).
+
+------------------- Released version 1.0.1 ---------------------------
+
+- In Fortran, continued format descriptors resulted in invalid include
+  of the opari.inc file (Ticket 76).
+
+- In Fortran, rename lists resulted in premature include of the
+  opari.inc file (Ticket 75).
+
+------------------- Released version 1.0 -----------------------------

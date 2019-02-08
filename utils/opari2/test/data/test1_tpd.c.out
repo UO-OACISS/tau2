@@ -1,0 +1,118 @@
+#include "test1_tpd.c.opari.inc"
+#line 1 "test1_tpd.c"
+/*
+ * This file is part of the Score-P software (http://www.score-p.org)
+ *
+ * Copyright (c) 2009-2011,
+ *    RWTH Aachen University, Germany
+ *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *    Technische Universitaet Dresden, Germany
+ *    University of Oregon, Eugene, USA
+ *    Forschungszentrum Juelich GmbH, Germany
+ *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *    Technische Universitaet Muenchen, Germany
+ *
+ * See the COPYING file in the package base directory for details.
+ *
+ * Testfile for automated testing of OPARI2
+ *
+ *
+ * @brief Test the parsers ability to find directives and filter strings and comments.
+ */
+
+#include <stdio.h>
+#ifdef _OPENMP
+#endif
+
+int main() {
+  printf("before...\n");
+
+  //************************************************
+  //* The following pragmas should be instrumented *
+  //************************************************
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_1, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_1 );
+#line 33 "test1_tpd.c"
+  #pragma omp parallel POMP2_DLIST_00001 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads) copyin(pomp_tpd)
+{   POMP2_Parallel_begin( &opari2_region_1 );
+#line 34 "test1_tpd.c"
+  {{
+    printf("parallel 1...\n");
+  }}
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_1, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_1, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_1 ); }
+  POMP2_Parallel_join( &opari2_region_1, pomp2_old_task ); }
+#line 37 "test1_tpd.c"
+#line 36 "test1_tpd.c"
+     //end
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_2, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_2 );
+#line 38 "test1_tpd.c"
+  #                 pragma \
+                    omp \
+                    parallel POMP2_DLIST_00002 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads) copyin(pomp_tpd)
+{   POMP2_Parallel_begin( &opari2_region_2 );
+#line 41 "test1_tpd.c"
+  {
+    printf("parallel 2...\n");
+  }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_2, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_2, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_2 ); }
+  POMP2_Parallel_join( &opari2_region_2, pomp2_old_task ); }
+#line 44 "test1_tpd.c"
+  
+  //**************************************
+  //* The following should be ignored    *
+  //**************************************
+  //#pragma omp parallel
+  {
+    //printf("parallel 1...\n");
+  }
+
+/*
+  #pragma omp parallel
+  {
+    printf("parallel 1...\n");
+  }
+*/
+
+
+  {
+    printf("#pragma omp parallel");
+    //  printf("#pragma omp parallel");
+    /*  printf("#pragma omp parallel");*/
+    /*
+    printf("#pragma omp parallel");
+    */
+    printf("\" and continuation \
+in the next line #pragma omp parallel\" \
+and especially strange escape character usage\\
+n");
+  }
+
+  printf("after...\n");
+
+  //**********************************************
+  //* Tests for the string parsing part of opari.*
+  //**********************************************
+  
+  printf("");
+  printf("\\");
+  printf("\\\\");
+  printf("\\\"");
+  printf("\"\"");
+}

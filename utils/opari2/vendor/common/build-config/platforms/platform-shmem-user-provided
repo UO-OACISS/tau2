@@ -1,0 +1,19 @@
+SHMEMCC=
+SHMEMCXX=
+SHMEMF77=
+SHMEMFC=
+
+#SHMEM_LDFLAGS=
+#SHMEM_CPPFLAGS=
+#SHMEM_CFLAGS=
+#SHMEM_CXXFLAGS=
+#SHMEM_FFLAGS=
+#SHMEM_FCFLAGS=
+# All libraries needed to link SHMEM applications.
+# For example, add '-lsma -lmpi' to SHMEM_LIBS to use SGI SHMEM.
+#SHMEM_LIBS=
+# Name of the SHMEM library, e.g. 'sma' for SGI SHMEM.
+# This name is used by the Score-P instrumenter to detect whether a
+# SHMEM application is built.
+#SHMEM_LIB_NAME=
+SHMEM_NAME=SHMEM

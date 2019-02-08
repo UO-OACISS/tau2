@@ -1,0 +1,73 @@
+##
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2013, 2014
+## Forschungszentrum Juelich GmbH, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license. See the COPYING file in the package base
+## directory for details.
+##
+##
+
+## @internal
+##
+##  @file      Makefile.inc.am
+##
+##  @brief
+##
+
+## -*- mode: makefile -*-
+
+bin_PROGRAMS += opari2 opari2-config
+opari2_SOURCES =                                                   \
+    $(SRC_ROOT)src/opari/common.h        	                   \
+    $(SRC_ROOT)src/opari/opari2.cc                                 \
+    $(SRC_ROOT)src/opari/opari2.h                                  \
+    $(SRC_ROOT)src/opari/opari2_parser_c.h                         \
+    $(SRC_ROOT)src/opari/opari2_parser_c.cc                        \
+    $(SRC_ROOT)src/opari/opari2_parser_f.h                         \
+    $(SRC_ROOT)src/opari/opari2_parser_f.cc                        \
+    $(SRC_ROOT)src/opari/opari2_directive_manager.cc               \
+    $(SRC_ROOT)src/opari/opari2_directive_manager.h                \
+    $(SRC_ROOT)src/opari/opari2_directive_definition.h             \
+    $(SRC_ROOT)src/opari/opari2_directive_entry.h                  \
+    $(SRC_ROOT)src/opari/opari2_directive.cc                       \
+    $(SRC_ROOT)src/opari/opari2_directive.h                        \
+    $(SRC_ROOT)src/opari/openmp/opari2_directive_entry_openmp.h    \
+    $(SRC_ROOT)src/opari/openmp/opari2_directive_openmp.h          \
+    $(SRC_ROOT)src/opari/openmp/opari2_directive_openmp.cc         \
+    $(SRC_ROOT)src/opari/openmp/opari2_omp_handler.h               \
+    $(SRC_ROOT)src/opari/openmp/opari2_omp_handler.cc              \
+    $(SRC_ROOT)src/opari/pomp/opari2_directive_entry_pomp.h        \
+    $(SRC_ROOT)src/opari/pomp/opari2_directive_pomp.h              \
+    $(SRC_ROOT)src/opari/pomp/opari2_directive_pomp.cc             \
+    $(SRC_ROOT)src/opari/pomp/opari2_pomp_handler.h                \
+    $(SRC_ROOT)src/opari/pomp/opari2_pomp_handler.cc               \
+    $(SRC_ROOT)src/opari/offload/opari2_directive_entry_offload.h  \
+    $(SRC_ROOT)src/opari/offload/opari2_directive_offload.h        \
+    $(SRC_ROOT)src/opari/offload/opari2_directive_offload.cc       \
+    $(SRC_ROOT)src/opari/offload/opari2_offload_handler.cc         \
+    $(SRC_ROOT)src/opari/offload/opari2_offload_handler.h          \
+    opari2_usage.h
+
+opari2_CPPFLAGS = $(AM_CPPFLAGS) -DPACKAGE_VERSION="\"@PACKAGE_VERSION@\"" -I$(INC_ROOT)src/opari
+
+opari2includedir = $(includedir)/opari2
+opari2include_HEADERS = $(PUBLIC_INC_SRC)pomp2_lib.h
+opari2include_HEADERS += $(PUBLIC_INC_SRC)pomp2_user_lib.h
+
+
+opari2_config_SOURCES  = $(SRC_ROOT)src/opari/opari2_config.cc \
+                         $(SRC_ROOT)src/opari/opari2_config.h  \
+			 opari2-config_usage.h
+
+BUILT_SOURCES += opari2_usage.h opari2-config_usage.h
+
+opari2_usage.h: $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in
+	$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in > opari2_usage.h
+
+opari2-config_usage.h: $(INC_ROOT)doc/doxygen-user/opari2-config_usage.dox.in
+	$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2-config_usage.dox.in > opari2-config_usage.h
+
+CLEANFILES += opari2_usage.h opari2-config_usage.h

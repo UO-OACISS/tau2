@@ -1,0 +1,80 @@
+  0: init
+  0: fork  parallel
+  0: begin parallel
+  0: enter for
+  0: enter implicit barrier of paralleldo
+  0: exit  implicit barrier of paralleldo
+  0: exit  for
+  0: end   parallel
+  0: join  parallel
+  0: fork  parallel
+  0: begin parallel
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter implicit barrier of parallel
+  0: exit  implicit barrier of parallel
+  0: end   parallel
+  0: join  parallel
+  0: fork  parallel
+  0: begin parallel
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter implicit barrier of parallel
+  0: exit  implicit barrier of parallel
+  0: end   parallel
+  0: join  parallel
+  0: fork  parallel
+  0: begin parallel
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter implicit barrier of parallel
+  0: exit  implicit barrier of parallel
+  0: end   parallel
+  0: join  parallel
+  0: fork  parallel
+  0: begin parallel
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter implicit barrier of parallel
+  0: exit  implicit barrier of parallel
+  0: end   parallel
+  0: join  parallel
+  0: fork  parallel
+  0: begin parallel
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter for
+  0: enter implicit barrier of do
+  0: exit  implicit barrier of do
+  0: exit  for
+  0: enter implicit barrier of parallel
+  0: exit  implicit barrier of parallel
+  0: end   parallel
+  0: join  parallel
+  0: finalize

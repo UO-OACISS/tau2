@@ -1,0 +1,75 @@
+# -*- mode: makefile -*-
+# This file is part of the Score-P software (http://www.score-p.org)
+
+# Copyright (c) 2009-2013,
+# RWTH Aachen University, Germany
+
+# Copyright (c) 2009-2013,
+# Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+
+# Copyright (c) 2009-2013,
+# Technische Universitaet Dresden, Germany
+
+# Copyright (c) 2009-2013,
+# University of Oregon, Eugene, USA
+
+# Copyright (c) 2009-2013,
+# Forschungszentrum Juelich GmbH, Germany
+
+# Copyright (c) 2009-2013,
+# German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+
+# Copyright (c) 2009-2013,
+# Technische Universitaet Muenchen, Germany
+
+# This software may be modified and distributed under the terms of
+# a BSD-style license. See the COPYING file in the package base
+# directory for details.
+
+if HAVE_OPENMP_SUPPORT
+
+noinst_LTLIBRARIES += libpomp.la
+libpomp_la_SOURCES =                                          \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_lib.c                \
+    $(PUBLIC_INC_SRC)pomp2_lib.h                              \
+    $(PUBLIC_INC_SRC)pomp2_user_lib.h                         \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_ctc_token.h         \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_ctc_parser.c        \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_ctc_parser.h        \
+    $(SRC_ROOT)src/opari-lib-dummy/opari2_region_info.h       \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_region_info.c        \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_region_info.h        \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_user_region_info.c   \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_user_region_info.h
+
+# Currently, the fortran wrappers get a int* parameter whereas the new
+# POMP_Region_handle is of type void*. Ask a fortran guru if this may cause
+# problems.
+
+# CFLAGS are sufficient here, CPPFLAGS would cause duplication
+libpomp_la_CFLAGS   = $(AM_CFLAGS) $(OPENMP_CFLAGS)
+libpomp_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(PUBLIC_INC_DIR)
+
+
+if SCOREP_HAVE_F77
+libpomp_la_SOURCES +=                                   \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_fwrapper.c      \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_fwrapper_base.c \
+    $(SRC_ROOT)src/opari-lib-dummy/pomp2_fwrapper_base.h
+
+BUILT_SOURCES += pomp2_fwrapper_def.h
+CLEANFILES += pomp2_fwrapper_def.h
+
+pomp2_fwrapper_def.h: Makefile getfname$(EXEEXT)
+	./getfname
+
+
+noinst_PROGRAMS += getfname
+getfname_SOURCES =                           \
+    $(SRC_ROOT)src/opari-lib-dummy/foos.c     \
+    $(SRC_ROOT)src/opari-lib-dummy/getfname.f
+endif
+EXTRA_DIST += $(SRC_ROOT)src/opari-lib-dummy/pomp2_parse_init_regions.awk.in
+
+
+endif

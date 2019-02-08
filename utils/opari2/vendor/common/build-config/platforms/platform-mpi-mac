@@ -1,0 +1,14 @@
+# can't decide what would be a useful default. use --with-mpi
+
+#MPICC=
+#MPICXX=
+#MPIF77=
+#MPIFC=
+
+#MPI_LDFLAGS=
+#MPI_LIBS=
+#MPI_CPPFLAGS=
+#MPI_CFLAGS=
+#MPI_CXXFLAGS=
+#MPI_FFLAGS=
+#MPI_FCFLAGS=

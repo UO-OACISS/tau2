@@ -1,0 +1,6 @@
+## -*- mode: makefile -*-
+
+include ../src/opari/Makefile.inc.am
+include ../src/opari-lib-dummy/Makefile.inc.am
+
+include ../test/Makefile.inc.am 

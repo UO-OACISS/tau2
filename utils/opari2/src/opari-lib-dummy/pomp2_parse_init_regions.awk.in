@@ -1,0 +1,176 @@
+#!@OPARI2_AWK@ -f
+##
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2009-2011,
+## RWTH Aachen University, Germany
+##
+## Copyright (c) 2009-2011,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2011,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2011, 2013, 2014, 2016-2017,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2011,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license. See the COPYING file in the package base
+## directory for details.
+##
+
+#
+# pomp2_parse_init_regions.awk
+#
+# Expects the output of
+# $(NM) $ALL_OBJS_AND_LIBS as input. See
+# <prefix/share/doc/opari2/example/Makefile> for a working example.
+#
+# The output is C-code that needs to be linked to your application. It
+# provides several functions:
+#
+# void POMP2_Init_regions(): need to be called from your POMP2 library to
+# initialize all instrumented POMP2 region by calling the instrumented
+# functions POMP2_Init_reg_*.
+#
+# size_t POMP2_Get_num_regions() returns the number of POMP2 regions found
+# in $ALL_OBJS_AND_LIBS.
+#
+# const char* POMP2_Get_opari2_version() returns a version string.
+#
+# Three functions returning int and specifying the library interface version:
+# int POMP2_Get_required_pomp2_library_version_(current|revision|age)()
+#
+# Author: Christian Roessel <c.roessel@fz-juelich.de>
+#
+
+function add_region( type_str, regions_arr, n_regions_int )
+{
+    for (i = 1; i <= NF; i++)
+    {
+      if (index($i,type_str) != 0)
+      {
+        separator = type_str;
+      }
+      else if (index($i,tolower(type_str)) != 0)
+      {
+	  separator = tolower(type_str);
+      }
+      else if (index($i,toupper(type_str)) != 0)
+      {
+	  separator = toupper(type_str);
+      }
+      else
+      {
+        continue;
+      }
+
+      # $i looks like "POMP2_Init_reg_uniqueId_n_regions" or
+      # like "pomp2_init_reg_uniqueId_n_regions" or
+      # like "POMP2_INIT_REG_uniqueId_n_regions"
+      split ($i,splitResult,separator);
+      _uniqueId_n_regions = splitResult[2];
+      if (!(_uniqueId_n_regions in regions_arr))
+      {
+        regions_arr[_uniqueId_n_regions] = $i;
+        split(_uniqueId_n_regions, tokens, "_");
+        n_regions_int += tokens[3];
+      }
+    }
+
+    return n_regions_int;
+}
+
+# The pomp OpenMP region symbols contain 'pomp2_init_reg' (case insensitive), are of
+# (nm) type [TDA], and are not Intel -ipo or -O3 symbols (.ITC.).
+/ [_]*[Pp][Oo][Mm][Pp]2_[Ii][Nn][Ii][Tt]_[Rr][Ee][Gg]_[0-9a-zA-Z][0-9a-zA-Z]*_[1-9][0-9]*/ {
+  if (tolower($0) ~ /pomp2_init_reg/ && $0 ~ / [TDA] / && $0 !~ /\.ITC\./)
+  {
+      n_pomp_regions = add_region("POMP2_Init_reg", pomp_regions, n_pomp_regions)
+  }
+}
+
+# The pomp user region symbols contain 'pomp2_user_init_reg' (case insensitive), are of
+# (nm) type [TDA], and are not Intel -ipo or -O3 symbols (.ITC.).
+/ [_]*[Pp][Oo][Mm][Pp]2_[Uu][Ss][Ee][Rr]_[Ii][Nn][Ii][Tt]_[Rr][Ee][Gg]_[0-9a-zA-Z][0-9a-zA-Z]*_[1-9][0-9]*/ {
+  if (tolower($0) ~ /pomp2_user_init_reg/ && $0 ~ / [TDA] / && $0 !~ /\.ITC\./)
+  {
+      n_pomp_user_regions = add_region("POMP2_USER_Init_reg", pomp_user_regions, n_pomp_user_regions)
+  }
+}
+
+
+END{
+  print tmp "\n"
+  print "#ifdef __cplusplus"
+  print "extern \"C\""
+  print "{"
+  print "#endif"
+
+  print "#include <stddef.h>\n"
+
+  # Make a regions array with all regions
+  counter = 0
+  for (i in pomp_regions)
+  {
+      regions[counter++]=pomp_regions[i];
+  }
+  for (i in pomp_user_regions)
+  {
+      regions[counter++]=pomp_user_regions[i];
+  }
+
+  # cut away leading full-stops
+  for (i in regions)
+  {
+    sub(/^\./, "", regions[i]);
+  }
+
+  # declare XXXXX_Init_reg_* functions extern
+  for (i in regions)
+  {
+    print "extern void " regions[i] "();";
+  }
+
+  print_init_functions("POMP2", pomp_regions, n_pomp_regions);
+  print_init_functions("POMP2_USER", pomp_user_regions, n_pomp_user_regions);
+
+  print "#ifdef __cplusplus"
+  print "}"
+  print "#endif"
+}
+
+function print_init_functions(type_str, regions_arr, n_reg_int)
+{
+    # define XXXXX_Init_regions() and call all XXXXX_Init_reg_* functions
+    print "\nvoid " type_str "_Init_regions()"
+    print "{"
+    if ( n_reg_int != 0)
+    {
+        for (i in regions_arr)
+        {
+            print "    " regions_arr[i] "();";
+        }
+    }
+    print "}\n"
+
+  # define function XXXXX_Get_num_regions()
+  print "size_t " type_str "_Get_num_regions()"
+  print "{"
+  if (n_reg_int != 0)
+  {
+      print "    return " n_reg_int ";"
+  } else {
+      print "    return 0;"
+  }
+  print "}\n"
+}

@@ -1,0 +1,20 @@
+
+#line 1 "test9.f90"
+PROGRAM PROGRAM
+
+      include 'test9.f90.opari.inc'
+#line 3 "test9.f90"
+    CALL SUBROUTINE
+
+END PROGRAM
+
+SUBROUTINE SUBROUTINE
+
+      include 'test9.f90.opari.inc'
+#line 9 "test9.f90"
+    CHARACTER(len=32), PARAMETER :: FUNCTION = 'Check whether OPARI2 is broken'
+
+    PRINT*, FUNCTION
+
+END SUBROUTINE
+

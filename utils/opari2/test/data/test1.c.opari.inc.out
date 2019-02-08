@@ -1,0 +1,17 @@
+#include <opari2/pomp2_lib.h>
+
+#define POMP2_DLIST_00001 shared(opari2_region_1)
+static OPARI2_Region_handle opari2_region_1 = NULL;
+    #define opari2_ctc_1 "61*regionType=parallel*sscl=test1.c:33:33*escl=test1.c:36:36**"
+#define POMP2_DLIST_00002 shared(opari2_region_2)
+static OPARI2_Region_handle opari2_region_2 = NULL;
+    #define opari2_ctc_2 "61*regionType=parallel*sscl=test1.c:38:40*escl=test1.c:43:43**"
+
+#ifdef __cplusplus 
+ extern "C" 
+#endif
+void POMP2_Init_reg_000()
+{
+    POMP2_Assign_handle( &opari2_region_1, opari2_ctc_1 );
+    POMP2_Assign_handle( &opari2_region_2, opari2_ctc_2 );
+}

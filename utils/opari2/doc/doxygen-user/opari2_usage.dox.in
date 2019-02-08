@@ -1,0 +1,102 @@
+Usage: opari2 [OPTION] ... infile [outfile]
+
+****************** general options and parameters *******************
+
+[--f77|--f90|--c|--c++]
+  [OPTIONAL] Specifies the programming language of the input source
+  file. This option is only necessary if the automatic language
+  detection based on the input file suffix fails.
+
+[--free-form]
+  [OPTIONAL] Specifies that free formatting is used for Fortran source
+  files. This is the default for Fortran 90/95.
+
+[--fix-form]
+  [OPTIONAL] Specifies that fixed formatting is used for Fortran source
+  files. This is the default for Fortran 77.
+
+[--nosrc]
+  [OPTIONAL] If specified, OPARI2 does not generate #line constructs,
+  which allow to preserve the original source file and line number
+  information, in the transformation process. This option might be
+  necessary if the OpenMP compiler does not understand #line
+  constructs.  The default is to generate #line constructs.
+
+[--disable=paradigm[:directive|group[:inner],...][+paradigm...]
+  [OPTIONAL] Disable the instrumentation of whole paradigms, or
+  specific directives or groups of directives of a paradigm.
+  Furthermore it gives the possibility to suppress the insertion of
+  instrumentation functions inside code regions, i.e. only the
+  surrounding instrumentation is inserted. See the paradigm 
+  sections below.
+
+[--preprocessed]
+  [OPTIONAL] Indicates that the source file is already
+  preprocessed. It requires that necessary instrumentation interface
+  headers are already included. Furthermore, it requires a marker,
+  e.g.  ___POMP2_INCLUDE___ immediately after the respective include
+  file.
+
+[--version]
+  [OPTIONAL] Prints version information.
+
+[--help]
+  [OPTIONAL] Prints this help text.
+
+infile
+  Input file name.
+
+[outfile]
+  [OPTIONAL] Output file name. If not specified, OPARI2 uses the name
+  infile.mod.suffix if the input file is called infile.suffix.
+
+********************** OpenMP specific options **********************
+
+[--disable=omp[:directive|group,...]
+  [OPTIONAL] Accepted directives are 'atomic', 'critical', 'master',
+  'flush', 'single', 'ordered' or 'locks'. These directives form the
+  group 'sync', that disables all of them. The group 'task' prevents
+  the instrumentation of task directives.
+  E.g., --disable=omp:master,atomic diables the instrumentation of
+  master and atomic directives.
+
+[--omp-nodecl]
+  [OPTIONAL] Disables the generation of POMP2_DLISTXXXXX macros. These
+  are used in the parallel directives of the instrumentation to make
+  the region handles shared. By using this option the shared clause is
+  used directly on the parallel directive with the respective region
+  handles.
+
+[--omp-tpd]
+  [OPTIONAL] Adds the clause 'copyin(<pomp_tpd>)' to any parallel
+  construct. This allows to pass data from the creating thread to its
+  children. The variable is declared externally in all files, so it
+  needs to be defined by the pomp library. This option is not
+  supported when using the Fujitsu compiler.
+
+[--omp-tpd-mangling=gnu|intel|sun|pgi|ibm|cray]
+  [OPTIONAL] If programming languages are mixed(C and Fortran), the
+  <pomp_tpd> needs to use the Fortran mangled name also in C files.
+  This option specifies to use the mangling scheme of the gnu, intel,
+  sun, pgi or ibm compiler. The default is to use the mangling scheme
+  of the compiler used to build OPARI2.
+
+[--omp-task=abort|warn|remove]
+  Special treatment for the task directive
+  abort:  Stop instrumentation with an error message when encountering
+          a task directive.
+  warn:   Resume but print a warning.
+  remove: Remove all task directives.
+
+[--omp-task-untied=abort|keep|no-warn]
+  Special treatment for the untied task attribute. The default behavior
+  is to remove the untied attribute, thus making all tasks tied, and
+  print out a warning.
+  abort:   Stop instrumentation with an error message when
+           encountering a task directive with the untied attribute.
+  keep:    Do not remove the untied attribute.
+  no-warn: Do not print out a warning.
+
+**********************************************************************
+
+Please report bugs to <support@score-p.org>.

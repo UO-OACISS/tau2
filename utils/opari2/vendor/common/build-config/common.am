@@ -1,0 +1,129 @@
+## -*- mode: makefile -*-
+
+##
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2009-2012,
+## RWTH Aachen University, Germany
+##
+## Copyright (c) 2009-2012,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2012,
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2012,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2012, 2014,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2012,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2012,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
+##
+
+## file  vendor/common/build-config/common.am
+##       Intended to be included by the component's
+##       build-includes/common.am. Defines "common" entities that all
+##       components rely on.
+
+
+## AM_CPPFLAGS: The contents of this variable are passed to every compilation
+## that invokes the C preprocessor; it is a list of arguments to the
+## preprocessor. For instance, -I and -D options should be listed here.
+##
+## Automake already provides some -I options automatically, in a separate
+## variable that is also passed to every compilation that invokes the C
+## preprocessor. In particular it generates -I., -I$(srcdir), and a -I
+## pointing to the directory holding config.h (if you've used
+## AC_CONFIG_HEADERS or AM_CONFIG_HEADER). You can disable the default -I
+## options using the nostdinc option.
+##
+## AM_CPPFLAGS is ignored in preference to a per-executable (or per-library)
+## _CPPFLAGS variable if it is defined.  So add it if necessary.
+##
+## -I$(srcdir)/../src: path to config.h; is this really necessary?
+AM_CPPFLAGS = -I$(srcdir)/../src
+
+## Convenience variable, use for referencing sources, e.g.
+## foo_SOURCES = $(SRC_ROOT)src/foo/foo.c. For CPPFLAGS use SRC_ROOT_*
+## See the note below
+SRC_ROOT = ../
+
+## Convenience variables, use for referencing include directories,
+## e.g.  foo_CPPFLAGS = $(AM_CPPFLAGS) -I$(INC_ROOT)src/bar
+## Note: we need different convenience variable for SRC and INC
+## because they are evaluated at different times. The SRC_ROOT
+## variable is evaluated at autoreconf time where it is not
+## recommended to use $(srcdir). On the other hand the INC_ROOT
+## variable is evaluated during configure.
+INC_ROOT = $(srcdir)/../
+PUBLIC_INC_DIR = $(INC_ROOT)include
+
+# The include path to the common utils headers.
+INC_DIR_COMMON_UTILS = $(INC_ROOT)vendor/common/src/utils/include
+
+##  Where to find the Jenkins' hash headers.
+INC_DIR_COMMON_HASH = $(INC_ROOT)vendor/common/hash
+
+##  Where to find the Jenkins' hash headers.
+INC_DIR_COMMON_CUTEST = $(INC_ROOT)vendor/common/cutest
+
+## Not really needed but already in use.
+LIB_ROOT =
+
+## Add entities using += to the following primaries/variables in
+## local Makefile.inc.ams
+bin_PROGRAMS =
+noinst_PROGRAMS =
+pkglibexec_PROGRAMS =
+lib_LTLIBRARIES =
+noinst_LTLIBRARIES =
+BUILT_SOURCES =
+CLEANFILES =
+DISTCLEANFILES =
+EXTRA_DIST =
+check_PROGRAMS =
+check_LTLIBRARIES =
+PHONY_TARGETS =
+INSTALL_DATA_LOCAL_TARGETS =
+INSTALL_DATA_HOOK_TARGETS =
+UNINSTALL_LOCAL_TARGETS =
+dist_bin_SCRIPTS =
+pkgdata_DATA =
+
+## TESTS are handlend differently because of cross-, mpi- and openmp
+## environments, see the component specific common.am or Makefile.am
+## resp.  But we need to define TESTS or else am__tty_colors will not
+## get defined which leads to an syntax error in our tests.
+TESTS =
+XFAIL_TESTS =
+# TESTS_ENVIRONMENT =
+
+.PHONY: $(PHONY_TARGETS)
+
+## Automatically update the libtool script if it becomes out-of-date.
+BUILT_SOURCES += libtool
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status libtool
+
+## need to have an empty rule here in order to stop recursion.
+beautify:
+
+
+## just build all targets specified by check_PROGRAMS and
+## check_LTLIBRARIES here, don't traverse into subdirectories
+check-build: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
+
+DISTCLEANFILES += $(builddir)/config.summary
+
+# this propagates changes to vendor/common/build-config/config-common.h
+../src/config-common.h: $(srcdir)/../vendor/common/build-config/config-common.h
+	@$(am__cd) .. && $(MAKE) $(AM_MAKEFLAGS) src/config-common.h

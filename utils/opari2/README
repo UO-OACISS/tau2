@@ -1,0 +1,19 @@
+OPARI2
+------
+OPARI2 is a source-to-source instrumentation tool for directive based
+programming models, such as OpenMP.
+
+To build OPARI2 you usually just need to do
+
+  ./configure
+  make
+  make install
+
+Please have a look at INSTALL for further configure and build options.
+
+After make install you will find html and pdf documentation as well as
+usage examples under $(prefix)/share/doc/opari.
+
+Have fun!
+
+Please report bugs to <support@score-p.org>.
