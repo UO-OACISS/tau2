@@ -8,7 +8,9 @@
 #include <Profile/TauUtil.h>
 #include <Profile/TauEnv.h>
 /******************************************************/
+#ifdef TAU_EXP_TRACK_COMM
 void Tau_communicator_set_name(void *comm, const char *name);
+#endif /* TAU_EXP_TRACK_COMM */
 /******************************************************/
 #ifdef TAU_MPICONSTCHAR
 #define TAU_CONST const
@@ -7283,7 +7285,9 @@ int MPI_Comm_set_name( MPI_Comm comm, TAU_MPICH3_CONST char * comm_name)
 /*  printf("MPI_Comm_set_name: comm = %p, name = %s\n",
 	comm, comm_name);
 */
+#ifdef TAU_EXP_TRACK_COMM
   Tau_communicator_set_name((void *)comm, comm_name);
+#endif /* TAU_EXP_TRACK_COMM */
   TAU_PROFILE_TIMER(t, "MPI_Comm_set_name()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
   retvalue = PMPI_Comm_set_name( comm, comm_name) ; 
