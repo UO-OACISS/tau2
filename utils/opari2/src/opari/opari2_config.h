@@ -2,23 +2,38 @@
  * This file is part of the Score-P software (http://www.score-p.org)
  *
  * Copyright (c) 2009-2011,
- *    RWTH Aachen University, Germany
- *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
- *    Technische Universitaet Dresden, Germany
- *    University of Oregon, Eugene, USA
- *    Forschungszentrum Juelich GmbH, Germany
- *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
- *    Technische Universitaet Muenchen, Germany
+ * RWTH Aachen University, Germany
  *
- * See the COPYING file in the package base directory for details.
+ * Copyright (c) 2009-2011,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2011,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2011,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license. See the COPYING file in the package base
+ * directory for details.
  *
  */
 
-/**
+/** @internal
  *
- * @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
- * @authors    Daniel Lorenz <d.lorenz@fz.juelich.de>
+ *  @file      opari2_config.h
  *
+ *  @brief
+
  */
 
 #include <iostream>
@@ -32,14 +47,14 @@ public:
     /**
        Constructor
      */
-    OPARI_Config();
+    OPARI_Config( void );
 
     /**
        Destructor
      */
     virtual
     ~
-    OPARI_Config();
+    OPARI_Config( void );
 
     /**
        Reads the configuration data from a file. To handle the read data
@@ -56,7 +71,7 @@ public:
        Changes from the install path to the build path.
      */
     void
-    setBuildCheck();
+    setBuildCheck( void );
 
     /* **************************************** Protected implmented methods */
 private:
@@ -84,17 +99,17 @@ private:
     /* *************************************************** Public members */
 public:
     /**nm command*/
-    std::string nm;
+    std::string m_nm;
     /** awk command*/
-    std::string awk;
+    std::string m_awk;
     /** egrep command*/
-    std::string egrep;
+    std::string m_egrep;
     /** version information*/
-    std::string version;
+    std::string m_version;
     /** pomp2 api version information*/
-    std::string pomp2_api_version;
+    std::string m_pomp2_api_version;
     /** awk script to use */
-    std::string script;
+    std::string m_script;
     /** include path for installed headers */
-    std::string cflags;
+    std::string m_cflags;
 };

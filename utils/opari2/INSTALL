@@ -20,22 +20,16 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-platform=(auto,disabled,<platform>)
-                          autodetect platform [auto], disabled or select one
-                          from: altix, aix, arm, bgl, bgp, bgq, crayxt, linux,
-                          solaris, mac, necsx.
-  --with-compiler-suite=(gcc|ibm|intel|pathscale|pgi|studio)
+  --with-compiler-suite=(gcc|ibm|intel|pgi|studio)
                           The compiler suite to build this package with. Needs
                           to be in $PATH [gcc].
-  --with-pic              try to use only PIC/non-PIC objects [default=use
-                          both]
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot=DIR      Search for dependent libraries within DIR
                           (or the compiler's sysroot if not specified).
 
 Some influential environment variables:
 (note that the _FOR_BUILD variables take precedence, e.g. if you call
-opari's configure from a top level configure in a cross-compile
+OPARI2's configure from a top level configure in a cross-compile
 environment that defines CC as well as CC_FOR_BUILD etc.)
   CC_FOR_BUILD
               C compiler command for the frontend build
@@ -82,7 +76,7 @@ environment that defines CC as well as CC_FOR_BUILD etc.)
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
-Please report bugs to <scorep-bugs@groups.tu-dresden.de>.
+Please report bugs to <support@score-p.org>.
 
 
 Installation Instructions

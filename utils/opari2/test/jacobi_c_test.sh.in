@@ -34,7 +34,7 @@ $CC -I$INCDIR $OPENMP $CFLAGS -c main.mod.c
 $CC -I$INCDIR $OPENMP $CFLAGS -c jacobi.mod.c
 
 #build
-$NM jacobi.mod.o main.mod.o | @EGREP@ -i "[DT] \.{0,1}_{0,2}pomp2_init_reg" | `$OPARI2_CONFIG --awk-cmd` -f `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
+$NM jacobi.mod.o main.mod.o | `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
 $CC -I$INCDIR -c pomp_init_file.c
 $CC $OPENMP $CFLAGS pomp_init_file.o jacobi.mod.o main.mod.o $LDFLAGS -o jacobi$EXEEXT
 

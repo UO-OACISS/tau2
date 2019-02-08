@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+test_dir="../test/tmp"
+mkdir -p ${test_dir}
+test_data_dir=@abs_srcdir@/data
+
+AWK_SCRIPT="@abs_builddir@/../build-frontend/pomp2-parse-init-regions.awk"
+
+$AWK_SCRIPT < $test_data_dir/awk_script_test.input > $test_dir/awk_script.out
+
+
+if diff $test_dir/../awk_script_test.output $test_dir/awk_script.out > /dev/null
+  then
+    true
+  else
+    echo "-------- ERROR: in awk script output --------"
+    diff  $test_dir/../awk_script_test.output $test_dir/awk_script.out
+    cd $opari_dir
+    exit
+fi
+

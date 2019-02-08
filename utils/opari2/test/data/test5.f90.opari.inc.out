@@ -1,18 +1,21 @@
-      INTEGER( KIND=8 ) :: pomp2_region_1
+      INTEGER( KIND=8 ) :: opari2_region_1
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_1 =&
-        "87*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:42:42*scheduleType=dynamic**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_1 =&
+        "86*regionType=paralleldo*sscl=test5.f90:28:36*escl=test5.f90:41:41*hasSchedule=dynamic**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_2
+      INTEGER( KIND=8 ) :: opari2_region_2
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_2 =&
-        "111*regionType=parallelsections*sscl=test5.f90:45:46*escl=test5.f90:53:53*hasIf=1*hasNumThreads=1*hasReduction=1**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_2 =&
+        "112*regionType=parallelsections*sscl=test5.f90:44:45*escl=test5.f90:52:52*hasIf=1*hasNum_threads=1*hasReduction=1**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_3
+      INTEGER( KIND=8 ) :: opari2_region_3
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_3 =&
-        "73*regionType=parallelworkshare*sscl=test5.f90:55:55*escl=test5.f90:58:58**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_3 =&
+        "73*regionType=parallelworkshare*sscl=test5.f90:54:54*escl=test5.f90:57:57**"
 
+      common /cb000/ opari2_region_1,&
+              opari2_region_2,&
+              opari2_region_3
 
       integer ( kind=4 ) :: pomp2_lib_get_max_threads
       logical :: pomp2_test_lock
@@ -20,6 +23,3 @@
       integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task 
       logical :: pomp2_if 
       integer ( kind=4 ) :: pomp2_num_threads 
-      common /cb000/ pomp2_region_1,&
-              pomp2_region_2,&
-              pomp2_region_3

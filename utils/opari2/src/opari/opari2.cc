@@ -1,16 +1,30 @@
 /*
  * This file is part of the Score-P software (http://www.score-p.org)
  *
- * Copyright (c) 2009-2011,
- *    RWTH Aachen University, Germany
- *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
- *    Technische Universitaet Dresden, Germany
- *    University of Oregon, Eugene, USA
- *    Forschungszentrum Juelich GmbH, Germany
- *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
- *    Technische Universitaet Muenchen, Germany
+ * Copyright (c) 2009-2013,
+ * RWTH Aachen University, Germany
  *
- * See the COPYING file in the package base directory for details.
+ * Copyright (c) 2009-2013,
+ * Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *
+ * Copyright (c) 2009-2013,
+ * Technische Universitaet Dresden, Germany
+ *
+ * Copyright (c) 2009-2013,
+ * University of Oregon, Eugene, USA
+ *
+ * Copyright (c) 2009-2013, 2015,
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * Copyright (c) 2009-2013,
+ * German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *
+ * Copyright (c) 2009-2013,
+ * Technische Universitaet Muenchen, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license. See the COPYING file in the package base
+ * directory for details.
  *
  */
 /****************************************************************************
@@ -24,25 +38,19 @@
 ****************************************************************************/
 /** @internal
  *
- *  @file       opari2.cc
- *  @status     beta
+ *  @file		opari2.cc
  *
- *  @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
- *
- *  @authors    Bernd Mohr <b.mohr@fz-juelich.de>
- *              Dirk Schmidl <schmidl@rz-rwth-aachen.de>
- *              Peter Philippen <p.philippen@fz-juelich.de>
- *
- *  @brief     This File containes the opari main function. It is used
- *             to handle input arguments and open input and output
- *             files.  Afterwards the function process_c_or_cxx or
- *             process_fortran is called, depending on the file type
- *             or provided arguments. */
+ *  @brief This File containes the opari main function. It is used to
+ *              handle input arguments and open input and output
+ *              files. Afterwards the C or Fortran parsers are used,
+ *              depending on the file type or provided arguments. */
 
 #include <config.h>
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
+#include <sstream>
+using std::stringstream;
 #include <iostream>
 using std::cout;
 using std::cerr;
@@ -50,6 +58,7 @@ using std::cerr;
 using std::sprintf;
 using std::remove;
 #include <cstring>
+using std::string;
 using std::strcmp;
 using std::strrchr;
 using std::strncpy;
@@ -60,109 +69,247 @@ using std::exit;
 #include <string>
 #include <assert.h>
 #include <unistd.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "opari2.h"
-#include "handler.h"
+#include "opari2_directive_manager.h"
+#include "openmp/opari2_directive_openmp.h"
+#include "opari2_parser_c.h"
+#include "opari2_parser_f.h"
 
-string pomp_tpd;
-bool   copytpd             = false;
-bool   task_abort          = false;
-bool   task_warn           = false;
-bool   task_remove         = false;
-bool   untied_abort        = false;
-bool   untied_keep         = false;
-bool   untied_no_warn      = false;
-bool   tpd_in_extern_block = false;
 
-namespace
-{
-char* out_filename = 0;
-}
+#define DEPRECATED_ON
+
+
+/* cmd line options */
+OPARI2_Option_t opt;
 
 void
-print_usage_information( char* prog )
+print_usage_information( char* prog, std::ostream& output )
 {
     std::string usage =
-#include "opari2_usage.h"
+        #include "opari2_usage.h"
     ;
-    cerr << prog << "\n\n" << usage << std::endl;
+    output << prog << "\n\n" << usage << std::endl;
 }
 
 void
-cleanup_and_exit()
+cleanup_and_exit( void )
 {
-    if ( out_filename )
+    if ( !opt.outfile.empty() )
     {
-        remove( out_filename );
+        remove( opt.outfile.c_str() );
     }
+
     exit( 1 );
 }
 
-#define SCOREP_STR_( str ) #str
-#define SCOREP_STR( str ) SCOREP_STR_( str )
-#define POMP_TPD_MANGLED FORTRAN_MANGLED( pomp_tpd )
-
-/** @brief Main function to read and handle arguments, open files and call
- *         appropriate process function.*/
-int
-main( int   argc,
-      char* argv[] )
+void
+print_deprecated_msg( const string old_form, const string new_form )
 {
-    // -- parse options
-    int         a             = 1;
-    Language    lang          = L_NA;
-    bool        keepSrcInfo   = true;
-    bool        addSharedDecl = true;
-    bool        errFlag       = false;
-    char*       infile        = 0;
-    const char* disabled      = 0;
-    pomp_tpd = SCOREP_STR( POMP_TPD_MANGLED );
-    struct stat infile_status;
+#ifdef DEPRECATED_ON
+    cerr << "Warning: Option \"" << old_form << "\" is deprecated.\n\
+Please use \"" << new_form << "\" for future compatibility.\n";
+#endif
+}
 
+/**
+ * @brief Disable directive entry in the directive_table.
+ *
+ * Currently supported option:
+ * --disable=xx,xx,...
+ *  Here xx can possibly be an openmp/pomp directive name, openmp/pomp
+ *  group name, or a paradigm type name.
+ *
+ * Not supported anymore:
+ *  -disable xx,xx,...
+ *
+ * Current --help output (27.03.2014):
+ * [--disable=paradigm[:directive|group[:inner],...][+paradigm...]
+ *   [OPTIONAL] Disable the instrumentation of whole paradigms, or
+ *   specific directives or groups of directives of a paradigm.
+ *   Furthermore it gives the possibility to suppress the insertion of
+ *   instrumentation functions inside code regions, i.e. only the
+ *   surrounding instrumentation is inserted.  *
+ */
+bool
+set_disabled( const string& constructs )
+{
+    typedef std::pair<char*, bool> dir_and_inner_t;
 
+    char* str = new char[ constructs.length() + 1 ];
+    std::strcpy( str, constructs.c_str() );
 
+    std::vector<char*> paradigms;
+    char*              paradigm = strtok( str, "+" );
+
+    while ( paradigm != NULL )
+    {
+        paradigms.push_back( paradigm );
+        paradigm = strtok( NULL, "+" );
+    }
+
+    for ( vector<char*>::iterator it = paradigms.begin(); it != paradigms.end(); ++it )
+    {
+        paradigm = strtok( *it, ",:" );
+
+        dir_and_inner_t               directive;
+        std::vector<dir_and_inner_t > directives;
+
+        directive.first  = strtok( NULL, "," );
+        directive.second = false;
+        while ( directive.first != NULL )
+        {
+            directives.push_back( directive );
+            directive.second = false;
+            directive.first  = strtok( NULL, "," );
+        }
+
+        for ( vector<dir_and_inner_t>::iterator it = directives.begin(); it != directives.end(); ++it )
+        {
+            if ( strchr( it->first, ':' ) )
+            {
+                it->first = strtok( it->first, ":" );
+                char* inner = strtok( NULL, ":" );
+                if ( strcmp( inner, "inner" ) == 0 )
+                {
+                    it->second = true;
+                }
+                else
+                {
+                    cerr << "Error, unknown identifier " <<  inner << std::endl;
+                    return false;
+                }
+            }
+        }
+
+        if ( directives.empty() )
+        {
+            if ( !DisableParadigmDirectiveOrGroup( paradigm, "", false ) )
+            {
+                return false;
+            }
+        }
+        else
+        {
+            for ( vector<dir_and_inner_t>::iterator it = directives.begin(); it != directives.end(); ++it )
+            {
+                if ( !DisableParadigmDirectiveOrGroup( paradigm, it->first, it->second ) )
+                {
+                    return false;
+                }
+            }
+        }
+    }
+
+    delete[] str;
+    return true;
+}
+
+/**
+ * @brief Parse and handle cmd line options.
+ *
+ * First hanlde global options,
+ * then handle paradigm-specific options.
+ */
+void
+process_cmd_line( int argc, char* argv[] )
+{
+    int              a        = 1;
+    OPARI2_ErrorCode err_flag = OPARI2_NO_ERROR;
+    const char*      ptr      = NULL;
+
+    opt.lang          = L_NA;
+    opt.form          = F_NA;
+    opt.keep_src_info = true;
+
+    opari2_omp_option* omp_opt = OPARI2_DirectiveOpenmp::GetOpenmpOpt();
+
+    /* parse global options */
     while ( a < argc && argv[ a ][ 0 ] == '-' )
     {
-        if ( strcmp( argv[ a ], "--f77" ) == 0 )
+        if ( strncmp( argv[ a ], "--omp", 5 ) == 0 )
         {
-            lang = L_F77;
+            err_flag =  OPARI2_DirectiveOpenmp::ProcessOption( argv[ a ] );
+            if ( err_flag )
+            {
+                cerr << "ERROR: unknown option " << argv[ a ] << "\n";
+                err_flag = OPARI2_ERROR_WITH_MESSAGE;
+            }
+        }
+        else if ( strcmp( argv[ a ], "--f77" ) == 0 )
+        {
+            opt.lang = L_F77;
         }
         else if ( strcmp( argv[ a ], "--f90" ) == 0 )
         {
-            lang = L_F90;
+            opt.lang = L_F90;
         }
         else if ( strcmp( argv[ a ], "--c++" ) == 0 )
         {
-            lang = L_CXX;
+            opt.lang = L_CXX;
         }
         else if ( strcmp( argv[ a ], "--c" ) == 0 )
         {
-            lang = L_C;
+            opt.lang = L_C;
+        }
+        else if ( strcmp( argv[ a ], "--free-form" ) == 0 )
+        {
+            opt.form = F_FREE;
+        }
+        else if ( strcmp( argv[ a ], "--fix-form" ) == 0 )
+        {
+            opt.form = F_FIX;
         }
         else if ( strcmp( argv[ a ], "--version" ) == 0 )
         {
             std::cout << "opari2 version " << PACKAGE_VERSION << std::endl;
-            return 0;
         }
         else if ( strcmp( argv[ a ], "--help" ) == 0 )
         {
-            print_usage_information( argv[ 0 ] );
-            return 0;
+            print_usage_information( argv[ 0 ], std::cout );
+            exit( 0 );
         }
         else if ( strcmp( argv[ a ], "--nosrc" ) == 0 )
         {
-            keepSrcInfo = false;
+            opt.keep_src_info = false;
         }
-        else if ( strcmp( argv[ a ], "--nodecl" ) == 0 )
+        else if ( strcmp( argv[ a ], "--preprocessed" ) == 0 )
         {
-            addSharedDecl = false;
+            opt.preprocessed_file = true;
         }
+        /* handle "--disable=" */
+        else if ( strncmp( argv[ a ], "--disable", 9 ) == 0 )
+        {
+            ptr = strchr( argv[ a ], '=' );
+            if ( ptr )
+            {
+                ptr++;
+                if ( !set_disabled( ptr ) )
+                {
+                    err_flag = OPARI2_ERROR_WITH_MESSAGE;
+                }
+            }
+            else
+            {
+                err_flag = OPARI2_ERROR_WITH_MESSAGE;
+                cerr << "ERROR: missing value for option --disable\n";
+            }
+        }
+        /*  handle deprecated options */
         else if ( strcmp( argv[ a ], "--tpd" ) == 0 )
         {
-            copytpd = true;
+            print_deprecated_msg( "--tpd", "--omp-tpd" );
+            omp_opt->copytpd = true;
+            #if HAVE( PLATFORM_K ) || HAVE( PLATFORM_FX10 ) || HAVE( PLATFORM_FX100 )
+            cerr << "WARNING: option --tpd not supported on Fujitsu systems.\n";
+            #endif
         }
         else if ( strncmp( argv[ a ], "--tpd-mangling=", 15 ) == 0 )
         {
+            print_deprecated_msg( "--tpd-mangling=<comp>", "--omp-tpd-mangling=<comp>" );
             char* tpd_arg = strchr( argv[ a ], '=' );
             if ( tpd_arg != NULL )
             {
@@ -171,191 +318,112 @@ main( int   argc,
                      strcmp( tpd_arg, "intel" ) == 0 || strcmp( tpd_arg, "pgi" ) == 0 ||
                      strcmp( tpd_arg, "cray" )  == 0 )
                 {
-                    pomp_tpd            = "pomp_tpd_";
-                    tpd_in_extern_block = false;
+                    omp_opt->pomp_tpd            = "pomp_tpd_";
+                    omp_opt->tpd_in_extern_block = false;
                 }
                 else if ( strcmp( tpd_arg, "ibm" ) == 0 )
                 {
-                    pomp_tpd            = "pomp_tpd";
-                    tpd_in_extern_block = true;
+                    omp_opt->pomp_tpd            = "pomp_tpd";
+                    omp_opt->tpd_in_extern_block = true;
                 }
                 else
                 {
                     cerr << "ERROR: unknown option for --tpd-mangling\n";
-                    errFlag = true;
+                    err_flag = OPARI2_ERROR_WITH_MESSAGE;
                 }
             }
             else
             {
                 cerr << "ERROR: missing value for option --tpd-mangling\n";
-                errFlag = true;
+                err_flag = OPARI2_ERROR_WITH_MESSAGE;
             }
         }
         else if ( strncmp( argv[ a ], "--task=", 7 ) == 0 )
         {
+            print_deprecated_msg( "--task=<comp>", "--omp-task=<comp>" );
             char* token = strtok( argv[ a ], "=" );
             token = strtok( NULL, "," );
             while ( token != NULL )
             {
                 if ( strcmp( token, "abort" ) == 0 )
                 {
-                    task_abort = true;
+                    omp_opt->task_abort = true;
                 }
                 else if ( strcmp( token, "warn" ) == 0 )
                 {
-                    task_warn = true;
+                    omp_opt->task_warn = true;
                 }
                 else if ( strcmp( token, "remove" ) == 0 )
                 {
-                    task_remove = true;
+                    omp_opt->task_remove = true;
                 }
                 else
                 {
                     cerr << "ERROR: unknown option \"" << token << "\" for --task\n";
-                    errFlag = true;
+                    err_flag = OPARI2_ERROR_WITH_MESSAGE;
                 }
                 token = strtok( NULL, "," );
             }
         }
         else if ( strncmp( argv[ a ], "--untied=", 9 ) == 0 )
         {
+            print_deprecated_msg( "--untied=<comp>", "--omp-task-untied=<comp>" );
             char* token = strtok( argv[ a ], "=" );
             token = strtok( NULL, "," );
             do
             {
                 if ( strcmp( token, "abort" ) == 0 )
                 {
-                    untied_abort = true;
+                    omp_opt->untied_abort = true;
                 }
                 else if ( strcmp( token, "no-warn" ) == 0 )
                 {
-                    untied_no_warn = true;
+                    omp_opt->untied_nowarn = true;
                 }
                 else if ( strcmp( token, "keep" ) == 0 )
                 {
-                    untied_keep = true;
+                    omp_opt->untied_keep = true;
                 }
                 else
                 {
                     cerr << "ERROR: unknown option \"" << token << "\" for --untied\n";
-                    errFlag = true;
+                    err_flag = OPARI2_ERROR_WITH_MESSAGE;
                 }
                 token = strtok( NULL, "," );
             }
             while ( token != NULL );
         }
-        else if ( strncmp( argv[ a ], "--disable", 9 ) == 0 )
-        {
-            if ( strlen( argv[ a ] ) > 9 )
-            {
-                disabled = strchr( argv[ a ], '=' );
-                if ( disabled != NULL )
-                {
-                    disabled++;
-                    if ( set_disabled( disabled ) )
-                    {
-                        errFlag = true;
-                    }
-                }
-                else
-                {
-                    cerr << "ERROR: missing value for option -disable\n";
-                    errFlag = true;
-                }
-            }
-            //*** Deprecated options that are still active due to compatibility reasons
-            else
-            {
-                cerr << "WARNING: Option \"--disable <comma separated list>\" is deprecated please use --disable=<comma separated list> for future compatibilty.\n";
-                if ( ( a + 1 ) < argc )
-                {
-                    disabled = argv[ ++a ];
-                    if ( set_disabled( disabled ) )
-                    {
-                        errFlag = true;
-                    }
-                }
-                else
-                {
-                    cerr << "ERROR: missing value for option -disable\n";
-                    errFlag = true;
-                }
-            }
-        }
         else if ( strcmp( argv[ a ], "-disable" ) == 0 )
         {
-            cerr << "WARNING: Option -disable is deprecated please use --disable=<comma separated list> for future compatibilty.\n";
-            if ( ( a + 1 ) < argc )
-            {
-                disabled = argv[ ++a ];
-                if ( set_disabled( disabled ) )
-                {
-                    errFlag = true;
-                }
-            }
-            else
-            {
-                cerr << "ERROR: missing value for option -disable\n";
-                errFlag = true;
-            }
-        }
-        else if ( strcmp( argv[ a ], "--tpd-mangling" ) == 0 )
-        {
-            if ( ( a + 1 ) < argc )
-            {
-                cerr << "WARNING: Option \"--tpd-mangling <comp>\" is deprecated please use \"--tpd-mangling=<comp>\" for future compatibilty.\n";
-                a++;
-                if ( strcmp( argv[ a ], "gnu" ) == 0 || strcmp( argv[ a ], "sun" ) == 0 || strcmp( argv[ a ], "intel" ) == 0 || strcmp( argv[ a ], "pgi" ) == 0 || strcmp( argv[ a ], "cray" ) == 0 )
-                {
-                    pomp_tpd            = "pomp_tpd_";
-                    tpd_in_extern_block = false;
-                }
-                else if ( strcmp( argv[ a ], "ibm" ) == 0 )
-                {
-                    pomp_tpd            = "pomp_tpd";
-                    tpd_in_extern_block = true;
-                }
-                else
-                {
-                    cerr << "ERROR: unknown option for --tpd-mangling\n";
-                    errFlag = true;
-                }
-            }
-            else
-            {
-                cerr << "ERROR: missing value for option --tpd-mangling\n";
-                errFlag = true;
-            }
-        }
-        else if ( strcmp( argv[ a ], "-nosrc" ) == 0 )
-        {
-            cerr << "WARNING: Option \"-nosrc\" is deprecated, please use \"--nosrc\" for future compatibilty.\n";
-            keepSrcInfo = false;
-        }
-        else if ( strcmp( argv[ a ], "-nodecl" ) == 0 )
-        {
-            cerr << "WARNING: Option \"-nodecl\" is deprecated, please use \"--nodecl\" for future compatibilty.\n";
-            addSharedDecl = false;
+            cerr << "ERROR: -disable not supported by this version of OPARI2. "
+                 << "Please use --disable=paradigm[:directive|group[:inner],...][+paradigm...]. "
+                 << "Use opari2 --help or refer to the documentation for more details." << std::endl;
+            err_flag = OPARI2_ERROR_WITH_MESSAGE;
         }
         else if ( strcmp( argv[ a ], "-f77" ) == 0 )
         {
-            cerr << "WARNING: Option \"-f77\" is deprecated, please use \"--f77\" for future compatibilty.\n";
-            lang = L_F77;
+            print_deprecated_msg( "-f77", "--f77" );
+            opt.lang = L_F77;
         }
         else if ( strcmp( argv[ a ], "-f90" ) == 0 )
         {
-            cerr << "WARNING: Option \"-f90\" is deprecated, please use \"--f90\" for future compatibilty.\n";
-            lang = L_F90;
+            print_deprecated_msg( "-f90", "--f90" );
+            opt.lang = L_F90;
         }
         else if ( strcmp( argv[ a ], "-c++" ) == 0 )
         {
-            cerr << "WARNING: Option \"-c++\" is deprecated, please use \"--c++\" for future compatibilty.\n";
-            lang = L_CXX;
+            print_deprecated_msg( "-c++", "--c++" );
+            opt.lang = L_CXX;
         }
         else if ( strcmp( argv[ a ], "-c" ) == 0 )
         {
-            cerr << "WARNING: Option \"-c\" is deprecated, please use \"--c\" for future compatibilty.\n";
-            lang = L_C;
+            print_deprecated_msg( "-c", "--c" );
+            opt.lang = L_C;
+        }
+        else if ( strcmp( argv[ a ], "-nosrc" ) == 0 )
+        {
+            print_deprecated_msg( "-nosrc", "--nosrc" );
+            opt.keep_src_info = false;
         }
         else if ( strcmp( argv[ a ], "-rcfile" ) == 0 )
         {
@@ -365,212 +433,284 @@ main( int   argc,
         {
             cerr << "WARNING: Option \"-table\" is deprecated and ignored.\n";
         }
-        //*** End of deprecated options
-
-        else
-        {
-            cerr << "ERROR: unknown option " << argv[ a ] << "\n";
-            errFlag = true;
-        }
+        /* End of deprecated options */
         ++a;
     }
-    // -- parse file arguments
-    ifstream is;
-    ofstream os;
 
+    /* parse file arguments, prepare input/output stream if specified */
     switch ( argc - a )
     {
         case 2:
             if ( strcmp( argv[ a + 1 ], "-" ) == 0 )
             {
-                os.std::ostream::rdbuf( cout.rdbuf() );
+                opt.os.std::ostream::rdbuf( cout.rdbuf() );
             }
             else
             {
-                os.open( argv[ a + 1 ] );
-                if ( !os )
+                opt.os.open( argv[ a + 1 ] );
+                if ( !opt.os )
                 {
                     cerr << "ERROR: cannot open output file " << argv[ a + 1 ] << "\n";
-                    errFlag = true;
+                    err_flag = OPARI2_ERROR_WITH_MESSAGE;
                 }
-                os << "\n";
-                out_filename = argv[ a + 1 ];
+
+                opt.outfile = string( argv[ a + 1 ] );
             }
         /*NOBREAK*/
         case 1:
             if ( *argv[ a ] != '/' )
             {
-                int pathlength;
-                pathlength = 10;
-                infile     = new char[ pathlength ];
-                while ( !getcwd( infile, pathlength ) )
+                int   pathlength = 10;
+                char* tmp_inf    = new char[ pathlength ];
+                while ( !getcwd( tmp_inf, pathlength ) )
                 {
                     pathlength += 10;
-                    delete[] infile;
-                    infile = new char[ pathlength ];
+                    delete[] tmp_inf;
+                    tmp_inf = new char[ pathlength ];
                 }
                 pathlength += strlen( argv[ a ] ) + 1;
-                delete[] infile;
-                infile = new char[ pathlength ];
-                if ( !getcwd( infile, pathlength ) )
+                delete[] tmp_inf;
+                tmp_inf = new char[ pathlength ];
+                if ( !getcwd( tmp_inf, pathlength ) )
                 {
-                    cerr << "ERROR: cannot determine path of input file " << infile << "\n";
+                    cerr << "ERROR: cannot determine path of input file " << tmp_inf << "\n";
                     exit( -1 );
                 }
-                infile = strcat( infile, "/" );
-                infile = strcat( infile, argv[ a ] );
+                tmp_inf    = strcat( tmp_inf, "/" );
+                tmp_inf    = strcat( tmp_inf, argv[ a ] );
+                opt.infile = string( tmp_inf );
+                delete[] tmp_inf;
             }
             else
             {
-                infile = new char[ strlen( argv[ a ] ) + 1 ];
-                strcpy( infile, argv[ a ] );
+                opt.infile = string( argv[ a ] );
             }
-            is.open( infile );
-            if ( !is )
+            opt.is.open( opt.infile.c_str() );
+            if ( !opt.is )
             {
-                cerr << "ERROR: cannot open input file " << infile << "\n";
-                errFlag = true;
+                cerr << "ERROR: cannot open input file " << opt.infile << "\n";
+                err_flag = OPARI2_ERROR_WITH_MESSAGE;
             }
             break;
         default:
-            errFlag = true;
+            err_flag = OPARI2_ERROR_NO_MESSAGE;
             break;
     }
 
-    if ( !errFlag && infile && lang == L_NA )
+    /* determine language and format by filename if not specified */
+    if ( !err_flag && !opt.infile.empty() && opt.lang == L_NA )
     {
-        const char* dot = strrchr( infile, '.' );
-        if ( dot != 0  && dot[ 1 ] )
+        size_t pos = opt.infile.find_last_of( '.' );
+
+        if ( pos < opt.infile.length() + 1  && opt.infile[ pos + 1 ] )
         {
-            switch ( dot[ 1 ] )
+            switch ( opt.infile[ pos + 1 ] )
             {
                 case 'f':
                 case 'F':
-                    lang = dot[ 2 ] == '9' ? L_F90 : L_F77;
+                    opt.lang = opt.infile[ pos + 2 ] == '9' ? L_F90 : L_F77;
                     break;
                 case 'c':
+                    /*Files *.CUF and *.cuf are CUDA Fortran files*/
+                    if ( opt.infile[ pos + 2 ] == 'u' && opt.infile[ pos + 3 ] == 'f' )
+                    {
+                        opt.lang = L_F90;
+                        break;
+                    }
                 case 'C':
-                    lang = dot[ 2 ] ? L_CXX : L_C;
+                    if ( opt.infile[ pos + 2 ] == 'U' && opt.infile[ pos + 3 ] == 'F' )
+                    {
+                        opt.lang = L_F90;
+                        break;
+                    }
+                    opt.lang = opt.infile[ pos + 2 ] ? L_CXX : L_C;
                     break;
             }
         }
     }
-    if ( !errFlag && infile && lang == L_NA )
+    if ( !err_flag && opt.infile.empty() && opt.lang == L_NA )
     {
         cerr << "ERROR: cannot determine input file language\n";
-        errFlag = true;
+        err_flag = OPARI2_ERROR_WITH_MESSAGE;
+    }
+    /* if no format is specified, default is free format for f90 and fix form for f77 */
+    if ( ( opt.form == F_NA ) && ( opt.lang & L_FORTRAN ) )
+    {
+        if ( opt.lang & L_F77 )
+        {
+            opt.form = F_FIX;
+        }
+        else
+        {
+            opt.form = F_FREE;
+        }
     }
 
-    // generate output file name if necessary
-    if ( !errFlag && ( a + 1 ) == argc )
+    /* generate output file name if necessary */
+    if ( !err_flag && opt.outfile.empty() )
     {
-        out_filename = new char[ strlen( infile ) + 5 ];
-        char* dot = ( char* )strrchr( infile, '.' );
-        if ( dot != 0 )
+        size_t pos = opt.infile.find_last_of( '.' );
+        if ( pos != string::npos )
         {
-            sprintf( out_filename, "%.*s.mod%s", ( int )( dot - infile ), infile, dot );
+            opt.outfile = opt.infile;
+            opt.outfile.replace( pos, 1, ".mod." );
 
-            if ( keepSrcInfo && ( lang & L_FORTRAN ) )
+            if ( opt.keep_src_info && ( opt.lang & L_FORTRAN ) )
             {
-                dot        = strrchr( out_filename, '.' );
-                *( ++dot ) = 'F';
+                if ( opt.outfile.find( "cuf", pos ) == pos + 5 ||
+                     opt.outfile.find( "CUF", pos ) == pos + 5 )
+                {
+                    opt.outfile[ pos + 5 ] = 'C';
+                    opt.outfile[ pos + 6 ] = 'U';
+                    opt.outfile[ pos + 7 ] = 'F';
+                }
+                else
+                {
+                    opt.outfile[ pos + 5 ] = 'F';
+                }
             }
 
-            os.open( out_filename );
-            if ( !os )
+            opt.os.open( opt.outfile.c_str() );
+            if ( !opt.os )
             {
-                cerr << "ERROR: cannot open output file " << out_filename << "\n";
-                errFlag = true;
+                cerr << "ERROR: cannot open output file " << opt.outfile << "\n";
+                err_flag = OPARI2_ERROR_WITH_MESSAGE;
             }
-            os << "\n";
+            //            opt.os << "\n";
         }
         else
         {
             cerr << "ERROR: cannot generate output file name\n";
-            errFlag = true;
+            err_flag = OPARI2_ERROR_WITH_MESSAGE;
         }
     }
 
-    // print usage and die on error
-    if ( errFlag )
+    /* print usage and die on error */
+    if ( err_flag )
     {
-        print_usage_information( argv[ 0 ] );
+        if ( err_flag == OPARI2_ERROR_NO_MESSAGE )
+        {
+            print_usage_information( argv[ 0 ], std::cerr );
+        }
+
         exit( 1 );
     }
 
-    // query inode number of the infile as unique attribute
-    int retval = stat( infile, &infile_status );
+    return;
+}
+
+void
+misc_init()
+{
+    struct stat status;
+    timeval     compiletime;
+    //long long int     id[ 3 ];
+    uint64_t     id[ 3 ];
+    stringstream id_str;
+    int          rest = 0;
+    /* query inode number of the infile and timestamp as unique attribute */
+    int retval = stat( opt.infile.c_str(), &status );
+
+    // initialize inod_compiletime_id
     assert( retval == 0 );
-    infile_inode = infile_status.st_ino;
+    gettimeofday( &compiletime, NULL );
 
-    // generate opari include file name
-    char* incfile       = 0;
-    char* incfileNoPath = 0;
+    //id[ 0 ] = ( long long int )status.st_ino;
+    id[ 0 ] = static_cast< uint64_t > ( status.st_ino );
+    id[ 1 ] = static_cast< uint64_t > ( compiletime.tv_sec );
+    id[ 2 ] = static_cast< uint64_t > ( compiletime.tv_usec );
 
-    //if ( lang & L_FORTRAN )
-    //{
+    for ( int i = 0; i < 3; i++ )
+    {
+        while ( id[ i ] > 36 || ( i > 1 && id[ i ] > 0 ) )
+        {
+            rest     = id[ i ] % 36;
+            id[ i ] -= rest;
+            id[ i ] /= 36;
+            if ( rest < 10 )
+            {
+                id_str << ( char )( rest + 48 );
+            }
+            else
+            {
+                id_str << ( char )( rest + 87 );
+            }
+        }
+        if ( i < 2 )
+        {
+            id[ i + 1 ] += id[ i ];
+        }
+    }
+
+    // generate opari2 include file name
+
     // only need base filename without path for include statement
     // in Fortran files and if an output file without dir is used
-    const char* dirsep = strrchr( infile, '/' );
-    if ( dirsep )
+
+    size_t sep_in = opt.infile.find_last_of( '/' );
+    opt.incfile_nopath = string( opt.infile.substr( sep_in + 1 ) +
+                                 ".opari.inc" );
+
+    size_t sep_out = opt.outfile.find_last_of( '/' );
+    if ( sep_out == string::npos )
     {
-        incfileNoPath = new char[ strlen( dirsep ) + 12 ];
-        sprintf( incfileNoPath, "%s.opari.inc", dirsep + 1 );
+        opt.incfile = "";
     }
     else
     {
-        incfileNoPath = new char[ strlen( infile ) + 13 ];
-        sprintf( incfileNoPath, "%s.opari.inc", infile );
+        opt.incfile = opt.outfile.substr( 0, sep_out + 1 );
     }
-    char* sep = strrchr( out_filename, '/' );
-    if ( sep )
+    opt.incfile += opt.incfile_nopath;
+
+    OPARI2_Directive::SetOptions( opt.lang, opt.form, opt.keep_src_info,
+                                  opt.preprocessed_file, id_str.str() );
+
+    return;
+}
+
+/**
+ * @brief Main function.
+ *
+ * Initialize directive and API table, handle command line options,
+ * open files and call appropriate process function.
+ */
+int
+main( int   argc,
+      char* argv[] )
+{
+    process_cmd_line( argc, argv );
+
+    misc_init();
+
+    /* instrument source file */
+    if ( opt.lang & L_FORTRAN )
     {
-        incfile = new char[ ( sep - out_filename + 2 ) + strlen( incfileNoPath ) ];
-        strncpy( incfile, out_filename, ( sep - out_filename + 1 ) );
-        strncpy( incfile + ( sep - out_filename + 1 ), incfileNoPath, strlen( incfileNoPath ) + 1 );
+        /* in Fortran no Underscore is needed */
+        OPARI2_DirectiveOpenmp::SetOptPomptpd( "pomp_tpd" );
+
+        OPARI2_FortranParser parser( opt );
+        parser.process();
     }
     else
     {
-        incfile = new char[ strlen( incfileNoPath ) + 1 ];
-        strcpy( incfile, incfileNoPath );
+        if ( !opt.preprocessed_file )
+        {
+            // const char* basename = strrchr( opt.incfile, '/' );
+            // basename =  basename ? ( basename + 1 ) : opt.incfile;
+            opt.os << "#include \"" << opt.incfile_nopath << "\"" << "\n";
+
+            if ( opt.keep_src_info )
+            {
+                opt.os << "#line 1 \"" << opt.infile << "\"" << "\n";
+            }
+        }
+
+        OPARI2_CParser parser( opt );
+        parser.process();
     }
 
-    // transform
-    do_transform = true;
-    init_handler( infile, lang, keepSrcInfo );
-
-    if ( lang & L_FORTRAN )
-    {
-        /*in Fortran no Underscore is needed*/
-        pomp_tpd = "pomp_tpd";
-        if ( keepSrcInfo )
-        {
-            os << "#line 1 \"" << infile << "\"" << "\n";
-        }
-        process_fortran( is, infile, os, addSharedDecl, incfileNoPath, lang, keepSrcInfo );
-    }
-    else
-    {
-        // include file filenames are relative to base file -> need base filename
-        const char* dirsep = strrchr( incfile, '/' );
-        if ( dirsep )
-        {
-            os << "#include \"" << ( dirsep + 1 ) << "\"" << "\n";
-        }
-        else
-        {
-            os << "#include \"" << incfile << "\"" << "\n";
-        }
-        if ( keepSrcInfo )
-        {
-            os << "#line 1 \"" << infile << "\"" << "\n";
-        }
-        process_c_or_cxx( is, infile, os, addSharedDecl );
-    }
-    finalize_handler( incfile, incfileNoPath, os );
-    delete[] infile;
-    delete[] incfile;
-    delete[] incfileNoPath;
+    /* generate *.opari.inc ( by directive_manager ) */
+    Finalize( opt );
 
     return 0;
 }

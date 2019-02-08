@@ -4,13 +4,13 @@
 # - mpi compilers
 # - user-provided arguments
 #
-# With this order we guarantee that user-provided binary arguments takes 
+# With this order we guarantee that user-provided binary arguments takes
 # precedence. They just overwrite already existing binary arguments.
 #
 # iterate over the fields. if a field is of the form "key=value", store it in
 # a map<key, value>. subsequent insertions of the same key override the old
 # value, e.g. the last insertion wins.
-# 
+#
 # fields not in "key=value" form are treated as unary arguments and are taken
 # into account for the user-provided toplevel arguments only.
 
@@ -23,7 +23,7 @@
     n = index($0, "=")
     if (n != 0) { # line with at least one "=". Use first "=" as key-value separator
       args_binary[substr($0, 1, n-1)] = substr($0, n+1)
-    }    
+    }
     else {
       args_unary = "'" $0 "' " args_unary
     }
@@ -37,12 +37,12 @@
 #     n = split($0, split_array, "=")
 #     if (n == 2) {
 #       key = split_array[1]
-#       if (key in args_binary) { 
+#       if (key in args_binary) {
 #         args_binary[key]=split_array[2]
 #       }
 #     }
 #   }
-  else { # FILENAME == "${ac_scorep_platform}"  
+  else { # FILENAME == "${ac_scorep_platform}"
     if (index($0, "#") == 0) { # ! commented line
       n = index($0, "=")
       if (n != 0) { # line with at least one "=". Use first "=" as key-value separator
@@ -59,9 +59,19 @@ function evaluate_placeholder(compiler)
   # assuming that CC=gcc
   mpi_compiler = "MPI" compiler
   pattern = "{" compiler "}"
-  if (mpi_compiler in args_binary) { 
+  if (mpi_compiler in args_binary) {
     if (match(args_binary[mpi_compiler], pattern) != 0) {
       sub(pattern, args_binary[compiler], args_binary[mpi_compiler])
+    }
+  }
+
+  # e.g. transform SHMEMCC={CC} to SHMEMCC="icc",
+  # assuming that CC=icc
+  shmem_compiler = "SHMEM" compiler
+  pattern = "{" compiler "}"
+  if (shmem_compiler in args_binary) {
+    if (match(args_binary[shmem_compiler], pattern) != 0) {
+      sub(pattern, args_binary[compiler], args_binary[shmem_compiler])
     }
   }
 }
@@ -74,11 +84,11 @@ END{
   evaluate_placeholder("FC")
 
   # Concatenate the map's content into a "key=value" pair sequence, add the
-  # unary arguments and print it to stdout. 
+  # unary arguments and print it to stdout.
   for (key in args_binary) {
     result = "'" key "=" args_binary[key] "' " result
   }
 
   print result args_unary
 }
- 
+

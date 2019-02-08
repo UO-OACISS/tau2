@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test that the insertion of wrapper functions works correctly, but ONLY on supported functions.
 
@@ -24,14 +23,14 @@
       integer (kind=omp_nest_lock_kind) lock2
       integer (kind=omp_sched_kind)     sched
       integer mod
-      
+
 !     **************************************************
 !     * Should be replaced by wrapper functions        *
 !     *  regardless of "distractions"                  *
 !     **************************************************
       call omp_init_lock(lock1); call omp_init_nest_lock(lock2)
       call omp_set_lock(lock1); write(*,*) "omp_set_lock(lock1)"
-      call omp_set_nest_lock(lock2) ! omp_set_nest_lock(lock2); 
+      call omp_set_nest_lock(lock2) ! omp_set_nest_lock(lock2);
       call omp_unset_lock(lock1); !omp_unset_lock(lock1);
       call omp_unset_nest_lock(lock2)
 !$    mod = omp_test_lock(lock1)
@@ -61,12 +60,21 @@ c     call omp_init_lock(i)
 *     call omp_init_lock(i)
 
       write(*,*) "omp_init_lock(i)",  'omp_init_lock(i)' ! call omp_init_lock(i)
-      write(*,*)  "omp_init_lock(i)""test", """omp_init_lock(i)", 
+      write(*,*)  "omp_init_lock(i)""test", """omp_init_lock(i)",
      &"omp_init_lock(i)""",  """", """""""","omp_init_lock(i) ",
 !        ",&
      & "  + call omp_init_lock(i)"
-    
+
 !     call omp_init_lock(i)       ! call omp_init_lock(i)
 !     call omp_init_lock(i) ; call omp_set_lock(i)
-!     write(*,*) "call omp_init_lock(i)" ; call omp_init_lock(i)      
+!     write(*,*) "call omp_init_lock(i)" ; call omp_init_lock(i)
       end program test6
+
+! Simulation of included header file, nothing should be replaced
+#line 1 /some/path/to/include/file/omp_lib.h
+      call omp_init_lock(lock1)
+      call omp_init_nest_lock(lock2)
+      call omp_set_lock(lock1)
+      call omp_set_nest_lock(lock2)
+      call omp_unset_lock(lock1)
+      call omp_unset_nest_lock(lock2)

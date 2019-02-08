@@ -1,19 +1,46 @@
+# This file is part of the Score-P software (http://www.score-p.org)
+
+# Copyright (c) 2009-2013,
+# RWTH Aachen University, Germany
+
+# Copyright (c) 2009-2013,
+# Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+
+# Copyright (c) 2009-2013,
+# Technische Universitaet Dresden, Germany
+
+# Copyright (c) 2009-2013,
+# University of Oregon, Eugene, USA
+
+# Copyright (c) 2009-2013, 2016,
+# Forschungszentrum Juelich GmbH, Germany
+
+# Copyright (c) 2009-2013,
+# German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+
+# Copyright (c) 2009-2013,
+# Technische Universitaet Muenchen, Germany
+
+# This software may be modified and distributed under the terms of
+# a BSD-style license. See the COPYING file in the package base
+# directory for details.
+
 ######################################################
 #  Compiler                                          #
 ######################################################
 CC=@CC@
 FORTRAN=@FC@
-OPENMP_C_FLAG=@OPENMP_CFLAGS@
-OPENMP_F_FLAG=@OPENMP_FFLAGS@
+OPENMP_C_FLAG=@OPENMP_CFLAGS@ @CFLAGS@
+OPENMP_F_FLAG=@OPENMP_FFLAGS@ @FFLAGS@
 
 ######################################################
 #  OPARI & DUMMY LIBRARY                             #
 ######################################################
-POMP_INC=-I@abs_srcdir@/../../include
-POMPLIBDIR=@abs_builddir@/../../build-frontend/.libs/ 
+POMP_INC=-I@prefix@/include
+POMPLIBDIR=@prefix@/share/doc/opari2/example_user_instrumentation
 POMPLIB=-L${POMPLIBDIR} -lpomp 
 
-BINDIR=@prefix@/bin
+BINDIR=@BINDIR@
 OPARI=$(BINDIR)/opari2
 OPARI2_CONFIG=$(BINDIR)/opari2-config
 

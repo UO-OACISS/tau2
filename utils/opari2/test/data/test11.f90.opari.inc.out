@@ -1,0 +1,31 @@
+      INTEGER( KIND=8 ) :: opari2_region_1
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_1 =&
+        "66*regionType=critical*sscl=test11.f90:22:22*escl=test11.f90:24:24**"
+
+      INTEGER( KIND=8 ) :: opari2_region_2
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_2 =&
+        "64*regionType=atomic*sscl=test11.f90:26:26*escl=test11.f90:27:27**"
+
+      INTEGER( KIND=8 ) :: opari2_region_3
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_3 =&
+        "67*regionType=workshare*sscl=test11.f90:29:29*escl=test11.f90:36:36**"
+
+      INTEGER( KIND=8 ) :: opari2_region_4
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_4 =&
+        "75*regionType=parallelworkshare*sscl=test11.f90:38:38*escl=test11.f90:45:45**"
+
+      common /cb000/ opari2_region_1,&
+              opari2_region_2,&
+              opari2_region_3,&
+              opari2_region_4
+
+      integer ( kind=4 ) :: pomp2_lib_get_max_threads
+      logical :: pomp2_test_lock
+      integer ( kind=4 ) :: pomp2_test_nest_lock
+      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task 
+      logical :: pomp2_if 
+      integer ( kind=4 ) :: pomp2_num_threads 

@@ -14,7 +14,6 @@
  *
  * Testfile for automated testing of OPARI2
  *
- * @authors Bernd Mohr, Peter Philippen
  *
  * @brief Test the splitting of combined parallel clauses.
  */

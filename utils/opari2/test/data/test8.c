@@ -14,7 +14,6 @@
  *
  * Testfile for automated testing of OPARI2
  *
- * @authors Bernd Mohr, Peter Philippen
  *
  * @brief Tests whether specific clauses are found and inserted into the CTC string.
  */
@@ -54,16 +53,21 @@ main()
         }
     }
 
- #pragma omp parallel
+#pragma omp parallel default(private)
     {
 #pragma omp task if(true) untied
         {
             printf( "task\n" );
         }
     }
+
+#pragma omp parallel shared(num_threads)
+    {
+	printf("num_threads variable is %d\n",num_threads);
+    }
 }
 
-#pragma omp parallel for  num_threads(4) reduction(+:k) schedule(static,chunkif) collapse(1) ordered if(1)
+#pragma omp parallel for  num_threads(4) reduction(+:k) schedule(static,chunkif) collapse(1) ordered if(1) default(none)
 for ( i = 0; i < 4; ++i )
 {
      #pragma omp ordered

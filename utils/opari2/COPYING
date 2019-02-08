@@ -1,11 +1,29 @@
-Copyright (c) 2009-2012,
-   RWTH Aachen University, Germany
-   Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
-   Technische Universitaet Dresden, Germany
-   University of Oregon, Eugene, USA
-   Forschungszentrum Juelich GmbH, Germany
-   German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
-   Technische Universitaet Muenchen, Germany
+The entire code of Score-P is licensed under the BSD-style license
+agreement given below, except for the third-party code distributed in the
+'vendor/' subdirectory.  See the corresponding COPYING files in 'vendor/*'
+of the distribution tarball for details.
+
+
+-----------------------------------------------------------------------------
+
+
+                       OPARI2 LICENSE AGREEMENT
+                       ========================
+
+Copyright (c) 2009-2016,
+  RWTH Aachen University, Germany
+Copyright (c) 2009-2013,
+  Gesellschaft fuer numerische Simulation mbH, Braunschweig, Germany
+Copyright (c) 2009-2013, 2016,
+  Technische Universitaet Dresden, Germany
+Copyright (c) 2009-2013,
+  University of Oregon, Eugene, USA
+Copyright (c) 2009-2018,
+  Forschungszentrum Juelich GmbH, Germany
+Copyright (c) 2009-2014,
+  German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+Copyright (c) 2009-2013,
+  Technische Universitaet Muenchen, Germany
 
 All rights reserved.
 

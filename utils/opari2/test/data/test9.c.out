@@ -1,0 +1,203 @@
+#include "test9.c.opari.inc"
+#line 1 "test9.c"
+/*
+ * This file is part of the Score-P software (http://www.score-p.org)
+ *
+ * Copyright (c) 2013, 2014
+ * Forschungszentrum Juelich GmbH, Germany
+ *
+ * This software may be modified and distributed under the terms of
+ * a BSD-style license. See the COPYING file in the package base
+ * directory for details.
+ *
+ * Testfile for automated testing of OPARI2
+ *
+ * @brief Tests proper treatment of offload regions.
+ */
+
+__declspec( target( mic ) )
+                            int global_1 = 5;
+
+__declspec( target( mic ) )
+                            int bar();
+
+__declspec( target( mic ) )
+                            int foo()
+{
+	int i = 0;
+	#pragma omp parallel
+	{
+		i++;
+	}
+
+	return ++global_1;
+}
+
+__attribute__( ( target( mic ) ) ) int global_2 = 0;
+__attribute__( ( target( mic ) ) ) int f()
+{
+	int i = 0;
+{   POMP2_Atomic_enter( &opari2_region_1, opari2_ctc_1  );
+#line 35 "test9.c"
+	#pragma omp atomic
+	global_2 += 1;
+  POMP2_Atomic_exit( &opari2_region_1 );
+ }
+#line 37 "test9.c"
+}
+
+__attribute__( ( target( mic ) ) ) void g();
+
+
+#pragma offload_attribute( push, target( mic ) )
+void test();
+#pragma offload_attribute( pop )
+
+
+void test()
+{
+	int i;
+
+{   POMP2_Sections_enter( &opari2_region_2, opari2_ctc_2  );
+#line 51 "test9.c"
+	#pragma omp sections nowait
+	{
+		i++;
+#line 54 "test9.c"
+		#pragma omp section
+{   POMP2_Section_begin( &opari2_region_2, opari2_ctc_2  );
+#line 55 "test9.c"
+		i++;
+  POMP2_Section_end( &opari2_region_2 ); }
+#line 56 "test9.c"
+		#pragma omp section
+{   POMP2_Section_begin( &opari2_region_2, opari2_ctc_2  );
+#line 57 "test9.c"
+		i++;
+  POMP2_Section_end( &opari2_region_2 ); }
+#line 58 "test9.c"
+	}
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_2, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_2, pomp2_old_task ); }
+  POMP2_Sections_exit( &opari2_region_2 );
+ }
+#line 59 "test9.c"
+}
+
+
+int
+main( int argc, char** argv )
+{
+	int i, j, k;
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_3, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_3 );
+#line 67 "test9.c"
+	#pragma omp parallel     POMP2_DLIST_00003 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_3 );
+{   POMP2_For_enter( &opari2_region_3, opari2_ctc_3  );
+#line 67 "test9.c"
+ #pragma omp          for                   nowait
+	for ( i = 0; i < 10; i++ )
+	{
+	 	j++;
+	}
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_3, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_3, pomp2_old_task ); }
+  POMP2_For_exit( &opari2_region_3 );
+ }
+  POMP2_Parallel_end( &opari2_region_3 ); }
+  POMP2_Parallel_join( &opari2_region_3, pomp2_old_task ); }
+#line 72 "test9.c"
+
+	#pragma offload target( mic ) in( global ) out( i, global )
+	{
+		i = foo();
+		#pragma omp for
+		for ( j = 0; j < 10; j++ )
+		{
+			k ++;
+		}
+	}
+
+	#pragma offload target( mic ) in( global ) out( i, global )
+	{
+		i = bar();
+	}
+
+	#pragma offload_attribute( push, target( mic ) )
+
+{
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
+  POMP2_Task_handle pomp2_old_task;
+  POMP2_Parallel_fork(&opari2_region_4, pomp2_if, pomp2_num_threads, &pomp2_old_task, opari2_ctc_4 );
+#line 90 "test9.c"
+	#pragma omp parallel POMP2_DLIST_00004 firstprivate(pomp2_old_task) num_threads(pomp2_num_threads)
+{   POMP2_Parallel_begin( &opari2_region_4 );
+#line 91 "test9.c"
+	{
+		i = f();
+		g();
+		test();
+	}
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_4, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_4, pomp2_old_task ); }
+  POMP2_Parallel_end( &opari2_region_4 ); }
+  POMP2_Parallel_join( &opari2_region_4, pomp2_old_task ); }
+#line 96 "test9.c"
+
+	#pragma offload_attribute( pop )
+
+
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Barrier_enter( &opari2_region_5, &pomp2_old_task, opari2_ctc_5  );
+#line 100 "test9.c"
+	#pragma omp barrier
+  POMP2_Barrier_exit( &opari2_region_5, pomp2_old_task ); }
+#line 101 "test9.c"
+
+	printf( "Hello world!\n" );
+
+	return 0;
+}
+
+int bar()
+{
+{   POMP2_Single_enter( &opari2_region_6, opari2_ctc_6  );
+#line 109 "test9.c"
+	#pragma omp single nowait
+{   POMP2_Single_begin( &opari2_region_6 );
+#line 110 "test9.c"
+		global_1++;
+  POMP2_Single_end( &opari2_region_6 ); }
+{ POMP2_Task_handle pomp2_old_task;
+  POMP2_Implicit_barrier_enter( &opari2_region_6, &pomp2_old_task );
+#pragma omp barrier
+  POMP2_Implicit_barrier_exit( &opari2_region_6, pomp2_old_task ); }
+  POMP2_Single_exit( &opari2_region_6 );
+ }
+#line 111 "test9.c"
+
+	return global_1;
+}
+
+void g()
+{
+#line 117 "test9.c"
+	#pragma omp master
+{   POMP2_Master_begin( &opari2_region_7, opari2_ctc_7  );
+#line 118 "test9.c"
+	global_2 = 0;
+  POMP2_Master_end( &opari2_region_7 ); }
+#line 119 "test9.c"
+}

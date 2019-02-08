@@ -44,7 +44,7 @@ CEXTRA =
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
-#OPARI2#OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/_build/include -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/_build/build-frontend -I$(TAUROOT)/utils/opari2/src -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD #ENDIF#
+#OPARI2#OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/_build/include -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/_build/build-frontend -I$(TAUROOT)/utils/opari2/src -I$(TAUROOT)/include/opari2 -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD #ENDIF#
 
 DEFINES = -DTAU_LIBRARY_SOURCE
 #ANDROID#DEFINES += -DTAU_ANDROID#ENDIF#
@@ -847,6 +847,12 @@ pomp2_fwrapper.o : pomp2_fwrapper.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS)  -c $(@:.o=.cpp)
 
 pomp2_region_info.o : pomp2_region_info.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
+
+pomp2_user_region_info.o : pomp2_user_region_info.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
+
+opari2_ctc_parser.o : opari2_ctc_parser.c $(HDRS)
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 TauKojakOpari.o : TauKojakOpari.cpp $(HDRS)

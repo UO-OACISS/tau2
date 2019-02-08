@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Special tests for end pragma substitution and nested parallel regions/loops.
 

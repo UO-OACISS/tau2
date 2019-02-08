@@ -1,23 +1,36 @@
 ## -*- mode: autoconf -*-
 
-## 
+##
 ## This file is part of the Score-P software (http://www.score-p.org)
 ##
-## Copyright (c) 2009-2011, 
-##    RWTH Aachen University, Germany
-##    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
-##    Technische Universitaet Dresden, Germany
-##    University of Oregon, Eugene, USA
-##    Forschungszentrum Juelich GmbH, Germany
-##    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
-##    Technische Universitaet Muenchen, Germany
+## Copyright (c) 2009-2011,
+## RWTH Aachen University, Germany
 ##
-## See the COPYING file in the package base directory for details.
+## Copyright (c) 2009-2011,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2011,2014
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2011,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2014, 2017,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2011,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
 ##
 
+## file ac_scorep_compiler_and_flags.m4
 
-## file       ac_scorep_compiler_and_flags.m4
-## maintainer Christian Roessel <c.roessel@fz-juelich.de>
 
 AC_DEFUN([AC_SCOREP_CONVERT_FOR_BUILD_FLAGS],
 [
@@ -25,7 +38,7 @@ if test "x${ac_cv_env_[$1]_FOR_BUILD_set}" != "xset"; then
    # don't use the default flags if nothing is specified for the frontend
    unset [$1]
 else
-   # use the FOR_BUILD flags 
+   # use the FOR_BUILD flags
    [$1]="$ac_cv_env_[$1]_FOR_BUILD_value"
 fi
 ])
@@ -36,7 +49,7 @@ if test "x${ac_cv_env_MPI_[$1]_set}" != "xset"; then
    # don't use the default flags if nothing is specified for MPI
    unset [$1]
 else
-   # use the MPI flags 
+   # use the MPI flags
    [$1]="$ac_cv_env_MPI_[$1]_value"
 fi
 ])
@@ -70,171 +83,113 @@ fi
 ])
 
 
-# On cross-compile system we might get provided with the *_FOR_BUILD compilers and flags
-# and need to map them to CC, CFLAGS etc. The *_FOR_BUILD parameters take precedence.
-AC_DEFUN([AC_SCOREP_OPARI2_FOR_BUILD_ARGS_TAKES_PRECEDENCE],
-[
-    opari2_cross_build_args=""
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([CC])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([CXX])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([F77])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([FC])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([CPPFLAGS])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([CFLAGS])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([CXXFLAGS])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([FFLAGS])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([FCFLAGS])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([LDFLAGS])
-    AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG([LIBS])
-])
-
-AC_DEFUN([AC_SCOREP_OPARI2_CONVERT_FOR_BUILD_ARG],
-[
-    if test "x${ac_cv_env_[$1]_FOR_BUILD_set}" == "xset"; then
-       [$1]=$ac_cv_env_[$1]_FOR_BUILD_value
-    fi
-])
-
-
-dnl dont' use together with AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE
+dnl do not use together with AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE
 AC_DEFUN([AC_SCOREP_WITH_COMPILER_SUITE],
 [
+AC_REQUIRE([AC_SCOREP_DETECT_PLATFORMS])
+
+ac_scorep_compilers_frontend="platform-frontend-${ac_scorep_platform}"
+ac_scorep_compilers_backend="platform-backend-${ac_scorep_platform}"
+# ac_scorep_compilers_mpi set in AC_SCOREP_WITH_MPI_COMPILER_SUITE
+
 m4_pattern_allow([AC_SCOREP_WITH_COMPILER_SUITE])
 m4_pattern_allow([AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE])
-if test "x${ac_scorep_compiler_suite_called}" != "x"; then
-    # We need m4 quoting magic here ...
-    AC_MSG_ERROR([cannot use [AC_SCOREP_WITH_COMPILER_SUITE] and [AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE] in one configure.ac.])
-else
-    ac_scorep_compiler_suite_called="yes"
-fi
-
-path_to_compiler_files="$srcdir/vendor/common/build-config/platforms/"
+AS_IF([test "x${ac_scorep_compiler_suite_called}" != "x"],
+    [AC_MSG_ERROR([cannot use [AC_SCOREP_WITH_COMPILER_SUITE] and [AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE] in one configure.ac.])],
+    [ac_scorep_compiler_suite_called="yes"])
 
 AC_ARG_WITH([nocross-compiler-suite],
-            [AS_HELP_STRING([--with-nocross-compiler-suite=(gcc|ibm|intel|pathscale|pgi|studio)], 
-                            [The compiler suite to build this package in non cross-compiling environments with. Needs to be in $PATH [gcc].])],
-            [AS_IF([test "x${ac_scorep_cross_compiling}" = "xno"], 
-                   [AS_CASE([$withval],
-                            ["gcc"],       [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-nocross-gcc"],
-                            ["ibm"],       [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-nocross-ibm"],
-                            ["intel"],     [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-nocross-intel"],
-                            ["pathscale"], [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-nocross-pathscale"],
-                            ["pgi"],       [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-nocross-pgi"],
-                            ["studio"],    [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-nocross-studio"],
-                            [AC_MSG_WARN([Compiler suite "${withval}" not supported by --with-nocross-compiler-suite, ignoring.])])],
-                   [AC_MSG_ERROR([Option --with-nocross-compiler-suite not supported in cross-compiling mode. Please use --with-backend-compiler-suite and --with-frontend-compiler-suite instead.])])],
-            [])
-
-dnl backend-compiler-suite is not very useful. if we are on a cross-compiling
-dnl platform, we usually want to use the vendor tools that should be detected
-dnl automatically. otherwise, use platform-*-user-provided
-dnl AC_ARG_WITH([backend-compiler-suite],
-dnl             [AS_HELP_STRING([--with-backend-compiler-suite=(ibm|sx)], 
-dnl                             [The compiler suite to build the backend parts of this package in cross-compiling environments with. Needs to be in $PATH [gcc].])],
-dnl             [AS_IF([test "x${ac_scorep_cross_compiling}" = "xyes"], 
-dnl                    [AS_CASE([$withval],
-dnl                             ["ibm"],       [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-backend-ibm"],
-dnl                             ["sx"],        [ac_scorep_compilers_backend="${path_to_compiler_files}compiler-backend-sx"],
-dnl                             [AC_MSG_WARN([Compiler suite "${withval}" not supported by --with-backend-compiler-suite, ignoring.])])], 
-dnl                    [AC_MSG_ERROR([Option --with-backend-compiler-suite not supported in non cross-compiling mode. Please use --with-nocross-compiler-suite instead.])])],
-dnl             [])
+            [AS_HELP_STRING([--with-nocross-compiler-suite=(gcc|ibm|intel|pgi|studio)],
+                            [The compiler suite used to build this package in non cross-compiling environments. Needs to be in $PATH [gcc].])],
+            [AS_IF([test "x${ac_scorep_cross_compiling}" = "xno"],
+                   [ac_scorep_compilers_backend="compiler-nocross-gcc" # default
+                    AS_CASE([$withval],
+                            ["gcc"],       [ac_scorep_compilers_backend="compiler-nocross-gcc"],
+                            ["ibm"],       [ac_scorep_compilers_backend="compiler-nocross-ibm"],
+                            ["intel"],     [ac_scorep_compilers_backend="compiler-nocross-intel"],
+                            ["pgi"],       [ac_scorep_compilers_backend="compiler-nocross-pgi"],
+                            ["studio"],    [ac_scorep_compilers_backend="compiler-nocross-studio"],
+                            ["no"],        [AC_MSG_ERROR([option --without-nocross-compiler-suite makes no sense.])],
+                            [AC_MSG_ERROR([compiler suite "${withval}" not supported by --with-nocross-compiler-suite.])])],
+                   [AC_MSG_WARN([option --with-nocross-compiler-suite ignored in cross-compiling mode. You may use --with-frontend-compiler-suite to customize the frontend compiler.])])])
+AS_IF([test -f "AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_backend}"],
+      [ac_scorep_compilers_backend="AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_backend}"],
+      [ac_scorep_compilers_backend="AFS_COMPILER_FILES_COMMON/${ac_scorep_compilers_backend}"])
 
 
 AC_ARG_WITH([frontend-compiler-suite],
-            [AS_HELP_STRING([--with-frontend-compiler-suite=(gcc|ibm|intel|pathscale|pgi|studio)], 
-                            [The compiler suite to build the frontend parts of this package in cross-compiling environments with. Needs to be in $PATH [gcc].])],
-            [AS_IF([test "x${ac_scorep_cross_compiling}" = "xyes"], 
-                   [AS_CASE([$withval],
-                            ["gcc"],       [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-frontend-gcc"],
-                            ["ibm"],       [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-frontend-ibm"],
-                            ["intel"],     [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-frontend-intel"],
-                            ["pathscale"], [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-frontend-pathscale"],
-                            ["pgi"],       [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-frontend-pgi"],
-                            ["studio"],    [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-frontend-studio"],
-                            [AC_MSG_WARN([Compiler suite "${withval}" not supported by --with-frontend-compiler-suite, ignoring.])])],
-                   [AC_MSG_ERROR([Option --with-frontend-compiler-suite not supported in non cross-compiling mode. Please use --with-nocross-compiler-suite instead.])])],
-            [])
-])
-
-
-dnl dont' use together with AC_SCOREP_WITH_COMPILER_SUITE, intended to be used by OPARI only
-AC_DEFUN([AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE],
-[
-m4_pattern_allow([AC_SCOREP_WITH_COMPILER_SUITE])
-m4_pattern_allow([AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE])
-if test "x${ac_scorep_compiler_suite_called}" != "x"; then
-    # We need m4 quoting magic here ...
-    AC_MSG_ERROR([cannot use [AC_SCOREP_WITH_COMPILER_SUITE] and [AC_SCOREP_WITH_NOCROSS_COMPILER_SUITE] in one configure.ac.])
-else
-    ac_scorep_compiler_suite_called="yes"
-fi
-
-path_to_compiler_files="$srcdir/vendor/common/build-config/platforms/"
-
-AC_ARG_WITH([compiler-suite],
-            [AS_HELP_STRING([--with-compiler-suite=(gcc|ibm|intel|pathscale|pgi|studio)], 
-                            [The compiler suite to build this package with. Needs to be in $PATH [gcc].])],
-            [AS_CASE([$withval],
-                     ["gcc"],       [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-nocross-gcc"],
-                     ["ibm"],       [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-nocross-ibm"],
-                     ["intel"],     [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-nocross-intel"],
-                     ["pathscale"], [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-nocross-pathscale"],
-                     ["pgi"],       [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-nocross-pgi"],
-                     ["studio"],    [ac_scorep_compilers_frontend="${path_to_compiler_files}compiler-nocross-studio"],
-                     [AC_MSG_WARN([Compiler suite "${withval}" not supported by --with-compiler-suite, ignoring.])])],
-            [])
-])
-
+            [AS_HELP_STRING([--with-frontend-compiler-suite=(gcc|ibm|intel|pgi|studio)],
+                            [The compiler suite used to build the frontend parts of this package in cross-compiling environments. Needs to be in $PATH [gcc].])],
+            [AS_IF([test "x${ac_scorep_cross_compiling}" = "xyes"],
+                   [ac_scorep_compilers_frontend="compiler-frontend-gcc"
+                    AS_CASE([$withval],
+                            ["gcc"],       [ac_scorep_compilers_frontend="compiler-frontend-gcc"],
+                            ["ibm"],       [ac_scorep_compilers_frontend="compiler-frontend-ibm"],
+                            ["intel"],     [ac_scorep_compilers_frontend="compiler-frontend-intel"],
+                            ["pgi"],       [ac_scorep_compilers_frontend="compiler-frontend-pgi"],
+                            ["studio"],    [ac_scorep_compilers_frontend="compiler-frontend-studio"],
+                            ["no"],        [AC_MSG_ERROR([option --without-frontend-compiler-suite makes no sense.])],
+                            [AC_MSG_ERROR([compiler suite "${withval}" not supported by --with-frontend-compiler-suite.])])],
+                   [AC_MSG_ERROR([Option --with-frontend-compiler-suite not supported in non cross-compiling mode. Please use --with-nocross-compiler-suite instead.])])])
+AS_IF([test -f "AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_frontend}"],
+      [ac_scorep_compilers_frontend="AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_frontend}"],
+      [ac_scorep_compilers_frontend="AFS_COMPILER_FILES_COMMON/${ac_scorep_compilers_frontend}"])
+])# AC_SCOREP_WITH_COMPILER_SUITE
 
 
 AC_DEFUN([AC_SCOREP_WITH_MPI_COMPILER_SUITE],
 [
-path_to_compiler_files="$srcdir/vendor/common/build-config/platforms/"
+AC_REQUIRE([AC_SCOREP_DETECT_PLATFORMS])
 
+scorep_mpi_user_disabled="no"
 AC_ARG_WITH([mpi],
-            [AS_HELP_STRING([--with-mpi=(mpich2|impi|openmpi)], 
-                            [The mpi compiler suite to build this package with. Needs to be in $PATH [mpich2].])],
-            [AS_CASE([$withval],
-                     ["mpich2"],      [ac_scorep_compilers_mpi="${path_to_compiler_files}compiler-mpi-mpich2"],
-                     ["impi"],        [ac_scorep_compilers_mpi="${path_to_compiler_files}compiler-mpi-impi"],
-                     ["openmpi"],     [ac_scorep_compilers_mpi="${path_to_compiler_files}compiler-mpi-openmpi"],
-                     ["no"],          [], # suppress warning for '--without-mpi'
-                     [AC_MSG_WARN([MPI compiler suite "${withval}" not supported by --with-mpi, ignoring.])])],
-            [])
+    [AS_HELP_STRING([--with-mpi=(bullxmpi|hp|ibmpoe|intel|intel2|intel3|intelpoe|lam|mpibull2|mpich|mpich2|mpich3|openmpi|platform|scali|sgimpt|sgimptwrapper|sun)],
+         [The MPI compiler suite to build this package in non cross-compiling mode. Usually autodetected. Needs to be in $PATH.])],
+    [AS_IF([test "x${withval}" = xno],
+         [scorep_mpi_user_disabled=yes
+          ac_scorep_compilers_mpi="compiler-mpi-without"
+         ],
+         [AS_IF([test "x${ac_scorep_cross_compiling}" = "xno" && test "x${ac_scorep_platform}" != "xaix"],
+              [AS_CASE([$withval],
+                   ["bullxmpi"], [ac_scorep_compilers_mpi="compiler-mpi-bullxmpi"],
+                   ["hp"], [ac_scorep_compilers_mpi="compiler-mpi-hp"],
+                   ["ibmpoe"], [ac_scorep_compilers_mpi="compiler-mpi-ibmpoe"],
+                   ["intel"], [ac_scorep_compilers_mpi="compiler-mpi-intel"],
+                   ["intel2"], [ac_scorep_compilers_mpi="compiler-mpi-intel2"],
+                   ["intel3"], [ac_scorep_compilers_mpi="compiler-mpi-intel3"],
+                   ["impi"], [AC_MSG_WARN([option 'impi' to --with-mpi deprecated, use 'intel2' instead.])
+                              ac_scorep_compilers_mpi="compiler-mpi-intel2"],
+                   ["intelpoe"], [ac_scorep_compilers_mpi="compiler-mpi-intelpoe"],
+                   ["lam"], [ac_scorep_compilers_mpi="compiler-mpi-lam"],
+                   ["mpibull2"], [ac_scorep_compilers_mpi="compiler-mpi-mpibull2"],
+                   ["mpich"], [ac_scorep_compilers_mpi="compiler-mpi-mpich"],
+                   ["mpich2"], [ac_scorep_compilers_mpi="compiler-mpi-mpich2"],
+                   ["mpich3"], [ac_scorep_compilers_mpi="compiler-mpi-mpich3"],
+                   ["openmpi"], [ac_scorep_compilers_mpi="compiler-mpi-openmpi"],
+                   ["platform"], [ac_scorep_compilers_mpi="compiler-mpi-platform"],
+                   ["scali"], [ac_scorep_compilers_mpi="compiler-mpi-scali"],
+                   ["sgimpt"], [ac_scorep_compilers_mpi="compiler-mpi-sgimpt"],
+                   ["sgimptwrapper"], [ac_scorep_compilers_mpi="compiler-mpi-sgimptwrapper"],
+                   ["sun"], [ac_scorep_compilers_mpi="compiler-mpi-sun"],
+                   [AC_MSG_ERROR([MPI compiler suite "${withval}" not supported by --with-mpi.])])
+              ])
+         ])
+     # omit check "if in PATH" for now. Will fail in build-mpi configure.
+    ],
+    [AS_IF([test "x${ac_scorep_cross_compiling}" = "xno" && test "x${ac_scorep_platform}" != "xaix"],
+         [AFS_COMPILER_MPI
+          ac_scorep_compilers_mpi="compiler-mpi-${afs_compiler_mpi}"])
+    ])
 
-# use mpi_compiler_suite as input for process_arguments.awk
-cat ${ac_scorep_compilers_mpi} > mpi_compiler_suite
+AS_IF([test "x${scorep_mpi_user_disabled}" = xno],
+    [AS_IF([test "x${ac_scorep_cross_compiling}" = "xyes" || test "x${ac_scorep_platform}" = "xaix"],
+         [ac_scorep_compilers_mpi="platform-mpi-${ac_scorep_platform}"])])
 
-# find suitable defaults if not already set by platform detection or
-# configure arguments. Note that we can't source
-# ${ac_scorep_compilers_mpi} directly as it may contain lines like
-# 'MPIF77=mpiifort -fc=${F77}' which are not valid shell code. Adding
-# quotes like in 'MPIF77="mpiifort -fc=${F77}"' would solve the
-# problem here but cause headaches using AC_CONFIG_SUBDIR_CUSTOM
-$AWK '{print $[]1}' ${ac_scorep_compilers_mpi} | grep MPI > mpi_compiler_suite_to_source
-. ./mpi_compiler_suite_to_source
-
-if test "x${MPICC}" = "x"; then
-    AC_CHECK_PROGS(MPICC, mpicc hcc mpxlc_r mpxlc mpcc cmpicc mpiicc, $CC)
-    echo "MPICC=${MPICC}" >> mpi_compiler_suite
-fi
-
-if test "x${MPICXX}" = "x"; then
-    AC_CHECK_PROGS(MPICXX, mpic++ mpicxx mpiCC hcp mpxlC_r mpxlC mpCC cmpic++ mpiicpc, $CXX)
-    echo "MPICXX=${MPICXX}" >> mpi_compiler_suite
-fi
-
-if test "x${MPIF77}" = "x"; then
-    AC_CHECK_PROGS(MPIF77, mpif77 hf77 mpxlf_r mpxlf mpf77 cmpifc mpiifort, $F77)
-    echo "MPIF77=${MPIF77}" >> mpi_compiler_suite
-fi
-
-if test "x${MPIFC}" = "x"; then
-    AC_CHECK_PROGS(MPIFC, mpif90 mpxlf95_r mpxlf90_r mpxlf95 mpxlf90 mpf90 cmpif90c mpiifort, $FC)
-    echo "MPIFC=${MPIFC}"   >> mpi_compiler_suite
-fi
-
-])
+AS_IF([test -f "AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_mpi}"],
+      [ac_scorep_compilers_mpi="AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_mpi}"],
+      [ac_scorep_compilers_mpi="AFS_COMPILER_FILES_COMMON/${ac_scorep_compilers_mpi}"])
+# sanity checks missing
+])# AC_SCOREP_WITH_MPI_COMPILER_SUITE
 
 
 AC_DEFUN([AC_SCOREP_PRECIOUS_VARS_MPI],
@@ -265,4 +220,88 @@ AC_ARG_VAR(FFLAGS_FOR_BUILD, [Fortran 77 compiler flags for the frontend build])
 AC_ARG_VAR(FCFLAGS_FOR_BUILD, [Fortran compiler flags for the frontend build])
 AC_ARG_VAR(LDFLAGS_FOR_BUILD, [linker flags for the frontend build, e.g. -L<lib dir> if you have libraries in a nonstandard directory <lib dir>])
 AC_ARG_VAR(LIBS_FOR_BUILD, [libraries to pass to the linker for the frontend build, e.g. -l<library>])
+])
+
+
+dnl --------------------------------------------------------------------
+
+
+AC_DEFUN([AFS_WITH_SHMEM_COMPILER_SUITE],
+[
+AC_REQUIRE([AC_SCOREP_DETECT_PLATFORMS])
+
+scorep_shmem_user_disabled="no"
+AC_ARG_WITH([shmem],
+    [AS_HELP_STRING([--with-shmem=(openshmem|openmpi|sgimpt|sgimptwrapper)],
+         [The SHMEM compiler suite to build this package in non cross-compiling mode. Usually autodetected. Needs to be in $PATH.])],
+    [AS_IF([test "x${withval}" = xno],
+         [scorep_shmem_user_disabled=yes
+          ac_scorep_compilers_shmem="compiler-shmem-without"
+         ],
+         [AS_IF([test "x${ac_scorep_cross_compiling}" = "xno" && test "x${ac_scorep_platform}" != "xaix"],
+              [AS_CASE([$withval],
+                   ["openshmem"], [ac_scorep_compilers_shmem="compiler-shmem-openshmem"],
+                   ["openmpi"], [ac_scorep_compilers_shmem="compiler-shmem-openmpi"],
+                   ["sgimpt"], [ac_scorep_compilers_shmem="compiler-shmem-sgimpt"],
+                   ["sgimptwrapper"], [ac_scorep_compilers_shmem="compiler-shmem-sgimptwrapper"],
+                   [AC_MSG_ERROR([SHMEM compiler suite "${withval}" not supported by --with-shmem.])])
+              ])
+         ])
+     # omit check "if in PATH" for now.
+    ],
+    [AS_IF([test "x${ac_scorep_cross_compiling}" = "xno" && test "x${ac_scorep_platform}" != "xaix"],
+         [AFS_COMPILER_SHMEM
+          ac_scorep_compilers_shmem="compiler-shmem-${afs_compiler_shmem}"])
+    ])
+
+AS_IF([test "x${scorep_shmem_user_disabled}" = xno],
+      [AS_IF([test "x${ac_scorep_cross_compiling}" = "xyes"],
+             [AS_CASE([${ac_scorep_platform}],
+                [cray*],
+                    [ac_scorep_compilers_shmem="platform-shmem-${ac_scorep_platform}"],
+                [ac_scorep_compilers_shmem=""])])])
+
+AS_IF([test "x${ac_scorep_compilers_shmem}" != "x" && test -f "AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_shmem}"],
+      [ac_scorep_compilers_shmem="AFS_COMPILER_FILES_PACKAGE/${ac_scorep_compilers_shmem}"],
+      [ac_scorep_compilers_shmem="AFS_COMPILER_FILES_COMMON/${ac_scorep_compilers_shmem}"])
+# sanity checks missing
+])# AFS_WITH_SHMEM_COMPILER_SUITE
+
+
+AC_DEFUN([AFS_PRECIOUS_VARS_SHMEM],
+[
+AC_ARG_VAR(SHMEMCC,[SHMEM C compiler command])
+AC_ARG_VAR(SHMEMCXX,[SHMEM C++ compiler command])
+AC_ARG_VAR(SHMEMF77,[SHMEM Fortran 77 compiler command])
+AC_ARG_VAR(SHMEMFC,[SHMEM Fortran compiler command])
+AC_ARG_VAR(SHMEM_CPPFLAGS, [SHMEM (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if you have headers in a nonstandard directory <include dir>])
+AC_ARG_VAR(SHMEM_CFLAGS, [SHMEM C compiler flags])
+AC_ARG_VAR(SHMEM_CXXFLAGS, [SHMEM C++ compiler flags])
+AC_ARG_VAR(SHMEM_FFLAGS, [SHMEM Fortran 77 compiler flags])
+AC_ARG_VAR(SHMEM_FCFLAGS, [SHMEM Fortran compiler flags])
+AC_ARG_VAR(SHMEM_LDFLAGS, [SHMEM linker flags, e.g. -L<lib dir> if you have libraries in a nonstandard directory <lib dir>])
+AC_ARG_VAR(SHMEM_LIBS, [SHMEM libraries to pass to the linker, e.g. -l<library>])
+AC_ARG_VAR(SHMEM_LIB_NAME, [name of the SHMEM library])
+AC_ARG_VAR(SHMEM_NAME, [name of the implemented SHMEM specification])
+])
+
+AC_DEFUN([AFS_CONVERT_SHMEM_COMPILER],
+[
+if test "x${ac_cv_env_SHMEM[$1]_set}" != "xset"; then
+    # don't use the default compiler if nothing is specified for SHMEM
+    unset [$1]
+else
+    [$1]="$ac_cv_env_SHMEM[$1]_value"
+fi
+])
+
+AC_DEFUN([AFS_CONVERT_SHMEM_FLAGS],
+[
+if test "x${ac_cv_env_SHMEM_[$1]_set}" != "xset"; then
+   # don't use the default flags if nothing is specified for SHMEM
+   unset [$1]
+else
+   # use the SHMEM flags
+   [$1]="$ac_cv_env_SHMEM_[$1]_value"
+fi
 ])

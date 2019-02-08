@@ -19,7 +19,6 @@
 ##       Intended to be included by the components
 ##       build-(front|back)end/Makefile.am. Defines "common" entities
 ##       that all build-* Makefiles rely on.
-## maintainer Christian Roessel <c.roessel@fz-juelich.de>
 
 
 include ../vendor/common/build-config/common.am

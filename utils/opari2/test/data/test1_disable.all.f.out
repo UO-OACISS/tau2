@@ -1,0 +1,110 @@
+
+#line 1 "test1_disable.f"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! *
+! * @brief Test the --disable= option
+
+
+      program test1_disable
+      IMPLICIT NONE
+      
+      SUBROUTINE foo(A,N)
+      include 'test1_disable.f.opari.inc'
+#line 24 "test1_disable.f"
+      INTEGER I,N,L,T
+      
+#line 26 "test1_disable.f"
+c$omp parallel
+
+#line 28 "test1_disable.f"
+c$omp atomic
+      N=0
+
+#line 31 "test1_disable.f"
+c$omp critical
+      N=1
+#line 33 "test1_disable.f"
+c$omp end critical
+
+#line 35 "test1_disable.f"
+c$omp flush
+
+      CALL OMP_INIT_LOCK(L)
+      CALL OMP_SET_LOCK(L)
+      T=OMP_TEST_LOCK(L)
+      CALL OMP_UNSET_LOCK(L)
+      CALL OMP_DESTROY_LOCK(L)
+
+      CALL OMP_INIT_NEST_LOCK(L)
+      CALL OMP_SET_NEST_LOCK(L)
+      T=OMP_TEST_NEST_LOCK(L)
+      CALL OMP_UNSET_NEST_LOCK(L)
+      CALL OMP_DESTROY_NEST_LOCK(L)
+#line 48 "test1_disable.f"
+c$omp master
+      N=2
+#line 50 "test1_disable.f"
+c$omp end master
+
+#line 52 "test1_disable.f"
+c$omp do
+      DO I=1,5
+#line 54 "test1_disable.f"
+c$omp ordered
+         N=I
+#line 56 "test1_disable.f"
+c$omp end ordered
+      END DO
+
+#line 58 "test1_disable.f"
+c$omp end do 
+#line 59 "test1_disable.f"
+c$omp single
+      N=6
+#line 61 "test1_disable.f"
+c$omp end single
+
+#line 63 "test1_disable.f"
+c$omp task
+      N=7
+#line 65 "test1_disable.f"
+c$omp end task
+
+#line 67 "test1_disable.f"
+c$omp end parallel      
+
+      call POMP2_Init()
+#line 70 "test1_disable.f"
+
+      call POMP2_Begin(opari2_region_1, opari2_ctc_1)
+#line 72 "test1_disable.f"
+      if .false. then
+      call POMP2_End(opari2_region_1)
+#line 74 "test1_disable.f"
+      return
+      end
+      call POMP2_End(opari2_region_1)
+#line 77 "test1_disable.f"
+
+      END SUBROUTINE 
+      end program test1_free
+
+      subroutine POMP2_USER_Init_reg_000()
+         include 'test1_disable.f.opari.inc'
+         call POMP2_USER_Assign_handle( opari2_region_1, 
+     &   opari2_ctc_1 )
+      end

@@ -18,6 +18,7 @@
 TESTS += $(SRC_ROOT)test/c_test.sh
 TESTS += $(SRC_ROOT)test/f90_test.sh
 TESTS += $(SRC_ROOT)test/f77_test.sh
+TESTS += $(SRC_ROOT)test/awk_script_test.sh
 if HAVE_OPENMP_SUPPORT
 TESTS += $(SRC_ROOT)test/jacobi_c_test.sh
 TESTS += $(SRC_ROOT)test/jacobi_c++_test.sh

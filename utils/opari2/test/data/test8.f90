@@ -13,13 +13,13 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Tests whether specific clauses are found and inserted into the CTC string.
 
 program test8
   integer i
   integer k
+  integer num_threads
 
   integer, save :: j
   !$omp threadprivate(j)
@@ -49,7 +49,7 @@ program test8
   !$omp end task
   !$omp end parallel
 
-  !$omp parallel do num_threads(4) reduction(+:k) schedule(static,chunkif) collapse(1) ordered if(.true.)
+  !$omp parallel do num_threads(4) reduction(+:k) schedule(static,chunkif) collapse(1) ordered if(.true.) default(private) shared(i,k)
   do i=1,4
      !$omp ordered
      write(*,*) "do",i
@@ -58,7 +58,7 @@ program test8
   enddo
   !$omp end parallel do
 
-  !$omp parallel sections if((i+k)>5) num_threads(4) reduction(+:k)
+  !$omp parallel sections if((i+k)>5) num_threads(4) reduction(+:k) default(none)
   !$omp section
   write(*,*) "section 1"
   !$omp section
@@ -68,5 +68,8 @@ program test8
   !$omp parallel workshare if(.true.) num_threads(4) reduction(+:k)
   write(*,*) "workshare"
   !$omp end parallel workshare
-end program test8
 
+  !$omp parallel shared(num_threads)
+  write(*,*) num_threads
+  !$omp end parallel 
+end program test8

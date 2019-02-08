@@ -13,11 +13,15 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test the parsers ability to find directives and filter strings and comments.
 
 program test1
+
+implicit none
+
+integer a, b
+
 !************************************************
 !* The following pragmas should be instrumented *
 !************************************************
@@ -45,4 +49,13 @@ program test1
 ! $ omp parallel
   write(*,*) "!$omp parallel"
   write(*,*) """!$omp parallel"""
+
+!**************************************
+!* Test for handling lines with       *
+!* multiple statements separated by ; *
+!**************************************
+
+  a = 1;  a = 2;  a = 3; a = 1; a = 2; a = 3; a = 1; a = 2; a = 3;
+  a = 1; a = 2; a = 3; a = 1; a = 2; a = 3; a = 1; a = 2; a = 3;
+
 end program test1

@@ -1,6 +1,6 @@
 CC=bgxlc_r
 CXX=bgxlC_r
-F77=bgxlf_r 
+F77=bgxlf_r
 FC=bgxlf_r
 
 #CPPFLAGS=

@@ -1,0 +1,1 @@
+# Don't provide MPICC and friends if the user specified --without-mpi.

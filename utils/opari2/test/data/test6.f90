@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test that the insertion of wrapper functions works correctly, but ONLY on supported functions.
 

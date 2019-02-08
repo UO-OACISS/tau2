@@ -1,0 +1,204 @@
+
+#line 1 "test1_disable.f"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! *
+! * @brief Test the --disable= option
+
+
+      program test1_disable
+      IMPLICIT NONE
+      
+      SUBROUTINE foo(A,N)
+      include 'test1_disable.f.opari.inc'
+#line 24 "test1_disable.f"
+      INTEGER I,N,L,T
+      
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_1,
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &opari2_ctc_1 )
+#line 26 "test1_disable.f"
+c$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_1)
+#line 27 "test1_disable.f"
+
+      call POMP2_Atomic_enter(opari2_region_2,
+     &opari2_ctc_2 )
+#line 28 "test1_disable.f"
+c$omp atomic
+      N=0
+      call POMP2_Atomic_exit(opari2_region_2)
+#line 30 "test1_disable.f"
+
+      call POMP2_Critical_enter(opari2_region_3,
+     &opari2_ctc_3 )
+#line 31 "test1_disable.f"
+c$omp critical
+      call POMP2_Critical_begin(opari2_region_3)
+#line 32 "test1_disable.f"
+      N=1
+      call POMP2_Critical_end(opari2_region_3)
+#line 33 "test1_disable.f"
+c$omp end critical
+      call POMP2_Critical_exit(opari2_region_3)
+#line 34 "test1_disable.f"
+
+      call POMP2_Flush_enter(opari2_region_4,
+     &opari2_ctc_4 )
+#line 35 "test1_disable.f"
+c$omp flush
+      call POMP2_Flush_exit(opari2_region_4)
+#line 36 "test1_disable.f"
+
+      CALL POMP2_INIT_LOCK(L)
+      CALL POMP2_SET_LOCK(L)
+      T=POMP2_TEST_LOCK(L)
+      CALL POMP2_UNSET_LOCK(L)
+      CALL POMP2_DESTROY_LOCK(L)
+
+      CALL POMP2_INIT_NEST_LOCK(L)
+      CALL POMP2_SET_NEST_LOCK(L)
+      T=POMP2_TEST_NEST_LOCK(L)
+      CALL POMP2_UNSET_NEST_LOCK(L)
+      CALL POMP2_DESTROY_NEST_LOCK(L)
+#line 48 "test1_disable.f"
+c$omp master
+      call POMP2_Master_begin(opari2_region_5,
+     &opari2_ctc_5 )
+#line 49 "test1_disable.f"
+      N=2
+      call POMP2_Master_end(opari2_region_5)
+#line 50 "test1_disable.f"
+c$omp end master
+
+      call POMP2_Do_enter(opari2_region_6,
+     &opari2_ctc_6 )
+#line 52 "test1_disable.f"
+c$omp do
+      DO I=1,5
+      call POMP2_Ordered_enter(opari2_region_7,
+     &opari2_ctc_7 )
+#line 54 "test1_disable.f"
+c$omp ordered
+      call POMP2_Ordered_begin(opari2_region_7)
+#line 55 "test1_disable.f"
+         N=I
+      call POMP2_Ordered_end(opari2_region_7)
+#line 56 "test1_disable.f"
+c$omp end ordered
+      call POMP2_Ordered_exit(opari2_region_7)
+#line 57 "test1_disable.f"
+      END DO
+
+#line 58 "test1_disable.f"
+c$omp end do  nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_6,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_6,
+     &pomp2_old_task)
+      call POMP2_Do_exit(opari2_region_6)
+#line 59 "test1_disable.f"
+#line 59 "test1_disable.f"
+c$omp single
+      N=6
+#line 61 "test1_disable.f"
+c$omp end single
+
+      pomp2_if = .true.
+      if (pomp2_if) then
+      call POMP2_Task_create_begin(opari2_region_8,
+     &pomp2_new_task,
+     &pomp2_old_task, 
+     &pomp2_if,
+     &opari2_ctc_8 )
+      end if
+#line 63 "test1_disable.f"
+c$omp task
+!$omp& if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)
+      if (pomp2_if) then
+      call POMP2_Task_begin(opari2_region_8, pomp2_new_task)
+      end if
+#line 64 "test1_disable.f"
+      N=7
+      if (pomp2_if) then
+      call POMP2_Task_end(opari2_region_8)
+      end if
+#line 65 "test1_disable.f"
+c$omp end task
+      if (pomp2_if) then
+      call POMP2_Task_create_end(opari2_region_8,
+     &pomp2_old_task)
+      end if
+#line 66 "test1_disable.f"
+
+      call POMP2_Implicit_barrier_enter(opari2_region_1,
+     &pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_1,
+     &pomp2_old_task)
+      call POMP2_Parallel_end(opari2_region_1)
+#line 67 "test1_disable.f"
+c$omp end parallel      
+      call POMP2_Parallel_join(opari2_region_1,
+     &pomp2_old_task)
+#line 68 "test1_disable.f"
+
+      call POMP2_Init()
+#line 70 "test1_disable.f"
+
+      call POMP2_Begin(opari2_region_9, opari2_ctc_9)
+#line 72 "test1_disable.f"
+      if .false. then
+      call POMP2_End(opari2_region_9)
+#line 74 "test1_disable.f"
+      return
+      end
+      call POMP2_End(opari2_region_9)
+#line 77 "test1_disable.f"
+
+      END SUBROUTINE 
+      end program test1_free
+
+      subroutine POMP2_Init_reg_000()
+         include 'test1_disable.f.opari.inc'
+         call POMP2_Assign_handle( opari2_region_1, 
+     &   opari2_ctc_1 )
+         call POMP2_Assign_handle( opari2_region_2, 
+     &   opari2_ctc_2 )
+         call POMP2_Assign_handle( opari2_region_3, 
+     &   opari2_ctc_3 )
+         call POMP2_Assign_handle( opari2_region_4, 
+     &   opari2_ctc_4 )
+         call POMP2_Assign_handle( opari2_region_5, 
+     &   opari2_ctc_5 )
+         call POMP2_Assign_handle( opari2_region_6, 
+     &   opari2_ctc_6 )
+         call POMP2_Assign_handle( opari2_region_7, 
+     &   opari2_ctc_7 )
+         call POMP2_Assign_handle( opari2_region_8, 
+     &   opari2_ctc_8 )
+      end
+
+      subroutine POMP2_USER_Init_reg_000()
+         include 'test1_disable.f.opari.inc'
+         call POMP2_USER_Assign_handle( opari2_region_9, 
+     &   opari2_ctc_9 )
+      end

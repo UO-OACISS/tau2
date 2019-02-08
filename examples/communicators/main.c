@@ -90,12 +90,14 @@ void main(int argc, char* argv[])
       color = 2;
       MPI_Comm_split(comm2d,color,rank, &redblue); /* even processor ids  */
       MPI_Comm_rank(redblue,&newPid);
+      MPI_Comm_set_name(redblue, "EVEN");
     }
   else
     {
       color = 3;
       MPI_Comm_split(comm2d,color,rank, &redblue); /* odd processor ids  */
       MPI_Comm_rank(redblue,&newPid);
+      MPI_Comm_set_name(redblue, "ODD");
     }
 
   /* initialize data to be broadcast */

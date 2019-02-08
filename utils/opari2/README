@@ -1,9 +1,9 @@
-OPARI2 
+OPARI2
 ------
-OPARI2 is a source-to-source instrumentation tool for OpenMP and
-hybrid codes.
+OPARI2 is a source-to-source instrumentation tool for directive based
+programming models, such as OpenMP.
 
-To build OPARI2 you usually just need to do 
+To build OPARI2 you usually just need to do
 
   ./configure
   make
@@ -16,4 +16,4 @@ usage examples under $(prefix)/share/doc/opari.
 
 Have fun!
 
-Please report bugs to <scorep-bugs@groups.tu-dresden.de>.
+Please report bugs to <support@score-p.org>.

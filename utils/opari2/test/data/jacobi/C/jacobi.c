@@ -37,7 +37,7 @@ Jacobi( struct JacobiData* data )
     int     i, j;
     double  fLRes;
 
-    double  ax, ay, b, residual, tmpResd;
+    double ax, ay, b, residual, tmpResd;
 
     double* uold = ( double* )malloc( data->iCols * data->iRows * sizeof( double ) );
     afU = data->afU;
@@ -54,24 +54,25 @@ Jacobi( struct JacobiData* data )
         {
             residual = 0.0;
 
-            /* copy new solution into old */
+            /* Copy new solution into old, including the boundary. */
 #pragma omp parallel
             {
 #pragma omp for private(j, i)
-                for ( j = 1; j < data->iRows - 1; j++ )
+                for ( j = data->iRowFirst; j <= data->iRowLast; j++ )
                 {
-                    for ( i = 1; i < data->iCols - 1; i++ )
+                    for ( i = 0; i < data->iCols; i++ )
                     {
                         UOLD( j, i ) = U( j, i );
                     }
                 }
 
 
-                /* compute stencil, residual and update */
+                /* Compute stencil, residual and update.
+                 * Update excludes the boundary. */
 #pragma omp for private(j, i, fLRes) reduction(+:residual)
                 for ( j = data->iRowFirst + 1; j <= data->iRowLast - 1; j++ )
                 {
-                    for ( i = 1; i <= data->iCols - 2; i++ )
+                    for ( i = 1; i < data->iCols - 1; i++ )
                     {
                         fLRes = ( ax * ( UOLD( j, i - 1 ) + UOLD( j, i + 1 ) )
                                   + ay * ( UOLD( j - 1, i ) + UOLD( j + 1, i ) )

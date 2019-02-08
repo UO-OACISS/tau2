@@ -1,0 +1,70 @@
+      INTEGER*8 opari2_region_1
+      CHARACTER*999 opari2_ctc_1
+      PARAMETER (opari2_ctc_1=
+     &"78*regionType=parallel*sscl=test1_disable.f:26:26*escl=test"//
+     &"1_disable.f:67:67**")
+
+      INTEGER*8 opari2_region_2
+      CHARACTER*999 opari2_ctc_2
+      PARAMETER (opari2_ctc_2=
+     &"76*regionType=atomic*sscl=test1_disable.f:28:28*escl=test1_"//
+     &"disable.f:29:29**")
+
+      INTEGER*8 opari2_region_3
+      CHARACTER*999 opari2_ctc_3
+      PARAMETER (opari2_ctc_3=
+     &"78*regionType=critical*sscl=test1_disable.f:31:31*escl=test"//
+     &"1_disable.f:33:33**")
+
+      INTEGER*8 opari2_region_4
+      CHARACTER*999 opari2_ctc_4
+      PARAMETER (opari2_ctc_4=
+     &"75*regionType=flush*sscl=test1_disable.f:35:35*escl=test1_d"//
+     &"isable.f:35:35**")
+
+      INTEGER*8 opari2_region_5
+      CHARACTER*999 opari2_ctc_5
+      PARAMETER (opari2_ctc_5=
+     &"76*regionType=master*sscl=test1_disable.f:48:48*escl=test1_"//
+     &"disable.f:50:50**")
+
+      INTEGER*8 opari2_region_6
+      CHARACTER*999 opari2_ctc_6
+      PARAMETER (opari2_ctc_6=
+     &"72*regionType=do*sscl=test1_disable.f:52:52*escl=test1_disa"//
+     &"ble.f:58:58**")
+
+      INTEGER*8 opari2_region_7
+      CHARACTER*999 opari2_ctc_7
+      PARAMETER (opari2_ctc_7=
+     &"77*regionType=ordered*sscl=test1_disable.f:54:54*escl=test1"//
+     &"_disable.f:56:56**")
+
+      INTEGER*8 opari2_region_8
+      CHARACTER*999 opari2_ctc_8
+      PARAMETER (opari2_ctc_8=
+     &"76*regionType=single*sscl=test1_disable.f:59:59*escl=test1_"//
+     &"disable.f:61:61**")
+
+      INTEGER*8 opari2_region_9
+      CHARACTER*999 opari2_ctc_9
+      PARAMETER (opari2_ctc_9=
+     &"107*regionType=userRegion*sscl=test1_disable.f:71:71*escl=t"//
+     &"est1_disable.f:76:76*userRegionName=user_region**")
+
+      common /cb000/ opari2_region_1,
+     &          opari2_region_2,
+     &          opari2_region_3,
+     &          opari2_region_4,
+     &          opari2_region_5,
+     &          opari2_region_6,
+     &          opari2_region_7,
+     &          opari2_region_8,
+     &          opari2_region_9
+
+      integer*4 pomp2_lib_get_max_threads
+      logical pomp2_test_lock
+      integer*4 pomp2_test_nest_lock
+      integer*8 pomp2_old_task, pomp2_new_task 
+      logical pomp2_if 
+      integer*4 pomp2_num_threads 

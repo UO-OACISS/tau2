@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test the parsers ability to insert a necessary include statement at the right places.
 

@@ -32,7 +32,7 @@ using namespace std;
 
 
 void
-Jacobi( JacobiData &data )
+Jacobi( JacobiData& data )
 {
     /*use local pointers for performance reasons*/
     double* afU, * afF;
@@ -47,17 +47,17 @@ Jacobi( JacobiData &data )
         double b        = -2.0 * ( ax + ay ) - data.fAlpha; /* Central coeff */
         double residual = 10.0 * data.fTolerance;
 
-        while ( data.iIterCount < data.iIterMax && residual > data.fTolerance )
+        while ( data.iIterCount < data.iIterMax&& residual > data.fTolerance )
         {
             residual = 0.0;
 
-            /* copy new solution into old */
+            /* Copy new solution into old, excluding the boundary. */
 #pragma omp parallel
             {
 #pragma omp for
-                for ( int j = 1; j < data.iRows - 1; j++ )
+                for ( int j = data.iRowFirst; j <= data.iRowLast; j++ )
                 {
-                    for ( int i = 1; i < data.iCols - 1; i++ )
+                    for ( int i = 0; i < data.iCols; i++ )
                     {
                         UOLD( j, i ) = U( j, i );
                     }
@@ -65,7 +65,8 @@ Jacobi( JacobiData &data )
 
                 double fLRes;
 
-                /* compute stencil, residual and update */
+                /* Compute stencil, residual and update.
+                 * Update excludes the boundary */
 #pragma omp for reduction(+:residual)
                 for ( int j = data.iRowFirst + 1; j <= data.iRowLast - 1; j++ )
                 {

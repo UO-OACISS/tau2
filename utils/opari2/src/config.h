@@ -19,9 +19,6 @@
 
 /**
  * @file       config.h
- * @author     Christian R&ouml;ssel <c.roessel@fz-juelich.de>
- * @maintainer Christian R&ouml;ssel <c.roessel@fz-juelich.de>
- * @status     ALPHA
  *
  * @brief      Provide a single config.h that hides the frontend/backend
  *             issues from the developer
@@ -34,12 +31,12 @@
     #elif defined BACKEND_BUILD
         #include <config-backend.h>
     #else
-        #error "You can not use config.h without defining either FRONTEND_BUILD or BACKEND_BUILD."
+        #error "You cannot use config.h without defining either FRONTEND_BUILD or BACKEND_BUILD."
     #endif
 #elif defined NOCROSS_BUILD
     #include <config-backend.h>
 #else
-    #error "You can not use config.h without defining either CROSS_BUILD or NOCROSS_BUILD."
+    #error "You cannot use config.h without defining either CROSS_BUILD or NOCROSS_BUILD."
 #endif
 
 #include <config-common.h>

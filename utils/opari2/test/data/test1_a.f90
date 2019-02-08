@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test the parsers ability to insert a necessary include statement at the right places.
 
@@ -54,7 +53,7 @@
             write (*,*) "Subroutine 1"
             call f1()
           end subroutine r1
-    
+
         end module module1
 
         integer function f0()
@@ -78,7 +77,7 @@
           return
         end function f1
 
-        subroutine s1(a) 
+        subroutine s1(a)
           integer :: a
           write (*,*) "subroutine s1"
           write (*,*) "keyword interface inside a string"
@@ -90,6 +89,11 @@
             end subroutine ss1
         end subroutine s1
 
+        subroutine sub_bind(a) bind(c,name='sub_bind_f')
+          integer :: a
+
+          write(*,*) "subroutine sub_bind(a) bind(c,name='sub_bind_f')"
+        end subroutine sub_bind
         program otest
           use mmm
           use rename_test, bar => foo

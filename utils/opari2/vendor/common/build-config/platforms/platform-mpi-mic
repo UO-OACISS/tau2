@@ -1,0 +1,13 @@
+MPICC=mpiicc -mmic
+MPICXX=mpiicpc -mmic
+MPIF77=mpiifort -mmic
+MPIFC=mpiifort -mmic
+MPI_CPPFLAGS=-DMPICH_SKIP_MPICXX
+MPILIB_LDFLAGS=-Wc,-nolinkage
+
+#MPI_LDFLAGS=
+#MPI_LIBS=
+#MPI_CFLAGS=
+#MPI_CXXFLAGS=
+#MPI_FFLAGS=
+#MPI_FCFLAGS=

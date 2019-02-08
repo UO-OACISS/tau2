@@ -3,41 +3,50 @@
 ##
 ## This file is part of the Score-P software (http://www.score-p.org)
 ##
-## Copyright (c) 2009-2011, 
-##    RWTH Aachen University, Germany
-##    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
-##    Technische Universitaet Dresden, Germany
-##    University of Oregon, Eugene, USA
-##    Forschungszentrum Juelich GmbH, Germany
-##    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
-##    Technische Universitaet Muenchen, Germany
+## Copyright (c) 2009-2011,
+## RWTH Aachen University, Germany
 ##
-## See the COPYING file in the package base directory for details.
+## Copyright (c) 2009-2011,
+## Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Dresden, Germany
+##
+## Copyright (c) 2009-2011,
+## University of Oregon, Eugene, USA
+##
+## Copyright (c) 2009-2011, 2014,
+## Forschungszentrum Juelich GmbH, Germany
+##
+## Copyright (c) 2009-2011,
+## German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##
+## Copyright (c) 2009-2011,
+## Technische Universitaet Muenchen, Germany
+##
+## This software may be modified and distributed under the terms of
+## a BSD-style license.  See the COPYING file in the package base
+## directory for details.
 ##
 
 
 ## file       ac_scorep_c99.m4
 ##            This file contains a modified versions of the following
-##            autoconf's 2.65 macros:
+##            autoconf's 2.69 macros:
 ##
 ##            AC_PROG_CC_C99 (renamed to AC_SCOREP_PROG_CC_C99):
 ##              In SCOREP we don't want to use the GNU option -std=gnu99
 ##              (but -std=c99 instead) as this prevents some warnings that
 ##              may cause portability issues.
 ##
-##            AC_OPENMP (renamed to SCOREP_OPENMP):
-##              Add support for NEC SX compiler.
-##
 ##            Please find the autoconf licence below.
 ##
-## maintainer Christian Roessel <c.roessel@fz-juelich.de>
 ##
 
 
 # This file is part of Autoconf.			-*- Autoconf -*-
 # Programming languages support.
-# Copyright (C) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-# Free Software Foundation, Inc.
+# Copyright (C) 2001-2012 Free Software Foundation, Inc.
 
 # This file is part of Autoconf.  This program is free
 # software; you can redistribute it and/or modify it under the
@@ -108,6 +117,15 @@ test_varargs_macros (void)
 
 // Check long long types.
 #define BIG64 18446744073709551615ull
+#define BIG32 4294967295ul
+#define BIG_OK (BIG64 / BIG32 == 4294967297ull && BIG64 % BIG32 == 0)
+#if !BIG_OK
+  your preprocessor is broken;
+#endif
+#if BIG_OK
+#else
+  your preprocessor is broken;
+#endif
 static long long int bignum = -9223372036854775807LL;
 static unsigned long long int ubignum = BIG64;
 
@@ -207,15 +225,24 @@ test_varargs (const char *format, ...)
 	  || dynamic_array[ni.number - 1] != 543);
 ]],
 dnl Try
-dnl GCC		-std=c99 (unused restrictive modes: -std=iso9899:1999)
+dnl GCC		-std=gnu99 (unused restrictive modes: -std=c99 -std=iso9899:1999)
 dnl AIX		-qlanglvl=extc99 (unused restrictive mode: -qlanglvl=stdc99)
 dnl HP cc	-AC99
 dnl Intel ICC	-std=c99, -c99 (deprecated)
 dnl IRIX	-c99
-dnl Solaris	-xc99=all (Forte Developer 7 C mishandles -xc99 on Solaris 9,
-dnl		as it incorrectly assumes C99 semantics for library functions)
+dnl Solaris	-D_STDC_C99=
+dnl		cc's -xc99 option uses linker magic to define the external
+dnl		symbol __xpg4 as if by "int __xpg4 = 1;", which enables C99
+dnl		behavior for C library functions.  This is not wanted here,
+dnl		because it means that a single module compiled with -xc99
+dnl		alters C runtime behavior for the entire program, not for
+dnl		just the module.  Instead, define the (private) symbol
+dnl		_STDC_C99, which suppresses a bogus failure in <stdbool.h>.
+dnl		The resulting compiler passes the test case here, and that's
+dnl		good enough.  For more, please see the thread starting at:
+dnl            http://lists.gnu.org/archive/html/autoconf/2010-12/msg00059.html
 dnl Tru64	-c99
 dnl NEC SX	-Kc99
 dnl with extended modes being tried first.
-[[-std=c99 -c99 -AC99 -xc99=all -qlanglvl=extc99 -Kc99]], [$1], [$2])[]dnl
+[[-std=gnu99 -std=c99 -c99 -AC99 -D_STDC_C99= -qlanglvl=extc99 -Kc99]], [$1], [$2])[]dnl
 ])# _AC_SCOREP_PROG_CC_C99

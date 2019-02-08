@@ -14,7 +14,6 @@
  *
  * Testfile for automated testing of OPARI2
  *
- * @authors Bernd Mohr, Peter Philippen
  *
  * @brief Test that the insertion of wrapper functions works correctly, but ONLY on supported functions.
  */
@@ -33,7 +32,7 @@ int main() {
   //**************************************************
 
   omp_init_lock(&lock1); omp_init_nest_lock(&lock2); omp_set_lock(&lock1);
-  omp_set_nest_lock(&lock2);  // omp_set_nest_lock(&lock2); 
+  omp_set_nest_lock(&lock2);  // omp_set_nest_lock(&lock2);
   omp_unset_lock(&lock1); /*omp_unset_lock(&lock1);*/ omp_unset_nest_lock(&lock2);
   omp_test_lock(&lock1);/*
   omp_test_lock(&lock1);
@@ -58,7 +57,7 @@ int main() {
   //**************************************************
 
   omp_get_num_threads();
-  omp_get_max_threads(); 
+  omp_get_max_threads();
   omp_get_thread_num();
   omp_get_num_procs();
   omp_in_parallel();
@@ -78,9 +77,21 @@ int main() {
 
   // omp_init_lock(i)
   /* -- omp_init_lock(i) -- */
-  /* -- 
-        omp_init_lock(i) 
+  /* --
+        omp_init_lock(i)
                          -- */
   printf("omp_init_lock(i)   \n");  // omp_init_lock(i)
   printf("omp_init_lock(i)\"test\"omp_init_lock(i)omp_init_lock(i)\"\"\"\n");
 }
+
+/* Simulate preincluded definitions. Nothing beyond this point should be replaced */
+#line 1 "/some/path/to/presumed/include/file/omp.h"
+  omp_init_lock(&lock1); omp_init_nest_lock(&lock2); omp_set_lock(&lock1);
+  omp_set_nest_lock(&lock2);  // omp_set_nest_lock(&lock2);
+  omp_unset_lock(&lock1); /*omp_unset_lock(&lock1);*/ omp_unset_nest_lock(&lock2);
+  omp_test_lock(&lock1);/*
+  omp_test_lock(&lock1);
+  */ omp_test_nest_lock(&lock2);
+
+  omp_destroy_lock(&lock1);
+  omp_destroy_nest_lock(&lock2);

@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Tests user instrumentation directives and selective instrumentation.
 
@@ -29,15 +28,25 @@ C$POMP INST INIT
 !$OMP end PARALLEL
 
 CPOMP$ INST END(foo)
-      
+
 *POMP$ INST ON
 
 !POMP$ NOINSTRUMENT
 !$OMP PARALLEL
-      i = 2
+!$OMP DO
+      do i = 1,2
+         write(*,*) i
+      end do
+!$OMP END DO
 !$OMP END PARALLEL
+
+!$OMP PARALLEL DO
+      do i = 1,2
+         write(*,*) i
+      end do
+!$OMP END PARALLEL DO
 !$POMP INSTRUMENT
-      
+
 !$OMP PARALLEL
       i = 3
 !$OMP end PARALLEL

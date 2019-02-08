@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test the basic instrumentation of all directives.
 
@@ -85,7 +84,6 @@
 !$omp end task
 
 !$omp this should be ignored by opari and the compiler
-!$this line will be deleted
 
 !$omp taskwait
 !$omp end parallel
