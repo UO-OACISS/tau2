@@ -33,10 +33,12 @@
 
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 //#include <math.h>
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
+#include <map>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
@@ -97,6 +99,13 @@ extern "C" char *Tau_printRanks(void *comm_ptr);
 static void *Tau_Global_comm;
 #endif /* TAU_MPI */
 
+
+/* The map of communicator names as set in Tau_communicator_set_name */
+map<uint64_t, string>& TheCommNameMap(void) {
+  static map<uint64_t, string> comm_name_map;
+  return comm_name_map;
+}
+
 FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
   /* Get the FunctionInfo Object of the current Profiler */
   Profiler *current = TauInternal_CurrentProfiler(tid);
@@ -120,7 +129,16 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
     string name;
 	/* print out the ranks of the processes in the communicator */
 	if (keyname.compare("comm") == 0) {
-	  char* ranks = Tau_printRanks((void *)key);
+        /* Is there a name for this map? If not, use ranks */
+          char *ranks; 
+          map<uint64_t, string>::iterator it = TheCommNameMap().find((uint64_t)key);
+          if (it != TheCommNameMap().end()) {
+            DEBUGPROFMSG("TAU: Rank="<< RtsLayer::myNode()<<": Found key in TheCommNameMap "<<it->second<<endl; );
+            ranks = (char *)( it->second.c_str());    
+          } else {
+            DEBUGPROFMSG("TAU: Rank="<< RtsLayer::myNode()<<": did not find key in TheCommNameMap "<<endl;);
+	    ranks = Tau_printRanks((void *)key);
+          }
 	  keystr = (char*)(calloc(strlen(ranks)+1,sizeof(char)));
       sprintf(keystr, "%s", ranks);
 	  Tau_Global_comm = (void*)key;
@@ -160,6 +178,7 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
 void TauProfiler_AddProfileParamData(long key, const char *keyname) {
   string keystring(keyname);
   int tid = RtsLayer::myThread();
+
   FunctionInfo *f = TauGetProfileParamFI(tid, key, keystring);
   Profiler *current = TauInternal_CurrentProfiler(tid);
   if (!current) return; 
@@ -195,6 +214,14 @@ void Profiler::ProfileParamStop(double* TotalTime, int tid) {
     ProfileParamFunction->AddExclTime(TotalTime, tid);  
   }
 }
+
+extern "C" void Tau_communicator_set_name(void * comm, const char * comm_name) {
+  DEBUGPROFMSG("Rank "<<RtsLayer::myNode() << " Tau_communicator_set_name: comm = " <<
+    comm << " name = "<< comm_name<<endl; );
+	
+  TheCommNameMap()[(uint64_t)comm] = comm_name;
+}
+
   
 /***************************************************************************
  * $RCSfile: ProfileParam.cpp,v $   $Author: amorris $
