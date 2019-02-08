@@ -28,6 +28,8 @@ void Tau_util_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char
 void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id);
 void Tau_util_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name);
 void Tau_util_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name);
+void Tau_util_add_regex(const char * r);
+const char* Tau_util_check_for_matching_regex(const char * input);
 
 #ifdef __cplusplus
 }

@@ -27,6 +27,7 @@
 #include <Profiler.h>
 
 #include <tr1/functional>
+#include <regex>
 
 #ifndef TAU_WINDOWS
 #include <dlfcn.h>
@@ -40,6 +41,7 @@ Tau_plugin_callbacks_active_t Tau_plugins_enabled;
 std::map < PluginKey, std::set<unsigned int> > plugins_for_named_specific_event;
 std::map < unsigned int, Tau_plugin_new_t*> plugin_map;
 std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
+std::list < std::string > regex_list;
 unsigned int plugin_id_counter = 0;
 size_t star_hash; 
 ////
@@ -680,7 +682,8 @@ extern "C" void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
   plugins_for_named_specific_event[key].erase(id);
-
+  if(plugins_for_named_specific_event[key].empty())
+    plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
 }
 
 extern "C" void Tau_util_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
@@ -701,13 +704,30 @@ extern "C" void Tau_util_enable_all_plugins_for_specific_event(Tau_plugin_event_
   }
 }
 
+extern "C" void Tau_util_add_regex(const char * r)
+{
+  std::string s(r);
+  regex_list.push_back(s);
+}
+
+extern "C" const char* Tau_util_check_for_matching_regex(const char * input)
+{
+  for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
+    if(regex_match(input, std::regex(*it))) {
+      return (*it).c_str();
+    }
+  }
+  return NULL;
+}
+
 ////
 
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the function registration event
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* data, PluginKey key) {
-
+  
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->FunctionRegistrationComplete != 0)
       plugin_callback_map[*it]->FunctionRegistrationComplete(data);
@@ -720,6 +740,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_registration_data_t* d
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->Mpit != 0)
       plugin_callback_map[*it]->Mpit(data);
@@ -731,6 +752,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_mpit_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_dump_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->Dump != 0)
       plugin_callback_map[*it]->Dump(data);
@@ -742,6 +764,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_dump_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_entry_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->FunctionEntry != 0)
       plugin_callback_map[*it]->FunctionEntry(data);
@@ -753,6 +776,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_entry_data_t* data, Pl
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->FunctionExit != 0)
       plugin_callback_map[*it]->FunctionExit(data);
@@ -764,6 +788,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_exit_data_t* data, Plu
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->CurrentTimerExit != 0)
       plugin_callback_map[*it]->CurrentTimerExit(data);
@@ -775,6 +800,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_current_timer_exit_data_t* data
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->Send != 0)
       plugin_callback_map[*it]->Send(data);
@@ -786,6 +812,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_send_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->Recv != 0)
       plugin_callback_map[*it]->Recv(data);
@@ -797,6 +824,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_recv_data_t* data, PluginKey ke
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->MetadataRegistrationComplete != 0)
       plugin_callback_map[*it]->MetadataRegistrationComplete(data);
@@ -808,6 +836,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_metadata_registration_data_t* d
  ***************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->PostInit != 0)
       plugin_callback_map[*it]->PostInit(data);
@@ -819,6 +848,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_post_init_data_t* data, PluginK
  ****************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->AtomicEventRegistrationComplete != 0)
       plugin_callback_map[*it]->AtomicEventRegistrationComplete(data);
@@ -830,6 +860,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_registration_data_
  *****************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->AtomicEventTrigger != 0)
       plugin_callback_map[*it]->AtomicEventTrigger(data);
@@ -841,6 +872,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_atomic_event_trigger_data_t* da
  ******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->PreEndOfExecution != 0)
       plugin_callback_map[*it]->PreEndOfExecution(data);
@@ -852,6 +884,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_pre_end_of_execution_data_t* da
  ******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->EndOfExecution != 0)
       plugin_callback_map[*it]->EndOfExecution(data);
@@ -864,6 +897,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_end_of_execution_data_t* data, 
  *****************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->FunctionFinalize != 0)
       plugin_callback_map[*it]->FunctionFinalize(data);
@@ -875,6 +909,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_function_finalize_data_t* data,
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->InterruptTrigger != 0)
       plugin_callback_map[*it]->InterruptTrigger(data);
@@ -886,6 +921,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data,
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->PhaseEntry != 0)
       plugin_callback_map[*it]->PhaseEntry(data);
@@ -897,6 +933,7 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data, Plugi
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data, PluginKey key) {
 
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return; 
   for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
     if (plugin_callback_map[*it]->PhaseExit != 0)
       plugin_callback_map[*it]->PhaseExit(data);
@@ -912,13 +949,22 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
   ////NPD
   size_t hash_ = Tau_util_return_hash_of_string(specific_event_name);
   size_t hash;
+  const char * matching_regex = Tau_util_check_for_matching_regex(specific_event_name);
 
   PluginKey key_(event, hash_);
 
-  if(plugins_for_named_specific_event[key_].empty()) {
-     hash = star_hash;
-  } else {
+  if(!plugins_for_named_specific_event[key_].empty()) {
      hash = hash_;
+  } else if (matching_regex != NULL) {
+     size_t hash__ = Tau_util_return_hash_of_string(matching_regex);
+     PluginKey key__(event, hash__);
+     if(plugins_for_named_specific_event[key__].empty()) {
+       hash = star_hash;
+     } else {
+       hash = hash__;
+     }
+  } else {
+     hash = star_hash;
   }
      
   PluginKey key(event, hash);

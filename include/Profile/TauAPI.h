@@ -386,6 +386,8 @@
 #define TAU_UTIL_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_util_disable_plugin_for_specific_event
 #define TAU_UTIL_ENABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_util_enable_all_plugins_for_specific_event
 #define TAU_UTIL_DISABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_util_disable_all_plugins_for_specific_event
+#define TAU_UTIL_ADD_REGEX Tau_util_add_regex
+#define TAU_UTIL_CHECK_FOR_MATCHING_REGEX Tau_util_check_for_matching_regex
 /* TAU_PLUGIN_API */
 
 
