@@ -1097,6 +1097,17 @@ extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
 
 }
 
+////NPD
+extern "C" size_t Tau_create_trigger(const char *name) {
+  TauInternalFunctionGuard protects_this_function;
+  return 0;
+}
+
+extern "C" void Tau_trigger(size_t id, void * data) {
+  TauInternalFunctionGuard protects_this_function;
+}
+
+////
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   TauInternalFunctionGuard protects_this_function;
