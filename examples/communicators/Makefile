@@ -1,4 +1,9 @@
-MCC      = tau_cc.sh    
+TAU_MAKEFILE ?=../../include/Makefile
+
+include $(TAU_MAKEFILE)
+
+MCC              = TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh 
+
 CFLAGS = -O2   
 
 OBJS =  main.o 
