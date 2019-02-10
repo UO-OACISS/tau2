@@ -1110,7 +1110,7 @@ extern "C" void Tau_trigger(size_t id, void * data) {
   TauInternalFunctionGuard protects_this_function;
 }
 
-extern "C" void Tau_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
@@ -1119,7 +1119,7 @@ extern "C" void Tau_enable_plugin_for_specific_event(Tau_plugin_event_t ev, cons
 
 }
  
-extern "C" void Tau_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
@@ -1129,7 +1129,7 @@ extern "C" void Tau_disable_plugin_for_specific_event(Tau_plugin_event_t ev, con
     plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
 }
 
-extern "C" void Tau_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
+extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
@@ -1138,7 +1138,7 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev
   plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
 }
 
-extern "C" void Tau_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
+extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name)
 {
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);

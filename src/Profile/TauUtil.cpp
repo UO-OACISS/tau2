@@ -44,7 +44,7 @@ std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
 std::list < std::string > regex_list;
 unsigned int plugin_id_counter = 0;
 size_t star_hash; 
-extern "C" void Tau_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name);
+extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name);
 ////
 
 #define TAU_NAME_LENGTH 1024

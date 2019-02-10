@@ -508,6 +508,16 @@ void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
 void TAUDECL Tau_stop_timer(void *profiler, int tid);
 int TAUDECL Tau_invoke_plugin_phase_entry(void *profiler);
 int TAUDECL Tau_invoke_plugin_phase_exit(void *profiler);
+////NPD
+void TAUDECL Tau_add_regex(const char * r);
+void TAUDECL Tau_enable_all_plugins_for_specific_event(int ev, const char *name);
+void TAUDECL Tau_disable_all_plugins_for_specific_event(int ev, const char *name);
+void TAUDECL Tau_disable_plugin_for_specific_event(int ev, const char *name, unsigned int id);
+void TAUDECL Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id);
+size_t TAUDECL Tau_create_trigger(const char *name);
+void TAUDECL Tau_trigger(size_t id, void * data);
+////
+
 void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
 void TAUDECL Tau_lite_stop_timer(void *profiler);
 void TAUDECL Tau_pure_start(const char *name);
