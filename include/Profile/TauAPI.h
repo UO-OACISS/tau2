@@ -377,11 +377,6 @@
 
 #endif /* TAU_FAPI */
 
-#endif /* TAU_ENABLED */
-
-/* TAU_PLUGIN API */
-#define TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS Tau_util_init_tau_plugin_callbacks
-#define TAU_UTIL_PLUGIN_REGISTER_CALLBACKS Tau_util_plugin_register_callbacks
 #define TAU_ENABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_enable_plugin_for_specific_event
 #define TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_disable_plugin_for_specific_event
 #define TAU_ENABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_enable_all_plugins_for_specific_event
@@ -391,6 +386,12 @@
 
 #define TAU_CREATE_TRIGGER Tau_create_trigger
 #define TAU_TRIGGER Tau_trigger
+
+#endif /* TAU_ENABLED */
+
+/* TAU_PLUGIN API */
+#define TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS Tau_util_init_tau_plugin_callbacks
+#define TAU_UTIL_PLUGIN_REGISTER_CALLBACKS Tau_util_plugin_register_callbacks
 /* TAU_PLUGIN_API */
 
 

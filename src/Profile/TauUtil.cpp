@@ -44,6 +44,7 @@ std::map < unsigned int, Tau_plugin_callbacks_t* > plugin_callback_map;
 std::list < std::string > regex_list;
 unsigned int plugin_id_counter = 0;
 size_t star_hash; 
+extern "C" void Tau_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name);
 ////
 
 #define TAU_NAME_LENGTH 1024
@@ -671,50 +672,9 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 }
 
 
-////NPD
-extern "C" void Tau_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
-{
-  size_t hash = Tau_util_return_hash_of_string(name);
-  PluginKey key(ev, hash);
-  plugins_for_named_specific_event[key].insert(id);
-
-}
- 
-extern "C" void Tau_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
-{
-  size_t hash = Tau_util_return_hash_of_string(name);
-  PluginKey key(ev, hash);
-  plugins_for_named_specific_event[key].erase(id);
-  if(plugins_for_named_specific_event[key].empty())
-    plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
-}
-
-extern "C" void Tau_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
-{
-  size_t hash = Tau_util_return_hash_of_string(name);
-  PluginKey key(ev, hash);
-  plugins_for_named_specific_event[key].clear();
-  plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
-}
-
-extern "C" void Tau_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
-{
-  size_t hash = Tau_util_return_hash_of_string(name);
-  PluginKey key(ev, hash);
-
-  for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
-    plugins_for_named_specific_event[key].insert(i);
-  }
-}
-
-extern "C" void Tau_add_regex(const char * r)
-{
-  std::string s(r);
-  regex_list.push_back(s);
-}
-
 extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
+  TauInternalFunctionGuard protects_this_function;
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(regex_match(input, std::regex(*it))) {
       return (*it).c_str();
@@ -722,8 +682,6 @@ extern "C" const char* Tau_check_for_matching_regex(const char * input)
   }
   return NULL;
 }
-
-////
 
 /**************************************************************************************************************************
  * Overloaded function that invokes all registered callbacks for the function registration event

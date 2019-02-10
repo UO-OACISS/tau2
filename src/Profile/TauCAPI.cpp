@@ -81,6 +81,9 @@ using namespace tau;
 extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
+extern size_t Tau_util_return_hash_of_string(const char *name);
+extern unsigned int plugin_id_counter;
+extern std::list < std::string > regex_list;
 
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
@@ -1105,6 +1108,52 @@ extern "C" size_t Tau_create_trigger(const char *name) {
 
 extern "C" void Tau_trigger(size_t id, void * data) {
   TauInternalFunctionGuard protects_this_function;
+}
+
+extern "C" void Tau_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].insert(id);
+
+}
+ 
+extern "C" void Tau_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].erase(id);
+  if(plugins_for_named_specific_event[key].empty())
+    plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+}
+
+extern "C" void Tau_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].clear();
+  plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+}
+
+extern "C" void Tau_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  size_t hash = Tau_util_return_hash_of_string(name);
+  PluginKey key(ev, hash);
+
+  for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
+    plugins_for_named_specific_event[key].insert(i);
+  }
+}
+
+extern "C" void Tau_add_regex(const char * r)
+{
+  TauInternalFunctionGuard protects_this_function;
+  std::string s(r);
+  regex_list.push_back(s);
 }
 
 ////
