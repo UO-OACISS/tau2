@@ -116,6 +116,10 @@ typedef struct Tau_plugin_event_interrupt_trigger_data {
    int signum;
 } Tau_plugin_event_interrupt_trigger_data_t ;
 
+typedef struct Tau_plugin_event_trigger_data {
+   void *data;
+} Tau_plugin_event_trigger_data_t ;
+
 /*Define callbacks for specific events*/
 typedef int (*Tau_plugin_function_registration_complete)(Tau_plugin_event_function_registration_data_t*);
 typedef int (*Tau_plugin_metadata_registration_complete)(Tau_plugin_event_metadata_registration_data_t*);
@@ -135,6 +139,7 @@ typedef int (*Tau_plugin_pre_end_of_execution)(Tau_plugin_event_pre_end_of_execu
 typedef int (*Tau_plugin_end_of_execution)(Tau_plugin_event_end_of_execution_data_t*);
 typedef int (*Tau_plugin_function_finalize)(Tau_plugin_event_function_finalize_data_t*);
 typedef int (*Tau_plugin_interrupt_trigger)(Tau_plugin_event_interrupt_trigger_data_t*);
+typedef int (*Tau_plugin_trigger)(Tau_plugin_event_trigger_data_t*);
 
 /*Define the callback structure*/
 typedef struct Tau_plugin_callbacks {
@@ -156,6 +161,7 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_end_of_execution EndOfExecution;
    Tau_plugin_function_finalize FunctionFinalize;
    Tau_plugin_interrupt_trigger InterruptTrigger;
+   Tau_plugin_trigger Trigger;
 } Tau_plugin_callbacks_t;
 
 /*Define all the events currently supported*/
@@ -177,7 +183,8 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION,
    TAU_PLUGIN_EVENT_END_OF_EXECUTION,
    TAU_PLUGIN_EVENT_FUNCTION_FINALIZE,
-   TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER
+   TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER,
+   TAU_PLUGIN_EVENT_TRIGGER
 } Tau_plugin_event_t;
 
 
@@ -219,6 +226,7 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int end_of_execution;
     unsigned int function_finalize;
     unsigned int interrupt_trigger;
+    unsigned int trigger;
 } Tau_plugin_callbacks_active_t;
 
 /*Define data structures to hold information about currently loaded plugins. 

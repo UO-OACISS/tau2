@@ -1108,6 +1108,7 @@ extern "C" void Tau_trigger(size_t id, void * data) {
 }
 
 ////
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   TauInternalFunctionGuard protects_this_function;

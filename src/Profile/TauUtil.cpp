@@ -598,6 +598,7 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->PreEndOfExecution = 0;
   cb->EndOfExecution = 0;
   cb->InterruptTrigger = 0;
+  cb->Trigger = 0;
   cb->FunctionFinalize = 0;
   cb->PhaseEntry = 0;
   cb->PhaseExit = 0;
@@ -622,6 +623,7 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->PreEndOfExecution = src->PreEndOfExecution;
   dest->EndOfExecution = src->EndOfExecution;
   dest->InterruptTrigger = src->InterruptTrigger;
+  dest->Trigger = src->Trigger;
   dest->FunctionFinalize = src->FunctionFinalize;
   dest->PhaseEntry = src->PhaseEntry;
   dest->PhaseExit = src->PhaseExit;
@@ -662,6 +664,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->EndOfExecution != 0) { Tau_plugins_enabled.end_of_execution = 1; }
   if (cb->FunctionFinalize != 0) { Tau_plugins_enabled.function_finalize = 1; }
   if (cb->InterruptTrigger != 0) { Tau_plugins_enabled.interrupt_trigger = 1; }
+  if (cb->Trigger != 0) { Tau_plugins_enabled.trigger = 1; }
   if (cb->PhaseEntry != 0) { Tau_plugins_enabled.phase_entry = 1; }
   if (cb->PhaseExit != 0) { Tau_plugins_enabled.phase_exit = 1; }
   
