@@ -410,25 +410,25 @@ int Tau_util_parse_plugin_token(char * token, char ** plugin_name, char *** plug
   return 0;
 }
 
-void Tau_util_enable_plugins_for_all_events() {
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_POST_INIT, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_DUMP, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_MPIT, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_EXIT, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PHASE_ENTRY, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PHASE_EXIT, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_SEND, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_RECV, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_END_OF_EXECUTION, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*");
-  Tau_util_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*");
+void Tau_enable_plugins_for_all_events() {
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_METADATA_REGISTRATION, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_POST_INIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_DUMP, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_MPIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_EXIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PHASE_ENTRY, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PHASE_EXIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_SEND, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_RECV, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_CURRENT_TIMER_EXIT, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_PRE_END_OF_EXECUTION, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_END_OF_EXECUTION, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*");
 
 }
 
@@ -512,7 +512,7 @@ int Tau_util_load_and_register_plugins(PluginManager* plugin_manager)
     token = strtok_r(NULL, ":", &save_ptr);
   }
 
-  Tau_util_enable_plugins_for_all_events();
+  Tau_enable_plugins_for_all_events();
   star_hash = Tau_util_return_hash_of_string("*");
   
   Tau_metadata_push_to_plugins();
@@ -672,7 +672,7 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
 
 
 ////NPD
-extern "C" void Tau_util_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+extern "C" void Tau_enable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
 {
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
@@ -680,7 +680,7 @@ extern "C" void Tau_util_enable_plugin_for_specific_event(Tau_plugin_event_t ev,
 
 }
  
-extern "C" void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
+extern "C" void Tau_disable_plugin_for_specific_event(Tau_plugin_event_t ev, const char *name, unsigned int id)
 {
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
@@ -689,7 +689,7 @@ extern "C" void Tau_util_disable_plugin_for_specific_event(Tau_plugin_event_t ev
     plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
 }
 
-extern "C" void Tau_util_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
+extern "C" void Tau_disable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
 {
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
@@ -697,7 +697,7 @@ extern "C" void Tau_util_disable_all_plugins_for_specific_event(Tau_plugin_event
   plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
 }
 
-extern "C" void Tau_util_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
+extern "C" void Tau_enable_all_plugins_for_specific_event(Tau_plugin_event_t ev, const char *name)
 {
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
@@ -707,13 +707,13 @@ extern "C" void Tau_util_enable_all_plugins_for_specific_event(Tau_plugin_event_
   }
 }
 
-extern "C" void Tau_util_add_regex(const char * r)
+extern "C" void Tau_add_regex(const char * r)
 {
   std::string s(r);
   regex_list.push_back(s);
 }
 
-extern "C" const char* Tau_util_check_for_matching_regex(const char * input)
+extern "C" const char* Tau_check_for_matching_regex(const char * input)
 {
   for(std::list< std::string >::iterator it = regex_list.begin(); it != regex_list.end(); it++) {
     if(regex_match(input, std::regex(*it))) {
@@ -952,7 +952,7 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
   ////NPD
   size_t hash_ = Tau_util_return_hash_of_string(specific_event_name);
   size_t hash;
-  const char * matching_regex = Tau_util_check_for_matching_regex(specific_event_name);
+  const char * matching_regex = Tau_check_for_matching_regex(specific_event_name);
 
   PluginKey key_(event, hash_);
 
