@@ -1222,7 +1222,7 @@ else
     rm -f "$reportfile" "$pttsprefix/${viewdir}.html" "$pttsprefix/$node"
 
   else
-    $dryrun $@
+    $dryrun "$@"
     retval=$?
   fi
 
