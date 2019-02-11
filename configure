@@ -2015,6 +2015,36 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+    # This option indicates that the OMPT path specified in -ompt=* is a TR6 version.
+    # TAU Commander uses this option because it downloads and builds its own version of
+    # the LLVM OpenMP runtime.
+
+    -ompt-tr6=download)
+	    openmp=yes
+	    ompt=yes
+	    download_ompt_tr6=yes
+        shift
+        ;;
+
+    -ompt-tr6=*)
+        openmp=yes
+        ompt=yes
+        ompt_dir=`echo $arg | sed -e 's/-ompt-tr6=//'`
+        if [ ! -d $ompt_dir ]
+        then
+          echo "Error: OMPT directory $ompt_dir cannot be accessed"
+          exit 1
+        fi
+	    omptlib="${ompt_dir}/lib"
+        ompt_use_tr6_version=yes
+        shift
+        ;;
+
+    -ompt-tr6*)
+        ompt_use_tr6_version=yes
+        shift
+        ;;
+
 	-ompt=*)
 	    openmp=yes
 	    ompt=yes
@@ -2034,13 +2064,6 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-    # This option indicates that the OMPT path specified in -ompt=* is a TR6 version.
-    # TAU Commander uses this option because it downloads and builds its own version of
-    # the LLVM OpenMP runtime.
-    -ompt-tr6*)
-        ompt_use_tr6_version=yes
-        shift
-        ;;
 
 	-xlsmp=*)
 	    xlsmp=yes
@@ -6855,7 +6878,7 @@ fi
 
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
-  if [ "x$download_ompt_tr6" = "xyes" ]; then
+  if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ]; then
     tauoptions="${tauoptions}-tr6"
   fi
   if [ "x$CRAY_CPU_TARGET" != "x" -a "x$PE_ENV" = "xINTEL" ] ; then
@@ -6983,17 +7006,22 @@ if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
 	  mkdir build-${ompt_cxx_compiler}
 	  cd build-${ompt_cxx_compiler}
       libomp_cmake_instdir=`pwd`
-	  echo -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} ..
+	  echo cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} ..
 	  cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
       result=$?
       if [ $result -eq 0 ] ; then
+        echo make clean
 	    make clean
-            make libomp-needed-headers >> $libomp_oss_log 2>&1
+        echo make libomp-needed-headers
+        make libomp-needed-headers >> $libomp_oss_log 2>&1
+        echo make
 	    make >> $libomp_oss_log 2>&1
         result=$?
         if [ $result -eq 0 ] ; then
+          echo make install
 	      make install >> $libomp_oss_log 2>&1
           # copy the header to our source area, anyway - we need it.
+          echo cp ./include/*.h ${START_DIR}/include/.
           cp ./include/*.h ${START_DIR}/include/.
           libomp_ossdir_shared=${libomp_cmake_instdir}/lib
           libomp_ossdir_static=${libomp_cmake_instdir}/lib
@@ -7018,6 +7046,7 @@ else
   install_ompt=yes
   if [ $ompt = "yes" -a ! -f ${START_DIR}/include/ompt.h ] ; then
     # we need the ompt header for building TAU
+    echo cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
     cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
   fi
 fi #ompt=download
@@ -7052,10 +7081,12 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     fi
 else # intel OMPT support
     if [ $ompt = yes ]; then
-	omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
-        if [ "x$download_ompt_tr6" = "xyes" ] ; then
-	  fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+	    omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
+        if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+          echo "Using OMPT TR6"
+	      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
         else
+          echo "Using OMPT"
           fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
         fi  
     fi 
@@ -11320,14 +11351,14 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
 
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
-    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes"] ; then 
+    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then 
       fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
     else
       fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     fi 
     # also put them in the "disable" directory for later builds - but only do it once
     
-    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes"] ; then
+    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
     else
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
