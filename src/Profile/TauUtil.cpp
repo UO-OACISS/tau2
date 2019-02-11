@@ -901,37 +901,10 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data, Plugin
   }
 }
 
-/*****************************************************************************************************************************
- * Wrapper function that calls the actual callback invocation function based on the event type
- ******************************************************************************************************************************/
-extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * specific_event_name, const void * data) {
 
+/* Actually do the invocation */
+void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const void * data) {
 
-  ////NPD
-  size_t hash_ = Tau_util_return_hash_of_string(specific_event_name);
-  size_t hash;
-  const char * matching_regex = Tau_check_for_matching_regex(specific_event_name);
-
-  PluginKey key_(event, hash_);
-
-  if(!plugins_for_named_specific_event[key_].empty()) {
-     hash = hash_;
-  } else if (matching_regex != NULL) {
-     size_t hash__ = Tau_util_return_hash_of_string(matching_regex);
-     PluginKey key__(event, hash__);
-     if(plugins_for_named_specific_event[key__].empty()) {
-       hash = star_hash;
-     } else {
-       hash = hash__;
-     }
-  } else {
-     hash = star_hash;
-  }
-     
-  PluginKey key(event, hash);
-
-  ////
- 
   switch(event) {
     case TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_function_registration_data_t*)data, key);
@@ -1010,6 +983,47 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * s
       abort();
     }
   }
+}
+
+/*****************************************************************************************************************************
+ * Wrapper function that calls the actual callback invocation function based on the event type
+ ******************************************************************************************************************************/
+extern "C" void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event event, size_t hash, const void * data) {
+
+  PluginKey key(event, hash);
+  Tau_util_do_invoke_callbacks(event, key, data);
+  
+}
+
+/*****************************************************************************************************************************
+ * Wrapper function that calls the actual callback invocation function based on the event type
+ ******************************************************************************************************************************/
+extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const char * specific_event_name, const void * data) {
+
+
+  ////NPD
+  size_t hash_ = Tau_util_return_hash_of_string(specific_event_name);
+  size_t hash;
+  const char * matching_regex = Tau_check_for_matching_regex(specific_event_name);
+
+  PluginKey key_(event, hash_);
+
+  if(!plugins_for_named_specific_event[key_].empty()) {
+     hash = hash_;
+  } else if (matching_regex != NULL) {
+     size_t hash__ = Tau_util_return_hash_of_string(matching_regex);
+     PluginKey key__(event, hash__);
+     if(plugins_for_named_specific_event[key__].empty()) {
+       hash = star_hash;
+     } else {
+       hash = hash__;
+     }
+  } else {
+     hash = star_hash;
+  }
+  
+  PluginKey key(event, hash);
+  Tau_util_do_invoke_callbacks(event, key, data);
 }
 
 /*****************************************************************************************************************************

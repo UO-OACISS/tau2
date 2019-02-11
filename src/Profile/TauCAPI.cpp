@@ -1102,12 +1102,15 @@ extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
 
 ////NPD
 extern "C" size_t Tau_create_trigger(const char *name) {
+  static size_t trigger_counter = 0;
   TauInternalFunctionGuard protects_this_function;
-  return 0;
+
+  return trigger_counter++;
 }
 
 extern "C" void Tau_trigger(size_t id, void * data) {
   TauInternalFunctionGuard protects_this_function;
+  Tau_util_invoke_callbacks_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, id, data); 
 }
 
 extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id)
@@ -1127,6 +1130,7 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   plugins_for_named_specific_event[key].erase(id);
   if(plugins_for_named_specific_event[key].empty())
     plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+
 }
 
 extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *name)
@@ -1149,6 +1153,41 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
   }
 }
 
+extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].insert(id);
+
+}
+ 
+extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].erase(id);
+  if(plugins_for_named_specific_event[key].empty())
+    plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+
+}
+
+extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+  plugins_for_named_specific_event[key].clear();
+  plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+}
+
+extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
+{
+  TauInternalFunctionGuard protects_this_function;
+  PluginKey key(ev, hash);
+
+  for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
+    plugins_for_named_specific_event[key].insert(i);
+  }
+}
 extern "C" void Tau_add_regex(const char * r)
 {
   TauInternalFunctionGuard protects_this_function;

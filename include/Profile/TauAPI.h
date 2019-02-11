@@ -514,6 +514,10 @@ void TAUDECL Tau_enable_all_plugins_for_specific_event(int ev, const char *name)
 void TAUDECL Tau_disable_all_plugins_for_specific_event(int ev, const char *name);
 void TAUDECL Tau_disable_plugin_for_specific_event(int ev, const char *name, unsigned int id);
 void TAUDECL Tau_enable_plugin_for_specific_event(int ev, const char *name, unsigned int id);
+void TAUDECL Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash);
+void TAUDECL Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash);
+void TAUDECL Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id);
+void TAUDECL Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id);
 size_t TAUDECL Tau_create_trigger(const char *name);
 void TAUDECL Tau_trigger(size_t id, void * data);
 ////
