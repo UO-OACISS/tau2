@@ -50,6 +50,7 @@ typedef struct Tau_plugin_event_mpit_data {
 typedef struct Tau_plugin_event_function_entry_data {
    const char * timer_name;
    const char * timer_group;
+   unsigned int func_id;
    int tid;
    long unsigned int timestamp;
 } Tau_plugin_event_function_entry_data_t;
@@ -57,6 +58,7 @@ typedef struct Tau_plugin_event_function_entry_data {
 typedef struct Tau_plugin_event_function_exit_data {
    const char * timer_name;
    const char * timer_group;
+   unsigned int func_id;
    int tid;
    long unsigned int timestamp;
 } Tau_plugin_event_function_exit_data_t;
