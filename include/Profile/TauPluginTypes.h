@@ -187,25 +187,6 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_TRIGGER
 } Tau_plugin_event_t;
 
-
-class PluginKey {
-   public:
-   int plugin_event;
-   size_t specific_event_hash;
-
-   PluginKey(int _plugin_event, size_t _specific_event_hash) {
-     plugin_event = _plugin_event;
-     specific_event_hash = _specific_event_hash;
-   }
-   
-   bool operator< (const PluginKey &rhs) const {
-     if(plugin_event != rhs.plugin_event) return plugin_event < rhs.plugin_event;
-     else return specific_event_hash < rhs.specific_event_hash;
-   }
-   
-   ~PluginKey() { }
-};
-
 /* Is the event registered with a callback? */
 typedef struct Tau_plugin_callbacks_active {
     unsigned int function_registration;

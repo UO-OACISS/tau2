@@ -81,7 +81,7 @@ using namespace tau;
 extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
-extern size_t Tau_util_return_hash_of_string(const char *name);
+extern "C" size_t Tau_util_return_hash_of_string(const char *name);
 extern unsigned int plugin_id_counter;
 extern std::list < std::string > regex_list;
 

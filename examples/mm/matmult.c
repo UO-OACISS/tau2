@@ -11,7 +11,6 @@
 ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "matmult_initialize.h"
 
 #ifdef TAU_MPI
@@ -28,6 +27,9 @@ This is not a parallel implementation */
 /*** NOTE THE ATTR INITIALIZER HERE! ***/
 pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
+
+#include <TAU.h>
+#include <Profile/TauPluginTypes.h> 
 
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 512
@@ -214,6 +216,11 @@ void * threaded_func(void *data)
 
 int main (int argc, char *argv[]) 
 {
+
+  ////NPD
+  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, "*", 0);
+  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_EXIT, "*", 0);
+  ////
 
 #ifdef PTHREADS
   int ret;

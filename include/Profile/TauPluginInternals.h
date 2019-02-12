@@ -28,6 +28,24 @@ extern "C" {
 
 #define TAU_PLUGIN_INIT_FUNC "Tau_plugin_init_func"
 
+class PluginKey {
+   public:
+   int plugin_event;
+   size_t specific_event_hash;
+
+   PluginKey(int _plugin_event, size_t _specific_event_hash) {
+     plugin_event = _plugin_event;
+     specific_event_hash = _specific_event_hash;
+   }
+   
+   bool operator< (const PluginKey &rhs) const {
+     if(plugin_event != rhs.plugin_event) return plugin_event < rhs.plugin_event;
+     else return specific_event_hash < rhs.specific_event_hash;
+   }
+   
+   ~PluginKey() { }
+};
+
 int Tau_initialize_plugin_system();
 int Tau_util_load_and_register_plugins(PluginManager_t* plugin_manager);
 void* Tau_util_load_plugin(const char *name, const char *path, PluginManager_t* plugin_manager);
