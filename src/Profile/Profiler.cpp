@@ -391,6 +391,7 @@ void Profiler::Start(int tid)
   if(Tau_plugins_enabled.function_entry) {
     Tau_plugin_event_function_entry_data_t plugin_data;
     plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.func_id = ThisFunction->GetFunctionId();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
     plugin_data.timestamp = TimeStamp;
@@ -760,6 +761,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   if(Tau_plugins_enabled.function_exit) {
     Tau_plugin_event_function_exit_data_t plugin_data;
     plugin_data.timer_name = ThisFunction->GetName();
+    plugin_data.func_id = ThisFunction->GetFunctionId();
     plugin_data.timer_group = ThisFunction->GetAllGroups();
     plugin_data.tid = tid;
     plugin_data.timestamp = TimeStamp;
