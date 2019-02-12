@@ -51,20 +51,11 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   
-  RtsLayer::LockDB();
-  for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-    TauTraceInit(tid);
-  }
-
-  RtsLayer::UnLockDB();
-
   cb->FunctionEntry = Tau_plugin_event_function_entry;
   cb->FunctionExit = Tau_plugin_event_function_exit;
   cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution;
 
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
-  //TAU_ADD_REGEX("(compute)(.*)");
-  //TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_REGISTRATION, "(compute)(.*)", id);
 
   return 0;
 }
