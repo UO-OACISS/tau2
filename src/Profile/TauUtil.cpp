@@ -20,6 +20,7 @@
 #include <string>
 #include <TauEnv.h>
 #include <TauPluginInternals.h>
+#include <TauPluginCPPTypes.h>
 #include <stdarg.h>
 #include <string.h>
 #include <Profile/Profiler.h>
@@ -430,6 +431,7 @@ void Tau_enable_plugins_for_all_events() {
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_END_OF_EXECUTION, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*");
+  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_TRIGGER, "*");
 
 }
 
