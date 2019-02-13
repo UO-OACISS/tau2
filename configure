@@ -8570,7 +8570,10 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         ;;
       *)   
         #echo $c_compiler
-        if [ "$c_compiler" = mpc_cc ]
+        base_c_compiler="`basename "$c_compiler"`"
+        base_env_c_compiler="`basename "$CC"`"
+
+        if [ "$base_c_compiler" = mpc_cc ]
         then
            ./configure \
             CFLAGS="-fPIC -Wno-error" CXXFLAGS="-fPIC -Wno-error" \
@@ -8579,7 +8582,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
             err=$?	 
         else
-	  if [ "$c_compiler" = pgcc ]
+	  if [ "$base_c_compiler" = pgcc ] || [ "$base_env_c_compiler" = pgcc ]
 	  then
             ./configure \
               CFLAGS="-fPIC -noswitcherror" CXX=pgc++ CXXFLAGS=-fPIC \
