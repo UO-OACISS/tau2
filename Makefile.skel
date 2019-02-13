@@ -89,6 +89,8 @@ TAUPRELOAD=src/wrappers/taupreload
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 #SHMEM#TAU_CUPTI_AVAIL= #ENDIF#
 #IBM64LINUX_XLC#TAU_CUPTI_AVAIL= #ENDIF#
+### Note: tau_cupti_avail fails to build because POMP2_Begin is undefined for it when TAU is built with OPARI2. Remove the following line when this is fixed.
+#OPARI2#TAU_CUPTI_AVAIL= #ENDIF#
 #TAUENV#TAU_ENV=utils/tau_env #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
