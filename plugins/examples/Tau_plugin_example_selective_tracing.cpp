@@ -18,6 +18,8 @@
 
 #include <Profile/TauTrace.h>
 
+int stop_tracing = 0;
+
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
   RtsLayer::LockDB();
@@ -31,16 +33,45 @@ int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *
 }
 
 int Tau_plugin_event_function_entry(Tau_plugin_event_function_entry_data_t* data) {
+
+  if(stop_tracing)
+    return 0;
+
   fprintf(stderr, "TAU PLUGIN: Function %s with id %d has entered at timestamp %lu on tid: %d\n", data->timer_name, data->func_id, data->timestamp, data->tid);
   
   TauTraceEvent(data->func_id, 1 /* entry */, data->tid, data->timestamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
+
   return 0;
 }
 
 int Tau_plugin_event_function_exit(Tau_plugin_event_function_exit_data_t* data) {
+
+  if(stop_tracing)
+    return 0;
+
+  #ifdef TAU_MPI
+  /* Initialized OTF2 */
+  if(!strcmp(data->timer_name, "MPI_Init()")) {
+  
+    RtsLayer::LockDB();
+
+    for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+      TauTraceInit(tid);
+    }
+
+    RtsLayer::UnLockDB();
+  }
+
+  #endif
+
   fprintf(stderr, "TAU PLUGIN: Function %s with id %d has exited at timestamp %lu on tid: %d\n", data->timer_name, data->func_id, data->timestamp, data->tid);
   
   TauTraceEvent(data->func_id, -1 /* entry */, data->tid, data->timestamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
+  
+  #ifdef TAU_MPI
+  if(!strcmp(data->timer_name, "MPI_Finalize()"))
+    stop_tracing = 1;
+  #endif
   return 0;
 }
 
