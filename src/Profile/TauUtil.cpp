@@ -632,7 +632,6 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->PhaseExit = src->PhaseExit;
 }
 
-
 /**************************************************************************************************************************
  * Register callbacks associated with well defined events defined in struct Tau_plugin_callbacks
  **************************************************************************************************************************/
@@ -880,6 +879,19 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data,
 }
 
 /**************************************************************************************************************************
+ *  Overloaded function that invokes all registered callbacks for trigger event
+ *******************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_trigger_data_t* data, PluginKey key) {
+
+  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return;
+  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
+    if (plugin_callback_map[*it]->Trigger != 0) {
+      plugin_callback_map[*it]->Trigger(data);
+    }
+  }
+}
+
+/**************************************************************************************************************************
  *  Overloaded function that invokes all registered callbacks for phase entry event
  *******************************************************************************************************************************/
 void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data, PluginKey key) {
@@ -972,6 +984,10 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
       Tau_util_invoke_callbacks_((Tau_plugin_event_interrupt_trigger_data_t*)data, key);
       break;
     }
+    case TAU_PLUGIN_EVENT_TRIGGER: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_trigger_data_t*)data, key);
+      break;
+    }
     case TAU_PLUGIN_EVENT_PHASE_ENTRY: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_phase_entry_data_t*)data, key);
       break;
@@ -992,9 +1008,14 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
  ******************************************************************************************************************************/
 extern "C" void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event event, size_t hash, const void * data) {
 
-  PluginKey key(event, hash);
-  Tau_util_do_invoke_callbacks(event, key, data);
-  
+  PluginKey key_(event, hash);
+
+  if(!plugins_for_named_specific_event[key_].empty()) {
+    Tau_util_do_invoke_callbacks(event, key_, data);
+  } else {
+    PluginKey key(event, star_hash);
+    Tau_util_do_invoke_callbacks(event, key, data);
+  }
 }
 
 /*****************************************************************************************************************************

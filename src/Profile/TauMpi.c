@@ -2224,6 +2224,8 @@ char *** argv;
   if(Tau_get_usesMPI() == 0)
   {
 
+  /* Initialize the plugin system */
+  Tau_initialize_plugin_system();
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
@@ -2259,9 +2261,6 @@ char *** argv;
     Tau_handle_spawned_init(parent);
   }
 
-  /* Initialize the plugin system */
-  Tau_initialize_plugin_system();
-
 #ifndef TAU_WINDOWS
 #ifndef _AIX 
   if (TauEnv_get_ebs_enabled()) {
@@ -2269,6 +2268,9 @@ char *** argv;
   }
 #endif /* _AIX */
 #endif /* TAU_WINDOWS */
+
+  /* Initialize the plugin system */
+  Tau_initialize_plugin_system();
 
   Tau_signal_initialization(); 
 
