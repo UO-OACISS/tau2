@@ -20,13 +20,15 @@
 
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
-  fprintf(stderr, "Inside end of execution\n");
+  Tau_dump();
+
   return 0;
 }
 
 int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
-  
-  fprintf(stderr, "Inside trigger\n");
+ 
+  Tau_dump_incr();
+ 
   return 0;
 }
 
