@@ -49,6 +49,7 @@ pthread_t worker_thread;
 bool _threaded = false;
 int daemon_rank = 0;
 int my_rank = 0;
+int listener_rank = 0;
 int comm_size = 1;
 bool shutdown_daemon = false;
 int period_microseconds = 2000000;
@@ -277,7 +278,7 @@ bool TAU_SOS_fork_exec_sosd(void) {
                 if (index != std::string::npos) {
                     if (ranks_per_node) {
                         int rpn = atoi(ranks_per_node);
-                        int listener_rank = my_rank / rpn;
+                        listener_rank = my_rank / rpn;
                         if(offset) {
                             int off = atoi(offset);
                             listener_rank = listener_rank + off;
@@ -554,6 +555,7 @@ void TAU_SOS_finalize(void) {
         if (my_rank == daemon_rank) {
             TAU_VERBOSE("Waiting %d seconds for SOS to flush...\n", thePluginOptions().env_sos_shutdown_delay);
 		    sleep(thePluginOptions().env_sos_shutdown_delay);
+			printf("TAU: rank %d sending shutdown message to listener %d...\n", my_rank, listener_rank);
             TAU_SOS_send_shutdown_message();
 			int returnStatus = 0;
 			pid_t retval = 0;
@@ -563,9 +565,18 @@ void TAU_SOS_finalize(void) {
 			} else {
 				retval = waitpid(listener_pid, &returnStatus, 0);
 			}
+            if (WIFEXITED(returnStatus)) {
+                printf("listener %d exited, status=%d\n", listener_rank, WEXITSTATUS(returnStatus));
+            } else if (WIFSIGNALED(returnStatus)) {
+                printf("listener %d killed by signal %d\n", listener_rank, WTERMSIG(returnStatus));
+            } else if (WIFSTOPPED(returnStatus)) {
+                printf("listener %d stopped by signal %d\n", listener_rank, WSTOPSIG(returnStatus));
+            } else if (WIFCONTINUED(returnStatus)) {
+                printf("listener %d continued\n", listener_rank);
+            }
 			if (retval < 0) {
 				perror("waitpid error: ");
-        		fprintf(stderr, "WARNING! SOS listener did not exit normally!\n");
+        		fprintf(stderr, "WARNING! SOS listener %d did not exit normally!\n", listener_rank);
 			}
         }
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
@@ -828,7 +839,8 @@ void TAU_SOS_send_data(void) {
     	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
     TauTrackLoadHere();
     /* Only send a profile update if we aren't tracing */
-    if (!thePluginOptions().env_sos_tracing) {
+    if (!thePluginOptions().env_sos_tracing && 
+	    !thePluginOptions().env_sos_trace_adios) {
         TAU_SOS_pack_profile();
     }
     static int frame = 0;
