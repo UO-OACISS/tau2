@@ -61,7 +61,6 @@ int Tau_plugin_event_function_exit(Tau_plugin_event_function_exit_data_t* data) 
 
     RtsLayer::UnLockDB();
   }
-
   #endif
 
   fprintf(stderr, "TAU PLUGIN: Function %s with id %d has exited at timestamp %lu on tid: %d\n", data->timer_name, data->func_id, data->timestamp, data->tid);
