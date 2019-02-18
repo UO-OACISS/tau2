@@ -18,6 +18,7 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
+#include <Profile/TauMetaData.h>
 #if TAU_MPI
 #include "mpi.h"
 #endif
@@ -30,10 +31,15 @@ static bool opened(false);
 
 /* Some ADIOS variables */
 adios2::ADIOS ad;
+adios2::IO bpIO;
 adios2::Engine bpWriter;
 std::map<std::string, adios2::Variable<double> >varT;
-adios2::Variable<double> num_threads;
-adios2::Variable<double> num_metrics;
+adios2::Variable<int> num_threads_var;
+adios2::Variable<int> num_metrics_var;
+
+/* Some MPI variables */
+int comm_rank(0);
+int comm_size(1);
 
 void Tau_dump_ADIOS2_metadata(adios2::IO &bpIO) {
     int tid = RtsLayer::myThread();
@@ -72,24 +78,37 @@ void Tau_dump_ADIOS2_metadata(adios2::IO &bpIO) {
 }
 
 void Tau_plugin_adios2_init_adios(void) {
+#if TAU_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+#endif
     /** ADIOS class factory of IO class objects, DebugON is recommended */
-    ad = adios2::ADIOS adios(MPI_COMM_WORLD, adios2::DebugON);
+    ad = adios2::ADIOS(MPI_COMM_WORLD, adios2::DebugON);
 
     /*** IO class object: settings and factory of Settings: Variables,
      * Parameters, Transports, and Execution: Engines */
-    adios2::IO bpIO = adios.DeclareIO("TAU_profiles");
+    bpIO = ad.DeclareIO("TAU_profiles");
+    // if not defined by user, we can change the default settings
+    // BPFile is the default engine
+    bpIO.SetEngine("BPFile");
+    bpIO.SetParameters({{"num_threads", "1"}});
+
+    // ISO-POSIX file output is the default transport (called "File")
+    // Passing parameters to the transport
+    bpIO.AddTransport("File", {{"Library", "POSIX"}});
 
     /* write the metadata as attributes */
-    Tau_dump_ADIOS2_metadata(bpIO);
+    // Tau_dump_ADIOS2_metadata(bpIO);
 
     /* Create some "always used" variables */
     
     /** global array : name, { shape (total) }, { start (local) }, {
      * count (local) }, all are constant dimensions */
-    num_threads = bpIO.DefineVariable<double>(
-        "num_threads", {1}, {0}, {0}, adios2::ConstantDims);
-    num_metrics = bpIO.DefineVariable<double>(
-        "num_metrics", {1}, {0}, {0}, adios2::ConstantDims);
+    const std::size_t Nx = 1;
+    num_threads_var = bpIO.DefineVariable<int>(
+        "num_threads", {comm_size * Nx}, {comm_rank * Nx}, {Nx}, adios2::ConstantDims);
+    num_metrics_var = bpIO.DefineVariable<int>(
+        "num_metrics", {comm_size * Nx}, {comm_rank * Nx}, {Nx}, adios2::ConstantDims);
 
 }
 
@@ -102,11 +121,12 @@ void Tau_plugin_adios2_open_file(void) {
     }
     ss << "tauprofile.bp";
     printf("Writing %s\n", ss.str().c_str());
-    adios2::Engine bpFileWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
+    bpWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
+    opened = true;
 }
 
 void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
-    char** counterNames) {
+    const char** counterNames) {
     // get the FunctionInfo database, and iterate over it
     std::vector<FunctionInfo*>::const_iterator it;
     RtsLayer::LockDB();
@@ -120,6 +140,7 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
         calls = 0;
         inclusive = 0.0;
         exclusive = 0.0;
+    }
 
 
     RtsLayer::UnLockDB();
@@ -136,20 +157,24 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
-    numThreads = RtsLayer::getTotalThreads();
+    std::vector<int> numThreads = {RtsLayer::getTotalThreads()};
     const char **counterNames;
-    int numCounters;
-    TauMetrics_getCounterList(&counterNames, &numCounters);
+    std::vector<int> numCounters = {0};
+    TauMetrics_getCounterList(&counterNames, &(numCounters[0]));
  
-    Tau_plugin_adios2_define_variables(numThreads, numCounters, counterNames);
+    Tau_plugin_adios2_define_variables(numThreads[0], numCounters[0], counterNames);
+    Tau_global_decr_insideTAU();
 
 	if (!opened) {
        Tau_plugin_adios2_open_file();
     }
 
-    bpWriter.BeginStep();
-    //bpWriter.Put<double>(varT, ht.data());
-    bpWriter.EndStep();
+    if (opened) {
+        bpWriter.BeginStep();
+        bpWriter.Put<int>(num_threads_var, numThreads.data());
+        bpWriter.Put<int>(num_metrics_var, numCounters.data());
+        bpWriter.EndStep();
+    }
 
     return 0;
 }
