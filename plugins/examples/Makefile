@@ -19,7 +19,7 @@ LDFLAGS = $(TAU_MPI_LIB)
 
 OBJS = libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o tau_plugin_example_free_unused_vbufs.o tau_plugin_sos.o
 
-SHAREDLIBS = libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so
+SHAREDLIBS = libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so libTAU-adios2-plugin.so
 
 all: install
 	@echo
@@ -31,6 +31,9 @@ install: $(SHAREDLIBS)
 libTAU-sos-plugin.so: tau_plugin_sos.o TauSOS.o
 	$(CXX) tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin.so
 
+libTAU-adios2-plugin.so: tau_plugin_adios2.o
+	$(CXX) tau_plugin_adios2.o $(TAU_SOS_LINKER_OPTS) -L$(ADIOS2DIR)/lib $(ADIOS2_LIBS) $(TAU_SHFLAGS) libTAU-adios2-plugin.so
+
 libTAU-filter-plugin.so: tau_plugin_example_disable_instrumentation_runtime.o 
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin.so tau_plugin_example_disable_instrumentation_runtime.o 
 
@@ -39,6 +42,9 @@ tau_plugin_sos.o: Tau_plugin_sos.cpp
 
 TauSOS.o: TauSOS.cpp
 	$(CXX) $(CFLAGS) -c TauSOS.cpp -o TauSOS.o
+
+tau_plugin_adios2.o: Tau_plugin_adios2.cpp
+	$(CXX) $(CFLAGS) $(ADIOS2_CXXFLAGS) -c Tau_plugin_adios2.cpp -o tau_plugin_adios2.o
 
 tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable_instrumentation_runtime.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_disable_instrumentation_runtime.cpp -o tau_plugin_example_disable_instrumentation_runtime.o

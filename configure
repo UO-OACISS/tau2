@@ -1060,6 +1060,8 @@ download_sos=no
 install_sos=no
 adios=no
 adiosdir=
+adios2=no
+adios2dir=
 #caliper=no
 #caliperdir=
 apex=no
@@ -1884,6 +1886,21 @@ for arg in "$@"; do
 	    then
 		echo "Error: Cannot access ADIOS directory $adiosdir"
 		exit 1
+	    fi
+	    shift
+	    ;;
+
+	-adios2=*)
+	    adios2=yes
+        pthread=yes
+	    adios2dir=`echo $arg | sed -e 's/-adios2=//'`
+	    if [ ! -d $adios2dir ] ; then
+		    echo "Error: Cannot access ADIOS2 directory $adios2dir"
+		    exit 1
+	    fi
+	    if [ ! -d $adios2dir/bin ] ; then
+		    echo "Error: Cannot access ADIOS2 directory $adios2dir/bin"
+		    exit 1
 	    fi
 	    shift
 	    ;;
@@ -10542,6 +10559,19 @@ if [ $adios = yes ] ; then
     tauoptions="${tauoptions}-adios"
     fixmakeargs="$fixmakeargs ADIOS "
     fixmakeargs="$fixmakeargs adiosdir=$adiosdir"
+fi
+
+if [ $adios2 = yes ] ; then
+    adios2_config_cmd=${adios2dir}/bin/adios2-config
+    echo "Querying ADIOS2 CXX flags..."
+    adios2cxxflags=`${adios2_config_cmd} --cxxflags | grep -v ADIOS2_DIR | sed 's/ /#/g'`
+    echo "Querying ADIOS2 LIB flags..."
+    adios2libs=`${adios2_config_cmd} --cxxlibs | grep -v ADIOS2_DIR | sed 's/ /#/g'`
+    tauoptions="${tauoptions}-adios2"
+    fixmakeargs="$fixmakeargs ADIOS2 "
+    fixmakeargs="$fixmakeargs adios2dir=$adios2dir"
+    fixmakeargs="$fixmakeargs adios2cxxflags=${adios2cxxflags}"
+    fixmakeargs="$fixmakeargs adios2libs=${adios2libs}"
 fi
 
 #if [ $caliper = yes ] ; then
