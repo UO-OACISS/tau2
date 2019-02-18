@@ -7,14 +7,14 @@ library interface version:
     https://www.gnu.org/software/libtool/manual/libtool.html#Versioning
     http://sourceware.org/autobook/autobook/autobook_91.html#SEC91
 
-package.major=1
+package.major=2
 package.minor=0
-package.bugfix=7
-package.suffix=rc1
+package.bugfix=4
+package.suffix=
 
 # In the POMP2 case library.revision makes no sense as opari2 just provides
 # the interface definition and no (installed) implementation. So, set
 # library.revision always to 0 and ignore it for version compatibility checks.
-library.current=1
+library.current=3
 library.revision=0
 library.age=0

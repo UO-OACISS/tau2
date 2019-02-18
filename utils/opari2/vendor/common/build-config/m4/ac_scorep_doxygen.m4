@@ -1,9 +1,9 @@
 ## -*- mode: autoconf -*-
 
-## 
+##
 ## This file is part of the Score-P software (http://www.score-p.org)
 ##
-## Copyright (c) 2009-2011, 
+## Copyright (c) 2009-2011,
 ##    RWTH Aachen University, Germany
 ##    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
 ##    Technische Universitaet Dresden, Germany
@@ -42,24 +42,10 @@ AC_SUBST([have_doxygen_latex])
 AM_CONDITIONAL(HAVE_DOXYGEN_LATEX, test "x${have_doxygen_latex}" = xyes)
 
 # ac_scorep_doxygen_distdir may be passed in from upper level configure
+# will end up in 'USER_DOC_DIR = $(top_distdir)$(ac_scorep_doxygen_distdir)/doc'
 if test ! -n "$ac_scorep_doxygen_distdir"; then
    ac_scorep_doxygen_distdir=""
 fi
 AC_SUBST([ac_scorep_doxygen_distdir])
 
-])
-
-
-# AC_SCOREP_DOXYGEN_CONFIG_FILES
-#----------------
-# Generate Score-P related doxygen configuration files.
-#
-AC_DEFUN([AC_SCOREP_DOXYGEN_CONFIG_FILES],
-[
-AC_REQUIRE([AC_SCOREP_SVN_CONTROLLED])
-if test "x${ac_scorep_svn_controlled}" = "xyes"; then
-   AC_CONFIG_FILES([doc/doxygen-user-common.cfg:vendor/common/build_related/doxygen/doxygen-user-common.cfg.in])
-   AC_CONFIG_FILES([doc/doxygen-user-component.cfg:doc/doxygen-user/doxygen-user-component.cfg.in])
-   AC_CONFIG_FILES([doc/doxygen-dev.cfg:doc/doxygen-dev/doxygen-dev.cfg.in])
-fi
 ])

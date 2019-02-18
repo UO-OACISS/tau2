@@ -33,7 +33,7 @@
                 gsub("escl=([^/]*/)*","escl=",source)
                 gsub("sscl=([^/]*/)*","sscl=",source)
                 #remove old length
-                sub("\"[0-9]*","\"", source)
+                sub("\"[0-9a-z]*","\"", source)
                 #insert new length
                 sub("\"", "\""length(source)-2, source)
                 line = line " " source
@@ -44,9 +44,9 @@
         }
         print line
     }
-    else if(match($0,"POMP2_Init_reg")){
+    else if(match($0,"Init_reg")){
         #remove the timestamp based region identifier
-        gsub("Init_reg_[0-9_]+","Init_reg_000",$0)
+        gsub("Init_reg_[0-9a-z_]+","Init_reg_000",$0)
         print $0
     }
     else if(match($0,"#line")){
@@ -56,16 +56,16 @@
     }
 #    else if(match($0,"get_max_threads")){
         #remove timestamp based function specifier
-#        gsub("pomp_get_max_threads[0-9_]*", "pomp_get_max_threads000", $0)
+#        gsub("pomp_get_max_threads[0-9a-z_]*", "pomp_get_max_threads000", $0)
 #        print $0
 #    }
     else if(match($0,"/cb")){
         #remove timestamp based common block identifier
-        gsub("cb[0-9_]*", "cb000", $0)
+        gsub("cb[0-9a-z_]*", "cb000", $0)
         print $0
     }
     else if(match($0,"LEN=")){
-        gsub("LEN=[0-9]*", "LEN=999", $0)
+        gsub("LEN=[0-9a-z]*", "LEN=999", $0)
         print $0
     }
     else{

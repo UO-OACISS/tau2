@@ -2133,7 +2133,12 @@ int Tau_MPI_T_initialization(void) {
   returnVal = Tau_mpi_t_cvar_initialize();
 
   #ifdef TAU_BEACON
-  returnVal = TauBeaconSubscribe(pycoolr_cvar_topic_name, pycoolr_cvar_topic_scope, TauBeacon_MPI_T_CVAR_handler);
+  if(getenv("BEACON_TOPOLOGY_SERVER_ADDR") != NULL) {
+    returnVal = TauBeaconSubscribe(pycoolr_cvar_topic_name, pycoolr_cvar_topic_scope, TauBeacon_MPI_T_CVAR_handler);
+  }  else {
+    fprintf(stderr,"TAU: Warning! TAU is built with beacon but BEACON_TOPOLOGY_SERVER_ADDR is not set. Carrying on without enabling beacon support\n");
+    returnVal = 1;
+  }
   #endif /* TAU_BEACON */
 
   return returnVal;
@@ -2318,6 +2323,7 @@ int *provided;
   tau_mpi_init_predefined_constants();
 #ifdef TAU_MPI_T
   returnVal = Tau_MPI_T_initialization();
+  Tau_track_mpi_t();
 #endif /* TAU_MPI_T */
 
   returnVal = PMPI_Init_thread( argc, argv, required, provided );

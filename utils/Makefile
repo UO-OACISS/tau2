@@ -40,8 +40,8 @@ tau_timecorrect:	tau_timecorrect.o
 opari/opari:
 		cd opari ; $(MAKE) opari
 
-opari2/_build/bin/opari2:
-		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) install
+opari2/_build/installdir/bin/opari2:
+		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd`/installdir --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
@@ -294,21 +294,21 @@ $(INSTALLDEST)/opari: opari/opari
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) opari/opari $(INSTALLDEST)
 
-$(INSTALLDEST)/opari2-config: opari2/_build/bin/opari2
+$(INSTALLDEST)/opari2-config: opari2/_build/installdir/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2/_build/bin/opari2-config $(INSTALLDEST)
-$(INSTALLDEST)/pomp2-parse-init-regions.awk: opari2/_build/bin/opari2
+		$(TAU_INSTALL) opari2/_build/installdir/bin/opari2-config $(INSTALLDEST)
+$(INSTALLDEST)/pomp2-parse-init-regions.awk: opari2/_build/installdir/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2/_build/bin/pomp2-parse-init-regions.awk $(INSTALLDEST)
-$(INSTALLDEST)/opari2: opari2/_build/bin/opari2
+		$(TAU_INSTALL) opari2/_build/installdir/libexec/pomp2-parse-init-regions.awk $(INSTALLDEST)
+$(INSTALLDEST)/opari2: opari2/_build/installdir/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2/_build/bin/opari2 $(INSTALLDEST)
+		$(TAU_INSTALL) opari2/_build/installdir/bin/opari2 $(INSTALLDEST)
 
 $(INSTALLDEST)/tau2elg: elgconverter/tau2elg
 		@echo Installing $? in $(INSTALLDEST)

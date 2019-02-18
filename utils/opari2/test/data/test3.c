@@ -14,7 +14,6 @@
  *
  * Testfile for automated testing of OPARI2
  *
- * @authors Bernd Mohr, Peter Philippen
  *
  * @brief Special tests for code blocks and nested parallel regions/loops.
 

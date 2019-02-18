@@ -37,6 +37,8 @@ CuStringClear( CuString* str );
 void
 CuStringFree( CuString* str );
 void
+CuStringReset( CuString* str );
+void
 CuStringAppend( CuString*   str,
                 const char* text );
 void
@@ -62,13 +64,17 @@ CuStringResize( CuString* str,
 
 typedef struct CuTest CuTest;
 
-typedef void ( *TestFunction )( CuTest* );
+typedef void ( * TestFunction )( CuTest* );
+typedef void ( * TestAllreduce )( int* );
 
 struct CuTest
 {
     const char*    name;
     TestFunction   function;
+    void*          userArg;
+    TestAllreduce  testAllreduce;
     int            failed;
+    int            failedLocally;
     int            ran;
     const char*    message;
     jmp_buf*       jumpBuf;
@@ -101,7 +107,7 @@ CuAssert_Line( CuTest*     tc,
                const char* file,
                int         line,
                const char* message,
-               int         condition );
+               int         success );
 void
 CuAssertStrEquals_LineMsg( CuTest*     tc,
                            const char* file,
@@ -116,6 +122,14 @@ CuAssertIntEquals_LineMsg( CuTest*     tc,
                            const char* message,
                            int         expected,
                            int         actual );
+
+void
+CuAssertIntNotEquals_LineMsg( CuTest*     tc,
+                              const char* file,
+                              int         line,
+                              const char* message,
+                              int         notExpected,
+                              int         actual );
 void
 CuAssertDblEquals_LineMsg( CuTest*     tc,
                            const char* file,
@@ -142,9 +156,11 @@ CuAssertPtrEquals_LineMsg( CuTest*     tc,
 
 #define CuAssertStrEquals( tc, ex, ac )           CuAssertStrEquals_LineMsg( ( tc ), __FILE__, __LINE__, NULL, ( ex ), ( ac ) )
 #define CuAssertStrEqualsMsg( tc, ms, ex, ac )    CuAssertStrEquals_LineMsg( ( tc ), __FILE__, __LINE__, ( ms ), ( ex ), ( ac ) )
+#define CuAssertIntNotEquals( tc, nex, ac )        CuAssertIntNotEquals_LineMsg( ( tc ), __FILE__, __LINE__, NULL, ( nex ), ( ac ) )
+#define CuAssertIntNotEqualsMsg( tc, ms, nex, ac ) CuAssertIntNotEquals_LineMsg( ( tc ), __FILE__, __LINE__, ( ms ), ( nex ), ( ac ) )
 #define CuAssertIntEquals( tc, ex, ac )           CuAssertIntEquals_LineMsg( ( tc ), __FILE__, __LINE__, NULL, ( ex ), ( ac ) )
 #define CuAssertIntEqualsMsg( tc, ms, ex, ac )    CuAssertIntEquals_LineMsg( ( tc ), __FILE__, __LINE__, ( ms ), ( ex ), ( ac ) )
-#define CuAssertDblEquals( tc, ex, ac, dl )        CuAssertDblEquals_LineMsg( ( tc ), __FILE__, __LINE__, NULL, ( ex ), ( ac ), ( dl ) )
+#define CuAssertDblEquals( tc, ex, ac, dl )       CuAssertDblEquals_LineMsg( ( tc ), __FILE__, __LINE__, NULL, ( ex ), ( ac ), ( dl ) )
 #define CuAssertDblEqualsMsg( tc, ms, ex, ac, dl ) CuAssertDblEquals_LineMsg( ( tc ), __FILE__, __LINE__, ( ms ), ( ex ), ( ac ), ( dl ) )
 #define CuAssertPtrEquals( tc, ex, ac )           CuAssertPtrEquals_LineMsg( ( tc ), __FILE__, __LINE__, NULL, ( ex ), ( ac ) )
 #define CuAssertPtrEqualsMsg( tc, ms, ex, ac )    CuAssertPtrEquals_LineMsg( ( tc ), __FILE__, __LINE__, ( ms ), ( ex ), ( ac ) )
@@ -159,11 +175,15 @@ CuAssertPtrEquals_LineMsg( CuTest*     tc,
 
 typedef struct
 {
-    const char* name;
-    int         count;
-    CuTest*     head;
-    CuTest**    tail;
-    int         failCount;
+    const char*   name;
+    int           count;
+    CuTest*       head;
+    CuTest**      tail;
+    int           failCount;
+
+    int           currentRank;
+    int           masterRank;
+    TestAllreduce testAllreduce;
 } CuSuite;
 
 
@@ -171,10 +191,16 @@ void
 CuUseColors( void );
 
 void
-CuSuiteInit( const char* name,
-             CuSuite*    testSuite );
+CuSuiteInit( const char*   name,
+             CuSuite*      testSuite,
+             int           currentRank,
+             TestAllreduce testAllreduce );
 CuSuite*
 CuSuiteNew( const char* name );
+CuSuite*
+CuSuiteNewParallel( const char*   name,
+                    int           currentRank,
+                    TestAllreduce testAllreduce );
 void
 CuSuiteClear( CuSuite* testSuite );
 void

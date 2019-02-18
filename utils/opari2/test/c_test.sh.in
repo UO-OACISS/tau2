@@ -1,6 +1,6 @@
 #!/bin/sh
 # This file is part of the Score-P software (http://www.score-p.org)
-# 
+#
 # Copyright (c) 2009-2011,
 #    *    RWTH Aachen University, Germany
 #    *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
@@ -9,7 +9,7 @@
 #    *    Forschungszentrum Juelich GmbH, Germany
 #    *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
 #    *    Technische Universitaet Muenchen, Germany
-#  
+#
 # See the COPYING file in the package base directory for details.
 
 opari_dir=`pwd`
@@ -19,22 +19,36 @@ test_data_dir=@abs_srcdir@/data
 sed=@SED@
 awk=@AWK@
 
-echo $test_data_dir
-echo $test_dir
-cp $test_data_dir/test?.c $test_dir/
+#echo $test_data_dir
+#echo $test_dir
+cp $test_data_dir/test*.c $test_dir/
 
 if [ ! -f $test_dir/replacePaths_c.awk ]; then
     cp $test_data_dir/../replacePaths_c.awk $test_dir/
 fi
 cd $test_dir
 
-for file in test?.c
-do 
-  echo "        $file ..."
+for file in `ls *.c | grep -v mod`
+do
   base=`basename $file .c`
-  $opari_dir/opari2 --untied=keep,no-warn $file || exit
+  if [ -n "`echo $file | grep tpd`" ]
+  then
+      echo "        $file testing --omp-tpd ..."
+      $opari_dir/opari2 --omp-tpd $file || exit
+  elif [ -n "`echo $file | grep prep`" ]
+  then
+      echo "        $file testing --preprocessed ..."
+      $opari_dir/opari2 --preprocessed $file || exit
+  elif [ -n "`echo $file | grep remove-task`" ]
+  then
+      echo "        $file testing --omp-task=remove ..."
+      $opari_dir/opari2 --omp-task=remove --omp-task-untied=no-warn $file || exit
+  else
+      echo "        $file ..."
+      $opari_dir/opari2 --omp-task-untied=keep,no-warn $file || exit
+  fi
 
-# Replace the full path in the line numbering 
+# Replace the full path in the line numbering
 #  in the source files
   `$awk -f replacePaths_c.awk $base.mod.c > $base.mod.c.tmp`
   `mv $base.mod.c.tmp $base.mod.c`
@@ -59,7 +73,7 @@ do
     echo "-------- ERROR: unexpected change in opari include file --------"
     diff -u $test_data_dir/$base.c.opari.inc.out $base.c.opari.inc
     error="true"
-    continue 
+    continue
   fi
 done
 

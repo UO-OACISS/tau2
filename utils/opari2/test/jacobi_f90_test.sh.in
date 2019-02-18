@@ -13,15 +13,15 @@ OPARI2=@abs_builddir@/../build-frontend/opari2
 OPARI2_CONFIG="@abs_builddir@/../build-frontend/opari2-config --build-check"
 LDFLAGS="-lm -L@abs_builddir@/../build-frontend/.libs -lpomp"
 FCFLAGS="@FCFLAGS@"
-OPENMP="@OPENMP_CFLAGS@"
+OPENMP="@OPENMP_FCFLAGS@"
 
 rm -rf $test_dir/jacobi/F
 mkdir -p $test_dir/jacobi/F
 cp -r $test_data_dir/jacobi/F/jacobi.F90 $test_dir/jacobi/F
 cp -r $test_data_dir/jacobi/F/main.F90 $test_dir/jacobi/F
 cp -r $test_data_dir/jacobi/F/VariableDef.f90 $test_dir/jacobi/F
-#cp @srcdir@/../src/pomp-lib-dummy/pomp_lib.h  $test_dir/jacobi/F/
-#cp @srcdir@/../src/pomp-lib-dummy/opari_omp.h  $test_dir/jacobi/F/
+#cp @srcdir@/../src/opari-lib-dummy/pomp_lib.h  $test_dir/jacobi/F/
+#cp @srcdir@/../src/opari-lib-dummy/opari_omp.h  $test_dir/jacobi/F/
 
 cd $test_dir/jacobi/F
 #make instrument
@@ -35,7 +35,7 @@ $FC -I$INCDIR $OPENMP $FCFLAGS -c jacobi.mod.F90
 $FC -I$INCDIR $OPENMP $FCFLAGS -c main.mod.F90
 
 #make build
-@NM@ jacobi.mod.o main.mod.o | @EGREP@ -i "[DT] \.{0,1}_{0,2}pomp2_init_reg" | `$OPARI2_CONFIG --awk-cmd` -f `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
+@NM@ jacobi.mod.o main.mod.o | `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
 $CC -I$INCDIR  -c pomp_init_file.c
 $FC $OPENMP $FCFLAGS pomp_init_file.o jacobi.mod.o main.mod.o VariableDef.mod.o $LDFLAGS -o jacobi$EXEEXT
 

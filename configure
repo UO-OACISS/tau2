@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -765,6 +765,7 @@ for arg in "$@"; do
 	    echo "                                                          Symbol Table."
 	    echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
 	    echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
+	    echo "-sos=<dir> ........................... Use Scalable Observation System."
 	    #    echo "-TRACE ..................................... Generate TAU event traces."
 	    #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
 	    #    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
@@ -1076,6 +1077,7 @@ omptenabled=no
 download_ompt=no
 download_ompt_tr6=no
 install_ompt=no
+ompt_use_tr6_version=no
 xlsmp=no
 ibmxlc=no
 ibmxlc_r=no
@@ -1798,12 +1800,12 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
-        -otf=download*)
-            echo "Downloading libotf2..."
-            otf=yes
-            download_otf=yes
-            shift
-            ;;
+     -otf=download*)
+        echo "Downloading libotf2..."
+        otf=yes
+        download_otf=yes
+        shift
+        ;;
 
 	-otf=*)
 	    otf=yes
@@ -1938,6 +1940,13 @@ for arg in "$@"; do
 	    shift
         ;;
 
+    -dwarf=download)
+        dwarf=yes
+        download_dwarf=yes
+        echo "Downloading libdwarf..."
+        shift
+        ;;
+
 	-dwarf=*)
 	    dwarf=yes
 	    dwarfdir=`echo $arg | sed -e 's/-dwarf=//'`
@@ -2006,6 +2015,36 @@ for arg in "$@"; do
 	    shift
 	    ;;
 
+    # This option indicates that the OMPT path specified in -ompt=* is a TR6 version.
+    # TAU Commander uses this option because it downloads and builds its own version of
+    # the LLVM OpenMP runtime.
+
+    -ompt-tr6=download)
+	    openmp=yes
+	    ompt=yes
+	    download_ompt_tr6=yes
+        shift
+        ;;
+
+    -ompt-tr6=*)
+        openmp=yes
+        ompt=yes
+        ompt_dir=`echo $arg | sed -e 's/-ompt-tr6=//'`
+        if [ ! -d $ompt_dir ]
+        then
+          echo "Error: OMPT directory $ompt_dir cannot be accessed"
+          exit 1
+        fi
+	    omptlib="${ompt_dir}/lib"
+        ompt_use_tr6_version=yes
+        shift
+        ;;
+
+    -ompt-tr6*)
+        ompt_use_tr6_version=yes
+        shift
+        ;;
+
 	-ompt=*)
 	    openmp=yes
 	    ompt=yes
@@ -2024,6 +2063,7 @@ for arg in "$@"; do
 	    ompt=yes
 	    shift
 	    ;;
+
 
 	-xlsmp=*)
 	    xlsmp=yes
@@ -2548,7 +2588,7 @@ for arg in "$@"; do
 	    else
 	      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
               rocprofiler=yes
-              tauoptions="${tauoptions}-rocm"
+              #tauoptions="${tauoptions}-rocm"
 	      pthread=yes
             fi
 	    shift
@@ -3120,6 +3160,10 @@ esac
 
 if [ "$c_compiler" != "" -a "$c_compiler" != "default" ]; then
     TAU_CCOM="$c_compiler"          # for 'archfind'
+    if [ "$c_compiler" = pgcc ]
+    then
+       TAU_CCOM=""
+    fi
     if [ "$c_compiler" = mpc_cc ]
     then
       TAU_CCOM="$mpc_c_compiler"
@@ -6827,9 +6871,14 @@ fi
 # Install Clang/LLVM OpenMP runtime with OMPT if requested
 ######################################################################
 
+if [ "x$download_ompt" = "xyes" -a "x$ompt_use_tr6_version" = "xyes" ] ; then
+  download_ompt=no
+  download_ompt_tr6=yes
+fi
+
 if [ $ompt = yes ]; then
   tauoptions="${tauoptions}-ompt"
-  if [ "x$download_ompt_tr6" = "xyes" ]; then
+  if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ]; then
     tauoptions="${tauoptions}-tr6"
   fi
   if [ "x$CRAY_CPU_TARGET" != "x" -a "x$PE_ENV" = "xINTEL" ] ; then
@@ -6837,7 +6886,7 @@ if [ $ompt = yes ]; then
   fi
 fi
 
-if [ "x$download_ompt_tr6" = "xyes" ] ; then
+if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
   libomp_oss=LLVM-openmp-master
   libomp_osstgz=LLVM-openmp-ompt-tr6.tar.gz
   libomp_ossurl=http://tau.uoregon.edu/${libomp_osstgz}
@@ -6854,7 +6903,7 @@ if [ "${omptlib}" = "" ] ; then
     # TODO: Please remove this check once TR6 (and newer) become the only supported OMPT version(s).
     # If we do not have separate directories for OMPT (legacy) and OMPT-TR6, then there are issues
     # in installing both together for comparison purposes.
-    if [ "x$download_ompt_tr6" = "xyes" ] ; then
+    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
         libomp_ossdir_shared=${targetdir}/${architecture}/lib/shared-disable-tr6
         libomp_ossdir_static=${targetdir}/${architecture}/lib/static-disable-tr6
     else
@@ -6957,17 +7006,22 @@ if [ "x$download_ompt" = "xyes" -o "x$download_ompt_tr6" = "xyes" ] ; then
 	  mkdir build-${ompt_cxx_compiler}
 	  cd build-${ompt_cxx_compiler}
       libomp_cmake_instdir=`pwd`
-	  echo cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} ..
-	  cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
+	  echo cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true cmake -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} ..
+	  cmake -DCMAKE_DISABLE_FIND_PACKAGE_CUDA=true -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=${ompt_c_compiler} -DCMAKE_CXX_COMPILER=${ompt_cxx_compiler} -DCMAKE_INSTALL_PREFIX=${libomp_cmake_instdir} ${specialflags} .. > $libomp_oss_log 2>&1
       result=$?
       if [ $result -eq 0 ] ; then
+        echo make clean
 	    make clean
-            make libomp-needed-headers >> $libomp_oss_log 2>&1
+        echo make libomp-needed-headers
+        make libomp-needed-headers >> $libomp_oss_log 2>&1
+        echo make
 	    make >> $libomp_oss_log 2>&1
         result=$?
         if [ $result -eq 0 ] ; then
+          echo make install
 	      make install >> $libomp_oss_log 2>&1
           # copy the header to our source area, anyway - we need it.
+          echo cp ./include/*.h ${START_DIR}/include/.
           cp ./include/*.h ${START_DIR}/include/.
           libomp_ossdir_shared=${libomp_cmake_instdir}/lib
           libomp_ossdir_static=${libomp_cmake_instdir}/lib
@@ -6992,6 +7046,7 @@ else
   install_ompt=yes
   if [ $ompt = "yes" -a ! -f ${START_DIR}/include/ompt.h ] ; then
     # we need the ompt header for building TAU
+    echo cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
     cp ${omptlib}/../include/ompt.h ${START_DIR}/include/.
   fi
 fi #ompt=download
@@ -7026,10 +7081,12 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
     fi
 else # intel OMPT support
     if [ $ompt = yes ]; then
-	omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
-        if [ "x$download_ompt_tr6" = "xyes" ] ; then
-	  fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
+	    omptlinking="-Wl,-rpath,$omptlib#-L$omptlib#$omptlibrary"
+        if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
+          echo "Using OMPT TR6"
+	      fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
         else
+          echo "Using OMPT"
           fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
         fi  
     fi 
@@ -8513,7 +8570,10 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
         ;;
       *)   
         #echo $c_compiler
-        if [ "$c_compiler" = mpc_cc ]
+        base_c_compiler="`basename "$c_compiler"`"
+        base_env_c_compiler="`basename "$CC"`"
+
+        if [ "$base_c_compiler" = mpc_cc ]
         then
            ./configure \
             CFLAGS="-fPIC -Wno-error" CXXFLAGS="-fPIC -Wno-error" \
@@ -8522,7 +8582,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
             --disable-nls --disable-werror > tau_configure.log 2>&1
             err=$?	 
         else
-	  if [ "$c_compiler" = pgcc ]
+	  if [ "$base_c_compiler" = pgcc ] || [ "$base_env_c_compiler" = pgcc ]
 	  then
             ./configure \
               CFLAGS="-fPIC -noswitcherror" CXX=pgc++ CXXFLAGS=-fPIC \
@@ -8851,6 +8911,8 @@ fi
 # Check if BFD can be linked into a shared library
 ######################################################################
 cat <<EOF > conftest_bfd.c
+#define PACKAGE TAU
+#define PACKAGE_VERSION 2.28
 #include <bfd.h>
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include <demangle.h>
@@ -9424,20 +9486,20 @@ EOF
 		cuda_version=$(cat "$cudadir"/include/cuda.h | grep "define CUDA_VERSION")
 		vers_arr=($cuda_version)
 		cupti_event_path=""
-		if [ ${vers_arr[2]} -ge 10000 ] ; then
-		    ## For now, checking if version greater than 10
-		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
-		else
+		if [ -f "$cudadir/extras/CUPTI/include/cupti_events.h" ] ; then
+		    # check if usual path exists, otherwise use fallback
 		    cupti_event_path="$cudadir/extras/CUPTI/include/cupti_events.h"
+		else
+		    cupti_event_path="$cudadir/extras/CUPTI.orig/include/cupti_events.h"
 		fi
 		if [ $cupti = no -a -f $cupti_event_path ] ; then
 		    tauoptions="${tauoptions}-cupti"
 		    cupti=""
-		    if [ ${vers_arr[2]} -ge 10000 ] ; then
-			## For now, checking if version greater than 10
-			cupti="$cudadir/extras/CUPTI.orig"
-		    else
+		    if [ -d "$cudadir/extras/CUPTI" ] ; then
+                        # check if usual path exists, otherwise use fallback
 			cupti="$cudadir/extras/CUPTI"
+		    else
+			cupti="$cudadir/extras/CUPTI.orig"
 		    fi
 		    fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		    echo "Using CUPTI library found in $cupti."
@@ -9714,7 +9776,7 @@ if [ $apex = yes ] ; then
 		else
         	echo "TAUOMPT=-DUSE_OMPT=TRUE -DOMPT_ROOT=${omptlib}" >> ${apex_include_file}
 		fi
-		if [ "${download_ompt_tr6}" = "yes" ] ; then
+		if [ "${download_ompt_tr6}" = "yes" -o "x$ompt_use_tr6_version" = "xyes"] ; then
         	echo "TAUOMPT=-DUSE_OMPT_TR6=TRUE -DOMPT_ROOT=${targetdir}/${architecture}" >> ${apex_include_file}
 		else
         	echo "TAUOMPT=-DUSE_OMPT_TR6=TRUE -DOMPT_ROOT=${omptlib}" >> ${apex_include_file}
@@ -10523,11 +10585,122 @@ if [ $dyninst = yes ] ; then
 fi
 
 
+######################################################################
+# Install libdwarf if requested
+######################################################################
+libdwarf=libdwarf
+libdwarf_dirname=libdwarf-20181024
+libdwarftgz=$libdwarf_dirname.tar.gz
+libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
+
+if [ "x$dwarfdir" = "x" ]; then
+    libdwarfdir=${targetdir}/${architecture}
+else
+    libdwarfdir=$dwarfdir
+fi
+
+libdwarf_name=dwarf
+if [ "x$dwarfdir" != "x" -a -d "$dwarfdir" ] ; then
+    if [ -r $dwarfdir/$libdwarftgz ]; then
+        echo "NOTE: Copying $dwarfdir/$libdwarftgz "
+        cp $dwarfdir/$libdwardtgz .
+        download_dwarf=yes
+    fi
+fi
+
+
+if [ "x$download_dwarf" = xyes ] ; then
+    if [ $machine = craycnl ] ; then
+        dwarfdir=${libdwarfdir}/${libdwarf}-${c_compiler}-${PE_ENV}
+    else
+        dwarfdir=${libdwarfdir}/${libdwarf}-${c_compiler}
+    fi
+    predwarfdir=`pwd`
+
+
+    if [ -r "$dwarfdir/lib/lib${libdwarf_name}.so" -o \
+        -r "$dwarfdir/lib/lib${libdwarf_name}.a" -o \
+        -r "$dwarfdir/lib/lib${libdwarf_name}.dylib" -o \
+        -r "$dwarfdir/lib64/lib${libdwarf_name}.so" -o \
+        -r "$dwarfdir/lib64/lib${libdwarf_name}.a" -o \
+        -r "$dwarfdir/lib64/lib${libdwarf_name}.dylib" ] ; then
+        echo "Found: lib${libdwarf_name}"
+        echo "libdwarf download already found, skipping"
+    else
+        echo "Not found in ${dwarfdir}: lib${libdwarf_name}"
+        # get the tar file
+        if [ ! -f $libdwarftgz ] ; then
+            download "$libdwarfurl" "$libdwarftgz"
+        fi
+
+        # check the tar file
+        if [ ! -f $libdwarftgz ] ; then
+            echo "$libdwarftgz did not download.  Please download it manually from: "
+            echo "$libdwarfurl"
+            echo "Please enter the directory containing the tarball: ${nnl}"
+            read RESPONSE
+            cp $RESPONSE/$libdwarftgz .
+        else
+            echo "expanding $libdwarftgz..."
+            tar -xzf $libdwarftgz
+            echo "removing $libdwarftgz..."
+            rm $libdwarftgz
+            if [ ${c_compiler}=mpc_cc -o ${c_compiler}=mpc_icc ]
+            then
+                dwarf_c_compiler=gcc
+                dwarf_cxx_compiler=g++
+            else
+                dwarf_c_compiler=${c_compiler}
+                dwarf_cxx_compiler=${cxx_compiler}
+            fi
+
+            configresult=0
+            makeresult=0
+            libdwarf_log=configure.log
+            cd $libdwarf_dirname
+            echo "configuring $libdwarf... (see `pwd`/${libdwarf_log} for log)..."
+            ./configure --prefix=${dwarfdir} --enable-static --enable-shared CC=${dwarf_c_compiler} CXX=${dwarf_cxx_compiler} > ${libdwarf_log} 2>&1
+            configresult=$?
+            if [ $configresult -eq 0 ] ; then
+                libdwarf_log=build.log
+                echo "building ${libdwarf}... (see `pwd`/${libdwarf_log} for log)..."
+                make -i > $libdwarf_log  2>&1
+                makeresult=$?
+                if [ $makeresult -eq 0 ] ; then
+                    libdwarf_log=install.log
+                    echo "installing ${libdwarf} to ${dwarfdir}... (see `pwd`/${libdwarf_log} for log)..."
+                    make -i install > $libdwarf_log  2>&1
+                    makeresult=$?
+                fi
+            fi
+            if [ $configresult -eq 0 ] && [ $makeresult -eq 0 ] ; then
+                # Some systems install to lib64 instead of lib
+                if [ -d "$dwarfdir/lib64" -a ! -d "$dwarfdir/lib" ] ; then
+                    tdir=$dwarfdir
+                    pwddir=${PWD}
+                    cd $tdir
+                    ln -s lib64 lib
+                    cd $pwddir
+                fi
+                echo "...Success."
+            else
+                echo "ERROR BUILDING $libdwarf!"
+                echo "Please check `pwd`/config.log or `pwd`/${libdwarf_log}"
+            fi
+        fi
+    fi
+    cd $predwarfdir
+fi
+
 if [ $dwarf = yes ] ; then
     if [ ! -r $dwarfdir/lib/libdwarf.a ] ; then
 	echo "ERROR: $dwarfdir/lib/libdwarf.a not found"
     else
+    echo "Using libdwarf at $dwarfdir"
 	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
+    fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
+    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf"
+    fixmakeargs="$fixmakeargs TAU_DWARF"
     fi
 fi
 
@@ -10538,7 +10711,7 @@ if [ $papi = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
-    if [ [[ $pthread = yes -a $openmp = no ]] -o $smarts = yes -o $java = yes ] ; then
+    if [ $pthread = yes -a $openmp = no -o $smarts = yes -o $java = yes ] ; then
 	echo "ERROR: -opari option requires OpenMP threads package."
 	echo "*****************************************************"
 	exit 1
@@ -11181,14 +11354,14 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_shared}/lib${libom
 
     echo "ompt_dir=$ompt_dir"
     omptlinking="-Wl,-rpath=${ompt_instdir}#-L${ompt_instdir}#$omptlibrary"
-    if [ "x$download_ompt_tr6" = "xyes" ] ; then 
+    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then 
       fixmakeargs="$fixmakeargs TAU_OMPT_TR6 omptlib=$omptlinking"
     else
       fixmakeargs="$fixmakeargs TAU_OMPT omptlib=$omptlinking"
     fi 
     # also put them in the "disable" directory for later builds - but only do it once
     
-    if [ "x$download_ompt_tr6" = "xyes" ] ; then
+    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes" ] ; then
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable-tr6
     else
        ompt_instdir=${targetdir}/${architecture}/lib/shared-disable
@@ -11219,7 +11392,7 @@ if [ $ompt = yes -a $install_ompt = yes -a -r ${libomp_ossdir_static}/lib${libom
     echo "ompt_dir=$ompt_dir"
 
     # also put them in the "disable" directory for later builds - but only do it once
-    if [ "x$download_ompt_tr6" = "xyes" ] ; then
+    if [ "x$download_ompt_tr6" = "xyes" -o "x$ompt_use_tr6_version" = "xyes"] ; then
       ompt_instdir=${targetdir}/${architecture}/lib/static-disable-tr6
     else 
       ompt_instdir=${targetdir}/${architecture}/lib/static-disable

@@ -20,10 +20,6 @@
 
 /**
  * @file       config-custom.h
- * @author     Christian R&ouml;ssel <c.roessel@fz-juelich.de>
- * @author     Bert Wesarg <Bert.Wesarg@tu-dresden.de>
- * @maintainer Christian R&ouml;ssel <c.roessel@fz-juelich.de>
- * @maintainer Bert Wesarg <Bert.Wesarg@tu-dresden.de>
  *
  * @brief This file gets included by config.h (resp. config-frontend.h and
  * config-backend.h) and contains supplementary macros to be used with the

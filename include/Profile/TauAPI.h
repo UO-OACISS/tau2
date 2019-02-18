@@ -95,9 +95,8 @@
 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 
-#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_thread())
-#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_thread())
-
+#define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_thread()); Tau_invoke_plugin_phase_entry(var##finfo)
+#define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_thread()); Tau_invoke_plugin_phase_exit(var##finfo)
 #define TAU_ENABLE_GROUP(group)			Tau_enable_group(group);
 #define TAU_DISABLE_GROUP(group)		Tau_disable_group(group);
 #define TAU_ENABLE_GROUP_NAME(group)            Tau_enable_group_name(group) 
@@ -175,6 +174,7 @@
 #define TAU_EVENT_THREAD(event, data, tid)				Tau_userevent_thread(event, data, tid)
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
 #define TAU_CONTEXT_EVENT_THREAD(event, data, tid) Tau_context_userevent_thread(event, data, tid);
+#define TAU_CONTEXT_EVENT_THREAD_TS(event, data, tid, ts) Tau_context_userevent_thread_ts(event, data, tid, ts);
 #define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
 #define TAU_REPORT_THREAD_STATISTICS()  Tau_report_thread_statistics();
@@ -486,6 +486,8 @@ void TAUDECL Tau_set_node(int node);
 
 void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
 void TAUDECL Tau_stop_timer(void *profiler, int tid);
+int TAUDECL Tau_invoke_plugin_phase_entry(void *profiler);
+int TAUDECL Tau_invoke_plugin_phase_exit(void *profiler);
 void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
 void TAUDECL Tau_lite_stop_timer(void *profiler);
 void TAUDECL Tau_pure_start(const char *name);
@@ -551,6 +553,7 @@ void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);
 void Tau_context_userevent_thread(void *event, double data, int tid);
+void Tau_context_userevent_thread_ts(void *event, double data, int tid, double ts);
 void Tau_set_event_name(void *event, char * name);
 void Tau_report_statistics(void);
 void Tau_report_thread_statistics(void);

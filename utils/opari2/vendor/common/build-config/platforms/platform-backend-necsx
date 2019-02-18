@@ -1,6 +1,6 @@
 # It is necessary to set this because "sxmpic++ -E" always tries to
 # link and fails
-#CPP="sxcc -E" 
+#CPP="sxcc -E"
 
 CC=sxcc
 CXX=sxc++

@@ -52,17 +52,18 @@ module JacobiMod
             do while (myData%iIterCount < myData%iIterMax .and. residual > myData%fTolerance)
                 residual = 0.0d0
         
-            ! Copy new solution into old
+            ! Copy new solution into old, including the boundary.
 !$omp parallel private(fLRes, tmpResd, i)
 !$omp do
-                   do j = 1, myData%iRows - 2
-                       do i = 1, myData%iCols - 2
+                   do j = myData%iRowFirst, myData%iRowLast
+                       do i = 0, myData%iCols - 1
                            uold(i, j) = myData%afU(i, j)
                        end do
                    end do
 !$omp end do
 !$omp do reduction(+:residual)
-                  ! Compute stencil, residual, & update
+                  ! Compute stencil, residual, & update.
+                  ! Update excludes the boundary.
                    do j = myData%iRowFirst + 1, myData%iRowLast - 1
                        do i = 1, myData%iCols - 2
                            ! Evaluate residual 

@@ -118,6 +118,7 @@ C$omp parallel do private(i,j)
       enddo
 C$omp end parallel do
 
+*
       return 
       end 
 

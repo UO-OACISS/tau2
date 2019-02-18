@@ -47,6 +47,7 @@ ThreadValue * LikwidLayer::ThreadList[TAU_MAX_THREADS] = { 0 };
 
 //string LikwidLayer::eventString;//[] = "L2_LINES_IN_ALL:PMC0,L2_TRANS_L2_WB:PMC1";
 int* LikwidLayer::cpus;
+int num_cpus = 0;
 int LikwidLayer::gid;
 int LikwidLayer::err;
 int LikwidLayer::numCounters = 0;
@@ -62,24 +63,31 @@ int LikwidLayer::initializeLikwidLayer() //Tau_initialize_likwid_library(void)
 	int w;
 	int y;
 	int z;
-	LikwidLayer::err = topology_init();
-	CpuInfo_t info = get_cpuInfo();
-	CpuTopology_t topo = get_cpuTopology();
-	affinity_init();
+	if (!LikwidLayer::likwidInitialized) // initialize only if not already initialized
+	{
+	    LikwidLayer::err = topology_init();
+	    CpuInfo_t info = get_cpuInfo();
+	    CpuTopology_t topo = get_cpuTopology();
+	    numa_init(); // Should be done by affinity_init() also but we do it explicitly
+	    affinity_init();
+	    //printf("TAU: LIKWID: Initializing\n");
 
-	LikwidLayer::cpus = (int*) malloc(topo->activeHWThreads * sizeof(int)); //vs numHWThreads
-	if (!LikwidLayer::cpus)
-		return 1;
-	int w1 = 0;
-	for (w = 0; w < topo->numHWThreads; w++) {
-		if (topo->threadPool[w].inCpuSet == 1) {
-			LikwidLayer::cpus[w1] = topo->threadPool[w].apicId;
-			w1++;
-		}
-	}
-	//perfmon_setVerbosity(3);
-
-	LikwidLayer::err = perfmon_init(topo->activeHWThreads, LikwidLayer::cpus);
+	    LikwidLayer::cpus = (int*) malloc(topo->activeHWThreads * sizeof(int)); //vs numHWThreads
+	    if (!LikwidLayer::cpus)
+		    return 1;
+	    int w1 = 0;
+	    for (w = 0; w < topo->numHWThreads; w++) {
+		    if (topo->threadPool[w].inCpuSet == 1) {
+			    LikwidLayer::cpus[w1] = topo->threadPool[w].apicId;
+			    w1++;
+		    }
+	    }
+	    //perfmon_setVerbosity(3);
+        setenv("LIKWID_FORCE", "1", 1); // Overwrite already running counters because currently there are no stopCounters() or finalize() calls
+	    LikwidLayer::err = perfmon_init(topo->activeHWThreads, LikwidLayer::cpus);
+	    num_cpus = topo->activeHWThreads; // Store the number of CPUs to use it later in LikwidLayer::getAllCounters
+	    LikwidLayer::likwidInitialized = true; // we initialized it, so set this to true
+    }
 
 }
 
@@ -98,15 +106,20 @@ int LikwidLayer::addEvents(const char *estr) {
 	 eventString=eventString+","+string(estr);
 	 }
 	 */
-	TAU_VERBOSE("TAU: LIKWID: Adding events %s\n", estr);
+	if (!LikwidLayer::likwidInitialized) // Check flag and initialize if needed
+	{
+	    LikwidLayer::err = LikwidLayer::initializeLikwidLayer();
+	}
+	//printf("TAU: LIKWID: Adding events %s\n", estr);
 
 	//LikwidLayer::err = perfmon_stopCounters();
 	LikwidLayer::gid = perfmon_addEventSet(estr);
 	LikwidLayer::err = perfmon_setupCounters(LikwidLayer::gid);
-	//printf("SetupCounters error: %d\n",LikwidLayer::err);
+	//printf("TAU: LIKWID: SetupCounters error: %d\n",LikwidLayer::err);
 	LikwidLayer::err = perfmon_startCounters();
-	//printf("StartCounters error: %d\n",LikwidLayer::err);
+	//printf("TAU: LIKWID: StartCounters error: %d\n",LikwidLayer::err);
 	numCounters = perfmon_getNumberOfEvents(LikwidLayer::gid);
+	//printf("TAU: LIKWID: NumberOfEvents: %d\n", numCounters);
 	return LikwidLayer::gid;
 }
 
@@ -146,7 +159,7 @@ int LikwidLayer::initializeThread(int tid) {
 /////////////////////////////////////////////////
 long long *LikwidLayer::getAllCounters(int tid, int *numValues) {
 	int rc = 0;
-	long long tmpCounters[numCounters];
+	//long long tmpCounters[numCounters];
 	//perfmon_setVerbosity(3);
 
 	/* Task API does not have a real thread associated with it. It is fake */
@@ -173,14 +186,22 @@ long long *LikwidLayer::getAllCounters(int tid, int *numValues) {
 	*numValues = numCounters; //TODO: Warning. Likwid adds two additional counters to the specified counter list. This does not seem to matter but could cause unexpected issues in the future. Consider adjusting the value array to contain only the user specified counters.
 	//printf("About to read tid:%d, cpu:%d, gid:%d\n",tid,LikwidLayer::cpus[tid],LikwidLayer::gid);
 	int readres = perfmon_readCounters(); // GroupThread(LikwidLayer::gid,tid);
+	// If we know the CPU the application is running on, we could also use perfmon_readCountersCpu(int cpuid) to reduce overhead
 	//printf("Read returned %d\n",readres);
 
+    
 	for (int comp = 0; comp < numCounters; comp++) {
 		//int comp=0;
-		tmpCounters[comp] = perfmon_getLastResult(LikwidLayer::gid, comp, tid);
-
+		// Sum up the results of all CPUs
+		double dblsum = 0;
+		for (int c = 0; c < num_cpus; c++) 
+        {
+            dblsum += perfmon_getLastResult(LikwidLayer::gid, comp, c);
+		}
+		//printf("Counter %d longsum %lld dblsum %f\n", comp, static_cast<long long>(dblsum), dblsum);
+        //tmpCounters[comp] += static_cast<long long>(s);
 		//for (int j=0; j<numCounters; j++) {
-		ThreadList[tid]->CounterValues[comp] += tmpCounters[comp];
+		ThreadList[tid]->CounterValues[comp] += static_cast<long long>(dblsum);
 		//printf("ThreadList[%d]->CounterValues[%d] = %lld\n", tid, comp, ThreadList[tid]->CounterValues[comp]);
 		//}
 

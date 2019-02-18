@@ -16,10 +16,6 @@
 /** @internal
  *
  *  @file       opari2_config.cc
- *  @status     alpha
- *
- *  @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
- *  @autors     Daniel Lorenz <d.lorenz@fz-juelich.de>
  *
  *  @brief      Implementation of the OPARI2 config tool.
  *
@@ -33,6 +29,10 @@
 #include <opari2_config_tool_frontend.h>
 #include "opari2_config.h"
 
+#if HAVE( READLINK )
+#include <unistd.h>
+#endif
+
 #define ACTION_NM      1
 #define ACTION_AWK     2
 #define ACTION_SCRIPT  3
@@ -41,31 +41,16 @@
 #define ACTION_NM2AWK  6
 #define ACTION_CFLAGS  7
 #define ACTION_POMP2_API_VERSION 8
+#define ACTION_CFLAGS_GNU  9
+#define ACTION_CFLAGS_INTEL  10
 
 void
 opari2_print_help( char** argv )
 {
-    std::cout << argv[ 0 ] << "\n\n"
-              << "Usage: opari2-config [OPTION] ... <command>\n\n"
-              << "with following commands:\n"
-              << "   --nm                    Prints the nm command.\n"
-              << "   --region-initialization Prints the script used to create the pomp2_init_regions.c file.\n"
-              << "   --create-pomp2-regions <object files> Prints the whole command necessary\n"
-              << "                           for creating the initialization file.\n"
-              << "   --cflags                Prints compiler options to include installed headers.\n"
-              << "   --version               Prints the opari2 version number.\n"
-              << "   --interface-version     Prints the pomp2 API version that instrumented files\n"
-              << "                           conform too.\n\n"
-              << "   --opari2-revision       prints the revision number of the OPARI2 package\n"
-              << "   --common-revision       prints the revision number of the common package\n\n"
-              << "   --help                  Prints this help text.\n"
-              << "and following options:\n"
-              << "   --build-check           Tells opari2-config to use build paths instead of install paths.\n"
-              << "                           Used for build testing."
-              << "   --config=<config file>  Reads in a configuration from the given file.\n\n"
-              << "Report bugs to <scorep-bugs@groups.tu-dresden.de>."
-              << std::endl;
-    return;
+    std::string usage =
+#include "opari2-config_usage.h"
+    ;
+    std::cout << "\n\n" << usage << std::endl;
 }
 
 int
@@ -78,6 +63,7 @@ main( int    argc,
     int          n_obj_files = 0;
     char**       obj_files   = NULL;
     OPARI_Config app;
+    bool         fortran = false;
 
 
     /* parsing the command line */
@@ -108,7 +94,20 @@ main( int    argc,
         {
             action = ACTION_EGREP;
         }
-        else if ( strcmp( argv[ i ], "--cflags" ) == 0 )
+        else if ( strcmp( argv[ i ], "--cflags=gnu" ) == 0 )
+        {
+            action = ACTION_CFLAGS_GNU;
+        }
+        else if ( strcmp( argv[ i ], "--cflags=intel" ) == 0 )
+        {
+            action = ACTION_CFLAGS_INTEL;
+        }
+        else if ( ( strcmp( argv[ i ], "--cflags" ) == 0 )       ||
+                  ( strcmp( argv[ i ], "--cflags=sun" ) == 0 )   ||
+                  ( strcmp( argv[ i ], "--cflags=pgi" ) == 0 )   ||
+                  ( strcmp( argv[ i ], "--cflags=ibm" ) == 0 )   ||
+                  ( strcmp( argv[ i ], "--cflags=cray" ) == 0 )  ||
+                  ( strcmp( argv[ i ], "--cflags=fujitsu" ) == 0 )  )
         {
             action = ACTION_CFLAGS;
         }
@@ -167,6 +166,10 @@ main( int    argc,
         {
             app.setBuildCheck();
         }
+        else if ( strcmp( argv[ i ], "--fortran" ) == 0 )
+        {
+            fortran = true;
+        }
         else
         {
             std::cerr << "\nUnknown option " << argv[ i ] << ". Abort.\n" << std::endl;
@@ -185,46 +188,68 @@ main( int    argc,
     switch ( action )
     {
         case ACTION_NM:
-            std::cout << app.nm;
+            std::cout << app.m_nm;
             std::cout.flush();
             break;
 
         case ACTION_AWK:
-            std::cout << app.awk;
+            std::cout << app.m_awk;
             std::cout.flush();
             break;
 
         case ACTION_SCRIPT:
-            std::cout << app.script;
+            std::cout << app.m_script;
             std::cout.flush();
             break;
 
         case ACTION_EGREP:
-            std::cout << app.egrep;
+            std::cout << app.m_egrep;
             std::cout.flush();
             break;
 
         case ACTION_CFLAGS:
-            std::cout << app.cflags;
+            std::cout << app.m_cflags;
+            std::cout.flush();
+            break;
+        case ACTION_CFLAGS_GNU:
+            if ( fortran )
+            {
+                std::cout << app.m_cflags << " -Wno-unused";
+            }
+            else
+            {
+                std::cout << app.m_cflags;
+            }
+            std::cout.flush();
+            break;
+        case ACTION_CFLAGS_INTEL:
+            if ( fortran )
+            {
+                std::cout << app.m_cflags << " -warn nounused";
+            }
+            else
+            {
+                std::cout << app.m_cflags;
+            }
             std::cout.flush();
             break;
 
         case ACTION_NM2AWK:
-            std::cout << app.nm << " ";
+            std::cout << app.m_nm << " ";
             for ( int i = 0; i < n_obj_files; i++ )
             {
                 std::cout << obj_files[ i ] << " ";
             }
-            std::cout << " | "  << app.script;
+            std::cout << " | "  << app.m_script;
             break;
 
         case ACTION_VERSION:
-            std::cout << app.version << "\n";
+            std::cout << app.m_version << "\n";
             std::cout.flush();
             break;
 
         case ACTION_POMP2_API_VERSION:
-            std::cout << app.pomp2_api_version << "\n";
+            std::cout << app.m_pomp2_api_version << "\n";
             std::cout.flush();
             break;
 
@@ -235,26 +260,44 @@ main( int    argc,
     return EXIT_SUCCESS;
 }
 
-OPARI_Config::OPARI_Config()
+OPARI_Config::OPARI_Config( void )
 {
-    nm                = NM;
-    awk               = AWK;
-    egrep             = EGREP;
-    version           = VERSION;
-    pomp2_api_version = POMP2_API_VERSION;
-    script            = SCRIPT;
-    cflags            = CFLAGS;
+    m_nm                = NM;
+    m_awk               = AWK;
+    m_egrep             = EGREP;
+    m_version           = VERSION;
+    m_pomp2_api_version = POMP2_API_VERSION;
+    m_script            = SCRIPT;
+    m_cflags            = CFLAGS;
 }
 
-OPARI_Config::~OPARI_Config()
+OPARI_Config::~OPARI_Config( void )
 {
 }
 
 void
-OPARI_Config::setBuildCheck()
+OPARI_Config::setBuildCheck( void )
 {
-    script = BUILD_SCRIPT;
-    cflags = BUILD_CFLAGS;
+    #if !HAVE( READLINK )
+    std::cerr << "Option --build-check not supported without readlink support." << std::endl;
+    exit( EXIT_FAILURE );
+    #endif /* !HAVE(READLINK) */
+
+    unsigned bufsize = 8192;
+    char     buffer[ bufsize ];
+    memset( buffer, 0, bufsize );
+    ssize_t result = readlink( "/proc/self/exe", buffer, bufsize );
+    if ( result >= bufsize || result == -1 )
+    {
+        std::cerr << "Could not determine executable path. Option --build-check not supported." << std::endl;
+        exit( EXIT_FAILURE );
+    }
+    std::string opari2_config_exe        = std::string( buffer );
+    std::size_t found                    = opari2_config_exe.rfind( "opari2-config" );
+    std::string opari2_config_build_path = opari2_config_exe.substr( 0, found );
+
+    m_script = opari2_config_build_path + "pomp2-parse-init-regions.awk";
+    m_cflags = "-I" + opari2_config_build_path + "../include";
 }
 
 void
@@ -265,7 +308,7 @@ OPARI_Config::readConfigFile( std::string config_file )
     inFile.open( config_file.c_str(), std::ios_base::in );
     if ( !( inFile.good() ) )
     {
-        std::cerr << "Can not open config file: "
+        std::cerr << "Cannot open config file: "
                   << config_file << std::endl;
         abort();
     }
@@ -283,31 +326,31 @@ OPARI_Config::set_value( std::string key, std::string value )
 {
     if ( key == "EGREP" )
     {
-        egrep = value;
+        m_egrep = value;
     }
     else if ( key == "VERSION" )
     {
-        version = value;
+        m_version = value;
     }
     else if ( key == "POMP2_API_VERSION" )
     {
-        pomp2_api_version = value;
+        m_pomp2_api_version = value;
     }
     else if ( key == "NM" )
     {
-        nm = value;
+        m_nm = value;
     }
     else if ( key == "AWK" )
     {
-        awk = value;
+        m_awk = value;
     }
     else if ( key == "OPARI_SCRIPT" )
     {
-        script = value;
+        m_script = value;
     }
     else if ( key == "CFLAGS" )
     {
-        cflags = value;
+        m_cflags = value;
     }
     /* Ignore unknown entries */
 }

@@ -1068,6 +1068,36 @@ extern "C" int Tau_dump(void) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_invoke_plugin_phase_entry(void *functionInfo) {
+  TauInternalFunctionGuard protects_this_function;
+  FunctionInfo *fi = (FunctionInfo *) functionInfo;
+  
+  if(Tau_plugins_enabled.phase_entry) {
+    Tau_plugin_event_phase_entry_data_t plugin_data;
+    plugin_data.phase_name = fi->GetName();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_ENTRY, &plugin_data);
+  }
+
+  return 0;
+  
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
+  TauInternalFunctionGuard protects_this_function;
+  FunctionInfo *fi = (FunctionInfo *) functionInfo;
+  
+  if(Tau_plugins_enabled.phase_exit) {
+    Tau_plugin_event_phase_exit_data_t plugin_data;
+    plugin_data.phase_name = fi->GetName();
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_PHASE_EXIT, &plugin_data);
+  }
+
+  return 0;
+
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   TauInternalFunctionGuard protects_this_function;
   for (int i = 0 ; i < RtsLayer::getTotalThreads() ; i++)
@@ -1802,10 +1832,25 @@ extern "C" void Tau_trigger_userevent(const char *name, double data) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_userevent_thread(const char *name, double data, int tid) {
+  TauInternalFunctionGuard protects_this_function;
+  void *ue;
+  Tau_pure_userevent_signal_safe(&ue, name);
+  Tau_userevent_thread(ue, data, tid);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data, tid);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_context_userevent_thread_ts(void *ue, double data, int tid, double ts) {
+  TauInternalFunctionGuard protects_this_function;
+  TauContextUserEvent *t = (TauContextUserEvent *) ue;
+  t->TriggerEventTS(data, tid, ts);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2909,7 +2954,7 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 
 #include <mpi.h> 
 
-int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
+void Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_count) {
   int return_val, namelen, verb, varclass, bind, threadsup, i;
   int readonly, continuous, atomic;
   char event_name[TAU_NAME_LENGTH + 1] = "";
@@ -2950,6 +2995,10 @@ int Tau_fill_mpi_t_pvar_events(TauUserEvent*** event, int pvar_index, int pvar_c
   sprintf(concat_event_name, "MPI_T PVAR[%d]: %s", pvar_index, event_name);
   TAU_METADATA(concat_event_name, description); 
 }
+
+//Static variables with file scope
+static TauUserEvent *** pvarEvents = NULL;
+static char pvarnamearray[300];
  
 TauUserEvent & ThePVarsMPIEvents(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars) {
     /*All this routine does is to return the event at the current PVAR index and subindex*/
@@ -2992,18 +3041,11 @@ extern "C" void Tau_allocate_pvar_event(int num_pvars, const int *tau_pvar_count
     tau_previous_pvar_count = num_pvars;
 }
 
-//Static variables with file scope
-static TauUserEvent *** pvarEvents = NULL;
-static char pvarnamearray[100];
-
 extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int current_pvar_subindex) {
  
-  std::cout << "PVAR name: " << PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str() << std::endl;
   char * pvarnamechar = const_cast<char*>(PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
-  fprintf(stdout, "PVAR name (char *): %s\n", pvarnamechar);
 
   strcpy(pvarnamearray,pvarnamechar);
-  fprintf(stdout, "PVAR name after strcpy: %s\n", pvarnamearray);
   //return (char *) (PvarName(current_pvar_index, current_pvar_subindex).GetName().c_str());
   return pvarnamearray;
 }
@@ -3011,7 +3053,8 @@ extern "C" char * Tau_get_pvar_name(const int current_pvar_index, const int curr
 extern "C" void Tau_track_pvar_event(const int current_pvar_index, const int current_pvar_subindex, const int *tau_pvar_count, const int num_pvars, double data) {
   ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).TriggerEvent(data, Tau_get_thread()); 
 #ifdef TAU_BEACON
-  TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).GetName().c_str()));
+  if(getenv("BEACON_TOPOLOGY_SERVER_ADDR") != NULL)
+    TauBeaconPublish(data, "counts", "MPI_T_PVAR", (char *) (ThePVarsMPIEvents(current_pvar_index, current_pvar_subindex, tau_pvar_count, num_pvars).GetName().c_str()));
 #endif /* TAU_BEACON */
 }
 

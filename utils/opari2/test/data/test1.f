@@ -13,7 +13,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test the parsers ability to find directives and filter strings and comments.
 
@@ -35,7 +34,7 @@ c$OMP PARALLEL
 !$OmP   parallel
 !$OmP&   default(shared)
 !$OmP end
-!$OmP+ 
+!$OmP+
 !$OmP+ parallel
 
 !$omp parallel !comment will be deleted
@@ -43,7 +42,7 @@ c$OMP PARALLEL
 !$omp&private(a)
 !and some more comment...
 
-!$omp end 
+!$omp end
 !$omp&parallel
 
 
@@ -57,4 +56,3 @@ c     comment
       write(*,*) "!$omp parallel"
       write(*,*) """!$omp parallel"""
       end program test1
-

@@ -14,7 +14,6 @@
  *
  * Testfile for automated testing of OPARI2
  *
- * @authors Bernd Mohr, Peter Philippen
  *
  * @brief Test the parsers ability to find directives and filter strings and comments.
  */
@@ -42,7 +41,34 @@ int main() {
   {
     printf("parallel 2...\n");
   }
-  
+
+  //*************************************************
+  //* The treatment of else blocks doesn't work yet *
+  //*************************************************
+
+  /* #pragma omp parallel */
+  /* if ( omp_get_thread_num() == 0 ) */
+  /*   { */
+  /*     printf("parallel 3 thread 0 ...\n"); */
+  /*   } */
+  /* else */
+  /*   { */
+  /*     printf("parallel 3 other threads ...\n"); */
+  /*   } */
+
+  /* #pragma omp parallel */
+  /* if ( omp_get_thread_num() == 0 ) */
+  /*     printf("parallel 4 thread 0 ...\n"); */
+  /* else */
+  /*     printf("parallel 4 other threads ...\n"); */
+
+  /* #pragma omp parallel */
+  /* if ( omp_get_thread_num() == 0 ) printf("parallel 5 thread 0 ...\n"); */
+  /* else printf("parallel 5 other threads ...\n"); */
+
+  /* #pragma omp parallel */
+  /* if ( omp_get_thread_num() == 0 ) printf("parallel 6 thread 0 ...\n"); else printf("parallel 6 other threads ...\n"); */
+
   //**************************************
   //* The following should be ignored    *
   //**************************************
@@ -73,4 +99,14 @@ n");
   }
 
   printf("after...\n");
+
+  //**********************************************
+  //* Tests for the string parsing part of opari.*
+  //**********************************************
+
+  printf("");
+  printf("\\");
+  printf("\\\\");
+  printf("\\\"");
+  printf("\"\"");
 }

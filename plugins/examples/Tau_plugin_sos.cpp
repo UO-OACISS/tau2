@@ -39,13 +39,9 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data_t* data) {
 /* This happens when reading MPI-T PVARs from the underlying MPI library */
 int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data_t* data) {
 
-    printf("TAU PLUGIN SOS: MPIT\n");
+    //dprintf("TAU SOS PLUGIN: pvar name: %s\n", data->pvar_name);
+    //dprintf("TAU SOS PLUGIN: pvar value: %llu\n", data->pvar_value); 
 
-    fprintf(stdout, "TAU PLUGIN SOS: pvar name: %s\n", data->pvar_name);
-    //std::cout << "TAU PLUGINS SOS: pvar name: " << data.pvar_name << std::endl;
-    fprintf(stdout, "TAU PLUGIN SOS: pvar value: %llu\n", data->pvar_value); 
-
-    //TAU_SOS_send_data();
     Tau_SOS_pack_long(data->pvar_name, data->pvar_value);
     TAU_SOS_send_data();
     return 0;
@@ -235,7 +231,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
     //fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
     //Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
-    fprintf(stdout, "TAU PLUGIN SOS Init\n"); fflush(stdout);
+    TAU_VERBOSE("TAU PLUGIN SOS Init\n");
     // Parse our settings
     TAU_SOS_parse_environment_variables();
     // Check the value of TAU_SOS
@@ -245,9 +241,11 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
         return 0; 
     }
 
-    TAU_SOS_init();
-
-    fprintf(stdout, "SOS plugin: SOS initalized\n");
+    // if initialization fails, do nothing else.
+    if (!TAU_SOS_init()) {
+        return 1;
+    }
+    TAU_VERBOSE("SOS plugin: SOS initalized\n");
 #if 1
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);

@@ -1,78 +1,78 @@
 #include <opari2/pomp2_lib.h>
 
-#define POMP2_DLIST_00001 shared(pomp2_region_1,pomp2_region_2)
-static POMP2_Region_handle pomp2_region_1 = NULL;
-    static const char pomp2_ctc_1[] = "61*regionType=parallel*sscl=test3.c:32:32*escl=test3.c:39:39**";
-static POMP2_Region_handle pomp2_region_2 = NULL;
-    static const char pomp2_ctc_2[] = "56*regionType=for*sscl=test3.c:34:34*escl=test3.c:38:38**";
-#define POMP2_DLIST_00003 shared(pomp2_region_3,pomp2_region_4)
-static POMP2_Region_handle pomp2_region_3 = NULL;
-    static const char pomp2_ctc_3[] = "61*regionType=parallel*sscl=test3.c:41:41*escl=test3.c:46:46**";
-static POMP2_Region_handle pomp2_region_4 = NULL;
-    static const char pomp2_ctc_4[] = "56*regionType=for*sscl=test3.c:42:42*escl=test3.c:46:46**";
-#define POMP2_DLIST_00005 shared(pomp2_region_5,pomp2_region_6)
-static POMP2_Region_handle pomp2_region_5 = NULL;
-    static const char pomp2_ctc_5[] = "61*regionType=parallel*sscl=test3.c:48:48*escl=test3.c:53:53**";
-static POMP2_Region_handle pomp2_region_6 = NULL;
-    static const char pomp2_ctc_6[] = "59*regionType=master*sscl=test3.c:50:50*escl=test3.c:52:52**";
-#define POMP2_DLIST_00007 shared(pomp2_region_7,pomp2_region_8)
-static POMP2_Region_handle pomp2_region_7 = NULL;
-    static const char pomp2_ctc_7[] = "61*regionType=parallel*sscl=test3.c:55:55*escl=test3.c:59:59**";
-static POMP2_Region_handle pomp2_region_8 = NULL;
-    static const char pomp2_ctc_8[] = "59*regionType=single*sscl=test3.c:57:57*escl=test3.c:58:58**";
-#define POMP2_DLIST_00009 shared(pomp2_region_9,pomp2_region_10)
-static POMP2_Region_handle pomp2_region_9 = NULL;
-    static const char pomp2_ctc_9[] = "61*regionType=parallel*sscl=test3.c:61:61*escl=test3.c:63:63**";
-static POMP2_Region_handle pomp2_region_10 = NULL;
-    static const char pomp2_ctc_10[] = "61*regionType=critical*sscl=test3.c:62:62*escl=test3.c:63:63**";
-#define POMP2_DLIST_00011 shared(pomp2_region_11)
-static POMP2_Region_handle pomp2_region_11 = NULL;
-    static const char pomp2_ctc_11[] = "61*regionType=parallel*sscl=test3.c:69:69*escl=test3.c:81:81**";
-#define POMP2_DLIST_00012 shared(pomp2_region_12)
-static POMP2_Region_handle pomp2_region_12 = NULL;
-    static const char pomp2_ctc_12[] = "61*regionType=parallel*sscl=test3.c:71:71*escl=test3.c:80:80**";
-#define POMP2_DLIST_00013 shared(pomp2_region_13,pomp2_region_14)
-static POMP2_Region_handle pomp2_region_13 = NULL;
-    static const char pomp2_ctc_13[] = "61*regionType=parallel*sscl=test3.c:73:73*escl=test3.c:79:79**";
-static POMP2_Region_handle pomp2_region_14 = NULL;
-    static const char pomp2_ctc_14[] = "56*regionType=for*sscl=test3.c:75:75*escl=test3.c:78:78**";
-#define POMP2_DLIST_00015 shared(pomp2_region_15,pomp2_region_16,pomp2_region_17,pomp2_region_18,pomp2_region_19,pomp2_region_20)
-static POMP2_Region_handle pomp2_region_15 = NULL;
-    static const char pomp2_ctc_15[] = "63*regionType=parallel*sscl=test3.c:87:87*escl=test3.c:121:121**";
-static POMP2_Region_handle pomp2_region_16 = NULL;
-    static const char pomp2_ctc_16[] = "56*regionType=for*sscl=test3.c:89:89*escl=test3.c:94:94**";
-static POMP2_Region_handle pomp2_region_17 = NULL;
-    static const char pomp2_ctc_17[] = "58*regionType=for*sscl=test3.c:96:96*escl=test3.c:103:103**";
-static POMP2_Region_handle pomp2_region_18 = NULL;
-    static const char pomp2_ctc_18[] = "60*regionType=for*sscl=test3.c:105:105*escl=test3.c:108:108**";
-static POMP2_Region_handle pomp2_region_19 = NULL;
-    static const char pomp2_ctc_19[] = "60*regionType=for*sscl=test3.c:110:110*escl=test3.c:114:114**";
-static POMP2_Region_handle pomp2_region_20 = NULL;
-    static const char pomp2_ctc_20[] = "60*regionType=for*sscl=test3.c:116:116*escl=test3.c:120:120**";
+#define POMP2_DLIST_00001 shared(opari2_region_1,opari2_region_2)
+static OPARI2_Region_handle opari2_region_1 = NULL;
+    #define opari2_ctc_1 "61*regionType=parallel*sscl=test3.c:31:31*escl=test3.c:38:38**"
+static OPARI2_Region_handle opari2_region_2 = NULL;
+    #define opari2_ctc_2 "56*regionType=for*sscl=test3.c:33:33*escl=test3.c:37:37**"
+#define POMP2_DLIST_00003 shared(opari2_region_3,opari2_region_4)
+static OPARI2_Region_handle opari2_region_3 = NULL;
+    #define opari2_ctc_3 "61*regionType=parallel*sscl=test3.c:40:40*escl=test3.c:45:45**"
+static OPARI2_Region_handle opari2_region_4 = NULL;
+    #define opari2_ctc_4 "56*regionType=for*sscl=test3.c:41:41*escl=test3.c:45:45**"
+#define POMP2_DLIST_00005 shared(opari2_region_5,opari2_region_6)
+static OPARI2_Region_handle opari2_region_5 = NULL;
+    #define opari2_ctc_5 "61*regionType=parallel*sscl=test3.c:47:47*escl=test3.c:52:52**"
+static OPARI2_Region_handle opari2_region_6 = NULL;
+    #define opari2_ctc_6 "59*regionType=master*sscl=test3.c:49:49*escl=test3.c:51:51**"
+#define POMP2_DLIST_00007 shared(opari2_region_7,opari2_region_8)
+static OPARI2_Region_handle opari2_region_7 = NULL;
+    #define opari2_ctc_7 "61*regionType=parallel*sscl=test3.c:54:54*escl=test3.c:58:58**"
+static OPARI2_Region_handle opari2_region_8 = NULL;
+    #define opari2_ctc_8 "59*regionType=single*sscl=test3.c:56:56*escl=test3.c:57:57**"
+#define POMP2_DLIST_00009 shared(opari2_region_9,opari2_region_10)
+static OPARI2_Region_handle opari2_region_9 = NULL;
+    #define opari2_ctc_9 "61*regionType=parallel*sscl=test3.c:60:60*escl=test3.c:62:62**"
+static OPARI2_Region_handle opari2_region_10 = NULL;
+    #define opari2_ctc_10 "61*regionType=critical*sscl=test3.c:61:61*escl=test3.c:62:62**"
+#define POMP2_DLIST_00011 shared(opari2_region_11,opari2_region_12,opari2_region_13,opari2_region_14)
+static OPARI2_Region_handle opari2_region_11 = NULL;
+    #define opari2_ctc_11 "61*regionType=parallel*sscl=test3.c:68:68*escl=test3.c:80:80**"
+#define POMP2_DLIST_00012 shared(opari2_region_12,opari2_region_13,opari2_region_14)
+static OPARI2_Region_handle opari2_region_12 = NULL;
+    #define opari2_ctc_12 "61*regionType=parallel*sscl=test3.c:70:70*escl=test3.c:79:79**"
+#define POMP2_DLIST_00013 shared(opari2_region_13,opari2_region_14)
+static OPARI2_Region_handle opari2_region_13 = NULL;
+    #define opari2_ctc_13 "61*regionType=parallel*sscl=test3.c:72:72*escl=test3.c:78:78**"
+static OPARI2_Region_handle opari2_region_14 = NULL;
+    #define opari2_ctc_14 "68*regionType=for*sscl=test3.c:74:74*escl=test3.c:77:77*hasNowait=1**"
+#define POMP2_DLIST_00015 shared(opari2_region_15,opari2_region_16,opari2_region_17,opari2_region_18,opari2_region_19,opari2_region_20)
+static OPARI2_Region_handle opari2_region_15 = NULL;
+    #define opari2_ctc_15 "63*regionType=parallel*sscl=test3.c:86:86*escl=test3.c:120:120**"
+static OPARI2_Region_handle opari2_region_16 = NULL;
+    #define opari2_ctc_16 "68*regionType=for*sscl=test3.c:88:88*escl=test3.c:93:93*hasNowait=1**"
+static OPARI2_Region_handle opari2_region_17 = NULL;
+    #define opari2_ctc_17 "70*regionType=for*sscl=test3.c:95:95*escl=test3.c:102:102*hasNowait=1**"
+static OPARI2_Region_handle opari2_region_18 = NULL;
+    #define opari2_ctc_18 "72*regionType=for*sscl=test3.c:104:104*escl=test3.c:107:107*hasNowait=1**"
+static OPARI2_Region_handle opari2_region_19 = NULL;
+    #define opari2_ctc_19 "72*regionType=for*sscl=test3.c:109:109*escl=test3.c:113:113*hasNowait=1**"
+static OPARI2_Region_handle opari2_region_20 = NULL;
+    #define opari2_ctc_20 "72*regionType=for*sscl=test3.c:115:115*escl=test3.c:119:119*hasNowait=1**"
 
 #ifdef __cplusplus 
  extern "C" 
 #endif
 void POMP2_Init_reg_000()
 {
-    POMP2_Assign_handle( &pomp2_region_1, pomp2_ctc_1 );
-    POMP2_Assign_handle( &pomp2_region_2, pomp2_ctc_2 );
-    POMP2_Assign_handle( &pomp2_region_3, pomp2_ctc_3 );
-    POMP2_Assign_handle( &pomp2_region_4, pomp2_ctc_4 );
-    POMP2_Assign_handle( &pomp2_region_5, pomp2_ctc_5 );
-    POMP2_Assign_handle( &pomp2_region_6, pomp2_ctc_6 );
-    POMP2_Assign_handle( &pomp2_region_7, pomp2_ctc_7 );
-    POMP2_Assign_handle( &pomp2_region_8, pomp2_ctc_8 );
-    POMP2_Assign_handle( &pomp2_region_9, pomp2_ctc_9 );
-    POMP2_Assign_handle( &pomp2_region_10, pomp2_ctc_10 );
-    POMP2_Assign_handle( &pomp2_region_11, pomp2_ctc_11 );
-    POMP2_Assign_handle( &pomp2_region_12, pomp2_ctc_12 );
-    POMP2_Assign_handle( &pomp2_region_13, pomp2_ctc_13 );
-    POMP2_Assign_handle( &pomp2_region_14, pomp2_ctc_14 );
-    POMP2_Assign_handle( &pomp2_region_15, pomp2_ctc_15 );
-    POMP2_Assign_handle( &pomp2_region_16, pomp2_ctc_16 );
-    POMP2_Assign_handle( &pomp2_region_17, pomp2_ctc_17 );
-    POMP2_Assign_handle( &pomp2_region_18, pomp2_ctc_18 );
-    POMP2_Assign_handle( &pomp2_region_19, pomp2_ctc_19 );
-    POMP2_Assign_handle( &pomp2_region_20, pomp2_ctc_20 );
+    POMP2_Assign_handle( &opari2_region_1, opari2_ctc_1 );
+    POMP2_Assign_handle( &opari2_region_2, opari2_ctc_2 );
+    POMP2_Assign_handle( &opari2_region_3, opari2_ctc_3 );
+    POMP2_Assign_handle( &opari2_region_4, opari2_ctc_4 );
+    POMP2_Assign_handle( &opari2_region_5, opari2_ctc_5 );
+    POMP2_Assign_handle( &opari2_region_6, opari2_ctc_6 );
+    POMP2_Assign_handle( &opari2_region_7, opari2_ctc_7 );
+    POMP2_Assign_handle( &opari2_region_8, opari2_ctc_8 );
+    POMP2_Assign_handle( &opari2_region_9, opari2_ctc_9 );
+    POMP2_Assign_handle( &opari2_region_10, opari2_ctc_10 );
+    POMP2_Assign_handle( &opari2_region_11, opari2_ctc_11 );
+    POMP2_Assign_handle( &opari2_region_12, opari2_ctc_12 );
+    POMP2_Assign_handle( &opari2_region_13, opari2_ctc_13 );
+    POMP2_Assign_handle( &opari2_region_14, opari2_ctc_14 );
+    POMP2_Assign_handle( &opari2_region_15, opari2_ctc_15 );
+    POMP2_Assign_handle( &opari2_region_16, opari2_ctc_16 );
+    POMP2_Assign_handle( &opari2_region_17, opari2_ctc_17 );
+    POMP2_Assign_handle( &opari2_region_18, opari2_ctc_18 );
+    POMP2_Assign_handle( &opari2_region_19, opari2_ctc_19 );
+    POMP2_Assign_handle( &opari2_region_20, opari2_ctc_20 );
 }

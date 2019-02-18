@@ -1,0 +1,1 @@
+# Don't provide SHMEMCC and friends if the user specified --with-shmem=no.

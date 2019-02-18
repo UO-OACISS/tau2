@@ -1,0 +1,20 @@
+MPICC=mpicc -cc={CC}
+#MPI_CFLAGS
+MPICXX=mpicxx -cxx={CXX}
+#MPI_CXXFLAGS=
+MPIF77=mpif77 -f77={F77}
+#MPI_FFLAGS=
+MPIFC=mpif90 -fc={FC}
+#MPI_FCFLAGS=
+MPI_CPPFLAGS=-DMPICH_SKIP_MPICXX
+#MPI_LDFLAGS=
+#MPI_LIBS=
+MPILIB_LDFLAGS=-Wc,-nolinkage
+
+# # Scalasca1 settings
+# MPILIB    =
+# PMPILIB   =
+# FMPILIB   = -lepk.ad.fmpi
+# FMPIOBJ   = libepk.ad.fmpi.a
+# MPIEXTRA  = -DMPICH_IGNORE_CXX_SEEK -DHAS_MPI2_1SIDED
+

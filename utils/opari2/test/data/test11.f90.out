@@ -1,0 +1,110 @@
+
+#line 1 "test11.f90"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! * @authors Jie Jiang 
+! *
+! * @brief Test worskshare directives.
+
+program test11
+
+      include 'test11.f90.opari.inc'
+#line 22 "test11.f90"
+      call POMP2_Critical_enter(opari2_region_1, &
+     opari2_ctc_1 )
+#line 22 "test11.f90"
+  !$omp critical
+      call POMP2_Critical_begin(opari2_region_1)
+#line 23 "test11.f90"
+    i = 2
+      call POMP2_Critical_end(opari2_region_1)
+#line 24 "test11.f90"
+  !$omp end critical
+      call POMP2_Critical_exit(opari2_region_1)
+#line 25 "test11.f90"
+
+      call POMP2_Atomic_enter(opari2_region_2, &
+     opari2_ctc_2 )
+#line 26 "test11.f90"
+  !$omp atomic update
+    i = 3
+      call POMP2_Atomic_exit(opari2_region_2)
+#line 28 "test11.f90"
+
+      call POMP2_Workshare_enter(opari2_region_3, &
+     opari2_ctc_3 )
+#line 29 "test11.f90"
+  !$omp workshare 
+    i = 4
+  !$omp critical
+    i = 5
+  !$omp end critical
+  !$omp atomic update
+    i = 6
+#line 36 "test11.f90"
+  !$omp end workshare nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_3,&
+      pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_3, pomp2_old_task)
+      call POMP2_Workshare_exit(opari2_region_3)
+#line 37 "test11.f90"
+
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
+      call POMP2_Parallel_fork(opari2_region_4,&
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      opari2_ctc_4 )
+#line 38 "test11.f90"
+  !$omp parallel           &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp num_threads(pomp2_num_threads)
+      call POMP2_Parallel_begin(opari2_region_4)
+      call POMP2_Workshare_enter(opari2_region_4, &
+     opari2_ctc_4 )
+#line 38 "test11.f90"
+  !$omp          workshare
+    i =  7
+  !$omp critical
+    i = 8
+  !$omp end critical
+  !$omp atomic update
+    i = 9
+#line 45 "test11.f90"
+!$omp end workshare nowait
+      call POMP2_Implicit_barrier_enter(opari2_region_4,&
+      pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(opari2_region_4, pomp2_old_task)
+      call POMP2_Workshare_exit(opari2_region_4)
+      call POMP2_Parallel_end(opari2_region_4)
+#line 45 "test11.f90"
+!$omp end parallel
+      call POMP2_Parallel_join(opari2_region_4, pomp2_old_task)
+#line 46 "test11.f90"
+end program test11
+
+      subroutine POMP2_Init_reg_000()
+         include 'test11.f90.opari.inc'
+         call POMP2_Assign_handle( opari2_region_1, &
+         opari2_ctc_1 )
+         call POMP2_Assign_handle( opari2_region_2, &
+         opari2_ctc_2 )
+         call POMP2_Assign_handle( opari2_region_3, &
+         opari2_ctc_3 )
+         call POMP2_Assign_handle( opari2_region_4, &
+         opari2_ctc_4 )
+      end

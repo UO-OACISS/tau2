@@ -73,6 +73,13 @@ CuStringFree( CuString* str )
 }
 
 void
+CuStringReset( CuString* str )
+{
+    str->length      = 0;
+    str->buffer[ 0 ] = '\0';
+}
+
+void
 CuStringResize( CuString* str,
                 int       newSize )
 {
@@ -153,19 +160,26 @@ CuStringInsert( CuString*   str,
 /*-------------------------------------------------------------------------*
 * CuTest
 *-------------------------------------------------------------------------*/
+static void
+CuTestAllreduceInternal( int* success )
+{
+    return;
+}
 
 void
 CuTestInit( CuTest*      t,
             const char*  name,
             TestFunction function )
 {
-    t->name     = CuStrCopy( name );
-    t->failed   = 0;
-    t->ran      = 0;
-    t->message  = NULL;
-    t->function = function;
-    t->jumpBuf  = NULL;
-    t->next     = NULL;
+    t->name          = CuStrCopy( name );
+    t->failed        = 0;
+    t->ran           = 0;
+    t->message       = NULL;
+    t->function      = function;
+    t->userArg       = NULL;
+    t->testAllreduce = CuTestAllreduceInternal;
+    t->jumpBuf       = NULL;
+    t->next          = NULL;
 }
 
 CuTest*
@@ -251,12 +265,16 @@ CuAssert_Line( CuTest*     tc,
                const char* file,
                int         line,
                const char* message,
-               int         condition )
+               int         success )
 {
-    if ( condition )
+    tc->failedLocally = !success;
+
+    tc->testAllreduce( &success );
+    if ( success )
     {
         return;
     }
+
     CuFail_Line( tc, file, line, NULL, message );
 }
 
@@ -269,9 +287,19 @@ CuAssertStrEquals_LineMsg( CuTest*     tc,
                            const char* actual )
 {
     CuString string;
+    int      success = 0;
+
     if ( ( expected == NULL && actual == NULL ) ||
          ( expected != NULL && actual != NULL &&
            strcmp( expected, actual ) == 0 ) )
+    {
+        success = 1;
+    }
+
+    tc->failedLocally = !success;
+
+    tc->testAllreduce( &success );
+    if ( success )
     {
         return;
     }
@@ -300,11 +328,51 @@ CuAssertIntEquals_LineMsg( CuTest*     tc,
                            int         actual )
 {
     char buf[ STRING_MAX ];
+    int  success = 0;
+
     if ( expected == actual )
+    {
+        success = 1;
+    }
+
+    tc->failedLocally = !success;
+
+    tc->testAllreduce( &success );
+    if ( success )
     {
         return;
     }
+
     sprintf( buf, "expected <%d> but was <%d>", expected, actual );
+    CuFail_Line( tc, file, line, message, buf );
+}
+
+
+void
+CuAssertIntNotEquals_LineMsg( CuTest*     tc,
+                              const char* file,
+                              int         line,
+                              const char* message,
+                              int         notExpected,
+                              int         actual )
+{
+    char buf[ STRING_MAX ];
+    int  success = 0;
+
+    if ( notExpected != actual )
+    {
+        success = 1;
+    }
+
+    tc->failedLocally = !success;
+
+    tc->testAllreduce( &success );
+    if ( success )
+    {
+        return;
+    }
+
+    sprintf( buf, "Not expected <%d> but was <%d>", notExpected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
 
@@ -318,10 +386,21 @@ CuAssertDblEquals_LineMsg( CuTest*     tc,
                            double      delta )
 {
     char buf[ STRING_MAX ];
+    int  success = 0;
+
     if ( fabs( expected - actual ) <= delta )
+    {
+        success = 1;
+    }
+
+    tc->failedLocally = !success;
+
+    tc->testAllreduce( &success );
+    if ( success )
     {
         return;
     }
+
     sprintf( buf, "expected <%lf> but was <%lf>", expected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
@@ -335,10 +414,21 @@ CuAssertPtrEquals_LineMsg( CuTest*     tc,
                            void*       actual )
 {
     char buf[ STRING_MAX ];
+    int  success = 0;
+
     if ( expected == actual )
+    {
+        success = 1;
+    }
+
+    tc->failedLocally = !success;
+
+    tc->testAllreduce( &success );
+    if ( success )
     {
         return;
     }
+
     sprintf( buf, "expected pointer <%p> but was <%p>", expected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
@@ -373,21 +463,46 @@ CuUseColors( void )
 }
 
 void
-CuSuiteInit( const char* name,
-             CuSuite*    testSuite )
+CuSuiteInit( const char*   name,
+             CuSuite*      testSuite,
+             int           currentRank,
+             TestAllreduce testAllreduce )
 {
-    testSuite->name      = CuStrCopy( name );
-    testSuite->count     = 0;
-    testSuite->failCount = 0;
-    testSuite->head      = NULL;
-    testSuite->tail      = &testSuite->head;
+    testSuite->name        = CuStrCopy( name );
+    testSuite->count       = 0;
+    testSuite->failCount   = 0;
+    testSuite->head        = NULL;
+    testSuite->tail        = &testSuite->head;
+    testSuite->currentRank = currentRank;
+    testSuite->masterRank  = currentRank;
+
+    if ( testAllreduce )
+    {
+        testSuite->testAllreduce = testAllreduce;
+        /* determine the lowest rank and use this as the master rank */
+        testSuite->testAllreduce( &testSuite->masterRank );
+    }
+    else
+    {
+        testSuite->testAllreduce = CuTestAllreduceInternal;
+    }
 }
 
 CuSuite*
 CuSuiteNew( const char* name )
 {
     CuSuite* testSuite = CU_ALLOC( CuSuite );
-    CuSuiteInit( name, testSuite );
+    CuSuiteInit( name, testSuite, 0, NULL );
+    return testSuite;
+}
+
+CuSuite*
+CuSuiteNewParallel( const char*   name,
+                    int           currentRank,
+                    TestAllreduce testAllreduce )
+{
+    CuSuite* testSuite = CU_ALLOC( CuSuite );
+    CuSuiteInit( name, testSuite, currentRank, testAllreduce );
     return testSuite;
 }
 
@@ -420,6 +535,8 @@ void
 CuSuiteAdd( CuSuite* testSuite,
             CuTest*  testCase )
 {
+    testCase->testAllreduce = testSuite->testAllreduce;
+
     *testSuite->tail = testCase;
     testSuite->tail  = &testCase->next;
     testSuite->count++;
@@ -444,24 +561,50 @@ CuSuiteRun( CuSuite* testSuite )
     int     i        = 1;
     CuTest* testCase = testSuite->head;
 
-    printf( "%s%s:%s\n", color_yel, testSuite->name, color_std );
+    if ( testSuite->masterRank == testSuite->currentRank )
+    {
+        printf( "%s%s:%s\n", color_yel, testSuite->name, color_std );
+    }
 
     while ( testCase )
     {
         CuTestRun( testCase );
+
         if ( testCase->failed )
         {
             testSuite->failCount++;
-            printf( " %sFAIL%s %d: %s: %s%s%s\n", color_red, color_std,
-                    i, testCase->name,
-                    color_red, testCase->message, color_std );
+
+            int isSerialTest = testSuite->testAllreduce == CuTestAllreduceInternal;
+            if ( isSerialTest )
+            {
+                printf( " %sFAIL%s %d: %s: %s%s%s\n", color_red, color_std,
+                        i, testCase->name,
+                        color_red, testCase->message, color_std );
+            }
+            else
+            {
+                if ( testCase->failedLocally )
+                {
+                    printf( " %sFAIL on Rank %d%s %d: %s: %s%s%s\n",
+                            color_red, testSuite->currentRank, color_std,
+                            i, testCase->name,
+                            color_red, testCase->message, color_std );
+                }
+
+                int fakeBarrier = 0;
+                testSuite->testAllreduce( &fakeBarrier );
+            }
             break;
         }
         else
         {
-            printf( "   %sok%s %d: %s\n", color_grn, color_std,
-                    i, testCase->name );
+            if ( testSuite->masterRank == testSuite->currentRank )
+            {
+                printf( "   %sok%s %d: %s\n", color_grn, color_std,
+                        i, testCase->name );
+            }
         }
+
         testCase = testCase->next;
         i++;
     }
@@ -473,6 +616,11 @@ CuSuiteSummary( CuSuite*  testSuite,
 {
     int         runCount = 0;
     const char* testWord;
+
+    if ( testSuite->masterRank != testSuite->currentRank )
+    {
+        return;
+    }
 
     if ( testSuite->failCount == 0 )
     {

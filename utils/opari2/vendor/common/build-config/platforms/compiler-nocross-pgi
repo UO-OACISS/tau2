@@ -1,11 +1,12 @@
 CC=pgcc
-CXX=pgCC
+CXX=pgc++
 F77=pgf77
 FC=pgf90
 
 #CPPFLAGS=
-#CFLAGS=
-#CXXFLAGS=
+# Provide flags as 16.1 is broken with the default '-O2 -g'.
+CFLAGS_FOR_BUILD=-O2 -gopt
+CXXFLAGS_FOR_BUILD=-O2 -gopt
 #FFLAGS=
 #FCFLAGS=
 #LDFLAGS=

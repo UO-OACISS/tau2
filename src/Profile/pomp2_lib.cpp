@@ -25,6 +25,8 @@
 
 #include <config.h>
 #include "opari2/pomp2_lib.h"
+#include "opari2/pomp2_user_region_info.h"
+#include "opari2/pomp2_user_lib.h"
 
 
 #include "pomp2_region_info.h"
@@ -42,15 +44,19 @@
 #endif /* TAU_OPENMP */
 using std::string;
 
-/* Define these weakly linked routines so the even if the pompregions.o file is
+/* Define these weakly linked routines so even if the pompregions.o file is
  * missing the TAU libraries will be able to resolve all undefined symbols.
  * */
 #ifndef TAU_CLANG
 void POMP2_Init_regions() {}
+void POMP2_USER_Init_regions() {}
 size_t POMP2_Get_num_regions() { return 0; }
+size_t POMP2_USER_Get_num_regions() { return 0; }
 #endif /* TAU_CLANG */
 #pragma weak POMP2_Init_regions
 #pragma weak POMP2_Get_num_regions
+#pragma weak POMP2_USER_Init_regions
+#pragma weak POMP2_USER_Get_num_regions
 
 /* These two defines specify if we want region based views or construct based
 views or both */
@@ -289,18 +295,46 @@ initDummyRegionFromPOMP2RegionInfo(
     pomp2_region->end_line_1 = pomp2RegionInfo->mEndLine1;
     pomp2_region->end_line_2 = pomp2RegionInfo->mEndLine2;
 
+/* OLD CODE :
     if ( pomp2RegionInfo->mRegionType == POMP2_User_region )
     {
         assignString( &pomp2_region->name,
                       pomp2RegionInfo->mUserRegionName );
-    }
-    else if ( pomp2RegionInfo->mRegionType == POMP2_Critical && pomp2RegionInfo->mCriticalName )
+    } else 
+*/
+    if ( pomp2RegionInfo->mRegionType == POMP2_Critical && pomp2RegionInfo->mCriticalName )
     {
         assignString( &pomp2_region->name,
                       pomp2RegionInfo->mCriticalName );
     }
 
     pomp2_region->num_sections = pomp2RegionInfo->mNumSections;
+}
+
+
+static void
+initDummyRegionFromPOMP2UserRegionInfo(
+    my_pomp2_region*              pomp2_region,
+    const POMP2_USER_Region_info* pomp2RegionInfo )
+{
+    assignString( &( pomp2_region->rtype ),
+                  pomp2UserRegionType2String( (POMP2_USER_Region_type)pomp2RegionInfo->mRegionType ) );
+
+    assignString( &pomp2_region->start_file_name,
+                  pomp2RegionInfo->mStartFileName );
+    pomp2_region->start_line_1 = pomp2RegionInfo->mStartLine1;
+    pomp2_region->start_line_2 = pomp2RegionInfo->mStartLine2;
+
+    assignString( &pomp2_region->end_file_name,
+                  pomp2RegionInfo->mEndFileName );
+    pomp2_region->end_line_1 = pomp2RegionInfo->mEndLine1;
+    pomp2_region->end_line_2 = pomp2RegionInfo->mEndLine2;
+
+    if ( pomp2RegionInfo->mRegionType == POMP2_USER_Region )
+    {
+        assignString( &pomp2_region->name,
+                      pomp2RegionInfo->mUserRegionName );
+    }
 }
 
 
@@ -475,11 +509,27 @@ void POMP2_Init()
 #endif /* DEBUG_PROF */
 
     /* Allocate memory for your POMP2_Get_num_regions() regions */
+#ifdef OLD_OPARI2
     my_pomp2_regions = (my_pomp2_region *)(calloc(POMP2_Get_num_regions(), sizeof(my_pomp2_region)));
     //pomp2_tpd_ = ( void* )malloc( sizeof( int ) );
     //pomp2_tpd_ = ( long )0;
 
     POMP2_Init_regions();
+#endif /* OLD_OPARI2 */
+
+    int n_pomp2_regions = POMP2_Get_num_regions() + POMP2_USER_Get_num_regions();
+    int n_pomp2_user_regions = POMP2_USER_Get_num_regions();
+
+    my_pomp2_regions = (my_pomp2_region *) calloc( n_pomp2_regions + n_pomp2_user_regions,
+                                   sizeof( my_pomp2_region ) );
+
+    if ( n_pomp2_regions > 0 ) {
+      POMP2_Init_regions();
+    }
+
+    if ( n_pomp2_regions > 0 ) {
+      POMP2_USER_Init_regions();
+    }
 
     pomp2_tracing = 1;
   }
@@ -591,6 +641,25 @@ void POMP2_Assign_handle(POMP2_Region_handle* pomp2_handle, const char ctc_strin
   freePOMP2RegionInfoMembers(&pomp2RegionInfo);
   ++count;
   
+}
+
+void
+POMP2_USER_Assign_handle( POMP2_USER_Region_handle* pomp2_handle,
+                          const char                ctc_string[] )
+{
+    static size_t count = 0;
+    assert( count < POMP2_Get_num_regions() );
+
+    POMP2_USER_Region_info pomp2RegionInfo;
+    ctcString2UserRegionInfo( ctc_string, &pomp2RegionInfo );
+
+    initDummyRegionFromPOMP2UserRegionInfo( &my_pomp2_regions[ count ], &pomp2RegionInfo );
+    my_pomp2_regions[ count ].id = count;
+
+    *pomp2_handle = &my_pomp2_regions[ count ];
+
+    freePOMP2UserRegionInfoMembers( &pomp2RegionInfo );
+    ++count;
 }
 
 void POMP2_Atomic_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])

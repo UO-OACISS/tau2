@@ -13,26 +13,26 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Special tests for end pragma substitution and nested parallel regions/loops.
 
       program test3
       integer i, j, k
+      real end_level, dolic
 
-c$OMP parallel 
+c$OMP parallel
 c$OMP do
       do 12,i = 1,8
          a=a+1
- 12   continue 
+ 12   continue
 c$OMP end parallel
 
 c$OMP parallel do
       do 13,i = 1,8
          a=a+1
- 13   continue 
+ 13   continue
 
-c$OMP parallel 
+c$OMP parallel
 c$OMP do
       do 14,i = 1,8
          a=a+1
@@ -57,8 +57,9 @@ c$OMP end parallel
 !$omp parallel
 !$omp parallel do
       do i = 1,8
+         end_level = end_level + dolic/i
          a=a+1
-      end do 
+      end do
 !$omp end parallel do
 !$omp end parallel
 !$omp end parallel
@@ -85,6 +86,6 @@ c$omp parallel do
          if (a .gt. 0) then
             exit
          endif
-      enddo 
+      enddo
       end program test3
-      
+

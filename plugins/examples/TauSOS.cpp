@@ -20,6 +20,7 @@
 #include "errno.h"
 #include <pthread.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <sys/time.h>
 #include <signal.h>
 #include <algorithm>
@@ -41,12 +42,14 @@ unsigned long fi_count = 0;
 unsigned long ue_count = 0;
 static bool done = false;
 static SOS_runtime * _runtime = NULL;
+static int listener_pid = 0;
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
 bool _threaded = false;
 int daemon_rank = 0;
 int my_rank = 0;
+int listener_rank = 0;
 int comm_size = 1;
 bool shutdown_daemon = false;
 int period_microseconds = 2000000;
@@ -220,7 +223,7 @@ void TAU_SOS_send_shutdown_message(void) {
 #endif
 }
 
-void TAU_SOS_fork_exec_sosd(void) {
+bool TAU_SOS_fork_exec_sosd(void) {
 #ifdef TAU_MPI
     // first, figure out who should fork a daemon on this node
     int i;
@@ -248,19 +251,26 @@ void TAU_SOS_fork_exec_sosd(void) {
         }
         host_index = host_index + hostlength;
     }
+    char* forkCommand = NULL;
+    char* ranks_per_node = NULL;
+    char* offset = NULL;
+    forkCommand = getenv ("SOS_FORK_COMMAND");
+    //std::cout << "forkCommand " << forkCommand << std::endl;
+    ranks_per_node = getenv ("SOS_APP_RANKS_PER_NODE");
+    //std::cout << "ranks_per_node " << ranks_per_node << std::endl;
+    offset = getenv ("SOS_LISTENER_RANK_OFFSET");
+    //std::cout << "offset " << offset << std::endl;
+    if (!forkCommand || !ranks_per_node || !offset) {
+        if (my_rank == 0) {
+            std::cerr << "Please set the SOS_FORK_COMMAND, SOS_APP_RANKS_PER_NODE, and SOS_LISTENER_RANK_OFFSET environment variables to spawn SOS in the background." << std::endl;
+            std::cerr << "SOS Listener not found, SOS plugin not configured." << std::endl;
+        }
+        return false;
+    }
     // fork the daemon
     if (my_rank == daemon_rank) {
-        int pid = vfork();
-        if (pid == 0) {
-            char* forkCommand = NULL;
-            char* ranks_per_node = NULL;
-            char* offset = NULL;
-            forkCommand = getenv ("SOS_FORK_COMMAND");
-            //std::cout << "forkCommand " << forkCommand << std::endl;
-            ranks_per_node = getenv ("SOS_APP_RANKS_PER_NODE");
-            //std::cout << "ranks_per_node " << ranks_per_node << std::endl;
-            offset = getenv ("SOS_LISTENER_RANK_OFFSET");
-            //std::cout << "offset " << offset << std::endl;
+        int listener_pid = vfork();
+        if (listener_pid == 0) {
             if (forkCommand) {
                 std::string custom_command(forkCommand);
                 size_t index = 0;
@@ -268,7 +278,7 @@ void TAU_SOS_fork_exec_sosd(void) {
                 if (index != std::string::npos) {
                     if (ranks_per_node) {
                         int rpn = atoi(ranks_per_node);
-                        int listener_rank = my_rank / rpn;
+                        listener_rank = my_rank / rpn;
                         if(offset) {
                             int off = atoi(offset);
                             listener_rank = listener_rank + off;
@@ -280,8 +290,6 @@ void TAU_SOS_fork_exec_sosd(void) {
                 }
                 std::cout << "SOS Listener not found, Rank " << my_rank << " spawning SOS daemon(s): " << custom_command << std::endl;
                 TAU_SOS_do_fork(custom_command);
-            } else {
-                std::cerr << "Please set the SOS_FORK_COMMAND environment variable to spawn SOS in the background." << std::endl;
             }
         }
     }
@@ -290,6 +298,7 @@ void TAU_SOS_fork_exec_sosd(void) {
     //
     //wait(2);
 #endif
+    return true;
 }
 
 /*********************************************************************
@@ -432,7 +441,7 @@ void Tau_SOS_parse_selection_file(const char * filename) {
     }
 }
 
-void TAU_SOS_init() {
+bool TAU_SOS_init() {
     static bool initialized = false;
     TAU_VERBOSE("TAU_SOS_init()...\n");
     if (!initialized) {
@@ -453,8 +462,12 @@ void TAU_SOS_init() {
         SOS_init(&_runtime, SOS_ROLE_CLIENT, SOS_RECEIVES_NO_FEEDBACK, NULL);
         if(_runtime == NULL) {
             TAU_VERBOSE("Unable to connect to SOS daemon. Spawning...\n");
-            TAU_SOS_fork_exec_sosd();
-            shutdown_daemon = true;
+            shutdown_daemon = TAU_SOS_fork_exec_sosd();
+            if (!shutdown_daemon) { 
+                // failed.  Don't claim initialized.
+                _runtime = NULL;
+                return false;
+            }
         }
         int repeat = 3;
         while(_runtime == NULL) {
@@ -467,7 +480,7 @@ void TAU_SOS_init() {
                 break;
             } else if (--repeat < 0) { 
                 TAU_VERBOSE("Unable to connect to SOS daemon. Failing...\n");
-                return;
+                return false;
             }
         }
 
@@ -484,6 +497,8 @@ void TAU_SOS_init() {
         initialized = true;
         /* Fixme! Insert all the data that was collected into Metadata */
     }
+    // if we have a runtime, all is good.
+    return (!(_runtime == NULL));
 }
 
 void TAU_SOS_stop_worker(void) {
@@ -540,12 +555,33 @@ void TAU_SOS_finalize(void) {
         if (my_rank == daemon_rank) {
             TAU_VERBOSE("Waiting %d seconds for SOS to flush...\n", thePluginOptions().env_sos_shutdown_delay);
 		    sleep(thePluginOptions().env_sos_shutdown_delay);
+			printf("TAU: rank %d sending shutdown message to listener %d...\n", my_rank, listener_rank);
             TAU_SOS_send_shutdown_message();
+			int returnStatus = 0;
+			pid_t retval = 0;
+			if (listener_pid != 0) {
+				// wait for zombie children, just in case.
+			    retval = waitpid((pid_t) (-1), &returnStatus, 0);
+			} else {
+				retval = waitpid(listener_pid, &returnStatus, 0);
+			}
+            if (WIFEXITED(returnStatus)) {
+                printf("listener %d exited, status=%d\n", listener_rank, WEXITSTATUS(returnStatus));
+            } else if (WIFSIGNALED(returnStatus)) {
+                printf("listener %d killed by signal %d\n", listener_rank, WTERMSIG(returnStatus));
+            } else if (WIFSTOPPED(returnStatus)) {
+                printf("listener %d stopped by signal %d\n", listener_rank, WSTOPSIG(returnStatus));
+            } else if (WIFCONTINUED(returnStatus)) {
+                printf("listener %d continued\n", listener_rank);
+            }
+			if (retval < 0) {
+				perror("waitpid error: ");
+        		fprintf(stderr, "WARNING! SOS listener %d did not exit normally!\n", listener_rank);
+			}
         }
         // shouldn't be necessary, but sometimes the shutdown message is ignored?
         //TAU_SOS_fork_exec_sosd_shutdown();
     }
-        printf("}\n");
     SOS_finalize(_runtime);
 }
 
@@ -770,6 +806,9 @@ void TAU_SOS_pack_profile() {
     RtsLayer::UnLockDB();
 }
 
+extern "C" int Tau_open_status(void);
+extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm);
+
 void TAU_SOS_send_data(void) {
     // have we initialized?
     if (_runtime == NULL) { 
@@ -788,11 +827,20 @@ void TAU_SOS_send_data(void) {
     // Make sure we have a pub handle */
     assert(tau_sos_pub);
     // Update these now, WITHOUT a signal. Signals are TROUBLE.
-    TAU_TRACK_MEMORY_HERE();
-    TAU_TRACK_MEMORY_FOOTPRINT_HERE();
-    TAU_TRACK_LOAD_HERE();
+    // However, that means we have to duplicate code, because we don't want
+    // the measurement on *this* thread, but on thread 0.
+    Tau_trigger_context_event_thread("Heap Memory Used (KB)", Tau_max_RSS(), 0);
+  	static int fd=Tau_open_status();
+    long long vmrss, vmhwm;
+    Tau_read_status(fd, &vmrss, &vmhwm);
+    if (vmrss > 0)
+    	Tau_trigger_context_event_thread("Memory Footprint (VmRSS) (KB)", (double)vmrss, 0);
+    if (vmhwm > 0)
+    	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
+    TauTrackLoadHere();
     /* Only send a profile update if we aren't tracing */
-    if (!thePluginOptions().env_sos_tracing) {
+    if (!thePluginOptions().env_sos_tracing && 
+	    !thePluginOptions().env_sos_trace_adios) {
         TAU_SOS_pack_profile();
     }
     static int frame = 0;

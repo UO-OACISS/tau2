@@ -543,6 +543,9 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->PreEndOfExecution = 0;
   cb->EndOfExecution = 0;
   cb->InterruptTrigger = 0;
+  cb->FunctionFinalize = 0;
+  cb->PhaseEntry = 0;
+  cb->PhaseExit = 0;
 }
 
 /**************************************************************************************************************************
@@ -564,6 +567,9 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->PreEndOfExecution = src->PreEndOfExecution;
   dest->EndOfExecution = src->EndOfExecution;
   dest->InterruptTrigger = src->InterruptTrigger;
+  dest->FunctionFinalize = src->FunctionFinalize;
+  dest->PhaseEntry = src->PhaseEntry;
+  dest->PhaseExit = src->PhaseExit;
 }
 
 
@@ -595,6 +601,9 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb) {
   if (cb->EndOfExecution != 0) { Tau_plugins_enabled.end_of_execution = 1; }
   if (cb->FunctionFinalize != 0) { Tau_plugins_enabled.function_finalize = 1; }
   if (cb->InterruptTrigger != 0) { Tau_plugins_enabled.interrupt_trigger = 1; }
+  if (cb->PhaseEntry != 0) { Tau_plugins_enabled.phase_entry = 1; }
+  if (cb->PhaseExit != 0) { Tau_plugins_enabled.phase_exit = 1; }
+  
 }
 
 
@@ -855,6 +864,38 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_interrupt_trigger_data_t* data)
   }
 }
 
+/**************************************************************************************************************************
+ *  Overloaded function that invokes all registered callbacks for phase entry event
+ *******************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_entry_data_t* data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_t * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.PhaseEntry != 0) {
+     callback->cb.PhaseEntry(data);
+   }
+   callback = callback->next;
+  }
+}
+
+/**************************************************************************************************************************
+ *  Overloaded function that invokes all registered callbacks for phase exit event
+ *******************************************************************************************************************************/
+void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data) {
+  PluginManager* plugin_manager = Tau_util_get_plugin_manager();
+  Tau_plugin_callback_list * callback_list = plugin_manager->callback_list;
+  Tau_plugin_callback_t * callback = callback_list->head;
+
+  while(callback != NULL) {
+   if(callback->cb.PhaseExit != 0) {
+     callback->cb.PhaseExit(data);
+   }
+   callback = callback->next;
+  }
+}
+
 /*****************************************************************************************************************************
  * Wrapper function that calls the actual callback invocation function based on the event type
  ******************************************************************************************************************************/
@@ -923,6 +964,14 @@ extern "C" void Tau_util_invoke_callbacks(Tau_plugin_event event, const void * d
     } 
     case TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_interrupt_trigger_data_t*)data);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_PHASE_ENTRY: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_phase_entry_data_t*)data);
+      break;
+    }
+    case TAU_PLUGIN_EVENT_PHASE_EXIT: {
+      Tau_util_invoke_callbacks_((Tau_plugin_event_phase_exit_data_t*)data);
       break;
     }
    default: {

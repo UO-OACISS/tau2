@@ -1,0 +1,26 @@
+#include <opari2/pomp2_lib.h>
+
+#define POMP2_DLIST_00001 shared(opari2_region_1,opari2_region_2,opari2_region_3,opari2_region_4,opari2_region_5)
+static OPARI2_Region_handle opari2_region_1 = NULL;
+    #define opari2_ctc_1 "85*regionType=parallel*sscl=test4.remove-task.c:29:29*escl=test4.remove-task.c:54:54**"
+static OPARI2_Region_handle opari2_region_2 = NULL;
+    #define opari2_ctc_2 "92*regionType=for*sscl=test4.remove-task.c:32:32*escl=test4.remove-task.c:35:35*hasNowait=1**"
+static OPARI2_Region_handle opari2_region_3 = NULL;
+    #define opari2_ctc_3 "111*regionType=sections*sscl=test4.remove-task.c:37:37*escl=test4.remove-task.c:43:43*numSections=2*hasNowait=1**"
+static OPARI2_Region_handle opari2_region_4 = NULL;
+    #define opari2_ctc_4 "95*regionType=single*sscl=test4.remove-task.c:45:45*escl=test4.remove-task.c:48:48*hasNowait=1**"
+#define POMP2_DLIST_00005 shared(opari2_region_5)
+static OPARI2_Region_handle opari2_region_5 = NULL;
+    #define opari2_ctc_5 "93*regionType=task*sscl=test4.remove-task.c:50:50*escl=test4.remove-task.c:53:53*hasUntied=1**"
+
+#ifdef __cplusplus 
+ extern "C" 
+#endif
+void POMP2_Init_reg_000()
+{
+    POMP2_Assign_handle( &opari2_region_1, opari2_ctc_1 );
+    POMP2_Assign_handle( &opari2_region_2, opari2_ctc_2 );
+    POMP2_Assign_handle( &opari2_region_3, opari2_ctc_3 );
+    POMP2_Assign_handle( &opari2_region_4, opari2_ctc_4 );
+    POMP2_Assign_handle( &opari2_region_5, opari2_ctc_5 );
+}

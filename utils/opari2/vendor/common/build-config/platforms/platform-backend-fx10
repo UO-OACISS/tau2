@@ -1,0 +1,12 @@
+CC=fccpx
+CXX=FCCpx
+F77=frtpx
+FC=frtpx
+
+#CPPFLAGS=
+CFLAGS=-Xg -noansi -Ntl_notrt -mt
+CXXFLAGS=-Xg -Ntl_notrt -mt
+FFLAGS=-Ntl_notrt -mt
+FCFLAGS=-Ntl_notrt -mt
+#LDFLAGS=
+#LIBS=

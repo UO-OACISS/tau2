@@ -13,7 +13,7 @@ OPARI2=@abs_builddir@/../build-frontend/opari2
 OPARI2_CONFIG="@abs_builddir@/../build-frontend/opari2-config --build-check"
 LDFLAGS="-lm -L@abs_builddir@/../build-frontend/.libs -lpomp"
 FFLAGS="@FFLAGS@"
-OPENMP="@OPENMP_CFLAGS@"
+OPENMP="@OPENMP_FFLAGS@"
 
 rm -rf $test_dir/jacobi/F77
 mkdir -p $test_dir/jacobi/F77
@@ -30,7 +30,7 @@ $F77 -I$INCDIR $OPENMP $FFLAGS -c jacobi.mod.F
 $F77 -I$INCDIR $OPENMP $FFLAGS -c main.mod.F
 
 #make build
-@NM@ jacobi.mod.o main.mod.o | @EGREP@ -i "[DT] \.{0,1}_{0,2}pomp2_init_reg" | `$OPARI2_CONFIG --awk-cmd` -f `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
+@NM@ jacobi.mod.o main.mod.o | `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
 $CC -I$INCDIR  -c pomp_init_file.c
 $F77 $OPENMP $FFLAGS pomp_init_file.o jacobi.mod.o main.mod.o $LDFLAGS -o jacobi$EXEEXT
 

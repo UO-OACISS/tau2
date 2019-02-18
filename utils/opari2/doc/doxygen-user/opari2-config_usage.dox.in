@@ -1,0 +1,56 @@
+Usage: opari2-config [OPTION] ... <command>
+
+
+with the following commands:
+
+   --nm                       Prints the nm command.
+
+   --region-initialization    Prints the script used to create the
+                              pomp2_init_regions.c file.
+
+   --create-pomp2-regions     Prints the whole command necessary
+            <object files>    for creating the initialization file.
+
+   --awk-cmd                  [Deprecated, use --region-initialization instead.]
+                              Prints the awk command.
+
+   --awk-script               [Deprecated, use --region-initialization instead.]
+                              Prints the awk script. 
+
+   --egrep                    [Deprecated, use --region-initialization instead.]
+                              Prints the egrep command.
+
+   --cflags[=(gnu|intel|sun|  Prints compiler options to include  
+       pgi|ibm|cray|fujitsu)] installed headers and adds compiler 
+                              specific flags to prevent warnings 
+                              for unused variables which can occur 
+                              during the instrumentation.
+
+   --fortran                  Indicates that the target language is fortran.
+                              Sometimes for fortran different compile flags 
+                              are provided, in most of the cases there is 
+                              no difference.
+
+   --version                  Prints the OPARI2 version number.
+
+   --interface-version        Prints the pomp2 API version that 
+                              instrumented files conform too.
+
+   --opari2-revision          Prints the revision number of the 
+                              OPARI2 package.
+
+   --common-revision          Prints the revision number of the
+                              common package.
+
+   --help                     Prints this help text.
+
+and the following options:
+
+   [--build-check]           Tells opari2-config to use build paths
+                             instead of install paths. Used for build 
+                             testing.
+
+   [--config=<config file>]  Reads in a configuration from the given 
+                             file.
+
+Report bugs to <support@score-p.org>.

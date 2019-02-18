@@ -38,6 +38,7 @@
 
 #include "pomp2_fwrapper_base.h"
 #include <opari2/pomp2_lib.h>
+#include <opari2/pomp2_user_lib.h>
 #include "pomp2_fwrapper_def.h"
 extern "C" {
 extern int pomp2_tracing;
@@ -59,8 +60,9 @@ void FSUB(POMP2_On)() {
   pomp2_tracing = 1;
 }
 
-void FSUB(POMP2_Begin)(POMP2_Region_handle* regionHandle) {
-  POMP2_Begin(regionHandle);
+void FSUB(POMP2_Begin)(POMP2_Region_handle* regionHandle,
+                       char*                ctc_string) {
+  POMP2_Begin(regionHandle, ctc_string);
 }
 
 void FSUB(POMP2_End)(POMP2_Region_handle* regionHandle) {

@@ -1,0 +1,34 @@
+      INTEGER( KIND=8 ) :: opari2_region_1
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_1 =&
+        "72*regionType=parallel*sscl=test1_tpd.f90:23:23*escl=test1_tpd.f90:25:25**"
+
+      INTEGER( KIND=8 ) :: opari2_region_2
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_2 =&
+        "71*regionType=barrier*sscl=test1_tpd.f90:24:24*escl=test1_tpd.f90:24:24**"
+
+      INTEGER( KIND=8 ) :: opari2_region_3
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_3 =&
+        "72*regionType=parallel*sscl=test1_tpd.f90:27:28*escl=test1_tpd.f90:29:30**"
+
+      INTEGER( KIND=8 ) :: opari2_region_4
+
+      CHARACTER (LEN=999), parameter :: opari2_ctc_4 =&
+        "72*regionType=parallel*sscl=test1_tpd.f90:32:33*escl=test1_tpd.f90:34:35**"
+
+      common /cb000/ opari2_region_1,&
+              opari2_region_2,&
+              opari2_region_3,&
+              opari2_region_4
+
+      integer ( kind=4 ) :: pomp2_lib_get_max_threads
+      logical :: pomp2_test_lock
+      integer ( kind=4 ) :: pomp2_test_nest_lock
+      integer( kind=8 ) pomp_tpd 
+      common /pomp_tpd/ pomp_tpd 
+!$omp threadprivate(/pomp_tpd/)
+      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task 
+      logical :: pomp2_if 
+      integer ( kind=4 ) :: pomp2_num_threads 

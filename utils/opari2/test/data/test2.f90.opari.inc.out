@@ -1,83 +1,99 @@
-      INTEGER( KIND=8 ) :: pomp2_region_1
+      INTEGER( KIND=8 ) :: opari2_region_1
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_1 =&
-        "64*regionType=parallel*sscl=test2.f90:27:27*escl=test2.f90:78:78**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_1 =&
+        "64*regionType=parallel*sscl=test2.f90:26:26*escl=test2.f90:77:77**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_2
+      INTEGER( KIND=8 ) :: opari2_region_2
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_2 =&
-        "58*regionType=do*sscl=test2.f90:29:29*escl=test2.f90:33:33**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_2 =&
+        "58*regionType=do*sscl=test2.f90:28:28*escl=test2.f90:32:32**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_3
+      INTEGER( KIND=8 ) :: opari2_region_3
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_3 =&
-        "61*regionType=flush*sscl=test2.f90:35:35*escl=test2.f90:35:35**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_3 =&
+        "61*regionType=flush*sscl=test2.f90:34:34*escl=test2.f90:34:34**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_4
+      INTEGER( KIND=8 ) :: opari2_region_4
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_4 =&
-        "71*regionType=do*sscl=test2.f90:37:37*escl=test2.f90:43:43*hasOrdered=1**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_4 =&
+        "71*regionType=do*sscl=test2.f90:36:36*escl=test2.f90:42:42*hasOrdered=1**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_5
+      INTEGER( KIND=8 ) :: opari2_region_5
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_5 =&
-        "63*regionType=ordered*sscl=test2.f90:39:39*escl=test2.f90:41:41**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_5 =&
+        "63*regionType=ordered*sscl=test2.f90:38:38*escl=test2.f90:40:40**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_6
+      INTEGER( KIND=8 ) :: opari2_region_6
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_6 =&
-        "63*regionType=barrier*sscl=test2.f90:45:45*escl=test2.f90:45:45**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_6 =&
+        "63*regionType=barrier*sscl=test2.f90:44:44*escl=test2.f90:44:44**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_7
+      INTEGER( KIND=8 ) :: opari2_region_7
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_7 =&
-        "78*regionType=sections*sscl=test2.f90:47:47*escl=test2.f90:52:52*numSections=2**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_7 =&
+        "78*regionType=sections*sscl=test2.f90:46:46*escl=test2.f90:51:51*numSections=2**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_8
+      INTEGER( KIND=8 ) :: opari2_region_8
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_8 =&
-        "62*regionType=master*sscl=test2.f90:54:54*escl=test2.f90:56:56**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_8 =&
+        "62*regionType=master*sscl=test2.f90:53:53*escl=test2.f90:55:55**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_9
+      INTEGER( KIND=8 ) :: opari2_region_9
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_9 =&
-        "64*regionType=critical*sscl=test2.f90:58:58*escl=test2.f90:60:60**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_9 =&
+        "64*regionType=critical*sscl=test2.f90:57:57*escl=test2.f90:59:59**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_10
+      INTEGER( KIND=8 ) :: opari2_region_10
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_10 =&
-        "84*regionType=critical*sscl=test2.f90:62:62*escl=test2.f90:64:64*criticalName=foobar**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_10 =&
+        "84*regionType=critical*sscl=test2.f90:61:61*escl=test2.f90:63:63*criticalName=foobar**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_11
+      INTEGER( KIND=8 ) :: opari2_region_11
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_11 =&
-        "62*regionType=atomic*sscl=test2.f90:66:66*escl=test2.f90:68:68**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_11 =&
+        "62*regionType=atomic*sscl=test2.f90:65:65*escl=test2.f90:67:67**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_12
+      INTEGER( KIND=8 ) :: opari2_region_12
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_12 =&
-        "62*regionType=single*sscl=test2.f90:70:70*escl=test2.f90:72:72**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_12 =&
+        "62*regionType=single*sscl=test2.f90:69:69*escl=test2.f90:71:71**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_13
+      INTEGER( KIND=8 ) :: opari2_region_13
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_13 =&
-        "65*regionType=workshare*sscl=test2.f90:74:74*escl=test2.f90:76:76**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_13 =&
+        "65*regionType=workshare*sscl=test2.f90:73:73*escl=test2.f90:75:75**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_14
+      INTEGER( KIND=8 ) :: opari2_region_14
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_14 =&
-        "64*regionType=parallel*sscl=test2.f90:80:80*escl=test2.f90:86:86**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_14 =&
+        "64*regionType=parallel*sscl=test2.f90:79:79*escl=test2.f90:85:85**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_15
+      INTEGER( KIND=8 ) :: opari2_region_15
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_15 =&
-        "60*regionType=task*sscl=test2.f90:81:81*escl=test2.f90:83:83**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_15 =&
+        "60*regionType=task*sscl=test2.f90:80:80*escl=test2.f90:82:82**"
 
-      INTEGER( KIND=8 ) :: pomp2_region_16
+      INTEGER( KIND=8 ) :: opari2_region_16
 
-      CHARACTER (LEN=999), parameter :: pomp2_ctc_16 =&
-        "64*regionType=taskwait*sscl=test2.f90:85:85*escl=test2.f90:85:85**"
+      CHARACTER (LEN=999), parameter :: opari2_ctc_16 =&
+        "64*regionType=taskwait*sscl=test2.f90:84:84*escl=test2.f90:84:84**"
 
+      common /cb000/ opari2_region_1,&
+              opari2_region_2,&
+              opari2_region_3,&
+              opari2_region_4,&
+              opari2_region_5,&
+              opari2_region_6,&
+              opari2_region_7,&
+              opari2_region_8,&
+              opari2_region_9,&
+              opari2_region_10,&
+              opari2_region_11,&
+              opari2_region_12,&
+              opari2_region_13,&
+              opari2_region_14,&
+              opari2_region_15,&
+              opari2_region_16
 
       integer ( kind=4 ) :: pomp2_lib_get_max_threads
       logical :: pomp2_test_lock
@@ -85,19 +101,3 @@
       integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task 
       logical :: pomp2_if 
       integer ( kind=4 ) :: pomp2_num_threads 
-      common /cb000/ pomp2_region_1,&
-              pomp2_region_2,&
-              pomp2_region_3,&
-              pomp2_region_4,&
-              pomp2_region_5,&
-              pomp2_region_6,&
-              pomp2_region_7,&
-              pomp2_region_8,&
-              pomp2_region_9,&
-              pomp2_region_10,&
-              pomp2_region_11,&
-              pomp2_region_12,&
-              pomp2_region_13,&
-              pomp2_region_14,&
-              pomp2_region_15,&
-              pomp2_region_16

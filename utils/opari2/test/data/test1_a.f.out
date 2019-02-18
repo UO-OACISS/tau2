@@ -15,7 +15,6 @@
 ! *
 ! * Testfile for automated testing of OPARI2
 ! *
-! * @authors Bernd Mohr, Peter Philippen
 ! *
 ! * @brief Test the parsers ability to insert a necessary include statement at the right places.
 
@@ -24,7 +23,7 @@
       implicit
      &none
       include 'test1_a.f.opari.inc'
-#line 24 "test1_a.f"
+#line 23 "test1_a.f"
       double precision :: d
       write (*,*) "function f0"
       f0 = 5
@@ -33,7 +32,7 @@
       
       subroutine s0
       include 'test1_a.f.opari.inc'
-#line 31 "test1_a.f"
+#line 30 "test1_a.f"
       write (*,*) "subroutine s0"
       end subroutine s0
       
@@ -41,7 +40,7 @@
       implicit
      >none
       include 'test1_a.f.opari.inc'
-#line 37 "test1_a.f"
+#line 36 "test1_a.f"
       integer :: a, result
       write (*,*) "function f1"
       f1 = a
@@ -52,7 +51,7 @@
       implicit
      $none
       include 'test1_a.f.opari.inc'
-#line 46 "test1_a.f"
+#line 45 "test1_a.f"
       integer :: a
       write (*,*) "subroutine s1"
       write (*,*) "keyword interface inside a string"
@@ -64,7 +63,7 @@
 
       program otest
       include 'test1_a.f.opari.inc'
-#line 56 "test1_a.f"
+#line 55 "test1_a.f"
       integer :: i, f0, f1, function
       
       function = 0
