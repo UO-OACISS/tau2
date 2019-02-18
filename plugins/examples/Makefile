@@ -32,7 +32,7 @@ libTAU-sos-plugin.so: tau_plugin_sos.o TauSOS.o
 	$(CXX) tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin.so
 
 libTAU-adios2-plugin.so: tau_plugin_adios2.o
-	$(CXX) tau_plugin_adios2.o $(TAU_SOS_LINKER_OPTS) -L$(ADIOS2DIR)/lib $(ADIOS2_LIBS) $(TAU_SHFLAGS) libTAU-adios2-plugin.so
+	$(CXX) tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-adios2-plugin.so
 
 libTAU-filter-plugin.so: tau_plugin_example_disable_instrumentation_runtime.o 
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin.so tau_plugin_example_disable_instrumentation_runtime.o 
@@ -44,7 +44,7 @@ TauSOS.o: TauSOS.cpp
 	$(CXX) $(CFLAGS) -c TauSOS.cpp -o TauSOS.o
 
 tau_plugin_adios2.o: Tau_plugin_adios2.cpp
-	$(CXX) $(CFLAGS) $(ADIOS2_CXXFLAGS) -c Tau_plugin_adios2.cpp -o tau_plugin_adios2.o
+	$(CXX) $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c Tau_plugin_adios2.cpp -o tau_plugin_adios2.o
 
 tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable_instrumentation_runtime.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_disable_instrumentation_runtime.cpp -o tau_plugin_example_disable_instrumentation_runtime.o
