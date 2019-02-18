@@ -217,10 +217,7 @@ void * threaded_func(void *data)
 int main (int argc, char *argv[]) 
 {
 
-  ////NPD
-  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, "*", 0);
-  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_EXIT, "*", 0);
-  ////
+  size_t id = TAU_CREATE_TRIGGER("after matrix");
 
 #ifdef PTHREADS
   int ret;
@@ -328,6 +325,8 @@ int main (int argc, char *argv[])
   for (i = 0 ; i < ITERATIONS ; i++) {
   printf("%d.", i);fflush(stdout);
   do_work();
+  void * data = NULL;
+  TAU_TRIGGER(id, data);
   }
 
 #ifdef PTHREADS
