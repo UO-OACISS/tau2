@@ -135,6 +135,7 @@ void Tau_plugin_adios2_init_adios(void) {
         std::cout << "Exception, STOPPING PROGRAM from rank " << comm_rank << "\n";
         std::cout << e.what() << "\n";
     }
+    initialized = true;
 }
 
 void Tau_plugin_adios2_open_file(void) {
@@ -357,7 +358,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
     /* Required event support */
-    //cb->Dump = Tau_plugin_adios2_dump;
+    cb->Dump = Tau_plugin_adios2_dump;
     cb->PostInit = Tau_plugin_adios2_post_init;
     cb->PreEndOfExecution = Tau_plugin_adios2_pre_end_of_execution;
     cb->EndOfExecution = Tau_plugin_adios2_end_of_execution;
