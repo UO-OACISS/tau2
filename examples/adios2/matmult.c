@@ -32,7 +32,7 @@ This is not a parallel implementation */
 pthread_mutex_t mutexsum;
 #endif /* PTHREADS */
 
-#define ITERATIONS 3
+#define ITERATIONS 10
 
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 512
