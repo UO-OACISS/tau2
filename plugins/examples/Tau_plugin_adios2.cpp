@@ -204,15 +204,23 @@ void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
     std::vector<FunctionInfo*>::const_iterator it;
     RtsLayer::LockDB();
 
+    std::map<std::string, std::vector<double> >::iterator timer_map_it;
+
     //foreach: TIMER
     for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo *fi = *it;
         int tid = 0; // todo: get ALL thread data.
 
-        try {
-            stringstream ss;
-            ss << fi->GetName() << " / Calls";
+        stringstream ss;
+        ss << fi->GetName() << " / Calls";
 
+        // Check if a timer showed up since we last defined variables.
+        timer_map_it = timers.find(ss.str());
+        if (timer_map_it == timers.end()) {
+            continue;
+        }
+
+        try {
             for (tid = 0; tid < numThreads; tid++) {
                 timers[ss.str()][tid] = (double)(fi->GetCalls(tid));
             }
