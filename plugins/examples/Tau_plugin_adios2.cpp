@@ -33,7 +33,8 @@ static bool opened(false);
 adios2::ADIOS ad;
 adios2::IO bpIO;
 adios2::Engine bpWriter;
-std::map<std::string, adios2::Variable<double> >varT;
+//std::map<std::string, adios2::Variable<double> > timers;
+std::map<std::string, std::vector<double> > timers;
 adios2::Variable<int> num_threads_var;
 adios2::Variable<int> num_metrics_var;
 
@@ -82,34 +83,58 @@ void Tau_plugin_adios2_init_adios(void) {
     MPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 #endif
-    /** ADIOS class factory of IO class objects, DebugON is recommended */
-    ad = adios2::ADIOS(MPI_COMM_WORLD, adios2::DebugON);
+    try {
+        /** ADIOS class factory of IO class objects, DebugON is recommended */
+#if TAU_MPI
+        ad = adios2::ADIOS(MPI_COMM_WORLD, adios2::DebugON);
+#else
+        ad = adios2::ADIOS(true);
+#endif
+        /*** IO class object: settings and factory of Settings: Variables,
+        * Parameters, Transports, and Execution: Engines */
+        bpIO = ad.DeclareIO("TAU_profiles");
+        // if not defined by user, we can change the default settings
+        // BPFile is the default engine
+        bpIO.SetEngine("BPFile");
+        bpIO.SetParameters({{"num_threads", "1"}});
 
-    /*** IO class object: settings and factory of Settings: Variables,
-     * Parameters, Transports, and Execution: Engines */
-    bpIO = ad.DeclareIO("TAU_profiles");
-    // if not defined by user, we can change the default settings
-    // BPFile is the default engine
-    bpIO.SetEngine("BPFile");
-    bpIO.SetParameters({{"num_threads", "1"}});
+        // ISO-POSIX file output is the default transport (called "File")
+        // Passing parameters to the transport
+        bpIO.AddTransport("File", {{"Library", "POSIX"}});
 
-    // ISO-POSIX file output is the default transport (called "File")
-    // Passing parameters to the transport
-    bpIO.AddTransport("File", {{"Library", "POSIX"}});
+        /* write the metadata as attributes */
+        Tau_dump_ADIOS2_metadata(bpIO);
 
-    /* write the metadata as attributes */
-    // Tau_dump_ADIOS2_metadata(bpIO);
-
-    /* Create some "always used" variables */
+        /* Create some "always used" variables */
     
-    /** global array : name, { shape (total) }, { start (local) }, {
-     * count (local) }, all are constant dimensions */
-    const std::size_t Nx = 1;
-    num_threads_var = bpIO.DefineVariable<int>(
-        "num_threads", {comm_size * Nx}, {comm_rank * Nx}, {Nx}, adios2::ConstantDims);
-    num_metrics_var = bpIO.DefineVariable<int>(
-        "num_metrics", {comm_size * Nx}, {comm_rank * Nx}, {Nx}, adios2::ConstantDims);
-
+        /** global array : name, { shape (total) }, { start (local) }, {
+        * count (local) }, all are constant dimensions */
+        const std::size_t Nx = 1;
+        const adios2::Dims shape{static_cast<size_t>(Nx * comm_size)};
+        const adios2::Dims start{static_cast<size_t>(Nx * comm_rank)};
+        const adios2::Dims count{Nx};
+        num_threads_var = bpIO.DefineVariable<int>(
+            "num_threads", shape, start, count, adios2::ConstantDims);
+        num_metrics_var = bpIO.DefineVariable<int>(
+            "num_metrics", shape, start, count, adios2::ConstantDims);
+    } catch (std::invalid_argument &e)
+    {
+        std::cout << "Invalid argument exception, STOPPING PROGRAM from rank "
+                  << comm_rank << "\n";
+        std::cout << e.what() << "\n";
+    }
+    catch (std::ios_base::failure &e)
+    {
+        std::cout << "IO System base failure exception, STOPPING PROGRAM "
+                     "from rank "
+                  << comm_rank << "\n";
+        std::cout << e.what() << "\n";
+    }
+    catch (std::exception &e)
+    {
+        std::cout << "Exception, STOPPING PROGRAM from rank " << comm_rank << "\n";
+        std::cout << e.what() << "\n";
+    }
 }
 
 void Tau_plugin_adios2_open_file(void) {
@@ -131,17 +156,95 @@ void Tau_plugin_adios2_define_variables(int numThreads, int numCounters,
     std::vector<FunctionInfo*>::const_iterator it;
     RtsLayer::LockDB();
 
+    std::map<std::string, std::vector<double> >::iterator timer_map_it;
+
+    const std::size_t Nx = numThreads;
+    const adios2::Dims shape{static_cast<size_t>(Nx * comm_size)};
+    const adios2::Dims start{static_cast<size_t>(Nx * comm_rank)};
+    const adios2::Dims count{Nx};
+
+    //foreach: TIMER
+    for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+        FunctionInfo *fi = *it;
+
+        stringstream ss;
+        ss << fi->GetName() << " / Calls";
+        timer_map_it = timers.find(ss.str());
+        if (timer_map_it == timers.end()) {
+            // add the timer to the map
+            timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+            // define the variable for ADIOS
+            bpIO.DefineVariable<double>(
+                ss.str(), shape, start, count, adios2::ConstantDims);
+            for (int i = 0 ; i < numCounters ; i++) {
+                ss.str(std::string());
+                ss << fi->GetName() << " / Inclusive " << counterNames[i];
+                // add the timer to the map
+                timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+                // define the variable for ADIOS
+                bpIO.DefineVariable<double>(
+                    ss.str(), shape, start, count, adios2::ConstantDims);
+                ss.str(std::string());
+                ss << fi->GetName() << " / Exclusive " << counterNames[i];
+                // add the timer to the map
+                timers.insert(pair<std::string,vector<double> >(ss.str(), vector<double>(numThreads)));
+                // define the variable for ADIOS
+                bpIO.DefineVariable<double>(
+                    ss.str(), shape, start, count, adios2::ConstantDims);
+            }
+        }
+    }
+
+    RtsLayer::UnLockDB();
+}
+
+void Tau_plugin_adios2_write_variables(int numThreads, int numCounters,
+    const char** counterNames) {
+    // get the FunctionInfo database, and iterate over it
+    std::vector<FunctionInfo*>::const_iterator it;
+    RtsLayer::LockDB();
+
     //foreach: TIMER
     for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
         FunctionInfo *fi = *it;
         int tid = 0; // todo: get ALL thread data.
-        int calls;
-        double inclusive, exclusive;
-        calls = 0;
-        inclusive = 0.0;
-        exclusive = 0.0;
-    }
 
+        try {
+            stringstream ss;
+            ss << fi->GetName() << " / Calls";
+
+            for (tid = 0; tid < numThreads; tid++) {
+                timers[ss.str()][tid] = (double)(fi->GetCalls(tid));
+            }
+
+            bpWriter.Put<double>(ss.str(), timers[ss.str()].data());
+
+            for (int m = 0 ; m < numCounters ; m++) {
+                stringstream incl;
+                stringstream excl;
+                incl << fi->GetName() << " / Inclusive " << counterNames[m];
+                excl << fi->GetName() << " / Exclusive " << counterNames[m];
+                for (tid = 0; tid < numThreads; tid++) {
+                    timers[incl.str()][tid] = fi->getDumpInclusiveValues(tid)[m];
+                    timers[excl.str()][tid] = fi->getDumpExclusiveValues(tid)[m];
+                }
+                bpWriter.Put<double>(incl.str(), timers[incl.str()].data());
+                bpWriter.Put<double>(excl.str(), timers[excl.str()].data());
+            }
+        } catch (std::invalid_argument &e) {
+            std::cout << "Invalid argument exception, STOPPING PROGRAM from rank "
+                    << comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        } catch (std::ios_base::failure &e) {
+            std::cout << "IO System base failure exception, STOPPING PROGRAM "
+                        "from rank "
+                    << comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        } catch (std::exception &e) {
+            std::cout << "Exception, STOPPING PROGRAM from rank " << comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        }
+    }
 
     RtsLayer::UnLockDB();
 }
@@ -170,10 +273,25 @@ int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     }
 
     if (opened) {
-        bpWriter.BeginStep();
-        bpWriter.Put<int>(num_threads_var, numThreads.data());
-        bpWriter.Put<int>(num_metrics_var, numCounters.data());
-        bpWriter.EndStep();
+        try {
+            bpWriter.BeginStep();
+            bpWriter.Put<int>(num_threads_var, numThreads.data());
+            bpWriter.Put<int>(num_metrics_var, numCounters.data());
+            Tau_plugin_adios2_write_variables(numThreads[0], numCounters[0], counterNames);
+            bpWriter.EndStep();
+        } catch (std::invalid_argument &e) {
+            std::cout << "Invalid argument exception, STOPPING PROGRAM from rank "
+                    << comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        } catch (std::ios_base::failure &e) {
+            std::cout << "IO System base failure exception, STOPPING PROGRAM "
+                        "from rank "
+                    << comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        } catch (std::exception &e) {
+            std::cout << "Exception, STOPPING PROGRAM from rank " << comm_rank << "\n";
+            std::cout << e.what() << "\n";
+        }
     }
 
     return 0;
@@ -187,10 +305,15 @@ int Tau_plugin_finalize(Tau_plugin_event_function_finalize_data_t* data) {
 /* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
     if (!enabled) return 0;
-    //fprintf(stdout, "TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
+    fprintf(stdout, "TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
+#if 1
+    Tau_plugin_event_dump_data_t * dummy;
+    Tau_plugin_adios2_dump(dummy);
     if (opened) {
         bpWriter.Close();
+        opened = false;
     }
+#endif
     return 0;
 }
 
@@ -205,10 +328,15 @@ int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
 int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t* data) {
     if (!enabled || data->tid != 0) return 0;
     enabled = false;
-    //fprintf(stdout, "TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
+    fprintf(stdout, "TAU PLUGIN ADIOS2 Finalize\n"); fflush(stdout);
+#if 0
+    Tau_plugin_event_dump_data_t * dummy;
+    Tau_plugin_adios2_dump(dummy);
     if (opened) {
         bpWriter.Close();
+        opened = false;
     }
+#endif
     return 0;
 }
 
@@ -221,7 +349,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
     /* Required event support */
-    cb->Dump = Tau_plugin_adios2_dump;
+    //cb->Dump = Tau_plugin_adios2_dump;
     cb->PostInit = Tau_plugin_adios2_post_init;
     cb->PreEndOfExecution = Tau_plugin_adios2_pre_end_of_execution;
     cb->EndOfExecution = Tau_plugin_adios2_end_of_execution;

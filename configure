@@ -10566,7 +10566,8 @@ if [ $adios2 = yes ] ; then
     echo "Querying ADIOS2 CXX flags..."
     adios2cxxflags=`${adios2_config_cmd} --cxxflags | grep -v ADIOS2_DIR | sed 's/ /#/g'`
     echo "Querying ADIOS2 LIB flags..."
-    adios2libs=`${adios2_config_cmd} --cxxlibs | grep -v ADIOS2_DIR | sed 's/ /#/g'`
+    #adios2libs=`${adios2_config_cmd} --cxxlibs | grep -v ADIOS2_DIR | sed 's/ /#/g'`
+    adios2libs="-L${adios2dir}/lib#-ladios2"
     tauoptions="${tauoptions}-adios2"
     fixmakeargs="$fixmakeargs ADIOS2 "
     fixmakeargs="$fixmakeargs adios2dir=$adios2dir"
