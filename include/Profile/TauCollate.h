@@ -19,7 +19,7 @@
 #define _TAU_COLLATE_H_
 
 // To allow the use of Tau_unify_object_t in the interface.
-#include <TauUnify.h>
+#include "TauUnify.h"
 
 #define NUM_COLLATE_OP_TYPES 2
 #define COLLATE_OP_BASIC 0

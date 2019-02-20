@@ -11,7 +11,6 @@
 #include <string>
 
 #include <Profile/TauEnv.h>
-#include <Profile/TauSnapshot.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauCollate.h>
 #include <Profile/TauUtil.h>
@@ -31,26 +30,14 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
  
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-/*
+
   FILE *f;
 #ifdef TAU_MPI
   MPI_Status status;
 #endif 
   x_uint64 start, end;
-  const char *profiledir = TauEnv_get_profiledir();
-  const char *profile_prefix = TauEnv_get_profile_prefix();
 
-  Tau_detect_memory_leaks();
-
-#ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions_MPI();
-
-	for (int tid = 0; tid<RtsLayer::getTotalThreads(); tid++) {
-		Tau_snapshot_writeUnifiedBuffer(tid);
-	}
-#else
-  Tau_snapshot_writeToBuffer("merge");
-#endif
 
   int rank = 0;
   int size = 1;
@@ -62,19 +49,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
 #endif
 
-	int buflen = Tau_snapshot_getBufferLength()+1;
-  int maxBuflen = buflen;
 
-#ifdef TAU_MPI
-
-  PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
-
-	char * buf = (char *) malloc(buflen);
-	Tau_snapshot_getBuffer(buf);
-
-#endif
-
-#ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
   int numEvents = 0;
   int globalNumThreads;
@@ -174,8 +149,6 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					 &sAtomicSumSqr);
 
   }
-#endif
- */
   return 0;
 }
 

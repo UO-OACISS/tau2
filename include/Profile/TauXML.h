@@ -20,8 +20,8 @@
 #ifndef _TAU_XML_H_
 #define _TAU_XML_H_
 
-#include <TauUtil.h>
-#include <TauMetaData.h>
+#include "TauUtil.h"
+#include "TauMetaData.h"
 
 void Tau_XML_writeString(Tau_util_outputDevice *out, const char *string);
 void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *string, bool newline);
