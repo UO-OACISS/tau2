@@ -24,6 +24,8 @@
 
 typedef struct snapshot_buffer {
   double ***gExcl, ***gIncl;
+  double_int **gExcl_min, **gIncl_min;
+  double_int **gExcl_max, **gIncl_max;
   double **gNumCalls, **gNumSubr;
   double ***sExcl, ***sIncl;
   double **sNumCalls, **sNumSubr;
@@ -108,17 +110,23 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					  Tau_Global_numCounters,
 					  COLLATE_OP_DERIVED);
     }
-    Tau_collate_compute_statistics_MPI(s_buffer[current_s_buffer_index].functionUnifier, s_buffer[current_s_buffer_index].globalEventMap, 
+    Tau_collate_compute_statistics_MPI_with_minmaxloc(s_buffer[current_s_buffer_index].functionUnifier, s_buffer[current_s_buffer_index].globalEventMap, 
 				   numEvents, 
 				   globalNumThreads, s_buffer[current_s_buffer_index].numEventThreads,
-				   &(s_buffer[current_s_buffer_index].gExcl), &(s_buffer[current_s_buffer_index].gIncl), &(s_buffer[current_s_buffer_index].gNumCalls), &(s_buffer[current_s_buffer_index].gNumSubr),
-				   &(s_buffer[current_s_buffer_index].sExcl), &(s_buffer[current_s_buffer_index].sIncl), &(s_buffer[current_s_buffer_index].sNumCalls), &(s_buffer[current_s_buffer_index].sNumSubr));
+				   &(s_buffer[current_s_buffer_index].gExcl), &(s_buffer[current_s_buffer_index].gIncl),
+				   &(s_buffer[current_s_buffer_index].gExcl_min), &(s_buffer[current_s_buffer_index].gIncl_min),
+				   &(s_buffer[current_s_buffer_index].gExcl_max), &(s_buffer[current_s_buffer_index].gIncl_max),
+                                   &(s_buffer[current_s_buffer_index].gNumCalls), &(s_buffer[current_s_buffer_index].gNumSubr),
+				   &(s_buffer[current_s_buffer_index].sExcl), &(s_buffer[current_s_buffer_index].sIncl), 
+                                   &(s_buffer[current_s_buffer_index].sNumCalls), &(s_buffer[current_s_buffer_index].sNumSubr));
 
     s_buffer[current_s_buffer_index].atomicUnifier = Tau_unify_getAtomicUnifier();
     numAtomicEvents = s_buffer[current_s_buffer_index].atomicUnifier->globalNumItems;
+
     s_buffer[current_s_buffer_index].numAtomicEventThreads = 
       (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
     s_buffer[current_s_buffer_index].globalAtomicEventMap = (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
+
     // initialize all to -1
     for (int i=0; i<numAtomicEvents; i++) { 
       // -1 indicates that the event did not occur for this rank

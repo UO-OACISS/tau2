@@ -915,7 +915,8 @@ void Tau_collate_compute_statistics_MPI(Tau_unify_object_t *functionUnifier,
 
   // allocate memory for values to fill with performance data and sent to
   //   the root node
-  double **excl, **incl;
+  double **excl;
+  double **incl;
   double *numCalls, *numSubr;
 #ifdef TAU_MPI
   Tau_collate_allocateUnitFunctionBuffer(&excl, &incl, 
@@ -1023,6 +1024,171 @@ void Tau_collate_compute_statistics_MPI(Tau_unify_object_t *functionUnifier,
   PMPI_Op_free(&min_op);
 #endif /* TAU_MPI */
 }
+
+void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *functionUnifier,
+				    int *globalEventMap, int numItems,
+				    int globalNumThreads, int *numEventThreads,
+				    double ****gExcl, double ****gIncl,
+                                    double_int ***gExcl_min, double_int ***gIncl_min,
+                                    double_int ***gExcl_max, double_int ***gIncl_max,
+				    double ***gNumCalls, double ***gNumSubr,
+				    double ****sExcl, double ****sIncl,
+				    double ***sNumCalls, double ***sNumSubr) {
+  int rank = 0;
+#ifdef TAU_MPI
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif /* TAU_MPI */
+
+  // *CWL* - Minimum needs to be handled with out-of-band values for now.
+  MPI_Op min_op = MPI_MIN;
+#ifdef TAU_MPI
+  PMPI_Op_create (stat_min, 1, &min_op);
+#endif /* TAU_MPI */
+  collate_op[step_min] = min_op;
+
+  // allocate memory for values to fill with performance data and sent to
+  //   the root node
+  double **excl;
+  double **incl;
+  double_int **excl_, **incl_;
+  double *numCalls, *numSubr;
+#ifdef TAU_MPI
+  Tau_collate_allocateUnitFunctionBuffer(&excl, &incl, 
+					 &numCalls, &numSubr, 
+					 numItems, Tau_Global_numCounters);
+
+  excl_ = (double_int **)TAU_UTIL_MALLOC(sizeof(double_int *)*Tau_Global_numCounters);
+  incl_ = (double_int **)TAU_UTIL_MALLOC(sizeof(double_int *)*Tau_Global_numCounters);
+  // Please note the use of Calloc
+   for (int m=0; m<Tau_Global_numCounters; m++) {
+     excl_[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numItems);
+     incl_[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numItems);
+   }
+
+#endif /* TAU_MPI */
+
+  // Fill the data, once for each basic statistic
+  for (int s=0; s<NUM_COLLATE_STEPS; s++) {
+#ifndef TAU_MPI
+    // in the non-MPI case, just point to the same memory.
+    excl = &((*gExcl)[s][0]);
+    incl = &((*gIncl)[s][0]);
+    numCalls = &((*gNumCalls)[s][0]);
+    numSubr = &((*gNumSubr)[s][0]);
+#endif /* !TAU_MPI */
+    // Initialize to -1 only for step_min to handle unrepresented values for
+    //   minimume
+    double fillDbl = 0.0;
+    if (s == step_min) {
+      fillDbl = -1.0;
+    }
+    for (int i=0; i<numItems; i++) {
+      for (int m=0; m<Tau_Global_numCounters; m++) {
+	incl_[m][i].value = incl[m][i] = fillDbl;
+	excl_[m][i].value = excl[m][i] = fillDbl;
+        incl_[m][i].index = excl_[m][i].index = 0;
+      }
+      numCalls[i] = fillDbl;
+      numSubr[i] = fillDbl;
+    }
+    for (int i=0; i<numItems; i++) { // for each event
+      if (globalEventMap[i] != -1) { // if it occurred in our rank
+	int local_index = functionUnifier->sortMap[globalEventMap[i]];
+	FunctionInfo *fi = TheFunctionDB()[local_index];
+	//	int numThreads = RtsLayer::getNumThreads();
+	int numThreads = RtsLayer::getTotalThreads();
+	//synchronize
+	RtsLayer::LockDB();
+
+	for (int tid = 0; tid<numThreads; tid++) { // for each thread
+	  for (int m=0; m<Tau_Global_numCounters; m++) {
+			//this make no sense but you need to use a different data-structure in
+			//FunctionInfo if you are quering thread 0.
+			if (tid == 0)
+			{	
+				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+								fi->getDumpInclusiveValues(tid)[m]);
+				excl[m][i] = getStepValue((collate_step)s, excl[m][i],
+								fi->getDumpExclusiveValues(tid)[m]);
+                                excl_[m][i].value = excl[m][i];
+                                incl_[m][i].value = incl[m][i];
+			}	
+			else // thread != 0
+			{
+				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+								fi->GetInclTimeForCounter(tid,m));
+				excl[m][i] = getStepValue((collate_step)s, excl[m][i],fi->GetExclTimeForCounter(tid,m));
+
+                                excl_[m][i].value = excl[m][i];
+                                incl_[m][i].value = incl[m][i];
+			}	
+		
+	  }
+			numCalls[i] = getStepValue((collate_step)s, numCalls[i],
+							 (double)fi->GetCalls(tid));
+			numSubr[i] = getStepValue((collate_step)s, numSubr[i],
+							(double)fi->GetSubrs(tid));
+	}
+	//release lock
+	RtsLayer::UnLockDB();
+      }
+    }
+    
+#ifdef TAU_MPI
+    // reduce data to rank 0
+    for (int m=0; m<Tau_Global_numCounters; m++) {
+      PMPI_Reduce(excl[m], (*gExcl)[s][m], numItems, MPI_DOUBLE, 
+		  collate_op[s], 0, MPI_COMM_WORLD);
+      PMPI_Reduce(incl[m], (*gIncl)[s][m], numItems, MPI_DOUBLE, 
+		  collate_op[s], 0, MPI_COMM_WORLD);
+
+      /* Awfully inefficient stuff!!*/
+      if(s == step_min) {
+        PMPI_Reduce(excl_[m], (*gExcl_min)[m], numItems, MPI_DOUBLE_INT,
+                    collate_op[s], 0, MPI_COMM_WORLD);
+        PMPI_Reduce(incl_[m], (*gIncl_min)[m], numItems, MPI_DOUBLE_INT,
+                    collate_op[s], 0, MPI_COMM_WORLD);
+      }
+
+      if(s == step_max) {
+        PMPI_Reduce(excl_[m], (*gExcl_max)[m], numItems, MPI_DOUBLE_INT,
+                    collate_op[s], 0, MPI_COMM_WORLD);
+        PMPI_Reduce(incl_[m], (*gIncl_max)[m], numItems, MPI_DOUBLE_INT,
+                    collate_op[s], 0, MPI_COMM_WORLD);
+      }
+    }
+
+    PMPI_Reduce(numCalls, (*gNumCalls)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(numSubr, (*gNumSubr)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+#endif /* TAU_MPI */
+  }
+#ifdef TAU_MPI
+  // Free allocated memory for basic info.
+  Tau_collate_freeUnitFunctionBuffer(&excl, &incl, &numCalls, &numSubr, Tau_Global_numCounters);
+#endif
+
+  // Now compute the actual statistics on rank 0 only. The assumption
+  //   is that at least one thread would be active across the node-space
+  //   and so negative values should never show up after reduction.
+  if (rank == 0) {
+    // *CWL* TODO - abstract the operations to avoid this nasty coding
+    //     of individual operations.
+    for (int i=0; i<numItems; i++) { // for each event
+      for (int m=0; m<Tau_Global_numCounters; m++) {
+	    assignDerivedStats(sIncl, gIncl, m, i, globalNumThreads, numEventThreads);
+	    assignDerivedStats(sExcl, gExcl, m, i, globalNumThreads, numEventThreads);
+	  }
+	  assignDerivedStats(sNumCalls, gNumCalls, i, globalNumThreads, numEventThreads);
+	  assignDerivedStats(sNumSubr, gNumSubr, i, globalNumThreads, numEventThreads);
+	}    
+  }
+#ifdef TAU_MPI
+  PMPI_Op_free(&min_op);
+#endif /* TAU_MPI */
+}
+
 void Tau_collate_compute_statistics_SHMEM(Tau_unify_object_t *functionUnifier,
 				    int *globalEventMap, int numItems,
 				    int globalNumThreads, int *numEventThreads,
