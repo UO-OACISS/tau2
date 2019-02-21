@@ -107,6 +107,23 @@ void Tau_collate_compute_atomicStatistics_MPI(Tau_unify_object_t *atomicUnifier,
 					  double ***sAtomicSum, double ***sAtomicMean,
 					  double ***sAtomicSumSqr);
 
+void Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(Tau_unify_object_t *atomicUnifier,
+                                          int *globalEventMap, int numItems,
+                                          int globalNumThreads,
+                                          int *numEventThreads,
+                                          double ***gAtomicMin,
+                                          double ***gAtomicMax,
+                                          double_int **gAtomicMin_min,
+                                          double_int **gAtomicMax_max,
+                                          double ***gAtomicCalls,
+                                          double ***gAtomicMean,
+                                          double ***gAtomicSumSqr,
+                                          double ***sAtomicMin,
+                                          double ***sAtomicMax,
+                                          double ***sAtomicCalls,
+                                          double ***sAtomicMean,
+                                          double ***sAtomicSumSqr);
+
 void Tau_collate_compute_atomicStatistics_SHMEM(Tau_unify_object_t *atomicUnifier,
 					  int *globalEventMap, int numItems,
 					  int globalNumThreads, int *numEventThreads,

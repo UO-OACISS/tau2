@@ -748,6 +748,151 @@ void Tau_collate_compute_atomicStatistics_MPI(Tau_unify_object_t *atomicUnifier,
   PMPI_Op_free(&min_op);
 #endif /* TAU_MPI */
 }
+
+void Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(Tau_unify_object_t *atomicUnifier,
+					  int *globalEventMap, int numItems,
+					  int globalNumThreads, 
+					  int *numEventThreads,
+					  double ***gAtomicMin, 
+					  double ***gAtomicMax,
+					  double_int **gAtomicMin_min, 
+					  double_int **gAtomicMax_max,
+					  double ***gAtomicCalls, 
+					  double ***gAtomicMean,
+					  double ***gAtomicSumSqr,
+					  double ***sAtomicMin, 
+					  double ***sAtomicMax,
+					  double ***sAtomicCalls, 
+					  double ***sAtomicMean,
+					  double ***sAtomicSumSqr) {
+  int rank = 0;
+#ifdef TAU_MPI
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif /* TAU_MPI */
+  
+  MPI_Op min_op = MPI_MIN;
+#ifdef TAU_MPI
+  PMPI_Op_create(stat_min, 1, &min_op);
+#endif /* TAU_MPI */
+  collate_op[step_min] = min_op;
+
+  // allocate memory for values to fill with performance data and sent to
+  //   the root node
+  double *atomicMin, *atomicMax;
+  double_int *atomicMin_, *atomicMax_;
+  double *atomicCalls, *atomicMean, *atomicSumSqr;
+
+#ifdef TAU_MPI
+  Tau_collate_allocateUnitAtomicBuffer(&atomicMin, &atomicMax, 
+				       &atomicCalls, &atomicMean,
+				       &atomicSumSqr,
+				       numItems);
+   atomicMin_ = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numItems);
+   atomicMax_ = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numItems);
+
+#endif /* TAU_MPI */
+
+  for (int s=0; s<NUM_COLLATE_STEPS; s++) {
+#ifndef TAU_MPI
+    // in the non-MPI case, just point to the same memory.
+    atomicMin = &((*gAtomicMin)[s][0]);
+    atomicMax = &((*gAtomicMax)[s][0]);
+    atomicCalls = &((*gAtomicCalls)[s][0]);
+    atomicMean = &((*gAtomicMean)[s][0]);
+    atomicSumSqr = &((*gAtomicSumSqr)[s][0]);
+#endif /* !TAU_MPI */
+    // Initialize to -1 only for step_min to handle unrepresented values for
+    //   minimum.
+    double fillDbl = 0.0;
+    if (s == step_min) {
+      fillDbl = -1.0;
+    }
+    for (int i=0; i<numItems; i++) {
+      atomicMin[i] = atomicMin_[i].value = fillDbl;
+      atomicMax[i] = atomicMax_[i].value = fillDbl;
+      atomicMin_[i].index = atomicMax_[i].index = rank;
+      atomicCalls[i] = fillDbl;
+      atomicMean[i] = fillDbl;
+      atomicSumSqr[i] = fillDbl;
+    }
+
+    for (int i=0; i<numItems; i++) { // for each event
+      if (globalEventMap[i] != -1) { // if it occurred in our rank
+	int local_index = atomicUnifier->sortMap[globalEventMap[i]];
+	TauUserEvent *event = TheEventDB()[local_index];
+	//	int numThreads = RtsLayer::getNumThreads();
+	int numThreads = RtsLayer::getTotalThreads();
+
+	//synchronize
+	RtsLayer::LockDB();
+
+	for (int tid = 0; tid<numThreads; tid++) { // for each thread
+	  atomicMin[i] = getStepValue((collate_step)s, atomicMin[i],
+				      (double)event->GetMin(tid));
+          atomicMin_[i].value = atomicMin[i];
+
+	  atomicMax[i] = getStepValue((collate_step)s, atomicMax[i],
+				      (double)event->GetMax(tid));
+          atomicMax_[i].value = atomicMax[i];
+
+	  atomicCalls[i] = getStepValue((collate_step)s, atomicCalls[i],
+					(double)event->GetNumEvents(tid));
+	  atomicMean[i] = getStepValue((collate_step)s, atomicMean[i],
+				       (double)event->GetMean(tid));
+	  atomicSumSqr[i] = getStepValue((collate_step)s, atomicSumSqr[i],
+					 (double)event->GetSumSqr(tid));
+	}
+	
+	//release lock
+	RtsLayer::UnLockDB();
+      }
+    }
+
+    // reduce data to rank 0
+#ifdef TAU_MPI
+    PMPI_Reduce(atomicMin, (*gAtomicMin)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicMax, (*gAtomicMax)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicCalls, (*gAtomicCalls)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicMean, (*gAtomicMean)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicSumSqr, (*gAtomicSumSqr)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+
+    if(s == step_min) {
+      PMPI_Reduce(atomicMin_, *gAtomicMin_min, numItems, MPI_DOUBLE_INT,
+                MPI_MINLOC, 0, MPI_COMM_WORLD);
+    }
+    if(s == step_max) {
+      PMPI_Reduce(atomicMax_, *gAtomicMax_max, numItems, MPI_DOUBLE_INT,
+                MPI_MAXLOC, 0, MPI_COMM_WORLD);
+    }
+#endif /* TAU_MPI */
+  }
+#ifndef TAU_MPI
+  // free memory for basic information
+  Tau_collate_freeUnitAtomicBuffer(&atomicMin, &atomicMax, 
+				   &atomicCalls, &atomicMean, 
+				   &atomicSumSqr);
+#endif /* ! TAU_MPI */
+  
+  // Compute derived statistics on rank 0
+  if (rank == 0) {
+    for (int i=0; i<numItems; i++) { // for each event
+      assignDerivedStats(sAtomicMin, gAtomicMin, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicMax, gAtomicMax, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicCalls, gAtomicCalls, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicMean, gAtomicMean, i, globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, i, globalNumThreads, numEventThreads);
+    }    
+  }
+#ifdef TAU_MPI
+  PMPI_Op_free(&min_op);
+#endif /* TAU_MPI */
+}
+
 void Tau_collate_compute_atomicStatistics_SHMEM(Tau_unify_object_t *atomicUnifier,
 					  int *globalEventMap, int numItems,
 					  int globalNumThreads, 

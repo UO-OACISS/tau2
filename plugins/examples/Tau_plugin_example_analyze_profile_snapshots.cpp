@@ -30,6 +30,7 @@ typedef struct snapshot_buffer {
   double ***sExcl, ***sIncl;
   double **sNumCalls, **sNumSubr;
   double **gAtomicMin, **gAtomicMax;
+  double_int *gAtomicMin_min, *gAtomicMax_max;
   double **gAtomicCalls, **gAtomicMean;
   double **gAtomicSumSqr;
   double **sAtomicMin, **sAtomicMax;
@@ -138,13 +139,13 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl), 
                                    &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr));
 
-    if(rank == 0) {
+    /*if(rank == 0) {
       for (int m=0; m<Tau_Global_numCounters; m++)  {
         for(int n=0; n<numEvents; n++) {
           fprintf(stderr, "Counter %d: The min exclusive, max exclusive, min inclusive, max inclusive values for event %d are located on processes %d, %d, %d and %d with values %f, %f, %f, %f\n", m, n, s_buffer[index].gExcl_min[m][n].index, s_buffer[index].gExcl_max[m][n].index, s_buffer[index].gIncl_min[m][n].index, s_buffer[index].gIncl_max[m][n].index, s_buffer[index].gExcl_min[m][n].value, s_buffer[index].gExcl_max[m][n].value, s_buffer[index].gIncl_min[m][n].value, s_buffer[index].gIncl_max[m][n].value);
         }
       }
-    }
+    }*/
 
     /* End  interval event calculations */
     /* Start atomic statistic calculations */
@@ -174,6 +175,9 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 				      &(s_buffer[index].gAtomicSumSqr),
 				      numAtomicEvents,
 				      COLLATE_OP_BASIC);
+   s_buffer[index].gAtomicMin_min = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numAtomicEvents);
+   s_buffer[index].gAtomicMax_max = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numAtomicEvents);
+  
     if (rank == 0) {
       Tau_collate_allocateAtomicBuffers(&(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax),
 					&(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
@@ -181,18 +185,24 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					numAtomicEvents,
 					COLLATE_OP_DERIVED);
     }
-    Tau_collate_compute_atomicStatistics_MPI(s_buffer[index].atomicUnifier, s_buffer[index].globalAtomicEventMap, 
+    Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(s_buffer[index].atomicUnifier, s_buffer[index].globalAtomicEventMap, 
 					 numAtomicEvents, 
 					 globalNumThreads, 
 					 s_buffer[index].numAtomicEventThreads,
 					 &(s_buffer[index].gAtomicMin), &(s_buffer[index].gAtomicMax), 
+					 &(s_buffer[index].gAtomicMin_min), &(s_buffer[index].gAtomicMax_max), 
 					 &(s_buffer[index].gAtomicCalls), &(s_buffer[index].gAtomicMean),
 					 &(s_buffer[index].gAtomicSumSqr),
 					 &(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax), 
 					 &(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
 					 &(s_buffer[index].sAtomicSumSqr));
 
+    if(rank == 0) {
+      for(int i=0; i<numAtomicEvents; i++)
+        fprintf(stderr, "The min and max for atomic event %d lies with processes %d and %d with values %f and %f\n", i, s_buffer[index].gAtomicMin_min[i].index, s_buffer[index].gAtomicMax_max[i].index, s_buffer[index].gAtomicMin_min[i].value, s_buffer[index].gAtomicMax_max[i].value);
+    }
   }
+
   index++;
   return 0;
 }
