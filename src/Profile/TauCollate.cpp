@@ -1086,7 +1086,7 @@ void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *funct
       for (int m=0; m<Tau_Global_numCounters; m++) {
 	incl_[m][i].value = incl[m][i] = fillDbl;
 	excl_[m][i].value = excl[m][i] = fillDbl;
-        incl_[m][i].index = excl_[m][i].index = 0;
+        incl_[m][i].index = excl_[m][i].index = rank;
       }
       numCalls[i] = fillDbl;
       numSubr[i] = fillDbl;
@@ -1121,6 +1121,7 @@ void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *funct
 
                                 excl_[m][i].value = excl[m][i];
                                 incl_[m][i].value = incl[m][i];
+                                 
 			}	
 		
 	  }
@@ -1145,16 +1146,16 @@ void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *funct
       /* Awfully inefficient stuff!!*/
       if(s == step_min) {
         PMPI_Reduce(excl_[m], (*gExcl_min)[m], numItems, MPI_DOUBLE_INT,
-                    collate_op[s], 0, MPI_COMM_WORLD);
+                    MPI_MINLOC, 0, MPI_COMM_WORLD);
         PMPI_Reduce(incl_[m], (*gIncl_min)[m], numItems, MPI_DOUBLE_INT,
-                    collate_op[s], 0, MPI_COMM_WORLD);
+                    MPI_MINLOC, 0, MPI_COMM_WORLD);
       }
 
       if(s == step_max) {
         PMPI_Reduce(excl_[m], (*gExcl_max)[m], numItems, MPI_DOUBLE_INT,
-                    collate_op[s], 0, MPI_COMM_WORLD);
+                    MPI_MAXLOC, 0, MPI_COMM_WORLD);
         PMPI_Reduce(incl_[m], (*gIncl_max)[m], numItems, MPI_DOUBLE_INT,
-                    collate_op[s], 0, MPI_COMM_WORLD);
+                    MPI_MAXLOC, 0, MPI_COMM_WORLD);
       }
     }
 

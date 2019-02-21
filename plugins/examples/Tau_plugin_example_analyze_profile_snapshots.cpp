@@ -55,7 +55,10 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
  
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-  static int current_s_buffer_index = 0;
+
+  //Update the profile!
+  TauProfiler_updateAllIntermediateStatistics();
+  static int index = 0;
 
   FILE *f;
 #ifdef TAU_MPI
@@ -83,88 +86,114 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   
   if (TauEnv_get_stat_precompute() == 1) {
     // Unification must already be called.
-    s_buffer[current_s_buffer_index].functionUnifier = Tau_unify_getFunctionUnifier();
-    numEvents = s_buffer[current_s_buffer_index].functionUnifier->globalNumItems;
-    s_buffer[current_s_buffer_index].numEventThreads = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
-    s_buffer[current_s_buffer_index].globalEventMap = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
+    s_buffer[index].functionUnifier = Tau_unify_getFunctionUnifier();
+    numEvents = s_buffer[index].functionUnifier->globalNumItems;
+    s_buffer[index].numEventThreads = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
+    s_buffer[index].globalEventMap = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     // initialize all to -1
-    for (int i=0; i<s_buffer[current_s_buffer_index].functionUnifier->globalNumItems; i++) { 
+    for (int i=0; i<s_buffer[index].functionUnifier->globalNumItems; i++) { 
       // -1 indicates that the event did not occur for this rank
-      s_buffer[current_s_buffer_index].globalEventMap[i] = -1; 
+      s_buffer[index].globalEventMap[i] = -1; 
     }
-    for (int i=0; i<s_buffer[current_s_buffer_index].functionUnifier->localNumItems; i++) {
-      s_buffer[current_s_buffer_index].globalEventMap[s_buffer[current_s_buffer_index].functionUnifier->mapping[i]] = i; // set reverse mapping
+    for (int i=0; i<s_buffer[index].functionUnifier->localNumItems; i++) {
+      s_buffer[index].globalEventMap[s_buffer[index].functionUnifier->mapping[i]] = i; // set reverse mapping
     }
-    Tau_collate_get_total_threads_MPI(s_buffer[current_s_buffer_index].functionUnifier, &globalNumThreads, &(s_buffer[current_s_buffer_index].numEventThreads),
-				  numEvents, s_buffer[current_s_buffer_index].globalEventMap,false);
+    Tau_collate_get_total_threads_MPI(s_buffer[index].functionUnifier, &globalNumThreads, &(s_buffer[index].numEventThreads),
+				  numEvents, s_buffer[index].globalEventMap,false);
 
-    Tau_collate_allocateFunctionBuffers(&(s_buffer[current_s_buffer_index].gExcl), &(s_buffer[current_s_buffer_index].gIncl),
-					&(s_buffer[current_s_buffer_index].gNumCalls), &(s_buffer[current_s_buffer_index].gNumSubr),
+    Tau_collate_allocateFunctionBuffers(&(s_buffer[index].gExcl), &(s_buffer[index].gIncl),
+					&(s_buffer[index].gNumCalls), &(s_buffer[index].gNumSubr),
 					numEvents,
 					Tau_Global_numCounters,
 					COLLATE_OP_BASIC);
+
+    s_buffer[index].gExcl_min = (double_int **)TAU_UTIL_MALLOC(sizeof(double_int *)*Tau_Global_numCounters);
+    s_buffer[index].gIncl_min = (double_int **)TAU_UTIL_MALLOC(sizeof(double_int *)*Tau_Global_numCounters);
+    s_buffer[index].gExcl_max = (double_int **)TAU_UTIL_MALLOC(sizeof(double_int *)*Tau_Global_numCounters);
+    s_buffer[index].gIncl_max = (double_int **)TAU_UTIL_MALLOC(sizeof(double_int *)*Tau_Global_numCounters);
+
+    // Please note the use of Calloc
+    for (int m=0; m<Tau_Global_numCounters; m++) {
+      s_buffer[index].gExcl_min[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numEvents);
+      s_buffer[index].gIncl_min[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numEvents);
+      s_buffer[index].gExcl_max[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numEvents);
+      s_buffer[index].gIncl_max[m] = (double_int *)TAU_UTIL_CALLOC(sizeof(double_int)*numEvents);
+      
+    }
+
     if (rank == 0) {
-      Tau_collate_allocateFunctionBuffers(&(s_buffer[current_s_buffer_index].sExcl), &(s_buffer[current_s_buffer_index].sIncl),
-					  &(s_buffer[current_s_buffer_index].sNumCalls), &(s_buffer[current_s_buffer_index].sNumSubr),
+      Tau_collate_allocateFunctionBuffers(&(s_buffer[index].sExcl), &(s_buffer[index].sIncl),
+					  &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr),
 					  numEvents,
 					  Tau_Global_numCounters,
 					  COLLATE_OP_DERIVED);
     }
-    Tau_collate_compute_statistics_MPI_with_minmaxloc(s_buffer[current_s_buffer_index].functionUnifier, s_buffer[current_s_buffer_index].globalEventMap, 
+    Tau_collate_compute_statistics_MPI_with_minmaxloc(s_buffer[index].functionUnifier, s_buffer[index].globalEventMap, 
 				   numEvents, 
-				   globalNumThreads, s_buffer[current_s_buffer_index].numEventThreads,
-				   &(s_buffer[current_s_buffer_index].gExcl), &(s_buffer[current_s_buffer_index].gIncl),
-				   &(s_buffer[current_s_buffer_index].gExcl_min), &(s_buffer[current_s_buffer_index].gIncl_min),
-				   &(s_buffer[current_s_buffer_index].gExcl_max), &(s_buffer[current_s_buffer_index].gIncl_max),
-                                   &(s_buffer[current_s_buffer_index].gNumCalls), &(s_buffer[current_s_buffer_index].gNumSubr),
-				   &(s_buffer[current_s_buffer_index].sExcl), &(s_buffer[current_s_buffer_index].sIncl), 
-                                   &(s_buffer[current_s_buffer_index].sNumCalls), &(s_buffer[current_s_buffer_index].sNumSubr));
+				   globalNumThreads, s_buffer[index].numEventThreads,
+				   &(s_buffer[index].gExcl), &(s_buffer[index].gIncl),
+				   &(s_buffer[index].gExcl_min), &(s_buffer[index].gIncl_min),
+				   &(s_buffer[index].gExcl_max), &(s_buffer[index].gIncl_max),
+                                   &(s_buffer[index].gNumCalls), &(s_buffer[index].gNumSubr),
+				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl), 
+                                   &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr));
 
-    s_buffer[current_s_buffer_index].atomicUnifier = Tau_unify_getAtomicUnifier();
-    numAtomicEvents = s_buffer[current_s_buffer_index].atomicUnifier->globalNumItems;
+    if(rank == 0) {
+      for (int m=0; m<Tau_Global_numCounters; m++)  {
+        for(int n=0; n<numEvents; n++) {
+          fprintf(stderr, "Counter %d: The min exclusive, max exclusive, min inclusive, max inclusive values for event %d are located on processes %d, %d, %d and %d with values %f, %f, %f, %f\n", m, n, s_buffer[index].gExcl_min[m][n].index, s_buffer[index].gExcl_max[m][n].index, s_buffer[index].gIncl_min[m][n].index, s_buffer[index].gIncl_max[m][n].index, s_buffer[index].gExcl_min[m][n].value, s_buffer[index].gExcl_max[m][n].value, s_buffer[index].gIncl_min[m][n].value, s_buffer[index].gIncl_max[m][n].value);
+        }
+      }
+    }
 
-    s_buffer[current_s_buffer_index].numAtomicEventThreads = 
+    /* End  interval event calculations */
+    /* Start atomic statistic calculations */
+
+    s_buffer[index].atomicUnifier = Tau_unify_getAtomicUnifier();
+    numAtomicEvents = s_buffer[index].atomicUnifier->globalNumItems;
+
+    s_buffer[index].numAtomicEventThreads = 
       (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
-    s_buffer[current_s_buffer_index].globalAtomicEventMap = (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
+    s_buffer[index].globalAtomicEventMap = (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
 
     // initialize all to -1
     for (int i=0; i<numAtomicEvents; i++) { 
       // -1 indicates that the event did not occur for this rank
-      s_buffer[current_s_buffer_index].globalAtomicEventMap[i] = -1; 
+      s_buffer[index].globalAtomicEventMap[i] = -1; 
     }
-    for (int i=0; i<s_buffer[current_s_buffer_index].atomicUnifier->localNumItems; i++) {
+    for (int i=0; i<s_buffer[index].atomicUnifier->localNumItems; i++) {
       // set reverse mapping
-      s_buffer[current_s_buffer_index].globalAtomicEventMap[s_buffer[current_s_buffer_index].atomicUnifier->mapping[i]] = i;
+      s_buffer[index].globalAtomicEventMap[s_buffer[index].atomicUnifier->mapping[i]] = i;
     }
 
-    Tau_collate_get_total_threads_MPI(s_buffer[current_s_buffer_index].atomicUnifier, &globalNumThreads, &(s_buffer[current_s_buffer_index].numAtomicEventThreads),
-				  numAtomicEvents, s_buffer[current_s_buffer_index].globalAtomicEventMap,true);
+    Tau_collate_get_total_threads_MPI(s_buffer[index].atomicUnifier, &globalNumThreads, &(s_buffer[index].numAtomicEventThreads),
+				  numAtomicEvents, s_buffer[index].globalAtomicEventMap,true);
     
-    Tau_collate_allocateAtomicBuffers(&(s_buffer[current_s_buffer_index].gAtomicMin), &(s_buffer[current_s_buffer_index].gAtomicMax),
-				      &(s_buffer[current_s_buffer_index].gAtomicCalls), &(s_buffer[current_s_buffer_index].gAtomicMean),
-				      &(s_buffer[current_s_buffer_index].gAtomicSumSqr),
+    Tau_collate_allocateAtomicBuffers(&(s_buffer[index].gAtomicMin), &(s_buffer[index].gAtomicMax),
+				      &(s_buffer[index].gAtomicCalls), &(s_buffer[index].gAtomicMean),
+				      &(s_buffer[index].gAtomicSumSqr),
 				      numAtomicEvents,
 				      COLLATE_OP_BASIC);
     if (rank == 0) {
-      Tau_collate_allocateAtomicBuffers(&(s_buffer[current_s_buffer_index].sAtomicMin), &(s_buffer[current_s_buffer_index].sAtomicMax),
-					&(s_buffer[current_s_buffer_index].sAtomicCalls), &(s_buffer[current_s_buffer_index].sAtomicMean),
-					&(s_buffer[current_s_buffer_index].sAtomicSumSqr),
+      Tau_collate_allocateAtomicBuffers(&(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax),
+					&(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
+					&(s_buffer[index].sAtomicSumSqr),
 					numAtomicEvents,
 					COLLATE_OP_DERIVED);
     }
-    Tau_collate_compute_atomicStatistics_MPI(s_buffer[current_s_buffer_index].atomicUnifier, s_buffer[current_s_buffer_index].globalAtomicEventMap, 
+    Tau_collate_compute_atomicStatistics_MPI(s_buffer[index].atomicUnifier, s_buffer[index].globalAtomicEventMap, 
 					 numAtomicEvents, 
 					 globalNumThreads, 
-					 s_buffer[current_s_buffer_index].numAtomicEventThreads,
-					 &(s_buffer[current_s_buffer_index].gAtomicMin), &(s_buffer[current_s_buffer_index].gAtomicMax), 
-					 &(s_buffer[current_s_buffer_index].gAtomicCalls), &(s_buffer[current_s_buffer_index].gAtomicMean),
-					 &(s_buffer[current_s_buffer_index].gAtomicSumSqr),
-					 &(s_buffer[current_s_buffer_index].sAtomicMin), &(s_buffer[current_s_buffer_index].sAtomicMax), 
-					 &(s_buffer[current_s_buffer_index].sAtomicCalls), &(s_buffer[current_s_buffer_index].sAtomicMean),
-					 &(s_buffer[current_s_buffer_index].sAtomicSumSqr));
+					 s_buffer[index].numAtomicEventThreads,
+					 &(s_buffer[index].gAtomicMin), &(s_buffer[index].gAtomicMax), 
+					 &(s_buffer[index].gAtomicCalls), &(s_buffer[index].gAtomicMean),
+					 &(s_buffer[index].gAtomicSumSqr),
+					 &(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax), 
+					 &(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
+					 &(s_buffer[index].sAtomicSumSqr));
 
   }
-  current_s_buffer_index++;
+  index++;
   return 0;
 }
 
