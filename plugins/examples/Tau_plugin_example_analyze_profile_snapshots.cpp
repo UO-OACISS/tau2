@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <string>
+#include <utility>
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
@@ -17,6 +18,9 @@
 #include <Profile/TauXML.h>
 
 #include <mpi.h>
+#include <list>
+#include <vector>
+
 #include <Profile/TauPlugin.h>
 
 #include <Profile/TauTrace.h>
@@ -42,10 +46,28 @@ typedef struct snapshot_buffer {
   int *globalEventMap;
   int *numAtomicEventThreads;
   int *globalAtomicEventMap;
+  std::vector <int> top_5_excl_time_mean;
 } snapshot_buffer_t;
 
 #define N_SNAPSHOTS 5
 snapshot_buffer_t s_buffer[5]; //Store upto N_SNAPSHOTS snapshots
+
+int is_instrumentation_enabled = 1;
+
+void disable_instrumentation_if_necessary(int index) {
+
+   for(int i = 0 ; i < 5; i++) {
+     if(s_buffer[index].top_5_excl_time_mean[i] != s_buffer[index-1].top_5_excl_time_mean[i]) {
+       return;
+     }
+   }
+
+   fprintf(stderr, "Disabling instrumentation at index %d\n", index);
+
+   TAU_DISABLE_INSTRUMENTATION(); 
+   is_instrumentation_enabled = 0; 
+}
+
 
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
@@ -56,6 +78,9 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
  
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
+
+  if(!is_instrumentation_enabled)
+    return 0;
 
   //Update the profile!
   TauProfiler_updateAllIntermediateStatistics();
@@ -129,6 +154,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					  Tau_Global_numCounters,
 					  COLLATE_OP_DERIVED);
     }
+
     Tau_collate_compute_statistics_MPI_with_minmaxloc(s_buffer[index].functionUnifier, s_buffer[index].globalEventMap, 
 				   numEvents, 
 				   globalNumThreads, s_buffer[index].numEventThreads,
@@ -185,6 +211,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					numAtomicEvents,
 					COLLATE_OP_DERIVED);
     }
+
     Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(s_buffer[index].atomicUnifier, s_buffer[index].globalAtomicEventMap, 
 					 numAtomicEvents, 
 					 globalNumThreads, 
@@ -197,10 +224,27 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					 &(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
 					 &(s_buffer[index].sAtomicSumSqr));
 
-    if(rank == 0) {
+   std::list<std::pair<double, int> > sorted_list;
+   for(int i = 0; i < numEvents; i++) {
+     sorted_list.push_back(std::make_pair(s_buffer[index].sExcl[stat_mean_all][0][i], i));
+   }
+
+   sorted_list.sort();
+
+   for(int i = 0 ; i < 5; i++) {
+     s_buffer[index].top_5_excl_time_mean[i] = sorted_list.front().second;
+     fprintf(stderr, "Ith function id is %d\n", s_buffer[index].top_5_excl_time_mean[i]);
+     sorted_list.pop_front();
+   }
+
+   if(index)
+     disable_instrumentation_if_necessary(index);
+
+    
+   /* if(rank == 0) {
       for(int i=0; i<numAtomicEvents; i++)
         fprintf(stderr, "The min and max for atomic event %d lies with processes %d and %d with values %f and %f\n", i, s_buffer[index].gAtomicMin_min[i].index, s_buffer[index].gAtomicMax_max[i].index, s_buffer[index].gAtomicMin_min[i].value, s_buffer[index].gAtomicMax_max[i].value);
-    }
+    }*/
   }
 
   index++;
