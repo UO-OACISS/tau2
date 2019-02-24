@@ -103,8 +103,8 @@ typedef void (*function)(int, int, double[]);
 static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
 static TauMetricCuptiFlag cumetric[TAU_MAX_METRICS];
-static int eventsv[TAU_MAX_METRICS];
-static double defaults[TAU_MAX_METRICS]; // used for values read before initialization
+static int eventsv[TAU_MAX_METRICS] = {0};
+static double defaults[TAU_MAX_METRICS] = {0}; // used for values read before initialization
 
 /* nfunctions can be different from nmetrics because
  a single call to PAPI can provide several metrics */

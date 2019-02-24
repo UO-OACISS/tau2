@@ -482,11 +482,19 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   // However, if CurrentTime is not 0, we need to fix a timer that was read
   // before we were done initializing metrics.
   if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
+	// get the CurrentTime again, but use the thread 0 context
+    double CurrentTime_0[TAU_MAX_COUNTERS] = { 0 };
+    RtsLayer::getUSecD(0, CurrentTime_0);
+	// ...because the default values were captured by thread 0
     TauMetrics_getDefaults(tid, StartTime, 0);
-  }
-
-  for (int k = 0; k < Tau_Global_numCounters; k++) {
-    TotalTime[k] = CurrentTime[k] - StartTime[k];
+	// ...and what we really care about is that the delta is correct.
+    for (int k = 0; k < Tau_Global_numCounters; k++) {
+      TotalTime[k] = CurrentTime_0[k] - StartTime[k];
+    }
+  } else {
+    for (int k = 0; k < Tau_Global_numCounters; k++) {
+      TotalTime[k] = CurrentTime[k] - StartTime[k];
+    }
   }
 
   x_uint64 TimeStamp = 0L;
