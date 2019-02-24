@@ -1058,7 +1058,7 @@ const char *TauEnv_get_ebs_source() {
 
 void TauEnv_override_ebs_source(const char *newName) {
   env_ebs_source = newName;
-  TAU_METADATA("TAU_EBS_PERIOD (Override)", newName);
+  TAU_METADATA("TAU_EBS_SOURCE (Override)", newName);
 }
 
 int TauEnv_get_stat_precompute() {
