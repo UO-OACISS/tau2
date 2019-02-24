@@ -9,7 +9,7 @@
 
 int WORK_ITER=5000;
 
-#define T 1000
+#define T 20
 
 void do_work() {
   usleep(1000);
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
     int world_rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
     Tau_enable_plugin_for_trigger_event(TAU_PLUGIN_EVENT_TRIGGER, load_balance_module, 0);
-
+    TAU_PROFILE_TIMER(timer, "trigger_timer", "", TAU_DEFAULT);
 
     for(int t=0; t < T; t++) {
       for(int w=0; w < WORK_ITER; w++) {
@@ -40,9 +40,11 @@ int main(int argc, char** argv) {
 
       data = WORK_ITER;
 
+      TAU_PROFILE_START(timer);
       TAU_TRIGGER(load_balance_module, (void *)&data); 
+      TAU_PROFILE_STOP(timer);
       MPI_Barrier(MPI_COMM_WORLD);
-
+     
       if(data) {
         fprintf(stderr, "Rebalancing...\n");
         WORK_ITER = 5000;
