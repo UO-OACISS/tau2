@@ -1006,15 +1006,18 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
 /*****************************************************************************************************************************
  * Wrapper function that calls the actual callback invocation function based on the event type
  ******************************************************************************************************************************/
-extern "C" void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event event, size_t hash, const void * data) {
+extern "C" void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event event, size_t hash, void * data_) {
 
   PluginKey key_(event, hash);
 
+  Tau_plugin_event_trigger_data_t data;
+  data.data = data_;
+
   if(!plugins_for_named_specific_event[key_].empty()) {
-    Tau_util_do_invoke_callbacks(event, key_, data);
+    Tau_util_do_invoke_callbacks(event, key_, &data);
   } else {
     PluginKey key(event, star_hash);
-    Tau_util_do_invoke_callbacks(event, key, data);
+    Tau_util_do_invoke_callbacks(event, key, &data);
   }
 }
 

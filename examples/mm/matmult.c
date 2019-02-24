@@ -326,6 +326,11 @@ int main (int argc, char *argv[])
   printf("%d.", i);fflush(stdout);
   do_work();
   void * data = NULL;
+  
+  #ifdef TAU_MPI
+  usleep(rank*10000);
+  MPI_Barrier(MPI_COMM_WORLD);
+  #endif
   TAU_TRIGGER(id, data);
   }
 

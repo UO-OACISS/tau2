@@ -33,22 +33,36 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   #ifdef TAU_MPI
   int rank; int size;
   int global_min, global_max;
-  int global_sum; float sum_;
+  int global_sum; float sum_, avg_, min_, max_;
 
-  PMPI_Reduce(&(data), &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  PMPI_Reduce(&(data), &global_min, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
-  PMPI_Reduce(&(data), &global_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+  int local = *((int*)(data->data));
+
+  PMPI_Reduce(&local, &global_sum, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+  PMPI_Reduce(&local, &global_min, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
+  PMPI_Reduce(&local, &global_max, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
  
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if(rank == 0 ) {
+  if(rank == 0) {
     sum_ = global_sum;
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    fprintf(stderr, "Avg, min, max are %f %d %d \n", (sum_ / size), global_min, global_max);
+    PMPI_Comm_size(MPI_COMM_WORLD, &size);
+    fprintf(stderr, "Avg, min, max are %f %d %d \n", (sum_/size), global_min, global_max);
+    avg_ = (sum_ / size);
+    min_ = global_min;
+    max_ = global_max;
+
+    if((max_ - min_) > 0.10 * avg_) {
+      fprintf(stderr, "Should rebalance...\n");
+      local = 1;
+    } else {
+      local = 0;
+    }
   }
 
-  /*if(...) {
-  }*/
+  PMPI_Bcast(&local, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  *((int*)(data->data)) = local;
+
   #endif
 
   return 0;

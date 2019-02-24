@@ -33,7 +33,7 @@ int Tau_util_cleanup_all_plugins();
 
 PluginManager_t* Tau_util_get_plugin_manager();
 void Tau_util_invoke_callbacks(Tau_plugin_event_t event, const char * specific_event_name, const void * data);
-void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event_t event, size_t hash, const void * data);
+void Tau_util_invoke_callbacks_for_trigger_event(Tau_plugin_event_t event, size_t hash, void * data);
 
 extern Tau_plugin_callbacks_active_t Tau_plugins_enabled;
 
