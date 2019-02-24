@@ -631,6 +631,15 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   // Validate that the timestamp is non-zero.  Can happen during startup, before
   // the metrics are ready.
   my_ts = fix_zero_timestamp(my_ts, tid);
+    // OK...we get some counter values during a CUPTI callback that are
+    // in between the start and the stop, but the counter will get a timestamp
+    // that could (will?) be after the timer stop.  So, to prevent out-of-order
+    // events, make the counter timestamp the same as the previous timer timestamp.
+#ifdef CUPTI
+    if (my_ts < previous_ts[tid]) {
+      my_ts = previous_ts[tid];
+    }
+#endif
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
     if(par == 1) { // Enter
       OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
@@ -648,15 +657,6 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     OTF2_Type types[1] = {OTF2_TYPE_UINT64};
     OTF2_MetricValue values[1];
     values[0].unsigned_int = par;
-    // OK...we get some counter values during a CUPTI callback that are
-    // in between the start and the stop, but the counter will get a timestamp
-    // that could (will?) be after the timer stop.  So, to prevent out-of-order
-    // events, make the counter timestamp the same as the previous timer timestamp.
-#ifdef CUPTI
-    if (previous_type[tid] == 0 || my_ts < previous_ts[tid]) {
-      my_ts = previous_ts[tid];
-    }
-#endif
     //printf ("%d %lu Counter: %d\n", tid, my_ts - start_time, ev);
     OTF2_EC(OTF2_EvtWriter_Metric(evt_writer, NULL, my_ts, ev, 1, types, values))
   }
