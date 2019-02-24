@@ -63,7 +63,6 @@ bool sort_func(const std::pair<double, int>& first, const std::pair<double, int>
 
 void disable_instrumentation_if_necessary(int index, int rank) {
 
-
    int should_i_disable_instrumentation = 1;
   
    if(rank == 0) {
@@ -94,6 +93,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+#ifdef TAU_ANALYTICS_INSTRUMENTATION_TOGGLE
   if(!is_instrumentation_enabled && counter < 5) {
     counter++;
     return 0;
@@ -105,6 +105,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
     is_instrumentation_enabled = 1;
     counter = 0;
   }
+#endif
 
   //Update the profile!
   TauProfiler_updateAllIntermediateStatistics();
@@ -249,6 +250,8 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					 &(s_buffer[index].sAtomicSumSqr));
 
 
+#ifdef TAU_ANALYTICS_INSTRUMENTATION_TOGGLE
+
    if(rank == 0) {
      std::list<std::pair<double, int> > sorted_list;
 
@@ -266,7 +269,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
    if(index)
      disable_instrumentation_if_necessary(index, rank);
-
+#endif
     
    /* if(rank == 0) {
       for(int i=0; i<numAtomicEvents; i++)
