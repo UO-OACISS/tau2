@@ -270,6 +270,18 @@ void Profiler::Start(int tid)
   RtsLayer::getUSecD(tid, StartTime, 1);
 
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
+  // This can happen when starting .TAU application on "virtual" GPU threads.
+  // The GPU timestamp isn't availble yet, so start is bogus.  Instead,
+  // get the timers read just after initialization.
+  if (TimeStamp == 0L) {
+    // printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+    TauMetrics_getDefaults(tid, StartTime, 1);
+    TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
+    if (TimeStamp == 0L) {
+      fprintf(stderr, "Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+      abort();
+    }
+  }
 
   /********************************************************************************/
   /*** Extras ***/
@@ -481,6 +493,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   // It's ok if CurrentTime is 0, because that means StartTime is too.
   // However, if CurrentTime is not 0, we need to fix a timer that was read
   // before we were done initializing metrics.
+  // This code SHOULDN'T be needed any more.  but things slip through the cracks.
   if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
 	// get the CurrentTime again, but use the thread 0 context
     double CurrentTime_0[TAU_MAX_COUNTERS] = { 0 };

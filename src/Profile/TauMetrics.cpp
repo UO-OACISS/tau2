@@ -89,6 +89,7 @@ int Tau_init_check_initialized(void);
 static void metricv_add(const char *name);
 static void read_env_vars();
 static void initialize_functionArray();
+static bool functionsInitialized(false);
 
 #ifndef TAU_MAX_METRICS
 #define TAU_MAX_METRICS 25
@@ -727,6 +728,7 @@ static void initialize_functionArray() {
 #endif
 
 	nfunctions = pos;
+    functionsInitialized = true;
 }
 
 /*********************************************************************
@@ -807,7 +809,7 @@ int TauMetrics_getEventIndex(int eventid) {
  ********************************************************************/
 extern "C" bool TauCompensateInitialized(void);
 void TauMetrics_getMetrics(int tid, double values[], int reversed) {
-	if (Tau_init_check_initialized()) {
+	if (functionsInitialized) {
 	    if (reversed) {
             for (int i=nfunctions-1; i >= 0; --i) {
                 functionArray[i](tid, i, values);
@@ -828,7 +830,7 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 }
 
 void TauMetrics_getDefaults(int tid, double values[], int reversed) {
-	if (Tau_init_check_initialized()) {
+	if (functionsInitialized) {
 	    if (reversed) {
             for (int i=nfunctions-1; i >= 0; --i) {
                 values[i] = defaults[i];

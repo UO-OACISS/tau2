@@ -345,7 +345,7 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 double gpu_timestamp[TAU_MAX_THREADS];
 double gpu_counterstamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
 
-extern "C" void metric_set_gpu_timestamp(int tid, int idx, double value)
+extern "C" void metric_set_gpu_timestamp(int tid, double value)
 {
 	gpu_timestamp[tid] = value;
 }

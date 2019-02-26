@@ -477,6 +477,13 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	    if (set_gpuThread.find(cur_tid) == set_gpuThread.end()) {
           // reserve a thread ID from TAU
 	      int threadid = Tau_create_task();
+          // FIRST! Get a cupti timestamp for this start
+          // Otherwise, the .TAU application start time will be 0.
+          uint64_t currentTimestamp;
+          double d_currentTimestamp;
+	      CUptiResult err = cuptiGetTimestamp(&currentTimestamp);
+          d_currentTimestamp = (double)currentTimestamp/1e3; // orig
+          metric_set_gpu_timestamp(threadid, d_currentTimestamp);
           // Start a top level timer on that thread.
           Tau_create_top_level_timer_if_necessary_task(threadid);
           //printf("VIRTUAL THREAD: %d\n", threadid);
