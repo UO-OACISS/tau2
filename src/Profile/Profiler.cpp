@@ -274,7 +274,7 @@ void Profiler::Start(int tid)
   // The GPU timestamp isn't availble yet, so start is bogus.  Instead,
   // get the timers read just after initialization.
   if (TimeStamp == 0L) {
-    // printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+    printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
     TauMetrics_getDefaults(tid, StartTime, 1);
     TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
     if (TimeStamp == 0L) {
@@ -495,6 +495,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   // before we were done initializing metrics.
   // This code SHOULDN'T be needed any more.  but things slip through the cracks.
   if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
+    abort();
 	// get the CurrentTime again, but use the thread 0 context
     double CurrentTime_0[TAU_MAX_COUNTERS] = { 0 };
     RtsLayer::getUSecD(0, CurrentTime_0);

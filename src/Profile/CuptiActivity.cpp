@@ -9,7 +9,6 @@ using namespace std;
 
 static int subscribed = 0;
 static unsigned int parent_tid = 0;
-static uint64_t timestamp;
 
 // From CuptiActivity.h
 uint8_t *activityBuffer;
@@ -429,10 +428,13 @@ if(!TauEnv_get_cuda_track_sass()) {
 	}  
   CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer.\n");
   
-  //uint64_t timestamp;
-  err = cuptiGetTimestamp(&timestamp);
+  uint64_t gpu_timestamp;
+  err = cuptiGetTimestamp(&gpu_timestamp);
   CUDA_CHECK_ERROR(err2, "Cannot get timestamp.\n");
-  Tau_cupti_set_offset(TauTraceGetTimeStamp() - ((double)timestamp / 1e3));
+  double cpu_timestamp = TauTraceGetTimeStamp();
+  double tmp = cpu_timestamp - ((double)gpu_timestamp / 1.0e3);
+  //printf("Set offset: %lu - %f/1e3 = %f\n", TauTraceGetTimeStamp(), (double)gpu_timestamp, tmp);
+  Tau_cupti_set_offset(tmp);
   //Tau_cupti_set_offset((-1) * timestamp / 1e3);
   //cerr << "begining timestamp: " << TauTraceGetTimeStamp() - ((double)timestamp/1e3) << "ms.\n" << endl;
   //Tau_cupti_set_offset(0);
@@ -484,6 +486,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	      CUptiResult err = cuptiGetTimestamp(&currentTimestamp);
           d_currentTimestamp = (double)currentTimestamp/1e3; // orig
           metric_set_gpu_timestamp(threadid, d_currentTimestamp);
+		  //printf("%d Setting timestamp to: %f from %lu\n", threadid, d_currentTimestamp, currentTimestamp);
           // Start a top level timer on that thread.
           Tau_create_top_level_timer_if_necessary_task(threadid);
           //printf("VIRTUAL THREAD: %d\n", threadid);

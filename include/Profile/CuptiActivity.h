@@ -100,9 +100,7 @@
 #define TAU_ASYNC_ACTIVITY_API
 #endif
 
-extern "C" void Tau_cupti_set_offset(
-            uint64_t timestamp
-            );
+extern "C" void Tau_cupti_set_offset(double cpu_gpu_offset);
 
 // unified memory
 extern "C" void Tau_cupti_configure_unified_memory(void);

@@ -74,6 +74,15 @@
     } \
 }
 
+#define OTF2_EC2(call) { \
+    OTF2_ErrorCode ec = call; \
+    if (ec != OTF2_SUCCESS) { \
+        printf("TAU: OTF2 Error (%s:%d): %s, %s\n", __FILE__, __LINE__, OTF2_Error_GetName(ec), OTF2_Error_GetDescription (ec)); \
+		printf("Prevous: %d, %lu tid = %d\n", previous_type[tid], previous_ts[tid], tid); \
+        abort(); \
+    } \
+}
+
 using namespace std;
 using namespace tau;
 
@@ -199,6 +208,7 @@ static inline x_uint64 fix_zero_timestamp(x_uint64 my_ts, int tid) {
     my_ts = (x_uint64)(tmpTime[0]);
     // if so, the start time is possibly wrong, too.
     if (start_time == 0) {
+	  printf("Fixing Start! %lu = %lu\n", start_time, my_ts);
       start_time = my_ts;
     }
   }
@@ -576,6 +586,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
   if(!otf2_initialized||(TauEnv_get_set_node()>(-1)&&start_time==0)) {
     if(start_time == 0) {
       start_time = TauTraceGetTimeStamp(tid) - 1000;
+	  //printf("Setting Start! %lu\n", start_time);
     }
 #if defined(TAU_MPI) || defined(TAU_SHMEM)
     // If we're using MPI, we can't initialize tracing until MPI_Init gets called,
@@ -642,10 +653,10 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
 #endif
   if(kind == TAU_TRACE_EVENT_KIND_FUNC || kind == TAU_TRACE_EVENT_KIND_CALLSITE) {
     if(par == 1) { // Enter
-      OTF2_EC(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
+      OTF2_EC2(OTF2_EvtWriter_Enter(evt_writer, NULL, my_ts, ev));
       previous_type[tid] = 0;
     } else if(par == -1) { // Exit
-      OTF2_EC(OTF2_EvtWriter_Leave(evt_writer, NULL, my_ts, ev));
+      OTF2_EC2(OTF2_EvtWriter_Leave(evt_writer, NULL, my_ts, ev));
       previous_type[tid] = 1;
     }
   } else if(kind == TAU_TRACE_EVENT_KIND_USEREVENT) {
@@ -658,7 +669,7 @@ void TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts,
     OTF2_MetricValue values[1];
     values[0].unsigned_int = par;
     //printf ("%d %lu Counter: %d\n", tid, my_ts - start_time, ev);
-    OTF2_EC(OTF2_EvtWriter_Metric(evt_writer, NULL, my_ts, ev, 1, types, values))
+    OTF2_EC2(OTF2_EvtWriter_Metric(evt_writer, NULL, my_ts, ev, 1, types, values))
   }
   previous_ts[tid] = my_ts;
 }
@@ -718,6 +729,8 @@ inline void convert_upper(const std::string& str, std::string& converted)
     }
 }
 
+extern "C" int Tau_is_thread_fake(int t);
+
 static void TauTraceOTF2WriteGlobalDefinitions() {
 #ifdef TAU_OTF2_DEBUG
   fprintf(stderr, "TauTraceOTF2WriteGlobalDefinitions()\n");
@@ -758,12 +771,18 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
         const int end_loc = start_loc + num_locations[node];
         int thread_num = 0;
         for(int loc = start_loc; loc < end_loc; ++loc) {
+		    OTF2_LocationType_enum thread_type = OTF2_LOCATION_TYPE_CPU_THREAD;
             if(nodes < 2 && thread_num == 0) {
                 snprintf(namebuf, 256, "Master thread");
             } else if(thread_num == 0) {
                 snprintf(namebuf, 256, "Rank");
+#if 0 // this is a hack - we can't assume all threads are ordered like rank 0
+            } else if(Tau_is_thread_fake(thread_num)) {
+                snprintf(namebuf, 256, "GPU Thread %d", thread_num);
+				thread_type = OTF2_LOCATION_TYPE_GPU;
+#else
             } else {
-                snprintf(namebuf, 256, "Thread %d", thread_num);
+                snprintf(namebuf, 256, "CPU Thread %d", thread_num);
             }
 #ifdef TAU_ENABLE_ROCM
                 //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
@@ -795,7 +814,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             ++thread_num;
             int locName = nextString++;
             OTF2_EC(OTF2_GlobalDefWriter_WriteString(global_def_writer, locName, namebuf));
-            OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, OTF2_LOCATION_TYPE_CPU_THREAD, num_events_written[node], node));
+            OTF2_EC(OTF2_GlobalDefWriter_WriteLocation(global_def_writer, loc, locName, thread_type, num_events_written[node], node));
         }
 
     }
@@ -1331,6 +1350,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
     otf2_comms_shutdown = true;
     otf2_disable = false;
     end_time = TauTraceGetTimeStamp(0) ;
+	//printf("Setting End! %lu\n", start_time);
 
     // Don't close the trace here -- events can still come in after comms shutdown
     // (in particular, exit from main and exit from .TAU application)
@@ -1354,6 +1374,7 @@ void TauTraceOTF2Close(int tid) {
     otf2_finished = true;
     otf2_initialized = false;
     end_time = TauTraceGetTimeStamp(0);
+	//printf("Setting End! %lu\n", start_time);
 
     // Write definitions file
     if(my_node() < 1) {
