@@ -237,6 +237,10 @@ extern "C" char *cuserid(char *);
 extern "C" void Tau_set_usesMPI(int value);
 #endif /* TAU_MPI */
 
+#ifdef TAU_ENABLE_ROCTRACER
+extern "C" void TauRocTracer_start_tracing(void); 
+#endif /* TAU_ROCTRACER */
+
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
 extern "C" {
@@ -2597,6 +2601,10 @@ void TauEnv_initialize()
 #endif /* TAU_WINDOWS - use strtok under Windows */
   }
 
+  TAU_VERBOSE("Calling TAU_ROCTRACER...\n");
+#ifdef TAU_ENABLE_ROCTRACER
+  TauRocTracer_start_tracing();
+#endif /* TAU_ROCTRACER */
 }
 
 } /* C linkage */
