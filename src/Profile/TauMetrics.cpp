@@ -89,6 +89,7 @@ int Tau_init_check_initialized(void);
 static void metricv_add(const char *name);
 static void read_env_vars();
 static void initialize_functionArray();
+static bool functionsInitialized(false);
 
 #ifndef TAU_MAX_METRICS
 #define TAU_MAX_METRICS 25
@@ -103,8 +104,8 @@ typedef void (*function)(int, int, double[]);
 static char *metricv[TAU_MAX_METRICS];
 static int nmetrics = 0;
 static TauMetricCuptiFlag cumetric[TAU_MAX_METRICS];
-static int eventsv[TAU_MAX_METRICS];
-static double defaults[TAU_MAX_METRICS]; // used for values read before initialization
+static int eventsv[TAU_MAX_METRICS] = {0};
+static double defaults[TAU_MAX_METRICS] = {0}; // used for values read before initialization
 
 /* nfunctions can be different from nmetrics because
  a single call to PAPI can provide several metrics */
@@ -727,6 +728,7 @@ static void initialize_functionArray() {
 #endif
 
 	nfunctions = pos;
+    functionsInitialized = true;
 }
 
 /*********************************************************************
@@ -807,7 +809,7 @@ int TauMetrics_getEventIndex(int eventid) {
  ********************************************************************/
 extern "C" bool TauCompensateInitialized(void);
 void TauMetrics_getMetrics(int tid, double values[], int reversed) {
-	if (Tau_init_check_initialized()) {
+	if (functionsInitialized) {
 	    if (reversed) {
             for (int i=nfunctions-1; i >= 0; --i) {
                 functionArray[i](tid, i, values);
@@ -828,7 +830,7 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 }
 
 void TauMetrics_getDefaults(int tid, double values[], int reversed) {
-	if (Tau_init_check_initialized()) {
+	if (functionsInitialized) {
 	    if (reversed) {
             for (int i=nfunctions-1; i >= 0; --i) {
                 values[i] = defaults[i];

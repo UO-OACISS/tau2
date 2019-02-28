@@ -100,9 +100,7 @@
 #define TAU_ASYNC_ACTIVITY_API
 #endif
 
-extern "C" void Tau_cupti_set_offset(
-            uint64_t timestamp
-            );
+extern "C" void Tau_cupti_set_offset(double cpu_gpu_offset);
 
 // unified memory
 extern "C" void Tau_cupti_configure_unified_memory(void);
@@ -111,7 +109,7 @@ extern "C" void Tau_set_context_event_name(void *ue, const char *name);
 extern "C" void Tau_write_user_event_as_metric(void *ue);
 extern "C" void * Tau_return_context_userevent(const char *name);
 
-extern "C" void metric_set_gpu_timestamp(int tid, int idx, double value);
+extern "C" void metric_set_gpu_timestamp(int tid, double value);
 
 extern "C" void Tau_cupti_find_context_event(
 						TauContextUserEvent** u, 
