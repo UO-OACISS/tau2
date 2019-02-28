@@ -89,6 +89,10 @@ double TauWindowsUsecD(void);
 #endif //__GNUC__
 #endif //CUPTI
 
+#ifdef TAU_ENABLE_ROCTRACER
+extern "C" void TauRocTracer_stop_tracing(void); 
+#endif /* TAU_ROCTRACER */
+
 #ifdef TAU_SHMEM
 #include "shmem.h"
 extern "C" void  __real_shmem_finalize() ;
@@ -1622,6 +1626,12 @@ int TauProfiler_StoreData(int tid)
   TAU_VERBOSE("TAU<%d,%d>: Turning off the lights... \n", RtsLayer::myNode(), tid);
   Tau_global_setLightsOut();
 #endif /* TAU_SCOREP */  
+
+
+#ifdef TAU_ENABLE_ROCTRACER
+  TauRocTracer_stop_tracing();
+#endif /* TAU_ENABLE_ROCTRACER */
+
   return 1;
 }
 
