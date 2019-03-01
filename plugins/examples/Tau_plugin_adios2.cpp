@@ -84,11 +84,29 @@ void Tau_plugin_adios2_init_adios(void) {
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
 #endif
     try {
+        char * config = getenv("TAU_ADIOS2_CONFIG_FILE");
+        if (config == nullptr) {
+            if( access( "./adios2.xml", F_OK ) != -1 ) {
+                // file exists
+                config = strdup("./adios2.xml");
+            } else {
+                // file doesn't exist
+                config = nullptr;
+            }
+        }
         /** ADIOS class factory of IO class objects, DebugON is recommended */
 #if TAU_MPI
-        ad = adios2::ADIOS(MPI_COMM_WORLD, adios2::DebugON);
+        if (config != nullptr) {
+            ad = adios2::ADIOS(config, MPI_COMM_WORLD, adios2::DebugON);
+        } else {
+            ad = adios2::ADIOS(MPI_COMM_WORLD, adios2::DebugON);
+        }
 #else
-        ad = adios2::ADIOS(true);
+        if (config != nullptr) {
+            ad = adios2::ADIOS(config, true);
+        } else {
+            ad = adios2::ADIOS(true);
+        }
 #endif
         /*** IO class object: settings and factory of Settings: Variables,
         * Parameters, Transports, and Execution: Engines */

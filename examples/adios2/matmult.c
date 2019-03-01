@@ -22,9 +22,6 @@ This is not a parallel implementation */
 #endif /* TAU_MPI */
 
 #ifdef PTHREADS
-#undef PTHREADS
-#endif
-#ifdef PTHREADS
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
