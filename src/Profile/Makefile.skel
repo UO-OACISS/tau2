@@ -139,6 +139,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 # ROCPROFILER OBJECTS
 #############################################
 #ROCPROFILER#ROCPROFILER_O = TauGpu.o TauRocProfiler.o #ENDIF#
+#ROCTRACER#ROCTRACER_O = TauRocTracer.o #ENDIF#
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
@@ -154,7 +155,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauKokkos.o \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
 		$(TAU_NON_MPI_MERGE_OBJS) $(TAU_SCOREP_ADAPTER_O) $(BEACON_O) $(ADIOS_O) \
-		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O)
+		$(OTF2_O) $(CALIPER_O) $(ROCPROFILER_O) $(ROCTRACER_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
