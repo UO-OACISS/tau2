@@ -78,7 +78,7 @@ struct TauRocmEvent {
 } TauRocmEvent;
 
 // Compare to TauRocmEvents based on their timestamps (for sorting)
-bool TauCompareRocmEvents (struct TauRocmEvent one, struct TauRocmEvent two) {
+bool Tau_compare_rocm_events (struct TauRocmEvent one, struct TauRocmEvent two) {
   if (one.entry.counters[0] < two.entry.counters[0]) return true;
   else return false;
 /*
@@ -89,8 +89,8 @@ bool TauCompareRocmEvents (struct TauRocmEvent one, struct TauRocmEvent two) {
 
 
 
-void TauTriggerRocmEvents(void);
-void TauProcessEvents(struct TauRocmEvent e);
+//void Tau_trigger_rocm_events(void);
+void Tau_process_rocm_events(struct TauRocmEvent e);
 
 
 /*
@@ -131,7 +131,7 @@ void fatal(const std::string msg) {
 }
 
 
-void metric_set_synchronized_gpu_timestamp(int tid, double value){
+void Tau_metric_set_synchronized_gpu_timestamp(int tid, double value){
 	if (offset_timestamp == 0L)
 	{
 		offset_timestamp=TauTraceGetTimeStamp() - ((double)value);
@@ -141,7 +141,7 @@ void metric_set_synchronized_gpu_timestamp(int tid, double value){
 
 
 // Check returned HSA API status
-void check_status(hsa_status_t status) {
+void Tau_rocm_check_status(hsa_status_t status) {
   if (status != HSA_STATUS_SUCCESS) {
     const char* error_string = NULL;
     rocprofiler_error_string(&error_string);
@@ -207,20 +207,20 @@ void TauPublishEvent(struct TauRocmEvent event) {
   }
 
   timestamp = event.entry.counters[0]; // Using first element of array 
-  metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
+  Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_START_TASK(event.name.c_str(), event.taskid);
   TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp);
 
   // then the exit
   timestamp = event.exit.counters[0]; // Using first element of array 
   tau_last_timestamp_published = timestamp;
-  metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
+  Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_STOP_TASK(event.name.c_str(), event.taskid);
   TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp);
 }
 
 
-void TauProcessEvents(struct TauRocmEvent e) {
+void Tau_process_rocm_events(struct TauRocmEvent e) {
   std::list<struct TauRocmEvent>::iterator it;
 
 #ifdef DEBUG_PROF
@@ -231,7 +231,7 @@ void TauProcessEvents(struct TauRocmEvent e) {
 
   TauRocmList.push_back(e);
 
-  TauRocmList.sort(TauCompareRocmEvents);
+  TauRocmList.sort(Tau_compare_rocm_events);
   int listsize = TauRocmList.size();
 
   if (listsize < TAU_ROCM_LOOK_AHEAD) {
@@ -276,8 +276,8 @@ void TauProcessEvents(struct TauRocmEvent e) {
 
 
 // Dump stored context entry
-void dump_context_entry(context_entry_t* entry) {
-  TAU_VERBOSE("inside dump_context_entry\n");
+void Tau_rocm_dump_context_entry(context_entry_t* entry) {
+  TAU_VERBOSE("inside Tau_rocm_dump_context_entry\n");
   int taskid, queueid;
   unsigned long long timestamp = 0L;
   static unsigned long long last_timestamp = tau_last_timestamp_ns;
@@ -294,13 +294,13 @@ void dump_context_entry(context_entry_t* entry) {
   taskid = tau_initialized_queues[queueid]; 
   if (taskid == -1) { // not initialized
     TAU_CREATE_TASK(taskid);
-    TAU_VERBOSE("dump_context_entry: associating queueid %d with taskid %d\n", queueid, taskid);
+    TAU_VERBOSE("Tau_rocm_dump_context_entry: associating queueid %d with taskid %d\n", queueid, taskid);
     tau_initialized_queues[queueid] = taskid;  
     timestamp = record->dispatch; 
     Tau_check_timestamps(last_timestamp, timestamp, "NEW QUEUE", taskid);
     last_timestamp = timestamp; 
     // Set the timestamp for TAUGPU_TIME:
-    metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3));
+    Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3));
     Tau_create_top_level_timer_if_necessary_task(taskid); 
     Tau_add_metadata_for_task("TAU_TASK_ID", taskid, taskid);
     Tau_add_metadata_for_task("ROCM_GPU_ID", HsaRsrcFactory::Instance().GetAgentInfo(entry->agent)->dev_index, taskid);
@@ -317,11 +317,11 @@ void dump_context_entry(context_entry_t* entry) {
   e.printEvent();
   cout <<endl;
 #endif /* DEBUG_PROF */
-  TauProcessEvents(e); 
+  Tau_process_rocm_events(e); 
   timestamp = record->begin;
   //Tau_check_timestamps(last_timestamp, timestamp,"KERNEL_BEGIN", taskid);
 /*
-  metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
+  Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_START_TASK(kernel_name.c_str(), taskid);
 */
 
@@ -330,7 +330,7 @@ void dump_context_entry(context_entry_t* entry) {
   //Tau_check_timestamps(last_timestamp, timestamp, "KERNEL_END", taskid);
   last_timestamp = timestamp; 
 /*
-  metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
+  Tau_metric_set_synchronized_gpu_timestamp(taskid, ((double)timestamp/1e3)); // convert to microseconds
   TAU_STOP_TASK(kernel_name.c_str(), taskid);
 */
   tau_last_timestamp_ns = record->complete; 
@@ -363,8 +363,8 @@ void dump_context_entry(context_entry_t* entry) {
 // Profiling completion handler
 // Dump and delete the context entry
 // Return true if the context was dumped successfully
-bool context_handler(rocprofiler_group_t group, void* arg) {
-  TAU_VERBOSE("Inside context_handler\n");
+bool Tau_rocm_context_handler(rocprofiler_group_t group, void* arg) {
+  TAU_VERBOSE("Inside Tau_rocm_context_handler\n");
   context_entry_t* entry = reinterpret_cast<context_entry_t*>(arg);
 
   if (pthread_mutex_lock(&rocm_mutex) != 0) {
@@ -372,7 +372,7 @@ bool context_handler(rocprofiler_group_t group, void* arg) {
     abort();
   }
 
-  dump_context_entry(entry);
+  Tau_rocm_dump_context_entry(entry);
   delete entry;
 
   if (pthread_mutex_unlock(&rocm_mutex) != 0) {
@@ -384,9 +384,9 @@ bool context_handler(rocprofiler_group_t group, void* arg) {
 }
 
 // Kernel dispatch callback
-hsa_status_t dispatch_callback(const rocprofiler_callback_data_t* callback_data, void* /*user_data*/,
+hsa_status_t Tau_rocm_dispatch_callback(const rocprofiler_callback_data_t* callback_data, void* /*user_data*/,
                                rocprofiler_group_t* group) {
-  TAU_VERBOSE("Inside dispatch_callback\n");
+  TAU_VERBOSE("Inside Tau_rocm_dispatch_callback\n");
   // HSA status
   hsa_status_t status = HSA_STATUS_ERROR;
 
@@ -398,17 +398,17 @@ hsa_status_t dispatch_callback(const rocprofiler_callback_data_t* callback_data,
 
   // context properties
   rocprofiler_properties_t properties{};
-  properties.handler = context_handler;
+  properties.handler = Tau_rocm_context_handler;
   properties.handler_arg = (void*)entry;
 
   // Open profiling context
   status = rocprofiler_open(callback_data->agent, NULL, 0,
                             &context, 0 /*ROCPROFILER_MODE_SINGLEGROUP*/, &properties);
-  check_status(status);
+  Tau_rocm_check_status(status);
 
   // Get group[0]
   status = rocprofiler_get_group(context, 0, group);
-  check_status(status);
+  Tau_rocm_check_status(status);
 
   // Fill profiling context entry
   entry->agent = callback_data->agent;
@@ -420,8 +420,8 @@ hsa_status_t dispatch_callback(const rocprofiler_callback_data_t* callback_data,
   return HSA_STATUS_SUCCESS;
 }
 
-void initialize() {
-  TAU_VERBOSE("Inside initialize\n");
+void Tau_rocm_initialize() {
+  TAU_VERBOSE("Inside Tau_rocm_initialize\n");
   // Getting GPU device info
   const AgentInfo* agent_info = NULL;
   if (HsaRsrcFactory::Instance().GetGpuAgentInfo(0, &agent_info) == false) {
@@ -431,21 +431,21 @@ void initialize() {
 
   // Adding dispatch observer
   rocprofiler_queue_callbacks_t callbacks_ptrs{};
-  callbacks_ptrs.dispatch = dispatch_callback;
+  callbacks_ptrs.dispatch = Tau_rocm_dispatch_callback;
   int err=rocprofiler_set_queue_callbacks(callbacks_ptrs, NULL);
   TAU_VERBOSE("err=%d, rocprofiler_set_queue_callbacks\n", err);
 }
 
-void cleanup() {
+void Tau_rocm_cleanup() {
   // Unregister dispatch callback
-  TAU_VERBOSE("Inside cleanup\n");
+  TAU_VERBOSE("Inside Tau_rocm_cleanup\n");
   rocprofiler_remove_queue_callbacks();
 
   // Dump stored profiling output data
   fflush(stdout);
 }
 
-bool TauIsThreadIdRocmTask(int thread_id) {
+bool Tau_is_thread_id_rocm_task(int thread_id) {
   // Just for checking!
   for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
     if (tau_initialized_queues[i] == thread_id) { 
@@ -458,11 +458,11 @@ bool TauIsThreadIdRocmTask(int thread_id) {
 
 extern void TauFlushRocmEventsIfNecessary(int thread_id) {
 
-  if(!TauIsThreadIdRocmTask(thread_id)) return ; 
+  if(!Tau_is_thread_id_rocm_task(thread_id)) return ; 
 
   if (TauRocmList.empty()) return; 
   TAU_VERBOSE("Inside unload! publishing...\n");
-  TauRocmList.sort(TauCompareRocmEvents);
+  TauRocmList.sort(Tau_compare_rocm_events);
   while (!TauRocmList.empty()) {
     TauPublishEvent(TauRocmList.front());
     TauRocmList.pop_front();
@@ -474,7 +474,7 @@ extern void TauFlushRocmEventsIfNecessary(int thread_id) {
       RtsLayer::LockDB();
       if (tau_initialized_queues[i] != -1) {  // contention. Is it still -1?
         TAU_VERBOSE("Closing thread id: %d last timestamp = %llu\n", tau_initialized_queues[i], tau_last_timestamp_ns);
-        metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
+        Tau_metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
         Tau_stop_top_level_timer_if_necessary_task(tau_initialized_queues[i]);
         tau_initialized_queues[i] = -1;
       }
@@ -524,7 +524,7 @@ extern "C" PUBLIC_API void OnLoadToolProp(rocprofiler_settings_t* settings)
   settings->timestamp_on = true;
 
   // Initialize profiling
-  initialize();
+  Tau_rocm_initialize();
   HsaRsrcFactory::Instance().PrintGpuAgents("ROCm");
 }
 
@@ -546,7 +546,7 @@ extern "C" PUBLIC_API void OnUnloadTool() {
 
   Tau_stop_top_level_timer_if_necessary(); 
   // Final resources cleanup
-  cleanup();
+  Tau_rocm_cleanup();
 }
 
 extern "C" DESTRUCTOR_API void destructor() {
