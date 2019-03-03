@@ -784,6 +784,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             } else {
                 snprintf(namebuf, 256, "CPU Thread %d", thread_num);
             }
+#endif /* if 0 */
 #ifdef TAU_ENABLE_ROCM
                 //snprintf(namebuf, 256, "Thread %d (ROCM GPU ID:%d, Queue ID:%d, Thread ID:%d)", thread_num, 1, 2, 3);
                 const char *name; 
