@@ -2089,18 +2089,14 @@ void TauEnv_initialize()
     } else {
       TAU_VERBOSE("TAU: TAU_PLUGINS is \"%s\"\n", env_plugins);
     }
-    if (env_plugins_path != NULL && env_plugins != NULL) {
-        env_plugins_enabled = 1;
-    }
 
     if((env_select_file = getconf("TAU_SELECT_FILE")) == NULL) {
       env_select_file = NULL; 
     } else {
       if ((env_plugins == NULL) && (env_plugins_path == NULL)) {
         TAU_VERBOSE("TAU: TAU_SELECT_FILE is set to %s when TAU plugins are not initialized\n", env_select_file);
-          //env_plugins_path=strdup(TAU_LIB_DIR); 
-          env_plugins_path=strdup("."); 
-          TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is now %s\n", env_plugins_path);
+          env_plugins_path=strdup(TAU_LIB_DIR); 
+          TAU_VERBOSE("TAU: TAU_PLUGINS_PATH is now %s, TAU_LIB_DIR=%s\n", env_plugins_path, TAU_LIB_DIR);
           //sprintf(env_plugins,"libTAU-filter-plugin.so(%s)", env_select_file); 
           char *plugins = (char *) malloc(1024); 
 	  char *filename = strdup(env_select_file);
@@ -2110,10 +2106,14 @@ void TauEnv_initialize()
 	  TAU_METADATA("TAU_SELECT_FILE", filename);
       } else {
         TAU_VERBOSE("TAU: Ignoring TAU_SELECT_FILE because TAU_PLUGINS and/or TAU_PLUGINS_PATH is set.\nPlease use export TAU_PLUGINS_PATH=%s and export TAU_PLUGINS=\"libTAU-filter-plugin.so(%s)\"\n", 
-			//strdup(TAU_LIB_DIR), 
-			strdup("."), 
+			strdup(TAU_LIB_DIR), 
 			strdup(env_select_file)); 
       }
+    }
+
+    // Check for these paths after TAU_SELECT_FILE sets them
+    if (env_plugins_path != NULL && env_plugins != NULL) {
+        env_plugins_enabled = 1;
     }
 
     tmp = getconf("TAU_OPENMP_RUNTIME");
