@@ -638,7 +638,7 @@ for arg in "$@"; do
         echo "    options [CC|KCC|g++|*xlC*|cxx|pgc++|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
         echo "       armclang++|clang++|bgclang++|hcc|hipcc|icpc|scgcc|scpathCC|pathCC|orCC]."
         echo "-cc=<compiler> ................................ specify the C compiler."
-        echo "   options [cc|gcc|gcc4|scgcc|clang|pgcc|guidec|*xlc*|ecc|pathcc|orcc|armclang]."
+        echo "   options [cc|gcc|gcc4|scgcc|clang|hcc|pgcc|guidec|*xlc*|ecc|pathcc|orcc|armclang]."
         echo "-fortran=<compiler> ..................... specify the Fortran compiler."
         echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
         echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"  
@@ -1131,7 +1131,7 @@ for arg in "$@"; do
 
 	-cc=*)
 	    myarg=`echo $arg | sed 's/-cc=//'`
-	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = hipcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang ]
+	    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = gcc-5 -o $myarg = gcc-6 -o $myarg = gcc-7 -o $myarg = gcc-8 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = hcc -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpc_icc -o $myarg = mpicc -o $myarg = mcc -o $myarg = oshcc -o $myarg = armclang ]
 	    then
 		c_compiler=$myarg
 
@@ -1144,7 +1144,7 @@ for arg in "$@"; do
 		testmp=`echo $myarg | sed -e 's/^mp//'`
 		if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
 		then
-		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'hcc', 'hipcc', 'bgclang', 'mpicc', 'mcc', or 'oshcc'"
+		    echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'gcc-*', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpc_icc', 'mpifcc', 'mpifccpx', 'clang', 'hcc', 'bgclang', 'mpicc', 'mcc', or 'oshcc'"
 		    #       exit 1
 		else
 		    if [ "y$testxlc" != "y$myarg" ]
@@ -3736,6 +3736,10 @@ if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ -o $cxx_compiler = hcc
     fixmakeargs="$fixmakeargs CLANG"
 fi
 
+if [ $c_compiler = hcc ]; then
+    fixmakeargs="$fixmakeargs HCC"
+fi
+
 
 if [ "$machine" = "apple" ] ; then
     mkdir -p apple/lib
@@ -6059,7 +6063,7 @@ if [ $machine = hitachi ]
 then
     stdinc="-I/usr/include"
 else
-    stdinc=`$cxx_compiler  -E get_stdinc.C | awk -f find_stdinc.awk`
+    stdinc=`$cxx_compiler  -E get_stdinc.C  2>/dev/null | awk -f find_stdinc.awk `
 fi
 
 rm -f get_stdinc.C find_stdinc.awk
