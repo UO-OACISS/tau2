@@ -780,7 +780,7 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
             } else if(Tau_is_thread_fake(thread_num)) {
                 snprintf(namebuf, 256, "GPU Thread %d", thread_num);
 				thread_type = OTF2_LOCATION_TYPE_GPU;
-#else
+#endif
             } else {
                 snprintf(namebuf, 256, "CPU Thread %d", thread_num);
             }
