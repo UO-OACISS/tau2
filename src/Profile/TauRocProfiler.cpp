@@ -21,102 +21,22 @@ THE SOFTWARE.
 *******************************************************************************/
 
 #include <hsa.h>
-#include <string.h>
-#include <unistd.h>
-#include <iostream>
-#include <string>
-#include <list>
-#include <vector>
-#include <atomic>
+#include <Profile/TauRocm.h>
 #include "Profile/rocprofiler.h"
 #include "Profile/hsa_rsrc_factory.h"
-#include "Profile/Profiler.h"
-#include <dlfcn.h>
-using namespace std;
-
-
-#define TAU_METRIC_TYPE unsigned long long
-
-#ifndef TAU_ROCM_LOOK_AHEAD
-#define TAU_ROCM_LOOK_AHEAD 128
-#endif /* TAU_ROCM_LOOK_AHEAD */
 
 //#define DEBUG_PROF 1 
 
-std::list<struct TauRocmEvent> TauRocmList;
-static TAU_METRIC_TYPE tau_last_timestamp_published = 0;
-
-struct TauRocmCounter {
-  TAU_METRIC_TYPE counters[TAU_MAX_COUNTERS];
-}; 
-
-struct TauRocmEvent {
-  struct TauRocmCounter entry;
-  struct TauRocmCounter exit;
-  string name;
-  int taskid;
-    
-  TauRocmEvent(): taskid(0) {}
-  TauRocmEvent(string event_name, TAU_METRIC_TYPE begin, TAU_METRIC_TYPE end, int t) : name(event_name), taskid(t)
-  { 
-    entry.counters[0] = begin;
-    exit.counters[0]  = end; 
-  }   
-  void printEvent() {
-    std::cout <<name<<" Task: "<<taskid<<", \t\tEntry: "<<entry.counters[0]<<" , Exit = "<<exit.counters[0];
-  }   
-  bool appearsBefore(struct TauRocmEvent other_event) {
-    if ((taskid == other_event.taskid) && 
-        (entry.counters[0] < other_event.entry.counters[0]) &&
-        (exit.counters[0] < other_event.entry.counters[0]))  {
-      // both entry and exit of my event is before the entry of the other event. 
-      return true;
-    } else 
-      return false; 
-  }   
-      
-} TauRocmEvent;
-
-// Compare to TauRocmEvents based on their timestamps (for sorting)
-bool Tau_compare_rocm_events (struct TauRocmEvent one, struct TauRocmEvent two) {
-  if (one.entry.counters[0] < two.entry.counters[0]) return true;
-  else return false;
-/*
-  if (one.appearsBefore(two)) return true; // Less than 
-  else return false; // one does not appear before two.
-*/
-}
-
-
-
-//void Tau_trigger_rocm_events(void);
-void Tau_process_rocm_events(struct TauRocmEvent e);
-
-
-/*
-#include "ctrl/run_kernel.h"
-#include "ctrl/test_aql.h"
-#include "ctrl/test_hsa.h"
-#include "dummy_kernel/dummy_kernel.h"
-#include "simple_convolution/simple_convolution.h"
-#include "util/test_assert.h"
-*/
+//static TAU_METRIC_TYPE tau_last_timestamp_published = 0;
+static TAU_METRIC_TYPE tau_last_timestamp_ns = 0L;
 
 #define PUBLIC_API __attribute__((visibility("default")))
 #define CONSTRUCTOR_API __attribute__((constructor))
 #define DESTRUCTOR_API __attribute__((destructor))
 
-#define TAU_MAX_ROCM_QUEUES 512
 const char * pthread_orig_name = "libTAU-pthread.so";
 static void *pthread_dso_handle = NULL;
-static int tau_initialized_queues[TAU_MAX_ROCM_QUEUES] = { 0 };
 
-extern "C" x_uint64 TauTraceGetTimeStamp();
-extern "C" void metric_set_gpu_timestamp(int tid, double value);
-extern "C" void Tau_metadata_task(const char *name, const char *value, int tid);
-extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
-static unsigned long long tau_last_timestamp_ns = 0L;
-static unsigned long long offset_timestamp = 0L;
 // Dispatch callbacks and context handlers synchronization
 pthread_mutex_t rocm_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 // Tool is unloaded
@@ -128,24 +48,6 @@ void fatal(const std::string msg) {
   fprintf(stderr, "%s\n\n", msg.c_str());
   fflush(stderr);
   abort();
-}
-
-// access tau_initialized_queues through get and set access functions
-int Tau_get_initialized_queues(int queue_id) {
-  return tau_initialized_queues[queue_id]; 
-}
-
-void Tau_set_initialized_queues(int queue_id, int value) {
-  tau_initialized_queues[queue_id]=value; 
-  return;
-}
-
-void Tau_metric_set_synchronized_gpu_timestamp(int tid, double value){
-	if (offset_timestamp == 0L)
-	{
-		offset_timestamp=TauTraceGetTimeStamp() - ((double)value);
-	}
-	metric_set_gpu_timestamp(tid, offset_timestamp+value);
 }
 
 
@@ -166,123 +68,6 @@ struct context_entry_t {
   rocprofiler_group_t group;
   rocprofiler_callback_data_t data;
 };
-
-void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
-  char buf[1024];
-  sprintf(buf, "%d", value);
-  Tau_metadata_task(key, buf, taskid);
-  TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
-}
-
-bool Tau_check_timestamps(unsigned long long last_timestamp, unsigned long long current_timestamp, const char *debug_str, int taskid) {
-  TAU_VERBOSE("Taskid<%d>: Tau_check_timestamps: Checking last_timestamp = %llu, current_timestamp = %llu at %s\n", taskid, last_timestamp, current_timestamp, debug_str);
-  if (last_timestamp > current_timestamp) {
-    TAU_VERBOSE("Taskid<%d>: Tau_check_timestamps: Timestamps are not monotonically increasing! last_timestamp = %llu, current_timestamp = %llu at %s\n", taskid, last_timestamp, current_timestamp, debug_str);
-    return false; 
-  }
-  else 
-    return true;
-}
-
-void TauPublishEvent(struct TauRocmEvent event) {
-  std::list<struct TauRocmEvent>::iterator it;
-  TAU_METRIC_TYPE timestamp;
-
-#ifdef DEBUG_PROF
-  cout <<"Publishing event ";
-  event.printEvent(); 
-  cout <<endl;
-
-  cout <<endl<<" ------------- List -----------------: last: "<<tau_last_timestamp_published<<" current entry: "<<
-	event.entry.counters[0]<<endl;
-  for (it = TauRocmList.begin(); it != TauRocmList.end(); it++) {
-    it->printEvent();
-    cout <<endl;
-  }
-
-  cout <<" ------------- List -----------------"<<endl<<endl;
-#endif /* DEBUG_PROF */
-  // First the entry
-  if (event.entry.counters[0] < tau_last_timestamp_published) {
-
-    TAU_VERBOSE("ERROR: TauPublishEvent: Event to be published has a timestamp = %llu that is earlier than the last published timestamp %llu\n",
-	event.entry.counters[0], tau_last_timestamp_published);
-    TAU_VERBOSE("ERROR: please re-configure TAU with -useropt=-DTAU_ROCM_LOOK_AHEAD=16 (or some higher value) for a window of events to sort, make install and retry the command\n"); 
-    TAU_VERBOSE("Ignoring this event:\n");
-#ifdef DEBUG_PROF
-    event.printEvent();
-#endif /* DEBUG_PROF */
-    return; 
-  }
-
-  timestamp = event.entry.counters[0]; // Using first element of array 
-  Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
-  TAU_START_TASK(event.name.c_str(), event.taskid);
-  TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp);
-
-  // then the exit
-  timestamp = event.exit.counters[0]; // Using first element of array 
-  tau_last_timestamp_published = timestamp;
-  Tau_metric_set_synchronized_gpu_timestamp(event.taskid, ((double)timestamp/1e3)); // convert to microseconds
-  TAU_STOP_TASK(event.name.c_str(), event.taskid);
-  TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", event.name.c_str(), event.taskid, timestamp);
-}
-
-
-void Tau_process_rocm_events(struct TauRocmEvent e) {
-  std::list<struct TauRocmEvent>::iterator it;
-
-#ifdef DEBUG_PROF
-  cout <<"        Pushing event to the list: ";
-  e.printEvent();
-  cout <<endl;
-#endif /* DEBUG_PROF */
-
-  TauRocmList.push_back(e);
-
-  TauRocmList.sort(Tau_compare_rocm_events);
-  int listsize = TauRocmList.size();
-
-  if (listsize < TAU_ROCM_LOOK_AHEAD) {
-
-    return; // don't do anything else
-  } else {
-    // There are elements in the list. What are they?
-    TauPublishEvent(TauRocmList.front());
-    //TauRocmList.pop_front();
-#ifdef DEBUG_PROF 
-    cout <<"   before popping, size = "<<TauRocmList.size()<<endl;
-    cout <<" *********   TauRocmList BEFORE ******* "<<endl;
-    for(it=TauRocmList.begin(); it != TauRocmList.end(); it++) {
-
-      it->printEvent();
-      cout <<endl;
-    }
-    cout <<" *********   TauRocmList BEFORE ******* "<<endl;
-#endif /* DEBUG_PROF */
-/*
-    it=TauRocmList.begin();
-    TauRocmList.erase(it);
-*/
-    TauRocmList.pop_front();
-
-#ifdef DEBUG_PROF
-    int listsize = TauRocmList.size();
-    cout <<"   After popping, size = "<<listsize<<endl;
-    cout <<" *********   TauRocmList AFTER ******* "<<endl;
-    for(it=TauRocmList.begin(); it != TauRocmList.end(); it++) {
-      it->printEvent();
-      cout <<endl;
-    }
-    cout <<" *********   TauRocmList AFTER ******* "<<endl;
-#endif /* DEBUG_PROF */
-  }
-  return;
-}
-
-
-
-
 
 // Dump stored context entry
 void Tau_rocm_dump_context_entry(context_entry_t* entry) {
