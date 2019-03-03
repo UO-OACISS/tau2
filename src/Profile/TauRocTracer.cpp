@@ -21,10 +21,9 @@
  * */
 
 
-#include <iostream>
+#include <Profile/TauRocm.h>
 #include <hip/hip_runtime.h>
 #include <roctracer.h>
-using namespace std;
 //#include <roctracer_hcc.h>
 
 
@@ -42,7 +41,7 @@ using namespace std;
   } while (0)
 
 // Runtime API callback function
-void api_callback(
+void Tau_roctracer_api_callback(
     uint32_t domain,
     uint32_t cid,
     const void* callback_data,
@@ -96,7 +95,7 @@ void api_callback(
 
 // Activity tracing callback
 //   hipMalloc id(3) correlation_id(1): begin_ns(1525888652762640464) end_ns(1525888652762877067)
-void activity_callback(const char* begin, const char* end, void* arg) {
+void Tau_roctracer_activity_callback(const char* begin, const char* end, void* arg) {
   const roctracer_record_t* record = reinterpret_cast<const roctracer_record_t*>(begin);
   const roctracer_record_t* end_record = reinterpret_cast<const roctracer_record_t*>(end);
   fprintf(stdout, "\tActivity records:\n"); fflush(stdout);
@@ -130,30 +129,30 @@ void activity_callback(const char* begin, const char* end, void* arg) {
 }
 
 // Init tracing routine
-int TauRocTracer_init_tracing() {
+int Tau_roctracer_init_tracing() {
   std::cout << "# START #############################" << std::endl << std::flush;
   // Allocating tracing pool
   roctracer_properties_t properties{};
   properties.buffer_size = 0x1000;
-  properties.buffer_callback_fun = activity_callback;
+  properties.buffer_callback_fun = Tau_roctracer_activity_callback;
   ROCTRACER_CALL(roctracer_open_pool(&properties));
   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start tracing routine
-extern "C" void TauRocTracer_start_tracing() {
-  static int flag = TauRocTracer_init_tracing(); 
+extern "C" void Tau_roctracer_start_tracing() {
+  static int flag = Tau_roctracer_init_tracing(); 
   std::cout << "# START #############################" << std::endl << std::flush;
   // Enable HIP API callbacks
-  ROCTRACER_CALL(roctracer_enable_callback(api_callback, NULL));
+  ROCTRACER_CALL(roctracer_enable_callback(Tau_roctracer_api_callback, NULL));
   // Enable HIP activity tracing
   ROCTRACER_CALL(roctracer_enable_activity());
   // Enable HIP API callbacks
 }
 
 // Stop tracing routine
-extern "C" void TauRocTracer_stop_tracing() {
+extern "C" void Tau_roctracer_stop_tracing() {
   ROCTRACER_CALL(roctracer_disable_callback());
   ROCTRACER_CALL(roctracer_disable_activity());
   ROCTRACER_CALL(roctracer_flush_activity());
