@@ -26,24 +26,10 @@
 #include <roctracer.h>
 using namespace std;
 //#include <roctracer_hcc.h>
-namespace hc {
-
-// HCC Op IDs enumeration
-/*
-enum HSAOpId {
-    HSA_OP_ID_DISPATCH = 0,
-    HSA_OP_ID_COPY = 1,
-    HSA_OP_ID_BARRIER = 2,
-    HSA_OP_ID_NUM = 3,
-    HSA_OP_ID_ANY = 4
-};
-*/
-
-}; // namespace hc
-
 
 
 //#include <inc/roctracer_hcc.h>
+
 
 // Macro to check ROC-tracer calls status
 #define ROCTRACER_CALL(call)                                                                       \
@@ -64,13 +50,11 @@ void api_callback(
 {
   (void)arg;
   const hip_api_data_t* data = reinterpret_cast<const hip_api_data_t*>(callback_data);
-  if (cid != HIP_API_ID_hipModuleLaunchKernel) {
   fprintf(stdout, "<%s id(%u)\tcorrelation_id(%lu) %s> ",
     roctracer_op_string(ACTIVITY_DOMAIN_HIP_API, cid, 0),
     cid,
     data->correlation_id,
     (data->phase == ACTIVITY_API_PHASE_ENTER) ? "on-enter" : "on-exit");
-  }
   if (data->phase == ACTIVITY_API_PHASE_ENTER) {
     switch (cid) {
       case HIP_API_ID_hipMemcpy:
@@ -81,20 +65,18 @@ void api_callback(
           (uint32_t)(data->args.hipMemcpy.kind));
         break;
       case HIP_API_ID_hipMalloc:
-        fprintf(stdout, "ptr(%p) size(0x%x)\n",
+        fprintf(stdout, "ptr(%p) size(0x%x)",
           data->args.hipMalloc.ptr,
           (uint32_t)(data->args.hipMalloc.size));
         break;
       case HIP_API_ID_hipFree:
-        fprintf(stdout, "ptr(%p)\n",
+        fprintf(stdout, "ptr(%p)",
           data->args.hipFree.ptr);
         break;
       case HIP_API_ID_hipModuleLaunchKernel:
-/*
         fprintf(stdout, "kernel(\"%s\") stream(%p)",
           hipKernelNameRef(data->args.hipModuleLaunchKernel.f),
           data->args.hipModuleLaunchKernel.stream);
-*/
         break;
       default:
         break;
@@ -102,65 +84,46 @@ void api_callback(
   } else {
     switch (cid) {
       case HIP_API_ID_hipMalloc:
-        fprintf(stdout, "*ptr(0x%p)\n",
+        fprintf(stdout, "*ptr(0x%p)",
           *(data->args.hipMalloc.ptr));
         break;
       default:
         break;
     }
   }
-  //fprintf(stdout, "\n"); 
-  fflush(stdout);
+  fprintf(stdout, "\n"); fflush(stdout);
 }
 
 // Activity tracing callback
 //   hipMalloc id(3) correlation_id(1): begin_ns(1525888652762640464) end_ns(1525888652762877067)
 void activity_callback(const char* begin, const char* end, void* arg) {
-  bool do_not_print=false;
   const roctracer_record_t* record = reinterpret_cast<const roctracer_record_t*>(begin);
   const roctracer_record_t* end_record = reinterpret_cast<const roctracer_record_t*>(end);
-  //fprintf(stdout, "\tActivity records:\n"); fflush(stdout);
+  fprintf(stdout, "\tActivity records:\n"); fflush(stdout);
   while (record < end_record) {
     const char * name = roctracer_op_string(record->domain, record->op, record->kind);
-/*
-    if ((name[0] == 'h') && (name[3] == 'M') && (name[9] == 'L')) {
-      do_not_print=true;
-    } else {
-      if((name[0] == 'h') && (name[2] == 'C') && (name[9] == 'K')) {
-        do_not_print=true;
-      }
-    }
-*/
-    if (! do_not_print) {
-      fprintf(stdout, "\t%s\tcorrelation_id(%lu) Time_ns(%lu:%lu)",
-        name,
-        record->correlation_id,
-        record->begin_ns,
-        record->end_ns
-      );
-    }
+    fprintf(stdout, "\t%s\tcorrelation_id(%lu) time_ns(%lu:%lu)",
+      name,
+      record->correlation_id,
+      record->begin_ns,
+      record->end_ns
+    );
     if (record->domain == ACTIVITY_DOMAIN_HIP_API) {
-      if (! do_not_print) {
-        fprintf(stdout, " process_id(%u) thread_id(%u)",
-          record->process_id,
-          record->thread_id
-        );
-      }
+      fprintf(stdout, " process_id(%u) thread_id(%u)",
+        record->process_id,
+        record->thread_id
+      );
     } else if (record->domain == ACTIVITY_DOMAIN_HCC_OPS) {
-      if (! do_not_print) {
-        fprintf(stdout, " device_id(%d) queue_id(%lu)",
-          record->device_id,
-          record->queue_id
-        );
-      }
+      fprintf(stdout, " device_id(%d) queue_id(%lu)",
+        record->device_id,
+        record->queue_id
+      );
     } else {
       fprintf(stderr, "Bad domain %d\n", record->domain);
       abort();
     }
     if (record->op == hc::HSA_OP_ID_COPY) fprintf(stdout, " bytes(0x%zx)", record->bytes);
-    if (! do_not_print) {
-      fprintf(stdout, "\n");
-    }
+    fprintf(stdout, "\n");
     fflush(stdout);
     ROCTRACER_CALL(roctracer_next_record(record, &record));
   }
@@ -197,20 +160,4 @@ extern "C" void TauRocTracer_stop_tracing() {
   std::cout << "# STOP  #############################" << std::endl << std::flush;
 }
 
-/*
-class TauRocTracer {
-
-  public: 
-    TauRocTracer() {
-      cout <<"CTOR: TauRocTracer!"<<endl;
-      TauRocTracer_start_tracing();
-    }
-   ~TauRocTracer() {
-      cout <<"DTOR: ~TauRocTracer!"<<endl;
-      TauRocTracer_stop_tracing();
-    }
-};
-
-//TauRocTracer my_tau_roctracer_obj;
-*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
