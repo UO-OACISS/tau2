@@ -958,6 +958,15 @@ case $1 in
 	echo "s@^TAU_ROCPROFILER_LIBRARY=\(.*\)@TAU_ROCPROFILER_LIBRARY=$rocprofilerlibrary@g" >> $sedout
         ;;
 
+     roctracerdir=*)
+        roctracerdir=`echo $1 | sed -e 's/^roctracerdir=//' -e 's/#/ /g'`
+	echo "s@^TAU_ROCTRACER=\(.*\)@TAU_ROCTRACER=$roctracerdir@g" >> $sedout
+        ;;
+
+     hipdir=*)
+        hipdir=`echo $1 | sed -e 's/^hipdir=//' -e 's/#/ /g'`
+	echo "s@^TAU_HIP=\(.*\)@TAU_HIP=$hipdir@g" >> $sedout
+        ;;
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
@@ -986,6 +995,14 @@ case $1 in
         ;;
      ROCPROFILER)
         echo "NOTE: Using the TAU's ROCm ROCPROFILER Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     HIP)
+        echo "NOTE: Using the TAU's ROCm HIP Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     ROCTRACER)
+        echo "NOTE: Using the TAU's ROCm ROCTRACER Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      ROCM)
@@ -1273,6 +1290,10 @@ case $1 in
 	;;
      BGCLANG)
 	echo NOTE: Using IBM BlueGene CLANG LLVM C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     HCC)
+	echo NOTE: Using HCC as a C compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCC)
