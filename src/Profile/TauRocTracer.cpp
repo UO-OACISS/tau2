@@ -29,6 +29,7 @@ using namespace std;
 namespace hc {
 
 // HCC Op IDs enumeration
+/*
 enum HSAOpId {
     HSA_OP_ID_DISPATCH = 0,
     HSA_OP_ID_COPY = 1,
@@ -36,6 +37,7 @@ enum HSAOpId {
     HSA_OP_ID_NUM = 3,
     HSA_OP_ID_ANY = 4
 };
+*/
 
 }; // namespace hc
 
