@@ -90,7 +90,7 @@ double TauWindowsUsecD(void);
 #endif //CUPTI
 
 #ifdef TAU_ENABLE_ROCTRACER
-extern "C" void TauRocTracer_stop_tracing(void); 
+extern "C" void Tau_roctracer_stop_tracing(void); 
 #endif /* TAU_ROCTRACER */
 
 #ifdef TAU_SHMEM
@@ -1651,7 +1651,7 @@ int TauProfiler_StoreData(int tid)
 
 
 #ifdef TAU_ENABLE_ROCTRACER
-  TauRocTracer_stop_tracing();
+  Tau_roctracer_stop_tracing();
 #endif /* TAU_ENABLE_ROCTRACER */
 
   return 1;

@@ -2023,8 +2023,8 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 // struct GpuThread gThreads[TAU_MAX_THREADS];
 //
 #ifdef TAU_ROCTRACER
-extern void TauRocTracer_start_tracing(void); 
-extern void TauRocTracer_stop_tracing(void); 
+extern void Tau_roctracer_start_tracing(void); 
+extern void Tau_roctracer_stop_tracing(void); 
 #endif /* TAU_ROCTRACER */
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
@@ -2066,7 +2066,7 @@ extern "C" const char * Tau_get_current_timer_name(int tid) {
 extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
    Tau_stop_top_level_timer_if_necessary_task(Tau_get_thread());
 #ifdef TAU_ROCTRACER
-   TauRocTracer_stop_tracing();
+   Tau_roctracer_stop_tracing();
 #endif /* TAU_ROCTRACER */
 }
 
