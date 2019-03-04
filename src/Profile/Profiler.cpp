@@ -475,6 +475,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #else
   RtsLayer::getUSecD(tid, CurrentTime);
 #endif /* TAU_TRACK_IDLE_THREADS */
+  //printf("In Stop: CurrentTime[0] = %f\n", CurrentTime[0]);
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -512,6 +513,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   } else {
     for (int k = 0; k < Tau_Global_numCounters; k++) {
       TotalTime[k] = CurrentTime[k] - StartTime[k];
+#ifdef DEBUG_PROF
+      printf("CurrentTime[%d] = %f\n", k, CurrentTime[k]);
+      printf("StartTime[%d]   = %f\n", k, StartTime[k]);
+      printf("TotalTime[%d]   = %f\n", k, TotalTime[k]);
+#endif /* DEBUG_PROF */
     }
   }
 
