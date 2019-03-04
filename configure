@@ -2562,7 +2562,8 @@ for arg in "$@"; do
 
 	-rocm)
             rocmdir=/opt/rocm
-	    fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
+	    #fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
+	    fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
             rocm=yes
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
@@ -2579,7 +2580,7 @@ for arg in "$@"; do
 	      fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
               rocm=yes
             fi
-	    fixmakeargs="$fixmakeargs ROCPROFILER"
+	    #fixmakeargs="$fixmakeargs ROCPROFILER"
             rocprofiler=yes
             tauoptions="${tauoptions}-rocm"
 	    pthread=yes
@@ -2619,7 +2620,7 @@ for arg in "$@"; do
 	    else
 	      fixmakeargs="$fixmakeargs rocprofilerdir=$rocprofilerdir ROCPROFILER"
               rocprofiler=yes
-              #tauoptions="${tauoptions}-rocm"
+              tauoptions="${tauoptions}-rocprofiler"
 	      pthread=yes
             fi
 	    shift
