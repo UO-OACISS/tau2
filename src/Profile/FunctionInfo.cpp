@@ -17,6 +17,7 @@ e*			TAU Portable Profiling Package			   **
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+//#define DEBUG_PROF 1
 #include "Profile/Profiler.h"
 #include <sstream>
 
@@ -26,6 +27,7 @@ using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
+
 
 #include <stdio.h> 
 #include <fcntl.h>
@@ -292,6 +294,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
       << RtsLayer::myContext() << ", " << tid
       << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName()
       << " Group :  " << GetProfileGroup()
+      << " Id :  " << GetFunctionId()
       << " Type : " << GetType() << endl;);
 
 #ifdef TAU_PROFILEMEMORY
