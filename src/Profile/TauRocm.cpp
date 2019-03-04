@@ -52,11 +52,13 @@ void Tau_set_initialized_queues(int queue_id, int value) {
 }
 
 void Tau_metric_set_synchronized_gpu_timestamp(int tid, double value){
-	if (offset_timestamp == 0L)
-	{
-		offset_timestamp=TauTraceGetTimeStamp() - ((double)value);
-	}
-	metric_set_gpu_timestamp(tid, offset_timestamp+value);
+  //printf("value = %f\n", value);
+  if (offset_timestamp == 0L) {
+    offset_timestamp=TauTraceGetTimeStamp() - ((double)value);
+  }
+  metric_set_gpu_timestamp(tid, offset_timestamp+value);
+  //printf("metric_set_gpu_timestamp = %f\n", offset_timestamp+value);
+
 }
 
 
