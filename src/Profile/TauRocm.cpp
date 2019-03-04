@@ -22,7 +22,7 @@
 
 std::list<struct TauRocmEvent> TauRocmList;
 static TAU_METRIC_TYPE tau_last_timestamp_published = 0;
-//static unsigned long long tau_last_timestamp_ns = 0L;
+static TAU_METRIC_TYPE tau_last_timestamp_ns = 0L;
 static unsigned long long offset_timestamp = 0L;
 
 // Compare to TauRocmEvents based on their timestamps (for sorting)
@@ -60,12 +60,33 @@ void Tau_metric_set_synchronized_gpu_timestamp(int tid, double value){
 }
 
 
+// access tau_last_timestamp_ns through get and set access functions
+TAU_METRIC_TYPE Tau_get_last_timestamp_ns(void) {
+  return tau_last_timestamp_ns;
+}
+
+void Tau_set_last_timestamp_ns(TAU_METRIC_TYPE timestamp) {
+  tau_last_timestamp_ns = timestamp;
+}
+
 void Tau_add_metadata_for_task(const char *key, int value, int taskid) {
   char buf[1024];
   sprintf(buf, "%d", value);
   Tau_metadata_task(key, buf, taskid);
   TAU_VERBOSE("Adding Metadata: %s, %d, for task %d\n", key, value, taskid);
 }
+
+bool Tau_is_thread_id_rocm_task(int thread_id) {
+  // Just for checking!
+  for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
+    if (Tau_get_initialized_queues(i) == thread_id) {
+      TAU_VERBOSE("TauIsThreadRocmTask: Tau_get_initialized_queues(%d) = %d matches thread_id %d. Returning true\n", i, Tau_get_initialized_queues(i), thread_id);
+      return true;
+    }
+  }
+  return false;
+}
+
 
 bool Tau_check_timestamps(unsigned long long last_timestamp, unsigned long long current_timestamp, const char *debug_str, int taskid) {
   TAU_VERBOSE("Taskid<%d>: Tau_check_timestamps: Checking last_timestamp = %llu, current_timestamp = %llu at %s\n", taskid, last_timestamp, current_timestamp, debug_str);
@@ -171,6 +192,35 @@ void Tau_process_rocm_events(struct TauRocmEvent e) {
 #endif /* DEBUG_PROF */
   }
   return;
+}
+
+
+extern void TauFlushRocmEventsIfNecessary(int thread_id) {
+
+  if(!Tau_is_thread_id_rocm_task(thread_id)) return ;
+
+  if (TauRocmList.empty()) return;
+  TAU_VERBOSE("Inside unload! publishing...\n");
+  TauRocmList.sort(Tau_compare_rocm_events);
+  while (!TauRocmList.empty()) {
+    TauPublishEvent(TauRocmList.front());
+    TauRocmList.pop_front();
+  }
+
+//  Tau_stop_top_level_timer_if_necessary(); 
+  for (int i=0; i < TAU_MAX_ROCM_QUEUES; i++) {
+    if (Tau_get_initialized_queues(i) != -1) {
+      RtsLayer::LockDB();
+      if (Tau_get_initialized_queues(i) != -1) {  // contention. Is it still -1?
+        TAU_VERBOSE("Closing thread id: %d last timestamp = %llu\n", Tau_get_initialized_queues(i), tau_last_timestamp_ns);
+        Tau_metric_set_synchronized_gpu_timestamp(i, ((double)tau_last_timestamp_ns/1e3)); // convert to microseconds
+        Tau_stop_top_level_timer_if_necessary_task(Tau_get_initialized_queues(i));
+        Tau_set_initialized_queues(i, -1);
+      }
+      RtsLayer::UnLockDB();
+    }
+  }
+
 }
 
 
