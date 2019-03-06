@@ -53,6 +53,6 @@ libTAU-mpit-mvapich-free_unused_vbufs.so: tau_plugin_example_free_unused_vbufs.o
 	$(CC) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-mvapich-free_unused_vbufs.so tau_plugin_example_free_unused_vbufs.o
 
 tau_plugin_example_free_unused_vbufs.o: Tau_plugin_example_mpit_mvapich_free_unused_vbufs.c
-	$(CC) $(CFLAGS) -c Tau_plugin_example_mpit_mvapich_free_unused_vbufs.c -o tau_plugin_example_free_unused_vbufs.o
+	$(CC) $(CFLAGS) $(TAU_CC_SPECIAL_OPTS) -c Tau_plugin_example_mpit_mvapich_free_unused_vbufs.c -o tau_plugin_example_free_unused_vbufs.o
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)

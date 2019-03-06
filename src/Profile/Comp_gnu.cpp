@@ -187,7 +187,7 @@ void runOnExit()
     if (node->fi) {
 #ifndef TAU_TBB_SUPPORT
 // At the end of a TBB program, it crashes here. 
-		delete node->fi;
+		//delete node->fi;
 #endif /* TAU_TBB_SUPPORT */
 	}
     delete node;

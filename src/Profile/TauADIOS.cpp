@@ -11,9 +11,7 @@
  * for tools, or ADIOST.
  */
 
-#ifdef TAU_SOS
 #include "Profile/TauPluginInternals.h"
-#endif
 #include "Profile/Profiler.h"
 #include "Profile/UserEvent.h"
 #include "Profile/TauMetrics.h"

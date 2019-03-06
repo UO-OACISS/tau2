@@ -40,16 +40,16 @@ trace2profile.o: trace2profile.h trace2profile.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c trace2profile.cpp
 	
 otf2_hash_table.o: otf2_hash_table.h
-	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2_hash_table.c
+	$(CC) $(TAU_CC_SPECIAL_OPTS) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2_hash_table.c
 	
 otf2_vector.o: otf2_vector.h
-	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2_vector.c
+	$(CC) $(TAU_CC_SPECIAL_OPTS) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c otf2_vector.c
 	
 UTILS_Error.o: UTILS_Error.h
-	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_Error.c
+	$(CC) $(TAU_CC_SPECIAL_OPTS) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_Error.c
 	
 UTILS_IO_Tools.o: UTILS_IO.h
-	$(CC) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_IO_Tools.c
+	$(CC) $(TAU_CC_SPECIAL_OPTS) $(CXXFLAGS) $(OTF2FLAGS) $(INCLUDES) -I$(OTFDIR)/include -I$(OTF_SOURCE) -I$(OTF_UTIL_INCLUDE) -c UTILS_IO_Tools.c
 
 clean:
 	$(RM) $(TRACE2PROFILE) $(HANDLERS) $(READTRACE) $(MAKEFILE) *.o otf2profile

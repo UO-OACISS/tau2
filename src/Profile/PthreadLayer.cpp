@@ -270,7 +270,7 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
   }
 
   int retval;
-  if(*wrapped || Tau_global_getLightsOut()) {
+  if(*wrapped || Tau_global_getLightsOut() || !Tau_init_check_initialized()) {
     // Another wrapper has already intercepted the call so just pass through
     retval = pthread_create_call(threadp, attr, start_routine, arg);
   } else {

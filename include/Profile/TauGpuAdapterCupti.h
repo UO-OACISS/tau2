@@ -75,6 +75,8 @@ KernelContextMap & TheKernelContextMap() {
 
 class CuptiGpuEvent : public GpuEvent
 {
+private:
+  static double beginTimestamp;
 public:
 	uint32_t streamId;
 	uint32_t contextId;
@@ -95,8 +97,6 @@ public:
 	//FunctionInfo *callingSite;
 	GpuEventAttributes *gpu_event_attributes;
 	int number_of_gpu_attributes;
-
-  static double beginTimestamp;
 
 	/*CuptiGpuEvent(uint32_t s, uint32_t cn, uint32_t c) { streamId = s; contextId = cn ; correlationId = c; };*/
 	CuptiGpuEvent *getCopy() const { 
@@ -180,6 +180,10 @@ public:
 	double syncOffset() const 
   { 
     return (double) beginTimestamp; 
+  };
+	static void setSyncOffset(double offset)
+  { 
+    beginTimestamp = offset; 
   };
 	uint32_t stream() { return streamId; };
 	uint32_t context() { return contextId; };

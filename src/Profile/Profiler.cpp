@@ -89,6 +89,10 @@ double TauWindowsUsecD(void);
 #endif //__GNUC__
 #endif //CUPTI
 
+#ifdef TAU_ENABLE_ROCTRACER
+extern "C" void Tau_roctracer_stop_tracing(void); 
+#endif /* TAU_ROCTRACER */
+
 #ifdef TAU_SHMEM
 #include "shmem.h"
 extern "C" void  __real_shmem_finalize() ;
@@ -270,6 +274,18 @@ void Profiler::Start(int tid)
   RtsLayer::getUSecD(tid, StartTime, 1);
 
   TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
+  // This can happen when starting .TAU application on "virtual" GPU threads.
+  // The GPU timestamp isn't availble yet, so start is bogus.  Instead,
+  // get the timers read just after initialization.
+  if (TimeStamp == 0L) {
+    printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+    TauMetrics_getDefaults(tid, StartTime, 1);
+    TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
+    if (TimeStamp == 0L) {
+      fprintf(stderr, "Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+      abort();
+    }
+  }
 
   /********************************************************************************/
   /*** Extras ***/
@@ -459,6 +475,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #else
   RtsLayer::getUSecD(tid, CurrentTime);
 #endif /* TAU_TRACK_IDLE_THREADS */
+  //printf("In Stop: CurrentTime[0] = %f\n", CurrentTime[0]);
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -481,12 +498,27 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   // It's ok if CurrentTime is 0, because that means StartTime is too.
   // However, if CurrentTime is not 0, we need to fix a timer that was read
   // before we were done initializing metrics.
+  // This code SHOULDN'T be needed any more.  but things slip through the cracks.
   if (CurrentTime[0] != 0.0 && StartTime[0] == 0.0) { 
+    abort();
+	// get the CurrentTime again, but use the thread 0 context
+    double CurrentTime_0[TAU_MAX_COUNTERS] = { 0 };
+    RtsLayer::getUSecD(0, CurrentTime_0);
+	// ...because the default values were captured by thread 0
     TauMetrics_getDefaults(tid, StartTime, 0);
-  }
-
-  for (int k = 0; k < Tau_Global_numCounters; k++) {
-    TotalTime[k] = CurrentTime[k] - StartTime[k];
+	// ...and what we really care about is that the delta is correct.
+    for (int k = 0; k < Tau_Global_numCounters; k++) {
+      TotalTime[k] = CurrentTime_0[k] - StartTime[k];
+    }
+  } else {
+    for (int k = 0; k < Tau_Global_numCounters; k++) {
+      TotalTime[k] = CurrentTime[k] - StartTime[k];
+#ifdef DEBUG_PROF
+      printf("CurrentTime[%d] = %f\n", k, CurrentTime[k]);
+      printf("StartTime[%d]   = %f\n", k, StartTime[k]);
+      printf("TotalTime[%d]   = %f\n", k, TotalTime[k]);
+#endif /* DEBUG_PROF */
+    }
   }
 
   x_uint64 TimeStamp = 0L;
@@ -1622,6 +1654,12 @@ int TauProfiler_StoreData(int tid)
   TAU_VERBOSE("TAU<%d,%d>: Turning off the lights... \n", RtsLayer::myNode(), tid);
   Tau_global_setLightsOut();
 #endif /* TAU_SCOREP */  
+
+
+#ifdef TAU_ENABLE_ROCTRACER
+  Tau_roctracer_stop_tracing();
+#endif /* TAU_ENABLE_ROCTRACER */
+
   return 1;
 }
 

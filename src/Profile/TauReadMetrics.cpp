@@ -345,8 +345,9 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 double gpu_timestamp[TAU_MAX_THREADS];
 double gpu_counterstamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
 
-extern "C" void metric_set_gpu_timestamp(int tid, int idx, double value)
+extern "C" void metric_set_gpu_timestamp(int tid, double value)
 {
+  // printf("TauReadMetrics.cpp: metric_set_gpu_timestamp: tid = %d, value = %f\n", tid, value);
 	gpu_timestamp[tid] = value;
 }
 
@@ -356,7 +357,6 @@ extern "C" void metric_set_gpu_counterstamp(int tid, int idx, double value)
 }
 
 void metric_read_cudatime(int tid, int idx, double values[]) {
-
   //get time from the CPU clock
   if (!Tau_is_thread_fake(tid))
   { 
@@ -374,7 +374,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
     values[idx] = gpu_timestamp[tid];
     //values[idx] = gpu_timestamp[tid][1];
   }
-  //printf("metric_read_cudatime: tid %d, values[%d] = %g\n", tid, idx, values[idx]); 
+  //printf("metric_read_cudatime: tid %d, values[%d] = %f\n", tid, idx, values[idx]); 
 }
 
 #ifdef CUPTI

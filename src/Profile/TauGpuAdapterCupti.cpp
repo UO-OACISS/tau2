@@ -2,10 +2,9 @@
 
 extern void *Tau_pure_search_for_function(const char *name);
 
-extern "C" void Tau_cupti_set_offset(
-        double timestamp) {
-    //printf("setting timestamp.\n");
-    CuptiGpuEvent::beginTimestamp = timestamp;
+extern "C" void Tau_cupti_set_offset(double cpu_gpu_offset) {
+    // printf("setting offset to %f.\n", cpu_gpu_offset);
+    CuptiGpuEvent::setSyncOffset(cpu_gpu_offset);
 }
 
 extern "C" void Tau_cupti_find_context_event(
