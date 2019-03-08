@@ -31,7 +31,7 @@ int Tau_plugin_sos_dump(Tau_plugin_event_dump_data_t* data) {
     if (!enabled) return 0;
     //printf("TAU PLUGIN SOS: dump\n");
     if (thePluginOptions().env_sos_periodic != 1) { 
-        TAU_SOS_send_data();
+        TAU_SOS_send_data(false);
     }
     return 0;
 }
@@ -43,7 +43,7 @@ int Tau_plugin_sos_mpit(Tau_plugin_event_mpit_data_t* data) {
     //dprintf("TAU SOS PLUGIN: pvar value: %llu\n", data->pvar_value); 
 
     Tau_SOS_pack_long(data->pvar_name, data->pvar_value);
-    TAU_SOS_send_data();
+    TAU_SOS_send_data(false);
     return 0;
 }
 
@@ -57,7 +57,7 @@ int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_da
     if (!enabled) return 0;
     //fprintf(stdout, "TAU PLUGIN SOS Pre-Finalize\n"); fflush(stdout);
     // OK to do it from any thread, because it came from MPI_Finalize
-    TAU_SOS_send_data();
+    TAU_SOS_send_data(false);
     /* We used to finalize now, but we no longer use MPI in the finalization
      * so it's ok to wait until all timers are done */
     /*
@@ -73,7 +73,7 @@ int Tau_plugin_sos_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_da
 int Tau_plugin_sos_post_init(Tau_plugin_event_post_init_data_t* data) {
     if (!enabled) return 0;
     //fprintf(stdout, "TAU PLUGIN SOS Post Init\n"); fflush(stdout);
-    TAU_SOS_send_data();
+    TAU_SOS_send_data(false);
     return 0;
 }
 

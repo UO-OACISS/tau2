@@ -95,7 +95,7 @@ void * Tau_sos_thread_function(void* data) {
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
             TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
-            TAU_SOS_send_data();
+            TAU_SOS_send_data(false);
             TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
@@ -549,7 +549,7 @@ void TAU_SOS_finalize(void) {
         TAU_SOS_stop_worker();
     }
     // flush any outstanding packs
-    TAU_SOS_send_data();
+    TAU_SOS_send_data(true);
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
         if (my_rank == daemon_rank) {
@@ -809,7 +809,7 @@ void TAU_SOS_pack_profile() {
 extern "C" int Tau_open_status(void);
 extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm);
 
-void TAU_SOS_send_data(void) {
+void TAU_SOS_send_data(bool finalizing) {
     // have we initialized?
     if (_runtime == NULL) { 
         fprintf(stderr, "ERROR! No SOS runtime found, did you initialize?\n");
@@ -839,8 +839,9 @@ void TAU_SOS_send_data(void) {
     	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
     TauTrackLoadHere();
     /* Only send a profile update if we aren't tracing */
-    if (!thePluginOptions().env_sos_tracing && 
-	    !thePluginOptions().env_sos_trace_adios) {
+    if (finalizing || 
+        (!thePluginOptions().env_sos_tracing && 
+	     !thePluginOptions().env_sos_trace_adios)) {
         TAU_SOS_pack_profile();
     }
     static int frame = 0;

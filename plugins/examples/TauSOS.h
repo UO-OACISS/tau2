@@ -58,11 +58,10 @@ void Tau_SOS_parse_selection_file(const char * filename);
 bool Tau_SOS_contains(std::set<std::string>& myset, 
         const char * key, bool if_empty);
 
-void TAU_SOS_send_data(void);
+void TAU_SOS_send_data(bool finalizing);
 bool TAU_SOS_init(void);
 void TAU_SOS_stop_worker(void);
 void TAU_SOS_finalize(void);
-void TAU_SOS_send_data(void);
 void Tau_SOS_pack_current_timer(const char * event_name);
 void Tau_SOS_pack_string(const char * name, char * value);
 void Tau_SOS_pack_double(const char * name, double value);
