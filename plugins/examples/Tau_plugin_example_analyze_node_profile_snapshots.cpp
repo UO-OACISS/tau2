@@ -83,6 +83,9 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
 #ifdef TAU_MPI
 
+  if(!index)
+    PMPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
+
   PMPI_Comm_rank(comm, &rank);
   PMPI_Comm_size(comm, &size);
 
@@ -225,8 +228,6 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
-
-  MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 
   cb->Trigger = Tau_plugin_event_trigger;
   cb->EndOfExecution = Tau_plugin_event_end_of_execution;
