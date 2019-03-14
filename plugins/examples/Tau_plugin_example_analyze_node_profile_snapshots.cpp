@@ -55,36 +55,6 @@ typedef struct snapshot_buffer {
 #define N_SNAPSHOTS 20
 snapshot_buffer_t s_buffer[N_SNAPSHOTS]; //Store upto N_SNAPSHOTS snapshots
 
-int is_instrumentation_enabled = 1;
-
-int counter = 0;
-
-bool sort_func(const std::pair<double, int>& first, const std::pair<double, int>& second)
-{
-  return (first.first < second.first);
-}
-
-void disable_instrumentation_if_necessary(int index, int rank) {
-
-   int should_i_disable_instrumentation = 1;
-  
-   if(rank == 0) {
-     for(int i = 0 ; i < 5; i++) {
-       if(s_buffer[index].top_5_excl_time_mean[i] != s_buffer[index-1].top_5_excl_time_mean[i]) {
-         should_i_disable_instrumentation = 0; break;
-       }
-     }
-   }
-
-   MPI_Bcast(&should_i_disable_instrumentation, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-   if(should_i_disable_instrumentation) {
-     fprintf(stderr, "Disabling instrumentation at index %d\n", index);
-     TAU_DISABLE_INSTRUMENTATION(); 
-     is_instrumentation_enabled = 0; 
-   }
-}
-
 
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
@@ -95,20 +65,6 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
  
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
-#ifdef TAU_ANALYTICS_INSTRUMENTATION_TOGGLE
-  if(!is_instrumentation_enabled && counter < 5) {
-    counter++;
-    return 0;
-  }
-
-  if(counter == 5) {
-    fprintf(stderr, "Enabling instrumentation again...\n");
-    TAU_ENABLE_INSTRUMENTATION();
-    is_instrumentation_enabled = 1;
-    counter = 0;
-  }
-#endif
 
   //Update the profile!
   TauProfiler_updateAllIntermediateStatistics();
@@ -127,8 +83,8 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
 #ifdef TAU_MPI
 
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  PMPI_Comm_size(MPI_COMM_WORLD, &size);
+  PMPI_Comm_rank(comm, &rank);
+  PMPI_Comm_size(comm, &size);
 
 #endif
 
@@ -253,27 +209,6 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					 &(s_buffer[index].sAtomicSumSqr), comm);
 
 
-#ifdef TAU_ANALYTICS_INSTRUMENTATION_TOGGLE
-
-   if(rank == 0) {
-     std::list<std::pair<double, int> > sorted_list;
-
-     for(int i = 0; i < numEvents; i++) {
-       sorted_list.push_back(std::make_pair(s_buffer[index].sExcl[stat_mean_all][0][i], i));
-     }
-
-     sorted_list.sort(sort_func);
-     std::list<std::pair<double, int> >::iterator it=sorted_list.begin();
-
-     for(int i = 0; i < 5; i++, it++) {
-       s_buffer[index].top_5_excl_time_mean.push_back(it->second);
-     }
-   }
-
-   if(index)
-     disable_instrumentation_if_necessary(index, rank);
-#endif
-    
    /* if(rank == 0) {
       for(int i=0; i<numAtomicEvents; i++)
         fprintf(stderr, "The min and max for atomic event %d lies with processes %d and %d with values %f and %f\n", i, s_buffer[index].gAtomicMin_min[i].index, s_buffer[index].gAtomicMax_max[i].index, s_buffer[index].gAtomicMin_min[i].value, s_buffer[index].gAtomicMax_max[i].value);

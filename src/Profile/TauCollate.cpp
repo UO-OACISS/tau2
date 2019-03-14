@@ -764,10 +764,17 @@ void Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(Tau_unify_object_t 
 					  double ***sAtomicMax,
 					  double ***sAtomicCalls, 
 					  double ***sAtomicMean,
-					  double ***sAtomicSumSqr) {
+					  double ***sAtomicSumSqr
+#ifdef TAU_MPI
+  , MPI_Comm comm)
+#else
+  )
+#endif
+
+{
   int rank = 0;
 #ifdef TAU_MPI
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(comm, &rank);
 #endif /* TAU_MPI */
   
   MPI_Op min_op = MPI_MIN;
@@ -851,23 +858,23 @@ void Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(Tau_unify_object_t 
     // reduce data to rank 0
 #ifdef TAU_MPI
     PMPI_Reduce(atomicMin, (*gAtomicMin)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, comm);
     PMPI_Reduce(atomicMax, (*gAtomicMax)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, comm);
     PMPI_Reduce(atomicCalls, (*gAtomicCalls)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, comm);
     PMPI_Reduce(atomicMean, (*gAtomicMean)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, comm);
     PMPI_Reduce(atomicSumSqr, (*gAtomicSumSqr)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, comm);
 
     if(s == step_min) {
       PMPI_Reduce(atomicMin_, *gAtomicMin_min, numItems, MPI_DOUBLE_INT,
-                MPI_MINLOC, 0, MPI_COMM_WORLD);
+                MPI_MINLOC, 0, comm);
     }
     if(s == step_max) {
       PMPI_Reduce(atomicMax_, *gAtomicMax_max, numItems, MPI_DOUBLE_INT,
-                MPI_MAXLOC, 0, MPI_COMM_WORLD);
+                MPI_MAXLOC, 0, comm);
     }
 #endif /* TAU_MPI */
   }
@@ -1178,10 +1185,18 @@ void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *funct
                                     double_int ***gExcl_max, double_int ***gIncl_max,
 				    double ***gNumCalls, double ***gNumSubr,
 				    double ****sExcl, double ****sIncl,
-				    double ***sNumCalls, double ***sNumSubr) {
+				    double ***sNumCalls, double ***sNumSubr
+
+#ifdef TAU_MPI
+ , MPI_Comm comm)
+#else
+  )
+#endif
+{
+
   int rank = 0;
 #ifdef TAU_MPI
-  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(comm, &rank);
 #endif /* TAU_MPI */
 
   // *CWL* - Minimum needs to be handled with out-of-band values for now.
@@ -1284,30 +1299,30 @@ void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *funct
     // reduce data to rank 0
     for (int m=0; m<Tau_Global_numCounters; m++) {
       PMPI_Reduce(excl[m], (*gExcl)[s][m], numItems, MPI_DOUBLE, 
-		  collate_op[s], 0, MPI_COMM_WORLD);
+		  collate_op[s], 0, comm);
       PMPI_Reduce(incl[m], (*gIncl)[s][m], numItems, MPI_DOUBLE, 
-		  collate_op[s], 0, MPI_COMM_WORLD);
+		  collate_op[s], 0, comm);
 
       /* Awfully inefficient stuff!!*/
       if(s == step_min) {
         PMPI_Reduce(excl_[m], (*gExcl_min)[m], numItems, MPI_DOUBLE_INT,
-                    MPI_MINLOC, 0, MPI_COMM_WORLD);
+                    MPI_MINLOC, 0, comm);
         PMPI_Reduce(incl_[m], (*gIncl_min)[m], numItems, MPI_DOUBLE_INT,
-                    MPI_MINLOC, 0, MPI_COMM_WORLD);
+                    MPI_MINLOC, 0, comm);
       }
 
       if(s == step_max) {
         PMPI_Reduce(excl_[m], (*gExcl_max)[m], numItems, MPI_DOUBLE_INT,
-                    MPI_MAXLOC, 0, MPI_COMM_WORLD);
+                    MPI_MAXLOC, 0, comm);
         PMPI_Reduce(incl_[m], (*gIncl_max)[m], numItems, MPI_DOUBLE_INT,
-                    MPI_MAXLOC, 0, MPI_COMM_WORLD);
+                    MPI_MAXLOC, 0, comm);
       }
     }
 
     PMPI_Reduce(numCalls, (*gNumCalls)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, comm);
     PMPI_Reduce(numSubr, (*gNumSubr)[s], numItems, MPI_DOUBLE, 
-		collate_op[s], 0, MPI_COMM_WORLD);
+		collate_op[s], 0, comm);
 #endif /* TAU_MPI */
   }
 #ifdef TAU_MPI
