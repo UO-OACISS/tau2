@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <algorithm>
 #include <iterator>
+#include <fcntl.h>
+
 
 #ifdef TAU_MPI
 #include <mpi.h>
@@ -269,6 +271,26 @@ bool TAU_SOS_fork_exec_sosd(void) {
     }
     // fork the daemon
     if (my_rank == daemon_rank) {
+        int outfd = 0;
+        int errfd = 0;
+        /* This is disabled unless you need to log the output from listeners */
+        if (ranks_per_node && false) {
+            int rpn = atoi(ranks_per_node);
+            std::stringstream ss;
+            ss << "listener." << my_rank / rpn << ".out";
+            if ((outfd = open(ss.str().c_str(), O_CREAT|O_TRUNC|O_WRONLY, 0644)) < 0) {
+                perror(ss.str().c_str());    /* open failed */
+                exit(1);
+            }
+            std::cout << "writing output of the command " << forkCommand << " to " << ss.str() << std::endl;
+            std::stringstream ss2;
+            ss2 << "listener." << my_rank / rpn << ".err";
+            if ((errfd = open(ss2.str().c_str(), O_CREAT|O_TRUNC|O_WRONLY, 0644)) < 0) {
+                perror(ss2.str().c_str());    /* open failed */
+                exit(1);
+            }
+            std::cout << "writing error of the command " << forkCommand << " to " << ss2.str() << std::endl;
+        }
         int listener_pid = vfork();
         if (listener_pid == 0) {
             if (forkCommand) {
@@ -288,7 +310,13 @@ bool TAU_SOS_fork_exec_sosd(void) {
                         custom_command.replace(index,15,ss.str());
                     }
                 }
-                std::cout << "SOS Listener not found, Rank " << my_rank << " spawning SOS daemon(s): " << custom_command << std::endl;
+                std::cout << "SOS Listener not found, Rank " << my_rank << " spawned SOS daemon(s): " << custom_command << std::endl;
+                if (outfd > 0) {
+                    dup2(outfd, STDOUT_FILENO);    /* fd becomes the standard output */
+                }
+                if (errfd > 0) {
+                    dup2(errfd, STDERR_FILENO);    /* fd becomes the standard output */
+                }
                 TAU_SOS_do_fork(custom_command);
             }
         }
