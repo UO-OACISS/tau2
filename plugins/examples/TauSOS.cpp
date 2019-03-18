@@ -723,19 +723,30 @@ void TAU_SOS_pack_profile() {
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
 
+    RtsLayer::LockDB();
+    /* Copy the function info database so we can release the lock */
+    std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
+    /* The counters are special, because they have a special allocator. */
+    std::vector<tau::TauUserEvent*> tmpCounters;
+    tmpCounters.reserve(tau::TheEventDB().size());
+    for (tau::AtomicEventDB::const_iterator tmpIter = tau::TheEventDB().begin();
+         tmpIter != tau::TheEventDB().end(); tmpIter++) {
+         tmpCounters.push_back(*tmpIter);
+    }
+    RtsLayer::UnLockDB();
+
     // get the FunctionInfo database, and iterate over it
     std::vector<FunctionInfo*>::const_iterator it;
     const char **counterNames;
     int numCounters;
     TauMetrics_getCounterList(&counterNames, &numCounters);
     //printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
-    RtsLayer::LockDB();
 
     std::map<std::string, std::vector<double>* > low_res_timer_map;
     std::map<std::string, std::vector<double>* >::iterator timer_map_it;
 
     //foreach: TIMER
-    for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
         /* First, check to see if we are including/excluding this timer */
         if (skip_timer(fi->GetName())) {
@@ -752,6 +763,9 @@ void TAU_SOS_pack_profile() {
         //foreach: THREAD
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
             calls = fi->GetCalls(tid);
+            // skip this timer if this thread didn't call it.
+            // for data-reduction reasons.
+            if (calls == 0) continue;
             std::stringstream calls_str;
             calls_str << "TAU_TIMER:" << tid << ":calls:" << fi->GetAllGroups() << ":" << fi->GetName();
             const std::string& tmpcalls = calls_str.str();
@@ -783,13 +797,13 @@ void TAU_SOS_pack_profile() {
     std::map<std::string, double>::iterator counter_map_it;
 
     // do the same with counters.
-    //std::vector<tau::TauUserEvent*>::const_iterator it2;
-    tau::AtomicEventDB::iterator it2;
+    std::vector<tau::TauUserEvent*>::const_iterator it2;
     int numEvents;
     double max, min, mean, sumsqr;
     std::stringstream tmp_str;
-    for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
+    for (it2 = tmpCounters.begin(); it2 != tmpCounters.end(); it2++) {
         tau::TauUserEvent *ue = (*it2);
+        if (ue == NULL) continue;
         /* First, check to see if we are including/excluding this counter */
         if (skip_counter(ue->GetName().c_str())) {
             continue;
@@ -798,7 +812,7 @@ void TAU_SOS_pack_profile() {
 
         int tid = 0;
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-            if (ue && ue->GetNumEvents(tid) == 0) continue;
+            if (ue->GetNumEvents(tid) == 0) continue;
             //if (ue && ue->GetWriteAsMetric()) continue;
             numEvents = ue->GetNumEvents(tid);
             mean = ue->GetMean(tid);
@@ -831,7 +845,6 @@ void TAU_SOS_pack_profile() {
     if ((ue_count + fi_count) > SOS_DEFAULT_ELEM_MAX) {
         TAU_VERBOSE("DANGER, WILL ROBINSON! EXCEEDING MAX ELEMENTS IN SOS. Bad things might happen?\n");
     }
-    RtsLayer::UnLockDB();
 }
 
 extern "C" int Tau_open_status(void);
