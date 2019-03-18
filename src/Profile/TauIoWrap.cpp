@@ -46,9 +46,9 @@ void * global_bytes_read = 0;
  * to enable/disable wrapping
  ********************************************************************/
 static int lightsOut = 0;
-struct IOvector : public vector<vector<TauUserEvent*, TauSignalSafeAllocator<TauUserEvent*> > >
+struct IOvector : public vector<AtomicEventDB>
 {
-  IOvector(int farg) : vector<vector<TauUserEvent*, TauSignalSafeAllocator<TauUserEvent*> > >(farg) {
+  IOvector(int farg) : vector<AtomicEventDB>(farg) {
     lightsOut = 0;
   }
   ~IOvector() {

@@ -726,13 +726,8 @@ void TAU_SOS_pack_profile() {
     RtsLayer::LockDB();
     /* Copy the function info database so we can release the lock */
     std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
-    /* The counters are special, because they have a special allocator. */
-    std::vector<tau::TauUserEvent*> tmpCounters;
-    tmpCounters.reserve(tau::TheEventDB().size());
-    for (tau::AtomicEventDB::const_iterator tmpIter = tau::TheEventDB().begin();
-         tmpIter != tau::TheEventDB().end(); tmpIter++) {
-         tmpCounters.push_back(*tmpIter);
-    }
+    // use the normal copy constructor.
+    tau::AtomicEventDB tmpCounters(tau::TheEventDB());
     RtsLayer::UnLockDB();
 
     // get the FunctionInfo database, and iterate over it
@@ -793,16 +788,17 @@ void TAU_SOS_pack_profile() {
         }
     }
 
+    tau::AtomicEventDB::const_iterator counterIterator;
     std::map<std::string, double> low_res_counter_map;
     std::map<std::string, double>::iterator counter_map_it;
 
     // do the same with counters.
-    std::vector<tau::TauUserEvent*>::const_iterator it2;
     int numEvents;
     double max, min, mean, sumsqr;
     std::stringstream tmp_str;
-    for (it2 = tmpCounters.begin(); it2 != tmpCounters.end(); it2++) {
-        tau::TauUserEvent *ue = (*it2);
+    for (counterIterator = tmpCounters.begin();
+         counterIterator != tmpCounters.end(); counterIterator++) {
+        tau::TauUserEvent *ue = (*counterIterator);
         if (ue == NULL) continue;
         /* First, check to see if we are including/excluding this counter */
         if (skip_counter(ue->GetName().c_str())) {
