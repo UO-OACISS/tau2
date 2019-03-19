@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <inttypes.h>
 #include <vector>
+#include <map>
 #include <string>
 #include <stack>
 #include <iostream>
@@ -32,6 +33,7 @@ using namespace std;
 
 #include <TAU.h>
 
+map<int,FunctionInfo*> KokkosFunctionInfoDB;
 
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
@@ -112,7 +114,11 @@ extern "C" void Tau_start_kokkos_timer(string operation, const char* name, const
 	FunctionInfo *fi = (FunctionInfo *)fiptr; 
   	*kID=fi->GetFunctionId();
 
-	TAU_VERBOSE("TAU: Start: %s kernel id=%llu on device %d\n", fi->GetName(), *kID, devID);
+        KokkosFunctionInfoDB[*kID] = fi; 
+
+	TAU_VERBOSE("TAU: Start : %s kernel id=%llu on device %d\n", fi->GetName(), *kID, devID);
+        TAU_VERBOSE("TAU: Start: KokkosFunctionInfoDB[%d]->GetName() is %s, addr = %p\n",
+	  (*(kID)), KokkosFunctionInfoDB[*kID]->GetName(), KokkosFunctionInfoDB[*kID]);
 	//cout <<"Region: "<<region_name<<" id = "<<*kID<<endl;
 	//printf("Kokkos::parallel_for %s [device=%d]\n", dem_name, devID); 
 }
@@ -124,7 +130,8 @@ extern "C" void kokkosp_begin_parallel_for(const char* name, const uint32_t devI
 //// end parallel for 
 ///////////////////////////////////////////////////////////
 extern "C" void Tau_stop_kokkos_timer(const uint64_t kID) {
-	FunctionInfo *fiptr = TheFunctionDB()[kID-1];
+	//FunctionInfo *fiptr = TheFunctionDB()[kID-1];
+	FunctionInfo *fiptr = KokkosFunctionInfoDB[kID];
 	TAU_PROFILER_STOP(fiptr); 
 	TAU_VERBOSE("TAU: Stop:  %s kernel id=%d is complete.\n", 
 		fiptr->GetName(), kID); 

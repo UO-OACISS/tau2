@@ -32,6 +32,7 @@ pthread_mutex_t mutexsum;
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 512
 #endif
+#define ITERATIONS 3
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
 #define NCA MATRIX_SIZE                 /* number of columns in matrix A */
@@ -197,7 +198,7 @@ void * threaded_func(void *data)
   int sum = 0;
   // compute
   int i;
-  for (i = 0 ; i < 1 ; i++) {
+  for (i = 0 ; i < ITERATIONS ; i++) {
   do_work();
   }
 
@@ -330,7 +331,8 @@ int main (int argc, char *argv[])
 
 /* On thread 0: */
   int i;
-  for (i = 0 ; i < 1 ; i++) {
+  for (i = 0 ; i < ITERATIONS ; i++) {
+  printf("%d.", i);fflush(stdout);
   do_work();
   }
 

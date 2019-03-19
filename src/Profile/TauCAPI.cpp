@@ -1827,7 +1827,7 @@ extern "C" void Tau_trigger_context_event(const char *name, double data) {
 extern "C" void Tau_trigger_userevent(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
-  Tau_pure_userevent_signal_safe(&ue, name);
+  Tau_pure_userevent(&ue, name);
   Tau_userevent(ue, data);
 }
 
@@ -1835,7 +1835,7 @@ extern "C" void Tau_trigger_userevent(const char *name, double data) {
 extern "C" void Tau_trigger_userevent_thread(const char *name, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
-  Tau_pure_userevent_signal_safe(&ue, name);
+  Tau_pure_userevent(&ue, name);
   Tau_userevent_thread(ue, data, tid);
 }
 
@@ -2021,6 +2021,11 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 }
 
 // struct GpuThread gThreads[TAU_MAX_THREADS];
+//
+#ifdef TAU_ROCTRACER
+extern void Tau_roctracer_start_tracing(void); 
+extern void Tau_roctracer_stop_tracing(void); 
+#endif /* TAU_ROCTRACER */
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
 // #if defined(TAU_GPU) && defined(PTHREADS) 
@@ -2033,6 +2038,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void) {
     TauEnv_set_nodeNegOneSeen(TauEnv_get_nodeNegOneSeen()+1);
   }
   return Tau_create_top_level_timer_if_necessary_task(Tau_get_thread());
+
 }
 
 
@@ -2059,6 +2065,9 @@ extern "C" const char * Tau_get_current_timer_name(int tid) {
 
 extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
    Tau_stop_top_level_timer_if_necessary_task(Tau_get_thread());
+#ifdef TAU_ROCTRACER
+   Tau_roctracer_stop_tracing();
+#endif /* TAU_ROCTRACER */
 }
 
 

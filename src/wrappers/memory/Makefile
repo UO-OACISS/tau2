@@ -1,7 +1,7 @@
 include ../../../include/Makefile
 include ../Makefile
 
-CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) -I$(TAUROOT)/src/wrappers/memory
+CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) $(TAU_CC_SPECIAL_OPTS) -I$(TAUROOT)/src/wrappers/memory 
 ARFLAGS = rcv
 
 DYNAMIC_OBJ = dynamic.o memory_wrapper_dynamic.o

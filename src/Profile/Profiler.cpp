@@ -89,6 +89,10 @@ double TauWindowsUsecD(void);
 #endif //__GNUC__
 #endif //CUPTI
 
+#ifdef TAU_ENABLE_ROCTRACER
+extern "C" void Tau_roctracer_stop_tracing(void); 
+#endif /* TAU_ROCTRACER */
+
 #ifdef TAU_SHMEM
 #include "shmem.h"
 extern "C" void  __real_shmem_finalize() ;
@@ -471,6 +475,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 #else
   RtsLayer::getUSecD(tid, CurrentTime);
 #endif /* TAU_TRACK_IDLE_THREADS */
+  //printf("In Stop: CurrentTime[0] = %f\n", CurrentTime[0]);
 
 #ifndef TAU_WINDOWS
 #ifndef _AIX
@@ -508,6 +513,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   } else {
     for (int k = 0; k < Tau_Global_numCounters; k++) {
       TotalTime[k] = CurrentTime[k] - StartTime[k];
+#ifdef DEBUG_PROF
+      printf("CurrentTime[%d] = %f\n", k, CurrentTime[k]);
+      printf("StartTime[%d]   = %f\n", k, StartTime[k]);
+      printf("TotalTime[%d]   = %f\n", k, TotalTime[k]);
+#endif /* DEBUG_PROF */
     }
   }
 
@@ -1644,6 +1654,12 @@ int TauProfiler_StoreData(int tid)
   TAU_VERBOSE("TAU<%d,%d>: Turning off the lights... \n", RtsLayer::myNode(), tid);
   Tau_global_setLightsOut();
 #endif /* TAU_SCOREP */  
+
+
+#ifdef TAU_ENABLE_ROCTRACER
+  Tau_roctracer_stop_tracing();
+#endif /* TAU_ENABLE_ROCTRACER */
+
   return 1;
 }
 

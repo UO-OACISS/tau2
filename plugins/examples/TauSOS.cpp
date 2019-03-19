@@ -25,6 +25,8 @@
 #include <signal.h>
 #include <algorithm>
 #include <iterator>
+#include <fcntl.h>
+
 
 #ifdef TAU_MPI
 #include <mpi.h>
@@ -95,7 +97,7 @@ void * Tau_sos_thread_function(void* data) {
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
             TAU_VERBOSE("%d Sending data from TAU thread...\n", RtsLayer::myNode()); fflush(stderr);
-            TAU_SOS_send_data();
+            TAU_SOS_send_data(false);
             TAU_VERBOSE("%d Done.\n", RtsLayer::myNode()); fflush(stderr);
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
@@ -123,7 +125,7 @@ void TAU_SOS_make_pub() {
         sprintf(pub_name, "TAU_SOS_SUPPORT");
         sprintf(app_version, "v0.alpha");
         SOS_pub_init(_runtime, &tau_sos_pub, pub_name, SOS_NATURE_DEFAULT);
-        //SOS_pub_config(tau_sos_pub, SOS_PUB_OPTION_CACHE, thePluginOptions().env_sos_cache_depth);
+        SOS_pub_config(tau_sos_pub, SOS_PUB_OPTION_CACHE, thePluginOptions().env_sos_cache_depth);
 
         strcpy(tau_sos_pub->prog_ver, app_version);
         tau_sos_pub->meta.channel       = 1;
@@ -269,6 +271,26 @@ bool TAU_SOS_fork_exec_sosd(void) {
     }
     // fork the daemon
     if (my_rank == daemon_rank) {
+        int outfd = 0;
+        int errfd = 0;
+        /* This is disabled unless you need to log the output from listeners */
+        if (ranks_per_node && false) {
+            int rpn = atoi(ranks_per_node);
+            std::stringstream ss;
+            ss << "listener." << my_rank / rpn << ".out";
+            if ((outfd = open(ss.str().c_str(), O_CREAT|O_TRUNC|O_WRONLY, 0644)) < 0) {
+                perror(ss.str().c_str());    /* open failed */
+                exit(1);
+            }
+            std::cout << "writing output of the command " << forkCommand << " to " << ss.str() << std::endl;
+            std::stringstream ss2;
+            ss2 << "listener." << my_rank / rpn << ".err";
+            if ((errfd = open(ss2.str().c_str(), O_CREAT|O_TRUNC|O_WRONLY, 0644)) < 0) {
+                perror(ss2.str().c_str());    /* open failed */
+                exit(1);
+            }
+            std::cout << "writing error of the command " << forkCommand << " to " << ss2.str() << std::endl;
+        }
         int listener_pid = vfork();
         if (listener_pid == 0) {
             if (forkCommand) {
@@ -288,7 +310,13 @@ bool TAU_SOS_fork_exec_sosd(void) {
                         custom_command.replace(index,15,ss.str());
                     }
                 }
-                std::cout << "SOS Listener not found, Rank " << my_rank << " spawning SOS daemon(s): " << custom_command << std::endl;
+                std::cout << "SOS Listener not found, Rank " << my_rank << " spawned SOS daemon(s): " << custom_command << std::endl;
+                if (outfd > 0) {
+                    dup2(outfd, STDOUT_FILENO);    /* fd becomes the standard output */
+                }
+                if (errfd > 0) {
+                    dup2(errfd, STDERR_FILENO);    /* fd becomes the standard output */
+                }
                 TAU_SOS_do_fork(custom_command);
             }
         }
@@ -549,7 +577,7 @@ void TAU_SOS_finalize(void) {
         TAU_SOS_stop_worker();
     }
     // flush any outstanding packs
-    TAU_SOS_send_data();
+    TAU_SOS_send_data(true);
     // shutdown the daemon, if necessary
     if (shutdown_daemon) {
         if (my_rank == daemon_rank) {
@@ -695,19 +723,25 @@ void TAU_SOS_pack_profile() {
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
 
+    RtsLayer::LockDB();
+    /* Copy the function info database so we can release the lock */
+    std::vector<FunctionInfo*> tmpTimers(TheFunctionDB());
+    // use the normal copy constructor.
+    tau::AtomicEventDB tmpCounters(tau::TheEventDB());
+    RtsLayer::UnLockDB();
+
     // get the FunctionInfo database, and iterate over it
     std::vector<FunctionInfo*>::const_iterator it;
     const char **counterNames;
     int numCounters;
     TauMetrics_getCounterList(&counterNames, &numCounters);
     //printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
-    RtsLayer::LockDB();
 
     std::map<std::string, std::vector<double>* > low_res_timer_map;
     std::map<std::string, std::vector<double>* >::iterator timer_map_it;
 
     //foreach: TIMER
-    for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
         /* First, check to see if we are including/excluding this timer */
         if (skip_timer(fi->GetName())) {
@@ -724,6 +758,9 @@ void TAU_SOS_pack_profile() {
         //foreach: THREAD
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
             calls = fi->GetCalls(tid);
+            // skip this timer if this thread didn't call it.
+            // for data-reduction reasons.
+            if (calls == 0) continue;
             std::stringstream calls_str;
             calls_str << "TAU_TIMER:" << tid << ":calls:" << fi->GetAllGroups() << ":" << fi->GetName();
             const std::string& tmpcalls = calls_str.str();
@@ -751,17 +788,18 @@ void TAU_SOS_pack_profile() {
         }
     }
 
+    tau::AtomicEventDB::const_iterator counterIterator;
     std::map<std::string, double> low_res_counter_map;
     std::map<std::string, double>::iterator counter_map_it;
 
     // do the same with counters.
-    //std::vector<tau::TauUserEvent*>::const_iterator it2;
-    tau::AtomicEventDB::iterator it2;
     int numEvents;
     double max, min, mean, sumsqr;
     std::stringstream tmp_str;
-    for (it2 = tau::TheEventDB().begin(); it2 != tau::TheEventDB().end(); it2++) {
-        tau::TauUserEvent *ue = (*it2);
+    for (counterIterator = tmpCounters.begin();
+         counterIterator != tmpCounters.end(); counterIterator++) {
+        tau::TauUserEvent *ue = (*counterIterator);
+        if (ue == NULL) continue;
         /* First, check to see if we are including/excluding this counter */
         if (skip_counter(ue->GetName().c_str())) {
             continue;
@@ -770,7 +808,7 @@ void TAU_SOS_pack_profile() {
 
         int tid = 0;
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-            if (ue && ue->GetNumEvents(tid) == 0) continue;
+            if (ue->GetNumEvents(tid) == 0) continue;
             //if (ue && ue->GetWriteAsMetric()) continue;
             numEvents = ue->GetNumEvents(tid);
             mean = ue->GetMean(tid);
@@ -803,13 +841,12 @@ void TAU_SOS_pack_profile() {
     if ((ue_count + fi_count) > SOS_DEFAULT_ELEM_MAX) {
         TAU_VERBOSE("DANGER, WILL ROBINSON! EXCEEDING MAX ELEMENTS IN SOS. Bad things might happen?\n");
     }
-    RtsLayer::UnLockDB();
 }
 
 extern "C" int Tau_open_status(void);
 extern "C" int Tau_read_status(int fd, long long * rss, long long * hwm);
 
-void TAU_SOS_send_data(void) {
+void TAU_SOS_send_data(bool finalizing) {
     // have we initialized?
     if (_runtime == NULL) { 
         fprintf(stderr, "ERROR! No SOS runtime found, did you initialize?\n");
@@ -839,8 +876,9 @@ void TAU_SOS_send_data(void) {
     	Tau_trigger_context_event_thread("Peak Memory Usage Resident Set Size (VmHWM) (KB)", (double)vmhwm, 0);
     TauTrackLoadHere();
     /* Only send a profile update if we aren't tracing */
-    if (!thePluginOptions().env_sos_tracing && 
-	    !thePluginOptions().env_sos_trace_adios) {
+    if (finalizing || 
+        (!thePluginOptions().env_sos_tracing && 
+	     !thePluginOptions().env_sos_trace_adios)) {
         TAU_SOS_pack_profile();
     }
     static int frame = 0;
@@ -855,7 +893,11 @@ void TAU_SOS_send_data(void) {
 // C++ program to implement wildcard
 // pattern matching algorithm
 // from: https://www.geeksforgeeks.org/wildcard-pattern-matching/
+#if defined(__APPLE__) && defined(__clang__)
+// do nothing
+#else
 #include <bits/stdc++.h>
+#endif
 using namespace std;
  
 // Function that matches input str with
