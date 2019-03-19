@@ -70,6 +70,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   TauProfiler_updateAllIntermediateStatistics();
   static int index = 0;
 
+
   FILE *f;
 #ifdef TAU_MPI
   MPI_Status status;
@@ -80,6 +81,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
   int rank = 0;
   int size = 1;
+  int world_rank = 0;
 
 #ifdef TAU_MPI
 
@@ -87,6 +89,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
     PMPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 
   PMPI_Comm_rank(comm, &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
   PMPI_Comm_size(comm, &size);
 
 #endif
@@ -154,8 +157,9 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 
     /*if(rank == 0) {
       for (int m=0; m<Tau_Global_numCounters; m++)  {
-        for(int n=0; n<numEvents; n++) {
-          fprintf(stderr, "Counter %d: The min exclusive, max exclusive, min inclusive, max inclusive values for event %d are located on processes %d, %d, %d and %d with values %f, %f, %f, %f\n", m, n, s_buffer[index].gExcl_min[m][n].index, s_buffer[index].gExcl_max[m][n].index, s_buffer[index].gIncl_min[m][n].index, s_buffer[index].gIncl_max[m][n].index, s_buffer[index].gExcl_min[m][n].value, s_buffer[index].gExcl_max[m][n].value, s_buffer[index].gIncl_min[m][n].value, s_buffer[index].gIncl_max[m][n].value);
+        //for(int n=0; n<numEvents; n++) {
+        for(int n=0; n<1; n++) {
+          fprintf(stderr, "Counter %d: The min exclusive, max exclusive, min inclusive, max inclusive values for event %d are located on processes %d, %d, %d and %d with values %f, %f, %f, %f AND %d\n", m, n, s_buffer[index].gExcl_min[m][n].index, s_buffer[index].gExcl_max[m][n].index, s_buffer[index].gIncl_min[m][n].index, s_buffer[index].gIncl_max[m][n].index, s_buffer[index].gExcl_min[m][n].value, s_buffer[index].gExcl_max[m][n].value, s_buffer[index].gIncl_min[m][n].value, s_buffer[index].gIncl_max[m][n].value, world_rank);
         }
       }
     }*/
