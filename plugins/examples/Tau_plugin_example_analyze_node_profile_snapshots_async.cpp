@@ -84,12 +84,42 @@ void init_lock(void) {
     }
 }
 
+void Tau_stop_worker(void) {
+
+    fprintf(stderr, "Entering stop worker routine...\n");
+    pthread_mutex_lock(&_my_mutex);
+    done = true;
+    pthread_mutex_unlock(&_my_mutex);
+        pthread_cond_signal(&_my_cond);
+        int ret = pthread_join(worker_thread, NULL);
+        if (ret != 0) {
+            switch (ret) {
+                case ESRCH:
+                    // already exited.
+                    break;
+                case EINVAL:
+                    // Didn't exist?
+                    break;
+                case EDEADLK:
+                    // trying to join with itself?
+                    break;
+                default:
+                    errno = ret;
+                    perror("Warning: pthread_join failed\n");
+                    break;
+            }
+        }
+        pthread_cond_destroy(&_my_cond);
+        pthread_mutex_destroy(&_my_mutex);
+}
+
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
+  //Tau_stop_worker();
   return 0;
 }
 
-void * Tau_plugin_threaded_analytics(void* data) {
+void * Tau_plugin_threaded_analytics_(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
@@ -123,7 +153,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
 	return(NULL);
 }
 
-int Tau_plugin_threaded_analytics_(void* data) {
+void * Tau_plugin_threaded_analytics(void* data) {
  
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
@@ -132,8 +162,41 @@ int Tau_plugin_threaded_analytics_(void* data) {
   TauProfiler_updateAllIntermediateStatistics();
   static int index = 0;
 
+  /* Set the wakeup time (ts) to 2 seconds in the future. */
+  struct timespec ts;
+  struct timeval  tp;
+
+  int flag;
+
+#ifdef TAU_MPI
+  PMPI_Initialized(&flag);
+#endif
+
 
   FILE *f;
+
+  while (!done && flag) {
+        // wait x microseconds for the next batch.
+        gettimeofday(&tp, NULL);
+        const int one_second = 1000000;
+        // first, add the period to the current microseconds
+        int tmp_usec = tp.tv_usec + period_microseconds;
+        int flow_sec = 0;
+        if (tmp_usec > one_second) { // did we overflow?
+            flow_sec = tmp_usec / one_second; // how many seconds?
+            tmp_usec = tmp_usec % one_second; // get the remainder
+        }
+        ts.tv_sec  = (tp.tv_sec + flow_sec);
+        ts.tv_nsec = (1000 * tmp_usec);
+        pthread_mutex_lock(&_my_mutex);
+        int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
+        if (rc == ETIMEDOUT) {
+        } else if (rc == EINVAL) {
+            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
+        } else if (rc == EPERM) {
+            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
+        }
+
 #ifdef TAU_MPI
   MPI_Status status;
 #endif 
@@ -217,14 +280,14 @@ int Tau_plugin_threaded_analytics_(void* data) {
 				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl), 
                                    &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr), comm);
 
-    /*if(rank == 0) {
+    if(rank == 0) {
       for (int m=0; m<Tau_Global_numCounters; m++)  {
         //for(int n=0; n<numEvents; n++) {
-        for(int n=0; n<1; n++) {
+        for(int n=4; n<5; n++) {
           fprintf(stderr, "Counter %d: The min exclusive, max exclusive, min inclusive, max inclusive values for event %d are located on processes %d, %d, %d and %d with values %f, %f, %f, %f AND %d\n", m, n, s_buffer[index].gExcl_min[m][n].index, s_buffer[index].gExcl_max[m][n].index, s_buffer[index].gIncl_min[m][n].index, s_buffer[index].gIncl_max[m][n].index, s_buffer[index].gExcl_min[m][n].value, s_buffer[index].gExcl_max[m][n].value, s_buffer[index].gIncl_min[m][n].value, s_buffer[index].gIncl_max[m][n].value, world_rank);
         }
       }
-    }*/
+    }
 
     /* End  interval event calculations */
     /* Start atomic statistic calculations */
@@ -285,7 +348,11 @@ int Tau_plugin_threaded_analytics_(void* data) {
   }
 
   index++;
-  return 0;
+ }
+    // unlock after being signalled.
+    pthread_mutex_unlock(&_my_mutex);
+    pthread_exit((void*)0L);
+return(NULL);
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
