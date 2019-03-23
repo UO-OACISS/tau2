@@ -96,10 +96,12 @@ void Tau_plugin_adios2_init_adios(void) {
         }
         /** ADIOS class factory of IO class objects, DebugON is recommended */
 #if TAU_MPI
+        MPI_Comm adios_comm;
+        PMPI_Comm_dup(MPI_COMM_WORLD, &adios_comm);
         if (config != nullptr) {
-            ad = adios2::ADIOS(config, MPI_COMM_WORLD, adios2::DebugON);
+            ad = adios2::ADIOS(config, adios_comm, adios2::DebugON);
         } else {
-            ad = adios2::ADIOS(MPI_COMM_WORLD, adios2::DebugON);
+            ad = adios2::ADIOS(adios_comm, adios2::DebugON);
         }
 #else
         if (config != nullptr) {
