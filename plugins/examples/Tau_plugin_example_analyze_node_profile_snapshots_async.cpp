@@ -20,6 +20,7 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <semaphore.h>
 
 #ifdef TAU_MPI
 #include <mpi.h>
@@ -32,11 +33,15 @@
 #include <Profile/TauTrace.h>
 
 MPI_Comm comm;
+MPI_Comm newcomm;
 pthread_t worker_thread;
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
 int period_microseconds = 2000000;
 bool _threaded = true;
+
+int analytics_complete = 1;
+sem_t mutex;
 
 typedef struct snapshot_buffer {
   double ***gExcl, ***gIncl;
@@ -61,7 +66,7 @@ typedef struct snapshot_buffer {
   std::vector <int> top_5_excl_time_mean;
 } snapshot_buffer_t;
 
-#define N_SNAPSHOTS 20
+#define N_SNAPSHOTS 2000
 snapshot_buffer_t s_buffer[N_SNAPSHOTS]; //Store upto N_SNAPSHOTS snapshots
 
 int done = 0;
@@ -115,7 +120,8 @@ void Tau_stop_worker(void) {
 
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
-  //Tau_stop_worker();
+  //sem_destroy(&mutex);
+
   return 0;
 }
 
@@ -154,55 +160,31 @@ void * Tau_plugin_threaded_analytics_(void* data) {
 }
 
 void * Tau_plugin_threaded_analytics(void* data) {
- 
+
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
-
-  //Update the profile!
-  TauProfiler_updateAllIntermediateStatistics();
-  static int index = 0;
-
-  /* Set the wakeup time (ts) to 2 seconds in the future. */
-  struct timespec ts;
-  struct timeval  tp;
-
   int flag;
+  static int index = 0;
 
 #ifdef TAU_MPI
   PMPI_Initialized(&flag);
 #endif
 
+ while(!done && flag) {
 
-  FILE *f;
+  sem_wait(&mutex); //Block on semaphore
+  fprintf(stderr, "Performing analytics...\n");
+  //PMPI_Barrier(newcomm);
 
-  while (!done && flag) {
-        // wait x microseconds for the next batch.
-        gettimeofday(&tp, NULL);
-        const int one_second = 1000000;
-        // first, add the period to the current microseconds
-        int tmp_usec = tp.tv_usec + period_microseconds;
-        int flow_sec = 0;
-        if (tmp_usec > one_second) { // did we overflow?
-            flow_sec = tmp_usec / one_second; // how many seconds?
-            tmp_usec = tmp_usec % one_second; // get the remainder
-        }
-        ts.tv_sec  = (tp.tv_sec + flow_sec);
-        ts.tv_nsec = (1000 * tmp_usec);
-        pthread_mutex_lock(&_my_mutex);
-        int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
-        if (rc == ETIMEDOUT) {
-        } else if (rc == EINVAL) {
-            TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
-        } else if (rc == EPERM) {
-            TAU_VERBOSE("Mutex not locked!\n"); fflush(stderr);
-        }
+  analytics_complete = 0;
+ 
+  //Update the profile!
+  TauProfiler_updateAllIntermediateStatistics();
 
 #ifdef TAU_MPI
   MPI_Status status;
 #endif 
   x_uint64 start, end;
-
-  Tau_unify_unifyDefinitions_MPI();
 
   int rank = 0;
   int size = 1;
@@ -213,9 +195,8 @@ void * Tau_plugin_threaded_analytics(void* data) {
   if(!index)
     PMPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 
-  PMPI_Comm_rank(comm, &rank);
-  PMPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-  PMPI_Comm_size(comm, &size);
+   PMPI_Comm_rank(comm, &rank);
+   PMPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
 #endif
 
@@ -224,7 +205,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
   int globalNumThreads;
 
   int numAtomicEvents = 0;
- 
+
   if (TauEnv_get_stat_precompute() == 1) {
     // Unification must already be called.
     s_buffer[index].functionUnifier = Tau_unify_getFunctionUnifier();
@@ -278,16 +259,15 @@ void * Tau_plugin_threaded_analytics(void* data) {
 				   &(s_buffer[index].gExcl_max), &(s_buffer[index].gIncl_max),
                                    &(s_buffer[index].gNumCalls), &(s_buffer[index].gNumSubr),
 				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl), 
-                                   &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr), comm);
+                                   &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr), newcomm);
 
-    if(rank == 0) {
+   /* if(rank == 0) {
       for (int m=0; m<Tau_Global_numCounters; m++)  {
-        //for(int n=0; n<numEvents; n++) {
-        for(int n=4; n<5; n++) {
+        for(int n=0; n<numEvents; n++) {
           fprintf(stderr, "Counter %d: The min exclusive, max exclusive, min inclusive, max inclusive values for event %d are located on processes %d, %d, %d and %d with values %f, %f, %f, %f AND %d\n", m, n, s_buffer[index].gExcl_min[m][n].index, s_buffer[index].gExcl_max[m][n].index, s_buffer[index].gIncl_min[m][n].index, s_buffer[index].gIncl_max[m][n].index, s_buffer[index].gExcl_min[m][n].value, s_buffer[index].gExcl_max[m][n].value, s_buffer[index].gIncl_min[m][n].value, s_buffer[index].gIncl_max[m][n].value, world_rank);
         }
       }
-    }
+    }*/
 
     /* End  interval event calculations */
     /* Start atomic statistic calculations */
@@ -338,7 +318,7 @@ void * Tau_plugin_threaded_analytics(void* data) {
 					 &(s_buffer[index].gAtomicSumSqr),
 					 &(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax), 
 					 &(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
-					 &(s_buffer[index].sAtomicSumSqr), comm);
+					 &(s_buffer[index].sAtomicSumSqr), newcomm);
 
 
    /* if(rank == 0) {
@@ -348,11 +328,20 @@ void * Tau_plugin_threaded_analytics(void* data) {
   }
 
   index++;
- }
-    // unlock after being signalled.
-    pthread_mutex_unlock(&_my_mutex);
-    pthread_exit((void*)0L);
-return(NULL);
+  analytics_complete = 1;
+
+}
+  return(NULL);
+}
+
+int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
+
+   if(analytics_complete) {
+      Tau_unify_unifyDefinitions_MPI();
+      sem_post(&mutex); //release semaphore
+   }
+
+   return 0;
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
@@ -362,7 +351,14 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
+  sem_init(&mutex, 0, 0);
+
+  cb->Trigger = Tau_plugin_event_trigger;
   cb->EndOfExecution = Tau_plugin_event_end_of_execution;
+
+#ifdef TAU_MPI
+  PMPI_Comm_dup(MPI_COMM_WORLD, &newcomm);
+#endif
 
   init_lock();
 
