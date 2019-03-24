@@ -1177,7 +1177,7 @@ extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
   plugins_for_named_specific_event[key].clear();
-  plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+  //plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
 }
 
 extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
