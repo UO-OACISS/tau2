@@ -138,7 +138,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
   cb->EndOfExecution = Tau_plugin_event_end_of_execution;
-  process_id = getpid();
 
 #ifdef TAU_MPI
   PMPI_Comm_dup(MPI_COMM_WORLD, &newcomm);

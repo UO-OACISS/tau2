@@ -51,7 +51,7 @@ typedef struct snapshot_buffer {
   std::vector <int> top_5_excl_time_mean;
 } snapshot_buffer_t;
 
-#define N_SNAPSHOTS 20
+#define N_SNAPSHOTS 2000
 snapshot_buffer_t s_buffer[N_SNAPSHOTS]; //Store upto N_SNAPSHOTS snapshots
 
 int is_instrumentation_enabled = 1;
