@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <utility>
 
@@ -29,8 +30,13 @@
 #include <vector>
 
 #include <Profile/TauPlugin.h>
+#include <Profile/TauMemory.h>
 
 #include <Profile/TauTrace.h>
+#include <sys/resource.h>
+
+#include <sys/types.h>
+#include <unistd.h>
 
 MPI_Comm comm;
 MPI_Comm newcomm;
@@ -40,36 +46,17 @@ pthread_cond_t _my_cond; // for timer
 int period_microseconds = 2000000;
 bool _threaded = true;
 
-int analytics_complete = 1;
-sem_t mutex;
+using namespace std;
 
 typedef struct snapshot_buffer {
-  double ***gExcl, ***gIncl;
-  double_int **gExcl_min, **gIncl_min;
-  double_int **gExcl_max, **gIncl_max;
-  double **gNumCalls, **gNumSubr;
-  double ***sExcl, ***sIncl;
-  double **sNumCalls, **sNumSubr;
-  double **gAtomicMin, **gAtomicMax;
-  double_int *gAtomicMin_min, *gAtomicMax_max;
-  double **gAtomicCalls, **gAtomicMean;
-  double **gAtomicSumSqr;
-  double **sAtomicMin, **sAtomicMax;
-  double **sAtomicCalls, **sAtomicMean;
-  double **sAtomicSumSqr;
-  Tau_unify_object_t *functionUnifier;
-  Tau_unify_object_t *atomicUnifier;
-  int *numEventThreads;
-  int *globalEventMap;
-  int *numAtomicEventThreads;
-  int *globalAtomicEventMap;
-  std::vector <int> top_5_excl_time_mean;
 } snapshot_buffer_t;
 
 #define N_SNAPSHOTS 2000
 snapshot_buffer_t s_buffer[N_SNAPSHOTS]; //Store upto N_SNAPSHOTS snapshots
 
 int done = 0;
+pid_t process_id;
+ifstream memusage;
 
 void init_lock(void) {
     if (!_threaded) return;
@@ -89,35 +76,6 @@ void init_lock(void) {
     }
 }
 
-void Tau_stop_worker(void) {
-
-    fprintf(stderr, "Entering stop worker routine...\n");
-    pthread_mutex_lock(&_my_mutex);
-    done = true;
-    pthread_mutex_unlock(&_my_mutex);
-        pthread_cond_signal(&_my_cond);
-        int ret = pthread_join(worker_thread, NULL);
-        if (ret != 0) {
-            switch (ret) {
-                case ESRCH:
-                    // already exited.
-                    break;
-                case EINVAL:
-                    // Didn't exist?
-                    break;
-                case EDEADLK:
-                    // trying to join with itself?
-                    break;
-                default:
-                    errno = ret;
-                    perror("Warning: pthread_join failed\n");
-                    break;
-            }
-        }
-        pthread_cond_destroy(&_my_cond);
-        pthread_mutex_destroy(&_my_mutex);
-}
-
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
   //sem_destroy(&mutex);
@@ -129,19 +87,15 @@ void * Tau_plugin_threaded_analytics(void* data) {
     /* Set the wakeup time (ts) to 2 seconds in the future. */
     struct timespec ts;
     struct timeval  tp;
-    int dummy_array[100];
-    int min_array[100];
-    int max_array[100];
-    int sum_array[100];
 
     int rank;
 
     PMPI_Comm_rank(newcomm, &rank);
+    string line;
 
     while (!done) {
         // wait x microseconds for the next batch.
         gettimeofday(&tp, NULL);
-        fprintf(stderr, "Inside thread...\n");
         const int one_second = 1000000;
         // first, add the period to the current microseconds
         int tmp_usec = tp.tv_usec + period_microseconds;
@@ -155,13 +109,10 @@ void * Tau_plugin_threaded_analytics(void* data) {
         pthread_mutex_lock(&_my_mutex);
         int rc = pthread_cond_timedwait(&_my_cond, &_my_mutex, &ts);
         if (rc == ETIMEDOUT) {
-          for(int i = 0 ; i < 100; i++) {
-               dummy_array[i] = i*2;
-          }
 
-          PMPI_Reduce(dummy_array, min_array, 100, MPI_INT, MPI_MIN, 0, newcomm);
-          PMPI_Reduce(dummy_array, max_array, 100, MPI_INT, MPI_MAX, 0, newcomm);
-          PMPI_Reduce(dummy_array, sum_array, 100, MPI_INT, MPI_SUM, 0, newcomm);
+           struct rusage r_usage;
+           getrusage(RUSAGE_SELF,&r_usage);
+           fprintf(stderr, "Memory usage = %ld\n",r_usage.ru_maxrss);
    
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
@@ -183,6 +134,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
   cb->EndOfExecution = Tau_plugin_event_end_of_execution;
+  process_id = getpid();
 
 #ifdef TAU_MPI
   PMPI_Comm_dup(MPI_COMM_WORLD, &newcomm);
