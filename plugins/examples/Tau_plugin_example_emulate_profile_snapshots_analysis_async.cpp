@@ -111,8 +111,12 @@ void * Tau_plugin_threaded_analytics(void* data) {
         if (rc == ETIMEDOUT) {
 
            struct rusage r_usage;
+           long result;
            getrusage(RUSAGE_SELF,&r_usage);
-           fprintf(stderr, "Memory usage = %ld\n",r_usage.ru_maxrss);
+           PMPI_Reduce(&(r_usage.ru_maxrss), &result, 1, MPI_LONG, MPI_MAX, 0, newcomm);
+
+           if(!rank)
+             fprintf(stderr, "Max Memory usage = %ld\n", result);
    
         } else if (rc == EINVAL) {
             TAU_VERBOSE("Invalid timeout!\n"); fflush(stderr);
