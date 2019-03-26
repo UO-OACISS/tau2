@@ -294,7 +294,7 @@ void adios::write_variables(void)
     }
 
     /* sort into one big vector from all threads */
-    std::vector<std::pair<unsigned long, std::array<unsigned long, 8> > > 
+    std::vector<std::pair<unsigned long, std::array<unsigned long, 7> > > 
         merged_comms(comm_values_array[0]);
     comm_values_array[0].clear();
     for (int t = 1 ; t < threads ; t++) {
@@ -595,8 +595,8 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(data->message_tag);
-    tmparray[5] = (unsigned long)(data->destination);
-    tmparray[6] = (unsigned long)(data->bytes_sent);
+    tmparray[5] = (unsigned long)(data->source);
+    tmparray[6] = (unsigned long)(data->bytes_received);
     auto &tmp = my_adios->comm_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
