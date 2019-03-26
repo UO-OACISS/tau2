@@ -31,7 +31,8 @@
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
-int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data);
+int Tau_plugin_adios2_function_exit(
+    Tau_plugin_event_function_exit_data_t* data);
 void Tau_dump_ADIOS2_metadata(void);
 
 static bool enabled(false);
@@ -95,7 +96,7 @@ class adios {
             for(int i = 0 ; i < TAU_MAX_THREADS ; i++) {
                 timer_values_array[i].reserve(1024);
                 counter_values_array[i].reserve(1024);
-                //comm_values_array[i].reserve(8*1024);
+                comm_values_array[i].reserve(1024);
             }
         };
         ~adios() {
@@ -105,7 +106,8 @@ class adios {
         void define_variables();
         void open();
         void close();
-        void define_attribute(const std::string& name, const std::string& value);
+        void define_attribute(const std::string& name,
+            const std::string& value);
         void write_variables(void);
 /* from sos object */
         int check_prog_name(char * prog_name);
@@ -126,11 +128,21 @@ class adios {
         // This is an array (one per thread)
         // of vectors (one per timestamp)
         // of pairs (timestamp, values)...
-        std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+        std::vector<
+            std::pair<
+                unsigned long, 
+                std::array<unsigned long, 5> > > 
             timer_values_array[TAU_MAX_THREADS];
-        std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+        std::vector<
+            std::pair<
+                unsigned long,
+                std::array<unsigned long, 5> > > 
             counter_values_array[TAU_MAX_THREADS];
-        //std::vector<unsigned long> comm_values_array[TAU_MAX_THREADS];
+        std::vector<
+            std::pair<
+                unsigned long,
+                std::array<unsigned long, 7> > > 
+            comm_values_array[TAU_MAX_THREADS];
 };
 
 void adios::initialize() {
@@ -271,7 +283,8 @@ void adios::write_variables(void)
     std::vector<unsigned long> all_counters(6,0);;
     all_counters.reserve(6*merged_counters.size());
     int counter_value_index = 0;
-    for (auto it = merged_counters.begin() ; it != merged_counters.end() ; it++) {
+    for (auto it = merged_counters.begin() ;
+         it != merged_counters.end() ; it++) {
         all_counters[counter_value_index++] = it->second[0];
         all_counters[counter_value_index++] = it->second[1];
         all_counters[counter_value_index++] = it->second[2];
@@ -280,7 +293,33 @@ void adios::write_variables(void)
         all_counters[counter_value_index++] = it->first;
     }
 
-    size_t num_comm_values = 0;
+    /* sort into one big vector from all threads */
+    std::vector<std::pair<unsigned long, std::array<unsigned long, 8> > > 
+        merged_comms(comm_values_array[0]);
+    comm_values_array[0].clear();
+    for (int t = 1 ; t < threads ; t++) {
+        merged_comms.insert(merged_comms.end(),
+            comm_values_array[t].begin(),
+            comm_values_array[t].end());
+        comm_values_array[t].clear();
+    }
+    std::sort(merged_comms.begin(), merged_comms.end());
+    size_t num_comm_values = merged_comms.size();
+
+    std::vector<unsigned long> all_comms(8,0);;
+    all_comms.reserve(8*merged_comms.size());
+    int comm_value_index = 0;
+    for (auto it = merged_comms.begin() ;
+         it != merged_comms.end() ; it++) {
+        all_comms[comm_value_index++] = it->second[0];
+        all_comms[comm_value_index++] = it->second[1];
+        all_comms[comm_value_index++] = it->second[2];
+        all_comms[comm_value_index++] = it->second[3];
+        all_comms[comm_value_index++] = it->second[4];
+        all_comms[comm_value_index++] = it->second[5];
+        all_comms[comm_value_index++] = it->second[6];
+        all_comms[comm_value_index++] = it->first;
+    }
 
     bpWriter.Put(program_count, &programs);
     bpWriter.Put(comm_rank_count, &comm_ranks);
@@ -316,7 +355,7 @@ void adios::write_variables(void)
         const adios2::Dims comm_count{static_cast<size_t>(num_comm_values), 8};
         const adios2::Box<adios2::Dims> comm_selection{comm_start, comm_count};
         comm_timestamps.SetSelection(comm_selection);
-        //bpWriter.Put(comm_timestamps, comm_values_array.data());
+        bpWriter.Put(comm_timestamps, all_comms.data());
     }
 
     bpWriter.EndStep();
@@ -522,39 +561,49 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
 
 /* This happens on MPI_Send events (and similar) */
 int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
-#if 0
     if (!enabled) return 0;
     static std::string sendstr("SEND");
     int event_index = my_adios->check_event_type(sendstr);
     my_adios->check_thread(data->tid);
-    comm_values_array[comm_value_index++] = (unsigned long)(0);
-    comm_values_array[comm_value_index++] = (unsigned long)(comm_rank);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->tid);
-    comm_values_array[comm_value_index++] = (unsigned long)(event_index);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->message_tag);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->destination);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->bytes_sent);
-    comm_values_array[comm_value_index++] = timestamp;
-#endif
+    std::array<unsigned long, 7> tmparray;
+    tmparray[0] = 0UL;
+    tmparray[1] = (unsigned long)(comm_rank);
+    tmparray[2] = (unsigned long)(data->tid);
+    tmparray[3] = (unsigned long)(event_index);
+    tmparray[4] = (unsigned long)(data->message_tag);
+    tmparray[5] = (unsigned long)(data->destination);
+    tmparray[6] = (unsigned long)(data->bytes_sent);
+    auto &tmp = my_adios->comm_values_array[data->tid];
+    tmp.push_back(
+        std::make_pair(
+            data->timestamp, 
+            std::move(tmparray)
+        )
+    );
     return 0;
 }
 
 /* This happens on MPI_Recv events (and similar) */
 int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
-#if 0
     if (!enabled) return 0;
     static std::string recvstr("RECV");
     int event_index = my_adios->check_event_type(recvstr);
     my_adios->check_thread(data->tid);
-    comm_values_array[comm_value_index++] = (unsigned long)(0);
-    comm_values_array[comm_value_index++] = (unsigned long)(comm_rank);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->tid);
-    comm_values_array[comm_value_index++] = (unsigned long)(event_index);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->message_tag);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->destination);
-    comm_values_array[comm_value_index++] = (unsigned long)(data->bytes_sent);
-    comm_values_array[comm_value_index++] = timestamp;
-#endif
+    std::array<unsigned long, 7> tmparray;
+    tmparray[0] = 0UL;
+    tmparray[1] = (unsigned long)(comm_rank);
+    tmparray[2] = (unsigned long)(data->tid);
+    tmparray[3] = (unsigned long)(event_index);
+    tmparray[4] = (unsigned long)(data->message_tag);
+    tmparray[5] = (unsigned long)(data->destination);
+    tmparray[6] = (unsigned long)(data->bytes_sent);
+    auto &tmp = my_adios->comm_values_array[data->tid];
+    tmp.push_back(
+        std::make_pair(
+            data->timestamp, 
+            std::move(tmparray)
+        )
+    );
     return 0;
 }
 
@@ -634,7 +683,6 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(counter_index);
     tmparray[4] = (unsigned long)(data->value);
-    printf("%s %lu\n", data->counter_name, data->timestamp);
     auto &tmp = my_adios->counter_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
@@ -665,8 +713,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     cb->PreEndOfExecution = Tau_plugin_adios2_pre_end_of_execution;
     cb->EndOfExecution = Tau_plugin_adios2_end_of_execution;
     /* Trace events */
-    //cb->Send = Tau_plugin_adios2_send;
-    //cb->Recv = Tau_plugin_adios2_recv;
+    cb->Send = Tau_plugin_adios2_send;
+    cb->Recv = Tau_plugin_adios2_recv;
     cb->FunctionEntry = Tau_plugin_adios2_function_entry;
     cb->FunctionExit = Tau_plugin_adios2_function_exit;
     cb->AtomicEventTrigger = Tau_plugin_adios2_atomic_trigger;
