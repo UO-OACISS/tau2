@@ -50,8 +50,8 @@ static bool enabled{false};
 static bool initialized{false};
 static bool done{false};
 static bool _threaded{false};
-static int comm_size = 1;
-static int comm_rank = 0;
+static int global_comm_size = 1;
+static int global_comm_rank = 0;
 pthread_mutex_t _my_mutex; // for initialization, termination
 pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
@@ -240,7 +240,7 @@ class adios {
         adios2::IO bpIO;
         adios2::Engine bpWriter;
         adios2::Variable<int> program_count;
-        adios2::Variable<int> comm_rank_count;
+        adios2::Variable<int> comm_size;
         adios2::Variable<int> thread_count;
         adios2::Variable<int> event_type_count;
         adios2::Variable<int> timer_count;
@@ -259,7 +259,6 @@ class adios {
         int frame_index;
         int total_valid;
         int time_index;
-        int max_comm_rank;
         int max_threads;
         std::unordered_map<std::string, int> prog_names;
         std::unordered_map<std::string, int> value_names;
@@ -277,7 +276,6 @@ class adios {
             value_index(-1),
             frame_index(-1),
             time_index(-1),
-            max_comm_rank(0),
             max_threads(0)
         {
             initialize();
@@ -305,16 +303,13 @@ class adios {
         int check_timer(const char * timer);
         int check_counter(const char * counter);
         // do we need this?
-        void check_comm_rank(int comm_rank);
-        // do we need this?
         void check_thread(int thread);
         int get_prog_count(void) { return prog_names.size(); }
         int get_value_name_count(void) { return value_names.size(); }
         int get_timer_count(void) { return timers.size(); }
         int get_event_type_count(void) { return event_types.size(); }
         int get_counter_count(void) { return counters.size(); }
-        int get_comm_rank_count(void) { return max_comm_rank+1; }
-        int get_thread_count(void) { return max_threads+1; }
+        int get_thread_count(void) { return max_threads+1; } // zero-indexed.
         // This is an array (one per thread)
         // of vectors (one per timestamp)
         // of pairs (timestamp, values)...
@@ -379,7 +374,7 @@ void adios::initialize() {
 
 void adios::define_variables(void) {
     program_count = bpIO.DefineVariable<int>("program_count");
-    comm_rank_count = bpIO.DefineVariable<int>("comm_rank_count");
+    comm_size = bpIO.DefineVariable<int>("comm_rank_count");
     thread_count = bpIO.DefineVariable<int>("thread_count");
     event_type_count = bpIO.DefineVariable<int>("event_type_count");
     timer_count = bpIO.DefineVariable<int>("timer_count");
@@ -399,7 +394,7 @@ void adios::open() {
         std::stringstream ss;
         ss << thePluginOptions().env_filename; 
         if (!thePluginOptions().env_one_file) {
-            ss << "-" << comm_rank;
+            ss << "-" << global_comm_rank;
         }
         ss << ".bp";
         printf("Writing %s\n", ss.str().c_str());
@@ -430,7 +425,7 @@ void adios::define_attribute(const std::string& name, const std::string& value) 
 void adios::write_variables(void)
 {
     int programs = get_prog_count();
-    int comm_ranks = get_comm_rank_count();
+    int comm_ranks = global_comm_size;
     int threads = get_thread_count();
     int event_types = get_event_type_count();
     int timers = get_timer_count();
@@ -518,7 +513,7 @@ void adios::write_variables(void)
     }
 
     bpWriter.Put(program_count, &programs);
-    bpWriter.Put(comm_rank_count, &comm_ranks);
+    bpWriter.Put(comm_size, &comm_ranks);
     bpWriter.Put(thread_count, &threads);
     bpWriter.Put(event_type_count, &event_types);
     bpWriter.Put(timer_count, &timers);
@@ -529,6 +524,7 @@ void adios::write_variables(void)
 
     if (num_timer_values > 0) {
         event_timestamps.SetShape({num_timer_values, 6});
+        /* These dimensions need to change for 1-file case! */
         const adios2::Dims timer_start{0, 0};
         const adios2::Dims timer_count{static_cast<size_t>(num_timer_values), 6};
         const adios2::Box<adios2::Dims> timer_selection{timer_start, timer_count};
@@ -538,6 +534,7 @@ void adios::write_variables(void)
 
     if (num_counter_values > 0) {
         counter_values.SetShape({num_counter_values, 6});
+        /* These dimensions need to change for 1-file case! */
         const adios2::Dims counter_start{0, 0};
         const adios2::Dims counter_count{static_cast<size_t>(num_counter_values), 6};
         const adios2::Box<adios2::Dims> counter_selection{counter_start, counter_count};
@@ -547,6 +544,7 @@ void adios::write_variables(void)
 
     if (num_comm_values > 0) {
         comm_timestamps.SetShape({num_comm_values, 8});
+        /* These dimensions need to change for 1-file case! */
         const adios2::Dims comm_start{0, 0};
         const adios2::Dims comm_count{static_cast<size_t>(num_comm_values), 8};
         const adios2::Box<adios2::Dims> comm_selection{comm_start, comm_count};
@@ -607,13 +605,6 @@ void adios::write_variables(void)
             define_attribute(ss.str(), tmp);
         }
         return counters[tmp];
-    }
-
-    /* Keep a map of max number of MPI communicators */
-    void adios::check_comm_rank(int comm_rank) {
-        if (comm_rank > max_comm_rank) {
-            max_comm_rank = comm_rank;
-        }
     }
 
     /* Keep a map of max number of threads per process */
@@ -773,7 +764,7 @@ void Tau_dump_ADIOS2_metadata(void) {
             my_adios->check_prog_name(it->second->data.cval);
         }
         std::stringstream ss;
-        ss << "MetaData:" << comm_rank << ":" << tid << ":" << it->first.name;
+        ss << "MetaData:" << global_comm_rank << ":" << tid << ":" << it->first.name;
         switch(it->second->type) {
             case TAU_METADATA_TYPE_STRING:
                 my_adios->define_attribute(ss.str(), std::string(it->second->data.cval));
@@ -804,7 +795,7 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
     if (!enabled) return 0;
     //fprintf(stdout, "TAU Metadata registration\n"); fflush(stdout);
     std::stringstream ss;
-    ss << "MetaData:" << comm_rank << ":" << RtsLayer::myThread() << ":" << data->name;
+    ss << "MetaData:" << global_comm_rank << ":" << RtsLayer::myThread() << ":" << data->name;
     switch(data->value->type) {
         case TAU_METADATA_TYPE_STRING:
             my_adios->define_attribute(ss.str(), std::string(data->value->data.cval));
@@ -838,7 +829,7 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
     my_adios->check_thread(data->tid);
     std::array<unsigned long, 7> tmparray;
     tmparray[0] = 0UL;
-    tmparray[1] = (unsigned long)(comm_rank);
+    tmparray[1] = (unsigned long)(global_comm_rank);
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(data->message_tag);
@@ -862,7 +853,7 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     my_adios->check_thread(data->tid);
     std::array<unsigned long, 7> tmparray;
     tmparray[0] = 0UL;
-    tmparray[1] = (unsigned long)(comm_rank);
+    tmparray[1] = (unsigned long)(global_comm_rank);
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(data->message_tag);
@@ -894,7 +885,7 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     my_adios->check_thread(data->tid);
     std::array<unsigned long, 5> tmparray;
     tmparray[0] = 0;
-    tmparray[1] = (unsigned long)(comm_rank);
+    tmparray[1] = (unsigned long)(global_comm_rank);
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
@@ -921,7 +912,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     int event_index = my_adios->check_event_type(exitstr);
     std::array<unsigned long, 5> tmparray;
     tmparray[0] = 0UL;
-    tmparray[1] = (unsigned long)(comm_rank);
+    tmparray[1] = (unsigned long)(global_comm_rank);
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
@@ -948,7 +939,7 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     my_adios->check_thread(data->tid);
     std::array<unsigned long, 5> tmparray;
     tmparray[0] = 0UL;
-    tmparray[1] = (unsigned long)(comm_rank);
+    tmparray[1] = (unsigned long)(global_comm_rank);
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(counter_index);
     tmparray[4] = (unsigned long)(data->value);
@@ -1008,8 +999,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     fprintf(stdout, "TAU PLUGIN ADIOS2 Init\n"); fflush(stdout);
     tau_plugin::Tau_ADIOS2_parse_environment_variables();
 #if TAU_MPI
-    PMPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-    PMPI_Comm_rank(MPI_COMM_WORLD, &comm_rank);
+    PMPI_Comm_size(MPI_COMM_WORLD, &global_comm_size);
+    PMPI_Comm_rank(MPI_COMM_WORLD, &global_comm_rank);
 #endif
     /* Create the callback object */
     TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
@@ -1032,7 +1023,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
 
     /* Open the ADIOS archive */
     my_adios = new tau_plugin::adios();
-    my_adios->check_comm_rank(comm_rank);
     enabled = true;
     Tau_dump_ADIOS2_metadata();
     my_adios->check_event_type(std::string("ENTRY"));
