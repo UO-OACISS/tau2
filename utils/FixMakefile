@@ -441,6 +441,21 @@ case $1 in
 	echo "s,^ADIOSDIR=.*$,ADIOSDIR=$adiosdir,g" >> $sedout
 	;;
 
+    adios2dir=*)
+        adios2dir=`echo $1 | sed -e 's/^adios2dir=//'`
+	echo "s,^ADIOS2DIR=.*$,ADIOS2DIR=$adios2dir,g" >> $sedout
+	;;
+
+    adios2cxxflags=*)
+        adios2cxxflags=`echo $1 | sed -e 's/^adios2cxxflags=//' -e 's/#/ /g'`
+	echo "s,^ADIOS2_CXXFLAGS=.*$,ADIOS2_CXXFLAGS=$adios2cxxflags,g" >> $sedout
+	;;
+
+    adios2libs=*)
+        adios2libs=`echo $1 | sed -e 's/^adios2libs=//' -e 's/#/ /g'`
+	echo "s,^ADIOS2_LIBS=.*$,ADIOS2_LIBS=$adios2libs,g" >> $sedout
+	;;
+
 #    caliperdir=*)
 #        caliperdir=`echo $1 | sed -e 's/^caliperdir=//'`
 #	echo "s,^CALIPERDIR=.*$,CALIPERDIR=$caliperdir,g" >> $sedout
@@ -1689,6 +1704,10 @@ case $1 in
 	;;
      ADIOS)
 	echo "NOTE: Using ADIOS ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     ADIOS2)
+	echo "NOTE: Using ADIOS2 ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
 #     CALIPER)

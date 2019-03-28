@@ -154,6 +154,9 @@ void TauUserEvent::AddEventToDB()
 
 }
 
+// Used when the timestamp is 0, but we need it for the plugin processing
+extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
+
 ///////////////////////////////////////////////////////////
 // TriggerEvent records the value of data in the UserEvent
 ///////////////////////////////////////////////////////////
@@ -305,7 +308,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
         Tau_plugin_event_atomic_event_trigger_data_t plugin_data;
         plugin_data.counter_name = name.c_str();
         plugin_data.tid = tid;
-        plugin_data.timestamp = timestamp;
+        plugin_data.timestamp = (timestamp == 0 ? TauTraceGetTimeStamp(tid) : timestamp);
         plugin_data.value = (uint64_t)data;
         Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_TRIGGER, &plugin_data);
       }
