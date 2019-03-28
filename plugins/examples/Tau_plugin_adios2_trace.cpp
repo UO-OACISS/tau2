@@ -354,6 +354,7 @@ void adios::initialize() {
         PMPI_Group_free(&world_group);
         PMPI_Group_free(&adios_group);
     }
+    Tau_global_incr_insideTAU();
     ad = adios2::ADIOS(adios_comm, true);
 #else
     /** ADIOS class factory of IO class objects, DebugON is recommended */
@@ -370,6 +371,7 @@ void adios::initialize() {
     // ISO-POSIX file output is the default transport (called "File")
     // Passing parameters to the transport
     bpIO.AddTransport("File", {{"Library", "POSIX"}});
+    Tau_global_decr_insideTAU();
 }
 
 void adios::define_variables(void) {
@@ -391,6 +393,7 @@ void adios::define_variables(void) {
 /* Open the ADIOS archive */
 void adios::open() {
     if (!opened) {
+        Tau_global_incr_insideTAU();
         std::stringstream ss;
         ss << thePluginOptions().env_filename; 
         if (!thePluginOptions().env_one_file) {
@@ -400,15 +403,18 @@ void adios::open() {
         printf("Writing %s\n", ss.str().c_str());
         bpWriter = bpIO.Open(ss.str(), adios2::Mode::Write);
         opened = true;
+        Tau_global_decr_insideTAU();
     }
 }
 
 /* Close the ADIOS archive */
 void adios::close() {
     if (opened) {
+        Tau_global_incr_insideTAU();
         bpWriter.Close();
         opened = false;
         enabled = false;
+        Tau_global_decr_insideTAU();
     }
 };
 
@@ -431,6 +437,7 @@ void adios::write_variables(void)
     int timers = get_timer_count();
     int counters = get_counter_count();
 
+    Tau_global_incr_insideTAU();
     bpWriter.BeginStep();
 
     /* sort into one big vector from all threads */
@@ -553,6 +560,7 @@ void adios::write_variables(void)
     }
 
     bpWriter.EndStep();
+    Tau_global_decr_insideTAU();
 }
 
 /* sos object methods */
@@ -654,7 +662,9 @@ void init_lock(void) {
 
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     if (!enabled) return 0;
+    Tau_global_incr_insideTAU();
     my_adios->write_variables();
+    Tau_global_decr_insideTAU();
     return 0;
 }
 
@@ -757,6 +767,7 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
 void Tau_dump_ADIOS2_metadata(void) {
     int tid = RtsLayer::myThread();
     int nodeid = TAU_PROFILE_GET_NODE();
+    Tau_global_incr_insideTAU();
     for (MetaDataRepo::iterator it = Tau_metadata_getMetaData(tid).begin();
          it != Tau_metadata_getMetaData(tid).end(); it++) {
         // check for executable name
@@ -788,11 +799,13 @@ void Tau_dump_ADIOS2_metadata(void) {
                 break;
         }
     }
+    Tau_global_decr_insideTAU();
 }
 
 /* This happens when a Metadata field is saved. */
 int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_registration_data_t* data) {
     if (!enabled) return 0;
+    Tau_global_incr_insideTAU();
     //fprintf(stdout, "TAU Metadata registration\n"); fflush(stdout);
     std::stringstream ss;
     ss << "MetaData:" << global_comm_rank << ":" << RtsLayer::myThread() << ":" << data->name;
@@ -818,6 +831,7 @@ int Tau_plugin_metadata_registration_complete_func(Tau_plugin_event_metadata_reg
         default:
             break;
     }
+    Tau_global_decr_insideTAU();
     return 0;
 }
 
