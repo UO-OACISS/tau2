@@ -65,3 +65,7 @@ extern "C" void (*Adiost_stop)(const char *) = &Tau_pure_stop;
 extern "C" void (*Adiost_trigger_context_event)(const char *, double) = &Tau_trigger_context_event;
 extern "C" void (*Adiost_metadata)(const char *, const char *) = &Tau_metadata;
 
+// Temproary fix
+//extern "C" void Tau_start(const char * name) {
+    //Tau_pure_start(name);
+//}
