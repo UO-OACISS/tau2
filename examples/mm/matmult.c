@@ -159,19 +159,6 @@ double do_work(void) {
   //}
 #endif
 #endif
-#ifdef TAU_MPI
-  int rank = 0;
-  int comm_size = 0;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
-  if (rank == 0) {
-      if (provided == MPI_THREAD_MULTIPLE) { 
-        printf("provided is MPI_THREAD_MULTIPLE\n");
-      } else if (provided == MPI_THREAD_FUNNELED) { 
-        printf("provided is MPI_THREAD_FUNNELED\n");
-      }
-  }
-#endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   double result = c[0][1];
@@ -292,6 +279,8 @@ int main (int argc, char *argv[])
 
 #endif /* PTHREADS */
 
+int Tau_dump(void);
+
 #ifdef TAU_MPI
     // create a communicator
     /* The code above only works with 4 or more processes!! */
@@ -334,6 +323,7 @@ int main (int argc, char *argv[])
   for (i = 0 ; i < ITERATIONS ; i++) {
   printf("%d.", i);fflush(stdout);
   do_work();
+  Tau_dump();
   }
 
 #ifdef PTHREADS

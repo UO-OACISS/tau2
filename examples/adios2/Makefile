@@ -40,7 +40,7 @@ all:		$(TARGET)
 install: 	$(TARGET)
 
 $(TARGET):	$(OBJS) 
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -Wl,-rpath,/Users/khuck/src/tau2/apple/lib
 
 matmult.o: matmult.c
 	$(CC) $(CFLAGS) -c $< -o $@
