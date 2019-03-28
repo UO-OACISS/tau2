@@ -2081,13 +2081,10 @@ extern "C" void Tau_enable_context_event(void *event) {
   e->SetContextEnabled(true);
 }
 
-
-
 extern "C" void Tau_track_memory(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackMemoryUtilization(true);
 }
-
 
 extern "C" void Tau_track_memory_here(void) {
   TauInternalFunctionGuard protects_this_function;

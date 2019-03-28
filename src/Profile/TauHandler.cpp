@@ -324,9 +324,7 @@ void TauAlarmHandler(int signum) {
   }
 
   if (TheIsTauTrackingMemoryRSSandHWM()) {
-    TAU_VERBOSE("Triggering memory rss and hwm event\n");
     Tau_trigger_memory_rss_hwm();
-    TAU_VERBOSE("...done with trigger.\n");
   }
 
   /* Set alarm for the next interrupt */
@@ -341,27 +339,13 @@ void TauAlarmHandler(int signum) {
   }
 }
 
-//////////////////////////////////////////////////////////////////////
-// Track Memory
-//////////////////////////////////////////////////////////////////////
-void TauTrackMemoryUtilization(bool allocated) {
-//////////////////////////////////////////////////////////////////////
-// Argument: allocated. TauTrackMemoryUtilization can keep track of memory
-// allocated or memory free (headroom to grow). Accordingly, it is true
-// for tracking memory allocated, and false to check the headroom 
-//////////////////////////////////////////////////////////////////////
-
+void TauSetupHandler(void) {
+    /* set up the ONE timer that will execute the handler for all
+     * the triggered counters.  ONE. */
 #ifndef TAU_WINDOWS
   struct sigaction new_action, old_action;
   memset(&old_action, 0, sizeof(struct sigaction));
   memset(&new_action, 0, sizeof(struct sigaction));
-
-  // Are we tracking memory or headroom. Check the allocated argument. 
-  if (allocated) {
-    TheIsTauTrackingMemory() = true; 
-  } else {
-    TheIsTauTrackingMemoryHeadroom() = true; 
-  }
 
   // call the handler once, at startup.  This will pre-allocate some 
   // necessary data structures for us, so they don't have to be created
@@ -384,100 +368,42 @@ void TauTrackMemoryUtilization(bool allocated) {
 }
 
 //////////////////////////////////////////////////////////////////////
+// Track Memory
+//////////////////////////////////////////////////////////////////////
+void TauTrackMemoryUtilization(bool allocated) {
+//////////////////////////////////////////////////////////////////////
+// Argument: allocated. TauTrackMemoryUtilization can keep track of memory
+// allocated or memory free (headroom to grow). Accordingly, it is true
+// for tracking memory allocated, and false to check the headroom 
+//////////////////////////////////////////////////////////////////////
+  // Are we tracking memory or headroom. Check the allocated argument. 
+  if (allocated) {
+    TheIsTauTrackingMemory() = true; 
+  } else {
+    TheIsTauTrackingMemoryHeadroom() = true; 
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
 // Track Power
 //////////////////////////////////////////////////////////////////////
 void TauTrackPower(void) {
-
-#ifndef TAU_WINDOWS
-  struct sigaction new_action, old_action;
-  memset(&old_action, 0, sizeof(struct sigaction));
-  memset(&new_action, 0, sizeof(struct sigaction));
-
   // Are we tracking memory or headroom. Check the allocated argument. 
   TheIsTauTrackingPower() = true;
-
-  // call the handler once, at startup.  This will pre-allocate some 
-  // necessary data structures for us, so they don't have to be created
-  // during the signal processing.
-  TauAlarmHandler(SIGINT); 
-
-  // set signal handler 
-  new_action.sa_handler = TauAlarmHandler;
-
-  new_action.sa_flags = 0;
-  sigaction(SIGALRM, NULL, &old_action);
-  if (old_action.sa_handler != SIG_IGN) {
-    /* by default it is set to ignore */
-    sigaction(SIGALRM, &new_action, NULL);
-  }
- 
-  /* activate alarm */
-  alarm(TheTauInterruptInterval());
-#endif
 }
 
 //////////////////////////////////////////////////////////////////////
 // Track Load
 //////////////////////////////////////////////////////////////////////
 void TauTrackLoad(void) {
-
-#ifndef TAU_WINDOWS
-  struct sigaction new_action, old_action;
-  memset(&old_action, 0, sizeof(struct sigaction));
-  memset(&new_action, 0, sizeof(struct sigaction));
-
   // Are we tracking memory or headroom. Check the allocated argument. 
   TheIsTauTrackingLoad() = true;
-
-  // call the handler once, at startup.  This will pre-allocate some 
-  // necessary data structures for us, so they don't have to be created
-  // during the signal processing.
-  TauAlarmHandler(SIGINT); 
-
-  // set signal handler 
-  new_action.sa_handler = TauAlarmHandler;
-
-  new_action.sa_flags = 0;
-  sigaction(SIGALRM, NULL, &old_action);
-  if (old_action.sa_handler != SIG_IGN) {
-    /* by default it is set to ignore */
-    sigaction(SIGALRM, &new_action, NULL);
-  }
- 
-  /* activate alarm */
-  alarm(TheTauInterruptInterval());
-#endif
 }
 //////////////////////////////////////////////////////////////////////
 // Track MPI_T
 //////////////////////////////////////////////////////////////////////
 extern "C" void Tau_track_mpi_t(void) {
-
-#ifndef TAU_WINDOWS
-  struct sigaction new_action, old_action;
-  memset(&old_action, 0, sizeof(struct sigaction));
-  memset(&new_action, 0, sizeof(struct sigaction));
-  
-  // call the handler once, at startup.  This will pre-allocate some 
-  // necessary data structures for us, so they don't have to be created
-  // during the signal processing.
-  // Not doing anything for now. This causes MPI code to error out with
-  // "Called an MPI routine befor MPI_Init, when we track PVARs
-  //TauAlarmHandler(SIGINT); 
-
-  // set signal handler 
-  new_action.sa_handler = TauAlarmHandler;
-  
-  new_action.sa_flags = 0;
-  sigaction(SIGALRM, NULL, &old_action);
-  if (old_action.sa_handler != SIG_IGN) {
-    /* by default it is set to ignore */
-    sigaction(SIGALRM, &new_action, NULL);
-  } 
-  
-  /* activate alarm */
-  alarm(TheTauInterruptInterval());
-#endif
+    // nothing to do?
 }
 
 
@@ -485,30 +411,7 @@ extern "C" void Tau_track_mpi_t(void) {
 // Track memory resident set size (RSS) and high water mark (hwm)
 //////////////////////////////////////////////////////////////////////
 void TauTrackMemoryFootPrint(void) {
-#ifndef TAU_WINDOWS 
-  struct sigaction new_action, old_action;
-  TheIsTauTrackingMemoryRSSandHWM() = true;
-  memset(&old_action, 0, sizeof(struct sigaction));
-  memset(&new_action, 0, sizeof(struct sigaction));
-  
-  // call the handler once, at startup.  This will pre-allocate some 
-  // necessary data structures for us, so they don't have to be created
-  // during the signal processing.
-  TauAlarmHandler(SIGINT); 
-
-  // set signal handler 
-  new_action.sa_handler = TauAlarmHandler;
-
-  new_action.sa_flags = 0;
-  sigaction(SIGALRM, NULL, &old_action);
-  if (old_action.sa_handler != SIG_IGN) {
-    /* by default it is set to ignore */
-    sigaction(SIGALRM, &new_action, NULL);
-  }
- 
-  /* activate alarm */
-  alarm(TheTauInterruptInterval());
-#endif
+  TauEnableTrackingMemoryRSSandHWM();
 }
 
 //////////////////////////////////////////////////////////////////////
