@@ -386,6 +386,8 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
     enabled = true;
+    Tau_plugin_adios2_init_adios();
+    Tau_plugin_adios2_open_file();
 
     return 0;
 }
