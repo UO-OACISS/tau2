@@ -58,6 +58,8 @@ static bool _threaded{false};
 static int global_comm_size = 1;
 static int global_comm_rank = 0;
 pthread_mutex_t _my_mutex; // for initialization, termination
+// for controlling access (per thread) to vectors of data:
+pthread_mutex_t _vector_mutex[TAU_MAX_THREADS];
 pthread_cond_t _my_cond; // for timer
 pthread_t worker_thread;
 
@@ -465,12 +467,15 @@ void adios::write_variables(void)
     std::sort(merged_timers.begin(), merged_timers.end());
 #else
     // make a list from the first thread of data
+    pthread_mutex_lock(&_vector_mutex[0]);
     std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
         merged_timers(timer_values_array[0].begin(), timer_values_array[0].end());
     timer_values_array[0].clear();
+    pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
         // start at the head of the list
         auto it = merged_timers.begin();
+        pthread_mutex_lock(&_vector_mutex[t]);
         // start at the head of the vector
         auto it2 = timer_values_array[t].begin();
         do {
@@ -487,6 +492,7 @@ void adios::write_variables(void)
                 }
             }
         } while (it2 != timer_values_array[t].end());
+        pthread_mutex_unlock(&_vector_mutex[t]);
     }
 #endif
     size_t num_timer_values = merged_timers.size();
@@ -520,14 +526,18 @@ void adios::write_variables(void)
     }
 
     /* sort into one big vector from all threads */
+    pthread_mutex_lock(&_vector_mutex[0]);
     std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > > 
         merged_counters(counter_values_array[0]);
     counter_values_array[0].clear();
+    pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
+        pthread_mutex_lock(&_vector_mutex[t]);
         merged_counters.insert(merged_counters.end(),
             counter_values_array[t].begin(),
             counter_values_array[t].end());
         counter_values_array[t].clear();
+        pthread_mutex_unlock(&_vector_mutex[t]);
     }
     std::sort(merged_counters.begin(), merged_counters.end());
     size_t num_counter_values = merged_counters.size();
@@ -546,14 +556,18 @@ void adios::write_variables(void)
     }
 
     /* sort into one big vector from all threads */
+    pthread_mutex_lock(&_vector_mutex[0]);
     std::vector<std::pair<unsigned long, std::array<unsigned long, 7> > > 
         merged_comms(comm_values_array[0]);
     comm_values_array[0].clear();
+    pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
+        pthread_mutex_lock(&_vector_mutex[t]);
         merged_comms.insert(merged_comms.end(),
             comm_values_array[t].begin(),
             comm_values_array[t].end());
         comm_values_array[t].clear();
+        pthread_mutex_unlock(&_vector_mutex[t]);
     }
     std::sort(merged_comms.begin(), merged_comms.end());
     size_t num_comm_values = merged_comms.size();
@@ -697,13 +711,13 @@ bool Tau_ADIOS2_contains(std::set<std::string>& myset,
 
 static tau_plugin::adios * my_adios{nullptr};
 
-void init_lock(void) {
+void init_lock(pthread_mutex_t * _mutex) {
     if (!_threaded) return;
     pthread_mutexattr_t Attr;
     pthread_mutexattr_init(&Attr);
     pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_ERRORCHECK);
     int rc;
-    if ((rc = pthread_mutex_init(&_my_mutex, &Attr)) != 0) {
+    if ((rc = pthread_mutex_init(_mutex, &Attr)) != 0) {
         errno = rc;
         perror("pthread_mutex_init error");
         exit(1);
@@ -752,8 +766,6 @@ void Tau_ADIOS2_stop_worker(void) {
                     break;
             }
         }
-        pthread_cond_destroy(&_my_cond);
-        pthread_mutex_destroy(&_my_mutex);
     }
     _threaded = false;
 }
@@ -817,6 +829,13 @@ int Tau_plugin_adios2_end_of_execution(Tau_plugin_event_end_of_execution_data_t*
     if (my_adios != nullptr) {
         my_adios->close();
         my_adios = nullptr;
+    }
+    if (tau_plugin::thePluginOptions().env_periodic) {
+        pthread_cond_destroy(&_my_cond);
+        for (int i = 0 ; i < TAU_MAX_THREADS ; i++) {
+            pthread_mutex_destroy(&(_vector_mutex[i]));
+        }
+        pthread_mutex_destroy(&_my_mutex);
     }
     return 0;
 }
@@ -906,6 +925,7 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
     tmparray[4] = (unsigned long)(data->message_tag);
     tmparray[5] = (unsigned long)(data->destination);
     tmparray[6] = (unsigned long)(data->bytes_sent);
+    pthread_mutex_lock(&_vector_mutex[data->tid]);
     auto &tmp = my_adios->comm_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
@@ -913,6 +933,7 @@ int Tau_plugin_adios2_send(Tau_plugin_event_send_data_t* data) {
             std::move(tmparray)
         )
     );
+    pthread_mutex_unlock(&_vector_mutex[data->tid]);
     return 0;
 }
 
@@ -930,6 +951,7 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
     tmparray[4] = (unsigned long)(data->message_tag);
     tmparray[5] = (unsigned long)(data->source);
     tmparray[6] = (unsigned long)(data->bytes_received);
+    pthread_mutex_lock(&_vector_mutex[data->tid]);
     auto &tmp = my_adios->comm_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
@@ -937,6 +959,7 @@ int Tau_plugin_adios2_recv(Tau_plugin_event_recv_data_t* data) {
             std::move(tmparray)
         )
     );
+    pthread_mutex_unlock(&_vector_mutex[data->tid]);
     return 0;
 }
 
@@ -960,6 +983,7 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
+    pthread_mutex_lock(&_vector_mutex[data->tid]);
     auto &tmp = my_adios->timer_values_array[data->tid];
 #ifdef DO_VALIDATION
     unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
@@ -974,6 +998,7 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
             std::move(tmparray)
         )
     );
+    pthread_mutex_unlock(&_vector_mutex[data->tid]);
     return 0;
 }
 
@@ -994,6 +1019,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
+    pthread_mutex_lock(&_vector_mutex[data->tid]);
     auto &tmp = my_adios->timer_values_array[data->tid];
 #ifdef DO_VALIDATION
     unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
@@ -1015,6 +1041,7 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
             std::move(tmparray)
         )
     );
+    pthread_mutex_unlock(&_vector_mutex[data->tid]);
     return 0;
 }
 
@@ -1035,6 +1062,7 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
     tmparray[2] = (unsigned long)(data->tid);
     tmparray[3] = (unsigned long)(counter_index);
     tmparray[4] = (unsigned long)(data->value);
+    pthread_mutex_lock(&_vector_mutex[data->tid]);
     auto &tmp = my_adios->counter_values_array[data->tid];
     tmp.push_back(
         std::make_pair(
@@ -1042,6 +1070,7 @@ int Tau_plugin_adios2_atomic_trigger(Tau_plugin_event_atomic_event_trigger_data_
             std::move(tmparray)
         )
     );
+    pthread_mutex_unlock(&_vector_mutex[data->tid]);
     return 0;
 }
 
@@ -1125,7 +1154,10 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     /* spawn the thread if doing periodic */
     if (tau_plugin::thePluginOptions().env_periodic) {
         _threaded = true;
-        init_lock();
+        init_lock(&_my_mutex);
+        for (int i = 0 ; i < TAU_MAX_THREADS ; i++) {
+            init_lock(&(_vector_mutex[i]));
+        }
         TAU_VERBOSE("Spawning thread for ADIOS2.\n");
         int ret = pthread_create(&worker_thread, NULL, &Tau_ADIOS2_thread_function, NULL);
         if (ret != 0) {
