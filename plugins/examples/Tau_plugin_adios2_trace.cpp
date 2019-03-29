@@ -31,6 +31,8 @@
 #include <array>
 #include <string>
 #include <set>
+#include <stack>
+#include <list>
 
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
@@ -328,6 +330,9 @@ class adios {
                 unsigned long,
                 std::array<unsigned long, 7> > > 
             comm_values_array[TAU_MAX_THREADS];
+        // for validation
+        std::stack<unsigned long> timer_stack[TAU_MAX_THREADS];
+        unsigned long previous_timestamp[TAU_MAX_THREADS];
 };
 
 void adios::initialize() {
@@ -441,6 +446,7 @@ void adios::write_variables(void)
     bpWriter.BeginStep();
 
     /* sort into one big vector from all threads */
+#if 0
     std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > > 
         merged_timers(timer_values_array[0]);
     timer_values_array[0].clear();
@@ -451,6 +457,32 @@ void adios::write_variables(void)
         timer_values_array[t].clear();
     }
     std::sort(merged_timers.begin(), merged_timers.end());
+#else
+    // make a list from the first thread of data
+    std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+        merged_timers(timer_values_array[0].begin(), timer_values_array[0].end());
+    timer_values_array[0].clear();
+    for (int t = 1 ; t < threads ; t++) {
+        // start at the head of the list
+        auto it = merged_timers.begin();
+        // start at the head of the vector
+        auto it2 = timer_values_array[t].begin();
+        do {
+            // if the next event on thread n is less than the current timestamp
+            if (it2->first < it->first) {
+                merged_timers.insert(it, *it2);
+                it2++;
+            } else {
+                it++;
+                // if we're at the end of the list, append the rest of this thread
+                if (it == merged_timers.end()) {
+                    merged_timers.insert (it,it2,timer_values_array[t].end());
+                    break;
+                }
+            }
+        } while (it2 != timer_values_array[t].end());
+    }
+#endif
     size_t num_timer_values = merged_timers.size();
 
     std::vector<unsigned long> all_timers(6,0);;
@@ -463,6 +495,20 @@ void adios::write_variables(void)
         all_timers[timer_value_index++] = it->second[3];
         all_timers[timer_value_index++] = it->second[4];
         all_timers[timer_value_index++] = it->first;
+        if (it->second[3] == 0) {
+            // on entry
+            timer_stack[it->second[2]].push(it->second[4]);
+        } else if (it->second[3] == 1) {
+            // on exit
+            if (timer_stack[it->second[2]].top() != it->second[4]) {
+                fprintf(stderr, "Stack violation.\n");
+                fprintf(stderr, "thread %lu, %lu != %lu, timestamp %lu\n", it->second[2], timer_stack[it->second[2]].top(), it->second[4], it->first);
+            } else if (timer_stack[it->second[2]].size() == 0) {
+                fprintf(stderr, "Stack violation.\n");
+                fprintf(stderr, "Stack for thread %lu is empty, timestamp %lu.\n", it->second[2], it->first);
+            }
+            timer_stack[it->second[2]].pop();
+        }
     }
 
     /* sort into one big vector from all threads */
@@ -597,6 +643,7 @@ void adios::write_variables(void)
             int num = timers.size();
             ss << "timer " << num;
             timers[tmp] = num;
+            // printf("%d = %s\n", num, timer);
             define_attribute(ss.str(), tmp);
         }
         return timers[tmp];
@@ -904,9 +951,10 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
     auto &tmp = my_adios->timer_values_array[data->tid];
+    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
     tmp.push_back(
         std::make_pair(
-            data->timestamp, 
+            ts,
             std::move(tmparray)
         )
     );
@@ -931,9 +979,10 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
     auto &tmp = my_adios->timer_values_array[data->tid];
+    unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
     tmp.push_back(
         std::make_pair(
-            data->timestamp, 
+            ts,
             std::move(tmparray)
         )
     );
