@@ -35,7 +35,7 @@ using namespace std;
 
 /* Function pointers */
 
-extern "C" void Adiost_init(void) {
+extern "C" void perftool_init(void) {
 #ifndef TAU_MPI
     int _argc = 1;
     const char *_dummy = "";
@@ -47,23 +47,23 @@ extern "C" void Adiost_init(void) {
 #endif
 }
 
-extern "C" void Adiost_register_thread(void) {
+extern "C" void perftool_register_thread(void) {
     Tau_register_thread();
     Tau_create_top_level_timer_if_necessary();
 }
 
 extern "C" void Tau_profile_exit_all_threads();
 
-extern "C" void Adiost_exit(void) {
+extern "C" void perftool_exit(void) {
     Tau_destructor_trigger();
     Tau_profile_exit_all_threads();
     Tau_exit("stub exiting");
 }
 
-extern "C" void (*Adiost_start)(const char *) = &Tau_pure_start;
-extern "C" void (*Adiost_stop)(const char *) = &Tau_pure_stop;
-extern "C" void (*Adiost_trigger_context_event)(const char *, double) = &Tau_trigger_context_event;
-extern "C" void (*Adiost_metadata)(const char *, const char *) = &Tau_metadata;
+extern "C" void (*perftool_start)(const char *) = &Tau_pure_start;
+extern "C" void (*perftool_stop)(const char *) = &Tau_pure_stop;
+extern "C" void (*perftool_trigger_context_event)(const char *, double) = &Tau_trigger_context_event;
+extern "C" void (*perftool_metadata)(const char *, const char *) = &Tau_metadata;
 
 // Temproary fix
 //extern "C" void Tau_start(const char * name) {

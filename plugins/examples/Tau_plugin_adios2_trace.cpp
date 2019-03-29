@@ -42,6 +42,9 @@
 #define TAU_ADIOS2_ONE_FILE_DEFAULT false
 #define TAU_ADIOS2_ENGINE "BPFile"
 
+// This will enable some checking to make sure we don't have call stack violations.
+// #define DO_VALIDATION
+
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
 int Tau_plugin_adios2_function_exit(
@@ -331,8 +334,11 @@ class adios {
                 std::array<unsigned long, 7> > > 
             comm_values_array[TAU_MAX_THREADS];
         // for validation
+#ifdef DO_VALIDATION
         std::stack<unsigned long> timer_stack[TAU_MAX_THREADS];
+        std::stack<unsigned long> pre_timer_stack[TAU_MAX_THREADS];
         unsigned long previous_timestamp[TAU_MAX_THREADS];
+#endif
 };
 
 void adios::initialize() {
@@ -495,6 +501,7 @@ void adios::write_variables(void)
         all_timers[timer_value_index++] = it->second[3];
         all_timers[timer_value_index++] = it->second[4];
         all_timers[timer_value_index++] = it->first;
+#ifdef DO_VALIDATION
         if (it->second[3] == 0) {
             // on entry
             timer_stack[it->second[2]].push(it->second[4]);
@@ -509,6 +516,7 @@ void adios::write_variables(void)
             }
             timer_stack[it->second[2]].pop();
         }
+#endif
     }
 
     /* sort into one big vector from all threads */
@@ -710,7 +718,9 @@ void init_lock(void) {
 int Tau_plugin_adios2_dump(Tau_plugin_event_dump_data_t* data) {
     if (!enabled) return 0;
     Tau_global_incr_insideTAU();
+    pthread_mutex_lock(&_my_mutex);
     my_adios->write_variables();
+    pthread_mutex_unlock(&_my_mutex);
     Tau_global_decr_insideTAU();
     return 0;
 }
@@ -750,8 +760,9 @@ void Tau_ADIOS2_stop_worker(void) {
 
 /* This happens from MPI_Finalize, before MPI is torn down. */
 int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t* data) {
-    if (!enabled) return 0;
+    if (!enabled || data->tid != 0) return 0;
     fprintf(stdout, "TAU PLUGIN ADIOS2 Pre-Finalize\n"); fflush(stdout);
+    Tau_ADIOS2_stop_worker();
     Tau_plugin_event_function_exit_data_t exit_data;
     // safe to assume 0?
     //int tid = exit_data.tid;
@@ -771,13 +782,12 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
         double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
         RtsLayer::getUSecD(tid, CurrentTime);
         exit_data.timestamp = (x_uint64)CurrentTime[0];    // USE COUNTER1 for tracing
-        //printf("%d,%d Stopping %s\n", getpid(), tid, data.timer_name);
+        //printf("%d Stopping %s\n", tid, exit_data.timer_name);
         Tau_plugin_adios2_function_exit(&exit_data);
       }
     }
     RtsLayer::UnLockDB();
     /* write those last events... */
-    Tau_ADIOS2_stop_worker();
     Tau_plugin_event_dump_data_t* dummy_data;
     Tau_plugin_adios2_dump(dummy_data);
     /* Close ADIOS archive */
@@ -951,7 +961,13 @@ int Tau_plugin_adios2_function_entry(Tau_plugin_event_function_entry_data_t* dat
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
     auto &tmp = my_adios->timer_values_array[data->tid];
+#ifdef DO_VALIDATION
     unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
+    my_adios->previous_timestamp[data->tid] = ts;
+    my_adios->pre_timer_stack[tmparray[2]].push(tmparray[4]);
+#else
+    unsigned long ts = data->timestamp;
+#endif
     tmp.push_back(
         std::make_pair(
             ts,
@@ -979,7 +995,20 @@ int Tau_plugin_adios2_function_exit(Tau_plugin_event_function_exit_data_t* data)
     tmparray[3] = (unsigned long)(event_index);
     tmparray[4] = (unsigned long)(timer_index);
     auto &tmp = my_adios->timer_values_array[data->tid];
+#ifdef DO_VALIDATION
     unsigned long ts = my_adios->previous_timestamp[data->tid] > data->timestamp ? my_adios->previous_timestamp[data->tid] + 1 : data->timestamp;
+    my_adios->previous_timestamp[data->tid] = ts;
+    if (my_adios->pre_timer_stack[tmparray[2]].top() != tmparray[4]) {
+      fprintf(stderr, "Pre: Stack violation.\n");
+      fprintf(stderr, "Pre: thread %lu, %lu != %lu, timestamp %lu\n", tmparray[2], my_adios->pre_timer_stack[tmparray[2]].top(), tmparray[4], data->timestamp);
+    } else if (my_adios->pre_timer_stack[tmparray[2]].size() == 0) {
+      fprintf(stderr, "Pre: Stack violation.\n");
+      fprintf(stderr, "Pre: Stack for thread %lu is empty, timestamp %lu.\n", tmparray[2], data->timestamp);
+    }
+    my_adios->pre_timer_stack[tmparray[2]].pop();
+#else
+    unsigned long ts = data->timestamp;
+#endif
     tmp.push_back(
         std::make_pair(
             ts,
