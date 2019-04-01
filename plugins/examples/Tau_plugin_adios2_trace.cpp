@@ -33,6 +33,8 @@
 #include <set>
 #include <stack>
 #include <list>
+#include <iterator>
+#include <algorithm>
 
 #define CONVERT_TO_USEC 1.0/1000000.0 // hopefully the compiler will precompute this.
 #define TAU_ADIOS2_PERIODIC_DEFAULT false
@@ -43,7 +45,7 @@
 #define TAU_ADIOS2_ENGINE "BPFile"
 
 // This will enable some checking to make sure we don't have call stack violations.
-// #define DO_VALIDATION
+#define DO_VALIDATION
 
 /* Some forward declarations that we need */
 tau::Profiler *Tau_get_timer_at_stack_depth(int);
@@ -466,33 +468,42 @@ void adios::write_variables(void)
     }
     std::sort(merged_timers.begin(), merged_timers.end());
 #else
-    // make a list from the first thread of data
     pthread_mutex_lock(&_vector_mutex[0]);
+    // make a list from the first thread of data - copying the data in!
     std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
-        merged_timers(timer_values_array[0].begin(), timer_values_array[0].end());
+        merged_timers(timer_values_array[0].begin(),
+                      timer_values_array[0].end());
+    // this clear will empty the vector and destroy the objects!
     timer_values_array[0].clear();
     pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
+        pthread_mutex_lock(&_vector_mutex[t]);
+        // make a list from the next thread of data - copying the data in!
+        std::list<std::pair<unsigned long, std::array<unsigned long, 5> > > 
+            next_thread(timer_values_array[t].begin(),
+                        timer_values_array[t].end());
+        // this clear will empty the vector and destroy the objects!
+        timer_values_array[t].clear();
+        pthread_mutex_unlock(&_vector_mutex[t]);
         // start at the head of the list
         auto it = merged_timers.begin();
-        pthread_mutex_lock(&_vector_mutex[t]);
         // start at the head of the vector
-        auto it2 = timer_values_array[t].begin();
+        auto head = next_thread.begin();
+        auto tail = next_thread.end();
         do {
             // if the next event on thread n is less than the current timestamp
-            if (it2->first < it->first) {
-                merged_timers.insert(it, *it2);
-                it2++;
+            if (head->first < it->first) {
+                merged_timers.insert(it, *head);
+                head++;
             } else {
                 it++;
                 // if we're at the end of the list, append the rest of this thread
                 if (it == merged_timers.end()) {
-                    merged_timers.insert (it,it2,timer_values_array[t].end());
+                    merged_timers.insert (it,head,tail);
                     break;
                 }
             }
-        } while (it2 != timer_values_array[t].end());
-        pthread_mutex_unlock(&_vector_mutex[t]);
+        } while (head != tail);
     }
 #endif
     size_t num_timer_values = merged_timers.size();
@@ -525,19 +536,17 @@ void adios::write_variables(void)
 #endif
     }
 
+
     /* sort into one big vector from all threads */
     pthread_mutex_lock(&_vector_mutex[0]);
     std::vector<std::pair<unsigned long, std::array<unsigned long, 5> > > 
         merged_counters(counter_values_array[0]);
-    counter_values_array[0].clear();
     pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
         pthread_mutex_lock(&_vector_mutex[t]);
         merged_counters.insert(merged_counters.end(),
             counter_values_array[t].begin(),
             counter_values_array[t].end());
-        counter_values_array[t].clear();
-        pthread_mutex_unlock(&_vector_mutex[t]);
     }
     std::sort(merged_counters.begin(), merged_counters.end());
     size_t num_counter_values = merged_counters.size();
@@ -555,19 +564,21 @@ void adios::write_variables(void)
         all_counters[counter_value_index++] = it->first;
     }
 
+    for (int t = 0 ; t < threads ; t++) {
+        counter_values_array[t].clear();
+        pthread_mutex_unlock(&_vector_mutex[t]);
+    }
+
     /* sort into one big vector from all threads */
     pthread_mutex_lock(&_vector_mutex[0]);
     std::vector<std::pair<unsigned long, std::array<unsigned long, 7> > > 
         merged_comms(comm_values_array[0]);
-    comm_values_array[0].clear();
     pthread_mutex_unlock(&_vector_mutex[0]);
     for (int t = 1 ; t < threads ; t++) {
         pthread_mutex_lock(&_vector_mutex[t]);
         merged_comms.insert(merged_comms.end(),
             comm_values_array[t].begin(),
             comm_values_array[t].end());
-        comm_values_array[t].clear();
-        pthread_mutex_unlock(&_vector_mutex[t]);
     }
     std::sort(merged_comms.begin(), merged_comms.end());
     size_t num_comm_values = merged_comms.size();
@@ -585,6 +596,11 @@ void adios::write_variables(void)
         all_comms[comm_value_index++] = it->second[5];
         all_comms[comm_value_index++] = it->second[6];
         all_comms[comm_value_index++] = it->first;
+    }
+
+    for (int t = 0 ; t < threads ; t++) {
+        comm_values_array[t].clear();
+        pthread_mutex_unlock(&_vector_mutex[t]);
     }
 
     bpWriter.Put(program_count, &programs);
@@ -664,9 +680,14 @@ void adios::write_variables(void)
             std::stringstream ss; 
             int num = timers.size();
             ss << "timer " << num;
-            timers[tmp] = num;
-            // printf("%d = %s\n", num, timer);
-            define_attribute(ss.str(), tmp);
+            pthread_mutex_lock(&_my_mutex);
+            // check to make sure another thread didn't create it already
+            if (timers.count(tmp) == 0) {
+                timers[tmp] = num;
+                // printf("%d = %s\n", num, timer);
+                define_attribute(ss.str(), tmp);
+            }
+            pthread_mutex_unlock(&_my_mutex);
         }
         return timers[tmp];
     }
@@ -678,8 +699,13 @@ void adios::write_variables(void)
             std::stringstream ss;
             int num = counters.size();
             ss << "counter " << num;
-            counters[tmp] = num;
-            define_attribute(ss.str(), tmp);
+            pthread_mutex_lock(&_my_mutex);
+            // check to make sure another thread didn't create it already
+            if (counters.count(tmp) == 0) {
+                counters[tmp] = num;
+                define_attribute(ss.str(), tmp);
+            }
+            pthread_mutex_unlock(&_my_mutex);
         }
         return counters[tmp];
     }
