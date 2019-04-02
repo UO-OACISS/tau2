@@ -381,11 +381,13 @@ void adios::initialize() {
     // if not defined by user, we can change the default settings
     // BPFile is the default engine
     bpIO.SetEngine(thePluginOptions().env_engine);
-    bpIO.SetParameters({{"num_threads", "2"}});
+    // bpIO.SetParameters({{"num_threads", "2"}});
+    // don't wait on readers to connect
+    bpIO.SetParameters({{"RendezvousReaderCount", "0"}});
 
     // ISO-POSIX file output is the default transport (called "File")
     // Passing parameters to the transport
-    bpIO.AddTransport("File", {{"Library", "POSIX"}});
+    // bpIO.AddTransport("File", {{"Library", "POSIX"}});
     Tau_global_decr_insideTAU();
 }
 
