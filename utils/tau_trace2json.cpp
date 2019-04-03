@@ -28,6 +28,7 @@ using namespace std;
 int debugPrint = 0;
 int jsonPrint = 1;
 int chromeFormat = 0;
+int ignoreAtomic = 0;
 #define dprintf if (debugPrint) printf
 
 ofstream json_event_out;
@@ -217,6 +218,9 @@ int EventTrigger( void *userData, double time,
 		long long userEventValue)
 {
   dprintf("EventTrigger: time %g, nid %d tid %d event id %d triggered value %lld \n", time, nodeToken, threadToken, userEventToken, userEventValue);
+	if(ignoreAtomic){
+		return 0;
+	}
 	if(chromeFormat){
 		json_event_out << "{";
 	  //json_event_out << "\t\t\t\"event-id\": \"" << stateid << "\",\n";
@@ -306,8 +310,8 @@ int RecvMessage( void *userData, double time,
 				json_event_out << "\"name\": \"Recv\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
 			  json_event_out << "\"ts\": \"" << time << "\", ";
-			  json_event_out << "\"pid\": \"" << sourceNodeToken << "\", ";
-			  json_event_out << "\"tid\": \"" << sourceThreadToken << "\", ";
+			  json_event_out << "\"pid\": \"" << destinationNodeToken << "\", ";
+			  json_event_out << "\"tid\": \"" << destinationThreadToken << "\", ";
 				json_event_out << "\"ph\": \"f\", ";
 				json_event_out << "\"bp\": \"e\", ";
 			  json_event_out << "\"id\": \"" << destinationNodeToken << "\", ";
@@ -459,6 +463,10 @@ int main(int argc, char **argv)
 	{
 		 chromeFormat = 1;
 			     }
+	if (strcmp(argv[i], "-ignoreatomic")==0)
+	{
+			ignoreAtomic = 1;
+	}
 	break;
     }
   }
@@ -474,6 +482,8 @@ int main(int argc, char **argv)
   /* open the output files */
   if (jsonPrint) {
     json_event_out.open("events.json", ios::out | ios::trunc);
+		//If we truncate the timestamps we get invalid trace renderings.
+		json_event_out.setf(ios_base::fixed);
     //json_index_out.open("trace.json", ios::out | ios::trunc);
 		if(chromeFormat){
 			json_event_out << "[\n";
