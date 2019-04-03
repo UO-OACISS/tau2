@@ -2230,7 +2230,15 @@ char *** argv;
   adiost_tool();
 #endif
 
-  returnVal = PMPI_Init( argc, argv );
+#ifdef TAU_ADIOS2
+  int provided;
+  returnVal = PMPI_Init_thread( argc, argv, MPI_THREAD_MULTIPLE, &provided );
+  if (provided != MPI_THREAD_MULTIPLE && provided != MPI_THREAD_FUNNELED) {
+      fprintf(stderr, "ERROR!!!  MPI implementation doesn't provide threaded support.\nADIOS2 output from TAU likely won't work.\n");
+  }
+#else
+   returnVal = PMPI_Init( argc, argv );
+#endif
 
   MPI_Comm parent;
   PMPI_Comm_get_parent(&parent);

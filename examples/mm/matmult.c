@@ -279,8 +279,6 @@ int main (int argc, char *argv[])
 
 #endif /* PTHREADS */
 
-int Tau_dump(void);
-
 #ifdef TAU_MPI
     // create a communicator
     /* The code above only works with 4 or more processes!! */
@@ -323,7 +321,6 @@ int Tau_dump(void);
   for (i = 0 ; i < ITERATIONS ; i++) {
   printf("%d.", i);fflush(stdout);
   do_work();
-  Tau_dump();
   }
 
 #ifdef PTHREADS
