@@ -29,6 +29,8 @@ int debugPrint = 0;
 int jsonPrint = 1;
 int chromeFormat = 0;
 int ignoreAtomic = 0;
+int printstdout = 0;
+const char* filename="events.json";
 #define dprintf if (debugPrint) printf
 
 ofstream json_event_out;
@@ -408,11 +410,17 @@ void write_metadata(void) {
   write_definitions();
   }
   ifstream json_trace_in;
-  json_trace_in.open("events.json");
+  json_trace_in.open(filename);
   std::string line;
-  while(std::getline(json_trace_in, line)) json_index_out << line << '\n' ;
+	if(printstdout)
+  {
+		while(std::getline(json_trace_in, line)) json_index_out << line << '\n' ;
+	}
   json_trace_in.close();
-  remove("events.json");
+	if(printstdout)
+ {
+	 remove(filename);
+ }
 	if(!chromeFormat){
   json_index_out << "}\n";
   }
@@ -428,7 +436,7 @@ int main(int argc, char **argv)
   /* main program: Usage app <trc> <edf> [-nostate] [-nomessage] */
   if (argc < 3)
   {
-    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome]\n",
+    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome] [-o filename.json] [-print]\n",
 		    argv[0]);
     return 1;
   }
@@ -467,6 +475,17 @@ int main(int argc, char **argv)
 	{
 			ignoreAtomic = 1;
 	}
+	if (strcmp(argv[i], "-o")==0)
+	{
+		  i++;
+			filename = argv[i];
+	}
+
+	if (strcmp(argv[i], "-print")==0)
+	{
+		  printstdout=1;
+	}
+
 	break;
     }
   }
@@ -481,7 +500,7 @@ int main(int argc, char **argv)
 
   /* open the output files */
   if (jsonPrint) {
-    json_event_out.open("events.json", ios::out | ios::trunc);
+    json_event_out.open(filename, ios::out | ios::trunc);
 		//If we truncate the timestamps we get invalid trace renderings.
 		json_event_out.setf(ios_base::fixed);
     //json_index_out.open("trace.json", ios::out | ios::trunc);
