@@ -34,8 +34,8 @@ const char* filename="events.json";
 #define dprintf if (debugPrint) printf
 
 ofstream json_event_out;
-//ofstream json_index_out;
-#define json_index_out cout
+ofstream json_index_out;
+//#define json_index_out cout
 
 /* map of metadata */
 map<string,string> my_metadata;
@@ -504,6 +504,8 @@ int main(int argc, char **argv)
 		//If we truncate the timestamps we get invalid trace renderings.
 		json_event_out.setf(ios_base::fixed);
     //json_index_out.open("trace.json", ios::out | ios::trunc);
+		json_index_out.open(filename, ios::out | ios::trunc);
+		json_index_out.setf(ios_base::fixed);
 		if(chromeFormat){
 			json_event_out << "[\n";
 		}
