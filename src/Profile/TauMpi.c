@@ -1156,6 +1156,8 @@ MPI_Comm comm;
   return returnVal;
 }
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int   MPI_Attr_delete( comm, keyval )
 MPI_Comm comm;
 int keyval;
@@ -1211,6 +1213,7 @@ void * attr_value;
 
   return returnVal;
 }
+#endif // OMPI_MAJOR_VERSION
 
 int   MPI_Comm_compare( comm1, comm2, result )
 MPI_Comm comm1;
@@ -1801,6 +1804,8 @@ MPI_Comm * comm_out;
   return returnVal;
 }
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int   MPI_Keyval_create( copy_fn, delete_fn, keyval, extra_state )
 MPI_Copy_function * copy_fn;
 MPI_Delete_function * delete_fn;
@@ -1833,6 +1838,7 @@ int * keyval;
 
   return returnVal;
 }
+#endif // OMPI_MAJOR_VERSION
 
 /* LAM MPI defines MPI_Abort as a macro! We check for this and if it is
    defined that way, we change the MPI_Abort wrapper */
@@ -1879,6 +1885,8 @@ int * errorclass;
   return returnVal;
 }
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Errhandler_create( function, errhandler )
 MPI_Handler_function * function;
 MPI_Errhandler * errhandler;
@@ -1926,6 +1934,7 @@ MPI_Errhandler * errhandler;
 
   return returnVal;
 }
+#endif // OMPI_MAJOR_VERSION
 
 int  MPI_Error_string( errorcode, string, resultlen )
 int errorcode;
@@ -1944,6 +1953,8 @@ int * resultlen;
   return returnVal;
 }
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Errhandler_set( comm, errhandler )
 MPI_Comm comm;
 MPI_Errhandler errhandler;
@@ -1960,6 +1971,7 @@ MPI_Errhandler errhandler;
 
   return returnVal;
 }
+#endif //OMPI_MAJOR_VERSION
 
 #if !defined(TAU_MPC)
 int tau_mpi_finalized = 0;
@@ -2470,6 +2482,8 @@ int MPI_Get_version( int *version, int *subversion )
 }
 #endif
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Address( location, address )
 #if (defined(TAU_SGI_MPT_MPI) || defined(TAU_NEC_SX))
 void * location;
@@ -2489,6 +2503,7 @@ MPI_Aint * address;
 
   return returnVal;
 }
+#endif //OMPI_MAJOR_VERSION
 
 int  MPI_Bsend( buf, count, datatype, dest, tag, comm )
 TAU_MPICH3_CONST TAU_MPICH3_CONST void * buf;
@@ -3486,6 +3501,8 @@ MPI_Datatype * newtype;
   return returnVal;
 }
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Type_extent( datatype, extent )
 MPI_Datatype datatype;
 MPI_Aint * extent;
@@ -3501,6 +3518,7 @@ MPI_Aint * extent;
 
   return returnVal;
 }
+#endif // OMPI_MAJOR_VERSION
 
 int   MPI_Type_free( datatype )
 MPI_Datatype * datatype;
@@ -3525,6 +3543,8 @@ MPI_Datatype * datatype;
 #endif /* TAU_HINDEXED_CONST */
 #endif /* TAU_SGI_MPT_MPI */
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Type_hindexed( count, blocklens, indices, old_type, newtype )
 int count;
 TAU_HINDEXED_CONST int * blocklens;
@@ -3562,6 +3582,7 @@ MPI_Datatype * newtype;
 
   return returnVal;
 }
+#endif // OMPI_MAJOR_VERSION
 
 int  MPI_Type_indexed( count, blocklens, indices, old_type, newtype )
 int count;
@@ -3582,6 +3603,8 @@ MPI_Datatype * newtype;
   return returnVal;
 }
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int   MPI_Type_lb( datatype, displacement )
 MPI_Datatype datatype;
 MPI_Aint * displacement;
@@ -3597,6 +3620,7 @@ MPI_Aint * displacement;
 
   return returnVal;
 }
+#endif // OMPI_MAJOR_VERSION
 
 int   MPI_Type_size( datatype, size )
 MPI_Datatype datatype;
@@ -3615,6 +3639,8 @@ int * size;
 }
 
 
+// OpenMPI 4 and later have removed some functions deleted in MPI 3.0
+#if !defined(OMPI_MAJOR_VERSION) || (OMPI_MAJOR_VERSION < 4)
 int  MPI_Type_struct( count, blocklens, indices, old_types, newtype )
 int count;
 TAU_OPENMPI3_CONST int * blocklens;
@@ -3649,6 +3675,7 @@ MPI_Aint * displacement;
 
   return returnVal;
 }
+#endif // OMPI_MAJOR_VERSION
 
 int  MPI_Type_vector( count, blocklen, stride, old_type, newtype )
 int count;
