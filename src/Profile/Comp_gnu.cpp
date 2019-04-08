@@ -184,7 +184,7 @@ void runOnExit()
   HashTable & mytab = TheHashTable();
   for ( TAU_HASH_MAP<unsigned long, HashNode*>::iterator it = mytab.begin(); it != mytab.end(); ++it ) {
   	HashNode * node = it->second;
-    if (node->fi) {
+    if (node != NULL && node->fi) {
 #ifndef TAU_TBB_SUPPORT
 // At the end of a TBB program, it crashes here. 
 		//delete node->fi;

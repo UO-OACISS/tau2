@@ -46,7 +46,7 @@
 
 
 #ifndef TAU_ROCTRACER_BUFFER_SIZE
-#define TAU_ROCTRACER_BUFFER_SIZE 0x1000
+#define TAU_ROCTRACER_BUFFER_SIZE 65536
 #endif /* TAU_ROCTRACER_BUFFER_SIZE */
 
 #ifndef TAU_ROCTRACER_HOST_TASKID 
@@ -69,6 +69,8 @@ std::string TauRocTracerNameDB[TAU_ROCTRACER_BUFFER_SIZE];
 
 // Launch a kernel
 void Tau_roctracer_register_activity(int id, const char *name) {
+  TAU_VERBOSE("Inside Tau_roctracer_register_activity: id = %d, name = %s\n",
+	id, name);
   TauRocTracerNameDB[id] = std::string(name); 
   TAU_VERBOSE("Tau_roctracer_register_activity: id = %d, name = %s\n",
 	id, TauRocTracerNameDB[id].c_str());
@@ -163,6 +165,7 @@ void Tau_roctracer_hip_event(const roctracer_record_t *record, int task_id) {
 // gpu based events 
 void Tau_roctracer_hcc_event(const roctracer_record_t *record, int task_id) {
   const char * name = TauRocTracerNameDB[record->correlation_id].c_str();
+  //const char * name = string(string(roctracer_op_string(record->domain, record->op, record->kind)) + " : " + TauRocTracerNameDB[record->correlation_id]).c_str();
   TAU_VERBOSE("Tau_roctracer_hcc_event: name=%s, cid=%lu, time_ns(%lu:%lu), device=%d, queue_id=%lu, task_id=%d\n",
     name, record->correlation_id, record->begin_ns, record->end_ns, 
     record->device_id, record->queue_id, task_id);
@@ -170,12 +173,18 @@ void Tau_roctracer_hcc_event(const roctracer_record_t *record, int task_id) {
   int status;
   const char *demangled_name;
   TAU_INTERNAL_DEMANGLE_NAME(name, demangled_name);
-  TAU_START_TASK(demangled_name, task_id);
+  char *joined_name ; 
+  if ((record -> kind == 2) || (record->kind == 1) ) { //hipMemcpy 
+    joined_name = (char *) roctracer_op_string(record->domain, record->op, record->kind);
+  } else {
+    joined_name = (char *) string(string(roctracer_op_string(record->domain, record->op, record->kind)) +" "+ demangled_name).c_str(); 
+  }
+  TAU_START_TASK(joined_name, task_id);
   TAU_VERBOSE("Started event %s on task %d timestamp = %lu \n", demangled_name, task_id, record->begin_ns);
 
   // and the end
   Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(record->end_ns)/1e3)); // convert to microseconds
-  TAU_STOP_TASK(demangled_name, task_id);
+  TAU_STOP_TASK(joined_name, task_id);
   TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", demangled_name, task_id, record->end_ns);
   Tau_set_last_timestamp_ns(record->end_ns);
    
@@ -199,10 +208,12 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
     );
     if (record->domain == ACTIVITY_DOMAIN_HIP_API) {
       int my_pid = getpid(); 
-      if ((record->process_id == my_pid) && (record->thread_id == my_pid)) {
+      TAU_VERBOSE(" ACTIVITY_DOMAIN_HIP_API: my_pid=%d\n", my_pid);
+      //if ((record->process_id == my_pid) && (record->thread_id == my_pid)) {
         // We need to record events on this host thread. Check if it is created already. 
         task_id = Tau_get_initialized_queues(TAU_ROCTRACER_HOST_TASKID);
         if (task_id == -1) {
+          TAU_VERBOSE(" ACTIVITY_DOMAIN_HIP_API: creating task\n");
           TAU_CREATE_TASK(task_id); 
           Tau_set_initialized_queues(TAU_ROCTRACER_HOST_TASKID, task_id);
           Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)record->begin_ns/1e3));
@@ -211,15 +222,18 @@ void Tau_roctracer_activity_callback(const char* begin, const char* end, void* a
           Tau_add_metadata_for_task("ROCM_HOST_PROCESS_ID", record->process_id, task_id);
           Tau_add_metadata_for_task("ROCM_HOST_THREAD_ID", record->thread_id, task_id);
         }
-      }
-      TAU_VERBOSE(" process_id(%u) thread_id(%u)\n",
+      //}
+      TAU_VERBOSE(" process_id(%u) thread_id(%u) task_id(%d)\n",
         record->process_id,
-        record->thread_id
+        record->thread_id,
+        task_id
       );
       Tau_roctracer_hip_event(record, task_id); // on the host 
     } else if (record->domain == ACTIVITY_DOMAIN_HCC_OPS) {
+      TAU_VERBOSE(" ACTIVITY_DOMAIN_HCC_OPS\n");
       task_id = Tau_get_initialized_queues(record->queue_id); 
       if (task_id == -1) {
+        TAU_VERBOSE("ACTIVITY_DOMAIN_HIP_API: creating task\n");
         TAU_CREATE_TASK(task_id);
         Tau_set_initialized_queues(record->queue_id, task_id);
         Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)record->begin_ns/1e3));

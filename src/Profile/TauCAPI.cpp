@@ -1876,7 +1876,7 @@ extern "C" void Tau_trigger_context_event(const char *name, double data) {
 extern "C" void Tau_trigger_userevent(const char *name, double data) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
-  Tau_pure_userevent_signal_safe(&ue, name);
+  Tau_pure_userevent(&ue, name);
   Tau_userevent(ue, data);
 }
 
@@ -1884,7 +1884,7 @@ extern "C" void Tau_trigger_userevent(const char *name, double data) {
 extern "C" void Tau_trigger_userevent_thread(const char *name, double data, int tid) {
   TauInternalFunctionGuard protects_this_function;
   void *ue;
-  Tau_pure_userevent_signal_safe(&ue, name);
+  Tau_pure_userevent(&ue, name);
   Tau_userevent_thread(ue, data, tid);
 }
 
@@ -2130,13 +2130,10 @@ extern "C" void Tau_enable_context_event(void *event) {
   e->SetContextEnabled(true);
 }
 
-
-
 extern "C" void Tau_track_memory(void) {
   TauInternalFunctionGuard protects_this_function;
   TauTrackMemoryUtilization(true);
 }
-
 
 extern "C" void Tau_track_memory_here(void) {
   TauInternalFunctionGuard protects_this_function;
