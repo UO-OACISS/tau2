@@ -1573,7 +1573,11 @@ static void TauTraceOTF2ExchangeRmaWins() {
     uint64_t my_num_rma_wins[my_num_threads];
     uint64_t my_total_rma_wins = 0;
     for(OTF2_LocationRef i = 0; i < my_num_threads; ++i) {
-        my_num_rma_wins[i] = local_rma_win_maps[i]->size();
+        if(local_rma_win_maps[i] == NULL) {
+            my_num_rma_wins[i] = 0;
+        } else {
+            my_num_rma_wins[i] = local_rma_win_maps[i]->size();
+        }
         my_total_rma_wins += my_num_rma_wins[i];
 #ifdef TAU_OTF2_DEBUG
         fprintf(stderr, "%u: thread %d has %" PRIu64 " RMA windows.\n", my_node(), i, my_num_rma_wins[i]);
@@ -1619,6 +1623,9 @@ static void TauTraceOTF2ExchangeRmaWins() {
     size_t data_offset = 0;
     for(OTF2_LocationRef i = 0; i < my_num_threads; ++i) {
         rma_win_map_t * local_map = local_rma_win_maps[i];
+        if(local_map == NULL) {
+            continue;
+        }
         for(rma_win_map_t::const_iterator it = local_map->begin(); it != local_map->end(); it++) {
             my_rma_win_data[data_offset++] = std::get<0>(it->first);
             my_rma_win_data[data_offset++] = std::get<1>(it->first);
@@ -1705,13 +1712,12 @@ static void TauTraceOTF2DestroyRmaWins() {
     const uint32_t my_num_threads = RtsLayer::getTotalThreads();
     for(uint32_t i = 0; i < my_num_threads; ++i) {
         int loc = my_real_location(RtsLayer::myNode(), i);
-        rma_win_map_t * local_map = local_rma_win_maps[i];
-        if(local_map == NULL) {
-            continue;
-        }
         OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
-        for(rma_win_map_t::const_iterator it = local_map->begin(); it != local_map->end(); ++it) {
-            OTF2_EC(OTF2_EvtWriter_RmaWinDestroy(evt_writer, NULL, TauTraceGetTimeStamp(0), it->second));
+        rma_win_map_t * local_map = local_rma_win_maps[i];
+        if(local_map != NULL) {
+            for(rma_win_map_t::const_iterator it = local_map->begin(); it != local_map->end(); ++it) {
+                OTF2_EC(OTF2_EvtWriter_RmaWinDestroy(evt_writer, NULL, TauTraceGetTimeStamp(0), it->second));
+            }
         }
         OTF2_EC(OTF2_EvtWriter_RmaWinDestroy(evt_writer, NULL, TauTraceGetTimeStamp(0), TAU_OTF2_COMM_WIN));
     }
