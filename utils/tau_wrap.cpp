@@ -432,6 +432,41 @@ void printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 #endif /* DEBUG */
     impl <<"  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, "<<processor_arg<<", "<<length_string<<");"<<endl;
   }
+  if(rname.find("barrier_all") != string::npos) {
+    impl << "  TAU_TRACE_BARRIER_ALL_START(TAU_SHMEM_TAGID_NEXT);" << endl;
+  } else if(rname.find("barrier") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_BARRIER, a1, a2, a3, 0, 0, -1);" << endl;
+  } else if(rname.find("broadcast32") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 4*a3, 4*a3, a5);" << endl;
+  } else if(rname.find("broadcast4") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 4*a3, 4*a3, a4);" << endl;
+  } else if(rname.find("broadcast64") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 8*a3, 8*a3, a4);" << endl;
+  } else if(rname.find("broadcast8") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 8*a3, 8*a3, a4);" << endl;
+  } else if(rname.find("fcollect4") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("fcollect32") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("fcollect8") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("fcollect64") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("collect4") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("collect32") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("collect8") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("collect64") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("to_all") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLREDUCE, a4, a5, a6, 0, 0, -1);" << endl;
+  } else if(rname.find("alltoall32") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLTOALL, a4, a5, a6, a3*4*a6, a3*4, -1);" << endl;
+  } else if(rname.find("alltoall64") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_BEGIN(TAU_SHMEM_TAGID_NEXT, TAU_TRACE_COLLECTIVE_TYPE_ALLTOALL, a4, a5, a6, a3*8*a6, a3*8, -1);" << endl;
+  }
 }
 
 void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSignatureInfo sig)
@@ -520,7 +555,37 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSigna
 #endif /* DEBUG */
     impl <<"  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), "<<length_string<<", "<<processor_arg<<");"<<endl;
   }
-
+  if(rname.find("barrier_all") != string::npos) {
+    impl << "  TAU_TRACE_BARRIER_ALL_END(TAU_SHMEM_TAGID);" << endl;
+  } else if(rname.find("barrier") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_BARRIER, a1, a2, a3, 0, 0, -1);" << endl;
+  } else if(rname.find("broadcast32") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 4*a3, 4*a3, a5);" << endl;
+  } else if(rname.find("broadcast4") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 4*a3, 4*a3, a4);" << endl;
+  } else if(rname.find("broadcast64") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 8*a3, 8*a3, a4);" << endl;
+  } else if(rname.find("broadcast8") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_BROADCAST, a5, a6, a7, 8*a3, 8*a3, a4);" << endl;
+  } else if(rname.find("fcollect4") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("fcollect32") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("fcollect8") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("fcollect64") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("collect4") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("collect32") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*4, a3*4, -1);" << endl;
+  } else if(rname.find("collect8") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("collect64") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER, a4, a5, a6, a3*8, a3*8, -1);" << endl;
+  } else if(rname.find("to_all") != string::npos) {
+    impl << "  TAU_TRACE_RMA_COLLECTIVE_END(TAU_SHMEM_TAGID, TAU_TRACE_COLLECTIVE_TYPE_ALLREDUCE, a4, a5, a6, 0, 0, -1);" << endl;
+  }
 }
 
 void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * prefix, FunctionSignatureInfo & sig)
@@ -1387,8 +1452,12 @@ int main(int argc, char **argv)
     if ( runtime == WRAPPER_INTERCEPT) 
       impl << "#include <Profile/TauEnv.h>\n"
            << "#include <Profile/TauAPI.h>\n"
+           << "#include <Profile/TauTrace.h>\n"
            << endl;
     impl << "int TAUDECL tau_totalnodes(int set_or_get, int value);\n"
+         << "int TAUDECL Tau_set_usesSHMEM(int value);\n"
+         << "int __real_shmem_n_pes(void);\n"
+         << "int __real_shmem_my_pe(void);\n"
          << "static int tau_shmem_tagid_f=0;\n"
          << "#define TAU_SHMEM_TAGID (tau_shmem_tagid_f = (tau_shmem_tagid_f & 255))\n"
          << "#define TAU_SHMEM_TAGID_NEXT ((++tau_shmem_tagid_f) & 255)\n"

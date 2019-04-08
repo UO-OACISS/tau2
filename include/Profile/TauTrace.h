@@ -56,6 +56,14 @@
 #define TAU_TRACE_EVENT_KIND_TEMP_FUNC      5
 #define TAU_TRACE_EVENT_KIND_TEMP_USEREVENT 6
 
+/* Collective kinds */
+#define TAU_TRACE_COLLECTIVE_TYPE_BARRIER     1
+#define TAU_TRACE_COLLECTIVE_TYPE_BROADCAST   2
+#define TAU_TRACE_COLLECTIVE_TYPE_ALLGATHER   3
+#define TAU_TRACE_COLLECTIVE_TYPE_ALLGATHERV  4
+#define TAU_TRACE_COLLECTIVE_TYPE_ALLREDUCE   5
+#define TAU_TRACE_COLLECTIVE_TYPE_ALLTOALL    6
+
 /* event record description */
 typedef struct {
   x_int32  ev;    /* event id                    */
@@ -95,6 +103,10 @@ extern "C" {
   void TAUDECL TauTraceRecvMsg(int type, int source, int length);
   void TAUDECL TauTraceSendMsgRemote(int type, int destination, int length, int remoteid);
   void TAUDECL TauTraceRecvMsgRemote(int type, int source, int length, int remoteid);
+  void TAUDECL TauTraceBarrierAllStart(int tag);
+  void TAUDECL TauTraceBarrierAllEnd(int tag);
+  void TAUDECL TauTraceRMACollectiveBegin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root);
+  void TAUDECL TauTraceRMACollectiveEnd(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root);
 #if TAU_GPU
 #ifdef __cplusplus
   void TAUDECL TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
