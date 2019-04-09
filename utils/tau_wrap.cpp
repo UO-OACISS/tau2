@@ -1440,6 +1440,9 @@ int main(int argc, char **argv)
       impl << "#ifndef SHMEM_FINT\n"
            << "#define SHMEM_FINT int\n"
            << "#endif\n"
+           << "#ifndef SHMEM_FINT8_t\n"
+           << "#define SHMEM_FINT8_t int8_t\n"
+           << "#endif\n"
            << endl;
     }
   }
