@@ -166,12 +166,16 @@ static metric_param_map_t global_metric_param_map;
 typedef set<uint64_t> metrics_seen_t;
 static metrics_seen_t metrics_seen;
 
-typedef tuple<int,int,int> rma_win_triple_t;
+typedef pair<pair<int,int>,int> rma_win_triple_t;
 typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
 static rma_win_map_t rma_win_map;
 static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
 static uint64_t next_rma_win[TAU_MAX_THREADS];
 static uint64_t total_rma_wins;
+
+static rma_win_triple_t make_triple(const int x, const int y, const int z) {
+    return pair<pair<int,int>,int>(pair<int,int>(x, y), z);
+}
 
 extern "C" x_uint64 TauTraceGetTimeStamp(int tid);
 extern "C" int tau_totalnodes(int set_or_get, int value);
@@ -819,7 +823,7 @@ void TauTraceOTF2RMACollectiveBegin(int tag, int type, int start, int stride, in
         next_rma_win[tid] = TAU_OTF2_WIN_FIRST_AVAILABLE;
     }
     rma_win_map_t * local_map = local_rma_win_maps[tid];
-    rma_win_triple_t triple(start, stride, size);
+    rma_win_triple_t triple = make_triple(start, stride, size);
     rma_win_map_t::const_iterator it = local_map->find(triple);
     OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter(otf2_archive, loc);
     if(it == local_map->end()) {
@@ -855,7 +859,7 @@ void TauTraceOTF2RMACollectiveEnd(int tag, int type, int start, int stride, int 
         fprintf(stderr, "TAU: Error: Got a collective end but have never encountered a start\n");
         abort();
     }
-    rma_win_triple_t triple(start, stride, size);
+    rma_win_triple_t triple = make_triple(start, stride, size);
     rma_win_map_t::const_iterator it = local_map->find(triple);
     if(it == local_map->end()) {
         fprintf(stderr, "TAU: Error: Got a collective end for active set (%d, %d, %d), but have never seen that active set in a collective begin.\n", start, stride, size);
@@ -1055,9 +1059,9 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     // Now write the RMA windows created during runtime, plus associated groups and communicators
     for(rma_win_map_t::const_iterator it = rma_win_map.begin(); it != rma_win_map.end(); it++) {
         const rma_win_triple_t triple = it->first;
-        const int pe_start              = std::get<0>(triple); 
-        const int pe_logstride          = std::get<1>(triple); 
-        const int pe_size               = std::get<2>(triple); 
+        const int pe_start              = triple.first.first;
+        const int pe_logstride          = triple.first.second;
+        const int pe_size               = triple.second; 
         const OTF2_RmaWinRef rma_win_id = it->second;
         uint64_t rma_win_list[pe_size];
         rma_win_list[0] = pe_start;
@@ -1627,9 +1631,9 @@ static void TauTraceOTF2ExchangeRmaWins() {
             continue;
         }
         for(rma_win_map_t::const_iterator it = local_map->begin(); it != local_map->end(); it++) {
-            my_rma_win_data[data_offset++] = std::get<0>(it->first);
-            my_rma_win_data[data_offset++] = std::get<1>(it->first);
-            my_rma_win_data[data_offset++] = std::get<2>(it->first);
+            my_rma_win_data[data_offset++] = it->first.first.first;
+            my_rma_win_data[data_offset++] = it->first.first.second;
+            my_rma_win_data[data_offset++] = it->first.second;
             my_rma_win_data[data_offset++] = it->second;
         }
     }
@@ -1657,7 +1661,7 @@ static void TauTraceOTF2ExchangeRmaWins() {
 #endif
         int next_win_id = TAU_OTF2_WIN_FIRST_AVAILABLE;
         for(int i = 0; i < total_rma_wins; ++i) {
-            const rma_win_triple_t triple(rma_win_data[4*i], rma_win_data[(4*i)+1], rma_win_data[(4*i)+2]);
+            const rma_win_triple_t triple = make_triple(rma_win_data[4*i], rma_win_data[(4*i)+1], rma_win_data[(4*i)+2]);
             rma_win_map_t::const_iterator it = rma_win_map.find(triple);
             if(it == rma_win_map.end()) {
                 // First time encountering this tuple
@@ -1677,11 +1681,11 @@ static void TauTraceOTF2ExchangeRmaWins() {
 #endif
             for(rma_win_map_t::const_iterator it = rma_win_map.begin(); it != rma_win_map.end(); ++it) {
 #ifdef TAU_OTF2_DEBUG
-                fprintf(stderr, "(%d, %d, %d) -> %" PRIu64 "\n", std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first), it->second);            
+                //fprintf(stderr, "(%d, %d, %d) -> %" PRIu64 "\n", std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first), it->second);            
 #endif
-                master_rma_win_data[data_offset++] = std::get<0>(it->first);
-                master_rma_win_data[data_offset++] = std::get<1>(it->first);
-                master_rma_win_data[data_offset++] = std::get<2>(it->first);
+                master_rma_win_data[data_offset++] = it->first.first.first;
+                master_rma_win_data[data_offset++] = it->first.first.second;
+                master_rma_win_data[data_offset++] = it->first.second;
                 master_rma_win_data[data_offset++] = it->second;
             }
         }
@@ -1692,7 +1696,7 @@ static void TauTraceOTF2ExchangeRmaWins() {
         TauCollectives_Bcast(TauCollectives_Get_World(), master_rma_win_data, master_rma_win_data_size*4, TAUCOLLECTIVES_INT, 0);
         if(my_node() > 0) {
             for(int i = 0; i < master_rma_win_data_size; ++i) {
-                const rma_win_triple_t triple(master_rma_win_data[4*i], master_rma_win_data[(4*i)+1], master_rma_win_data[(4*i)+2]);
+                const rma_win_triple_t triple = make_triple(master_rma_win_data[4*i], master_rma_win_data[(4*i)+1], master_rma_win_data[(4*i)+2]);
                 rma_win_map.insert(std::pair<rma_win_triple_t, uint64_t>(triple, master_rma_win_data[(4*i)+3]));
             }
         }
@@ -1702,7 +1706,7 @@ static void TauTraceOTF2ExchangeRmaWins() {
 
 #ifdef TAU_OTF2_DEBUG
     for(rma_win_map_t::const_iterator it = rma_win_map.begin(); it != rma_win_map.end(); ++it) {
-        fprintf(stderr, " %u: (%d, %d, %d) -> %" PRIu64 "\n", my_node(), std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first), it->second);            
+        //fprintf(stderr, " %u: (%d, %d, %d) -> %" PRIu64 "\n", my_node(), std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first), it->second);            
     }
 #endif
     
