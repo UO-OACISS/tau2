@@ -166,25 +166,7 @@ static metric_param_map_t global_metric_param_map;
 typedef set<uint64_t> metrics_seen_t;
 static metrics_seen_t metrics_seen;
 
-struct rma_win_triple {
-    int pe_start;
-    int logpe_stride;
-    int pe_size;
-
-    rma_win_triple(int pe_start, int logpe_stride, int pe_size) 
-        : pe_start(pe_start), logpe_stride(logpe_stride), pe_size(pe_size) {};
-
-};
-
-static bool operator<(const rma_win_triple & l, const rma_win_triple &r) {
-    return (l.pe_start < r.pe_start) || ((l.pe_start == r.pe_start) && (l.logpe_stride < r.logpe_stride)) || ((l.logpe_stride == r.logpe_stride) && (l.pe_size < r.pe_size));
-}
-
-static bool operator==(const rma_win_triple & l, const rma_win_triple & r) {
-    return (l.pe_start == r.pe_start) && (l.logpe_stride == r.logpe_stride) && (l.pe_size == r.pe_size);
-}
-
-typedef rma_win_triple rma_win_triple_t;
+typedef tuple<int,int,int> rma_win_triple_t;
 typedef map<rma_win_triple_t,uint64_t> rma_win_map_t;
 static rma_win_map_t rma_win_map;
 static rma_win_map_t * local_rma_win_maps[TAU_MAX_THREADS];
@@ -1073,9 +1055,9 @@ static void TauTraceOTF2WriteGlobalDefinitions() {
     // Now write the RMA windows created during runtime, plus associated groups and communicators
     for(rma_win_map_t::const_iterator it = rma_win_map.begin(); it != rma_win_map.end(); it++) {
         const rma_win_triple_t triple = it->first;
-        const int pe_start              = triple.pe_start;
-        const int pe_logstride          = triple.logpe_stride;
-        const int pe_size               = triple.pe_size;
+        const int pe_start              = std::get<0>(triple); 
+        const int pe_logstride          = std::get<1>(triple); 
+        const int pe_size               = std::get<2>(triple); 
         const OTF2_RmaWinRef rma_win_id = it->second;
         uint64_t rma_win_list[pe_size];
         rma_win_list[0] = pe_start;
@@ -1645,9 +1627,9 @@ static void TauTraceOTF2ExchangeRmaWins() {
             continue;
         }
         for(rma_win_map_t::const_iterator it = local_map->begin(); it != local_map->end(); it++) {
-            my_rma_win_data[data_offset++] = it->first.pe_start;
-            my_rma_win_data[data_offset++] = it->first.logpe_stride;
-            my_rma_win_data[data_offset++] = it->first.pe_size;
+            my_rma_win_data[data_offset++] = std::get<0>(it->first);
+            my_rma_win_data[data_offset++] = std::get<1>(it->first);
+            my_rma_win_data[data_offset++] = std::get<2>(it->first);
             my_rma_win_data[data_offset++] = it->second;
         }
     }
@@ -1695,11 +1677,11 @@ static void TauTraceOTF2ExchangeRmaWins() {
 #endif
             for(rma_win_map_t::const_iterator it = rma_win_map.begin(); it != rma_win_map.end(); ++it) {
 #ifdef TAU_OTF2_DEBUG
-                fprintf(stderr, "(%d, %d, %d) -> %" PRIu64 "\n", it->first.pe_start, it->first.logpe_stride, it->first.pe_size, it->second);            
+                fprintf(stderr, "(%d, %d, %d) -> %" PRIu64 "\n", std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first), it->second);            
 #endif
-                master_rma_win_data[data_offset++] = it->first.pe_start;
-                master_rma_win_data[data_offset++] = it->first.logpe_stride;
-                master_rma_win_data[data_offset++] = it->first.pe_size;
+                master_rma_win_data[data_offset++] = std::get<0>(it->first);
+                master_rma_win_data[data_offset++] = std::get<1>(it->first);
+                master_rma_win_data[data_offset++] = std::get<2>(it->first);
                 master_rma_win_data[data_offset++] = it->second;
             }
         }
@@ -1720,7 +1702,7 @@ static void TauTraceOTF2ExchangeRmaWins() {
 
 #ifdef TAU_OTF2_DEBUG
     for(rma_win_map_t::const_iterator it = rma_win_map.begin(); it != rma_win_map.end(); ++it) {
-        fprintf(stderr, " %u: (%d, %d, %d) -> %" PRIu64 "\n", my_node(), it->first.pe_start, it->first.logpe_stride, it->first.pe_size, it->second);            
+        fprintf(stderr, " %u: (%d, %d, %d) -> %" PRIu64 "\n", my_node(), std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first), it->second);            
     }
 #endif
     
