@@ -1600,7 +1600,9 @@ int TauProfiler_StoreData(int tid)
 #endif /* _AIX */
 #endif
   if (TauEnv_get_profiling()) {
-    Tau_snapshot_writeFinal("final");
+    if (TauEnv_get_profile_format() == TAU_FORMAT_SNAPSHOT) {
+      Tau_snapshot_writeFinal("final");
+	}
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
 	}
