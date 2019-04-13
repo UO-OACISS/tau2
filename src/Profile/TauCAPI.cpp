@@ -1103,10 +1103,14 @@ extern "C" int Tau_invoke_plugin_phase_exit(void *functionInfo) {
 
 ////NPD
 extern "C" size_t Tau_create_trigger(const char *name) {
-  static size_t trigger_counter = 0;
+  static size_t trigger_counter = -1;
   TauInternalFunctionGuard protects_this_function;
 
-  return trigger_counter++;
+  RtsLayer::LockDB();
+  trigger_counter++;
+  RtsLayer::UnLockDB();
+  
+  return trigger_counter;
 }
 
 extern "C" void Tau_trigger(size_t id, void * data) {
@@ -1119,7 +1123,9 @@ extern "C" void Tau_enable_plugin_for_specific_event(int ev, const char *name, u
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
+  RtsLayer::LockDB();
   plugins_for_named_specific_event[key].insert(id);
+  RtsLayer::UnLockDB();
 
 }
  
@@ -1128,9 +1134,11 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
+  RtsLayer::LockDB();
   plugins_for_named_specific_event[key].erase(id);
   if(plugins_for_named_specific_event[key].empty())
     plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+  RtsLayer::UnLockDB();
 
 }
 
@@ -1139,8 +1147,10 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   TauInternalFunctionGuard protects_this_function;
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
+  RtsLayer::LockDB();
   plugins_for_named_specific_event[key].clear();
   plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *name)
@@ -1149,16 +1159,20 @@ extern "C" void Tau_enable_all_plugins_for_specific_event(int ev, const char *na
   size_t hash = Tau_util_return_hash_of_string(name);
   PluginKey key(ev, hash);
 
+  RtsLayer::LockDB();
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     plugins_for_named_specific_event[key].insert(i);
   }
+  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id)
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
+  RtsLayer::LockDB();
   plugins_for_named_specific_event[key].insert(id);
+  RtsLayer::UnLockDB();
 
 }
  
@@ -1166,9 +1180,11 @@ extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsign
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
+  RtsLayer::LockDB();
   plugins_for_named_specific_event[key].erase(id);
   if(plugins_for_named_specific_event[key].empty())
     plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+  RtsLayer::UnLockDB();
 
 }
 
@@ -1176,8 +1192,10 @@ extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
 {
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
+  RtsLayer::LockDB();
   plugins_for_named_specific_event[key].clear();
   //plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
+  RtsLayer::UnLockDB();
 }
 
 extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
@@ -1185,15 +1203,19 @@ extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
   TauInternalFunctionGuard protects_this_function;
   PluginKey key(ev, hash);
 
+  RtsLayer::LockDB();
   for(unsigned int i = 0 ; i < plugin_id_counter; i++) {
     plugins_for_named_specific_event[key].insert(i);
   }
+  RtsLayer::UnLockDB();
 }
 extern "C" void Tau_add_regex(const char * r)
 {
   TauInternalFunctionGuard protects_this_function;
   std::string s(r);
+  RtsLayer::LockDB();
   regex_list.push_back(s);
+  RtsLayer::UnLockDB();
 }
 
 ////
