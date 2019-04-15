@@ -1209,6 +1209,7 @@ extern "C" void Tau_enable_all_plugins_for_trigger_event(int ev, size_t hash)
   }
   RtsLayer::UnLockDB();
 }
+
 extern "C" void Tau_add_regex(const char * r)
 {
   TauInternalFunctionGuard protects_this_function;
@@ -1218,6 +1219,25 @@ extern "C" void Tau_add_regex(const char * r)
   RtsLayer::UnLockDB();
 }
 
+extern "C" void Tau_start_async_plugin(size_t id, void * data) {
+  TauInternalFunctionGuard protects_this_function;
+  
+  if(Tau_plugins_enabled.start_async_plugin) {
+    Tau_plugin_event_start_async_plugin_data_t plugin_data;
+    plugin_data.data = data;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_START_ASYNC_PLUGIN, NULL, &plugin_data);
+  } 
+}
+
+extern "C" void Tau_stop_async_plugin(size_t id) {
+  TauInternalFunctionGuard protects_this_function;
+  
+  if(Tau_plugins_enabled.stop_async_plugin) {
+    Tau_plugin_event_start_async_plugin_data_t plugin_data;
+    plugin_data.data = NULL;
+    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_STOP_ASYNC_PLUGIN, NULL, &plugin_data);
+  }
+}
 ////
 
 ///////////////////////////////////////////////////////////////////////////

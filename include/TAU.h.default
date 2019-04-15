@@ -215,6 +215,8 @@
 #define TAU_ADD_REGEX(r)
 #define TAU_CHECK_FOR_MATCHING_REGEX(input)
 
+#define TAU_START_ASYNC_PLUGIN(id, data)
+#define TAU_STOP_ASYNC_PLUGIN(id)
 #define TAU_CREATE_TRIGGER(name)
 #define TAU_TRIGGER(id, data)
 ////

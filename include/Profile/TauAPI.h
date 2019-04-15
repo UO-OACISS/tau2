@@ -383,6 +383,8 @@
 #define TAU_DISABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_disable_all_plugins_for_specific_event
 #define TAU_ADD_REGEX Tau_add_regex
 #define TAU_CHECK_FOR_MATCHING_REGEX Tau_check_for_matching_regex
+#define TAU_START_ASYNC_PLUGIN Tau_start_async_plugin
+#define TAU_STOP_ASYNC_PLUGIN Tau_stop_async_plugin
 
 #define TAU_CREATE_TRIGGER Tau_create_trigger
 #define TAU_TRIGGER Tau_trigger
@@ -520,6 +522,8 @@ void TAUDECL Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsigned 
 void TAUDECL Tau_enable_plugin_for_trigger_event(int ev, size_t hash, unsigned int id);
 size_t TAUDECL Tau_create_trigger(const char *name);
 void TAUDECL Tau_trigger(size_t id, void * data);
+void TAUDECL Tau_start_async_plugin(size_t id, void * data);
+void TAUDECL Tau_stop_async_plugin(size_t id);
 ////
 
 void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
