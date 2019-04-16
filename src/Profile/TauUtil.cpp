@@ -23,6 +23,7 @@
 #include <TauPluginCPPTypes.h>
 #include <stdarg.h>
 #include <string.h>
+#include <thread>
 #include <Profile/Profiler.h>
 #include <TauMetaData.h>
 #include <Profiler.h>
@@ -432,9 +433,6 @@ void Tau_enable_plugins_for_all_events() {
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_FUNCTION_FINALIZE, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER, "*");
   Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_TRIGGER, "*");
-  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_START_ASYNC_PLUGIN, "*");
-  Tau_enable_all_plugins_for_specific_event(TAU_PLUGIN_EVENT_STOP_ASYNC_PLUGIN, "*");
-
 }
 
 
@@ -608,7 +606,6 @@ extern "C" void Tau_util_init_tau_plugin_callbacks(Tau_plugin_callbacks * cb) {
   cb->PhaseEntry = 0;
   cb->PhaseExit = 0;
   cb->StartAsyncPlugin = 0;
-  cb->StopAsyncPlugin = 0;
 }
 
 /**************************************************************************************************************************
@@ -635,7 +632,6 @@ void Tau_util_make_callback_copy(Tau_plugin_callbacks * dest, Tau_plugin_callbac
   dest->PhaseEntry = src->PhaseEntry;
   dest->PhaseExit = src->PhaseExit;
   dest->StartAsyncPlugin = src->StartAsyncPlugin;
-  dest->StopAsyncPlugin = src->StopAsyncPlugin;
 }
 
 /**************************************************************************************************************************
@@ -676,7 +672,6 @@ extern "C" void Tau_util_plugin_register_callbacks(Tau_plugin_callbacks * cb, un
   if (cb->PhaseEntry != 0) { Tau_plugins_enabled.phase_entry = 1; }
   if (cb->PhaseExit != 0) { Tau_plugins_enabled.phase_exit = 1; }
   if (cb->StartAsyncPlugin !=0) { Tau_plugins_enabled.start_async_plugin = 1; }
-  if (cb->StopAsyncPlugin !=0) { Tau_plugins_enabled.stop_async_plugin = 1; }
   
 }
 
@@ -924,25 +919,12 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data, Plugin
 }
 
 /**************************************************************************************************************************
- *  Overloaded function that invokes all registered callbacks for phase exit event
+ *  Invokes callback for the async event
  *******************************************************************************************************************************/
-void Tau_util_invoke_callbacks_(Tau_plugin_event_start_async_plugin_data_t* data, PluginKey key) {
-  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return;
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->StartAsyncPlugin != 0)
-      plugin_callback_map[*it]->StartAsyncPlugin(data);
-  }
-  
-}
-
-void Tau_util_invoke_callbacks_(Tau_plugin_event_stop_async_plugin_data_t* data, PluginKey key) {
-
-  if(*(plugins_for_named_specific_event[key].begin()) == 10000) return;
-  for(std::set<unsigned int>::iterator it = plugins_for_named_specific_event[key].begin(); it != plugins_for_named_specific_event[key].end(); it++) {
-    if (plugin_callback_map[*it]->StopAsyncPlugin != 0)
-      plugin_callback_map[*it]->StopAsyncPlugin(data);
-  }
-  
+void Tau_util_invoke_async_callback(unsigned int id, void *data) {
+   if (plugin_callback_map[id]->StartAsyncPlugin != 0) {
+     std::thread(plugin_callback_map[id]->StartAsyncPlugin, data);
+   }
 }
 
 /* Actually do the invocation */
@@ -1023,14 +1005,6 @@ void Tau_util_do_invoke_callbacks(Tau_plugin_event event, PluginKey key, const v
     }
     case TAU_PLUGIN_EVENT_PHASE_EXIT: {
       Tau_util_invoke_callbacks_((Tau_plugin_event_phase_exit_data_t*)data, key);
-      break;
-    }
-    case TAU_PLUGIN_EVENT_START_ASYNC_PLUGIN: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_start_async_plugin_data_t*)data, key);
-      break;
-    }
-    case TAU_PLUGIN_EVENT_STOP_ASYNC_PLUGIN: {
-      Tau_util_invoke_callbacks_((Tau_plugin_event_stop_async_plugin_data_t*)data, key);
       break;
     }
    default: {

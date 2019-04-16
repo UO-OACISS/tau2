@@ -122,14 +122,6 @@ typedef struct Tau_plugin_event_trigger_data {
    void *data;
 } Tau_plugin_event_trigger_data_t;
 
-typedef struct Tau_plugin_event_start_async_plugin_data {
-   void *data;
-} Tau_plugin_event_start_async_plugin_data_t;
-
-typedef struct Tau_plugin_event_stop_async_plugin_data {
-   void *data;
-} Tau_plugin_event_stop_async_plugin_data_t;
-
 /*Define callbacks for specific events*/
 typedef int (*Tau_plugin_function_registration_complete)(Tau_plugin_event_function_registration_data_t*);
 typedef int (*Tau_plugin_metadata_registration_complete)(Tau_plugin_event_metadata_registration_data_t*);
@@ -150,8 +142,7 @@ typedef int (*Tau_plugin_end_of_execution)(Tau_plugin_event_end_of_execution_dat
 typedef int (*Tau_plugin_function_finalize)(Tau_plugin_event_function_finalize_data_t*);
 typedef int (*Tau_plugin_interrupt_trigger)(Tau_plugin_event_interrupt_trigger_data_t*);
 typedef int (*Tau_plugin_trigger)(Tau_plugin_event_trigger_data_t*);
-typedef int (*Tau_plugin_start_async_plugin)(Tau_plugin_event_start_async_plugin_data_t*);
-typedef int (*Tau_plugin_stop_async_plugin)(Tau_plugin_event_stop_async_plugin_data_t*);
+typedef int (*Tau_plugin_start_async_plugin)(void*);
 
 
 /*Define the callback structure*/
@@ -176,7 +167,6 @@ typedef struct Tau_plugin_callbacks {
    Tau_plugin_interrupt_trigger InterruptTrigger;
    Tau_plugin_trigger Trigger;
    Tau_plugin_start_async_plugin StartAsyncPlugin;
-   Tau_plugin_stop_async_plugin StopAsyncPlugin;
 } Tau_plugin_callbacks_t;
 
 /*Define all the events currently supported*/
@@ -200,8 +190,7 @@ typedef enum Tau_plugin_event {
    TAU_PLUGIN_EVENT_FUNCTION_FINALIZE,
    TAU_PLUGIN_EVENT_INTERRUPT_TRIGGER,
    TAU_PLUGIN_EVENT_TRIGGER,
-   TAU_PLUGIN_EVENT_START_ASYNC_PLUGIN,
-   TAU_PLUGIN_EVENT_STOP_ASYNC_PLUGIN
+   TAU_PLUGIN_EVENT_START_ASYNC_PLUGIN
 } Tau_plugin_event_t;
 
 /* Is the event registered with a callback? */
@@ -226,7 +215,6 @@ typedef struct Tau_plugin_callbacks_active {
     unsigned int interrupt_trigger;
     unsigned int trigger;
     unsigned int start_async_plugin;
-    unsigned int stop_async_plugin;
 } Tau_plugin_callbacks_active_t;
 
 /*Define data structures to hold information about currently loaded plugins. 

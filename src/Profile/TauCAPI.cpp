@@ -83,9 +83,10 @@ extern "C" void Tau_shutdown(void);
 //extern "C" void Tau_disable_collector_api();
 extern int Tau_get_count_for_pvar(int index);
 extern "C" size_t Tau_util_return_hash_of_string(const char *name);
+extern "C" void Tau_util_invoke_async_callback(unsigned int id, void * data);
+
 extern unsigned int plugin_id_counter;
 extern std::list < std::string > regex_list;
-
 #ifdef TAU_UNWIND
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 #endif
@@ -1219,25 +1220,14 @@ extern "C" void Tau_add_regex(const char * r)
   RtsLayer::UnLockDB();
 }
 
-extern "C" void Tau_start_async_plugin(size_t id, void * data) {
+extern "C" void Tau_start_async_plugin(unsigned int id, void * data) {
   TauInternalFunctionGuard protects_this_function;
   
   if(Tau_plugins_enabled.start_async_plugin) {
-    Tau_plugin_event_start_async_plugin_data_t plugin_data;
-    plugin_data.data = data;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_START_ASYNC_PLUGIN, NULL, &plugin_data);
+    Tau_util_invoke_async_callback(id, data);
   } 
 }
 
-extern "C" void Tau_stop_async_plugin(size_t id) {
-  TauInternalFunctionGuard protects_this_function;
-  
-  if(Tau_plugins_enabled.stop_async_plugin) {
-    Tau_plugin_event_start_async_plugin_data_t plugin_data;
-    plugin_data.data = NULL;
-    Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_STOP_ASYNC_PLUGIN, NULL, &plugin_data);
-  }
-}
 ////
 
 ///////////////////////////////////////////////////////////////////////////
