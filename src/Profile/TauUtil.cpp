@@ -921,9 +921,10 @@ void Tau_util_invoke_callbacks_(Tau_plugin_event_phase_exit_data_t* data, Plugin
 /**************************************************************************************************************************
  *  Invokes callback for the async event
  *******************************************************************************************************************************/
-void Tau_util_invoke_async_callback(unsigned int id, void *data) {
+extern "C" void Tau_util_invoke_async_callback(unsigned int id, void *data) {
    if (plugin_callback_map[id]->StartAsyncPlugin != 0) {
-     std::thread(plugin_callback_map[id]->StartAsyncPlugin, data);
+     std::thread t(plugin_callback_map[id]->StartAsyncPlugin, data);
+     t.detach();
    }
 }
 

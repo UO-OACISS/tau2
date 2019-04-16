@@ -142,7 +142,7 @@ typedef int (*Tau_plugin_end_of_execution)(Tau_plugin_event_end_of_execution_dat
 typedef int (*Tau_plugin_function_finalize)(Tau_plugin_event_function_finalize_data_t*);
 typedef int (*Tau_plugin_interrupt_trigger)(Tau_plugin_event_interrupt_trigger_data_t*);
 typedef int (*Tau_plugin_trigger)(Tau_plugin_event_trigger_data_t*);
-typedef int (*Tau_plugin_start_async_plugin)(void*);
+typedef void (*Tau_plugin_start_async_plugin)(void *);
 
 
 /*Define the callback structure*/
