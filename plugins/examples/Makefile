@@ -17,9 +17,9 @@ CFLAGS = $(TAU_MPI_COMPILE_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS) $(USER_OPT) $(TAU
 
 LDFLAGS = $(TAU_MPI_LIB)
 
-OBJS = libTAU-memory-usage-async.so libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so ibTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o tau_plugin_example_free_unused_vbufs.o tau_plugin_sos.o tau_plugin_example_selective_tracing.o tau_plugin_example_profile_snapshot_trigger.o tau_plugin_example_mpit_exchange_pvar_data.o tau_plugin_example_analyze_profile_snapshots.o tau_plugin_example_load_balance_async.o tau_plugin_example_load_balance.o tau_plugin_example_analyze_node_profile_snapshots.o tau_plugin_example_analyze_node_profile_snapshots_async.o tau_plugin_example_emulate_profile_snapshots_analysis_async.o tau_plugin_example_memory_usage_async.o
+OBJS = libTAU-atomic-trigger.so libTAU-memory-usage-async.so libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so ibTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o tau_plugin_example_free_unused_vbufs.o tau_plugin_sos.o tau_plugin_example_selective_tracing.o tau_plugin_example_profile_snapshot_trigger.o tau_plugin_example_mpit_exchange_pvar_data.o tau_plugin_example_analyze_profile_snapshots.o tau_plugin_example_load_balance_async.o tau_plugin_example_load_balance.o tau_plugin_example_analyze_node_profile_snapshots.o tau_plugin_example_analyze_node_profile_snapshots_async.o tau_plugin_example_emulate_profile_snapshots_analysis_async.o tau_plugin_example_memory_usage_async.o tau_plugin_example_atomic_trigger.o
 
-SHAREDLIBS = libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so libTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so libTAU-memory-usage-async.so libTAU-adios2-trace-plugin.so
+SHAREDLIBS = libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so libTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so libTAU-memory-usage-async.so libTAU-adios2-plugin.so libTAU-adios2-trace-plugin.so libTAU-atomic-trigger.so libTAU-adios2-trace-plugin.so
 
 all: install
 	@echo
@@ -27,6 +27,9 @@ all: install
 install: $(SHAREDLIBS)
 	@mkdir -p $(PLUGININSTALLDIR)
 	$(TAU_INSTALL) $^ $(PLUGININSTALLDIR)
+
+libTAU-atomic-trigger.so: tau_plugin_example_atomic_trigger.o
+	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-atomic-trigger.so tau_plugin_example_atomic_trigger.o
 
 libTAU-sos-plugin.so: tau_plugin_sos.o TauSOS.o
 	$(CXX) tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin.so
@@ -80,6 +83,9 @@ libTAU-load-balance-async.so: tau_plugin_example_load_balance_async.o
 
 libTAU-load-balance.so: tau_plugin_example_load_balance.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-load-balance.so tau_plugin_example_load_balance.o
+
+tau_plugin_example_atomic_trigger.o: Tau_plugin_example_atomic_trigger.cpp
+	$(CXX) $(CFLAGS) -c Tau_plugin_example_atomic_trigger.cpp -o tau_plugin_example_atomic_trigger.o
 
 tau_plugin_example_memory_usage_async.o: Tau_plugin_example_memory_usage_async.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_memory_usage_async.cpp -o tau_plugin_example_memory_usage_async.o
