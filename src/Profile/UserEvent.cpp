@@ -129,6 +129,7 @@ void TauUserEvent::AddEventToDB()
   if(Tau_plugins_enabled.atomic_event_registration) {
     Tau_plugin_event_atomic_event_registration_data_t plugin_data;
     plugin_data.user_event_ptr = this;
+    plugin_data.tid = Tau_get_thread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_ATOMIC_EVENT_REGISTRATION, GetName().c_str(), &plugin_data);
   }
 

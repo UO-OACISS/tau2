@@ -153,6 +153,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
 {
   /* Make sure TAU is initialized */
   static bool flag = true;
+
   if (flag) {
     flag = false;
     Tau_init_initializeTAU();

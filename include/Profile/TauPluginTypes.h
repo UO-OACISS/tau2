@@ -35,6 +35,7 @@ typedef struct Tau_plugin_event_metadata_registration_data {
 
 typedef struct Tau_plugin_event_post_init_data {
    int dummy;
+   int tid;
 } Tau_plugin_event_post_init_data_t;
 
 typedef struct Tau_plugin_event_dump_data {
@@ -93,6 +94,7 @@ typedef struct Tau_plugin_event_recv_data {
 
 typedef struct Tau_plugin_event_atomic_event_registration_data {
    void * user_event_ptr;
+   int tid;
 } Tau_plugin_event_atomic_event_registration_data_t;
 
 typedef struct Tau_plugin_event_atomic_event_trigger_data {
@@ -116,6 +118,7 @@ typedef struct Tau_plugin_event_function_finalize_data {
 
 typedef struct Tau_plugin_event_interrupt_trigger_data {
    int signum;
+   int tid;
 } Tau_plugin_event_interrupt_trigger_data_t ;
 
 typedef struct Tau_plugin_event_trigger_data {

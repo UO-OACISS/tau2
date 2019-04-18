@@ -1013,6 +1013,7 @@ extern "C" void Tau_post_init(void) {
   /*Invoke plugins only if both plugin path and plugins are specified*/
   if(Tau_plugins_enabled.post_init) {
     Tau_plugin_event_post_init_data_t plugin_data;
+    plugin_data.tid = Tau_get_thread();
     Tau_util_invoke_callbacks(TAU_PLUGIN_EVENT_POST_INIT, "*", &plugin_data);
   }
 }
