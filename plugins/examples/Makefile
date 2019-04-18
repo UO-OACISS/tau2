@@ -19,7 +19,7 @@ LDFLAGS = $(TAU_MPI_LIB)
 
 OBJS = libTAU-atomic-trigger.so libTAU-memory-usage-async.so libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so ibTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so tau_plugin_example_disable_instrumentation_runtime.o tau_plugin_example_mpit_recommend_sharp_usage.o tau_plugin_example_free_unused_vbufs.o tau_plugin_sos.o tau_plugin_example_selective_tracing.o tau_plugin_example_profile_snapshot_trigger.o tau_plugin_example_mpit_exchange_pvar_data.o tau_plugin_example_analyze_profile_snapshots.o tau_plugin_example_load_balance_async.o tau_plugin_example_load_balance.o tau_plugin_example_analyze_node_profile_snapshots.o tau_plugin_example_analyze_node_profile_snapshots_async.o tau_plugin_example_emulate_profile_snapshots_analysis_async.o tau_plugin_example_memory_usage_async.o tau_plugin_example_atomic_trigger.o
 
-SHAREDLIBS = libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so libTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so libTAU-memory-usage-async.so libTAU-adios2-plugin.so libTAU-adios2-trace-plugin.so libTAU-atomic-trigger.so libTAU-adios2-trace-plugin.so
+SHAREDLIBS = libTAU-memory-usage-async.so libTAU-emulate-profiles-analysis-async.so libTAU-load-balance-async.so libTAU-analyze-node-profiles.so libTAU-analyze-node-profiles-async.so libTAU-filter-plugin.so libTAU-mpit-recommend-sharp-usage-plugin.so libTAU-mpit-mvapich-free_unused_vbufs.so libTAU-sos-plugin.so libTAU-selective-tracing.so libTAU-snapshot-trigger.so libTAU-mpit-exchange-data.so libTAU-analyze-profiles.so libTAU-load-balance.so libTAU-memory-usage-async.so libTAU-adios2-plugin.so libTAU-adios2-trace-plugin.so libTAU-atomic-trigger.so libTAU-adios2-trace-plugin.so
 
 all: install
 	@echo
@@ -34,34 +34,23 @@ libTAU-atomic-trigger.so: tau_plugin_example_atomic_trigger.o
 libTAU-sos-plugin.so: tau_plugin_sos.o TauSOS.o
 	$(CXX) tau_plugin_sos.o TauSOS.o $(TAU_SOS_LINKER_OPTS) $(TAU_SHFLAGS) libTAU-sos-plugin.so
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 libTAU-adios2-plugin.so: tau_plugin_adios2.o
 	$(CXX) tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-plugin.so
 
 libTAU-adios2-trace-plugin.so: tau_plugin_adios2_trace.o
 	$(CXX) $(TAU_STDCXX11_FLAG) tau_plugin_adios2_trace.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-trace-plugin.so
-=======
-=======
-=======
-=======
+
 libTAU-memory-usage-async.so: tau_plugin_example_memory_usage_async.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS)  libTAU-memory-usage-async.so tau_plugin_example_memory_usage_async.o
 
->>>>>>> Add async memory usage plugin
 libTAU-emulate-profiles-analysis-async.so: tau_plugin_example_emulate_profile_snapshots_analysis_async.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-emulate-profiles-analysis-async.so tau_plugin_example_emulate_profile_snapshots_analysis_async.o
 
->>>>>>> Add some minor changes
 libTAU-analyze-node-profiles-async.so: tau_plugin_example_analyze_node_profile_snapshots_async.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles-async.so tau_plugin_example_analyze_node_profile_snapshots_async.o
 
->>>>>>> Add initial commit for async analytics
 libTAU-analyze-node-profiles.so: tau_plugin_example_analyze_node_profile_snapshots.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-analyze-node-profiles.so tau_plugin_example_analyze_node_profile_snapshots.o
->>>>>>> Add node-level profile snapshot analysis plugin
 
 libTAU-filter-plugin.so: tau_plugin_example_disable_instrumentation_runtime.o 
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin.so tau_plugin_example_disable_instrumentation_runtime.o 
@@ -141,12 +130,7 @@ tau_plugin_example_mpit_recommend_sharp_usage.o: Tau_plugin_example_mpit_recomme
 libTAU-mpit-mvapich-free_unused_vbufs.so: tau_plugin_example_free_unused_vbufs.o
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-mpit-mvapich-free_unused_vbufs.so tau_plugin_example_free_unused_vbufs.o
 
-<<<<<<< HEAD
-tau_plugin_example_free_unused_vbufs.o: Tau_plugin_example_mpit_mvapich_free_unused_vbufs.c
-	$(CC) $(CFLAGS) $(TAU_CC_SPECIAL_OPTS) -c Tau_plugin_example_mpit_mvapich_free_unused_vbufs.c -o tau_plugin_example_free_unused_vbufs.o
-=======
 tau_plugin_example_free_unused_vbufs.o: Tau_plugin_example_mpit_mvapich_free_unused_vbufs.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_mpit_mvapich_free_unused_vbufs.cpp -o tau_plugin_example_free_unused_vbufs.o
->>>>>>> Add node-level profile snapshot analysis plugin
 clean:
 	/bin/rm -rf *.o $(SHAREDLIBS)

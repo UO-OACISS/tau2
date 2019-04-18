@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <thread>
 #include <fstream>
 #include <string>
-#include <utility>
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
@@ -39,18 +39,45 @@
 #include <unistd.h>
 
 using namespace std;
+std::vector<std::thread> thread_vec;
+extern "C" int Tau_open_system_file(const char *filename);
+extern "C" int Tau_read_load_event(int fd, double *value);
 
-int done = 0;
+int done = 0; 
 
-int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
+int Tau_plugin_event_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+
+  done = 1;
+
+  for(auto it = thread_vec.begin(); it != thread_vec.end(); it++) 
+    it->join();
+
+  fprintf(stderr, "Asynchronous plugin exiting...\n");
 
   return 0;
 }
 
 void Tau_plugin_do_work(void * data) {
-   struct rusage r_usage;
-   getrusage(RUSAGE_SELF,&r_usage);
-   fprintf(stderr, "Max Memory usage = %ld\n", r_usage.ru_maxrss);
+  double value = 0;
+  static int fd = Tau_open_system_file("/proc/loadavg");
+
+  while(!done) {
+      value = 0;
+      if (fd) {
+        Tau_read_load_event(fd, &value);
+    
+       //Do not bother with recording the load if TAU is uninitialized. 
+        if (Tau_init_check_initialized()) {
+            value = value*100;
+        } else {
+          value = 0;
+        }
+      }
+      struct rusage r_usage;
+      getrusage(RUSAGE_SELF,&r_usage);
+      fprintf(stderr, "Load and Max Memory usage = %lf, %ld\n", value, r_usage.ru_maxrss);
+      sleep(2);
+  }
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
@@ -59,10 +86,11 @@ void Tau_plugin_do_work(void * data) {
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
-
-  cb->StartAsyncPlugin = Tau_plugin_do_work;
+  cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution;
 
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
+  void * data = NULL;
+  thread_vec.push_back(std::thread(Tau_plugin_do_work, data));
 
   return 0;
 }
