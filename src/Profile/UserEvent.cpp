@@ -495,7 +495,25 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
-        if (it == contextMap.end()) {
+	bool cuda_ctx_seen = true;
+	if (it != contextMap.end()) {
+	  FunctionInfo* fi;
+	  fi = current->ThisFunction;
+	  std::istringstream userEventPrevSS((std::string)(it->second->GetName().c_str()));
+	  std::string tok;
+	  vector<std::string> userEventPrevVec;
+	  while (std::getline(userEventPrevSS, tok, ':')) {
+	    userEventPrevVec.push_back(tok);
+	  }
+	  userEventPrevVec[0].erase(userEventPrevVec[0].length()-1, userEventPrevVec[0].length());
+	  userEventPrevVec[1].erase(0, 1);	  
+	  if (!((std::string)(userEvent->GetName().c_str())).compare(userEventPrevVec[0])) {
+	    if (((std::string)(fi->GetName())).compare(userEventPrevVec[1])) {
+	      cuda_ctx_seen = false;
+	    }
+	  }
+	}
+        if (it == contextMap.end() || !cuda_ctx_seen) {
           //printf("****  NEW  **** \n"); fflush(stdout);
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
