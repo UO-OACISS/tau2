@@ -11,6 +11,21 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauAPI.h>
 #include <Profile/TauPlugin.h>
+#include <string>
+#include <vector>
+#include <set>
+
+class TimerData {
+    public:
+        uint64_t _calls;
+        uint64_t _inclusive;
+        uint64_t _exclusive;
+        std::string _name;
+        TimerData(uint64_t calls, uint64_t inclusive,
+            uint64_t exclusive, std::string name) :
+            _calls(calls), _inclusive(inclusive),
+            _exclusive(exclusive), _name(name) { }
+};
 
 void dump_summary() {
     Tau_global_incr_insideTAU();
@@ -27,34 +42,41 @@ void dump_summary() {
     const char **counterNames;
     int numCounters;
     TauMetrics_getCounterList(&counterNames, &numCounters);
-    //printf("Num Counters: %d, Counter[0]: %s\n", numCounters, counterNames[0]);
+    std::map<uint64_t, TimerData > timers;
+    //timers.reserve(tmpTimers.size());
 
-    printf("Calls   Inclusive  Exclusive  Name\n");
     //foreach: TIMER
     for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
         // get the number of calls
         int tid = 0; // todo: get ALL thread data.
-        int calls;
-        double inclusive, exclusive;
+        uint64_t calls;
+        uint64_t inclusive, exclusive;
         calls = 0;
         inclusive = 0.0;
         exclusive = 0.0;
 
         //foreach: THREAD
         for (tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-            calls += fi->GetCalls(tid);
+            calls += (uint64_t)fi->GetCalls(tid);
             // skip this timer if this thread didn't call it.
             // for data-reduction reasons.
             if (calls == 0) continue;
             // iterate over metrics 
             //for (int m = 0; m < Tau_Global_numCounters; m++) {
             for (int m = 0; m < 1; m++) {
-                inclusive += fi->getDumpInclusiveValues(tid)[m];
-                exclusive += fi->getDumpExclusiveValues(tid)[m];
+                inclusive += (uint64_t)fi->getDumpInclusiveValues(tid)[m];
+                exclusive += (uint64_t)fi->getDumpExclusiveValues(tid)[m];
             }
         }
-        printf("%4d %4.f %4.f %s\n", calls, inclusive, exclusive, fi->GetName());
+        timers.insert(std::pair<uint64_t, TimerData>(
+                exclusive, TimerData(calls, inclusive, exclusive, fi->GetName())));
+    }
+    printf("   Calls  Inclusive  Exclusive  Name\n");
+    for (std::map<uint64_t, TimerData >::reverse_iterator iter = timers.rbegin() ; 
+            iter != timers.rend() ; ++iter) {
+        TimerData& t = iter->second;
+        printf("%8lu %10lu %10lu  %.60s\n", t._calls, t._inclusive, t._exclusive, t._name.c_str());
     }
 }
 
@@ -79,13 +101,13 @@ int Tau_plugin_my_event_trigger(Tau_plugin_event_trigger_data_t* data) {
  * Every plugin MUST implement this function to register callbacks for various events 
  * that the plugin is interested in listening to*/
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
-  Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
+  Tau_plugin_callbacks_t * cb = (Tau_plugin_callbacks_t*)malloc(sizeof(Tau_plugin_callbacks_t));
   fprintf(stdout, "TAU PLUGIN Thread Summary Init\n"); fflush(stdout);
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
   cb->Trigger = Tau_plugin_my_event_trigger;
   cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution;
-  cb->EndOfExecution = Tau_plugin_my_event_end_of_execution;
+  //cb->EndOfExecution = Tau_plugin_my_event_end_of_execution;
 
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
   return 0;
