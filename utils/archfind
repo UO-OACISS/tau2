@@ -42,6 +42,9 @@ if [ "y$test_arg" != "y$uname_output" ]
 then
     TAU_CCOM=gcc
     ARCH=arm64_linux
+    if  [ "x$CRAY_CPU_TARGET" != "x" ]; then
+        ARCH=craycnl
+    fi
 fi
 
 match_string="arm"
