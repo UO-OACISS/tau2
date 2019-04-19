@@ -28,6 +28,7 @@ class TimerData {
 };
 
 void dump_summary() {
+    if (Tau_get_node() > 0) return;
     Tau_global_incr_insideTAU();
     // get the most up-to-date profile information
     TauProfiler_updateAllIntermediateStatistics();
@@ -43,11 +44,11 @@ void dump_summary() {
     int numCounters;
     TauMetrics_getCounterList(&counterNames, &numCounters);
     std::map<uint64_t, TimerData > timers;
-    //timers.reserve(tmpTimers.size());
 
     //foreach: TIMER
     for (it = tmpTimers.begin(); it != tmpTimers.end(); it++) {
         FunctionInfo *fi = *it;
+        if (strncmp(fi->GetName(), ".TAU application", 16) == 0) continue;
         // get the number of calls
         int tid = 0; // todo: get ALL thread data.
         uint64_t calls;
@@ -70,22 +71,28 @@ void dump_summary() {
             }
         }
         timers.insert(std::pair<uint64_t, TimerData>(
-                exclusive, TimerData(calls, inclusive, exclusive, fi->GetName())));
+                inclusive, TimerData(calls, inclusive, exclusive, fi->GetName())));
     }
-    printf("   Calls  Inclusive  Exclusive  Name\n");
+    printf("%d threads, profile totals across all threads: \n", RtsLayer::getTotalThreads());
+    printf("   Calls  Inc_msec.  Exc_msec. Name\n");
+    printf("-------- ---------- ---------- ------------------------------------------------------------\n");
+    int index = 0;
     for (std::map<uint64_t, TimerData >::reverse_iterator iter = timers.rbegin() ; 
             iter != timers.rend() ; ++iter) {
         TimerData& t = iter->second;
-        printf("%8lu %10lu %10lu  %.60s\n", t._calls, t._inclusive, t._exclusive, t._name.c_str());
+        printf("%8lu %10lu %10lu %.60s\n", t._calls, t._inclusive/1000, t._exclusive/1000, t._name.c_str());
+        if (++index > 5) break;
     }
 }
 
 int Tau_plugin_event_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution_data_t *data) {
+    if (data->tid != 0) return 0;
     dump_summary();
     return 0;
 }
 
 int Tau_plugin_my_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
+    if (data->tid != 0) return 0;
     dump_summary();
     return 0;
 }
