@@ -944,6 +944,7 @@ likwid=no
 beacon=no
 beacondir="/"
 darshan=no
+tau_cray_arm64=no
 enable_export_dynamic=no
 perfsuite=no
 perfsuitedir=
@@ -1200,7 +1201,7 @@ for arg in "$@"; do
 
 	-fortran=*)
 	    myarg=`echo $arg | sed 's/-fortran=//'`
-	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang ] ; then
+	    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = pgf90 -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel  -o $myarg = ifort -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran-5 -o $myarg = gfortran-6 -o $myarg = gfortran-7 -o $myarg = gfortran-8 -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 -o $myarg = mpc_f77 -o $myarg = mpc_ifort -o $myarg = mpc_gfortran -o $myarg = oshfort -o $myarg = caf -o $myarg = armflang -o $myarg = ftn ] ; then
 		if [ $myarg = gnu ] ; then
 		    fortran_compiler=gfortran
 		else
@@ -3067,10 +3068,12 @@ configure_perfexplorer () {
 	    ;;
 
 	craycnl|sparc64fx)
-	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
-	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
-	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
-	    gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+            if [ $tau_cray_arm64 = no ]; then
+	      gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
+	      gunzip -c tools/src/contrib/jogl/x86_64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	      gunzip -c tools/src/contrib/jogl/x86_64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	      gunzip -c tools/src/contrib/jogl/x86_64/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
+	    fi
 	    ;;
 
 	xt3)
@@ -4778,7 +4781,7 @@ case $fortran_compiler in
 	fixmakeargs="$fixmakeargs HP_FORTRAN"
 	;;
 
-    cray)
+    cray|ftn)
 	echo "Default Fortran compiler will be Cray f90"
 	if [ $machine = crayx1 -o $machine = craysv1 ]
 	then
@@ -10804,6 +10807,44 @@ if [ $upc_compiler = cc -o $upc_compiler = default ]; then
 	fixmakeargs="$fixmakeargs CRAY_UPC"
     fi
 fi
+
+if [ $machine = arm64_linux -a "x$CRAY_CPU_TARGET" != "x" ]; then
+  echo "ERROR: This system was detected as a Cray not arm64_linux!"
+  echo "Please configure with -arch=craycnl instead of -arch=arm64_linux"
+  echo "----------------------------------------------------------------"
+  echo " "
+  exit 0;
+fi
+
+if [ $machine = craycnl -a "x`uname -m`" == "xaarch64" ]; then 
+  fixmakeargs="$fixmakeargs TAU_CRAY_AARCH64"
+  tau_cray_arm64=yes
+  # we need to copy the right jogl files here for ARM64
+  JARTARGET=${targetdir}/${architecture}/lib
+  gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
+  gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
+  gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+
+  cp tools/src/contrib/jogl/arm_linux/gluegen-rt-natives*.jar $JARTARGET/gluegen-rt-natives.jar
+  cp tools/src/contrib/jogl/arm_linux/jogl-all-natives*.jar $JARTARGET/jogl-all-natives.jar
+
+  if [ -r tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz ] ; then
+    gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+  fi
+
+  if [ ! -r /usr/lib/libGL.so.1 ]
+  then
+    echo "NOTE: Did not find OpenGL library, copying TAU's Mesa libGL.so.1 to $JARTARGET directory"
+    gunzip -c tools/src/contrib/jogl/arm_linux/libGL.so.1.gz > $JARTARGET/libGL.so.1
+  fi
+
+
+  if [ -r tools/src/contrib/jogl/arm_linux/gluegen.jar.gz -a -r tools/src/contrib/jogl/arm_linux/libgluegen-rt.so.gz ] ; then
+    gunzip -c tools/src/contrib/jogl/arm_linux/libgluegen-rt.so.gz > $JARTARGET/libgluegen-rt.so
+    gunzip -c tools/src/contrib/jogl/arm_linux/gluegen.jar.gz > $JARTARGET/gluegen.jar
+  fi
+
+fi	
 
 if [ $upc = yes ]; then
     # If MPI is used -mpi already appears in the name. If it is not, add it
