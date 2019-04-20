@@ -13,6 +13,7 @@
 #include <string>
 
 #include <Profile/TauEnv.h>
+#include <Profile/UserEvent.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauCollate.h>
 #include <Profile/TauUtil.h>
@@ -50,6 +51,8 @@ int done = 0;
 
 int load_id, usage_id;
 
+void * load, * usage;
+
 static x_uint64 getTimeStamp()
 {
   x_uint64 timestamp;
@@ -78,15 +81,6 @@ void * Tau_plugin_do_work(void * data) {
   double value = 0;
   static int fd = Tau_open_system_file("/proc/loadavg");
 
-/*  RtsLayer::LockDB();
-
-  for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-    TauTraceInit(tid);
-  }
-
-  RtsLayer::UnLockDB();
-*/
-
   while(!done) {
       value = 0;
       if (fd) {
@@ -109,15 +103,6 @@ void * Tau_plugin_do_work(void * data) {
       sleep(2);
   }
 
- /* RtsLayer::LockDB();
-
-  for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
-    TauTraceClose(tid);
-  }
-
-  RtsLayer::UnLockDB();
-*/
-
 }
 
 /*This is the init function that gets invoked by the plugin mechanism inside TAU.
@@ -129,9 +114,12 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
   cb->PreEndOfExecution = Tau_plugin_event_pre_end_of_execution;
 
-  load_id = RtsLayer::GenerateUniqueId();
-  usage_id = RtsLayer::GenerateUniqueId();
+  TAU_REGISTER_EVENT(load, "LOAD");
+  TAU_REGISTER_EVENT(usage, "MEMORY USAGE");
+  load_id = ((tau::TauUserEvent *)load)->GetId();
+  usage_id = ((tau::TauUserEvent *)usage)->GetId();
 
+  
   TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb, id);
   void * data = NULL;
 
