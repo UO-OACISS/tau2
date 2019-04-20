@@ -81,6 +81,10 @@ void * Tau_plugin_do_work(void * data) {
   double value = 0;
   static int fd = Tau_open_system_file("/proc/loadavg");
 
+  //TauTraceInit(Tau_get_thread());
+
+  sleep(2);
+
   while(!done) {
       value = 0;
       if (fd) {

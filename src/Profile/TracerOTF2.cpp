@@ -1753,7 +1753,7 @@ void TauTraceOTF2ShutdownComms(int tid) {
     TauTraceOTF2ExchangeEventsWritten();
     TauTraceOTF2ExchangeRegions();
     TauTraceOTF2ExchangeMetrics();
-    TauTraceOTF2ExchangeRmaWins();
+    //TauTraceOTF2ExchangeRmaWins();
     if(TauEnv_get_set_node()==-1){
       TauCollectives_Finalize();
     }

@@ -219,6 +219,13 @@ int main (int argc, char *argv[])
 
   size_t id = TAU_CREATE_TRIGGER("after matrix");
 
+  TAU_ADD_REGEX("(compute)(.*)"); 
+  TAU_ADD_REGEX("(MPI_Comm_size)(.*)"); 
+  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, "(compute)(.*)", 0);
+  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_ENTRY, "(MPI_Comm_size)(.*)", 0);
+  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_EXIT, "(compute)(.*)", 0);
+  TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT(TAU_PLUGIN_EVENT_FUNCTION_EXIT, "(MPI_Comm_size)(.*)", 0);
+
 #ifdef PTHREADS
   int ret;
   pthread_attr_t  attr;
