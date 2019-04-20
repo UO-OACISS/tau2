@@ -78,13 +78,14 @@ void * Tau_plugin_do_work(void * data) {
   double value = 0;
   static int fd = Tau_open_system_file("/proc/loadavg");
 
-  RtsLayer::LockDB();
+/*  RtsLayer::LockDB();
 
   for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
     TauTraceInit(tid);
   }
 
   RtsLayer::UnLockDB();
+*/
 
   while(!done) {
       value = 0;
@@ -108,13 +109,14 @@ void * Tau_plugin_do_work(void * data) {
       sleep(2);
   }
 
-  RtsLayer::LockDB();
+ /* RtsLayer::LockDB();
 
   for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
     TauTraceClose(tid);
   }
 
   RtsLayer::UnLockDB();
+*/
 
 }
 
