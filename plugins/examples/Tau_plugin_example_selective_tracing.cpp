@@ -37,11 +37,21 @@ int Tau_plugin_event_function_entry(Tau_plugin_event_function_entry_data_t* data
   if(stop_tracing)
     return 0;
 
-  fprintf(stderr, "TAU PLUGIN: Function %s with id %d has entered at timestamp %lu on tid: %d\n", data->timer_name, data->func_id, data->timestamp, data->tid);
+  //fprintf(stderr, "TAU PLUGIN: Function %s with id %d has entered at timestamp %lu on tid: %d\n", data->timer_name, data->func_id, data->timestamp, data->tid);
   
   TauTraceEvent(data->func_id, 1 /* entry */, data->tid, data->timestamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
 
   return 0;
+}
+
+int Tau_plugin_event_post_init(Tau_plugin_event_post_init_data_t *data) {
+
+    RtsLayer::LockDB();
+
+    for (int tid = 0; tid < RtsLayer::getTotalThreads(); tid++) {
+      TauTraceInit(tid);
+    }
+    RtsLayer::UnLockDB();
 }
 
 int Tau_plugin_event_function_exit(Tau_plugin_event_function_exit_data_t* data) {
@@ -51,7 +61,7 @@ int Tau_plugin_event_function_exit(Tau_plugin_event_function_exit_data_t* data) 
 
   #ifdef TAU_MPI
   /* Initialized OTF2 */
-  if(!strcmp(data->timer_name, "MPI_Init()")) {
+/*  if(!strcmp(data->timer_name, "MPI_Init()")) {
   
     RtsLayer::LockDB();
 
@@ -60,10 +70,10 @@ int Tau_plugin_event_function_exit(Tau_plugin_event_function_exit_data_t* data) 
     }
 
     RtsLayer::UnLockDB();
-  }
+  }*/
   #endif
 
-  fprintf(stderr, "TAU PLUGIN: Function %s with id %d has exited at timestamp %lu on tid: %d\n", data->timer_name, data->func_id, data->timestamp, data->tid);
+//  fprintf(stderr, "TAU PLUGIN: Function %s with id %d has exited at timestamp %lu on tid: %d\n", data->timer_name, data->func_id, data->timestamp, data->tid);
   
   TauTraceEvent(data->func_id, -1 /* entry */, data->tid, data->timestamp, 1 /* use supplied timestamp */, TAU_TRACE_EVENT_KIND_FUNC);
   
@@ -81,6 +91,7 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
 
+  cb->PostInit =  Tau_plugin_event_post_init;
   cb->FunctionEntry = Tau_plugin_event_function_entry;
   cb->FunctionExit = Tau_plugin_event_function_exit;
   cb->EndOfExecution = Tau_plugin_event_end_of_execution;
