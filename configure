@@ -6764,7 +6764,7 @@ fi
 ######################################################################
 # Install libunwind if requested
 ######################################################################
-libunwind=libunwind-1.3-rc1
+libunwind=libunwind-1.3.1
 libunwindtgz=$libunwind.tar.gz
 libunwindurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libunwindtgz
 if [ "x$unwind_dir" = "x" ]; then
@@ -9638,7 +9638,11 @@ if [ "x$unwinder" != "xnone" ] ; then
 	    unwind_lib_flag="-framework#System"
 	    unwind_extras=""
 	fi
-	fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	if [ $machine=craycnl -a $CRAY_TARGET_PE=cray ]; then
+	  echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
+	else 
+	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
+	fi
     else
 	fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
     fi
