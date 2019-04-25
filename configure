@@ -3628,6 +3628,11 @@ case $machine in
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
 	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
+	elif [ "x$PE_ENV" = xALLINEA ] ; then
+	    intel=yes
+	    tauoptions="${tauoptions}-allinea"
+	    default_fortran=gfortran
+	    fixmakeargs="$fixmakeargs CLANG"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
