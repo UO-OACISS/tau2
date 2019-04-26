@@ -231,6 +231,10 @@ bool IsDynamicProfiling(char *filename) {
     if(strstr(version,"MULTI") != NULL){
       multipleCounters = true;
       counterName = strdup(version);
+      // convert version to all uppercase (Score-P uses Time)
+      for (size_t ii = 0 ; version[ii] != '\0' ; ++ii) {
+        version[ii] = toupper((unsigned char) version[ii]);
+      }
       if(strstr(version,"TIME") != NULL)
         hwcounters = false;
       else
