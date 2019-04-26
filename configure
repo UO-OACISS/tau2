@@ -10042,6 +10042,9 @@ if [ "x$download_scorep" = xyes ] ; then
     if [ $papi = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-papi=$papidir --with-papi-header=$papidir/include --with-papi-lib=$papidir/$papisubdir"
     fi
+    if [ $machine = craycnl ]; then
+      tau_scorep_config_options="${tau_scorep_config_options} ac_scorep_platform=crayxc"
+    fi
     if [ $pdt = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-pdt=$pdtdir/${architecture}/bin"
     fi
@@ -10186,7 +10189,7 @@ if [ $scorep = yes ] ; then
 
     if [ $openmp = yes ]; then
       if [ $opari = yes ]; then
-        scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
+        #scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
         scorep_adapter="$scorep_adapter --thread=omp --pomp"
       else
         if [ $ompt = yes ]; then
@@ -10256,10 +10259,12 @@ if [ $scorep = yes ] ; then
     fi
     #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
     scorepLibs="$scorepExtraLibs#$scorepLD#$scorepLibs"
-
-    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+    scorepLDflags=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e 's@ @#@g'`
+    #fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLDflags#$scorepLibs"
     if [ $mpi = no ]; then
-      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+      #fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#$scorepLDflags#$scorepLibs"
     fi
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
@@ -10774,7 +10779,7 @@ if [ $dwarf = yes ] ; then
     echo "Using libdwarf at $dwarfdir"
 	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
     fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
-    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf"
+    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf#-lz#-lelf"
     fixmakeargs="$fixmakeargs TAU_DWARF"
     fi
 fi
