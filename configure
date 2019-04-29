@@ -8749,7 +8749,7 @@ bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir
 ######################################################################
 cat <<EOF > conftest_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 //#ifdef __APPLE__
 //#include <crt_externs.h>
@@ -8790,7 +8790,7 @@ fi
 ######################################################################
 cat <<EOF > conftest_elf_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <stddef.h>
 #include <bfd.h>
 #include <elf-bfd.h>
@@ -8828,7 +8828,7 @@ cat <<EOF > conftest_bfd.c
 #include <mpc.h>
 #endif
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 int main(int argc, char **argv) {
    bfd_init();
@@ -8966,7 +8966,7 @@ fi
 ######################################################################
 cat <<EOF > conftest_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include <demangle.h>
