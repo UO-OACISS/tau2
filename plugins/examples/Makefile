@@ -35,7 +35,7 @@ libTAU-adios2-plugin.so: tau_plugin_adios2.o
 	$(CXX) tau_plugin_adios2.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-plugin.so
 
 libTAU-adios2-trace-plugin.so: tau_plugin_adios2_trace.o
-	$(CXX) -std=c++11 tau_plugin_adios2_trace.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-trace-plugin.so
+	$(CXX) $(TAU_STDCXX11_FLAG) tau_plugin_adios2_trace.o $(TAU_ADIOS2_LINKER_OPTS) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-adios2-trace-plugin.so
 
 libTAU-filter-plugin.so: tau_plugin_example_disable_instrumentation_runtime.o 
 	$(CXX) $(LDFLAGS) $(TAU_SHFLAGS) libTAU-filter-plugin.so tau_plugin_example_disable_instrumentation_runtime.o 
@@ -50,7 +50,7 @@ tau_plugin_adios2.o: Tau_plugin_adios2.cpp
 	$(CXX) $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c Tau_plugin_adios2.cpp -o tau_plugin_adios2.o
 
 tau_plugin_adios2_trace.o: Tau_plugin_adios2_trace.cpp
-	$(CXX) -std=c++11 $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c Tau_plugin_adios2_trace.cpp -o tau_plugin_adios2_trace.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) $(TAU_ADIOS2_INCLUDE_OPTS) -c Tau_plugin_adios2_trace.cpp -o tau_plugin_adios2_trace.o
 
 tau_plugin_example_disable_instrumentation_runtime.o: Tau_plugin_example_disable_instrumentation_runtime.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_disable_instrumentation_runtime.cpp -o tau_plugin_example_disable_instrumentation_runtime.o

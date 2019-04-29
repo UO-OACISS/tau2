@@ -43,6 +43,10 @@ then
     TAU_CCOM=gcc
     ARCH=arm64_linux
 fi
+# if you are on a Cray XC system, use craycnl as the architecture
+if  [ "x$CRAY_CPU_TARGET" != "x" ]; then
+  ARCH=craycnl
+fi
 
 match_string="arm"
 test_arg=${uname_output#$match_string}

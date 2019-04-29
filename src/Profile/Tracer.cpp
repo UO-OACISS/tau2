@@ -807,6 +807,39 @@ void TauTraceSendMsgRemote(int type, int destination, int length, int remote_id)
   /* 0, 0 is for ts and use_ts so TAU generates the timestamp */
 }
 
+void TauTraceBarrierAllStart(int tag) {
+#ifdef TAU_OTF2
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+      TauTraceOTF2BarrierAllStart(tag);
+  }
+#endif
+}
+
+void TauTraceBarrierAllEnd(int tag) {
+#ifdef TAU_OTF2
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+      TauTraceOTF2BarrierAllEnd(tag);
+  }
+#endif
+}
+
+
+void TauTraceRMACollectiveBegin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) {
+#ifdef TAU_OTF2
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+      TauTraceOTF2RMACollectiveBegin(tag, type, start, stride, size, data_in, data_out, root);
+  }
+#endif
+}
+
+void TauTraceRMACollectiveEnd(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) {
+#ifdef TAU_OTF2
+  if(TauEnv_get_trace_format() == TAU_TRACE_FORMAT_OTF2) {
+      TauTraceOTF2RMACollectiveEnd(tag, type, start, stride, size, data_in, data_out, root);
+  }
+#endif
+}
+
 void TauTraceOTF2InitShmem_if_necessary() {
 #ifdef TAU_OTF2
     TauTraceOTF2InitShmem();

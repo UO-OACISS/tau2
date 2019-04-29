@@ -325,6 +325,16 @@
 #define TAU_TRACE_RECVMSG_REMOTE(type, source, length, remoteid) \
         Tau_trace_recvmsg_remote(type, source, length, remoteid);
 
+#define TAU_TRACE_BARRIER_ALL_START(tag) \
+        Tau_trace_barrier_all_start(tag);
+#define TAU_TRACE_BARRIER_ALL_END(tag) \
+        Tau_trace_barrier_all_end(tag);
+
+#define TAU_TRACE_RMA_COLLECTIVE_BEGIN(tag, type, start, stride, size, data_in, data_out, root) \
+        Tau_trace_rma_collective_begin(tag, type, start, stride, size, data_in, data_out, root);
+#define TAU_TRACE_RMA_COLLECTIVE_END(tag, type, start, stride, size, data_in, data_out, root) \
+        Tau_trace_rma_collective_end(tag, type, start, stride, size, data_in, data_out, root);
+
 #define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_function_info(name, type, group, #group);
 #define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0, Tau_get_thread());
 #define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle, Tau_get_thread());
@@ -498,6 +508,10 @@ void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);
 void TAUDECL Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid);
 void TAUDECL Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid);
+void TAUDECL Tau_trace_barrier_all_start(int tag);
+void TAUDECL Tau_trace_barrier_all_end(int tag);
+void TAUDECL Tau_trace_rma_collective_begin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root);
+void TAUDECL Tau_trace_rma_collective_end(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root);
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_create_top_level_timer_if_necessary_task(int task);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);

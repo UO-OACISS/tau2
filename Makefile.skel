@@ -122,6 +122,7 @@ MEMORYWRAPPER=src/wrappers/memory
 #XLUPC#UPCWRAPPER=src/wrappers/upc/xlupc#ENDIF#
 
 #COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
+#TAU_CRAY_AARCH64#UPCWRAPPER= #ENDIF#
 
 #TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#
 #GOMP_AVAILABLE#GOMP_WRAPPER=src/wrappers/gomp #ENDIF#

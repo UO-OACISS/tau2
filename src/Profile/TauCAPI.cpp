@@ -1549,6 +1549,37 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_barrier_all_start(int tag) 
+{
+  if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
+      TauTraceBarrierAllStart(tag);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_barrier_all_end(int tag) 
+{
+  if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
+      TauTraceBarrierAllEnd(tag);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_rma_collective_begin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+{
+  if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
+      TauTraceRMACollectiveBegin(tag, type, start, stride, size, data_in, data_out, root);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+{
+  if (RtsLayer::TheEnableInstrumentation() && TauEnv_get_tracing()) {
+      TauTraceRMACollectiveEnd(tag, type, start, stride, size, data_in, data_out, root);
+  }
+}
 
 extern "C" void Tau_bcast_data(int data) {
   TAU_EVENT(TheBcastEvent(), data);
@@ -1607,6 +1638,24 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
   TauTraceRecvMsgRemote(type, source, length, remoteid);
+}
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_barrier_all_start(int tag) {
+  TauTraceBarrierAllStart(tag);
+}
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_barrier_all_end(int tag) {
+  TauTraceBarrierAllEnd(tag);
+}
+extern "C" void Tau_trace_rma_collective_begin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+{
+  TauTraceRMACollectiveBegin(tag, type, start, stride, size, data_in, data_out, root);
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_rma_collective_end(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root) 
+{
+  TauTraceRMACollectiveEnd(tag, type, start, stride, size, data_in, data_out, root);
 }
 
 #endif /* TAU_MPI || TAU_SHMEM*/

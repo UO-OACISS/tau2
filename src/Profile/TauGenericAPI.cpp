@@ -60,12 +60,19 @@ extern "C" void perftool_exit(void) {
     Tau_exit("stub exiting");
 }
 
-extern "C" void (*perftool_start)(const char *) = &Tau_pure_start;
-extern "C" void (*perftool_stop)(const char *) = &Tau_pure_stop;
-extern "C" void (*perftool_trigger_context_event)(const char *, double) = &Tau_trigger_context_event;
-extern "C" void (*perftool_metadata)(const char *, const char *) = &Tau_metadata;
+extern "C" void perftool_start(const char * name) { 
+    Tau_pure_start(name);
+}
 
-// Temproary fix
-//extern "C" void Tau_start(const char * name) {
-    //Tau_pure_start(name);
-//}
+extern "C" void perftool_stop(const char * name) {
+    Tau_pure_stop(name);
+}
+
+extern "C" void perftool_sample_counter(const char * name, double value) {
+    Tau_trigger_context_event(name, value);
+}
+
+extern "C" void perftool_metadata(const char * name, const char * value) {
+    Tau_metadata(name, value);
+}
+

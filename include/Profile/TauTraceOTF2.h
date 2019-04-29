@@ -41,6 +41,10 @@ extern "C" {
   void TAUDECL TauTraceOTF2Event(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int kind);
   void TAUDECL TauTraceOTF2EventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id, int kind);
   void TAUDECL TauTraceOTF2Msg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id);
+  void TAUDECL TauTraceOTF2BarrierAllStart(int tag);
+  void TAUDECL TauTraceOTF2BarrierAllEnd(int tag);
+  void TAUDECL TauTraceOTF2RMACollectiveBegin(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root);
+  void TAUDECL TauTraceOTF2RMACollectiveEnd(int tag, int type, int start, int stride, int size, int data_in, int data_out, int root);
   void TAUDECL TauTraceOTF2ShutdownComms(int tid);
   void TAUDECL TauTraceOTF2Close(int tid);
 
