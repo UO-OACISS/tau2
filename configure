@@ -697,7 +697,7 @@ for arg in "$@"; do
         echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
         echo "-dwarf=<dir> ................ Specify location of the libdwarf package."
         echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
-        echo "-elf=<dir | download> ......... Specify location of the libelf package."
+        echo "-elf=<dir> .................... Specify location of the libelf package."
         echo "-bfd=<dir | download> ....... Specify a binutils directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
@@ -10788,7 +10788,7 @@ if [ "x$download_dwarf" = xyes ] ; then
                 mkdir -p ${dwarfdir}; mkdir -p ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.so* ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.a ${dwarfdir}/lib; 
               fi
             else 
-              echo "WARNING!!! TAU: libelf.h not found. Dwarf needs this. Please install the libelf-devel (or libelf-dev) package and rerun this TAU configure command. The Dwarf build will likely fail next. "
+              echo "Found /usr/include/libelf.h"
             fi
 # End of libelf check. Continue with libdwarf build.
             if [ $elf=yes ]; then
