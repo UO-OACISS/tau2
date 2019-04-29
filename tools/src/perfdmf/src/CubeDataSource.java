@@ -141,11 +141,21 @@ public class CubeDataSource extends DataSource
 			{
 				if (cart.get_ndim() != 3)
 				{
-					if (JOptionPane.showConfirmDialog(
-						null,
-						new String("Topology " + num + "( "+cart.get_name()+") has different number of coordinates ("+ cart.get_ndim()+") than 3. \n Visualization of this topology will fail. \n Add to TAU profile anyway?"),
-						"Not supported topologies are detected",
-						JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) continue;
+					int optionReturn=JOptionPane.YES_OPTION;
+					
+					try {JOptionPane.showConfirmDialog(
+							null,
+							new String("Topology " + num + "( "+cart.get_name()+") has a different number of coordinates ("+ cart.get_ndim()+") than 3. \n Visualization of this topology will fail. \n Add to TAU profile anyway?"),
+							"No supported topologies are detected",
+							JOptionPane.YES_NO_OPTION);}
+					catch(Exception e){
+								
+							}
+					
+					if (optionReturn == JOptionPane.NO_OPTION) 
+					{
+						continue;
+					}
 
 				}
 				String prefix = "Topo"+num;
