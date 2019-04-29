@@ -949,7 +949,9 @@ enable_export_dynamic=no
 perfsuite=no
 perfsuitedir=
 bfd=no
+elf=no
 bfddir=
+elfdir=
 turnbfdoff=no
 perf=no
 perfincdir=
@@ -1502,6 +1504,12 @@ for arg in "$@"; do
 	-bfd=*)
 	    bfd=yes
 	    bfddir=`echo $arg | sed -e 's/-bfd=//'`
+	    shift
+	    ;;
+
+	-elf=*)
+	    elf=yes
+	    elfdir=`echo $arg | sed -e 's/-elf=//'`
 	    shift
 	    ;;
 
@@ -8749,7 +8757,7 @@ bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir
 ######################################################################
 cat <<EOF > conftest_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 //#ifdef __APPLE__
 //#include <crt_externs.h>
@@ -8790,7 +8798,7 @@ fi
 ######################################################################
 cat <<EOF > conftest_elf_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <stddef.h>
 #include <bfd.h>
 #include <elf-bfd.h>
@@ -8828,7 +8836,7 @@ cat <<EOF > conftest_bfd.c
 #include <mpc.h>
 #endif
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 int main(int argc, char **argv) {
    bfd_init();
@@ -8966,7 +8974,7 @@ fi
 ######################################################################
 cat <<EOF > conftest_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include <demangle.h>
@@ -10676,6 +10684,11 @@ libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$lib
 libelf_dirname=libelf-devel-0.158-6.1.x86_64
 libelftgz=$libelf_dirname.tgz
 libelfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libelftgz
+if [ "x$elfdir" = "x" ]; then
+  libelfdir=${targetdir}/${architecture}/${libelf_dirname}
+else
+  libelfdir=$elfdir
+fi
 
 if [ "x$dwarfdir" = "x" ]; then
     libdwarfdir=${targetdir}/${architecture}
@@ -10757,10 +10770,10 @@ if [ "x$download_dwarf" = xyes ] ; then
               fi 
 # Dwarf needs a libelf.h in its libdwarf directory and libelf.so in the lib dir. Symlinks.
               if [ ! -L libdwarf/libelf.h ]; then 
-                cd libdwarf; ln -s ${targetdir}/${architecture}/${libelf_dirname}/include/libelf.h . ; cd ../ 
+                cd libdwarf; ln -s ${libelfdir}/include/libelf.h . ; cd ../ 
               fi
               if [ ! -L ${dwarfdir}/lib/libelf.so ]; then 
-                mkdir -p ${dwarfdir}; mkdir -p ${dwarfdir}/lib; ln -s ${targetdir}/${architecture}/${libelf_dirname}/lib64/libelf.so ${dwarfdir}/lib; ln -s ${targetdir}/${architecture}/${libelf_dirname}/lib64/libelf.a ${dwarfdir}/lib; 
+                mkdir -p ${dwarfdir}; mkdir -p ${dwarfdir}/lib; ln -s ${libelfdir}/lib64/libelf.so ${dwarfdir}/lib; ln -s ${libelfdir}/lib64/libelf.a ${dwarfdir}/lib; 
               fi
             else 
               echo "WARNING!!! TAU: libelf.h not found. Dwarf needs this. Please install the libelf-devel (or libelf-dev) package and rerun this TAU configure command. The Dwarf build will likely fail next. "
