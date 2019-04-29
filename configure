@@ -10779,10 +10779,10 @@ if [ "x$download_dwarf" = xyes ] ; then
                 cd libdwarf; ln -s ${libelfdir}/include/libelf.h . ; ln -s ${libelfdir}/include/libelf . ; cd ../ 
               fi
               if [ ! -L ${dwarfdir}/lib/libelf.so ]; then 
-                if [ ${libelfdir}/lib64/libelf.so ]; then 
+                if [ -r ${libelfdir}/lib64/libelf.so ]; then 
                   libelflibdir=lib64
                 fi
-                if [ ${libelfdir}/lib/libelf.so ]; then 
+                if [ -r ${libelfdir}/lib/libelf.so ]; then 
                   libelflibdir=lib
                 fi
                 mkdir -p ${dwarfdir}; mkdir -p ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.so* ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.a ${dwarfdir}/lib; 
