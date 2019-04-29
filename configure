@@ -10768,6 +10768,7 @@ if [ "x$download_dwarf" = xyes ] ; then
               else 
                 echo "TAU: Found libelf in ${targetdir}/${architecture}/${libelf_dirname}. Using it."
               fi 
+              elf=yes
 # Dwarf needs a libelf.h in its libdwarf directory and libelf.so in the lib dir. Symlinks.
               if [ ! -L libdwarf/libelf.h ]; then 
                 cd libdwarf; ln -s ${libelfdir}/include/libelf.h . ; cd ../ 
@@ -10779,6 +10780,12 @@ if [ "x$download_dwarf" = xyes ] ; then
               echo "WARNING!!! TAU: libelf.h not found. Dwarf needs this. Please install the libelf-devel (or libelf-dev) package and rerun this TAU configure command. The Dwarf build will likely fail next. "
             fi
 # End of libelf check. Continue with libdwarf build.
+            if [ $elf=yes ]; then
+              orig_cflags=`echo $CFLAGS`
+              export CFLAGS="$orig_cflags -I${libelfdir}/include"
+              export DWARF_LIBS="-L${libelfdir}/lib64"
+              echo "TAU: Using CFLAGS=$CFLAGS to compile libdwarf"
+            fi
             ./configure --prefix=${dwarfdir} --enable-static --enable-shared CC=${dwarf_c_compiler} CXX=${dwarf_cxx_compiler} > ${libdwarf_log} 2>&1
             configresult=$?
             if [ $configresult -eq 0 ] ; then
@@ -10806,6 +10813,9 @@ if [ "x$download_dwarf" = xyes ] ; then
             else
                 echo "ERROR BUILDING $libdwarf!"
                 echo "Please check `pwd`/config.log or `pwd`/${libdwarf_log}"
+            fi
+            if [ $elf=yes ]; then
+              export CFLAGS=$orig_cflags
             fi
         fi
     fi
