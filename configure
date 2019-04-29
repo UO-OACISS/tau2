@@ -10768,7 +10768,9 @@ if [ "x$download_dwarf" = xyes ] ; then
                   rm $libelftgz 
                   mv $libelf_dirname ${targetdir}/${architecture}
                 else 
-                  echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed. Please configure TAU with -elf=<dir> after installing it from the source code available from [https://fossies.org/linux/misc/old/libelf-0.8.13.tar.gz]."
+                  echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed."
+                  echo "Please configure TAU with and additional -elf=<dir> configuration option after installing it from the source code available from:"
+                  echo "[https://sourceware.org/elfutils/ftp/elfutils-latest.tar.bz2] using ./configure --enable-shared --prefix=<dir>; make install."
                 fi
               else 
                 echo "TAU: Found libelf in ${libelfdir}. Using it."
