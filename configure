@@ -10760,7 +10760,7 @@ if [ "x$download_dwarf" = xyes ] ; then
 # Before configuring libdwarf we need to check if libelf is there!
             if [ ! -f /usr/include/libelf.h ]; then 
               if [ ! -d ${libelfdir} ]; then 
-                if [ -a "x`uname -m`" = "xx86_64" ]; then 
+                if [ "x`uname -m`" = "xx86_64" ]; then 
                   echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed. Using a binary libelf package for x86_64."
                   download "$libelfurl" "$libelftgz" 
                   tar -zxf $libelftgz  
