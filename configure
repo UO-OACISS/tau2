@@ -690,13 +690,14 @@ for arg in "$@"; do
         echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
         echo "-android_platform=VERSION ........ Android platform version, e.g. '19'."
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
-        echo "-boost=<dir> ....................... Specify location of Boost Package."
+        echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
-        echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+        echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
         echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
-        echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+        echo "-dwarf=<dir> ................ Specify location of the libdwarf package."
         echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
+        echo "-elf=<dir> .................... Specify location of the libelf package."
         echo "-bfd=<dir | download> ....... Specify a binutils directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
@@ -949,7 +950,9 @@ enable_export_dynamic=no
 perfsuite=no
 perfsuitedir=
 bfd=no
+elf=no
 bfddir=
+elfdir=
 turnbfdoff=no
 perf=no
 perfincdir=
@@ -1502,6 +1505,12 @@ for arg in "$@"; do
 	-bfd=*)
 	    bfd=yes
 	    bfddir=`echo $arg | sed -e 's/-bfd=//'`
+	    shift
+	    ;;
+
+	-elf=*)
+	    elf=yes
+	    elfdir=`echo $arg | sed -e 's/-elf=//'`
 	    shift
 	    ;;
 
@@ -10676,6 +10685,11 @@ libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$lib
 libelf_dirname=libelf-devel-0.158-6.1.x86_64
 libelftgz=$libelf_dirname.tgz
 libelfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libelftgz
+if [ "x$elfdir" = "x" ]; then
+  libelfdir=${targetdir}/${architecture}/${libelf_dirname}
+else
+  libelfdir=$elfdir
+fi
 
 if [ "x$dwarfdir" = "x" ]; then
     libdwarfdir=${targetdir}/${architecture}
@@ -10744,28 +10758,47 @@ if [ "x$download_dwarf" = xyes ] ; then
             cd $libdwarf_dirname
             echo "configuring $libdwarf... (see `pwd`/${libdwarf_log} for log)..."
 # Before configuring libdwarf we need to check if libelf is there!
-            if [ ! -f /usr/include/libelf.h  -a "x`uname -m`" = "xx86_64" ]; then 
-              if [ ! -d ${targetdir}/${architecture}/${libelf_dirname} ]; then 
-                echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed. Using a binary libelf package for x86_64."
-                download "$libelfurl" "$libelftgz" 
-                tar -zxf $libelftgz  
-                echo "removing $libelftgz..."
-                rm $libelftgz 
-                mv $libelf_dirname ${targetdir}/${architecture}
+            if [ ! -f /usr/include/libelf.h ]; then 
+              if [ ! -d ${libelfdir} ]; then 
+                if [ "x`uname -m`" = "xx86_64" ]; then 
+                  echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed. Using a binary libelf package for x86_64."
+                  download "$libelfurl" "$libelftgz" 
+                  tar -zxf $libelftgz  
+                  echo "removing $libelftgz..."
+                  rm $libelftgz 
+                  mv $libelf_dirname ${targetdir}/${architecture}
+                else 
+                  echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed."
+                  echo "Please configure TAU with and additional -elf=<dir> configuration option after installing it from the source code available from:"
+                  echo "[https://sourceware.org/elfutils/ftp/elfutils-latest.tar.bz2] using ./configure --enable-shared --prefix=<dir>; make install."
+                fi
               else 
-                echo "TAU: Found libelf in ${targetdir}/${architecture}/${libelf_dirname}. Using it."
+                echo "TAU: Found libelf in ${libelfdir}. Using it."
               fi 
+              elf=yes
 # Dwarf needs a libelf.h in its libdwarf directory and libelf.so in the lib dir. Symlinks.
               if [ ! -L libdwarf/libelf.h ]; then 
-                cd libdwarf; ln -s ${targetdir}/${architecture}/${libelf_dirname}/include/libelf.h . ; cd ../ 
+                cd libdwarf; ln -s ${libelfdir}/include/libelf.h . ; ln -s ${libelfdir}/include/libelf . ; cd ../ 
               fi
               if [ ! -L ${dwarfdir}/lib/libelf.so ]; then 
-                mkdir -p ${dwarfdir}; mkdir -p ${dwarfdir}/lib; ln -s ${targetdir}/${architecture}/${libelf_dirname}/lib64/libelf.so ${dwarfdir}/lib; ln -s ${targetdir}/${architecture}/${libelf_dirname}/lib64/libelf.a ${dwarfdir}/lib; 
+                if [ -r ${libelfdir}/lib64/libelf.so ]; then 
+                  libelflibdir=lib64
+                fi
+                if [ -r ${libelfdir}/lib/libelf.so ]; then 
+                  libelflibdir=lib
+                fi
+                mkdir -p ${dwarfdir}; mkdir -p ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.so* ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.a ${dwarfdir}/lib; 
               fi
             else 
-              echo "WARNING!!! TAU: libelf.h not found. Dwarf needs this. Please install the libelf-devel (or libelf-dev) package and rerun this TAU configure command. The Dwarf build will likely fail next. "
+              echo "Found /usr/include/libelf.h"
             fi
 # End of libelf check. Continue with libdwarf build.
+            if [ $elf=yes ]; then
+              orig_cflags=`echo $CFLAGS`
+              export CFLAGS="$orig_cflags -I${libelfdir}/include"
+              export DWARF_LIBS="-L${libelfdir}/lib64 -L${libelfdir}/lib"
+              echo "TAU: Using CFLAGS=$CFLAGS to compile libdwarf"
+            fi
             ./configure --prefix=${dwarfdir} --enable-static --enable-shared CC=${dwarf_c_compiler} CXX=${dwarf_cxx_compiler} > ${libdwarf_log} 2>&1
             configresult=$?
             if [ $configresult -eq 0 ] ; then
@@ -10793,6 +10826,9 @@ if [ "x$download_dwarf" = xyes ] ; then
             else
                 echo "ERROR BUILDING $libdwarf!"
                 echo "Please check `pwd`/config.log or `pwd`/${libdwarf_log}"
+            fi
+            if [ $elf=yes ]; then
+              export CFLAGS=$orig_cflags
             fi
         fi
     fi
