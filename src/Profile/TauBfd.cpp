@@ -1267,7 +1267,7 @@ static void Tau_get_dwarf_symbols(const char * filename, map<string, int> & sym_
 // Given a function name, this routine iterates through the list of symbols and
 // returns the line number associated with the function name. It needs to 
 // cache this information - it is not efficient. 
-int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
+static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
   if (TauEnv_get_lite_enabled()) return 0; 
 
   static bool first_time = true; 
@@ -1426,6 +1426,22 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
 
   return result_line; 
   
+}
+
+int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcname) {
+    int line_number = Tau_internal_get_lineno_for_function(bfd_handle, funcname);
+    // To fix a mismatch between the regular symbol table and the debug symbol table, if we didn't find
+    // the name from the regular symbol table, and it ends with an underscore, also try the lookup
+    // without the underscore. Intel compilers on Cray seem to use e.g. "foo_" in the regular table but
+    // "foo" in the debug table.
+    if(line_number == 0) {
+        std::string underscore_name_str = std::string(funcname);
+        if(underscore_name_str.back() == '_') {
+            underscore_name_str.pop_back();
+            line_number = Tau_internal_get_lineno_for_function(bfd_handle, underscore_name_str.c_str());
+        }
+    }
+    return line_number;
 }
 
 #endif /* TAU_BFD */
