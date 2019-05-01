@@ -1436,8 +1436,8 @@ int Tau_get_lineno_for_function(tau_bfd_handle_t bfd_handle, char const * funcna
     // "foo" in the debug table.
     if(line_number == 0) {
         std::string underscore_name_str = std::string(funcname);
-        if(underscore_name_str.back() == '_') {
-            underscore_name_str.pop_back();
+        if((*underscore_name_str.rbegin()) == '_') {
+            underscore_name_str.erase(underscore_name_str.end() - 1);
             line_number = Tau_internal_get_lineno_for_function(bfd_handle, underscore_name_str.c_str());
         }
     }
