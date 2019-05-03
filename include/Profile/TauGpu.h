@@ -88,55 +88,6 @@ public:
 	
 };
 
-/* /\* BEGIN: PC Sampling structs *\/ */
-
-/* class InstrSampling */
-/* { */
-/*  public: */
-/*   uint32_t sourceLocatorId; */
-/*   uint32_t functionId; */
-/*   uint32_t pcOffset; */
-/*   uint32_t correlationId; */
-/*   uint32_t executed; */
-/*   uint32_t threadsExecuted; */
-/*   double timestamp_delta; */
-/*   double timestamp_current; */
-/*   double timestamp_recent; */
-/*   }; */
-
-/* class FuncSampling */
-/* { */
-/*  public: */
-/*   uint32_t fid; */
-/*   uint32_t contextId; */
-/*   uint32_t moduleId; */
-/*   uint32_t functionIndex; */
-/*   char* name; */
-/*   const char* demangled; */
-/*   uint32_t calls; // unique function calls */
-/*   uint32_t kernel_launches; // total kernel launches for this function */
-/*   bool funcinfo_created;  // track whether FunctionInfo created for pprof */
-/* }; */
-
-/* class SourceSampling */
-/* { */
-/*  public: */
-/*   uint32_t sid; */
-/*   uint32_t fid; */
-/*   char* fileName; */
-/*   uint32_t lineNumber; */
-/*   double timestamp_delta; */
-/*   double timestamp_recentacc; */
-/*   uint32_t samples; // # samples for sid (file/line) */
-/* }; */
-
-
-/* static std::map<uint32_t, std::list<InstrSampling> > instrSrcMap; */
-/* static std::map<uint32_t, std::list<InstrSampling> > instrFuncMap; */
-/* static std::map<uint32_t, SourceSampling> srcLocMap; */
-/* static std::map<uint32_t, FuncSampling> funcMap; */
-/* END: PC Sampling structs */
-
 /************************************************************************
  * Performance Hooks. The following routines are hooks into the execution
  * of GPU applications. 
@@ -192,27 +143,6 @@ extern "C" void Tau_gpu_register_unifmem_event(GpuEvent *event, double startTime
 extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
 
 extern "C" void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
-
-/* /\* Callback for a SASS event that occurred earlier in the execution of the                                    */
-/*  * program. Timestamps from GPU clock. *\/ */
-/* extern "C" void Tau_gpu_register_func_event(GpuEvent *event, int deviceId, double timeStamp, const char* name, uint32_t contextId, uint32_t functionIndex, uint32_t id, uint32_t moduleid, const char *kname, const char *demangled); */
-
-/* extern "C" void Tau_gpu_register_instruction_event(GpuEvent *event, double start, double stop, double delta_tstamp, const char* name, uint32_t correlationId, uint32_t sourceLocatorId, uint32_t functionId, uint32_t pcOffset, uint32_t executed, uint32_t threadsExecuted); */
-
-/* extern "C" void Tau_gpu_register_source_event(GpuEvent *event, double timestamp, const char* name, uint32_t sourceId, const char *fileName, uint32_t lineNumber); */
-
-/* //extern "C" void printInstrMap(void); */
-/* extern "C" void printSourceMap(void); */
-/* extern "C" void printFuncMap(void); */
-
-/* // routines for calculating kernel level stats */
-/* extern "C" double getKernelExecutionTimes(uint32_t functionIndex); */
-/* extern "C" uint32_t getKernelSamples(uint32_t functionIndex); */
-/* extern "C" const char* getKernelFilePath(uint32_t functionIndex); */
-/* extern "C" uint32_t getKernelLineNo(uint32_t functionIndex); */
-/* extern "C" void resetKernelExecutionTimes(uint32_t functionIndex); */
-/* extern "C" uint32_t getUniqueKernelLaunches(uint32_t functionIndex); */
-
 
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE

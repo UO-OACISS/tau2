@@ -303,8 +303,6 @@ if(!TauEnv_get_cuda_track_sass()) {
   }
 #endif //CUPTI_API_VERSIOn >= 3
 
-  //cout << "Tau_cupti_onload():  get_device_id(): " << get_device_id() << endl;
-
   CUpti_ActivityDevice device = __deviceMap()[get_device_id()];
 
 	if ((device.computeCapabilityMajor > 3) ||
@@ -1300,8 +1298,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         staticSharedMemory = kernel->staticSharedMemory;
         localMemoryPerThread = kernel->localMemoryPerThread;
         registersPerThread = kernel->registersPerThread;
-        //find FunctionInfo object from FunctionInfoMap
-        // kernelMap[kernel->correlationId] = *kernel;
 	int taskId = get_device_id() + 1;
 #if defined(PTHREADS)
 	if (map_cudaThread.find(kernel->correlationId) != map_cudaThread.end()) {
@@ -1684,7 +1680,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #ifdef TAU_DEBUG_CUPTI
 			cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
 #endif
-      // CUpti_ActivityKernel *kernel = &kernelMap[global_access->correlationId];
       int taskId = get_device_id() + 1;
 #if defined(PTHREADS)
       if (map_cudaThread.find(global_access->correlationId) != map_cudaThread.end()) {
@@ -1744,7 +1739,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
 #endif
      
-      // CUpti_ActivityKernel *kernel = &kernelMap[branch->correlationId];
       int taskId = get_device_id() + 1;
 #if defined(PTHREADS)
       if (map_cudaThread.find(branch->correlationId) != map_cudaThread.end()) {
@@ -1961,13 +1955,11 @@ void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId
   if (instructionMap[taskId].find(id) == instructionMap[taskId].end()) {
     TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded.\n");
   }
-  //else if (map_disassem2[taskId].empty()) {
   else if (map_disassem.empty()) {
     TAU_VERBOSE("[CuptiActivity] warning:  No disassembly found, SASS counters not recorded.\n");
   }
   else {
     TAU_VERBOSE("[CuptiActivity]: about to call write_runtime_imix\n");
-    // ImixStats is_runtime = write_runtime_imix(id, taskId, map_disassem2[taskId], name);
     ImixStats is_runtime = write_runtime_imix(id, taskId, map_disassem, name);
 #ifdef TAU_DEBUG_CUPTI
     cout << "[CuptiActivity]:  Name: " << name << 
@@ -2036,11 +2028,8 @@ ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pai
 	for (std::map<std::pair<int, int>,CudaOps>::iterator iter= map_disassem.begin();
 	     iter != map_disassem.end(); iter++) { 
 	  CudaOps cuops = iter->second;
-	  // cout << "cuops pair(" << cuops.lineno << ", " << cuops.pcoffset << ")\n";
 	  if (map_disassem.find(p1) != map_disassem.end()) {
 	    CudaOps cuops = map_disassem.find(p1)->second;
-	    // cout << "[CuptiActivity]:  cuops.instruction: " << cuops.instruction << endl;
-	    // map to disassem
 	    int instr_type = get_instruction_mix_category(cuops.instruction);
 	    switch(instr_type) {
 	      // Might be non-existing ops, don't count those!

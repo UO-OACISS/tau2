@@ -35,7 +35,6 @@ struct CudaOps
   int lineno;
   std::string instruction;
   int pcoffset;
-  //int deviceid;
 };
 
 static std::set<std::string> s_FP;
@@ -103,8 +102,6 @@ const char* getKernelFilePath(uint32_t functionIndex, std::map<uint32_t, std::li
 uint32_t getKernelLineNo(uint32_t functionIndex, std::map<uint32_t, std::list<InstrSampling> > instructionMap, std::map<uint32_t, SourceSampling> srcLocMap);
 ImixStats write_runtime_imix(uint32_t functionId, std::list<InstrSampling> instrFunc_list, std::map<std::pair<int, int>, CudaOps> map_disassem, std::map<uint32_t, SourceSampling> srcLocMap, std::string kernel);
 std::vector<std::string> get_disassem_from_out(std::string cmd);
-/* std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file, int device_id); */
-/* std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec, int device_id); */
 std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file);
 std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec);
 std::map<std::string, ImixStats> print_instruction_mixes();

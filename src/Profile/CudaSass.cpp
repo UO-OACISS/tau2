@@ -64,7 +64,6 @@ std::vector<std::string> get_disassem_from_out(std::string cmd)
   return v_out;
 }
 
-//std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec, int device_id) 
 std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec) 
 {
   int n = vec.size()-1;
@@ -105,7 +104,6 @@ std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> v
       for(int j = 0; j < v_out.size(); j++) {
 	if (v_out[j].substr(0, underscore.size()) == underscore) {
 	  kernel_name = split(v_out[j], ' ')[0];
-	  //kernel_name = v_out[j].substr(0, v_out[j].length() - 2);
 	}
       }
       while (vec[i].substr(0, prefix.size()) != prefix && i < n) {
@@ -138,7 +136,6 @@ std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> v
 	    cuOps.lineno = line_number;
 	    cuOps.pcoffset = pc_offset;
 	    cuOps.instruction = instrs;
-	    //cuOps.deviceid = device_id;
 	    v_cudaOps.push_back(cuOps);
 
 	    typedef std::pair<int, int> my_key_type;
@@ -156,14 +153,12 @@ std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> v
   return map_disassem;
 }
 
-//std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file, int device_id)
 std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file)
 {
   init_instruction_set();
   std::map<std::pair<int, int>, CudaOps> map_disassem;
   string command1 = "nvdisasm -g -c -hex -sf " + (string)cubin_file;
   std::vector<std::string> res1 = get_disassem_from_out(command1);
-  //map_disassem = parse_disassem(res1, device_id);
   map_disassem = parse_disassem(res1);
   return map_disassem;
 }
@@ -287,7 +282,6 @@ std::map<std::string, ImixStats> write_disassem()
 
     kernel_iter = v_cudaOps[i].kernel.erase(v_cudaOps[i].kernel.size() - 1) ; // strip '\n'
 
-    // cout << "[CudaDisassembly]:  demangleName: " << kernel_iter << endl;
     if (current_kernel == "") {
       current_kernel = kernel_iter;
     }
@@ -563,118 +557,4 @@ void printFuncMap(std::map<uint32_t, FuncSampling> funcMap)
 	   fTemp.demangled);
   }
 }
-
-// ImixStats write_runtime_imix(uint32_t functionId, std::list<InstrSampling> instrSamp_list, std::map<std::pair<int, int>, CudaOps> map_disassem, std::map<uint32_t, SourceSampling> srcLocMap, std::string kernel)
-// {
-
-// #ifdef TAU_DEBUG_SASS
-//   cout << "[CudaSass]: write_runtime_imix begin\n";
-// #endif
-
-//   // look up from map_imix_static
-//   ImixStats imix_stats;
-//   string current_kernel = "";
-//   int flops_raw = 0;
-//   int ctrlops_raw = 0;
-//   int memops_raw = 0;
-//   int totops_raw = 0;
-//   double flops_pct = 0;
-//   double ctrlops_pct = 0;
-//   double memops_pct = 0;
-
-//   // check if entries exist
-//   if (!instrSamp_list.empty()) {
-//     // cout << "[CuptiActivity]:  instrSamp_list not empty\n";
-//     for (std::list<InstrSampling>::iterator iter=instrSamp_list.begin();
-// 	 iter != instrSamp_list.end(); iter++) {
-//       InstrSampling is = *iter;
-      
-//       // TODO:  Get line info here...
-//       int sid = is.sourceLocatorId;
-//       // cout << "[CuptiActivity]:  is.sourceLocatorId: " << is.sourceLocatorId << endl;
-//       int lineno = -1;
-//       if ( srcLocMap.find(sid) != srcLocMap.end() ) {
-// 	lineno = srcLocMap.find(sid)->second.lineNumber;
-// 	// cout << "[CuptiActivity]:  lineno: " << lineno << endl;
-// 	std::pair<int, int> p1 = std::make_pair(lineno, is.pcOffset);
-
-// 	for (std::map<std::pair<int, int>,CudaOps>::iterator iter= map_disassem.begin();
-// 	     iter != map_disassem.end(); iter++) { 
-// 	  CudaOps cuops = iter->second;
-// 	  // cout << "cuops pair(" << cuops.lineno << ", " << cuops.pcoffset << ")\n";
-// 	  if (map_disassem.find(p1) != map_disassem.end()) {
-// 	    CudaOps cuops = map_disassem.find(p1)->second;
-// 	    // cout << "[CuptiActivity]:  cuops.instruction: " << cuops.instruction << endl;
-// 	    // map to disassem
-// 	    int instr_type = get_instruction_mix_category(cuops.instruction);
-// 	    switch(instr_type) {
-// 	      // Might be non-existing ops, don't count those!
-// 	      case FloatingPoint: case Integer:
-// 	      case SIMD: case Conversion: {
-// 		flops_raw++;
-// 		totops_raw++;
-// 		break;
-// 	      }
-// 	      case LoadStore: case Texture:
-// 	      case Surface: {
-// 		memops_raw++;
-// 		totops_raw++;
-// 		break;
-// 	      }
-// 	      case Control: case Move:
-// 	      case Predicate: {
-// 		ctrlops_raw++;
-// 		totops_raw++;
-// 		break;
-// 	      }
-// 	      case Misc: {
-// 		totops_raw++;
-// 		break;
-// 	      }
-// 	    }
-// 	  }
-// 	  else {
-// #if TAU_DEBUG_DISASM
-// 	    cout << "[CuptiActivity]:  map_disassem does not exist for pair(" 
-// 	    	 << lineno << "," << is.pcOffset << ")\n";
-// #endif
-// 	  }
-// 	}
-//       }
-//       else {
-// #if TAU_DEBUG_DISASM
-// 	cout << "[CuptiActivity]:  srcLocMap does not exist for sid: " << sid << endl;
-// #endif
-//       }
-//     }
-//   }
-//   else {
-//     cout << "[CuptiActivity]: instrSamp_list empty!\n";
-//   }
-  
-//   string kernel_iter = kernel;
-
-//   flops_pct = ((float)flops_raw/totops_raw) * 100;
-//   memops_pct = ((float)memops_raw/totops_raw) * 100;
-//   ctrlops_pct = ((float)ctrlops_raw/totops_raw) * 100;
-//   // push onto map
-//   imix_stats.flops_raw = flops_raw;
-//   imix_stats.ctrlops_raw = ctrlops_raw;
-//   imix_stats.memops_raw = memops_raw;
-//   imix_stats.totops_raw = totops_raw;
-//   imix_stats.flops_pct = flops_pct;
-//   imix_stats.ctrlops_pct = ctrlops_pct;
-//   imix_stats.memops_pct = memops_pct;
-//   imix_stats.kernel = kernel_iter;
-
-// #ifdef TAU_DEBUG_DISASM
-//   cout << "[CudaDisassembly]:  current_kernel: " << kernel_iter << endl;
-//   cout << "  FLOPS: " << flops_raw << ", MEMOPS: " << memops_raw 
-//        << ", CTRLOPS: " << ctrlops_raw << ", TOTOPS: " << totops_raw << "\n";
-//   cout << setprecision(2) << "  FLOPS_pct: " << flops_pct << "%, MEMOPS_pct: " 
-//        << memops_pct << "%, CTRLOPS_pct: " << ctrlops_pct << "%\n";
-// #endif
-
-//   return imix_stats;
-// }
 /* END: SASS Helper Functions */
