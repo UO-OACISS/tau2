@@ -723,7 +723,6 @@ int Tau_metadata_fillMetaData()
   bzero(buffer, 4096);
   uint32_t size = sizeof(buffer);
   int rc = _NSGetExecutablePath(buffer, &size);
-  printf("%s\n",buffer);
   if (rc == 0) {
     Tau_metadata_register("Executable", buffer);
   }

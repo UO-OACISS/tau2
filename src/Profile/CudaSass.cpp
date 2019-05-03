@@ -44,7 +44,6 @@ void print_vector(std::vector<std::string> vec)
 
 std::vector<std::string> get_disassem_from_out(std::string cmd) 
 {
-  // string data;
   FILE * stream;
   const int max_buffer = 256;
   char buffer[max_buffer];
@@ -57,16 +56,16 @@ std::vector<std::string> get_disassem_from_out(std::string cmd)
     int i = 0;
     while (!feof(stream)) {
       if (fgets(buffer, max_buffer, stream) != NULL) {
-	v_out.push_back(buffer);
+  	v_out.push_back(buffer);
       }
     }
     pclose(stream);
   }
-  
   return v_out;
 }
 
-std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec, int device_id) 
+//std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec, int device_id) 
+std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> vec) 
 {
   int n = vec.size()-1;
   int i = 0;
@@ -139,7 +138,7 @@ std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> v
 	    cuOps.lineno = line_number;
 	    cuOps.pcoffset = pc_offset;
 	    cuOps.instruction = instrs;
-	    cuOps.deviceid = device_id;
+	    //cuOps.deviceid = device_id;
 	    v_cudaOps.push_back(cuOps);
 
 	    typedef std::pair<int, int> my_key_type;
@@ -157,13 +156,15 @@ std::map<std::pair<int, int>, CudaOps> parse_disassem(std::vector<std::string> v
   return map_disassem;
 }
 
-std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file, int device_id)
+//std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file, int device_id)
+std::map<std::pair<int, int>, CudaOps> parse_cubin(char* cubin_file)
 {
   init_instruction_set();
   std::map<std::pair<int, int>, CudaOps> map_disassem;
   string command1 = "nvdisasm -g -c -hex -sf " + (string)cubin_file;
   std::vector<std::string> res1 = get_disassem_from_out(command1);
-  map_disassem = parse_disassem(res1, device_id);
+  //map_disassem = parse_disassem(res1, device_id);
+  map_disassem = parse_disassem(res1);
   return map_disassem;
 }
 

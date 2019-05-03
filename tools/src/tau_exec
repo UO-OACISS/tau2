@@ -822,7 +822,7 @@ if [ $track_cupti = "true" ] ; then
     if [ "x$sass_type" != "x" ] ; then
       export TAU_SASS_TYPE=$sass_type
     fi
-    export TAU_CUDA_BINARY_EXE=$binary_exe
+    export TAU_CUDA_BINARY_EXE=$arg
   fi
   #echo "api found: $TAU_CUPTI_API"
   if [ $python_wrapper = "true" ] ; then

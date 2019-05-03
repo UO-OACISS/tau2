@@ -338,7 +338,7 @@ void record_gpu_counters_at_sync(int device);
 
 void clear_counters(int device);
 
-ImixStats write_runtime_imix(uint32_t functionId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
+ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
