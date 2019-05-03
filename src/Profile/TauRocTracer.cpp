@@ -141,11 +141,13 @@ void Tau_roctracer_api_callback(
 void Tau_roctracer_hip_event(const roctracer_record_t *record, int task_id) {
   const char *event_name = roctracer_op_string(record->domain, record->op, record->kind);
   const char *name = event_name;
+  bool dealloc_name = false;
   if (strcmp(name, "hipModuleLaunchKernel") == 0) {
+    dealloc_name = true;
     const char * kernel_name = TauRocTracerNameDB[record->correlation_id].c_str();
     const char *demangled_name;
     TAU_INTERNAL_DEMANGLE_NAME(kernel_name, demangled_name);
-    name = (event_name + string(" ") + demangled_name).c_str();
+    name = strdup((event_name + string(" ") + demangled_name).c_str());
     TAU_VERBOSE("Tau_roctracer_hip_event: name = %s\n", name);
   }
  
@@ -159,6 +161,9 @@ void Tau_roctracer_hip_event(const roctracer_record_t *record, int task_id) {
   Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(record->end_ns)/1e3)); // convert to microseconds
   TAU_STOP_TASK(name, task_id);
   TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", name, task_id, record->end_ns);
+  if (dealloc_name) {
+    delete(name);
+  }
   Tau_set_last_timestamp_ns(record->end_ns);
 }
 
