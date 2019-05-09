@@ -1,5 +1,7 @@
-This example can be used on one or more cores using MPI, pthread, OpenMP or with a hybrid MPI+<thread> runtime. It features a selective instrumentation file that uses outer-loop level instrumentation in two routines. 
+This example shows how to generate a CODAR/Chimbuko trace output to ADIOS2.
 
-To use compiler based instrumentation:
-setenv TAU_OPTIONS '-optCompInst -optVerbose'
-make
+Configure TAU with -adios=/path/to/adios2 -useropt=-g#-O2#-DTAU_DISABLE_SIGUSR
+
+To signal the plugin and tell it to dump a window from the trace, do:
+kill -s USR1 `ps | grep matmult | grep -v grep | awk '{print $1}'`
+
