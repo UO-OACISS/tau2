@@ -304,7 +304,6 @@ public:
         }
 
     void put(step_data_t* item) {
-        std::lock_guard<std::mutex> lock(mutex_);
         // destroy any existing data at this index
         if (buf_[head_] != nullptr) {
             delete buf_[head_];
@@ -318,7 +317,6 @@ public:
     }
 
     step_data_t* get() {
-        std::lock_guard<std::mutex> lock(mutex_);
         if(empty()) {
             return nullptr;
         }
@@ -332,7 +330,6 @@ public:
     }
 
     void reset() {
-        std::lock_guard<std::mutex> lock(mutex_);
         head_ = tail_;
         full_ = false;
     }
@@ -362,7 +359,6 @@ public:
     }
 
 private:
-    std::mutex mutex_;
     std::vector<step_data_t*> buf_;
     size_t head_ = 0;
     size_t tail_ = 0;
