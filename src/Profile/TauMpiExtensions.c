@@ -11,6 +11,9 @@
 #ifdef TAU_EXP_TRACK_COMM
 void Tau_communicator_set_name(void *comm, const char *name);
 #endif /* TAU_EXP_TRACK_COMM */
+#ifdef TAU_MPI_T
+void Tau_mpi_t_check_communicator(void *comm, const char *comm_name);
+#endif /* TAU_MPI_T */
 /******************************************************/
 #ifdef TAU_MPICONSTCHAR
 #define TAU_CONST const
@@ -7288,6 +7291,9 @@ int MPI_Comm_set_name( MPI_Comm comm, TAU_MPICH3_CONST char * comm_name)
 #ifdef TAU_EXP_TRACK_COMM
   Tau_communicator_set_name((void *)comm, comm_name);
 #endif /* TAU_EXP_TRACK_COMM */
+#ifdef TAU_MPI_T
+  Tau_mpi_t_check_communicator((void *)&comm, comm_name); 
+#endif /* TAU_MPI_T */
   TAU_PROFILE_TIMER(t, "MPI_Comm_set_name()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
   retvalue = PMPI_Comm_set_name( comm, comm_name) ; 
