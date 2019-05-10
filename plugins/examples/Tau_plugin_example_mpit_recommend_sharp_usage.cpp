@@ -69,7 +69,7 @@ extern "C" int Tau_plugin_example_mpit_recommend_sharp_usage(Tau_plugin_event_en
   }
 
   //Get the mean MPI_Allreduce message size  
-  std::vector<tau::TauUserEvent*, TauSignalSafeAllocator<tau::TauUserEvent*> >::iterator it2;
+  tau::AtomicEventDB::iterator it2;
   int numEvents;
   std::stringstream tmp_str;
   std::stringstream all_reduce_event_name("Message size for all-reduce");
