@@ -309,10 +309,12 @@ static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cvar_metrics = NULL;
+static const char *env_mpi_t_comm_metric_values = NULL;
 static const char *env_cvar_values = NULL;
 static const char *env_plugins_path = NULL;
 static const char *env_plugins = NULL;
 static int env_plugins_enabled = 0;
+static int env_track_mpi_t_comm_metric_values = 0;
 static const char *env_select_file = NULL;
 static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT;
 static const char * env_cuda_device_name = TAU_CUDA_DEVICE_NAME_DEFAULT;
@@ -764,6 +766,10 @@ extern "C" const char *TauEnv_get_cvar_metrics() {
   return env_cvar_metrics;
 }
 
+extern "C" const char *TauEnv_get_mpi_t_comm_metric_values() {
+  return env_mpi_t_comm_metric_values;
+}
+
 extern "C" const char *TauEnv_get_plugins_path() {
   return env_plugins_path;
 }
@@ -774,6 +780,10 @@ extern "C" const char *TauEnv_get_plugins() {
 
 extern "C" int TauEnv_get_plugins_enabled() {
   return env_plugins_enabled;
+}
+
+extern "C" int TauEnv_get_track_mpi_t_comm_metric_values() {
+  return env_track_mpi_t_comm_metric_values;
 }
 
 extern "C" int TauEnv_get_set_node() {
@@ -1342,6 +1352,15 @@ void TauEnv_initialize()
     } 
 
 #ifdef TAU_MPI_T
+    if ((env_mpi_t_comm_metric_values = getconf("TAU_MPI_T_COMM_METRIC_VALUES")) == NULL) {
+      env_mpi_t_comm_metric_values = "";   /* Not set */
+      env_track_mpi_t_comm_metric_values=0;
+    } else {
+      env_track_mpi_t_comm_metric_values=1;
+      TAU_VERBOSE("TAU: TAU_MPI_T_COMM_METRIC_VALUES is \"%s\"\n", env_mpi_t_comm_metric_values);
+      TAU_METADATA("TAU_MPI_T_COMM_METRIC_VALUES", env_mpi_t_comm_metric_values);
+    }
+
     tmp = getconf("TAU_TRACK_MPI_T_PVARS");
     if (parse_bool(tmp, env_track_mpi_t_pvars)) {
 #ifdef TAU_DISABLE_MEM_MANAGER
