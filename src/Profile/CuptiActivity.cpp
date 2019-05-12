@@ -32,9 +32,9 @@ device_map_t & __deviceMap()
 }
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap[TAU_MAX_THREADS];
 
-std::map<uint32_t, CUpti_ActivityFunction> functionMap[TAU_MAX_THREADS];
+std::map<uint32_t, CUpti_ActivityFunction> functionMap;
 std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> > instructionMap[TAU_MAX_THREADS];
-std::map<uint32_t, CUpti_ActivitySourceLocator> srcLocMap[TAU_MAX_THREADS];
+std::map<uint32_t, CUpti_ActivitySourceLocator> srcLocMap;
 
 std::map<std::pair<int, int>, CudaOps> map_disassem;
 std::map<std::string, ImixStats> map_imix_static;
@@ -1509,13 +1509,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
     {
       CUpti_ActivitySourceLocator *source = (CUpti_ActivitySourceLocator *)record;
       sourceLocatorMap[source->id] = *source;
-	int taskId = get_device_id() + 1;
-#if defined(PTHREADS)
-	if (map_cudaThread.find(kernel->correlationId) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[kernel->correlationId].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
-#endif
       // double tstamp;
       // uint32_t sourceId;
       // const char *fileName;
@@ -1523,7 +1516,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #ifdef TAU_DEBUG_CUPTI
       cerr << "source locator (id): " << source->id << ", " << source->fileName << ", " << source->lineNumber << ".\n" << endl;
 #endif
-      srcLocMap[taskId][source->id] = *source;
+      srcLocMap[source->id] = *source;
 
 #if CUDA_VERSION >= 5500
       if(TauEnv_get_cuda_track_sass()) {
@@ -1557,8 +1550,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	  CUpti_ActivityInstructionExecution *instrRecord = (CUpti_ActivityInstructionExecution *)record;
 	  int taskId = get_device_id() + 1;
 #if defined(PTHREADS)
-	if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[id].tau_vtid;
+	if (map_cudaThread.find(instrRecord->correlationId) != map_cudaThread.end()) {
+	  int local_vtid = map_cudaThread[instrRecord->correlationId].tau_vtid;
 	  taskId = map_cuptiThread[local_vtid];
 	}
 #endif
@@ -1602,13 +1595,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	case CUPTI_ACTIVITY_KIND_FUNCTION: {
 	  if(TauEnv_get_cuda_track_sass()) {
 	    CUpti_ActivityFunction *fResult = (CUpti_ActivityFunction *)record;
-	    int taskId = get_device_id() + 1;
-#if defined(PTHREADS)
-	    if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	      int local_vtid = map_cudaThread[id].tau_vtid;
-	      taskId = map_cuptiThread[local_vtid];
-	    }
-#endif
 	    // uint32_t contextId;
 	    // uint32_t functionIndex;
 	    // uint32_t id;
@@ -1633,7 +1619,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 // 	    // current_device_id = cResult.deviceId;
 // 	    current_context_id = cResult.contextId;
 	    
-	    functionMap[taskId][fResult->id] = *fResult;
+	    functionMap[fResult->id] = *fResult;
 // 	    if(TauEnv_get_cuda_csv_output()){
 // #ifdef TAU_DEBUG_CUPTI_SASS
 // 	      printf("[CuptiActivity]:  About to write out to csv:\n  %f, %u, %u, %u, %u, %u, %s, %s\n",
@@ -2021,8 +2007,8 @@ ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pai
       CUpti_ActivityInstructionExecution is = *iter;
       int sid = is.sourceLocatorId;
       int lineno = -1;
-      if ( srcLocMap[taskId].find(sid) != srcLocMap[taskId].end() ) {
-	lineno = srcLocMap[taskId].find(sid)->second.lineNumber;
+      if ( srcLocMap.find(sid) != srcLocMap.end() ) {
+	lineno = srcLocMap.find(sid)->second.lineNumber;
 	std::pair<int, int> p1 = std::make_pair(lineno, (unsigned int) is.pcOffset);
 
 	for (std::map<std::pair<int, int>,CudaOps>::iterator iter= map_disassem.begin();
