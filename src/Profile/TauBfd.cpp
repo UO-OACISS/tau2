@@ -1065,7 +1065,7 @@ simple_error_handler(Dwarf_Error error, Dwarf_Ptr errarg)
 }
 
 
-static void Tau_get_dwarf_line_number(Dwarf_Debug dbg, Dwarf_Die die, map<string, int> & sym_map, bfd * bfdImage) {
+static void Tau_get_dwarf_line_number(tau_bfd_handle_t bfd_handle, Dwarf_Debug dbg, Dwarf_Die die, map<string, int> & sym_map, bfd * bfdImage) {
     // This retrieves the line numbers for each DIE that represents a subprogram (function/routine).
     char * name = NULL;
     Dwarf_Half tag = 0;
@@ -1076,15 +1076,19 @@ static void Tau_get_dwarf_line_number(Dwarf_Debug dbg, Dwarf_Die die, map<string
 
     res = dwarf_tag(die, &tag, errp);
     if(res != DW_DLV_OK) {
-        printf("Error in dwarf_tag\n");
+        printf("TAU: Error in dwarf_tag\n");
         return;
     }
     if(tag != DW_TAG_subprogram) {
         return; // Only care about subprograms
     }
+
+    // There are two ways that the name can be stored. One is directly as the name of the DIE,
+    // which is retrieved using a dedicated function dwarf_diename
+    // This should be a "human readable" name
     res = dwarf_diename(die, &name,errp);
     if(res == DW_DLV_ERROR) {
-        printf("Error in dwarf_diename\n");
+        printf("TAU: Error in dwarf_diename\n");
         return;
     }
     if(res == DW_DLV_NO_ENTRY) {
@@ -1093,20 +1097,22 @@ static void Tau_get_dwarf_line_number(Dwarf_Debug dbg, Dwarf_Die die, map<string
     }
     res = dwarf_get_TAG_name(tag, &tagname);
     if(res != DW_DLV_OK) {
-        printf("Error in dwarf_get_TAG_name\n");
+        printf("TAU: Error in dwarf_get_TAG_name\n");
         return;
     }
 
+    // The other is the linkage name. This should be the mangled name used by the linker.
     Dwarf_Attribute linkage_name;
     res = dwarf_attr(die, DW_AT_linkage_name, &linkage_name, errp); 
     char * linkage_name_str = NULL;
     if(res == DW_DLV_OK) {
         res = dwarf_formstring(linkage_name, &linkage_name_str, errp);
         if( res != DW_DLV_OK) {
-            fprintf(stderr, "Error getting linkage name string\n");
+            fprintf(stderr, "TAU: Error getting linkage name string\n");
         }
     }
 
+    // The line number corresponding to the function declaration is stored in the DW_AT_decl_line field
     Dwarf_Attribute line_number;
     res = dwarf_attr(die, DW_AT_decl_line, &line_number, errp);
     Dwarf_Unsigned line_number_u = 0;
@@ -1114,6 +1120,22 @@ static void Tau_get_dwarf_line_number(Dwarf_Debug dbg, Dwarf_Die die, map<string
         res = dwarf_formudata(line_number, &line_number_u, errp);
         if(res != DW_DLV_OK) {
             line_number_u = 0;
+        }
+    }
+
+    // If there isn't a DW_AT_decl_line field, try looking up the function line number by address.
+    // This will help get a source line for compiler-generated ("artificial") functions.
+    if((linkage_name_str || !noname) && (line_number_u == 0)) {
+        Dwarf_Addr low_pc_addr = 0;
+        res = dwarf_lowpc(die, &low_pc_addr, errp);
+        if(res == DW_DLV_OK) {
+            TauBfdInfo bfd_info;
+            const bool resolved = Tau_bfd_resolveBfdInfo(bfd_handle, low_pc_addr, bfd_info);
+            if(resolved) {
+                if(bfd_info.lineno > 0) {
+                    line_number_u = bfd_info.lineno;
+                }
+            }
         }
     }
 
@@ -1140,14 +1162,14 @@ static void Tau_get_dwarf_line_number(Dwarf_Debug dbg, Dwarf_Die die, map<string
     }
 }
 
-static void Tau_process_debug_symbols(Dwarf_Debug dbg, Dwarf_Die in_die, int is_info, map<string, int> & sym_map, bfd * bfdImage) {
+static void Tau_process_debug_symbols(tau_bfd_handle_t bfd_handle, Dwarf_Debug dbg, Dwarf_Die in_die, int is_info, map<string, int> & sym_map, bfd * bfdImage) {
     int res = DW_DLV_ERROR;
     Dwarf_Die cur_die=in_die;
     Dwarf_Die child = 0;
     Dwarf_Error *errp = 0;
 
     // Get any line numbers from the current DIE
-    Tau_get_dwarf_line_number(dbg, in_die, sym_map, bfdImage);
+    Tau_get_dwarf_line_number(bfd_handle, dbg, in_die, sym_map, bfdImage);
 
     // This loop recursively processes all the children of this DIE, then the next sibling of this DIE
     for(;;) {
@@ -1159,7 +1181,7 @@ static void Tau_process_debug_symbols(Dwarf_Debug dbg, Dwarf_Die in_die, int is_
         }
         if(res == DW_DLV_OK) {
             // Get line numbers from the child and its siblings
-            Tau_process_debug_symbols(dbg, child, is_info, sym_map, bfdImage);
+            Tau_process_debug_symbols(bfd_handle, dbg, child, is_info, sym_map, bfdImage);
             dwarf_dealloc(dbg, child, DW_DLA_DIE);
             child = 0;
         }
@@ -1177,12 +1199,12 @@ static void Tau_process_debug_symbols(Dwarf_Debug dbg, Dwarf_Die in_die, int is_
         }
         cur_die = sib_die;
         // Get line numbers from the sibling DIE
-        Tau_get_dwarf_line_number(dbg, cur_die, sym_map, bfdImage);
+        Tau_get_dwarf_line_number(bfd_handle, dbg, cur_die, sym_map, bfdImage);
     }
     return;
 }
 
-static void Tau_get_dwarf_symbols(const char * filename, map<string, int> & sym_map, bfd * bfdImage) {
+static void Tau_get_dwarf_symbols(tau_bfd_handle_t bfd_handle, const char * filename, map<string, int> & sym_map, bfd * bfdImage) {
 
     Dwarf_Debug dbg = 0;
     int fd = -1;
@@ -1244,7 +1266,7 @@ static void Tau_get_dwarf_symbols(const char * filename, map<string, int> & sym_
         }
 
         // Process the DIE of the CU
-        Tau_process_debug_symbols(dbg, cu_die, is_info, sym_map, bfdImage);
+        Tau_process_debug_symbols(bfd_handle, dbg, cu_die, is_info, sym_map, bfdImage);
 
         dwarf_dealloc(dbg, cu_die, DW_DLA_DIE);
     }
@@ -1324,7 +1346,7 @@ static int Tau_internal_get_lineno_for_function(tau_bfd_handle_t bfd_handle, cha
           }
         }
         TAU_VERBOSE("TAU_BFD: Will process symbols in %s using libdwarf\n", module->name.c_str());
-        Tau_get_dwarf_symbols(module->name.c_str(), full_symtab, bfdImage);
+        Tau_get_dwarf_symbols(bfd_handle, module->name.c_str(), full_symtab, bfdImage);
       }
     }
   }
