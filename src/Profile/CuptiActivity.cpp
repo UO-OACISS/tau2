@@ -676,7 +676,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		   it != kernelMap[i].end(); it++) {
 		uint32_t correlId = it->first;
 		CUpti_ActivityKernel *kernel = &it->second;
-		record_imix_counters(kernel->name, i-1, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
+		// pass in demangled name
+		const char *kname = demangleName(kernel->name);
+		record_imix_counters(kname, i-1, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
 	      }
 	    }
 	  }
