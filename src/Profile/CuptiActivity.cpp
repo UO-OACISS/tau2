@@ -9,6 +9,7 @@ using namespace std;
 
 static int subscribed = 0;
 static unsigned int parent_tid = 0;
+static int currentContextId = -1;
 
 // From CuptiActivity.h
 uint8_t *activityBuffer;
@@ -31,10 +32,12 @@ device_map_t & __deviceMap()
   return deviceMap;
 }
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap[TAU_MAX_THREADS];
+std::map<uint32_t, CUpti_ActivityContext> contextMap;
 
 std::map<uint32_t, CUpti_ActivityFunction> functionMap;
 std::map<uint32_t, std::list<CUpti_ActivityInstructionExecution> > instructionMap[TAU_MAX_THREADS];
 std::map<uint32_t, CUpti_ActivitySourceLocator> srcLocMap;
+std::map<uint32_t, CudaEnvironment> environmentMap;
 
 std::map<std::pair<int, int>, CudaOps> map_disassem;
 std::map<std::string, ImixStats> map_imix_static;
@@ -148,12 +151,12 @@ handleResource(CUpti_CallbackId cbid, const CUpti_ResourceData *resourceData)
 CUresult cuInit(unsigned int a1)
 {
 #ifdef TAU_DEBUG_CUPTI
-    TAU_VERBOSE("in cuInit\n");
+    printf("in cuInit\n");
 #endif
     if (parent_tid == 0) {
       parent_tid = pthread_self();
 #ifdef TAU_DEBUG_CUPTI
-      TAU_VERBOSE("[CuptiActivity]:  Set parent_tid as: %u\n", parent_tid);
+      printf("[CuptiActivity]:  Set parent_tid as: %u\n", parent_tid);
 #endif
     }
     typedef CUresult (*cuInit_p_h)(unsigned int);
@@ -252,8 +255,8 @@ void Tau_cupti_onload()
   }
 #endif
  	/* END source line info */
-    // 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
-    // CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
+    	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_CONTEXT)");
     // 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_DRIVER);
     // CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_DRIVER)");
     // 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_RUNTIME);
@@ -280,7 +283,12 @@ if(!TauEnv_get_cuda_track_sass()) {
    err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_KERNEL)");
  }
-
+ if(TauEnv_get_cuda_track_env()) {
+#if CUDA_VERSION >= 5050
+	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_ENVIRONMENT);
+    CUPTI_CHECK_ERROR(err, "cuptiActivityEnable (CUPTI_ACTIVITY_KIND_ENVIRONMENT)");
+#endif
+ }
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
   {
@@ -671,12 +679,10 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 #if !defined(PTHREADS)
 	  if (TauEnv_get_cuda_track_sass()) {
 	    for (int i = 1; i <= get_device_count(); i++) {
-	      TAU_VERBOSE("[CuptiActivity]: kernelMap[%i].size() %i\n", i, kernelMap[i].size());
 	      for (std::map<uint32_t, CUpti_ActivityKernel>::iterator it = kernelMap[i].begin(); 
 		   it != kernelMap[i].end(); it++) {
 		uint32_t correlId = it->first;
 		CUpti_ActivityKernel *kernel = &it->second;
-		// pass in demangled name
 		const char *kname = demangleName(kernel->name);
 		record_imix_counters(kname, i-1, kernel->streamId, kernel->contextId, kernel->correlationId, kernel->end);
 	      }
@@ -1005,16 +1011,112 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   //     }
   //     break;
   //   }
-  // case CUPTI_ACTIVITY_KIND_CONTEXT:
-  //   {
-  //     CUpti_ActivityContext *context = (CUpti_ActivityContext *) record;
-  //     // printf("CONTEXT %u, device %u, compute API %s, NULL stream %d\n",
-  //     //        context->contextId, context->deviceId,
-  //     //        getComputeApiKindString((CUpti_ActivityComputeApiKind) context->computeApiKind),
-  //     //        (int) context->nullStreamId);
-  //     contextMap[context->contextId] = *context;
-  //     break;
-  //   }
+    case CUPTI_ACTIVITY_KIND_CONTEXT:
+    {
+      CUpti_ActivityContext *context = (CUpti_ActivityContext *)record;
+      contextMap[context->deviceId] = *context;
+      currentContextId = context->contextId;
+      break;
+    }
+    if (TauEnv_get_cuda_track_env()) {
+#if CUDA_VERSION >= 5050
+  case CUPTI_ACTIVITY_KIND_ENVIRONMENT:
+    {
+      CUpti_ActivityEnvironment* env = (CUpti_ActivityEnvironment*)record;
+#ifdef TAU_DEBUG_ENV
+      printf("ENVIRONMENT deviceId: %u, timestamp: %u\n", env->deviceId, env->timestamp);
+#endif
+      double timestamp;
+      uint32_t deviceId;
+      uint16_t nullStreamId;
+      uint32_t contextId;
+      int context_idle = 5000; // reserved space for idle GPU monitoring
+
+      if (currentContextId == -1) {
+	contextId = context_idle + deviceId;
+      }
+      else {
+	contextId = currentContextId;
+      }
+      timestamp = env->timestamp/1e3;
+      deviceId = env->deviceId;
+
+      if (contextMap.empty()) {
+	nullStreamId = -1;
+	contextId = -1;
+      }
+      else {
+	nullStreamId = contextMap.find(deviceId)->second.nullStreamId;
+	contextId = contextMap.find(deviceId)->second.contextId;
+      }
+
+      if( environmentMap.find(contextId) == environmentMap.end() ) {
+	CudaEnvironment envt;
+	envt.timestamp.push_back(timestamp);
+	envt.deviceId = deviceId;
+	environmentMap[contextId] = envt;
+      }
+      else {
+	environmentMap.find(contextId)->second.timestamp.push_back(timestamp);
+      }
+
+      switch (env->environmentKind)
+	{
+	case CUPTI_ACTIVITY_ENVIRONMENT_SPEED:
+	  {
+	    uint32_t smClock = env->data.speed.smClock;
+	    uint32_t memoryClock = env->data.speed.memoryClock;
+#ifdef TAU_DEBUG_ENV
+	    printf("SPEED\n");
+	    printf("\tsmClock = %d\n", smClock);
+	    printf("\tmemoryClock = %d\n", memoryClock);
+#endif
+	    environmentMap.find(contextId)->second.smClock.push_back(smClock);
+	    environmentMap.find(contextId)->second.memoryClock.push_back(memoryClock);
+	    break;
+	}
+	case CUPTI_ACTIVITY_ENVIRONMENT_TEMPERATURE:
+	  {
+#ifdef TAU_DEBUG_ENV
+	    printf("TEMPERATURE = %d C\n", env->data.temperature.gpuTemperature);
+#endif
+	    uint32_t gpuTemperature = env->data.temperature.gpuTemperature;
+	    environmentMap.find(contextId)->second.gpuTemperature.push_back(gpuTemperature);
+	    break;
+	  }
+	case CUPTI_ACTIVITY_ENVIRONMENT_POWER:
+	  {
+#ifdef TAU_DEBUG_ENV
+	    printf("POWER\n");
+	    printf("\tpower: %u, power limit: %u\n", env->data.power.power, env->data.power.powerLimit);
+#endif
+	    uint32_t power_t = env->data.power.power;
+	    uint32_t powerLimit = env->data.power.powerLimit;
+	    environmentMap.find(contextId)->second.power.push_back(power_t);
+	    environmentMap.find(contextId)->second.powerLimit = powerLimit; // cap shouldn't change
+	    double power_utilization = ((float)power_t/powerLimit) * 100.0;
+	    break;
+	  }
+	case CUPTI_ACTIVITY_ENVIRONMENT_COOLING:
+	  {
+#ifdef TAU_DEBUG_ENV
+	    printf("COOLING\n");
+	    printf("\tfanspeed %u\n", env->data.cooling.fanSpeed);
+#endif
+	    uint32_t fanSpeed = env->data.cooling.fanSpeed;
+	    environmentMap.find(contextId)->second.fanSpeed.push_back(fanSpeed);
+	    break;
+	  }
+	default:
+#ifdef TAU_DEBUG_ENV
+	  printf("<unknown>\n");
+#endif
+	  break;
+	}
+      break;
+    }
+#endif
+    }
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 #if CUDA_VERSION >= 5050
 	  case CUPTI_ACTIVITY_KIND_MEMCPY2:
@@ -1369,6 +1471,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #endif
       record_gpu_counters(taskId, name, id, &eventMap[taskId]);
 #endif
+      if (TauEnv_get_cuda_track_env()) {
+#if CUDA_VERSION >= 5050
+      record_environment_counters(name, taskId, deviceId, streamId, contextId, id, end);
+#endif
+      }
 			if (gpu_occupancy_available(deviceId))
 			{
 			  int taskId = get_device_id() + 1;
@@ -1939,7 +2046,6 @@ void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId
     taskId = map_cuptiThread[local_vtid];
   }
 #endif
-  TAU_VERBOSE("[CuptiActivity]: record_imix_counters\n");
   if (instructionMap[taskId].find(id) == instructionMap[taskId].end()) {
     TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded.\n");
   }
@@ -1947,7 +2053,6 @@ void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId
     TAU_VERBOSE("[CuptiActivity] warning:  No disassembly found, SASS counters not recorded.\n");
   }
   else {
-    TAU_VERBOSE("[CuptiActivity]: about to call write_runtime_imix\n");
     ImixStats is_runtime = write_runtime_imix(id, taskId, map_disassem, name);
 #ifdef TAU_DEBUG_CUPTI
     cout << "[CuptiActivity]:  Name: " << name << 
@@ -2088,6 +2193,71 @@ ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pai
 #endif
 
   return imix_stats;
+}
+
+void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent* tc)
+{
+  if (vec.size()==0) {
+    eventMap[taskId][tc] = 0;
+  }
+  else {
+    for(std::vector<uint32_t>::iterator iter=vec.begin(); iter != vec.end(); iter++) {
+      if (envT == PowerUtilization) {
+	uint32_t power_lim = environmentMap.find(contextId)->second.powerLimit;
+	eventMap[taskId][tc] = ((float)*iter/power_lim)*100.0;
+      }
+      else {
+	eventMap[taskId][tc] = *iter;
+      }
+      
+      GpuEventAttributes *map;
+      int map_size = eventMap[taskId].size();
+      map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+      int i = 0;
+      
+      for (eventMap_t::iterator it = eventMap[taskId].begin(); it != eventMap[taskId].end(); it++) {	
+	map[i].userEvent = it->first;
+	map[i].data = it->second;
+	i++;
+      }
+      Tau_cupti_register_gpu_event(name, deviceId,
+				   streamId, contextId, id, 0, false, map, map_size,
+				   end / 1e3, end / 1e3, taskId);
+    }
+  }
+  
+}
+
+void record_environment_counters(const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint32_t end) {
+  if (environmentMap.find(contextId) == environmentMap.end()) {
+    TAU_VERBOSE("[CuptiActivity] warning:  GPU environment counters not recorded.\n");
+  }
+  else {
+    static TauContextUserEvent* sm_clock;
+    static TauContextUserEvent* memory_clock;
+    static TauContextUserEvent* gpu_temperature;
+    static TauContextUserEvent* power_t;
+    static TauContextUserEvent* fan_speed;
+  
+    Tau_get_context_userevent((void **) &sm_clock, "SM Frequency (MHz)");
+    Tau_get_context_userevent((void **) &memory_clock, "Memory Frequency (MHz)");
+    Tau_get_context_userevent((void **) &gpu_temperature, "GPU Temperature (C)");
+    Tau_get_context_userevent((void **) &power_t, "Power Utilization (% mW)");
+    Tau_get_context_userevent((void **) &fan_speed, "Fan Speed (% max)");
+  
+    CudaEnvironment ce = environmentMap.find(contextId)->second;
+    std::vector<uint32_t> v_power = ce.power;
+    std::vector<uint32_t> v_smClock = ce.smClock;
+    std::vector<uint32_t> v_memoryClock = ce.memoryClock;
+    std::vector<uint32_t> v_gpuTemperature = ce.gpuTemperature;
+    std::vector<uint32_t> v_fanSpeed = ce.fanSpeed;
+
+    transport_environment_counters(v_power, PowerUtilization, name, deviceId, taskId, streamId, contextId, id, end, power_t);
+    transport_environment_counters(v_smClock, SMClock, name, deviceId, taskId, streamId, contextId, id, end, sm_clock);
+    transport_environment_counters(v_memoryClock, MemoryClock, name, taskId, deviceId, streamId, contextId, id, end, memory_clock);
+    transport_environment_counters(v_gpuTemperature, GPUTemperature, name, taskId, deviceId, streamId, contextId, id, end, gpu_temperature);
+    transport_environment_counters(v_fanSpeed, FanSpeed, name, taskId, deviceId, streamId, contextId, id, end, fan_speed);
+  }
 }
 
 void record_gpu_launch(int correlationId, const char *name)
