@@ -711,8 +711,7 @@ void Tau_CuptiLayer_Initialize_Map(int off)
 
 bool Tau_CuptiLayer_is_cupti_counter(char const * str)
 {
-    if (Tau_CuptiLayer_initialized && !Tau_CuptiLayer_finalized 
-     && Tau_CuptiLayer_Counter_Map().empty()) {
+    if (Tau_CuptiLayer_Counter_Map().empty()) {
 	  Tau_CuptiLayer_Initialize_Map(0);
 	}
 	return Tau_CuptiLayer_Counter_Map().count(string(str)) > 0;
