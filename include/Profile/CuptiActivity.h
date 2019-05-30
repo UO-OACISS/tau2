@@ -367,6 +367,10 @@ void clear_counters(int device);
 
 ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
 
+int get_device_from_id(int id);
+
+int get_task_from_id(int id, int task);
+
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
 	{ \

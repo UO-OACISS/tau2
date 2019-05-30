@@ -521,12 +521,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 			err = cuptiActivityEnqueueBuffer(resource->context, stream, activityBuffer, ACTIVITY_BUFFER_SIZE);
 			CUDA_CHECK_ERROR(err2, "Cannot enqueue buffer in stream.\n");
-			int taskId = get_device_id();
+			CUptiResult cuptiErr;
+			uint32_t deviceId;
+			cuptiErr = cuptiGetDeviceId(resource->context, &deviceId);
+			int taskId = deviceId;
 #if defined(PTHREADS)
-			if (map_cudaThread.find(corrid) != map_cudaThread.end()) {
-			  int local_vtid = map_cudaThread[corrid].tau_vtid;
-			  taskId = map_cuptiThread[local_vtid];
-			}
+			taskId = get_task_from_id(corrid, taskId);
 #endif
 			streamIds[taskId].push_back(stream);
 			number_of_streams[taskId]++;
@@ -556,12 +556,13 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		err = cuptiGetStreamId(sync->context, sync->stream, &stream);
 		CUPTI_CHECK_ERROR(err, " cuptiGetStreamId");
 		Tau_cupti_register_sync_event(sync->context, stream, NULL, 0, 0);
-		int taskId = get_device_id();
+		CUptiResult cuptiErr;
+		uint32_t deviceId;
+		cuptiErr = cuptiGetDeviceId(sync->context, &deviceId);
+		int taskId = deviceId;
+
 #if defined(PTHREADS)
-		if (map_cudaThread.find(corrid) != map_cudaThread.end()) {
-		  int local_vtid = map_cudaThread[corrid].tau_vtid;
-		  taskId = map_cuptiThread[local_vtid];
-		}
+		taskId = get_task_from_id(corrid, taskId);
 #endif
 		for (int s=0; s<number_of_streams[taskId]; s++)
 		{
@@ -577,7 +578,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	{
 #endif //TAU_ASYNC_ACTIVITY_API
 		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
-
         // BEGIN handling memcpy
 		if (function_is_memcpy(id, domain))
 		{
@@ -589,12 +589,13 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			get_values_from_memcpy(cbInfo, id, domain, kind, count);
 			if (cbInfo->callbackSite == CUPTI_API_ENTER)
 			{
-			  int taskId = get_device_id();
+			  CUptiResult cuptiErr;
+			  uint32_t deviceId;
+			  cuptiErr = cuptiGetDeviceId(cbInfo->context, &deviceId);
+			  int taskId = deviceId;
+			  
 #if defined(PTHREADS)
-			  if (map_cudaThread.find(cbInfo->correlationId) != map_cudaThread.end()) {
-			    int local_vtid = map_cudaThread[cbInfo->correlationId].tau_vtid;
-			    taskId = map_cuptiThread[local_vtid];
-			  }
+			  taskId = get_task_from_id(cbInfo->correlationId, taskId);
 #endif
 				Tau_cupti_enter_memcpy_event(
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
@@ -616,12 +617,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 #ifdef TAU_DEBUG_CUPTI
 				cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
 #endif
-				int taskId = get_device_id();
+				CUptiResult cuptiErr;
+				uint32_t deviceId;
+				cuptiErr = cuptiGetDeviceId(cbInfo->context, &deviceId);
+				int taskId = deviceId;
 #if defined(PTHREADS)
-				if (map_cudaThread.find(cbInfo->correlationId) != map_cudaThread.end()) {
-				  int local_vtid = map_cudaThread[cbInfo->correlationId].tau_vtid;
-				  taskId = map_cuptiThread[local_vtid];
-				}
+				taskId = get_task_from_id(cbInfo->correlationId, taskId);
 #endif
 				Tau_cupti_exit_memcpy_event(
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
@@ -707,12 +708,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					CUdevice device;
 					cuCtxGetDevice(&device);
                                         Tau_cuda_Event_Synchonize();
-					int taskId = get_device_id();
+					int taskId = device;
 #if defined(PTHREADS)
-					if (map_cudaThread.find(cbInfo->correlationId) != map_cudaThread.end()) {
-					  int local_vtid = map_cudaThread[cbInfo->correlationId].tau_vtid;
-					  taskId = map_cuptiThread[local_vtid];
-					}
+					get_task_from_id(cbInfo->correlationId, taskId);
 #endif
 					record_gpu_counters_at_launch(taskId);
 				}
@@ -1132,6 +1130,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       uint8_t copyKind;
 			int id;
       int direction = MESSAGE_UNKNOWN;
+      int taskId;
 
 #if CUDA_VERSION >= 5050
       if (record->kind == CUPTI_ACTIVITY_KIND_MEMCPY2) {
@@ -1149,13 +1148,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
 		cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
 #endif
-	// get Correlationid
-	int taskId = get_device_id();
+	correlDeviceMap[id] = deviceId;
+	taskId = deviceId;
 #if defined(PTHREADS)
-	if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[id].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
+	taskId = get_task_from_id(id, taskId);
 #endif
         Tau_cupti_register_memcpy_event(
           TAU_GPU_USE_DEFAULT_NAME,
@@ -1204,6 +1200,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         } else if (getMemcpyType(copyKind) == MemcpyDtoH) {
           direction = MESSAGE_SEND;
         }
+	correlDeviceMap[id] = deviceId;
+	taskId = deviceId;
+#if defined(PTHREADS)
+	taskId = get_task_from_id(id, taskId);
+#endif
 #ifdef TAU_DEBUG_CUPTI
 			cerr << "recording memcpy: " << end - start << "ns.\n" << endl;
 		    cerr << "recording memcpy on device: " << deviceId << endl;
@@ -1213,13 +1214,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			//the CPU what type of copy we have so we need to register 
 			//the bytes copied here. Be careful we only want to record 
 			//the bytes copied once.
-		    int taskId = get_device_id();
-#if defined(PTHREADS)
-		    if (map_cudaThread.find(id) != map_cudaThread.end()) {
-		      int local_vtid = map_cudaThread[id].tau_vtid;
-		      taskId = map_cuptiThread[local_vtid];
-		    }
-#endif
 			Tau_cupti_register_memcpy_event(
 				TAU_GPU_USE_DEFAULT_NAME,
 				deviceId,
@@ -1308,7 +1302,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       //the CPU what type of copy we have so we need to register 
       //the bytes copied here. Be careful we only want to record 
       //the bytes copied once.
-      int taskId = get_device_id(); // need to get correlation id from CUpti_ActivityStream
+      int taskId = deviceId; // need to get correlation id from CUpti_ActivityStream
       Tau_cupti_register_unifmem_event(
 				       TAU_GPU_USE_DEFAULT_NAME,
 				       deviceId,
@@ -1405,10 +1399,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         registersPerThread = kernel->registersPerThread;
 	int taskId = kernel->deviceId;
 #if defined(PTHREADS)
-	if (map_cudaThread.find(kernel->correlationId) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[kernel->correlationId].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
+	taskId = get_task_from_id(kernel->correlationId, taskId);
 #endif
         kernelMap[taskId][kernel->correlationId] = *kernel;
 	correlDeviceMap[kernel->correlationId] = kernel->deviceId;
@@ -1431,12 +1422,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       {
 	id = correlationId;
       }
-      int taskId = get_device_id();
+      int taskId = deviceId;
 #if defined(PTHREADS)
-      if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	int local_vtid = map_cudaThread[id].tau_vtid;
-	taskId = map_cuptiThread[local_vtid];
-      }
+      taskId = get_task_from_id(id, taskId);
 #endif
       // At this point store source locator and function maps accumulated, then clear maps
       for (std::map<uint32_t, CUpti_ActivitySourceLocator>::iterator it = sourceLocatorMap.begin();
@@ -1448,29 +1436,14 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
       const char* name_og = name;
       name = demangleName(name);
-
       int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
       double metrics_start[number_of_metrics];
       double metrics_end[number_of_metrics];
 #if CUDA_VERSION >= 5050
       if (record->kind != CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
-	int taskId = get_device_id();
-#if defined(PTHREADS)
-	if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[id].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
-#endif
 	record_gpu_counters(taskId, name, id, &eventMap[taskId]);
       }
 #else
-      int taskId = get_device_id();
-#if defined(PTHREADS)
-      if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	int local_vtid = map_cudaThread[id].tau_vtid;
-	taskId = map_cuptiThread[local_vtid];
-      }
-#endif
       record_gpu_counters(taskId, name, id, &eventMap[taskId]);
 #endif
       if (TauEnv_get_cuda_track_env()) {
@@ -1480,13 +1453,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       }
 			if (gpu_occupancy_available(deviceId))
 			{
-			  int taskId = get_device_id();
-#if defined(PTHREADS)
-			  if (map_cudaThread.find(id) != map_cudaThread.end()) {
-			    int local_vtid = map_cudaThread[id].tau_vtid;
-			    taskId = map_cuptiThread[local_vtid];
-			  }
-#endif
         record_gpu_occupancy(blockX, 
                             blockY,
                             blockZ,
@@ -1533,26 +1499,12 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUDA_VERSION >= 5050
       if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
         if (TauEnv_get_cuda_track_cdp()) {
-	  int taskId = get_device_id();
-#if defined(PTHREADS)
-	  if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	    int local_vtid = map_cudaThread[id].tau_vtid;
-	    taskId = map_cuptiThread[local_vtid];
-	  }
-#endif
 	Tau_cupti_register_gpu_event(name, deviceId,
 				       streamId, contextId, id, parentGridId, 
 				       true, map, map_size,
 				     start / 1e3, end / 1e3, taskId);
         }
       } else {
-#endif
-	int taskId = get_device_id();
-#if defined(PTHREADS)
-	if (map_cudaThread.find(id) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[id].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
 #endif
         Tau_cupti_register_gpu_event(name, deviceId,
 				     streamId, contextId, id, 0, false, map, map_size,
@@ -1659,14 +1611,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 	case CUPTI_ACTIVITY_KIND_INSTRUCTION_EXECUTION: {
     if(TauEnv_get_cuda_track_sass()) {
 	  CUpti_ActivityInstructionExecution *instrRecord = (CUpti_ActivityInstructionExecution *)record;
-	  int taskId = 0;
-	  if (correlDeviceMap.find(instrRecord->correlationId) != correlDeviceMap.end()) 
-	    taskId = correlDeviceMap[instrRecord->correlationId];
+	  int taskId = get_device_from_id(instrRecord->correlationId);
 #if defined(PTHREADS)
-	if (map_cudaThread.find(instrRecord->correlationId) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[instrRecord->correlationId].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
+	  taskId = get_task_from_id(instrRecord->correlationId, taskId);
 #endif
 	  
 #ifdef TAU_DEBUG_CUPTI_SASS
@@ -1779,25 +1726,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #ifdef TAU_DEBUG_CUPTI
 			cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
 #endif
-      int taskId = get_device_id();
+      int taskId = get_device_from_id(global_access->correlationId);
 #if defined(PTHREADS)
-      if (map_cudaThread.find(global_access->correlationId) != map_cudaThread.end()) {
-	int local_vtid = map_cudaThread[global_access->correlationId].tau_vtid;
-	taskId = map_cuptiThread[local_vtid];
-      }
+      taskId = get_task_from_id(global_access->correlationId, taskId);
 #endif
       CUpti_ActivityKernel *kernel = &kernelMap[taskId][global_access->correlationId];
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[global_access->sourceLocatorId];
 
       if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
       {
-	int taskId = get_device_id();
-#if defined(PTHREADS)
-	if (map_cudaThread.find(global_access->correlationId) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[global_access->correlationId].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
-#endif
         eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
 
         std::string name;
@@ -1838,25 +1775,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
 #endif
      
-      int taskId = get_device_id();
+      int taskId = get_device_from_id(branch->correlationId);
 #if defined(PTHREADS)
-      if (map_cudaThread.find(branch->correlationId) != map_cudaThread.end()) {
-	int local_vtid = map_cudaThread[branch->correlationId].tau_vtid;
-	taskId = map_cuptiThread[local_vtid];
-      }
+      taskId = get_task_from_id(branch->correlationId, taskId);
 #endif
       CUpti_ActivityKernel *kernel = &kernelMap[taskId][branch->correlationId];
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[branch->sourceLocatorId];
 
       if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
       {
-	int taskId = get_device_id();
-#if defined(PTHREADS)
-	if (map_cudaThread.find(branch->correlationId) != map_cudaThread.end()) {
-	  int local_vtid = map_cudaThread[branch->correlationId].tau_vtid;
-	  taskId = map_cuptiThread[local_vtid];
-	}
-#endif
         eventMap[taskId].erase(eventMap[taskId].begin(), eventMap[taskId].end());
         
         std::string name;
@@ -2017,10 +1944,7 @@ void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uin
  {
    int taskId = deviceId;
 #if defined(PTHREADS)
-   if (map_cudaThread.find(id) != map_cudaThread.end()) {
-     int local_vtid = map_cudaThread[id].tau_vtid;
-     taskId = map_cuptiThread[local_vtid];
-   }
+   taskId = get_task_from_id(id, taskId);
 #endif
    eventMap[taskId][tc] = vec;
    
@@ -2045,10 +1969,7 @@ void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId
   bool update = false;
   int taskId = deviceId;
 #if (PTHREADS)
-  if (map_cudaThread.find(id) != map_cudaThread.end()) {
-    int local_vtid = map_cudaThread[id].tau_vtid;
-    taskId = map_cuptiThread[local_vtid];
-  }
+  taskId = get_task_from_id(id, taskId);
 #endif
   if (instructionMap[taskId].find(id) == instructionMap[taskId].end()) {
     TAU_VERBOSE("[CuptiActivity] warning:  Instruction mix counters not recorded.\n");
@@ -2274,12 +2195,9 @@ void record_gpu_launch(int correlationId, const char *name)
 
 void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
 {
-  int taskId = get_device_id();
+  int taskId = device_id;
 #if defined(PTHREADS)
-  if (map_cudaThread.find(correlationId) != map_cudaThread.end()) {
-    int local_vtid = map_cudaThread[correlationId].tau_vtid;
-    taskId = map_cuptiThread[local_vtid];
-  }
+  taskId = get_task_from_id(correlationId, taskId);
 #endif
   if (Tau_CuptiLayer_get_num_events() > 0 &&
       !counters_bounded_warning_issued[device_id] && 
@@ -2706,7 +2624,7 @@ int get_device_count()
 #endif
 
 }
-/*  BEGIN:  SASS added  */
+
 int get_device_id() 
 {
   int deviceId;
@@ -2973,7 +2891,13 @@ void clear_counters(int device)
   kernels_recorded[device] = 0;
 
 }
-/*  END:  SASS added  */
+int get_device_from_id(int id) {
+   return (correlDeviceMap.find(id) != correlDeviceMap.end()) ? correlDeviceMap[id] : 0;
+}
+
+int get_task_from_id(int id, int task) {
+   return (map_cudaThread.find(id) != map_cudaThread.end()) ? map_cuptiThread[map_cudaThread[id].tau_vtid] : task;
+}
 
 // #if CUDA_VERSION >= 6000
 // static const char *
