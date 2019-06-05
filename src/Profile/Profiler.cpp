@@ -283,7 +283,7 @@ void Profiler::Start(int tid)
     TauMetrics_getDefaults(tid, StartTime, 1);
     TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
     if (TimeStamp == 0L) {
-      fprintf(stderr, "Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+      fprintf(stderr, "Still got a bogus start! %d %s\n", tid, ThisFunction->GetName());
       abort();
     }
   }
