@@ -201,6 +201,7 @@ using namespace std;
 #define TAU_TRACK_CUDA_SASS_DEFAULT 0
 #define TAU_SASS_TYPE_DEFAULT "kernel"
 #define TAU_OUTPUT_CUDA_CSV_DEFAULT 0
+#define TAU_TRACK_CUDA_ENV_DEFAULT 0
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
@@ -326,6 +327,7 @@ static int env_track_cuda_sass = TAU_TRACK_CUDA_SASS_DEFAULT;
 static const char* env_sass_type = TAU_SASS_TYPE_DEFAULT;
 static int env_output_cuda_csv = TAU_OUTPUT_CUDA_CSV_DEFAULT;
 static const char *env_binaryexe = NULL;
+static int env_track_cuda_env = TAU_TRACK_CUDA_ENV_DEFAULT;
 
 static int env_node_set = -1;
 
@@ -1118,6 +1120,10 @@ int TauEnv_get_cuda_csv_output(){
 
 const char* TauEnv_get_cuda_binary_exe(){
   return env_binaryexe;
+}
+
+int TauEnv_get_cuda_track_env(){
+  return env_track_cuda_env;
 }
 
 void TauEnv_set_cudaTotalThreads(int nthreads) {
@@ -2513,7 +2519,15 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: CUDA binary exe: %s\n", env_binaryexe);
       TAU_METADATA("TAU_CUDA_BINARY_EXE", env_binaryexe);
     }
-
+    tmp = getconf("TAU_TRACK_CUDA_ENV");
+    if (parse_bool(tmp, TAU_TRACK_CUDA_ENV_DEFAULT)) {
+      env_track_cuda_env = 1;
+      TAU_VERBOSE("TAU: tracking CUDA Environment Enabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_ENV", "on");
+    } else {
+      TAU_VERBOSE("TAU: tracking CUDA Environment Disabled\n");
+      TAU_METADATA("TAU_TRACK_CUDA_ENV", "off");
+    }
     tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
       env_mic_offload = 1;
