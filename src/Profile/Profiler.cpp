@@ -277,17 +277,18 @@ void Profiler::Start(int tid)
   // This can happen when starting .TAU application on "virtual" GPU threads.
   // The GPU timestamp isn't availble yet, so start is bogus.  Instead,
   // get the timers read just after initialization.
-// #ifndef TAU_SCOREP
-//   if (TimeStamp == 0L) {
-//     printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
-//     TauMetrics_getDefaults(tid, StartTime, 1);
-//     TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
-//     if (TimeStamp == 0L) {
-//       fprintf(stderr, "Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
-//       abort();
-//     }
-//   }
-// #endif /* !TAU_SCOREP */
+#ifndef TAU_SCOREP
+  if (TimeStamp == 0L) {
+    printf("Got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+    TauMetrics_getDefaults(tid, StartTime, 1);
+    TimeStamp = (x_uint64)StartTime[0];    // USE COUNTER1 for tracing
+    if (TimeStamp == 0L) {
+      fprintf(stderr, "Still got a bogus start! %d %s\n", tid, ThisFunction->GetName());
+      abort();
+    }
+  }
+#endif /* !TAU_SCOREP */
+
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/

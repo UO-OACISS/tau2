@@ -756,9 +756,6 @@ void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTi
  */
 void Tau_gpu_init(void)
 {
-#if not defined(PTHREADS)
-  Tau_create_top_level_timer_if_necessary();
-#endif
 
   //init context event.
   Tau_get_context_userevent((void **)&MemoryCopyEventHtoD, "Bytes copied from Host to Device");
