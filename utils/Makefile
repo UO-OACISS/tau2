@@ -121,7 +121,7 @@ tau_trace2json: tau_trace2json.o
 		$(CXX) $(CFLAGS) tau_trace2json.o -o $@ -lm $(TAU_TRACE_INPUT_LIB) 
 
 tau_trace2json.o: tau_trace2json.cpp
-		$(CXX) $(CFLAGS) $< -c 
+		$(CXX) $(CFLAGS) -std=c++11  $< -c 
 
 tau_wrap: tau_wrap.o tau_selective.o tau_instrument.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_wrap.o tau_selective.o tau_instrument.o -o $@ $(PDTOPTS) -lm $(LEXTRAUTIL) 
