@@ -690,13 +690,14 @@ for arg in "$@"; do
         echo "-android_version=VERSION ................. Android version, e.g. '4.4'."
         echo "-android_platform=VERSION ........ Android platform version, e.g. '19'."
         echo "-asmdex=<dir | download> ...... Specify a asmdex directory or download."
-        echo "-boost=<dir> ....................... Specify location of Boost Package."
+        echo "-boost=<dir> ....................... Specify location of Boost package."
         echo "-apex ......................................... Build the APEX package."
-        echo "-dyninst=<dir> ................... Specify location of DynInst Package."
+        echo "-dyninst=<dir> ................... Specify location of DynInst package."
         echo "-dyninstinc=<dir> ............ Specify location of DynInst include dir."
         echo "-dyninstlib=<dir> ................ Specify location of DynInst lib dir."
-        echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+        echo "-dwarf=<dir> ................ Specify location of the libdwarf package."
         echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
+        echo "-elf=<dir> .................... Specify location of the libelf package."
         echo "-bfd=<dir | download> ....... Specify a binutils directory or download."
         echo "    Note: 'download' will download and build the library automatically."
         echo "-unwind=<dir | download> ... Specify a libunwind directory or download."
@@ -949,7 +950,9 @@ enable_export_dynamic=no
 perfsuite=no
 perfsuitedir=
 bfd=no
+elf=no
 bfddir=
+elfdir=
 turnbfdoff=no
 perf=no
 perfincdir=
@@ -1502,6 +1505,12 @@ for arg in "$@"; do
 	-bfd=*)
 	    bfd=yes
 	    bfddir=`echo $arg | sed -e 's/-bfd=//'`
+	    shift
+	    ;;
+
+	-elf=*)
+	    elf=yes
+	    elfdir=`echo $arg | sed -e 's/-elf=//'`
 	    shift
 	    ;;
 
@@ -3628,6 +3637,11 @@ case $machine in
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
 	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
+	elif [ "x$PE_ENV" = xALLINEA ] ; then
+	    intel=yes
+	    tauoptions="${tauoptions}-allinea"
+	    default_fortran=gfortran
+	    fixmakeargs="$fixmakeargs CLANG"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
@@ -8744,7 +8758,7 @@ bfdlink="-L$bfddir/lib -L$bfddir/lib64 -Wl,-rpath,$bfddir/lib -Wl,-rpath,$bfddir
 ######################################################################
 cat <<EOF > conftest_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 //#ifdef __APPLE__
 //#include <crt_externs.h>
@@ -8785,7 +8799,7 @@ fi
 ######################################################################
 cat <<EOF > conftest_elf_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <stddef.h>
 #include <bfd.h>
 #include <elf-bfd.h>
@@ -8823,7 +8837,7 @@ cat <<EOF > conftest_bfd.c
 #include <mpc.h>
 #endif
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 int main(int argc, char **argv) {
    bfd_init();
@@ -8961,7 +8975,7 @@ fi
 ######################################################################
 cat <<EOF > conftest_bfd.c
 #define PACKAGE TAU
-#define PACKAGE_VERSION 2.28
+#define PACKAGE_VERSION 2.28.1
 #include <bfd.h>
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #    include <demangle.h>
@@ -9638,7 +9652,7 @@ if [ "x$unwinder" != "xnone" ] ; then
 	    unwind_lib_flag="-framework#System"
 	    unwind_extras=""
 	fi
-	if [ $machine=craycnl -a $CRAY_TARGET_PE=cray ]; then
+	if [ $machine = craycnl -a "x$CRAY_TARGET_PE" = "xcray" ]; then
 	  echo "WARNING: TAU does not currently support libunwind with Cray CCE compilers on AARCH64."
 	else 
 	  fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
@@ -10037,6 +10051,9 @@ if [ "x$download_scorep" = xyes ] ; then
     if [ $papi = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-papi=$papidir --with-papi-header=$papidir/include --with-papi-lib=$papidir/$papisubdir"
     fi
+    if [ $machine = craycnl ]; then
+      tau_scorep_config_options="${tau_scorep_config_options} ac_scorep_platform=crayxc"
+    fi
     if [ $pdt = yes ]; then
       tau_scorep_config_options="${tau_scorep_config_options} --with-pdt=$pdtdir/${architecture}/bin"
     fi
@@ -10181,7 +10198,8 @@ if [ $scorep = yes ] ; then
 
     if [ $openmp = yes ]; then
       if [ $opari = yes ]; then
-        scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
+        #scorep_adapter="$scorep_adapter --thread=omp:pomp_tpd --pomp"
+        scorep_adapter="$scorep_adapter --thread=omp --pomp"
       else
         if [ $ompt = yes ]; then
           #scorep_adapter="$scorep_adapter --thread=omp:ompt"
@@ -10250,10 +10268,12 @@ if [ $scorep = yes ] ; then
     fi
     #scorepLibs="$scorepLD $scorepLibs $scorepExtraLibs"
     scorepLibs="$scorepExtraLibs#$scorepLD#$scorepLibs"
-
-    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+    scorepLDflags=`${scorepdir}/bin/scorep-config --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g' -e 's@ @#@g'`
+    #fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+    fixmakeargs="$fixmakeargs scorepmpilibs=\$(TAU_LIBS)\#$scorepLDflags#$scorepLibs"
     if [ $mpi = no ]; then
-      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+      #fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#-Wl,-rpath,$scorepdir/lib#$scorepLibs"
+      fixmakeargs="$fixmakeargs scoreplibs=-L$scorepdir/lib#$scorepLDflags#$scorepLibs"
     fi
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 
@@ -10662,6 +10682,15 @@ libdwarf_dirname=libdwarf-20181024
 libdwarftgz=$libdwarf_dirname.tar.gz
 libdwarfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libdwarftgz
 
+libelf_dirname=libelf-devel-0.158-6.1.x86_64
+libelftgz=$libelf_dirname.tgz
+libelfurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$libelftgz
+if [ "x$elfdir" = "x" ]; then
+  libelfdir=${targetdir}/${architecture}/${libelf_dirname}
+else
+  libelfdir=$elfdir
+fi
+
 if [ "x$dwarfdir" = "x" ]; then
     libdwarfdir=${targetdir}/${architecture}
 else
@@ -10728,6 +10757,48 @@ if [ "x$download_dwarf" = xyes ] ; then
             libdwarf_log=configure.log
             cd $libdwarf_dirname
             echo "configuring $libdwarf... (see `pwd`/${libdwarf_log} for log)..."
+# Before configuring libdwarf we need to check if libelf is there!
+            if [ ! -f /usr/include/libelf.h ]; then 
+              if [ ! -d ${libelfdir} ]; then 
+                if [ "x`uname -m`" = "xx86_64" ]; then 
+                  echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed. Using a binary libelf package for x86_64."
+                  download "$libelfurl" "$libelftgz" 
+                  tar -zxf $libelftgz  
+                  echo "removing $libelftgz..."
+                  rm $libelftgz 
+                  mv $libelf_dirname ${targetdir}/${architecture}
+                else 
+                  echo "TAU: Dwarf needs libelf.h, but this package (libelf-devel) is not installed."
+                  echo "Please configure TAU with and additional -elf=<dir> configuration option after installing it from the source code available from:"
+                  echo "[https://sourceware.org/elfutils/ftp/elfutils-latest.tar.bz2] using ./configure --enable-shared --prefix=<dir>; make install."
+                fi
+              else 
+                echo "TAU: Found libelf in ${libelfdir}. Using it."
+              fi 
+              elf=yes
+# Dwarf needs a libelf.h in its libdwarf directory and libelf.so in the lib dir. Symlinks.
+              if [ ! -L libdwarf/libelf.h ]; then 
+                cd libdwarf; ln -s ${libelfdir}/include/libelf.h . ; ln -s ${libelfdir}/include/libelf . ; cd ../ 
+              fi
+              if [ ! -L ${dwarfdir}/lib/libelf.so ]; then 
+                if [ -r ${libelfdir}/lib64/libelf.so ]; then 
+                  libelflibdir=lib64
+                fi
+                if [ -r ${libelfdir}/lib/libelf.so ]; then 
+                  libelflibdir=lib
+                fi
+                mkdir -p ${dwarfdir}; mkdir -p ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.so* ${dwarfdir}/lib; ln -s ${libelfdir}/${libelflibdir}/libelf.a ${dwarfdir}/lib; 
+              fi
+            else 
+              echo "Found /usr/include/libelf.h"
+            fi
+# End of libelf check. Continue with libdwarf build.
+            if [ $elf=yes ]; then
+              orig_cflags=`echo $CFLAGS`
+              export CFLAGS="$orig_cflags -I${libelfdir}/include"
+              export DWARF_LIBS="-L${libelfdir}/lib64 -L${libelfdir}/lib"
+              echo "TAU: Using CFLAGS=$CFLAGS to compile libdwarf"
+            fi
             ./configure --prefix=${dwarfdir} --enable-static --enable-shared CC=${dwarf_c_compiler} CXX=${dwarf_cxx_compiler} > ${libdwarf_log} 2>&1
             configresult=$?
             if [ $configresult -eq 0 ] ; then
@@ -10756,6 +10827,9 @@ if [ "x$download_dwarf" = xyes ] ; then
                 echo "ERROR BUILDING $libdwarf!"
                 echo "Please check `pwd`/config.log or `pwd`/${libdwarf_log}"
             fi
+            if [ $elf=yes ]; then
+              export CFLAGS=$orig_cflags
+            fi
         fi
     fi
     cd $predwarfdir
@@ -10768,7 +10842,7 @@ if [ $dwarf = yes ] ; then
     echo "Using libdwarf at $dwarfdir"
 	fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib"
     fixmakeargs="$fixmakeargs dwarfinc=-I$dwarfdir/include"
-    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf"
+    fixmakeargs="$fixmakeargs dwarflib=-L$dwarfdir/lib#-Wl\,-rpath\,$dwarfdir/lib#-ldwarf#-lz#-lelf"
     fixmakeargs="$fixmakeargs TAU_DWARF"
     fi
 fi
