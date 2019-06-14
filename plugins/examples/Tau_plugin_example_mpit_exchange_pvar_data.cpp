@@ -18,7 +18,9 @@
 
 #include <Profile/TauTrace.h>
 
+#ifdef TAU_MPI
 #include <mpi.h>
+#endif
 
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
@@ -30,13 +32,17 @@ int Tau_plugin_event_mpit(Tau_plugin_event_mpit_data_t* data) {
 
   int rank; long long int local_val; long long int global_val;
 
+  #ifdef TAU_MPI
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  #endif
 
   fprintf(stderr, "PVAR Name %s and value %d from rank %d\n", data->pvar_name, data->pvar_value, rank);
 
   local_val = data->pvar_value; 
 
+  #ifdef TAU_MPI
   PMPI_Allreduce(&local_val, &global_val, 1, MPI_LONG, MPI_MAX, MPI_COMM_WORLD);
+  #endif
 
   fprintf(stderr, "Max value: %d\n", global_val);
 

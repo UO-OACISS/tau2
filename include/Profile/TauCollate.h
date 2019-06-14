@@ -21,6 +21,10 @@
 // To allow the use of Tau_unify_object_t in the interface.
 #include "TauUnify.h"
 
+#ifdef TAU_MPI
+  #include <mpi.h>
+#endif
+
 #define NUM_COLLATE_OP_TYPES 2
 #define COLLATE_OP_BASIC 0
 #define COLLATE_OP_DERIVED 1
@@ -122,7 +126,13 @@ void Tau_collate_compute_atomicStatistics_MPI_with_minmaxloc(Tau_unify_object_t 
                                           double ***sAtomicMax,
                                           double ***sAtomicCalls,
                                           double ***sAtomicMean,
-                                          double ***sAtomicSumSqr);
+                                          double ***sAtomicSumSqr
+
+#ifdef TAU_MPI
+  , MPI_Comm comm);
+#else
+  );
+#endif
 
 void Tau_collate_compute_atomicStatistics_SHMEM(Tau_unify_object_t *atomicUnifier,
 					  int *globalEventMap, int numItems,
@@ -142,7 +152,13 @@ void Tau_collate_compute_statistics_MPI_with_minmaxloc(Tau_unify_object_t *funct
                                     double_int ***gExcl_max, double_int ***gIncl_max,
 				    double ***gNumCalls, double ***gNumSubr,
 				    double ****sExcl, double ****sIncl,
-				    double ***sNumCalls, double ***sNumSubr);
+				    double ***sNumCalls, double ***sNumSubr
+#ifdef TAU_MPI
+  , MPI_Comm comm);
+#else
+  );
+#endif
+
 
 void Tau_collate_compute_statistics_MPI(Tau_unify_object_t *functionUnifier,
 				    int *globalmap, int numItems, 

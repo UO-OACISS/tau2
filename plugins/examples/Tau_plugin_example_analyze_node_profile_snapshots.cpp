@@ -27,6 +27,7 @@
 
 #include <Profile/TauTrace.h>
 
+MPI_Comm comm;
 
 typedef struct snapshot_buffer {
   double ***gExcl, ***gIncl;
@@ -136,7 +137,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
   int globalNumThreads;
 
   int numAtomicEvents = 0;
-  
+ 
   if (TauEnv_get_stat_precompute() == 1) {
     // Unification must already be called.
     s_buffer[index].functionUnifier = Tau_unify_getFunctionUnifier();
@@ -190,7 +191,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 				   &(s_buffer[index].gExcl_max), &(s_buffer[index].gIncl_max),
                                    &(s_buffer[index].gNumCalls), &(s_buffer[index].gNumSubr),
 				   &(s_buffer[index].sExcl), &(s_buffer[index].sIncl), 
-                                   &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr), MPI_COMM_WORLD);
+                                   &(s_buffer[index].sNumCalls), &(s_buffer[index].sNumSubr), comm);
 
     /*if(rank == 0) {
       for (int m=0; m<Tau_Global_numCounters; m++)  {
@@ -249,7 +250,7 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 					 &(s_buffer[index].gAtomicSumSqr),
 					 &(s_buffer[index].sAtomicMin), &(s_buffer[index].sAtomicMax), 
 					 &(s_buffer[index].sAtomicCalls), &(s_buffer[index].sAtomicMean),
-					 &(s_buffer[index].sAtomicSumSqr), MPI_COMM_WORLD);
+					 &(s_buffer[index].sAtomicSumSqr), comm);
 
 
 #ifdef TAU_ANALYTICS_INSTRUMENTATION_TOGGLE
@@ -289,6 +290,8 @@ int Tau_plugin_event_trigger(Tau_plugin_event_trigger_data_t* data) {
 extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   Tau_plugin_callbacks * cb = (Tau_plugin_callbacks*)malloc(sizeof(Tau_plugin_callbacks));
   TAU_UTIL_INIT_TAU_PLUGIN_CALLBACKS(cb);
+
+  MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 
   cb->Trigger = Tau_plugin_event_trigger;
   cb->EndOfExecution = Tau_plugin_event_end_of_execution;
