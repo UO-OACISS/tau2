@@ -72,7 +72,7 @@ struct TauRocmEvent {
       return false;
   }
 
-} TauRocmEvent;
+} ;
 
 extern std::list<struct TauRocmEvent> TauRocmList;
 extern void Tau_process_rocm_events(struct TauRocmEvent e);
