@@ -791,6 +791,9 @@ void TauProfiler_theFunctionList(const char ***inPtr, int *numFuncs, bool addNam
 void TauProfiler_dumpFunctionNames()
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!TheSafeToDumpData()) {
+    return;
+  }
 
   int numFuncs;
   const char ** functionList;
@@ -1533,6 +1536,9 @@ extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 #ifdef TAU_ENABLE_ROCM
   TauFlushRocmEventsIfNecessary(tid); 
 #endif /* TAU_ENABLE_ROCM */
@@ -1618,10 +1624,8 @@ int TauProfiler_StoreData(int tid)
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
-    for (int i = 1; i < TAU_MAX_THREADS; i++) {
-      if (TauInternal_ParentProfiler(i) != (Profiler *)NULL) {
-        TauProfiler_StoreData(i);
-      }
+    for (int i = 1; i < RtsLayer::getTotalThreads(); i++) {
+      TauProfiler_StoreData(i);
     }
 #ifndef TAU_MPI
 #ifndef TAU_SHMEM
@@ -1713,6 +1717,9 @@ static int getProfileLocation(int metric, char *str)
 int TauProfiler_DumpData(bool increment, int tid, const char *prefix)
 {
   TAU_VERBOSE("TAU<%d,%d>: TauProfiler_DumpData\n", RtsLayer::myNode(), tid);
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 
   int rc = TauProfiler_writeData(tid, prefix, increment);
 
@@ -1727,6 +1734,9 @@ void getMetricHeader(int i, char *header)
 // Stores profile data
 int TauProfiler_writeData(int tid, const char *prefix, bool increment, const char **inFuncs, int numFuncs)
 {
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 
   TauProfiler_updateIntermediateStatistics(tid);
 
@@ -1933,6 +1943,9 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 int TauProfiler_dumpFunctionValues(const char **inFuncs, int numFuncs, bool increment, int tid, const char *prefix)
 {
   TauInternalFunctionGuard protects_this_function;
+  if(!TheSafeToDumpData()) {
+    return -1;
+  }
 
   TAU_PROFILE("TAU_DUMP_FUNC_VALS()", " ", TAU_IO);
 
