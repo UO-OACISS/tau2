@@ -100,6 +100,19 @@
 #define TAU_ASYNC_ACTIVITY_API
 #endif
 
+class CudaEnvironment
+{
+ public:
+  std::vector<double> timestamp;
+  uint32_t deviceId;
+  std::vector<uint32_t> smClock;
+  std::vector<uint32_t> memoryClock;
+  std::vector<uint32_t> gpuTemperature;
+  std::vector<uint32_t> power;
+  uint32_t powerLimit;
+  std::vector<uint32_t> fanSpeed;
+};
+
 extern "C" void Tau_cupti_set_offset(double cpu_gpu_offset);
 
 // unified memory
@@ -281,14 +294,16 @@ int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(int32_t blockX, 
                           int32_t blockY,
                           int32_t blockZ,
-			                    uint16_t registersPerThread,
-		                      int32_t staticSharedMemory,
+			  uint16_t registersPerThread,
+			  int32_t staticSharedMemory,
                           uint32_t deviceId,
                           const char *name, 
                           eventMap_t *map);
 
 void record_gpu_launch(int cId, const char *name);
 void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
+void record_environment_counters(const char *name, uint32_t taskId, uint32_t device, uint32_t streamId, uint32_t contextId, uint32_t id, uint32_t end);
+void transport_environment_counters(std::vector<uint32_t> vec, EnvType envT, const char* name, uint32_t taskId, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent* tc);
 void record_imix_counters(const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end);
 void transport_imix_counters(uint32_t vec, Instrmix imixT, const char* name, uint32_t deviceId, uint32_t streamId, uint32_t contextId, uint32_t id, uint64_t end, TauContextUserEvent * tc);
 void dump_sass_to_csv(int task_id);
@@ -296,12 +311,24 @@ void dump_sass_to_csv(int task_id);
 int get_device_count();
 int get_device_id();
 
+// Envt helper functions:
+float getVecAvgVal(std::vector<uint32_t> vec)
+{
+  if (vec.size() == 0) {
+    return 0;
+  }
+  int sum_of_elems = 0;
+  for(std::vector<uint32_t>::iterator iter=vec.begin(); iter != vec.end(); iter++) {
+      sum_of_elems += *iter;
+  }
+  return (float)sum_of_elems/vec.size();
+}
+
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
 
 
 #endif // CUPTI_API_VERSION >= 3
-
 
 #ifndef TAU_MAX_GPU_DEVICES
 #define TAU_MAX_GPU_DEVICES 16
@@ -339,6 +366,10 @@ void record_gpu_counters_at_sync(int device);
 void clear_counters(int device);
 
 ImixStats write_runtime_imix(uint32_t corrId, uint32_t taskId, std::map<std::pair<int, int>, CudaOps> map_disassem, std::string kernel);
+
+int get_device_from_id(int id);
+
+int get_task_from_id(int id, int task);
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \

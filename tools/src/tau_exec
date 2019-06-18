@@ -69,7 +69,8 @@ usage()
   echo "        -ebs_resolution=<file|function|line> Choose sampling granularity."
   echo "        -um          Enable Unified Memory events via CUPTI"
   echo "        -sass=<level> Track GPU events via CUDA with Source Code Locator activity (kernel level or source level)"
-  echo "        -csv          Outputs sass profile in CSV"
+  echo "        -csv         Outputs sass profile in CSV"
+  echo "        -env         Track GPU environment activity (power utilization, SM, memory frequency, temperature)"
   options=`tau-config --list-options`
   echo "        -T <$options> : Specify TAU tags"
   echo "        -loadlib=<file.so>   : Specify additional load library"
@@ -94,6 +95,7 @@ fi
   echo "    $scriptname -T serial -opencl (OPENCL)"
   echo "    $scriptname -T serial,cupti -cupti -um ./unified_memory (Unified Virtual Memory)"
   echo "    $scriptname -T serial,cupti -cupti -sass=kernel -csv ./sass_source (Metrics Intensity)"
+  echo "    $scriptname -T serial,cupti -cupti -env ./matmult (GPU Environment)"
   echo ""
   echo "qsub mode (IBM BG/P only):"
   echo "    Original:"
@@ -290,6 +292,7 @@ track_sass=false
 sass_type=""
 csv_output=false
 binary_exe=""
+track_env=false
 track_opencl=false
 track_rocm=false
 track_openacc=false
@@ -410,6 +413,11 @@ for arg in "$@" ; do
         save_arg $arg
         shift
         ;;
+      -env)
+        track_env=true
+	save_arg $arg
+	shift
+	;;
       -opencl)
         track_opencl=true
         save_arg $arg
@@ -823,6 +831,9 @@ if [ $track_cupti = "true" ] ; then
       export TAU_SASS_TYPE=$sass_type
     fi
     export TAU_CUDA_BINARY_EXE=$arg
+  fi
+  if [ $track_env = "true" ] ; then
+      export TAU_TRACK_CUDA_ENV=1
   fi
   #echo "api found: $TAU_CUPTI_API"
   if [ $python_wrapper = "true" ] ; then

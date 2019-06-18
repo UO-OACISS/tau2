@@ -10,6 +10,7 @@
 enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
 enum Unifmem { BytesHtoD = 0, BytesDtoH = 1, CPUPageFault = 2, UnifmemUnknown = 3 };
 enum Instrmix { FlPtOps = 0, MemOps = 1, CtrlOps = 2 };
+enum EnvType { SMClock=0, MemoryClock=1, GPUTemperature=2, PowerUtilization=3, FanSpeed=4 };
 
 #define TAU_GPU_UNKNOWN_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""
@@ -138,6 +139,8 @@ extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime,
 /* Callback for a UnifMem event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_unifmem_event(GpuEvent *event, double startTime, double endTime, int transferSize, int unifmemType, int direction);
+
+extern "C" void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType);
 
 /* Callback for a GPU atomic event that is associated with this gpu event. */
 extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);

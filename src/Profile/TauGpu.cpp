@@ -41,10 +41,12 @@ static TauContextUserEvent *UnifiedMemoryEventPageFault;
 static TauContextUserEvent *FloatingPointOps;
 static TauContextUserEvent *MemoryOps;
 static TauContextUserEvent *ControlOps;
+static TauContextUserEvent *SMClockEvent;
+static TauContextUserEvent *MemoryClockEvent;
+static TauContextUserEvent *PowerUtilizationEvent;
 
 static uint32_t recentKernelId = -1;
 static uint32_t recentCorrelationId = -1;
-static int curr_device_id = 0;
 
 int number_of_tasks = 0;
 int number_of_top_level_task_events = 0;
@@ -525,6 +527,54 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 
 }
 
+void Tau_gpu_register_envt_event(GpuEvent *event, double startTime, double endTime, int transferSize, int dataType)
+{
+#if defined(PTHREADS)
+  int task = event->getTaskId();
+#else
+  int task = get_task(event);  
+#endif
+	const char* functionName = event->getName();
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
+	{
+		if (dataType == SMClock) {
+			functionName = "SM Frequency (MHz)";
+		}
+		else if (dataType == MemoryClock)
+		{
+			functionName = "Memory Frequency (MHz)";
+		}
+		else if (dataType == GPUTemperature)
+		{
+			functionName = "GPU Temperature";
+		}
+		else if (dataType == PowerUtilization)
+		  {
+		    functionName = "Power Utilization (% mW)";
+		  }
+		else if (dataType == FanSpeed)
+		  {
+		    functionName == "Fan Speed";
+		  }
+	}
+
+#ifdef DEBUG_PROF	
+	TAU_VERBOSE("recording environment event.\n");
+	TAU_VERBOSE("time is: %f:%f.\n", startTime, endTime);
+	TAU_VERBOSE("kind is: %d.\n", dataType);
+	TAU_VERBOSE("id is: %s.\n", event->gpuIdentifier());
+#endif
+	if (dataType == SMClock) {
+	  TAU_CONTEXT_EVENT(SMClockEvent, transferSize);
+	}
+	else if (dataType == MemoryClock) {
+	  TAU_CONTEXT_EVENT(MemoryClockEvent, transferSize);
+	}
+	else if (dataType == PowerUtilization) {
+	  TAU_CONTEXT_EVENT(PowerUtilizationEvent, transferSize);
+	}
+}
+
 void Tau_gpu_register_unifmem_event(GpuEvent *id, double startTime, double endTime, int transferSize, int unifmemType,
     int direction)
 {
@@ -706,9 +756,6 @@ void Tau_gpu_register_imix_event(GpuEvent *event, double startTime, double endTi
  */
 void Tau_gpu_init(void)
 {
-#if not defined(PTHREADS)
-  Tau_create_top_level_timer_if_necessary();
-#endif
 
   //init context event.
   Tau_get_context_userevent((void **)&MemoryCopyEventHtoD, "Bytes copied from Host to Device");

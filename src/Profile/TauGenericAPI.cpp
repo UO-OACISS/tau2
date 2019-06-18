@@ -60,12 +60,28 @@ extern "C" void perftool_exit(void) {
     Tau_exit("stub exiting");
 }
 
-extern "C" void perftool_start(const char * name) { 
+extern "C" void perftool_timer_start(const char * name) {
     Tau_pure_start(name);
 }
 
-extern "C" void perftool_stop(const char * name) {
+extern "C" void perftool_timer_stop(const char * name) {
     Tau_pure_stop(name);
+}
+
+extern "C" void perftool_static_phase_start(const char * name) {
+    Tau_static_phase_start(name);
+}
+
+extern "C" void perftool_static_phase_stop(const char * name) {
+    Tau_static_phase_stop(name);
+}
+
+extern "C" void perftool_dynamic_phase_start(const char * name, int index) {
+    Tau_dynamic_start(name, index);
+}
+
+extern "C" void perftool_dynamic_phase_stop(const char * name, int index) {
+    Tau_dynamic_stop(name, index);
 }
 
 extern "C" void perftool_sample_counter(const char * name, double value) {
