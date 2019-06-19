@@ -1963,12 +1963,18 @@ int Tau_sampling_finalize(int tid)
 extern "C" void Tau_sampling_defer_init(void) {
     TauInternalFunctionGuard protects_this_function;
     const int tid = RtsLayer::localThreadId();
+#ifdef SIGEV_THREAD_ID
 #ifndef TAU_ANDROID
 #ifndef TAU_FUJITSU
     const pid_t pid = syscall(__NR_gettid);
 #endif /* TAU_FUJITSU */
 #else
     const pid_t pid = JNIThreadLayer::GetThreadSid();
+#endif
+#else
+    fprintf(stderr, "TAU: WARNING: Thread %d was started before MPI_Init, but this system "
+            "doesn't support timer_create. Thread %d will not be sampled!\n", tid, tid);
+    return;
 #endif
     const DeferredInit d = DeferredInit(tid, pid);
 
