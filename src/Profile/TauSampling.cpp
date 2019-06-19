@@ -1966,7 +1966,11 @@ extern "C" void Tau_sampling_defer_init(void) {
 #ifdef SIGEV_THREAD_ID
 #ifndef TAU_ANDROID
 #ifndef TAU_FUJITSU
+#ifdef SYS_gettid  
+    const pid_t pid = syscall(SYS_gettid);
+#elif defined(__NR_gettid)
     const pid_t pid = syscall(__NR_gettid);
+#endif
 #endif /* TAU_FUJITSU */
 #else
     const pid_t pid = JNIThreadLayer::GetThreadSid();
