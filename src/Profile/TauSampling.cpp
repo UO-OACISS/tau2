@@ -1978,6 +1978,7 @@ extern "C" void Tau_sampling_defer_init(void) {
 #else
     fprintf(stderr, "TAU: WARNING: Thread %d was started before MPI_Init, but this system "
             "doesn't support timer_create. Thread %d will not be sampled!\n", tid, tid);
+    const pid_t pid = 0;
     return;
 #endif
     const DeferredInit d = DeferredInit(tid, pid);
