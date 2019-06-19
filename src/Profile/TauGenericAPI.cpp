@@ -60,6 +60,10 @@ extern "C" void perftool_exit(void) {
     Tau_exit("stub exiting");
 }
 
+extern "C" void perftool_dump_data(void) {
+    Tau_dump();
+}
+
 extern "C" void perftool_timer_start(const char * name) {
     Tau_pure_start(name);
 }
