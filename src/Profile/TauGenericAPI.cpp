@@ -99,6 +99,17 @@ void perftool_exit(void) {
 }
 
 void perftool_dump_data(void) {
+    const char **counterNames;
+    int numCounters;
+    TauMetrics_getCounterList(&counterNames, &numCounters);
+
+    TauTrackMemoryFootPrintHere();
+    TauTrackMemoryHere();
+    //TauTrackMemoryHeadroomHere();
+    if (numCounters == 1) {
+        TauTrackPowerHere();
+    }
+    TauTrackLoadHere();
     Tau_dump();
 }
 
