@@ -79,6 +79,7 @@ usage()
 if [ $python_wrapper = "true" ] ; then
   echo "        -tau-python-args=<\"arguments\"> Arguments to the python interpreter"
   echo "        -tau-python-interpreter=<\"python\"> name of python interpreter (e.g, python, python3.6)"
+  echo "        -adios2      Write output to ADIOS2 archive"
 fi
   echo ""
   echo "Notes:"
@@ -317,6 +318,7 @@ ptts_num=""
 py_interp_args=""
 ptts_sample_flags="${TAU_TS_SAMPLE_FLAGS:-}" # Set these from environment vars if they exist, don't complain even
 ptts_report_flags="${TAU_TS_REPORT_FLAGS:-}" # if set -o nounset
+adios2=false
 
 # This saves the args to tau_exec so they can be reused later.
 # This is used for MPI_Comm_spawn support, in which TAU spawns the child
@@ -384,6 +386,10 @@ for arg in "$@" ; do
       -ompt)
         track_ompt=true
         save_arg $arg
+        shift
+        ;;
+      -adios2)
+        adios2=true
         shift
         ;;
       -power)
@@ -718,6 +724,11 @@ if [ $apple = 1 ]; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 else
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
+fi
+
+if [ $adios2 = "true" ]; then
+    export TAU_PLUGINS=libTAU-adios2-plugin.so
+    export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
 fi
 
 export KOKKOS_PROFILE_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX

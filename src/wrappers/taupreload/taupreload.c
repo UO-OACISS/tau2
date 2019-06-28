@@ -16,6 +16,6 @@ void taupreload_init() {
 }
 
 void taupreload_fini() {
-  Tau_destructor_trigger();
   Tau_profile_exit_all_threads();
+  Tau_destructor_trigger();
 }
