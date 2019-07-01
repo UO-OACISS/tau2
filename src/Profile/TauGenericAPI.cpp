@@ -99,6 +99,7 @@ void perftool_exit(void) {
 }
 
 void perftool_dump_data(void) {
+#if 0
     const char **counterNames;
     int numCounters;
     TauMetrics_getCounterList(&counterNames, &numCounters);
@@ -110,6 +111,7 @@ void perftool_dump_data(void) {
         TauTrackPowerHere();
     }
     TauTrackLoadHere();
+#endif
     Tau_dump();
 }
 
@@ -169,10 +171,10 @@ void perftool_get_timer_data(perftool_timer_data_t *timer_data)
     timer_data->metric_names[0] = strdup("Calls");
     for (int m = 0; m < numCounters; m++) {
         std::stringstream ss;
-        ss << "Inclusive " << counterNames[m];
+        ss << "Inclusive_" << counterNames[m];
         timer_data->metric_names[(m*2)+1] = strdup(ss.str().c_str());
         std::stringstream ss2;
-        ss2 << "Exclusive " << counterNames[m];
+        ss2 << "Exclusive_" << counterNames[m];
         timer_data->metric_names[(m*2)+2] = strdup(ss2.str().c_str());
     }
 
@@ -316,17 +318,18 @@ void perftool_get_metadata(perftool_metadata_t *metadata)
             std::stringstream ss;
             ss << "Thread " << tid << ":" << it->first.name;
             metadata->names[v_index] = strdup(ss.str().c_str());
+            std::stringstream ss2;
             switch(it->second->type) {
                 case TAU_METADATA_TYPE_STRING:
                     metadata->values[v_index] = strdup(it->second->data.cval);
                     break;
                 case TAU_METADATA_TYPE_INTEGER:
-                    metadata->values[v_index] = 
-                        strdup(std::to_string(it->second->data.ival).c_str());
+                    ss2 << it->second->data.ival;
+                    metadata->values[v_index] = strdup(ss2.str().c_str());
                     break;
                 case TAU_METADATA_TYPE_DOUBLE:
-                    metadata->values[v_index] = 
-                        strdup(std::to_string(it->second->data.dval).c_str());
+                    ss2 << it->second->data.dval;
+                    metadata->values[v_index] = strdup(ss2.str().c_str());
                     break;
                 case TAU_METADATA_TYPE_TRUE:
                     metadata->values[v_index] = strdup("true");
