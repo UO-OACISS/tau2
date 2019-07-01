@@ -99,6 +99,7 @@ void perftool_exit(void) {
 }
 
 void perftool_dump_data(void) {
+#if 0
     const char **counterNames;
     int numCounters;
     TauMetrics_getCounterList(&counterNames, &numCounters);
@@ -110,6 +111,7 @@ void perftool_dump_data(void) {
         TauTrackPowerHere();
     }
     TauTrackLoadHere();
+#endif
     Tau_dump();
 }
 
@@ -169,10 +171,10 @@ void perftool_get_timer_data(perftool_timer_data_t *timer_data)
     timer_data->metric_names[0] = strdup("Calls");
     for (int m = 0; m < numCounters; m++) {
         std::stringstream ss;
-        ss << "Inclusive " << counterNames[m];
+        ss << "Inclusive_" << counterNames[m];
         timer_data->metric_names[(m*2)+1] = strdup(ss.str().c_str());
         std::stringstream ss2;
-        ss2 << "Exclusive " << counterNames[m];
+        ss2 << "Exclusive_" << counterNames[m];
         timer_data->metric_names[(m*2)+2] = strdup(ss2.str().c_str());
     }
 
@@ -200,24 +202,24 @@ void perftool_get_timer_data(perftool_timer_data_t *timer_data)
 
     void perftool_free_timer_data(perftool_timer_data_t *timer_data)
     {
-        if (timer_data == nullptr)
+        if (timer_data == NULL)
         {
             return;
         }
-        if (timer_data->timer_names != nullptr)
+        if (timer_data->timer_names != NULL)
         {
             free(timer_data->timer_names);
-            timer_data->timer_names = nullptr;
+            timer_data->timer_names = NULL;
         }
-        if (timer_data->metric_names != nullptr)
+        if (timer_data->metric_names != NULL)
         {
             free(timer_data->metric_names);
-            timer_data->metric_names = nullptr;
+            timer_data->metric_names = NULL;
         }
-        if (timer_data->values != nullptr)
+        if (timer_data->values != NULL)
         {
             free(timer_data->values);
-            timer_data->values = nullptr;
+            timer_data->values = NULL;
         }
     }
 
@@ -263,39 +265,39 @@ void perftool_get_counter_data(perftool_counter_data_t *counter_data)
 
     void perftool_free_counter_data(perftool_counter_data_t *counter_data)
     {
-        if (counter_data == nullptr)
+        if (counter_data == NULL)
         {
             return;
         }
-        if (counter_data->counter_names != nullptr)
+        if (counter_data->counter_names != NULL)
         {
             free(counter_data->counter_names);
-            counter_data->counter_names = nullptr;
+            counter_data->counter_names = NULL;
         }
-        if (counter_data->num_samples != nullptr)
+        if (counter_data->num_samples != NULL)
         {
             free(counter_data->num_samples);
-            counter_data->num_samples = nullptr;
+            counter_data->num_samples = NULL;
         }
-        if (counter_data->value_total != nullptr)
+        if (counter_data->value_total != NULL)
         {
             free(counter_data->value_total);
-            counter_data->value_total = nullptr;
+            counter_data->value_total = NULL;
         }
-        if (counter_data->value_min != nullptr)
+        if (counter_data->value_min != NULL)
         {
             free(counter_data->value_min);
-            counter_data->value_min = nullptr;
+            counter_data->value_min = NULL;
         }
-        if (counter_data->value_max != nullptr)
+        if (counter_data->value_max != NULL)
         {
             free(counter_data->value_max);
-            counter_data->value_max = nullptr;
+            counter_data->value_max = NULL;
         }
-        if (counter_data->value_sumsqr != nullptr)
+        if (counter_data->value_sumsqr != NULL)
         {
             free(counter_data->value_sumsqr);
-            counter_data->value_sumsqr = nullptr;
+            counter_data->value_sumsqr = NULL;
         }
     }
 
@@ -316,17 +318,18 @@ void perftool_get_metadata(perftool_metadata_t *metadata)
             std::stringstream ss;
             ss << "Thread " << tid << ":" << it->first.name;
             metadata->names[v_index] = strdup(ss.str().c_str());
+            std::stringstream ss2;
             switch(it->second->type) {
                 case TAU_METADATA_TYPE_STRING:
                     metadata->values[v_index] = strdup(it->second->data.cval);
                     break;
                 case TAU_METADATA_TYPE_INTEGER:
-                    metadata->values[v_index] = 
-                        strdup(std::to_string(it->second->data.ival).c_str());
+                    ss2 << it->second->data.ival;
+                    metadata->values[v_index] = strdup(ss2.str().c_str());
                     break;
                 case TAU_METADATA_TYPE_DOUBLE:
-                    metadata->values[v_index] = 
-                        strdup(std::to_string(it->second->data.dval).c_str());
+                    ss2 << it->second->data.dval;
+                    metadata->values[v_index] = strdup(ss2.str().c_str());
                     break;
                 case TAU_METADATA_TYPE_TRUE:
                     metadata->values[v_index] = strdup("true");
@@ -348,19 +351,19 @@ void perftool_get_metadata(perftool_metadata_t *metadata)
 
     void perftool_free_metadata(perftool_metadata_t *metadata)
     {
-        if (metadata == nullptr)
+        if (metadata == NULL)
         {
             return;
         }
-        if (metadata->names != nullptr)
+        if (metadata->names != NULL)
         {
             free(metadata->names);
-            metadata->names = nullptr;
+            metadata->names = NULL;
         }
-        if (metadata->values != nullptr)
+        if (metadata->values != NULL)
         {
             free(metadata->values);
-            metadata->values = nullptr;
+            metadata->values = NULL;
         }
     }
 
