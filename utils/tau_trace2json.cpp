@@ -467,7 +467,7 @@ int main(int argc, char **argv)
   /* main program: Usage app <trc> <edf> [-nostate] [-nomessage] */
   if (argc < 3)
   {
-    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome] [-o filename.json] [-print]\n",
+    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome] [-ignoreatomic] [-o filename.json] [-print]\n",
 		    argv[0]);
     return 1;
   }
