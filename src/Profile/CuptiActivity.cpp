@@ -51,6 +51,7 @@ FILE *fp_func[TAU_MAX_THREADS];
 FILE *cubin;
 static int device_count_total = 0;
 static double recentTimestamp = 0;
+static int disable_callbacks = 0;
 
 static uint32_t buffers_queued = 0;
 
@@ -435,10 +436,25 @@ void Tau_cupti_onunload() {
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
 #ifdef TAU_DEBUG_CUPTI
-	printf("in Tau_cupti_callback_dispatch\n");
+    {
+        const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
+	    fprintf(stderr, "in Tau_cupti_callback_dispatch: %s\n", cbInfo->functionName);
+    }
 #endif
-	if (!device_count_total)
+    // The get_device_count function causes a CUDA driver call.
+    // If we're recieving callbacks for driver events, we have to not
+    // process that call or we'll end up recursively callling get_device_count
+    // forever (or until we run out of stack).
+    if(disable_callbacks) {
+        return;
+    }
+	if (!device_count_total) {
+      RtsLayer::LockDB();
+      disable_callbacks = 1;
 	  device_count_total = get_device_count();
+      disable_callbacks = 0;
+      RtsLayer::UnLockDB();
+    }
 #if defined(PTHREADS)
 	if (!TauEnv_get_tauCuptiAvail()) {
 	  unsigned int cur_tid = pthread_self(); // needed for IBM P8
