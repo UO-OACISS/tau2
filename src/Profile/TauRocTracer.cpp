@@ -26,12 +26,12 @@
 #include <roctracer.h>
 #include <stdlib.h>
 
-#ifdef TAU_ROCTRACER_HIP
+#ifdef TAU_ENABLE_ROCTRACER_HSA
 #include <roctracer_hsa.h>
 #include <roctracer_hip.h>
 #include <roctracer_hcc.h>
 #include <ext/hsa_rt_utils.hpp>
-#endif /* TAU_ROCTRACER_HIP */
+#endif /* TAU_ENABLE_ROCTRACER_HSA */
 
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
@@ -319,6 +319,30 @@ extern "C" PUBLIC_API void OnLoadTool() {
   TAU_VERBOSE("Inside OnLoadTool\n");
 }
 
+
+#ifdef TAU_ENABLE_ROCTRACER_HSA
+extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, uint64_t failed_tool_count, const char* const* failed_tool_names) {
+  TAU_VERBOSE("Inside OnLoad!\n");
+  timer = new hsa_rt_utils::Timer(table->core_->hsa_system_get_info_fn);
+
+  // API trace vector
+  std::vector<std::string> hsa_api_vec;
+
+  // initialize HSA tracing
+  roctracer_set_properties(ACTIVITY_DOMAIN_HSA_API, (void*)table);
+  roctracer::hsa_ops_properties_t ops_properties{
+    reinterpret_cast<activity_async_callback_t>(hsa_activity_callback),
+    NULL};
+  roctracer_set_properties(ACTIVITY_DOMAIN_HSA_OPS, &ops_properties);
+  TAU_VERBOSE("TAU: HSA TRACING ENABLED\n");
+
+
+}
+
+extern "C" PUBLIC_API void OnUnload() {
+  TAU_VERBOSE("Inside OnUnload\n");
+}
+#endif /* TAU_ENABLE_ROCTRACER_HSA */
 
 
 
