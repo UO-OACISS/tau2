@@ -24,6 +24,14 @@
 #include <Profile/TauRocm.h>
 #include <hip/hip_runtime.h>
 #include <roctracer.h>
+#include <stdlib.h>
+
+#ifdef TAU_ROCTRACER_HIP
+#include <roctracer_hsa.h>
+#include <roctracer_hip.h>
+#include <roctracer_hcc.h>
+#include <ext/hsa_rt_utils.hpp>
+#endif /* TAU_ROCTRACER_HIP */
 
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
@@ -162,7 +170,7 @@ void Tau_roctracer_hip_event(const roctracer_record_t *record, int task_id) {
   TAU_STOP_TASK(name, task_id);
   TAU_VERBOSE("Stopped event %s on task %d timestamp = %lu \n", name, task_id, record->end_ns);
   if (dealloc_name) {
-    delete(name);
+    free((void*)name);
   }
   Tau_set_last_timestamp_ns(record->end_ns);
 }
