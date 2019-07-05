@@ -346,9 +346,15 @@ void Tau_roctracer_hsa_api_callback(
 
   if (data->phase == ACTIVITY_API_PHASE_ENTER) {
     hsa_begin_timestamp = timer->timestamp_fn_ns();
+   // Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(hsa_begin_timestamp)/1e3)); // convert to microseconds
+    //TAU_START_TASK("HSA_activity", task_id);
+    printf("STARTING HSA activity\n");
   } else {
     const timestamp_t end_timestamp = (cid == HSA_API_ID_hsa_shut_down) ? hsa_begin_timestamp : timer->timestamp_fn_ns();
-    std::ostringstream os;
+    //std::ostringstream os;
+    //Tau_metric_set_synchronized_gpu_timestamp(task_id, ((double)(end_timestamp)/1e3)); // convert to microseconds
+    //TAU_STOP_TASK("HSA_activity", task_id);
+    printf("STOPPING HSA activity\n");
     //os << hsa_begin_timestamp << ":" << end_timestamp << " " << Tau_getTid() << ":" << GetTid() << " " << hsa_api_data_pair_t(cid, *data);
     //fprintf(hsa_api_file_handle, "%s\n", os.str().c_str());
   }
@@ -356,6 +362,7 @@ void Tau_roctracer_hsa_api_callback(
 
 
 extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, uint64_t failed_tool_count, const char* const* failed_tool_names) {
+  printf("Inside OnLoad!\n");
   TAU_VERBOSE("Inside OnLoad!\n");
   timer = new hsa_rt_utils::Timer(table->core_->hsa_system_get_info_fn);
 
@@ -386,6 +393,7 @@ extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, 
 }
 
 extern "C" PUBLIC_API void OnUnload() {
+  printf("Inside OnUnload\n");
   TAU_VERBOSE("Inside OnUnload\n");
 }
 #endif /* TAU_ENABLE_ROCTRACER_HSA */
