@@ -495,6 +495,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 
         RtsLayer::LockDB();
         ContextEventMap::const_iterator it = contextMap.find(comparison);
+#ifdef TAU_GPU
 	bool cuda_ctx_seen = true;
 	if (it != contextMap.end()) {
 	  FunctionInfo* fi;
@@ -514,6 +515,9 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
 	  }
 	}
         if (it == contextMap.end() || !cuda_ctx_seen) {
+#else
+        if (it == contextMap.end()) {
+#endif
           //printf("****  NEW  **** \n"); fflush(stdout);
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
