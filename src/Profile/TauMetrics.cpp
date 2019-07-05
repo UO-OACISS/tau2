@@ -95,7 +95,7 @@ static bool functionsInitialized(false);
 #define TAU_MAX_METRICS 25
 #endif
 /* Global Variable holding the number of counters */
-int Tau_Global_numCounters = -1;
+int Tau_Global_numCounters = 1;
 
 static TauUserEvent **traceCounterEvents;
 
