@@ -378,8 +378,6 @@ void Tau_roctracer_hsa_api_callback(
 
 
 extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, uint64_t failed_tool_count, const char* const* failed_tool_names) {
-  printf("Inside OnLoad!\n");
-  TAU_VERBOSE("Inside OnLoad!\n");
   timer = new hsa_rt_utils::Timer(table->core_->hsa_system_get_info_fn);
 
   // API trace vector
