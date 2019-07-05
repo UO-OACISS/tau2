@@ -2633,7 +2633,7 @@ for arg in "$@"; do
               if [ -r $tryroctracerlib/libroctracer64.so ]; then
                 fixmakeargs="$fixmakeargs roctracerlibdir=$tryroctracerlib"
               else
-                tryroctracerlib=$roctracerdir/lib
+                tryroctracerlib=$roctracerdir/build
                 if [ -r $tryroctracerlib/libroctracer64.so ]; then
                   fixmakeargs="$fixmakeargs roctracerlibdir=$tryroctracerlib"
                 fi
