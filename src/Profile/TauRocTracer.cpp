@@ -321,6 +321,40 @@ extern "C" PUBLIC_API void OnLoadTool() {
 
 
 #ifdef TAU_ENABLE_ROCTRACER_HSA
+void Tau_roctracer_hsa_activity_callback(
+  uint32_t op,
+  activity_record_t* record,
+  void* arg)
+{
+  TAU_VERBOSE("%lu:%lu async-copy%lu\n", record->begin_ns, record->end_ns, record->correlation_id);
+}
+
+typedef hsa_rt_utils::Timer::timestamp_t timestamp_t;
+hsa_rt_utils::Timer* timer = NULL;
+thread_local timestamp_t hsa_begin_timestamp = 0;
+thread_local timestamp_t hip_begin_timestamp = 0;
+
+// HSA API callback function
+void Tau_roctracer_hsa_api_callback(
+    uint32_t domain,
+    uint32_t cid,
+    const void* callback_data,
+    void* arg)
+{
+  (void)arg;
+  const hsa_api_data_t* data = reinterpret_cast<const hsa_api_data_t*>(callback_data);
+
+  if (data->phase == ACTIVITY_API_PHASE_ENTER) {
+    hsa_begin_timestamp = timer->timestamp_fn_ns();
+  } else {
+    const timestamp_t end_timestamp = (cid == HSA_API_ID_hsa_shut_down) ? hsa_begin_timestamp : timer->timestamp_fn_ns();
+    std::ostringstream os;
+    //os << hsa_begin_timestamp << ":" << end_timestamp << " " << Tau_getTid() << ":" << GetTid() << " " << hsa_api_data_pair_t(cid, *data);
+    //fprintf(hsa_api_file_handle, "%s\n", os.str().c_str());
+  }
+}
+
+
 extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, uint64_t failed_tool_count, const char* const* failed_tool_names) {
   TAU_VERBOSE("Inside OnLoad!\n");
   timer = new hsa_rt_utils::Timer(table->core_->hsa_system_get_info_fn);
@@ -331,12 +365,24 @@ extern "C" PUBLIC_API bool OnLoad(HsaApiTable* table, uint64_t runtime_version, 
   // initialize HSA tracing
   roctracer_set_properties(ACTIVITY_DOMAIN_HSA_API, (void*)table);
   roctracer::hsa_ops_properties_t ops_properties{
-    reinterpret_cast<activity_async_callback_t>(hsa_activity_callback),
+    reinterpret_cast<activity_async_callback_t>(Tau_roctracer_hsa_activity_callback),
     NULL};
   roctracer_set_properties(ACTIVITY_DOMAIN_HSA_OPS, &ops_properties);
   TAU_VERBOSE("TAU: HSA TRACING ENABLED\n");
 
-
+  if (hsa_api_vec.size() != 0) {
+    for (unsigned i = 0; i < hsa_api_vec.size(); ++i) {
+      uint32_t cid = HSA_API_ID_NUMBER;
+      const char* api = hsa_api_vec[i].c_str();
+      ROCTRACER_CALL(roctracer_op_code(ACTIVITY_DOMAIN_HSA_API, api, &cid));
+      ROCTRACER_CALL(roctracer_enable_op_callback(ACTIVITY_DOMAIN_HSA_API, cid, Tau_roctracer_hsa_api_callback, NULL));
+      printf(" %s", api);
+    }
+  } else {
+    ROCTRACER_CALL(roctracer_enable_domain_callback(ACTIVITY_DOMAIN_HSA_API, Tau_roctracer_hsa_api_callback, NULL));
+  }
+  ROCTRACER_CALL(roctracer_enable_domain_activity(ACTIVITY_DOMAIN_HSA_OPS));
+  return true;
 }
 
 extern "C" PUBLIC_API void OnUnload() {
