@@ -826,6 +826,10 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 		if (TauCompensateInitialized()) {
 			TauMetrics_init();
 		}
+		// we need to give some value to the tracer or it will take 0
+		// as the default value which will mess up traces. This is 
+		// seen in roctracer (AMD). 
+                metric_read_gettimeofday(tid, 0, &values[0]);
 	}
 }
 
