@@ -95,7 +95,7 @@ static bool functionsInitialized(false);
 #define TAU_MAX_METRICS 25
 #endif
 /* Global Variable holding the number of counters */
-int Tau_Global_numCounters = 1;
+int Tau_Global_numCounters = -1;
 
 static TauUserEvent **traceCounterEvents;
 
@@ -809,6 +809,9 @@ int TauMetrics_getEventIndex(int eventid) {
  ********************************************************************/
 extern "C" bool TauCompensateInitialized(void);
 void TauMetrics_getMetrics(int tid, double values[], int reversed) {
+        if (!functionsInitialized) {
+	       TauMetrics_init();
+        }
 	if (functionsInitialized) {
 	    if (reversed) {
             for (int i=nfunctions-1; i >= 0; --i) {
@@ -823,6 +826,7 @@ void TauMetrics_getMetrics(int tid, double values[], int reversed) {
 		// *CWL* - Safe only if Compensation is safely initialized. Otherwise
 		//         we would be in the middle of re-entrant behavior and
 		//         would be re-initializing metrics each time.
+		fprintf(stderr,"TAU: ERROR: TauMetrics not initialized!\n");
 		if (TauCompensateInitialized()) {
 			TauMetrics_init();
 		}
