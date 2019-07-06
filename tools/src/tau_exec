@@ -726,9 +726,6 @@ else
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX:$LD_PRELOAD
 fi
 
-# AMD ROCTRACER HSA library is set here. This only applies to AMD ROCm.
-TAU_HSA_TOOLS_LIB="$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX"
-
 if [ $adios2 = "true" ]; then
     export TAU_PLUGINS=libTAU-adios2-plugin.so
     export TAU_PLUGINS_PATH=$BASEDIR/lib/$theBinding
@@ -741,6 +738,7 @@ isTBB=`echo $theBinding | grep tbb`
 if [ ! "x$isTBB" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
+
 
 isPthread=`echo $theBinding | grep pthread`
 if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
@@ -869,8 +867,13 @@ if [ $track_openacc = "true" ] ; then
   export ACC_PROFLIB=$BASEDIR/lib/$theBinding/libTAU.so
 fi
 if [ $track_rocm = "true" ] ; then
-  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU.so
-  export HSA_TOOLS_LIB=librocprofiler64.so.1
+  export ROCP_TOOL_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+  export TAU_HSA_TOOLS_LIB=librocprofiler64.so.1
+fi
+
+isRoctracer=`echo $theBinding | grep roctracer`
+if [ ! "x$isRoctracer" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX ]; then
+  export TAU_HSA_TOOLS_LIB=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 fi
 
 if [ $track_armci = "true" ] ; then
