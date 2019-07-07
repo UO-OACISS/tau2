@@ -21,7 +21,7 @@ int provided = MPI_THREAD_SINGLE;
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
 
-#ifdef PTHREADS
+#ifdef PTHREADS_DISABLED
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
@@ -31,7 +31,7 @@ static pthread_barrier_t barrier;
 #ifndef PTHREAD_MUTEX_ERRORCHECK
 #define PTHREAD_MUTEX_ERRORCHECK 0
 #endif
-#endif /* PTHREADS */
+#endif /* PTHREADS_DISABLED */
 
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 256
@@ -138,12 +138,12 @@ void * threaded_func(void *data)
     int * maxi = (int *)(data);
   int i;
   for (i = 0 ; i < *maxi ; i++) {
-#ifdef PTHREADS
+#ifdef PTHREADS_DISABLED
     int s = pthread_barrier_wait(&barrier);
 #endif
     do_work();
   }
-#ifdef PTHREADS
+#ifdef PTHREADS_DISABLED
   pthread_exit(NULL);
 #endif
   return NULL;
@@ -152,7 +152,7 @@ void * threaded_func(void *data)
 int main (int argc, char *argv[]) 
 {
   int rc = MPI_SUCCESS;
-#if defined(PTHREADS)
+#if defined(PTHREADS_DISABLED)
   rc = MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
   printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
 #elif defined(TAU_OPENMP)
@@ -220,7 +220,7 @@ int main (int argc, char *argv[])
     MPI_Comm_create(MPI_COMM_WORLD, even_group, &new_comm);
     MPI_Comm_create(MPI_COMM_WORLD, odd_group, &new_comm);
 
-#ifdef PTHREADS
+#ifdef PTHREADS_DISABLED
   int ret;
   pthread_attr_t  attr;
   //pthread_t       tid1, tid2, tid3;
@@ -232,18 +232,18 @@ int main (int argc, char *argv[])
   if (pthread_mutex_init(&mutexsum, &Attr)) {
    printf("Error while using pthread_mutex_init\n");
   }
-#endif /* PTHREADS */
+#endif /* PTHREADS_DISABLED */
 
   int maxi = 200;
 
-#ifdef PTHREADS
+#ifdef PTHREADS_DISABLED
   for (i = 0 ; i < nthreads ; i++) {
     if (ret = pthread_create(&(tid[i]), NULL, threaded_func, &maxi) ) {
       printf("Error: pthread_create (1) fails ret = %d\n", ret);
       exit(1);
     }   
   }   
-#endif /* PTHREADS */
+#endif /* PTHREADS_DISABLED */
 
   char * periodic_str = getenv("TAU_SOS_PERIODIC");
   int do_dump = 1;
@@ -259,7 +259,9 @@ int main (int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     if (rank == 0) { printf("Iteration %d of %d working...", i, maxi); fflush(stdout); }
     TAU_CONTEXT_EVENT(event, i);
+#ifdef PTHREADS_DISABLED 
     int s = pthread_barrier_wait(&barrier);
+#endif
     do_work();
     if (do_dump) {
         if (rank == 0) { printf("Iteration %d of %d Sending data over SOS....", i, maxi); fflush(stdout); }
@@ -283,7 +285,7 @@ int main (int argc, char *argv[])
     }
 
 
-#ifdef PTHREADS 
+#ifdef PTHREADS_DISABLED 
   for (i = 0 ; i < nthreads ; i++) {
     if (ret = pthread_join(tid[i], NULL) )
     {
@@ -292,7 +294,7 @@ int main (int argc, char *argv[])
     }   
   }   
   pthread_mutex_destroy(&mutexsum);
-#endif /* PTHREADS */
+#endif /* PTHREADS_DISABLED */
 
   MPI_Finalize();
   printf ("Done.\n");

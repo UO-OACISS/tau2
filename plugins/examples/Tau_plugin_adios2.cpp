@@ -530,6 +530,24 @@ int Tau_plugin_adios2_pre_end_of_execution(Tau_plugin_event_pre_end_of_execution
  * read */
 int Tau_plugin_adios2_post_init(Tau_plugin_event_post_init_data_t* data) {
     if (!enabled) return 0;
+    Tau_plugin_adios2_init_adios();
+    Tau_plugin_adios2_open_file();
+
+    /* spawn the thread if doing periodic */
+    if (thePluginOptions().env_periodic) {
+        _threaded = true;
+        init_lock(&_my_mutex);
+        TAU_VERBOSE("Spawning thread for ADIOS2.\n");
+        int ret = pthread_create(&worker_thread, NULL, &Tau_ADIOS2_thread_function, NULL);
+        if (ret != 0) {
+            errno = ret;
+            perror("Error: pthread_create (1) fails\n");
+            exit(1);
+        }
+    } else {
+        _threaded = false;
+    }
+
     return 0;
 }
 
@@ -574,24 +592,6 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv) {
     /* Register the callback object */
     TAU_UTIL_PLUGIN_REGISTER_CALLBACKS(cb);
     enabled = true;
-    Tau_plugin_adios2_init_adios();
-    Tau_plugin_adios2_open_file();
-
-    /* spawn the thread if doing periodic */
-    if (thePluginOptions().env_periodic) {
-        _threaded = true;
-        init_lock(&_my_mutex);
-        TAU_VERBOSE("Spawning thread for ADIOS2.\n");
-        int ret = pthread_create(&worker_thread, NULL, &Tau_ADIOS2_thread_function, NULL);
-        if (ret != 0) {
-            errno = ret;
-            perror("Error: pthread_create (1) fails\n");
-            exit(1);
-        }
-    } else {
-        _threaded = false;
-    }
-
     return 0;
 }
 

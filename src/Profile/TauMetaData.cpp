@@ -942,11 +942,15 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   }
 
 // can't do full delete, because the aggregation does not do deep copies. :(
+/* Don't delete the repo now! If Tau_dump() is called before exit, this will
+ * erase all the metadata. */
+#if 0
   if (tid == 0) {
     localRepo->emptyRepo();
   } else {
   	delete localRepo;
   }
+#endif 
 
 #ifndef TAU_SCOREP
   Tau_util_output (out, "</metadata>%s", endl);

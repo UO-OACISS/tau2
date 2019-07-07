@@ -237,7 +237,7 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
   dprintf("DefUserEvent event id %d user event name %s, monotonically increasing = %d\n", userEventToken,
 		  userEventName, monotonicallyIncreasing);
 
-			printf("Orig name: %s, escaped name: %s\n",userEventName,escapedName);
+			//printf("Orig name: %s, escaped name: %s\n",userEventName,escapedName);
 
   my_user_event *ue = new my_user_event(userEventToken, escape_json(userEventName).c_str(), monotonicallyIncreasing);
   my_user_event_set[userEventToken] = ue;
@@ -297,7 +297,7 @@ int SendMessage( void *userData, double time,
 		  messageSize, messageTag);
 			if(chromeFormat){
 				json_event_out << "{ ";
-				json_event_out << "\"name\": \"Send\", ";
+				json_event_out << "\"name\": \"MPI\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
 			  json_event_out << "\"ts\": \"" << time << "\", ";
 			  json_event_out << "\"pid\": \"" << sourceNodeToken << "\", ";
@@ -340,7 +340,7 @@ int RecvMessage( void *userData, double time,
 		  messageSize, messageTag);
 			if(chromeFormat){
 				json_event_out << "{ ";
-				json_event_out << "\"name\": \"Recv\", ";
+				json_event_out << "\"name\": \"MPI\", ";
 			  json_event_out << "\"cat\": \"Message\", ";
 			  json_event_out << "\"ts\": \"" << time << "\", ";
 			  json_event_out << "\"pid\": \"" << destinationNodeToken << "\", ";
@@ -467,7 +467,7 @@ int main(int argc, char **argv)
   /* main program: Usage app <trc> <edf> [-nostate] [-nomessage] */
   if (argc < 3)
   {
-    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome] [-o filename.json] [-print]\n",
+    printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage] [-v] [-nojson] [-chrome] [-ignoreatomic] [-o filename.json] [-print]\n",
 		    argv[0]);
     return 1;
   }

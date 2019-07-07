@@ -918,6 +918,9 @@ extern "C" void Tau_stop_all_timers(int tid)
 
 inline void Tau_profile_exit_threads(int begin_index)
 {
+  if(!TheSafeToDumpData()) {
+    return;
+  }
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
   // Stop the collector API. The main thread may exit with running
@@ -2976,6 +2979,7 @@ void Tau_destructor_trigger() {
 //#ifndef JAVA
   Tau_stop_top_level_timer_if_necessary();
   Tau_global_setLightsOut();
+  TheSafeToDumpData() = 0;
 //#endif
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
