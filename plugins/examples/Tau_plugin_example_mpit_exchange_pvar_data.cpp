@@ -20,7 +20,6 @@
 
 #ifdef TAU_MPI
 #include <mpi.h>
-#endif
 
 int Tau_plugin_event_end_of_execution(Tau_plugin_event_end_of_execution_data_t *data) {
 
@@ -64,3 +63,4 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   return 0;
 }
 
+#endif

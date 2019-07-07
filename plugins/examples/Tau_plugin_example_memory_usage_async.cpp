@@ -26,7 +26,6 @@
 
 #ifdef TAU_MPI
 #include <mpi.h>
-#endif
 
 #include <list>
 #include <vector>
@@ -134,3 +133,4 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   return 0;
 }
 
+#endif

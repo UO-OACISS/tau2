@@ -22,7 +22,6 @@
 
 #ifdef TAU_MPI
   #include <mpi.h>
-#endif
 
 pthread_t worker_thread;
 pthread_mutex_t _my_mutex; // for initialization, termination
@@ -182,3 +181,4 @@ extern "C" int Tau_plugin_init_func(int argc, char **argv, int id) {
   return 0;
 }
 
+#endif
