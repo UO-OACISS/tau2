@@ -1141,8 +1141,6 @@ extern "C" void Tau_disable_plugin_for_specific_event(int ev, const char *name, 
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].erase(id);
-  if(plugins_for_named_specific_event[key].empty())
-    plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
   RtsLayer::UnLockDB();
 
 }
@@ -1154,7 +1152,6 @@ extern "C" void Tau_disable_all_plugins_for_specific_event(int ev, const char *n
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].clear();
-  plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
   RtsLayer::UnLockDB();
 }
 
@@ -1187,8 +1184,6 @@ extern "C" void Tau_disable_plugin_for_trigger_event(int ev, size_t hash, unsign
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].erase(id);
-  if(plugins_for_named_specific_event[key].empty())
-    plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
   RtsLayer::UnLockDB();
 
 }
@@ -1199,7 +1194,6 @@ extern "C" void Tau_disable_all_plugins_for_trigger_event(int ev, size_t hash)
   PluginKey key(ev, hash);
   RtsLayer::LockDB();
   plugins_for_named_specific_event[key].clear();
-  //plugins_for_named_specific_event[key].insert(10000); //Arbitrarily large number
   RtsLayer::UnLockDB();
 }
 
