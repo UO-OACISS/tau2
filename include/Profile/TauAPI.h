@@ -377,14 +377,20 @@
 
 #endif /* TAU_FAPI */
 
+///NPD
 #define TAU_ENABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_enable_plugin_for_specific_event
 #define TAU_DISABLE_PLUGIN_FOR_SPECIFIC_EVENT Tau_disable_plugin_for_specific_event
 #define TAU_ENABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_enable_all_plugins_for_specific_event
 #define TAU_DISABLE_ALL_PLUGINS_FOR_SPECIFIC_EVENT Tau_disable_all_plugins_for_specific_event
+#define TAU_ENABLE_PLUGIN_FOR_TRIGGER_EVENT Tau_enable_plugin_for_trigger_event
+#define TAU_DISABLE_PLUGIN_FOR_TRIGGER_EVENT Tau_disable_plugin_for_trigger_event
+#define TAU_ENABLE_ALL_PLUGINS_FOR_TRIGGER_EVENT Tau_enable_all_plugins_for_trigger_event
+#define TAU_DISABLE_ALL_PLUGINS_FOR_TRIGGER_EVENT Tau_disable_all_plugins_for_trigger_event
 #define TAU_ADD_REGEX Tau_add_regex
 #define TAU_CHECK_FOR_MATCHING_REGEX Tau_check_for_matching_regex
 #define TAU_CREATE_TRIGGER Tau_create_trigger
 #define TAU_TRIGGER Tau_trigger
+///
 
 #endif /* TAU_ENABLED */
 
