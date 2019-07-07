@@ -1224,14 +1224,6 @@ extern "C" void Tau_add_regex(const char * r)
   RtsLayer::UnLockDB();
 }
 
-extern "C" void Tau_start_async_plugin(unsigned int id, void * data) {
-  TauInternalFunctionGuard protects_this_function;
-  
-  if(Tau_plugins_enabled.start_async_plugin) {
-    Tau_util_invoke_async_callback(id, data);
-  } 
-}
-
 ////
 
 ///////////////////////////////////////////////////////////////////////////

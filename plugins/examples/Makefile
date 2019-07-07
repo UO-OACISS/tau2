@@ -82,10 +82,10 @@ tau_plugin_example_memory_usage_async.o: Tau_plugin_example_memory_usage_async.c
 	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c Tau_plugin_example_memory_usage_async.cpp -o tau_plugin_example_memory_usage_async.o
 
 tau_plugin_example_emulate_profile_snapshots_analysis_async.o: Tau_plugin_example_emulate_profile_snapshots_analysis_async.cpp
-	$(CXX) $(CFLAGS) -c Tau_plugin_example_emulate_profile_snapshots_analysis_async.cpp -o tau_plugin_example_emulate_profile_snapshots_analysis_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c Tau_plugin_example_emulate_profile_snapshots_analysis_async.cpp -o tau_plugin_example_emulate_profile_snapshots_analysis_async.o
 
 tau_plugin_example_analyze_node_profile_snapshots_async.o: Tau_plugin_example_analyze_node_profile_snapshots_async.cpp
-	$(CXX) $(CFLAGS) -c Tau_plugin_example_analyze_node_profile_snapshots_async.cpp -o tau_plugin_example_analyze_node_profile_snapshots_async.o
+	$(CXX) $(TAU_STDCXX11_FLAG) $(CFLAGS) -c Tau_plugin_example_analyze_node_profile_snapshots_async.cpp -o tau_plugin_example_analyze_node_profile_snapshots_async.o
 
 tau_plugin_example_analyze_node_profile_snapshots.o: Tau_plugin_example_analyze_node_profile_snapshots.cpp
 	$(CXX) $(CFLAGS) -c Tau_plugin_example_analyze_node_profile_snapshots.cpp -o tau_plugin_example_analyze_node_profile_snapshots.o
